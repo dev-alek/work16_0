@@ -1,0 +1,95 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Утилита проверки/инициализации атрибутов товара на объекте
+
+Автор: Комаров Иван Сергеевич
+Дата создания: 02/11/10
+Author: Komarov Ivan
+Creation date: 02/11/10
+
+*/
+
+define input parameter p-forced as logical no-undo .
+define input parameter p-read-only as logical no-undo .
+
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-description as character no-undo init "Утилита проверки/инициализации параметров при запуске ТН".
+{ cmp/vssrevis.i }
+{ cmp/str-glbl.i }
+{ str/lib-trn.i  }
+{ ref/gds-attr.i }
+{ cmp/trg-def.i  }
+
+
+do
+on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
+on stop   undo, return error substitute( "&1. stop", vss-workfile )
+on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+:
+  define variable v-is-petrol  as logical    no-undo.
+  define variable v-is-pieces  as logical    no-undo.
+  define variable v-value      as character  no-undo.
+  define variable v-type       as character  no-undo.
+
+  define buffer buf_goods   for ub.goods .
+
+
+
+  do transaction
+  on error  undo, return error substitute( "&1 (sys-key). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+  on stop   undo, return error substitute( "&1 (sys-key). stop", vss-workfile )
+  on endkey undo, return error substitute( "&1 (sys-key). endkey", vss-workfile )
+  :
+
+  if ( g#db-num > 0 ) then return.
+
+  /* перенос норм естественной убыли */
+  for each buf_goods
+     where buf_goods.normal-wastage <> 0
+     no-lock :
+
+      { str/is-petrl.i
+          buf_goods.artic
+          buf_goods.prod-type
+          buf_goods.prod-code
+          v-is-petrol
+          v-is-pieces
+      }
+      if  v-is-petrol = yes
+      and v-is-pieces = no
+      then do : /* проверим на ТНП через ТРК */
+        run gds-attr-value in this-procedure (
+                                         input buf_goods.gds-code
+                                        ,input {&attr-ptrl-as-good}
+                                        ,output v-value
+                                        ,output v-type) no-error.
+        if NOT logical(v-value) then do: /* нет атрибута */
+          if p-read-only = false then do:
+            run adm/initnwas.p
+                ( input buf_goods.artic ,
+                  input buf_goods.prod-type ,
+                  input buf_goods.prod-code
+                ) no-error .
+            if error-status :error then do:
+              return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) ).
+            end.
+          end.
+          else do:
+            return error substitute("До начала работы с данной БД (режим RO) необходимо произвести вход в ОСНОВНУЮ БД!!!") .
+          end.
+        end.
+      end.
+  end.
+
+end.
+end.

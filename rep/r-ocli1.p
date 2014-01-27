@@ -1,0 +1,20 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+
+
+Автор: Чернова Светлана Александровна
+Дата создания: 09/12/05
+Author: Svetlana Chernova
+Creation date: 09/12/05
+
+*/
+&glob fr-name "&framename='oborot-cli':U"
+&glob r-sort "&b3 = goods.artic"         /* поле сортировки  */
+{ rep/r-pst-mn.i {&fr-name} {&r-sort} }
+{ rep/r-oclidp.i }

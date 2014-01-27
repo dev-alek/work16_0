@@ -1,0 +1,59 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Записать значение атрибута клиента
+
+Автор: Перваков Михаил Сергеевич
+Дата создания: 04/05/06
+Author: Mikhail Pervakov
+Creation date: 04/05/06
+
+*/
+
+define input parameter p-obj-type like ub.clients-attr.obj-type   no-undo .
+define input parameter p-obj-code like ub.clients-attr.obj-code   no-undo .
+define input parameter p-code     like ub.clients-attr.attr-code  no-undo .
+define input parameter p-value    like ub.clients-attr.attr-value no-undo .
+
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-description as character no-undo init "Записать значение атрибута клиента".
+{ cmp/vssrevis.i "substitute('&1|&2|&3|&4',p-obj-type,p-obj-code,p-code,p-value)" }
+{ cmp/trg-def.i  }
+{ gbl/clntattr.i }
+
+
+do
+on error undo, return error return-value
+:
+  run clntattr-write in this-procedure
+    (input  p-obj-type /* p-obj-type */
+    ,input  p-obj-code /* p-obj-code */
+    ,input  p-code     /* p-code     */
+    ,input  p-value    /* p-value    */
+    ) no-error .
+  if error-status :error
+  then do:
+    if error-status :get-message(1) <> ""
+    then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Ошибка при вызове процедуры" 'clntattr-write':u skip
+        "Клиент" p-obj-type p-obj-code skip
+        "Атрибут" p-code skip
+        "Значение" p-value skip
+        error-status :get-message(1) skip
+        return-value skip
+        view-as alert-box error .
+    end.
+    undo, return error return-value .
+  end.
+end.

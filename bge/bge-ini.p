@@ -1,0 +1,141 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Cоздание каталогов, секции и ключа для Экспорта XML
+
+Автор: Хныкин Павел Андреевич
+Дата создания: 04/05/06
+Author: Pavel Khnykin
+Creation date: 04/05/06
+
+Input:
+    strB        as character    - "bge" - экспорт во внешн бух, "buh" - импорт из IBS Trade
+    strFRG-ACC  as character    - полный путь до каталога ЭКСПОРТА: d:\temp\frg-acc
+
+Output:
+    RETURN-VALUE =  "OK", тогда strFRG-ACC - это полный путь до каталога ЭКСПОРТА;
+    RETURN-VALUE <> "OK", отказ от создания секции-ключа или не созданы каталоги
+
+*/
+define input  parameter strB        as character        no-undo.
+define output parameter strFRG-ACC  as character        no-undo.
+
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-description as character no-undo init "Cоздание каталогов, секции и ключа для Экспорта XML".
+{ cmp/vssrevis.i }
+
+define variable strBGE    as character    no-undo.
+define variable strDIR    as character    no-undo.
+
+&if OPSYS = "UNIX" &then
+&SCOP Slash /
+&else
+&SCOP Slash ~\
+&endif
+
+GET-KEY-VALUE SECTION "" KEY "" VALUE strBGE. /* есть ли BGE-секция? */
+IF LOOKUP( "BGE", strBGE ) = 0
+THEN DO:        /* нет - создаем каталоги, секцию и ключ */
+     RUN makeFRGdir ( OUTPUT strDIR ). /* запросим место и сделаем попытку созданий дир */
+     IF RETURN-VALUE = "OK"
+     THEN DO:
+         PUT-KEY-VALUE SECTION "BGE" KEY "Dirfrg-acc" VALUE strDIR + "{&Slash}frg-acc" no-error.
+         if error-status :error
+         then do:
+             message
+                     "Не удалось записать значение ключа"
+                skip "Dirfrg-acc в секции BGE ini-файла."
+                skip "Выгрузка данных невозможна."
+                skip(1)
+                skip "Снимите защиту от записи"
+                skip "или пропишите каталог выгрузки"
+                skip "в ini-файле вручную."
+             view-as alert-box error.
+             undo, return error .
+         end.
+         assign
+            strFRG-ACC = strDIR + "{&Slash}frg-acc"
+         .
+         RETURN "OK".
+     END.
+     ELSE RETURN "ERROR".
+END. /* of  IF LOOKUP("BGE", strBGE) = 0 ... */
+ELSE DO:    /* Секция есть; проверим есть ли ключ */
+    GET-KEY-VALUE SECTION "BGE" KEY "Dirfrg-acc" VALUE strBGE.
+    IF strBGE = ?
+    THEN DO:        /* нет ключа */
+        RUN makeFRGdir ( OUTPUT strDIR ).
+        IF RETURN-VALUE = "OK"
+        THEN DO:
+            PUT-KEY-VALUE SECTION "BGE" KEY "Dirfrg-acc" VALUE strDIR + "{&Slash}frg-acc".
+            assign
+                strFRG-ACC = strDIR + "{&Slash}frg-acc"
+            .
+            RETURN "OK".
+        END.
+        ELSE RETURN "ERROR".
+    END.
+    ELSE DO: /* есть ключ */
+        assign
+            strFRG-ACC = strBGE
+        .
+        RETURN "OK".
+    END.
+END.
+
+PROCEDURE makeFRGdir :
+    /* Запросить место и создать 4 каталога; OK - удача */
+    define output parameter strDIR   as character        no-undo.
+
+    define variable strQuest    as character    no-undo.
+
+               /* Запросить подтверждение : "OK" - создать, "CANCEL" - отказ */
+    run bge/bge-ini1.w (
+          input strB
+        , output strQuest
+    ).
+    IF strQuest = "OK"
+    THEN DO:                 /* запросить место */
+        strQuest = "ERROR".
+        run bge/bge-ini2.w (
+              input strB
+            , OUTPUT strQuest
+            , OUTPUT strDIR
+        ) NO-ERROR.         /* место - каталог */
+        IF strQuest = "OK"
+        AND NOT ERROR-STATUS:ERROR
+        THEN DO:
+          /* попытка создать дир "frg-acc" */
+          run bge/dir_cd.p (strDir + "{&Slash}frg-acc", "CA").
+          IF RETURN-VALUE = "ERROR" THEN RETURN "ERROR".
+          /* создана дир "frg-acc" */
+
+          /* попытка создать дир "dict" */
+          run bge/dir_cd.p (strDir + "{&Slash}frg-acc{&Slash}dict", "CA").
+          IF RETURN-VALUE = "ERROR" THEN RETURN "ERROR".
+          /* создана дир "dict" */
+
+          /* попытка создать дир "exp-acc" */
+          run bge/dir_cd.p (strDir + "{&Slash}frg-acc{&Slash}exp-acc", "CA").
+          IF RETURN-VALUE = "ERROR" THEN RETURN "ERROR".
+          /* создана дир "exp-acc" */
+
+          /* попытка создать дир "global" */
+          run bge/dir_cd.p (strDir + "{&Slash}frg-acc{&Slash}global", "CA").
+          IF RETURN-VALUE = "ERROR" THEN RETURN "ERROR".
+          /* создана дир "global" */
+
+          RETURN "OK".
+        END.
+    END.
+    RETURN "ERROR".
+END PROCEDURE.

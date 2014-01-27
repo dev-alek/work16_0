@@ -1,0 +1,618 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+–азброска товаров по платежам - внутри одного чека и запись в chk-gds-pay
+
+јвтор: Ѕахтадзе Ќаталь€ ¬икторовна
+ƒата создани€: 03/24/06
+Author: Bakhtadze Natalya
+Creation date: 03/24/06
+
+*/
+
+&scoped-define vssseq {&sequence}
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+
+&if "{1}" = "defalgo" &then
+&global-define current-algo-1 "1.7"
+
+&else
+
+&if "{1}" = "def" &then
+define variable pychk_kk as integer no-undo .  /*текуща€ позици€ в полученном списке товаров*/
+define variable pychk_jj as integer no-undo .  /*текуща€ позици€ в полученном списке товаров*/
+define variable pychk_jjp as integer no-undo .  /*текуща€ позици€ в полученном списке товаров- бензин*/
+define variable pychk_jjo as integer no-undo .  /*текуща€ позици€ в полученном списке товаров - небензин*/
+define variable pychk_pay-sum as decimal no-undo .  /*сумма неразбросанного*/
+DEFINE VARIABLE pychk_No-EXCH as logical no-undo. /*если все в р у б л € х то курс пересчета 1 к базовой валюте */
+DEFINE VARIABLE pychk_No-EXCH-rubl as logical no-undo. /*если r-b- base  и base-code <> 0 то курс пересчета <> 1*/
+DEFINE VARIABLE pychk_dop-sump as decimal No-UNDO. /*сумма неразбросанной текущей оплаты*/
+DEFINE VARIABLE pychk_dop-sumg as decimal No-UNDO. /*сумма неразбросанного текцщего товара*/
+DEFINE VARIABLE pychk_dop-sumk as decimal No-UNDO. /*квант товар-оплата*/
+DEFINE VARIABLE pychk_exch as decimal No-UNDO. /*курс платежа*/
+DEFINE VARIABLE pychk_exch-rubl as decimal No-UNDO. /*курс платежа*/
+define variable pychk_rec-type as integer no-undo .
+define variable pychk_line-type as integer no-undo .
+define variable pychk_create as logical no-undo .
+define variable pychk_pays_count as integer no-undo .
+define variable pychk_zero-gds as decimal no-undo .
+define variable pychk_zero-pay as decimal no-undo .
+define variable pychk_zero-n as decimal no-undo .
+define variable pychk_value as character no-undo .
+define variable pychk_type as character no-undo .
+define variable pychk_line-type-chr as character no-undo .
+
+define temp-table temp-ptrl-goods no-undo
+field b-code as integer
+field gds-code as integer
+field ptrl-good as logical /*no -good yes -petrol*/
+index pi as unique primary
+b-code
+.
+
+define buffer buf_temp-chk-gds for temp-chk-gds.
+define buffer buf_chk-gds-pay for ub.chk-gds-pay.
+define buffer buf2_chk-doc for ub.chk-doc.
+define buffer buf_bar-code for ub.bar-code.
+
+&else
+if first-of(ub.CHK-pay.DOC-CODE) THEN Do:
+  find first buf_chk-gds-pay no-lock where
+            buf_chk-gds-pay.doc-code = ub.chk-doc.doc-code
+        and buf_chk-gds-pay.algo-num = {&current-algo-1} no-error.
+  if not available buf_chk-gds-pay then do:
+    pychk_create = yes.
+  end.
+  else do:
+    pychk_create = no.
+  end.
+end.
+if pychk_create then do:
+
+create-block:
+do transaction
+on error  undo create-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+on stop   undo create-block, return error substitute( "&1. stop", vss-workfile )
+on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile )
+:
+  find first buf2_chk-doc exclusive-lock where
+         recid(buf2_chk-doc) = recid(ub.chk-doc).
+
+  if first-of(ub.CHK-pay.DOC-CODE) THEN Do:
+    for each temp-chk-pay:
+      delete temp-chk-pay.
+    end.
+    for each temp-chk-gds:
+      delete temp-chk-gds.
+    end.
+
+    assign
+    pychk_kk = 0 /*текуща€ позици€ в полученном списке товаров*/
+    pychk_jj = 1 /*всего записей temp-chk-gds*/
+    pychk_jjp = 0 /*записей топлива*/
+    pychk_jjo = 0 /*записей нетоплива*/
+    pychk_pay-sum = ub.chk-doc.netto /*сумма неразбросанного*/
+    pychk_dop-sumg = 0
+    pychk_pays_count = 0
+    .
+    FOR EACH ub.chk-gds No-LOCK WHERE
+            ub.chk-gds.doc-code = ub.chk-pay.doc-code
+    BY ub.chk-gds.line-num:
+      if ub.chk-gds.write-off-code <> ?
+      and ub.chk-gds.write-off-code > 0 then NEXT.
+      find first buf_bar-code no-lock where
+                buf_bar-code.b-code = ub.chk-gds.b-code no-error.
+      if not available buf_bar-code then do:
+        undo create-block, return error substitute("Ќе найден товар дл€ бар-кода &1: чек &2 &3&4 строка &5"
+                                                    , ub.chk-gds.b-code
+                                                    , ub.chk-gds.doc-code
+                                                    , ub.chk-doc.obj-type
+                                                    , ub.chk-doc.obj-code
+                                                    , ub.chk-gds.line-num).
+      end.
+
+      /*топливо*/
+      if ub.chk-gds.pump <> 0 then do:
+        pychk_rec-type = 1.
+        find first temp-ptrl-goods where
+                   temp-ptrl-goods.b-code = ub.chk-gds.b-code no-error.
+        if not available temp-ptrl-goods then do:
+          /*найдем атрибут ptrl-as-good*/
+          run gds-attr-value in this-procedure (
+                                                 input buf_bar-code.gds-code
+                                                ,input {&attr-ptrl-as-good}
+                                                ,output pychk_value
+                                                ,output pychk_type) no-error.
+          create temp-ptrl-goods.
+          assign
+          temp-ptrl-goods.gds-code = buf_bar-code.gds-code
+          temp-ptrl-goods.b-code = buf_bar-code.b-code
+          temp-ptrl-goods.ptrl-good = (not logical(pychk_value))
+          .
+        end.
+        if temp-ptrl-goods.ptrl-good then do:
+        assign
+          pychk_line-type = 1
+        .
+      end.
+      else do:
+        assign
+          pychk_line-type = 0
+          .
+        end.
+        release temp-ptrl-goods.
+      end.
+      else do:
+        assign
+        pychk_rec-type = 0
+        pychk_line-type = 0
+        .
+      end.
+      find first temp-chk-gds where
+                temp-chk-gds.doc-code = ub.chk-gds.doc-code
+            and temp-chk-gds.b-code = ub.chk-gds.b-code
+            AND temp-chk-gds.rec-type = pychk_rec-type
+            and temp-chk-gds.line-num = 0
+            no-error.
+      if not available temp-chk-gds then do:
+        find first temp-chk-gds use-index ijj where
+                temp-chk-gds.jj_ = pychk_jj
+            and temp-chk-gds.line-num = 0
+                no-error.
+        if not available temp-chk-gds then do:
+          create temp-chk-gds.
+          assign
+          temp-chk-gds.jj_ = pychk_jj
+          temp-chk-gds.b-code = ub.chk-gds.b-code
+          temp-chk-gds.doc-code = ub.chk-gds.doc-code
+          temp-chk-gds.line-num = 0
+          temp-chk-gds.rec-type = pychk_rec-type
+          temp-chk-gds.gds-code = buf_bar-code.gds-code.
+          .
+
+        end.
+        else do:
+          assign
+          temp-chk-gds.b-code = ub.chk-gds.b-code
+          temp-chk-gds.doc-code = ub.chk-gds.doc-code
+          temp-chk-gds.line-num = 0
+          temp-chk-gds.rec-type = pychk_rec-type
+          temp-chk-gds.line-num = 0
+          temp-chk-gds.sum = 0
+          temp-chk-gds.jjp_ = 0
+          temp-chk-gds.jjo_ = 0
+          temp-chk-gds.line-type = '':U
+          temp-chk-gds.num-lines = 0
+          temp-chk-gds.doc-qnty = 0
+          temp-chk-gds.sum = 0
+          temp-chk-gds.flag  = no
+          .
+        end.
+        assign
+        temp-chk-gds.doc-code = ub.chk-gds.doc-code
+        temp-chk-gds.b-code = ub.chk-gds.b-code
+        temp-chk-gds.line-num = 0
+        temp-chk-gds.rec-type = pychk_rec-type
+        temp-chk-gds.line-type = (if pychk_line-type = 1
+                                then {&petrolium}
+                                else entry(1, ub.chk-gds.line-type, {&delim-par})
+                                ) + {&delim-par} +
+                                (if num-entries(ub.chk-gds.line-type, {&delim-par}) > 1
+                                then entry(2, ub.chk-gds.line-type, {&delim-par})
+                                else '')
+        temp-chk-gds.line-num = 0
+        temp-chk-gds.num-lines = 0
+        pychk_jj = pychk_jj + 1
+        .
+        if pychk_rec-type = 1 then do:
+          assign
+          temp-chk-gds.jjp_ = pychk_jjp + 1
+          pychk_jjp = pychk_jjp + 1
+          .
+        end.
+        else do:
+          assign
+          temp-chk-gds.jjo_ = pychk_jjo + 1
+          pychk_jjo = pychk_jjo + 1
+          .
+        end.
+      end. /*if not available temp-chk-gds then do:*/
+      assign
+      temp-chk-gds.doc-qnty = temp-chk-gds.doc-qnty + ub.chk-gds.doc-qnty
+      temp-chk-gds.sum = temp-chk-gds.sum + ub.chk-gds.doc-qnty * (ub.chk-gds.price-base - ub.chk-gds.discnt)
+      temp-chk-gds.num-lines = temp-chk-gds.num-lines  + 1
+      .
+      find first temp-chk-gds use-index ijj where
+              temp-chk-gds.jj_ = 0
+          and temp-chk-gds.line-num = ub.chk-gds.line-num
+              no-error.
+      if not available temp-chk-gds then do:
+        create temp-chk-gds.
+        assign
+        temp-chk-gds.jj_ = 0
+        temp-chk-gds.line-num = ub.chk-gds.line-num
+        temp-chk-gds.doc-code = ub.chk-gds.doc-code
+        temp-chk-gds.b-code = ub.chk-gds.b-code
+        temp-chk-gds.gds-code = buf_bar-code.gds-code
+        temp-chk-gds.rec-type = pychk_rec-type
+        temp-chk-gds.line-num = ub.chk-gds.line-num
+        .
+
+      end.
+      else do:
+        assign
+        temp-chk-gds.doc-qnty = 0
+        temp-chk-gds.doc-code = ub.chk-gds.doc-code
+        temp-chk-gds.b-code = ub.chk-gds.b-code
+        temp-chk-gds.gds-code = buf_bar-code.gds-code
+        temp-chk-gds.rec-type = pychk_rec-type
+        temp-chk-gds.line-num = ub.chk-gds.line-num
+        temp-chk-gds.jjp_ = 0
+        temp-chk-gds.jjo_ = 0
+        temp-chk-gds.line-type = '':U
+                .
+      end.
+      assign
+      temp-chk-gds.doc-code = ub.chk-gds.doc-code
+      temp-chk-gds.b-code = ub.chk-gds.b-code
+      temp-chk-gds.doc-qnty = ub.chk-gds.doc-qnty
+      temp-chk-gds.price-base = ub.chk-gds.price-base
+      temp-chk-gds.price-service = ub.chk-gds.price-service
+      temp-chk-gds.line-type = (if pychk_line-type = 1
+                              then {&petrolium}
+                              else entry(1, ub.chk-gds.line-type, {&delim-par})
+                              ) + {&delim-par} +
+                              (if num-entries(ub.chk-gds.line-type, {&delim-par}) > 1
+                              then entry(2, ub.chk-gds.line-type, {&delim-par})
+                              else '')
+      temp-chk-gds.line-sign = ub.chk-gds.line-sign
+      temp-chk-gds.discnt = ub.chk-gds.discnt
+      temp-chk-gds.sum = ub.chk-gds.doc-qnty * (ub.chk-gds.price-base - ub.chk-gds.discnt)
+      temp-chk-gds.rec-type = pychk_rec-type
+      temp-chk-gds.line-num = ub.chk-gds.line-num
+      temp-chk-gds.num-lines = 1
+      .
+    END. /* FOR EACH ub.chk-gds No-LOCK WHERE */
+  end. /*if first-of ub.chk-pay.DOC-CODE*/
+
+  FIND FIRST ub.cash-pay No-LOCK WHERE
+            ub.cash-pay.cdpay-code = ub.chk-pay.pay-code AND
+            ub.cash-pay.curr-code = ub.chk-pay.curr-code No-ERROR.
+  if available ub.cash-pay then do:
+      find first temp-chk-pay where
+              temp-chk-pay.doc-code = ub.chk-pay.doc-code
+          and temp-chk-pay.pay-code = ub.chk-pay.pay-code
+          and temp-chk-pay.pay-card = ub.chk-pay.pay-card
+          and temp-chk-pay.curr-code = ub.chk-pay.curr-code
+                 no-error.
+    if not available temp-chk-pay then do:
+      if (ub.chk-pay.tot-sum >= 0) NE (ub.chk-doc.netto >= 0)
+      and ub.chk-pay.tot-sum <> 0
+      and abs(ub.chk-doc.netto) > 0.00000001
+      then do:
+
+        /*сдача*/
+        find first temp-chk-pay where
+                temp-chk-pay.doc-code = ub.chk-pay.doc-code
+            and temp-chk-pay.pay-code = ub.chk-pay.pay-code
+            and temp-chk-pay.pay-card = ub.chk-pay.pay-card
+            and temp-chk-pay.curr-code = ub.chk-pay.curr-code
+            and abs(temp-chk-pay.tot-r-b) >= abs(ub.chk-pay.tot-sum)
+            and (temp-chk-pay.tot-r-b >=0) NE (ub.chk-pay.tot-sum >=0)
+            no-error.
+        if not available temp-chk-pay then do:
+          /*сдача наличными  в баз вал касы*/
+          find first temp-chk-pay where
+                  temp-chk-pay.doc-code = ub.chk-pay.doc-code
+              and temp-chk-pay.pay-code = 1
+              and temp-chk-pay.curr-code = (if v-curr-r-b = {&r-b-rubl}
+                                            then 0
+                                            else v-base-code) /*баз вал кассы*/
+              and abs(temp-chk-pay.tot-rubl) >= abs(ub.chk-pay.tot-rubl )
+              and (temp-chk-pay.tot-r-b >=0) NE (ub.chk-pay.tot-sum >=0)
+              no-error.
+          if not available temp-chk-pay then do:
+            /*сдача на первый попавшийс€ в баз вал касы*/
+            find first temp-chk-pay where
+                    temp-chk-pay.doc-code = ub.chk-pay.doc-code
+                and abs(temp-chk-pay.tot-rubl) >= abs(ub.chk-pay.tot-rubl  )
+                and (temp-chk-pay.tot-r-b >=0) NE (ub.chk-pay.tot-sum >=0)
+                no-error.
+            if not available temp-chk-pay then do:
+              if not g#auto then do:
+                message
+                substitute("Ќе могу обработать чек &1&2&3&4 смена &5 пор.&6 касса &7 є на кассе &8"
+                          ,ub.chk-doc.doc-code
+                          ,{&new-line}
+                          ,ub.chk-doc.obj-type
+                          ,ub.chk-doc.obj-code
+                          ,ub.chk-doc.shift-date
+                          ,ub.chk-doc.shift-num
+                          ,ub.chk-doc.pay-desk
+                          ,ub.chk-doc.chk-num)
+                view-as alert-box error .
+              end.
+              next _chk-doc.
+            end.
+          end. /*if not available temp-chk-pay then do:*/
+        end. /*if not available temp-chk-pay then do:*/
+      end. /*if (ub.chk-pay.tot-sum >= 0) NEQ (ub.chk-doc.netto >= 0) then do:*/
+      else do:
+        /*пр€мой платеж*/
+        find first temp-chk-pay where
+                  temp-chk-pay.doc-code = ub.chk-pay.doc-code
+              and temp-chk-pay.line-num = ub.chk-pay.line-num use-index pi no-error.
+        if not available temp-chk-pay then do:
+          create temp-chk-pay.
+          assign
+          temp-chk-pay.line-num = ub.chk-pay.line-num
+          temp-chk-pay.doc-code = ub.chk-doc.doc-code
+          temp-chk-pay.pay-code = ub.chk-pay.pay-code
+          temp-chk-pay.curr-code = /*(if ub.chk-pay.pay-code = 1 then 0 else ub.chk-pay.curr-code)*/ ub.chk-pay.curr-code
+          pychk_pays_count = pychk_pays_count + 1
+          .
+        end.
+        assign
+        temp-chk-pay.doc-code = ub.chk-doc.doc-code
+        temp-chk-pay.pet-good = integer(cash-pay.atr64) * 2 + integer(cash-pay.is-cash)
+        temp-chk-pay.pay-code = ub.chk-pay.pay-code
+        temp-chk-pay.curr-code = /*(if ub.chk-pay.pay-code = 1 then 0 else ub.chk-pay.curr-code)*/ ub.chk-pay.curr-code
+        temp-chk-pay.is-cash  = ub.cash-pay.is-cash
+        temp-chk-pay.register = ub.cash-pay.register
+        temp-chk-pay.pay-card = ub.chk-pay.pay-card
+        temp-chk-pay.tot-rubl = 0
+        temp-chk-pay.tot-base = 0
+        temp-chk-pay.num-lines = 0
+        temp-chk-pay.flag  = no
+        .
+      end. /*else if (ub.chk-pay.tot-sum >= 0) NEQ (ub.chk-doc.netto >= 0) then do:*/
+    end. /*if not available temp-chk-pay then do:*/
+    assign
+    temp-chk-pay.tot-r-b = temp-chk-pay.tot-r-b + (if v-curr-r-b = {&r-b-rubl}
+                                                   then ub.chk-pay.tot-rubl
+                                                   else ub.chk-pay.tot-base)
+    temp-chk-pay.tot-rubl = temp-chk-pay.tot-rubl + ub.chk-pay.tot-rubl
+    temp-chk-pay.tot-base = temp-chk-pay.tot-base + ub.chk-pay.tot-base
+    temp-chk-pay.num-lines = temp-chk-pay.num-lines  + 1
+    .
+  end.
+  if available temp-chk-pay then RELEASE TEMP-CHK-PAY.
+
+  if last-of(ub.chk-pay.doc-code) then do:
+    for each temp-chk-pay where
+            temp-chk-pay.doc-code = ub.chk-doc.doc-code
+    break
+    by temp-chk-pay.pet-good descending
+    /*
+    by temp-chk-pay.pay-code
+    by temp-chk-pay.curr-code*/
+    by temp-chk-pay.line-num:
+      assign
+      pychk_dop-sump = temp-chk-pay.tot-r-b
+      pychk_exch = if pychk_No-exch then 1
+                   else (if temp-chk-pay.tot-base = 0
+                         then 0
+                         else temp-chk-pay.tot-rubl / temp-chk-pay.tot-base)
+      pychk_exch-rubl = if pychk_No-exch-rubl
+                        then 1
+                        else (if temp-chk-pay.tot-base = 0
+                              then 0
+                              else temp-chk-pay.tot-rubl / temp-chk-pay.tot-base)
+      temp-chk-pay.flag = (if abs(temp-chk-pay.tot-rubl) < 0.001 then no else yes)
+      .
+      _repeat:
+      REPEAT WHILE  abs(pychk_dop-sump) > 0 :
+        if pychk_dop-sumg = 0 then do:
+          assign
+          pychk_kk = pychk_kk + 1
+          .
+          if pychk_kk >= pychk_jj then LEAVE _repeat.
+          if pychk_kk <= pychk_jjp then do:
+            find first temp-chk-gds where
+                    temp-chk-gds.doc-code = ub.chk-doc.doc-code
+                  and temp-chk-gds.jjp_ = pychk_kk
+                  and temp-chk-gds.line-num = 0
+                no-error .
+          end.
+          else do:
+            find first temp-chk-gds where
+                    temp-chk-gds.doc-code = ub.chk-doc.doc-code
+                  and temp-chk-gds.jjo_ = pychk_kk - pychk_jjp
+                  and temp-chk-gds.line-num = 0
+                no-error .
+          end.
+          if not available temp-chk-gds
+          or (temp-chk-gds.sum = 0
+              or
+              (temp-chk-gds.sum <= 0  and ub.chk-doc.netto > 0)
+              )
+          then do:
+            /*в некоторвых магазинах сумма нетто получалаь < 0 - например на пакетах стоимостью 1 коп*/
+            NEXT _repeat.
+          end.
+          assign
+          pychk_dop-sumg = temp-chk-gds.sum
+          temp-chk-gds.flag = yes
+          .
+        end. /*if pychk_dop-sumg = 0 then do:*/
+        assign
+        pychk_dop-sumk = min(abs(pychk_dop-sumg), abs(pychk_dop-sump))  * (if pychk_dop-sump > 0 then 1 else -1 ) /*квант*/
+        pychk_pay-sum = pychk_pay-sum - pychk_dop-sumk
+        pychk_dop-sump = pychk_dop-sump - pychk_dop-sumk
+        pychk_dop-sumg = pychk_dop-sumg - pychk_dop-sumk
+        .
+        for each buf_temp-chk-gds where
+                buf_temp-chk-gds.doc-code = ub.chk-doc.doc-code
+            and buf_temp-chk-gds.b-code = temp-chk-gds.b-code
+            and buf_temp-chk-gds.line-num  > 0
+        by buf_temp-chk-gds.doc-code
+        by buf_temp-chk-gds.rec-type descending
+        by buf_temp-chk-gds.line-num
+         :
+          case num-entries(buf_temp-chk-gds.line-type, {&delim-par}):
+            when 1 then do:
+              pychk_line-type-chr = buf_temp-chk-gds.line-type + {&delim-par} + {&delim-par} + string(temp-chk-pay.num-lines).
+            end.
+            when 2 then do:
+              pychk_line-type-chr = buf_temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
+            end.
+          end case.
+          create buf_chk-gds-pay.
+          assign
+          buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
+          buf_chk-gds-pay.chk-type = ub.chk-doc.chk-type
+          buf_chk-gds-pay.algo-num = {&current-algo-1}
+          buf_chk-gds-pay.pay-code = temp-chk-pay.pay-code
+          buf_chk-gds-pay.curr-code = temp-chk-pay.curr-code
+          buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+          buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
+          buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
+          buf_chk-gds-pay.tot-r-b = (if temp-chk-gds.num-lines = 1
+                                    and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
+                                    then pychk_dop-sumk
+                                    else (pychk_dop-sumk * buf_temp-chk-gds.sum / temp-chk-gds.sum)
+                                    )
+          buf_chk-gds-pay.eff-base-rate = pychk_exch
+          buf_chk-gds-pay.eff-doc-qnty = (if temp-chk-gds.num-lines = 1
+                                          and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
+                                          and pychk_pays_count = 1
+                                          then temp-chk-gds.doc-qnty
+                                          else (buf_chk-gds-pay.tot-r-b / (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt))
+                                          )
+          buf_chk-gds-pay.b-code = buf_temp-chk-gds.b-code
+          buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
+          buf_chk-gds-pay.discnt = buf_temp-chk-gds.discnt
+          buf_chk-gds-pay.price-base = buf_temp-chk-gds.price-base
+          buf_chk-gds-pay.price-service = buf_temp-chk-gds.price-service
+          buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
+          buf_chk-gds-pay.line-type = pychk_line-type-chr
+          buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
+          buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
+          buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
+          buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
+          buf_chk-gds-pay.obj-code = ub.chk-doc.obj-code
+          buf_chk-gds-pay.out-code = ub.chk-doc.out-code
+          buf_chk-gds-pay.shift-date = ub.chk-doc.shift-date
+          buf_chk-gds-pay.shift-num = ub.chk-doc.shift-num
+          buf_chk-gds-pay.shift-name= ub.chk-doc.shift-name
+          .
+        end.
+        /*--------------------записали в нужную таблицу квант товар-оплата--------------------------*/
+        /*если покрылась вс€ сумма перейдем к следующему товару*/
+        if abs(pychk_dop-sumg) <= 0 then do:
+          assign
+          pychk_kk = pychk_kk + 1.
+          if pychk_kk >= pychk_jj then LEAVE _repeat.
+
+          if pychk_kk <= pychk_jjp then do:
+            find first temp-chk-gds where
+                      temp-chk-gds.doc-code = ub.chk-doc.doc-code
+                and temp-chk-gds.line-num = 0
+                AND temp-chk-gds.jjp_ = pychk_kk
+                no-error .
+          end.
+          else do:
+            find first temp-chk-gds where
+                      temp-chk-gds.doc-code = ub.chk-doc.doc-code
+                  and temp-chk-gds.line-num = 0
+                  AND temp-chk-gds.jjo_ = pychk_kk - pychk_jjp no-error .
+            if not available temp-chk-gds then do:
+              LEAVE _repeat.
+            end.
+          end.
+          pychk_dop-sumg = temp-chk-gds.sum.
+        end. /*if pychk_dop-sumg <= 0 then do:*/
+      end. /*    REPEAT WHILE  abs(pychk_dop-sump) > 0 :*/
+    end. /*for each temp-chk-pay :*/
+    if available temp-chk-gds then release temp-chk-gds.
+    if available temp-chk-pay then release temp-chk-pay.
+    pychk_zero-gds = 0.
+    pychk_zero-pay = 0.
+    for each temp-chk-gds where
+            temp-chk-gds.doc-code = ub.chk-pay.doc-code
+        and temp-chk-gds.flag = no
+        and temp-chk-gds.line-num  > 0
+        :
+       pychk_zero-gds = pychk_zero-gds + 1.
+    end.
+    for each temp-chk-pay where
+            temp-chk-pay.doc-code = ub.chk-pay.doc-code
+        and temp-chk-pay.flag = no:
+       pychk_zero-pay = pychk_zero-pay + 1.
+    end.
+    for each temp-chk-pay
+    where   temp-chk-pay.doc-code = ub.chk-pay.doc-code
+        and temp-chk-pay.flag = no:
+      pychk_zero-n = 0.
+      for each buf_temp-chk-gds
+      where   buf_temp-chk-gds.doc-code = ub.chk-pay.doc-code
+          and buf_temp-chk-gds.flag = no
+          and buf_temp-chk-gds.line-num  > 0 :
+        pychk_zero-n = pychk_zero-n + 1.
+        case num-entries(buf_temp-chk-gds.line-type, {&delim-par}):
+          when 1 then do:
+            pychk_line-type-chr = buf_temp-chk-gds.line-type + {&delim-par} + {&delim-par} + string(temp-chk-pay.num-lines).
+          end.
+          when 2 then do:
+            pychk_line-type-chr = buf_temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
+          end.
+        end case.
+        create buf_chk-gds-pay.
+        assign
+        buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
+        buf_chk-gds-pay.algo-num = {&current-algo-1}
+        buf_chk-gds-pay.pay-code = temp-chk-pay.pay-code
+        buf_chk-gds-pay.curr-code = temp-chk-pay.curr-code
+        buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+        buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
+        buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
+        buf_chk-gds-pay.tot-r-b = 0
+        buf_chk-gds-pay.eff-base-rate = pychk_exch
+        buf_chk-gds-pay.eff-doc-qnty = buf_temp-chk-gds.doc-qnty
+        buf_chk-gds-pay.b-code = buf_temp-chk-gds.b-code
+        buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
+        buf_chk-gds-pay.discnt = buf_temp-chk-gds.discnt
+        buf_chk-gds-pay.price-base = buf_temp-chk-gds.price-base
+        buf_chk-gds-pay.price-service = buf_temp-chk-gds.price-service
+        buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
+        buf_chk-gds-pay.line-type = pychk_line-type-chr
+        buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
+        buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
+        buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
+        buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
+        buf_chk-gds-pay.obj-code = ub.chk-doc.obj-code
+        buf_chk-gds-pay.out-code = ub.chk-doc.out-code
+        buf_chk-gds-pay.shift-date = ub.chk-doc.shift-date
+        buf_chk-gds-pay.shift-num = ub.chk-doc.shift-num
+        buf_chk-gds-pay.shift-name= ub.chk-doc.shift-name
+        buf_temp-chk-gds.flag = yes
+        .
+        if pychk_zero-n > pychk_zero-gds / pychk_zero-pay then leave.
+      end. /*for each temp-chk-gds*/
+      temp-chk-pay.flag = yes.
+    end. /*for each temp-chk-pay*/
+  end. /*if last-of(chk-pay.doc-code) then do:*/
+end. /*if pychk_create*/
+end.
+/*
+output to r-pychk0.txt append.
+for each temp-chk-gds:
+  export temp-chk-gds.
+end.
+for each temp-chk-pay:
+  export temp-chk-pay.
+end.
+for each buf_chk-gds-pay where buf_Chk-gds-pay.doc-code = ub.chk-doc.doc-code:
+  export buf_chk-gds-pay.
+end.
+output close.
+*/
+
+&endif
+&endif
+/* $Workfile$   E n d */

@@ -1,0 +1,101 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Показать изображение товара
+
+Автор: Бахтадзе Наталья Викторовна
+Дата создания: 04/10/06
+Author: Bakhtadze Natalya
+Creation date: 04/10/06
+
+*/
+
+define input parameter parparentproc  as widget-handle no-undo.
+define parameter buffer buf_goods for ub.goods .
+
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-description as character no-undo init "Показать изображение товара".
+{ cmp/vssrevis.i }
+{ cmp/str-glbl.i }
+{ cmp/library.i  }
+{ cmp/ini-lib.i  }
+{ gbl/getcntxt.i def }
+
+define variable HexStr   as character no-undo .
+define variable v-b-code like ub.bar-code.b-code no-undo .
+define variable loc#log as logical no-undo.
+define variable v-can-edit as logical no-undo .
+
+{ gbl/getcntxt.i get }
+
+{ gbl/gdsbcode.i
+  buf_goods.gds-code
+  ?
+  v-b-code
+}
+
+case buf_goods.gds-type
+:
+  when {&gds-goods}
+  then do:
+    { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_reference_update':U
+      {&cntxt-global}
+      0
+      '':U
+      0
+      0
+      buf_goods.grp-code
+      0
+      true
+      v-can-edit
+    }
+  end.
+  when {&gds-office}
+  then do:
+    { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_reference-services_update':U
+      {&cntxt-global}
+      0
+      '':U
+      0
+      0
+      buf_goods.grp-code
+      0
+      true
+      v-can-edit
+    }
+  end.
+  otherwise do:
+    message
+      vss-workfile vss-revision vss-description skip
+      "Неизвестное значение типа товара" skip
+      "Тип товара" buf_goods.gds-type skip
+      "Код товара" buf_goods.gds-code skip
+      view-as alert-box error .
+    undo, return error return-value .
+  end.
+end case.
+
+run gbl/newbase.p
+  (input v-b-code
+  ,input 16
+  ,output HexStr
+  ).
+
+{ ref/viewpict.i gds\ HexStr v-can-edit  }

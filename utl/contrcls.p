@@ -1,0 +1,54 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Закрытие договоров, срок действия которых истёк
+
+Автор: Чернова Светлана Александровна
+Дата создания: 05/07/09
+Author: Svetlana Chernova
+Creation date: 05/07/09
+
+*/
+
+define input  parameter parparentproc  as handle no-undo .
+
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-description as character no-undo init "Закрытие договоров, срок действия которых истёк".
+{ cmp/vssrevis.i }
+{ cmp/str-glbl.i }
+{ gbl/waitfram.i }
+{ gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }
+
+if v-cntxt-db-num <> 0 then do:
+  message "Утилита для ГБД !" view-as alert-box .
+  return .
+end.
+
+define buffer buf_contract for ub.contract  .
+define buffer buf_sysconf for ub.sysconf  .
+
+run waitfram-show in this-procedure ( substitute("Закрытие договоров"  ) ).
+for each buf_sysconf no-lock :
+
+    for each buf_contract exclusive-lock where
+             buf_contract.host-code = buf_sysconf.host-code and
+             buf_contract.status_ = {&current-contr} and
+             buf_contract.contract-date-end < today
+             :
+              run waitfram-show in this-procedure ( substitute("Закрытие договоров по фирме  &1  № договора &2 " , buf_sysconf.host-code , buf_contract.contract-code )) .
+              assign
+                buf_contract.status_ = {&close-contr}
+              .
+    end.
+end.
+run waitfram-hide in this-procedure .

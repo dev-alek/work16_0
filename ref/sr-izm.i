@@ -1,0 +1,143 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Справочник средств измерений
+
+Автор: Шальнев Иван Сергеевич
+Дата создания: 28/12/11
+Author: Shalnev Ivan
+Creation date: 28/12/11
+
+*/
+
+{ gbl/color.i }
+
+&scoped-define vssseq {&sequence}
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+
+&if "{2}" <> "proc" &then
+
+define temp-table {1} no-undo
+
+
+field sr-model as character column-label "Модель"
+format "X(35)" label "Модель"
+view-as fill-in size 35 by 1
+
+
+field sr-type as character column-label "Тип"
+format "X(55)" label "Тип"
+view-as combo-box list-item-pairs "Ареометр калиброванный при 15°С","1",
+                                  "Ареометр калиброванный при 20°С","2",
+                                  "Поточный плотномер","3",
+                                  "Погружной плотномер","4",
+                                  "Канал измерения плотности (с поточным плотномером)","5",
+                                  "Канал измерения плотности (без поточного плотномера)","6"   inner-lines 5 drop-down-list size-chars 55 by 1
+
+
+field sr-abs-err-neft-water as decimal column-label "Абсолютная погрешность измерений уровня! нефтепродукта и подтоварной воды"
+format "9.9999" initial 0 label "Абсолютная погрешность измерений уровня нефтепродукта и подтоварной воды"
+view-as fill-in size 15  by 1
+
+
+field sr-abs-err-water as decimal column-label "Абсолютная погрешность измерений! уровня подтоварной воды"
+format "9.9999" initial 0 label "Абсолютная погрешность измерений уровня подтоварной воды"
+view-as fill-in size 15  by 1
+
+
+field sr-abs-err-dens as decimal column-label "Абсолютная погрешность измерений! плотности нефтепродукта ареометром"
+format "9.9999" initial 0 label "Абсолютная погрешность измерений плотности нефтепродукта ареометром"
+view-as fill-in size 15  by 1
+
+
+field sr-abs-err-temp-vol as decimal column-label "Абсолютная погрешность измерений! температуры нефтепродукта при! измерении его объема"
+format "9.9999" initial 0 label "Абсолютная погрешность измерений температуры нефтепродукта при измерении его объема"
+view-as fill-in size 15  by 1
+
+
+field sr-abs-err-temp-dens as decimal column-label "Абсолютная погрешность измерений! температуры нефтепродукта при! измерении его плотности"
+format "9.9999" initial 0 label "Абсолютная погрешность измерений температуры нефтепродукта при измерении его плотности"
+view-as fill-in size 15  by 1
+
+
+field sr-otnos as decimal column-label "Предел допускаемой относительной! погрешности средства обработки! результатов измерений"
+format "9.999999" initial 0 label "Предел допускаемой относительной погрешности средства обработки результатов измерений"
+view-as fill-in size 15  by 1
+
+
+field sr-temp-line as character column-label "Температурный коэффициент линейного! расширения материала средства! измерения уровня "
+format "X(10)" label "Температурный коэффициент линейного расширения материала средства измерения уровня "
+view-as combo-box list-item-pairs "Сталь","0.0000125",
+                                  "Алюминий","0.000023" inner-lines 2 drop-down-list size-chars 10 by 1
+
+
+field node-code as integer  column-label "Код"
+format ">>>9" label "Код"
+fgcolor RED_COLOR
+
+index pi is unique primary
+node-code
+.
+&if "{2}" = "ds" &then
+
+define dataset sr-izmerenia-ds for {1}.
+
+&endif
+&endif
+
+&if "{2}" = "proc" &then
+
+procedure sr-izmerenia_fill-sr-izm :
+/* заполним таблицу из clob */
+define input parameter p-mode as character no-undo .
+define parameter buffer buf_clob-bind for ub.clob-bind.
+define buffer buf_clob-data for ub.clob-data.
+define variable v-longchar as longchar no-undo .
+define variable glog as logical no-undo .
+case p-mode:
+  when  {&update} then do:
+   find first buf_clob-bind exclusive-lock where
+            buf_clob-bind.resource-type = {&lob-res-ref}
+       and buf_clob-bind.uniq-key-rec = "sr-izmerenia.xml"
+       and buf_clob-bind.field-name = "" no-error.
+
+  end.
+  otherwise do:
+    find first buf_clob-bind no-lock where
+            buf_clob-bind.resource-type = {&lob-res-ref}
+       and buf_clob-bind.uniq-key-rec = "sr-izmerenia.xml"
+       and buf_clob-bind.field-name = "" no-error.
+  end.
+end case.
+if available buf_clob-bind then do:
+  find first buf_clob-data no-lock where
+            buf_clob-data.db-num = buf_clob-bind.db-num
+        and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
+  if available buf_clob-data then do:
+    v-longchar = buf_clob-data.cdata.
+    glog = DATASET sr-izmerenia-ds:HANDLE:read-XML("LONGCHAR"
+                                                  , v-longchar
+                                                  , "EMPTY" /*read-mode*/
+                                                  , ? /*schema-location*/
+                                                  , ? /*override-default-mapping*/
+                                                  , ? /*field-type-mapping*/
+                                                  , "loose" /*verify-schema-mode*/  )  no-error .
+    if error-status:error
+    or not glog then do:
+      MESSAGE
+      "НЕ удается прочитать справочник из БД " skip
+      ERROR-STATUS:GET-MESSAGE(1) SKIP
+      RETURN-VALUE
+      VIEW-AS ALERT-BOX ERROR.
+      UNDO, RETURN ERROR.
+    end.
+  end.
+end.
+end procedure. /* fill-msf */
+
+&endif

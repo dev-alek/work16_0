@@ -1,0 +1,183 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Загрузка тарировочных таблиц !!! (только по ОДНОМУ резервуару в отличие от tarir.p )
+Файл формата:
+код резервуара табуляция высота наполнения (см) табуляция объем наполнения резервуара (литры) табуляция коэффициент вместимости (литры/мм) перевод строки
+
+Автор: Суслов Алексей Юрьевич
+Дата создания: 07/31/07
+Author: Alexey Suslov
+Creation date: 07/31/07
+
+*/
+{ cmp/str-glbl.i }
+
+define input parameter parfile    as character no-undo.
+define input parameter p-obj-type as character no-undo.
+define input parameter p-obj-code as integer   no-undo.
+define input parameter p-pl-code  as integer   no-undo.
+
+define variable v-filename       as character no-undo.
+define variable varstring        as character no-undo.
+define variable varcode          as integer   no-undo.
+define variable varlevel         as integer   no-undo.
+define variable varvolume        as DECIMAL   no-undo.
+define variable varprev-level    as integer   no-undo.
+define variable varprev-volume   as DECIMAL   no-undo.
+define variable varkoeff         as decimal   no-undo.
+
+define temp-table tt-tarir
+   field level   as   integer
+   field volume  as   DECIMAL
+
+   index pi is unique primary
+         level
+         .
+
+define buffer buf_clients  for ub.clients .
+define buffer buf_place    for ub.place .
+define buffer buf_pl-level for ub.pl-level .
+
+define stream str-in.
+
+do
+on error undo, return error return-value :
+   assign
+      v-filename = search(parfile)
+   .
+
+   if v-filename = ? then do:
+      message "Не найден файл " parfile
+      skip "Таблицы не загружены."
+      view-as alert-box error.
+      return error.
+   end.
+
+   if  p-obj-type <> {&shop}
+   and p-obj-type <> {&stock}
+   then do:
+      message "Указан тип объекта " p-obj-type " должен быть указан склад или магазин."
+      skip "Таблицы не загружены."
+      view-as alert-box error.
+      return error.
+   end.
+
+   find first buf_clients
+        where buf_clients.obj-type = p-obj-type
+        and   buf_clients.obj-code = p-obj-code
+        no-lock
+        no-error.
+   if not available buf_clients then do:
+      message "Указан неправильный объект " p-obj-type " " p-obj-code " ."
+      skip "Таблицы не загружены."
+      view-as alert-box error.
+      return error.
+   end.
+
+   find first buf_place
+        where buf_place.obj-type = p-obj-type
+        and   buf_place.obj-code = p-obj-code
+        and   buf_place.pl-code  = p-pl-code
+        no-lock
+        no-error.
+   if not available buf_clients then do:
+      message "Указан неправильный резервуар " p-obj-type " " p-obj-code " " p-pl-code "."
+      skip "Таблицы не загружены."
+      view-as alert-box error.
+      return error.
+   end.
+
+   input stream str-in from VALUE(v-filename).
+   repeat :
+      import stream str-in unformatted varstring.
+      assign
+         varcode   = integer(entry (1, varstring, chr(9)))
+         varlevel  = integer(entry (2, varstring, chr(9)))
+         varvolume = DECIMAL(entry (3, varstring, chr(9)))
+      no-error.
+
+      if error-status:error = no
+      and STRING(varcode) = buf_place.loc1
+      then do:
+            create tt-tarir.
+            assign
+               tt-tarir.level  = varlevel
+               tt-tarir.volume = varvolume
+            .
+      end.
+   end. /* repeat */
+
+   IF NOT CAN-FIND (FIRST tt-tarir) THEN DO:
+      message "В файле нет тарировочной таблицы для резервуара " p-obj-type " " p-obj-code " " p-pl-code " ("  buf_place.loc1 ")."
+      skip "Таблицы не загружены."
+      view-as alert-box error.
+      return.
+   END.
+
+   /*Проверим, что создали корректные тарировочные таблицы*/
+   for each tt-tarir
+       break by tt-tarir.level
+       :
+
+      if first-of (tt-tarir.level) then do:
+      /*
+         if tt-tarir.level <> 0 then do:
+            message "Первый уровень не 0."
+            skip "Во время загрузки тарировочных таблиц были ошибки. Таблицы не загружены."
+            view-as alert-box error.
+            return error.
+         end.
+      */
+      end.
+      else do:
+         if tt-tarir.level <> varprev-level + 1 then do:
+            message "Неверно указаны тарировочные таблицы по резервуару " p-pl-code " уровень " tt-tarir.level " идет после уровня " varprev-level " ."
+            skip "Во время загрузки тарировочных таблиц были ошибки. Таблицы не загружены."
+            view-as alert-box error.
+            return error.
+         end.
+         if tt-tarir.volume <= varprev-level then do:
+            message "Неверно указаны тарировочные таблицы по резервуару " p-pl-code " уровень " tt-tarir.level " объем " tt-tarir.volume " идет после уровня " varprev-level " с объемом " varprev-volume " ."
+            skip "Во время загрузки тарировочных таблиц были ошибки. Таблицы не загружены."
+            view-as alert-box error.
+            return error.
+         end.
+      end.
+      assign
+         varprev-level  = tt-tarir.level
+         varprev-volume = tt-tarir.volume
+      .
+   end. /* each tt-tarir */
+
+   /*Удаляем старые таблицы*/
+   for each  buf_pl-level
+       where buf_pl-level.obj-type = buf_place.obj-type
+       and   buf_pl-level.obj-code = buf_place.obj-code
+       and   buf_pl-level.pl-code  = buf_place.pl-code
+       exclusive-lock
+       on error undo, return error return-value
+       :
+      delete buf_pl-level.
+   end.
+
+   /*Создаем новые*/
+   for each tt-tarir
+   :
+   create buf_pl-level.
+   assign
+      buf_pl-level.obj-type = buf_place.obj-type
+      buf_pl-level.obj-code = buf_place.obj-code
+      buf_pl-level.pl-code  = buf_place.pl-code
+      buf_pl-level.pl-level = tt-tarir.level
+      buf_pl-level.pl-qnty  = tt-tarir.volume.
+   end.
+end. /* do on error */
+
+message "Импорт завершен успешно."
+view-as alert-box.
