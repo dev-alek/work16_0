@@ -32,7 +32,6 @@ define variable vss-description as character no-undo init "Отчет Почасовая реали
 { gbl/waitfram.i }
 { rep/lkp-font.i }
 
-
 define variable g#report-num  as integer no-undo .
 run get-report-num in my-handle (output g#report-num).
 
@@ -219,7 +218,7 @@ on error undo, return error return-value
       ,output v-par-type
       ,INPUT-OUTPUT table-handle v-tth
                     ) no-error.  
-                    
+
   if error-status :error
      or v-par-val = "":U
   then do:
@@ -234,19 +233,21 @@ on error undo, return error return-value
   else do:
   assign
 /*  v-par-val = "1519510,1519511,1519512,1519513,105108,1513629,1517544,1519593,1513665,1520800":U непонятно почему тут это раньше было */
-    v-num     = num-entries(v-par-val).
+    v-num = num-entries(v-par-val).
+
   end.
   delete object v-tth.
-  if v-num < 10 then do:
-    message
-      vss-workfile vss-revision vss-description skip
-      "Параметр " + {&par-name} + " содержит неверное количество кодов топлива." skip
-      "В параметре должно быть задано 10 видов топлива." skip
-      "Отчет не может быть сформирован."
-      view-as alert-box error.
-    undo, return error.
-  end.
-  do v-i = 1 to 10 :
+/*  if v-num < 10 then do:                                                             */
+/*    message                                                                          */
+/*      vss-workfile vss-revision vss-description skip                                 */
+/*      "Параметр " + {&par-name} + " содержит неверное количество кодов топлива." skip*/
+/*      "В параметре должно быть задано 10 видов топлива." skip                        */
+/*      "Отчет не может быть сформирован."                                             */
+/*      view-as alert-box error.                                                       */
+/*    undo, return error.                                                              */
+/*  end.                                                                               */
+
+  do v-i = 1 to v-num:
     assign
       v-gds-code =  integer( entry( v-i , v-par-val ) )
     .
@@ -301,7 +302,7 @@ on error undo, return error return-value
         buf_tt-fuel-goods.b-code    = buf_bar-code.b-code
       .
     end.
-  end. /* do v-i = 1 to 10  */
+  end. /* do v-i = 1 to v-num: */
 
 end. /* main do */
 end procedure. /* load-param-ptrl-gds */
