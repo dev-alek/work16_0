@@ -3289,6 +3289,8 @@ end.
 &global-define attr-bge-incr-last-shift-date '{&bef-attr-bge-incr-last-shift-date}':U
 &global-define bef-attr-bge-incr-last-shift-num bge-incr-last-shift-num
 &global-define attr-bge-incr-last-shift-num '{&bef-attr-bge-incr-last-shift-num}':U
+&global-define bef-attr-bge-incr-cur bge-incr-cur
+&global-define attr-bge-incr-cur '{&bef-attr-bge-incr-cur}':U
 &global-define bef-attr-bge-sap-sng-last-shift bge-sap-sng-last-shift
 &global-define attr-bge-sap-sng-last-shift '{&bef-attr-bge-sap-sng-last-shift}':U
 &global-define bef-attr-egrip-date egrip-date
@@ -6470,7 +6472,7 @@ end.
 &global-define alc-check-price-full '{&bef-alc-check-price-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: f0e393ce9a27, 3, test  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7732,7 +7734,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: aea5316774be, 0, rls ':U
+&global-define str-glbl4_vss-revision 'Revision':U
 &global-define str-glbl5_vss-revision 'Revision: 199ddf50f4e5, 2, test ':U
-&global-define str-glblt_vss-revision 'Revision':U
+&global-define str-glblt_vss-revision 'Revision: f0e393ce9a27, 3, test ':U
 &endif
