@@ -7189,12 +7189,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-gds-ref_is-scgb '{&bef-attr-gds-ref_is-scgb}':U
 &global-define bef-attr-gds-ref_obj gds-ref_obj
 &global-define attr-gds-ref_obj '{&bef-attr-gds-ref_obj}':U
-&global-define bef-prop-list-attr-gds-ref_obj dfltggrp,gdsscrvw
+&global-define bef-prop-list-attr-gds-ref_obj dfltggrp,gdsscrvw,chg-bcod
 &global-define prop-list-attr-gds-ref_obj '{&bef-prop-list-attr-gds-ref_obj}':U
 &global-define bef-attr-gds-ref_obj_dfltggrp dfltggrp
 &global-define attr-gds-ref_obj_dfltggrp '{&bef-attr-gds-ref_obj_dfltggrp}':U
 &global-define bef-attr-gds-ref_obj_gdsscrvw gdsscrvw
 &global-define attr-gds-ref_obj_gdsscrvw '{&bef-attr-gds-ref_obj_gdsscrvw}':U
+&global-define bef-attr-gds-ref_obj_chg-bcod chg-bcod
+&global-define attr-gds-ref_obj_chg-bcod '{&bef-attr-gds-ref_obj_chg-bcod}':U
 &global-define bef-attr-dc-ref dc-ref
 &global-define attr-dc-ref '{&bef-attr-dc-ref}':U
 &global-define bef-prop-list-attr-dc-ref l-zeros
@@ -7731,6 +7733,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl2_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: aea5316774be, 0, rls ':U
-&global-define str-glbl5_vss-revision 'Revision':U
+&global-define str-glbl5_vss-revision 'Revision: 199ddf50f4e5, 2, test ':U
 &global-define str-glblt_vss-revision 'Revision':U
 &endif
