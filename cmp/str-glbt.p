@@ -104,7 +104,7 @@ attr-cd-inf-send }
 /*Параметры работы с весами*/
 { cmp/cr-prep.i 1 attr-scale-inf                scale-inf                 " " scale-inf }
 { cmp/cr-prepc.i 1 prop-list-attr-scale-inf
-"scales-type,scales-pr,scallist,sclin-ld"
+"scales-type,scales-pr,scallist,sclin-ld,noauto-scls"
 attr-scale-inf }
 
 /*Параметры POS IBM*/

@@ -913,6 +913,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dct-proc-
 { cmp/cr-prep.i 1 goods-proc_rest-update       rest-update       "Изменение остатка"                rest-update          "Rest Update"           }
 { cmp/cr-prep.i 1 goods-proc_goods-cd-send     goods-cd-send     "Передача товаров на кассу"        goods-cd-send        "Send to POS"           }
 { cmp/cr-prep.i 1 goods-proc_goods-batchwork   goods-batchwork   "Работа в атоматическом режиме"    goods-batchwork      "Auto Mode"             }
+{ cmp/cr-prep.i 1 goods-proc_add-good-to-asm   add-good-to-asm   "Добавление в асм. матрицу"        add-good-to-asm      "Add to AsM"            }
+{ cmp/cr-prep.i 1 goods-proc_del-good-from-asm del-good-from-asm "Удаление из асм. матрицы"         del-good-from-asm    "Remove from AsM"       }
 
 
 &glob goods-proc-list '{&bef-goods-proc_gdsadd}~
@@ -931,6 +933,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dct-proc-
 ,{&bef-goods-proc_rest-update}~
 ,{&bef-goods-proc_goods-cd-send}~
 ,{&bef-goods-proc_goods-batchwork}~
+,{&bef-goods-proc_add-good-to-asm}~
+,{&bef-goods-proc_del-good-from-asm}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define goods-proc-list {&goods-proc-list}" ).
@@ -951,6 +955,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define goods-pro
 ,{&bef-goods-proc_rest-update-full}~
 ,{&bef-goods-proc_goods-cd-send-full}~
 ,{&bef-goods-proc_goods-batchwork-full}~
+,{&bef-goods-proc_add-good-to-asm}~
+,{&bef-goods-proc_del-good-from-asm}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define goods-proc-list-full {&goods-proc-list-full}" ).
