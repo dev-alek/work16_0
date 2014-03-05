@@ -42,6 +42,12 @@ on stop   undo, return error
 on endkey undo, return error :
   delete locb-ord-rcv-line-attr.
 end.
+for each locb-ord-rcv-attr
+on error  undo, return error
+on stop   undo, return error
+on endkey undo, return error :
+  delete locb-ord-rcv-attr.
+end.
 
 for each locb-ord-dtl-rcv
 on error  undo, return error
