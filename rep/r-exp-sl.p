@@ -157,7 +157,8 @@ on error undo, return error
    output stream out-stream to value(v-file-name-mapping + ".txt") .
    put stream out-stream unformatted
    "Gds-Code"   {&tabulation}
-   "Bar-Code"     {&new-line}.
+   "Bar-Code" {&tabulation}
+   "Qnty" {&new-line}.
 
 /*  output stream StreamLog to value(log-file-name) append.*/
 
@@ -178,7 +179,8 @@ on error undo, return error
            
            put stream out-stream unformatted
                 buf_bar-code.gds-code {&tabulation}
-                    buf_prod-bc.b-str     {&new-line}.
+                buf_goods.qnty-cart {&tabulation}
+                buf_prod-bc.b-str {&new-line}.
            
            end. /* for each buf_prod-bc */
            
@@ -186,6 +188,7 @@ on error undo, return error
 
                 put stream out-stream unformatted
                     buf_bar-code.gds-code {&tabulation}
+                buf_goods.qnty-cart {&tabulation}
                     buf_bar-code.b-code     {&new-line}.
                     
        end. /* for each buf_bar-code */
@@ -305,13 +308,13 @@ on error undo, return error
                    buf_tt-line.src-code  = buf_chk-gds.src-code
                    buf_tt-line.b-code    = buf_chk-gds.b-code
                    buf_tt-line.summ      = (if (lookup(string(buf_chk-doc.chk-type), {&sale-out-receipt-codes}) > 0) then buf_chk-gds.sum-base else buf_chk-gds.sum-base * (-1))
-                   buf_tt-line.qnty      = (if (lookup(string(buf_chk-doc.chk-type), {&sale-out-receipt-codes}) > 0) then buf_chk-gds.src-qnty else buf_chk-gds.src-qnty * (-1)).
+                   buf_tt-line.qnty      = (if (lookup(string(buf_chk-doc.chk-type), {&sale-out-receipt-codes}) > 0) then buf_chk-gds.doc-qnty else buf_chk-gds.doc-qnty * (-1)).
              end. /* if not available tt-line */
 
              else do:
             assign
                    buf_tt-line.summ = buf_tt-line.summ + (if (lookup(string(buf_chk-doc.chk-type), {&sale-out-receipt-codes}) > 0) then buf_chk-gds.sum-base else buf_chk-gds.sum-base * (-1))
-                   buf_tt-line.qnty = buf_tt-line.qnty + (if (lookup(string(buf_chk-doc.chk-type), {&sale-out-receipt-codes}) > 0) then buf_chk-gds.src-qnty else buf_chk-gds.src-qnty * (-1)).
+                   buf_tt-line.qnty = buf_tt-line.qnty + (if (lookup(string(buf_chk-doc.chk-type), {&sale-out-receipt-codes}) > 0) then buf_chk-gds.doc-qnty else buf_chk-gds.doc-qnty * (-1)).
              end. /* else do */
 
          end. /*  for each buf_chk-gds */
