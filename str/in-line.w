@@ -249,6 +249,8 @@ define variable v-value-integer             as   integer                     no-
 define variable v-value-logical             as   logical                     no-undo.
 define variable v-vat-goods                 as   logical                     no-undo.
 define variable v-round-vat-sum             as logical                       no-undo .
+define variable v-goods-ms-base             as decimal format ">>,>>9.999"   no-undo .
+
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 98 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
@@ -372,6 +374,7 @@ define frame d-in-line
   b-choose-last-date                   AT ROW 2    COL 83
   tt-fr-doc-line.last-num-day          at row 2    col 86    format "->>>>9" no-label
   tt-fr-doc-line.cli-art               at row 3    col 20    colon-aligned label "Артикул поставщика"   format "x(16)"
+  v-goods-ms-base                      at row 3    col 42    label "Объем штуки"                                               fgcolor 4  
 
   tt-fr-doc-line.alpha1                at row 3    col 77    colon-aligned label "Страна"             view-as text    size 4    by 0.7
   r-country                            at row 3    col 83
@@ -457,6 +460,7 @@ with keep-tab-order view-as dialog-box
          default-button b-save
          cancel-button  b-quit
 .
+
 
 { gbl/ed_date.i
   tt-fr-doc-line.last-date
@@ -3498,6 +3502,7 @@ procedure cr-tt-fr-doc-line:
     tt-fr-doc-line.prod-type     = buf_goods.prod-type
     tt-fr-doc-line.prod-code     = buf_goods.prod-code
     tt-fr-doc-line.gds-name      = buf_goods.gds-name
+    v-goods-ms-base              = buf_goods.ms-base
     tt-fr-doc-line.unit-base     = buf_goods.unit-base
     tt-fr-doc-line.unit-type     = ub.units.type
     tt-fr-doc-line.prt-root      = buf_goods.prt-root
@@ -3683,6 +3688,7 @@ define variable v-type as character no-undo .
     tt-fr-doc-line.prod-type
     tt-fr-doc-line.prod-code
     tt-fr-doc-line.gds-name
+    v-goods-ms-base
     tt-fr-doc-line.obj-name
     tt-fr-doc-line.unit-base
     tt-fr-doc-line.unit-cli
