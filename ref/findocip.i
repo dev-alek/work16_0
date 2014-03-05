@@ -2141,6 +2141,7 @@ procedure proc-update-sum-vat-chr :
 define input-output parameter p-start as integer no-undo .
 define variable v-sum-vat like ub.fin-doc-tax.sum-vat-line-doc no-undo .
 define variable v-sum-vat-chr as character no-undo .
+define variable v-each-vat-chr as character no-undo. /* Сюда размещаем информацию о каждом налоге: его процент и значение (не сумму всех налогов, как было до этой задачи!!!) Арн. #3076. 2014г */
 
 &if "{&doc-type}" = "income-cash" or  "{&doc-type}" = "expense-cashless" &then
 
@@ -2151,26 +2152,39 @@ define variable v-sum-vat-chr as character no-undo .
     for each tt0-fin-doc-tax no-lock where
             tt0-fin-doc-tax.fin-doc-code = tt-fin-doc.fin-doc-code
         AND tt0-fin-doc-tax.host-code = tt-fin-doc.host-code:
-      assign
-      v-sum-vat = v-sum-vat +
-                  (if tt0-fin-doc-tax.with-vat then tt0-fin-doc-tax.sum-vat-line-doc else 0)
-      .
-    end.
+/*      assign*/
+        do:
+            if tt0-fin-doc-tax.with-vat then /* Если tt0-fin-doc-tax.with-vat - существует, то: */
+                v-each-vat-chr = v-each-vat-chr +
+                substitute (" &1% = &2;"
+                , string(tt0-fin-doc-tax.vat-pc)             /* Берём процент одного налога (из возможных нескольких, по порядку). */
+                , string(truncate(tt0-fin-doc-tax.sum-vat-line-doc, 0)) + {&space-char} +  "{&abbr_rub}." + {&space-char} +     /* Берём сумму одного налога (из возможных нескольких, по порядку и вставляем обвязку: руб, коп.*/
+                (if tt0-fin-doc-tax.sum-vat-line-doc <> truncate(tt0-fin-doc-tax.sum-vat-line-doc, 0)
+                    then (string(100 * round(tt0-fin-doc-tax.sum-vat-line-doc - truncate(tt0-fin-doc-tax.sum-vat-line-doc, 0), 2))  + {&space-char} + "{&abbr_kop}.")
+                    else "":U)).
+            v-sum-vat = v-sum-vat +
+            (if tt0-fin-doc-tax.with-vat then tt0-fin-doc-tax.sum-vat-line-doc else 0).
+/*      .*/
+        end.
+    end. /* for each tt0-fin-doc-tax no-lock where */
     if tt-fin-doc.curr-code = 0 then do:
-      assign
-      v-sum-vat-chr = "в том числе НДС" + {&space-char} +
-                      string(truncate(v-sum-vat, 0)) + {&space-char} +  "{&abbr_rub}." + {&space-char} +
-                      (if v-sum-vat <> truncate(v-sum-vat, 0)
-                      then (string(100 * round(v-sum-vat - truncate(v-sum-vat, 0), 2))  + {&space-char} + "{&abbr_kop}.")
-                      else "":U)
-      .
-    end.
+/*      assign*/
+      do:
+        v-sum-vat-chr = "в том числе НДС" + right-trim (v-each-vat-chr , ";").
+/*      v-sum-vat-chr = "в том числе НДС" + {&space-char} +                                                              */
+/*                    string(truncate(v-sum-vat, 0)) + {&space-char} +  "{&abbr_rub}." + {&space-char} +                 */
+/*                    (if v-sum-vat <> truncate(v-sum-vat, 0)                                                            */
+/*                    then (string(100 * round(v-sum-vat - truncate(v-sum-vat, 0), 2))  + {&space-char} + "{&abbr_kop}.")*/
+/*                    else "":U)                                                                                         */
+      end.
+/*      .*/
+    end. /* if tt-fin-doc.curr-code = 0 then do: */
     else do:
       assign
       v-sum-vat-chr = "в том числе НДС" + {&space-char} +
                       string(v-sum-vat)
       .
-    end.
+    end. /* else do: */
     &if "{&doc-type}" = "income-cash" &then
       if p-start = 0 then
       assign
@@ -2186,11 +2200,11 @@ define variable v-sum-vat-chr as character no-undo .
                                   else ({&comma-char} + {&space-char} )
                                   ) +
                                   v-sum-vat-chr.
-      end.
+      end. /* if num-entries(tt-fin-doc.including, "@":U) < 2 and p-start = 2 then do: */
       if num-entries(tt-fin-doc.including, "@":U) > 1 then do:
         assign
         entry(2, tt-fin-doc.including, "@":U) = {&comma-char} + {&space-char}  + v-sum-vat-chr.
-      end.
+      end. /* if num-entries(tt-fin-doc.including, "@":U) > 1 then do: */
       display
       tt-fin-doc.including
       with frame {&frame-name} .
@@ -2210,20 +2224,20 @@ define variable v-sum-vat-chr as character no-undo .
                                   else ({&comma-char} + {&space-char} )
                                   ) +
                                   v-sum-vat-chr.
-      end.
+      end. /*  if num-entries(tt-fin-doc.naznach-plat, "@":U) < 2 and p-start = 2 then do: */
       if num-entries(tt-fin-doc.naznach-plat, "@":U) > 1 then do:
         assign
         entry(2, tt-fin-doc.naznach-plat, "@":U) = {&comma-char} + {&space-char}  + v-sum-vat-chr.
-      end.
+      end. /* if num-entries(tt-fin-doc.naznach-plat, "@":U) > 1 then do: */
       display
       tt-fin-doc.naznach-plat
       with frame {&frame-name} .
     &endif
 
    if p-start = 2 then p-start = 0.
-  end.
+  end. /* do on error undo, return error: */
 &endif
-end procedure. /* proc-update-naznach-plat */
+end procedure. /* proc-update-sum-vat-chr */
 
 
 /* конец части &if "{&action}" = "triggers" &then*/
