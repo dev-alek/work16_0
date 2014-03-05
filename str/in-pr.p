@@ -858,14 +858,10 @@ if not ( par-pr-parex = "yes" and
       if not can-find (first ub.price-list where ub.price-list.doc-num = l-d-n no-lock ) then do:
             message
           "Обратите ВНИМАНИЕ !!! В документе  переоценки " l-d-n " нет ни одной строки. " skip
-          "устанавливаем статус " caps({&g___new})
+          "документ удаляется " caps({&g___new})
             view-as alert-box .
 
-          assign
-            ub.price-doc.fact-date  = ?
-            ub.price-doc.fact-time  = ?
-            .
-
+          undo cre-pr, return.
       end.
       assign
         v-rest-last =  ub.price-doc.rest-last
