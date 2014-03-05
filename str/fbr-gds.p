@@ -339,7 +339,7 @@ on error undo, return error
         or (  ( v-old-price-sum-vat-base   <> buf_fbr-line.price-sum-vat-base ) )
         or (  ( v-old-price-sum-vat-rubl   <> buf_fbr-line.price-sum-vat-rubl ) )
         then do:        /* раскидываем изменённую цену по компонентам (разделка) или вычисляем приход (производство) */
-            define buffer buf_recipe        for recipe.
+            define buffer buf_fbr-recipe        for fbr-recipe.
 
             if fbr-doc.is-free = yes
             then do:
@@ -349,11 +349,12 @@ on error undo, return error
                 ).
             end.        /* if fbr-doc.is-free = yes */
             else do:
-                find first buf_recipe no-lock
-                     where buf_recipe.recipe-code = buf_fbr-line.recipe-code
+                find first buf_fbr-recipe no-lock
+                     where buf_fbr-recipe.recipe-code = buf_fbr-line.recipe-code
+                     and buf_fbr-recipe.doc-code      = ub.fbr-doc.doc-code 
                 .
-                if buf_recipe.recipe-type <> {&dressing}
-                and ( buf_recipe.recipe-type <> {&gathering}
+                if buf_fbr-recipe.recipe-type <> {&dressing}
+                and ( buf_fbr-recipe.recipe-type <> {&gathering}
                     or buf_fbr-line.trn-type  <> {&income} )
                 then do:        /* Для разделки и разукомплектации надо раскидывать измененную цену по компонентам */
                     run calc-income-fbr-line in this-procedure (
