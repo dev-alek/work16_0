@@ -47,7 +47,7 @@ def var h-findrec-program   as handle no-undo .
 def var h-loadlock-program   as handle no-undo .
 
 DEFINE TEMP-TABLE temp-Lock NO-UNDO
-  FIELD Lock_RecID     AS RECID     LABEL "RecId":u
+  FIELD Lock_RecID     AS RECID     LABEL "RecId":u FORMAT "->>>>>>>>>>>>>>>9"
   FIELD Lock_TableName AS CHARACTER LABEL "Table Name":u FORMAT "x(30)"
   FIELD Lock_UserName  AS CHARACTER LABEL "User Name":u  format "x(20)"
   FIELD Lock_Flags     AS CHARACTER LABEL "Flags":u

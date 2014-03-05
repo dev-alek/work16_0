@@ -2415,7 +2415,7 @@ procedure lib-trn3_getwtqty :
         undo, return error substitute( 'lib-trn3_getwtqty: не найден документ "&1"', p-doc-code ).
       end.
 
-      find first buf_goods no-lock
+      find first buf_goods share-lock /* Для многопоточной выгрузки в xml */
         where buf_goods.artic     = p-artic
           and buf_goods.prod-type = p-prod-type
           and buf_goods.prod-code = p-prod-code
@@ -2426,7 +2426,8 @@ procedure lib-trn3_getwtqty :
       assign
         rec-goods = recid( buf_goods )
       .
-      find first buf_goods exclusive-lock where recid( buf_goods ) = rec-goods.
+
+/*      find first buf_goods no-lock where recid( buf_goods ) = rec-goods.*/ /* Для многопоточной выгрузки в xml */
 
       find buf_doc-line        no-lock where
             buf_doc-line.doc-code  = p-doc-code  and

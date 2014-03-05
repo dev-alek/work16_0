@@ -634,6 +634,20 @@ end.
 &scop manual-edit-attr-bge-incr-last-shift-num  0
 &scop batch-edit-attr-bge-incr-last-shift-num  0
 
+
+/* Выгружается ли смена в данный момент */
+&scop type-attr-bge-incr-cur {&type-log}
+&scop format-attr-bge-incr-cur "+/"
+&scop label-attr-bge-incr-cur "Выгружается ли смена в данный момент"
+&scop tooltip-attr-bge-incr-cur "Выгружается ли смена в данный момент"
+&scop user-can-edit-attr-bge-incr-cur  false
+&scop output-display-attr-bge-incr-cur  false
+&scop other-attr-bge-incr-cur '':u
+&scop news-attr-bge-incr-cur false
+&scop manual-edit-attr-bge-incr-cur  0
+&scop batch-edit-attr-bge-incr-cur  0
+
+
 /* Дата и номер последней выгруженной смены в SAP ECC 6.0 ОАО "Сургутнефтегаз" */
 &scop type-attr-bge-sap-sng-last-shift {&type-char}
 &scop format-attr-bge-sap-sng-last-shift "X(13)"
@@ -1009,6 +1023,8 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-bge-incr-last-shift-num
       {&attr-temp-full-code}
+      &scop attr-code attr-bge-incr-cur
+      {&attr-temp-full-code}
       &scop attr-code attr-bge-sap-sng-last-shift
       {&attr-temp-full-code}      
       &scop attr-code attr-egrip-date
@@ -1149,6 +1165,8 @@ procedure clntattr-tooltip :
       &scop attr-code attr-bge-incr-last-shift-date
       {&attr-temp-code}
       &scop attr-code attr-bge-incr-last-shift-num
+      {&attr-temp-code}
+      &scop attr-code attr-bge-incr-cur
       {&attr-temp-code}
       &scop attr-code attr-bge-sap-sng-last-shift
       {&attr-temp-code}      
@@ -1497,6 +1515,8 @@ procedure clntattr-news :
       &scop attr-code attr-bge-incr-last-shift-date
       {&attr-news-code}
       &scop attr-code attr-bge-incr-last-shift-num
+      {&attr-news-code}
+      &scop attr-code attr-bge-incr-cur
       {&attr-news-code}
       &scop attr-code attr-bge-sap-sng-last-shift
       {&attr-news-code} 
