@@ -1,11 +1,11 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME D-FBR-DOC
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS D-FBR-DOC 
 /*
 
 $Revision$
@@ -107,11 +107,22 @@ define variable v-base                      as logical  init no     no-undo.
 
 define new shared buffer flt-gds for ub.goods.                                /* для режима ТОВАР */
 
+define variable v-value-character as character no-undo .
+define variable v-value-date      as date      no-undo .
+define variable v-value-decimal   as decimal   no-undo .
+define variable v-value-integer   as integer   no-undo .
+define variable v-value-logical   as logical   no-undo .
+define variable v-tth             as handle    no-undo .
+define variable v-back-date       as logical   no-undo . /* включено ли закрытие задним числом */
+define variable v-back-date-type  as character no-undo .
+
+define variable is-shift-on as logical no-undo. /* включены ли смены на объекте */
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -126,11 +137,11 @@ define new shared buffer flt-gds for ub.goods.                                /*
 &Scoped-define INTERNAL-TABLES buf_comp_fbr-line buf_ingr_fbr-line
 
 /* Definitions for BROWSE br-comp                                       */
-&Scoped-define FIELDS-IN-QUERY-br-comp buf_comp_fbr-line.artic get-goods-name(recid(buf_comp_fbr-line)) @ comp-name buf_comp_fbr-line.trn-type get-line-OK(recid(buf_comp_fbr-line)) @ comp-OK buf_comp_fbr-line.fact-qnty get-unit-base(recid(buf_comp_fbr-line)) @ comp-unit buf_comp_fbr-line.is-calc buf_comp_fbr-line.price-sale buf_comp_fbr-line.fix-cost buf_comp_fbr-line.price-base buf_comp_fbr-line.price-sum-base buf_comp_fbr-line.price-sum-vat-base buf_comp_fbr-line.price-rubl buf_comp_fbr-line.price-sum-rubl buf_comp_fbr-line.price-sum-vat-rubl buf_comp_fbr-line.rsrv-qnty get-prod-ref(recid(buf_comp_fbr-line)) @ comp-prod
+&Scoped-define FIELDS-IN-QUERY-br-comp buf_comp_fbr-line.artic get-goods-name(recid(buf_comp_fbr-line)) @ comp-name buf_comp_fbr-line.trn-type get-line-OK(recid(buf_comp_fbr-line)) @ comp-OK buf_comp_fbr-line.fact-qnty get-unit-base(recid(buf_comp_fbr-line)) @ comp-unit buf_comp_fbr-line.is-calc buf_comp_fbr-line.price-sale buf_comp_fbr-line.fix-cost buf_comp_fbr-line.price-base buf_comp_fbr-line.price-sum-base buf_comp_fbr-line.price-sum-vat-base buf_comp_fbr-line.price-rubl buf_comp_fbr-line.price-sum-rubl buf_comp_fbr-line.price-sum-vat-rubl buf_comp_fbr-line.rsrv-qnty get-prod-ref(recid(buf_comp_fbr-line)) @ comp-prod   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-comp buf_comp_fbr-line.is-calc ~
 buf_comp_fbr-line.fix-cost ~
 buf_comp_fbr-line.price-rubl ~
-buf_comp_fbr-line.price-sum-vat-rubl
+buf_comp_fbr-line.price-sum-vat-rubl   
 &Scoped-define ENABLED-TABLES-IN-QUERY-br-comp buf_comp_fbr-line
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br-comp buf_comp_fbr-line
 &Scoped-define SELF-NAME br-comp
@@ -141,7 +152,7 @@ buf_comp_fbr-line.price-sum-vat-rubl
 
 
 /* Definitions for BROWSE br-ingr                                       */
-&Scoped-define FIELDS-IN-QUERY-br-ingr buf_ingr_fbr-line.artic buf_ingr_fbr-line.recipe-code get-goods-name(recid(buf_ingr_fbr-line)) @ ingr-name buf_ingr_fbr-line.trn-type get-line-OK(recid(buf_comp_fbr-line)) @ ingr-OK buf_ingr_fbr-line.fact-qnty get-unit-base(recid(buf_comp_fbr-line)) @ ingr-unit buf_ingr_fbr-line.is-calc buf_ingr_fbr-line.price-sale buf_ingr_fbr-line.fix-cost buf_ingr_fbr-line.coeff-waste buf_ingr_fbr-line.coeff-value get-netto-qnty(recid(buf_comp_fbr-line)) @ ingr-netto buf_ingr_fbr-line.price-base buf_ingr_fbr-line.price-sum-base buf_ingr_fbr-line.price-sum-vat-base buf_ingr_fbr-line.price-rubl buf_ingr_fbr-line.price-sum-rubl buf_ingr_fbr-line.price-sum-vat-rubl buf_ingr_fbr-line.rsrv-qnty get-prod-ref(recid(buf_comp_fbr-line)) @ ingr-prod
+&Scoped-define FIELDS-IN-QUERY-br-ingr buf_ingr_fbr-line.artic buf_ingr_fbr-line.recipe-code get-goods-name(recid(buf_ingr_fbr-line)) @ ingr-name buf_ingr_fbr-line.trn-type get-line-OK(recid(buf_comp_fbr-line)) @ ingr-OK buf_ingr_fbr-line.fact-qnty get-unit-base(recid(buf_comp_fbr-line)) @ ingr-unit buf_ingr_fbr-line.is-calc buf_ingr_fbr-line.price-sale buf_ingr_fbr-line.fix-cost buf_ingr_fbr-line.coeff-waste buf_ingr_fbr-line.coeff-value get-netto-qnty(recid(buf_comp_fbr-line)) @ ingr-netto buf_ingr_fbr-line.price-base buf_ingr_fbr-line.price-sum-base buf_ingr_fbr-line.price-sum-vat-base buf_ingr_fbr-line.price-rubl buf_ingr_fbr-line.price-sum-rubl buf_ingr_fbr-line.price-sum-vat-rubl buf_ingr_fbr-line.rsrv-qnty get-prod-ref(recid(buf_comp_fbr-line)) @ ingr-prod   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-ingr buf_ingr_fbr-line.is-calc ~
 buf_ingr_fbr-line.fix-cost ~
 buf_ingr_fbr-line.fact-qnty ~
@@ -149,7 +160,7 @@ buf_ingr_fbr-line.price-sale ~
 buf_ingr_fbr-line.price-base ~
 buf_ingr_fbr-line.price-rubl ~
 buf_ingr_fbr-line.price-sum-vat-base ~
-buf_ingr_fbr-line.price-sum-vat-rubl
+buf_ingr_fbr-line.price-sum-vat-rubl   
 &Scoped-define ENABLED-TABLES-IN-QUERY-br-ingr buf_ingr_fbr-line
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br-ingr buf_ingr_fbr-line
 &Scoped-define SELF-NAME br-ingr
@@ -163,22 +174,22 @@ buf_ingr_fbr-line.price-sum-vat-rubl
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-FIELDS fbr-recipe.recipe-code ~
-fbr-recipe-gds.is-waste fbr-recipe.recipe-name fbr-recipe.qnty
+fbr-recipe-gds.is-waste fbr-recipe.recipe-name fbr-recipe.qnty 
 &Scoped-define ENABLED-TABLES fbr-recipe fbr-recipe-gds
 &Scoped-define FIRST-ENABLED-TABLE fbr-recipe
 &Scoped-define SECOND-ENABLED-TABLE fbr-recipe-gds
 &Scoped-Define ENABLED-OBJECTS br-comp br-ingr fi-pay-code b-exit b-prev ~
 b-next b-rsrv b-gds b-parts out-code r-outs obj-price r-price b-help ~
 b-recipe b-lkp b-add b-chg b-del rs-one-all obj-fbroperator r-fbroperator ~
-r-pay
+r-pay shift-sel 
 &Scoped-Define DISPLAYED-FIELDS fbr-recipe.recipe-code ~
 fbr-recipe.recipe-type fbr-recipe-gds.is-waste fbr-recipe.recipe-name ~
-fbr-recipe.qnty
+fbr-recipe.qnty 
 &Scoped-define DISPLAYED-TABLES fbr-recipe fbr-recipe-gds
 &Scoped-define FIRST-DISPLAYED-TABLE fbr-recipe
 &Scoped-define SECOND-DISPLAYED-TABLE fbr-recipe-gds
 &Scoped-Define DISPLAYED-OBJECTS fi-pay-code fi-pay-type-name out-code ~
-obj-price rs-one-all effect obj-fbroperator
+obj-price rs-one-all effect obj-fbroperator fact-date shift 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -189,35 +200,35 @@ obj-price rs-one-all effect obj-fbroperator
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-goods-name D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-goods-name D-FBR-DOC 
 FUNCTION get-goods-name RETURNS CHARACTER
   ( p-fbr-line-recid AS RECID )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-line-OK D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-line-OK D-FBR-DOC 
 FUNCTION get-line-OK RETURNS logical
   ( p-fbr-line-recid AS RECID /* buffer buf_fbr-line for ub.fbr-line */)  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-netto-qnty D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-netto-qnty D-FBR-DOC 
 FUNCTION get-netto-qnty RETURNS DECIMAL
   ( p-fbr-line-recid AS RECID /* buffer buf_fbr-line for ub.fbr-line */)  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-prod-ref D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-prod-ref D-FBR-DOC 
 FUNCTION get-prod-ref RETURNS CHARACTER
   ( p-fbr-line-recid AS RECID /* buffer buf_fbr-line for ub.fbr-line*/ )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-unit-base D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-unit-base D-FBR-DOC 
 FUNCTION get-unit-base RETURNS CHARACTER
   (  p-fbr-line-recid AS RECID /*buffer buf_fbr-line for ub.fbr-line*/ )  FORWARD.
 
@@ -230,171 +241,190 @@ FUNCTION get-unit-base RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-DEFINE MENU m-add
+DEFINE MENU m-add 
        MENU-ITEM m-rcp-add      LABEL "Товар с &рецептом"
        MENU-ITEM m-all-add      LABEL "Товары по в&сем связанным рецептам"
        MENU-ITEM m-comp-add     LABEL "Товар без рецепта в &верхний список"
        MENU-ITEM m-ingr-add     LABEL "Товар без рецепта в &нижний список".
 
-DEFINE MENU m-del
+DEFINE MENU m-del 
        MENU-ITEM m-rcp-del      LABEL "Товар с &рецептом"
        MENU-ITEM m-all-del      LABEL "Товары по в&сем связанным рецептам"
        MENU-ITEM m-all-doc-del  LABEL "Вс&е товары документа"
        MENU-ITEM m-comp-del     LABEL "Товар без рецепта в &верхнем списке"
        MENU-ITEM m-ingr-del     LABEL "Товар без рецепта в &нижнем списке".
 
-DEFINE MENU m-outs
-       MENU-ITEM m-sale         LABEL "&Продажа"
-       MENU-ITEM m-doc          LABEL "&Накладная"
-       MENU-ITEM m-ord          LABEL "&Заказ" .
+DEFINE MENU m-outs 
+       MENU-ITEM m-sale         LABEL "&Продажа"      
+       MENU-ITEM m-doc          LABEL "&Накладная"    
+       MENU-ITEM m-ord          LABEL "&Заказ"        .
 
-DEFINE MENU POPUP-MENU-b-rsrv
+DEFINE MENU POPUP-MENU-b-rsrv 
        MENU-ITEM m-doc-rsrv     LABEL "По всему &документу"
        MENU-ITEM m-rcp-rsrv     LABEL "По текущему &рецепту".
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить"
+DEFINE BUTTON b-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1 TOOLTIP "Добавление строк по рецепту (или без него)".
 
-DEFINE BUTTON b-calc-comp
-     LABEL "С&ост"
+DEFINE BUTTON b-calc-comp 
+     LABEL "С&ост" 
      SIZE 10 BY 1 TOOLTIP "Расчет полученного товара от строк ингредиентов по рецепту".
 
-DEFINE BUTTON b-calc-ingr
-     LABEL "Ин&гр"
+DEFINE BUTTON b-calc-ingr 
+     LABEL "Ин&гр" 
      SIZE 10 BY 1 TOOLTIP "Расчет строк ингредиентов от полученного товара по рецепту".
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1 TOOLTIP "Изменение строки составного товара".
 
-DEFINE BUTTON b-del
-     LABEL "&Удалить"
+DEFINE BUTTON b-del 
+     LABEL "&Удалить" 
      SIZE 10 BY 1 TOOLTIP "Удаление строк по рецепту (или без него)".
 
-DEFINE BUTTON b-exit
-     LABEL "&Выход "
+DEFINE BUTTON b-exit 
+     LABEL "&Выход " 
      SIZE 10 BY 1 TOOLTIP "Выход из документа с сохранением состояния"
      BGCOLOR 8 .
 
-DEFINE BUTTON b-gds
-     LABEL "Товар&ы"
+DEFINE BUTTON b-gds 
+     LABEL "Товар&ы" 
      SIZE 10 BY 1 TOOLTIP "Просмотр документа производства по товарам"
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1 TOOLTIP "Помощь"
      BGCOLOR 8 .
 
-DEFINE BUTTON b-lkp
-     LABEL "&Просмотр"
+DEFINE BUTTON b-lkp 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1 TOOLTIP "Просмотр строки составного товара".
 
-DEFINE BUTTON b-next AUTO-GO
-     LABEL "&>>"
+DEFINE BUTTON b-next AUTO-GO 
+     LABEL "&>>" 
      SIZE 3 BY 1 TOOLTIP "Переход к просмотру следующего документа списка".
 
-DEFINE BUTTON b-parts
-     LABEL "&Партии"
+DEFINE BUTTON b-parts 
+     LABEL "&Партии" 
      SIZE 10 BY 1 TOOLTIP "Просмотр или редактирование партий товара"
      BGCOLOR 8 .
 
-DEFINE BUTTON b-prev AUTO-GO
-     LABEL "&<<"
+DEFINE BUTTON b-prev AUTO-GO 
+     LABEL "&<<" 
      SIZE 3 BY 1 TOOLTIP "Переход к просмотру предыдущего документа списка".
 
-DEFINE BUTTON b-recipe
-     LABEL "&Рецепт"
+DEFINE BUTTON b-recipe 
+     LABEL "&Рецепт" 
      SIZE 10 BY 1 TOOLTIP "Просмотр или исправление рецепта для текущей строки".
 
-DEFINE BUTTON b-rsrv
-     LABEL "Ре&зерв"
+DEFINE BUTTON b-rsrv 
+     LABEL "Ре&зерв" 
      SIZE 10 BY 1 TOOLTIP "Резервирование списываемого товара"
      BGCOLOR 8 .
 
-DEFINE BUTTON r-fbroperator
+DEFINE BUTTON r-fbroperator 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "r-price"
+     LABEL "r-price" 
      SIZE 3 BY .88 TOOLTIP "Выбор ответственного за операции производства".
 
-DEFINE BUTTON r-outs
+DEFINE BUTTON r-outs 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "r-outs"
+     LABEL "r-outs" 
      SIZE 3 BY .88 TOOLTIP "Список накладных по объекту".
 
-DEFINE BUTTON r-pay
+DEFINE BUTTON r-pay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "r-pay"
+     LABEL "r-pay" 
      SIZE 3 BY .88 TOOLTIP "Выбор объекта, с которого берутся цены продажи".
 
-DEFINE BUTTON r-price
+DEFINE BUTTON r-price 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "r-price"
+     LABEL "r-price" 
      SIZE 3 BY .88 TOOLTIP "Выбор объекта, с которого берутся цены продажи".
 
-DEFINE VARIABLE effect AS DECIMAL FORMAT "->>,>>9.99%":U INITIAL 0
-     LABEL "Эфф"
-     VIEW-AS FILL-IN
+DEFINE BUTTON shift-sel 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 3 BY .88.
+
+DEFINE VARIABLE effect AS DECIMAL FORMAT "->>,>>9.99%":U INITIAL 0 
+     LABEL "Эфф" 
+     VIEW-AS FILL-IN 
      SIZE 8.25 BY 1 TOOLTIP "Эффективность: увеличение суммы продажных цен в процентах"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-pay-code AS INTEGER FORMAT "99999":U INITIAL 0
-     LABEL "&Опл"
-     VIEW-AS FILL-IN
-     SIZE 6.5 BY 1 NO-UNDO.
-
-DEFINE VARIABLE fi-pay-type-name AS CHARACTER FORMAT "X(40)":U
-     VIEW-AS FILL-IN
-     SIZE 14.5 BY 1
+DEFINE VARIABLE fact-date AS DATE FORMAT "99/99/99":U 
+     LABEL "Факт" 
+     VIEW-AS FILL-IN 
+     SIZE 9.75 BY 1 TOOLTIP "Факт дата закрытия"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE ingr-goods-type AS CHARACTER FORMAT "X(1)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE fi-pay-code AS INTEGER FORMAT "99999":U INITIAL 0 
+     LABEL "&Опл" 
+     VIEW-AS FILL-IN 
+     SIZE 6.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE fi-pay-type-name AS CHARACTER FORMAT "X(40)":U 
+     VIEW-AS FILL-IN 
+     SIZE 12.5 BY 1
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE ingr-goods-type AS CHARACTER FORMAT "X(1)":U 
+     VIEW-AS FILL-IN 
      SIZE 2.38 BY 1 TOOLTIP "Буква У появляется, если это услуга"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE ingr-long AS CHARACTER FORMAT "X(256)":U
-     LABEL "Товар"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE ingr-long AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Товар" 
+     VIEW-AS FILL-IN 
      SIZE 66 BY 1 TOOLTIP "Полное название товара из нижнего списка"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE obj-fbroperator AS CHARACTER FORMAT "X(256)":U
-     LABEL "Ответственный"
-     VIEW-AS FILL-IN
-     SIZE 26.5 BY 1 TOOLTIP "Ответственный за операции производства"
+DEFINE VARIABLE obj-fbroperator AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Ответственный" 
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 TOOLTIP "Ответственный за операции производства"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE obj-price AS CHARACTER FORMAT "X(256)":U
-     LABEL "Цены"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE obj-price AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Цены" 
+     VIEW-AS FILL-IN 
      SIZE 12.38 BY 1 TOOLTIP "Объект, с которого берутся цены продажи"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE out-code AS CHARACTER FORMAT "X(16)":U
-     LABEL "Ис&т"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE out-code AS CHARACTER FORMAT "X(16)":U 
+     LABEL "Ис&т" 
+     VIEW-AS FILL-IN 
      SIZE 16.13 BY 1 TOOLTIP "Номер накладной для добавления строк из нее" NO-UNDO.
 
-DEFINE VARIABLE tot-qnty AS DECIMAL FORMAT "->,>>>,>>9.99":U INITIAL 0
-     LABEL "Сумма по фракциям"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE shift AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Смена" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY 1
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE tot-qnty AS DECIMAL FORMAT "->,>>>,>>9.99":U INITIAL 0 
+     LABEL "Сумма по фракциям" 
+     VIEW-AS FILL-IN 
      SIZE 13.5 BY 1.08 NO-UNDO.
 
-DEFINE VARIABLE rs-one-all AS CHARACTER
+DEFINE VARIABLE rs-one-all AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "В&се", "all",
 "Ре&цепт", "recipe",
 "&Тип", "type",
@@ -403,10 +433,10 @@ DEFINE VARIABLE rs-one-all AS CHARACTER
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY br-comp FOR
+DEFINE QUERY br-comp FOR 
       buf_comp_fbr-line SCROLLING.
 
-DEFINE QUERY br-ingr FOR
+DEFINE QUERY br-ingr FOR 
       buf_ingr_fbr-line SCROLLING.
 &ANALYZE-RESUME
 
@@ -438,7 +468,7 @@ ENABLE
       buf_comp_fbr-line.price-sum-vat-rubl
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 96.13 BY 7.13.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 99 BY 7.13.
 
 DEFINE BROWSE br-ingr
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-ingr D-FBR-DOC _FREEFORM
@@ -475,7 +505,7 @@ ENABLE
       buf_ingr_fbr-line.price-sum-vat-rubl
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 96.13 BY 8.63.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 99 BY 8.63.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -483,8 +513,8 @@ ENABLE
 DEFINE FRAME D-FBR-DOC
      br-comp AT ROW 5.25 COL 2
      br-ingr AT ROW 15.13 COL 2
-     fi-pay-code AT ROW 2.25 COL 61 COLON-ALIGNED
-     fi-pay-type-name AT ROW 2.25 COL 68 COLON-ALIGNED NO-LABEL
+     fi-pay-code AT ROW 2.5 COL 76.5 COLON-ALIGNED
+     fi-pay-type-name AT ROW 2.5 COL 83.5 COLON-ALIGNED NO-LABEL
      b-exit AT ROW 1.21 COL 2
      b-prev AT ROW 1.21 COL 12
      b-next AT ROW 1.21 COL 15
@@ -504,42 +534,46 @@ DEFINE FRAME D-FBR-DOC
      b-calc-ingr AT ROW 12.71 COL 42
      b-calc-comp AT ROW 12.71 COL 52
      rs-one-all AT ROW 12.71 COL 67.75 NO-LABEL
-     ub.fbr-recipe.recipe-code AT ROW 3.75 COL 13.38 COLON-ALIGNED NO-LABEL FORMAT "X(10)"
-          VIEW-AS FILL-IN
+     fbr-recipe.recipe-code AT ROW 3.75 COL 13.38 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 12.63 BY 1.08 TOOLTIP "Номер рецепта текущей строки"
-          FGCOLOR 4
-     ub.fbr-recipe.recipe-type AT ROW 3.75 COL 10.63 COLON-ALIGNED NO-LABEL FORMAT "X(1)"
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     fbr-recipe.recipe-type AT ROW 3.75 COL 10.63 COLON-ALIGNED NO-LABEL FORMAT "X(1)"
+          VIEW-AS FILL-IN 
           SIZE 2.5 BY 1.08 TOOLTIP "Тип рецепта: к - комплектация, а - альтернатива, п - производство, р - разделка"
-          FGCOLOR 4
-     ub.fbr-recipe-gds.qnty AT ROW 13.96 COL 87.63 COLON-ALIGNED
+          FGCOLOR 4 
+     fbr-recipe-gds.qnty AT ROW 13.96 COL 87.63 COLON-ALIGNED
           LABEL "Коэф"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6.5 BY 1 TOOLTIP "Количество текущего ингредиента по рецепту"
-          FGCOLOR 4
-     ub.fbr-recipe-gds.is-waste AT ROW 13.96 COL 78.75 COLON-ALIGNED NO-LABEL FORMAT "*/."
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     fbr-recipe-gds.is-waste AT ROW 13.96 COL 78.75 COLON-ALIGNED NO-LABEL FORMAT "*/."
+          VIEW-AS FILL-IN 
           SIZE 2.5 BY 1 TOOLTIP "Звездочка зажигается, если это ОТХОДЫ"
-          FGCOLOR 4
-     ub.fbr-recipe.recipe-name AT ROW 3.75 COL 24.5 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     fbr-recipe.recipe-name AT ROW 3.75 COL 24.5 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 43.75 BY 1.08 TOOLTIP "Название рецепта текущей строки"
-          FGCOLOR 4
+          FGCOLOR 4 
      ingr-goods-type AT ROW 13.96 COL 76.5 COLON-ALIGNED NO-LABEL
-     ub.fbr-recipe.qnty AT ROW 3.79 COL 88.25 COLON-ALIGNED
+     fbr-recipe.qnty AT ROW 3.79 COL 88.25 COLON-ALIGNED
           LABEL "Коэф"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6.5 BY 1 TOOLTIP "Количество составного товара по рецепту"
-          FGCOLOR 4
+          FGCOLOR 4 
      effect AT ROW 3.79 COL 73.63 COLON-ALIGNED
      tot-qnty AT ROW 20.25 COL 37.5 COLON-ALIGNED
      ingr-long AT ROW 13.96 COL 10.5 COLON-ALIGNED
-     obj-fbroperator AT ROW 2.5 COL 16 COLON-ALIGNED
-     r-fbroperator AT ROW 2.5 COL 44.5
-     r-pay AT ROW 2.25 COL 84.5
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D
-         scrollable TITLE "".
+     obj-fbroperator AT ROW 2.5 COL 15 COLON-ALIGNED
+     r-fbroperator AT ROW 2.5 COL 30.5
+     r-pay AT ROW 2.5 COL 98
+     fact-date AT ROW 2.5 COL 38 COLON-ALIGNED WIDGET-ID 2
+     shift AT ROW 2.5 COL 55.5 COLON-ALIGNED WIDGET-ID 4
+     shift-sel AT ROW 2.5 COL 69 WIDGET-ID 6
+     SPACE(29.37) SKIP(20.36)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "".
 
 
 /* *********************** Procedure Settings ************************ */
@@ -560,28 +594,30 @@ DEFINE FRAME D-FBR-DOC
    FRAME-NAME Custom                                                    */
 /* BROWSE-TAB br-comp 1 D-FBR-DOC */
 /* BROWSE-TAB br-ingr br-comp D-FBR-DOC */
-ASSIGN
+ASSIGN 
        FRAME D-FBR-DOC:SCROLLABLE       = FALSE
        FRAME D-FBR-DOC:HIDDEN           = TRUE.
 
-ASSIGN
+ASSIGN 
        b-add:POPUP-MENU IN FRAME D-FBR-DOC       = MENU m-add:HANDLE.
 
 /* SETTINGS FOR BUTTON b-calc-comp IN FRAME D-FBR-DOC
    NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON b-calc-ingr IN FRAME D-FBR-DOC
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        b-del:POPUP-MENU IN FRAME D-FBR-DOC       = MENU m-del:HANDLE.
 
-ASSIGN
+ASSIGN 
        b-rsrv:POPUP-MENU IN FRAME D-FBR-DOC       = MENU POPUP-MENU-b-rsrv:HANDLE.
 
 /* SETTINGS FOR FILL-IN effect IN FRAME D-FBR-DOC
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        effect:HIDDEN IN FRAME D-FBR-DOC           = TRUE.
 
+/* SETTINGS FOR FILL-IN fact-date IN FRAME D-FBR-DOC
+   NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN fi-pay-type-name IN FRAME D-FBR-DOC
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN ingr-goods-type IN FRAME D-FBR-DOC
@@ -594,7 +630,7 @@ ASSIGN
    NO-DISPLAY NO-ENABLE EXP-LABEL                                       */
 /* SETTINGS FOR FILL-IN fbr-recipe.qnty IN FRAME D-FBR-DOC
    EXP-LABEL                                                            */
-ASSIGN
+ASSIGN 
        r-outs:POPUP-MENU IN FRAME D-FBR-DOC       = MENU m-outs:HANDLE.
 
 /* SETTINGS FOR FILL-IN fbr-recipe.recipe-code IN FRAME D-FBR-DOC
@@ -603,9 +639,14 @@ ASSIGN
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN fbr-recipe.recipe-type IN FRAME D-FBR-DOC
    NO-ENABLE EXP-FORMAT                                                 */
+/* SETTINGS FOR FILL-IN shift IN FRAME D-FBR-DOC
+   NO-ENABLE                                                            */
+ASSIGN 
+       shift:READ-ONLY IN FRAME D-FBR-DOC        = TRUE.
+
 /* SETTINGS FOR FILL-IN tot-qnty IN FRAME D-FBR-DOC
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        tot-qnty:HIDDEN IN FRAME D-FBR-DOC           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -640,13 +681,24 @@ OPEN QUERY {&SELF-NAME} FOR EACH buf_ingr_fbr-line NO-LOCK.
 */  /* DIALOG-BOX D-FBR-DOC */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
 /* ************************  Control Triggers  ************************ */
 
 &Scoped-define SELF-NAME D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL D-FBR-DOC D-FBR-DOC
+ON END-ERROR OF FRAME D-FBR-DOC
+OR ENDKEY OF FRAME D-FBR-DOC ANYWHERE DO:
+
+   APPLY "CHOOSE":U TO b-exit.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL D-FBR-DOC D-FBR-DOC
 ON GO OF FRAME D-FBR-DOC
 DO:
@@ -682,17 +734,6 @@ DO:
             .
         end.
     end.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME D-FBR-DOC
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL D-FBR-DOC D-FBR-DOC
-ON END-ERROR OF FRAME D-FBR-DOC
-OR ENDKEY OF FRAME D-FBR-DOC ANYWHERE DO:
-
-   APPLY "CHOOSE":U TO b-exit.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1539,7 +1580,6 @@ DO:
         if v-recipe-type = {&dressing}
         and v-recipe-waste = no
         then do:
-           
             if v-base = yes
             then do:
                 assign
@@ -1851,91 +1891,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME m-ord
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-ord D-FBR-DOC
-ON CHOOSE OF MENU-ITEM m-ord /* Накладная */
-DO:
-
-define variable i as integer   no-undo .
-define variable loc-ref-list as character no-undo.
-
-run ref/all-zakz.w
-    ( input   parParentProc
-    ,input   ?
-    ,input   ?
-    ,input   "firmord"
-    ,input   ""
-    ,input   "b-sel,b-mark"
-    ,input   ""
-    ,output  loc-ref-list ) no-error .
-   if loc-ref-list = ""  then do:
-       message "Ни чего не отметили в списке заказов !"
-       view-as alert-box information .
-        display
-            ? @ out-code
-        with frame {&frame-name}.
-        apply "entry" to b-add in frame {&frame-name}.
-        return no-apply.
-   end.
-    if num-entries( loc-ref-list ) = 0
-    or loc-ref-list                = ""
-    or error-status :error
-    then do:
-        display
-            ? @ out-code
-        with frame {&frame-name}.
-        apply "entry" to b-add in frame {&frame-name}.
-        return no-apply.
-    end.
-    else do:
-     { gbl/working.i }
-     repeat i = 1 to  num-entries( loc-ref-list ) :
-        find first ub.ord-doc no-lock
-            where recid( ub.ord-doc ) = integer( entry( i , loc-ref-list ) )  no-error.
-        display
-            ub.ord-doc.doc-code @ out-code
-        with frame {&frame-name}.
-
-              run cus/ord-copy.p (
-                    input parparentproc
-                  , input f-doc.doc-code
-                  , input ub.ord-doc.doc-code
-                  , input f-doc.obj-type
-                  , input f-doc.obj-code
-                  , input v-price-sale-obj-type
-                  , input v-price-sale-obj-code
-                  , input p-fbrhist-handle
-              ) no-error.
-              if error-status :error
-              then do:
-                  message
-                          vss-workfile vss-revision vss-description
-                      skip(1)
-                      skip "Ошибка копирования заказа в документ производства."
-                      skip return-value
-                      skip trim( error-status :get-message( 1 ) )
-                          trim( error-status :get-message( 2 ) )
-                          trim( error-status :get-message( 3 ) )
-                  view-as alert-box error.
-                  undo, return no-apply.
-              end.
-
-        end.
-    end.
-    assign
-        f-doc.is-free = no
-    .
-    run hide-not-avail-menu-items in this-procedure ( input no ).
-    run UI-on in this-procedure ( input "line" ).
-    { gbl/stopwork.i }
-    return no-apply.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-
 &Scoped-define SELF-NAME m-doc-rsrv
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-doc-rsrv D-FBR-DOC
 ON CHOOSE OF MENU-ITEM m-doc-rsrv /* По всему документу */
@@ -2039,6 +1994,90 @@ DO:
     then do:
         run UI-on ("line").
     end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME m-ord
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-ord D-FBR-DOC
+ON CHOOSE OF MENU-ITEM m-ord /* Заказ */
+DO:
+
+define variable i as integer   no-undo .
+define variable loc-ref-list as character no-undo.
+
+run ref/all-zakz.w
+    ( input   parParentProc
+    ,input   ?
+    ,input   ?
+    ,input   "firmord"
+    ,input   ""
+    ,input   "b-sel,b-mark"
+    ,input   ""
+    ,output  loc-ref-list ) no-error .
+   if loc-ref-list = ""  then do:
+       message "Ни чего не отметили в списке заказов !"
+       view-as alert-box information .
+        display
+            ? @ out-code
+        with frame {&frame-name}.
+        apply "entry" to b-add in frame {&frame-name}.
+        return no-apply.
+   end.
+    if num-entries( loc-ref-list ) = 0
+    or loc-ref-list                = ""
+    or error-status :error
+    then do:
+        display
+            ? @ out-code
+        with frame {&frame-name}.
+        apply "entry" to b-add in frame {&frame-name}.
+        return no-apply.
+    end.
+    else do:
+     { gbl/working.i }
+     repeat i = 1 to  num-entries( loc-ref-list ) :
+        find first ub.ord-doc no-lock
+            where recid( ub.ord-doc ) = integer( entry( i , loc-ref-list ) )  no-error.
+        display
+            ub.ord-doc.doc-code @ out-code
+        with frame {&frame-name}.
+
+              run cus/ord-copy.p (
+                    input parparentproc
+                  , input f-doc.doc-code
+                  , input ub.ord-doc.doc-code
+                  , input f-doc.obj-type
+                  , input f-doc.obj-code
+                  , input v-price-sale-obj-type
+                  , input v-price-sale-obj-code
+                  , input p-fbrhist-handle
+              ) no-error.
+              if error-status :error
+              then do:
+                  message
+                          vss-workfile vss-revision vss-description
+                      skip(1)
+                      skip "Ошибка копирования заказа в документ производства."
+                      skip return-value
+                      skip trim( error-status :get-message( 1 ) )
+                          trim( error-status :get-message( 2 ) )
+                          trim( error-status :get-message( 3 ) )
+                  view-as alert-box error.
+                  undo, return no-apply.
+              end.
+
+        end.
+    end.
+    assign
+        f-doc.is-free = no
+    .
+    run hide-not-avail-menu-items in this-procedure ( input no ).
+    run UI-on in this-procedure ( input "line" ).
+    { gbl/stopwork.i }
+    return no-apply.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2401,10 +2440,21 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME shift-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL shift-sel D-FBR-DOC
+ON CHOOSE OF shift-sel IN FRAME D-FBR-DOC
+DO:
+    run proc-sht.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define BROWSE-NAME br-comp
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK D-FBR-DOC 
 
 
 /*{ gbl/f2gds.i br-comp get-current-goods-recid parparentproc }*/
@@ -2465,6 +2515,46 @@ on return, mouse-select-dblclick of buf_ingr_fbr-line.fix-cost in browse br-ingr
         string ((buf_ingr_fbr-line.fix-cost:screen-value in browse br-ingr = "-"), buf_ingr_fbr-line.fix-cost:format in browse br-ingr).
   return no-apply.
 end.
+
+on value-changed of fact-date in frame {&FRAME-NAME} do:
+    assign frame {&FRAME-NAME} fact-date no-error.
+    f-doc.fact-date = fact-date.
+end.
+
+PROCEDURE proc-sht :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+  define buffer bf_shift-obj   for ub.shift-obj.
+  define variable varrid-list as character no-undo.
+  define variable varrecid    as recid     no-undo.
+  assign
+    varrid-list = "".
+  run str/sht-all.w (parparentproc, f-doc.obj-type, f-doc.obj-code, 'b-sel', 'obj',f-doc.obj-type, f-doc.obj-code, '':u, input-output varrid-list) no-error.
+  if error-status:error or varrid-list = "":u then do:
+    return.
+  end.
+  else do:
+    assign
+      varrecid = integer (entry(1, varrid-list)).
+    find first bf_shift-obj where recid(bf_shift-obj) = varrecid no-lock no-error.
+    if available bf_shift-obj then do:
+      assign
+        f-doc.shift-date = bf_shift-obj.shift-date
+        f-doc.shift-num  = bf_shift-obj.shift-num
+        f-doc.shift-name = bf_shift-obj.shift-name.
+        shift = subst("&1 &2 &3", f-doc.shift-date, f-doc.shift-num, f-doc.shift-name ).
+      display shift f-doc.shift-date f-doc.shift-num f-doc.shift-name with frame {&frame-name}.
+      assign
+        f-doc.fact-date = f-doc.shift-date
+        fact-date = f-doc.shift-date.
+      display fact-date with frame {&frame-name}.
+    end.
+  end.
+
+END PROCEDURE.
 
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
@@ -2532,6 +2622,37 @@ assign
 }
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
+
+/* закрытие документа задним числом возможно? */
+
+delete object v-tth no-error.
+run adm/shattri.p (
+     input "get":U
+    ,input v-cntxt-obj-type
+    ,input v-cntxt-obj-code
+    ,input {&attr-nakl_par}
+    ,input  "back-date"
+    ,output v-value-character
+    ,output v-value-date
+    ,output v-value-decimal
+    ,output v-value-integer
+    ,output v-back-date
+    ,output v-back-date-type
+    ,INPUT-OUTPUT table-handle v-tth
+    ) no-error .
+    if error-status :error  then v-back-date = false .
+    delete object v-tth no-error.
+if error-status:error then v-back-date = false.
+
+{ gbl/objat.i
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    "'shift-on=request'"
+    is-shift-on
+    no-error
+}
+
+{ gbl/ed_date.i fact-date }
 
 /* зацикливание формы */
 assign
@@ -2634,6 +2755,12 @@ do while p-fbr-doc-next-prev
             v-price-sale-obj-type = v-cntxt-obj-type
             v-price-sale-obj-code = v-cntxt-obj-code
         .
+        
+        display f-doc.fact-date @ fact-date with frame {&FRAME-NAME}.
+        shift = subst("&1 &2 &3", f-doc.shift-date, f-doc.shift-num, f-doc.shift-name).
+        if f-doc.shift-date <> ? then
+            display shift with frame {&FRAME-NAME}.
+        
         run get-pay-type-name in this-procedure (
               input fi-pay-code
             , output fi-pay-type-name
@@ -2646,7 +2773,6 @@ do while p-fbr-doc-next-prev
         then do:
             reposition br-comp to recid v-fbr-doc-line-rec no-error.
         end.
-        
         WAIT-FOR GO OF FRAME {&FRAME-NAME} focus br-comp.
     END.
 end. /* Зацикливания */
@@ -2658,7 +2784,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-free-fbr-line D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-free-fbr-line D-FBR-DOC 
 PROCEDURE add-free-fbr-line :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2790,7 +2916,7 @@ END PROCEDURE. /* add-free-fbr-line */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-proc D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-proc D-FBR-DOC 
 PROCEDURE add-proc :
 /*------------------------------------------------------------------------------
   Purpose:     добавление строки по рецепту и без
@@ -2910,7 +3036,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-recipe D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-recipe D-FBR-DOC 
 PROCEDURE add-recipe :
 /*------------------------------------------------------------------------------
   Purpose:     Добавление в документ товара с рецептом
@@ -2961,7 +3087,7 @@ END PROCEDURE. /* add-recipe */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE adjust-changed-ingr-line D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE adjust-changed-ingr-line D-FBR-DOC 
 PROCEDURE adjust-changed-ingr-line :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3145,7 +3271,7 @@ END PROCEDURE. /* adjust-changed-ingr-line */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-current-goods D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-current-goods D-FBR-DOC 
 PROCEDURE assign-current-goods :
 /*------------------------------------------------------------------------------
   Purpose: определить recid текущего товара
@@ -3183,7 +3309,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-ingr-line D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-ingr-line D-FBR-DOC 
 PROCEDURE assign-ingr-line :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3285,7 +3411,7 @@ END PROCEDURE. /* assign-ingr-line */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-obj-fbroperator D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-obj-fbroperator D-FBR-DOC 
 PROCEDURE assign-obj-fbroperator :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3326,7 +3452,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE change-current-comp-line D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE change-current-comp-line D-FBR-DOC 
 PROCEDURE change-current-comp-line :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3532,7 +3658,7 @@ END PROCEDURE. /* change-current-comp-line */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-and-correct-fbr-recipe D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-and-correct-fbr-recipe D-FBR-DOC 
 PROCEDURE check-and-correct-fbr-recipe :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3602,7 +3728,7 @@ END PROCEDURE. /* check-and-correct-fbr-recipe */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE del-proc D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE del-proc D-FBR-DOC 
 PROCEDURE del-proc :
 /*------------------------------------------------------------------------------
   Purpose:     удаление строки по рецепту и без
@@ -3902,7 +4028,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -3913,7 +4039,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-del-list D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-del-list D-FBR-DOC 
 PROCEDURE fill-del-list :
 define input parameter r-code       like ub.fbr-recipe.recipe-code no-undo.
 define output parameter p-rcp-list  as character    no-undo.
@@ -3947,7 +4073,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-recipe-fields D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-recipe-fields D-FBR-DOC 
 PROCEDURE fill-recipe-fields :
 do
 on error undo, return error
@@ -3983,7 +4109,7 @@ END PROCEDURE. /* fill-recipe-fields */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-current-goods-recid D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-current-goods-recid D-FBR-DOC 
 PROCEDURE get-current-goods-recid :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4029,7 +4155,7 @@ END PROCEDURE. /* get-current-goods-recid */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-effect D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-effect D-FBR-DOC 
 PROCEDURE get-effect :
 do
 on error undo, return error
@@ -4085,7 +4211,7 @@ END PROCEDURE. /* get-effect */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-goods-name-proc D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-goods-name-proc D-FBR-DOC 
 PROCEDURE get-goods-name-proc :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4130,7 +4256,7 @@ END PROCEDURE. /* get-goods-name-proc */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-goods-recid D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-goods-recid D-FBR-DOC 
 PROCEDURE get-goods-recid :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4186,7 +4312,7 @@ END PROCEDURE. /* get-goods-recid */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-ingr-line-parameters D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-ingr-line-parameters D-FBR-DOC 
 PROCEDURE get-ingr-line-parameters :
 define input parameter p-recipe-code            as character        no-undo.
 define input parameter p-artic                  as character        no-undo.
@@ -4263,7 +4389,7 @@ END PROCEDURE. /* get-ingr-line-parameters */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-line-OK-proc D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-line-OK-proc D-FBR-DOC 
 PROCEDURE get-line-OK-proc :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4299,7 +4425,7 @@ END PROCEDURE. /* get-line-OK-proc */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-netto-qnty-proc D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-netto-qnty-proc D-FBR-DOC 
 PROCEDURE get-netto-qnty-proc :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4358,7 +4484,7 @@ END PROCEDURE. /* get-netto-qnty-proc */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-pay-name D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-pay-name D-FBR-DOC 
 PROCEDURE get-pay-name :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4393,7 +4519,7 @@ END PROCEDURE. /* get-pay-name */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-pay-type-name D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-pay-type-name D-FBR-DOC 
 PROCEDURE get-pay-type-name :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4427,7 +4553,7 @@ END PROCEDURE. /* get-pay-type-name */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-prod-ref-proc D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-prod-ref-proc D-FBR-DOC 
 PROCEDURE get-prod-ref-proc :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4468,7 +4594,7 @@ END PROCEDURE. /* get-prod-ref-proc */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-unit-base-proc D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-unit-base-proc D-FBR-DOC 
 PROCEDURE get-unit-base-proc :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4528,7 +4654,7 @@ END PROCEDURE. /* get-unit-base-proc */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE hide-not-avail-menu-items D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE hide-not-avail-menu-items D-FBR-DOC 
 PROCEDURE hide-not-avail-menu-items :
 do
 on error undo, return error
@@ -4563,7 +4689,7 @@ END PROCEDURE. /* hide-not-avail-menu-items */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE mode-on D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE mode-on D-FBR-DOC 
 PROCEDURE mode-on :
 do
 on error undo, return error
@@ -4616,7 +4742,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE open-comp D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE open-comp D-FBR-DOC 
 PROCEDURE open-comp :
 /*------------------------------------------------------------------------------
   Purpose: reopen query br-comp
@@ -4724,7 +4850,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE open-ingr D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE open-ingr D-FBR-DOC 
 PROCEDURE open-ingr :
 /*------------------------------------------------------------------------------
   Purpose: reopen query br-ingr
@@ -4888,7 +5014,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE process-parts D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE process-parts D-FBR-DOC 
 PROCEDURE process-parts :
 do
 on error undo, return error
@@ -5029,7 +5155,7 @@ END PROCEDURE. /* process-parts */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-fbroperator D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-fbroperator D-FBR-DOC 
 PROCEDURE select-fbroperator :
 define output parameter p-obj-fbroperator   as character        no-undo.
 
@@ -5118,7 +5244,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-fbrpaycode D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-fbrpaycode D-FBR-DOC 
 PROCEDURE select-fbrpaycode :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5160,7 +5286,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-comp-qnty D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-comp-qnty D-FBR-DOC 
 PROCEDURE set-comp-qnty :
 /* Установить количество и продажную цену в строке составного товара. */
 do
@@ -5231,7 +5357,7 @@ END PROCEDURE. /* set-comp-qnty */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-line-and-recipe D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-line-and-recipe D-FBR-DOC 
 PROCEDURE show-line-and-recipe :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5333,7 +5459,7 @@ END PROCEDURE. /* show-line-and-recipe */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE UI-on D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE UI-on D-FBR-DOC 
 PROCEDURE UI-on :
 def input param fnc as character no-undo.
 /* -------------------------------------------------------------------------------------------
@@ -5475,6 +5601,12 @@ on error undo, return error
                     enable
                         b-rsrv
                         b-parts
+                    with frame {&frame-name}.
+                end.
+                if f-doc.status_ <> {&fact} AND v-back-date then do:
+                    enable
+                        fact-date
+                        shift-sel when is-shift-on
                     with frame {&frame-name}.
                 end.
             end.
@@ -5631,7 +5763,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-goods-name D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-goods-name D-FBR-DOC 
 FUNCTION get-goods-name RETURNS CHARACTER
   ( p-fbr-line-recid AS RECID ) :
 /*------------------------------------------------------------------------------
@@ -5651,7 +5783,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-line-OK D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-line-OK D-FBR-DOC 
 FUNCTION get-line-OK RETURNS logical
   ( p-fbr-line-recid AS RECID /* buffer buf_fbr-line for ub.fbr-line */) :
 /*------------------------------------------------------------------------------
@@ -5670,7 +5802,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-netto-qnty D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-netto-qnty D-FBR-DOC 
 FUNCTION get-netto-qnty RETURNS DECIMAL
   ( p-fbr-line-recid AS RECID /* buffer buf_fbr-line for ub.fbr-line */) :
 /*------------------------------------------------------------------------------
@@ -5690,7 +5822,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-prod-ref D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-prod-ref D-FBR-DOC 
 FUNCTION get-prod-ref RETURNS CHARACTER
   ( p-fbr-line-recid AS RECID /* buffer buf_fbr-line for ub.fbr-line*/ ) :
 /*------------------------------------------------------------------------------
@@ -5709,7 +5841,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-unit-base D-FBR-DOC
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-unit-base D-FBR-DOC 
 FUNCTION get-unit-base RETURNS CHARACTER
   (  p-fbr-line-recid AS RECID /*buffer buf_fbr-line for ub.fbr-line*/ ) :
 /*------------------------------------------------------------------------------
@@ -5727,3 +5859,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

@@ -195,6 +195,8 @@ DEFINE NEW SHARED BROWSE br-docs
       f-doc.in-rubl COLUMN-LABEL "Cумма учет ({&abbr_rub}.)"
       f-doc.in-vat-base COLUMN-LABEL "Cумма уч. НДС (баз)"
       f-doc.in-vat-rubl COLUMN-LABEL "Cумма уч. НДС ({&abbr_rub})"
+      f-doc.shift-date COLUMN-LABEL "Смена"
+      (if f-doc.shift-num = 0 then ? else f-doc.shift-num) COLUMN-LABEL "№" format ">9"
 /*
       f-doc.out-base COLUMN-LABEL "Cумма спис.(б.в.)"
       f-doc.out-rubl COLUMN-LABEL "Cумма спис.({&abbr_rub}.)"
@@ -317,7 +319,6 @@ define variable varchip-code like ub.c-trn-doc.chip-num no-undo.
 define variable varchip-code2 like ub.c-trn-doc.chip-num no-undo.
 { gbl/stdbtn.i }
 {&net-proc}
-
 if f-doc.status_ = {&doc-froze}
 then do:
     find first f-doc no-lock
