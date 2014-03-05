@@ -1577,7 +1577,8 @@ X_cash-desk.obj-code COLUMN-LABEL "Магазин" format ">>>>9"
 sym2 column-label ":" format "x(1)"
 X_cash-desk.cash-num column-label "Номер" format ">>>9"
 sym8 column-label ":" format "x(1)"
-X_cash-desk.db-num column-label "БД" format ">9"
+/*X_cash-desk.db-num column-label "БД" format ">9"*/
+X_cash-desk.db-num column-label "БД" format ">>>>9"
 sym3 column-label ":" format "x(1)"
 X_cash-desk.pos-type column-label "Тип POS" format "x(20)"
 sym4 column-label ":" format "x(1)"
@@ -1587,9 +1588,11 @@ X_cash-desk.cash-os COLUMN-LABEL "Тип ОС" format "x(12)"
 sym6 column-label ":" format "x(1)"
 X_cash-desk.version COLUMN-LABEL "Версия протокола" format "x(17)"
 sym7 column-label ":" format "x(1)"
-X_cash-desk.registration-code COLUMN-LABEL "Регистр. №" format "x(30)"
+/*X_cash-desk.registration-code COLUMN-LABEL "Регистр. №" format "x(30)"*/
+X_cash-desk.registration-code COLUMN-LABEL "Регистр. №" format "x(28)"
 sym9 column-label ":" format "x(1)"
-X_cash-desk.serial-code COLUMN-LABEL "Сер. №" format "x(30)"
+/*X_cash-desk.serial-code COLUMN-LABEL "Сер. №" format "x(30)"*/
+X_cash-desk.serial-code COLUMN-LABEL "Сер. №" format "x(28)"
 sym10 column-label ":" format "x(1)"
 v-fo-version COLUMN-LABEL "Версия кассовой программы" format "x(27)"
 HEADER
