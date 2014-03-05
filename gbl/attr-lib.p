@@ -2919,6 +2919,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 ,Заказные поля в экране покупателя~
 ,Уникальный цифровой артикул`создание доп. БК = артикулу~
 ,Разрешено создавать глобальный весовые коды~
+,Запрещена работа с Доп-БК~
 '
 &scop global-attr-gds-ref true
 &scop host-attr-gds-ref false
@@ -2937,10 +2938,11 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-gds-ref_obj true
 &scop output-display-attr-gds-ref_obj false
 &scop other-attr-gds-ref_obj 'spr-ext=adm\shattr22.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-gds-ref_obj 'integer,character'
+&scop prop-type-list-attr-gds-ref_obj 'integer,character,logical'
 &scop prop-label-list-attr-gds-ref_obj '~
 Гр.товаров по умолч.~
 ,Заказные поля в экране покупателя~
+,Запрещена работа с Доп-БК~
 '
 &scop global-attr-gds-ref_obj false
 &scop host-attr-gds-ref_obj false

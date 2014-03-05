@@ -170,10 +170,10 @@ on error undo, return error
       if  entry(v-step, v-dflt-level-way) = '' then do:
         if v-step = v-start then do:
           /*ошибка*/
-      end.
-      else do:
+        end.
+        else do:
           next _step.
-      end.
+        end.
       end.
       v-upper-param-code = entry(v-step, v-dflt-up-way).
       case v-step:
@@ -229,79 +229,79 @@ on error undo, return error
       v-level-way-2 = v-level-way-2 + (if v-level-way-2 = '' then '' else {&comma-char})  + string(v-obj-code).
       v-up-way = v-up-way + (if v-up-way = "" then "" else {&comma-char}) +  entry(v-step, v-dflt-up-way).
 
-    if p-param-code = '':U then do:
-      run thbjattr_get-section  in this-procedure (
+      if p-param-code = '':U then do:
+        run thbjattr_get-section  in this-procedure (
                                              input v-obj-type
                                             ,input v-obj-code
-                                          ,input v-upper-param-code
-                                          ,input p-mode
-                                          ,input-output table tt0-thbj-attr
-                                          ,output v-found
-                                          ) no-error.
-    end.
-    else do:
-      run thbjattr_value  in this-procedure (
+                                            ,input v-upper-param-code
+                                            ,input p-mode
+                                            ,input-output table tt0-thbj-attr
+                                            ,output v-found
+                                            ) no-error.
+      end.
+      else do:
+        run thbjattr_value  in this-procedure (
                                              input v-obj-type
                                             ,input v-obj-code
-                                          ,input v-upper-param-code
-                                          ,input p-param-code
-                                          ,output p-value-character
-                                          ,output p-value-date
-                                          ,output p-value-decimal
-                                          ,output p-value-integer
-                                          ,output p-value-logical
-                                          ,output v-attr-type
-                                          ,output v-found
-                                          ) no-error.
-    end.
-    if error-status:error then do:
-      undo, return error substitute( "&1 &2 &3 &4 &5"
-                                    , vss-workfile
-                                    , vss-revision
-                                    , vss-description
-                                    , error-status:get-message(1)
-                                    , return-value ).
+                                            ,input v-upper-param-code
+                                            ,input p-param-code
+                                            ,output p-value-character
+                                            ,output p-value-date
+                                            ,output p-value-decimal
+                                            ,output p-value-integer
+                                            ,output p-value-logical
+                                            ,output v-attr-type
+                                            ,output v-found
+                                            ) no-error.
+      end.
+      if error-status:error then do:
+        undo, return error substitute( "&1 &2 &3 &4 &5"
+                                      , vss-workfile
+                                      , vss-revision
+                                      , vss-description
+                                      , error-status:get-message(1)
+                                      , return-value ).
 
-    end.
+      end.
       if v-found = 1.0
       and v-step = v-start
-          then do:
+      then do:
        /*нашли все prop*/
         return.
       end.
         run thbjattr_code in this-procedure (
-          input  v-upper-param-code
-          ,input p-param-code
-          ,output attr-label
-          ,output attr-user-can-edit
-          ,output attr-output-display
-          ,output attr-other
-          ,output v-prop-list
-          ,output v-prop-type-list
-          ,output v-prop-label-list
-          ,output v-global
-          ,output v-host
-          ,output v-shop
-          ,output v-store
-          ,output v-db
-          ) no-error .
-        if error-status:error then do:
-          undo, return error substitute( "&1 &2 &3 Неверное значение v-upper-param-code &4 или p-param-code &5"
-                                        , vss-workfile
-                                        , vss-revision
-                                        , vss-description
-                                        , v-upper-param-code
-                                        , p-param-code
-                                        ).
-        end.
+         input  v-upper-param-code
+        ,input p-param-code
+        ,output attr-label
+        ,output attr-user-can-edit
+        ,output attr-output-display
+        ,output attr-other
+        ,output v-prop-list
+        ,output v-prop-type-list
+        ,output v-prop-label-list
+        ,output v-global
+        ,output v-host
+        ,output v-shop
+        ,output v-store
+        ,output v-db
+        ) no-error .
+      if error-status:error then do:
+        undo, return error substitute( "&1 &2 &3 Неверное значение v-upper-param-code &4 или p-param-code &5"
+                                      , vss-workfile
+                                      , vss-revision
+                                      , vss-description
+                                      , v-upper-param-code
+                                      , p-param-code
+                                      ).
+      end.
       v-need-prop-list = v-prop-list.
       v-num-need = num-entries(v-prop-list).
       /*нашли начальное значение из вышестоящего*/
-    if v-found = 1.0 then do:
-      if p-param-code <> '' then return.
-      if p-param-code = '':U
+      if v-found = 1.0 then do:
+        if p-param-code <> '' then return.
+        if p-param-code = '':U
         and p-obj-type <> v-obj-type then do:
-        for each tt0-thbj-attr
+          for each tt0-thbj-attr
               where tt0-thbj-attr.obj-type = v-obj-type:
             if lookup(tt0-thbj-attr.prop-code,  v-need-prop-list) = 0
             and entry(1, tt0-thbj-attr.upper-prop-code, "_") = p-upper-param-code
@@ -309,7 +309,7 @@ on error undo, return error
               delete tt0-thbj-attr.
               next.
             end.
-          v-to-find-upper-param-code = (if tt0-thbj-attr.upper-prop-code <> p-upper-param-code
+            v-to-find-upper-param-code = (if tt0-thbj-attr.upper-prop-code <> p-upper-param-code
                                         and  num-entries(p-upper-param-code, "_") > 1
                                         and (entry(2, p-upper-param-code, "_") = "obj"
                                               or
@@ -320,21 +320,21 @@ on error undo, return error
                                         then p-upper-param-code
                                         else tt0-thbj-attr.upper-prop-code
                                         ).
-          find first buf_tt0-thbj-attr where
-                  buf_tt0-thbj-attr.obj-type = p-obj-type
-              and buf_tt0-thbj-attr.obj-code = p-obj-code
-              and buf_tt0-thbj-attr.upper-prop-code = v-to-find-upper-param-code
-              and buf_tt0-thbj-attr.prop-code = tt0-thbj-attr.prop-code no-error .
-          if not available buf_tt0-thbj-attr then do:
-            create buf_tt0-thbj-attr.
-            buffer-copy tt0-thbj-attr except obj-type obj-code upper-prop-code
-            to buf_tt0-thbj-attr
-            assign
-            buf_tt0-thbj-attr.obj-type = p-obj-type
-            buf_tt0-thbj-attr.obj-code = p-obj-code
-            buf_tt0-thbj-attr.upper-prop-code = v-to-find-upper-param-code.
-            .
-            delete tt0-thbj-attr.
+            find first buf_tt0-thbj-attr where
+                    buf_tt0-thbj-attr.obj-type = p-obj-type
+                and buf_tt0-thbj-attr.obj-code = p-obj-code
+                and buf_tt0-thbj-attr.upper-prop-code = v-to-find-upper-param-code
+                and buf_tt0-thbj-attr.prop-code = tt0-thbj-attr.prop-code no-error .
+            if not available buf_tt0-thbj-attr then do:
+              create buf_tt0-thbj-attr.
+              buffer-copy tt0-thbj-attr except obj-type obj-code upper-prop-code
+              to buf_tt0-thbj-attr
+              assign
+              buf_tt0-thbj-attr.obj-type = p-obj-type
+              buf_tt0-thbj-attr.obj-code = p-obj-code
+              buf_tt0-thbj-attr.upper-prop-code = v-to-find-upper-param-code
+              .
+              delete tt0-thbj-attr.
           end.
           v-num-found = v-num-found + 1.
         end.
@@ -347,41 +347,41 @@ on error undo, return error
   end. /*if p-mode = "get":U then do:*/
 
 &scop create-thbj-attr                                                        ~
-    if p-param-code = '':U or p-param-code = ~{&prop-code~} then do:       ~
-      v-to-create = no.                                             ~
+      if p-param-code = '':U or p-param-code = ~{&prop-code~} then do:       ~
+        v-to-create = no.                                                      ~
       run create-thbj-attr in this-procedure ( input ~{&prop-code~} ~
                                               ,input "~{&ptype~}"     ~
                                               ,input v-level-way    ~
                                               ,input v-level-way-2  ~
                                               ,input v-up-way       ~
                                               ,output v-to-create) no-error. ~
-     if v-to-create then do:                                         ~
+        if v-to-create then do:                                                 ~
        if not available stt0-thbj-attr then do:                      ~
         &if "~{&ptype~}"  <> "void"  &then                             ~
-          assign                                                     ~
+          assign                                                                ~
           tt0-thbj-attr.property-value-~{&ptype~} = ~{&prop-value~}      ~
-          p-value-~{&ptype~} = (if p-param-code = ~{&prop-code~}         ~
+            p-value-~{&ptype~} = (if p-param-code = ~{&prop-code~}                  ~
                                 then ~{&prop-value~}                   ~
-                                else p-value-~{&ptype~})  .            ~
+                                  else p-value-~{&ptype~})  .                       ~
         &endif                                                       ~
-      end.                                                           ~
-      else do: ~
+          end.                                                                     ~
+          else do:                                                                 ~
         &if "~{&ptype~}"  <> "void"  &then                             ~
-          p-value-~{&ptype~} = (if p-param-code = ~{&prop-code~}                  ~
+            p-value-~{&ptype~} = (if p-param-code = ~{&prop-code~}                  ~
                                 then stt0-thbj-attr.property-value-~{&ptype~}    ~
-                                else p-value-~{&ptype~})  .                       ~
+                                  else p-value-~{&ptype~})  .                       ~
         &endif                                                       ~
-      end. ~
-    end.                                                             ~
-    else do:                                                         ~
+          end.                                                                      ~
+        end.                                                                        ~
+        else do:                                                                    ~
       &if "~{&ptype~}"  <> "void" &then                                ~
-          assign                                                     ~
-          p-value-~{&ptype~} = (if p-param-code = ~{&prop-code~}         ~
-                                then stt0-thbj-attr.property-value-~{&ptype~} ~
-                                else p-value-~{&ptype~})  .                   ~
+            assign                                                                  ~
+            p-value-~{&ptype~} = (if p-param-code = ~{&prop-code~}                  ~
+                                  then stt0-thbj-attr.property-value-~{&ptype~}    ~
+                                  else p-value-~{&ptype~})  .                       ~
       &endif                                                                ~
-    end.                                                                    ~
-  end
+        end.                                                                        ~
+      end
 
   CASE p-upper-param-code:
     when {&attr-autosale} then do:
@@ -1057,7 +1057,6 @@ on error undo, return error
     end.
     when {&attr-cd-type-autotank} then do:
 
-
       v-prop-code = "{&bef-attr-cd-type-autotank_cash-pay-list}".
 
 &scop ptype character
@@ -1258,9 +1257,7 @@ v-prop-code = "{&bef-attr-overval_pr-abs-d},{&bef-attr-overval_pr-altex},{&bef-a
         {&create-thbj-attr}.
       end.
 
-    end.
-
-
+end.
 
     when {&attr-abc-global} then do:
       v-prop-code = {&prop-list-attr-abc-global} .
@@ -1292,7 +1289,6 @@ v-prop-code = "{&bef-attr-overval_pr-abs-d},{&bef-attr-overval_pr-altex},{&bef-a
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
-
 
     end.
     when {&attr-inv-global} then do:
@@ -1356,6 +1352,7 @@ v-prop-code = "{&bef-attr-overval_pr-abs-d},{&bef-attr-overval_pr-altex},{&bef-a
         {&create-thbj-attr}.
       end.
     end.
+
     when {&attr-fin-doc} then do:
       v-prop-code = "{&bef-attr-fin-doc_suffix-pko},{&bef-attr-fin-doc_suffix-rko}" .
 &scop ptype character
@@ -1470,7 +1467,7 @@ v-prop-code = "{&bef-attr-overval_pr-abs-d},{&bef-attr-overval_pr-altex},{&bef-a
 
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
-    end.
+      end.
 
             v-prop-code = "{&bef-attr-fin-doc_uchet}" .
 &scop ptype    character
@@ -1547,7 +1544,7 @@ v-prop-code = "{&bef-attr-overval_pr-abs-d},{&bef-attr-overval_pr-altex},{&bef-a
       v-prop-code = "{&bef-attr-prt-glob_invprn0},{&bef-attr-prt-glob_outprncd},{&bef-attr-prt-glob_sort-prd},{&bef-attr-prt-glob_torg2-no},{&bef-attr-prt-glob_outprops},{&bef-attr-prt-glob_rep-artic}" .
 &scop ptype logical
 &scop prop-value no
-&scop prop-code  entry(v-ii,v-prop-code)
+&scop prop-code entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
@@ -1787,6 +1784,13 @@ v-prop-code = "{&bef-attr-overval_pr-abs-d},{&bef-attr-overval_pr-altex},{&bef-a
 &scop prop-code entry(v-ii, v-prop-code)
         {&create-thbj-attr}.
       end.
+      v-prop-code = "{&bef-attr-gds-ref_obj_chg-bcod}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype logical
+&scop prop-value no
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
       v-prop-code = "{&bef-attr-gds-ref_obj_gdsscrvw}".
 &scop ptype character
 &scop prop-value 'goods.lgrp-name,goods.engl-name,goods.#prod-name,goods.alpha1,goods.sert,goods.destin,goods.ps,goods.user-rule,goods.struct,goods.deadline,gds-obj.in-date,goods.#foto'
@@ -1934,7 +1938,7 @@ v-prop-code = "{&bef-attr-overval_pr-abs-d},{&bef-attr-overval_pr-altex},{&bef-a
 &scop prop-code entry(v-ii, v-prop-code)
         {&create-thbj-attr}.
       end.
-       v-prop-code = "{&bef-attr-wthrep_docdstnws}".
+      v-prop-code = "{&bef-attr-wthrep_docdstnws}".
       do v-ii = 1 to num-entries(v-prop-code):
 &scop ptype logical
 &scop prop-value no
