@@ -5947,8 +5947,11 @@ when 1 then do:
      find first old_tmp#zakaz where
                 old_tmp#zakaz.gds-code = ub.contract-specif.gds-code no-error .
      if available old_tmp#zakaz then next .
-    run ver-izt ( loc-doc-type , ub.contract-specif.gds-code , v-cntxt-obj-type , v-cntxt-obj-code , output v-error) .
-    if  v-error then next.
+    
+    if not g#type = {&f-p} then do:
+      run ver-izt ( loc-doc-type , contract-specif.gds-code , v-cntxt-obj-type , v-cntxt-obj-code , output v-error) .
+      if  v-error then next.
+    end.
 
      ii = ii + 1 .
      run create-tmp in this-procedure  (input "contract-spec":u, "") no-error .
