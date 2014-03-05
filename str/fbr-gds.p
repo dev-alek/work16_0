@@ -206,6 +206,11 @@ on error undo, return error
             or return-value <> "user-interrupt":U
             then do:
               if p-silent then do:
+                
+                if p-autofbr then do:
+                  undo, return error "not-reserved":U.
+                end.
+                
                 undo, return error substitute("&1 &2 &3&4Не удалось зарезервировать товар на складе.&4" +
                                               "Товар: &5&4Требуемое количество: &6&4Зарезервировано количество:   &7&4&8&4&9"
                                               ,vss-workfile
@@ -247,7 +252,6 @@ on error undo, return error
                 skip "Зарезервировано количество:   " v-reserved-qnty
             view-as alert-box error.
             end.
-            undo, return error "not-reserved":U.
         end.
         assign
             v-is-rsrv = yes
