@@ -14,7 +14,7 @@ Author: Alexey Suslov
 Creation date: 04/03/02
 
 */
-
+ 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
@@ -2859,12 +2859,78 @@ procedure lib-trn3_avrgdens :
                 .
               end. /* if available bf_inv-line */
             end. /* for each buf_doc-line */
-
+            if v-ostatok-kg + v-oboroty-kg = 0 or ( v-ostatok-lt + v-oboroty-lt ) = 0 and available buf_rvs-line  then
+            assign p-density = buf_rvs-line.state-density.
             /* усредненная плотность топлива */
-            assign
+            else assign
               p-density = abs( ( v-ostatok-kg + v-oboroty-kg ) / ( v-ostatok-lt + v-oboroty-lt ) )
             .
           end. /* shft_rvs-inc */
+          
+          when 'shft_sys-inc':U then do:
+            assign
+              v-ostatok-lt    = 0.0
+              v-oboroty-lt    = 0.0
+              v-ostatok-kg    = 0.0
+              v-oboroty-kg    = 0.0
+            .
+            if available buf-prev_rvs-doc then do:
+              find first buf_rvs-line no-lock
+                where buf_rvs-line.rvs-code = buf-prev_rvs-doc.rvs-code
+                  and buf_rvs-line.obj-type = buf-prev_rvs-doc.obj-type
+                  and buf_rvs-line.obj-code = buf-prev_rvs-doc.obj-code
+                  and buf_rvs-line.pl-code  = p-pl-code
+                  and buf_rvs-line.gds-code = buf_goods.gds-code
+                no-error .
+              if available buf_rvs-line then do:
+                assign
+                  v-ostatok-lt = buf_rvs-line.system-qnty
+                  v-ostatok-kg = buf_rvs-line.system-cli-qnty
+                .
+              end. /* if available buf_rvs-line */
+            end. /* if available buf-prev_shift-obj */
+
+            /* обороты за смену (внешний приход) */
+            for each buf_trn-doc no-lock
+              where buf_trn-doc.obj-type   = p-obj-type
+                and buf_trn-doc.obj-code   = p-obj-code
+                and buf_trn-doc.shift-date = p-shift-date
+                and buf_trn-doc.shift-num  = p-shift-num
+                and buf_trn-doc.status_    = {&fact}
+              ,each buf_doc-line no-lock
+              where buf_doc-line.doc-code     = buf_trn-doc.doc-code
+                and buf_doc-line.artic        = buf_goods.artic
+                and buf_doc-line.prod-type    = buf_goods.prod-type
+                and buf_doc-line.prod-code    = buf_goods.prod-code
+                and buf_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh}
+            on error undo, return error substitute( "&1 (lib-trn3_avrgdens). &2 ", vss-workfile, return-value )
+            :
+              find first buf_doc-pl no-lock
+                where buf_doc-pl.obj-type = buf_doc-line.obj-type
+                  and buf_doc-pl.obj-code = buf_doc-line.obj-code
+                  and buf_doc-pl.pl-code  = p-pl-code
+                  and buf_doc-pl.out-code = buf_doc-line.doc-code
+                  and buf_doc-pl.gds-code = buf_goods.gds-code
+                no-error.
+              if available buf_doc-pl
+                and buf_doc-pl.fact-qnty <> ?
+                and buf_doc-pl.cli-fact-qnty <> ?
+              then do:
+                assign
+                  v-oboroty-lt = v-oboroty-lt + buf_doc-pl.fact-qnty
+                  v-oboroty-kg = v-oboroty-kg + buf_doc-pl.cli-fact-qnty
+                .
+              end. /* if available bf_inv-line */
+            end. /* for each buf_doc-line */
+            if v-ostatok-kg + v-oboroty-kg = 0 or ( v-ostatok-lt + v-oboroty-lt ) = 0 and available buf_rvs-line  then
+            assign p-density = buf_rvs-line.state-density.
+            /* усредненная плотность топлива */
+            else assign
+              p-density = abs( ( v-ostatok-kg + v-oboroty-kg ) / ( v-ostatok-lt + v-oboroty-lt ) )
+            .
+          end. /* shft_sys-inc */
+          
+          
           otherwise do:
             undo, return error substitute( 'lib-trn3_avrgdens: нет описания алгоритма определения плотности &1'
                                           , ptrlprop-denstclc
