@@ -227,7 +227,7 @@ CALL_tt-rule-call-param.rule_id    COLUMN-LABEL "Правило"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 7 FIT-LAST-COLUMN
-    TITLE "Правила, в которых применяются параметры"    .
+    title "Правила, в которых применяются параметры"   .
 
 DEFINE BROWSE BR-rcp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-rcp Dialog-Frame _FREEFORM
@@ -241,7 +241,7 @@ term_tt-rule-call-param.profile_id  COLUMN-LABEL "Профайл"
 term_tt-rule-call-param.once-more COLUMN-LABEL "№!Привязки"
 {&abl-datatype-name} COLUMN-LABEL "Тип пар-ра" FORMAT "X(12)"
 term_tt-rule-call-param.param-num COLUMN-LABEL "№!пар-ра" FORMAT ">9"
-TERM_tt-rule-call-param.p-index COLUMN-LABEL "Инд!екс" FORMAT ">9"
+TERM_tt-rule-call-param.p-index COLUMN-LABEL "Инд!екс" FORMAT ">>9"
 term_tt-rule-call-param.param-name COLUMN-LABEL "Название пар-ра!правила" FORMAT "X(16)"
 term_tt-rule-call-param.param-label COLUMN-LABEL "Название пар-ра" FORMAT "X(255)" WIDTH 30
 {&script-parmode-name} COLUMN-LABEL "Вид!пар-ра"

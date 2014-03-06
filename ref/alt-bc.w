@@ -79,6 +79,7 @@ define variable vss-description as character no-undo init "Бар-коды и ДопБК для 
 { ref/attr-pop.i def }
 { ref/attr-pop.i proc }
 { gbl/thbj-def.i }
+{ gbl/thbjattr.i }
 
 define variable rid as recid no-undo.
 define variable add-option as character no-undo .
@@ -1135,11 +1136,11 @@ find first buf_prod-bc exclusive-lock where
 if lookup ({&weight}, buf_units.type) > 0 then do:
   /*проверим тип*/
   if IS-GLOBAL(buffer buf_prod-bc) then do:
-  message
+    message
     "Нельзя удалить ГЛОБАЛЬНЫЙ весовой код"
-   view-as alert-box error.
-  return no-apply.
-end.
+            view-as alert-box error.
+    return no-apply.
+  end.
 end.
 if buf_prod-bc.bc-on-type = {&loc-pg-code}
 or (lookup ({&weight}, buf_units.type) > 0
@@ -1184,7 +1185,7 @@ if not glog then return no-apply.
 glog = no.
 message
 "Удалить дополнительный бар-код:" X_prod-bc.b-str "? Вы уверены ?"
-        view-as alert-box question buttons OK-Cancel update glog.
+view-as alert-box question buttons OK-Cancel update glog.
 if not glog then  return no-apply.
 { gbl/chk-actg.i
 v-cntxt-db-num
@@ -1736,11 +1737,47 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
 PROCEDURE MyEnable :
+/* Проверка на разрешение работы с Дополнительными Баркодами. Добавлено по задаче ТН-3097. Арн. 2014г */
+do: /* A */
+    define variable v-tth as handle no-undo.  
+    define variable v-chg-bcod as logical no-undo.
+    define variable v-value-character as character no-undo.
+    define variable v-value-date as date no-undo.
+    define variable v-value-decimal as decimal no-undo.
+    define variable v-value-integer as INTEGER no-undo.
+    define variable v-value-logical AS LOGICAL no-undo.
+    define variable v-param-type as character no-undo.
+
+    assign v-tth = buffer thbjattr_thbj-attr:table-handle.
+
+    FOR EACH thbjattr_thbj-attr:
+        delete thbjattr_thbj-attr.
+    end.
+
+    run adm/shattri.p (
+              input "get":U
+            , input v-cntxt-obj-type
+            , input v-cntxt-obj-code
+            , input {&attr-gds-ref_obj}
+            , input {&attr-gds-ref_obj_chg-bcod} /*p-param-code*/
+            , output v-value-character
+            , output v-value-date
+            , output v-value-decimal
+            , output v-value-integer
+            , output v-value-logical
+            , output v-param-type
+            , INPUT-OUTPUT table-handle v-tth
+            ) no-error .
+    
+     v-chg-bcod = v-value-logical.
+end. /* A */
+
 ENABLE
-b-print-2 br-bc br-pbc b-quit b-help b-hist-2 b-hist-0 b-dpl
-b-add-1 when v-cntxt-level = {&cntxt-object}
-b-del-1 when v-cntxt-level = {&cntxt-object}
-b-on    when v-cntxt-level = {&cntxt-object}
+b-print-2 br-bc br-pbc b-quit b-help b-hist-2 b-hist-0 /*b-dpl - перенёс (см. ниже) для выполнения ТН-3097. Арн. 2014г*/
+b-add-1 when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
+b-del-1 when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
+b-on    when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
+b-dpl   when v-chg-bcod = no
 b-print-1 WITH FRAME {&frame-name}.
 X_prod-bc.b-str:COLUMN-READ-ONLY IN BROWSE br-pbc = YES.
 if not transaction then do:
@@ -1824,6 +1861,7 @@ else
                               " Номер: " + base-bar-code.part-code.
 
 view frame {&frame-name} .
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

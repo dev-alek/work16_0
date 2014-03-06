@@ -124,8 +124,8 @@ INDEX pi IS UNIQUE PRIMARY tbl-name fld-name
     ~{&OPEN-QUERY-BR-gdsscrvw}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help B-dfltggrp BR-gdsscrvw
-&Scoped-Define DISPLAYED-OBJECTS f-dfltggrp f-grp-name
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help B-dfltggrp BR-gdsscrvw t-chg-bcod
+&Scoped-Define DISPLAYED-OBJECTS f-dfltggrp f-grp-name t-chg-bcod 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -173,6 +173,11 @@ DEFINE VARIABLE f-grp-name AS CHARACTER FORMAT "X(256)":U
      SIZE 61 BY 1
      FGCOLOR 3  NO-UNDO.
 
+DEFINE VARIABLE t-chg-bcod AS LOGICAL INITIAL no 
+     LABEL "Запрещена работа с Доп-БК" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 49.4 BY .81 NO-UNDO.
+
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BR-gdsscrvw FOR
@@ -202,6 +207,7 @@ DEFINE FRAME Dialog-Frame
      f-dfltggrp AT ROW 3.13 COL 21 COLON-ALIGNED WIDGET-ID 22
      B-dfltggrp AT ROW 3.13 COL 32.5 WIDGET-ID 24
      f-grp-name AT ROW 3.13 COL 35 COLON-ALIGNED NO-LABEL WIDGET-ID 68
+     t-chg-bcod AT ROW 5.91 COL 2.6 WIDGET-ID 70
      BR-gdsscrvw AT ROW 5 COL 57 WIDGET-ID 100
      SPACE(0.24) SKIP(12.45)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
@@ -483,9 +489,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-dfltggrp f-grp-name
+  DISPLAY f-dfltggrp f-grp-name t-chg-bcod 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-Help B-dfltggrp BR-gdsscrvw
+  ENABLE B-exit b-quit B-Help B-dfltggrp t-chg-bcod BR-gdsscrvw
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -559,6 +565,7 @@ run adm/shattri.p (
             , output v-param-type
             , INPUT-OUTPUT table-handle v-tth
             ) no-error .
+
 if error-status:error
 and not available locked_thbj-attr then do:
   message
@@ -567,8 +574,9 @@ and not available locked_thbj-attr then do:
   view-as alert-box error .
   undo, return error .
 end.
+/* Получив необходимые данные по аттрибуту из adm/shattri.p - заполняем временную таблицу "thbjattr_thbj-attr" в БД */
 FOR EACH thbjattr_thbj-attr:
- if lookup(thbjattr_thbj-attr.prop-code, v-need-prop-list) = 0 then do:
+  if lookup(thbjattr_thbj-attr.prop-code, v-need-prop-list) = 0 then do:
     delete thbjattr_thbj-attr.
     next.
   end.
@@ -581,11 +589,18 @@ FOR EACH thbjattr_thbj-attr:
     .
     RUN set-full-grp-name IN THIS-PROCEDURE ( INPUT f-dfltggrp) .
   END.
+  IF v-entry = {&attr-gds-ref_obj_chg-bcod} THEN DO:
+    ASSIGN
+    t-chg-bcod = thbjattr_thbj-attr.property-value-logical
+    t-chg-bcod:private-data IN FRAME {&FRAME-NAME} = "recid=" + string(recid(thbjattr_thbj-attr))
+    .
+  END.
   IF v-entry = {&attr-gds-ref_obj_gdsscrvw} THEN DO:
     ASSIGN
     v-gdsscrvw = thbjattr_thbj-attr.property-value-character
     .
   END.
+
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
 END.
@@ -594,7 +609,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
 PROCEDURE MyEnable :
 DEFINE BUFFER buf_custom-labels FOR ub.custom-labels.
 DEFINE BUFFER buf_temp-gdsscrvw FOR temp-gdsscrvw.
@@ -626,16 +641,18 @@ or p-obj-type = {&stock} then do:
   .
 end.
 
-v-tab-order = "b-dfltggrp".
+v-tab-order = "b-dfltggrp,t-chg-bcod".
 display
 f-dfltggrp
 f-grp-name
+t-chg-bcod
 with frame {&frame-name} .
 ENABLE
 B-exit WHEN p-mode = {&UPDATE}
 b-quit
 B-Help
 b-dfltggrp WHEN p-mode = {&UPDATE}
+t-chg-bcod WHEN p-mode = {&UPDATE}
 br-gdsscrvw
 WITH FRAME {&frame-name}.
 VIEW FRAME {&frame-name}.
@@ -654,7 +671,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
 PROCEDURE proc-save :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -686,6 +703,7 @@ v-gdsscrvw = TRIM(v-gdsscrvw, {&comma-char}).
 ASSIGN
 FRAME {&FRAME-NAME}
 f-dfltggrp
+t-chg-bcod
 .
 assign
 fh = frame {&frame-name}:first-child
@@ -767,7 +785,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-full-grp-name Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-full-grp-name Dialog-Frame
 PROCEDURE set-full-grp-name :
 DEFINE INPUT PARAMETER p-node-code AS INTEGER NO-UNDO.
 DEFINE BUFFER buf_gds-grp FOR ub.gds-grp.

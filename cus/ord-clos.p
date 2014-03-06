@@ -68,6 +68,7 @@ define variable v-longchar as longchar no-undo .
 define variable doc-db-num as integer   no-undo .
 define buffer bf2_goods for ub.goods  .
 define buffer bf3_goods for ub.goods  .
+define buffer bf_contract-specif for ub.contract-specif.
 
 define buffer bf2_ext-artic for ub.ext-artic  .
 run gbl/_tmpfile.p ("ord", ".txt", output v-file-name) .
@@ -332,6 +333,32 @@ define variable v-ext-mode as character no-undo .
        v-mastc = true
   then do:
       return error "На фирме " + string(shar-buf_ord-doc.host-code) + " задание договора по заказу ОП и ФП обязательны ! " .
+  end.
+  
+  if shar-buf_ord-doc.doc-type = {&f-p} and shar-buf_ord-doc.contract-code > 0 and shar-buf_ord-doc.status_ =  {&g___new} then do:
+     find first bf_contract-specif where bf_contract-specif.host-code    = shar-buf_ord-doc.host-code     and
+                                          bf_contract-specif.contract-num = shar-buf_ord-doc.contract-code no-lock no-error.
+      if available bf_contract-specif then do: /* спецификация есть */
+         v-ok = true.
+         for each ub.ord-line no-lock where
+                  ub.ord-line.doc-code = shar-buf_ord-doc.doc-code :
+            if not can-find (first bf_contract-specif no-lock where
+                                   bf_contract-specif.host-code    = shar-buf_ord-doc.host-code and
+                                   bf_contract-specif.contract-num = shar-buf_ord-doc.contract-code and
+                                   bf_contract-specif.gds-code     = ub.ord-line.gds-code   ) then do:
+                                      message
+                                        "Выбран Договор со спецификацией !!!" skip
+                                        "Несоответствие списка товаров заказа и спецификации " skip
+                                        "Заказ      :" shar-buf_ord-doc.doc-code        skip
+                                        "код товара :" ub.ord-line.gds-code skip
+                                        "артикл     :" ub.ord-line.artic skip
+                                        view-as alert-box error .
+                                      v-ok = false.
+                                   end.            
+         end.
+          if not v-ok
+              then return error substitute ("Документ &1, не может быть закрыт, т.к. есть товары несоответствующие спецификации", shar-buf_ord-doc.doc-code).
+       end.
   end.
 
   { gbl/conf-rd.i "'is-edi'" "''" "''" 0 "''" "''" "''" no par-is-edi par-type no-error  }

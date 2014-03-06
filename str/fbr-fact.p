@@ -50,6 +50,10 @@ define variable v-price-base        like ub.fbr-line.price-base    no-undo.    /
 define variable v-price-rubl        like ub.fbr-line.price-rubl    no-undo.    /* для контроля одинаковости */
 define variable v-in-fix-cost       like ub.fbr-line.fix-cost      no-undo.    /* для контроля одинаковости */
 define variable v-fact-time         as integer                  no-undo.
+define variable v-fact-date         as date                     no-undo.
+define variable v-shift-date        as date                     no-undo.
+define variable v-shift-num         as integer                  no-undo.
+define variable v-shift-name        as character                no-undo.
 define variable v-par-gen-mrgn-ie      as character                no-undo.
 define variable v-par-gen-mrgn-iv      as character                no-undo.
 define variable v-par-gen-mrgn-im      as character                no-undo.
@@ -78,6 +82,7 @@ define buffer buf_fbr-line              for ub.fbr-line.
 define buffer buf_goods                 for ub.goods.
 define buffer buf_temp_fbrlib_recipe    for temp_fbrlib_recipe.
 define buffer buf_temp_fbrrep-goods     for temp_fbrrep-goods.
+define buffer buf_shift-obj             for ub.shift-obj.
 
 do
 for buf_in_trn-doc
@@ -266,17 +271,19 @@ fact-close:
                                         , v-in-doc-code
                                         ).
         end.
+        
         /* расчет накладной */
         run gbl/calc-trn.p ( input parparentproc, input recid (buf_in_trn-doc ) ).
+        
         /* Устанавливаем фактич. дату, время, смену */
         run gbl/factdate.p (
               input buf_fbr-doc.obj-type
             , input buf_fbr-doc.obj-code
-            , input-output buf_fbr-doc.fact-date
+            , input-output v-fact-date
             , input-output v-fact-time
-            , input-output buf_fbr-doc.shift-date
-            , input-output buf_fbr-doc.shift-num
-            , input-output buf_fbr-doc.shift-name
+            , input-output v-shift-date
+            , input-output v-shift-num
+            , input-output v-shift-name
             , input        (p-silent = no)        /* выводить сообщения? */
         ) no-error.
         if error-status:error
@@ -287,6 +294,42 @@ fact-close:
                                         , buf_fbr-doc.doc-code
                                         ).
         end.
+
+        if buf_fbr-doc.fact-date <> ? then do:
+            define variable v-authorize as logical no-undo.
+            run gbl/authoriz.p("", output v-authorize).
+            
+            if not v-authorize then undo, return.
+        end.
+        
+        if buf_fbr-doc.fact-date = ? then do:
+            assign
+                buf_fbr-doc.fact-date      = v-fact-date
+                buf_fbr-doc.shift-date     = v-shift-date
+                buf_fbr-doc.shift-num      = v-shift-num
+                buf_fbr-doc.shift-name     = v-shift-name
+            .
+        end.
+        
+        find first buf_shift-obj no-lock
+            where buf_shift-obj.shift-date = buf_fbr-doc.shift-date
+            and buf_shift-obj.shift-num = buf_fbr-doc.shift-num
+            and buf_shift-obj.obj-type = buf_fbr-doc.obj-type
+            and buf_shift-obj.obj-code = buf_fbr-doc.obj-code
+            no-error.
+        
+        if available buf_shift-obj then do:
+            if buf_fbr-doc.fact-date > buf_shift-obj.close-date
+                OR buf_fbr-doc.fact-date < buf_shift-obj.open-date then do:
+                
+                undo, return error subst("Фактическая дата &1 не входит в интервал дат смены &2 &3.",
+                                         buf_fbr-doc.fact-date,
+                                         buf_shift-obj.shift-date,
+                                         buf_shift-obj.shift-num
+                                        ).
+            end.
+        end.
+        
         assign
             buf_out_trn-doc.fact-date  = buf_fbr-doc.fact-date
             buf_out_trn-doc.fact-time  = v-fact-time
@@ -294,6 +337,7 @@ fact-close:
             buf_out_trn-doc.shift-num  = buf_fbr-doc.shift-num
             buf_out_trn-doc.shift-name = buf_fbr-doc.shift-name
         .
+        
         run str/parts-pc.p (
               input parparentproc
             , input buf_out_trn-doc.doc-code

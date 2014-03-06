@@ -367,6 +367,9 @@ run create-hist-nws-option in this-procedure ( input v-codes1
                                               ,input v-labels1
                                               ,input v-groups1) .
 
+run waitfram-show in this-procedure ("Заполнение справочника регионов РФ").
+run utl/reg-cre.p.
+
 run waitfram-hide in this-procedure .
 
 message "Инициализация закончена.".

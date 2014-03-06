@@ -62,6 +62,10 @@ on endkey undo, return error :
       create rcvlocb-ord-doc-attr.
       { nws/impl-nws.i "ord-doc-attr" "rcvlocb-" }
     end.
+    when "ord-rcv-attr" then do:
+      create locb-ord-rcv-attr.
+      { nws/impl-nws.i "ord-rcv-attr" "locb-" }
+    end.
 
 
     otherwise do:
@@ -144,6 +148,24 @@ on endkey undo, return error :
   buffer-copy locb-ord-rcv-line-attr to buf_ord-rcv-line-attr.
 end.
 
+/* ------------------------------- ord-rcv-attr --------------------------------------------- */
+for each buf_ord-rcv-attr where buf_ord-rcv-attr.rcv-code = wt-ord-doc-rcv.rcv-code and
+                                buf_ord-rcv-attr.doc-code = wt-ord-doc-rcv.doc-code
+on error  undo, return error
+on stop   undo, return error
+on endkey undo, return error :
+  delete buf_ord-rcv-attr.
+end.
+
+for each locb-ord-rcv-attr where locb-ord-rcv-attr.rcv-code = wt-ord-doc-rcv.rcv-code and
+                                 locb-ord-rcv-attr.doc-code = wt-ord-doc-rcv.doc-code
+                       no-lock
+on error  undo, return error
+on stop   undo, return error
+on endkey undo, return error :
+  create buf_ord-rcv-attr.
+  buffer-copy locb-ord-rcv-attr to buf_ord-rcv-attr.
+end.
 
 /* ------------------------------- ord-dtl-rcv ---------------------------------------------- */
 for each buf_ord-dtl-rcv where buf_ord-dtl-rcv.rcv-code = wt-ord-doc-rcv.rcv-code and
@@ -297,6 +319,12 @@ on error  undo, return error
 on stop   undo, return error
 on endkey undo, return error :
   delete locb-ord-rcv-line-attr.
+end.
+for each locb-ord-rcv-attr
+on error  undo, return error
+on stop   undo, return error
+on endkey undo, return error :
+  delete locb-ord-rcv-attr.
 end.
 
 for each locb-ord-dtl-rcv

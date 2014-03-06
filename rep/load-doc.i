@@ -160,6 +160,9 @@ end.
 { rep/menu-doc.i {&write-off} "'*'" "'no'" "'*'"                                               "'Накладная списания (короткая форма)'"                          "'cost,sale,rubl,base'"   "'rep/r-outret.p'"   "'no,no'"                          "'++++++-'"  "''"               "'A4port'"  "''"                  ? }
 
 { rep/menu-doc.i {&write-off} "'*'" "'no'" "'*'"                                               "'Накладная списания (короткая форма.Spar)'"                     "'cost,sale,rubl,base'"   "'rep/r-outret.p'"   "'no,SPAR'"                     "'++++++-'"  "'SPAR'"                 "'A4port'"  "''"                                  ? }
+
+{ rep/menu-doc.i {&write-off} "'*'" "'no'" "'*'"                                               "'Служебная записка (Роснефть)'"                                 "'cost,sale,rubl,base'"   "'rep/r-wofrosneft.p'"    "'no,no'"                  "'-------'"  "'Rosneft-*'"                 "'self'"  "''"                                  ? }
+
 { rep/menu-doc.i {&expense} "'*'" "'no'" "'*'"                                                 "'Выгрузка товарной накладной'"                                  "'cost,sale,rubl,base'"   "'rep/r-unlway.p'"   "''"                            "'+-+----'"  "'Can_Ru'"         "'EXCEL'"   "''"                  ? }
 { rep/menu-doc.i {&write-off} "'*'" "'no'" "'*'"                                               "'Акт о списании материалов'"                                    "'cost,sale,rubl,base'"   "'rep/torg-16a.p'"   "''"                            "'-++----'"  "'zum'"            "''"        "''"                  ? }
 { rep/menu-doc.i {&expense} "'{&bef-inquiry},{&bef-ready}'"       "'*'" "'*'"                  "'Заказ флористов - бланк № 1'"                                  "'cost,sale,rubl,base'"   "'rep/r-flor1.p'"    "''"                            "'--+----'"  "''"               "'self'"    "''"                  ? }

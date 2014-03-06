@@ -1,8 +1,8 @@
 /*
 
-$Revision$
-$Author$
-$Date$
+$Revision: $
+$Author: $
+$Date: $
 $Workfile: $
 $Archive: $
                                         
@@ -3289,6 +3289,8 @@ end.
 &global-define attr-bge-incr-last-shift-date '{&bef-attr-bge-incr-last-shift-date}':U
 &global-define bef-attr-bge-incr-last-shift-num bge-incr-last-shift-num
 &global-define attr-bge-incr-last-shift-num '{&bef-attr-bge-incr-last-shift-num}':U
+&global-define bef-attr-bge-incr-cur bge-incr-cur
+&global-define attr-bge-incr-cur '{&bef-attr-bge-incr-cur}':U
 &global-define bef-attr-bge-sap-sng-last-shift bge-sap-sng-last-shift
 &global-define attr-bge-sap-sng-last-shift '{&bef-attr-bge-sap-sng-last-shift}':U
 &global-define bef-attr-egrip-date egrip-date
@@ -5176,9 +5178,17 @@ end.
 &global-define goods-proc_goods-batchwork '{&bef-goods-proc_goods-batchwork}':U
 &global-define bef-goods-proc_goods-batchwork-full Работа в атоматическом режиме
 &global-define goods-proc_goods-batchwork-full '{&bef-goods-proc_goods-batchwork-full}':U
-&global-define goods-proc-list 'gdsadd,gdsupdate,rengdscode,addlcode,dellcode,updatelcode,addprcode,delprcode,updateprcode,xml-file-import,xml-esys-import,batchwork-export,batchwork-routing,rest-update,goods-cd-send,goods-batchwork':U
-&global-define goods-proc-list-full 'Добавление товара,Изменение товара,Смена кода товара,Добавление лок.кода,Удаление лок.кода,Изменение лок.кода,Добавление Доп.БК,Удаление Доп.БК,Изменение Доп.БК,Импорт из xml-файла,Импорт из ВС,Операции по списку-экспорт,Операции по списку-маршрутизация,Изменение остатка,Передача товаров на кассу,Работа в атоматическом режиме':U
-&global-define goods-proc-name entry (lookup (~{&goods-proc-code}, 'gdsadd,gdsupdate,rengdscode,addlcode,dellcode,updatelcode,addprcode,delprcode,updateprcode,xml-file-import,xml-esys-import,batchwork-export,batchwork-routing,rest-update,goods-cd-send,goods-batchwork':U) + 1, ',' + 'Добавление товара,Изменение товара,Смена кода товара,Добавление лок.кода,Удаление лок.кода,Изменение лок.кода,Добавление Доп.БК,Удаление Доп.БК,Изменение Доп.БК,Импорт из xml-файла,Импорт из ВС,Операции по списку-экспорт,Операции по списку-маршрутизация,Изменение остатка,Передача товаров на кассу,Работа в атоматическом режиме':U)
+&global-define bef-goods-proc_add-good-to-asm add-good-to-asm
+&global-define goods-proc_add-good-to-asm '{&bef-goods-proc_add-good-to-asm}':U
+&global-define bef-goods-proc_add-good-to-asm-full Добавление в асм. матрицу
+&global-define goods-proc_add-good-to-asm-full '{&bef-goods-proc_add-good-to-asm-full}':U
+&global-define bef-goods-proc_del-good-from-asm del-good-from-asm
+&global-define goods-proc_del-good-from-asm '{&bef-goods-proc_del-good-from-asm}':U
+&global-define bef-goods-proc_del-good-from-asm-full Удаление из асм. матрицы
+&global-define goods-proc_del-good-from-asm-full '{&bef-goods-proc_del-good-from-asm-full}':U
+&global-define goods-proc-list 'gdsadd,gdsupdate,rengdscode,addlcode,dellcode,updatelcode,addprcode,delprcode,updateprcode,xml-file-import,xml-esys-import,batchwork-export,batchwork-routing,rest-update,goods-cd-send,goods-batchwork,add-good-to-asm,del-good-from-asm':U
+&global-define goods-proc-list-full 'Добавление товара,Изменение товара,Смена кода товара,Добавление лок.кода,Удаление лок.кода,Изменение лок.кода,Добавление Доп.БК,Удаление Доп.БК,Изменение Доп.БК,Импорт из xml-файла,Импорт из ВС,Операции по списку-экспорт,Операции по списку-маршрутизация,Изменение остатка,Передача товаров на кассу,Работа в атоматическом режиме,add-good-to-asm,del-good-from-asm':U
+&global-define goods-proc-name entry (lookup (~{&goods-proc-code}, 'gdsadd,gdsupdate,rengdscode,addlcode,dellcode,updatelcode,addprcode,delprcode,updateprcode,xml-file-import,xml-esys-import,batchwork-export,batchwork-routing,rest-update,goods-cd-send,goods-batchwork,add-good-to-asm,del-good-from-asm':U) + 1, ',' + 'Добавление товара,Изменение товара,Смена кода товара,Добавление лок.кода,Удаление лок.кода,Изменение лок.кода,Добавление Доп.БК,Удаление Доп.БК,Изменение Доп.БК,Импорт из xml-файла,Импорт из ВС,Операции по списку-экспорт,Операции по списку-маршрутизация,Изменение остатка,Передача товаров на кассу,Работа в атоматическом режиме,add-good-to-asm,del-good-from-asm':U)
 &global-define bef-clients-proc_batchwork-export batchwork-export
 &global-define clients-proc_batchwork-export '{&bef-clients-proc_batchwork-export}':U
 &global-define bef-clients-proc_batchwork-export-full Операции по списку-экспорт
@@ -6462,7 +6472,7 @@ end.
 &global-define alc-check-price-full '{&bef-alc-check-price-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 5371  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: f0e393ce9a27, 3, test  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -6602,7 +6612,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-cd-inf-send_how-pcnt-kat '{&bef-attr-cd-inf-send_how-pcnt-kat}':U
 &global-define bef-attr-scale-inf scale-inf
 &global-define attr-scale-inf '{&bef-attr-scale-inf}':U
-&global-define bef-prop-list-attr-scale-inf scales-type,scales-pr,scallist,sclin-ld
+&global-define bef-prop-list-attr-scale-inf scales-type,scales-pr,scallist,sclin-ld,noauto-scls
 &global-define prop-list-attr-scale-inf '{&bef-prop-list-attr-scale-inf}':U
 &global-define bef-attr-scale-inf_scales-type scales-type
 &global-define attr-scale-inf_scales-type '{&bef-attr-scale-inf_scales-type}':U
@@ -6612,6 +6622,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-scale-inf_scallist '{&bef-attr-scale-inf_scallist}':U
 &global-define bef-attr-scale-inf_sclin-ld sclin-ld
 &global-define attr-scale-inf_sclin-ld '{&bef-attr-scale-inf_sclin-ld}':U
+&global-define bef-attr-scale-inf_noauto-scls noauto-scls
+&global-define attr-scale-inf_noauto-scls '{&bef-attr-scale-inf_noauto-scls}':U
 &global-define bef-attr-cd-type-ibm cd-type-ibm
 &global-define attr-cd-type-ibm '{&bef-attr-cd-type-ibm}':U
 &global-define bef-prop-list-attr-cd-type-ibm ibmrubc,ibmnalc,ibmspool,ibmgroup,multicurr,cd-vat,cdtaxlst,specgrp
@@ -7179,12 +7191,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-gds-ref_is-scgb '{&bef-attr-gds-ref_is-scgb}':U
 &global-define bef-attr-gds-ref_obj gds-ref_obj
 &global-define attr-gds-ref_obj '{&bef-attr-gds-ref_obj}':U
-&global-define bef-prop-list-attr-gds-ref_obj dfltggrp,gdsscrvw
+&global-define bef-prop-list-attr-gds-ref_obj dfltggrp,gdsscrvw,chg-bcod
 &global-define prop-list-attr-gds-ref_obj '{&bef-prop-list-attr-gds-ref_obj}':U
 &global-define bef-attr-gds-ref_obj_dfltggrp dfltggrp
 &global-define attr-gds-ref_obj_dfltggrp '{&bef-attr-gds-ref_obj_dfltggrp}':U
 &global-define bef-attr-gds-ref_obj_gdsscrvw gdsscrvw
 &global-define attr-gds-ref_obj_gdsscrvw '{&bef-attr-gds-ref_obj_gdsscrvw}':U
+&global-define bef-attr-gds-ref_obj_chg-bcod chg-bcod
+&global-define attr-gds-ref_obj_chg-bcod '{&bef-attr-gds-ref_obj_chg-bcod}':U
 &global-define bef-attr-dc-ref dc-ref
 &global-define attr-dc-ref '{&bef-attr-dc-ref}':U
 &global-define bef-prop-list-attr-dc-ref l-zeros
@@ -7717,10 +7731,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff':U
-&global-define str-glbl_vss-revision 'Revision: 4606 ':U
-&global-define str-glbl2_vss-revision 'Revision: 5136 ':U
-&global-define str-glbl3_vss-revision 'Revision: 5144 ':U
-&global-define str-glbl4_vss-revision 'Revision: 5316 ':U
-&global-define str-glbl5_vss-revision 'Revision: 5286 ':U
-&global-define str-glblt_vss-revision 'Revision: 5371 ':U
+&global-define str-glbl_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
+&global-define str-glbl2_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
+&global-define str-glbl3_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
+&global-define str-glbl4_vss-revision 'Revision':U
+&global-define str-glbl5_vss-revision 'Revision: 199ddf50f4e5, 2, test ':U
+&global-define str-glblt_vss-revision 'Revision: f0e393ce9a27, 3, test ':U
 &endif

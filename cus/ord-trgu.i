@@ -85,6 +85,12 @@ DO:
   if error-status :error then do:
      apply "choose" to r-clients in frame {&frame-name} .
   end.
+  if can-find (first ub.contract where ub.contract.cli-code = loc-cli-code and ub.contract.cli-type = loc-cli-type and ub.contract.host-code = v-cntxt-host-code-obj) then do:
+    if loc-cli-code <> ? then do: 
+      run r-contract-choose in this-procedure no-error .
+      if error-status :error then return no-apply .
+    end.
+  end.
 END.
 
 ON  RETURN OF loc-cli-code IN FRAME Dialog-Frame /* Код */
@@ -122,6 +128,12 @@ ON CHOOSE OF r-clients IN FRAME Dialog-Frame /* r-cli */
 DO:
   run r-clients-ch in this-procedure no-error  .
   if error-status :error then return no-apply.
+  if can-find (first ub.contract where ub.contract.cli-code = loc-cli-code and ub.contract.cli-type = loc-cli-type and ub.contract.host-code = v-cntxt-host-code-obj) then do:
+    if loc-cli-code <> ? then do: 
+      run r-contract-choose in this-procedure no-error .
+      if error-status :error then return no-apply .
+    end.
+  end.
 END.
 
 ON value-changed OF slt_type IN FRAME {&frame-name}

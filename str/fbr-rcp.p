@@ -37,6 +37,7 @@ define variable vss-description as character no-undo init "Резервирование и расч
 { cmp/library.i  }
 { gbl/cur-time.i }
 { str/writelog.i def "'fbr.log'" no-create }
+{ str/fbr-log.p  }
 
     define variable v-unit-type     as character            no-undo.  /* тип единицы измерения */
     define variable v-alt-in-qnty   like ub.fbr-line.fact-qnty no-undo.  /* количество в приходной строке альтернативного рецепта */
@@ -66,6 +67,7 @@ define variable vss-description as character no-undo init "Резервирование и расч
     define variable v-sum-vat-input-price-r-b           as decimal       no-undo.
     define variable v-margin                            as decimal       no-undo.
     define variable v-rb-is-base        as logical      no-undo.
+    define variable v-not-reserved      as logical      no-undo.
 
     define buffer buf_zero_fbr-line  for  ub.fbr-line.                   /* поиск нулевых строк альтернативы */
     define buffer buf_in_fbr-line   for  ub.fbr-line.                    /* строка производства при */
@@ -727,6 +729,18 @@ define output parameter p-count-input-fact-qnty          as decimal      no-undo
             ) no-error.                 /* делаем попытку за(пере)резервировать товар */
             if error-status :error
             then do:
+                if return-value = 'not-reserved' then do:
+                  v-not-reserved = true.
+                  run write-fbr-rsrv-log(subst(
+                      "Не зарезервирован товар &1 &2 &3 кол-во &4 рецепт &5",
+                      buf_fbr-line.artic,
+                      buf_fbr-line.prod-type,
+                      buf_fbr-line.prod-code,
+                      buf_fbr-line.fact-qnty,
+                      buf_fbr-line.recipe-code
+                  )).
+                  next calc-prices-for-each-fbr-line.
+                end.
                 if error-status :get-message(1) <> ""
                 or return-value <> "user-interrupt":U
                 then do:
@@ -853,6 +867,9 @@ define output parameter p-count-input-fact-qnty          as decimal      no-undo
             ).
         end.
     end.        /* for each buf_fbr-line */
+    
+    if v-not-reserved then
+      return error 'not-reserved'.
 end.
 end procedure. /* calc-prices */
 

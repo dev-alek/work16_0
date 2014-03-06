@@ -104,7 +104,7 @@ attr-cd-inf-send }
 /*Параметры работы с весами*/
 { cmp/cr-prep.i 1 attr-scale-inf                scale-inf                 " " scale-inf }
 { cmp/cr-prepc.i 1 prop-list-attr-scale-inf
-"scales-type,scales-pr,scallist,sclin-ld"
+"scales-type,scales-pr,scallist,sclin-ld,noauto-scls"
 attr-scale-inf }
 
 /*Параметры POS IBM*/
@@ -297,11 +297,11 @@ attr-rt-trn-doc }
 attr-gds-ref
 }
 
-/*набор опций работы со справочником товаров в контексте объекта*/
+/*набор опций работы со справочником товаров в контексте объекта*/ /*chg-bcod = логический параметр: работа с баркодами разрешена/запрещена. ТН-3098 2014г. Арн.*/
 { cmp/cr-prep.i 1 attr-gds-ref_obj                 gds-ref_obj                 " " gds-ref_obj }
 
 { cmp/cr-prepc.i 1 prop-list-attr-gds-ref_obj
-"dfltggrp,gdsscrvw"
+"dfltggrp,gdsscrvw,chg-bcod"
 attr-gds-ref_obj
 }
 

@@ -49,6 +49,7 @@ define variable v-cntxt-userid as character no-undo .
 { str/fbrhist.i  }
 { str/trdcalib.i }
 { str/fbrattr.i  }
+{ str/fbr-log.p  }
 
 define temp-table temp_fbr-objects no-undo
     field obj-type  as character
@@ -100,6 +101,9 @@ for buf_recipe
   , buf_sale-doc
 on error undo, return error
 :
+    /* для записи недостающих ингридиентов в файл */
+    run init-fbr-rsrv-log.
+    
     { gbl/working.i }
     /*НЕ ПЕРЕДЕЛЫВАТЬ НА g e t c n t x t .i get процедура вызывается в автомате!!!!*/
     run get-db-num in parparentproc ( output v-cntxt-db-num).
@@ -487,6 +491,7 @@ on error undo, return error
             find first buf_fbr-doc no-lock
                 where buf_fbr-doc.doc-code = v-fbr-doc-code
             .
+
             run str/fbr-rsrv.p (
                   input parparentproc
                 , input p-fbrhist-handle
@@ -500,6 +505,26 @@ on error undo, return error
             if error-status :error
             or v-reserved = no
             then do:
+                
+                if return-value = 'not-reserved' then do:
+                  
+                  /* печатаем */
+                  define variable v-user-action   as character no-undo .
+                  define variable v-printed       as logical   no-undo .
+                  define variable DisabledOptions as integer   no-undo .
+                  define variable v-orient-page as character no-undo .
+                  
+                  run gbl/prnfilen.w (
+                        input "Список не зарезервированных товаров при автопроизводстве":U
+                      , input 8
+                      , input search({&fbr-rsrv-log-file-name})
+                      , input 7
+                      , output v-user-action
+                      , output v-printed
+                  ).
+                  undo, return error.                  
+                end.
+                
                 v-mess =  substitute("Не удалось зарезервировать товары для производства.&1" +
                           "Объект (кухня): &2&3&1&4&1&5"
                           , {&new-line}

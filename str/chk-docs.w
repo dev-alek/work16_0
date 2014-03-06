@@ -1698,7 +1698,7 @@ define variable l-open-query as logical   no-undo .
             c-doc.obj-code  = parobj-code  AND ~
             c-doc.d-card  = pard-card      ~
                         "
-          dyn_&where-cond = " substitute(' c-doc.obj-type  = &1&2&1  AND ~
+          &dyn_where-cond = " substitute(' c-doc.obj-type  = &1&2&1  AND ~
             c-doc.obj-code  = &3  AND ~
             c-doc.d-card  = &1&4&1', ~{&double-quote~}, parobj-type, parobj-code, pard-card )  "
 

@@ -68,8 +68,28 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   run extsyssl in this-procedure ( buffer buf_Ext-system
                                   ,output v-ok ) NO-ERROR.
   if not v-ok then do:
-    v-mess = substitute("Данная внешняя система используется&1Удаление невозможно"
+    v-mess = substitute("Данная внешняя система используется&1Удаление невозможно:&2&3"
                         , {&new-line}
+                        , {&new-line}
+                        ,  return-value
+                        ).
+    run err-mess in this-procedure ( input-output v-mess).
+    return error (if p-silent = yes then v-mess else '':U).
+  end.
+  for each ub.rule-call-param no-lock where 
+        ub.rule-call-param.param-2-data-type = "ext-system"
+  on error  undo , return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+  on stop   undo , return error substitute( "&1. stop", vss-workfile )
+  on endkey undo , return error substitute( "&1. endkey", vss-workfile )
+  :
+    v-ok = no.
+    v-mess = v-mess + substitute ("профайл №&1 правило №&2&3", ub.rule-call-param.profile_id, ub.rule-call-param.rule_id, {&new-line}).
+  end.
+  if not v-ok then do:
+    v-mess = substitute("Данная внешняя система используется в настройках машины правил.&1Удаление невозможно:&2&3"
+                        , {&new-line}
+                        , {&new-line}
+                        , v-mess
                         ).
     run err-mess in this-procedure ( input-output v-mess).
     return error (if p-silent = yes then v-mess else '':U).

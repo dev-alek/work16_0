@@ -20,6 +20,7 @@ define temp-table rcvlocb-ord-line     no-undo like ub.ord-line.
 define temp-table rcvlocb-ord-dtl      no-undo like ub.ord-dtl.
 define temp-table rcvlocb-ord-doc      no-undo like ub.ord-doc.
 
+
 define temp-table locb-ord-rcv-attr         no-undo like ub.ord-rcv-attr.
 define temp-table locb-ord-rcv-line-attr    no-undo like ub.ord-rcv-line-attr.
 define temp-table rcvlocb-ord-line-attr     no-undo like ub.ord-line-attr.

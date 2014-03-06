@@ -189,6 +189,31 @@ on error undo, return error
       object-of-list:
       for each temp-obj
       :
+          /* Для автоматического экспорта: залочим атрибут на объекте, если в данный момент выгружаем */
+          find first ub.clients-attr exclusive-lock
+            where ub.clients-attr.obj-type = temp-obj.obj-type
+              and ub.clients-attr.obj-code = temp-obj.obj-code
+              and ub.clients-attr.attr-code = {&attr-bge-incr-cur} no-wait no-error.
+          
+          if not available ub.clients-attr then do:
+            if locked ub.clients-attr then do:
+              run wp-XMLWriteLog in this-procedure (
+                    input v-log-file-name
+                  , input 1
+                  , input "Ошибка экспорта документов по объекту " + temp-obj.obj-type + string( temp-obj.obj-code ) + ". Объект выгружается в другой сессии."
+              ).
+              next object-of-list. /* пойдём дальше по списку объектов */
+            end.
+            else do:
+              create ub.clients-attr.
+              assign
+              ub.clients-attr.obj-type = temp-obj.obj-type
+              ub.clients-attr.obj-code = temp-obj.obj-code
+              ub.clients-attr.attr-code = {&attr-bge-incr-cur}.
+              find current ub.clients-attr exclusive-lock.
+            end.
+          end.
+          
           run export-docs-by-object in this-procedure (
                 input temp-obj.host-code
               , input temp-obj.obj-type
@@ -207,6 +232,10 @@ on error undo, return error
                 input temp-obj.obj-type
               , input temp-obj.obj-code
           ).
+          
+          /* Освободим атрибут */
+          release ub.clients-attr.
+          
       end.
       if v-bge-xml-bgeflold <> "oracle"
       then do:

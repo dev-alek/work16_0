@@ -9,7 +9,7 @@
 
 /* Temp-Table and Buffer definitions                                    */
 DEFINE BUFFER locked_thbj-attr FOR thbj-attr.
-
+ 
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS shattrpt
@@ -142,7 +142,9 @@ DEFINE VARIABLE r-denstclc AS CHARACTER
      RADIO-BUTTONS
           "среднее по сменной сверке и внеш.приходам (shft_rvs-inc)", "shft_rvs-inc",
 "среднее по сверкам (avrg-rvs)", "avrg-rvs",
-"среднеарифметическое значение окаймл€ющих сверок (avrg-chk)", "avrg-chk"
+"среднеарифметическое значение окаймл€ющих сверок (avrg-chk)", "avrg-chk",
+"среднее значение по расчетно-книжным данным (shft_sys-inc)", "shft_sys-inc"
+/*из сменной сверке и внеш.приходам*/
      SIZE 65.5 BY 2.5 NO-UNDO.
 
 DEFINE VARIABLE r-expptrl AS CHARACTER

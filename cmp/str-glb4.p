@@ -270,6 +270,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 { cmp/cr-prep.i 1 attr-bge-incr-last-shift-date bge-incr-last-shift-date " " bge-incr-last-shift-date }
 /* Номер последней выгруженной смены для объекта */
 { cmp/cr-prep.i 1 attr-bge-incr-last-shift-num bge-incr-last-shift-num " " bge-incr-last-shift-num }
+/* Выгружается ли смена в данный момент */
+{ cmp/cr-prep.i 1 attr-bge-incr-cur bge-incr-cur " " bge-incr-cur }
 /* Дата и номер последней выгруженной смены в SAP ECC 6.0 ОАО "Сургутнефтегаз" */
 { cmp/cr-prep.i 1 attr-bge-sap-sng-last-shift bge-sap-sng-last-shift " " bge-sap-sng-last-shift }
 /* Дата ЕГРИП */

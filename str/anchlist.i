@@ -1130,9 +1130,11 @@ define variable v-old-status as character no-undo .
 
     if CHK-STATUS = "chk-date":U
     then do:
+      if v-start-date = ? or v-end-date = ? then
       assign
       v-start-date = date(month(v-today - 1), 1, year(v-today))
-      v-end-date = v-today - 1
+      v-end-date = v-today - 1.
+      
       RS-STATUS = CHK-STATUS + {&delim-par} + string(v-start-date, "99/99/9999") + {&delim-par} + string(v-end-date, "99/99/9999")
       .
       display

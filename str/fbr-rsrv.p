@@ -66,6 +66,7 @@ define variable vss-description as character no-undo init "Расчет учетных цен и 
     define variable v-continue                      as logical      no-undo.
     define variable v-ok                            as logical      no-undo.
     define variable v-del-zero-lines                as logical      no-undo.
+    define variable v-not-reserved                  as logical      no-undo.
 
     define buffer buf_out_fbr-line for fbr-line.         /* строка производства {&write-off} */
     define buffer buf_in_fbr-line   for fbr-line.             /* {&row} производства {&income} */
@@ -334,6 +335,7 @@ on error undo, return error
                 .
                 leave reserv-fbr-line.
             end.
+            
             run str/fbr-rcp.p (
                   input parparentproc
                 , input p-fbrhist-handle
@@ -345,6 +347,10 @@ on error undo, return error
             ) no-error.
             if error-status:error
             then do:
+                if return-value = 'not-reserved' then do:
+                  v-not-reserved = true.
+                  next reserv-fbr-line.
+                end.
                 assign
                     v-continue = no
                 .
@@ -457,6 +463,8 @@ on error undo, return error
                         .
                     end.
                   end.
+                  
+                  if return-value <> 'not-reserved' then
                     undo, return error return-value .
                 end.
             end.
@@ -471,6 +479,9 @@ on error undo, return error
                 .
             end.
         end.        /* for each temp_recipe-order */
+        
+        if v-not-reserved then return error 'not-reserved'.
+        
         if p-reserved = no
         then do:
           if p-silent then do:
