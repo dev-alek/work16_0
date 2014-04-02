@@ -1962,7 +1962,7 @@ define variable v-holder-obj-code as integer no-undo .
           undo, return error .
         end.
         assign
-        v-value = v-holder-obj-type + string(v-holder-obj-code, ">>>>>>>>9")
+        v-value = v-holder-obj-type + "," + string(v-holder-obj-code)
         .
         if v-value <> p-value then do:
           p-value = v-value.
