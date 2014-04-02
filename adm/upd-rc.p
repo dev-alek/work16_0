@@ -95,10 +95,10 @@ end.
 
 /* Есть ли архиватор  */
 assign
-  v-arc = search( "exe/7za.exe":U )
+  v-arc = search( "exe/7z.exe":U )
 .
 if v-arc = ? then do:
-  return error "Не найдена программа 7za.exe, раскрыть обновления невозможно" .
+  return error "Не найдена программа 7z.exe, раскрыть обновления невозможно" .
 end.
 
 assign
@@ -185,11 +185,11 @@ on error undo, return error return-value
       end.
 
       v-txt = "".
-      v-txt = /* v-arc */ v-PathRC + "-old\exe\7za.exe" + " x -y -o" + v-PathRC + " " +  UpgFile-tbl.FullNameUpgFile.
+      v-txt = /* v-arc */ v-PathRC + "-old\exe\7z.exe" + " x -y -o" + v-PathRC + " " +  UpgFile-tbl.FullNameUpgFile.
     end.
     else do:
       v-txt = "".
-      v-txt = v-PathRC + "\exe\7za.exe" + " x -y -o" + v-PathRC + " " +  UpgFile-tbl.FullNameUpgFile.
+      v-txt = v-PathRC + "\exe\7z.exe" + " x -y -o" + v-PathRC + " " +  UpgFile-tbl.FullNameUpgFile.
     end.
 
     os-command silent value ( v-txt ) .
