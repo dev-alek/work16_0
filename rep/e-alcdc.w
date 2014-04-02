@@ -38,6 +38,7 @@ define variable vss-description as character no-undo init "".
 { str/trdcalib.i  } /* Атрибуты */
 { trg/partslib.i  } /* Для остатков */
 { rep/fmtcli.i    } /* Для инн, кпп, адреса и т.п. */
+{ gbl/clntattr.i }
 
 CREATE WIDGET-POOL.
 
@@ -236,12 +237,12 @@ define buffer buf_part-2            for part-2.
 &Scoped-define FRAME-NAME F-Main
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-13 RADIO-ALC-PRODUCER ~
-EDITOR-ALC-PRODUCER RADIO-SUPPLIER EDITOR-SUPPLIER RADIO-ALC-TYPE ~
-EDITOR-ALC-TYPE TOGGLE-Excel TOGGLE-XML 
-&Scoped-Define DISPLAYED-OBJECTS RADIO-ALC-PRODUCER EDITOR-ALC-PRODUCER ~
-RADIO-SUPPLIER EDITOR-SUPPLIER RADIO-ALC-TYPE EDITOR-ALC-TYPE TOGGLE-Excel ~
-TOGGLE-XML 
+&Scoped-Define ENABLED-OBJECTS RECT-13 RADIO-SET-ver FILL-IN-kor ~
+RADIO-SET-form RADIO-ALC-PRODUCER EDITOR-ALC-PRODUCER RADIO-SUPPLIER ~
+EDITOR-SUPPLIER RADIO-ALC-TYPE EDITOR-ALC-TYPE TOGGLE-Excel TOGGLE-XML 
+&Scoped-Define DISPLAYED-OBJECTS RADIO-SET-ver FILL-IN-kor RADIO-SET-form ~
+RADIO-ALC-PRODUCER EDITOR-ALC-PRODUCER RADIO-SUPPLIER EDITOR-SUPPLIER ~
+RADIO-ALC-TYPE EDITOR-ALC-TYPE TOGGLE-Excel TOGGLE-XML 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -267,10 +268,16 @@ DEFINE VARIABLE EDITOR-SUPPLIER AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 50 BY 2.62 NO-UNDO.
 
+DEFINE VARIABLE FILL-IN-kor AS INTEGER FORMAT ">>9":U 
+     LABEL "№ кор" 
+     VIEW-AS FILL-IN 
+     SIZE 5 BY 1 NO-UNDO.
+
 DEFINE VARIABLE RADIO-ALC-PRODUCER AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
      RADIO-BUTTONS 
-          "Все", 1
+          "Все", 1,
+"Выборочно", 2
      SIZE 16 BY 2.38 NO-UNDO.
 
 DEFINE VARIABLE RADIO-ALC-TYPE AS INTEGER 
@@ -280,22 +287,37 @@ DEFINE VARIABLE RADIO-ALC-TYPE AS INTEGER
 "Выборочно", 2
      SIZE 16 BY 2.38 NO-UNDO.
 
+DEFINE VARIABLE RADIO-SET-form AS INTEGER 
+     VIEW-AS RADIO-SET HORIZONTAL
+     RADIO-BUTTONS 
+          "Первичная", 1,
+"Корректирующая", 2
+     SIZE 41 BY .95 NO-UNDO.
+
+DEFINE VARIABLE RADIO-SET-ver AS INTEGER 
+     VIEW-AS RADIO-SET HORIZONTAL
+     RADIO-BUTTONS 
+          "4.30", 1,
+"4.20", 2
+     SIZE 20 BY .95 NO-UNDO.
+
 DEFINE VARIABLE RADIO-SUPPLIER AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
      RADIO-BUTTONS 
-          "Все", 1
+          "Все", 1,
+"Выборочно", 2
      SIZE 16 BY 2.38 NO-UNDO.
 
 DEFINE RECTANGLE RECT-13
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 72 BY 13.76.
+     SIZE 72 BY 16.14.
 
 DEFINE VARIABLE TOGGLE-Excel AS LOGICAL INITIAL yes 
      LABEL "Excel" 
      VIEW-AS TOGGLE-BOX
      SIZE 10 BY .81 NO-UNDO.
 
-DEFINE VARIABLE TOGGLE-XML AS LOGICAL INITIAL no 
+DEFINE VARIABLE TOGGLE-XML AS LOGICAL INITIAL yes 
      LABEL "XML" 
      VIEW-AS TOGGLE-BOX
      SIZE 9 BY .81 NO-UNDO.
@@ -304,25 +326,34 @@ DEFINE VARIABLE TOGGLE-XML AS LOGICAL INITIAL no
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
-     RADIO-ALC-PRODUCER AT ROW 2.67 COL 4 NO-LABEL WIDGET-ID 26
-     EDITOR-ALC-PRODUCER AT ROW 2.67 COL 22 NO-LABEL WIDGET-ID 32
-     RADIO-SUPPLIER AT ROW 6.71 COL 4 NO-LABEL WIDGET-ID 50
-     EDITOR-SUPPLIER AT ROW 6.71 COL 22 NO-LABEL WIDGET-ID 40
-     RADIO-ALC-TYPE AT ROW 10.52 COL 4 NO-LABEL WIDGET-ID 44
-     EDITOR-ALC-TYPE AT ROW 10.52 COL 22 NO-LABEL WIDGET-ID 42
-     TOGGLE-Excel AT ROW 13.62 COL 33 WIDGET-ID 52
-     TOGGLE-XML AT ROW 13.62 COL 44 WIDGET-ID 54
-     "Вывести отчет в формате:" VIEW-AS TEXT
-          SIZE 28 BY .71 AT ROW 13.7 COL 4 WIDGET-ID 56
+     RADIO-SET-ver AT ROW 1.62 COL 13 NO-LABEL WIDGET-ID 58
+     FILL-IN-kor AT ROW 2.43 COL 65 COLON-ALIGNED WIDGET-ID 70
+     RADIO-SET-form AT ROW 2.5 COL 13 NO-LABEL WIDGET-ID 66
+     RADIO-ALC-PRODUCER AT ROW 4.81 COL 4 NO-LABEL WIDGET-ID 26
+     EDITOR-ALC-PRODUCER AT ROW 4.81 COL 22 NO-LABEL WIDGET-ID 32
+     RADIO-SUPPLIER AT ROW 8.86 COL 4 NO-LABEL WIDGET-ID 50
+     EDITOR-SUPPLIER AT ROW 8.86 COL 22 NO-LABEL WIDGET-ID 40
+     RADIO-ALC-TYPE AT ROW 12.67 COL 4 NO-LABEL WIDGET-ID 44
+     EDITOR-ALC-TYPE AT ROW 12.67 COL 22 NO-LABEL WIDGET-ID 42
+     TOGGLE-Excel AT ROW 15.76 COL 33 WIDGET-ID 52
+     TOGGLE-XML AT ROW 15.76 COL 44 WIDGET-ID 54
      "Выбор поставщика" VIEW-AS TEXT
-          SIZE 23 BY .62 AT ROW 6 COL 4 WIDGET-ID 34
+          SIZE 23 BY .62 AT ROW 8.14 COL 4 WIDGET-ID 34
           FGCOLOR 4 
-     "Выбор производителя" VIEW-AS TEXT
-          SIZE 23 BY .62 AT ROW 1.71 COL 4 WIDGET-ID 30
+     "Форма" VIEW-AS TEXT
+          SIZE 9 BY .62 AT ROW 2.67 COL 4 WIDGET-ID 64
+          FGCOLOR 4 
+     "Версия" VIEW-AS TEXT
+          SIZE 9 BY .62 AT ROW 1.71 COL 4 WIDGET-ID 62
           FGCOLOR 4 
      "Выбор вида алкогольной продукции" VIEW-AS TEXT
-          SIZE 38 BY .62 AT ROW 9.81 COL 4 WIDGET-ID 48
+          SIZE 38 BY .62 AT ROW 11.95 COL 4 WIDGET-ID 48
           FGCOLOR 4 
+     "Выбор производителя" VIEW-AS TEXT
+          SIZE 23 BY .62 AT ROW 3.86 COL 4 WIDGET-ID 30
+          FGCOLOR 4 
+     "Вывести отчет в формате:" VIEW-AS TEXT
+          SIZE 28 BY .71 AT ROW 15.86 COL 4 WIDGET-ID 56
      RECT-13 AT ROW 1.29 COL 2 WIDGET-ID 18
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
@@ -446,7 +477,7 @@ DO:
                          assign
                            alc-producers.obj-type = buf_clients.obj-type
                            alc-producers.obj-code = buf_clients.obj-code
-                           alc-producers.obj-name = buf_clients.obj-name
+                           alc-producers.obj-name = buf_clients.obj-name.
                            EDITOR-ALC-PRODUCER = EDITOR-ALC-PRODUCER + alc-producers.obj-name + chr(10).
                      end. /* if available buf_clients */
                end. /* do ii = 1 to num-entries */
@@ -565,6 +596,21 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME RADIO-SET-form
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RADIO-SET-form s-object
+ON VALUE-CHANGED OF RADIO-SET-form IN FRAME F-Main
+DO:
+    assign RADIO-SET-form.  /* Получим текущее значение */
+    case RADIO-SET-form:
+        when 1 then
+            assign FILL-IN-kor:hidden in frame {&FRAME-NAME} = true.
+        when 2 then
+            assign FILL-IN-kor:hidden in frame {&FRAME-NAME} = false.
+    end case.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &UNDEFINE SELF-NAME
 
@@ -618,7 +664,8 @@ define variable v-attr-type      as character no-undo.
 
 /* Сначала обработаем кнопки */
 
-assign frame {&FRAME-NAME} RADIO-ALC-PRODUCER RADIO-ALC-TYPE RADIO-SUPPLIER TOGGLE-Excel TOGGLE-XML.
+assign frame {&FRAME-NAME} RADIO-ALC-PRODUCER RADIO-ALC-TYPE RADIO-SUPPLIER TOGGLE-Excel
+    TOGGLE-XML RADIO-SET-ver RADIO-SET-form FILL-IN-kor.
 
 for each part-1 exclusive-lock:
     delete part-1.
@@ -649,29 +696,15 @@ run factord-end-day(input x-date-end, output fact-order-end).
 
 /* Производитель */
 
-case RADIO-ALC-PRODUCER:
-    /* Создадим таблицу, если выбрраны все */
-    when 1 then do:
-/*        for each buf_clients-attr no-lock where buf_clients-attr.attr-code = {&attr-cli-alc-producer}:  */
-/*            find first buf_clients no-lock where buf_clients.obj-type = buf_clients-attr.obj-type */
-/*                                             and buf_clients.obj-code = buf_clients-attr.obj-code.*/
-/*                   create alc-producers.                                                          */
-/*                   assign                                                                         */
-/*                   alc-producers.obj-code = buf_clients.obj-code                                  */
-/*                   alc-producers.obj-type = buf_clients.obj-type                                  */
-/*                   alc-producers.obj-name = buf_clients.obj-name.                                 */
-/*        end.                                                                                      */
-    end.
+if RADIO-ALC-PRODUCER = 2 then do:
     /* Уберем из выбранных не производителей алкоголя */
-    when 2 then do:
-/*        for each alc-producers exclusive-lock :                                                                */
-/*            find first buf_clients-attr no-lock where buf_clients-attr.obj-code = alc-producers.obj-code       */
-/*                                                  and buf_clients-attr.obj-type = alc-producers.obj-type       */
-/*                                                  and buf_clients-attr.attr-code = {&attr-cli-alc-producer} no-error.*/
-/*        if not available (buf_clients-attr) then delete alc-producers.                                         */
-/*        end.                                                                                                   */
+    for each alc-producers exclusive-lock :
+        find first buf_clients-attr no-lock where buf_clients-attr.obj-code = alc-producers.obj-code
+                                              and buf_clients-attr.obj-type = alc-producers.obj-type
+                                              and buf_clients-attr.attr-code = {&attr-cli-alc-producer} no-error.
+        if not available (buf_clients-attr) then delete alc-producers.
     end.
-end case.
+    end.
 
 /*/* Поставщик */                        */
 /*                                       */
@@ -744,6 +777,13 @@ case x-SelectGood:
                                   where buf_alc-type-gds.alc-type-inner-code = alc-types.type-code:
             for first buf_goods no-lock where buf_goods.gds-code = buf_alc-type-gds.gds-code
                                         and buf_goods.stts = 0: /* Смотрим, что не удаленный */
+                
+                /* Если только по выбранному производителю */
+                if RADIO-ALC-PRODUCER = 2 and
+                not can-find(first alc-producers where alc-producers.obj-type = buf_goods.prod-type
+                                                   and alc-producers.obj-code = buf_goods.prod-code)
+                then next.
+                
                 create alc-goods.
                 assign
                 alc-goods.gds-code  = buf_alc-type-gds.gds-code
@@ -873,6 +913,12 @@ for each obj-list no-lock:  /* По всем объектам */
                                                                    ,input true).
        for each temp-parts no-lock where temp-parts.fact-qnty <> 0:
 
+          /* Если выборочно по поставщикам */
+          if RADIO-SUPPLIER = 2 and
+          not can-find(first alc-suppliers where alc-suppliers.obj-type = temp-parts.supp-type
+                                             and alc-suppliers.obj-code = temp-parts.supp-code)
+          then next.
+          
           /* Получим производителя/импортера */
            if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
                imp-or-prod-type = temp-parts.alc-imp-type
@@ -987,6 +1033,12 @@ for each obj-list no-lock:  /* По всем объектам */
                                                                    ,input true).
        for each temp-parts no-lock where temp-parts.fact-qnty <> 0:
 
+          /* Если выборочно по поставщикам */
+          if RADIO-SUPPLIER = 2 and
+          not can-find(first alc-suppliers where alc-suppliers.obj-type = temp-parts.supp-type
+                                             and alc-suppliers.obj-code = temp-parts.supp-code)
+          then next.
+          
           /* Получим производителя/импортера */
            if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
                imp-or-prod-type = temp-parts.alc-imp-type
@@ -1095,7 +1147,7 @@ for each obj-list no-lock:  /* По всем объектам */
                                       and   buf_doc-line.obj-code     = obj-list.obj-code             /* По объекту */
                                       and   buf_doc-line.fact-order   >= fact-order-start             /* По дате начала */
                                       and   buf_doc-line.fact-order   <= fact-order-end               /* По дате конца */
-                                      and   buf_doc-line.status_      = "факт"                        /* По закрытым */
+                                      and   buf_doc-line.status_      = {&fact}                       /* По закрытым */
                                       and   buf_doc-line.artic        = alc-goods.artic               /* По артикулу */
                                       and   buf_doc-line.prod-code    = alc-goods.prod-code           /* По производителю */
                                       and   buf_doc-line.prod-type    = alc-goods.prod-type           /* По производителю */
@@ -1106,6 +1158,12 @@ for each obj-list no-lock:  /* По всем объектам */
                                           and   buf_parts.artic     = alc-goods.artic
                                           and   buf_parts.out-code  = buf_doc-line.doc-code:
 
+                    /* Если выборочно по поставщикам */
+                    if RADIO-SUPPLIER = 2 and
+                    not can-find(first alc-suppliers where alc-suppliers.obj-type = buf_parts.supp-type
+                                                       and alc-suppliers.obj-code = buf_parts.supp-code)
+                    then next.
+                    
                     /* Получим производителя/импортера */
                     if buf_parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
                         imp-or-prod-type = buf_parts.alc-imp-type
@@ -1354,14 +1412,33 @@ for each obj-list no-lock:  /* По всем объектам */
                         part-2.total = buf_parts.fact-qnty * alc-goods.vol / 10.  /* 16 */
 
                     for first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code:
+                        
+                        run clntattr-value in this-procedure (
+                                              input buf_trn-doc.cli-type
+                                            ,input buf_trn-doc.cli-code
+                                            ,input {&attr-main-accholder}
+                                            ,output v-attr-val
+                                            ,output v-attr-type) no-error.
+                        
+                        if v-attr-val = '' then do:
                         assign
                         part-2.supplier-code = buf_trn-doc.cli-code               /*  */
                         part-2.supplier-type = buf_trn-doc.cli-type               /*  */
                         part-2.supplier-obj-name = buf_trn-doc.cli-name.          /* 6 */
+                        end.
+                        else do:
+                            find first buf_clients no-lock where buf_clients.obj-type = entry(1, v-attr-val, ',')
+                                                             and buf_clients.obj-code = integer(entry(2, v-attr-val, ',')).
+
+                            assign
+                            part-2.supplier-code = buf_clients.obj-code               /*  */
+                            part-2.supplier-type = buf_clients.obj-type               /*  */
+                            part-2.supplier-obj-name = buf_clients.obj-name.          /* 6 */
+                        end.
 
                         /* Для ИНН и КПП Поставщика */
 
-                            case buf_trn-doc.cli-type:
+                            case part-2.supplier-type:
 
                             when {&cmp} then do:
                                 find first buf_firm no-lock where buf_firm.firm-code = part-2.supplier-code.
@@ -1450,12 +1527,11 @@ run waitfram-show in this-procedure (input wait-message).
 /* Вывод */
 
 if TOGGLE-Excel = yes then run excel-output.
-
 if TOGGLE-XML = yes then run xml-output.
 
 run waitfram-hide.
 
-apply "go".
+/*apply "go".*/
 
 END PROCEDURE.
 
@@ -1944,7 +2020,12 @@ hSAXWriter:start-element ("Файл").
 
     /* Атрибуты */
     hSAXWriter:insert-attribute ("ДатаДок", string(day(today), "99") + "." + string(month(today), "99")  + "." + string(year(today), "9999")).
-    hSAXWriter:insert-attribute ("ВерсФорм", "4.20").
+    
+    case RADIO-SET-ver:
+        when 1 then hSAXWriter:insert-attribute ("ВерсФорм", "4.30").
+        when 2 then hSAXWriter:insert-attribute ("ВерсФорм", "4.20").
+    end case.
+    
     hSAXWriter:insert-attribute ("НаимПрог", "Trade House").
 
     /* Тэги в "Файл"-е */
@@ -1952,14 +2033,29 @@ hSAXWriter:start-element ("Файл").
     hSAXWriter:start-element ("ФормаОтч").
         
         /* Атрибуты */
+        case RADIO-SET-ver:
+            when 1 then do:
+                hSAXWriter:insert-attribute ("НомФорм", "11").
+                hSAXWriter:insert-attribute ("ПризПериодОтч", string(quarter)).
+                hSAXWriter:insert-attribute ("ГодПериодОтч", string(year(x-date-start))).
+            end.
+            when 2 then do:
         hSAXWriter:insert-attribute ("ГодПериодОтч", string(year(x-date-start))).
         hSAXWriter:insert-attribute ("НомФорм", "11-о").
         hSAXWriter:insert-attribute ("ПризПериодОтч", string(quarter)).
         hSAXWriter:insert-attribute ("ПризФОтч", "4").
+            end.
+        end case.
         
-        /* Дата */    
+        case RADIO-SET-form:
+            when 1 then do:
         hSAXWriter:write-empty-element("Первичная").
-            
+            end.
+            when 2 then do:
+                hSAXWriter:write-empty-element("Корректирующая").
+                    hSAXWriter:insert-attribute ("НомерКорр", string(FILL-IN-kor)).
+            end.
+        end case.
     hSAXWriter:end-element ("ФормаОтч").
     
     hSAXWriter:start-element ("Справочники").
@@ -2083,6 +2179,43 @@ hSAXWriter:start-element ("Файл").
             
             hSAXWriter:end-element ("ОтветЛицо").
             
+            case RADIO-SET-ver:
+                
+                when 1 then do:
+                    
+                    hSAXWriter:start-element ("Деятельность").
+                    
+                        hSAXWriter:start-element ("Лицензируемая").
+                            
+                            for each alc-sale-licenses no-lock:
+                                
+                                hSAXWriter:write-empty-element ("Лицензия").
+                            
+                                /* Атрибуты */
+                                hSAXWriter:insert-attribute ("ВидДеят", "06").
+                                hSAXWriter:insert-attribute ("ДатаНачЛиц", alc-sale-licenses.date-from).
+                                hSAXWriter:insert-attribute ("ДатаОконЛиц", alc-sale-licenses.date-to).
+                                hSAXWriter:insert-attribute ("СерНомЛиц", alc-sale-licenses.seria + alc-sale-licenses.number).
+                            
+                            end. /* for each alc-sale-licenses */
+                            
+                        hSAXWriter:end-element ("Лицензируемая").
+                        
+                        if can-find(first part-1 where index(part-1.alc-type-code, '481,482,483,484,485') > 0)
+                            or can-find(first part-2 where index(part-2.alc-type-code, '481,482,483,484,485') > 0) then do:
+                            
+                            hSAXWriter:start-element ("Нелицензируемая").
+                                hSAXWriter:insert-attribute ("ВидДеят", "12").
+                            hSAXWriter:end-element ("Нелицензируемая").
+                            
+                        end. /* if can-find */
+                        
+                    hSAXWriter:end-element ("Деятельность").
+                
+                end. /* when 1 */
+                
+                when 2 then do:
+                    
             hSAXWriter:start-element ("Лицензии").
                 
                 for each alc-sale-licenses no-lock:
@@ -2099,6 +2232,10 @@ hSAXWriter:start-element ("Файл").
                 end. /* for each alc-sale-licenses */
                 
             hSAXWriter:end-element ("Лицензии").
+            
+                end. /* when 2 */
+                
+            end.
             
         hSAXWriter:end-element ("Организация").
         
@@ -2246,6 +2383,11 @@ hSAXWriter:end-element ("Файл").
 hSAXWriter:end-document().
 delete object hSAXWriter no-error.
 
+message "Вывод в XML завершен." skip
+        "Путь к сформированному файлу: " skip
+        xml
+view-as alert-box information.
+
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2271,10 +2413,13 @@ PROCEDURE local-initialize :
     assign
     EDITOR-ALC-PRODUCER = "По всем производителям"
     EDITOR-SUPPLIER = "По всем поставщикам"
-    EDITOR-ALC-TYPE = "По всем типам продукции".
-    TOGGLE-Excel    = yes.
+    EDITOR-ALC-TYPE = "По всем типам продукции"
+    TOGGLE-Excel    = yes
+    TOGGLE-XML      = yes.
     
-    display EDITOR-ALC-PRODUCER EDITOR-SUPPLIER EDITOR-ALC-TYPE TOGGLE-Excel with frame {&FRAME-NAME}.
+    display EDITOR-ALC-PRODUCER EDITOR-SUPPLIER EDITOR-ALC-TYPE TOGGLE-Excel TOGGLE-XML with frame {&FRAME-NAME}.
+    
+    assign FILL-IN-kor:hidden in frame {&FRAME-NAME} = true.
 
 END PROCEDURE.
 
