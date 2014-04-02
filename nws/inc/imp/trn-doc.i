@@ -375,6 +375,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}
         and buf_parts.artic     = buf_goods.artic
         and buf_parts.prod-type = buf_goods.prod-type
         and buf_parts.prod-code = buf_goods.prod-code
+        and buf_parts.prt-code = locb-parts-attr.prt-code
         and buf_parts.part-code = locb-parts-attr.part-code
     on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
     :
