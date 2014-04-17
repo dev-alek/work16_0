@@ -138,7 +138,7 @@ end.
 { rep/menu-doc.i {&TDEDT_Corr_Acc_Price} "'*'" "'no'" "'*'"  "'Счет-фактура (возврат поставщику) для переоц.(без НП)'"              "'cost,sale,rubl,base'" "'rep/factur.p'"    "'yes,yes,all,no,yes'"      "'--+++--'"  "''"        "''"          "''"     ? }
 { rep/menu-doc.i "'*'" "'*'" "'*'" "'*'"                     "'Печать документов внешней программой'"                               "'cost,sale,rubl,base'" "'rep/torg-ext.p'"  {&print}                    "'-------'"  "'BDC'"     "'self'"      "''"     ? }
 { rep/menu-doc.i "'*'" "'*'" "'*'" "'*'"                     "'Печать штрих-кодов внешней программой'"                              "'cost,sale,rubl,base'" "'rep/torg-ext.p'"  {&alt-barcode}              "'-------'"  "'BDC'"     "'self'"      "''"     ? }
-{ rep/menu-doc.i {&TDEDT_Inv} {&fact} "'*'" "'*'"            "'Акт на списание материалов'"                                         "'cost,sale,rubl,base'" "'rep/r-achmat.p'"  "''"                        "'+-+++-+'"  "''"        "''"          "''"     ? }
+{ rep/menu-doc.i {&TDEDT_Inv} {&fact} "'*'" "'*'"            "'Акт на списание материалов'"                                         "'cost,sale,rubl,base'" "'rep/r-achmat.p'"  "''"                        "'+-----+'"  "''"        "''"          "''"     ? }
 
 /* Для ОС */
 { rep/menu-doc.i {&write-off}  {&fact} "'no'"  "'*'"         "'Требование-накладная (форма М-11)'"                                  "'cost,sale,rubl,base'" "'rep/r-f_m11.p'"   "''"                        "'+-+----'"  "''"        "'self'"      "''"     ? }
