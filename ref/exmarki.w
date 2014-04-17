@@ -48,6 +48,7 @@ def var vss-description as character no-undo init "Корректировка акцизной или сп
 define variable v-db-num like ub.db.db-num no-undo.
 
 define buffer locked_ex-mark for ub.ex-mark.
+define buffer locked_ex-mark-attr for ub.ex-mark-attr.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -82,12 +83,13 @@ tt-ex-mark.db-num tt-ex-mark.mark-code
 &Scoped-Define ENABLED-FIELDS tt-ex-mark.mark-name
 &Scoped-define ENABLED-TABLES tt-ex-mark
 &Scoped-define FIRST-ENABLED-TABLE tt-ex-mark
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help r-mark-type
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help r-mark-type ~
+FILL-IN-Date-to 
 &Scoped-Define DISPLAYED-FIELDS tt-ex-mark.mark-name tt-ex-mark.db-num ~
 tt-ex-mark.mark-code
 &Scoped-define DISPLAYED-TABLES tt-ex-mark
 &Scoped-define FIRST-DISPLAYED-TABLE tt-ex-mark
-&Scoped-Define DISPLAYED-OBJECTS r-mark-type FILL-IN-Descr
+&Scoped-Define DISPLAYED-OBJECTS r-mark-type FILL-IN-Date-to FILL-IN-Descr 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -117,16 +119,21 @@ DEFINE BUTTON B-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
+DEFINE VARIABLE FILL-IN-Date-to AS DATE FORMAT "99/99/9999":U INITIAL ? 
+     LABEL "Действительна до" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
 DEFINE VARIABLE FILL-IN-Descr AS CHARACTER FORMAT "X(256)":U INITIAL "Тип марки:"
       VIEW-AS TEXT
-     SIZE 10.5 BY .67 NO-UNDO.
+     SIZE 10.6 BY .67 NO-UNDO.
 
 DEFINE VARIABLE r-mark-type AS INTEGER
      VIEW-AS RADIO-SET VERTICAL
      RADIO-BUTTONS
           "Специальная", 0,
 "Акцизная", 1
-     SIZE 22 BY 1.6 NO-UNDO.
+     SIZE 22 BY 1.62 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -139,24 +146,25 @@ DEFINE QUERY Dialog-Frame FOR
 DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      B-quit AT ROW 1 COL 11
-     B-Help AT ROW 1 COL 50.5
-     tt-ex-mark.mark-name AT ROW 4.73 COL 24 COLON-ALIGNED
+     B-Help AT ROW 1 COL 50.6
+     tt-ex-mark.mark-name AT ROW 4.71 COL 24 COLON-ALIGNED
           LABEL "Код марки" FORMAT "X(20)"
           VIEW-AS FILL-IN
-          SIZE 30.5 BY 1
-     r-mark-type AT ROW 6.07 COL 26 NO-LABEL
-     tt-ex-mark.db-num AT ROW 2.6 COL 24 COLON-ALIGNED
+          SIZE 30.6 BY 1
+     r-mark-type AT ROW 6.05 COL 26 NO-LABEL
+     FILL-IN-Date-to AT ROW 7.91 COL 24 COLON-ALIGNED WIDGET-ID 2
+     tt-ex-mark.db-num AT ROW 2.62 COL 24 COLON-ALIGNED
           LABEL "Код БД создания"
            VIEW-AS TEXT
-          SIZE 5.5 BY .67
+          SIZE 5.6 BY .67
           FGCOLOR 4
      tt-ex-mark.mark-code AT ROW 3.67 COL 24 COLON-ALIGNED
           LABEL "Внутренний код"
            VIEW-AS TEXT
           SIZE 10 BY .67
           FGCOLOR 4
-     FILL-IN-Descr AT ROW 6.07 COL 13 COLON-ALIGNED NO-LABEL
-     SPACE(37.69) SKIP(1.58)
+     FILL-IN-Descr AT ROW 6.05 COL 13 COLON-ALIGNED NO-LABEL
+     SPACE(37.59) SKIP(2.75)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
          TITLE "Акцизная или специальная марка"
@@ -366,12 +374,12 @@ PROCEDURE enable_UI :
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY r-mark-type FILL-IN-Descr
+  DISPLAY r-mark-type FILL-IN-Date-to FILL-IN-Descr 
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-ex-mark THEN
     DISPLAY tt-ex-mark.mark-name tt-ex-mark.db-num tt-ex-mark.mark-code
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit B-Help tt-ex-mark.mark-name r-mark-type
+  ENABLE B-exit B-quit B-Help tt-ex-mark.mark-name r-mark-type FILL-IN-Date-to 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -392,11 +400,21 @@ PROCEDURE MyEnable :
     r-mark-type = tt-ex-mark.mark-type.
   end.
 
+  /* Марка действительна до */
+  find first locked_ex-mark-attr no-lock 
+    where locked_ex-mark-attr.db-num = tt-ex-mark.db-num
+    and locked_ex-mark-attr.mark-code = tt-ex-mark.mark-code
+    and locked_ex-mark-attr.attr-code = "exp-date" no-error.
+  if available locked_ex-mark-attr then do:
+    FILL-IN-Date-to = date(locked_ex-mark-attr.attr-value).
+  end.
+
   display
     tt-ex-mark.db-num
     tt-ex-mark.mark-code
     tt-ex-mark.mark-name
     r-mark-type
+    FILL-IN-Date-to
    with frame {&frame-name}.
 
   view frame {&frame-name}.
@@ -414,6 +432,7 @@ PROCEDURE MyEnable :
     enable B-exit
            tt-ex-mark.mark-name
            r-mark-type when p-mark-type = ? /* В браузе фильтр "Все" */
+           FILL-IN-Date-to
       with frame {&frame-name}.
     apply "entry" to tt-ex-mark.mark-name in frame {&frame-name}.
   end.
@@ -432,7 +451,7 @@ PROCEDURE proc-save :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-  define variable v-new-code like ub.ex-mark.mark-code no-undo.
+  define variable v-new-code like ex-mark.mark-code no-undo.
 
   define buffer buf_ex-mark for ub.ex-mark.
   if p-mode = {&lookup} then do:
@@ -442,6 +461,7 @@ PROCEDURE proc-save :
   assign frame {&frame-name}
     tt-ex-mark.mark-name
     r-mark-type
+    FILL-IN-Date-to
   .
 
   /* Предварительные проверки */
@@ -477,9 +497,37 @@ PROCEDURE proc-save :
         locked_ex-mark.db-num    = v-db-num
         locked_ex-mark.mark-code = NEXT-VALUE( s-ex-mark, {&db-name_schema} )
       .
+      if FILL-IN-Date-to <> ? then do:
+        create locked_ex-mark-attr.
+        assign
+        locked_ex-mark-attr.db-num = locked_ex-mark.db-num
+        locked_ex-mark-attr.mark-code = locked_ex-mark.mark-code
+        locked_ex-mark-attr.attr-code = "exp-date"
+        locked_ex-mark-attr.attr-value = string(FILL-IN-Date-to).
+      end.
     end.
     else do:
       find current locked_ex-mark exclusive-lock.
+      
+      /* Найём дату */
+      find first locked_ex-mark-attr exclusive-lock 
+            where locked_ex-mark-attr.db-num = locked_ex-mark.db-num
+              and locked_ex-mark-attr.mark-code = locked_ex-mark.mark-code
+              and locked_ex-mark-attr.attr-code = "exp-date" no-error.
+      
+      /* Если не было и что-то поставили, то создадим */
+      if not available(locked_ex-mark-attr) and FILL-IN-Date-to <> ? then do:
+            create locked_ex-mark-attr.
+            assign
+            locked_ex-mark-attr.db-num = locked_ex-mark.db-num
+            locked_ex-mark-attr.mark-code = locked_ex-mark.mark-code
+            locked_ex-mark-attr.attr-code = "exp-date"
+            locked_ex-mark-attr.attr-value = string(FILL-IN-Date-to).
+      end.
+      /* Если обнуление */
+      else do:
+        locked_ex-mark-attr.attr-value = string(FILL-IN-Date-to).
+      end.
     end.
 
     assign
