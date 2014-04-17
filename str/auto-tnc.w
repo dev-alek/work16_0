@@ -135,7 +135,7 @@ DEFINE FRAME Dialog-Frame
      b-choose-auto-firm AT ROW 6.25 COL 30 WIDGET-ID 4
      varPS AT ROW 7.5 COL 15.13 NO-LABEL
      "Примечание" VIEW-AS TEXT
-          SIZE 11.88 BY .88 AT ROW 6.21 COL 2.75
+          SIZE 11.88 BY .88 AT ROW 7.63 COL 2.75
      SPACE(43.86) SKIP(2.15)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
@@ -272,7 +272,7 @@ DO:
       end.
     end.
     else do :
-      delete ub.auto-tank-attr.
+      if available ub.auto-tank-attr then delete ub.auto-tank-attr.
     end.
   end.
 END.

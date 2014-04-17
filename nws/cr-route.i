@@ -378,7 +378,9 @@ PROCEDURE cre-dump-c-recipe:
 
     find buf_c-recipe where rowid(buf_c-recipe) = tbl-row.
 
-    for each buf_c-recipe-gds where buf_c-recipe-gds.recipe-code = buf_c-recipe.recipe-code
+    for each buf_c-recipe-gds where buf_c-recipe-gds.recipe-code = buf_c-recipe.recipe-code and
+         buf_c-recipe-gds.corr-user-db-num  = buf_c-recipe.corr-user-db-num  and
+                               buf_c-recipe-gds.chip-num = buf_c-recipe.chip-num
     on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
       run cre-route-dump( p-act-name, {&table_c-recipe-gds}, (buffer buf_c-recipe-gds:handle), dmp-ord, input-output rc-ord ).
     end.

@@ -10859,6 +10859,8 @@
     <Cell ss:MergeAcross="44" ss:StyleID="m90201984"><Data ss:Type="String">Расход</Data></Cell>
     <Cell ss:MergeAcross="9" ss:MergeDown="3" ss:StyleID="m90202004"><Data
       ss:Type="String">Остаток на конец&#10;отчетного периода</Data></Cell>
+    <Cell ss:MergeAcross="9" ss:MergeDown="3" ss:StyleID="m90202004"><Data
+      ss:Type="String">В том числе остаток с акцизными марками,&#10;требования к которым утрачивают силу</Data></Cell>
    </Row>
    <Row ss:AutoFitHeight="0" ss:Height="14.25" ss:StyleID="s88">
     <Cell ss:Index="30" ss:MergeAcross="11" ss:MergeDown="2" ss:StyleID="m90214848"><Data
@@ -10922,6 +10924,7 @@
     <Cell ss:MergeAcross="8" ss:StyleID="m90216192"><Data ss:Type="Number">18</Data></Cell>
     <Cell ss:MergeAcross="8" ss:StyleID="m90216212"><Data ss:Type="Number">19</Data></Cell>
     <Cell ss:MergeAcross="9" ss:StyleID="m90216232"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:MergeAcross="9" ss:StyleID="m90216232"><Data ss:Type="Number">21</Data></Cell>
    </Row>
 	
 	<!-- Заполнение таблицы Раздела 1 -->
@@ -10930,7 +10933,7 @@
    
    <Row ss:AutoFitHeight="0" ss:Height="12.75" ss:StyleID="s64">
     <Cell ss:MergeAcross="5" ss:StyleID="m90216252"><Data ss:Type="String">1</Data></Cell>
-    <Cell ss:MergeAcross="191" ss:StyleID="m90216272"><Data ss:Type="String"><xsl:value-of select="./firm/header"/></Data></Cell>
+    <Cell ss:MergeAcross="201" ss:StyleID="m90216272"><Data ss:Type="String"><xsl:value-of select="./firm/header"/></Data></Cell>
    </Row>   
    
 		    <xsl:for-each select="./firm/row">
@@ -10957,6 +10960,7 @@
     <Cell ss:MergeAcross="8" ss:StyleID="m90216885"><Data ss:Type="String">x</Data></Cell>
     <Cell ss:MergeAcross="8" ss:StyleID="m90216904"><Data ss:Type="Number"><xsl:value-of select="c19"/></Data></Cell>
     <Cell ss:MergeAcross="9" ss:StyleID="m90216924"><Data ss:Type="Number"><xsl:value-of select="c20"/></Data></Cell>
+    <Cell ss:MergeAcross="9" ss:StyleID="m90216924"><Data ss:Type="Number"><xsl:value-of select="c21"/></Data></Cell>
    </Row>
 			
 			</xsl:for-each> <!-- for-each select="./firm/row" -->
@@ -10965,7 +10969,7 @@
 		
    <Row ss:AutoFitHeight="0" ss:Height="12.75" ss:StyleID="s64">
     <Cell ss:MergeAcross="5" ss:StyleID="m90216252"><Data ss:Type="String"><xsl:value-of select="./n"/></Data></Cell>
-    <Cell ss:MergeAcross="191" ss:StyleID="m90216272"><Data ss:Type="String"><xsl:value-of select="./header"/></Data></Cell>
+    <Cell ss:MergeAcross="201" ss:StyleID="m90216272"><Data ss:Type="String"><xsl:value-of select="./header"/></Data></Cell>
    </Row>
    
 			<xsl:for-each select="./row">
@@ -10992,6 +10996,7 @@
     <Cell ss:MergeAcross="8" ss:StyleID="m90216884"><Data ss:Type="Number"><xsl:value-of select="c18"/></Data></Cell>
     <Cell ss:MergeAcross="8" ss:StyleID="m90216904"><Data ss:Type="Number"><xsl:value-of select="c19"/></Data></Cell>
     <Cell ss:MergeAcross="9" ss:StyleID="m90216924"><Data ss:Type="Number"><xsl:value-of select="c20"/></Data></Cell>
+    <Cell ss:MergeAcross="9" ss:StyleID="m90216924"><Data ss:Type="Number"><xsl:value-of select="c21"/></Data></Cell>
    </Row>
 			
 			</xsl:for-each> <!-- for-each select="./row" -->

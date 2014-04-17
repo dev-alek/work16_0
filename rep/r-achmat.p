@@ -46,8 +46,17 @@ define variable v-doc-sum  as decimal no-undo. /* сумма по накладной */
 define stream Out-Stream.
 
 { cmp/vssrevis.i     }
+{ cmp/library.i         }
 { cmp/str-glbl.i     }
 { cmp/r-pril.i       }
+{ str/trdcalib.i        }
+{ str/in-vatp.i def     }
+{ str/out-vatp.i def    }
+{ rep/r-cliprp.i def    }
+{ rep/fmtcli.i          }
+{ gbl/clntattr.i        }
+{ rep/torgconf.i        }
+{ str/getctxtp.i def    }
 
 /* для вывода в excel */
 { gbl/paramls.i }
@@ -65,6 +74,8 @@ run write-cells.
 /* формируем отчет */
 run close-rep.
 
+define shared variable no-vat  as logical no-undo.
+define shared variable CostPrice as logical no-undo.
 
 procedure prepare-rep:
     run get-gds-engl  in parParentProc ( output g#gds-engl ).
@@ -170,12 +181,16 @@ procedure write-lines:
         find first bf_doc-line-sum
             where bf_doc-line-sum.doc-code = bf_trn-doc.doc-code
             and bf_doc-line-sum.gds-code = bf_goods.gds-code
-            and bf_doc-line-sum.sum-type = {&sum-after-doc}
+            and bf_doc-line-sum.sum-type = {&sum-general-doc}
             no-lock.
             
         v-line-num = v-line-num + 1.
         v-doc-qnty = v-doc-qnty + bf_doc-line.fact-qnty.
-        v-doc-sum = v-doc-sum + (bf_doc-line.fact-qnty * bf_doc-line-sum.cost-sum-rubl).
+        /*Сумма*/
+        v-doc-sum = v-doc-sum + if no-vat then bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl 
+                                    else  if Costprice then bf_doc-line-sum.cost-sum-rubl
+                                              else bf_doc-line-sum.crsa-sum-rubl.
+        
 
         run acmxl-sheet1-write-line-data(
                 v-line-num, /* номер строки */
@@ -185,8 +200,13 @@ procedure write-lines:
                 bf_goods.unit-base, /* ед. измерения */
                 bf_goods.normal-wastage, /* норма ( в доп. информацие по товару ) */
                 bf_doc-line.fact-qnty, /* кол-во */
-                bf_doc-line-sum.cost-sum-rubl, /* учетная цена */
-                bf_doc-line.fact-qnty * bf_doc-line-sum.cost-sum-rubl, /* сумма в учетных ценах */
+                if bf_doc-line.fact-qnty = 0 then 0 
+                    else if no-vat then (bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl) / bf_doc-line.fact-qnty
+                             else if Costprice then bf_doc-line-sum.cost-sum-rubl / bf_doc-line.fact-qnty
+                                      else bf_doc-line-sum.crsa-sum-rubl / bf_doc-line.fact-qnty , /* цена */
+                if no-vat then bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl 
+                    else if Costprice then bf_doc-line-sum.cost-sum-rubl 
+                             else bf_doc-line-sum.crsa-sum-rubl, /* сумма */
                 if avail bf_trn-reason then bf_trn-reason.reason-name else "" /* основание накладной */
             ).
     end. /* for each bf_doc-line */

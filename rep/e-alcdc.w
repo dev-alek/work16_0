@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS s-object 
-&Scoped-define doc-types ie,ee,ep,es,re,rs,we,vt,vp,iv,ev,rv,em,wm
+&Scoped-define doc-types ie,ee,ep,es,re,rs,we,vt,vp,iv,ev,rv,em,wm,im
 /*
 
 $Revision$
@@ -161,6 +161,7 @@ define temp-table part-1    /* Раздел I */
     field exp-18            as   decimal decimals 5        /* 18 */
     field exp-19            as   decimal decimals 5        /* 19 */
     field remain-20         as   decimal decimals 5        /* 20 */
+    field remain-21         as   decimal decimals 5        /* 21 */
     index pi is unique primary type-code prod-code prod-type obj-type obj-code
     index producer-obj-name producer-obj-name.
 
@@ -219,6 +220,7 @@ define buffer buf_person            for ub.person.
 define buffer buf_alc-sale-lic      for ub.alc-sale-lic.
 define buffer buf_sysconf           for ub.sysconf.
 define buffer buf_part-2            for part-2.
+define buffer buf_ex-mark-attr      for ub.ex-mark-attr.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -238,11 +240,12 @@ define buffer buf_part-2            for part-2.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-13 RADIO-SET-ver FILL-IN-kor ~
-RADIO-SET-form RADIO-ALC-PRODUCER EDITOR-ALC-PRODUCER RADIO-SUPPLIER ~
-EDITOR-SUPPLIER RADIO-ALC-TYPE EDITOR-ALC-TYPE TOGGLE-Excel TOGGLE-XML 
+RADIO-SET-form FILL-IN-exp-date RADIO-ALC-PRODUCER EDITOR-ALC-PRODUCER ~
+RADIO-SUPPLIER EDITOR-SUPPLIER RADIO-ALC-TYPE EDITOR-ALC-TYPE TOGGLE-Excel ~
+TOGGLE-XML 
 &Scoped-Define DISPLAYED-OBJECTS RADIO-SET-ver FILL-IN-kor RADIO-SET-form ~
-RADIO-ALC-PRODUCER EDITOR-ALC-PRODUCER RADIO-SUPPLIER EDITOR-SUPPLIER ~
-RADIO-ALC-TYPE EDITOR-ALC-TYPE TOGGLE-Excel TOGGLE-XML 
+FILL-IN-exp-date RADIO-ALC-PRODUCER EDITOR-ALC-PRODUCER RADIO-SUPPLIER ~
+EDITOR-SUPPLIER RADIO-ALC-TYPE EDITOR-ALC-TYPE TOGGLE-Excel TOGGLE-XML 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -268,7 +271,12 @@ DEFINE VARIABLE EDITOR-SUPPLIER AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 50 BY 2.62 NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-kor AS INTEGER FORMAT ">>9":U 
+DEFINE VARIABLE FILL-IN-exp-date AS DATE FORMAT "99/99/99":U
+     LABEL "Срок действия марок, считающихся устаревшими" 
+     VIEW-AS FILL-IN 
+     SIZE 10 BY .95 NO-UNDO.
+
+DEFINE VARIABLE FILL-IN-kor AS INTEGER FORMAT ">>9":U INITIAL 0 
      LABEL "№ кор" 
      VIEW-AS FILL-IN 
      SIZE 5 BY 1 NO-UNDO.
@@ -310,7 +318,7 @@ DEFINE VARIABLE RADIO-SUPPLIER AS INTEGER
 
 DEFINE RECTANGLE RECT-13
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 72 BY 16.14.
+     SIZE 72 BY 16.62.
 
 DEFINE VARIABLE TOGGLE-Excel AS LOGICAL INITIAL yes 
      LABEL "Excel" 
@@ -328,33 +336,34 @@ DEFINE VARIABLE TOGGLE-XML AS LOGICAL INITIAL yes
 DEFINE FRAME F-Main
      RADIO-SET-ver AT ROW 1.62 COL 13 NO-LABEL WIDGET-ID 58
      FILL-IN-kor AT ROW 2.43 COL 65 COLON-ALIGNED WIDGET-ID 70
-     RADIO-SET-form AT ROW 2.5 COL 13 NO-LABEL WIDGET-ID 66
-     RADIO-ALC-PRODUCER AT ROW 4.81 COL 4 NO-LABEL WIDGET-ID 26
-     EDITOR-ALC-PRODUCER AT ROW 4.81 COL 22 NO-LABEL WIDGET-ID 32
-     RADIO-SUPPLIER AT ROW 8.86 COL 4 NO-LABEL WIDGET-ID 50
-     EDITOR-SUPPLIER AT ROW 8.86 COL 22 NO-LABEL WIDGET-ID 40
-     RADIO-ALC-TYPE AT ROW 12.67 COL 4 NO-LABEL WIDGET-ID 44
-     EDITOR-ALC-TYPE AT ROW 12.67 COL 22 NO-LABEL WIDGET-ID 42
-     TOGGLE-Excel AT ROW 15.76 COL 33 WIDGET-ID 52
-     TOGGLE-XML AT ROW 15.76 COL 44 WIDGET-ID 54
+     RADIO-SET-form AT ROW 2.52 COL 13 NO-LABEL WIDGET-ID 66
+     FILL-IN-exp-date AT ROW 3.62 COL 54 COLON-ALIGNED WIDGET-ID 72
+     RADIO-ALC-PRODUCER AT ROW 5.52 COL 4 NO-LABEL WIDGET-ID 26
+     EDITOR-ALC-PRODUCER AT ROW 5.52 COL 22 NO-LABEL WIDGET-ID 32
+     RADIO-SUPPLIER AT ROW 9.57 COL 4 NO-LABEL WIDGET-ID 50
+     EDITOR-SUPPLIER AT ROW 9.57 COL 22 NO-LABEL WIDGET-ID 40
+     RADIO-ALC-TYPE AT ROW 13.38 COL 4 NO-LABEL WIDGET-ID 44
+     EDITOR-ALC-TYPE AT ROW 13.38 COL 22 NO-LABEL WIDGET-ID 42
+     TOGGLE-Excel AT ROW 16.48 COL 33 WIDGET-ID 52
+     TOGGLE-XML AT ROW 16.48 COL 44 WIDGET-ID 54
      "Выбор поставщика" VIEW-AS TEXT
-          SIZE 23 BY .62 AT ROW 8.14 COL 4 WIDGET-ID 34
+          SIZE 23 BY .62 AT ROW 8.86 COL 4 WIDGET-ID 34
           FGCOLOR 4 
-     "Форма" VIEW-AS TEXT
-          SIZE 9 BY .62 AT ROW 2.67 COL 4 WIDGET-ID 64
+     "Вывести отчет в формате:" VIEW-AS TEXT
+          SIZE 28 BY .71 AT ROW 16.57 COL 4 WIDGET-ID 56
+     "Выбор производителя" VIEW-AS TEXT
+          SIZE 23 BY .62 AT ROW 4.57 COL 4 WIDGET-ID 30
+          FGCOLOR 4 
+     "Выбор вида алкогольной продукции" VIEW-AS TEXT
+          SIZE 38 BY .62 AT ROW 12.67 COL 4 WIDGET-ID 48
           FGCOLOR 4 
      "Версия" VIEW-AS TEXT
           SIZE 9 BY .62 AT ROW 1.71 COL 4 WIDGET-ID 62
           FGCOLOR 4 
-     "Выбор вида алкогольной продукции" VIEW-AS TEXT
-          SIZE 38 BY .62 AT ROW 11.95 COL 4 WIDGET-ID 48
+     "Форма" VIEW-AS TEXT
+          SIZE 9 BY .62 AT ROW 2.67 COL 4 WIDGET-ID 64
           FGCOLOR 4 
-     "Выбор производителя" VIEW-AS TEXT
-          SIZE 23 BY .62 AT ROW 3.86 COL 4 WIDGET-ID 30
-          FGCOLOR 4 
-     "Вывести отчет в формате:" VIEW-AS TEXT
-          SIZE 28 BY .71 AT ROW 15.86 COL 4 WIDGET-ID 56
-     RECT-13 AT ROW 1.29 COL 2 WIDGET-ID 18
+     RECT-13 AT ROW 1.24 COL 2 WIDGET-ID 18
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1 SCROLLABLE 
@@ -377,7 +386,7 @@ DEFINE FRAME F-Main
 &ANALYZE-SUSPEND _CREATE-WINDOW
 /* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW s-object ASSIGN
-         HEIGHT             = 16.76
+         HEIGHT             = 17.24
          WIDTH              = 75.
 /* END WINDOW DEFINITION */
                                                                         */
@@ -541,6 +550,22 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME RADIO-SET-form
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RADIO-SET-form s-object
+ON VALUE-CHANGED OF RADIO-SET-form IN FRAME F-Main
+DO:
+    assign RADIO-SET-form.  /* Получим текущее значение */
+    case RADIO-SET-form:
+        when 1 then
+            assign FILL-IN-kor:hidden in frame {&FRAME-NAME} = true.
+        when 2 then
+            assign FILL-IN-kor:hidden in frame {&FRAME-NAME} = false.
+    end case.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME RADIO-SUPPLIER
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RADIO-SUPPLIER s-object
 ON VALUE-CHANGED OF RADIO-SUPPLIER IN FRAME F-Main
@@ -596,21 +621,6 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME RADIO-SET-form
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RADIO-SET-form s-object
-ON VALUE-CHANGED OF RADIO-SET-form IN FRAME F-Main
-DO:
-    assign RADIO-SET-form.  /* Получим текущее значение */
-    case RADIO-SET-form:
-        when 1 then
-            assign FILL-IN-kor:hidden in frame {&FRAME-NAME} = true.
-        when 2 then
-            assign FILL-IN-kor:hidden in frame {&FRAME-NAME} = false.
-    end case.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &UNDEFINE SELF-NAME
 
@@ -665,7 +675,7 @@ define variable v-attr-type      as character no-undo.
 /* Сначала обработаем кнопки */
 
 assign frame {&FRAME-NAME} RADIO-ALC-PRODUCER RADIO-ALC-TYPE RADIO-SUPPLIER TOGGLE-Excel
-    TOGGLE-XML RADIO-SET-ver RADIO-SET-form FILL-IN-kor.
+    TOGGLE-XML RADIO-SET-ver RADIO-SET-form FILL-IN-kor FILL-IN-exp-date.
 
 for each part-1 exclusive-lock:
     delete part-1.
@@ -1008,6 +1018,16 @@ for each obj-list no-lock:  /* По всем объектам */
 
           part-1.remain-20 = part-1.remain-20 + temp-parts.fact-qnty * alc-goods.vol / 10.
 
+          /* для проверки акцизной марки */
+          find first buf_ex-mark-attr no-lock 
+            where buf_ex-mark-attr.db-num = temp-parts.mark-db-num
+            and buf_ex-mark-attr.mark-code = temp-parts.mark-code
+            and buf_ex-mark-attr.attr-code = "exp-date" no-error.
+            
+          if available(buf_ex-mark-attr) and buf_ex-mark-attr.attr-value <> ? then do:
+              if date(buf_ex-mark-attr.attr-value) <= FILL-IN-exp-date then
+                part-1.remain-21 = part-1.remain-21 + temp-parts.fact-qnty * alc-goods.vol / 10.
+          end.
        end. /* for each temp-parts */
 
     end. /* each alc-goods */
@@ -1531,7 +1551,7 @@ if TOGGLE-XML = yes then run xml-output.
 
 run waitfram-hide.
 
-/*apply "go".*/
+apply "go".
 
 END PROCEDURE.
 
@@ -1647,6 +1667,7 @@ for each part-1 no-lock break by part-1.alc-type-code:
     accumulate part-1.exp-18    (total).
     accumulate part-1.exp-19    (total).
     accumulate part-1.remain-20 (total).
+    accumulate part-1.remain-21 (total).
 
     accumulate part-1.remain-6  (total by part-1.alc-type-code).
     accumulate part-1.inc-7     (total by part-1.alc-type-code).
@@ -1663,6 +1684,7 @@ for each part-1 no-lock break by part-1.alc-type-code:
     accumulate part-1.exp-18    (total by part-1.alc-type-code).
     accumulate part-1.exp-19    (total by part-1.alc-type-code).
     accumulate part-1.remain-20 (total by part-1.alc-type-code).
+    accumulate part-1.remain-21 (total by part-1.alc-type-code).
 
     if last-of (part-1.alc-type-code) then do:
 
@@ -1689,6 +1711,7 @@ for each part-1 no-lock break by part-1.alc-type-code:
         hSAXWriter:write-data-element("c18" ,string(accum total by part-1.alc-type-code part-1.exp-18   )).
         hSAXWriter:write-data-element("c19" ,string(accum total by part-1.alc-type-code part-1.exp-19   )).
         hSAXWriter:write-data-element("c20" ,string(accum total by part-1.alc-type-code part-1.remain-20)).
+        hSAXWriter:write-data-element("c21" ,string(accum total by part-1.alc-type-code part-1.remain-21)).
       hSAXWriter:end-element ("row").
     end.
 
@@ -1717,6 +1740,7 @@ end. /* for each part-1 */
         hSAXWriter:write-data-element("c18" ,string(accum total part-1.exp-18   )).
         hSAXWriter:write-data-element("c19" ,string(accum total part-1.exp-19   )).
         hSAXWriter:write-data-element("c20" ,string(accum total part-1.remain-20)).
+        hSAXWriter:write-data-element("c21" ,string(accum total part-1.remain-21)).
       hSAXWriter:end-element ("row").
 
 hSAXWriter:end-element ("firm").
@@ -1749,6 +1773,7 @@ for each part-1 no-lock break by part-1.obj-type by part-1.obj-code by part-1.al
     accumulate part-1.exp-18    (total by part-1.obj-code).
     accumulate part-1.exp-19    (total by part-1.obj-code).
     accumulate part-1.remain-20 (total by part-1.obj-code).
+    accumulate part-1.remain-21 (total by part-1.obj-code).
 
     hSAXWriter:start-element ("row").
         nn = nn + 1.
@@ -1773,6 +1798,7 @@ for each part-1 no-lock break by part-1.obj-type by part-1.obj-code by part-1.al
         hSAXWriter:write-data-element("c18" ,string(part-1.exp-18)).
         hSAXWriter:write-data-element("c19" ,string(part-1.exp-19)).
         hSAXWriter:write-data-element("c20" ,string(part-1.remain-20)).
+        hSAXWriter:write-data-element("c21" ,string(part-1.remain-21)).
     hSAXWriter:end-element ("row").
 
     if last-of (part-1.obj-code) then do:
@@ -1800,6 +1826,7 @@ for each part-1 no-lock break by part-1.obj-type by part-1.obj-code by part-1.al
             hSAXWriter:write-data-element("c18" ,string(accum total by part-1.obj-code part-1.exp-18   )).
             hSAXWriter:write-data-element("c19" ,string(accum total by part-1.obj-code part-1.exp-19   )).
             hSAXWriter:write-data-element("c20" ,string(accum total by part-1.obj-code part-1.remain-20)).
+            hSAXWriter:write-data-element("c21" ,string(accum total by part-1.obj-code part-1.remain-21)).
         hSAXWriter:end-element ("row").
 
        hSAXWriter:end-element ("object").
@@ -2362,6 +2389,7 @@ hSAXWriter:start-element ("Файл").
                             hSAXWriter:insert-attribute ("П100000000018", string(part-1.exp-18)   ).
                             hSAXWriter:insert-attribute ("П100000000019", string(part-1.exp-19)   ).
                             hSAXWriter:insert-attribute ("П100000000020", string(part-1.remain-20)).
+                            hSAXWriter:insert-attribute ("П100000000021", string(part-1.remain-21)).
                                                                             
                     hSAXWriter:end-element ("СведПроизвИмпорт").
                        
@@ -2415,9 +2443,10 @@ PROCEDURE local-initialize :
     EDITOR-SUPPLIER = "По всем поставщикам"
     EDITOR-ALC-TYPE = "По всем типам продукции"
     TOGGLE-Excel    = yes
-    TOGGLE-XML      = yes.
+    TOGGLE-XML      = yes
+    FILL-IN-exp-date =  12/01/14.
     
-    display EDITOR-ALC-PRODUCER EDITOR-SUPPLIER EDITOR-ALC-TYPE TOGGLE-Excel TOGGLE-XML with frame {&FRAME-NAME}.
+    display EDITOR-ALC-PRODUCER EDITOR-SUPPLIER EDITOR-ALC-TYPE TOGGLE-Excel TOGGLE-XML FILL-IN-exp-date with frame {&FRAME-NAME}.
     
     assign FILL-IN-kor:hidden in frame {&FRAME-NAME} = true.
 

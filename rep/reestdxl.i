@@ -325,7 +325,7 @@ on error undo, return error
 
     run reestdxl-write-cell-data in this-procedure (
           input {&reestdxl-sheet4_columnList}
-        , input "ind,clients,data,doc,qnty,sum_cli,sum_pr_list":U
+        , input "ind,clients,data,doc,qnty,sum_cli,sum_bez_vat,sum_pr_listt":U
     ).
     run reestdxl-write-cell-data in this-procedure (
           input {&reestdxl-sheet4_columnType}
@@ -419,7 +419,6 @@ on error undo, return error
         buf_temp_sheet1_line-data.sum_pr_list    = p-sum_pr_list
     .
     put stream excel-line unformatted
-    {&new-line}
                         buf_temp_sheet1_line-data.sheet-name
         {&tabulation}   {&reestdxl-data-label}
         {&tabulation}   buf_temp_sheet1_line-data.ind
@@ -433,7 +432,7 @@ on error undo, return error
         {&tabulation}   buf_temp_sheet1_line-data.vat
         {&tabulation}   buf_temp_sheet1_line-data.sum_cli
         {&tabulation}   buf_temp_sheet1_line-data.sum_pr_list
-        
+        {&new-line}
     .
     .
 end.
@@ -479,7 +478,6 @@ on error undo, return error
         buf_temp_sheet2_line-data.sum_pr_list    = p-sum_pr_list
     .
     put stream excel-line unformatted
-    {&new-line}
                         buf_temp_sheet2_line-data.sheet-name
         {&tabulation}   {&reestdxl-data-label}
         {&tabulation}   buf_temp_sheet2_line-data.ind
@@ -493,7 +491,7 @@ on error undo, return error
         {&tabulation}   buf_temp_sheet2_line-data.vat
         {&tabulation}   buf_temp_sheet2_line-data.sum_cli
         {&tabulation}   buf_temp_sheet2_line-data.sum_pr_list
-        
+        {&new-line}
     .
     .
 end.
@@ -528,7 +526,6 @@ on error undo, return error
         buf_temp_sheet3_line-data.sum             = p-sum
     .
     put stream excel-line unformatted
-    {&new-line}
                         buf_temp_sheet3_line-data.sheet-name
         {&tabulation}   {&reestdxl-data-label}
         {&tabulation}   buf_temp_sheet3_line-data.ind
@@ -536,7 +533,7 @@ on error undo, return error
         {&tabulation}   buf_temp_sheet3_line-data.doc
         {&tabulation}   buf_temp_sheet3_line-data.qnty
         {&tabulation}   buf_temp_sheet3_line-data.sum
-        
+        {&new-line}
     .
     .
 end.
@@ -577,7 +574,6 @@ on error undo, return error
         buf_temp_sheet4_line-data.sum_pr_list      = p-sum_pr_list
     .
     put stream excel-line unformatted
-    {&new-line}
                         buf_temp_sheet4_line-data.sheet-name
         {&tabulation}   {&reestdxl-data-label}
         {&tabulation}   buf_temp_sheet4_line-data.ind
@@ -588,7 +584,7 @@ on error undo, return error
         {&tabulation}   buf_temp_sheet4_line-data.sum_cli
         {&tabulation}   buf_temp_sheet4_line-data.sum_bez_vat
         {&tabulation}   buf_temp_sheet4_line-data.sum_pr_list
-        
+        {&new-line}
     .
     .
 end.
@@ -628,7 +624,6 @@ on error undo, return error
         buf_temp_sheet5_line-data.sum_pr_listt      = p-sum_pr_list
     .
     put stream excel-line unformatted
-    {&new-line}
                         buf_temp_sheet5_line-data.sheet-name
         {&tabulation}   {&reestdxl-data-label}
         {&tabulation}   buf_temp_sheet5_line-data.ind
@@ -639,7 +634,7 @@ on error undo, return error
         {&tabulation}   buf_temp_sheet5_line-data.sum_cli
         {&tabulation}   buf_temp_sheet5_line-data.sum_bez_vat
         {&tabulation}   buf_temp_sheet5_line-data.sum_pr_listt
-        
+        {&new-line}
     .
     .
 end.
@@ -675,7 +670,6 @@ on error undo, return error
         buf_temp_sheet6_line-data.sum_pr_list       =  p-sum_pr_list
     .
     put stream excel-line unformatted
-    {&new-line}
                         buf_temp_sheet6_line-data.sheet-name
         {&tabulation}   {&reestdxl-data-label}
         {&tabulation}   buf_temp_sheet6_line-data.ind
@@ -684,7 +678,7 @@ on error undo, return error
         {&tabulation}   buf_temp_sheet6_line-data.qnty
         {&tabulation}   buf_temp_sheet6_line-data.sum_cli
         {&tabulation}   buf_temp_sheet6_line-data.sum_pr_list
-        
+        {&new-line}
     .
     .
 end.
@@ -720,10 +714,9 @@ on error undo, return error
         buf_temp_cell-data.data-value = p-data-value
     .
     put stream excel-cell unformatted
-    {&new-line}
                         buf_temp_cell-data.data-key
         {&tabulation}   buf_temp_cell-data.data-value
-        
+        {&new-line}
     .
 end.
 end procedure. /* reestdxl-write-cell-data */

@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS s-object 
-&Scoped-define doc-types ie,ee,ep,es,re,rs,we,vt,vp,iv,ev,rv,em,wm
+&Scoped-define doc-types ie,ee,ep,es,re,rs,we,vt,vp,iv,ev,rv,em,wm,im
 /*
 
 $Revision$
@@ -1469,6 +1469,8 @@ if TOGGLE-Excel = yes then run excel-output.
 if TOGGLE-XML = yes then run xml-output.
 
 run waitfram-hide.
+
+apply "go".
 
 END PROCEDURE.
 
