@@ -69,7 +69,7 @@ run rep/d-report.w (
                     ,input if v-curr-r-b = {&r-b-base}
                             then (if v-base-code = 0 then "" else "{&v-base},{&v-all}")
                             else "":U
-                    ,input "shop,{&send-check}"
+                    ,input "shop" /*было убрано: ,{&send-check}*/ 
                     ,input yes).
 
 /* $Workfile$ e n d */

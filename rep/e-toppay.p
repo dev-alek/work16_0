@@ -15,6 +15,10 @@ Creation date: 09/07/05
 
 */
 
+using Progress.Lang.*.
+using Ibs.Th.Gbl.reportXml.
+using Ibs.Th.Gbl.rep-out.
+
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -52,6 +56,10 @@ def SHARED var cas-shft as logical no-undo init no.
 define variable found as logical init yes no-undo.
 define variable bad-chk-str as character no-undo .
 
+define variable Report  as class ReportXml no-undo. /* Переменная под класс */
+define variable xml_tmp as character no-undo. /*путь к временному файлу*/
+define variable xslt-path as character no-undo. /*путь к шаблону */
+define variable rep-out-unit as class rep-out no-undo. /*экземпляр класса формирования документа отчёта */
 define temp-table benefits no-undo
 Field b-code like ub.bar-code.b-code
 field gds-name like ub.goods.gds-name
@@ -122,6 +130,7 @@ define variable attr-value as character no-undo .
 define variable attr-type as character no-undo .
 define variable v-header-base-curr as character no-undo .
 define variable v-curr-r-b as character no-undo .
+define variable v-mode as character initial "nototal":U no-undo .
 { gbl/curr-r-b.i
   v-curr-r-b
 }
@@ -243,8 +252,13 @@ end.
 
 run t-beneq.
 
-IF method = "b-code":U then RUN Proc-b-code.
-else RUN Proc-pay-code.
+/*IF method = "b-code":U then RUN Proc-b-code.             */
+/*else RUN Proc-pay-code.                                  */
+/*run prn-lib-prn-file in this-procedure (                 */
+/*                                          input my-handle*/
+/*                                          ,input 0       */
+/*                                          ).             */
+run Proc-b-code-excel.
 /*
 assign
 g#rep-tblname = ""
@@ -254,10 +268,6 @@ g#rep-updflds = string( (if method = "b-code":U
                                       else 'Топливные платежи по видам топлива')
                                       + str1) .
 */
-run prn-lib-prn-file in this-procedure (
-                                          input my-handle
-                                          ,input 0
-                                          ).
 
 
 END PROCEDURE.
@@ -602,6 +612,337 @@ output stream PrnLibStream CLOSE.
 
 
 END PROCEDURE .
+/*Процедура вывода в Excel продажи топлива по типам оплаты*/
+procedure Proc-b-code-excel:
+
+/*формируем xml */
+xml_tmp = string(session:temp-directory + "report-tmp2.xml"). /* путь к временному xml файлу */
+Report = new ReportXml(xml_tmp). 
+
+
+Report:worksheet("Лист 1").
+Report:worksheet-header("start").   /* Начало шапки отчета */
+Report:worksheet-header("     " + "Отчёт по видам топлива с разбивкой по типам оплаты").
+Report:worksheet-header("" ).
+case my-set_val_type :
+    when {&v-base} then do:
+        if length(str4) > 90 
+            then
+                do:
+                    Report:worksheet-header(substring(str4, 1, 90)+ "..." ).
+                end.
+            else
+                do:
+                    Report:worksheet-header(str4).
+                end.
+        Report:worksheet-header("").
+        if length(str1) > 90        
+            then
+                do:
+                    Report:worksheet-header("     " + substring(str1, 1, 90)+ "..." ).
+                end.
+            else
+                do:
+                    Report:worksheet-header("     " + str1 ).
+                end.
+    end.
+    when {&v-all} then do:
+        if length(str4) > 115 
+            then
+                do:
+                    Report:worksheet-header(substring(str4, 1, 115)+ "..." ).
+                end.
+            else
+                do:
+                    Report:worksheet-header(str4).
+                end.
+        Report:worksheet-header("").
+        if length(str1) > 115        
+            then
+                do:
+                    Report:worksheet-header("     " + substring(str1, 1, 115)+ "..." ).
+                end.
+            else
+                do:
+                    Report:worksheet-header("     " + str1 ).
+                end.
+    end.            
+end case.
+
+
+if NotInc then
+Report:worksheet-header("     " + "(сформирован по ВСЕМ ЧЕКАМ " + (if cas-num = 0 then "ВСЕХ КАСС" else
+("КАССЫ: " + string(cas-num))) + ", включая невошедшие в отчеты о продажах)" ).
+else
+Report:worksheet-header("     " + "(сформирован по ВСЕМ ЧЕКАМ " + (if cas-num = 0 then "ВСЕХ КАСС" else
+("КАССЫ: " + string(cas-num))) + ")").
+
+Report:worksheet-header("").
+
+CASE my-set_val_type :
+    when {&v-base} then do:
+        Report:worksheet-header("     " + date_string + v-header-base-curr).
+    end.
+    when {&v-all} then do:
+        Report:worksheet-header("     " + date_string + string( "  (Б.Вал. - " + caps( trim( base-type ) ) + ")" ) ).
+    end.            
+END CASE .
+
+
+/*Конец шапки отчета*/ 
+Report:worksheet-header("end").
+CASE my-set_val_type :
+    when {&v-base} then do:
+        Report:table-columns("60,125,30,30,120,70,70").    /* Начало таблицы, задаем размеры колонок */
+        Report:table-types = "String,String,String,String,String,Qnty,Number".   /* Типы данных в таблице */
+        Report:table-header("Код|Вид топлива|Вид опл.|Вал|Метод платежа|Литры|Сумма","40","9").    /* Шапка таблицы */     
+    end.
+        
+    when {&v-all} then do:
+        Report:table-columns("60,125,30,30,120,70,70,70,70").    /* Начало таблицы, задаем размеры колонок */
+        Report:table-types = "String,String,String,String,String,Qnty,String,Number,Number".   /* Типы данных в таблице */
+        Report:table-header("Код|Вид топлива|Вид опл.|Вал|Метод платежа|Литры|Сумма в валюте|Сумма в Баз. валюте|Сумма в рублях","40","9").    /* Шапка таблицы */ 
+    end.            
+END CASE .
+
+FOR EACH benefits
+BREAk
+BY benefits.b-code
+BY benefits.pay-code :
+    if benefits.is-real-top <> 0 then do:
+    ACCUMULATE
+    benefits.qnty (total BY benefits.b-code)
+    benefits.tot-base (total BY benefits.b-code)
+    benefits.tot-rubl (total BY benefits.b-code).
+    FIND FIRST ub.cash-pay No-LOCK WHERE ub.cash-pay.cdpay-code = benefits.pay-code No-ERROR.
+    IF AVAIL ub.cash-pay
+    then do:
+      for-pay-name = ub.cash-pay.obj-name.
+    end.
+    else do:
+      if benefits.pay-code = 0 then do:
+        for-pay-name = "Нетопливные платежи".
+      end.
+      else do:
+        for-pay-name = "Неопознанный платеж".
+      end.
+    end.
+    FIND FIRST pays WHERE
+              pays.pay-code = benefits.pay-code NO-ERROR.
+    IF NOT AVAIL pays then do:
+      create pays.
+      assign
+      pays.pay-code = benefits.pay-code
+      pays.pay-name = for-pay-name
+      .
+    end.
+    assign
+    pays.qnty = pays.qnty  + benefits.qnty
+    pays.tot-rubl = pays.tot-rubl  + benefits.tot-rubl
+    pays.tot-base = pays.tot-base  + benefits.tot-base
+    .
+    end.
+  IF FIRST-OF(benefits.b-code) then do:
+    if benefits.is-real-top <> 0 then do:
+      CASE my-set_val_type :
+        when {&v-base} then do:
+        Report:table-row(  (if benefits.b-code = ? then "" else string(benefits.b-code, "999999999"))
+                + "|" +    (if benefits.gds-name = ? then "" else string(benefits.gds-name))
+                + "|" +    (if benefits.pay-code = ? then "" else string(benefits.pay-code))
+                + "|" +    (if benefits.curr-code = ? then "" else string(benefits.curr-code))
+                + "|" +    (if for-pay-name = ? then "" else string(for-pay-name))
+                + "|" +    (if benefits.qnty = ? then "" else string(benefits.qnty))
+                + "|" +    (if v-curr-r-b = {&r-b-base}
+                            then (if benefits.tot-base = ? then "" else string(benefits.tot-base))
+                            else (if benefits.tot-rubl = ? then "" else string(benefits.tot-rubl)))
+        ).
+        end.
+        when {&v-all} then do:
+          Report:table-row(  (if benefits.b-code = ? then "" else string(benefits.b-code, "999999999"))
+                + "|" +    (if benefits.gds-name = ? then "" else string(benefits.gds-name))
+                + "|" +    (if benefits.pay-code = ? then "" else string(benefits.pay-code))
+                + "|" +    (if benefits.curr-code = ? then "" else string(benefits.curr-code))
+                + "|" +    (if for-pay-name = ? then "" else string(for-pay-name))
+                + "|" +    (if benefits.qnty = ? then "" else string(benefits.qnty))
+                + "|" +    ""
+                + "|" +    (if benefits.tot-base = ? then "" else string(benefits.tot-base))
+                + "|" +    (if benefits.tot-rubl = ? then "" else string(benefits.tot-rubl))
+          ).
+        end.
+      END CASE .
+    end. 
+  END.
+    ELSE do:
+    if benefits.is-real-top <> 0 then do:
+      CASE my-set_val_type :
+        when {&v-base} then do:
+        Report:table-row(  ""
+                + "|" +    ""
+                + "|" +    (if benefits.pay-code = ? then "" else string(benefits.pay-code))
+                + "|" +    (if benefits.curr-code = ? then "" else string(benefits.curr-code))
+                + "|" +    (if for-pay-name = ? then "" else string(for-pay-name))
+                + "|" +    (if benefits.qnty = ? then "" else string(benefits.qnty))
+                + "|" +    (if v-curr-r-b = {&r-b-base}
+                            then (if benefits.tot-base = ? then "" else string(benefits.tot-base))
+                            else (if benefits.tot-rubl = ? then "" else string(benefits.tot-rubl)))
+        ).
+        end.
+        when {&v-all} then do:
+          Report:table-row(  ""
+                + "|" +    ""
+                + "|" +    (if benefits.pay-code = ? then "" else string(benefits.pay-code))
+                + "|" +    (if benefits.curr-code = ? then "" else string(benefits.curr-code))
+                + "|" +    (if for-pay-name = ? then "" else string(for-pay-name))
+                + "|" +    (if benefits.qnty = ? then "" else string(benefits.qnty))
+                + "|" +    ""
+                + "|" +    (if benefits.tot-base = ? then "" else string(benefits.tot-base))
+                + "|" +    (if benefits.tot-rubl = ? then "" else string(benefits.tot-rubl))
+          ).
+
+        end.
+      END CASE .
+    end. /*if benefits.is-real-top <> 0 then do:*/
+  END. 
+  
+    IF LAST-OF(benefits.b-code) then do:
+    if benefits.is-real-top <> 0 then do:
+      CASE my-set_val_type :
+        when {&v-base} then do:
+        Report:table-subtotal(  ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    "Итого"
+                + "|" +    string(ACCUM total BY benefits.b-code benefits.qnty)
+                + "|" +    (if v-curr-r-b = {&r-b-base}
+                            then (if (ACCUM total BY benefits.b-code benefits.tot-base) = ? then "" else string(ACCUM total BY benefits.b-code benefits.tot-base))
+                            else (if (ACCUM total BY benefits.b-code benefits.tot-rubl) = ? then "" else string(ACCUM total BY benefits.b-code benefits.tot-rubl)))
+        ).
+        end.
+        when {&v-all} then do:
+        Report:table-subtotal(  ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    "Итого"
+                + "|" +    (if (ACCUM total BY benefits.b-code benefits.qnty) = ? then "" else (string(ACCUM total BY benefits.b-code benefits.qnty)))
+                + "|" +    ""
+                + "|" +    (if (ACCUM total BY benefits.b-code benefits.tot-base) = ? then "" else string(ACCUM total BY benefits.b-code benefits.tot-base))
+                + "|" +    (if (ACCUM total BY benefits.b-code benefits.tot-rubl) = ? then "" else string(ACCUM total BY benefits.b-code benefits.tot-rubl))
+          ).
+        end.
+      END CASE .
+    end.
+  end.
+
+    IF LAST(benefits.b-code) then do:
+    FOR EACH pays No-LOCK
+    BREAK
+    BY PAYS.PAY-CODE:
+      CASE my-set_val_type :
+        when {&v-base} then do:
+        Report:table-row(  ""
+                + "|" +    (IF FIRST(pays.pay-code) then "Всего по методам платежа"  else "")
+                + "|" +    string(pays.pay-code)
+                + "|" +    string(pays.curr-code)
+                + "|" +    string(pays.pay-name)
+                + "|" +    string(pays.qnty)
+                + "|" +   (if v-curr-r-b = {&r-b-base}
+                           then string(pays.tot-base)
+                           else string(pays.tot-rubl) )
+        ).
+        end.
+        when {&v-all} then do:
+        Report:table-row(  ""
+                + "|" +    (IF FIRST(pays.pay-code) then "Всего по методам платежа "  else " ")
+                + "|" +    string(pays.pay-code)
+                + "|" +    string(pays.curr-code)
+                + "|" +    string(pays.pay-name)
+                + "|" +    string(pays.qnty)
+                + "|" +    ""
+                + "|" +    (if (pays.tot-base) = ? then "" else string(pays.tot-base))
+                + "|" +    (if (pays.tot-rubl) = ? then "" else string(pays.tot-rubl))
+        ).
+        end.
+      END CASE .
+    END.
+
+      CASE my-set_val_type :
+      when {&v-base} then do:
+         Report:table-total(    ""
+                + "|" +    "Всего продано топлива"
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    (if (ACCUM TOTAL benefits.qnty) = ? then "" else string(ACCUM TOTAL benefits.qnty))
+                + "|" +    (if v-curr-r-b = {&r-b-base}
+                            then  string(ACCUM TOTAL benefits.tot-base)
+                            else  string(ACCUM TOTAL benefits.tot-rubl))
+         ).
+         v-mode = "yestotal":U.
+      end.
+      when {&v-all} then do:
+         Report:table-total(  ""
+                + "|" +    "Всего продано топлива"
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    (if (ACCUM TOTAL benefits.qnty) = ? then "" else string(ACCUM TOTAL benefits.qnty))
+                + "|" +    ""
+                + "|" +    (if (ACCUM TOTAL benefits.tot-base) = ? then "" else string(ACCUM TOTAL benefits.tot-base))
+                + "|" +    (if (ACCUM TOTAL benefits.tot-rubl) = ? then "" else string(ACCUM TOTAL benefits.tot-rubl))
+         ).
+         v-mode = "yestotal":U.
+        end.
+    END CASE .
+  END.  
+    
+END.  
+if v-mode = "nototal":U and my-set_val_type = {&v-base}  then do:
+         Report:table-total(  ""
+                + "|" +    "Всего продано топлива"
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+         ).
+end.   
+
+if v-mode = "nototal":U and my-set_val_type = {&v-all}  then do:
+         Report:table-total(  ""
+                + "|" +    "Всего продано топлива"
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+                + "|" +    ""
+         ).
+end.   
+
+  
+
+
+Report:worksheet-footer("start").
+Report:worksheet-footer("").
+Report:worksheet-footer("Директор _______________        Старший продавец ______________"  ).
+Report:worksheet-footer("").
+Report:worksheet-footer("").
+Report:worksheet-footer("Бухгалтер ______________         Кассир _________________________  ").
+Report:worksheet-footer("end").
+  
+     
+report:worksheet("end").
+delete object Report. 
+
+
+xslt-path = search("exe\template.xsl").
+rep-out-unit = new rep-out ().
+rep-out-unit:office(xml_tmp, xslt-path). 
+        
+END PROCEDURE.
 
 
 PROCEDURE Proc-pay-code:
