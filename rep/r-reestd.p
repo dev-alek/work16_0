@@ -151,7 +151,7 @@ run get-report-num in my-handle (output g#report-num).
     end.
   find first buf_sys-ctrl no-lock.
   v-single-line = fill("-", 198).
- { cmp/open-out.i stream out-stream " " 38}
+ { cmp/open-out.i stream out-stream " " 42}
   FORM HEADER
     string( "Страница " + string( PAGE-NUMBER( out-stream ), ">>9" ) ) at 160 format "X(13)" skip
     with FRAME TopFrame width {&DOS_CW} PAGE-TOP use-text stream-io NO-LABELS no-box.
@@ -222,17 +222,17 @@ run get-report-num in my-handle (output g#report-num).
         sym5                  column-label ":!:" format "X(1)" space(0)
         buf_trn-doc.doc-code  column-label "№ документа!в системе" format "X(14)" space(0)
         sym6                  column-label ":!:" format "X(1)" space(0)
-        sum-cli-novat         column-label "Сумма по поставщику!без НДС":C20 format "->>>>>>>>9.<<" space(0)
+        sum-cli-novat         column-label "Сумма по поставщику!без НДС":C20 format "->>,>>>,>>9.99" space(0)
         sym7                  column-label ":!:" format "X(1)" space(0)
-        vat-acc-ten           column-label "Сумма НДС!10%":C10 format "->>>>>>>>9.<<" space(0)
+        vat-acc-ten           column-label "Сумма НДС!10%":C10 format "->>,>>>,>>9.99" space(0)
         sym8                  column-label ":!:" format "X(1)" space(0)
-        vat-acc-eighteen      column-label "Сумма НДС!18%:":C10 format "->>>>>>>>9.<<" space(0)
+        vat-acc-eighteen      column-label "Сумма НДС!18%:":C10 format "->>,>>>,>>9.99" space(0)
         sym9                  column-label ":!:" format "X(1)" space(0)
-        vat-acc               column-label "Сумма НДС! ":C10 format "->>>>>>>>9.<<" space(0)
+        vat-acc               column-label "Сумма НДС! ":C10 format "->>,>>>,>>9.99" space(0)
         sym10                 column-label ":!:" format "X(1)" space(0)
-        sum-dsc-cli-acc       column-label "Сумма по поставщику!с НДС":c20 format "->>>>>>>>9.<<" space(0)
+        sum-dsc-cli-acc       column-label "Сумма по поставщику!с НДС":c20 format "->>,>>>,>>9.99" space(0)
         sym11                 column-label ":!:" format "X(1)" space(0)
-        sum-pr-list           column-label "Сумма в продажных!ценах":C18 format "->>>>>>>>9.<<" space(0)
+        sum-pr-list           column-label "Сумма в продажных!ценах":C18 format "->>,>>>,>>9.99" space(0)
         sym12                 column-label ":!:" format "X(1)" space(0)
         header "1. Приход внешний"
         cur-time-print() at 5 format "X(35)" skip
@@ -249,19 +249,19 @@ run get-report-num in my-handle (output g#report-num).
         sym4                  column-label ":!:" format "X(1)" space(0)
         buf_trn-doc.doc-code  column-label "№ документа!в системе" format "X(14)" space(0)
         sym5                  column-label ":!:" format "X(1)" space(0)
-        buf_trn-doc.fact-qnty column-label "Количество!по накладной" format "->>,>>>,>>>,>>9.<<<" space(0)
+        buf_trn-doc.fact-qnty column-label "Количество!по накладной" format "->>,>>>,>>9.<<<" space(0)
         sym6                  column-label ":!:" format "X(1)" space(0)
-        sum-cli-novat         column-label "Сумма по поставщику!без НДС":C20 format "->>>>>>>>9.<<" space(0)
+        sum-cli-novat         column-label "Сумма по поставщику!без НДС":C20 format "->>,>>>,>>9.99" space(0)
         sym7                  column-label ":!:" format "X(1)" space(0)
-        vat-acc-ten           column-label "Сумма НДС!10%":C10 format "->>>>>>>>9.<<" space(0)
+        vat-acc-ten           column-label "Сумма НДС!10%":C10 format "->>,>>>,>>9.99" space(0)
         sym8                  column-label ":!:" format "X(1)" space(0)
-        vat-acc-eighteen      column-label "Сумма НДС!18%:":C10 format "->>>>>>>>9.<<" space(0)
+        vat-acc-eighteen      column-label "Сумма НДС!18%:":C10 format "->>,>>>,>>9.99" space(0)
         sym9                  column-label ":!:" format "X(1)" space(0)
-        vat-acc               column-label "Сумма НДС! ":C10 format "->>>>>>>>9.<<" space(0)
+        vat-acc               column-label "Сумма НДС! ":C10 format "->>,>>>,>>9.99" space(0)
         sym10                 column-label ":!:" format "X(1)" space(0)
-        sum-dsc-cli-acc       column-label "Сумма по поставщику!с НДС":c20 format "->>>>>>>>9.<<" space(0)
+        sum-dsc-cli-acc       column-label "Сумма по поставщику!с НДС":c20 format "->>,>>>,>>9.99" space(0)
         sym11                 column-label ":!:" format "X(1)" space(0)
-        sum-pr-list           column-label "Сумма в продажных!ценах":C18 format "->>>>>>>>9.<<" space(0)
+        sum-pr-list           column-label "Сумма в продажных!ценах":C18 format "->>,>>>,>>9.99" space(0)
         sym12                 column-label ":!:" format "X(1)" space(0)
         header "2. Возврат поставщику"
         v-single-line format "X(192)" at 1
@@ -276,13 +276,13 @@ run get-report-num in my-handle (output g#report-num).
         sym5                  column-label ":!:" format "X(1)" space(0)
         buf_trn-doc.doc-code  column-label "№ документа!в системе":C14 format "X(14)" space(0)
         sym6                  column-label ":!:" format "X(1)" space(0)
-        buf_trn-doc.fact-qnty column-label "Количество!по накладной":C13 format "->>,>>>,>>>,>>9.<<<" space(0)
+        buf_trn-doc.fact-qnty column-label "Количество!по накладной":C13 format "->>,>>>,>>9.<<<" space(0)
         sym7                  column-label ":!:" format "X(1)" space(0)
-        sum-dsc-cli-acc       column-label "Сумма по поставщику!с НДС":c20 format "->>>>>>>>9.<<" space(0)
+        sum-dsc-cli-acc       column-label "Сумма по поставщику!с НДС":c20 format "->>,>>>,>>9.99" space(0)
         sym12                 column-label ":!:" format "X(1)" space(0)
-        sum-cli-novat      column-label "Сумма по поставщику!без НДС":c20 format "->>>>>>>>9.<<" space(0)
+        sum-cli-novat      column-label "Сумма по поставщику!без НДС":c20 format "->>,>>>,>>9.99" space(0)
         sym14                 column-label ":!:" format "X(1)" space(0)
-        sum-pr-list           column-label "Сумма в продажных!ценах":C18 format "->>>>>>>>9.<<" space(0)
+        sum-pr-list           column-label "Сумма в продажных!ценах":C18 format "->>,>>>,>>9.99" space(0)
         sym13                 column-label ":!:" format "X(1)" space(0)
         header "4. Приход внутренний"
         v-single-line format "X(160)" at 1
@@ -297,13 +297,13 @@ run get-report-num in my-handle (output g#report-num).
         sym5                  column-label ":!:" format "X(1)" space(0)
         buf_trn-doc.doc-code  column-label "№ документа!в системе":C13 format "X(14)" space(0)
         sym6                  column-label ":!:" format "X(1)" space(0)
-        buf_trn-doc.fact-qnty column-label "Количество!по накладной":C13 format "->>,>>>,>>>,>>9.<<<" space(0)
+        buf_trn-doc.fact-qnty column-label "Количество!по накладной":C13 format "->>,>>>,>>9.<<<" space(0)
         sym7                  column-label ":!:" format "X(1)" space(0)
-        sum-dsc-cli-acc       column-label "Сумма по поставщику!с НДС":c20 format "->>>>>>>>9.<<" space(0)
+        sum-dsc-cli-acc       column-label "Сумма по поставщику!с НДС":c20 format "->>,>>>,>>9.99" space(0)
         sym12                 column-label ":!:" format "X(1)" space(0)
-        sum-cli-novat      column-label "Сумма по поставщику!без НДС":c22 format "->>>>>>>>9.<<" space(0)
+        sum-cli-novat      column-label "Сумма по поставщику!без НДС":c22 format "->>,>>>,>>9.99" space(0)
         sym14                 column-label ":!:" format "X(1)" space(0)
-        sum-pr-list           column-label "Сумма в продажных!ценах":C18 format "->>>>>>>>9.<<" space(0)
+        sum-pr-list           column-label "Сумма в продажных!ценах":C18 format "->>,>>>,>>9.99" space(0)
         sym13                 column-label ":!:" format "X(1)" space(0)
         header "5. Расход внутренний"
         v-single-line format "X(160)" at 1
@@ -316,11 +316,11 @@ run get-report-num in my-handle (output g#report-num).
         sym5                  column-label ":!:" format "X(1)" space(0)
         buf_trn-doc.doc-code  column-label "№ документа!в системе" format "X(14)" space(0)
         sym6                  column-label ":!:" format "X(1)" space(0)
-        buf_trn-doc.fact-qnty column-label "Количество!по накладной":C13 format "->>,>>>,>>>,>>9.<<<" space(0)
+        buf_trn-doc.fact-qnty column-label "Количество!по накладной":C13 format "->>,>>>,>>9.<<<" space(0)
         sym7                  column-label ":!:" format "X(1)" space(0)
-        sum-dsc-cli-acc       column-label "Сумма по поставщику!с НДС":c22 format "->>>>>>>>9.<<" space(0)
+        sum-dsc-cli-acc       column-label "Сумма по поставщику!с НДС":c22 format "->>,>>>,>>9.99" space(0)
         sym12                 column-label ":!:" format "X(1)" space(0)
-        sum-pr-list           column-label "Сумма в продажных!ценах":C18 format "->>,>>>,>>>,>>9.<<<" space(0)
+        sum-pr-list           column-label "Сумма в продажных!ценах":C18 format "->>,>>>,>>9.<<<" space(0)
         sym13                 column-label ":!:" format "X(1)" space(0)
         header "6. Списание"
         v-single-line format "X(87)" at 1
@@ -333,16 +333,16 @@ run get-report-num in my-handle (output g#report-num).
         sym5                    column-label ":!:" format "X(1)" space(0)
         buf_price-doc.doc-num   column-label "№ документа!в системе" format "X(14)" space(0)
         sym6                    column-label ":!:" format "X(1)" space(0)
-        v-qnty                  column-label "Количество!по документу":C13 format "->>,>>>,>>>,>>9.<<<" space(0)
+        v-qnty                  column-label "Количество!по документу":C13 format "->>,>>>,>>9.<<<" space(0)
         sym7                    column-label ":!:" format "X(1)" space(0)
-        v-sum-pl                column-label "Сумма переоценки !в продажных ценах":C17 format "->>,>>>,>>>,>>9.<<<" space(0)
+        v-sum-pl                column-label "Сумма переоценки !в продажных ценах":C17 format "->>,>>>,>>9.<<<" space(0)
         sym12                   column-label ":!:" format "X(1)" space(0)
         header "3. Переоценка"
         v-single-line format "X(64)" at 1
         with width {&DOS_CW} down stream-io use-text .
 
 /*==========================================================================*/
-procedure pr-Header :
+procedure pr-Header :  /*Шапка документа*/
 do
 on error undo, return error
 :
