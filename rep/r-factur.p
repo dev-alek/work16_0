@@ -2735,6 +2735,8 @@ procedure print-footer :
 
 define variable v-base-code as integer     no-undo .
 define variable v-base-abbr as character   no-undo .
+define variable xx as integer no-undo.
+define variable yy as integer no-undo.
 
 define buffer buf_currency      for ub.currency.
 
@@ -2852,63 +2854,45 @@ on error undo, return error
     if abs( v-tot-SLT ) >= 0.005
     or ( not invers and abs( buf_trn-doc.discnt-rubl ) >= 0.005 )
     then do:
+        yy = 150 - length(trim(string(v-tot-sum,"->>>>>>>>>>9.99"))).
         put stream Out-stream
-            skip space(5) "Итого по документу: "
-            trim( string( v-tot-sum, "->,>>>,>>>,>>>,>>>,>>9.99" ) )
-            + " ("
-            + trim( ( if invers and buf_trn-doc.doc-type <> {&income} then v-curr-abbr else ( if PrintRubl then "{&abbr_rub_allshift}" else v-base-abbr ) ) )
-            + ")"
-                                                                        format "X(120)"     at {&footer-tab-stop1}
+            skip ":Итого по документу" ":" at 44 ":" at 134
+            trim( string( v-tot-sum, "->>>>>>>>>>9.99" ) ) + ":" at yy
         .
         if v-tot-SLT <> 0 and p-no-slt = false
         then do:
-
+            yy = 150 - length(trim(string(v-tot-SLT,"->>>>>>>>>>9.99"))).
             put stream Out-stream
-                skip space(10) "Налог с продаж: "
-                        trim( string( v-tot-SLT, "->>>,>>9.99" ) )
-                        + " ("
-                        + trim( ( if PrintRubl then "{&abbr_rub_allshift}" else v-base-abbr ) )
-                        + ")"
-                                                                        format "X(150)"     at {&footer-tab-stop1}
+                skip ":Налог с продаж" ":" at 44 ":" at 134
+                        trim( string( v-tot-SLT, "->>>>>>>>>>9.99" ) )  + ":" at yy
+
             .
         end.
         if buf_trn-doc.discnt-rubl <> 0
         and not invers
         and v-torgconf-outdisc = no
         then do:
+            yy = 150 - length(trim(string(if PrintRubl
+                                        then buf_trn-doc.discnt-rubl
+                                        else buf_trn-doc.tot-calc,"->>>>>>>>>>9.99"))).
             put stream Out-stream
-                skip space(14) "Скидка:"
+                skip ":Скидка" ":" at 44 ":" at 134
                         trim( string( ( if PrintRubl
                                         then buf_trn-doc.discnt-rubl
-                                        else buf_trn-doc.tot-calc ), "->>>,>>>,>>>,>>9.99" ) )
-                        + " ("
-                        + trim( ( if PrintRubl then "{&abbr_rub_allshift}" else v-base-abbr ) )
-                        + ")"
-                                                                        format "X(150)"     at {&footer-tab-stop1}
+                                        else buf_trn-doc.tot-calc ), "->>>>>>>>>>9.99" ) ) + ":" at yy
+
             .
         end.
     end.
     if v-tot-tax <> 0
     then do:
+        yy = 150 - length(trim(string(v-tot-tax,"->>>>>>>>>>9.99"))).
         put stream Out-stream
-            skip space(10)  v-tax-name + ": "                                   format "X(20)"
-                trim( string( v-tot-tax, "->>>,>>>,>>>,>>9.99" ) )
-                + " ("
-                + trim( ( if invers and buf_trn-doc.doc-type <> {&income} then v-curr-abbr else ( if PrintRubl then "{&abbr_rub_allshift}" else v-base-abbr ) ) )
-                + ")"
-                                                                        format "X(150)"     at {&footer-tab-stop1}
+            skip ":" + v-tax-name  format "X(20)" ":" at 44 ":" at 134
+                trim( string( v-tot-tax, "->>>>>>>>>>9.99" ) ) + ":" at yy
         .
     end.
-    put stream Out-stream
-        skip space(5) "Всего к оплате: "
-                        string( trim( string( v-tot-sum + v-tot-SLT, "->,>>>,>>>,>>>,>>>,>>9.99" ) )
-                        + " ("
-                        + trim( ( if invers and buf_trn-doc.doc-type <> {&income} then v-curr-abbr else ( if PrintRubl then "{&abbr_rub_allshift}" else v-base-abbr ) ) )
-                        + ")" )
-                                                                        format "X(150)"     at {&footer-tab-stop1}
-    .
 
-  end.
     if PrintRubl
     and v-torgconf-outprops = yes
     and lookup ("corr" , p-mode) = 0
@@ -2918,16 +2902,26 @@ on error undo, return error
             , output v-propis
             , output v-propis-cop
         ).
-        put stream out-stream
-            skip space(25) v-propis
-                                                                            format "X(150)"  at {&footer-tab-stop1}
-            skip(1)
-        .
         run facturxl-write-cell-data in this-procedure (
               input {&facturxl-h_summ_prop}
             , input v-propis
         ).
     end.
+
+    xx = 134 - length(trim(string(v-tot-VAT,"->>>>>>>9.99"))).
+    yy = 150 - length(trim(string(v-tot-sum + v-tot-SLT,"->>>>>>>>>>9.99"))).
+    
+    put stream Out-stream
+          skip ":Всего к оплате" ":" at 44
+                          v-propis format "X(75)" at 46 ":" at 121
+                          string( trim( string(v-tot-VAT, "->>>>>>>9.99") ) + ":" ) format "X(13)" at xx
+                          string( trim( string( v-tot-sum + v-tot-SLT, "->>>>>>>>>>9.99" ) ) + ":" ) format "X(16)" at yy
+          skip fill("-",150) format "x(150)"
+   .
+    
+
+  end.
+
     if v-torgconf-outsubs = no
     then do:
         run facturxl-write-cell-data in this-procedure (
