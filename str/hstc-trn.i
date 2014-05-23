@@ -26,6 +26,7 @@ Creation date: 12/13/06
   , input {6}  /* parcorr-incas-code */
   , input {7}  /* parcorr-fbr-code   */
   , input {8}  /* paruserid          */
-  , input {9}  /* parchipnum         */
-  ) {10}.
+  , input {9}  /* parcurdb-num       */
+  , input {10} /* parchipnum         */
+  ) {11}.
 /* $Workfile$ e n d */

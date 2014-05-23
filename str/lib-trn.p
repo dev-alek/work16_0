@@ -5717,6 +5717,7 @@ define variable v-back-date-type as character no-undo .
           parcorr-inkas-code
           parcorr-fbr-code
           paruserid
+          parcurdb-num
           varchip-num-main
           no-error }
         if error-status :error then do:
@@ -6179,6 +6180,7 @@ procedure lib-trn_hstc-trn :
   define input parameter parcorr-incas-code like ub.c-trn-doc.corr-inkas-code no-undo.
   define input parameter parcorr-fbr-code   like ub.c-trn-doc.corr-fbr-code   no-undo.
   define input parameter paruserid          as   character                    no-undo.
+  define input parameter parcurdb-num       as   integer                      no-undo.
   define input parameter parchip-num        as   integer                      no-undo.
 
   define buffer hstc_trn-doc         for ub.trn-doc.
@@ -6217,6 +6219,7 @@ procedure lib-trn_hstc-trn :
     assign
       hstc_c-trn-doc.chip-num        = parchip-num
       hstc_c-trn-doc.corr-user-name  = paruserid
+      hstc_c-trn-doc.corr-user-db-num = parcurdb-num
       hstc_c-trn-doc.corr-inkas-code = parcorr-incas-code
       hstc_c-trn-doc.corr-fbr-code   = parcorr-fbr-code
       hstc_c-trn-doc.corr-date       = parobj-date

@@ -91,21 +91,21 @@ define buffer buf_clients for ub.clients.
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 &Scoped-define FIELDS-IN-QUERY-Dialog-Frame tt-firm.firm-code ~
-tt-clients.obj-name tt-firm.engl-name tt-firm.is-pboul tt-firm.inn ~
-tt-firm.okpo tt-firm.kpp tt-firm.okonh tt-clients.reg-code tt-firm.city ~
+tt-clients.obj-name tt-firm.engl-name tt-firm.inn tt-firm.okpo tt-firm.kpp ~
+tt-firm.is-pboul tt-firm.okonh tt-clients.reg-code tt-firm.city ~
 tt-firm.post-city tt-firm.ind tt-firm.post-ind tt-firm.director ~
-tt-firm.contact-psn tt-firm.phone1-note tt-firm.phone tt-firm.fax ~
+tt-firm.contact-psn tt-firm.phone tt-firm.phone1-note tt-firm.fax ~
 tt-firm.telex tt-firm.e-mail tt-firm.passp-ser tt-firm.passp-num ~
-tt-firm.given-by tt-firm.tobj-code tt-clients.PS tt-clients.lim-kr ~
-tt-clients.turnover-buyer tt-clients.turnover-buyer-gds
+tt-firm.given-by tt-firm.tobj-code tt-clients.lim-kr tt-clients.PS ~
+tt-clients.turnover-buyer tt-clients.turnover-buyer-gds 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-Dialog-Frame tt-firm.firm-code ~
-tt-clients.obj-name tt-firm.engl-name tt-firm.is-pboul tt-firm.inn ~
-tt-firm.okpo tt-firm.kpp tt-firm.okonh tt-clients.reg-code tt-firm.city ~
+tt-clients.obj-name tt-firm.engl-name tt-firm.inn tt-firm.okpo tt-firm.kpp ~
+tt-firm.is-pboul tt-firm.okonh tt-clients.reg-code tt-firm.city ~
 tt-firm.post-city tt-firm.ind tt-firm.post-ind tt-firm.director ~
-tt-firm.contact-psn tt-firm.phone1-note tt-firm.phone tt-firm.fax ~
+tt-firm.contact-psn tt-firm.phone tt-firm.phone1-note tt-firm.fax ~
 tt-firm.telex tt-firm.e-mail tt-firm.passp-ser tt-firm.passp-num ~
-tt-firm.given-by tt-clients.PS tt-clients.lim-kr tt-clients.turnover-buyer ~
-tt-clients.turnover-buyer-gds
+tt-firm.given-by tt-clients.lim-kr tt-clients.PS tt-clients.turnover-buyer ~
+tt-clients.turnover-buyer-gds 
 &Scoped-define ENABLED-TABLES-IN-QUERY-Dialog-Frame tt-firm tt-clients
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-Dialog-Frame tt-firm
 &Scoped-define SECOND-ENABLED-TABLE-IN-QUERY-Dialog-Frame tt-clients
@@ -126,22 +126,22 @@ tt-clients.turnover-buyer-gds
 tt-firm.engl-name tt-firm.is-pboul tt-firm.inn tt-firm.okpo tt-firm.kpp ~
 tt-firm.okonh tt-clients.reg-code tt-firm.city tt-firm.post-city ~
 tt-firm.ind tt-firm.post-ind tt-firm.director tt-firm.contact-psn ~
-tt-firm.phone1-note tt-firm.phone tt-firm.fax tt-firm.telex tt-firm.e-mail ~
-tt-firm.passp-ser tt-firm.passp-num tt-firm.given-by tt-clients.PS ~
-tt-clients.lim-kr tt-clients.turnover-buyer tt-clients.turnover-buyer-gds
+tt-firm.phone tt-firm.phone1-note tt-firm.fax tt-firm.telex tt-firm.e-mail ~
+tt-firm.passp-ser tt-firm.passp-num tt-firm.given-by tt-clients.lim-kr ~
+tt-clients.PS tt-clients.turnover-buyer tt-clients.turnover-buyer-gds 
 &Scoped-define ENABLED-TABLES tt-firm tt-clients
 &Scoped-define FIRST-ENABLED-TABLE tt-firm
 &Scoped-define SECOND-ENABLED-TABLE tt-clients
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit b-dc b-bank Docs b-attr ~
 b-sysconf b-hist B-Help T-check-inn b-region jj_change-address fcli b-cli
 &Scoped-Define DISPLAYED-FIELDS tt-firm.firm-code tt-clients.obj-name ~
-tt-firm.engl-name tt-firm.is-pboul tt-firm.inn tt-firm.okpo tt-firm.kpp ~
+tt-firm.engl-name tt-firm.inn tt-firm.okpo tt-firm.kpp tt-firm.is-pboul ~
 tt-firm.okonh tt-clients.reg-code tt-firm.city tt-firm.post-city ~
 tt-firm.ind tt-firm.post-ind tt-firm.director tt-firm.contact-psn ~
-tt-firm.phone1-note tt-firm.phone tt-firm.fax tt-firm.telex tt-firm.e-mail ~
+tt-firm.phone tt-firm.phone1-note tt-firm.fax tt-firm.telex tt-firm.e-mail ~
 tt-firm.passp-ser tt-firm.passp-num tt-firm.given-by tt-firm.tobj-code ~
-tt-clients.PS tt-clients.lim-kr tt-clients.turnover-buyer ~
-tt-clients.turnover-buyer-gds
+tt-clients.lim-kr tt-clients.PS tt-clients.turnover-buyer ~
+tt-clients.turnover-buyer-gds 
 &Scoped-define DISPLAYED-TABLES tt-firm tt-clients
 &Scoped-define FIRST-DISPLAYED-TABLE tt-firm
 &Scoped-define SECOND-DISPLAYED-TABLE tt-clients
@@ -217,7 +217,7 @@ DEFINE BUTTON b-region
      LABEL "":L
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-sysconf
+DEFINE BUTTON B-sysconf
      LABEL "Своя фирма"
      SIZE 20 BY 1.
 
@@ -255,7 +255,7 @@ DEFINE VARIABLE jj_change-address AS INTEGER INITIAL 1
      RADIO-BUTTONS
           "&Юридический", 0,
 "Поч&товый", 1
-     SIZE 13.9 BY 2 NO-UNDO.
+     SIZE 14 BY 2 NO-UNDO.
 
 DEFINE VARIABLE T-check-inn AS LOGICAL INITIAL yes
      LABEL "Проверять"
@@ -279,10 +279,10 @@ DEFINE FRAME Dialog-Frame
      b-bank AT ROW 1 COL 33
      Docs AT ROW 1 COL 43
      b-attr AT ROW 1 COL 53 WIDGET-ID 2
-     b-sysconf AT ROW 1 COL 62.5 WIDGET-ID 8
+     B-sysconf AT ROW 1 COL 63 WIDGET-ID 8
      b-hist AT ROW 1 COL 92
      B-Help AT ROW 1 COL 95
-     tt-firm.firm-code AT ROW 2.43 COL 4.1 COLON-ALIGNED
+     tt-firm.firm-code AT ROW 2.43 COL 4.2 COLON-ALIGNED
           LABEL "Код"
           VIEW-AS FILL-IN
           SIZE 10 BY 1
@@ -292,78 +292,78 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN
           SIZE 72 BY 1
           BGCOLOR 15
-     tt-firm.engl-name AT ROW 3.67 COL 24.9 COLON-ALIGNED
+     tt-firm.engl-name AT ROW 3.62 COL 25 COLON-ALIGNED
           LABEL "Англ./второе назв." FORMAT "X(130)"
           VIEW-AS FILL-IN
           SIZE 72 BY 1
           BGCOLOR 15
-     tt-firm.is-pboul AT ROW 4.77 COL 87
+     tt-firm.is-pboul AT ROW 4.81 COL 87
           LABEL "ПБОЮЛ"
           VIEW-AS TOGGLE-BOX
           SIZE 10 BY 1
-     tt-firm.inn AT ROW 4.8 COL 6.9 COLON-ALIGNED
+     tt-firm.inn AT ROW 4.81 COL 7.8 COLON-ALIGNED
           LABEL "INN"
           VIEW-AS FILL-IN
           SIZE 16 BY 1
           BGCOLOR 15
-     T-check-inn AT ROW 4.8 COL 25.5
-     tt-firm.okpo AT ROW 4.8 COL 47 COLON-ALIGNED
+     T-check-inn AT ROW 4.81 COL 26.4
+     tt-firm.okpo AT ROW 4.81 COL 47 COLON-ALIGNED
           LABEL "ОКПО" FORMAT "X(10)"
           VIEW-AS FILL-IN
           SIZE 12 BY 1
           BGCOLOR 15
-     tt-firm.kpp AT ROW 4.8 COL 66 COLON-ALIGNED
+     tt-firm.kpp AT ROW 4.81 COL 66 COLON-ALIGNED
           LABEL "KPP"
           VIEW-AS FILL-IN
           SIZE 16.8 BY 1
-     tt-firm.okonh AT ROW 6 COL 7 COLON-ALIGNED
+     tt-firm.okonh AT ROW 6 COL 8 COLON-ALIGNED
           LABEL "OKONX"
           VIEW-AS FILL-IN
-          SIZE 59.8 BY 1
+          SIZE 60 BY 1
           BGCOLOR 15
      tt-clients.reg-code AT ROW 6 COL 76 COLON-ALIGNED
           LABEL "Регион"
           VIEW-AS FILL-IN
           SIZE 4 BY 1
-     b-region AT ROW 6 COL 82.5
-     jj_change-address AT ROW 7.2 COL 1.9 NO-LABEL
-     tt-firm.addres1 AT ROW 7.2 COL 24 COLON-ALIGNED NO-LABEL FORMAT "X(50)"
+     b-region AT ROW 6 COL 82.6
+     jj_change-address AT ROW 7.19 COL 2 NO-LABEL
+     tt-firm.addres1 AT ROW 7.19 COL 24 COLON-ALIGNED NO-LABEL FORMAT "X(50)"
           VIEW-AS FILL-IN
           SIZE 52 BY 1
           BGCOLOR 15
-     tt-firm.post-addr1 AT ROW 7.2 COL 45 COLON-ALIGNED
+     tt-firm.post-addr1 AT ROW 7.19 COL 45 COLON-ALIGNED
           LABEL "Адрес" FORMAT "X(50)"
           VIEW-AS FILL-IN
           SIZE 52 BY 1
           BGCOLOR 15
-     tt-firm.addres2 AT ROW 8.43 COL 24 COLON-ALIGNED NO-LABEL FORMAT "X(50)"
+     tt-firm.addres2 AT ROW 8.38 COL 24 COLON-ALIGNED NO-LABEL FORMAT "X(50)"
           VIEW-AS FILL-IN
           SIZE 52 BY 1
           BGCOLOR 15
-     tt-firm.post-addr2 AT ROW 8.43 COL 45 COLON-ALIGNED NO-LABEL FORMAT "X(50)"
+     tt-firm.post-addr2 AT ROW 8.38 COL 45 COLON-ALIGNED NO-LABEL FORMAT "X(50)"
           VIEW-AS FILL-IN
           SIZE 52 BY 1
           BGCOLOR 15
      f1 AT ROW 9.57 COL 24 COLON-ALIGNED NO-LABEL
      fp1 AT ROW 9.57 COL 45 COLON-ALIGNED NO-LABEL
-     f2 AT ROW 10.8 COL 24 COLON-ALIGNED NO-LABEL
-     fp2 AT ROW 10.8 COL 45 COLON-ALIGNED NO-LABEL
-     tt-firm.city AT ROW 11.93 COL 15.6 COLON-ALIGNED
+     f2 AT ROW 10.76 COL 24 COLON-ALIGNED NO-LABEL
+     fp2 AT ROW 10.76 COL 45 COLON-ALIGNED NO-LABEL
+     tt-firm.city AT ROW 11.95 COL 15 COLON-ALIGNED
           LABEL "Страна, город"
           VIEW-AS FILL-IN
-          SIZE 37.4 BY 1
+          SIZE 38 BY 1
           BGCOLOR 15
-     tt-firm.post-city AT ROW 11.93 COL 15.6 COLON-ALIGNED WIDGET-ID 4
-          LABEL "Страна, город"
-          VIEW-AS FILL-IN
-          SIZE 37.4 BY 1
-          BGCOLOR 15
-     tt-firm.ind AT ROW 11.97 COL 67.3 COLON-ALIGNED
+     tt-firm.ind AT ROW 11.95 COL 67.4 COLON-ALIGNED
           LABEL "Индекс"
           VIEW-AS FILL-IN
           SIZE 7 BY 1
           BGCOLOR 15
-     tt-firm.post-ind AT ROW 11.97 COL 67.3 COLON-ALIGNED WIDGET-ID 6
+     tt-firm.post-city AT ROW 11.97 COL 15.6 COLON-ALIGNED WIDGET-ID 4
+          LABEL "Страна, город"
+          VIEW-AS FILL-IN
+          SIZE 38 BY 1
+          BGCOLOR 15
+     tt-firm.post-ind AT ROW 11.95 COL 67.4 COLON-ALIGNED WIDGET-ID 6
           LABEL "Индекс"
           VIEW-AS FILL-IN
           SIZE 7 BY 1
@@ -374,84 +374,84 @@ DEFINE FRAME Dialog-Frame
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     tt-firm.director AT ROW 13 COL 15.8 COLON-ALIGNED
-          LABEL "Руководитель"
+     tt-firm.director AT ROW 13.14 COL 15 COLON-ALIGNED
+          LABEL "Руководитель" FORMAT "X(50)"
           VIEW-AS FILL-IN
-          SIZE 22.3 BY 1
+          SIZE 82 BY 1
           BGCOLOR 15
-     tt-firm.contact-psn AT ROW 13.13 COL 55.3 COLON-ALIGNED
+     tt-firm.contact-psn AT ROW 14.33 COL 15 COLON-ALIGNED
           LABEL "Контакт. лицо" FORMAT "X(50)"
           VIEW-AS FILL-IN
-          SIZE 41.8 BY 1
+          SIZE 82 BY 1
           BGCOLOR 15
-     tt-firm.phone1-note AT ROW 14.13 COL 30.5 COLON-ALIGNED
-          LABEL "Прим."
-          VIEW-AS FILL-IN
-          SIZE 17.4 BY 1
-          BGCOLOR 15 FGCOLOR 0
-     tt-firm.phone AT ROW 14.17 COL 8.6 COLON-ALIGNED
+     tt-firm.phone AT ROW 15.52 COL 8.6 COLON-ALIGNED
           LABEL "Тел."
           VIEW-AS FILL-IN
           SIZE 13.8 BY 1
           BGCOLOR 15
-     tt-firm.fax AT ROW 14.17 COL 55.3 COLON-ALIGNED
+     tt-firm.phone1-note AT ROW 15.52 COL 30.5 COLON-ALIGNED
+          LABEL "Прим."
+          VIEW-AS FILL-IN
+          SIZE 17.4 BY 1
+          BGCOLOR 15 FGCOLOR 0
+     tt-firm.fax AT ROW 15.52 COL 55.4 COLON-ALIGNED
           LABEL "Факс"
           VIEW-AS FILL-IN
           SIZE 20.5 BY 1
           BGCOLOR 15
-     tt-firm.telex AT ROW 15.27 COL 8.6 COLON-ALIGNED
+     tt-firm.telex AT ROW 16.71 COL 8.6 COLON-ALIGNED
           LABEL "Телекс"
           VIEW-AS FILL-IN
           SIZE 13.8 BY 1
           BGCOLOR 15 FGCOLOR 0
-     tt-firm.e-mail AT ROW 15.27 COL 30.8 COLON-ALIGNED
+     tt-firm.e-mail AT ROW 16.71 COL 30.8 COLON-ALIGNED
           LABEL "e-mail" FORMAT "X(100)"
           VIEW-AS FILL-IN
-          SIZE 66.3 BY 1
+          SIZE 66.4 BY 1
           BGCOLOR 15 FGCOLOR 0
-     tt-firm.passp-ser AT ROW 16.43 COL 15 COLON-ALIGNED
+     tt-firm.passp-ser AT ROW 17.9 COL 31 COLON-ALIGNED
           LABEL "Паспорт: серия"
           VIEW-AS FILL-IN
           SIZE 16.5 BY 1 TOOLTIP "Для ПБОЮЛ"
           BGCOLOR 15 FGCOLOR 0
-     tt-firm.passp-num AT ROW 16.43 COL 40.5 COLON-ALIGNED
+     tt-firm.passp-num AT ROW 17.9 COL 55.5 COLON-ALIGNED
           LABEL "номер"
           VIEW-AS FILL-IN
-          SIZE 14 BY 1 TOOLTIP "Для ПБОЮЛ"
+          SIZE 20.4 BY 1 TOOLTIP "Для ПБОЮЛ"
           BGCOLOR 15 FGCOLOR 0
-     tt-firm.given-by AT ROW 17.5 COL 15 COLON-ALIGNED
+     tt-firm.given-by AT ROW 19.09 COL 15 COLON-ALIGNED
           LABEL "Выдан"
           VIEW-AS FILL-IN
           SIZE 82 BY 1 TOOLTIP "Для ПБОЮЛ"
           BGCOLOR 15 FGCOLOR 0
-     fcli AT ROW 18.77 COL 14.1 COLON-ALIGNED
-     b-cli AT ROW 18.77 COL 59
-     b-cli-cl AT ROW 18.77 COL 62.5
-     tt-firm.tobj-code AT ROW 18.8 COL 69.5 COLON-ALIGNED
+     fcli AT ROW 20.28 COL 14 COLON-ALIGNED
+     b-cli AT ROW 20.28 COL 59
+     b-cli-cl AT ROW 20.28 COL 62.5
+     tt-firm.tobj-code AT ROW 20.28 COL 69.5 COLON-ALIGNED
           LABEL "Код"
           VIEW-AS FILL-IN
           SIZE 6 BY 1
           BGCOLOR 15
-     tt-clients.PS AT ROW 20 COL 8.5 NO-LABEL
+     tt-clients.PS AT ROW 21.47 COL 8.6 NO-LABEL
           VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
-          SIZE 54.4 BY 2.13
+          SIZE 54.4 BY 2.67
           FONT 4
-     tt-clients.lim-kr AT ROW 20 COL 77 COLON-ALIGNED
+     tt-clients.lim-kr AT ROW 21.47 COL 77 COLON-ALIGNED
           LABEL "Лимит кредита"
           VIEW-AS FILL-IN
-          SIZE 19.9 BY 1
+          SIZE 20 BY 1
           BGCOLOR 15
-     tt-clients.turnover-buyer AT ROW 21 COL 64.5
+     tt-clients.turnover-buyer AT ROW 22.66 COL 64.2
           LABEL "Расчитывать обороты по пок-лю"
           VIEW-AS TOGGLE-BOX
-          SIZE 33 BY .83 TOOLTIP "Рассчитывать обороты по покупателю"
-     tt-clients.turnover-buyer-gds AT ROW 21.77 COL 67.1
+          SIZE 36.8 BY .81 TOOLTIP "Рассчитывать обороты по покупателю"
+     tt-clients.turnover-buyer-gds AT ROW 23.50 COL 67
           LABEL "в разрезе товаров"
           VIEW-AS TOGGLE-BOX
-          SIZE 19.5 BY .83 TOOLTIP "Расcчитывать обороты покупателя в разрезе товаров"
+          SIZE 23.85 BY .81 TOOLTIP "Расcчитывать обороты покупателя в разрезе товаров"
      "Прим.:" VIEW-AS TEXT
-          SIZE 6.5 BY .93 AT ROW 20 COL 1.5
-     SPACE(91.24) SKIP(1.73)
+          SIZE 6.5 BY .95 AT ROW 21.47 COL 1.5
+     SPACE(92) SKIP(2)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
          TITLE "О Р Г А Н И З А Ц И Я"
@@ -882,7 +882,7 @@ END.
 
 &Scoped-define SELF-NAME B-sysconf
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-sysconf Dialog-Frame
-ON CHOOSE OF B-sysconf IN FRAME Dialog-Frame /* СВОЯ фирма */
+ON CHOOSE OF B-sysconf IN FRAME Dialog-Frame /* Своя фирма */
 DO:
 define variable v-ok as logical no-undo.
       { gbl/chk-actg.i
@@ -1274,27 +1274,26 @@ PROCEDURE enable_UI :
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-clients THEN
     DISPLAY tt-clients.obj-name tt-clients.reg-code tt-clients.PS
-          tt-clients.lim-kr tt-clients.turnover-buyer
-          tt-clients.turnover-buyer-gds
+          tt-clients.lim-kr tt-clients.turnover-buyer tt-clients.turnover-buyer-gds
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-firm THEN
     DISPLAY tt-firm.firm-code tt-firm.engl-name tt-firm.is-pboul tt-firm.inn
-          tt-firm.okpo tt-firm.kpp tt-firm.okonh tt-firm.city tt-firm.post-city
-          tt-firm.ind tt-firm.post-ind tt-firm.director tt-firm.contact-psn
-          tt-firm.phone1-note tt-firm.phone tt-firm.fax tt-firm.telex
-          tt-firm.e-mail tt-firm.passp-ser tt-firm.passp-num tt-firm.given-by
-          tt-firm.tobj-code
+          tt-firm.okpo tt-firm.kpp tt-firm.okonh tt-firm.city tt-firm.ind
+          tt-firm.director tt-firm.contact-psn tt-firm.phone1-note tt-firm.phone
+          tt-firm.fax tt-firm.telex tt-firm.e-mail tt-firm.passp-ser
+          tt-firm.passp-num tt-firm.given-by tt-firm.tobj-code
+          tt-firm.post-city
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit b-dc b-bank Docs b-attr b-sysconf b-hist B-Help
+  ENABLE B-exit b-quit b-dc b-bank Docs b-attr B-sysconf b-hist B-Help
          tt-firm.firm-code tt-clients.obj-name tt-firm.engl-name
          tt-firm.is-pboul tt-firm.inn T-check-inn tt-firm.okpo tt-firm.kpp
          tt-firm.okonh tt-clients.reg-code b-region jj_change-address
-         tt-firm.city tt-firm.post-city tt-firm.ind tt-firm.post-ind
-         tt-firm.director tt-firm.contact-psn tt-firm.phone1-note tt-firm.phone
-         tt-firm.fax tt-firm.telex tt-firm.e-mail tt-firm.passp-ser
-         tt-firm.passp-num tt-firm.given-by fcli b-cli tt-clients.PS
-         tt-clients.lim-kr tt-clients.turnover-buyer
-         tt-clients.turnover-buyer-gds
+         tt-firm.city tt-firm.ind tt-firm.director tt-firm.contact-psn
+         tt-firm.phone1-note tt-firm.phone tt-firm.fax tt-firm.telex
+         tt-firm.e-mail tt-firm.passp-ser tt-firm.passp-num tt-firm.given-by
+         fcli b-cli tt-clients.PS tt-clients.lim-kr tt-clients.turnover-buyer
+         tt-clients.turnover-buyer-gds tt-firm.post-city  tt-firm.post-ind  
+         tt-firm.contact-psn
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1381,8 +1380,8 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable Dialog-Frame
-PROCEDURE Myenable :
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+PROCEDURE MyEnable :
 define variable for-code as integer no-undo .
 define variable conf-par as character no-undo .
 define variable par-type as character no-undo .
@@ -1394,8 +1393,8 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-tth as handle no-undo .
 
-
 define buffer last_person for ub.person.
+
 tt-firm.okonh:label in frame {&frame-name} = "{&abbr_okonh_allshift}".
 tt-firm.inn:label in frame {&frame-name} = "{&abbr_inn_allshift}".
 tt-firm.kpp:label in frame {&frame-name} = "{&abbr_kpp_allshift}".
@@ -1450,7 +1449,6 @@ f2 = substring( tt-firm.addres1, 101, 50 )
 fp1 = substring( tt-firm.post-addr1, 51, 50 )
 fp2 = substring( tt-firm.post-addr1, 101, 50 )
 .
-
 
 IF AVAILABLE tt-clients THEN
   DISPLAY
@@ -1569,14 +1567,14 @@ else do: /*lookup*/
   in frame {&frame-name} .
 end.
 if p-mode <> {&add-def} then do:
-MENU-ITEM m-choose:SENSITIVE IN MENU MENU-firm-code = NO .
+  MENU-ITEM m-choose:SENSITIVE IN MENU MENU-firm-code = NO .
 end.
 assign
 b-sysconf:visible in frame {&frame-name} = (p-mode <> {&add-def} and can-find(first ub.sysconf where ub.sysconf.host-code = tt-clients.obj-code))
 .
 
 assign
-b-bank:label = "&Счета".
+  b-bank:label = "&Счета".
   define variable v-use-grp-buy           as logical   no-undo .
   define variable v-use-oborot-buy        as logical   no-undo .
   define variable v-use-qnty-group        as logical   no-undo .
@@ -1588,29 +1586,31 @@ b-bank:label = "&Счета".
   define variable v-use-val               as logical   no-undo .
   define variable v-use-pay-type          as logical   no-undo .
   define variable v-use-cash-pay          as logical   no-undo .
-  define variable v-use-child as logical   no-undo .
-  { gbl/glstall.i
-    v-use-grp-buy
-    v-use-oborot-buy
-    v-use-qnty-group
-    v-use-sum-group
-    v-use-add-code
-    v-use-sys-date-time
-    v-use-shift-date-num
-    v-use-cassa
-    v-use-val
-    v-use-pay-type
-    v-use-cash-pay
-    v-use-child
-no-error
-    }
+  define variable v-use-child as logical
+no-undo.
+{ gbl/glstall.i
+  v-use-grp-buy
+  v-use-oborot-buy
+  v-use-qnty-group
+  v-use-sum-group
+  v-use-add-code
+  v-use-sys-date-time
+  v-use-shift-date-num
+  v-use-cassa
+  v-use-val
+  v-use-pay-type
+  v-use-cash-pay
+  v-use-child
+  no-error
+}
 
-if not ( v-use-grp-buy  or  v-use-oborot-buy ) then do:
-  hide
-  tt-clients.turnover-buyer
-  tt-clients.turnover-buyer-gds
-  in frame {&frame-name}.
-end.
+if not (v-use-grp-buy  or  v-use-oborot-buy) then
+  do:
+    hide
+    tt-clients.turnover-buyer
+    tt-clients.turnover-buyer-gds
+    in frame {&frame-name}.
+  end.
 VIEW FRAME {&frame-name}.
 APPLY "VALUE-CHANGED":U TO jj_change-address IN FRAME {&frame-name}.
 APPLY "VALUE-CHANGED":U TO tt-firm.is-pboul IN FRAME {&frame-name}.
@@ -1807,3 +1807,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

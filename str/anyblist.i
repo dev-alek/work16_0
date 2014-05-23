@@ -3403,7 +3403,7 @@ define buffer buf_db for ub.db.
                                                 , input tot-lns
                                                 , input rs-list-method
                                                 , input rs-status
-                                                , input f-name
+                                                , input f-gds-name
                                                 , input '':U
                                                 , input ?
                                                 ).

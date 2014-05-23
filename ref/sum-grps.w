@@ -178,11 +178,11 @@ DEFINE BROWSE br-sumgrps
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-sumgrps d-sum-grp _FREEFORM
   QUERY br-sumgrps NO-LOCK DISPLAY
       if lookup(string(recid(X_sum-grp)), v-rid-list) > 0 then "*" else "":U FORMAT "X(1)":U
-  X_sum-grp.grp-code FORMAT "999":U
-  X_sum-grp.grp-name COLUMN-LABEL "Наименование группы" FORMAT "X(15)":U
+  X_sum-grp.grp-code FORMAT "999":U width 10
+  X_sum-grp.grp-name COLUMN-LABEL "Наименование группы" FORMAT "X(65)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH SEPARATORS SIZE 59.5 BY 14
+    WITH SEPARATORS SIZE 80 BY 17
          BGCOLOR 15 FGCOLOR 0 .
 
 
@@ -190,18 +190,18 @@ DEFINE BROWSE br-sumgrps
 
 DEFINE FRAME d-sum-grp
      b-quit AT ROW 1 COL 1
-     b-mark AT ROW 1 COL 18
-     b-sel AT ROW 1 COL 21
-     b-add AT ROW 1 COL 31
-     b-chg AT ROW 1 COL 41
-     b-del AT ROW 1 COL 51
-     b-disc AT ROW 1 COL 61 WIDGET-ID 2
-     b-hist AT ROW 1 COL 83
-     b-print AT ROW 1 COL 86
-     b-help AT ROW 1 COL 89
+     b-mark AT ROW 1 COL 15
+     b-sel AT ROW 1 COL 18
+     b-add AT ROW 1 COL 28
+     b-chg AT ROW 1 COL 38
+     b-del AT ROW 1 COL 48
+     b-disc AT ROW 1 COL 58 WIDGET-ID 2
+     b-hist AT ROW 1 COL 73
+     b-print AT ROW 1 COL 76
+     b-help AT ROW 1 COL 79
      mark-num AT ROW 1.03 COL 9.1 COLON-ALIGNED NO-LABEL
-     br-sumgrps AT ROW 2.97 COL 2.9
-     SPACE(30.09) SKIP(0.90)
+     br-sumgrps AT ROW 2.9 COL 2.5
+     SPACE(0.9) SKIP(0.3)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
          TITLE "ГРУППЫ ТОВАРОВ НА КАССАХ":L.
@@ -785,6 +785,7 @@ b-print
 b-help
 WITH FRAME {&FRAME-NAME}.
 {&OPEN-BROWSERS-IN-QUERY-d-sum-grp}
+APPLY "ENTRY" to br-sumgrps.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

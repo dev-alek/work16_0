@@ -431,14 +431,15 @@ Report = new ReportXml(xml_tmp).
 
 Report:worksheet("Ëèñò 1").
 Report:worksheet-header("start").   /* Íà÷àëî øàïêè îò÷åòà */
-        if length(str1) > 95 
+Report:worksheet-header( "Îò÷¸ò ïî êàğòàì ËÍĞ" ).        
+        if length(str1) > 115
             then
                 do:
-                    Report:worksheet-header("Îò÷¸ò ïî êàğòàì ËÍĞ " + substring(str1, 1, 95) + "..." ).
+                    Report:worksheet-header(substring(str1, 1, 115) + "..." ).
                 end.
             else
                 do:
-                    Report:worksheet-header("Îò÷¸ò ïî êàğòàì ËÍĞ " + str1).
+                    Report:worksheet-header(str1).
                 end.
         if length(str2) > 115 
             then
