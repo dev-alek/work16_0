@@ -117,8 +117,8 @@ end.
    define variable v-param-type            as character no-undo .
 
    run adm/shattri.p ( input "get":U
-                     , input  '':u
-                     , input  0
+                     , input  o-type
+                     , input  o-code
                      , input  {&attr-obj-date}
                      , input  {&attr-obj-date_diffshft}
                      , output v-value-character
