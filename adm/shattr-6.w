@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,18 +8,18 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER locked_thbj-attr FOR ub.thbj-attr.
-DEFINE TEMP-TABLE tt-scales-type NO-UNDO LIKE ub.scales
+DEFINE BUFFER locked_thbj-attr FOR thbj-attr.
+DEFINE TEMP-TABLE tt-scales-type NO-UNDO LIKE scales
        field is-tiger as logical
        field tiger-wt-cart as character
        index pi is unique primary scales-type.
-DEFINE BUFFER X_scales FOR ub.scales.
-DEFINE BUFFER X_shop FOR ub.shop.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER X_scales FOR scales.
+DEFINE BUFFER X_shop FOR shop.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -67,6 +67,7 @@ DEFINE VARIABLE v-db-num LIKE ub.db.db-num NO-UNDO.
 DEFINE VARIABLE v-tab-order AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-to-create AS logical NO-UNDO.
 DEFINE VARIABLE v-num-list AS CHARACTER NO-UNDO.
+define variable v-noauto-scls as logical no-undo.
 define variable v-obj-db-num like ub.db.db-num no-undo .
 define temp-table temp-thbj-attr no-undo like ub.thbj-attr.
 define variable v-tth as handle no-undo .
@@ -82,7 +83,7 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -100,8 +101,8 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 &Scoped-define FIELDS-IN-QUERY-BR-scales ~
 mark-string(X_scales.scales-num, v-num-list) X_scales.db-num ~
 X_scales.scales-num X_scales.scales-name X_scales.scales-type ~
-X_scales.master
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-scales
+X_scales.master 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-scales 
 &Scoped-define QUERY-STRING-BR-scales FOR EACH X_scales NO-LOCK INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-BR-scales OPEN QUERY BR-scales FOR EACH X_scales NO-LOCK INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-BR-scales X_scales
@@ -110,9 +111,9 @@ X_scales.master
 
 /* Definitions for BROWSE BR-scales-type                                */
 &Scoped-define FIELDS-IN-QUERY-BR-scales-type tt-scales-type.scales-type ~
-tt-scales-type.scales-name tt-scales-type.is-tiger
+tt-scales-type.scales-name tt-scales-type.is-tiger 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-scales-type ~
-tt-scales-type.scales-name
+tt-scales-type.scales-name 
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-scales-type tt-scales-type
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-scales-type tt-scales-type
 &Scoped-define QUERY-STRING-BR-scales-type FOR EACH tt-scales-type NO-LOCK INDEXED-REPOSITION
@@ -125,8 +126,8 @@ tt-scales-type.scales-name
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit RS-sclin-ld B-Help EDITOR-1 ~
-B-add B-del BR-scales-type B-mark BR-scales mark-num l-scallist
-&Scoped-Define DISPLAYED-OBJECTS RS-sclin-ld EDITOR-1 mark-num l-scallist
+B-add B-del B-etc BR-scales-type B-mark BR-scales mark-num l-scallist 
+&Scoped-Define DISPLAYED-OBJECTS RS-sclin-ld EDITOR-1 mark-num l-scallist 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -137,7 +138,7 @@ B-add B-del BR-scales-type B-mark BR-scales mark-num l-scallist
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD mark-string Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD mark-string Dialog-Frame 
 FUNCTION mark-string RETURNS CHARACTER
   ( input p-scales-num as integer, input p-list as character )  FORWARD.
 
@@ -150,60 +151,64 @@ FUNCTION mark-string RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-add
-     LABEL "&Добавить"
+DEFINE BUTTON B-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-del
-     LABEL "&Удалить"
+DEFINE BUTTON B-del 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-etc 
+     LABEL "Дополнительно" 
+     SIZE 14.5 BY 1.
+
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE EDITOR-1 AS CHARACTER INITIAL "Установка сроков годности при приходе и переоценке"
+DEFINE VARIABLE EDITOR-1 AS CHARACTER INITIAL "Установка сроков годности при приходе и переоценке" 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 30.5 BY 2 NO-UNDO.
 
-DEFINE VARIABLE l-scallist AS CHARACTER FORMAT "X(256)":U INITIAL "Количество весов, используемых на объекте"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-scallist AS CHARACTER FORMAT "X(256)":U INITIAL "Количество весов, используемых на объекте" 
+      VIEW-AS TEXT 
      SIZE 41 BY .67 NO-UNDO.
 
-DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 6 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE RS-sclin-ld AS INTEGER
+DEFINE VARIABLE RS-sclin-ld AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Из карточки товара", 0,
 "Min из партий посл.прихода", 1,
 "Max из партий посл.прихода", 2
-     SIZE 42 BY 3 NO-UNDO.
+     SIZE 29.5 BY 3 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-scales FOR
+DEFINE QUERY BR-scales FOR 
       X_scales SCROLLING.
 
-DEFINE QUERY BR-scales-type FOR
+DEFINE QUERY BR-scales-type FOR 
       tt-scales-type SCROLLING.
 &ANALYZE-RESUME
 
@@ -247,14 +252,15 @@ DEFINE FRAME Dialog-Frame
      EDITOR-1 AT ROW 2 COL 21 NO-LABEL WIDGET-ID 8
      B-add AT ROW 3 COL 1
      B-del AT ROW 3 COL 11
+     B-etc AT ROW 3 COL 84.5
      BR-scales-type AT ROW 4 COL 1
      B-mark AT ROW 12 COL 1
      BR-scales AT ROW 13 COL 1
      mark-num AT ROW 12 COL 9.5 COLON-ALIGNED NO-LABEL
      l-scallist AT ROW 12 COL 16.5 COLON-ALIGNED NO-LABEL
      SPACE(39.74) SKIP(7.90)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки, необходимые для работы весов"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -287,9 +293,9 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB BR-scales-type B-del Dialog-Frame */
+/* BROWSE-TAB BR-scales-type B-etc Dialog-Frame */
 /* BROWSE-TAB BR-scales B-mark Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -325,12 +331,12 @@ ASSIGN
      _FldNameList[2]   > Temp-Tables.tt-scales-type.scales-name
 "tt-scales-type.scales-name" "Название!программы!пересылки!данных" "X(20)" "character" ? ? ? ? ? ? yes ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[3]   > "_<CALC>"
-"tt-scales-type.is-tiger" "Задавать!коды тары" "+/" ? ? ? ? ? ? ? no ? no no "68.3" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"tt-scales-type.is-tiger" "Задавать!коды тары" "+/" ? ? ? ? ? ? ? no ? no no "68.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BR-scales-type */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -410,6 +416,18 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-etc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-etc Dialog-Frame
+ON CHOOSE OF B-etc IN FRAME Dialog-Frame /* Дополнительно */
+DO:
+  /*  */
+  run adm/shattr-6-1.w(input-output v-noauto-scls).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME B-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exit Dialog-Frame
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Ввод */
@@ -459,7 +477,7 @@ END.
 &Scoped-define BROWSE-NAME BR-scales
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -596,7 +614,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -615,13 +633,13 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY RS-sclin-ld EDITOR-1 mark-num l-scallist
+  DISPLAY RS-sclin-ld EDITOR-1 mark-num l-scallist 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit RS-sclin-ld B-Help EDITOR-1 B-add B-del BR-scales-type
-         B-mark BR-scales mark-num l-scallist
+  ENABLE B-exit b-quit RS-sclin-ld B-Help EDITOR-1 B-add B-del B-etc 
+         BR-scales-type B-mark BR-scales mark-num l-scallist 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -630,7 +648,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 DEFINE VARIABLE ii AS INTEGER NO-UNDO.
 DEFINE VARIABLE jj AS INTEGER NO-UNDO.
@@ -715,6 +733,9 @@ for each thbjattr_thbj-attr:
       END.
     END.
   END.
+  if v-entry = {&attr-scale-inf_noauto-scls} then do:
+    v-noauto-scls = thbjattr_thbj-attr.property-value-logical.
+  end.
   IF v-entry = {&attr-scale-inf_sclin-ld} THEN DO:
     ASSIGN
     rs-sclin-ld = thbjattr_thbj-attr.property-value-integer
@@ -743,7 +764,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 ASSIGN
 FRAME {&FRAME-NAME}:TITLE = FRAME {&FRAME-NAME}:TITLE + (if p-obj-type = {&cmp} then " фирма" else " маг") + STRING(p-obj-code)
@@ -759,6 +780,7 @@ l-scallist
 WITH FRAME {&frame-name}.
 ENABLE
 B-exit WHEN p-mode = {&UPDATE}
+B-etc when p-mode = {&update}
 b-quit
 B-Help
 br-scales-type
@@ -785,7 +807,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBR-scales Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBR-scales Dialog-Frame 
 PROCEDURE OpenBR-scales :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -799,7 +821,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr-scales-type Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr-scales-type Dialog-Frame 
 PROCEDURE OpenBr-scales-type :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -813,7 +835,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -877,11 +899,10 @@ find first thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-scale-
 assign
 thbjattr_thbj-attr.property-value-character = v-scallist
 .
-find first thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-scale-inf_sclin-ld}.
+find first thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-scale-inf_noauto-scls}.
 assign
-thbjattr_thbj-attr.property-value-integer = rs-sclin-ld
+thbjattr_thbj-attr.property-value-logical = v-noauto-scls
 .
-
 
 v-same = yes.
 for each thbjattr_thbj-attr,
@@ -946,7 +967,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION mark-string Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION mark-string Dialog-Frame 
 FUNCTION mark-string RETURNS CHARACTER
   ( input p-scales-num as integer, input p-list as character ) :
 if lookup(string(p-scales-num), p-list) > 0 then return "*".
@@ -956,3 +977,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

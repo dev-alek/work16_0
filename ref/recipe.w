@@ -865,6 +865,7 @@ DO:
     assign
         v-recipe-name  = input frame {&frame-name} fi-recipe-name
         v-recipe-qnty  = input frame {&frame-name} fi-recipe-qnty
+        tb-global = input frame {&frame-name}  tb-global
     .
     run change-goods-list in this-procedure (
           input buf_init_recipe.recipe-code

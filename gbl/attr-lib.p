@@ -2293,12 +2293,13 @@ end procedure.
 &scop user-can-edit-attr-scale-inf true
 &scop output-display-attr-scale-inf false
 &scop other-attr-scale-inf 'spr-ext=adm\shattr-6.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-scale-inf 'character,character,character,integer':U
+&scop prop-type-list-attr-scale-inf 'character,character,character,integer,logical':U
 &scop prop-label-list-attr-scale-inf '~
 Разрешенные типы весов~
 ,Название программ для работы с весами~
 ,Номера весов на объекте~
 ,Установка сроков годности вес.товара при приходе и переоценке~
+,Отключена автоматическая передача товаров на весы~
 '
 &scop global-attr-scale-inf false
 &scop host-attr-scale-inf false
@@ -2308,7 +2309,7 @@ end procedure.
 &scop batch-edit-attr-scale-inf  0
 &scop level-way-attr-scale-inf "obj,,"
 &scop up-way-attr-scale-inf "scale-inf,,"
-/*бывшие параметры    scales-type,scales-pr,scallist,sclin-ld  */
+/*бывшие параметры    scales-type,scales-pr,scallist,sclin-ld,noauto-scls  */
 
 
 

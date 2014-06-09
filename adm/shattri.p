@@ -615,6 +615,15 @@ on error undo, return error
 &scop prop-code v-prop-code
 
       {&create-thbj-attr}.
+
+      v-prop-code =  "{&bef-attr-scale-inf_noauto-scls}".
+
+&scop ptype logical
+&scop prop-value yes
+&scop prop-code v-prop-code
+
+      {&create-thbj-attr}.
+
     end.
     when {&attr-cd-type-ibm} then do:
       { gbl/r-b-curr.i v-host-code v-ibmnalc }

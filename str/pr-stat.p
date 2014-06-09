@@ -1149,18 +1149,6 @@ define variable curr-db-num as integer   no-undo .
       undo main-block, return error "Ошибка при определении текущего курса в переоценке " . /* --->>>--- */
     end.
 
-    define variable varok as logical no-undo.
-    run check-the-same-object (output varok).
-    if buf-price-doc.obj-type = {&shop} and
-        can-find (first ub.scales no-lock where ub.scales.db-num = curr-db-num ) and  varok
-    then do:
-      { str/add-scal.i parparentproc buf-price-doc.obj-type buf-price-doc.obj-code buf-price-doc.doc-num {&overvalue} this-procedure no-error }
-      if error-status :error
-      then do:
-        undo main-block, return error "Ошибка при обновлении информации на весах " + return-value . /* --->>>--- */
-      end.
-    end.
-
   /* Сработает тригер */
   release buf-price-doc no-error .
   if error-status :error then do:
@@ -1237,6 +1225,15 @@ define variable curr-db-num as integer   no-undo .
                                                  , error-status:get-message(1)
                                                  , return-value) . /* --->>>--- */
       end.
+    end.
+    define variable varok as logical no-undo.
+    run check-the-same-object (output varok).
+    if buf-price-doc.obj-type = {&shop} and
+        can-find (first ub.scales no-lock where ub.scales.db-num = curr-db-num ) and  varok
+    then do:
+      run send-to-scales(INPUT int(recid(buf-price-doc))) no-error.
+      if error-status:error then
+        undo main-block, return error subst("Ошибка при отправке на весы - &1", return-value).
     end.
   end.
   run waitfram-hide in this-procedure .
@@ -1449,3 +1446,76 @@ define variable v-value-type        as character no-undo .
   end.
 
 end procedure. /* ver-date-period */
+
+/* отправка на весы */
+procedure send-to-scales:
+    define input parameter p-price-doc-recid as integer no-undo.
+    
+    define variable v-param-type as character no-undo .
+    define variable v-value-character as character no-undo .
+    define variable v-value-date as date no-undo .
+    define variable v-value-decimal as decimal no-undo .
+    define variable v-value-integer as INTEGER no-undo .
+    define variable v-value-logical AS LOGICAL no-undo .
+    define variable v-tth as handle no-undo .
+    
+    define buffer buf_price-doc for ub.price-doc.
+    define buffer buf_price-list for ub.price-list.
+    define buffer buf_bar-code for ub.bar-code.
+    define buffer buf_goods for ub.goods.
+    
+    v-tth = buffer thbjattr_thbj-attr:table-handle .
+
+    for each thbjattr_thbj-attr:
+      delete thbjattr_thbj-attr.
+    end.
+    run adm/shattri.p (
+       input "get":U
+      ,input  v-cntxt-obj-type
+      ,input  v-cntxt-obj-code
+      ,input  {&attr-scale-inf}
+      ,input  {&attr-scale-inf_noauto-scls} /*p-param-code*/
+      , output v-value-character
+      , output v-value-date
+      , output v-value-decimal
+      , output v-value-integer
+      , output v-value-logical
+      , output v-param-type
+      , INPUT-OUTPUT table-handle v-tth
+      ) no-error .
+    IF error-status:error then do:
+        message
+        substitute("Ошибка при получении настроек, необъодимых для работы весов НА ОБЪЕКТЕ &1&2:&3&4 &5"
+                , v-cntxt-obj-type
+                , v-cntxt-obj-code
+                , {&new-line}
+                , error-status:get-message(1)
+                , return-value )
+        view-as alert-box error .
+        undo, return error .
+    end.
+    
+    find first buf_price-doc no-lock
+      where recid(buf_price-doc) = p-price-doc-recid.
+
+    { str/add-scal.i parparentproc buf_price-doc.obj-type buf_price-doc.obj-code buf_price-doc.doc-num {&overvalue} this-procedure no-error }
+    if error-status :error
+    then do:
+      return error "Ошибка при обновлении информации на весах " + return-value . /* --->>>--- */
+    end.
+    
+    /* если запрет отправки на весы или переоценка не закрыта на АКТ */
+    if v-value-logical OR p-mode = 'close' then return.
+    
+    run str/diallog.w
+      ( input parparentproc
+      , input this-procedure
+      , input "ref/sendscal.p":U
+      , input (buf_price-doc.obj-type + {&delim-par} + string(buf_price-doc.obj-code) + {&delim-par} + {&question-mark} + {&delim-par} +
+               "changed":U + {&delim-par} + '' + {&delim-par} + "current":U + {&delim-par} + string(0))
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка изменений на весы")
+      ) no-error.
+      
+end procedure. /* send-to-scales */

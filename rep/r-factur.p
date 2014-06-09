@@ -2683,7 +2683,7 @@ end.
         put stream Out-stream
         space(5)  /*  space(10)    */
             string( "Валюта:  " +
-            trim( ( if invers and buf_trn-doc.doc-type <> {&income} then v-curr-name else ( if PrintRubl then v-rubl-name else v-base-name  ) ) ) ) format "X(120)" "(7)" at 196
+            trim( ( if invers and buf_trn-doc.doc-type <> {&income} then v-curr-name else ( if PrintRubl then v-rubl-name else v-base-name  ) ) ) ) format "X(120)" "(7)" at 196 skip(0)
         .
     end.
     if lookup("TopAukc", p-mode) <> 0 then do :
@@ -2737,6 +2737,7 @@ define variable v-base-code as integer     no-undo .
 define variable v-base-abbr as character   no-undo .
 define variable xx as integer no-undo.
 define variable yy as integer no-undo.
+define variable zz as integer no-undo.
 
 define buffer buf_currency      for ub.currency.
 
@@ -2892,7 +2893,46 @@ on error undo, return error
                 trim( string( v-tot-tax, "->>>>>>>>>>9.99" ) ) + ":" at yy
         .
     end.
+    xx = 134 - length(trim(string(v-tot-VAT,"->>>>>>>9.99"))).
+    yy = 150 - length(trim(string(v-tot-sum + v-tot-SLT,"->>>>>>>>>>9.99"))).
+    zz = 103  - length(trim(string(v-tot-sum-no-VAT,"->>>>>>>>>>>>9.99"))).
+    if PrintRubl
+    and v-torgconf-outprops = yes
+    then do:
+        run rep/wp-rub.p (
+            input v-tot-sum + v-tot-SLT
+            , output v-propis
+            , output v-propis-cop
+        ).
+    put stream Out-stream
+          skip ":Всего к оплате" ":" at 44
+                          v-propis format "X(75)" at 46 ":" at 121
+                          string( trim( string(v-tot-VAT, "->>>>>>>9.99") ) + ":" ) format "X(13)" at xx
+                          string( trim( string( v-tot-sum + v-tot-SLT, "->>>>>>>>>>9.99" ) ) + ":" ) format "X(16)" at yy
+          skip fill("-",150) format "x(150)"
+   .
+    end.
+    else do:
+      /*if lookup ("TopAukc" , p-mode) <> 0 then do :*/
+      put stream Out-stream
+          skip ":Всего к оплате" ":" at 44 ":" at 85
+                          string( trim( string( v-tot-sum-no-VAT, "->>>>>>>>>>>>9.99" ) ) + ":" ) format "X(18)" at zz
+                          string( trim( string(v-tot-VAT, "->>>>>>>9.99") ) + ":" ) format "X(13)" at xx
+                          string( trim( string( v-tot-sum + v-tot-SLT, "->>>>>>>>>>9.99" ) ) + ":" ) format "X(16)" at yy
+          skip fill("-",150) format "x(150)"
+        .
+      /*end.
+      else do :
+      put stream Out-stream
+              skip ":Всего к оплате" ":" at 44 ":" at 121
+                              string( trim( string(v-tot-VAT, "->>>>>>>9.99") ) + ":" ) format "X(13)" at xx
+                              string( trim( string( v-tot-sum + v-tot-SLT, "->>>>>>>>>>9.99" ) ) + ":" ) format "X(16)" at yy
+              skip fill("-",150) format "x(150)"
+      .
+      end.*/
+    end.
 
+  end.
     if PrintRubl
     and v-torgconf-outprops = yes
     and lookup ("corr" , p-mode) = 0
@@ -2902,26 +2942,16 @@ on error undo, return error
             , output v-propis
             , output v-propis-cop
         ).
+     /*   put stream out-stream
+            skip space(25) v-propis
+                                                                            format "X(150)"  at {&footer-tab-stop1}
+            skip(1)
+        .    */
         run facturxl-write-cell-data in this-procedure (
               input {&facturxl-h_summ_prop}
             , input v-propis
         ).
     end.
-
-    xx = 134 - length(trim(string(v-tot-VAT,"->>>>>>>9.99"))).
-    yy = 150 - length(trim(string(v-tot-sum + v-tot-SLT,"->>>>>>>>>>9.99"))).
-    
-    put stream Out-stream
-          skip ":Всего к оплате" ":" at 44
-                          v-propis format "X(75)" at 46 ":" at 121
-                          string( trim( string(v-tot-VAT, "->>>>>>>9.99") ) + ":" ) format "X(13)" at xx
-                          string( trim( string( v-tot-sum + v-tot-SLT, "->>>>>>>>>>9.99" ) ) + ":" ) format "X(16)" at yy
-          skip fill("-",150) format "x(150)"
-   .
-    
-
-  end.
-
     if v-torgconf-outsubs = no
     then do:
         run facturxl-write-cell-data in this-procedure (
@@ -2954,13 +2984,13 @@ on error undo, return error
             skip space(45) "(подпись)" space(30) "(Ф.И.О)"  space(47) "(подпись)" space(30) "(Ф.И.О)"
         .   */
         put stream Out-stream
-            skip(2) space(10) "Руководитель организации" format "X(25)" space(75)
+            skip(0) space(4) "Руководитель организации" format "X(25)" space(74)
             "Главный бухгалтер" format "X(25)" skip
-            space(10) "или иное уполномоченное  " format "X(25)" space(75)
-            "или иное уполномоченное  " format "X(25)" skip
-            space(10) "лицо" format "X(25)" fill( "_", 26 ) format "X(26)" "    /" v-torgconf-main-boss format "X(33)" "/"
-            space(10) "лицо" format "X(25)" fill( "_", 26 ) format "X(26)" "    /" v-torgconf-main-buh format "X(31)" "/"
-            skip space(43) "(подпись)" space(27) "(Ф.И.О)"  space(57) "(подпись)" space(27) "(Ф.И.О)"
+            space(4) "или иное уполномоченное лицо " format "X(31)" fill( "_", 26 ) format "X(26)" "    /" v-torgconf-main-boss format "X(31)" "/" space(5)
+            "или иное уполномоченное лицо " format "X(31)" fill( "_", 26 ) format "X(26)" "    /" v-torgconf-main-buh format "X(31)" "/"
+            /*space(10) "лицо" format "X(25)" fill( "_", 26 ) format "X(26)" "    /" v-torgconf-main-boss format "X(33)" "/"
+            space(10) "лицо" format "X(25)" fill( "_", 26 ) format "X(26)" "    /" v-torgconf-main-buh format "X(31)" "/"*/
+            skip space(43) "(подпись)" space(27) "(Ф.И.О)"  space(55) "(подпись)" space(27) "(Ф.И.О)"
         .
     if v-torgconf-outegrp = no
     then do :
@@ -2976,7 +3006,7 @@ on error undo, return error
               skip (1) space(10) substitute( "Индивидуальный предприниматель   &1  / &2 / ЕГРИП N &3 от &4 ", fill( "_", 26 ) , string(v-torgconf-self-host-name, "x(42)") , v-torgconf-self-host-egrip-num, v-torgconf-self-host-egrip-date ) format "X(174)"
 
               skip     space(51) "(подпись)"  space(29) "(Ф.И.О)" space(22) "(реквизиты свидетельства о государственной"
-              skip     space(119) substitute( "регистрации индивидуального предпринимателя)" ) format "X(90)"
+              skip     space(119) substitute( "регистрации индивидуального предпринимателя)" ) format "X(60)"
               skip
           .
           run facturxl-write-cell-data in this-procedure (
@@ -2994,7 +3024,7 @@ on error undo, return error
               skip (1) space(10) substitute( "Индивидуальный предприниматель   &1  / &2 /  &3  ", fill( "_", 26 ) , fill("_", 42) , fill( "_", 50 ) ) format "X(174)"
 
               skip     space(51) "(подпись)"  space(29) "(Ф.И.О)" space(22) "(реквизиты свидетельства о государственной"
-              skip     space(119) substitute( "регистрации индивидуального предпринимателя)" ) format "X(90)"
+              skip     space(119) substitute( "регистрации индивидуального предпринимателя)" ) format "X(60)"
               skip
           .
       end.
