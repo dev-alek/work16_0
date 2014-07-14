@@ -207,6 +207,15 @@ CASE p-scales-type:
     v-attr-code = {&attr-6x50}
     .
   end.
+  when "SHTRIH-M" then do:
+    assign
+    v-struct = "|" /*номер группы и номер клавиши*/
+    v-rows-num = 8
+    v-format = "X(50)"
+    v-line-length = 50
+    v-attr-code = {&attr-8x50}
+    .
+  end.
 
 END CASE.
 if v-attr-code <> '':U
@@ -301,6 +310,19 @@ CASE p-scales-type:
                       string(p-plu, '9999') +
                       string(replace(replace(p-struct, {&delim-par}, {&space-char}), {&new-line}, {&space-char}), "X(200)")
                       .
+    end.
+  end.
+  when 'SHTRIH-M':U
+  then do:
+    do ii = 1 to min(v-rows-num, num-entries(p-struct, {&delim-par})):
+      assign
+      v-entry = replace(entry(ii, p-struct, {&delim-par}), {&double-quote}, {&space-char} )
+      v-entry = replace(v-entry, {&single-quote}, {&space-char} )
+      v-entry = replace(v-entry, {&new-line}, {&space-char} )
+      .
+      assign
+      v-struct = v-struct + string(v-entry, v-format) + "'".
+      .
     end.
   end.
   otherwise do:
@@ -483,12 +505,13 @@ CASE p-scales-type:
   end.
   when "SHTRIH-M" then do:
     if p-mode = {&update} then do:
-      run create-name-str-2 in this-procedure ( buffer buf_goods, input 28, output name-buf1, output name-buf2) .
+      run create-name-str-2 in this-procedure ( buffer buf_goods, input 56, output name-buf1, output name-buf2) .
+      name-buf1 = trim(name-buf1).
       assign
       v-main-string = string(1) + "|" +       /*добавление*/
                       string(p-pLU-code) + "|"  +
                       string(p-b-str, "x(5)") + "|" +
-                      string(replace(name-buf1, "|", " "), "x(28)" ) + "|" +
+                      string(replace(name-buf1, "|", " "), "x(56)" ) + "|" +
                       /*вторая строка названия зарезерви*/ "" + "|" +
                       get-wt-cart(p-scales-type, p-wt-cart, p-scales-db-num, p-scales-num, p-tara-string, p-dec-delim) + "|" +
                       string(scl-gds-ld2(p-deadline, p-deaddate, p-deadflag), ">>>>9") + "|" +
@@ -502,7 +525,7 @@ CASE p-scales-type:
     or p-mode = "purge-all"
     then do:
       assign
-      v-main-string = string(0) + "|" +       /*удаление*/
+      v-main-string = (if p-mode = "purge-all" then string(2) else string(0)) + "|" +       /*удаление*/
                       string(p-pLU-code) + "|"  +
                       string(p-b-str, "x(5)") + "|" +
                       string(replace(name-buf1, "|", " "), "x(29)" ) + "|" +
@@ -645,6 +668,7 @@ define buffer buf_gdsolist for gdsolist.
                    or t-scales.scales-type = "TIGER-SPCT1"   ~
                    or t-scales.scales-type = "CAS_CL5000j"   ~
                    or t-scales.scales-type = "CAS_CL5000"   ~
+                   or t-scales.scales-type = "SHTRIH-M" ~
                then get-struct ( input buf_goods.gds-code       ~
                                , input buf_scales-gds.plu-code   ~
                                , input buf_goods.struct          ~

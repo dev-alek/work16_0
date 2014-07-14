@@ -5651,8 +5651,8 @@ end procedure.
 
 &glob type-attr-8x50 {&type-char}
 &glob format-attr-8x50  "X(255)"
-&glob label-attr-8x50   "Текст поля СОСТАВ 8x50 (CAS_LP-16x)"
-&glob tooltip-attr-8x50   "Текст поля СОСТАВ для этикетки 8x50 (CAS_LP-16x)"
+&glob label-attr-8x50   "Текст поля СОСТАВ 8x50 (CAS_LP-16x,SHTRIH-M)"
+&glob tooltip-attr-8x50   "Текст поля СОСТАВ для этикетки 8x50 (CAS_LP-16x,SHTRIH-M)"
 &glob user-can-edit-attr-8x50  true
 &glob output-display-attr-8x50  true
 &glob other-attr-8x50  "spr-ext=ref\struct-i.w/spr-param=8x50/init=gds-attr_init-8x50"
