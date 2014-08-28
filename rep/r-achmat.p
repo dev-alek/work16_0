@@ -42,6 +42,8 @@ define variable g#report-num as integer   no-undo .
 
 define variable v-doc-qnty as decimal no-undo. /* кол-во всех товаров в накладной */
 define variable v-doc-sum  as decimal no-undo. /* сумма по накладной */
+define variable v-PropisSumall as character no-undo. /* Сумма прописью, формата: "Стро руб. 15 коп." */
+define variable v-abbr as character no-undo.
 
 define stream Out-Stream.
 
@@ -102,7 +104,8 @@ end.
 
 procedure write-cells:
     define variable v-host-code as integer no-undo.
-    define variable v-qnty-str  as character no-undo. 
+/*    define variable v-qnty-str  as character no-undo.*/
+    define variable v-sum-str as character no-undo.
     
     /* название объекта */
     find first bf_clients
@@ -121,7 +124,7 @@ procedure write-cells:
     run acmxl-write-cell-data({&acmxl-firm_name}, bf_clients.obj-name).
     
     /* код документа */    
-    run acmxl-write-cell-data({&acmxl-doc_code}, "АКТ № " + bf_trn-doc.doc-code).
+    run acmxl-write-cell-data({&acmxl-doc_code}, /*"АКТ № " +*/ bf_trn-doc.doc-code).
     
     /* дата документа */
     run acmxl-write-cell-data({&acmxl-doc_date}, string(bf_trn-doc.doc-date, "99/99/99")).
@@ -153,12 +156,22 @@ procedure write-cells:
         run acmxl-write-cell-data({&acmxl-stock_name}, bf_clients.obj-name).
     end.
     
-    /* сумма количеств */
+    /* сумма Итого: */
+    v-doc-sum = 0 - v-doc-sum. /* Инвертируем знак +/-. Специфика отображения при списании. */
     run acmxl-write-cell-data({&acmxl-sum_all}, v-doc-sum).
-    
-    /* кол-во прописью */
-    run gbl/num-rus.p(v-doc-qnty, output v-qnty-str).
-    run acmxl-write-cell-data({&acmxl-qnty_str}, v-qnty-str).
+
+    /* Сумма прописью */
+    run rep/wp-rub.p(input v-doc-sum, output v-PropisSumall, output v-abbr).
+    run acmxl-write-cell-data({&acmxl-sum_str}, v-PropisSumall).
+
+    /* Количество Итого: */
+    v-doc-qnty = 0 - v-doc-qnty. /* Инвертируем знак +/-. Специфика отображения при списании. */
+    run acmxl-write-cell-data({&acmxl-qnty_all}, v-doc-qnty).
+
+/*    /* кол-во прописью */                                    */
+/*    run gbl/num-rus.p(v-doc-qnty, output v-qnty-str).        */
+/*    run acmxl-write-cell-data({&acmxl-qnty_str}, v-qnty-str).*/
+
 end.
 
 procedure write-lines:
@@ -185,12 +198,14 @@ procedure write-lines:
             no-lock.
             
         v-line-num = v-line-num + 1.
+        
+        /* Количество */
         v-doc-qnty = v-doc-qnty + bf_doc-line.fact-qnty.
+
         /*Сумма*/
         v-doc-sum = v-doc-sum + if no-vat then bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl 
                                     else  if Costprice then bf_doc-line-sum.cost-sum-rubl
                                               else bf_doc-line-sum.crsa-sum-rubl.
-        
 
         run acmxl-sheet1-write-line-data(
                 v-line-num, /* номер строки */
@@ -198,15 +213,15 @@ procedure write-lines:
                 bf_goods.artic, /* артикул */
                 bf_trn-doc.fact-date, /* дата закрытия на факт */
                 bf_goods.unit-base, /* ед. измерения */
-                bf_goods.normal-wastage, /* норма ( в доп. информацие по товару ) */
-                bf_doc-line.fact-qnty, /* кол-во */
-                if bf_doc-line.fact-qnty = 0 then 0 
+/*                bf_goods.normal-wastage, /* норма (в доп. информацие по товару) */*/
+                0 - bf_doc-line.fact-qnty, /* кол-во с инверсией знака. Такова логика отобр. знака при списании. */
+                if bf_doc-line.fact-qnty = 0 then 0
                     else if no-vat then (bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl) / bf_doc-line.fact-qnty
                              else if Costprice then bf_doc-line-sum.cost-sum-rubl / bf_doc-line.fact-qnty
                                       else bf_doc-line-sum.crsa-sum-rubl / bf_doc-line.fact-qnty , /* цена */
-                if no-vat then bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl 
-                    else if Costprice then bf_doc-line-sum.cost-sum-rubl 
-                             else bf_doc-line-sum.crsa-sum-rubl, /* сумма */
+                if no-vat then 0 - (bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl)
+                    else if Costprice then 0 - (bf_doc-line-sum.cost-sum-rubl)
+                             else 0 - (bf_doc-line-sum.crsa-sum-rubl), /* сумма ("0 - (сумма)" выдаёт инверсию знака. Такова логика отобр. знака при списании!)*/
                 if avail bf_trn-reason then bf_trn-reason.reason-name else "" /* основание накладной */
             ).
     end. /* for each bf_doc-line */

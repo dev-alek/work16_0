@@ -32,7 +32,9 @@ Creation date: 21/03/13
 &global-define acmxl-doc_code       "h_doc_code":U
 &global-define acmxl-doc_date       "h_doc_date":U
 &global-define acmxl-sum_all        "h_sum_all":U
-&global-define acmxl-qnty_str       "h_qnty_str":U
+&global-define acmxl-sum_str        "h_sum_str":U
+&global-define acmxl-qnty_all       "h_qnty_all":U
+/*&global-define acmxl-qnty_str       "h_qnty_str":U*/
 &global-define acmxl-mgr_name       "h_mgr_name":U
 &global-define acmxl-performer_name "h_performer_name":U
 &global-define acmxl-stock_name     "h_stock_name":U
@@ -82,12 +84,14 @@ procedure acmxl-init :
     
     run acmxl-write-cell-data in this-procedure (
           input {&acmxl-sheet1_columnList}
-        , input "pos,name,num,delivery_date,unit,norm,fact_qnty,price,sum,description":U
+/*        , input "pos,name,num,delivery_date,unit,norm,fact_qnty,price,sum,description":U*/
+        , input "pos,name,num,delivery_date,unit,fact_qnty,price,sum,description":U
     ).
     
     run acmxl-write-cell-data in this-procedure (
           input {&acmxl-sheet1_columnType}
-        , input "I,S,S,S,S,S,D,D,D,S":U
+/*        , input "I,S,S,S,S,S,D,D,D,S":U*/
+        , input "I,S,S,S,S,D,D,D,S":U
     ).
     
     run acmxl-write-cell-data in this-procedure (
@@ -108,7 +112,7 @@ procedure acmxl-sheet1-write-line-data :
     define input parameter p-num        as character no-undo.
     define input parameter p-dv-date    as date      no-undo.
     define input parameter p-unit       as character no-undo.
-    define input parameter p-norm       as character no-undo.
+/*    define input parameter p-norm       as character no-undo.*/
     define input parameter p-fact-qnty  as decimal   no-undo.
     define input parameter p-price      as decimal   no-undo.
     define input parameter p-sum        as decimal   no-undo.
@@ -122,7 +126,7 @@ procedure acmxl-sheet1-write-line-data :
         {&tabulation} p-num
         {&tabulation} p-dv-date
         {&tabulation} p-unit
-        {&tabulation} p-norm
+/*        {&tabulation} p-norm*/
         {&tabulation} p-fact-qnty
         {&tabulation} p-price
         {&tabulation} p-sum
