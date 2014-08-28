@@ -184,14 +184,15 @@ ON STOP UNDO, RETURN ERROR:
       run err-mess in this-procedure ( input-output v-err-mess ).
       undo _main, return error (if p-silent = yes then v-err-mess else '':U).
     end.
-    if ub.fin-schet.cli-type<> p-cli-type
+    if ub.fin-schet.cli-type <> p-cli-type
     OR ub.fin-schet.cli-code <> p-cli-code then do:
       v-err-mess = "Для уже имеющейся записи нельзя изменить держателя счета" .
       run err-mess in this-procedure ( input-output v-err-mess ).
       undo _main, return error (if p-silent = yes then v-err-mess else '':U).
     end.
   end.
-  if v-dop1 = '' then do:
+/* Закомментировано по задаче ТН-3206 от 2014г Арн.*/
+/*ТН-3206 от 2014г Арн. if v-dop1 = '' then do:
     for each buf-db_fin-schet where buf-db_fin-schet.host-code = p-host-code and
                                       buf-db_fin-schet.r-schet   = p-r-schet   and
                                       buf-db_fin-schet.code-bank = p-code-bank and
@@ -221,6 +222,106 @@ ON STOP UNDO, RETURN ERROR:
       leave.
     end.
   end.
+ТН-3206 от 2014г Арн.*/
+    run clntattr-value in this-procedure (
+        input p-cli-type,
+        input p-cli-code,
+        input {&attr-main-accholder},
+        output v1-mainholder,
+        output v1type)
+    no-error.
+
+ 
+    for each buf-db_fin-schet where buf-db_fin-schet.host-code = p-host-code and        /* Хост код фирмы-держателя счёта, к которой хотим доб. контрагента с тем-же Р/с */
+                                      buf-db_fin-schet.r-schet = p-r-schet and          /* Р/с фирмы-держателя счёта, к которой хотим доб. контрагента с тем-же Р/с  */
+                                      buf-db_fin-schet.code-bank = p-code-bank and      /* Код Банка фирмы-держателя счёта, к которой хотим доб. контрагента с тем-же Р/с  */
+                                      buf-db_fin-schet.status_ = {&current-status}      /* Статус фин докум. фирмы-держателя счёта, к которой хотим доб. контрагента с тем-же Р/с  */
+                                and (p-mode = {&add-def} or (p-mode = {&update} and ub.fin-schet.status_ = {&current-status})):
+    if buf-db_fin-schet.code-schet = p-code-schet then next.
+
+    run clntattr-value in this-procedure (
+        input buf-db_fin-schet.cli-type,
+        input buf-db_fin-schet.cli-code,
+        input {&attr-main-accholder},
+        output v2-mainholder,
+        output v2type)
+    no-error.
+
+
+    if buf-db_fin-schet.cli-type = p-cli-type
+        and buf-db_fin-schet.cli-code = p-cli-code
+    then
+        do:
+            
+             /* Запрет ввода одной и той-же фирмы HOST-CODE на один и тот-же р/счёт. */
+            v-err-mess = substitute("Для клиена &6,&7 уже заведен счёт &1 по фирме &2 в том же банке." +
+                "&3Вн.номер счета = &4" +
+                "&3Доп.назв.держ.счёта = &5",
+                p-r-schet,
+                p-host-code,
+                {&new-line},
+                buf-db_fin-schet.code-schet,
+                buf-db_fin-schet.dop1,
+                buf-db_fin-schet.cli-type,
+                buf-db_fin-schet.cli-code
+                ).
+            run err-mess in this-procedure (input-output v-err-mess).
+            undo, return error (if p-silent = yes then v-err-mess else 'r-schet':U).
+        end.
+
+    if p-dop1 <> '':U
+        and buf-db_Fin-schet.dop1 = '':U
+        and  v1-mainholder <> '':U 
+        and v1-mainholder = buf-db_fin-schet.cli-type + "," + string(buf-db_fin-schet.cli-code)
+        and v2-mainholder = '':U        
+    then
+        do:
+            next.
+        end.
+
+    if p-dop1 = ''
+        and v1-mainholder = '' 
+        and v2-mainholder <> '':U and v2-mainholder = string(p-cli-type + "," + string(p-cli-code))
+        and buf-db_Fin-schet.dop1 <> '':U
+    then
+        do:
+            next.
+        end.
+
+    if p-dop1 <> ''
+        and buf-db_Fin-schet.dop1 <> '' 
+        and p-dop1 <> buf-db_Fin-schet.dop1
+        and v1-mainholder <> '':U 
+        and v1-mainholder = v2-mainholder
+    then 
+        do:
+            next.
+        end.
+
+    v-err-mess = substitute("Уже есть расчетный счет &1 по фирме &2 в том же банке." +
+        "&3Вн.номер счета = &4" +
+        (if v1-mainholder <> ''
+            and v1-mainholder = v2-mainholder
+            and buf-db_Fin-schet.dop1 <> ''
+            and buf-db_Fin-schet.dop1 = p-dop1
+            then
+                "&3Объект = &6,&7" +
+                "&3Доп.назв.держ.счёта = &5"
+            else ""),
+        p-r-schet,
+        p-host-code,
+        {&new-line},
+        buf-db_fin-schet.code-schet,
+        buf-db_fin-schet.dop1,
+        buf-db_fin-schet.cli-type,
+        buf-db_fin-schet.cli-code
+        ).
+    run err-mess in this-procedure (input-output v-err-mess).
+    undo, return error (if p-silent = yes then v-err-mess else 'r-schet':U).
+
+end. /* for each buf-db_fin-schet ... */
+
+/*
   if available buf-db_fin-schet then do:
     v-err-mess = substitute("Уже есть расчетный счет &1 по фирме &2 в том же банке.&3" +
                                   "Вн.номер счета: &4"
@@ -231,27 +332,28 @@ ON STOP UNDO, RETURN ERROR:
     run err-mess in this-procedure ( input-output v-err-mess ).
     undo, return error (if p-silent = yes then v-err-mess else 'r-schet':U).
   end.
+*/
 
   assign
   ub.fin-schet.c-schet   = p-c-schet
   ub.fin-schet.cli-type  = p-cli-type
   ub.fin-schet.cli-code  = p-cli-code
   ub.fin-schet.code-bank = p-code-bank
-  ub.fin-schet.curr-code  = p-curr-code
+  ub.fin-schet.curr-code = p-curr-code
   ub.fin-schet.dop1      = p-dop1
   ub.fin-schet.dop2      = p-dop2
   ub.fin-schet.r-schet   = p-r-schet
-  ub.fin-schet.PS         = p-PS
-  ub.fin-schet.status_    =  (if p-mode = {&add-def}
-                              then {&current-status}
-                              else ub.fin-schet.status_)
+  ub.fin-schet.PS        = p-PS
+  ub.fin-schet.status_   = (if p-mode = {&add-def}
+                            then {&current-status}
+                            else ub.fin-schet.status_)
   .
   release ub.fin-schet no-error.
   if error-status:error then do:
     v-err-mess = substitute("Ошибка при сохранении записи БАНКОВСКОГО СЧЕТА &1: &2", ERROR-STATUS:GET-NUMBER(1), return-value ) .
     run err-mess in this-procedure ( input-output v-err-mess ).
     undo _main, return error (if p-silent = yes then v-err-mess else '':U).
- end.
+  end.
 
 end. /*doe*/
 
