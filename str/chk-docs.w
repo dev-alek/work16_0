@@ -453,23 +453,8 @@ define variable v-host-code as integer no-undo .
   define buffer s-doc for ub.trn-doc.
   if not available c-doc then return no-apply.
   { gbl/hostcode.i c-doc.obj-type c-doc.obj-code v-host-code }
-  { gbl/chk-actg.i
-  v-cntxt-db-num
-  v-cntxt-userid
-  {&action-head-code-main}
-  'actn_receipt_input':U
-  {&cntxt-object}
-  v-host-code
-  c-doc.obj-type
-  c-doc.obj-code
-  0
-  0
-  0
-  true
-  glog
-  }
-  if NOT glog then return no-apply.
-    if change-type = '':U then do:
+
+  if change-type = '':U then do:
     run gbl/pop-up.p ( input b-chg:handle, input no) no-error.
   end.
   if change-type = '':U then return no-apply.
@@ -2867,7 +2852,8 @@ define variable next-prev as character no-undo .
 define variable glog as logical no-undo .
 define variable v-pump like ub.chk-gds.pump no-undo .
 define variable v-b-code like ub.chk-gds.b-code no-undo .
-
+define variable v-host-code as integer no-undo .
+{ gbl/hostcode.i parobj-type parobj-code v-host-code }
 
   do
   on error undo, return error
@@ -2891,6 +2877,22 @@ define variable v-b-code like ub.chk-gds.b-code no-undo .
       assign
       v-doc-rec = recid(c-doc).
       if lookup(string(c-doc.chk-type), {&wth-receipt-codes}) > 0 then do:
+  { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_wth-receipts_update':U
+  {&cntxt-object}
+  v-host-code
+  c-doc.obj-type
+  c-doc.obj-code
+  0
+  0
+  0
+  true
+  glog
+  }
+  if NOT glog then return no-apply.
         run str/checkwth.w
                         (
                           input parparentproc
@@ -2904,6 +2906,24 @@ define variable v-b-code like ub.chk-gds.b-code no-undo .
         .
       end.
       else do:
+
+  { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_receipt_input':U
+  {&cntxt-object}
+  v-host-code
+  c-doc.obj-type
+  c-doc.obj-code
+  0
+  0
+  0
+  true
+  glog
+  }
+  if NOT glog then return no-apply.
+
         run str/superchk.w
                         (
                           input parparentproc
