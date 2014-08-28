@@ -87,7 +87,9 @@ on error undo, return error return-value
     (input  del_trn-doc.doc-code   /* p-doc-code                  */
     ,input  true                   /* p-check-inv                 */
     ,input  true                   /* p-check-inv-rasr-minus      */
-    ,input  del_trn-doc.fact-order /* p-document-fact-order       */
+    ,input (if del_trn-doc.is-back-date = yes   /* p-document-fact-order  */
+            then 0
+            else del_trn-doc.fact-order)
     ,input  0                      /* p-document-fact-order-price */
     ,input  true                   /* p-fact-close                */
     ,input  false                  /* p-is-news                   */
