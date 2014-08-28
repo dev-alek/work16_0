@@ -764,6 +764,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                 or when "R":U
                 or when "DB":U
                 or when "ExtSys"
+                or when "ProcName":U
                 then do:
                   assign
                     v-new-add-mode = v-new-add-mode + "+":U + v-curr-mode

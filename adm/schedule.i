@@ -26,8 +26,10 @@ define temp-table curr-task no-undo
   field db-num-char as character column-label "БД" format "X(5)"
   field task-num    as integer   column-label "N задачи" format ">>>>>>>9"
   field task-type   as character
+  field cre-db-num    as integer
   field task-date   as date      column-label "Дата"  format "99.99.9999"
   field task-time   as integer   column-label "Время"  /* format "HH:MM:SS" */
+  field task-free-id  as character column-label "ID произвольного задания" 
   index pi is unique primary
     task-type
     db-num
@@ -440,6 +442,7 @@ procedure trans-task : /* преобразование строк расписания к виду дата, время */
             curr-task.db-num-char = buf_schedule.db-num-char
             curr-task.task-num    = buf_schedule.task-num
             curr-task.task-type   = buf_schedule.task-type
+            curr-task.cre-db-num    = buf_schedule.cre-db-num
             curr-task.task-date   = v-task-date
             curr-task.task-time   = v-task-time
           .
