@@ -3340,10 +3340,10 @@ CASE p-option:
                         ,input p-curr-host-code /*p-curr-host-code*/
                         ,input v-mode
                         ,input p-host-code /*p-host-code*/
+                        ,input 0 /*p-fin-doc-code*/
                         ,input v-obj-type
                         ,input v-obj-code
-                        ,input 0 /*p-fin-doc-code*/
-                        ,input "":U /*p-fin-ext-doc-type*/
+						,input "":U /*p-fin-ext-doc-type*/
                         ,input v-contract-code
                         ,input '':U /*p-ob-doc-code*/
                         ,input v-receiver-type
