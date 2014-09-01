@@ -1371,10 +1371,29 @@ for each obj-list no-lock:  /* По всем объектам */
                         part-2.total = buf_parts.fact-qnty * alc-goods.vol / 10.  /* 16 */
                         
                     for first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code:
+                        
+                        /* Сначала смотрим в грузоотправителя */
+                        run gbl/trdcat-v.p (input buf_trn-doc.doc-code
+                                           ,input {&trdcattr-shipper}
+                                           ,output v-attr-val
+                                           ,output v-attr-type
+                                           ) no-error.
+                        
+                        if v-attr-val <> "" then do:
+                            part-2.supplier-code = integer(substring(v-attr-val, 4)).
+                            part-2.supplier-type = substring(v-attr-val, 1, 3).
+                            
+                            for first buf_clients where buf_clients.obj-type = part-2.supplier-type
+                                                    and buf_clients.obj-code = part-2.supplier-code no-lock:
+                                part-2.supplier-obj-name = buf_clients.obj-name. /* 6 */
+                            end.
+                        end.
+                        else do:
                         assign
-                        part-2.supplier-code = buf_trn-doc.cli-code               /*  */
-                        part-2.supplier-type = buf_trn-doc.cli-type               /*  */      
-                        part-2.supplier-obj-name = buf_trn-doc.cli-name.          /* 6 */
+                            part-2.supplier-code = buf_trn-doc.cli-code               /*  */
+                            part-2.supplier-type = buf_trn-doc.cli-type               /*  */      
+                            part-2.supplier-obj-name = buf_trn-doc.cli-name.          /* 6 */
+                        end.
                         
                         /* Для ИНН и КПП Поставщика */
                         

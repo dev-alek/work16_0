@@ -137,7 +137,7 @@ on error undo, return error return-value
       view-as alert-box error .
     undo, return error "CRITICAL" .
   end.
-  for each cdlinv_doc-line no-lock
+  /*for each cdlinv_doc-line no-lock
     where cdlinv_doc-line.obj-type     = p-obj-type
       and cdlinv_doc-line.obj-code     = p-obj-code
       and cdlinv_doc-line.artic        = p-artic
@@ -161,7 +161,7 @@ on error undo, return error return-value
                   p-doc-code).
     output stream str-err close.
     undo, return error "CRITICAL".
-  end.
+  end.*/
 
   { str/is-petrl.i
     p-artic

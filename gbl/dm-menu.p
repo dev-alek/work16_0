@@ -11974,28 +11974,26 @@ end procedure. /* c-obj-ext-ret-hi-exe */
 
 procedure c-trn-doc-all-exe :
   define input parameter p-is-hold as logical no-undo.
+  define variable loc-ref-list as character no-undo.
 
   do on error undo, return error return-value :
-    /* todopervakov - доработать вызов */
-    message
-      "Данная функция находится в разработке"
-      view-as alert-box error .
 
-/*    run str/calldocs.w*/
-/*      (input parparentproc*/
-/*      ,input {&c-work}*/
-/*      ,input ?*/
-/*      ,input ?*/
-/*      ,input ?*/
-/*      ,input ?*/
-/*      ,input "":U*/
-/*      ,input ?*/
-/*      ,input p-is-hold*/
-/*      ,input ?*/
-/*      ,input v-cntxt-obj-type*/
-/*      ,input v-cntxt-obj-code*/
-/*      ,output loc-ref-list*/
-/*      ).*/
+    run str/calldocs.w
+      (input parparentproc
+      ,input {&c-work}
+      ,input ?
+      ,input ?
+      ,input ?
+      ,input ?
+      ,input "":U
+      ,input ?
+      ,input p-is-hold
+      ,input ?
+      ,input v-cntxt-obj-type
+      ,input v-cntxt-obj-code
+      ,output loc-ref-list
+      ).
+
   end. /* on error */
 end procedure. /* c-trn-doc-all-exe */
 

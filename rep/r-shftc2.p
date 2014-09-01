@@ -151,11 +151,19 @@ FOR EACH ub.chk-doc No-LOCK WHERE
           return error .
         end.
         assign v-doc-code-r = ras-doc.doc-code.
+        
         find first ret-doc no-lock where
                   ret-doc.doc-code = ras-doc.out-code no-error .
+        
+        if not available(ret-doc) then do:
+            find first ret-doc no-lock where
+                      ret-doc.doc-code = replace(ras-doc.out-code,"у","") no-error .
+        end.
+        
         if not available ret-doc then do:
           message
-          substitute("Отсутствует документ возврата по чеку &1"
+          substitute("Отсутствует документ возврата &1 по чеку &2"
+                    , ras-doc.out-code
                     , ub.chk-doc.doc-code
                     )   skip
           "ЭКСПОРТ НЕ МОЖЕТ БЫТЬ ОСУЩЕСТВЛЕН" SKIP

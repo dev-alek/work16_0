@@ -19,6 +19,8 @@ define input  parameter p-task-type as character no-undo .
 define input  parameter p-for-db    as character no-undo .
 define output parameter p-list-db   as character no-undo .
 define output parameter p-list-key  as character no-undo .
+define input  parameter p-for-extsys  as character no-undo .
+define input  parameter p-for-proc    as character no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -185,6 +187,28 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         and buf_BatchProcess.BP_Type     = p-task-type
         and buf_BatchProcess.CharKey_One = string( buf_db.db-num )
         and buf_BatchProcess.CharKey_Two = "auto":U
+        and (p-task-type <> {&btpr-type-autooxml} or 
+              (p-task-type = {&btpr-type-autooxml} and 
+                (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-extsys = ""
+                    ) 
+                or (p-for-extsys <> "" 
+                    and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                    and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-extsys
+                    )
+                 )
+               )
+             )
+          and (p-task-type <> {&btpr-type-autofree} or 
+                (p-task-type = {&btpr-type-autofree} and 
+                  (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-proc = ""
+                      ) 
+                  or (p-for-proc <> "" 
+                      and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                      and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-proc
+                      )
+                   )
+                 )
+               )
       no-error
     .
 
@@ -262,6 +286,28 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         and buf_BatchProcess.BP_Type     = p-task-type
         and buf_BatchProcess.CharKey_One = string( buf_db.db-num )
         and buf_BatchProcess.CharKey_Two = "auto":U
+        and (p-task-type <> {&btpr-type-autooxml} or 
+              (p-task-type = {&btpr-type-autooxml} and 
+                (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-extsys = ""
+                    ) 
+                or (p-for-extsys <> "" 
+                    and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                    and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-extsys
+                    )
+                 )
+               )
+             )
+          and (p-task-type <> {&btpr-type-autofree} or 
+                (p-task-type = {&btpr-type-autofree} and 
+                  (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-proc = ""
+                      ) 
+                  or (p-for-proc <> "" 
+                      and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                      and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-proc
+                      )
+                   )
+                 )
+               )
       no-error
     .
     if available buf_BatchProcess then do:
@@ -270,6 +316,28 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           and buf-all_BatchProcess.BP_Type     = p-task-type
           and buf-all_BatchProcess.CharKey_One = string( buf_db.db-num )
           and buf-all_BatchProcess.CharKey_Two = "auto":U
+          and (p-task-type <> {&btpr-type-autooxml} or 
+                (p-task-type = {&btpr-type-autooxml} and 
+                  (  (num-entries (buf-all_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-extsys = ""
+                      ) 
+                  or (p-for-extsys <> "" 
+                      and num-entries (buf-all_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                      and entry (4, buf-all_BatchProcess.CharKey_Three, {&delim-key}) = p-for-extsys
+                      )
+                   )
+                 )
+               )
+          and (p-task-type <> {&btpr-type-autofree} or 
+                (p-task-type = {&btpr-type-autofree} and 
+                  (  (num-entries (buf-all_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-proc = ""
+                      ) 
+                  or (p-for-proc <> "" 
+                      and num-entries (buf-all_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                      and entry (4, buf-all_BatchProcess.CharKey_Three, {&delim-key}) = p-for-proc
+                      )
+                   )
+                 )
+               )
       on error undo, return error
       :
         if buf-all_BatchProcess.BatchProcess# <> buf_BatchProcess.BatchProcess# then do:
@@ -346,6 +414,28 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   and buf_BatchProcess.BP_ExecSysTimeInt < v-time
                 )
             )
+        and (p-task-type <> {&btpr-type-autooxml} or 
+              (p-task-type = {&btpr-type-autooxml} and 
+                (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-extsys = ""
+                    ) 
+                or (p-for-extsys <> "" 
+                    and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                    and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-extsys
+                    )
+                 )
+               )
+             )
+        and (p-task-type <> {&btpr-type-autofree} or 
+              (p-task-type = {&btpr-type-autofree} and 
+                (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-proc = ""
+                    ) 
+                or (p-for-proc <> "" 
+                    and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                    and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-proc
+                    )
+                 )
+               )
+             )
       no-error
     .
     if available buf_BatchProcess then do:

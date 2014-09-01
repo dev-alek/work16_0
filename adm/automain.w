@@ -67,7 +67,11 @@ define temp-table tt-extsys no-undo
   index pi is unique primary
     extsys_id ascending
 .
-
+define temp-table tt-proc no-undo
+  field proc_id as integer
+  index pi is unique primary
+    proc_id ascending
+.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -611,6 +615,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable v-list-db             as character no-undo .
   define variable v-for-db              as character no-undo .
   define variable v-for-extsys              as character no-undo .
+  define variable v-for-proc            as character no-undo .
   define variable start-time            as int64     no-undo .
   define variable v-session-begin       as logical   no-undo .
 
@@ -624,6 +629,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable v-db-num              as integer   no-undo .
   define variable v-log                 as logical   no-undo .
   define variable v-mess                as logical   no-undo .
+  define variable v-free-id             as character no-undo.
 
   define variable v-new-hidden-mode     as logical   no-undo .
 
@@ -713,6 +719,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
       leave block_db-list .
     end.
+    
+    if entry( 1, entry( v-ind, p-mode, "+":U), ":":U ) = "ProcName":U then do:
+      assign
+        v-for-proc = entry( 2, entry( v-ind, p-mode, "+":U), ":":U )
+      .
+      leave block_db-list .
+    end.
+
   end.
 
   run adm/autoconn.p no-error.
@@ -896,7 +910,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     if v-for-extsys <> "":U then do:
       run write-to-log ( substitute( "Сессия работает с Внешними Системами &1", v-for-extsys ) ).
     end.
-
+    if v-for-proc <> "":U then do:
+      run write-to-log ( substitute( "Сессия работает с Произвольными заданиями &1", v-for-proc ) ).
+    end.
 
   end.
 
@@ -967,6 +983,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         , input  v-for-db
         , output v-list-db
         , output v-list-key
+        , input v-for-extsys
+        , input v-for-proc
         ) no-error.
       if error-status :error
       then do:
@@ -1209,6 +1227,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          ,input v-session-begin
          ,input p-auto-type
          ,input v-list-db
+         ,input v-for-extsys
+         ,input v-for-proc
         ) no-error.
       if error-status :error
       then do:

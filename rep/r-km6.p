@@ -88,7 +88,8 @@ define temp-table temp-str no-undo
    field zero-counter    as integer
    field summ-begin      as character
    field summ-end        as character
-   field summ-sale       as character
+   field summ-sale       as decimal
+   field summ-nal        as decimal
    field summ-return     as decimal
    field person          as character
    field chk-date        as date
@@ -121,6 +122,10 @@ define buffer buf_fin-doc      for ub.fin-doc.
 define buffer buf_arh-fin-doc-schet-nal-obj for ub.arh-fin-doc-schet-nal-obj .
 define buffer buf_sysconf      for ub.sysconf.
 define buffer buf_shift-cash   for ub.shift-cash.
+define buffer buf_cash-pay-attr for ub.cash-pay-attr.
+define buffer buf_cash-pay for ub.cash-pay.
+define buffer buf_chk-gds-pay for ub.chk-gds-pay.
+define buffer buf_chk-pay-attr for ub.chk-pay-attr.
 
 define variable sum1-shift      as decimal initial 0     no-undo .
 define variable sum2-shift      as decimal initial 0     no-undo .
@@ -167,6 +172,10 @@ define variable sheet-list      as character             no-undo .
 define variable sheet-list-copy-from   as character      no-undo .
 define variable v-start         as logical   initial yes no-undo .
 define variable v-obj-code      as integer               no-undo .
+define variable v-is-cash-list as character no-undo. /* Список кодов оплаты наличными */
+define variable v-itogo-sum-sale as decimal no-undo.
+define variable v-itogo-sum as decimal no-undo.
+define variable v-itogo-nal as decimal no-undo.
 
 &scop display-message ~
    if p-batch > 0 then do: ~
@@ -207,7 +216,7 @@ define FRAME km-frame
       empty-str09-3           no-label format "X(8)"            space(0)
 
       Sym4                    no-label format "X(1)"            space(0)
-      temp-str.zero-counter   no-label format "999999999999999" space(0)
+      temp-str.zero-counter   no-label format ">>>>>>>>>>>>>>>" space(0)
 
       sym5                    no-label format "X(1)"            space(0)
       temp-str.summ-begin     no-label format "x(15)"           space(0)
@@ -216,7 +225,7 @@ define FRAME km-frame
       temp-str.summ-end       no-label format "x(15)"           space(0)
 
       sym7                    no-label format "X(1)"            space(0)
-      temp-str.summ-sale      no-label format "x(15)"           space(0)
+      temp-str.summ-sale      no-label format "->>>,>>>,>>9.99" space(0)
 
       sym8                    no-label format "X(1)"            space(0)
       temp-str.summ-return    no-label format "->>>,>>>,>>9.99" space(0)
@@ -249,8 +258,10 @@ define FRAME km-frame
 /* число прописью */
 FUNCTION f-wp-qnty returns character ( input p-dec as decimal ) :
   define variable pr as character no-undo .
+  define variable abbr as character no-undo.
 
-  run rep/wp-qnty.p ( input p-dec, output Pr ).
+  
+  run rep/wp-rub.p ( input p-dec, output Pr, output abbr).
   if Pr = '' then do:
      Pr = 'Ноль'.
   end.
@@ -264,7 +275,13 @@ do on error undo, return error
 
    if session:set-wait-state("compiler") then.
 
-/* сначала заполняем таблицу */
+/* Получим список кодов наличной оплаты */
+for each buf_cash-pay where buf_cash-pay.is-cash:
+    v-is-cash-list = v-is-cash-list + string(buf_cash-pay.cdpay-code) + ','.
+end.
+
+/* Теперь заполняем таблицу */
+
 for each buf_obj-list
   no-lock:
    assign
@@ -374,6 +391,11 @@ for each tt-cash-desk
    /* по строкам документа */
    { rep/repfrm.i on 25 } /* Показать окно информации о текущем процессе */
 
+   assign
+   v-itogo-sum = 0
+   v-itogo-sum-sale = 0
+   v-itogo-nal = 0.
+   
    for each temp-str no-lock
       where temp-str.cash-num = tt-cash-desk.cash-num
          by temp-str.z-number
@@ -385,6 +407,9 @@ for each tt-cash-desk
    end.
    /* тело */
       run print-line in this-procedure ( input substitute("ККМ&1", tt-cash-desk.cash-num)).
+      v-itogo-sum-sale = v-itogo-sum-sale + temp-str.summ-sale.
+      v-itogo-sum = v-itogo-sum + temp-str.summ-sale - temp-str.summ-return.
+      v-itogo-nal = v-itogo-nal + temp-str.summ-nal - temp-str.summ-return.
    end.
    PUT STREAM Out-Stream
        Line format {&format-km-gold} .
@@ -392,6 +417,7 @@ for each tt-cash-desk
    display stream Out-Stream
           "          ИТОГО" @ temp-str.summ-end
           sym7 sym8 sym9
+          v-itogo-sum-sale @ temp-str.summ-sale
           sum2-shift @ temp-str.summ-return
    with FRAME km-frame.
    PUT STREAM Out-Stream
@@ -905,7 +931,7 @@ do on error undo, return error return-value  :
    /* TEXT */
    PAGE STREAM Out-Stream.
    PUT STREAM Out-Stream
-       "Итого выручка в сумме " fill("_", 100) format "X(82)"  skip
+       "Итого выручка в сумме " f-wp-qnty(v-itogo-nal) format "X(82)"  skip
 /*       STRING(PropisSumall + " {&abbr_rub}. " + STRING(v-kop,"99") + " {&abbr_kop}.", "x(150)") format "x(150)" SKIP*/
        "Принята и оприходована по кассе," SKIP
        'по приходному кассовому ордеру № __' substitute("___&1&2", v-pko-num, fill("_", 32 - length(v-pko-num) )) format "X(35)"
@@ -971,7 +997,7 @@ if v-cassir-op     = "" then v-cassir-op     = UndLine.
        "(должность)" format "X(15)" AT 21   "(подпись)" format "X(20)" AT 44 "(расшифровка подписи)" format "X(25)" AT 73 skip
        "" skip
        "" skip
-       "Печатать с оборотом. Подписи печатать на обороте." AT 65
+       "Печатать с оборотом. Подписи печатать на обороте." AT 65 skip
    .
      /*Excel*/
 

@@ -18,7 +18,7 @@ Creation date: 10/09/05
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
-
+{ cmp/str-glbl.i }
 FUNCTION set-inkas-PS returns character(    input p-ps as character,
                                             input p-chk-amount as integer,
                                             input p-gds-amount as integer,
@@ -64,17 +64,52 @@ FUNCTION set-inkas-PS-simple returns character(
                                             input p-nf-gds-amount as integer
                                             ):
 define variable v-ps as character no-undo .
+define variable v-str1 as character no-undo .
 
 assign
   v-ps = fill( {&space-char} +  {&delim-par}, 9).
-  entry(2, ENTRY(1, v-PS, {&delim-par}), {&space-char})  = string(p-chk-amount).
+  
+  v-str1 = ENTRY(1, v-PS, {&delim-par}).
+  entry(2, v-str1, {&space-char})  = string(p-chk-amount).
+  ENTRY(1, v-PS, {&delim-par}) = v-str1.
+
+  v-str1 = ENTRY(2, v-PS, {&delim-par}).
+  entry(2, v-str1, {&space-char})  = string(p-gds-amount).
+  ENTRY(2, v-PS, {&delim-par}) = v-str1.
+  
+  v-str1 = ENTRY(3, v-PS, {&delim-par}).
+  entry(2, v-str1, {&space-char})  = string(p-line-out).
+  ENTRY(3, v-PS, {&delim-par}) = v-str1.
+  
+  v-str1 = ENTRY(4, v-PS, {&delim-par}).
+  entry(2, v-str1, {&space-char})  = string(p-dtl-out).
+  ENTRY(4, v-PS, {&delim-par}) = v-str1.
+  
+  v-str1 = ENTRY(5, v-PS, {&delim-par}).
+  entry(2, v-str1, {&space-char})  = string(p-line-ret).
+  ENTRY(5, v-PS, {&delim-par}) = v-str1.
+  
+  v-str1 = ENTRY(6, v-PS, {&delim-par}).
+  entry(2, v-str1, {&space-char})  = string(p-dtl-ret).
+  ENTRY(5, v-PS, {&delim-par}) = v-str1.
+  
+  v-str1 = ENTRY(7, v-PS, {&delim-par}).
+  entry(2, v-str1, {&space-char})  = string(p-nf-chk-amount).
+  ENTRY(5, v-PS, {&delim-par}) = v-str1.
+  
+  v-str1 = ENTRY(8, v-PS, {&delim-par}).
+  entry(2, v-str1, {&space-char})  = string(p-nf-gds-amount).
+  ENTRY(5, v-PS, {&delim-par}) = v-str1.
+
+
+/*  entry(2, ENTRY(1, v-PS, {&delim-par}), {&space-char})  = string(p-chk-amount).
   entry(2, ENTRY(2, v-PS, {&delim-par}), {&space-char})  = string(p-gds-amount).
   entry(2, ENTRY(3, v-PS, {&delim-par}), {&space-char}) = string(p-line-out).
   entry(2, ENTRY(4, v-PS, {&delim-par}), {&space-char}) = string(p-dtl-out).
   entry(2, ENTRY(5, v-PS, {&delim-par}), {&space-char}) = string(p-line-ret).
   entry(2, ENTRY(6, v-PS, {&delim-par}), {&space-char}) = string(p-dtl-ret).
   entry(2, ENTRY(7, v-PS, {&delim-par}), {&space-char})  = string(p-nf-chk-amount).
-  entry(2, ENTRY(8, v-PS, {&delim-par}), {&space-char})  = string(p-nf-gds-amount).
+  entry(2, ENTRY(8, v-PS, {&delim-par}), {&space-char})  = string(p-nf-gds-amount).*/
 
 return v-ps.
 END FUNCTION.

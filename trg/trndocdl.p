@@ -127,7 +127,9 @@ on error undo, return error return-value
       (input buf_trn-doc.doc-code            /* v-trn-doc-doc-code          */
       ,input true                            /* p-check-inv                 */
       ,input no                              /* p-check-inv-rasr-minus      */
-      ,input buf_trn-doc.fact-order          /* p-document-fact-order       */
+      ,input (if buf_trn-doc.is-back-date = yes   /* p-document-fact-order  */
+            then 0
+            else buf_trn-doc.fact-order)
       ,input 0                               /* p-document-fact-order-price */
       ,input (buf_trn-doc.status_ = {&fact}) /* p-fact-close                */
       ,input g#news                          /* p-is-news                   */

@@ -18,6 +18,8 @@ define input parameter parparentproc   as handle    no-undo .
 define input parameter p-session-begin as logical   no-undo .
 define input parameter p-task-type     as character no-undo .
 define input parameter p-db-num        as character no-undo .
+define input parameter p-for-extsys    as character no-undo .
+define input parameter p-for-proc      as character no-undo . 
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -30,6 +32,7 @@ define variable vss-description as character no-undo init "запись следующего по 
 { adm/schedule.i }
 { gbl/db-attr.i  }
 { adm/push-m.i "with-attr-code" }
+{ ref/shd-attr.i }
 
 do
 on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
@@ -55,6 +58,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable db-attr-value         as character no-undo .
   define variable db-attr-type          as character no-undo .
   define variable db-attr-exist         as logical   no-undo .
+  define variable v-free-id             as character no-undo .
 
   if transaction = true then do:
     message
@@ -216,11 +220,24 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   ,output v-time
                  ).
 
+
+    if p-task-type = {&btpr-type-autofree} and p-for-proc <> "" then do:
+      for each curr-task where curr-task.task-type = {&btpr-type-autofree}:
+        run schedule-attr-get-free-id (input curr-task.cre-db-num
+                                      ,input curr-task.task-type
+                                      ,input curr-task.task-num
+                                      ,output v-free-id) no-error.
+        curr-task.task-free-id = v-free-id .
+        
+      end.
+    end.   
+    
     find first curr-task no-lock
       where curr-task.task-type = p-task-type
         and curr-task.db-num    = v-db-num
         and curr-task.task-date = v-date
         and curr-task.task-time > v-time
+        and (p-for-proc = "" or lookup (string(curr-task.task-free-id), p-for-proc) > 0) 
       no-error
     .
     if not available curr-task then do:
@@ -228,6 +245,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         where curr-task.task-type = p-task-type
           and curr-task.db-num    = v-db-num
           and curr-task.task-date > v-date
+          and (p-for-proc = "" or lookup (string(curr-task.task-free-id), p-for-proc) > 0)
         no-error
       .
     end.
@@ -242,6 +260,28 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           and buf_BatchProcess.BP_Type     = p-task-type
           and buf_BatchProcess.CharKey_One = v-db-num
           and buf_BatchProcess.CharKey_Two = "auto":U
+          and (p-task-type <> {&btpr-type-autooxml} or 
+                (p-task-type = {&btpr-type-autooxml} and 
+                  (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-extsys = ""
+                      ) 
+                  or (p-for-extsys <> "" 
+                      and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                      and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-extsys
+                      )
+                   )
+                 )
+               )
+          and (p-task-type <> {&btpr-type-autofree} or 
+                (p-task-type = {&btpr-type-autofree} and 
+                  (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-proc = ""
+                      ) 
+                  or (p-for-proc <> "" 
+                      and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                      and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-proc
+                      )
+                   )
+                 )
+               )
         no-error
       .
 
@@ -270,7 +310,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           or db-attr-exist = false
           or p-session-begin = true
         then do:
-          run write-to-log( substitute( "Для БД &1 не составлено расписание!", v-db-num ) ).
+          run write-to-log( substitute( "Для БД &1 &2 не составлено расписание!", v-db-num, if p-for-proc <> "" then "и процесса произвольного задания " + p-for-proc else "") ).
           run db-attr-write ( input v-db-num
                             ,input db-attr-code
                             ,input no
@@ -309,8 +349,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           buf_BatchProcess.CharKey_Two   = "auto":U
         .
       end.
+      
       assign
-        buf_BatchProcess.CharKey_Three     = substitute( "&1&2&3&2&4", buf_sys-ctrl.db-num, {&delim-key}, curr-task.task-type, curr-task.task-num )
+        buf_BatchProcess.CharKey_Three     = substitute( "&1&2&3&2&4&5", buf_sys-ctrl.db-num, {&delim-key}, curr-task.task-type, curr-task.task-num, 
+            if (p-for-extsys <> "" and p-task-type = {&btpr-type-autooxml}) then {&delim-key} + p-for-extsys else 
+                if (p-for-proc <> "" and p-task-type = {&btpr-type-autofree}) then {&delim-key} + p-for-proc else "")
         buf_BatchProcess.User_ID           = v-user-id
         buf_BatchProcess.Key#_One          = 0
         buf_BatchProcess.BP_SysDate        = v-date
@@ -352,6 +395,28 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           and buf_BatchProcess.BP_Type     = p-task-type
           and buf_BatchProcess.CharKey_One = entry( ind, v-db-wait )
           and buf_BatchProcess.CharKey_Two = "auto":U
+          and (p-task-type <> {&btpr-type-autooxml} or 
+                (p-task-type = {&btpr-type-autooxml} and 
+                  (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-extsys = ""
+                      ) 
+                  or (p-for-extsys <> "" 
+                      and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                      and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-extsys
+                      )
+                   )
+                 )
+               )
+          and (p-task-type <> {&btpr-type-autofree} or 
+                (p-task-type = {&btpr-type-autofree} and 
+                  (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-proc = ""
+                      ) 
+                  or (p-for-proc <> "" 
+                      and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                      and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-proc
+                      )
+                   )
+                 )
+               )
         no-error
       .
       if available buf_BatchProcess then do:
@@ -374,6 +439,28 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         and buf_BatchProcess.BP_Type     = p-task-type
         and buf_BatchProcess.CharKey_One = string( buf_db.db-num )
         and buf_BatchProcess.CharKey_Two = "auto":U
+        and (p-task-type <> {&btpr-type-autooxml} or 
+              (p-task-type = {&btpr-type-autooxml} and 
+                (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-extsys = ""
+                    ) 
+                or (p-for-extsys <> "" 
+                    and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                    and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-extsys
+                    )
+                 )
+               )
+             )
+          and (p-task-type <> {&btpr-type-autofree} or 
+                (p-task-type = {&btpr-type-autofree} and 
+                  (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-proc = ""
+                      ) 
+                  or (p-for-proc <> "" 
+                      and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                      and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-proc
+                      )
+                   )
+                 )
+               )
       no-error
     .
     if available buf_BatchProcess

@@ -89,7 +89,7 @@ define buffer buf_temp-schedule-free for temp-schedule-free .
 &Scoped-define INTERNAL-TABLES buf_temp-schedule-free
 
 /* Definitions for BROWSE BR-free-tasks                                 */
-&Scoped-define FIELDS-IN-QUERY-BR-free-tasks buf_temp-schedule-free.free-task-name buf_temp-schedule-free.proc-run-name buf_temp-schedule-free.proc-param-edit-name buf_temp-schedule-free.conf-param buf_temp-schedule-free.is-gbd buf_temp-schedule-free.is-ubd buf_temp-schedule-free.enable-concurrent-0 buf_temp-schedule-free.enable-concurrent-db
+&Scoped-define FIELDS-IN-QUERY-BR-free-tasks buf_temp-schedule-free.free-id buf_temp-schedule-free.free-task-name buf_temp-schedule-free.proc-run-name buf_temp-schedule-free.proc-param-edit-name buf_temp-schedule-free.conf-param buf_temp-schedule-free.is-gbd buf_temp-schedule-free.is-ubd buf_temp-schedule-free.enable-concurrent-0 buf_temp-schedule-free.enable-concurrent-db
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-free-tasks
 &Scoped-define SELF-NAME BR-free-tasks
 &Scoped-define QUERY-STRING-BR-free-tasks FOR EACH buf_temp-schedule-free
@@ -150,6 +150,7 @@ buf_temp-schedule-free.is-gbd COLUMN-LABEL  "Возможность!запуска!в ГБД" FORMAT "
 buf_temp-schedule-free.is-ubd COLUMN-LABEL "Возможность!запуска!в УБД" FORMAT "да/нет"
 buf_temp-schedule-free.enable-concurrent-0 COLUMN-LABEL  "Возможность!одноврем.!запуска" FORMAT "да/нет"
 buf_temp-schedule-free.enable-concurrent-db COLUMN-LABEL "Возможность!одноврем.!запуска!в одной БД" FORMAT "да/нет"
+buf_temp-schedule-free.free-id COLUMN-LABEL "ID задачи" FORMAT "X(100)" WIDTH 11
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 11.5 FIT-LAST-COLUMN.
@@ -447,6 +448,7 @@ PROCEDURE MyEnable :
 assign
 frame {&frame-name}:title = "Произвольные задания"
 buf_temp-schedule-free.free-task-name:RESIZABLE IN BROWSE br-free-tasks = YES
+buf_temp-schedule-free.free-id:RESIZABLE IN BROWSE br-free-tasks = YES
 .
   ENABLE
   b-quit

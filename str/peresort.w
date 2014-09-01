@@ -1577,7 +1577,7 @@ DO:
   if error-status:error then do:
     return no-apply.
   end.
-  run proc-sht in this-procedure.
+  run proc-sht in this-procedure no-error.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2913,19 +2913,10 @@ define buffer bf_shift-obj   for ub.shift-obj.
     for each  bf_shift-obj where bf_shift-obj.obj-type   = bf_trn-doc.obj-type                             and
                                  bf_shift-obj.obj-code   = bf_trn-doc.obj-code                             and
                                  bf_shift-obj.shift-date = input frame {&frame-name} varshift-date no-lock on error undo, return error return-value :
-      find first bf_shift-staff where bf_shift-staff.obj-type    = bf_shift-obj.obj-type                   and
-                                      bf_shift-staff.obj-code    = bf_shift-obj.obj-code                   and
-                                      bf_shift-staff.shift-date  = bf_shift-obj.shift-date                 and
-                                      bf_shift-staff.shift-num   = bf_shift-obj.shift-num                  and
-                                      bf_shift-staff.next-shift  = no                                      and
-                                      bf_shift-staff.psn-num     = -1                                      and
-                                      bf_shift-staff.name        = input frame {&frame-name} varshift-name no-lock no-error.
-      if available bf_shift-staff then do:
-        assign
-          varfind-shift = varfind-shift + 1
-          varshift-date-mem = bf_shift-obj.shift-date
-          varshift-num-mem  = bf_shift-obj.shift-num.
-      end.
+      assign
+        varfind-shift = varfind-shift + 1
+        varshift-date-mem = bf_shift-obj.shift-date
+        varshift-num-mem  = bf_shift-obj.shift-num.
     end.
 
     if varfind-shift = 0 or varfind-shift > 1 then do:
@@ -2949,7 +2940,9 @@ define buffer bf_shift-obj   for ub.shift-obj.
         varshift-name.
       assign
         bf_trn-doc.shift-date = varshift-date-mem
-        bf_trn-doc.shift-num  = varshift-num-mem.
+        bf_trn-doc.shift-num  = varshift-num-mem
+        varshift-date = varshift-date-mem
+        varshift-num = varshift-num-mem.
       display bf_trn-doc.shift-date @ varshift-date
               bf_trn-doc.shift-num  @ varshift-num
               varshift-name with frame {&frame-name}.
@@ -2987,30 +2980,19 @@ define buffer bf_shift-obj   for ub.shift-obj.
       end.
     end.
     else do:
-      find first bf_shift-staff where bf_shift-staff.obj-type    = bf_shift-obj.obj-type   and
-                                      bf_shift-staff.obj-code    = bf_shift-obj.obj-code   and
-                                      bf_shift-staff.shift-date  = bf_shift-obj.shift-date and
-                                      bf_shift-staff.shift-num   = bf_shift-obj.shift-num  and
-                                      bf_shift-staff.next-shift  = no                      and
-                                      bf_shift-staff.psn-num     = -1                      no-lock no-error.
-      if available bf_shift-staff then do:
+      assign
+        bf_trn-doc.shift-date = bf_shift-obj.shift-date
+        bf_trn-doc.shift-num  = bf_shift-obj.shift-num
+        varshift-name    = bf_shift-obj.shift-name
+        varshift-date = bf_shift-obj.shift-date.
+      display bf_trn-doc.shift-date @ varshift-date
+              bf_trn-doc.shift-num  @ varshift-num
+              varshift-name with frame {&frame-name}.
+      if bf_trn-doc.fact-date = ? then do:
         assign
-          bf_trn-doc.shift-date = bf_shift-obj.shift-date
-          bf_trn-doc.shift-num  = bf_shift-obj.shift-num
-          varshift-name    = bf_shift-staff.name.
-        display bf_trn-doc.shift-date @ varshift-date
-                bf_trn-doc.shift-num  @ varshift-num
-                varshift-name with frame {&frame-name}.
-        if bf_trn-doc.fact-date = ? then do:
-          assign
-            bf_trn-doc.fact-date = bf_trn-doc.shift-date
-            bf_trn-doc.fact-time = (24 * 60 * 60).
-          display bf_trn-doc.fact-date @ varfact-date with frame {&frame-name}.
-        end.
-      end.
-      else do:
-        display varshift-num with frame {&frame-name}.
-        return error.
+          bf_trn-doc.fact-date = bf_trn-doc.shift-date
+          bf_trn-doc.fact-time = (24 * 60 * 60).
+        display bf_trn-doc.fact-date @ varfact-date with frame {&frame-name}.
       end.
     end.
   end.
@@ -3046,27 +3028,21 @@ define buffer bf_shift-obj   for ub.shift-obj.
       varrecid = integer (entry(1, varrid-list)).
     find first bf_shift-obj where recid(bf_shift-obj) = varrecid no-lock no-error.
     if available bf_shift-obj then do:
-      find first bf_shift-staff where bf_shift-staff.obj-type    = bf_shift-obj.obj-type   and
-                                      bf_shift-staff.obj-code    = bf_shift-obj.obj-code   and
-                                      bf_shift-staff.shift-date  = bf_shift-obj.shift-date and
-                                      bf_shift-staff.shift-num   = bf_shift-obj.shift-num  and
-                                      bf_shift-staff.next-shift  = no                      and
-                                      bf_shift-staff.psn-num     = -1                      no-lock no-error.
-      if available bf_shift-staff then do:
+      assign
+        bf_trn-doc.shift-date = bf_shift-obj.shift-date
+        bf_trn-doc.shift-num  = bf_shift-obj.shift-num
+        varshift-name    = bf_shift-obj.shift-name
+        varshift-date = bf_shift-obj.shift-date
+        varshift-num = bf_shift-obj.shift-num.
+      display bf_trn-doc.shift-date @ varshift-date
+              bf_trn-doc.shift-num  @ varshift-num
+              varshift-name with frame {&frame-name}.
+/*      if bf_trn-doc.fact-date = ? then do:*/
         assign
-          bf_trn-doc.shift-date = bf_shift-obj.shift-date
-          bf_trn-doc.shift-num  = bf_shift-obj.shift-num
-          varshift-name    = bf_shift-staff.name.
-        display bf_trn-doc.shift-date @ varshift-date
-                bf_trn-doc.shift-num  @ varshift-num
-                varshift-name with frame {&frame-name}.
-        if bf_trn-doc.fact-date = ? then do:
-          assign
-            bf_trn-doc.fact-date = bf_trn-doc.shift-date
-            bf_trn-doc.fact-time = (24 * 60 * 60).
-          display bf_trn-doc.fact-date @ varfact-date with frame {&frame-name}.
-        end.
-      end.
+          bf_trn-doc.fact-date = bf_trn-doc.shift-date
+          bf_trn-doc.fact-time = (24 * 60 * 60).
+        display bf_trn-doc.fact-date @ varfact-date with frame {&frame-name}.
+/*      end.*/
     end.
   end.
 END PROCEDURE.

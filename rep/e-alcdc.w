@@ -671,6 +671,8 @@ define variable imp-or-prod-type as character no-undo. /* Тот, кто в третьей кол
 define variable imp-or-prod-code as integer   no-undo. /* Тот, кто в третьей колонке */
 define variable v-attr-val       as character no-undo.
 define variable v-attr-type      as character no-undo.
+define variable v-obj-code as integer no-undo.
+define variable v-obj-type as character no-undo.
 
 /* Сначала обработаем кнопки */
 
@@ -1433,6 +1435,53 @@ for each obj-list no-lock:  /* По всем объектам */
 
                     for first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code:
                         
+                        /* Получим нужного контрагента */
+                        assign
+                        v-obj-code = 0
+                        v-obj-type = "".
+                        release buf_alc-supp-lic.
+                        
+                        /* Сначала смотрим в грузоотправителя */
+                        run gbl/trdcat-v.p (input buf_trn-doc.doc-code
+                                           ,input {&trdcattr-shipper}
+                                           ,output v-attr-val
+                                           ,output v-attr-type
+                                           ) no-error.
+                        
+                        if v-attr-val <> "" then do:
+                            /* Поиск лицензии */
+                            /* Сначала у грузоотправителя */
+                            find first buf_alc-supp-lic where buf_alc-supp-lic.cli-type = substring(v-attr-val, 1, 3)
+                                                          and buf_alc-supp-lic.cli-code = integer(substring(v-attr-val, 4))
+                                                          and buf_alc-supp-lic.date-from <= buf_trn-doc.fact-date
+                                                          and buf_alc-supp-lic.date-to   >= buf_trn-doc.fact-date no-lock no-error.
+                            
+                            if not available(buf_alc-supp-lic) then do:
+                                run clntattr-value in this-procedure (
+                                             input substring(v-attr-val, 1, 3)
+                                            ,input integer(substring(v-attr-val, 4))
+                                            ,input {&attr-main-accholder}
+                                            ,output v-attr-val
+                                            ,output v-attr-type) no-error.
+                            
+                                find first buf_alc-supp-lic where buf_alc-supp-lic.cli-type = entry(1, v-attr-val, ',')
+                                                          and buf_alc-supp-lic.cli-code = integer(entry(2, v-attr-val, ','))
+                                                          and buf_alc-supp-lic.date-from <= buf_trn-doc.fact-date
+                                                          and buf_alc-supp-lic.date-to   >= buf_trn-doc.fact-date no-lock no-error.
+                            end.
+                            
+                        end. /* Сделали всё что могли по грузоотправителю */
+                        
+                        /* Если не было грузоотправителя или у него не было лицензии */
+                        
+                        if not available(buf_alc-supp-lic) then do:
+                            /* посмотрим у контрагента */
+                            find first buf_alc-supp-lic where buf_alc-supp-lic.cli-type = buf_trn-doc.cli-type
+                                                          and buf_alc-supp-lic.cli-code = buf_trn-doc.cli-code
+                                                          and buf_alc-supp-lic.date-from <= buf_trn-doc.fact-date
+                                                          and buf_alc-supp-lic.date-to   >= buf_trn-doc.fact-date no-lock no-error.
+                            
+                            if not available(buf_alc-supp-lic) then do:
                         run clntattr-value in this-procedure (
                                               input buf_trn-doc.cli-type
                                             ,input buf_trn-doc.cli-code
@@ -1440,19 +1489,35 @@ for each obj-list no-lock:  /* По всем объектам */
                                             ,output v-attr-val
                                             ,output v-attr-type) no-error.
                         
-                        if v-attr-val = '' then do:
+                                find first buf_alc-supp-lic where buf_alc-supp-lic.cli-type = entry(1, v-attr-val, ',')
+                                                          and buf_alc-supp-lic.cli-code = integer(entry(2, v-attr-val, ','))
+                                                          and buf_alc-supp-lic.date-from <= buf_trn-doc.fact-date
+                                                          and buf_alc-supp-lic.date-to   >= buf_trn-doc.fact-date no-lock no-error.
+                            end.
+                            
+                        end.
+                        
+                        if available(buf_alc-supp-lic) then do:
                         assign
-                        part-2.supplier-code = buf_trn-doc.cli-code               /*  */
-                        part-2.supplier-type = buf_trn-doc.cli-type               /*  */
-                        part-2.supplier-obj-name = buf_trn-doc.cli-name.          /* 6 */
+                            part-2.supplier-serial-number = buf_alc-supp-lic.seria + " " +  buf_alc-supp-lic.number /* 9  */
+                            part-2.supplier-date-get = string(buf_alc-supp-lic.date-get, "99.99.9999")              /* 10 */
+                            part-2.supplier-date-to = string(buf_alc-supp-lic.date-to, "99.99.9999")                /* 11 */
+                            part-2.supplier-get-from = buf_alc-supp-lic.who-are-got.                                /* 12 */
+                            assign
+                            v-obj-code = buf_alc-supp-lic.cli-code
+                            v-obj-type = buf_alc-supp-lic.cli-type.
                         end.
                         else do:
-                            find first buf_clients no-lock where buf_clients.obj-type = entry(1, v-attr-val, ',')
-                                                             and buf_clients.obj-code = integer(entry(2, v-attr-val, ',')).
+/*                            message "Для накладной " buf_trn-doc.doc-code " не было найдено контрагента с лицензией."*/
+/*                            view-as alert-box error.                                                                 */
+                        end.                        
 
                             assign
-                            part-2.supplier-code = buf_clients.obj-code               /*  */
-                            part-2.supplier-type = buf_clients.obj-type               /*  */
+                        part-2.supplier-code = v-obj-code
+                        part-2.supplier-type = v-obj-type.
+                        
+                        for first buf_clients where buf_clients.obj-type = part-2.supplier-type
+                                                and buf_clients.obj-code = part-2.supplier-code no-lock:
                             part-2.supplier-obj-name = buf_clients.obj-name.          /* 6 */
                         end.
 
@@ -1498,22 +1563,8 @@ for each obj-list no-lock:  /* По всем объектам */
 
                         end case. /* case buf_trn-doc.cli-type */
 
-                        /* Лицензии */
-
-                        for first buf_alc-supp-lic no-lock where buf_alc-supp-lic.cli-type = part-2.supplier-type
-                                                           and   buf_alc-supp-lic.cli-code = part-2.supplier-code
-                                                           and   buf_alc-supp-lic.date-from <= buf_trn-doc.fact-date
-                                                           and   buf_alc-supp-lic.date-to   >= buf_trn-doc.fact-date:
-                            assign
-                            part-2.supplier-serial-number = buf_alc-supp-lic.seria + " " +  buf_alc-supp-lic.number /* 9  */
-                            part-2.supplier-date-get = string(buf_alc-supp-lic.date-get, "99.99.9999")              /* 10 */
-                            part-2.supplier-date-to = string(buf_alc-supp-lic.date-to, "99.99.9999")                /* 11 */
-                            part-2.supplier-get-from = buf_alc-supp-lic.who-are-got.                                /* 12 */
-
-                        end. /* for first buf_alc-supp-lic */
-
                         run gbl/trdcat-v.p   ( input buf_trn-doc.doc-code
-                           , input {&trdcattr-dids} /* номер приходной накладной поставщика */
+                           , input {&trdcattr-dids}
                            , output v-attr-val
                            , output v-attr-type
                            ) no-error.
@@ -1521,7 +1572,7 @@ for each obj-list no-lock:  /* По всем объектам */
                            part-2.purchase-date = (if v-attr-val <> "" then date(v-attr-val) else buf_trn-doc.fact-date). /* 13 */
 
                         run gbl/trdcat-v.p   ( input buf_trn-doc.doc-code
-                           , input {&trdcattr-nids} /* номер приходной накладной поставщика */
+                           , input {&trdcattr-nids}
                            , output v-attr-val
                            , output v-attr-type
                            ) no-error.

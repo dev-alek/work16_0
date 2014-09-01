@@ -77,10 +77,49 @@ for each buf_chk-doc
           assign temp-str.chk-time-1 = buf_chk-doc.chk-time.
       end.
 
+      /* По продажам за наличные */
+      if lookup(string(buf_chk-doc.chk-type), {&sale-out-receipt-codes}) > 0 then do :
+          for each buf_chk-pay no-lock where buf_chk-pay.doc-code = buf_chk-doc.doc-code:
+              
+              if lookup(string(buf_chk-pay.pay-code), v-is-cash-list) > 0 then do:
+                temp-str.summ-nal = temp-str.summ-nal + buf_chk-pay.tot-rubl.
+              end.
+              
+              for first buf_chk-pay-attr where buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code
+                                             and buf_chk-pay-attr.line-num = buf_chk-pay.line-num
+                                             and buf_chk-pay-attr.attr-code = "autotank-sum-return" no-lock:
+                    temp-str.summ-nal = temp-str.summ-nal - decimal(buf_chk-pay-attr.attr-value).
+                end.
+              
+              if not can-find(first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
+                                         and buf_cash-pay-attr.curr-code = buf_chk-pay.curr-code
+                                         and buf_cash-pay-attr.attr-code = "kbo")
+              and not can-find(first buf_cash-pay where buf_cash-pay.cdpay-code = buf_chk-pay.pay-code
+                                                    and buf_cash-pay.curr-code = buf_chk-pay.curr-code
+                                                    and buf_cash-pay.is-service-pay = yes) then do:
+                temp-str.summ-sale = temp-str.summ-sale + buf_chk-pay.tot-rubl.
+                
+                for first buf_chk-pay-attr where buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code
+                                             and buf_chk-pay-attr.line-num = buf_chk-pay.line-num
+                                             and buf_chk-pay-attr.attr-code = "autotank-sum-return" no-lock:
+                    temp-str.summ-sale = temp-str.summ-sale - decimal(buf_chk-pay-attr.attr-value).
+                end.
+                
+              end.
+          end.
+      end.
+      
       if lookup(string(buf_chk-doc.chk-type), {&sale-in-receipt-codes}) > 0 then do :
+        for each buf_chk-pay no-lock
+              where buf_chk-pay.doc-code = buf_chk-doc.doc-code :
+          find first buf_cash-pay-attr where  buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code   and
+                                              buf_cash-pay-attr.curr-code  = buf_chk-pay.curr-code  and
+                                              buf_cash-pay-attr.attr-code  = "form_km3" no-lock no-error.
+          if available buf_cash-pay-attr and buf_cash-pay-attr.attr-value = "yes" then
           assign
-            temp-str.summ-return = temp-str.summ-return + ABS(buf_chk-doc.netto)
+              temp-str.summ-return = temp-str.summ-return + ABS(buf_chk-pay.tot-rubl)
                                     .
+      end.
       end.
       find first buf_sale-clients
             where buf_sale-clients.obj-code = buf_chk-doc.cashier-psn-code
