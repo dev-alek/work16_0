@@ -7051,7 +7051,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-fin-doc '{&bef-attr-fin-doc}':U
 &global-define bef-attr-fin-doc-full fin-doc
 &global-define attr-fin-doc-full '{&bef-attr-fin-doc-full}':U
-&global-define bef-prop-list-attr-fin-doc suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code
+&global-define bef-prop-list-attr-fin-doc suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code,page-cash-book
 &global-define prop-list-attr-fin-doc '{&bef-prop-list-attr-fin-doc}':U
 &global-define bef-attr-fin-doc_suffix-pko suffix-pko
 &global-define attr-fin-doc_suffix-pko '{&bef-attr-fin-doc_suffix-pko}':U
@@ -7083,6 +7083,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-fin-doc_dpt-dflt-type '{&bef-attr-fin-doc_dpt-dflt-type}':U
 &global-define bef-attr-fin-doc_dpt-dflt-code dpt-dflt-code
 &global-define attr-fin-doc_dpt-dflt-code '{&bef-attr-fin-doc_dpt-dflt-code}':U
+&global-define bef-attr-fin-doc_page-cash-book page-cash-book
+&global-define attr-fin-doc_page-cash-book '{&bef-attr-fin-doc_page-cash-book}':U
 &global-define bef-attr-contr-in contr-in
 &global-define attr-contr-in '{&bef-attr-contr-in}':U
 &global-define bef-attr-contr-in-full contr-in
@@ -7717,10 +7719,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-petrol_rvs-wt-email '{&bef-attr-petrol_rvs-wt-email}':U
 &global-define bef-attr-staff-options staff
 &global-define attr-staff-options '{&bef-attr-staff-options}':U
-&global-define bef-prop-list-attr-staff-options noanshftstaff
+&global-define bef-prop-list-attr-staff-options noanshftstaff,obyznumbukv,minparol
 &global-define prop-list-attr-staff-options '{&bef-prop-list-attr-staff-options}':U
 &global-define bef-attr-staff-options_noanshftstaff noanshftstaff
 &global-define attr-staff-options_noanshftstaff '{&bef-attr-staff-options_noanshftstaff}':U
+&global-define bef-attr-staff-options_obyznumbukv obyznumbukv
+&global-define attr-staff-options_obyznumbukv '{&bef-attr-staff-options_obyznumbukv}':U
+&global-define bef-attr-staff-options_minparol minparol
+&global-define attr-staff-options_minparol '{&bef-attr-staff-options_minparol}':U
 &global-define bef-attr-izt-rul izt-rul
 &global-define attr-izt-rul '{&bef-attr-izt-rul}':U
 &global-define bef-prop-list-attr-izt-rul izt-rul
