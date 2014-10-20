@@ -260,7 +260,7 @@ attr-fin-global }
 /* атрибут объектный -  Взаиморасчеты -Платежи */
 { cmp/cr-prep.i 1 attr-fin-doc  fin-doc fin-doc fin-doc fin-doc  }
 { cmp/cr-prepc.i 1 prop-list-attr-fin-doc
-"suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code"
+"suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code,page-cash-book"
 attr-fin-doc }
 
 
@@ -541,10 +541,10 @@ attr-fbrattr
 attr-petrol
 }
 
-/* Настройки работы с персоналом*/
+/* Настройки работы с пользователями и персоналом*/
 { cmp/cr-prep.i 1 attr-staff-options staff " " staff }
 { cmp/cr-prepc.i 1 prop-list-attr-staff-options
-"noanshftstaff"
+"noanshftstaff,obyznumbukv,minparol"
 attr-staff-options
 }
 
