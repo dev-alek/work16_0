@@ -618,6 +618,7 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-obj-date}~
 ,{&bef-attr-fbrattr}~
 ,{&bef-attr-petrol}~
+,{&bef-attr-staff-options}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list {&thbjattr-list}" ).
 
