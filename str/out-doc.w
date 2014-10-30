@@ -5104,7 +5104,7 @@ do
     find ub.goods where ub.goods.prod-code = ub.gds-dtl.prod-code
                 and ub.goods.prod-type = ub.gds-dtl.prod-type
                 and ub.goods.artic     = ub.gds-dtl.artic      no-lock.
-    if pardoc-mode = {&lookup} or (var_is-petrol = yes and var_is-pieces = no) then do:
+    if pardoc-mode = {&lookup} or (var_is-petrol = yes and var_is-pieces = no) or t-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} then do:
       assign
         work-mode = "lookup-parts":U
       .
