@@ -1089,7 +1089,7 @@ DO:
   END.
   ELSE DO:
     CASE X_cash-desk.pos-type:
-      WHEN {&cd-type-ibm-xml} THEN DO:
+      WHEN {&cd-type-ibm-xml} OR WHEN {&cd-type-autotank} THEN DO:
         enable
         b-version when parref-mode <> {&all}
         with FRAME {&FRAME-NAME}.
