@@ -263,7 +263,7 @@ define temp-table temp-rvs no-undo
       AND ub.trn-doc.obj-code   = pobj-code
       AND ub.trn-doc.fact-order >= prev-fo
       AND ub.trn-doc.fact-order <= fo
-      AND ub.trn-doc.internal   = NO
+     /* AND ub.trn-doc.internal   = NO */
       AND ub.trn-doc.status_    = {&fact}
       AND ub.trn-doc.doc-type   = {&income}
   , EACH  ub.doc-line NO-LOCK WHERE
