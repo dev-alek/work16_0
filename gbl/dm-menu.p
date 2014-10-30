@@ -4535,6 +4535,20 @@ define input parameter p-action as character no-undo .   */
   ) no-error.
 end procedure. /* run-2cashpay */
 
+procedure m-catalog-oss-exe :
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/sendcoss.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U)
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка данных по справочнику ОСС ")
+  ) no-error.
+
+end procedure. /* m-catalog-oss-exe */
+
 procedure m-cash-dept-exe :
   define variable v-obj-db-num  as integer   no-undo initial ? .
 
