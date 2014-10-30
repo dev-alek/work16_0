@@ -113,12 +113,22 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                             )
     buf_c-ext-classif.corr-date          = v-date
     .
-    if ub.ext-classif.uniq-key-rec <> '' then do:
-      run gen-key-fv in this-procedure (
-                                          input ub.ext-classif.uniq-key-rec
-                                          ,output v-field-list
-                                          ,output v-value-list).
-
+    if lookup(ub.ext-classif.classif-name, {&extclass_extended-data-list}) = 0 then /* Проверка: в списке {&extclass_extended-data-list} - перечень данных без привязки к физическим таблицам ТН. Если находим таковые записи, то обходим формирование ключа, который ищет физические таблицы в ТН. */
+        do: /* A-1 */
+            run gen-key-fv in this-procedure (
+                                                input ub.ext-classif.uniq-key-rec
+                                                ,output v-field-list
+                                                ,output v-value-list).
+            if error-status:error then
+                do:
+                    undo, return error substitute( "&2&1Ошибка... &1&3&1&4"
+                                                    , {&new-line}
+                                                    , vss-workfile
+                                                    , return-value
+                                                    , error-status :get-message ( 1 ) ).
+                end.
+        end. /* A-1 */
+        
       case ub.ext-classif.classif-subject :
         when {&table_clients} then do:
           assign
@@ -161,8 +171,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
           buf_c-ext-classif.chip-num           = next-value (s-ref-corr-chip, {&db-name_schema}).
         end.
       end case.
-    end. /*if ub.ext-classif.uniq-key-rec <> '' then do:*/
-  end. /*  if (not g#news*/
+    end. /*if (not g#news... */
+
   if lookup(ub.ext-classif.classif-name, {&extclass_no-news}) = 0 then do:
   run str/callnews.p
     ( input {&table_ext-classif}

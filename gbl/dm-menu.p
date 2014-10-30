@@ -8485,6 +8485,24 @@ procedure m-obj-rvinv-exe :
 
 end procedure. /* m-obj-rvinv-exe */
 
+procedure m-oss-ref :
+    define variable v-rid-list as character no-undo.
+    define variable v-mode as character no-undo.
+  do
+  on error undo, return error return-value
+  :
+    v-mode = "". /* возможное значение - "v-sel", т.е. активизация возможности выбора произвольных строк в браузере ОСС. */
+
+    run ref/oss-ref.w
+        (
+        input parparentproc,
+        input v-mode,
+        input v-cntxt-db-num,
+        output v-rid-list
+        ) no-error.
+  end.
+
+end procedure. /* m-oss-exe */
 
 procedure m_autopush-exe :
 

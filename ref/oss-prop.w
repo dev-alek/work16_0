@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -11,7 +11,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Свойства платежа Оператору сотовой связи
+Справочник Операторов Сотовой Связи. Диалоговое окно.
 
 Автор: Бахтадзе Наталья Викторовна
 Дата создания: 11/11/05
@@ -25,10 +25,10 @@ Creation date: 11/11/05
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
-DEFINE INPUT PARAMETER p-parentproc AS WIDGET-HANDLE NO-UNDO.
-DEFINE INPUT PARAMETER p-mode AS character NO-UNDO.
-DEFINE INPUT PARAMETER p-gds-code AS integer NO-UNDO.
-DEFINE INPUT-OUTPUT PARAMETER p-value AS CHARACTER NO-UNDO.
+define input parameter parParentProc as widget-handle no-undo.
+define input parameter p-mode as character no-undo.
+define input parameter p-db-num as integer no-undo.
+define input-output parameter p-io-rowid as rowid no-undo.
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -44,30 +44,69 @@ define variable vss-description as character no-undo init "Свойства платежа Опер
 { cmp/showinf.i }
 { ref/gds-attr.i }
 { ref/ossprpdf.i }
+{ ref/extclass.i }
+
+define variable rid-list as character no-undo.
+
+define buffer buf_ext-classif for ub.ext-classif.
+define buffer buf_sum-grp for ub.sum-grp.
+
+define temp-table tt-oss-ref no-undo
+
+    /* Ключевые поля */
+    field oper-code as integer          /* Uniq for table: ext-classif. Первое и уникальное (из трёх) ключевое поле справочника ОСС в таблице ext-classif */
+    field oper-abbrev as character      /* Второе (из трёх) ключевое поле справочника ОСС в таблице ext-classif */
+    field gds-group-in-cass as integer  /* Третье (из трёх) ключевое поле справочника ОСС в таблице ext-classif */
+
+    /* Параметры из таблицы ext-classif, уложенные в одно поле CharKey_Two */
+    field oper-name as character        /* 1. Название Оператора Связи */
+    field min-digit-nums as integer     /* 2. Минимальное кол-во цифр для ввода номера сотового телефона */
+    field max-digit-nums as integer     /* 3. Максимальное кол-во цифр для ввода номера сотового телефона */
+    field min-sum as decimal            /* 4. Минимальная сумма начисления */
+    field max-sum as decimal            /* 5. Максимальная сумма начисления */
+    field warning-lim-sum as decimal    /* 6. Порог суммы для выдачи предупреждения */
+    field type-comission as integer     /* 7. Типы ввода комиссии (цифры от 0 до 3) */
+    field comission-pcnt as decimal     /* 8. % комиссии */
+    field comission-sum as decimal      /* 9. Сумма комиссии */
+    field necessary-authorization as logical /* 10. Авторизация неохбодима */
+    field necessary-slip as logical     /* 11. Печать слипа необходима */
+    field slip-file as character        /* 12. Имя файла образа конечного слипа */
+    field billing-type as integer       /* 13. Тип расчёта с оператором */
+
+    /* Параметры из др. таблиц дополнительно */
+    field db-num as integer
+    field classif-subject as character  /* Сущность */
+    field classif-name as character     /* Классификатор */
+
+    index pi as primary unique oper-code
+.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help f-oper-code f-oper-name ~
+&Scoped-Define ENABLED-OBJECTS f-name-gds-grp B-exit b-quit B-Help ~
+f-gds-group-in-cass b-grp-gds f-oper-code f-oper-name f-oper-abbrev ~
 f-min-digit-nums f-max-digit-nums f-min-sum f-max-sum f-warning-lim-sum ~
-Rs-comission f-comission-pcnt f-comission-sum t-authorization t-slip ~
-f-slip-file Rs-billing-type
-&Scoped-Define DISPLAYED-OBJECTS f-oper-code f-oper-name f-min-digit-nums ~
-f-max-digit-nums f-min-sum f-max-sum f-warning-lim-sum Rs-comission ~
-f-comission-pcnt f-comission-sum t-authorization t-slip f-slip-file ~
-Rs-billing-type
+Rs-type-comission f-comission-pcnt f-comission-sum ~
+t-necessary-authorization t-necessary-slip f-slip-file Rs-billing-type ~
+RECT-1 RECT-2 
+&Scoped-Define DISPLAYED-OBJECTS f-name-gds-grp f-gds-group-in-cass ~
+f-oper-code f-oper-name f-oper-abbrev f-min-digit-nums f-max-digit-nums ~
+f-min-sum f-max-sum f-warning-lim-sum Rs-type-comission f-comission-pcnt ~
+f-comission-sum t-necessary-authorization t-necessary-slip f-slip-file ~
+Rs-billing-type 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -82,125 +121,161 @@ Rs-billing-type
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-grp-gds 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 3 BY .71.
+
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-comission-pcnt AS DECIMAL FORMAT ">9.99":U INITIAL 0
-     LABEL "% комиссии"
-     VIEW-AS FILL-IN
-     SIZE 7 BY 1 NO-UNDO.
+DEFINE VARIABLE f-comission-pcnt AS DECIMAL FORMAT ">9.99":U INITIAL 0 
+     LABEL "% комиссии" 
+     VIEW-AS FILL-IN 
+     SIZE 13.2 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-comission-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0
-     LABEL "Сумма комиссии"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-comission-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0 
+     LABEL "Сумма комиссии" 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-max-digit-nums AS INTEGER FORMAT ">9":U INITIAL 0
-     LABEL "Максимальное кол-во цифр для ввода номера"
-     VIEW-AS FILL-IN
-     SIZE 4 BY 1 TOOLTIP "Максимальное кол-во цифр для ввода номера телефона или счета" NO-UNDO.
+DEFINE VARIABLE f-gds-group-in-cass AS INTEGER FORMAT "->>>>>>9":U INITIAL 0 
+     LABEL "Код группы товаров на кассе        " 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-max-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0
-     LABEL "Максимальная сумма начисления"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-max-digit-nums AS INTEGER FORMAT ">9":U INITIAL 0 
+     LABEL "Максимальное кол-во цифр для ввода номера " 
+     VIEW-AS FILL-IN 
+     SIZE 6 BY 1 TOOLTIP "Максимальное кол-во цифр для ввода номера телефона или счета" NO-UNDO.
+
+DEFINE VARIABLE f-max-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0 
+     LABEL "Максимальная сумма начисления " 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 TOOLTIP "в национальной валюте" NO-UNDO.
 
-DEFINE VARIABLE f-min-digit-nums AS INTEGER FORMAT ">9":U INITIAL 0
-     LABEL "Минимальное кол-во цифр для ввода номера"
-     VIEW-AS FILL-IN
-     SIZE 4 BY 1 TOOLTIP "Минимальное кол-во цифр для ввода номера телефона или счета" NO-UNDO.
+DEFINE VARIABLE f-min-digit-nums AS INTEGER FORMAT ">9":U INITIAL 0 
+     LABEL "Минимальное кол-во цифр для ввода номера " 
+     VIEW-AS FILL-IN 
+     SIZE 6 BY 1 TOOLTIP "Минимальное кол-во цифр для ввода номера телефона или счета" NO-UNDO.
 
-DEFINE VARIABLE f-min-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0
-     LABEL "Минимальная сумма начисления"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-min-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0 
+     LABEL "Минимальная сумма начисления " 
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 TOOLTIP "В национальной валюте" NO-UNDO.
+
+DEFINE VARIABLE f-name-gds-grp AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 29 BY .95 NO-UNDO.
+
+DEFINE VARIABLE f-oper-abbrev AS CHARACTER FORMAT "X(50)":U 
+     LABEL "Аббревиатура Оператора Связи       " 
+     VIEW-AS FILL-IN 
+     SIZE 47.6 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-oper-code AS INTEGER FORMAT ">>9":U INITIAL 0 
+     LABEL "Код Оператора Связи                " 
+     VIEW-AS FILL-IN 
+     SIZE 6 BY 1 TOOLTIP "Присваивается Системой приема платежей" NO-UNDO.
+
+DEFINE VARIABLE f-oper-name AS CHARACTER FORMAT "X(50)":U 
+     LABEL "Название Оператора Связи           " 
+     VIEW-AS FILL-IN 
+     SIZE 47.6 BY 1 TOOLTIP "Для печати на слипе" NO-UNDO.
+
+DEFINE VARIABLE f-slip-file AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Имя файла образа конечного слипа " 
+     VIEW-AS FILL-IN 
+     SIZE 46.4 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-warning-lim-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0 
+     LABEL "Порог суммы для выдачи предупреждения " 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 TOOLTIP "в национальной валюте" NO-UNDO.
 
-DEFINE VARIABLE f-oper-code AS INTEGER FORMAT ">>9":U INITIAL 0
-     LABEL "Код оператора"
-     VIEW-AS FILL-IN
-     SIZE 4 BY 1 TOOLTIP "Присваивается Системой приема платежей" NO-UNDO.
-
-DEFINE VARIABLE f-oper-name AS CHARACTER FORMAT "X(15)":U
-     LABEL "Название оператора"
-     VIEW-AS FILL-IN
-     SIZE 26.5 BY 1 TOOLTIP "Для печати на слипе" NO-UNDO.
-
-DEFINE VARIABLE f-slip-file AS CHARACTER FORMAT "X(256)":U
-     LABEL "Имя файла образа конечного слипа"
-     VIEW-AS FILL-IN
-     SIZE 23.5 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-warning-lim-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0
-     LABEL "Порог суммы для выдачи предупреждения"
-     VIEW-AS FILL-IN
-     SIZE 13 BY 1 TOOLTIP "в национальной валюте" NO-UNDO.
-
-DEFINE VARIABLE Rs-billing-type AS INTEGER
+DEFINE VARIABLE Rs-billing-type AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
-          "Item 1", 1,
-"Item 2", 2,
-"Item 3", 3
-     SIZE 74 BY 2.88 NO-UNDO.
+     RADIO-BUTTONS 
+          "Оплата Сотовой Связи", 1,
+"Оплата по договору", 2,
+"Оплата Счёта", 3
+     SIZE 40 BY 3.52 NO-UNDO.
 
-DEFINE VARIABLE Rs-comission AS INTEGER
+DEFINE VARIABLE Rs-type-comission AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
-          "Item 0", 0,
-"Item 1", 1,
-"Item 2", 2,
-"Item 3", 3,
-"Item 4", 4
-     SIZE 65.5 BY 4.54 NO-UNDO.
+     RADIO-BUTTONS 
+          "Без комиссии", 0,
+"Расчёт по % комиссии от вводимой суммы", 1,
+"Расчёт по % комиссии от суммы начисления", 2,
+"Расчёт по сумме комиссии от вводимой суммы", 3
+     SIZE 56.2 BY 4.52 NO-UNDO.
 
-DEFINE VARIABLE t-authorization AS LOGICAL INITIAL no
-     LABEL "Авторизация неоходима"
-     VIEW-AS TOGGLE-BOX
-     SIZE 25 BY 1.08 NO-UNDO.
+DEFINE RECTANGLE RECT-1
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 88 BY 5.14.
 
-DEFINE VARIABLE t-slip AS LOGICAL INITIAL no
-     LABEL "Печать слипа необходима"
+DEFINE RECTANGLE RECT-2
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 88 BY 4.05.
+
+DEFINE VARIABLE t-necessary-authorization AS LOGICAL INITIAL no 
+     LABEL "Авторизация необходима" 
      VIEW-AS TOGGLE-BOX
-     SIZE 28.5 BY 1 NO-UNDO.
+     SIZE 30.4 BY 1.1 NO-UNDO.
+
+DEFINE VARIABLE t-necessary-slip AS LOGICAL INITIAL no 
+     LABEL "Печать слипа необходима" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 30.4 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
+     f-name-gds-grp AT ROW 2.52 COL 57 COLON-ALIGNED NO-LABEL WIDGET-ID 16
      B-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
-     B-Help AT ROW 1 COL 54.88
-     f-oper-code AT ROW 2.5 COL 15.5 COLON-ALIGNED
-     f-oper-name AT ROW 3.75 COL 20 COLON-ALIGNED
-     f-min-digit-nums AT ROW 5 COL 42 COLON-ALIGNED
-     f-max-digit-nums AT ROW 6.25 COL 42 COLON-ALIGNED
-     f-min-sum AT ROW 7.42 COL 42 COLON-ALIGNED
-     f-max-sum AT ROW 8.5 COL 42 COLON-ALIGNED
-     f-warning-lim-sum AT ROW 9.75 COL 42 COLON-ALIGNED
-     Rs-comission AT ROW 10.88 COL 2.5 NO-LABEL
-     f-comission-pcnt AT ROW 10.88 COL 82.5 COLON-ALIGNED
-     f-comission-sum AT ROW 11.92 COL 82.5 COLON-ALIGNED
-     t-authorization AT ROW 15.92 COL 2.5
-     t-slip AT ROW 17 COL 2.5
-     f-slip-file AT ROW 17 COL 63.5 COLON-ALIGNED
-     Rs-billing-type AT ROW 18.08 COL 26.5 NO-LABEL
-     "Тип расчета с оператором" VIEW-AS TEXT
-          SIZE 24.5 BY .79 AT ROW 18.08 COL 1.5
-     SPACE(74.79) SKIP(2.07)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     B-Help AT ROW 1 COL 54.8
+     f-gds-group-in-cass AT ROW 2.52 COL 39 COLON-ALIGNED WIDGET-ID 2
+     b-grp-gds AT ROW 2.67 COL 55 WIDGET-ID 12
+     f-oper-code AT ROW 3.62 COL 39 COLON-ALIGNED
+     f-oper-name AT ROW 4.71 COL 39 COLON-ALIGNED
+     f-oper-abbrev AT ROW 5.81 COL 39 COLON-ALIGNED WIDGET-ID 10
+     f-min-digit-nums AT ROW 6.91 COL 50.4 COLON-ALIGNED
+     f-max-digit-nums AT ROW 8 COL 50.4 COLON-ALIGNED
+     f-min-sum AT ROW 9.1 COL 50.4 COLON-ALIGNED
+     f-max-sum AT ROW 10.19 COL 50.4 COLON-ALIGNED
+     f-warning-lim-sum AT ROW 11.29 COL 50.4 COLON-ALIGNED
+     Rs-type-comission AT ROW 13.57 COL 4.6 NO-LABEL
+     f-comission-pcnt AT ROW 15.91 COL 73 COLON-ALIGNED
+     f-comission-sum AT ROW 17 COL 73 COLON-ALIGNED
+     t-necessary-authorization AT ROW 19 COL 4.6
+     t-necessary-slip AT ROW 20.1 COL 4.6
+     f-slip-file AT ROW 21.19 COL 39.6 COLON-ALIGNED
+     Rs-billing-type AT ROW 23.38 COL 4.6 NO-LABEL
+     "Тип ввода используемой комиссии" VIEW-AS TEXT
+          SIZE 31.4 BY .95 AT ROW 12.81 COL 32.6 WIDGET-ID 6
+     "Тип расчета с Оператором Связи" VIEW-AS TEXT
+          SIZE 31 BY .81 AT ROW 22.67 COL 33.8
+     RECT-1 AT ROW 13.29 COL 2.6 WIDGET-ID 4
+     RECT-2 AT ROW 23.14 COL 2.6 WIDGET-ID 8
+     SPACE(1.19) SKIP(0.47)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки платежа оператора сотовой связи"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -220,8 +295,8 @@ DEFINE FRAME Dialog-Frame
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
-                                                                        */
-ASSIGN
+   FRAME-NAME Custom                                                    */
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -249,102 +324,175 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exit Dialog-Frame
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Ввод */
 DO:
-  RUN proc-save IN THIS-PROCEDURE NO-ERROR.
-  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+    run proc-chck-min-max-fields-all-widgets2 no-error.
+    if error-status:error then return no-apply.
+    RUN proc-save IN THIS-PROCEDURE NO-ERROR.
+    IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME Rs-comission
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Rs-comission Dialog-Frame
-ON VALUE-CHANGED OF Rs-comission IN FRAME Dialog-Frame
+&Scoped-define SELF-NAME b-grp-gds
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-grp-gds Dialog-Frame
+ON CHOOSE OF b-grp-gds IN FRAME Dialog-Frame
 DO:
-  ASSIGN
-  rs-comission.
-  CASE rs-comission:
-    WHEN 0 THEN DO:
-       ASSIGN
-       f-comission-pcnt = 0
-       f-comission-sum = 0
-       .
-       DISPLAY
-       f-comission-pcnt
-       f-comission-sum
-       WITH FRAME {&FRAME-NAME}.
-       DISABLE
-       f-comission-pcnt
-       f-comission-sum
-       WITH FRAME {&FRAME-NAME}.
-    END.
-    WHEN 1
-    or
-    WHEN 2 THEN DO:
-        ASSIGN
-        f-comission-pcnt = 0
-        .
-        DISPLAY
-        f-comission-sum
-        WITH FRAME {&FRAME-NAME}.
+    run ref/sum-grps.w (input parParentProc
+        ,input 'b-sel':U
+        ,input-output rid-list).
 
-        DISABLE
-        f-comission-sum
-        WITH FRAME {&FRAME-NAME}.
-        ENABLE
-        f-comission-SUM
-        WITH FRAME {&FRAME-NAME}.
-    END.
-    WHEN 3
-    or
-    WHEN 4 THEN DO:
-        ASSIGN
-        f-comission-pcnt = 0
-        .
-        DISPLAY
-        f-comission-pcnt
-
-        WITH FRAME {&FRAME-NAME}.
-
-        DISABLE
-        f-comission-pcnt
-        WITH FRAME {&FRAME-NAME}.
-        ENABLE
-        f-comission-sum
-        WITH FRAME {&FRAME-NAME}.
-
-    END.
-
-  END CASE.
+    find first buf_sum-grp no-lock where recid(buf_sum-grp) = integer(rid-list) no-error.
+        if available buf_sum-grp then
+            do:
+                f-gds-group-in-cass:screen-value = string(buf_sum-grp.grp-code).
+                f-name-gds-grp:screen-value = string(buf_sum-grp.grp-name).
+            end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME t-slip
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-slip Dialog-Frame
-ON VALUE-CHANGED OF t-slip IN FRAME Dialog-Frame /* Печать слипа необходима */
+&Scoped-define SELF-NAME f-gds-group-in-cass
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-gds-group-in-cass Dialog-Frame
+ON LEAVE OF f-gds-group-in-cass IN FRAME Dialog-Frame /* Код группы товаров на кассе         */
 DO:
-  ASSIGN
-  t-slip.
-  IF t-slip THEN DO:
-      ENABLE
-      f-slip-file
-      WITH FRAME {&FRAME-NAME}.
-  END.
-  ELSE DO:
-      ASSIGN
-      f-slip-file = '':U.
-      DISPLAY
-      f-slip-file
-      WITH FRAME {&FRAME-NAME}.
-      disABLE
-      f-slip-file
-      WITH FRAME {&FRAME-NAME}.
-
-  END.
+    assign f-gds-group-in-cass.
+    find first buf_sum-grp where buf_sum-grp.grp-code = f-gds-group-in-cass no-lock no-error.
+        if available buf_sum-grp then
+            do:
+                f-name-gds-grp:screen-value = string(buf_sum-grp.grp-name).
+            end.
+        else
+            do:
+                f-name-gds-grp:screen-value = "".
+            end.
 END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME Rs-type-comission
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Rs-type-comission Dialog-Frame
+ON VALUE-CHANGED OF Rs-type-comission IN FRAME Dialog-Frame
+DO:
+    ASSIGN
+        rs-type-comission.
+    case rs-type-comission:
+    when 0 then do:
+        assign
+            f-comission-pcnt = 0
+            f-comission-sum = 0
+        .
+        display
+            f-comission-pcnt
+            f-comission-sum
+        with frame {&FRAME-NAME}.
+        disable
+            f-comission-pcnt
+            f-comission-sum
+        with frame {&FRAME-NAME}.
+        hide
+            f-comission-pcnt
+            f-comission-sum
+        in frame {&frame-name}.
+    end.
+    when 1 then do:
+        assign
+            f-comission-pcnt
+            f-comission-sum = 0
+        .
+        display
+            f-comission-pcnt
+            f-comission-sum
+        with frame {&FRAME-NAME}.
+        disable
+            f-comission-pcnt
+            f-comission-sum
+        with frame {&FRAME-NAME}.
+        enable
+            f-comission-pcnt
+        with frame {&FRAME-NAME}.
+        hide
+            f-comission-sum
+        in frame {&frame-name}.
+    end.
+    when 2 then do:
+        assign
+            f-comission-pcnt
+            f-comission-sum = 0
+        .
+        display
+            f-comission-pcnt
+            f-comission-sum
+        with frame {&FRAME-NAME}.
+        disable
+            f-comission-pcnt
+            f-comission-sum
+        with frame {&FRAME-NAME}.
+        enable
+            f-comission-pcnt
+        with frame {&FRAME-NAME}.
+        hide
+            f-comission-sum
+        in frame {&frame-name}.
+    end.
+    when 3 then do:
+        assign
+            f-comission-pcnt = 0
+            f-comission-sum
+        .
+        display
+            f-comission-pcnt
+            f-comission-sum
+        with frame {&FRAME-NAME}.
+        disable
+            f-comission-pcnt
+            f-comission-sum
+        with frame {&FRAME-NAME}.
+        enable
+            f-comission-sum
+        with frame {&FRAME-NAME}.
+        hide
+            f-comission-pcnt
+        in frame {&frame-name}.
+    end.
+
+  end CASE.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME t-necessary-slip
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-necessary-slip Dialog-Frame
+ON VALUE-CHANGED OF t-necessary-slip IN FRAME Dialog-Frame /* Печать слипа необходима */
+DO:
+    assign
+        t-necessary-slip
+    .
+    if t-necessary-slip then
+        do:
+            enable
+                f-slip-file
+            with frame {&FRAME-NAME}.
+        end.
+    else
+        do:
+            assign
+                f-slip-file = '':U
+            .
+            display
+                f-slip-file
+            with frame {&FRAME-NAME}.
+            disable
+                f-slip-file
+            with frame {&FRAME-NAME}.
+        end.
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -352,7 +500,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -367,8 +515,8 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-  RUN fill-table IN THIS-PROCEDURE.
-  RUN Myenable IN THIS-PROCEDURE.
+  RUN fill-tt-oss-ref IN THIS-PROCEDURE.
+  RUN MyEnable IN THIS-PROCEDURE.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -385,7 +533,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -404,17 +552,20 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-oper-code f-oper-name f-min-digit-nums f-max-digit-nums f-min-sum
-          f-max-sum f-warning-lim-sum Rs-comission f-comission-pcnt
-          f-comission-sum t-authorization t-slip f-slip-file Rs-billing-type
+  DISPLAY f-name-gds-grp f-gds-group-in-cass f-oper-code f-oper-name 
+          f-oper-abbrev f-min-digit-nums f-max-digit-nums f-min-sum f-max-sum 
+          f-warning-lim-sum Rs-type-comission f-comission-pcnt f-comission-sum 
+          t-necessary-authorization t-necessary-slip f-slip-file Rs-billing-type 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-Help f-oper-code f-oper-name f-min-digit-nums
-         f-max-digit-nums f-min-sum f-max-sum f-warning-lim-sum Rs-comission
-         f-comission-pcnt f-comission-sum t-authorization t-slip f-slip-file
-         Rs-billing-type
+  ENABLE f-name-gds-grp B-exit b-quit B-Help f-gds-group-in-cass b-grp-gds 
+         f-oper-code f-oper-name f-oper-abbrev f-min-digit-nums 
+         f-max-digit-nums f-min-sum f-max-sum f-warning-lim-sum 
+         Rs-type-comission f-comission-pcnt f-comission-sum 
+         t-necessary-authorization t-necessary-slip f-slip-file Rs-billing-type 
+         RECT-1 RECT-2 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -423,276 +574,436 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-table Dialog-Frame
-PROCEDURE fill-table :
-DEFINE VARIABLE v-num-entries AS INTEGER NO-UNDO.
-DEFINE VARIABLE v-ii AS INTEGER NO-UNDO.
-DEFINE VARIABLE v-entry AS character NO-UNDO.
-define variable v-value as character no-undo .
-define buffer buf_goods for ub.goods.
-find first buf_goods no-lock where
-          buf_goods.gds-code = p-gds-code no-error .
-if not available buf_goods then do:
-  message
-  substitute("Платеж оператору сотовой связи: Не найдена услуга с кодом &1", p-gds-code)
-  view-as alert-box error .
-  return error.
-end.
-if buf_goods.gds-type <> {&gds-office}
-or buf_goods.unit-base <> "{&abbr_rub}" then do:
-  message
-  substitute("Платеж оператору сотовой связи должен быть услугой&1," +
-            "с единицей измерения равной единице измерения национальной валюты (&2)"
-             , {&new-line}
-             , "{&abbr_rub}"
-             )
-  view-as alert-box error .
-end.
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-tt-oss-ref Dialog-Frame 
+PROCEDURE fill-tt-oss-ref :
+define variable v-ii as integer no-undo.
+define variable v-i-cnt as integer initial 0 no-undo.
+define variable v-value as character no-undo.
+define variable v-list as character no-undo.
 
-ASSIGN
-v-num-entries = NUM-ENTRIES( p-value, {&delim-par})
-.
-DO v-ii = 1 TO v-num-entries:
-  ASSIGN
-  v-entry = ENTRY(v-ii, p-value, {&delim-par})
-  v-value = (if num-entries(v-entry, '=') > 1
-             then left-trim(v-entry, entry(1, v-entry, '=':U) + '=':U)
-             else '':U)
-  .
-  IF v-entry BEGINS ({&oper-code} + '=':U) THEN DO:
-     ASSIGN
-     f-oper-code = INTEGER(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&oper-name} + '=':U) THEN DO:
-     ASSIGN
-     f-oper-name = v-value
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&min-digit-nums}  + '=':U) THEN DO:
-     ASSIGN
-     f-min-digit-nums = INTEGER(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&max-digit-nums}  + '=':U) THEN DO:
-     ASSIGN
-     f-max-digit-nums = INTEGER(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&min-sum}  + '=':U) THEN DO:
-     ASSIGN
-     f-min-sum = DECIMAL(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&max-sum}  + '=':U) THEN DO:
-     ASSIGN
-     f-max-sum = DECIMAL(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&warning-lim-sum}  + '=':U) THEN DO:
-     ASSIGN
-     f-warning-lim-sum = DECIMAL(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&comission-type}  + '=':U) THEN DO:
-     ASSIGN
-     rs-comission = integer(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&comission-pcnt}  + '=':U) THEN DO:
-     ASSIGN
-     f-comission-pcnt = decimal(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&comission-sum}  + '=':U) THEN DO:
-     ASSIGN
-     f-comission-sum = decimal(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&need-authorization}  + '=':U) THEN DO:
-     ASSIGN
-     t-authorization = logical(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&need-slip-print}  + '=':U) THEN DO:
-     ASSIGN
-     t-slip = logical(v-value)
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&slip-file}  + '=':U) THEN DO:
-     ASSIGN
-     f-slip-file = v-entry
-     NO-ERROR.
-  END.
-  IF v-entry BEGINS ({&billing-type}  + '=':U) THEN DO:
-     ASSIGN
-     rs-billing-type = integer(v-value)
-     NO-ERROR.
-  END.
+    for each buf_ext-classif where buf_ext-classif.classif-subject = {&extclass_oss-ref} no-lock:
+            create tt-oss-ref.
+            assign
+                tt-oss-ref.oper-code = buf_ext-classif.Key#_One
+/*                tt-oss-ref.oper-code = string(buf_ext-classif.uniq-key-rec)*/
+                tt-oss-ref.oper-abbrev = buf_ext-classif.CharKey_One
+                tt-oss-ref.gds-group-in-cass = integer(buf_ext-classif.Key#_Two)
+                tt-oss-ref.db-num = p-db-num
+                tt-oss-ref.classif-subject = buf_ext-classif.classif-subject /* Сущность */
+                tt-oss-ref.classif-name = buf_ext-classif.classif-name /* Классификатор */
+                v-list = buf_ext-classif.CharKey_Two
+            .
 
-END.
+            do v-ii = 1 to 13: /* Линейно распаковываем аттрибуты Оператора Сотовой Связи во временную таблицу. Последовательность - см выше, в обявлении временной таблицы tt-oss-ref */
+                do:
+                    v-value = trim(string(entry(v-ii, v-list, {&delim-par}))).
+                    case v-ii:
+                        when 1 then tt-oss-ref.oper-name = v-value.
+                        when 2 then tt-oss-ref.min-digit-nums = integer(v-value).
+                        when 3 then tt-oss-ref.max-digit-nums = integer(v-value).
+                        when 4 then tt-oss-ref.min-sum = decimal(v-value).
+                        when 5 then tt-oss-ref.max-sum = decimal(v-value).
+                        when 6 then tt-oss-ref.warning-lim-sum = decimal(v-value).
+                        when 7 then tt-oss-ref.type-comission = integer(v-value).
+                        when 8 then tt-oss-ref.comission-pcnt = decimal(v-value).
+                        when 9 then tt-oss-ref.comission-sum = decimal(v-value).
+                        when 10 then tt-oss-ref.necessary-authorization = logical(v-value).
+                        when 11 then tt-oss-ref.necessary-slip = logical(v-value).
+                        when 12 then tt-oss-ref.slip-file = v-value.
+                        when 13 then tt-oss-ref.billing-type = integer(v-value).
+                    end case.
+                end.
+            end. /* do v-ii = 1 to 13: */
+    end. /* for each buf_ext-classif */
+    {&OPEN-QUERY-br-oss}
 
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
-ASSIGN
-Rs-comission:RADIO-BUTTONS in frame {&frame-name} =
-    "Комиссия не взимается" + {&comma-char} + STRING(0) + {&comma-char} +
-    "Комиссия (%) включена в вводимую сумму" + {&comma-char} + STRING(1) + {&comma-char} +
-    "Комиссия (%) начисляется сверх вводимой суммы" + {&comma-char} + STRING(2) + {&comma-char} +
-    "Комиссия (сумма) включена в вводимую сумму" + {&comma-char} + STRING(3) + {&comma-char} +
-    "Комиссия (сумма) начисляется сверх вводимой суммы" + {&comma-char} + STRING(4)
-rs-billing-type:RADIO-BUTTONS =
-    "Оплата сотовой связи (запрашивается № телефона)" + {&comma-char} + STRING(1) + {&comma-char} +
-    "Оплата по договору (запрашивается № договора)" + {&comma-char} + STRING(2) + {&comma-char} +
-    "Оплата счета (запрашивается № счета)" + {&comma-char} + STRING(3)
-    .
-DISPLAY
-f-oper-code
-f-oper-name
-f-min-digit-nums
-f-max-digit-nums
-f-min-sum
-f-max-sum
-f-warning-lim-sum
-Rs-comission
-f-comission-pcnt
-f-comission-sum
-t-slip
-f-slip-file
-t-authorization
-Rs-billing-type
-WITH FRAME {&frame-name}.
-IF p-mode = {&UPDATE} THEN do:
-  ENABLE
-  B-exit
-  b-quit
-  B-Help
-  f-oper-code
-  f-oper-name
-  f-min-digit-nums
-  f-max-digit-nums
-  f-min-sum
-  f-max-sum
-  f-warning-lim-sum
-  Rs-comission
-  f-comission-pcnt
-  f-comission-sum
-  t-slip
-  f-slip-file
-  t-authorization
-  Rs-billing-type
-  WITH FRAME {&frame-name}.
-end.
-else do:
-  assign
-  b-quit:label = "&Выход"
-  b-quit:column = 1
- .
-  enable
-  b-quit
-  b-help
-  with frame {&frame-name} .
-end.
-VIEW FRAME {&frame-name}.
-if p-mode <> {&lookup} then do:
-  APPLY "VALUE-CHANGED"  TO rs-comission.
-  APPLY "VALUE-CHANGED"  TO t-slip.
-end.
+if Lookup(p-mode, {&add-def} + "," + {&Lookup} + "," +  {&update}) = 0 then return error.
+
+    define variable v-value as character no-undo.
+    define variable v-list as character no-undo.
+    define variable v-ii as integer no-undo.    
+
+    if p-mode = {&update} or p-mode = {&Lookup} then                        /* Режим "Изменение сущ. данных" */
+        do: /* a */
+            find first buf_ext-classif where rowid (buf_ext-classif) = p-io-rowid.  /* Проверка: ext-classif не пустая табл? */
+            if available buf_ext-classif then                               /* Проверка: ext-classif не пустая табл? */
+                do: /* b */
+                    find first buf_sum-grp where buf_sum-grp.grp-code = buf_ext-classif.Key#_Two no-lock no-error. /* Прилепим "на лету" в интерфейсе расшифровку к имени группы товаров, т.к. оно не хранится в нашем справочнике, но думаю, будет полезным. */
+                        if available buf_sum-grp then
+                            do:
+                                f-name-gds-grp = buf_sum-grp.grp-name.
+                            end.
+                        else
+                            do:
+                                f-name-gds-grp = "".
+                            end.
+
+                    assign
+                        f-oper-code = buf_ext-classif.Key#_One
+/*                        f-oper-code = integer(buf_ext-classif.uniq-key-rec)*/
+                        f-oper-abbrev = buf_ext-classif.CharKey_One
+                        f-gds-group-in-cass = integer(buf_ext-classif.Key#_Two)
+                        v-list = buf_ext-classif.CharKey_Two
+                    .
+                    do v-ii = 1 to 13:                                      /* Считывание упакованной переменной по указателю p-io-rowid (передаваемой из главного окна) на экранную форму заполнения диалогового окна. */
+                        v-value = trim(string(entry(v-ii, v-list, {&delim-par}))).
+                        case v-ii:
+                            when 1 then f-oper-name = v-value.
+                            when 2 then f-min-digit-nums = integer(v-value).
+                            when 3 then f-max-digit-nums = integer(v-value).
+                            when 4 then f-min-sum = decimal(v-value).
+                            when 5 then f-max-sum = decimal(v-value).
+                            when 6 then f-warning-lim-sum = decimal(v-value).
+                            when 7 then rs-type-comission = integer(v-value).
+                            when 8 then f-comission-pcnt = decimal(v-value).
+                            when 9 then f-comission-sum = decimal(v-value).
+                            when 10 then t-necessary-authorization = logical(v-value).
+                            when 11 then t-necessary-slip = logical(v-value).
+                            when 12 then f-slip-file = v-value.
+                            when 13 then rs-billing-type = integer(v-value).
+                        end case.
+                    end. /* do v-ii = 1 to 13: */
+                end. /* b */
+        end. /* a */
+
+    if p-mode = {&add-def} then
+        do: /* e */
+            assign
+                f-oper-code = 0
+                f-oper-abbrev = ""
+                f-gds-group-in-cass = 0
+                f-name-gds-grp = ""
+                v-list = ""
+                f-oper-name = ""
+                f-min-digit-nums = 0
+                f-max-digit-nums = 0
+                f-min-sum = 0
+                f-max-sum = 0
+                f-warning-lim-sum = 0
+                rs-type-comission = 0
+                f-comission-pcnt = 0
+                f-comission-sum = 0
+                t-necessary-authorization = false
+                t-necessary-slip = false
+                f-slip-file = ""
+                rs-billing-type = 1.
+            .
+        end. /* e */
+
+    display
+        f-oper-code
+        f-oper-abbrev
+        f-gds-group-in-cass
+        f-name-gds-grp
+        f-oper-name
+        f-min-digit-nums
+        f-max-digit-nums
+        f-min-sum
+        f-max-sum
+        f-warning-lim-sum
+        Rs-type-comission
+        f-comission-pcnt
+        f-comission-sum
+        t-necessary-authorization
+        t-necessary-slip
+        f-slip-file
+        Rs-billing-type
+    with frame Dialog-Frame.
+    view frame Dialog-Frame.
+
+    enable
+        B-exit
+        b-quit
+        B-Help
+        f-oper-code
+        f-oper-abbrev
+        f-gds-group-in-cass
+        b-grp-gds
+        f-oper-name
+        f-min-digit-nums
+        f-max-digit-nums
+        f-min-sum
+        f-max-sum
+        f-warning-lim-sum
+        Rs-type-comission
+        f-comission-pcnt
+        f-comission-sum
+        t-necessary-authorization
+        t-necessary-slip
+        f-slip-file
+        Rs-billing-type
+        RECT-1
+        RECT-2
+    with frame Dialog-Frame.
+    view frame Dialog-Frame.
+
+    disable
+        f-name-gds-grp
+    with frame Dialog-Frame.
+    view frame Dialog-Frame.
+
+    apply "VALUE-CHANGED" to Rs-type-comission in frame Dialog-Frame.
+    apply "VALUE-CHANGED" to t-necessary-slip in frame Dialog-Frame.
+
+    if p-mode = {&update} then
+        do:
+            disable
+                f-oper-code /* Устранение ошибки: т.к. новости работают только с режимами "Добавить" и "Удалить" запись в справочник ОСС и не работают с режимом "Изменить", то запрещаем пользователю изменять запись. Т.е. пользователю придётся удалить оператора с неправильным кодом и добавить заново - с правильным. Арн. 07.07.2014г */
+                f-oper-abbrev
+            with frame Dialog-Frame.
+        end.
+
+    if p-mode = {&Lookup} then /* Теперь выключим для режима "Чтение данных" только нужные виджеты. */
+        do: /* g */
+            disable
+                B-exit
+                /* b-quit */
+                B-Help
+                f-oper-code
+                f-oper-abbrev
+                f-gds-group-in-cass
+                b-grp-gds
+                f-name-gds-grp
+                f-oper-name
+                f-min-digit-nums
+                f-max-digit-nums
+                f-min-sum
+                f-max-sum
+                f-warning-lim-sum
+                Rs-type-comission
+                f-comission-pcnt
+                f-comission-sum
+                t-necessary-authorization
+                t-necessary-slip
+                f-slip-file
+                Rs-billing-type
+                RECT-1
+                RECT-2
+            with frame Dialog-Frame.
+            view frame Dialog-Frame.
+        end. /* g */
+
+    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-chck-min-max-fields-all-widgets1 Dialog-Frame 
+PROCEDURE proc-chck-min-max-fields-all-widgets1 :
+/*/* *** */                                                                                                                                                                                                                                                                                                                                           */
+/*    /* "Лёгкая" (предварительная) проверка значений мин и макс для виджета "Мин/Макс кол-во цифр тлф", когда пользователь скачет по полям и пока допускаем ввод Макс значений = 0 без ругани (как бы ждём, что пользователь ещё сам вернётся к правильному вводу). Жёсткая проверка будет по нажатию на "сохранить", тут уже нули не допускаются! */*/
+/*    if decimal(f-min-digit-nums:screen-value in frame Dialog-frame) > decimal(f-max-digit-nums:screen-value in frame Dialog-frame)                                                                                                                                                                                                                  */
+/*        and decimal(f-max-digit-nums:screen-value in frame Dialog-frame) <> 0 then                                                                                                                                                                                                                                                                  */
+/*            do:                                                                                                                                                                                                                                                                                                                                     */
+/*                message 'Поле "Минимальное кол-во цифр телефона" не может быть больше поля "Максимальное кол-во цифр телефона"' skip                                                                                                                                                                                                                */
+/*                "Введите корректные значения." view-as alert-box error.                                                                                                                                                                                                                                                                             */
+/*/*                apply "entry" to f-max-digit-nums in frame Dialog-frame.*/                                                                                                                                                                                                                                                                        */
+/*                undo, return error.                                                                                                                                                                                                                                                                                                                 */
+/*            end.                                                                                                                                                                                                                                                                                                                                    */
+/*    /* "Лёгкая" (предварительная) проверка значений мин и макс для виджета "Мин/Макс суммы", когда пользователь скачет по полям и пока допускаем ввод Макс значений = 0 без ругани (как бы ждём, что пользователь ещё сам вернётся к правильному вводу). Жёсткая проверка будет по нажатию на "сохранить", тут уже нули не допускаются! */          */
+/*    if decimal(f-min-sum:screen-value in frame Dialog-frame) > decimal(f-max-sum:screen-value in frame Dialog-frame)                                                                                                                                                                                                                                */
+/*        and decimal(f-max-sum:screen-value in frame Dialog-frame) <> 0 then                                                                                                                                                                                                                                                                         */
+/*            do:                                                                                                                                                                                                                                                                                                                                     */
+/*                message 'Поле "Минимальная сумма" не может быть больше поля "Максимальная сумма"' skip                                                                                                                                                                                                                                              */
+/*                "Введите корректные значения." view-as alert-box error.                                                                                                                                                                                                                                                                             */
+/*/*                apply "entry" to f-max-sum in frame Dialog-frame.*/                                                                                                                                                                                                                                                                               */
+/*                undo, return error.                                                                                                                                                                                                                                                                                                                 */
+/*            end.                                                                                                                                                                                                                                                                                                                                    */
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-chck-min-max-fields-all-widgets2 Dialog-Frame 
+PROCEDURE proc-chck-min-max-fields-all-widgets2 :
+/* *** */
+    define variable v-msg-digit-nums as character no-undo.
+    define variable v-msg-sum as character no-undo.
+    
+    /* "Полная" проверка значений мин и макс для виджета "Мин/Макс кол-во цифр тлф", когда пользователь скачет по полям и пока допускаем ввод Макс значений = 0 без ругани (как бы ждём, что пользователь ещё сам вернётся к правильному вводу). Жёсткая проверка будет по нажатию на "сохранить", тут уже нули не допускаются! */
+    if decimal(f-min-digit-nums:screen-value in frame Dialog-frame) > decimal(f-max-digit-nums:screen-value in frame Dialog-frame) then
+        do:
+            v-msg-digit-nums = 'Поле "Минимальное кол-во цифр телефона" не может быть больше поля "Максимальное кол-во цифр телефона"!'.
+/*            message "Поле ""Минимальное кол-во цифр телефона"" не может быть больше поля ""Максимальное кол-во цифр телефона""" skip*/
+/*            "Введите корректные значения." view-as alert-box error.                                                                 */
+/*            return error.*/
+        end.
+    /* "Полная" (предварительная) проверка значений мин и макс для виджета "Мин/Макс суммы", когда пользователь скачет по полям и пока допускаем ввод Макс значений = 0 без ругани (как бы ждём, что пользователь ещё сам вернётся к правильному вводу). Жёсткая проверка будет по нажатию на "сохранить", тут уже нули не допускаются! */
+    if decimal(f-min-sum:screen-value in frame Dialog-frame) > decimal(f-max-sum:screen-value in frame Dialog-frame) then
+        do:
+            v-msg-sum = 'Поле "Минимальная сумма" не может быть больше поля "Максимальная сумма"!'.
+/*            message "Поле ""Минимальная сумма"" не может быть больше поля ""Максимальная сумма""!" skip*/
+/*            "Введите корректные значения." view-as alert-box error.*/
+/*            return error.*/
+        end.
+
+/*    v-msg-digit-nums = (if v-msg-digit-nums <> "" and v-msg-digit-nums <> ? then v-msg-digit-nums else "")                          */
+/*                     + (if v-msg-digit-nums <> "" and v-msg-digit-nums <> ? and v-msg-sum <> "" and v-msg-sum <> ? then " " else "")*/
+/*                     + (if v-msg-sum <> "" and v-msg-sum <> ? then v-msg-sum else "").                                              */
+    if v-msg-digit-nums <> "" and v-msg-digit-nums <> ? or v-msg-sum <> "" and v-msg-sum <> ? then
+        do:
+            message v-msg-digit-nums skip v-msg-sum skip
+            "Введите корректные значения и повторите попытку." view-as alert-box error.
+            undo, return error.
+        end.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
+define variable v-collect-par-1 AS character no-undo. /* Переменная, в которую собираем "коллекцию" параметров (суммы мин/макс, типы платежей сот. операт., и т.д. разделённых через delim-par. */
+    define variable v-ii as integer no-undo.
+    define variable v-i-cnt as integer initial 0 no-undo.
+    define variable v-value as character no-undo.
+    define variable v-list as character no-undo.
 
-DEFINE VARIABLE v-value AS CHARACTER NO-UNDO.
-define variable v-type as character no-undo .
+    assign
+        frame {&FRAME-NAME}
+        f-oper-code
+        f-oper-abbrev
+        f-gds-group-in-cass
+        f-oper-name
+        f-min-digit-nums
+        f-max-digit-nums
+        f-min-sum
+        f-max-sum
+        f-warning-lim-sum
+        Rs-type-comission
+        f-comission-pcnt
+        f-comission-sum
+        t-necessary-authorization
+        t-necessary-slip
+        f-slip-file
+        Rs-billing-type
+    .
 
-define buffer buf_goods for ub.goods.
+    assign
+    v-collect-par-1 =
+        trim(string(f-oper-name)) + {&delim-par} +
+        trim(string(f-min-digit-nums)) + {&delim-par} +
+        trim(string(f-max-digit-nums)) + {&delim-par} +
+        trim(string(f-min-sum)) + {&delim-par} +
+        trim(string(f-max-sum)) + {&delim-par} +
+        trim(string(f-warning-lim-sum)) + {&delim-par} +
+        trim(string(rs-type-comission)) + {&delim-par} +
+        trim(string(f-comission-pcnt)) + {&delim-par} +
+        trim(string(f-comission-sum)) + {&delim-par} +
+        trim(string(t-necessary-authorization)) + {&delim-par} +
+        trim(string(t-necessary-slip)) + {&delim-par} +
+        trim(string(f-slip-file)) + {&delim-par} +
+        trim(string(rs-billing-type))
+    .
 
-find first buf_goods no-lock where
-          buf_goods.gds-code = p-gds-code no-error .
-if not available buf_goods then do:
-  message
-  substitute("Платеж оператору сотовой связи: Не найдена услуга с кодом &1", p-gds-code)
-  view-as alert-box error .
-  return error.
-end.
-/*проверим ГЛОБАЛЬНЫЙ атрибут товара*/
-run gds-attr-value in this-procedure (
-                                       input  p-gds-code
-                                      ,input  {&attr-is-oss-payment}
-                                      ,output v-value
-                                      ,output v-type ) no-error .
-if logical(v-value) <> yes then do:
-  message
-  substitute("Перед заданием свойств платежа оператору сотовой связи&1" +
-             "Необходимо привязать к товару глобальный атрибут <ПЛАТЕЖ ОСС>"
-             , {&new-line})
-  view-as alert-box error .
-  undo, return error .
-end.
+    if p-mode = {&add-def} then
+        do:
 
-if buf_goods.gds-type <> {&gds-office}
-or buf_goods.unit-base <> "{&abbr_rub}" then do:
-  message
-  substitute("Платеж оператору сотовой связи должен быть услугой&1," +
-            "с единицей измерения равной единице измерения национальной валюты (&2)"
-             , {&new-line}
-             , "{&abbr_rub}"
-             )
-  view-as alert-box error .
-end.
+            /* Перед записью проверим: в вводимом поле "Код оператора" <f-oper-code> находится значение,
+            которое уже есть в тек БД, т.е. это дубликат? Если да, то запрещаем записывать в БД вообще ни единого поля!*/
 
+            find first buf_ext-classif where
+                buf_ext-classif.Key#_One = f-oper-code and
+                buf_ext-classif.classif-subject = {&extclass_oss-ref}
+                no-lock no-error.
+                if available buf_ext-classif then
+                    do:
+                        message "Внимание, запись в Базу Данных невозможна!" skip
+                        "Запись с кодом оператора = " f-oper-code "уже существует" skip
+                        "для оператора = " trim(string(entry(1, buf_ext-classif.CharKey_Two, {&delim-par}))) skip (2)
+                        "Код номера каждого оператора связи должен быть уникальным!"
+                        view-as alert-box error.
+                        undo, return error.
+                    end.
+            /* _______________________________________________________________________________________________________ */
 
-ASSIGN
-FRAME {&FRAME-NAME}
-f-oper-code
-f-oper-name
-f-min-digit-nums
-f-max-digit-nums
-f-min-sum
-f-max-sum
-f-warning-lim-sum
-Rs-comission
-f-comission-pcnt
-f-comission-sum
-t-authorization
-t-slip
-f-slip-file
-Rs-billing-type
-.
+            create buf_ext-classif.
 
-ASSIGN
-v-value = {&oper-code} + '=':U + STRING(f-oper-code) + {&delim-par} +
-          {&oper-name} + '=':U + STRING(f-oper-name) + {&delim-par} +
-          {&min-digit-nums} + '=':U + STRING(f-min-digit-nums) + {&delim-par} +
-          {&max-digit-nums} + '=':U + STRING(f-max-digit-nums) + {&delim-par} +
-          {&min-sum} + '=':U + STRING(f-min-sum) + {&delim-par} +
-          {&max-sum} + '=':U + STRING(f-max-sum) + {&delim-par} +
-          {&warning-lim-sum} + '=':U + STRING(f-warning-lim-sum) + {&delim-par} +
-          {&comission-type} + '=':U + STRING(rs-comission) + {&delim-par} +
-          {&comission-pcnt} + '=':U + STRING(f-comission-pcnt) + {&delim-par} +
-          {&comission-sum} + '=':U + STRING(f-comission-sum) + {&delim-par} +
-          {&need-authorization} + '=':U + STRING(t-authorization) + {&delim-par} +
-          {&need-slip-print} + '=':U + STRING(t-slip) + {&delim-par} +
-          {&slip-file} + '=':U + STRING(f-slip-file) + {&delim-par} +
-          {&billing-type} + '=':U + STRING(rs-billing-type) .
-IF v-value = ? THEN DO:
-    MESSAGE
-    "Все поля должны  быть определены"
-    VIEW-AS ALERT-BOX ERROR.
-    RETURN error.
-END.
-p-value = v-value.
+            assign
+                buf_ext-classif.classif-subject = {&extclass_oss-ref}
+                buf_ext-classif.classif-name = {&extclass_oss-ref}
+                buf_ext-classif.db-num = p-db-num
+                buf_ext-classif.Key#_One = f-oper-code
+/*                buf_ext-classif.uniq-key-rec = string(f-oper-code)*/
+                buf_ext-classif.Key#_Two = f-gds-group-in-cass
+                buf_ext-classif.CharKey_One = f-oper-abbrev
+                buf_ext-classif.CharKey_Two = v-collect-par-1
+                p-io-rowid = rowid(buf_ext-classif)
+            no-error.
+        end.
+
+    if p-mode = {&update} then
+        do:
+            find first buf_ext-classif where rowid (buf_ext-classif) = p-io-rowid no-error.
+            assign
+                f-oper-code = buf_ext-classif.Key#_One
+                f-oper-abbrev = buf_ext-classif.CharKey_One
+                f-gds-group-in-cass = integer(buf_ext-classif.Key#_Two)
+                v-list = buf_ext-classif.CharKey_Two
+            .
+            do v-ii = 1 to 13:
+                v-value = trim(string(entry(v-ii, v-list, {&delim-par}))).
+                    case v-ii:
+                        when 1 then f-oper-name = v-value.
+                        when 2 then f-min-digit-nums = integer(v-value).
+                        when 3 then f-max-digit-nums = integer(v-value).
+                        when 4 then f-min-sum = decimal(v-value).
+                        when 5 then f-max-sum = decimal(v-value).
+                        when 6 then f-warning-lim-sum = decimal(v-value).
+                        when 7 then rs-type-comission = integer(v-value).
+                        when 8 then f-comission-pcnt = decimal(v-value).
+                        when 9 then f-comission-sum = decimal(v-value).
+                        when 10 then t-necessary-authorization = logical(v-value).
+                        when 11 then t-necessary-slip = logical(v-value).
+                        when 12 then f-slip-file = v-value.
+                        when 13 then rs-billing-type = integer(v-value).
+                    end case.
+            end.
+
+            assign
+                frame {&FRAME-NAME}
+                f-oper-code
+                f-oper-abbrev
+                f-gds-group-in-cass
+                f-oper-name
+                f-min-digit-nums
+                f-max-digit-nums
+                f-min-sum
+                f-max-sum
+                f-warning-lim-sum
+                Rs-type-comission
+                f-comission-pcnt
+                f-comission-sum
+                t-necessary-authorization
+                t-necessary-slip
+                f-slip-file
+                Rs-billing-type
+            .
+
+            assign
+                buf_ext-classif.classif-subject = {&extclass_oss-ref}
+                buf_ext-classif.classif-name = {&extclass_oss-ref}
+                buf_ext-classif.db-num = p-db-num
+/*                buf_ext-classif.uniq-key-rec = string(f-oper-code)*/
+                buf_ext-classif.Key#_One = f-oper-code
+                buf_ext-classif.Key#_Two = f-gds-group-in-cass
+                buf_ext-classif.CharKey_One = f-oper-abbrev
+                buf_ext-classif.CharKey_Two = v-collect-par-1
+                p-io-rowid = rowid(buf_ext-classif)
+            .
+            end.
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

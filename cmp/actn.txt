@@ -1,4 +1,4 @@
-"153"
+"154"
 "action-group"
 "edi"      "EDI"                     "Работа с системой EDI"                  "chk-is-edi"
 "action-group"
@@ -589,4 +589,5 @@
 "actn_ibsthpos-return"                               "object" "chk-num-cd"                 "cash"    "(ibsthpos) Создание чека возврата"                                                                                                "(ibsthpos) Создание чека возврата"                                                                                                                                                                                                       ""
 "actn_ibsthpos-annul-card-pay"                       "object" "chk-num-cd"                 "cash"    "(ibsthpos) Аннуляция оплаты банковской картой"                                                                                    "(ibsthpos) Аннуляция оплаты банковской картой"                                                                                                                                                                                           ""
 "actn_ibsthpos-bank-day"                             "object" "chk-num-cd"                 "cash"    "(ibsthpos) Подведение итогов по банковским картам"                                                                                "(ibsthpos) Подведение итогов по банковским картам"                                                                                                                                                                                       ""
+"actn_oss_add-chg-del"                               "global"                              "dir"     ""Справочник операторов сотовой связи (ОСС) доб,изм,удал"                                                                          "ОСС: добавление, изменение, удаление справочника."                                                                                                                                                                                       ""
 ?
