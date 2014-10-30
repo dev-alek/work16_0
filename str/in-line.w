@@ -116,7 +116,6 @@ define new shared temp-table tt-doc-pl no-undo like ub.doc-pl .
 { str/prslnew.i "proc"         }
 { gbl/ptrlprop.i def           }
 { str/in-ptrl.i def one-line   }
-{ ref/gds-attr.i               }
 { gbl/thbj-def.i               }
 { ref/gdsoattr.i               }
 { gbl/clntattr.i               }

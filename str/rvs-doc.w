@@ -51,6 +51,9 @@ define variable vss-description as character no-undo initial "Обработка документ
 { str/lib-rvs.i       }
 { gbl/waitfram.i      }
 { str/rvsttdef.i file }
+{ ref/gds-attr.i      }
+{ str/is-gas.i        }
+{ str/placelib.i      }
 
 define buffer r-doc          for ub.rvs-doc.
 define buffer cur_shift-obj  for ub.shift-obj.
@@ -314,7 +317,7 @@ define browse {&browse-name} query {&browse-name} no-lock display
       {&sort-clmn_29-br-line}
       {&sort-clmn_30-br-line}
       {&sort-clmn_31-br-line}
-      {&sort-clmn_32-br-line}
+      {&sort-clmn_32-br-line} format "->>,>>>,>>>.<<<"
       {&sort-clmn_33-br-line}
       {&sort-clmn_34-br-line}
       {&sort-clmn_35-br-line}
@@ -1576,6 +1579,43 @@ assign rvs-line-rec = recid(ub.rvs-line)
 
 if varlog <> yes then do: return no-apply. end.
 find first buf_goods where buf_goods.gds-code = ub.rvs-line.gds-code no-lock.
+
+if not error-status :error 
+   and is-gas(buf_goods.gds-code) then do:
+   
+    run str/rvs-lin-mask.w
+      (input  parparentproc
+      ,input  recid(ub.rvs-line)
+      ,input  {&update}
+      ,input  " # "     + r-doc.rvs-code +
+              " товар " + buf_goods.artic     + " " +
+                          buf_goods.prod-type + " " +
+                          string(buf_goods.prod-code) +
+              " складское место " + string(ub.rvs-line.pl-code)
+      ) no-error.
+   
+end.
+
+else do:
+    
+    define variable is-vir as logical no-undo.
+    define variable v-value as character no-undo.
+    define variable v-ok as logical no-undo.
+    
+    run placelib_get-attr(input {&place-virtual}
+                                 ,input rvs-line.obj-code
+                                 ,input rvs-line.obj-type
+                                 ,input rvs-line.pl-code 
+                                 ,output v-value
+                                 ,output v-ok) no-error.
+
+    is-vir = if (v-ok and logical(v-value)) then true else false.
+    
+    if is-vir then do:
+        message "Редактирование строки сверки виртуального резервуара запрещено." view-as alert-box.
+    end.
+    
+    else do:
 run str/rvs-lin.w
   (input  parparentproc
   ,input  recid(ub.rvs-line)
@@ -1586,6 +1626,10 @@ run str/rvs-lin.w
                       string(buf_goods.prod-code) +
           " складское место " + string(ub.rvs-line.pl-code)
   ) no-error.
+    end.
+    
+end.
+
 if error-status :error then do:
    message "Ошибка при редактировании строки сверки." skip
            return-value skip
@@ -2129,6 +2173,25 @@ assign rvs-line-rec = recid(ub.rvs-line)
   end case .
 if varlog <> yes then do: return error. end.
 find first buf_goods where buf_goods.gds-code = ub.rvs-line.gds-code no-lock.
+
+if not error-status :error 
+   and is-gas(buf_goods.gds-code) then do:
+   
+    run str/rvs-lin-mask.w
+      (input  parparentproc
+      ,input  recid(ub.rvs-line)
+      ,input  {&lookup}
+      ,input  " # "     + r-doc.rvs-code +
+              " товар " + buf_goods.artic     + " " +
+                          buf_goods.prod-type + " " +
+                          string(buf_goods.prod-code) +
+              " складское место " + string(ub.rvs-line.pl-code)
+      ) no-error.
+   
+end.
+
+else do:
+
 run str/rvs-lin.w
   (input  parparentproc
   ,input  recid(ub.rvs-line)
@@ -2139,6 +2202,9 @@ run str/rvs-lin.w
                       string(buf_goods.prod-code) +
           " складское место " + string(ub.rvs-line.pl-code)
   ) no-error.
+  
+end.
+  
 if error-status :error then do:
    message "Ошибка при просмотре строки сверки." skip
            return-value skip

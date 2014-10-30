@@ -3227,7 +3227,7 @@ if avail buf_bar-code then do:
     or v-is-ord-check
     then do:
       if accum-pay <> 0
-      or accum-pay-count <> 0
+      or (accum-pay-count <> 0 and buf_chk-doc.chk-type <> int({&rcpt-tech-refuell}))
       or (buf_chk-doc.discnt <> 0 and not v-is-ord-check)
       then do:
         assign

@@ -56,6 +56,8 @@ define variable accum-chk-pay-tot-base-by as decimal no-undo.
 define variable accum-chk-pay-tot-rubl-by as decimal no-undo.
 define variable KIND-TO-RESERV as character no-undo .
 define variable KIND-TO-RESERV-GDS as character no-undo .
+define variable cli-type-to-reserv as character no-undo.
+define variable cli-code-to-reserv as integer no-undo.
 define variable v-real-doc-kind as character no-undo .
 define variable office-TO-RESERV as character no-undo .
 define variable office-TO-RESERV-GDS as character no-undo .
@@ -97,6 +99,8 @@ define variable v-rare-doc as logical no-undo.
 define variable v-dop as character no-undo .
 define variable v-rec-inv-line as recid no-undo .
 define variable nff-chk-amount as integer no-undo .
+define variable v-cash-pay-attr as character no-undo.
+
 define buffer buf_trn-doc for ub.trn-doc.
 define buffer buf_fbr-gds-obj for ub.fbr-gds-obj.
 define buffer buf_c-chk-doc for ub.c-chk-doc.
@@ -106,6 +110,7 @@ define buffer buf_c-chk-discnt for ub.c-chk-discnt.
 define buffer buf_c-chk-doc-attr for ub.c-chk-doc-attr.
 define buffer buf_chk-gds-pay for ub.chk-gds-pay.
 define buffer buf_chk-pay for ub.chk-pay.
+define buffer buf_cash-pay-attr for ub.cash-pay-attr.
 define buffer buf_chk-gds for ub.chk-gds.
 define buffer buf_chk-discnt for ub.chk-discnt.
 define buffer buf_inkas-pay for ub.inkas-pay.
@@ -321,6 +326,58 @@ on error undo, return error return-value
                                 , output kind-to-reserv
                                 , output add-nf-amount
                                 ).
+    
+    /* Создание доп документов */
+    
+    v-cash-pay-attr = "".
+    cli-type-to-reserv = "".
+    cli-code-to-reserv = 0.
+    
+    if X_chk-doc.chk-type = integer({&rcpt-tech-refuell}) then do:
+    
+        for each buf_chk-pay where buf_chk-pay.doc-code = X_chk-doc.doc-code no-lock:
+            
+            find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
+                                         and buf_cash-pay-attr.curr-code = buf_chk-pay.curr-code
+                                         and buf_cash-pay-attr.attr-code = "dop-doc" no-lock no-error.
+            
+            if not available(buf_cash-pay-attr) then next.
+            
+            v-cash-pay-attr = buf_cash-pay-attr.attr-value.
+            
+            case entry(1, v-cash-pay-attr, ','):
+            
+                when {&sale-add-write-off} then do: /* Списание */
+                    v-add = no.
+                    docs-to-reserv = 1.
+                    office-to-reserv = {&gds-goods}.
+                    kind-to-reserv = entry(1, v-cash-pay-attr, ','). /* {&sale-add-write-off} */
+                    cli-type-to-reserv = entry(2, v-cash-pay-attr, ',').
+                    cli-code-to-reserv = int(entry(3, v-cash-pay-attr, ',')).
+                end.
+                
+                when {&sale-add-tech-refuell} then do: /* Техпролив */
+                    cli-type-to-reserv = entry(2, v-cash-pay-attr, ',').
+                    cli-code-to-reserv = int(entry(3, v-cash-pay-attr, ',')).
+                end.
+                
+                when {&sale-add-vir-res} then do: /* Перемещение в вирт.рез. */
+                    kind-to-reserv = {&sale-add-vir-res}. /* {&sale-add-write-off} */
+                    cli-type-to-reserv = entry(2, v-cash-pay-attr, ',').
+                    cli-code-to-reserv = int(entry(3, v-cash-pay-attr, ',')).
+                end.
+                
+                when 'none' then do:
+                    docs-to-reserv = 0.
+                    kind-to-reserv = 'none'.
+                end. /* не создавать */
+                
+            end case.
+            
+        end. /* for each buf_chk-pay */
+    
+    end. /* if X_chk-doc.doc-type */
+    
     if docs-to-reserv > 0
     and not (KIND-TO-RESERV = {&TDEDT_Ras_Vnesh_Kass}
              and office-to-reserv = {&gds-goods}) then do:
@@ -335,6 +392,8 @@ on error undo, return error return-value
                         , buffer dop_trn-doc
                         , input entry(dtrg, kind-to-reserv)
                         , input entry(dtrg, office-to-reserv)
+                        , input cli-type-to-reserv
+                        , input cli-code-to-reserv
                         , output other-doc-code) no-error .
           if error-status:error then do:
       &scop my-message substitute("&1 &2 &3&4&5&4&6"  ~
@@ -389,6 +448,53 @@ on error undo, return error return-value
                                     , output kind-to-reserv-gds
                                     , output add-nf-gds-amount
                                     ).
+        
+        if X_chk-doc.chk-type = integer({&rcpt-tech-refuell}) then do:
+        
+            for each buf_chk-pay where buf_chk-pay.doc-code = X_chk-doc.doc-code no-lock:
+                
+                find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
+                                             and buf_cash-pay-attr.curr-code = buf_chk-pay.curr-code
+                                             and buf_cash-pay-attr.attr-code = "dop-doc" no-lock no-error.
+                
+                if not available(buf_cash-pay-attr) then next.
+                
+                v-cash-pay-attr = buf_cash-pay-attr.attr-value.
+                
+                case entry(1, v-cash-pay-attr, ','):
+                    when {&sale-add-vir-res} then do: /* Перемещение в вирт.рез. */
+                        assign
+                        kind-to-reserv-gds = {&sale-add-vir-res}
+                        docs-to-reserv-gds = 1
+                        v-add = no
+                        office-TO-RESERV-GDS = 'т'.
+                    end.
+                    when 'none' then do:
+                        assign
+                        kind-to-reserv-gds = 'none'
+                        docs-to-reserv-gds = 0
+                        v-add = no
+                        office-TO-RESERV-GDS = 'т'.
+                        
+                        /* Создадим sale-doc */
+                        create buf_sale-doc.
+                        assign
+                        buf_sale-doc.inkas-code = ink-doc.inkas-code
+                        buf_sale-doc.storage =  {&table_trn-doc}
+                        buf_sale-doc.host-code = ink-doc.host-code
+                        buf_sale-doc.obj-type = ink-doc.obj-type
+                        buf_sale-doc.obj-code = ink-doc.obj-code
+                        buf_sale-doc.doc-kind  = 'none'
+                        buf_sale-doc.order = 0
+                        buf_sale-doc.chr-office = 'т'
+                        buf_sale-doc.doc-code = ''.
+                        
+                    end.
+                 end case.       
+            end. /* for each buf_chk-pay */
+        
+        end. /* if X_chk-doc.doc-type */
+        
         assign
         GDS-AMOUNT = GDS-AMOUNT + 1
         nf-gds-amount = nf-gds-amount  + add-nf-gds-amount
@@ -417,6 +523,7 @@ on error undo, return error return-value
             do dtrg = 1 to docs-to-reserv-gds :
               if entry(dtrg, office-to-reserv-gds) <> entry(1, buf_chk-gds.line-type, {&delim-par})
               then next _dtrg-gds.
+              if KIND-TO-RESERV-GDS = 'none' then next.
               find first buf_sale-doc where
                         buf_Sale-doc.inkas-code = ink-doc.inkas-code
                     and buf_sale-doc.doc-kind = entry(dtrg, kind-to-reserv-gds)
@@ -428,6 +535,8 @@ on error undo, return error return-value
                               , buffer dop_trn-doc
                               , input entry(dtrg, kind-to-reserv-gds)
                               , input entry(dtrg, office-to-reserv-gds)
+                              , input cli-type-to-reserv
+                              , input cli-code-to-reserv
                               , output other-doc-code) no-error .
                 if error-status:error then do:
                   &scop my-message substitute("&1 &2 &3&4&5&4&6"  ~
@@ -771,7 +880,7 @@ on error undo, return error return-value
 
         end. /*fi docs-to-reserv > 0 */
       end. /*for each buf_chk-gds*/
-      if docs-to-reserv > 0 then do:
+      if docs-to-reserv > 0 or KIND-TO-RESERV = 'none' then do:
       /*к этому моменту имеем массив t-gds в которых лежат все данные для создания строк документов*/
 
         FOR EACH t-gds where t-gds.crf <= cr,
@@ -1116,7 +1225,7 @@ on error undo, return error return-value
         if kind-to-reserv begins {&TDEDT_Ras_Vnesh_Kass} then do:
           var-doc-type =  {&income}.
         end.
-        if kind-to-reserv begins {&TDEDT_Vozvrat_Vnesh_Kass} then do:
+        if kind-to-reserv begins {&TDEDT_Vozvrat_Vnesh_Kass} or v-cash-pay-attr <> "" then do: /* Тоже в расход пока (иначе не создастся оплата по чеку) */
           var-doc-type =  {&expense} .
         end.
         FOR  EACH buf_chk-pay WHERE buf_chk-pay.doc-code = X_chk-doc.doc-code

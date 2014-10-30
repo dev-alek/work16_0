@@ -264,15 +264,15 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN
           SIZE 22 BY .97
      tt-cash-pay.is-cash AT ROW 9.8 COL 2.1
-          LABEL "Платеж на кассе по кнопке <Наличные>"
+          LABEL "Платеж наличными"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
      tt-cash-pay.atr128 AT ROW 9.8 COL 48.6
-          LABEL "Платеж по Smart карте"
+          LABEL "Платеж по топливной карте"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
      tt-cash-pay.atr1 AT ROW 10.8 COL 2.1
-          LABEL "Разрешается сдача на платеж"
+          LABEL "Разрешается сдача и возврат"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
      tt-cash-pay.is-credit-card AT ROW 10.8 COL 48.6
@@ -300,7 +300,7 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
      tt-cash-pay.is-service-pay AT ROW 13.8 COL 48.7
-          LABEL "Платеж за услуги"
+          LABEL "Сервисный платеж"
           VIEW-AS TOGGLE-BOX
           SIZE 45.4 BY .93
      tt-cash-pay.atr16 AT ROW 14.8 COL 2.1
@@ -322,7 +322,7 @@ DEFINE FRAME Dialog-Frame
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
      tt-cash-pay.is-card-swap AT ROW 15.8 COL 48.9
-          LABEL "'Прокатывать' карту"
+          LABEL "Запрос ввода карты"
           VIEW-AS TOGGLE-BOX
           SIZE 45.4 BY .93
      tt-cash-pay.atr64 AT ROW 16.8 COL 2.1
@@ -330,9 +330,9 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
      tt-cash-pay.is-bar-read AT ROW 16.8 COL 48.9
-          LABEL "Использовать сканер бар-кодов"
+          LABEL "Запрашивать сканирование баркода талона для платежа"
           VIEW-AS TOGGLE-BOX
-          SIZE 45.4 BY .93
+          SIZE 48.8 BY .93
      tt-cash-pay.is-credit AT ROW 17.8 COL 2.1
           LABEL "Платеж <В кредит>"
           VIEW-AS TOGGLE-BOX

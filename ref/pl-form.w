@@ -85,7 +85,7 @@ tt-place.chk-max-qnty tt-place.PS
 &Scoped-define ENABLED-TABLES tt-place
 &Scoped-define FIRST-ENABLED-TABLE tt-place
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit B-hist b-help place-type ~
-place-si place-diameter dead-balance place-ratio-error dens-prov
+place-si place-diameter dead-balance place-ratio-error dens-prov t-place-virtual
 &Scoped-Define DISPLAYED-FIELDS tt-place.loc1 tt-place.loc2 tt-place.loc3 ~
 tt-place.loc4 tt-place.pl-name tt-place.is-meas tt-place.pl-code ~
 tt-place.issue-year tt-place.start-date tt-place.add-qnty tt-place.max-qnty ~
@@ -93,7 +93,7 @@ tt-place.chk-max-qnty tt-place.PS
 &Scoped-define DISPLAYED-TABLES tt-place
 &Scoped-define FIRST-DISPLAYED-TABLE tt-place
 &Scoped-Define DISPLAYED-OBJECTS place-type place-si place-diameter ~
-place-ratio-error dens-prov
+place-ratio-error dens-prov t-place-virtual
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -163,6 +163,11 @@ DEFINE VARIABLE place-type AS INTEGER
 "Горизонтальный", 2
      SIZE 17.5 BY 2.25 NO-UNDO.
 
+DEFINE VARIABLE t-place-virtual AS LOGICAL INITIAL no 
+     LABEL "Виртуальный резервуар" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 27 BY 1 NO-UNDO.
+
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-pl-form
@@ -190,6 +195,7 @@ DEFINE FRAME d-pl-form
           LABEL "Название"
           VIEW-AS FILL-IN
           SIZE 74 BY 1
+     t-place-virtual AT ROW 5.44 COL 47
      tt-place.is-meas AT ROW 5.5 COL 12 WIDGET-ID 14
           LABEL "Измеряется приборами"
           VIEW-AS TOGGLE-BOX
@@ -323,6 +329,7 @@ DO:
     tt-place.start-date
     tt-place.issue-year
     tt-place.chk-max-qnty
+    t-place-virtual
   .
   if input frame {&frame-name} dens-prov <> dens-prov then do:
     if input frame {&frame-name} dens-prov = ?
@@ -384,6 +391,9 @@ DO:
         end.
         when {&place-dens-prov} then do :
           v-value = dens-prov:screen-value .
+        end.
+        when {&place-virtual} then do :
+          v-value = t-place-virtual:screen-value .
         end.
       end case.
       run placelib_write-attr  (input v-code
@@ -614,6 +624,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       when {&place-dens-prov} then do :
         if v-ok then dens-prov = decimal(v-value) .
       end.
+      when {&place-virtual} then do :
+        if v-ok then t-place-virtual = logical(v-value) .
+      end.
     end case.
   end.
   run Myenable in this-procedure .
@@ -655,7 +668,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY place-type place-si r-sr-izm place-diameter dead-balance place-ratio-error dens-prov
+  DISPLAY place-type place-si r-sr-izm place-diameter dead-balance place-ratio-error dens-prov t-place-virtual
       WITH FRAME d-pl-form.
   IF AVAILABLE tt-place THEN
     DISPLAY tt-place.loc1 tt-place.loc2 tt-place.loc3 tt-place.loc4
@@ -666,7 +679,7 @@ PROCEDURE enable_UI :
   ENABLE b-exit b-quit B-hist b-help tt-place.loc1 tt-place.loc2 tt-place.loc3
          tt-place.loc4 tt-place.pl-name tt-place.is-meas tt-place.issue-year place-type
          tt-place.start-date tt-place.add-qnty tt-place.max-qnty r-sr-izm
-         place-diameter dead-balance place-ratio-error dens-prov tt-place.chk-max-qnty tt-place.PS
+         place-diameter dead-balance place-ratio-error dens-prov tt-place.chk-max-qnty tt-place.PS t-place-virtual
       WITH FRAME d-pl-form.
   {&OPEN-BROWSERS-IN-QUERY-d-pl-form}
 END PROCEDURE.
@@ -681,7 +694,7 @@ PROCEDURE Myenable :
   assign
     v-tab-order = "loc1,loc2,loc3,loc4,pl-name,is-meas,"
                   + "issue-year,start-date,add-qnty,max-qnty,t-chk-max-qnty,"
-                  + "ps,place-type,place-SI,r-sr-izm,place-diameter,dead-balance,place-ratio-error,dens-prov".
+                  + "ps,place-type,place-SI,r-sr-izm,place-diameter,dead-balance,place-ratio-error,dens-prov,t-place-virtual".
   if p-mode = {&lookup} then do:
     disable
       all

@@ -780,6 +780,11 @@ procedure lib-rvs_crrvslnp : /* create-rvs-line-pump */
   define input parameter p-prev_icnt-code           like ub.icnt-doc.doc-code    no-undo.
   define input parameter p-message-on               as   logical                 no-undo.
 
+  /* для вирт рез */
+  define variable is-vir as logical no-undo.
+  define variable v-value as character no-undo.
+  define variable v-ok as logical no-undo.
+  
   do
   on error  undo, return error substitute( "&1(lib-rvs_crrvslnp). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
   on stop   undo, return error substitute( "&1(lib-rvs_crrvslnp). stop", vss-workfile )
@@ -1056,6 +1061,34 @@ procedure lib-rvs_crrvslnp : /* create-rvs-line-pump */
               buf_rvs-line-pump.state-mh-qnty = other-line-pump.state-mh-qnty
             .
           end. /* if available other-line-pump */
+          
+          /* Для виртуального резервуара */
+          run placelib_get-attr(input {&place-virtual}
+                           ,input buf_rvs-line-pump.obj-code
+                           ,input buf_rvs-line-pump.obj-type
+                           ,input buf_rvs-line-pump.pl-code
+                           ,output v-value
+                           ,output v-ok) no-error.
+
+          is-vir = if (v-ok and logical(v-value)) then true else false.
+          
+          if is-vir then
+            assign
+            buf_rvs-line-pump.meas-el-cnt   = 0
+            buf_rvs-line-pump.meas-am-cnt   = 0
+            buf_rvs-line-pump.meas-cf-cnt   = 0
+            buf_rvs-line-pump.meas-mh-cnt   = 0
+            buf_rvs-line-pump.meas-am-qnty  = 0
+            buf_rvs-line-pump.meas-cf-qnty  = 0
+            buf_rvs-line-pump.meas-mh-qnty  = 0
+            buf_rvs-line-pump.state-el-cnt  = 0
+            buf_rvs-line-pump.state-am-cnt  = 0
+            buf_rvs-line-pump.state-cf-cnt  = 0
+            buf_rvs-line-pump.state-mh-cnt  = 0
+            buf_rvs-line-pump.state-am-qnty = 0
+            buf_rvs-line-pump.state-cf-qnty = 0
+            buf_rvs-line-pump.state-mh-qnty = 0
+            .
         end. /* if not available buf_rvs-line-pump */
       end. /* for each bf_pl-pump-nozzle */
     end. /* transaction */
@@ -3041,6 +3074,7 @@ procedure lib-rvs_rvsclcln : /* recalc-line */
 
   define buffer bf_rvs-line      for ub.rvs-line.
   define buffer bf_rvs-line-pump for ub.rvs-line-pump.
+  define buffer bf_goods for ub.goods.
 
   find first bf_rvs-line
     where recid( bf_rvs-line ) = p-rec-id
@@ -3071,6 +3105,26 @@ procedure lib-rvs_rvsclcln : /* recalc-line */
     bf_rvs-line.state-cf-qnty = ( accum total bf_rvs-line-pump.state-cf-qnty )
     bf_rvs-line.state-mh-qnty = ( accum total bf_rvs-line-pump.state-mh-qnty )
   .
+  /* Проставим плотность для виртуального резервуара (из карточки товара) */
+  define variable is-vir as logical no-undo.
+  define variable v-value as character no-undo.
+  define variable v-ok as logical no-undo.
+  
+  run placelib_get-attr(input {&place-virtual}
+                       ,input bf_rvs-line.obj-code
+                       ,input bf_rvs-line.obj-type
+                       ,input bf_rvs-line.pl-code
+                       ,output v-value
+                       ,output v-ok) no-error.
+  is-vir = if (v-ok and logical(v-value)) then true else false.
+  if is-vir then do:
+    if bf_rvs-line.system-cli-qnty <> 0 and bf_rvs-line.system-qnty <> 0 then
+        bf_rvs-line.state-density = bf_rvs-line.system-cli-qnty / (bf_rvs-line.system-qnty).
+    else do:
+      find first bf_goods where bf_goods.gds-code = bf_rvs-line.gds-code no-lock.
+      bf_rvs-line.state-density = 1 / bf_goods.cli-base-rate.
+    end.
+  end.
   return .
 end procedure. /* lib-rvs_rvsclcln */
 

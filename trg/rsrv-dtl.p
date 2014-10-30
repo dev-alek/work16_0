@@ -144,6 +144,8 @@ define variable vss-description as character no-undo initial "Процедура резервир
 { trg/partlist.i }
 { cmp/trg-def.i  }
 { gbl/lineattr.i }
+{ ref/gds-attr.i }
+{ str/is-gas.i }
 /* что резервируем: документ, товар, признак, объект */
 define variable v-obj-type   like ub.gds-dtl.obj-type  no-undo .
 define variable v-obj-code   like ub.gds-dtl.obj-code  no-undo .
@@ -1329,7 +1331,7 @@ on error undo, return error return-value
             undo, return error return-value .
           end.
 
-          if absolute( buf_doc-pl.doc-qnty ) <> absolute( v-input-qnty ) then do:
+          if absolute( buf_doc-pl.doc-qnty ) <> absolute( v-input-qnty ) and not is-gas(ub.goods.gds-code) then do:
             /* резервировать можно только полное кол-во по doc-pl, никакого дорезервирования */
             message
               "Артикул" ub.goods.artic ub.goods.gds-name skip

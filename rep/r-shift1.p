@@ -50,6 +50,9 @@ define variable vss-description as character no-undo init "$Печать сменного отче
 { rep/r-gl.i }
 { rep/rshiftd1.i t "shared" }
 { rul/ruleset_.i }
+{ ref/gds-attr.i }
+{ str/is-gas.i }
+{ str/placelib.i }
 
 define shared stream Prnlibstream.
 
@@ -111,7 +114,7 @@ DEFINE FRAME FRAME-1
   sym1  column-label ":" format "x(1)":U space( 0 )
   pol2   column-label "1.2":C8    format  "->>>>9.99":U  space( 0 )
   sym2  column-label ":" format "x(1)":U space( 0 )
-  pol3   column-label "1.3":C8    format ">>>>9.99":U   space( 0 )
+  pol3   column-label "1.3":C9    format ">>>>>9.99":U   space( 0 )
   sym3  column-label ":" format "x(1)":U space( 0 )
   pol4   column-label ".4"        format "99":U          space( 0 )
   sym4  column-label ":" format "x(1)":U space( 0 )
@@ -178,6 +181,11 @@ define buffer last-rvs-line-pump for ub.rvs-line-pump.
 define buffer control-rvs-doc for ub.rvs-doc.
 define buffer control-rvs-line-pump for ub.rvs-line-pump.
 define buffer buf_shift-pgds for shift-pgdst.
+
+define buffer buf_rvs-line-attr for ub.rvs-line-attr. /* Для газа */
+define buffer buf_prev-rvs-line-attr for ub.rvs-line-attr. /* Для газа */
+define buffer buf_control-rvs-doc for ub.rvs-doc. /* Для контрольной сверки, если нет сменной */
+define variable i-rvs-code as character no-undo. /* Для контроьной или сменной сверки */
 
 define variable p-host-code       as integer   no-undo.
 define variable v-sign            as decimal   no-undo .
@@ -415,6 +423,189 @@ for each temp-rvs-line
   break by temp-rvs-line.gds-code by temp-rvs-line.pl-code
 on error undo, return error return-value
 :
+
+  /* Если природный газ */
+  if is-gas(temp-rvs-line.gds-code) then do:
+
+      /* Найдём атрибуты сверки за текущую и предыдущую смены */
+      
+      find first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = temp-rvs-line.obj-code
+                                   and buf_rvs-line-attr.obj-type = temp-rvs-line.obj-type
+                                   and buf_rvs-line-attr.gds-code = temp-rvs-line.gds-code
+                                   and buf_rvs-line-attr.pl-code = temp-rvs-line.pl-code
+                                   and buf_rvs-line-attr.rvs-code = temp-rvs-line.rvs-code
+                                   and buf_rvs-line-attr.attr-code = "mask" no-lock.
+      
+      /* На previous-rvs-doc мы уже стоим (строка 261) */
+      
+      /* Если не было сменной - берем контрольную */
+      if not available previous-rvs-doc then do:
+          
+          find first buf_control-rvs-doc where buf_control-rvs-doc.obj-type = temp-rvs-line.obj-type
+                                           and buf_control-rvs-doc.obj-code = temp-rvs-line.obj-code
+                                           and buf_control-rvs-doc.shift-date = temp-rvs-line.shift-date
+                                           and buf_control-rvs-doc.shift-num = temp-rvs-line.shift-num
+                                           and buf_control-rvs-doc.status_ = {&fact}
+                                           and buf_control-rvs-doc.rvs-type = {&rvs-control} no-lock no-error.
+            
+            i-rvs-code = buf_control-rvs-doc.rvs-code.
+            
+      end. /* if not available previous-rvs-doc */
+      
+      else i-rvs-code = previous-rvs-doc.rvs-code.
+      
+      find first previous-rvs-line where previous-rvs-line.rvs-code = i-rvs-code
+                                     and previous-rvs-line.gds-code = temp-rvs-line.gds-code
+                                     and previous-rvs-line.obj-code = temp-rvs-line.obj-code
+                                     and previous-rvs-line.obj-type = temp-rvs-line.obj-type
+                                     and previous-rvs-line.pl-code = temp-rvs-line.pl-code no-lock no-error.
+      
+      find first buf_prev-rvs-line-attr where buf_prev-rvs-line-attr.obj-code = temp-rvs-line.obj-code
+                                        and buf_prev-rvs-line-attr.obj-type = temp-rvs-line.obj-type
+                                        and buf_prev-rvs-line-attr.gds-code = temp-rvs-line.gds-code
+                                        and buf_prev-rvs-line-attr.pl-code = temp-rvs-line.pl-code
+                                        and buf_prev-rvs-line-attr.rvs-code = i-rvs-code
+                                        and buf_prev-rvs-line-attr.attr-code = "mask" no-lock no-error.      
+
+      /* Проверим, поместимся ли на страницу */
+      
+      if line-counter( PrnLibstream ) + 5 > page-size( PrnLibstream ) then do:
+          page stream PrnLibstream .
+      end.
+      
+      /* Первая строчка для газа */
+      
+      assign
+      pol1 = "Метан (КПГ)"
+      pol2 = previous-rvs-line.state-level-total
+      pol5 = temp-rvs-line.state-level-petrol
+      pol6 = previous-rvs-line.state-level-petrol
+      pol7 = pol5 - pol6
+      pol9 = temp-rvs-line.state-level-total.
+
+      display stream PrnLibstream
+      {&All-sym}
+      pol1
+      pol2
+      pol5
+      pol6
+      pol7
+      pol9
+      with frame frame-1.
+      down stream PrnLibstream with frame frame-1.
+      
+      {&PutExcel}
+          "Метан(КПГ)кгс/см2" {&tabulation}
+          pol2 {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          pol5 {&tabulation}
+          pol6 {&tabulation}
+          pol7 {&tabulation}
+          {&tabulation}
+          pol9 {&tabulation}
+          {&new-line}.
+      
+      /* Вторая строчка для газа */
+      
+      assign
+      pol1 = "CH4 м3"
+      pol5 = integer(entry(1,buf_rvs-line-attr.attr-value, ";"))
+      pol6 = integer(entry(1,buf_prev-rvs-line-attr.attr-value, ";"))
+      pol7 = pol5 - pol6.
+      
+      display stream PrnLibstream
+      {&All-sym}
+      pol1
+      pol5
+      pol6
+      pol7
+      with frame frame-1.
+      down stream PrnLibstream with frame frame-1.      
+      
+      {&PutExcel}
+          pol1 {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          pol5 {&tabulation}
+          pol6 {&tabulation}
+          pol7 {&tabulation}
+          {&new-line}.
+      
+      /* Третья строчка для газа */
+      assign
+      pol1 = "Pвх-CH4 кгс/см2"
+      pol2 = integer(entry(2,buf_prev-rvs-line-attr.attr-value, ";"))
+      pol15 = integer(entry(2,buf_rvs-line-attr.attr-value, ";")).
+      
+      display stream PrnLibstream
+      {&All-sym}
+      pol1
+      pol2
+      pol15
+      with frame frame-1.
+      down stream PrnLibstream with frame frame-1.  
+      
+      {&PutExcel}
+          pol1 {&tabulation}
+          pol2 {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          pol15 {&tabulation}
+          {&new-line}.
+      
+      /* Четвертая строчка для газа */
+
+      assign
+      pol1 = "Tвх - CH4 °C"
+      pol2 = integer(entry(3,buf_prev-rvs-line-attr.attr-value, ";"))
+      pol15 = integer(entry(3,buf_rvs-line-attr.attr-value, ";")).
+      
+      display stream PrnLibstream
+      {&All-sym}
+      pol1
+      pol2
+      pol15
+      with frame frame-1.
+      down stream PrnLibstream with frame frame-1.  
+      
+      {&PutExcel}
+          pol1 {&tabulation}
+          pol2 {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          {&tabulation}
+          pol15 {&tabulation}
+          {&new-line}.
+      
+      /* Подчеркнем */
+      
+      underline stream PrnLibstream {&all-sym} {&all-pol} with frame frame-1.
+      down stream PrnLibstream with frame frame-1.
+
+      next.
+  end.
+
   assign
     accum-by-pl-code-pol3-l = 0
     accum-by-pl-code-pol3-kg = 0
@@ -900,6 +1091,31 @@ on error undo, return error return-value
         end.
       end. /* for each ub.trn-doc */
     end.
+    
+    define variable is-vir as logical no-undo.
+    define variable v-value as character no-undo.
+    define variable v-ok as logical no-undo.
+
+    run placelib_get-attr(input {&place-virtual}
+                         ,input temp-rvs-line.obj-code
+                         ,input temp-rvs-line.obj-type
+                         ,input temp-rvs-line.pl-code
+                         ,output v-value
+                         ,output v-ok) no-error.
+
+    is-vir = if (v-ok and logical(v-value)) then true else false.
+
+    if is-vir then do:
+        pol2 = if p-weight then pol2-kg-system else pol2-l-system.
+        pol2-kg-state = pol2-kg-system.
+        pol2-l-state = pol2-l-system.
+        
+        if available last-rvs-line then do:
+            pol16-l = last-rvs-line.system-qnty.
+            pol16-kg = last-rvs-line.system-cli-qnty.
+        end.
+    end.
+    
     if p-weight = false then do:
       assign
         pol17 = ( if ( pol15 - pol16-l ) >  0 then ( pol15 - pol16-l ) else 0 )
@@ -978,6 +1194,7 @@ on error undo, return error return-value
     accumulate pol2-l-system  (Total by temp-rvs-line.gds-code).
     accumulate pol2-kg-system  (Total by temp-rvs-line.gds-code).
     accumulate pol2  (count by temp-rvs-line.gds-code).
+    accumulate pol3  (Total  by temp-rvs-line.gds-code).
     accumulate pol13 (Total  by temp-rvs-line.gds-code).
     accumulate pol14 (Total  by temp-rvs-line.gds-code).
     accumulate pol15 (Total  by temp-rvs-line.gds-code).
@@ -1007,7 +1224,7 @@ on error undo, return error return-value
                           then ACCUM TOTAL BY temp-rvs-line.gds-code pol2-l-system
                           else ACCUM TOTAL BY temp-rvs-line.gds-code pol2-l-state)
                    )
-        pol3     = 0
+        pol3     = ACCUM TOTAL BY  temp-rvs-line.gds-code pol3
         pol4     = 0
         pol5     = 0
         pol6     = 0
@@ -1037,6 +1254,7 @@ on error undo, return error return-value
           {&All-sym}
           pol1
           pol2
+          pol3
           pol7
           pol13
           pol14
@@ -1055,7 +1273,7 @@ on error undo, return error return-value
         {&PutExcel}
         pol1  {&tabulation}
         pol2  {&tabulation}
-        {&tabulation}
+        pol3  {&tabulation}
         {&tabulation}
         {&tabulation}
         {&tabulation}

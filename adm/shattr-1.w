@@ -127,7 +127,7 @@ t-one-sale-per-day t-augetres t-close-day-period t-autocalc t-pay-gds-algo ~
 t-autoclos t-autocomp t-one-curs t-sale-filter t-prcl-spl t-autofbr ~
 t-restdish t-restingr rs-tpsi-mode t-main-tpsi t-resttpsi t-neg-tpsi-weight ~
 f-neg-tpsi-qnty t-neg-tpsi-oper t-close-in-rfsl BR-sale-add B-sc-update ~
-r-wrkr r-agnt r-boss wrkr-name agnt-name boss-name
+B-sc-clear r-wrkr r-agnt r-boss wrkr-name agnt-name boss-name
 &Scoped-Define DISPLAYED-FIELDS tt-trn-doc.wrkr tt-trn-doc.agnt ~
 tt-trn-doc.boss
 &Scoped-define DISPLAYED-TABLES tt-trn-doc
@@ -165,6 +165,10 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      LABEL "&Отмена"
      SIZE 10 BY 1
      BGCOLOR 8 .
+
+DEFINE BUTTON B-sc-clear 
+     LABEL "&Сбросить" 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON B-sc-update
      LABEL "<-&Изменить"
@@ -366,6 +370,7 @@ DEFINE FRAME Dialog-Frame
      t-close-in-rfsl AT ROW 18 COL 1 WIDGET-ID 26
      BR-sale-add AT ROW 19 COL 1
      B-sc-update AT ROW 19.13 COL 67.5
+     B-sc-clear AT ROW 19 COL 78 WIDGET-ID 30
      tt-trn-doc.wrkr AT ROW 20.47 COL 74 COLON-ALIGNED WIDGET-ID 18
           LABEL "К&л-к"
           VIEW-AS FILL-IN
@@ -520,6 +525,27 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-sc-clear
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-sc-clear Dialog-Frame
+ON CHOOSE OF B-sc-clear IN FRAME Dialog-Frame /* Сбросить */
+DO:
+    /* Очистим от контрагента */
+    DEFINE BUFFER buf_tt-sale-add FOR tt-sale-add.
+
+    FIND FIRST buf_tt-sale-add WHERE
+              buf_tt-sale-add.doc-kind = tt-sale-add.doc-kind.
+    ASSIGN
+    buf_tt-sale-add.obj-type = ''
+    buf_tt-sale-add.obj-code = 0
+    buf_tt-sale-add.obj-name = ''
+    .
+    br-sale-add:REFRESH().
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 
 &Scoped-define SELF-NAME B-sc-update
@@ -954,7 +980,7 @@ PROCEDURE enable_UI :
          t-close-day-period t-autocalc t-pay-gds-algo t-autoclos t-autocomp
          t-one-curs t-sale-filter t-prcl-spl t-autofbr t-restdish t-restingr
          rs-tpsi-mode t-main-tpsi t-resttpsi t-neg-tpsi-weight f-neg-tpsi-qnty
-         t-neg-tpsi-oper t-close-in-rfsl BR-sale-add B-sc-update
+         t-neg-tpsi-oper t-close-in-rfsl BR-sale-add B-sc-update B-sc-clear 
          tt-trn-doc.wrkr r-wrkr tt-trn-doc.agnt r-agnt tt-trn-doc.boss r-boss
          wrkr-name agnt-name boss-name
       WITH FRAME Dialog-Frame.
@@ -1347,6 +1373,7 @@ t-sale-filter WHEN p-mode = {&UPDATE}
 t-close-in-rfsl WHEN p-mode = {&UPDATE}
 br-sale-add
 b-sc-update WHEN p-mode = {&UPDATE}
+b-sc-clear WHEN p-mode = {&UPDATE}
 rs-tpsi-mode WHEN p-mode = {&UPDATE}
 t-main-tpsi WHEN p-mode = {&UPDATE}
 tt-trn-doc.wrkr WHEN p-mode = {&UPDATE}

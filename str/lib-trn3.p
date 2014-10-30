@@ -38,6 +38,9 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { str/lib-rvs.i  }
 { gbl/getsect.i  def }
 { gbl/ptrlprop.i def }
+{ ref/gds-attr.i }
+{ str/is-gas.i }
+{ str/placelib.i }
 
 
 define temp-table temp-tpsi-clients no-undo like ub.clients.
@@ -2541,6 +2544,7 @@ procedure lib-trn3_avrgdens :
     define buffer buf_trn-doc        for ub.trn-doc .
     define buffer buf_doc-line       for ub.doc-line .
     define buffer buf_doc-pl         for ub.doc-pl .
+    define buffer buf_pl-gds         for ub.pl-gds .
 
     find first buf_goods no-lock
       where buf_goods.gds-code = p-gds-code
@@ -2556,17 +2560,44 @@ procedure lib-trn3_avrgdens :
       is-petrol
       is-pieces
     }
+    
+    define variable is-vir as logical no-undo.
+    define variable v-value as character no-undo.
+    define variable v-ok as logical no-undo.
+    
+    run placelib_get-attr(input {&place-virtual}
+                         ,input p-obj-code
+                         ,input p-obj-type
+                         ,input p-pl-code
+                         ,output v-value
+                         ,output v-ok) no-error.
+    
+    is-vir = if (v-ok and logical(v-value)) then true else false.
+    
     if is-petrol = yes
-      and is-pieces = no
+      and is-pieces = no or is-gas(buf_goods.gds-code) or is-vir
     then do:
       if buf_goods.unit-base = buf_goods.unit-cli then do:
         assign
           p-density = 1.0
         .
       end.
+      
+      if is-gas(buf_goods.gds-code) then p-density = 1 / buf_goods.cli-base-rate.
+      
       else do:
-
-        { gbl/ptrlprop.i run p-obj-type p-obj-code }
+        if is-vir then do:
+            
+            find first buf_pl-gds no-lock
+              where buf_pl-gds.obj-type = p-obj-type
+                and buf_pl-gds.obj-code = p-obj-code
+                and buf_pl-gds.pl-code = p-pl-code
+                and buf_pl-gds.gds-code = buf_goods.gds-code no-error.
+            
+            p-density = buf_pl-gds.cli-fact-qnty / buf_pl-gds.fact-qnty.
+        end.
+        else do:
+            { gbl/ptrlprop.i run p-obj-type p-obj-code }
 
         assign
           from_fact-order = 0.0
@@ -2949,6 +2980,7 @@ procedure lib-trn3_avrgdens :
                                       , ptrlprop-denstclc
                                       ) .
         end.
+      end.
       end.
     end. /* petrol */
   end. /* on error */

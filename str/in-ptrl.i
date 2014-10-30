@@ -26,6 +26,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     { str/plgdsfnd.i parparentproc }
     { str/lib-rvs.i                }
     { str/rvsttdef.i rvs           }
+    { ref/gds-attr.i }
+    { str/is-gas.i }
+    { str/placelib.i }
 
     define variable v-prt-car-num          as character    no-undo .
     define variable v-prt-car-vol          as character    no-undo .
@@ -69,6 +72,10 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     define variable varpercinv             as decimal      no-undo initial ?   .
     define variable varinv-set             as logical      no-undo initial no  .
 
+    define variable is-vir as logical no-undo.
+    define variable v-value as character no-undo.
+    define variable v-ok as logical no-undo.
+    
     procedure return-rvs-qnty :
       define  input parameter p-doc-code            like ub.trn-doc.doc-code            no-undo .
       define  input parameter p-gds-code            like ub.goods.gds-code              no-undo .
@@ -246,6 +253,20 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 view-as alert-box error .
               return error .
             end.
+            
+            if is-gas(buf_before_rvs-line.gds-code) then next.
+            
+            run placelib_get-attr(input {&place-virtual}
+                                 ,input tt-doc-pl.obj-code
+                                 ,input tt-doc-pl.obj-type
+                                 ,input tt-doc-pl.pl-code
+                                 ,output v-value
+                                 ,output v-ok) no-error.
+        
+            is-vir = if (v-ok and logical(v-value)) then true else false.
+            
+            if is-vir then next.
+            
             if buf_before_rvs-line.state-measure-qnty = ?
             then do:
               message
@@ -612,6 +633,24 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
           end.
           when "edit":U then do:
+
+            if not error-status :error 
+               and is-gas(buf_goods.gds-code) then do:
+               
+                run str/rvs-lin-mask.w
+                  (input  parparentproc
+                  ,input  recid( buf_rvs-line )
+                  ,input  p-action
+                  ,input  substitute(" # &1 товар &2 &3 &4  складское место &5"
+                                    ,buf_rvs-doc.rvs-code
+                                    ,buf_goods.artic
+                                    ,buf_goods.prod-type
+                                    ,buf_goods.prod-code
+                                    ,v-pl-code)) no-error.
+            end.
+            
+            else do:
+            
             run str/rvs-lin.w
               (input  parparentproc
               ,input  recid( buf_rvs-line )
@@ -621,9 +660,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                   ,buf_goods.artic
                                   ,buf_goods.prod-type
                                   ,buf_goods.prod-code
-                                  ,v-pl-code
-                                )
-              ) no-error .
+                                    ,v-pl-code)) no-error.
+            end.
+            
             if error-status :error then do:
               message
                 "Ошибка при редактировании строки сверки." skip
@@ -640,6 +679,17 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           end.
         end case.
 
+        run placelib_get-attr(input {&place-virtual}
+                                 ,input buf_rvs-line.obj-code
+                                 ,input buf_rvs-line.obj-type
+                                 ,input buf_rvs-line.pl-code
+                                 ,output v-value
+                                 ,output v-ok) no-error.
+        
+        is-vir = if (v-ok and logical(v-value)) then true else false.
+        
+        if not is-gas(buf_goods.gds-code) and not is-vir then do:
+        
         if p-action = {&update} then do:
           if p-action-type = "meas":U then do:
             { str/rvsclcln.i
@@ -741,6 +791,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               undo block_tr, return error .
             end.
           end. /* v-rvs-qnty-after <> ? */
+        end.
         end.
       end. /* on error */
     end procedure. /* action-rvs-line */
@@ -1043,6 +1094,20 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                ,tt-doc-pl.pl-code
                              ).
           end.
+
+          if is-gas(buf-after_rvs-line.gds-code) then next.
+          
+          run placelib_get-attr(input {&place-virtual}
+                                 ,input buf-after_rvs-line.obj-code
+                                 ,input buf-after_rvs-line.obj-type
+                                 ,input buf-after_rvs-line.pl-code
+                                 ,output v-value
+                                 ,output v-ok) no-error.
+        
+          is-vir = if (v-ok and logical(v-value)) then true else false.
+          
+          if is-vir then next.
+          
           if buf-before_rvs-line.state-measure-qnty = ? then do:
             return substitute( 'Документ "&1", товар &2, резервуар &3.&4Не задан фактический остаток (&5) в сверке <<до налива топлива>>.'
                                ,p-doc-code

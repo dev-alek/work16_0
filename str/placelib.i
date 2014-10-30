@@ -15,17 +15,14 @@ Creation date: 12/22/11
 
 */
 
-
-&global-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
-
 &global-define place-type        "place-type"                /*тип резервуара(вертикальный,горизонтальный)*/
 &global-define place-SI          "place-SI"                    /*средство измерения*/
 &global-define place-diameter    "place-diameter"        /*диаметр резервуара(мм)*/
 &global-define dead-balance       "dead-balance"        /*мертвый остаток*/
 &global-define place-ratio-error "place-ratio-error"  /*относительная погрешность составления калибровочной таблицы резервуара*/
 &global-define place-dens-prov         "dens-prov"         /*плотность при поверке резервуара*/
-&global-define list-place-attr   'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov':u /*список атрибутов резервуара*/
+&global-define place-virtual     "place-virtual"     /*виртуальный резервуар*/
+&global-define list-place-attr   'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov,place-virtual':u /*список атрибутов резервуара*/
 
 
 procedure placelib_write-attr:

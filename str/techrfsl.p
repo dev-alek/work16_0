@@ -21,6 +21,7 @@ define input parameter log-file-name    as character no-undo .
 define input parameter p-auto           as integer no-undo .
 define input parameter v-curr-r-b       as character no-undo .
 define input parameter p-close-in-rfsl  as integer no-undo .
+define input parameter p-doc-kind       as character no-undo .
 /*документ техпролива продажи  -списание*/
 define parameter buffer buf_trn-doc for ub.trn-doc.
 /*создарнный документ прихода по техпроливу */
@@ -43,6 +44,9 @@ define variable vss-description as character no-undo init "Создание приходного д
 { str/lib-def.i }
 { cmp/gds-list.i gds-list def "new shared" }
 { str/saledoc.i " " }
+{ cmp/croslist.i }
+{ ref/gdsoattr.i }
+{ str/placelib.i }
 
 define variable v-mes as character no-undo .
 define variable v-out-pay         as integer   no-undo .
@@ -57,6 +61,11 @@ define variable v-sum-rubl        as decimal no-undo .
 define variable v-sum-base        as decimal no-undo .
 define variable v-qnty            as decimal no-undo .
 define variable v-insalepr        as logical initial ? no-undo.
+define variable v-attr-type       as character no-undo .
+define variable v-exist           as logical   no-undo .
+define variable v-pl-code         as integer no-undo.
+define variable v-value           as character no-undo.
+define variable v-ok              as logical no-undo.
 
 define buffer buf_doc-line      for ub.doc-line.
 define buffer buf_doc-line-attr for ub.doc-line-attr.
@@ -71,6 +80,7 @@ define buffer in_inv-line       for ub.inv-line.
 define buffer in_doc-line       for ub.doc-line.
 define buffer in_gds-dtl        for ub.gds-dtl.
 define buffer buf_sale-doc      for ub.sale-doc.
+define buffer buf_pl-gds        for ub.pl-gds.
 
 define temp-table tt-in_trn-doc       no-undo like lib-trn_ret-doc.
 define temp-table tt-in_doc-line      no-undo like lib-trn_ret-line.
@@ -106,7 +116,7 @@ on error undo, return error return-value :
                                             ,vss-description
                                             ,{&new-line}).
   end.
-  if buf_trn-doc.ext-doc-type <> {&tdedt_Spi_vnesh}
+  if (buf_trn-doc.ext-doc-type <> {&tdedt_Spi_vnesh} and buf_trn-doc.ext-doc-type <> {&tdedt_Ras_vnesh})
   or buf_trn-doc.internal <> no
   or buf_trn-doc.status_ <> {&fact} then do:
     undo _main, return error substitute("&1 &2 &3&4Документ списания техпролива, используемый для создания прихода по техпроливу&4" +
@@ -147,7 +157,8 @@ on error undo, return error return-value :
     .
   end.
   run doc-code in this-procedure
-      (input "stock-up"
+      (input "chip"
+/*      input "stock-up"*/
       ,input buf_trn-doc.obj-type
       ,input buf_trn-doc.obj-code
       ,input buf_trn-doc.out-code
@@ -177,7 +188,7 @@ on error undo, return error return-value :
   do v-seq = 1 to v-seq-max:
     if v-seq-max > 1 then do:
       run doc-code in this-procedure
-          (input "stock-up,chip"
+          (input "chip"
           ,input buf_trn-doc.obj-type
           ,input buf_trn-doc.obj-code
           ,input v-prev-doc-code
@@ -308,7 +319,29 @@ on error undo, return error return-value :
         tt-in_parts.out-code = v-doc-code-chip
         tt-in_parts.purch-code = tt-in_trn-doc.purch-code
         tt-in_parts.slt-type  = {&without-slt}
-        tt-in_parts.vat-type  = {&inc-vat}
+        tt-in_parts.vat-type  = {&inc-vat}.
+        
+        if p-doc-kind = {&sale-add-vir-res} then do: /* Поменяем на виртуальный резервуар */
+            v-pl-code = ?.
+            for each buf_pl-gds no-lock
+                where buf_pl-gds.obj-type = buf_trn-doc.obj-type
+                and buf_pl-gds.obj-code = buf_trn-doc.obj-code
+                and buf_pl-gds.gds-code  = buf2_temp-tank.gds-code:
+            
+                run placelib_get-attr  ( input {&place-virtual}
+                                        ,input buf_trn-doc.obj-code
+                                        ,input buf_trn-doc.obj-type
+                                        ,input buf_pl-gds.pl-code
+                                        ,output v-value
+                                        ,output v-ok) no-error.
+                if v-ok and logical(v-value) then v-pl-code = buf_pl-gds.pl-code.
+            end. /* for each buf_pl-gds no-lock */
+            
+            tt-in_parts.pl-code = v-pl-code.
+            
+        end. /* if p-doc-kind = {&sale-add-vir-res} */
+        
+        assign
         v-qnty = v-qnty + buf_parts.fact-qnty
         v-sum-rubl = v-sum-rubl + buf_parts.price-rubl * buf_parts.fact-qnty
         v-sum-base = v-sum-base + buf_parts.price-base * buf_parts.fact-qnty
