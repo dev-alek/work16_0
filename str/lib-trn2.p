@@ -2771,15 +2771,15 @@ for each bf_gds-dtl where bf_gds-dtl.doc-code  = pardoc-code on error undo, retu
   find first bf_goods where bf_goods.artic     = bf_gds-dtl.artic     and
                             bf_goods.prod-type = bf_gds-dtl.prod-type and
                             bf_goods.prod-code = bf_gds-dtl.prod-code no-lock.
-
-  if bf_gds-dtl.fact-qnty  <> 0 and (
-     bf_gds-dtl.price-base - bf_gds-dtl.discnt-base = 0 or
-     bf_gds-dtl.price-rubl - bf_gds-dtl.discnt-rubl = 0 ) then do:
-     { gbl/fgdsobjt.i bf_trn-doc.obj-type bf_trn-doc.obj-code bf_goods.gds-code "'is-modificator-null-price=request'" v-is-mdificator-null-price }
-     if v-is-mdificator-null-price <> "1" then do:
-        undo, return error substitute( "Цена со скидкой по товару &1 &2 &3 равна 0 . (gds-dtl) Продажная цена = &4 и Скидка = &5", bf_gds-dtl.artic, bf_gds-dtl.prod-type, bf_gds-dtl.prod-code, bf_gds-dtl.price-rubl, bf_gds-dtl.discnt-rubl ).
-     end.
-  end.
+/* Закомментировал, чтобы были доступны 100% скидки в накладных */
+/*  if bf_gds-dtl.fact-qnty  <> 0 and (                                                                                                                                                                                                            */
+/*     bf_gds-dtl.price-base - bf_gds-dtl.discnt-base = 0 or                                                                                                                                                                                       */
+/*     bf_gds-dtl.price-rubl - bf_gds-dtl.discnt-rubl = 0 ) then do:                                                                                                                                                                               */
+/*     { gbl/fgdsobjt.i bf_trn-doc.obj-type bf_trn-doc.obj-code bf_goods.gds-code "'is-modificator-null-price=request'" v-is-mdificator-null-price }                                                                                               */
+/*     if v-is-mdificator-null-price <> "1" then do:                                                                                                                                                                                               */
+/*        undo, return error substitute( "Цена со скидкой по товару &1 &2 &3 равна 0 . (gds-dtl) Продажная цена = &4 и Скидка = &5", bf_gds-dtl.artic, bf_gds-dtl.prod-type, bf_gds-dtl.prod-code, bf_gds-dtl.price-rubl, bf_gds-dtl.discnt-rubl ).*/
+/*     end.                                                                                                                                                                                                                                        */
+/*  end.                                                                                                                                                                                                                                           */
   if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} then do:
     define variable v-limit as decimal no-undo .
     define buffer buf_dis-gds-rule for ub.dis-gds-rule.

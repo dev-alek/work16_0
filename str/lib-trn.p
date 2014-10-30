@@ -3062,7 +3062,7 @@ else do:
            ca_doc-line.price-base = varprice-base-ca.
        end. /*простановка цены*/
        if ca_trn-doc.status_ = {&wayb} and
-          (ca_doc-line.price-cli = 0 or ca_doc-line.price-cli = ?) then do:
+          ca_doc-line.price-cli = ? then do:
           undo, return error substitute ("Артикул : &1 &2 Цена не может быть определена !", ca_goods.artic, ca_goods.gds-name).
        end.
        { str/lgl-node.i
