@@ -1521,11 +1521,16 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define tpsi-doc-
 { cmp/cr-prep.i 1 sale-add-tech-refuell      trf          ТехПролив              trf  TechRefuell}
 { cmp/cr-prep.i 1 sale-add-return-write-off  rwo          Списание-по-Возврату   rwo  Write-off-by-Return}
 { cmp/cr-prep.i 1 sale-add-write-off         swo          Списание               swo  Write-off}
+{ cmp/cr-prep.i 1 sale-add-nat-gas           ngs          Приход-Природный-Газ   ngs  Natural-Gas}
+{ cmp/cr-prep.i 1 sale-add-vir-res           vir          Перемещение-Вирт-Рез   vir  Virtual-Res}
+
 
 &glob sale-add-kinds '~
 {&bef-sale-add-return-write-off}~
 ,{&bef-sale-add-tech-refuell}~
 ,{&bef-sale-add-write-off}~
+,{&bef-sale-add-nat-gas}~
+,{&bef-sale-add-vir-res}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define sale-add-kinds {&sale-add-kinds}" ).
@@ -1534,6 +1539,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sale-add-
 {&bef-sale-add-return-write-off-full}~
 ,{&bef-sale-add-tech-refuell-full}~
 ,{&bef-sale-add-write-off-full}~
+,{&bef-sale-add-nat-gas-full}~
+,{&bef-sale-add-vir-res-full}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define sale-add-kinds-full {&sale-add-kinds-full}" ).
 
@@ -1544,7 +1551,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sale-add-
 ~~~~~~~{&bef-TDEDT_Vozvrat_Vnesh_Kass},~
 {&bef-sale-add-return-write-off},~
 {&bef-sale-add-tech-refuell},~
-{&bef-sale-add-write-off}~
+{&bef-sale-add-write-off},~
+{&bef-sale-add-nat-gas},~
+{&bef-sale-add-vir-res}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define sale-all-doc-kinds {&sale-all-doc-kinds}" ).
@@ -1554,7 +1563,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sale-all-
 ~~~~~~~{&bef-TDEDT_Vozvrat_Vnesh_Kass-full},~
 {&bef-sale-add-return-write-off-full},~
 {&bef-sale-add-tech-refuell-full},~
-{&bef-sale-add-write-off-full}~
+{&bef-sale-add-write-off-full},~
+{&bef-sale-add-nat-gas-full},~
+{&bef-sale-add-vir-res-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define sale-all-doc-kinds-full {&sale-all-doc-kinds-full}" ).
@@ -1563,7 +1574,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sale-all-
 
 &glob sale-add-ext-doc-types '~~~~~~~{&bef-TDEDT_Spi_Vnesh},~
 ~~~~~~~{&bef-TDEDT_Spi_Vnesh},~
-~~~~~~~{&bef-TDEDT_Spi_Vnesh}~
+~~~~~~~{&bef-TDEDT_Spi_Vnesh},~
+~~~~~~~{&bef-TDEDT_Spi_Vnesh},~
+~~~~~~~{&bef-TDEDT_Ras_Vnesh}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define sale-add-ext-doc-types {&sale-add-ext-doc-types}" ).
@@ -1575,7 +1588,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sale-add-
 run filwrlib_append-new-line in this-procedure ( input "&global-define sale-doc-name {&sale-doc-name}" ).
 
 
-&glob sale-doc-kind-born entry (lookup (~~~~~~~{&sale-doc-kind}, {&sale-all-doc-kinds}), 'main,pair,trio-m,quadro,stock-down')
+&glob sale-doc-kind-born entry (lookup (~~~~~~~{&sale-doc-kind}, {&sale-all-doc-kinds}), 'main,pair,trio-m,quadro,stock-down,quadro,chip')
 run filwrlib_append-new-line in this-procedure ( input "&global-define sale-doc-kind-born {&sale-doc-kind-born}" ).
 
 &glob sale-doc-main-receipt-type entry (lookup (~~~~~~~{&sale-doc-kind}, {&sale-all-doc-kinds}) + 1, '~
@@ -1584,7 +1597,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sale-doc-
 ~~~~~~~{&bef-rcpt-return},~
 ~~~~~~~{&bef-rcpt-return-write-off},~
 ~~~~~~~{&bef-rcpt-tech-refuell},~
-~~~~~~~{&bef-rcpt-write-off}~
+~~~~~~~{&bef-rcpt-write-off},~
+~~~~~~~{&bef-rcpt-tech-refuell},~
+~~~~~~~{&bef-rcpt-tech-refuell}~
 ':U)
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define sale-doc-main-receipt-type {&sale-doc-main-receipt-type}" ).
