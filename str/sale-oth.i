@@ -583,6 +583,10 @@ define variable v-run-tpsi as logical no-undo .
 define buffer buf_sale-doc for ub.sale-doc.
 define buffer dop_trn-doc for ub.trn-doc.
 
+define variable v-user-action  as character no-undo .
+define variable v-printed      as logical   no-undo .
+define variable v-old-num_rec  as integer no-undo .
+
 if buf_trn-doc.status_ = {&inquiry} then return.
 
 assign
@@ -698,6 +702,8 @@ on error undo _buf_sale-doc, next _buf_sale-doc:
     else cashfbr = no.
     rsrv-title = substitute("–езервирование. &1. —трок ", {&sale-doc-name}).
     if buf_sale-doc.dir = 1 then do:
+      assign
+        v-old-num_rec = num_rec.
       run RSRV-line in this-procedure (
                     input 1,
                     input p-auto-fbr,
@@ -715,6 +721,20 @@ on error undo _buf_sale-doc, next _buf_sale-doc:
                     buffer buf_trn-doc,
                     buffer buf_sale-doc
                     ) no-error.
+      if ub.doc-line.fact-qnty <> ub.doc-line.doc-qnty and v-log-handle <> ?
+          and v-old-num_rec <> num_rec /*посл. условие что позици€ подлежит резервированию*/
+      then do:
+        run write-log-and-file in v-log-handle (
+                            input 1
+                          , input log-file-name
+                          , input 1
+                          , input substitute("ќшибка при резервировании товара артикул &1: требуемое кол-во &2 зарезервировано &3"
+                                        ,ub.doc-line.artic
+                                        ,ub.doc-line.fact-qnty
+                                        ,ub.doc-line.doc-qnty
+                                        )
+                          ).
+      end.
     end.
     else do:
       run RSRV-line in this-procedure (
@@ -827,10 +847,22 @@ else do:
   if auto-fbr then do:
   end.
   if  num_resv > 0 then do:
-&scop my-message substitute("»з &1 позиций, подлежащих резервированию, успешно зарезервировано &2" ~
+&scop my-message substitute("»з &1 позиций, подлежащих резервированию, успешно зарезервировано &2 (не зарезервировано &3)" ~
                         , num_resv                                                              ~
-                        , num_resv_res)
+                        , num_resv_res ~
+                        , num_resv - num_resv_res)
 {&display-message-laud}.
+    if search (log-file-name) <> ? then do:
+      run gbl/prnfilen.w (
+            input "—писок не зарезервированных товаров":U
+          , input 8
+          , input search (log-file-name)
+          , input 7
+          , output v-user-action
+          , output v-printed
+      ).
+      os-delete value(log-file-name) .
+    end.
   end.
   if num_resv > 0
   and (auto-close or p-auto-fbr) then return error "Ќе все товары, подлежащие резервированию, зарезервированы".

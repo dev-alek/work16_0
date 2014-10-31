@@ -4364,15 +4364,18 @@ character~
 &scop up-way-attr-petrol "petrol,petrol,petrol"
 
 /*Параметры POS staff-options*/
-&scop label-attr-staff-options "Параметры работы с персоналом"
-&scop tooltip-attr-staff-options "Параметры работы с персоналом"
+&scop label-attr-staff-options "Параметры работы с пользователями и персоналом"
+&scop tooltip-attr-staff-options "Параметры работы с пользователями и персоналом"
 &scop user-can-edit-attr-staff-options true
 &scop output-display-attr-staff-options false
 &scop other-attr-staff-options 'cd/spr-ext=adm\shattr40.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-staff-options 'logical':U
+&scop prop-type-list-attr-staff-options 'logical,logical,integer':U
 &scop prop-label-list-attr-staff-options '~
-Запрет на ввод произвольных данных при вводе персонала смены~
+Запрет на ввод произвольных данных при вводе персонала смены,~
+Обязательное сочетание цифровых и буквенных символов,~
+Минимальная длина пароля~
 '
+&scop prop-list-attr-staff-options 'noanshftstaff,obyznumbukv,minparol':U
 &scop global-attr-staff-options true
 &scop host-attr-staff-options true
 &scop shop-attr-staff-options true

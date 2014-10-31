@@ -1525,7 +1525,9 @@ define variable v-default-recipe-code   as character    no-undo.
         if p-autofbr = yes
         and buf_recipe.recipe-type <> {&manufacturing}
         and buf_recipe.recipe-type <> {&alternative}
-        then do:        /* При раскрутке для ресторанов берутся только рецепты производства и альтернативы. */
+        and buf_recipe.recipe-type <> {&gathering}
+        and buf_recipe.recipe-type <> {&gathering}
+        then do:        /* При раскрутке для ресторанов берутся только рецепты производства и альтернативы и комплепкты. */
             next comp-recipe.
         end.
         if p-trn-type = {&income}

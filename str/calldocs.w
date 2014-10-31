@@ -833,6 +833,7 @@ end.
 
 
 on choose of b-lines in frame {&frame-name} do:
+if not available c-t-doc then return .
   define variable v-list as character no-undo.
   run str/docclins.w (
       input        parparentproc,   /* parParentProc  */

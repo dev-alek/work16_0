@@ -1,10 +1,10 @@
 /*
 
-$Revision: $
-$Author: $
-$Date: $
-$Workfile: $
-$Archive: $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
                                         
 Файл глобальных определений
 
@@ -4099,19 +4099,27 @@ end.
 &global-define sale-add-write-off '{&bef-sale-add-write-off}':U
 &global-define bef-sale-add-write-off-full Списание
 &global-define sale-add-write-off-full '{&bef-sale-add-write-off-full}':U
-&global-define sale-add-kinds 'rwo,trf,swo':U
-&global-define sale-add-kinds-full 'Списание-по-Возврату,ТехПролив,Списание':U
-&global-define sale-all-doc-kinds '~{&bef-TDEDT_Ras_Vnesh_Kass},~{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo':U
-&global-define sale-all-doc-kinds-full '~{&bef-TDEDT_Ras_Vnesh_Kass-full},~{&bef-TDEDT_Vozvrat_Vnesh_Kass-full},Списание-по-Возврату,ТехПролив,Списание':U
-&global-define sale-add-ext-doc-types '~{&bef-TDEDT_Spi_Vnesh},~{&bef-TDEDT_Spi_Vnesh},~{&bef-TDEDT_Spi_Vnesh}':U
+&global-define bef-sale-add-nat-gas ngs
+&global-define sale-add-nat-gas '{&bef-sale-add-nat-gas}':U
+&global-define bef-sale-add-nat-gas-full Приход-Природный-Газ
+&global-define sale-add-nat-gas-full '{&bef-sale-add-nat-gas-full}':U
+&global-define bef-sale-add-vir-res vir
+&global-define sale-add-vir-res '{&bef-sale-add-vir-res}':U
+&global-define bef-sale-add-vir-res-full Перемещение-Вирт-Рез
+&global-define sale-add-vir-res-full '{&bef-sale-add-vir-res-full}':U
+&global-define sale-add-kinds 'rwo,trf,swo,ngs,vir':U
+&global-define sale-add-kinds-full 'Списание-по-Возврату,ТехПролив,Списание,Приход-Природный-Газ,Перемещение-Вирт-Рез':U
+&global-define sale-all-doc-kinds '~{&bef-TDEDT_Ras_Vnesh_Kass},~{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,vir':U
+&global-define sale-all-doc-kinds-full '~{&bef-TDEDT_Ras_Vnesh_Kass-full},~{&bef-TDEDT_Vozvrat_Vnesh_Kass-full},Списание-по-Возврату,ТехПролив,Списание,Приход-Природный-Газ,Перемещение-Вирт-Рез':U
+&global-define sale-add-ext-doc-types '~{&bef-TDEDT_Spi_Vnesh},~{&bef-TDEDT_Spi_Vnesh},~{&bef-TDEDT_Spi_Vnesh},~{&bef-TDEDT_Spi_Vnesh},~{&bef-TDEDT_Ras_Vnesh}':U
 &global-define bef-sale-add2-in-tech-refuell itr
 &global-define sale-add2-in-tech-refuell '{&bef-sale-add2-in-tech-refuell}':U
 &global-define bef-sale-add2-in-tech-refuell-full ПриТехПрол
 &global-define sale-add2-in-tech-refuell-full '{&bef-sale-add2-in-tech-refuell-full}':U
-&global-define sale-doc-name entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo':U + ',' + 'itr':U) + 1, ',' + '{&bef-TDEDT_Ras_Vnesh_Kass-full},{&bef-TDEDT_Vozvrat_Vnesh_Kass-full},Списание-по-Возврату,ТехПролив,Списание':U + ',' + 'ПриТехПрол':U )
-&global-define sale-doc-kind-born entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo':U), 'main,pair,trio-m,quadro,stock-down')
-&global-define sale-doc-main-receipt-type entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo':U) + 1, '0,~{&bef-rcpt-sale},~{&bef-rcpt-return},~{&bef-rcpt-return-write-off},~{&bef-rcpt-tech-refuell},~{&bef-rcpt-write-off}':U)
-&global-define sale-doc-poss-wro-codes entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo':U) + 1, '0,~{&bef-wro-r-modificator},~{&bef-wro-v-modificator},~{&bef-wro-cancell-item};~{&bef-wro-v-modificator-ci};~{&bef-wro-cancell-all};~{&bef-wro-v-modificator-ca},~{&bef-wro-r-tech-refuell},~{&bef-wro-without-payment};~{&bef-wro-r-modificator-wp}':U)
+&global-define sale-doc-name entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,vir':U + ',' + 'itr':U) + 1, ',' + '{&bef-TDEDT_Ras_Vnesh_Kass-full},{&bef-TDEDT_Vozvrat_Vnesh_Kass-full},Списание-по-Возврату,ТехПролив,Списание,Приход-Природный-Газ,Перемещение-Вирт-Рез':U + ',' + 'ПриТехПрол':U )
+&global-define sale-doc-kind-born entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,vir':U), 'main,pair,trio-m,quadro,stock-down,quadro,chip')
+&global-define sale-doc-main-receipt-type entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,vir':U) + 1, '0,~{&bef-rcpt-sale},~{&bef-rcpt-return},~{&bef-rcpt-return-write-off},~{&bef-rcpt-tech-refuell},~{&bef-rcpt-write-off},~{&bef-rcpt-tech-refuell},~{&bef-rcpt-tech-refuell}':U)
+&global-define sale-doc-poss-wro-codes entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,vir':U) + 1, '0,~{&bef-wro-r-modificator},~{&bef-wro-v-modificator},~{&bef-wro-cancell-item};~{&bef-wro-v-modificator-ci};~{&bef-wro-cancell-all};~{&bef-wro-v-modificator-ca},~{&bef-wro-r-tech-refuell},~{&bef-wro-without-payment};~{&bef-wro-r-modificator-wp}':U)
 &global-define sale-doc-fbrsale '~{&bef-TDEDT_Ras_Vnesh_Kass},swo':U
 &global-define sale-all-ext-doc-types '~{&bef-TDEDT_Ras_Vnesh_Kass},~{&bef-TDEDT_Vozvrat_Vnesh_Kass},~{&bef-TDEDT_Spi_Vnesh}':U
 &global-define bef-contr-chf-nodef Не определено
@@ -6472,7 +6480,7 @@ end.
 &global-define alc-check-price-full '{&bef-alc-check-price-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: f0e393ce9a27, 3, test  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: c60348b25ab3, 88, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7051,7 +7059,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-fin-doc '{&bef-attr-fin-doc}':U
 &global-define bef-attr-fin-doc-full fin-doc
 &global-define attr-fin-doc-full '{&bef-attr-fin-doc-full}':U
-&global-define bef-prop-list-attr-fin-doc suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code
+&global-define bef-prop-list-attr-fin-doc suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code,page-cash-book
 &global-define prop-list-attr-fin-doc '{&bef-prop-list-attr-fin-doc}':U
 &global-define bef-attr-fin-doc_suffix-pko suffix-pko
 &global-define attr-fin-doc_suffix-pko '{&bef-attr-fin-doc_suffix-pko}':U
@@ -7083,6 +7091,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-fin-doc_dpt-dflt-type '{&bef-attr-fin-doc_dpt-dflt-type}':U
 &global-define bef-attr-fin-doc_dpt-dflt-code dpt-dflt-code
 &global-define attr-fin-doc_dpt-dflt-code '{&bef-attr-fin-doc_dpt-dflt-code}':U
+&global-define bef-attr-fin-doc_page-cash-book page-cash-book
+&global-define attr-fin-doc_page-cash-book '{&bef-attr-fin-doc_page-cash-book}':U
 &global-define bef-attr-contr-in contr-in
 &global-define attr-contr-in '{&bef-attr-contr-in}':U
 &global-define bef-attr-contr-in-full contr-in
@@ -7717,10 +7727,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-petrol_rvs-wt-email '{&bef-attr-petrol_rvs-wt-email}':U
 &global-define bef-attr-staff-options staff
 &global-define attr-staff-options '{&bef-attr-staff-options}':U
-&global-define bef-prop-list-attr-staff-options noanshftstaff
+&global-define bef-prop-list-attr-staff-options noanshftstaff,obyznumbukv,minparol
 &global-define prop-list-attr-staff-options '{&bef-prop-list-attr-staff-options}':U
 &global-define bef-attr-staff-options_noanshftstaff noanshftstaff
 &global-define attr-staff-options_noanshftstaff '{&bef-attr-staff-options_noanshftstaff}':U
+&global-define bef-attr-staff-options_obyznumbukv obyznumbukv
+&global-define attr-staff-options_obyznumbukv '{&bef-attr-staff-options_obyznumbukv}':U
+&global-define bef-attr-staff-options_minparol minparol
+&global-define attr-staff-options_minparol '{&bef-attr-staff-options_minparol}':U
 &global-define bef-attr-izt-rul izt-rul
 &global-define attr-izt-rul '{&bef-attr-izt-rul}':U
 &global-define bef-prop-list-attr-izt-rul izt-rul
@@ -7729,12 +7743,12 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-izt-rul_izt-rul '{&bef-attr-izt-rul_izt-rul}':U
 &global-define cpdoc-attr-code 'rrn-vbrr,cpdoc':U
 &global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U
-&global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol':U
+&global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff':U
 &global-define str-glbl_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
-&global-define str-glbl4_vss-revision 'Revision':U
+&global-define str-glbl4_vss-revision 'Revision: 8cb79fca1631, 75, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 199ddf50f4e5, 2, test ':U
-&global-define str-glblt_vss-revision 'Revision: f0e393ce9a27, 3, test ':U
+&global-define str-glblt_vss-revision 'Revision: c60348b25ab3, 88, rls ':U
 &endif

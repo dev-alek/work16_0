@@ -116,6 +116,16 @@ CASE p-doc-kind:
    .
    return {&sale-add-write-off}.
  end.
+ when {&sale-add-vir-res} then do:
+   assign
+   p-msign = 1
+   p-main = no
+   p-in-inkas = no
+   p-order = 600
+   p-dir_ = 1
+   .
+   return {&sale-add-vir-res}.
+ end.
  when {&sale-add2-in-tech-refuell} then do:
    assign
    p-msign = 1
@@ -125,6 +135,16 @@ CASE p-doc-kind:
    p-dir_ = -1
    .
   return {&sale-add2-in-tech-refuell}.
+ end.
+ when {&sale-add-nat-gas} then do:
+   assign
+   p-msign = 1
+   p-main = no
+   p-in-inkas = no
+   p-order = 1
+   p-dir_ = 1
+   .
+   return {&sale-add-nat-gas}.
  end.
  otherwise do:
     /*другие неопределенные типы документов*/
@@ -212,7 +232,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   buf_sale-doc.dir = v-dir_
   buf_sale-doc.fbrsale = lookup(buf_sale-doc.doc-kind, {&sale-doc-fbrsale}) > 0
   buf_sale-doc.main-receipt-type = integer({&sale-doc-main-receipt-type})
-  buf_sale-doc.poss-wro-codes = (if v-order > 0 then {&sale-doc-poss-wro-codes} else '':U)
+  buf_sale-doc.poss-wro-codes = '':U
   buf_sale-doc.chr-office = p-office
   buf_sale-doc.tpsidoc = p-tpsidoc
   buf_sale-doc.alias-type-price = p-alias-type-price
@@ -223,6 +243,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                  then p-price-obj-code
                                  else 0)
   .
+  assign
+  buf_sale-doc.poss-wro-codes = (if (v-order > 0 and {&sale-doc-kind} <> {&sale-add-vir-res}) then {&sale-doc-poss-wro-codes} else '':U)
+  no-error.
+
 end. /*doe*/
 END.
 

@@ -64,6 +64,9 @@ define variable vss-description as character no-undo initial "—писок документов 
 { str/getctxtp.i get }
 { str/lib-rvs.i  }
 { gbl/fltopend.i defproc }
+{ ref/gds-attr.i }
+{ str/is-gas.i }
+{ str/placelib.i }
 
 define buffer buf-inv_trn-doc     for ub.trn-doc .
 define buffer buf-spi_trn-doc     for ub.trn-doc .
@@ -91,6 +94,11 @@ define variable varobj-type  like ub.rvs-doc.obj-type  no-undo .
 define variable varobj-code  like ub.rvs-doc.obj-code  no-undo .
 define variable varhost-code like ub.rvs-doc.host-code no-undo .
 define variable varstatus_   like ub.rvs-doc.status_   no-undo .
+
+/* дл€ вирт рез */
+define variable is-vir as logical no-undo.
+define variable v-value as character no-undo.
+define variable v-ok as logical no-undo.
 
 define variable sort-column-name as character no-undo.
 define variable filter-point     as character no-undo.
@@ -341,7 +349,7 @@ DEFINE BROWSE br-r-docs
      {&sort-clmn_27-br-dtl}
      {&sort-clmn_28-br-dtl}
      {&sort-clmn_29-br-dtl}
-     {&sort-clmn_30-br-dtl}
+     {&sort-clmn_30-br-dtl} format "->>,>>>,>>>.<<<"
      {&sort-clmn_31-br-dtl}
      {&sort-clmn_32-br-dtl}
      {&sort-clmn_33-br-dtl}
@@ -741,12 +749,23 @@ DO:
       no-error.
     if available ub.rvs-line then do:
       find first ub.goods no-lock
-        where ub.goods.gds-code = ub.rvs-line.gds-code
-      .
+        where ub.goods.gds-code = ub.rvs-line.gds-code.
+      
+      run placelib_get-attr(input {&place-virtual}
+                           ,input rvs-line.obj-code
+                           ,input rvs-line.obj-type
+                           ,input rvs-line.pl-code
+                           ,output v-value
+                           ,output v-ok) no-error.
+
+      is-vir = if (v-ok and logical(v-value)) then true else false.
+  
+      if not is-gas(ub.rvs-line.gds-code) and not is-vir then do:
       message
         substitute( "Ќе заданы фактические остатки по товару &1 (&2)", ub.goods.gds-code, ub.goods.gds-name )
         view-as alert-box error.
       return no-apply.
+    end.
     end.
     tr:
     do transaction
@@ -918,12 +937,23 @@ DO:
     no-error.
   if available ub.rvs-line then do:
     find first ub.goods no-lock
-      where ub.goods.gds-code = ub.rvs-line.gds-code
-    .
+      where ub.goods.gds-code = ub.rvs-line.gds-code.
+      
+      run placelib_get-attr(input {&place-virtual}
+                           ,input rvs-line.obj-code
+                           ,input rvs-line.obj-type
+                           ,input rvs-line.pl-code
+                           ,output v-value
+                           ,output v-ok) no-error.
+
+      is-vir = if (v-ok and logical(v-value)) then true else false.
+      
+      if not is-gas(ub.rvs-line.gds-code) and not is-vir then do:
     message
       substitute( "Ќе заданы фактические остатки по товару &1 (&2)", ub.goods.gds-code, ub.goods.gds-name )
       view-as alert-box error.
     return no-apply.
+  end.
   end.
   find first buf-inv_trn-doc no-lock
     where buf-inv_trn-doc.out-code = r-doc.rvs-code

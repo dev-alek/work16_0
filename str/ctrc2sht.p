@@ -34,7 +34,8 @@ define variable vss-description as character no-undo initial "Добавление сменной
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { ref/gds-attr.i }
-
+{ str/is-gas.i }
+{ str/placelib.i }
 define variable rec-rvs-shift as recid         no-undo .
 define variable p-db-num      as integer       no-undo .
 define variable p-userid      as character     no-undo .
@@ -59,6 +60,8 @@ define buffer bf_place            for ub.place .
 define buffer bf_place-error      for ub.place .
 define buffer bf_pl-gds           for ub.pl-gds .
 define buffer bf_pl-pump-nozzle   for ub.pl-pump-nozzle .
+define buffer buf_ctrl-rvs-line-attr   for ub.rvs-line-attr .
+define buffer buf_shift-rvs-line-attr   for ub.rvs-line-attr .
 
 define temp-table tt_pl-gds no-undo
   field pl-code  like ub.pl-gds.pl-code
@@ -486,6 +489,31 @@ do on error undo Main-Block, return error return-value :
         end. /* for each bf_rvs-line-pump */
         find first ctrl_rvs-line        no-lock where
             recid( ctrl_rvs-line ) = recid( bf_rvs-line ) .
+      
+          /* Добавим атрибуты для газа */
+        
+          find first buf_ctrl-rvs-line-attr where buf_ctrl-rvs-line-attr.obj-code = ctrl_rvs-line.obj-code
+                                              and buf_ctrl-rvs-line-attr.obj-type = ctrl_rvs-line.obj-type
+                                              and buf_ctrl-rvs-line-attr.gds-code = ctrl_rvs-line.gds-code
+                                              and buf_ctrl-rvs-line-attr.pl-code = ctrl_rvs-line.pl-code
+                                              and buf_ctrl-rvs-line-attr.rvs-code = ctrl_rvs-line.rvs-code
+                                              and buf_ctrl-rvs-line-attr.attr-code = "mask" no-lock no-error.
+          
+          if available (buf_ctrl-rvs-line-attr) then do: /* Если есть линии с метаном */
+          
+              create buf_shift-rvs-line-attr. 
+              
+              assign
+                  buf_shift-rvs-line-attr.obj-code = buf_ctrl-rvs-line-attr.obj-code
+                  buf_shift-rvs-line-attr.obj-type = buf_ctrl-rvs-line-attr.obj-type
+                  buf_shift-rvs-line-attr.gds-code = buf_ctrl-rvs-line-attr.gds-code
+                  buf_shift-rvs-line-attr.pl-code = buf_ctrl-rvs-line-attr.pl-code
+                  buf_shift-rvs-line-attr.rvs-code = shift_rvs-doc.rvs-code
+                  buf_shift-rvs-line-attr.attr-code = buf_ctrl-rvs-line-attr.attr-code
+                  buf_shift-rvs-line-attr.attr-value = buf_ctrl-rvs-line-attr.attr-value.
+          
+          end. /* if available (buf_rvs-line-attr) */
+      
       end. /* for each bf_rvs-line */
     end. /* on error */
 
@@ -539,7 +567,21 @@ do on error undo Main-Block, return error return-value :
                bf_rvs-line.obj-type           = shift_rvs-doc.obj-type and
                bf_rvs-line.obj-code           = shift_rvs-doc.obj-code and
                bf_rvs-line.state-measure-qnty = ?                      no-error .
-    if available bf_rvs-line then do:
+    
+    define variable is-vir as logical no-undo.
+    define variable v-value as character no-undo.
+    define variable v-ok as logical no-undo.
+
+    run placelib_get-attr(input {&place-virtual}
+                         ,input bf_rvs-line.obj-code
+                         ,input bf_rvs-line.obj-type
+                         ,input bf_rvs-line.pl-code
+                         ,output v-value
+                         ,output v-ok) no-error.
+
+    is-vir = if (v-ok and logical(v-value)) then true else false.
+    
+    if available bf_rvs-line and not is-gas(bf_rvs-line.gds-code) and not is-vir then do:
       {&SetCursorNo}
       run waitfram-hide in this-procedure .
       undo Main-Block, return error substitute( 'Не заданы фактические остатки по товару &1.'

@@ -16,6 +16,9 @@ Creation date: 09/05/07
 */
 
 { cmp/str-glbl.i }
+{ ref/gds-attr.i }
+{ str/is-gas.i }
+{ str/placelib.i }
 
 define input parameter parrecid as recid no-undo.
 
@@ -121,9 +124,28 @@ on stop    undo tr, return error
   if ub.rvs-doc.status_ = {&fact} then do:
     /* Проверка того что заданы значения по установленому количеству во всех сверках */
     for each ub.rvs-line no-lock where ub.rvs-line.rvs-code = ub.rvs-doc.rvs-code :
+      
+      if is-gas(ub.rvs-line.gds-code) then next.
+      
+      define variable is-vir as logical no-undo.
+      define variable v-value as character no-undo.
+      define variable v-ok as logical no-undo.
+
+      run placelib_get-attr(input {&place-virtual}
+                           ,input rvs-line.obj-code
+                           ,input rvs-line.obj-type
+                           ,input rvs-line.pl-code
+                           ,output v-value
+                           ,output v-ok) no-error.
+
+      is-vir = if (v-ok and logical(v-value)) then true else false.
+      
+      if is-vir then next.
+      
       if ub.rvs-line.state-measure-qnty = ? or
          ub.rvs-line.state-density      = ? or
          ub.rvs-line.state-density      = 0 then do:
+                  
          find ub.goods no-lock where ub.goods.gds-code = ub.rvs-line.gds-code.
          undo tr, return error
            substitute( "Вы не сделали сверку товара(не установлено кол-во или плотность): &1 &2 &3 &4 по месту хранения: &5",

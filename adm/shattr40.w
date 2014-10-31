@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,14 +8,14 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER locked_thbj-attr FOR ub.thbj-attr.
-DEFINE BUFFER X_shop FOR ub.shop.
-DEFINE BUFFER X_store FOR ub.store.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER locked_thbj-attr FOR thbj-attr.
+DEFINE BUFFER X_shop FOR shop.
+DEFINE BUFFER X_store FOR store.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -73,7 +73,7 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -84,8 +84,9 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help t-noanshftstaff
-&Scoped-Define DISPLAYED-OBJECTS t-noanshftstaff
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help t-noanshftstaff ~
+t-obyznumbukv t-minparol 
+&Scoped-Define DISPLAYED-OBJECTS t-noanshftstaff t-obyznumbukv t-minparol 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -100,23 +101,33 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE t-noanshftstaff AS LOGICAL INITIAL no
-     LABEL "Запрет на ввод произвольных данных при вводе персонала смены"
+DEFINE VARIABLE t-minparol AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0 
+     LABEL "Минимальная длина пароля" 
+     VIEW-AS FILL-IN 
+     SIZE 7.5 BY .78 NO-UNDO.
+
+DEFINE VARIABLE t-noanshftstaff AS LOGICAL INITIAL no 
+     LABEL "Запрет на ввод произвольных данных при вводе персонала смены" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 70 BY 1 NO-UNDO.
+
+DEFINE VARIABLE t-obyznumbukv AS LOGICAL INITIAL no 
+     LABEL "Обязательное сочетание цифровых и буквенных символов" 
      VIEW-AS TOGGLE-BOX
      SIZE 70 BY 1 NO-UNDO.
 
@@ -127,11 +138,13 @@ DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 95
-     t-noanshftstaff AT ROW 2.13 COL 4
-     SPACE(25.29) SKIP(4.16)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         TITLE "Параметры работы с персоналом"
+     t-noanshftstaff AT ROW 2.15 COL 4
+     t-obyznumbukv AT ROW 3.07 COL 4
+     t-minparol AT ROW 4.15 COL 27.5 COLON-ALIGNED WIDGET-ID 4
+     SPACE(62.24) SKIP(3.32)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "Параметры работы с пользователями и персоналом"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
 
@@ -157,14 +170,14 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -172,7 +185,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Опции закачки чеков */
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Параметры работы с пользователями и персоналом */
 DO:
   APPLY "END-ERROR":U TO SELF.
 END.
@@ -195,10 +208,22 @@ END.
 
 &Scoped-define SELF-NAME t-noanshftstaff
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-noanshftstaff Dialog-Frame
-ON VALUE-CHANGED OF t-noanshftstaff IN FRAME Dialog-Frame /* НЕТ ПРИЕМА ЧЕКОВ В МАГАЗИНЕ */
+ON VALUE-CHANGED OF t-noanshftstaff IN FRAME Dialog-Frame /* Запрет на ввод произвольных данных при вводе персонала смены */
 DO:
     ASSIGN
-  t-noanshftstaff.
+  t-obyznumbukv.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME t-obyznumbukv
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-obyznumbukv Dialog-Frame
+ON VALUE-CHANGED OF t-obyznumbukv IN FRAME Dialog-Frame /* Обязательное сочетание цифровых и буквенных символов */
+DO:
+    ASSIGN
+  t-obyznumbukv.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -207,7 +232,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -366,7 +391,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -385,12 +410,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-noanshftstaff
+  DISPLAY t-noanshftstaff t-obyznumbukv t-minparol 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-Help t-noanshftstaff
+  ENABLE B-exit b-quit B-Help t-noanshftstaff t-obyznumbukv t-minparol 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -399,7 +424,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 DEFINE VARIABLE ii AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-entry AS CHARACTER NO-UNDO.
@@ -447,6 +472,18 @@ FOR EACH thbjattr_thbj-attr:
     t-noanshftstaff:private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
     .
   END.
+  IF v-entry = {&attr-staff-options_obyznumbukv} THEN DO:
+    ASSIGN
+    t-obyznumbukv = thbjattr_thbj-attr.property-value-logical
+    t-obyznumbukv:private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+    .
+  END.
+  IF v-entry = {&attr-staff-options_minparol} THEN DO:
+    ASSIGN
+    t-minparol = thbjattr_thbj-attr.property-value-integer
+    t-minparol:private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+    .
+  END.
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
 END.
@@ -455,36 +492,52 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 ASSIGN
 FRAME {&FRAME-NAME}:TITLE = FRAME {&FRAME-NAME}:TITLE + (if p-obj-type = {&cmp} then " фирма" else " маг") + STRING(p-obj-code)
-v-tab-order = "t-noanshftstaff"
+v-tab-order = "t-noanshftstaff, t-obyznumbukv, t-minparol"
 .
-DISPLAY
-t-noanshftstaff
-WITH FRAME {&frame-name}.
-ENABLE
-B-exit WHEN p-mode = {&UPDATE}
-b-quit
-B-Help
-t-noanshftstaff WHEN p-mode = {&UPDATE}
-WITH FRAME {&frame-name}.
-VIEW FRAME {&frame-name}.
-IF p-mode = {&LOOKUP} THEN DO:
-  HIDE
-  b-exit
-  IN FRAME {&FRAME-NAME}.
-  ASSIGN
-  b-quit:LABEL = "&Выход"
-  .
-END.
+    IF p-obj-type = '' and p-obj-code = 0 THEN DO:
+        DISPLAY
+        t-noanshftstaff t-obyznumbukv t-minparol
+        WITH FRAME {&frame-name}.
+        ENABLE
+        B-exit WHEN p-mode = {&UPDATE}
+        b-quit
+        B-Help
+        t-noanshftstaff WHEN p-mode = {&UPDATE}
+        t-obyznumbukv WHEN p-mode = {&UPDATE}
+        t-minparol WHEN p-mode = {&UPDATE}
+        WITH FRAME {&frame-name}.
+    END.
+    ELSE DO:
+        DISPLAY
+        t-noanshftstaff
+        WITH FRAME {&frame-name}.
+        ENABLE
+        B-exit WHEN p-mode = {&UPDATE}
+        b-quit
+        B-Help
+        t-noanshftstaff WHEN p-mode = {&UPDATE}
+        WITH FRAME {&frame-name}.        
+    END.
+    VIEW FRAME {&frame-name}.
+    IF p-mode = {&LOOKUP} THEN DO:
+      HIDE
+      b-exit
+      IN FRAME {&FRAME-NAME}.
+      ASSIGN
+      b-quit:LABEL = "&Выход"
+      .
+    END.
+        
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -500,7 +553,7 @@ DEFINE VARIABLE v-t-shft AS integer NO-UNDO.
 IF p-mode = {&LOOKUP} THEN RETURN ERROR.
 ASSIGN
 FRAME {&FRAME-NAME}
-t-noanshftstaff
+t-noanshftstaff t-obyznumbukv t-minparol
 .
 
 assign

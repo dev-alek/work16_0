@@ -373,6 +373,11 @@ ON STOP UNDO _main, LEAVE _main :
     end.
 
   end. /*for each buf_sale-doc*/
+  /* Удалим sale-doc  с order = 0 */
+  for each buf_sale-doc where buf_sale-doc.inkas-code = p-inkas-code
+                          and buf_sale-doc.order = 0:
+    delete buf_sale-doc.
+  end.
   /*ii = 1  внутренний */
   /* ii = 2 межфирма*/
   /*начинаем закрытие документов перемещения*/

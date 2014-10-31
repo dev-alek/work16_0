@@ -103,10 +103,14 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                             )
     buf_c-ext-classif.corr-date          = v-date
     .
-    run gen-key-fv in this-procedure ( input ub.ext-classif.uniq-key-rec
-                                     , output v-field-list
-                                     , output v-value-list
-                                     ).
+    if lookup(ub.ext-classif.classif-name, {&extclass_extended-data-list}) = 0 then /* Проверка: в списке {&extclass_extended-data-list} - перечень данных без привязки к физическим таблицам ТН. Если находим таковые записи, то обходим формирование ключа, который ищет физические таблицы в ТН. */
+        do: /* A-1 */
+            run gen-key-fv in this-procedure ( input ub.ext-classif.uniq-key-rec
+                                                , output v-field-list
+                                                , output v-value-list
+                                                ).
+            end. /* A-1 */
+            
     case ub.ext-classif.classif-subject :
       when {&table_clients} then do:
         assign

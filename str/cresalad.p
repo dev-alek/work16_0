@@ -25,6 +25,11 @@ define input parameter p-doc-kind as character no-undo .
 тогда генеритс€ документ списани€ на контрагента, определ€емого соответствующими атрибутами фирмы
 */
 define input parameter p-office as character no-undo .
+
+/* ƒл€ определени€ контрагента при создании доп документа в соотв. с атрибутом типа оплаты */
+define input parameter p-cli-type as character no-undo .
+define input parameter p-cli-code as integer no-undo .
+
 /*ключевое слово, описывающее “»ѕ “ќ¬ј–ј*/
 define output parameter p-doc-code like ub.trn-doc.doc-code no-undo .
 /*номер сгенеренного документа*/
@@ -125,7 +130,7 @@ on error undo, return error return-value
   if error-status:error then do:
     message
     vss-workfile vss-revision vss-description skip
-    substitute("Ќеверно опеределено или не определено правило создани€ номера документа дл€ дополнительного документа по продаже вида &1"
+    substitute("Ќеверно определено или не определено правило создани€ номера документа дл€ дополнительного документа по продаже вида &1"
                 , {&sale-doc-name}
                )
     view-as alert-box error .
@@ -156,7 +161,7 @@ on error undo, return error return-value
   else do:
     if available buf_trn-doc then return.
   end.
-  if lookup(p-doc-kind, {&sale-add-kinds}) > 0 then do:
+  if lookup(p-doc-kind, {&sale-add-kinds}) > 0 and p-cli-code = 0 and p-cli-type = "" then do: /* проверил, что это не атрибут платежа */
     /*найдем контрагента*/
     run adm/shattri.p (
         input "get":U
@@ -266,6 +271,8 @@ on error undo, return error return-value
     when {&sale-add-return-write-off}
     or
     when {&sale-add-write-off}
+    or
+    when {&sale-add-vir-res}
     then do:
       case buf_main_trn-doc.obj-type :
         when {&shop} then do:
@@ -282,8 +289,7 @@ on error undo, return error return-value
       v-mes = '':U.
       assign
       v-ext-doc-type       = entry(lookup(p-doc-kind, {&sale-add-kinds}), {&sale-add-ext-doc-types})
-      v-doc-type           = {&write-off}
-      v-cli-name           = buf_clients.obj-name
+      v-cli-name           = if available(buf_clients) then buf_clients.obj-name else ''
       v-internal = no
       v-pay-code = v-down-pay
       v-ps = '':U
@@ -291,10 +297,23 @@ on error undo, return error return-value
               then {&inquiry}
               else {&doc-froze})
       v-purch-code  = ?
-      v-discnt-type = {&row}
-      .
+      v-discnt-type = {&row}.
+      v-doc-type = if p-doc-kind = {&sale-add-vir-res} then {&expense} else {&write-off}.
     end.
   END CASE.
+  
+  /*  онтрагент при создании доп. док-та по атрибуту типа платежа */
+  if p-cli-type <> "" and p-cli-code > 0 then do:
+    for first buf_clients no-lock
+      where buf_clients.obj-type = p-cli-type
+      and buf_clients.obj-code = p-cli-code:
+        assign
+        v-cli-type = buf_clients.obj-type
+        v-cli-code = buf_clients.obj-code
+        v-cli-name = buf_clients.obj-name.
+    end.
+  end. /*  if p-cli-type */
+
   { str/crtrndoc.i
     ?
     ?

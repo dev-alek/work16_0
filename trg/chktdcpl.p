@@ -33,6 +33,8 @@ define variable vss-description as character no-undo initial "Проверка всех това
 { gbl/clntattr.i }
 { ref/gds-attr.i }
 { str/valddnst.i def      }
+{ str/is-gas.i }
+{ str/placelib.i }
 
 do
 on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
@@ -66,6 +68,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-after-cli-qnty  as decimal   no-undo .
   define variable v-last-invlin     as recid     no-undo .
 
+  define variable is-vir as logical no-undo.
+  define variable v-value as character no-undo.
+  define variable v-ok as logical no-undo.
+  
   define buffer buf_doc-line      for ub.doc-line.
   define buffer buf_inv-line      for ub.inv-line.
   define buffer buf_trn-doc       for ub.trn-doc.
@@ -203,7 +209,23 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               ,output v-attr-value
               ,output v-attr-type
               ) .
-            if lookup(v-attr-value, 'true,yes':u) = 0 then do:
+            
+            find first buf_doc-pl no-lock
+                where buf_doc-pl.obj-type = buf_doc-line.obj-type
+                and buf_doc-pl.obj-code = buf_doc-line.obj-code
+                and buf_doc-pl.out-code = buf_doc-line.doc-code
+                and buf_doc-pl.gds-code = buf_goods.gds-code no-error.
+            
+            run placelib_get-attr(input {&place-virtual}
+                                 ,input buf_doc-pl.obj-code
+                                 ,input buf_doc-pl.obj-type
+                                 ,input buf_doc-pl.pl-code 
+                                 ,output v-value
+                                 ,output v-ok) no-error.
+
+            is-vir = if (v-ok and logical(v-value)) then true else false.
+            
+            if lookup(v-attr-value, 'true,yes':u) = 0 and not is-gas(buf_goods.gds-code) and not is-vir then do:
               assign
                 v-chk-rvs = true
               .
@@ -248,6 +270,26 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           and buf_goods.prod-type = buf_doc-line.prod-type
           and buf_goods.prod-code = buf_doc-line.prod-code
       .
+      
+      if is-gas(buf_goods.gds-code) then next.
+      
+      find first buf_doc-pl no-lock
+                where buf_doc-pl.obj-type = buf_doc-line.obj-type
+                and buf_doc-pl.obj-code = buf_doc-line.obj-code
+                and buf_doc-pl.out-code = buf_doc-line.doc-code
+                and buf_doc-pl.gds-code = buf_goods.gds-code no-error.
+            
+      run placelib_get-attr(input {&place-virtual}
+                           ,input buf_doc-pl.obj-code
+                           ,input buf_doc-pl.obj-type
+                           ,input buf_doc-pl.pl-code 
+                           ,output v-value
+                           ,output v-ok) no-error.
+
+      is-vir = if (v-ok and logical(v-value)) then true else false.
+      
+      if is-vir then next.
+      
       { gbl/gdsobjat.i
         buf_doc-line.obj-type
         buf_doc-line.obj-code
@@ -732,6 +774,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             find first buf-prev_inv-line no-lock
               where recid( buf-prev_inv-line ) = v-last-invlin
               no-error .
+
+            IF AVAILABLE buf-prev_inv-line THEN DO :
             case buf_trn-doc.doc-type :
               when {&inventory} then do:
                 assign
@@ -780,6 +824,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                                             ).
             end.
             end.
+            END.
 
             find first buf-next_doc-line
               where buf-next_doc-line.obj-type   = buf_doc-line.obj-type

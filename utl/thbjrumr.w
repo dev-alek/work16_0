@@ -825,8 +825,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
            then entry(3, p-parameter, {&delim-par})
            else '').
   find first buf_rule-process no-error.
-  if not available buf_rule-process then do:
-    run pch-link_fill-ruleproc in this-procedure .
+  if not available buf_rule-process
+  then do:
+    message
+      "Нарушение целосности машины правил: нет записей в таблице rule-process. Обратитесь к администратору системы"
+      view-as alert-box error.
+    undo, return error.
   end.
   case v-profile-type:
     when {&table_goods} then do:

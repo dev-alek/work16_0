@@ -99,6 +99,8 @@ define variable v-input-error as logical no-undo .
 { str/lib-trn.i }
 { str/chksplin.i }
 { gbl/thbjattr.i }
+{ ref/gds-attr.i }
+{ str/is-gas.i }
 
 define variable v-obj-type like ub.inkas.obj-type no-undo .
 define variable v-obj-code like ub.inkas.obj-code no-undo .
@@ -111,7 +113,8 @@ DEFINE VARIABLE sys-today as date no-undo .
 define variable v-back-date as logical no-undo .
 define variable force-auto-fbr as logical no-undo .
 define variable force-tpsi-obj as logical no-undo .
-define variable ii as integer no-undo .
+define variable ii as integer no-undo . /* пожалуйста, не трогайте ее */
+define variable jj as integer no-undo.
 define variable v-notes as character no-undo .
 define variable case-num as integer no-undo .
 define variable v-fbr-income-doc-code like ub.trn-doc.doc-code no-undo .
@@ -149,6 +152,7 @@ define variable v-value-date      as date      no-undo .
 define variable v-value-decimal   as decimal   no-undo .
 define variable v-value-integer   as integer   no-undo .
 define variable v-close-day-period AS LOGICAL no-undo .
+define variable v-log-handle as handle no-undo.
 
 
 define buffer buf_cash-pay for ub.cash-pay.
@@ -320,8 +324,27 @@ define variable v-is-inquiry as logical no-undo .
 define variable v-shift-date as date no-undo .
 define variable v-shift-num as integer no-undo .
 define variable v-shift-name as character no-undo .
+define variable v-value-character as character no-undo .
+define variable v-value-date as date no-undo .
+define variable v-value-decimal as decimal no-undo .
+define variable v-value-integer as INTEGER no-undo .
+define variable v-value-logical AS LOGICAL no-undo .
+define variable v-param-type as character no-undo .
+define variable v-found as decimal no-undo.
+define variable v-tth as handle no-undo .
+define variable v-entry as character no-undo.
+define variable v-gas-cli-type as character no-undo.
+define variable v-gas-cli-code as integer no-undo.
+define variable v-run-tpsi-line as logical no-undo.
+define variable v-new_doc-code as character no-undo.
+define variable v-root-node as integer no-undo.
+
 define buffer buf_shift-obj for ub.shift-obj.
 define buffer tpsi_sale-doc for ub.sale-doc.
+define buffer buf-new_trn-doc for ub.trn-doc.
+define buffer buf_goods for ub.goods.
+define buffer buf_doc-line for ub.doc-line.
+define buffer buf_sale-doc for ub.sale-doc.
 
 do
 on error undo, return error return-value
@@ -456,11 +479,7 @@ on error undo, return error return-value
   if NOT can-find( first ub.chk-doc NO-LOCK where ub.chk-doc.out-code = buf_inkas.inkas-code ) then  do:
     return error substitute("Отчет о продаже N&1 пуст. Закрытие невозможно.", buf_inkas.inkas-code).
   end.
-  define variable v-param-type as character no-undo .
-  define variable v-value-date as date no-undo .
-  define variable v-value-decimal as decimal no-undo .
-  define variable v-value-integer as INTEGER no-undo .
-  define variable v-tth as handle no-undo .
+  
   run fbrhist-read-conf in this-procedure .
   if p-auto < 2 then do:
     if NOT auto-close then do:
@@ -611,6 +630,90 @@ on error undo, return error return-value
     if error-status:error then undo f-close, return error.
     else compensed = yes.
     run set-compensed in p-parent-handle(input compensed) no-error .
+    
+    if buf_trn-doc.ext-doc-type = {&TDEDT_ras_vnesh_kass} then do:
+
+        run thbjattr_value in this-procedure (input v-obj-type
+                                             ,input v-obj-code
+                                             ,input {&attr-autosale}
+                                             ,input {&attr-autosale_sale-add}
+                                             ,output v-value-character
+                                             ,output v-value-date
+                                             ,output v-value-decimal
+                                             ,output v-value-integer
+                                             ,output v-value-logical
+                                             ,output v-param-type
+                                             ,output v-found) no-error.
+        
+        assign
+        v-gas-cli-type = ""
+        v-gas-cli-code = 0.
+                
+        jj:
+        do jj = 1 to num-entries(v-value-character, ';':U):
+            v-entry = entry(jj, v-value-character, ';':U).
+            if entry(1, v-entry) = {&sale-add-nat-gas} and integer(entry(3, v-entry)) > 0 then do: /* В контрагенте на природный газ кто-то стоит */
+                assign
+                v-gas-cli-type = entry(2, v-entry)
+                v-gas-cli-code = integer(entry(3, v-entry)).
+                leave jj.
+            end.
+        end. /*do jj*/
+        
+        if v-gas-cli-code > 0 then do:
+            
+            for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code:
+                
+                find first buf_goods where buf_goods.prod-code = buf_doc-line.prod-code
+                                       and buf_goods.prod-type = buf_doc-line.prod-type
+                                       and buf_goods.artic = buf_doc-line.artic no-lock.
+                                        
+                /* Проверим, если газ */
+                if is-gas(buf_goods.gds-code) then do:
+                    
+                    find first buf_sale-doc where buf_sale-doc.inkas-code = p-inkas-code.
+                    
+                    run str/gas-autosl.p (input parparentproc,
+                                          input p-log-handle,
+                                          input log-file-name,
+                                          input p-auto,
+                                          input p-inkas-code,
+                                          input v-curr-r-b,
+                                          input v-gas-cli-type,
+                                          input v-gas-cli-code,
+                                          output v-new_doc-code,
+                                          output v-root-node,
+                                          buffer buf_trn-doc,
+                                          buffer buf_doc-line,
+                                          buffer buf-new_trn-doc).
+                    assign   /* Очищаем переменные, чтобы резервирование не воспринималось с компенсацией  */
+                    r-qnty = 0
+                    r-b-code = ?
+                    r-pl-code = ?
+                    rgds-dtl = ?.
+                    run RSRV-line in this-procedure (input 1,
+                                                     input no,
+                                                     input no,
+                                                     input yes,
+                                                     input no,
+                                                     input v-new_doc-code,
+                                                     input no,
+                                                     input no,
+                                                     input yes,
+                                                     input buf_goods.gds-code,
+                                                     input v-root-node,
+                                                     output v-run-tpsi-line,
+                                                     buffer buf_doc-line,
+                                                     buffer buf_trn-doc,
+                                                     buffer buf_sale-doc).
+                end. /*if is-gas(buf_goods.gds-code) */
+            
+            end. /*  for each buf_doc-line */
+            
+        end. /* if v-gas-cli-code > 0 */
+            
+    end. /* if buf_trn-doc.ext-doc-type */
+    
     RUN button-close in this-procedure (
                                              buffer buf_trn-doc
                                             ,buffer buf_ret-doc
@@ -2001,8 +2104,8 @@ DO ON ERROR undo _main, return error:
 
     run gbl/calc-trn.p ( input parparentproc, input recid(locked_trn-doc)).
 &scop sale-doc-kind buf_sale-doc.doc-kind
-
-    if buf_sale-doc.doc-kind = {&sale-add-tech-refuell} then do:
+    if buf_sale-doc.doc-kind = {&sale-add-tech-refuell} or buf_sale-doc.doc-kind = {&sale-add-vir-res} 
+        or buf_sale-doc.doc-kind = 'none' or (not p-is-catering and buf_sale-doc.doc-kind = {&sale-add-write-off}) then do:
     end.
     else do:
       if buf_sale-doc.in-inkas then
@@ -2017,7 +2120,7 @@ DO ON ERROR undo _main, return error:
                               , current-netto
                             ).
             .
-      if buf_sale-doc.doc-type = {&write-off} then
+      if buf_sale-doc.doc-type = {&write-off} then do:
       assign
       current-write-off = if v-curr-r-b = {&r-b-rubl}
                   then locked_trn-doc.tot-sale - locked_trn-doc.discnt-rubl
@@ -2028,6 +2131,7 @@ DO ON ERROR undo _main, return error:
                               , {&sale-doc-name}
                               , current-write-off
                             ).
+    end.
     end.
   end. /*ОСНОВНЫЕ ДОКУМЕНТЫ ПОСЧИТАЛИ*/
   if abs(locked_inkas.netto - (for-netto  - (locked_inkas.sub-discnt - for-write-off))) > 0.015
@@ -2353,13 +2457,18 @@ DO ON ERROR undo _main, return error:
           v-note-compense = '':U
           .
         end. /*if available buf_sale-doc and return-write-off*/
-        if available buf_sale-doc
-        and buf_sale-doc.doc-kind = {&sale-add-tech-refuell} then do:
+        if available buf_sale-doc then do:
+            if buf_sale-doc.doc-kind = {&sale-add-tech-refuell} then do:
           assign
           v-ps-label = "Техпролив"
-          v-note-compense = '':U
-          .
-        end. /*if available buf_sale-doc and tech-refuell*/
+              v-note-compense = '':U.
+            end.
+            if buf_sale-doc.doc-kind = {&sale-add-vir-res} then do:
+              assign
+              v-ps-label = "Перемещение в виртуальный резервуар"
+              v-note-compense = '':U.
+            end.
+        end. /*if available buf_sale-doc*/
         if available buf_sale-doc
         and buf_sale-doc.doc-kind = {&sale-add-write-off} then do:
           assign
@@ -2511,6 +2620,7 @@ DO ON ERROR undo _main, return error:
           end.
           find first locked_trn-doc where recid(locked_trn-doc) = v-rec-id no-lock.
         end.
+        
         if available buf_sale-doc
         and buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do:
             run adm/shattri.p (
@@ -2539,7 +2649,7 @@ DO ON ERROR undo _main, return error:
           end. /*if varminus-parts = "yes":u then do:*/
         end.
         if available buf_sale-doc
-        and buf_sale-doc.doc-kind = {&sale-add-tech-refuell} then do:
+        and (buf_sale-doc.doc-kind = {&sale-add-tech-refuell} or buf_sale-doc.doc-kind = {&sale-add-vir-res}) then do:
           &scop my-message substitute("Создание приходной накладной по Техпроливу в статусе &1...", {&wayb})
           {&display-message}.
           run str/techrfsl.p (input parparentproc
@@ -2548,6 +2658,7 @@ DO ON ERROR undo _main, return error:
                         ,input p-auto
                         ,input v-curr-r-b
                         ,input close-in-rfsl
+                        ,input buf_sale-doc.doc-kind
                         ,buffer locked_trn-doc
                         ,buffer buf-in
                         ) no-error .

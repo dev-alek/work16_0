@@ -81,7 +81,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scop batch-edit-cp-attr-is-use  0
 
 
-/* префиксы платежных каhт  */
+/* префиксы платежных карт  */
 &scop bef-cp-attr-paycard-all-prefix paycard-all-prefix
 &glob cp-attr-paycard-all-prefix '{&bef-cp-attr-paycard-all-prefix}':U
 &scop type-cp-attr-paycard-all-prefix {&type-char}
@@ -135,10 +135,29 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scop batch-edit-cp-attr-form_km3  0
 
 
+/* Создание дополнительного документа */
+&scop bef-cp-attr-dop-doc dop-doc
+&glob cp-attr-dop-doc '{&bef-cp-attr-dop-doc}':U
+&scop type-cp-attr-dop-doc {&type-char}
+&scop format-cp-attr-dop-doc "X(255)"
+&scop label-cp-attr-dop-doc "Дополнительный документ"
+&scop tooltip-cp-attr-dop-doc "Дополнительный документ"
+/*область действия  - глобально или фирма или объект*/
+&scop range-cp-attr-dop-doc ~{&bef-global-int~}
+&scop user-can-edit-cp-attr-dop-doc true
+&scop output-display-cp-attr-dop-doc true
+&scop other-cp-attr-dop-doc 'spr=dop-doc':u
+&scop news-cp-attr-dop-doc true
+&scop hist-cp-attr-dop-doc true
+&scop manual-edit-cp-attr-dop-doc 1
+&scop batch-edit-cp-attr-dop-doc 0
+
+
 /* сюда добавлять новые параметры */
 &glob cp-attr-list '{&bef-cp-attr-paycard-export-prefix}~
 ,{&bef-cp-attr-grp-code}~
 ,{&bef-cp-attr-is-use}~
+,{&bef-cp-attr-dop-doc}~
 ,{&bef-cp-attr-paycard-all-prefix}~
 ,{&bef-cp-attr-paycard-edit-prefix}~
 ,{&bef-cp-attr-form_km3}~
@@ -215,6 +234,8 @@ procedure cp-attr-code :
       {&attr-temp-full-code}
       &scop attr-code cp-attr-is-use
       {&attr-temp-full-code}
+      &scop attr-code cp-attr-dop-doc
+      {&attr-temp-full-code}
       &scop attr-code cp-attr-paycard-all-prefix
       {&attr-temp-full-code}
       &scop attr-code cp-attr-paycard-edit-prefix
@@ -247,6 +268,8 @@ procedure cp-attr-tooltip :
       &scop attr-code cp-attr-grp-code
       {&attr-temp-code}
       &scop attr-code cp-attr-is-use
+      {&attr-temp-code}
+      &scop attr-code cp-attr-dop-doc
       {&attr-temp-code}
       &scop attr-code cp-attr-paycard-all-prefix
       {&attr-temp-code}
@@ -523,6 +546,8 @@ procedure cp-attr-news :
       {&attr-news-code}
       &scop attr-code cp-attr-is-use
       {&attr-news-code}
+      &scop attr-code cp-attr-dop-doc
+      {&attr-news-code}
       &scop attr-code cp-attr-paycard-all-prefix
       {&attr-news-code}
       &scop attr-code cp-attr-paycard-edit-prefix
@@ -730,6 +755,8 @@ do on error undo, return error return-value
       {&attr-manual-edit-code}
       &scop attr-code cp-attr-is-use
       {&attr-manual-edit-code}
+      &scop attr-code cp-attr-dop-doc
+      {&attr-manual-edit-code}
       &scop attr-code cp-attr-paycard-all-prefix
       {&attr-manual-edit-code}
       &scop attr-code cp-attr-form_km3
@@ -762,6 +789,8 @@ do
       {&attr-batch-edit-code}
       &scop attr-code cp-attr-is-use
       {&attr-batch-edit-code}
+      &scop attr-code cp-attr-dop-doc
+      {&attr-batch-edit-code}
       &scop attr-code cp-attr-form_km3
       {&attr-batch-edit-code}
 
@@ -775,6 +804,47 @@ do
 end procedure.
 
 
+procedure dop-doc :
+define input parameter p-cdpay-code like ub.cash-pay-attr.cdpay-code no-undo .
+define input parameter p-curr-code like ub.cash-pay-attr.curr-code no-undo .
+define input parameter p-host-code like ub.cash-pay-attr.host-code no-undo .
+define input parameter p-obj-type like ub.cash-pay-attr.obj-type no-undo .
+define input parameter p-obj-code like ub.cash-pay-attr.obj-code no-undo .
+define input-output parameter p-value as character no-undo .
+define output parameter p-setted as logical no-undo .
+DEFINE VARIABLE v-value as character no-undo .
+define variable v-codes as character no-undo .
+define variable v-labels as character no-undo .
+define variable v-ok as logical no-undo .
+
+
+  do on error undo, return error:
+        
+    assign
+    v-value = p-value.
+    
+    run ref/cpa-dop-doc.w (
+                   input parparentproc
+                  ,input p-cdpay-code
+                  ,input p-curr-code
+                  ,input p-host-code
+                  ,input p-obj-type
+                  ,input p-obj-code
+                  ,input-output v-value
+                  ,output v-ok
+                   ) no-error .
+
+    if
+    v-ok and
+    p-value <> v-value and v-value <> ? and not error-status:error then do:
+      assign
+      p-setted = yes
+      p-value = v-value
+      .
+    end.
+  end.
+
+end procedure. /* dop-doc */
 
 &endif
 /*of interface*/

@@ -591,6 +591,13 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
     end. /*if error-status :error*/
   end. /*for each buf_sale-doc*/
 
+  /* ”далим sale-doc  с order = 0 */
+  for each buf_sale-doc where buf_sale-doc.inkas-code = parinkas-code
+                          and buf_sale-doc.order = 0:
+      delete buf_sale-doc.
+  end.
+  
+
   if available supp_trn-doc
   then do:
       assign

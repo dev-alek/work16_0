@@ -86,7 +86,6 @@ define variable vss-description as character no-undo initial "Задание док. и фак
 { trg/partsplt.i }
 { gbl/ptrlprop.i def            }
 { str/in-ptrl.i  def one-line   }
-{ ref/gds-attr.i }
 { str/prslnew.i "proc"         }
 { gbl/lineattr.i    }
 { gbl/getsect.i  def }

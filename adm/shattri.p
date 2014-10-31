@@ -2547,7 +2547,7 @@ end.
       end.
     end.
     when {&attr-staff-options} then do:
-    v-prop-code = "{&bef-attr-staff-options_noanshftstaff}".
+    v-prop-code = "{&bef-attr-staff-options_noanshftstaff},{&bef-attr-staff-options_obyznumbukv}".
 
 &scop ptype logical
 &scop prop-value no
@@ -2556,6 +2556,15 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+    
+    v-prop-code = "{&bef-attr-staff-options_minparol}".
+&scop ptype integer
+&scop prop-value 0
+&scop prop-code entry(v-ii, v-prop-code)
+
+        do v-ii = 1 to num-entries(v-prop-code):
+          {&create-thbj-attr}.
+        end.
     end.
     when {&attr-izt-rul} then do:
       v-prop-code = "izt-rul".

@@ -126,7 +126,7 @@ v-label-param =
  + "is-credit-card" + {&delim-par} + "Кред.карта" + {&delim-par} + "" + {&delim-flf}
  + "is-debet-card" + {&delim-par} + "Расчетн.карта" + {&delim-par} + "" + {&delim-flf}
  + "is-goods-pay" + {&delim-par} + "Платеж за товары" + {&delim-par} + "" + {&delim-flf}
- + "is-service-pay" + {&delim-par} + "Платеж за услуги" + {&delim-par} + "" + {&delim-flf}
+ + "is-service-pay" + {&delim-par} + "Сервисный платеж" + {&delim-par} + "" + {&delim-flf}
  + "obj-name" + {&delim-par} + "Название" + {&delim-par} + "" + {&delim-flf}
  + "pay-card-view" + {&delim-par} + "Виден N плат.карты" + {&delim-par} + "" + {&delim-flf}
  + "pay-code" + {&delim-par} + "Оплата" + {&delim-par} + "" + {&delim-flf}

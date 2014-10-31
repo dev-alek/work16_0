@@ -45,6 +45,16 @@ define variable vss-description as character no-undo init "Диалог задания пароля
 { cmp/library.i  }
 { cmp/showinf.i  }
 
+define variable v-param-type as character no-undo .
+define variable v-value-character AS character no-undo .
+define variable v-value-date as date no-undo .
+define variable v-value-decimal as decimal no-undo .
+define variable v-value-integer as INTEGER no-undo .
+define variable v-value-logical as logical no-undo .
+define variable v-noanshftstaff as logical no-undo .
+define variable v-obyznumbukv as logical no-undo .
+define variable v-minparol as INTEGER no-undo .
+define variable v-tth as handle no-undo .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -176,6 +186,26 @@ ASSIGN
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
+
+/* ***********  Function Definisions  *********** */
+function check_alphanumeric returns logical (input pass as character):
+    DEFINE VARIABLE int_pass AS INTEGER NO-UNDO.
+    DEFINE VARIABLE iChar AS integer NO-UNDO.
+    DEFINE VARIABLE cChar AS CHARACTER NO-UNDO.
+
+    assign int_pass = integer(pass) no-error. /*  */
+    if error-status :error then do:
+        DO iChar = 1 TO LENGTH(pass):
+            ASSIGN cChar = SUBSTRING(pass,iChar,1).
+            if index("1234567890", cChar) > 0 then do:
+                return True.
+            end.
+        end.
+    end.
+    
+    return false.
+    
+end function.
 
 
 
@@ -349,6 +379,59 @@ PROCEDURE change-password :
         view-as alert-box information .
       apply 'entry':U to fi-new-password .
       undo, return error return-value .
+    end.
+    
+    run adm/shattri.p (
+        input "get":U
+        ,input  '':U
+        ,input  0
+        ,input  {&attr-staff-options}
+        ,input  {&attr-staff-options_minparol} /*p-param-code*/
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-minparol
+        ,output v-value-logical
+        ,output v-param-type
+        ,INPUT-OUTPUT table-handle v-tth
+        )  .
+   
+    
+    if v-minparol <> 0 /* вместо false будет Проверка длины включена и задана */ then do:
+        if length(fi-new-password) < v-minparol /* тут будет переменная из thbjattr */
+        then do:
+          message
+            "Длина поля должна быть не менее "  v-minparol
+            view-as alert-box information .
+          apply 'entry':U to fi-new-password .
+          undo, return error return-value .
+        end.
+    end.
+    
+    run adm/shattri.p (
+        input "get":U
+        ,input  '':U
+        ,input  0
+        ,input  {&attr-staff-options}
+        ,input  {&attr-staff-options_obyznumbukv} /*p-param-code*/
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-obyznumbukv
+        ,output v-param-type
+        ,INPUT-OUTPUT table-handle v-tth
+        )  .
+    
+    if v-obyznumbukv = true /* вместо false будет Проверка численнобуквенная включена */ then do:
+        if not check_alphanumeric(fi-new-password) /* тут будет переменная из thbjattr */
+        then do:
+          message
+            "В пароле должны содержаться буквы и цифры"
+            view-as alert-box information .
+          apply 'entry':U to fi-new-password .
+          undo, return error return-value .
+        end.
     end.
 
     if fi-new-password-2 = '':U

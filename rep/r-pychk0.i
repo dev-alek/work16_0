@@ -441,7 +441,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           .
         end. /*if pychk_dop-sumg = 0 then do:*/
         assign
-        pychk_dop-sumk = min(abs(pychk_dop-sumg), abs(pychk_dop-sump))  * (if pychk_dop-sump > 0 then 1 else -1 ) /*квант*/
+        pychk_dop-sumk = min(abs(pychk_dop-sumg), abs(pychk_dop-sump))  * (if pychk_dop-sump > 0 then 1 else -1 ) * (if pychk_dop-sumg < 0 AND ub.chk-doc.chk-type = {&bef-rcpt-sale} then -1 else 1 ) /*квант*/
         pychk_pay-sum = pychk_pay-sum - pychk_dop-sumk
         pychk_dop-sump = pychk_dop-sump - pychk_dop-sumk
         pychk_dop-sumg = pychk_dop-sumg - pychk_dop-sumk

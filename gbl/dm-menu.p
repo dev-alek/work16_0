@@ -4535,6 +4535,20 @@ define input parameter p-action as character no-undo .   */
   ) no-error.
 end procedure. /* run-2cashpay */
 
+procedure m-catalog-oss-exe :
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/sendcoss.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U)
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка данных по справочнику ОСС ")
+  ) no-error.
+
+end procedure. /* m-catalog-oss-exe */
+
 procedure m-cash-dept-exe :
   define variable v-obj-db-num  as integer   no-undo initial ? .
 
@@ -8485,6 +8499,24 @@ procedure m-obj-rvinv-exe :
 
 end procedure. /* m-obj-rvinv-exe */
 
+procedure m-oss-ref :
+    define variable v-rid-list as character no-undo.
+    define variable v-mode as character no-undo.
+  do
+  on error undo, return error return-value
+  :
+    v-mode = "". /* возможное значение - "v-sel", т.е. активизация возможности выбора произвольных строк в браузере ОСС. */
+
+    run ref/oss-ref.w
+        (
+        input parparentproc,
+        input v-mode,
+        input v-cntxt-db-num,
+        output v-rid-list
+        ) no-error.
+  end.
+
+end procedure. /* m-oss-exe */
 
 procedure m_autopush-exe :
 
