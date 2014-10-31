@@ -26,6 +26,11 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &SCOPED-DEFINE num-name   string(" N " + string(t-scales.scales-num) + " - " + t-scales.scales-name)
 &SCOPED-DEFINE num-name-type  string(" N " + string(t-scales.scales-num) + " - " + t-scales.scales-name + " тип " + t-scales.scales-type)
 
+/* Пригодится для определения программы весов т.к. новый exe файл может отсылать, но не удалять */
+&SCOPED-DEFINE scale-prog-16 replace(ENTRY(LOOKUP("CAS_LP-15v1.6", ini-types), ini-progs), "\", "/")
+
+/* Так же нужно завести для 5000j если останется старый exe и будет новый */
+
 PROCEDURE SetCurrentDirectoryA EXTERNAL "KERNEL32.DLL":
     DEFINE INPUT PARAMETER chrCurDir AS CHARACTER.
     DEFINE RETURN PARAMETER SetCurrentDirectoryAResult AS LONG.
@@ -37,6 +42,7 @@ DEFINE VARIABLE var-tara-string as character no-undo .
 DEFINE VARIABLE var-param-code as character no-undo .
 DEFINE VARIABLE v-value as character no-undo .
 DEFINE VARIABLE par-type as character no-undo .
+
   CASE loc-scales.scales-type:
     when "TIGER":U
     or
@@ -98,6 +104,14 @@ DEFINE VARIABLE ii as integer no-undo .
           if p-dec-delim = {&comma-char} then do:
             var-wt-cart-str = replace(var-wt-cart-str, ".", {&comma-char}).
           end.
+        end.
+        when "CAS_LP-15v1.6" then do:
+            if {&scale-prog-16} = "exe/CAScentre.exe" then
+                assign
+                var-wt-cart-str = trim(string(par-wt-cart)).
+            else 
+                assign
+                var-wt-cart-str = string(par-wt-cart * 1000, "->>,>>9.999").
         end.
         otherwise do:
           assign
@@ -167,6 +181,7 @@ define variable v-format as character no-undo .
 define variable v-attr-code as character no-undo .
 define variable v-dop as character no-undo .
 define variable v-struct1 as character no-undo .
+
 CASE p-scales-type:
   when "CAS_lp-16x" then do:
     assign
@@ -176,6 +191,14 @@ CASE p-scales-type:
     v-line-length = 50
     v-attr-code = {&attr-8x50}
     .
+  end.
+  when "CAS_LP-15v1.6_new" then do:
+      assign
+      v-rows-num = 8
+      v-format = "X(50)"
+      v-line-length = 50
+      v-attr-code = {&attr-8x50}
+      .
   end.
   when "DIGI-SM" then do:
     assign
@@ -216,7 +239,7 @@ CASE p-scales-type:
     v-attr-code = {&attr-8x50}
     .
   end.
-
+  
 END CASE.
 if v-attr-code <> '':U
 and p-gds-code > 0
@@ -280,7 +303,7 @@ CASE p-scales-type:
       v-entry = replace(v-entry, {&new-line}, {&space-char} )
       .
       assign
-      v-struct = v-struct +  {&space-char} +  {&double-quote} +  string(v-entry, v-format) + {&double-quote}
+      v-struct = v-struct +  {&space-char} +  {&double-quote} +  string(v-entry, v-format) + "" + {&double-quote}
       .
     end.
     if v-rows < v-rows-num then do:
@@ -325,6 +348,22 @@ CASE p-scales-type:
       .
     end.
   end.
+  when "CAS_LP-15v1.6_new"
+  then do:
+    if {&scale-prog-16} = "exe/CAScentre.exe" then do:
+        /* Всё в одну строчку. Т.к. это csv то ; заменим */
+        do ii = 1 to min(v-rows-num, num-entries(p-struct, {&delim-par})):
+          assign
+          v-entry = trim(entry(ii, p-struct, {&delim-par}))
+          v-entry = replace(v-entry, ";", {&space-char} )
+          v-entry = replace(v-entry, {&new-line}, {&space-char} )
+          .
+          assign
+          v-struct = v-struct + (if v-entry <> "" then " " else "") + v-entry.
+          .
+        end.
+    end.
+  end.
   otherwise do:
   end.
 END CASE.
@@ -354,15 +393,15 @@ define variable name-buf2 as character no-undo .
 define variable v-row-length as integer no-undo .
 DEFINE VARIABLE v-today as date no-undo .
 DEFINE VARIABLE v-time as integer no-undo .
+define variable v-struct as character no-undo.
+
+/* В CAScentre.exe работает только создание, поэтому прийдётся подправить */
+if p-scales-type = "CAS_LP-15v1.6"  and {&scale-prog-16} = "exe/CAScentre.exe" and p-mode = {&update} then p-scales-type = "CAS_LP-15v1.6_new".
+
 CASE p-scales-type:
   when 'DIGI-SM' then do:
     if p-mode = {&update} then do:
       run create-name-str in this-procedure ( buffer buf_goods, output name-buf1) .
-
-
-
-
-
       assign
       v-main-string = 'A':U +
                       entry(1, (if p-plu-type = integer({&sc-gds-weight})
@@ -390,7 +429,7 @@ CASE p-scales-type:
                       entry(1, (if p-plu-type = integer({&sc-gds-weight})
                                 then substring(varscales-pref, 1, 2)
                                 else substring(varpgscales-pref, 1, 2))) +
-                      string(p-b-str, "x(5)") + '00000':U +
+                      string(p-b-str, "x(5)")  + '00000':U +
                       '000000':U + string(p-plu-code, '999999999':U) +
                       '0000':U + /*dummy1*/
                       '0000':U + /*dummy2*/
@@ -409,7 +448,7 @@ CASE p-scales-type:
   then do:
     if p-mode = {&update} then do:
       if p-scales-type = "TIGER-SPCT2" then do:
-      run create-name-str-2 in this-procedure ( buffer buf_goods, input 30, output name-buf1, output name-buf2) .
+        run create-name-str-2 in this-procedure ( buffer buf_goods, input 30, output name-buf1, output name-buf2) .
       end.
       else do:
         run create-name-str in this-procedure ( buffer buf_goods, output name-buf1) .
@@ -449,7 +488,7 @@ CASE p-scales-type:
                       '0000':U + /*dummy1*/
                       '00000000000':U + /*fixweight*/
                       '0000':U + /*groupno*/
-                       (if p-plu-type = integer({&sc-gds-weight})
+                      (if p-plu-type = integer({&sc-gds-weight})
                       then '0020':U
                       else '0021':U)  + /*флаги*/
                       string(scl-gds-ld2(p-deadline, p-deaddate, p-deadflag), "999") +
@@ -569,6 +608,17 @@ CASE p-scales-type:
                                                   ,trim(string(p-price-sale * 100, ">>>>>9"), {&space-char})
                               )
                  .
+  end.
+  when "CAS_LP-15v1.6_new" then do: /* Для 5000j будет такой же способ (порядок полей) */
+      run create-name-str-2 in this-procedure ( buffer buf_goods, input 28, output name-buf1, output name-buf2).
+      v-struct = trim(get-struct(input buf_goods.gds-code, p-plu-code, buf_goods.struct, p-scales-type, p-scales-db-num, p-scales-num)).
+      /* Состав получим в этой же строке а не в &ingridients как у других */
+      v-main-string = substitute("1;&1;1;&2;&3;;0;1;0;&4;&5;0;0;&6;0;0;&7;0;0;0;0;0;0;0;0;0;0;",
+                                 p-plu-code, trim(name-buf1), trim(name-buf2), trim(string(p-price-sale * 100, ">>>>>>>>9")),
+                                 trim(get-wt-cart("CAS_LP-15v1.6", p-wt-cart, p-scales-db-num, p-scales-num, p-tara-string, p-dec-delim)),
+                                 trim(string(scl-gds-ld2(p-deadline, p-deaddate, p-deadflag), ">>>>9") ),
+                                 v-struct
+                                ).
   end.
   otherwise do:
     case p-scales-type:
@@ -743,9 +793,9 @@ end.
     v-keys = 'out,tiger-spct1-install-dir'.
   end.
   otherwise do:
-  v-sections = 'scales,kassa-ibm'.
-  v-keys = 'out'.
-end.
+    v-sections = 'scales,kassa-ibm'.
+    v-keys = 'out'.
+  end.
 end.
 _i-section:
 do i-section = 1 to num-entries(v-sections):
@@ -836,43 +886,43 @@ do i-section = 1 to num-entries(v-sections):
 end.
 CASE t-scales.scales-type:
   when 'DIGI-SM' then do:
-  RUN verify-ini-entry in this-procedure (
-                         input 'digi-sm-file-mask'
-                        ,input 'scales'
-                        ,input  substitute("отсутствует настройка маски файла для весов типа &1&2"+
-                                          "-параметр &3, секция &4 ini-файла,&2по умолчанию подставляем smimp*.dat"
-                                        , t-scales.scales-type
-                                        , {&new-line}
-                                        , 'digi-sm-file-mask'
-                                        , 'scales'
-                                        )
-                        ,input yes
-                        ,output v-file-mask) no-error.
-  if v-file-mask = '':U
-  or v-file-mask = ?
-  then do:
-    v-file-mask = 'smimp*.dat':U.
-  end.
-  assign
-  v-file-mask-1 = (if index({&question-mark}, v-file-mask) > index('*':U, v-file-mask)
-                   or index({&question-mark}, v-file-mask) = 0
-                 then entry(1, v-file-mask, '*')
-                 else entry(1, v-file-mask, {&question-mark})
-                  )
-  v-file-mask-2 = (if index({&question-mark}, v-file-mask) > index('*':U, v-file-mask)
-                   or index({&question-mark}, v-file-mask) = 0
-                    then (if num-entries(v-file-mask, '*') > 1
-                          then entry(2, v-file-mask, '*')
-                          else '':U)
-                    else  (if num-entries(v-file-mask, {&question-mark}) > 1
-                            then entry(2, v-file-mask, {&question-mark})
-                            else '':U)
+    RUN verify-ini-entry in this-procedure (
+                          input 'digi-sm-file-mask'
+                          ,input 'scales'
+                          ,input  substitute("отсутствует настройка маски файла для весов типа &1&2"+
+                                            "-параметр &3, секция &4 ini-файла,&2по умолчанию подставляем smimp*.dat"
+                                          , t-scales.scales-type
+                                          , {&new-line}
+                                          , 'digi-sm-file-mask'
+                                          , 'scales'
+                                          )
+                          ,input yes
+                          ,output v-file-mask) no-error.
+    if v-file-mask = '':U
+    or v-file-mask = ?
+    then do:
+      v-file-mask = 'smimp*.dat':U.
+    end.
+    assign
+    v-file-mask-1 = (if index({&question-mark}, v-file-mask) > index('*':U, v-file-mask)
+                    or index({&question-mark}, v-file-mask) = 0
+                  then entry(1, v-file-mask, '*')
+                  else entry(1, v-file-mask, {&question-mark})
                     )
-  .
-  assign
-  v-file-name = v-file-mask-1 + entry(4, t-scales.address, '.') + v-file-mask-2
-  .
-end.
+    v-file-mask-2 = (if index({&question-mark}, v-file-mask) > index('*':U, v-file-mask)
+                    or index({&question-mark}, v-file-mask) = 0
+                      then (if num-entries(v-file-mask, '*') > 1
+                            then entry(2, v-file-mask, '*')
+                            else '':U)
+                      else  (if num-entries(v-file-mask, {&question-mark}) > 1
+                              then entry(2, v-file-mask, {&question-mark})
+                              else '':U)
+                      )
+    .
+    assign
+    v-file-name = v-file-mask-1 + entry(4, t-scales.address, '.') + v-file-mask-2
+    .
+  end.
   when 'TIGER-SPCT2':U
   or
   when 'TIGER-SPCT1':U
@@ -919,10 +969,10 @@ end.
     .
   end.
   otherwise do:
-  assign
-  v-file-name = "plu" + string( g#report-num ) + "." + string(t-scales.scales-num, "999").
-end.
-
+    assign
+    v-file-name = "plu" + string( g#report-num ) + "." + string(t-scales.scales-num, "999").
+  end.
+  
 END CASE.
 if t-scales.scales-type = "SHTRIH-M" then do:
   define variable v-dec-delim as character no-undo .
@@ -1026,9 +1076,20 @@ ELSE DO:
     then do:
       v-stream = "WINDOWS-1251".
     end.
+    when "CAS_LP-15v1.6" then do:
+         if {&scale-prog-16} = "exe/CAScentre.exe" and /* только апдэйты */
+         (SendOption = "changed"
+         or SendOption = "ALL"
+         or SendOption = "CURRENT"
+         or SendOption = "SELECTIVE")
+         then do:
+          v-stream = "WINDOWS-1251".
+        end.
+    end.
     otherwise do:
     end.
   end case.
+
   _zz:
   DO
   ON STOP UNDO, return error
@@ -1050,8 +1111,17 @@ ELSE DO:
         END CASE.
         case v-stream:
           when "WINdows-1251" then do:
-            output stream PrnLibStream to value( out-dir + v-file-name ) .
-
+            if t-scales.scales-type = "CAS_LP-15v1.6" then do:
+                /* Для CSV всегда нужна эта шапка. Для нового 5000j - тоже, поэтому их сюда добавить. */
+                output to value( out-dir + v-file-name ). 
+                put "номер отдела;номер товара;тип товара;первая строка названия товара;вторая строка названия товара;строка, которая печатается под логотипом;групповой код;код товара;фиксированная цена товара, в копейках;цена товара, в копейках;вес тары, в граммах;дата упаковки, в днях;время упаковки, в часах;срок годности, в днях;срок годности, в часах;номер состава продукта прикрепленного к товару;текст состава продукта;номер этикетки для печати;номер штрих-кода для печати;дата создания продукта, в днях;номер текста рекламного сообщения;номер логотипа для печати на этикетки;номер единицы измерения количественного товара;кол-во для штучных и счетных товаров;номер страны-производителя;номер второго штриховой код для печати на этикетки;фиксированный вес продукта;"
+                    skip. 
+                output close.
+                output stream PrnLibStream to value( out-dir + v-file-name ) append.
+            end.
+            else do:
+                output stream PrnLibStream to value( out-dir + v-file-name ).
+            end.
           end.
           otherwise do:
             output stream PrnLibStream to value( out-dir + v-file-name )
@@ -1082,6 +1152,7 @@ ELSE DO:
           on stop   undo, return error substitute( "&1. stop", vss-workfile )
           on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           :
+
          jj = jj + 1.
           if ( jj modulo 10 = 0 ) then do:
             run show-counter in p-log-handle .
@@ -1291,7 +1362,7 @@ ELSE DO:
         gds-amount = num-entries( send-rid-list ) .
         case v-stream:
           when "WINdows-1251" then do:
-            output stream PrnLibStream to value( out-dir + v-file-name ) .
+                output stream PrnLibStream to value( out-dir + v-file-name ).
 
           end.
           otherwise do:
@@ -1403,8 +1474,17 @@ ELSE DO:
           END CASE.
           case v-stream:
             when "WINdows-1251" then do:
-              output stream PrnLibStream to value( out-dir + v-file-name ) .
-
+              if t-scales.scales-type = "CAS_LP-15v1.6" then do:
+                  /* Для CSV всегда нужна эта шапка. Для нового 5000j - тоже, поэтому их сюда добавить. */
+                  output to value( out-dir + v-file-name ). 
+                  put "номер отдела;номер товара;тип товара;первая строка названия товара;вторая строка названия товара;строка, которая печатается под логотипом;групповой код;код товара;фиксированная цена товара, в копейках;цена товара, в копейках;вес тары, в граммах;дата упаковки, в днях;время упаковки, в часах;срок годности, в днях;срок годности, в часах;номер состава продукта прикрепленного к товару;текст состава продукта;номер этикетки для печати;номер штрих-кода для печати;дата создания продукта, в днях;номер текста рекламного сообщения;номер логотипа для печати на этикетки;номер единицы измерения количественного товара;кол-во для штучных и счетных товаров;номер страны-производителя;номер второго штриховой код для печати на этикетки;фиксированный вес продукта;"
+                      skip. 
+                  output close.
+                  output stream PrnLibStream to value( out-dir + v-file-name ) append.
+              end.
+              else do:
+                  output stream PrnLibStream to value( out-dir + v-file-name ).
+              end.
             end.
             otherwise do:
               output stream PrnLibStream to value( out-dir + v-file-name )
@@ -1507,8 +1587,17 @@ ELSE DO:
                                                             , t-scales.scales-num)).
           case v-stream:
             when "WINdows-1251" then do:
-              output stream PrnLibStream to value( out-dir + v-file-name ) .
-
+              if t-scales.scales-type = "CAS_LP-15v1.6" then do:
+                  /* Для CSV всегда нужна эта шапка. Для нового 5000j - тоже, поэтому их сюда добавить.*/
+                  output to value( out-dir + v-file-name ). 
+                  put "номер отдела;номер товара;тип товара;первая строка названия товара;вторая строка названия товара;строка, которая печатается под логотипом;групповой код;код товара;фиксированная цена товара, в копейках;цена товара, в копейках;вес тары, в граммах;дата упаковки, в днях;время упаковки, в часах;срок годности, в днях;срок годности, в часах;номер состава продукта прикрепленного к товару;текст состава продукта;номер этикетки для печати;номер штрих-кода для печати;дата создания продукта, в днях;номер текста рекламного сообщения;номер логотипа для печати на этикетки;номер единицы измерения количественного товара;кол-во для штучных и счетных товаров;номер страны-производителя;номер второго штриховой код для печати на этикетки;фиксированный вес продукта;"
+                      skip. 
+                  output close.
+                  output stream PrnLibStream to value( out-dir + v-file-name ) append.
+              end.
+              else do:
+                  output stream PrnLibStream to value( out-dir + v-file-name ).
+              end.
             end.
             otherwise do:
               output stream PrnLibStream to value( out-dir + v-file-name )
@@ -1899,6 +1988,7 @@ define variable v-cmd-line as character no-undo .
 define variable r_e as character no-undo .
 define variable com_ip as character no-undo .
 define variable timeout_port as character no-undo .
+define variable v-par as character no-undo.
 
 run get-report-num  in parParentProc(output g#report-num).
 
@@ -2077,10 +2167,10 @@ else do:
       :
        run gbl/synd.p ( input v-install-dir
                       ,input v-file-name
-                   ,input substitute("ibs&1.ini", p-scales.scales-num)
-                   ,input '':U
-                   ,output l-res
-                                                               ) no-error .
+                      ,input substitute("ibs&1.ini", p-scales.scales-num)
+                      ,input '':U
+                      ,output l-res
+                                                                  ) no-error .
       end.
       if l-res > 0 then do:
         run write-log-and-file in p-log-handle (
@@ -2122,6 +2212,40 @@ else do:
             if error-status:error
             or chr-res > '':u then do:
               l-res = 1.
+            end.
+        end.
+        when "CAS_LP-15v1.6" then do:
+            /* Тут нужна обработка: Если запись и новый экзэшник, то всё нормально,
+                а если удаление, то берем из препроцессоров стандартный exe и удаляем */
+            if {&scale-prog-16} = "exe/CAScentre.exe" then do:
+                if p-mode = {&update} then do:
+                    com_ip = entry(1, p-scales.address, ":").
+                    timeout_port = entry(2, p-scales.address, ":").
+                    v-cmd-line = com_ip + " " + timeout_port + " 1 0 " + out-dir + p-file-name.
+                end.
+                else do:
+                    v-cmd-line = substitute(" -d &1 < &2&3"
+                                  ,p-scales.address
+                                  ,out-dir
+                                  ,p-file-name).
+                    p-scale-prog = ENTRY(LOOKUP("CAS_LP-15v1.6", {&scales-type}), {&scales-pr}).
+                    p-scale-prog = search(p-scale-prog).
+                end.
+                run gbl/syn.p ( input p-scale-prog
+                    ,input v-cmd-line
+                    ,input '':u
+                    ,output l-res) no-error.
+                
+            end.
+            else do:
+                v-cmd-line = substitute(" -d &1 < &2&3"
+                                  ,p-scales.address
+                                  ,out-dir
+                                  ,p-file-name).
+                run gbl/syn.p ( input p-scale-prog
+                    ,input v-cmd-line
+                    ,input '':u
+                    ,output l-res) no-error.
             end.
         end.
         when "DIGI_AW-4600_FX":U then do:
@@ -2172,7 +2296,6 @@ else do:
                         ,input v-cmd-line
                           ,input '':u
                           ,output l-res) no-error.
-
         end.
       end case.
       assign
