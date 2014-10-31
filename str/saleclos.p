@@ -152,6 +152,7 @@ define variable v-value-date      as date      no-undo .
 define variable v-value-decimal   as decimal   no-undo .
 define variable v-value-integer   as integer   no-undo .
 define variable v-close-day-period AS LOGICAL no-undo .
+define variable v-log-handle as handle no-undo.
 
 
 define buffer buf_cash-pay for ub.cash-pay.

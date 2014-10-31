@@ -117,6 +117,7 @@ define variable from-menu as logical initial no.
 define variable num_resv as integer no-undo.
 /*количество зарезервированных позиций*/
 define variable num_resv_res as integer no-undo.
+define variable v-log-handle as handle no-undo.
 
 /*
 /*есть неучтенные чеки с товарами*/

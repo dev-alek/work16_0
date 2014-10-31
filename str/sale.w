@@ -58,6 +58,9 @@ define variable vss-description as character no-undo initial "Главная форма инте
 { gbl/getcntxt.i def }
 { gbl/fltopend.i defproc }
 
+{ str/writelog.i def "'fbr-rsrv-errors-sale.txt'" }
+os-delete value (search ('fbr-rsrv-errors-sale.txt')) no-error.
+
 DEFINE NEW SHARED BUFFER t-doc     FOR ub.trn-doc. /* можно было бы обойтись буфером по умолчанию t-doc, но t-doc зашито в sch-line.i */
 DEFINE NEW SHARED BUFFER ret-doc   FOR ub.trn-doc. /* возвратный документ */
 DEFINE BUFFER l-out-dtl FOR ub.gds-dtl. /* для поиска  */
@@ -207,6 +210,7 @@ define variable v-value-decimal as decimal no-undo .
 define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-tth as handle no-undo .
+define variable v-log-handle as handle no-undo . /* для логирования резервирования*/
 { gbl/thbj-def.i }
 assign
 v-tth = buffer thbjattr_thbj-attr:table-handle .
@@ -1737,6 +1741,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     brwh-out-dtl = browse br-out:handle
     brwh-ret-dtl = browse br-ret:handle
     v-is-inquiry = (t-doc.status_ = {&inquiry})
+    v-log-handle = this-procedure.
     .
     /* проверка "закольцованности" ссылок */
     if available ret-doc and ret-doc.out-code <> t-doc.doc-code then   do:
@@ -3031,7 +3036,19 @@ on error undo, return error
 end.
 end procedure. /* mi-unres */
 
+PROCEDURE write-log-and-file :
+define input parameter p-tab-position as integer   no-undo.
+define input parameter p-file-name    as character no-undo .
+define input parameter p-log-level    as integer   no-undo .
+define input parameter p-log-string   as character no-undo .
 
+    run writelog in this-procedure (
+          input log-file-name
+        , input p-log-level
+        , input p-log-string 
+    ).
+
+END PROCEDURE.
 
 &UNDEFINE FRAME-NAME
 &UNDEFINE WINDOW-NAME
