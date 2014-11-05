@@ -274,6 +274,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 { cmp/cr-prep.i 1 attr-bge-incr-cur bge-incr-cur " " bge-incr-cur }
 /* Дата и номер последней выгруженной смены в SAP ECC 6.0 ОАО "Сургутнефтегаз" */
 { cmp/cr-prep.i 1 attr-bge-sap-sng-last-shift bge-sap-sng-last-shift " " bge-sap-sng-last-shift }
+/* Дата и номер последней выгруженной смены в Малину */
+{ cmp/cr-prep.i 1 attr-bge-exp-malina-last-shift bge-exp-malina-last-shift " " bge-exp-malina-last-shift }
 /* Дата ЕГРИП */
 { cmp/cr-prep.i 1 attr-egrip-date egrip-date " " egrip-date }
 /* Номер ЕГРИП */
@@ -421,6 +423,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Перечисление в систему лояльности */
 { cmp/cr-prep.i 1 attr-is-loyalty-payment is-loyalty-payment " " is-loyalty-payment }
 
+/* Запрет на участие в бонусных программах */
+{ cmp/cr-prep.i 1 attr-ban-bonus ban-bonus " " ban-bonus }
+
 /* товар фасуется */
 { cmp/cr-prep.i 1 attr-fasovka            fasovka            " " fasovka       }
 
@@ -489,6 +494,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-ptrl-without-rvs}~
 ,{&bef-attr-is-oss-payment}~
 ,{&bef-attr-is-loyalty-payment}~
+,{&bef-attr-ban-bonus}~
 ,{&bef-attr-fasovka}~
 ,{&bef-attr-15x80}~
 ,{&bef-attr-8x50}~
