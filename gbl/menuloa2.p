@@ -572,6 +572,17 @@ define variable vss-description as character no-undo init "".
 
 { gbl/menuload.i
   {&bef-menuload_adm_function}
+  "'Изменение даты выгрузки данных в Малину'"
+  "'bge/setmalinad.w'"
+  "''"
+  "''"
+  "''"
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
   "'Просмотр правил работы ИЖТ'"
   "'gbl/iztrul.w'"
   "''"
