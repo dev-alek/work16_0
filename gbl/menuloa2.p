@@ -87,6 +87,29 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
+
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Выгрузка информации в систему Малина'"
+  "'bge/exp-malina-man.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Выгрузка информации в систему Carbon'"
+  "'bge/exp-carbon-man.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
 { gbl/menuload.i
   {&bef-menuload_service_impexp}
   "'Экспорт документов в формате импорта'"
@@ -139,6 +162,17 @@ define variable vss-description as character no-undo init "".
   "yes"
 }
 
+{ gbl/menuload.i
+  {&bef-menuload_service_fin_impexp}
+  "'Импорт Платежных Поручений (Бизнес-Букет)'"
+  "'bge/cbnkrunie.p'"
+  "no"
+  "'14.1'"
+  "'1'"
+  "all"
+  "yes"
+  "'clntbank'"
+}
 
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_service_fin_impexp}                                             */
@@ -170,6 +204,17 @@ define variable vss-description as character no-undo init "".
   "'clntbank'"
 }
 
+{ gbl/menuload.i
+  {&bef-menuload_service_fin_impexp}
+  "'Импорт Платежных Поручений (Бизнес-Букет)'"
+  "'bge/cbnkrunie.p'"
+  "no"
+  "'14.1'"
+  "'1'"
+  "all"
+  "yes"
+  "'clntbank'"
+}
 
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_service_customs}                                                */

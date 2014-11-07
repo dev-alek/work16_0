@@ -5628,6 +5628,18 @@ end procedure.
 &scop manual-edit-attr-is-loyalty-payment 1
 &scop batch-edit-attr-is-loyalty-payment  1
 
+&scop type-attr-ban-bonus {&type-log}
+&scop format-attr-ban-bonus  "+/ "
+&scop label-attr-ban-bonus   "Запрет на участие в бонусных программах"
+&scop tooltip-attr-ban-bonus   "Запрет на участие в бонусных программах"
+&scop user-can-edit-attr-ban-bonus  true
+&scop output-display-attr-ban-bonus  true
+&scop other-attr-ban-bonus  ""
+&scop news-attr-ban-bonus true
+&scop copy-attr-ban-bonus  true
+&scop manual-edit-attr-ban-bonus 1
+&scop batch-edit-attr-ban-bonus  1
+
 &glob type-attr-fasovka {&type-log}
 &glob format-attr-fasovka  "+/ "
 &glob label-attr-fasovka   "Товар фасуется"
@@ -5958,6 +5970,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-temp-full-code}
+      &scop attr-code attr-ban-bonus
+      {&attr-temp-full-code}
       &scop attr-code attr-fasovka
       {&attr-temp-full-code}
       &scop attr-code attr-15x80
@@ -6034,6 +6048,8 @@ do
       &scop attr-code attr-is-oss-payment
       {&attr-temp-code}
       &scop attr-code attr-is-loyalty-payment
+      {&attr-temp-code}
+      &scop attr-code attr-ban-bonus
       {&attr-temp-code}
        &scop attr-code attr-fasovka
       {&attr-temp-code}
@@ -6345,6 +6361,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-news-code}
+      &scop attr-code attr-ban-bonus
+      {&attr-news-code}
       &scop attr-code attr-fasovka
       {&attr-news-code}
       &scop attr-code attr-15x80
@@ -6414,6 +6432,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-is-oss-payment
       {&attr-copy-code}
       &scop attr-code attr-is-loyalty-payment
+      {&attr-copy-code}
+      &scop attr-code attr-ban-bonus
       {&attr-copy-code}
       &scop attr-code attr-fasovka
       {&attr-copy-code}
@@ -6835,6 +6855,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-manual-edit-code}
+      &scop attr-code attr-ban-bonus
+      {&attr-manual-edit-code}
       &scop attr-code attr-fasovka
       {&attr-manual-edit-code}
       &scop attr-code attr-15x80
@@ -6905,6 +6927,8 @@ do
       &scop attr-code attr-is-oss-payment
       {&attr-batch-edit-code}
       &scop attr-code attr-is-loyalty-payment
+      {&attr-batch-edit-code}
+      &scop attr-code attr-ban-bonus
       {&attr-batch-edit-code}
       &scop attr-code attr-fasovka
       {&attr-batch-edit-code}
