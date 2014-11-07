@@ -660,6 +660,18 @@ end.
 &scop manual-edit-attr-bge-sap-sng-last-shift 0
 &scop batch-edit-attr-bge-sap-sng-last-shift 0
 
+/* Дата и номер последней выгруженной смены  в формате Малины */
+&scop type-attr-bge-exp-malina-last-shift {&type-char}
+&scop format-attr-bge-exp-malina-last-shift "X(13)"
+&scop label-attr-bge-exp-malina-last-shift "Дата и номер последней выгруженной смены в формате Малины"
+&scop tooltip-attr-bge-exp-malina-last-shift "Дата и номер последней выгруженной смены в формате Малины"
+&scop user-can-edit-attr-bge-exp-malina-last-shift false
+&scop output-display-attr-bge-exp-malina-last-shift true
+&scop other-attr-bge-exp-malina-last-shift '':u
+&scop news-attr-bge-exp-malina-last-shift false
+&scop manual-edit-attr-bge-exp-malina-last-shift 0
+&scop batch-edit-attr-bge-exp-malina-last-shift 0
+
 /* Дата ЕГРИП */
 &scop type-attr-egrip-date {&type-char}
 &scop format-attr-egrip-date "X(13)"
@@ -1026,6 +1038,8 @@ procedure clntattr-code :
       &scop attr-code attr-bge-incr-cur
       {&attr-temp-full-code}
       &scop attr-code attr-bge-sap-sng-last-shift
+      {&attr-temp-full-code}
+      &scop attr-code attr-bge-exp-malina-last-shift
       {&attr-temp-full-code}      
       &scop attr-code attr-egrip-date
       {&attr-temp-full-code}
@@ -1169,6 +1183,8 @@ procedure clntattr-tooltip :
       &scop attr-code attr-bge-incr-cur
       {&attr-temp-code}
       &scop attr-code attr-bge-sap-sng-last-shift
+      {&attr-temp-code}
+      &scop attr-code attr-bge-exp-malina-last-shift
       {&attr-temp-code}      
       &scop attr-code attr-egrip-date
       {&attr-temp-code}
@@ -1519,6 +1535,8 @@ procedure clntattr-news :
       &scop attr-code attr-bge-incr-cur
       {&attr-news-code}
       &scop attr-code attr-bge-sap-sng-last-shift
+      {&attr-news-code}
+      &scop attr-code attr-bge-exp-malina-last-shift
       {&attr-news-code} 
       &scop attr-code attr-egrip-date
       {&attr-news-code}
@@ -5628,6 +5646,18 @@ end procedure.
 &scop manual-edit-attr-is-loyalty-payment 1
 &scop batch-edit-attr-is-loyalty-payment  1
 
+&scop type-attr-ban-bonus {&type-log}
+&scop format-attr-ban-bonus  "+/ "
+&scop label-attr-ban-bonus   "Запрет на участие в бонусных программах"
+&scop tooltip-attr-ban-bonus   "Запрет на участие в бонусных программах"
+&scop user-can-edit-attr-ban-bonus  true
+&scop output-display-attr-ban-bonus  true
+&scop other-attr-ban-bonus  ""
+&scop news-attr-ban-bonus true
+&scop copy-attr-ban-bonus  true
+&scop manual-edit-attr-ban-bonus 1
+&scop batch-edit-attr-ban-bonus  1
+
 &glob type-attr-fasovka {&type-log}
 &glob format-attr-fasovka  "+/ "
 &glob label-attr-fasovka   "Товар фасуется"
@@ -5958,6 +5988,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-temp-full-code}
+      &scop attr-code attr-ban-bonus
+      {&attr-temp-full-code}
       &scop attr-code attr-fasovka
       {&attr-temp-full-code}
       &scop attr-code attr-15x80
@@ -6034,6 +6066,8 @@ do
       &scop attr-code attr-is-oss-payment
       {&attr-temp-code}
       &scop attr-code attr-is-loyalty-payment
+      {&attr-temp-code}
+      &scop attr-code attr-ban-bonus
       {&attr-temp-code}
        &scop attr-code attr-fasovka
       {&attr-temp-code}
@@ -6345,6 +6379,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-news-code}
+      &scop attr-code attr-ban-bonus
+      {&attr-news-code}
       &scop attr-code attr-fasovka
       {&attr-news-code}
       &scop attr-code attr-15x80
@@ -6414,6 +6450,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-is-oss-payment
       {&attr-copy-code}
       &scop attr-code attr-is-loyalty-payment
+      {&attr-copy-code}
+      &scop attr-code attr-ban-bonus
       {&attr-copy-code}
       &scop attr-code attr-fasovka
       {&attr-copy-code}
@@ -6835,6 +6873,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-manual-edit-code}
+      &scop attr-code attr-ban-bonus
+      {&attr-manual-edit-code}
       &scop attr-code attr-fasovka
       {&attr-manual-edit-code}
       &scop attr-code attr-15x80
@@ -6905,6 +6945,8 @@ do
       &scop attr-code attr-is-oss-payment
       {&attr-batch-edit-code}
       &scop attr-code attr-is-loyalty-payment
+      {&attr-batch-edit-code}
+      &scop attr-code attr-ban-bonus
       {&attr-batch-edit-code}
       &scop attr-code attr-fasovka
       {&attr-batch-edit-code}

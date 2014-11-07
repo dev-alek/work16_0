@@ -2486,6 +2486,10 @@ end.
 &global-define discnt-t-cashloyal '{&bef-discnt-t-cashloyal}':U
 &global-define bef-discnt-t-cashloyal-full ЛНР
 &global-define discnt-t-cashloyal-full '{&bef-discnt-t-cashloyal-full}':U
+&global-define bef-discnt-t-bonuscard 22
+&global-define discnt-t-bonuscard '{&bef-discnt-t-bonuscard}':U
+&global-define bef-discnt-t-bonuscard-full Оплата
+&global-define discnt-t-bonuscard-full '{&bef-discnt-t-bonuscard-full}':U
 &global-define bef-discnt-t-alt-condition 998
 &global-define discnt-t-alt-condition '{&bef-discnt-t-alt-condition}':U
 &global-define bef-discnt-t-alt-condition-full Доп.условие
@@ -2498,9 +2502,9 @@ end.
 &global-define discnt-t-fault '{&bef-discnt-t-fault}':U
 &global-define bef-discnt-t-fault-full Погрешность
 &global-define discnt-t-fault-full '{&bef-discnt-t-fault-full}':U
-&global-define discnt-type-list '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,998,999,1001':U
-&global-define discnt-type-list-full '?,Клиент,Стандарт,Временная,Количество,Сумма,Персонал,Промо,Уценка,Счастл.час,Комплект,Сезонная,Катег,Ручная,Карта-маска,Округл. в пользу.клиента,Катег с исп шаблона,Абсолютная,Группа,Платеж,ЛНР,Доп.условие,Другое,Погрешность':U
-&global-define discnt-type-name entry (lookup (~{&discnt-type-code}, '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,998,999,1001':U), '?,Клиент,Стандарт,Временная,Количество,Сумма,Персонал,Промо,Уценка,Счастл.час,Комплект,Сезонная,Катег,Ручная,Карта-маска,Округл. в пользу.клиента,Катег с исп шаблона,Абсолютная,Группа,Платеж,ЛНР,Доп.условие,Другое,Погрешность':U)
+&global-define discnt-type-list '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,998,999,1001':U
+&global-define discnt-type-list-full '?,Клиент,Стандарт,Временная,Количество,Сумма,Персонал,Промо,Уценка,Счастл.час,Комплект,Сезонная,Катег,Ручная,Карта-маска,Округл. в пользу.клиента,Катег с исп шаблона,Абсолютная,Группа,Платеж,ЛНР,Оплата,Доп.условие,Другое,Погрешность':U
+&global-define discnt-type-name entry (lookup (~{&discnt-type-code}, '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,998,999,1001':U), '?,Клиент,Стандарт,Временная,Количество,Сумма,Персонал,Промо,Уценка,Счастл.час,Комплект,Сезонная,Катег,Ручная,Карта-маска,Округл. в пользу.клиента,Катег с исп шаблона,Абсолютная,Группа,Платеж,ЛНР,Оплата,Доп.условие,Другое,Погрешность':U)
 &global-define bef-dtr-t-unknown 0
 &global-define dtr-t-unknown '{&bef-dtr-t-unknown}':U
 &global-define bef-dtr-t-unknown-full ?
@@ -3293,6 +3297,8 @@ end.
 &global-define attr-bge-incr-cur '{&bef-attr-bge-incr-cur}':U
 &global-define bef-attr-bge-sap-sng-last-shift bge-sap-sng-last-shift
 &global-define attr-bge-sap-sng-last-shift '{&bef-attr-bge-sap-sng-last-shift}':U
+&global-define bef-attr-bge-exp-malina-last-shift bge-exp-malina-last-shift
+&global-define attr-bge-exp-malina-last-shift '{&bef-attr-bge-exp-malina-last-shift}':U
 &global-define bef-attr-egrip-date egrip-date
 &global-define attr-egrip-date '{&bef-attr-egrip-date}':U
 &global-define bef-attr-egrip-num egrip-num
@@ -3353,6 +3359,8 @@ end.
 &global-define attr-is-oss-payment '{&bef-attr-is-oss-payment}':U
 &global-define bef-attr-is-loyalty-payment is-loyalty-payment
 &global-define attr-is-loyalty-payment '{&bef-attr-is-loyalty-payment}':U
+&global-define bef-attr-ban-bonus ban-bonus
+&global-define attr-ban-bonus '{&bef-attr-ban-bonus}':U
 &global-define bef-attr-fasovka fasovka
 &global-define attr-fasovka '{&bef-attr-fasovka}':U
 &global-define bef-attr-15x80 15x80
@@ -3393,7 +3401,7 @@ end.
 &global-define attr-qnty-on-pallet '{&bef-attr-qnty-on-pallet}':U
 &global-define bef-attr-weight-of-pallet weight-of-pallet
 &global-define attr-weight-of-pallet '{&bef-attr-weight-of-pallet}':U
-&global-define gds-attr-list 'alcohol-prod,is-gas,ptrl-without-rvs,is-oss-payment,is-loyalty-payment,fasovka,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet':U
+&global-define gds-attr-list 'alcohol-prod,is-gas,ptrl-without-rvs,is-oss-payment,is-loyalty-payment,ban-bonus,fasovka,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet':U
 &global-define bef-attr-taracode-bc taracode-bc
 &global-define attr-taracode-bc '{&bef-attr-taracode-bc}':U
 &global-define bc-attr-list 'taracode-bc':U
@@ -7747,8 +7755,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff':U
 &global-define str-glbl_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
-&global-define str-glbl3_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 8cb79fca1631, 75, rls ':U
+&global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 873711764fd4, 93, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 199ddf50f4e5, 2, test ':U
 &global-define str-glblt_vss-revision 'Revision: c60348b25ab3, 88, rls ':U
 &endif
