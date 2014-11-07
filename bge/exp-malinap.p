@@ -586,7 +586,7 @@ IF p-chk THEN DO:
                             buf-tt_chk-doc.sku_id = IF AVAILABLE buf_bar-code THEN STRING(buf_bar-code.gds-code) + '_' + STRING(p-category) ELSE "" /* идентификатор SKU*/
                             buf-tt_chk-doc.sku_qty = LEFT-TRIM(STRING(buf_chk-gds-pay.eff-doc-qnty, "->>>>>>>>>.9999")) /* количество SKU*/
                             buf-tt_chk-doc.sku_price = STRING(buf_chk-gds-pay.price-base * 100) /* Цена единицы SKU */
-                            buf-tt_chk-doc.line_cost = IF buf_chk-gds-pay.eff-doc-qnty <> 0 THEN STRING(int(buf_chk-gds-pay.tot-r-b * 100 / buf_chk-gds-pay.eff-doc-qnty)) ELSE "0"
+                            buf-tt_chk-doc.line_cost = STRING(int(buf_chk-gds-pay.tot-r-b * 100 )) 
                             buf-tt_chk-doc.sku_descr = ""
                             buf-tt_chk-doc.transaction_attrs = ""
                             buf-tt_chk-doc.standard_points = ""
