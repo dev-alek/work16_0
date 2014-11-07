@@ -1,10 +1,10 @@
 /*
 
-$Revision: $
-$Author: $
-$Date: $
-$Workfile: $
-$Archive: $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
                                         
 Файл глобальных определений
 
@@ -2486,6 +2486,10 @@ end.
 &global-define discnt-t-cashloyal '{&bef-discnt-t-cashloyal}':U
 &global-define bef-discnt-t-cashloyal-full ЛНР
 &global-define discnt-t-cashloyal-full '{&bef-discnt-t-cashloyal-full}':U
+&global-define bef-discnt-t-bonuscard 22
+&global-define discnt-t-bonuscard '{&bef-discnt-t-bonuscard}':U
+&global-define bef-discnt-t-bonuscard-full Оплата
+&global-define discnt-t-bonuscard-full '{&bef-discnt-t-bonuscard-full}':U
 &global-define bef-discnt-t-alt-condition 998
 &global-define discnt-t-alt-condition '{&bef-discnt-t-alt-condition}':U
 &global-define bef-discnt-t-alt-condition-full Доп.условие
@@ -2498,9 +2502,9 @@ end.
 &global-define discnt-t-fault '{&bef-discnt-t-fault}':U
 &global-define bef-discnt-t-fault-full Погрешность
 &global-define discnt-t-fault-full '{&bef-discnt-t-fault-full}':U
-&global-define discnt-type-list '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,998,999,1001':U
-&global-define discnt-type-list-full '?,Клиент,Стандарт,Временная,Количество,Сумма,Персонал,Промо,Уценка,Счастл.час,Комплект,Сезонная,Катег,Ручная,Карта-маска,Округл. в пользу.клиента,Катег с исп шаблона,Абсолютная,Группа,Платеж,ЛНР,Доп.условие,Другое,Погрешность':U
-&global-define discnt-type-name entry (lookup (~{&discnt-type-code}, '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,998,999,1001':U), '?,Клиент,Стандарт,Временная,Количество,Сумма,Персонал,Промо,Уценка,Счастл.час,Комплект,Сезонная,Катег,Ручная,Карта-маска,Округл. в пользу.клиента,Катег с исп шаблона,Абсолютная,Группа,Платеж,ЛНР,Доп.условие,Другое,Погрешность':U)
+&global-define discnt-type-list '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,998,999,1001':U
+&global-define discnt-type-list-full '?,Клиент,Стандарт,Временная,Количество,Сумма,Персонал,Промо,Уценка,Счастл.час,Комплект,Сезонная,Катег,Ручная,Карта-маска,Округл. в пользу.клиента,Катег с исп шаблона,Абсолютная,Группа,Платеж,ЛНР,Оплата,Доп.условие,Другое,Погрешность':U
+&global-define discnt-type-name entry (lookup (~{&discnt-type-code}, '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,998,999,1001':U), '?,Клиент,Стандарт,Временная,Количество,Сумма,Персонал,Промо,Уценка,Счастл.час,Комплект,Сезонная,Катег,Ручная,Карта-маска,Округл. в пользу.клиента,Катег с исп шаблона,Абсолютная,Группа,Платеж,ЛНР,Оплата,Доп.условие,Другое,Погрешность':U)
 &global-define bef-dtr-t-unknown 0
 &global-define dtr-t-unknown '{&bef-dtr-t-unknown}':U
 &global-define bef-dtr-t-unknown-full ?
@@ -6484,7 +6488,7 @@ end.
 &global-define alc-check-price-full '{&bef-alc-check-price-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: c60348b25ab3, 73, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: c60348b25ab3, 88, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7749,10 +7753,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff':U
-&global-define str-glbl_vss-revision 'Revision: aea5316774be, 0, rls ':U
-&global-define str-glbl2_vss-revision 'Revision: aea5316774be, 0, rls ':U
-&global-define str-glbl3_vss-revision 'Revision: aea5316774be, 0, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 8cb79fca1631, 100, rls ':U
+&global-define str-glbl_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
+&global-define str-glbl2_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
+&global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 873711764fd4, 93, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 199ddf50f4e5, 2, test ':U
-&global-define str-glblt_vss-revision 'Revision: c60348b25ab3, 73, rls ':U
+&global-define str-glblt_vss-revision 'Revision: c60348b25ab3, 88, rls ':U
 &endif
