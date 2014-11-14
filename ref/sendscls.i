@@ -613,11 +613,12 @@ CASE p-scales-type:
       run create-name-str-2 in this-procedure ( buffer buf_goods, input 28, output name-buf1, output name-buf2).
       v-struct = trim(get-struct(input buf_goods.gds-code, p-plu-code, buf_goods.struct, p-scales-type, p-scales-db-num, p-scales-num)).
       /* —остав получим в этой же строке а не в &ingridients как у других */
-      v-main-string = substitute("1;&1;1;&2;&3;;0;1;0;&4;&5;0;0;&6;0;0;&7;0;0;0;0;0;0;0;0;0;0;",
+      v-main-string = substitute("1;&1;1;&2;&3;;0;&8;0;&4;&5;0;0;&6;0;&1;&7;0;0;0;0;0;0;0;0;0;0;",
                                  p-plu-code, trim(name-buf1), trim(name-buf2), trim(string(p-price-sale * 100, ">>>>>>>>9")),
                                  trim(get-wt-cart("CAS_LP-15v1.6", p-wt-cart, p-scales-db-num, p-scales-num, p-tara-string, p-dec-delim)),
                                  trim(string(scl-gds-ld2(p-deadline, p-deaddate, p-deadflag), ">>>>9") ),
-                                 v-struct
+                                 v-struct,
+								 p-b-str
                                 ).
   end.
   otherwise do:
@@ -626,7 +627,7 @@ CASE p-scales-type:
       or
       when 'CAS_CL5000'
       then do:
-        v-row-length = 52.
+        v-row-length = 40.
       end.
       otherwise do:
         v-row-length = 26.
