@@ -54,6 +54,7 @@ define variable v-attr-value as character no-undo.
 define variable v-attr-doc-data as date no-undo.
 define variable v-attr-doc-code as character no-undo.
 define variable v-name-ext-doc-type as character no-undo.
+define variable v-fill-path-RepView as character no-undo.
 
 define variable v-file-name-rep-htm as character no-undo.
 
@@ -212,30 +213,36 @@ procedure proc-create-HTML:
               /* Should be unset in IE9+ I think. */
               filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
             &2
+            
+            th &1
+                border: 1px black solid;
+                word-wrap: break-word;
+            &2
+            
              </style>
             
             <body>
                 <table>
                     <thead>
-                        <tr id="set-columns">
+                        <tr id="set_columns">
                             <td style="width: 35px; border: none;"></td>
-                            <td style="width: 100px; border: none;"></td>
-                            <td style="width: 40px; border: none;"></td>
-                            <td style="width: 170px; border: none;"></td>
+                            <td style="width: 95px; border: none;"></td>
+                            <td style="width: 45px; border: none;"></td>
+                            <td style="width: 157px; border: none;"></td>
                             <td style="width: 82px; border: none;"></td>
                             <td style="width: 65px; border: none;"></td>
                             <td style="width: 60px; border: none;"></td>
-                            <td style="width: 60px; border: none;"></td>
-                            <td style="width: 60px; border: none;"></td>
+                            <td style="width: 65px; border: none;"></td>
+                            <td style="width: 68px; border: none;"></td>
                             <td style="width: 60px; border: none;"></td>
                             <td style="width: 75px; border: none;"></td>
-                            <td style="width: 170px; border: none;"></td>
-                            <td style="width: 60px; border: none;"></td>
-                            <td style="width: 60px; border: none;"></td>
+                            <td style="width: 157px; border: none;"></td>
+                            <td style="width: 65px; border: none;"></td>
+                            <td style="width: 68px; border: none;"></td>
                             <td style="width: 60px; border: none;"></td>
                         </tr>
                         <tr>
-                            <td style="border: none"></td></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="width: 60px; border: none;" colspan="4">Приложение № 1</td>
+                            <td style="border: none"></td><td style="border: none"></td><td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="width: 60px; border: none;" colspan="4">Приложение № 1</td>
                         </tr>
                         <tr>
                             <td style="height: 14px; border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none" colspan="4">к приказу Федеральной службы</td>
@@ -250,13 +257,7 @@ procedure proc-create-HTML:
                             <td style="height: 14px; border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td>
                         </tr>
                         <tr>
-                            <td style="height: 14px; border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td>
-                        </tr>
-                        <tr>
-                            <td style="height: 14px; border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td>
-                        </tr>
-                        <tr>
-                            <td style="border: none; font-size: 12pt; text-align: center;" colspan="14"> <b>Журнал учета объема розничной продажи алкогольной и спиртосодержащей продукции</b></td>
+                            <td style="border: none; font-size: 12pt; text-align: center; font-weight: bold;" colspan="14">Журнал учета объема розничной продажи алкогольной и спиртосодержащей продукции</td>
                         </tr>
                         <tr>
                             <td style="height: 14px; border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td> <td style="border: none"></td>
@@ -264,30 +265,30 @@ procedure proc-create-HTML:
                     </thead>
                     <tbody>
                         <tr>
-                            <td rowspan="3" style="text-align: center;">№ п/п</td> <td colspan="9" style="text-align: center;">Поступления</td> <td colspan="5" height="16" style="text-align: center;">Расход</td>
+                            <th rowspan="3" style="text-align: center;">№ п/п</th> <th colspan="9" style="text-align: center;">Поступления</th> <th colspan="5" height="16" style="text-align: center;">Расход</th>
                         </tr>
                         <tr>
-                            <td rowspan="2" style="text-align: center;">Вид и наименование продукции</td> <td  rowspan="2" style="text-align: center;"><div class="rotate">Код вида продукции</div></td> <td colspan="2" style="text-align: center;">Поставщик продукции</td> <td  colspan="4" style="text-align: center;">ТТН</td> <td  rowspan="2" style="text-align: center;">Итого поступило за отчетный период (дкл) </td> <td rowspan="2" style="text-align: center;">Содержание записи</td> <td rowspan="2" style="text-align: center;">Вид и наименование продукции</td> <td  rowspan="2" style="text-align: center;">Емкость тары (упаковки) (л)</td> <td  rowspan="2" style="text-align: center;">Количество тары (упаковки)</td> <td  rowspan="2" style="text-align: center;">Итого расход за отчетный период (дкл)</td>
+                            <th rowspan="2" style="text-align: center;">Вид и наименование продукции</th> <th  rowspan="2" style="text-align: center;"><div class="rotate">Код вида продукции</div></th> <th colspan="2" style="text-align: center;">Поставщик продукции</th> <th  colspan="4" style="text-align: center;">ТТН</th> <th  rowspan="2" style="text-align: center;">Итого поступило за отчетный период (дкл) </th> <th rowspan="2" style="text-align: center;">Содержание записи</th> <th rowspan="2" style="text-align: center;">Вид и наименование продукции</th> <th  rowspan="2" style="text-align: center;">Емкость тары (упаковки) (л)</th> <th  rowspan="2" style="text-align: center;">Количество тары (упаковки)</th> <th  rowspan="2" style="text-align: center;">Итого расход за отчетный период (дкл)</th>
                         </tr>
                         <tr>
-                            <td style="text-align: center;">Наименование организации</td> <td style="text-align: center;">ИНН</td> <td  style="text-align: center;">Дата</td> <td  style="text-align: center;">Номер</td>  <td  style="text-align: center;">Емкость тары (упаковки) (л)</td> <td  style="text-align: center;">Количество тары (упаковки)</td>
+                            <th style="text-align: center;">Наименование организации</th> <th style="text-align: center;">ИНН</th> <th  style="text-align: center;">Дата</th> <th  style="text-align: center;">Номер</th>  <th  style="text-align: center;">Емкость тары (упаковки) (л)</th> <th  style="text-align: center;">Количество тары (упаковки)</th>
                         </tr>
                         <tr>
-                            <td style="text-align: center;">1</td>
-                            <td style="text-align: center;">2</td>
-                            <td style="text-align: center;">3</td>
-                            <td style="text-align: center;">4</td>
-                            <td style="text-align: center;">5</td>
-                            <td style="text-align: center;">6</td>
-                            <td style="text-align: center;">7</td>
-                            <td style="text-align: center;">8</td>
-                            <td style="text-align: center;">9</td>
-                            <td style="text-align: center;">10</td>
-                            <td style="text-align: center;">11</td>
-                            <td style="text-align: center;">12</td>
-                            <td style="text-align: center;">13</td>
-                            <td style="text-align: center;">14</td>
-                            <td style="text-align: center;">15</td>
+                            <th style="text-align: center;">1</th>
+                            <th style="text-align: center;">2</th>
+                            <th style="text-align: center;">3</th>
+                            <th style="text-align: center;">4</th>
+                            <th style="text-align: center;">5</th>
+                            <th style="text-align: center;">6</th>
+                            <th style="text-align: center;">7</th>
+                            <th style="text-align: center;">8</th>
+                            <th style="text-align: center;">9</th>
+                            <th style="text-align: center;">10</th>
+                            <th style="text-align: center;">11</th>
+                            <th style="text-align: center;">12</th>
+                            <th style="text-align: center;">13</th>
+                            <th style="text-align: center;">14</th>
+                            <th style="text-align: center;">15</th>
                         </tr>'
             , chr(123), chr(125)
         ).
@@ -307,15 +308,15 @@ procedure proc-create-HTML:
 
             substitute(
                     '<tr>
-                        <td style="height: 14px; border: all; text-align: center;"> &1 </td>
-                        <td style="border: all; padding: 3px;"> &2 </td>
-                        <td style="border: all; text-align: center;"> &3 </td>
-                        <td style="border: all; padding: 3px;"> &4 </td>
-                        <td style="border: all; text-align: center;"> &5 </td>
-                        <td style="border: all; text-align: center;"> &6 </td>
-                        <td style="border: all; text-align: center;"> &7 </td>
-                        <td style="border: all; text-align: right; padding: 3px;"> &8 </td>
-                        <td style="border: all; text-align: right; padding: 3px;"> &9 </td>'
+                        <td style="height: 14px; border: 1px solid black;">&1</td>
+                        <td style="border: 1px solid black; padding: 3px;">&2</td>
+                        <td style="border: 1px solid black;">&3</td>
+                        <td style="border: 1px solid black; padding: 3px;">&4</td>
+                        <td style="border: 1px solid black;">&5</td>
+                        <td style="border: 1px solid black;">&6</td>
+                        <td style="border: 1px solid black;">&7</td>
+                        <td style="border: 1px solid black; text-align: right; padding: 3px;">&8</td>
+                        <td style="border: 1px solid black; text-align: right; padding: 3px;">&9</td>'
                 ,
                 buf_tt.cnt-line,
                 buf_tt.alc-type-name,
@@ -329,12 +330,12 @@ procedure proc-create-HTML:
             )
             +
             substitute( /* Продолжение столбцов. Так сделано из-за того, что substitute работает только с девятью параметрами &n, а у нас их 15. */
-                        '<td style="border-top: none; border-bottom: none; text-align: right; padding: 3px;"> &1 </td>
-                        <td style="border: all; padding: 3px;"> &2 </td>
-                        <td style="border: all; padding: 3px;"> &3 </td>
-                        <td style="border: all; text-align: right; padding: 3px;"> &4 </td>
-                        <td style="border: all; text-align: right; padding: 3px;"> &5 </td>
-                        <td style="border-top: none; border-bottom: none; text-align: right; padding: 3px;"> &6 </td>
+                        '<td style="border-top: none; border-bottom: none; text-align: right; padding: 3px;">&1</td>
+                        <td style="border: 1px solid black; padding: 3px;">&2</td>
+                        <td style="border: 1px solid black; padding: 3px;">&3</td>
+                        <td style="border: 1px solid black; text-align: right;">&4</td>
+                        <td style="border: 1px solid black; text-align: right;">&5</td>
+                        <td style="border-top: none; border-bottom: none; text-align: right; padding: 3px;">&6</td>
                     </tr>'
                 ,
                 "", /*v-inc-total-quontity,*/ /*fnc-fmt-dec-tc-litres(buf_tt.inc-total-quontity),*/
@@ -353,21 +354,21 @@ procedure proc-create-HTML:
         put stream OutStr-html unformatted
             substitute (
                         '<tr>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all; text-align: right; padding: 3px;"> &1 </td>
-                            <td style="height: 14px; border: all; text-align: right; padding: 3px;"> &2 </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all; text-align: right; padding: 3px;"> &3 </td>
-                            <td style="height: 14px; border: all; text-align: right; padding: 3px;"> &4 </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black; text-align: right; padding: 3px;">&1</td>
+                            <td style="height: 14px; border: 1px solid black; text-align: right; padding: 3px;">&2</td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black; text-align: right; padding: 3px;">&3</td>
+                            <td style="height: 14px; border: 1px solid black; text-align: right; padding: 3px;">&4</td>
                         </tr>'
             ,
             p-inc-qnty-tot,
@@ -384,21 +385,21 @@ procedure proc-create-HTML:
     output stream OutStr-html to value(v-file-name-rep-htm) append convert target 'UTF-8' /*no-convert*/.
         put stream OutStr-html unformatted
                         '<tr>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all; text-align: center;">ИТОГО</td> 
-                            <td style="height: 14px; border: all; text-align: center;">ИТОГО</td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td>
-                            <td style="height: 14px; border: all"> </td> 
-                            <td style="height: 14px; border: all; text-align: center;">ИТОГО</td>
-                            <td style="height: 14px; border: all; text-align: center;">ИТОГО</td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black; text-align: center;">ИТОГО</td> 
+                            <td style="height: 14px; border: 1px solid black; text-align: center;">ИТОГО</td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td>
+                            <td style="height: 14px; border: 1px solid black"> </td> 
+                            <td style="height: 14px; border: 1px solid black; text-align: center;">ИТОГО</td>
+                            <td style="height: 14px; border: 1px solid black; text-align: center;">ИТОГО</td>
                         </tr>
                     </tbody>'
         .
@@ -409,12 +410,7 @@ procedure proc-create-HTML:
     /* Заполнение подвала таблицы */
     output stream OutStr-html to value(v-file-name-rep-htm) append convert target 'UTF-8' /*no-convert*/.
         put stream OutStr-html unformatted
-                    '<tfoot>
-                        <tr>
-                            <td style="height: 14px; border: none"> </td> <td style="height: 14px; border: none"> </td> <td style="height: 14px; border: none"> </td> <td style="height: 14px; border: none"> </td> <td style="height: 14px; border: none"> </td> <td style="height: 14px; border: none"></td> <td style="height: 14px; border: none"></td> <td style="height: 14px; border: none"></td> <td style="height: 14px; border: none"></td> <td style="height: 14px; border: none"></td> <td style="height: 14px; border: none"></td> <td style="height: 14px; border: none"></td> <td style="height: 14px; border: none"></td> <td style="height: 14px; border: none"></td> <td style="height: 14px; border: none"></td>
-                        </tr>
-                    </tfoot>
-                </table>
+                    '</table>
             </body>
         </html>'
         .
@@ -472,13 +468,20 @@ do: /* S */
             output g#report-num
         ).
 
-        v-file-name-rep-htm = {&DF_Name} + string(g#report-num) + ".html".
+        v-file-name-rep-htm = session:temp-directory + {&DF_Name} + string(g#report-num) + ".html".
         /* Создаём файл html где будет сформирован отчёт. */
-            output to value(string(session:temp-directory + v-file-name-rep-htm)).
+            output to value(v-file-name-rep-htm).
             output close.
         /* ******************** */
 
-
+        if search("exe\ReportViewer\reportviewer.exe") = ? then
+            do:
+                message "Не найдена программа просмотра отчёта!" view-as alert-box error.
+            end.
+        else
+            do:
+                v-fill-path-RepView = search("exe\ReportViewer\reportviewer.exe").
+            end.
         
     
     end. /* Нач_Иниц */
@@ -680,9 +683,18 @@ do:
 
     run proc-create-HTML (input v-inc-qnty-tot, input v-inc-litres-tot, input v-out-qnty-tot, input v-out-litres-tot, buffer tt-rep1).
 
-    message "Отчет сохранен в рабочую директорию " skip "(файл: " + v-file-name-rep-htm + ")." view-as alert-box information.
+/*    message "Отчет сохранен в рабочую директорию " skip "(файл: " + v-file-name-rep-htm + ")." view-as alert-box information.*/
 
-    os-command silent value("ReportViewer\dist\main\main.exe" + " " + v-file-name-rep-htm).
+    if search(v-file-name-rep-htm) = ? then
+        do:
+            message "Не найден файл отчёта: " v-file-name-rep-htm view-as alert-box error.
+        end.
+    else
+        do:
+            v-file-name-rep-htm = search(v-file-name-rep-htm).
+        end.
+
+    os-command no-wait value(v-fill-path-RepView + " " + v-file-name-rep-htm).
 
 end.
 
