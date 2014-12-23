@@ -66,7 +66,7 @@ DEFINE BUFFER buf_gds-grp FOR gds-grp.
 DEFINE BUFFER buf_goods FOR goods.
 
 
-v-logname = p-directory + "exp-malina.txt":U.
+v-logname = p-directory + "exp-carbon.txt":U.
 /* p-prefix = p-prefix + '_':U. */
 /* Для лога 
 &scop display-message run write-log-and-file in p-log-handle ~

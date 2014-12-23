@@ -34,12 +34,12 @@ define variable vss-description as character no-undo init "Выгрузка информации в
 
 /* Includes */
 
-{cmp/vssrevis.i}
-{cmp/trg-def.i}
-{cmp/showinf.i}
-{gbl/getcntxt.i def}
-{gbl/userobjs.i}
-{gbl/cur-time.i}
+{ cmp/vssrevis.i }
+{ cmp/trg-def.i }
+{ cmp/showinf.i }
+{ gbl/getcntxt.i def }
+{ gbl/userobjs.i }
+{ gbl/cur-time.i }
 { ref/shd-attr.i }
 
 /* Parameters Definitions ---                                           */
@@ -318,16 +318,16 @@ DO:
 
     rs-obj:screen-value = "2".
     
-    {gbl/uobjclr.i}
+   /* { gbl/uobjclr.i }  */
     
-    {gbl/usobjava.i
+    { gbl/usobjava.i
      v-cntxt-db-num
      {&action-head-code-main}
      v-cntxt-userid
      v-cntxt-obj-type
      v-cntxt-obj-code
      v-object-available
-     no-error}
+     no-error }
      
     if error-status :error then do:
         message vss-workfile vss-revision vss-description skip
@@ -339,19 +339,20 @@ DO:
     end. /* if error-status */
 
     if v-object-available = true then do:
-        {gbl/uobjapnd.i
+        { gbl/uobjapnd.i
          v-cntxt-obj-type
-         v-cntxt-obj-code}
+         v-cntxt-obj-code }
     end.
 
-    {gbl/uobjsman.i
+    { gbl/uobjsman.i
      parparentproc
      v-cntxt-db-num
      v-cntxt-userid
      v-cntxt-host-code-obj
      v-cntxt-obj-type
      v-cntxt-obj-code
-     v-user-select}
+     v-user-select
+      }
      
     if v-user-select <> true then do:
       message "Объект не выбран" view-as alert-box information.
@@ -940,6 +941,11 @@ case p-mode:
                          (if buf_clients.obj-name <> '' then buf_clients.obj-name
                          else buf_clients.obj-type + string(buf_clients.obj-code))
                          + "," + chr(13).
+                         create userobjs_temp-user-obj.
+                         assign 
+                         userobjs_temp-user-obj.obj-type = buf_clients.obj-type
+                         userobjs_temp-user-obj.obj-code = buf_clients.obj-code.
+                         
                      end. /* if available buf_clients */
                      
                 end. /* do ii = 1 to num-entries(v-obj-list) */
