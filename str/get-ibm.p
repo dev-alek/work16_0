@@ -1061,7 +1061,7 @@ define variable src-d-card_ as character no-undo .
       ub.chk-doc.src-d-card       = (if /*d-card_ = "":U or d-card_ = '0':U
                                 or*/  ub.chk-doc.src-d-card = d-card_
                                 then ub.chk-doc.src-d-card
-                                else (if (not v-flag-card
+                                else (if true /*(not v-flag-card
                                           and (ub.chk-doc.src-d-card = ? or ub.chk-doc.src-d-card = "":U or v-dopi = cli-code_ )
                                           )
                                       or (
@@ -1072,7 +1072,7 @@ define variable src-d-card_ as character no-undo .
                                            ((d-mask_ = '0')
                                            and
                                            ub.chk-doc.src-d-card = d-card_)
-                                         )
+                                         )*/
                                       then (if d-mask_ <> '0':U then src-d-card_ else d-card_)
                                       else "-0":U
                                       )
@@ -1080,33 +1080,33 @@ define variable src-d-card_ as character no-undo .
       ub.chk-doc.src-cli-type   = (if cli-type_ = "":U
                                 or ub.chk-doc.src-cli-type = cli-type_
                                 then ub.chk-doc.src-cli-type
-                                else (if
-                                      (not v-flag-card
+                                else (if true
+                                      /*(not v-flag-card
                                       and (ub.chk-doc.src-cli-type = ? or ub.chk-doc.src-cli-type = "":U or v-dopi = cli-code_ )
                                       )
-                                      or  ub.chk-doc.src-cli-type = cli-type_
+                                      or  ub.chk-doc.src-cli-type = cli-type_*/
                                       then cli-type_
                                       else ?)
                               )
       ub.chk-doc.src-cli-code   = (if cli-code_ = 0
                                 or ub.chk-doc.src-cli-code = cli-code_
                                 then ub.chk-doc.src-cli-code
-                                else (if
-                                      (not v-flag-card
+                                else (if true
+                                      /*(not v-flag-card
                                       and (ub.chk-doc.src-cli-code = ? or ub.chk-doc.src-cli-code = 0 or v-dopi = cli-code_ )
                                       )
-                                      or ub.chk-doc.src-cli-code =  cli-code_
+                                      or ub.chk-doc.src-cli-code =  cli-code_*/
                                       then cli-code_
                                       else ?)
                               )
       ub.chk-doc.src-d-mask   = (if d-mask_ = "":U
                                 or ub.chk-doc.src-d-mask = d-mask_
                                 then ub.chk-doc.src-d-mask
-                                else (if
-                                      (not v-flag-card
+                                else (if true
+                                      /*(not v-flag-card
                                       and (ub.chk-doc.src-d-mask = ? or ub.chk-doc.src-d-mask = "":U )
                                       )
-                                      or  ub.chk-doc.src-d-mask = d-mask_
+                                      or  ub.chk-doc.src-d-mask = d-mask_*/
                                       then d-mask_
                                       else ?)
                               )
@@ -1114,9 +1114,9 @@ define variable src-d-card_ as character no-undo .
                       and trim(n-entry[5]) = string(0)
                       then d-mask_
                       else (if ub.chk-doc.d-card <> "":U then ub.chk-doc.d-card else d-card_)
-      v-flag-card         = (if not v-flag-card  and d-card_ <> "":U
+      /*v-flag-card         = (if not v-flag-card  and d-card_ <> "":U
                           then yes
-                          else v-flag-card)
+                          else v-flag-card)*/
       .
     end.
   end.
