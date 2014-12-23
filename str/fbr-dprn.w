@@ -795,6 +795,14 @@ for bf_fbr-line
   , buf_tmp#list
 on error undo, return error
 :
+for each bf_fbr-line where bf_fbr-line.doc-code = fbr-doc.doc-code no-lock,
+  first bf_recipe
+   where bf_recipe.recipe-code = bf_fbr-line.recipe-code
+     and bf_recipe.recipe-type = {&dressing}  no-lock on error undo, return error return-value :
+  assign
+    varhave-dressing = yes.
+  leave.
+end.
     { gbl/currsysk.i
       v-menu-doc-sys-key
       no-error
