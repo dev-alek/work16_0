@@ -1347,7 +1347,7 @@ CASE par-subject:
 
     message
     "Вы уверены, что Вы хотите провести изменение (добавление, удаление) скидок по отдельным ДК" SKIP
-    "всего определенногоу Вами списка?"
+    "всего определенного Вами списка?"
     view-as alert-box QUESTION buttons YES-NO update loc#log.
     if loc#log then do:
       run str/diallog.w (
