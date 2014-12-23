@@ -746,6 +746,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   and not {&wro-is-modificator}
   and not v-modificator-null-price
   and not p-chk-type = integer({&rcpt-inventory})
+  and not p-pos-type = {&cd-type-autotank}
+  and not p-pos-type = {&cd-type-ibm-xml}
+  and not p-pos-type = {&cd-type-ibm}
   then do:
     p-mess = substitute("Товар с кодом &1: цена = 0"
                         ,p-src-code
@@ -2746,7 +2749,7 @@ if avail buf_bar-code then do:
             ) then NEXT.
       if recid(buf0_chk-discnt) = var-pcnt-discnt then NEXT.
       if abs(buf0_chk-discnt.object-sum) < abs(buf0_chk-discnt.discnt-value-abs)
-      and not(abs(abs(buf0_chk-discnt.object-sum) - abs(buf0_chk-discnt.discnt-value-abs)) < 0.02
+      and not(abs(abs(buf0_chk-discnt.object-sum) - abs(buf0_chk-discnt.discnt-value-abs)) < 0.2
                     and
                     {&prefix}is-100-discnt)
       then do:
@@ -3490,6 +3493,10 @@ if avail buf_bar-code then do:
                             else no)
                       else no)
   .
+  /* чеки с пустым полем типа */
+  find first ub.chk-gds no-lock where ub.chk-gds.doc-code = ub.chk-doc.doc-code no-error.
+  if trim(ub.chk-doc.office) = "" and not available ub.chk-gds then
+      ub.chk-doc.office = {&gds-goods}.
   p-prev-code = "" .    /* иной раз помогает */
 end. /*doe*/
 error-status:error = no.
@@ -3520,6 +3527,7 @@ DEFINE VARIABLE nd                         as   logical             no-undo .
 DEFINE VARIABLE var-gds-for-discnt         as decimal               no-undo .
 define variable v-old-discnt               as decimal               no-undo .
 define variable v-log-handle as handle no-undo .
+define variable v-old-corr-discnt-rank as decimal no-undo.
 define variable v-fttwd as logical no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
 define buffer buf0_chk-discnt for ub.chk-discnt.
@@ -3556,6 +3564,7 @@ on error undo, return error
                 t-gds.b-code = buf_chk-gds.b-code AND
                 t-gds.drc = recid(buf_chk-doc)
                 :
+        v-old-corr-discnt-rank = t-gds.corr-discnt-rank.
         if t-gds.first-line-num = 0
         or t-gds.first-line-num > buf_chk-gds.line-num
         then do:
@@ -3588,7 +3597,7 @@ on error undo, return error
         if t-gds.was-write-off  then do:
           t-gds.corr-discnt-rank = t-gds.corr-discnt-rank + 6.
         end.
-        if (buf_chk-gds.price-base <= buf_chk-gds.discnt) then do:
+        if (buf_chk-gds.price-base <= buf_chk-gds.discnt - 0.2) then do:
           t-gds.corr-discnt-rank = t-gds.corr-discnt-rank + 7.
         end.
         if buf_chk-doc.chk-type = integer({&rcpt-return-write-off})
@@ -3599,6 +3608,12 @@ on error undo, return error
         and buf_chk-doc.d-pcnt = 100
         then do:
           t-gds.corr-discnt-rank = t-gds.corr-discnt-rank + 9.
+        end.
+        if t-gds.corr-discnt-rank = v-old-corr-discnt-rank then do:
+          assign
+            t-gds.corr-discnt-rank = 0
+            t-gds.first-line-num = buf_chk-gds.line-num
+          .
         end.
         if buf_chk-gds.discnt <> 0 then do:
         t-gds.corr-discnt-rank = t-gds.corr-discnt-rank - 0.1.
@@ -3619,7 +3634,7 @@ on error undo, return error
               t-gds.drc = recid(buf_chk-doc) use-index icorr-discnt no-error .
     end.
   end.
-  if available t-gds
+  /*if available t-gds
   and nd = yes
   and t-gds.corr-discnt-rank / t-gds.num-lines > 2 then do:
     assign
@@ -3638,7 +3653,7 @@ on error undo, return error
                       )
     {&display-message}.
     {&prefix}view-log = yes.
-  end.
+  end.*/
   if nd = yes
   and (not available t-gds
   or (available t-gds and t-gds.first-line-num = 0)
@@ -5247,6 +5262,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                else no)
                         else no
   .
+  /* чеки с пустым полем типа */
+  find first ub.chk-gds no-lock where ub.chk-gds.doc-code = ub.chk-doc.doc-code no-error.
+  if trim(ub.chk-doc.office) = "" and not available ub.chk-gds then
+      ub.chk-doc.office = {&gds-goods}.
   p-mc-prev-code = "" .    /* иной раз помогает */
 end. /*doe*/
 end procedure. /* libchkwl_getwcheck */

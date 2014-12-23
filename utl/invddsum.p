@@ -31,7 +31,7 @@ for first ub.trn-doc where ub.trn-doc.doc-code = pardoc-code:
    for each ub.doc-line-sum where  ub.doc-line-sum.doc-code = pardoc-code:
       delete ub.doc-line-sum.
    end.
-   run utl/uaddsum.p(pardoc-code,no,?,?) no-error.
+   run utl/uaddsum.p(pardoc-code,yes,yes,no) no-error.
    if error-status:error then do:
        message error-status:get-message(1) view-as alert-box.
        return.

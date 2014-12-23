@@ -544,7 +544,7 @@ CASE p-scales-type:
   end.
   when "SHTRIH-M" then do:
     if p-mode = {&update} then do:
-      run create-name-str-2 in this-procedure ( buffer buf_goods, input 56, output name-buf1, output name-buf2) .
+      run create-name-str-2 in this-procedure ( buffer buf_goods, input 28, output name-buf1, output name-buf2) .
       name-buf1 = trim(name-buf1).
       assign
       v-main-string = string(1) + "|" +       /*добавление*/
@@ -627,7 +627,7 @@ CASE p-scales-type:
       or
       when 'CAS_CL5000'
       then do:
-        v-row-length = 40.
+        v-row-length = 0.
       end.
       otherwise do:
         v-row-length = 26.
@@ -641,8 +641,8 @@ CASE p-scales-type:
                       then  (string((if p-plu-type = integer({&sc-gds-weight}) then "01" else "02"), "x(2)") + {&space-char} )
                       else '')  +
                       string(p-b-str, "x(5)") + {&space-char} +
-                      string( "~"" + string( name-buf1, substitute("x(&1)", v-row-length) ) + "~"", substitute("x(&1)", v-row-length + 2)) + {&space-char} +
-                      string( "~"" + string( name-buf2, substitute("x(&1)", v-row-length) ) + "~"", substitute("x(&1)", v-row-length + 2)) + {&space-char} +
+                      string( "~"" + string( name-buf1 ) + "~"", substitute("x(&1)", length(name-buf1) + 2)) + {&space-char} +
+                      string( "~"" + string( name-buf2 ) + "~"", substitute("x(&1)", length(name-buf2) + 2)) + {&space-char} +
                       string(p-price-sale * 100, ">>>>>>>>9") + {&space-char} +
                       string(scl-gds-ld2(p-deadline, p-deaddate, p-deadflag), ">>>>9") + {&space-char} +
                       get-wt-cart(p-scales-type, p-wt-cart, p-scales-db-num, p-scales-num, p-tara-string, p-dec-delim).
@@ -2306,7 +2306,8 @@ else do:
       .
       FOR EACH slave_scales WHERE
               slave_scales.master = p-scales.scales-num
-          AND slave_scales.db-num = p-scales.db-num:
+          AND slave_scales.db-num = p-scales.db-num
+          and slave_scales.sts <> integer({&deleted-status-int}):
         run write-log-and-file in p-log-handle (
                                                   input 1
                                                 , input log-file-name
@@ -2354,6 +2355,40 @@ else do:
                       ,output l-res) no-error.
 
           end.
+        when "CAS_LP-15v1.6" then do:
+            /* Тут нужна обработка: Если запись и новый экзэшник, то всё нормально,
+                а если удаление, то берем из препроцессоров стандартный exe и удаляем */
+            if {&scale-prog-16} = "exe/CAScentre.exe" then do:
+                if p-mode = {&update} then do:
+                    com_ip = entry(1, slave_scales.address, ":").
+                    timeout_port = entry(2, slave_scales.address, ":").
+                    v-cmd-line = com_ip + " " + timeout_port + " 1 0 " + out-dir + p-file-name.
+                end.
+                else do:
+                    v-cmd-line = substitute(" -d &1 < &2&3"
+                                  ,slave_scales.address
+                                  ,out-dir
+                                  ,p-file-name).
+                    p-scale-prog = ENTRY(LOOKUP("CAS_LP-15v1.6", {&scales-type}), {&scales-pr}).
+                    p-scale-prog = search(p-scale-prog).
+                end.
+                run gbl/syn.p ( input p-scale-prog
+                    ,input v-cmd-line
+                    ,input '':u
+                    ,output l-res) no-error.
+                
+            end.
+            else do:
+                v-cmd-line = substitute(" -d &1 < &2&3"
+                                  ,slave_scales.address
+                                  ,out-dir
+                                  ,p-file-name).
+                run gbl/syn.p ( input p-scale-prog
+                    ,input v-cmd-line
+                    ,input '':u
+                    ,output l-res) no-error.
+            end.
+        end.
           otherwise do:
             v-cmd-line = substitute(" -d &1 < &2&3"
                                     ,slave_scales.address
@@ -2412,6 +2447,10 @@ define variable v-log as logical no-undo .
            then  loc-goods.gds-name
            else loc-goods.label-name
            .
+  if p-length <= 0 then do:   /* Для CAS5000 длина одной строки может быть 40 символов, но с достаточно мелким шштрифтом, поэтому взависимости от длины названия будем делить его на разный размер  */
+    if length(v-name) >= 50 then p-length = length(v-name) / 2.
+    else p-length = 30.
+  end.             
   DO ff = 1 TO num-entries( v-name, '"' ) :
       loc-name-buf = loc-name-buf + entry( ff, v-name, '"' ) .
   END .

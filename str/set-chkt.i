@@ -30,6 +30,7 @@ if v-b-c <> ? then do:
   and not(lookup(string(chk-doc.chk-type), {&sale-in-receipt-codes}) > 0
          and {2}.write-off-code > 0)
   and not (chk-doc.chk-type = integer({&rcpt-trans-cancell}))
+  and not p-pos-type = {&cd-type-autotank} and not p-pos-type = {&cd-type-ibm-xml} and not p-pos-type = {&cd-type-ibm}
   then do:
     /*случай когда возвращают или списывают на возварте чек в котором было списание - второй раз списать нельз
     положим товар для информативности
@@ -92,6 +93,9 @@ if v-b-c <> ? then do:
     .
   end.
 
+  IF {2}.pump > 0 and LOOKUP({&petrolium}, units.type) = 0 and ub.goods.gds-type = {&gds-office} then do:
+    {2}.pump = 0.
+  end.
   { str/libchkvl_petrol-valid.i
    chk-doc.chk-type
    {2}.line-num

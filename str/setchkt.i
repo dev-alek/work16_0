@@ -89,7 +89,10 @@ if v-b-c <> ? then do:
     {&prefix}view-log = yes
     .
   end.
-
+  
+  IF buf_chk-gds.pump > 0 and LOOKUP({&petrolium}, units.type) = 0 and ub.goods.gds-type = {&gds-office} then do:
+    buf_chk-gds.pump = 0.
+  end.
   { str/libchkvl_petrol-valid.i
    buf_chk-doc.chk-type
    buf_chk-gds.line-num

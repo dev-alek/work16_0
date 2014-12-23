@@ -440,6 +440,12 @@ ON CHOOSE OF b-close IN FRAME Dialog-Frame /* Закрыть */
 DO:
   DEFINE VARIABLE v-icnt-rec AS RECID NO-UNDO.
   DEFINE VARIABLE glog AS LOGICAL no-undo.
+  IF X_icnt-doc.status_ = {&fact} THEN DO:
+      message
+      "Данный документ закрыт на факт."
+      VIEW-AS ALERT-BOX .
+    RETURN NO-APPLY.  
+  END.  
   IF NOT AVAILABLE X_icnt-doc THEN RETURN NO-APPLY.
   { gbl/chk-actg.i
     v-cntxt-db-num

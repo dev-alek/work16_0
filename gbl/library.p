@@ -5401,8 +5401,8 @@ procedure objat :
           end.
 
           run adm/shattri.p ( input "get":U
-                            , input  '':u
-                            , input  0
+                            , input  p-obj-type
+                            , input  p-obj-code
                             , input  {&attr-obj-date}
                             , input  v-param-name
                             , output v-value-character

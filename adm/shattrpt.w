@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -9,10 +9,10 @@
 
 /* Temp-Table and Buffer definitions                                    */
 DEFINE BUFFER locked_thbj-attr FOR thbj-attr.
- 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS shattrpt
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS shattrpt 
 /*
 
 $Revision$
@@ -64,7 +64,7 @@ DEFINE VARIABLE v-db-num        like ub.db.db-num no-undo.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -76,12 +76,12 @@ DEFINE VARIABLE v-db-num        like ub.db.db-num no-undo.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 ~
-RECT-4 t-autopump t-avtinvpm t-olddens r-inpptrl r-expptrl r-algrvspt ~
-t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc rvs-wt-email
-
-&Scoped-Define DISPLAYED-OBJECTS t-autopump t-avtinvpm t-olddens r-inpptrl ~
-r-expptrl r-algrvspt t-rvsnmter t-invclipt f-invclipt r-temp-for-pomi ~
-r-denstclc f-invclipt-name rvs-wt-email
+RECT-4 t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl rvs-wt-email ~
+r-algrvspt t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi ~
+r-denstclc 
+&Scoped-Define DISPLAYED-OBJECTS t-autopump t-avtinvpm t-olddens r-expptrl ~
+r-inpptrl rvs-wt-email r-algrvspt t-rvsnmter t-invclipt f-invclipt ~
+r-temp-for-pomi r-denstclc f-invclipt-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -96,118 +96,117 @@ r-denstclc f-invclipt-name rvs-wt-email
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-invclipt
+DEFINE BUTTON b-invclipt 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
+     LABEL "":L 
      SIZE 3 BY .92.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE rvs-wt-email AS CHARACTER FORMAT "X(256)":U 
-     VIEW-AS FILL-IN 
-     SIZE 60 BY .95 NO-UNDO.
-
 DEFINE VARIABLE f-invclipt LIKE clients.obj-code
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 10 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-invclipt-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE f-invclipt-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 78 BY 1 NO-UNDO.
 
-DEFINE VARIABLE r-algrvspt AS INTEGER
+DEFINE VARIABLE rvs-wt-email AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 60 BY .96 NO-UNDO.
+
+DEFINE VARIABLE r-algrvspt AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Алгоритм N1", 1,
 "Алгоритм N2", 2
      SIZE 16 BY 1.75 NO-UNDO.
 
-DEFINE VARIABLE r-denstclc AS CHARACTER
+DEFINE VARIABLE r-denstclc AS CHARACTER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "среднее по сменной сверке и внеш.приходам (shft_rvs-inc)", "shft_rvs-inc",
 "среднее по сверкам (avrg-rvs)", "avrg-rvs",
 "среднеарифметическое значение окаймляющих сверок (avrg-chk)", "avrg-chk",
 "среднее значение по расчетно-книжным данным (shft_sys-inc)", "shft_sys-inc"
-/*из сменной сверке и внеш.приходам*/
      SIZE 65.5 BY 2.5 NO-UNDO.
 
-DEFINE VARIABLE r-expptrl AS CHARACTER
+DEFINE VARIABLE r-expptrl AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Вес", "weight",
 "Объем", "volume"
      SIZE 23.5 BY .83 NO-UNDO.
 
-DEFINE VARIABLE r-inpptrl AS CHARACTER
+DEFINE VARIABLE r-inpptrl AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Вес+плотность", "weight",
 "Объем+плотность", "volume",
 "Вес+объем", "weight+",
 "Объем+вес", "volume+"
      SIZE 66 BY .83 NO-UNDO.
 
-DEFINE VARIABLE r-temp-for-pomi AS INTEGER
+DEFINE VARIABLE r-temp-for-pomi AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "15°С", 1,
 "20°С", 2
      SIZE 17 BY .75 TOOLTIP "Используется только при передаче в ПО к МИ" NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
      SIZE 96.5 BY 3.75.
 
 DEFINE RECTANGLE RECT-2
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
      SIZE 96.5 BY 7.5.
 
 DEFINE RECTANGLE RECT-3
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
      SIZE 96.5 BY 4.25.
 
 DEFINE RECTANGLE RECT-4
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
      SIZE 96.5 BY 3.75.
 
-DEFINE VARIABLE t-autopump AS LOGICAL INITIAL no
-     LABEL "Автоматические сверки создавать с чтением всех счетчиков ТРК"
+DEFINE VARIABLE t-autopump AS LOGICAL INITIAL no 
+     LABEL "Автоматические сверки создавать с чтением всех счетчиков ТРК" 
      VIEW-AS TOGGLE-BOX
      SIZE 82.5 BY .83 NO-UNDO.
 
-DEFINE VARIABLE t-avtinvpm AS LOGICAL INITIAL no
-     LABEL "Автомат. создание инв. счетчиков ТРК при переполнении разрядности эл. счетчика"
+DEFINE VARIABLE t-avtinvpm AS LOGICAL INITIAL no 
+     LABEL "Автомат. создание инв. счетчиков ТРК при переполнении разрядности эл. счетчика" 
      VIEW-AS TOGGLE-BOX
      SIZE 82.5 BY .83 TOOLTIP "если включено, то контроль и создание происходит при закрытии сверки" NO-UNDO.
 
-DEFINE VARIABLE t-invclipt AS LOGICAL INITIAL no
-     LABEL "Контрагент для списания ЕУ при инвентаризации топлива по сверке:"
+DEFINE VARIABLE t-invclipt AS LOGICAL INITIAL no 
+     LABEL "Контрагент для списания ЕУ при инвентаризации топлива по сверке:" 
      VIEW-AS TOGGLE-BOX
      SIZE 83 BY .83 NO-UNDO.
 
-DEFINE VARIABLE t-olddens AS LOGICAL INITIAL no
-     LABEL "В документы по умолчанию ставится плотность и темп. из предыдущего документа"
+DEFINE VARIABLE t-olddens AS LOGICAL INITIAL no 
+     LABEL "В документы по умолчанию ставится плотность и темп. из предыдущего документа" 
      VIEW-AS TOGGLE-BOX
      SIZE 81.5 BY .83 NO-UNDO.
 
-DEFINE VARIABLE t-rvsnmter AS LOGICAL INITIAL no
-     LABEL "Расхождение в инвентаризации по сверке делать без учета погрешности измерения"
+DEFINE VARIABLE t-rvsnmter AS LOGICAL INITIAL no 
+     LABEL "Расхождение в инвентаризации по сверке делать без учета погрешности измерения" 
      VIEW-AS TOGGLE-BOX
      SIZE 82.5 BY .83 NO-UNDO.
 
@@ -221,10 +220,10 @@ DEFINE FRAME shattrpt
      t-autopump AT ROW 2.75 COL 3 WIDGET-ID 40
      t-avtinvpm AT ROW 3.75 COL 3 WIDGET-ID 42
      t-olddens AT ROW 4.75 COL 3 WIDGET-ID 76
+     r-expptrl AT ROW 6.25 COL 56.63 NO-LABEL WIDGET-ID 50
      r-inpptrl AT ROW 7.25 COL 6 NO-LABEL WIDGET-ID 44
-     r-expptrl AT ROW 9.25 COL 6 NO-LABEL WIDGET-ID 50
+     rvs-wt-email AT ROW 9 COL 4 NO-LABEL WIDGET-ID 90
      r-algrvspt AT ROW 11.5 COL 3.5 NO-LABEL WIDGET-ID 80
-     rvs-wt-email AT ROW 9.38 COL 2 NO-LABEL WIDGET-ID 90
      t-rvsnmter AT ROW 13.5 COL 3.5 WIDGET-ID 58
      t-invclipt AT ROW 14.5 COL 3.5 WIDGET-ID 74
      f-invclipt AT ROW 15.5 COL 3 COLON-ALIGNED HELP
@@ -238,7 +237,7 @@ DEFINE FRAME shattrpt
      "Настройки инвентаризации по сверке" VIEW-AS TEXT
           SIZE 35.5 BY .67 AT ROW 10.75 COL 3 WIDGET-ID 78
      "Тип ввода топлива во всех документах кроме прихода внешнего:" VIEW-AS TEXT
-          SIZE 61 BY .83 AT ROW 8.25 COL 4 WIDGET-ID 54
+          SIZE 61 BY .83 AT ROW 8 COL 4 WIDGET-ID 54
      "Тип ввода топлива в документах прихода внешнего :" VIEW-AS TEXT
           SIZE 49 BY .83 AT ROW 6.25 COL 4 WIDGET-ID 48
      "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
@@ -246,16 +245,16 @@ DEFINE FRAME shattrpt
      "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
           SIZE 52 BY .63 AT ROW 22.25 COL 3.5 WIDGET-ID 86
      "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
-          SIZE 84 BY .95 AT ROW 7.43 COL 2 WIDGET-ID 92
+          SIZE 84 BY .96 AT ROW 7.17 COL 4 WIDGET-ID 92
      "на список почтовых адресов(разделять адреса запятыми):" VIEW-AS TEXT
-          SIZE 79 BY .95 AT ROW 8.24 COL 2 WIDGET-ID 94
+          SIZE 79 BY .96 AT ROW 8.08 COL 4 WIDGET-ID 94
      RECT-1 AT ROW 18 COL 2.5 WIDGET-ID 38
-     RECT-2 AT ROW 10.5 COL 2.5 WIDGET-ID 64
+     RECT-2 AT ROW 10.54 COL 2.5 WIDGET-ID 64
      RECT-3 AT ROW 6 COL 2.5 WIDGET-ID 66
      RECT-4 AT ROW 22 COL 2.5 WIDGET-ID 84
      SPACE(1.24) SKIP(0.41)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки работы с ТОПЛИВНЫМ товаром" WIDGET-ID 100.
 
 
@@ -278,16 +277,18 @@ DEFINE FRAME shattrpt
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX shattrpt
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME shattrpt:SCROLLABLE       = FALSE.
 
 /* SETTINGS FOR FILL-IN f-invclipt IN FRAME shattrpt
    LIKE = ub.clients.obj-code EXP-LABEL EXP-HELP EXP-SIZE               */
 /* SETTINGS FOR FILL-IN f-invclipt-name IN FRAME shattrpt
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        f-invclipt-name:READ-ONLY IN FRAME shattrpt        = TRUE.
 
+/* SETTINGS FOR FILL-IN rvs-wt-email IN FRAME shattrpt
+   ALIGN-L                                                              */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -301,7 +302,7 @@ ASSIGN
 */  /* DIALOG-BOX shattrpt */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -415,7 +416,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK shattrpt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK shattrpt 
 
 
 /* ***************************  Main Block  *************************** */
@@ -622,7 +623,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -641,16 +642,16 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-autopump t-avtinvpm t-olddens r-inpptrl r-expptrl r-algrvspt
-          t-rvsnmter t-invclipt f-invclipt r-temp-for-pomi r-denstclc
-          f-invclipt-name rvs-wt-email
+  DISPLAY t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl rvs-wt-email 
+          r-algrvspt t-rvsnmter t-invclipt f-invclipt r-temp-for-pomi r-denstclc 
+          f-invclipt-name 
       WITH FRAME shattrpt.
-  ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 t-autopump t-avtinvpm
-         t-olddens r-inpptrl r-expptrl r-algrvspt t-rvsnmter t-invclipt
-         f-invclipt b-invclipt r-temp-for-pomi r-denstclc rvs-wt-email 
+  ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 t-autopump t-avtinvpm 
+         t-olddens r-expptrl r-inpptrl rvs-wt-email r-algrvspt t-rvsnmter 
+         t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc 
       WITH FRAME shattrpt.
   {&OPEN-BROWSERS-IN-QUERY-shattrpt}
 END PROCEDURE.
@@ -658,7 +659,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets shattrpt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets shattrpt 
 PROCEDURE fill-widgets :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -785,7 +786,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save shattrpt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save shattrpt 
 PROCEDURE proc-save :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -927,3 +928,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

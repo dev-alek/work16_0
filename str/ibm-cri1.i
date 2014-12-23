@@ -42,7 +42,7 @@ FOR EACH t-gds No-LOCK WHERE
          )
          )
       )
-      or (abs(abs(t-gds.price-sum) - abs(t-gds.discnt-sum)) < 0.01
+      or (abs(abs(t-gds.price-sum) - abs(t-gds.discnt-sum)) < 0.2
           and
           is-100-discnt)
       then do:

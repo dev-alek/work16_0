@@ -257,7 +257,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     end.
     when {&cmd-parts-fact-corr}
     then do:
-run gbl/inidebug.p.
+
       assign
         v-type-pdf     = entry( 2, p-full-cmd, {&delim-cmd} )
        /* v-1            = int(entry( 3, p-full-cmd, {&delim-cmd} )) */

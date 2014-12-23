@@ -58,6 +58,7 @@ def var vss-description as character no-undo init "Атрибуты товара на объекте- Р
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
+{ str/lib-trn.i  }
 { cmp/showinf.i  }
 { gbl/temphost.i }
 { cmp/titlmode.i }
@@ -129,6 +130,23 @@ EDITOR-fbr
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
+
+/* ************************  Function Prototypes ********************** */
+
+
+
+&IF DEFINED(EXCLUDE-check-is-petrol) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD check-is-petrol Dialog-Frame
+function check-is-petrol returns logical 
+  (  ) forward.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ENDIF
+
+
 
 
 
@@ -530,7 +548,8 @@ DO:
         tt-fbr-gds-obj.fbr-obj-type = "":U
         fbr-obj-name = "":U.
         run fbr-warning in this-procedure (tt-fbr-gds-obj.fbr-obj-type:screen-value, tt-fbr-gds-obj.fbr-obj-code:screen-value) no-error.
-      return no-apply.
+      if int(tt-fbr-gds-obj.fbr-obj-code:screen-value) > 0 then return no-apply.
+      else tt-fbr-gds-obj.fbr-obj-type:screen-value = ''.
   end.
 END.
 
@@ -566,6 +585,13 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  
+  if check-is-petrol() then do:
+      message "Запрещено для топливных товаров"
+      view-as alert-box ERROR.
+      return error.
+  end.
+  
   { gbl/getcntxt.i get }
   if par-mode <> {&update}
   and par-mode <> {&add-def}
@@ -1044,8 +1070,16 @@ then do:
                         , input tt-fbr-gds-obj.is-semi-finished
                         ) no-error.
         if error-status:error then do:
-          { gbl/reterhnd.i error }
-          return no-apply.
+          if return-value <> '' then do:
+            define variable v-rv as character no-undo .
+            v-rv = return-value .
+            entry(1, v-rv, {&new-line}) = ''.
+            message
+            left-trim(v-rv, {&new-line})
+            view-as alert-box error.
+          end.
+           { gbl/reterhnd.i error }
+           undo, return error.
         end.
       end.
       else do:
@@ -1068,3 +1102,31 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+/* ************************  Function Implementations ***************** */
+
+
+
+&IF DEFINED(EXCLUDE-check-is-petrol) = 0 &THEN
+		
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION check-is-petrol Dialog-Frame
+function check-is-petrol returns logical 
+  (  ):
+define variable v-is-petrolium as logical no-undo .
+define variable v-is-pieces as logical no-undo .
+
+define buffer lc_goods for ub.goods.
+
+find first lc_goods no-lock where lc_goods.gds-code = p-gds-code.
+{ str/is-petrl.i lc_goods.artic lc_goods.prod-type lc_goods.prod-code v-is-petrolium v-is-pieces }
+
+return v-is-petrolium.
+
+end function.
+	
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ENDIF
+
+

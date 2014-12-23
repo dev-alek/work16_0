@@ -22,6 +22,7 @@ define input parameter p-mainmenu-handle    as handle           no-undo.
 define input parameter p-recid              as recid            no-undo.
 define input parameter p-print-in-rubl      as logical          no-undo.
 define input parameter p-print-details      as logical          no-undo.
+define input parameter p-fat                as logical          no-undo.
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
