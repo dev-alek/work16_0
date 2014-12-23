@@ -3520,6 +3520,7 @@ DEFINE VARIABLE nd                         as   logical             no-undo .
 DEFINE VARIABLE var-gds-for-discnt         as decimal               no-undo .
 define variable v-old-discnt               as decimal               no-undo .
 define variable v-log-handle as handle no-undo .
+define variable v-old-corr-discnt-rank as decimal no-undo.
 define variable v-fttwd as logical no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
 define buffer buf0_chk-discnt for ub.chk-discnt.
@@ -3556,6 +3557,7 @@ on error undo, return error
                 t-gds.b-code = buf_chk-gds.b-code AND
                 t-gds.drc = recid(buf_chk-doc)
                 :
+        v-old-corr-discnt-rank = t-gds.corr-discnt-rank.
         if t-gds.first-line-num = 0
         or t-gds.first-line-num > buf_chk-gds.line-num
         then do:
@@ -3599,6 +3601,12 @@ on error undo, return error
         and buf_chk-doc.d-pcnt = 100
         then do:
           t-gds.corr-discnt-rank = t-gds.corr-discnt-rank + 9.
+        end.
+        if t-gds.corr-discnt-rank = v-old-corr-discnt-rank then do:
+          assign
+            t-gds.corr-discnt-rank = 0
+            t-gds.first-line-num = buf_chk-gds.line-num
+          .
         end.
         if buf_chk-gds.discnt <> 0 then do:
         t-gds.corr-discnt-rank = t-gds.corr-discnt-rank - 0.1.
