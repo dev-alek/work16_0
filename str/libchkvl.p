@@ -746,6 +746,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   and not {&wro-is-modificator}
   and not v-modificator-null-price
   and not p-chk-type = integer({&rcpt-inventory})
+  and not p-pos-type = {&cd-type-autotank}
+  and not p-pos-type = {&cd-type-ibm-xml}
+  and not p-pos-type = {&cd-type-ibm}
   then do:
     p-mess = substitute("Товар с кодом &1: цена = 0"
                         ,p-src-code
@@ -3490,6 +3493,10 @@ if avail buf_bar-code then do:
                             else no)
                       else no)
   .
+  /* чеки с пустым полем типа */
+  find first ub.chk-gds no-lock where ub.chk-gds.doc-code = ub.chk-doc.doc-code no-error.
+  if trim(ub.chk-doc.office) = "" and not available ub.chk-gds then
+      ub.chk-doc.office = {&gds-goods}.
   p-prev-code = "" .    /* иной раз помогает */
 end. /*doe*/
 error-status:error = no.
@@ -5255,6 +5262,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                else no)
                         else no
   .
+  /* чеки с пустым полем типа */
+  find first ub.chk-gds no-lock where ub.chk-gds.doc-code = ub.chk-doc.doc-code no-error.
+  if trim(ub.chk-doc.office) = "" and not available ub.chk-gds then
+      ub.chk-doc.office = {&gds-goods}.
   p-mc-prev-code = "" .    /* иной раз помогает */
 end. /*doe*/
 end procedure. /* libchkwl_getwcheck */
