@@ -2746,7 +2746,7 @@ if avail buf_bar-code then do:
             ) then NEXT.
       if recid(buf0_chk-discnt) = var-pcnt-discnt then NEXT.
       if abs(buf0_chk-discnt.object-sum) < abs(buf0_chk-discnt.discnt-value-abs)
-      and not(abs(abs(buf0_chk-discnt.object-sum) - abs(buf0_chk-discnt.discnt-value-abs)) < 0.02
+      and not(abs(abs(buf0_chk-discnt.object-sum) - abs(buf0_chk-discnt.discnt-value-abs)) < 0.2
                     and
                     {&prefix}is-100-discnt)
       then do:
@@ -3588,7 +3588,7 @@ on error undo, return error
         if t-gds.was-write-off  then do:
           t-gds.corr-discnt-rank = t-gds.corr-discnt-rank + 6.
         end.
-        if (buf_chk-gds.price-base <= buf_chk-gds.discnt) then do:
+        if (buf_chk-gds.price-base <= buf_chk-gds.discnt - 0.2) then do:
           t-gds.corr-discnt-rank = t-gds.corr-discnt-rank + 7.
         end.
         if buf_chk-doc.chk-type = integer({&rcpt-return-write-off})
@@ -3619,7 +3619,7 @@ on error undo, return error
               t-gds.drc = recid(buf_chk-doc) use-index icorr-discnt no-error .
     end.
   end.
-  if available t-gds
+  /*if available t-gds
   and nd = yes
   and t-gds.corr-discnt-rank / t-gds.num-lines > 2 then do:
     assign
@@ -3638,7 +3638,7 @@ on error undo, return error
                       )
     {&display-message}.
     {&prefix}view-log = yes.
-  end.
+  end.*/
   if nd = yes
   and (not available t-gds
   or (available t-gds and t-gds.first-line-num = 0)
