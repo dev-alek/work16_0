@@ -155,7 +155,7 @@ attr-cd-type-omron-new }
 /*Параметры POS IBM-XML*/
 { cmp/cr-prep.i 1 attr-cd-type-IBM-XML          cd-type-IBM-XML           " " cd-type-IBM-XML }
 { cmp/cr-prepc.i 1 prop-list-attr-cd-type-ibm-XML
-"ibmrubc,ibmnalc,ibmgroup,multicurr,cd-vat,cdtaxlst,specgrp"
+"ibmrubc,ibmnalc,ibm-ccm,ibmgroup,multicurr,cd-vat,cdtaxlst,specgrp"
 attr-cd-type-IBM-XML }
 
 /*Параметры POS r-keeper*/
