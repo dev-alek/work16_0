@@ -90,7 +90,7 @@ if v-b-c <> ? then do:
     .
   end.
   
-  IF buf_chk-gds.pump > 0 and LOOKUP({&petrolium}, units.type) = 0 and ub.goods.gds-type = {&gds-office} then do:
+  IF buf_chk-gds.pump > 0 and LOOKUP({&petrolium}, buf_units.type) = 0 and buf_goods.gds-type = {&gds-office} then do:
     buf_chk-gds.pump = 0.
   end.
   { str/libchkvl_petrol-valid.i
