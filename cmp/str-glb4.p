@@ -417,8 +417,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Топливо - сверка не требуется */
 { cmp/cr-prep.i 1 attr-ptrl-without-rvs   ptrl-without-rvs   " " ptrl-without-rvs   }
 
-/* Платеж оператору сотовой связи */
-{ cmp/cr-prep.i 1 attr-is-oss-payment     is-oss-payment     " " is-oss-payment     }
+/* Тип услуги */
+{ cmp/cr-prep.i 1 attr-office-type     office-type     " " office-type     }
 
 /* Перечисление в систему лояльности */
 { cmp/cr-prep.i 1 attr-is-loyalty-payment is-loyalty-payment " " is-loyalty-payment }
@@ -492,7 +492,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 &glob gds-attr-list '{&bef-attr-alcohol-prod}~
 ,{&bef-attr-is-gas}~
 ,{&bef-attr-ptrl-without-rvs}~
-,{&bef-attr-is-oss-payment}~
+,{&bef-attr-office-type}~
 ,{&bef-attr-is-loyalty-payment}~
 ,{&bef-attr-ban-bonus}~
 ,{&bef-attr-fasovka}~
@@ -518,6 +518,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define gds-attr-list {&gds-attr-list}" ).
 
+/* типы услуг */
+{ cmp/cr-prepc.i 1 prop-list-attr-office-type
+"oss-pay,tso-ret"
+attr-office-type
+}
 
 /* tara-code для сканер-весов NCR*/
 { cmp/cr-prep.i 1 attr-taracode-bc             taracode-bc          " " taracode-bc       }

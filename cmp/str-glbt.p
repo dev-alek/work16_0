@@ -194,7 +194,7 @@ attr-cd-type-maria }
 /*Параметры POS autotank*/
 { cmp/cr-prep.i 1 attr-cd-type-autotank       cd-type-autotank         " " cd-type-autotank }
 { cmp/cr-prepc.i 1 prop-list-attr-cd-type-autotank
-"cash-pay-list"
+"cash-pay-list,ibmgroup,specgrp"
 attr-cd-type-autotank }
 
 
@@ -556,6 +556,12 @@ attr-staff-options
 attr-izt-rul
 }
 
+/* Сервер авторизации АСУ */
+{ cmp/cr-prep.i 1 attr-srv-auth-ASU srv-auth-ASU " " srv-auth-ASU }
+{ cmp/cr-prepc.i 1 prop-list-attr-srv-auth-ASU
+"pko-cli,srv-auth-adr"
+attr-srv-auth-ASU
+}
 
 /* сюда добавлять новые названия атрибутов объектов TH */
 
@@ -619,6 +625,7 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-fbrattr}~
 ,{&bef-attr-petrol}~
 ,{&bef-attr-staff-options}~
+,{&bef-attr-srv-auth-ASU}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list {&thbjattr-list}" ).
 
@@ -685,6 +692,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-
 ,{&bef-attr-fbrattr}~
 ,{&bef-attr-petrol}~
 ,{&bef-attr-staff-options}~
+,{&bef-attr-srv-auth-ASU}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list-all {&thbjattr-list-all}" ).
 
