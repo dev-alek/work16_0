@@ -74,7 +74,7 @@ define variable vss-description as character no-undo init "Ёкспорт по расписанию
     define variable v-exp-fo                    as logical      no-undo.
     define variable v-exp-fp                    as logical      no-undo.
     define variable v-exp-s-f                   as logical      no-undo.
-    define variable v-gds-grp-list              as character    no-undo.
+    /*define variable v-gds-grp-list              as character    no-undo.*/
 
     define variable v-range                     as integer      no-undo.
     define variable v-initial-range             as integer      no-undo.
@@ -296,7 +296,7 @@ on error undo, return error
         , output v-exp-s-f
     ).
 
-    v-gds-grp-list = entry(23,v-param-list,{&comma-char}) no-error.
+    /*v-gds-grp-list = entry(23,v-param-list,{&comma-char}) no-error.*/
 
     if v-incr = no
     then do:
@@ -542,10 +542,24 @@ on error undo, return error
                                             )
                                 ) .
             end.
-        end.        /* if v-exp-way = yes  */
-        if v-exp-stk = yes
-        then do:
-            if v-exp-stk-supp = yes
+        end.        /* if v-exp-way = yes  */      
+        if v-exp-stk = yes and entry(1,v-date-range) = '1' then do:         
+                    run bge/bgestd.p (
+                          input ?
+                        , input -1
+                        , input 3
+                        , input v-obj-list
+                        , input v-date-to
+                        , input v-cst
+                        , input yes
+                        , input 0
+                        /*, input v-gds-grp-list*/
+                        , input ?
+                        , input ?
+                    ).
+        end.
+        else if v-exp-stk = yes  then  do: 
+           if v-exp-stk-supp = yes
             then do:
                 run bge/bge-stk.p (
                       input ?
@@ -556,7 +570,7 @@ on error undo, return error
                     , input yes
                     , input p-db-num
                     , input v-obj-list
-                    , input v-gds-grp-list
+                    /*, input v-gds-grp-list*/
                     , input ?
                     , input ?
                 ) no-error.
@@ -579,7 +593,7 @@ on error undo, return error
                     , input yes
                     , input p-db-num
                     , input v-obj-list
-                    , input v-gds-grp-list
+                    /*, input v-gds-grp-list*/
                     , input ?
                     , input ?
                 ) no-error.

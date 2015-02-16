@@ -36,8 +36,7 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Проверка архивов для диапазона дат для выгрузки".
 { cmp/vssrevis.i        }
-{ cmp/str-glbl.i        }
-{ cmp/library.i         }
+{ cmp/trg-def.i        }
 { gbl/getcntxt.i def    }
 
 define buffer buf_sys-ctrl    for ub.sys-ctrl.
@@ -80,7 +79,7 @@ on error undo, return error
         , input        p-verify-arh
         , input        p-verify-ahsp
         , input        p-verify-aht
-        , input        yes                     /* p-check-act         */
+        , input        if g#auto then no else yes                     /* p-check-act         */
         , input        v-cntxt-db-num          /* p-check-act-db-num  */
         , input        v-cntxt-userid          /* p-check-act-user-id */
         , input-output v-date-from

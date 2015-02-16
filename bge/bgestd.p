@@ -286,7 +286,7 @@ define output parameter p-new-xml-file-number   as integer      no-undo.
     define variable v-archive-ok        as logical      no-undo.
     define variable v-comment           as character    no-undo.
 do
-on error undo, return error
+on error undo, return error return-value
 :
     assign
         p-new-xml-file-name     = p-xml-file-name
@@ -322,7 +322,7 @@ on error undo, return error
             trim(error-status :get-message(2))
             trim(error-status :get-message(3))
         view-as alert-box error.
-        undo, return error .
+        undo, return error return-value.
     end.
     if v-archive-ok = no
     then do:
@@ -335,8 +335,9 @@ on error undo, return error
                                     , p-date-to
                                     , v-comment       )
         ).
-        undo, return error .
+        undo, return error 'Остатки по объекту не будут выгружены. Архивы по объекту за эту дату не целостные.'.
     end.
+    
     process events.
 /*---S----- Границы fact-order для дат dFrom - dTo --------*/
     run bgelib-write-edt( hEDT, 4,  "Расчет архивов завершен. Вывод данных по товарам...").
@@ -359,7 +360,7 @@ on error undo, return error
                trim(error-status :get-message(2))
                trim(error-status :get-message(3))
         view-as alert-box error.
-        undo, return error .
+        undo, return error return-value.
     end.
     run bge/stdoper.p (
           input p-obj-type
