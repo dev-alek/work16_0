@@ -2528,7 +2528,7 @@ define output parameter p-have-rights   as logical      no-undo.
             v-cntxt-userid
             {&action-head-code-main}
             'actn_reference_groups-edit':U
-            {&cntxt-global}
+            {&cntxt-firm}
             v-cntxt-host-code-obj
             '':U
             0
@@ -3392,22 +3392,22 @@ define variable  v-have-rights    as logical no-undo .
         v-focused-row      = br-list :focused-row in frame {&FRAME-NAME}.
         v-repositioned-row = current-result-row( "br-list" )
     .
-    { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_reference_groups-edit':U
-        {&cntxt-firm}
-        v-cntxt-host-code-obj
-        '':U
-        0
-        0
-        p-node-code
-        0
-        yes
-        v-have-rights
-    }
-    if not v-have-rights then return.
+/*    { gbl/chk-actg.i                  */
+/*        v-cntxt-db-num                */
+/*        v-cntxt-userid                */
+/*        {&action-head-code-main}      */
+/*        'actn_reference_groups-edit':U*/
+/*        {&cntxt-firm}                 */
+/*        v-cntxt-host-code-obj         */
+/*        '':U                          */
+/*        0                             */
+/*        0                             */
+/*        p-node-code                   */
+/*        0                             */
+/*        yes                           */
+/*        v-have-rights                 */
+/*    }                                 */
+/*    if not v-have-rights then return. */
 
     run ref/pr-marg.w (
           input parparentproc
@@ -5028,6 +5028,12 @@ then do:
     .
 end.
 end case.
+/*Параметры на объектах видны с УБД */
+if (g#db-num <> 0) then do:
+    view
+        b-marg   in frame {&frame-name}
+    .    
+end.    
 if v-current-store-code = 0
 or transaction
 then do:
