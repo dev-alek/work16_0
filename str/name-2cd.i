@@ -199,7 +199,7 @@ else do:
   assign
   p-second-name = replace(p-gds-name1, {&single-quote}, "":U)
   p-second-name =   ({&double-quote} +
-                    TRIM(CAPS(string( replace(p-second-name, {&double-quote}, "":U), "X(":U + string(v-length) + ")":U ))) /* англ назв или лок код или номер партии*/
+                    TRIM(string( replace(p-second-name, {&double-quote}, "":U), "X(":U + string(v-length) + ")":U )) /* англ назв или лок код или номер партии*/
                     + {&double-quote} )
   .
 end.
