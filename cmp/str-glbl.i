@@ -6494,7 +6494,7 @@ end.
 &global-define alc-check-price-full '{&bef-alc-check-price-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 43b88f2209fa, 124, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 50c60499372c, 128, test  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -6762,12 +6762,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-cd-type-omron-new_omrncurl '{&bef-attr-cd-type-omron-new_omrncurl}':U
 &global-define bef-attr-cd-type-IBM-XML cd-type-IBM-XML
 &global-define attr-cd-type-IBM-XML '{&bef-attr-cd-type-IBM-XML}':U
-&global-define bef-prop-list-attr-cd-type-ibm-XML ibmrubc,ibmnalc,ibmgroup,multicurr,cd-vat,cdtaxlst,specgrp
+&global-define bef-prop-list-attr-cd-type-ibm-XML ibmrubc,ibmnalc,ibm-ccm,ibmgroup,multicurr,cd-vat,cdtaxlst,specgrp
 &global-define prop-list-attr-cd-type-ibm-XML '{&bef-prop-list-attr-cd-type-ibm-XML}':U
 &global-define bef-attr-cd-type-IBM-XML_ibmrubc ibmrubc
 &global-define attr-cd-type-IBM-XML_ibmrubc '{&bef-attr-cd-type-IBM-XML_ibmrubc}':U
 &global-define bef-attr-cd-type-IBM-XML_ibmnalc ibmnalc
 &global-define attr-cd-type-IBM-XML_ibmnalc '{&bef-attr-cd-type-IBM-XML_ibmnalc}':U
+&global-define bef-attr-cd-type-IBM-XML_ibm-ccm ibm-ccm
+&global-define attr-cd-type-IBM-XML_ibm-ccm '{&bef-attr-cd-type-IBM-XML_ibm-ccm}':U
 &global-define bef-attr-cd-type-IBM-XML_ibmgroup ibmgroup
 &global-define attr-cd-type-IBM-XML_ibmgroup '{&bef-attr-cd-type-IBM-XML_ibmgroup}':U
 &global-define bef-attr-cd-type-IBM-XML_multicurr multicurr
@@ -7776,5 +7778,5 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: 43b88f2209fa, 124, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 199ddf50f4e5, 2, test ':U
-&global-define str-glblt_vss-revision 'Revision: 43b88f2209fa, 124, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 50c60499372c, 128, test ':U
 &endif
