@@ -28,6 +28,7 @@ define variable vss-description as character no-undo init "Триггер на удаление з
 define variable v-is-update as logical no-undo .
 define variable v-chip-num as integer no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
+define buffer buf_chk-gds-attr for ub.chk-gds-attr.
 define buffer buf_chk-pay for ub.chk-pay.
 define buffer buf_chk-discnt for ub.chk-discnt.
 define buffer buf_chk-doc-attr for ub.chk-doc-attr.
@@ -61,6 +62,9 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile ):
     for each buf_chk-gds where
            buf_chk-gds.doc-code = ub.chk-doc.doc-code :
         delete buf_chk-gds.
+        for each buf_chk-gds-attr where buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code:
+          delete buf_chk-gds-attr.
+        end.
     end.
     for each buf_chk-pay where
            buf_chk-pay.doc-code = ub.chk-doc.doc-code :

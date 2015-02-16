@@ -685,6 +685,7 @@ PROCEDURE cre-dump-trn-doc:
     define buffer buf-rc_arh-trn-doc-contract  for ub.arh-trn-doc-contract.
     define buffer buf_chk-doc              for ub.chk-doc.
     define buffer buf_chk-gds              for ub.chk-gds.
+    define buffer buf_chk-gds-attr         for ub.chk-gds-attr.
     define buffer buf_chk-doc-attr         for ub.chk-doc-attr.
     define buffer buf_c-chk-doc            for ub.c-chk-doc.
     define buffer buf_c-chk-gds            for ub.c-chk-gds.
@@ -918,10 +919,11 @@ PROCEDURE cre-dump-inkas:
     define buffer buf_inkas          for ub.inkas.
     define buffer buf_chk-doc        for ub.chk-doc.
     define buffer buf_chk-gds        for ub.chk-gds.
+    define buffer buf_chk-gds-attr   for ub.chk-gds-attr.
     define buffer buf_chk-pay        for ub.chk-pay.
     define buffer buf_chk-discnt     for ub.chk-discnt.
     define buffer buf_chk-doc-attr   for ub.chk-doc-attr.
-    define buffer buf_chk-gds-pay          for ub.chk-gds-pay.
+    define buffer buf_chk-gds-pay      for ub.chk-gds-pay.
     define buffer buf_c-chk-doc        for ub.c-chk-doc.
     define buffer buf_c-chk-gds        for ub.c-chk-gds.
     define buffer buf_c-chk-pay        for ub.c-chk-pay.
@@ -969,6 +971,10 @@ PROCEDURE cre-dump-inkas:
       for each  buf_chk-gds where buf_chk-gds.doc-code = buf_chk-doc.doc-code
       on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
         run cre-route-dump( p-act-name, {&table_chk-gds}, (buffer buf_chk-gds:handle), dmp-ord, input-output rc-ord ).
+      end.
+      for each  buf_chk-gds-attr where buf_chk-gds-attr.doc-code = buf_chk-doc.doc-code
+      on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+        run cre-route-dump( p-act-name, {&table_chk-gds-attr}, (buffer buf_chk-gds-attr:handle), dmp-ord, input-output rc-ord ).
       end.
       for each  buf_chk-pay where buf_chk-pay.doc-code = buf_chk-doc.doc-code
       on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :

@@ -36,12 +36,12 @@ define variable ii as integer no-undo.
   on error undo, return error
   :
 
-    for each buf_ext-classif where buf_ext-classif.classif-subject = {&extclass_oss-ref} no-lock by buf_ext-classif.Key#_One :
-      ii = ii + 1.
-      run bgelib-tag-open in this-procedure ( input 2, input "OperServ", input substitute("ctrl='&2' code='&1'", if p-is-del then "" else string (ii), if p-is-del then "DEL":u else "ADD":u)).
-        run bgelib-tag-put in this-procedure ( input 3, input "OSCode":U, input string (buf_ext-classif.Key#_One), input 1 ).
-        if not p-is-del then do:
-          run bgelib-tag-put in this-procedure ( input 3, input "OSName":U, input buf_ext-classif.CharKey_One, input 1 ).
+    if p-is-del then do:
+      for each buf_ext-classif where buf_ext-classif.classif-subject = {&extclass_oss-ref} no-lock by buf_ext-classif.Key#_One :
+        ii = ii + 1.
+        run bgelib-tag-open in this-procedure ( input 2, input "OperServ", input substitute("ctrl='&2' code='&1'", string (ii), "ADD":u)).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSCode":U, input string (buf_ext-classif.Key#_One), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSName":U, input if ub.cash-desk.pos-type = {&cd-type-IBM-XML} then entry (1, buf_ext-classif.CharKey_Two, {&delim-par}) else buf_ext-classif.CharKey_One, input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSQuantMin":U, input trim(string(entry(2, buf_ext-classif.CharKey_Two, {&delim-par}))), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSQuantMax":U, input trim(string(entry(3, buf_ext-classif.CharKey_Two, {&delim-par}))), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSGroup":U, input string (buf_ext-classif.Key#_Two), input 1 ).
@@ -55,12 +55,15 @@ define variable ii as integer no-undo.
           run bgelib-tag-put in this-procedure ( input 3, input "OSPreSlip":U, input trim(string(entry(11, buf_ext-classif.CharKey_Two, {&delim-par}))), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSSlipName":U, input trim(string(entry(12, buf_ext-classif.CharKey_Two, {&delim-par}))), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSCalcType":U, input trim(string(entry(13, buf_ext-classif.CharKey_Two, {&delim-par}))), input 1 ).
-        end.
-      run bgelib-tag-close in this-procedure ( input 2, input "OperServ").    
-
+        run bgelib-tag-close in this-procedure ( input 2, input "OperServ").    
+  
+      end.
+      ii = 0 .
     end.
-    ii = 0 .
-    
+    else do:
+      run bgelib-tag-open in this-procedure ( input 2, input "OperServ", input substitute("ctrl='&2' code='&1'", "*", "DEL":u)).
+      run bgelib-tag-close in this-procedure ( input 2, input "OperServ").
+    end.
   end.
 
 end procedure. /* putc-par */

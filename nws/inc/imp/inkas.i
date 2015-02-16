@@ -59,6 +59,10 @@ on endkey undo, return error :
       create locb-chk-gds.
       { nws/impl-nws.i "chk-gds" "locb-" }
     end.
+    when "chk-gds-attr" then do:
+      create locb-chk-gds-attr.
+      { nws/impl-nws.i "chk-gds-attr" "locb-" }
+    end.
     when "chk-pay" then do:
       create locb-chk-pay.
       { nws/impl-nws.i "chk-pay" "locb-" }
@@ -330,6 +334,12 @@ end.
 for each buf_chk-gds where buf_chk-gds.out-code = wt-inkas.inkas-code
 on error  undo, return error
 :
+  for each buf_chk-gds-attr where buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+      and buf_chk-gds-attr.line-num = buf_chk-gds.line-num
+  on error  undo, return error
+  :
+    delete buf_chk-gds-attr.
+  end.
   delete buf_chk-gds.
 end.
 for each locb-chk-gds where locb-chk-gds.out-code = wt-inkas.inkas-code
@@ -338,6 +348,14 @@ on error  undo, return error
 :
   create buf_chk-gds.
   buffer-copy locb-chk-gds to buf_chk-gds.
+  for each locb-chk-gds-attr where locb-chk-gds-attr.doc-code = locb-chk-gds.doc-code
+      and locb-chk-gds-attr.line-num = locb-chk-gds.line-num
+                        no-lock
+  on error  undo, return error
+  :
+    create buf_chk-gds-attr.
+    buffer-copy locb-chk-gds-attr to buf_chk-gds-attr.
+  end.
 end.
 /* ------------------------------- chk-pay ---------------------------------------------- */
 for each buf_chk-pay where buf_chk-pay.out-code = wt-inkas.inkas-code
@@ -525,6 +543,11 @@ for each locb-chk-gds
 on error  undo, return error
 :
   delete locb-chk-gds.
+end.
+for each locb-chk-gds-attr
+on error  undo, return error
+:
+  delete locb-chk-gds-attr.
 end.
 for each locb-chk-pay
 on error  undo, return error

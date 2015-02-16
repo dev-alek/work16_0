@@ -107,7 +107,7 @@ FOR EACH for-cash-desk NO-LOCK WHERE
                 ,input for-cash-desk.version
                 ,input for-cash-desk.cash-os
                 ,input for-cash-desk.cash-num
-                ,input true /*удалить справочник*/
+                ,input false /*удалить весь справочник*/
                 ).
 
   { str/cloc-gen.i
@@ -136,7 +136,7 @@ FOR EACH for-cash-desk NO-LOCK WHERE
                 ,input for-cash-desk.version
                 ,input for-cash-desk.cash-os
                 ,input for-cash-desk.cash-num
-                ,input false /*удалить справочник*/
+                ,input true /*удалить весь справочник*/
                 ).
 
   { str/cloc-gen.i

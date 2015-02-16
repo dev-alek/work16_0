@@ -21,6 +21,7 @@ define temp-table locb-inkas-pay-wth  no-undo like ub.inkas-pay-wth.
 define temp-table locb-sale-doc       no-undo like ub.sale-doc.
 define temp-table locb-chk-doc        no-undo like ub.chk-doc.
 define temp-table locb-chk-gds        no-undo like ub.chk-gds.
+define temp-table locb-chk-gds-attr   no-undo like ub.chk-gds-attr.
 define temp-table locb-chk-pay        no-undo like ub.chk-pay.
 define temp-table locb-chk-discnt     no-undo like ub.chk-discnt.
 define temp-table locb-chk-doc-attr   no-undo like ub.chk-doc-attr.
