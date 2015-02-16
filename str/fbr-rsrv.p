@@ -68,10 +68,10 @@ define variable vss-description as character no-undo init "Расчет учетных цен и 
     define variable v-del-zero-lines                as logical      no-undo.
     define variable v-not-reserved                  as logical      no-undo.
 
-    define buffer buf_out_fbr-line for fbr-line.         /* строка производства {&write-off} */
-    define buffer buf_in_fbr-line   for fbr-line.             /* {&row} производства {&income} */
-    define buffer buf_fbr-doc       for fbr-doc.
-    define buffer buf_goods         for goods.
+    define buffer buf_out_fbr-line  for ub.fbr-line.         /* строка производства {&write-off} */
+    define buffer buf_in_fbr-line   for ub.fbr-line.             /* {&row} производства {&income} */
+    define buffer buf_fbr-doc       for ub.fbr-doc.
+    define buffer buf_goods         for ub.goods.
 
 do
 for buf_out_fbr-line
@@ -80,14 +80,15 @@ for buf_out_fbr-line
   , buf_goods
 on error undo, return error
 :
+    find first buf_fbr-doc no-lock
+         where recid( buf_fbr-doc ) = p-fbr-doc-recid.
+
     run writelog in this-procedure (
           input log-file-name
         , input 0
         , input "=====*** fbr-rsrv.p ***================================================"
     ).
-    find first buf_fbr-doc no-lock
-         where recid( buf_fbr-doc ) = p-fbr-doc-recid
-    .
+
     { gbl/hostcode.i
         buf_fbr-doc.obj-type
         buf_fbr-doc.obj-code
@@ -395,7 +396,7 @@ on error undo, return error
                     end. /*if error-status :get-message(1) <> ""*/
                     else do:
                       if p-silent then do:
-                        undo, return error substitute("&1 &2 &3&4Товар не был зарезервирован. Документ производства &5.&4Номер рецепта &6.&4&7&4&8"
+                        undo, return error substitute("&1 &2 &3&4Товар(ы) не был(и) зарезервирован(ы). Документ производства &5.&4Номер рецепта &6.&4&7&4&8"
                                                         ,vss-workfile
                                                         ,vss-revision
                                                         ,vss-description

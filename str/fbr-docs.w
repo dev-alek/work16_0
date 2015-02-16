@@ -48,6 +48,7 @@ define variable vss-description as character no-undo initial "—писок документов 
 { gbl/waitfram.i }
 { gbl/fltopend.i defproc }
 { cmp/showinf.i  }
+{ str/fbr-log.i clear }
 
 define variable doc-rec                 as recid        no-undo.
 define variable v-yesno                 as logical      no-undo.
@@ -55,6 +56,8 @@ define variable gds-rec                 as recid        no-undo.
 define variable v-fbr-docs-nik          as character    no-undo.
 define variable v-fbr-docs-oper-nik     as character    no-undo.
 define variable v-fbr-docs-where-cond   as character    no-undo.
+define variable v-user-action           as character    no-undo .
+define variable v-printed               as logical      no-undo .
 
 &scoped-define FRAME-NAME d-fbr-docs
 
@@ -95,6 +98,13 @@ define variable g#quest-print   as logical      no-undo.
 define variable g#log           as logical      no-undo.
 define variable v-host-code     as integer      no-undo.
 define variable v-host-name     as character    no-undo.
+
+define temp-table tt-rsrv-err no-undo
+  field artic like ub.goods.artic
+  field rsrv-qnty like ub.gds-obj.fact-qnty
+  field req-qnty like ub.gds-obj.fact-qnty 
+.
+define stream stm. 
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -381,7 +391,7 @@ then do:    /* новый -> разрешен */
         , input ?
         , input recid( f-doc )
         , input no /*p-silent*/
-        , input no              /* autofbr */
+        , input no /* autofbr */
         , input no
         , input no
         , output v-reserved ) no-error.
@@ -393,6 +403,37 @@ then do:    /* новый -> разрешен */
           skip return-value
           skip trim(error-status :get-message(1))
         view-as alert-box error.
+        if search ({&fbr-rsrv-tt-log-file-name}) <> ? then do:
+          input stream stm from value({&fbr-rsrv-tt-log-file-name}).
+          repeat .
+            create tt-rsrv-err.
+            import stream stm tt-rsrv-err no-error.
+            if error-status:error 
+              then delete tt-rsrv-err.
+          END.
+          output stream stm to value (v-fbr-tt-log-file-name).
+          for each tt-rsrv-err no-lock break by tt-rsrv-err.artic:  
+            if last-of (tt-rsrv-err.artic) and tt-rsrv-err.artic <> "" then do:
+              put stream stm unformatted substitute("ќшибка при резервировании товара артикул &1: требуемое кол-во &2 зарезервировано &3&4"
+                                  , tt-rsrv-err.artic
+                                  , tt-rsrv-err.req-qnty
+                                  , tt-rsrv-err.rsrv-qnty
+                                  , {&new-line}
+                                  ).
+            end.
+          end.
+          output stream stm close.
+          if search ({&fbr-rsrv-tt-log-file-name}) <> ? then do:
+            run gbl/prnfilen.w (
+                  input "—писок не зарезервированных товаров при производстве":U
+                , input 8
+                , input search({&fbr-rsrv-tt-log-file-name})
+                , input 7
+                , output v-user-action
+                , output v-printed
+            ).
+          end.
+        end.
         return no-apply.
      end.
      if v-reserved = yes
