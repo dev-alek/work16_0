@@ -957,6 +957,7 @@ on error undo, return error
 
       {&create-thbj-attr}.
 
+
       v-prop-code = "{&bef-attr-cd-type-ibm-xml_ibmrubc}".
 
 &scop ptype integer
@@ -1654,6 +1655,14 @@ end.
 &scop ptype logical
 &scop prop-value no
 &scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
+      v-prop-code = "{&bef-attr-report-glob_rep-shift-format}" .
+&scop ptype integer
+&scop prop-value 1
+&scop prop-code entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.

@@ -243,6 +243,16 @@ define variable vss-description as character no-undo init "".
 }
 { gbl/menuload.i
   {&bef-menuload_service_customs}
+  "'Сменный отчет (формат HTML)'"
+  "'rep/g-new-shift.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_service_customs}
   "'Остатки на текущий момент по товарам, оприходованным до ...'"
   "'rep/g-oldrst.p'"
   " "

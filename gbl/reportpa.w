@@ -69,8 +69,8 @@ define variable v-onewin-point as character no-undo .
 &Scoped-define page-1p  prt-z-no actuate sum-from sum-step sum-to sumvals ~
 ardecldt  shft-qty ~
 xl-delim  rep-sort  shft-qty   ~
-alcgrpgd s-alcgrpgd cplot
-
+alcgrpgd s-alcgrpgd cplot 
+&Scoped-define page-1p rep-shift-format
 
 &Scoped-define page-2p
 
@@ -96,18 +96,19 @@ v-tthf = buffer thbjattr_thbj-attr-f:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit BUTTON-1 B-quit B-Help BUTTON-2 ~
-I-actuate I-ardecldt I-rep-sort I-sum-from I-sum-step I-sum-to I-sumvals ~
+&Scoped-Define ENABLED-OBJECTS B-exit BUTTON-1 B-quit B-Help I-actuate ~
+BUTTON-2 I-ardecldt I-rep-sort I-sum-from I-sum-step I-sum-to I-sumvals ~
 I-prt-z-no I-shft-qty RECT-2 I-xl-delim I-alcgrpgd I-cplot actuate B-10 ~
 prt-z-no sum-from sum-step sum-to sumvals B-17 xl-delim B-set_rep-sort ~
-rep-sort ardecldt B-11 shft-qty B-alcgrpgd cplot B-set_cplot F-button-1 ~
-F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from v-sum-step v-sum-to ~
-v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd v-cplot 
+rep-sort ardecldt B-11 shft-qty rep-shift-format B-alcgrpgd cplot ~
+B-set_cplot F-button-1 F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from ~
+v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty ~
+v-alcgrpgd v-cplot 
 &Scoped-Define DISPLAYED-OBJECTS actuate prt-z-no sum-from sum-step sum-to ~
-sumvals xl-delim rep-sort ardecldt shft-qty alcgrpgd cplot F-button-1 ~
-F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from v-sum-step v-sum-to ~
-v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd s-alcgrpgd ~
-v-cplot 
+sumvals xl-delim rep-sort ardecldt shft-qty rep-shift-format alcgrpgd cplot ~
+F-button-1 F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from v-sum-step ~
+v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd ~
+s-alcgrpgd v-cplot 
 
 /* Custom List Definitions                                              */
 /* page-1,page-2,List-3,List-4,List-5,List-6                            */
@@ -187,6 +188,13 @@ DEFINE BUTTON BUTTON-2
      IMAGE-INSENSITIVE FILE "adeicon\ts-up":U NO-FOCUS
      LABEL "&2.Параметры" 
      SIZE 14 BY 1.13 TOOLTIP "Закладка №2".
+
+DEFINE VARIABLE rep-shift-format AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 1 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEM-PAIRS "Стандарт",1,
+                     "Форма 1",2
+     DROP-DOWN-LIST
+     SIZE 23 BY 1 NO-UNDO.
 
 DEFINE VARIABLE cplot AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
@@ -385,10 +393,11 @@ DEFINE FRAME Dialog-Frame
      ardecldt AT ROW 8.58 COL 2.75 NO-LABEL WIDGET-ID 274
      B-11 AT ROW 9.58 COL 2.75 WIDGET-ID 314
      shft-qty AT ROW 9.58 COL 47.5 NO-LABEL WIDGET-ID 308
-     alcgrpgd AT ROW 10.46 COL 34.38 COLON-ALIGNED NO-LABEL WIDGET-ID 472
-     B-alcgrpgd AT ROW 10.46 COL 47.25 WIDGET-ID 464
-     cplot AT ROW 11.5 COL 2.75 NO-LABEL WIDGET-ID 478
-     B-set_cplot AT ROW 11.5 COL 49 WIDGET-ID 476
+     rep-shift-format AT ROW 10.58 COL 26.5 COLON-ALIGNED NO-LABEL WIDGET-ID 488
+     alcgrpgd AT ROW 11.92 COL 34.38 COLON-ALIGNED NO-LABEL WIDGET-ID 472
+     B-alcgrpgd AT ROW 11.92 COL 47.25 WIDGET-ID 464
+     cplot AT ROW 12.96 COL 2.75 NO-LABEL WIDGET-ID 478
+     B-set_cplot AT ROW 12.96 COL 49 WIDGET-ID 476
      F-button-1 AT ROW 1.25 COL 34 COLON-ALIGNED NO-LABEL WIDGET-ID 350
      F-button-2 AT ROW 1.25 COL 47.25 COLON-ALIGNED NO-LABEL WIDGET-ID 348
      v-actuate AT ROW 2.25 COL 5.5 NO-LABEL WIDGET-ID 122
@@ -402,9 +411,11 @@ DEFINE FRAME Dialog-Frame
      v-rep-sort AT ROW 7.46 COL 52.75 NO-LABEL WIDGET-ID 160
      v-ardecldt AT ROW 8.63 COL 14.88 NO-LABEL WIDGET-ID 132
      v-shft-qty AT ROW 9.58 COL 6 NO-LABEL WIDGET-ID 312
-     v-alcgrpgd AT ROW 10.46 COL 2.75 NO-LABEL WIDGET-ID 470
-     s-alcgrpgd AT ROW 10.58 COL 48.63 COLON-ALIGNED NO-LABEL WIDGET-ID 474
-     v-cplot AT ROW 11.5 COL 52.25 NO-LABEL WIDGET-ID 484
+     v-alcgrpgd AT ROW 11.92 COL 2.75 NO-LABEL WIDGET-ID 470
+     s-alcgrpgd AT ROW 12.13 COL 48.63 COLON-ALIGNED NO-LABEL WIDGET-ID 474
+     v-cplot AT ROW 13.04 COL 52.25 NO-LABEL WIDGET-ID 484
+     "Форма сменного отчета:" VIEW-AS TEXT
+          SIZE 23.5 BY .67 AT ROW 10.67 COL 2.88 WIDGET-ID 486
      I-actuate AT ROW 2.25 COL 1 WIDGET-ID 118
      I-ardecldt AT ROW 8.67 COL 1 WIDGET-ID 128
      I-rep-sort AT ROW 7.54 COL 1 WIDGET-ID 158
@@ -416,9 +427,9 @@ DEFINE FRAME Dialog-Frame
      I-shft-qty AT ROW 9.58 COL 1 WIDGET-ID 306
      RECT-2 AT ROW 2 COL 1 WIDGET-ID 346
      I-xl-delim AT ROW 6.5 COL 1 WIDGET-ID 380
-     I-alcgrpgd AT ROW 10.5 COL 1 WIDGET-ID 466
-     I-cplot AT ROW 11.5 COL 1 WIDGET-ID 482
-     SPACE(98.12) SKIP(10.91)
+     I-alcgrpgd AT ROW 11.96 COL 1 WIDGET-ID 466
+     I-cplot AT ROW 12.96 COL 1 WIDGET-ID 482
+     SPACE(98.12) SKIP(9.45)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для ОТЧЕТОВ"
@@ -955,18 +966,19 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY actuate prt-z-no sum-from sum-step sum-to sumvals xl-delim rep-sort 
-          ardecldt shft-qty alcgrpgd cplot F-button-1 F-button-2 v-actuate 
-          v-prt-z-no FILL-IN-2 v-sum-from v-sum-step v-sum-to v-sumvals 
-          v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd s-alcgrpgd 
-          v-cplot 
+          ardecldt shft-qty rep-shift-format alcgrpgd cplot F-button-1 
+          F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from v-sum-step 
+          v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty 
+          v-alcgrpgd s-alcgrpgd v-cplot 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit BUTTON-1 B-quit B-Help BUTTON-2 I-actuate I-ardecldt I-rep-sort 
+  ENABLE B-exit BUTTON-1 B-quit B-Help I-actuate BUTTON-2 I-ardecldt I-rep-sort 
          I-sum-from I-sum-step I-sum-to I-sumvals I-prt-z-no I-shft-qty RECT-2 
          I-xl-delim I-alcgrpgd I-cplot actuate B-10 prt-z-no sum-from sum-step 
          sum-to sumvals B-17 xl-delim B-set_rep-sort rep-sort ardecldt B-11 
-         shft-qty B-alcgrpgd cplot B-set_cplot F-button-1 F-button-2 v-actuate 
-         v-prt-z-no FILL-IN-2 v-sum-from v-sum-step v-sum-to v-sumvals 
-         v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd v-cplot 
+         shft-qty rep-shift-format B-alcgrpgd cplot B-set_cplot F-button-1 
+         F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from v-sum-step 
+         v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty 
+         v-alcgrpgd v-cplot 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1129,11 +1141,13 @@ FOR EACH thbjattr_thbj-attr-g
 &scop type integer
 {&telo1g}
 
+&scop pole rep-shift-format
+&scop type integer
+{&telo1g}
+
 &scop pole cplot
 &scop type character
 {&telo1g}
-
-
 
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr-g to temp-thbj-attr.
@@ -1394,6 +1408,7 @@ define variable v-found as decimal   no-undo .
      sum-to
      sumvals
      cplot
+     rep-shift-format 
      with frame {&frame-name}.
   end.
   /* по фирме */
@@ -1406,6 +1421,7 @@ define variable v-found as decimal   no-undo .
   enable
   rep-sort
   cplot
+  rep-shift-format
   with frame {&frame-name} .
 
 end procedure.
@@ -1775,8 +1791,6 @@ define variable loc#log as logical   no-undo .
   if loc#log <> yes then do: return error. end.
 
 ASSIGN
-
-
     actuate FRAME {&FRAME-NAME}
     alcgrpgd
     ardecldt
@@ -1788,6 +1802,7 @@ ASSIGN
     prt-z-no
     shft-qty
     cplot
+    rep-shift-format
  .
 assign
   fh = frame {&frame-name}:first-child

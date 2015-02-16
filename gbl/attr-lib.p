@@ -4096,6 +4096,7 @@ logical~
 ,character~
 ,integer~
 ,character~
+,integer~
 ':U
 &scop prop-label-list-attr-report-glob '~
 Есть отчеты Actuate~
@@ -4107,9 +4108,10 @@ logical~
 ,Список~
 ,Код группы <Алкогольные товары>~
 ,Сортировка типов касс.пл-жей в отчете по АВТОКУШ~
+,Формат сменного отчета~
 '
 
-&scop prop-list-attr-report-glob 'actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot'
+&scop prop-list-attr-report-glob 'actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format'
 &scop global-attr-report-glob true
 &scop host-attr-report-glob false
 &scop shop-attr-report-glob false
@@ -4125,6 +4127,7 @@ logical~
 &scop attr-report-glob-sumvals_tooltip    (sumvals)   Глобальный. Список диапазонов сумм для почасового отчета по диапазонам сумм продаж` например <20_30`30_40> – т.е. список непересекающихся` примыкающих диапазонов – [нижнее-значение]_[верхнее значение] – имеет приоритет на настройками sum-step` sum-from и sum-to
 &scop attr-report-glob-alcgrpgd_tooltip   (alcgrpgd)  Глобальный. Для Отчета <Декларация об объемах розничной продажи алкогольной продукции (Калуга)> нужно выбрать из классификатора групп номер группы с АЛКОГОЛЕМ
 &scop attr-report-glob-cplot_tooltip      (cplot)     Глобальный. Перечень типов касс.платежей - билетов лотереи АВТОКУШ. Порядок вывода типов касс.платежа в отчетах <<Отчет по АВТОКУШ>> соответствует порядку перечисления кодов в этом параметре
+&scop attr-report-glob-shift-rep-format_tooltip  (rep-shift-format) Глобальный. Формат сменного отчета
 &scop prop-tooltip-list-attr-report-glob  {&attr-report-glob-actuate_tooltip}~
 ,{&attr-report-glob-ardecldt_tooltip}~
 ,{&attr-report-glob-rep-sort_tooltip}~
@@ -4133,7 +4136,8 @@ logical~
 ,{&attr-report-glob-sum-to_tooltip}~
 ,{&attr-report-glob-sumvals_tooltip}~
 ,{&attr-report-glob-alcgrpgd_tooltip}~
-,{&attr-report-glob-cplot_tooltip}
+,{&attr-report-glob-cplot_tooltip}~
+,{&attr-report-glob-rep-shift-format_tooltip}
 
 &scop level-way-attr-report-glob ",,global"
 &scop up-way-attr-report-glob ",,report-glob"

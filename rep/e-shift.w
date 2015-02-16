@@ -437,7 +437,12 @@ END.
 ON VALUE-CHANGED OF Classify IN FRAME F-Main
 DO:
   ASSIGN Classify.
-
+  if place-call = "'new-rep'" then do:
+      DISABLE
+         tog-6
+         tog-8
+     with frame {&frame-name} .
+  end.
   if classify = "n-level":u
     and tog-3 = true
   then do:
@@ -1468,6 +1473,54 @@ define variable v-xmlh as handle no-undo .
   find first buf_currency no-lock
     where buf_currency.curr-code = v-base-code
   .
+  
+  if place-call = "'new-rep'" then do:
+    run rep/r-new-shift.p
+      ( input my-handle
+       ,input this-procedure:handle /*p-parent-handle*/
+       ,input this-procedure:handle /*      p-log-handle*/
+       ,input this-procedure:handle /*   p-cont-handle*/
+       ,input this-procedure:handle /*p-call-handle*/
+       ,input ? /*p-rebh*/
+       ,input ? /*p-redbh*/
+       ,input '' /*p-report-id*/
+       ,input '' /*p-xsd-file*/
+       ,input "" /*p-log-file-name*/
+       ,input integer({&repcalc-type-operator}) /*p-batch*/
+       ,input 0 /*p-codex-id*/
+       ,input 0 /*p-ruleset-id*/
+       ,INPUT v-cntxt-obj-code
+       ,INPUT v-cntxt-obj-type
+       ,INPUT buf_currency.curr-abbr
+       ,INPUT v-base-code
+       ,input f-line-of-page
+       ,input tog-weight
+       ,INPUT Classify
+       ,INPUT SortType
+       ,input tog-level
+       ,input var-level
+       ,INPUT tog-1
+       ,INPUT tog-2
+       ,input tog-3
+       ,input tog-4
+       ,input tog-5
+       ,input tog-6
+       ,input tog-7
+       ,input tog-8
+       ,input tog-9
+       ,input tog-10
+       ,input tog-1-pump-one
+       ,input tog-1-whole-gds
+       ,input tog-1-out-pump-with-icnt
+       ,input tog-2-cp-grp
+       ,input yes /*p-plain-text*/
+       ,input yes /*p-xls*/
+       ,input '' /*p-output-dir - выбираем внутри*/
+       ,input-output v_dataseth /*если не batch ничего не возвращается*/
+       ,input table temp-xml-tables
+      ) .    
+  end. /*place-call = "'new-rep'"*/
+  else
     run rep/r-shift.p
       ( input my-handle
        ,input this-procedure:handle /*p-parent-handle*/
