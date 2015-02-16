@@ -430,8 +430,14 @@ procedure calc:
                    when {&TDEDT_Ras_Prvo}            or
                    when {&TDEDT_Spi_Prvo} then do:                   
                        /* сумируем все расходы */
-                       tt-line.all-spent-qnty = tt-line.all-spent-qnty + lc_ot-line.fact-qnty.
+                       tt-line.all-spent-qnty = tt-line.all-spent-qnty - lc_ot-line.fact-qnty.
                    end.
+                   otherwise do:
+                        if lc_ot-line.ext-doc-type = {&TDEDT_Inv} and  lc_ot-line.fact-qnty > 0 then
+                        tt-line.all-rcv-qnty = tt-line.all-rcv-qnty + lc_ot-line.fact-qnty.
+                        else if lc_ot-line.ext-doc-type = {&TDEDT_Inv} and lc_ot-line.fact-qnty <= 0 then
+                        tt-line.all-spent-qnty = tt-line.all-spent-qnty - lc_ot-line.fact-qnty.
+                   end. 
                end. /* case lc_ot-line.ext-doc-type: */
         end. /* for each lc_ot-line */
         
