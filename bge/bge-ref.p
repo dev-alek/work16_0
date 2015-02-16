@@ -98,6 +98,7 @@ on error undo, return error
           input p-mode
         , input p-host-code
         , input table temp_bge-xml_clients
+        , ""
     ) no-error.
     if error-status :error
     then do:
@@ -161,6 +162,7 @@ on error undo, return error
     run bge/cat-good.p (
             input p-mode
           , input table temp_bge-xml_goods
+          , ""
     ) no-error.
     if error-status :error
     then do:
@@ -229,6 +231,7 @@ on error undo, return error
         run bge/cat-dcrt.p (
               input p-mode
             , input table temp_bge-xml_dis-card
+            , ""
         ) no-error.
         if error-status :error
         then do:

@@ -287,10 +287,12 @@ on error undo, return error
           input "list":U
         , input v-cntxt-host-code-obj
         , input table temp_bge-xml_clients
+        , ""
     ).
     run bge/cat-good.p (
           input "good-ext,list":U
         , input table temp_bge-xml_goods
+        , ""
     ).
     run wp-XMLWriteLog in this-procedure (
           input v-log-file-name

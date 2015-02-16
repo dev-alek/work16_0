@@ -414,6 +414,10 @@ DO:
     end.
     define buffer buf_userobjs_temp-user-obj for userobjs_temp-user-obj .
 
+    for each temp_obj-list:
+        delete temp_obj-list.
+    end.
+
     for each buf_userobjs_temp-user-obj
     on error undo, return no-apply
     :
