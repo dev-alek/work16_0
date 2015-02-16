@@ -1088,8 +1088,8 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BUTTON-shift s-object
 ON CHOOSE OF BUTTON-shift IN FRAME F-Main
 DO:
-  define variable v-doc-rec  as recid no-undo .
-  define variable rec-list-2 as character no-undo .
+  define variable v-doc-rec as recid no-undo.
+  define variable rec-list-2 as character no-undo.
   define buffer buf_shift-obj for ub.shift-obj .
 
   IF  SelectObject:screen-value = {&obj-currency} then do:
@@ -1604,23 +1604,36 @@ x-Date-End  = DAte(Date-Start:screen-value IN frame {&frame-name}).
 x-Shift-End = integer(Shift-Start:screen-value IN frame {&frame-name}).
 
 
-if TOG-Shift-2 THEN
-   disable Date-End shift-end with frame {&frame-name}.
-   ELSE
-   enable Date-End shift-end with frame {&frame-name}.
+if TOG-Shift-2 then
+    do:
+        disable
+            Date-End
+            shift-end
+        with frame {&frame-name}.
+    end.
+else
+    do:
+        enable
+            Date-End
+            shift-end
+        with frame {&frame-name}.
+    end.
 
-Display Date-End shift-end  with frame {&frame-name}.
+Display Date-End shift-end with frame {&frame-name}.
 
 if can-find(first buf_shift-obj where buf_shift-obj.obj-code = v-cntxt-obj-code and
-                                  buf_shift-obj.obj-type = v-cntxt-obj-type no-lock ) then  DO:
-if tog-shift-2 then do:
-  disable  button-shift-end with frame {&frame-name} .
-end.
-else do:
-  enable  button-shift-end with frame {&frame-name} .
-end.
-display button-shift-end with frame {&frame-name} .
-end.
+    buf_shift-obj.obj-type = v-cntxt-obj-type no-lock) then
+        do:
+            if tog-shift-2 then
+                do:
+                    disable button-shift-end with frame {&frame-name} .
+                end.
+            else
+                do:
+                    enable button-shift-end with frame {&frame-name} .
+                end.
+            display button-shift-end with frame {&frame-name} .
+        end.
 
 
 END.
@@ -1778,6 +1791,7 @@ assign
   X-Shift-End      = X-Shift-Alone
   X-Shift-Start    = X-Shift-Alone
   .
+
 /* Проверка нет ли двойных записей в obj-list */
  Assign
  L#obj-code=0
@@ -1901,9 +1915,9 @@ assign
           str4 = str4   + {&new-line} +  "Нет информации о чеках на объектах : " + str-obj2# .        /*объекты которые не попали*/
        IF str-obj3# <> "" Then do:
           if not SelectObject = {&obj-firm} then do:
-          str4 = str4   + {&new-line} +  "Не текущая фирма : " + str-obj3# .        /*объекты которые не попали*/
+             str4 = str4   + {&new-line} +  "Не текущая фирма : " + str-obj3# .        /*объекты которые не попали*/
           end.
-        end.
+       end.
      End.
 
      /* Контрагенты */
@@ -2034,7 +2048,7 @@ case temp-param-date:
          End.
 
     when 2 then do: /*2 датЫ - период*/
-         TEXT-3 ='Выбор периода'.
+         TEXT-3 = 'Выбор периода'.
          enable TEXT-3  Date-End Date-Start  with frame {&FRAME-NAME} .
          display TEXT-3  Date-End Date-Start  with frame {&FRAME-NAME} .
          disable Radio-task Date-Alone Shift-Alone  BUTTON-shift  Shift-End Shift-Start TOG-Shift  Radio-Period with frame {&FRAME-NAME} .
@@ -2065,9 +2079,19 @@ case temp-param-date:
             hide Shift-start shift-end BUTTON-Shift-end BUTTON-Shift-Start  Radio-Period in frame {&FRAME-NAME} .
          end .
          else do:
-            enable  Shift-start shift-end BUTTON-Shift-end BUTTON-Shift-Start       with frame {&FRAME-NAME} .
-            display Shift-start shift-end BUTTON-Shift-end BUTTON-Shift-Start      with frame {&FRAME-NAME} .
-            display TEXT-3 Date-Start Date-End Shift-Start Shift-End TOG-Shift  with frame {&FRAME-NAME} .
+            if tog-shift-2 then
+                do:
+                    disable shift-end BUTTON-Shift-end Date-End with frame {&FRAME-NAME} .
+                    enable  Shift-start BUTTON-Shift-Start with frame {&FRAME-NAME} .
+                    display Shift-start BUTTON-Shift-Start with frame {&FRAME-NAME} .
+                    display TEXT-3 Date-Start Date-End Shift-Start Shift-End TOG-Shift with frame {&FRAME-NAME} .
+                end.
+            else
+                do:
+                    enable  Shift-start shift-end BUTTON-Shift-end BUTTON-Shift-Start with frame {&FRAME-NAME} .
+                    display Shift-start shift-end BUTTON-Shift-end BUTTON-Shift-Start with frame {&FRAME-NAME} .
+                    display TEXT-3 Date-Start Date-End Shift-Start Shift-End TOG-Shift with frame {&FRAME-NAME} .
+                end.
          end.
          display Date-Start Date-End TOG-Shift with frame {&FRAME-NAME} .
 
