@@ -1,11 +1,11 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -79,7 +79,7 @@ define buffer buf_alc-type     for ub.alc-type.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -91,23 +91,23 @@ define buffer buf_alc-type     for ub.alc-type.
 &Scoped-define BROWSE-NAME BROWSE-2
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
-&Scoped-define INTERNAL-TABLES ub.alc-type-gds ub.goods
+&Scoped-define INTERNAL-TABLES alc-type-gds goods
 
 /* Definitions for BROWSE BROWSE-2                                      */
-&Scoped-define FIELDS-IN-QUERY-BROWSE-2 ub.goods.artic ub.goods.gds-name ~
-ub.goods.gds-code
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2
-&Scoped-define QUERY-STRING-BROWSE-2 FOR EACH ub.alc-type-gds ~
-      WHERE ub.alc-type-gds.alc-type-inner-code = p-alc-type-inner-code  NO-LOCK, ~
-      EACH ub.goods WHERE ub.goods.gds-code = ub.alc-type-gds.gds-code NO-LOCK ~
+&Scoped-define FIELDS-IN-QUERY-BROWSE-2 goods.artic goods.gds-name ~
+goods.gds-code 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2 
+&Scoped-define QUERY-STRING-BROWSE-2 FOR EACH alc-type-gds ~
+      WHERE alc-type-gds.alc-type-inner-code = p-alc-type-inner-code  NO-LOCK, ~
+      EACH goods WHERE goods.gds-code = alc-type-gds.gds-code NO-LOCK ~
     ~{&SORTBY-PHRASE}
-&Scoped-define OPEN-QUERY-BROWSE-2 OPEN QUERY BROWSE-2 FOR EACH ub.alc-type-gds ~
-      WHERE ub.alc-type-gds.alc-type-inner-code = p-alc-type-inner-code  NO-LOCK, ~
-      EACH ub.goods WHERE ub.goods.gds-code = ub.alc-type-gds.gds-code NO-LOCK ~
+&Scoped-define OPEN-QUERY-BROWSE-2 OPEN QUERY BROWSE-2 FOR EACH alc-type-gds ~
+      WHERE alc-type-gds.alc-type-inner-code = p-alc-type-inner-code  NO-LOCK, ~
+      EACH goods WHERE goods.gds-code = alc-type-gds.gds-code NO-LOCK ~
     ~{&SORTBY-PHRASE}.
-&Scoped-define TABLES-IN-QUERY-BROWSE-2 ub.alc-type-gds ub.goods
-&Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-2 ub.alc-type-gds
-&Scoped-define SECOND-TABLE-IN-QUERY-BROWSE-2 ub.goods
+&Scoped-define TABLES-IN-QUERY-BROWSE-2 alc-type-gds goods
+&Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-2 alc-type-gds
+&Scoped-define SECOND-TABLE-IN-QUERY-BROWSE-2 goods
 
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
@@ -115,7 +115,10 @@ ub.goods.gds-code
     ~{&OPEN-QUERY-BROWSE-2}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-add b-del b-help BROWSE-2
+&Scoped-Define ENABLED-OBJECTS b-exit b-add b-del b-help r-sort s-artic ~
+s-code BROWSE-2 FILL-IN-2 
+&Scoped-Define DISPLAYED-OBJECTS r-sort s-artic s-name s-name-cnt s-code ~
+FILL-IN-2 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -130,43 +133,73 @@ ub.goods.gds-code
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить":L
+DEFINE BUTTON b-add 
+     LABEL "&Добавить":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-del
-     LABEL "&Удалить":L
+DEFINE BUTTON b-del 
+     LABEL "&Удалить":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "&Выход ":L
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Выход ":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь":L
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-print
-     LABEL "Пе&чать":L
+DEFINE BUTTON b-print 
+     LABEL "Пе&чать":L 
      SIZE 10 BY 1.
+
+DEFINE VARIABLE FILL-IN-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Поиск по" 
+      VIEW-AS TEXT 
+     SIZE 8.88 BY .67 NO-UNDO.
+
+DEFINE VARIABLE s-artic AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 25 BY 1 NO-UNDO.
+
+DEFINE VARIABLE s-code AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 25 BY 1 NO-UNDO.
+
+DEFINE VARIABLE s-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 25 BY 1 NO-UNDO.
+
+DEFINE VARIABLE s-name-cnt AS CHARACTER FORMAT "X(256)":U 
+     LABEL "" 
+     VIEW-AS FILL-IN 
+     SIZE 25 BY 1 NO-UNDO.
+
+DEFINE VARIABLE r-sort AS INTEGER 
+     VIEW-AS RADIO-SET HORIZONTAL
+     RADIO-BUTTONS 
+          "Код", 1,
+"Артикул", 2,
+"Нач.назв", 3
+
+     SIZE 38.75 BY .96 TOOLTIP "Поиск по" NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BROWSE-2 FOR
-      ub.alc-type-gds,
-      ub.goods SCROLLING.
+DEFINE QUERY BROWSE-2 FOR 
+      alc-type-gds, 
+      goods SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame _STRUCTURED
   QUERY BROWSE-2 NO-LOCK DISPLAY
-      ub.goods.artic FORMAT "X(16)":U
-      ub.goods.gds-name FORMAT "X(48)":U
-      ub.goods.gds-code FORMAT "999999999":U
+      goods.artic FORMAT "X(16)":U
+      goods.gds-name FORMAT "X(48)":U
+      goods.gds-code FORMAT "999999999":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 87 BY 18.9
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 87 BY 18.92
          BGCOLOR 15 .
 
 
@@ -178,10 +211,16 @@ DEFINE FRAME Dialog-Frame
      b-del AT ROW 1 COL 22
      b-print AT ROW 1 COL 68
      b-help AT ROW 1 COL 78
+     r-sort AT ROW 2.04 COL 10.75 NO-LABEL WIDGET-ID 4
+     s-artic AT ROW 2.04 COL 49 COLON-ALIGNED NO-LABEL WIDGET-ID 10
+     s-name AT ROW 2.04 COL 49 COLON-ALIGNED NO-LABEL WIDGET-ID 8
+     s-name-cnt AT ROW 2.04 COL 49 COLON-ALIGNED WIDGET-ID 12
+     s-code AT ROW 2.04 COL 49 COLON-ALIGNED NO-LABEL WIDGET-ID 14
      BROWSE-2 AT ROW 3.13 COL 1
-     SPACE(0.00) SKIP(0.01)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     FILL-IN-2 AT ROW 2.21 COL 1 NO-LABEL WIDGET-ID 2
+     SPACE(78.12) SKIP(19.17)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Товары ".
 
 
@@ -201,12 +240,18 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB BROWSE-2 b-help Dialog-Frame */
-ASSIGN
+/* BROWSE-TAB BROWSE-2 s-code Dialog-Frame */
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* SETTINGS FOR BUTTON b-print IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN FILL-IN-2 IN FRAME Dialog-Frame
+   ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN s-name IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN s-name-cnt IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -228,7 +273,7 @@ ASSIGN
 */  /* BROWSE BROWSE-2 */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -273,7 +318,7 @@ assign
 run str/chsgdsls.w
 (   input parParentProc ,
     input "alc-type" ,
-    input "Тип акоголя: " + p-name  ,
+    input "Вид акоголя: " + p-name  ,
     input ? ,
     input ? ,
     input v-cntxt-host-code-obj,
@@ -342,10 +387,183 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME r-sort
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sort Dialog-Frame
+ON VALUE-CHANGED OF r-sort IN FRAME Dialog-Frame
+DO:
+  Assign frame {&frame-name} r-sort.
+  case r-sort :
+  when 1 then do:
+        if sch-field = "s-name-cnt" then do:
+                       assign frame {&frame-name}:title = "Товары >> Вид алкогольной продукции - " + p-name.
+                      {&OPEN-QUERY-BROWSE-2}
+                      end.
+        enable s-code with frame {&frame-name}.
+            Hide s-name  s-name-cnt s-artic in frame {&frame-name}.
+        display s-code with frame {&frame-name}.
+        apply "entry" to s-code in frame {&frame-name}.
+   end.
+  when 2 then do:
+        if sch-field = "s-name-cnt" then do:
+                       assign frame {&frame-name}:title = "Товары >> Вид алкогольной продукции - " + p-name.
+                      {&OPEN-QUERY-BROWSE-2}
+                      end.
+        enable s-artic with frame {&frame-name}.
+            Hide s-name  s-name-cnt s-code in frame {&frame-name}.
+        display s-artic with frame {&frame-name}.
+        apply "entry" to s-artic in frame {&frame-name}.
+   end.
+  when 3 then do:
+    if sch-field = "s-name-cnt" then do:
+                 assign frame {&frame-name}:title = "Товары >> Вид алкогольной продукции - " + p-name.
+                {&OPEN-QUERY-BROWSE-2}
+                end.
+        enable s-name with frame {&frame-name}.
+        hide s-artic  s-name-cnt s-code in frame {&frame-name}.
+        display s-name with frame {&frame-name}.
+        apply "entry" to s-name in frame {&frame-name}.
+   end.
+  when 4 then do:
+        enable s-name-cnt with frame {&frame-name}.
+        hide s-artic  s-name s-code in frame {&frame-name}.
+        display s-name-cnt with frame {&frame-name}.
+        apply "entry" to s-name-cnt in frame {&frame-name}.
+   end.
+
+  end case.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME s-artic
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL s-artic Dialog-Frame
+ON MOUSE-SELECT-DBLCLICK OF s-artic IN FRAME Dialog-Frame
+OR  RETURN OF s-artic IN FRAME {&frame-name}
+DO:
+  if s-artic <> input frame {&frame-name} s-artic or sch-field <> "s-artic" then do:
+
+ sch-field = "s-artic".
+ assign s-artic = input frame {&frame-name} s-artic.
+
+ doc-rec = ?.
+ for each buf_alc-type-gds where buf_alc-type-gds.alc-type-inner-code = p-alc-type-inner-code,
+            first buf_goods where buf_alc-type-gds.gds-code = buf_goods.gds-code and
+                                  buf_goods.artic begins s-artic :
+         doc-rec = recid(buf_alc-type-gds) .
+         leave.
+ end.
+  if doc-rec = ? then message "Товар не найден !"  .
+  else
+      reposition {&browse-name} to recid doc-rec no-error.
+
+return no-apply.
+end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME s-code
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL s-code Dialog-Frame
+ON MOUSE-SELECT-DBLCLICK OF s-code IN FRAME Dialog-Frame
+OR  RETURN OF s-code IN FRAME {&frame-name}
+DO:
+  if s-code <> input frame {&frame-name} s-code or sch-field <> "s-code" then do:
+
+ sch-field = "s-code".
+ assign s-code = input frame {&frame-name} s-code.
+
+ doc-rec = ?.
+ for each buf_alc-type-gds where buf_alc-type-gds.alc-type-inner-code = p-alc-type-inner-code,
+            first buf_goods where buf_alc-type-gds.gds-code = buf_goods.gds-code and
+                                  buf_goods.gds-code = integer(s-code) :
+         doc-rec = recid(buf_alc-type-gds) .
+         leave.
+ end.
+  if doc-rec = ? then message "Товар не найден !"  .
+  else
+      reposition {&browse-name} to recid doc-rec no-error.
+
+return no-apply.
+end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME s-name
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL s-name Dialog-Frame
+ON MOUSE-SELECT-DBLCLICK OF s-name IN FRAME Dialog-Frame
+OR  RETURN OF s-name IN FRAME {&frame-name}
+DO:
+  if s-name <> input frame {&frame-name} s-name or sch-field <> "s-name" then do:
+
+ sch-field = "s-name".
+ assign s-name = input frame {&frame-name} s-name.
+
+ doc-rec = ?.
+ for each buf_alc-type-gds where buf_alc-type-gds.alc-type-inner-code = p-alc-type-inner-code,
+            first buf_goods where buf_alc-type-gds.gds-code = buf_goods.gds-code and
+                                  buf_goods.gds-name begins s-name :
+         doc-rec = recid(buf_alc-type-gds) .
+         leave.
+ end.
+  if doc-rec = ? then message "Товар не найден !"  .
+  else
+      reposition {&browse-name} to recid doc-rec no-error.
+
+return no-apply.
+end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME s-name-cnt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL s-name-cnt Dialog-Frame
+ON MOUSE-SELECT-DBLCLICK OF s-name-cnt IN FRAME Dialog-Frame
+OR  RETURN OF s-name-cnt IN FRAME {&frame-name}
+DO:
+  if s-name-cnt <> input frame {&frame-name} s-name-cnt or sch-field <> "s-name-cnt" then do:
+
+ sch-field = "s-name-cnt".
+ assign s-name-cnt = input frame {&frame-name} s-name-cnt.
+
+ doc-rec = ?.
+ for each buf_alc-type-gds where buf_alc-type-gds.alc-type-inner-code = p-alc-type-inner-code,
+            first buf_goods where
+               buf_alc-type-gds.gds-code = buf_goods.gds-code and
+             INDEX(buf_goods.gds-name,s-name-cnt) > 0 :
+         doc-rec = recid(buf_alc-type-gds) .
+         leave.
+ end.
+  if doc-rec = ? then message "Товар не найден !"  .
+  else do:
+     assign frame {&frame-name}:title = "Товары >> виды алкогольной продукции - " + p-name + " , содержащие в названии " + s-name-cnt .
+      {&OPEN-QUERY-BROWSE-2-alt}
+     /* reposition {&browse-name} to recid doc-rec no-error. */
+     end.
+return no-apply.
+end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define BROWSE-NAME BROWSE-2
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -388,7 +606,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         .
 
    if not available buf_alc-type  then return error .
-
+/*поиск*/
+   enable  s-code with frame {&frame-name}.
+   Hide      s-name  s-name-cnt s-artic in frame {&frame-name}.
+   display s-code with frame {&frame-name}.
+   
    WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 run disable_UI in this-procedure .
@@ -399,7 +621,7 @@ run disable_UI in this-procedure .
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE cycle-add Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE cycle-add Dialog-Frame 
 PROCEDURE cycle-add :
 define variable v-num   as integer no-undo .
    define variable v-count as integer no-undo .
@@ -413,12 +635,12 @@ define variable v-num   as integer no-undo .
 
    run gbl/d-askw.w
       (input "Вопрос" /* Заголовок окна */
-      ,input "Если товар уже прикреплен к типу алкоголя, пропускаем его?"
+      ,input "Если товар уже прикреплен к виду алкоголя, пропускаем его?"
       ,input "|^" /* Символы разделители для кодирования двух следующих параметров */
       ,input "Не добавлять|Добавлять|Остановка" /* список названий кнопок  */
-      ,input "Не добавляем товар к новому типу алкоголя, товар остается со старым типом|" /* список описаний кнопок */
-         + "Добавляем товар к новому типу и открепляем от старого|"
-         + "Остановить добавление товаров, если встречаются товары прикрепленные к другим типам алкоголя."
+      ,input "Не добавляем товар к новому виду алкоголя, товар остается со старым видом|" /* список описаний кнопок */
+         + "Добавляем товар к новому виду и открепляем от старого|"
+         + "Остановить добавление товаров, если встречаются товары прикрепленные к другим видам алкоголя."
       ,input 1 /* значение возвращаемое при нажатии enter */
       ,input 2 /* значение возвращаемое при нажатии escape */
       ,output v-num /* выбор пользователя */
@@ -547,7 +769,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -566,10 +788,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-exit b-add b-del b-help BROWSE-2
+  DISPLAY r-sort s-artic s-name s-name-cnt s-code FILL-IN-2 
+      WITH FRAME Dialog-Frame.
+  ENABLE b-exit b-add b-del b-help r-sort s-artic s-code BROWSE-2 FILL-IN-2 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -578,32 +802,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE post_enable_UI Dialog-Frame
-PROCEDURE post_enable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     ENABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we display/view/enable the widgets in the
-               user-interface.  In addition, OPEN all queries
-               associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
-               Settings" section of the widget Property Sheets.
-------------------------------------------------------------------------------*/
-   if v-cntxt-db-num <> 0 then do:
-      disable
-            b-add b-del
-      WITH FRAME Dialog-Frame.
-   end.
-END PROCEDURE. /* post_enable_UI */
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 define variable t-ret as logical no-undo .
 t-ret =  session:SET-WAIT-STATE("GENERAL") .
@@ -639,7 +838,28 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-list Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE post_enable_UI Dialog-Frame 
+PROCEDURE post_enable_UI :
+/*------------------------------------------------------------------------------
+  Purpose:     ENABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we display/view/enable the widgets in the
+               user-interface.  In addition, OPEN all queries
+               associated with each FRAME and BROWSE.
+               These statements here are based on the "Other
+               Settings" section of the widget Property Sheets.
+------------------------------------------------------------------------------*/
+   if v-cntxt-db-num <> 0 then do:
+      disable
+            b-add b-del
+      WITH FRAME Dialog-Frame.
+   end.
+END PROCEDURE. /* post_enable_UI */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-list Dialog-Frame 
 PROCEDURE proc-b-list :
 /*
 define input parameter loc-list-option as character no-undo.
@@ -749,3 +969,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

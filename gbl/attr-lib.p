@@ -5620,15 +5620,15 @@ end procedure.
 &scop format-attr-alcohol-prod  "+/ "
 &scop label-attr-alcohol-prod   "Алкогольная продукция"
 &scop tooltip-attr-alcohol-prod   "Алкогольная продукция"
-&scop user-can-edit-attr-alcohol-prod  true
-&scop output-display-attr-alcohol-prod  true
+&scop user-can-edit-attr-alcohol-prod  false
+&scop output-display-attr-alcohol-prod  false
 &scop other-attr-alcohol-prod  ""
 &scop news-attr-alcohol-prod true
 &scop copy-attr-alcohol-prod  true
-&scop manual-edit-attr-alcohol-prod 1
-&scop batch-edit-attr-alcohol-prod  1
+&scop manual-edit-attr-alcohol-prod 0
 
 &scop type-attr-is-gas {&type-log}
+&scop batch-edit-attr-alcohol-prod  0
 &scop format-attr-is-gas  "+/ "
 &scop label-attr-is-gas   "Природный газ-топливо"
 &scop tooltip-attr-is-gas   "Природный газ-топливо"

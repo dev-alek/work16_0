@@ -332,7 +332,7 @@ DO:
 
     run ref/exmark.w
       (input parParentProc
-      ,input 'b-sel'
+      ,input 'b-sel,b-add'
       ,input-output ref-list
       ).
     if ref-list <> "" and ref-list <> ? then do:

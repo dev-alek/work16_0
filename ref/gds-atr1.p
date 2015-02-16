@@ -40,7 +40,7 @@ define variable v-deleted as logical no-undo .
 define variable v-err-mess as character no-undo .
 define buffer buf_goods-attr for ub.goods-attr.
 define buffer buf_goods for ub.goods.
-
+define variable v-num-section            as integer no-undo.
 _main:
 do
 on error undo, return error return-value
@@ -81,31 +81,36 @@ on error undo, return error return-value
   END. /*FOR EACH tt0-goods-attr:*/
   if p-mode <> {&add-def} then do:
     FOR EACH buf_goods-attr where buf_goods-attr.gds-code = p-gds-code:
-       if buf_goods-attr.attr-code = {&attr-gds-attr-lock} then next.
+
         FIND FIRST tt0-goods-attr NO-LOCK WHERE
             tt0-goods-attr.gds-code = p-gds-code
         AND tt0-goods-attr.attr-code = buf_goods-attr.attr-code NO-ERROR.
-      IF NOT AVAILABLE tt0-goods-attr THEN DO:
-          ASSIGN
-          v-deleted = NO.
-          RUN gds-attr-delete IN THIS-PROCEDURE (
-                                                input buf_goods-attr.gds-code
-                                                ,INPUT buf_goods-attr.attr-code
-                                                ,output v-deleted ) NO-ERROR.
-        IF NOT v-deleted
-        or error-status:error
-        THEN DO:
-          assign
-          v-err-mess = substitute("Ошибка при удалении атрибута товара &1 &2 :&3&4 &5"
-                                  , p-gds-code
-                                  , buf_goods-attr.attr-code
-                                  , {&new-line}
-                                  ,error-status:get-message(1)
-                                  ,return-value
-                                  ).
-          undo _main, return error v-err-mess.
-        END. /*tt0-goods-attr.attr-code*/
-      END. /*IF NOT AVAILABLE tt0-goods-attr THEN DO:*/
+          IF NOT AVAILABLE tt0-goods-attr THEN DO:
+           run gds-attr-manual-edit in this-procedure (input buf_goods-attr.gds-code
+                                                       , output v-num-section).
+           if v-num-section > 0 then do:         /* Если атрибут есть, но он заполняется не через обычный интерфейс, то не надо запись удалять из базы */                                      
+                  ASSIGN
+                  v-deleted = NO.
+                  RUN gds-attr-delete IN THIS-PROCEDURE (
+                                                        input buf_goods-attr.gds-code
+                                                        ,INPUT buf_goods-attr.attr-code
+                                                        ,output v-deleted ) NO-ERROR.
+                IF NOT v-deleted
+                or error-status:error
+                THEN DO:
+                  assign
+                  v-err-mess = substitute("Ошибка при удалении атрибута товара &1 &2 :&3&4 &5"
+                                          , p-gds-code
+                                          , buf_goods-attr.attr-code
+                                          , {&new-line}
+                                          ,error-status:get-message(1)
+                                          ,return-value
+                                          ).
+                  undo _main, return error v-err-mess.
+                END. /* NOT v-deleted */
+            end. /* v-num-section > 0 */
+          END. /*IF NOT AVAILABLE tt0-goods-attr THEN DO:*/
+
     END. /*FOR EACH buf_goods-attr where buf_goods-attr.gds-code = p-gds-code:*/
   end.
 end. /*doe*/

@@ -526,6 +526,7 @@ PROCEDURE proc-save :
       end.
       /* Если обнуление */
       else do:
+        if FILL-IN-Date-to <> ? then
         locked_ex-mark-attr.attr-value = string(FILL-IN-Date-to).
       end.
     end.

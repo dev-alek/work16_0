@@ -126,6 +126,7 @@ ABC-XYZ-анализы,abcxyz,                           ~
 Товар классиф.ТИПЫ ТОПЛИВА ДЛЯ ВЫГРУЗКИ В ЭЛКОС ТАЛОН,elcos,   ~
 Нет ингредиентов рецептов,no-recipe-gds,           ~
 Неактивные,deleted,                                ~
+Виды алкогольной продукции,choose-alc-prod,        ~
 С движением за период с:,move-date"
 
 &glob no-browser-option '':U
@@ -1407,6 +1408,23 @@ case rs-list-method:
       {&assign-nums}.
     end.
   end.
+  when "choose-alc-prod"
+  then do:
+    for each buf_{1}-hist where
+             buf_{1}-hist.id = p-id
+        and  buf_{1}-hist.item_  <> '':U:
+      {&get-rowid} next.
+      find alc-type where rowid (alc-type) = v-rowid no-lock.
+      if rs-list-method = "choose-alc-prod" then do:
+        for each alc-type-gds where alc-type-gds.alc-type-inner-code = alc-type.alc-type-inner-code no-lock,
+            first goods where goods.gds-code = alc-type-gds.gds-code no-lock:
+          run ex-gds  in this-procedure( buffer goods, input rs-list-method, input rs-status, input line-mode).
+        end.
+      end.
+      {&assign-nums}.
+    end.
+  end.
+
   when "object" then do:
     find first buf_{1}-hist where
              buf_{1}-hist.id = p-id
@@ -2979,6 +2997,79 @@ on error undo, return error
           return error.
         end.
       end.
+      /*-------------------------------------------------------*/
+      when "choose-alc-prod" then do:
+          grp-list = "". /* чтоб не было ложного срабатывания следующего if */
+          run ref/alc-type.w ( input parparentproc
+                              ,input "b-sel,b-mark"
+                              ,input-output grp-list
+                              ,output v-ok ).
+
+        if grp-list <> ? and
+        grp-list <> "" then do:
+          v-recs = num-entries (grp-list).
+          do num-rec = 0 to v-recs:
+            if v-recs = 1 then do:
+              num-rec = 1 .
+            end.
+            if num-rec > 0 then do:
+              v-grp-rec = integer (entry (num-rec, grp-list)).
+              find ub.alc-type where recid (ub.alc-type) = v-grp-rec no-lock.
+              run grplib-get-full-name-alc-type in this-procedure (ub.alc-type.alc-type-inner-code, output grp-path).
+            end.
+            if v-recs = 1 then do:
+              assign
+              v-temp-seq = v-seq
+              v-line     = 0
+              dsp-rs = substitute("Вид алкогольной продукции: &1 &2", grp-path, stat-line(rs-status))
+              v-item     = '':U
+              v-tbl-name = {&table_alc-type}
+              v-bh       = buffer ub.alc-type:handle
+              v-tot-lns = tot-lns
+              .
+            end.
+            else do:
+              if num-rec = 0 then do:
+                assign
+                v-temp-seq = v-seq
+                v-line     = 0
+                dsp-rs = substitute("Виды алкогольной продукции: &1", stat-line(rs-status))
+                v-item     = '':U
+                v-tbl-name = '':U
+                v-bh       = ?
+                v-tot-lns = tot-lns
+                .
+              end.
+              else do:
+                assign
+                v-temp-seq = v-seq - 1
+                v-line     = num-rec
+                dsp-rs = substitute("&1", grp-path)
+                v-item     = '':U
+                v-tbl-name = {&table_alc-type}
+                v-bh       = buffer alc-type:handle
+                v-tot-lns = tot-lns + num-rec
+                .
+              end.
+            end.
+            v-no-hist = (if num-rec = 1 then 0 else num-rec).
+            run create-{1}-hist in this-procedure(input {&add-def}
+                                                , input-output v-temp-seq
+                                                , input v-line
+                                                , input '':U
+                                                , input dsp-rs
+                                                , input v-tot-lns
+                                                , input rs-list-method
+                                                , input rs-status
+                                                , input v-item
+                                                , input v-tbl-name
+                                                , input v-bh
+                                                ).
+            if num-rec = 0 or v-recs = 1 then v-seq  = v-temp-seq.
+          end.
+        end.
+      end.
+      /*-------------------------------------------------------*/
       when "grp-supp" or
       when "supplier" then do:
         if rs-list-method = "grp-supp" then do:
@@ -6873,3 +6964,23 @@ run ref/clobbnds.w ( input parparentproc
                     ,input-output v-rid-list) no-error.
 &endif
 end procedure. /* m-macros-save-db-proc */
+
+procedure grplib-get-full-name-alc-type :
+do
+on error undo, return error
+:
+define input parameter p-node-code  as integer      no-undo.
+define output parameter p-full-name as character    no-undo.
+    define buffer buf_alc-type       for ub.alc-type.
+    find first buf_alc-type no-lock
+         where buf_alc-type.alc-type-inner-code = p-node-code
+    no-error.
+    if not available buf_alc-type
+    then do:
+        undo, return error "grplib-get-full-name-alc-type: Не найден вид алкогольной продукции с кодом " + string( p-node-code ).
+    end.
+    assign
+    p-full-name = buf_alc-type.alc-type-name
+    .
+end.
+end procedure. /* grplib-get-full-name-alc-type */
