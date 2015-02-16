@@ -2319,7 +2319,9 @@ if varrvs-place = yes then do:
     and is-pieces = no
   then do:
 
-    if t-doc.status_ <> {&fact} then do:
+/*    if t-doc.status_ <> {&fact} then */   /* Убрано попутно к задаче ТН-3354 15.01.2015 Арн. */
+  if parline-mode <> {&lookup} then         /* Добавл попутно к задаче ТН-3354 15.01.2015 Арн. */
+    do:
       assign
         b-rvs-bf:popup-menu in frame {&frame-name} = menu m-rvs-bf:handle
         b-rvs-bf:menu-mouse = 1

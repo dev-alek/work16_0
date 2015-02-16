@@ -428,10 +428,20 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         end.
 
         case p-action :
-          when {&update} then do:
-            assign
-              v-act-name = 'actn_rvs-on-doc_upd-revision':U
-            .
+          when {&update} then /* Строка Накл в режиме "Изменить" */
+          do:
+            if p-action-type = "meas" then /* ТН-3354 Арн 12.01.2015. (Строка Накл в режиме "Изменить") и меню pop-up (по кнопкам "Св.до" и "Св.после") = "Сверка резервуара" [он же парам="meas"] */
+            do:
+              assign
+                v-act-name = 'actn_rvs-on-doc_cr-revision':U /* Право на создание сверки */
+              .
+            end.
+            else
+            do:
+              assign
+                v-act-name = 'actn_rvs-on-doc_upd-revision':U /* Право на изменение сверки */
+              .
+            end.
             case p-rvs-type :
               when {&rvs-before-doc} then do:
                 run check-before in this-procedure
