@@ -197,7 +197,7 @@ DEFINE VARIABLE f-oper-name AS CHARACTER FORMAT "X(50)":U
      VIEW-AS FILL-IN 
      SIZE 47.6 BY 1 TOOLTIP "Для печати на слипе" NO-UNDO.
 
-DEFINE VARIABLE f-slip-file AS CHARACTER FORMAT "X(256)":U 
+DEFINE VARIABLE f-slip-file AS CHARACTER FORMAT "X(19)":U  /* Экспериментально - текущая касса ограничена передачей 20 символов. 28.01.2015 Арн. */
      LABEL "Имя файла образа конечного слипа " 
      VIEW-AS FILL-IN 
      SIZE 46.4 BY 1 NO-UNDO.
@@ -632,6 +632,7 @@ if Lookup(p-mode, {&add-def} + "," + {&Lookup} + "," +  {&update}) = 0 then retu
 
     if p-mode = {&update} or p-mode = {&Lookup} then                        /* Режим "Изменение сущ. данных" */
         do: /* a */
+            
             find first buf_ext-classif where rowid (buf_ext-classif) = p-io-rowid.  /* Проверка: ext-classif не пустая табл? */
             if available buf_ext-classif then                               /* Проверка: ext-classif не пустая табл? */
                 do: /* b */

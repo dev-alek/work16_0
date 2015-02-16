@@ -28,7 +28,7 @@ using Ibs.Th.Gbl.Rep-Out.
 define input parameter parParentProc as widget-handle no-undo.
 define input parameter p-mode as character no-undo.
 define input parameter p-db-num as integer no-undo.
-define output parameter rid-list as character no-undo. /* список recid'ов выбранных записей в браузере (по tt-oss-ref) */
+define output parameter p-rid-list as character no-undo. /* список recid'ов из таблицы ext-classif связка с таблицей выводимой в браузере (tt-oss-ref) */
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -37,12 +37,15 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Справочник сезонов".
 { cmp/vssrevis.i }
+{ cmp/showinf.i  }
+
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { ref/extclass.i }
 
+define variable rid-list as character no-undo. /* список recid'ов выбранных записей в браузере (по tt-oss-ref) */
 define variable v-rowid as rowid no-undo.
 define variable v-rowid-tt-oss-ref as rowid no-undo.
 define variable v-log as logical no-undo.
@@ -77,7 +80,7 @@ define temp-table tt-oss-ref no-undo
     field db-num as integer
     field classif-subject as character  /* Сущность */
     field classif-name as character     /* Классификатор */
-    field ext-classf-row as rowid     /* Ключ соотв. таблице ext-classif */
+    field ext-classif-row as rowid     /* Ключ соотв. таблице ext-classif */
 
     index pi as primary unique oper-code
 .
@@ -103,7 +106,7 @@ define buffer buf_tt-oss-ref for tt-oss-ref.
 &Scoped-define INTERNAL-TABLES tt-oss-ref
 
 /* Definitions for BROWSE br-oss                                        */
-&Scoped-define FIELDS-IN-QUERY-br-oss (if (can-do(rid-list, string(recid(tt-oss-ref)))) then ("*") else (" ")) tt-oss-ref.db-num tt-oss-ref.classif-subject /* Сущность */ tt-oss-ref.oper-code /* Первое (из трёх) ключевое поле справочника ОСС в таблице ext-classif */ tt-oss-ref.oper-name /* 1. Название Оператора Связи */ tt-oss-ref.oper-abbrev /* Второе (из трёх) ключевое поле справочника ОСС в таблице ext-classif */ tt-oss-ref.gds-group-in-cass /* Третье (из трёх) ключевое поле справочника ОСС в таблице ext-classif */ tt-oss-ref.min-digit-nums /* 2. Минимальное кол-во цифр для ввода номера сотового телефона */ tt-oss-ref.max-digit-nums /* 3. Максимальное кол-во цифр для ввода номера сотового телефона */ tt-oss-ref.min-sum /* 4. Минимальная сумма начисления */ tt-oss-ref.max-sum /* 5. Максимальная сумма начисления */ tt-oss-ref.warning-lim-sum /* 6. Порог суммы для выдачи предупреждения */ tt-oss-ref.type-comission /* 7. Типы ввода комиссии (цифры от 0 до 3) */ tt-oss-ref.comission-pcnt /* 8. % комиссии */ tt-oss-ref.comission-sum /* 9. Сумма комиссии */ tt-oss-ref.necessary-authorization /* 10. Авторизация неохбодима */ tt-oss-ref.necessary-slip /* 11. Печать слипа необходима */ tt-oss-ref.slip-file /* 12. Имя файла образа конечного слипа */ tt-oss-ref.billing-type /* 13. Тип расчёта с оператором */   
+&Scoped-define FIELDS-IN-QUERY-br-oss (if (can-do(rid-list, string(recid(tt-oss-ref)))) then ("*") else (" ")) /* tt-oss-ref.db-num */ /* tt-oss-ref.classif-subject /* Сущность */*/ tt-oss-ref.oper-code /* Первое (из трёх) ключевое поле справочника ОСС в таблице ext-classif */ tt-oss-ref.oper-name /* 1. Название Оператора Связи */ tt-oss-ref.oper-abbrev /* Второе (из трёх) ключевое поле справочника ОСС в таблице ext-classif */ tt-oss-ref.gds-group-in-cass /* Третье (из трёх) ключевое поле справочника ОСС в таблице ext-classif */ tt-oss-ref.min-digit-nums /* 2. Минимальное кол-во цифр для ввода номера сотового телефона */ tt-oss-ref.max-digit-nums /* 3. Максимальное кол-во цифр для ввода номера сотового телефона */ tt-oss-ref.min-sum /* 4. Минимальная сумма начисления */ tt-oss-ref.max-sum /* 5. Максимальная сумма начисления */ tt-oss-ref.warning-lim-sum /* 6. Порог суммы для выдачи предупреждения */ tt-oss-ref.type-comission /* 7. Типы ввода комиссии (цифры от 0 до 3) */ tt-oss-ref.comission-pcnt /* 8. % комиссии */ tt-oss-ref.comission-sum /* 9. Сумма комиссии */ tt-oss-ref.necessary-authorization /* 10. Авторизация неохбодима */ tt-oss-ref.necessary-slip /* 11. Печать слипа необходима */ tt-oss-ref.slip-file /* 12. Имя файла образа конечного слипа */ tt-oss-ref.billing-type /* 13. Тип расчёта с оператором */   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-oss   
 &Scoped-define SELF-NAME br-oss
 &Scoped-define QUERY-STRING-br-oss FOR EACH tt-oss-ref
@@ -142,7 +145,7 @@ function fnc-cur-time-print returns character forward.
 
 /* Definitions of the field level widgets                               */
 define button b-add 
-     LABEL "&Добавить":L 
+     label "&Добавить":L 
      size 10 by 1.
 
 define button b-del 
@@ -150,11 +153,11 @@ define button b-del
      size 10 by 1.
 
 define button b-exit auto-go 
-     LABEL "&Выход ":L 
+     label "&Выход ":L 
      size 10 by 1.
 
 define button b-help 
-     LABEL "Помо&щь":L 
+     label "Помо&щь":L 
      size 10 by 1.
 
 define button b-hist 
@@ -162,7 +165,7 @@ define button b-hist
      size 10 by 1.
 
 define button b-lookup 
-     LABEL "Про&смотр":L 
+     label "Про&смотр":L 
      size 10 by 1.
 
 define button B-mark 
@@ -170,7 +173,7 @@ define button B-mark
      size 3 by 1.
 
 define button b-print 
-     LABEL "Пе&чать":L 
+     label "Пе&чать":L 
      size 10 by 1.
 
 define button b-sel auto-end-key 
@@ -178,7 +181,7 @@ define button b-sel auto-end-key
      size 10 by 1.
 
 define button b-upd 
-     LABEL "&Изменить":L 
+     label "&Изменить":L 
      size 10 by 1.
 
 define variable mark-num as character format "X(256)":U 
@@ -187,7 +190,8 @@ define variable mark-num as character format "X(256)":U
 
 /* Query definitions */
 &ANALYZE-SUSPEND
-define query br-oss for tt-oss-ref scrolling.
+define query br-oss for 
+      tt-oss-ref scrolling.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
@@ -215,7 +219,7 @@ define browse br-oss
     tt-oss-ref.billing-type column-label "Тип расчёта с опер. связ." format ">9":U                      /* 13. Тип расчёта с оператором */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 100 BY 18 ROW-HEIGHT-CHARS .67 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 100 BY 18 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -305,7 +309,7 @@ do:
             {&open-query-br-oss}
             run proc-fill-tt-oss-ref no-error.
             find first buf_ext-classif where rowid (buf_ext-classif) = v-rowid no-error.
-            find first tt-oss-ref where rowid (buf_ext-classif) = tt-oss-ref.ext-classf-row no-error.
+            find first tt-oss-ref where rowid (buf_ext-classif) = tt-oss-ref.ext-classif-row no-error.
             v-rowid-tt-oss-ref = rowid (tt-oss-ref) no-error.
             {&open-query-br-oss}
             reposition br-oss to rowid v-rowid-tt-oss-ref no-error.
@@ -344,7 +348,7 @@ do:
         v-log
     }
 
-    find first buf_ext-classif where rowid (buf_ext-classif) = tt-oss-ref.ext-classf-row no-error.
+    find first buf_ext-classif where rowid (buf_ext-classif) = tt-oss-ref.ext-classif-row no-error.
     v-rowid-tt-oss-ref = rowid (tt-oss-ref).
     if not v-log or not available buf_ext-classif then return no-apply.
 
@@ -390,7 +394,6 @@ end.
 &ANALYZE-RESUME
 
 
-
 &Scoped-define SELF-NAME b-lookup
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-lookup Dialog-Frame
 on choose of b-lookup in frame Dialog-Frame /* Просмотр */
@@ -412,7 +415,7 @@ do:
         v-log
     }
 
-    find first buf_ext-classif where rowid (buf_ext-classif) = tt-oss-ref.ext-classf-row no-error.
+    find first buf_ext-classif where rowid (buf_ext-classif) = tt-oss-ref.ext-classif-row no-error.
     if not v-log or not available buf_ext-classif then return no-apply.
 
     v-rowid = rowid(buf_ext-classif).
@@ -425,7 +428,7 @@ do:
     {&open-query-br-oss}
     run proc-fill-tt-oss-ref no-error.
     find first buf_ext-classif where rowid (buf_ext-classif) = v-rowid no-error.
-    find first tt-oss-ref where rowid (buf_ext-classif) = tt-oss-ref.ext-classf-row no-error.
+    find first tt-oss-ref where rowid (buf_ext-classif) = tt-oss-ref.ext-classif-row no-error.
     v-rowid = rowid (tt-oss-ref).    
     {&open-query-br-oss}
     reposition br-oss to rowid v-rowid no-error.
@@ -477,7 +480,15 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel Dialog-Frame
 on choose of b-sel in frame Dialog-Frame /* Выбор */
 do:
-    if available tt-oss-ref and rid-list = "" then rid-list = string(recid(tt-oss-ref)).
+    if rid-list <> "" then /* Если есть recid из временной таблицы, тогда1... */
+    do:
+        run fill-p-rid-list(input rid-list, output p-rid-list). /* ...тогда1 подтягиваем recid из ТН: ext-classif */
+    end.
+    if available tt-oss-ref and rid-list = "" then
+    do:
+        rid-list = string(recid(tt-oss-ref)).
+        p-rid-list = string(tt-oss-ref.ext-classif-row).
+    end.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -503,7 +514,7 @@ do:
         true
         v-log
     }
-    find first buf_ext-classif where rowid (buf_ext-classif) = tt-oss-ref.ext-classf-row no-error.
+    find first buf_ext-classif where rowid (buf_ext-classif) = tt-oss-ref.ext-classif-row no-error.
     if not v-log or not available buf_ext-classif then return no-apply.
 
     v-rowid = rowid(buf_ext-classif).
@@ -516,7 +527,7 @@ do:
     {&open-query-br-oss}
     run proc-fill-tt-oss-ref no-error.
     find first buf_ext-classif where rowid (buf_ext-classif) = v-rowid no-error.
-    find first tt-oss-ref where rowid (buf_ext-classif) = tt-oss-ref.ext-classf-row no-error.
+    find first tt-oss-ref where rowid (buf_ext-classif) = tt-oss-ref.ext-classif-row no-error.
     v-rowid = rowid (tt-oss-ref).    
     {&open-query-br-oss}
     reposition br-oss to rowid v-rowid no-error.
@@ -550,8 +561,8 @@ end.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-oss Dialog-Frame
-ON RETURN OF br-oss IN FRAME Dialog-Frame
-DO:
+on return of br-oss in frame Dialog-Frame
+do:
     if p-db-num = 0 then
         do:
             apply "choose" to b-lookup in frame {&frame-name}.
@@ -562,7 +573,7 @@ DO:
             apply "choose" to b-lookup in frame {&frame-name}.
             return no-apply.
         end.
-END.
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -648,6 +659,36 @@ end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+ 		
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-p-rid-list Include
+procedure fill-p-rid-list:
+/* Получение recid ext-classif по recid-ам временной таблицы tt-oss-ref */
+    define input parameter p-rid-list-tt as character no-undo.
+    define output parameter p-rid-list_ext-classif as character no-undo.
+    define variable v-i as integer no-undo.
+    
+    define buffer buf_tt-oss-ref for tt-oss-ref.
+
+    do v-i = 1 to num-entries (p-rid-list-tt):
+        for each buf_tt-oss-ref where
+        recid(buf_tt-oss-ref) = integer(entry(v-i, p-rid-list-tt, ","))
+        no-lock:
+            if p-rid-list_ext-classif <> "" then
+            do:
+                p-rid-list_ext-classif = p-rid-list_ext-classif + "," + string(buf_tt-oss-ref.ext-classif-row). /* Если в переменной p-rid-list_ext-classif уже что-то содержится, ставим перед записью запятую-разделитель списка. */
+            end.
+            else
+            do:
+                p-rid-list_ext-classif = string(buf_tt-oss-ref.ext-classif-row). /* Если в переменной p-rid-list_ext-classif пусто, то перед первой записью запятую-разделитель списка не ставим. */
+            end.
+        end.
+    end.
+
+end procedure.
+	
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-fill-tt-oss-ref Dialog-Frame
 procedure proc-fill-tt-oss-ref:
 define variable v-ii as integer no-undo.
@@ -673,7 +714,7 @@ define variable v-list as character no-undo.
                     tt-oss-ref.db-num = p-db-num
                     tt-oss-ref.classif-subject = buf_ext-classif.classif-subject /* Сущность */
                     tt-oss-ref.classif-name = buf_ext-classif.classif-name /* Классификатор */
-                    tt-oss-ref.ext-classf-row = rowid(buf_ext-classif)
+                    tt-oss-ref.ext-classif-row = rowid(buf_ext-classif)
                     v-list = buf_ext-classif.CharKey_Two
                 .
 
