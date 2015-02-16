@@ -31,6 +31,7 @@ define buffer buf_temp-temp for temp-temp.
 define variable c-attr-code  as character no-undo.
 define variable c-attr-value as character no-undo.
 
+  _proc-03:
   do
   on error undo, return error
   :
@@ -104,15 +105,20 @@ define variable c-attr-value as character no-undo.
             no-error .
           end.
           when "CPDOC":U then do:
-            if buf_temp-temp.field-value begins "RRN" 
-                then do:
+            case true:
+              when buf_temp-temp.field-value begins "RRN" then do:
                     c-attr-code  = "RRN-VBRR".
-                    c-attr-value = replace(buf_temp-temp.field-value,"RRN=","").                     
-                end.
-                else do:
+                    c-attr-value = replace(buf_temp-temp.field-value,"RRN=","").
+              end.
+              when buf_temp-temp.field-value begins "RTA_RefundExport" then do:
+                    c-attr-code  = "RTA_RefundExport".
+                    c-attr-value = replace(buf_temp-temp.field-value,"RTA_RefundExport=","").
+              end.
+              otherwise do:
                     c-attr-code  = "CPDOC".
-                    c-attr-value = buf_temp-temp.field-value.
-                end.
+                    c-attr-value = buf_temp-temp.field-value.               
+              end.
+            end case.
           end. /*when "CPDOC":U then do:*/
 
           otherwise do:
@@ -131,6 +137,18 @@ define variable c-attr-value as character no-undo.
       if error-status:error then do:
         {&error-in-file-format}
       end.
+      
+      find first ub.chk-pay-attr where 
+            ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
+        and ub.chk-pay-attr.line-num   = lnp-spl
+        and ub.chk-pay-attr.attr-code  = 'RTA_RefundExport' no-error.
+      if available ub.chk-pay-attr then do:
+        assign
+          ub.chk-pay-attr.attr-value = ub.chk-pay-attr.attr-value + c-attr-value
+          no-error.
+        leave _proc-03.      
+      end.
+      
       CASE par-mode:
         when 0
         or when 1
