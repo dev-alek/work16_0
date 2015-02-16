@@ -475,6 +475,19 @@ with frame a :
                                   then {&attr-cd-type-ibm}
                                   else {&attr-cd-type-ibm-xml}
                                   ).
+          
+          
+          /*/* выбор секции, из которой читать настройки для кассы */
+          if ub.cash-desk.pos-type = {&cd-type-ibm} OR ub.cash-desk.pos-type = {&cd-type-nkt-ibm} 
+              then v-effective-pos-type = {&attr-cd-type-ibm}.
+              else if ub.cash-desk.pos-type = {&cd-type-IBM-XML} 
+                      then v-effective-pos-type = {&attr-cd-type-ibm-xml}.
+                      else 
+                          if ub.cash-desk.pos-type = {&cd-type-Autotank} 
+                              then v-effective-pos-type = {&attr-cd-type-Autotank}.
+                              else v-effective-pos-type = {&attr-cd-type-marketer}.*/
+              
+            
           run adm/shattri.p (
               input "get":U
               ,input  p-obj-type

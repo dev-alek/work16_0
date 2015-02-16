@@ -2341,6 +2341,7 @@ end procedure.
 &scop prop-label-list-attr-cd-type-ibm '~
 Код нац.вал. НА КАССЕ~
 ,Код валюты по умолчанию при оплате НАЛИЧНЫМИ (код платежа = 1)~
+,Прием чеков с продажами по группам~
 ,Тип спула~
 ,Прием чеков с продажами по группам~
 ,Многовалютные НАЛИЧНЫЕ~
@@ -2523,10 +2524,11 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-cd-type-IBM-XML true
 &scop output-display-attr-cd-type-IBM-XML false
 &scop other-attr-cd-type-ibm-XML 'cd/spr-ext=adm\shattr13.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-cd-type-ibm-XML 'integer,integer,logical,logical,integer,character,character':U
+&scop prop-type-list-attr-cd-type-ibm-XML 'integer,integer,integer,logical,logical,integer,character,character':U
 &scop prop-label-list-attr-cd-type-ibm-XML '~
 Код валюты соответствующий баз. вал. КАССЫ~
 ,Код валюты по умолчанию при оплате НАЛИЧНЫМИ (код платежа = 1)~
+,Код платежа при оплате НАЛИЧНЫМИ CCM~
 ,прием чеков с продажами по группам~
 ,Многовалютные НАЛИЧНЫЕ~
 ,Выделение ставок НДС в чеке~
@@ -2541,7 +2543,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop level-way-attr-cd-type-ibm-xml "obj,host,global"
 &scop up-way-attr-cd-type-ibm-xml "cd-type-ibm-xml,cd-type-ibm-xml,cd-type-ibm-xml"
 
-/*ibmrubc,ibmnalc,ibmgroup,cd-vat,cdtaxlst,specgrp*/
+/*ibmrubc,ibmnalc,ibm-ccm,ibmgroup,cd-vat,cdtaxlst,specgrp*/
 
 
 /*Параметры POS R-keeper*/
@@ -2598,10 +2600,12 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-cd-type-autotank true
 &scop output-display-attr-cd-type-autotank false
 &scop other-attr-cd-type-autotank 'cd/spr-ext=adm\shattr41.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-cd-type-autotank 'character':U
+&scop prop-type-list-attr-cd-type-autotank 'character,logical,character':U
 &scop prop-label-list-attr-cd-type-autotank '~
 Список соответствий типов кассовых платежей~
-'
+,Прием чеков с продажами по группам~
+,Спецгруппы в справочнике суммовых групп'
+
 &scop global-attr-cd-type-autotank true
 &scop host-attr-cd-type-autotank true
 &scop shop-attr-cd-type-autotank true
@@ -2610,6 +2614,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop batch-edit-attr-cd-type-autotank  0
 &scop level-way-attr-cd-type-autotank "obj,host,global"
 &scop up-way-attr-cd-type-autotank "cd-type-autotank,cd-type-autotank,cd-type-autotank"
+/*cash-pay-list,ibmgroup,specgrp*/
 /*cash-pay-list*/
 
 
@@ -3641,7 +3646,25 @@ logical~
 &scop level-way-attr-inv-obj "obj,host,global"
 &scop up-way-attr-inv-obj "inv-obj,inv-obj,inv-obj"
 
-
+/* Сервер авторизации АСУ */
+&scop label-attr-srv-auth-ASU           "Сервер авторизации АСУ"
+&scop tooltip-attr-srv-auth-ASU         "Сервер авторизации АСУ"
+&scop user-can-edit-attr-srv-auth-ASU   true
+&scop output-display-attr-srv-auth-ASU  true
+&scop other-attr-srv-auth-ASU 'spr-ext=adm\shattrsa.w/init-ext=adm\shattri.p':U
+&scop prop-type-list-attr-srv-auth-ASU 'character,character':U
+&scop prop-label-list-attr-srv-auth-ASU 'Код контрагента РКО обязательного к авторизации,~
+Адрес сервера авторизации ~
+'
+&scop global-attr-srv-auth-ASU true
+&scop host-attr-srv-auth-ASU true
+&scop shop-attr-srv-auth-ASU true
+&scop store-attr-srv-auth-ASU true
+&scop db-attr-srv-auth-ASU false
+&scop batch-edit-attr-srv-auth-ASU  0
+&scop level-way-attr-srv-auth-ASU "obj,host,global"
+&scop up-way-attr-srv-auth-ASU "srv-auth-ASU,srv-auth-ASU,srv-auth-ASU"
+/* pko-cli,srv-auth-adr */
 
 /* Общие параметры по АРХИВАМ */
 &scop type-attr-arh-global            {&type-char}
@@ -4636,7 +4659,8 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-izt-rul
       {&attr-temp-full-code}
-
+      &scop attr-code attr-srv-auth-ASU
+      {&attr-temp-full-code}
 
 
 
@@ -4813,7 +4837,9 @@ on error undo, return error return-value
     {&attr-temp-code}
      &scop attr-code attr-izt-rul
     {&attr-temp-code}
-
+    &scop attr-code attr-srv-auth-ASU
+    {&attr-temp-code}
+    
     /* сюда добавлять новые параметры атрибутов клиентов */
     otherwise do:
       undo, return error substitute("неизвестный атрибут объекта TH &1 &2"
@@ -5514,7 +5540,8 @@ on error undo, return error return-value
     {&attr-legacy-code}
     &scop attr-code attr-izt-rul
     {&attr-legacy-code}
-
+    &scop attr-code attr-srv-auth-ASU
+    {&attr-legacy-code}
 
     /* сюда добавлять новые параметры  */
     otherwise do:
@@ -5620,6 +5647,18 @@ end procedure.
 &scop copy-attr-ptrl-without-rvs  true
 &scop manual-edit-attr-ptrl-without-rvs 1
 &scop batch-edit-attr-ptrl-without-rvs  1
+
+&scop type-attr-office-type {&type-char}
+&scop format-attr-office-type  "X(50)"
+&scop label-attr-office-type   "Тип услуги"
+&scop tooltip-attr-office-type   "Тип услуги"
+&scop user-can-edit-attr-office-type  true
+&scop output-display-attr-office-type  true
+&scop other-attr-office-type  "spr-ext=ref\gds-ot.w/spr-param=office-type/check=gds-attr_check-office-type"
+&scop news-attr-office-type true
+&scop copy-attr-office-type  true
+&scop manual-edit-attr-office-type 1
+&scop batch-edit-attr-office-type  1
 
 &scop type-attr-is-oss-payment {&type-log}
 &scop format-attr-is-oss-payment  "+/ "
@@ -5984,7 +6023,7 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-temp-full-code}
-      &scop attr-code attr-is-oss-payment
+      &scop attr-code attr-office-type
       {&attr-temp-full-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-temp-full-code}
@@ -6063,7 +6102,7 @@ do
       {&attr-temp-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-temp-code}
-      &scop attr-code attr-is-oss-payment
+      &scop attr-code attr-office-type
       {&attr-temp-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-temp-code}
@@ -6375,7 +6414,7 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-news-code}
-      &scop attr-code attr-is-oss-payment
+      &scop attr-code attr-office-type
       {&attr-news-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-news-code}
@@ -6447,7 +6486,7 @@ procedure gds-attr-copy :
       {&attr-copy-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-copy-code}
-      &scop attr-code attr-is-oss-payment
+      &scop attr-code attr-office-type
       {&attr-copy-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-copy-code}
@@ -6644,7 +6683,7 @@ define buffer buf_goods for ub.goods.
 
 end procedure. /* gds-attr_gds-ptrl-densities */
 
-procedure gds-attr_check-is-oss-payment :
+procedure gds-attr_check-office-type :
 define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
 define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
 define input parameter p-value as character no-undo .
@@ -6665,18 +6704,15 @@ on error undo, return error return-value
         return error substitute("(Еще) Нет товара с кодом &1, невозможно выполнить проверку корректности установки атрибута"
                                 , p-gds-code).
       end.
-      if not (
-              buf_goods.gds-type = {&gds-office}
-              and
-              buf_goods.unit-base = "{&abbr_rub}") then do:
-        assign
-        p-error-code = substitute("Платеж оператору сотовой связи должен быть услугой,&1" +
-                      "с единицей измерения равной единице измерения национальной валюты (&2)"
-                      , {&new-line}
-                      , "{&abbr_rub}"
-                      ).
-        return p-error-code.
+      if buf_goods.gds-type <> {&gds-office} then do:
+        p-error-code = "Товар должен быть услугой".
       end.
+      if lookup(p-value, {&prop-list-attr-office-type}) = 0 then do:
+        p-error-code = "Значение атрибута должно быть одним из списка {&prop-list-attr-office-type}".
+      end.
+     
+     if p-error-code <> "" then
+        return p-error-code.
     end.
   END CASE.
 end.
@@ -6869,7 +6905,7 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-manual-edit-code}
-      &scop attr-code attr-is-oss-payment
+      &scop attr-code attr-office-type
       {&attr-manual-edit-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-manual-edit-code}
@@ -6942,7 +6978,7 @@ do
       {&attr-batch-edit-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-batch-edit-code}
-      &scop attr-code attr-is-oss-payment
+      &scop attr-code attr-office-type
       {&attr-batch-edit-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-batch-edit-code}

@@ -84,6 +84,7 @@ define variable v-eff-date as date no-undo .
 define variable v-eff-time as integer no-undo .
 define variable v-oss-code as character no-undo init "".
 define variable disc-d-card as character no-undo.
+define variable ibm-ccm as integer no-undo.
 
 define buffer buf_ext-classif for ub.ext-classif.
 
@@ -465,6 +466,31 @@ output close.
 */
 
 
+end.
+if p-pos-type = {&cd-type-ibm-xml} then do :
+    run adm/shattri.p (
+        input "get":U
+        ,input  p-obj-type
+        ,input  p-obj-code
+        ,input  {&attr-cd-type-ibm-xml}
+        ,input  {&attr-cd-type-ibm-xml_ibm-ccm} /*p-param-code*/
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-value-logical
+        ,output v-param-type
+        ,INPUT-OUTPUT table-handle v-tth
+        ) no-error .
+    IF not error-status:error then do:
+      delete object v-tth.
+      ibm-ccm = v-value-integer.
+    end.
+    else do:
+      ibm-ccm = ?.
+      delete object v-tth.
+      return error return-value .
+    end.
 end.
 if (p-pos-type = {&cd-type-ibm-xml} or p-pos-type = {&cd-type-Autotank}) and get-chkc_context.ibmgroup then do:
   for each buf_tt-sum-grp:

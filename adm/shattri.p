@@ -949,6 +949,14 @@ on error undo, return error
 
       {&create-thbj-attr}.
 
+      v-prop-code =  "{&bef-attr-cd-type-ibm-xml_ibm-ccm}".
+
+&scop ptype integer
+&scop prop-value  0
+&scop prop-code  v-prop-code
+
+      {&create-thbj-attr}.
+
       v-prop-code = "{&bef-attr-cd-type-ibm-xml_ibmrubc}".
 
 &scop ptype integer
@@ -1070,6 +1078,22 @@ on error undo, return error
 
 &scop ptype character
 &scop prop-value  '0,Наличные/1,0;1,Банковская карта/?,?;2,Топливная карта/?,?;3,Наличные со скидкой/?,?;4,Банковская карта со скидкой/?,?'
+&scop prop-code  v-prop-code
+
+      {&create-thbj-attr}.
+
+      v-prop-code = "{&bef-attr-cd-type-autotank_ibmgroup}".
+
+&scop ptype logical
+&scop prop-value  no
+&scop prop-code  v-prop-code
+
+      {&create-thbj-attr}.
+
+      v-prop-code = "{&bef-attr-cd-type-autotank_specgrp}".
+
+&scop ptype character
+&scop prop-value  ''
 &scop prop-code  v-prop-code
 
       {&create-thbj-attr}.
@@ -1548,6 +1572,16 @@ end.
       end.
     end.
 
+    when {&attr-srv-auth-ASU} then do:
+
+      v-prop-code = "{&bef-attr-srv-auth-ASU_pko-cli},{&bef-attr-srv-auth-ASU_srv-auth-adr}" .
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+    end.
 
     when {&attr-prt-glob} then do:
       v-prop-code = "{&bef-attr-prt-glob_invprn0},{&bef-attr-prt-glob_outprncd},{&bef-attr-prt-glob_sort-prd},{&bef-attr-prt-glob_torg2-no},{&bef-attr-prt-glob_outprops},{&bef-attr-prt-glob_rep-artic}" .

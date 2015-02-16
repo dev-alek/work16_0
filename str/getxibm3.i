@@ -42,10 +42,14 @@ define variable c-attr-value as character no-undo.
         AND buf_temp-temp.id = v-id:
         CASE buf_temp-temp.field-name:
           when "CPCode":U then do:
-            if p-pos-type = {&cd-type-IBM-XML} then do:
-              assign
-              pay_code = integer(buf_temp-temp.field-value)
-              no-error .
+
+		  if p-pos-type = {&cd-type-IBM-XML} then do:
+              if integer(buf_temp-temp.field-value) = ibm-ccm then do:
+                   assign pay_code = 1
+                   c-attr-code  = "IBM-CCM".
+                   c-attr-value = 'yes'.
+              end.
+              else assign pay_code = integer(buf_temp-temp.field-value)      no-error .
             end.
             else do:
               assign
@@ -53,7 +57,7 @@ define variable c-attr-value as character no-undo.
               no-error .
             end.
           end.
-          when "CPCurr":U then do:
+          when "CPCurr":U then do:	
             if p-pos-type = {&cd-type-IBM-XML} then
             assign
             curr_code = if kassa-rub-code = integer(buf_temp-temp.field-value)
@@ -120,7 +124,16 @@ define variable c-attr-value as character no-undo.
               end.
             end case.
           end. /*when "CPDOC":U then do:*/
-
+            
+/*            if buf_temp-temp.field-value begins "RRN"                           */
+/*                then do:                                                        */
+/*                    c-attr-code  = "RRN-VBRR".                                  */
+/*                    c-attr-value = replace(buf_temp-temp.field-value,"RRN=","").*/
+/*                end.                                                            */
+/*                else do:                                                        */
+/*                    c-attr-code  = "CPDOC".                                     */
+/*                    c-attr-value = buf_temp-temp.field-value.                   */
+/*                end.                                                            */
           otherwise do:
             error-status:error = no.
           end.

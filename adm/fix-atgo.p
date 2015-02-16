@@ -51,45 +51,77 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   on endkey undo, return error substitute( "&1 (sys-key). endkey", vss-workfile )
   :
 
-  if ( g#db-num > 0 ) then return.
+  if ( g#db-num = 0 ) then do:
 
-  /* перенос норм естественной убыли */
-  for each buf_goods
-     where buf_goods.normal-wastage <> 0
-     no-lock :
-
-      { str/is-petrl.i
-          buf_goods.artic
-          buf_goods.prod-type
-          buf_goods.prod-code
-          v-is-petrol
-          v-is-pieces
-      }
-      if  v-is-petrol = yes
-      and v-is-pieces = no
-      then do : /* проверим на ТНП через ТРК */
-        run gds-attr-value in this-procedure (
-                                         input buf_goods.gds-code
-                                        ,input {&attr-ptrl-as-good}
-                                        ,output v-value
-                                        ,output v-type) no-error.
-        if NOT logical(v-value) then do: /* нет атрибута */
-          if p-read-only = false then do:
-            run adm/initnwas.p
-                ( input buf_goods.artic ,
-                  input buf_goods.prod-type ,
-                  input buf_goods.prod-code
-                ) no-error .
-            if error-status :error then do:
-              return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) ).
+    /* перенос норм естественной убыли */
+    for each buf_goods
+       where buf_goods.normal-wastage <> 0
+       no-lock :
+  
+        { str/is-petrl.i
+            buf_goods.artic
+            buf_goods.prod-type
+            buf_goods.prod-code
+            v-is-petrol
+            v-is-pieces
+        }
+        if  v-is-petrol = yes
+        and v-is-pieces = no
+        then do : /* проверим на ТНП через ТРК */
+          run gds-attr-value in this-procedure (
+                                           input buf_goods.gds-code
+                                          ,input {&attr-ptrl-as-good}
+                                          ,output v-value
+                                          ,output v-type) no-error.
+          if NOT logical(v-value) then do: /* нет атрибута */
+            if p-read-only = false then do:
+              run adm/initnwas.p
+                  ( input buf_goods.artic ,
+                    input buf_goods.prod-type ,
+                    input buf_goods.prod-code
+                  ) no-error .
+              if error-status :error then do:
+                return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) ).
+              end.
+            end.
+            else do:
+              return error substitute("До начала работы с данной БД (режим RO) необходимо произвести вход в ОСНОВНУЮ БД!!!") .
             end.
           end.
-          else do:
-            return error substitute("До начала работы с данной БД (режим RO) необходимо произвести вход в ОСНОВНУЮ БД!!!") .
-          end.
         end.
-      end.
+    end.
   end.
-
+  
+  /* Перенесем атрибут Платеж Сотовой связи в Тип услуги */
+  &glob attr-is-oss-payment 'is-oss-payment'
+  
+  /* удалим без запуска в новости на каждой базе */
+  disable triggers for load of ub.goods-attr.
+  
+  define buffer bf_goods-attr-1 for ub.goods-attr.
+  define buffer bf_goods-attr-2 for ub.goods-attr.
+  
+  for each bf_goods-attr-1 exclusive-lock
+    where bf_goods-attr-1.attr-code = {&attr-is-oss-payment}:
+    
+    find first bf_goods-attr-2 exclusive-lock
+      where bf_goods-attr-2.gds-code = bf_goods-attr-1.gds-code
+      and bf_goods-attr-2.attr-code = {&attr-office-type}
+      no-error.
+    
+    if not available bf_goods-attr-2 then
+      create bf_goods-attr-2.
+      
+    assign
+      bf_goods-attr-2.gds-code = bf_goods-attr-1.gds-code
+      bf_goods-attr-2.whole-send-news = bf_goods-attr-1.whole-send-news
+      bf_goods-attr-2.attr-code = {&attr-office-type}
+      bf_goods-attr-2.attr-value = {&attr-office-type_oss-pay}
+    .
+    release bf_goods-attr-2.
+    
+    delete bf_goods-attr-1.
+  end.
+  
 end.
 end.

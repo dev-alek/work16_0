@@ -288,7 +288,7 @@ procedure gds-attr_gds-ptrl-densities :
 
 end procedure.
 
-procedure gds-attr_check-is-oss-payment :
+procedure gds-attr_check-office-type :
 
   define input  parameter p-gds-code    like ub.goods-attr.gds-code     no-undo .
   define input  parameter p-code        like ub.goods-attr.attr-code  no-undo .
@@ -301,7 +301,7 @@ procedure gds-attr_check-is-oss-payment :
   do
   on error undo, return error return-value
   :
-    &scop proc-name gds-attr_check-is-oss-payment
+    &scop proc-name gds-attr_check-office-type
     {&run_proc_attr-lib}
       (input  p-gds-code
       ,input  p-code
