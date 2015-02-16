@@ -82,6 +82,7 @@ define variable spool-date_ as date no-undo .
 define variable spool-time_ as integer no-undo .
 define variable v-eff-date as date no-undo .
 define variable v-eff-time as integer no-undo .
+define variable disc-d-card as character no-undo.
 
 define temp-table temp-cash-desk no-undo
 field last-date like ub.chk-doc.chk-date
@@ -2063,6 +2064,11 @@ define buffer buf_chk-discnt for ub.chk-discnt.
             disc-mode_ = buf_temp-temp.field-value
             no-error .
           end.
+          when "CDCard":U then do:
+            assign
+            disc-d-card = buf_temp-temp.field-value
+            no-error .
+          end.
           otherwise do:
             error-status:error = no.
           end.
@@ -2179,6 +2185,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
                                 then ub.chk-gds.d-card
                                 else '')
                                 )
+      chk-discnt.d-card = (if disc-d-card = "" or disc-d-card = ? then ub.chk-discnt.d-card else disc-d-card)
       chk-discnt.discnt-value-abs = - disc-sum_ /*скидка идет со знаком минус*/
       chk-discnt.discnt-value-pcnt = (if p-pos-type = {&cd-type-ibm-xml} then (- disc-pcnt_) else disc-pcnt_)
       chk-discnt.object-line-num = lnd-spl
