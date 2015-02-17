@@ -393,7 +393,6 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &Scoped-define SELF-NAME b-lookup
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-lookup Dialog-Frame
 on choose of b-lookup in frame Dialog-Frame /* Просмотр */
@@ -656,6 +655,36 @@ procedure enable_UI :
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 end procedure.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+ 		
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-p-rid-list Include
+procedure fill-p-rid-list:
+/* Получение recid ext-classif по recid-ам временной таблицы tt-oss-ref */
+    define input parameter p-rid-list-tt as character no-undo.
+    define output parameter p-rid-list_ext-classif as character no-undo.
+    define variable v-i as integer no-undo.
+    
+    define buffer buf_tt-oss-ref for tt-oss-ref.
+
+    do v-i = 1 to num-entries (p-rid-list-tt):
+        for each buf_tt-oss-ref where
+        recid(buf_tt-oss-ref) = integer(entry(v-i, p-rid-list-tt, ","))
+        no-lock:
+            if p-rid-list_ext-classif <> "" then
+            do:
+                p-rid-list_ext-classif = p-rid-list_ext-classif + "," + string(buf_tt-oss-ref.ext-classif-row). /* Если в переменной p-rid-list_ext-classif уже что-то содержится, ставим перед записью запятую-разделитель списка. */
+            end.
+            else
+            do:
+                p-rid-list_ext-classif = string(buf_tt-oss-ref.ext-classif-row). /* Если в переменной p-rid-list_ext-classif пусто, то перед первой записью запятую-разделитель списка не ставим. */
+            end.
+        end.
+    end.
+
+end procedure.
+	
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
