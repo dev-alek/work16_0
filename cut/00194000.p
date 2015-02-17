@@ -60,6 +60,7 @@ on WRITE of dst.c-wth-line   override do: end.
 on WRITE of dst.c-wth-dtl    override do: end.
 on WRITE of dst.c-wth-parts  override do: end.
 
+if not varstay-history  then return. 
 if vardate-actual-docs <> ? then do:
    run factord-end-day in this-procedure ( vardate-actual-docs - 1, output var-fact-order-docs).
 

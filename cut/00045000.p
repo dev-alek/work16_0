@@ -43,7 +43,7 @@ on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:ge
 { utl/00000001.i }
 { utl/tt-objs.i  }
 
-if varstay-history = true then return .
+if not varstay-history then return .
 
 define buffer buf_clients for src.clients .
 

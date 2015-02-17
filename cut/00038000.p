@@ -50,6 +50,8 @@ define variable v-beg-fact-order as integer no-undo .
 
 define buffer buf_clients for src.clients .
 
+if not varstay-history  then return .
+
 if vardate-actual-docs <> ? then do:
 
   run day-begin-fact-order in this-procedure

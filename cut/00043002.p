@@ -187,7 +187,7 @@ on error undo, return error
         create new-trn-doc-sum.
         BUFFER-COPY old-trn-doc-sum to new-trn-doc-sum.
     end.
-    for each old-c-trn-doc-sum no-lock  where
+    if varstay-history then for each old-c-trn-doc-sum no-lock  where
         old-c-trn-doc-sum.doc-code = new-trn-doc.doc-code
         on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2))
         :
@@ -202,7 +202,7 @@ on error undo, return error
         create new-doc-line-sum.
         BUFFER-COPY old-doc-line-sum to new-doc-line-sum.
     end.
-    for each old-c-doc-line-sum no-lock  where
+    if varstay-history then for each old-c-doc-line-sum no-lock  where
         old-c-doc-line-sum.doc-code = new-trn-doc.doc-code
         on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2))
         :

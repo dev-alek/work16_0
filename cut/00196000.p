@@ -40,6 +40,7 @@ do
 on error undo, return error
 :
   { utl/00000001.i }
+  if not varstay-history  then return .
   on WRITE of dst.c-doc-attr      override do: end.
 
   for each new-c-trn-doc no-lock  on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
