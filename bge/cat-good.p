@@ -36,6 +36,7 @@ define variable vss-description as character no-undo init "Ёкспорт справочника т
 
 define input parameter p-mode       as character    no-undo.
 define input parameter table for temp_bge-xml_goods .
+define input parameter p-file-name  as character    no-undo.
 
 define temp-table temp_gds-host-attr no-undo
     field host-code as integer
@@ -72,7 +73,7 @@ strHomeDir = strHomeDir + "{&Slash}{&SubDir}".
 run bge/dir_cd.p (strHomeDir, "CA").
 IF RETURN-VALUE = "ERROR" THEN RETURN "ERROR".
 
-strOutFile = strHomeDir + "{&Slash}{&OutFileName}.".
+strOutFile = strHomeDir + "{&Slash}" + "{&OutFileName}" + p-file-name + ".".
 
 /* найти исходный файл */
 bLocked = (SEARCH (strOutFile + "xml") <> ?).

@@ -112,6 +112,14 @@ on error undo, return error
           by buf_gds-obj.prod-type
           by buf_gds-obj.prod-code
     :
+           /* find first buf_goods no-lock where buf_goods.artic = buf_gds-obj.artic
+                                       and buf_goods.prod-type = buf_gds-obj.prod-type
+                                       and buf_goods.prod-code = buf_gds-obj.prod-code no-error.*/
+        /* Проверим на принадлежность группе */
+        /*if p-gds-grp-list <> "" and p-gds-grp-list <> ? then do:
+            if not available(buf_goods) then next. /* чтобы проверка группы не падала если так будет */
+            if not can-find(first temp-gds-grp where buf_goods.grp-name begins temp-gds-grp.full-name) then next.
+        end.*/
         run cur-time in this-procedure (
               output v-today
             , output v-time

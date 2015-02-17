@@ -37,7 +37,7 @@ define variable vss-description as character no-undo init "Резервирование и расч
 { cmp/library.i  }
 { gbl/cur-time.i }
 { str/writelog.i def "'fbr.log'" no-create }
-{ str/fbr-log.p  }
+{ str/fbr-log.i  }
 
     define variable v-unit-type     as character            no-undo.  /* тип единицы измерения */
     define variable v-alt-in-qnty   like ub.fbr-line.fact-qnty no-undo.  /* количество в приходной строке альтернативного рецепта */
@@ -722,7 +722,7 @@ define output parameter p-count-input-fact-qnty          as decimal      no-undo
                   INPUT parparentproc
                 , input p-fbrhist-handle
                 , input p-fbr-doc-recid
-                , input p-silent
+                , input yes /*всегда тихий режим, что бы была возможность пройти по всем строкам. и потом выдать ошибку*/
                 , input recid( buf_goods )
                 , input p-autofbr
                 , input p-have-store
@@ -744,16 +744,23 @@ define output parameter p-count-input-fact-qnty          as decimal      no-undo
                 if error-status :get-message(1) <> ""
                 or return-value <> "user-interrupt":U
                 then do:
-                  if p-silent then do:
-                     undo, return error substitute("&1 &2 &3&4Ошибка при резервировании товара.&4Товар:     &5 &6&4В рецепте: &7"
+                  if true /*p-silent*/ then do:
+                     run writelog in this-procedure (
+                                        input {&fbr-rsrv-log-file-name}
+                                      , input 0
+                                      , input substitute("&1 &2 &3&4Ошибка при резервировании товара.&4Товар:     &5 &6&4В рецепте: &7&8&9"
                                                     ,vss-workfile
                                                     ,vss-revision
                                                     ,vss-description
                                                     ,{&new-line}
                                                     ,buf_goods.artic
                                                     ,buf_goods.gds-name
-                                                    ,p-recipe-code).
-
+                                                    ,p-recipe-code
+                                                    ,{&new-line}
+                                                    ,return-value)
+                                                    ).
+                     v-not-reserved = true.
+                     next calc-prices-for-each-fbr-line.
                   end.
                   else do:
                     message

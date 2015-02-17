@@ -56,7 +56,7 @@ define variable vss-description as character no-undo init "Кассовая книга".
 define variable g#report-num as integer no-undo .
 { gbl/paramls.i  }
 { rep/ostatok.i  }
-{ rep/fostatok.i  &arh-name = "arh-fin-doc-schet-nal-obj" }
+{ rep/fostatok.i  &arh-name = "arh-fin-doc-schet-nal-obj" } /* Fact-order и остатки на дату ПО ФИН АРХИВАМ */
 { rep/ost-line.i }
 { str/farh-def.i }
 { cmp/trg-def.i  }
@@ -105,6 +105,7 @@ define buffer buf_obj-list                  for obj-list .
 define buffer buf_fin-doc                   for ub.fin-doc .
 define buffer buf_arh-fin-doc-schet-nal-obj for ub.arh-fin-doc-schet-nal-obj .
 define buffer buf_shift-obj                 for ub.shift-obj .
+define buffer buf_day-shift-obj             for ub.shift-obj .
 
 define variable v-count       as integer   no-undo .
 define variable v-str         as integer   no-undo .
@@ -171,6 +172,18 @@ define stream  out-stream .
 define variable v-file-name       as character no-undo .
 define variable v-file-name-ind   as integer   no-undo .
 define variable v-line            as character no-undo .
+
+define variable v-shift-name as character format "X(2)" no-undo.        /* TH #3077 */
+define variable v-shift-name-min as character format "X(2)" no-undo.    /* TH #3077 */
+define variable v-shift-name-max as character format "X(2)" no-undo.    /* TH #3077 */
+define variable v-shift-num-min as integer no-undo.                     /* TH #3077 */
+define variable v-shift-num-max as integer no-undo.                     /* TH #3077 */
+define variable v-multy-shift as logical no-undo.                       /* TH #3077 */
+define variable v-shift-multydate as logical no-undo.                   /* TH #3077 */
+define variable v-date-start-multydate as date no-undo.                 /* TH #3077 */
+define variable shift-alone as logical no-undo.                         /* TH #3077 */
+
+
    assign
       v-line  = fill( "-" , 100 )
       v-tab110 = fill( " " , 110  )
@@ -203,7 +216,7 @@ define variable v-line            as character no-undo .
   header
           str1 at 5  format "X(100)"
           str2 at 50 format "X(75)"
-          string( "Касса за ") + v-date-name at 5 format "X(50)"
+          string( "Касса за ") + v-date-name at 5 format "X(100)"
           string( "Лист____" ) at 90 format "X(8)"
           v-line format "X(100)" at 1
   with width {&DOS_CW} down stream-io.
@@ -221,7 +234,7 @@ define variable v-line            as character no-undo .
           .
     assign v-firm = buf_clients.obj-name  .
 
-    for each obj-list by obj-list.obj-name :
+    for each obj-list by obj-list.obj-name:
       if v-obj-code = -1 then do:
         assign
         v-obj-type = obj-list.obj-type
@@ -285,324 +298,478 @@ define variable v-line            as character no-undo .
           .
         end.
       end.
-    end .
+    end. /* for each obj-list by obj-list.obj-name: */
+    
     if length(v-obj-name) > 100 then v-obj-name = substring(v-obj-name, 1, 95) + "..." .
-
 
     find first obj-list
         where obj-list.obj-type = v-cntxt-obj-type
-          and obj-list.obj-code = v-cntxt-obj-code
-          no-error .
-        if available obj-list then do :
-            assign v-cntxt-obj-name = obj-list.obj-name .
-        end .
-    assign
-        v-date-start  = x-date-start
-        v-date-end    = x-date-end
-    .
-    do while v-date-start <> (v-date-end + 1) :
-        for each   temp-fin-doc :
-            delete temp-fin-doc .
-        end .
+        and obj-list.obj-code = v-cntxt-obj-code
+        no-error.
 
-        create sheetf.
-        assign
-          sheetf.sheet-num = v-sheet-num
-          sheetf.Excel-Column-Lable = "Номер документа,От кого получено или кому выдано,Номер коррес-пондирующего счета\субсчета,Приход руб.коп.,Расход руб.коп."
-          sheetf.Sizes  = "10,40,15,11,11"
-          Sheetf.ColFOrmat   = "1=@;2=@;3=@;4=0.00;5=0.00"
-          Make-excel = p-xls  /*иногда не хотим пеачать в excel!!!*/
-          Make-excel-com = false
-          Sheetf.Bas-File      = "exe/cash-bk.bas"
-      .
+        if available obj-list then do:
+            assign v-cntxt-obj-name = obj-list.obj-name.
+        end.
 
         assign
-          v-strok  = 0
-          v-strok1 = 0
-          v-strok2 = 0
-          v-ost-begin = 0
+            v-date-start  = x-date-start
+            v-date-end    = x-date-end
         .
-        if v-date-start = x-date-end   then v-shift-end   = x-shift-end.
-        if v-date-start = x-date-start then v-shift-start = x-shift-start.
+        do while v-date-start <> (v-date-end + 1) :
+            for each    temp-fin-doc :
+                delete temp-fin-doc.
+            end.
 
-        run report-exec in this-procedure (input v-date-start, output v-strok ).
-        if X-SelectObject = {&obj-firm} then do :
-            assign         str1 = "Организация: " + v-firm .
-        end .
-        else do :
-            assign          str1 = v-obj-name .
-        end.
-
-        if p-print-form = 1 then do :
-            assign         str2 = "Вкладной лист кассовой книги" .
-        end .
-        else do :
-            assign          str2 = "Отчет кассира" .
-        end .
-        assign
-          v-date-name = string(day(v-date-start)) + " " + MonthNameRusGen(MONTH ( v-date-start )) + " " + string(year(v-date-start))
-        .
-        if x-tog-shift then do :
-            if v-date-start = x-date-start then do :
-              assign
-                v-date-name = v-date-name + ". Смена с " + string(x-shift-start)
-              .
-            end.
-            else do :
-              assign
-                v-date-name = v-date-name + ". Смена с 0 "
-              .
-            end.
-            if v-date-start = x-date-end then do :
-              assign
-                v-date-name = v-date-name + " по " + string(x-shift-end)
-              .
-            end.
-            else do :
-              assign
-                v-date-name = v-date-name + " по " + string({&max-shift-num})
-              .
-            end.
-        end.
-        assign
-          ReportHeader = "Касса за " + v-date-name + v-tab110 + "Лист____"
-        .
-        if v-page > 0 then do :
-            down stream Out-stream 70 with frame cashbk .
-        end.
-
-        if v-strok > 48 then do :
-          assign
-            v-strok1 = v-strok - 48
-            v-strok2 = 1
-          .
-        end.
-        do while v-strok1 >= 51 :
             assign
-              v-strok1 = v-strok1 - 51
-              v-strok2 = v-strok2 + 1
+            v-shift-num-min = 0
+            v-shift-num-max = 0
+            v-shift-name-min = ""
+            v-shift-name-max = ""
+            v-shift-multydate = no
+            v-date-start-multydate = ?
             .
-        end.
-        run my-extitle in this-procedure ( input sheetf.sheet-num).
-        assign
-          Sheetf.Bas-Params    = string(v-strok + v-strok2 )
-        .
+            if x-shift-start = x-shift-end and x-date-start = x-date-end then
+                do:
+                    shift-alone = yes.
+                end.
+            else
+                do:
+                    shift-alone = no.
+                end.
 
-        display stream Out-stream
-        sym1 sym3 sym4 sym5 sym6
-        "                      Остаток на начало дня"  @ f-payer
-        string(v-ost-begin, "->>>>>>>>.99")            @ f-income
-        "     X"                                       @ f-expense
-        with frame cashbk .
-        down stream Out-stream 1 with frame cashbk .
 
-        {&PutExcel}
-        ""                                   {&tabulation}
-        "Остаток на начало дня"              {&tabulation}
-        ""                                   {&tabulation}
-        v-ost-begin                          {&tabulation}
-        "X"                                  {&new-line}
-        .
-        assign
-            v-page      = 1
-            v-count     = 0
-            v-kolvo-pko = 0
-            v-kolvo-rko = 0
-            v-income    = 0
-            v-expense   = 0
-        .
-        for each temp-fin-doc where temp-fin-doc.sheet-num = v-sheet-num no-lock by temp-fin-doc.prn-doc-code :
+                if v-date-start = x-date-start then
+                    do:
+/*===================1*/find first buf_day-shift-obj /* ====================== Фильтр смен верхний */
+                            where buf_day-shift-obj.shift-date = v-date-start /* Исследуем дату из цикла выше - do while v-date-start <> (v-date-end + 1) */
+                            and buf_day-shift-obj.obj-type = v-cntxt-obj-type
+                            and buf_day-shift-obj.obj-code = v-cntxt-obj-code                                                
+                            and buf_day-shift-obj.shift-num >= x-shift-start
+                            no-lock no-error.
+                            
+                            if available buf_day-shift-obj then
+                                do:
+                                    v-shift-num-min = buf_day-shift-obj.shift-num.
+                                    v-shift-name-min = buf_day-shift-obj.shift-name.
+                                end.
+
+                    end. /* if v-date-start = x-date-start then do: */
+                    else
+                        do: /* s */
+/*================2*/       find first buf_day-shift-obj /*==================== Фильтр смен серединный мин*/
+                                where buf_day-shift-obj.shift-date = v-date-start /* Исследуем дату из цикла выше - do while v-date-start <> (v-date-end + 1) */                                           
+                                and buf_day-shift-obj.obj-type = v-cntxt-obj-type
+                                and buf_day-shift-obj.obj-code = v-cntxt-obj-code
+                                no-lock no-error.
+
+                                if available buf_day-shift-obj then
+                                    do:
+                                        v-shift-num-min = buf_day-shift-obj.shift-num.
+                                        v-shift-name-min = buf_day-shift-obj.shift-name.
+                                    end.
+                                else
+                                    do: /* v */
+                                        find last buf_day-shift-obj
+                                            where buf_day-shift-obj.shift-date <= v-date-start /* Исследуем дату из цикла выше - do while v-date-start <> (v-date-end + 1) */                                           
+                                            and buf_day-shift-obj.obj-type = v-cntxt-obj-type
+                                            and buf_day-shift-obj.obj-code = v-cntxt-obj-code
+                                            and buf_day-shift-obj.close-date >= v-date-start
+                                            no-lock no-error. 
+                                            do: /* t */
+                                                if available buf_day-shift-obj then
+                                                    do:
+                                                        v-shift-num-min = buf_day-shift-obj.shift-num.
+                                                        v-shift-name-min = buf_day-shift-obj.shift-name.
+                                                        
+                                                        v-date-start-multydate = buf_day-shift-obj.shift-date.
+                                                        v-shift-multydate = yes.
+                                                    end. 
+                                            end. /* t */
+                                    end. /* v */
+                        end. /* s */
+                                            
+/*==============3*/ find last buf_day-shift-obj /*=================================== Фильтр смен серединный макс */
+                        where buf_day-shift-obj.obj-type = v-cntxt-obj-type
+                        and buf_day-shift-obj.obj-code = v-cntxt-obj-code
+                        and buf_day-shift-obj.shift-date = v-date-start
+                        and (if v-date-start = x-date-end 
+                                then  buf_day-shift-obj.shift-num <= x-shift-end else true)
+                        no-lock no-error.
+                            do:
+                                if available buf_day-shift-obj then
+                                    do: /* n */
+                                        if v-shift-num-min < v-shift-num-max then
+                                            do:
+                                                v-multy-shift = yes.
+                                            end.
+                                        else
+                                            do:
+                                                if v-shift-num-min = 0 and buf_day-shift-obj.shift-num > 0 then /* Состояние, куда попадаем, если задаём несуществующий номер смены, который больше других существующих в данной дате (есть 1 и 2 смены, а мы задали 5 смену). */
+                                                    do:
+                                                        v-shift-num-min = 0.
+                                                        v-shift-num-max = 0.
+                                                        v-shift-name-min = "".
+                                                        v-shift-name-max = "".
+                                                    end.
+                                                else
+                                                    do:
+                                                        v-shift-num-max = buf_day-shift-obj.shift-num.
+                                                        v-shift-name-max = buf_day-shift-obj.shift-name.
+                                                    end.
+                                            end.
+                                    end. /* n */
+                            end.
+                    if shift-alone = yes then
+                        do:
+                            if v-shift-num-min > 0 and v-shift-num-max = 0 then
+                                do:
+                                    v-shift-num-min = 0.
+                                    v-shift-num-max = 0.
+                                    v-shift-name-min = "".
+                                    v-shift-name-max = "".
+                                    v-multy-shift = no.
+                                end.
+                        end.
+                    else
+                        do:
+                            if v-shift-num-min = v-shift-num-max then
+                                do:
+                                    v-multy-shift = no.
+                                end.
+                            else
+                                do:
+                                    v-multy-shift = yes.
+                                end.
+                        end.
+
+            create sheetf.
+            assign
+              sheetf.sheet-num = v-sheet-num
+              sheetf.Excel-Column-Lable = "Номер документа,От кого получено или кому выдано,Номер коррес-пондирующего счета\субсчета,Приход руб.коп.,Расход руб.коп."
+              sheetf.Sizes  = "10,40,15,11,11"
+              Sheetf.ColFOrmat   = "1=@;2=@;3=@;4=0.00;5=0.00"
+              Make-excel = p-xls  /*иногда не хотим пеачать в excel!!!*/
+              Make-excel-com = false
+              Sheetf.Bas-File      = "exe/cash-bk.bas"
+            .
+    
+            assign
+              v-strok  = 0
+              v-strok1 = 0
+              v-strok2 = 0
+              v-ost-begin = 0
+            .
+            if v-date-start = x-date-end   then v-shift-end   = x-shift-end.
+            if v-date-start = x-date-start then v-shift-start = x-shift-start.
+    
+            run report-exec in this-procedure (input v-date-start, output v-strok ).
+            
+            if X-SelectObject = {&obj-firm} then do :
+                assign  str1 = "Организация: " + v-firm.
+            end.
+            else do :
+                assign  str1 = v-obj-name.
+            end.
+    
+            if p-print-form = 1 then do :
+                assign  str2 = "Вкладной лист кассовой книги" .
+            end.
+            else do :
+                assign  str2 = "Отчет кассира" .
+            end.
+            
+            assign
+                v-date-name = string(day(v-date-start)) + " " + MonthNameRusGen(MONTH ( v-date-start )) + " " + string(year(v-date-start))
+            .
+
+            if x-tog-shift then do :
+/*            if v-date-start = x-date-start then do :*/
+/*              assign                                */
+
+                if v-shift-multydate = yes and v-date-start-multydate <> ? then
+                    do:
+                        v-multy-shift = no.
+                    end.
+
+                if v-multy-shift = yes then
+                    do:
+                        v-date-name = v-date-name + ". Смена c " + v-shift-name-min + " (" + string(v-shift-num-min) + ")" + " по " + v-shift-name-max + " (" + string(v-shift-num-max) + ")".
+                    end.
+
+                if v-multy-shift = no then
+                    do:
+                        v-date-name = v-date-name + ". Смена " + v-shift-name-min + " (" + string(v-shift-num-min) + ")".
+                        if v-shift-multydate = yes and v-date-start-multydate <> ? then
+                            do:
+                                v-date-name = v-date-name + " от " + string(v-date-start-multydate) + ".".
+                            end.
+                    end.
+
+    /*                v-date-name = v-date-name + ". Смена с " + string(x-shift-start)*/
+    /*              .                                                                 */
+    /*            end.                                                             */
+    /*            else do :                                                        */
+    /*              assign                                                         */
+    /*                v-date-name = v-date-name + ". Смена с 0 "                   */
+    /*              .                                                              */
+    /*            end.                                                             */
+    /*            if v-date-start = x-date-end then do :                           */
+    /*              assign                                                         */
+    /*                v-date-name = v-date-name + " по " + string(x-shift-end)     */
+    /*              .                                                              */
+    /*            end.                                                             */
+    /*            else do :                                                        */
+    /*              assign                                                         */
+    /*                v-date-name = v-date-name + " по " + string({&max-shift-num})*/
+    /*              .                                                              */
+    /*            end.                                                             */
+            end. /* if x-tog-shift then do : */
+            assign
+              ReportHeader = "Касса за " + v-date-name + v-tab110 + "Лист____"
+            .
+            if v-page > 0 then do :
+                down stream Out-stream 70 with frame cashbk .
+            end.
+    
+            if v-strok > 48 then do :
+              assign
+                v-strok1 = v-strok - 48
+                v-strok2 = 1
+              .
+            end.
+            do while v-strok1 >= 51 :
+                assign
+                  v-strok1 = v-strok1 - 51
+                  v-strok2 = v-strok2 + 1
+                .
+            end.
+            run my-extitle in this-procedure (input sheetf.sheet-num).
+            assign
+              Sheetf.Bas-Params    = string(v-strok + v-strok2)
+            .
+    
+            display stream Out-stream
+            sym1 sym3 sym4 sym5 sym6
+            "                      Остаток на начало дня"  @ f-payer
+            string(v-ost-begin, "->>>>>>>>.99")            @ f-income
+            "     X"                                       @ f-expense
+            with frame cashbk .
+            down stream Out-stream 1 with frame cashbk .
+    
             {&PutExcel}
-              temp-fin-doc.prn-doc-code                                                                                    {&tabulation}
-              (if temp-fin-doc.fin-doc-type = {&income-cash}  then temp-fin-doc.payer else temp-fin-doc.receiver)          {&tabulation}
-              temp-fin-doc.cor-acc                                                                                         {&tabulation}
-              (if temp-fin-doc.fin-doc-type = {&income-cash}  then string(temp-fin-doc.sum-rubl, "->>>>>>>>.99") else "-") {&tabulation}
-              (if temp-fin-doc.fin-doc-type = {&expense-cash} then string(temp-fin-doc.sum-rubl, "->>>>>>>>.99") else "-") {&new-line}
-              .
-
-              display stream Out-stream
-              sym1 sym2 sym3 sym4 sym5 sym6
-              temp-fin-doc.prn-doc-code                                                                        @ f-prn-doc-code
-              temp-fin-doc.payer                            when temp-fin-doc.fin-doc-type  = {&income-cash}   @ f-payer
-              temp-fin-doc.receiver                         when temp-fin-doc.fin-doc-type  = {&expense-cash}  @ f-payer
-              temp-fin-doc.cor-acc                                                                             @ f-corr-acc
-              string(temp-fin-doc.sum-rubl, "->>>>>>>>.99") when temp-fin-doc.fin-doc-type  = {&income-cash}   @ f-income
-              "         -"                                  when temp-fin-doc.fin-doc-type  = {&income-cash}   @ f-expense
-              "         -"                                  when temp-fin-doc.fin-doc-type  = {&expense-cash}  @ f-income
-              string(temp-fin-doc.sum-rubl, "->>>>>>>>.99") when temp-fin-doc.fin-doc-type  = {&expense-cash}  @ f-expense
-              with frame cashbk .
-              down stream Out-stream 1 with frame cashbk .
-              assign
-                v-count = v-count + 1
-              .
-
-              if temp-fin-doc.fin-doc-type  = {&income-cash} then do :
-                assign
-                  v-income    = v-income    + temp-fin-doc.sum-rubl
-                  v-kolvo-pko = v-kolvo-pko + 1
-                .
-              end.
-              else do :
-                assign
-                  v-expense   = v-expense   + temp-fin-doc.sum-rubl
-                  v-kolvo-rko = v-kolvo-rko + 1
-                .
-              end.
-              if (v-count = 48 and v-page = 1 ) or (v-count = 51 and v-page > 1 ) then do :
-              assign
-                str1 = ""
-                str2 = ""
-              .
-                  {&PutExcel}
-                  ""                                   {&tabulation}
-                  "Перенесено на следующий лист"       {&tabulation}
-                  ""                                   {&tabulation}
-                  string(v-income,  "->>>>>>>>.99")    {&tabulation}
-                  string(v-expense, "->>>>>>>>.99")    {&new-line}
+            ""                                   {&tabulation}
+            "Остаток на начало дня"              {&tabulation}
+            ""                                   {&tabulation}
+            v-ost-begin                          {&tabulation}
+            "X"                                  {&new-line}
+            .
+            assign
+                v-page      = 1
+                v-count     = 0
+                v-kolvo-pko = 0
+                v-kolvo-rko = 0
+                v-income    = 0
+                v-expense   = 0
+            .
+            for each temp-fin-doc where temp-fin-doc.sheet-num = v-sheet-num no-lock by temp-fin-doc.prn-doc-code :
+                {&PutExcel}
+                  temp-fin-doc.prn-doc-code                                                                                    {&tabulation}
+                  (if temp-fin-doc.fin-doc-type = {&income-cash}  then temp-fin-doc.payer else temp-fin-doc.receiver)          {&tabulation}
+                  temp-fin-doc.cor-acc                                                                                         {&tabulation}
+                  (if temp-fin-doc.fin-doc-type = {&income-cash}  then string(temp-fin-doc.sum-rubl, "->>>>>>>>.99") else "-") {&tabulation}
+                  (if temp-fin-doc.fin-doc-type = {&expense-cash} then string(temp-fin-doc.sum-rubl, "->>>>>>>>.99") else "-") {&new-line}
                   .
-                  if v-page = 1 then do :
-                      display stream Out-stream
-                      sym1 sym4 sym5 sym6
-                      "              Перенесено на следующий лист"   @ f-payer
-                      string(v-income,  "->>>>>>>>.99")  @ f-income
-                      string(v-expense, "->>>>>>>>.99")  @ f-expense
-                      with frame cashbk .
-                      down stream Out-stream 4 with frame cashbk .
-                  end .
-                  else do :
-                      display stream Out-stream
-                      sym1 sym4 sym5 sym6
-                      "              Перенесено на следующий лист"   @ f-payer
-                      string(v-income,  "->>>>>>>>.99")  @ f-income
-                      string(v-expense, "->>>>>>>>.99")  @ f-expense
-                      with frame cashbk .
-                      down stream Out-stream 1 with frame cashbk .
-                  end .
+    
+                  display stream Out-stream
+                  sym1 sym2 sym3 sym4 sym5 sym6
+                  temp-fin-doc.prn-doc-code                                                                        @ f-prn-doc-code
+                  temp-fin-doc.payer                            when temp-fin-doc.fin-doc-type  = {&income-cash}   @ f-payer
+                  temp-fin-doc.receiver                         when temp-fin-doc.fin-doc-type  = {&expense-cash}  @ f-payer
+                  temp-fin-doc.cor-acc                                                                             @ f-corr-acc
+                  string(temp-fin-doc.sum-rubl, "->>>>>>>>.99") when temp-fin-doc.fin-doc-type  = {&income-cash}   @ f-income
+                  "         -"                                  when temp-fin-doc.fin-doc-type  = {&income-cash}   @ f-expense
+                  "         -"                                  when temp-fin-doc.fin-doc-type  = {&expense-cash}  @ f-income
+                  string(temp-fin-doc.sum-rubl, "->>>>>>>>.99") when temp-fin-doc.fin-doc-type  = {&expense-cash}  @ f-expense
+                  with frame cashbk .
+                  down stream Out-stream 1 with frame cashbk .
                   assign
-                      v-count = 0
-                      v-page  = v-page + 1
+                    v-count = v-count + 1
                   .
-              end.
-        end .
-        run rep/wp-qnty.p ( input v-kolvo-pko, output v-pko-propis ).
-        if v-pko-propis = '' then do :
-          v-pko-propis = 'Ноль'.
-        end.
-        run rep/wp-qnty.p ( input v-kolvo-rko, output v-rko-propis ).
-        if v-rko-propis = '' then do :
-          v-rko-propis = 'Ноль'.
-        end.
-        {&PutExcel}
-          ""                                   {&tabulation}
-          "Итого за день"                      {&tabulation}
-          ""                                   {&tabulation}
-          v-income                             {&tabulation}
-          v-expense                            {&new-line}
-          ""                                   {&tabulation}
-          "Остаток на конец дня"               {&tabulation}
-          ""                                   {&tabulation}
-          (v-ost-begin + v-income - v-expense) {&tabulation}
-          "X"                                  {&new-line}
-          ""                                   {&tabulation}
-          "В том числе на заработную плату, выплаты"   {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&new-line}
-          ""                                   {&tabulation}
-          "социального характера и стипендии"  {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&new-line}
-          .
-        {&PutExcel}
-          "Кассир"                             {&tabulation}
-          "______________________"             {&tabulation}
-          "______________________"             {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&new-line}
-          ""                                   {&tabulation}
-          "       подпись"                     {&tabulation}
-          "расшифровка подписи"                {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&new-line}
-          "Записи в кассовой книге проверил и документы в количестве" {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&new-line}
-          string(v-pko-propis) + " приходных и " + string(v-rko-propis) + " расходных получил."  {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&new-line}
-          "Бухгалтер"                          {&tabulation}
-          "______________________"             {&tabulation}
-          "______________________"             {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&new-line}
-          ""                                   {&tabulation}
-          "       подпись"                     {&tabulation}
-          "расшифровка подписи"                {&tabulation}
-          ""                                   {&tabulation}
-          ""                                   {&new-line}
-          .
+    
+                  if temp-fin-doc.fin-doc-type  = {&income-cash} then do :
+                    assign
+                      v-income    = v-income    + temp-fin-doc.sum-rubl
+                      v-kolvo-pko = v-kolvo-pko + 1
+                    .
+                  end.
+                  else do :
+                    assign
+                      v-expense   = v-expense   + temp-fin-doc.sum-rubl
+                      v-kolvo-rko = v-kolvo-rko + 1
+                    .
+                  end.
+                  if (v-count = 48 and v-page = 1 ) or (v-count = 51 and v-page > 1 ) then do :
+                  assign
+                    str1 = ""
+                    str2 = ""
+                  .
+                      {&PutExcel}
+                      ""                                   {&tabulation}
+                      "Перенесено на следующий лист"       {&tabulation}
+                      ""                                   {&tabulation}
+                      string(v-income,  "->>>>>>>>.99")    {&tabulation}
+                      string(v-expense, "->>>>>>>>.99")    {&new-line}
+                      .
+                      if v-page = 1 then do :
+                          display stream Out-stream
+                          sym1 sym4 sym5 sym6
+                          "              Перенесено на следующий лист"   @ f-payer
+                          string(v-income,  "->>>>>>>>.99")  @ f-income
+                          string(v-expense, "->>>>>>>>.99")  @ f-expense
+                          with frame cashbk .
+                          down stream Out-stream 4 with frame cashbk .
+                      end .
+                      else do :
+                          display stream Out-stream
+                          sym1 sym4 sym5 sym6
+                          "              Перенесено на следующий лист"   @ f-payer
+                          string(v-income,  "->>>>>>>>.99")  @ f-income
+                          string(v-expense, "->>>>>>>>.99")  @ f-expense
+                          with frame cashbk .
+                          down stream Out-stream 1 with frame cashbk .
+                      end .
+                      assign
+                          v-count = 0
+                          v-page  = v-page + 1
+                      .
+                  end.
+            end. /* for each temp-fin-doc */
+            
+            run rep/wp-qnty.p ( input v-kolvo-pko, output v-pko-propis ).
+            
+            if v-pko-propis = '' then do :
+                v-pko-propis = 'Ноль'.
+            end.
+            
+            run rep/wp-qnty.p ( input v-kolvo-rko, output v-rko-propis ).
+            
+            if v-rko-propis = '' then do :
+                v-rko-propis = 'Ноль'.
+            end.
+            {&PutExcel}
+              ""                                   {&tabulation}
+              "Итого за день"                      {&tabulation}
+              ""                                   {&tabulation}
+              v-income                             {&tabulation}
+              v-expense                            {&new-line}
+              ""                                   {&tabulation}
+              "Остаток на конец дня"               {&tabulation}
+              ""                                   {&tabulation}
+              (v-ost-begin + v-income - v-expense) {&tabulation}
+              "X"                                  {&new-line}
+              ""                                   {&tabulation}
+              "В том числе на заработную плату, выплаты"   {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&new-line}
+              ""                                   {&tabulation}
+              "социального характера и стипендии"  {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&new-line}
+              .
+            {&PutExcel}
+              "Кассир"                             {&tabulation}
+              "______________________"             {&tabulation}
+              "______________________"             {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&new-line}
+              ""                                   {&tabulation}
+              "       подпись"                     {&tabulation}
+              "расшифровка подписи"                {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&new-line}
+              "Записи в кассовой книге проверил и документы в количестве" {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&new-line}
+              string(v-pko-propis) + " приходных и " + string(v-rko-propis) + " расходных получил."  {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&new-line}
+              "Бухгалтер"                          {&tabulation}
+              "______________________"             {&tabulation}
+              "______________________"             {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&new-line}
+              ""                                   {&tabulation}
+              "       подпись"                     {&tabulation}
+              "расшифровка подписи"                {&tabulation}
+              ""                                   {&tabulation}
+              ""                                   {&new-line}
+              .
 
-        put stream out-stream v-line format "X(100)" skip.
-        display stream Out-stream
-        sym1 sym3 sym4 sym5 sym6
-        "                             Итого за день" @ f-payer
-        string(v-income,  "->>>>>>>>.99")            @ f-income
-        string(v-expense, "->>>>>>>>.99")            @ f-expense
-        with frame cashbk .
-        down stream Out-stream 1 with frame cashbk .
 
-        put stream out-stream v-line format "X(100)" skip.
-        display stream Out-stream
-        sym1 sym3 sym4 sym5 sym6
-        "                      Остаток на конец дня"  @ f-payer
-        string((v-ost-begin + v-income - v-expense),  "->>>>>>>>.99")     @ f-income
-        "     X"                                      @ f-expense
-        with frame cashbk .
-        down stream Out-stream 1 with frame cashbk .
+            put stream out-stream v-line format "X(100)" skip.
+            display stream Out-stream
+            sym1 sym3 sym4 sym5 sym6
+            "                             Итого за день" @ f-payer
+            string(v-income,  "->>>>>>>>.99")            @ f-income
+            string(v-expense, "->>>>>>>>.99")            @ f-expense
+            with frame cashbk .
+            down stream Out-stream 1 with frame cashbk .
 
 
-        put stream out-stream v-line format "X(100)" skip.
-        display stream Out-stream
-        sym1 sym3 sym4 sym5 sym6
-        "  В том числе на заработную плату, выплаты"   @ f-payer
-        with frame cashbk .
-        down stream Out-stream 1 with frame cashbk .
-        display stream Out-stream
-        sym1 sym3 sym4 sym5 sym6
-        "         социального характера и стипендии"   @ f-payer
-        "     X"                                       @ f-expense
-        with frame cashbk .
-        down stream Out-stream 1 with frame cashbk .
-        put stream out-stream v-line format "X(100)" skip.
+            put stream out-stream v-line format "X(100)" skip.
+            display stream Out-stream
+            sym1 sym3 sym4 sym5 sym6
+            "                      Остаток на конец дня"  @ f-payer
+            string((v-ost-begin + v-income - v-expense),  "->>>>>>>>.99")     @ f-income
+            "     X"                                      @ f-expense
+            with frame cashbk .
+            down stream Out-stream 1 with frame cashbk .
+    
+    
+            put stream out-stream v-line format "X(100)" skip.
+            display stream Out-stream
+            sym1 sym3 sym4 sym5 sym6
+            "  В том числе на заработную плату, выплаты"   @ f-payer
+            with frame cashbk .
+            down stream Out-stream 1 with frame cashbk .
+            display stream Out-stream
+            sym1 sym3 sym4 sym5 sym6
+            "         социального характера и стипендии"   @ f-payer
+            "     X"                                       @ f-expense
+            with frame cashbk .
+            down stream Out-stream 1 with frame cashbk .
+            put stream out-stream v-line format "X(100)" skip.
+    
+    
+            PUT STREAM Out-Stream
+              space(0) "Кассир" format "X(10)"                                                             skip
+                                "_____________________    _______________________"  format "X(50)" at 10   skip
+                                "     (подпись)           (расшифровка подписи)  "  format "X(50)" at 10   skip
+              space(0) "Записи в кассовой книге проверил и документы в количестве " format "X(80)"         skip
+              space(0) v-pko-propis + " приходных и "
+                    + v-rko-propis + " расходных получил."                          format "X(80)"         skip
+              " "                                                                                          skip
+              space(0) "Бухгалтер" format "X(10)"                                                          skip
+                                "_____________________    _______________________"  format "X(50)" at 10   skip
+                                "     (подпись)           (расшифровка подписи)  "  format "X(50)" at 10   skip
+            .
 
+            assign
+              v-date-start = v-date-start + 1
+              v-sheet-num = v-sheet-num + 1
+              v-kolvo-pko = 0
+              v-kolvo-rko = 0
+            .
 
-        PUT STREAM Out-Stream
-          space(0) "Кассир" format "X(10)"                                                             skip
-                            "_____________________    _______________________"  format "X(50)" at 10   skip
-                            "     (подпись)           (расшифровка подписи)  "  format "X(50)" at 10   skip
-          space(0) "Записи в кассовой книге проверил и документы в количестве " format "X(80)"         skip
-          space(0) v-pko-propis + " приходных и "
-                + v-rko-propis + " расходных получил."                          format "X(80)"         skip
-          " "                                                                                          skip
-          space(0) "Бухгалтер" format "X(10)"                                                          skip
-                            "_____________________    _______________________"  format "X(50)" at 10   skip
-                            "     (подпись)           (расшифровка подписи)  "  format "X(50)" at 10   skip
+            {&PageExcel}
+    end. /* do while v-date-start <> (v-date-end + 1) : */
 
-        .
-        assign
-          v-date-start = v-date-start + 1
-          v-sheet-num = v-sheet-num + 1
-          v-kolvo-pko = 0
-          v-kolvo-rko = 0
-        .
-
-        {&PageExcel}
-    end.
   { rep/repfrm.i off }
   { gbl/stopwork.i }
 

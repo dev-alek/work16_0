@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,17 +8,20 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER locked_thbj-attr FOR ub.thbj-attr.
-DEFINE TEMP-TABLE tt-cash-pay-autotank NO-UNDO LIKE ub.cash-pay
+DEFINE BUFFER locked_thbj-attr FOR thbj-attr.
+DEFINE TEMP-TABLE tt-cash-pay-autotank NO-UNDO LIKE cash-pay
        field autotank-cdpay-code like ub.cash-pay.cdpay-code
        field autotank-obj-name as character
        index pi is unique primary autotank-cdpay-code.
-DEFINE BUFFER X_shop FOR ub.shop.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE TEMP-TABLE tt-sum-grp NO-UNDO LIKE sum-grp
+       field code-2 as integer
+       field gtype as integer.
+DEFINE BUFFER X_shop FOR shop.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -62,12 +65,18 @@ define variable vss-description as character no-undo init "Редактирование атрибу
 { ref/cgrplbfn.i }
 { gbl/windtfrm.i }
 { gbl/getcntxt.i def }
+{ str/runanlst.i }
+{ ref/gds-attr.i }
+{ ref/gdshattr.i }
+{ cmp/gds-list.i gds-list def "new shared" }
+
 DEFINE VARIABLE v-db-num LIKE ub.db.db-num NO-UNDO.
 DEFINE VARIABLE v-tab-order AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-to-create AS logical NO-UNDO.
 DEFINE VARIABLE v-host-code LIKE ub.shop.host-code NO-UNDO.
 DEFINE VARIABLE v-base-code LIKE ub.sysconf.base-code NO-UNDO.
 DEFINE VARIABLE v-r-b-code LIKE ub.currency.curr-code NO-UNDO.
+DEFINE VARIABLE specgrp-option AS INTEGER NO-UNDO.
 DEFINE BUFFER buf_currency FOR ub.currency.
 DEFINE BUFFER buf_cash-pay-nal FOR ub.cash-pay.
 DEFINE BUFFER buf_cash-pay-ntnl FOR ub.cash-pay.
@@ -81,7 +90,7 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -93,24 +102,35 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 &Scoped-define BROWSE-NAME BR-cash-pay
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
-&Scoped-define INTERNAL-TABLES tt-cash-pay-autotank
+&Scoped-define INTERNAL-TABLES tt-cash-pay-autotank tt-sum-grp
 
 /* Definitions for BROWSE BR-cash-pay                                   */
 &Scoped-define FIELDS-IN-QUERY-BR-cash-pay autotank-cdpay-code ~
 tt-cash-pay-autotank.cdpay-code tt-cash-pay-autotank.curr-code ~
-autotank-obj-name tt-cash-pay-autotank.obj-name
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-cash-pay
+autotank-obj-name tt-cash-pay-autotank.obj-name 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-cash-pay 
 &Scoped-define QUERY-STRING-BR-cash-pay FOR EACH tt-cash-pay-autotank NO-LOCK INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-BR-cash-pay OPEN QUERY BR-cash-pay FOR EACH tt-cash-pay-autotank NO-LOCK INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-BR-cash-pay tt-cash-pay-autotank
 &Scoped-define FIRST-TABLE-IN-QUERY-BR-cash-pay tt-cash-pay-autotank
 
 
+/* Definitions for BROWSE BR-specgrp                                    */
+&Scoped-define FIELDS-IN-QUERY-BR-specgrp tt-sum-grp.grp-code ~
+tt-sum-grp.grp-name code-2 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-specgrp 
+&Scoped-define QUERY-STRING-BR-specgrp FOR EACH tt-sum-grp NO-LOCK INDEXED-REPOSITION
+&Scoped-define OPEN-QUERY-BR-specgrp OPEN QUERY BR-specgrp FOR EACH tt-sum-grp NO-LOCK INDEXED-REPOSITION.
+&Scoped-define TABLES-IN-QUERY-BR-specgrp tt-sum-grp
+&Scoped-define FIRST-TABLE-IN-QUERY-BR-specgrp tt-sum-grp
+
+
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help b-chg BR-cash-pay B-ok ~
-B-no-ok
+B-no-ok BR-specgrp 
+&Scoped-Define DISPLAYED-OBJECTS t-ibmgroup 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -124,38 +144,60 @@ B-no-ok
 
 /* Define a dialog box                                                  */
 
+/* Menu Definitions                                                     */
+DEFINE MENU MENU-B-add-2 
+       MENU-ITEM m_50           LABEL "Услуги"        
+       MENU-ITEM m_24           LABEL "Перечисление в систему лояльности".
+
+
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON B-add-2  NO-FOCUS
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON B-del-2 
+     LABEL "&Удалить" 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-no-ok
-     LABEL "Отмена"
+DEFINE BUTTON B-no-ok 
+     LABEL "Отмена" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-ok
-     LABEL "Ввод"
+DEFINE BUTTON B-ok 
+     LABEL "Ввод" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
+
+DEFINE VARIABLE t-ibmgroup AS LOGICAL INITIAL no 
+     LABEL "прием чеков с продажами по группам" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 38.6 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-cash-pay FOR
+DEFINE QUERY BR-cash-pay FOR 
       tt-cash-pay-autotank SCROLLING.
+
+DEFINE QUERY BR-specgrp FOR 
+      tt-sum-grp SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
@@ -167,26 +209,41 @@ DEFINE BROWSE BR-cash-pay
       tt-cash-pay-autotank.curr-code COLUMN-LABEL "Код валюты!IBS TH" FORMAT ">>9":U
       autotank-obj-name COLUMN-LABEL "Название типа!кассового платежа!AUTOTANK" FORMAT "X(27)":U
       tt-cash-pay-autotank.obj-name COLUMN-LABEL "Название типа!кассового платежа!IBS TH" FORMAT "X(30)":U
-            WIDTH 34.7
+            WIDTH 34.8
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 7.6
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 7.62
          TITLE "Соответствие кодов типов кассовых платежей" FIT-LAST-COLUMN.
+
+DEFINE BROWSE BR-specgrp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-specgrp Dialog-Frame _STRUCTURED
+  QUERY BR-specgrp NO-LOCK DISPLAY
+      tt-sum-grp.grp-code COLUMN-LABEL "Код группы" FORMAT "99":U
+      tt-sum-grp.grp-name COLUMN-LABEL "Описание" FORMAT "X(40)":U
+      code-2 COLUMN-LABEL "Код товара" FORMAT "999999999":U WIDTH 40.2
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 8.57
+         TITLE "Спецгруппы в справочнике суммовых групп" FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
+     B-add-2 AT ROW 11.48 COL 51 WIDGET-ID 4
      B-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 71
      b-chg AT ROW 2 COL 71 WIDGET-ID 2
      BR-cash-pay AT ROW 3 COL 1
-     B-ok AT ROW 10.6 COL 79
-     B-no-ok AT ROW 10.6 COL 89
-     SPACE(0.24) SKIP(5.89)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     B-ok AT ROW 10.62 COL 79
+     B-no-ok AT ROW 10.62 COL 89
+     t-ibmgroup AT ROW 11.48 COL 2
+     B-del-2 AT ROW 11.48 COL 61 WIDGET-ID 6
+     BR-specgrp AT ROW 12.67 COL 1 WIDGET-ID 100
+     SPACE(0.59) SKIP(0.13)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры POS Касса autotank"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -205,6 +262,11 @@ DEFINE FRAME Dialog-Frame
           field autotank-obj-name as character
           index pi is unique primary autotank-cdpay-code
       END-FIELDS.
+      TABLE: tt-sum-grp T "?" NO-UNDO ub sum-grp
+      ADDITIONAL-FIELDS:
+          field code-2 as integer
+          field gtype as integer
+      END-FIELDS.
       TABLE: X_shop B "?" ? ub shop
       TABLE: X_sysconf B "?" ? ub sysconf
    END-TABLES.
@@ -219,16 +281,26 @@ DEFINE FRAME Dialog-Frame
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-cash-pay b-chg Dialog-Frame */
-ASSIGN
+/* BROWSE-TAB BR-specgrp B-del-2 Dialog-Frame */
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-ASSIGN
+/* SETTINGS FOR BUTTON B-add-2 IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+ASSIGN 
+       B-add-2:POPUP-MENU IN FRAME Dialog-Frame       = MENU MENU-B-add-2:HANDLE.
+
+/* SETTINGS FOR BUTTON B-del-2 IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+ASSIGN 
        B-no-ok:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
-ASSIGN
+ASSIGN 
        B-ok:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
+/* SETTINGS FOR TOGGLE-BOX t-ibmgroup IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -248,12 +320,26 @@ ASSIGN
      _FldNameList[4]   > "_<CALC>"
 "autotank-obj-name" "Название типа!кассового платежа!AUTOTANK" "X(27)" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[5]   > Temp-Tables.tt-cash-pay-autotank.obj-name
-"tt-cash-pay-autotank.obj-name" "Название типа!кассового платежа!IBS TH" "X(30)" "character" ? ? ? ? ? ? no ? no no "34.7" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"tt-cash-pay-autotank.obj-name" "Название типа!кассового платежа!IBS TH" "X(30)" "character" ? ? ? ? ? ? no ? no no "34.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BR-cash-pay */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _QUERY-BLOCK BROWSE BR-specgrp
+/* Query rebuild information for BROWSE BR-specgrp
+     _TblList          = "Temp-Tables.tt-sum-grp"
+     _Options          = "NO-LOCK INDEXED-REPOSITION"
+     _FldNameList[1]   > Temp-Tables.tt-sum-grp.grp-code
+"tt-sum-grp.grp-code" "Код группы" ? "integer" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[2]   > Temp-Tables.tt-sum-grp.grp-name
+"tt-sum-grp.grp-name" "Описание" ? "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[3]   > "_<CALC>"
+"code-2" "Код товара" "999999999" ? ? ? ? ? ? ? no ? no no "40.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _Query            is NOT OPENED
+*/  /* BROWSE BR-specgrp */
+&ANALYZE-RESUME
 
+ 
 
 
 
@@ -264,6 +350,26 @@ ASSIGN
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Параметры POS Касса autotank */
 DO:
   APPLY "END-ERROR":U TO SELF.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-add-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-add-2 Dialog-Frame
+ON CHOOSE OF B-add-2 IN FRAME Dialog-Frame /* Добавить */
+DO:
+  IF specgrp-option = 0 THEN DO:
+    run gbl/pop-up.p ( INPUT self:handle, INPUT yes) NO-ERROR.
+  END.
+  IF specgrp-option = 0  THEN RETURN NO-APPLY.
+  RUN proc-b-add-2 IN THIS-PROCEDURE ( INPUT specgrp-option) NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN do:
+      specgrp-option = 0.
+       RETURN NO-APPLY.
+  END.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -285,11 +391,25 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-del-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-del-2 Dialog-Frame
+ON CHOOSE OF B-del-2 IN FRAME Dialog-Frame /* Удалить */
+DO:
+  IF NOT AVAILABLE tt-sum-grp THEN RETURN NO-APPLY.
+  DELETE tt-sum-grp.
+  {&OPEN-QUERY-br-specgrp}
+  REPOSITION br-specgrp TO ROW 1.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME B-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exit Dialog-Frame
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Ввод */
 DO:
-  RUN proc-save IN THIS-PROCEDURE  NO-ERROR.
+  RUN proc-save IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
 END.
 
@@ -310,13 +430,105 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME m_24
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_24 Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_24 /* Перечисление в систему лояльности */
+DO:
+  ASSIGN
+  specgrp-option = 24.
+  RUN proc-b-add-2 IN THIS-PROCEDURE ( INPUT specgrp-option) NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN DO:
+      specgrp-option = 0.
+      RETURN NO-APPLY.
+  END.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME m_50
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_50 Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_50 /* Услуги */
+DO:
+  ASSIGN
+  specgrp-option = 50.
+  RUN proc-b-add-2 IN THIS-PROCEDURE ( INPUT specgrp-option) NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN DO:
+      specgrp-option = 0.
+      RETURN NO-APPLY.
+  END.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME t-ibmgroup
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-ibmgroup Dialog-Frame
+ON VALUE-CHANGED OF t-ibmgroup IN FRAME Dialog-Frame /* прием чеков с продажами по группам */
+DO:
+ ASSIGN
+ t-ibmgroup.
+  CASE t-ibmgroup:
+    WHEN YES  THEN DO:
+      if p-mode = {&update} then do:
+         ENABLE
+         b-add-2
+         b-del-2
+         WITH FRAME {&FRAME-NAME}.
+      end.
+    END.
+    WHEN NO THEN DO:
+      FOR EACH tt-sum-grp:
+          DELETE tt-sum-grp.
+      END.
+      DISABLE
+      b-add-2
+      b-del-2
+      WITH FRAME {&FRAME-NAME}.
+      {&OPEN-QUERY-br-specgrp}
+    END.
+  END CASE.
+
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define BROWSE-NAME BR-cash-pay
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
+
+ON CHOOSE OF MENU-ITEM m_50 /* Услуги */
+DO:
+  ASSIGN
+  specgrp-option = 50.
+  RUN proc-b-add-2 IN THIS-PROCEDURE ( INPUT specgrp-option) NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN DO:
+      specgrp-option = 0.
+      RETURN NO-APPLY.
+  END.
+
+END.
+
+ON CHOOSE OF MENU-ITEM m_24 /* Перечисление в систему лояльности */
+DO:
+  ASSIGN
+  specgrp-option = 24.
+  RUN proc-b-add-2 IN THIS-PROCEDURE ( INPUT specgrp-option) NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN DO:
+      specgrp-option = 0.
+      RETURN NO-APPLY.
+  END.
+END.
 
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
@@ -454,7 +666,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -473,10 +685,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE B-exit b-quit B-Help b-chg BR-cash-pay B-ok B-no-ok
+  DISPLAY t-ibmgroup 
+      WITH FRAME Dialog-Frame.
+  ENABLE B-exit b-quit B-Help b-chg BR-cash-pay B-ok B-no-ok BR-specgrp 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -485,7 +699,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -494,15 +708,22 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 DEFINE VARIABLE ii AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-entry AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-specgrp AS CHARACTER NO-UNDO.
+define variable v-grp-code as integer no-undo .
+define variable v-gtype as integer no-undo .
 DEFINE VARIABLE v-cash-pay-list AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-cdpay-code LIKE ub.cash-pay.cdpay-code NO-UNDO.
 DEFINE VARIABLE v-curr-code LIKE ub.cash-pay.curr-code NO-UNDO.
 DEFINE VARIABLE v-cdpay-code-autotank LIKE ub.cash-pay.cdpay-code NO-UNDO.
 define variable v-autotank-obj-name as character no-undo .
-
-DEFINE BUFFER buf_cash-pay FOR ub.cash-pay.
 define variable v-param-type as character no-undo .
 define variable v-param-value as character no-undo .
+
+DEFINE BUFFER buf_cash-pay FOR ub.cash-pay.
+DEFINE BUFFER buf_tt-sum-grp FOR tt-sum-grp.
+DEFINE BUFFER buf_tax-rate FOR ub.tax-rate.
+DEFINE BUFFER buf_goods FOR ub.goods.
+
 FOR EACH thbjattr_thbj-attr:
   delete thbjattr_thbj-attr.
 end.
@@ -538,6 +759,15 @@ FOR EACH thbjattr_thbj-attr:
     ASSIGN
     v-cash-pay-list = thbjattr_thbj-attr.property-value-character.
   END.
+  if v-entry = {&attr-cd-type-Autotank_ibmgroup} then do:
+    assign
+    t-ibmgroup = thbjattr_thbj-attr.property-value-logical
+    .
+  end.
+  IF v-entry = {&attr-cd-type-ibm-xml_specgrp} THEN DO:
+    ASSIGN
+    v-specgrp = thbjattr_thbj-attr.property-value-character.
+  END.
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
 
@@ -571,13 +801,42 @@ DO ii = 1 TO  NUM-ENTRIES(v-cash-pay-list, ";"):
 END.
 end.
 
+if v-specgrp <> "":U then do:
+  _ii:
+  DO ii = 1 TO NUM-ENTRIES(v-specgrp, ";"):
+    ASSIGN
+    v-grp-code = INTEGER (ENTRY(1, ENTRY(ii, v-specgrp, ";":U), "-":U))
+    .
+    if num-entries(ENTRY(ii, v-specgrp, ";":U), "-":U) > 2 then do:
+      assign
+      v-gtype = INTEGER (ENTRY(3, ENTRY(ii, v-specgrp, ";":U), "-":U)) no-error .
+    end.
+    FIND FIRST buf_tt-sum-grp NO-LOCK WHERE
+                  buf_tt-sum-grp.grp-code = v-grp-code NO-ERROR.
+    IF AVAILABLE buf_tt-sum-grp THEN NEXT _ii.
+    FIND FIRST buf_goods NO-LOCK WHERE
+                buf_goods.gds-code = integer(ENTRY(2, ENTRY(ii, v-specgrp, ";":U), "-":U)) NO-ERROR.
+
+      CREATE buf_tt-sum-grp.
+      ASSIGN
+      buf_tt-sum-grp.grp-code = integer(ENTRY(1, ENTRY(ii, v-specgrp, ";":U), "-":U))
+      buf_tt-sum-grp.code-2 = (IF AVAILABLE buf_goods
+                               THEN buf_goods.gds-code
+                               ELSE integer(ENTRY(2, ENTRY(ii, v-specgrp, ";":U), "-":U)))
+      buf_tt-sum-grp.grp-name = (IF AVAILABLE buf_goods
+                               THEN buf_goods.gds-name
+                               ELSE "!!!Ошибка не такого товара")
+      buf_tt-sum-grp.gtype    = v-gtype
+      .
+  END.
+end.
 
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -591,12 +850,22 @@ FRAME {&FRAME-NAME}:TITLE = FRAME {&FRAME-NAME}:TITLE + (if p-obj-type = {&cmp} 
 tt-cash-pay-autotank.obj-name:resizable in browse br-cash-pay = yes
 tt-cash-pay-autotank.autotank-obj-name:resizable in browse br-cash-pay = yes
 v-tab-order = "b-add-cash-pay,b-del-cash-pay".
+
+if p-obj-code = 0 and p-obj-type = "" then  t-ibmgroup = no.
+
+display
+t-ibmgroup
+WITH FRAME {&frame-name}.
+
 ENABLE
 B-exit WHEN p-mode = {&UPDATE}
 b-quit
 B-Help
 br-cash-pay
 b-chg WHEN p-mode = {&UPDATE}
+t-ibmgroup WHEN p-mode = {&UPDATE} and p-obj-type = {&shop}
+b-add-2   WHEN p-mode = {&UPDATE} AND t-ibmgroup
+b-del-2   WHEN p-mode = {&UPDATE} AND t-ibmgroup
 WITH FRAME {&frame-name}.
 VIEW FRAME {&frame-name}.
 IF p-mode = {&LOOKUP} THEN DO:
@@ -608,13 +877,15 @@ IF p-mode = {&LOOKUP} THEN DO:
     b-quit:LABEL = "&Выход"
     .
 END.
+APPLY "value-changed" TO t-ibmgroup.
 RUN openbrcash-pay IN THIS-PROCEDURE.
+{&OPEN-QUERY-BR-specgrp}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBrcash-pay Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBrcash-pay Dialog-Frame 
 PROCEDURE OpenBrcash-pay :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -627,7 +898,141 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-chg Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add-2 Dialog-Frame 
+PROCEDURE proc-b-add-2 :
+DEFINE INPUT PARAMETER p-gtype AS INTEGER NO-UNDO.
+DEFINE VARIABLE v-value-int AS integer NO-UNDO.
+DEFINE VARIABLE v-sum-grp-rid AS recid NO-UNDO.
+DEFINE VARIABLE ref-list AS character NO-UNDO.
+define buffer buf_gds-list for gds-list.
+
+  /*50 - сотовые операторы */
+  /*24 - перечисление системе лояльности */
+  define variable v-host-code as integer no-undo .
+  define buffer buf_macro-list-hist for macro-list-hist.
+
+
+  DEFINE BUFFER buf_tt-sum-grp FOR tt-sum-grp.
+  DEFINE BUFFER buf_goods FOR ub.goods.
+
+
+  DEFINE BUFFER buf_sum-grp FOR ub.sum-grp.
+  run ref/sum-grps.w (
+                 input parparentproc
+               , INPUT "b-sel"
+               , input-output ref-list).
+  if ref-list = "":U then do:
+    UNDO, RETURN ERROR.
+  END.
+
+    find first buf_sum-grp no-lock where
+              recid(buf_sum-grp) = integer(entry(1, ref-list)) no-error .
+    if not avail buf_sum-grp then return error.
+    assign
+    v-value-int = buf_sum-grp.grp-code
+    .
+  FIND FIRST buf_tt-sum-grp WHERE
+            buf_tt-sum-grp.grp-code = v-value-int NO-ERROR.
+  IF AVAILABLE buf_tt-sum-grp THEN DO:
+      MESSAGE
+      "Уже определена запись с таким кодом"
+      VIEW-AS ALERT-BOX ERROR.
+      UNDO, RETURN error.
+  END.
+  for each buf_macro-list-hist:
+    delete buf_macro-list-hist.
+  end.
+  for each gds-list-hist:
+    delete gds-list-hist.
+  end.
+  create buf_macro-list-hist.
+  assign
+  buf_macro-list-hist.list-table = '':U
+  buf_macro-list-hist.id         = 1
+  buf_macro-list-hist.line       = 0
+  buf_macro-list-hist.hist-mode  = '+'
+  buf_macro-list-hist.status_    = {&all}
+  .
+  CASE p-gtype:
+      WHEN 50 THEN DO:
+          ASSIGN
+          buf_macro-list-hist.des        = "ВСЕ услуги-платежи в адрес ОСС"
+                                                 /*ВСЕ товары с глобальным атрибутом товара Платеж ОСС = yes (текущие товары)*/
+          buf_macro-list-hist.item_      = {&attr-office-type}
+          buf_macro-list-hist.option_    = "goods-attr"
+          .
+      END.
+      WHEN 24 THEN DO:
+          ASSIGN
+          buf_macro-list-hist.des        = "ВСЕ услуги-перечисления в системы лояльности"
+                                                 /*ВСЕ товары с глобальным атрибутом перечисление в систему лояльности*/
+          buf_macro-list-hist.item_      = {&attr-is-loyalty-payment}  + {&delim-key} + string(yes)
+          buf_macro-list-hist.option_    = "goods-attr-val"
+          .
+    END.
+  END CASE.
+  release buf_macro-list-hist.
+
+  { gbl/hostcode.i p-obj-type p-obj-code v-host-code no-error }
+  for each gds-list:
+    delete gds-list.
+  end.
+
+  run str/gdsqlist.w (
+                   input parparentproc
+                  ,input this-procedure:handle
+                  ,input v-host-code
+                  ,input p-obj-type
+                  ,input p-obj-code
+                  ,input "b-sel"
+                  ,input "ВСЕ услуги-платежи в адрес ОСС"
+                  ,input yes
+                  ).
+  find first gds-list where
+           gds-list.to-sel = yes no-error.
+  if not available gds-list then return error.
+  FIND FIRST buf_goods NO-LOCK WHERE
+            buf_goods.gds-code = gds-list.gds-code NO-ERROR.
+  IF NOT AVAILABLE buf_goods THEN RETURN error.
+  for each buf_gds-list where buf_gds-list.to-sel = yes:
+    buf_gds-list.to-sel = no.
+  end.
+  if buf_goods.gds-type <> {&gds-office} then do:
+    message
+    "Со спецгруппой можно связать только УСЛУГУ!"
+    view-as alert-box error.
+    undo, return error.
+  end.
+  if buf_goods.unit-base <> "{&abbr_rub}" then do:
+    message
+    substitute("Со спецгруппой можно связать только УСЛУГУ,&1" +
+               "у которой единица измерения равна единице измерения НАЦИОНАЛЬНОЙ ВАЛЮТЫ (&2)"
+               , {&new-line}
+               , "{&abbr_rub}")
+    view-as alert-box error.
+    undo, return error.
+  end.
+
+  CREATE buf_tt-sum-grp.
+  ASSIGN
+  buf_tt-sum-grp.grp-code = v-value-int
+  buf_tt-sum-grp.grp-name = gds-list.gds-name
+  buf_tt-sum-grp.code-2   = gds-list.gds-code
+  buf_tt-sum-grp.gtype    = p-gtype
+  v-sum-grp-rid = RECID(buf_tt-sum-grp)
+  .
+  for each gds-list:
+    delete gds-list.
+  end.
+  {&OPEN-QUERY-br-specgrp}
+  REPOSITION br-specgrp TO RECID v-sum-grp-rid.
+
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-chg Dialog-Frame 
 PROCEDURE proc-b-chg :
 DEFINE VARIABLE v-value AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-log AS logical NO-UNDO.
@@ -699,7 +1104,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 define variable v-same as logical no-undo .
 define variable v-value-character as character no-undo .
@@ -709,8 +1114,25 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-param-type as character no-undo .
 DEFINE VARIABLE v-cash-pay-list AS CHARACTER NO-UNDO.
+define variable v-specgrp as character no-undo .
+define variable ii as integer no-undo .
+
 DEFINE BUFFER buf_tt-cash-pay-autotank FOR tt-cash-pay-autotank.
+DEFINE BUFFER buf_tt-sum-grp FOR tt-sum-grp.
+
 IF p-mode = {&LOOKUP} THEN RETURN ERROR.
+
+if t-ibmgroup then do:
+  ii = 0.
+  FOR EACH buf_tt-sum-grp BY buf_tt-sum-grp.grp-code:
+    ASSIGN
+    ii = ii + 1
+    v-specgrp = v-specgrp + (if ii = 1 then "":U else ";":U)  +
+                  STRING(buf_tt-sum-grp.grp-code) + "-":U + STRING(buf_tt-sum-grp.code-2) +
+                   '-' + STRING(buf_tt-sum-grp.gtype)
+    .
+  END.
+end.
 
 FOR EACH tt-cash-pay-autotank BY tt-cash-pay-autotank.autotank-cdpay-code:
   ASSIGN
@@ -725,6 +1147,12 @@ END.
 find first thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-cd-type-Autotank_cash-pay-list}.
 assign
 thbjattr_thbj-attr.property-value-character = v-cash-pay-list.
+find first thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-cd-type-Autotank_ibmgroup}.
+assign
+thbjattr_thbj-attr.property-value-logical = t-ibmgroup.
+find first thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-cd-type-Autotank_specgrp}.
+assign
+thbjattr_thbj-attr.property-value-character = v-specgrp.
 
 v-same = yes.
 for each thbjattr_thbj-attr,
@@ -786,3 +1214,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

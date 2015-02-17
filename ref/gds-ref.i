@@ -370,8 +370,8 @@ DEFINE MENU m-add
        MENU-ITEM m-add-2 LABEL "Услуга"  ACCELERATOR "ALT-2"
 .
 DEFINE MENU m-dopinf
-       MENU-ITEM m-dopinf-1 LABEL "Атрибуты товара"                                  ACCELERATOR "ALT-1"
-       MENU-ITEM m-dopinf-2 LABEL "Фото"                                             ACCELERATOR "ALT-2"
+       MENU-ITEM m-dopinf-1 LABEL "Доп.инфо по карточке товара"                                  ACCELERATOR "ALT-1"
+       MENU-ITEM m-dopinf-2 LABEL "Фото"                                           				 ACCELERATOR "ALT-2"
        RULE
        MENU-ITEM m-dopinf-lgattr LABEL "Просмотр Глобальных атрибутов товара"                       ACCELERATOR "ALT-3"
        MENU-ITEM m-dopinf-lhattr LABEL "Просмотр Атрибутов товара на фирме"                         ACCELERATOR "ALT-4"
@@ -2336,6 +2336,8 @@ PROCEDURE proc-b-add-inf:
   define variable normal-wastage_ like ub.goods.normal-wastage no-undo .
   define variable normal-waste_   like ub.goods.normal-waste   no-undo .
   define variable cond-keep-code_ like ub.goods.cond-keep-code no-undo .
+  define variable is-alc          as logical                   no-undo .
+  define variable choose-alc-prod_ as integer                  no-undo .     
 
   define variable prodaddress as character no-undo .
   define variable v-recid     as recid     no-undo .
@@ -2392,6 +2394,33 @@ PROCEDURE proc-b-add-inf:
           end case.
         end.
       end.
+
+        define VARIABLE v-attr-value as character no-undo .
+        define VARIABLE v-value as character no-undo .
+
+  
+        RUN gds-attr-value (
+          INPUT loc-goods.gds-code,
+          INPUT {&attr-alcohol-prod},
+          OUTPUT v-attr-value,
+          OUTPUT v-value
+          ).
+          if v-attr-value = "YES" then do:
+            find first ub.alc-type-gds no-lock
+              where ub.alc-type-gds.gds-code = loc-goods.gds-code and
+              ub.alc-type-gds.create-user-db-num = 0 no-error.
+            if available ub.alc-type-gds then do:
+            assign
+              choose-alc-prod_ = ub.alc-type-gds.alc-type-inner-code
+              is-alc           = yes
+              .
+            end.
+            if not available ub.alc-type-gds then do:
+              assign
+              is-alc = no.
+            end.
+          end.
+      
       if not available loc-goods or not available buf_clients then do:
         assign
           loc-dopinf-option = "":U
@@ -2444,6 +2473,8 @@ PROCEDURE proc-b-add-inf:
                    , input-output normal-waste_
                    , input-output cond-keep-code_
                    , input-output proof_
+				   , input-output is-alc
+                   , input-output choose-alc-prod_
                    ) .
     end.
     WHEN "foto":U THEN DO:

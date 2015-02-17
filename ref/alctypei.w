@@ -118,7 +118,7 @@ DEFINE FRAME Dialog-Frame
      SPACE(66.49) SKIP(2.66)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         TITLE " типов алкогол€"
+         TITLE " видов алкогол€"
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
 
@@ -180,7 +180,7 @@ DO:
                               .
       IF AVAILABLE buf_alc-type
       THEN DO:
-         MESSAGE "¬веденный код типа алкогол€ уже существует" buf_alc-type.alc-type-name " ! " VIEW-AS  ALERT-BOX  ERROR.
+         MESSAGE "¬веденный код вида алкогол€ уже существует" buf_alc-type.alc-type-name " ! " VIEW-AS  ALERT-BOX  ERROR.
          APPLY "entry"  TO v-code .
          RETURN NO-APPLY.
       END.
@@ -188,14 +188,14 @@ DO:
 
    if p-def = {&add-def} OR p-def = {&update}  then DO:
       if v-name = "" then do:
-         message "¬ведите название типа алкогол€! "
+         message "¬ведите название вида алкогол€! "
          view-as  alert-box  error.
          apply "entry"  to v-name .
          return no-apply.
       end.
 
       if v-code = "" then do:
-         message "¬ведите код типа алкогол€! "
+         message "¬ведите код вида алкогол€! "
          view-as  alert-box  error.
          apply "entry"  to v-code .
          return no-apply.
@@ -241,7 +241,7 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 { gbl/app_help.i }
 
-assign frame {&frame-name}:title = p-def + " типа алкогол€  " .
+assign frame {&frame-name}:title = p-def + " вида алкогол€  " .
 
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */

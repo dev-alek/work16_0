@@ -103,6 +103,7 @@ on write of dst.c-doc-prts        override do: end.
 on write of dst.c-parts           override do: end.
 on write of dst.c-parts-root      override do: end.
 
+if not varstay-history  then return .
 
 define variable my-fact-order as decimal   no-undo .
 run day-begin-fact-order (input vardate-actual-docs , output my-fact-order) .

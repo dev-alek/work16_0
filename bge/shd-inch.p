@@ -55,6 +55,7 @@ define variable vss-description as character no-undo init "Инкрементальный экспо
     define buffer buf_temp_doc-code     for temp_doc-code.
     define buffer buf_temp_del-doc-code for temp_del-doc-code.
     define buffer buf_temp_pr-doc-num   for temp_pr-doc-num.
+    define buffer buf_clients-attr for ub.clients-attr.
 do
 for buf_temp_doc-code
   , buf_temp_del-doc-code
@@ -153,30 +154,17 @@ on error undo, return error
     object-of-list:
     for each temp-obj
     :
-          /* Для автоматического экспорта: залочим атрибут на объекте, если в данный момент выгружаем */
-          find first ub.clients-attr exclusive-lock
-            where ub.clients-attr.obj-type = temp-obj.obj-type
-              and ub.clients-attr.obj-code = temp-obj.obj-code
-              and ub.clients-attr.attr-code = {&attr-bge-incr-cur} no-wait no-error.
-          
-          if not available ub.clients-attr then do:
-            if locked ub.clients-attr then do:
+        run bge/lock-bge-incr.p (input temp-obj.obj-type, input temp-obj.obj-code, buffer buf_clients-attr) no-error.
+        if error-status:error then do:
+
               run wp-XMLWriteLog in this-procedure (
                     input v-log-file-name
                   , input 1
-                  , input "Внимание: Объект " + temp-obj.obj-type + string( temp-obj.obj-code ) + ".  выгружается в другой сессии."
+                  , input "Ошибка экспорта документов по объекту " + temp-obj.obj-type + string( temp-obj.obj-code ) + ". Объект выгружается в другой сессии."
               ).
               next object-of-list. /* пойдём дальше по списку объектов */
-            end.
-            else do:
-              create ub.clients-attr.
-              assign
-              ub.clients-attr.obj-type = temp-obj.obj-type
-              ub.clients-attr.obj-code = temp-obj.obj-code
-              ub.clients-attr.attr-code = {&attr-bge-incr-cur}.
-              find current ub.clients-attr exclusive-lock.
-            end.
           end.
+          
         run export-docs-by-object in this-procedure (
               input temp-obj.host-code
             , input temp-obj.obj-type
@@ -191,11 +179,11 @@ on error undo, return error
                 , input 1
                 , input "Ошибка экспорта документов по объекту " + temp-obj.obj-type + string( temp-obj.obj-code )
             ).
+            find current buf_clients-attr no-lock. /* снять блокировку */
             next object-of-list.
         end.
         
-        /* Освободим атрибут */
-        release ub.clients-attr.
+        find current buf_clients-attr no-lock. /* снять блокировку */
     end. /* object-of-list: */
 
     /* дата выгрузки для контрагентов - сегодня */

@@ -121,7 +121,7 @@ on error undo, return error
                  vss-workfile vss-revision vss-description
             skip v-operation-name[ v-operation-num ]
                     + " - ошибка "
-                    + trim( string( v-error-num, ">9" ) )
+                    + trim( string( v-error-num, ">>9" ) )
                     + ": "
                     + v-error-name[ min( v-error-num, 19 ) ]
             skip return-value

@@ -49,7 +49,13 @@ define variable v-cntxt-userid as character no-undo .
 { str/fbrhist.i  }
 { str/trdcalib.i }
 { str/fbrattr.i  }
-{ str/fbr-log.p  }
+{ str/fbr-log.i clear }
+define temp-table tt-rsrv-err no-undo
+  field artic like ub.goods.artic
+  field rsrv-qnty like ub.gds-obj.fact-qnty
+  field req-qnty like ub.gds-obj.fact-qnty 
+.
+define stream stm.
 
 define temp-table temp_fbr-objects no-undo
     field obj-type  as character
@@ -101,9 +107,7 @@ for buf_recipe
   , buf_sale-doc
 on error undo, return error
 :
-    /* для записи недостающих ингридиентов в файл */
-    run init-fbr-rsrv-log.
-    
+
     { gbl/working.i }
     /*НЕ ПЕРЕДЕЛЫВАТЬ НА g e t c n t x t .i get процедура вызывается в автомате!!!!*/
     run get-db-num in parparentproc ( output v-cntxt-db-num).
@@ -491,13 +495,12 @@ on error undo, return error
             find first buf_fbr-doc no-lock
                 where buf_fbr-doc.doc-code = v-fbr-doc-code
             .
-
             run str/fbr-rsrv.p (
                   input parparentproc
                 , input p-fbrhist-handle
                 , input recid( buf_fbr-doc )
-                , input yes /*p-silent*/
-                , input yes              /* autofbr */
+                , input yes /* p-silent */
+                , input yes /* autofbr */
                 , input yes
                 , input v-store-rest
                 , output v-reserved
@@ -505,15 +508,12 @@ on error undo, return error
             if error-status :error
             or v-reserved = no
             then do:
-                
-                if return-value = 'not-reserved' then do:
-                  
                   /* печатаем */
                   define variable v-user-action   as character no-undo .
                   define variable v-printed       as logical   no-undo .
                   define variable DisabledOptions as integer   no-undo .
                   define variable v-orient-page as character no-undo .
-                  
+                  /*
                   run gbl/prnfilen.w (
                         input "Список не зарезервированных товаров при автопроизводстве":U
                       , input 8
@@ -522,9 +522,39 @@ on error undo, return error
                       , output v-user-action
                       , output v-printed
                   ).
-                  undo, return error.                  
+                  os-delete value({&fbr-rsrv-log-file-name}) .
+                end.*/
+                if search ({&fbr-rsrv-tt-log-file-name}) <> ? then do:
+                  input stream stm from value({&fbr-rsrv-tt-log-file-name}).
+                  repeat .
+                    create tt-rsrv-err.
+                    import stream stm tt-rsrv-err no-error.
+                    if error-status:error 
+                      then delete tt-rsrv-err.
+                  END.
+                  output stream stm to value (v-fbr-tt-log-file-name).
+                  for each tt-rsrv-err no-lock break by tt-rsrv-err.artic:  
+                    if last-of (tt-rsrv-err.artic) and tt-rsrv-err.artic <> "" then do:
+                      put stream stm unformatted substitute("Ошибка при резервировании товара артикул &1: требуемое кол-во &2 зарезервировано &3&4"
+                                          , tt-rsrv-err.artic
+                                          , tt-rsrv-err.req-qnty
+                                          , tt-rsrv-err.rsrv-qnty
+                                          , {&new-line}
+                                          ).
+                    end.
+                  end.
+                  output stream stm close.
+                  if search ({&fbr-rsrv-tt-log-file-name}) <> ? then do:
+                    run gbl/prnfilen.w (
+                          input "Список не зарезервированных товаров при автопроизводстве":U
+                        , input 8
+                        , input search({&fbr-rsrv-tt-log-file-name})
+                        , input 7
+                        , output v-user-action
+                        , output v-printed
+                    ).
+                  end.
                 end.
-                
                 v-mess =  substitute("Не удалось зарезервировать товары для производства.&1" +
                           "Объект (кухня): &2&3&1&4&1&5"
                           , {&new-line}

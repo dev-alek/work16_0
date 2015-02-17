@@ -54,7 +54,11 @@ define variable vss-description as character no-undo init "Карточка товара".
 { gbl/perproc.i }
 { gbl/getcntxt.i def }
 { gbl/thbj-def.i }
-define temp-table temp-goods no-undo like ub.goods.
+{ gbl/clntattr.i }
+
+define temp-table temp-goods no-undo like ub.goods
+field alc-prod as logical
+field alc-choose-prod as integer.
 define variable v-next-prev as character no-undo .
 define variable v-param-type as character no-undo .
 define variable v-value-character as character no-undo .
@@ -94,9 +98,8 @@ define buffer locked_gds-add-charges for ub.gds-add-charges.
 DEFINE TEMP-TABLE tt0-goods-attr NO-UNDO LIKE ub.goods-attr.
 define buffer locked_goods-attr for ub.goods-attr.
 define buffer locked_goods for ub.goods.
-
-
-
+define variable v-cli-alc-producer as character no-undo .
+define variable v-attr-type as character no-undo .
 
 define variable ref-list as char no-undo.
 define variable g#log as logical no-undo .
@@ -139,7 +142,8 @@ define variable v-s-coeff-par             as integer no-undo .
 define variable v-gds-prop-par             as integer no-undo .
 define variable v-add-prop-par             as integer no-undo .
 define variable v-attr-gbl-par            as integer no-undo .
-
+DEFINE VARIABLE v-gds-attr-type AS CHARACTER NO-UNDO .      
+DEFINE VARIABLE v-gds-attr-value-old AS character NO-UNDO init "no".
 
 
 /* переменные для импорта */
@@ -267,10 +271,15 @@ define variable dopinf-option as char no-undo.
 define variable prodbc-option as char no-undo.
 define variable p-list as character no-undo .
 define variable fbr-grp-code_ like ub.goods.fbr-grp-code no-undo.
+DEFINE VARIABLE v-is-alc AS LOGICAL NO-UNDO.
+DEFINE VARIABLE v-choose-alc-prod AS CHARACTER NO-UNDO. 
+DEFINE variable v-alc-type-inner-code as integer no-undo .
+define variable v-create-user-db-num  as integer no-undo .
 /*флаг изменения в атрибутах товара или еще где-то внутри*/
 define variable updated as logical no-undo.
 define buffer buf_fbr-gds-grp for ub.fbr-gds-grp.
-
+define variable v-err-mess as character no-undo .
+define variable v-deleted as logical no-undo .
 /*Если это таможенный объект следует считать с диска справочник кодов ТНВЭД*/
 { gbl/conf-rd.i
  "'is-custm'"
@@ -597,7 +606,7 @@ def MENU m-altcd
 .
 
 def MENU m-dopinf
-    MENU-ITEM m-dopinf-1 LABEL "Атрибуты товара"  ACCELERATOR "ALT-2"
+    MENU-ITEM m-dopinf-1 LABEL "Доп.инфо по карточке товара"  ACCELERATOR "ALT-2"
     MENU-ITEM m-dopinf-2 LABEL "Фото"  ACCELERATOR "ALT-2"
     MENU-ITEM m-dopinf-10 LABEL "Глобальные атрибуты товара"  ACCELERATOR "ALT-3"
     MENU-ITEM m-dopinf-3 LABEL "Атрибуты товара на фирме"  ACCELERATOR "ALT-4"
@@ -1216,6 +1225,25 @@ ON choose OF b-arch IN FRAME d-gds-form /* Архив */
 DO:
   if mode = {&add-def} then  do:    /* Сохр */
     one-good = no.
+        if temp-goods.alc-prod = yes then 
+do:
+  if (input frame {&frame-name} ub.goods.ms-base = 0) then 
+  do:
+    message "Введите объем штуки в карточке товара" VIEW-AS ALERT-BOX .
+    RETURN NO-APPLY. 
+  end.
+  run clntattr-value in this-procedure ( input clients.obj-type
+                                       , input clients.obj-code
+                                       , input {&attr-cli-alc-producer}
+                                       , output v-cli-alc-producer
+                                       , output v-attr-type
+                                       ) .
+  if v-cli-alc-producer = "no" then
+  do:
+    message "Производитель товара не является производителем алкогольной продукции, установите соответствующий атрибут в справочнике клиентов." VIEW-AS ALERT-BOX .
+    return no-apply .
+  end.
+end. 
     RUN check-update-attr IN THIS-PROCEDURE(no) NO-ERROR.
     RUN check-add in this-procedure ( input 0) no-error.
     if error-status:error and NOT return-value = "next" then return no-apply.
@@ -1283,6 +1311,25 @@ if can-do( {&update_add-def}, mode ) then  do:    /* Вых */
   assign
   one-good = yes
   saved-name2 = saved-name.
+      if temp-goods.alc-prod = yes then 
+do:
+  if (input frame {&frame-name} ub.goods.ms-base = 0) then 
+  do:
+    message "Введите объем штуки в карточке товара" VIEW-AS ALERT-BOX .
+    RETURN NO-APPLY. 
+  end.
+  run clntattr-value in this-procedure ( input clients.obj-type
+                                       , input clients.obj-code
+                                       , input {&attr-cli-alc-producer}
+                                       , output v-cli-alc-producer
+                                       , output v-attr-type
+                                       ) .
+  if v-cli-alc-producer = "no" then
+  do:
+    message "Производитель товара не является производителем алкогольной продукции, установите соответствующий атрибут в справочнике клиентов." VIEW-AS ALERT-BOX .
+    return no-apply .
+  end.
+end. 
   RUN check-add in this-procedure ( input 2)  no-error.
   if error-status:error then
       return no-apply.
@@ -2721,12 +2768,120 @@ if logical(entry(1, choice-str, "|":U)) then do:
 end.
 if mode = {&add-def} then do:
   find first goods share-lock where recid(goods) = gds-rec .
+  if not AVAILABLE goods then return no-apply.
+  else do:
+/*  if temp-goods.alc-prod <> logical (v-gds-attr-value-old) then*/
+/*  do:                                                          */
+    if temp-goods.alc-prod = yes then 
+    do:
+      run gds-attr-write IN THIS-PROCEDURE(
+        input ub.goods.gds-code
+        ,INPUT {&attr-alcohol-prod}
+        ,INPUT temp-goods.alc-prod ) NO-ERROR.
+      
+      IF ERROR-STATUS:ERROR THEN 
+      DO:
+        assign
+          v-err-mess = substitute("Ошибка при сохранении атрибута товара &1 &2 :&3&4 &5"
+                                    , ub.goods.gds-code
+                                    , {&attr-alcohol-prod}
+                                    , {&new-line}
+                                    ,error-status:get-message(1)
+                                    ,return-value).
+        undo _main, return error v-err-mess.
+      END.
+
+        find first ub.alc-type-gds 
+        where ub.alc-type-gds.gds-code = ub.goods.gds-code
+        and ub.alc-type-gds.create-user-db-num = 0 EXCLUSIVE-LOCK no-error.
+      if not available ub.alc-type-gds then 
+      do :
+        create ub.alc-type-gds.       
+      end.
+      assign
+        ub.alc-type-gds.gds-code            = ub.goods.gds-code
+        ub.alc-type-gds.alc-type-inner-code = temp-goods.alc-choose-prod
+        ub.alc-type-gds.create-user-db-num  = 0
+        .         
+      end. /*if temp-goods.alc-prod = yes then */   
+   end. /*else do:*/
+end. /*if mode = {&add-def} then do:*/
+
+if mode <> {&add-def} and mode <> {&lookup} then do:
+find first goods share-lock where recid(goods) = gds-rec .
+  if temp-goods.alc-prod <> logical (v-gds-attr-value-old) then 
+  do:
+    if temp-goods.alc-prod = yes then 
+    do:
+      run gds-attr-write IN THIS-PROCEDURE(
+        input ub.goods.gds-code
+        ,INPUT {&attr-alcohol-prod}
+        ,INPUT temp-goods.alc-prod ) NO-ERROR.
+      
+      IF ERROR-STATUS:ERROR THEN 
+      DO:
+        assign
+          v-err-mess = substitute("Ошибка при сохранении атрибута товара &1 &2 :&3&4 &5"
+                                    , ub.goods.gds-code
+                                    , {&attr-alcohol-prod}
+                                    , {&new-line}
+                                    ,error-status:get-message(1)
+                                    ,return-value).
+
+      END.
+
+    end. /* temp-goods.alc-prod = yes */
+    else   
+    do: 
+      RUN gds-attr-delete IN THIS-PROCEDURE (
+        input ub.goods.gds-code
+        ,INPUT {&attr-alcohol-prod}
+        ,output v-deleted ) NO-ERROR.
+      IF NOT v-deleted
+        or error-status:error
+        THEN 
+      DO:
+        assign
+          v-err-mess = substitute("Ошибка при удалении атрибута товара &1 &2 :&3&4 &5"
+                                  , ub.goods.gds-code
+                                  , {&attr-alcohol-prod}
+                                  , {&new-line}
+                                  ,error-status:get-message(1)
+                                  ,return-value
+                                  ).
+
+      END. /*tt0-goods-attr.attr-code*/
+      find first ub.alc-type-gds 
+        where ub.alc-type-gds.gds-code = goods.gds-code
+        and ub.alc-type-gds.alc-type-inner-code = temp-goods.alc-choose-prod
+        and ub.alc-type-gds.create-user-db-num = 0 no-error.
+        if available ub.alc-type-gds then
+        delete ub.alc-type-gds.
+    end.   /* else */ 
+  end. /* temp-goods.alc-prod <> logical (v-gds-attr-value-old) */
+  if temp-goods.alc-prod = yes then 
+    do:
+        find first ub.alc-type-gds 
+        where ub.alc-type-gds.gds-code = ub.goods.gds-code
+        and ub.alc-type-gds.create-user-db-num = 0 EXCLUSIVE-LOCK no-error.
+      if not available ub.alc-type-gds then 
+      do :
+        create ub.alc-type-gds.       
+      end.
+      assign
+        ub.alc-type-gds.gds-code            = ub.goods.gds-code
+        ub.alc-type-gds.alc-type-inner-code = temp-goods.alc-choose-prod
+        ub.alc-type-gds.create-user-db-num  = 0
+        .                
+
+ end.
+end.
 end.
 if v-loc-update-dgr then do:
 /*сохраним изменения скидок*/
   run ref/disgdru1.p (
                      input mode
-                    ,input goods.gds-code
+                    ,input ub.goods.gds-code
                     ,input p-obj-type
                     ,input p-obj-code
                     ,INPUT table tt0-dis-gds-rule
@@ -2739,14 +2894,13 @@ if v-loc-update-dgr then do:
                , return-value )
     view-as alert-box
     error .
-    undo _main, return error .
   end.
 end.
 if v-loc-update-attr-obj then do:
 /*сохраним изменения атрибутов*/
   run ref/gdsoatr1.p (
                      input mode
-                    ,input goods.gds-code
+                    ,input ub.goods.gds-code
                     ,input p-obj-type
                     ,input p-obj-code
                     ,INPUT table tt0-gds-obj-attr
@@ -2759,7 +2913,6 @@ if v-loc-update-attr-obj then do:
                , return-value )
     view-as alert-box
     error .
-    undo _main, return error .
   end.
 end.
 if v-loc-update-attr-host then do:
@@ -2780,7 +2933,6 @@ if v-loc-update-attr-host then do:
                , return-value )
     view-as alert-box
     error .
-    undo  _main, return error .
   end.
 end.
 if v-loc-update-attr-gbl then do:
@@ -2798,7 +2950,6 @@ if v-loc-update-attr-gbl then do:
                , return-value )
     view-as alert-box
     error .
-    undo _main, return error .
   end.
 end.
 
@@ -2830,7 +2981,6 @@ if v-loc-update-fbr-gds then do:
                , return-value )
     view-as alert-box
     error .
-    undo _main, return error .
   end.
 end.
 if v-loc-update-s-coeff then do:
@@ -2851,7 +3001,6 @@ if v-loc-update-s-coeff then do:
                , return-value )
     view-as alert-box
     error .
-    undo _main, return error .
   end.
 end.
 
@@ -2895,7 +3044,6 @@ if v-loc-update-gds-prop then do:
                     , return-value )
           view-as alert-box
           error .
-          undo _main, return error .
         end.
     end.
 
@@ -2922,7 +3070,6 @@ if v-loc-update-gds-prop then do:
                     , return-value )
           view-as alert-box
           error .
-          undo _main, return error .
         end.
       end.
 end.
@@ -2945,7 +3092,6 @@ if v-loc-update-add-prop then do:
                , return-value )
     view-as alert-box
     error .
-    undo _main, return error .
   end.
 end.
 
@@ -2965,7 +3111,7 @@ end.
 assign
 temp-goods.cst-base-rate = goods.cst-base-rate
 .
-end. /*doe*/
+
 END PROCEDURE.
 
 PROCEDURE disable_UI :
@@ -3676,6 +3822,31 @@ CASE mode :
     APPLY "Value-changed" to ub.goods.calc-method in frame {&frame-name}.
   end.
 end CASE .
+
+/* Определение алкогольных атрибутов */       
+  RUN gds-attr-value (
+    INPUT temp-goods.gds-code,
+    INPUT {&attr-alcohol-prod},
+    OUTPUT v-gds-attr-value-old,
+    OUTPUT v-gds-attr-type
+    ).
+    
+     if v-gds-attr-value-old = "yes" then do:
+     find first ub.alc-type-gds no-lock
+     where ub.alc-type-gds.gds-code = temp-goods.gds-code and
+     ub.alc-type-gds.create-user-db-num = 0 no-error. 
+     if not AVAILABLE ub.alc-type-gds then do:
+     assign
+        temp-goods.alc-prod = no
+        .  
+     end.
+     else   
+     assign
+        temp-goods.alc-choose-prod = ub.alc-type-gds.alc-type-inner-code
+        temp-goods.alc-prod = yes
+        .
+     end. /*v-gds-attr-value-old = yes*/   
+
 END PROCEDURE.
 
 PROCEDURE copy-name-to-lbl:
@@ -4179,6 +4350,8 @@ PROCEDURE proc-b-add-inf:
                         , input-output temp-goods.normal-waste
                         , input-output temp-goods.cond-keep-code
                         , input-output temp-goods.proof
+						, INPUT-OUTPUT temp-goods.alc-prod
+                      	, INPUT-OUTPUT temp-goods.alc-choose-prod
                         ) .
         run get-fields in this-procedure .
       end.
@@ -5148,7 +5321,7 @@ on stop undo, return error return-value
           end. /*when {&table_gds-obj-attr} then do:*/
 
           when {&table_goods-attr} then do:
-            FOR EACH tt0-goods-attr:
+            FOR EACH tt0-goods-attr WHERE tt0-goods-attr.attr-code <> {&attr-alcohol-prod}:
               DELETE tt0-goods-attr.
             END.
             FOR EACH locked_goods-attr EXCLUSIVE-LOCK where
@@ -6362,5 +6535,10 @@ procedure proc-b-extart:
 
 end procedure.
 
+procedure proc-alc-attr:
+
+
+
+end procedure.
 
 { arc/gds_inf.i calc goods p-obj-type p-obj-code }

@@ -83,7 +83,7 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -99,8 +99,8 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 
 /* Definitions for BROWSE BR-specgrp                                    */
 &Scoped-define FIELDS-IN-QUERY-BR-specgrp tt-sum-grp.grp-code ~
-tt-sum-grp.grp-name code-2
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-specgrp
+tt-sum-grp.grp-name code-2 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-specgrp 
 &Scoped-define QUERY-STRING-BR-specgrp FOR EACH tt-sum-grp NO-LOCK INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-BR-specgrp OPEN QUERY BR-specgrp FOR EACH tt-sum-grp NO-LOCK INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-BR-specgrp tt-sum-grp
@@ -109,9 +109,9 @@ tt-sum-grp.grp-name code-2
 
 /* Definitions for BROWSE BR-tax-rate-code                              */
 &Scoped-define FIELDS-IN-QUERY-BR-tax-rate-code tt-tax-rate-code.rate-code ~
-bo-tax-code tt-tax-rate-code.rate-name tt-tax-rate-code.tax-code
+bo-tax-code tt-tax-rate-code.rate-name tt-tax-rate-code.tax-code 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-tax-rate-code ~
-tt-tax-rate-code.tax-code
+tt-tax-rate-code.tax-code 
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-tax-rate-code tt-tax-rate-code
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-tax-rate-code tt-tax-rate-code
 &Scoped-define QUERY-STRING-BR-tax-rate-code FOR EACH tt-tax-rate-code NO-LOCK INDEXED-REPOSITION
@@ -124,10 +124,10 @@ tt-tax-rate-code.tax-code
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help f-ibmrubc f-ibmnalc ~
-b-curr RS-cd-vat T-multicurr BR-tax-rate-code t-ibmgroup BR-specgrp ~
-for-curr-name l-cd-vat
-&Scoped-Define DISPLAYED-OBJECTS f-ibmrubc f-ibmnalc RS-cd-vat T-multicurr ~
-t-ibmgroup for-curr-name l-cd-vat
+b-curr f-ibm-ccm RS-cd-vat T-multicurr BR-tax-rate-code t-ibmgroup ~
+BR-specgrp for-curr-name l-cd-vat 
+&Scoped-Define DISPLAYED-OBJECTS f-ibmrubc f-ibmnalc f-ibm-ccm RS-cd-vat ~
+T-multicurr t-ibmgroup for-curr-name l-cd-vat 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -142,93 +142,98 @@ t-ibmgroup for-curr-name l-cd-vat
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-DEFINE MENU MENU-B-add-2
-       MENU-ITEM m_50           LABEL "Платежи оператору сотовой сети"
+DEFINE MENU MENU-B-add-2 
+       MENU-ITEM m_50           LABEL "Услуги"        
        MENU-ITEM m_24           LABEL "Перечисление в систему лояльности".
 
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON B-add  NO-FOCUS
-     LABEL "&Добавить"
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
 DEFINE BUTTON B-add-2  NO-FOCUS
-     LABEL "&Добавить"
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-curr
+DEFINE BUTTON b-curr 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
+     LABEL "":L 
      SIZE 3 BY 1
      BGCOLOR 8 FGCOLOR 0 .
 
-DEFINE BUTTON B-del
-     LABEL "&Удалить"
+DEFINE BUTTON B-del 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-del-2
-     LABEL "&Удалить"
+DEFINE BUTTON B-del-2 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-ibmnalc AS INTEGER FORMAT ">>9":U INITIAL 0
-     LABEL "Код валюты по умолчанию при оплате НАЛИЧНЫМИ (код платежа = 1)"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-ibm-ccm AS INTEGER FORMAT ">>9":U INITIAL 0 
+     LABEL "Код платежа при оплате НАЛИЧНЫМИ CCM" 
+     VIEW-AS FILL-IN 
      SIZE 7 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-ibmrubc AS INTEGER FORMAT ">>9":U INITIAL 0
-     LABEL "Код национальной валюты (abbr_rub_allshift) НА КАССЕ"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-ibmnalc AS INTEGER FORMAT ">>9":U INITIAL 0 
+     LABEL "Код валюты по умолчанию при оплате НАЛИЧНЫМИ (код платежа = 1)" 
+     VIEW-AS FILL-IN 
      SIZE 7 BY 1 NO-UNDO.
 
-DEFINE VARIABLE for-curr-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE f-ibmrubc AS INTEGER FORMAT ">>9":U INITIAL 0 
+     LABEL "Код национальной валюты (abbr_rub_allshift) НА КАССЕ" 
+     VIEW-AS FILL-IN 
+     SIZE 7 BY 1 NO-UNDO.
+
+DEFINE VARIABLE for-curr-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 6.8 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE l-cd-vat AS CHARACTER FORMAT "X(256)":U INITIAL "Выделение ставок НДС в чеке:"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-cd-vat AS CHARACTER FORMAT "X(256)":U INITIAL "Выделение ставок НДС в чеке:" 
+      VIEW-AS TEXT 
      SIZE 29 BY .67 NO-UNDO.
 
-DEFINE VARIABLE RS-cd-vat AS INTEGER
+DEFINE VARIABLE RS-cd-vat AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Не выделять", 0,
 "Выделять", 1
      SIZE 32 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-ibmgroup AS LOGICAL INITIAL no
-     LABEL "прием чеков с продажами по группам"
+DEFINE VARIABLE t-ibmgroup AS LOGICAL INITIAL no 
+     LABEL "прием чеков с продажами по группам" 
      VIEW-AS TOGGLE-BOX
-     SIZE 38.5 BY 1 NO-UNDO.
+     SIZE 38.6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-multicurr AS LOGICAL INITIAL no
-     LABEL "Многовалютные НАЛИЧНЫЕ"
+DEFINE VARIABLE T-multicurr AS LOGICAL INITIAL no 
+     LABEL "Многовалютные НАЛИЧНЫЕ" 
      VIEW-AS TOGGLE-BOX
-     SIZE 24.5 BY 1 NO-UNDO.
+     SIZE 24.6 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-specgrp FOR
+DEFINE QUERY BR-specgrp FOR 
       tt-sum-grp SCROLLING.
 
-DEFINE QUERY BR-tax-rate-code FOR
+DEFINE QUERY BR-tax-rate-code FOR 
       tt-tax-rate-code SCROLLING.
 &ANALYZE-RESUME
 
@@ -241,7 +246,7 @@ DEFINE BROWSE BR-specgrp
       code-2 COLUMN-LABEL "Код товара" FORMAT "999999999":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 79.5 BY 6
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 79.6 BY 6
          TITLE "Спецгруппы в справочнике суммовых групп" FIT-LAST-COLUMN.
 
 DEFINE BROWSE BR-tax-rate-code
@@ -256,33 +261,34 @@ DEFINE BROWSE BR-tax-rate-code
       tt-tax-rate-code.tax-code
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 80.5 BY 7.27
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 80.6 BY 7.29
          TITLE "Соответствие ставок НДС категориям налога на кассе (кроме POS c ОС LINUX)" FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     B-add-2 AT ROW 14.5 COL 51
+     B-add-2 AT ROW 15 COL 51
      B-exit AT ROW 1 COL 1
-     B-add AT ROW 6 COL 1
      b-quit AT ROW 1 COL 11
-     B-Help AT ROW 1 COL 54.9
-     f-ibmrubc AT ROW 2.27 COL 67.5 COLON-ALIGNED
-     f-ibmnalc AT ROW 3.5 COL 67.5 COLON-ALIGNED
-     b-curr AT ROW 3.5 COL 77.5
-     RS-cd-vat AT ROW 5 COL 34.5 NO-LABEL
-     T-multicurr AT ROW 5 COL 69.5 WIDGET-ID 2
-     B-del AT ROW 6 COL 11
-     BR-tax-rate-code AT ROW 7 COL 1
-     t-ibmgroup AT ROW 14.33 COL 1
-     B-del-2 AT ROW 14.5 COL 61
-     BR-specgrp AT ROW 15.5 COL 1
-     for-curr-name AT ROW 3.67 COL 79.5 COLON-ALIGNED NO-LABEL
-     l-cd-vat AT ROW 5.27 COL 3.5 NO-LABEL
-     SPACE(66.79) SKIP(15.72)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     B-add AT ROW 6.52 COL 1
+     B-Help AT ROW 1 COL 55
+     f-ibmrubc AT ROW 2.29 COL 67.6 COLON-ALIGNED
+     f-ibmnalc AT ROW 3.52 COL 72.6 COLON-ALIGNED
+     b-curr AT ROW 3.52 COL 77.6
+     f-ibm-ccm AT ROW 4.52 COL 67.6 COLON-ALIGNED
+     RS-cd-vat AT ROW 5.52 COL 34.6 NO-LABEL
+     T-multicurr AT ROW 5.52 COL 69.6 WIDGET-ID 2
+     B-del AT ROW 6.52 COL 11
+     BR-tax-rate-code AT ROW 7.52 COL 1
+     t-ibmgroup AT ROW 14.81 COL 1
+     B-del-2 AT ROW 15 COL 61
+     BR-specgrp AT ROW 16 COL 1
+     for-curr-name AT ROW 3.67 COL 79.6 COLON-ALIGNED NO-LABEL
+     l-cd-vat AT ROW 5.76 COL 3.6 NO-LABEL
+     SPACE(66.69) SKIP(15.73)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры POS IBM-XML"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -320,7 +326,7 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-tax-rate-code B-del Dialog-Frame */
 /* BROWSE-TAB BR-specgrp B-del-2 Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -328,7 +334,7 @@ ASSIGN
    NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON B-add-2 IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        B-add-2:POPUP-MENU IN FRAME Dialog-Frame       = MENU MENU-B-add-2:HANDLE.
 
 /* SETTINGS FOR BUTTON B-del IN FRAME Dialog-Frame
@@ -368,12 +374,12 @@ ASSIGN
      _FldNameList[3]   > Temp-Tables.tt-tax-rate-code.rate-name
 "tt-tax-rate-code.rate-name" "Название ставки" ? "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[4]   > Temp-Tables.tt-tax-rate-code.tax-code
-"tt-tax-rate-code.tax-code" "Катег.налога!на кассе" ? "integer" ? ? ? ? ? ? yes ? no no "13.5" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"tt-tax-rate-code.tax-code" "Катег.налога!на кассе" ? "integer" ? ? ? ? ? ? yes ? no no "13.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BR-tax-rate-code */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -573,7 +579,7 @@ END.
 
 &Scoped-define SELF-NAME m_50
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_50 Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_50 /* Платежи оператору сотовой сети */
+ON CHOOSE OF MENU-ITEM m_50 /* Услуги */
 DO:
   ASSIGN
   specgrp-option = 50.
@@ -660,7 +666,7 @@ END.
 &Scoped-define BROWSE-NAME BR-specgrp
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -797,7 +803,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -816,14 +822,15 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-ibmrubc f-ibmnalc RS-cd-vat T-multicurr t-ibmgroup for-curr-name
-          l-cd-vat
+  DISPLAY f-ibmrubc f-ibmnalc f-ibm-ccm RS-cd-vat T-multicurr t-ibmgroup 
+          for-curr-name l-cd-vat 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-Help f-ibmrubc f-ibmnalc b-curr RS-cd-vat T-multicurr
-         BR-tax-rate-code t-ibmgroup BR-specgrp for-curr-name l-cd-vat
+  ENABLE B-exit b-quit B-Help f-ibmrubc f-ibmnalc b-curr f-ibm-ccm RS-cd-vat 
+         T-multicurr BR-tax-rate-code t-ibmgroup BR-specgrp for-curr-name 
+         l-cd-vat 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -832,7 +839,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -892,6 +899,12 @@ FOR EACH thbjattr_thbj-attr:
     ASSIGN
     f-ibmnalc = thbjattr_thbj-attr.property-value-integer
     f-ibmnalc:private-data = "recid=" + string(recid(thbjattr_thbj-attr))
+    .
+  END.
+  IF v-entry = {&attr-cd-type-ibm-xml_ibm-ccm} THEN DO:
+    ASSIGN
+    f-ibm-ccm = thbjattr_thbj-attr.property-value-integer
+    f-ibm-ccm:private-data = "recid=" + string(recid(thbjattr_thbj-attr))
     .
   END.
   IF v-entry = {&attr-cd-type-ibm-xml_ibmgroup} THEN DO:
@@ -976,7 +989,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -992,7 +1005,7 @@ IF AVAILABLE buf_currency THEN DO:
 END.
 ASSIGN
 FRAME {&FRAME-NAME}:TITLE = FRAME {&FRAME-NAME}:TITLE + (if p-obj-type = {&cmp} then " фирма" else " маг") + STRING(p-obj-code)
-v-tab-order = "f-ibmrubc,f-ibmnalc,b-curr,RS-cd-vat,t-multicurr,b-add,b-del,br-tax-rate-code," +
+v-tab-order = "f-ibmrubc,f-ibmnalc,f-ibm-ccm,b-curr,RS-cd-vat,t-multicurr,b-add,b-del,br-tax-rate-code," +
               "t-ibmgroup,b-add-2,b-del-2,br-specgrp".
 
 assign
@@ -1000,9 +1013,12 @@ f-ibmrubc :label = "Код национальной валюты ({&abbr_rub_allshift}) НА КАССЕ"
 b-add-2:MENU-MOUSE = 1
 .
 
+if p-obj-code = 0 and p-obj-type = "" then  t-ibmgroup = no.
+
 DISPLAY
 f-ibmrubc
 f-ibmnalc
+f-ibm-ccm
 for-curr-name
 RS-cd-vat
 l-cd-vat
@@ -1018,7 +1034,8 @@ br-specgrp
 b-curr WHEN p-mode = {&UPDATE}
 f-ibmrubc WHEN p-mode = {&UPDATE}
 f-ibmnalc WHEN p-mode = {&UPDATE}
-t-ibmgroup WHEN p-mode = {&UPDATE}
+f-ibm-ccm WHEN p-mode = {&UPDATE}
+t-ibmgroup WHEN p-mode = {&UPDATE} and p-obj-code <> 0
 t-multicurr when p-mode = {&UPDATE}
 rs-cd-vat WHEN p-mode = {&UPDATE}
 b-add   WHEN p-mode = {&UPDATE} AND rs-cd-vat = 1
@@ -1045,7 +1062,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1058,7 +1075,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add-2 Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add-2 Dialog-Frame 
 PROCEDURE proc-b-add-2 :
 DEFINE INPUT PARAMETER p-gtype AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-value-int AS integer NO-UNDO.
@@ -1111,7 +1128,6 @@ define buffer buf_gds-list for gds-list.
   buf_macro-list-hist.id         = 1
   buf_macro-list-hist.line       = 0
   buf_macro-list-hist.hist-mode  = '+'
-  buf_macro-list-hist.option_    = "goods-attr-val"
   buf_macro-list-hist.status_    = {&all}
   .
   CASE p-gtype:
@@ -1119,7 +1135,8 @@ define buffer buf_gds-list for gds-list.
           ASSIGN
           buf_macro-list-hist.des        = "ВСЕ услуги-платежи в адрес ОСС"
                                                  /*ВСЕ товары с глобальным атрибутом товара Платеж ОСС = yes (текущие товары)*/
-          buf_macro-list-hist.item_      = {&attr-is-oss-payment}  + {&delim-key} + string(yes)
+          buf_macro-list-hist.item_      = {&attr-office-type}
+          buf_macro-list-hist.option_    = "goods-attr"
           .
       END.
       WHEN 24 THEN DO:
@@ -1127,12 +1144,13 @@ define buffer buf_gds-list for gds-list.
           buf_macro-list-hist.des        = "ВСЕ услуги-перечисления в системы лояльности"
                                                  /*ВСЕ товары с глобальным атрибутом перечисление в систему лояльности*/
           buf_macro-list-hist.item_      = {&attr-is-loyalty-payment}  + {&delim-key} + string(yes)
+          buf_macro-list-hist.option_    = "goods-attr-val"
           .
     END.
   END CASE.
   release buf_macro-list-hist.
 
-  { gbl/hostcode.i p-obj-type p-obj-code v-host-code }
+  { gbl/hostcode.i p-obj-type p-obj-code v-host-code no-error }
   for each gds-list:
     delete gds-list.
   end.
@@ -1191,7 +1209,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -1221,6 +1239,7 @@ ASSIGN
 FRAME {&FRAME-NAME}
 f-ibmrubc
 f-ibmnalc
+f-ibm-ccm
 t-ibmgroup
 t-multicurr
 RS-cd-vat.
@@ -1264,7 +1283,7 @@ thbjattr_thbj-attr.property-value-character = v-cdtaxlst
 .
 find first thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-cd-type-ibm-xml_specgrp}.
 assign
-thbjattr_thbj-attr.property-value-character = v-cdtaxlst
+thbjattr_thbj-attr.property-value-character = v-specgrp
 .
 v-same = yes.
 for each thbjattr_thbj-attr,
@@ -1326,3 +1345,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

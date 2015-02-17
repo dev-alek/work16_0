@@ -222,8 +222,29 @@ define variable vss-description as character no-undo init "".
 /* -------------------------------------------------------------------------- */
 { gbl/menuload.i
   {&bef-menuload_service_customs}
+  "'Сверка транзакций перевода средств ОСС (Кубаньнефтепродукт)'"
+  "'rep/g-rnk-oss.p'"
+  " "
+  " "
+  " "
+  "'Rosneft-*'"
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_service_customs}
   "'Понедельный отчет по товарам (реализация в магазине)'"
   "'rep/g-weekm.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Сменный отчет (формат HTML)'"
+  "'rep/g-new-shift.p'"
   " "
   " "
   " "

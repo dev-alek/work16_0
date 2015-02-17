@@ -1892,7 +1892,7 @@ delete object v-tth no-error.
                                 else integer({&discnt-t-sum})
                                 )
       buf0_chk-discnt.src-d-card = buf_chk-doc.src-d-card
-      buf0_chk-discnt.d-card     = buf_chk-doc.d-card
+      buf0_chk-discnt.d-card     = if buf0_chk-discnt.d-card = ? or buf0_chk-discnt.d-card = "" then  buf_chk-doc.d-card else buf0_chk-discnt.d-card 
       buf0_chk-discnt.discnt-value-pcnt = buf_chk-doc.src-d-pcnt
       buf0_chk-discnt.object-line-num = 0
       buf0_chk-discnt.pay-desk = buf_chk-doc.pay-desk
@@ -2496,8 +2496,8 @@ if avail buf_bar-code then do:
               buf_chk-discnt.discnt-value-pcnt = if buf0_chk-discnt.object-sum <> 0
                                                 then buf0_chk-discnt.discnt-value-abs / buf0_chk-discnt.object-sum * 100
                                                 else 0
-              buf0_chk-discnt.d-card           = buf_chk-gds.d-card
-              buf_chk-discnt.d-card       = buf_chk-gds.d-card
+              buf0_chk-discnt.d-card       = if buf0_chk-discnt.d-card = ? or buf0_chk-discnt.d-card = "" then buf_chk-gds.d-card else buf0_chk-discnt.d-card
+              buf_chk-discnt.d-card       = if buf_chk-discnt.d-card = ? or buf_chk-discnt.d-card = "" then buf_chk-gds.d-card else buf_chk-discnt.d-card  
               .
 
             end.
@@ -2532,6 +2532,7 @@ if avail buf_bar-code then do:
           buf0_chk-discnt.value-type = integer({&discnt-v-unknown})
           buf0_chk-discnt.discnt-type = integer({&discnt-t-unknown})
           buf0_chk-discnt.d-card = buf_chk-doc.d-card
+          buf0_chk-discnt.d-card = if buf0_chk-discnt.d-card = ? or buf0_chk-discnt.d-card = "" then buf_chk-doc.d-card else buf0_chk-discnt.d-card 
           buf0_chk-discnt.src-d-card = buf_chk-doc.src-d-card
           buf0_chk-discnt.discnt-value-abs = buf_chk-gds.src-discnt
           buf0_chk-discnt.object-qnty = buf_chk-gds.src-qnty
@@ -2919,8 +2920,8 @@ if avail buf_bar-code then do:
           buf0_chk-discnt.object-qnty = buf_chk-gds.doc-qnty
           buf0_chk-discnt.object-sum = var-gds-for-discnt
           buf0_chk-discnt.object-line-num = buf_chk-gds.line-num
-          buf0_chk-discnt.d-card          = buf_chk-gds.d-card
-          buf_chk-discnt.d-card      = buf_chk-gds.d-card
+          buf0_chk-discnt.d-card      = if buf0_chk-discnt.d-card = ? or buf0_chk-discnt.d-card = "" then buf_chk-gds.d-card else buf0_chk-discnt.d-card
+          buf_chk-discnt.d-card      = if buf_chk-discnt.d-card = ? or buf_chk-discnt.d-card = "" then buf_chk-gds.d-card else buf_chk-discnt.d-card
           .
         END . /* FOR EACH buf_chk-gds WHERE*/
         assign

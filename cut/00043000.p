@@ -456,7 +456,7 @@ for each old-inv-line
       create new-inv-line.
       buffer-copy old-inv-line to new-inv-line.
 end. /*old-inv-line*/
-for each old-c-inv-line
+if varstay-history  then for each old-c-inv-line
     where old-c-inv-line.doc-code = new-trn-doc.doc-code no-lock
   on error undo, return error
   :
@@ -558,21 +558,21 @@ if old-trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass} then do:
       create new-inkas-pay-wth.
       buffer-copy old-inkas-pay-wth to new-inkas-pay-wth.
   end.
-  for each old-c-inkas
+ if varstay-history  then  for each old-c-inkas
     where old-c-inkas.inkas-code = new-trn-doc.doc-code no-lock
   on error undo, return error
   :
       create new-c-inkas.
       buffer-copy old-c-inkas to new-c-inkas.
   end.
-  for each old-c-inkas-pay
+ if varstay-history  then  for each old-c-inkas-pay
     where old-c-inkas-pay.inkas-code = new-trn-doc.doc-code no-lock
   on error undo, return error
   :
       create new-c-inkas-pay.
       buffer-copy old-c-inkas-pay to new-c-inkas-pay.
   end.
-  for each old-c-inkas-pay-desk
+  if varstay-history  then for each old-c-inkas-pay-desk
     where old-c-inkas-pay-desk.inkas-code = new-trn-doc.doc-code no-lock
   on error undo, return error
   :
@@ -600,7 +600,7 @@ if old-trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass} then do:
       create new-sale-doc-attr.
       buffer-copy old-sale-doc-attr to new-sale-doc-attr.
   end.
-  for each old-c-sale-doc
+  if varstay-history  then for each old-c-sale-doc
     where old-c-sale-doc.inkas-code = new-trn-doc.doc-code no-lock
   on error undo, return error
   :
@@ -670,40 +670,42 @@ if old-trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass} then do:
     end.
   end.
 
-  for each old-c-chk-doc
-    where old-c-chk-doc.out-code = new-trn-doc.doc-code no-lock
-  on error undo, return error
-  :
-      create new-c-chk-doc.
-      buffer-copy old-c-chk-doc to new-c-chk-doc.
-  end.
-  for each old-c-chk-gds
-    where old-c-chk-gds.out-code = new-trn-doc.doc-code no-lock
-  on error undo, return error
-  :
-      create new-c-chk-gds.
-      buffer-copy old-c-chk-gds to new-c-chk-gds.
-  end.
-  for each old-c-chk-pay
-    where old-c-chk-pay.out-code = new-trn-doc.doc-code no-lock
-  on error undo, return error
-  :
-      create new-c-chk-pay.
-      buffer-copy old-c-chk-pay to new-c-chk-pay.
-  end.
-  for each old-c-chk-discnt
-    where old-c-chk-discnt.out-code = new-trn-doc.doc-code no-lock
-  on error undo, return error
-  :
-      create new-c-chk-discnt.
-      buffer-copy old-c-chk-discnt to new-c-chk-discnt.
-  end.
-  for each old-c-chk-doc-attr
-    where old-c-chk-doc-attr.out-code = new-trn-doc.doc-code no-lock
-  on error undo, return error
-  :
-      create new-chk-doc-attr.
-      buffer-copy old-c-chk-doc-attr to new-c-chk-doc-attr.
+  if varstay-history  then do:
+      for each old-c-chk-doc
+        where old-c-chk-doc.out-code = new-trn-doc.doc-code no-lock
+      on error undo, return error
+      :
+          create new-c-chk-doc.
+          buffer-copy old-c-chk-doc to new-c-chk-doc.
+      end.
+      for each old-c-chk-gds
+        where old-c-chk-gds.out-code = new-trn-doc.doc-code no-lock
+      on error undo, return error
+      :
+          create new-c-chk-gds.
+          buffer-copy old-c-chk-gds to new-c-chk-gds.
+      end.
+      for each old-c-chk-pay
+        where old-c-chk-pay.out-code = new-trn-doc.doc-code no-lock
+      on error undo, return error
+      :
+          create new-c-chk-pay.
+          buffer-copy old-c-chk-pay to new-c-chk-pay.
+      end.
+      for each old-c-chk-discnt
+        where old-c-chk-discnt.out-code = new-trn-doc.doc-code no-lock
+      on error undo, return error
+      :
+          create new-c-chk-discnt.
+          buffer-copy old-c-chk-discnt to new-c-chk-discnt.
+      end.
+      for each old-c-chk-doc-attr
+        where old-c-chk-doc-attr.out-code = new-trn-doc.doc-code no-lock
+      on error undo, return error
+      :
+          create new-chk-doc-attr.
+          buffer-copy old-c-chk-doc-attr to new-c-chk-doc-attr.
+      end.
   end.
 end. /*если продажа*/
 end procedure.

@@ -34,6 +34,7 @@ define variable vss-description as character no-undo init "Выгрузка справочника 
 
 define input parameter p-mode           as character    no-undo.
 define input parameter table for temp_bge-xml_dis-card .
+define input parameter p-file-name      as character    no-undo.
 
 &scop out-file-name "dcard"
 &scop version-string "15.0 " + replace( vss-revision + vss-date, "$", " " )
@@ -48,7 +49,7 @@ on error undo, return error
 
     run bge/bge-head.p (
           input "dict"
-        , input {&out-file-name}
+        , input {&out-file-name} + trim(p-file-name, ".")
         , input "XML - Вывод справочника дисконтных карт"
         , input no
         , output v-xml-file-name

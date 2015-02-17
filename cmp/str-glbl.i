@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: $
+$Author: $
+$Date: $
+$Workfile: $
+$Archive: $
                                         
 Файл глобальных определений
 
@@ -6494,7 +6494,7 @@ end.
 &global-define alc-check-price-full '{&bef-alc-check-price-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 43b88f2209fa, 124, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 50c60499372c, 128, test  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -6762,12 +6762,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-cd-type-omron-new_omrncurl '{&bef-attr-cd-type-omron-new_omrncurl}':U
 &global-define bef-attr-cd-type-IBM-XML cd-type-IBM-XML
 &global-define attr-cd-type-IBM-XML '{&bef-attr-cd-type-IBM-XML}':U
-&global-define bef-prop-list-attr-cd-type-ibm-XML ibmrubc,ibmnalc,ibmgroup,multicurr,cd-vat,cdtaxlst,specgrp
+&global-define bef-prop-list-attr-cd-type-ibm-XML ibmrubc,ibmnalc,ibm-ccm,ibmgroup,multicurr,cd-vat,cdtaxlst,specgrp
 &global-define prop-list-attr-cd-type-ibm-XML '{&bef-prop-list-attr-cd-type-ibm-XML}':U
 &global-define bef-attr-cd-type-IBM-XML_ibmrubc ibmrubc
 &global-define attr-cd-type-IBM-XML_ibmrubc '{&bef-attr-cd-type-IBM-XML_ibmrubc}':U
 &global-define bef-attr-cd-type-IBM-XML_ibmnalc ibmnalc
 &global-define attr-cd-type-IBM-XML_ibmnalc '{&bef-attr-cd-type-IBM-XML_ibmnalc}':U
+&global-define bef-attr-cd-type-IBM-XML_ibm-ccm ibm-ccm
+&global-define attr-cd-type-IBM-XML_ibm-ccm '{&bef-attr-cd-type-IBM-XML_ibm-ccm}':U
 &global-define bef-attr-cd-type-IBM-XML_ibmgroup ibmgroup
 &global-define attr-cd-type-IBM-XML_ibmgroup '{&bef-attr-cd-type-IBM-XML_ibmgroup}':U
 &global-define bef-attr-cd-type-IBM-XML_multicurr multicurr
@@ -7583,7 +7585,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-report-glob '{&bef-attr-report-glob}':U
 &global-define bef-attr-report-glob-full report-glob
 &global-define attr-report-glob-full '{&bef-attr-report-glob-full}':U
-&global-define bef-prop-list-attr-report-glob actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot
+&global-define bef-prop-list-attr-report-glob actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format
 &global-define prop-list-attr-report-glob '{&bef-prop-list-attr-report-glob}':U
 &global-define bef-attr-report-glob_actuate actuate
 &global-define attr-report-glob_actuate '{&bef-attr-report-glob_actuate}':U
@@ -7603,6 +7605,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-report-glob_alcgrpgd '{&bef-attr-report-glob_alcgrpgd}':U
 &global-define bef-attr-report-glob_cplot cplot
 &global-define attr-report-glob_cplot '{&bef-attr-report-glob_cplot}':U
+&global-define bef-attr-report-glob_rep-shift-format rep-shift-format
+&global-define attr-report-glob_rep-shift-format '{&bef-attr-report-glob_rep-shift-format}':U
 &global-define bef-attr-report-firm report-firm
 &global-define attr-report-firm '{&bef-attr-report-firm}':U
 &global-define bef-attr-report-firm-full report-firm
@@ -7771,10 +7775,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU':U
-&global-define str-glbl_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
-&global-define str-glbl2_vss-revision 'Revision: 5af892880dc2, 1, rls ':U
+&global-define str-glbl_vss-revision 'Revision: aea5316774be, 0, rls ':U
+&global-define str-glbl2_vss-revision 'Revision: aea5316774be, 0, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: 43b88f2209fa, 124, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 199ddf50f4e5, 2, test ':U
-&global-define str-glblt_vss-revision 'Revision: 43b88f2209fa, 124, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 50c60499372c, 128, test ':U
 &endif

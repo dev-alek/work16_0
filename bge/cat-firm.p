@@ -35,6 +35,7 @@ define variable vss-description as character no-undo init "Ёкспорт контрагентов"
 define input parameter p-mode           as character    no-undo.
 define input parameter p-host-code      as integer      no-undo.
 define input parameter table for temp_bge-xml_clients .
+define input parameter p-file-name      as character    no-undo.
 
 &SCOP SubDir       dict
 &SCOP OutFileName  firm
@@ -85,7 +86,7 @@ on error undo, return error
     run bge/dir_cd.p (strHomeDir, "CA").
     IF RETURN-VALUE = "ERROR" THEN RETURN "ERROR".
 
-    strOutFile = strHomeDir + "{&Slash}{&OutFileName}.".
+    strOutFile = strHomeDir + "{&Slash}" + "{&OutFileName}" + p-file-name + ".".
 
     /* найти исходный файл */
     bolLKfile = (SEARCH (strOutFile + "xml") <> ?).

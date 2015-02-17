@@ -109,8 +109,8 @@ define temp-table temp_attr no-undo
     ~{&OPEN-QUERY-br-margins-list}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-3 RECT-2 RECT-1 B-exit RECT-4 B-Help ~
-S-round-method B-add B-chg B-del br-margins-list
+&Scoped-Define ENABLED-OBJECTS B-exit RECT-3 RECT-2 RECT-1 RECT-4 B-Help ~
+S-round-method B-add B-chg B-rev B-del br-margins-list
 &Scoped-Define DISPLAYED-OBJECTS ed-grp-name fi-range-increase ~
 fi-range-rmethod fi-increase-pc S-round-method F-base fi-range-margin ~
 fi-marg-min fi-marg-max fi-range-income-cli fi-cli-type fi-cli-code
@@ -143,6 +143,9 @@ DEFINE BUTTON B-chg
      LABEL "&Изменить"
      SIZE 10 BY 1.
 
+DEFINE BUTTON B-rev
+     LABEL "&Просмотр"
+     SIZE 10 BY 1.
 DEFINE BUTTON B-del
      LABEL "&Удалить"
      SIZE 10 BY 1.
@@ -279,6 +282,7 @@ DEFINE FRAME Dialog-Frame
      fi-cli-code AT ROW 13.04 COL 61.13 COLON-ALIGNED NO-LABEL
      B-add AT ROW 13.25 COL 1
      B-chg AT ROW 13.25 COL 11
+     B-rev AT ROW 13.25 COL 21
      B-del AT ROW 13.25 COL 21
      br-margins-list AT ROW 14.29 COL 1
      RECT-3 AT ROW 3.38 COL 57.88
@@ -407,6 +411,16 @@ DO:
   end.
 END.
 
+&Scoped-define SELF-NAME B-rev
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-rev Dialog-Frame
+ON CHOOSE OF B-rev IN FRAME Dialog-Frame /* Изменить */
+DO:
+  run proc-b-rev in this-procedure no-error.
+    if error-status:error then do:
+        assign add-option = "":U.
+        return no-apply.
+  end.
+END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -682,7 +696,7 @@ PROCEDURE enable_UI :
           S-round-method F-base fi-range-margin fi-marg-min fi-marg-max
           fi-range-income-cli fi-cli-type fi-cli-code
       WITH FRAME Dialog-Frame.
-  ENABLE RECT-3 RECT-2 RECT-1 B-exit RECT-4 B-Help S-round-method B-add B-chg
+ ENABLE B-exit RECT-3 RECT-2 RECT-1 RECT-4 B-Help S-round-method B-add B-chg B-rev
          B-del br-margins-list
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
@@ -928,6 +942,53 @@ run ui-on in this-procedure .
 
 END PROCEDURE.
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-rev Dialog-Frame
+PROCEDURE proc-b-rev :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define variable rr as recid no-undo.
+define variable v-option as character no-undo.
+define buffer buf_gds-grp-obj for ub.gds-grp-obj.
+
+if not available temp_attr then return error.
+
+find first  buf_gds-grp-obj  exclusive-lock
+     where buf_gds-grp-obj.node-code = p-node-code
+       and buf_gds-grp-obj.host-code = temp_attr.host-code
+       and buf_gds-grp-obj.obj-type = temp_attr.obj-type
+       and buf_gds-grp-obj.obj-code = temp_attr.obj-code
+no-error .
+if not available temp_attr
+then do:
+    message
+        skip "Не найдена запись, соответствующая значению, выбранному в списке"
+        skip "наценок для группы товаров."
+    view-as alert-box error.
+    undo, return error .
+end.
+
+assign
+v-option = (if buf_gds-grp-obj.obj-type = "":U and
+                    buf_gds-grp-obj.obj-code = 0 and
+                    buf_gds-grp-obj.host-code = 0
+                    then "global":U
+                    else (if buf_gds-grp-obj.obj-type = "":U and
+                             buf_gds-grp-obj.obj-code = 0
+                             then {&company}
+                             else {&g___object})
+                    )
+ .
+ run ref/pr-mchg.w ( input parparentproc, {&lookup}, p-node-code, v-option, buf_gds-grp-obj.host-code , buf_gds-grp-obj.obj-type, buf_gds-grp-obj.obj-code, output rr).
+
+assign
+add-option = "":U.
+run ui-on in this-procedure .
+
+
+END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -966,7 +1027,7 @@ s-round-method:list-items = {&pr-rounds}.
 DISPLAY ed-grp-name fi-marg-min fi-marg-max fi-increase-pc S-round-method
     WITH FRAME Dialog-Frame.
 ENABLE B-exit B-Help br-margins-list
-     B-add B-chg B-del
+     B-add B-chg B-rev B-del
     WITH FRAME Dialog-Frame.
 VIEW FRAME Dialog-Frame.
     run fill-temp-attr in this-procedure .
@@ -1104,7 +1165,13 @@ VIEW FRAME Dialog-Frame.
         fi-increase-pc:visible = no
         .
     end.
-
+/*На удаленной БД недоступны Добавить Изменить Удалить*/
+if (g#db-num <> 0) then do:
+hide    b-add       in frame {&frame-name}
+        b-chg      in frame {&frame-name}
+        b-del       in frame {&frame-name}
+     .    
+end.   
 
 {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 

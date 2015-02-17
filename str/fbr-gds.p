@@ -46,10 +46,19 @@ define variable vss-description as character no-undo init "Резервирование одного
 { str/fbrrsrv.i  }
 { rep/fbrrep.i   }
 { str/writelog.i def "'fbr.log'" no-create }
+{ str/fbr-log.i  }
 
 do
 on error undo, return error
 :
+
+    define temp-table tt-rsrv-err no-undo
+      field artic like ub.goods.artic
+      field rsrv-qnty like ub.gds-obj.fact-qnty
+      field req-qnty like ub.gds-obj.fact-qnty 
+    .
+    define stream stm.
+    
     define variable v-required-qnty     like doc-line.doc-qnty  no-undo.    /* требуемое для резервирования - важна точность */
     define variable v-reserved-qnty     like doc-line.doc-qnty  no-undo.    /* количество для резервирования */
     define variable v-store-qnty                 as decimal      no-undo.
@@ -71,7 +80,8 @@ on error undo, return error
     define variable v-cost-price-base           as decimal        no-undo.
     define variable v-cost-price-vat-rubl       as decimal        no-undo.
     define variable v-cost-price-vat-base       as decimal        no-undo.
-
+    define variable v-err-msg                   as character      no-undo.
+    
     define buffer buf_goods             for goods.
     define buffer buf_fbr-line          for fbr-line.
     define buffer buf_temp_fbrrep-goods for temp_fbrrep-goods.
@@ -206,23 +216,42 @@ on error undo, return error
             or return-value <> "user-interrupt":U
             then do:
               if p-silent then do:
-                
+                v-err-msg = substitute("&1 &2 &3&4Не удалось зарезервировать товар на складе.&4" +
+                                  "Товар: &5&4Требуемое количество: &6&4Зарезервировано количество:   &7&4&8&4&9"
+                                  ,vss-workfile
+                                  ,vss-revision
+                                  ,vss-description
+                                  ,{&new-line}
+                                  ,buf_goods.artic + {&space-char} + buf_goods.gds-name
+                                  ,v-required-qnty
+                                  ,v-reserved-qnty
+                                  , error-status:get-message(1)
+                                  , return-value ).
+
+              end.
+              else do:
+                v-err-msg = trim(error-status :get-message(1)) + " " +  trim(error-status :get-message(2)) + " " + trim(error-status :get-message(3)).
+              end.
+              
+              find first tt-rsrv-err where tt-rsrv-err.artic = buf_goods.artic no-lock no-error.
+              if not available tt-rsrv-err 
+                then do: 
+                  create tt-rsrv-err.
+                  assign
+                    tt-rsrv-err.artic = buf_goods.artic.
+                end.
+              assign 
+                tt-rsrv-err.rsrv-qnty = tt-rsrv-err.rsrv-qnty + v-reserved-qnty
+                tt-rsrv-err.req-qnty = tt-rsrv-err.req-qnty + v-required-qnty
+              .
+              output stream stm to value (v-fbr-tt-log-file-name) append.
+              export stream stm tt-rsrv-err.
+              output stream stm close.
+              if p-silent then do:
                 if p-autofbr then do:
                   undo, return error "not-reserved":U.
                 end.
-                
-                undo, return error substitute("&1 &2 &3&4Не удалось зарезервировать товар на складе.&4" +
-                                              "Товар: &5&4Требуемое количество: &6&4Зарезервировано количество:   &7&4&8&4&9"
-                                              ,vss-workfile
-                                              ,vss-revision
-                                              ,vss-description
-                                              ,{&new-line}
-                                              ,buf_goods.artic + {&space-char} + buf_goods.gds-name
-                                              ,v-required-qnty
-                                              ,v-reserved-qnty
-                                              , error-status:get-message(1)
-                                              , return-value ).
-
+                undo, return error v-err-msg.
               end.
               else do:
                 message
@@ -233,9 +262,7 @@ on error undo, return error
                     skip "Требуемое количество:         " v-required-qnty
                     skip "Зарезервировано количество:   " v-reserved-qnty
                     skip return-value
-                    skip trim(error-status :get-message(1))
-                        trim(error-status :get-message(2))
-                        trim(error-status :get-message(3))
+                    skip v-err-msg
                 view-as alert-box error.
             end.
             end.

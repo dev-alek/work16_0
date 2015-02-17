@@ -399,10 +399,12 @@ on error undo, return error return-value
               input "list":U
             , input v-cntxt-host-code-obj
             , input table temp_bge-xml_clients
+            , ""
         ).
         run bge/cat-good.p (
               input "good-ext,list":U
             , input table temp_bge-xml_goods
+            , ""
         ).
         run xml-bge-write-footer in this-procedure ( input v-xml-file-name ).
         run wp-XMLWriteLog in this-procedure (

@@ -201,6 +201,7 @@ index ifvalue fvalue
 Чек документа МЦ,wth-doc,                     ~
 Чеки. с товаром,goods,                        ~
 Чеки с типом касс. платежа,cash-pay,          ~
+Чеки с ОСС,chk-oss,                           ~
 Чеки по дисконтной карте,d-card,              ~
 Чеки. с тов. из списка,gds-list,              ~
 Чеки МЦ с определенной МЦ,wealth,             ~
@@ -219,6 +220,13 @@ index ifvalue fvalue
 
 define variable f-name as char init "default.chk" no-undo.
 
+FUNCTION get-table-name returns character(input p-is-wth as logical):
+CASE p-is-wth:
+  when yes then return {&table_chk-DOC}.
+  otherwise return {&table_chk-doc}.
+
+END CASE.
+END FUNCTION.
 &if "{1}" <> "chk-list" &then
 &message anchlist.i можно вызывать только для таблицы chk-list
 &endif
@@ -1982,6 +1990,7 @@ define variable v-message as character no-undo .
 define variable grp-path as character no-undo .
 define variable v-input-output as character no-undo .
 define variable v-ref-rec as recid no-undo .
+define variable v-ref-row as character no-undo .
 define variable v-ref-rec2 as recid no-undo .
 define variable v-grp-rec as recid no-undo .
 define variable v-doc-rec as recid no-undo .
@@ -1994,6 +2003,8 @@ define buffer buf_inkas for ub.inkas.
 define buffer buf_wth-doc for ub.wth-doc.
 define buffer buf_dis-card for ub.dis-card.
 define buffer buf_cash-pay for ub.cash-pay.
+define buffer buf_ext-classif for ub.ext-classif.
+define buffer buf_chk-gds-attr for ub.chk-gds-attr.
 define buffer buf_wealth for ub.wealth.
 define buffer buf_goods for ub.goods.
 define buffer buf_userobjs_temp-user-obj for userobjs_temp-user-obj.
@@ -2779,6 +2790,130 @@ else do:
         return error.
       end.
     end. /*when cash-pay*/
+    when "chk-oss" then do:
+      glog = yes.
+      message "Чеки с ОСС."
+      skip stat-line(CHK-STATUS)
+      view-as alert-box question buttons OK-Cancel update glog.
+      if not glog then do:
+        run MyEnable in this-procedure.
+        return error.
+      end.
+      assign v-rid-list = "".
+      { gbl/uobjclr.i  }
+      {&sel-objm}
+      { gbl/uobjcnt.i v-recs2 }
+       run ref/oss-ref.w ( input parparentproc
+                          ,input "v-sel":U
+                          ,input 0
+                          ,output v-rid-list).
+      if v-rid-list <> "" and  v-rid-list <> ? then do:
+        assign
+        v-recs = num-entries (v-rid-list)
+        .
+        _oss:
+        do num-rec = 0 to v-recs: /*цикл по типам осс*/
+        assign
+        v-prev-type = '':U
+        v-prev-code = 0
+        .
+        _object:
+        do num-rec2 = 0 to v-recs2: /*цикл по объектам*/
+          if v-recs = 1 and v-recs2 = 1 then do:
+            assign
+            num-rec = 1
+            num-rec2 = 1
+            .
+          end.
+          if num-rec > 0
+          and num-rec2 > 0
+          then do:
+            v-ref-row = entry (num-rec, v-rid-list).
+            find first buf_ext-classif where rowid (buf_ext-classif) = to-rowid (v-ref-row) no-lock.
+            find first buf_userobjs_temp-user-obj where
+                   (buf_userobjs_temp-user-obj.obj-type = v-prev-type
+                and buf_userobjs_temp-user-obj.obj-code > v-prev-code)
+                or  buf_userobjs_temp-user-obj.obj-type > v-prev-type no-error .
+
+          end.
+          if v-recs = 1
+          and v-recs2 = 1 then do:
+            assign
+            v-temp-seq = v-seq
+            v-line     = 0
+            dsp-rs = substitute("ОСС: &1  &3&4 &5"
+                           , buf_ext-classif.CharKey_One
+                           , buf_ext-classif.Key#_One
+                           , buf_userobjs_temp-user-obj.obj-type
+                           , buf_userobjs_temp-user-obj.obj-code
+                           , stat-line(CHK-STATUS)
+                           )
+            v-item = string(buf_ext-classif.CharKey_One) + {&delim-key} +
+                     string(buf_ext-classif.Key#_One) + {&delim-key} +
+                    buf_userobjs_temp-user-obj.obj-type + {&delim-key} +
+                    string(buf_userobjs_temp-user-obj.obj-code)
+            v-tot-lns = tot-lns
+            .
+          end.
+          else do:
+            if num-rec = 0
+            and num-rec2 = 0
+            then do:
+              assign
+              v-temp-seq = v-seq
+              v-line     = 0
+              dsp-rs = substitute("ОСС: &1", stat-line(CHK-STATUS))
+              v-item     = '':U
+              v-tot-lns = tot-lns
+              .
+            end.
+            else do:
+              if num-rec = 0 then NEXT _oss.
+              if num-rec2 = 0 then  NEXT _object.
+              assign
+              v-temp-seq = v-seq - 1
+              v-line     = num-rec
+              dsp-rs = substitute("&1&2 &3&4"
+                                  , buf_ext-classif.CharKey_One
+                                  , buf_ext-classif.Key#_One
+                                  , buf_userobjs_temp-user-obj.obj-type
+                                  , buf_userobjs_temp-user-obj.obj-code)
+              v-item = string(buf_ext-classif.CharKey_One) + {&delim-key} +
+                       string(buf_ext-classif.Key#_One) + {&delim-key} +
+                       buf_userobjs_temp-user-obj.obj-type + {&delim-key} +
+                       string(buf_userobjs_temp-user-obj.obj-code)
+              v-tot-lns = tot-lns + num-rec + num-rec2
+              .
+            end.
+          end.
+          v-no-hist = (if num-rec = 1 and num-rec2 = 1 then 0 else num-rec).
+          run create-{1}-hist in this-procedure(input {&add-def}
+                                              , input-output v-temp-seq
+                                              , input v-line
+/*                                              , input {&table_chk-doc}*/
+                                              , input '':U
+                                              , input dsp-rs
+                                              , input v-tot-lns
+                                              , input rs-list-method
+                                              , input rs-status
+                                              , input v-item
+                                              , input '':U
+                                              , input ?
+                                              ).
+          if num-rec = 0 and num-rec2 = 0
+          or (v-recs = 1 and v-recs2 = 1 ) then v-seq  = v-temp-seq.
+          assign
+          v-prev-code = (if available buf_userobjs_temp-user-obj then buf_userobjs_temp-user-obj.obj-code else 0)
+          v-prev-type = (if available buf_userobjs_temp-user-obj then buf_userobjs_temp-user-obj.obj-type else '')
+         .
+        end. /*do num-rec2*/
+        end. /*do num-rec*/
+      end.
+      else do:
+        run MyEnable in this-procedure .
+        return error.
+      end.
+    end. /*when chk-oss*/
     when "wealth" then do:
       glog = yes.
       message "Чеки МЦ с определенными МЦ."
@@ -3505,6 +3640,8 @@ define variable v-end-date as date no-undo .
 define variable v-d-card like ub.dis-card.d-card no-undo .
 define variable v-gds-code like ub.goods.gds-code no-undo .
 define variable v-cdpay-code like ub.cash-pay.cdpay-code no-undo .
+define variable v-oss-code like ub.chk-gds-attr.attr-code no-undo .
+define VARIABLE v-oss-type like ub.chk-gds-attr.attr-value no-undo .
 define variable v-curr-code like ub.cash-pay.curr-code no-undo .
 define variable v-wth-code like ub.wealth.wth-code no-undo .
 define variable v-line-num as integer no-undo .
@@ -3523,6 +3660,7 @@ define buffer buf_inkas for ub.inkas.
 define buffer buf_wth-doc for ub.wth-doc.
 define buffer buf_dis-card for ub.dis-card.
 define buffer buf_cash-pay for ub.cash-pay.
+define buffer buf_chk-gds-attr for ub.chk-gds-attr.
 define buffer buf_wealth for ub.wealth.
 define buffer buf_chk-gds for ub.chk-gds.
 define buffer buf_chk-pay for ub.chk-pay.
@@ -3813,6 +3951,71 @@ case rs-list-method:
       {&assign-nums}.
     end.
   end. /*when cash-pay*/
+  when "chk-oss" then do:
+   _chk-oss:
+   for each buf_{1}-hist where
+            buf_{1}-hist.id = p-id
+      and  buf_{1}-hist.item_ <> '':U:
+      assign
+      v-oss-type   = entry(1, buf_{1}-hist.item_, {&delim-key})
+      v-oss-code   = entry(2, buf_{1}-hist.item_, {&delim-key})
+      v-obj-type = entry(3, buf_{1}-hist.item_, {&delim-key})
+      v-obj-code = integer(entry(4, buf_{1}-hist.item_, {&delim-key}))
+      no-error
+      .
+      if error-status:error then  next _chk-oss.
+      { gbl/usobjava.i
+        v-cntxt-db-num
+        {&action-head-code-main}
+        v-cntxt-userid
+        v-obj-type
+        v-obj-code
+        v-object-available
+      }
+      if v-object-available <> true then next _chk-oss.
+      find first buf_chk-gds-attr no-lock where 
+      buf_chk-gds-attr.attr-value = v-oss-code 
+      and buf_chk-gds-attr.attr-code = "oss-code" no-error.
+      if not avail buf_chk-gds-attr then next _chk-oss.
+      CASE entry(1, buf_{1}-hist.STATUS_, {&delim-par}):
+        when {&all} then do:
+          for each chk-doc no-lock where
+                  chk-doc.obj-type = v-obj-type
+              AND chk-doc.obj-code = v-obj-code,
+              each buf_chk-gds-attr no-lock where
+                chk-doc.doc-code = buf_chk-gds-attr.doc-code and buf_chk-gds-attr.attr-value = v-oss-code and buf_chk-gds-attr.attr-code = "oss-code":
+                run ex-chk in this-procedure(input rs-list-method, input rs-status, input line-mode).
+          end.
+        end.
+        when "free":U then do:
+          for each chk-doc no-lock where
+                  chk-doc.obj-type = v-obj-type
+              AND chk-doc.obj-code = v-obj-code
+              and chk-doc.out-code = ?,
+              each buf_chk-gds-attr no-lock where
+                chk-doc.doc-code = buf_chk-gds-attr.doc-code and buf_chk-gds-attr.attr-value = v-oss-code and buf_chk-gds-attr.attr-code = "oss-code":
+                run ex-chk in this-procedure(input rs-list-method, input rs-status, input line-mode).
+          end.
+        end.
+        when "chk-date":U then do:
+          assign
+          v-start-date = date(entry(2, buf_{1}-hist.status_, {&delim-par}))
+          v-end-date = date(entry(3, buf_{1}-hist.status_, {&delim-par}))
+          .
+          for each chk-doc no-lock where
+                  chk-doc.obj-type = v-obj-type
+              AND chk-doc.obj-code = v-obj-code
+              AND chk-doc.chk-date >= v-start-date
+              AND chk-doc.chk-date <= v-end-date,
+              each buf_chk-gds-attr no-lock where
+                chk-doc.doc-code = buf_chk-gds-attr.doc-code and buf_chk-gds-attr.attr-value = v-oss-code and buf_chk-gds-attr.attr-code = "oss-code":
+                run ex-chk in this-procedure(input rs-list-method, input rs-status, input line-mode).
+          end.
+      end.
+      END CASE.
+      {&assign-nums}.
+    end.
+  end. /*when chk-oss*/
   when "wealth" then do:
    _wealth:
    for each buf_{1}-hist where

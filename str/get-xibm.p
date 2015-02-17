@@ -82,6 +82,11 @@ define variable spool-date_ as date no-undo .
 define variable spool-time_ as integer no-undo .
 define variable v-eff-date as date no-undo .
 define variable v-eff-time as integer no-undo .
+define variable v-oss-code as character no-undo init "".
+define variable disc-d-card as character no-undo.
+define variable ibm-ccm as integer no-undo.
+
+define buffer buf_ext-classif for ub.ext-classif.
 
 define temp-table temp-cash-desk no-undo
 field last-date like ub.chk-doc.chk-date
@@ -336,6 +341,7 @@ if get-chkc_context.shift-on and not get-chkc_context.cas-shft then do:
   undo, return .
 end.
 
+get-chkc_context.ibmgroup = ibmgroup.
 if get-chkc_context.t-shft > 0 and get-chkc_context.shift-on = yes then do:
   run write-log-and-file in p-log-handle (
         input 1
@@ -461,7 +467,32 @@ output close.
 
 
 end.
-if p-pos-type = {&cd-type-ibm-xml} and get-chkc_context.ibmgroup then do:
+if p-pos-type = {&cd-type-ibm-xml} then do :
+    run adm/shattri.p (
+        input "get":U
+        ,input  p-obj-type
+        ,input  p-obj-code
+        ,input  {&attr-cd-type-ibm-xml}
+        ,input  {&attr-cd-type-ibm-xml_ibm-ccm} /*p-param-code*/
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-value-logical
+        ,output v-param-type
+        ,INPUT-OUTPUT table-handle v-tth
+        ) no-error .
+    IF not error-status:error then do:
+      delete object v-tth.
+      ibm-ccm = v-value-integer.
+    end.
+    else do:
+      ibm-ccm = ?.
+      delete object v-tth.
+      return error return-value .
+    end.
+end.
+if (p-pos-type = {&cd-type-ibm-xml} or p-pos-type = {&cd-type-Autotank}) and get-chkc_context.ibmgroup then do:
   for each buf_tt-sum-grp:
     delete buf_tt-sum-grp.
   end.
@@ -1257,6 +1288,12 @@ on error undo, return error
           end.
           else do:
             if buf_temp-temp.field-value <> string(0) then do:
+              for each buf_tt-sum-grp where string (buf_tt-sum-grp.grp-code) = buf_temp-temp.field-value:
+                find first ub.goods-attr where ub.goods-attr.gds-code = buf_tt-sum-grp.code-2
+                        and ub.goods-attr.attr-code = {&attr-office-type} and ub.goods-attr.attr-value = {&attr-office-type_oss-pay} no-error.
+                if available ub.goods-attr
+                    then assign v-oss-code = bc-buf.
+              end.
               assign
               bc-buf = buf_temp-temp.field-value
               v-line-type = 'grp'
@@ -1365,7 +1402,7 @@ on error undo, return error
       if (p-pos-type = {&cd-type-IBM-xml}
         or p-pos-type = {&cd-type-autotank})
       and  LOOKUP(string(cstype_), "6,7,8":U) > 0
-      and not ibmgroup
+      and not get-chkc_context.ibmgroup
       then return.
       delete buf_temp-temp.
     end. /*for each buf_temp-temp*/
@@ -1514,9 +1551,10 @@ on error undo, return error
       end. /*do v-step*/
     end. /*magia*/
     if v-to-delete[1] = yes then return.
-    if p-pos-type = {&cd-type-ibm-xml}
+    if (p-pos-type = {&cd-type-ibm-xml}
+    or p-pos-type = {&cd-type-Autotank})
     and v-line-type = 'grp':U
-    and ibmgroup
+    and get-chkc_context.ibmgroup
     and can-find(first tt-sum-grp)  then do:
       find first buf_tt-sum-grp no-lock where
               buf_tt-sum-grp.grp-code = integer(bc-buf)
@@ -1640,6 +1678,26 @@ on error undo, return error
                          else v-flag-salesman)
     ub.chk-doc.src-tot-doc = v-src-tot-doc
     .
+    if v-oss-code <> ""then do:
+      case p-pos-type:
+        when {&cd-type-autotank} then do:
+          find first buf_ext-classif where buf_ext-classif.CharKey_One = v-oss-code no-error.
+          if available buf_ext-classif then do:
+            assign
+              v-oss-code = string (buf_ext-classif.Key#_One)
+            .
+          end.
+        end.
+      end case.
+      create ub.chk-gds-attr.
+      assign
+        ub.chk-gds-attr.doc-code = ub.chk-gds.doc-code
+        ub.chk-gds-attr.line-num = ub.chk-gds.line-num
+        ub.chk-gds-attr.attr-code = "oss-code"
+        ub.chk-gds-attr.attr-value =  v-oss-code
+      .
+      v-oss-code = "".
+    end.
     if p-pos-type = {&cd-type-ibm-xml}
     or p-pos-type = {&cd-type-autotank}
     then do:
@@ -2063,6 +2121,11 @@ define buffer buf_chk-discnt for ub.chk-discnt.
             disc-mode_ = buf_temp-temp.field-value
             no-error .
           end.
+          when "CDCard":U then do:
+            assign
+            disc-d-card = buf_temp-temp.field-value
+            no-error .
+          end.
           otherwise do:
             error-status:error = no.
           end.
@@ -2179,6 +2242,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
                                 then ub.chk-gds.d-card
                                 else '')
                                 )
+      chk-discnt.d-card = (if disc-d-card = "" or disc-d-card = ? then ub.chk-discnt.d-card else disc-d-card)
       chk-discnt.discnt-value-abs = - disc-sum_ /*скидка идет со знаком минус*/
       chk-discnt.discnt-value-pcnt = (if p-pos-type = {&cd-type-ibm-xml} then (- disc-pcnt_) else disc-pcnt_)
       chk-discnt.object-line-num = lnd-spl

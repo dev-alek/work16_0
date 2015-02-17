@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Утилита закачки справочника типов алкогольной продукции
+Утилита закачки справочника видов алкогольной продукции
 
 Автор: Хныкин Павел Андреевич
 Дата создания: 09/20/06
@@ -21,7 +21,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Утилита закачки типов алкоголя".
+define variable vss-description as character no-undo init "Утилита закачки видов алкоголя".
 { cmp/vssrevis.i    }
 { cmp/str-glbl.i    }
 { rep/repfrm.i def  }
@@ -98,13 +98,13 @@ on stop   undo, return error return-value
 
   OUTPUT STREAM log-stream TO VALUE( {&log-file} ) CONVERT SOURCE "1251" APPEND.
       run write-log in this-procedure
-            ( input "Начат импорт справочника типы алкоголя"
+            ( input "Начат импорт справочника видов алкоголя"
             , input no
             , input no
             ) .
      .
   message
-    "Импорт справочника типов алкогольной продукции." skip
+    "Импорт справочника видов алкогольной продукции." skip
     "Начать импорт?"
   view-as alert-box question
   buttons yes-no update v-log.
@@ -207,7 +207,7 @@ on stop   undo, return error return-value
     THEN DO:
       INPUT  STREAM in-stream  CLOSE.
       run write-log in this-procedure
-            ( input SUBSTITUTE( "В файле &1 присутствует более одного типа алкогольной продукции с кодом: &2."
+            ( input SUBSTITUTE( "В файле &1 присутствует более одного вида алкогольной продукции с кодом: &2."
                               , {&import-file}
                               , v-alc-type-code
                               )
@@ -259,7 +259,7 @@ on stop   undo, return error return-value
                buf_alc-type.alc-type-status = 1
             .
             run write-log in this-procedure
-               ( input SUBSTITUTE("В файле &1 отсутствовал тип алкогольной продукции с кодом: &2. Ему изменен статус с 0 на 1. Не забудьте открепить товары."
+               ( input SUBSTITUTE("В файле &1 отсутствовал вид алкогольной продукции с кодом: &2. Ему изменен статус с 0 на 1. Не забудьте открепить товары."
                      , {&import-file}
                      , buf_alc-type.alc-type-code
                      )
@@ -276,7 +276,7 @@ on stop   undo, return error return-value
 
   ASSIGN
     v-counter     = 0
-    v-repfrm-str  = "Загрузка типов алкогольной продукции...":U
+    v-repfrm-str  = "Загрузка видов алкогольной продукции...":U
   .
 
   /* начинаем раскручивать закачаные типы */
@@ -294,7 +294,7 @@ on stop   undo, return error return-value
         /* !!! */
         IF LOCKED buf_alc-type THEN DO :
          run write-log in this-procedure
-            ( input SUBSTITUTE ( "Запись типа алкогольной продукции <&1. &2> редактируется.&3Изменение записи невозможно."
+            ( input SUBSTITUTE ( "Запись вида алкогольной продукции <&1. &2> редактируется.&3Изменение записи невозможно."
                        , tt-alc-type.alc-type-code
                        , tt-alc-type.alc-type-name
                        , {&new-line}
@@ -315,7 +315,7 @@ on stop   undo, return error return-value
                                          .
              IF AVAILABLE buf_alc-type-gds THEN do:
                run write-log in this-procedure
-                  ( input SUBSTITUTE( "К типу алкогольной продукции <&1. &2> есть привязаные товары.&3Удаление типа невозможно."
+                  ( input SUBSTITUTE( "К виду алкогольной продукции <&1. &2> есть привязаные товары.&3Удаление вида невозможно."
                                  , tt-alc-type.alc-type-code
                                  , tt-alc-type.alc-type-name
                                  , {&new-line}

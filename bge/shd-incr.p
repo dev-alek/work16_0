@@ -40,6 +40,7 @@ define variable vss-description as character no-undo init "Инкрементальный экспо
 
     define variable v-xml-file-name     as character            no-undo. /* имя файла вывода */
     define variable v-log-file-name     as character            no-undo. /* имя log-файла */
+    define variable v-xml-f-nam-short   as character no-undo.
     define variable v-out-dir           as character            no-undo.
     define variable v-locked            as logical              no-undo.
     define variable v-log-string        as character            no-undo. /* имя log-файла */
@@ -58,7 +59,7 @@ define variable vss-description as character no-undo init "Инкрементальный экспо
     define buffer buf_temp_del-doc-code for temp_del-doc-code.
     define buffer buf_temp_pr-doc-num   for temp_pr-doc-num.
     define buffer buf_temp_ord-doc-code for temp_ord-doc-code.
-
+    define buffer buf_clients-attr for ub.clients-attr.
 do
 for buf_temp_doc-code
   , buf_temp_del-doc-code
@@ -189,29 +190,14 @@ on error undo, return error
       object-of-list:
       for each temp-obj
       :
-          /* Для автоматического экспорта: залочим атрибут на объекте, если в данный момент выгружаем */
-          find first ub.clients-attr exclusive-lock
-            where ub.clients-attr.obj-type = temp-obj.obj-type
-              and ub.clients-attr.obj-code = temp-obj.obj-code
-              and ub.clients-attr.attr-code = {&attr-bge-incr-cur} no-wait no-error.
-          
-          if not available ub.clients-attr then do:
-            if locked ub.clients-attr then do:
-              run wp-XMLWriteLog in this-procedure (
-                    input v-log-file-name
-                  , input 1
-                  , input "Ошибка экспорта документов по объекту " + temp-obj.obj-type + string( temp-obj.obj-code ) + ". Объект выгружается в другой сессии."
+          run bge/lock-bge-incr.p (input temp-obj.obj-type, input temp-obj.obj-code, buffer buf_clients-attr) no-error.
+          if error-status:error then do:
+            run wp-XMLWriteLog in this-procedure (
+                   input v-log-file-name
+                  ,input 1
+                  ,input "Ошибка экспорта документов по объекту " + temp-obj.obj-type + string( temp-obj.obj-code ) + ". " + error-status:get-message(1)
               ).
               next object-of-list. /* пойдём дальше по списку объектов */
-            end.
-            else do:
-              create ub.clients-attr.
-              assign
-              ub.clients-attr.obj-type = temp-obj.obj-type
-              ub.clients-attr.obj-code = temp-obj.obj-code
-              ub.clients-attr.attr-code = {&attr-bge-incr-cur}.
-              find current ub.clients-attr exclusive-lock.
-            end.
           end.
           
           run export-docs-by-object in this-procedure (
@@ -226,16 +212,14 @@ on error undo, return error
                   , input 1
                   , input "Ошибка экспорта документов по объекту " + temp-obj.obj-type + string( temp-obj.obj-code )
               ).
+              find current buf_clients-attr no-lock. /* снять блокировку */
               next object-of-list.
           end.
           run cb-fill_bge-xml_clients in this-procedure (
                 input temp-obj.obj-type
               , input temp-obj.obj-code
           ).
-          
-          /* Освободим атрибут */
-          release ub.clients-attr.
-          
+          find current buf_clients-attr no-lock. /* снять блокировку */
       end.
       if v-bge-xml-bgeflold <> "oracle"
       then do:
@@ -243,18 +227,27 @@ on error undo, return error
       end.
     if v-bge-xml-bgeflold <> "oracle"
     then do:
+        
+      v-xml-f-nam-short = replace(v-xml-file-name, "/", "\").
+      v-xml-f-nam-short = entry(num-entries(v-xml-f-nam-short, "\"), v-xml-f-nam-short, "\"). /* достанем только имя файла */
+      v-xml-f-nam-short = right-trim(v-xml-f-nam-short, ".").
+      v-xml-f-nam-short = "_" + v-xml-f-nam-short.
+      
       run bge/cat-firm.p (
             input "list":U
           , input 0
           , input table temp_bge-xml_clients
+          , v-xml-f-nam-short
       ).
       run bge/cat-good.p (
             input "good-ext,list":U
           , input table temp_bge-xml_goods
+          , v-xml-f-nam-short
       ).
       run bge/cat-dcrt.p (
             input "list":U
           , input table temp_bge-xml_dis-card
+          , v-xml-f-nam-short
       ).
     end.
     for each buf_temp_doc-code

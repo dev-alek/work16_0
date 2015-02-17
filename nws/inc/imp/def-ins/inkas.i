@@ -25,6 +25,7 @@ define buffer buf_sale-doc       for ub.sale-doc.
 define buffer buf_c-sale-doc       for ub.c-sale-doc.
 define buffer buf_chk-doc        for ub.chk-doc.
 define buffer buf_chk-gds        for ub.chk-gds.
+define buffer buf_chk-gds-attr   for ub.chk-gds-attr.
 define buffer buf_chk-pay        for ub.chk-pay.
 define buffer buf_chk-discnt     for ub.chk-discnt.
 define buffer buf_chk-doc-attr   for ub.chk-doc-attr.

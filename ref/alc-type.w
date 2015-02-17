@@ -192,7 +192,7 @@ DEFINE FRAME Dialog-Frame
      SPACE(63.19) SKIP(15.29)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         TITLE "Типы алкогольных товаров"
+         TITLE "Виды алкогольной продукции"
          DEFAULT-BUTTON b-exit WIDGET-ID 100.
 
 

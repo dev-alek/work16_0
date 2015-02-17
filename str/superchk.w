@@ -209,7 +209,7 @@ data-relation line-discnt for tt-chk-doc, tt-chk-discnt relation-fields (doc-cod
 tt-chk-pay tt-pay-info tt-chk-doc
 
 /* Definitions for BROWSE BR-discnt                                     */
-&Scoped-define FIELDS-IN-QUERY-BR-discnt tt-chk-discnt.line-num {&discnt-v-name} tt-chk-discnt.object-line-num {&discnt-target-name} (IF tt-chk-discnt.record-type < 4 THEN {&discnt-type-name} ELSE STRING(tt-chk-discnt.discnt-type)) tt-chk-discnt.discnt-value-abs tt-chk-discnt.discnt-value-pcnt tt-chk-discnt.src-d-card tt-chk-discnt.discnt-id tt-chk-discnt.kateg get-templ-rl-name( INPUT tt-chk-discnt.templ-rl-root)   
+&Scoped-define FIELDS-IN-QUERY-BR-discnt tt-chk-discnt.line-num {&discnt-v-name} tt-chk-discnt.object-line-num {&discnt-target-name} (IF tt-chk-discnt.record-type < 4 THEN {&discnt-type-name} ELSE STRING(tt-chk-discnt.discnt-type)) tt-chk-discnt.discnt-value-abs tt-chk-discnt.discnt-value-pcnt tt-chk-discnt.src-d-card tt-chk-discnt.discnt-id tt-chk-discnt.kateg tt-chk-discnt.d-card get-templ-rl-name( INPUT tt-chk-discnt.templ-rl-root)   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-discnt tt-chk-discnt.discnt-value-abs tt-chk-discnt.discnt-value-pcnt   
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-discnt tt-chk-discnt
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-discnt tt-chk-discnt
@@ -525,6 +525,7 @@ tt-chk-discnt.discnt-value-pcnt COLUMN-LABEL "% Знач.скидки/!бонуса" FORMAT "->>
 tt-chk-discnt.src-d-card COLUMN-LABEL "№ Карты!для начисления"
 tt-chk-discnt.discnt-id COLUMN-LABEL "ID!транзакц" FORMAT ">>>>>>>>9"
 tt-chk-discnt.kateg COLUMN-LABEL "Код !валюты" FORMAT "->>>9"
+tt-chk-discnt.d-card COLUMN-LABEL "№ карты" FORMAT "X(20)"
 get-templ-rl-name( INPUT tt-chk-discnt.templ-rl-root) COLUMN-LABEL {&label_templ-rl-root} FORMAT "X(255)" WIDTH 50
 ENABLE
 tt-chk-discnt.discnt-value-abs

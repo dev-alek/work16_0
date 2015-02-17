@@ -39,11 +39,17 @@ define variable vss-description as character no-undo init "Экспорт по расписанию
 { cmp/operlist.i    }
     
     define buffer lck_schedule-attr for ub.schedule-attr.
+    define buffer buf_shift-obj for ub.shift-obj.
 
     define variable v-ind                       as integer      no-undo.
     define variable v-param-list                as character    no-undo.
     define variable v-temp-obj-list             as character    no-undo.
+    define variable v-obj-counter               as integer      no-undo.
     define variable v-obj-list                  as character    no-undo.
+    define variable v-obj-list-shift            as character    no-undo.
+    define variable v-obj-list-noshift          as character    no-undo.
+    define variable v-obj-list-type             as character    no-undo.
+    define variable v-obj-list-code             as integer      no-undo.
     define variable v-doc-type-list             as character    no-undo.
     define variable v-spec-doc-type-list        as character    no-undo.
     define variable v-date-range                as character    no-undo.
@@ -68,11 +74,14 @@ define variable vss-description as character no-undo init "Экспорт по расписанию
     define variable v-exp-fo                    as logical      no-undo.
     define variable v-exp-fp                    as logical      no-undo.
     define variable v-exp-s-f                   as logical      no-undo.
+    /*define variable v-gds-grp-list              as character    no-undo.*/
 
     define variable v-range                     as integer      no-undo.
     define variable v-initial-range             as integer      no-undo.
     define variable v-host-code                 as integer      no-undo.
 
+    define variable v-par-value         as character    no-undo.
+    define variable v-par-type          as character    no-undo.
     define variable v-shift-mode-on     as logical      no-undo.
     define variable v-bgeflold          as character    no-undo.
 
@@ -286,6 +295,8 @@ on error undo, return error
         , input v-param-list
         , output v-exp-s-f
     ).
+
+    /*v-gds-grp-list = entry(23,v-param-list,{&comma-char}) no-error.*/
 
     if v-incr = no
     then do:
@@ -531,10 +542,24 @@ on error undo, return error
                                             )
                                 ) .
             end.
-        end.        /* if v-exp-way = yes  */
-        if v-exp-stk = yes
-        then do:
-            if v-exp-stk-supp = yes
+        end.        /* if v-exp-way = yes  */      
+        if v-exp-stk = yes and entry(1,v-date-range) = '1' then do:         
+                    run bge/bgestd.p (
+                          input ?
+                        , input -1
+                        , input 3
+                        , input v-obj-list
+                        , input v-date-to
+                        , input v-cst
+                        , input yes
+                        , input 0
+                        /*, input v-gds-grp-list*/
+                        , input ?
+                        , input ?
+                    ).
+        end.
+        else if v-exp-stk = yes  then  do: 
+           if v-exp-stk-supp = yes
             then do:
                 run bge/bge-stk.p (
                       input ?
@@ -545,6 +570,7 @@ on error undo, return error
                     , input yes
                     , input p-db-num
                     , input v-obj-list
+                    /*, input v-gds-grp-list*/
                     , input ?
                     , input ?
                 ) no-error.
@@ -567,6 +593,7 @@ on error undo, return error
                     , input yes
                     , input p-db-num
                     , input v-obj-list
+                    /*, input v-gds-grp-list*/
                     , input ?
                     , input ?
                 ) no-error.
@@ -648,10 +675,57 @@ on error undo, return error
         then do:
             if v-shift-mode-on = yes
             then do:
+                /* В списке могут быть как сменные так и не сменные объекты,
+                разделим их на два списка и запустим обе выгрузки */
+                
+                v-obj-list-shift = "".
+                v-obj-list-noshift = "".
+                
+                do v-obj-counter = 1 to num-entries (v-obj-list) / 2:
+                    
+                    assign
+                    v-obj-list-type = entry(v-obj-counter * 2 - 1, v-obj-list)
+                    v-obj-list-code = integer(entry(v-obj-counter * 2, v-obj-list)) no-error.
+                    
+                    
+                    if not can-find(first buf_shift-obj
+                        where buf_shift-obj.obj-type = v-obj-list-type
+                          and buf_shift-obj.obj-code = v-obj-list-code)
+                        then do:
+                            assign
+                            v-obj-list-noshift = v-obj-list-noshift + v-obj-list-type + ',' + string(v-obj-list-code) + ','.
+                    end. /* if not can-find */
+                    else do:
+                        assign
+                        v-obj-list-shift = v-obj-list-shift + v-obj-list-type + ',' + string(v-obj-list-code) + ','.
+                    end.
+                end.
+                                
+                /* Запустим по сменным */
+                if v-obj-list-shift <> "" then do:
                 run bge/shd-inch.p (
                       input p-db-num
                     , input v-range
-                    , input v-obj-list
+                        , input v-obj-list-shift
+                        , input v-exp-checks
+                    ) no-error.
+                    if error-status :error
+                    then do:
+                        run write-to-log ( vss-workfile + {&space-char}
+                                        + substitute( " Ошибка выгрузки по расписанию. &1 "
+                                                        , return-value
+                                                    )
+                                        ) .
+                        undo, return error .
+                    end.
+                end. /* if v-obj-list-shift <> "" */
+                
+                /* Запустим по несменным */
+                if v-obj-list-noshift <> "" then do:
+                    run bge/shd-incr.p (
+                          input p-db-num
+                        , input v-range
+                        , input v-obj-list-noshift
                     , input v-exp-checks
                 ) no-error.
                 if error-status :error
@@ -663,6 +737,7 @@ on error undo, return error
                                     ) .
                     undo, return error .
                 end.
+                end. /* if v-obj-list-noshift <> "" */
             end.        /* if v-shift-mode-on = yes */
             else do:
                 run bge/shd-incr.p (

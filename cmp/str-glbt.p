@@ -155,7 +155,7 @@ attr-cd-type-omron-new }
 /*Параметры POS IBM-XML*/
 { cmp/cr-prep.i 1 attr-cd-type-IBM-XML          cd-type-IBM-XML           " " cd-type-IBM-XML }
 { cmp/cr-prepc.i 1 prop-list-attr-cd-type-ibm-XML
-"ibmrubc,ibmnalc,ibmgroup,multicurr,cd-vat,cdtaxlst,specgrp"
+"ibmrubc,ibmnalc,ibm-ccm,ibmgroup,multicurr,cd-vat,cdtaxlst,specgrp"
 attr-cd-type-IBM-XML }
 
 /*Параметры POS r-keeper*/
@@ -468,7 +468,7 @@ attr-prt-obj }
 /* атрибут глобальный  -  ОТЧЕТЫ */
 { cmp/cr-prep.i 1 attr-report-glob  report-glob report-glob report-glob report-glob }
 { cmp/cr-prepc.i 1 prop-list-attr-report-glob
-"actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot"
+"actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format"
 attr-report-glob }
 
 /* атрибут по фирме  -  ОТЧЕТЫ */

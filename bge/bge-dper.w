@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -13,9 +13,9 @@ $Archive$
 
 Выбор параметров для выгрузки документов.
 
-Автор: Хныкин Павел Андреевич
+Автор: Гюнтнер Виктор Арнольдович
 Дата создания: 04/12/06
-Author: Pavel Khnykin
+Author: Victor Guntner
 Creation date: 04/12/06
 
 Input:
@@ -72,6 +72,7 @@ define output parameter p-pay-desk-cards    as logical   INIT no    no-undo.
 define output parameter p-deleted           as logical   INIT no    no-undo.
 define output parameter p-chk               as logical   INIT no    no-undo.
 define output parameter p-cancel            as logical   INIT no    no-undo.
+/*define output parameter p-gds-grp-list      as character            no-undo.*/
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -89,6 +90,7 @@ define variable vss-description as character no-undo init "Выбор параметров для 
 { gbl/userobjs.i }
 { bge/bge-xml.i  }
 { gbl/usr-flt.i  }
+{ ref/grplibfn.i }
 
 define variable v-bge-dper-host-code    as integer      no-undo.
 define variable v-bge-dper-store-type   as character    no-undo.
@@ -98,6 +100,8 @@ define variable v-obj-list          as character    no-undo.
 define variable v-host-name         as character    no-undo.
 define variable v-today             as date         no-undo.
 define variable v-time              as integer      no-undo.
+
+define buffer buf_gds-grp for ub.gds-grp.
 
 define temp-table temp_obj-list no-undo
     field obj-type as character
@@ -109,25 +113,27 @@ define temp-table temp_obj-list no-undo
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-2 RECT-1 RECT-3 Btn_OK Btn_Cancel ~
-b-help date_from date_to rs-1 bt-sel-obj ed-doc-type bt-sel-doc-type ~
-tb-inkass-pay-code tb-deleted tb-cst-code tb-exp-checks tb-parts ~
-tb-chk-pay-code rs-cash-pay tb-pay-desk bt-cash-pay tb-pay-desk-cards
+&Scoped-Define ENABLED-OBJECTS RECT-2 RECT-1 RECT-3 RECT-gds Btn_OK ~
+Btn_Cancel b-help date_from date_to rs-1 bt-sel-obj ed-doc-type ~
+bt-sel-doc-type tb-inkass-pay-code tb-deleted tb-cst-code tb-exp-checks ~
+tb-parts tb-chk-pay-code rs-cash-pay tb-pay-desk bt-cash-pay ~
+tb-pay-desk-cards EDITOR-gds-grp RADIO-SET-gds-grp bt-sel-gds-grp ~
+v-text-goods 
 &Scoped-Define DISPLAYED-OBJECTS date_from date_to ed-object rs-1 ~
 ed-doc-type ed-doc-type-label tb-inkass-pay-code tb-deleted tb-cst-code ~
 tb-exp-checks tb-parts tb-chk-pay-code rs-cash-pay tb-pay-desk ~
-tb-pay-desk-cards
+tb-pay-desk-cards EDITOR-gds-grp RADIO-SET-gds-grp v-text-goods 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -142,168 +148,199 @@ tb-pay-desk-cards
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON bt-cash-pay
+DEFINE BUTTON bt-cash-pay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "..."
+     LABEL "..." 
      SIZE 3.63 BY 1.04.
 
-DEFINE BUTTON bt-sel-doc-type
+DEFINE BUTTON bt-sel-doc-type 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "..."
+     LABEL "..." 
      SIZE 3.63 BY 1.04.
 
-DEFINE BUTTON bt-sel-obj
+DEFINE BUTTON bt-sel-gds-grp 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "..."
+     LABEL "..." 
      SIZE 3.63 BY 1.04.
 
-DEFINE BUTTON Btn_Cancel
-     LABEL "&Отмена"
+DEFINE BUTTON bt-sel-obj 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "..." 
+     SIZE 3.63 BY 1.04.
+
+DEFINE BUTTON Btn_Cancel 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON Btn_OK DEFAULT
-     LABEL "&Ввод"
+DEFINE BUTTON Btn_OK DEFAULT 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE ed-doc-type AS CHARACTER INITIAL "Все"
+DEFINE VARIABLE ed-doc-type AS CHARACTER INITIAL "Все" 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-VERTICAL NO-BOX
-     SIZE 35.75 BY 1.83 NO-UNDO.
+     SIZE 35.75 BY 1.79 NO-UNDO.
 
-DEFINE VARIABLE ed-doc-type-label AS CHARACTER INITIAL "Типы документов"
+DEFINE VARIABLE ed-doc-type-label AS CHARACTER INITIAL "Типы документов" 
      VIEW-AS EDITOR NO-BOX
-     SIZE 12.5 BY 1.75 NO-UNDO.
+     SIZE 12.63 BY 1.75 NO-UNDO.
 
-DEFINE VARIABLE ed-object AS CHARACTER
+DEFINE VARIABLE ed-object AS CHARACTER 
      VIEW-AS EDITOR NO-BOX
      SIZE 35.63 BY 3.38
      FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE date_from AS DATE FORMAT "99/99/9999":U
-     LABEL "Дата с"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE EDITOR-gds-grp AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 38 BY 3.79 NO-UNDO.
+
+DEFINE VARIABLE date_from AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата с" 
+     VIEW-AS FILL-IN 
      SIZE 12 BY 1 NO-UNDO.
 
-DEFINE VARIABLE date_to AS DATE FORMAT "99/99/9999":U
-     LABEL "по"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE date_to AS DATE FORMAT "99/99/9999":U 
+     LABEL "по" 
+     VIEW-AS FILL-IN 
      SIZE 12 BY 1 NO-UNDO.
 
-DEFINE VARIABLE rs-1 AS INTEGER
+DEFINE VARIABLE v-text-goods AS CHARACTER FORMAT "X(256)":U INITIAL "Товары" 
+      VIEW-AS TEXT 
+     SIZE 8 BY .63 NO-UNDO.
+
+DEFINE VARIABLE RADIO-SET-gds-grp AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
+          "Все", 1,
+"Группы", 2
+     SIZE 12 BY 2 NO-UNDO.
+
+DEFINE VARIABLE rs-1 AS INTEGER 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
           "глобально", 1,
 "по фирме", 2,
 "по объектам", 3
      SIZE 13.75 BY 3.25 NO-UNDO.
 
-DEFINE VARIABLE rs-cash-pay AS LOGICAL
+DEFINE VARIABLE rs-cash-pay AS LOGICAL 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", no,
 "Выбор", yes
      SIZE 9 BY 1.88 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 55.38 BY 4.38.
 
 DEFINE RECTANGLE RECT-2
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 55.25 BY 2.17.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 55.25 BY 2.21.
 
 DEFINE RECTANGLE RECT-3
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 55.25 BY 5.08.
 
-DEFINE VARIABLE tb-chk-pay-code AS LOGICAL INITIAL no
-     LABEL "По типу кассовых платежей из чеков"
-     VIEW-AS TOGGLE-BOX
-     SIZE 38 BY .83 NO-UNDO.
+DEFINE RECTANGLE RECT-gds
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 55 BY 4.75.
 
-DEFINE VARIABLE tb-cst-code AS LOGICAL INITIAL no
-     LABEL "ГТД по строке документа"
+DEFINE VARIABLE tb-chk-pay-code AS LOGICAL INITIAL no 
+     LABEL "По типу кассовых платежей из чеков" 
      VIEW-AS TOGGLE-BOX
-     SIZE 26.38 BY .83 NO-UNDO.
+     SIZE 38 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-deleted AS LOGICAL INITIAL no
-     LABEL "Удалённые"
+DEFINE VARIABLE tb-cst-code AS LOGICAL INITIAL no 
+     LABEL "ГТД по строке документа" 
      VIEW-AS TOGGLE-BOX
-     SIZE 20.5 BY .83 NO-UNDO.
+     SIZE 26.38 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-exp-checks AS LOGICAL INITIAL no
-     LABEL "Чеки"
+DEFINE VARIABLE tb-deleted AS LOGICAL INITIAL no 
+     LABEL "Удалённые" 
      VIEW-AS TOGGLE-BOX
-     SIZE 20.5 BY .83 NO-UNDO.
+     SIZE 20.63 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-inkass-pay-code AS LOGICAL INITIAL no
-     LABEL "По виду оплаты"
+DEFINE VARIABLE tb-exp-checks AS LOGICAL INITIAL no 
+     LABEL "Чеки" 
      VIEW-AS TOGGLE-BOX
-     SIZE 24.38 BY .83 NO-UNDO.
+     SIZE 20.63 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-parts AS LOGICAL INITIAL no
-     LABEL "По партиям"
+DEFINE VARIABLE tb-inkass-pay-code AS LOGICAL INITIAL no 
+     LABEL "По виду оплаты" 
      VIEW-AS TOGGLE-BOX
-     SIZE 26.38 BY .83 NO-UNDO.
+     SIZE 24.38 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-pay-desk AS LOGICAL INITIAL no
-     LABEL "По кассе"
+DEFINE VARIABLE tb-parts AS LOGICAL INITIAL no 
+     LABEL "По партиям" 
      VIEW-AS TOGGLE-BOX
-     SIZE 12.25 BY .83 NO-UNDO.
+     SIZE 26.38 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-pay-desk-cards AS LOGICAL INITIAL no
-     LABEL "По префиксам карт"
+DEFINE VARIABLE tb-pay-desk AS LOGICAL INITIAL no 
+     LABEL "По кассе" 
      VIEW-AS TOGGLE-BOX
-     SIZE 22 BY .83 NO-UNDO.
+     SIZE 12.25 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-supp AS LOGICAL INITIAL no
-     LABEL "Остатки по поставщикам"
+DEFINE VARIABLE tb-pay-desk-cards AS LOGICAL INITIAL no 
+     LABEL "По префиксам карт" 
      VIEW-AS TOGGLE-BOX
-     SIZE 26.88 BY .83 NO-UNDO.
+     SIZE 22 BY .79 NO-UNDO.
+
+DEFINE VARIABLE tb-supp AS LOGICAL INITIAL no 
+     LABEL "Остатки по поставщикам" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 26.75 BY .79 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     Btn_OK AT ROW 1.25 COL 1.5
-     Btn_Cancel AT ROW 1.25 COL 11.5
+     Btn_OK AT ROW 1.25 COL 1.63
+     Btn_Cancel AT ROW 1.25 COL 11.63
      b-help AT ROW 1.25 COL 47
      date_from AT ROW 3.13 COL 8.25 COLON-ALIGNED
-     date_to AT ROW 3.13 COL 25.13 COLON-ALIGNED
-     tb-supp AT ROW 4.54 COL 10.38
+     date_to AT ROW 3.13 COL 25.25 COLON-ALIGNED
+     tb-supp AT ROW 4.5 COL 10.38
      ed-object AT ROW 4.96 COL 20.75 NO-LABEL
      rs-1 AT ROW 5.04 COL 3 NO-LABEL
      bt-sel-obj AT ROW 7.21 COL 17
-     ed-doc-type AT ROW 9.17 COL 16.75 NO-LABEL
+     ed-doc-type AT ROW 9.21 COL 16.75 NO-LABEL
      bt-sel-doc-type AT ROW 9.21 COL 53.25
      ed-doc-type-label AT ROW 9.25 COL 3 NO-LABEL
-     tb-inkass-pay-code AT ROW 11.46 COL 2.5
-     tb-deleted AT ROW 11.5 COL 36.5
-     tb-cst-code AT ROW 12.25 COL 2.5
-     tb-exp-checks AT ROW 12.25 COL 36.5 WIDGET-ID 2
-     tb-parts AT ROW 13 COL 2.5
-     tb-chk-pay-code AT ROW 13.75 COL 2.5
+     tb-inkass-pay-code AT ROW 11.5 COL 2.63
+     tb-deleted AT ROW 11.5 COL 36.63
+     tb-cst-code AT ROW 12.25 COL 2.63
+     tb-exp-checks AT ROW 12.25 COL 36.63 WIDGET-ID 2
+     tb-parts AT ROW 13 COL 2.63
+     tb-chk-pay-code AT ROW 13.75 COL 2.63
      rs-cash-pay AT ROW 13.79 COL 40 NO-LABEL
-     tb-pay-desk AT ROW 14.67 COL 5.5
+     tb-pay-desk AT ROW 14.67 COL 5.63
      bt-cash-pay AT ROW 14.71 COL 48
-     tb-pay-desk-cards AT ROW 15.5 COL 5.5
+     tb-pay-desk-cards AT ROW 15.5 COL 5.63
+     EDITOR-gds-grp AT ROW 17.42 COL 18 NO-LABEL WIDGET-ID 12
+     RADIO-SET-gds-grp AT ROW 18.13 COL 3 NO-LABEL WIDGET-ID 8
+     bt-sel-gds-grp AT ROW 19.08 COL 14 WIDGET-ID 14
+     v-text-goods AT ROW 16.71 COL 2 NO-LABEL WIDGET-ID 4
      RECT-2 AT ROW 9.04 COL 2
-     RECT-1 AT ROW 4.42 COL 1.88
+     RECT-1 AT ROW 4.42 COL 1.75
      RECT-3 AT ROW 11.42 COL 2
-     SPACE(1.04) SKIP(0.16)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     RECT-gds AT ROW 16.96 COL 2 WIDGET-ID 16
+     SPACE(0.99) SKIP(0.28)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Диапазон дат для экспорта".
 
 
@@ -323,35 +360,40 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-ASSIGN
+ASSIGN 
        bt-cash-pay:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
-ASSIGN
+ASSIGN 
        ed-doc-type:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR ed-doc-type-label IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        ed-doc-type-label:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR ed-object IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
+       EDITOR-gds-grp:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+
+ASSIGN 
        rs-cash-pay:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* SETTINGS FOR TOGGLE-BOX tb-supp IN FRAME Dialog-Frame
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        tb-supp:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
+/* SETTINGS FOR FILL-IN v-text-goods IN FRAME Dialog-Frame
+   ALIGN-L                                                              */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -375,7 +417,6 @@ DO:
     run ref/cashpays.w (
          INPUT parparentproc
         ,INPUT "b-sel,b-mark":U
-        ,input {&all}
         ,input v-bge-dper-host-code
         ,input v-bge-dper-store-type
         ,input v-bge-dper-store-code
@@ -445,6 +486,39 @@ DO:
             end.
         end.
     end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME bt-sel-gds-grp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-sel-gds-grp Dialog-Frame
+ON CHOOSE OF bt-sel-gds-grp IN FRAME Dialog-Frame /* ... */
+DO:
+    define variable v-ii as integer no-undo.
+    define variable v-Grp_Name as character no-undo.
+    define variable v-grp-recid-list as character no-undo.
+    
+    run ref/gds-grp.w (
+     input parparentproc
+    ,input "b-sel,b-mark"
+    ,input v-cntxt-obj-type
+    ,input v-cntxt-obj-code
+    ,input-output v-grp-recid-list).
+
+    EDITOR-gds-grp:screen-value = "".
+    /*p-gds-grp-list = "".*/
+
+    do v-ii = 1 to num-entries(v-grp-recid-list):
+        find buf_gds-grp where recid (buf_gds-grp) = integer(entry(v-ii, v-grp-recid-list)) no-lock.
+        run grplib-get-full-name in this-procedure( input buf_gds-grp.node-code, output v-Grp_Name).
+            EDITOR-gds-grp:screen-value = EDITOR-gds-grp:screen-value + v-Grp_Name + {&new-line}.
+      /*  p-gds-grp-list = p-gds-grp-list + string(buf_gds-grp.node-code) + {&delim-par}.*/
+    end.
+    
+    /*p-gds-grp-list = trim(p-gds-grp-list, {&delim-par}).*/
+    
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -724,6 +798,26 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME RADIO-SET-gds-grp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RADIO-SET-gds-grp Dialog-Frame
+ON VALUE-CHANGED OF RADIO-SET-gds-grp IN FRAME Dialog-Frame
+DO:
+  assign RADIO-SET-gds-grp.
+  if RADIO-SET-gds-grp = 1 then do:
+      bt-sel-gds-grp :visible in frame {&frame-name} = no.
+      /*p-gds-grp-list = "".*/
+      EDITOR-gds-grp:screen-value = "".
+  end.
+  else do:
+      bt-sel-gds-grp :visible in frame {&frame-name} = yes.
+      apply "CHOOSE" to bt-sel-gds-grp.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME rs-1
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-1 Dialog-Frame
 ON VALUE-CHANGED OF rs-1 IN FRAME Dialog-Frame
@@ -770,7 +864,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -829,7 +923,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     end.
     run bge-xml-init-ext-doc-type in this-procedure .
     RUN enable_UI.
-    run init-fields in this-procedure .
+
     IF p-output-type = 6
     THEN DO:
        ASSIGN
@@ -906,7 +1000,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             RECT-2
             ed-doc-type
             ed-doc-type-label
-            tb-exp-checks
         .
         if p-output-type = 5
         then do:
@@ -924,6 +1017,19 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             .
         end.
     end.
+    
+    if lookup(string(p-output-type), "2,4") = 0
+        then do:
+            hide
+            v-text-goods
+            RECT-gds
+            EDITOR-gds-grp
+            bt-sel-gds-grp
+            RADIO-SET-gds-grp
+            .
+    end.
+
+    run init-fields in this-procedure .
 
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -941,7 +1047,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -960,17 +1066,19 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY date_from date_to ed-object rs-1 ed-doc-type ed-doc-type-label
-          tb-inkass-pay-code tb-deleted tb-cst-code tb-exp-checks tb-parts
-          tb-chk-pay-code rs-cash-pay tb-pay-desk tb-pay-desk-cards
+  DISPLAY date_from date_to ed-object rs-1 ed-doc-type ed-doc-type-label 
+          tb-inkass-pay-code tb-deleted tb-cst-code tb-exp-checks tb-parts 
+          tb-chk-pay-code rs-cash-pay tb-pay-desk tb-pay-desk-cards 
+          EDITOR-gds-grp RADIO-SET-gds-grp v-text-goods 
       WITH FRAME Dialog-Frame.
-  ENABLE RECT-2 RECT-1 RECT-3 Btn_OK Btn_Cancel b-help date_from date_to rs-1
-         bt-sel-obj ed-doc-type bt-sel-doc-type tb-inkass-pay-code tb-deleted
-         tb-cst-code tb-exp-checks tb-parts tb-chk-pay-code rs-cash-pay
-         tb-pay-desk bt-cash-pay tb-pay-desk-cards
+  ENABLE RECT-2 RECT-1 RECT-3 RECT-gds Btn_OK Btn_Cancel b-help date_from 
+         date_to rs-1 bt-sel-obj ed-doc-type bt-sel-doc-type tb-inkass-pay-code 
+         tb-deleted tb-cst-code tb-exp-checks tb-parts tb-chk-pay-code 
+         rs-cash-pay tb-pay-desk bt-cash-pay tb-pay-desk-cards EDITOR-gds-grp 
+         RADIO-SET-gds-grp bt-sel-gds-grp v-text-goods 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -979,7 +1087,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE flt-load Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE flt-load Dialog-Frame 
 PROCEDURE flt-load :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1040,7 +1148,7 @@ on error undo, return error return-value
       with frame {&frame-name}.
     end.
     display
-      date_from
+      date_from    when not( p-output-type = 4 or p-output-type = 5)
       date_to
       tb-chk-pay-code
       tb-cst-code
@@ -1053,7 +1161,6 @@ on error undo, return error return-value
       tb-supp           when p-output-type = 2
     with frame {&frame-name}.
   end.
-
   if num-entries(v-list,';') = 2
   then do:
     assign
@@ -1073,6 +1180,7 @@ on error undo, return error return-value
         .
       end.
       run object-select in this-procedure .
+      if rs-1:visible then
       display
         rs-1
       with frame {&frame-name}.
@@ -1146,7 +1254,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE flt-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE flt-save Dialog-Frame 
 PROCEDURE flt-save :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1251,7 +1359,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-host-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-host-name Dialog-Frame 
 PROCEDURE get-host-name :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1294,7 +1402,7 @@ END PROCEDURE. /* get-host-name */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame 
 PROCEDURE init-fields :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1343,7 +1451,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-tb-chk-pay-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-tb-chk-pay-code Dialog-Frame 
 PROCEDURE manage-tb-chk-pay-code :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1372,7 +1480,7 @@ END PROCEDURE. /* manage-tb-chk-pay-code */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE object-select Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE object-select Dialog-Frame 
 PROCEDURE object-select :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1417,3 +1525,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

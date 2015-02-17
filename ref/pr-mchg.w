@@ -32,7 +32,7 @@ Creation date: 06/26/09
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-mode as character no-undo.
-/*может быть {&add-def} {&update}*/
+/*может быть {&add-def} {&update} {&lookup}*/
 define input parameter p-node-code like ub.gds-grp-obj.node-code no-undo.
 define input parameter  p-option as character no-undo.
 /*может быть {&company} {&g___object} "object-list":U */
@@ -1291,7 +1291,7 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   { gbl/getcntxt.i get }
-  if NOT (p-mode = {&add-def} or p-mode = {&update}) then do:
+    if NOT (p-mode = {&add-def} or p-mode = {&update} or p-mode = {&lookup}) then do:
     message
     vss-workfile vss-revision vss-description skip
     "Неверный параметр вызова p-mode" p-mode
@@ -2202,6 +2202,13 @@ CASE p-option:
                    AND buf_gds-grp-obj.obj-type = "":U
                    AND buf_gds-grp-obj.obj-code = 0.
         end. /*update*/
+        when {&lookup} then do:
+                    find first buf_gds-grp-obj exclusive-lock where
+                         buf_gds-grp-obj.node-code = p-node-code
+                   AND buf_gds-grp-obj.host-code = 0
+                   AND buf_gds-grp-obj.obj-type = "":U
+                   AND buf_gds-grp-obj.obj-code = 0.
+        end. /*{&lookup}*/
         END CASE. /*p-mode*/
     end. /*when global*/
     when {&company} then do:
@@ -2227,6 +2234,13 @@ CASE p-option:
                    AND buf_gds-grp-obj.obj-type = "":U
                    AND buf_gds-grp-obj.obj-code = 0.
         end. /*update*/
+        when {&lookup} then do:
+                    find first buf_gds-grp-obj exclusive-lock where
+                         buf_gds-grp-obj.node-code = p-node-code
+                   AND buf_gds-grp-obj.host-code = p-host-code
+                   AND buf_gds-grp-obj.obj-type = "":U
+                   AND buf_gds-grp-obj.obj-code = 0.
+        end. /*{&lookup}*/
         END CASE. /*p-mode*/
     end. /*when company*/
     when {&g___object} then do:
@@ -2252,6 +2266,13 @@ CASE p-option:
                    AND buf_gds-grp-obj.obj-type = p-obj-type
                    AND buf_gds-grp-obj.obj-code = p-obj-code.
         end. /*update*/
+        when {&lookup} then do:
+                    find first buf_gds-grp-obj exclusive-lock where
+                         buf_gds-grp-obj.node-code = p-node-code
+                   AND buf_gds-grp-obj.host-code = p-host-code
+                   AND buf_gds-grp-obj.obj-type = p-obj-type
+                   AND buf_gds-grp-obj.obj-code = p-obj-code.
+        end. /*{&lookup}*/
         END CASE. /*p-mode*/
     end. /*g___object*/
     when "object-list":U then do:
@@ -2475,6 +2496,14 @@ CASE p-mode:
 
 
     end.
+    when {&lookup} then do:
+        assign
+    RS-option:radio-buttons = "Глобально" + {&comma-char} + "global":U + {&comma-char} +
+                                            "Фирма" + {&comma-char} + {&company} + {&comma-char} +
+                                            "Объект" + {&comma-char} + {&g___object} .
+
+
+    end.
 END CASE.
 assign
 rs-option = p-option.
@@ -2522,6 +2551,60 @@ else do:
 BR-temp_obj-list
     in frame {&frame-name}.
 end.
+
+if p-mode = {&lookup} then do:
+    disable
+     B-exit 
+     B-Help 
+     BR-temp_obj-list 
+     RS-option 
+     fi-increase-pc 
+     n-marg 
+     fi-marg-min 
+     fi-marg-max 
+     S-round-method 
+     F-base 
+     fi-cli-type 
+     fi-cli-code 
+     r-cli 
+     fi-cli-name 
+     fi-notcorr 
+     fi-alc-min-price 
+     br-level-dis
+     n-marg-pr-paraf 
+     fi-marg-pr-paraf 
+     fi-grp-name 
+     n-increase-pc 
+     l-min 
+     l-max 
+     n-rmethod 
+     n-no-inc-auto-rep 
+     n-ban-sales-via-cd
+     n-income-cli 
+     n-notcorr 
+     n-alc-min-price 
+     n-level-dis 
+     l-income-cli 
+     l-marg 
+     l-marg-pr-paraf 
+     l-rmethod 
+     l-increase-pc 
+     l-notcorr 
+     l-alc-min-price 
+     l-level-dis 
+     B-add 
+     B-chg 
+     B-del  WITH FRAME Dialog-Frame.
+    hide  
+     l-income-cli 
+     l-marg 
+     l-marg-pr-paraf 
+     l-rmethod 
+     l-increase-pc 
+     l-notcorr 
+     l-alc-min-price 
+     l-level-dis  in frame {&frame-name}.
+end.        
 
   VIEW FRAME Dialog-Frame.
 

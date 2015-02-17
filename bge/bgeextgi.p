@@ -70,6 +70,7 @@ on error undo, return error
             run bge/cat-good.p (
                   input "good-ext":U
                 , input table temp_bge-xml_goods
+                , ""
             ) .
             { gbl/stopwork.i }
             message

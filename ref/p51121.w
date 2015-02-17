@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,11 +8,11 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER X_condition-keeping FOR ub.condition-keeping.
+DEFINE BUFFER X_condition-keeping FOR condition-keeping.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS DLGOKCAN
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS DLGOKCAN 
 /*------------------------------------------------------------------------
 
 $Revision$
@@ -61,6 +61,8 @@ define input-output parameter normal-wastage_ like ub.goods.normal-wastage no-un
 define input-output parameter normal-waste_ like ub.goods.normal-waste no-undo .
 define input-output parameter cond-keep-code_ like ub.goods.cond-keep-code no-undo .
 define input-output parameter proof_ like ub.goods.proof no-undo .
+define input-output parameter is-alc_ as logical no-undo .
+define input-output parameter alc-type-inner-code as integer no-undo .
 
 /* Local Variable Definitions ---                                       */
 
@@ -80,6 +82,8 @@ define variable vss-description as character no-undo init "Карточка товара - доп
 define variable rid-tnved as recid no-undo.
 define variable custvalue      as char initial ? no-undo.
 define variable custtype       as char initial ? no-undo.
+define variable alcvalue      as char initial ? no-undo.
+define variable alctype       as char initial ? no-undo.
 DEFINE VARIABLE old-frame-height AS DECIMAL NO-UNDO.
 DEFINE VARIABLE old-rect-height AS DECIMAL NO-UNDO.
 DEFINE VARIABLE v-expand AS logical NO-UNDO.
@@ -97,7 +101,7 @@ DEFINE BUFFER buf_units FOR ub.units.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -108,15 +112,16 @@ DEFINE BUFFER buf_units FOR ub.units.
 &Scoped-define FRAME-NAME DLGOKCAN
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit RECT-11 b-quit b-help G-Name P-Name ~
-P-Address TNVED r-tnved UNIT-CST CST-BASE-RATE g-unit-base r-cst ~
-NATIONALITY Destin Attrib UserRule Sert Struct DeadLine Sort proof ~
-normal-wastage normal-waste cond-keep-code r-cnd-keep struct-length ~
-l-struct
+&Scoped-Define ENABLED-OBJECTS b-exit RECT-11 RECT-12 b-quit b-help G-Name ~
+P-Name P-Address TNVED r-tnved UNIT-CST CST-BASE-RATE g-unit-base r-cst ~
+NATIONALITY Destin Attrib UserRule Sert Struct DeadLine Sort normal-wastage ~
+normal-waste cond-keep-code r-cnd-keep proof is-alc choose-alc-prod ~
+r-choose-alc-prod struct-length l-struct 
 &Scoped-Define DISPLAYED-OBJECTS G-Name P-Name P-Address TNVED tnved-name ~
 UNIT-CST CST-BASE-RATE g-unit-base NATIONALITY Destin Attrib UserRule Sert ~
-Struct DeadLine Sort proof normal-wastage normal-waste cond-keep-code ~
-struct-length l-struct cond-keep-name
+Struct DeadLine Sort normal-wastage normal-waste cond-keep-code proof ~
+is-alc choose-alc-prod struct-length l-struct cond-keep-name ~
+choose-alc-prod-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -131,186 +136,212 @@ struct-length l-struct cond-keep-name
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "Ввод":L
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "Ввод":L 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "&Помощь":L
+DEFINE BUTTON b-help 
+     LABEL "&Помощь":L 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена":L
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена":L 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON r-cnd-keep
+DEFINE BUTTON r-choose-alc-prod 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
-     SIZE 3 BY .87.
+     LABEL "" 
+     SIZE 3 BY .88.
 
-DEFINE BUTTON r-cst
+DEFINE BUTTON r-cnd-keep 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "r-cst"
-     SIZE 3 BY .87.
+     LABEL "" 
+     SIZE 3 BY .88.
 
-DEFINE BUTTON r-tnved
+DEFINE BUTTON r-cst 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "r-tnved"
-     SIZE 3 BY .87.
+     LABEL "r-cst" 
+     SIZE 3 BY .88.
 
-DEFINE VARIABLE NATIONALITY AS CHARACTER FORMAT "X(20)":U
-     LABEL "Статус товара (национальность)"
+DEFINE BUTTON r-tnved 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "r-tnved" 
+     SIZE 3 BY .88.
+
+DEFINE VARIABLE NATIONALITY AS CHARACTER FORMAT "X(20)":U 
+     LABEL "Статус товара (национальность)" 
      VIEW-AS COMBO-BOX INNER-LINES 2
-     LIST-ITEMS "Российский","Иностранный"
+     LIST-ITEMS "Российский","Иностранный" 
      DROP-DOWN-LIST
-     SIZE 37.3 BY 1
+     SIZE 37.25 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE Struct AS CHARACTER
+DEFINE VARIABLE Struct AS CHARACTER 
      VIEW-AS EDITOR MAX-CHARS 1000 SCROLLBAR-VERTICAL
-     SIZE 85 BY 3.43 NO-UNDO.
+     SIZE 85 BY 3.42 NO-UNDO.
 
-DEFINE VARIABLE Attrib AS CHARACTER FORMAT "X(100)":U
-     LABEL "Характеристики"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE Attrib AS CHARACTER FORMAT "X(100)":U 
+     LABEL "Характеристики" 
+     VIEW-AS FILL-IN 
      SIZE 55 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE cond-keep-code AS INTEGER FORMAT ">>9":U INITIAL 0
-     LABEL "Код усл. хран."
-     VIEW-AS FILL-IN
+DEFINE VARIABLE choose-alc-prod AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 0 
+     LABEL "Выбор вида алкогольной продукции" 
+     VIEW-AS FILL-IN 
+     SIZE 10.5 BY 1
+	   BGCOLOR 15 FGCOLOR 0  NO-UNDO.	
+
+DEFINE VARIABLE choose-alc-prod-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 43.5 BY 1.04 NO-UNDO.
+
+DEFINE VARIABLE cond-keep-code AS INTEGER FORMAT ">>9":U INITIAL 0 
+     LABEL "Код усл. хран." 
+     VIEW-AS FILL-IN 
      SIZE 5 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE cond-keep-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE cond-keep-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 44.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE CST-BASE-RATE AS DECIMAL FORMAT ">>,>>9.9999999999":U INITIAL 0
-     LABEL "Коэффициент"
-     VIEW-AS FILL-IN
-     SIZE 13.8 BY 1
+DEFINE VARIABLE CST-BASE-RATE AS DECIMAL FORMAT ">>,>>9.9999999999":U INITIAL 0 
+     LABEL "Коэффициент" 
+     VIEW-AS FILL-IN 
+     SIZE 13.75 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE DeadLine AS INTEGER FORMAT ">>>>>>>9":U INITIAL 0
-     LABEL "Срок хранения"
-     VIEW-AS FILL-IN
-     SIZE 9.8 BY .93
+DEFINE VARIABLE DeadLine AS INTEGER FORMAT ">>>>>>>9":U INITIAL 0 
+     LABEL "Срок хранения" 
+     VIEW-AS FILL-IN 
+     SIZE 9.75 BY .92
      BGCOLOR 12 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE Destin AS CHARACTER FORMAT "X(100)":U
-     LABEL "Назначение"
-     VIEW-AS FILL-IN
-     SIZE 57.6 BY 1
+DEFINE VARIABLE Destin AS CHARACTER FORMAT "X(100)":U 
+     LABEL "Назначение" 
+     VIEW-AS FILL-IN 
+     SIZE 57.63 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE G-Name AS CHARACTER FORMAT "X(100)":U
-     LABEL "Название товара"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE G-Name AS CHARACTER FORMAT "X(100)":U 
+     LABEL "Название товара" 
+     VIEW-AS FILL-IN 
      SIZE 53 BY 1
      BGCOLOR 8 FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE g-unit-base AS CHARACTER FORMAT "X(3)":U
-     LABEL "Учет.ед.изм"
-     VIEW-AS FILL-IN
-     SIZE 4.8 BY 1
+DEFINE VARIABLE g-unit-base AS CHARACTER FORMAT "X(3)":U 
+     LABEL "Учет.ед.изм" 
+     VIEW-AS FILL-IN 
+     SIZE 4.75 BY 1
      BGCOLOR 8 FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE l-struct AS CHARACTER FORMAT "X(256)":U INITIAL "Состав"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-struct AS CHARACTER FORMAT "X(256)":U INITIAL "Состав" 
+      VIEW-AS TEXT 
      SIZE 10 BY .67 NO-UNDO.
 
-DEFINE VARIABLE normal-wastage AS DECIMAL FORMAT "->9.99%":U INITIAL 0
-     LABEL "Норма ест. убыли"
-     VIEW-AS FILL-IN
-     SIZE 7.9 BY 1 NO-UNDO.
+DEFINE VARIABLE normal-wastage AS DECIMAL FORMAT "->9.99%":U INITIAL 0 
+     LABEL "Норма ест. убыли" 
+     VIEW-AS FILL-IN 
+     SIZE 7.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE normal-waste AS DECIMAL FORMAT "->9.99%":U INITIAL 0
-     LABEL "Норма отходов"
-     VIEW-AS FILL-IN
-     SIZE 7.9 BY 1 NO-UNDO.
+DEFINE VARIABLE normal-waste AS DECIMAL FORMAT "->9.99%":U INITIAL 0 
+     LABEL "Норма отходов" 
+     VIEW-AS FILL-IN 
+     SIZE 7.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE P-Address AS CHARACTER FORMAT "X(100)":U
-     LABEL "Адрес произв-ля"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE P-Address AS CHARACTER FORMAT "X(100)":U 
+     LABEL "Адрес произв-ля" 
+     VIEW-AS FILL-IN 
      SIZE 53 BY 1
      BGCOLOR 8 FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE P-Name AS CHARACTER FORMAT "X(100)":U
-     LABEL "Прозводитель"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE P-Name AS CHARACTER FORMAT "X(100)":U 
+     LABEL "Прозводитель" 
+     VIEW-AS FILL-IN 
      SIZE 53 BY 1
      BGCOLOR 8 FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE proof AS DECIMAL FORMAT ">9.99%":U INITIAL 0
-     LABEL "Алкоголь"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE proof AS DECIMAL FORMAT ">9.99%":U INITIAL 0 
+     LABEL "Алкоголь" 
+     VIEW-AS FILL-IN 
      SIZE 7.5 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE Sert AS CHARACTER FORMAT "X(100)":U
-     LABEL "Сертификат"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE Sert AS CHARACTER FORMAT "X(100)":U 
+     LABEL "Сертификат" 
+     VIEW-AS FILL-IN 
      SIZE 56.5 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE Sort AS CHARACTER FORMAT "X(30)":U
-     LABEL "Сорт/проба"
-     VIEW-AS FILL-IN
-     SIZE 10.3 BY 1
+DEFINE VARIABLE Sort AS CHARACTER FORMAT "X(30)":U 
+     LABEL "Сорт/проба" 
+     VIEW-AS FILL-IN 
+     SIZE 10.25 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE struct-length AS INTEGER FORMAT ">,>>9":U INITIAL 0
-     LABEL "Символов"
-      VIEW-AS TEXT
+DEFINE VARIABLE struct-length AS INTEGER FORMAT ">,>>9":U INITIAL 0 
+     LABEL "Символов" 
+      VIEW-AS TEXT 
      SIZE 6.5 BY .67
      FGCOLOR 12  NO-UNDO.
 
-DEFINE VARIABLE TNVED AS CHARACTER FORMAT "x(10)"
-     LABEL "Код ТНВЭД"
-     VIEW-AS FILL-IN
-     SIZE 11.9 BY 1
+DEFINE VARIABLE TNVED AS CHARACTER FORMAT "x(10)" 
+     LABEL "Код ТНВЭД" 
+     VIEW-AS FILL-IN 
+     SIZE 11.88 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE tnved-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 42.6 BY 1 NO-UNDO.
+DEFINE VARIABLE tnved-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 42.63 BY 1 NO-UNDO.
 
-DEFINE VARIABLE UNIT-CST AS CHARACTER FORMAT "X(3)":U
-     LABEL "Тамож.ед.изм"
-     VIEW-AS FILL-IN
-     SIZE 6.3 BY 1
+DEFINE VARIABLE UNIT-CST AS CHARACTER FORMAT "X(3)":U 
+     LABEL "Тамож.ед.изм" 
+     VIEW-AS FILL-IN 
+     SIZE 6.25 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE UserRule AS CHARACTER FORMAT "X(100)":U
-     LABEL "Правила экпл-ции"
-     VIEW-AS FILL-IN
-     SIZE 53.3 BY 1
+DEFINE VARIABLE UserRule AS CHARACTER FORMAT "X(100)":U 
+     LABEL "Правила экпл-ции" 
+     VIEW-AS FILL-IN 
+     SIZE 53.25 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
 DEFINE RECTANGLE RECT-10
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
      SIZE 97.5 BY 3.5
      BGCOLOR 8 FGCOLOR 0 .
 
 DEFINE RECTANGLE RECT-11
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
-     SIZE 97.5 BY 4.8
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
+     SIZE 97.5 BY 4.79
      BGCOLOR 0 FGCOLOR 0 .
 
+DEFINE RECTANGLE RECT-12
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
+     SIZE 97 BY 4.38.
+
 DEFINE RECTANGLE RECT-9
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
-     SIZE 97.5 BY 12.43
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
+     SIZE 97.5 BY 12.42
      BGCOLOR 0 FGCOLOR 0 .
+
+DEFINE VARIABLE is-alc AS LOGICAL INITIAL no 
+     LABEL "Алкогольная продукция" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 25 BY .83 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -319,46 +350,50 @@ DEFINE FRAME DLGOKCAN
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      b-help AT ROW 1 COL 95
-     G-Name AT ROW 2.47 COL 20 COLON-ALIGNED
+     G-Name AT ROW 2.46 COL 20 COLON-ALIGNED
      P-Name AT ROW 3.5 COL 20 COLON-ALIGNED
      P-Address AT ROW 4.5 COL 20 COLON-ALIGNED
      TNVED AT ROW 6.5 COL 14.5 COLON-ALIGNED
-     tnved-name AT ROW 6.53 COL 31.8 COLON-ALIGNED NO-LABEL
-     r-tnved AT ROW 6.63 COL 28.6
-     UNIT-CST AT ROW 7.93 COL 17.3 COLON-ALIGNED
-     CST-BASE-RATE AT ROW 7.97 COL 42.9 COLON-ALIGNED
-     g-unit-base AT ROW 7.97 COL 70.4 COLON-ALIGNED
-     r-cst AT ROW 8.03 COL 28.6
+     tnved-name AT ROW 6.54 COL 31.75 COLON-ALIGNED NO-LABEL
+     r-tnved AT ROW 6.63 COL 28.63
+     UNIT-CST AT ROW 7.92 COL 17.25 COLON-ALIGNED
+     CST-BASE-RATE AT ROW 7.96 COL 42.88 COLON-ALIGNED
+     g-unit-base AT ROW 7.96 COL 70.38 COLON-ALIGNED
+     r-cst AT ROW 8.04 COL 28.63
      NATIONALITY AT ROW 9.5 COL 36.5 COLON-ALIGNED
-     Destin AT ROW 11.43 COL 15.4 COLON-ALIGNED
+     Destin AT ROW 11.42 COL 15.38 COLON-ALIGNED
      Attrib AT ROW 12.67 COL 18 COLON-ALIGNED
-     UserRule AT ROW 13.93 COL 19.8 COLON-ALIGNED
+     UserRule AT ROW 13.92 COL 19.75 COLON-ALIGNED
      Sert AT ROW 15.17 COL 16.5 COLON-ALIGNED
-     Struct AT ROW 16.47 COL 13 NO-LABEL WIDGET-ID 2
-     DeadLine AT ROW 19.93 COL 39 COLON-ALIGNED
-     Sort AT ROW 19.93 COL 63.4 COLON-ALIGNED
-     proof AT ROW 19.93 COL 87 COLON-ALIGNED WIDGET-ID 6
-     normal-wastage AT ROW 21.13 COL 22.9 COLON-ALIGNED
-     normal-waste AT ROW 21.13 COL 50.1 COLON-ALIGNED
-     cond-keep-code AT ROW 22.27 COL 19 COLON-ALIGNED
-     r-cnd-keep AT ROW 22.27 COL 27
-     struct-length AT ROW 15.4 COL 90 COLON-ALIGNED WIDGET-ID 8
-     l-struct AT ROW 16.47 COL 2.5 NO-LABEL WIDGET-ID 4
-     cond-keep-name AT ROW 22.27 COL 30 COLON-ALIGNED NO-LABEL
+     Struct AT ROW 16.46 COL 13 NO-LABEL WIDGET-ID 2
+     DeadLine AT ROW 19.92 COL 39 COLON-ALIGNED
+     Sort AT ROW 19.92 COL 63.38 COLON-ALIGNED
+     normal-wastage AT ROW 21.13 COL 22.88 COLON-ALIGNED
+     normal-waste AT ROW 21.13 COL 50.13 COLON-ALIGNED
+     cond-keep-code AT ROW 22.25 COL 19 COLON-ALIGNED
+     r-cnd-keep AT ROW 22.25 COL 27
+     proof AT ROW 25 COL 64.13 COLON-ALIGNED WIDGET-ID 6
+     is-alc AT ROW 25.13 COL 6.13 WIDGET-ID 14
+     choose-alc-prod AT ROW 26.33 COL 38 COLON-ALIGNED WIDGET-ID 16
+     r-choose-alc-prod AT ROW 26.42 COL 51 WIDGET-ID 18
+     struct-length AT ROW 15.42 COL 90 COLON-ALIGNED WIDGET-ID 8
+     l-struct AT ROW 16.46 COL 2.5 NO-LABEL WIDGET-ID 4
+     cond-keep-name AT ROW 22.25 COL 30 COLON-ALIGNED NO-LABEL
+     choose-alc-prod-name AT ROW 26.29 COL 52.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
      "Таможенные характеристики" VIEW-AS TEXT
-          SIZE 25.8 BY .7 AT ROW 5.77 COL 27
-          BGCOLOR 3 FGCOLOR 14
-     "(Комплектность)" VIEW-AS TEXT
-          SIZE 11 BY 1 AT ROW 17.53 COL 2
-          FONT 4
-     RECT-10 AT ROW 2.2 COL 1.5
+          SIZE 25.75 BY .71 AT ROW 5.75 COL 27
+          BGCOLOR 3 FGCOLOR 14 
+     "Атрибуты алкогольной продукции" VIEW-AS TEXT
+          SIZE 30.63 BY .67 AT ROW 23.5 COL 31.38 WIDGET-ID 12
+     RECT-10 AT ROW 2.21 COL 1.5
      RECT-11 AT ROW 6 COL 1.5
      RECT-9 AT ROW 11 COL 1.5
-     SPACE(0.09) SKIP(0.16)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS THREE-D  SCROLLABLE
-         BGCOLOR 8 FGCOLOR 0
-         TITLE BGCOLOR 8 FGCOLOR 1 "Атрибуты товара по ГОСТ Р 51121-97":L
+     RECT-12 AT ROW 23.63 COL 1.88 WIDGET-ID 10
+     SPACE(0.24) SKIP(0.27)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS THREE-D  SCROLLABLE 
+         BGCOLOR 8 FGCOLOR 0 
+         TITLE BGCOLOR 8 FGCOLOR 1 "Доп.инфо по карточке товара":L
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
 
@@ -380,18 +415,24 @@ DEFINE FRAME DLGOKCAN
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX DLGOKCAN
    FRAME-NAME UNDERLINE                                                 */
-ASSIGN
+ASSIGN 
        FRAME DLGOKCAN:SCROLLABLE       = FALSE.
 
+/* SETTINGS FOR FILL-IN choose-alc-prod-name IN FRAME DLGOKCAN
+   NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN cond-keep-name IN FRAME DLGOKCAN
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN l-struct IN FRAME DLGOKCAN
    ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN proof IN FRAME DLGOKCAN
+   NO-ENABLE                                                            */
+ASSIGN 
+       proof:HIDDEN IN FRAME DLGOKCAN           = TRUE.
 /* SETTINGS FOR RECTANGLE RECT-10 IN FRAME DLGOKCAN
    NO-ENABLE                                                            */
 /* SETTINGS FOR RECTANGLE RECT-9 IN FRAME DLGOKCAN
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        Struct:RETURN-INSERTED IN FRAME DLGOKCAN  = TRUE.
 
 /* SETTINGS FOR FILL-IN tnved-name IN FRAME DLGOKCAN
@@ -399,7 +440,7 @@ ASSIGN
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -416,9 +457,21 @@ define variable loc#log as log no-undo .
   ASSIGN
   Struct_ = Struct:screen-value
   .
+  if is-alc = true and (choose-alc-prod-name = ? or choose-alc-prod-name = "") then do:
+     message 
+     "Не выбран вид алкогольной продукции"
+     VIEW-AS ALERT-BOX .
+     RETURN NO-APPLY. 
+  end.   
 assign
 Destin    Attrib    UserRule    Sert        /* ProdDate */   DeadLine    Sort    Proof
 TNVED UNIT-CST CST-BASE-RATE NATIONALITY normal-wastage normal-waste cond-keep-code.
+  if is-alc = true and proof = 0 then do:
+     message 
+     "Не указан % содержания алкоголя"
+     VIEW-AS ALERT-BOX .
+     RETURN NO-APPLY. 
+  end.  
 assign
   destin_ = Destin
   attrib_ = Attrib
@@ -434,6 +487,7 @@ assign
   nationality_ = NATIONALITY
   normal-waste_ = normal-waste
   cond-keep-code_ = cond-keep-code
+  is-alc_ = is-alc
   .
   if normal-wastage <> normal-wastage_ then do:
     assign
@@ -460,6 +514,34 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME choose-alc-prod
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL choose-alc-prod DLGOKCAN
+ON LEAVE OF choose-alc-prod IN FRAME DLGOKCAN /* Выбор вида алкогольной продукции */
+DO:
+  FIND FIRST ub.alc-type WHERE ub.alc-type.alc-type-code = choose-alc-prod:SCREEN-VALUE NO-LOCK NO-error.
+    if not available ub.alc-type then do:
+            ASSIGN 
+                choose-alc-prod = ?
+                choose-alc-prod:SCREEN-VALUE = ?.
+    end.
+            
+    else do:
+        DISPLAY ub.alc-type.alc-type-code @ choose-alc-prod with frame {&frame-name}.
+        DISPLAY ub.alc-type.alc-type-name @ choose-alc-prod-name with frame {&frame-name}.
+    end.         
+         assign 
+         choose-alc-prod
+         choose-alc-prod-name
+         alc-type-inner-code = ub.alc-type.alc-type-inner-code 
+         .
+end.
+
+
+
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME cond-keep-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cond-keep-code DLGOKCAN
 ON LEAVE OF cond-keep-code IN FRAME DLGOKCAN /* Код усл. хран. */
@@ -483,6 +565,38 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME is-alc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL is-alc DLGOKCAN
+ON VALUE-CHANGED OF is-alc IN FRAME DLGOKCAN /* Алкогольная продукция */
+DO:
+  IF is-alc:checked and alcvalue = "yes" then do:
+  if mode <> {&lookup} and alcvalue = "yes" then
+  enable choose-alc-prod
+         r-choose-alc-prod
+         proof
+         choose-alc-prod-name
+         with frame {&frame-name}   
+  .
+  else
+  display choose-alc-prod
+          r-choose-alc-prod
+          proof
+          choose-alc-prod-name
+          with frame {&frame-name}
+          .
+  end.
+  else hide
+         choose-alc-prod
+         r-choose-alc-prod
+         proof
+         choose-alc-prod-name
+         in frame {&frame-name} 
+  .
+  assign is-alc.      
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 &Scoped-define SELF-NAME normal-wastage
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL normal-wastage DLGOKCAN
 ON ENTRY OF normal-wastage IN FRAME DLGOKCAN /* Норма ест. убыли */
@@ -495,9 +609,11 @@ END.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL normal-wastage DLGOKCAN
-ON LEAVE OF normal-wastage IN FRAME DLGOKCAN /* Норма ест. убыли */
+&Scoped-define SELF-NAME r-choose-alc-prod
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-choose-alc-prod DLGOKCAN
+ON CHOOSE OF r-choose-alc-prod IN FRAME DLGOKCAN
 DO:
+  run ch-choose-alc-prod in this-procedure .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -613,7 +729,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK DLGOKCAN
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK DLGOKCAN 
 
 
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
@@ -649,6 +765,7 @@ NATIONALITY = nationality_
 normal-wastage = normal-wastage_
 normal-waste = normal-waste_
 cond-keep-code = cond-keep-code_
+is-alc = is-alc_
 .
 
 /* Now enable the interface and wait for the exit condition.            */
@@ -675,7 +792,39 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ch-tnved DLGOKCAN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ch-choose-alc-prod DLGOKCAN 
+PROCEDURE ch-choose-alc-prod :                      /*вызов справочника вида влкогольной продукции*/
+define variable v-rec as char no-undo .
+define variable v-ok  as logical no-undo .
+
+run ref/alc-type.w (
+          input parparentproc
+          , input 'b-sel':U /*bttns*/
+          , input-output v-rec
+          , output v-ok ).
+   
+if v-rec = ? then  do:
+  apply "entry" to r-choose-alc-prod in frame {&frame-name}.
+  return error.
+end.
+FIND ub.alc-type WHERE recid (alc-type) = int(v-rec) no-error.
+if available ub.alc-type then do:
+    DISPLAY ub.alc-type.alc-type-code @ choose-alc-prod with frame {&frame-name}.
+    DISPLAY ub.alc-type.alc-type-name @ choose-alc-prod-name with frame {&frame-name}.
+    assign 
+        choose-alc-prod
+        choose-alc-prod-name
+        alc-type-inner-code = ub.alc-type.alc-type-inner-code 
+        
+    .
+end.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ch-tnved DLGOKCAN 
 PROCEDURE ch-tnved :
 run ref/t-tnved.w (yes, output rid-tnved).
 find first tt-tnved where RECID(tt-tnved) = rid-tnved no-lock no-error.
@@ -687,7 +836,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ch-units DLGOKCAN
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ch-units DLGOKCAN 
 PROCEDURE ch-units :
 define variable v-rec as recid no-undo .
 run ref/units.w (
@@ -720,7 +869,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -731,13 +880,13 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI DLGOKCAN
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI DLGOKCAN 
 PROCEDURE enable_UI :
 define variable v-scales-type as character no-undo .
 define variable v-ii as integer no-undo .
 v-tab-order = 'b-ezit,b-quit,b-help,g-name,p-name,p-address,tnved,r-tnved,tnved-name,unit-cst,' +
                'r-cst,cst-base-rate,nationality,destin,attrib,userrule,sert,struct,' +
-               'deadline,sort,proof,normal-wastage,normal-waste,cond-keep-code,r-cnd-keep'.
+               'deadline,sort,is-alc,proof,choose-alc-prod,normal-wastage,normal-waste,cond-keep-code,r-cnd-keep'.
 
 IF goods-unit-base <> '':U THEN DO:
   FIND FIRST buf_units NO-LOCK WHERE
@@ -750,7 +899,7 @@ DISPLAY
 TNVED UNIT-CST CST-BASE-RATE r-cst g-unit-base
 Destin Attrib UserRule Sert l-struct Struct /* ProdDate */ DeadLine Sort Proof
 UNIT-CST CST-BASE-RATE TNVED
-G-Name P-Name P-Address NATIONALITY normal-wastage normal-waste cond-keep-code
+G-Name P-Name P-Address NATIONALITY normal-wastage normal-waste cond-keep-code is-alc choose-alc-prod
 WITH FRAME {&frame-name} .
 { gbl/conf-rd.i
 "'is-custm'"
@@ -784,6 +933,39 @@ THEN DO:
       WITH FRAME {&FRAME-NAME}.
   END.
 END.
+{ gbl/conf-rd.i
+"'alcohol'"
+0
+"''"
+0
+"''"
+"''"
+"''"
+no
+alcvalue
+alctype
+no-error
+}
+
+if alcvalue = "yes" then do:
+  display is-alc with frame {&FRAME-NAME}.
+end.
+if alc-type-inner-code >= 0 and alc-type-inner-code <> ?
+then do:
+  find first ub.alc-type no-lock where
+  ub.alc-type.alc-type-inner-code = alc-type-inner-code no-error.
+  if available ub.alc-type then do:
+    assign 
+        choose-alc-prod = integer (ub.alc-type.alc-type-code)
+        choose-alc-prod-name = ub.alc-type.alc-type-name
+        .
+        
+    DISPLAY 
+    choose-alc-prod
+    choose-alc-prod-name with frame {&frame-name}.
+    
+  end. 
+end.
 
 ENABLE
 TNVED when mode <> {&lookup} and custvalue = "yes"
@@ -798,6 +980,8 @@ Sert when mode <> {&lookup}
 Struct
 r-cnd-keep when mode <> {&lookup}
 cond-keep-code WHEN mode <> {&LOOKUP}
+is-alc WHEN mode <> {&LOOKUP} and alcvalue = "yes"
+choose-alc-prod when mode <> {&LOOKUP} and alcvalue = "yes"
 /*
 ProdDate when mode <> {&lookup}
 */
@@ -809,6 +993,7 @@ normal-wastage when mode <> {&lookup}
 normal-waste when mode <> {&lookup}
 b-help b-exit b-quit
 WITH FRAME {&frame-name} .
+apply "VALUE-CHANGED":U to is-alc.
 IF mode = {&LOOKUP} THEN DO:
   struct:READ-ONLY IN FRAME {&FRAME-NAME} = YES.
 END.
@@ -819,7 +1004,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-cond-keep-code DLGOKCAN
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-cond-keep-code DLGOKCAN 
 PROCEDURE proc-b-cond-keep-code :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -878,7 +1063,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-leave-cond-keep-code DLGOKCAN
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-leave-cond-keep-code DLGOKCAN 
 PROCEDURE proc-leave-cond-keep-code :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -949,3 +1134,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
