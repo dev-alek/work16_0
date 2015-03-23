@@ -129,7 +129,7 @@ str/cont-spec-slave.i
 
 define new shared buffer temp-trn-doc for gds-list-flt  .
 define variable r-2 as integer   no-undo init 1 .
-
+define variable v-mark-seq as integer no-undo.
 define variable p-bcode as character no-undo .
 define variable p-prod as character no-undo .
 define variable p-grp as character no-undo .
@@ -145,6 +145,7 @@ release gds-list-flt .
 
 define temp-table temp-conn no-undo
 field ri  as  recid
+field mark-seq as integer
 index pi  is primary   ri
 .
 
@@ -700,6 +701,8 @@ DO:
     assign
       temp-conn.ri = recid( buf_contract-specif )
       mark-num = mark-num + 1
+      v-mark-seq = v-mark-seq + 1 
+    temp-conn.mark-seq = v-mark-seq
     .
     GET next spec-List NO-LOCK .
   end.
@@ -1285,6 +1288,7 @@ DO:
     assign
       temp-conn.ri = recid( buf_contract-specif )
       mark-num = mark-num + 1
+      v-mark-seq = v-mark-seq + 1
     .
   end.
   g-log = spec-List:refresh() .
@@ -1404,7 +1408,7 @@ END.
 ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор */
 DO:
   rid-list = "".
-  for each temp-conn :
+  for each temp-conn by temp-conn.mark-seq :
     rid-list = rid-list + ( if rid-list = "":U then "":U else {&comma-char} ) + string(temp-conn.ri).
   end.
 
