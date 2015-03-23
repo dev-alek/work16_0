@@ -50,6 +50,9 @@ CASE List-sort:
   when "b-code":U then do:
     run gds-list-b-code in this-procedure .
   end.
+    when "gds-name":U then do:
+    run gds-list-gds-name in this-procedure .
+  end.
   when "order-num":U then do:
     run gds-list-order-num in this-procedure .
   end.
@@ -80,6 +83,17 @@ procedure gds-list-b-code :
   end.
 
 end procedure. /* gds-list-b-code */
+procedure gds-list-gds-name :
+
+  do
+  on error undo, return error
+  :
+
+    { rep/tick-lst.i gds-list gds-name }
+
+  end.
+
+end procedure. /* gds-list-gds-name */
 
 procedure gds-list-order-num :
 
