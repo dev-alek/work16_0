@@ -1,11 +1,11 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -51,9 +51,11 @@ define variable vss-description as character no-undo init "Справочник групп прав
 { str/actntw.i   }
 { gbl/onewin.i   }
 { gbl/color.i    }
+{gbl/waitfram.i}
+{ gbl/prn-lib.i "new shared" }
 
 /* Local Variable Definitions ---                                       */
-
+define stream OutStr-html.
 define variable v-current-db-num              as integer   no-undo .
 define variable v-can-edit-action-role        as logical   no-undo .
 define variable v-current-db-num-screen-value as character no-undo .
@@ -94,7 +96,7 @@ define temp-table temp_filter-fields-item no-undo
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -110,8 +112,8 @@ define temp-table temp_filter-fields-item no-undo
 action-group action-role-item action-role temp_filter-fields
 
 /* Definitions for BROWSE browse-action-item                            */
-&Scoped-define FIELDS-IN-QUERY-browse-action-item action-group.action-group-name action-item.action-item-name action-item.action-item-id
-&Scoped-define ENABLED-FIELDS-IN-QUERY-browse-action-item
+&Scoped-define FIELDS-IN-QUERY-browse-action-item action-group.action-group-name action-item.action-item-name action-item.action-item-id   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-browse-action-item   
 &Scoped-define SELF-NAME browse-action-item
 &Scoped-define OPEN-QUERY-browse-action-item /* OPEN QUERY {&SELF-NAME} FOR EACH action-item, ~
        FIRST temp_filter-fields-item, ~
@@ -126,8 +128,8 @@ temp_filter-fields-item action-group action-role-item
 
 
 /* Definitions for BROWSE browse-action-role                            */
-&Scoped-define FIELDS-IN-QUERY-browse-action-role mark-string(recid(action-role), p-rid-list) @ v-action-role-select get-action-role-context(BUFFER action-role) @ v-action-role-context action-role.action-role-name action-role.action-role-description
-&Scoped-define ENABLED-FIELDS-IN-QUERY-browse-action-role
+&Scoped-define FIELDS-IN-QUERY-browse-action-role mark-string(recid(action-role), p-rid-list) @ v-action-role-select get-action-role-context(BUFFER action-role) @ v-action-role-context action-role.action-role-name action-role.action-role-description   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-browse-action-role   
 &Scoped-define SELF-NAME browse-action-role
 &Scoped-define OPEN-QUERY-browse-action-role /* OPEN QUERY {&SELF-NAME} FOR EACH action-role, ~
        FIRST temp_filter-fields. */ RUN refresh-query-action-role IN THIS-PROCEDURE .
@@ -143,12 +145,12 @@ temp_filter-fields
     ~{&OPEN-QUERY-browse-action-role}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-quit b-sel b-help rs-scope b-mark b-add ~
-b-chg b-del b-toggle b-users b-filter-role v-filter-role ~
+&Scoped-Define ENABLED-OBJECTS b-quit b-sel b-help rs-scope b-print b-mark ~
+b-add b-chg b-del b-toggle b-users b-filter-role v-filter-role ~
 b-filter-item v-filter-item browse-action-role browse-action-item ~
-role-editor item-EDITOR
+role-editor item-EDITOR 
 &Scoped-Define DISPLAYED-OBJECTS rs-scope v-filter-role tb-filter-role ~
-v-filter-item tb-filter-item role-editor item-EDITOR
+v-filter-item tb-filter-item role-editor item-EDITOR 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -159,14 +161,14 @@ v-filter-item tb-filter-item role-editor item-EDITOR
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action-role-context Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action-role-context Dialog-Frame 
 FUNCTION get-action-role-context RETURNS CHARACTER
   ( BUFFER buf_action-role FOR action-role )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action-role-item-state Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action-role-item-state Dialog-Frame 
 FUNCTION get-action-role-item-state RETURNS CHARACTER
   ( BUFFER buf_action-item FOR action-item )  FORWARD.
 
@@ -179,113 +181,117 @@ FUNCTION get-action-role-item-state RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить"
+DEFINE BUTTON b-add 
+     LABEL "&Добавить" 
      SIZE 9 BY 1 TOOLTIP "Добавить группу прав".
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 9 BY 1 TOOLTIP "Изменить группу прав".
 
-DEFINE BUTTON b-del
-     LABEL "&Удалить"
+DEFINE BUTTON b-del 
+     LABEL "&Удалить" 
      SIZE 9 BY 1 TOOLTIP "Удалить группу прав".
 
-DEFINE BUTTON b-filter-item DEFAULT
-     LABEL "&ФПоиск"
+DEFINE BUTTON b-filter-item DEFAULT 
+     LABEL "&ФПоиск" 
      SIZE 10 BY 1 TOOLTIP "Поиск с фильтром строки во всех текстовых полях"
      BGCOLOR 8 .
 
-DEFINE BUTTON b-filter-role
-     LABEL "Ф&Поиск"
+DEFINE BUTTON b-filter-role 
+     LABEL "Ф&Поиск" 
      SIZE 10 BY 1 TOOLTIP "Поиск с фильтрацией строки во всех текстовых полях формы".
 
-DEFINE BUTTON b-help
-     LABEL "&Помощь"
+DEFINE BUTTON b-help 
+     LABEL "&Помощь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-mark
-     LABEL "&*"
+DEFINE BUTTON b-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-print 
+     LABEL "Печать" 
+     SIZE 9.6 BY .95.
+
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&брать"
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&брать" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-set-current-db
-     LABEL "Тек"
+DEFINE BUTTON b-set-current-db 
+     LABEL "Тек" 
      SIZE 5 BY 1 TOOLTIP "Выбрать текущую базу данных".
 
-DEFINE BUTTON b-toggle
-     LABEL "&Права"
+DEFINE BUTTON b-toggle 
+     LABEL "&Права" 
      SIZE 10 BY 1 TOOLTIP "Изменить список прав, привязанных к группе".
 
-DEFINE BUTTON b-users
-     LABEL "&Польз"
+DEFINE BUTTON b-users 
+     LABEL "&Польз" 
      SIZE 9 BY 1 TOOLTIP "Список пользователей с выбранной группой прав".
 
-DEFINE VARIABLE cb-db AS CHARACTER FORMAT "X(256)":U
-     LABEL "БД"
+DEFINE VARIABLE cb-db AS CHARACTER FORMAT "X(256)":U 
+     LABEL "БД" 
      VIEW-AS COMBO-BOX INNER-LINES 5
-     LIST-ITEMS "Item 1"
+     LIST-ITEMS "Item 1" 
      DROP-DOWN-LIST
-     SIZE 12.5 BY 1 NO-UNDO.
+     SIZE 12.6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE item-EDITOR AS CHARACTER
+DEFINE VARIABLE item-EDITOR AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 58 BY 1.58 TOOLTIP "описание права"
+     SIZE 58 BY 1.57 TOOLTIP "описание права"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE role-editor AS CHARACTER
+DEFINE VARIABLE role-editor AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 39.5 BY 1.58 TOOLTIP "Описание группы"
+     SIZE 39.6 BY 1.57 TOOLTIP "Описание группы"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE v-filter-item AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 20.75 BY 1 NO-UNDO.
+DEFINE VARIABLE v-filter-item AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 20.8 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-filter-role AS CHARACTER FORMAT "X(40)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-filter-role AS CHARACTER FORMAT "X(40)":U 
+     VIEW-AS FILL-IN 
      SIZE 25 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE rs-scope AS INTEGER
+DEFINE VARIABLE rs-scope AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", 1,
 "Без привязки", 2,
 "Фирма", 3,
 "Объект", 4
-     SIZE 40.5 BY .75
+     SIZE 40.6 BY .76
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE tb-filter-item AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE tb-filter-item AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 2.63 BY .79 TOOLTIP "Снятие поиска с фильтром" NO-UNDO.
+     SIZE 2.6 BY .81 TOOLTIP "Снятие поиска с фильтром" NO-UNDO.
 
-DEFINE VARIABLE tb-filter-role AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE tb-filter-role AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 2.5 BY .83 TOOLTIP "Временно отключить фильтрацию" NO-UNDO.
+     SIZE 2.6 BY .81 TOOLTIP "Временно отключить фильтрацию" NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY browse-action-item FOR
-      action-item,
-      temp_filter-fields-item,
-      action-group,
+DEFINE QUERY browse-action-item FOR 
+      action-item, 
+      temp_filter-fields-item, 
+      action-group, 
       action-role-item SCROLLING.
 
-DEFINE QUERY browse-action-role FOR
-      action-role,
+DEFINE QUERY browse-action-role FOR 
+      action-role, 
       temp_filter-fields SCROLLING.
 &ANALYZE-RESUME
 
@@ -298,7 +304,7 @@ DEFINE BROWSE browse-action-item
          action-item.action-item-id column-label "Идентификатор"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 58 BY 16.75.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 58 BY 16.76.
 
 DEFINE BROWSE browse-action-role
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS browse-action-role Dialog-Frame _FREEFORM
@@ -309,7 +315,7 @@ DEFINE BROWSE browse-action-role
      action-role.action-role-description
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 39.5 BY 16.75 ROW-HEIGHT-CHARS .53.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 39.6 BY 16.76 ROW-HEIGHT-CHARS .53.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -317,10 +323,11 @@ DEFINE BROWSE browse-action-role
 DEFINE FRAME Dialog-Frame
      b-quit AT ROW 1 COL 1
      b-sel AT ROW 1 COL 11 WIDGET-ID 16
-     cb-db AT ROW 1 COL 68.5 COLON-ALIGNED WIDGET-ID 2
+     cb-db AT ROW 1 COL 68.6 COLON-ALIGNED WIDGET-ID 2
      b-set-current-db AT ROW 1 COL 83 WIDGET-ID 4
-     b-help AT ROW 1 COL 89.63
-     rs-scope AT ROW 1.25 COL 23.5 NO-LABEL WIDGET-ID 42
+     b-help AT ROW 1 COL 89.6
+     rs-scope AT ROW 1.24 COL 23.6 NO-LABEL WIDGET-ID 42
+     b-print AT ROW 1.95 COL 90 WIDGET-ID 70
      b-mark AT ROW 2 COL 1 WIDGET-ID 14
      b-add AT ROW 2 COL 4 WIDGET-ID 6
      b-chg AT ROW 2 COL 13 WIDGET-ID 10
@@ -328,18 +335,18 @@ DEFINE FRAME Dialog-Frame
      b-toggle AT ROW 2 COL 31 WIDGET-ID 12
      b-users AT ROW 2 COL 41 WIDGET-ID 48
      b-filter-role AT ROW 3 COL 1 WIDGET-ID 24
-     v-filter-role AT ROW 3 COL 10 COLON-ALIGNED NO-LABEL WIDGET-ID 28 NO-TAB-STOP
+     v-filter-role AT ROW 3 COL 10 COLON-ALIGNED NO-LABEL WIDGET-ID 28 NO-TAB-STOP 
      tb-filter-role AT ROW 3 COL 38 WIDGET-ID 52
-     b-filter-item AT ROW 3 COL 63.5 WIDGET-ID 64 NO-TAB-STOP
-     v-filter-item AT ROW 3 COL 71.75 COLON-ALIGNED NO-LABEL WIDGET-ID 66
-     tb-filter-item AT ROW 3 COL 95.5 WIDGET-ID 68
-     browse-action-role AT ROW 4.25 COL 1 WIDGET-ID 200
-     browse-action-item AT ROW 4.25 COL 41.5 WIDGET-ID 300
-     role-editor AT ROW 21.25 COL 1 NO-LABEL WIDGET-ID 20
-     item-EDITOR AT ROW 21.25 COL 41.5 NO-LABEL WIDGET-ID 22
-     SPACE(0.13) SKIP(0.27)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     b-filter-item AT ROW 3 COL 63.6 WIDGET-ID 64 NO-TAB-STOP 
+     v-filter-item AT ROW 3 COL 71.8 COLON-ALIGNED NO-LABEL WIDGET-ID 66
+     tb-filter-item AT ROW 3 COL 95.6 WIDGET-ID 68
+     browse-action-role AT ROW 4.24 COL 1 WIDGET-ID 200
+     browse-action-item AT ROW 4.24 COL 41.6 WIDGET-ID 300
+     role-editor AT ROW 21.24 COL 1 NO-LABEL WIDGET-ID 20
+     item-EDITOR AT ROW 21.24 COL 41.6 NO-LABEL WIDGET-ID 22
+     SPACE(0.03) SKIP(0.28)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Группы прав"
          DEFAULT-BUTTON b-quit CANCEL-BUTTON b-quit WIDGET-ID 100.
 
@@ -362,34 +369,34 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB browse-action-role tb-filter-item Dialog-Frame */
 /* BROWSE-TAB browse-action-item browse-action-role Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* SETTINGS FOR BUTTON b-set-current-db IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        b-set-current-db:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* SETTINGS FOR COMBO-BOX cb-db IN FRAME Dialog-Frame
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        cb-db:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
-ASSIGN
+ASSIGN 
        item-EDITOR:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
-ASSIGN
+ASSIGN 
        role-editor:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR TOGGLE-BOX tb-filter-item IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* SETTINGS FOR TOGGLE-BOX tb-filter-role IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        v-filter-item:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
-ASSIGN
+ASSIGN 
        v-filter-role:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -418,7 +425,7 @@ RUN refresh-query-action-role IN THIS-PROCEDURE .
 */  /* BROWSE browse-action-role */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -597,7 +604,6 @@ END.
 &ANALYZE-RESUME
 
 
-
 &Scoped-define SELF-NAME b-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark Dialog-Frame
 ON CHOOSE OF b-mark IN FRAME Dialog-Frame /* * */
@@ -624,6 +630,194 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
+ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
+DO:
+    
+
+        def var v-prn-ff as char no-undo.
+        v-prn-ff = session:temp-directory + {&DF_Name} +  "actnrole.html".
+
+        run waitfram-show in this-procedure ( input "Ждите...").
+        output stream OutStr-html to value(v-prn-ff) convert target 'UTF-8'/*no-convert*/.
+     
+        put stream outstr-html unformatted 
+            substitute(
+              
+            '<!doctype html>
+            <html>
+              <head>
+              <meta charset="UTF-8">
+                  <!-- Стили документа -->
+              <style>
+                   table ~{
+                       border-collapse: collapse;
+                       width: 1400px;  
+                   ~}
+                   tbody td, th ~{
+                       border: 1px solid black;
+                       border-collapse: collapse;
+                 height: 5px;
+                   ~}
+          
+              </style>
+               </head>
+                    <body>
+                  <table orientation="landscape" name="Группы прав" fit_to_page="true" > 
+                    <thead> 
+                   <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                <tr class="set_columns">                       
+                <td style="width:250px"></td>
+                        
+                       <td style="width:250px"></td>
+                        <td style="width:250px"></td>
+                            
+        
+                 </tr>
+        <tr>
+            <td colspan="2" style="front-weight: bold; text-align: center;">Список групп прав</td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr>
+        <th>Привязка</th>
+        <th>Наименование</th>
+       
+        </tr>'  ). 
+        
+        get first browse-action-role.     
+        do while available action-role:    
+            
+            for each  action-role-item no-lock
+                where action-role-item.db-num           = action-role.db-num
+                and action-role-item.action-head-code = action-role.action-head-code
+                and action-role-item.action-role-code = action-role.action-role-code:
+          
+ 
+                put stream OutStr-html unformatted
+                    substitute(
+    
+                    '<tr style="height: 50px;">
+                  <td text_wrap="true"> &1 </td>
+                   <td text_wrap="true"> &2 </td> 
+                   </tr> ', 
+     
+                    get-action-role-context(BUFFER action-role),
+                    action-role.action-role-name
+                    ).  
+            end.
+
+            get next browse-action-role. 
+        end. 
+        put stream OutStr-html unformatted
+            substitute('
+            </table>'
+            ,chr(123), chr(125)).
+
+    
+        put stream OutStr-html unformatted
+            substitute(
+                                            
+            '  <table orientation="landscape" name="Списки прав" fit_to_page="true"> 
+                    <thead> 
+                   <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                <tr class="set_columns">                       
+                <td style="width:250px"></td>
+                        
+                       <td style="width:250px"></td>
+                        <td style="width:250px"></td>
+                        <td style="width:250px"></td>  
+                        <td style="width:250px"></td>              
+       
+                 </tr>
+        <tr>
+            <td colspan="4" style="front-weight: bold; text-align: center;">Список прав</td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr>
+        <th>Привязка</th>
+        <th>Название группы прав</th>
+        <th>Тема</th>
+        <th>Имя права</th>
+        </tr>').
+   
+        get first browse-action-role.     
+        do while available action-role:    
+            
+            for each  action-role-item no-lock
+                where action-role-item.db-num           = action-role.db-num
+                and action-role-item.action-head-code = action-role.action-head-code
+                and action-role-item.action-role-code = action-role.action-role-code
+                ,
+                FIRST action-item  where action-role-item.action-item-code = action-item.action-item-code
+                NO-LOCK
+                ,
+                FIRST temp_filter-fields-item
+                WHERE temp_filter-fields-item.action-item-code = action-item.action-item-code
+                and (    temp_filter-fields-item.record-on = YES
+                or tb-filter-item = no
+                )
+                NO-LOCK 
+                ,
+                FIRST action-group  where action-group.action-head-code  = action-item.action-head-code
+                and action-group.action-group-id = action-item.action-group-id no-lock  
+                /*       by action-item.action-head-code     */
+                /*        by  action-group.action-group-name */
+                /*        by  action-item.action-item-context*/
+                /*        by  action-item.action-group-id    */
+                /*         by action-item.action-item-name  */:
+                put stream OutStr-html unformatted
+                    substitute(
+          
+          
+                    '<tr style="height: 50px;">
+                  <td text_wrap="true"> &1 </td>
+                   <td text_wrap="true"> &2 </td>
+                   <td text_wrap="true"> &3 </td>
+                   <td text_wrap="true"> &4 </td>
+                   </tr>
+                    
+                    ',
+     
+                    get-action-role-context(BUFFER action-role),
+                    action-role.action-role-name,
+                    action-group.action-group-name,
+                    action-item.action-item-name
+                    ).
+                put stream outstr-html unformatted
+                    substitute(
+       
+                    '</tbody>
+      </body>
+      </html>',chr(123), chr(125)
+      
+                    ).
+            end.
+     
+            get next browse-action-role.
+        end.
+        run waitfram-hide in this-procedure. 
+  
+    
+        output stream OutStr-html close.  
+
+        run prn-lib-reportviewer-report-name in this-procedure (
+            input parParentProc
+            ,input v-prn-ff
+            ).
+     
+    end.
+  /* new trigger */  
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 
 &Scoped-define SELF-NAME b-quit
@@ -894,7 +1088,7 @@ END.
 &Scoped-define BROWSE-NAME browse-action-item
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -968,7 +1162,129 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-filter-mark-item Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-gds-grp Dialog-Frame 
+PROCEDURE add-gds-grp :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define input parameter p-gds-list as character        no-undo.
+
+define buffer buf_action-role-item-gds-grp      for ub.action-role-item-gds-grp .
+
+define variable v-count    as integer      no-undo.
+
+do
+on error undo, return error
+:
+   FOR EACH  buf_action-role-item-gds-grp
+       where buf_action-role-item-gds-grp.db-num           = action-role-item.db-num
+         AND buf_action-role-item-gds-grp.action-head-code = action-role-item.action-head-code
+         AND buf_action-role-item-gds-grp.action-role-code = action-role-item.action-role-code
+         AND buf_action-role-item-gds-grp.action-item-code = action-role-item.action-item-code
+      exclusive-lock
+      :
+      IF LOOKUP(STRING(buf_action-role-item-gds-grp.gds-grp-code), p-Gds-List, {&delim-par}) = 0
+      THEN DO:
+         DELETE buf_action-role-item-gds-grp.
+      END.
+   END.
+
+   DO v-count = 1 TO NUM-ENTRIES(p-Gds-List, {&delim-par})
+   on error undo, next
+   :
+      FIND   FIRST buf_action-role-item-gds-grp
+             where buf_action-role-item-gds-grp.db-num               = action-role-item.db-num
+               AND buf_action-role-item-gds-grp.action-head-code     = action-role-item.action-head-code
+               AND buf_action-role-item-gds-grp.action-role-code = action-role-item.action-role-code
+               AND buf_action-role-item-gds-grp.action-item-code         = action-role-item.action-item-code
+               AND buf_action-role-item-gds-grp.gds-grp-code             = INTEGER(ENTRY(v-count, p-Gds-List, {&delim-par}))
+            no-lock
+            no-error
+            .
+      IF NOT AVAILABLE buf_action-role-item-gds-grp THEN DO:
+         CREATE buf_action-role-item-gds-grp.
+         ASSIGN
+            buf_action-role-item-gds-grp.db-num                 = action-role-item.db-num
+            buf_action-role-item-gds-grp.action-head-code       = action-role-item.action-head-code
+            buf_action-role-item-gds-grp.action-role-code       = action-role-item.action-role-code
+            buf_action-role-item-gds-grp.action-item-code       = action-role-item.action-item-code
+            buf_action-role-item-gds-grp.action-role-item-code  = action-role-item.action-role-item-code
+            buf_action-role-item-gds-grp.action-item-id         = action-role-item.action-item-id
+            buf_action-role-item-gds-grp.gds-grp-code           = INTEGER(ENTRY(v-count, p-Gds-List, {&delim-par}))
+         .
+      END.
+   END.
+
+end.  /* do on error */
+END PROCEDURE. /* add-gds-grp */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-goods Dialog-Frame 
+PROCEDURE add-goods :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define input parameter p-gds-list as character        no-undo.
+
+define buffer buf_action-role-item-gds    for ub.action-role-item-gds .
+
+define variable v-count    as integer      no-undo.
+
+do
+on error undo, return error
+:
+   FOR EACH  buf_action-role-item-gds
+       where buf_action-role-item-gds.db-num           = action-role-item.db-num
+         AND buf_action-role-item-gds.action-head-code = action-role-item.action-head-code
+         AND buf_action-role-item-gds.action-role-code = action-role-item.action-role-code
+         AND buf_action-role-item-gds.action-item-code = action-role-item.action-item-code
+      exclusive-lock
+      :
+      IF LOOKUP(STRING(buf_action-role-item-gds.gds-code), p-Gds-List, {&delim-par}) = 0
+      THEN DO:
+         DELETE buf_action-role-item-gds.
+      END.
+   END.
+
+   DO v-count = 1 TO NUM-ENTRIES(p-Gds-List, {&delim-par})
+   on error undo, next
+   :
+      FIND FIRST buf_action-role-item-gds
+            where buf_action-role-item-gds.db-num            = action-role-item.db-num
+               AND buf_action-role-item-gds.action-head-code = action-role-item.action-head-code
+               AND buf_action-role-item-gds.action-role-code = action-role-item.action-role-code
+               AND buf_action-role-item-gds.action-item-code = action-role-item.action-item-code
+               AND buf_action-role-item-gds.gds-code         = INTEGER(ENTRY(v-count, p-Gds-List, {&delim-par}))
+            no-lock
+            no-error
+            .
+      IF NOT AVAILABLE buf_action-role-item-gds THEN DO:
+         CREATE buf_action-role-item-gds.
+         ASSIGN
+            buf_action-role-item-gds.db-num                 = action-role-item.db-num
+            buf_action-role-item-gds.action-head-code       = action-role-item.action-head-code
+            buf_action-role-item-gds.action-role-code       = action-role-item.action-role-code
+            buf_action-role-item-gds.action-item-code       = action-role-item.action-item-code
+            buf_action-role-item-gds.action-role-item-code  = action-role-item.action-role-item-code
+            buf_action-role-item-gds.action-item-id         = action-role-item.action-item-id
+            buf_action-role-item-gds.gds-code               = INTEGER(ENTRY(v-count, p-Gds-List, {&delim-par}))
+         .
+      END.
+   END.
+
+end.  /* do on error */
+END PROCEDURE. /* add-goods */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-filter-mark-item Dialog-Frame 
 PROCEDURE assign-filter-mark-item :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1019,7 +1335,7 @@ END PROCEDURE. /* assign-filter-mark-item */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-filter-mark-role Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-filter-mark-role Dialog-Frame 
 PROCEDURE assign-filter-mark-role :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1071,7 +1387,7 @@ END PROCEDURE. /* assign-filter-mark-role */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE can-edit-action-role Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE can-edit-action-role Dialog-Frame 
 PROCEDURE can-edit-action-role :
 /* -----------------------------------------------------------
   Purpose:
@@ -1113,7 +1429,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE change-items Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE change-items Dialog-Frame 
 PROCEDURE change-items :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1416,7 +1732,7 @@ END PROCEDURE. /* change-items */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE delete-action-role Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE delete-action-role Dialog-Frame 
 PROCEDURE delete-action-role :
 /* -----------------------------------------------------------
   Purpose:
@@ -1489,7 +1805,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -1508,16 +1824,15 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY rs-scope v-filter-role tb-filter-role v-filter-item tb-filter-item
-          role-editor item-EDITOR
+  DISPLAY rs-scope v-filter-role tb-filter-role v-filter-item tb-filter-item 
+          role-editor item-EDITOR 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit b-sel b-help rs-scope b-mark b-add b-chg b-del b-toggle b-users
-         b-filter-role v-filter-role b-filter-item
-         v-filter-item browse-action-role browse-action-item role-editor
-         item-EDITOR
+  ENABLE b-quit b-sel b-help rs-scope b-print b-mark b-add b-chg b-del b-toggle 
+         b-users b-filter-role v-filter-role b-filter-item v-filter-item 
+         browse-action-role browse-action-item role-editor item-EDITOR 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1526,7 +1841,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-db-num-list Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-db-num-list Dialog-Frame 
 PROCEDURE fill-db-num-list :
 /* -----------------------------------------------------------
   Purpose:
@@ -1578,7 +1893,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query-action-item Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query-action-item Dialog-Frame 
 PROCEDURE local-open-query-action-item :
 /* -----------------------------------------------------------
   Purpose:
@@ -1667,7 +1982,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query-action-role Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query-action-role Dialog-Frame 
 PROCEDURE local-open-query-action-role :
 /* -----------------------------------------------------------
   Purpose:
@@ -1732,7 +2047,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE post_enable_UI Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE post_enable_UI Dialog-Frame 
 PROCEDURE post_enable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     ENABLE the User Interface
@@ -1799,7 +2114,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-action-role-context Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-action-role-context Dialog-Frame 
 PROCEDURE procedure-get-action-role-context :
 /* -----------------------------------------------------------
   Purpose:
@@ -1847,7 +2162,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-action-role-item-state Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-action-role-item-state Dialog-Frame 
 PROCEDURE procedure-get-action-role-item-state :
 /* -----------------------------------------------------------
   Purpose:
@@ -1889,7 +2204,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query-action-item Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query-action-item Dialog-Frame 
 PROCEDURE refresh-query-action-item :
 /* -----------------------------------------------------------
   Purpose:
@@ -1915,7 +2230,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query-action-role Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query-action-role Dialog-Frame 
 PROCEDURE refresh-query-action-role :
 /* -----------------------------------------------------------
   Purpose:
@@ -1943,7 +2258,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-brw-pos Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-brw-pos Dialog-Frame 
 PROCEDURE set-brw-pos :
 /* -----------------------------------------------------------
   Purpose:
@@ -1964,7 +2279,7 @@ END PROCEDURE. /* set-brw-pos */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-users-for-role Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-users-for-role Dialog-Frame 
 PROCEDURE show-users-for-role :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2049,7 +2364,7 @@ END PROCEDURE. /* show-users-for-role */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-users-for-role-item Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-users-for-role-item Dialog-Frame 
 PROCEDURE show-users-for-role-item :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2176,7 +2491,7 @@ end procedure. /* init-filter-item */
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action-role-context Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action-role-context Dialog-Frame 
 FUNCTION get-action-role-context RETURNS CHARACTER
   ( BUFFER buf_action-role FOR action-role ) :
 /*------------------------------------------------------------------------------
@@ -2198,7 +2513,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action-role-item-state Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action-role-item-state Dialog-Frame 
 FUNCTION get-action-role-item-state RETURNS CHARACTER
   ( BUFFER buf_action-item FOR action-item ) :
 /*------------------------------------------------------------------------------
@@ -2218,125 +2533,3 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-goods {&FRAME-NAME}
-PROCEDURE add-goods :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-define input parameter p-gds-list as character        no-undo.
-
-define buffer buf_action-role-item-gds    for ub.action-role-item-gds .
-
-define variable v-count    as integer      no-undo.
-
-do
-on error undo, return error
-:
-   FOR EACH  buf_action-role-item-gds
-       where buf_action-role-item-gds.db-num           = action-role-item.db-num
-         AND buf_action-role-item-gds.action-head-code = action-role-item.action-head-code
-         AND buf_action-role-item-gds.action-role-code = action-role-item.action-role-code
-         AND buf_action-role-item-gds.action-item-code = action-role-item.action-item-code
-      exclusive-lock
-      :
-      IF LOOKUP(STRING(buf_action-role-item-gds.gds-code), p-Gds-List, {&delim-par}) = 0
-      THEN DO:
-         DELETE buf_action-role-item-gds.
-      END.
-   END.
-
-   DO v-count = 1 TO NUM-ENTRIES(p-Gds-List, {&delim-par})
-   on error undo, next
-   :
-      FIND FIRST buf_action-role-item-gds
-            where buf_action-role-item-gds.db-num            = action-role-item.db-num
-               AND buf_action-role-item-gds.action-head-code = action-role-item.action-head-code
-               AND buf_action-role-item-gds.action-role-code = action-role-item.action-role-code
-               AND buf_action-role-item-gds.action-item-code = action-role-item.action-item-code
-               AND buf_action-role-item-gds.gds-code         = INTEGER(ENTRY(v-count, p-Gds-List, {&delim-par}))
-            no-lock
-            no-error
-            .
-      IF NOT AVAILABLE buf_action-role-item-gds THEN DO:
-         CREATE buf_action-role-item-gds.
-         ASSIGN
-            buf_action-role-item-gds.db-num                 = action-role-item.db-num
-            buf_action-role-item-gds.action-head-code       = action-role-item.action-head-code
-            buf_action-role-item-gds.action-role-code       = action-role-item.action-role-code
-            buf_action-role-item-gds.action-item-code       = action-role-item.action-item-code
-            buf_action-role-item-gds.action-role-item-code  = action-role-item.action-role-item-code
-            buf_action-role-item-gds.action-item-id         = action-role-item.action-item-id
-            buf_action-role-item-gds.gds-code               = INTEGER(ENTRY(v-count, p-Gds-List, {&delim-par}))
-         .
-      END.
-   END.
-
-end.  /* do on error */
-END PROCEDURE. /* add-goods */
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-gds-grp {&FRAME-NAME}
-PROCEDURE add-gds-grp :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-define input parameter p-gds-list as character        no-undo.
-
-define buffer buf_action-role-item-gds-grp      for ub.action-role-item-gds-grp .
-
-define variable v-count    as integer      no-undo.
-
-do
-on error undo, return error
-:
-   FOR EACH  buf_action-role-item-gds-grp
-       where buf_action-role-item-gds-grp.db-num           = action-role-item.db-num
-         AND buf_action-role-item-gds-grp.action-head-code = action-role-item.action-head-code
-         AND buf_action-role-item-gds-grp.action-role-code = action-role-item.action-role-code
-         AND buf_action-role-item-gds-grp.action-item-code = action-role-item.action-item-code
-      exclusive-lock
-      :
-      IF LOOKUP(STRING(buf_action-role-item-gds-grp.gds-grp-code), p-Gds-List, {&delim-par}) = 0
-      THEN DO:
-         DELETE buf_action-role-item-gds-grp.
-      END.
-   END.
-
-   DO v-count = 1 TO NUM-ENTRIES(p-Gds-List, {&delim-par})
-   on error undo, next
-   :
-      FIND   FIRST buf_action-role-item-gds-grp
-             where buf_action-role-item-gds-grp.db-num               = action-role-item.db-num
-               AND buf_action-role-item-gds-grp.action-head-code     = action-role-item.action-head-code
-               AND buf_action-role-item-gds-grp.action-role-code = action-role-item.action-role-code
-               AND buf_action-role-item-gds-grp.action-item-code         = action-role-item.action-item-code
-               AND buf_action-role-item-gds-grp.gds-grp-code             = INTEGER(ENTRY(v-count, p-Gds-List, {&delim-par}))
-            no-lock
-            no-error
-            .
-      IF NOT AVAILABLE buf_action-role-item-gds-grp THEN DO:
-         CREATE buf_action-role-item-gds-grp.
-         ASSIGN
-            buf_action-role-item-gds-grp.db-num                 = action-role-item.db-num
-            buf_action-role-item-gds-grp.action-head-code       = action-role-item.action-head-code
-            buf_action-role-item-gds-grp.action-role-code       = action-role-item.action-role-code
-            buf_action-role-item-gds-grp.action-item-code       = action-role-item.action-item-code
-            buf_action-role-item-gds-grp.action-role-item-code  = action-role-item.action-role-item-code
-            buf_action-role-item-gds-grp.action-item-id         = action-role-item.action-item-id
-            buf_action-role-item-gds-grp.gds-grp-code           = INTEGER(ENTRY(v-count, p-Gds-List, {&delim-par}))
-         .
-      END.
-   END.
-
-end.  /* do on error */
-END PROCEDURE. /* add-gds-grp */
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME

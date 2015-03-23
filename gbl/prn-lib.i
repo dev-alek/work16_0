@@ -63,6 +63,7 @@ define variable v-exist as logical no-undo .
   do
   on error undo, return error
   :
+    
     run prn-lib-get-report-name  in this-procedure (
                                                       input parParentProc
                                                       ,output v-report-name
@@ -217,6 +218,37 @@ procedure prn-lib-reportviewer-report-name :
   os-command no-wait value(v-fill-path-RepView + " " + p-report-name-html).
 
 end procedure. /* prn-lib-reportviewer-report-name */
+
+
+procedure prn-lib-reportviewer-report-name :
+  define input parameter parParentProc  AS WIDGET-HANDLE NO-UNDO.
+  define input parameter p-report-name-html as character no-undo .
+  define variable ii                  as integer no-undo .
+  define variable v-report-name       as character no-undo .
+  define variable v-fill-path-RepView as character no-undo.
+  
+  if search("exe\ReportViewer\reportviewer.exe") <> ? then
+  do:
+    v-fill-path-RepView = search("exe\ReportViewer\reportviewer.exe").
+  end.
+  else
+  do:
+    message "Не найдена программа просмотра отчёта!" view-as alert-box error.
+  end.
+
+  do ii = 1 to NUM-ENTRIES (p-report-name-html).
+    v-report-name = ENTRY (ii,p-report-name-html).
+    if search(v-report-name) = ? then
+    do:
+      message "Не найден файл отчёта: " v-report-name view-as alert-box error.
+      return error.
+    end.
+  end.
+
+  os-command no-wait value(v-fill-path-RepView + " " + p-report-name-html).
+
+end procedure. /* prn-lib-reportviewer-report-name */
+
 
 &endif
 
