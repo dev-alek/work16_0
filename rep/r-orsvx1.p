@@ -301,7 +301,7 @@ on error undo, return error return-value
     substring( string( v-host-name + fill( '_', 40 ), "x(40)":U ), 1, 40 ) +
                                             ' управление                                                                                                                                                                                                                                                      Утверждена Госкомнефтепродуктом СССР' skip
     '________________________________________ нефтебаза                                                                                                                                                                                                                                                          15 августа 1985 г. № 06/21-8  446' skip
-    '  АЗС № ' + substring( trim( string( bf_trn-doc.obj-code, ">>>>>>>>9":U ) ) + fill( '_', 32 ), 1, 32 )                                                                                                                                                                                                                                         skip( 2 )
+    substring( trim( string( bf_object.obj-name , "x(40)":U ) ) + fill( '_', 32 ), 1, 32 )                                                                                                                                                                                                                                         skip( 2 )
     CenterLine( Sparse( 'СЛИЧИТЕЛЬНАЯ ВЕДОМОСТЬ' ), {&ReportWidth} )                                                                                                                                                                                                                                                                                skip
     CenterLine( 'результатов инвентаризации нефтепродуктов', {&ReportWidth} )                                                                                                                                                                                                                                                                       skip
     CenterLine( substitute( 'на "&1" &2 &3 г.'
@@ -334,8 +334,8 @@ on error undo, return error return-value
     , input ( trim( v-host-name ) + " ":U + "управление" )
     ) .
   run r-orsvxl-write-cell-data in this-procedure
-    ( input {&r-orsvxl-h_ObjCode}
-    , input trim( string( bf_trn-doc.obj-code, ">>>>>>>>9":U ) )
+    ( input {&r-orsvxl-h_objcode}
+    , input trim( string( bf_object.obj-name, "x(40)":U ) )
     ) .
   run r-orsvxl-write-cell-data in this-procedure
     ( input {&r-orsvxl-h_FactDate}
