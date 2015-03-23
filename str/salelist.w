@@ -820,7 +820,7 @@ define variable v-handle as handle no-undo .
                     , buffer ink-doc
                     ).
   end.
-  reposition br-docs to recid v-doc-rec no-error.
+  
   apply "entry" to br-docs in frame {&frame-name}.
   apply "iteration-changed" to br-docs in frame {&frame-name}.
 END.
