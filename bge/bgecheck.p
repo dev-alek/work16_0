@@ -298,6 +298,26 @@ on error undo, return error
                                   )
             ).
         end.
+        
+
+        /*Õ¿ƒŒ ”¡≈ƒ»“‹—ﬂ ◊“Œ ¬—≈ –¿«Ã¿«¿ÕŒ!!*/
+        run rep/rpychk0.p (input "r-shftc2"
+                        ,input temp-obj.obj-type
+                        ,input temp-obj.obj-code
+                        ,input ?                    /*p-date-from*/
+                        ,input ?                    /*p-date-to*/
+                        ,input v-date-from         /*p-shift-date-from*/
+                        ,input v-date-to           /*p-shift-date-to*/
+                        ,input 1                    /*p-shift-num-start*/
+                        ,input 99                   /*p-shift-num-end*/
+                        ,input ?                    /*p-inkas-code*/
+                        ) no-error.
+
+        if error-status:error then
+        do:
+             message error-status:get-message(1) view-as alert-box.
+        end.        
+        
     end.        /* for each temp-obj */
     run xml-bge-write-footer in this-procedure (
         input v-xml-file-name
@@ -363,6 +383,14 @@ define input parameter p-need-pay-type  as logical      no-undo.
     define variable v-is-pieces     as logical      no-undo.
     define variable v-is-found      as logical      no-undo.
 
+    define variable v-cpline        as integer      no-undo.
+    define variable v-pay-code      as integer      no-undo.
+    define variable v-eff-doc-qnty  as decimal      no-undo.
+    define variable v-pay-card      as character    no-undo.
+    define variable v-price-base    as decimal      no-undo.
+    define variable v-tot-r-b       as decimal      no-undo.
+    define variable v-discnt        as decimal      no-undo.
+
     define buffer buf_chk-doc       for ub.chk-doc.
     define buffer buf_chk-gds       for ub.chk-gds.
     define buffer buf_bar-code      for ub.bar-code.
@@ -370,7 +398,8 @@ define input parameter p-need-pay-type  as logical      no-undo.
     define buffer buf_chk-pay       for ub.chk-pay.
     define buffer buf_cash-pay      for ub.cash-pay.
     define buffer buf_currency      for ub.currency.
-
+    define buffer buf_chk-gds-pay   for ub.chk-gds-pay.
+    
     { gbl/hostcode.i
         p-obj-type
         p-obj-code
@@ -544,6 +573,31 @@ define input parameter p-need-pay-type  as logical      no-undo.
             run wp-xmltagput in this-procedure ( input 3, input "gdsName"   , input string( v-gds-name              ), input 0 ).
             run wp-xmltagput in this-procedure ( input 3, input "price"     , input string( buf_chk-gds.price-base  ), input 0 ).
             run wp-xmltagput in this-procedure ( input 3, input "qnty"      , input string( buf_chk-gds.doc-qnty    ), input 0 ).
+            run wp-xmltagput in this-procedure ( input 3, input "discnt"    , input string( buf_chk-gds.discnt      ), input 0 ).
+            for each buf_chk-gds-pay no-lock
+                 where buf_chk-gds-pay.doc-code = buf_chk-gds.doc-code and
+                 buf_chk-gds-pay.line-num = buf_chk-gds.line-num:
+              
+                    assign
+                        v-cpline = buf_chk-gds-pay.cpline-num
+                        v-pay-code = buf_chk-gds-pay.pay-code
+                        v-eff-doc-qnty = buf_chk-gds-pay.eff-doc-qnty
+                        v-pay-card = buf_chk-gds-pay.pay-card
+                        v-price-base = buf_chk-gds-pay.price-base
+                        v-tot-r-b = buf_chk-gds-pay.tot-r-b
+                        v-discnt = buf_chk-gds-pay.discnt 
+                    .
+                 
+                run wp-xmltagopen in this-procedure ( input 3, input "checkBodyPay", input "" ).
+                  run wp-xmltagput in this-procedure ( input 4, input "cpLine"       , input string( v-cpline             ), input 0 ).
+                  run wp-xmltagput in this-procedure ( input 4, input "payCode"      , input string( v-pay-code           ), input 0 ).
+                  run wp-xmltagput in this-procedure ( input 4, input "totrb"        , input string( v-tot-r-b            ), input 0 ).
+                  run wp-xmltagput in this-procedure ( input 4, input "pricebase"    , input string( v-price-base         ), input 0 ).
+                  run wp-xmltagput in this-procedure ( input 4, input "numpaycard"   , input string( v-pay-card           ), input 0 ).
+                  run wp-xmltagput in this-procedure ( input 4, input "discnt"       , input string( v-discnt             ), input 0 ).
+                  run wp-xmltagput in this-procedure ( input 4, input "effdocqnty"   , input string( v-eff-doc-qnty       ), input 0 ).
+                run wp-xmltagclose in this-procedure ( input 3, input "checkBodyPay" ).
+            end.            
             run wp-xmltagclose in this-procedure ( input 2, input "checkBody" ).
         end.        /* for each buf_chk-gds */
         for each buf_chk-pay no-lock
