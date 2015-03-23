@@ -2507,7 +2507,7 @@ end.
       .
       /* смены и факт даты */
 
-          enable tt-wth-doc.fact-date when tt-wth-doc.auto-fill = no
+          enable tt-wth-doc.fact-date /* when tt-wth-doc.auto-fill = no */
           with frame {&frame-name}.
           { gbl/objat.i
             tt-wth-doc.obj-type
