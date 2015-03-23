@@ -1,10 +1,10 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*------------------------------------------------------------------------
 
 $Revision$
@@ -50,6 +50,8 @@ define variable vss-description as character no-undo init "Список прав системы".
 { gbl/color.i    }
 { gbl/getcntxt.i def }
 { gbl/onewin.i   }
+{gbl/waitfram.i}
+{ gbl/prn-lib.i "new shared" }
 
 define temp-table temp_filter-fields no-undo
     field action-item-code as integer
@@ -85,6 +87,10 @@ define buffer br_action-group   for ub.action-group .
 define buffer buf_action-item-attr for ub.action-item-attr .
 define buffer br_temp_filter-fields for temp_filter-fields .
 
+define stream OutStr-html.
+
+define stream OutStr-html.
+define variable actr-print as character no-undo.
 define variable v-context  as character no-undo column-label "Привязка"        format "x(15)":u  .
 define variable v-brws-mark      as character no-undo COLUMN-LABEL "*"        FORMAT "X(1)":U  .
 
@@ -92,7 +98,7 @@ define variable v-brws-mark      as character no-undo COLUMN-LABEL "*"        FO
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -108,8 +114,8 @@ define variable v-brws-mark      as character no-undo COLUMN-LABEL "*"        FO
 br_temp_filter-fields
 
 /* Definitions for BROWSE BROWSE-item                                   */
-&Scoped-define FIELDS-IN-QUERY-BROWSE-item (IF ( INDEX (rid-list, string( recid( br_action-item ) ) ) > 0 ) THEN ("*") ELSE (" ")) @ v-brws-mark br_action-item.action-item-name br_action-group.action-group-name br_action-item.action-item-id context(br_action-item.action-item-context) @ v-context br_action-item.action-item-description chek-action-gds-group(br_action-item.action-item-code)
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-item br_action-item.action-item-description
+&Scoped-define FIELDS-IN-QUERY-BROWSE-item (IF ( INDEX (rid-list, string( recid( br_action-item ) ) ) > 0 ) THEN ("*") ELSE (" ")) @ v-brws-mark br_action-item.action-item-name br_action-group.action-group-name br_action-item.action-item-id context(br_action-item.action-item-context) @ v-context br_action-item.action-item-description chek-action-gds-group(br_action-item.action-item-code)   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-item br_action-item.action-item-description   
 &Scoped-define ENABLED-TABLES-IN-QUERY-BROWSE-item br_action-item
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BROWSE-item br_action-item
 &Scoped-define SELF-NAME BROWSE-item
@@ -122,15 +128,16 @@ br_temp_filter-fields
 &Scoped-define SECOND-TABLE-IN-QUERY-BROWSE-item br_action-group
 &Scoped-define THIRD-TABLE-IN-QUERY-BROWSE-item br_temp_filter-fields
 
+
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 &Scoped-define OPEN-BROWSERS-IN-QUERY-Dialog-Frame ~
     ~{&OPEN-QUERY-BROWSE-item}
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-mark b-sel b-group b-user b-filter ~
-v-filter b-help tb-filter cb-group rs-scope BROWSE-item item-EDITOR
+v-filter b-help tb-filter cb-group rs-scope b-print BROWSE-item item-EDITOR 
 &Scoped-Define DISPLAYED-OBJECTS v-filter tb-filter cb-group rs-scope ~
-item-EDITOR
+item-EDITOR 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -141,7 +148,7 @@ item-EDITOR
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD context Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD context Dialog-Frame 
 FUNCTION context RETURNS CHARACTER
   ( INPUT p-context AS character )  FORWARD.
 
@@ -161,71 +168,75 @@ FUNCTION chek-action-gds-group RETURNS character
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-filter
-     LABEL "&ФПоиск"
+DEFINE BUTTON b-filter 
+     LABEL "&ФПоиск" 
      SIZE 10 BY 1 TOOLTIP "Поиск с фильтрацией".
 
-DEFINE BUTTON b-group
-     LABEL "&Группы"
+DEFINE BUTTON b-group 
+     LABEL "&Группы" 
      SIZE 10 BY 1 TOOLTIP "Группы прав, включающие право".
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1.13
      BGCOLOR 8 .
 
-DEFINE BUTTON b-mark
-     LABEL "*"
+DEFINE BUTTON b-mark 
+     LABEL "*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-print 
+     LABEL "Печать" 
+     SIZE 9.5 BY 1.
+
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "&Выбор"
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "&Выбор" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-user
-     LABEL "&Польз"
+DEFINE BUTTON b-user 
+     LABEL "&Польз" 
      SIZE 10 BY 1 TOOLTIP "Список пользователей с выбранным правом".
 
-DEFINE VARIABLE cb-group AS INTEGER FORMAT "->>>>9":U INITIAL 0
-     LABEL "Тема"
+DEFINE VARIABLE cb-group AS INTEGER FORMAT "->>>>9":U INITIAL 0 
+     LABEL "Тема" 
      VIEW-AS COMBO-BOX INNER-LINES 15
      LIST-ITEM-PAIRS "0",1
      DROP-DOWN-LIST
      SIZE 25 BY 1 TOOLTIP "Тема, к которой относится право" NO-UNDO.
 
-DEFINE VARIABLE item-EDITOR AS CHARACTER
+DEFINE VARIABLE item-EDITOR AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 97 BY 1.5 NO-UNDO.
 
-DEFINE VARIABLE v-filter AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-filter AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 31.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE rs-scope AS INTEGER
+DEFINE VARIABLE rs-scope AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", 1,
 "Без привязки", 2,
 "Фирма", 3,
 "Объект", 4
      SIZE 38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE tb-filter AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE tb-filter AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 2.5 BY .83 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BROWSE-item FOR
-      br_action-item,
-      br_action-group,
+DEFINE QUERY BROWSE-item FOR 
+      br_action-item, 
+      br_action-group, 
       br_temp_filter-fields
       scrolling.
 &ANALYZE-RESUME
@@ -256,17 +267,19 @@ DEFINE FRAME Dialog-Frame
      b-group AT ROW 1 COL 24 WIDGET-ID 4
      b-user AT ROW 1 COL 34 WIDGET-ID 6
      b-filter AT ROW 1 COL 44 WIDGET-ID 8
-     v-filter AT ROW 1 COL 52 COLON-ALIGNED NO-LABEL WIDGET-ID 10 NO-TAB-STOP
+     v-filter AT ROW 1 COL 52 COLON-ALIGNED NO-LABEL WIDGET-ID 10 NO-TAB-STOP 
      b-help AT ROW 1 COL 88.5
+     b-print AT ROW 2.25 COL 88.5 WIDGET-ID 22
      tb-filter AT ROW 1.08 COL 86.13 WIDGET-ID 12
      cb-group AT ROW 2.25 COL 8.5 COLON-ALIGNED WIDGET-ID 20
      rs-scope AT ROW 2.25 COL 41 HELP
           "Привязка права" NO-LABEL WIDGET-ID 14
+     b-print AT ROW 2.25 COL 88.5 WIDGET-ID 24
      BROWSE-item AT ROW 3.5 COL 1.5 WIDGET-ID 200
      item-EDITOR AT ROW 21.25 COL 1.5 NO-LABEL WIDGET-ID 2
      SPACE(0.50) SKIP(0.24)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Список прав системы"
          DEFAULT-BUTTON b-sel CANCEL-BUTTON b-quit WIDGET-ID 100.
 
@@ -288,20 +301,20 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB BROWSE-item rs-scope Dialog-Frame */
-ASSIGN
+/* BROWSE-TAB BROWSE-item b-print Dialog-Frame */
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* SETTINGS FOR BUTTON b-quit IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        b-quit:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
-ASSIGN
+ASSIGN 
        item-EDITOR:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
-ASSIGN
+ASSIGN 
        v-filter:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -328,7 +341,7 @@ run local-open-query-item in this-procedure .
 */  /* BROWSE BROWSE-item */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -339,43 +352,6 @@ run local-open-query-item in this-procedure .
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Список прав системы */
 DO:
   APPLY "END-ERROR":U TO SELF.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b-mark
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark Dialog-Frame
-ON CHOOSE OF b-mark IN FRAME Dialog-Frame /* * */
-DO:
-   define variable v-ok as logical no-undo .
-
-   if not available br_action-item then do:
-      return no-apply.
-   end.
-
-   { gbl/markstrn.i br_action-item rid-list }
-
-   v-ok = {&browse-name}:select-next-row ().
-   v-ok = {&browse-name}:refresh( )  in frame {&frame-name}.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b-sel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel Dialog-Frame
-ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбрать */
-DO:
-   IF  available br_action-item
-   AND rid-list = ""
-   then DO:
-      assign
-         rid-list = string( recid( br_action-item ) )
-      .
-   end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -458,6 +434,150 @@ DO:
       ).
    end.
 END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark Dialog-Frame
+ON CHOOSE OF b-mark IN FRAME Dialog-Frame /* * */
+DO:
+   define variable v-ok as logical no-undo .
+
+   if not available br_action-item then do:
+      return no-apply.
+   end.
+
+   { gbl/markstrn.i br_action-item rid-list }
+
+   v-ok = {&browse-name}:select-next-row ().
+   v-ok = {&browse-name}:refresh( )  in frame {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
+
+
+
+
+ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор */
+DO:
+   IF  available br_action-item
+   AND rid-list = ""
+   then DO:
+      assign
+         rid-list = string( recid( br_action-item ) )
+      .
+   end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
+ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
+DO: 
+    define var v-act-file as char no-undo.
+    v-act-file  = session:temp-directory + {&DF_Name} +  "actnitem1.html".
+  
+ run waitfram-show in this-procedure ( input "Ждите...").
+  output stream OutStr-html to value(v-act-file) convert target 'UTF-8'/*no-convert*/.
+        put stream OutStr-html unformatted
+        substitute(
+        
+                  '<!doctype html>
+                 <html>
+              <head>
+              <meta charset="UTF-8">
+                 <!-- Стили документа --> 
+              <style>
+          table ~{border-collapse: collapse; ~}
+        tbody td, th ~{border: 1px solid black;~}
+        #myid ~{font-weight: bold;~}
+        .class1 ~{font-style: italic;~}
+        .class2 ~{font-family: Arial;~}
+          
+              </style>
+              
+              
+              </head>
+                    <body>
+                  <table orientation="landscape" name="лист1" repeat_rows="1:1" hide_zero="True"> 
+                    <thead> 
+                   <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                <tr class="set_columns">                       
+                        <td style="width:200px"></td>
+                        <td style="width:130px"></td>
+                        <td style="width:170px"></td>
+                        <td style="width:140px"></td>
+                        <td style="width:300px"></td>
+                        
+       
+                 </tr>
+        <tr>
+            <td colspan="5" style="front-weight: bold; text-align: center;">Список прав</td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr>
+        <th>Имя права</th>
+        <th>Тема</th>
+        <th>Идентификатор права</th> 
+        <th>Привязка</th>
+        <th>Описания права</th>
+        </tr>').
+        
+                get first BROWSE-item.
+                do while available  br_action-item:
+                
+                  put stream OutStr-html unformatted
+        substitute(
+                    '<tr style="height: 60px;">
+               
+                   <td text_wrap="true"> &1 </td>
+                   <td text_wrap="true"> &2 </td>
+                  <td text_wrap="true">  &3 </td>
+           <td text_wrap="true"> &4 </td>
+        <td text_wrap="true"> &5 </td>
+                </tr>
+
+ </tbody>',
+
+
+               
+                
+      br_action-item.action-item-name,
+      br_action-group.action-group-name,
+      br_action-item.action-item-id,
+      context(br_action-item.action-item-context),
+      br_action-item.action-item-description 
+     
+
+           ).       
+     get next BROWSE-item.
+        
+                
+        end.
+                           
+
+        
+                run waitfram-hide in this-procedure. 
+                
+    output stream OutStr-html close.   
+    run prn-lib-reportviewer-report-name in this-procedure (
+                                                          input parParentProc
+                                                          ,input v-act-file
+                                                          ).
+        
+END.
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -591,7 +711,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -639,7 +759,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-filter-mark Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-filter-mark Dialog-Frame 
 PROCEDURE assign-filter-mark :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -709,7 +829,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -728,13 +848,13 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY v-filter tb-filter cb-group rs-scope item-EDITOR
+  DISPLAY v-filter tb-filter cb-group rs-scope item-EDITOR 
       WITH FRAME Dialog-Frame.
-  ENABLE b-mark b-sel b-group b-user b-filter v-filter b-help tb-filter
-         cb-group rs-scope BROWSE-item item-EDITOR
+  ENABLE b-mark b-sel b-group b-user b-filter v-filter b-help tb-filter 
+         cb-group rs-scope b-print BROWSE-item item-EDITOR 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -743,7 +863,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query-item Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query-item Dialog-Frame 
 PROCEDURE local-open-query-item :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -835,7 +955,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE mark-string Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE mark-string Dialog-Frame 
 PROCEDURE mark-string :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -852,7 +972,7 @@ END PROCEDURE. /* mark-string */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE post_enable_UI Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE post_enable_UI Dialog-Frame 
 PROCEDURE post_enable_UI :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -888,7 +1008,7 @@ END PROCEDURE. /* post_enable_UI */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-roles-for-item Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-roles-for-item Dialog-Frame 
 PROCEDURE show-roles-for-item :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -967,7 +1087,7 @@ END PROCEDURE. /* show-roles-for-item */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-users-for-item Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-users-for-item Dialog-Frame 
 PROCEDURE show-users-for-item :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1067,7 +1187,7 @@ END PROCEDURE. /* show-users-for-item */
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION context Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION context Dialog-Frame 
 FUNCTION context RETURNS CHARACTER
   ( INPUT p-context AS character ) :
 /*------------------------------------------------------------------------------
@@ -1125,5 +1245,3 @@ end.
 
 
 END FUNCTION.
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
