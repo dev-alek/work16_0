@@ -73,7 +73,7 @@ define variable vss-description as character no-undo init "Список пользователей 
 { gbl/sys-time.i }
 { cmp/showinf.i  }
 { gbl/usr-flt.i }
-
+{ gbl/prn-lib.i }
 &scoped-define current-position-rowid "users-rowid":U
 &scoped-define current-position-focus "users-focus":U
 &scoped-define current-position-db "users-db":U
@@ -94,6 +94,13 @@ define variable v-only-lookup           as logical      no-undo.
 
 define buffer buf_init_user-account      for user-account.
 define buffer buf_init_user-login        for user-login.
+
+define stream out-stream.
+define stream OutStr-html.
+
+define variable p-report-id               as integer              no-undo .
+define variable v-report-name             as CHARACTER            no-undo .
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -182,6 +189,11 @@ FUNCTION get-work-status RETURNS CHARACTER
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
+/* Menu Definitions                                                     */
+DEFINE MENU POPUP-MENU-b-print 
+       MENU-ITEM m_b-print-list LABEL "Список"        
+       MENU-ITEM m_b-print-user LABEL "Пользователь"  .
+
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-add
@@ -384,6 +396,10 @@ ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+ASSIGN 
+       b-print:POPUP-MENU IN FRAME Dialog-Frame       = MENU POPUP-MENU-b-print:HANDLE.
+ASSIGN b-print :MENU-MOUSE = 1.
+
 ASSIGN
        ed-login-object:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
@@ -405,7 +421,7 @@ ASSIGN
 /* OPEN QUERY {&SELF-NAME} FOR EACH buf_init_user-login NO-LOCK INDEXED-REPOSITION. */
 run open-query-login in this-procedure.
      _END_FREEFORM
-     _Options          = "NO-LOCK INDEXED-REPOSITION"
+     _Options          = "INDEXED-REPOSITION"
      _Query            is OPENED
 */  /* BROWSE br-login */
 &ANALYZE-RESUME
@@ -1035,10 +1051,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
 ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
 DO:
-  run adm/usr-prnt.p ( INPUT parparentproc
-                     , INPUT buf_init_user-login.user-id
-                     , INPUT buf_init_user-login.db-num
-                     ) .
+      run gbl/pop-up.p (self:handle, no) no-error.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1348,6 +1361,39 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_b-print-list
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-print-list Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_b-print-list /* Список */
+DO:
+  
+        run get-report-num in parParentProc (
+            output p-report-id
+        ).
+
+  v-report-name = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
+    
+    run PROC-print-list in this-procedure.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME m_b-print-user
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-print-user Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_b-print-user /* Пользователь */
+DO:
+  run adm/usr-prnt.p ( INPUT parparentproc
+                     , INPUT buf_init_user-login.user-id
+                     , INPUT buf_init_user-login.db-num
+                     ) .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 
 &Scoped-define SELF-NAME cb-db
@@ -2086,6 +2132,71 @@ END PROCEDURE. /* assign-filter-mark */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-saved-position Dialog-Frame 
+PROCEDURE get-saved-position :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+    define variable v-current-rowid-string      as character    no-undo.
+    define variable v-current-focus-string      as character    no-undo.
+    define variable v-current-db-string         as character    no-undo.
+    define variable v-current-status-string     as character    no-undo.
+    define variable v-void-logical              as logical      no-undo.
+    define variable v-void-character            as character    no-undo.
+
+do
+on error undo, return error
+:
+   run uf-get (
+        input {&uf-users-1}
+      , input  v-cntxt-userid
+      , output v-current-status-string
+      , output v-current-db-string
+      , output v-void-logical
+      , output v-void-logical
+      , output v-void-logical
+      , output v-void-logical
+   ) .
+   run uf-get (
+           input {&uf-users-2}
+         , input  v-cntxt-userid
+         , output v-current-focus-string
+         , output v-current-rowid-string
+         , output v-void-logical
+         , output v-void-logical
+         , output v-void-logical
+         , output v-void-logical
+   ) .
+
+   assign
+      cb-db                   = IF v-current-db-string <> "":U       THEN integer(  v-current-db-string     ) ELSE cb-db
+      rs-scope                = IF v-current-status-string <> "":U   THEN integer(  v-current-status-string ) ELSE rs-scope
+      v-users-current-rowid   = IF v-current-rowid-string <> "":U    THEN to-rowid( v-current-rowid-string  ) ELSE v-users-current-rowid
+      v-users-current-focus   = IF v-current-focus-string <> "":U    THEN integer(  v-current-focus-string  ) ELSE 1
+   .
+
+   IF cb-db = ?
+   THEN DO:
+      ASSIGN
+         cb-db = v-cntxt-db-num
+      .
+   END.
+
+   IF rs-scope = ?
+   THEN DO:
+      ASSIGN
+         rs-scope    = 1
+      .
+   END.
+
+end.
+END PROCEDURE. /* get-saved-position */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-user-fields Dialog-Frame
 PROCEDURE get-user-fields :
 /*------------------------------------------------------------------------------
@@ -2640,7 +2751,7 @@ on error undo, return error
                       by buf_init_user-account.last-name
                       by buf_init_user-account.first-name
                       by buf_init_user-account.second-name
-            INDEXED-REPOSITION.
+            .
         end.        /* when 1 */
         when 2
         then do:
@@ -2653,7 +2764,7 @@ on error undo, return error
                       by buf_init_user-account.last-name
                       by buf_init_user-account.first-name
                       by buf_init_user-account.second-name
-            INDEXED-REPOSITION.
+            .
         end.        /* when 2 */
         when 3
         then do:
@@ -2667,7 +2778,7 @@ on error undo, return error
                       by buf_init_user-account.last-name
                       by buf_init_user-account.first-name
                       by buf_init_user-account.second-name
-            INDEXED-REPOSITION.
+            .
         end.        /* when 3 */
     end case.       /* case rs-scope */
     if v-users-current-focus > 0
@@ -3689,70 +3800,198 @@ END PROCEDURE. /* save-position */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-saved-position Dialog-Frame
-PROCEDURE get-saved-position :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-    define variable v-current-rowid-string      as character    no-undo.
-    define variable v-current-focus-string      as character    no-undo.
-    define variable v-current-db-string         as character    no-undo.
-    define variable v-current-status-string     as character    no-undo.
-    define variable v-void-logical              as logical      no-undo.
-    define variable v-void-character            as character    no-undo.
+PROCEDURE proc-print-list :
+  define buffer buf_user-login-action-role for ub.user-login-action-role .
+  define buffer buf_action-role-item       for ub.action-role-item .
+  define buffer buf_action-item            for ub.action-item .
+  define buffer buf_action-role            for ub.action-role .
+  define VARIABLE v-first as LOGICAL no-undo .
+  define VARIABLE v-ok2 as LOGICAL no-undo .
+  define VARIABLE ii      as integer no-undo .
+  define VARIABLE jj      as integer no-undo .
+  define VARIABLE v-action-role-context as character no-undo .
+  define VARIABLE v-last-name as character no-undo.
+  define VARIABLE v-last-name1 as character no-undo.
+  define VARIABLE v-last-name2 as character no-undo.  
 
 do
 on error undo, return error
 :
-    run uf-get (
-        input {&uf-users-1}
-            , input v-cntxt-userid
-            , output v-current-status-string
-      , output v-current-db-string
-            , output v-void-logical
-            , output v-void-logical
-            , output v-void-logical
-            , output v-void-logical
-   ) .
-                run uf-get (
-           input {&uf-users-2}
-                    , input v-cntxt-userid
-                    , output v-current-focus-string
-         , output v-current-rowid-string
-                    , output v-void-logical
-                    , output v-void-logical
-                    , output v-void-logical
-                    , output v-void-logical
-   ) .
+            
+  /*вызов процедуры печати шапки отчета*/      
+  output stream OutStr-html to value(v-report-name) convert target 'UTF-8' /*no-convert*/.
+  put stream OutStr-html unformatted
+    substitute(
+    '<!doctype html>
+            <html>
+              <head>
+              <meta charset="UTF-8">
+                  <!-- Стили документа -->
+              <style>
+                   table ~{
+                       border-collapse: collapse;
+                       width: 850px; 
+                   ~}
+                   tbody td, th ~{
+                       border: 1px solid black;
+                       border-collapse: collapse;
+                 height: 14px;
+                   ~}
+          
+              </style>
+              </head>
+                <body>
+                  <table orientation="landscape" name="list_users" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+                    <thead>  <!-- Шапка отчета -->
+                    <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                      <tr class="set_columns">
+                        <td style="width:200px"></td>
+                        <td style="width:200px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:200px"></td>
+                        <td style="width:200px"></td>
+                      </tr>
+                      <tr>
+                        <td colspan="5" style="font-size:16px;font-weight:bold; text-align: center;">Список пользователей</td>
+                      </tr>
+                    </thead>
+                    <tbody> <!-- Здесь начинается таблица отчета -->
+                      <tr> <!-- Первые строки – шапка таблицы с тэгами tr -->
+                        <th style="text-align: center;">ФИО</th>
+                        <th style="text-align: center;">Псевдоним</th>
+                        <th style="text-align: center;">БД</th>
+                        <th style="text-align: center;">Привязка</th>
+                        <th style="text-align: center;">Группа</th>
+                      </tr>'
+    , chr(123), chr(125)
+    ).
 
-        assign
-      cb-db                   = IF v-current-db-string <> "":U       THEN integer(  v-current-db-string     ) ELSE cb-db
-      rs-scope                = IF v-current-status-string <> "":U   THEN integer(  v-current-status-string ) ELSE rs-scope
-      v-users-current-rowid   = IF v-current-rowid-string <> "":U    THEN to-rowid( v-current-rowid-string  ) ELSE v-users-current-rowid
-      v-users-current-focus   = IF v-current-focus-string <> "":U    THEN integer(  v-current-focus-string  ) ELSE 1
-   .
+  /*печать тела*/
+  get first br-user.
+  do while available buf_init_user-account:
+  assign ii = 0
+         jj = 0
+         v-first = no.
+         v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .        
 
-        IF cb-db = ?
-        THEN DO:
-           ASSIGN
-             cb-db = v-cntxt-db-num
-           .
-        END.
+      for each buf_init_user-login where buf_init_user-login.user-id = buf_init_user-account.user-id:
+          assign v-first = yes 
+                 v-ok2 = no.
+          
+          
+          FOR EACH buf_user-login-action-role
+            WHERE buf_user-login-action-role.action-head-code    = {&action-head-code-main}
+            AND buf_user-login-action-role.db-num              = buf_init_user-login.db-num
+            AND buf_user-login-action-role.user-id             = buf_init_user-login.user-id
+            NO-LOCK:
+              
+              find FIRST buf_action-role
+                WHERE buf_action-role.action-head-code    = {&action-head-code-main}
+                AND buf_action-role.action-role-code    = buf_user-login-action-role.action-role-code
+                AND buf_action-role.db-num              = buf_init_user-login.db-num
+                NO-LOCK no-error.
+                if AVAILABLE buf_action-role then do:
+                assign 
+                  ii = ii + 1
+                  jj = jj + 1 
+                  v-ok2 = yes .
+                  
+                  if buf_user-login-action-role.action-role-context = {&cntxt-global} then do:
+                  assign v-action-role-context = "Без привязки". end.
+                  if buf_user-login-action-role.action-role-context = {&cntxt-firm} then do:
+                  assign v-action-role-context = SUBSTITUTE("Фирма &1", buf_user-login-action-role.host-code). end. 
+                  if buf_user-login-action-role.action-role-context = {&cntxt-object} then do:
+                  assign v-action-role-context = SUBSTITUTE("&1 &2", buf_user-login-action-role.obj-type, buf_user-login-action-role.obj-code). end.             
+   
+                put stream OutStr-html unformatted
+                  substitute(
+                  '<tr>
+                            <td>&1</td>
+                            <td>&2</td>
+                            <td>&3</td>
+                            <td>&4</td>
+                            <td>&5</td>
+                   </tr>'
+                  , 
+                  if ii > 1 or jj > 1 then "" else string(v-last-name),
+                  if ii > 1 or jj > 1 then "" else string(buf_init_user-account.nik),
+                  if ii > 1 or jj > 1 then "" else string(buf_init_user-login.db-num),
+                  string(v-action-role-context),
+                  string(buf_action-role.action-role-name)                                                              
+                  ).
+                  end.
+                  else do:
+                  put stream OutStr-html unformatted
+                          substitute(
+                          '<tr>
+                                    <td>&1</td>
+                                    <td>&2</td>
+                                    <td>&3</td>
+                                    <td></td>
+                                    <td></td>
+                           </tr>'
+                          , 
+                          if ii > 1 or jj > 1 then "" else string(v-last-name),
+                          if ii > 1 or jj > 1 then "" else string(buf_init_user-account.nik),
+                          if ii > 1 or jj > 1 then "" else string(buf_init_user-login.db-num)                                                      
+                          ).
+                  end.
 
-        IF rs-scope = ?
-        THEN DO:
-           ASSIGN
-              rs-scope    = 1
-           .
-        END.
+          end. /*FOR EACH buf_user-login-action-role*/
+          if v-ok2 = no then 
+          do:  
+            put stream OutStr-html unformatted
+              substitute(
+              '<tr>
+                                            <td>&1</td>
+                                            <td>&2</td>
+                                            <td>&3</td>
+                                            <td></td>
+                                            <td></td>
+                    </tr>'
+              ,
+              (v-last-name),
+              (buf_init_user-account.nik),
+              (buf_init_user-login.db-num)
+              ).
+    
+          end. /*if v-ok2 = no then do*/
 
-    end.
-END PROCEDURE. /* get-saved-position */
+      end. /*for each buf_init_user-login where buf_init_user-login.user-id = buf_init_user-account.user-id: */  
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+      if v-first = no then do:
+      put stream OutStr-html unformatted
+        substitute(
+        '<tr>
+              <td>&1</td>
+              <td>&2</td>
+              <td></td>
+              <td></td>
+              <td></td>
+        </tr>'
+        ,
+        (v-last-name),
+        (buf_init_user-account.nik)
+        ).
+      end. /*if v-first = no then do:*/
+
+    get next br-user. 
+  end.
+
+       output stream OutStr-html close.    
+ 
+
+
+  /*вызов программы печати*/ 
+  run prn-lib-reportviewer-report-name in this-procedure (
+    input parParentProc
+    ,input v-report-name
+    ).
+
+
+end.
+end procedure .
+
 
 /* ************************  Function Implementations ***************** */
 
