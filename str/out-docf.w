@@ -241,8 +241,8 @@ define variable is-cons       as logical               no-undo.
 define variable is-storage    as logical               no-undo.
 define variable is-oldcons    as logical               no-undo.
 define variable varr-b        as character             no-undo.
-define variable v-is-scan     as character             no-undo.
-define variable v-is-scan-type as character            no-undo.
+define variable v-is-tsd      as character             no-undo.
+define variable v-is-tsd-type as character             no-undo.
 define variable v-exist       as logical               no-undo.
 define variable v-buket-gds-code as integer            no-undo.
 define variable v-param       as character             no-undo.
@@ -1515,7 +1515,7 @@ find ub.sysconf where ub.sysconf.host-code = v-cntxt-host-code-obj no-lock.
 v-cntxp-cash-pay = ub.sysconf.cash-pay.
 { gbl/conf-rd.i "'is-prt'"   0  "''" 0 "''" "''" "''" yes  prtvalue        prttype        no-error }
 { gbl/conf-rd.i "'holding'"  0  "''" 0 "''" "''" "''" no   varhold         varhold-type   no-error }
-{ gbl/conf-rd.i "'is-scan'"  0  "''" 0 "''" "''" "''" no   v-is-scan       v-is-scan-type no-error }
+{ gbl/conf-rd.i "'is-tsd'"  0  "''" 0 "''" "''" "''" no   v-is-tsd       v-is-tsd-type no-error }
 { gbl/getsect.i run "''" 0 {&attr-nakl-glob} }
 for each thbjattr_thbj-attr :
     if thbjattr_thbj-attr.prop-code = 'is-bcdoc' then bcvalue = string(thbjattr_thbj-attr.property-value-logical) .

@@ -181,8 +181,8 @@ define variable is-petrolium   as logical   no-undo.
 define variable is-pieces      as logical   no-undo.
 define variable v-cond         as character no-undo init ?. /*режим вызова справочника товаров*/
 define variable varr-b         as character no-undo.
-define variable v-is-scan      as character no-undo .
-define variable v-is-scan-type as character no-undo .
+define variable v-is-tsd       as character no-undo .
+define variable v-is-tsd-type  as character no-undo .
 define variable v-exist  as logical   no-undo .
 define variable v-buket-gds-code as integer   no-undo .
 define variable v-param as character no-undo .
@@ -2528,7 +2528,7 @@ else do:
 end.
 { gbl/conf-rd.i "'is-prt'"   0 "''" 0 "''" "''" "''" yes prtvalue      prttype        no-error }
 { gbl/conf-rd.i "'holding'"  0 "''" 0 "''" "''" "''" no  varhold       varhold-type   no-error }
-{ gbl/conf-rd.i "'is-scan'"  0 "''" 0 "''" "''" "''" no  v-is-scan     v-is-scan-type no-error }
+{ gbl/conf-rd.i "'is-tsd'"   0 "''" 0 "''" "''" "''" no  v-is-tsd     v-is-tsd-type no-error }
 { gbl/getsect.i run "''" 0 {&attr-nakl-glob} }
 for each thbjattr_thbj-attr :
     if thbjattr_thbj-attr.prop-code = 'is-bcdoc' then bcvalue = string(thbjattr_thbj-attr.property-value-logical) .
@@ -2558,7 +2558,7 @@ if error-status :error then do:
 end.
 { gbl/hold-doc.i t-doc.doc-code is-doc-hold no-error }
 if error-status :error or is-doc-hold = ? then do: assign is-doc-hold = no. end.
-if v-is-scan = "no" then do: menu-item m-outs-2 :sensitive in menu m-outs = no. end.
+if v-is-tsd = "no" then do: menu-item m-outs-2 :sensitive in menu m-outs = no. end.
 prev-pardoc-mode = pardoc-mode.
 run ui-on in this-procedure ( input "enable" ) no-error.
 if error-status :error then do:
