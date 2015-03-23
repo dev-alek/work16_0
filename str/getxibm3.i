@@ -200,13 +200,15 @@ define variable c-attr-value as character no-undo.
                                 )
             ub.chk-pay.is-error = no
             .
-          create ub.chk-pay-attr.
-          assign 
-          ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
-          ub.chk-pay-attr.line-num   = lnp-spl
-          ub.chk-pay-attr.attr-code  = c-attr-code
-          ub.chk-pay-attr.attr-value = c-attr-value
-          no-error.
+            if not (c-attr-code = "" or c-attr-code = ?) then do:
+              create ub.chk-pay-attr.
+              assign 
+              ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
+              ub.chk-pay-attr.line-num   = lnp-spl
+              ub.chk-pay-attr.attr-code  = c-attr-code
+              ub.chk-pay-attr.attr-value = c-attr-value
+              no-error.
+            end.
           end.
           assign
           chk-pay.tot-sum = chk-pay.tot-sum + tot_sum
