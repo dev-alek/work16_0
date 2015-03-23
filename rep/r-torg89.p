@@ -62,6 +62,7 @@ define temp-table temp-grp-obj no-undo
   FIELD rasprod          as decimal
   FIELD rasvozv          as decimal
   FIELD rasperem         as decimal
+  FIELD rasvnesh         as decimal
   FIELD rasprvo          as decimal
   FIELD rasspis          as decimal
   FIELD raselse          as decimal
@@ -109,6 +110,7 @@ define temp-table temp-gds no-undo
   define variable it_rasprod    as decimal   no-undo .
   define variable it_rasvozv    as decimal   no-undo .
   define variable it_rasperem   as decimal   no-undo .
+  define variable it_rasvnesh   as decimal   no-undo .
   define variable it_rasprvo    as decimal   no-undo .
   define variable it_rasspis    as decimal   no-undo .
   define variable it_raselse    as decimal   no-undo .
@@ -270,7 +272,7 @@ define temp-table temp-gds no-undo
                               assign temp-grp-obj.raselse   = temp-grp-obj.raselse   + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
                           end .
                        end.
-  /*продажа*/          when {&TDEDT_Ras_Vnesh_Kass} or when {&TDEDT_Ras_Vnesh}
+  /*продажа*/          when {&TDEDT_Ras_Vnesh_Kass} 
                                                     then assign temp-grp-obj.rasprod    = temp-grp-obj.rasprod   + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
  /*продажи - возврат*/ when {&TDEDT_Vozvrat_Vnesh_Kass} then assign temp-grp-obj.rasprod = temp-grp-obj.rasprod  - ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
   /*возврат постав.*/  when {&TDEDT_Ras_Vnesh_VP}   then assign temp-grp-obj.rasvozv    = temp-grp-obj.rasvozv   + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
@@ -285,6 +287,10 @@ define temp-table temp-gds no-undo
                                 assign temp-grp-obj.rasspis    = temp-grp-obj.rasspis   + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl).
                              end .
                        end .
+                       
+                       when {&TDEDT_Ras_Vnesh}
+                       then assign temp-grp-obj.rasvnesh = temp-grp-obj.rasvnesh   + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
+                       
 /*ИНВЕНТАРИЗАЦИЯ:*/
   /*пересорт*/         when {&TDEDT_Peresort}       then assign temp-grp-obj.peresort   = temp-grp-obj.peresort  + (buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
                        when {&TDEDT_Inv} then do :
@@ -356,6 +362,7 @@ define temp-table temp-gds no-undo
                   it_rasprod      = it_rasprod  + temp-grp-obj.rasprod
                   it_rasvozv      = it_rasvozv  + temp-grp-obj.rasvozv
                   it_rasperem     = it_rasperem + temp-grp-obj.rasperem
+                  it_rasvnesh     = it_rasvnesh + temp-grp-obj.rasvnesh
                   it_rasprvo      = it_rasprvo  + temp-grp-obj.rasprvo
                   it_rasspis      = it_rasspis  + temp-grp-obj.rasspis
                   it_raselse      = it_raselse  + temp-grp-obj.raselse
@@ -393,6 +400,7 @@ define temp-table temp-gds no-undo
                                             , input temp-grp-obj.rasprod
                                             , input temp-grp-obj.rasvozv
                                             , input temp-grp-obj.rasperem
+                                            , input temp-grp-obj.rasvnesh
                                             , input temp-grp-obj.rasprvo
                                             , input temp-grp-obj.rasspis
                                             , input temp-grp-obj.raselse
@@ -413,6 +421,7 @@ define temp-table temp-gds no-undo
                                             , input it_rasprod
                                             , input it_rasvozv
                                             , input it_rasperem
+                                            , input it_rasvnesh
                                             , input it_rasprvo
                                             , input it_rasspis
                                             , input it_raselse
