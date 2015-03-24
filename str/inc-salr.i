@@ -633,7 +633,7 @@ on error undo, return error return-value
                   and (buf_Chk-gds.write-off-code = 0
                       or
                       buf_Chk-gds.write-off-code = ?) then do:
-        &scop my-message substitute("&1 &2 &3&4Чек &5 строка &6,&цена товара-услуги с бар-кодом &7=0&4Чек не будет закачан в продажу"  ~
+        &scop my-message substitute("&1 &2 &3&4Чек &5 строка &6, цена товара-услуги с бар-кодом &7=0&4Чек не будет закачан в продажу"  ~
                                     , vss-workfile                   ~
                                     , vss-revision                   ~
                                     , vss-description                ~

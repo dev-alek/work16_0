@@ -1020,7 +1020,7 @@ define buffer t-clients for ub.clients.
     run UI-on in this-procedure .
   end.
   apply "entry" to br-out in frame {&frame-name}.
-  reposition br-out to recid r-rec no-error.
+  
 end.
 
 on end-error, stop of frame {&frame-name}

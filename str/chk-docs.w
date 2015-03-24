@@ -526,7 +526,7 @@ DO WHILE next-prev = '':U:
     .
   /*end.*/
 END .
-reposition br-docs to recid v-doc-rec no-error.
+
 apply "entry" to br-docs in frame {&frame-name}.
 apply "value-changed" to br-docs in frame {&frame-name}.
 END.

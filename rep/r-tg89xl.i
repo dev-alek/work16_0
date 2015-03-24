@@ -57,6 +57,7 @@ define temp-table temp_line-data no-undo
     field d_rasprod       as decimal
     field d_rasvozv       as decimal
     field d_rasperem      as decimal
+    field d_rasvnesh      as decimal
     field d_rasprvo       as decimal
     field d_rasspis       as decimal
     field d_raselse       as decimal
@@ -106,16 +107,16 @@ on error undo, return error
 
     run xl-write-cell-data in this-procedure (
           input {&tg89xl-columnList}
-        , input "count,grpname,ostbegin,pripost,priperem,priprvo,privozv,prielse,rasprod,rasvozv,rasperem,rasprvo,rasspis,raselse,peresort,izlish,nedost,ostend":U
+        , input "count,grpname,ostbegin,pripost,priperem,priprvo,privozv,prielse,rasprod,rasvozv,rasperem,rasvnesh,rasprvo,rasspis,raselse,peresort,izlish,nedost,ostend":U
     ).
 
     run xl-write-cell-data in this-procedure (
           input {&tg89xl-columnType}
-        , input "S,S,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D":U
+        , input "S,S,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D":U
     ).
     run xl-write-cell-data in this-procedure (
           input {&tg89xl-columnAmount}
-        , input "18":U
+        , input "19":U
     ).
 
 /*    run xl-write-cell-data in this-procedure (*/
@@ -198,6 +199,7 @@ define input parameter p-d_prielse      as decimal   no-undo .
 define input parameter p-d_rasprod      as decimal   no-undo .
 define input parameter p-d_rasvozv      as decimal   no-undo .
 define input parameter p-d_rasperem     as decimal   no-undo .
+define input parameter p-d_rasvnesh     as decimal   no-undo .
 define input parameter p-d_rasprvo      as decimal   no-undo .
 define input parameter p-d_rasspis      as decimal   no-undo .
 define input parameter p-d_raselse      as decimal   no-undo .
@@ -231,6 +233,7 @@ on error undo, return error
         buf_temp_line-data.d_rasprod       =  p-d_rasprod
         buf_temp_line-data.d_rasvozv       =  p-d_rasvozv
         buf_temp_line-data.d_rasperem      =  p-d_rasperem
+        buf_temp_line-data.d_rasvnesh      =  p-d_rasvnesh
         buf_temp_line-data.d_rasprvo       =  p-d_rasprvo
         buf_temp_line-data.d_rasspis       =  p-d_rasspis
         buf_temp_line-data.d_raselse       =  p-d_raselse
@@ -252,6 +255,7 @@ on error undo, return error
         {&tabulation} buf_temp_line-data.d_rasprod
         {&tabulation} buf_temp_line-data.d_rasvozv
         {&tabulation} buf_temp_line-data.d_rasperem
+        {&tabulation} buf_temp_line-data.d_rasvnesh
         {&tabulation} buf_temp_line-data.d_rasprvo
         {&tabulation} buf_temp_line-data.d_rasspis
         {&tabulation} buf_temp_line-data.d_raselse

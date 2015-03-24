@@ -76,15 +76,13 @@ on error undo _main, return error substitute("Ошибка при удалении/отвязывании че
          ub.chk-doc-attr.out-code = ?.
       end.
     END .
+    
+    
     FOR EACH ub.chk-gds-pay WHERE
-              ub.chk-gds-pay.doc-code = ub.chk-doc.doc-code :
-      if g#news then do:
-        delete ub.chk-gds-pay.
-      end.
-      else do:
-         ub.chk-gds-pay.out-code = ?.
-      end.
+             ub.chk-gds-pay.doc-code = ub.chk-doc.doc-code :
+      delete ub.chk-gds-pay.
     END .
+    
     FOR EACH ub.c-chk-gds WHERE
               ub.c-chk-gds.doc-code = ub.chk-doc.doc-code :
       if g#news then do:

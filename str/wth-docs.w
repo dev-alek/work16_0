@@ -858,6 +858,7 @@ end.
     end.
     for each ub.chk-doc EXCLUSIVE-LOCK WHERE
             ub.chk-doc.out-code = buf_wth-doc.doc-code
+            and  lookup(string(ub.chk-doc.chk-type),{&wth-receipt-codes} )  > 0 
     ON ERROR UNDO, return no-apply
     ON STOP UNDO, return no-apply
             :

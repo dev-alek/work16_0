@@ -190,8 +190,8 @@ define variable varvalue                    as   character                     n
 define variable vartype                     as   character                     no-undo.
 define variable vartpsi                     as   character                     no-undo.
 define variable vartpsi-type                as   character                     no-undo.
-define variable v-is-scan                   as   character                     no-undo.
-define variable v-is-scan-type              as   character                     no-undo.
+define variable v-is-tsd                    as   character                     no-undo.
+define variable v-is-tsd-type               as   character                     no-undo.
 define variable v-is-pharm                  as   character                     no-undo.
 define variable v-is-pharm-type             as   character                     no-undo.
 define variable varlog                      as   logical                       no-undo.
@@ -2190,7 +2190,7 @@ do on error undo main-block, leave main-block :
    display varinplnsum m-inc with frame {&frame-name}.
    if pardoc-mode <> {&lookup} then line-rec = ?. /* указатель на ту строку, на которую надо встать */
 
-   if v-is-scan = "no" then do: menu-item m-outs-2:sensitive in menu m-outs = no. end.
+   if v-is-tsd = "no" then do: menu-item m-outs-2:sensitive in menu m-outs = no. end.
    if pardoc-mode = {&add-def} then do:
      find first bf_sysconf where bf_sysconf.host-code = v-cntxt-host-code-obj no-lock no-error .
    end.
@@ -4299,7 +4299,7 @@ do on error undo, return error return-value :
 { gbl/conf-rd.i  "'is-prt'"    0  "''"  0 "''" "''" "''"                              yes prtvalue         prttype}
 { gbl/conf-rd.i  "'holding'"   0  "''"  0 "''" "''" "''"                              no  varhold          varhold-type}
 { gbl/conf-rd.i  "'tpsi'"      0             "''"         0         "''"  "''"  "''"  no  vartpsi       vartpsi-type }
-{ gbl/conf-rd.i  "'is-scan'"   0             "''"         0         "''"  "''"  "''"  no  v-is-scan     v-is-scan-type }
+{ gbl/conf-rd.i  "'is-tsd'"    0             "''"         0         "''"  "''"  "''"  no  v-is-tsd     v-is-tsd-type }
 { gbl/conf-rd.i  "'is-pharm'" v-cntxt-host-code-obj v-cntxt-obj-type v-cntxt-obj-code "''" "''" "''"  no  v-is-pharm       v-is-pharm-type no-error}.
 
 if v-is-pharm <> "yes" then v-is-pharm = "no" .

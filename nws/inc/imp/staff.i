@@ -90,6 +90,13 @@ for each buf_staff where
         v-import = no.
       end.
     end.
+    if buf_staff.date-end < wt-staff.date-end then do:
+      if buf_staff.date-start = wt-staff.date-start then do:
+        buf_staff.date-end = wt-staff.date-end.
+        v-import = yes.
+        leave.
+      end.
+    end. 
   end.
   else do:
     if buf_staff.date-start < wt-staff.date-start
