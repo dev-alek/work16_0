@@ -132,7 +132,7 @@ B-hist b-help br-shift
 /* Menu Definitions                                                     */
 DEFINE MENU MENU-B-rep
        MENU-ITEM mi-petrol      LABEL "Сменный отчет"
-       MENU-ITEM mi-ptrlch      LABEL "Технологический по ТРК"
+       MENU-ITEM mi-ptrlch      LABEL "Технологический отчет по ТРК"
        MENU-ITEM mi-ukrptl      LABEL "Сменный отчет АЗС (Украина)".
 
 

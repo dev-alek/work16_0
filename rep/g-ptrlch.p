@@ -60,12 +60,13 @@ custom-par = "shop,{&send-check},{&Excel-yes}" + {&comma-char} +
 
 run rep/d-report.w (
                      input parparentproc
-                    ,input 'rep/r-ptrlch.p'
+/*                    ,input 'rep/r-ptrlch.p'*/
+                    ,input 'rep/e-ptrlch.w'
                     ,input 'Технологический отчет по ТРК'
-                    ,input 7
+                    ,input 4
                     ,input '':U
                     ,input "*"
                     ,input ""
                     ,input '':U
                     ,input custom-par
-                    ,input yes).
+                    ,input no).
