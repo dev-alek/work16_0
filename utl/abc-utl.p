@@ -13,10 +13,10 @@ Author: Svetlana Chernova
 Creation date: 04/22/09
 
 */
-
+define input parameter parParentProc as handle           no-undo.
 define variable p-install as logical no-undo init true  .
 
-{ cmp/str-glbl.i }
+
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -31,7 +31,9 @@ def var v-ind          as integer no-undo .
 def var v-err-count    as integer no-undo .
 def var v-file-name    as char no-undo init "03091801.txt".
 
-
+{ cmp/vssrevis.i }
+{ cmp/str-glbl.i }
+{ cmp/library.i  }
 
 def frame a
   "Создание справочника Критерии анализа"

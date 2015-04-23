@@ -1491,7 +1491,16 @@ define variable vss-description as character no-undo init "".
 /* {&bef-menuload_service_utility}                                                */
 /* Сервис/ Служебные программы                                                */
 /* -------------------------------------------------------------------------- */
-
+{gbl/menuload.i
+{&bef-menuload_service_utility}
+"'Начальное формирование справочника критериев анализа'"
+"'utl/abc-utl.p'"
+"''"
+"''"
+"''"
+" "
+"yes"
+}
 
 { gbl/menuload.i
   {&bef-menuload_service_utility}
