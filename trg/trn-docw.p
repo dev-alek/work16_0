@@ -3687,9 +3687,10 @@ procedure process-line :
     end.
 
     /* ---------------------- Обработка статуса ФАКТ ---------------------------- */
+    
     if v-process-goods
     then do:
-      if ub.trn-doc.doc-type = {&income}
+      if ub.trn-doc.doc-type = {&income} and ub.shop.in-ov 
       then do:
         /* устанавливается признак того, что товар необходимо переоценить */
         define variable l-in-ov as logical no-undo .

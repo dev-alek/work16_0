@@ -421,6 +421,12 @@ define variable vss-description as character no-undo init "Информация об объекте
   "yes"
 }
 { gbl/menuload.i
+ {&bef-menuload_adm_function}
+  "'Снятие отметки <Требует переоценки> с товаров'"
+  "'utl/in-ov1.p'"
+}
+
+{ gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Снять отметки <Требует переоценки> для удаленных товаров'"
   "'utl/inov-del.p'"
