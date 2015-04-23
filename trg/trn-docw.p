@@ -3593,6 +3593,7 @@ procedure process-line :
       undo, return error return-value .
     end.
 
+    if ub.trn-doc.doc-type <> "рас" then do:
     /* тип товара должен соответствовать типу документа */
     if (ub.trn-doc.office and buf_goods.gds-type <> {&gds-office})
     or (not ub.trn-doc.office and buf_goods.gds-type <> {&gds-goods})
@@ -3608,7 +3609,7 @@ procedure process-line :
         view-as alert-box error .
       undo, return error return-value .
     end.
-
+    end.
     /* проверяем, что заданы фактическое количество и количество по документу */
     if buf_doc-line.doc-qnty = ?
     then do:
