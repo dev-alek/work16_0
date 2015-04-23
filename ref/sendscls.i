@@ -544,14 +544,14 @@ CASE p-scales-type:
   end.
   when "SHTRIH-M" then do:
     if p-mode = {&update} then do:
-      run create-name-str-2 in this-procedure ( buffer buf_goods, input 28, output name-buf1, output name-buf2) .
+      run create-name-str-2 in this-procedure ( buffer buf_goods, input 56, output name-buf1, output name-buf2) .
       name-buf1 = trim(name-buf1).
       assign
       v-main-string = string(1) + "|" +       /*добавление*/
                       string(p-pLU-code) + "|"  +
                       string(p-b-str, "x(5)") + "|" +
                       string(replace(name-buf1, "|", " "), "x(56)" ) + "|" +
-                      /*вторая строка названия зарезерви*/ "" + "|" +
+                      /*вторая строка названия зарезерв*/ "" + "|" +    
                       get-wt-cart(p-scales-type, p-wt-cart, p-scales-db-num, p-scales-num, p-tara-string, p-dec-delim) + "|" +
                       string(scl-gds-ld2(p-deadline, p-deaddate, p-deadflag), ">>>>9") + "|" +
                       (if p-dec-delim = {&comma-char}
@@ -2333,7 +2333,7 @@ else do:
                                     ,p-file-name).
             run gbl/syn6.p
               (input v-cmd-line
-              ,input "log.txt"
+              ,input out-dir + "log.txt"
               ,input "Ждите! Идет передача на весы..."
               ,output chr-res
               ) no-error .
