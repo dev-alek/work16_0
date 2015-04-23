@@ -16,21 +16,21 @@ Creation date: 02/02/10
 */
 
 define input parameter parparentproc as widget-handle no-undo .
-define input parameter p-parent-handle          as handle                  no-undo .
-define input parameter p-log-handle             as handle                  no-undo .
-define input parameter p-cont-handle            as handle                  no-undo .
-define input parameter p-call-handle            as handle                  no-undo .
-define input parameter p-rebh                   as handle                  no-undo . /*для ошибок*/
-define input parameter p-rdbh                   as handle                  no-undo . /*destination*/
-define input parameter p-report-id              as character               no-undo .
-define input parameter p-log-file-name          as character               no-undo .
-define input parameter p-batch                  as integer                 no-undo .
-define input parameter p-codex-id               as integer                 no-undo .
-define input parameter p-ruleset-id             as integer                 no-undo .
-define input parameter p-print-form             as integer                 no-undo .
-define input parameter p-plain-txt              as   logical               no-undo .
-define input parameter p-xls                    as   logical               no-undo .
-define input parameter p-dir-name               as   character             no-undo .
+define var p-parent-handle          as handle                  no-undo .
+define var p-log-handle             as handle                  no-undo .
+define var p-cont-handle            as handle                  no-undo .
+define var p-call-handle            as handle                  no-undo .
+define var p-rebh                   as handle                  no-undo . /*для ошибок*/
+define var p-rdbh                   as handle                  no-undo . /*destination*/
+define var p-report-id              as character               no-undo .
+define var p-log-file-name          as character               no-undo .
+define var p-batch                  as integer                 no-undo .
+define var p-codex-id               as integer                 no-undo .
+define var p-ruleset-id             as integer                 no-undo .
+/*define var p-print-form             as integer                 no-undo .*/
+define var p-plain-txt              as   logical               no-undo .
+define var p-xls                    as   logical               no-undo .
+define variable  p-dir-name               as   character             no-undo .
 
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -183,10 +183,17 @@ define variable v-shift-multydate as logical no-undo.                   /* TH #3
 define variable v-date-start-multydate as date no-undo.                 /* TH #3077 */
 define variable shift-alone as logical no-undo.                         /* TH #3077 */
 
+p-batch = integer({&repcalc-type-operator}).
+p-codex-id = 0.
+p-ruleset-id = 0.
+p-log-file-name = "".
+p-plain-txt = yes.
+p-xls = yes.
+p-dir-name = "".
 
    assign
       v-line  = fill( "-" , 100 )
-      v-tab110 = fill( " " , 110  )
+      v-tab110 = fill( " " , 160  )
    .
 
   { cmp/open-out.i stream out-stream  " " }
@@ -446,7 +453,7 @@ define variable shift-alone as logical no-undo.                         /* TH #3
             assign
               sheetf.sheet-num = v-sheet-num
               sheetf.Excel-Column-Lable = "Номер документа,От кого получено или кому выдано,Номер коррес-пондирующего счета\субсчета,Приход руб.коп.,Расход руб.коп."
-              sheetf.Sizes  = "10,40,15,11,11"
+              sheetf.Sizes  = "10,40,15,15,15"
               Sheetf.ColFOrmat   = "1=@;2=@;3=@;4=0.00;5=0.00"
               Make-excel = p-xls  /*иногда не хотим пеачать в excel!!!*/
               Make-excel-com = false
@@ -471,13 +478,13 @@ define variable shift-alone as logical no-undo.                         /* TH #3
                 assign  str1 = v-obj-name.
             end.
     
-            if p-print-form = 1 then do :
-                assign  str2 = "Вкладной лист кассовой книги" .
-            end.
-            else do :
-                assign  str2 = "Отчет кассира" .
-            end.
-            
+/*            if p-print-form = 1 then do :                      */
+/*                assign  str2 = "Вкладной лист кассовой книги" .*/
+/*            end.                                               */
+/*            else do :                                          */
+/*                assign  str2 = "Отчет кассира" .               */
+/*            end.                                               */
+/*                                                               */
             assign
                 v-date-name = string(day(v-date-start)) + " " + MonthNameRusGen(MONTH ( v-date-start )) + " " + string(year(v-date-start))
             .
@@ -494,14 +501,20 @@ define variable shift-alone as logical no-undo.                         /* TH #3
                 if v-multy-shift = yes then
                     do:
                         v-date-name = v-date-name + ". Смена c " + v-shift-name-min + " (" + string(v-shift-num-min) + ")" + " по " + v-shift-name-max + " (" + string(v-shift-num-max) + ")".
+                      v-tab110 = fill( " " , 100  )
+   .
                     end.
 
                 if v-multy-shift = no then
                     do:
                         v-date-name = v-date-name + ". Смена " + v-shift-name-min + " (" + string(v-shift-num-min) + ")".
+                          v-tab110 = fill( " " , 140  )
+   .
                         if v-shift-multydate = yes and v-date-start-multydate <> ? then
                             do:
                                 v-date-name = v-date-name + " от " + string(v-date-start-multydate) + ".".
+                                  v-tab110 = fill( " " , 117  )
+   .
                             end.
                     end.
 
