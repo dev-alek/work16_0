@@ -85,7 +85,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       end.
     end.
     else do:
-      if  ub.gds-grp-obj-attr.attr-code  <> {&ggoattr-QntyAssMat} then do:
+      if  ub.gds-grp-obj-attr.attr-code  <> {&ggoattr-QntyAssMat} and ub.gds-grp-obj-attr.obj-code > 0 then do:
           find first buf_clients no-lock
             where buf_clients.obj-code = ub.gds-grp-obj-attr.obj-code
               and buf_clients.obj-type = ub.gds-grp-obj-attr.obj-type
@@ -105,6 +105,12 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
               .
           end.
     end.
+        else if  ub.gds-grp-obj-attr.attr-code  <> {&ggoattr-QntyAssMat} then do:
+            assign
+                v-list-db-for-send = ""
+                v-need-send        = true
+              .
+        end.
     else do:
        v-need-send = false .
     end.
