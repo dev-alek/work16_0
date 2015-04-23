@@ -981,11 +981,11 @@ DO:
         v-parts-cst-code = buf_parts.cst-code
       .
 
-      run gbl/fldfrmt.p
-        (input  "parts":U
-        ,input  "cst-code":U
-        ,output v-cst-code-format
-        ) .
+/*      run gbl/fldfrmt.p          */
+/*        (input  "parts":U        */
+/*        ,input  "cst-code":U     */
+/*        ,output v-cst-code-format*/
+/*        ) .                      */
 
       run gbl/d-prompt.w
         ( 'title=':U + "Введите новый ГТД" + '\':U
@@ -994,7 +994,7 @@ DO:
         + 'text2=' + "Артикул " + str-encode(buf_parts.artic, "", '\=':U )
           + {&space-char} + string(buf_parts.prod-type)
           + {&space-char} + string(buf_parts.prod-code) + '\':U
-        + 'format=' + v-cst-code-format + '\':U
+        + 'format=' + 'X(60)' + '\':U
         + 'type=character':U
         ,input-output v-parts-cst-code
         ).
