@@ -1,10 +1,10 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*------------------------------------------------------------------------
 
 $Revision$
@@ -38,7 +38,7 @@ define variable vss-description as character no-undo init "Градуировочная таблиц
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { cmp/showinf.i  }
-
+{ gbl/waitfram.i }
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc   as widget-handle  no-undo .
 define input parameter p-obj-type      as character      no-undo .
@@ -53,7 +53,7 @@ define buffer buf_place    for ub.place .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -68,8 +68,8 @@ define buffer buf_place    for ub.place .
 &Scoped-define INTERNAL-TABLES buf_pl-level
 
 /* Definitions for BROWSE BROWSE-2                                      */
-&Scoped-define FIELDS-IN-QUERY-BROWSE-2 buf_pl-level.pl-level pl-qnty
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2
+&Scoped-define FIELDS-IN-QUERY-BROWSE-2 buf_pl-level.pl-level pl-qnty 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2 
 &Scoped-define QUERY-STRING-BROWSE-2 FOR EACH buf_pl-level ~
       WHERE buf_pl-level.obj-type = p-obj-type ~
  AND buf_pl-level.obj-code = p-obj-code ~
@@ -87,8 +87,8 @@ define buffer buf_place    for ub.place .
     ~{&OPEN-QUERY-BROWSE-2}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-add b-chg b-del b-load b-help ~
-BROWSE-2
+&Scoped-Define ENABLED-OBJECTS b-exit b-add b-chg b-del b-load b-delete ~
+b-help BROWSE-2 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -103,35 +103,39 @@ BROWSE-2
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить"
+DEFINE BUTTON b-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-del
-     LABEL "&Удалить"
+DEFINE BUTTON b-del 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "&Выход"
+DEFINE BUTTON b-delete 
+     LABEL "Очистить" 
+     SIZE 9.5 BY 1.
+
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-load
-     LABEL "&Загрузить"
+DEFINE BUTTON b-load 
+     LABEL "&Загрузить" 
      SIZE 10 BY 1.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BROWSE-2 FOR
+DEFINE QUERY BROWSE-2 FOR 
       buf_pl-level SCROLLING.
 &ANALYZE-RESUME
 
@@ -139,11 +143,11 @@ DEFINE QUERY BROWSE-2 FOR
 DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame _STRUCTURED
   QUERY BROWSE-2 NO-LOCK DISPLAY
-      buf_pl-level.pl-level FORMAT ">,>>9" column-label "Уровень, см"
-      pl-qnty  column-label "Объем, литры"
+      buf_pl-level.pl-level WIDTH 15
+      pl-qnty WIDTH 45.13
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 53 BY 17.5 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 63.5 BY 17.5 ROW-HEIGHT-CHARS .75 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -154,11 +158,12 @@ DEFINE FRAME Dialog-Frame
      b-chg AT ROW 1 COL 21 WIDGET-ID 4
      b-del AT ROW 1 COL 31 WIDGET-ID 6
      b-load AT ROW 1 COL 41 WIDGET-ID 8
-     b-help AT ROW 1 COL 44
+     b-delete AT ROW 1 COL 51 WIDGET-ID 10
+     b-help AT ROW 1 COL 54
      BROWSE-2 AT ROW 2.25 COL 1 WIDGET-ID 200
-     SPACE(0.00) SKIP(0.12)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     SPACE(3.49) SKIP(0.00)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Градуировочная таблица"
          DEFAULT-BUTTON b-exit WIDGET-ID 100.
 
@@ -181,7 +186,7 @@ DEFINE FRAME Dialog-Frame
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BROWSE-2 b-help Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -199,14 +204,14 @@ ASSIGN
  AND buf_pl-level.obj-code = p-obj-code
  AND buf_pl-level.pl-code = p-pl-code"
      _FldNameList[1]   > "_<CALC>"
-"buf_pl-level.pl-level" ? ? ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"buf_pl-level.pl-level" ? ? ? ? ? ? ? ? ? no ? no no "15" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > "_<CALC>"
-"pl-qnty" ? ? "decimal" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"pl-qnty" ? ? "decimal" ? ? ? ? ? ? no ? no no "45.13" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is OPENED
 */  /* BROWSE BROWSE-2 */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -318,6 +323,54 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-delete
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-delete Dialog-Frame
+ON CHOOSE OF b-delete IN FRAME Dialog-Frame /* Очистить */
+    DO:
+   
+        define variable v-delete as logical no-undo.
+        if available buf_pl-level then 
+        do:
+            message
+                SUBSTITUTE ( "Очистить таблицу? " ) 
+                  
+                view-as alert-box information
+                BUTTONS YES-NO
+                update v-delete
+                .
+            IF v-delete
+                THEN 
+            DO:
+                run waitfram-show in this-procedure ( input "Ждите...").
+   
+                FOR EACH buf_pl-level 
+                    WHERE buf_pl-level.obj-type = p-obj-type 
+                    AND buf_pl-level.obj-code = p-obj-code 
+                    AND buf_pl-level.pl-code = p-pl-code .
+ 
+                    delete buf_pl-level.
+                end.
+                run waitfram-hide in this-procedure.
+                if error-status:error then 
+                do:
+                    message 
+                        error-status:get-message(1) skip
+                        return-value
+                        view-as alert-box error.
+                    return no-apply.
+                end.
+                else 
+                do:
+                    run enable_UI in this-procedure.
+                end.
+            END.
+        end.
+    END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit Dialog-Frame
 ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
@@ -344,8 +397,6 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 
 &Scoped-define SELF-NAME b-load
@@ -396,7 +447,7 @@ END.
 &Scoped-define BROWSE-NAME BROWSE-2
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -451,7 +502,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-pl-level Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-pl-level Dialog-Frame 
 PROCEDURE check-pl-level :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -515,7 +566,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE del-pl-level Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE del-pl-level Dialog-Frame 
 PROCEDURE del-pl-level :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -589,7 +640,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -608,10 +659,10 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-exit b-add b-chg b-del b-load b-help BROWSE-2
+  ENABLE b-exit b-add b-chg b-del b-load b-delete b-help BROWSE-2 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -619,3 +670,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
