@@ -283,7 +283,7 @@ on error undo, return error return-value
     substring( string( v-host-name + fill( '_', 40 ), "x(40)":U ), 1, 40 ) +
                                             ' óïðàâëåíèå                                                                                                                                                                                                                                                         Óòâåðæäåíà Ãîñêîìíåôòåïðîäóêòîì ÑÑÑÐ' skip
     '________________________________________ íåôòåáàçà                                                                                                                                                                                                                                                              15 àâãóñòà 1985 ã. ¹ 06/21-8-446' skip
-    '  ÀÇÑ ¹ ' + substring( trim( string( bf_trn-doc.obj-code, ">>>>>>>>9":U ) ) + fill( '_', 32 ), 1, 32 )                                                                                                                                                                                                                                            skip( 2 )
+     substring( trim( string( bf_object.obj-name , "x(40)":U) )  + fill( '_', 32 ), 1, 32 )                                                                                                                                                                                                                                             skip( 2 )
     CenterLine( Sparse( 'ÈÍÂÅÍÒÀÐÈÇÀÖÈÎÍÍÀß ÎÏÈÑÜ ÍÅÔÒÈ È ÍÅÔÒÅÏÐÎÄÓÊÒÎÂ' ), {&ReportWidth} )                                                                                                                                                                                                                                                          skip
     CenterLine( substitute( '¹ &1 îò "&2" &3 &4 ã.'
                           , trim( bf_trn-doc.doc-code )
@@ -370,7 +370,7 @@ on error undo, return error return-value
   run r-orioxl-write-cell-data in this-procedure
     ( input {&r-orioxl-h_ObjCode}
     , input substitute( ' &1'
-                      , trim( string( bf_trn-doc.obj-code, ">>>>>>>>9":U ) )
+                      , trim( string( bf_object.obj-name, "x(40)":U  ) )
                       )
     ) .
   run r-orioxl-write-cell-data in this-procedure
