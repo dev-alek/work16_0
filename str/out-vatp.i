@@ -162,6 +162,8 @@ else do:
       out-vatp-have-vat-slt{5} = yes.
   end.
   else do:
+     out-vatp-have-vat-slt{5} = no. 
+      /*
     if out-vatp_doc-attr{5}.attr-value <> "yes":u then do:
       assign
         out-vatp-have-vat-slt{5} = yes.
@@ -180,6 +182,7 @@ else do:
           out-vatp-have-vat-slt{5} = yes.
       end.
     end.
+    */
   end.
 end.
 &scop road-tax-dtl    (if {2}road-tax = ? then 0 else {2}road-tax ~{&rate-calc-rubl-base})
