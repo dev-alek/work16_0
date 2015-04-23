@@ -1639,6 +1639,7 @@ on error undo, return error
             , input v-obj-list
             , input v-date-to
             , input v-cst
+            , input v-parts
             , input no
             , input 0
             , input v-bge-editor-handle
@@ -1646,6 +1647,7 @@ on error undo, return error
         ).
     end.        /* if v-bge-isbgeold = yes */
     else do:
+
         run bge/bgestd.p (
               input parparentproc
             , input v-bge-host-code
@@ -1653,6 +1655,7 @@ on error undo, return error
             , input v-obj-list
             , input v-date-to
             , input v-cst
+            , input v-parts
             , input no
             , input 0
             , input v-bge-editor-handle
