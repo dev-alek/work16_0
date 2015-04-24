@@ -26,7 +26,7 @@ Input:
                                         3 - все, кроме tb-supp (остатки по поставщикам) и галок.
                                         4 - то же, что и 2, но с выбором объектов и с одной (последней) датой
                                         5 - только выбор объектов
-                                        6 - то же, что и 3, но с выботом типа платежей
+                                        6 - то же, что и 3, но с выбором типа платежей
     p-init-doc-type-list as character    - список типов документов
 Output:
     date_exp_from  as date          - Дата с
@@ -718,7 +718,7 @@ DO:
     or p-output-type = 5
     or p-output-type = 6
     then do:
-        if p-output-type = 1
+        if p-output-type = 1 or p-output-type = 4 
         then do:
             assign
                 p-pay-code     = tb-inkass-pay-code
@@ -1147,6 +1147,7 @@ on error undo, return error return-value
         tb-pay-desk-cards
       with frame {&frame-name}.
     end.
+    end.
     display
       date_from    when not( p-output-type = 4 or p-output-type = 5)
       date_to
@@ -1160,7 +1161,7 @@ on error undo, return error return-value
       tb-pay-desk-cards
       tb-supp           when p-output-type = 2
     with frame {&frame-name}.
-  end.
+  
   if num-entries(v-list,';') = 2
   then do:
     assign

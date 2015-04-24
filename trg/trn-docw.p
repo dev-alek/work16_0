@@ -3593,6 +3593,7 @@ procedure process-line :
       undo, return error return-value .
     end.
 
+    if ub.trn-doc.doc-type <> "рас" then do:
     /* тип товара должен соответствовать типу документа */
     if (ub.trn-doc.office and buf_goods.gds-type <> {&gds-office})
     or (not ub.trn-doc.office and buf_goods.gds-type <> {&gds-goods})
@@ -3608,7 +3609,7 @@ procedure process-line :
         view-as alert-box error .
       undo, return error return-value .
     end.
-
+    end.
     /* проверяем, что заданы фактическое количество и количество по документу */
     if buf_doc-line.doc-qnty = ?
     then do:
@@ -3686,9 +3687,10 @@ procedure process-line :
     end.
 
     /* ---------------------- Обработка статуса ФАКТ ---------------------------- */
+    
     if v-process-goods
     then do:
-      if ub.trn-doc.doc-type = {&income}
+      if ub.trn-doc.doc-type = {&income} and ub.shop.in-ov 
       then do:
         /* устанавливается признак того, что товар необходимо переоценить */
         define variable l-in-ov as logical no-undo .

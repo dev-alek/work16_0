@@ -62,6 +62,7 @@ procedure lggdstrn :
                              , pargds-prod-code
                              , pardoc-code      ).
     end.
+    if parext-doc-type <> {&TDEDT_Ras_Vnesh} then do:
     if pardoc-office <> pargds-office
     then do:
       if pardoc-office = yes
@@ -72,6 +73,7 @@ procedure lggdstrn :
       else do:
         return error substitute( 'В документе "&1" уже есть товары. Добавление услуг в документ недопустимо.'
                                , pardoc-code ).
+      end.
       end.
     end.
     if pargds-pl-reserv = yes

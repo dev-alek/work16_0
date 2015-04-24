@@ -2456,8 +2456,8 @@ else do:
     v-notcorr       = "":U
     v-cli-code      = 0
     v-alc-min-price = "":U
-    v-no-inc-auto-rep = "no"
-    v-ban-sales-via-cd = "no"
+    v-no-inc-auto-rep = "no":U
+    v-ban-sales-via-cd = "no":U
     .
 end.
 
@@ -2715,7 +2715,7 @@ PROCEDURE show-hide-lock :
 ------------------------------------------------------------------------------*/
 v-cli-name = func-cli-name (v-cli-type,v-cli-code) .
 CASE p-mode:
-  when {&update} then do:
+  when {&update} or when {&lookup} then do: /* ÒÍ-3197 Àðí. 16.04.2015 */
     if v-marg-min <> ? and v-marg-max <> ? then do:
       display
       v-marg-min @ fi-marg-min

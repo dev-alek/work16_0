@@ -40,7 +40,7 @@ define variable kk as integer   no-undo .
 define variable k as integer   no-undo .
 
 
-run waitfram-show ("Обработка товаров. ЖДИТЕ...").
+run waitfram-show ("Обработка товаров. ЖДИТЕ..."). 
 k = 0 .
 kk = 0 .
 for each ub.goods no-lock

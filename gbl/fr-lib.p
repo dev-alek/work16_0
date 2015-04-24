@@ -107,7 +107,7 @@ PROCEDURE fr-init :
 ------------------------------------------------------------------------------*/
 define input parameter p-dc-number     as integer        no-undo.
 define input parameter p-shop-number   as integer        no-undo.
-define input parameter p-serial-number as integer        no-undo.
+define input parameter p-serial-number as character        no-undo.
 define input  parameter p-fr-type      as character      no-undo .
 define input  parameter p-com-port     as character      no-undo .
 define output parameter p-fr-model     as integer        no-undo.
@@ -358,7 +358,7 @@ ON ERROR UNDO, RETURN ERROR
 
        if v-return = 0 then
        do:
-          if integer(v-Ser-Num) <> p-serial-number then
+          if v-Ser-Num <> p-serial-number then
           do:
             assign
               p-err-message = SUBSTITUTE ( "Серийный номер ФР (&1) отличается от указанного в настройках (&2)"

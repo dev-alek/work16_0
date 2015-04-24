@@ -106,7 +106,8 @@ assign
         in-vatp-have-vat-slt{5} = yes.
     end.
     else do:
-      if in-vatp_doc-attr{5}.attr-value <> "yes":u then do:
+         in-vatp-have-vat-slt{5} = no.
+     /* if in-vatp_doc-attr{5}.attr-value <> "yes":u then do:
         assign
           in-vatp-have-vat-slt{5} = no.
       end.
@@ -124,7 +125,7 @@ assign
           assign
             in-vatp-have-vat-slt{5} = yes.
         end.
-      end.
+      end.  */
     end.
   end.
   assign
@@ -156,17 +157,21 @@ assign
     other-cli-loc{5}      = 0
   .
 &ELSE
+  /* 
    find first in-vatp-trn-doc{5} where in-vatp-trn-doc{5}.doc-code = {2}doc-code no-lock.
    find in-vatp-sysconf{5} where in-vatp-sysconf{5}.host-code = in-vatp-trn-doc{5}.host-code no-lock.
+   */
    find first in-vatp_doc-attr{5} no-lock
     where in-vatp_doc-attr{5}.doc-code  = {3}doc-code
       and in-vatp_doc-attr{5}.attr-code = {&trdcattr-envd}
     no-error .
-    if available in-vatp_doc-attr{5} and /*   if in-vatp-sysconf{5}.vat-sp = 999 and*/
+    if available in-vatp_doc-attr{5} 
+    /* and /*   if in-vatp-sysconf{5}.vat-sp = 999 and*/
       (in-vatp-trn-doc{5}.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass}     or
       in-vatp-trn-doc{5}.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass} or
       (in-vatp-trn-doc{5}.ext-doc-type = {&TDEDT_Ras_Vnesh}     and in-vatp-trn-doc{5}.pay-code = in-vatp-sysconf{5}.cash-pay) or
-      (in-vatp-trn-doc{5}.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} and in-vatp-trn-doc{5}.pay-code = in-vatp-sysconf{5}.cash-pay)) then do:
+      (in-vatp-trn-doc{5}.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} and in-vatp-trn-doc{5}.pay-code = in-vatp-sysconf{5}.cash-pay)) */
+       then do:
        assign
          in-vatp-have-vat-slt{5} = no.
    end.

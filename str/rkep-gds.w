@@ -1083,9 +1083,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   { gbl/mv-clmn.i
     &browse-name = "br-rkep-gds"
     &frame-name = "{&frame-name}"
-    &ext-col = 15
+    &ext-col = 12
     &start-column = 1
-    &prev-order-column_1 = "'1,2,3,4,5,6,7,8,9,10,11,12,13,14,15'"
+    &prev-order-column_1 = "'1,2,3,4,5,6,7,8,9,10,11,12'"
     &prev-order-column-condition_1 = " true "
     }
 

@@ -24,6 +24,7 @@ define input parameter p-date-to                as date             no-undo.
 define input parameter p-fact-order-to          as integer          no-undo.
 define input parameter p-obj-list               as character        no-undo.
 define input parameter p-parameter-list         as character        no-undo.
+define input parameter p-parts                  as character        no-undo.
 define input parameter p-xml-file-name          as character        no-undo.
 define input parameter p-log-file-name          as character        no-undo.
 define input parameter p-list-file-name         as character        no-undo.
@@ -264,14 +265,32 @@ define input parameter p-r-b-is-base    as logical          no-undo.
     define variable v-type as character no-undo.
     define variable v-value as character no-undo.
     define variable v-not-output-result as logical      no-undo.
-
+    define variable v-in-code as character no-undo.
+    define variable v-parts-code as character no-undo.
+    define variable v-fact-qnty as decimal no-undo.
+    define variable v-supp-type as character no-undo.
+    define variable v-supp-code as integer no-undo.
+    define VARIABLE v-price-cli as decimal no-undo.
+    define variable v-cst-code as character no-undo.
+    define VARIABLE v-gds-attr-value-old as character no-undo.
+    define VARIABLE v-gds-attr-type as character no-undo.
+    define VARIABLE v-alc-bottling-date like ub.parts.alc-bottling-date no-undo.
+    define VARIABLE v-alc-ref-ab-path like ub.parts.alc-ref-ab-path no-undo.
+    define VARIABLE v-alc-quality-certif-path like ub.parts.alc-quality-certif-path no-undo.
+    define VARIABLE v-alc-certif-path like ub.parts.alc-certif-path no-undo.
+    define VARIABLE v-alc-imp-code like ub.parts.alc-imp-code no-undo.
+    define VARIABLE v-alc-imp-type like ub.parts.alc-imp-type no-undo.
+    
     define buffer buf_goods             for ub.goods.
     define buffer buf_crsa_stk-line     for ub.stk-line.
     define buffer buf_cost_stk-line     for ub.stk-line.
+    define buffer buf_reserv_parts      for ub.parts. 
+ 
 do
 for buf_goods
   , buf_crsa_stk-line
   , buf_cost_stk-line
+  , buf_reserv_parts
 on error undo, return error
 :
     find last buf_cost_stk-line no-lock
@@ -360,7 +379,7 @@ on error undo, return error
                 .
             end.
         end.        /* NOT ( if p-r-b-is-base = yes ) */
-    end.
+    end. /* if ( not available buf_cost_stk-line )*/
     if v-not-output-result = yes
     then do:
         undo, return .
@@ -434,7 +453,7 @@ on error undo, return error
                                 , p-obj-code
                                 , buf_goods.gds-code )
         ).
-    end.
+    end. /*if error-status :error*/
     run bgelib-tag-open( input 1, input "storeGoods", input "" ).
     run bgelib-tag-put( input 2, input "storeCode"      , input p-obj-type + string( p-obj-code ) , input 0 ).
     run bgelib-tag-put( input 2, input "goodsCode"      , input string( v-gds-code              ) , input 0 ).
@@ -474,7 +493,7 @@ on error undo, return error
         run bgelib-tag-put( input 2, input "goodsCostTransportb"   , input string( buf_cost_stk-line.transport-base  ) , input 2 ).
         run bgelib-tag-put( input 2, input "goodsCostOtherb"       , input string( buf_cost_stk-line.other-base      ) , input 2 ).
         run bgelib-tag-put( input 2, input "goodsCostExciseb"      , input string( buf_cost_stk-line.excise-base     ) , input 2 ).
-    end.
+    end. /*if available buf_cost_stk-line*/
     if available buf_crsa_stk-line
     then do:
         if p-r-b-is-base = yes
@@ -496,8 +515,67 @@ on error undo, return error
             run bgelib-tag-put( input 2, input "goodsSaleOtherr"       , input string( buf_crsa_stk-line.other-rubl      ) , input 2 ).
             run bgelib-tag-put( input 2, input "goodsSaleExciser"      , input string( buf_crsa_stk-line.excise-rubl     ) , input 2 ).
         end.        /* NOT ( if v-r-b-is-base = yes ) */
-    end.
+    end. /*if available buf_crsa_stk-line*/
+
+        if p-parts = "yes" then do:
+          for each buf_reserv_parts where buf_reserv_parts.artic = p-artic
+                                  and buf_reserv_parts.prod-code = p-prod-code
+                                  and buf_reserv_parts.prod-type = p-prod-type
+                                  and buf_reserv_parts.obj-code = p-obj-code
+                                  and buf_reserv_parts.obj-type = p-obj-type
+                                  and buf_reserv_parts.out-code = {&free-code}:
+                assign
+                v-in-code = buf_reserv_parts.in-code
+                v-parts-code = buf_reserv_parts.part-code
+                v-fact-qnty = buf_reserv_parts.fact-qnty
+                v-supp-type = buf_reserv_parts.supp-type
+                v-supp-code = buf_reserv_parts.supp-code
+                v-cst-code = buf_reserv_parts.cst-code
+                v-price-cli = buf_reserv_parts.price-cli.
+    
+                run bgelib-tag-open( input 2, input "storeParts", input "" ).
+               
+                    run bgelib-tag-put( input 3, input "Partsincode"           , input string( v-in-code ) , input 1 ).
+                    run bgelib-tag-put( input 3, input "Partspartcode"         , input string( v-parts-code ) , input 1 ).
+                    run bgelib-tag-put( input 3, input "PartspartGTD"          , input string( v-cst-code ) , input 1 ).
+                    run bgelib-tag-put( input 3, input "Partsfactqnty"         , input string( v-fact-qnty ) , input 1 ).
+                    run bgelib-tag-put( input 3, input "Partssupptype"         , input string( v-supp-type ) , input 1 ).
+                    run bgelib-tag-put( input 3, input "Partssuppcode"         , input string( v-supp-code ) , input 1 ).
+                    run bgelib-tag-put( input 3, input "Partspricecli"         , input string( v-price-cli ) , input 1 ).
+                    
+                   RUN gds-attr-value (
+                        INPUT v-gds-code,
+                        INPUT {&attr-alcohol-prod},
+                        OUTPUT v-gds-attr-value-old,
+                        OUTPUT v-gds-attr-type
+                        ).
+
+                    if v-gds-attr-value-old = "yes" then do:
+                                  assign
+                                  v-alc-bottling-date = buf_reserv_parts.alc-bottling-date
+                                  v-alc-ref-ab-path = buf_reserv_parts.alc-ref-ab-path
+                                  v-alc-quality-certif-path = buf_reserv_parts.alc-quality-certif-path
+                                  v-alc-certif-path = buf_reserv_parts.alc-certif-path
+                                  v-alc-imp-code = buf_reserv_parts.alc-imp-code
+                                  v-alc-imp-type = buf_reserv_parts.alc-imp-type.     
+                                                   
+                            run bgelib-tag-open( input 3, input "storePartsAlcAttr", input "" ).
+                                  run bgelib-tag-put( input 4, input "PartsAlcAttrBottingDate"          , input string( v-alc-bottling-date ) , input 1 ).
+                                  run bgelib-tag-put( input 4, input "PartsAlcAttrRefAbPatch"           , input string( v-alc-ref-ab-path ) , input 1 ).
+                                  run bgelib-tag-put( input 4, input "PartsAlcAttrQualityCertify"       , input string( v-alc-quality-certif-path ) , input 1 ).
+                                  run bgelib-tag-put( input 4, input "PartsAlcAttrCertifPath"           , input string( v-alc-certif-path ) , input 1 ).
+                                  run bgelib-tag-put( input 4, input "PartsAlcAttrImpCode"              , input string( v-alc-imp-code ) , input 1 ).
+                                  run bgelib-tag-put( input 4, input "PartsAlcAttrImpType"              , input string( v-alc-imp-type ) , input 1 ).
+
+                            run bgelib-tag-close( input 3, input "storePartsAlcAttr").
+                    end.
+                    
+                run bgelib-tag-close( input 2, input "storeParts" ).
+          end. /*for each buf_reserv_parts where buf_reserv_parts.artic = p-artic*/
+        end. /*if p-parts = "yes" then do:*/
+
     run bgelib-tag-close( input 1, input "storeGoods" ).
+
 end.
 end procedure. /* eval-sum-and-write-result */
 

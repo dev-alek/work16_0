@@ -31,6 +31,7 @@ define input parameter p-range          as integer      no-undo. /* Диапазон: 1 
 define input parameter p-obj-list       as character    no-undo. /* Список объектов для p-range = 3 */
 define input parameter p-date-to        as date         no-undo.
 define input parameter p-export-supp    as logical      no-undo.
+define input parameter p-parts          as logical      no-undo.
 define input parameter p-shedule        as logical      no-undo.
 define input parameter p-db-num         as integer      no-undo.
 define input parameter hedt             as handle       no-undo.
@@ -362,6 +363,7 @@ on error undo, return error return-value
         view-as alert-box error.
         undo, return error return-value.
     end.
+
     run bge/stdoper.p (
           input p-obj-type
         , input p-obj-code
@@ -369,6 +371,7 @@ on error undo, return error return-value
         , input v-fact-order-to
         , input p-obj-list
         , input v-parameter-list
+        , input p-parts
         , input v-xml-file-name
         , input v-log-file-name
         , input p-list-file-name

@@ -300,6 +300,17 @@ define variable vss-description as character no-undo init "Информация об объекте
 /* АРМ Администратор   Утилиты/Функции администратора                         */
 /* -------------------------------------------------------------------------- */
 
+{gbl/menuload.i
+{&bef-menuload_adm_function}
+"'Корекция даты на объекте'"
+"'utl/cor-date.w'"
+" "
+" "
+" "
+" "
+"yes"
+}
+
 { gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Единицы измерения по списку товаров'"
@@ -409,6 +420,12 @@ define variable vss-description as character no-undo init "Информация об объекте
   " "
   "yes"
 }
+{ gbl/menuload.i
+ {&bef-menuload_adm_function}
+  "'Снятие отметки <Требует переоценки> с товаров'"
+  "'utl/in-ov1.p'"
+}
+
 { gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Снять отметки <Требует переоценки> для удаленных товаров'"

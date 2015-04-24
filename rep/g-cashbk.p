@@ -28,11 +28,12 @@ define input  parameter parParentProc  as widget-handle no-undo.
 { cmp/r-page1.i new}
 run rep/d-report.w (
                 input parParentProc ,
-                input 'rep/e-cashbk.w',"Кассовая книга",
+                input "rep/r-cashbk.p " + string(parParentProc),
+                input "Кассовая книга",
                 input 4,
                 input "",
                 input "*",
                 input "",
                 input "",
                 input "all,{&Excel-yes}",
-                input no).
+                input yes).

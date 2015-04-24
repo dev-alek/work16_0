@@ -4701,10 +4701,12 @@ procedure lib-trn3_goods-tr :
                  gds-b.artic     = cg_doc-line.artic     and
                  gds-b.prod-type = cg_doc-line.prod-type and
                  gds-b.prod-code = cg_doc-line.prod-code .
-      if gds-b.gds-type <> cg_goods.gds-type
-      then do:
-        return error "Услуги и товары не могут быть добавлены в один и тот же документ." .
-      end.
+		if cg_trn-doc.doc-type <> "рас" then do:  
+	      if gds-b.gds-type <> cg_goods.gds-type
+	      then do:
+	        return error "Услуги и товары не могут быть добавлены в один и тот же документ." .
+	      end.
+		end.	
     end.
 
     if cg_goods.stts = integer( {&deleted-status-int} )
