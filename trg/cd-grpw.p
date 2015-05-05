@@ -85,7 +85,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     buf_c-cd-grp.corr-user-name     = g#userid
     buf_c-cd-grp.corr-date          = v-date
     .
-    create buf_c-cash-desk.
+    /*create buf_c-cash-desk.
     buffer-copy buf_c-cd-grp
     using
     obj-code
@@ -103,7 +103,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                                   else {&hn-update})
     buf_c-cash-desk.subject               = {&table_cd-grp}
     buf_c-cash-desk.cash-num              = 0
-    .
+    .*/
 
   end.
   if g#oxml = yes

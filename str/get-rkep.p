@@ -958,7 +958,7 @@ define buffer upper_temp-menu for temp-menu.
             assign
             v-lvl-num = (if v-lvl-num = - 1 then 0 else v-lvl-num )
             v-lvl-num = (if available upper_temp-menu then v-lvl-num + 1 else v-lvl-num)
-            v-upper-num = upper_temp-menu.parent
+            v-upper-num = (if available upper_temp-menu then upper_temp-menu.parent else v-upper-num)
             .
           end.
           if v-lvl-num = 0 then do:
@@ -1634,7 +1634,7 @@ clu-type             должность
       buf_cd-clu.pos-type = {&cd-type-r-keeper}
       buf_cd-clu.clu-type = p-type
       buf_cd-clu.clu-code = p-sifr
-      buf_cd-clu.obj-code = ?
+      /*buf_cd-clu.obj-code = ?*/
       .
     end.
     else do:
