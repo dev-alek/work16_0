@@ -36,7 +36,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Справочник типов алкоголя".
+define variable vss-description as character no-undo init "Справочник лицензий на поставку алкоголя".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
@@ -50,16 +50,16 @@ DEFINE VARIABLE p-cli-code     LIKE ub.alc-supp-lic.cli-code no-undo INIT ?.
 
 define variable log-res as log no-undo.
 define variable rr as recid no-undo.
-define variable v-log as logical   no-undo .
-define variable RowID-list as  character no-undo .
-define variable v-ok    as logical      no-undo.
+define variable v-log as logical no-undo.
+define variable RowID-list as character no-undo.
+define variable v-ok as logical no-undo.
 
-define stream ListStream .
+define stream ListStream.
 
-define variable sort-column-name as character no-undo .
+define variable sort-column-name as character no-undo.
 
-define buffer buf_alc-supp-lic for ub.alc-supp-lic .
-define buffer br_clients for ub.clients .
+define buffer buf_alc-supp-lic for ub.alc-supp-lic.
+define buffer br_clients for ub.clients.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -95,8 +95,8 @@ define buffer br_clients for ub.clients .
     ~{&OPEN-QUERY-br-alc-supp-lic}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-hist b-help b-add b-upd b-del ~
-br-alc-supp-lic
+&Scoped-Define ENABLED-OBJECTS b-exit b-print b-hist b-help b-add b-upd ~
+b-del br-alc-supp-lic 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -131,6 +131,10 @@ DEFINE BUTTON b-hist
      LABEL "Ис&тория"
      SIZE 10 BY 1.
 
+DEFINE BUTTON b-print 
+     LABEL "Пе&чать" 
+     SIZE 3 BY 1.05.
+
 DEFINE BUTTON b-upd
      LABEL "&Изменить":L
      SIZE 10 BY 1.
@@ -164,6 +168,7 @@ DEFINE BROWSE br-alc-supp-lic
 
 DEFINE FRAME f-alc-supp-lic
      b-exit AT ROW 1 COL 1
+     b-print AT ROW 1 COL 33 WIDGET-ID 2
      b-hist AT ROW 1 COL 36
      b-help AT ROW 1 COL 46
      b-add AT ROW 2 COL 1
@@ -286,7 +291,7 @@ DO:
 define variable g-log as logical   no-undo .
 define variable v-recid as integer no-undo .
 define variable ii as integer no-undo .
-define buffer del_alc-supp-lic for ub.alc-supp-lic .
+define buffer del_alc-supp-lic for ub.alc-supp-lic.
 /*!!!    'actn_alc-supp-lic_deletion':U
   { gbl/chk-actg.i
     v-cntxt-db-num
@@ -345,6 +350,18 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print f-alc-supp-lic
+ON CHOOSE OF b-print IN FRAME f-alc-supp-lic /* Печать */
+DO:
+    run ref/p-licsu.p(input parparentproc, input p-cli-type, input p-cli-code).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 
 &Scoped-define SELF-NAME b-upd
@@ -478,7 +495,7 @@ PROCEDURE enable_UI :
         b-del  /* WHEN (lookup ( "b-add" , bttns) > 0 ) */
         b-hist
         b-help
-
+        b-print
         WITH FRAME  {&frame-name}.
     {&OPEN-BROWSERS-IN-QUERY-d-alc-supp-lic}
     if available buf_alc-supp-lic then
@@ -491,8 +508,6 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE post_enable_UI f-alc-supp-lic
 PROCEDURE post_enable_UI :
@@ -523,10 +538,9 @@ on error undo, return error
     end.
 end.
 END PROCEDURE. /* post_enable_UI */
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query f-alc-supp-lic
 PROCEDURE refresh-query :
@@ -563,3 +577,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
