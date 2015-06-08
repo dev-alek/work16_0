@@ -88,10 +88,10 @@ define stream StreamLog.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-2 b-start b-save b-close v-company ~
 v-goods v-chk v-category t-location v-category-2 v-diapmin v-diapmax ~
-v-directory b-dir v-prefix v-bonus-pay rs-obj b-obj e-obj 
+v-directory b-dir v-prefix rs-obj b-obj e-obj 
 &Scoped-Define DISPLAYED-OBJECTS v-company v-goods v-chk v-category ~
-t-location v-category-2 v-diapmin v-diapmax v-directory v-prefix ~
-v-bonus-pay rs-obj e-obj 
+t-location v-category-2 v-diapmin v-diapmax v-directory v-prefix rs-obj ~
+e-obj 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -135,11 +135,6 @@ DEFINE BUTTON b-start
 DEFINE VARIABLE e-obj AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 42.5 BY 4.71 NO-UNDO.
-
-DEFINE VARIABLE v-bonus-pay AS CHARACTER FORMAT "X(256)":U INITIAL "0" 
-     LABEL "Тип платежа для оплаты баллами" 
-     VIEW-AS FILL-IN 
-     SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-category AS INTEGER FORMAT ">>>>9":U INITIAL 0 
      LABEL "Категория тов.класс-ра" 
@@ -219,7 +214,6 @@ DEFINE FRAME gDialog
      v-directory AT ROW 8.5 COL 25 COLON-ALIGNED WIDGET-ID 12
      b-dir AT ROW 8.5 COL 67 WIDGET-ID 22
      v-prefix AT ROW 9.75 COL 25 COLON-ALIGNED WIDGET-ID 6
-     v-bonus-pay AT ROW 11 COL 31.88 COLON-ALIGNED WIDGET-ID 50
      rs-obj AT ROW 12.5 COL 2 NO-LABEL WIDGET-ID 34
      b-obj AT ROW 12.5 COL 19.5 WIDGET-ID 24
      e-obj AT ROW 12.5 COL 27 NO-LABEL WIDGET-ID 32
@@ -397,8 +391,7 @@ DO:
         v-goods
         v-chk
         rs-obj
-        t-location
-        v-bonus-pay.
+        t-location.
     
     v-directory = right-trim(v-directory,'/\') + '\'.
     
@@ -440,7 +433,7 @@ DO:
                    string(v-diapmin) + {&delim-par} + 
                    string(v-diapmax) + {&delim-par} + 
                    string(t-location) + {&delim-par} + string(v-category-2) +
-                   {&delim-par} + string(v-bonus-pay).
+                   {&delim-par}.
 
     run attach-attr-to-schedule-line in this-procedure ( INPUT v-param-list ).
 
@@ -477,7 +470,6 @@ DO:
     v-category-2
     v-diapmin
     v-diapmax
-    v-bonus-pay
     .
     
   v-directory = RIGHT-TRIM(v-directory,'/\') + '\'.
@@ -537,8 +529,7 @@ DO:
                             v-diapmax,
                             this-procedure:handle,
                             t-location:CHECKED,
-                            v-category-2,
-                            v-bonus-pay
+                            v-category-2
                        ) .
 
     apply "go".
@@ -768,11 +759,11 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY v-company v-goods v-chk v-category t-location v-category-2 v-diapmin 
-          v-diapmax v-directory v-prefix v-bonus-pay rs-obj e-obj 
+          v-diapmax v-directory v-prefix rs-obj e-obj 
       WITH FRAME gDialog.
   ENABLE RECT-2 b-start b-save b-close v-company v-goods v-chk v-category 
          t-location v-category-2 v-diapmin v-diapmax v-directory b-dir v-prefix 
-         v-bonus-pay rs-obj b-obj e-obj 
+         rs-obj b-obj e-obj 
       WITH FRAME gDialog.
   VIEW FRAME gDialog.
   {&OPEN-BROWSERS-IN-QUERY-gDialog}
@@ -881,7 +872,7 @@ case p-mode:
                 v-diapmax = integer(entry(8,v-param-list,{&delim-par}))
                 t-location = logical(entry(9,v-param-list,{&delim-par}))
                 v-category-2 = entry(10,v-param-list,{&delim-par})
-                v-bonus-pay = entry(11,v-param-list,{&delim-par})
+            /*    v-bonus-pay = entry(11,v-param-list,{&delim-par})*/
                 NO-ERROR.
 
             DISPLAY v-company WITH FRAME gDialog.
@@ -894,7 +885,7 @@ case p-mode:
             DISPLAY v-diapmin WITH FRAME gDialog.
             DISPLAY v-diapmax 
                     t-location
-                    v-bonus-pay
+
             WITH FRAME gDialog.
 
             

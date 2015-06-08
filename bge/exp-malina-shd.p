@@ -52,7 +52,7 @@ define variable ii as integer no-undo.
 define variable c_entry as character no-undo.
 define variable v-location as logical no-undo.
 define variable v-categ-loc as character no-undo.
-define variable v-bonus-pay as character no-undo.
+/*define variable v-bonus-pay as character no-undo.*/
 
 
 /* Buffers */
@@ -88,7 +88,7 @@ assign
     v-diapmax = integer(entry(8,v-param-list,{&delim-par}))
     v-location = LOGICAL(entry(9,v-param-list,{&delim-par}))
     v-categ-loc = entry(10,v-param-list,{&delim-par})
-    v-bonus-pay  = entry(11,v-param-list,{&delim-par})
+/*    v-bonus-pay  = entry(11,v-param-list,{&delim-par})*/
     NO-ERROR.
 
 /* Получим список объектов */
@@ -156,6 +156,5 @@ end. /* else do */
                             v-diapmax,
                             p_log-handle,
                             v-location,
-                            v-categ-loc,
-                            v-bonus-pay
+                            v-categ-loc
                        ).
