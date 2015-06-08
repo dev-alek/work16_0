@@ -469,7 +469,7 @@ DEFINE BUTTON B-sel AUTO-GO
 
 DEFINE BUTTON B-trn
      LABEL "Д&окум."
-     SIZE 10 BY 1 TOOLTIP "Просмотр складских документов, порадивших ФО"
+     SIZE 10 BY 1 TOOLTIP "Просмотр складских документов, породивших ФО"
      BGCOLOR 8 .
 
 DEFINE VARIABLE d-abbr AS CHARACTER FORMAT "X(256)":U
@@ -554,13 +554,13 @@ DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE p-date AS DATE FORMAT "99/99/9999":U
      LABEL "Дата фин.об."
      VIEW-AS FILL-IN
-     SIZE 11 BY 1 TOOLTIP "Поиск по дате создания фин.об. Поиск первой записи - <ВВОД>;ующей -"
+     SIZE 11 BY 1 TOOLTIP "Поиск по дате создания фин.об. (Поиск первой записи - <ВВОД>; поиск следующей -<CTRL-J>)"
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE p-desc AS CHARACTER FORMAT "X(80)":U
      LABEL "№ договора"
      VIEW-AS FILL-IN
-     SIZE 20.63 BY 1 TOOLTIP "Поиск по № договора  Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>"
+     SIZE 20.63 BY 1 TOOLTIP "Поиск по № договора. (Поиск первой записи - <ВВОД>; поиск следующей -<CTRL-J>)"
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE r-abbr AS CHARACTER FORMAT "X(256)":U INITIAL "abbr_rub_allshift"
@@ -576,7 +576,7 @@ DEFINE VARIABLE s-name AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE sch-code AS CHARACTER FORMAT "X(12)":U
      LABEL "№ фин.обяз"
      VIEW-AS FILL-IN
-     SIZE 14 BY 1 TOOLTIP "Поиск по номеру Поиск первой записи - <ВВОД>; поиск следующей -  <CTRL-J>"
+     SIZE 14 BY 1 TOOLTIP "Поиск по номеру ФО. (Поиск первой записи - <ВВОД>; поиск следующей -<CTRL-J>)"
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-abbr AS CHARACTER FORMAT "X(256)":U
@@ -1306,7 +1306,6 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-reopen-br Dialog-Frame
 ON CHOOSE OF B-reopen-br IN FRAME Dialog-Frame /* Применить */
 DO:
-  
   run set-selection in this-procedure .
   run OpenBr in this-procedure (yes, no, '':U).
 
@@ -2118,7 +2117,7 @@ CASE par-mode:
   r-1 = 1 .
   r-2 = 1 .
   r-3 = 1 .
-  
+
   run OpenBR in this-procedure (yes, no, '':U).
 
 { gbl/mv-clmn.i
@@ -2802,7 +2801,7 @@ then do:
   return error .
 end.
 
-define variable v-sys-key   as character         no-undo.
+define variable v-sys-key as character no-undo.
 { gbl/currsysk.i
   v-sys-key
   no-error
@@ -2992,45 +2991,46 @@ PROCEDURE proc-copy :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-define variable p-doc-code as integer no-undo .
-define variable p-out-host-code like ub.sysconf.host-code no-undo.
-define variable p-ok as logical no-undo .
-define buffer buf2_fin-liab for ub.fin-ob .
-define variable j as integer no-undo .
-define variable k as integer no-undo .
-define variable p-ret as logical no-undo .
-define variable p-doc-date            like ub.fin-ob.doc-date             no-undo .
-define variable p-payer-name            like ub.fin-ob.payer-name             no-undo .
-define variable p-receiver-name            like ub.fin-ob.receiver-name             no-undo .
-define variable p-curr-code           like ub.fin-ob.curr-code            no-undo .
-define variable p-sum-doc             like ub.fin-ob.sum-doc              no-undo .
-define variable p-user-db-num-doc     like ub.fin-ob.user-db-num-doc      no-undo .
-define variable p-user-name-doc       like ub.fin-ob.user-name-doc        no-undo .
-define variable p-base-rate           like ub.fin-ob.base-rate            no-undo .
-define variable p-base-scale          like ub.fin-ob.base-scale           no-undo .
-define variable p-receiver-code            like ub.fin-ob.receiver-code             no-undo .
-define variable p-receiver-type            like ub.fin-ob.receiver-type             no-undo .
-define variable p-contract-code       like ub.fin-ob.contract-code        no-undo .
-define variable p-exch-rate           like ub.fin-ob.exch-rate            no-undo .
-define variable p-exch-scale          like ub.fin-ob.exch-scale           no-undo .
-define variable p-fact-date           like ub.fin-ob.fact-date            no-undo .
-define variable p-fact-order          like ub.fin-ob.fact-order           no-undo .
-define variable p-host-code           like ub.fin-ob.host-code            no-undo .
-define variable p-payer-code            like ub.fin-ob.payer-code             no-undo .
-define variable p-payer-type            like ub.fin-ob.payer-type             no-undo .
-define variable p-pay-date             like ub.fin-ob.pay-date              no-undo .
-define variable p-prn-doc-code        like ub.fin-ob.prn-doc-code         no-undo .
-define variable p-sum-base-orig       like ub.fin-ob.sum-base-orig        no-undo .
-define variable p-sum-base            like ub.fin-ob.sum-base             no-undo .
-define variable p-sum-doc-orig        like ub.fin-ob.sum-doc-orig         no-undo .
-define variable p-sum-rubl-orig       like ub.fin-ob.sum-rubl-orig        no-undo .
-define variable p-sum-rubl            like ub.fin-ob.sum-rubl             no-undo .
-define variable p-trn-doc-code        like ub.fin-ob.trn-doc-code         no-undo .
-define variable p-user-db-num-fact    like ub.fin-ob.user-db-num-fact     no-undo .
-define variable p-user-db-num-pay     like ub.fin-ob.user-db-num-pay      no-undo .
-define variable p-user-name-fact      like ub.fin-ob.user-name-fact       no-undo .
-define variable p-user-name-pay       like ub.fin-ob.user-name-pay        no-undo .
-define variable p-ri as recid no-undo .
+define variable p-doc-code          as integer no-undo.
+define variable p-out-host-code     like ub.sysconf.host-code       no-undo.
+define variable p-ok                as logical no-undo.
+define variable j                   as integer no-undo.
+define variable k                   as integer no-undo.
+define variable p-ret               as logical no-undo.
+define variable p-doc-date          like ub.fin-ob.doc-date         no-undo.
+define variable p-payer-name        like ub.fin-ob.payer-name       no-undo.
+define variable p-receiver-name     like ub.fin-ob.receiver-name    no-undo.
+define variable p-curr-code         like ub.fin-ob.curr-code        no-undo.
+define variable p-sum-doc           like ub.fin-ob.sum-doc          no-undo.
+define variable p-user-db-num-doc   like ub.fin-ob.user-db-num-doc  no-undo.
+define variable p-user-name-doc     like ub.fin-ob.user-name-doc    no-undo.
+define variable p-base-rate         like ub.fin-ob.base-rate        no-undo.
+define variable p-base-scale        like ub.fin-ob.base-scale       no-undo.
+define variable p-receiver-code     like ub.fin-ob.receiver-code    no-undo.
+define variable p-receiver-type     like ub.fin-ob.receiver-type    no-undo.
+define variable p-contract-code     like ub.fin-ob.contract-code    no-undo.
+define variable p-exch-rate         like ub.fin-ob.exch-rate        no-undo.
+define variable p-exch-scale        like ub.fin-ob.exch-scale       no-undo.
+define variable p-fact-date         like ub.fin-ob.fact-date        no-undo.
+define variable p-fact-order        like ub.fin-ob.fact-order       no-undo.
+define variable p-host-code         like ub.fin-ob.host-code        no-undo.
+define variable p-payer-code        like ub.fin-ob.payer-code       no-undo.
+define variable p-payer-type        like ub.fin-ob.payer-type       no-undo.
+define variable p-pay-date          like ub.fin-ob.pay-date         no-undo.
+define variable p-prn-doc-code      like ub.fin-ob.prn-doc-code     no-undo.
+define variable p-sum-base-orig     like ub.fin-ob.sum-base-orig    no-undo.
+define variable p-sum-base          like ub.fin-ob.sum-base         no-undo.
+define variable p-sum-doc-orig      like ub.fin-ob.sum-doc-orig     no-undo.
+define variable p-sum-rubl-orig     like ub.fin-ob.sum-rubl-orig    no-undo.
+define variable p-sum-rubl          like ub.fin-ob.sum-rubl         no-undo.
+define variable p-trn-doc-code      like ub.fin-ob.trn-doc-code     no-undo.
+define variable p-user-db-num-fact  like ub.fin-ob.user-db-num-fact no-undo.
+define variable p-user-db-num-pay   like ub.fin-ob.user-db-num-pay  no-undo.
+define variable p-user-name-fact    like ub.fin-ob.user-name-fact   no-undo.
+define variable p-user-name-pay     like ub.fin-ob.user-name-pay    no-undo.
+define variable p-ri                as recid no-undo.
+
+define buffer buf2_fin-liab for ub.fin-ob.
 
   { gbl/chk-actg.i
     v-cntxt-db-num
@@ -3231,8 +3231,8 @@ END PROCEDURE.
 PROCEDURE proc-find-desc :
 define input parameter par-next as logical no-undo.
 define input parameter pardoc-code as char no-undo.
-define variable pp as integer no-undo .
-define buffer b_contract for ub.contract .
+define variable pp as integer no-undo.
+define buffer b_contract for ub.contract.
 display "" @ sch-code with frame {&frame-name}.
 display "" @ p-date with frame {&frame-name}.
 if  par-next = true then
@@ -3590,9 +3590,9 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION contract-gen Dialog-Frame
 FUNCTION contract-gen RETURNS CHARACTER
 ( input p-rec as recid ) :
-define BUFFER loc-fin-liab FOR ub.fin-ob .
-find first loc-fin-liab no-lock where recid (loc-fin-liab) = p-rec no-error .
-if error-status :error then return '' .
+define BUFFER loc-fin-liab FOR ub.fin-ob.
+find first loc-fin-liab no-lock where recid (loc-fin-liab) = p-rec no-error.
+if error-status :error then return ''.
 
   define variable rr as character no-undo .
   define buffer buf-f_contract for ub.contract.
@@ -3611,7 +3611,7 @@ END FUNCTION.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION contract-id Dialog-Frame
 FUNCTION contract-id RETURNS CHARACTER
 ( input p-rec as recid ) :
-define  BUFFER loc-fin-liab FOR ub.fin-ob .
+define  BUFFER loc-fin-liab FOR ub.fin-ob.
 find first loc-fin-liab no-lock where recid (loc-fin-liab) = p-rec no-error .
 if error-status :error then return '' .
 
@@ -3677,7 +3677,7 @@ FUNCTION sel-abbr RETURNS CHARACTER
  ( p-curr-code as int ) :
   define variable rr as character no-undo .
   find first ub.currency no-lock where  ub.currency.curr-code  = p-curr-code no-error.
-  rr = ub.currency.curr-abbr .
+  rr = ub.currency.curr-abbr.
   RETURN rr.
 END FUNCTION.
 
@@ -3687,15 +3687,15 @@ END FUNCTION.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION val-abbr-type Dialog-Frame
 FUNCTION val-abbr-type RETURNS CHARACTER
 ( input p-rec as recid ) :
-define  BUFFER loc-fin-liab FOR ub.fin-ob .
+define  BUFFER loc-fin-liab FOR ub.fin-ob.
 find first loc-fin-liab no-lock where recid (loc-fin-liab) = p-rec no-error .
 if error-status :error then return '' .
 
   define variable rr as character no-undo .
-     find first ub.currency no-lock where  ub.currency.curr-code  = loc-fin-liab.curr-code no-error.
+     find first ub.currency no-lock where ub.currency.curr-code  = loc-fin-liab.curr-code no-error.
 /*      if error-status then return "". */
   rr = currency.curr-abbr .
-if available ub.currency then  rr = ub.currency.curr-abbr .
+if available ub.currency then  rr = ub.currency.curr-abbr.
 else rr = ""   .
 
   RETURN rr.
