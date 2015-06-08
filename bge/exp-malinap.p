@@ -34,6 +34,7 @@ define variable vss-description as character no-undo init "Передача данных в Мал
 { str/lib-trn.i }
 { gbl/clntattr.i }
 { ref/extclass.i }
+{ ref/gds-attr.i }
 
 /* ***************************  Definitions  ************************** */
 
@@ -87,6 +88,8 @@ DEFINE VARIABLE i-shift AS INTEGER INITIAL 0 NO-UNDO.
 DEFINE VARIABLE i-op-id AS INTEGER INITIAL 0 NO-UNDO.
 DEFINE VARIABLE b-malina AS LOGICAL NO-UNDO.
 DEFINE VARIABLE c-locfile AS CHARACTER NO-UNDO. /*переменная для хранения адреса файла соответствий локации*/
+define variable v-attr-value    as character no-undo .
+define variable v-attr-type     as character no-undo .
 
 DEFINE BUFFER buf_gds-grp FOR gds-grp.
 DEFINE BUFFER buf_goods FOR goods.
@@ -561,13 +564,25 @@ IF p-chk THEN DO:
                     l-reiff = no
                     i-tender-code = 0
                         .
-
+                    
                     FOR EACH buf_chk-gds-pay WHERE buf_chk-gds-pay.doc-code = buf_chk-doc.doc-code NO-LOCK:
                         i-numline = i-numline + 1.
 
                         
                         FIND FIRST buf_bar-code WHERE buf_bar-code.b-code = buf_chk-gds-pay.b-code NO-LOCK NO-ERROR.
-                        
+                        run gds-attr-value in this-procedure
+                            ( input  buf_bar-code.gds-code
+                            , input  {&attr-ban-bonus}
+                            , output v-attr-value
+                            , output v-attr-type
+                            ) .
+                        if lookup(v-attr-value, 'true,yes':u) > 0 then do:   /*  Товар без бонусов */
+                        assign
+                            tt_chk-doc.total_sum = STRING(int(tt_chk-doc.total_sum) - int(buf_chk-gds-pay.tot-r-b * 100 ))
+                            tt_chk-doc.invest_sum = string(int(tt_chk-doc.invest_sum) - int(buf_chk-gds-pay.tot-r-b))
+                            .   
+                            next .
+                        end.         
                         CREATE buf-tt_chk-doc.
                         ASSIGN
                             buf-tt_chk-doc.partner_id = STRING(p-company,"999")
@@ -594,6 +609,7 @@ IF p-chk THEN DO:
                             buf-tt_chk-doc.error_code = ""
                             buf-tt_chk-doc.error_message = ""
                             .
+                            
                         if buf_chk-gds-pay.pay-code = buf_sysconf.cash-pay then l-cash = yes.
                         else if buf_chk-gds-pay.pay-code = int(p-bonus-pay) then do:
                             l-bonus = yes.
@@ -672,7 +688,30 @@ IF p-chk THEN DO:
     i-i = 0.
 
     FOR EACH tt_chk-doc NO-LOCK:
+        IF i-i >= 299990 and int(tt_chk-doc.transaction_line_number) = 0  THEN DO:
+            OUTPUT CLOSE.
+            file_name = p-directory + STRING(p-company,"999") + 'tr' + STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING(DAY(TODAY), "99") + STRING(i-numfile, "999") + '.ok'.
+            OUTPUT TO VALUE(file_name).
+            put unformatted i-i skip.
+                
+            OUTPUT CLOSE.
+            i-numfile = i-numfile + 1.
 
+            IF i-numfile > p-diapmax THEN DO:
+                MESSAGE
+                    vss-workfile vss-revision vss-description SKIP
+                    SUBSTITUTE( "Превышен диапазон при выгрузке чеков!" ) SKIP
+                    RETURN-VALUE SKIP
+                    ERROR-STATUS:GET-MESSAGE ( ERROR-STATUS:NUM-MESSAGES )
+                    VIEW-AS ALERT-BOX ERROR
+                    .
+                RETURN ERROR .
+            END.
+
+            file_name = p-directory + STRING(p-company,"999") + 'tr' + STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING(DAY(TODAY), "99") + STRING(i-numfile, "999") + '.lsp'.
+            OUTPUT TO VALUE(file_name).
+            i-i = 0.
+        END.
         ASSIGN
             i-i = i-i + 1
             i-chkcnt = i-chkcnt + 1
@@ -701,29 +740,6 @@ IF p-chk THEN DO:
                 tt_chk-doc.error_message.
         PUT UNFORMATTED c-ch SKIP.
 
-        IF i-i >= 300000 THEN DO:
-            OUTPUT CLOSE.
-            file_name = p-directory + STRING(p-company,"999") + 'tr' + STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING(DAY(TODAY), "99") + STRING(i-numfile, "999") + '.ok'.
-            OUTPUT TO VALUE(file_name).
-            put unformatted i-i skip.
-                
-            OUTPUT CLOSE.
-            i-numfile = i-numfile + 1.
-
-            IF i-numfile > p-diapmax THEN DO:
-                MESSAGE
-                    vss-workfile vss-revision vss-description SKIP
-                    SUBSTITUTE( "Превышен диапазон при выгрузке чеков!" ) SKIP
-                    RETURN-VALUE SKIP
-                    ERROR-STATUS:GET-MESSAGE ( ERROR-STATUS:NUM-MESSAGES )
-                    VIEW-AS ALERT-BOX ERROR
-                    .
-                RETURN ERROR .
-            END.
-
-            file_name = p-directory + STRING(p-company,"999") + 'tr' + STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING(DAY(TODAY), "99") + STRING(i-numfile, "999") + '.lsp'.
-            OUTPUT TO VALUE(file_name).
-        END.
     END.
 
     OUTPUT CLOSE.
