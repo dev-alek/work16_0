@@ -1474,6 +1474,9 @@ procedure lib-rvs_rvsplace : /* revision-place */
           tt-meas-file.measure-cli-qnty = tt-meas-file.measure-qnty * tt-meas-file.density
         .
       end.
+      /* Если уровень воды нулевой, но при этом вес общий, который пришел с видерута, меньше, чем то, что мы расчитали исходя из плотности, то подставляем расчетное значение.  Иначе вода лезет в минус */
+      if tt-meas-file.meas-vol-water and tt-meas-file.level-water  = 0 and abs(tt-meas-file.brutto-cli-qnty - tt-meas-file.measure-cli-qnty) <= 0.1 then tt-meas-file.brutto-cli-qnty = tt-meas-file.measure-cli-qnty.
+      
     end. /* for each tt-meas-file */
 
     /* Сравниваем запрос и полученные данные */
