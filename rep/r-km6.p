@@ -58,7 +58,7 @@ define variable g#report-num              as integer              no-undo .
 { cmp/r-page1.i  }
 { cmp/r-pril.i   }
 { gbl/paramls.i  }
-{ gbl/getcntxt.i  def }
+{ gbl/getcntxt.i def }
 { gbl/cur-time.i     }
 { cmp/breakstr.i     }
 { rep/r-cliprp.i def }
@@ -176,6 +176,10 @@ define variable v-is-cash-list as character no-undo. /* Список кодов оплаты нали
 define variable v-itogo-sum-sale as decimal no-undo.
 define variable v-itogo-sum as decimal no-undo.
 define variable v-itogo-nal as decimal no-undo.
+define variable v-i as integer no-undo.
+define variable v-ii as integer no-undo.
+define variable v-txt-1 as character no-undo.
+define variable v-txt-2 as character no-undo.
 
 &scop display-message ~
    if p-batch > 0 then do: ~
@@ -435,7 +439,7 @@ end.
    { rep/repfrm.i off } /* Показать окно информации о текущем процессе */
    run km6xl-close in this-procedure .
 
-   define variable disabledoptions   as integer   no-undo .
+   define variable disabledoptions as integer   no-undo .
    define variable v-user-action   as character no-undo .
    define variable v-printed       as logical   no-undo .
    DisabledOptions = 7.
@@ -578,13 +582,50 @@ do on error undo, return error return-value  :
    .
 
    /* Excel */
+   v-ii = num-entries(v-organization, " ") + 1.
+   if v-ii = 1 then /* Если в v-organization содержится одно огромное слово > 87 символов, то ничего не переносим на другую строку. */
+   do:
+     v-txt-1 = v-organization.
+   end.
+   else
+   do:
+     if length(v-organization) > 78 then
+     do:
+       do v-i = 1 to v-ii + 1:
+         v-txt-1 = v-txt-1 + (if v-txt-1 = "" then "" else " ") + entry(v-i, v-organization, " ").
+         if length(v-txt-1) + 1 + length(entry((v-i + 1), v-organization, " ")) > 78 then /* поместится-ли с текущими блоками - следующий (+1)? Если нет, то оставляем текущие в v-txt-1 */
+         do:
+           leave.
+         end.
+       end.
+       v-txt-2 = substring(v-organization, length(v-txt-1) + 2).
+     end.
+     else
+       do:
+         v-txt-1 = v-organization.
+       end.
+   end.
+
    run km6xl-write-cell-data in this-procedure (
        input substitute("&1_&2"
                        , p-sheet-name
                        , {&km6xl-h_organization}
                        )
-       , input v-organization
+       , input /*v-organization*/ v-txt-1
    ).
+
+   run km6xl-write-cell-data in this-procedure (
+       input substitute("&1_&2"
+                       , p-sheet-name
+                       , {&km6xl-h_organization2}
+                       )
+       , input v-txt-2
+   ).
+
+   /* Сброс, иначе, для очередной Кассы (кол-во Касс может меняться) - будут циклические вычисления! */
+   v-txt-1 = "".
+   v-txt-2 = "".
+
    run km6xl-write-cell-data in this-procedure (
        input substitute("&1_&2"
                        , p-sheet-name
@@ -597,7 +638,7 @@ do on error undo, return error return-value  :
                        , p-sheet-name
                        , {&km6xl-h_Docdate}
                        )
-       , input string( x-date-start, "99/99/9999")
+       , input string(x-date-start, "99/99/9999")
    ).
    run km6xl-write-cell-data in this-procedure (
        input substitute("&1_&2"
@@ -618,7 +659,9 @@ do on error undo, return error return-value  :
                        , p-sheet-name
                        , {&km6xl-h_descname}
                        )
-       , input SUBSTITUTE("&1, &2", v-kkm-model, v-kkm-num)
+       , input SUBSTITUTE((if v-kkm-model = "" then "&2"
+                                               else "&1, &2"),
+                          v-kkm-model, v-kkm-num)
    ).
    run km6xl-write-cell-data in this-procedure (
        input substitute("&1_&2"
@@ -847,6 +890,15 @@ do on error undo, return error return-value  :
        , input v-cassir
    ).            
 
+   /* Добавил 21.01.2015г Арн. (Обращение Заказчика за №16448) - было: не отобр суммы в Ексель, а только на экране. */
+   run km6xl-write-cell-data in this-procedure (
+         input substitute("&1_&2"
+                       , p-sheet-name
+                       , {&km6xl-it_Summ}
+                       )
+       , input v-itogo-sum-sale
+   ).
+
    run km6xl-write-cell-data in this-procedure (
          input substitute("&1_&2"
                        , p-sheet-name
@@ -936,6 +988,16 @@ do on error undo, return error return-value  :
        "Принята и оприходована по кассе," SKIP
        'по приходному кассовому ордеру № __' substitute("___&1&2", v-pko-num, fill("_", 32 - length(v-pko-num) )) format "X(35)"
    .
+
+   /* Добавил 21.01.2015г Арн. (Обращение Заказчика за №16448) - было: не отобр суммы в Ексель, а только на экране. */
+   run km6xl-write-cell-data in this-procedure (
+         input substitute("&1_&2"
+                       , p-sheet-name
+                       , {&km6xl-it_s_Summ_1}
+                       )
+       , input f-wp-qnty(v-itogo-nal)
+   ).
+
    if v-pko-date <> ? then do :
       PUT STREAM Out-Stream
           ' от "' string(Day(v-pko-date)) format "x(2)" '" '
@@ -1008,6 +1070,7 @@ if v-cassir-op     = "" then v-cassir-op     = UndLine.
                        )
        , input v-pko-num
    ).
+
 
 end.
 end procedure. /* PrintPodval */
