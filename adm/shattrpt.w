@@ -143,8 +143,9 @@ DEFINE VARIABLE r-denstclc AS CHARACTER
           "среднее по сменной сверке и внеш.приходам (shft_rvs-inc)", "shft_rvs-inc",
 "среднее по сверкам (avrg-rvs)", "avrg-rvs",
 "среднеарифметическое значение окаймляющих сверок (avrg-chk)", "avrg-chk",
-"среднее значение по расчетно-книжным данным (shft_sys-inc)", "shft_sys-inc"
-     SIZE 65.5 BY 2.5 NO-UNDO.
+"среднее значение по расчетно-книжным данным (shft_sys-inc)", "shft_sys-inc",
+"плотность, аппроксимирующая расчетно-книжные остатки к фактическим (fact-approx)", "fact-approx"
+     SIZE 84.5 BY 2.5 NO-UNDO.
 
 DEFINE VARIABLE r-expptrl AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
@@ -234,20 +235,20 @@ DEFINE FRAME shattrpt
      f-invclipt-name AT ROW 15.5 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
      "Температура, к которой приводиться плотность и объем (°С) :" VIEW-AS TEXT
           SIZE 60 BY .67 AT ROW 17 COL 4 WIDGET-ID 94
-     "Настройки инвентаризации по сверке" VIEW-AS TEXT
-          SIZE 35.5 BY .67 AT ROW 10.75 COL 3 WIDGET-ID 78
-     "Тип ввода топлива во всех документах кроме прихода внешнего:" VIEW-AS TEXT
-          SIZE 61 BY .83 AT ROW 8 COL 4 WIDGET-ID 54
-     "Тип ввода топлива в документах прихода внешнего :" VIEW-AS TEXT
-          SIZE 49 BY .83 AT ROW 6.25 COL 4 WIDGET-ID 48
-     "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
-          SIZE 50.5 BY .63 AT ROW 18.25 COL 3.5 WIDGET-ID 36
-     "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
-          SIZE 52 BY .63 AT ROW 22.25 COL 3.5 WIDGET-ID 86
-     "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
-          SIZE 84 BY .96 AT ROW 7.17 COL 4 WIDGET-ID 92
      "на список почтовых адресов(разделять адреса запятыми):" VIEW-AS TEXT
           SIZE 79 BY .96 AT ROW 8.08 COL 4 WIDGET-ID 94
+     "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
+          SIZE 84 BY .96 AT ROW 7.17 COL 4 WIDGET-ID 92
+     "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
+          SIZE 52 BY .63 AT ROW 22.25 COL 3.5 WIDGET-ID 86
+     "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
+          SIZE 50.5 BY .63 AT ROW 18.25 COL 3.5 WIDGET-ID 36
+     "Тип ввода топлива в документах прихода внешнего :" VIEW-AS TEXT
+          SIZE 49 BY .83 AT ROW 6.25 COL 4 WIDGET-ID 48
+     "Тип ввода топлива во всех документах кроме прихода внешнего:" VIEW-AS TEXT
+          SIZE 61 BY .83 AT ROW 8 COL 4 WIDGET-ID 54
+     "Настройки инвентаризации по сверке" VIEW-AS TEXT
+          SIZE 35.5 BY .67 AT ROW 10.75 COL 3 WIDGET-ID 78
      RECT-1 AT ROW 18 COL 2.5 WIDGET-ID 38
      RECT-2 AT ROW 10.54 COL 2.5 WIDGET-ID 64
      RECT-3 AT ROW 6 COL 2.5 WIDGET-ID 66
