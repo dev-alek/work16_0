@@ -61,8 +61,9 @@ define input parameter loc-exist as logical no-undo .
       FIND ub.chk-pay WHERE
             ub.chk-pay.doc-code = ub.chk-doc.doc-code AND
             ub.chk-pay.curr-code = curr_code AND
-            ub.chk-pay.pay-code = pay_code  AND
-            ub.chk-pay.line-num = lnp + 1
+            ub.chk-pay.pay-code = pay_code  
+            /* AND
+            ub.chk-pay.line-num = lnp + 1  */
             NO-ERROR.
       if NOT available ub.chk-pay then  do:
         CREATE ub.chk-pay .
@@ -99,7 +100,7 @@ define input parameter loc-exist as logical no-undo .
       end.
       assign
       ub.chk-pay.tot-sum = ub.chk-pay.tot-sum + tot_sum
-      .
+      .      
     end. /* if not loc-exist */
   end.
 
