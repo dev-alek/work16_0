@@ -13,7 +13,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Справочник лицензий на продажу алкоголя.
+Справочник лицензий на продажу алкогольной продукции.
 
 Автор: Белоусов Илья Александрович
 Дата создания:
@@ -37,7 +37,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Справочник лицензий на продажу алкоголя".
+define variable vss-description as character no-undo init "Справочник лицензий на продажу алкогольной продукции".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
@@ -57,8 +57,8 @@ define stream ListStream .
 
 define variable sort-column-name as character no-undo .
 
-define buffer buf_alc-sale-lic for ub.alc-sale-lic .
-define buffer host_clients for ub.clients .
+define buffer buf_alc-sale-lic for ub.alc-sale-lic.
+define buffer host_clients for ub.clients.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -92,7 +92,7 @@ define buffer host_clients for ub.clients .
     ~{&OPEN-QUERY-br-alc-sale-lic}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-hist b-help b-add b-upd b-del ~
+&Scoped-Define ENABLED-OBJECTS b-exit b-print b-hist b-help b-add b-upd b-del ~
 br-alc-sale-lic
 
 /* Custom List Definitions                                              */
@@ -128,6 +128,10 @@ DEFINE BUTTON b-hist
      LABEL "Ис&тория"
      SIZE 10 BY 1.
 
+DEFINE BUTTON b-print 
+     LABEL "Пе&чать" 
+     SIZE 3 BY .95.
+
 DEFINE BUTTON b-upd
      LABEL "&Изменить":L
      SIZE 10 BY 1.
@@ -151,7 +155,7 @@ DEFINE BROWSE br-alc-sale-lic
       IF buf_alc-sale-lic.all-type > 0 THEN "+" ELSE "-" COLUMN-LABEL "На все типы"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH SEPARATORS SIZE 54.63 BY 18.46
+    WITH SEPARATORS SIZE 54.6 BY 18.48
          BGCOLOR 15 FGCOLOR 0 .
 
 
@@ -159,6 +163,7 @@ DEFINE BROWSE br-alc-sale-lic
 
 DEFINE FRAME f-alc-sale-lic
      b-exit AT ROW 1 COL 1
+     b-print AT ROW 1 COL 33 WIDGET-ID 2
      b-hist AT ROW 1 COL 36
      b-help AT ROW 1 COL 46
      b-add AT ROW 2 COL 1
@@ -168,7 +173,7 @@ DEFINE FRAME f-alc-sale-lic
      SPACE(0.11) SKIP(0.28)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         TITLE "Лицензии на продажу алкоголя":L.
+         TITLE "Лицензии на продажу алкогольной продукции":L.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -289,7 +294,7 @@ DO:
 define variable g-log as logical   no-undo .
 define variable v-recid as integer no-undo .
 define variable ii as integer no-undo .
-define buffer del_alc-sale-lic for ub.alc-sale-lic .
+define buffer del_alc-sale-lic for ub.alc-sale-lic.
 /*!!!    'actn_alc-sale-lic_deletion':U
   { gbl/chk-actg.i
     v-cntxt-db-num
@@ -348,6 +353,18 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print f-alc-sale-lic
+ON CHOOSE OF b-print IN FRAME f-alc-sale-lic /* Печать */
+DO:
+    run ref/p-licsa.p(input parparentproc, input p-cli-type, input p-cli-code).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 
 &Scoped-define SELF-NAME b-upd
@@ -492,7 +509,7 @@ PROCEDURE enable_UI :
         b-del  /* WHEN (lookup ( "b-add" , bttns) > 0 ) */
         b-hist
         b-help
-
+        b-print
         WITH FRAME  {&frame-name}.
     {&OPEN-BROWSERS-IN-QUERY-d-alc-sale-lic}
     if available buf_alc-sale-lic then
@@ -506,9 +523,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE post_enable_UI f-alc-supp-lic
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE post_enable_UI f-alc-sale-lic
 PROCEDURE post_enable_UI :
 do
 on error undo, return error
@@ -537,10 +552,9 @@ on error undo, return error
     end.
 end.
 END PROCEDURE. /* post_enable_UI */
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query f-alc-sale-lic
 PROCEDURE refresh-query :

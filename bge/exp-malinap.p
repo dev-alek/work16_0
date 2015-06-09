@@ -34,6 +34,7 @@ define variable vss-description as character no-undo init "Передача данных в Мал
 { str/lib-trn.i }
 { gbl/clntattr.i }
 { ref/extclass.i }
+{ ref/gds-attr.i }
 
 /* ***************************  Definitions  ************************** */
 
@@ -65,9 +66,10 @@ DEFINE INPUT PARAMETER p-diapmax AS INTEGER NO-UNDO. /*Верхняя граница диапазона
 DEFINE INPUT PARAMETER p-log-handle AS HANDLE NO-UNDO. /* handle по которому находится процедура записи лога */
 DEFINE INPUT PARAMETER p-location AS logical NO-UNDO. /* Выгрузить локации */
 DEFINE INPUT PARAMETER p-categ-loc AS char NO-UNDO. /*Код категории для локаций*/
-DEFINE INPUT PARAMETER p-bonus-pay AS char NO-UNDO. /*Код категории для локаций*/
 
+DEFINE variable v-bonus-pay AS char NO-UNDO. /*Код категории для локаций*/
 DEFINE VARIABLE i-i AS INTEGER INITIAL 0 NO-UNDO.
+DEFINE VARIABLE i-j AS INTEGER INITIAL 0 NO-UNDO.
 DEFINE VARIABLE i-hh AS INTEGER INITIAL 0 NO-UNDO. /* переменные для преобразования времени в секундах */
 DEFINE VARIABLE i-mm AS INTEGER INITIAL 0 NO-UNDO.
 DEFINE VARIABLE i-ss AS INTEGER INITIAL 0 NO-UNDO.
@@ -86,7 +88,10 @@ DEFINE VARIABLE d-date AS DATE NO-UNDO.
 DEFINE VARIABLE i-shift AS INTEGER INITIAL 0 NO-UNDO.
 DEFINE VARIABLE i-op-id AS INTEGER INITIAL 0 NO-UNDO.
 DEFINE VARIABLE b-malina AS LOGICAL NO-UNDO.
+DEFINE VARIABLE b-ball-malina AS LOGICAL NO-UNDO.
 DEFINE VARIABLE c-locfile AS CHARACTER NO-UNDO. /*переменная для хранения адреса файла соответствий локации*/
+define variable v-attr-value    as character no-undo .
+define variable v-attr-type     as character no-undo .
 
 DEFINE BUFFER buf_gds-grp FOR gds-grp.
 DEFINE BUFFER buf_goods FOR goods.
@@ -100,6 +105,7 @@ DEFINE BUFFER buf_clients FOR ub.clients.
 DEFINE BUFFER buf_sysconf FOR ub.sysconf.
 DEFINE BUFFER buf_bar-code FOR ub.bar-code.
 DEFINE BUFFER buf_db-attr FOR ub.db-attr.
+define BUFFER buf_cash-pay-attr FOR ub.cash-pay-attr.
 
 /* Таблица товарного классификатора для Малины */
 DEFINE TEMP-TABLE tt_goods NO-UNDO
@@ -420,6 +426,17 @@ IF p-chk THEN DO:
             i-numfile = p-diapmin.
     END.
 
+            /*ищим платежи с атрибутом оплата баллами Малина*/
+            FOR EACH buf_cash-pay-attr where buf_cash-pay-attr.attr-code  = "bal_malina" and 
+                                               buf_cash-pay-attr.attr-value = "yes":
+            
+            if v-bonus-pay = "" then do:
+                  v-bonus-pay = string(buf_cash-pay-attr.cdpay-code). /*платеж баллами малина*/
+                end.
+                else v-bonus-pay = v-bonus-pay + "," + string(buf_cash-pay-attr.cdpay-code). /*платеж баллами малина*/
+
+            END.  
+           
     for each tt_obj no-lock:
 
         /* Найдём атрибут выгрузки Малина. Если нет - создадим */ 
@@ -486,16 +503,23 @@ IF p-chk THEN DO:
                 ASSIGN
                     i-numline = 0
                     b-malina = FALSE
+					b-ball-malina = FALSE
                     .
 
                 /* Проверяем шла ли оплата по карте Малина */
                 DO i-i = 1 TO NUM-ENTRIES (p-prefix):
                     IF buf_chk-doc.d-card BEGINS ENTRY ( i-i, p-prefix) THEN b-malina = TRUE.
                 END. /*DO i-i = 1 TO NUM-ENTRIES*/
-                
+                /* Проверяем шла ли оплата баллами Малина */
+               DO i-j = 1 TO NUM-ENTRIES (v-bonus-pay):
+                    if CAN-FIND (ub.chk-pay where chk-pay.doc-code = buf_chk-doc.doc-code and chk-pay.pay-code = int(ENTRY (i-j,v-bonus-pay,",")) no-lock) then do:
+                         b-ball-malina = TRUE.
+                    end.
+               end. 
+
                 /* Если Малина, то выгружаем данные */
-                IF b-malina  or can-find(first chk-pay where chk-pay.doc-code = buf_chk-doc.doc-code and chk-pay.pay-code = int(p-bonus-pay) no-lock) THEN DO:
-                    /*
+                IF b-malina  or b-ball-malina THEN DO:                    /*
+
                     IF AVAILABLE buf_sysconf THEN DO:
                         /* Проверяем наличие оплаты наличными */
                         IF CAN-FIND (buf_chk-gds-pay WHERE buf_chk-gds-pay.doc-code = buf_chk-doc.doc-code
@@ -561,13 +585,25 @@ IF p-chk THEN DO:
                     l-reiff = no
                     i-tender-code = 0
                         .
-
+                    
                     FOR EACH buf_chk-gds-pay WHERE buf_chk-gds-pay.doc-code = buf_chk-doc.doc-code NO-LOCK:
                         i-numline = i-numline + 1.
 
                         
                         FIND FIRST buf_bar-code WHERE buf_bar-code.b-code = buf_chk-gds-pay.b-code NO-LOCK NO-ERROR.
-                        
+                        run gds-attr-value in this-procedure
+                            ( input  buf_bar-code.gds-code
+                            , input  {&attr-ban-bonus}
+                            , output v-attr-value
+                            , output v-attr-type
+                            ) .
+                        if lookup(v-attr-value, 'true,yes':u) > 0 then do:   /*  Товар без бонусов */
+                        assign
+                            tt_chk-doc.total_sum = STRING(int(tt_chk-doc.total_sum) - int(buf_chk-gds-pay.tot-r-b * 100 ))
+                            tt_chk-doc.invest_sum = string(int(tt_chk-doc.invest_sum) - int(buf_chk-gds-pay.tot-r-b))
+                            .   
+                            next .
+                        end.         
                         CREATE buf-tt_chk-doc.
                         ASSIGN
                             buf-tt_chk-doc.partner_id = STRING(p-company,"999")
@@ -594,8 +630,9 @@ IF p-chk THEN DO:
                             buf-tt_chk-doc.error_code = ""
                             buf-tt_chk-doc.error_message = ""
                             .
+                            
                         if buf_chk-gds-pay.pay-code = buf_sysconf.cash-pay then l-cash = yes.
-                        else if buf_chk-gds-pay.pay-code = int(p-bonus-pay) then do:
+                        else if lookup (string(buf_chk-gds-pay.pay-code), v-bonus-pay) > 0 then do:
                             l-bonus = yes.
                             sum-bonus = sum-bonus + (buf_chk-gds-pay.tot-r-b * 100 / buf_chk-gds-pay.eff-doc-qnty).
                             tt_chk-doc.card_number = IF LENGTH(buf_chk-gds-pay.pay-card) = 16 THEN buf_chk-gds-pay.pay-card ELSE "".
@@ -604,7 +641,7 @@ IF p-chk THEN DO:
                         else l-bank = yes.
 
                         /*определяем тип карты оплаты*/
-                        IF buf_chk-gds-pay.pay-card <> '0' and not  buf_chk-gds-pay.pay-code = int(p-bonus-pay) THEN DO:
+                        IF buf_chk-gds-pay.pay-card <> '0' and not  lookup (string(buf_chk-gds-pay.pay-code), v-bonus-pay) > 0 THEN DO:
                             IF buf_chk-gds-pay.pay-card BEGINS '422287' THEN l-reiff = YES.
                             ELSE IF buf_chk-gds-pay.pay-card BEGINS '4' THEN l-visa = YES.
                             ELSE IF buf_chk-gds-pay.pay-card BEGINS '5' THEN l-master = YES.
@@ -631,6 +668,7 @@ IF p-chk THEN DO:
 
                     tt_chk-doc.tender_code = STRING(i-tender-code).
                 END. /*IF b-malina THEN*/
+
             END. /*FOR EACH buf_chk-doc*/
 
             if not error-status:error then do:
@@ -671,8 +709,31 @@ IF p-chk THEN DO:
 
     i-i = 0.
 
-    FOR EACH tt_chk-doc NO-LOCK:
+    FOR EACH tt_chk-doc where ( tt_chk-doc.transaction_line_number = "0" and int(total_sum) <> 0 and int(total_sum) <> ?) or tt_chk-doc.transaction_line_number <> "0" NO-LOCK:
+        IF i-i >= 299990 and int(tt_chk-doc.transaction_line_number) = 0  THEN DO:
+            OUTPUT CLOSE.
+            file_name = p-directory + STRING(p-company,"999") + 'tr' + STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING(DAY(TODAY), "99") + STRING(i-numfile, "999") + '.ok'.
+            OUTPUT TO VALUE(file_name).
+            put unformatted i-i skip.
+                
+            OUTPUT CLOSE.
+            i-numfile = i-numfile + 1.
 
+            IF i-numfile > p-diapmax THEN DO:
+                MESSAGE
+                    vss-workfile vss-revision vss-description SKIP
+                    SUBSTITUTE( "Превышен диапазон при выгрузке чеков!" ) SKIP
+                    RETURN-VALUE SKIP
+                    ERROR-STATUS:GET-MESSAGE ( ERROR-STATUS:NUM-MESSAGES )
+                    VIEW-AS ALERT-BOX ERROR
+                    .
+                RETURN ERROR .
+            END.
+
+            file_name = p-directory + STRING(p-company,"999") + 'tr' + STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING(DAY(TODAY), "99") + STRING(i-numfile, "999") + '.lsp'.
+            OUTPUT TO VALUE(file_name).
+            i-i = 0.
+        END.
         ASSIGN
             i-i = i-i + 1
             i-chkcnt = i-chkcnt + 1
@@ -701,29 +762,6 @@ IF p-chk THEN DO:
                 tt_chk-doc.error_message.
         PUT UNFORMATTED c-ch SKIP.
 
-        IF i-i >= 300000 THEN DO:
-            OUTPUT CLOSE.
-            file_name = p-directory + STRING(p-company,"999") + 'tr' + STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING(DAY(TODAY), "99") + STRING(i-numfile, "999") + '.ok'.
-            OUTPUT TO VALUE(file_name).
-            put unformatted i-i skip.
-                
-            OUTPUT CLOSE.
-            i-numfile = i-numfile + 1.
-
-            IF i-numfile > p-diapmax THEN DO:
-                MESSAGE
-                    vss-workfile vss-revision vss-description SKIP
-                    SUBSTITUTE( "Превышен диапазон при выгрузке чеков!" ) SKIP
-                    RETURN-VALUE SKIP
-                    ERROR-STATUS:GET-MESSAGE ( ERROR-STATUS:NUM-MESSAGES )
-                    VIEW-AS ALERT-BOX ERROR
-                    .
-                RETURN ERROR .
-            END.
-
-            file_name = p-directory + STRING(p-company,"999") + 'tr' + STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING(DAY(TODAY), "99") + STRING(i-numfile, "999") + '.lsp'.
-            OUTPUT TO VALUE(file_name).
-        END.
     END.
 
     OUTPUT CLOSE.

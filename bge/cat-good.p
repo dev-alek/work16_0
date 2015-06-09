@@ -33,6 +33,7 @@ define variable vss-description as character no-undo init "Экспорт справочника т
 { trg/factord.i  }
 { str/fbrlib.i   }
 { gbl/temphost.i }
+{ ref/gds-attr.i }
 
 define input parameter p-mode       as character    no-undo.
 define input parameter table for temp_bge-xml_goods .
@@ -64,7 +65,8 @@ DEF VAR iRepeater       AS INT      INIT 0      NO-UNDO. /* счетчик для цикла */
 DEF VAR bLocked         AS LOGICAL  INIT NO     NO-UNDO. /* флаг блокировки */
 
 DEF VAR ErrorLevel      AS INT                  NO-UNDO. /* ошибка - номер */
-
+define VARIABLE v-gds-attr-value-old as character no-undo.
+define VARIABLE v-gds-attr-type as character no-undo.
 run bge/bge-ini.p ("bge", OUTPUT strHomeDir).
 IF RETURN-VALUE <> "OK" THEN RETURN "ERROR".
 strHomeDir = strHomeDir + "{&Slash}{&SubDir}".
@@ -164,6 +166,9 @@ define variable v-have-attr    as logical      no-undo.
 
 define buffer buf_goods                 for ub.goods.
 define buffer buf_prod-bc               for ub.prod-bc.
+define buffer buf_bar-code              for ub.bar-code.
+define buffer buf_alc-type              for ub.alc-type.
+define buffer buf_alc-type-gds          for ub.alc-type-gds.
 define buffer buf_temp_gds-host-attr    for temp_gds-host-attr.
 
 FIND FIRST buf_goods NO-LOCK
@@ -178,12 +183,13 @@ run get-tax-rate-code in this-procedure (
     , output v-rate-code
 ).
 
-{ gbl/gdsbcode.i buf_goods.gds-code ? iBarCode no-error }
-IF ERROR-STATUS:ERROR THEN
-DO:
-  run wp-XMLWriteLog(sLogFile, 2, "ERROR! Не найден бар-код товара "
-      + STRING(buf_goods.gds-code) + " или ошибка при поиске").
-END.
+/*{ gbl/gdsbcode.i buf_goods.gds-code ? iBarCode no-error }          */
+/*IF ERROR-STATUS:ERROR THEN                                         */
+/*DO:                                                                */
+/*  run wp-XMLWriteLog(sLogFile, 2, "ERROR! Не найден баркод товара "*/
+/*      + STRING(buf_goods.gds-code) + " или ошибка при поиске").    */
+/*END.                                                               */
+
 
 run wp-XMLTagOpen(2, "{&OutFileName}","").
 run wp-XMLTagPut(3, "referenceNo", STRING(buf_goods.gds-code), 0).
@@ -199,6 +205,7 @@ run wp-XMLTagPut(3, "type", buf_goods.gds-type, 0).
 run wp-XMLTagPut(3, "minstock", STRING(buf_goods.min-stock), 0).
 run wp-XMLTagPut(3, "okdp", buf_goods.okdp, 0).
 run wp-XMLTagPut(3, "name", buf_goods.gds-name, 0).
+run wp-XMLTagPut(3, "nameengl", buf_goods.engl-name, 0).
 if lookup( "good-ext":U, p-mode ) <> 0
 then do:
     define variable v-have-recipe          as logical      no-undo.
@@ -248,7 +255,25 @@ else do:
     run wp-XMLWriteLog(sLogFile, 2, "ERROR! Не найден тип '" + buf_goods.unit-base
             + "' товара '" + STRING(buf_goods.gds-code) + "' или ошибка при поиске").
 end.        /* NOT ( available units ) */
-run wp-XMLTagPut(3, "barcode", STRING(iBarCode, "->>>>>>>>>9"),0).
+
+
+  for each buf_bar-code where buf_bar-code.gds-code = buf_goods.gds-code and buf_bar-code.part-code = "" and buf_bar-code.in-code = "" no-lock:
+      
+      run wp-XMLTagOpen(3, "barcode", "").
+      run wp-XMLTagPut(4, "barcodenum", STRING(buf_bar-code.b-code, "->>>>>>>>>9"),0).
+      run wp-XMLTagPut(4, "barcodeclibase", STRING(buf_bar-code.cli-base-rate ),0).
+      run wp-XMLTagPut(4, "barcodecliunit", STRING(buf_bar-code.unit-cli ),0).
+            for each buf_prod-bc no-lock
+               where buf_prod-bc.b-code = buf_bar-code.b-code
+            on error undo, return error
+            :
+                run wp-XMLTagOpen(5, "bcode","").
+                run wp-XMLTagPut(6, "bcodeStr"     , string( buf_prod-bc.b-str         ),  0).
+                run wp-XMLTagPut(6, "bcodeOn"      , string( buf_prod-bc.bc-on         ),  0).
+                run wp-XMLTagClose(5, "bcode").
+            end.        /* for each buf_prod-bc */
+       run wp-XMLTagClose(3, "barcode").     
+  end. /*for each buf_bar-code where buf_bar-code.gds-code = buf_goods.gds-code:*/
 run wp-XMLTagPut(3, "groupcode", STRING(buf_goods.grp-code),0).
 run wp-XMLTagPut(3, "condKeepCode", STRING(buf_goods.cond-keep-code),0).
 
@@ -260,17 +285,29 @@ run wp-XMLTagPut(3, "qntyCart"      , string( buf_goods.qnty-cart       ),  0).
 run wp-XMLTagPut(3, "msBase"        , string( buf_goods.ms-base         ),  0).
 run wp-XMLTagPut(3, "wtBase"        , string( buf_goods.wt-base         ),  0).
 
+RUN gds-attr-value (
+                        INPUT buf_goods.gds-code,
+                        INPUT {&attr-alcohol-prod},
+                        OUTPUT v-gds-attr-value-old,
+                        OUTPUT v-gds-attr-type
+                        ).
+     if v-gds-attr-value-old = "yes" then do:
+        for first buf_alc-type-gds where buf_alc-type-gds.gds-code = buf_goods.gds-code no-lock:
+            if AVAILABLE buf_alc-type-gds then do:
+               for first buf_alc-type where buf_alc-type.alc-type-inner-code = buf_alc-type-gds.alc-type-inner-code no-lock:
+               run wp-XMLTagOpen(3, "alcAttr","").
+                   run wp-XMLTagPut(4, "alcgoods"            , string( "yes"               ),  0).
+                   run wp-XMLTagPut(4, "alcprodcode"         , string( buf_alc-type.alc-type-code         ),  0).
+                   run wp-XMLTagPut(4, "alcprodname"         , string( buf_alc-type.alc-type-name         ),  0).
+                   run wp-XMLTagPut(4, "alcproof"            , string( buf_goods.proof                    ),  0).
+               run wp-XMLTagClose(3, "alcAttr").
+               end.
+            end.
+        end.         
+     end.                   
 run wp-XMLTagPut(3, "comment", buf_goods.PS, 0).
 
-for each buf_prod-bc no-lock
-   where buf_prod-bc.b-code = iBarCode
-on error undo, return error
-:
-    run wp-XMLTagOpen(3, "bcode","").
-    run wp-XMLTagPut(4, "bcodeStr"     , string( buf_prod-bc.b-str         ),  0).
-    run wp-XMLTagPut(4, "bcodeOn"      , string( buf_prod-bc.bc-on         ),  0).
-    run wp-XMLTagClose(3, "bcode").
-end.        /* for each buf_prod-bc */
+
 run fill-gds-host-attr in this-procedure (
       input p-gds-code
     , output v-have-attr

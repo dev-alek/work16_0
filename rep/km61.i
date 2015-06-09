@@ -57,6 +57,7 @@ DO:
   run km6xl-write-line-data in this-procedure (
         input p-sheet-name
       , input temp-str.z-number
+      , input temp-str.summ-sale
       , input temp-str.summ-return
       , input temp-str.person
   ).

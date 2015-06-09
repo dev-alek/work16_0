@@ -134,6 +134,22 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scop manual-edit-cp-attr-form_km3 1
 &scop batch-edit-cp-attr-form_km3  0
 
+/* Оплата баллами Малина  */
+&scop bef-cp-attr-bal_malina bal_malina
+&glob cp-attr-bal_malina '{&bef-cp-attr-bal_malina}':U
+&scop type-cp-attr-bal_malina {&type-log}
+&scop format-cp-attr-bal_malina "+/-"
+&scop label-cp-attr-bal_malina "Оплата баллами Малина"
+&scop tooltip-cp-attr-bal_malina "Оплата баллами Малина"
+/*область действия  - глобально или фирма или объект*/
+&scop range-cp-attr-bal_malina  ~{&bef-global-int~}
+&scop user-can-edit-cp-attr-bal_malina true
+&scop output-display-cp-attr-bal_malina true
+&scop other-cp-attr-bal_malina '':u
+&scop news-cp-attr-bal_malina false
+&scop hist-cp-attr-bal_malina true
+&scop manual-edit-cp-attr-bal_malina 1
+&scop batch-edit-cp-attr-bal_malina  0
 
 /* Создание дополнительного документа */
 &scop bef-cp-attr-dop-doc dop-doc
@@ -161,6 +177,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,{&bef-cp-attr-paycard-all-prefix}~
 ,{&bef-cp-attr-paycard-edit-prefix}~
 ,{&bef-cp-attr-form_km3}~
+,{&bef-cp-attr-bal_malina}~
 ':u
 
 /* ------------------------------------------------------------------- */
@@ -242,6 +259,8 @@ procedure cp-attr-code :
       {&attr-temp-full-code}
       &scop attr-code cp-attr-form_km3
       {&attr-temp-full-code}
+      &scop attr-code cp-attr-bal_malina
+      {&attr-temp-full-code}
 
 
       /* сюда добавлять новые параметры */
@@ -276,6 +295,8 @@ procedure cp-attr-tooltip :
       &scop attr-code cp-attr-paycard-edit-prefix
       {&attr-temp-code}
       &scop attr-code cp-attr-form_km3
+      {&attr-temp-code}
+      &scop attr-code cp-attr-bal_malina
       {&attr-temp-code}
 
 
@@ -554,6 +575,8 @@ procedure cp-attr-news :
       {&attr-news-code}
       &scop attr-code cp-attr-form_km3
       {&attr-news-code}
+      &scop attr-code cp-attr-bal_malina
+      {&attr-news-code}
 
 
       /* сюда добавлять новые параметры */
@@ -582,6 +605,8 @@ procedure cp-attr-hist :
       &scop attr-code cp-attr-paycard-edit-prefix
       {&attr-hist-code}
       &scop attr-code cp-attr-form_km3
+      {&attr-hist-code}
+      &scop attr-code cp-attr-bal_malina
       {&attr-hist-code}
 
 
@@ -761,6 +786,8 @@ do on error undo, return error return-value
       {&attr-manual-edit-code}
       &scop attr-code cp-attr-form_km3
       {&attr-manual-edit-code}
+      &scop attr-code cp-attr-bal_malina
+      {&attr-manual-edit-code}
 
 
 
@@ -792,6 +819,8 @@ do
       &scop attr-code cp-attr-dop-doc
       {&attr-batch-edit-code}
       &scop attr-code cp-attr-form_km3
+      {&attr-batch-edit-code}
+      &scop attr-code cp-attr-bal_malina
       {&attr-batch-edit-code}
 
 

@@ -39,6 +39,7 @@ initial "@(#)$Workfile$ $Revision$".
 &global-define km6xl-subtotalPropisAmount "subtotalPropisAmount":U
 
 &global-define km6xl-h_organization       "h_organization":U
+&global-define km6xl-h_organization2      "h_organization2":U
 &global-define km6xl-h_object             "h_object":U
 &global-define km6xl-h_docCode            "h_docCode":U
 &global-define km6xl-h_docDate            "h_DocDate":U
@@ -80,15 +81,15 @@ define temp-table temp_cell-data no-undo
 .
 define temp-table temp_line-data no-undo
       field sheet-name       as character
-      field data-key    as character
-      field xl-line-id  as integer
+      field data-key         as character
+      field xl-line-id       as integer
       FIELD d_znumber        as INTEGER
       FIELD d_empty2         as character
       FIELD d_empty3         as character
       FIELD d_empty4         as character
       FIELD d_empty5         as character
       FIELD d_empty6         as character
-      FIELD d_empty7         as character
+      FIELD d_summ-sale-7    as character
       FIELD d_zerocounter    as INTEGER
       FIELD d_summbegin      as DECIMAL
       FIELD d_summend        as DECIMAL
@@ -111,8 +112,8 @@ define input parameter p-sheet-name           as character no-undo .
 define input parameter p-sheet-list           as character no-undo .
 define input parameter p-sheet-list-copy-from as character no-undo .
 
-    define buffer buf_temp_cell-data        for temp_cell-data.
-    define buffer buf_usr-flt               for ubflt.usr-flt.
+define buffer buf_temp_cell-data        for temp_cell-data.
+define buffer buf_usr-flt               for ubflt.usr-flt.
 do
 for buf_temp_cell-data
   , buf_usr-flt
@@ -120,18 +121,18 @@ on error undo, return error
 :
 
     if p-first-sheet then do:
-    run gbl/_tmpfile.p (
-          input "xd"
-        , input ".txt"
-        , output v-km6xl-data-file-name
-    ).
-    output stream excel-line to value( v-km6xl-data-file-name ).
-    run gbl/_tmpfile.p (
-          input "xc"
-        , input ".txt"
-        , output v-km6xl-cell-file-name
-    ).
-    output stream excel-cell to value( v-km6xl-cell-file-name ).
+      run gbl/_tmpfile.p (
+            input "xd"
+          , input ".txt"
+          , output v-km6xl-data-file-name
+      ).
+      output stream excel-line to value( v-km6xl-data-file-name ).
+      run gbl/_tmpfile.p (
+            input "xc"
+          , input ".txt"
+          , output v-km6xl-cell-file-name
+      ).
+      output stream excel-cell to value( v-km6xl-cell-file-name ).
       run km6xl-write-cell-data in this-procedure (
             input "sheetListcopyfrom":U
           , input p-sheet-list-copy-from
@@ -272,6 +273,7 @@ end procedure. /* km6xl-write-cell-data */
 procedure km6xl-write-line-data :
 define input parameter p-sheet-name        as character   no-undo.
 define input parameter p-d_z-number        as INTEGER     no-undo.
+define input parameter p-d_summ-sale       as decimal     no-undo.
 define input parameter p-d_summ-return     as DECIMAL     no-undo.
 define input parameter p-d_person          as character   no-undo.
 
@@ -290,16 +292,16 @@ on error undo, return error
     assign
         buf_temp_line-data.sheet-name     = p-sheet-name
         buf_temp_line-data.data-key       = {&km6xl-data-label}
-        buf_temp_line-data.d_znumber     = p-d_z-number
-        buf_temp_line-data.d_empty2         = ""
-        buf_temp_line-data.d_empty3         = ""
+        buf_temp_line-data.d_znumber      = p-d_z-number
+        buf_temp_line-data.d_empty2       = ""
+        buf_temp_line-data.d_empty3       = ""
         buf_temp_line-data.d_empty4       = ""
         buf_temp_line-data.d_empty5       = ""
         buf_temp_line-data.d_empty6       = ""
-        buf_temp_line-data.d_empty7       = ""
-        buf_temp_line-data.d_summreturn  = p-d_summ-return
+        buf_temp_line-data.d_summ-sale-7  = string(p-d_summ-sale)
+        buf_temp_line-data.d_summreturn   = p-d_summ-return
         buf_temp_line-data.d_person       = p-d_person
-        buf_temp_line-data.d_empty10        = ""
+        buf_temp_line-data.d_empty10      = ""
     .
     put stream excel-line unformatted
                         buf_temp_line-data.sheet-name
@@ -310,7 +312,7 @@ on error undo, return error
         {&tabulation}   buf_temp_line-data.d_empty4
         {&tabulation}   buf_temp_line-data.d_empty5
         {&tabulation}   buf_temp_line-data.d_empty6
-        {&tabulation}   buf_temp_line-data.d_empty7
+        {&tabulation}   buf_temp_line-data.d_summ-sale-7
         {&tabulation}   buf_temp_line-data.d_summreturn
         {&tabulation}   buf_temp_line-data.d_person
         {&tabulation}   buf_temp_line-data.d_empty10

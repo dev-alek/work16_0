@@ -77,11 +77,11 @@ DEFINE VARIABLE v-db-num        like ub.db.db-num no-undo.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 ~
 RECT-4 t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl rvs-wt-email ~
-r-algrvspt t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi ~
+r-algrvspt t-rvsnmter r-temp-for-pomi t-invclipt f-invclipt b-invclipt ~
 r-denstclc 
 &Scoped-Define DISPLAYED-OBJECTS t-autopump t-avtinvpm t-olddens r-expptrl ~
-r-inpptrl rvs-wt-email r-algrvspt t-rvsnmter t-invclipt f-invclipt ~
-r-temp-for-pomi r-denstclc f-invclipt-name 
+r-inpptrl rvs-wt-email r-algrvspt t-rvsnmter r-temp-for-pomi t-invclipt ~
+f-invclipt r-denstclc f-invclipt-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -143,8 +143,9 @@ DEFINE VARIABLE r-denstclc AS CHARACTER
           "среднее по сменной сверке и внеш.приходам (shft_rvs-inc)", "shft_rvs-inc",
 "среднее по сверкам (avrg-rvs)", "avrg-rvs",
 "среднеарифметическое значение окаймляющих сверок (avrg-chk)", "avrg-chk",
-"среднее значение по расчетно-книжным данным (shft_sys-inc)", "shft_sys-inc"
-     SIZE 65.5 BY 2.5 NO-UNDO.
+"среднее значение по расчетно-книжным данным (shft_sys-inc)", "shft_sys-inc",
+"плотность, аппроксимирующая расчетно-книжные остатки к фактическим (fact-approx)", "fact-approx"
+     SIZE 84.5 BY 2.5 NO-UNDO.
 
 DEFINE VARIABLE r-expptrl AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
@@ -179,7 +180,7 @@ DEFINE RECTANGLE RECT-2
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
-     SIZE 96.5 BY 4.25.
+     SIZE 96.5 BY 7.5.
 
 DEFINE RECTANGLE RECT-4
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
@@ -221,38 +222,38 @@ DEFINE FRAME shattrpt
      t-avtinvpm AT ROW 3.75 COL 3 WIDGET-ID 42
      t-olddens AT ROW 4.75 COL 3 WIDGET-ID 76
      r-expptrl AT ROW 6.25 COL 56.63 NO-LABEL WIDGET-ID 50
-     r-inpptrl AT ROW 7.25 COL 6 NO-LABEL WIDGET-ID 44
-     rvs-wt-email AT ROW 9 COL 4 NO-LABEL WIDGET-ID 90
-     r-algrvspt AT ROW 11.5 COL 3.5 NO-LABEL WIDGET-ID 80
-     t-rvsnmter AT ROW 13.5 COL 3.5 WIDGET-ID 58
-     t-invclipt AT ROW 14.5 COL 3.5 WIDGET-ID 74
-     f-invclipt AT ROW 15.5 COL 3 COLON-ALIGNED HELP
-          "" NO-LABEL WIDGET-ID 60
-     b-invclipt AT ROW 15.5 COL 15.5 WIDGET-ID 68
+     r-inpptrl AT ROW 8.38 COL 4 NO-LABEL WIDGET-ID 44
+     rvs-wt-email AT ROW 12.04 COL 4 NO-LABEL WIDGET-ID 90
+     r-algrvspt AT ROW 14.83 COL 3.5 NO-LABEL WIDGET-ID 80
+     t-rvsnmter AT ROW 16.83 COL 3.5 WIDGET-ID 58
      r-temp-for-pomi AT ROW 17 COL 65.5 NO-LABEL WIDGET-ID 96
-     r-denstclc AT ROW 19 COL 3.5 NO-LABEL WIDGET-ID 32
-     f-invclipt-name AT ROW 15.5 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
+     t-invclipt AT ROW 17.83 COL 3.5 WIDGET-ID 74
+     f-invclipt AT ROW 18.83 COL 3 COLON-ALIGNED HELP
+          "" NO-LABEL WIDGET-ID 60
+     b-invclipt AT ROW 18.83 COL 15.5 WIDGET-ID 68
+     r-denstclc AT ROW 22.33 COL 3.5 NO-LABEL WIDGET-ID 32
+     f-invclipt-name AT ROW 18.83 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
      "Температура, к которой приводиться плотность и объем (°С) :" VIEW-AS TEXT
-          SIZE 60 BY .67 AT ROW 17 COL 4 WIDGET-ID 94
+          SIZE 60 BY .67 AT ROW 20.33 COL 4 WIDGET-ID 94
      "Настройки инвентаризации по сверке" VIEW-AS TEXT
-          SIZE 35.5 BY .67 AT ROW 10.75 COL 3 WIDGET-ID 78
+          SIZE 35.5 BY .67 AT ROW 14.08 COL 3 WIDGET-ID 78
      "Тип ввода топлива во всех документах кроме прихода внешнего:" VIEW-AS TEXT
-          SIZE 61 BY .83 AT ROW 8 COL 4 WIDGET-ID 54
+          SIZE 61 BY .83 AT ROW 7.25 COL 4.25 WIDGET-ID 54
      "Тип ввода топлива в документах прихода внешнего :" VIEW-AS TEXT
           SIZE 49 BY .83 AT ROW 6.25 COL 4 WIDGET-ID 48
      "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
-          SIZE 50.5 BY .63 AT ROW 18.25 COL 3.5 WIDGET-ID 36
+          SIZE 50.5 BY .63 AT ROW 21.58 COL 3.5 WIDGET-ID 36
      "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
-          SIZE 52 BY .63 AT ROW 22.25 COL 3.5 WIDGET-ID 86
+          SIZE 52 BY .63 AT ROW 25.58 COL 3.5 WIDGET-ID 86
      "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
-          SIZE 84 BY .96 AT ROW 7.17 COL 4 WIDGET-ID 92
+          SIZE 84 BY .96 AT ROW 10.04 COL 4 WIDGET-ID 92
      "на список почтовых адресов(разделять адреса запятыми):" VIEW-AS TEXT
-          SIZE 79 BY .96 AT ROW 8.08 COL 4 WIDGET-ID 94
-     RECT-1 AT ROW 18 COL 2.5 WIDGET-ID 38
-     RECT-2 AT ROW 10.54 COL 2.5 WIDGET-ID 64
+          SIZE 79 BY .96 AT ROW 10.96 COL 4 WIDGET-ID 94
+     RECT-1 AT ROW 21.33 COL 2.5 WIDGET-ID 38
+     RECT-2 AT ROW 13.71 COL 2.5 WIDGET-ID 64
      RECT-3 AT ROW 6 COL 2.5 WIDGET-ID 66
-     RECT-4 AT ROW 22 COL 2.5 WIDGET-ID 84
-     SPACE(1.24) SKIP(0.41)
+     RECT-4 AT ROW 25.33 COL 2.5 WIDGET-ID 84
+     SPACE(1.24) SKIP(0.37)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки работы с ТОПЛИВНЫМ товаром" WIDGET-ID 100.
@@ -646,12 +647,12 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl rvs-wt-email 
-          r-algrvspt t-rvsnmter t-invclipt f-invclipt r-temp-for-pomi r-denstclc 
+          r-algrvspt t-rvsnmter r-temp-for-pomi t-invclipt f-invclipt r-denstclc 
           f-invclipt-name 
       WITH FRAME shattrpt.
   ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 t-autopump t-avtinvpm 
          t-olddens r-expptrl r-inpptrl rvs-wt-email r-algrvspt t-rvsnmter 
-         t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc 
+         r-temp-for-pomi t-invclipt f-invclipt b-invclipt r-denstclc 
       WITH FRAME shattrpt.
   {&OPEN-BROWSERS-IN-QUERY-shattrpt}
 END PROCEDURE.

@@ -76,7 +76,6 @@ def var vss-description as character no-undo init "Печать документов из списка д
 
 DEFINE stream DocsStream .
 
-
 def     buffer  b-wt-docs           for     wt-docs .
 
 define variable DifferentTypes      as logical   no-undo .
@@ -273,7 +272,9 @@ Assign l-col-type="CHARACTER" l-col-len=10 l-col-format= "x(10)"            l-co
 
 Assign l-col-type="CHARACTER" l-col-len=30 l-col-format= "x(30)"            l-col-lable="Контрагент".
   { rep/dincol.i cr  5    for-cli-name      x1                }
+  assign l-col-type="CHARACTER" l-col-len=50 l-col-format= "x(70)". /* ТН-3418 Увеличение поля "Контрагент" ДЛЯ Excel (на экран - вывод по старому=30симв). Арн. 21.04.2015г */
   { rep/dincol.i crx 5 }
+
 Assign l-col-type="DECIMAL" l-col-len=12 l-col-format= "->>>>,>>9.99"            l-col-lable="Количество".
   { rep/dincol.i cr  6    Qnty      x1                }
   { rep/dincol.i crx 6 }
@@ -757,8 +758,26 @@ FOR EACH wt-docs with frame x1
 
   { rep/dincol.i dix 4  for-doc-code
                   wt-docs.doc-code }
-  { rep/dincol.i dix 5  for-cli-name
-                  wt-docs.cli-name }
+
+  /*{ rep/dincol.i dix 5  for-cli-name*/ /* ТН-3417 21.04.2015 Арн. Откл инклуд и заменил его кодом ниже (из инклуда, но с модиф). */
+  /*                wt-docs.cli-name }*/ /* ТН-3417 21.04.2015 Арн. Теперь - на экране поле "Контрагент" = 30симв, а в Excel = 70 симв, что и требует Заказчик. */
+                                                                                                        /* ТН-3417 21.04.2015 Арн. */
+  /*в Excel*/                                                                                           /* ТН-3417 21.04.2015 Арн. */
+  if use-column[5]                                                                                      /* ТН-3417 21.04.2015 Арн. */
+  then (reg-output(                                                                                     /* ТН-3417 21.04.2015 Арн. */
+                    string(wt-docs.cli-name, entry(1, "x(70)"/*c-for-cli-name:private-data*/, chr(4)))  /* ТН-3417 21.04.2015 Арн. */
+                   ,c-for-cli-name:private-data                                                         /* ТН-3417 21.04.2015 Арн. */
+                   ,v-reg-replace                                                                       /* ТН-3417 21.04.2015 Арн. */
+                                                                                                        /* ТН-3417 21.04.2015 Арн. */
+                   ,no                                                                                  /* ТН-3417 21.04.2015 Арн. */
+                                                                                                        /* ТН-3417 21.04.2015 Арн. */
+                   ,v-dec-sep                                                                           /* ТН-3417 21.04.2015 Арн. */
+                   ,v-th-sep)  +                                                                        /* ТН-3417 21.04.2015 Арн. */
+        (if 5 < last-col-num                                                                            /* ТН-3417 21.04.2015 Арн. */
+         then CHR(9)                                                                                    /* ТН-3417 21.04.2015 Арн. */
+         else ""))                                                                                      /* ТН-3417 21.04.2015 Арн. */
+  else "":U                                                                                             /* ТН-3417 21.04.2015 Арн. */
+
   { rep/dincol.i dix 6  Qnty
                   Qnty }
   { rep/dincol.i dix 7  Val-BruttoSaleSum

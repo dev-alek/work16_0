@@ -2524,6 +2524,7 @@ procedure lib-trn3_avrgdens :
     define variable v-prev-fact-order      as decimal   no-undo .
     define variable v-next-date            as date      no-undo .
     define variable v-prev-date            as date      no-undo .
+    define variable v-prev-doc             like ub.rvs-doc.rvs-code      no-undo .
     define variable v-next-time            as integer   no-undo .
     define variable v-prev-time            as integer   no-undo .
     define variable v-next-density         as decimal   no-undo .
@@ -2545,7 +2546,11 @@ procedure lib-trn3_avrgdens :
     define buffer buf_doc-line       for ub.doc-line .
     define buffer buf_doc-pl         for ub.doc-pl .
     define buffer buf_pl-gds         for ub.pl-gds .
-
+    define variable v-attr-type            as character  no-undo.
+    define variable v-gds-ptrl-densities   as character  no-undo.
+    define variable v-min-dens             as   decimal  no-undo.
+    define variable v-max-dens             as   decimal  no-undo.
+    
     find first buf_goods no-lock
       where buf_goods.gds-code = p-gds-code
       no-error.
@@ -2853,8 +2858,8 @@ procedure lib-trn3_avrgdens :
                 no-error .
               if available buf_rvs-line then do:
                 assign
-                  v-ostatok-lt = buf_rvs-line.system-qnty
-                  v-ostatok-kg = buf_rvs-line.system-cli-qnty
+                  v-ostatok-lt = buf_rvs-line.state-measure-qnty
+                  v-ostatok-kg = buf_rvs-line.state-measure-cli-qnty
                 .
               end. /* if available buf_rvs-line */
             end. /* if available buf-prev_shift-obj */
@@ -2898,7 +2903,6 @@ procedure lib-trn3_avrgdens :
               p-density = abs( ( v-ostatok-kg + v-oboroty-kg ) / ( v-ostatok-lt + v-oboroty-lt ) )
             .
           end. /* shft_rvs-inc */
-          
           when 'shft_sys-inc':U then do:
             assign
               v-ostatok-lt    = 0.0
@@ -2960,9 +2964,48 @@ procedure lib-trn3_avrgdens :
             else assign
               p-density = abs( ( v-ostatok-kg + v-oboroty-kg ) / ( v-ostatok-lt + v-oboroty-lt ) )
             .
-          end. /* shft_sys-inc */
-          
-          
+          end. /* shft_rvs-inc */
+          when "fact-approx" then do:
+              v-min-dens = 0.1.
+              v-max-dens = 0.9.
+              find last  buf_rvs-doc no-lock
+              where buf_rvs-doc.obj-type   = p-obj-type
+                and buf_rvs-doc.obj-code   = p-obj-code
+                and buf_rvs-doc.shift-date = p-shift-date
+                and buf_rvs-doc.shift-num  = p-shift-num
+                and buf_rvs-doc.status_    = {&fact}
+                and buf_rvs-doc.rvs-type  = {&rvs-control} no-error.
+              if available buf_rvs-doc then    v-prev-doc = buf_rvs-doc.rvs-code .
+              else  undo, return error substitute( 'lib-trn3_avrgdens: Нет ни одной контрольной сверки в текущей смене.'
+                                                                                   ) .
+            /*  else if available buf-prev_rvs-doc then do:  v-prev-doc = buf-prev_rvs-doc.rvs-code .  */
+              for first buf_rvs-line no-lock
+              where buf_rvs-line.rvs-code   =  v-prev-doc
+                and buf_rvs-line.obj-type   = p-obj-type
+                and buf_rvs-line.obj-code   = p-obj-code
+                and buf_rvs-line.pl-code    = p-pl-code
+                and buf_rvs-line.gds-code   = buf_goods.gds-code
+              by buf_rvs-doc.fact-order
+            on error undo, return error substitute( "&1 (lib-trn3_avrgdens). &2 ", vss-workfile, return-value )
+            :              
+                p-density = abs ((buf_rvs-line.system-cli-qnty  - buf_rvs-line.state-measure-cli-qnty) / (buf_rvs-line.system-qnty - buf_rvs-line.state-measure-qnty)).    
+                   run gds-attr-value in this-procedure
+                   ( input  buf_goods.gds-code
+                    ,input  {&attr-gds-ptrl-densities}
+                    ,output v-gds-ptrl-densities
+                    ,output v-attr-type
+                   ) .
+                   if v-gds-ptrl-densities <> "" and v-gds-ptrl-densities <> ? then do:
+                      assign
+                        v-min-dens = decimal(replace(entry(1, v-gds-ptrl-densities, "-":U ), "кг\л", "":U))
+                        v-max-dens = decimal(replace(entry(2, v-gds-ptrl-densities, "-":U ), "кг\л":U, "":U))
+                      no-error .
+                   end.  
+                if p-density = ? then p-density =  buf_rvs-line.state-density.   
+                if  p-density >  v-max-dens then p-density = v-max-dens .
+                if  p-density <  v-min-dens then p-density = v-min-dens .      
+            end. /* for each buf_rvs-doc */
+          end.
           otherwise do:
             undo, return error substitute( 'lib-trn3_avrgdens: нет описания алгоритма определения плотности &1'
                                           , ptrlprop-denstclc

@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-r-Отчет по картам ЛНР.
+r-Отчет по типам скидки (карты ЛНР).
 
 Автор: Шутилов Арнольд Валерьевич
 Дата создания: 02/12/14
@@ -27,7 +27,7 @@ def var vss-author      as character no-undo init "$Author$":U .
 def var vss-date        as character no-undo init "$Date$":U .
 def var vss-workfile    as character no-undo init "$Workfile$":U .
 def var vss-archive     as character no-undo init "$Archive$":U .
-def var vss-description as character no-undo init "e-Отчет по картам ЛНР.Печать отчёта в процедуре my-report.".
+def var vss-description as character no-undo init "r-Отчет по типам скидки (карты ЛНР)".
 
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -75,7 +75,10 @@ define temp-table tt-line no-undo
     field doc-code as character
     field type-line as character
 
-    index pi as primary doc-code
+    index pi is primary obj-type obj-code 
+    index bcode b-code
+    index grp_lvl       grp-lvl
+    index upper_code    upper-code
 .
 
 define stream OutStr-html.
@@ -601,9 +604,9 @@ procedure transform-tt-level:
 
         v-upper-code = 0.
 
-        for each tt-line where tt-line.grp-lvl =  v-cur-lvl
+        for each tt-line where tt-line.grp-lvl = v-cur-lvl
         and tt-line.obj-type = obj-list.obj-type
-        and  tt-line.obj-code = obj-list.obj-code
+        and tt-line.obj-code = obj-list.obj-code
         break by tt-line.grp-code 
         :
 

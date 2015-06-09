@@ -20,7 +20,7 @@ $Date$
 $Workfile$
 $Archive$
 
-e-Отчет по картам ЛНР. Печать отчёта в процедуре my-report.
+e-Отчет по типам скидки (карты ЛНР)
 
 Автор: Соломко Дмитрий Владимирович
 Дата создания: 09/10/13
@@ -34,7 +34,7 @@ def var vss-author      as character no-undo init "$Author$":U .
 def var vss-date        as character no-undo init "$Date$":U .
 def var vss-workfile    as character no-undo init "$Workfile$":U .
 def var vss-archive     as character no-undo init "$Archive$":U .
-def var vss-description as character no-undo init "e-Отчет по картам ЛНР.Печать отчёта в процедуре my-report.".
+def var vss-description as character no-undo init "e-Отчет по типам скидки (карты ЛНР)".
 
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
