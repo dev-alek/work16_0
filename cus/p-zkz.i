@@ -34,6 +34,21 @@ DO:
   run cus/torg-26.p ( parParentProc, recid(shar-buf_ord-doc) ).
 END.
 
+ON CHOOSE OF MENU-ITEM m_print4
+DO:
+    
+    
+      g#log = true  . 
+            message "Экспорт в excel ." skip "Продолжать ?"
+                view-as alert-box question buttons ok-cancel update g#log.
+            {&if-not-true}
+            IF NOT AVAILABLE shar-buf_ord-doc THEN RETURN .     
+            RUN cus/z-tot1.p (PARPARENTPROC ,  shar-buf_ord-doc.doc-code , shar-buf_ord-doc.obj-TYPE ,shar-buf_ord-doc.obj-code   ).
+    
+    END.
+
+
+
 ON CHOOSE OF MENU-ITEM m_PRINT2 /* 7.  */
 DO:
 define variable j as integer init 0 no-undo .

@@ -318,13 +318,20 @@ DEFINE BUTTON b-cons
      LABEL "&s":L
      TOOLTIP "Объединение нескольких заказов в один, ALT-S"
      SIZE 3 BY 1.
-
+     
+DEFINE BUTTON b-email
+    LABEL "&s":L
+    TOOLTIP "Отправка файла на e-mail"
+    SIZE 3 BY 1.
+    
+    
 define MENU m-rep
     .
 
 DEFINE MENU M-print
-       MENU-ITEM m_print1       LABEL "Печать стандартной формы Заказа" ACCELERATOR "ALT-7"
+       MENU-ITEM m_print1       LABEL "ТОРГ-26" ACCELERATOR "ALT-7"
        MENU-ITEM m_print2       LABEL "Печать по форме Поставщика" ACCELERATOR "ALT-8"
+       menu-item m_print4       LABEL "Стандартная форма"
        RULE
        MENU-ITEM m_print3       LABEL "Выбор формы печати" ACCELERATOR "ALT-9"
  .
@@ -463,7 +470,7 @@ DEFINE FRAME {&frame-name}
      b-print-rcv AT ROW 2 COL 86
      b-history AT ROW 2 COL 62
      b-cons    at row 2 col 87.5
-
+     b-email   AT ROW 2 COL 90.5
      br-docs  AT ROW 3 COL 1
      pay-type at row 18 col 5 COLON-ALIGNED LABEL "Опл" VIEW-AS FILL-IN SIZE 64 BY 1 fgcolor 4
      shar-buf_ord-doc.tot-lines at row 18 col 80 COLON-ALIGNED LABEL "Кол-во строк" VIEW-AS TEXT SIZE 14 BY .79 fgcolor 4
