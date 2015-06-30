@@ -756,7 +756,7 @@ end.
 &scop user-can-edit-attr-cli-alc-producer  true
 &scop output-display-attr-cli-alc-producer  true
 &scop other-attr-cli-alc-producer '':u
-&scop news-attr-cli-alc-producer false
+&scop news-attr-cli-alc-producer true
 &scop manual-edit-attr-cli-alc-producer  1
 &scop batch-edit-attr-cli-alc-producer  1
 
