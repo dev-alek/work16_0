@@ -40,6 +40,7 @@ define variable v-dop as character no-undo .
 define buffer buf_firm for ub.firm.
 define buffer buf_person for ub.person.
 
+define variable v-cor as logical no-undo .
 
 function sum-1 returns integer(INPUT p-inn as character, input p-mnz as character, input p-ii as integer):
 define variable v-sum as integer no-undo .
@@ -60,7 +61,6 @@ define variable v-dopi as integer no-undo .
   return v-int .
 END FUNCTION.
 
-
 CASE p-obj-type:
   when {&cmp} then do:
     if p-is-pboul = ? then do:
@@ -74,14 +74,18 @@ CASE p-obj-type:
       .
     end.
     if p-is-pboul then do:
-      run check in this-procedure ("12":U, output p-correct) no-error .
+      run check in this-procedure ("12":U, output p-correct, output v-cor) no-error .
     end.
     else do:
-      run check in this-procedure ("10":U, output p-correct) no-error .
+      run check in this-procedure ("10":U, output p-correct, output v-cor) no-error .
+      if p-correct = no and v-cor = no then do:
+      run check in this-procedure ("12":U, output p-correct, output v-cor) no-error .
+      end.
     end.
     if error-status:error then return error .
     return return-value.
   end.
+
   when {&prs} then do:
     if p-is-pboul = ? then do:
       find first buf_person no-lock where
@@ -93,7 +97,10 @@ CASE p-obj-type:
       p-is-pboul = buf_person.is-pboul
       .
     end.
-    run check in this-procedure ("12":U, output p-correct) no-error .
+    run check in this-procedure ("12":U, output p-correct, output v-cor) no-error .
+    if p-correct = no and v-cor = no then do:
+    run check in this-procedure ("10":U, output p-correct, output v-cor) no-error .
+    end.
     if error-status:error then return error .
     return return-value.
   end.
@@ -102,7 +109,7 @@ END CASE.
 procedure check :
 define input parameter p-par as character no-undo .
 define output parameter p-correct as logical no-undo .
-
+define output parameter p-cor as logical no-undo .
 
   do
   on error undo, return error
@@ -110,10 +117,13 @@ define output parameter p-correct as logical no-undo .
     CASE p-par:
       when "10" then do:
         if length(left-trim(p-inn, "F":U)) <> 10 then do:
+          assign p-cor = no.
           return substitute("{&abbr_inn_allshift} &1: Неверная длина {&abbr_inn_allshift} - &2 - должна быть буква <F> и/или 10 цифр"
                              ,p-inn
                              ,length (p-inn)) .
+
         end.
+        else p-cor = yes.
         assign
         v-int = sum-1(p-inn, vmn0, 9)
         v-int = v-int MODULO 11

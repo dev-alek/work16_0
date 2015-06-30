@@ -2056,6 +2056,7 @@ on error undo, return error
     t-create-no-th      :visible in frame {&frame-name} = no
     f-t-create-3        :visible in frame {&frame-name} = no
     f-t-create-4        :visible in frame {&frame-name} = no
+    f-t-create-5        :visible in frame {&frame-name} = no    
 .
 if rs-action = "exp" then do:
     assign
@@ -2137,6 +2138,7 @@ if rs-action = "imp" then do:
     t-create-no-th      :visible in frame {&frame-name} = YES
     f-t-create-3        :visible in frame {&frame-name} = YES
     f-t-create-4        :visible in frame {&frame-name} = YES
+    f-t-create-5        :visible in frame {&frame-name} = YES
     bt-sel-hsch       :visible in frame {&frame-name} = yes
     .
     run host-select in this-procedure (
@@ -2166,6 +2168,7 @@ if rs-action = "imp" then do:
     f-t-create-2
     f-t-create-3
     f-t-create-4
+    f-t-create-5
     rs-1
     t-create
     t-create-no-th
