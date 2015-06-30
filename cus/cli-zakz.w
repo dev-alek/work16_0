@@ -2668,7 +2668,7 @@ define buffer bufff-units  for ub.units     .
   if tmp#zakaz.line-num = 0 or
      tmp#zakaz.line-num = ? or
      shar_ord-line.line-num = 0 then do:
-       find last ll-tmp#zakaz where ll-tmp#zakaz.gds-code  <> tmp#zakaz.gds-code no-error .
+       find last ll-tmp#zakaz where ll-tmp#zakaz.gds-code  <> tmp#zakaz.gds-code use-index idx-ln no-lock no-error. 
         if available ll-tmp#zakaz
             then tmp#zakaz.line-num = ll-tmp#zakaz.line-num + 1.
             else tmp#zakaz.line-num = 1.
@@ -2930,7 +2930,7 @@ procedure export-proc :
 {&start-proc}
 /* load from 1 tab */
 define input parameter numbersheet as integer no-undo .
-define variable ii as integer init 2 no-undo.
+define variable ii as integer init 6 no-undo.
 t-ret =  session:set-wait-state("general") .
 mm:
  repeat  /* on endkey undo, retry  */ :
@@ -2945,11 +2945,11 @@ mm:
            end.
   end.
 
-  if ii = 2 then disable  loc-cli-code loc-cli-type loc-obj-name r-clients with frame {&frame-name}.
+  if ii = 6 then disable  loc-cli-code loc-cli-type loc-obj-name r-clients with frame {&frame-name}.
   t-ret =  session:set-wait-state("") .
 
   run openbr in this-procedure  .
-  message "Импортировано " + string (ii - 3) + " товаров".
+  message "Импортировано " + string (ii - 7) + " товаров".
   end.
 end.
 

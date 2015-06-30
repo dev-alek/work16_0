@@ -45,7 +45,8 @@ field min-order     as decimal   ~
 field service-order as decimal ~
 field local-mark    as character ~
 field max-stock     as decimal   ~
-index pi is unique primary artic prod-type prod-code  ascending.
+index pi is unique primary artic prod-type prod-code  ascending ~
+index idx-ln line-num.
 
 &glob def-tt-option {1} shared
 {&def-tt-zakaz}

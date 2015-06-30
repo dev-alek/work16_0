@@ -756,7 +756,7 @@ end.
 &scop user-can-edit-attr-cli-alc-producer  true
 &scop output-display-attr-cli-alc-producer  true
 &scop other-attr-cli-alc-producer '':u
-&scop news-attr-cli-alc-producer false
+&scop news-attr-cli-alc-producer true
 &scop manual-edit-attr-cli-alc-producer  1
 &scop batch-edit-attr-cli-alc-producer  1
 
@@ -2666,7 +2666,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop output-display-attr-abc-global  true
 &scop other-attr-abc-global           'spr-ext=gbl\assortpa.w':U
 &scop prop-type-list-attr-abc-global  'character,character,character,character':U
-&scop prop-label-list-attr-abc-global 'ABC-анализ - способ проведения,Количество параметров для ABC-анализа,Проценты по умолчанию для ABC-анализа (простого). Уровни ранжирования,Проценты по умолчанию по Двухуровнему ABC-анализу'
+&scop prop-label-list-attr-abc-global 'ABC-анализ - способ проведения,Количество параметров для ABC-анализа,Проценты по умолчанию для ABC-анализа (простого). Уровни ранжирования,Проценты по умолчанию по Двухуровневому ABC-анализу'
 &scop prop-list-attr-abc-global       'abc-mode,abc-type,abc-one,abc-two'
 &scop global-attr-abc-global true
 &scop host-attr-abc-global false

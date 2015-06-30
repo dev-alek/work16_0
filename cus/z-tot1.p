@@ -268,39 +268,119 @@ procedure make-str-1 :
  :
 /* по строкам */
 
+num#col# = 0 .
+ num#str# = 0 .
+ num#col# = 1 .
+ num#str# = num#str# + 1 .
+
+ run macr_excel_char_with_format in this-procedure ( reportname , num#str# , num#col#  ).
+ run macr_cell_format in this-procedure
+          ( 12    ,       /* p-size   */
+            true  ,       /* p-bold   */
+            false ,       /* p-italic */
+            ?     ,       /* p-color  */
+            num#str# ,    /* p-row    */
+            num#col# ,    /* p-col    */
+            ? ,           /* p-row-2  */
+            ?         ) . /* p-col-2  */
+
+reportheader =   cur-time-print() .
+
+
+num#col# = num#col# + 1 .
+num#str# = num#str# + 1 .
+num#col# = 1 .
+p-name = "Покупатель: " .
+run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+num#col# =  2 .
+run macr_excel_char_with_format in this-procedure ( sh-clients.obj-name , num#str# , num#col#  ).
+
+
+num#str# = num#str# + 1 .
+num#col# =  1 .
+p-name = "Поставщик: " .
+run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+num#col# =  2 .
+run macr_excel_char_with_format in this-procedure ( post-clients.obj-name , num#str# , num#col#  ).
+
+
+num#str# = num#str# + 1 .
+num#col# = 1 .
+p-name = "Дата печати: " .
+run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+num#col# = 2 .
+run macr_excel_char_with_format in this-procedure ( string( today ,"99/99/9999") , num#str# , num#col#  ).
+
+num#str# = num#str# + 1 .
+num#col# = 1 .
+p-name = "Планируемая дата доставки: " .
+run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+num#col# = 2 .
+run macr_excel_char_with_format in this-procedure ( string( p-ship-date,"99/99/9999") , num#str# , num#col#  ).
+num#col# = 3 .
+run macr_excel_char_with_format in this-procedure ( string( p-ship-time,"hh:mm") , num#str# , num#col#  ).
+
+
 /* столбики */
+ run macr_cell_format in this-procedure  (
+        10       , /*p-size-font */
+        true     , /*p-bold      */
+        false    , /*p-italic    */
+        36      , /*p-color-bg  */
+        6        , /*p-row       */
+        1        , /*p-col       */
+        6        , /*p-row-2     */
+       ( if p-doc-type <> {&o-f} then 24    else 17 )
+         )       /*p-col-2     */
+        .
 num#col# =  0.
 num#str# = num#str# + 1 .
 num#col# = num#col# + 1 .
 
 p-name = "Артикул" .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+put  stream macr_excel unformatted  'COLUMN.WIDTH(17,,,,)'  skip.
+
 
 num#col# = num#col# + 1 .
 p-name = "Тип производителя " .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
-
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 num#col# = num#col# + 1 .
 p-name = "Код производителя " .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
-
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 num#col# = num#col# + 1 .
 p-name = "Название товара" .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+put  stream macr_excel unformatted  'COLUMN.WIDTH(50,,,,)'  skip.
 
 num#col# = num#col# + 1 .
 p-name = "Артикул поставщика" .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
-
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 
 num#col# = num#col# + 1 .
 p-name = "Цена в валюте поставщика на баз.ед.изм." .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
-
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 num#col# = num#col# + 1 .
 p-name = "Количество в баз.ед.изм" .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 
+
+
+
+put  stream macr_excel unformatted  'COLUMN.WIDTH(15,,,,)'  skip.
+
+  put  stream macr_excel unformatted
+       substitute('select("r&1c&2:r&3c&4 ")' , 6  , 1 , num#str# ,  num#col# ) + {&new-line}  +
+        'BORDER( 2 , 2 , 2 , 2 , 8 , ) '  + {&new-line} +
+       'ALIGNMENT(3 , , 4 , 4 ,)'  + {&new-line}
+       .
+
+num#col# =  0.
 
 for each  buf_ord-line no-lock where  buf_ord-line.doc-code = p-ord-doc break by buf_ord-line.line-num  :
     find first ub.goods no-lock where
@@ -403,15 +483,17 @@ num#str# = num#str# + 1 .
 num#col# = num#col# + 1 .
 p-name = "Артикул" .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ) .
+put  stream macr_excel unformatted  'COLUMN.WIDTH(17,,,,)'  skip.
+
 
 num#col# = num#col# + 1 .
 p-name = "Тип производителя " .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
-
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 num#col# = num#col# + 1 .
 p-name = "Код производителя " .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
-
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 num#col# = num#col# + 1 .
 p-name = "Название товара" .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
@@ -429,14 +511,16 @@ run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#
 num#col# = num#col# + 1 .
 p-name = "Ед. изм. поставщика" .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
-
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 num#col# = num#col# + 1 .
 p-name = "Количество в ед. изм. поставщика" .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 
 num#col# = num#col# + 1 .
 p-name = "Количество" .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 
 num#col# = num#col# + 1 .
 p-name = "Цена в базовой валюте" .
@@ -445,6 +529,7 @@ run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#
 num#col# = num#col# + 1 .
 p-name = "Цена в валюте поставщика на баз. ед.изм." .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 
 num#col# = num#col# + 1 .
 p-name = "Цена в {&abbr_rub}." .
@@ -469,6 +554,7 @@ run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#
 num#col# = num#col# + 1 .
 p-name = "Сумма в валюте поставщика" .
 run macr_excel_char_with_format in this-procedure ( p-name , num#str# , num#col#  ).
+put  stream macr_excel unformatted  'COLUMN.WIDTH(13,,,,)'  skip.
 
 num#col# = num#col# + 1 .
 p-name = "Сумма в {&abbr_rub}." .

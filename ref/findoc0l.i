@@ -301,13 +301,13 @@ on error undo, return error
                     buf_person.psn-code = p-payer-code .
         end.
       END CASE.
-      if (p-payer-type = {&cmp} and not buf_firm.is-pboul)
-      then do:
-        assign
-        p-err-mess = "Не заполнен {&abbr_kpp_allshift} ПЛАТЕЛЬЩИКА"
-        .
-        return "payer-kpp":U.
-      end.
+/*      if (p-payer-type = {&cmp} and not buf_firm.is-pboul)         */
+/*      then do:                                                     */
+/*        assign                                                     */
+/*        p-err-mess = "Не заполнен {&abbr_kpp_allshift} ПЛАТЕЛЬЩИКА"*/
+/*        .                                                          */
+/*        return "payer-kpp":U.                                      */
+/*      end.                                                         */
     end.
     if p-payer-bik = "":U then do:
       assign
@@ -381,13 +381,13 @@ on error undo, return error
                     buf_person.psn-code = p-receiver-code .
         end.
       END CASE.
-      if (p-receiver-type = {&cmp} and not buf_firm.is-pboul)
-      then do:
-        assign
-        p-err-mess = "Не заполнен {&abbr_kpp_allshift} ПОЛУЧАТЕЛЯ"
-        .
-        return "receiver-kpp":U.
-      end.
+/*      if (p-receiver-type = {&cmp} and not buf_firm.is-pboul)     */
+/*      then do:                                                    */
+/*        assign                                                    */
+/*        p-err-mess = "Не заполнен {&abbr_kpp_allshift} ПОЛУЧАТЕЛЯ"*/
+/*        .                                                         */
+/*        return "receiver-kpp":U.                                  */
+/*      end.                                                        */
     end.
     if p-receiver-bik = "":U then do:
       assign

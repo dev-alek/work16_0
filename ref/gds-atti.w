@@ -379,13 +379,13 @@ define variable v-check             as character no-undo .
 define variable v-correct           as logical   no-undo .
 define variable v-error-code        as character no-undo .
   if not available temp-attr then return no-apply.
-  if temp-attr.code = {&attr-alcohol-prod}
-  and alco-val-log <> yes  then do:
-     message
-     "Запрещена работа с атрибутом"
-     view-as alert-box error.
-     return no-apply.
-  end.
+/*  if temp-attr.code = {&attr-alcohol-prod}*/
+/*  and alco-val-log <> yes  then do:       */
+/*     message                              */
+/*     "Запрещена работа с атрибутом"       */
+/*     view-as alert-box error.             */
+/*     return no-apply.                     */
+/*  end.                                    */
   run gds-attr-name in this-procedure (
                                         input  temp-attr.code           /* p-code           */
                                         ,output attr-type           /* p-type           */
@@ -749,33 +749,34 @@ if p-mode = {&lookup} then do:
   .
 end.
 ASSIGN b-add:MENU-MOUSE = 1.
-{ gbl/conf-rd.i
-  "'alcohol'"
-  "''"
-  "''"
-  0
-  "''"
-  "''"
-  "''"
-  no
-  alco-val
-  alco-type
-  no-error }
-assign
-alco-val-log = logical(alco-val) no-error
-.
-if p-mode <> {&lookup}
-and alco-val-log <> yes then do:
-  find first tt-attr-property where
-            tt-attr-property.table-name = {&table_goods-attr}
-        and tt-attr-property.attr-code = {&attr-alcohol-prod} no-error.
-  if available tt-attr-property then do:
-    assign
-    tt-attr-property.menu-item-handle:sensitive = no
+/*{ gbl/conf-rd.i                          */
+/*  "'alcohol'"                            */
+/*  "''"                                   */
+/*  "''"                                   */
+/*  0                                      */
+/*  "''"                                   */
+/*  "''"                                   */
+/*  "''"                                   */
+/*  no                                     */
+/*  alco-val                               */
+/*  alco-type                              */
+/*  no-error }                             */
+/*assign                                   */
+/*alco-val-log = logical(alco-val) no-error*/
+/*.                                        */
+/*if p-mode <> {&lookup}                                                 */
+/*and alco-val-log <> yes then do:                                       */
+/*  find first tt-attr-property where                                    */
+/*            tt-attr-property.table-name = {&table_goods-attr}          */
+/*        and tt-attr-property.attr-code = {&attr-alcohol-prod} no-error.*/
+/*  if available tt-attr-property then do:                               */
+/*    assign                                                             */
+/*    tt-attr-property.menu-item-handle:sensitive = no                   */
+/*                                                                       */
+/*    .                                                                  */
+/*  end.                                                                 */
+/*end.                                                                   */
 
-    .
-  end.
-end.
 
 {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 APPLY "ENTRY" to br-attr.
@@ -889,13 +890,13 @@ CASE p-add:
     .
   end. /*when add*/
   when no then do:
-    if temp-attr.code = {&attr-alcohol-prod}
-    and alco-val-log <> yes  then do:
-        message
-        "Запрещена работа с атрибутом"
-        view-as alert-box error.
-        undo, return error.
-    end.
+/*    if temp-attr.code = {&attr-alcohol-prod}*/
+/*    and alco-val-log <> yes  then do:       */
+/*        message                             */
+/*        "Запрещена работа с атрибутом"      */
+/*        view-as alert-box error.            */
+/*        undo, return error.                 */
+/*    end.                                    */
     run gds-attr-name in this-procedure (
                                           input temp-attr.code
                                           ,output attr-type

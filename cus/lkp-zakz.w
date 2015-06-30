@@ -293,8 +293,8 @@ t agnt-name boss-name prod-name goods-name  date-sale-1 date-sale-2 loc-hour loc
 
 define menu m-export
 
-       menu-item m_export_text  label "&7. Экспорт в формат Моб.сканера" accelerator "alt-7"
-       menu-item m_export_excel label "&8. Экспорт в Excel" accelerator "alt-8"
+       menu-item m_export_text  label "&1. Экспорт в формат Моб.сканера" accelerator "alt-7"
+       menu-item m_export_excel label "&2. Экспорт в Excel" accelerator "alt-8"
        .
 define menu m-way
        menu-item m_way1         label "&9. Заказано до даты поставки" accelerator "alt-9"

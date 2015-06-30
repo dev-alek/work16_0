@@ -153,6 +153,7 @@ define temp-table tempclip-orddoc no-undo like ub.ord-doc.
 
 
 define variable varnext-prev      as logical   no-undo.
+define variable p-file as character no-undo.
 define variable bf-handle         as handle    no-undo.
 define variable v-spis-status     as character no-undo .
 define variable g-log             as logical   no-undo .
@@ -904,7 +905,19 @@ DO:
     run gbl/pop-up.p ( self:handle, no) no-error.
     if error-status:error then return no-apply.
 END.
+ON CHOOSE OF b-email IN FRAME {&frame-name}
+    DO:  
+         g#log = true  .   
+         IF NOT AVAILABLE shar-buf_ord-doc THEN RETURN .
 
+  message "Отправить письмо по e-mail? ." skip "Продолжать ?"
+           view-as alert-box question buttons ok-cancel update g#log.
+           {&if-not-true}
+     
+        run cus/z-tott.p (parParentProc, shar-buf_ord-doc.doc-code,  shar-buf_ord-doc.obj-type, shar-buf_ord-doc.obj-code, output p-file).
+
+        RETURN NO-APPLY.
+    END.
 ON CHOOSE OF b-cons IN FRAME {&frame-name}
 DO:
   define variable v-recid as recid no-undo .
@@ -1570,9 +1583,11 @@ find sch-cons where recid (sch-cons) = p-doc-rec no-lock no-error.
 find sch-contract where recid (sch-contract) = p-doc-rec no-lock no-error.
 doc-rec = ?.
 define variable v-ok as logical   no-undo .
+define variable v-mail as logical no-undo.
 
+v-mail = b-email:load-image ("cmp/www.bmp").
 v-ok = b-cons:load-IMAGE ("cmp/group.bmp") .
-ENABLE b-quit  b-print b-sch b-help br-docs  sch-code sch-date sch-fact ed-notes  b-rep  b-exec b-cons
+ENABLE b-quit  b-print b-sch b-help br-docs  sch-code sch-date sch-fact ed-notes  b-rep  b-exec b-cons b-email
 &if "{1}" = "true" &then
  b-print-rcv
  br-rcv

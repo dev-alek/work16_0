@@ -311,6 +311,11 @@ DEFINE BUTTON b-cons
      TOOLTIP "Объединение нескольких заказов в один, ALT-S"
      SIZE 3 BY 1.
 
+DEFINE BUTTON b-email
+    LABEL "&s":L
+    TOOLTIP "Отправка файла на e-mail"
+    SIZE 3 BY 1.
+    
 DEFINE VARIABLE agnt-name AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT
      SIZE 14.5 BY 1 NO-UNDO.
@@ -369,8 +374,9 @@ def MENU m-rep
     .
 
 DEFINE MENU M-print
-       MENU-ITEM m_print1       LABEL "Печать стандартной формы Заказа" ACCELERATOR "ALT-7"
+       MENU-ITEM m_print1       LABEL "ТОРГ-26" ACCELERATOR "ALT-7"
        MENU-ITEM m_print2       LABEL "Печать по форме Поставщика" ACCELERATOR "ALT-8"
+       MENU-ITEM m_print4       LABEL "Стандартная форма"
        RULE
        MENU-ITEM m_print3       LABEL "Выбор формы печати" ACCELERATOR "ALT-9"
  .
@@ -559,7 +565,7 @@ DEFINE FRAME {&frame-name}
      b-copy    AT ROW 2 COL 74
      b-cons    at row 2 col 89.5
      b-print   AT ROW 2 COL 87
-
+     b-email   AT ROW 2 COL 92.5
      /* Поиск */
      "Поиск:"  VIEW-AS TEXT SIZE 7 BY 1 AT ROW 3 COL 1.5
      sch-code  at row 3 col 11 label "&Начало номера"

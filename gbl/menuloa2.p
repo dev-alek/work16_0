@@ -241,7 +241,6 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
-
 { gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Сменный отчет (формат HTML)'"
@@ -895,7 +894,6 @@ define variable vss-description as character no-undo init "".
   "'Can_Ru'"
   "yes"
 }
-
 { gbl/menuload.i
   {&bef-menuload_service_impexp}
   "'Конвертор данных (Can_Ru) - импорт'"
@@ -1148,6 +1146,7 @@ define variable vss-description as character no-undo init "".
   "yes"
  }
 
+
 { gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Отчет - Аннуляция чеков'"
@@ -1287,7 +1286,6 @@ define variable vss-description as character no-undo init "".
   "'Sporty'"
   "yes"
 }
-
 { gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Продажи за неделю для Nielsen'"
@@ -1501,32 +1499,12 @@ define variable vss-description as character no-undo init "".
   "'Rosneft-*'"
   "yes"
 }
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Отчет об отчислениях в ЛПВ'"
-  "'rep/g-asLPV.p'"
-  "''"
-  "''"
-  "''"
-  "'Rosneft-*'"
-  "yes"
-}
 
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_service_utility}                                                */
 /* Сервис/ Служебные программы                                                */
 /* -------------------------------------------------------------------------- */
 
-{gbl/menuload.i
-{&bef-menuload_service_utility}
-"'Начальное формирование справочника критериев анализа'"
-"'utl/abc-utl.p'"
-"''"
-"''"
-"''"
-" "
-"yes"
-}
 
 { gbl/menuload.i
   {&bef-menuload_service_utility}
@@ -1548,6 +1526,19 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
+
+
+{gbl/menuload.i
+{&bef-menuload_service_utility}
+"'Утилита копирования состава товара'"
+"'utl/coppy_tov.p'"
+"''"
+"''"
+"''"
+" "
+"yes"
+}
+
 
 { gbl/menuload.i
   {&bef-menuload_service_utility}

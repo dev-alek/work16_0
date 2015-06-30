@@ -84,11 +84,11 @@ then do:
   .
 end.
 else do:
-  if num-entries(entry(2, p-parameter, {&delim-par})) <> 8
+  if num-entries(entry(2, p-parameter, {&delim-par})) <> 9
   then do:
     assign
     v-input-error = yes
-    v-esm         = substitute("Неверное количество ENTRY в 2-ом ENTRY составного параметре - &1, должно быть 8"
+    v-esm         = substitute("Неверное количество ENTRY в 2-ом ENTRY составного параметре - &1, должно быть 9"
                               , num-entries(entry(1, p-parameter, {&delim-par}))).
     .
 
@@ -456,7 +456,6 @@ define buffer buf_fin-bank for ub.fin-bank.
 define buffer buf_fin-schet for ub.fin-schet.
 define buffer buf_temp_hfin-schet for temp_hfin-schet.
 define buffer find_first-fin-bank for ub.fin-bank.
-
 
   do
   on error undo, return error
