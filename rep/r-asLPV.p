@@ -56,6 +56,7 @@ define variable v-sum_ as decimal no-undo.                      /* Локальная пер
 define variable v-sum-contribution_ as decimal no-undo.         /* Локальная переменная для chk-calc */
 define variable v-calc-ban-bonus as logical no-undo.
 define variable v-pay-codes-bonus-malina as character no-undo.
+define variable v-accur-13 as character initial "->>>>>>>>>>>>9.99" no-undo.   /* Формат числа с плавающей точкой на 15 разрядов до и 2 разряда после десятичной запятой. ТРИЛЛИОН. */
 
 /* Переменные для функции last-of-condition (функция смены условий-вх.данных) (УМУКО) */
 define variable v-doc-code1   like ub.chk-doc.doc-code no-undo.
@@ -603,10 +604,10 @@ procedure proc-create-HTML:         /* Запись даннах в файл отчёта HTML (на HDD)
                                 if tt-chk.shift-date <> ? then fnc-DD-MM-YYYY(tt-chk.shift-date) + '</td>' else "" + '</td>' skip
                     '         <td style="display: yes; text-align: center; font-weight: bold">' +
                                 if tt-chk.chk-date <> ? then fnc-DD-MM-YYYY(tt-chk.chk-date) + '</td>' else "" + '</td>' skip
-                    '         <td num="0.00" style="display: yes; text-align: right; font-weight: bold">' + 
-                                if tt-chk.sum_ <> ? then fnc-convert-dot-to-colon(tt-chk.sum_, "->>>>>>>9.99") + '</td>' else "?" + '</td>' skip
-                    '         <td num="0.00" style="display: yes; text-align: right; font-weight: bold">' +
-                                if tt-chk.sum-contribution_ <> ? then fnc-convert-dot-to-colon(tt-chk.sum-contribution_, "->>>>>>>9.99") + '</td>' else "?" + '</td>' skip
+                    '         <td num="0.00" style="display: yes; text-align: right; font-weight: bold" val="' + string(tt-chk.sum_) + '"' + '>' +
+                                fnc-convert-dot-to-colon(tt-chk.sum_, v-accur-13) + '</td>' skip
+                    '         <td num="0.00" style="display: yes; text-align: right; font-weight: bold" val="' + string(tt-chk.sum-contribution_) + '"' + '>' +
+                                fnc-convert-dot-to-colon(tt-chk.sum-contribution_, v-accur-13) + '</td>' skip
                     '       </tr>' skip
                 .
             end. /* Вывод подзаголовка(жирным шрифтом) строки по Отчёту (все Объекты) */
@@ -624,10 +625,10 @@ procedure proc-create-HTML:         /* Запись даннах в файл отчёта HTML (на HDD)
                                     if buf1_tt-chk.shift-date <> ? then fnc-DD-MM-YYYY(buf1_tt-chk.shift-date) + '</td>' else "" + '</td>' skip
                         '         <td style="display: yes; text-align: center; font-weight: bold">' +
                                     if buf1_tt-chk.chk-date <> ? then fnc-DD-MM-YYYY(buf1_tt-chk.chk-date) + '</td>' else "" + '</td>' skip
-                        '         <td num="0.00" style="display: yes; text-align: right; font-weight: bold">' + 
-                                    if buf1_tt-chk.sum_ <> ? then fnc-convert-dot-to-colon(buf1_tt-chk.sum_, "->>>>>>>9.99") + '</td>' else "?" + '</td>' skip
-                        '         <td num="0.00" style="display: yes; text-align: right; font-weight: bold">' +
-                                    if buf1_tt-chk.sum-contribution_ <> ? then fnc-convert-dot-to-colon(buf1_tt-chk.sum-contribution_, "->>>>>>>9.99") + '</td>' else "?" + '</td>' skip
+                        '         <td num="0.00" style="display: yes; text-align: right; font-weight: bold" val="' + string(buf1_tt-chk.sum_) + '"' + '>' +
+                                    fnc-convert-dot-to-colon(buf1_tt-chk.sum_, v-accur-13) + '</td>' skip
+                        '         <td num="0.00" style="display: yes; text-align: right; font-weight: bold" val="' + string(buf1_tt-chk.sum-contribution_) + '"' + '>' +
+                                    fnc-convert-dot-to-colon(buf1_tt-chk.sum-contribution_, v-accur-13) + '</td>' skip
                         '       </tr>' skip
                     .
                 end. /* Вывод подзаголовка(жирным шрифтом) строки "по Объекту" */
@@ -651,10 +652,10 @@ procedure proc-create-HTML:         /* Запись даннах в файл отчёта HTML (на HDD)
                                         if buf2_tt-chk.shift-date <> ? then fnc-DD-MM-YYYY(buf2_tt-chk.shift-date) + '</td>' else "?" + '</td>' skip
                             '         <td style="display: none; text-align: center; font-weight: normal">' +
                                         if buf2_tt-chk.chk-date <> ? then fnc-DD-MM-YYYY(buf2_tt-chk.chk-date) + '</td>' else "?" + '</td>' skip
-                            '         <td num="0.00" style="display: none; text-align: right; font-weight: normal">' + 
-                                        if buf2_tt-chk.sum_ <> ? then fnc-convert-dot-to-colon(buf2_tt-chk.sum_, "->>>>>>>9.99") + '</td>' else "?" + '</td>' skip
-                            '         <td num="0.00" style="display: none; text-align: right; font-weight: normal">' +
-                                        if buf2_tt-chk.sum-contribution_ <> ? then fnc-convert-dot-to-colon(buf2_tt-chk.sum-contribution_, "->>>>>>>9.99") + '</td>' else "?" + '</td>' skip
+                            '         <td num="0.00" style="display: none; text-align: right; font-weight: normal" val="' + string(buf2_tt-chk.sum_) + '"' + '>' + 
+                                        fnc-convert-dot-to-colon(buf2_tt-chk.sum_, v-accur-13) + '</td>' skip
+                            '         <td num="0.00" style="display: none; text-align: right; font-weight: normal" val="' + string(buf2_tt-chk.sum-contribution_) + '"' + '>' +
+                                        fnc-convert-dot-to-colon(buf2_tt-chk.sum-contribution_, v-accur-13) + '</td>' skip
                             '       </tr>' skip
                         .
                     end. /* Вывод элементарных линий - содержание "по Объекту" */
@@ -1043,13 +1044,21 @@ end function.
 
 function fnc-convert-dot-to-colon returns character 
 (input p-data as decimal, input p-accur as character):
-/* Конвертация десятичной точки в запятую с передачей параметра форматирования числа (accuracy - точность) */
+/* Конвертация десятичной точки в запятую с передачей параметра форматирования числа (accuracy - выводим разряды после запятой). */
+/* Возвращает: а)число с запятой, б)ноль, в)вопрос, в зависимости от того, что содержится во входном decimal. */
 
     define variable result as character no-undo.
     define variable v-str-result as character no-undo.
 /*message "dbg-p-data = " p-data skip "p-accur = " p-accur view-as alert-box.*/
-    p-data = round(p-data, 2). /* Чтобы не выйти случайно за рамки формата числа при выводе (несоотвесвие формата результата и формата отображения - приводит к ош) */
-    v-str-result = trim(replace(string(p-data, p-accur), ".", ",")).
+    if p-data = ? then
+    do:
+        v-str-result = "?".
+    end.
+    else
+    do:
+        p-data = round(p-data, 2). /* Чтобы не выйти случайно за рамки формата числа при выводе (несоотвесвие формата результата и формата отображения - приводит к ош) */
+        v-str-result = trim(replace(string(p-data, p-accur), ".", ",")).
+    end.
 
     return v-str-result.
 
