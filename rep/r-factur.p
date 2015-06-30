@@ -2464,6 +2464,7 @@ end.
           skip    space(5) string( "{&abbr_inn_allshift}/{&abbr_kpp_allshift} продавца" + fill( " ", 23 ) + ( if p-round = 'round':U then ":" else " " ) + t-inn ) format "X(190)" "(2б)" at 196
         .
     end.
+    
         /*то что было в оригинале
         skip    space(5) string( "Грузоотправитель и его адрес"
                                 + ( if p-round = 'round':U then ":" else " " )
@@ -2496,9 +2497,10 @@ end.
    and v-torgconf-outobj = no
    and v-torgconf-outasend = no
    and v-torgconf-outsend = no
+   and LOOKUP( "TopAukc", p-mode ) = 0
    then v-out-name = "Он же".
    else
-/*   v-out-name =  if buf_trn-doc.office = yes
+   v-out-name =  if buf_trn-doc.office = yes
                               then "---"
                               else v-torgconf-cargo-from-name
                                     + "  "
@@ -2507,8 +2509,8 @@ end.
                                           and ( not invers )
                                           and ( buf_trn-doc.doc-type <> {&income} ) )
                                        then v-torgconf-cargo-from-addres
-                                       else '':U ) .  */
- /*                                      else v-torgconf-self-obj-addres ) . */
+                                       else '':U ) .  
+/*                                       else v-torgconf-self-obj-addres ) .*/
    v-out-name =  v-torgconf-cargo-from-sf-value.
    run facturxl-write-cell-data in this-procedure (
         input {&facturxl-h_cargoFrom}
