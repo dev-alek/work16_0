@@ -72,7 +72,7 @@ define variable v-min-dens   as decimal   no-undo.
 define variable v-max-dens   as decimal   no-undo.
 define variable v-attr-type  as character no-undo.
 define variable v-gds-ptrl-densities as character no-undo.
-define variable pomi-licvalue as character no-undo.
+define variable pomi-licvalue as character no-undo init 'no':U.
 define variable pomi-lictype  as character no-undo.
 
 define variable v-value           as character no-undo.
@@ -84,6 +84,7 @@ define buffer buf_rvs-doc      for ub.rvs-doc.
 define buffer buf_rvs-line     for ub.rvs-line .
 define buffer buf_pl-level     for ub.pl-level.
 define buffer buf-nxt_pl-level for ub.pl-level.
+define buffer buf2_place       for ub.place.
 
 define stream outstream.
 
@@ -1610,27 +1611,42 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   if parmode <> {&update} then do:
      disable {&list-2} with frame {&frame-name}.
   end.
-  else do:
-      case buf_rvs-doc.rvs-type
-      :
-        when {&rvs-before-doc}
-        or when {&rvs-after-doc}
-        then do:
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_rvs-on-doc_upd-revision':U
-            {&cntxt-object}
-            buf_rvs-doc.host-code
-            buf_rvs-doc.obj-type
-            buf_rvs-doc.obj-code
-            0
-            0
-            0
-            false
-            g-log
-          }
+  else
+    do:
+      case buf_rvs-doc.rvs-type:
+        when {&rvs-before-doc} or when {&rvs-after-doc} then
+        do:
+          find first buf2_place no-lock where
+                     buf2_place.obj-code = tt-rvs-line.obj-code and
+                     buf2_place.obj-type = tt-rvs-line.obj-type and
+                     buf2_place.pl-code  = tt-rvs-line.pl-code
+          no-error.
+
+          if available buf2_place then
+          do:
+            if buf2_place.is-meas = yes then
+            do:
+              { gbl/chk-actg.i
+                v-cntxt-db-num
+                v-cntxt-userid
+                {&action-head-code-main}
+                'actn_rvs-on-doc_upd-revision':U
+                {&cntxt-object}
+                buf_rvs-doc.host-code
+                buf_rvs-doc.obj-type
+                buf_rvs-doc.obj-code
+                0
+                0
+                0
+                false
+                g-log
+               }
+             end.
+             else
+             do:
+               g-log = yes.
+             end.
+          end.
         end.
         when {&rvs-shift}
         then do:

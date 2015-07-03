@@ -430,7 +430,13 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         case p-action :
           when {&update} then /* Строка Накл в режиме "Изменить" */
           do:
-            if p-action-type = "meas" then /* ТН-3354 Арн 12.01.2015. (Строка Накл в режиме "Изменить") и меню pop-up (по кнопкам "Св.до" и "Св.после") = "Сверка резервуара" [он же парам="meas"] */
+           find buf_place no-lock
+              where buf_place.obj-type = t-doc.obj-type
+                and buf_place.obj-code = t-doc.obj-code
+                and buf_place.pl-code  = v-pl-code
+              .
+                    
+            if p-action-type = "meas" or buf_place.is-meas <> yes then /* ТН-3370 Арн 12.01.2015. (Строка Накл в режиме "Изменить") и меню pop-up (по кнопкам "Св.до" и "Св.после") = "Сверка резервуара" [он же парам="meas"] */
             do:
               assign
                 v-act-name = 'actn_rvs-on-doc_cr-revision':U /* Право на создание сверки */
