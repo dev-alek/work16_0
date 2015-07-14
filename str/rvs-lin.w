@@ -1613,15 +1613,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
   else
     do:
+      find first buf2_place no-lock where
+                 buf2_place.obj-code = tt-rvs-line.obj-code and
+                 buf2_place.obj-type = tt-rvs-line.obj-type and
+                 buf2_place.pl-code  = tt-rvs-line.pl-code
+      no-error.  
       case buf_rvs-doc.rvs-type:
         when {&rvs-before-doc} or when {&rvs-after-doc} then
-        do:
-          find first buf2_place no-lock where
-                     buf2_place.obj-code = tt-rvs-line.obj-code and
-                     buf2_place.obj-type = tt-rvs-line.obj-type and
-                     buf2_place.pl-code  = tt-rvs-line.pl-code
-          no-error.
-
+        do: 
           if available buf2_place then
           do:
             if buf2_place.is-meas = yes then
@@ -1650,39 +1649,81 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         end.
         when {&rvs-shift}
         then do:
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_rvs-shift_upd-revision':U
-            {&cntxt-object}
-            buf_rvs-doc.host-code
-            buf_rvs-doc.obj-type
-            buf_rvs-doc.obj-code
-            0
-            0
-            0
-            false
-            g-log
-          }
+            if available buf2_place then do :  
+                if buf2_place.is-meas then do :
+                  { gbl/chk-actg.i
+                    v-cntxt-db-num
+                    v-cntxt-userid
+                    {&action-head-code-main}
+                    'actn_rvs-shift_upd-revision':U
+                    {&cntxt-object}
+                    buf_rvs-doc.host-code
+                    buf_rvs-doc.obj-type
+                    buf_rvs-doc.obj-code
+                    0
+                    0
+                    0
+                    false
+                    g-log
+                  }
+                end.
+                else do :
+                  { gbl/chk-actg.i
+                    v-cntxt-db-num
+                    v-cntxt-userid
+                    {&action-head-code-main}
+                    'actn_rvs-shift_upd-immeas':U
+                    {&cntxt-object}
+                    buf_rvs-doc.host-code
+                    buf_rvs-doc.obj-type
+                    buf_rvs-doc.obj-code
+                    0
+                    0
+                    0
+                    false
+                    g-log
+                  } 
+                end. 
+            end.        
         end.
         when {&rvs-control}
         then do:
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_rvs-control_upd-revision':U
-            {&cntxt-object}
-            buf_rvs-doc.host-code
-            buf_rvs-doc.obj-type
-            buf_rvs-doc.obj-code
-            0
-            0
-            0
-            false
-            g-log
-          }
+            if available buf2_place then do :  
+                if buf2_place.is-meas then do :
+                  { gbl/chk-actg.i
+                    v-cntxt-db-num
+                    v-cntxt-userid
+                    {&action-head-code-main}
+                    'actn_rvs-control_upd-revision':U
+                    {&cntxt-object}
+                    buf_rvs-doc.host-code
+                    buf_rvs-doc.obj-type
+                    buf_rvs-doc.obj-code
+                    0
+                    0
+                    0
+                    false
+                    g-log
+                  }
+                end.
+                else do :
+                  { gbl/chk-actg.i
+                    v-cntxt-db-num
+                    v-cntxt-userid
+                    {&action-head-code-main}
+                    'actn_rvs-control_upd-immeas':U
+                    {&cntxt-object}
+                    buf_rvs-doc.host-code
+                    buf_rvs-doc.obj-type
+                    buf_rvs-doc.obj-code
+                    0
+                    0
+                    0
+                    false
+                    g-log
+                  } 
+                end.
+            end.         
         end.
         otherwise do:
           message
