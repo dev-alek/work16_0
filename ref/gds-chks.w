@@ -2159,23 +2159,7 @@ define  variable old-discnt as decimal no-undo.
 define variable glog as logical no-undo .
 define buffer buf_inkas for ub.inkas .
 define buffer del_chk-doc for ub.chk-doc.
-/*удаление есть только в режиме просмотра из продажи*/
-{ gbl/chk-actg.i
-v-cntxt-db-num
-v-cntxt-userid
-{&action-head-code-main}
-'actn_receipts_deletion':U
-{&cntxt-object}
-v-inkas-host-code
-v-inkas-obj-type
-v-inkas-obj-code
-0
-0
-0
-true
-glog
-}
-if NOT glog then  return error.
+
 IF par-mode = {&sale} then do:
 CASE del-type:
    when "list":U then do:
