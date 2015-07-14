@@ -36,6 +36,7 @@ define buffer buf_clients for src.clients .
 define buffer old-price-doc     for src.price-doc.
 define buffer old-price-list    for src.price-list.
 define buffer old-n-price-list  for src.price-list.
+define buffer old-doc-line      for src.doc-line.
 
 
 define variable v-total-parts-qnty like dst.parts.qnty no-undo .
@@ -86,7 +87,16 @@ define input  parameter p-host-code as integer   no-undo .
                new-goods.prod-type = new-gds-obj.prod-type
                no-lock no-error .
      if error-status:error then next .
-     if new-goods.stts        = 1  and
+     if not can-find (first old-doc-line no-lock
+                      where old-doc-line.obj-type  = new-gds-obj.obj-type
+                        and old-doc-line.obj-code  = new-gds-obj.obj-code
+                        and old-doc-line.prod-type = new-gds-obj.prod-type
+                        and old-doc-line.prod-code = new-gds-obj.prod-code
+                        and old-doc-line.artic     = new-gds-obj.artic
+                        and old-doc-line.status_   = {&fact}
+                        and old-doc-line.fact-order > v-fact-order)
+        and                
+        new-goods.stts        = 1  and
         new-gds-obj.fact-qnty = 0 and
         new-gds-obj.free-qnty = 0 then next .
 

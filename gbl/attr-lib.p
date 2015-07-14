@@ -5626,9 +5626,9 @@ end procedure.
 &scop news-attr-alcohol-prod true
 &scop copy-attr-alcohol-prod  true
 &scop manual-edit-attr-alcohol-prod 0
+&scop batch-edit-attr-alcohol-prod  0
 
 &scop type-attr-is-gas {&type-log}
-&scop batch-edit-attr-alcohol-prod  0
 &scop format-attr-is-gas  "+/ "
 &scop label-attr-is-gas   "Природный газ-топливо"
 &scop tooltip-attr-is-gas   "Природный газ-топливо"

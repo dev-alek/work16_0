@@ -3057,23 +3057,7 @@ define buffer buf_inkas for ub.inkas.
 define buffer buf_trn-doc for ub.trn-doc.
 /*удаление может быть только на текущем объекте*/
 { gbl/hostcode.i parobj-type parobj-code v-host-code }
-{ gbl/chk-actg.i
-v-cntxt-db-num
-v-cntxt-userid
-{&action-head-code-main}
-'actn_receipts_deletion':U
-{&cntxt-object}
-v-host-code
-parobj-type
-parobj-code
-0
-0
-0
-true
-glog
-}
 
-if NOT glog then  return error.
 case del-type:
   when "list":U then do:
     IF par-mode = {&sale} then do:

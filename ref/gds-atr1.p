@@ -87,14 +87,30 @@ on error undo, return error return-value
         AND tt0-goods-attr.attr-code = buf_goods-attr.attr-code NO-ERROR.
           IF NOT AVAILABLE tt0-goods-attr THEN DO:
            run gds-attr-manual-edit in this-procedure (input buf_goods-attr.gds-code
-                                                       , output v-num-section).
+                                                       , output v-num-section) no-error.
+                IF  error-status:error
+                THEN DO:
+                  assign
+                  v-err-mess = substitute("Ошибка при удалении атрибута товара &1 &2 :&3&4 &5"
+                                          , p-gds-code
+                                          , buf_goods-attr.attr-code
+                                          , {&new-line}
+                                          ,error-status:get-message(1)
+                                          ,return-value
+                                          ).
+                  undo _main, return error v-err-mess.
+                END. /* gds-attr-manual-edit */
+                  message   error-status:error return-value error-status:get-message(1) view-as alert-box.                                      
+                                                      
            if v-num-section > 0 then do:         /* Если атрибут есть, но он заполняется не через обычный интерфейс, то не надо запись удалять из базы */                                      
                   ASSIGN
                   v-deleted = NO.
+                  message "Удаляем" view-as alert-box.
                   RUN gds-attr-delete IN THIS-PROCEDURE (
                                                         input buf_goods-attr.gds-code
                                                         ,INPUT buf_goods-attr.attr-code
                                                         ,output v-deleted ) NO-ERROR.
+                                                        message v-deleted  error-status:error view-as alert-box.                                                        
                 IF NOT v-deleted
                 or error-status:error
                 THEN DO:

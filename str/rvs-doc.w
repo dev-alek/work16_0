@@ -1532,39 +1532,91 @@ assign rvs-line-rec = recid(ub.rvs-line)
     end.
     when {&rvs-shift}
     then do:
-      { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_rvs-shift_upd-revision':U
-        {&cntxt-object}
-        r-doc.host-code
-        r-doc.obj-type
-        r-doc.obj-code
-        0
-        0
-        0
-        true
-        varlog
-      }
+        find first ub.place no-lock where
+                   ub.place.obj-code = ub.rvs-line.obj-code and
+                   ub.place.obj-type = ub.rvs-line.obj-type and
+                   ub.place.pl-code  = ub.rvs-line.pl-code
+        no-error. 
+        if available ub.place then do :
+            if ub.place.is-meas then do :
+              { gbl/chk-actg.i
+                v-cntxt-db-num
+                v-cntxt-userid
+                {&action-head-code-main}
+                'actn_rvs-shift_upd-revision':U
+                {&cntxt-object}
+                r-doc.host-code
+                r-doc.obj-type
+                r-doc.obj-code
+                0
+                0
+                0
+                true
+                varlog
+              }
+            end.
+            else do :
+              { gbl/chk-actg.i
+                v-cntxt-db-num
+                v-cntxt-userid
+                {&action-head-code-main}
+                'actn_rvs-shift_upd-immeas':U
+                {&cntxt-object}
+                r-doc.host-code
+                r-doc.obj-type
+                r-doc.obj-code
+                0
+                0
+                0
+                true
+                varlog
+              }
+            end.      
+        end.  
     end.
     when {&rvs-control}
     then do:
-      { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_rvs-control_upd-revision':U
-        {&cntxt-object}
-        r-doc.host-code
-        r-doc.obj-type
-        r-doc.obj-code
-        0
-        0
-        0
-        true
-        varlog
-      }
+        find first ub.place no-lock where
+                   ub.place.obj-code = ub.rvs-line.obj-code and
+                   ub.place.obj-type = ub.rvs-line.obj-type and
+                   ub.place.pl-code  = ub.rvs-line.pl-code
+        no-error.
+        if available ub.place then do :
+            if ub.place.is-meas then do :
+              { gbl/chk-actg.i
+                v-cntxt-db-num
+                v-cntxt-userid
+                {&action-head-code-main}
+                'actn_rvs-control_upd-revision':U
+                {&cntxt-object}
+                r-doc.host-code
+                r-doc.obj-type
+                r-doc.obj-code
+                0
+                0
+                0
+                true
+                varlog
+              }
+            end.
+            else do :
+              { gbl/chk-actg.i
+                v-cntxt-db-num
+                v-cntxt-userid
+                {&action-head-code-main}
+                'actn_rvs-control_upd-immeas':U
+                {&cntxt-object}
+                r-doc.host-code
+                r-doc.obj-type
+                r-doc.obj-code
+                0
+                0
+                0
+                true
+                varlog
+              } 
+            end.
+        end.         
     end.
     otherwise do:
       message
