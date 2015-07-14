@@ -138,8 +138,6 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,cd-video-link-attr~
 ":U.
 
-/*,alc-type-gds~  */
-/*,c-alc-type-gds~*/
 
 /*---------------------------------------------------------------------------------------------*/
 
@@ -400,7 +398,8 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,fin-code-cor-acc~
 ,thbj-attr~
 ":U.
-
+/*,alc-type-gds~
+,c-alc-type-gds~*/
 
 /*---------------------------------------------------------------------------------------------*/
 
