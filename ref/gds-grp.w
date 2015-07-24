@@ -4692,9 +4692,11 @@ if v-from-b-gds then do:
     gds-grp-row = (if v-uf-List_ =  {&question-mark} then ? else integer(v-uf-LIst_))
     .
   end.
+ /* 
   assign
       p-recid-list = string( gds-grp-row )
   .
+  */
   assign
   v-from-b-gds = no
   v-old-recid-list = "":U.
@@ -4717,9 +4719,11 @@ else do:
   assign
   gds-grp-row = (if v-uf-List_ =  {&question-mark} then ? else integer(v-uf-LIst_))
   .
+  /*
   assign
       p-recid-list = string( gds-grp-row )
   .
+  */
 end.
 end.
 find first buf_gds-grp no-lock
