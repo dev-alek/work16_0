@@ -1,7 +1,7 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI ADM1
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS s-object 
 /*
 
 $Revision$
@@ -84,7 +84,7 @@ obj-code
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -99,12 +99,12 @@ obj-code
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-9 tog-weight f-line-of-page ~
 tog-1-out-pump-with-icnt TOG-1 tog-1-pump-one tog-1-whole-gds TOG-2 ~
-tog-2-cp-grp TOG-3 Classify SortType TOG-4 f-shift-days-to-report TOG-5 ~
-b-esys TOG-6 TOG-7 TOG-8 tog-9 tog-10 B-staff t-excel t-TEXT
+tog-2-cp-grp TOG-3 Classify SortType TOG-4 TOG-5 f-shift-days-to-report ~
+TOG-6 b-esys TOG-7 TOG-8 tog-9 tog-10 B-staff t-excel t-TEXT 
 &Scoped-Define DISPLAYED-OBJECTS tog-weight f-line-of-page ~
 tog-1-out-pump-with-icnt TOG-1 tog-1-pump-one tog-1-whole-gds TOG-2 ~
-tog-2-cp-grp TOG-3 Classify SortType TOG-4 f-shift-days-to-report TOG-5 ~
-TOG-6 TOG-7 TOG-8 tog-9 tog-10 t-excel t-TEXT f-esys-id f-esys-name
+tog-2-cp-grp TOG-3 Classify SortType TOG-4 TOG-5 f-shift-days-to-report ~
+TOG-6 TOG-7 TOG-8 tog-9 tog-10 t-excel t-TEXT f-esys-id f-esys-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -118,203 +118,210 @@ TOG-6 TOG-7 TOG-8 tog-9 tog-10 t-excel t-TEXT f-esys-id f-esys-name
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-esys
+DEFINE BUTTON b-esys 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 4 BY 1.
 
-DEFINE BUTTON B-staff
-     LABEL "Персонал  смены "
+DEFINE BUTTON B-staff 
+     LABEL "Персонал  смены " 
      SIZE 45 BY 1
      BGCOLOR 8 FGCOLOR 0 .
 
-DEFINE VARIABLE f-esys-id AS INTEGER FORMAT ">>>>>>9":U INITIAL 0
-     LABEL "Код Внеш.системы, в которую идет выгрузка"
-      VIEW-AS TEXT
+DEFINE VARIABLE f-esys-id AS INTEGER FORMAT ">>>>>>9":U INITIAL 0 
+     LABEL "Код Внеш.системы, в которую идет выгрузка" 
+      VIEW-AS TEXT 
      SIZE 10 BY .67 NO-UNDO.
 
-DEFINE VARIABLE f-esys-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE f-esys-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 68.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE f-line-of-page AS INTEGER FORMAT ">>9":U INITIAL 0
-     LABEL "Строк на cтранице"
-     VIEW-AS FILL-IN
-     SIZE 4 BY .77 NO-UNDO.
+DEFINE VARIABLE f-line-of-page AS INTEGER FORMAT ">>9":U INITIAL 0 
+     LABEL "Строк на cтранице" 
+     VIEW-AS FILL-IN 
+     SIZE 4 BY .78 NO-UNDO.
 
-DEFINE VARIABLE f-shift-days-to-report AS INTEGER FORMAT ">>9":U INITIAL 0
-     LABEL "Кол-во дней для расчета ни разу нерассчитанных  объектов"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-shift-days-to-report AS INTEGER FORMAT ">>9":U INITIAL 0 
+     LABEL "Кол-во дней для расчета ни разу нерассчитанных  объектов" 
+     VIEW-AS FILL-IN 
      SIZE 6 BY 1.07 NO-UNDO.
 
-DEFINE VARIABLE var-level AS INTEGER FORMAT ">>9":U INITIAL 1
-     VIEW-AS FILL-IN NATIVE
-     SIZE 5 BY .77
+DEFINE VARIABLE var-level AS INTEGER FORMAT ">>9":U INITIAL 1 
+     VIEW-AS FILL-IN NATIVE 
+     SIZE 5 BY .78
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE Classify AS CHARACTER
+DEFINE VARIABLE Classify AS CHARACTER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Группы 1-го уровня", "no-classify":U,
 "Группы с n-уровнeм вложенности", "n-level":U,
 "Терминальные группы", "t-level":U,
 "Только итоги", "totals":U
-     SIZE 33 BY 3.43
+     SIZE 33 BY 3.44
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE SortType AS CHARACTER
+DEFINE VARIABLE SortType AS CHARACTER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "по коду", "sort-code":U,
 "по артикулу", "sort-article":U
      SIZE 14 BY 2
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
 DEFINE RECTANGLE RECT-9
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
-     SIZE 91 BY 16.27.
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
+     SIZE 91 BY 16.26.
 
-DEFINE VARIABLE t-excel AS LOGICAL INITIAL no
-     LABEL "Excel"
+DEFINE VARIABLE t-excel AS LOGICAL INITIAL no 
+     LABEL "Excel" 
      VIEW-AS TOGGLE-BOX
      SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-TEXT AS LOGICAL INITIAL no
-     LABEL "TEXT"
+DEFINE VARIABLE t-TEXT AS LOGICAL INITIAL no 
+     LABEL "TEXT" 
      VIEW-AS TOGGLE-BOX
      SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE TOG-1 AS LOGICAL INITIAL no
-     LABEL "Часть 1 - Движение Нефтепродуктов по количеству"
+DEFINE VARIABLE TOG-1 AS LOGICAL INITIAL no 
+     LABEL "Часть 1 - Движение Нефтепродуктов по количеству" 
      VIEW-AS TOGGLE-BOX
-     SIZE 57.4 BY .77 TOOLTIP "Лист отчета ~"Движение Нефтепродуктов по количеству~""
+     SIZE 57.38 BY .78 TOOLTIP "Лист отчета ~"Движение Нефтепродуктов по количеству~""
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE tog-1-out-pump-with-icnt AS LOGICAL INITIAL no
-     LABEL "Колонка ~"расход~"/~"оборот~" по показаниям электронного счетчика (части 1/9)"
+DEFINE VARIABLE tog-1-out-pump-with-icnt AS LOGICAL INITIAL no 
+     LABEL "Колонка ~"расход~"/~"оборот~" по показаниям электронного счетчика (части 1/9)" 
      VIEW-AS TOGGLE-BOX
-     SIZE 77.5 BY .77 TOOLTIP "Колонка ~"расход~" по показаниям электронного счетчика" NO-UNDO.
+     SIZE 77.5 BY .78 TOOLTIP "Колонка ~"расход~" по показаниям электронного счетчика" NO-UNDO.
 
-DEFINE VARIABLE tog-1-pump-one AS LOGICAL INITIAL no
-     LABEL "Счетчики ТРК в одной строке"
+DEFINE VARIABLE tog-1-pump-one AS LOGICAL INITIAL no 
+     LABEL "Счетчики ТРК в одной строке" 
      VIEW-AS TOGGLE-BOX
-     SIZE 30.5 BY .77 TOOLTIP "Один ТРК несколько резервуаров, показания в одной строке" NO-UNDO.
+     SIZE 30.5 BY .78 TOOLTIP "Один ТРК несколько резервуаров, показания в одной строке" NO-UNDO.
 
-DEFINE VARIABLE tog-1-whole-gds AS LOGICAL INITIAL no
-     LABEL "Товар на одной странице"
+DEFINE VARIABLE tog-1-whole-gds AS LOGICAL INITIAL no 
+     LABEL "Товар на одной странице" 
      VIEW-AS TOGGLE-BOX
-     SIZE 27 BY .77 TOOLTIP "Все строки по товару выводятся без разбиения на одной странице" NO-UNDO.
+     SIZE 27 BY .78 TOOLTIP "Все строки по товару выводятся без разбиения на одной странице" NO-UNDO.
 
-DEFINE VARIABLE TOG-2 AS LOGICAL INITIAL no
-     LABEL "Часть 2 - Движение Нефтепродуктов по количеству и суммам"
+DEFINE VARIABLE tog-10 AS LOGICAL INITIAL no 
+     LABEL "Часть 10 - Топливо по типам платежей" 
      VIEW-AS TOGGLE-BOX
-     SIZE 60.8 BY .77 TOOLTIP "Лист отчета ~"Движение Нефтепродуктов по количеству и суммам~""
+     SIZE 61.5 BY .78 NO-UNDO.
+
+DEFINE VARIABLE TOG-2 AS LOGICAL INITIAL no 
+     LABEL "Часть 2 - Движение Нефтепродуктов по количеству и суммам" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Движение Нефтепродуктов по количеству и суммам~""
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE tog-2-cp-grp AS LOGICAL INITIAL no
-     LABEL "Итоги по группам платежей"
+DEFINE VARIABLE tog-2-cp-grp AS LOGICAL INITIAL no 
+     LABEL "Итоги по группам платежей" 
      VIEW-AS TOGGLE-BOX
-     SIZE 29 BY .77 NO-UNDO.
+     SIZE 29 BY .78 NO-UNDO.
 
-DEFINE VARIABLE TOG-3 AS LOGICAL INITIAL no
-     LABEL "Часть 3 - Движение ТНП по количеству и суммам"
+DEFINE VARIABLE TOG-3 AS LOGICAL INITIAL no 
+     LABEL "Часть 3 - Движение ТНП по количеству и суммам" 
      VIEW-AS TOGGLE-BOX
-     SIZE 60.8 BY .77 TOOLTIP "Лист отчета ~"Движение ТНП по количеству и суммам~""
+     SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Движение ТНП по количеству и суммам~""
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE TOG-4 AS LOGICAL INITIAL no
-     LABEL "Часть 4 - Реализация услуг"
+DEFINE VARIABLE TOG-4 AS LOGICAL INITIAL no 
+     LABEL "Часть 4 - Реализация услуг" 
      VIEW-AS TOGGLE-BOX
-     SIZE 60.8 BY .77 TOOLTIP "Лист отчета ~"Реализация услуг по кол-ву и сумме~""
+     SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Реализация услуг по кол-ву и сумме~""
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE TOG-5 AS LOGICAL INITIAL no
-     LABEL "Часть 5 - Движение материальных ценностей"
+DEFINE VARIABLE TOG-5 AS LOGICAL INITIAL no 
+     LABEL "Часть 5 - Движение материальных ценностей" 
      VIEW-AS TOGGLE-BOX
-     SIZE 60.8 BY .77 TOOLTIP "Лист отчета ~"Движение материальных ценностей~""
+     SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Движение материальных ценностей~""
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE TOG-6 AS LOGICAL INITIAL no
-     LABEL "Часть 6 - Простои АЗК"
+DEFINE VARIABLE TOG-5-1 AS LOGICAL INITIAL no 
+     LABEL "Часть 5 - Движение денежных средств" 
      VIEW-AS TOGGLE-BOX
-     SIZE 60.8 BY .77 TOOLTIP "Лист отчета ~"Простои АЗК~""
+     SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Движение денежных средств~""
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE TOG-7 AS LOGICAL INITIAL no
-     LABEL "Часть 7 - Погрешности объемомеров ТРК"
+DEFINE VARIABLE TOG-6 AS LOGICAL INITIAL no 
+     LABEL "Часть 6 - Простои АЗК" 
      VIEW-AS TOGGLE-BOX
-     SIZE 60.8 BY .77 TOOLTIP "Лист отчета ~"Погрешности объемомеров ТРК~""
+     SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Простои АЗК~""
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE TOG-8 AS LOGICAL INITIAL no
-     LABEL "Часть 8 - Статистика реализации по ведомостям"
+DEFINE VARIABLE TOG-7 AS LOGICAL INITIAL no 
+     LABEL "Часть 7 - Погрешности объемомеров ТРК" 
      VIEW-AS TOGGLE-BOX
-     SIZE 60.8 BY .77 TOOLTIP "Лист отчета ~"Статистика реализации по ведомостям~""
+     SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Погрешности объемомеров ТРК~""
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE tog-9 AS LOGICAL INITIAL no
-     LABEL "Часть 9 - Сбросы, переливы и переводы транзакций"
+DEFINE VARIABLE TOG-8 AS LOGICAL INITIAL no 
+     LABEL "Часть 8 - Статистика реализации по ведомостям" 
      VIEW-AS TOGGLE-BOX
-     SIZE 61.5 BY .77 NO-UNDO.
-
-DEFINE VARIABLE tog-10 AS LOGICAL INITIAL no
-     LABEL "Часть 10 - Топливо по типам платежей"
-     VIEW-AS TOGGLE-BOX
-     SIZE 61.5 BY .77 NO-UNDO.
-
-DEFINE VARIABLE Tog-level AS LOGICAL INITIAL no
-     LABEL "с уровня":L
-     VIEW-AS TOGGLE-BOX
-     SIZE 12.6 BY .77
+     SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Статистика реализации по ведомостям~""
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE tog-weight AS LOGICAL INITIAL no
-     LABEL "Весовой учет топлива"
+DEFINE VARIABLE tog-9 AS LOGICAL INITIAL no 
+     LABEL "Часть 9 - Сбросы, переливы и переводы транзакций" 
      VIEW-AS TOGGLE-BOX
-     SIZE 24 BY .83 TOOLTIP "Весовой учет топлива"
+     SIZE 61.5 BY .78 NO-UNDO.
+
+DEFINE VARIABLE Tog-level AS LOGICAL INITIAL no 
+     LABEL "с уровня":L 
+     VIEW-AS TOGGLE-BOX
+     SIZE 12.63 BY .78
+     BGCOLOR 8 FGCOLOR 0  NO-UNDO.
+
+DEFINE VARIABLE tog-weight AS LOGICAL INITIAL no 
+     LABEL "Весовой учет топлива" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 24 BY .82 TOOLTIP "Весовой учет топлива"
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
-     tog-weight AT ROW 1.27 COL 2.5
-     f-line-of-page AT ROW 1.27 COL 86 COLON-ALIGNED
-     tog-1-out-pump-with-icnt AT ROW 2.5 COL 14 WIDGET-ID 4
-     TOG-1 AT ROW 3.5 COL 14
-     tog-1-pump-one AT ROW 4.25 COL 24
+     tog-weight AT ROW 1.26 COL 2.5
+     f-line-of-page AT ROW 1.26 COL 86 COLON-ALIGNED
+     tog-1-out-pump-with-icnt AT ROW 2.52 COL 14 WIDGET-ID 4
+     TOG-1 AT ROW 3.52 COL 14
+     tog-1-pump-one AT ROW 4.26 COL 24
      tog-1-whole-gds AT ROW 5 COL 24
-     TOG-2 AT ROW 5.75 COL 14
-     tog-2-cp-grp AT ROW 6.5 COL 24
-     TOG-3 AT ROW 7.5 COL 14
-     Classify AT ROW 8.27 COL 40 NO-LABEL
-     SortType AT ROW 8.77 COL 24 NO-LABEL
+     TOG-2 AT ROW 5.74 COL 14
+     tog-2-cp-grp AT ROW 6.52 COL 24
+     TOG-3 AT ROW 7.52 COL 14
+     Classify AT ROW 8.26 COL 40 NO-LABEL
+     SortType AT ROW 8.78 COL 24 NO-LABEL
      Tog-level AT ROW 9 COL 73.5
      var-level AT ROW 9 COL 84 COLON-ALIGNED NO-LABEL
-     TOG-4 AT ROW 11.5 COL 14
-     f-shift-days-to-report AT ROW 13.2 COL 68 COLON-ALIGNED WIDGET-ID 6
-     TOG-5 AT ROW 12.5 COL 14
-     b-esys AT ROW 14.4 COL 63 WIDGET-ID 16
-     TOG-6 AT ROW 13.5 COL 14
-     TOG-7 AT ROW 14.5 COL 14
-     TOG-8 AT ROW 15.5 COL 14
-     tog-9 AT ROW 16.5 COL 14 WIDGET-ID 2
-     TOG-10 AT ROW 17.5 COL 14
-     B-staff AT ROW 18.5 COL 1.5
-     t-excel AT ROW 18.6 COL 50.5 WIDGET-ID 20
-     t-TEXT AT ROW 18.6 COL 71 WIDGET-ID 8
-     f-esys-id AT ROW 14.4 COL 48 COLON-ALIGNED WIDGET-ID 14
-     f-esys-name AT ROW 16.53 COL 2 COLON-ALIGNED NO-LABEL WIDGET-ID 18
+     TOG-4 AT ROW 11.52 COL 14
+     TOG-5 AT ROW 12.52 COL 14
+     TOG-5-1 AT ROW 12.52 COL 14 WIDGET-ID 22
+     f-shift-days-to-report AT ROW 13.19 COL 68 COLON-ALIGNED WIDGET-ID 6
+     TOG-6 AT ROW 13.52 COL 14
+     b-esys AT ROW 14.41 COL 63 WIDGET-ID 16
+     TOG-7 AT ROW 14.52 COL 14
+     TOG-8 AT ROW 15.52 COL 14
+     tog-9 AT ROW 16.52 COL 14 WIDGET-ID 2
+     tog-10 AT ROW 17.52 COL 14
+     B-staff AT ROW 18.52 COL 1.5
+     t-excel AT ROW 18.59 COL 50.5 WIDGET-ID 20
+     t-TEXT AT ROW 18.59 COL 71 WIDGET-ID 8
+     f-esys-id AT ROW 14.41 COL 48 COLON-ALIGNED WIDGET-ID 14
+     f-esys-name AT ROW 16.52 COL 2 COLON-ALIGNED NO-LABEL WIDGET-ID 18
      "Показать :" VIEW-AS TEXT
-          SIZE 11.5 BY .77 AT ROW 2.5 COL 2.5
-          FGCOLOR 4
-     RECT-9 AT ROW 2.27 COL 1.5
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
-         AT COL 1 ROW 1 SCROLLABLE
+          SIZE 11.5 BY .78 AT ROW 2.52 COL 2.5
+          FGCOLOR 4 
+     RECT-9 AT ROW 2.26 COL 1.5
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
+         AT COL 1 ROW 1 SCROLLABLE 
          BGCOLOR 8 FGCOLOR 0 .
 
 
@@ -332,15 +339,15 @@ DEFINE FRAME F-Main
 /* *************************  Create Window  ************************** */
 
 &ANALYZE-SUSPEND _CREATE-WINDOW
-/* DESIGN Window definition (used by the UIB)
+/* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW s-object ASSIGN
          HEIGHT             = 18.67
-         WIDTH              = 92.1.
+         WIDTH              = 92.13.
 /* END WINDOW DEFINITION */
                                                                         */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB s-object 
 /* ************************* Included-Libraries *********************** */
 
 { src/adm/method/viewer.i }
@@ -358,28 +365,33 @@ DEFINE FRAME F-Main
   VISIBLE,,RUN-PERSISTENT                                               */
 /* SETTINGS FOR FRAME F-Main
    NOT-VISIBLE FRAME-NAME Size-to-Fit                                   */
-ASSIGN
+ASSIGN 
        FRAME F-Main:HEIGHT           = 18.67
        FRAME F-Main:WIDTH            = 92.13.
 
 /* SETTINGS FOR FILL-IN f-esys-id IN FRAME F-Main
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        f-esys-id:READ-ONLY IN FRAME F-Main        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-esys-name IN FRAME F-Main
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        SortType:HIDDEN IN FRAME F-Main           = TRUE.
+
+/* SETTINGS FOR TOGGLE-BOX TOG-5-1 IN FRAME F-Main
+   NO-DISPLAY NO-ENABLE                                                 */
+ASSIGN 
+       TOG-5-1:HIDDEN IN FRAME F-Main           = TRUE.
 
 /* SETTINGS FOR TOGGLE-BOX Tog-level IN FRAME F-Main
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        Tog-level:HIDDEN IN FRAME F-Main           = TRUE.
 
 /* SETTINGS FOR FILL-IN var-level IN FRAME F-Main
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        var-level:HIDDEN IN FRAME F-Main           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -395,7 +407,7 @@ ASSIGN
 */  /* FRAME F-Main */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -436,13 +448,33 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Classify s-object
 ON VALUE-CHANGED OF Classify IN FRAME F-Main
 DO:
+
   ASSIGN Classify.
   if place-call = "'new-rep'" then do:
       DISABLE
          tog-6
          tog-8
      with frame {&frame-name} .
+
+     if is-wth = true then do:
+         ENABLE
+            tog-5
+         with frame {&frame-name} .
+         HIDE 
+            tog-5-1
+         in frame {&frame-name}.
+     end.
+
+     else do:
+         ENABLE
+            tog-5-1
+         with frame {&frame-name} .    
+         HIDE 
+            tog-5
+         in frame {&frame-name}.
+     end.
   end.
+     
   if classify = "n-level":u
     and tog-3 = true
   then do:
@@ -523,6 +555,28 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME TOG-5
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL TOG-5 s-object
+ON VALUE-CHANGED OF TOG-5 IN FRAME F-Main /* Часть 5 - Движение материальных ценностей */
+DO:
+  assign tog-5.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME TOG-5-1
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL TOG-5-1 s-object
+ON VALUE-CHANGED OF TOG-5-1 IN FRAME F-Main /* Часть 5 - Движение денежных средств */
+DO:
+  assign tog-5-1.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME Tog-level
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Tog-level s-object
 ON VALUE-CHANGED OF Tog-level IN FRAME F-Main /* с уровня */
@@ -544,7 +598,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK s-object 
 
 
 /* ***************************  Main Block  *************************** */
@@ -568,7 +622,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -580,7 +634,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-ext-system s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-ext-system s-object 
 PROCEDURE get-ext-system :
 DEFINE INPUT PARAMETER p-interface AS LOGICAL NO-UNDO.
 DEFINE VARIABLE v-ok AS LOGICAL NO-UNDO.
@@ -641,7 +695,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ini-from-selgds s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ini-from-selgds s-object 
 PROCEDURE ini-from-selgds :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -669,7 +723,7 @@ END PROCEDURE. /* ini-from-selgds */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-initialize s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-initialize s-object 
 PROCEDURE local-initialize :
 /*------------------------------------------------------------------------------
   Purpose:     Override standard ADM method
@@ -899,6 +953,7 @@ CASE place-call:
     )  no-error.
 
     if not error-status:error then do:
+        
       if num-entries(v-uf-List_, {&delim-par}) >= 17 then do:
         assign
           tog-weight                :screen-value in frame {&frame-name} = entry(1, v-uf-List_, {&delim-par})
@@ -985,7 +1040,7 @@ END PROCEDURE. /* local-initialize */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-params s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-params s-object 
 PROCEDURE my-params :
 define input parameter p-action as character no-undo .
 DEFINE VARIABLE v-today as date no-undo .
@@ -1462,7 +1517,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-report s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-report s-object 
 PROCEDURE my-report :
 define variable v-base-code like ub.sysconf.base-code no-undo .
 define buffer buf_currency for ub.currency.
@@ -1504,6 +1559,7 @@ define variable v-xmlh as handle no-undo .
        ,input tog-3
        ,input tog-4
        ,input tog-5
+       ,INPUT TOG-5-1
        ,input tog-6
        ,input tog-7
        ,input tog-8
@@ -1565,12 +1621,13 @@ define variable v-xmlh as handle no-undo .
        ,input-output v_dataseth /*если не batch ничего не возвращается*/
        ,input table temp-xml-tables
       ) .
+      
 END PROCEDURE. /* my-report */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-var s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-var s-object 
 PROCEDURE my-var :
 /*------------------------------------------------------------------------------
   Purpose:     здесь происходит вызов  значений переменных
@@ -1619,7 +1676,7 @@ case v-profile-id:
         tog-5
       .
     end.
-
+    ELSE TOG-5-1.
     /* строки в которых содержатся выбранные обекты */
     ASSIGN STR-obj-type = ''
           STR-obj-code = ''
@@ -1647,6 +1704,7 @@ case v-profile-id:
 
   end.
 end case.
+
 if not (place-call = {&table_schedule}
         or
         place-call = {&table_rp-by-call}) then do:
@@ -1686,7 +1744,7 @@ END PROCEDURE. /* my-var */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE state-changed s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE state-changed s-object 
 PROCEDURE state-changed :
 /* -----------------------------------------------------------
   Purpose:     Receive and process 'state-changed' methods
@@ -1710,7 +1768,7 @@ END PROCEDURE. /* state-changed */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-to-log s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-to-log s-object 
 PROCEDURE write-to-log :
 define input param p-str as char no-undo.
 
@@ -1727,3 +1785,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
