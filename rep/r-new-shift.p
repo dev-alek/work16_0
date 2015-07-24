@@ -44,6 +44,7 @@ define input parameter tog-2                    as   logical               no-un
 define input parameter tog-3                    as   logical               no-undo .
 define input parameter tog-4                    as   logical               no-undo .
 define input parameter tog-5                    as   logical               no-undo .
+define input parameter tog-5-1                  as   logical               no-undo .
 define input parameter tog-6                    as   logical               no-undo .
 define input parameter tog-7                    as   logical               no-undo .
 define input parameter tog-8                    as   logical               no-undo .
@@ -80,7 +81,6 @@ define variable vss-description as character no-undo initial "сменный отчет":U .
 { cmp/breakstr.i }
 { gbl/cur-time.i }
 { gbl/getcntxt.i def }
-{ gbl/getsect.i  def }
 /*данные по реализации*/
 { rep/real-2df.i "NEW SHARED" treal-2 }
 { rep/real-3df.i "NEW SHARED" treal-3 }
@@ -101,6 +101,8 @@ define variable rep-shift-for-mng as character no-undo format "X(30)":U .
 define variable rep-shift-for-mng1 as character no-undo format "X(30)":U .
 define variable rep-shift-for-mng2 as character no-undo format "X(30)":U .
 define variable rep-shift-for-mng-next as character no-undo format "X(30)":U .
+define variable rep-shift-for-mng-end as character no-undo format "X(30)":U .
+define variable rep-shift-rol-mng-end as character no-undo format "X(30)":U .
 define variable rep-shift-for-opers as character no-undo.
 define variable rep-shift-for-opers1 as character no-undo format "X(44)":U .
 define variable rep-shift-for-opers2 as character no-undo format "X(44)":U .
@@ -155,6 +157,9 @@ define stream OutStr-html.
 /*определение какого формата будет печататься сменный отчет*/
 define variable v-sort-list as character no-undo .
 define variable v-param-type as character no-undo .
+define variable v-value-date as date no-undo .
+define variable v-value-decimal as decimal no-undo .
+define variable v-value-logical AS LOGICAL no-undo .
 define variable v-tth as handle no-undo .
 
 run adm/shattri.p (
@@ -196,6 +201,9 @@ if tog-4 = true then do:
   end.  
 if tog-5 = true then do:
   tog-list = tog-list + ',' + "tog-5".
+  end.  
+if tog-5-1 = true then do:
+  tog-list = tog-list + ',' + "tog-5-1".
   end.  
 if tog-7 = true then do:
   tog-list = tog-list + ',' + "tog-7".
@@ -243,20 +251,13 @@ rep-shift-store-name = if available ub.clients
 .
 { gbl/hostname.i p-obj-type p-obj-code v-host-code v-host-name}
 
-{ gbl/getsect.i run p-obj-type p-obj-code {&attr-report-obj} }
-for each thbjattr_thbj-attr :
-  if thbjattr_thbj-attr.prop-code = 'shft-qty'  then v-param_shft-qty = thbjattr_thbj-attr.property-value-character .
-  if thbjattr_thbj-attr.prop-code = 'prt-z-no'  then v-param_prt-z-no = string(thbjattr_thbj-attr.property-value-logical) .
+{ gbl/conf-rd.i "'shft-qty'" v-host-code p-obj-type p-obj-code "''" "''" "''" no v-param_shft-qty v-param_data-type no-error }
+if error-status :error or v-param_data-type <> "C":U or lookup( v-param_shft-qty, "system,state,state-all-per":U ) = 0 then do:
+  assign v-param_shft-qty = "system":U.
 end.
-if lookup( v-param_shft-qty, "system,state,state-all-per":U ) = 0 then do:
-  assign
-    v-param_shft-qty = "system":U
-  .
-end.
-if lookup( v-param_prt-z-no, "yes,no,true,false":U ) = 0 then do:
-  assign
-    v-param_prt-z-no = "yes":U
-  .
+{ gbl/conf-rd.i "'prt-z-no'" v-host-code p-obj-type p-obj-code "''" "''" "''" no v-param_prt-z-no v-param_data-type no-error }
+if error-status :error or v-param_data-type <> "L":U or lookup( v-param_prt-z-no, "yes,no,true,false":U ) = 0 then do:
+  assign v-param_prt-z-no = "yes":U.
 end.
 define temp-table temp-shift-obj no-undo like ub.shift-obj
   FIELD num as integer
@@ -803,11 +804,11 @@ if tog-4 = true then do:
 end. 
 
   if tog-5 = yes then do:
-                 
+
   run first-line-tog5-html in this-procedure (
                   input v-report-name-html
                   ).
-                  
+
  run rep/r-new-shift5.p (
                   input parparentproc
                   ,input p-parent-handle
@@ -835,6 +836,53 @@ end.
   end.
     if tog-last <> "tog-5" then do:
           output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+     put stream OutStr-html unformatted
+        substitute (
+        '
+        </table>
+        '
+            , chr(123), chr(125)
+       ).
+      output stream OutStr-html close.
+     end.
+     else
+      run last-line-tog-html in this-procedure (
+                      input v-report-name-html
+                      ).
+End.
+
+  if tog-5-1 = yes then do:
+                 
+  run first-line-tog5-1-html in this-procedure (
+                  input v-report-name-html
+                  ).
+ run rep/r-new-shift5-1.p (
+                  input parparentproc
+                  ,input p-parent-handle
+                  ,input p-log-handle
+                  ,input p-cont-handle
+                  ,input p-rebh
+                  ,input p-rdbh
+                  ,input v-report-name-html
+                  ,input p-log-file-name
+                  ,input p-batch
+                  ,input p-codex-id
+                  ,input p-ruleset-id
+                 ,input p-obj-type
+                 ,input p-obj-code
+                 ) no-error.
+  if error-status:error then do:
+    &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
+                          ,vss-workfile ~
+                          ,vss-revision ~
+                          ,vss-description ~
+                          ,~{&new-line~} ~
+                          , error-status:get-message(1) ~
+                          , return-value )
+    {&display-message}.
+  end.
+    if tog-last <> "tog-5-1" then do:
+          output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
      put stream OutStr-html unformatted                                                                     
         substitute (
         '
@@ -845,7 +893,7 @@ end.
       output stream OutStr-html close.
      end.
      else
-      run last-line-tog-html in this-procedure (
+      run last-line-tog-html5-1 in this-procedure (
                       input v-report-name-html
                       ).
 End.
@@ -914,15 +962,15 @@ if tog-7 = yes then DO:
     {&display-message}.
   end.
     if tog-last <> "tog-7" then do:
-          output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-     put stream OutStr-html unformatted                                                                     
-        substitute (
-        '
-        </table>
-        '                                                                                      
-            , chr(123), chr(125)                                                                                                 
-       ).                                                                                                    
-      output stream OutStr-html close.
+/*          output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.*/
+/*     put stream OutStr-html unformatted                                                                       */
+/*        substitute (                                                                                          */
+/*        '                                                                                                     */
+/*        </table>                                                                                              */
+/*        '                                                                                                     */
+/*            , chr(123), chr(125)                                                                              */
+/*       ).                                                                                                     */
+/*      output stream OutStr-html close.                                                                        */
      end.
      else
       run last-line-tog-html in this-procedure (
@@ -1081,6 +1129,9 @@ procedure first-line-tog1-html :
                        border-collapse: collapse;
                        width: 1400px; 
                    ~}
+                   .class1 ~{
+                       border-collapse: collapse;
+                   ~}
                    tbody td, th ~{
                        border: 1px solid black;
                        border-collapse: collapse;
@@ -1168,6 +1219,9 @@ procedure first-line-tog1-html :
                    table ~{
                        border-collapse: collapse;
                        width: 1400px; 
+                   ~}
+                   .class1 ~{
+                       border-collapse: collapse;
                    ~}
                    tbody td, th ~{
                        border: 1px solid black;
@@ -1411,19 +1465,19 @@ if v-param-code <> 2 and v-report-result = no then do:
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
-                        <td style="width:70px"></td>
+                        <td style="width:80px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
                         <td style="width:80px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
+                        <td style="width:30px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:30px"></td>
-                        <td style="width:80px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:30px"></td>
+                        <td style="width:120px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
@@ -1529,24 +1583,24 @@ if v-param-code <> 2 and v-report-result = no then do:
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
-                        <td style="width:70px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
                         <td style="width:80px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
+                        <td style="width:60px"></td>
+                        <td style="width:60px"></td>
+                        <td style="width:170px"></td>
+                        <td style="width:30px"></td>
+                        <td style="width:60px"></td>
                         <td style="width:50px"></td>
                         <td style="width:30px"></td>
-                        <td style="width:80px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:30px"></td>
+                        <td style="width:170px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:60px"></td>
-                        <td style="width:60px"></td>                        
+                        <td style="width:60px"></td>                     
                       </tr>
                     <tr>
                       <td colspan="18" style="height:30px;"></td>
@@ -2250,6 +2304,231 @@ procedure first-line-tog5-html :
   assign v-report-result = yes. 
 End procedure.
 
+procedure first-line-tog5-1-html :
+  
+  define input parameter v-report-name-html     as character no-undo .
+
+  if v-param-code <> 2 and v-report-result = no then do:
+       output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+        put stream OutStr-html unformatted
+        substitute(
+          '<!doctype html>
+            <html>
+              <head>
+              <meta charset="UTF-8">
+                  <!-- Стили документа -->
+              <style>
+                   table ~{
+                       border-collapse: collapse;
+                       table-layout: fixed;
+                       width: 1200px; 
+                   ~}
+                   tbody td, th ~{
+                       border: 1px solid black;
+                       border-collapse: collapse;
+                 height: 14px;
+                   ~}
+          
+              </style>
+              </head>
+                <body>
+                  <table orientation="landscape" name="лист5" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+                    <thead>  <!-- Шапка отчета -->
+                    <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                      <tr class="set_columns">
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                      </tr>
+                       <tr>  
+                        <td colspan="8" >&1</td>
+                      </tr>
+                      <tr>
+                        <td colspan="8" >&2</td>
+                      </tr>
+                      <tr>
+                        <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                      </tr>
+                      <tr>
+                        <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">Часть №5 Движение денежных средств</td>
+                      </tr>
+                      <tr>
+                        <td colspan="8"> Смены  с &3  по &4 </td>
+                      </tr>
+                      <tr>
+                        <td colspan="8"> Закрыта &5 </td>
+                      </tr>
+                      <tr>
+                        <td colspan="8"> Старший смены: &6 </td>
+                      </tr>
+                      <tr>
+                        <td colspan="8"> Операторы: &7 </td>
+                      </tr>
+                      <tr>
+                       <td colspan="8" style="height:30px;"></td>
+                      </tr>       
+                      </thead>'
+        ,
+        v-host-name,
+        rep-shift-store-name,
+        String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+        String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
+        string(v-rep-shift-close-date,"99.99.9999"),
+        rep-shift-for-mng1,
+        rep-shift-for-opers1                    
+                  ).
+      output stream OutStr-html close.  
+  end.
+  if v-param-code = 2 and v-report-result = no then do:
+       output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+        put stream OutStr-html unformatted
+        substitute(
+          '<!doctype html>
+            <html>
+              <head>
+              <meta charset="UTF-8">
+                  <!-- Стили документа -->
+              <style>
+                   table ~{
+                       border-collapse: collapse;
+                       table-layout: fixed;
+                       width: 1200px; 
+                   ~}
+                   tbody td, th ~{
+                       border: 1px solid black;
+                       border-collapse: collapse;
+                 height: 14px;
+                   ~}
+          
+              </style>
+              </head>
+                <body>
+                  <table orientation="landscape" name="лист5" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+                    <thead>  <!-- Шапка отчета -->
+                    <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                      <tr class="set_columns">
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                      </tr>
+                    <tr>
+                      <td colspan="8"></td>
+                    </tr>
+                    <tr>  
+                      <td colspan="4" style="border-bottom: 1px solid black; text-align: center;">&1</td>
+                      <td colspan="4"></td>
+                    </tr>
+                    <tr>
+                      <td colspan="4" style="font-size:10px; text-align: center;">наименование организации</td>
+                      <td colspan="4"></td>
+                    </tr>
+                    <tr>
+                      <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ АЗС № &2</td>
+                    </tr>
+                    <tr>
+                      <td colspan="8" style="text-align: center;"> от &3 </td>
+                    </tr>
+                    <tr>
+                      <td colspan="8"> Смена  с &4  по &5 </td>
+                    </tr>
+                    <tr>
+                      <td colspan="8"> </td>
+                    </tr>'
+                  ,
+                  rep-shift-store-name,
+                  string(p-obj-code),
+                  string(v-rep-shift-close-date,"99.99.9999"),
+                  String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+                  String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+                  ).
+
+         
+        put stream OutStr-html unformatted
+          substitute (
+          '<tr> 
+            <td colspan="3" style="height:30px;"> Состав смены:</td>
+            <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&1</td>
+            <td></td>
+            <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&2</td>
+          </tr>
+          <tr> 
+            <td colspan="3"></td>
+            <td colspan="2" style="font-size:10px; text-align: center;">должность</td>
+            <td></td>
+            <td colspan="2" style="font-size:10px; text-align: center;">инициалы, фамилия</td>
+          <tr> 
+            <td colspan="3" style="height:30px;"></td>
+            <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&3</td>
+            <td></td>
+            <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&4</td>
+          </tr>
+          <tr> 
+            <td colspan="3"></td>
+            <td colspan="2" style="font-size:10px; text-align: center;">должность</td>
+            <td></td>
+            <td colspan="2" style="font-size:10px; text-align: center;">инициалы, фамилия</td>
+          </tr>
+          <tr>
+            <td colspan="8" style="height:30px;"></td>
+          </tr>       
+          </thead>'
+        ,
+        rep-shift-rol-mng,
+        rep-shift-for-mng1,
+        rep-shift-rol-oper,
+        rep-shift-for-opers1
+        ).
+    output stream OutStr-html close.          
+  end.
+  if v-report-result = yes then do:
+           output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+        put stream OutStr-html unformatted
+        substitute(
+          '       <table orientation="landscape" name="лист5" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+                    <thead>  <!-- Шапка отчета -->
+                    <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                      <tr class="set_columns">
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                      </tr>
+                      <tr>
+                        <td colspan="8" style="height:30px;"></td>
+                      </tr>                             
+                      <tr>
+                        <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                      </tr>
+                      <tr>
+                        <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">Часть №5 Движение денежных средств</td>
+                      </tr>
+                      <tr>
+                        <td colspan="8" style="height:30px;"></td>
+                      </tr>       
+                      </thead>'
+        ,       chr(123), chr(125)                  
+                  ).
+      output stream OutStr-html close.  
+  end.
+
+  assign v-report-result = yes. 
+End procedure.
+
+
 procedure first-line-tog7-html :
   
   define input parameter v-report-name-html     as character no-undo .
@@ -2486,9 +2765,8 @@ procedure first-line-tog8-html :
                    tbody td, th ~{
                        border: 1px solid black;
                        border-collapse: collapse;
-                 height: 14px;
+                       height: 14px;
                    ~}
-          
               </style>
               </head>
                 <body>
@@ -2582,30 +2860,31 @@ procedure first-line-tog9-html :
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
+                        <td style="width:60px"></td>
                       </tr>
                        <tr>  
-                        <td colspan="12" >&1</td>
+                        <td colspan="13" >&1</td>
                       </tr>
                       <tr>
-                        <td colspan="12" >&2</td>
+                        <td colspan="13" >&2</td>
                       </tr>
                       <tr>
-                        <td colspan="12" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                        <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
                       </tr>
                       <tr>
-                        <td colspan="12" style="font-size:16px;font-weight:bold; text-align: center;">Часть №9 Сбросы, переливы и переводы транзакций</td>
+                        <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">Часть №9 Сбросы, переливы и переводы транзакций</td>
                       </tr>
                       <tr>
-                        <td colspan="12"> Смены  с &3  по &4 </td>
+                        <td colspan="13"> Смены  с &3  по &4 </td>
                       </tr>
                       <tr>
-                        <td colspan="12"> Закрыта &5 </td>
+                        <td colspan="13"> Закрыта &5 </td>
                       </tr>
                       <tr>
-                        <td colspan="12"> Старший смены: &6 </td>
+                        <td colspan="13"> Старший смены: &6 </td>
                       </tr>
                       <tr>
-                        <td colspan="12"> Операторы: &7 </td>
+                        <td colspan="13"> Операторы: &7 </td>
                       </tr>
                       </thead>'
         ,
@@ -2659,29 +2938,30 @@ procedure first-line-tog9-html :
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
+                        <td style="width:60px"></td>
                       </tr>
                     <tr>
-                      <td colspan="12"></td>
+                      <td colspan="13"></td>
                     </tr>
                     <tr>  
-                      <td colspan="4" style="border-bottom: 1px solid black; text-align: center;">&1</td>
+                      <td colspan="5" style="border-bottom: 1px solid black; text-align: center;">&1</td>
                       <td colspan="8"></td>
                     </tr>
                     <tr>
-                      <td colspan="4" style="font-size:10px; text-align: center;">наименование организации</td>
-                      <td colspan="7"></td>
+                      <td colspan="5" style="font-size:10px; text-align: center;">наименование организации</td>
+                      <td colspan="8"></td>
                     </tr>
                     <tr>
-                      <td colspan="12" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ АЗС № &2</td>
+                      <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ АЗС № &2</td>
                     </tr>
                     <tr>
-                      <td colspan="12" style="text-align: center;"> от &3 </td>
+                      <td colspan="13" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="12"> Смена  с &4  по &5 </td>
+                      <td colspan="13"> Смена  с &4  по &5 </td>
                     </tr>
                     <tr>
-                      <td colspan="12"> </td>
+                      <td colspan="13"> </td>
                     </tr>'
                   ,
                   rep-shift-store-name,
@@ -2695,30 +2975,30 @@ procedure first-line-tog9-html :
         put stream OutStr-html unformatted
           substitute (
           '<tr> 
-            <td colspan="3" style="height:30px;"> Состав смены:</td>
+            <td colspan="4" style="height:30px;"> Состав смены:</td>
             <td colspan="4" style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
             <td colspan="4" style="border-bottom: 1px solid black; text-align: center;">&2</td>
           </tr>
           <tr> 
-            <td colspan="3"></td>
+            <td colspan="4"></td>
             <td colspan="4" style="font-size:10px; text-align: center;">должность</td>
             <td></td>
             <td colspan="4" style="font-size:10px; text-align: center;">инициалы, фамилия</td>
           <tr> 
-            <td colspan="3" style="height:30px;"></td>
+            <td colspan="4" style="height:30px;"></td>
             <td colspan="4" style="border-bottom: 1px solid black; text-align: center;">&3</td>
             <td></td>
             <td colspan="4" style="border-bottom: 1px solid black; text-align: center;">&4</td>
           </tr>
           <tr> 
-            <td colspan="3"></td>
+            <td colspan="4"></td>
             <td colspan="4" style="font-size:10px; text-align: center;">должность</td>
             <td></td>
             <td colspan="4" style="font-size:10px; text-align: center;">инициалы, фамилия</td>
           </tr>
           <tr>
-            <td colspan="12" style="height:30px;"></td>
+            <td colspan="13" style="height:30px;"></td>
           </tr>       
           </thead>'
         ,
@@ -2749,18 +3029,19 @@ procedure first-line-tog9-html :
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
+                        <td style="width:60px"></td>
                       </tr>
                       <tr>
-                        <td colspan="12" style="height:30px;"></td>
+                        <td colspan="13" style="height:30px;"></td>
                       </tr>                            
                       <tr>
-                        <td colspan="12" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                        <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
                       </tr>
                       <tr>
-                        <td colspan="12" style="font-size:16px;font-weight:bold; text-align: center;">Часть №9 Сбросы, переливы и переводы транзакций</td>
+                        <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">Часть №9 Сбросы, переливы и переводы транзакций</td>
                       </tr>
                       <tr>
-                        <td colspan="12" style="height:30px;"></td>
+                        <td colspan="13" style="height:30px;"></td>
                       </tr>       
                       </thead>'
         ,   chr(123), chr(125)                  
@@ -3001,6 +3282,36 @@ End procedure.
 procedure last-line-tog-html :
   define input parameter v-report-name-html     as character no-undo .
 
+  find first temp-shift-obj  where temp-shift-obj.num = v-count no-error .
+  if available temp-shift-obj then do:
+    assign
+      x-date-End   = temp-shift-obj.shift-date
+      X-Shift-End  = temp-shift-obj.shift-num
+      v-rep-shift-close-date = temp-shift-obj.close-date
+      v-rep-shift-close-time = temp-shift-obj.close-time
+    .
+  end.
+  
+  
+/*  /* ищем следующюю смену и ее персонал */                                                                                                       */
+/*  FIND first next-shift-obj NO-LOCK                                                                                                              */
+/*    WHERE next-shift-obj.obj-type   = temp-shift-obj.obj-type                                                                                    */
+/*      and next-shift-obj.obj-code   = temp-shift-obj.obj-code                                                                                    */
+/*      and next-shift-obj.shift-date = temp-shift-obj.shift-date                                                                                  */
+/*      and next-shift-obj.shift-num  = temp-shift-obj.shift-num                                                                                   */
+/*  no-error .                                                                                                                                     */
+/*  FIND NEXT  next-shift-obj SHARE-LOCK WHERE next-shift-obj.obj-type = p-obj-type AND next-shift-obj.obj-code = p-obj-code use-index pi NO-ERROR.*/
+  FIND FIRST ub.shift-staff No-LOCK WHERE
+           ub.shift-staff.obj-type   = p-obj-type AND
+           ub.shift-staff.obj-code   = p-obj-code AND
+           ub.shift-staff.shift-date = x-date-End AND
+           ub.shift-staff.shift-num  = X-Shift-End AND
+           ub.shift-staff.staff-role = yes and
+           ub.shift-staff.psn-num    >= 0 No-ERROR.
+  assign rep-shift-for-mng-end = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+         rep-shift-rol-mng-end = "Старший оператор"  
+.
+
 if v-param-code <> 2 then do:
    output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
       put stream OutStr-html unformatted                                                                     
@@ -3020,6 +3331,7 @@ if v-param-code <> 2 then do:
         </table>
         '                                                                                      
         ,
+        
         rep-shift-for-mng-next                                                                                            
        ).                                                                                                    
       put stream OutStr-html unformatted                                                                     
@@ -3044,11 +3356,11 @@ else do:
                     <tr> 
                     <td colspan="2" style="height:30px;"> Отчет составил и смену сдал:</td>
                     <td></td>
-                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&1</td>
                     <td></td>
                     <td style="border-bottom: 1px solid black; text-align: center;"></td>
                     <td></td>
-                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&2</td>
                   </tr>
                   <tr> 
                     <td colspan="2"></td>
@@ -3062,11 +3374,11 @@ else do:
                     <tr> 
                     <td colspan="2" style="height:30px;"> Смену принял:</td>
                     <td></td>
-                    <td style="border-bottom: 1px solid black; text-align: center;">&1</td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&3</td>
                     <td></td>
                     <td style="border-bottom: 1px solid black; text-align: center;"></td>
                     <td></td>
-                    <td style="border-bottom: 1px solid black; text-align: center;">&2</td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&4</td>
                   </tr>
                   <tr> 
                     <td colspan="2"></td>
@@ -3100,9 +3412,156 @@ else do:
         </table>
         '                                                                                      
         ,
+        rep-shift-rol-mng-end,  
+        rep-shift-for-mng-end, 
         rep-shift-rol-mng-next,  
         rep-shift-for-mng-next                                                                                            
        ).                                                                                                    
       output stream OutStr-html close.
+ 
+
+end.      
+End procedure.
+procedure last-line-tog-html5-1 :
+  define input parameter v-report-name-html     as character no-undo .
+
+  find first temp-shift-obj  where temp-shift-obj.num = v-count no-error .
+  if available temp-shift-obj then do:
+    assign
+      x-date-End   = temp-shift-obj.shift-date
+      X-Shift-End  = temp-shift-obj.shift-num
+      v-rep-shift-close-date = temp-shift-obj.close-date
+      v-rep-shift-close-time = temp-shift-obj.close-time
+    .
+  end.
+  
+  
+/*  /* ищем следующюю смену и ее персонал */                                                                                                       */
+/*  FIND first next-shift-obj NO-LOCK                                                                                                              */
+/*    WHERE next-shift-obj.obj-type   = temp-shift-obj.obj-type                                                                                    */
+/*      and next-shift-obj.obj-code   = temp-shift-obj.obj-code                                                                                    */
+/*      and next-shift-obj.shift-date = temp-shift-obj.shift-date                                                                                  */
+/*      and next-shift-obj.shift-num  = temp-shift-obj.shift-num                                                                                   */
+/*  no-error .                                                                                                                                     */
+/*  FIND NEXT  next-shift-obj SHARE-LOCK WHERE next-shift-obj.obj-type = p-obj-type AND next-shift-obj.obj-code = p-obj-code use-index pi NO-ERROR.*/
+  FIND FIRST ub.shift-staff No-LOCK WHERE
+           ub.shift-staff.obj-type   = p-obj-type AND
+           ub.shift-staff.obj-code   = p-obj-code AND
+           ub.shift-staff.shift-date = x-date-End AND
+           ub.shift-staff.shift-num  = X-Shift-End AND
+           ub.shift-staff.staff-role = yes and
+           ub.shift-staff.psn-num    >= 0 No-ERROR.
+  assign rep-shift-for-mng-end = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+         rep-shift-rol-mng-end = "Старший оператор"  
+.
+
+if v-param-code <> 2 then do:
+   output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted                                                                     
+        substitute (
+        '
+              
+                  <tr> <!--Подвал-->
+                    <td colspan="8" style="height:30px;"></td>
+                  </tr>
+                    <tr> 
+                    <td colspan="8" style="height:30px;"> СМЕНУ СДАЛ:  &1  __________________</td>
+                  </tr>
+                  <tr> 
+                    <td colspan="8"> СМЕНУ ПРИНЯЛ: </td>
+                  </tr>
+            </tfoot>
+        </table>
+        '                                                                                      
+        ,
+        
+        rep-shift-for-mng-next                                                                                            
+       ).                                                                                                    
+      put stream OutStr-html unformatted                                                                     
+        substitute (
+        '
+        </body>
+        </html>
+        '                                                                                      
+            , chr(123), chr(125)                                                                                                 
+       ).                                                                                                    
+      output stream OutStr-html close.
+end.
+else do:
+   output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.  
+      put stream OutStr-html unformatted                                                                     
+        substitute (
+        '
+              
+                  <tr> <!--Подвал-->
+                    <td colspan="8"></td>
+                  </tr>
+                    <tr> 
+                    <td colspan="2" style="height:30px;"> Отчет составил и смену сдал:</td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&1</td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&2</td>
+                  </tr>
+                  <tr> 
+                    <td colspan="2"></td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">должность</td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">подпись</td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                  </tr>
+                    <tr> 
+                    <td colspan="2" style="height:30px;"> Смену принял:</td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&3</td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&4</td>
+                  </tr>
+                  <tr> 
+                    <td colspan="2"></td>
+                    <td></td>
+                    <td style="font-size:10px;  text-align: center;">должность</td>
+                    <td></td>
+                    <td style="font-size:10px;  text-align: center;">подпись</td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                  </tr>
+                    <tr>
+                    <td colspan="2" style="height:30px;"> Отчет проверил:</td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                  </tr>
+                  <tr> 
+                    <td colspan="2"></td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">должность</td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">подпись</td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                  </tr>
+        
+            </tfoot>
+        </table>
+        '                                                                                      
+        ,
+        rep-shift-rol-mng-end,  
+        rep-shift-for-mng-end, 
+        rep-shift-rol-mng-next,  
+        rep-shift-for-mng-next                                                                                            
+       ).                                                                                                    
+      output stream OutStr-html close.
+ 
+
 end.      
 End procedure.

@@ -509,9 +509,11 @@ DO WHILE available t-doc or start:
   /*период*/
   CASE X-radio-task:
     when 1 then do:
-      if t-doc.doc-date = ? OR
-         t-doc.doc-date < X-date-start OR
-         t-doc.doc-date > X-date-end then NEXT _docs.
+      if (t-doc.fact-date = ? and
+         (t-doc.doc-date < X-date-start OR
+         t-doc.doc-date > X-date-end)) 
+         or (t-doc.fact-date <> ? and  t-doc.fact-date < X-date-start OR
+         t-doc.fact-date > X-date-end) then NEXT _docs.
     end.
     when 2 then do:
       if t-doc.shift-date = ? OR

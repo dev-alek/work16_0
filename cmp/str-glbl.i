@@ -4250,10 +4250,10 @@ end.
 &global-define attr-pal-level-discnt-full '{&bef-attr-pal-level-discnt-full}':U
 &global-define scales-type 'CAS_LP-15,CAS_LP-6,HELMAC_net,HELMAC_model-Z,HELMAC_model-T,CAS_LP-485,BOLET_P-280,BZB-SC515,DIGI_SM-80,CAS_LP-15v1.6,TIGER,MIRA,TIGER2,CAS_LP-16x,DIGI-SM,TIGER-SPCT2,SHTRIH-M,CAS_LP-II,CAS_CL5000J,CAS_CL5000,DIGI_AW-4600_FX,TIGER-SPCT1':U
 &global-define scales-pr 'exe/lp15s.exe,exe/lp15s.exe,exe/hcns.exe,exe/hczs.exe,exe/hcts.exe,exe/lp485s.exe,exe/scalex.exe,exe/bzbs.exe,exe/digis.exe,exe/lp16s.exe,exe/metos.exe,exe/miras.exe,exe/meto2s.exe,exe/lp16xs.exe,,,exe/shtrih.exe,exe/lp16s.exe,exe/cl5000js.exe,exe/cl5000s.exe,,':U
-&global-define struct-scales-list 'CAS_lp-16x,DIGI-SM,CAS_CL5000J,CAS_CL5000,TIGER-SPCT2,TIGER-SPCT1':U
+&global-define struct-scales-list 'CAS_lp-16x,DIGI-SM,CAS_CL5000J,CAS_CL5000,TIGER-SPCT2,TIGER-SPCT1,CAS_LP-15,SHTRIH-M,CAS_LP-15v1.6':U
 &global-define pg-scales-list 'DIGI-SM,CAS_CL5000J,CAS_CL5000,TIGER-SPCT1,TIGER-SPCT2':U
-&global-define struct-attr-list '8x50,15x80,6x50,,':U
-&global-define struct-attr-code entry (lookup (~{&this-scales-type}, 'CAS_lp-16x,DIGI-SM,CAS_CL5000J,CAS_CL5000,TIGER-SPCT2,TIGER-SPCT1':U), '8x50,15x80,6x50,,':U)
+&global-define struct-attr-list '8x50,15x80,6x50,6x50,8x50,8x50,8x50,8x50,8x50':U
+&global-define struct-attr-code entry (lookup (~{&this-scales-type}, 'CAS_lp-16x,DIGI-SM,CAS_CL5000J,CAS_CL5000,TIGER-SPCT2,TIGER-SPCT1,CAS_LP-15,SHTRIH-M,CAS_LP-15v1.6':U), '8x50,15x80,6x50,6x50,8x50,8x50,8x50,8x50,8x50':U)
 &global-define bef-place-in приемки
 &global-define place-in '{&bef-place-in}':U
 &global-define bef-place-out отгрузки

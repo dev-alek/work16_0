@@ -1751,6 +1751,9 @@ CAS_lp-16x~
 ,CAS_CL5000~
 ,TIGER-SPCT2~
 ,TIGER-SPCT1~
+,CAS_LP-15~
+,SHTRIH-M~
+,CAS_LP-15v1.6~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define struct-scales-list {&struct-scales-list}" ).
 
@@ -1768,11 +1771,14 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define pg-scales
 {&bef-attr-8x50}~
 ,{&bef-attr-15x80}~
 ,{&bef-attr-6x50}~
-,~
-,~
+,{&bef-attr-6x50}~
+,{&bef-attr-8x50}~
+,{&bef-attr-8x50}~
+,{&bef-attr-8x50}~
+,{&bef-attr-8x50}~
+,{&bef-attr-8x50}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define struct-attr-list {&struct-attr-list}" ).
-
 
 &glob struct-attr-code entry (lookup (~~~~~~~{&this-scales-type}, {&struct-scales-list}), {&struct-attr-list})
 

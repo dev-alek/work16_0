@@ -40,7 +40,7 @@ find first buf{&vssseq}_bar-code no-lock
     and buf{&vssseq}_bar-code.unit-cli  = {1}.unit-base
   no-error .
 if available buf{&vssseq}_bar-code then do: /* а в новостях он еще не принят если товар новый! */
-
+/* идем по всем привязкам к весам по товару, проверяем нужен ли состав для этих весов и из нашего ли атрибута должен браться состав для этих весов */
   for each buf{&vssseq}_scales-gds
     where buf{&vssseq}_scales-gds.db-num = g#db-num
       AND buf{&vssseq}_scales-gds.b-code = buf{&vssseq}_bar-code.b-code
