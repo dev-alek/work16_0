@@ -1586,7 +1586,8 @@ do while parnext-prev :
       find first t-doc where recid( t-doc ) = pardoc-rec.
     end. /* pardoc-mode = {&add-def} */
     else do: /* pardoc-mode <> {&add-def} */
-      find first t-doc where recid( t-doc ) = pardoc-rec no-error.
+      if pardoc-mode = {&lookup} then  find first t-doc NO-LOCK where recid( t-doc ) = pardoc-rec no-error.
+      else find first t-doc where recid( t-doc ) = pardoc-rec no-error.
       if available t-doc then do:
         if pardoc-mode = {&update} then do:
           case t-doc.status_ :
