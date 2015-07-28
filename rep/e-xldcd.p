@@ -60,7 +60,7 @@ define variable ii-grp as integer no-undo .
 define variable v-found as logical no-undo .
 define variable v-count as integer   no-undo .
 
-{ rep/e-xldcd.i "SHARED" }
+{ rep/e-xldcd-old.i "SHARED" }
 
 define temp-table obj-host no-undo
 FIELd host-code like ub.sysconf.host-code
@@ -77,6 +77,8 @@ define buffer buf_bar-code for ub.bar-code.
 define buffer buf_goods for ub.goods.
 define buffer buf_payment for ub.payment.
 define buffer buf_payment-attr for ub.payment-attr.
+
+define stream MyWatch-strm. /* задать в области определения переменных */
 
 if p-prodmode2 = "ONE" then do:
   if prodmode = {&g-prod} then do:
@@ -129,9 +131,9 @@ FOR EACH obj-list :
   end.
   else do:
     find first buf_store no-lock where
-              buf_store.obj-code = obj-list.obj-code.
+               buf_store.obj-code = obj-list.obj-code.
     find first obj-host no-lock where
-                obj-host.host-code = buf_store.host-code no-error .
+               obj-host.host-code = buf_store.host-code no-error .
     if not available obj-host then do:
       create
       obj-host.
@@ -140,13 +142,13 @@ FOR EACH obj-list :
       .
     end.
   end.
-  if can-find( FIRST ub.chk-doc WHERE
-                      ub.chk-doc.obj-type = obj-list.obj-type AND
-                      ub.chk-doc.obj-code = obj-list.obj-code AND
-                      ub.chk-doc.chk-date >= StartPoint AND
-                      ub.chk-doc.chk-date <= EndPoint AND
-                      ub.chk-doc.d-card <> "" AND
-                      ub.chk-doc.out-code <> ? ) then DO:
+  if can-find( FIRST chk-doc WHERE
+                      chk-doc.obj-type = obj-list.obj-type AND
+                      chk-doc.obj-code = obj-list.obj-code AND
+                      chk-doc.chk-date >= StartPoint AND
+                      chk-doc.chk-date <= EndPoint AND
+                      chk-doc.d-card <> "" AND
+                      chk-doc.out-code <> ? ) then DO:
     _chk-doc:
     FOR EACH buf_chk-doc NO-LOCK WHERE
             buf_chk-doc.obj-type = obj-list.obj-type
@@ -155,32 +157,36 @@ FOR EACH obj-list :
         AND buf_chk-doc.chk-date <= EndPoint
         AND buf_chk-doc.out-code <> ?
         and buf_chk-doc.d-card > '':U:
-      if LOOKUP(string(buf_chk-doc.chk-type), {&no-d-card-receipt-codes}) > 0 then next _CHk-doc.
-        if (dcardmode = "ONE" or dcardmode = "LIST")
-        and (t-legacy or t-subsid) then do:
-            /**/
-        end.
-        else do:
-          if dcardmode = "ONE" then do:
+      if LOOKUP(string(buf_chk-doc.chk-type), {&no-d-card-receipt-codes}) > 0 then next _CHk-doc. /* receipt - типы чеков (СбросТранзкц, Перелив, Техпролив и тд.) */
+        if (dcardmode = "ONE" or dcardmode = "LIST") then
+        /* and (t-legacy or t-subsid) then*/ /* Откл код. ТН-3320 27.05.2015. Арн. Устр ошибки в "старом" отчёте - отчёт не реагировал на выбранные ДК для уст. галок в t-legacy и t-subsid */
+        /* do:                            */
+              /**/
+        /* end.*/
+        /* else*/
+        do:
+          if dcardmode = "ONE" then
+          do:
             if not  buf_chk-doc.d-card = FixDCard then next _chk-doc.
           end.
 
-          if dcardmode = "list" then do:
+          if dcardmode = "list" then
+          do:
             find first dc-list WHERE
-                        dc-list.d-card = buf_chk-doc.d-card no-error.
+                       dc-list.d-card = buf_chk-doc.d-card no-error.
             if not available dc-list then next _chk-doc.
           end.
         end.
         PROCESS EVENTS .
         v-count = v-count + 1.
         if ( v-count  modulo 10 ) = 0
-        AND  v-count >= 10 then do:
-          run waitfram-show in this-procedure  ( input substitute("&1&2 обработано чеков &3"
+        AND  v-count >= 10 then
+        do:
+          run waitfram-show in this-procedure ( input substitute("&1&2 обработано чеков &3"
                                                                 ,obj-list.obj-type
                                                                 ,obj-list.obj-code
                                                                 ,v-count)
                                               ).
-
         end.
         new-doc = yes.
         IF T-time and NOT can-find(FIRST times where
@@ -525,14 +531,17 @@ FOR EACH obj-host
       and buf_payment.status_ = {&fact}
       AND buf_payment.source-type = {&pmnt-cash-desk} + {&comma-char} + {&hn-source-import}
   :
-    if (dcardmode = "ONE" or dcardmode = "LIST")
-    and (t-legacy or t-subsid) then do:
-        /**/
-    end.
-    else do:
-      if dcardmode = "ONE" then do:
-        if not buf_payment.d-card = FixDCard then next _chk-payment.
-      end.
+/*    if (dcardmode = "ONE" or dcardmode = "LIST")*/
+/*    and (t-legacy or t-subsid) then             */
+/*    do:                                         */
+/*        /**/                                    */
+/*    end.                                        */
+/*    else                                        */
+    do:
+/*      if dcardmode = "ONE" or dcardmode = "LIST" then               */
+/*      do:                                                           */
+/*        if not buf_payment.d-card = FixDCard then next _chk-payment.*/
+/*      end.                                                          */
 
       if dcardmode = "list" then do:
         find first dc-list WHERE
@@ -695,3 +704,89 @@ break by dcards.d-card
 end.      */
 
 run waitfram-hide in this-procedure .
+
+procedure my-watch-table:           /* Процедура для моей ОТЛАДКИ! Арн. */
+/* Запись наблюдаемых таблиц в файл */
+/*&scope tt-table dcards*/
+/*&scope tt-table obj-list*/
+/*&scope tt-table tt-chk*/
+&scope tt-table dc-list
+
+    define variable v-full-file-name as character no-undo.
+    define variable v-message as character no-undo.
+    define variable v-table-handle as handle no-undo.
+    define variable v-cnt-field as integer no-undo.
+    define variable v-list-field-name as character no-undo.
+    define variable v-list-field-label as character no-undo.
+    define variable v-list-field-type as character no-undo.
+    define variable v-ii as integer no-undo.
+
+    define buffer {&tt-table} for {&tt-table}.
+/*    define buffer buf5_dcards for {&tt-table}.*/
+/*    define variable tt-handle as handle no-undo.*/
+
+    /* Получаем:
+       спискок полей таблицы - name;
+       спискок полей таблицы - label;
+       спискок типов полей таблицы - type. */
+    v-table-handle = buffer {&tt-table}:handle.
+    v-cnt-field = v-table-handle:num-fields.
+    do v-ii = 1 to v-cnt-field:
+        v-list-field-name =
+            (if v-list-field-name <> "" then
+               v-list-field-name + "$" + v-table-handle:buffer-field(v-ii):name
+            else
+                v-table-handle:buffer-field(v-ii):name).
+        v-list-field-label =
+            (if v-list-field-label <> "" then
+               v-list-field-label + "$" + v-table-handle:buffer-field(v-ii):label
+            else
+                v-table-handle:buffer-field(v-ii):label).
+        v-list-field-type =
+            (if v-list-field-type <> "" then
+               v-list-field-type + "$" + v-table-handle:buffer-field(v-ii):data-type
+            else
+                v-table-handle:buffer-field(v-ii):data-type).
+    end.
+
+/*    tt-handle:name = p-table-name.*/
+/*    tt-handle = handle(p-table-name).*/
+/*    tt-handle = handle(p-table-name).*/
+/*    tt-handle = buffer dc-list:handle.*/
+/*    tt-handle = buf_tt.a:get-buffer-handle(p-table-name).*/
+/*    tt-handle = tt-handle:get-buffer-handle(p-table-name):handle.*/
+/*    tt-handle = tt-handle:get-buffer-handle(p-table-name).*/
+/*    tt-table = dc-list:get-buffer-handle(p-table-name).*/
+/*    tt-handle = buffer tt-table:handle.*/
+/*{ Zadachi+Test_Arn/my-include-001.i point-A p-table-name }*/
+
+    /* Задаём жёстко имя файла и полный путь */
+    v-full-file-name = "C:\work15_0\my-watch_{&tt-table}.txt".
+
+    if search(v-full-file-name) = ? then
+        do:
+            message "Не найден файл отчёта: " v-full-file-name view-as alert-box error.
+        end.
+
+    /* Сохранение потока в созданный файл my-watch-table.txt */
+    output stream MyWatch-strm to value(v-full-file-name) /*append*/ /*no-convert*/ convert target "utf-8".
+        put stream MyWatch-strm unformatted
+            today format "99.99.9999" " " string(time, "HH:MM") " " "Исследуемая таблица: " "{&tt-table}" "." skip /* Для вывода текста, отдельных слов - только пробел, не ставить "+" */
+            v-list-field-label skip
+            v-list-field-name skip
+            v-list-field-type skip
+        .
+        if not can-find(first {&tt-table}) then
+        do:
+            v-message = "Исследуемая таблица {&tt-table} пуста!".
+            put stream MyWatch-strm unformatted
+                v-message
+            .
+            message "My-watch-table: " v-message view-as alert-box information.
+        end.
+
+            for each /*buf5_dcards*/ {&tt-table} no-lock:
+                export stream MyWatch-strm delimiter "$" /*buf5_dcards*/ {&tt-table}. /* Вставляем сюда вручную свою таблицу!!! */
+            end.
+    output stream MyWatch-strm close.
+end procedure.

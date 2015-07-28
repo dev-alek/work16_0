@@ -1,7 +1,7 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI ADM1
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS F-Frame-Win
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS F-Frame-Win 
 /*
 
 $Revision$
@@ -52,7 +52,7 @@ define variable vss-description as character no-undo init "Отчет по покупкам пос
 { gbl/waitfram.i }
 { cmp/dc-list.i dc-list def "new shared" }
 { ref/grplibfn.i }
-{ rep/e-xldcd.i "NEW SHARED" }
+{ rep/e-xldcd-old.i "NEW SHARED" }
 define variable parparentproc as widget-handle no-undo .
 { gbl/getcntxt.i def }
 { rep/lhstprex.i dc-list-hist  "'дисконтных карт'" }
@@ -85,9 +85,9 @@ define variable SelectProducer as char no-undo.
 define variable v-curr-r-b as character no-undo .
 define variable v-dcoveris as character no-undo .
 
-define buffer cli-obj for ub.clients .
-define buffer cli-dcard for ub.clients .
-define buffer cli-prod  for ub.clients .
+define buffer cli-obj for clients .
+define buffer cli-dcard for clients .
+define buffer cli-prod  for clients .
 
 define variable for-netto as decimal no-undo.
 
@@ -622,7 +622,7 @@ sym1 column-label ":!:" format "X(1)"
 dcards.date_ column-label "Дата!покупки" format "99/99/9999"
 dcards.artic column-label "Артикул! " format "X(16)"
 dcards.b-code column-label "Баркод!" format ">>>>>>>>>>>>9"
-ub.goods.gds-name format "X(25)"
+goods.gds-name format "X(25)"
 cli-prod.obj-name column-label "Производитель!(поставщик)" format "X(38)"
 dcards.sale-price column-label "Цена!отпускная" format ">,>>>,>>9.99"
 dcards.qnty column-label "Количество  ! " format "->>>>>>9.<<<"
@@ -758,7 +758,7 @@ if can-find( first dcards ) then do:
   FOR EACH obj-list :
       FIND FIRST cli-obj WHERE cli-obj.obj-type = obj-list.obj-type AND
                                 cli-obj.obj-code = obj-list.obj-code NO-LOCK .
-      FIND FIRST ub.db WHERE ub.db.db-num = cli-obj.db-num NO-LOCK .
+      FIND FIRST db WHERE db.db-num = cli-obj.db-num NO-LOCK .
       PUT stream PrnLibStream
       string( trim( string( db.db-name, "x(30)" ) ) + " / " + cli-obj.obj-name )
       format "x(100)"     skip space(35) .
@@ -769,8 +769,8 @@ if can-find( first dcards ) then do:
       PUT stream PrnLibStream space(20) "По ВСЕМ картам." format "x(40)" skip.
     end.
     when "ONE":U then do:
-      FIND FIRST cli-dcard WHERE cli-dcard.obj-type = ub.dis-card.cli-type AND
-                                cli-dcard.obj-code = ub.dis-card.cli-code NO-LOCK .
+      FIND FIRST cli-dcard WHERE cli-dcard.obj-type = dis-card.cli-type AND
+                                cli-dcard.obj-code = dis-card.cli-code NO-LOCK .
       PUT stream PrnLibStream
       space(20) substitute("По карте &1 держатель - &2", dis-card.d-card, cli-dcard.obj-name ) format "x(80)" skip.
     end.
@@ -1061,11 +1061,11 @@ if can-find( first dcards ) then do:
           FIND FIRST goods WHERE goods.artic = dcards.artic AND
                       goods.prod-type = dcards.prod-type AND
                       goods.prod-code = dcards.prod-code NO-LOCK.
-          FIND FIRST ub.gds-prt WHERE ub.gds-prt.node-code = dcards.node-code No-LOCK NO-ERROR.
-          IF AVAIL ub.gds-prt AND NOT ub.gds-prt.node-name = {&empty-scale}
+          FIND FIRST gds-prt WHERE gds-prt.node-code = dcards.node-code No-LOCK NO-ERROR.
+          IF AVAIL gds-prt AND NOT gds-prt.node-name = {&empty-scale}
           then
-          for-name = string(ub.goods.gds-name, "X(25)") + "\" + ub.gds-prt.node-name.
-          else for-name = ub.goods.gds-name.
+          for-name = string(goods.gds-name, "X(25)") + "\" + gds-prt.node-name.
+          else for-name = goods.gds-name.
           namebuf1 = breakstr(for-name, 25, input-output namebuf1, input-output namebuf2).
           DISPLAY stream PrnLibStream
           sym1

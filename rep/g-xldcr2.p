@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-ОТЧЕТ ПО ПОКУПКАМ ПОСТОЯННЫХ КЛИЕНТОВ (С ДИС.КАРТАМИ) - запуск
+Отчёт по Картам клиентов (с ДисКартами) - запуск
 
 Автор: Бахтадзе Наталья Викторовна
 Дата создания: 09/07/05
@@ -22,11 +22,11 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "ОТЧЕТ ПО ПОКУПКАМ ПОСТОЯННЫХ КЛИЕНТОВ (С ДИС.КАРТАМИ) - запуск".
+define variable vss-description as character no-undo init "Отчёт по Картам клиентов (с ДисКартами) - запуск".
 { cmp/vssrevis.i }
 
 { cmp/str-glbl.i }
-{ cmp/library.i  }
+{ cmp/library.i }
 { gbl/getcntxt.i def }
 { cmp/r-page0.i new}
 define variable glog as logical no-undo .
@@ -51,9 +51,9 @@ if NOT glog then  do:
 end.
 
 run rep/d-report.w (            input parparentproc
-                            ,input 'rep/e-xldcrd.w'
-                            ,input ('Продажи постоянным клиентам')
-                            ,input 2 /*ТН-3320(было 2)*/
+                            ,input 'rep/e-xldcr2.w'
+                            ,input ('Продажи по картам клиентов')
+                            ,input 4 /*ТН-3320(было 2)*/
                             ,input "{&g-all},{&g-prod},{&g-grp},{&g-choice},{&g-one}"
                             ,input "*"
                             ,input ""
