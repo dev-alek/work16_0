@@ -71,8 +71,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     then do:
       find first buf_goods no-lock where buf_goods.gds-code = ub.goods-attr.gds-code no-error.
       if available buf_goods then do:
-        { ref/scgdsupd.i buf_goods " " " " ?  ub.goods-attr.attr-code }
+             { ref/scgdsupd.i buf_goods " " " " ?  ub.goods-attr.attr-code }
       end.
+      
     end.
     if g#news then do:
       define variable v-send as integer no-undo .
