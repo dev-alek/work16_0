@@ -195,7 +195,8 @@ CASE choice :
           cash-cash.slr-code =  (if stf-list.role = {&role-seller} then stf-list.staff-code else 0 )
           cash-cash.cash-name = buf_clients.obj-name
           cash-cash.stts = (if stf-list.date-end < v-today then 1 else 0)
-          cash-cash.psswd = stf-list.password
+          cash-cash.psswd = (if stf-list.role = {&role-cashier} then stf-list.password else ? )
+          cash-cash.s-psswd = (if stf-list.role = {&role-seller} then stf-list.password else ? )
           /* todo */
           cash-cash.ident-type = 1 /*ключ ТМ*/
           .
@@ -248,7 +249,8 @@ CASE choice :
                 cash-cash.slr-code = (if buf_staff.role = {&role-seller} then buf_staff.staff-code else 0)
                 cash-cash.cash-name = buf_clients.obj-name
                 cash-cash.stts = (if buf_staff.date-end < v-today then 1 else 0)
-                cash-cash.psswd = buf_staff.password
+                cash-cash.psswd = (if buf_staff.role = {&role-cashier} then buf_staff.password else ? )
+                cash-cash.s-psswd = (if buf_staff.role = {&role-seller} then buf_staff.password else ? )
                 /* todo */
                 cash-cash.ident-type = 1 /*ключ ТМ*/
                 .
