@@ -80,6 +80,7 @@ define buffer t_doc-line for ub.doc-line .
 define buffer t_gds-dtl  for ub.gds-dtl .
 define buffer buf_goods  for ub.goods .
 define buffer buf_contract for ub.contract  .
+define buffer buf_doc-line for ub.doc-line  .
 
 define variable parrec-doc      as recid     no-undo .
 define variable parrecalc-price as logical   no-undo init false .
@@ -117,12 +118,17 @@ define buffer   buf_ext-classif for ub.ext-classif  .
 define variable v-rowid         as rowid no-undo .
 define variable v-table-name    as character no-undo .
 define variable v-uniq-key-rec  as character no-undo .
-
+define variable is-tsd as logical no-undo .
+define variable not-is-new as logical no-undo .
+define variable varzero-string as logical no-undo .
 
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+     
    for each  temp_trn-doc :
+       if temp_trn-doc.cli-code = - 1
+        then is-tsd = true. 
        for each temp_gds-line where
                 temp_gds-line.line-num = temp_trn-doc.line-num :
            if temp_gds-line.doc-code <> temp_trn-doc.doc-code then do:
@@ -239,7 +245,7 @@ for each  temp_trn-doc :
       temp_trn-doc.contract-code =  buf_contract.contract-code .
    end.
 
-  if temp_trn-doc.cli-code <> 0 then do:
+  if temp_trn-doc.cli-code <> 0 and temp_trn-doc.cli-code <> -1 then do:
       run who-cli-ora in this-procedure (
           input  temp_trn-doc.cli-code ,
           output temp_trn-doc.cli-type ,
@@ -290,6 +296,27 @@ assign
 .
   { str/getctxtp.i get this-procedure }
 
+  
+  for each ub.doc-attr exclusive-lock where
+           ub.doc-attr.attr-value = "tsd," + temp_trn-doc.doc-code and
+           ub.doc-attr.attr-code = {&trdcattr-nids} :
+
+    find first new_trn-doc where new_trn-doc.doc-code = ub.doc-attr.doc-code
+      and new_trn-doc.status_ = {&permitted}
+      and new_trn-doc.flag_ = true  exclusive-lock no-error .
+    if available new_trn-doc
+      then do:
+        not-is-new = true.
+        leave.
+      end.
+
+  end.
+    
+  if not not-is-new 
+  then do:
+    
+
+  
     run doc-code in this-procedure
       (input  "main":U,
        input  temp_trn-doc.obj-type,
@@ -412,6 +439,7 @@ assign
         run pcall-log-file in p-log-handle ( input v-end-message ) .
         undo, return error v-end-message.
     end.
+  end.
 
   k = 0 .
   for each  temp_gds-line  no-lock  where
@@ -531,13 +559,23 @@ assign
               no-error
               }
 
+  
+
+           find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = new_trn-doc.doc-code
+             and buf_doc-line.artic = buf_goods.artic
+             and buf_doc-line.prod-type = buf_goods.prod-type
+             and buf_doc-line.prod-code = buf_goods.prod-code
+           no-error  .
+           if not available buf_doc-line then 
+           do:
             create anlz-bc .
             { gbl/gdsbcode.i
               buf_goods.gds-code
               ?
               anlz-bc.b-c
               no-error }
-         if error-status :error then do:
+             if error-status :error then 
+             do:
          v-end-message = substitute("anlz-bc &1 &2 &3 &4" ,
               buf_goods.gds-code ,
               anlz-bc.b-c ,
@@ -548,6 +586,7 @@ assign
           k = k + 1  .
      end.
    end.
+   end.
 
    run str/use-list.p (input this-procedure , input-output line-rec, input recid(new_trn-doc) , input false  , input (buffer anlz-bc:handle) ) no-error .
    if error-status :error then do:
@@ -557,10 +596,9 @@ assign
    end.
    /*дополнительная проверка на количества*/
    define buffer buf_gds-obj for ub.gds-obj  .
-   define buffer buf_doc-line for ub.doc-line  .
 
    for each buf_doc-line exclusive-lock where
-            buf_doc-line.doc-code = new_trn-doc.doc-code :
+            buf_doc-line.doc-code = new_trn-doc.doc-code and not is-tsd:
        find first  buf_gds-obj no-lock where
                    buf_gds-obj.obj-type  = new_trn-doc.obj-type  and
                    buf_gds-obj.obj-code  = new_trn-doc.obj-code  and
@@ -570,6 +608,9 @@ assign
 
        if available buf_gds-obj and  buf_doc-line.doc-qnty <> buf_gds-obj.fact-qnty then
           buf_doc-line.doc-qnty = buf_gds-obj.fact-qnty.
+          
+          
+       
    end.
 
       run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
@@ -586,12 +627,41 @@ assign
         undo, return error v-end-message.
     end.
 
+   if not not-is-new 
+   then do: 
+     run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+      if error-status:error then do :
+          v-end-message = substitute(" Ошибка2 &1 &2" , error-status :get-message(1)  , return-value) .
+          run pcall-log-file in p-log-handle ( input v-end-message ) .
+          undo, return error v-end-message.
+      end.
+   end.
+    
+   if not not-is-new 
+   then do: 
    run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
     if error-status:error then do :
         v-end-message = substitute(" Ошибка2 &1 &2" , error-status :get-message(1)  , return-value) .
         run pcall-log-file in p-log-handle ( input v-end-message ) .
         undo, return error v-end-message.
     end.
+   end.
+
+   if is-tsd 
+   then do:
+     
+     run gbl/filnline.p (input "addinvtsd.txt", output varzero-string).
+     if varzero-string = true 
+      then run str/scantsd.p ( this-procedure, 1, input no , input recid(new_trn-doc) ,input "addinvtsd.txt" ).
+     
+     run gbl/filnline.p (input "invtsd.txt", output varzero-string).
+     if varzero-string = true 
+      then run str/scantsd.p ( this-procedure, 2, input no , input recid(new_trn-doc) ,input "invtsd.txt" ).
+
+     os-delete value (search ("invtsd.txt")) no-error.
+     os-delete value (search ("addinvtsd.txt")) no-error.
+        
+   end.
 
     assign
         v-end-message =  string(temp_trn-doc.obj-type) + string(temp_trn-doc.obj-code)
@@ -634,11 +704,36 @@ run str/trn-stat.p (
     output varchg-inv ,
     output table gds-list)
     no-error.
-    if error-status:error then do :
+    if error-status:error then 
+    do :
+      v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
+      run pcall-log-file in p-log-handle ( input v-end-message ) .
+      undo, return error v-end-message.
+    end.
+    if is-tsd then 
+    do:
+      run str/trn-stat.p (
+        input  parparentproc ,
+        input  this-procedure ,
+        input  {&close-doc} ,
+        input  p-trn-code,
+        input  false /* проверка старого возврата */ ,
+        input  v-cntxt-db-num,
+        input  false /* проверка переоценки */,
+        input  v-cntxt-rsrv-time,
+        input  v-cntxt-load-time,
+        input  v-cntxt-holidays,
+        input  false ,
+        output varchg-inv ,
+        output table gds-list)
+        no-error.
+      if error-status:error then 
+      do :
         v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
         run pcall-log-file in p-log-handle ( input v-end-message ) .
         undo, return error v-end-message.
     end.
+  end.
   end.
 end procedure. /* clos-trn2 */
 
@@ -743,7 +838,7 @@ define input  parameter p-date-inv as character no-undo .
   assign
     ub.doc-attr.doc-code = p-doc-code
     ub.doc-attr.attr-code = {&trdcattr-nids}
-    ub.doc-attr.attr-value = p-doc-out
+    ub.doc-attr.attr-value = if is-tsd then "tsd," + p-doc-out else p-doc-out
   .
 
   find first ub.doc-attr exclusive-lock where

@@ -21,6 +21,7 @@ Creation date: 04/05/06
 &glob pt2_sale 'TSFRET':U
 &glob pt3_mpl  'TSFOPT':U
 &glob pt4_rms  'TSFPRC':U
+&glob pt4_tsd  'TSFTSD':U
 
 define input  parameter parparentproc as widget-handle no-undo .
 define input  parameter p-log-handle  as handle no-undo .
@@ -57,7 +58,7 @@ define variable vss-description as character no-undo init "Импорт накладных из в
 { cmp/gds-list.i gds-list def "new shared" }
 { gbl/getsect.i def }
 { str/in-vatp.i def  }
-
+{ cmp/trg-def.i }
 
 
 
@@ -131,7 +132,9 @@ define variable v-road-tax-rubl as decimal   no-undo .
 define variable v-excise-base as decimal   no-undo .
 define variable v-excise-rubl as decimal   no-undo .
 define variable v-main-b-code as integer   no-undo .
-
+define variable is-tsd as logical no-undo .
+define variable is-unit-error   as logical no-undo .
+define variable v-internal      as logical no-undo .
 
 
 MAIN-BLOCK:
@@ -292,13 +295,18 @@ for each  temp_trn-doc :
       end.
    end.
 
-
+   if not (temp_trn-doc.cli-type = {&cmp} or temp_trn-doc.cli-type = {&prs}) 
+   then do: 
       run who-cli-ora in this-procedure (
           input  temp_trn-doc.cli-code ,
           output temp_trn-doc.cli-type ,
           output temp_trn-doc.cli-code
           ) no-error .
           if error-status :error then return error return-value .
+   end.
+   else do:
+     is-tsd = true.
+   end.
 
 /* *******************************88888   */
 /*
@@ -367,6 +375,17 @@ for each  temp_trn-doc :
           v-ret-supp     = false
           v-discnt-type    = {&percent}
           v-status_        = {&inquiry}
+          v-internal       = false 
+          .
+      end.
+      when {&TDEDT_Ras_Perem} then do:
+       assign
+          v-ext-doc-type = {&TDEDT_Ras_Perem}
+          v-doc-type     = {&expense}
+          v-ret-supp     = false
+          v-discnt-type    = {&percent}
+          v-status_        = {&inquiry}
+          v-internal       = true
           .
       end.
       when {&TDEDT_Pri_Vnesh} then do:
@@ -376,6 +395,17 @@ for each  temp_trn-doc :
           v-ret-supp     = false
           v-status_ = {&wayb}
           v-discnt-type    = ""
+          v-internal       = false
+          .
+      end.
+      when {&TDEDT_Pri_Perem} then do:
+       assign
+          v-ext-doc-type   = {&TDEDT_Pri_Perem}
+          v-doc-type = {&income}
+          v-ret-supp     = false
+          v-status_ = {&wayb}
+          v-discnt-type    = ""
+          v-internal       = true
           .
       end.
       when {&TDEDT_Vozvrat_Vnesh} then do:
@@ -385,6 +415,7 @@ for each  temp_trn-doc :
           v-ret-supp     = false
           v-status_ = {&wayb}
           v-discnt-type    = {&percent}
+          v-internal       = false
           .
       end.
       otherwise do:
@@ -439,7 +470,7 @@ assign
       tt-trn-doc.doc-code             = n-d
       tt-trn-doc.doc-date             = to-day
       tt-trn-doc.doc-type             = v-doc-type
-      tt-trn-doc.internal             = false
+      tt-trn-doc.internal             = v-internal
       tt-trn-doc.cr-db-num            = v-cntxt-db-num
       tt-trn-doc.vat-type             = temp_trn-doc.vat-type
       tt-trn-doc.slt-type             = {&without-slt}
@@ -564,9 +595,28 @@ assign
         new_trn-doc.agnt  = tt-trn-doc.agnt
         new_trn-doc.boss  = tt-trn-doc.boss
         new_trn-doc.wrkr  = tt-trn-doc.wrkr
-        new_trn-doc.rcv-code = "not_delete"  /* нельзя будет открыть, чтоб потом изменить или удалить */
+        new_trn-doc.rcv-code = if not is-tsd then "not_delete" else ""  /* нельзя будет открыть, чтоб потом изменить или удалить */
         parrec-doc = recid (new_trn-doc)
     .
+    
+  if is-tsd
+    then 
+  do:
+    find first ub.shift-obj no-lock
+      where ub.shift-obj.obj-type = new_trn-doc.obj-type
+      and ub.shift-obj.obj-code = new_trn-doc.obj-code
+      and ub.shift-obj.status_  = {&sht-current}
+      no-error .
+    if available ub.shift-obj then 
+    do:
+      assign
+        new_trn-doc.shift-num  = ub.shift-obj.shift-num
+        new_trn-doc.shift-name = ub.shift-obj.shift-name
+        new_trn-doc.shift-date = ub.shift-obj.shift-date
+        .
+    end.
+  end.
+  
   k = 0 .
 
   for each  temp_doc-line  no-lock  where
@@ -660,6 +710,10 @@ assign
      then do:
         v-str-txt = "Цена из RMS".
      end.
+     when  {&pt4_tsd} /* от tsd */
+     then do:
+
+     end.
      when  {&pt1_cost} /* Учетная */
      then do:
        temp_doc-line.price-cli  = ub.gds-obj.avrg-rubl.
@@ -726,7 +780,7 @@ assign
         BUFFER-COPY temp_doc-line  to tt2-doc-line
           assign
             tt2-doc-line.cli-qnty       = temp_doc-line.fact-qnty
-            tt2-doc-line.doc-qnty       = temp_doc-line.fact-qnty
+            tt2-doc-line.doc-qnty       = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty
             tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty
             tt2-doc-line.price-cli      = temp_doc-line.price-cli
             tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
@@ -749,7 +803,7 @@ assign
         create tt-gds-dtl.
         BUFFER-COPY tt2-doc-line  to tt-gds-dtl
           assign
-            tt-gds-dtl.doc-qnty  = temp_doc-line.fact-qnty
+            tt-gds-dtl.doc-qnty  = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty
             tt-gds-dtl.fact-qnty = temp_doc-line.fact-qnty
             tt-gds-dtl.prt-code  = v-root-node
             tt-gds-dtl.ov = yes     /*  yes  зафиксируем цены для внутреннего перемещения . Они определены в заказе */
@@ -810,7 +864,57 @@ assign
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
           end.
+          if is-tsd and v-ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
+            run unitqnty1 (
+              input tt2-doc-line.unit-cli, 
+              input "",
+              input "",
+              input 0,
+              input "",
+              input tt2-doc-line.doc-qnty) 
+              no-error.
+
+            if error-status:error then 
+            do:
+              v-str-txt = "Товар - " + string (tt2-doc-line.artic) + ": " +  return-value.
+              run pcall-log-file in p-log-handle (input v-str-txt) .
+              is-unit-error  = true.
+              new_trn-doc.ps = new_trn-doc.ps + {&new-line} + v-str-txt.
+              delete tt2-doc-line.
+            end.
+            
+            if available tt2-doc-line then do:
+
+              run unitqnty1 (
+                input tt2-doc-line.unit-cli, 
+                input "",
+                input "",
+                input 0,
+                input "",
+                input tt2-doc-line.fact-qnty) 
+                no-error.
+              
+              if error-status:error then 
+              do:
+                v-str-txt = "Товар - " + string (tt2-doc-line.artic) + ": " +  return-value.
+                run pcall-log-file in p-log-handle (input v-str-txt) .
+                is-unit-error  = true.
+                new_trn-doc.ps = new_trn-doc.ps + {&new-line} + v-str-txt.
+                delete tt2-doc-line.
+              end.
+              
+            end.
+              
+
+            
 end.
+
+  end.
+
+  if is-unit-error then do:
+    run pcall-log-file in p-log-handle (input "Не все товары попали в накладную") .
+  end.
+
 /*
 
 for each tt2-doc-line :
@@ -843,9 +947,11 @@ for each tt-parts:
 end.
 */
   case v-ext-doc-type :
-      when  {&TDEDT_Pri_Vnesh} then do:
+      when  {&TDEDT_Pri_Vnesh} or when {&TDEDT_Pri_Perem} then do:
 
           /* проверка спецификаций */
+           if v-specif 
+           then do:
            for each tt-parts          :
               find first buf_goods no-lock  where
                     tt-parts.artic     = buf_goods.artic    and
@@ -868,6 +974,9 @@ end.
             run pcall-log-file in p-log-handle ( input v-end-message ) .
             undo, return error v-end-message.
           end.
+          end.
+
+      
        /* копирование */
      { str/copy-in.i
           this-procedure
@@ -889,20 +998,47 @@ end.
               undo, return error v-end-message.
           end.
 
+          if is-tsd then do:
+            
+            for each ub.doc-line exclusive-lock where new_trn-doc.doc-code = ub.doc-line.doc-code:
+            
+              find first buf_goods where ub.doc-line.artic = buf_goods.artic and
+                ub.doc-line.prod-type = buf_goods.prod-type  and
+                ub.doc-line.prod-code = buf_goods.prod-code
+                no-lock no-error .
+              
+              find first ub.gds-dtl exclusive-lock where ub.gds-dtl.doc-code = ub.doc-line.doc-code and
+                ub.gds-dtl.artic = buf_goods.artic and
+                ub.gds-dtl.prod-type = buf_goods.prod-type  and
+                ub.gds-dtl.prod-code = buf_goods.prod-code.
+
+              find first temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code.
+                
+              ub.gds-dtl.doc-qnty  = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty.
+              
+
+              ub.doc-line.doc-qnty = temp_doc-line.doc-qnty.
+              ub.doc-line.cli-qnty = temp_doc-line.doc-qnty.
+              
+            end.
+            
+          end.
+          
+          if not is-tsd then do:
           run gbl/calc-trn.p ( this-procedure  , recid(new_trn-doc)) no-error .
           if error-status :error then do:
             v-end-message = substitute(" Ошибка пересчета &1 &2 " , error-status :get-message(1)  , return-value ) .
             run pcall-log-file in p-log-handle ( input v-end-message ) .
             undo, return error v-end-message.
           end.
-
-
+          end.
 
           find current new_trn-doc exclusive-lock .
               new_trn-doc.tot-cli =  new_trn-doc.tot-calc.
       end.
-      when {&TDEDT_Ras_Vnesh}    or
-      when {&TDEDT_Vozvrat_Vnesh}    then do:
+      when {&TDEDT_Ras_Vnesh}    
+      or when {&TDEDT_Ras_Perem}
+      or when {&TDEDT_Vozvrat_Vnesh}    then do:
           { str/copy-ret.i
             this-procedure
             new_trn-doc.doc-code
@@ -946,12 +1082,40 @@ end.
                 undo, return error v-end-message.
             end.
 
+            if is-tsd then do:
+              
+              for each ub.doc-line exclusive-lock where new_trn-doc.doc-code = ub.doc-line.doc-code:
+              
+                find first buf_goods where ub.doc-line.artic = buf_goods.artic and
+                  ub.doc-line.prod-type = buf_goods.prod-type  and
+                  ub.doc-line.prod-code = buf_goods.prod-code
+                  no-lock no-error .
+                
+                find first ub.gds-dtl exclusive-lock where ub.gds-dtl.doc-code = ub.doc-line.doc-code and
+                  ub.gds-dtl.artic = buf_goods.artic and
+                  ub.gds-dtl.prod-type = buf_goods.prod-type  and
+                  ub.gds-dtl.prod-code = buf_goods.prod-code.
+  
+                find first temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code.
+                  
+                ub.gds-dtl.doc-qnty  = temp_doc-line.doc-qnty.
+                ub.gds-dtl.fact-qnty = temp_doc-line.fact-qnty.
+  
+                ub.doc-line.fact-qnty = temp_doc-line.fact-qnty.
+                ub.doc-line.doc-qnty = temp_doc-line.doc-qnty.
+                ub.doc-line.cli-qnty = temp_doc-line.fact-qnty.
+                
+              end.
 
+            end.
+
+            if not is-tsd then do: 
             run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
             if error-status :error then do:
               v-end-message = substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
+            end.
             end.
 
             if v-ext-doc-type = {&TDEDT_Ras_Vnesh} then do:
@@ -962,7 +1126,9 @@ end.
                    run pcall-log-file in p-log-handle ( input v-end-message ) .
                    undo, return error v-end-message.
                 end.
-
+                if is-unit-error then do:
+                  new_trn-doc.flag_ = false.
+                end.
                 if temp_trn-doc.price-type   = {&pt1_cost} then do:
                   run calc-cost-price (new_trn-doc.doc-code) no-error .
                   if error-status :error then do:
@@ -1064,6 +1230,45 @@ assign
   varchg-inv      = true
   .
 
+for each tt2-doc-line where is-tsd and doc-code = p-trn-code no-lock:
+
+  run unitqnty1 (
+      input tt2-doc-line.unit-cli, 
+      input "",
+      input "",
+      input 0,
+      input "",
+      input tt2-doc-line.doc-qnty) 
+  no-error.
+  
+  if error-status:error then do:
+    run pcall-log-file in p-log-handle (input return-value) .
+    is-unit-error  = true.
+  end.
+  
+  run unitqnty1 (
+      input tt2-doc-line.unit-cli, 
+      input "",
+      input "",
+      input 0,
+      input "",
+      input tt2-doc-line.fact-qnty) 
+  no-error.
+  
+  if error-status:error then do:
+    run pcall-log-file in p-log-handle (input return-value) .
+    is-unit-error  = true.
+  end.
+
+
+end. 
+
+if is-unit-error then do:
+  run pcall-log-file in p-log-handle (input "Невозможно перевести накладную в статус накл") .
+  return.
+  
+end.
+
 run str/trn-graf.p
   ( input  p-trn-code ,
     input  v-cntxt-db-num ,
@@ -1103,6 +1308,33 @@ run str/trn-stat.p (
 
   end.
 
+  if is-tsd then do:
+    
+    for each ub.doc-line exclusive-lock where new_trn-doc.doc-code = ub.doc-line.doc-code:
+    
+      find first buf_goods where ub.doc-line.artic = buf_goods.artic and
+        ub.doc-line.prod-type = buf_goods.prod-type  and
+        ub.doc-line.prod-code = buf_goods.prod-code
+        no-lock no-error .
+      
+      find first ub.gds-dtl exclusive-lock where ub.gds-dtl.doc-code = ub.doc-line.doc-code and
+        ub.gds-dtl.artic = buf_goods.artic and
+        ub.gds-dtl.prod-type = buf_goods.prod-type  and
+        ub.gds-dtl.prod-code = buf_goods.prod-code.
+  
+      find first temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code.
+      
+      ub.gds-dtl.doc-qnty  = temp_doc-line.doc-qnty.
+      ub.gds-dtl.fact-qnty = temp_doc-line.fact-qnty.  
+      
+      ub.doc-line.fact-qnty = temp_doc-line.fact-qnty.
+      ub.doc-line.doc-qnty = temp_doc-line.doc-qnty.
+      ub.doc-line.cli-qnty = temp_doc-line.fact-qnty.
+      
+    end.
+    
+  end.
+
 end procedure. /* clos-trn */
 
 
@@ -1120,6 +1352,8 @@ define variable varcopyflag        like ub.trn-doc.flag     no-undo.
 define variable varcheck-return as logical no-undo .
 define variable varchg-inv as logical no-undo .
 
+if is-tsd
+  then return.
 run str/trn-stat.p (
     input  parparentproc ,
     input  this-procedure ,
@@ -1300,11 +1534,13 @@ define variable varnew-price like ub.doc-line.price-base no-undo.
         undo, return error v-end-message.
        end.
    end.
+    if not is-tsd then do:
     run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
     if error-status :error then do:
       v-end-message = substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
       run pcall-log-file in p-log-handle ( input v-end-message ) .
       undo, return error v-end-message.
+    end.
     end.
 
   end.
@@ -1322,3 +1558,128 @@ define output parameter p-is-negostmess as logical   no-undo .
   end.
 
 end procedure. /* cb_cloce-quest-neg */
+
+procedure unitqnty1 :
+  /*
+
+  Контроль допустимых количеств для данной единицы измерения (товара)
+
+  Для серийного и штучного товара количество должно быть целым
+
+  Параметры:
+
+  Необходимо задать контролируемое количество p-qnty
+  И либо единицу измерения p-unit-name
+  либо артикул товара, которые необходимо контролировать.
+
+  Если задан только артикул товара, то будет контролироваться базовая единица
+  измерения товара.
+
+  Необязательный параметр p-unit-description определяет
+  имя единицы измерения.
+  Например можно задать его как
+    p-unit-description = "Единица измерения поставщика"
+    или
+    p-unit-description = "Базовая единица измерения"
+
+  */
+
+  define input parameter  p-unit-name        like ub.units.unit-name no-undo .
+  define input parameter  p-artic            like ub.goods.artic     no-undo .
+  define input parameter  p-prod-type        like ub.goods.prod-type no-undo .
+  define input parameter  p-prod-code        like ub.goods.prod-code no-undo .
+  define input parameter  p-unit-description as character            no-undo .
+  define input parameter  p-qnty             as decimal              no-undo .
+
+
+  define buffer buf_units for ub.units .
+  define buffer buf_goods for ub.goods .
+
+  define variable v-artic as character no-undo .
+  define variable v-msg   as character no-undo .
+
+  if p-unit-description = ''
+  or p-unit-description = ?
+  then do:
+    assign
+      p-unit-description = "Единица измерения "
+    .
+  end.
+
+  if  p-unit-name <> ''
+  and p-unit-name <> ?
+  then do:
+    find first buf_units no-lock
+      where buf_units.unit-name = p-unit-name
+      no-error .
+    if not available buf_units
+    then do:
+      v-msg = 
+        "Не найдена единица измерения " + {&new-line} +
+        "p-unit-name" +   p-unit-name + {&new-line} +
+        "p-artic" +       p-artic +  {&new-line} +
+        "p-prod-type" +   p-prod-type + {&new-line} +
+        "p-proc-code" +   string (p-prod-code) + {&new-line} +
+        "p-qnty" +        string (p-qnty) + {&new-line} 
+         .
+      undo, return error v-msg .
+    end.
+  end.
+  else do:
+    find first buf_goods no-lock
+      where buf_goods.artic     = p-artic
+        and buf_goods.prod-type = p-prod-type
+        and buf_goods.prod-code = p-prod-code
+      no-error .
+    if not available buf_goods
+    then do:
+      v-msg =
+        "Не найден товар" + {&new-line} +
+        "p-unit-name" +   p-unit-name + {&new-line} +
+        "p-artic" +       p-artic +  {&new-line} +
+        "p-prod-type" +   p-prod-type + {&new-line} +
+        "p-proc-code" +   string (p-prod-code) + {&new-line} +
+        "p-qnty" +        string (p-qnty) + {&new-line}
+        .
+      undo, return error v-msg .
+    end.
+
+    find first buf_units no-lock
+      where buf_units.unit-name = buf_goods.unit-base
+      no-error .
+    if not available buf_units
+    then do:
+      v-msg =
+        "Не найдена единица измерения " + {&new-line} +
+        "p-unit-name" +   p-unit-name + {&new-line} +
+        "p-artic" +       p-artic +  {&new-line} +
+        "p-prod-type" +   p-prod-type + {&new-line} +
+        "p-proc-code" +   string (p-prod-code) + {&new-line} +
+        "p-qnty" +        string (p-qnty) + {&new-line}
+        .
+      undo, return error v-msg .
+    end.
+
+    assign
+      v-artic = "Артикул " + string(p-artic) + " " + string(p-prod-type)
+              + " " + string(p-prod-code)
+      p-unit-description = "Базовая единица измерения"
+    .
+  end.
+
+
+  if lookup({&pieces}, buf_units.type) > 0
+  or lookup({&serial}, buf_units.type) > 0
+  then do:
+    if p-qnty <> truncate(p-qnty, 0)
+    then do:
+      v-msg =
+        "Для штучного и серийного товаров резервируемое количество должно быть целым" + {&new-line} +
+        v-artic + {&new-line} +
+        p-unit-description + buf_units.unit-name + {&new-line} +
+        "Запрошено количество " + string (p-qnty) + {&new-line}.
+      undo, return error v-msg .
+    end.
+  end.
+
+end procedure. /* unitqnty */

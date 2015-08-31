@@ -3390,7 +3390,8 @@ procedure process-line :
       display
         num_rec buf_doc-line.artic num_gds v-current-time v-current-action
         with frame a.
-      process events .
+      /*if not g#auto then
+        process events .*/
     end.
 
 

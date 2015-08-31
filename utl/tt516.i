@@ -49,6 +49,7 @@ field gds-code    as integer
 field artic       as character     /* не присылают */
 field prod-type   as character     /* не присылают */
 field prod-code   as integer       /* не присылают */
+field doc-qnty    as decimal
 field fact-qnty   as decimal
 field price-rubl  as decimal
 field price-cli   as decimal

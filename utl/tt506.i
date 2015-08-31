@@ -39,6 +39,7 @@ define temp-table temp_gds-line no-undo
 field line-num    as integer
 field doc-code    as character
 field gds-code    as integer
+field line-qnty        as integer
 index pi
 doc-code
 line-num

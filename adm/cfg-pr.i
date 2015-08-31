@@ -75,7 +75,7 @@ function decoding-user-resp returns character
   define variable v-num-entries as integer   no-undo .
   define variable v-user-resp   as character no-undo .
   assign
-    v-user-list   = "Бахтадзе,Булгаков,Белоусов,Гюнтнер,Исаков,Перваков,Суслов,Уханов,Чернова,Кочетков,Степанов,Хныкин,Гридчина,Шальнев,Сливенко,Харитонов,Кирюхин"
+    v-user-list   = "Бахтадзе,Булгаков,Белоусов,Гюнтнер,Исаков,Перваков,Суслов,Уханов,Чернова,Кочетков,Степанов,Хныкин,Гридчина,Шальнев,Сливенко,Харитонов,Кирюхин,Морозов"
     v-num-entries = num-entries( v-user-list )
     v-user-resp   = "":U
   .

@@ -75,6 +75,8 @@ define variable v-curr-db     as integer   no-undo .
 &scop autocbnk '{&bef-autocbnk}':U
 &scop bef-autofree Произвольные задани~377
 &scop autofree '{&bef-autofree}':U
+&scop bef-sktsrv Сокет-Сервер
+&scop sktsrv '{&bef-sktsrv}':U
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
