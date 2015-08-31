@@ -440,6 +440,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define barcode-e
 { cmp/cr-prep.i 1 btpr-type-rt-bcprint "bcprint" " " "bcprint" }
 { cmp/cr-prep.i 1 btpr-type-oxml-new   "oxmlnew" " " "oxmlnew" }
 { cmp/cr-prep.i 1 btpr-type-mt-poslock "mtposlck" " " "mtposlck" }
+{ cmp/cr-prep.i 1 btpr-type-sktsrv     "sktsrv" " " "sktsrv"   }
 
 &glob btpr-type-gds 'gds':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define btpr-type-gds {&btpr-type-gds}" ).
