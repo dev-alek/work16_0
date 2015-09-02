@@ -142,7 +142,7 @@ on error undo main-block, return error
       display
         num_rec buf_doc-line.artic curr_time
         with frame a.
-      process events .
+/*      process events .*/
     end.
 
     { gbl/gdsobjcr.i

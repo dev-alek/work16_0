@@ -42,6 +42,9 @@ define variable v-num-entries   as integer   no-undo .
 define variable v-par-val       as character no-undo .
 define variable v-par-type      as character no-undo .
 define variable v-soket-param   as character no-undo .
+define variable v-params        as character no-undo .
+define variable v-hide          as logical no-undo.
+define variable ii              as integer no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -265,6 +268,18 @@ then do:
       END.
     end.
 
+    if v-param begins 'M:' then do:
+        
+        v-params = substring(v-param,3,LENGTH(v-param)).
+        do ii = 1 to num-entries(v-params, '+'):
+            
+            if entry(ii, v-params, '+':U) = 'h' then v-hide = true.
+            
+            if entry(ii, v-params, '+':U) begins 'Sock' then do:
+                v-soket-param = '-S ' + entry(2, v-params, ':').
+            end.
+        end.
+    end.
   end.
 
   if name <> "":U
@@ -361,8 +376,9 @@ on stop   undo, leave
      v-connection = TRUE
    .
 
+  RUN disable_UI.
   /*Вызов основного экрана*/
-  run adm/sktsrv.w (input v-soket-param).
+  run adm/sktsrv.w (input v-soket-param, input v-hide).
 
 end.  /* do1:  on endkey ... */
 assign

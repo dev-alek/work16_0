@@ -100,6 +100,11 @@ task-type
             buf_temp-autotask.task-name = "Произвольные задания"
             .
           end.
+          when {&btpr-type-sktsrv} then do:
+            assign
+            buf_temp-autotask.task-name = "Сокет-Сервер"
+            .
+          end.
         END CASE.
     END.
 

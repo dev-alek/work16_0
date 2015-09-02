@@ -1976,6 +1976,7 @@ for each buf_temp-dis-rule:
     tt-dis-rule.doc-qnty           = buf_temp-dis-rule.doc-qnty
     .
     /*Здесь ищем тип правила привязанного к указанному объекту*/
+    /*run gbl\inidebug.p.
     find first buf_dis-rule no-lock where
               /*buf_dis-rule.des = tt-dis-rule.des*/
               buf_dis-rule.discnt-type        = tt-dis-rule.discnt-type
@@ -2010,7 +2011,8 @@ for each buf_temp-dis-rule:
     end.
     else do:
       v-add-upd = true .
-    end.
+    end.*/
+    v-add-upd = true .
     buffer-copy buf_temp-dis-rule
     except des
     host-code

@@ -1229,11 +1229,17 @@ procedure restore-s-gds-grp :
     find last restseq.gds-grp no-lock
       use-index pi no-error
     .
+
     if available restseq.gds-grp then do:
       assign
         v-curr-seq-value = restseq.gds-grp.node-code
       .
     end.
+      {&update-sequence}
+      
+    {&init-validation}
+
+    &scoped-define sequence-name   s-fbr-grp
     assign
     v-curr-seq-name  = "{&sequence-name}"
     v-table-name     = "fbr-gds-grp"

@@ -70,7 +70,7 @@ define variable v-types         as character no-undo .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit b-help RECT-1 RECT-2 ~
-f-param-name f-param-ps f-param-value f-obj-name
+f-param-name f-param-ps f-param-value btn_dwl f-obj-name 
 &Scoped-Define DISPLAYED-OBJECTS f-db-num f-db-key f-param-name f-param-ps ~
 f-param-value f-beg-date t-beg-date f-end-date t-end-date f-obj-type ~
 f-obj-code f-host-name f-param-code f-cnf-type f-obj-name
@@ -110,6 +110,10 @@ DEFINE BUTTON b-quit AUTO-END-KEY DEFAULT
      SIZE 10 BY 1
      BGCOLOR 8 .
 
+DEFINE BUTTON btn_dwl 
+     LABEL "Загрузить" 
+     SIZE 15 BY 1 TOOLTIP "Загрузить значение из excel".
+
 DEFINE VARIABLE f-host-name AS CHARACTER FORMAT "X(80)":U
      LABEL "Фирма"
      VIEW-AS COMBO-BOX INNER-LINES 5
@@ -121,12 +125,6 @@ DEFINE VARIABLE f-obj-type AS CHARACTER FORMAT "X(3)":U
      VIEW-AS COMBO-BOX INNER-LINES 5
      DROP-DOWN-LIST
      SIZE 6 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-param-value AS CHARACTER FORMAT "X(250)":U
-     LABEL "Значение"
-     VIEW-AS COMBO-BOX INNER-LINES 5
-     DROP-DOWN-LIST
-     SIZE 85 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-param-name AS CHARACTER
      VIEW-AS EDITOR NO-BOX
@@ -171,6 +169,17 @@ DEFINE VARIABLE f-param-code AS CHARACTER FORMAT "X(8)":U
       VIEW-AS TEXT
      SIZE 9 BY .67 NO-UNDO.
 
+DEFINE VARIABLE f-param-value AS CHARACTER FORMAT "X(250)":U 
+     LABEL "Значение" 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     DROP-DOWN-LIST
+     SIZE 85 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-param-value-2 AS CHARACTER FORMAT "X(31000)":U 
+     LABEL "Значение"
+     VIEW-AS FILL-IN 
+     SIZE 85 BY 1 NO-UNDO.
+
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
      SIZE 97 BY 4.
@@ -201,9 +210,11 @@ DEFINE FRAME d-cnf
      f-db-key AT ROW 2.5 COL 31.5 COLON-ALIGNED
      f-param-name AT ROW 4.96 COL 14 NO-LABEL
      f-param-ps AT ROW 6.79 COL 14 NO-LABEL
+     f-param-value-2 AT ROW 9.54 COL 12 COLON-ALIGNED WIDGET-ID 4
      f-param-value AT ROW 9.54 COL 12 COLON-ALIGNED
      f-beg-date AT ROW 11.29 COL 30.5 COLON-ALIGNED NO-LABEL
      t-beg-date AT ROW 11.29 COL 45
+     btn_dwl AT ROW 11.29 COL 62.5 WIDGET-ID 2
      f-end-date AT ROW 12.54 COL 30.5 COLON-ALIGNED NO-LABEL
      t-end-date AT ROW 12.54 COL 45
      f-obj-type AT ROW 15.29 COL 11 COLON-ALIGNED
@@ -214,14 +225,14 @@ DEFINE FRAME d-cnf
      f-obj-name AT ROW 15.46 COL 27.5 COLON-ALIGNED NO-LABEL
      "Дата окончания действия:" VIEW-AS TEXT
           SIZE 25 BY .75 AT ROW 12.54 COL 7.5
-     "Примечание:" VIEW-AS TEXT
-          SIZE 11 BY 1 AT ROW 6.79 COL 2
-     "Привязки" VIEW-AS TEXT
-          SIZE 9 BY .67 AT ROW 14.29 COL 2.5
-     "Дата начала действия:" VIEW-AS TEXT
-          SIZE 22 BY .75 AT ROW 11.54 COL 10.5
      "Название:" VIEW-AS TEXT
           SIZE 9.5 BY 1 AT ROW 4.79 COL 4
+     "Дата начала действия:" VIEW-AS TEXT
+          SIZE 22 BY .75 AT ROW 11.54 COL 10.5
+     "Привязки" VIEW-AS TEXT
+          SIZE 9 BY .67 AT ROW 14.29 COL 2.5
+     "Примечание:" VIEW-AS TEXT
+          SIZE 11 BY 1 AT ROW 6.79 COL 2
      RECT-1 AT ROW 14.04 COL 2
      RECT-2 AT ROW 10.79 COL 2
      SPACE(0.87) SKIP(4.33)
@@ -291,6 +302,8 @@ ASSIGN
 ASSIGN
        f-param-ps:READ-ONLY IN FRAME d-cnf        = TRUE.
 
+/* SETTINGS FOR FILL-IN f-param-value-2 IN FRAME d-cnf
+   NO-DISPLAY NO-ENABLE                                                 */
 /* SETTINGS FOR TOGGLE-BOX t-beg-date IN FRAME d-cnf
    NO-ENABLE                                                            */
 /* SETTINGS FOR TOGGLE-BOX t-end-date IN FRAME d-cnf
@@ -400,6 +413,7 @@ DO:
     f-db-num
     f-db-key
     f-param-value
+    f-param-value-2
     f-obj-type
     f-obj-code
     t-beg-date
@@ -421,6 +435,12 @@ DO:
   if f-param-value = ? then do:
     assign
       f-param-value = "":U
+    .
+  end.
+
+  if f-param-value-2 = ? then do:
+    assign
+      f-param-value-2 = "":U
     .
   end.
 
@@ -534,7 +554,7 @@ DO:
     assign
       cnf.db-num      = f-db-num
       cnf.db-key      = f-db-key
-      cnf.param-value = f-param-value
+      cnf.param-value = if f-param-code = "tsd-list" then f-param-value-2 else f-param-value
       cnf.beg-date    = f-beg-date
       cnf.end-date    = f-end-date
       cnf.host-code   = v-host-code
@@ -562,6 +582,28 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME btn_dwl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_dwl d-cnf
+ON CHOOSE OF btn_dwl IN FRAME d-cnf /* Загрузить */
+DO:
+  def var v-outstr as char no-undo.
+  run adm/xlssn.p
+    (output v-outstr) no-error.
+  if length (v-outstr) > 31000
+  then do:
+    message "Превышена длинна значения, не возможно загрузить даенные" view-as alert-box information.
+  end. 
+  else do:
+    f-param-value-2 = v-outstr.
+    f-param-value-2:screen-value = v-outstr.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-db-key
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-db-key d-cnf
 ON RETURN OF f-db-key IN FRAME d-cnf /* Ключ БД */
 DO:
@@ -849,6 +891,14 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-param-value-2 d-cnf
+ON RETURN OF f-param-value-2 IN FRAME d-cnf /* Значение */
+DO:
+  apply "TAB" to self.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME t-beg-date
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-beg-date d-cnf
@@ -1005,11 +1055,14 @@ ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     f-param-code  = cnf.param-code
     f-param-name  = cnf.param-name
     f-param-ps    = cnf.param-ps
-    f-param-value = cnf.param-value
     f-beg-date    = cnf.beg-date
     f-end-date    = cnf.end-date
     v-host-code   = cnf.host-code
   .
+  if f-param-code = "tsd-list" 
+    then assign f-param-value-2 = cnf.param-value.
+    else assign f-param-value = cnf.param-value.
+  
   if ( f-db-key = "" or f-db-key = ? )
     and f-db-num <> ?
   then do:
@@ -1104,6 +1157,8 @@ ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     end.
   end.
 
+  RUN enable_UI.
+  
   run prepare-screen .
 
   if f-obj-code:sensitive in frame {&frame-name} then do:
@@ -1113,7 +1168,7 @@ ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     .
   end.
 
-  RUN enable_UI.
+
 
   apply "value-changed" to t-beg-date in frame {&frame-name}.
   apply "value-changed" to t-end-date in frame {&frame-name}.
@@ -1157,6 +1212,7 @@ ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       b-clients
       b-exit
       f-param-value
+      f-param-value-2
       f-beg-date
       t-beg-date
       f-end-date
@@ -1332,7 +1388,7 @@ PROCEDURE enable_UI :
           f-param-code f-cnf-type f-obj-name
       WITH FRAME d-cnf.
   ENABLE b-exit b-quit b-help RECT-1 RECT-2 f-param-name f-param-ps
-         f-param-value f-obj-name
+         f-param-value btn_dwl f-obj-name 
       WITH FRAME d-cnf.
   {&OPEN-BROWSERS-IN-QUERY-d-cnf}
 END PROCEDURE.
@@ -1428,6 +1484,35 @@ define variable v-ok as logical   no-undo .
     end.
   end.
 &endif
+
+if f-param-code = "tsd-list" and p-action <> "lkp":U
+then do:
+  enable
+    btn_dwl
+    f-param-value-2
+    with frame {&frame-name}.
+end.
+else do:
+  hide
+    btn_dwl
+    in frame {&frame-name}.
+end.
+
+if f-param-code = "tsd-list"
+then do:
+  enable
+    f-param-value-2
+    with frame {&frame-name}.
+  f-param-value-2:screen-value = f-param-value-2.  
+  hide
+    f-param-value
+    in frame {&frame-name}.
+end.
+else do:
+  hide
+    f-param-value-2
+    in frame {&frame-name}.
+end.
 
 END PROCEDURE.
 

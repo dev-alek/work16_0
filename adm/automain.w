@@ -892,7 +892,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         .
         run write-to-log ( "Запущена система автоматического выполнения произвольных заданий" ).
       end.
-
+      when {&btpr-type-sktsrv}
+      then do:
+        assign
+          {&window-name}:title = {&window-name}:title + "Сокет-Сервер"
+        .
+        run write-to-log ( "Запущен Сокет-Сервер" ).
+      end.
       otherwise do:
         assign
           log-exit = yes
@@ -1372,6 +1378,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     when {&btpr-type-autocbnk}
     then do:
       run write-to-log ( "Закончен сеанс работы с системой автоматической эксп/имп в КЛИЕНТ-БАНК" ).
+    end.
+    when {&btpr-type-sktsrv}
+    then do:
+      run write-to-log ( "Закончен сеанс работы Сокет-Сервера" ).
     end.
     when {&btpr-type-autofree}
     then do:

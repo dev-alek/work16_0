@@ -763,7 +763,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                 when "H":U
                 or when "R":U
                 or when "DB":U
-                or when "ExtSys"
+                or when "ExtSys":U
+                or when "Sock":U
                 or when "ProcName":U
                 then do:
                   assign
@@ -1044,6 +1045,12 @@ create X_auto-session .
     X_auto-session.session-type = {&btpr-type-autofree}
     X_auto-session.session-name = "Произвольные задания"
     X_auto-session.proc-name    = "adm/l-i-free.w":U
+  .
+create X_auto-session .
+  assign
+    X_auto-session.session-type = {&btpr-type-sktsrv}
+    X_auto-session.session-name = "Сокет Сервер"
+    X_auto-session.proc-name    = "adm/l-i-skt.w":U
   .
 
 END PROCEDURE.

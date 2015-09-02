@@ -650,24 +650,28 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 
   )
   then do:
-    find first buf_fbr-gds-obj no-lock where
-                buf_fbr-gds-obj.obj-type = p-obj-type
-            AND buf_fbr-gds-obj.obj-code = p-obj-code
-            AND buf_fbr-gds-obj.gds-code = p-gds-code no-error .
-    if available buf_fbr-gds-obj
-    AND (buf_fbr-gds-obj.is-menu
-        or
-        buf_fbr-gds-obj.is-semi-finished) then do:
-      if p-pos-type = {&cd-type-IBM}
-      or p-pos-type = {&cd-type-IBM-XML}
-      or p-pos-type = {&cd-type-IBS-TH}
-      or p-pos-type = {&cd-type-ncr-as-r}
-      then do:
-        assign
-        v-depart-code = buf_fbr-gds-obj.fbr-obj-code
-        v-depart-type = {&shop}
-        .
-      end.
+    if p-depart-code > 0 then v-depart-code = p-depart-code.
+    else do:  
+        find first buf_fbr-gds-obj no-lock where
+                    buf_fbr-gds-obj.obj-type = p-obj-type
+                AND buf_fbr-gds-obj.obj-code = p-obj-code
+                AND buf_fbr-gds-obj.gds-code = p-gds-code no-error .
+        if available buf_fbr-gds-obj
+        AND (buf_fbr-gds-obj.is-menu
+            or
+            buf_fbr-gds-obj.is-semi-finished) then do:
+          if p-pos-type = {&cd-type-IBM}
+          or p-pos-type = {&cd-type-IBM-XML}
+          or p-pos-type = {&cd-type-IBS-TH}
+          or p-pos-type = {&cd-type-ncr-as-r}
+          or p-pos-type = {&cd-type-MAGIA-XML}
+          then do:
+            assign
+            v-depart-code = buf_fbr-gds-obj.fbr-obj-code
+            v-depart-type = {&shop}
+            .
+          end.
+      end.    
       if v-depart-code = ?
       or v-depart-code = 0  then do:
         p-mess = substitute("Произведенный товар по кодом &1 продан без ссылки  на ОБЪЕКТ  ПРОИЗВОДСТВА (кухню)"
