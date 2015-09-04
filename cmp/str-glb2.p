@@ -110,6 +110,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define order-typ
 { cmp/cr-prep.i 1 rcpt-overflow         15               Перелив               15  Overflow}
 { cmp/cr-prep.i 1 rcpt-trans-transfer   16               ПеревТрнзкц           16  TrnsctTrnsfr}
 { cmp/cr-prep.i 1 rcpt-tech-refuell     17               ТехПролив             17  TechRefuell}
+{ cmp/cr-prep.i 1 rcpt-unlock-trans     36               РазблТрнзкц           36  UnlockTrans}
 { cmp/cr-prep.i 1 rcpt-pre-sale             101          _Продажа              101  _Sale }
 { cmp/cr-prep.i 1 rcpt-pre-return           106          _Возврат              106  _Return }
 { cmp/cr-prep.i 1 rcpt-pre-annu             108          _Аннуляция            108  _Annul. }
@@ -122,6 +123,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define order-typ
 { cmp/cr-prep.i 1 rcpt-pre-overflow         115          _Перелив              115  _Overflow }
 { cmp/cr-prep.i 1 rcpt-pre-trans-transfer   116          _ПеревТрнзкц          116  _TrnsctTrnsfr }
 { cmp/cr-prep.i 1 rcpt-pre-tech-refuell     117          _ТехПролив            117  _TechRefuell }
+{ cmp/cr-prep.i 1 rcpt-pre-unlock-trans     136          _РазблТрнзкц          136  _UnlockTrans }
 { cmp/cr-prep.i 1 rcpt-ord-sale             201          >Продажа              201  >Sale }
 { cmp/cr-prep.i 1 rcpt-ord-return           206          >Возврат              206  >Return }
 { cmp/cr-prep.i 1 rcpt-ord-annu             208          >Аннуляция            208  >Annul. }
@@ -141,6 +143,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define order-typ
 {&bef-rcpt-trans-cancell-full},{&bef-rcpt-trans-cancell},~
 {&bef-rcpt-overflow-full},{&bef-rcpt-overflow},~
 {&bef-rcpt-trans-transfer-full},{&bef-rcpt-trans-transfer},~
+{&bef-rcpt-unlock-trans-full},{&bef-rcpt-unlock-trans},~
 {&bef-rcpt-tech-refuell-full},{&bef-rcpt-tech-refuell},~
 {&bef-rcpt-write-off-full},{&bef-rcpt-write-off},~
 {&bef-rcpt-annu-full},{&bef-rcpt-annu},~
@@ -158,6 +161,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define order-typ
 {&bef-rcpt-pre-annu-full},{&bef-rcpt-pre-annu},~
 {&bef-rcpt-pre-inventory-full},{&bef-rcpt-pre-inventory},~
 {&bef-rcpt-pre-Z-rep-full},{&bef-rcpt-pre-z-rep},~
+{&bef-rcpt-pre-trans-cancell-full},{&bef-rcpt-pre-trans-cancell},~
+{&bef-rcpt-pre-unlock-trans-full},{&bef-rcpt-pre-unlock-trans},~
 {&bef-rcpt-pre-shft-close-full},{&bef-rcpt-pre-shft-close},~
 {&bef-rcpt-ord-sale-full},{&bef-rcpt-ord-sale},~
 {&bef-rcpt-ord-return-full},{&bef-rcpt-ord-return},~
@@ -180,6 +185,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-trans-cancell-full},{&bef-rcpt-trans-cancell},~
 {&bef-rcpt-overflow-full},{&bef-rcpt-overflow},~
 {&bef-rcpt-trans-transfer-full},{&bef-rcpt-trans-transfer},~
+{&bef-rcpt-unlock-trans-full},{&bef-rcpt-unlock-trans},~
 {&bef-rcpt-tech-refuell-full},{&bef-rcpt-tech-refuell},~
 {&bef-rcpt-write-off-full},{&bef-rcpt-write-off},~
 {&bef-rcpt-annu-full},{&bef-rcpt-annu},~
@@ -196,6 +202,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-pre-annu-full},{&bef-rcpt-pre-annu},~
 {&bef-rcpt-pre-inventory-full},{&bef-rcpt-pre-inventory},~
 {&bef-rcpt-pre-Z-rep-full},{&bef-rcpt-pre-z-rep},~
+{&bef-rcpt-pre-trans-cancell-full},{&bef-rcpt-pre-trans-cancell},~
+{&bef-rcpt-pre-unlock-trans-full},{&bef-rcpt-pre-unlock-trans},~
 {&bef-rcpt-ord-sale-full},{&bef-rcpt-ord-sale},~
 {&bef-rcpt-ord-return-full},{&bef-rcpt-ord-return},~
 {&bef-rcpt-ord-annu-full},{&bef-rcpt-ord-annu},~
@@ -214,6 +222,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-trans-cancell},~
 {&bef-rcpt-overflow},~
 {&bef-rcpt-trans-transfer},~
+{&bef-rcpt-unlock-trans},~
 {&bef-rcpt-tech-refuell},~
 {&bef-rcpt-inventory},~
 {&bef-rcpt-z-rep},~
@@ -229,6 +238,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-pre-tech-refuell},~
 {&bef-rcpt-pre-inventory},~
 {&bef-rcpt-pre-z-rep},~
+{&bef-rcpt-pre-unlock-trans},~
 {&bef-rcpt-pre-shft-close},~
 {&bef-rcpt-ord-sale},~
 {&bef-rcpt-ord-return},~
@@ -247,6 +257,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-trans-cancell-full},~
 {&bef-rcpt-overflow-full},~
 {&bef-rcpt-trans-transfer-full},~
+{&bef-rcpt-unlock-trans-full},~
 {&bef-rcpt-tech-refuell-full},~
 {&bef-rcpt-inventory-full},~
 {&bef-rcpt-z-rep-full},~
@@ -262,6 +273,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-pre-tech-refuell-full},~
 {&bef-rcpt-pre-inventory-full},~
 {&bef-rcpt-pre-z-rep-full},~
+{&bef-rcpt-pre-unlock-trans-full},~
 {&bef-rcpt-pre-shft-close-full},~
 {&bef-rcpt-ord-sale-full},~
 {&bef-rcpt-ord-return-full},~
@@ -281,6 +293,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-trans-cancell},~
 {&bef-rcpt-overflow},~
 {&bef-rcpt-trans-transfer},~
+{&bef-rcpt-unlock-trans},~
 {&bef-rcpt-tech-refuell},~
 {&bef-rcpt-inventory},~
 {&bef-rcpt-z-rep},~
@@ -296,6 +309,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-pre-tech-refuell},~
 {&bef-rcpt-pre-inventory},~
 {&bef-rcpt-pre-z-rep},~
+{&bef-rcpt-pre-unlock-trans},~
 {&bef-rcpt-pre-shft-close},~
 {&bef-rcpt-ord-sale},~
 {&bef-rcpt-ord-return},~
@@ -319,6 +333,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-trans-cancell-full},~
 {&bef-rcpt-overflow-full},~
 {&bef-rcpt-trans-transfer-full},~
+{&bef-rcpt-unlock-trans-full},~
 {&bef-rcpt-tech-refuell-full},~
 {&bef-rcpt-inventory-full},~
 {&bef-rcpt-z-rep-full},~
@@ -334,6 +349,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-pre-tech-refuell-full},~
 {&bef-rcpt-pre-inventory-full},~
 {&bef-rcpt-pre-z-rep-full},~
+{&bef-rcpt-pre-unlock-trans-full},~
 {&bef-rcpt-pre-shft-close-full},~
 {&bef-rcpt-ord-sale-full},~
 {&bef-rcpt-ord-return-full},~
@@ -357,7 +373,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-n
 &glob petrol-receipt-codes '{&bef-rcpt-trans-cancell},~
 {&bef-rcpt-overflow},~
 {&bef-rcpt-trans-transfer},~
-{&bef-rcpt-tech-refuell}~
+{&bef-rcpt-tech-refuell},~
+{&bef-rcpt-unlock-trans}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define petrol-receipt-codes {&petrol-receipt-codes}" ).
@@ -365,6 +382,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define petrol-re
 &glob no-docum-receipt-codes '{&bef-rcpt-trans-cancell},~
 {&bef-rcpt-overflow},~
 {&bef-rcpt-trans-transfer},~
+{&bef-rcpt-unlock-trans},~
 {&bef-rcpt-annu},~
 {&bef-rcpt-pre-sale},~
 {&bef-rcpt-pre-return},~
@@ -380,6 +398,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define petrol-re
 {&bef-rcpt-pre-tech-refuell},~
 {&bef-rcpt-pre-inventory},~
 {&bef-rcpt-pre-z-rep},~
+{&bef-rcpt-pre-unlock-trans},~
 {&bef-rcpt-pre-shft-close},~
 {&bef-rcpt-ord-sale},~
 {&bef-rcpt-ord-return},~
@@ -399,6 +418,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define no-docum-
 &glob no-sale-receipt-codes '{&bef-rcpt-trans-cancell},~
 {&bef-rcpt-overflow},~
 {&bef-rcpt-trans-transfer},~
+{&bef-rcpt-unlock-trans},~
 {&bef-rcpt-tech-refuell},~
 {&bef-rcpt-annu},~
 {&bef-rcpt-inventory},~
@@ -415,6 +435,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define no-docum-
 {&bef-rcpt-pre-tech-refuell},~
 {&bef-rcpt-pre-inventory},~
 {&bef-rcpt-pre-z-rep},~
+{&bef-rcpt-pre-unlock-trans},~
 {&bef-rcpt-pre-shft-close},~
 {&bef-rcpt-ord-sale},~
 {&bef-rcpt-ord-return},~
@@ -434,6 +455,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define no-sale-r
 &glob no-d-card-receipt-codes '{&bef-rcpt-trans-cancell},~
 {&bef-rcpt-overflow},~
 {&bef-rcpt-trans-transfer},~
+{&bef-rcpt-unlock-trans},~
 {&bef-rcpt-tech-refuell},~
 {&bef-rcpt-annu},~
 {&bef-rcpt-inventory},~
@@ -451,6 +473,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define no-sale-r
 {&bef-rcpt-pre-tech-refuell},~
 {&bef-rcpt-pre-inventory},~
 {&bef-rcpt-pre-z-rep},~
+{&bef-rcpt-pre-unlock-trans},~
 {&bef-rcpt-pre-shft-close},~
 {&bef-rcpt-pre-sale},~
 {&bef-rcpt-pre-return},~
@@ -466,7 +489,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define no-sale-r
 run filwrlib_append-new-line in this-procedure ( input "&global-define no-d-card-receipt-codes {&no-d-card-receipt-codes}" ).
 
 &glob sale-out-receipt-codes '{&bef-rcpt-sale},~
-{&bef-rcpt-write-off}~
+{&bef-rcpt-write-off},~
+{&bef-rcpt-trans-cancell},~
+{&bef-rcpt-overflow},~
+{&bef-rcpt-trans-transfer},~
+{&bef-rcpt-unlock-trans}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define sale-out-receipt-codes {&sale-out-receipt-codes}" ).
@@ -485,6 +512,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sale-in-r
 {&bef-rcpt-pre-trans-cancell},~
 {&bef-rcpt-pre-overflow},~
 {&bef-rcpt-pre-trans-transfer},~
+{&bef-rcpt-pre-unlock-trans},~
 {&bef-rcpt-pre-tech-refuell},~
 {&bef-rcpt-pre-inventory},~
 {&bef-rcpt-pre-z-rep},~
@@ -538,6 +566,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define no-gds-re
 ,{&bef-rcpt-pre-trans-cancell}~
 ,{&bef-rcpt-pre-overflow}~
 ,{&bef-rcpt-pre-trans-transfer}~
+,{&bef-rcpt-pre-unlock-trans},~
 ,{&bef-rcpt-pre-tech-refuell}~
 ,{&bef-rcpt-pre-inventory}~
 ,{&bef-rcpt-pre-shft-close}~
@@ -554,6 +583,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define no-pay-re
 {&bef-rcpt-trans-cancell}~
 ,{&bef-rcpt-overflow}~
 ,{&bef-rcpt-trans-transfer}~
+,{&bef-rcpt-unlock-trans},~
 ,{&bef-rcpt-tech-refuell}~
 ,{&bef-rcpt-inventory}~
 ,{&bef-rcpt-z-rep}~
@@ -564,6 +594,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define no-pay-re
 ,{&bef-rcpt-pre-tech-refuell}~
 ,{&bef-rcpt-pre-inventory}~
 ,{&bef-rcpt-pre-z-rep}~
+,{&bef-rcpt-pre-unlock-trans},~
 ,{&bef-rcpt-pre-shft-close}~
 ,{&bef-rcpt-annu}~
 ,{&bef-rcpt-pre-annu}~
