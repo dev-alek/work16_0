@@ -130,7 +130,7 @@ tt-dis-rule-r-keeper.rule-num tt-dis-rule-r-keeper.des {&discnt-type-name} ~
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help BR-cash-pay ~
 f-cdpay-code B-ok B-no-ok BR-dis-rule f-r-keeper-sifr s-datef
-&Scoped-Define DISPLAYED-OBJECTS f-cdpay-code f-r-keeper-sifr s-datef
+&Scoped-Define DISPLAYED-OBJECTS f-cdpay-code f-r-keeper-sifr s-datef FILL-IN-cdpay-code
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -191,10 +191,16 @@ DEFINE VARIABLE s-datef AS CHARACTER FORMAT "X(256)":U
      DROP-DOWN-LIST
      SIZE 18.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE FILL-IN-cdpay-code AS CHARACTER FORMAT "X(256)":U INITIAL "Код плат. на кассе"
+     LABEL ""
+     VIEW-AS TEXT
+     SIZE 19 BY 1
+     /*FGCOLOR 15*/  NO-UNDO.
+
 DEFINE VARIABLE f-cdpay-code AS INTEGER FORMAT ">>>>9":U INITIAL 0
-     LABEL "Код плат."
+     LABEL ""
      VIEW-AS FILL-IN
-     SIZE 9.5 BY 1 TOOLTIP "Код кассового платежа в ЧУЖОЙ системе" NO-UNDO.
+     SIZE 15 BY 1 TOOLTIP "Код кассового платежа в ЧУЖОЙ системе" NO-UNDO.
 
 DEFINE VARIABLE f-r-keeper-sifr AS INTEGER FORMAT ">>>>9":U INITIAL 0
      LABEL "Идентиф-р"
@@ -251,10 +257,11 @@ DEFINE FRAME Dialog-Frame
      BR-cash-pay AT ROW 3 COL 1
      B-add-cash-pay AT ROW 3 COL 79
      B-del-cash-pay AT ROW 3 COL 89
-     f-cdpay-code AT ROW 6.27 COL 87.5 COLON-ALIGNED
-     B-ok AT ROW 7.77 COL 79
-     B-no-ok AT ROW 7.77 COL 89
-     BR-dis-rule AT ROW 9.77 COL 1
+     FILL-IN-cdpay-code AT ROW 5 COL 77.6 COLON-ALIGNED no-label
+     f-cdpay-code AT ROW 6.25 COL 80 COLON-ALIGNED no-label
+     B-ok AT ROW 7.75 COL 79
+     B-no-ok AT ROW 7.75 COL 89
+     BR-dis-rule AT ROW 9.75 COL 1
      B-del-dis-rule AT ROW 10 COL 89
      f-r-keeper-sifr AT ROW 12 COL 87.5 COLON-ALIGNED
      s-datef AT ROW 16 COL 35.5 COLON-ALIGNED
@@ -322,6 +329,11 @@ ASSIGN
 
 ASSIGN
        f-r-keeper-sifr:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+ASSIGN
+       FILL-IN-cdpay-code:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -397,11 +409,12 @@ DO:
   b-no-ok:ROW = 8
 
   .
-
+assign FILL-IN-cdpay-code:screen-value =  "Код плат. на кассе:".
 ENABLE
 b-ok
 b-no-ok
 f-cdpay-code
+FILL-IN-cdpay-code
 WITH FRAME {&FRAME-NAME}.
 APPLY "ENTRY" TO f-cdpay-code.
 
@@ -690,7 +703,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-cdpay-code f-r-keeper-sifr s-datef 
+  DISPLAY f-cdpay-code f-r-keeper-sifr s-datef FILL-IN-cdpay-code
       WITH FRAME Dialog-Frame.
   ENABLE B-exit b-quit B-Help BR-cash-pay f-cdpay-code B-ok B-no-ok BR-dis-rule 
          f-r-keeper-sifr s-datef 
@@ -861,6 +874,7 @@ HIDE
 b-ok
 b-no-ok
 f-cdpay-code
+FILL-IN-cdpay-code
 f-r-keeper-sifr
 in FRAME {&FRAME-NAME}.
 RUN openbrcash-pay IN THIS-PROCEDURE.
@@ -973,6 +987,7 @@ IN FRAME {&FRAME-NAME}
 b-no-ok
 IN FRAME {&FRAME-NAME}
 f-cdpay-code
+FILL-IN-cdpay-code
 f-r-keeper-sifr
 IN FRAME {&FRAME-NAME}
 .
@@ -1095,6 +1110,8 @@ IN FRAME {&FRAME-NAME}
 b-no-ok
 IN FRAME {&FRAME-NAME}
 f-cdpay-code
+IN FRAME {&FRAME-NAME}
+FILL-IN-cdpay-code
 IN FRAME {&FRAME-NAME}
 f-r-keeper-sifr
 IN FRAME {&FRAME-NAME}

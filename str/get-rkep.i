@@ -29,8 +29,8 @@ find first buf_cd-plu no-lock where
           buf_cd-plu.obj-type = p-obj-type
       and buf_cd-plu.obj-code = p-obj-code
       and buf_cd-plu.pos-type = {&cd-type-r-keeper}
-      and buf_cd-plu.plu-type = '':U
-      and buf_cd-plu.plu-code = ((if {1}.component then - 1 else 1 ) * {1}.sifr) no-error.
+      and buf_cd-plu.plu-type = (if {1}.component then 'modifier':U else '':U)
+      and buf_cd-plu.plu-code = (/*(if {1}.component then - 1 else 1 ) **/ {1}.sifr) no-error.
 &else
 find first buf_cd-plu no-lock where
           buf_cd-plu.obj-type = p-obj-type
@@ -81,9 +81,9 @@ else do:
   p-view-log = yes
   .
   run save-for-future in this-procedure .
-  assign
-  bc-buf = "0".
   undo  _temp-acheck, next _temp-acheck.
+/*  assign
+  bc-buf = "0".*/
 end.
 &if "{1}" = "temp-avcheck" &then
 find first temp-reasons no-lock where

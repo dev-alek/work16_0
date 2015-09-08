@@ -8,9 +8,21 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
+define temp-table temp-cd-grp no-undo like cd-grp
+field name as character
+field lft as integer
+field rgt as integer
+index pi is primary unique
+grp-code
+index lft
+lft
+index rgt
+rgt
+.
+
 DEFINE BUFFER find_cd-grp FOR ub.cd-grp.
 DEFINE BUFFER locked_cash-desk FOR ub.cash-desk.
-DEFINE BUFFER X_cd-grp FOR ub.cd-grp.
+DEFINE BUFFER X_cd-grp FOR temp-cd-grp.
 DEFINE BUFFER X_clients FOR ub.clients.
 DEFINE BUFFER X_fbr-gds-grp FOR ub.fbr-gds-grp.
 DEFINE BUFFER X_upper-fbr-gds-grp FOR ub.fbr-gds-grp.
@@ -98,6 +110,15 @@ DEFINE VARIABLE v-name AS LOGICAL NO-UNDO.
 DEFINE VARIABLE v-parent AS LOGICAL NO-UNDO.
 define variable v-rid-list as character no-undo .
 
+  define variable i as integer no-undo.
+  define variable v-count as integer no-undo.
+  define variable v-parent-id as integer no-undo.
+  define variable v-parent-right as integer no-undo.
+  define variable v-current-left as integer no-undo.
+  define variable v-current-lenth as integer no-undo.
+  define buffer t_temp-cd-grp for temp-cd-grp.
+  define buffer tc_temp-cd-grp for temp-cd-grp.
+
 define buffer pos_cd-grp for ub.cd-grp.
 
 
@@ -135,17 +156,17 @@ define buffer pos_cd-grp for ub.cd-grp.
 &Scoped-define INTERNAL-TABLES X_cd-grp X_fbr-gds-grp X_upper-fbr-gds-grp
 
 /* Definitions for BROWSE BR-rkep-grp                                   */
-&Scoped-define FIELDS-IN-QUERY-BR-rkep-grp mark-string( recid(X_cd-grp), v-rid-list) X_cd-grp.grp-code X_cd-grp.grp-name get-gparent-diff(BUFFER X_fbr-gds-grp) @ v-parent get-gname-diff(BUFFER X_fbr-gds-grp) @ v-name X_fbr-gds-grp.node-name
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-rkep-grp X_cd-grp.grp-NAME
+&Scoped-define FIELDS-IN-QUERY-BR-rkep-grp mark-string( recid(X_cd-grp), v-rid-list) X_cd-grp.grp-code X_cd-grp.name get-gparent-diff(BUFFER X_fbr-gds-grp) @ v-parent get-gname-diff(BUFFER X_fbr-gds-grp) @ v-name X_fbr-gds-grp.node-name X_cd-grp.upper-grp-code
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-rkep-grp X_cd-grp.NAME
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-rkep-grp X_cd-grp
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-rkep-grp X_cd-grp
 &Scoped-define SELF-NAME BR-rkep-grp
 &Scoped-define QUERY-STRING-BR-rkep-grp FOR EACH X_cd-grp NO-LOCK, ~
                                    FIRST X_fbr-gds-grp OUTER-JOIN where                                   X_fbr-gds-grp.obj-type = {&shop}                               AND X_fbr-gds-grp.obj-code = p-curr-obj-code                               AND X_fbr-gds-grp.out-code = X_cd-grp.grp-code, ~
-                                   FIRST X_upper-fbr-gds-grp      INDEXED-REPOSITION
+                                   FIRST X_upper-fbr-gds-grp   by lft    INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-BR-rkep-grp OPEN QUERY {&SELF-NAME} FOR EACH X_cd-grp NO-LOCK, ~
                                    FIRST X_fbr-gds-grp OUTER-JOIN where                                   X_fbr-gds-grp.obj-type = {&shop}                               AND X_fbr-gds-grp.obj-code = p-curr-obj-code                               AND X_fbr-gds-grp.out-code = X_cd-grp.grp-code, ~
-                                   FIRST X_upper-fbr-gds-grp      INDEXED-REPOSITION.
+                                   FIRST X_upper-fbr-gds-grp  by lft    INDEXED-REPOSITION .
 &Scoped-define TABLES-IN-QUERY-BR-rkep-grp X_cd-grp X_fbr-gds-grp ~
 X_upper-fbr-gds-grp
 &Scoped-define FIRST-TABLE-IN-QUERY-BR-rkep-grp X_cd-grp
@@ -304,12 +325,13 @@ DEFINE BROWSE BR-rkep-grp
   QUERY BR-rkep-grp NO-LOCK DISPLAY
       mark-string( recid(X_cd-grp), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
       X_cd-grp.grp-code COLUMN-LABEL "Код группы"  FORMAT "9999":U
-      X_cd-grp.grp-name COLUMN-LABEL "Название группы" FORMAT "X(27)":U
+      X_cd-grp.name COLUMN-LABEL "Название группы" FORMAT "X(37)":U
       get-gparent-diff(BUFFER X_fbr-gds-grp) @ v-parent COLUMN-LABEL "Г" FORMAT "+/-"
       get-gname-diff(BUFFER X_fbr-gds-grp) @ v-name COLUMN-LABEL "Н" FORMAT "+/-"
-      X_fbr-gds-grp.node-name FORMAT "X(27)":U
+      X_fbr-gds-grp.node-name FORMAT "X(30)":U
+      X_cd-grp.upper-grp-code COLUMN-LABEL "Код родителя" FORMAT "9999":U
   ENABLE
-      X_cd-grp.grp-NAME
+      X_cd-grp.NAME
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 15.25 FIT-LAST-COLUMN.
@@ -811,7 +833,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
   &table-name     = "{&first-table-in-query-{&browse-name}}"
   &label-clmn_1   = "v-id"
   &sort-clmn_1    = "X_cd-grp.grp-code"
-  &sort-clmn_2    = "X_cd-grp.grp-name"
+  &sort-clmn_2    = "X_cd-grp.name"
   &open-query     = "run OpenBr in this-procedure ( input yes, input no, input '':U)."
   &open-query-otherwise = "run OpenBr in this-procedure ( input yes, input no, input '':U)."
   &sort-column-name = "sort-column-name"
@@ -836,6 +858,72 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+
+
+
+  v-count = 0.
+  i = 0.
+  for each cd-grp no-lock where cd-grp.obj-code = p-curr-obj-code and
+                                cd-grp.obj-type = p-curr-obj-type    :
+    create temp-cd-grp.
+    buffer-copy cd-grp to temp-cd-grp
+    assign temp-cd-grp.lft = 0
+          temp-cd-grp.rgt = 0
+    .
+    if temp-cd-grp.upper-grp-code = 0 then do :
+      i = i + 1.
+      temp-cd-grp.lft = i.
+      i = i + 1.
+      temp-cd-grp.rgt = i.
+    end.
+    temp-cd-grp.name = fill("   ", temp-cd-grp.key#_one) + temp-cd-grp.grp-name.
+    /*message "id " t_temp-cd-grp.grp-code   skip "lft " t_temp-cd-grp.lft  skip "rgt " t_temp-cd-grp.rgt  .*/
+  end.
+
+
+  forever_ :
+  repeat :
+    v-parent-id = 0.
+    for each t_temp-cd-grp,
+        first tc_temp-cd-grp no-lock where tc_temp-cd-grp.upper-grp-code = t_temp-cd-grp.grp-code and
+                                           tc_temp-cd-grp.lft = 0 and
+                                           t_temp-cd-grp.rgt <> 0 by t_temp-cd-grp.rgt :
+        assign
+          v-parent-id = t_temp-cd-grp.grp-code
+          v-parent-right = t_temp-cd-grp.rgt
+        .
+    end.
+
+    if v-parent-id = 0 then leave forever_.
+
+    v-current-left = v-parent-right.
+    v-count = 0.
+    for each t_temp-cd-grp no-lock where t_temp-cd-grp.upper-grp-code = v-parent-id :
+      v-count = v-count + 1.
+    end.
+
+    v-parent-right = v-current-left + v-count * 2.
+    v-current-lenth = v-parent-right - v-current-left.
+
+    for each temp-cd-grp exclusive-lock /*where temp-cd-grp.rgt >= v-current-left*/ /*by rgt*/ :
+      if temp-cd-grp.rgt >= v-current-left then assign temp-cd-grp.rgt = temp-cd-grp.rgt + v-current-lenth.
+    end.
+
+    for each temp-cd-grp exclusive-lock /*where temp-cd-grp.lft > v-current-left*/ /*by lft*/ :
+      if temp-cd-grp.lft > v-current-left then assign temp-cd-grp.lft = temp-cd-grp.lft + v-current-lenth.
+    end.
+
+    i = v-current-left - 1.
+
+    for each t_temp-cd-grp no-lock where t_temp-cd-grp.upper-grp-code = v-parent-id :
+      assign
+        i = i + 1
+        t_temp-cd-grp.lft = i
+        i = i + 1
+        t_temp-cd-grp.rgt = i
+      .
+    end.
+  end.
 
   { gbl/getcntxt.i get }
   v-rid-list = p-rid-list.
@@ -918,9 +1006,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   { gbl/mv-clmn.i
     &browse-name = "br-rkep-grp"
     &frame-name = "{&frame-name}"
-    &ext-col = 6
+    &ext-col = 7
     &start-column = 1
-    &prev-order-column_1 = "'1,2,3,4,5,6'"
+    &prev-order-column_1 = "'1,2,3,4,5,6,7'"
     &prev-order-column-condition_1 = " true "
     }
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
@@ -987,7 +1075,7 @@ v-tab-order = "b-quit,b-mark,b-sel,b-link,b-chg,b-sch,b-print,b-help," +
               "t-batch,rs-mode,t-name,t-group," +
                "rs-sch,sch-id,sch-full_name,br-rkep-grp"
 br-rkep-grp:num-locked-columns in frame {&frame-name} = 1
-X_cd-grp.grp-name:read-only in browse br-rkep-grp = yes
+X_cd-grp.name:read-only in browse br-rkep-grp = yes
 rs-mode:RADIO-BUTTONS IN FRAME {&FRAME-NAME}
                        = "С привязкой&+" + {&comma-char} +  "+":U + {&comma-char} +
                        "Все&!" + {&comma-char} + {&all} + {&comma-char} +

@@ -1441,7 +1441,7 @@ delete object v-tth no-error.
                               "вей асдер опхохяюм й люцюгхмс &4 дкъ бнглнфмнярх онякедсчыецн сдюкемхъ" ~
                               , buf_chk-doc.doc-code ~
                               , ~{&new-line~} ~
-                              , buf_chk-doc.pay-desk ~
+                              , buf_chk-doc.obj-code ~
                               , {&prefix}obj-code)
 
       {&display-message}.

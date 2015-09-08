@@ -89,8 +89,16 @@ find first buf_cd-clu no-lock where
           buf_cd-clu.obj-type = p-obj-type
       and buf_cd-clu.obj-code = p-obj-code
       and buf_cd-clu.pos-type = {&cd-type-r-keeper}
-      and buf_cd-clu.clu-type = {&role-seller}
+      and buf_cd-clu.clu-type = 'W'
       and buf_cd-clu.clu-code = p-r-keeper-sifr no-error .
+if not available buf_cd-clu then do :
+  find first buf_cd-clu no-lock where
+            buf_cd-clu.obj-type = p-obj-type
+        and buf_cd-clu.obj-code = p-obj-code
+        and buf_cd-clu.pos-type = {&cd-type-r-keeper}
+        and buf_cd-clu.clu-type = 'M'
+        and buf_cd-clu.clu-code = p-r-keeper-sifr no-error .
+end.
 if available buf_cd-clu and
             buf_cd-clu.cli-code <> ?
         and buf_cd-clu.cli-code <> 0 then do:
@@ -103,6 +111,17 @@ if available buf_cd-clu and
   if error-status:error
   then do:
      return ?.
+  end.
+  if buf_cd-clu.clu-type = 'M' and ( v-seller-code = ? or v-seller-code = 0 ) then do :
+     v-seller-code = gbclcode-get-db-role (  input {&role-cashier}
+                                            ,input g#db-num
+                                            ,input buf_cd-clu.cli-code
+                                            ,input p-date
+                                            ,output v-s-password ) no-error .
+     if error-status:error
+     then do:
+       return ?.
+     end.
   end.
   return v-seller-code.
 end.
@@ -121,8 +140,16 @@ find first buf_cd-clu no-lock where
           buf_cd-clu.obj-type = p-obj-type
       and buf_cd-clu.obj-code = p-obj-code
       and buf_cd-clu.pos-type = {&cd-type-r-keeper}
-      and buf_cd-clu.clu-type = {&role-cashier}
+      and buf_cd-clu.clu-type = 'K'
       and buf_cd-clu.clu-code = p-r-keeper-sifr no-error .
+if not available buf_cd-clu then do :
+  find first buf_cd-clu no-lock where
+            buf_cd-clu.obj-type = p-obj-type
+        and buf_cd-clu.obj-code = p-obj-code
+        and buf_cd-clu.pos-type = {&cd-type-r-keeper}
+        and buf_cd-clu.clu-type = 'M'
+        and buf_cd-clu.clu-code = p-r-keeper-sifr no-error .
+end.
 if available buf_cd-clu and
             buf_cd-clu.cli-code <> ? then do:
   assign
@@ -135,6 +162,17 @@ if available buf_cd-clu and
   if error-status:error
   then do:
      return ?.
+  end.
+  if buf_cd-clu.clu-type = 'M' and ( v-cashier-code = ? or v-cashier-code = 0 ) then do :
+     v-cashier-code = gbclcode-get-db-role (   input {&role-seller}
+                                              ,input g#db-num
+                                              ,input buf_cd-clu.cli-code
+                                              ,input p-date
+                                              ,output v-s-password ) no-error .
+     if error-status:error
+     then do:
+       return ?.
+     end.
   end.
   return v-cashier-code.
 
@@ -417,6 +455,7 @@ _line:
                                   0.00001 * (integer(entry(1, temp-avcheck.f_time, ":":U)) * 3600 + integer (entry(2, temp-avcheck.f_time, ":":U)) * 60 )
           temp-avcheck.line-num = v-line-num + 1
           v-line-num = v-line-num + 1
+          temp-avcheck.sys_num = 0
           .
           {&count-record}.
         end.
@@ -716,7 +755,7 @@ define buffer buf_cd-doc for ub.cd-doc.
   do
   on error undo, return error return-value
   :
-    if p-file-num > 0 then do:
+   /* if p-file-num > 0 then do: */
       run save-goods in this-procedure no-error .
       if error-status:error then do:
         return error return-value .
@@ -729,7 +768,7 @@ define buffer buf_cd-doc for ub.cd-doc.
       if error-status:error then do:
         return error return-value .
       end.
-    end.
+   /* end. */
     find first buf_cd-doc exclusive-lock where
             buf_cd-doc.obj-type = p-obj-type
         and buf_cd-doc.obj-code = p-obj-code
@@ -1475,7 +1514,7 @@ define buffer buf_cd-grp        for ub.cd-grp.
       { gbl/gdsbcode.i buf_cd-plu.b-code ? v-b-code }
       /*найдем цену*/
       { gbl/bcprcex.i p-obj-type p-obj-code v-b-code 0 0 v-doc-num v-price-sale v-road-tax v-excise v-vat-pc v-slt-pc }
-      if v-price-sale <> p-price then do:
+  /*    if v-price-sale <> p-price and not (p-treetype = "M" and p-price = 0) then do:
         find first buf_goods no-lock where
                   buf_goods.gds-code = buf_cd-plu.b-code.
         /*сообщим в log что есть несовпадение цены*/
@@ -1498,7 +1537,7 @@ define buffer buf_cd-grp        for ub.cd-grp.
         p-view-log = yes
         .
 
-      end.
+      end.       */
     end.
     lll = lll + 1 .
     ll-loc = ll-loc + 1.
@@ -1842,7 +1881,8 @@ define buffer buf_cd-plu for ub.cd-plu.
       sales-man_ = get-sales-man(temp-acheck.waiter, chk-date_)
       cashier_  = get-cashier(temp-acheck.cashier, chk-date_)
       no-error .
-      if sales-man_ = ?
+          /*  message sales-man_ skip cashier_. */
+      /*if sales-man_ = ?
       or cashier_ = 0 then do:
         run write-log-and-file in p-log-handle (
                 input 1
@@ -1860,7 +1900,7 @@ define buffer buf_cd-plu for ub.cd-plu.
         .
         run save-for-future in this-procedure .
         undo _temp-acheck,  next _temp-acheck.
-      end.
+      end.*/
       _do:
       do ii = 1 to 2:
         FIND  ub.chk-doc where
