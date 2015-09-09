@@ -341,7 +341,7 @@ DEFINE BROWSE BR-rkep-gds
       X_cd-plu.charkey_two COLUMN-LABEL "М" FORMAT "X(1)":U
       X_cd-plu.plu-code COLUMN-LABEL "Идентиф-р" FORMAT "9999":U
       X_cd-plu.charkey_one COLUMN-LABEL "Название блюда!на кассе R-KEEPER" FORMAT "X(25)":U
-      X_cd-doc-line.deckey_one FORMAT ">,>>>,>>9.999":U
+      X_cd-doc-line.deckey_one COLUMN-LABEL "Цена" FORMAT ">,>>>,>>9.999":U
       get-group-name(buffer X_cd-plu) COLUMN-LABEL "Группа меню" FORMAT "X(20)":U
             WIDTH 22
       X_cd-plu.b-code COLUMN-LABEL "Бар-код!в IBS TH" FORMAT "999999999":U
@@ -1294,7 +1294,7 @@ define variable l-open-query as logical   no-undo .
         frame {&frame-name}:TITLE = title0.
       end.
     { gbl/fltopend.i
-      &where-cond = " X_cd-plu.obj-type = p-curr-obj-type and X_cd-plu.obj-code = p-curr-obj-code and X_cd-plu.pos-type = ~{&cd-type-r-keeper~} and X_cd-plu.plu-type = '':U "
+      &where-cond = " X_cd-plu.obj-type = p-curr-obj-type and X_cd-plu.obj-code = p-curr-obj-code and X_cd-plu.pos-type = ~{&cd-type-r-keeper~} "
       &dyn_where-cond = " substitute('X_cd-plu.obj-type = &1&2&1 and X_cd-plu.obj-code = &3 and X_cd-plu.pos-type = &1&4&1 and X_cd-plu.plu-type = &1&1 ' ~
                         , ~{&double-quote~}, p-curr-obj-type, p-curr-obj-code, ~{&cd-type-r-keeper~})"
       &use-ind    = "  "
@@ -1409,6 +1409,7 @@ on error undo, return error
 
   ASSIGN
   buf_cd-plu.b-code = buf_bar-code.b-code
+  buf_cd-plu.gds-code = buf_bar-code.gds-code
   buf_cd-plu.logkey_one = (v-gds-name <> buf_cd-plu.charkey_one)
   buf_cd-plu.logkey_two = (v-price-sale <> X_cd-doc-line.deckey_one)
   buf_cd-plu.logkey_three = ( v-grp-code <> buf_cd-plu.key#_two)

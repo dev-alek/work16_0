@@ -1088,14 +1088,14 @@ define variable l-open-query as logical   no-undo .
                              , ~{&double-quote~}, p-curr-obj-type, p-curr-obj-code, {&cd-type-r-keeper})"
       &use-ind    = "  "
       &by         = "  "
-      &flt-open-open-query-tail = ", FIRST X_staff outer-join NO-LOCK WHERE X_staff.obj-code = X_cd-clu.cli-code ~
-                                        and X_staff.role = entry(lookup(X_cd-clu.clu-type, v-rkep-cli-role-list), v-th-role-list) ~
+      &flt-open-open-query-tail = ", FIRST X_staff outer-join NO-LOCK WHERE X_staff.psn-code = X_cd-clu.cli-code ~
+                                        /*and X_staff.role = entry(lookup(X_cd-clu.clu-type, v-rkep-cli-role-list), v-th-role-list)*/ ~
                                         and X_staff.db-num = v-db-num ~
                                         and X_staff.date-end = {&end-of-age}, ~
                                   first X_clients outer-join no-lock where X_clients.obj-type = ~{&prs~} AND ~
                                        X_clients.obj-code  = X_staff.psn-code "
-      &flt-open-dyn_open-query-tail = " substitute(', FIRST X_staff outer-join NO-LOCK WHERE X_staff.obj-code = X_cd-clu.cli-code ~
-                                        and X_staff.role = entry(lookup(X_cd-clu.clu-type, &1&2&1), &1&3&1) ~
+      &flt-open-dyn_open-query-tail = " substitute(', FIRST X_staff outer-join NO-LOCK WHERE X_staff.psn-code = X_cd-clu.cli-code ~
+                                        /*and X_staff.role = entry(lookup(X_cd-clu.clu-type, &1&2&1), &1&3&1)*/ ~
                                         and X_staff.db-num = &4 ~
                                         and X_staff.date-end = &5, ~
                                   first X_clients outer-join no-lock where X_clients.obj-type = &1&6&1 AND ~
@@ -1144,14 +1144,14 @@ define variable l-open-query as logical   no-undo .
                              , ~{&double-quote~}, p-curr-obj-type, p-curr-obj-code, {&cd-type-r-keeper})"
         &use-ind    = "  "
         &by         = "  "
-        &flt-open-open-query-tail = ", FIRST X_staff outer-join NO-LOCK WHERE X_staff.obj-code = X_cd-clu.cli-code ~
-                                              and X_staff.role = entry(lookup(X_cd-clu.charkey_one, v-rkep-cli-role-list), v-th-role-list) ~
+        &flt-open-open-query-tail = ", FIRST X_staff outer-join NO-LOCK WHERE X_staff.psn-code = X_cd-clu.cli-code ~
+                                              /*and X_staff.role = entry(lookup(X_cd-clu.charkey_one, v-rkep-cli-role-list), v-th-role-list)*/ ~
                                               and X_staff.db-num = v-db-num ~
                                               and X_staff.date-end = {&end-of-age}, ~
                                         first X_clients outer-join no-lock where X_clients.obj-type = ~{&prs~} AND ~
                                               X_clients.obj-code  = X_staff.psn-code "
-        &flt-open-dyn_open-query-tail = " substitute(' , FIRST X_staff outer-join NO-LOCK WHERE X_staff.obj-code = X_cd-clu.cli-code ~
-                                              and X_staff.role = entry(lookup(X_cd-clu.charkey_one, &1&2&1), &1&3&1) ~
+        &flt-open-dyn_open-query-tail = " substitute(' , FIRST X_staff outer-join NO-LOCK WHERE X_staff.psn-code = X_cd-clu.cli-code ~
+                                              /*and X_staff.role = entry(lookup(X_cd-clu.charkey_one, &1&2&1), &1&3&1)*/ ~
                                               and X_staff.db-num = &4 ~
                                               and X_staff.date-end = &5, ~
                                         first X_clients outer-join no-lock where X_clients.obj-type = &1&6&1 AND ~
@@ -1517,6 +1517,7 @@ FUNCTION get-crole-diff RETURNS LOGICAL
     Notes:
 ------------------------------------------------------------------------------*/
 IF NOT AVAILABLE loc-staff THEN RETURN YES.
+RETURN NO.
 /* Function return value. */
 END FUNCTION.
 

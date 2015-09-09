@@ -142,14 +142,14 @@ _gds-obj:
     FOR EACH ub.gds-obj WHERE
              ub.gds-obj.obj-type = {&shop} AND
              ub.gds-obj.obj-code = i-obj-code :
-   /* if v-is-restaurant then do:
+    if v-is-restaurant then do:
       find first buf_fbr-gds-obj no-lock where
                  buf_fbr-gds-obj.obj-type = {&shop}
              AND buf_fbr-gds-obj.obj-code = i-obj-code
              AND buf_fbr-gds-obj.gds-code = ub.gds-obj.gds-code no-error .
       if not available buf_fbr-gds-obj then
       NEXT _gds-obj.
-    end. */
+    end. 
 
     assign
       v-count = v-count + 1
@@ -261,14 +261,14 @@ v-count = 0.
 
 _gds-list:
 FOR EACH gds-list :
-    /*if v-is-restaurant then do:
+    if v-is-restaurant then do:
       find first buf_fbr-gds-obj no-lock where
                  buf_fbr-gds-obj.obj-type = {&shop}
              AND buf_fbr-gds-obj.obj-code = i-obj-code
              AND buf_fbr-gds-obj.gds-code = gds-list.gds-code no-error .
       if not available buf_fbr-gds-obj
       then NEXT _gds-list.
-    end.*/
+    end.
     assign
     v-count = v-count + 1.
     if v-count modulo 10 = 0 then do:

@@ -588,7 +588,7 @@ on error undo, return error
   err-file = bat-file
   substring( err-file, length(err-file) - 3, 4 ) = ".err"
   out-file = bat-file
-  substring( out-file, length(out-file) - 1, 2 ) = ".d"
+  substring( out-file, length(out-file) - 3, 4 ) = ".d"
   .
   OS-DELETE value(err-file).
   OS-DELETE value(out-file).

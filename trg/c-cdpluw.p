@@ -48,6 +48,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       and ub.c-cd-plu.corr-user-name = {&nts-user}
       )   /*из УБД - записи рожденные СПН*/
   then do:
+    if ub.c-cd-plu.gds-code > 0 then
     run str/callnews.p
       (input {&table_c-cd-plu}
       ,input (buffer ub.c-cd-plu:handle)

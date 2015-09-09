@@ -51,7 +51,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
 
-  if not g#news then do:
+  /*if not g#news then do:
     { gbl/objdbnum.i ub.cd-clu.obj-type ub.cd-clu.obj-code v-db-num }
     if v-db-num <> g#db-num then do:
       message
@@ -60,7 +60,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       view-as alert-box .
       undo main-block, return error.
     end.
-  end.
+  end.*/
 
   /* посылаем команду на удаление товара на весах */
   if not g#news then do:
@@ -86,7 +86,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     buf_c-cd-clu.corr-date          = v-date
     buf_c-cd-clu.is-del             = yes
     .
-    create buf_c-cash-desk.
+    /*create buf_c-cash-desk.
     buffer-copy buf_c-cd-clu
     using
     obj-code
@@ -101,7 +101,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     buf_c-cash-desk.action               = integer({&hn-delete})
     buf_c-cash-desk.subject              = {&table_cd-clu}
     buf_c-cash-desk.cash-num              = 0
-    .
+    .*/
   end.
   if g#oxml = yes
   then do:

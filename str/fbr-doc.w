@@ -3959,6 +3959,11 @@ case p-mode:
                     v-fbr-doc-line-rec = recid (buf_comp_fbr-line)
                     v-fbr-doc-rep-rec  = ?
                 .
+                get next br-comp .
+                if available buf_comp_fbr-line then do :
+                    v-fbr-doc-line-rec = recid (buf_comp_fbr-line) .
+                    get prev br-comp .
+                end.   
                 if p-mode = "all"
                 then do:
                     run fill-del-list in this-procedure (

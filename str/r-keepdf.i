@@ -36,7 +36,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 &glob all-files      "control,menu,modify,money,personal,reasons,charges,acheck,adcheck,apcheck,archeck,avcheck,categ":U
 &glob all-used-files "control,menu,modify,money,personal,reasons,charges,acheck,adcheck,apcheck,archeck,avcheck":U
-&glob chk-used-files "control,reasons,acheck,adcheck,apcheck,archeck,avcheck":U
+&glob chk-used-files "control,menu,reasons,acheck,adcheck,apcheck,archeck,avcheck":U
 &glob data-field-files  "acheck,avcheck,control"
 &endif
 

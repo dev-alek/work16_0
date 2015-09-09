@@ -65,11 +65,12 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   case-sensitive
   save result in v-changes.
   if trim(replace(replace(v-changes, 'to-del', ''), 'to-send', '':U), {&comma-char}) = '':U then return.
-  run str/callnews.p (  input {&table_cd-plu}
-                      ,input (buffer ub.cd-plu:handle)
-                    ) no-error .
-  if error-status:error then undo, return error return-value  .
-
+  if ub.cd-plu.gds-code > 0 then do :
+    run str/callnews.p (  input {&table_cd-plu}
+                        ,input (buffer ub.cd-plu:handle)
+                      ) no-error .
+    if error-status:error then undo, return error return-value  .
+  end.
 
   if not g#news then do:
     run cur-time in this-procedure(output v-date, output v-time).
