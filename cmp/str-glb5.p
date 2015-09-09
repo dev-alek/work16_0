@@ -1876,6 +1876,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-stts-
 { cmp/cr-prep.i 1 esys-dm-oracle-retail   3    "Oracle Retail"                 3  "Oracle Retail"          }
 { cmp/cr-prep.i 1 esys-dm-CDash           4    "Не архивировать(Панель Руководителя;DKLink)"  4  "No arj(Commanders DashBoard;DKLink)"    }
 { cmp/cr-prep.i 1 esys-dm-exite-edi       5    "Exite-EDI"                                    5  "Exite-EDI"              }
+{ cmp/cr-prep.i 1 esys-dm-contour-edi     9    "Контур.EDI"                                   9  "Сontour.EDI"            }
 
 &glob esys-dm-list '~
 {&bef-esys-dm-ordinal}~
@@ -1883,6 +1884,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-stts-
 ,{&bef-esys-dm-oracle-retail}~
 ,{&bef-esys-dm-CDash}~
 ,{&bef-esys-dm-exite-edi}~
+,{&bef-esys-dm-contour-edi}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-list {&esys-dm-list}" ).
@@ -1893,6 +1895,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-l
 ,{&bef-esys-dm-oracle-retail-full}~
 ,{&bef-esys-dm-CDash-full}~
 ,{&bef-esys-dm-exite-edi-full}~
+,{&bef-esys-dm-contour-edi-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-list-full {&esys-dm-list-full}" ).
