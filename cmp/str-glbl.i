@@ -6542,7 +6542,7 @@ end.
 &global-define alc-check-price-full '{&bef-alc-check-price-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 59ca1604305e, 148, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7243,7 +7243,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-rt-trn-doc_boss '{&bef-attr-rt-trn-doc_boss}':U
 &global-define bef-attr-gds-ref gds-ref
 &global-define attr-gds-ref '{&bef-attr-gds-ref}':U
-&global-define bef-prop-list-attr-gds-ref dif-nam1,dif-nam2,dpl-off,dif-pdbc,pbc-veto,tnvedimp,dfltggrp,gds-copy,gdsscrvw,unq-artc,is-scgb
+&global-define bef-prop-list-attr-gds-ref dif-nam1,dif-nam2,dpl-off,dif-pdbc,pbc-veto,tnvedimp,shema-foto,dfltggrp,gds-copy,gdsscrvw,unq-artc,is-scgb
 &global-define prop-list-attr-gds-ref '{&bef-prop-list-attr-gds-ref}':U
 &global-define bef-attr-gds-ref_dif-nam1 dif-nam1
 &global-define attr-gds-ref_dif-nam1 '{&bef-attr-gds-ref_dif-nam1}':U
@@ -7257,6 +7257,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-gds-ref_pbc-veto '{&bef-attr-gds-ref_pbc-veto}':U
 &global-define bef-attr-gds-ref_tnvedimp tnvedimp
 &global-define attr-gds-ref_tnvedimp '{&bef-attr-gds-ref_tnvedimp}':U
+&global-define bef-attr-gds-ref_shema-foto shema-foto
+&global-define attr-gds-ref_shema-foto '{&bef-attr-gds-ref_shema-foto}':U
 &global-define bef-attr-gds-ref_dfltggrp dfltggrp
 &global-define attr-gds-ref_dfltggrp '{&bef-attr-gds-ref_dfltggrp}':U
 &global-define bef-attr-gds-ref_gds-copy gds-copy
@@ -7824,9 +7826,9 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU':U
 &global-define str-glbl_vss-revision 'Revision':U
-&global-define str-glbl2_vss-revision 'Revision':U
+&global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
-&global-define str-glbl4_vss-revision 'Revision':U
-&global-define str-glbl5_vss-revision 'Revision':U
-&global-define str-glblt_vss-revision 'Revision: 59ca1604305e, 148, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 4378eb070905, 246, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 4378eb070905, 246, rls ':U
+&global-define str-glblt_vss-revision 'Revision':U
 &endif
