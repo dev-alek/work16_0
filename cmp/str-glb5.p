@@ -2041,6 +2041,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sc-gds-de
 
 /* Атрибуты заказа строки */
 { cmp/cr-prep.i 1 ordlineattr-cli-qnty    "cycle-cli-qnty"  " "  "cycle-cli-qnty"     }
+{ cmp/cr-prep.i 1 ordlineattr-min-stock   "min-stock"       " "  "cycle-cli-qnty"     }
+{ cmp/cr-prep.i 1 ordlineattr-gds-way     "gds-way"         " "  "cycle-cli-qnty"     }
 
 
 { cmp/cr-prep.i 1 wth-qnty-sum       "=sum"         "=Сумма" "=sum"  "=Sum" }
@@ -2551,6 +2553,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-line-
 &glob edi-line-ordrsp-name entry (lookup (~~~~~~~{&edi-line-ordrsp-code}, {&edi-line-ordrsp-list}) + 1, ',' + {&edi-line-ordrsp-list-full})
 run filwrlib_append-new-line in this-procedure ( input "&global-define edi-line-ordrsp-name {&edi-line-ordrsp-name}" ).
 
+/* Атрибуты сезона */
+{ cmp/cr-prep.i 1 seaattr-obj               sea-obj             "Объект сезона"           sea-obj             "Object of season"     }
+{ cmp/cr-prep.i 1 gdsseaattr-season-coef    gdssea-season-coef  "Коэф. увеличения спроса" gdssea-season-coef  "Coeff. of season"     }
+{ cmp/cr-prep.i 1 sea-global                sea-global          "глобальный"              sea-global          "global"               }
+{ cmp/cr-prep.i 1 sea-local                 sea-local           "локальный"               sea-local            "local"               }
 
 
 run filwrlib_num-lines-get in this-procedure
