@@ -1825,6 +1825,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edoc-stts
 { cmp/cr-prep.i 1 edi-recadv      9    "ПН отправлена"       9  "trn send"     }
 { cmp/cr-prep.i 1 edi-recadv-sts  11   "ПН получена"         11 "trn get"      }
 { cmp/cr-prep.i 1 edi-err         99   "Отказ"               99 "error"        }
+{ cmp/cr-prep.i 1 edi-orders-deliv    12   "Доставлен"       12 "delivered"        }
+{ cmp/cr-prep.i 1 edi-crit-err        13   "Ошибка"          13 "criterror"        }
 
 /* Состояние заказа (ord-int2)  */
 { cmp/cr-prep.i 1 edi-return     1    "вернулся"              1 "return"     }
@@ -1842,7 +1844,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edoc-stts
 {&bef-edi-desadv-sts},~
 {&bef-edi-recadv},~
 {&bef-edi-recadv-sts},~
-{&bef-edi-err}'
+{&bef-edi-err},~
+{&bef-edi-orders-deliv},~
+{&bef-edi-crit-err}'
 
 &glob edi-spis-f '{&bef-edi-empty-full},~
 {&bef-edi-orders-full},~
@@ -1855,9 +1859,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edoc-stts
 {&bef-edi-desadv-sts-full},~
 {&bef-edi-recadv-full},~
 {&bef-edi-recadv-sts-full},~
-{&bef-edi-err-full}'
+{&bef-edi-err-full},~
+{&bef-edi-orders-deliv-full},~
+{&bef-edi-crit-err-full}'
 
-&glob edi-spis-color '14,12,?,14,?,?,10,?,?,?,?,4'
+&glob edi-spis-color '14,12,?,14,?,?,10,?,?,?,?,4,10,4'
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define edi-spis {&edi-spis}" ).
 run filwrlib_append-new-line in this-procedure ( input "&global-define edi-spis-e {&edi-spis-e}" ).
