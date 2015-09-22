@@ -3745,7 +3745,13 @@ end.
 &global-define attr-esys-ftp-path-out '{&bef-attr-esys-ftp-path-out}':U
 &global-define bef-attr-esys-save-oxml-pck save-oxml-pck
 &global-define attr-esys-save-oxml-pck '{&bef-attr-esys-save-oxml-pck}':U
-&global-define ext-system-attr-list 'need-gen-new-xpack,FTP,Login,Password,Path,IN-dir,OUT-dir,save-oxml-pck':u
+&global-define bef-attr-esys-no-sent-ftp no-sent-ftp
+&global-define attr-esys-no-sent-ftp '{&bef-attr-esys-no-sent-ftp}':U
+&global-define bef-attr-esys-gln-net gln-net
+&global-define attr-esys-gln-net '{&bef-attr-esys-gln-net}':U
+&global-define bef-attr-esys-gln-provider gln-provider
+&global-define attr-esys-gln-provider '{&bef-attr-esys-gln-provider}':U
+&global-define ext-system-attr-list 'need-gen-new-xpack,FTP,Login,Password,Path,IN-dir,OUT-dir,save-oxml-pck,no-sent-ftp,gln-net,gln-provider':u
 &global-define bef-trdcattr-hold-part-code hold-part-code
 &global-define trdcattr-hold-part-code '{&bef-trdcattr-hold-part-code}':U
 &global-define bef-trdcattr-dov dov
@@ -5903,6 +5909,14 @@ end.
 &global-define edi-err '{&bef-edi-err}':U
 &global-define bef-edi-err-full Отказ
 &global-define edi-err-full '{&bef-edi-err-full}':U
+&global-define bef-edi-orders-deliv 12
+&global-define edi-orders-deliv '{&bef-edi-orders-deliv}':U
+&global-define bef-edi-orders-deliv-full Доставлен
+&global-define edi-orders-deliv-full '{&bef-edi-orders-deliv-full}':U
+&global-define bef-edi-crit-err 13
+&global-define edi-crit-err '{&bef-edi-crit-err}':U
+&global-define bef-edi-crit-err-full Ошибка
+&global-define edi-crit-err-full '{&bef-edi-crit-err-full}':U
 &global-define bef-edi-return 1
 &global-define edi-return '{&bef-edi-return}':U
 &global-define bef-edi-return-full вернулся
@@ -5911,12 +5925,12 @@ end.
 &global-define edi-diff '{&bef-edi-diff}':U
 &global-define bef-edi-diff-full разница
 &global-define edi-diff-full '{&bef-edi-diff-full}':U
-&global-define edi-spis '0,1,2,3,4,5,6,7,8,9,11,99'
+&global-define edi-spis '0,1,2,3,4,5,6,7,8,9,11,99,12,13'
 &global-define edi-spis-e 
-&global-define edi-spis-f ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ'
-&global-define edi-spis-color '14,12,?,14,?,?,10,?,?,?,?,4'
-&global-define edi-stts-color entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99') , '14,12,?,14,?,?,10,?,?,?,?,4')
-&global-define edi-stts-name entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99') , ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ')
+&global-define edi-spis-f ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ,Доставлен,Ошибка'
+&global-define edi-spis-color '14,12,?,14,?,?,10,?,?,?,?,4,10,4'
+&global-define edi-stts-color entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99,12,13') , '14,12,?,14,?,?,10,?,?,?,?,4,10,4')
+&global-define edi-stts-name entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99,12,13') , ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ,Доставлен,Ошибка')
 &global-define bef-esys-dm-ordinal 0
 &global-define esys-dm-ordinal '{&bef-esys-dm-ordinal}':U
 &global-define bef-esys-dm-ordinal-full Как в СПН
@@ -7848,7 +7862,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 3ec8c04dde00, 238, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 4378eb070905, 246, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 886e88d5d071, 255, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: e5ab029c9ffa, 257, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: e5ab029c9ffa, 257, rls ':U
 &global-define str-glblt_vss-revision 'Revision: db1f34f92e19, 253, rls ':U
 &endif
