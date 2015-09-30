@@ -1,5 +1,6 @@
 
 
+
 /*
 $Revision: $
 $Author$
@@ -30,7 +31,7 @@ define input parameter p-tog-raz        as logical no-undo.
 define input parameter p-tog-uchet      as logical no-undo.
 define input parameter p-tog-prod      as logical no-undo.
 
- 
+{ rep/r-pychk0.i defalgo }
 { cmp/str-glbl.i }
 { cmp/r-page1.i }
 { cmp/r-pril.i new }
@@ -224,8 +225,12 @@ procedure chk-calc:
     v-chk-doc-code= chk-doc.doc-code.
     v-prod = no. 
     
-    
-    for each  chk-gds-pay where chk-gds-pay.doc-code = v-chk-doc-code no-lock,
+      
+            
+            
+            
+    for each  chk-gds-pay no-lock  where chk-gds-pay.doc-code = v-chk-doc-code 
+    and  chk-gds-pay.algo-num = {&current-algo-1} ,
         first ub.bar-code where bar-code.b-code =  chk-gds-pay.b-code no-lock
         break by chk-gds-pay.b-code :
             
@@ -352,7 +357,7 @@ end case.
 
          
                                                            
-        if first-of(chk-gds-pay.b-code) then 
+        if first-of(chk-gds-pay.b-code) then  
         do : 
             if not can-find(first help-chk where  help-chk.doc-code = chk-gds-pay.doc-code and 
                 help-chk.group-chk = v-group-chk) then 
@@ -368,7 +373,7 @@ end case.
 temp-chk.srchk-kol-tov = temp-chk.qnty / temp-chk.doc-qnty.
 temp-chk.srchk-sum = temp-chk.sum-unbase / temp-chk.doc-qnty.
 temp-chk.srchk-base-sum = temp-chk.sum-base / temp-chk.doc-qnty.
-temp-chk.srchk-kol-tov-pokup = temp-chk.qnty          / temp-chk.doc-qnty.
+temp-chk.srchk-kol-tov-pokup = temp-chk.pok-qnty          / temp-chk.doc-qnty.
 
 
 if p-tog-prod = yes then 
@@ -397,6 +402,7 @@ do:
     end.
                                      
         if v-prod = no then  buf-qnty-temp-chk.doc-qnty = buf-qnty-temp-chk.doc-qnty  + (if ub.chk-doc.chk-type = integer({&rcpt-return}) then 0 else 1).
+
     v-prod = yes. 
             
 end.
@@ -404,16 +410,14 @@ else do:
     
 
   if v-prod = no then  obj-temp-chk.doc-qnty = obj-temp-chk.doc-qnty  + (if ub.chk-doc.chk-type = integer({&rcpt-return}) then 0 else 1).
-
     v-prod = yes. 
     
     end.
-    
 
         temp-chk.srchk-kol-tov = temp-chk.qnty / temp-chk.doc-qnty.
         temp-chk.srchk-sum = temp-chk.sum-unbase / temp-chk.doc-qnty.
         temp-chk.srchk-base-sum = temp-chk.sum-base / temp-chk.doc-qnty.
-        temp-chk.srchk-kol-tov-pokup = temp-chk.qnty          / temp-chk.doc-qnty.
+        temp-chk.srchk-kol-tov-pokup = temp-chk.pok-qnty          / temp-chk.doc-qnty.
     
 
     
@@ -451,6 +455,23 @@ procedure create-fill-tt-chk:
             obj-temp-chk.grp-code = 0. 
         end.
 
+         run rep/rpychk0.p (input "r-shftc2"
+                        ,input obj-list.obj-type
+                        ,input obj-list.obj-code
+                        ,input ?                    /*p-date-from*/
+                        ,input ?                    /*p-date-to*/
+                        ,input X-date-start         /*p-shift-date-from*/
+                        ,input X-date-end           /*p-shift-date-to*/
+                        ,input 1                    /*p-shift-num-start*/
+                        ,input 99                   /*p-shift-num-end*/
+                        ,input ?                    /*p-inkas-code*/
+                        ) no-error.
+
+         if error-status:error then
+         do:
+             message error-status:get-message(1) view-as alert-box.
+         end.
+
 
 
         if x-TOG-Shift = yes then
@@ -484,8 +505,8 @@ procedure create-fill-tt-chk:
             end.
         end. /* else if x-TOG-Shift = no */
         if   p-tog-prod = no and p-tog-raz  = yes then run transform-tt-level ( input obj-list.obj-code, input obj-list.obj-type) . /* Преобразование созданной выше chk-calc в таблицу с уровнями и итогами по каждому уровню. */
-        if  p-tog-prod = yes and p-tog-raz  = yes then run prod-level ( input obj-list.obj-code, input obj-list.obj-type).
-
+        if  p-tog-prod = yes and p-tog-raz  = yes then  run prod-level ( input obj-list.obj-code, input obj-list.obj-type).
+           
     end. /* for each obj-list */ 
 
     if p-tog-prod = no and p-tog-raz = no  then run transform-tt-level( input 0, input '').
@@ -691,7 +712,7 @@ procedure proc-create-HTML:
             '         <td style="border: none"></td>' skip
             '         <td style="border: none"></td>' skip
             '         <td style="border: none"></td>' skip
-            '         <td style="border: none"></td>' skip 
+            '         <td style="border: none"></td>' skip
             '         <td style="border: none"></td>' skip
             '         <td style="border: none"></td>' skip
             '         <td style="border: none"></td>' skip
@@ -1059,7 +1080,7 @@ procedure transform-tt-level  :
 /*                    temp-chk.gds-code = string(temp-chk.grp-code) /* Вывод в подитоговой строке для ГРУПП ТОВАРОВ кода этих самых групп (1-е поле таблицы Excel) */*/
                 .
             end.
-
+  
             assign
                 v-eff-doc-qnty = v-eff-doc-qnty + temp-chk.qnty  /* Количество */
                 v-object-sum   = v-object-sum + temp-chk.sum-unbase        /* Сумма без скидки */
@@ -1081,36 +1102,34 @@ procedure transform-tt-level  :
                     buftt_temp-chk.sum-base   = v-tot-r-b                     /* Сумма со скидкой */
                     buftt_temp-chk.pok-qnty   = v-pok-qnty                      /* количество покупок*/
                     buftt_temp-chk.grp-lvl    = v-cur-lvl + 1       /* Уровень группы (относительный, как порядок следования групп: 1, 2, ...) */
-/*                    buftt_temp-chk.gds-name   = v-gds-name                   /* Наименование uруппы товаров */*/
+                    buftt_temp-chk.gds-name   = v-gds-name                   /* Наименование uруппы товаров */
                     buftt_temp-chk.obj-type   = v-obj-type
                     buftt_temp-chk.obj-code   = v-obj-code
                     .
                 
                 for each help-chk where help-chk.group-chk = temp-chk.grp-code :
-
+                         
                     buftt_temp-chk.doc-qnty      = buftt_temp-chk.doc-qnty + 1.
-
-                    if not can-find(first buf2_help-chk where  buf2_help-chk.doc-code = help-chk.doc-code and
-                        buf2_help-chk.group-chk = v-upper-code) then
+                       
+                    if not can-find(first buf2_help-chk where  buf2_help-chk.doc-code = help-chk.doc-code and 
+                        buf2_help-chk.group-chk = v-upper-code) then 
                     do:
-                        create buf2_help-chk.
+                        create buf2_help-chk.             
                         buf2_help-chk.doc-code = help-chk.doc-code.
                         buf2_help-chk.group-chk = v-upper-code.
-                    end.
-
+                    end.     
+                   
                 end.
-         
+      
                 buftt_temp-chk.srchk-kol-tov = buftt_temp-chk.qnty / buftt_temp-chk.doc-qnty.
                 buftt_temp-chk.srchk-sum     = buftt_temp-chk.sum-unbase / buftt_temp-chk.doc-qnty.
                 buftt_temp-chk.srchk-base-sum = buftt_temp-chk.sum-base / buftt_temp-chk.doc-qnty.
-                buftt_temp-chk.srchk-kol-tov-pokup = buftt_temp-chk.qnty   / buftt_temp-chk.doc-qnty.
-                
-                
-     
-     
-            end.
+                buftt_temp-chk.srchk-kol-tov-pokup = buftt_temp-chk.pok-qnty  / buftt_temp-chk.doc-qnty.
 
-          
+         
+
+            end.
+            
             
         end. /* temp-chk */
           v-cur-lvl = v-cur-lvl + 1.
@@ -1124,7 +1143,7 @@ procedure transform-tt-level  :
     obj-temp-chk.srchk-kol-tov       = obj-temp-chk.qnty / obj-temp-chk.doc-qnty.
     obj-temp-chk.srchk-sum           = obj-temp-chk.sum-unbase / obj-temp-chk.doc-qnty.
     obj-temp-chk.srchk-base-sum      = obj-temp-chk.sum-base / obj-temp-chk.doc-qnty.
-    obj-temp-chk.srchk-kol-tov-pokup = obj-temp-chk.qnty  / obj-temp-chk.doc-qnty.
+    obj-temp-chk.srchk-kol-tov-pokup = obj-temp-chk.pok-qnty  / obj-temp-chk.doc-qnty.
 
 end procedure.
 
@@ -1137,6 +1156,10 @@ procedure tt-print-line:
     define input parameter v-print-lvl as integer no-undo.
 define variable v-display as character no-undo.  
     define buffer buf-grp_temp-chk for temp-chk.
+
+
+ 
+
 
     for each buf-grp_temp-chk where
         buf-grp_temp-chk.upper-code = v-upper-code and
@@ -1213,9 +1236,12 @@ define variable v-display as character no-undo.
 
 end procedure.
 
-    
-
-
+/*    procedure prod-level-grp:                            */
+/*            define input parameter v-obj-code as integer.*/
+/*    define input parameter v-obj-type as char.           */
+/*                                                         */
+/*                                                         */
+/*        end.                                             */
 
 procedure prod-level: 
     define input parameter v-obj-code as integer.
@@ -1331,8 +1357,8 @@ procedure prod-level:
                     prod-temp-chk.srchk-kol-tov = prod-temp-chk.qnty / prod-temp-chk.doc-qnty.
                 prod-temp-chk.srchk-sum           = prod-temp-chk.sum-unbase / prod-temp-chk.doc-qnty.
                 prod-temp-chk.srchk-base-sum      = prod-temp-chk.sum-base / prod-temp-chk.doc-qnty.
-                prod-temp-chk.srchk-kol-tov-pokup = prod-temp-chk.qnty  / prod-temp-chk.doc-qnty.
-        
+                prod-temp-chk.srchk-kol-tov-pokup = prod-temp-chk.pok-qnty  / prod-temp-chk.doc-qnty.
+    
       
     
                 prod-temp-chk.srchk-base-uch =  prod-temp-chk.sum-base * 100 / obj-temp-chk.sum-base.
@@ -1346,10 +1372,7 @@ procedure prod-level:
             
         end. /* temp-chk */
  
- 
- 
- 
-        
+       
     
     obj-temp-chk.srchk-uch = 100.
     obj-temp-chk.srchk-base-uch = 100.
@@ -1357,7 +1380,7 @@ procedure prod-level:
     obj-temp-chk.srchk-kol-tov       = obj-temp-chk.qnty / obj-temp-chk.doc-qnty.
     obj-temp-chk.srchk-sum           = obj-temp-chk.sum-unbase / obj-temp-chk.doc-qnty.
     obj-temp-chk.srchk-base-sum      = obj-temp-chk.sum-base / obj-temp-chk.doc-qnty.
-    obj-temp-chk.srchk-kol-tov-pokup = obj-temp-chk.qnty  / obj-temp-chk.doc-qnty.
+    obj-temp-chk.srchk-kol-tov-pokup = obj-temp-chk.pok-qnty  / obj-temp-chk.doc-qnty.
           
   
 end procedure.
