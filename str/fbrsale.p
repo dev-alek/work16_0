@@ -50,12 +50,6 @@ define variable v-cntxt-userid as character no-undo .
 { str/trdcalib.i }
 { str/fbrattr.i  }
 { str/fbr-log.i clear }
-define temp-table tt-rsrv-err no-undo
-  field artic like ub.goods.artic
-  field rsrv-qnty like ub.gds-obj.fact-qnty
-  field req-qnty like ub.gds-obj.fact-qnty 
-.
-define stream stm.
 
 define temp-table temp_fbr-objects no-undo
     field obj-type  as character
@@ -535,11 +529,12 @@ on error undo, return error
                   output stream stm to value (v-fbr-tt-log-file-name).
                   for each tt-rsrv-err no-lock break by tt-rsrv-err.artic:  
                     if last-of (tt-rsrv-err.artic) and tt-rsrv-err.artic <> "" then do:
-                      put stream stm unformatted substitute("Ошибка при резервировании товара артикул &1: требуемое кол-во &2 зарезервировано &3&4"
+                      put stream stm unformatted substitute("Ошибка при резервировании товара артикул &1 &5: требуемое кол-во &2 зарезервировано &3&4"
                                           , tt-rsrv-err.artic
                                           , tt-rsrv-err.req-qnty
                                           , tt-rsrv-err.rsrv-qnty
                                           , {&new-line}
+                                          , tt-rsrv-err.gds-name
                                           ).
                     end.
                   end.

@@ -52,13 +52,6 @@ do
 on error undo, return error
 :
 
-    define temp-table tt-rsrv-err no-undo
-      field artic like ub.goods.artic
-      field rsrv-qnty like ub.gds-obj.fact-qnty
-      field req-qnty like ub.gds-obj.fact-qnty 
-    .
-    define stream stm.
-    
     define variable v-required-qnty     like doc-line.doc-qnty  no-undo.    /* требуемое для резервирования - важна точность */
     define variable v-reserved-qnty     like doc-line.doc-qnty  no-undo.    /* количество для резервирования */
     define variable v-store-qnty                 as decimal      no-undo.
@@ -238,7 +231,9 @@ on error undo, return error
                 then do: 
                   create tt-rsrv-err.
                   assign
-                    tt-rsrv-err.artic = buf_goods.artic.
+                    tt-rsrv-err.artic = buf_goods.artic
+                    tt-rsrv-err.gds-name = buf_goods.gds-name
+                    .
                 end.
               assign 
                 tt-rsrv-err.rsrv-qnty = tt-rsrv-err.rsrv-qnty + v-reserved-qnty
