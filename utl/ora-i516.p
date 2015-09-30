@@ -295,7 +295,7 @@ for each  temp_trn-doc :
       end.
    end.
 
-   if not (temp_trn-doc.cli-type = {&cmp} or temp_trn-doc.cli-type = {&prs}) 
+   if not (temp_trn-doc.cli-type = {&cmp} or temp_trn-doc.cli-type = {&prs} or temp_trn-doc.cli-type = {&stock} or temp_trn-doc.cli-type = {&shop}) /*для oracle вообще не присылают, значит из tsd*/ 
    then do: 
       run who-cli-ora in this-procedure (
           input  temp_trn-doc.cli-code ,
@@ -599,7 +599,7 @@ assign
         parrec-doc = recid (new_trn-doc)
     .
     
-  if is-tsd
+  if is-tsd and (new_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or new_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) 
     then 
   do:
     find first ub.shift-obj no-lock
@@ -1118,7 +1118,7 @@ end.
             end.
             end.
 
-            if v-ext-doc-type = {&TDEDT_Ras_Vnesh} then do:
+            if v-ext-doc-type = {&TDEDT_Ras_Vnesh} and not is-tsd then do:
             /* "Создание НАКЛ- " + caps({&expense})) . */
             run clos-trn in this-procedure (new_trn-doc.doc-code) no-error .
                 if error-status:error then do :
@@ -1137,7 +1137,6 @@ end.
                       undo, return error v-end-message.
                   end.
                 end.
-
             run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
                 if error-status:error then do :
                    v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .

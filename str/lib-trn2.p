@@ -2118,6 +2118,21 @@ procedure lib-trn2_filinvbd :
             assign
               parcur-cli-qnty = prev_inv-line.after-cli-qnty
             .
+            if parcur-cli-qnty <> v-pl-cli-qnty and abs (v-pl-cli-qnty - parcur-cli-qnty) <= 0.001 /* коррекция накопленной погрешности */ 
+            then do:
+              for last cb_doc-pl exclusive-lock
+                where cb_doc-pl.out-code = cb_doc-line.doc-code
+                  and cb_doc-pl.gds-code = cb_goods.gds-code
+                  and cb_doc-pl.obj-type = cb_doc-line.obj-type
+                  and cb_doc-pl.obj-code = cb_doc-line.obj-code
+              on error undo, return error return-value
+              :
+                  assign
+                    cb_doc-pl.cli-rest-bf-qnty = cb_doc-pl.cli-rest-bf-qnty - (v-pl-cli-qnty - parcur-cli-qnty)
+                    v-pl-cli-qnty = v-pl-cli-qnty -  (v-pl-cli-qnty - parcur-cli-qnty) 
+                  .
+              end.
+            end.
           end.
         end.
         if parcur-cli-qnty <> v-pl-cli-qnty then do:

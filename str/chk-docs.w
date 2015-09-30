@@ -3058,6 +3058,24 @@ define buffer buf_trn-doc for ub.trn-doc.
 /*удаление может быть только на текущем объекте*/
 { gbl/hostcode.i parobj-type parobj-code v-host-code }
 
+  { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_receipts_deletion':U
+  {&cntxt-object}
+  v-host-code
+  c-doc.obj-type
+  c-doc.obj-code
+  0
+  0
+  0
+  true
+  glog
+  }
+  if NOT glog then return no-apply.
+
+
 case del-type:
   when "list":U then do:
     IF par-mode = {&sale} then do:
@@ -3446,6 +3464,10 @@ input-output fld, input-output lab, input-output spr, input-output dim)  no-erro
 run fltfield-add in this-procedure('z-number', 'N Z-отчета', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('entry(1 ~~054c-doc.doc-num~~054{&delim-par})', 'N док-та', 'function_character',
+input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+run fltfield-add in this-procedure('entry(1 ~~054c-doc.doc-num2~~054{&delim-par})', 'N заказа', 'function_character',
+input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+run fltfield-add in this-procedure('entry(1 ~~054c-doc.doc-num2~~054{&delim-par})', 'N заказа', 'function_character',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('src-tot-doc', 'брутто-чек', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.

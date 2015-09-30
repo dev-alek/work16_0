@@ -128,7 +128,7 @@ class ibs.th.skt.ControlledClients.TSD :
   method public void getWB ():
     
     define variable cHeader    as character no-undo.
-    define variable cLine      as character no-undo.
+    define variable cLine      as longchar no-undo.
     define variable dFactSum   as decimal   no-undo.
     define variable factQnty   as character no-undo.
     define variable docQnty    as character no-undo.
@@ -212,7 +212,7 @@ class ibs.th.skt.ControlledClients.TSD :
           factQnty  = if buf_doc-line.fact-qnty > -1 and buf_doc-line.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
           docQnty  = if buf_doc-line.doc-qnty > -1 and buf_doc-line.doc-qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
           .
-        cLine = substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty).
+        cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty).
         dFactSum = buf_doc-line.fact-qnty + dFactSum.
       end.
       FactSum = if dFactSum > -1 and dFactSum < 1 then replace (string (dFactSum), ".", "0,") else replace (string (dFactSum), ".", ",").
@@ -284,7 +284,9 @@ class ibs.th.skt.ControlledClients.TSD :
   method public void WriteClients ():
     
     tsdstreamopen("TH_clients.txt"). 
-    for each buf_clients where buf_clients.stts = 0 and (buf_clients.obj-type = "орг" or buf_clients.obj-type = "чел") no-lock:
+    for each buf_clients where buf_clients.stts = 0 and (buf_clients.obj-type = "орг" 
+      or buf_clients.obj-type = "чел" or buf_clients.obj-type = {&shop} or buf_clients.obj-type = {&stock})
+      and not (buf_clients.obj-type = ObjType and buf_clients.obj-code = ObjCode) no-lock:
       put stream tsdstream unformatted string (buf_clients.obj-code) + {&delimiteFld} + buf_clients.obj-type + {&delimiteFld} + buf_clients.obj-name + {&delimiterLine}.
     end.
     tsdstreamclose().

@@ -107,7 +107,7 @@ define temp-table alc-goods      /* Для товаров */
     field alpha1    like ub.goods.alpha1
     field type-code like ub.alc-type-gds.alc-type-inner-code
     field vol       like ub.goods.ms-base
-    index pi is unique primary gds-code.
+    index pi is unique primary gds-code type-code.
 
 define temp-table alc-sale-licenses /* Лицензии для стр. 2 */
     field seria     like ub.alc-sale-lic.seria

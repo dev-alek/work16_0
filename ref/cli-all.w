@@ -4214,6 +4214,24 @@ case cli-types:
 end case.
 
 if attr-option_ = "":U then do:
+    HIDE
+    cli-listA
+    in frame {&frame-name}.
+end.
+else do:
+    HIDE
+    cli-list
+    in frame {&frame-name}.
+end.
+if v-total-select-num = 0 then do:
+  HIDE
+  mark-num
+  in frame {&frame-name} .
+end.
+HIDE
+NameOrCode
+in frame {&frame-name} .
+if attr-option_ = "":U then do:
   var-prev-br-name = var-br-name.
   var-Br-Name = "cli-list":U.
   { gbl/brwrepos.i
