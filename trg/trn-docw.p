@@ -103,7 +103,7 @@ define variable v-is-bge as character no-undo.
 define variable v-bge-incr-last-shift-date as character no-undo.
 define variable v-bge-incr-last-shift-num as character no-undo.
 define variable v-type as character no-undo.
-
+define variable loc#in-ov as logical no-undo.
 
 /* дата документа или дата фактического закрытия документа
    при закрытии по факту
@@ -3691,7 +3691,7 @@ procedure process-line :
     
     if v-process-goods
     then do:
-      if ub.trn-doc.doc-type = {&income} and ub.shop.in-ov 
+      if ub.trn-doc.doc-type = {&income} and loc#in-ov
       then do:
         /* устанавливается признак того, что товар необходимо переоценить */
         define variable l-in-ov as logical no-undo .
@@ -4021,14 +4021,18 @@ procedure init-local-vars :
         .
       assign
         loc#obj-active  = ub.store.active
+        loc#in-ov = ub.store.in-ov
       .
     end.
     else do:
+             
+        
       find first ub.shop no-lock
         where ub.shop.obj-code = ub.trn-doc.obj-code
         .
       assign
         loc#obj-active  = yes
+        loc#in-ov = ub.shop.in-ov
       .
     end.
   end.
