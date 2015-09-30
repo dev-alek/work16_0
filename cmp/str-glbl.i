@@ -1,10 +1,10 @@
 /*
 
-$Revision: $
-$Author: $
-$Date: $
-$Workfile: $
-$Archive: $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
                                         
 Файл глобальных определений
 
@@ -3745,7 +3745,13 @@ end.
 &global-define attr-esys-ftp-path-out '{&bef-attr-esys-ftp-path-out}':U
 &global-define bef-attr-esys-save-oxml-pck save-oxml-pck
 &global-define attr-esys-save-oxml-pck '{&bef-attr-esys-save-oxml-pck}':U
-&global-define ext-system-attr-list 'need-gen-new-xpack,FTP,Login,Password,Path,IN-dir,OUT-dir,save-oxml-pck':u
+&global-define bef-attr-esys-no-sent-ftp no-sent-ftp
+&global-define attr-esys-no-sent-ftp '{&bef-attr-esys-no-sent-ftp}':U
+&global-define bef-attr-esys-gln-net gln-net
+&global-define attr-esys-gln-net '{&bef-attr-esys-gln-net}':U
+&global-define bef-attr-esys-gln-provider gln-provider
+&global-define attr-esys-gln-provider '{&bef-attr-esys-gln-provider}':U
+&global-define ext-system-attr-list 'need-gen-new-xpack,FTP,Login,Password,Path,IN-dir,OUT-dir,save-oxml-pck,no-sent-ftp,gln-net,gln-provider':u
 &global-define bef-trdcattr-hold-part-code hold-part-code
 &global-define trdcattr-hold-part-code '{&bef-trdcattr-hold-part-code}':U
 &global-define bef-trdcattr-dov dov
@@ -5903,6 +5909,14 @@ end.
 &global-define edi-err '{&bef-edi-err}':U
 &global-define bef-edi-err-full Отказ
 &global-define edi-err-full '{&bef-edi-err-full}':U
+&global-define bef-edi-orders-deliv 12
+&global-define edi-orders-deliv '{&bef-edi-orders-deliv}':U
+&global-define bef-edi-orders-deliv-full Доставлен
+&global-define edi-orders-deliv-full '{&bef-edi-orders-deliv-full}':U
+&global-define bef-edi-crit-err 13
+&global-define edi-crit-err '{&bef-edi-crit-err}':U
+&global-define bef-edi-crit-err-full Ошибка
+&global-define edi-crit-err-full '{&bef-edi-crit-err-full}':U
 &global-define bef-edi-return 1
 &global-define edi-return '{&bef-edi-return}':U
 &global-define bef-edi-return-full вернулся
@@ -5911,12 +5925,12 @@ end.
 &global-define edi-diff '{&bef-edi-diff}':U
 &global-define bef-edi-diff-full разница
 &global-define edi-diff-full '{&bef-edi-diff-full}':U
-&global-define edi-spis '0,1,2,3,4,5,6,7,8,9,11,99'
+&global-define edi-spis '0,1,2,3,4,5,6,7,8,9,11,99,12,13'
 &global-define edi-spis-e 
-&global-define edi-spis-f ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ'
-&global-define edi-spis-color '14,12,?,14,?,?,10,?,?,?,?,4'
-&global-define edi-stts-color entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99') , '14,12,?,14,?,?,10,?,?,?,?,4')
-&global-define edi-stts-name entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99') , ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ')
+&global-define edi-spis-f ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ,Доставлен,Ошибка'
+&global-define edi-spis-color '14,12,?,14,?,?,10,?,?,?,?,4,10,4'
+&global-define edi-stts-color entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99,12,13') , '14,12,?,14,?,?,10,?,?,?,?,4,10,4')
+&global-define edi-stts-name entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99,12,13') , ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ,Доставлен,Ошибка')
 &global-define bef-esys-dm-ordinal 0
 &global-define esys-dm-ordinal '{&bef-esys-dm-ordinal}':U
 &global-define bef-esys-dm-ordinal-full Как в СПН
@@ -6087,6 +6101,10 @@ end.
 &global-define orddocattr-ora-exp-seq-num '{&bef-orddocattr-ora-exp-seq-num}':U
 &global-define bef-ordlineattr-cli-qnty cycle-cli-qnty
 &global-define ordlineattr-cli-qnty '{&bef-ordlineattr-cli-qnty}':U
+&global-define bef-ordlineattr-min-stock min-stock
+&global-define ordlineattr-min-stock '{&bef-ordlineattr-min-stock}':U
+&global-define bef-ordlineattr-gds-way gds-way
+&global-define ordlineattr-gds-way '{&bef-ordlineattr-gds-way}':U
 &global-define bef-wth-qnty-sum =sum
 &global-define wth-qnty-sum '{&bef-wth-qnty-sum}':U
 &global-define bef-wth-qnty-sum-full =Сумма
@@ -6536,13 +6554,29 @@ end.
 &global-define edi-line-ordrsp-list '1,2,3':U
 &global-define edi-line-ordrsp-list-full 'Совпадение,Разница,Отмена':U
 &global-define edi-line-ordrsp-name entry (lookup (~{&edi-line-ordrsp-code}, '1,2,3':U) + 1, ',' + 'Совпадение,Разница,Отмена':U)
+&global-define bef-seaattr-obj sea-obj
+&global-define seaattr-obj '{&bef-seaattr-obj}':U
+&global-define bef-seaattr-obj-full Объект сезона
+&global-define seaattr-obj-full '{&bef-seaattr-obj-full}':U
+&global-define bef-gdsseaattr-season-coef gdssea-season-coef
+&global-define gdsseaattr-season-coef '{&bef-gdsseaattr-season-coef}':U
+&global-define bef-gdsseaattr-season-coef-full Коэф. увеличения спроса
+&global-define gdsseaattr-season-coef-full '{&bef-gdsseaattr-season-coef-full}':U
+&global-define bef-sea-global sea-global
+&global-define sea-global '{&bef-sea-global}':U
+&global-define bef-sea-global-full глобальный
+&global-define sea-global-full '{&bef-sea-global-full}':U
+&global-define bef-sea-local sea-local
+&global-define sea-local '{&bef-sea-local}':U
+&global-define bef-sea-local-full локальный
+&global-define sea-local-full '{&bef-sea-local-full}':U
 &global-define bef-alc-check-price 28
 &global-define alc-check-price '{&bef-alc-check-price}':U
 &global-define bef-alc-check-price-full содержание спирта
 &global-define alc-check-price-full '{&bef-alc-check-price-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: db1f34f92e19, 253, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7825,10 +7859,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU':U
-&global-define str-glbl_vss-revision 'Revision':U
+&global-define str-glbl_vss-revision 'Revision: 3ec8c04dde00, 238, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 4378eb070905, 246, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 4378eb070905, 246, rls ':U
-&global-define str-glblt_vss-revision 'Revision':U
+&global-define str-glbl4_vss-revision 'Revision: e5ab029c9ffa, 257, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: e5ab029c9ffa, 257, rls ':U
+&global-define str-glblt_vss-revision 'Revision: db1f34f92e19, 253, rls ':U
 &endif
