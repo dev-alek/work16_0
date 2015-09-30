@@ -148,30 +148,32 @@ FOR EACH buf_cash-desk No-LOCK WHERE
                       .
     return error vreason.
   end.
-  FOR EACH buf_shift-cash No-LOCK WHERE
-            buf_shift-cash.obj-type = {&shop}
-        AND buf_shift-cash.obj-code = buf_cash-desk.obj-code
-        AND buf_shift-cash.cash-num = buf_cash-desk.cash-num
-        AND buf_shift-cash.shift-date = p-shift-date
-        AND (buf_shift-cash.shift-num = ?
-        or
-            buf_shift-cash.shift-num = 0)
-        :
-
-    IF buf_shift-cash.status_ <> {&sht-closed}
-    and (buf_shift-cash.shift-name = p-shift-name
-    or  buf_shift-cash.shift-name = '':U)
-    then do:
-      /*на какой-то кассе смена не закрыта*/
-      vReason = substitute("На кассе N &1 не закрыта смена <&2> от &3"
-                            ,buf_cash-desk.cash-num
-                            ,buf_shift-cash.shift-name
-                            ,string(p-shift-date, "99/99/9999"))
-                        .
-      return error vreason.
-    end.
-  end.
-
+  if not (available buf_shift-cash
+      and buf_shift-cash.status_ = {&sht-closed}) then do:
+      FOR EACH buf_shift-cash No-LOCK WHERE
+                buf_shift-cash.obj-type = {&shop}
+            AND buf_shift-cash.obj-code = buf_cash-desk.obj-code
+            AND buf_shift-cash.cash-num = buf_cash-desk.cash-num
+            AND buf_shift-cash.shift-date = p-shift-date
+            AND (buf_shift-cash.shift-num = ?
+            or
+                buf_shift-cash.shift-num = 0)
+            :
+    
+        IF buf_shift-cash.status_ <> {&sht-closed}
+        and (buf_shift-cash.shift-name = p-shift-name
+        or  buf_shift-cash.shift-name = '':U)
+        then do:
+          /*на какой-то кассе смена не закрыта*/
+          vReason = substitute("На кассе N &1 не закрыта смена <&2> от &3"
+                                ,buf_cash-desk.cash-num
+                                ,buf_shift-cash.shift-name
+                                ,string(p-shift-date, "99/99/9999"))
+                            .
+          return error vreason.
+        end.
+      end.
+  end. 
 END.
 
 /*это не проверяем это делает ИСАКОВ!*/
