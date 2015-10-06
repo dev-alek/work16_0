@@ -293,7 +293,7 @@ attr-rt-trn-doc }
 { cmp/cr-prep.i 1 attr-gds-ref                 gds-ref                  " " gds-ref }
 
 { cmp/cr-prepc.i 1 prop-list-attr-gds-ref
-"dif-nam1,dif-nam2,dpl-off,dif-pdbc,pbc-veto,tnvedimp,dfltggrp,gds-copy,gdsscrvw,unq-artc,is-scgb"
+"dif-nam1,dif-nam2,dpl-off,dif-pdbc,pbc-veto,tnvedimp,shema-foto,dfltggrp,gds-copy,gdsscrvw,unq-artc,is-scgb"
 attr-gds-ref
 }
 

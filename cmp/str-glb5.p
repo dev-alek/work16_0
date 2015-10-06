@@ -1825,6 +1825,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edoc-stts
 { cmp/cr-prep.i 1 edi-recadv      9    "ПН отправлена"       9  "trn send"     }
 { cmp/cr-prep.i 1 edi-recadv-sts  11   "ПН получена"         11 "trn get"      }
 { cmp/cr-prep.i 1 edi-err         99   "Отказ"               99 "error"        }
+{ cmp/cr-prep.i 1 edi-orders-deliv    12   "Доставлен"       12 "delivered"        }
+{ cmp/cr-prep.i 1 edi-crit-err        13   "Ошибка"          13 "criterror"        }
 
 /* Состояние заказа (ord-int2)  */
 { cmp/cr-prep.i 1 edi-return     1    "вернулся"              1 "return"     }
@@ -1842,7 +1844,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edoc-stts
 {&bef-edi-desadv-sts},~
 {&bef-edi-recadv},~
 {&bef-edi-recadv-sts},~
-{&bef-edi-err}'
+{&bef-edi-err},~
+{&bef-edi-orders-deliv},~
+{&bef-edi-crit-err}'
 
 &glob edi-spis-f '{&bef-edi-empty-full},~
 {&bef-edi-orders-full},~
@@ -1855,9 +1859,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edoc-stts
 {&bef-edi-desadv-sts-full},~
 {&bef-edi-recadv-full},~
 {&bef-edi-recadv-sts-full},~
-{&bef-edi-err-full}'
+{&bef-edi-err-full},~
+{&bef-edi-orders-deliv-full},~
+{&bef-edi-crit-err-full}'
 
-&glob edi-spis-color '14,12,?,14,?,?,10,?,?,?,?,4'
+&glob edi-spis-color '14,12,?,14,?,?,10,?,?,?,?,4,10,4'
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define edi-spis {&edi-spis}" ).
 run filwrlib_append-new-line in this-procedure ( input "&global-define edi-spis-e {&edi-spis-e}" ).
@@ -1876,6 +1882,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-stts-
 { cmp/cr-prep.i 1 esys-dm-oracle-retail   3    "Oracle Retail"                 3  "Oracle Retail"          }
 { cmp/cr-prep.i 1 esys-dm-CDash           4    "Не архивировать(Панель Руководителя;DKLink)"  4  "No arj(Commanders DashBoard;DKLink)"    }
 { cmp/cr-prep.i 1 esys-dm-exite-edi       5    "Exite-EDI"                                    5  "Exite-EDI"              }
+{ cmp/cr-prep.i 1 esys-dm-contour-edi     9    "Контур.EDI"                                   9  "Сontour.EDI"            }
 
 &glob esys-dm-list '~
 {&bef-esys-dm-ordinal}~
@@ -1883,6 +1890,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-stts-
 ,{&bef-esys-dm-oracle-retail}~
 ,{&bef-esys-dm-CDash}~
 ,{&bef-esys-dm-exite-edi}~
+,{&bef-esys-dm-contour-edi}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-list {&esys-dm-list}" ).
@@ -1893,6 +1901,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-l
 ,{&bef-esys-dm-oracle-retail-full}~
 ,{&bef-esys-dm-CDash-full}~
 ,{&bef-esys-dm-exite-edi-full}~
+,{&bef-esys-dm-contour-edi-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-list-full {&esys-dm-list-full}" ).
@@ -2038,6 +2047,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sc-gds-de
 
 /* Атрибуты заказа строки */
 { cmp/cr-prep.i 1 ordlineattr-cli-qnty    "cycle-cli-qnty"  " "  "cycle-cli-qnty"     }
+{ cmp/cr-prep.i 1 ordlineattr-min-stock   "min-stock"       " "  "cycle-cli-qnty"     }
+{ cmp/cr-prep.i 1 ordlineattr-gds-way     "gds-way"         " "  "cycle-cli-qnty"     }
 
 
 { cmp/cr-prep.i 1 wth-qnty-sum       "=sum"         "=Сумма" "=sum"  "=Sum" }
@@ -2548,6 +2559,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-line-
 &glob edi-line-ordrsp-name entry (lookup (~~~~~~~{&edi-line-ordrsp-code}, {&edi-line-ordrsp-list}) + 1, ',' + {&edi-line-ordrsp-list-full})
 run filwrlib_append-new-line in this-procedure ( input "&global-define edi-line-ordrsp-name {&edi-line-ordrsp-name}" ).
 
+/* Атрибуты сезона */
+{ cmp/cr-prep.i 1 seaattr-obj               sea-obj             "Объект сезона"           sea-obj             "Object of season"     }
+{ cmp/cr-prep.i 1 gdsseaattr-season-coef    gdssea-season-coef  "Коэф. увеличения спроса" gdssea-season-coef  "Coeff. of season"     }
+{ cmp/cr-prep.i 1 sea-global                sea-global          "глобальный"              sea-global          "global"               }
+{ cmp/cr-prep.i 1 sea-local                 sea-local           "локальный"               sea-local            "local"               }
 
 
 run filwrlib_num-lines-get in this-procedure
