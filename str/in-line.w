@@ -125,7 +125,7 @@ define buffer bf_sysconf        for ub.sysconf.
 
 /* Если перед началом редактирования в doc-qnty-cli-qnty или fact-qnty сразу следует
    надбавить данную дельту */
-
+define buffer buf_rvs-doc     for ub.rvs-doc .
 define buffer d-l-b         for ub.doc-line.
 define buffer bf-trn-doc    for ub.trn-doc.
 define buffer next_doc-pl   for ub.doc-pl.
@@ -249,7 +249,7 @@ define variable v-value-logical             as   logical                     no-
 define variable v-vat-goods                 as   logical                     no-undo.
 define variable v-round-vat-sum             as logical                       no-undo .
 define variable v-goods-ms-base             as decimal format ">>,>>9.999"   no-undo .
-
+define variable rvslog                      as logical                       no-undo.
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 98 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
@@ -1465,17 +1465,53 @@ on choose of b-alc-attr in frame {&frame-name} do:
 end.
 
 on choose of menu-item m-rvs-bf-1 in menu m-rvs-bf
-do:
-  { gbl/stdbtn.i b-rvs-bf }
+    do:
+        { gbl/stdbtn.i b-rvs-bf }
+        assign 
+            rvslog = no.
+        find first buf_rvs-doc 
+            where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+            and buf_rvs-doc.out-code = t-doc.doc-code
+            and buf_rvs-doc.state-measure-qnty <> ?
+            no-error .
+            
+         
+        if not available buf_rvs-doc then 
+        do: 
+            run action-rvs-line in this-procedure
+                ( input {&update}
+                ,input "meas":U
+                ,input {&rvs-before-doc}
+                ) no-error .
+            if error-status :error then 
+            do:
+                return no-apply .
+            end.
+        end.
+        else 
+        do:
+            message
+                "Сверка до уже выполнена. Вы уверены, что хотите ее изменить?"  skip
+  
+                view-as alert-box question buttons YES-NO update rvslog.
+            if rvslog then 
+            do:
+                run action-rvs-line in this-procedure
+                    ( input {&update}
+                    ,input "meas":U
+                    ,input {&rvs-before-doc}
+                    ) no-error .
+                if error-status :error then 
+                do:
+                    return no-apply .
+                end.
 
-  run action-rvs-line in this-procedure
-    ( input {&update}
-     ,input "meas":U
-     ,input {&rvs-before-doc}
-    ) no-error .
-  if error-status :error then do:
-    return no-apply .
-  end.
+            end.
+            else 
+            do:
+                return no-apply.
+            end.
+        end.
 
   run display-measure in this-procedure
     no-error .
