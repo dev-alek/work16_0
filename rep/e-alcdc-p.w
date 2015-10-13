@@ -275,7 +275,8 @@ DEFINE VARIABLE RADIO-SET-form AS INTEGER
 DEFINE VARIABLE RADIO-SET-ver AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
-          "4.30", 1,
+          "4.31", 1,
+          "4.30", 3,
 "4.20", 2
      SIZE 20 BY .95 NO-UNDO.
 
@@ -1956,7 +1957,8 @@ hSAXWriter:start-element ("Файл").
     hSAXWriter:insert-attribute ("ДатаДок", string(day(today), "99") + "." + string(month(today), "99")  + "." + string(year(today), "9999")).
     
     case RADIO-SET-ver:
-        when 1 then hSAXWriter:insert-attribute ("ВерсФорм", "4.30").
+        when 1 then hSAXWriter:insert-attribute ("ВерсФорм", "4.31").
+        when 3 then hSAXWriter:insert-attribute ("ВерсФорм", "4.30").
         when 2 then hSAXWriter:insert-attribute ("ВерсФорм", "4.20").
     end case.
     
@@ -1970,14 +1972,19 @@ hSAXWriter:start-element ("Файл").
         case RADIO-SET-ver:
             when 1 then do:
                 hSAXWriter:insert-attribute ("НомФорм", "12").
-        hSAXWriter:insert-attribute ("ПризПериодОтч", string(quarter)).
-        hSAXWriter:insert-attribute ("ГодПериодОтч", string(year(x-date-start))).
+                hSAXWriter:insert-attribute ("ПризПериодОтч", string(quarter)).
+                hSAXWriter:insert-attribute ("ГодПериодОтч", string(year(x-date-start))).
+            end.
+            when 3 then do:
+                hSAXWriter:insert-attribute ("НомФорм", "12").
+                hSAXWriter:insert-attribute ("ПризПериодОтч", string(quarter)).
+                hSAXWriter:insert-attribute ("ГодПериодОтч", string(year(x-date-start))).
             end.
             when 2 then do:
-        hSAXWriter:insert-attribute ("ГодПериодОтч", string(year(x-date-start))).
-        hSAXWriter:insert-attribute ("НомФорм", "12-о").
-        hSAXWriter:insert-attribute ("ПризПериодОтч", string(quarter)).
-        hSAXWriter:insert-attribute ("ПризФОтч", "4").
+                hSAXWriter:insert-attribute ("ГодПериодОтч", string(year(x-date-start))).
+                hSAXWriter:insert-attribute ("НомФорм", "12-о").
+                hSAXWriter:insert-attribute ("ПризПериодОтч", string(quarter)).
+                hSAXWriter:insert-attribute ("ПризФОтч", "4").
             end.
         end case.
         
@@ -2054,7 +2061,12 @@ hSAXWriter:start-element ("Файл").
             hSAXWriter:start-element ("Реквизиты").
                 
                 /* Атрибуты */
-                hSAXWriter:insert-attribute ("НаимОрг", v-fmtcli-name).
+                case RADIO-SET-ver:
+                    when 1 then hSAXWriter:insert-attribute ("Наим", v-fmtcli-name).
+                    when 3 then hSAXWriter:insert-attribute ("НаимОрг", v-fmtcli-name).
+                    when 2 then hSAXWriter:insert-attribute ("НаимОрг", v-fmtcli-name).
+                end case.
+                
 /*                hSAXWriter:insert-attribute ("ИННЮЛ", v-fmtcli-inn).*/
 /*                hSAXWriter:insert-attribute ("КППЮЛ", v-fmtcli-kpp).*/
                 hSAXWriter:insert-attribute ("ТелОрг", v-fmtcli-phone).
@@ -2111,8 +2123,12 @@ hSAXWriter:start-element ("Файл").
             
                 /* Атрибуты */
                 hSAXWriter:insert-attribute ("КППЮЛ", page-2.kpp).
-                hSAXWriter:insert-attribute ("НаимЮЛ", page-2.obj-name).
-                
+                case RADIO-SET-ver:
+                    when 1 then hSAXWriter:insert-attribute ("Наим", page-2.obj-name).
+                    when 3 then hSAXWriter:insert-attribute ("НаимЮЛ", page-2.obj-name).
+                    when 2 then hSAXWriter:insert-attribute ("НаимЮЛ", page-2.obj-name).
+                end case.
+                               
                 /* Проверим оборот */
                 
                 if can-find (first part-1 where part-1.obj-type = page-2.obj-type
