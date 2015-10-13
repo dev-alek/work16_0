@@ -1564,7 +1564,7 @@ END.
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ? THEN
 FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 
-{ gbl/app_help.i }
+{ gbl/app_help.i &disable_diasize_init=true &browse-name="br-out"}
 { gbl/hot-key.i b-exit }
 { gbl/hot-key.i b-print }
 { gbl/hot-key.i b-close }
@@ -1720,6 +1720,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
   { gbl/getcntxt.i get }
+  
+    run diasize_add_browse in this-procedure
+    (input  'width':u
+    ,input  browse br-ret :handle
+    ) .
+
+    run diasize_init in this-procedure .
+    
     { gbl/f2.i br-out goods-recid get-gds-rec  parparentproc }
     p-doc-rec = recid (ink-doc).  /* подстраховка на время перехода со старого варианта,
                                                 т.к. эта переменная исп-ся при закрытии.
