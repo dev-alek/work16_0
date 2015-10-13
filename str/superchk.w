@@ -2655,14 +2655,16 @@ PROCEDURE check-dublicate :
   Notes:
 ------------------------------------------------------------------------------*/
 define buffer dub_chk-doc for ub.chk-doc.
-      FIND  dub_chk-doc where
+      FIND first dub_chk-doc where
             dub_chk-doc.obj-type = tt-chk-doc.obj-type and
             dub_chk-doc.obj-code = tt-chk-doc.obj-code and
             dub_chk-doc.chk-date = tt-chk-doc.chk-date and
             dub_chk-doc.pay-desk = tt-chk-doc.pay-desk and
             dub_chk-doc.chk-time = tt-chk-doc.chk-time and
-            dub_chk-doc.chk-num = tt-chk-doc.chk-num and
-            dub_chk-doc.sales-man = tt-chk-doc.sales-man NO-ERROR .
+            dub_chk-doc.chk-num = tt-chk-doc.chk-num 
+/*            and                                         */
+/*            dub_chk-doc.sales-man = tt-chk-doc.sales-man*/
+             NO-ERROR .
 if available dub_chk-doc  and
     recid(dub_chk-doc) <> recid(locked_chk-doc) then do:
     message
@@ -2749,6 +2751,11 @@ if par-mode = {&update} and v-global-err then do:
   {&fatal-errs}
   return error.
 end.
+    if par-mode = {&update} then 
+    do: 
+        run check-dublicate in this-procedure no-error.
+        if error-status:error then return error.
+    end.
 run proc-save-doc in this-procedure no-error.
 if error-status:error then return error.
 assign
