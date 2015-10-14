@@ -3465,10 +3465,10 @@ run fltfield-add in this-procedure('z-number', 'N Z-отчета', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('entry(1 ~~054c-doc.doc-num~~054{&delim-par})', 'N док-та', 'function_character',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-run fltfield-add in this-procedure('entry(1 ~~054c-doc.doc-num2~~054{&delim-par})', 'N заказа', 'function_character',
-input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-run fltfield-add in this-procedure('entry(1 ~~054c-doc.doc-num2~~054{&delim-par})', 'N заказа', 'function_character',
-input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+/*run fltfield-add in this-procedure('entry(1 ~~054c-doc.doc-num2~~054{&delim-par})', 'N заказа', 'function_character',*/
+/*input-output fld, input-output lab, input-output spr, input-output dim)  no-error.                                   */
+/*run fltfield-add in this-procedure('entry(1 ~~054c-doc.doc-num2~~054{&delim-par})', 'N заказа', 'function_character',*/
+/*input-output fld, input-output lab, input-output spr, input-output dim)  no-error.                                   */
 run fltfield-add in this-procedure('src-tot-doc', 'брутто-чек', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('ps', 'Примечание', '',
