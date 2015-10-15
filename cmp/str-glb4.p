@@ -953,6 +953,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 { cmp/cr-prep.i 1 attr-esys-ftp-path-out       OUT-dir              " " OUt-dir  }
 /* Кол-во дней хранения пакетов после получения подтверждения */
 { cmp/cr-prep.i 1 attr-esys-save-oxml-pck      save-oxml-pck        " " save-oxml-pck         }
+{ cmp/cr-prep.i 1 attr-esys-no-sent-ftp        no-sent-ftp          " " no-sent-ftp     }
+{ cmp/cr-prep.i 1 attr-esys-gln-net            gln-net              " " gln-net         }
+{ cmp/cr-prep.i 1 attr-esys-gln-provider       gln-provider         " " gln-provider    }
 
 
 /* сюда добавлять новые названия атрибутов баз данных */
@@ -966,6 +969,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 ,{&bef-attr-esys-ftp-path-in}~
 ,{&bef-attr-esys-ftp-path-out}~
 ,{&bef-attr-esys-save-oxml-pck}~
+,{&bef-attr-esys-no-sent-ftp}~
+,{&bef-attr-esys-gln-net}~
+,{&bef-attr-esys-gln-provider}~
 ':u
 run filwrlib_append-new-line in this-procedure ( input "&global-define ext-system-attr-list {&ext-system-attr-list}" ).
 
