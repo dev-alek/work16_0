@@ -420,6 +420,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Тип услуги */
 { cmp/cr-prep.i 1 attr-office-type     office-type     " " office-type     }
 
+/* Тип топлива */
+{ cmp/cr-prep.i 1 attr-fuel-type     fuel-type     " " fuel-type     }
+
 /* Перечисление в систему лояльности */
 { cmp/cr-prep.i 1 attr-is-loyalty-payment is-loyalty-payment " " is-loyalty-payment }
 
@@ -486,6 +489,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /*вес палеты (товар + палета)*/
 { cmp/cr-prep.i 1 attr-weight-of-pallet  weight-of-pallet " " weight-of-pallet }
 
+/* Изображения */
+{ cmp/cr-prep.i 1 attr-image-list       image-list       " " image-list       }
+
 /* сюда добавлять новые названия атрибутов товаров */
 
 /* список атрибутов товаров */
@@ -493,6 +499,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-is-gas}~
 ,{&bef-attr-ptrl-without-rvs}~
 ,{&bef-attr-office-type}~
+,{&bef-attr-fuel-type}~
 ,{&bef-attr-is-loyalty-payment}~
 ,{&bef-attr-ban-bonus}~
 ,{&bef-attr-fasovka}~
@@ -515,6 +522,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-weight-box}~
 ,{&bef-attr-qnty-on-pallet}~
 ,{&bef-attr-weight-of-pallet}~
+,{&bef-attr-image-list}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define gds-attr-list {&gds-attr-list}" ).
 
@@ -522,6 +530,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gds-attr-
 { cmp/cr-prepc.i 1 prop-list-attr-office-type
 "oss-pay,tso-ret"
 attr-office-type
+}
+
+/* типы топлива */
+{ cmp/cr-prepc.i 1 prop-list-attr-fuel-type
+"petrol,diesel-sum,diesel-wint,metan"
+attr-fuel-type
 }
 
 /* tara-code для сканер-весов NCR*/
@@ -939,6 +953,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 { cmp/cr-prep.i 1 attr-esys-ftp-path-out       OUT-dir              " " OUt-dir  }
 /* Кол-во дней хранения пакетов после получения подтверждения */
 { cmp/cr-prep.i 1 attr-esys-save-oxml-pck      save-oxml-pck        " " save-oxml-pck         }
+{ cmp/cr-prep.i 1 attr-esys-no-sent-ftp        no-sent-ftp          " " no-sent-ftp     }
+{ cmp/cr-prep.i 1 attr-esys-gln-net            gln-net              " " gln-net         }
+{ cmp/cr-prep.i 1 attr-esys-gln-provider       gln-provider         " " gln-provider    }
 
 
 /* сюда добавлять новые названия атрибутов баз данных */
@@ -952,6 +969,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 ,{&bef-attr-esys-ftp-path-in}~
 ,{&bef-attr-esys-ftp-path-out}~
 ,{&bef-attr-esys-save-oxml-pck}~
+,{&bef-attr-esys-no-sent-ftp}~
+,{&bef-attr-esys-gln-net}~
+,{&bef-attr-esys-gln-provider}~
 ':u
 run filwrlib_append-new-line in this-procedure ( input "&global-define ext-system-attr-list {&ext-system-attr-list}" ).
 
@@ -1123,6 +1143,36 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /*время доставки */
 { cmp/cr-prep.i 1 trdcattr-delivery-time "delivery-time" " " "delivery-time" }
 
+/* Нефтебаза */
+{ cmp/cr-prep.i 1 trdcattr-ptbobj "ptbobj" " " "ptbobj" }
+
+/* Примечание к нефтебазе */
+{ cmp/cr-prep.i 1 trdcattr-ptb-item-pour "ptb-item-pour" " " "ptb-item-pour" }
+
+/* Автопредприятие */
+{ cmp/cr-prep.i 1 trdcattr-autoent "autoent" " " "autoent" }
+
+/* Гос. № автоцистерны */
+{ cmp/cr-prep.i 1 trdcattr-car-num "car-num" " " "car-num" }
+
+/* Ф.И.О. водителя-экспедитора */
+{ cmp/cr-prep.i 1 trdcattr-fio-driver "fio-driver" " " "fio-driver" }
+
+/* Время прибытия на АЗС */
+{ cmp/cr-prep.i 1 trdcattr-time-income "time-income" " " "time-income" }
+
+/* Свидетельство о проверке */
+{ cmp/cr-prep.i 1 trdcattr-inspection-cert "inspection-cert" " " "inspection-cert" }
+
+/* Свидетельство о проверке */
+{ cmp/cr-prep.i 1 trdcattr-date-cert "date-cert" " " "date-cert" }
+
+/* Техническое состояние */
+{ cmp/cr-prep.i 1 trdcattr-condition "condition" " " "condition" }
+
+/* Пломбы, их состояние */
+{ cmp/cr-prep.i 1 trdcattr-seals-condition "seals-condition" " " "seals-condition" }
+
 &glob trdcattr-list '~
 {&bef-trdcattr-hold-part-code}~
 ,{&bef-trdcattr-dov}~
@@ -1199,6 +1249,14 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-zakaz-date}~
 ,{&bef-trdcattr-delivery-date}~
 ,{&bef-trdcattr-delivery-time}~
+,{&bef-trdcattr-ptbocode}~
+,{&bef-trdcattr-autoent}~
+,{&bef-trdcattr-car-num}~
+,{&bef-trdcattr-fio-driver}~
+,{&bef-trdcattr-hour-income}~
+,{&bef-trdcattr-inspection-cert}~
+,{&bef-trdcattr-condition}~
+,{&bef-trdcattr-seals-condition}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define trdcattr-list {&trdcattr-list}" ).
 
@@ -1315,7 +1373,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define calc-petr
 { cmp/cr-prep.i 1 openxml-type-com-dashboard 6         "Панель Руководителя" 6                    "Commanders Dashboard"   }
 { cmp/cr-prep.i 1 openxml-type-dklink        7         "ДатаКрат DKLink"     7                    "DataKrat DKLink"   }
 { cmp/cr-prep.i 1 openxml-type-1c            8         "1C"                  8                    "1C"   }
-{ cmp/cr-prep.i 1 openxml-type-exite-edi     9         "Exite-EDI"           9                    "Exite-EDI"   }
+{ cmp/cr-prep.i 1 openxml-type-exite-edi     9         "EDI"           9                          "EDI"   }
 
 &glob openxml-type-list '~
 {&bef-openxml-type-ordinal}~

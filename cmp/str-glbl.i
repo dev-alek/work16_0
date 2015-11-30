@@ -1,10 +1,10 @@
 /*
 
-$Revision: $
-$Author: $
-$Date: $
-$Workfile: $
-$Archive: $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
                                         
 Файл глобальных определений
 
@@ -1383,6 +1383,10 @@ end.
 &global-define rcpt-tech-refuell '{&bef-rcpt-tech-refuell}':U
 &global-define bef-rcpt-tech-refuell-full ТехПролив
 &global-define rcpt-tech-refuell-full '{&bef-rcpt-tech-refuell-full}':U
+&global-define bef-rcpt-unlock-trans 36
+&global-define rcpt-unlock-trans '{&bef-rcpt-unlock-trans}':U
+&global-define bef-rcpt-unlock-trans-full РазблТрнзкц
+&global-define rcpt-unlock-trans-full '{&bef-rcpt-unlock-trans-full}':U
 &global-define bef-rcpt-pre-sale 101
 &global-define rcpt-pre-sale '{&bef-rcpt-pre-sale}':U
 &global-define bef-rcpt-pre-sale-full _Продажа
@@ -1431,6 +1435,10 @@ end.
 &global-define rcpt-pre-tech-refuell '{&bef-rcpt-pre-tech-refuell}':U
 &global-define bef-rcpt-pre-tech-refuell-full _ТехПролив
 &global-define rcpt-pre-tech-refuell-full '{&bef-rcpt-pre-tech-refuell-full}':U
+&global-define bef-rcpt-pre-unlock-trans 136
+&global-define rcpt-pre-unlock-trans '{&bef-rcpt-pre-unlock-trans}':U
+&global-define bef-rcpt-pre-unlock-trans-full _РазблТрнзкц
+&global-define rcpt-pre-unlock-trans-full '{&bef-rcpt-pre-unlock-trans-full}':U
 &global-define bef-rcpt-ord-sale 201
 &global-define rcpt-ord-sale '{&bef-rcpt-ord-sale}':U
 &global-define bef-rcpt-ord-sale-full >Продажа
@@ -1471,26 +1479,26 @@ end.
 &global-define cd-drawer '{&bef-cd-drawer}':U
 &global-define bef-cd-drawer-full Декл_ден_ящ
 &global-define cd-drawer-full '{&bef-cd-drawer-full}':U
-&global-define receipt-codes-combo 'Продажа,1,Возврат,6,ВзврСпис,96,СбросТрнзкц,14,Перелив,15,ПеревТрнзкц,16,ТехПролив,17,Списание,69,Аннуляция,8,Инвентаризация,11,Закрытие_смены,13,Z-отчет,12,_Продажа,101,_Возврат,106,_ВзврСпис,196,_СбросТрнзкц,114,_Перелив,115,_ПеревТрнзкц,116,_ТехПролив,117,_Списание,169,_Аннуляция,108,_Инвентаризация,111,_Z-отчет,112,_Закрытие_смены,113,>Продажа,201,>Возврат,206,>Аннуляция,208,>>Продажа,301,>>Возврат,306,Инкассация,2,Касс_фонд,3,Перевод_опл,4,Расход_кассы,5,Декл_ден_ящ,7':U
-&global-define receipt-codes-combo-only-gds 'Продажа,1,Возврат,6,ВзврСпис,96,СбросТрнзкц,14,Перелив,15,ПеревТрнзкц,16,ТехПролив,17,Списание,69,Аннуляция,8,Инвентаризация,11,Z-отчет,12,_Продажа,101,_Возврат,106,_ВзврСпис,196,_СбросТрнзкц,114,_Перелив,115,_ПеревТрнзкц,116,_ТехПролив,117,_Списание,169,_Аннуляция,108,_Инвентаризация,111,_Z-отчет,112,>Продажа,201,>Возврат,206,>Аннуляция,208,>>Продажа,301,>>Возврат,306':U
-&global-define receipt-codes '1,6,8,69,96,14,15,16,17,11,12,13,101,106,108,169,196,114,115,116,117,111,112,113,201,206,208,301,306':U
-&global-define receipt-codes-full 'Продажа,Возврат,Аннуляция,Списание,ВзврСпис,СбросТрнзкц,Перелив,ПеревТрнзкц,ТехПролив,Инвентаризация,Z-отчет,Закрытие_смены,_Продажа,_Возврат,_Аннуляция,_Списание,_ВзврСпис,_СбросТрнзкц,_Перелив,_ПеревТрнзкц,_ТехПролив,_Инвентаризация,_Z-отчет,_Закрытие_смены,>Продажа,>Возврат,>Аннуляция,>>Продажа,>>Возврат':U
-&global-define receipt-codes-all '1,6,8,69,96,14,15,16,17,11,12,13,101,106,108,169,196,114,115,116,117,111,112,113,201,206,208,301,306,2,3,4,5,7':U
-&global-define receipt-codes-all-full 'Продажа,Возврат,Аннуляция,Списание,ВзврСпис,СбросТрнзкц,Перелив,ПеревТрнзкц,ТехПролив,Инвентаризация,Z-отчет,Закрытие_смены,_Продажа,_Возврат,_Аннуляция,_Списание,_ВзврСпис,_СбросТрнзкц,_Перелив,_ПеревТрнзкц,_ТехПролив,_Инвентаризация,_Z-отчет,_Закрытие_смены,>Продажа,>Возврат,>Аннуляция,>>Продажа,>>Возврат,Инкассация,Касс_фонд,Перевод_опл,Расход_кассы,Декл_ден_ящ':U
-&global-define receipt-name entry (lookup (~{&receipt-code}, '1,6,8,69,96,14,15,16,17,11,12,13,101,106,108,169,196,114,115,116,117,111,112,113,201,206,208,301,306,2,3,4,5,7':U) + 1, ',' + 'Продажа,Возврат,Аннуляция,Списание,ВзврСпис,СбросТрнзкц,Перелив,ПеревТрнзкц,ТехПролив,Инвентаризация,Z-отчет,Закрытие_смены,_Продажа,_Возврат,_Аннуляция,_Списание,_ВзврСпис,_СбросТрнзкц,_Перелив,_ПеревТрнзкц,_ТехПролив,_Инвентаризация,_Z-отчет,_Закрытие_смены,>Продажа,>Возврат,>Аннуляция,>>Продажа,>>Возврат,Инкассация,Касс_фонд,Перевод_опл,Расход_кассы,Декл_ден_ящ':U)
-&global-define petrol-receipt-codes '14,15,16,17':U
-&global-define no-docum-receipt-codes '14,15,16,8,101,106,108,11,12,13,169,196,114,115,116,117,111,112,113,201,206,208,301,306,2,3,4,5,7':U
-&global-define no-sale-receipt-codes '14,15,16,17,8,11,12,13,101,106,108,169,196,114,115,116,117,111,112,113,201,206,208,301,306,2,3,4,5,7':U
-&global-define no-d-card-receipt-codes '14,15,16,17,8,11,12,13,69,101,106,108,169,196,114,115,116,117,111,112,113,101,106,108,208,2,3,4,5,7':U
-&global-define sale-out-receipt-codes '1,69':U
+&global-define receipt-codes-combo 'Продажа,1,Возврат,6,ВзврСпис,96,СбросТрнзкц,14,Перелив,15,ПеревТрнзкц,16,РазблТрнзкц,36,ТехПролив,17,Списание,69,Аннуляция,8,Инвентаризация,11,Закрытие_смены,13,Z-отчет,12,_Продажа,101,_Возврат,106,_ВзврСпис,196,_СбросТрнзкц,114,_Перелив,115,_ПеревТрнзкц,116,_ТехПролив,117,_Списание,169,_Аннуляция,108,_Инвентаризация,111,_Z-отчет,112,_СбросТрнзкц,114,_РазблТрнзкц,136,_Закрытие_смены,113,>Продажа,201,>Возврат,206,>Аннуляция,208,>>Продажа,301,>>Возврат,306,Инкассация,2,Касс_фонд,3,Перевод_опл,4,Расход_кассы,5,Декл_ден_ящ,7':U
+&global-define receipt-codes-combo-only-gds 'Продажа,1,Возврат,6,ВзврСпис,96,СбросТрнзкц,14,Перелив,15,ПеревТрнзкц,16,РазблТрнзкц,36,ТехПролив,17,Списание,69,Аннуляция,8,Инвентаризация,11,Z-отчет,12,_Продажа,101,_Возврат,106,_ВзврСпис,196,_СбросТрнзкц,114,_Перелив,115,_ПеревТрнзкц,116,_ТехПролив,117,_Списание,169,_Аннуляция,108,_Инвентаризация,111,_Z-отчет,112,_СбросТрнзкц,114,_РазблТрнзкц,136,>Продажа,201,>Возврат,206,>Аннуляция,208,>>Продажа,301,>>Возврат,306':U
+&global-define receipt-codes '1,6,8,69,96,14,15,16,36,17,11,12,13,101,106,108,169,196,114,115,116,117,111,112,136,113,201,206,208,301,306':U
+&global-define receipt-codes-full 'Продажа,Возврат,Аннуляция,Списание,ВзврСпис,СбросТрнзкц,Перелив,ПеревТрнзкц,РазблТрнзкц,ТехПролив,Инвентаризация,Z-отчет,Закрытие_смены,_Продажа,_Возврат,_Аннуляция,_Списание,_ВзврСпис,_СбросТрнзкц,_Перелив,_ПеревТрнзкц,_ТехПролив,_Инвентаризация,_Z-отчет,_РазблТрнзкц,_Закрытие_смены,>Продажа,>Возврат,>Аннуляция,>>Продажа,>>Возврат':U
+&global-define receipt-codes-all '1,6,8,69,96,14,15,16,36,17,11,12,13,101,106,108,169,196,114,115,116,117,111,112,136,113,201,206,208,301,306,2,3,4,5,7':U
+&global-define receipt-codes-all-full 'Продажа,Возврат,Аннуляция,Списание,ВзврСпис,СбросТрнзкц,Перелив,ПеревТрнзкц,РазблТрнзкц,ТехПролив,Инвентаризация,Z-отчет,Закрытие_смены,_Продажа,_Возврат,_Аннуляция,_Списание,_ВзврСпис,_СбросТрнзкц,_Перелив,_ПеревТрнзкц,_ТехПролив,_Инвентаризация,_Z-отчет,_РазблТрнзкц,_Закрытие_смены,>Продажа,>Возврат,>Аннуляция,>>Продажа,>>Возврат,Инкассация,Касс_фонд,Перевод_опл,Расход_кассы,Декл_ден_ящ':U
+&global-define receipt-name entry (lookup (~{&receipt-code}, '1,6,8,69,96,14,15,16,36,17,11,12,13,101,106,108,169,196,114,115,116,117,111,112,136,113,201,206,208,301,306,2,3,4,5,7':U) + 1, ',' + 'Продажа,Возврат,Аннуляция,Списание,ВзврСпис,СбросТрнзкц,Перелив,ПеревТрнзкц,РазблТрнзкц,ТехПролив,Инвентаризация,Z-отчет,Закрытие_смены,_Продажа,_Возврат,_Аннуляция,_Списание,_ВзврСпис,_СбросТрнзкц,_Перелив,_ПеревТрнзкц,_ТехПролив,_Инвентаризация,_Z-отчет,_РазблТрнзкц,_Закрытие_смены,>Продажа,>Возврат,>Аннуляция,>>Продажа,>>Возврат,Инкассация,Касс_фонд,Перевод_опл,Расход_кассы,Декл_ден_ящ':U)
+&global-define petrol-receipt-codes '14,15,16,17,36':U
+&global-define no-docum-receipt-codes '14,15,16,36,8,101,106,108,11,12,13,169,196,114,115,116,117,111,112,136,113,201,206,208,301,306,2,3,4,5,7':U
+&global-define no-sale-receipt-codes '14,15,16,36,17,8,11,12,13,101,106,108,169,196,114,115,116,117,111,112,136,113,201,206,208,301,306,2,3,4,5,7':U
+&global-define no-d-card-receipt-codes '14,15,16,36,17,8,11,12,13,69,101,106,108,169,196,114,115,116,117,111,112,136,113,101,106,108,208,2,3,4,5,7':U
+&global-define sale-out-receipt-codes '1,69,14,15,16,36':U
 &global-define sale-in-receipt-codes '6,96':U
-&global-define pre-receipt-codes '101,106,108,169,196,114,115,116,117,111,112,113':U
+&global-define pre-receipt-codes '101,106,108,169,196,114,115,116,136,117,111,112,113':U
 &global-define ord-receipt-codes '201,206,208,301,306':U
 &global-define no-inkas-receipt-codes '11,111,201,206':U
 &global-define inventory-receipt-codes '11':U
 &global-define no-gds-receipt-codes '12,13,112,113':U
-&global-define no-pay-receipt-codes '14,15,16,17,11,13,114,115,116,117,111,113,201,206,208,301,306':U
-&global-define no-discnt-receipt-codes '14,15,16,17,11,12,13,114,115,116,117,111,112,113,8,108,208,2,3,4,5,7':U
+&global-define no-pay-receipt-codes '14,15,16,17,11,13,114,115,116,136,,117,111,113,201,206,208,301,306':U
+&global-define no-discnt-receipt-codes '14,15,16,36,,17,11,12,13,114,115,116,117,111,112,136,,113,8,108,208,2,3,4,5,7':U
 &global-define no-calc-discnt-receipt-codes '6,69,96,106,169,196,206':U
 &global-define annu-receipt-codes '8,108,208':U
 &global-define bef-wro-without-payment 1
@@ -3359,6 +3367,8 @@ end.
 &global-define attr-ptrl-without-rvs '{&bef-attr-ptrl-without-rvs}':U
 &global-define bef-attr-office-type office-type
 &global-define attr-office-type '{&bef-attr-office-type}':U
+&global-define bef-attr-fuel-type fuel-type
+&global-define attr-fuel-type '{&bef-attr-fuel-type}':U
 &global-define bef-attr-is-loyalty-payment is-loyalty-payment
 &global-define attr-is-loyalty-payment '{&bef-attr-is-loyalty-payment}':U
 &global-define bef-attr-ban-bonus ban-bonus
@@ -3403,13 +3413,25 @@ end.
 &global-define attr-qnty-on-pallet '{&bef-attr-qnty-on-pallet}':U
 &global-define bef-attr-weight-of-pallet weight-of-pallet
 &global-define attr-weight-of-pallet '{&bef-attr-weight-of-pallet}':U
-&global-define gds-attr-list 'alcohol-prod,is-gas,ptrl-without-rvs,office-type,is-loyalty-payment,ban-bonus,fasovka,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet':U
+&global-define bef-attr-image-list image-list
+&global-define attr-image-list '{&bef-attr-image-list}':U
+&global-define gds-attr-list 'alcohol-prod,is-gas,ptrl-without-rvs,office-type,fuel-type,is-loyalty-payment,ban-bonus,fasovka,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet,image-list':U
 &global-define bef-prop-list-attr-office-type oss-pay,tso-ret
 &global-define prop-list-attr-office-type '{&bef-prop-list-attr-office-type}':U
 &global-define bef-attr-office-type_oss-pay oss-pay
 &global-define attr-office-type_oss-pay '{&bef-attr-office-type_oss-pay}':U
 &global-define bef-attr-office-type_tso-ret tso-ret
 &global-define attr-office-type_tso-ret '{&bef-attr-office-type_tso-ret}':U
+&global-define bef-prop-list-attr-fuel-type petrol,diesel-sum,diesel-wint,metan
+&global-define prop-list-attr-fuel-type '{&bef-prop-list-attr-fuel-type}':U
+&global-define bef-attr-fuel-type_petrol petrol
+&global-define attr-fuel-type_petrol '{&bef-attr-fuel-type_petrol}':U
+&global-define bef-attr-fuel-type_diesel-sum diesel-sum
+&global-define attr-fuel-type_diesel-sum '{&bef-attr-fuel-type_diesel-sum}':U
+&global-define bef-attr-fuel-type_diesel-wint diesel-wint
+&global-define attr-fuel-type_diesel-wint '{&bef-attr-fuel-type_diesel-wint}':U
+&global-define bef-attr-fuel-type_metan metan
+&global-define attr-fuel-type_metan '{&bef-attr-fuel-type_metan}':U
 &global-define bef-attr-taracode-bc taracode-bc
 &global-define attr-taracode-bc '{&bef-attr-taracode-bc}':U
 &global-define bc-attr-list 'taracode-bc':U
@@ -3723,7 +3745,13 @@ end.
 &global-define attr-esys-ftp-path-out '{&bef-attr-esys-ftp-path-out}':U
 &global-define bef-attr-esys-save-oxml-pck save-oxml-pck
 &global-define attr-esys-save-oxml-pck '{&bef-attr-esys-save-oxml-pck}':U
-&global-define ext-system-attr-list 'need-gen-new-xpack,FTP,Login,Password,Path,IN-dir,OUT-dir,save-oxml-pck':u
+&global-define bef-attr-esys-no-sent-ftp no-sent-ftp
+&global-define attr-esys-no-sent-ftp '{&bef-attr-esys-no-sent-ftp}':U
+&global-define bef-attr-esys-gln-net gln-net
+&global-define attr-esys-gln-net '{&bef-attr-esys-gln-net}':U
+&global-define bef-attr-esys-gln-provider gln-provider
+&global-define attr-esys-gln-provider '{&bef-attr-esys-gln-provider}':U
+&global-define ext-system-attr-list 'need-gen-new-xpack,FTP,Login,Password,Path,IN-dir,OUT-dir,save-oxml-pck,no-sent-ftp,gln-net,gln-provider':u
 &global-define bef-trdcattr-hold-part-code hold-part-code
 &global-define trdcattr-hold-part-code '{&bef-trdcattr-hold-part-code}':U
 &global-define bef-trdcattr-dov dov
@@ -3878,7 +3906,27 @@ end.
 &global-define trdcattr-zakaz-date '{&bef-trdcattr-zakaz-date}':U
 &global-define bef-trdcattr-delivery-time delivery-time
 &global-define trdcattr-delivery-time '{&bef-trdcattr-delivery-time}':U
-&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time':U
+&global-define bef-trdcattr-ptbobj ptbobj
+&global-define trdcattr-ptbobj '{&bef-trdcattr-ptbobj}':U
+&global-define bef-trdcattr-ptb-item-pour ptb-item-pour
+&global-define trdcattr-ptb-item-pour '{&bef-trdcattr-ptb-item-pour}':U
+&global-define bef-trdcattr-autoent autoent
+&global-define trdcattr-autoent '{&bef-trdcattr-autoent}':U
+&global-define bef-trdcattr-car-num car-num
+&global-define trdcattr-car-num '{&bef-trdcattr-car-num}':U
+&global-define bef-trdcattr-fio-driver fio-driver
+&global-define trdcattr-fio-driver '{&bef-trdcattr-fio-driver}':U
+&global-define bef-trdcattr-time-income time-income
+&global-define trdcattr-time-income '{&bef-trdcattr-time-income}':U
+&global-define bef-trdcattr-inspection-cert inspection-cert
+&global-define trdcattr-inspection-cert '{&bef-trdcattr-inspection-cert}':U
+&global-define bef-trdcattr-date-cert date-cert
+&global-define trdcattr-date-cert '{&bef-trdcattr-date-cert}':U
+&global-define bef-trdcattr-condition condition
+&global-define trdcattr-condition '{&bef-trdcattr-condition}':U
+&global-define bef-trdcattr-seals-condition seals-condition
+&global-define trdcattr-seals-condition '{&bef-trdcattr-seals-condition}':U
+&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition':U
 &global-define bef-lineattr-flora_ps flora_ps
 &global-define lineattr-flora_ps '{&bef-lineattr-flora_ps}':U
 &global-define bef-lineattr-flora_gds-code fl_gds-code
@@ -4002,11 +4050,11 @@ end.
 &global-define openxml-type-1c-full '{&bef-openxml-type-1c-full}':U
 &global-define bef-openxml-type-exite-edi 9
 &global-define openxml-type-exite-edi '{&bef-openxml-type-exite-edi}':U
-&global-define bef-openxml-type-exite-edi-full Exite-EDI
+&global-define bef-openxml-type-exite-edi-full EDI
 &global-define openxml-type-exite-edi-full '{&bef-openxml-type-exite-edi-full}':U
 &global-define openxml-type-list '0,1,2,3,4,5,6,7,8,9':U
-&global-define openxml-type-list-full 'НЕспециальная,Специальная,IBS TH,Oracle Retail,Lantab,EDOC-НН,Панель Руководителя,ДатаКрат DKLink,1C,Exite-EDI':U
-&global-define openxml-type-name entry (lookup (~{&openxml-type-code}, '0,1,2,3,4,5,6,7,8,9':U), 'НЕспециальная,Специальная,IBS TH,Oracle Retail,Lantab,EDOC-НН,Панель Руководителя,ДатаКрат DKLink,1C,Exite-EDI':U)
+&global-define openxml-type-list-full 'НЕспециальная,Специальная,IBS TH,Oracle Retail,Lantab,EDOC-НН,Панель Руководителя,ДатаКрат DKLink,1C,EDI':U
+&global-define openxml-type-name entry (lookup (~{&openxml-type-code}, '0,1,2,3,4,5,6,7,8,9':U), 'НЕспециальная,Специальная,IBS TH,Oracle Retail,Lantab,EDOC-НН,Панель Руководителя,ДатаКрат DKLink,1C,EDI':U)
 &global-define openxml-special-type-list '1,2,3,4,5,6,7,8,9':U
 &global-define openxml-licensed-type-list '7,9':U
 &global-define max-openxml-type-code 9
@@ -5861,6 +5909,14 @@ end.
 &global-define edi-err '{&bef-edi-err}':U
 &global-define bef-edi-err-full Отказ
 &global-define edi-err-full '{&bef-edi-err-full}':U
+&global-define bef-edi-orders-deliv 12
+&global-define edi-orders-deliv '{&bef-edi-orders-deliv}':U
+&global-define bef-edi-orders-deliv-full Доставлен
+&global-define edi-orders-deliv-full '{&bef-edi-orders-deliv-full}':U
+&global-define bef-edi-crit-err 13
+&global-define edi-crit-err '{&bef-edi-crit-err}':U
+&global-define bef-edi-crit-err-full Ошибка
+&global-define edi-crit-err-full '{&bef-edi-crit-err-full}':U
 &global-define bef-edi-return 1
 &global-define edi-return '{&bef-edi-return}':U
 &global-define bef-edi-return-full вернулся
@@ -5869,12 +5925,12 @@ end.
 &global-define edi-diff '{&bef-edi-diff}':U
 &global-define bef-edi-diff-full разница
 &global-define edi-diff-full '{&bef-edi-diff-full}':U
-&global-define edi-spis '0,1,2,3,4,5,6,7,8,9,11,99'
+&global-define edi-spis '0,1,2,3,4,5,6,7,8,9,11,99,12,13'
 &global-define edi-spis-e 
-&global-define edi-spis-f ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ'
-&global-define edi-spis-color '14,12,?,14,?,?,10,?,?,?,?,4'
-&global-define edi-stts-color entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99') , '14,12,?,14,?,?,10,?,?,?,?,4')
-&global-define edi-stts-name entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99') , ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ')
+&global-define edi-spis-f ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ,Доставлен,Ошибка'
+&global-define edi-spis-color '14,12,?,14,?,?,10,?,?,?,?,4,10,4'
+&global-define edi-stts-color entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99,12,13') , '14,12,?,14,?,?,10,?,?,?,?,4,10,4')
+&global-define edi-stts-name entry (lookup (~{&order-stts-int1}, '0,1,2,3,4,5,6,7,8,9,11,99,12,13') , ',отправлен,принят,подтвержден,подтвержден-,подтвержден+,подтвержденОк,поставка пришла,поставка принята,ПН отправлена,ПН получена,Отказ,Доставлен,Ошибка')
 &global-define bef-esys-dm-ordinal 0
 &global-define esys-dm-ordinal '{&bef-esys-dm-ordinal}':U
 &global-define bef-esys-dm-ordinal-full Как в СПН
@@ -5899,9 +5955,13 @@ end.
 &global-define esys-dm-exite-edi '{&bef-esys-dm-exite-edi}':U
 &global-define bef-esys-dm-exite-edi-full Exite-EDI
 &global-define esys-dm-exite-edi-full '{&bef-esys-dm-exite-edi-full}':U
-&global-define esys-dm-list '0,2,3,4,5':U
-&global-define esys-dm-list-full 'Как в СПН,Не архивировать;FTP,Oracle Retail,Не архивировать(Панель Руководителя;DKLink),Exite-EDI':U
-&global-define esys-dm-name entry (lookup (~{&esys-dm-code}, '0,2,3,4,5':U) + 1, ',' + 'Как в СПН,Не архивировать;FTP,Oracle Retail,Не архивировать(Панель Руководителя;DKLink),Exite-EDI':U)
+&global-define bef-esys-dm-contour-edi 9
+&global-define esys-dm-contour-edi '{&bef-esys-dm-contour-edi}':U
+&global-define bef-esys-dm-contour-edi-full Контур.EDI
+&global-define esys-dm-contour-edi-full '{&bef-esys-dm-contour-edi-full}':U
+&global-define esys-dm-list '0,2,3,4,5,9':U
+&global-define esys-dm-list-full 'Как в СПН,Не архивировать;FTP,Oracle Retail,Не архивировать(Панель Руководителя;DKLink),Exite-EDI,Контур.EDI':U
+&global-define esys-dm-name entry (lookup (~{&esys-dm-code}, '0,2,3,4,5,9':U) + 1, ',' + 'Как в СПН,Не архивировать;FTP,Oracle Retail,Не архивировать(Панель Руководителя;DKLink),Exite-EDI,Контур.EDI':U)
 &global-define bef-ggoattr-QntyAssMat QntyAssMat
 &global-define ggoattr-QntyAssMat '{&bef-ggoattr-QntyAssMat}':U
 &global-define bef-ggoattr-QntyAssMat-full QntyAssMat
@@ -6041,6 +6101,10 @@ end.
 &global-define orddocattr-ora-exp-seq-num '{&bef-orddocattr-ora-exp-seq-num}':U
 &global-define bef-ordlineattr-cli-qnty cycle-cli-qnty
 &global-define ordlineattr-cli-qnty '{&bef-ordlineattr-cli-qnty}':U
+&global-define bef-ordlineattr-min-stock min-stock
+&global-define ordlineattr-min-stock '{&bef-ordlineattr-min-stock}':U
+&global-define bef-ordlineattr-gds-way gds-way
+&global-define ordlineattr-gds-way '{&bef-ordlineattr-gds-way}':U
 &global-define bef-wth-qnty-sum =sum
 &global-define wth-qnty-sum '{&bef-wth-qnty-sum}':U
 &global-define bef-wth-qnty-sum-full =Сумма
@@ -6490,13 +6554,29 @@ end.
 &global-define edi-line-ordrsp-list '1,2,3':U
 &global-define edi-line-ordrsp-list-full 'Совпадение,Разница,Отмена':U
 &global-define edi-line-ordrsp-name entry (lookup (~{&edi-line-ordrsp-code}, '1,2,3':U) + 1, ',' + 'Совпадение,Разница,Отмена':U)
+&global-define bef-seaattr-obj sea-obj
+&global-define seaattr-obj '{&bef-seaattr-obj}':U
+&global-define bef-seaattr-obj-full Объект сезона
+&global-define seaattr-obj-full '{&bef-seaattr-obj-full}':U
+&global-define bef-gdsseaattr-season-coef gdssea-season-coef
+&global-define gdsseaattr-season-coef '{&bef-gdsseaattr-season-coef}':U
+&global-define bef-gdsseaattr-season-coef-full Коэф. увеличения спроса
+&global-define gdsseaattr-season-coef-full '{&bef-gdsseaattr-season-coef-full}':U
+&global-define bef-sea-global sea-global
+&global-define sea-global '{&bef-sea-global}':U
+&global-define bef-sea-global-full глобальный
+&global-define sea-global-full '{&bef-sea-global-full}':U
+&global-define bef-sea-local sea-local
+&global-define sea-local '{&bef-sea-local}':U
+&global-define bef-sea-local-full локальный
+&global-define sea-local-full '{&bef-sea-local-full}':U
 &global-define bef-alc-check-price 28
 &global-define alc-check-price '{&bef-alc-check-price}':U
 &global-define bef-alc-check-price-full содержание спирта
 &global-define alc-check-price-full '{&bef-alc-check-price-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 59ca1604305e, 148, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: db1f34f92e19, 253, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7197,7 +7277,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-rt-trn-doc_boss '{&bef-attr-rt-trn-doc_boss}':U
 &global-define bef-attr-gds-ref gds-ref
 &global-define attr-gds-ref '{&bef-attr-gds-ref}':U
-&global-define bef-prop-list-attr-gds-ref dif-nam1,dif-nam2,dpl-off,dif-pdbc,pbc-veto,tnvedimp,dfltggrp,gds-copy,gdsscrvw,unq-artc,is-scgb
+&global-define bef-prop-list-attr-gds-ref dif-nam1,dif-nam2,dpl-off,dif-pdbc,pbc-veto,tnvedimp,shema-foto,dfltggrp,gds-copy,gdsscrvw,unq-artc,is-scgb
 &global-define prop-list-attr-gds-ref '{&bef-prop-list-attr-gds-ref}':U
 &global-define bef-attr-gds-ref_dif-nam1 dif-nam1
 &global-define attr-gds-ref_dif-nam1 '{&bef-attr-gds-ref_dif-nam1}':U
@@ -7211,6 +7291,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-gds-ref_pbc-veto '{&bef-attr-gds-ref_pbc-veto}':U
 &global-define bef-attr-gds-ref_tnvedimp tnvedimp
 &global-define attr-gds-ref_tnvedimp '{&bef-attr-gds-ref_tnvedimp}':U
+&global-define bef-attr-gds-ref_shema-foto shema-foto
+&global-define attr-gds-ref_shema-foto '{&bef-attr-gds-ref_shema-foto}':U
 &global-define bef-attr-gds-ref_dfltggrp dfltggrp
 &global-define attr-gds-ref_dfltggrp '{&bef-attr-gds-ref_dfltggrp}':U
 &global-define bef-attr-gds-ref_gds-copy gds-copy
@@ -7777,10 +7859,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU':U
-&global-define str-glbl_vss-revision 'Revision':U
-&global-define str-glbl2_vss-revision 'Revision: aea5316774be, 0, rls ':U
+&global-define str-glbl_vss-revision 'Revision: 3ec8c04dde00, 238, rls ':U
+&global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 0118b50ecb58, 232, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 199ddf50f4e5, 2, test ':U
-&global-define str-glblt_vss-revision 'Revision: 59ca1604305e, 148, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: e5ab029c9ffa, 257, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: e5ab029c9ffa, 257, rls ':U
+&global-define str-glblt_vss-revision 'Revision: db1f34f92e19, 253, rls ':U
 &endif
