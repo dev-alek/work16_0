@@ -780,6 +780,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 { cmp/cr-prep.i 1 lob-res-list          list         "Список"      list           "List"        }
 { cmp/cr-prep.i 1 lob-res-list-macro    list-macro   "Макрос формир списка"      list-macro           "List Forming Macro"        }
 { cmp/cr-prep.i 1 lob-res-ref           ref          "Справочник"  ref            "Reference"   }
+{ cmp/cr-prep.i 1 lob-egais-wb          egais-wb     "Накладная EGAIS"  egais-wb  "EGAIS Waybill" }
 
 
 &glob clob-res-codes '{&bef-lob-res-data}~
@@ -790,6 +791,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 ,{&bef-lob-res-list}~
 ,{&bef-lob-res-list-macro}~
 ,{&bef-lob-res-ref}~
+,{&bef-lob-egais-wb}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes {&clob-res-codes}" ).
@@ -802,6 +804,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-
 ,{&bef-lob-res-list-full}~
 ,{&bef-lob-res-list-macro-full}~
 ,{&bef-lob-res-ref-full}~
+,{&bef-lob-egais-wb-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes-full {&clob-res-codes-full}" ).
@@ -1883,6 +1886,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-stts-
 { cmp/cr-prep.i 1 esys-dm-CDash           4    "Не архивировать(Панель Руководителя;DKLink)"  4  "No arj(Commanders DashBoard;DKLink)"    }
 { cmp/cr-prep.i 1 esys-dm-exite-edi       5    "Exite-EDI"                                    5  "Exite-EDI"              }
 { cmp/cr-prep.i 1 esys-dm-contour-edi     9    "Контур.EDI"                                   9  "Сontour.EDI"            }
+{ cmp/cr-prep.i 1 esys-dm-egais          10    "ЕГАИС"                                       10  "EGAIS"                  }
 
 &glob esys-dm-list '~
 {&bef-esys-dm-ordinal}~
@@ -1891,6 +1895,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-stts-
 ,{&bef-esys-dm-CDash}~
 ,{&bef-esys-dm-exite-edi}~
 ,{&bef-esys-dm-contour-edi}~
+,{&bef-esys-dm-egais}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-list {&esys-dm-list}" ).
@@ -1902,6 +1907,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-l
 ,{&bef-esys-dm-CDash-full}~
 ,{&bef-esys-dm-exite-edi-full}~
 ,{&bef-esys-dm-contour-edi-full}~
+,{&bef-esys-dm-egais-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-list-full {&esys-dm-list-full}" ).
@@ -2575,3 +2581,7 @@ run filwrlib_num-lines-get in this-procedure
   ) .
 
 { cmp/cr-prep.i 1 alc-check-price 28  "содержание спирта" 28 "contents alcohol"  }
+
+/* Типы сообщения EGAIS */
+{ cmp/cr-prep.i 1 EGAIS-DictOrg    1     "Справочник организаций"    1    "Dictionary organization"   }
+{ cmp/cr-prep.i 1 EGAIS-DictGds    2     "Справочник товаров"        2    "Dictionary goods"   }   
