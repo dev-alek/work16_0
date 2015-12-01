@@ -1772,6 +1772,17 @@ define variable vss-description as character no-undo init "".
 
 { gbl/menuload.i
   {&bef-menuload_service_utility}
+  "'Утилита загрузки фото'"
+  "'utl/imgsearch.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_service_utility}
   "'Перенос изображений в новую структуру'"
   "'utl/image2lst.p'"
   " "
