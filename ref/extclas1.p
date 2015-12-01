@@ -201,6 +201,8 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
           no-error .
           if not (v-obj-type = {&shop}
                   or
+                  v-obj-type = {&cmp}
+                  or
                   v-obj-type = {&stock}
                   or
                   v-obj-type = ''
