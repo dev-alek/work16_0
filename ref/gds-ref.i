@@ -2302,11 +2302,6 @@ FUNCTION Get-good RETURNS CHARACTER
                                             output v-assort-min          )
                                             no-error.
       if error-status :error then do: return error return-value. end.*/
-      IF mImagePh THEN
-      DO:
-        RUN gds-attr-value (loc-gds-obj.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
-        mphcol = LENGTH (vImageList) > 0.
-      END.
     end.
     else do:
       assign
@@ -2322,6 +2317,12 @@ FUNCTION Get-good RETURNS CHARACTER
         v-assort-min         = no
       .
     end.
+       IF mImagePh THEN
+      DO:
+        RUN gds-attr-value (loc-goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+        mphcol = LENGTH (vImageList) > 0.
+      END.
+    
  RETURN mark.
 END FUNCTION.
 
