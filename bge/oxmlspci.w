@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v9r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -14,7 +14,7 @@ DEFINE TEMP-TABLE tt-ext-system-attr NO-UNDO LIKE ub.ext-system-attr.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -73,7 +73,7 @@ define variable v-type as character no-undo.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -87,20 +87,20 @@ define variable v-type as character no-undo.
 &Scoped-define INTERNAL-TABLES tt-ext-system
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
-&Scoped-define FIELDS-IN-QUERY-Dialog-Frame tt-ext-system.esys-type ~
-tt-ext-system.esys-id tt-ext-system.delivery-method tt-ext-system.esys-name ~
-tt-ext-system.esys-des tt-ext-system.esys-have-export ~
-tt-ext-system.esys-send-news-exp tt-ext-system.esys-db-num-exp ~
-tt-ext-system.esys-have-import tt-ext-system.esys-num-days-keep-exp ~
-tt-ext-system.esys-send-news-imp tt-ext-system.esys-db-num-imp ~
-tt-ext-system.esys-max-p-size tt-ext-system.max-p-queue ~
-tt-ext-system.max-p-time tt-ext-system.save-days-pck-num
-&Scoped-define ENABLED-FIELDS-IN-QUERY-Dialog-Frame tt-ext-system.esys-type ~
-tt-ext-system.esys-id tt-ext-system.delivery-method tt-ext-system.esys-name ~
-tt-ext-system.esys-des tt-ext-system.esys-have-export ~
-tt-ext-system.esys-have-import tt-ext-system.esys-num-days-keep-exp ~
-tt-ext-system.esys-max-p-size tt-ext-system.max-p-queue ~
-tt-ext-system.max-p-time tt-ext-system.save-days-pck-num
+&Scoped-define FIELDS-IN-QUERY-Dialog-Frame tt-ext-system.esys-id ~
+tt-ext-system.esys-des tt-ext-system.esys-type tt-ext-system.esys-name ~
+tt-ext-system.delivery-method tt-ext-system.esys-have-export ~
+tt-ext-system.esys-db-num-exp tt-ext-system.save-days-pck-num ~
+tt-ext-system.esys-send-news-exp tt-ext-system.esys-have-import ~
+tt-ext-system.esys-num-days-keep-exp tt-ext-system.esys-max-p-size ~
+tt-ext-system.esys-db-num-imp tt-ext-system.esys-send-news-imp ~
+tt-ext-system.max-p-queue tt-ext-system.max-p-time 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-Dialog-Frame tt-ext-system.esys-id ~
+tt-ext-system.esys-des tt-ext-system.esys-type tt-ext-system.esys-name ~
+tt-ext-system.delivery-method tt-ext-system.esys-have-export ~
+tt-ext-system.save-days-pck-num tt-ext-system.esys-have-import ~
+tt-ext-system.esys-num-days-keep-exp tt-ext-system.esys-max-p-size ~
+tt-ext-system.max-p-queue tt-ext-system.max-p-time 
 &Scoped-define ENABLED-TABLES-IN-QUERY-Dialog-Frame tt-ext-system
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-Dialog-Frame tt-ext-system
 &Scoped-define QUERY-STRING-Dialog-Frame FOR EACH tt-ext-system SHARE-LOCK
@@ -110,33 +110,33 @@ tt-ext-system.max-p-time tt-ext-system.save-days-pck-num
 
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-FIELDS tt-ext-system.esys-type tt-ext-system.esys-id ~
-tt-ext-system.delivery-method tt-ext-system.esys-name ~
-tt-ext-system.esys-des tt-ext-system.esys-have-export ~
-tt-ext-system.esys-have-import tt-ext-system.esys-num-days-keep-exp ~
-tt-ext-system.esys-max-p-size tt-ext-system.max-p-queue ~
-tt-ext-system.max-p-time tt-ext-system.save-days-pck-num
+&Scoped-Define ENABLED-FIELDS tt-ext-system.esys-id tt-ext-system.esys-des ~
+tt-ext-system.esys-type tt-ext-system.esys-name ~
+tt-ext-system.delivery-method tt-ext-system.esys-have-export ~
+tt-ext-system.save-days-pck-num tt-ext-system.esys-have-import ~
+tt-ext-system.esys-num-days-keep-exp tt-ext-system.esys-max-p-size ~
+tt-ext-system.max-p-queue tt-ext-system.max-p-time 
 &Scoped-define ENABLED-TABLES tt-ext-system
 &Scoped-define FIRST-ENABLED-TABLE tt-ext-system
 &Scoped-Define ENABLED-OBJECTS b-exit RECT-1 RECT-2 RECT-3 RECT-4 b-quit ~
-b-links b-help FI-delivery-method f-ftp-ip f-login f-password f-ftp-path ~
-f-ftp-path-in f-ftp-path-out b-db-export f-exp-db-name T-exp-conf-wait ~
-b-db-import f-imp-db-name T-imp-conf-send t-delete-pck-on FILL-IN-4 ~
-l-save-oxml-pck
-&Scoped-Define DISPLAYED-FIELDS tt-ext-system.esys-type ~
-tt-ext-system.esys-id tt-ext-system.delivery-method tt-ext-system.esys-name ~
-tt-ext-system.esys-des tt-ext-system.esys-have-export ~
-tt-ext-system.esys-send-news-exp tt-ext-system.esys-db-num-exp ~
-tt-ext-system.esys-have-import tt-ext-system.esys-num-days-keep-exp ~
-tt-ext-system.esys-send-news-imp tt-ext-system.esys-db-num-imp ~
-tt-ext-system.esys-max-p-size tt-ext-system.max-p-queue ~
-tt-ext-system.max-p-time tt-ext-system.save-days-pck-num
+b-links b-help f-ftp-ip f-login FI-delivery-method f-password f-ftp-path ~
+f-ftp-path-in f-ftp-path-out b-db-export f-exp-db-name t-delete-pck-on ~
+T-exp-conf-wait b-db-import f-imp-db-name T-imp-conf-send l-save-oxml-pck ~
+FILL-IN-4 
+&Scoped-Define DISPLAYED-FIELDS tt-ext-system.esys-id ~
+tt-ext-system.esys-des tt-ext-system.esys-type tt-ext-system.esys-name ~
+tt-ext-system.delivery-method tt-ext-system.esys-have-export ~
+tt-ext-system.esys-db-num-exp tt-ext-system.save-days-pck-num ~
+tt-ext-system.esys-send-news-exp tt-ext-system.esys-have-import ~
+tt-ext-system.esys-num-days-keep-exp tt-ext-system.esys-max-p-size ~
+tt-ext-system.esys-db-num-imp tt-ext-system.esys-send-news-imp ~
+tt-ext-system.max-p-queue tt-ext-system.max-p-time 
 &Scoped-define DISPLAYED-TABLES tt-ext-system
 &Scoped-define FIRST-DISPLAYED-TABLE tt-ext-system
-&Scoped-Define DISPLAYED-OBJECTS FI-delivery-method fi-des-label f-ftp-ip ~
-f-login f-password fi-screen-pass f-ftp-path f-ftp-path-in f-ftp-path-out ~
-f-exp-db-name T-exp-conf-wait f-imp-db-name T-imp-conf-send t-delete-pck-on ~
-FILL-IN-4 l-save-oxml-pck
+&Scoped-Define DISPLAYED-OBJECTS fi-des-label f-ftp-ip f-login ~
+FI-delivery-method f-password fi-screen-pass f-ftp-path f-ftp-path-in ~
+f-ftp-path-out f-exp-db-name t-delete-pck-on T-exp-conf-wait f-imp-db-name ~
+T-imp-conf-send l-save-oxml-pck FILL-IN-4 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -151,142 +151,142 @@ FILL-IN-4 l-save-oxml-pck
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-DEFINE MENU MENU-b-links
+DEFINE MENU MENU-b-links 
        MENU-ITEM m_thobj        LABEL "Соответствие объектов ВС объектам IBS TH"
        MENU-ITEM m_edoc-nn      LABEL "Контрагенты для обмена данными (по EDOC-NN)"
-       MENU-ITEM m_exite-edi    LABEL "Контрагенты для обмена данными (по Exite-EDI)"
+       MENU-ITEM m_exite-edi    LABEL "Контрагенты для обмена данными (по EDI)"
        MENU-ITEM m_locks        LABEL "Блокирующие связи".
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-db-export
+DEFINE BUTTON b-db-export 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-db-import
+DEFINE BUTTON b-db-import 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-links
-     LABEL "Связи"
+DEFINE BUTTON b-links 
+     LABEL "Связи" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-exp-db-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 33 BY 1 NO-UNDO.
+DEFINE VARIABLE f-exp-db-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 32 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-ftp-ip AS CHARACTER FORMAT "X(256)":U
-     LABEL "FTP"
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE f-ftp-ip AS CHARACTER FORMAT "X(256)":U 
+     LABEL "FTP" 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 24 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-ftp-path AS CHARACTER FORMAT "X(256)":U
-     LABEL "Путь"
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE f-ftp-path AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Путь" 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 24 BY 1 TOOLTIP "Путь (от HOME-директории)" NO-UNDO.
 
-DEFINE VARIABLE f-ftp-path-in AS CHARACTER FORMAT "X(256)":U
-     LABEL "Вход."
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE f-ftp-path-in AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Вход." 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 24 BY 1 TOOLTIP "Папка для входящих сообщений" NO-UNDO.
 
-DEFINE VARIABLE f-ftp-path-out AS CHARACTER FORMAT "X(256)":U
-     LABEL "Исход."
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE f-ftp-path-out AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Исход." 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 24 BY 1 TOOLTIP "Папка для исходящих сообщений" NO-UNDO.
 
-DEFINE VARIABLE f-imp-db-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 33 BY 1 NO-UNDO.
+DEFINE VARIABLE f-imp-db-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 32 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-login AS CHARACTER FORMAT "X(256)":U
-     LABEL "Логин"
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE f-login AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Логин" 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 24 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-password AS CHARACTER FORMAT "X(10)":U
-     LABEL "Пароль"
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE f-password AS CHARACTER FORMAT "X(10)":U 
+     LABEL "Пароль" 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 24 BY 1 NO-UNDO.
 
-DEFINE VARIABLE FI-delivery-method AS CHARACTER FORMAT "X(256)":U INITIAL "Метод доставки"
-     VIEW-AS FILL-IN
-     SIZE 14.5 BY 1 NO-UNDO.
+DEFINE VARIABLE FI-delivery-method AS CHARACTER FORMAT "X(256)":U INITIAL "Метод доставки:" 
+     VIEW-AS FILL-IN 
+     SIZE 15.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fi-des-label AS CHARACTER FORMAT "X(256)":U INITIAL "Описание:"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE fi-des-label AS CHARACTER FORMAT "X(256)":U INITIAL "Описание:" 
+     VIEW-AS FILL-IN 
      SIZE 10 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fi-screen-pass AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE fi-screen-pass AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 24 BY .67
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-4 AS CHARACTER FORMAT "X(256)":U INITIAL "Условия переформирования пакетов:"
-      VIEW-AS TEXT
+DEFINE VARIABLE FILL-IN-4 AS CHARACTER FORMAT "X(256)":U INITIAL "Условия переформирования пакетов:" 
+      VIEW-AS TEXT 
      SIZE 36 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-save-oxml-pck AS CHARACTER FORMAT "X(256)":U INITIAL "дн."
-      VIEW-AS TEXT
+DEFINE VARIABLE l-save-oxml-pck AS CHARACTER FORMAT "X(256)":U INITIAL "дн." 
+      VIEW-AS TEXT 
      SIZE 5 BY .67 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 48 BY 12.03.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 47.5 BY 12.04.
 
 DEFINE RECTANGLE RECT-2
-     EDGE-PIXELS 2 GRAPHIC-EDGE
-     SIZE 12.5 BY 1.27
+     EDGE-PIXELS 2 GRAPHIC-EDGE    
+     SIZE 12.5 BY 1.25
      BGCOLOR 8 FGCOLOR 8 .
 
 DEFINE RECTANGLE RECT-3
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 48 BY 8.8.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 48 BY 7.08.
 
 DEFINE RECTANGLE RECT-4
-     EDGE-PIXELS 2 GRAPHIC-EDGE
-     SIZE 12.5 BY 1.27
+     EDGE-PIXELS 2 GRAPHIC-EDGE    
+     SIZE 12.5 BY 1.25
      BGCOLOR 8 FGCOLOR 8 .
 
-DEFINE VARIABLE t-delete-pck-on AS LOGICAL INITIAL no
-     LABEL "Удал. ф-лы из HEAP"
+DEFINE VARIABLE t-delete-pck-on AS LOGICAL INITIAL no 
+     LABEL "Удал. ф-лы из HEAP" 
      VIEW-AS TOGGLE-BOX
-     SIZE 22 BY 1.07 NO-UNDO.
+     SIZE 22 BY 1.08 NO-UNDO.
 
-DEFINE VARIABLE T-exp-conf-wait AS LOGICAL INITIAL no
-     LABEL "Ждет подтв. после экспорта"
+DEFINE VARIABLE T-exp-conf-wait AS LOGICAL INITIAL no 
+     LABEL "Ждет подтв. после экспорта" 
      VIEW-AS TOGGLE-BOX
-     SIZE 43 BY 1.07 NO-UNDO.
+     SIZE 31.5 BY 1.08 NO-UNDO.
 
-DEFINE VARIABLE T-imp-conf-send AS LOGICAL INITIAL no
-     LABEL "Посылает подтв. после импорта"
+DEFINE VARIABLE T-imp-conf-send AS LOGICAL INITIAL no 
+     LABEL "Посылает подтв. после импорта" 
      VIEW-AS TOGGLE-BOX
-     SIZE 43 BY 1.07 NO-UNDO.
+     SIZE 33 BY 1.08 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY Dialog-Frame FOR
+DEFINE QUERY Dialog-Frame FOR 
       tt-ext-system SCROLLING.
 &ANALYZE-RESUME
 
@@ -296,105 +296,105 @@ DEFINE FRAME Dialog-Frame
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      b-links AT ROW 1 COL 26 WIDGET-ID 24
-     tt-ext-system.esys-type AT ROW 1 COL 43 COLON-ALIGNED WIDGET-ID 64
+     b-help AT ROW 1 COL 95
+     tt-ext-system.esys-id AT ROW 2.25 COL 11 COLON-ALIGNED WIDGET-ID 26
+          LABEL "Код"
+          VIEW-AS FILL-IN 
+          SIZE 10 BY 1
+     fi-des-label AT ROW 2.25 COL 51 NO-LABEL
+     tt-ext-system.esys-des AT ROW 2.25 COL 61.5 NO-LABEL
+          VIEW-AS EDITOR SCROLLBAR-VERTICAL
+          SIZE 34.5 BY 2
+     tt-ext-system.esys-type AT ROW 3.58 COL 11 COLON-ALIGNED WIDGET-ID 64
           LABEL "Тип ВС" FORMAT "->,>>>,>>9"
           VIEW-AS COMBO-BOX INNER-LINES 8
           LIST-ITEM-PAIRS "Item 1",0
           DROP-DOWN-LIST
-          SIZE 35.5 BY 1
-     b-help AT ROW 1 COL 95
-     FI-delivery-method AT ROW 1.8 COL 80.5 NO-LABEL WIDGET-ID 42
-     tt-ext-system.esys-id AT ROW 2 COL 11 COLON-ALIGNED WIDGET-ID 26
-          LABEL "Код"
-          VIEW-AS FILL-IN
-          SIZE 10 BY 1
-     tt-ext-system.delivery-method AT ROW 2.6 COL 42.5 NO-LABEL WIDGET-ID 44
-          VIEW-AS RADIO-SET VERTICAL
-          RADIO-BUTTONS
-                    "Item 1", 1,
-"Item 2", 2
-          SIZE 46.5 BY 2.13
-     tt-ext-system.esys-name AT ROW 3 COL 3
+          SIZE 34.5 BY 1
+     tt-ext-system.esys-name AT ROW 4.92 COL 3
           LABEL "Название" FORMAT "X(30)"
-          VIEW-AS FILL-IN
-          SIZE 29 BY 1
-     fi-des-label AT ROW 4 COL 2 NO-LABEL
-     tt-ext-system.esys-des AT ROW 5 COL 1 NO-LABEL
-          VIEW-AS EDITOR SCROLLBAR-VERTICAL
-          SIZE 49 BY 3.77
+          VIEW-AS FILL-IN 
+          SIZE 34.5 BY 1
      f-ftp-ip AT ROW 5 COL 59.5 COLON-ALIGNED WIDGET-ID 48
      f-login AT ROW 6 COL 59.5 COLON-ALIGNED WIDGET-ID 50
-     f-password AT ROW 7 COL 59.5 COLON-ALIGNED WIDGET-ID 52 BLANK
-     fi-screen-pass AT ROW 7.27 COL 59.5 COLON-ALIGNED NO-LABEL WIDGET-ID 54
+     FI-delivery-method AT ROW 6.33 COL 2.88 NO-LABEL WIDGET-ID 42
+     tt-ext-system.delivery-method AT ROW 6.33 COL 16.5 COLON-ALIGNED NO-LABEL WIDGET-ID 28
+          VIEW-AS COMBO-BOX 
+          LIST-ITEM-PAIRS "Item 1",1,
+                     "Item 2",2
+          DROP-DOWN-LIST
+          SIZE 29 BY 1
+     f-password AT ROW 7 COL 59.5 COLON-ALIGNED WIDGET-ID 52 BLANK 
+     fi-screen-pass AT ROW 7.25 COL 59.5 COLON-ALIGNED NO-LABEL WIDGET-ID 54
      f-ftp-path AT ROW 8 COL 59.5 COLON-ALIGNED WIDGET-ID 56
      f-ftp-path-in AT ROW 9 COL 59.5 COLON-ALIGNED WIDGET-ID 66
-     tt-ext-system.esys-have-export AT ROW 9.23 COL 3.5
+     tt-ext-system.esys-have-export AT ROW 9.21 COL 3.5
           LABEL "Экспорт"
           VIEW-AS TOGGLE-BOX
           SIZE 10.5 BY .83
      f-ftp-path-out AT ROW 10 COL 59.5 COLON-ALIGNED WIDGET-ID 68
-     tt-ext-system.esys-send-news-exp AT ROW 10.5 COL 15.5
+     tt-ext-system.esys-db-num-exp AT ROW 10.5 COL 4.5 COLON-ALIGNED
+          LABEL "БД" FORMAT ">>>>9"
+          VIEW-AS FILL-IN 
+          SIZE 5.5 BY 1
+     b-db-export AT ROW 10.5 COL 12 WIDGET-ID 16
+     f-exp-db-name AT ROW 10.5 COL 14 COLON-ALIGNED NO-LABEL WIDGET-ID 20
+     t-delete-pck-on AT ROW 12 COL 55 WIDGET-ID 62
+     tt-ext-system.save-days-pck-num AT ROW 12 COL 82.5 COLON-ALIGNED WIDGET-ID 58
+          LABEL "через"
+          VIEW-AS FILL-IN 
+          SIZE 5.5 BY 1.08
+     tt-ext-system.esys-send-news-exp AT ROW 12.25 COL 6.5
           LABEL "Отправлять в новости"
           VIEW-AS TOGGLE-BOX
           SIZE 24 BY .83
-     tt-ext-system.esys-db-num-exp AT ROW 11.73 COL 3.5 COLON-ALIGNED
-          LABEL "БД" FORMAT ">>>>9"
-          VIEW-AS FILL-IN
-          SIZE 5.5 BY 1
-     b-db-export AT ROW 11.73 COL 11 WIDGET-ID 16
-     f-exp-db-name AT ROW 11.73 COL 13 COLON-ALIGNED NO-LABEL WIDGET-ID 20
-     tt-ext-system.esys-have-import AT ROW 12.73 COL 52 WIDGET-ID 6
+     T-exp-conf-wait AT ROW 13.25 COL 6.5 WIDGET-ID 30
+     tt-ext-system.esys-have-import AT ROW 14 COL 52 WIDGET-ID 6
           LABEL "Импорт"
           VIEW-AS TOGGLE-BOX
           SIZE 10.5 BY .83
-     tt-ext-system.esys-num-days-keep-exp AT ROW 13.23 COL 24.5 COLON-ALIGNED
+     tt-ext-system.esys-num-days-keep-exp AT ROW 14.5 COL 37 COLON-ALIGNED
           LABEL "Дней хранения пакетов" FORMAT ">,>>>,>>9"
-          VIEW-AS FILL-IN
-          SIZE 7.5 BY 1
-     tt-ext-system.esys-send-news-imp AT ROW 13.8 COL 64 WIDGET-ID 12
-          LABEL "Отправлять в новости"
-          VIEW-AS TOGGLE-BOX
-          SIZE 24 BY .83
-     T-exp-conf-wait AT ROW 14.87 COL 4.5 WIDGET-ID 30
-     tt-ext-system.esys-db-num-imp AT ROW 14.87 COL 52 COLON-ALIGNED WIDGET-ID 10
-          LABEL "БД" FORMAT ">>>>9"
-          VIEW-AS FILL-IN
-          SIZE 5.5 BY 1
-     b-db-import AT ROW 14.87 COL 60 WIDGET-ID 18
-     f-imp-db-name AT ROW 14.87 COL 61.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
-     tt-ext-system.esys-max-p-size AT ROW 15.93 COL 29.5 COLON-ALIGNED WIDGET-ID 40
-          LABEL "Макс. размер пакета" FORMAT ">,>>>,>>9"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 9 BY 1
-     T-imp-conf-send AT ROW 17 COL 54 WIDGET-ID 32
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     tt-ext-system.esys-max-p-size AT ROW 15.75 COL 37 COLON-ALIGNED WIDGET-ID 40
+          LABEL "Макс. размер пакета" FORMAT ">,>>>,>>9"
+          VIEW-AS FILL-IN 
+          SIZE 9 BY 1
+     tt-ext-system.esys-db-num-imp AT ROW 16 COL 53 COLON-ALIGNED WIDGET-ID 10
+          LABEL "БД" FORMAT ">>>>9"
+          VIEW-AS FILL-IN 
+          SIZE 5.5 BY 1
+     b-db-import AT ROW 16 COL 60.5 WIDGET-ID 18
+     f-imp-db-name AT ROW 16.08 COL 62.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     tt-ext-system.max-p-queue AT ROW 19 COL 39 COLON-ALIGNED WIDGET-ID 34
+     tt-ext-system.esys-send-news-imp AT ROW 17.5 COL 55 WIDGET-ID 12
+          LABEL "Отправлять в новости"
+          VIEW-AS TOGGLE-BOX
+          SIZE 24 BY .83
+     tt-ext-system.max-p-queue AT ROW 18.25 COL 37 COLON-ALIGNED WIDGET-ID 34
           LABEL "Кол-во неподтв. пакетов" FORMAT ">>>9"
-          VIEW-AS FILL-IN
-          SIZE 5 BY 1
-     tt-ext-system.max-p-time AT ROW 20 COL 39 COLON-ALIGNED WIDGET-ID 36
+          VIEW-AS FILL-IN 
+          SIZE 9 BY 1
+     T-imp-conf-send AT ROW 18.5 COL 55 WIDGET-ID 32
+     tt-ext-system.max-p-time AT ROW 19.5 COL 37 COLON-ALIGNED WIDGET-ID 36
           LABEL "Время ожидания потверждения > (мин)"
-          VIEW-AS FILL-IN
-          SIZE 7 BY 1 TOOLTIP "max время, черепз котор. должен отправляться очередной пакет"
-     tt-ext-system.save-days-pck-num AT ROW 21.53 COL 51 COLON-ALIGNED WIDGET-ID 58
-          LABEL "через"
-          VIEW-AS FILL-IN
-          SIZE 5.5 BY 1.07
-     t-delete-pck-on AT ROW 21.8 COL 24 WIDGET-ID 62
-     FILL-IN-4 AT ROW 18 COL 7.5 COLON-ALIGNED NO-LABEL WIDGET-ID 38
-     l-save-oxml-pck AT ROW 21.8 COL 57 COLON-ALIGNED NO-LABEL WIDGET-ID 60
-     RECT-1 AT ROW 9.5 COL 1
+          VIEW-AS FILL-IN 
+          SIZE 9 BY 1 TOOLTIP "max время, черепз котор. должен отправляться очередной пакет"
+     l-save-oxml-pck AT ROW 12.25 COL 91 COLON-ALIGNED NO-LABEL WIDGET-ID 60
+     FILL-IN-4 AT ROW 17.25 COL 2.38 COLON-ALIGNED NO-LABEL WIDGET-ID 38
+     RECT-1 AT ROW 9.5 COL 1.5
      RECT-2 AT ROW 9 COL 2.5
-     RECT-3 AT ROW 12.73 COL 50 WIDGET-ID 8
-     RECT-4 AT ROW 12.47 COL 51.5 WIDGET-ID 14
-     SPACE(35.29) SKIP(9.25)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     RECT-3 AT ROW 14.5 COL 50 WIDGET-ID 8
+     RECT-4 AT ROW 13.75 COL 51.5 WIDGET-ID 14
+     SPACE(34.49) SKIP(6.74)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Внешняя подсистема Open XML"
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
@@ -420,11 +420,11 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-ASSIGN
+ASSIGN 
        b-links:POPUP-MENU IN FRAME Dialog-Frame       = MENU MENU-b-links:HANDLE.
 
 /* SETTINGS FOR FILL-IN tt-ext-system.esys-db-num-exp IN FRAME Dialog-Frame
@@ -449,10 +449,10 @@ ASSIGN
    NO-ENABLE EXP-LABEL                                                  */
 /* SETTINGS FOR COMBO-BOX tt-ext-system.esys-type IN FRAME Dialog-Frame
    EXP-LABEL EXP-FORMAT                                                 */
-ASSIGN
+ASSIGN 
        f-exp-db-name:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
-ASSIGN
+ASSIGN 
        f-imp-db-name:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN FI-delivery-method IN FRAME Dialog-Frame
@@ -481,7 +481,7 @@ ASSIGN
 */  /* DIALOG-BOX Dialog-Frame */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -621,7 +621,7 @@ END.
 
 &Scoped-define SELF-NAME tt-ext-system.delivery-method
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-ext-system.delivery-method Dialog-Frame
-ON VALUE-CHANGED OF tt-ext-system.delivery-method IN FRAME Dialog-Frame
+ON VALUE-CHANGED OF tt-ext-system.delivery-method IN FRAME Dialog-Frame /* delivery-method */
 DO:
   ASSIGN
   tt-ext-system.delivery-method.
@@ -723,7 +723,7 @@ END.
 
 &Scoped-define SELF-NAME m_exite-edi
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_exite-edi Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_exite-edi /* Контрагенты для обмена данными (по Exite-EDI) */
+ON CHOOSE OF MENU-ITEM m_exite-edi /* Контрагенты для обмена данными (по EDI) */
 DO:
   ASSIGN
   link-option = "exite-edi".
@@ -794,7 +794,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -895,7 +895,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -914,39 +914,37 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY FI-delivery-method fi-des-label f-ftp-ip f-login f-password
-          fi-screen-pass f-ftp-path f-ftp-path-in f-ftp-path-out f-exp-db-name
-          T-exp-conf-wait f-imp-db-name T-imp-conf-send t-delete-pck-on
-          FILL-IN-4 l-save-oxml-pck
+  DISPLAY fi-des-label f-ftp-ip f-login FI-delivery-method f-password 
+          fi-screen-pass f-ftp-path f-ftp-path-in f-ftp-path-out f-exp-db-name 
+          t-delete-pck-on T-exp-conf-wait f-imp-db-name T-imp-conf-send 
+          l-save-oxml-pck FILL-IN-4 
       WITH FRAME Dialog-Frame.
-  IF AVAILABLE tt-ext-system THEN
-    DISPLAY tt-ext-system.esys-type tt-ext-system.esys-id
-          tt-ext-system.delivery-method tt-ext-system.esys-name
-          tt-ext-system.esys-des tt-ext-system.esys-have-export
-          tt-ext-system.esys-send-news-exp tt-ext-system.esys-db-num-exp
-          tt-ext-system.esys-have-import tt-ext-system.esys-num-days-keep-exp
-          tt-ext-system.esys-send-news-imp tt-ext-system.esys-db-num-imp
-          tt-ext-system.esys-max-p-size tt-ext-system.max-p-queue
-          tt-ext-system.max-p-time tt-ext-system.save-days-pck-num
+  IF AVAILABLE tt-ext-system THEN 
+    DISPLAY tt-ext-system.esys-id tt-ext-system.esys-des tt-ext-system.esys-type 
+          tt-ext-system.esys-name tt-ext-system.delivery-method 
+          tt-ext-system.esys-have-export tt-ext-system.esys-db-num-exp 
+          tt-ext-system.save-days-pck-num tt-ext-system.esys-send-news-exp 
+          tt-ext-system.esys-have-import tt-ext-system.esys-num-days-keep-exp 
+          tt-ext-system.esys-max-p-size tt-ext-system.esys-db-num-imp 
+          tt-ext-system.esys-send-news-imp tt-ext-system.max-p-queue 
+          tt-ext-system.max-p-time 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit RECT-1 RECT-2 RECT-3 RECT-4 b-quit b-links
-         tt-ext-system.esys-type b-help FI-delivery-method
-         tt-ext-system.esys-id tt-ext-system.delivery-method
-         tt-ext-system.esys-name tt-ext-system.esys-des f-ftp-ip f-login
-         f-password f-ftp-path f-ftp-path-in tt-ext-system.esys-have-export
-         f-ftp-path-out b-db-export f-exp-db-name
-         tt-ext-system.esys-have-import tt-ext-system.esys-num-days-keep-exp
-         T-exp-conf-wait b-db-import f-imp-db-name
-         tt-ext-system.esys-max-p-size T-imp-conf-send
-         tt-ext-system.max-p-queue tt-ext-system.max-p-time
-         tt-ext-system.save-days-pck-num t-delete-pck-on FILL-IN-4
-         l-save-oxml-pck
+  ENABLE b-exit RECT-1 RECT-2 RECT-3 RECT-4 b-quit b-links b-help 
+         tt-ext-system.esys-id tt-ext-system.esys-des tt-ext-system.esys-type 
+         tt-ext-system.esys-name f-ftp-ip f-login FI-delivery-method 
+         tt-ext-system.delivery-method f-password f-ftp-path f-ftp-path-in 
+         tt-ext-system.esys-have-export f-ftp-path-out b-db-export 
+         f-exp-db-name t-delete-pck-on tt-ext-system.save-days-pck-num 
+         T-exp-conf-wait tt-ext-system.esys-have-import 
+         tt-ext-system.esys-num-days-keep-exp tt-ext-system.esys-max-p-size 
+         b-db-import f-imp-db-name tt-ext-system.max-p-queue T-imp-conf-send 
+         tt-ext-system.max-p-time l-save-oxml-pck FILL-IN-4 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -955,7 +953,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-delete-pck-on Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-delete-pck-on Dialog-Frame 
 PROCEDURE manage-delete-pck-on :
 DEFINE INPUT PARAMETER t-delete-pck-on AS LOGICAL NO-UNDO.
 CASE t-delete-pck-on:
@@ -986,7 +984,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-exp-conf-wait Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-exp-conf-wait Dialog-Frame 
 PROCEDURE manage-exp-conf-wait :
 DEFINE input parameter p-exp-conf-wait    as integer          no-undo.
 do
@@ -1024,7 +1022,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-export Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-export Dialog-Frame 
 PROCEDURE manage-export :
 define input parameter p-have-export    as logical          no-undo.
 do
@@ -1075,7 +1073,7 @@ END PROCEDURE. /* manage-export */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-import Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-import Dialog-Frame 
 PROCEDURE manage-import :
 define input parameter p-have-import    as logical          no-undo.
 do
@@ -1115,7 +1113,7 @@ END PROCEDURE. /* manage-import */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-t-delete-pck-on Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-t-delete-pck-on Dialog-Frame 
 PROCEDURE manage-t-delete-pck-on :
 DEFINE INPUT PARAMETER t-save-oxml-pck AS LOGICAL NO-UNDO.
 CASE t-save-oxml-pck:
@@ -1144,7 +1142,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 DEFINE VARIABLE v-list-items AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-ii AS integer NO-UNDO.
@@ -1203,7 +1201,7 @@ DO v-ii = 1 TO NUM-ENTRIES({&esys-dm-list}):
     .
 END.
 ASSIGN
-tt-ext-system.delivery-method:RADIO-BUTTONS IN FRAME {&FRAME-NAME} = v-list-items.
+tt-ext-system.delivery-method:list-item-pairs IN FRAME {&FRAME-NAME} = v-list-items.
 DISPLAY
 fi-des-label
 fi-delivery-method
@@ -1296,7 +1294,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-link Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-link Dialog-Frame 
 PROCEDURE proc-b-link :
 define input parameter p-link-option as character no-undo.
 define variable v-rid-list as character no-undo.
@@ -1343,7 +1341,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 define variable v-rec as recid no-undo .
 define variable psw-buf as character no-undo .
@@ -1394,6 +1392,7 @@ END.
 if tt-ext-system.delivery-method = integer({&esys-dm-nn})
 or tt-ext-system.delivery-method = integer({&esys-dm-nnold})
 or tt-ext-system.delivery-method = integer({&esys-dm-exite-edi})
+or tt-ext-system.delivery-method = integer({&esys-dm-contour-edi})
 then do:
    assign
    f-ftp-ip
@@ -1401,6 +1400,7 @@ then do:
    f-login.
 end.
 if tt-ext-system.delivery-method = integer({&esys-dm-exite-edi})
+or tt-ext-system.delivery-method = integer({&esys-dm-contour-edi})
 then do:
    assign
    f-ftp-path-in
@@ -1505,7 +1505,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-value-change-method Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-value-change-method Dialog-Frame 
 PROCEDURE proc-value-change-method :
 define input parameter p-delivery-method as integer no-undo.
 hide
@@ -1538,6 +1538,8 @@ case p-delivery-method:
      END.
    END.
   when integer({&esys-dm-exite-edi})
+  or 
+  when integer({&esys-dm-contour-edi})
   then do:
     display
     f-ftp-ip

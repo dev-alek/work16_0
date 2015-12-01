@@ -115,7 +115,7 @@ define variable v-esm as character no-undo .
 define variable v-rv as character no-undo .
 define variable v-pack-num-chr as character no-undo .
 define variable v-ediinterchangeid as character no-undo .
-
+define variable v-dm-edi    as integer   no-undo .
 
 { rul/seterror.i }
 define buffer buf_temp-cmd for temp-cmd.
@@ -334,6 +334,7 @@ on endkey undo _ordrsp, retry _ordrsp
                         , input buf_ord-doc.cli-code
                         , input buf_ord-doc.obj-type
                         , input buf_ord-doc.obj-code
+                        , output v-dm-edi
                         ) no-error.
     if not glog = yes then do:
       v-mess = substitute("Нет обмена Документами по EXITE-EDI для поставщика &1&2 и &3&4 в БД &5)"

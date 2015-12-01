@@ -356,7 +356,7 @@ on stop undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line}, 
       first buf_ext-system no-lock where
                 buf_ext-system.esys-id = esys_ext-classif.key#_one
             and buf_ext-system.db-num = 0
-            and buf_ext-system.esys-db-num-exp = g#db-num
+/*            and buf_ext-system.esys-db-num-exp = g#db-num*/
             and buf_ext-system.esys-have-export = yes,
       first buf_ext-classif no-lock where
         buf_ext-classif.classif-name = {&extclass_clients_exite-edi}

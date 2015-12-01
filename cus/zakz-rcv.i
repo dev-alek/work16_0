@@ -173,6 +173,7 @@ define variable par-is-edoc-nn    as character no-undo .
 define variable p-status   as date      no-undo .
 define variable v-edoc-status as integer   no-undo .
 define variable v-edoc-ora as logical   no-undo .
+define variable v-dm-edi  as integer no-undo .
  v-edoc-ora = isoraret_on () .
 
 if Lookup("fin-block", p-buttons) <> 0 then v-fin-block = true.
@@ -1478,6 +1479,7 @@ define buffer buf_ext-classif for ub.ext-classif  .
                       , input shar-buf_ord-doc.cli-code
                       , input shar-buf_ord-doc.obj-type
                       , input shar-buf_ord-doc.obj-code
+                      , output v-dm-edi
                       )
           and
           shar-buf_ord-doc.whole-send-news = integer({&doc-dm-edi})
@@ -2261,8 +2263,9 @@ run adm/shattri.p (
   if v-cntxt-db-num = 0 then do: /* в ГБД можно корректировать согласование */
     if not (shar-buf_ord-doc.status_  = {&g___new} or
             shar-buf_ord-doc.status_  = {&ord-accept})
+        or (shar-buf_ord-doc.status_  = {&g___new} and not v-obj-active = "yes")
     then do:
-        message "Документ "  shar-buf_ord-doc.doc-code  " нельзя корректировать ,  статус " caps(shar-buf_ord-doc.status_)  view-as  alert-box .
+        message "Документ "  shar-buf_ord-doc.doc-code  " нельзя корректировать ,  статус " caps(shar-buf_ord-doc.status_) if v-not-activ then "на неактивном складе" else ""  view-as  alert-box .
         return .
     end.
   end.
@@ -2694,7 +2697,7 @@ define variable del-rec as recid no-undo.    /* recid for reposition */
 define variable unrv-qnty as dec no-undo.    /* количество из ub.gds-dtl */
     {&net-proc}
     find shar-buf_ord-doc where recid (shar-buf_ord-doc) = doc-rec no-lock.
-    if shar-buf_ord-doc.status_ <> {&g___new}  then do:
+    if shar-buf_ord-doc.status_ <> {&g___new} or (shar-buf_ord-doc.status_ = {&g___new} and not v-obj-active = "yes") then do:
       message "Документ в статусе" shar-buf_ord-doc.status_ "удалять нельзя! " view-as alert-box error .
       return no-apply.
     end.

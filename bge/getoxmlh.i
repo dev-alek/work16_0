@@ -76,6 +76,12 @@ on error undo, return error return-value
                                                   ,input ""
                                                 )  .
     end.
+    when integer({&esys-dm-contour-edi}) then do:
+            run xmllib-add-rec-fld  in this-procedure (
+                                                    input "statusReport"
+                                                  ,input ""
+                                                )  .
+    end.
     otherwise do:
       v-root-name = "".
       run xmllib-add-rec-fld  in this-procedure (

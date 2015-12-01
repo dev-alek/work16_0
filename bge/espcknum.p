@@ -125,7 +125,8 @@ on error undo, return error
         if ((p-custom-pack-name <> ?
         and p-custom-pack-name <> '')
         or p-delivery-method = integer({&esys-dm-oracle-retail})
-        or p-delivery-method = integer({&esys-dm-exite-edi}))
+        or p-delivery-method = integer({&esys-dm-exite-edi})
+        or p-delivery-method = integer({&esys-dm-contour-edi}))
         and v-new-pack
         then do:
            define variable v-custom-pack-name as character no-undo .

@@ -56,6 +56,7 @@ define variable par-type                      as   character                   n
 define variable par-edi                       as   character                   no-undo .
 define variable is-edoc-nn                    as logical no-undo .
 define variable is-edi                        as logical no-undo .
+define variable v-dm-edi                      as integer   no-undo .
 
 { gbl/conf-rd.i "'edoc-nn'" 0 "''" 0 "''" "''" "''" no par-edoc-nn par-type no-error }
 
@@ -89,6 +90,7 @@ is-edoc-nn = (par-edoc-nn = "yes")
                                   , input buf_trn-doc.cli-code
                                   , input buf_trn-doc.obj-type
                                   , input buf_trn-doc.obj-code
+                                  , output v-dm-edi
                                   ) .
 end.
 else do:
@@ -110,6 +112,7 @@ end.
                                   , input buf_ord-doc.cli-code
                                   , input buf_ord-doc.obj-type
                                   , input buf_ord-doc.obj-code
+                                  , output v-dm-edi
                                   ) .
 end.
 end.

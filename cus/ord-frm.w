@@ -60,6 +60,7 @@ define variable par-is-edoc-nn    as character no-undo .
 define variable par-is-edi        as character no-undo .
 define variable is-edoc-nn-doc    as logical   no-undo .
 define variable is-edi-doc        as logical   no-undo .
+define variable v-dm-edi          as integer   no-undo .
 
 { gbl/getcntxt.i get }
 assign
@@ -89,6 +90,7 @@ g#mainmenu-handle = PARPARENTPROC .
                               , input loc-cli-code
                               , input loc-store-type
                               , input loc-store-code
+                              , output v-dm-edi
                               ) .
 
 function rvs-qnty returns decimal

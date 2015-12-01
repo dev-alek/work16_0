@@ -84,6 +84,10 @@ case p-delivery-method:
    v-short-pack-name = p-custom-pack-name.
 
  end. /*when integer({&esys-dm-exite-edi}) then do:*/
+ when integer({&esys-dm-contour-edi}) then do:
+   p-custom-flag = yes.
+   v-short-pack-name = p-custom-pack-name.
+ end.
  otherwise do:
    v-short-pack-name = "o":U + string( p-pack-num, "999999999":U ) + ".":U.
  end.

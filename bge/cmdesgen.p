@@ -70,6 +70,7 @@ define variable v-header-rec as character no-undo .
 
 
 define buffer buf_esys-route for ub.esys-route.
+define buffer buf_esys-route-dump for ub.esys-route-dump.
 define buffer buf_temp-xml-tables for temp-xml-tables.
 define buffer buf_ext-system for ub.ext-system.
 define buffer buf_esys-pck-sent for ub.esys-pck-sent.
@@ -141,41 +142,23 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     undo, return error .
   end.
   /*наполняем временные таблицы*/
-  if p-esr-dump-ord >= 0 then do:
-  find first buf_esys-route exclusive-lock where
-            buf_esys-route.esr-dump-ord = p-esr-dump-ord
-       and  buf_esys-route.esys-id = p-esys-id
-       and  buf_esys-route.db-num = p-db-num
-            .
-  run  fillxpck in this-procedure (
-                                     buffer buf_esys-route
-                                    ,output v_dataseth
-                                    ,input-output v-xmlh
-                                    ,output v-num-rec
-                                    ) no-error.
-  if error-status:error then do:
-    &scop my-message  substitute("&1 Ошибка при заполнении пакета &6 (&6) через gate &2&3&4&3&5" ~
-                                            , vss-workfile ~
-                                            ,buf_esys-route.uniq-gate-rec ~
-                                            ,~{&new-line~} ~
-                                            ,error-status:get-message(1) ~
-                                            ,return-value ~
-                                            ,p-pack-num ~
-                                            ,buf_esys-route.esr-name-rec )
-    {&display-message}.
-    run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
-    undo, return error ''.
-  end.
-  end.
-  else do:
-    run  fillxpck_empty in this-procedure (
-                                       output v_dataseth
+  if not buf_ext-system.delivery-method = integer({&esys-dm-contour-edi}) then do:
+    if p-esr-dump-ord >= 0 then do:
+    find first buf_esys-route exclusive-lock where
+              buf_esys-route.esr-dump-ord = p-esr-dump-ord
+         and  buf_esys-route.esys-id = p-esys-id
+         and  buf_esys-route.db-num = p-db-num
+              .
+    run  fillxpck in this-procedure (
+                                       buffer buf_esys-route
+                                      ,output v_dataseth
                                       ,input-output v-xmlh
                                       ,output v-num-rec
                                       ) no-error.
     if error-status:error then do:
-      &scop my-message  substitute("&1 Ошибка при заполнении ПУСТОГО пакета &6 (&6) через &2&3&2&4" ~
+      &scop my-message  substitute("&1 Ошибка при заполнении пакета &6 (&6) через gate &2&3&4&3&5" ~
                                               , vss-workfile ~
+                                              ,buf_esys-route.uniq-gate-rec ~
                                               ,~{&new-line~} ~
                                               ,error-status:get-message(1) ~
                                               ,return-value ~
@@ -185,212 +168,242 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
       undo, return error ''.
     end.
-  end.
-
-  if buf_ext-system.exp-conf-wait = integer({&openxml-exp-conf-wait})  then do:
-     run fillxcnf in this-procedure ( input p-esys-id
-                                     ,input p-db-num
-                                     ,input p-cr-db-num
-                                     ,input p-pack-num
-                                     ,buffer buf_temp-esys-pck-sent
-                                     ,buffer buf_temp-esys-pck-rcvd
-                                     ,buffer curr_temp-esys-pck-sent
-                                     ,output rec-cnt
-                                     ,output v-prev-crc
-                                     ) no-error.
-     if error-status :error then do:
-      &scop my-message  substitute("&1 Ошибка при заполнении пакета &2 данными для подтверждений &3&4&3&5" ~
-                                    ,p-pack-num ~
-                                    , vss-workfile ~
-                                    ,~{&new-line~} ~
-                                    ,error-status:get-message(1) ~
-                                    ,return-value ~
-                                      )
-      {&display-message}.
-      run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
-      undo, return error ''.
-     end.
-  end. /*  if false buf_ext-system.exp-conf-wait */
-  rec-cnt = rec-cnt + v-num-rec.
-  case buf_ext-system.delivery-method:
-    when integer({&esys-dm-oracle-retail}) then do:
-      if entry(num-entries(p-xml-file-name, "."), p-xml-file-name, ".") = "ack" then do:
-        v-is-ack = yes.
+    end.
+    else do:
+      run  fillxpck_empty in this-procedure (
+                                         output v_dataseth
+                                        ,input-output v-xmlh
+                                        ,output v-num-rec
+                                        ) no-error.
+      if error-status:error then do:
+        &scop my-message  substitute("&1 Ошибка при заполнении ПУСТОГО пакета &6 (&6) через &2&3&2&4" ~
+                                                , vss-workfile ~
+                                                ,~{&new-line~} ~
+                                                ,error-status:get-message(1) ~
+                                                ,return-value ~
+                                                ,p-pack-num ~
+                                                ,buf_esys-route.esr-name-rec )
+        {&display-message}.
+        run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
+        undo, return error ''.
       end.
-      else do:
-        v-header-schema-name = "exe/header_.xsd".
-        v-header-name = "header_".
-        define buffer buf_clients for ub.clients.
-        find first buf_clients no-lock where
-                  buf_clients.db-num = g#db-num
-              and buf_clients.obj-type = {&shop} no-error .
-        run get-gate-rec in this-procedure ( input v-header-schema-name
-                                            ,output v-header-rec) no-error.
-        if error-status:error then do:
-          undo, return error substitute("Не найдено описание xsd-схемы &1 в БД", v-header-schema-name).
+    end.
+  
+    if buf_ext-system.exp-conf-wait = integer({&openxml-exp-conf-wait})  then do:
+       run fillxcnf in this-procedure ( input p-esys-id
+                                       ,input p-db-num
+                                       ,input p-cr-db-num
+                                       ,input p-pack-num
+                                       ,buffer buf_temp-esys-pck-sent
+                                       ,buffer buf_temp-esys-pck-rcvd
+                                       ,buffer curr_temp-esys-pck-sent
+                                       ,output rec-cnt
+                                       ,output v-prev-crc
+                                       ) no-error.
+       if error-status :error then do:
+        &scop my-message  substitute("&1 Ошибка при заполнении пакета &2 данными для подтверждений &3&4&3&5" ~
+                                      ,p-pack-num ~
+                                      , vss-workfile ~
+                                      ,~{&new-line~} ~
+                                      ,error-status:get-message(1) ~
+                                      ,return-value ~
+                                        )
+        {&display-message}.
+        run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
+        undo, return error ''.
+       end.
+    end. /*  if false buf_ext-system.exp-conf-wait */
+    rec-cnt = rec-cnt + v-num-rec.
+    case buf_ext-system.delivery-method:
+      when integer({&esys-dm-oracle-retail}) then do:
+        if entry(num-entries(p-xml-file-name, "."), p-xml-file-name, ".") = "ack" then do:
+          v-is-ack = yes.
         end.
-        run get-header-by-rec in this-procedure ( input v-header-rec
-                                              ,output v-header-th
-                                              ) no-error.
-        if error-status:error then do:
-          &scop my-message substitute("Ошибка при создании структуры заголовка пакета согласно гейту:&1&2" ~
-                                    , v-header-rec ~
-                                    , ~{&new-line~}, error-status:get-message(1) )
-          {&display-message}.
-          undo, return error '':U.
+        else do:
+          v-header-schema-name = "exe/header_.xsd".
+          v-header-name = "header_".
+          define buffer buf_clients for ub.clients.
+          find first buf_clients no-lock where
+                    buf_clients.db-num = g#db-num
+                and buf_clients.obj-type = {&shop} no-error .
+          run get-gate-rec in this-procedure ( input v-header-schema-name
+                                              ,output v-header-rec) no-error.
+          if error-status:error then do:
+            undo, return error substitute("Не найдено описание xsd-схемы &1 в БД", v-header-schema-name).
+          end.
+          run get-header-by-rec in this-procedure ( input v-header-rec
+                                                ,output v-header-th
+                                                ) no-error.
+          if error-status:error then do:
+            &scop my-message substitute("Ошибка при создании структуры заголовка пакета согласно гейту:&1&2" ~
+                                      , v-header-rec ~
+                                      , ~{&new-line~}, error-status:get-message(1) )
+            {&display-message}.
+            undo, return error '':U.
+          end.
+  
+          run cur-time in this-procedure ( output v-today, output v-time).
+          v-headerh = v-header-th:default-buffer-handle.
+          v-headerh:buffer-create().
+         assign
+          v-headerh::to_ = "Oracle Retail"
+          v-headerh::from_ = "IBS Trade House"
+          v-headerh::obj-type = (if available buf_clients then buf_clients.obj-type else '')
+          v-headerh::obj-code = (if available buf_clients then string (buf_clients.obj-code) else '')
+          v-headerh::name = entry(2, entry(1, v_dataseth:private-data, {&delim-par}), {&slash-char})
+          v-headerh::xsd = entry(2, entry(1, v_dataseth:private-data, {&delim-par}), {&slash-char})
+          v-headerh::date-from =  string(datetime(v-today, mtime), "99/99/9999 HH:MM:SS")
+          v-headerh::date-to =  string(datetime(v-today, mtime), "99/99/9999 HH:MM:SS")
+          .
         end.
-
-        run cur-time in this-procedure ( output v-today, output v-time).
+      end.
+      when integer({&esys-dm-exite-edi}) then do:
+        v-header-schema-name = "".
+        v-header-name = "".
+      end.
+      otherwise do:
+          v-header-schema-name = "exe/ThHeader.xsd".
+          v-header-name = "ThHeader".
+          run get-gate-rec in this-procedure ( input v-header-schema-name
+                                              ,output v-header-rec) no-error.
+          if error-status:error then do:
+            undo, return error substitute("Не найдено описание xsd-схемы &1 в БД", v-header-schema-name).
+          end.
+          run get-header-by-rec in this-procedure ( input v-header-rec
+                                                ,output v-header-th
+                                                ) no-error.
+          if error-status:error then do:
+            &scop my-message substitute("Ошибка при создании структуры заголовка поакета согласно гейту:&1&2" ~
+                                      , v-header-rec ~
+                                      , ~{&new-line~}, error-status:get-message(1) )
+            {&display-message}.
+            undo, return error '':U.
+          end.
         v-headerh = v-header-th:default-buffer-handle.
-        v-headerh:buffer-create().
-  assign
-        v-headerh::to_ = "Oracle Retail"
-        v-headerh::from_ = "IBS Trade House"
-        v-headerh::obj-type = (if available buf_clients then buf_clients.obj-type else '')
-        v-headerh::obj-code = (if available buf_clients then buf_clients.obj-code else '')
-        v-headerh::name = entry(2, entry(1, v_dataseth:private-data, {&delim-par}), {&slash-char})
-        v-headerh::xsd = entry(2, entry(1, v_dataseth:private-data, {&delim-par}), {&slash-char})
-        v-headerh::date-from =  string(datetime(v-today, mtime), "99/99/9999 HH:MM:SS")
-        v-headerh::date-to =  string(datetime(v-today, mtime), "99/99/9999 HH:MM:SS")
-        .
+        v-headerh:buffer-create( ).
+        assign
+        v-headerh::THfilename     = p-xml-file-name
+        v-headerh::THfilenumber   = p-xml-file-number
+        v-headerh::THformat_      = "Trade House OpenXML 1.0"
+        v-headerh::THversion_     = trim( replace( substring( vss-archive, 15, 4 ), "$":U, "":U ) )
+        v-headerh::THrevision     = trim( replace( substring( vss-revision, 12 ), "$":U, "":U ) )
+        v-headerh::THesysname     = buf_ext-system.esys-name
+        v-headerh::THcurrentDbNum = g#db-num
+        v-headerh::THpack-num     = p-pack-num
+        v-headerh::THschema-name  = substitute("exe/&1", entry(2, entry(1, v_dataseth:private-data, {&delim-par}), {&slash-char}))
+        v-headerh::THprev-crc     = v-prev-crc
+        v-headerh::THexport-esys-id  = p-esys-id
+    .
+      end.
+    end case.
+    /*добавим к dataset таблицу  для header*/
+    if not v-is-ack
+    and v-header-name <> ""
+    then do:
+    create buf_temp-xml-tables.
+    assign
+    buf_temp-xml-tables.tbl-name = v-headerh:table
+    buf_temp-xml-tables.tbl-handle_ = v-headerh
+    buf_temp-xml-tables.table-handle_ = v-headerh:table-handle
+    buf_temp-xml-tables.uniq-gate-rec = (if available buf_esys-route then buf_esys-route.uniq-gate-rec else '')
+    buf_temp-xml-tables.gate-name = v_dataseth:name
+    buf_temp-xml-tables.gate-handle_ = v_dataseth
+    buf_temp-xml-tables.order = -3
+    rec-cnt = rec-cnt + 1
+    .
+  end.
+    if buf_ext-system.exp-conf-wait = integer({&openxml-exp-conf-wait})  then do:
+      /*добавим к dataset таблицу  для отправ пакетов*/
+      create buf_temp-xml-tables.
+      assign
+      buf_temp-xml-tables.tbl-name = v-pcksent:table
+      buf_temp-xml-tables.tbl-handle_ = v-pcksent
+      buf_temp-xml-tables.table-handle_ = v-pcksent:table-handle
+      buf_temp-xml-tables.uniq-gate-rec = (if available buf_esys-route then buf_esys-route.uniq-gate-rec else '')
+      buf_temp-xml-tables.gate-name = v_dataseth:name
+      buf_temp-xml-tables.gate-handle_ = v_dataseth
+      buf_temp-xml-tables.order = -2
+      .
+      /*добавим к dataset таблицу  для получ пакетов*/
+      create buf_temp-xml-tables.
+      assign
+      buf_temp-xml-tables.tbl-name = v-pckrcvd:table
+      buf_temp-xml-tables.tbl-handle_ = v-pckrcvd
+      buf_temp-xml-tables.table-handle_ = v-pckrcvd:table-handle
+      buf_temp-xml-tables.uniq-gate-rec = (if available buf_esys-route then buf_esys-route.uniq-gate-rec else '')
+      buf_temp-xml-tables.gate-name = v_dataseth:name
+      buf_temp-xml-tables.gate-handle_ = v_dataseth
+      buf_temp-xml-tables.order = -1
+      .
+      /*добавим к dataset таблицу  для текущего пакета*/
+      create buf_temp-xml-tables.
+      assign
+      buf_temp-xml-tables.tbl-name = v-currpcksent:table
+      buf_temp-xml-tables.tbl-handle_ = v-currpcksent
+      buf_temp-xml-tables.table-handle_ = v-currpcksent:table-handle
+      buf_temp-xml-tables.uniq-gate-rec = (if available buf_esys-route then buf_esys-route.uniq-gate-rec else '')
+      buf_temp-xml-tables.gate-name = v_dataseth:name
+      buf_temp-xml-tables.gate-handle_ = v_dataseth
+      buf_temp-xml-tables.order = v_dataseth:num-buffers + 1
+      .
+      /*rec-cnt уже учли когда вызывали fillxcnf*/
+    end.
+    if not (v-is-ack
+            or
+            v-header-name = '')
+    then do:
+      if v-headerh:table = "THheader" then do:
+        v-headerh::THtotal-recs = rec-cnt.
+      end.
+    run tmpreldf_get-relations in this-procedure ( input v_dataseth).
+    /*пересортируем так чтобы header был первый*/
+    for each buf_temp-xml-tables
+    break
+    by buf_temp-xml-tables.order:
+     if first(buf_temp-xml-tables.order) then do:
+       glog = v_dataseth:set-buffers ( buf_temp-xml-tables.tbl-handle_) no-error.
+     end.
+     else do:
+       glog = v_dataseth:add-buffer ( buf_temp-xml-tables.tbl-handle_) no-error.
+     end.
+     if error-status:error
+      or not glog                                     then do:
+        &scop my-message substitute("Ошибка при создании заголовка XML файла:&1&2", ~{&new-line~}, error-status:get-message(1) )
+        {&display-message}.
+        run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
+        undo, return error '':U.
       end.
     end.
-    when integer({&esys-dm-exite-edi}) then do:
-      v-header-schema-name = "".
-      v-header-name = "".
-    end.
-    otherwise do:
-        v-header-schema-name = "exe/ThHeader.xsd".
-        v-header-name = "ThHeader".
-        run get-gate-rec in this-procedure ( input v-header-schema-name
-                                            ,output v-header-rec) no-error.
-        if error-status:error then do:
-          undo, return error substitute("Не найдено описание xsd-схемы &1 в БД", v-header-schema-name).
-        end.
-        run get-header-by-rec in this-procedure ( input v-header-rec
-                                              ,output v-header-th
-                                              ) no-error.
-        if error-status:error then do:
-          &scop my-message substitute("Ошибка при создании структуры заголовка поакета согласно гейту:&1&2" ~
-                                    , v-header-rec ~
-                                    , ~{&new-line~}, error-status:get-message(1) )
-          {&display-message}.
-          undo, return error '':U.
-        end.
-      v-headerh = v-header-th:default-buffer-handle.
-      v-headerh:buffer-create( ).
-      assign
-      v-headerh::THfilename     = p-xml-file-name
-      v-headerh::THfilenumber   = p-xml-file-number
-      v-headerh::THformat_      = "Trade House OpenXML 1.0"
-      v-headerh::THversion_     = trim( replace( substring( vss-archive, 15, 4 ), "$":U, "":U ) )
-      v-headerh::THrevision     = trim( replace( substring( vss-revision, 12 ), "$":U, "":U ) )
-      v-headerh::THesysname     = buf_ext-system.esys-name
-      v-headerh::THcurrentDbNum = g#db-num
-      v-headerh::THpack-num     = p-pack-num
-      v-headerh::THschema-name  = substitute("exe/&1", entry(2, entry(1, v_dataseth:private-data, {&delim-par}), {&slash-char}))
-      v-headerh::THprev-crc     = v-prev-crc
-      v-headerh::THexport-esys-id  = p-esys-id
-  .
-    end.
-  end case.
-  /*добавим к dataset таблицу  для header*/
-  if not v-is-ack
-  and v-header-name <> ""
-  then do:
-  create buf_temp-xml-tables.
-  assign
-  buf_temp-xml-tables.tbl-name = v-headerh:table
-  buf_temp-xml-tables.tbl-handle_ = v-headerh
-  buf_temp-xml-tables.table-handle_ = v-headerh:table-handle
-  buf_temp-xml-tables.uniq-gate-rec = (if available buf_esys-route then buf_esys-route.uniq-gate-rec else '')
-  buf_temp-xml-tables.gate-name = v_dataseth:name
-  buf_temp-xml-tables.gate-handle_ = v_dataseth
-  buf_temp-xml-tables.order = -3
-  rec-cnt = rec-cnt + 1
-  .
-end.
-  if buf_ext-system.exp-conf-wait = integer({&openxml-exp-conf-wait})  then do:
-    /*добавим к dataset таблицу  для отправ пакетов*/
-    create buf_temp-xml-tables.
-    assign
-    buf_temp-xml-tables.tbl-name = v-pcksent:table
-    buf_temp-xml-tables.tbl-handle_ = v-pcksent
-    buf_temp-xml-tables.table-handle_ = v-pcksent:table-handle
-    buf_temp-xml-tables.uniq-gate-rec = (if available buf_esys-route then buf_esys-route.uniq-gate-rec else '')
-    buf_temp-xml-tables.gate-name = v_dataseth:name
-    buf_temp-xml-tables.gate-handle_ = v_dataseth
-    buf_temp-xml-tables.order = -2
-    .
-    /*добавим к dataset таблицу  для получ пакетов*/
-    create buf_temp-xml-tables.
-    assign
-    buf_temp-xml-tables.tbl-name = v-pckrcvd:table
-    buf_temp-xml-tables.tbl-handle_ = v-pckrcvd
-    buf_temp-xml-tables.table-handle_ = v-pckrcvd:table-handle
-    buf_temp-xml-tables.uniq-gate-rec = (if available buf_esys-route then buf_esys-route.uniq-gate-rec else '')
-    buf_temp-xml-tables.gate-name = v_dataseth:name
-    buf_temp-xml-tables.gate-handle_ = v_dataseth
-    buf_temp-xml-tables.order = -1
-    .
-    /*добавим к dataset таблицу  для текущего пакета*/
-    create buf_temp-xml-tables.
-    assign
-    buf_temp-xml-tables.tbl-name = v-currpcksent:table
-    buf_temp-xml-tables.tbl-handle_ = v-currpcksent
-    buf_temp-xml-tables.table-handle_ = v-currpcksent:table-handle
-    buf_temp-xml-tables.uniq-gate-rec = (if available buf_esys-route then buf_esys-route.uniq-gate-rec else '')
-    buf_temp-xml-tables.gate-name = v_dataseth:name
-    buf_temp-xml-tables.gate-handle_ = v_dataseth
-    buf_temp-xml-tables.order = v_dataseth:num-buffers + 1
-    .
-    /*rec-cnt уже учли когда вызывали fillxcnf*/
-  end.
-  if not (v-is-ack
-          or
-          v-header-name = '')
-  then do:
-    if v-headerh:table = "THheader" then do:
-      v-headerh::THtotal-recs = rec-cnt.
-    end.
-  run tmpreldf_get-relations in this-procedure ( input v_dataseth).
-  /*пересортируем так чтобы header был первый*/
-  for each buf_temp-xml-tables
-  break
-  by buf_temp-xml-tables.order:
-   if first(buf_temp-xml-tables.order) then do:
-     glog = v_dataseth:set-buffers ( buf_temp-xml-tables.tbl-handle_) no-error.
-   end.
-   else do:
-     glog = v_dataseth:add-buffer ( buf_temp-xml-tables.tbl-handle_) no-error.
-   end.
-   if error-status:error
-    or not glog                                     then do:
-      &scop my-message substitute("Ошибка при создании заголовка XML файла:&1&2", ~{&new-line~}, error-status:get-message(1) )
+    run tmpreldf_set-relations in this-procedure ( input v_dataseth, input v_dataseth).
+    end. /*  if not (v-is-ack*/
+    glog = v_dataseth:WRITE-XML("FILE"
+                              ,p-xml-file-name
+                              ,yes /*lFormatted*/
+                              ,(if buf_ext-system.delivery-method = integer({&esys-dm-exite-edi})
+                                then "utf-8"
+                                else "windows-1251") /*encoding*/
+                              ,? /*cSchemaLocation*/
+                              ,no /*lWriteSchema*/
+                              ,no /*lMinSchema*/
+                              ) no-error.
+  
+    if error-status:error then do:
+          &scop my-message substitute("Ошибка при записи XML файла данными через гейт &1:&2&3" ~
+                                      , v_dataseth:name ~
+                                      , ~{&new-line~}, error-status:get-message(1) )
       {&display-message}.
-      run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
-      undo, return error '':U.
     end.
+    p-num-rec = v-num-rec.
+    run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
   end.
-  run tmpreldf_set-relations in this-procedure ( input v_dataseth, input v_dataseth).
-  end. /*  if not (v-is-ack*/
-  glog = v_dataseth:WRITE-XML("FILE"
-                            ,p-xml-file-name
-                            ,yes /*lFormatted*/
-                            ,(if buf_ext-system.delivery-method = integer({&esys-dm-exite-edi})
-                              then "utf-8"
-                              else "windows-1251") /*encoding*/
-                            ,? /*cSchemaLocation*/
-                            ,no /*lWriteSchema*/
-                            ,no /*lMinSchema*/
-                            ) no-error.
-
-  if error-status:error then do:
-        &scop my-message substitute("Ошибка при записи XML файла данными через гейт &1:&2&3" ~
-                                    , v_dataseth:name ~
-                                    , ~{&new-line~}, error-status:get-message(1) )
-    {&display-message}.
+  else do:
+    define stream exp-str .
+    define variable mbuffer as memptr .
+    output stream exp-str to value(p-xml-file-name). 
+    for each buf_esys-route-dump where buf_esys-route-dump.esrd-dump-ord = p-esr-dump-ord:
+      mbuffer = buf_esys-route-dump.esrd-value-rec.
+      export stream exp-str mbuffer .
+    end.
+    output stream exp-str close.
   end.
-  p-num-rec = v-num-rec.
-  run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
 end. /*doe*/

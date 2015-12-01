@@ -94,6 +94,9 @@ on error undo, return error
     when integer({&esys-dm-exite-edi}) then do:
       p0-arch = no.
     end.
+    when integer({&esys-dm-contour-edi}) then do:
+      p0-arch = no.
+    end.
   end.
 
   if p0-file-name <> ? then do:  /*при get так не бывает*/
@@ -113,6 +116,7 @@ on error undo, return error
     if p-delivery-method = integer({&esys-dm-nn})
     or p-delivery-method = integer({&esys-dm-nnold})
     or p-delivery-method = integer({&esys-dm-exite-edi})
+    or p-delivery-method = integer({&esys-dm-contour-edi})
     then do:
       /*надо получить список файлов и всем сделать get*/
       run ext-system-attr-value in this-procedure ( input p-esys-id
@@ -135,7 +139,7 @@ on error undo, return error
                                                     ,input {&attr-esys-ftp-path}
                                                     ,output v-ftp-path
                                                     ,output v-type) no-error.
-      if p-delivery-method = integer({&esys-dm-exite-edi}) then do:
+      if p-delivery-method = integer({&esys-dm-exite-edi}) or p-delivery-method = integer({&esys-dm-contour-edi}) then do:
         run ext-system-attr-value in this-procedure ( input p-esys-id
                                                       ,input p-db-num
                                                       ,input {&attr-esys-ftp-path-in}
@@ -178,7 +182,7 @@ on error undo, return error
                         ,input v-parameter ) no-error.
 
       if not can-find(first buf_temp-filelist) then do:
-        if p-delivery-method = integer({&esys-dm-exite-edi}) then do:
+        if p-delivery-method = integer({&esys-dm-exite-edi}) or p-delivery-method = integer({&esys-dm-contour-edi}) then do:
           define variable v-to-return as logical no-undo .
           v-to-return = yes.
         end.
@@ -238,12 +242,12 @@ on error undo, return error
           if error-status :error then do:
             return error return-value.
           end.
-          if p-delivery-method = integer({&esys-dm-exite-edi}) then do:
+          if p-delivery-method = integer({&esys-dm-exite-edi}) or p-delivery-method = integer({&esys-dm-contour-edi}) then do:
             /* запишем в контенер список файлов  */
             define variable v-caller-handle as handle no-undo .
             v-caller-handle = this-procedure:instantiating-procedure.
             if lookup("cb_fill-filelist", v-caller-handle:internal-entries) > 0 then do:
-              run cb_fill-filelist in v-caller-handle ( input v-filename) no-error.
+              run cb_fill-filelist in v-caller-handle ( input v-filename, input p-delivery-method) no-error.
             end.
           end.
         end.
@@ -300,6 +304,11 @@ procedure file-s-g :
       v-arh-name = ''.
       p-arch = no.
     end.
+      when integer({&esys-dm-contour-edi})
+      then do:
+        v-arh-name = ''.
+        p-arch = no.
+      end.
       when integer({&esys-dm-oracle-retail})
       then do:
         v-arh-name = search('exe/pkzipc.exe':U).
@@ -364,6 +373,7 @@ procedure file-s-g :
       if p-delivery-method = integer({&esys-dm-nnold})
       or p-delivery-method = integer({&esys-dm-oracle-retail})
       or p-delivery-method = integer({&esys-dm-exite-edi})
+      or p-delivery-method = integer({&esys-dm-contour-edi})
       then do:
         find first buf_esys-all-attr share-lock where
                   buf_esys-all-attr.attr-code = {&attr-custom-pack-name}
@@ -565,6 +575,8 @@ procedure file-s-g :
           p-delivery-method = integer({&esys-dm-nnold})
           OR
           p-delivery-method = integer({&esys-dm-exite-edi})
+          OR
+          p-delivery-method = integer({&esys-dm-contour-edi})
           )
       then do:
         run ext-system-attr-value in this-procedure ( input p-esys-id
@@ -587,7 +599,7 @@ procedure file-s-g :
                                                      ,input {&attr-esys-ftp-path}
                                                      ,output v-ftp-path
                                                      ,output v-type) no-error.
-        if p-delivery-method = integer({&esys-dm-exite-edi}) then do:
+        if p-delivery-method = integer({&esys-dm-exite-edi}) or p-delivery-method = integer({&esys-dm-contour-edi}) then do:
           run ext-system-attr-value in this-procedure ( input p-esys-id
                                                         ,input p-db-num
                                                         ,input {&attr-esys-ftp-path-in}
@@ -632,7 +644,7 @@ procedure file-s-g :
                                                                   )).
         end.
         else do:
-          if p-delivery-method <> integer({&esys-dm-exite-edi}) then do:
+          if p-delivery-method <> integer({&esys-dm-exite-edi}) and p-delivery-method <> integer({&esys-dm-contour-edi}) then do:
           run cur-time in this-procedure ( output v-today, output v-time).
           find first buf_esys-pck-sent exclusive-lock where
                     buf_esys-pck-sent.esys-id = p-esys-id

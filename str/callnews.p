@@ -1293,6 +1293,17 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
           v-found = true
         .
       end.
+      when {&table_edi-status} then do:
+        find first ub.edi-status no-lock where rowid (ub.edi-status) = v-tbl-row.
+        find first ub.ord-doc no-lock where ub.edi-status.doc-code = ub.ord-doc.doc-code.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          assign list-db-for-send = string (ub.ord-doc.user-db-num).
+        end.
+        v-found = true.
+      end.
       otherwise do:
         assign
           v-found = false

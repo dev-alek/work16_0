@@ -46,6 +46,80 @@ define variable v-curr-abbr as character no-undo .
 &glob order-type-gbd 2
 &glob order-type-ubd 3
 
+FUNCTION is-edi-send-nws RETURN logical (  input p-cli-type as character
+                                         , input p-cli-code as integer
+                                         , input p-obj-type     as character
+                                         , input p-obj-code     as integer
+                                         ) .
+
+define variable v-obj-db-num   as integer   no-undo .
+define variable v-uniq-key-rec as character no-undo .
+define variable v-obj-uniq-key-rec as character no-undo .
+define variable v-is-edi as logical no-undo .
+define variable par-is-edi      as character no-undo .
+define variable par-type      as character no-undo .
+
+define buffer buf_clients     for ub.clients .
+define buffer obj_clients     for ub.clients .
+define buffer buf_ext-classif for ub.ext-classif .
+define buffer buf2_ext-classif for ub.ext-classif .
+define buffer buf_ext-system  for ub.ext-system  .
+
+{ gbl/objdbnum.i p-obj-type p-obj-code v-obj-db-num }
+if v-obj-db-num = 0 then do:
+  return no.
+end.
+
+{ gbl/conf-rd.i "'is-edi'"   "''" "''" 0 "''" "''" "''"  no par-is-edi     par-type      no-error}
+
+v-is-edi = lookup(par-is-edi, "true,yes":U) > 0.
+
+if not v-is-edi then do:
+  return no.
+end.
+
+find first buf_clients no-lock
+     where buf_clients.obj-type = p-cli-type
+       and buf_clients.obj-code = p-cli-code
+       no-error .
+if not available buf_clients then do:
+  return no .
+end.
+find first obj_clients no-lock where
+          obj_clients.obj-type = p-obj-type
+      and obj_clients.obj-code = p-obj-code no-error.
+if not available buf_clients then do:
+  return no .
+end.
+run gen-key-rec IN THIS-PROCEDURE ( input {&table_clients}
+                                  , input (buffer buf_clients:handle)
+                                  , output v-uniq-key-rec).
+run gen-key-rec IN THIS-PROCEDURE ( input {&table_clients}
+                                  , input (buffer obj_clients:handle)
+                                  , output v-obj-uniq-key-rec).
+
+for each buf_ext-classif no-lock
+      where buf_ext-classif.uniq-key-rec = v-uniq-key-rec
+        and buf_ext-classif.classif-subject = {&table_clients}
+        and buf_ext-classif.classif-name    = {&extclass_clients_exite-edi},
+    first buf_ext-system no-lock
+      where buf_ext-system.esys-id = buf_ext-classif.key#_one
+        and buf_ext-system.db-num  = 0
+        and buf_ext-system.esys-have-export = yes
+        and buf_ext-system.esys-db-num-exp = 0
+        ,
+    first buf2_ext-classif no-lock
+            where buf2_ext-classif.uniq-key-rec = v-obj-uniq-key-rec
+              and buf2_ext-classif.classif-subject = {&table_clients}
+              and buf2_ext-classif.classif-name    = {&extclass_clients_exite-edi}
+              and buf2_ext-classif.key#_one  = buf_ext-classif.key#_one:
+  leave.
+end. /*if available buf_ext-classif then do :*/
+if available buf_ext-classif then do :
+  return yes .
+end. /*if available buf_ext-classif then do :*/
+return no .
+END FUNCTION.
 
 assign
   v-description-ord-type = ub.ord-doc.doc-type
@@ -324,7 +398,7 @@ on error undo main-block, return error
     end.
 
 /* Статус  */
- if  ( ub.ord-doc.status_    = {&ord-rejection}
+ if  (( ub.ord-doc.status_    = {&ord-rejection}
       or
      ( ub.ord-doc.status_    = {&ord-req}  and ub.ord-doc.flag_ = true and ub.ord-doc.doc-type   = {&o-o} )
       or
@@ -351,7 +425,8 @@ on error undo main-block, return error
       ub.ord-doc.flag_      = true  and
       ub.ord-doc.doc-type   = {&o-o} )
       ) and
-        g#news  = false
+        g#news  = false)
+      or is-edi-send-nws(ub.ord-doc.cli-type, ub.ord-doc.cli-code, ub.ord-doc.obj-type, ub.ord-doc.obj-code)
     then do:
     run str/callnews.p
       (input {&table_ord-doc}

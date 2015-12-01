@@ -34,6 +34,7 @@ define variable vss-description as character no-undo init "Триггер на запись мар
 
 define variable v-news as logical no-undo .
 define buffer buf_esys-all-attr for ub.esys-all-attr.
+define buffer buf_esys-route-dump for ub.esys-route-dump.
 
 main-block:
 do
@@ -41,6 +42,71 @@ on error  undo main-block, return error substitute("&1. error &2&3&4", vss-workf
 on endkey undo main-block, return error substitute("&1. endkey")
 on stop   undo main-block, return error substitute("&1. stop")
 :
+
+  if ub.esys-route.db-num = 0 and not g#news and not g#db-num  = 0
+  then do:
+
+    for each buf_esys-all-attr exclusive-lock where
+            buf_esys-all-attr.table-name =  {&table_esys-route}
+        and buf_esys-all-attr.key1 = ub.esys-route.esr-dump-ord
+        and buf_esys-all-attr.key2 = ub.esys-route.esys-id
+        and buf_esys-all-attr.key5 = ub.esys-route.db-num
+    on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+    on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
+    on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
+    :
+
+
+
+      buf_esys-all-attr.key6 = ub.esys-route.db-num.
+      run str/callnews.p
+        (input {&table_esys-all-attr}
+        ,input (buffer buf_esys-all-attr:handle)
+        ) no-error .
+      if error-status:error then do:
+        undo main-block, return error substitute( '&1. Ошибка при маршрутизации записи "&2" в СПН. &3&4&3&5'
+                                                  ,vss-workfile
+                                                  ,{&table_esys-all-attr}
+                                                  ,{&new-line}
+                                                  ,return-value
+                                                  ,error-status :get-message ( 1 )
+                                                ).
+
+      end.
+    end.
+    
+    for each buf_esys-route-dump exclusive-lock where
+        buf_esys-route-dump.esrd-dump-ord = ub.esys-route.esr-dump-ord
+    on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+    on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
+    on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
+    :
+
+
+      buf_esys-route-dump.esrd-cr-db-num = ub.esys-route.db-num.
+
+    end.
+    
+    
+    
+    ub.esys-route.esr-cr-db-num = ub.esys-route.db-num.
+    
+    run str/callnews.p
+      ( input {&table_esys-route}
+      , input (buffer ub.esys-route:handle)
+      ) no-error .
+    if error-status:error then do:
+      undo main-block, return error substitute( '&1. Ошибка при маршрутизации записи "&2" в СПН. &3&4&3&5'
+                                                ,vss-workfile
+                                                ,{&table_esys-route}
+                                                ,{&new-line}
+                                                ,return-value
+                                                ,error-status :get-message ( 1 )
+                                              ).
+    end.
+    
+   
+  end.
   /*
   убрали хождение в ГБД рутов во внешнюю систему,
   т.к. при настроенном DATAKRAT при закрытии продаж, в новости уходили изменения остатков

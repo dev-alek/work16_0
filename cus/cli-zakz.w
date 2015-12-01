@@ -72,6 +72,7 @@ define variable v-ok              as logical   no-undo .
 define variable varcontract       as character no-undo .
 define variable v-mastc           as logical   no-undo .
 define variable varcontract-type  as character no-undo .
+define variable v-dm-edi    as integer   no-undo .
 
 define temp-table tt-date no-undo
 field exch-date as date
@@ -3125,6 +3126,7 @@ procedure leave-loc-cli-code.
                               , input loc-cli-code
                               , input loc-store-type
                               , input loc-store-code
+                              , output v-dm-edi
                               ) .
 end.
 end procedure.
@@ -3164,6 +3166,7 @@ procedure leave-loc-cli-type :
                               , input loc-cli-code
                               , input loc-store-type
                               , input loc-store-code
+                              , output v-dm-edi
                               ) .
 
 end.
@@ -4352,6 +4355,7 @@ if loc-cli-type <> "" and loc-cli-code <> 0  then do:
                               , input loc-cli-code
                               , input loc-store-type
                               , input loc-store-code
+                              , output v-dm-edi
                               ) .
 end.
 

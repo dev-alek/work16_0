@@ -177,7 +177,6 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,c-fin-statement~
 ,fin-statement-attr~
 ,c-fin-statement-attr~
-,edi-status~
 ,esys-pck-sent~
 ,esys-pck-rcvd~
 ,pump~
@@ -397,6 +396,7 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,fin-code-an-uchet~
 ,fin-code-cor-acc~
 ,thbj-attr~
+,edi-status~
 ":U.
 /*,alc-type-gds~
 ,c-alc-type-gds~*/

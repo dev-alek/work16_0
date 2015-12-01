@@ -961,4 +961,14 @@ if entry(1, p-param-2-data-type, "_") = {&table_sysconf} then do:
         .
       end.
     end.
+    if p-param-2-data-type = "sub-type" then do:
+      if p-mode = {&verify} then do:
+        p-ok = yes.
+        return '':U.
+      end.
+      assign
+      p-value-character = p-value-character
+      p-ok = yes
+      .
+    end.
 end.

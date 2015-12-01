@@ -50,7 +50,7 @@ if not available buf{&vssseq}_ext-system then do:
     view-as alert-box error
   .
 end.
-if {&esr-cr-db-num} <> buf{&vssseq}_ext-system.esys-db-num-exp then do:
+if {&esr-cr-db-num} <> buf{&vssseq}_ext-system.esys-db-num-exp and buf{&vssseq}_ext-system.esys-db-num-exp <> 0 then do:
   message
     vss-include-info{&vssseq} skip
     vss-workfile vss-revision vss-description skip
