@@ -49,6 +49,7 @@ define variable v-gds-time as integer no-undo  init 86399.
 
 
 define buffer buf_BatchProcess for ub.batchProcess .
+define buffer buf_user-login for ub.user-login .
 { gbl/getcntxt.i get }
 
 find first  buf_BatchProcess no-lock
@@ -56,13 +57,14 @@ find first  buf_BatchProcess no-lock
         and buf_BatchProcess.bp_status     = {&btpr-normal}
         use-INDEX XPKN477 no-error .
 if avail buf_BatchProcess then do:
+    find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
   assign
   v-gds-note = "Самое старое задание на пересылку товара на кассу" + {&new-line} +
                "от" + {&space-char} +
                string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                buf_BatchProcess.BP_SysTime  + {&new-line} +
                "Пользователь" + {&space-char} +
-               buf_BatchProcess.User_ID
+               buf_user-login.User-login
   v-gds-date = buf_BatchProcess.BP_SysDate
   v-gds-time = buf_BatchProcess.BP_SysTimeInt
   v-gds = yes
@@ -82,13 +84,14 @@ if avail buf_BatchProcess then do:
   if buf_BatchProcess.BP_SysDate < v-gds-date
   OR (buf_BatchProcess.BP_SysDate = v-gds-date
   AND buf_BatchProcess.BP_SysTimeInt < v-gds-time) then do:
+      find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
     assign
     v-gds-note = "Самое старое задание на пересылку товара на кассу" + {&new-line} +
                 "от" + {&space-char} +
                 string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                 buf_BatchProcess.BP_SysTime  + {&new-line} +
                 "Пользователь" + {&space-char} +
-                buf_BatchProcess.User_ID
+                buf_user-login.User-login
     .
   end.
   assign
@@ -101,13 +104,14 @@ find first  buf_BatchProcess no-lock
         and buf_BatchProcess.bp_status     = {&btpr-normal}
         use-INDEX XPKN477 no-error .
 if avail buf_BatchProcess then do:
+        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
   assign
   v-dcard-note = "Самое старое задание на пересылку информации о клиенте (карте) на кассу" + {&new-line} +
                "от" + {&space-char} +
                string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                buf_BatchProcess.BP_SysTime  + {&new-line} +
                "Пользователь" + {&space-char} +
-               buf_BatchProcess.User_ID
+               buf_user-login.User-login
   v-dcard = yes
                .
 end.
@@ -122,13 +126,14 @@ find first  buf_BatchProcess no-lock
         and buf_BatchProcess.bp_status     = {&btpr-normal}
         use-INDEX XPKN477 no-error .
 if avail buf_BatchProcess then do:
+        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
   assign
   v-seller-note = "Самое старое задание на пересылку информации о продавце на кассу" + {&new-line} +
                "от" + {&space-char} +
                string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                buf_BatchProcess.BP_SysTime  + {&new-line} +
                "Пользователь" + {&space-char} +
-               buf_BatchProcess.User_ID
+               buf_user-login.User-login
   v-seller = yes
                .
 end.
@@ -143,13 +148,14 @@ find first  buf_BatchProcess no-lock
         and buf_BatchProcess.bp_status     = {&btpr-normal}
         use-INDEX XPKN477 no-error .
 if avail buf_BatchProcess then do:
+        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
   assign
   v-cashier-note = "Самое старое задание на пересылку информации о кассире на кассу" + {&new-line} +
                "от" + {&space-char} +
                string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                buf_BatchProcess.BP_SysTime  + {&new-line} +
                "Пользователь" + {&space-char} +
-               buf_BatchProcess.User_ID
+               buf_user-login.User-login
   v-cashier = yes
                .
 end.
@@ -164,13 +170,14 @@ find first  buf_BatchProcess no-lock
         and buf_BatchProcess.bp_status     = {&btpr-normal}
         use-INDEX XPKN477 no-error .
 if avail buf_BatchProcess then do:
+        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
   assign
   v-fgrp-note = "Самое старое задание на пересылку информации о группе блюд на кассу" + {&new-line} +
                "от" + {&space-char} +
                string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                buf_BatchProcess.BP_SysTime  + {&new-line} +
                "Пользователь" + {&space-char} +
-               buf_BatchProcess.User_ID
+               buf_user-login.User-login
   v-fgrp = yes
                .
 end.

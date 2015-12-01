@@ -86,6 +86,7 @@ field v_old as character
 field v_new as character
 index pi is unique primary
 f_name.
+
 /* Definitions for BROWSE BR-changes                                    */
 &Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes
@@ -513,10 +514,12 @@ define browse br-docs query br-docs no-lock display
   {&sort-clmn_6-br-dtl}              column-label {&label-clmn_6-br-dtl}  format "x(5)"
   {&sort-clmn_7-br-dtl}              column-label {&label-clmn_7-br-dtl}
   {&sort-clmn_8-br-dtl}              column-label {&label-clmn_8-br-dtl}
+  {&sort-clmn_33-br-dtl}             column-label {&label-clmn_33-br-dtl}
   {&sort-clmn_41-br-dtl}             column-label {&label-clmn_41-br-dtl}
+  usrfulnf(c-t-doc.user-name)        column-label "Исправил"
+  {&sort-clmn_44-br-dtl}             column-label {&label-clmn_44-br-dtl}
   {&sort-clmn_42-br-dtl}             column-label {&label-clmn_42-br-dtl}
   {&sort-clmn_43-br-dtl}             column-label {&label-clmn_43-br-dtl}
-  {&sort-clmn_44-br-dtl}             column-label {&label-clmn_44-br-dtl}
   {&sort-clmn_9-br-dtl}              column-label {&label-clmn_9-br-dtl}  format "x(6)"
   {&sort-clmn_10-br-dtl}             column-label {&label-clmn_10-br-dtl} format "99"
   {&sort-clmn_11-br-dtl}             column-label {&label-clmn_11-br-dtl} format "+/-"
@@ -541,7 +544,6 @@ define browse br-docs query br-docs no-lock display
   {&sort-clmn_30-br-dtl}             column-label {&label-clmn_30-br-dtl}
   {&sort-clmn_31-br-dtl}             column-label {&label-clmn_31-br-dtl}
   {&sort-clmn_32-br-dtl}             column-label {&label-clmn_32-br-dtl}
-  {&sort-clmn_33-br-dtl}             column-label {&label-clmn_33-br-dtl}
   {&sort-clmn_34-br-dtl}             column-label {&label-clmn_34-br-dtl}
   {&sort-clmn_35-br-dtl}             column-label {&label-clmn_35-br-dtl}
   {&sort-clmn_36-br-dtl}             column-label {&label-clmn_36-br-dtl}
@@ -550,9 +552,9 @@ define browse br-docs query br-docs no-lock display
   {&sort-clmn_39-br-dtl} @ varrealiz column-label {&label-clmn_39-br-dtl} format "x(8)"
   {&sort-clmn_40-br-dtl} @ varchold  column-label {&label-clmn_40-br-dtl} format "Межфирм/ ":U
   usrfulnf(c-t-doc.creid)            column-label "Создал"
-  usrfulnf(c-t-doc.user-name)        column-label "Исправил"
+  
 
-enable
+enable 
   {&enabled-clmn-br-dtl}
 with size 98 by 14.5 separators.
 
@@ -620,6 +622,16 @@ with view-as dialog-box keep-tab-order
     &sort-clmn_7   = "{&sort-clmn_7-br-dtl}"
     &label-clmn_8  = "{&label-clmn_8-br-dtl}"
     &sort-clmn_8   = "{&sort-clmn_8-br-dtl}"
+    &label-clmn_33 = "{&label-clmn_33-br-dtl}"
+    &sort-clmn_33  = "{&sort-clmn_33-br-dtl}"
+    &label-clmn_41 = "{&label-clmn_41-br-dtl}"
+    &sort-clmn_41  = "{&sort-clmn_41-br-dtl}"
+    &label-clmn_44 = "{&label-clmn_44-br-dtl}"
+    &sort-clmn_44  = "{&sort-clmn_44-br-dtl}"
+    &label-clmn_42 = "{&label-clmn_42-br-dtl}"
+    &sort-clmn_42  = "{&sort-clmn_42-br-dtl}"
+    &label-clmn_43 = "{&label-clmn_43-br-dtl}"
+    &sort-clmn_43  = "{&sort-clmn_43-br-dtl}"
     &label-clmn_9  = "{&label-clmn_9-br-dtl}"
     &sort-clmn_9   = "{&sort-clmn_9-br-dtl}"
     &label-clmn_10 = "{&label-clmn_10-br-dtl}"
@@ -668,8 +680,6 @@ with view-as dialog-box keep-tab-order
     &sort-clmn_31  = "{&sort-clmn_31-br-dtl}"
     &label-clmn_32 = "{&label-clmn_32-br-dtl}"
     &sort-clmn_32  = "{&sort-clmn_32-br-dtl}"
-    &label-clmn_33 = "{&label-clmn_33-br-dtl}"
-    &sort-clmn_33  = "{&sort-clmn_33-br-dtl}"
     &label-clmn_34 = "{&label-clmn_34-br-dtl}"
     &sort-clmn_34  = "{&sort-clmn_34-br-dtl}"
     &label-clmn_35 = "{&label-clmn_35-br-dtl}"
@@ -686,12 +696,8 @@ with view-as dialog-box keep-tab-order
     &sort-clmn_40  = "{&sort-clmn_40-br-dtl}"
     &label-clmn_41 = "{&label-clmn_41-br-dtl}"
     &sort-clmn_41  = "{&sort-clmn_41-br-dtl}"
-    &label-clmn_42 = "{&label-clmn_42-br-dtl}"
-    &sort-clmn_42  = "{&sort-clmn_42-br-dtl}"
-    &label-clmn_43 = "{&label-clmn_43-br-dtl}"
-    &sort-clmn_43  = "{&sort-clmn_43-br-dtl}"
-    &label-clmn_44 = "{&label-clmn_44-br-dtl}"
-    &sort-clmn_44  = "{&sort-clmn_44-br-dtl}"
+    
+    
 
 
     &open-query           = "run OpenBr in this-procedure ( input yes, input no, input no  )."
