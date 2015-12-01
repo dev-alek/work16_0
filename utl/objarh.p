@@ -177,7 +177,7 @@ on error undo, return error
             run trg/calcarh.p
               (input buf_clients.obj-type /* p-obj-type       */
               ,input buf_clients.obj-code /* p-obj-code       */
-              ,input true                 /* p-check-doc      */
+              ,input v-recalc-date = ?                 /* p-check-doc     Если дата пересчета не задана, то надо будет ее найти */
               ,input false                /* p-message-on     */
               ,input v-recalc-date        /* p-last-fact-date */
               ,input true                 /* p-check-act         */
@@ -264,7 +264,7 @@ on error undo, return error
           run trg/calcarh.p
             (input buf_clients.obj-type   /* p-obj-type       */
             ,input buf_clients.obj-code   /* p-obj-code       */
-            ,input true                /* p-check-doc      */
+            ,input v-recalc-date = ?      /* p-check-doc     Если дата пересчета не задана, то надо будет ее найти */
             ,input (p-install <> true) /* p-message-on     */
             ,input v-recalc-date       /* p-last-fact-date */
             ,input true                 /* p-check-act         */
