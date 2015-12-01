@@ -56,6 +56,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob extclass_goods_elcos   '{&bef-extclass_goods_elcos}':U
 &glob bef-extclass_goods_accor   exp-accor-gds-code
 &glob extclass_goods_accor   '{&bef-extclass_goods_accor}':U
+&glob bef-extclass_goods_esys   exp-esys-gds-code
+&glob extclass_goods_esys   '{&bef-extclass_goods_esys}':U
 &glob bef-extclass_clients_esys   clients-esys
 &glob extclass_clients_esys   '{&bef-extclass_clients_esys}':U
 &glob bef-extclass_goods_easyfuel   exp-easyfuel-talon-gds-code
@@ -98,6 +100,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,~{&bef-extclass_goods_th-th150}~
 ,~{&bef-extclass_goods_th-th14}~
 ,~{&bef-extclass_goods_accor}~
+,~{&bef-extclass_goods_esys}~
 ,~{&bef-extclass_goods_msf}~
 ,~{&bef-extclass_clients_esys}~
 ,~{&bef-extclass_goods_easyfuel}~
