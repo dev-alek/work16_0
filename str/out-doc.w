@@ -87,6 +87,7 @@ define variable vss-description as character no-undo initial "Обработка РН (заве
 { str/out-ptrl.i  def all-line }
 { gbl/getsect.i  def }
 { str/cont-ms.i}
+{ref/imagelist.i}
 
 &global-define store-type v-cntxt-obj-type
 &global-define store-code v-cntxt-obj-code
@@ -480,6 +481,11 @@ DEFINE BUTTON b-next AUTO-GO
      LABEL "&>>":L
      SIZE 4 BY 1.
 
+DEFINE IMAGE g-image
+     /*FILENAME "adeicon/blank":U*/
+     STRETCH-TO-FIT RETAIN-SHAPE
+     SIZE 20.00 BY 5.
+     
 DEFINE BUTTON b-notes
      LABEL "При&мДок":L
      SIZE 8 BY 1.
@@ -737,7 +743,7 @@ DEFINE BROWSE br-dtl
   enable ub.gds-dtl.doc-qnty ub.gds-dtl.fact-qnty
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH SEPARATORS SIZE 98 BY 8 ROW-HEIGHT-CHARS .6.
+    WITH SEPARATORS SIZE 106.5 BY 8 ROW-HEIGHT-CHARS .6.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -780,28 +786,28 @@ DEFINE FRAME d-out-doc
      t-doc.print-rubl AT ROW 2 COL 92
           VIEW-AS TOGGLE-BOX
           SIZE 8 BY 1 TOOLTIP "В какой валюте печатать"
-          FGCOLOR 4
-     t-doc.doc-date AT ROW 3.04 COL 5.25 COLON-ALIGNED
+          FGCOLOR 4 
+     t-doc.doc-date AT ROW 3.04 COL 6.38 COLON-ALIGNED
           LABEL "&Дата"
           VIEW-AS FILL-IN
           SIZE 9 BY 1
-          FGCOLOR 4
-     t-doc.fact-date AT ROW 3.04 COL 20.25 COLON-ALIGNED
+          FGCOLOR 4 
+     t-doc.fact-date AT ROW 3.04 COL 21.38 COLON-ALIGNED
           LABEL "&Факт"
           VIEW-AS FILL-IN
           SIZE 9 BY 1
-          FGCOLOR 4
-     t-doc.shift-date AT ROW 3.04 COL 36.75 COLON-ALIGNED
+          FGCOLOR 4 
+     t-doc.shift-date AT ROW 3.04 COL 37.88 COLON-ALIGNED
           LABEL "&Смена"
           VIEW-AS FILL-IN
           SIZE 9 BY 1 TOOLTIP "Дата смены"
-          FGCOLOR 4
-     t-doc.shift-name AT ROW 3.04 COL 48.75 COLON-ALIGNED
+          FGCOLOR 4 
+     t-doc.shift-name AT ROW 3.04 COL 49.88 COLON-ALIGNED
           LABEL "№"
           VIEW-AS FILL-IN
           SIZE 3 BY 1 TOOLTIP "Номер смены"
-          FGCOLOR 4
-     t-doc.shift-num AT ROW 3.04 COL 55.75 COLON-ALIGNED
+          FGCOLOR 4 
+     t-doc.shift-num AT ROW 3.04 COL 56.88 COLON-ALIGNED
           LABEL "П"
           VIEW-AS FILL-IN
           SIZE 3 BY 1 TOOLTIP "Порядок смены"
@@ -809,8 +815,8 @@ DEFINE FRAME d-out-doc
      r-sht AT ROW 3.04 COL 60.75
      t-doc.d-card AT ROW 3.04 COL 75.5 COLON-ALIGNED
           LABEL "Карта"
-          VIEW-AS FILL-IN
-          SIZE 20 BY 1 TOOLTIP "Дисконтная карта"
+          VIEW-AS FILL-IN 
+          SIZE 23 BY 1 TOOLTIP "Дисконтная карта"
      t-doc.discnt-pc AT ROW 4.04 COL 75.5 COLON-ALIGNED
           VIEW-AS FILL-IN
           SIZE 10 BY 1
@@ -820,23 +826,23 @@ DEFINE FRAME d-out-doc
           LIST-ITEMS "процент","карта","группа","сумма","строка","прайс-лист"
           DROP-DOWN-LIST
           SIZE 13 BY 1
-     t-doc.out-code AT ROW 5.08 COL 6 COLON-ALIGNED
+     t-doc.out-code AT ROW 4.5 COL 6.5 COLON-ALIGNED
           LABEL "Ист-&к"
           VIEW-AS FILL-IN
           SIZE 15 BY 1 TOOLTIP "Источник"
-     r-outs AT ROW 5.08 COL 23.25
-     t-doc.base-rate AT ROW 6.13 COL 5.63 COLON-ALIGNED
+     r-outs AT ROW 4.5 COL 23.5
+     t-doc.base-rate AT ROW 5.88 COL 6.75 COLON-ALIGNED
           LABEL "Кур&с"
           VIEW-AS FILL-IN
           SIZE 10 BY 1
-          FGCOLOR 4
-     t-doc.base-scale AT ROW 6.13 COL 22.25 COLON-ALIGNED
+          FGCOLOR 4 
+     t-doc.base-scale AT ROW 5.88 COL 23.38 COLON-ALIGNED
           LABEL "М-&б"
           VIEW-AS FILL-IN
           SIZE 4 BY 1 TOOLTIP "Масштаб"
-          FGCOLOR 4
-     r-acc AT ROW 6.13 COL 28.63
-     t-doc.tot-calc AT ROW 6.58 COL 41.13 COLON-ALIGNED
+          FGCOLOR 4 
+     r-acc AT ROW 5.88 COL 29.75
+     t-doc.tot-calc AT ROW 6.46 COL 47.13 COLON-ALIGNED
           LABEL "Скидка"
           VIEW-AS FILL-IN
           SIZE 17 BY 1
@@ -845,82 +851,73 @@ DEFINE FRAME d-out-doc
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME d-out-doc
-     t-doc.discnt-rubl AT ROW 6.58 COL 58.63 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+     t-doc.discnt-rubl AT ROW 6.46 COL 64.63 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 20 BY 1
-     varpurch-chs AT ROW 6.63 COL 83 NO-LABEL
-     t-doc.pay-code AT ROW 7.13 COL 5.63 COLON-ALIGNED
+     varpurch-chs AT ROW 6.5 COL 89 NO-LABEL
+     t-doc.pay-code AT ROW 6.88 COL 6.75 COLON-ALIGNED
           LABEL "&Опл"
           VIEW-AS FILL-IN
           SIZE 6 BY 1 TOOLTIP "Оплата"
-     r-pay AT ROW 7.13 COL 28.63
-     is-repay AT ROW 7.88 COL 83
-     t-doc.wrkr AT ROW 8.13 COL 5.63 COLON-ALIGNED
-          VIEW-AS FILL-IN
+     r-pay AT ROW 6.88 COL 29.75
+     is-repay AT ROW 7.63 COL 89
+     t-doc.wrkr AT ROW 8.13 COL 6.88 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 10 BY 1
-     r-wrkr AT ROW 8.13 COL 28.63
-     is-cons AT ROW 8.54 COL 83
-     t-doc.agnt AT ROW 9.13 COL 5.63 COLON-ALIGNED
-          VIEW-AS FILL-IN
+     r-wrkr AT ROW 8.13 COL 29.88
+     is-cons AT ROW 8.29 COL 89
+     is-storage AT ROW 9.04 COL 89
+     t-doc.agnt AT ROW 9.13 COL 6.88 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 10 BY 1
-     r-agnt AT ROW 9.13 COL 28.63
-     is-storage AT ROW 9.17 COL 83
-     is-oldcons AT ROW 9.79 COL 83
+     r-agnt AT ROW 9.13 COL 29.88
+     is-storage AT ROW 8.96 COL 89
+     is-oldcons AT ROW 9.67 COL 89
      t-doc.boss AT ROW 10.13 COL 5.63 COLON-ALIGNED
           VIEW-AS FILL-IN
           SIZE 10 BY 1
-     r-boss AT ROW 10.13 COL 28.63
-     r-reas AT ROW 10.75 COL 50.5
-     a-n-c AT ROW 11.5 COL 1 NO-LABEL
-     loc-code AT ROW 11.5 COL 11 COLON-ALIGNED NO-LABEL
-     loc-name AT ROW 11.5 COL 11 COLON-ALIGNED NO-LABEL
-     loc-art AT ROW 11.5 COL 11 COLON-ALIGNED NO-LABEL
-     varcontract-prn-code AT ROW 11.75 COL 45 COLON-ALIGNED WIDGET-ID 4
-     b-contr-lkp AT ROW 11.75 COL 62.25 WIDGET-ID 2
-     b-mark AT ROW 13 COL 1
-     b-add AT ROW 13 COL 4
-     b-bc AT ROW 13 COL 14
-     b-prt AT ROW 13 COL 24
-     b-parts AT ROW 13 COL 34
-     b-lkp AT ROW 13 COL 44
-     b-chg AT ROW 13 COL 54
-     b-del AT ROW 13 COL 64
-     b-notes-line AT ROW 13 COL 74
-     br-dtl AT ROW 14 COL 1
-     t-doc.doc-qnty AT ROW 4.13 COL 41.38 COLON-ALIGNED
-          LABEL "Кол-во"
-           VIEW-AS TEXT
-          SIZE 17 BY .67 TOOLTIP "Количество по документу"
-          FGCOLOR 4
-     t-doc.fact-qnty AT ROW 4.83 COL 41.38 COLON-ALIGNED
-          LABEL "Факт"
-           VIEW-AS TEXT
-          SIZE 17 BY .67 TOOLTIP "Фактическое количество"
-          FGCOLOR 4
-     sum-base AT ROW 5.88 COL 41.5 COLON-ALIGNED
-     sum-rubl AT ROW 5.88 COL 59 COLON-ALIGNED NO-LABEL
-     ub.pay-type.obj-name AT ROW 7.13 COL 12 COLON-ALIGNED NO-LABEL
-           VIEW-AS TEXT
+     r-boss AT ROW 10.13 COL 29.88
+     varcontract-prn-code AT ROW 11.5 COL 12 COLON-ALIGNED WIDGET-ID 4
+     b-contr-lkp AT ROW 11.5 COL 29 WIDGET-ID 2
+     r-reas AT ROW 12.75 COL 17.5
+     a-n-c AT ROW 13.75 COL 2 NO-LABEL
+     loc-art AT ROW 13.75 COL 12 COLON-ALIGNED NO-LABEL
+     loc-code AT ROW 13.75 COL 12.13 COLON-ALIGNED NO-LABEL
+     loc-name AT ROW 13.75 COL 12.13 COLON-ALIGNED NO-LABEL
+     b-mark AT ROW 15 COL 1
+     b-add AT ROW 15 COL 4
+     b-bc AT ROW 15 COL 14
+     b-prt AT ROW 15 COL 24
+     b-parts AT ROW 15 COL 34
+     b-lkp AT ROW 15 COL 44
+     b-chg AT ROW 15 COL 54
+     b-del AT ROW 15 COL 64
+     b-notes-line AT ROW 15 COL 74
+     br-dtl AT ROW 16 COL 1
+     sum-base AT ROW 5.75 COL 47.5 COLON-ALIGNED
+     sum-rubl AT ROW 5.75 COL 65 COLON-ALIGNED NO-LABEL
+     pay-type.obj-name AT ROW 6.88 COL 13.13 COLON-ALIGNED NO-LABEL
+           VIEW-AS TEXT 
           SIZE 15 BY 1
-          FGCOLOR 4
-     t-doc.VAT-base AT ROW 7.63 COL 41.5 COLON-ALIGNED
-           VIEW-AS TEXT
+          FGCOLOR 4 
+     t-doc.VAT-base AT ROW 7.5 COL 47.5 COLON-ALIGNED
+           VIEW-AS TEXT 
           SIZE 17 BY .67
-     t-doc.VAT-rubl AT ROW 7.63 COL 59 COLON-ALIGNED NO-LABEL
-           VIEW-AS TEXT
+     t-doc.VAT-rubl AT ROW 7.5 COL 65 COLON-ALIGNED NO-LABEL
+           VIEW-AS TEXT 
           SIZE 20 BY .67
-     wrkr-name AT ROW 8.13 COL 16 COLON-ALIGNED NO-LABEL
-     fact-base AT ROW 8.25 COL 41.5 COLON-ALIGNED
-     fact-rubl AT ROW 8.25 COL 59 COLON-ALIGNED NO-LABEL
-     TEXT-RUBL AT ROW 8.92 COL 59.5 COLON-ALIGNED NO-LABEL
-     agnt-name AT ROW 9.13 COL 16 COLON-ALIGNED NO-LABEL
-     t-doc.tot-cli AT ROW 9.71 COL 41.5 COLON-ALIGNED
+     wrkr-name AT ROW 8.13 COL 17.25 COLON-ALIGNED NO-LABEL
+     fact-base AT ROW 8.13 COL 47.5 COLON-ALIGNED
+     fact-rubl AT ROW 8.13 COL 65 COLON-ALIGNED NO-LABEL
+     TEXT-RUBL AT ROW 8.79 COL 65.5 COLON-ALIGNED NO-LABEL
+     agnt-name AT ROW 9.13 COL 17.25 COLON-ALIGNED NO-LABEL
+     t-doc.tot-cli AT ROW 9.58 COL 47.5 COLON-ALIGNED
           LABEL "Счет"
            VIEW-AS TEXT
           SIZE 17 BY .67
-     pay-rubl AT ROW 9.71 COL 59.13 COLON-ALIGNED NO-LABEL
-     boss-name AT ROW 10.13 COL 16 COLON-ALIGNED NO-LABEL
-     t-doc.reason-code AT ROW 11 COL 45 COLON-ALIGNED
+     pay-rubl AT ROW 9.58 COL 65.13 COLON-ALIGNED NO-LABEL
+     boss-name AT ROW 10.13 COL 17.25 COLON-ALIGNED NO-LABEL
+     t-doc.reason-code AT ROW 12.75 COL 12 COLON-ALIGNED
           LABEL "Основание" FORMAT ">>>>"
            VIEW-AS TEXT
           SIZE 3.38 BY .67
@@ -929,19 +926,20 @@ DEFINE FRAME d-out-doc
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME d-out-doc
-     rsn-name AT ROW 11 COL 52 COLON-ALIGNED NO-LABEL
-     flora-PS AT ROW 22.13 COL 1.38 NO-LABEL
+     rsn-name AT ROW 12.83 COL 19 COLON-ALIGNED NO-LABEL
+     flora-PS AT ROW 24.75 COL 1.5 NO-LABEL
      "Тип приобретения" VIEW-AS TEXT
-          SIZE 16 BY .67 AT ROW 5.88 COL 82.63
-          FGCOLOR 4
+          SIZE 16 BY .67 AT ROW 5.75 COL 88.63
+          FGCOLOR 4 
      "Баз.в." VIEW-AS TEXT
-          SIZE 6.5 BY .79 AT ROW 8.92 COL 45
-          BGCOLOR 3 FGCOLOR 15
-     rect-tot AT ROW 5.63 COL 35
-     rect-prc AT ROW 5.63 COL 82
-     SPACE(0.50) SKIP(12.65)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          SIZE 6.5 BY .79 AT ROW 8.79 COL 51
+          BGCOLOR 3 FGCOLOR 15 
+     rect-tot AT ROW 5.5 COL 41
+     rect-prc AT ROW 5.5 COL 88
+     g-image AT ROW 10.75 COL 87.25
+     SPACE(0.49) SKIP(10.16)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "<insert dialog title>".
 
 
@@ -1047,6 +1045,15 @@ open query br-dtl
 
 /* ************************  Control Triggers  ************************ */
 
+&Scoped-define SELF-NAME g-image
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL g-image d-out-doc
+ON MOUSE-SELECT-DBLCLICK OF g-image IN FRAME d-out-doc
+DO:
+  RUN ref/imagelist.w (PARPARENTPROC, "":U, ub.goods.gds-code,{&lookup}).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 &Scoped-define SELF-NAME d-out-doc
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL d-out-doc d-out-doc
 ON WINDOW-CLOSE OF FRAME d-out-doc /* <insert dialog title> */
@@ -1716,6 +1723,7 @@ DO:
       output  flora-ps ,
       output  p-type      )
     .
+    
   display flora-ps with frame {&frame-name} .
 
 END.
@@ -2022,9 +2030,32 @@ define menu m-ptrl
 { gbl/hot-key.i b-mark }
 { str/sch-line.i doc-line br-dtl }
 end.
+IF mImagePh THEN
+DO:
+    DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
+    DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
+if AVAILABLE goods then do:
+    RUN gds-attr-value ( goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+    RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, goods.gds-code, OUTPUT vImageList).
+    vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
+    g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
+    ASSIGN
+        g-image:HIDDEN     = NO
+        g-image:VISIBLE    = YES
+        g-image:SENSITIVE  = YES
+        .
+end.        
+END.
+ELSE
+    ASSIGN
+        g-image:HIDDEN     = YES
+        g-image:VISIBLE    = NO
+        g-image:SENSITIVE  = NO
+        .
 
-on end-error of ub.gds-dtl.doc-qnty in browse {&browse-name} do:
-  display ub.gds-dtl.doc-qnty with browse {&browse-name}.
+
+on end-error of gds-dtl.doc-qnty in browse {&browse-name} do:
+  display gds-dtl.doc-qnty with browse {&browse-name}.
   return no-apply.
 end.
 
