@@ -2028,7 +2028,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sc-gds-de
 { cmp/cr-prep.i 1  pr-gds-iserv-ptrl   7  " "  7 }
 { cmp/cr-prep.i 1  pr-gds-iban         8  " "  8 }
 
-/* Атрибуты заказа шапка */
+/* Атрибуты заказа шапка и поставки */
 { cmp/cr-prep.i 1 orddocattr-cycle-doc-code        "cycle-doc-code"       " "  "cycle-doc-code"       }
 { cmp/cr-prep.i 1 orddocattr-cycle-day             "cycle-day"            " "  "cycle-day"            }
 { cmp/cr-prep.i 1 orddocattr-cycle-contract-code   "cycle-contract-code"  " "  "cycle-contract-code"  }
@@ -2044,6 +2044,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sc-gds-de
 { cmp/cr-prep.i 1 orddocattr-cycle-base-rate       "base-rate"            " "  "base-rate"            }
 { cmp/cr-prep.i 1 orddocattr-cycle-base-scale      "base-scale"           " "  "base-scale"           }
 { cmp/cr-prep.i 1 orddocattr-ora-exp-seq-num       "ora-exp-seq-num"      " "  "ora-exp-seq-num"      }
+{ cmp/cr-prep.i 1 orddocattr-nids                  "nids"                 " "  "nids"                 }
+{ cmp/cr-prep.i 1 orddocattr-dids                  "dids"                 " "  "dids"                 }
+{ cmp/cr-prep.i 1 orddocattr-invoiceNumber         "invoiceNumber"        " "  "invoiceNumber"        }
+{ cmp/cr-prep.i 1 orddocattr-invoiceDate           "invoiceDate"          " "  "invoiceDate"          }
 
 /* Атрибуты заказа строки */
 { cmp/cr-prep.i 1 ordlineattr-cli-qnty    "cycle-cli-qnty"  " "  "cycle-cli-qnty"     }

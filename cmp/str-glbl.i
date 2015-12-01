@@ -6099,6 +6099,14 @@ end.
 &global-define orddocattr-cycle-base-scale '{&bef-orddocattr-cycle-base-scale}':U
 &global-define bef-orddocattr-ora-exp-seq-num ora-exp-seq-num
 &global-define orddocattr-ora-exp-seq-num '{&bef-orddocattr-ora-exp-seq-num}':U
+&global-define bef-orddocattr-nids nids
+&global-define orddocattr-nids '{&bef-orddocattr-nids}':U
+&global-define bef-orddocattr-dids dids
+&global-define orddocattr-dids '{&bef-orddocattr-dids}':U
+&global-define bef-orddocattr-invoiceNumber invoiceNumber
+&global-define orddocattr-invoiceNumber '{&bef-orddocattr-invoiceNumber}':U
+&global-define bef-orddocattr-invoiceDate invoiceDate
+&global-define orddocattr-invoiceDate '{&bef-orddocattr-invoiceDate}':U
 &global-define bef-ordlineattr-cli-qnty cycle-cli-qnty
 &global-define ordlineattr-cli-qnty '{&bef-ordlineattr-cli-qnty}':U
 &global-define bef-ordlineattr-min-stock min-stock
@@ -7863,6 +7871,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: e5ab029c9ffa, 257, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: e5ab029c9ffa, 257, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 9eea1c772766, 281, test ':U
 &global-define str-glblt_vss-revision 'Revision: db1f34f92e19, 253, rls ':U
 &endif
