@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: $
+$Author: $
+$Date: $
+$Workfile: $
+$Archive: $
                                         
 Файл глобальных определений
 
@@ -5016,23 +5016,23 @@ end.
 &global-define all-docs-p-siz '{&bef-all-docs-p-siz}':U
 &global-define bef-all-docs-p-vis trim(fill('yes,',40) + fill('no,',58) , ',')
 &global-define all-docs-p-vis '{&bef-all-docs-p-vis}':U
-&global-define bef-cli-zakzFP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21
+&global-define bef-cli-zakzFP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23
 &global-define cli-zakzFP-p-ord '{&bef-cli-zakzFP-p-ord}':U
-&global-define bef-cli-zakzFP-p-siz 1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10
+&global-define bef-cli-zakzFP-p-siz 1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10,10,10
 &global-define cli-zakzFP-p-siz '{&bef-cli-zakzFP-p-siz}':U
-&global-define bef-cli-zakzFP-p-vis yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,yes,yes,no
+&global-define bef-cli-zakzFP-p-vis yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,yes,yes,no,no,no
 &global-define cli-zakzFP-p-vis '{&bef-cli-zakzFP-p-vis}':U
-&global-define bef-cli-zakzOP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21
+&global-define bef-cli-zakzOP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23
 &global-define cli-zakzOP-p-ord '{&bef-cli-zakzOP-p-ord}':U
-&global-define bef-cli-zakzOP-p-siz 1,3,1,8,20,4,7,10,12,10,10,10,3,9,9,9,12,14,1,9,10
+&global-define bef-cli-zakzOP-p-siz 1,3,1,8,20,4,7,10,12,10,10,10,3,9,9,9,12,14,1,9,10,10,10
 &global-define cli-zakzOP-p-siz '{&bef-cli-zakzOP-p-siz}':U
-&global-define bef-cli-zakzOP-p-vis trim(fill('yes,',21),',')
+&global-define bef-cli-zakzOP-p-vis trim(fill('yes,',23),',')
 &global-define cli-zakzOP-p-vis '{&bef-cli-zakzOP-p-vis}':U
-&global-define bef-cli-zakzOF-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21
+&global-define bef-cli-zakzOF-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23
 &global-define cli-zakzOF-p-ord '{&bef-cli-zakzOF-p-ord}':U
-&global-define bef-cli-zakzOF-p-siz 1,3,1,10,26,4,7,9,12,10,10,10,3,11,11,11,12,14,1,9,10
+&global-define bef-cli-zakzOF-p-siz 1,3,1,10,26,4,7,9,12,10,10,10,3,11,11,11,12,14,1,9,10,10,10
 &global-define cli-zakzOF-p-siz '{&bef-cli-zakzOF-p-siz}':U
-&global-define bef-cli-zakzOF-p-vis yes,yes,yes,yes,yes,no,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,yes,yes,no
+&global-define bef-cli-zakzOF-p-vis yes,yes,yes,yes,yes,no,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no
 &global-define cli-zakzOF-p-vis '{&bef-cli-zakzOF-p-vis}':U
 &global-define bef-contspec-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23
 &global-define contspec-p-ord '{&bef-contspec-p-ord}':U

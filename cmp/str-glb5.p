@@ -698,15 +698,15 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define stop-stat
 { cmp/cr-prep.i 1 all-docs-p-vis "trim(fill('yes,',40) + fill('no,',58) , ',')"                                                                                                                                                                                                                                   " " "trim(fill('yes,',40)  + fill('no,',58) , ',')"                                                                                                                                                                                                                                   }
 
 /* Параметры cli-zakz.w по умолчанию */
-{ cmp/cr-prep.i 1 cli-zakzFP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                             }
-{ cmp/cr-prep.i 1 cli-zakzFP-p-siz 1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10                                  " "  1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10                                 }
-{ cmp/cr-prep.i 1 cli-zakzFP-p-vis yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,yes,yes,no   " "  yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,yes,yes,no  }
-{ cmp/cr-prep.i 1 cli-zakzOP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                             }
-{ cmp/cr-prep.i 1 cli-zakzOP-p-siz 1,3,1,8,20,4,7,10,12,10,10,10,3,9,9,9,12,14,1,9,10                                  " "  1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10                                 }
-{ cmp/cr-prep.i 1 cli-zakzOP-p-vis trim(fill('yes,',21),',')                                                          " "  trim(fill('yes,',21),',')                                                         }
-{ cmp/cr-prep.i 1 cli-zakzOF-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                             }
-{ cmp/cr-prep.i 1 cli-zakzOF-p-siz 1,3,1,10,26,4,7,9,12,10,10,10,3,11,11,11,12,14,1,9,10                              " "  1,3,1,10,26,4,7,9,12,10,10,10,3,11,11,11,12,14,1,9,10                             }
-{ cmp/cr-prep.i 1 cli-zakzOF-p-vis yes,yes,yes,yes,yes,no,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,yes,yes,no        " "  yes,yes,yes,yes,yes,no,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,yes,yes,no       }
+{ cmp/cr-prep.i 1 cli-zakzFP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              }
+{ cmp/cr-prep.i 1 cli-zakzFP-p-siz 1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10,10,10                                  " "  1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10,10,10                                  }
+{ cmp/cr-prep.i 1 cli-zakzFP-p-vis yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,yes,yes,no,no,no   " "  yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,yes,yes,no,no,no   }
+{ cmp/cr-prep.i 1 cli-zakzOP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              }
+{ cmp/cr-prep.i 1 cli-zakzOP-p-siz 1,3,1,8,20,4,7,10,12,10,10,10,3,9,9,9,12,14,1,9,10,10,10                                 " "  1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10,10,10                                  }
+{ cmp/cr-prep.i 1 cli-zakzOP-p-vis trim(fill('yes,',23),',')                                                                " "  trim(fill('yes,',23),',')                                                                }
+{ cmp/cr-prep.i 1 cli-zakzOF-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              }
+{ cmp/cr-prep.i 1 cli-zakzOF-p-siz 1,3,1,10,26,4,7,9,12,10,10,10,3,11,11,11,12,14,1,9,10,10,10                              " "  1,3,1,10,26,4,7,9,12,10,10,10,3,11,11,11,12,14,1,9,10,10,10                              }
+{ cmp/cr-prep.i 1 cli-zakzOF-p-vis yes,yes,yes,yes,yes,no,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no        " "  yes,yes,yes,yes,yes,no,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no        }
 
 /* Параметры contspec.w по умолчанию */
 { cmp/cr-prep.i 1 contspec-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23     " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23  }
