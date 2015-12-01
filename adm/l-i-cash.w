@@ -127,9 +127,9 @@ DEFINE FRAME FRAME-A
 IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW w-login ASSIGN
          HIDDEN             = YES
-         TITLE              = "Касса IBS TH 15.1"
-         COLUMN             = 25.25
-         ROW                = 8.5
+         TITLE              = "Касса TH 15.1"
+         COLUMN             = 27
+         ROW                = 7.58
          HEIGHT             = 10.38
          WIDTH              = 30
          MAX-HEIGHT         = 24.21
