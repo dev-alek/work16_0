@@ -486,6 +486,17 @@ define variable vss-description as character no-undo init "Информация об объекте
   "yes"
 }
 
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Утилита проверки фото товаров'"
+  "'utl/img-check.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_adm_check}                                                      */
 /* АРМ Администратор   Утилиты/Проверки                                       */
