@@ -7185,7 +7185,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-fin-doc '{&bef-attr-fin-doc}':U
 &global-define bef-attr-fin-doc-full fin-doc
 &global-define attr-fin-doc-full '{&bef-attr-fin-doc-full}':U
-&global-define bef-prop-list-attr-fin-doc suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code,page-cash-book
+&global-define bef-prop-list-attr-fin-doc suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code
 &global-define prop-list-attr-fin-doc '{&bef-prop-list-attr-fin-doc}':U
 &global-define bef-attr-fin-doc_suffix-pko suffix-pko
 &global-define attr-fin-doc_suffix-pko '{&bef-attr-fin-doc_suffix-pko}':U
@@ -7217,8 +7217,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-fin-doc_dpt-dflt-type '{&bef-attr-fin-doc_dpt-dflt-type}':U
 &global-define bef-attr-fin-doc_dpt-dflt-code dpt-dflt-code
 &global-define attr-fin-doc_dpt-dflt-code '{&bef-attr-fin-doc_dpt-dflt-code}':U
-&global-define bef-attr-fin-doc_page-cash-book page-cash-book
-&global-define attr-fin-doc_page-cash-book '{&bef-attr-fin-doc_page-cash-book}':U
 &global-define bef-attr-contr-in contr-in
 &global-define attr-contr-in '{&bef-attr-contr-in}':U
 &global-define bef-attr-contr-in-full contr-in

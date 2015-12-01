@@ -260,7 +260,7 @@ attr-fin-global }
 /* атрибут объектный -  Взаиморасчеты -Платежи */
 { cmp/cr-prep.i 1 attr-fin-doc  fin-doc fin-doc fin-doc fin-doc  }
 { cmp/cr-prepc.i 1 prop-list-attr-fin-doc
-"suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code,page-cash-book"
+"suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code"
 attr-fin-doc }
 
 
