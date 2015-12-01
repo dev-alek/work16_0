@@ -76,6 +76,7 @@ define stream out-stream.
 define buffer buf_trn-doc   for ub.trn-doc.
 define buffer buf_doc-line  for ub.doc-line.
 define buffer buf_goods     for ub.goods.
+define buffer buf_doc-attr  for ub.doc-attr.
 
 define variable v-head-time-pour        as character             initial ?        no-undo .
 define variable v-head-time-income      as character             initial ?        no-undo .
@@ -569,6 +570,7 @@ define variable v-a-b-tarir-dec        as decimal   no-undo .
 
 define variable v-time-pour-int        as integer   no-undo .
 define variable v-time-income-int      as integer   no-undo .
+define variable v-item-pour            as character no-undo .
 define variable v-head-time-pour-int   as integer initial ?  no-undo .
 define variable v-head-time-income-int as integer initial ?  no-undo .
 define variable v-autoent-obj-code-int as integer   no-undo .
@@ -603,20 +605,27 @@ on error undo, return error return-value
          and buf_doc-line-attr.gds-code = buf_goods.gds-code
     :
         case buf_doc-line-attr.attr-code:
-          { rep/akt-topl.i when autoent-obj-code }
-          { rep/akt-topl.i when autoent-obj-type }
-          { rep/akt-topl.i when car-num      }
           { rep/akt-topl.i when car-vol      }
           { rep/akt-topl.i when tank-density }
           { rep/akt-topl.i when tank-temp    }
           { rep/akt-topl.i when tank-vol     }
-          { rep/akt-topl.i when time-income  }
           { rep/akt-topl.i when time-pour    }
-          { rep/akt-topl.i when fio          }
           { rep/akt-topl.i when mouth        }
           { rep/akt-topl.i when a-b-tarir    }
         end case.
     end. /* for each buf_doc-line-attr no-lock */
+    
+    for each buf_doc-attr no-lock where
+             buf_doc-attr.doc-code = buf_trn-doc.doc-code:
+      case buf_doc-attr.attr-code :
+        { rep/akt-topl.i when-doc-attr trdcattr-autoent }
+        { rep/akt-topl.i when-doc-attr trdcattr-car-num }
+        { rep/akt-topl.i when-doc-attr trdcattr-time-income }
+        { rep/akt-topl.i when-doc-attr trdcattr-ptb-item-pour }
+        { rep/akt-topl.i when-doc-attr trdcattr-fio-driver }
+      end case. /* buf_doc-attr.attr-code */
+    end. /* for each buf_doc-attr */
+    
     if v-time-pour <> "" then do:
       assign
         v-time-pour-int = integer(substring(v-time-pour, 1, 2)) * 3600 + integer(substring(v-time-pour, 4, 2)) * 60

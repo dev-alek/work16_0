@@ -287,6 +287,7 @@ abc-analysis~
 ,auto-tank~
 ,c-auto-tank~
 ,auto-tank-meas~
+,auto-tank-attr~
 ,bar-code~
 ,c-bar-code~
 ,bar-code-attr~
@@ -939,7 +940,6 @@ abc-analysis-doc-attr~
 ,arh-wth-tot-attr~
 ,arh-wth-w-p-attr~
 ,assortment-matrix-goods-attr~
-,auto-tank-attr~
 ,auto-tank-meas-attr~
 ,blob-data~
 ,buyer-group-attr~

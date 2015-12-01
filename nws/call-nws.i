@@ -314,6 +314,7 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,person~
 ,goods~
 ,goods-attr~
+,auto-tank-attr~
 ,bar-code~
 ,bar-code-attr~
 ,prod-bc~

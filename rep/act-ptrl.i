@@ -32,6 +32,23 @@ Creation date: 05/24/05
          v-fio              = "":U.
 &elseif "{1}" = "when"        &then
   when "{2}" then do: assign v-{2} = trim( buf_doc-line-attr.attr-value ). end.
+
+&elseif "{1}" = "when-doc-attr" &then
+          &if "{2}" = "trdcattr-autoent"  &then
+            when {&trdcattr-autoent} then do: 
+              assign
+                v-autoent-obj-type = entry (1, buf_doc-attr.attr-value, ";")
+                v-autoent-obj-code = entry (2, buf_doc-attr.attr-value, ";")
+              no-error.
+            end.
+          &elseif "{2}" = "trdcattr-fio-driver" &then
+            when {&{2}} then do: assign v-fio = trim( buf_doc-attr.attr-value ). end.
+          &elseif "{2}" = "trdcattr-ptb-item-pour" &then
+            when {&{2}} then do: assign v-item-pour = trim( buf_doc-attr.attr-value ). end.
+          &else
+            when {&{2}} then do: assign v-{&bef-{2}} = trim( buf_doc-attr.attr-value ). end.
+          &endif
+
 &elseif "{1}" = "dec"         &then
   assign v-{2}-dec = decimal( v-{2} ) no-error.
   if error-status :error then do:

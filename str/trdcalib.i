@@ -1024,7 +1024,177 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-delivery-time true
 &glob sort-trdcattr-delivery-time 100
 
- define new global shared variable g#trdcalib as handle no-undo.
+/* Номер документа во Внешней системе */
+&glob fillin_width-trdcattr-doc-num-in-ext-sys 20
+&glob fillin_height-trdcattr-doc-num-in-ext-sys 1
+&glob type-trdcattr-doc-num-in-ext-sys {&type-char}
+&glob format-trdcattr-doc-num-in-ext-sys "X(20)"
+&glob label-trdcattr-doc-num-in-ext-sys "Номер документа во ВС"
+&glob tooltip-trdcattr-doc-num-in-ext-sys "Номер документа во ВС"
+&glob user-can-edit-trdcattr-doc-num-in-ext-sys true
+&glob output-display-trdcattr-doc-num-in-ext-sys true
+&glob other-trdcattr-doc-num-in-ext-sys '':u
+&glob news-trdcattr-doc-num-in-ext-sys true
+&glob sort-trdcattr-doc-num-in-ext-sys 190
+
+/* Сопроводительные документы */
+&glob fillin_width-trdcattr-cargo-doc 20
+&glob fillin_height-trdcattr-cargo-doc 1
+&glob type-trdcattr-cargo-doc {&type-char}
+&glob format-trdcattr-cargo-doc "X(100)"
+&glob label-trdcattr-cargo-doc "Сопроводительные документы"
+&glob tooltip-trdcattr-cargo-doc "Сопроводительные документы"
+&glob user-can-edit-trdcattr-cargo-doc true
+&glob output-display-trdcattr-cargo-doc true
+&glob other-trdcattr-cargo-doc '':u
+&glob news-trdcattr-cargo-doc true
+&glob sort-trdcattr-cargo-doc 190
+
+/* Единица измерения */
+&glob fillin_width-trdcattr-EI-pack 20
+&glob fillin_height-trdcattr-EI-pack 1
+&glob type-trdcattr-EI-pack {&type-char}
+&glob format-trdcattr-EI-pack "X(30)"
+&glob label-trdcattr-EI-pack "Единица измерения"
+&glob tooltip-trdcattr-EI-pack "Единица измерения"
+&glob user-can-edit-trdcattr-EI-pack true
+&glob output-display-trdcattr-EI-pack true
+&glob other-trdcattr-EI-pack '':u
+&glob news-trdcattr-EI-pack true
+&glob sort-trdcattr-EI-pack 190
+
+/* Нефтебаза */
+&glob fillin_width-trdcattr-ptbobj 20
+&glob fillin_height-trdcattr-ptbobj 1
+&glob type-trdcattr-ptbobj {&type-char}
+&glob format-trdcattr-ptbobj "X(20)"
+&glob label-trdcattr-ptbobj "Нефтебаза"
+&glob tooltip-trdcattr-ptbobj "Нефтебаза"
+&glob user-can-edit-trdcattr-ptbobj true
+&glob output-display-trdcattr-ptbobj true
+&glob other-trdcattr-ptbobj '':u
+&glob news-trdcattr-ptbobj true
+&glob sort-trdcattr-ptbobj 190
+
+/* Примечание к нефтебазе */
+&glob fillin_width-trdcattr-ptb-item-pour 20
+&glob fillin_height-trdcattr-ptb-item-pour 1
+&glob type-trdcattr-ptb-item-pour {&type-char}
+&glob format-trdcattr-ptb-item-pour "X(100)"
+&glob label-trdcattr-ptb-item-pour "Примечание к нефтебазе"
+&glob tooltip-trdcattr-ptb-item-pour "Примечание к нефтебазе"
+&glob user-can-edit-trdcattr-ptb-item-pour true
+&glob output-display-trdcattr-ptb-item-pour true
+&glob other-trdcattr-ptb-item-pour '':u
+&glob news-trdcattr-ptb-item-pour true
+&glob sort-trdcattr-ptb-item-pour 190
+
+/* Автопредприятие */
+&glob fillin_width-trdcattr-autoent 20
+&glob fillin_height-trdcattr-autoent 1
+&glob type-trdcattr-autoent {&type-char}
+&glob format-trdcattr-autoent "X(20)"
+&glob label-trdcattr-autoent "Автопредприятие"
+&glob tooltip-trdcattr-autoent "Автопредприятие"
+&glob user-can-edit-trdcattr-autoent true
+&glob output-display-trdcattr-autoent true
+&glob other-trdcattr-autoent '':u
+&glob news-trdcattr-autoent true
+&glob sort-trdcattr-autoent 190
+
+/* Гос. № автоцистерны */
+&glob fillin_width-trdcattr-car-num 20
+&glob fillin_height-trdcattr-car-num 1
+&glob type-trdcattr-car-num {&type-char}
+&glob format-trdcattr-car-num "X(20)"
+&glob label-trdcattr-car-num "Гос. № автоцистерны"
+&glob tooltip-trdcattr-car-num "Гос. № автоцистерны"
+&glob user-can-edit-trdcattr-car-num true
+&glob output-display-trdcattr-car-num true
+&glob other-trdcattr-car-num '':u
+&glob news-trdcattr-car-num true
+&glob sort-trdcattr-car-num 190
+
+/* Ф.И.О. водителя-экспедитора */
+&glob fillin_width-trdcattr-fio-driver 20
+&glob fillin_height-trdcattr-fio-driver 1
+&glob type-trdcattr-fio-driver {&type-char}
+&glob format-trdcattr-fio-driver "X(20)"
+&glob label-trdcattr-fio-driver "Ф.И.О. водителя-экспедитора"
+&glob tooltip-trdcattr-fio-driver "Ф.И.О. водителя-экспедитора"
+&glob user-can-edit-trdcattr-fio-driver true
+&glob output-display-trdcattr-fio-driver true
+&glob other-trdcattr-fio-driver '':u
+&glob news-trdcattr-fio-driver true
+&glob sort-trdcattr-fio-driver 190
+
+/* Время прибытия на АЗС */
+&glob fillin_width-trdcattr-time-income 20
+&glob fillin_height-trdcattr-time-income 1
+&glob type-trdcattr-time-income {&type-char}
+&glob format-trdcattr-time-income "X(20)"
+&glob label-trdcattr-time-income "Время прибытия на АЗС"
+&glob tooltip-trdcattr-time-income "Время прибытия на АЗС"
+&glob user-can-edit-trdcattr-time-income true
+&glob output-display-trdcattr-time-income true
+&glob other-trdcattr-time-income '':u
+&glob news-trdcattr-time-income true
+&glob sort-trdcattr-time-income 190
+
+/* Свидетельство о поверке */
+&glob fillin_width-trdcattr-inspection-cert 20
+&glob fillin_height-trdcattr-inspection-cert 1
+&glob type-trdcattr-inspection-cert {&type-char}
+&glob format-trdcattr-inspection-cert "X(20)"
+&glob label-trdcattr-inspection-cert "Свидетельство о поверке"
+&glob tooltip-trdcattr-inspection-cert "Свидетельство о поверке"
+&glob user-can-edit-trdcattr-inspection-cert true
+&glob output-display-trdcattr-inspection-cert true
+&glob other-trdcattr-inspection-cert '':u
+&glob news-trdcattr-inspection-cert true
+&glob sort-trdcattr-inspection-cert 190
+
+/* Дата свидетельства о поверке */
+&glob fillin_width-trdcattr-date-cert 11
+&glob fillin_height-trdcattr-date-cert 1
+&glob type-trdcattr-date-cert {&type-date}
+&glob format-trdcattr-date-cert "99/99/9999"
+&glob label-trdcattr-date-cert "Дата свидетельства о поверке"
+&glob tooltip-trdcattr-date-cert "Дата свидетельства о поверке"
+&glob user-can-edit-trdcattr-date-cert true
+&glob output-display-trdcattr-date-cert true
+&glob other-trdcattr-date-cert '':u
+&glob news-trdcattr-date-cert true
+&glob sort-trdcattr-date-cert 100
+
+
+/* Техническое состояние */
+&glob fillin_width-trdcattr-condition 20
+&glob fillin_height-trdcattr-condition 1
+&glob type-trdcattr-condition {&type-char}
+&glob format-trdcattr-condition "X(20)"
+&glob label-trdcattr-condition "Техническое состояние"
+&glob tooltip-trdcattr-condition Техническое состояние"
+&glob user-can-edit-trdcattr-condition true
+&glob output-display-trdcattr-condition true
+&glob other-trdcattr-condition '':u
+&glob news-trdcattr-condition true
+&glob sort-trdcattr-condition 190
+
+/* Пломбы, их состояние */
+&glob fillin_width-trdcattr-seals-condition 20
+&glob fillin_height-trdcattr-seals-condition 1
+&glob type-trdcattr-seals-condition {&type-char}
+&glob format-trdcattr-seals-condition "X(20)"
+&glob label-trdcattr-seals-condition "Пломбы, их состояние"
+&glob tooltip-trdcattr-seals-condition "Пломбы, их состояние"
+&glob user-can-edit-trdcattr-seals-condition true
+&glob output-display-trdcattr-seals-condition true
+&glob other-trdcattr-seals-condition '':u
+&glob news-trdcattr-seals-condition true
+&glob sort-trdcattr-seals-condition 190
+
+define new global shared variable g#trdcalib as handle no-undo.
 
   &glob include_trdcalib yes
   &glob check_trdcalib ~

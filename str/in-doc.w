@@ -393,7 +393,7 @@ t-doc.reason-code
 &Scoped-define THIRD-ENABLED-TABLE ub.currency
 &Scoped-define FOURTH-ENABLED-TABLE ub.pay-type
 &Scoped-Define ENABLED-OBJECTS b-exit b-prev b-next b-revis b-arch ~
-b-add-doc b-cnt b-attr b-notes b-history b-print b-help ~
+b-add-doc b-cnt b-attr b-in-attr-fuel b-notes b-history b-print b-help ~
 varcontract-prn-code b-contr-lkp r-clients r-currency r-acc r-outs r-pay ~
 varpurch-code-name r-wrkr r-agnt r-boss r-sht ov-pc b-add-doc-yes m-inc ~
 r-reas a-n-c loc-art loc-name loc-code b-mark b-add b-bc b-prt b-parts ~
@@ -496,14 +496,14 @@ DEFINE BUTTON b-add
 
 DEFINE BUTTON b-add-doc
      LABEL "  ДопРасх":L
-     SIZE 10 BY 1 TOOLTIP "Документ дополнительных расходов".
+     SIZE 12 BY 1 TOOLTIP "Документ дополнительных расходов".
 
 DEFINE BUTTON b-add-doc-yes
      IMAGE-UP FILE "cmp/check.bmp":U
      IMAGE-DOWN FILE "cmp/check.bmp":U
      IMAGE-INSENSITIVE FILE "cmp/check.bmp":U NO-CONVERT-3D-COLORS
      LABEL ""
-     SIZE 2 BY .92 TOOLTIP "Есть документ дополнительных расходов".
+     SIZE 2 BY 0.9 TOOLTIP "Есть документ дополнительных расходов".
 
 DEFINE BUTTON b-arch
      LABEL "Уч&етЦены":L
@@ -512,6 +512,10 @@ DEFINE BUTTON b-arch
 DEFINE BUTTON b-attr
      LABEL "А&трибуты"
      SIZE 10 BY 1.
+
+DEFINE BUTTON b-in-attr-fuel
+     LABEL "Доп. инфо"
+     SIZE 10 BY 1 TOOLTIP "Дополнительные атрибуты по документы при приемке топлива".
 
 DEFINE BUTTON b-bc
      LABEL "&БКод":L
@@ -538,7 +542,7 @@ DEFINE BUTTON b-del
 
 DEFINE BUTTON b-exit AUTO-GO
      LABEL "&Выход":L
-     SIZE 10 BY 1.
+     SIZE 6 BY 1.
 
 DEFINE BUTTON b-help
      LABEL "Помо&щь":L
@@ -566,7 +570,7 @@ DEFINE BUTTON b-next AUTO-GO
 
 DEFINE BUTTON b-notes
      LABEL "Примечание":L
-     SIZE 11 BY 1.
+     SIZE 11.5 BY 1.
 
 DEFINE BUTTON b-parts
      LABEL "Па&рт":L
@@ -591,7 +595,7 @@ DEFINE BUTTON b-renum
 
 DEFINE BUTTON b-revis
      LABEL "С&верки"
-     SIZE 10 BY 1.
+     SIZE 8 BY 1.
 
 DEFINE BUTTON r-acc
      IMAGE-UP FILE "btn-down-arrow":U
@@ -681,12 +685,12 @@ DEFINE VARIABLE varpurch-code-name AS CHARACTER FORMAT "x(22)":U
 
 DEFINE VARIABLE agnt-name AS CHARACTER FORMAT "x(256)":U
       VIEW-AS TEXT
-     SIZE 11.5 BY 1
+     SIZE 12 BY 1
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE boss-name AS CHARACTER FORMAT "x(256)":U
       VIEW-AS TEXT
-     SIZE 11.5 BY 1
+     SIZE 12 BY 1
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE loc-art AS CHARACTER FORMAT "x(16)"
@@ -707,7 +711,7 @@ DEFINE VARIABLE loc-name AS CHARACTER FORMAT "x(40)":U
 DEFINE VARIABLE ov-pc AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0
      LABEL "&%"
      VIEW-AS FILL-IN
-     SIZE 12.5 BY 1 TOOLTIP "Изменение цены поставщика: наценка, скидка" NO-UNDO.
+     SIZE 14 BY 1 TOOLTIP "Изменение цены поставщика: наценка, скидка" NO-UNDO.
 
 DEFINE VARIABLE rsn-name AS CHARACTER FORMAT "x(256)":U
       VIEW-AS TEXT
@@ -722,7 +726,7 @@ DEFINE VARIABLE varcontract-prn-code AS CHARACTER FORMAT "X(16)"
 
 DEFINE VARIABLE wrkr-name AS CHARACTER FORMAT "x(256)":U
       VIEW-AS TEXT
-     SIZE 11.5 BY 1
+     SIZE 12 BY 1
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE a-n-c AS CHARACTER
@@ -792,15 +796,15 @@ DEFINE BROWSE br-dtl
 
 DEFINE FRAME d-in-doc
      b-exit AT ROW 1 COL 1
-     b-prev AT ROW 1 COL 11.13
-     b-next AT ROW 1 COL 14.13
-     b-revis AT ROW 1 COL 17.13
-     b-arch AT ROW 1 COL 27
-     b-add-doc AT ROW 1 COL 36.88 WIDGET-ID 2
-     b-add-doc-yes AT ROW 1 COL 37.13 WIDGET-ID 4
-     b-cnt AT ROW 1 COL 46.75
-     b-attr AT ROW 1 COL 56.63
-     b-notes AT ROW 1 COL 66.5
+     b-prev AT ROW 1 COL 7
+     b-next AT ROW 1 COL 10
+     b-revis AT ROW 1 COL 13
+     b-arch AT ROW 1 COL 21
+     b-add-doc AT ROW 1 COL 31 WIDGET-ID 2
+     b-cnt AT ROW 1 COL 43.13
+     b-attr AT ROW 1 COL 53.13
+     b-in-attr-fuel AT ROW 1 COL 63.25
+     b-notes AT ROW 1 COL 73.25
      b-history AT ROW 1 COL 89.5
      b-print AT ROW 1 COL 93
      b-help AT ROW 1 COL 96
@@ -1271,6 +1275,42 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-in-attr-fuel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-in-attr-fuel d-in-doc
+ON CHOOSE OF b-in-attr-fuel IN FRAME d-in-doc /* Атр для накладных с топливом */
+DO:
+    run init-attr-general in this-procedure .
+    if t-doc.status_ <> {&fact} then do:
+
+    
+    /*for each tt-upd-attr-fuel :
+    message
+      tt-upd-attr-fuel.code             ' =code            ' skip
+      tt-upd-attr-fuel.type-attr        ' =type-attr       ' skip
+      tt-upd-attr-fuel.format-attr      ' =format-attr     ' skip
+      tt-upd-attr-fuel.fillin_width     ' =fillin_width    ' skip
+      tt-upd-attr-fuel.fillin_height    ' =fillin_height   ' skip
+      tt-upd-attr-fuel.label-attr       ' =label-attr      ' skip
+      tt-upd-attr-fuel.user-can-edit    ' =user-can-edit   ' skip
+      tt-upd-attr-fuel.output-display   ' =output-display  ' skip
+      tt-upd-attr-fuel.hot-key          ' =hot-key         ' skip
+      tt-upd-attr-fuel.can-select       ' =can-select      ' skip
+      tt-upd-attr-fuel.other            ' =other           '  skip
+      tt-upd-attr-fuel.proc-attr        ' =proc-attr       '  skip
+      tt-upd-attr-fuel.proc-win         ' =proc-win        '  skip
+      tt-upd-attr-fuel.proc-func        ' =proc-func       '  skip
+      tt-upd-attr-fuel.full-screen-val  ' =full-screen-val '   .
+    end.
+    */
+      run str/in-laddtrn.w (input ParParentproc, input pardoc-mode, input t-doc.doc-code, input table tt-upd-attr-fuel) no-error.
+    end.
+    else do:
+      run str/in-laddtrn.w (input ParParentproc, input pardoc-mode, input t-doc.doc-code, input table tt-upd-attr-fuel) no-error.
+    end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-bc
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-bc d-in-doc
@@ -2222,6 +2262,13 @@ do on error undo main-block, leave main-block :
       when 2 then is-fuel = no.
       when 3 then return error.
     end.
+   end.
+   if is-fuel or can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type  
+                                                and ub.clients-attr.obj-code = ub.clients.obj-code
+                                                and ub.clients-attr.attr-code = {&attr-supp-np}
+                                                and ub.clients-attr.attr-value = "yes")
+   then do:
+      b-in-attr-fuel:sensitive = true.
    end.
    if pardoc-mode = {&add-def} then do:
      wait-for go of frame {&frame-name} focus t-doc.cli-code.
@@ -3235,6 +3282,7 @@ PROCEDURE cr-tt-upd :
 do on error undo, return error return-value :
 
 for each tt-upd-attr: delete tt-upd-attr. end.
+for each tt-upd-attr-fuel: delete tt-upd-attr-fuel. end.
 
 &scop create-record create tt-upd-attr. ~
  assign~
@@ -3253,8 +3301,35 @@ for each tt-upd-attr: delete tt-upd-attr. end.
      tt-upd-attr.proc-attr       ~
      tt-upd-attr.full-screen-val ~
      tt-upd-attr.sort_  ~
-     no-error                   ~
-~}                              ~
+     no-error         ~
+~}                    ~
+ if error-status :error then do:    ~
+   message "Ошибка при установке атрибутов документа." skip ~
+           error-status :get-message(1) skip return-value ~
+   view-as alert-box. ~
+   return error. ~
+ end.
+ 
+ 
+ &scop create-record-fuel create tt-upd-attr-fuel. ~
+ assign~
+  tt-upd-attr-fuel.code =  ~{&~{&attr-code~}~}  . ~
+                                        ~
+~{ str/tdat-cod.i                ~
+     tt-upd-attr-fuel.code           ~
+     tt-upd-attr-fuel.type-attr      ~
+     tt-upd-attr-fuel.format-attr    ~
+     tt-upd-attr-fuel.fillin_width   ~
+     tt-upd-attr-fuel.fillin_height  ~
+     tt-upd-attr-fuel.label-attr     ~
+     tt-upd-attr-fuel.user-can-edit  ~
+     tt-upd-attr-fuel.output-display ~
+     v-other                    ~
+     tt-upd-attr-fuel.proc-attr       ~
+     tt-upd-attr-fuel.full-screen-val ~
+     tt-upd-attr-fuel.sort_  ~
+     no-error         ~
+~}                    ~
  if error-status :error then do:    ~
    message "Ошибка при установке атрибутов документа." skip ~
            error-status :get-message(1) skip return-value ~
@@ -3312,6 +3387,28 @@ if v-is-pharm = "yes":U then do:
   &scop attr-code trdcattr-ser_on_pack
   {&create-record}
 end.
+
+
+&scop attr-code trdcattr-ptbobj
+{&create-record-fuel}
+&scop attr-code trdcattr-ptb-item-pour
+{&create-record-fuel}
+&scop attr-code trdcattr-autoent
+{&create-record-fuel}
+&scop attr-code trdcattr-car-num
+{&create-record-fuel}
+&scop attr-code trdcattr-fio-driver
+{&create-record-fuel}
+&scop attr-code trdcattr-time-income
+{&create-record-fuel}
+&scop attr-code trdcattr-inspection-cert
+{&create-record-fuel}
+&scop attr-code trdcattr-date-cert
+{&create-record-fuel}
+&scop attr-code trdcattr-condition
+{&create-record-fuel}
+&scop attr-code trdcattr-seals-condition
+{&create-record-fuel}
 
 end.
 end procedure.
@@ -3665,7 +3762,7 @@ PROCEDURE enable_UI :
           t-doc.VAT-base t-doc.cli-qnty t-doc.doc-qnty t-doc.fact-qnty
           t-doc.reason-code
       WITH FRAME d-in-doc.
-  ENABLE b-exit b-prev b-next b-revis b-arch b-add-doc b-cnt b-attr b-notes
+  ENABLE b-exit b-prev b-next b-revis b-arch b-add-doc b-cnt b-attr b-in-attr-fuel b-notes
          b-history b-print b-help t-doc.cli-code t-doc.cli-type
          ub.clients.obj-name varcontract-prn-code b-contr-lkp r-clients r-currency
          t-doc.exch-code t-doc.exch-date t-doc.discnt-pc t-doc.cst-code
@@ -5710,6 +5807,14 @@ if pardoc-mode = {&update} then do:
        apply "entry" to  ub.doc-line.fact-qnty in browse {&browse-name}.
     end.
   end.
+end.
+if is-fuel or can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type  
+  and ub.clients-attr.obj-code = ub.clients.obj-code
+  and ub.clients-attr.attr-code = {&attr-supp-np}
+  and ub.clients-attr.attr-value = "yes")
+  then 
+do:
+  b-in-attr-fuel:sensitive = true.
 end.
 if num-results('{&browse-name}') > 0 then do:
    if {&browse-name}:refresh() then.

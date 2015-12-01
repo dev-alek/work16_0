@@ -36,5 +36,17 @@ on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
+  run str/callnews.p
+    (input {&table_auto-tank-attr}
+    ,input (buffer ub.auto-tank-attr:handle)
+    ).
+  if error-status:error then do:
+    message
+      vss-workfile vss-revision vss-description skip
+      "Ошибка при передаче в новости" skip
+      return-value skip
+      view-as alert-box error .
+      return error.
+  end.
 
 end. /* main-block */

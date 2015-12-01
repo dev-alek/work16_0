@@ -633,6 +633,13 @@ DO:
        ,input-output v-diameter
        ,input-output v-place-si
        ,input-output v-tank-density-pomi
+       ,input-output v-prt-certif-fuel 
+       ,input-output v-prt-norm-doc 
+       ,input-output v-prt-num-passport 
+       ,input-output v-prt-validity-certif
+       ,input-output v-prt-passport-plotn
+       ,input-output v-prt-num-plotn             
+       ,input-output v-prt-date-pov-plotn     
       ) no-error .
 
     if error-status :error then do:
@@ -971,7 +978,7 @@ DO:
           end.
         end.
 
-        run str/in-ladd.w
+        run str/in-laddout.w
           ( input        parParentProc
           ,input        "set-attr":U
           ,input        t-doc.doc-code
@@ -1001,6 +1008,13 @@ DO:
           ,input-output v-diameter
           ,input-output v-place-si
           ,input-output v-tank-density-pomi
+          ,input-output v-prt-certif-fuel 
+          ,input-output v-prt-norm-doc 
+          ,input-output v-prt-num-passport 
+          ,input-output v-prt-validity-certif
+          ,input-output v-prt-passport-plotn
+          ,input-output v-prt-num-plotn             
+          ,input-output v-prt-date-pov-plotn   
           ,      output was_setting
           ) no-error .
         if error-status :error then do:
@@ -1012,6 +1026,8 @@ DO:
             view-as alert-box error .
           return no-apply.
         end.
+      end.
+      else do:
         run write-doc-line-attr in this-procedure (
               input ub.doc-line.doc-code
             , input buf_goods.gds-code
@@ -2497,7 +2513,7 @@ end.
         .
       end.
 
-      run str/in-ladd.w
+      run str/in-laddout.w
         ( input        parParentProc
          ,input        "get-attr":U
          ,input        t-doc.doc-code
@@ -2527,6 +2543,13 @@ end.
          ,input-output v-diameter
          ,input-output v-place-si
          ,input-output v-tank-density-pomi
+         ,input-output v-prt-certif-fuel 
+         ,input-output v-prt-norm-doc 
+         ,input-output v-prt-num-passport 
+         ,input-output v-prt-validity-certif
+         ,input-output v-prt-passport-plotn
+         ,input-output v-prt-num-plotn             
+         ,input-output v-prt-date-pov-plotn   
          ,      output was_setting
         ) .
 

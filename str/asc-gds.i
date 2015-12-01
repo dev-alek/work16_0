@@ -291,7 +291,7 @@ if (lookup({&petrolium}, loc-units.type) > 0 AND lookup({&divisional}, loc-units
    /*проверим на газ*/
    run gds-attr-value in this-procedure  (
                                           input cash-gds.gds-code
-                                         ,input {&attr-is-gas}
+                                         ,input {&attr-fuel-type}
                                          ,output v-is-gas
                                          ,output v-type) no-error.
    run gds-attr-value in this-procedure  (
@@ -304,7 +304,7 @@ if (lookup({&petrolium}, loc-units.type) > 0 AND lookup({&divisional}, loc-units
    cash-gds.ptrl-as-good = logical(v-ptrl-as-good)
    no-error .
    assign
-   cash-gds.is-gas = logical(v-is-gas)
+   cash-gds.is-gas = (v-is-gas = 'metan':U) 
    no-error .
    if cash-gds.is-gas then do:
      cash-gds.gds-stat = cash-gds.gds-stat + 64.

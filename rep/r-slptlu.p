@@ -2640,12 +2640,12 @@ procedure cr-gds-list :
       end.
       run gds-attr-value in this-procedure
         (  input bf_goods.gds-code
-        ,  input {&attr-is-gas}
+        ,  input {&attr-fuel-type}
         , output v_gds-attr-value
         , output v_gds-attr-type
         ) no-error .
       if not error-status :error and
-         v_gds-attr-value = 'yes':U
+         v_gds-attr-value = 'metan':U
       then do:
         assign
           l_is-gds-gas = yes

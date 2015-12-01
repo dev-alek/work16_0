@@ -5634,13 +5634,25 @@ end procedure.
 &scop format-attr-is-gas  "+/ "
 &scop label-attr-is-gas   "Природный газ-топливо"
 &scop tooltip-attr-is-gas   "Природный газ-топливо"
-&scop user-can-edit-attr-is-gas  true
-&scop output-display-attr-is-gas  true
+&scop user-can-edit-attr-is-gas  false
+&scop output-display-attr-is-gas  false
 &scop other-attr-is-gas  "check=gds-attr_check-ptrl-divis"
-&scop news-attr-is-gas true
-&scop copy-attr-is-gas  true
-&scop manual-edit-attr-is-gas 1
-&scop batch-edit-attr-is-gas  1
+&scop news-attr-is-gas false
+&scop copy-attr-is-gas  false
+&scop manual-edit-attr-is-gas 6
+&scop batch-edit-attr-is-gas  6
+
+&scop type-attr-fuel-type {&type-char}
+&scop format-attr-fuel-type  "X(50)"
+&scop label-attr-fuel-type   "Тип топлива"
+&scop tooltip-attr-fuel-type   "Тип топлива"
+&scop user-can-edit-attr-fuel-type  true
+&scop output-display-attr-fuel-type  true
+&scop other-attr-fuel-type  "spr-ext=ref\gds-ft.p/spr-param=fuel-type/check=gds-attr_check-ptrl-divis"
+&scop news-attr-fuel-type true
+&scop copy-attr-fuel-type  true
+&scop manual-edit-attr-fuel-type 6
+&scop batch-edit-attr-fuel-type  6
 
 &scop type-attr-ptrl-without-rvs {&type-log}
 &scop format-attr-ptrl-without-rvs  "+/ "
@@ -5651,8 +5663,8 @@ end procedure.
 &scop other-attr-ptrl-without-rvs  "check=gds-attr_check-ptrl-divis"
 &scop news-attr-ptrl-without-rvs true
 &scop copy-attr-ptrl-without-rvs  true
-&scop manual-edit-attr-ptrl-without-rvs 1
-&scop batch-edit-attr-ptrl-without-rvs  1
+&scop manual-edit-attr-ptrl-without-rvs 6
+&scop batch-edit-attr-ptrl-without-rvs  6
 
 &scop type-attr-office-type {&type-char}
 &scop format-attr-office-type  "X(50)"
@@ -5724,8 +5736,8 @@ end procedure.
 &glob other-attr-15x80  "spr-ext=ref\struct-i.w/spr-param=15x80/init=gds-attr_init-15x80"
 &glob news-attr-15x80 true
 &glob copy-attr-15x80  true
-&scop manual-edit-attr-15x80 1
-&scop batch-edit-attr-15x80  1
+&scop manual-edit-attr-15x80 5
+&scop batch-edit-attr-15x80  5
 
 &glob type-attr-8x50 {&type-char}
 &glob format-attr-8x50  "X(255)"
@@ -5736,8 +5748,8 @@ end procedure.
 &glob other-attr-8x50  "spr-ext=ref\struct-i.w/spr-param=8x50/init=gds-attr_init-8x50"
 &glob news-attr-8x50 true
 &glob copy-attr-8x50  true
-&scop manual-edit-attr-8x50 1
-&scop batch-edit-attr-8x50  1
+&scop manual-edit-attr-8x50 5
+&scop batch-edit-attr-8x50  5
 
 
 &glob type-attr-6x50 {&type-char}
@@ -5749,8 +5761,8 @@ end procedure.
 &glob other-attr-6x50  "spr-ext=ref\struct-i.w/spr-param=6x50/init=gds-attr_init-6x50"
 &glob news-attr-6x50 true
 &glob copy-attr-6x50  true
-&scop manual-edit-attr-6x50 1
-&scop batch-edit-attr-6x50  1
+&scop manual-edit-attr-6x50 5
+&scop batch-edit-attr-6x50  5
 
 &glob type-attr-calories {&type-dec}
 &glob format-attr-calories  ">,>>9.9"
@@ -5835,8 +5847,8 @@ end procedure.
 &scop other-attr-ptrl-as-good  "check=gds-attr_check-ptrl-divis"
 &scop news-attr-ptrl-as-good true
 &scop copy-attr-ptrl-as-good  true
-&scop manual-edit-attr-ptrl-as-good 1
-&scop batch-edit-attr-ptrl-as-good  1
+&scop manual-edit-attr-ptrl-as-good 6
+&scop batch-edit-attr-ptrl-as-good  6
 
 &glob type-attr-dflt-insalepr {&type-log}
 &glob format-attr-dflt-insalepr  "+/ "
@@ -5847,8 +5859,8 @@ end procedure.
 &glob other-attr-dflt-insalepr  ""
 &glob news-attr-dflt-insalepr true
 &glob copy-attr-dflt-insalepr  false
-&scop manual-edit-attr-dflt-insalepr 1
-&scop batch-edit-attr-dflt-insalepr  1
+&scop manual-edit-attr-dflt-insalepr 6
+&scop batch-edit-attr-dflt-insalepr  6
 
 /* Диапазоны плотности топлива */
 &scop type-attr-gds-ptrl-densities {&type-char}
@@ -5860,8 +5872,8 @@ end procedure.
 &scop other-attr-gds-ptrl-densities "spr=gds-attr_gds-ptrl-densities"
 &glob news-attr-gds-ptrl-densities true
 &scop copy-attr-gds-ptrl-densities  false
-&scop manual-edit-attr-gds-ptrl-densities  1
-&scop batch-edit-attr-gds-ptrl-densities  1
+&scop manual-edit-attr-gds-ptrl-densities  6
+&scop batch-edit-attr-gds-ptrl-densities  6
 
 /*длина (мм)*/
 &glob type-attr-length-of {&type-int}
@@ -5873,8 +5885,8 @@ end procedure.
 &glob other-attr-length-of  ""
 &glob news-attr-length-of true
 &glob copy-attr-length-of  true
-&scop manual-edit-attr-length-of 1
-&scop batch-edit-attr-length-of  1
+&scop manual-edit-attr-length-of 3
+&scop batch-edit-attr-length-of  3
 
 /*ширина (мм)*/
 &glob type-attr-width-of {&type-int}
@@ -5886,8 +5898,8 @@ end procedure.
 &glob other-attr-width-of  ""
 &glob news-attr-width-of true
 &glob copy-attr-width-of  true
-&scop manual-edit-attr-width-of 1
-&scop batch-edit-attr-width-of  1
+&scop manual-edit-attr-width-of 3
+&scop batch-edit-attr-width-of  3
 
 /*высота (мм)*/
 &glob type-attr-height-of {&type-int}
@@ -5899,8 +5911,8 @@ end procedure.
 &glob other-attr-height-of  ""
 &glob news-attr-height-of true
 &glob copy-attr-height-of  true
-&scop manual-edit-attr-height-of 1
-&scop batch-edit-attr-height-of  1
+&scop manual-edit-attr-height-of 3
+&scop batch-edit-attr-height-of  3
 
 /*Количество в коробке*/
 &glob type-attr-qnty-in-box {&type-int}
@@ -5912,8 +5924,8 @@ end procedure.
 &glob other-attr-qnty-in-box  ""
 &glob news-attr-qnty-in-box true
 &glob copy-attr-qnty-in-box  true
-&scop manual-edit-attr-qnty-in-box 1
-&scop batch-edit-attr-qnty-in-box  1
+&scop manual-edit-attr-qnty-in-box 4
+&scop batch-edit-attr-qnty-in-box  4
 
 /*Вес коробки (товар + коробка)*/
 &glob type-attr-weight-box {&type-dec}
@@ -5925,8 +5937,8 @@ end procedure.
 &glob other-attr-weight-box  ""
 &glob news-attr-weight-box true
 &glob copy-attr-weight-box  true
-&scop manual-edit-attr-weight-box 1
-&scop batch-edit-attr-weight-box  1
+&scop manual-edit-attr-weight-box 4
+&scop batch-edit-attr-weight-box  4
 
 /*Количество на палете*/
 &glob type-attr-qnty-on-pallet {&type-int}
@@ -5938,8 +5950,8 @@ end procedure.
 &glob other-attr-qnty-on-pallet  ""
 &glob news-attr-qnty-on-pallet true
 &glob copy-attr-qnty-on-pallet  true
-&scop manual-edit-attr-qnty-on-pallet 1
-&scop batch-edit-attr-qnty-on-pallet  1
+&scop manual-edit-attr-qnty-on-pallet 4
+&scop batch-edit-attr-qnty-on-pallet  4
 
 /*Вес палеты (товар + коробка)*/
 &glob type-attr-weight-of-pallet {&type-dec}
@@ -6035,8 +6047,6 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-alcohol-prod
       {&attr-temp-full-code}
-      &scop attr-code attr-is-gas
-      {&attr-temp-full-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-temp-full-code}
       &scop attr-code attr-office-type
@@ -6085,6 +6095,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-temp-full-code}
+      &scop attr-code attr-fuel-type
+      {&attr-temp-full-code}
       &scop attr-code attr-image-list
       {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -6112,8 +6124,6 @@ do
       &scop attr-code attr-gds-attr-lock
       {&attr-temp-code}
       &scop attr-code attr-alcohol-prod
-      {&attr-temp-code}
-      &scop attr-code attr-is-gas
       {&attr-temp-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-temp-code}
@@ -6162,6 +6172,8 @@ do
       &scop attr-code attr-qnty-on-pallet
       {&attr-temp-code}
       &scop attr-code attr-weight-of-pallet
+      {&attr-temp-code}
+      &scop attr-code attr-fuel-type
       {&attr-temp-code}
       &scop attr-code attr-image-list
       {&attr-temp-code}
@@ -6424,8 +6436,6 @@ procedure gds-attr-news :
     case p-code :
       &scop attr-code attr-alcohol-prod
       {&attr-news-code}
-      &scop attr-code attr-is-gas
-      {&attr-news-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-news-code}
       &scop attr-code attr-office-type
@@ -6474,8 +6484,11 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-news-code}
+      &scop attr-code attr-fuel-type
+      {&attr-news-code}
       &scop attr-code attr-image-list
       {&attr-news-code}
+      
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный глобальный атрибут товара &1", p-code ).
@@ -6495,8 +6508,6 @@ procedure gds-attr-copy :
     case p-code :
       &scop attr-code attr-alcohol-prod
       {&attr-copy-code}
-      &scop attr-code attr-is-gas
-      {&attr-copy-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-copy-code}
       &scop attr-code attr-office-type
@@ -6544,6 +6555,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-qnty-on-pallet
       {&attr-copy-code}
       &scop attr-code attr-weight-of-pallet
+      {&attr-copy-code}
+      &scop attr-code attr-fuel-type
       {&attr-copy-code}
       &scop attr-code attr-image-list
       {&attr-copy-code}
@@ -6593,11 +6606,11 @@ procedure gds-attr_check-ptrl-divis :
     end.
     if not v-is-petrolium then do:
       case p-code:
-        when {&attr-is-gas} then do:
-          assign
-            p-error-code = substitute("Товар-топливо типа ГАЗ должен иметь топливную единицу измерения")
-          .
-        end.
+/*        when {&attr-is-gas} then do:                                                                    */
+/*          assign                                                                                        */
+/*            p-error-code = substitute("Товар-топливо типа ГАЗ должен иметь топливную единицу измерения")*/
+/*          .                                                                                             */
+/*        end.                                                                                            */
         when {&attr-ptrl-without-rvs} then do:
           assign
             p-error-code = substitute("Товар-топливо не требующий сверки должен иметь топливную единицу измерения")
@@ -6613,11 +6626,11 @@ procedure gds-attr_check-ptrl-divis :
     end.
     if v-is-pieces then do:
       case p-code:
-        when {&attr-is-gas}  then do:
-          assign
-            p-error-code = substitute("Товар-топливо типа ГАЗ должен иметь дробную единицу измерения")
-          .
-        end.
+/*        when {&attr-is-gas}  then do:                                                                 */
+/*          assign                                                                                      */
+/*            p-error-code = substitute("Товар-топливо типа ГАЗ должен иметь дробную единицу измерения")*/
+/*          .                                                                                           */
+/*        end.                                                                                          */
         when {&attr-ptrl-without-rvs}  then do:
           assign
             p-error-code = substitute("Товар-топливо не требующий сверки должен иметь дробную единицу измерения")
@@ -6913,8 +6926,6 @@ do
     case p-code :
       &scop attr-code attr-alcohol-prod
       {&attr-manual-edit-code}
-      &scop attr-code attr-is-gas
-      {&attr-manual-edit-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-manual-edit-code}
       &scop attr-code attr-office-type
@@ -6963,6 +6974,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-manual-edit-code}
+      &scop attr-code attr-fuel-type
+      {&attr-manual-edit-code}
       &scop attr-code attr-image-list
       {&attr-manual-edit-code}
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -6985,8 +6998,6 @@ do
 
     case p-code :
       &scop attr-code attr-alcohol-prod
-      {&attr-batch-edit-code}
-      &scop attr-code attr-is-gas
       {&attr-batch-edit-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-batch-edit-code}
@@ -7029,6 +7040,8 @@ do
       &scop attr-code attr-qnty-on-pallet
       {&attr-batch-edit-code}
       &scop attr-code attr-weight-of-pallet
+      {&attr-batch-edit-code}
+      &scop attr-code attr-fuel-type
       {&attr-batch-edit-code}
       &scop attr-code attr-image-list
       {&attr-batch-edit-code}

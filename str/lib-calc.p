@@ -830,7 +830,7 @@ if parstatus = {&wayb} and
                                ln_goods.prod-code = ln_doc-line.prod-code no-lock.
      find first ln_doc-line-attr where ln_doc-line-attr.doc-code  = ln_doc-line.doc-code and
                                        ln_doc-line-attr.gds-code  = ln_goods.gds-code    and
-                                       ln_doc-line-attr.attr-code = "tank-vol"           no-error.
+                                       ln_doc-line-attr.attr-code = "tank-vol":U           no-error.
      if available ln_doc-line-attr then do:
        assign varauto-tank-qnty = decimal (ln_doc-line-attr.attr-value).
      end.
@@ -839,13 +839,21 @@ if parstatus = {&wayb} and
      end.
      find first ln_doc-line-attr where ln_doc-line-attr.doc-code  = ln_doc-line.doc-code and
                                        ln_doc-line-attr.gds-code  = ln_goods.gds-code    and
-                                       ln_doc-line-attr.attr-code = "tank-density"       no-error.
+                                       ln_doc-line-attr.attr-code = "tank-weight":U       no-error.  /*Пытаемся посчитать плотность из массы потому, что при приведении в атрибуте плотности указана замеренная плотность и полученные кг не равны объему умноженному на эту плотность*/
      if available ln_doc-line-attr then do:
-       assign varauto-tank-density = decimal (ln_doc-line-attr.attr-value).
+       assign varauto-tank-density = decimal (ln_doc-line-attr.attr-value) / varauto-tank-qnty no-error.
      end.
      else do:
        assign varauto-tank-density = ?.
      end.
+     if varauto-tank-density = ? then do: /* На случай, если кг не указаны, то пытаемся найти просто плотность*/
+        find first ln_doc-line-attr where ln_doc-line-attr.doc-code  = ln_doc-line.doc-code and
+                                       ln_doc-line-attr.gds-code  = ln_goods.gds-code    and
+                                       ln_doc-line-attr.attr-code = "tank-density":U       no-error.  
+         if available ln_doc-line-attr then do:
+           assign varauto-tank-density = decimal (ln_doc-line-attr.attr-value)  no-error.
+         end.
+     end.    
      assign
        varrvs-before-qnty = 0
        varrvs-after-qnty  = 0.

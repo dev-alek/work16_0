@@ -1382,31 +1382,32 @@ do:
      ,input-output v-new-fact-qnty
      ,input-output v-new-density
      ,input-output v-new-cli-fact-qnty
-     ,input-output v-prt-car-num
      ,input-output v-prt-car-vol
      ,input-output v-prt-tests
-     ,input-output v-prt-autoent-obj-type
-     ,input-output v-prt-autoent-obj-code
-     ,input-output v-prt-item-pour
      ,input-output v-prt-time-pour
      ,input-output v-prt-tank-vol
      ,input-output v-prt-tank-temp
      ,input-output v-prt-tank-water
      ,input-output v-prt-tank-density
      ,input-output v-prt-tank-weight
-     ,input-output v-prt-time-income
      ,input-output v-prt-start-real-date
      ,input-output v-prt-start-real-time
      ,input-output v-prt-end-real-date
      ,input-output v-prt-end-real-time
      ,input-output v-prt-mouth
-     ,input-output v-prt-fio
-     ,input-output v-prt-ptbotype
-     ,input-output v-prt-ptbocode
      ,input-output v-prt-a-b-tarir
      ,input-output v-diameter
      ,input-output v-place-si
      ,input-output v-tank-density-pomi
+     ,input-output v-prt-tank-vol-pomi
+     ,input-output v-prt-dens-temp
+     ,input-output v-prt-certif-fuel 
+     ,input-output v-prt-norm-doc 
+     ,input-output v-prt-num-passport 
+     ,input-output v-prt-validity-certif
+     ,input-output v-prt-num-plotn
+     ,input-output v-prt-passport-plotn
+     ,input-output v-prt-date-pov-plotn
     ) no-error .
 
   if error-status :error then do:
@@ -2451,31 +2452,32 @@ if varrvs-place = yes then do:
        ,input        "get-attr":U
        ,input        t-doc.doc-code
        ,input        buf_goods.gds-code
-       ,input-output v-prt-car-num
        ,input-output v-prt-car-vol
        ,input-output v-prt-tests
-       ,input-output v-prt-autoent-obj-type
-       ,input-output v-prt-autoent-obj-code
-       ,input-output v-prt-item-pour
        ,input-output v-prt-time-pour
        ,input-output v-prt-tank-vol
        ,input-output v-prt-tank-temp
        ,input-output v-prt-tank-water
        ,input-output v-prt-tank-density
        ,input-output v-prt-tank-weight
-       ,input-output v-prt-time-income
        ,input-output v-prt-start-real-date
        ,input-output v-prt-start-real-time
        ,input-output v-prt-end-real-date
        ,input-output v-prt-end-real-time
        ,input-output v-prt-mouth
-       ,input-output v-prt-fio
-       ,input-output v-prt-ptbotype
-       ,input-output v-prt-ptbocode
        ,input-output v-prt-a-b-tarir
        ,input-output v-diameter
        ,input-output v-place-si
        ,input-output v-tank-density-pomi
+       ,input-output v-prt-tank-vol-pomi
+       ,input-output v-prt-dens-temp
+       ,input-output v-prt-certif-fuel 
+       ,input-output v-prt-norm-doc 
+       ,input-output v-prt-num-passport 
+       ,input-output v-prt-validity-certif
+       ,input-output v-prt-num-plotn
+       ,input-output v-prt-passport-plotn
+       ,input-output v-prt-date-pov-plotn       
        ,      output was_setting
       ) .
 
@@ -5123,33 +5125,34 @@ procedure save-place-rsrv :
         ,input        "set-attr":U
         ,input        t-doc.doc-code
         ,input        buf_goods.gds-code
-        ,input-output v-prt-car-num
         ,input-output v-prt-car-vol
         ,input-output v-prt-tests
-        ,input-output v-prt-autoent-obj-type
-        ,input-output v-prt-autoent-obj-code
-        ,input-output v-prt-item-pour
         ,input-output v-prt-time-pour
         ,input-output v-prt-tank-vol
         ,input-output v-prt-tank-temp
         ,input-output v-prt-tank-water
         ,input-output v-prt-tank-density
         ,input-output v-prt-tank-weight
-        ,input-output v-prt-time-income
         ,input-output v-prt-start-real-date
         ,input-output v-prt-start-real-time
         ,input-output v-prt-end-real-date
         ,input-output v-prt-end-real-time
         ,input-output v-prt-mouth
-        ,input-output v-prt-fio
-        ,input-output v-prt-ptbotype
-        ,input-output v-prt-ptbocode
         ,input-output v-prt-a-b-tarir
         ,input-output v-diameter
         ,input-output v-place-si
         ,input-output v-tank-density-pomi
-        ,      output was_setting
-        ) no-error .
+        ,input-output v-prt-tank-vol-pomi
+        ,input-output v-prt-dens-temp
+        ,input-output v-prt-certif-fuel 
+        ,input-output v-prt-norm-doc 
+        ,input-output v-prt-num-passport 
+        ,input-output v-prt-validity-certif
+        ,input-output v-prt-num-plotn
+        ,input-output v-prt-passport-plotn
+        ,input-output v-prt-date-pov-plotn
+        ,output was_setting
+        )  .
       if error-status :error then do:
         return error substitute( "&1 (save-place-rsrv). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ).
       end.

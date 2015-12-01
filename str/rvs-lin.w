@@ -1761,8 +1761,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       tt-rvs-line.state-density
       with frame {&frame-name}.
   end.
+  /*   Отключили определение параметра использования ПО к МИ, т.к. приведение плотности теперь работает только при приемки    
   run gbl/conf-rd.p ("pomi-lic", "", "", 0, "", "", "", no, output pomi-licvalue, output pomi-lictype) no-error.
-  if error-status:error or pomi-licvalue = "no" then do :
+  
+  if error-status:error or
+  */
+  
+  if pomi-licvalue = "no" then do :
     hide
       tt-rvs-line.meas-calc-qnty
       tt-rvs-line.meas-calc-dens
@@ -1772,7 +1777,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       b-calc
       in frame Dialog-Frame.
   end.
-  else do :
+  else  do :
     view
       tt-rvs-line.izmer-density
     in frame Dialog-Frame.

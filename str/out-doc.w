@@ -84,7 +84,7 @@ define variable vss-description as character no-undo initial "Обработка РН (заве
 { cmp/bb-list.i bb-list def " new shared " }
 { str/fact-bc.i }
 { str/lib-rvs.i }
-{ str/in-ptrl.i  def all-line }
+{ str/out-ptrl.i  def all-line }
 { gbl/getsect.i  def }
 { str/cont-ms.i}
 

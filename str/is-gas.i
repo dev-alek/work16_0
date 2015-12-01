@@ -32,12 +32,12 @@ do on error undo, return error:
     &scop proc-name gds-attr-value
     {&run_proc_attr-lib}
       (input  p-gds-code
-      ,input  {&attr-is-gas}
+      ,input  {&attr-fuel-type}
       ,output c-value
       ,output c-type) no-error.
 end.
 
-result = logical(c-value) no-error. /* При ошибке останется initial no */
+result = logical(c-value = 'metan':U) no-error. /* При ошибке останется initial no */
 
 return result.
 

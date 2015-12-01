@@ -29,7 +29,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     { ref/gds-attr.i }
     { str/is-gas.i }
     { str/placelib.i }
-
+    
     define variable v-prt-car-num          as character    no-undo .
     define variable v-prt-car-vol          as character    no-undo .
     define variable v-prt-tests            as character    no-undo .
@@ -55,21 +55,21 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     define variable v-diameter             as character    no-undo .
     define variable v-place-si             as character    no-undo .
     define variable v-tank-density-pomi    as character    no-undo .
-    define variable v-prt-tank-vol-pomi    as character    no-undo .
-    define variable v-prt-dens-temp        as character    no-undo .
     define variable v-prt-certif-fuel      as character    no-undo .
     define variable v-prt-norm-doc         as character    no-undo .
     define variable v-prt-num-passport     as character    no-undo .
     define variable v-prt-validity-certif  as character    no-undo .
-    define variable v-prt-passport-plotn   as   character             no-undo .
-    define variable v-prt-num-plotn        as   character             no-undo .
-    define variable v-prt-date-pov-plotn   like ub.rvs-line.real-date no-undo .
+    define variable v-prt-passport-plotn   as character    no-undo .
+    define variable v-prt-num-plotn        as character    no-undo .     
+    define variable v-prt-date-pov-plotn   as date    no-undo . 
     define variable was_setting            as logical      no-undo initial no .
 
     define variable ptoldfilvalue          as character    no-undo.
     define variable ptoldfiltype           as character    no-undo.
     define variable stfactplvalue          as character    no-undo initial ? .
     define variable stfactpltype           as character    no-undo initial ? .
+    define variable olddensvalue           as character    no-undo initial ? .
+    define variable olddenstype            as character    no-undo initial ? .
 
     define variable varupd-fact-qnty       as logical      no-undo initial yes .
     define variable varrevision            as logical      no-undo initial no  .
@@ -79,7 +79,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     define variable varinv                 as logical      no-undo initial no  .
     define variable varpercinv             as decimal      no-undo initial ?   .
     define variable varinv-set             as logical      no-undo initial no  .
-
+    
     define variable is-vir as logical no-undo.
     define variable v-value as character no-undo.
     define variable v-ok as logical no-undo.
@@ -202,7 +202,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 view-as alert-box error .
               return error .
             end.
-            if ptrlprop-olddens <> true
+            if olddensvalue <> 'yes':U
               and bf_after_rvs-line.state-density <> ?
               and buf_goods.unit-base <> buf_goods.unit-cli
             then do:
@@ -436,26 +436,10 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         end.
 
         case p-action :
-          when {&update} then /* Строка Накл в режиме "Изменить" */
-          do:
-           find buf_place no-lock
-              where buf_place.obj-type = t-doc.obj-type
-                and buf_place.obj-code = t-doc.obj-code
-                and buf_place.pl-code  = v-pl-code
-              .
-                    
-            if p-action-type = "meas" or buf_place.is-meas <> yes then /* ТН-3370 Арн 12.01.2015. (Строка Накл в режиме "Изменить") и меню pop-up (по кнопкам "Св.до" и "Св.после") = "Сверка резервуара" [он же парам="meas"] */
-            do:
-              assign
-                v-act-name = 'actn_rvs-on-doc_cr-revision':U /* Право на создание сверки */
-              .
-            end.
-            else
-            do:
-              assign
-                v-act-name = 'actn_rvs-on-doc_upd-revision':U /* Право на изменение сверки */
-              .
-            end.
+          when {&update} then do:
+            assign
+              v-act-name = 'actn_rvs-on-doc_upd-revision':U
+            .
             case p-rvs-type :
               when {&rvs-before-doc} then do:
                 run check-before in this-procedure
@@ -675,15 +659,15 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             
             else do:
             
-            run str/rvs-lin.w
-              (input  parparentproc
-              ,input  recid( buf_rvs-line )
-              ,input  p-action
-              ,input  substitute( " # &1 товар &2 &3 &4  складское место &5"
-                                  ,buf_rvs-doc.rvs-code
-                                  ,buf_goods.artic
-                                  ,buf_goods.prod-type
-                                  ,buf_goods.prod-code
+                run str/rvs-lin.w
+                  (input  parparentproc
+                  ,input  recid( buf_rvs-line )
+                  ,input  p-action
+                  ,input  substitute(" # &1 товар &2 &3 &4  складское место &5"
+                                    ,buf_rvs-doc.rvs-code
+                                    ,buf_goods.artic
+                                    ,buf_goods.prod-type
+                                    ,buf_goods.prod-code
                                     ,v-pl-code)) no-error.
             end.
             
@@ -702,7 +686,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
           end.
         end case.
-
+        
         run placelib_get-attr(input {&place-virtual}
                                  ,input buf_rvs-line.obj-code
                                  ,input buf_rvs-line.obj-type
@@ -714,108 +698,108 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         
         if not is-gas(buf_goods.gds-code) and not is-vir then do:
         
-        if p-action = {&update} then do:
-          if p-action-type = "meas":U then do:
-            { str/rvsclcln.i
-              recid(buf_rvs-line)
-              no-error
-            }
-            if error-status :error then do:
-              message
-                "Ошибка при пересчете строки документа сверки." skip
-                return-value skip
-                error-status :get-message(1) skip
-                view-as alert-box error .
-              undo block_tr, return error .
+            if p-action = {&update} then do:
+              if p-action-type = "meas":U then do:
+                { str/rvsclcln.i
+                  recid(buf_rvs-line)
+                  no-error
+                }
+                if error-status :error then do:
+                  message
+                    "Ошибка при пересчете строки документа сверки." skip
+                    return-value skip
+                    error-status :get-message(1) skip
+                    view-as alert-box error .
+                  undo block_tr, return error .
+                end.
+              end.
+    
+              { str/rvsclchd.i
+                recid(buf_rvs-doc)
+                false
+                no-error
+              }
+              if error-status :error then do:
+                message
+                  "Ошибка при пересчете документа сверки." skip
+                  return-value skip
+                  error-status :get-message(1) skip
+                  view-as alert-box error .
+                undo block_tr, return error .
+              end.
+    
+              run return-rvs-qnty in this-procedure
+                ( input t-doc.doc-code
+                 ,input buf_goods.gds-code
+                 ,input v-pl-code
+                 ,output v-rvs-qnty-before
+                 ,output v-rvs-qnty-after
+                 ,output v-rvs-cli-qnty-before
+                 ,output v-rvs-cli-qnty-after
+                ) no-error .
+              if error-status :error then do:
+                undo block_tr, return error return-value .
+              end.
+              
+              if p-rvs-type = {&rvs-after-doc} then do:
+                if v-rvs-qnty-after = ?
+                  or v-rvs-qnty-after = 0
+                then do:
+                  message
+                    "Не задано количество по сверке <<после_док>>"
+                    "по резервуару" v-pl-code "."
+                    view-as alert-box error .
+                  undo block_tr, return error .
+                end.
+                if v-rvs-cli-qnty-after = ?
+                  or v-rvs-cli-qnty-after = 0
+                then do:
+                  /* ругаемся на плотность потому что в строке редактирования сверки у нас открыто поле плотность */
+                  message
+                    "Не задана плотность в сверке <<после_док>>"
+                    "по резервуару" v-pl-code "."
+                    view-as alert-box error .
+                  undo block_tr, return error .
+                end.
+              end.
+    
+              if v-rvs-qnty-after <> ?
+                and v-rvs-qnty-after <> 0
+              then do:
+                if v-rvs-qnty-after - v-rvs-qnty-before <= 0
+                  or v-rvs-qnty-after - v-rvs-qnty-before = ?
+                then do:
+                  message
+                    substitute( "Ошибка по результатам сверки." ) skip
+                    substitute( "Место хранения: &1 .", v-pl-code ) skip
+                    substitute( "Количество залитого топлива: &1 (&2).", v-rvs-qnty-after - v-rvs-qnty-before, buf_goods.unit-base ) skip
+                    view-as alert-box .
+                  undo block_tr, return error .
+                end.
+                if v-rvs-cli-qnty-after - v-rvs-cli-qnty-before <= 0
+                  or v-rvs-cli-qnty-after - v-rvs-cli-qnty-before = ?
+                then do:
+                  message
+                    substitute( "Ошибка по результатам сверки." ) skip
+                    substitute( "Место хранения: &1 .", v-pl-code ) skip
+                    substitute( "Количество залитого топлива: &1 (&2).", v-rvs-cli-qnty-after - v-rvs-cli-qnty-before, buf_goods.unit-cli ) skip
+                    view-as alert-box .
+                  undo block_tr, return error .
+                end.
+    
+                assign
+                  v-rvs-density = (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before) / (v-rvs-qnty-after - v-rvs-qnty-before)
+                .
+                if Valid-Density( v-rvs-density, (buf_goods.unit-base = buf_goods.unit-cli)  ) <> true then do:
+                  message
+                    substitute( "Ошибка по результатам сверки." ) skip
+                    substitute( "Место хранения: &1 .", v-pl-code ) skip
+                    substitute( "Плотность залитого топлива: &1.", v-rvs-density ) skip
+                    view-as alert-box .
+                  undo block_tr, return error .
+                end.
+              end. /* v-rvs-qnty-after <> ? */
             end.
-          end.
-
-          { str/rvsclchd.i
-            recid(buf_rvs-doc)
-            false
-            no-error
-          }
-          if error-status :error then do:
-            message
-              "Ошибка при пересчете документа сверки." skip
-              return-value skip
-              error-status :get-message(1) skip
-              view-as alert-box error .
-            undo block_tr, return error .
-          end.
-
-          run return-rvs-qnty in this-procedure
-            ( input t-doc.doc-code
-             ,input buf_goods.gds-code
-             ,input v-pl-code
-             ,output v-rvs-qnty-before
-             ,output v-rvs-qnty-after
-             ,output v-rvs-cli-qnty-before
-             ,output v-rvs-cli-qnty-after
-            ) no-error .
-          if error-status :error then do:
-            undo block_tr, return error return-value .
-          end.
-
-          if p-rvs-type = {&rvs-after-doc} then do:
-            if v-rvs-qnty-after = ?
-              or v-rvs-qnty-after = 0
-            then do:
-              message
-                "Не задано количество по сверке <<после_док>>"
-                "по резервуару" v-pl-code "."
-                view-as alert-box error .
-              undo block_tr, return error .
-            end.
-            if v-rvs-cli-qnty-after = ?
-              or v-rvs-cli-qnty-after = 0
-            then do:
-              /* ругаемся на плотность потому что в строке редактирования сверки у нас открыто поле плотность */
-              message
-                "Не задана плотность в сверке <<после_док>>"
-                "по резервуару" v-pl-code "."
-                view-as alert-box error .
-              undo block_tr, return error .
-            end.
-          end.
-
-          if v-rvs-qnty-after <> ?
-            and v-rvs-qnty-after <> 0
-          then do:
-            if v-rvs-qnty-after - v-rvs-qnty-before <= 0
-              or v-rvs-qnty-after - v-rvs-qnty-before = ?
-            then do:
-              message
-                substitute( "Ошибка по результатам сверки." ) skip
-                substitute( "Место хранения: &1 .", v-pl-code ) skip
-                substitute( "Количество залитого топлива: &1 (&2).", v-rvs-qnty-after - v-rvs-qnty-before, buf_goods.unit-base ) skip
-                view-as alert-box .
-              undo block_tr, return error .
-            end.
-            if v-rvs-cli-qnty-after - v-rvs-cli-qnty-before <= 0
-              or v-rvs-cli-qnty-after - v-rvs-cli-qnty-before = ?
-            then do:
-              message
-                substitute( "Ошибка по результатам сверки." ) skip
-                substitute( "Место хранения: &1 .", v-pl-code ) skip
-                substitute( "Количество залитого топлива: &1 (&2).", v-rvs-cli-qnty-after - v-rvs-cli-qnty-before, buf_goods.unit-cli ) skip
-                view-as alert-box .
-              undo block_tr, return error .
-            end.
-
-            assign
-              v-rvs-density = (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before) / (v-rvs-qnty-after - v-rvs-qnty-before)
-            .
-            if Valid-Density( v-rvs-density, (buf_goods.unit-base = buf_goods.unit-cli)  ) <> true then do:
-              message
-                substitute( "Ошибка по результатам сверки." ) skip
-                substitute( "Место хранения: &1 .", v-pl-code ) skip
-                substitute( "Плотность залитого топлива: &1.", v-rvs-density ) skip
-                view-as alert-box .
-              undo block_tr, return error .
-            end.
-          end. /* v-rvs-qnty-after <> ? */
-        end.
         end.
       end. /* on error */
     end procedure. /* action-rvs-line */
@@ -834,32 +818,38 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       define input-output parameter p-new-fact-qnty        like ub.doc-line.fact-qnty    no-undo .
       define input-output parameter p-new-density          like ub.doc-line.fact-density no-undo .
       define input-output parameter p-new-cli-fact-qnty    like ub.doc-line.fact-qnty    no-undo .
+      define input-output parameter p-prt-car-num          as   character                no-undo .
       define input-output parameter p-prt-car-vol          as   character                no-undo .
       define input-output parameter p-prt-tests            as   character                no-undo .
+      define input-output parameter p-prt-autoent-obj-type as   character                no-undo .
+      define input-output parameter p-prt-autoent-obj-code as   character                no-undo .
+      define input-output parameter p-prt-item-pour        as   character                no-undo .
       define input-output parameter p-prt-time-pour        as   character                no-undo .
       define input-output parameter p-prt-tank-vol         as   character                no-undo .
       define input-output parameter p-prt-tank-temp        as   character                no-undo .
       define input-output parameter p-prt-tank-water       as   character                no-undo .
       define input-output parameter p-prt-tank-density     as   character                no-undo .
       define input-output parameter p-prt-tank-weight      as   character                no-undo .
+      define input-output parameter p-prt-time-income      as   character                no-undo .
       define input-output parameter p-prt-start-real-date  like ub.rvs-line.real-date    no-undo .
       define input-output parameter p-prt-start-real-time  like ub.rvs-line.real-time    no-undo .
       define input-output parameter p-prt-end-real-date    like ub.rvs-line.real-date    no-undo .
       define input-output parameter p-prt-end-real-time    like ub.rvs-line.real-time    no-undo .
       define input-output parameter p-prt-mouth            as   character                no-undo .
+      define input-output parameter p-prt-fio              as   character                no-undo .
+      define input-output parameter p-prt-ptbotype         as   character                no-undo .
+      define input-output parameter p-prt-ptbocode         as   character                no-undo .
       define input-output parameter p-prt-a-b-tarir        as   character                no-undo .
       define input-output parameter p-diameter             as   character                no-undo .
       define input-output parameter p-place-si             as   character                no-undo .
       define input-output parameter p-tank-density-pomi    as   character                no-undo .
-      define input-output parameter p-prt-tank-vol-pomi    as   character                no-undo .
-      define input-output parameter p-prt-dens-temp        as   character                no-undo .
-      define input-output parameter p-prt-certif-fuel      as   character                no-undo .
-      define input-output parameter p-prt-norm-doc         as   character                no-undo .
-      define input-output parameter p-prt-num-passport     as   character                no-undo .
-      define input-output parameter p-prt-validity-certif  as   character                no-undo .
-      define input-output parameter p-prt-passport-plotn   as   character                no-undo .
-      define input-output parameter p-prt-num-plotn        as   character                no-undo .
-      define input-output parameter p-prt-date-pov-plotn   like ub.rvs-line.real-date    no-undo .
+      define input-output parameter p-prt-certif-fuel      as character    no-undo .
+      define input-output parameter p-prt-norm-doc         as character    no-undo .
+      define input-output parameter p-prt-num-passport     as character    no-undo .
+      define input-output parameter p-prt-validity-certif  as character    no-undo .
+      define input-output parameter p-prt-passport-plotn   as   character             no-undo .
+      define input-output parameter p-prt-num-plotn        as   character             no-undo .
+      define input-output parameter p-prt-date-pov-plotn   like ub.rvs-line.real-date no-undo .
       do
       on error  undo, return error substitute( "&1 (proc-b-addinfo). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
       on stop   undo, return error substitute( "&1 (proc-b-addinfo). stop", vss-workfile )
@@ -956,32 +946,38 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
              ,input        p-mode
              ,input        p-doc-code
              ,input        p-gds-code
+             ,input-output p-prt-car-num
              ,input-output p-prt-car-vol
              ,input-output p-prt-tests
+             ,input-output p-prt-autoent-obj-type
+             ,input-output p-prt-autoent-obj-code
+             ,input-output p-prt-item-pour
              ,input-output p-prt-time-pour
              ,input-output p-prt-tank-vol
              ,input-output p-prt-tank-temp
              ,input-output p-prt-tank-water
              ,input-output p-prt-tank-density
              ,input-output p-prt-tank-weight
+             ,input-output p-prt-time-income
              ,input-output p-prt-start-real-date
              ,input-output p-prt-start-real-time
              ,input-output p-prt-end-real-date
              ,input-output p-prt-end-real-time
              ,input-output p-prt-mouth
+             ,input-output p-prt-fio
+             ,input-output p-prt-ptbotype
+             ,input-output p-prt-ptbocode
              ,input-output p-prt-a-b-tarir
              ,input-output p-diameter
              ,input-output p-place-si
              ,input-output p-tank-density-pomi
-             ,input-output p-prt-tank-vol-pomi
-             ,input-output p-prt-dens-temp
              ,input-output p-prt-certif-fuel 
              ,input-output p-prt-norm-doc 
              ,input-output p-prt-num-passport 
              ,input-output p-prt-validity-certif
              ,input-output p-prt-passport-plotn
-             ,input-output p-prt-num-plotn
-             ,input-output p-prt-date-pov-plotn                           
+             ,input-output p-prt-num-plotn             
+             ,input-output p-prt-date-pov-plotn     
              ,      output v-setting
             ) no-error .
           if error-status :error then do:
@@ -996,8 +992,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             assign
               v-new-fact-qnty = p-new-fact-qnty
             .
-		  def var v-calc-density  like ub.rvs-line.state-density          no-undo .
-          if decimal(p-prt-tank-weight) > 0 and decimal(p-prt-tank-vol) > 0 then v-calc-density = decimal(p-prt-tank-weight) / decimal(p-prt-tank-vol).
             { str/stfactqt.i
               p-stfactplvalue
               p-doc-qnty
@@ -1005,7 +999,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               0.00
               0.00
               p-prt-tank-vol
-              v-calc-density            
+              decimal(p-prt-tank-density)
               no
               v-new-fact-qnty
               v-chg
@@ -1021,7 +1015,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               or v-st-doc    =  yes
             then do:
               assign
-                v-new-density = ( if v-st-doc = yes then p-doc-density else v-calc-density )
+                v-new-density = ( if v-st-doc = yes then p-doc-density else decimal( p-prt-tank-density ) )
                 v-log         = yes
               .
               if decimal( p-prt-tank-vol ) <> p-new-fact-qnty
@@ -1093,6 +1087,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         for each tt-doc-pl no-lock
         on error undo, return error return-value
         :
+
           find first buf-before_rvs-line no-lock
             where buf-before_rvs-line.rvs-code = buf-before_rvs-doc.rvs-code
               and buf-before_rvs-line.obj-type = buf-before_rvs-doc.obj-type
@@ -1435,11 +1430,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               .
             end.
           end.
-          {gbl/ptrlprop.i
-           run
-           t-doc.obj-type
-           t-doc.obj-code
-          }
           run gbl/d-askw.w
             ( input "Расхождение значений по местам хранения с показаниями сверок"
              ,input substitute( "&1", v-message ) + {&new-line} + "Это вызовет расхождение фактических и расчетно-книжных остатков"

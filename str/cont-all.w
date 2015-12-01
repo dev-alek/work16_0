@@ -1987,7 +1987,7 @@ PROCEDURE OpenBr2 :
   &scop flt-open-find-recid           v-doc-rec
   &scop flt-open-find-condition       p-find-condition
   &scop flt-open-find-buffer-name     buf_contract
-  &scop flt-open-debug-file           c:\cont2.txt
+  &scop flt-open-debug-file           
 
   define variable l-open-query as logical   no-undo .
 

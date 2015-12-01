@@ -162,6 +162,7 @@ define buffer buf_goods           for ub.goods.
 define buffer buf_clients         for ub.clients.
 define buffer buf_clients_ship    for ub.clients.
 define buffer buf_doc-line-attr   for ub.doc-line-attr.
+define buffer buf_doc-attr        for ub.doc-attr.
 define buffer buf_rvs-doc_before  for ub.rvs-doc.
 define buffer buf_rvs-doc_after   for ub.rvs-doc.
 define buffer buf_rvs-line_before for ub.rvs-line.
@@ -245,21 +246,26 @@ do on error undo, return error :
              buf_doc-line-attr.doc-code = buf_trn-doc.doc-code and
              buf_doc-line-attr.gds-code = buf_goods.gds-code   :
       case buf_doc-line-attr.attr-code :
-        { rep/act-ptrl.i when autoent-obj-code }
-        { rep/act-ptrl.i when autoent-obj-type }
-        { rep/act-ptrl.i when car-num          }
         { rep/act-ptrl.i when car-vol          }
-        { rep/act-ptrl.i when item-pour        }
         { rep/act-ptrl.i when tank-density     }
         { rep/act-ptrl.i when tank-temp        }
         { rep/act-ptrl.i when tank-vol         }
         { rep/act-ptrl.i when tank-water       }
         { rep/act-ptrl.i when tank-weight      }
-        { rep/act-ptrl.i when time-income      }
         { rep/act-ptrl.i when time-pour        }
         { rep/act-ptrl.i when type-inp-vat     }
       end case. /* buf_doc-line-attr.attr-code */
     end. /* for each buf_doc-line-attr */
+
+    for each buf_doc-attr no-lock where
+             buf_doc-attr.doc-code = buf_trn-doc.doc-code:
+      case buf_doc-attr.attr-code :
+        { rep/act-ptrl.i when-doc-attr trdcattr-autoent }
+        { rep/act-ptrl.i when-doc-attr trdcattr-car-num }
+        { rep/act-ptrl.i when-doc-attr trdcattr-time-income }
+        { rep/act-ptrl.i when-doc-attr trdcattr-ptb-item-pour }
+      end case. /* buf_doc-attr.attr-code */
+    end. /* for each buf_doc-attr */
 
     { rep/act-ptrl.i dec tank-vol     }
     { rep/act-ptrl.i dec tank-temp    }
