@@ -162,6 +162,7 @@ run get-report-num  in parParentProc ( output g#report-num ).
 { cus/ord-code.i def }
 
 define buffer l-shar_ord-line for ub.ord-line.
+define buffer buf_ord-line-attr for ub.ord-line-attr.
 define variable store-type as character no-undo .
 define variable store-code as integer   no-undo .
 assign
@@ -231,7 +232,7 @@ define variable a-n-c as character view-as radio-set horizontal radio-buttons
 size 12 by 1 no-undo.
 define variable loc-art  as character  format "x(10)":u label "Нач.артик." view-as fill-in size 14 by 1 fgcolor red_color no-undo .
 define variable loc-name as character  label "Нач.назв."  view-as fill-in size 14 by 1 fgcolor red_color  no-undo.
-define variable loc-code as character  label "Бар-код" view-as fill-in  size 14 by 1 fgcolor red_color  no-undo.
+define variable loc-code as character  format "x(14)":u label "Бар-код" view-as fill-in  size 14 by 1 fgcolor red_color  no-undo.
 
 define variable base-abbr as character format "x(3)":u
       view-as text
@@ -363,6 +364,8 @@ t agnt-name boss-name prod-name goods-name t-auto date-sale-1 date-sale-2 loc-ho
 &scop label-clmn_21       tmp#zakaz.order-cli-qnty
 &scop label-clmn_22       tmp#zakaz.ord-dec1
 &scop label-clmn_23       tmp#zakaz.initial-qnty
+&scop label-clmn_24       tmp#zakaz.min-stock-old
+&scop label-clmn_25       tmp#zakaz.gds-way
 
 &scop label-clmn-lb_1   'ш! '
 &scop label-clmn-lb_2   'Артикул! '
@@ -387,6 +390,8 @@ t agnt-name boss-name prod-name goods-name t-auto date-sale-1 date-sale-2 loc-ho
 &scop label-clmn-lb_21  'Запрошено!количество'
 &scop label-clmn-lb_22  'Запрошена!цена'
 &scop label-clmn-lb_23  'Расcчитн.!кол-во'
+&scop label-clmn-lb_24  'Мин.!остаток'
+&scop label-clmn-lb_25  'Тов.!в пути'
 head-col =
   {&label-clmn-lb_20}     + '#' +
   {&label-clmn-lb_18}     + '#' +
@@ -408,7 +413,9 @@ head-col =
   {&label-clmn-lb_15}     + '#' +
   {&label-clmn-lb_17}     + '#' +
   {&label-clmn-lb_19}     + '#' +
-  {&label-clmn-lb_23}
+  {&label-clmn-lb_23}     + '#' +
+  {&label-clmn-lb_24}     + '#' +
+  {&label-clmn-lb_25}
   .
 /* ***********************  control definitions  ********************** */
 
@@ -717,6 +724,8 @@ define browse br-docs
    {&label-clmn_17}  column-label {&label-clmn-lb_17}    format "x(1)"
    {&label-clmn_19}  column-label {&label-clmn-lb_19}
    {&label-clmn_23}  column-label {&label-clmn-lb_23}
+   {&label-clmn_24}  column-label {&label-clmn-lb_24}
+   {&label-clmn_25}  column-label {&label-clmn-lb_25}
   enable
       {&label-clmn_8}
     with no-assign  separators size-char {&s-with1}  by 8.54.
@@ -1290,7 +1299,7 @@ then frame {&frame-name}:parent = active-window.
 { gbl/srt-clmn.i
   &browse-name    = "{&browse-name}"
   &frame-name     = "{&frame-name}"
-  &ext-col        = 23
+  &ext-col        = 25
   &start-column   = 5
   &table-name     = "{&first-table-in-query-{&browse-name}}"
   &sort-clmn_1    = "{&label-clmn_1}"
@@ -1316,6 +1325,8 @@ then frame {&frame-name}:parent = active-window.
   &sort-clmn_21   = "{&label-clmn_21}"
   &sort-clmn_22   = "{&label-clmn_22}"
   &sort-clmn_23   = "{&label-clmn_23}"
+  &sort-clmn_24   = "{&label-clmn_24}"
+  &sort-clmn_25   = "{&label-clmn_25}"
   &label-clmn_1    = "{&label-clmn-lb_1}"
   &label-clmn_2    = "{&label-clmn-lb_2}"
   &label-clmn_3    = "{&label-clmn-lb_3}"
@@ -1339,6 +1350,8 @@ then frame {&frame-name}:parent = active-window.
   &label-clmn_21   = "{&label-clmn-lb_21}"
   &label-clmn_22   = "{&label-clmn-lb_22}"
   &label-clmn_23   = "{&label-clmn-lb_23}"
+  &label-clmn_24   = "{&label-clmn-lb_24}"
+  &label-clmn_25   = "{&label-clmn-lb_25}"
   &sort-column-name     = "sort-column-name"
   &open-query     = "{&open-query-br-docs-sort} BY ~{&sort-clmn_~{&clmn_num~}~} ."
   &open-query-otherwise = "{&open-query-br-docs-sort} by tmp#zakaz.line-num ."
@@ -1379,7 +1392,7 @@ do on error   undo main-block, leave main-block
 run init-browse-p  in this-procedure .
 apply "VALUE-CHANGED" to {&browse-name} in frame {&frame-name}.
 { gbl/mv-clmn.i
-  &ext-col = 23
+  &ext-col = 25
   &start-column = 1
   &frame-name = "{&frame-name}"
   &browse-name = "br-docs"
@@ -2559,6 +2572,16 @@ define buffer bufff-units  for ub.units     .
                 tmp#zakaz.unit-base     = ub.goods.unit-base
                 tmp#zakaz.sum           = tmp#zakaz.price-rubl * tmp#zakaz.qnty
            .
+           
+            find first buf_ord-line-attr where buf_ord-line-attr.doc-code = shar_ord-line.doc-code
+              and buf_ord-line-attr.gds-code = shar_ord-line.gds-code
+              and buf_ord-line-attr.attr-code = {&ordlineattr-min-stock} no-error.
+            if available buf_ord-line-attr then tmp#zakaz.min-stock-old = decimal(buf_ord-line-attr.attr-value). 
+            find first buf_ord-line-attr where buf_ord-line-attr.doc-code = shar_ord-line.doc-code
+              and buf_ord-line-attr.gds-code = shar_ord-line.gds-code
+              and buf_ord-line-attr.attr-code = {&ordlineattr-gds-way} no-error.
+            if available buf_ord-line-attr then tmp#zakaz.gds-way = decimal(buf_ord-line-attr.attr-value).
+            
             find bufff-units where bufff-units.unit-name = tmp#zakaz.unit-base no-lock no-error.
             if available bufff-units then
             assign
@@ -5610,8 +5633,8 @@ define variable ii as integer   no-undo .
 
 repeat ii = 1 to cur-clmn-loc   :
     col-h = hcolumn [ ii ]  .
-    if decimal(entry(ii,v-spis-size))  = 0 then message ii.
-    col-h:width  = decimal(entry(ii,v-spis-size))   .
+/*    if decimal(entry(ii,v-spis-size))  = 0 and ii < 22 then message ii.*/
+    col-h:width  = max (0.1, decimal(entry(ii, v-spis-size))) .
     col-h:visible  = logical(entry(ii,v-spis-vis))  .
  end.
 

@@ -26,13 +26,20 @@ define variable vss-description as character no-undo init "Триггер на изменение 
 { cmp/vssrevis.i "substitute('&1|&2|&3', ub.season.sea-code, ub.season.db-num , ub.season.sea-name) "}
 { cmp/trg-def.i  }
 { gbl/cur-time.i }
+{ ref/chgdssea.i }
 main-block :
 do transaction
 on error undo main-block, return error
 :
 define buffer buf_c-season for ub.c-season.
+define buffer buf_season-attr for ub.season-attr.
+define buffer buf_gds-season for ub.gds-season.
 define variable v-date as date no-undo .
 define variable v-time as integer no-undo .
+define variable v-ok as logical no-undo.
+define variable v-seaobj as character no-undo.
+define variable v-sea-code as integer no-undo.
+define variable v-db-num as integer no-undo.
 
   run cur-time in this-procedure(output v-date, output v-time).
 
@@ -60,6 +67,36 @@ define variable v-time as integer no-undo .
             return error.
         end.
   end.
+  
+  if g#news then do: /* пришел по новостям, проверим не возникли ли пересечения с сезонами измененными на бд приемнике*/
+    find first buf_season-attr no-lock where buf_season-attr.sea-code = ub.season.sea-code 
+      and buf_season-attr.db-num = ub.season.db-num
+      and buf_season-attr.attr-code = {&seaattr-obj} no-error.
+    if available buf_season-attr then
+          assign
+            v-seaobj = buf_season-attr.attr-value
+            .
+    _foreach-gds-season:
+    for each buf_gds-season no-lock where buf_gds-season.sea-code = ub.season.sea-code
+      and buf_gds-season.db-num = ub.season.db-num:
+      run chk-gdssea in this-procedure 
+        ( input buf_gds-season.gds-code,
+          input v-seaobj,
+          input ub.season.sea-month-1,
+          input ub.season.sea-month-2,
+          input rowid (ub.season),
+          output v-sea-code,
+          output v-db-num,
+          output v-ok) no-error.
+      if not v-ok then do:
+        assign
+          ub.season.des = "пересечение"
+          .
+        leave _foreach-gds-season.
+      end.
+    end.
+  end.
+  
     if g#oxml = yes
     then do:
     run str/calloxml.p (

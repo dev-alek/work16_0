@@ -36,5 +36,20 @@ on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
+  if not g#news  or  ( g#news and g#db-num = 0 ) then do:
+    run str/callnews.p
+      (input {&table_gds-season-attr}
+      ,input (buffer ub.gds-season-attr:handle)
+      ) no-error .
+    if error-status:error then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Ошибка при передаче в новости атрибута Сезона" skip
+        error-status :get-message(1) skip
+        return-value skip
+        view-as alert-box error .
+        return error.
+    end.
+  end.
 
 end. /* main-block */

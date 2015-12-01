@@ -3,8 +3,6 @@
 $Revision$
 $Author$
 $Date$
-$Workfile$
-$Archive$
 
 Списки таблиц по типам маршрутизации
 
@@ -14,9 +12,6 @@ Author: Bakhtadze Natalya
 Creation date: 01/07/07
 
 */
-
-&scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 /*
 из ГБД в УБД  и только если не СПН  - НЕ ходят транзитом  УБД1-ГБД-УБД2
@@ -326,9 +321,7 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,gds-host-attr~
 ,dis-time-rule~
 ,c-dis-time-rule~
-,season~
 ,gds-add-charges~
-,gds-season~
 ,ext-system~
 ,ext-system-attr~
 ,abc-analysis~
@@ -675,6 +668,10 @@ define variable v-custom-list as character no-undo initial
 ,wth-doc~
 ,wth-doc-attr~
 ,c-dis-grp-rule~
+,season~
+,season-attr~
+,gds-season~
+,gds-season-attr~
 ":U.
 
 &if "{1}" = "check" &then

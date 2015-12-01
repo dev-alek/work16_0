@@ -28,8 +28,9 @@ define variable vss-description as character no-undo init "    ".
 { cmp/trg-def.i  }
 { gbl/cur-time.i }
 
-define buffer buf_c-season for c-season.
-define buffer buf_goods for goods.
+define buffer buf_c-season for ub.c-season.
+define buffer buf_goods for ub.goods.
+define buffer buf_clients for ub.clients.
 define variable v-date as date no-undo .
 define variable v-time as integer no-undo .
 
@@ -37,9 +38,9 @@ define variable v-time1 as character no-undo .
 define variable v-str as character no-undo .
 define variable v-gds-name as character no-undo .
 
-def frame a
-  v-str              format "x(60)"      no-label     skip
-  v-gds-name         format "x(60)"      no-label     skip
+define frame a
+  v-str              format "x(60)"      no-labels     skip
+  v-gds-name         format "x(60)"      no-labels     skip
   v-time1            format "x(60)" label     "Время"     skip
   with view-as dialog-box side-labels three-d
   title "Удаление привязки товара к СЕЗОНУ/КОЛЛЕКЦИИ"
@@ -90,13 +91,47 @@ for each ub.gds-season exclusive-lock
 
      delete ub.gds-season.
 end.
+
+    find first ub.season-attr no-lock where ub.season-attr.sea-code = ub.season.sea-code
+        and ub.season-attr.db-num =  ub.season.db-num 
+        and ub.season-attr.attr-code =  {&seaattr-obj} no-error.
+    
+    if not g#news then do:
+      if not available ub.season-attr or g#db-num <> 0 then do:  
     run nws/cmd-del.p
-      ( input "season":U
+          ( input {&table_season}
        ,input (buffer ub.season:handle)
        ,input "":U
       ) no-error .
     if error-status :error then do:
       undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+        end.
+      end.
+      else do:
+        find first buf_clients no-lock where buf_clients.obj-type = substring (ub.season-attr.attr-value, 1, 3)
+          and buf_clients.obj-code = integer(substring (ub.season-attr.attr-value, 4)).
+        if buf_clients.db-num <> 0 then do:
+          run nws/cmd-del.p
+            ( input {&table_season}
+             ,input (buffer ub.season:handle)
+             ,input string(buf_clients.db-num)
+            ) no-error .
+          if error-status :error then do:
+            undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+          end.
+        end.
+      end.
+    end.
+
+    for each ub.season-attr exclusive-lock where ub.season-attr.sea-code = ub.season.sea-code /*не удаляем пока атрибут seaattr-obj для того, чтобы правильно маршрутизировать season-attr*/
+        and ub.season-attr.db-num =  ub.season.db-num 
+        and ub.season-attr.attr-value <> {&seaattr-obj}:
+      delete ub.season-attr.
+    end.
+    for each ub.season-attr exclusive-lock where ub.season-attr.sea-code = ub.season.sea-code
+        and ub.season-attr.db-num =  ub.season.db-num 
+        and ub.season-attr.attr-value = {&seaattr-obj}:
+      delete ub.season-attr.
     end.
 
  hide frame a .

@@ -64,6 +64,7 @@ define input  parameter p-t-deadline  as logical no-undo .  /* заказ и срок хран
 define input  parameter store-type    as character no-undo .
 define input  parameter store-code    as integer   no-undo .
 define input  parameter g#type        as character no-undo .
+define input  parameter p-tog-det-prizn as logical no-undo .     /* детализировать по признакам */
 
 
 define variable vss-revision    as character no-undo init "$Revision$":u .
@@ -154,6 +155,13 @@ define variable v-corr-coeff as decimal   no-undo .
 define variable old-pay-day as integer   no-undo .
 old-pay-day = pay-day.
 
+define variable v-sum-qnty-prt as decimal no-undo .
+
+define buffer buf_season for ub.season.
+define buffer buf_season-attr for ub.season-attr.
+define buffer buf_gds-season for ub.gds-season.
+define buffer buf_gds-season-attr for ub.gds-season-attr.
+
 if p-mode-calc = ? then p-mode-calc = "" .
 for each temp-rash :  delete temp-rash. end.
 
@@ -174,6 +182,8 @@ end.
     message "Заказ не может быть рассчитан. Разница Даты заказа и текущей даты " l-qnty-qnty " дней !" view-as alert-box error .
     return.
  end.
+
+assign l-action = true .
 if p-mode-calc = ""  then do: /*  расчет */
     if  var#import = true   then do:
       message "Данные были введены через ИМПОРТ , делать изменения количества заказа ?" view-as alert-box question
@@ -371,32 +381,56 @@ end.
 
 
     if p-R-min-rest3 then do:  /* сезон */
-      find first ub.season no-lock where
-            ub.season.sea-month-1 <= month (DATE-sale-2) and
-            ub.season.sea-month-2 >= month (DATE-sale-1)
+
+      for each buf_season no-lock where 
+                  buf_season.sea-month-1 <= integer (DATE-sale-2) and
+                  buf_season.sea-month-2 >= integer (DATE-sale-1):
+        find first buf_season-attr where buf_season-attr.sea-code = buf_season.sea-code
+          and buf_season-attr.db-num = buf_season.db-num
+          and buf_season-attr.attr-code = {&seaattr-obj}
+          and buf_season-attr.attr-value = obj-list.obj-type + string (obj-list.obj-code) no-error.
+
+        find first buf_gds-season no-lock where
+          buf_gds-season.gds-code = tmp#zakaz.gds-code and
+          buf_gds-season.sea-code = buf_season.sea-code and
+          buf_gds-season.db-num   = buf_season.db-num
             no-error .
-
-        if available ub.season  then do:
-              find first ub.gds-season no-lock where
-              ub.gds-season.gds-code = tmp#zakaz.gds-code and
-              ub.gds-season.sea-code = ub.season.sea-code and
-              ub.gds-season.db-num   = ub.season.db-num
+        if available buf_season-attr and available buf_gds-season 
+        then do:
+          find first buf_gds-season-attr no-lock where buf_gds-season-attr.sea-code = buf_gds-season.sea-code
+            and buf_gds-season-attr.db-num = buf_gds-season.db-num
+            and buf_gds-season-attr.gds-code = buf_gds-season.gds-code
+            and buf_gds-season-attr.attr-code = {&gdsseaattr-season-coef}
               no-error .
-
-              if available ub.gds-season then do:
-              if p-mode-calc = ""  then tmp#zakaz.min-stock = ub.gds-season.min-stock .
-                                   else export-ras.min-stock = ub.gds-season.min-stock .
+          if available buf_gds-season-attr then tmp#zakaz.season-coef = decimal (buf_gds-season-attr.attr-value).
+          if p-mode-calc = ""  then tmp#zakaz.min-stock = buf_gds-season.min-stock .
+                     else export-ras.min-stock = buf_gds-season.min-stock .
+          leave.
               end.
+        else do:
+          if available buf_gds-season then do:
+            find first buf_gds-season-attr no-lock where buf_gds-season-attr.sea-code = buf_gds-season.sea-code
+              and buf_gds-season-attr.db-num = buf_gds-season.db-num
+              and buf_gds-season-attr.gds-code = buf_gds-season.gds-code
+              and buf_gds-season-attr.attr-code = {&gdsseaattr-season-coef}
+              no-error.
+            if available buf_gds-season-attr then tmp#zakaz.season-coef = decimal (buf_gds-season-attr.attr-value).
+            if p-mode-calc = ""  then tmp#zakaz.min-stock = buf_gds-season.min-stock .
+               else export-ras.min-stock = buf_gds-season.min-stock .
+          end.
         end.
       end.
+      if tmp#zakaz.season-coef = ? or tmp#zakaz.season-coef = 0 then assign tmp#zakaz.season-coef = 1.
+      
+    end.
 
 /* ОСТАТОК НА СЕГОДНЯ */
-      for each ub.gds-obj no-lock where ub.gds-obj.artic     = tmp#zakaz.artic      and
-                                    ub.gds-obj.prod-code = tmp#zakaz.prod-code   and
-                                    ub.gds-obj.prod-type = tmp#zakaz.prod-type   and
-                                    ub.gds-obj.obj-code  = obj-list.obj-code     and
-                                    ub.gds-obj.obj-type  = obj-list.obj-type     :
-          ostatok-goods = ostatok-goods + ub.gds-obj.fact-qnty  .
+      for each gds-obj no-lock where gds-obj.artic     = tmp#zakaz.artic      and
+                                    gds-obj.prod-code = tmp#zakaz.prod-code   and
+                                    gds-obj.prod-type = tmp#zakaz.prod-type   and
+                                    gds-obj.obj-code  = obj-list.obj-code     and
+                                    gds-obj.obj-type  = obj-list.obj-type     :
+          ostatok-goods = ostatok-goods + gds-obj.fact-qnty  .
       end.
 
 /* РАСЧЕТ ТЕМПА */
@@ -437,6 +471,7 @@ end.
                       input   {&arh-cost}    ,
                       input   {&root-cat-id} ,
                       input   ""    ,
+                      input   false ,
                       input   false ,
                       output v-prih ,
                       output v-rash ,
@@ -479,6 +514,7 @@ end.
                       input   {&root-cat-id} ,
                       input   ""    ,
                       input   false ,
+                      input   false ,
                       output v-prih ,
                       output v-rash ,
                       output v-kassa
@@ -512,6 +548,7 @@ end.
                       input   {&root-cat-id} ,
                       input   ""    ,
                       input   false ,
+                      input   false ,
                       output v-prih ,
                       output v-rash ,
                       output v-kassa
@@ -544,6 +581,7 @@ end.
               input   {&root-cat-id} ,
               input   ""    ,
               input   false ,
+              input  p-tog-det-prizn ,
               output v-prih ,
               output v-rash ,
               output v-kassa
@@ -570,6 +608,7 @@ end.
                               input {&root-cat-id} ,
                               input ""    ,
                               input false ,
+                              input  p-tog-det-prizn ,
                               output v-prih ,
                               output v-rash ,
                               output v-kassa
@@ -640,14 +679,14 @@ end.
             end.
       end.
     end.
-    run gdspoatr-value in this-procedure ( input  {&attr-corrcoeff-po}
-                                          ,input  tmp#zakaz.gds-code
-                                          ,input  obj-list.obj-type
-                                          ,input  obj-list.obj-code
-                                          ,output v-value
-                                          ,output v-type
-                                          ) no-error .
-    assign v-corr-coeff = decimal(v-value).
+/*    run gdspoatr-value in this-procedure ( input  {&attr-corrcoeff-po}*/
+/*                                          ,input  tmp#zakaz.gds-code  */
+/*                                          ,input  obj-list.obj-type   */
+/*                                          ,input  obj-list.obj-code   */
+/*                                          ,output v-value             */
+/*                                          ,output v-type              */
+/*                                          ) no-error .                */
+    assign v-corr-coeff = tmp#zakaz.season-coef.
     if v-corr-coeff = 0 then v-corr-coeff = 1.
 
 /* Изменение количества дней продаж по АВС, если он есть------------------------------------------------------------ */
@@ -794,13 +833,48 @@ define variable t-sum-base as decimal   no-undo .
           end.
     end.
 
+    if p-tog-det-prizn then do :
+      for each export-ras :
+        v-sum-qnty-prt = 0.
+        for each tmp#zakaz-prn where tmp#zakaz-prn.artic     = export-ras.artic     and
+                                     tmp#zakaz-prn.prod-type = export-ras.prod-type and
+                                     tmp#zakaz-prn.prod-code = export-ras.prod-code and
+                                     tmp#zakaz-prn.obj-type  = export-ras.obj-type  and
+                                     tmp#zakaz-prn.obj-code  = export-ras.obj-code  no-lock
+        :
+          assign
+            tmp#zakaz-prn.qnty-ord = round((export-ras.qnty * (tmp#zakaz-prn.qnty-sale / export-ras.qnty-sale)), 0)
+            v-sum-qnty-prt = v-sum-qnty-prt + tmp#zakaz-prn.qnty-ord
+          .
+          if tmp#zakaz-prn.qnty-ord = ? then tmp#zakaz-prn.qnty-ord = 0 .
+        end.  /*   for each tmp#zakaz-prn  */
+        for each tmp#zakaz-prn where tmp#zakaz-prn.artic     = export-ras.artic     and
+                                     tmp#zakaz-prn.prod-type = export-ras.prod-type and
+                                     tmp#zakaz-prn.prod-code = export-ras.prod-code and
+                                     tmp#zakaz-prn.obj-type  = export-ras.obj-type  and
+                                     tmp#zakaz-prn.obj-code  = export-ras.obj-code  no-lock break by tmp#zakaz-prn.prt-code descending
+        :
+            if v-sum-qnty-prt > export-ras.qnty then
+              assign
+                tmp#zakaz-prn.qnty-ord = tmp#zakaz-prn.qnty-ord - 1
+                v-sum-qnty-prt         = v-sum-qnty-prt         - 1
+              .
+            if v-sum-qnty-prt < export-ras.qnty then
+              assign
+                tmp#zakaz-prn.qnty-ord = tmp#zakaz-prn.qnty-ord + 1
+                v-sum-qnty-prt         = v-sum-qnty-prt         + 1
+              .
+        end.  /*   for each tmp#zakaz-prn  */
+      end.
+    end.  /*   if p-tog-det-prizn  */
+
  end. /* for each tmp#zakaz */
   if p-mode-calc <> "" and p-mode-calc <> "all-ord":U  and  p-mode-calc <> "rcv-ord":U then do: /*  расчет */
       run cus/z-tot5.p ( parParentProc ,  input table export-ras , input p-ord-doc , input p-e-method , input v-show-all-goods) .
   end.
 
   if  p-mode-calc = "all-ord":U  then do: /*  расчет */
-     run cus/z-tot6.p ( parParentProc , input table export-ras , g#type ) .
+     run cus/z-tot6.p ( parParentProc , input table export-ras , input table tmp#zakaz-prn , g#type ) .
   end.
 
   if  p-mode-calc = "rcv-ord":U  then do: /*  расчет */
@@ -1080,6 +1154,7 @@ procedure calc-sale :
               input   {&arh-cost}    ,
               input   {&root-cat-id} ,
               input   ""    ,
+              input   false ,
               input   false ,
               output v-prih ,
               output v-rash ,

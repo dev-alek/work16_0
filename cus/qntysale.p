@@ -61,10 +61,11 @@ define input parameter p-neg-sale as logical no-undo .     /* запрет на продажу 
 define input parameter p-t-gar    as logical no-undo .     /* остаток > гар.запаса */
 define input parameter p-t-min-zapas as logical no-undo .  /* заказ < мин.заказа */
 define input parameter p-t-min-ost   as logical no-undo .  /* остаток > мин остатка */
-define input  parameter p-t-deadline as logical no-undo .  /* заказ и срок хранения */
+define input parameter p-t-deadline as logical no-undo .  /* заказ и срок хранения */
 define input parameter store-type    as character no-undo .
 define input parameter store-code    as integer   no-undo .
 define input parameter g#type        as character no-undo .
+define input parameter p-tog-det-prizn as logical no-undo .     /* детализировать по признакам */
 
 
 define variable vss-revision    as character no-undo init "$Revision$":u .
@@ -143,6 +144,8 @@ index by-date tt-date
 define variable old-pay-day as integer   no-undo .
 old-pay-day = pay-day.
 
+define variable v-sum-qnty-prt as decimal no-undo .
+
 for each export-ras :
  delete export-ras.
 end.
@@ -165,6 +168,7 @@ if not can-find (first obj-list) then do:
     return.
 end.
 
+assign l-action = true .
 if p-mode-calc = ""  then do: /*  расчет */
     if  var#import = true   then do:
       message "Данные были введены через ИМПОРТ , делать изменения количества заказа ?" view-as alert-box question
@@ -255,6 +259,8 @@ for each tmp#zakaz :
           /* товар заказан и в пути */
           run goods-way in this-procedure  ( input obj-list.obj-type , input obj-list.obj-code , output  v-gds-way ) .
           v-gds-way-all = v-gds-way-all + v-gds-way .
+          tmp#zakaz.gds-way = v-gds-way.
+          tmp#zakaz.min-stock-old = tmp#zakaz.min-stock.
 
       end.
 
@@ -293,6 +299,7 @@ for each tmp#zakaz :
                             input   {&arh-cost}    ,
                             input   {&root-cat-id} ,
                             input   ""    ,
+                            input   false ,
                             input   false ,
                             output v-prih ,
                             output v-rash ,
@@ -336,6 +343,7 @@ for each tmp#zakaz :
                     input {&root-cat-id}      ,
                     input ""                  ,
                     input false               ,
+                    input false               ,
                     output v-prih             ,
                     output v-rash             ,
                     output v-kassa
@@ -369,6 +377,7 @@ for each tmp#zakaz :
                         input   {&arh-cost}    ,
                         input   {&root-cat-id} ,
                         input   ""    ,
+                        input   false ,
                         input   false ,
                         output v-prih ,
                         output v-rash ,
@@ -405,6 +414,7 @@ for each tmp#zakaz :
               input   {&root-cat-id} ,
               input   ""    ,
               input   false ,
+              input   p-tog-det-prizn ,
               output v-prih ,
               output v-rash ,
               output v-kassa
@@ -433,6 +443,7 @@ for each tmp#zakaz :
                               input {&root-cat-id} ,
                               input ""    ,
                               input false ,
+                              input   p-tog-det-prizn ,
                               output v-prih ,
                               output v-rash ,
                               output v-kassa
@@ -486,7 +497,6 @@ end.
          if p-mode-calc <> ""  then export-ras.temp-rash = tmp#zakaz.temp-rash .
       end.
       else do:
-
       find first ub.tmp-sale-gds where
           ub.tmp-sale-gds.artic     = tmp#zakaz.artic     and
           ub.tmp-sale-gds.prod-code = tmp#zakaz.prod-code and
@@ -513,14 +523,7 @@ end.
         end.
     end.
     for each obj-list :
-      run gdspoatr-value in this-procedure ( input  {&attr-corrcoeff-po}
-                                            ,input  tmp#zakaz.gds-code
-                                            ,input  obj-list.obj-type
-                                            ,input  obj-list.obj-code
-                                            ,output v-value
-                                            ,output v-type
-                                            ) no-error .
-      assign v-corr-coeff = decimal(v-value).
+      assign v-corr-coeff = decimal(v-value) * decimal (tmp#zakaz.season-coef).
       if v-corr-coeff = 0 then v-corr-coeff = 1.
     end.
 
@@ -614,6 +617,12 @@ define variable p-l-max as decimal no-undo .
              input obj-list.obj-code ,
              input tmp#zakaz.qnty
              ) .
+          run create-min-stock-gds-way in this-procedure (
+             input p-ord-doc ,
+             input tmp#zakaz.gds-code ,
+             input tmp#zakaz.min-stock,
+             input tmp#zakaz.gds-way
+             ) .
       end.
       end.
       else do:
@@ -666,13 +675,44 @@ define variable p-l-max as decimal no-undo .
           end.
       end.
     end.
+
+    if p-tog-det-prizn then do :
+        v-sum-qnty-prt = 0.
+        for each tmp#zakaz-prn where tmp#zakaz-prn.artic     = export-ras.artic     and
+                                     tmp#zakaz-prn.prod-type = export-ras.prod-type and
+                                     tmp#zakaz-prn.prod-code = export-ras.prod-code no-lock
+        :
+          assign
+            tmp#zakaz-prn.qnty-ord = round((export-ras.qnty * (tmp#zakaz-prn.qnty-sale / export-ras.qnty-sale)), 0)
+            v-sum-qnty-prt = v-sum-qnty-prt + tmp#zakaz-prn.qnty-ord
+          .
+          if tmp#zakaz-prn.qnty-ord = ? then tmp#zakaz-prn.qnty-ord = 0 .
+     /*     message substitute("заказ &2, заказ-прн &1, &3, &4",
+                tmp#zakaz-prn.qnty-ord, export-ras.qnty, export-ras.qnty-sale, tmp#zakaz-prn.qnty-sale) view-as alert-box.*/
+        end.  /*   for each tmp#zakaz-prn  */
+        for each tmp#zakaz-prn where tmp#zakaz-prn.artic     = export-ras.artic     and
+                                     tmp#zakaz-prn.prod-type = export-ras.prod-type and
+                                     tmp#zakaz-prn.prod-code = export-ras.prod-code no-lock break by tmp#zakaz-prn.prt-code descending
+        :
+            if v-sum-qnty-prt > export-ras.qnty then
+              assign
+                tmp#zakaz-prn.qnty-ord = tmp#zakaz-prn.qnty-ord - 1
+                v-sum-qnty-prt         = v-sum-qnty-prt         - 1
+              .
+            if v-sum-qnty-prt < export-ras.qnty then
+              assign
+                tmp#zakaz-prn.qnty-ord = tmp#zakaz-prn.qnty-ord + 1
+                v-sum-qnty-prt         = v-sum-qnty-prt         + 1
+              .
+        end.  /*   for each tmp#zakaz-prn  */
+    end.  /*   if p-tog-det-prizn  */
  end.   /* for each tmp#zakaz */
 
  if p-mode-calc <> ""  and p-mode-calc <> "all-ord":U  then do: /*  расчет */
    run cus/z-tot5.p ( parParentProc , input table export-ras , input p-ord-doc , input p-e-method , input v-show-all-goods ) .
  end.
   if  p-mode-calc = "all-ord":U  then do: /*  расчет */
-     run cus/z-tot6.p ( parParentProc , input table export-ras , g#type ) .
+     run cus/z-tot6.p ( parParentProc , input table export-ras , input table tmp#zakaz-prn , g#type ) .
   end.
 
 end. /* import */
@@ -695,6 +735,8 @@ procedure goods-way :
  :
  define buffer later_ord-doc for ub.ord-doc.
  define buffer later_ord-line for ub.ord-line.
+ define buffer later_ord-doc-rcv for ub.ord-doc-rcv.
+ define buffer later_ord-line-rcv for ub.ord-line-rcv.
  define input parameter p-obj-type like ub.clients.obj-type no-undo .
  define input parameter p-obj-code like ub.clients.obj-code no-undo .
  define output parameter p-qnty as decimal no-undo .
@@ -712,6 +754,18 @@ procedure goods-way :
             later_ord-doc.status_   <>  {&g___new}            and
             later_ord-doc.status_   <>  {&fact}            :
 
+          find first later_ord-line-rcv where 
+              later_ord-line-rcv.doc-code = later_ord-line.doc-code and 
+              later_ord-line-rcv.artic     = tmp#zakaz.artic        and
+              later_ord-line-rcv.prod-code = tmp#zakaz.prod-code    and
+              later_ord-line-rcv.prod-type = tmp#zakaz.prod-type 
+              no-error.
+          find first later_ord-doc-rcv where 
+              later_ord-doc-rcv.doc-code  = later_ord-line.doc-code     and 
+              later_ord-doc-rcv.rcv-code  = later_ord-line-rcv.rcv-code and
+              later_ord-doc-rcv.status_   = {&fact}
+              no-error.
+          if available later_ord-doc-rcv then next.
           if  G#type <> {&o-o}  then do:
                 if ( p-t-rcv  and  later_ord-doc.status_   =  {&ord-rcv})
                   OR
@@ -978,6 +1032,7 @@ procedure calc-sale :
             input   {&arh-cost}    ,
             input   {&root-cat-id} ,
             input   ""    ,
+            input   false ,
             input   false ,
             output v-prih ,
             output v-rash ,

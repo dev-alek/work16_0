@@ -14,7 +14,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Методы расчета заказа
+Методы расчета заказа для Автозаказов
 
 Автор: Чернова Светлана Александровна
 Дата создания: 02/11/02
@@ -24,8 +24,9 @@ Creation date: 02/11/02
 */
 
 define input  parameter parParentProc  as widget-handle no-undo.
-define input  parameter v-mode as character no-undo .
-define input  parameter G#type as character no-undo .
+define input  parameter v-mode         as character     no-undo .
+define input  parameter G#type         as character     no-undo .
+define input-output parameter p-return as character     no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -108,7 +109,7 @@ define variable     str-obj3#  as character no-undo .
 define variable     rec-list  as character no-undo .
 define var temp-param-obj as char no-undo.     /* Объекты */
 define var temp-param-obj-type as char no-undo.     /* Объекты */
-define buffer cli-obj  for ub.clients .
+define buffer cli-obj  for clients .
 define variable ii as integer no-undo .
 
 define variable  t-ret as log no-undo.
@@ -187,47 +188,45 @@ tmp-sale.tmp-code
 &Scoped-define ENABLED-TABLES tmp-sale
 &Scoped-define FIRST-ENABLED-TABLE tmp-sale
 &Scoped-Define ENABLED-OBJECTS RECT-1 RECT-3 RECT-5 RECT-6 RECT-7 RECT-8 ~
-R-algoritm R-min-rest p-neg-sale T-gar r-min-rest3 T-min-ost T-min-zapas ~
-R-algoritm2 SelectObject BR-obj-list T-DeadLine BUTTON-obj date-p-1 ~
-date-p-2 t-way BROWSE-1 BROWSE-abc-day B-10 B-1 B-2 T-clos B-3 T-rcv t-rv ~
-t-rvc B-4 t-rvz T-rvzc B-5 T-sppv-4 T-sp T-sppv-2 t-sppv-3 B-6 B-7 ~
-v-round-m v-round-base B-spis p-prt-art Btn_OK Btn_Cancel B-Help i-exit ~
-FILL-IN-17 FILL-IN-3 t-gar-1 t-gar-2 t-min-ost-1 t-min-ost-2 FILL-IN-5 ~
-FILL-IN-15 FILL-IN-13 FILL-IN-7 t-1 FILL-IN-8 FILL-IN-14 t-2 t-3 t-4 t-5 ~
-t-6 t-7 FILL-IN-16
+R-algoritm p-neg-sale R-min-rest T-gar r-min-rest3 T-min-ost R-algoritm2 ~
+SelectObject BR-obj-list T-min-zapas BUTTON-obj /* date-p-1 date-p-2 */ t-way ~
+BROWSE-1 BROWSE-abc-day B-10 B-1 B-2 T-clos B-3 t-rv t-rvc T-rcv B-4 t-rvz ~
+T-rvzc B-5 T-sppv-4 T-sp T-sppv-2 t-sppv-3 B-6 B-7 v-round-m v-round-base ~
+B-spis p-prt-art Btn_OK Btn_Cancel B-Help i-exit FILL-IN-17 FILL-IN-3 ~
+t-gar-1 t-gar-2 FILL-IN-15 FILL-IN-13 t-min-ost-1 t-min-ost-2 FILL-IN-5 ~
+FILL-IN-7 t-1 FILL-IN-8 FILL-IN-14 t-2 t-3 t-4 t-5 t-6 t-7 FILL-IN-16
 &Scoped-Define DISPLAYED-FIELDS tmp-sale.desc_ tmp-sale.tmp-code
 &Scoped-define DISPLAYED-TABLES tmp-sale
 &Scoped-define FIRST-DISPLAYED-TABLE tmp-sale
-&Scoped-Define DISPLAYED-OBJECTS R-algoritm R-min-rest p-neg-sale T-gar ~
-r-min-rest3 T-min-ost T-min-zapas R-algoritm2 SelectObject T-DeadLine ~
-date-p-1 date-p-2 t-way T-clos T-rcv t-rv t-rvc t-rvz T-rvzc T-sppv-4 T-sp ~
-T-sppv-2 t-sppv-3 v-round-m v-round-base v-name p-prt-art FILL-IN-2 ~
-FILL-IN-17 FILL-IN-3 t-gar-1 t-gar-2 t-min-ost-1 t-min-ost-2 FILL-IN-5 ~
-FILL-IN-15 FILL-IN-13 FILL-IN-7 t-1 FILL-IN-8 FILL-IN-14 t-2 t-3 t-4 t-5 ~
-t-6 t-7 FILL-IN-16
+&Scoped-Define DISPLAYED-OBJECTS R-algoritm p-neg-sale R-min-rest T-gar ~
+r-min-rest3 T-min-ost R-algoritm2 SelectObject T-min-zapas /* date-p-1 ~
+date-p-2 */ t-way T-clos t-rv t-rvc T-rcv t-rvz T-rvzc T-sppv-4 T-sp T-sppv-2 ~
+t-sppv-3 v-round-m v-round-base v-name p-prt-art FILL-IN-2 FILL-IN-17 ~
+FILL-IN-3 t-gar-1 t-gar-2 FILL-IN-15 FILL-IN-13 t-min-ost-1 t-min-ost-2 ~
+FILL-IN-5 FILL-IN-7 t-1 FILL-IN-8 FILL-IN-14 t-2 t-3 t-4 t-5 t-6 t-7 ~
+FILL-IN-16
 
 /* Custom List Definitions                                              */
 /* dates,List-spis,List-tt,all-obj,garant,all-obj-entry                 */
-&Scoped-define dates RECT-3 RECT-8 R-algoritm2 date-p-1 date-p-2 t-rv t-rvc ~
+&Scoped-define dates RECT-3 RECT-8 R-algoritm2 /* date-p-1 date-p-2 */ t-rv t-rvc ~
 t-rvz T-rvzc T-sppv-4 T-sp T-sppv-2 t-sppv-3 FILL-IN-15 FILL-IN-14
 &Scoped-define List-spis BROWSE-abc-day B-spis FILL-IN-16 tmp-sale.desc_ ~
 tmp-sale.tmp-code
 &Scoped-define List-tt BROWSE-1 B-10 B-1 B-2 B-3 B-4 B-5 B-6 B-7 t-1 t-2 ~
 t-3 t-4 t-5 t-6 t-7
-&Scoped-define all-obj R-algoritm R-min-rest p-neg-sale T-gar r-min-rest3 ~
-T-min-ost T-min-zapas R-algoritm2 SelectObject BR-obj-list T-DeadLine ~
-BUTTON-obj date-p-1 date-p-2 t-way BROWSE-1 B-10 B-1 B-2 T-clos B-3 T-rcv ~
-t-rv t-rvc B-4 t-rvz T-rvzc B-5 T-sppv-4 T-sp T-sppv-2 t-sppv-3 B-6 B-7 ~
-v-round-m p-prt-art Btn_OK Btn_Cancel B-Help i-exit FILL-IN-2 FILL-IN-17 ~
-FILL-IN-3 t-gar-1 t-gar-2 t-min-ost-1 t-min-ost-2 FILL-IN-5 FILL-IN-15 ~
-FILL-IN-13 FILL-IN-7 t-1 FILL-IN-8 FILL-IN-14 t-2 t-3 t-4 t-5 t-6 t-7 ~
-FILL-IN-16
+&Scoped-define all-obj R-algoritm p-neg-sale R-min-rest T-gar r-min-rest3 ~
+T-min-ost R-algoritm2 SelectObject BR-obj-list T-min-zapas BUTTON-obj ~
+/* date-p-1 date-p-2 */ t-way BROWSE-1 B-10 B-1 B-2 T-clos B-3 t-rv t-rvc T-rcv ~
+B-4 t-rvz T-rvzc B-5 T-sppv-4 T-sp T-sppv-2 t-sppv-3 B-6 B-7 v-round-m ~
+p-prt-art Btn_OK Btn_Cancel B-Help i-exit FILL-IN-2 FILL-IN-17 FILL-IN-3 ~
+t-gar-1 t-gar-2 FILL-IN-15 FILL-IN-13 t-min-ost-1 t-min-ost-2 FILL-IN-5 ~
+FILL-IN-7 t-1 FILL-IN-8 FILL-IN-14 t-2 t-3 t-4 t-5 t-6 t-7 FILL-IN-16
 &Scoped-define garant T-gar t-gar-1 t-gar-2
-&Scoped-define all-obj-entry R-algoritm R-min-rest p-neg-sale T-gar ~
-r-min-rest3 T-min-ost T-min-zapas R-algoritm2 T-DeadLine date-p-1 date-p-2 ~
-t-way T-clos T-rcv t-rv t-rvc t-rvz T-rvzc T-sppv-4 T-sp T-sppv-2 t-sppv-3 ~
+&Scoped-define all-obj-entry R-algoritm p-neg-sale R-min-rest T-gar ~
+r-min-rest3 T-min-ost R-algoritm2 T-min-zapas /* date-p-1 date-p-2 */ t-way ~
+T-clos t-rv t-rvc T-rcv t-rvz T-rvzc T-sppv-4 T-sp T-sppv-2 t-sppv-3 ~
 v-round-m p-prt-art FILL-IN-2 FILL-IN-17 FILL-IN-3 t-gar-1 t-gar-2 ~
-t-min-ost-1 t-min-ost-2 FILL-IN-5 FILL-IN-15 FILL-IN-13 FILL-IN-7 FILL-IN-8 ~
+FILL-IN-15 FILL-IN-13 t-min-ost-1 t-min-ost-2 FILL-IN-5 FILL-IN-7 FILL-IN-8 ~
 FILL-IN-16
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
@@ -365,18 +364,15 @@ DEFINE VARIABLE FILL-IN-2 AS CHARACTER FORMAT "X(256)":C12 INITIAL "Параметры то
 
 DEFINE VARIABLE FILL-IN-3 AS CHARACTER FORMAT "X(256)":U INITIAL " до привоза товара"
       VIEW-AS TEXT
-     SIZE 12 BY .5
-     FONT 4 NO-UNDO.
+     SIZE 30.63 BY .67 NO-UNDO.
 
 DEFINE VARIABLE FILL-IN-5 AS CHARACTER FORMAT "X(256)":U INITIAL " заказ которого меньше"
       VIEW-AS TEXT
-     SIZE 16 BY .67
-     FONT 4 NO-UNDO.
+     SIZE 30.63 BY .67 NO-UNDO.
 
 DEFINE VARIABLE FILL-IN-7 AS CHARACTER FORMAT "X(256)":U INITIAL " минимального заказа"
       VIEW-AS TEXT
-     SIZE 15.38 BY .67
-     FONT 4 NO-UNDO.
+     SIZE 30.63 BY .67 NO-UNDO.
 
 DEFINE VARIABLE FILL-IN-8 AS CHARACTER FORMAT "X(256)":U INITIAL "в статусах:"
       VIEW-AS TEXT
@@ -411,25 +407,21 @@ DEFINE VARIABLE t-7 AS LOGICAL FORMAT "+/":U INITIAL NO
       VIEW-AS TEXT
      SIZE 1.63 BY .67 NO-UNDO.
 
-DEFINE VARIABLE t-gar-1 AS CHARACTER FORMAT "X(256)":U INITIAL "остаток которого"
+DEFINE VARIABLE t-gar-1 AS CHARACTER FORMAT "X(256)":U INITIAL "остаток которого больше"
       VIEW-AS TEXT
-     SIZE 12 BY .67
-     FONT 4 NO-UNDO.
+     SIZE 30.63 BY .67 NO-UNDO.
 
-DEFINE VARIABLE t-gar-2 AS CHARACTER FORMAT "X(256)":U INITIAL "больше гарантийного запаса"
+DEFINE VARIABLE t-gar-2 AS CHARACTER FORMAT "X(256)":U INITIAL " гарантийного запаса"
       VIEW-AS TEXT
-     SIZE 25.5 BY .67
-     FONT 4 NO-UNDO.
+     SIZE 30.63 BY .67 NO-UNDO.
 
-DEFINE VARIABLE t-min-ost-1 AS CHARACTER FORMAT "X(256)":U INITIAL "остаток которого"
+DEFINE VARIABLE t-min-ost-1 AS CHARACTER FORMAT "X(256)":U INITIAL "остаток которого больше"
       VIEW-AS TEXT
-     SIZE 11.63 BY .67
-     FONT 4 NO-UNDO.
+     SIZE 30.63 BY .67 NO-UNDO.
 
-DEFINE VARIABLE t-min-ost-2 AS CHARACTER FORMAT "X(256)":U INITIAL "больше минимального остатка"
+DEFINE VARIABLE t-min-ost-2 AS CHARACTER FORMAT "X(256)":U INITIAL "минимального остатка"
       VIEW-AS TEXT
-     SIZE 21.5 BY .67
-     FONT 4 NO-UNDO.
+     SIZE 30.63 BY .67 NO-UNDO.
 
 DEFINE VARIABLE v-round-base AS DECIMAL FORMAT "->>>>9.99":U INITIAL 0
      VIEW-AS FILL-IN
@@ -450,8 +442,8 @@ DEFINE VARIABLE R-algoritm2 AS INTEGER
      VIEW-AS RADIO-SET VERTICAL
      RADIO-BUTTONS
           "Все за период", 1,
-"Без дней без товара", 2,
-"Выбранные по календарю", 3
+"Без дней без товара", 2
+/*"Выбранные по календарю", 3*/
      SIZE 30 BY 2 NO-UNDO.
 
 DEFINE VARIABLE R-min-rest AS INTEGER
@@ -498,8 +490,7 @@ DEFINE RECTANGLE RECT-8
 DEFINE VARIABLE p-neg-sale AS LOGICAL INITIAL no
      LABEL "Запрет на продажу в минус"
      VIEW-AS TOGGLE-BOX
-     SIZE 20.25 BY .5 TOOLTIP "Запрет на продажу в минус до привоза товара"
-     FONT 4 NO-UNDO.
+     SIZE 32.13 BY .83 TOOLTIP "Запрет на продажу в минус до привоза товара" NO-UNDO.
 
 DEFINE VARIABLE p-prt-art AS LOGICAL INITIAL no
      LABEL "Печать артикула на всех строках"
@@ -515,38 +506,27 @@ DEFINE VARIABLE r-min-rest3 AS LOGICAL INITIAL no
 DEFINE VARIABLE T-clos AS LOGICAL INITIAL no
      LABEL "закрыто"
      VIEW-AS TOGGLE-BOX
-     SIZE 12.13 BY .83
-     FONT 4 NO-UNDO.
-
-DEFINE VARIABLE T-DeadLine AS LOGICAL INITIAL no
-     LABEL "Учитывать срок хранения"
-     VIEW-AS TOGGLE-BOX
-     SIZE 31 BY .83 TOOLTIP "Ограничивать размер заказ сроком хранения из карточки товара"
-     FONT 4 NO-UNDO.
+     SIZE 12.13 BY .83 NO-UNDO.
 
 DEFINE VARIABLE T-gar AS LOGICAL INITIAL no
      LABEL "Не заказывать товар,"
      VIEW-AS TOGGLE-BOX
-     SIZE 16.75 BY .83 TOOLTIP "Не заказывать товар, остаток которого больше гарантийного запаса"
-     FONT 4 NO-UNDO.
+     SIZE 32 BY .83 TOOLTIP "Не заказывать товар, остаток которого больше гарантийного запаса" NO-UNDO.
 
 DEFINE VARIABLE T-min-ost AS LOGICAL INITIAL no
      LABEL "Не заказывать товар,"
      VIEW-AS TOGGLE-BOX
-     SIZE 17.5 BY .83 TOOLTIP "Не заказывать товар, остаток которого больше минимального запаса"
-     FONT 4 NO-UNDO.
+     SIZE 32 BY .83 TOOLTIP "Не заказывать товар, остаток которого больше минимального запаса" NO-UNDO.
 
 DEFINE VARIABLE T-min-zapas AS LOGICAL INITIAL no
      LABEL "Не заказывать товар,"
      VIEW-AS TOGGLE-BOX
-     SIZE 16.63 BY .83 TOOLTIP "Не заказывать товар, заказ которого меньше минимального заказа"
-     FONT 4 NO-UNDO.
+     SIZE 31.88 BY .83 TOOLTIP "Не заказывать товар, заказ которого меньше минимального заказа" NO-UNDO.
 
 DEFINE VARIABLE T-rcv AS LOGICAL INITIAL no
      LABEL "поставка"
      VIEW-AS TOGGLE-BOX
-     SIZE 12.13 BY .83
-     FONT 4 NO-UNDO.
+     SIZE 12.13 BY .83 NO-UNDO.
 
 DEFINE VARIABLE t-rv AS LOGICAL INITIAL no
      LABEL "Расход внешний"
@@ -591,8 +571,7 @@ DEFINE VARIABLE T-sppv-4 AS LOGICAL INITIAL no
 DEFINE VARIABLE t-way AS LOGICAL INITIAL no
      LABEL "Учитывать предыдущие заказы"
      VIEW-AS TOGGLE-BOX
-     SIZE 31.88 BY .83
-     FONT 4 NO-UNDO.
+     SIZE 31.88 BY .83 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -635,37 +614,36 @@ DEFINE BROWSE BROWSE-abc-day
 temp-abc-day.gar-day  COLUMN-LABEL "Гарант.запас!в днях  " FORMAT ">>>>>>>>>9"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 18.5 BY 7.33 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 21.5 BY 7.33 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
      R-algoritm AT ROW 2 COL 2 NO-LABEL
+     p-neg-sale AT ROW 2 COL 67.75
      R-min-rest AT ROW 2.21 COL 43.13 NO-LABEL
-     p-neg-sale AT ROW 2.3 COL 67.5
-     T-gar AT ROW 3.1 COL 67.5
+     T-gar AT ROW 3.54 COL 67.75
      r-min-rest3 AT ROW 3.92 COL 43.13
-     T-min-ost AT ROW 4.45 COL 67.5 WIDGET-ID 2
-     T-min-zapas AT ROW 5.9 COL 67.5
-     R-algoritm2 AT ROW 7.25 COL 2.25 NO-LABEL
+     T-min-ost AT ROW 5.75 COL 67.75 WIDGET-ID 2
+     R-algoritm2 AT ROW 7.25 COL 2 NO-LABEL
      SelectObject AT ROW 7.29 COL 34.13 NO-LABEL
      BR-obj-list AT ROW 7.29 COL 49.13
-     T-DeadLine AT ROW 7.35 COL 67.5 WIDGET-ID 12
+     T-min-zapas AT ROW 7.96 COL 67.75
      BUTTON-obj AT ROW 8.75 COL 45.88
      date-p-1 AT ROW 9.33 COL 3.63 COLON-ALIGNED
      date-p-2 AT ROW 9.33 COL 19.25 COLON-ALIGNED
-     t-way AT ROW 10.29 COL 67.5
+     t-way AT ROW 10.21 COL 67.75
      BROWSE-1 AT ROW 10.38 COL 6.88
      BROWSE-abc-day AT ROW 10.42 COL 1.5
      B-10 AT ROW 10.42 COL 21.25
      B-1 AT ROW 10.5 COL 1.5
      B-2 AT ROW 11.5 COL 1.5
-     T-clos AT ROW 11.96 COL 79
+     T-clos AT ROW 12.33 COL 87
      B-3 AT ROW 12.5 COL 1.5
-     T-rcv AT ROW 12.71 COL 79
      t-rv AT ROW 12.75 COL 34.13
      t-rvc AT ROW 12.79 COL 53.25
+     T-rcv AT ROW 13.17 COL 87
      B-4 AT ROW 13.5 COL 1.5
      t-rvz AT ROW 13.67 COL 34.13
      T-rvzc AT ROW 13.67 COL 53.25
@@ -688,17 +666,17 @@ DEFINE FRAME Dialog-Frame
      i-exit AT ROW 20.71 COL 66.88 WIDGET-ID 10
      FILL-IN-2 AT ROW 1.21 COL 41.13 COLON-ALIGNED NO-LABEL
      FILL-IN-17 AT ROW 1.25 COL 1.88 NO-LABEL
-     FILL-IN-3 AT ROW 2.25 COL 85.5 COLON-ALIGNED NO-LABEL
-     t-gar-1 AT ROW 3.15 COL 82.38 COLON-ALIGNED NO-LABEL
-     t-gar-2 AT ROW 3.75 COL 68 COLON-ALIGNED NO-LABEL
-     t-min-ost-1 AT ROW 4.5 COL 82.38 COLON-ALIGNED NO-LABEL WIDGET-ID 4
-     t-min-ost-2 AT ROW 5.1 COL 68 COLON-ALIGNED NO-LABEL WIDGET-ID 6
-     FILL-IN-5 AT ROW 6 COL 82 COLON-ALIGNED NO-LABEL
+     FILL-IN-3 AT ROW 2.67 COL 67 COLON-ALIGNED NO-LABEL
+     t-gar-1 AT ROW 4.21 COL 67 COLON-ALIGNED NO-LABEL
+     t-gar-2 AT ROW 4.83 COL 66.88 COLON-ALIGNED NO-LABEL
      FILL-IN-15 AT ROW 6.25 COL 1.63 NO-LABEL
      FILL-IN-13 AT ROW 6.33 COL 32.25 COLON-ALIGNED NO-LABEL
-     FILL-IN-7 AT ROW 6.55 COL 68 COLON-ALIGNED NO-LABEL
+     t-min-ost-1 AT ROW 6.42 COL 66.88 COLON-ALIGNED NO-LABEL WIDGET-ID 4
+     t-min-ost-2 AT ROW 7.04 COL 66.88 COLON-ALIGNED NO-LABEL WIDGET-ID 6
+     FILL-IN-5 AT ROW 8.67 COL 67.13 COLON-ALIGNED NO-LABEL
+     FILL-IN-7 AT ROW 9.29 COL 67.13 COLON-ALIGNED NO-LABEL
      t-1 AT ROW 10.58 COL 2.63 COLON-ALIGNED NO-LABEL
-     FILL-IN-8 AT ROW 11.25 COL 77 COLON-ALIGNED NO-LABEL
+     FILL-IN-8 AT ROW 11.42 COL 85 COLON-ALIGNED NO-LABEL
      FILL-IN-14 AT ROW 11.54 COL 32.5 COLON-ALIGNED NO-LABEL
      t-2 AT ROW 11.67 COL 2.63 COLON-ALIGNED NO-LABEL
      t-3 AT ROW 12.54 COL 2.63 COLON-ALIGNED NO-LABEL
@@ -730,7 +708,7 @@ DEFINE FRAME Dialog-Frame
      RECT-6 AT ROW 1.13 COL 66.88
      RECT-7 AT ROW 6 COL 33.5
      RECT-8 AT ROW 11.42 COL 33.5
-     SPACE(21.99) SKIP(4.95)
+     SPACE(22.01) SKIP(4.95)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
          FGCOLOR 0
@@ -783,6 +761,8 @@ ASSIGN
    NO-ENABLE                                                            */
 ASSIGN
        B-save:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+       date-p-1:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+       date-p-2:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* SETTINGS FOR BUTTON B-spis IN FRAME Dialog-Frame
    2                                                                    */
@@ -859,8 +839,6 @@ ASSIGN
 /* SETTINGS FOR FILL-IN t-7 IN FRAME Dialog-Frame
    3 4                                                                  */
 /* SETTINGS FOR TOGGLE-BOX T-clos IN FRAME Dialog-Frame
-   4 6                                                                  */
-/* SETTINGS FOR TOGGLE-BOX T-DeadLine IN FRAME Dialog-Frame
    4 6                                                                  */
 /* SETTINGS FOR TOGGLE-BOX T-gar IN FRAME Dialog-Frame
    4 5 6                                                                */
@@ -1110,19 +1088,19 @@ define variable t-recid as recid no-undo .
 define variable s-recid as character no-undo .
 
     if r-algoritm = 6 then do:
-      define buffer buf_abc-analysis for ub.abc-analysis  .
-      define buffer buff_abc-analysis for ub.abc-analysis  .
+      define buffer buf_abc-analysis for abc-analysis  .
       run cus/abc-run.p (input parparentproc, output s-recid ).
       if num-entries(s-recid) <> 2 THEN DO:
         message "Для данного метода расчета надо выбрать 2 анализа" view-as alert-box information .
         return no-apply.
       END.
-      find first buff_abc-analysis  where recid(buff_abc-analysis) = int(entry(1,s-recid)) no-lock no-error .
-      if available buff_abc-analysis and not error-status :error  then do:
-        v-p-code = buff_abc-analysis.abc-id .
-        display ( buff_abc-analysis.abc-name  + " от " +  string(buff_abc-analysis.abc-date-create, "99/99/9999")) @ ub.tmp-sale.desc_
+      find first abc-analysis  where recid(abc-analysis) = int(entry(1,s-recid)) no-lock no-error .
+      if available abc-analysis and not error-status :error  then do:
+        v-p-code = abc-analysis.abc-id .
+        display ( abc-analysis.abc-name  + " от " +  string(abc-analysis.abc-date-create, "99/99/9999")) @ ub.tmp-sale.desc_
                   with frame {&frame-name} .
-                  v-name = "1." + ( buff_abc-analysis.abc-name + " от " + string(buff_abc-analysis.abc-date-create, "99/99/9999")) .
+                  v-name = "1." + ( abc-analysis.abc-name + " от " + string(abc-analysis.abc-date-create, "99/99/9999")) .
+
        end.
 
       if num-entries(s-recid) > 1 then do:
@@ -1178,7 +1156,7 @@ Assign frame {&frame-name} v-round-base no-error .
 
 if date-p-1 <> ? and date-p-2 <> ? then do:
    if date-p-1 >  date-p-2 then do:
-                                 message "Не верно задан интервал дат для расчета объема продаж !"
+                                 message "Не верно задан интервал дат для расчета обьема продаж !"
                                  view-as alert-box information.
                                  return no-apply .
                                 end.
@@ -1192,7 +1170,9 @@ message
 "t-sp     "    t-sp        skip
 "t-sppv-2 "    t-sppv-2    skip
 "t-sppv-3 "    t-sppv-3    skip
-"t-sppv-4 "    t-sppv-4    skip       R-algoritm.
+"t-sppv-4 "    t-sppv-4    skip
+R-algoritm
+.
 */
 
 if (t-rv      = false  and
@@ -1204,7 +1184,7 @@ if (t-rv      = false  and
     t-sppv-3  = false  and
     t-sppv-4  = false ) and
     ( R-algoritm <> 2  and R-algoritm <> 6  and  R-algoritm <> 5)  then do:
-     message  " Не выбран ни один тип документа, по которым рассчитывается объем продаж !"
+     message  " Не выбран ни один тип документа, по которым рассчитывается обьем продаж !"
      view-as alert-box information.
      return no-apply .
 end.
@@ -1212,8 +1192,10 @@ if v-round-m = {&ord-round-qnty-card} then do:
    for each  tmp#zakaz :
        if tmp#zakaz.cli-base-rate <> 1 then do:
         message
-        substitute("При методе округления до числа в упаковке не учитывается ед.измерения Поставщика.
-        &3Измените ед.изм. поставщика в заказе у товара &3артикул &1 код &2  &3на &4"
+          substitute("При методе округления до числа в упаковке не учитывается ед.измерения Поставщика.
+          &3Измените ед.изм. поставщика в заказе у товара
+          &3артикул &1 код &2
+          &3на &4"
           , tmp#zakaz.artic, tmp#zakaz.gds-code, {&new-line} , tmp#zakaz.unit-base)
           view-as alert-box information.
           return no-apply.
@@ -1319,7 +1301,6 @@ e-method =  e-method  +      ";" +  {&new-line} +
          ( if  p-neg-sale  and  p-neg-sale:visible   then  " " + p-neg-sale  :tooltip + " : "    else "" ) +
          ( if  t-gar       and  t-gar:visible        then  " " + t-gar  :tooltip            else "" ) +
          ( if  t-min-ost   and  t-min-ost:visible    then  " " + t-min-ost  :tooltip + " : "    else "" ) +
-         ( if  t-DeadLine  and  t-DeadLine:visible    then  " " + t-DeadLine :tooltip + " : "    else "" ) +
          ( if  t-min-zapas and  t-min-zapas:visible  then  " " + t-min-zapas :tooltip            else "" ) + ";"
          .
 
@@ -1329,7 +1310,7 @@ e-method =  e-method  +      ";" +  {&new-line} +
           end.
 
 /* запомним для пользователя и для документа */
- if v-mode <> "all-ord":U then dO:
+ if v-mode <> "all-ord":U and v-mode <> "auto-ord" then dO:
       find first buf_usr-flt  exclusive-lock  where
               buf_usr-flt.user-name    = loc-ord-num and
               buf_usr-flt.call-point   = "ord-m":U + ( if v-mode <> ? then v-mode else "" )  no-error .
@@ -1394,7 +1375,6 @@ e-method =  e-method  +      ";" +  {&new-line} +
                       input t-gar       ,
                       input t-min-zapas ,
                       input t-min-ost   ,
-                      input t-deadline   ,
                       input store-type  ,
                       input store-code  ,
                       input g#type      ,
@@ -1436,10 +1416,9 @@ e-method =  e-method  +      ";" +  {&new-line} +
                       input t-gar         ,
                       input t-min-zapas ,
                       input t-min-ost ,
-                      input t-deadline ,
                       input store-type  ,
                       input store-code  ,
-                      input g#type      ,
+                      input g#type     ,
                       input no
                       ) no-error .
              end.
@@ -1484,10 +1463,9 @@ e-method =  e-method  +      ";" +  {&new-line} +
                     input t-gar,
                     input t-min-zapas ,
                     input t-min-ost ,
-                    input t-deadline ,
                     input store-type  ,
                     input store-code  ,
-                    input g#type      ,
+                    input g#type    ,
                     input no
                     ) no-error .
              end.
@@ -1526,10 +1504,9 @@ e-method =  e-method  +      ";" +  {&new-line} +
                     input t-gar,
                     input t-min-zapas ,
                     input t-min-ost ,
-                    input t-deadline ,
                     input store-type  ,
                     input store-code  ,
-                    input g#type      ,
+                    input g#type  ,
                     input no
                     ) no-error .
              end.
@@ -1555,6 +1532,9 @@ e-method =  e-method  +      ";" +  {&new-line} +
                   end.
               end.
           end.
+ end.
+ if v-mode = "auto-ord" then do:
+   run remember-screen ( input-output p-return ).
  end.
 t-ret =  session:SET-WAIT-STATE("") .
 
@@ -1786,22 +1766,31 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     run loc-init in this-procedure .
     IF  v-mode <> ? then do:
       g#log = SelectObject:enable( {&obj-order-txt } ) .
-      IF  v-mode = "all-ord":U THEN DO:
-          assign frame {&frame-name}:title = "Параметры для расчета заказа " + loc-ord-num + " /Расчет потребности/" .
-          ENABLE b-save WITH FRAME {&FRAME-NAME}.
-          DISPLAY b-save WITH FRAME {&FRAME-NAME}.
-          HIDE btn_ok IN FRAME {&FRAME-NAME}.
-          HIDE i-exit IN FRAME {&FRAME-NAME}.
-      END.
-      ELSE DO:
-          assign frame {&frame-name}:title = "Параметры для расчета заказа " + loc-ord-num + " /Экспорт/" .
-      END.
+      case v-mode :
+        when "auto-ord":U THEN DO:
+            assign frame {&frame-name}:title = "Параметры для расчета автозаказа ".
+            ENABLE b-save WITH FRAME {&FRAME-NAME}.
+            DISPLAY b-save WITH FRAME {&FRAME-NAME}.
+            HIDE btn_ok IN FRAME {&FRAME-NAME}.
+            HIDE i-exit IN FRAME {&FRAME-NAME}.
+        END.
+        when "all-ord":U THEN DO:
+            assign frame {&frame-name}:title = "Параметры для расчета заказа " + loc-ord-num + " /Расчет потребности/" .
+            ENABLE b-save WITH FRAME {&FRAME-NAME}.
+            DISPLAY b-save WITH FRAME {&FRAME-NAME}.
+            HIDE btn_ok IN FRAME {&FRAME-NAME}.
+            HIDE i-exit IN FRAME {&FRAME-NAME}.
+        END.
+        otherwise DO:
+            assign frame {&frame-name}:title = "Параметры для расчета заказа " + loc-ord-num + " /Экспорт/" .
+        END.
+      end.
     end.
 
-    if date-sale-1 = ? and date-sale-2 = ? then do:
+    /*if date-sale-1 = ? and date-sale-2 = ? then do:
        t-way = false .
        hide t-way FILL-IN-8 T-clos T-rcv r-min-rest3 in frame {&frame-name} .
-    end.
+    end.*/
 
 
   if is-abc <> "yes" then do:
@@ -1963,25 +1952,25 @@ PROCEDURE enable_UI :
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY R-algoritm R-min-rest p-neg-sale T-gar r-min-rest3 T-min-ost
-          T-min-zapas R-algoritm2 SelectObject T-DeadLine date-p-1 date-p-2
-          t-way T-clos T-rcv t-rv t-rvc t-rvz T-rvzc T-sppv-4 T-sp T-sppv-2
-          t-sppv-3 v-round-m v-round-base v-name p-prt-art FILL-IN-2 FILL-IN-17
-          FILL-IN-3 t-gar-1 t-gar-2 t-min-ost-1 t-min-ost-2 FILL-IN-5 FILL-IN-15
-          FILL-IN-13 FILL-IN-7 t-1 FILL-IN-8 FILL-IN-14 t-2 t-3 t-4 t-5 t-6 t-7
+  DISPLAY R-algoritm p-neg-sale R-min-rest T-gar r-min-rest3 T-min-ost
+          R-algoritm2 SelectObject T-min-zapas date-p-1 date-p-2 t-way T-clos
+          t-rv t-rvc T-rcv t-rvz T-rvzc T-sppv-4 T-sp T-sppv-2 t-sppv-3
+          v-round-m v-round-base v-name p-prt-art FILL-IN-2 FILL-IN-17 FILL-IN-3
+          t-gar-1 t-gar-2 FILL-IN-15 FILL-IN-13 t-min-ost-1 t-min-ost-2
+          FILL-IN-5 FILL-IN-7 t-1 FILL-IN-8 FILL-IN-14 t-2 t-3 t-4 t-5 t-6 t-7
           FILL-IN-16
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tmp-sale THEN
     DISPLAY tmp-sale.desc_ tmp-sale.tmp-code
       WITH FRAME Dialog-Frame.
-  ENABLE RECT-1 RECT-3 RECT-5 RECT-6 RECT-7 RECT-8 R-algoritm R-min-rest
-         p-neg-sale T-gar r-min-rest3 T-min-ost T-min-zapas R-algoritm2
-         SelectObject BR-obj-list T-DeadLine BUTTON-obj date-p-1 date-p-2 t-way
-         BROWSE-1 BROWSE-abc-day B-10 B-1 B-2 T-clos B-3 T-rcv t-rv t-rvc B-4
-         t-rvz T-rvzc B-5 T-sppv-4 T-sp T-sppv-2 t-sppv-3 B-6 B-7 v-round-m
+  ENABLE RECT-1 RECT-3 RECT-5 RECT-6 RECT-7 RECT-8 R-algoritm p-neg-sale
+         R-min-rest T-gar r-min-rest3 T-min-ost R-algoritm2 SelectObject
+         BR-obj-list T-min-zapas BUTTON-obj date-p-1 date-p-2 t-way BROWSE-1
+         BROWSE-abc-day B-10 B-1 B-2 T-clos B-3 t-rv t-rvc T-rcv B-4 t-rvz
+         T-rvzc B-5 T-sppv-4 T-sp T-sppv-2 t-sppv-3 B-6 B-7 v-round-m
          v-round-base B-spis p-prt-art Btn_OK Btn_Cancel B-Help i-exit
-         FILL-IN-17 FILL-IN-3 t-gar-1 t-gar-2 t-min-ost-1 t-min-ost-2 FILL-IN-5
-         FILL-IN-15 FILL-IN-13 FILL-IN-7 t-1 FILL-IN-8 FILL-IN-14 t-2 t-3 t-4
+         FILL-IN-17 FILL-IN-3 t-gar-1 t-gar-2 FILL-IN-15 FILL-IN-13 t-min-ost-1
+         t-min-ost-2 FILL-IN-5 FILL-IN-7 t-1 FILL-IN-8 FILL-IN-14 t-2 t-3 t-4
          t-5 t-6 t-7 FILL-IN-16 tmp-sale.desc_ tmp-sale.tmp-code
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
@@ -2061,7 +2050,6 @@ define variable v-nn as integer   no-undo .
         when string( "t-gar")         then  t-gar = if (entry(2,(entry(i,p-val)), "=" )) = "yes" then true else false .
         when string( "t-min-zapas") then  t-min-zapas = if (entry(2,(entry(i,p-val)), "=" )) = "yes" then true else false .
         when string( "t-min-ost") then  t-min-ost = if (entry(2,(entry(i,p-val)), "=" )) = "yes" then true else false .
-        when string( "t-deadline") then  t-deadline = if (entry(2,(entry(i,p-val)), "=" )) = "yes" then true else false .
         when string( "R-min-rest3")  then  R-min-rest3 = if (entry(2,(entry(i,p-val)), "=" )) = "yes" then true else false .
     end case.
    g#log = SelectObject:disable(radio-label("all":U , SelectObject:radio-buttons)).
@@ -2185,7 +2173,9 @@ else do:
     if available ub.tmp-sale then  rr = recid(ub.tmp-sale) .
 
 end.
-
+if v-mode = "auto-ord" then do:
+  run init-screen ( p-return ) .
+end.
 
  display {&all-obj} with frame {&frame-name}.
 
@@ -2358,7 +2348,6 @@ define input-output parameter p-val as character no-undo .
             string( "t-gar=" )       + string( t-gar,"yes/no" ) + "," +
             string( "t-min-zapas=" ) + string( t-min-zapas,"yes/no" ) + "," +
             string( "t-min-ost=" ) + string( t-min-ost,"yes/no" ) + "," +
-            string( "t-deadline=" ) + string( t-deadline,"yes/no" ) + "," +
             string( "SelectObject=" ) + string( SelectObject )
             .
 
@@ -2390,8 +2379,8 @@ PROCEDURE select-objects-proc :
  on error undo, return error return-value
  :
   define input parameter p-e-m as character no-undo .
-  my-handle = parparentproc .
   define variable v-all-object as logical   no-undo .
+  my-handle = parparentproc .
  { rep/s-selobj.i }
 
 if SelectObject = "currency":U  or g#type <> {&f-p} then do:
@@ -2559,10 +2548,10 @@ PROCEDURE v-c-alg :
    end.
   end case.
 
-  if date-sale-1 = ? and date-sale-2 = ? then do:
+  /*if date-sale-1 = ? and date-sale-2 = ? then do:
       t-way = false .
       hide t-way FILL-IN-8 T-clos T-rcv r-min-rest3 in frame {&frame-name} .
-  end.
+  end.*/
 
 
   if r-algoritm <>  2 and

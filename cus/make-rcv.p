@@ -197,7 +197,8 @@ run cus/qnty-obj.p (
     input no    ,
     v-cntxt-obj-type,
     v-cntxt-obj-code,
-    {&f-p}
+    {&f-p}          ,
+    input no
         ) no-error .
 if error-status :error then
 message

@@ -187,7 +187,6 @@ assortment-matrix~
 ,gds-host-attr~
 ,gds-prt~
 ,c-gds-prt~
-,gds-season~
 ,gds-obj-prop~
 ,global-state~
 ,c-global-state~
@@ -252,7 +251,6 @@ assortment-matrix~
 ,s-coeff~
 ,schedule~
 ,schedule-attr~
-,season~
 ,sert~
 ,c-sert~
 ,sert-join~

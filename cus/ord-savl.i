@@ -19,6 +19,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 { gbl/cur-time.i }
 { ref/grp-attr.i }
+{ cus/str-edi.i  }
 
 procedure ord-savl_process-line :
 define parameter buffer buf_ord-doc for ub.ord-doc.
@@ -46,6 +47,8 @@ define variable t-sum like ub.ord-line.qnty no-undo .
 define variable v-str-ps as character no-undo .
 define variable v-event-code as character no-undo .
 define variable v-nabor       as logical   no-undo .
+define variable is-edi-doc as logical no-undo .
+define variable v-dm-edi  as integer no-undo .
 
 define buffer buf_goods for ub.goods.
 define buffer buf_ord-dtl for ub.ord-dtl.
@@ -105,7 +108,15 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       var-ok-assort-pol
       var-mess-assort-pol
       }
-    if var-ok-assort-pol = false and not g#news then do:
+    assign
+    is-edi-doc = status-is-edi ( input yes  /*p-ies-edi*/
+                        , input buf_ord-doc.cli-type
+                        , input buf_ord-doc.cli-code
+                        , input buf_ord-doc.obj-type
+                        , input buf_ord-doc.obj-code
+                        , output v-dm-edi
+                        ) no-error.
+    if var-ok-assort-pol = false and not g#news and not is-edi-doc then do:
       run ord-savl_del-str-info in this-procedure (  input buf_ord-doc.PS
                                                     , input var-mess-assort-pol
                                                     , output v-str-ps ) .

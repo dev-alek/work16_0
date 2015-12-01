@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Кусок интерфейса списка заказав
+Кусок интерфейса списка заказа
 
 Автор: Чернова Светлана Александровна
 Дата создания: 03/02/02
@@ -174,6 +174,7 @@ define variable p-status   as date      no-undo .
 define variable v-edoc-status as integer   no-undo .
 define variable v-edoc-ora as logical   no-undo .
 define variable v-dm-edi  as integer no-undo .
+define variable kk as integer no-undo .
  v-edoc-ora = isoraret_on () .
 
 if Lookup("fin-block", p-buttons) <> 0 then v-fin-block = true.
@@ -1460,11 +1461,29 @@ END.
 ON CHOOSE OF b-close IN FRAME {&frame-name} /* Закр */
 DO:
 define variable ll-recid as recid no-undo .
+define variable mark-list as character no-undo.
 define buffer buf_clients for ub.clients  .
 define buffer buf_ext-classif for ub.ext-classif  .
+define buffer buf1_ord-doc for ub.ord-doc.
 
-{&net-proc}
   find current shar-buf_ord-doc no-lock no-error.
+  if del-list = "" then 
+    assign 
+      mark-list = string(recid(shar-buf_ord-doc))
+      .
+  else
+    assign 
+      mark-list = del-list
+      .
+  
+  do kk = 1 to num-entries(mark-list) :
+    for each shar-buf_ord-doc share-lock where recid(shar-buf_ord-doc) = integer(entry(kk,mark-list)):
+
+      if shar-buf_ord-doc.status_ = {&fact} and shar-buf_ord-doc.flag_= true  then do:
+         message "Заказ закрыт до статуса ФАКТ .".
+         next. 
+      end.
+
   if ( shar-buf_ord-doc.status_ = {&g___new} or
        shar-buf_ord-doc.status_ = {&ord-rcv}) and
        shar-buf_ord-doc.doc-type = {&O-P} then do:
@@ -1492,7 +1511,7 @@ define buffer buf_ext-classif for ub.ext-classif  .
                    ,shar-buf_ord-doc.cli-code
                    )
         view-as alert-box information .
-       return .
+            next .
       end. /*if shar-buf_ord-doc.status_ = {&g___new} then do:*/
       if shar-buf_ord-doc.status_ = {&ord-rcv} then do:
        define variable vv-ok as logical   no-undo .
@@ -1505,7 +1524,7 @@ define buffer buf_ext-classif for ub.ext-classif  .
            buttons yes-no
            update vv-ok
           .
-         if not vv-ok then  return .
+            if not vv-ok then  next .
       end. /*if shar-buf_ord-doc.status_ = {&ord-rcv} then do:*/
     end. /*if status-is-edoc-nn ( input is-edoc-nn*/
   end. /*if ( shar-buf_ord-doc.status_ = {&g___new} or*/
@@ -1516,7 +1535,7 @@ define buffer buf_ext-classif for ub.ext-classif  .
     buttons yes-no
     update g#log .
 
-    if not g#log then return no-apply.
+      if not g#log then next.
       ll-recid = recid(shar-buf_ord-doc).
       run cus/ord-clos.p
         (input  parParentProc
@@ -1534,6 +1553,9 @@ define buffer buf_ext-classif for ub.ext-classif  .
             title "Закрытие заказа"
           .
         end.
+    end.
+  end.
+  
   find current shar-buf_ord-doc no-lock no-error.
   run ui-on in this-procedure (yes, no, '':U).
   reposition br-docs to recid ll-recid no-error.

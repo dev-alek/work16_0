@@ -1304,6 +1304,103 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
         end.
         v-found = true.
       end.
+      when {&table_season} then do:
+        find first ub.season no-lock where rowid (ub.season) = v-tbl-row.
+        find first ub.season-attr no-lock where ub.season-attr.sea-code = ub.season.sea-code
+          and ub.season-attr.db-num = ub.season.db-num and ub.season-attr.attr-code = {&seaattr-obj} no-error.
+        if available ub.season-attr then do:
+          if g#db-num = 0 and not g#news then do:
+            find first buf_clients no-lock where buf_clients.obj-type = substring (ub.season-attr.attr-value, 1, 3)
+              and buf_clients.obj-code = integer(substring (ub.season-attr.attr-value, 4)).
+            if buf_clients.db-num <> 0  then do:
+              assign list-db-for-send = string (buf_clients.db-num).
+            end.
+          end.
+          if g#db-num <> 0 and not g#news then do:
+            assign list-db-for-send = "0".
+          end.
+        end.
+        else do:
+          if not g#news then do:
+            assign list-db-for-send = list-remote-db .
+         end.
+        end.
+        v-found = true.
+      end.     
+      when {&table_season-attr} then do:
+        find first ub.season-attr no-lock where rowid (ub.season-attr) = v-tbl-row.
+        if ub.season-attr.attr-code = {&seaattr-obj} then do:
+          if g#db-num = 0 and not g#news then do:
+            find first buf_clients no-lock where buf_clients.obj-type = substring (ub.season-attr.attr-value, 1, 3)
+              and buf_clients.obj-code = integer(substring (ub.season-attr.attr-value, 4)).
+            if buf_clients.db-num <> 0  then do:
+              assign list-db-for-send = string (buf_clients.db-num).
+            end.
+          end.
+          if g#db-num <> 0 and not g#news then do:
+            assign list-db-for-send = "0".
+          end.
+        end.
+        else do:
+         if g#db-num = 0 then do:
+           assign list-db-for-send = list-remote-db .
+         end.
+         if g#db-num <> 0 and not g#news then do:
+           assign list-db-for-send = "0" .
+         end.
+        end.
+        v-found = true.
+      end.
+      when {&table_gds-season} then do:
+        find first ub.gds-season no-lock where rowid (ub.gds-season) = v-tbl-row.
+        find first ub.season no-lock where ub.gds-season.sea-code = ub.season.sea-code
+          and ub.gds-season.db-num = ub.season.db-num.
+        find first ub.season-attr no-lock where ub.season-attr.sea-code = ub.season.sea-code
+          and ub.season-attr.db-num = ub.season.db-num and ub.season-attr.attr-code = {&seaattr-obj} no-error.
+        if available ub.season-attr then do:
+          if g#db-num = 0 and not g#news then do:
+            find first buf_clients no-lock where buf_clients.obj-type = substring (ub.season-attr.attr-value, 1, 3)
+              and buf_clients.obj-code = integer(substring (ub.season-attr.attr-value, 4)).
+            if buf_clients.db-num <> 0  then do:
+              assign list-db-for-send = string (buf_clients.db-num).
+            end.
+          end.
+          if g#db-num <> 0 and not g#news then do:
+            assign list-db-for-send = "0".
+          end.
+        end.
+        else do:
+          if not g#news then do:
+            assign list-db-for-send = list-remote-db .
+         end.
+        end.
+        v-found = true.
+      end.
+      when {&table_gds-season-attr} then do:
+        find first ub.gds-season-attr no-lock where rowid (ub.gds-season-attr) = v-tbl-row.
+        find first ub.season no-lock where ub.gds-season-attr.sea-code = ub.season.sea-code
+          and ub.gds-season-attr.db-num = ub.season.db-num.
+        find first ub.season-attr no-lock where ub.season-attr.sea-code = ub.season.sea-code
+          and ub.season-attr.db-num = ub.season.db-num and ub.season-attr.attr-code = {&seaattr-obj} no-error.
+        if available ub.season-attr then do:
+          if g#db-num = 0 and not g#news then do:
+            find first buf_clients no-lock where buf_clients.obj-type = substring (ub.season-attr.attr-value, 1, 3)
+              and buf_clients.obj-code = integer(substring (ub.season-attr.attr-value, 4)).
+            if buf_clients.db-num <> 0  then do:
+              assign list-db-for-send = string (buf_clients.db-num).
+            end.
+          end.
+          if g#db-num <> 0 and not g#news then do:
+            assign list-db-for-send = "0".
+          end.
+        end.
+        else do:
+          if not g#news then do:
+            assign list-db-for-send = list-remote-db .
+         end.
+        end.
+        v-found = true.
+      end.
       otherwise do:
         assign
           v-found = false

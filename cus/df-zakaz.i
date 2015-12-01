@@ -45,13 +45,28 @@ field min-order     as decimal   ~
 field service-order as decimal ~
 field local-mark    as character ~
 field max-stock     as decimal   ~
+field season-coef   as decimal   ~
+field min-stock-old as decimal   ~
+field gds-way       as decimal   ~
 index pi is unique primary artic prod-type prod-code  ascending ~
 index idx-ln line-num.
 
 &glob def-tt-option {1} shared
 {&def-tt-zakaz}
 
+&glob def-tt-zakaz-prn define ~{&def-tt-option~} temp-table tmp#zakaz-prn1 no-undo ~
+field artic         like ub.goods.artic      ~
+field prod-type     like ub.goods.prod-type  ~
+field prod-code     like ub.goods.prod-code  ~
+field obj-type      like ub.clients.obj-type ~
+field obj-code      like ub.clients.obj-code ~
+field prt-code      as   integer    ~
+field qnty-sale     as   decimal    ~
+field qnty-ord      as   decimal    ~
+index pi is unique primary artic prod-type prod-code obj-type obj-code prt-code  ascending.
 
+&glob def-tt-option {1} shared
+{&def-tt-zakaz-prn}
 
 &glob def-tt-zakaz-dtl define ~{&def-tt-option~} temp-table tmp#zakaz-dtl1 no-undo ~
 like ub.ord-dtl ~
@@ -67,6 +82,7 @@ define {1} shared buffer buf-goods   for ub.goods     .
 define {1} shared buffer sb-cli-gds  for ub.cli-gds   .
 define {1} shared buffer sb-gds-obj  for ub.gds-obj   .
 define {1} shared buffer tmp#zakaz     for tmp#zakaz1.
+define {1} shared buffer tmp#zakaz-prn     for tmp#zakaz-prn1.
 define {1} shared buffer tmp#zakaz-dtl for tmp#zakaz-dtl1.
 define buffer buf_contract for ub.contract .
 define {1} shared  buffer shar_ord-doc  for ub.ord-doc .

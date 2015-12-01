@@ -106,7 +106,7 @@ tt-gds-obj-prop.grop-who-update tt-gds-obj-prop.grop-db-num-update
 &Scoped-define DISPLAYED-TABLES tt-gds-obj-prop buf_goods
 &Scoped-define FIRST-DISPLAYED-TABLE tt-gds-obj-prop
 &Scoped-define SECOND-DISPLAYED-TABLE buf_goods
-&Scoped-Define DISPLAYED-OBJECTS f-corrcoeff F-time
+&Scoped-Define DISPLAYED-OBJECTS F-time
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -141,11 +141,6 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-corrcoeff AS DECIMAL FORMAT ">>9.99":U INITIAL 0
-     LABEL "Корр.коэфф для расчета кол-ва"
-     VIEW-AS FILL-IN
-     SIZE 11 BY 1 NO-UNDO.
-
 DEFINE VARIABLE F-time AS CHARACTER FORMAT "X(5)":U
      LABEL "Время изменения"
       VIEW-AS TEXT
@@ -177,7 +172,6 @@ DEFINE FRAME Dialog-Frame
      tt-gds-obj-prop.grop-level-always-presence AT ROW 8.77 COL 35.5 COLON-ALIGNED FORMAT ">.9999"
           VIEW-AS FILL-IN
           SIZE 11 BY 1
-     f-corrcoeff AT ROW 9.8 COL 35.5 COLON-ALIGNED WIDGET-ID 2
      buf_goods.artic AT ROW 2.77 COL 24 COLON-ALIGNED
            VIEW-AS TEXT
           SIZE 17 BY .67
@@ -239,8 +233,6 @@ ASSIGN
 
 /* SETTINGS FOR BUTTON B-Hist IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-/* SETTINGS FOR FILL-IN f-corrcoeff IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN tt-gds-obj-prop.gdop-min-stock IN FRAME Dialog-Frame
    NO-ENABLE EXP-FORMAT                                                 */
 /* SETTINGS FOR FILL-IN tt-gds-obj-prop.grop-level-always-presence IN FRAME Dialog-Frame
@@ -287,14 +279,6 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exit Dialog-Frame
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Ввод */
 DO:
-  assign f-corrcoeff.
-  if f-corrcoeff = 0 then do:
-    message
-      "Значение поля 'Корректирующий коэффициент' не может быть равно 0!"
-    view-as alert-box information.
-    apply "entry" to f-corrcoeff in frame {&frame-name}.
-    return no-apply.
-  end.
 
   run proc-save in this-procedure no-error.
   if error-status:error then return no-apply.
@@ -371,13 +355,11 @@ tt-gds-obj-prop.gdop-min-stock               when p-mode <> {&lookup}
 tt-gds-obj-prop.grop-level-always-presence   when p-mode <> {&lookup}
 tt-gds-obj-prop.grop-max-stock               when p-mode <> {&lookup}
 tt-gds-obj-prop.grop-min-order               when p-mode <> {&lookup}
-f-corrcoeff when p-mode <> {&lookup} and p-obj-type <> {&cmp}
 with frame dialog-frame.
 
 if p-obj-type = {&cmp}  then do:
    hide
    tt-gds-obj-prop.grop-max-stock
-   f-corrcoeff
    in frame {&frame-name} .
 end.
 
@@ -424,7 +406,7 @@ PROCEDURE enable_UI :
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY f-corrcoeff F-time
+  DISPLAY F-time
       WITH FRAME Dialog-Frame.
   IF AVAILABLE buf_goods THEN
     DISPLAY buf_goods.artic buf_goods.prod-type buf_goods.prod-code
@@ -550,12 +532,6 @@ else
           end.
         end. /*jj*/
       end. /*if not available tt-gds-obj-prop-attr then do:*/
-      case entry(v-ii, {&gdspoatr-list-obj}):
-        when {&attr-corrcoeff-po} then do:
-          assign
-          f-corrcoeff = decimal(tt-gds-obj-prop-attr.attr-value).
-        end.
-      end case.
       release tt-gds-obj-prop-attr.
       end. /*if lookup(entry(v-ii, {&gdspoatr-list-obj}), {&gdspoatr-list-spec}) = 0 then do:*/
     end. /*do v-ii = 1 to num-entries({&gdspoatr-list-obj}):*/
@@ -577,17 +553,9 @@ assign frame {&frame-name}  tt-gds-obj-prop.gdop-min-stock .
 assign frame {&frame-name}  tt-gds-obj-prop.grop-level-always-presence .
 assign frame {&frame-name}  tt-gds-obj-prop.grop-max-stock  .
 assign frame {&frame-name}  tt-gds-obj-prop.grop-min-order .
-assign frame {&frame-name}  f-corrcoeff .
 define variable p-recid as recid no-undo.
 define variable v-ident as logical no-undo .
-for each tt-gds-obj-prop-attr:
-  case tt-gds-obj-prop-attr.attr-code:
-    when {&attr-corrcoeff-po} then do:
-      assign
-      tt-gds-obj-prop-attr.attr-value = string(f-corrcoeff).
-    end.
-  end.
-end.
+
 if p-update-instantly then do:
     run gds-ind1
         (input-output p-recid

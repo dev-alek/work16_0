@@ -104,6 +104,7 @@ define variable  p-val       as character no-undo .
 define variable  t-min-ost   as logical no-undo .
 define variable  t-deadline  as logical no-undo .
 define variable SelectObject as character no-undo .
+define variable tog-det-prizn as logical no-undo .
 
 main-block :
 do on error undo main-block, return error
@@ -180,7 +181,8 @@ on error undo, return error return-value
                           input t-deadline ,
                           input v-cntxt-obj-type  ,
                           input v-cntxt-obj-code  ,
-                          input g#type
+                          input g#type            ,
+                          input tog-det-prizn
                                 ) no-error .
                                   if error-status :error then do:
                                             message  error-status :get-message(1) .
@@ -224,7 +226,9 @@ on error undo, return error return-value
               input t-deadline ,
               input v-cntxt-obj-type  ,
               input v-cntxt-obj-code  ,
-              input g#type
+              input g#type            ,
+              input tog-det-prizn
+
               ) no-error .
                 if error-status :error then do:
                   message error-status :get-message(1) .
@@ -237,6 +241,12 @@ end procedure. /* call-proc-calc */
 
 
 procedure make-tmp#zakz :
+  
+  define buffer buf_season for ub.season.
+  define buffer buf_season-attr for ub.season-attr.
+  define buffer buf_gds-season for ub.gds-season.
+  define buffer buf_gds-season-attr for ub.gds-season-attr.
+  
  do
  on error undo, return error return-value
  :
@@ -250,6 +260,10 @@ if not available gds-list then  do:
 
 for each tmp#zakaz :
     delete tmp#zakaz.
+end. /* for each */
+
+for each tmp#zakaz-prn :
+    delete tmp#zakaz-prn.
 end. /* for each */
 
 define variable max-num as integer no-undo .
@@ -322,23 +336,46 @@ when 1 then do:
 end.
 end case.
 if R-min-rest3 then do:  /* сезон */
-  find first ub.season no-lock where
-        ub.season.sea-month-1 <= month (DATE-sale-2) and
-        ub.season.sea-month-2 >= month (DATE-sale-1)
+  
+  for each buf_season no-lock where 
+              buf_season.sea-month-1 <= integer (DATE-sale-2) and
+              buf_season.sea-month-2 >= integer (DATE-sale-1):
+    find first buf_season-attr where buf_season-attr.sea-code = buf_season.sea-code
+      and buf_season-attr.db-num = buf_season.db-num
+      and buf_season-attr.attr-code = {&seaattr-obj}
+      and buf_season-attr.attr-value = obj-list.obj-type + string (obj-list.obj-code) no-error.
+
+    find first buf_gds-season no-lock where
+      buf_gds-season.gds-code = tmp#zakaz.gds-code and
+      buf_gds-season.sea-code = buf_season.sea-code and
+      buf_gds-season.db-num   = buf_season.db-num
         no-error .
-
-    if available ub.season  then do:
-          find first ub.gds-season no-lock where
-          ub.gds-season.gds-code = tmp#zakaz.gds-code and
-          ub.gds-season.sea-code = ub.season.sea-code and
-          ub.gds-season.db-num   = ub.season.db-num
+    if available buf_season-attr and available buf_gds-season 
+    then do:
+      find first buf_gds-season-attr no-lock where buf_gds-season-attr.sea-code = buf_gds-season.sea-code
+        and buf_gds-season-attr.db-num = buf_gds-season.db-num
+        and buf_gds-season-attr.gds-code = buf_gds-season.gds-code
+        and buf_gds-season-attr.attr-code = {&gdsseaattr-season-coef}
           no-error .
-
-          if available ub.gds-season then do:
-              tmp#zakaz.min-stock = ub.gds-season.min-stock .
-          end.
+      if available buf_gds-season-attr then tmp#zakaz.season-coef = decimal (buf_gds-season-attr.attr-value).
+      tmp#zakaz.min-stock = buf_gds-season.min-stock .
+      leave.
+    end.
+    else do:
+      if available buf_gds-season then do:
+        find first buf_gds-season-attr no-lock where buf_gds-season-attr.sea-code = buf_gds-season.sea-code
+          and buf_gds-season-attr.db-num = buf_gds-season.db-num
+          and buf_gds-season-attr.gds-code = buf_gds-season.gds-code
+          and buf_gds-season-attr.attr-code = {&gdsseaattr-season-coef}
+          no-error.
+        if available buf_gds-season-attr then tmp#zakaz.season-coef = decimal (buf_gds-season-attr.attr-value).
+          tmp#zakaz.min-stock = buf_gds-season.min-stock .
+        end.
     end.
   end.
+  if tmp#zakaz.season-coef = ? or tmp#zakaz.season-coef = 0 then assign tmp#zakaz.season-coef = 1.
+
+end.
 /*
  message error-status :get-message(1)
  return-value skip
@@ -419,6 +456,15 @@ date-2 = date-p-2 .
 
   kol-obj = num-entries( entry(2,ubflt.usr-flt.list_,"&" ) , ",") - 1 .
      if kol-obj  = ? then kol-obj  = 0 .
+
+find first ubflt.usr-flt where
+            ubflt.usr-flt.user-name    = v-cntxt-userid and
+            ubflt.usr-flt.call-point   = "selrdallo":U
+            no-error .
+    if available ubflt.usr-flt then do:
+                    tog-det-prizn = logical(entry(5, ubflt.usr-flt.list_, {&delim-par})) .
+    end.
+if R-algoritm <> 1 then tog-det-prizn = false.
 
  end. /* do */
 end procedure. /* init-screen */

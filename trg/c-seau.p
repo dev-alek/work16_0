@@ -30,21 +30,21 @@ main-block :
 do transaction
 on error undo main-block, return error
 :
-  if not g#news  or  ( g#news and g#db-num = 0 ) then do:
-    run str/callnews.p
-      (input "c-season"
-      ,input (buffer ub.c-season:handle)
-      ) no-error .
-        if error-status:error then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Ошибка при передаче в новости c-Сезона" skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-            return error.
-        end.
-  end.
+/*  if not g#news  or  ( g#news and g#db-num = 0 ) then do: */
+/*    run str/callnews.p                                    */
+/*      (input "c-season"                                   */
+/*      ,input (buffer ub.c-season:handle)                  */
+/*      ) no-error .                                        */
+/*        if error-status:error then do:                    */
+/*          message                                         */
+/*            vss-workfile vss-revision vss-description skip*/
+/*            "Ошибка при передаче в новости c-Сезона" skip */
+/*            error-status :get-message(1) skip             */
+/*            return-value skip                             */
+/*            view-as alert-box error .                     */
+/*            return error.                                 */
+/*        end.                                              */
+/*  end.                                                    */
     if g#oxml = yes
     then do:
     run str/calloxml.p (
