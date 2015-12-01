@@ -103,12 +103,14 @@ end.
 _buf_place:
 for each buf_place no-lock where
         buf_place.obj-type = p-obj-type
-    AND buf_place.obj-code = i-obj-code,
+    AND buf_place.obj-code = i-obj-code
+    and buf_place.status_  = {&current-status},
     first buf_pl-gds no-lock where
           buf_pl-gds.obj-type = p-obj-type
       AND buf_pl-gds.obj-code = i-obj-code
-      and buf_pl-gds.pl-code = buf_place.pl-code,
-    first buf_goods no-lock where buf_goods.gds-code = buf_pl-gds.gds-code:
+      and buf_pl-gds.pl-code = buf_place.pl-code
+      and buf_pl-gds.status_ = {&current-status},
+    first buf_goods no-lock where buf_goods.gds-code = buf_pl-gds.gds-code and buf_goods.stts = integer({&current-status-int}) :
   assign
   dop-int = integer(buf_place.loc1)
   no-error .
