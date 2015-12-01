@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -15,7 +15,7 @@ DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -94,7 +94,7 @@ INDEX pi IS UNIQUE PRIMARY tbl-name fld-name
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -109,8 +109,8 @@ INDEX pi IS UNIQUE PRIMARY tbl-name fld-name
 &Scoped-define INTERNAL-TABLES temp-gdsscrvw
 
 /* Definitions for BROWSE BR-gdsscrvw                                   */
-&Scoped-define FIELDS-IN-QUERY-BR-gdsscrvw temp-gdsscrvw.custom-label temp-gdsscrvw.is-on
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-gdsscrvw temp-gdsscrvw.is-on
+&Scoped-define FIELDS-IN-QUERY-BR-gdsscrvw temp-gdsscrvw.custom-label temp-gdsscrvw.is-on   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-gdsscrvw temp-gdsscrvw.is-on   
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-gdsscrvw temp-gdsscrvw
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-gdsscrvw temp-gdsscrvw
 &Scoped-define SELF-NAME BR-gdsscrvw
@@ -127,23 +127,23 @@ INDEX pi IS UNIQUE PRIMARY tbl-name fld-name
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help RECT-1 t-dif-nam1 ~
 BR-gdsscrvw t-dif-nam2 t-dpl-off t-dif-pdbc t-pbc-veto t-tnvedimp ~
-t-unq-artc t-is-scgb B-dfltggrp rs-gdsoattr rs-gdshattr rs-fgdsobj ~
-rs-s-coeff rs-gds-prop rs-gds-attr rs-add-prop l-gds-obj-attr ~
-l-gds-host-attr l-fbr-gds-obj l-s-coeff l-gds-prop l-goods-attr l-add-prop
+t-unq-artc t-is-scgb f-shema-foto B-dfltggrp rs-gdsoattr rs-gdshattr ~
+rs-fgdsobj rs-s-coeff rs-gds-prop rs-gds-attr rs-add-prop l-gds-obj-attr ~
+l-gds-host-attr l-fbr-gds-obj l-s-coeff l-gds-prop l-goods-attr l-add-prop 
 &Scoped-Define DISPLAYED-OBJECTS t-dif-nam1 t-dif-nam2 t-dpl-off t-dif-pdbc ~
-t-pbc-veto t-tnvedimp t-unq-artc t-is-scgb f-dfltggrp f-grp-name ~
-rs-gdsoattr rs-gdshattr rs-fgdsobj rs-s-coeff rs-gds-prop rs-gds-attr ~
-rs-add-prop FILL-IN-3 l-gds-obj-attr l-gds-host-attr l-fbr-gds-obj ~
-l-s-coeff l-gds-prop l-goods-attr l-add-prop
+t-pbc-veto t-tnvedimp t-unq-artc t-is-scgb f-shema-foto f-dfltggrp ~
+f-grp-name rs-gdsoattr rs-gdshattr rs-fgdsobj rs-s-coeff rs-gds-prop ~
+rs-gds-attr rs-add-prop FILL-IN-3 l-gds-obj-attr l-gds-host-attr ~
+l-fbr-gds-obj l-s-coeff l-gds-prop l-goods-attr l-add-prop 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
 &Scoped-define List-1 t-dif-nam1 t-dif-nam2 t-dpl-off t-dif-pdbc t-pbc-veto ~
-t-tnvedimp t-unq-artc t-is-scgb
+t-tnvedimp t-unq-artc t-is-scgb 
 &Scoped-define List-2 RECT-1 f-dfltggrp B-dfltggrp f-grp-name rs-gdsoattr ~
 rs-gdshattr rs-fgdsobj rs-s-coeff rs-gds-prop rs-gds-attr rs-add-prop ~
 FILL-IN-3 l-gds-obj-attr l-gds-host-attr l-fbr-gds-obj l-s-coeff l-gds-prop ~
-l-goods-attr l-add-prop
+l-goods-attr l-add-prop 
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -155,74 +155,82 @@ l-goods-attr l-add-prop
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-dfltggrp
+DEFINE BUTTON B-dfltggrp 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 4 BY 1.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-dfltggrp AS INTEGER FORMAT "->,>>>,>>9":U INITIAL -1
-     LABEL "Гр.товаров по умолч."
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE f-shema-foto AS integer FORMAT "->,>>>,>>9":U INITIAL 1
+     LABEL "Схема хранения фотографий" 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEM-PAIRS "Общая директория"," 1",
+                     "По товарам"," 2"
+     DROP-DOWN-LIST
+     SIZE 20.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-dfltggrp AS INTEGER FORMAT "->,>>>,>>9":U INITIAL -1 
+     LABEL "Гр.товаров по умолч." 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 9 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-grp-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN NATIVE
-     SIZE 62 BY 1
+DEFINE VARIABLE f-grp-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN NATIVE 
+     SIZE 59 BY 1
      FGCOLOR 3  NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-3 AS CHARACTER FORMAT "X(256)":U INITIAL "Опции копирования допинфо по товару ( при соз-дании товара копированием)"
-      VIEW-AS TEXT
+DEFINE VARIABLE FILL-IN-3 AS CHARACTER FORMAT "X(256)":U INITIAL "Опции копирования допинфо по товару ( при соз-дании товара копированием)" 
+      VIEW-AS TEXT 
      SIZE 95.5 BY .67
      FGCOLOR 3  NO-UNDO.
 
-DEFINE VARIABLE l-add-prop AS CHARACTER FORMAT "X(256)":U INITIAL "Атрибуты доп.расходов"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-add-prop AS CHARACTER FORMAT "X(256)":U INITIAL "Атрибуты доп.расходов" 
+      VIEW-AS TEXT 
      SIZE 29.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-fbr-gds-obj AS CHARACTER FORMAT "X(256)":U INITIAL "Атрибуты товара РЕСТОРАН"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-fbr-gds-obj AS CHARACTER FORMAT "X(256)":U INITIAL "Атрибуты товара РЕСТОРАН" 
+      VIEW-AS TEXT 
      SIZE 29.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-gds-host-attr AS CHARACTER FORMAT "X(256)":U INITIAL "Атрибуты товара по фирме"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-gds-host-attr AS CHARACTER FORMAT "X(256)":U INITIAL "Атрибуты товара по фирме" 
+      VIEW-AS TEXT 
      SIZE 29.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-gds-obj-attr AS CHARACTER FORMAT "X(256)":U INITIAL "Атрибуты товара по объекту"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-gds-obj-attr AS CHARACTER FORMAT "X(256)":U INITIAL "Атрибуты товара по объекту" 
+      VIEW-AS TEXT 
      SIZE 29.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-gds-prop AS CHARACTER FORMAT "X(256)":U INITIAL "Индикаторы товара на объекте"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-gds-prop AS CHARACTER FORMAT "X(256)":U INITIAL "Индикаторы товара на объекте" 
+      VIEW-AS TEXT 
      SIZE 29.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-goods-attr AS CHARACTER FORMAT "X(256)":U INITIAL "Глобальные атрибуты товара"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-goods-attr AS CHARACTER FORMAT "X(256)":U INITIAL "Глобальные атрибуты товара" 
+      VIEW-AS TEXT 
      SIZE 29.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-s-coeff AS CHARACTER FORMAT "X(256)":U INITIAL "Сезонные коэффициенты"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-s-coeff AS CHARACTER FORMAT "X(256)":U INITIAL "Сезонные коэффициенты" 
+      VIEW-AS TEXT 
      SIZE 29.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE rs-add-prop AS INTEGER
+DEFINE VARIABLE rs-add-prop AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", 1,
 "Item 2", 2,
 "Item 3", 3,
@@ -230,9 +238,9 @@ DEFINE VARIABLE rs-add-prop AS INTEGER
      SIZE 31 BY 3.5
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE rs-fgdsobj AS INTEGER
+DEFINE VARIABLE rs-fgdsobj AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", 1,
 "Item 2", 2,
 "Item 3", 3,
@@ -240,9 +248,9 @@ DEFINE VARIABLE rs-fgdsobj AS INTEGER
      SIZE 31 BY 3.5
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE rs-gds-attr AS INTEGER
+DEFINE VARIABLE rs-gds-attr AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", 1,
 "Item 2", 2,
 "Item 3", 3,
@@ -250,9 +258,9 @@ DEFINE VARIABLE rs-gds-attr AS INTEGER
      SIZE 31 BY 3.5
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE rs-gds-prop AS INTEGER
+DEFINE VARIABLE rs-gds-prop AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", 1,
 "Item 2", 2,
 "Item 3", 3,
@@ -260,9 +268,9 @@ DEFINE VARIABLE rs-gds-prop AS INTEGER
      SIZE 31 BY 3.5
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE rs-gdshattr AS INTEGER
+DEFINE VARIABLE rs-gdshattr AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", 1,
 "Item 2", 2,
 "Item 3", 3,
@@ -270,9 +278,9 @@ DEFINE VARIABLE rs-gdshattr AS INTEGER
      SIZE 31 BY 3.5
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE rs-gdsoattr AS INTEGER
+DEFINE VARIABLE rs-gdsoattr AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", 1,
 "Item 2", 2,
 "Item 3", 3,
@@ -280,9 +288,9 @@ DEFINE VARIABLE rs-gdsoattr AS INTEGER
      SIZE 31 BY 3.5
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE rs-s-coeff AS INTEGER
+DEFINE VARIABLE rs-s-coeff AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", 1,
 "Item 2", 2,
 "Item 3", 3,
@@ -291,52 +299,52 @@ DEFINE VARIABLE rs-s-coeff AS INTEGER
      FONT 4 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 97.5 BY 16.
 
-DEFINE VARIABLE t-dif-nam1 AS LOGICAL INITIAL no
-     LABEL "Разрешено добавление товаров с одинаковыми именами"
+DEFINE VARIABLE t-dif-nam1 AS LOGICAL INITIAL no 
+     LABEL "Разрешено добавление товаров с одинаковыми именами" 
      VIEW-AS TOGGLE-BOX
      SIZE 55 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-dif-nam2 AS LOGICAL INITIAL no
-     LABEL "Обязательное заведение ДопБК при добавлении товара"
+DEFINE VARIABLE t-dif-nam2 AS LOGICAL INITIAL no 
+     LABEL "Обязательное заведение ДопБК при добавлении товара" 
      VIEW-AS TOGGLE-BOX
      SIZE 55 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-dif-pdbc AS LOGICAL INITIAL no
-     LABEL "Запрет повторных ДопБК для одного производителя"
+DEFINE VARIABLE t-dif-pdbc AS LOGICAL INITIAL no 
+     LABEL "Запрет повторных ДопБК для одного производителя" 
      VIEW-AS TOGGLE-BOX
      SIZE 55 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-dpl-off AS LOGICAL INITIAL no
-     LABEL "Выключение повторных ДопБК при появлении новых"
+DEFINE VARIABLE t-dpl-off AS LOGICAL INITIAL no 
+     LABEL "Выключение повторных ДопБК при появлении новых" 
      VIEW-AS TOGGLE-BOX
      SIZE 55 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-is-scgb AS LOGICAL INITIAL no
-     LABEL "Разрешено создавать глобальные весовые коды"
+DEFINE VARIABLE t-is-scgb AS LOGICAL INITIAL no 
+     LABEL "Разрешено создавать глобальные весовые коды" 
      VIEW-AS TOGGLE-BOX
      SIZE 55 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-pbc-veto AS LOGICAL INITIAL no
-     LABEL "Запрет повторных ДопБК"
+DEFINE VARIABLE t-pbc-veto AS LOGICAL INITIAL no 
+     LABEL "Запрет повторных ДопБК" 
      VIEW-AS TOGGLE-BOX
      SIZE 55 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-tnvedimp AS LOGICAL INITIAL no
-     LABEL "импортировать код ТНВЭД в карточку товара"
+DEFINE VARIABLE t-tnvedimp AS LOGICAL INITIAL no 
+     LABEL "импортировать код ТНВЭД в карточку товара" 
      VIEW-AS TOGGLE-BOX
      SIZE 55 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-unq-artc AS LOGICAL INITIAL no
-     LABEL "Создание доп.БК = артикулу при создании товара"
+DEFINE VARIABLE t-unq-artc AS LOGICAL INITIAL no 
+     LABEL "Создание доп.БК = артикулу при создании товара" 
      VIEW-AS TOGGLE-BOX
      SIZE 55 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-gdsscrvw FOR
+DEFINE QUERY BR-gdsscrvw FOR 
       temp-gdsscrvw SCROLLING.
 &ANALYZE-RESUME
 
@@ -369,28 +377,29 @@ DEFINE FRAME Dialog-Frame
      t-tnvedimp AT ROW 7 COL 2
      t-unq-artc AT ROW 8.04 COL 2 WIDGET-ID 118
      t-is-scgb AT ROW 9.25 COL 2 WIDGET-ID 120
-     f-dfltggrp AT ROW 11 COL 21.5 COLON-ALIGNED WIDGET-ID 22
-     B-dfltggrp AT ROW 11 COL 32.5 WIDGET-ID 24
-     f-grp-name AT ROW 11 COL 35 COLON-ALIGNED NO-LABEL WIDGET-ID 68
-     rs-gdsoattr AT ROW 13.79 COL 2 NO-LABEL WIDGET-ID 28
-     rs-gdshattr AT ROW 13.79 COL 34 NO-LABEL WIDGET-ID 34
-     rs-fgdsobj AT ROW 13.79 COL 66 NO-LABEL WIDGET-ID 40
-     rs-s-coeff AT ROW 18.04 COL 2 NO-LABEL WIDGET-ID 46
-     rs-gds-prop AT ROW 18.04 COL 34 NO-LABEL WIDGET-ID 52
-     rs-gds-attr AT ROW 18.04 COL 66 NO-LABEL WIDGET-ID 58
-     rs-add-prop AT ROW 22.54 COL 2 NO-LABEL WIDGET-ID 106
-     FILL-IN-3 AT ROW 12.29 COL 2 NO-LABEL WIDGET-ID 70
-     l-gds-obj-attr AT ROW 13.04 COL 2.5 NO-LABEL WIDGET-ID 94
-     l-gds-host-attr AT ROW 13.04 COL 35 NO-LABEL WIDGET-ID 96
-     l-fbr-gds-obj AT ROW 13.04 COL 67 NO-LABEL WIDGET-ID 98
-     l-s-coeff AT ROW 17.29 COL 2 NO-LABEL WIDGET-ID 100
-     l-gds-prop AT ROW 17.29 COL 35 NO-LABEL WIDGET-ID 102
-     l-goods-attr AT ROW 17.29 COL 67 NO-LABEL WIDGET-ID 104
-     l-add-prop AT ROW 21.75 COL 2 NO-LABEL WIDGET-ID 112
-     RECT-1 AT ROW 10.5 COL 1.5 WIDGET-ID 64
-     SPACE(0.24) SKIP(0.37)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     f-shema-foto AT ROW 10.5 COL 27.13 COLON-ALIGNED WIDGET-ID 122
+     f-dfltggrp AT ROW 12.75 COL 22.25 COLON-ALIGNED WIDGET-ID 22
+     B-dfltggrp AT ROW 12.75 COL 33.5 WIDGET-ID 24
+     f-grp-name AT ROW 12.75 COL 35.25 COLON-ALIGNED NO-LABEL WIDGET-ID 68
+     rs-gdsoattr AT ROW 15.54 COL 2 NO-LABEL WIDGET-ID 28
+     rs-gdshattr AT ROW 15.54 COL 34 NO-LABEL WIDGET-ID 34
+     rs-fgdsobj AT ROW 15.54 COL 66 NO-LABEL WIDGET-ID 40
+     rs-s-coeff AT ROW 19.79 COL 2 NO-LABEL WIDGET-ID 46
+     rs-gds-prop AT ROW 19.79 COL 34 NO-LABEL WIDGET-ID 52
+     rs-gds-attr AT ROW 19.79 COL 66 NO-LABEL WIDGET-ID 58
+     rs-add-prop AT ROW 24.29 COL 2 NO-LABEL WIDGET-ID 106
+     FILL-IN-3 AT ROW 14.04 COL 2 NO-LABEL WIDGET-ID 70
+     l-gds-obj-attr AT ROW 14.79 COL 2.5 NO-LABEL WIDGET-ID 94
+     l-gds-host-attr AT ROW 14.79 COL 35 NO-LABEL WIDGET-ID 96
+     l-fbr-gds-obj AT ROW 14.79 COL 67 NO-LABEL WIDGET-ID 98
+     l-s-coeff AT ROW 19.04 COL 2 NO-LABEL WIDGET-ID 100
+     l-gds-prop AT ROW 19.04 COL 35 NO-LABEL WIDGET-ID 102
+     l-goods-attr AT ROW 19.04 COL 67 NO-LABEL WIDGET-ID 104
+     l-add-prop AT ROW 23.5 COL 2 NO-LABEL WIDGET-ID 112
+     RECT-1 AT ROW 12.25 COL 1.5 WIDGET-ID 64
+     SPACE(0.24) SKIP(0.70)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Набор опций работы со справочниками товаров"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -418,7 +427,7 @@ DEFINE FRAME Dialog-Frame
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-gdsscrvw t-dif-nam1 Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -426,12 +435,12 @@ ASSIGN
    2                                                                    */
 /* SETTINGS FOR FILL-IN f-dfltggrp IN FRAME Dialog-Frame
    NO-ENABLE 2                                                          */
-ASSIGN
+ASSIGN 
        f-dfltggrp:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-grp-name IN FRAME Dialog-Frame
    NO-ENABLE 2                                                          */
-ASSIGN
+ASSIGN 
        f-grp-name:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN FILL-IN-3 IN FRAME Dialog-Frame
@@ -497,7 +506,7 @@ OPEN QUERY br-gdsscrvw FOR EACH temp-gdsscrvw.
 */  /* BROWSE BR-gdsscrvw */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -577,7 +586,7 @@ END.
 &Scoped-define BROWSE-NAME BR-gdsscrvw
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -680,7 +689,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -699,20 +708,20 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-dif-nam1 t-dif-nam2 t-dpl-off t-dif-pdbc t-pbc-veto t-tnvedimp
-          t-unq-artc t-is-scgb f-dfltggrp f-grp-name rs-gdsoattr rs-gdshattr
-          rs-fgdsobj rs-s-coeff rs-gds-prop rs-gds-attr rs-add-prop FILL-IN-3
-          l-gds-obj-attr l-gds-host-attr l-fbr-gds-obj l-s-coeff l-gds-prop
-          l-goods-attr l-add-prop
+  DISPLAY t-dif-nam1 t-dif-nam2 t-dpl-off t-dif-pdbc t-pbc-veto t-tnvedimp 
+          t-unq-artc t-is-scgb f-shema-foto f-dfltggrp f-grp-name rs-gdsoattr 
+          rs-gdshattr rs-fgdsobj rs-s-coeff rs-gds-prop rs-gds-attr rs-add-prop 
+          FILL-IN-3 l-gds-obj-attr l-gds-host-attr l-fbr-gds-obj l-s-coeff 
+          l-gds-prop l-goods-attr l-add-prop 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-Help RECT-1 t-dif-nam1 BR-gdsscrvw t-dif-nam2
-         t-dpl-off t-dif-pdbc t-pbc-veto t-tnvedimp t-unq-artc t-is-scgb
-         B-dfltggrp rs-gdsoattr rs-gdshattr rs-fgdsobj rs-s-coeff rs-gds-prop
-         rs-gds-attr rs-add-prop l-gds-obj-attr l-gds-host-attr l-fbr-gds-obj
-         l-s-coeff l-gds-prop l-goods-attr l-add-prop
+  ENABLE B-exit b-quit B-Help RECT-1 t-dif-nam1 BR-gdsscrvw t-dif-nam2 
+         t-dpl-off t-dif-pdbc t-pbc-veto t-tnvedimp t-unq-artc t-is-scgb 
+         f-shema-foto B-dfltggrp rs-gdsoattr rs-gdshattr rs-fgdsobj rs-s-coeff 
+         rs-gds-prop rs-gds-attr rs-add-prop l-gds-obj-attr l-gds-host-attr 
+         l-fbr-gds-obj l-s-coeff l-gds-prop l-goods-attr l-add-prop 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -721,7 +730,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 DEFINE VARIABLE ii AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-entry AS CHARACTER NO-UNDO.
@@ -803,6 +812,12 @@ FOR EACH thbjattr_thbj-attr:
     t-tnvedimp:private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
     .
   END.
+  IF v-entry = {&attr-gds-ref_shema-foto} THEN DO:
+    ASSIGN
+    f-shema-foto = thbjattr_thbj-attr.property-value-integer
+    f-shema-foto:private-data = "recid=" + string(recid(thbjattr_thbj-attr))
+    .
+  end.  
   IF v-entry = {&attr-gds-ref_unq-artc} THEN DO:
     ASSIGN
     t-unq-artc = thbjattr_thbj-attr.property-value-logical
@@ -868,7 +883,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 DEFINE BUFFER buf_custom-labels FOR ub.custom-labels.
 DEFINE BUFFER buf_temp-gdsscrvw FOR temp-gdsscrvw.
@@ -932,7 +947,7 @@ or p-obj-type = {&stock} then do:
   .
 end.
 
-v-tab-order = "t-dif-nam1,t-dif-nam2,t-dif-pdbc,t-pbc-veto,t-tnvedimp,t-unq-artc,t-is-scgb" +
+v-tab-order = "t-dif-nam1,t-dif-nam2,t-dif-pdbc,t-pbc-veto,t-tnvedimp,shema-foto,t-unq-artc,t-is-scgb" +
               "b-dfltggrp,rs-gdsoattr,rs-gdshattr,rs-fgdsobj,rs-s-coeff,rs-gds-prop,rs-gds-attr,rs-add-prop,br-gdsscrvw".
 ASSIGN
 temp-gdsscrvw.is-on:read-only IN BROWSE br-gdsscrvw = (p-mode = {&LOOKUP}).
@@ -950,6 +965,7 @@ t-dpl-off
 t-dif-pdbc
 t-pbc-veto
 t-tnvedimp
+f-shema-foto
 t-unq-artc
 t-is-scgb
 rs-add-prop
@@ -973,6 +989,7 @@ t-dpl-off WHEN p-mode = {&UPDATE}
 t-dif-pdbc WHEN p-mode = {&UPDATE}
 t-pbc-veto WHEN p-mode = {&UPDATE}
 t-tnvedimp WHEN p-mode = {&UPDATE}
+f-shema-foto WHEN p-mode = {&UPDATE}
 t-unq-artc WHEN p-mode = {&UPDATE}
 t-is-scgb  WHEN p-mode = {&UPDATE}
 b-dfltggrp WHEN p-mode = {&UPDATE}
@@ -1001,7 +1018,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -1037,6 +1054,7 @@ t-dpl-off
 t-dif-pdbc
 t-pbc-veto
 t-tnvedimp
+f-shema-foto
 t-unq-artc
 t-is-scgb
 f-dfltggrp
@@ -1142,7 +1160,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-full-grp-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-full-grp-name Dialog-Frame 
 PROCEDURE set-full-grp-name :
 DEFINE INPUT PARAMETER p-node-code AS INTEGER NO-UNDO.
 DEFINE BUFFER buf_gds-grp FOR ub.gds-grp.
@@ -1176,3 +1194,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

@@ -89,6 +89,8 @@ define variable vss-description as character no-undo initial "Задание док. и фак
 { str/prslnew.i "proc"         }
 { gbl/lineattr.i    }
 { gbl/getsect.i  def }
+{ gbl/key-rec.i  }
+{ cmp/ini-lib.i  }
 
 /* Local Variable Definition -- For  r s r v - o u t . i */
 define variable chg-qnty     like ub.gds-dtl.doc-qnty no-undo initial ?.
@@ -142,6 +144,7 @@ define temp-table tt-parts-split no-undo like ub.parts
     pl-code
 .
 
+{ref/imagelist.i}
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -325,6 +328,9 @@ DEFINE VARIABLE varprod-bc-str AS CHARACTER FORMAT "X(40)"
      VIEW-AS FILL-IN
      SIZE 41 BY 1 NO-UNDO.
 
+DEFINE IMAGE g-image
+     STRETCH-TO-FIT RETAIN-SHAPE
+     SIZE 18.5 BY 3.75.
 DEFINE RECTANGLE RECT-discnt
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
      SIZE 95.5 BY 6.
@@ -477,6 +483,7 @@ DEFINE FRAME d-out-prt
      RECT-tot AT ROW 6.25 COL 2
      RECT-discnt AT ROW 9.75 COL 2
      RECT-qnty AT ROW 11.25 COL 55.75
+	 g-image AT ROW 2.25 COL 79 WIDGET-ID 8
      SPACE(1.12) SKIP(3.74)
     WITH VIEW-AS DIALOG-BOX
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
@@ -1439,6 +1446,20 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME g-image
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL g-image d-out-prt
+ON mouse-select-dblclick OF g-image IN FRAME {&FRAME-NAME}
+DO:
+   DEFINE VARIABLE v-main-code LIKE ub.bar-code.b-code NO-UNDO.
+    IF AVAILABLE buf_goods THEN
+    DO:
+        { gbl/gdsbcode.i buf_goods.gds-code ? v-main-code }
+        RUN ref/imagelist.w (ParParentProc, "":U, v-main-code, {&lookup}).
+    END.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.doc-qnty d-out-prt
 ON return OF ub.gds-dtl.doc-qnty IN FRAME d-out-prt /* Количество по документу */
@@ -2568,6 +2589,30 @@ end.
     end.
   end.
 
+  IF mImagePh THEN
+  DO:
+    IF AVAILABLE buf_goods THEN
+    DO:
+        DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
+        DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
+        RUN gds-attr-value (buf_goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+        RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, INPUT buf_goods.gds-code,OUTPUT vImageList).
+        vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
+    END.
+    g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
+    ASSIGN
+        g-image:HIDDEN     = NO
+        g-image:VISIBLE    = YES
+        g-image:SENSITIVE  = YES
+        .
+  END.
+  ELSE
+    ASSIGN
+        g-image:HIDDEN     = YES
+        g-image:VISIBLE    = NO
+        g-image:SENSITIVE  = NO
+        .
+  
   run UI-on in this-procedure
     no-error .
   if error-status :error then do:
@@ -4325,6 +4370,7 @@ end.
 else do:
    hide r-price in frame {&FRAME-NAME}.
 end.
+g-image:SENSITIVE = g-image:VISIBLE.
 if prt-mode <> {&lookup} and ub.gds-dtl.price-corr = 0 then do :
   define variable v-pr as decimal   no-undo .
   { str/prslnew.i

@@ -1792,6 +1792,13 @@ end.
       end.
     end.
     when {&attr-gds-ref} then do:
+      v-prop-code = "{&bef-attr-gds-ref_shema-foto}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype integer
+&scop prop-value 1
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
       v-prop-code = "{&bef-attr-gds-ref_dfltggrp}".
       do v-ii = 1 to num-entries(v-prop-code):
 &scop ptype integer

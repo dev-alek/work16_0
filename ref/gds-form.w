@@ -55,7 +55,7 @@ define variable vss-description as character no-undo init "Карточка товара".
 { gbl/getcntxt.i def }
 { gbl/thbj-def.i }
 { gbl/clntattr.i }
-
+{ ref/imagelist.i }
 define temp-table temp-goods no-undo like ub.goods
 field alc-prod as logical
 field alc-choose-prod as integer.
@@ -2407,6 +2407,9 @@ or v-next-prev = '':U
                       else MENU-ITEM m-dopinf-AC:SENSITIVE IN MENU m-dopinf = false .
       end.
 
+      IF mImagePh THEN MENU-ITEM m-dopinf-2:sensitive in MENU m-dopinf = true .
+      ELSE MENU-ITEM m-dopinf-2:sensitive in MENU m-dopinf = false .
+
       case mode :
           when {&add-def} then
               if f-name = "" then
@@ -4365,6 +4368,7 @@ PROCEDURE proc-b-add-inf:
       run ref/gds-ph.p
         (input parparentproc
         ,buffer goods
+        ,input mode
         ).
     end.
     WHEN "dop-inf-gbl":U then do:

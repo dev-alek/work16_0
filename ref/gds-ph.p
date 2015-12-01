@@ -17,6 +17,7 @@ Creation date: 04/10/06
 
 define input parameter parparentproc  as widget-handle no-undo.
 define parameter buffer buf_goods for ub.goods .
+define input parameter  loc-mode      as character no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -92,10 +93,16 @@ case buf_goods.gds-type
   end.
 end case.
 
-run gbl/newbase.p
-  (input v-b-code
-  ,input 16
-  ,output HexStr
-  ).
+&SCOPED-DEFINE Slash /
 
-{ ref/viewpict.i gds\ HexStr v-can-edit  }
+DEFINE VARIABLE par-val              AS CHARACTER NO-UNDO.
+DEFINE VARIABLE par-type             AS CHARACTER NO-UNDO.
+
+{gbl/conf-rd.i "'photo':u" "'':u" "'':u" 0 "'':u" "'':u" "'':u" no par-val par-type no-error}
+IF LOOKUP (par-val, "true,yes":U) > 0 THEN
+DO:
+    RUN ref/imagelist.w (parparentproc, 
+                         IF v-can-edit THEN "b-add":U ELSE "":U, 
+                         v-b-code,
+                         loc-mode).
+END.

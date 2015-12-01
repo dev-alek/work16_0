@@ -167,6 +167,7 @@ define variable v-curr-r-b as character no-undo .
 { gbl/waitfram.i }
 { gbl/prepnamc.i }
 { gbl/key-rec.i }
+{ cmp/ini-lib.i }
 
 define buffer g-producer for ub.clients .
 
@@ -202,10 +203,12 @@ DEFINE VARIABLE filter-point as character no-undo .
 DEFINE VARIABLE filter-point0 as character no-undo .
 DEFINE VARIABLE sort-column-name as character no-undo .
 define variable v-filter-name as character no-undo .
+DEFINE VARIABLE mphcol AS LOGICAL INITIAL NO NO-UNDO.
 
 
 { arc/gds_inf.i def }
 { gbl/fltfield.i }
+{ref/imagelist.i}
 
 
 DEFINE BUTTON b-exit AUTO-GO
@@ -467,14 +470,14 @@ define variable mypr      as character no-undo extent 8.
 define variable main-code as integer   no-undo.
 define variable v-chg-rec as recid     no-undo.
 
-define variable FI-1 as character view-as text size 80 by 1 no-undo format "x(80)":U.
-define variable FI-2 as character view-as text size 80 by 1 no-undo format "x(80)":U.
+define variable FI-1 as character view-as text size 76 by 1 no-undo format "x(80)":U.
+define variable FI-2 as character view-as text size 76 by 1 no-undo format "x(80)":U.
 define variable FI-3 as character view-as text size 45 by 1 no-undo format "x(49)":U.
-define variable FI-4 as character view-as text size 45 by 1 no-undo format "x(49)":U.
+define variable FI-4 as character view-as text size 30 by 1 no-undo format "x(49)":U.
 define variable FI-5 as character view-as text size 45 by 1 no-undo format "x(49)":U.
-define variable FI-6 as character view-as text size 45 by 1 no-undo format "x(49)":U.
+define variable FI-6 as character view-as text size 30 by 1 no-undo format "x(49)":U.
 define variable FI-7 as character view-as text size 45 by 1 no-undo format "x(49)":U.
-define variable FI-8 as character view-as text size 45 by 1 no-undo format "x(49)":U.
+define variable FI-8 as character view-as text size 20 by 1 no-undo format "x(49)":U.
 
 define variable v-obj-type as character view-as fill-in size  4 by 1 fgcolor 12 no-undo.
 define variable v-obj-code as integer   view-as fill-in size  6 by 1 fgcolor 12 no-undo.
@@ -501,6 +504,7 @@ DEFINE NEW SHARED QUERY {&BROWSE-NAME} FOR goo-doc SCROLLING.
 
 DEFINE BROWSE {&BROWSE-NAME} QUERY {&BROWSE-NAME} NO-LOCK DISPLAY
  /* mark */ get-good( buffer goo-doc, buffer gob-doc )  format "x(1)":U column-label "*"
+  (IF mphcol THEN "+":U ELSE "-":U) FORMAT "x(1)":U COLUMN-LABEL "Ф"
    ( if {1}.gds-type = {&gds-goods} then "-" else "+" ) format "x(1)":U column-label "У"
    mark-recipe format "x(1)":U column-label "Р"
   {1}.artic
@@ -543,6 +547,7 @@ DEFINE NEW SHARED QUERY {&BROWSE-NAME} FOR gob-doc {&table2} SCROLLING.
 
 DEFINE BROWSE {&BROWSE-NAME} QUERY {&BROWSE-NAME} NO-LOCK DISPLAY
   /*mark*/ get-good( buffer goo-doc, buffer gob-doc ) format "x(1)":U column-label "*"
+  (IF mphcol THEN "+":U ELSE "-":U) FORMAT "x(1)":U COLUMN-LABEL "Ф"
   gds-t format "x(1)":U column-label "У"
   mark-recipe format "x(1)":U column-label "Р"
   {1}.artic
@@ -578,6 +583,14 @@ DEFINE RECTANGLE RECT-cond
 DEFINE RECTANGLE RECT-gds-ref-fi
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
      SIZE 98 BY 4.5.
+/*DEFINE RECTANGLE RECT-image
+     EDGE-PIXELS 1 GRAPHIC-EDGE  NO-FILL
+     SIZE 16.88 /*12.75*/ /*9.63*/ BY 4.25.*/
+     
+DEFINE IMAGE g-image
+     /*FILENAME "adeicon/blank":U*/
+     STRETCH-TO-FIT RETAIN-SHAPE
+     SIZE 16.63 /*12.50*/ /*9.38*/ BY 4.17.
 
 DEFINE MENU m-ostatki
        MENU-ITEM m-ostatki-1 LABEL "Остатки по объектам"     ACCELERATOR "ALT-1"
@@ -644,6 +657,8 @@ DEFINE FRAME {&FRAME-NAME}
   fi-8 at row 19.4 col 51 No-LABEL
   rect-list at row 20.7 col 1
   rect-cond at row 20.7 col 50
+  /*rect-image AT ROW 16.22 COL 81.75 /*85.88*/ /*89*/ */
+  g-image AT ROW 16.27 COL 81.85 /*85.98*/ /*89.1*/
   "Справочник :" VIEW-AS TEXT SIZE 12 BY 1 fgcolor 4 AT ROW 20.9 COL 2
   rs-list at row 20.9 col 12 colon-aligned no-label
   "Фильтр :" VIEW-AS TEXT SIZE 9 BY 1 fgcolor 4 AT ROW 20.9 COL 51
@@ -730,7 +745,18 @@ FIND FIRST goo-doc NO-LOCK WHERE
       .
       { gbl/gdsbcode.i goo-doc.gds-code ? main-code }
     end.
-
+    IF mImagePh THEN
+    DO:
+        IF AVAILABLE goo-doc THEN
+        DO:
+            DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
+            DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
+            RUN gds-attr-value (goo-doc.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+            RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, goo-doc.gds-code, OUTPUT vImageList).
+            vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
+        END.
+        g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
+    END.
     DISPLAY
       fi-1
       fi-2
@@ -1213,6 +1239,11 @@ on choose of b-extart in frame {&FRAME-NAME} do:
   end.
 end.
 
+ON MOUSE-SELECT-DBLCLICK OF g-image IN FRAME {&FRAME-NAME}
+DO:
+    DEFINE VARIABLE v-main-code LIKE ub.bar-code.b-code NO-UNDO.
+    RUN ref/imagelist.w (parParentProc, "":U, goo-doc.gds-code, {&lookup}).
+END.
 /* ***************************  Main Block  *************************** */
 
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
@@ -1487,6 +1518,22 @@ b-sel  WHEN LOOKUP( "b-sel",  bttns ) > 0
 b-mark WHEN LOOKUP( "b-mark", bttns ) > 0
 b-extart
 WITH FRAME {&FRAME-NAME}.
+IF mImagePh THEN
+    ASSIGN
+        /* rect-image:HIDDEN  = YES
+        rect-image:VISIBLE = NO */
+        g-image:HIDDEN     = NO
+        g-image:VISIBLE    = YES
+        g-image:SENSITIVE  = YES
+        .
+ELSE
+    ASSIGN
+        /* rect-image:HIDDEN  = YES
+        rect-image:VISIBLE = NO */
+        g-image:HIDDEN     = YES
+        g-image:VISIBLE    = NO
+        g-image:SENSITIVE  = NO
+        .
 if lookup( "no-object":U, p-other, {&delim-par} ) > 0 then do:
   if v-obj-name = "":U then do:
     run proc-b-obj in this-procedure ( input "":U ).
@@ -2139,7 +2186,9 @@ FUNCTION Get-good RETURNS CHARACTER
     Notes:
 ------------------------------------------------------------------------------*/
   define variable for-last-pcnt as decimal column-label "Торг.наценка" format "->>>,>>9.99%" no-undo.
-
+  DEFINE VARIABLE vImageList AS CHARACTER  NO-UNDO.
+  DEFINE VARIABLE vCh        AS CHARACTER  NO-UNDO.
+  mphcol = NO.
 &if "{1}" = "gob-doc"  &then
     FIND FIRST loc-goods NO-LOCK WHERE
                loc-goods.artic     = loc-gds-obj.artic     AND
@@ -2176,6 +2225,11 @@ FUNCTION Get-good RETURNS CHARACTER
       unit-b = loc-goods.unit-base
       qnty-c = loc-goods.qnty-cart
     .
+    IF mImagePh THEN
+    DO:
+        RUN gds-attr-value (loc-goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+        mphcol = LENGTH (vImageList) > 0.
+    END.
 &endif
 &scop status-code string(loc-goods.stts)
     gds-n  = (if loc-goods.stts = 0 then loc-goods.gds-name else  (substring( loc-goods.gds-name, 1, 15 ) + {&space-char} + '<':U + CAPS({&gds-status-int-name}) + '>':U )).
@@ -2248,7 +2302,11 @@ FUNCTION Get-good RETURNS CHARACTER
                                             output v-assort-min          )
                                             no-error.
       if error-status :error then do: return error return-value. end.*/
-
+      IF mImagePh THEN
+      DO:
+        RUN gds-attr-value (loc-gds-obj.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+        mphcol = LENGTH (vImageList) > 0.
+      END.
     end.
     else do:
       assign
@@ -2478,45 +2536,11 @@ PROCEDURE proc-b-add-inf:
                    ) .
     end.
     WHEN "foto":U THEN DO:
-        if loc-mode = {&update} then do:
-              { gbl/chk-actg.i
-                v-cntxt-db-num
-                v-cntxt-userid
-                {&action-head-code-main}
-                'actn_reference_update_photo':U
-                {&cntxt-object}
-                v-cntxt-host-code-obj
-                v-cntxt-obj-type
-                v-cntxt-obj-code
-                0
-                goo-doc.grp-code
-                0
-                true
-                loc#log
-              }
-              if not g#log then do: return error . end.
-        end.
-        else do:
-              { gbl/chk-actg.i
-                v-cntxt-db-num
-                v-cntxt-userid
-                {&action-head-code-main}
-                'actn_reference_select_photo':U
-                {&cntxt-object}
-                v-cntxt-host-code-obj
-                v-cntxt-obj-type
-                v-cntxt-obj-code
-                0
-                goo-doc.grp-code
-                0
-                true
-                loc#log
-              }
-              if not g#log then do: return error . end.
-            end.
+
       run ref/gds-ph.p
         (input parparentproc
         ,buffer goo-doc
+		,input loc-mode
         ).
     END.
     WHEN "dop-inf-gbl":U THEN DO:

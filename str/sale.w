@@ -59,6 +59,9 @@ define variable vss-description as character no-undo initial "Главная форма инте
 { gbl/fltopend.i defproc }
 
 { str/writelog.i def "'fbr-rsrv-errors-sale.txt'" }
+{ ref/gds-attr.i }
+{ gbl/key-rec.i }
+{ cmp/ini-lib.i }
 os-delete value (search ('fbr-rsrv-errors-sale.txt')) no-error.
 
 DEFINE NEW SHARED BUFFER t-doc     FOR ub.trn-doc. /* можно было бы обойтись буфером по умолчанию t-doc, но t-doc зашито в sch-line.i */
@@ -237,6 +240,7 @@ define buffer tpsi_sale-doc for ub.sale-doc.
 { str/lib-farh.i }
 { str/saleq.i }
 
+{ref/imagelist.i}
 &scop artic-field 'artic':U
 &scop doc-code-field 'doc-code':U
 &scop prod-type-field 'prod-type':U
@@ -329,6 +333,10 @@ define buffer tpsi_sale-doc for ub.sale-doc.
 DEFINE NEW SHARED QUERY br-out FOR out-dtl, out-prt, out-goods, out-bar, out-tt0-dtl SCROLLING.
 DEFINE NEW SHARED QUERY br-ret FOR ret-dtl, ret-prt, ret-goods, ret-bar, ret-tt0-dtl SCROLLING.
 
+DEFINE IMAGE g-image
+     /*FILENAME "adeicon/blank":U*/
+     STRETCH-TO-FIT RETAIN-SHAPE
+     SIZE 11.00 BY 2.
 DEFINE BUTTON b-notes
      LABEL "П&рим":L
      SIZE 8.5 BY 1.
@@ -549,6 +557,7 @@ ink-doc.num-chk AT ROW 3 COL 84 COLON-ALIGNED label "Чеков"
 ink-doc.tot-doc AT ROW 3 COL 13 COLON-ALIGNED label "Сумма тов."
 ink-doc.discnt AT ROW 3 COL 44 COLON-ALIGNED label "Общая скидка"
 s-pc AT ROW 3 COL 65 COLON-ALIGNED no-label
+g-image AT ROW 4 COL 88.1
 for-discnt-chr AT ROW 4 COL 65 COLON-ALIGNED no-label
 FGCOLOR 4
 ink-doc.sub-discnt  AT ROW 4 COL 13 COLON-ALIGNED label "Списания"
@@ -695,6 +704,11 @@ ASSIGN b-troublp:MENU-MOUSE = 1.
 
 /* ************************  Control Triggers  ************************ */
 
+ON MOUSE-SELECT-DBLCLICK OF g-image IN FRAME {&FRAME-NAME}
+DO:
+   
+    RUN ref/imagelist.w (PARPARENTPROC, "":U, v-gds-code,{&lookup}).
+END.
 ON ENTRY OF
 br-out,
 BR-RET
@@ -1437,6 +1451,7 @@ if not bhg:available then return no-apply.
 assign
 v-prod-type = bhg:buffer-field({&prod-type-field}):buffer-value
 v-prod-code = bhg:buffer-field({&prod-code-field}):buffer-value
+v-gds-code = bhg:buffer-field({&gds-code-field}):buffer-value
 .
  FIND FIRST ub.clients where
           ub.clients.obj-type = v-prod-type
@@ -1457,6 +1472,26 @@ display
 prod-name-r
 prod-name-v
 with frame {&frame-name}.
+IF mImagePh THEN
+DO:
+    DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
+    DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
+    RUN gds-attr-value ( v-gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+    RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, v-gds-code, OUTPUT vImageList).
+    vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
+    g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
+    ASSIGN
+        g-image:HIDDEN     = NO
+        g-image:VISIBLE    = YES
+        g-image:SENSITIVE  = YES
+        .
+END.
+ELSE
+    ASSIGN
+        g-image:HIDDEN     = YES
+        g-image:VISIBLE    = NO
+        g-image:SENSITIVE  = NO
+        .
 END.
 
 ON CHOOSE OF b-arch IN FRAME {&frame-name} /* Просмотр в учетных ценах */

@@ -2950,21 +2950,23 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-gds-ref true
 &scop output-display-attr-gds-ref false
 &scop other-attr-gds-ref 'spr-ext=adm\shattr21.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-gds-ref 'logical,logical,logical,logical,logical,logical,integer,character,character,logical,logical'
+&scop prop-type-list-attr-gds-ref 'logical,logical,logical,logical,logical,logical,logical,logical,integer,integer,character,character'
 &scop prop-label-list-attr-gds-ref '~
 Разрешено добавление товаров с одинаковыми именами~
 ,Обязательное заведение ДопБК при добавлении товара~
 ,Выключение повторных ДопБК при появлении новых~
 ,Запрет повторных ДопБК для одного производителя~
 ,Запрет повторных ДопБК~
-,импортировать код ТНВЭД в карточку товара~
-,Гр.товаров по умолч.~
-,Опции копирования допинфо по товару ( при соз-дании товара копированием)~
-,Заказные поля в экране покупателя~
+,Импортировать код ТНВЭД в карточку товара~
 ,Уникальный цифровой артикул`создание доп. БК = артикулу~
 ,Разрешено создавать глобальный весовые коды~
+,Гр.товаров по умолч.~
+,Схема хранения фото~
+,Опции копирования допинфо по товару ( при соз-дании товара копированием)~
+,Заказные поля в экране покупателя~
 ,Запрещена работа с Доп-БК~
 '
+&scop prop-list-attr-gds-ref 'dif-nam1,dif-nam2,dpl-off,dif-pdbc,pbc-veto,tnvedimp,unq-artc,is-scgb,dfltggrp,shema-foto,gds-copy,gdsscrvw'
 &scop global-attr-gds-ref true
 &scop host-attr-gds-ref false
 &scop shop-attr-gds-ref false
@@ -5952,8 +5954,18 @@ end procedure.
 &scop manual-edit-attr-weight-of-pallet 1
 &scop batch-edit-attr-weight-of-pallet  1
 
-
-
+/* Изображения */
+&scop           type-attr-image-list {&type-char}
+&scop         format-attr-image-list "X(75)"
+&scop          label-attr-image-list "Изображения"
+&scop        tooltip-attr-image-list "Изображения"
+&scop  user-can-edit-attr-image-list true
+&scop output-display-attr-image-list true
+&scop          other-attr-image-list ""
+&scop           news-attr-image-list true
+&scop           copy-attr-image-list true
+&scop    manual-edit-attr-image-list 1
+&scop     batch-edit-attr-image-list 1
 
 
 /* сюда добавлять новые параметры атрибутов товаров */
@@ -6073,9 +6085,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-temp-full-code}
-
-
-
+      &scop attr-code attr-image-list
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный глобальный атрибут товара &1", p-code ).
@@ -6152,9 +6163,8 @@ do
       {&attr-temp-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-temp-code}
-
-
-
+      &scop attr-code attr-image-list
+      {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
@@ -6464,9 +6474,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-news-code}
-
-
-
+      &scop attr-code attr-image-list
+      {&attr-news-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный глобальный атрибут товара &1", p-code ).
@@ -6536,9 +6545,8 @@ procedure gds-attr-copy :
       {&attr-copy-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-copy-code}
-
-
-
+      &scop attr-code attr-image-list
+      {&attr-copy-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
@@ -6955,8 +6963,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-manual-edit-code}
-
-
+      &scop attr-code attr-image-list
+      {&attr-manual-edit-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный атрибут товара &1", p-code ).
@@ -7022,8 +7030,8 @@ do
       {&attr-batch-edit-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-batch-edit-code}
-
-
+      &scop attr-code attr-image-list
+      {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
