@@ -28,7 +28,7 @@ Creation date: 10/10/08
 DEFINE INPUT PARAMETER p-mode AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-title AS CHARACTER NO-UNDO.
 DEFINE INPUT-OUTPUT PARAMETER p-ext-obj-type AS CHARACTER .
-DEFINE INPUT-OUTPUT PARAMETER p-ext-obj-code AS integer .
+DEFINE INPUT-OUTPUT PARAMETER p-ext-obj-code AS CHARACTER .
 DEFINE OUTPUT PARAMETER p-ok AS LOGICAL NO-UNDO.
 
 /* Local Variable Definitions ---                                       */
@@ -90,10 +90,11 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-ext-obj-code AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 0
+DEFINE VARIABLE f-ext-obj-code AS character INITIAL ""
+     format "X(16)"
      LABEL "Код объекта во внешней системе"
      VIEW-AS FILL-IN
-     SIZE 10 BY 1 NO-UNDO.
+     SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE rs-ext-obj-type AS CHARACTER
      VIEW-AS RADIO-SET VERTICAL
@@ -180,7 +181,7 @@ DO:
   CASE rs-ext-obj-type:
     WHEN "+100000" THEN DO:
       ASSIGN
-      f-ext-obj-code = p-ext-obj-code + 100000.
+      f-ext-obj-code = string( integer(p-ext-obj-code) + 100000 ) no-error.
       DISPLAY
       f-ext-obj-code
       WITH FRAME {&FRAME-NAME}.
@@ -316,7 +317,7 @@ f-ext-obj-code
 .
 if p-ext-obj-type = {&stock}
 and rs-ext-obj-type = "+100000"
-and f-ext-obj-code <> p-ext-obj-code + 100000 then do:
+and f-ext-obj-code <> string ( integer(p-ext-obj-code) + 100000 ) then do:
   MESSAGE
   "Неверно определен код объекта во внешней системе" skip
   "Для склада он должен равняться номеру склада + 100000"
@@ -333,8 +334,7 @@ and f-ext-obj-code <> p-ext-obj-code then do:
   UNDO, RETURN ERROR.
 end.
 IF f-ext-obj-code = ?
-OR f-ext-obj-code = 0
-or f-ext-obj-code < 0 THEN DO:
+OR f-ext-obj-code = "" THEN DO:
   MESSAGE
   "Неверно определен код объекта во внешней системе"
   VIEW-AS ALERT-BOX ERROR.
