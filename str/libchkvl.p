@@ -2782,6 +2782,26 @@ if avail buf_bar-code then do:
       .
       /*if lookup({&amount}, for-chk-type)  = 0 and shop.discaloc then do:*/
       /*¬—≈√ƒј –ј«ћј«џ¬ј≈ћ!!!*/
+        def var v-excsum as dec no-undo.
+        FOR EACH chk-gds WHERE
+                  chk-gds.doc-code = chk-doc.doc-code AND
+                  chk-gds.line-num <= chk-discnt.line-num,
+            first t-gds where
+                  t-gds.b-code = chk-gds.b-code and
+                  t-gds.drc = recid(chk-doc):
+          find first ub.bar-code where ub.bar-code.b-code = buf_chk-gds.b-code no-error.
+          find first ub.dis-gds-rule where ub.dis-gds-rule.gds-code = ub.bar-code.gds-code and ub.dis-gds-rule.templ-rl-root = 55 no-error.
+          find first ub.clients where ub.clients.obj-type = {&prefix}obj-type and ub.clients.obj-code = {&prefix}obj-code no-error.          
+          if can-find (first ub.dis-rule no-lock where ub.dis-rule.rule-num = ub.dis-gds-rule.rule-num and
+                             ((ub.dis-rule.host-code = 0 and ub.dis-rule.obj-code = 0 and ub.dis-rule.obj-type = "")
+                          or (ub.dis-rule.host-code = ub.clients.host-code and ub.dis-rule.obj-code = 0 and ub.dis-rule.obj-type = "")
+                          or (ub.dis-rule.obj-code = {&prefix}obj-code and ub.dis-rule.obj-type = {&prefix}obj-type))
+                        ) 
+          then do:
+            v-excsum = chk-gds.src-sum + v-excsum.
+          end.
+        end.
+
         _buf_chk-gds:
         FOR EACH buf_chk-gds WHERE
                   buf_chk-gds.doc-code = buf_chk-doc.doc-code AND
@@ -2791,6 +2811,7 @@ if avail buf_bar-code then do:
             first t-gds where
                   t-gds.b-code = buf_chk-gds.b-code and
                   t-gds.drc = recid(buf_chk-doc):
+          
           if buf_chk-gds.doc-qnty = 0 then do:
             NEXT _buf_chk-gds.
           end.
@@ -2813,12 +2834,25 @@ if avail buf_bar-code then do:
           and buf_chk-gds.write-off-code > 0 then do:
             NEXT _buf_chk-gds. /*по списанным в расходе не размазываем*/
           end.
+
+          find first ub.bar-code where ub.bar-code.b-code = buf_chk-gds.b-code no-error.
+          find first ub.dis-gds-rule where ub.dis-gds-rule.gds-code = ub.bar-code.gds-code and ub.dis-gds-rule.templ-rl-root = 55 no-error.
+          find first ub.clients where ub.clients.obj-type = {&prefix}obj-type and ub.clients.obj-code = {&prefix}obj-code no-error.          
+          if can-find (first ub.dis-rule no-lock where ub.dis-rule.rule-num = ub.dis-gds-rule.rule-num and
+                             ((ub.dis-rule.host-code = 0 and ub.dis-rule.obj-code = 0 and ub.dis-rule.obj-type = "")
+                          or (ub.dis-rule.host-code = ub.clients.host-code and ub.dis-rule.obj-code = 0 and ub.dis-rule.obj-type = "")
+                          or (ub.dis-rule.obj-code = {&prefix}obj-code and ub.dis-rule.obj-type = {&prefix}obj-type))
+                        ) 
+          then do:
+            NEXT _buf_chk-gds.
+          end.
+
           assign
           str-dec = if buf0_chk-discnt.object-sum <> 0
                     then (if buf0_chk-discnt.discnt-value-pcnt = 100
                           and buf0_chk-discnt.value-type= integer({&discnt-v-pcnt})
                           then (buf_chk-gds.price-base - buf_chk-gds.discnt)
-                          else (buf_chk-gds.price-base - buf_chk-gds.discnt) * (buf0_chk-discnt.discnt-value-abs / buf0_chk-discnt.object-sum)
+                          else (buf_chk-gds.price-base - buf_chk-gds.discnt) * (buf0_chk-discnt.discnt-value-abs / buf0_chk-discnt.object-sum - v-excsum)
                           )
                     else 0
           var-gds-for-discnt = (buf_chk-gds.price-base - buf_chk-gds.discnt) * buf_chk-gds.doc-qnty
