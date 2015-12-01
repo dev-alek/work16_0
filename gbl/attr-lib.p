@@ -2822,7 +2822,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop batch-edit-attr-contr-in  0
 &scop attr-contr-in_contr-in-income_tooltip  Обязательная ссылка на договор в приходной накладной
 &scop attr-contr-in_contr-in-expense_tooltip Обязательная ссылка на договор в расходной накладной
-&scop attr-contr-in_contr-qnty-spec_tooltip  Сверять количестов в ПН по спецификации
+&scop attr-contr-in_contr-qnty-spec_tooltip  Сверять количество в ПН по спецификации
 &scop prop-tooltip-list-attr-contr-in        {&attr-contr-in_contr-in-income_tooltip},{&attr-contr-in_contr-in-expense_tooltip},{&attr-contr-in_contr-qnty-spec_tooltip}
 &scop level-way-attr-contr-in "obj,host,global"
 &scop up-way-attr-contr-in "contr-in,contr-in,contr-in"
@@ -3667,6 +3667,27 @@ logical~
 &scop level-way-attr-srv-auth-ASU "obj,host,global"
 &scop up-way-attr-srv-auth-ASU "srv-auth-ASU,srv-auth-ASU,srv-auth-ASU"
 /* pko-cli,srv-auth-adr */
+
+/* Настройки для обмена с ЕГАИС */
+&scop type-attr-egais-host            {&type-char}
+&scop format-attr-egais-host          "x(40)"
+&scop label-attr-egais-host           "Настройки для обмена с ЕГАИС"
+&scop tooltip-attr-egais-host         "Настройки для обмена с ЕГАИС"
+&scop user-can-edit-attr-egais-host   true
+&scop output-display-attr-egais-host  true
+&scop other-attr-egais-host           'spr-ext=gbl\exegais.w':U
+&scop prop-type-list-attr-egais-host  'character,integer':U
+&scop prop-label-list-attr-egais-host 'Номер ФСРАР,Номер внешней системы'
+&scop prop-list-attr-egais-host       'egais-fsrar,egais-exsys'
+&scop global-attr-egais-host false
+&scop host-attr-egais-host true
+&scop shop-attr-egais-host false
+&scop store-attr-egais-host false
+&scop db-attr-egais-host false
+/*&scop batch-edit-attr-egais-host  0*/
+&scop level-way-attr-egais-host ",host,"
+&scop up-way-attr-egais-host ",egais,"
+
 
 /* Общие параметры по АРХИВАМ */
 &scop type-attr-arh-global            {&type-char}
@@ -4647,8 +4668,6 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-images
       {&attr-temp-full-code}
-      &scop attr-code attr-code-range
-      {&attr-temp-full-code}
       &scop attr-code attr-bge-export
       {&attr-temp-full-code}
       &scop attr-code attr-auto-task
@@ -4667,8 +4686,8 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-srv-auth-ASU
       {&attr-temp-full-code}
-
-
+      &scop attr-code attr-egais-host
+      {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры атрибутов объектов TH */
       otherwise do:
@@ -4763,7 +4782,6 @@ on error undo, return error return-value
     {&attr-temp-code}
     &scop attr-code attr-ass-obj
     {&attr-temp-code}
-
     &scop attr-code attr-contr-in
     {&attr-temp-code}
     &scop attr-code attr-overval
@@ -4822,7 +4840,6 @@ on error undo, return error return-value
     {&attr-temp-code}
     &scop attr-code attr-report-firm
     {&attr-temp-code}
-
     &scop attr-code attr-images
     {&attr-temp-code}
     &scop attr-code attr-code-range
@@ -4845,8 +4862,10 @@ on error undo, return error return-value
     {&attr-temp-code}
     &scop attr-code attr-srv-auth-ASU
     {&attr-temp-code}
-    
-    /* сюда добавлять новые параметры атрибутов клиентов */
+    &scop attr-code attr-egais-host
+    {&attr-temp-code}
+
+    /* сюда добавлять новые параметры  */
     otherwise do:
       undo, return error substitute("неизвестный атрибут объекта TH &1 &2"
                                     , p-upper-code
@@ -5548,7 +5567,9 @@ on error undo, return error return-value
     {&attr-legacy-code}
     &scop attr-code attr-srv-auth-ASU
     {&attr-legacy-code}
-
+    &scop attr-code attr-egais-host
+    {&attr-legacy-code}
+    
     /* сюда добавлять новые параметры  */
     otherwise do:
       undo, return error substitute("неизвестная секция параметров TH &1"

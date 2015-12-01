@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,7 +8,7 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE TEMP-TABLE section_thbj-attr NO-UNDO LIKE ub.thbj-attr
+DEFINE TEMP-TABLE section_thbj-attr NO-UNDO LIKE thbj-attr
        field upper-prop-name as character
        field global_ as logical
        field host_ as logical
@@ -16,16 +16,16 @@ DEFINE TEMP-TABLE section_thbj-attr NO-UNDO LIKE ub.thbj-attr
        field store_ as logical
        field db_ as logical
        .
-DEFINE TEMP-TABLE X_thbj-attr LIKE ub.thbj-attr
+DEFINE TEMP-TABLE X_thbj-attr LIKE thbj-attr
        field ind1 as char
        index pi ind1
        .
-DEFINE BUFFER X_thbj-attr_2v FOR ub.thbj-attr.
-DEFINE BUFFER X_thbj-attr_v FOR ub.thbj-attr.
+DEFINE BUFFER X_thbj-attr_2v FOR thbj-attr.
+DEFINE BUFFER X_thbj-attr_v FOR thbj-attr.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -74,7 +74,7 @@ define variable add-region as character no-undo .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -90,8 +90,8 @@ define variable add-region as character no-undo .
 X_thbj-attr_v
 
 /* Definitions for BROWSE BR-2values                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-2values get-thbjattr-l-and-v( BUFFER X_thbj-attr_2v, OUTPUT v-2value) NO-LABEL v-2value NO-LABEL
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-2values
+&Scoped-define FIELDS-IN-QUERY-BR-2values get-thbjattr-l-and-v( BUFFER X_thbj-attr_2v, OUTPUT v-2value) NO-LABEL v-2value NO-LABEL   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-2values   
 &Scoped-define SELF-NAME BR-2values
 &Scoped-define QUERY-STRING-BR-2values FOR EACH X_thbj-attr_2v NO-LOCK INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-BR-2values OPEN QUERY {&SELF-NAME} FOR EACH X_thbj-attr_2v NO-LOCK INDEXED-REPOSITION.
@@ -100,8 +100,8 @@ X_thbj-attr_v
 
 
 /* Definitions for BROWSE BR-section                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-section section_thbj-attr.upper-prop-name SECTION_thbj-attr.GLOBAL_ SECTION_thbj-attr.host_ SECTION_thbj-attr.shop_ SECTION_thbj-attr.store_ SECTION_thbj-attr.db_
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-section
+&Scoped-define FIELDS-IN-QUERY-BR-section section_thbj-attr.upper-prop-name SECTION_thbj-attr.GLOBAL_ SECTION_thbj-attr.host_ SECTION_thbj-attr.shop_ SECTION_thbj-attr.store_ SECTION_thbj-attr.db_   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-section   
 &Scoped-define SELF-NAME BR-section
 &Scoped-define QUERY-STRING-BR-section FOR EACH section_thbj-attr NO-LOCK INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-BR-section OPEN QUERY {&SELF-NAME} FOR EACH section_thbj-attr NO-LOCK INDEXED-REPOSITION.
@@ -110,8 +110,8 @@ X_thbj-attr_v
 
 
 /* Definitions for BROWSE br-tree                                       */
-&Scoped-define FIELDS-IN-QUERY-br-tree get-objregion(X_thbj-attr.obj-type, X_thbj-attr.obj-code)
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-tree
+&Scoped-define FIELDS-IN-QUERY-br-tree get-objregion(X_thbj-attr.obj-type, X_thbj-attr.obj-code)   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-tree   
 &Scoped-define SELF-NAME br-tree
 &Scoped-define QUERY-STRING-br-tree FOR EACH X_thbj-attr NO-LOCK WHERE X_thbj-attr.upper-prop-code = SECTION_thbj-attr.upper-prop-code      INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-br-tree OPEN QUERY {&SELF-NAME} FOR EACH X_thbj-attr NO-LOCK WHERE X_thbj-attr.upper-prop-code = SECTION_thbj-attr.upper-prop-code      INDEXED-REPOSITION.
@@ -120,8 +120,8 @@ X_thbj-attr_v
 
 
 /* Definitions for BROWSE BR-values                                     */
-&Scoped-define FIELDS-IN-QUERY-BR-values get-thbjattr-l-and-v( BUFFER X_thbj-attr_v, OUTPUT v-value) NO-LABEL v-value NO-LABEL
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-values
+&Scoped-define FIELDS-IN-QUERY-BR-values get-thbjattr-l-and-v( BUFFER X_thbj-attr_v, OUTPUT v-value) NO-LABEL v-value NO-LABEL   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-values   
 &Scoped-define SELF-NAME BR-values
 &Scoped-define QUERY-STRING-BR-values FOR EACH X_thbj-attr_v NO-LOCK WHERE X_thbj-attr_v.prop-code > ''      INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-BR-values OPEN QUERY {&SELF-NAME} FOR EACH X_thbj-attr_v NO-LOCK WHERE X_thbj-attr_v.prop-code > ''      INDEXED-REPOSITION.
@@ -134,8 +134,8 @@ X_thbj-attr_v
     ~{&OPEN-QUERY-BR-section}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-quit B-Help I-tooltip BR-section b-copy ~
-B-add B-chg B-del B-lkp B-1 b-hist1 br-tree BR-values
+&Scoped-Define ENABLED-OBJECTS b-quit B-exp B-Help I-tooltip BR-section ~
+b-copy B-add B-chg B-del B-lkp B-1 b-hist1 br-tree BR-values BR-2values 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -146,7 +146,7 @@ B-add B-chg B-del B-lkp B-1 b-hist1 br-tree BR-values
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-thbjattr-l-and-v Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-thbjattr-l-and-v Dialog-Frame 
 FUNCTION get-thbjattr-l-and-v RETURNS CHARACTER
   ( BUFFER buf_thbj-attr FOR ub.thbj-attr
    ,OUTPUT p-value AS CHARACTER
@@ -162,73 +162,73 @@ FUNCTION get-thbjattr-l-and-v RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-DEFINE MENU MENU-B-add
-       MENU-ITEM m_db           LABEL "БД"
-       MENU-ITEM m_firm         LABEL "Фирма"
-       MENU-ITEM m_shop         LABEL "Магазин"
+DEFINE MENU MENU-B-add 
+       MENU-ITEM m_db           LABEL "БД"            
+       MENU-ITEM m_firm         LABEL "Фирма"         
+       MENU-ITEM m_shop         LABEL "Магазин"       
        MENU-ITEM m_stock        LABEL "Склад"         .
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-1
+DEFINE BUTTON B-1 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-add
-     LABEL "&Добавить"
+DEFINE BUTTON B-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-chg
-     LABEL "&Изменить"
+DEFINE BUTTON B-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-copy
-     LABEL "&Копия"
+DEFINE BUTTON b-copy 
+     LABEL "&Копия" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-del
-     LABEL "&Удалить"
+DEFINE BUTTON B-del 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-exp
-     LABEL "Экспорт в формате пакета СПН"
+DEFINE BUTTON B-exp 
+     LABEL "Экспорт в формате пакета СПН" 
      SIZE 40 BY 1.
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-hist1
-     LABEL "&История"
+DEFINE BUTTON b-hist1 
+     LABEL "&История" 
      SIZE 4 BY 1.
 
-DEFINE BUTTON B-lkp
-     LABEL "&Просмотр"
+DEFINE BUTTON B-lkp 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
 DEFINE IMAGE I-tooltip
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY 1.03.
+     SIZE 3 BY 1.04.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-2values FOR
+DEFINE QUERY BR-2values FOR 
       X_thbj-attr_2v SCROLLING.
 
-DEFINE QUERY BR-section FOR
+DEFINE QUERY BR-section FOR 
       section_thbj-attr SCROLLING.
 
-DEFINE QUERY br-tree FOR
+DEFINE QUERY br-tree FOR 
       X_thbj-attr SCROLLING.
 
-DEFINE QUERY BR-values FOR
+DEFINE QUERY BR-values FOR 
       X_thbj-attr_v SCROLLING.
 &ANALYZE-RESUME
 
@@ -240,12 +240,12 @@ DEFINE BROWSE BR-2values
 v-2value FORMAT "X(255)" WIDTH 40  NO-LABEL
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 73.5 BY 5.87 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 88 BY 6.5 FIT-LAST-COLUMN.
 
 DEFINE BROWSE BR-section
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-section Dialog-Frame _FREEFORM
   QUERY BR-section NO-LOCK DISPLAY
-      section_thbj-attr.upper-prop-name FORMAT "X(255)":U WIDTH 80 COLUMN-LABEL "Название секции"
+      section_thbj-attr.upper-prop-name FORMAT "X(255)":U WIDTH 100 COLUMN-LABEL "Название секции"
 SECTION_thbj-attr.GLOBAL_ FORMAT "+/" COLUMN-LABEL "Глоб"
 SECTION_thbj-attr.host_ FORMAT "+/" COLUMN-LABEL "Фирма"
 SECTION_thbj-attr.shop_ FORMAT "+/" COLUMN-LABEL "Маг"
@@ -253,7 +253,7 @@ SECTION_thbj-attr.store_ FORMAT "+/" COLUMN-LABEL "Скл"
 SECTION_thbj-attr.db_ FORMAT "+/" COLUMN-LABEL "БД"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 7
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 123 BY 12.25
          TITLE "Все имеющиеся в системе секции параметров".
 
 DEFINE BROWSE br-tree
@@ -262,7 +262,7 @@ DEFINE BROWSE br-tree
       get-objregion(X_thbj-attr.obj-type, X_thbj-attr.obj-code) FORMAT "X(20)" COLUMN-LABEL "Действует"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 24 BY 12.97 ROW-HEIGHT-CHARS .6 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 35 BY 14.25 ROW-HEIGHT-CHARS .75 FIT-LAST-COLUMN.
 
 DEFINE BROWSE BR-values
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-values Dialog-Frame _FREEFORM
@@ -271,8 +271,8 @@ DEFINE BROWSE BR-values
 v-value FORMAT "X(255)" WIDTH 40  NO-LABEL
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 73.5 BY 6.87
-         TITLE "Значения параметров" FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 88 BY 7.75
+         TITLE "Значения параметров" ROW-HEIGHT-CHARS .58 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -282,20 +282,20 @@ DEFINE FRAME Dialog-Frame
      B-exp AT ROW 1 COL 41 WIDGET-ID 96
      B-Help AT ROW 1 COL 95
      BR-section AT ROW 2 COL 1 WIDGET-ID 200
-     b-copy AT ROW 9 COL 1 WIDGET-ID 96
-     B-add AT ROW 9 COL 11 WIDGET-ID 98
-     B-chg AT ROW 9 COL 21 WIDGET-ID 2
-     B-del AT ROW 9 COL 31 WIDGET-ID 4
-     B-lkp AT ROW 9 COL 41 WIDGET-ID 6
-     B-1 AT ROW 9 COL 89 WIDGET-ID 94
-     b-hist1 AT ROW 9 COL 95 WIDGET-ID 100
-     br-tree AT ROW 10.27 COL 1 WIDGET-ID 300
-     BR-values AT ROW 10.27 COL 26 WIDGET-ID 400
-     BR-2values AT ROW 17.27 COL 26 WIDGET-ID 500
-     I-tooltip AT ROW 9 COL 86 WIDGET-ID 10
-     SPACE(4.20) SKIP(13.21)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     b-copy AT ROW 12.75 COL 1 WIDGET-ID 96
+     B-add AT ROW 12.75 COL 11 WIDGET-ID 98
+     B-chg AT ROW 12.75 COL 21 WIDGET-ID 2
+     B-del AT ROW 12.75 COL 31 WIDGET-ID 4
+     B-lkp AT ROW 12.75 COL 41 WIDGET-ID 6
+     B-1 AT ROW 12.75 COL 114 WIDGET-ID 94
+     b-hist1 AT ROW 12.75 COL 120 WIDGET-ID 100
+     br-tree AT ROW 14 COL 1 WIDGET-ID 300
+     BR-values AT ROW 14 COL 36 WIDGET-ID 400
+     BR-2values AT ROW 21.75 COL 36 WIDGET-ID 500
+     I-tooltip AT ROW 12.75 COL 111 WIDGET-ID 10
+     SPACE(10.37) SKIP(14.62)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE ""
          CANCEL-BUTTON b-quit.
 
@@ -315,13 +315,13 @@ DEFINE FRAME Dialog-Frame
           field shop_ as logical
           field store_ as logical
           field db_ as logical
-
+          
       END-FIELDS.
       TABLE: X_thbj-attr T "?" ? ub thbj-attr
       ADDITIONAL-FIELDS:
           field ind1 as char
           index pi ind1
-
+          
       END-FIELDS.
       TABLE: X_thbj-attr_2v B "?" ? ub thbj-attr
       TABLE: X_thbj-attr_v B "?" ? ub thbj-attr
@@ -336,15 +336,15 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB BR-section B-Help Dialog-Frame */
-/* BROWSE-TAB br-tree B-1 b-hist Dialog-Frame */
+/* BROWSE-TAB BR-section I-tooltip Dialog-Frame */
+/* BROWSE-TAB br-tree b-hist1 Dialog-Frame */
 /* BROWSE-TAB BR-values br-tree Dialog-Frame */
 /* BROWSE-TAB BR-2values BR-values Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-ASSIGN
+ASSIGN 
        B-add:POPUP-MENU IN FRAME Dialog-Frame       = MENU MENU-B-add:HANDLE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -401,7 +401,7 @@ WHERE X_thbj-attr_v.prop-code > ''
 */  /* BROWSE BR-values */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -559,6 +559,17 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-exp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exp Dialog-Frame
+ON CHOOSE OF B-exp IN FRAME Dialog-Frame /* Экспорт в формате пакета СПН */
+DO:
+  run utl/thbjexp.p ( INPUT parparentproc).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-hist1
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist1 Dialog-Frame
 ON CHOOSE OF b-hist1 IN FRAME Dialog-Frame /* История */
@@ -583,16 +594,6 @@ DEFINE VARIABLE v-rid-list AS CHARACTER no-undo.
                       ,input v-cntxt-db-num /* p-db-num */
                       ,input-output v-rid-list  ) no-error .
   END.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME B-exp
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exp Dialog-Frame
-ON CHOOSE OF B-exp IN FRAME Dialog-Frame /* Экспорт в формате пакета СПН */
-DO:
-  run utl/thbjexp.p ( INPUT parparentproc).
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -721,6 +722,7 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &Scoped-define SELF-NAME m_db
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_db Dialog-Frame
 ON CHOOSE OF MENU-ITEM m_db /* БД */
@@ -772,10 +774,11 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &Scoped-define BROWSE-NAME BR-2values
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -809,7 +812,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -828,11 +831,11 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-quit I-tooltip B-exp B-Help BR-section b-copy B-add B-chg B-del B-lkp B-1 br-tree
-         B-hist1 BR-values BR-2values
+  ENABLE b-quit B-exp B-Help I-tooltip BR-section b-copy B-add B-chg B-del 
+         B-lkp B-1 b-hist1 br-tree BR-values BR-2values 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -841,7 +844,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-section Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-section Dialog-Frame 
 PROCEDURE fill-section :
 DEFINE VARIABLE v-ii AS INTEGER NO-UNDO.
 define variable v-label as character no-undo .         /*лабел атрибута */
@@ -897,7 +900,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-tt Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-tt Dialog-Frame 
 PROCEDURE init-tt :
 DEFINE INPUT PARAMETER p-upper-prop-code AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-host-code AS INTEGER NO-UNDO.
@@ -949,7 +952,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 DEFINE VARIABLE v-ii AS INTEGER NO-UNDO.
 assign
@@ -994,7 +997,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr2values Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr2values Dialog-Frame 
 PROCEDURE Openbr2values :
 DEFINE INPUT PARAMETER p-upper-prop-code AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-obj-type AS CHARACTER NO-UNDO.
@@ -1019,7 +1022,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBrtree Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBrtree Dialog-Frame 
 PROCEDURE OpenBrtree :
 DEFINE INPUT PARAMETER p-upper-prop-code AS CHARACTER NO-UNDO.
 define variable v-label as character no-undo .         /*лабел атрибута */
@@ -1069,7 +1072,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBrValues Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBrValues Dialog-Frame 
 PROCEDURE OpenBrValues :
 DEFINE INPUT PARAMETER p-upper-prop-code AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-obj-type AS CHARACTER NO-UNDO.
@@ -1095,7 +1098,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-add Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-add Dialog-Frame 
 PROCEDURE proc-add :
 DEFINE INPUT PARAMETER p-region AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-upper-prop-code AS CHARACTER NO-UNDO.
@@ -1175,7 +1178,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-copy Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-copy Dialog-Frame 
 PROCEDURE proc-b-copy :
 DEFINE INPUT PARAMETER p-upper-prop-code AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-obj-type AS CHARACTER NO-UNDO.
@@ -1316,7 +1319,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-upd-lkp Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-upd-lkp Dialog-Frame 
 PROCEDURE proc-upd-lkp :
 DEFINE INPUT PARAMETER p-mode AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-upper-prop-code AS CHARACTER NO-UNDO.
@@ -1375,7 +1378,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-thbjattr-l-and-v Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-thbjattr-l-and-v Dialog-Frame 
 FUNCTION get-thbjattr-l-and-v RETURNS CHARACTER
   ( BUFFER buf_thbj-attr FOR ub.thbj-attr
    ,OUTPUT p-value AS CHARACTER
@@ -1446,3 +1449,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
