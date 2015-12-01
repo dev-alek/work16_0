@@ -627,6 +627,7 @@ define buffer buf_clients for ub.clients.
     RS-cli-type
     sch-cli-code
     with frame {&frame-name}.
+APPLY "VALUE-changed" to RS-cli-type.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -963,6 +964,8 @@ ON VALUE-CHANGED OF RS-cli-type IN FRAME Dialog-Frame
 DO:
   assign
   RS-cli-type.
+  run proc-find-cli-code in this-procedure ( input yes, input frame {&frame-name} sch-cli-code) no-error.
+  if error-status:error then return no-apply.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1424,6 +1427,10 @@ end case.
 
 define variable l-open-query as logical   no-undo .
 
+assign
+p-cli-type = RS-cli-type
+p-cli-code = sch-cli-code
+.
 
   CASE p-mode :
     WHEN {&all}        THEN DO:
