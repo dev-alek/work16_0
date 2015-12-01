@@ -225,6 +225,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       if buf_ext-system.delivery-method = integer({&esys-dm-nnold})
       or buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail})
       or buf_ext-system.delivery-method = integer({&esys-dm-exite-edi})
+	  or buf_ext-system.whole-send-news = integer({&esys-dm-contour-edi})
       then do:
         find first buf_esys-all-attr share-lock where
                 buf_esys-all-attr.attr-code = {&attr-route-custom-pack-name}

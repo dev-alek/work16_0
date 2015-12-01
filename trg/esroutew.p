@@ -43,6 +43,11 @@ on endkey undo main-block, return error substitute("&1. endkey")
 on stop   undo main-block, return error substitute("&1. stop")
 :
 
+  if g#news and g#db-num = 0
+  then do :
+    assign ub.esys-route.esr-tbl-ord = next-value( s-news-ord, {&db-name_schema} ) . 
+  end.    
+
   if ub.esys-route.db-num = 0 and not g#news and not g#db-num  = 0
   then do:
 

@@ -124,8 +124,9 @@ if p-table-name = {&table_ord-doc} then do:
     v-mess = 'Отсылка Заказа по EDOC'.
   end.
   if v-edi-doc then do:
-    v-profile-id = 77.
-    v-mess = 'Отсылка Заказа по EDI'.
+      if v-dm-edi = integer({&esys-dm-exite-edi}) then v-profile-id = 77.
+      if v-dm-edi = integer({&esys-dm-contour-edi}) then v-profile-id = 91.
+      v-mess = 'Отсылка Заказа по EDI'.
   end.
   if available  buf_ord-doc then do:
     /* Экспорт в oxml */
@@ -154,7 +155,8 @@ if p-table-name = {&table_trn-doc} then do:
     v-mess = 'Отсылка Накладной по EDOC'.
   end.
   if v-edi-doc then do:
-    v-profile-id = 77.
+    if v-dm-edi = integer({&esys-dm-exite-edi}) then v-profile-id = 77.
+    if v-dm-edi = integer({&esys-dm-contour-edi}) then v-profile-id = 91.
     v-mess = 'Отсылка Накладной по EDI'.
   end.
   if available  buf_trn-doc then do:

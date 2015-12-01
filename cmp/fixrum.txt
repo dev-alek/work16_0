@@ -24404,5 +24404,5 @@ assign v-view-log = yes
 "commanddeleterp-rule-param5422102041p-ass-izd-del12055"
 "commanddeleterp-rule-param5422102041p-ass-izd-spec12056"
 "ruledictruledict012057"
-"<num-fields>" "8" "<entry-type>" "" "<documentation>" "v15_1.70" "<entry-id>" "0" "<script-nl>" "" "<script-al>" "" "<language>" "ABL" "<whole-send-news>" "0" "<uniq-key-rec>" "ruledict0" 
+"<num-fields>" "8" "<entry-type>" "" "<documentation>" "v15_1.71" "<entry-id>" "0" "<script-nl>" "" "<script-al>" "" "<language>" "ABL" "<whole-send-news>" "0" "<uniq-key-rec>" "ruledict0" 
 "**END OF PACKET**"

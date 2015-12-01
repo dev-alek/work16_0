@@ -646,6 +646,13 @@ define variable v-ext-mode as character no-undo .
               end.
 
               */
+			  if v-dm-edi = integer({&esys-dm-contour-edi})
+              then do:
+              assign
+                shar-buf_ord-doc.ord-int1 = integer({&edi-ordrsp-sts})
+              .
+              end.
+
               assign
               shar-buf_ord-doc.status_ = {&ord-rcv}
               .

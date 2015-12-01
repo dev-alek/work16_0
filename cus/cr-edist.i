@@ -42,11 +42,13 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob edist_vat-change-full 'НДС':U
 &glob edist_qnty-up 'qnty-up':U
 &glob edist_qnty-up-full 'Кол-во':U
-&glob edist_qnty-down 'qnty-up':U
+&glob edist_qnty-down 'qnty-down':U
 &glob edist_qnty-down-full 'Кол-во':U
 &glob edist_bstr-change 'bstr-change':U
 &glob edist_bstr-change-full 'Штрихкод:':U
 &glob edist_ps 'ps':U
+&glob edist_info 'info':U
+&glob edist_info-full 'Инф:':U
 &glob edist_ps-full ' ':U
 &glob edist_shipdate-change 'shipdate-change':U
 &glob edist_shipdate-change-full 'Дата отгрузки:':U
@@ -93,11 +95,14 @@ do v-ii = 1 to num-entries(p-mess, {&delim-par} ):
     when {&edist_ps} then do:
       v-dop1 =  substitute("&1 &2", {&edist_ps-full}, entry(2, v-dop, "=")).
     end.
+    when {&edist_info} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_info-full}, entry(2, v-dop, "=")).
+    end.
     when {&edist_qnty-up} then do:
       v-dop1 =  substitute("&1 &2", {&edist_qnty-up-full}, entry(2, v-dop, "=")).
     end.
     when {&edist_qnty-down} then do:
-      v-dop1 =  substitute("&1 &2", {&edist_qnty-up-full}, entry(2, v-dop, "=")).
+      v-dop1 =  substitute("&1 &2", {&edist_qnty-down-full}, entry(2, v-dop, "=")).
     end.
     when {&edist_bstr-change} then do:
       v-dop1 =  substitute("&1 &2", {&edist_bstr-change-full}, entry(2, v-dop, "=")).
@@ -110,6 +115,59 @@ do v-ii = 1 to num-entries(p-mess, {&delim-par} ):
     end.
   end case. /*case entry(1, v-dop, "="):*/
   v-mess  = v-mess + (if v-mess = '' then '' else {&space-char}) + v-dop1.
+end. /*do v-ii = 1 to num-entries(p-mess, {&delim-par} ):*/
+return v-mess.
+end function.
+
+FUNCTION cr-edist_get-error-mean returns character ( input p-mess as character):
+define variable v-ii as integer   no-undo .
+define variable v-dop as character no-undo .
+define variable v-dop1 as character no-undo .
+define variable v-mess as character no-undo .
+do v-ii = 1 to num-entries(p-mess, {&delim-par} ):
+  v-dop = entry(v-ii, p-mess, {&delim-par} ).
+  case entry(1, v-dop, "="):
+    when {&edist_pack-num} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_pack-num-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_route} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_route-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_ediinterchangeid} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_ediinterchangeid-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_price-up} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_price-up-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_price-down} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_price-up-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_vat-change} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_vat-change-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_ps} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_ps-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_info} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_info-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_qnty-up} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_qnty-up-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_qnty-down} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_qnty-down-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_bstr-change} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_bstr-change-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_shipdate-change} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_shipdate-change-full}, entry(2, v-dop, "=")).
+    end.
+    when {&edist_clioutdoc-change} then do:
+      v-dop1 =  substitute("&1 &2", {&edist_clioutdoc-change-full}, entry(2, v-dop, "=")).
+    end.
+  end case. /*case entry(1, v-dop, "="):*/
+  v-mess  = v-mess + (if v-mess = '' then '' else {&delim-par}) + v-dop1.
 end. /*do v-ii = 1 to num-entries(p-mess, {&delim-par} ):*/
 return v-mess.
 end function.

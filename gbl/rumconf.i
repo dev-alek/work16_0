@@ -20,7 +20,7 @@ Creation date: 09/12/07
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 
-&glob rum-revision  "v15_1.70"
+&glob rum-revision  "v15_1.71"
 &glob rum-md5    { cmp/fixrum.md5 }
 
 procedure check-rum-version :

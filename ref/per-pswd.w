@@ -84,10 +84,10 @@ DEFINE VARIABLE fi-screen-pass AS CHARACTER FORMAT "X(256)":U
      SIZE 11.5 BY .29
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE PSWD AS CHARACTER FORMAT "X(10)":U
+DEFINE VARIABLE PSWD AS CHARACTER FORMAT "X(24)":U
      LABEL "Пароль"
      VIEW-AS FILL-IN
-     SIZE 12 BY 1 NO-UNDO.
+     SIZE 24 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */

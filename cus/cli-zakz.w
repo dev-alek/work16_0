@@ -1974,7 +1974,9 @@ define buffer bf2_tmp#zakaz for tmp#zakaz  .
     ( first tmp#zakaz  no-lock    where
       tmp#zakaz.qnty  =  0 or
       tmp#zakaz.qnty  =  ?
-    ) then do:
+    ) 
+  and not is-edi-doc
+  then do:
 
       message "В заказе есть нерассчитанные строки . Удаляем их ? " view-as alert-box question  buttons yes-no update g#log.
        if g#log then do:
@@ -2005,7 +2007,41 @@ define buffer bf2_tmp#zakaz for tmp#zakaz  .
        else do:
          /* return no-apply. */
        end.
-    end.
+  end.
+  if not can-find
+    ( first tmp#zakaz  no-lock    where
+      tmp#zakaz.qnty  <>  0 and
+      tmp#zakaz.qnty  <>  ?
+    )
+  and is-edi-doc
+  then do :
+      message "В заказе все строки нерассчитанные. Такой заказ нельзя отправлять по EDI. Удаляем строки? " view-as alert-box question  buttons yes-no update g#log.
+       if g#log then do:
+            assign
+              ord-qnty = 0
+              ord-sum-cli = 0
+              k = 0
+              .
+            for each tmp#zakaz no-lock :
+                    if not  (tmp#zakaz.qnty = 0  or  tmp#zakaz.qnty = ? ) then do:
+                      assign
+                        k = k + 1
+                        ord-qnty = ord-qnty + tmp#zakaz.qnty
+                        ord-sum-cli = ord-sum-cli + ( tmp#zakaz.qnty * tmp#zakaz.price-cli )
+                        .
+                    end.
+                    else do:
+                        find first shar_ord-line  exclusive-lock   where
+                                    shar_ord-line.doc-code   =  loc-ord-num   and
+                                    shar_ord-line.artic      =   tmp#zakaz.artic and
+                                    shar_ord-line.prod-type  =   tmp#zakaz.prod-type and
+                                    shar_ord-line.prod-code  =   tmp#zakaz.prod-code no-error .
+                          delete shar_ord-line .
+                          delete tmp#zakaz.
+                    end.
+            end. /* foreach*/
+       end. 
+  end.  
 
    is-error = false  .
    is-em = "" .
@@ -2084,7 +2120,8 @@ define buffer bf2_tmp#zakaz for tmp#zakaz  .
           input v-transport-sum      ,
           input v-transport-vat    ,
           input  if v-err-ext then false else is-edoc-nn-doc  , /* если были ошибки то еdoc не передается */
-          input  if v-err-ext then false else is-edi-doc      ) /* если были ошибки то еdoc не передается */
+          input  if v-err-ext then false else is-edi-doc      , /* если были ошибки то еdoc не передается */
+          input v-dm-edi                                      )
           no-error .
      if error-status :error then return error return-value .
    end.

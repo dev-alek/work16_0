@@ -137,9 +137,11 @@ class Ibs.Th.Rul.route-data_:
       if valid-handle(v_libg) then do:
         run gate-clear in v_libg ( input v_dataseth, input buffer buf_temp-xml-tables:handle).
       end.
-      else do:
-        run gate-clear in v_gc ( input v_dataseth, input buffer buf_temp-xml-tables:handle) no-error .
+      else if valid-handle(v_gc) then do:
+        run gate-clear in v_gc ( input v_dataseth, input buffer buf_temp-xml-tables:handle).
       end.
+      else do :
+      end.    
     end.
   end destructor.
   method public void change-direction ( input p-direction as integer):
