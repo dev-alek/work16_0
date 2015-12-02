@@ -58,7 +58,7 @@ class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
     
     define buffer buf_ext-sys for ub.ext-system.
     
-    find first buf_ext-sys no-lock where buf_ext-sys.delivery-method = integer ({&esys-dm-egais}) no-error.
+    find first buf_ext-sys no-lock where buf_ext-sys.whole-send-news = 10 no-error.
 
     if available (buf_ext-sys) then 
     do:

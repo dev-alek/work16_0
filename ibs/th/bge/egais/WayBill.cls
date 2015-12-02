@@ -61,17 +61,17 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
   define variable v-FS-RAR as character no-undo .
 
   define temp-table tt-wb-clob-hndls no-undo
-    field num          as character label "№ EGAIS"
+    field num          as character label "№ накл."
     field wb-date      as date label "Дата"
     field shippingdate as date label "Дата поставки"
     field shippregid   as character label "ID поставщика"
-    field wb-type      as character label "Тип"
-    field trn-doc-code as character label "№ накл."
-    field wbregid      as integer   label "ID EGAIS"
+    field wb-type      as character label "Тип" format "x(10)"
+    field trn-doc-code as character label "№ накл. TH"
     field is-fact      as character label "Статус"
-    field indenty      as character
-    field is-sent      as character
+    field is-sent      as character label "Отправлена"
+    field wbregid      as integer   label "ID EGAIS"
     field list-bregid  as character
+    field indenty      as character
     index pi
     indenty 
     .
@@ -206,15 +206,15 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
               tt-wb-clob-hndls.indenty      = entry (4, buf_clob-bind.descr, {&delim-par})
               tt-wb-clob-hndls.trn-doc-code = entry (6, buf_clob-bind.descr, {&delim-par})
               tt-wb-clob-hndls.is-sent      = entry (7, buf_clob-bind.descr, {&delim-par})
-              tt-wb-clob-hndls.list-bregid  = entry (8, buf_clob-bind.descr, {&delim-par})
+              tt-wb-clob-hndls.wb-type      = "приход вн."  when entry (8, buf_clob-bind.descr, {&delim-par}) = {&TDEDT_Pri_Vnesh}
+              tt-wb-clob-hndls.list-bregid  = entry (9, buf_clob-bind.descr, {&delim-par})
             .
             assign tt-wb-clob-hndls.wbregid = integer (entry (5, buf_clob-bind.descr, {&delim-par})) no-error.
             find first buf_trn-doc where buf_trn-doc.doc-code = tt-wb-clob-hndls.trn-doc-code no-error.
             if available (buf_trn-doc)
               then tt-wb-clob-hndls.is-fact = buf_trn-doc.status_.
-              else tt-wb-clob-hndls.is-fact = buf_trn-doc.status_.
-            return buffer tt-wb-clob-hndls:handle.
           end.
+          return buffer tt-wb-clob-hndls:handle.
         end.
     end case.
     
@@ -239,22 +239,22 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     
     do trans:
     
-      os-delete "TTNAct.xml".
+      os-delete "RespTTNAct.xml".
       assign
-        inFileName = "TTNAct.xml"
+        inFileName = "RespTTNAct.xml"
       .
       
       find first tt-wb-clob-hndls no-error.
       
       if available (tt-wb-clob-hndls)
       then do:
-        output stream outstr to value ("QueryAPSingle.xml") convert target "UTF-8". 
+        output stream outstr to value ("TTNAct.xml") convert target "UTF-8". 
         
         for each buf_doc-line no-lock where buf_doc-line.doc-code = tt-wb-clob-hndls.trn-doc-code:
           
           find first buf_gds no-lock where buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type.
           find first tt-wb-gds-EG where tt-wb-gds-EG.gds-code = buf_gds.gds-code.
-          if tt-wb-gds-EG.doc-qnty <> doc-line.fact-qnty then do:
+          if tt-wb-gds-EG.doc-qnty <> buf_doc-line.fact-qnty then do:
             &scop xml-cont '<wa:Position>~
             <wa:Identity>&1</wa:Identity>~
             <wa:InformBRegId>&2</wa:InformBRegId>~
@@ -276,7 +276,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
         put stream outstr skip.
         output stream outstr close.
     
-        cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("QueryAPSingle.xml"), ConPar, inFileName).
+        cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).
         os-command value (cmd).
   
         file-info:file-name = search (inFileName).
@@ -306,7 +306,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
         else do:
           assign
             StatusErr = true
-            Msg = "Не удалось получить данные от UTM"
+            Msg = "Не удалось отправить акт на накладную в UTM"
           .
           undo, return false.
         end.
@@ -435,7 +435,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                 end.
                 if v-wait then do:
                   find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Shipper".
-                  v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.indenty + {&delim-par} + string (tt-wb-header.wbregid) + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par}.
+                  v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.indenty + {&delim-par} + string (tt-wb-header.wbregid) + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par}.
                   
                   for each tt-wb-gds-EG:
                     v-info = string(tt-wb-gds-EG.Identity) + "," + string (tt-wb-gds-EG.informbregid) + ";". 
@@ -579,10 +579,22 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
         if hNoderef:name = "wb:NUMBER" then assign tt-wb-header.num = hText:node-value.
         if hNoderef:name = "wb:Date"         then assign tt-wb-header.wb-date = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
         if hNoderef:name = "wb:ShippingDate" then assign tt-wb-header.shippingdate = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
-        if hNoderef:name = "wb:Type"         then do: 
+        if hNoderef:name = "wb:Type" then do:
           case hText:node-value :
+            when 'WBInvoiceToMe' then do:
+              assign 
+                tt-wb-header.wb-type = {&TDEDT_Pri_Vnesh}
+                tt-wb-clob-hndls.wb-type = "приход вн."
+              .
+            end.
             when 'WBInvoiceFromMe' then do:
-              assign tt-wb-header.wb-type = {&TDEDT_Pri_Vnesh}.
+              assign 
+                tt-wb-header.wb-type = {&TDEDT_Pri_Vnesh}
+                tt-wb-clob-hndls.wb-type = "приход вн."
+              .
+            end.
+            otherwise do:
+              assign tt-wb-header.wb-type = ?.
             end.
           end case.
         end.
@@ -649,21 +661,20 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
       Msg = "Не найдена накладная с идентификатором " + inWbIndenty.
       StatusErr = true.
     end.
-    
     run ibs/th/bge/egais/AdapteeEGAISProcOra-i516.p
       (
       input table tt-wb-header,
       input table tt-wb-gds-EG,
       input User_Id,
       output trn-doc-code
-      ) .
-    
-    entry (6, buf_clob-bind.descr, {&delim-par}) = trn-doc-code.
-    
+      ) no-error.
     if error-status:error then do:
       Msg = return-value.
       StatusErr = true.
+      return.
     end.
+    entry (6, buf_clob-bind.descr, {&delim-par}) = trn-doc-code.
+    GetHndlTable ({&wb-clob}, '').    
     
   end.
 

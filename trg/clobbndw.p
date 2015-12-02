@@ -53,40 +53,42 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     end.
     if ub.clob-bind.resource-type = {&lob-res-gate}
     or new(ub.clob-bind) then do:
-    { gbl/curdburt.i
-      ub.clob-bind.user-db-num
-      ub.clob-bind.user-name
-      ub.clob-bind.sys-date
-      ub.clob-bind.sys-time
-      ub.clob-bind.sys-time-int
-    }
+      { gbl/curdburt.i
+        ub.clob-bind.user-db-num
+        ub.clob-bind.user-name
+        ub.clob-bind.sys-date
+        ub.clob-bind.sys-time
+        ub.clob-bind.sys-time-int
+      }
     end.
     if not g#news then do:
       v-call-handle = this-procedure:instantiating-procedure.
-      if lookup("cb_set-send-nws", v-call-handle:internal-entries) > 0 then do:
+      if valid-handle (v-call-handle) and lookup("cb_set-send-nws", v-call-handle:internal-entries) > 0 then do:
         run cb_set-send-nws in v-call-handle ( output v-send) .
       end.
       else do:
         v-send = yes.
       end.
+      if ub.clob-bind.resource-type = {&lob-egais-wb} 
+        then v-send = false.
       if v-send then do:
-      run str/callnews.p
-        (input {&table_clob-bind}
-        ,input (buffer ub.clob-bind:handle)
-        ) no-error .
-      if error-status:error then do:
-        if error-status :get-message(1) <> ""
-        then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Ошибка при вызове процедуры callnews.p" skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
+        run str/callnews.p
+          (input {&table_clob-bind}
+          ,input (buffer ub.clob-bind:handle)
+          ) no-error .
+        if error-status:error then do:
+          if error-status :get-message(1) <> ""
+          then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при вызове процедуры callnews.p" skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+          undo main-block,  return error return-value .
         end.
-        undo main-block,  return error return-value .
       end.
-   end.
    end.
    else do: /*если g#news*/
      if g#db-num = 0 then do:

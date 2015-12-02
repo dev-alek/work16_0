@@ -187,7 +187,7 @@ DO:
   egais:GetHndlTable(?, "AllWB").
   if egais:StatusErr 
   then do:
-    message "Ошибка: " egais:Msg view-as alert-box.
+    message "Ошибка: " egais:Msg view-as alert-box error.
   end.
 END.
 
@@ -204,7 +204,11 @@ DO:
   
   if RADIO-SET-1 = 1 
     then do:
-  
+    if bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value <> "нет"
+    then do:
+      message substitute ( "Накладная с № &1 уже сформирована", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
+      view-as alert-box.
+    end.
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
     bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("indenty"):buffer-value).  
@@ -233,8 +237,9 @@ DO:
     
     egais:SaveWB(bh-wb-egais:buffer-field ("indenty"):buffer-value).
     if egais:StatusErr
-      then message egais:Msg view-as alert-box.
+      then message egais:Msg view-as alert-box error.
       else message "Создание накладной завершено" view-as alert-box.
+    run refresh-query.
   end.
   else do:
     bh-wb-gds-EG = ?.
@@ -243,7 +248,7 @@ DO:
     bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("indenty"):buffer-value).
     egais:SendRequestUTM().
     if egais:StatusErr
-      then message egais:Msg view-as alert-box.
+      then message egais:Msg view-as alert-box error.
       else message "Накладная отправлена" view-as alert-box.
     
   end.
@@ -352,11 +357,12 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       y         = 42
       width     = 119
       height    = 25
-      visible   = yes
+      visible   = true
       read-only = true
-      sensitive = yes
-      separators = yes
-      column-resizable = yes
+      sensitive = true
+      separators = true
+      column-resizable = true
+      column-scrolling = true
       triggers:
         on mouse-move-dblclick persistent run msdblcl.
       end triggers
@@ -366,7 +372,6 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     do ii = 1 to bh-wb-egais:num-fields:
       bcol = browse-hdl-wb-egais:add-like-column('tt-wb-clob-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
     end.
-    browse-hdl-wb-egais:fit-last-column = true.
   end.
 
   run enable_UI.  
@@ -431,6 +436,7 @@ end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query Dialog-Frame 
 PROCEDURE refresh-query :
+
 if bh-wb-egais = ? 
   then return no-apply.
   
@@ -438,13 +444,13 @@ case RADIO-SET-1 :
     when 1  then 
     do:
       qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-clob-hndls where tt-wb-clob-hndls.trn-doc-code = '' ").
+      qh-wb-egais:query-prepare ("for each tt-wb-clob-hndls where tt-wb-clob-hndls.is-fact <> 'факт' ").
       qh-wb-egais:query-open.
     end.
     when 2  then 
     do:
       qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-clob-hndls where tt-wb-clob-hndls.trn-doc-code <> '' and  tt-wb-clob-hndls.is-sent = 'нет' and  tt-wb-clob-hndls.is-fact = 'факт' ").
+      qh-wb-egais:query-prepare ("for each tt-wb-clob-hndls where tt-wb-clob-hndls.is-sent = 'нет' and  tt-wb-clob-hndls.is-fact = 'факт' ").
       qh-wb-egais:query-open.
     end.
   end.
