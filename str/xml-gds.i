@@ -20,6 +20,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 define variable i-entry as integer no-undo .
 define buffer buf_cash-gds for cash-gds.
+define buffer buf_goods-attr for ub.goods-attr.
 
 &if "{1}" <> "7" &then
 if action = 'U':U then do:
@@ -70,19 +71,16 @@ if action = "U":U then do:
 
 
   define buffer bb_goods for ub.goods.
-  define variable hexstr as character no-undo .
+  define variable vVal as character no-undo .
+  define variable vType as character no-undo .
   if pos-type = {&cd-type-infokiosk} then do:
     find first bb_goods no-lock where bb_goods.gds-code = cash-gds.gds-code.
-    run gbl/newbase.p
-      (input cash-gds.gds-code
-      ,input 16
-      ,output HexStr
-      ).
-
+ 	find FIRST buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "image-list".
+ 	vVal = entry(1,buf_goods-attr.attr-value).    
     run bgelib-tag-put in this-procedure ( input 3, input "ItemNameLong"  , input string( bb_goods.gds-name ), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemDetails"    , input string( bb_goods.Ps ), input 1 ).
 
-    run bgelib-tag-put in this-procedure ( input 3, input "ItemPhoto"    , input string( Hexstr), input 1 ).
+    run bgelib-tag-put in this-procedure ( input 3, input "ItemPhoto"    , input string( entry(1,vVal)), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemGroupBO"  , input string( bb_goods.grp-code ), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemSizeColorCode" , input string( cash-gds.node-code), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemAttributes" , input string( bb_goods.attrib), input 1 ).

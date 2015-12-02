@@ -93,7 +93,7 @@ define variable v-cntxt-is-admin               as logical   no-undo .
 define variable g#dm-menu-handle               as handle    no-undo .
 define variable v-menu-control-number          as character no-undo.
 define variable parparentproc                  as widget-handle       no-undo.
-
+DEFINE VARIABLE fi-menu-group-name AS CHARACTER no-undo.
 define variable v-show-display-name as character format "x(46)" label "Меню" .
 define variable v-logo-image-visible    as logical      no-undo.
 
@@ -211,16 +211,14 @@ define stream sinp .
     ~{&OPEN-QUERY-br-menu-item}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS rect-db-user rect-host-obj rect-bar-code ~
-rect-image IMAGE-1 IMAGE-2 IMAGE-3 IMAGE-4 IMAGE-5 IMAGE-6 IMAGE-7 IMAGE-8 ~
-IMAGE-9 IMAGE-10 IMAGE-11 IMAGE-12 IMAGE-13 IMAGE-14 IMAGE-15 IMAGE-16 ~
-IMAGE-17 IMAGE-18 IMAGE-19 IMAGE-20 IMAGE-21 IMAGE-22 IMAGE-23 IMAGE-24 ~
-IMAGE-25 IMAGE-26 IMAGE-27 IMAGE-28 IMAGE-29 IMAGE-30 IMAGE-31 IMAGE-32 ~
-IMAGE-33 IMAGE-34 IMAGE-35 IMAGE-36 IMAGE-37 IMAGE-38 IMAGE-39 IMAGE-40 ~
-IMAGE-41 IMAGE-42 IMAGE-43 IMAGE-44 IMAGE-45 IMAGE-46 IMAGE-47 IMAGE-48 ~
-IMAGE-49 IMAGE-50 IMAGE-51 IMAGE-52 logo-image RECT-1 ed-menu-item-name ~
-b-copy br-menu-item b-show-date b-select-context fi-bar-code ~
-b-search-bar-code b-open-gds fi-menu-group-name fi-nickname fi-user-login ~
+&Scoped-Define ENABLED-OBJECTS rect-db-user rect-host-obj rect-image ~
+IMAGE-1 IMAGE-2 IMAGE-3 IMAGE-4 IMAGE-5 IMAGE-6 IMAGE-7 IMAGE-8 IMAGE-9 ~
+IMAGE-10 IMAGE-11 IMAGE-12 IMAGE-13 IMAGE-14 IMAGE-15 IMAGE-16 IMAGE-17 IMAGE-18 ~
+IMAGE-19 IMAGE-20 IMAGE-21 IMAGE-22 IMAGE-23 IMAGE-24 IMAGE-25 IMAGE-26 ~
+IMAGE-27 IMAGE-28 IMAGE-29 IMAGE-30 IMAGE-31 IMAGE-32 IMAGE-33 IMAGE-34 ~
+IMAGE-35 IMAGE-36 IMAGE-37 IMAGE-38 IMAGE-39 RECT-1 rect-host-obj-2 ~
+b-select-context ed-menu-item-name b-copy br-menu-item b-show-date ~
+b-search-bar-code fi-bar-code b-open-gds fi-nickname fi-user-login ~
 fi-obj-date fi-close-date fi-shift-date fi-shift-name fi-shift-order fi-obj ~
 fi-host fi-host-basecode-desc fi-gds-artic fi-gds-name fi-gds-qnty ~
 fi-gds-price-sale
@@ -262,43 +260,30 @@ DEFINE BUTTON b-open-gds
      LABEL "b-copy"
      SIZE 3 BY 1 TOOLTIP "Показать подробную информацию о штрих-коде".
 
-DEFINE BUTTON b-open-source
-     IMAGE-UP FILE "cmp/btn-opme.bmp":U
-     LABEL "b-copy"
-     SIZE 3 BY 1 TOOLTIP "Открыть программу в редакторе Multi-Edit".
-
-DEFINE BUTTON b-search-bar-code
+DEFINE BUTTON b-search-bar-code 
      IMAGE-UP FILE "cmp/btn-fnd.bmp":U
      LABEL "b-copy"
      SIZE 3 BY 1 TOOLTIP "Показать подробную информацию о штрих-коде".
 
-DEFINE BUTTON b-select-context
-     IMAGE-UP FILE "btn-down-arrow":U
-     IMAGE-DOWN FILE "btn-down-arrow":U
-     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
-     SIZE 3 BY 1 TOOLTIP "Выбрать фирму, объект, группу меню (Alt-F10)".
-
-DEFINE BUTTON b-show-date
+DEFINE BUTTON b-show-date 
      IMAGE-UP FILE "cmp/calend.bmp":U
      IMAGE-DOWN FILE "cmp/calend.bmp":U
      IMAGE-INSENSITIVE FILE "cmp/calend.bmp":U
-     LABEL "b-copy"
-     SIZE 2.5 BY .79 TOOLTIP "Показать дату на объекте".
+     LABEL "b-copy" 
+     SIZE 2.5 BY .67 TOOLTIP "Показать дату на объекте".
 
 DEFINE VARIABLE ed-menu-item-name AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 47 BY 2.25 NO-UNDO.
+     SIZE 57.25 BY 2.33 NO-UNDO.
 
-DEFINE VARIABLE fi-bar-code AS CHARACTER FORMAT "X(256)":U
-     LABEL "Штрих код"
-     VIEW-AS FILL-IN
-     SIZE 31 BY 1 TOOLTIP "Штрих код" NO-UNDO.
+DEFINE VARIABLE fi-bar-code AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 30.25 BY .67 TOOLTIP "Штрих код" NO-UNDO.
 
-DEFINE VARIABLE fi-close-date AS DATE FORMAT "99/99/9999":U INITIAL ?
-     LABEL "Период"
-      VIEW-AS TEXT
-     SIZE 11.5 BY .67 TOOLTIP "Дата закрытия периода на объекте"
+DEFINE VARIABLE fi-close-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "Период" 
+      VIEW-AS TEXT 
+     SIZE 10 BY .67 TOOLTIP "Дата закрытия периода на объекте"
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE fi-db-num AS CHARACTER FORMAT "X(256)":U
@@ -307,28 +292,28 @@ DEFINE VARIABLE fi-db-num AS CHARACTER FORMAT "X(256)":U
      SIZE 20 BY .67 TOOLTIP "База данных"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-gds-artic AS CHARACTER FORMAT "X(256)":U
-     LABEL "Артикул"
-      VIEW-AS TEXT
-     SIZE 33 BY .67 TOOLTIP "Артикул"
+DEFINE VARIABLE fi-gds-artic AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Артикул" 
+      VIEW-AS TEXT 
+     SIZE 32.63 BY .67 TOOLTIP "Артикул"
+     FGCOLOR 4 .
+
+DEFINE VARIABLE fi-gds-name AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Товар" 
+      VIEW-AS TEXT 
+     SIZE 34.75 BY .67 TOOLTIP "Наименование товара"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-gds-name AS CHARACTER FORMAT "X(256)":U
-     LABEL "Товар"
-      VIEW-AS TEXT
-     SIZE 36 BY .67 TOOLTIP "Наименование товара"
+DEFINE VARIABLE fi-gds-price-sale AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Цена" 
+      VIEW-AS TEXT 
+     SIZE 10 BY .67 TOOLTIP "Цена товара"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-gds-price-sale AS CHARACTER FORMAT "X(256)":U
-     LABEL "Цена"
-      VIEW-AS TEXT
-     SIZE 36 BY .67 TOOLTIP "Цена товара"
-     FGCOLOR 4  NO-UNDO.
-
-DEFINE VARIABLE fi-gds-qnty AS CHARACTER FORMAT "X(256)":U
-     LABEL "Кол-во"
-      VIEW-AS TEXT
-     SIZE 36 BY .67 TOOLTIP "Количество товара"
+DEFINE VARIABLE fi-gds-qnty AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Кол-во" 
+      VIEW-AS TEXT 
+     SIZE 10 BY .67 TOOLTIP "Количество товара"
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE fi-host AS CHARACTER FORMAT "X(256)":U
@@ -343,20 +328,15 @@ DEFINE VARIABLE fi-host-basecode-desc AS CHARACTER FORMAT "X(3)":U
      SIZE 5 BY .67 TOOLTIP "Фирма"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-host-description AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 44.5 BY 1 TOOLTIP "Фирма"
-     BGCOLOR 3 FGCOLOR 15  NO-UNDO.
+DEFINE VARIABLE fi-host-description AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 41.63 BY .67 TOOLTIP "Фирма"
+     FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE fi-menu-group-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 50 BY .67 TOOLTIP "Наименование товара"
-     FGCOLOR 4  NO-UNDO.
-
-DEFINE VARIABLE fi-nickname AS CHARACTER FORMAT "X(35)":U
-     LABEL "Псевдоним"
-      VIEW-AS TEXT
-     SIZE 33.88 BY .67
+DEFINE VARIABLE fi-nickname AS CHARACTER FORMAT "X(35)":U 
+     LABEL "Псевдоним" 
+      VIEW-AS TEXT 
+     SIZE 30.25 BY .67
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE fi-obj AS CHARACTER FORMAT "X(256)":U
@@ -371,14 +351,14 @@ DEFINE VARIABLE fi-obj-date AS DATE FORMAT "99/99/9999":U
      SIZE 11.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-obj-description AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 44.5 BY 1 TOOLTIP "Фирма"
-     BGCOLOR 3 FGCOLOR 15  NO-UNDO.
+DEFINE VARIABLE fi-obj-description AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 41.63 BY .67 TOOLTIP "Фирма"
+     FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE fi-shift-date AS CHARACTER FORMAT "X(256)":U
-     LABEL "Смена"
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-shift-date AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Смена" 
+      VIEW-AS TEXT 
      SIZE 10.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
@@ -394,247 +374,199 @@ DEFINE VARIABLE fi-shift-order AS CHARACTER FORMAT "X(256)":U
      SIZE 2.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-user-login AS CHARACTER FORMAT "X(40)":U
-     LABEL "Логин"
-      VIEW-AS TEXT
-     SIZE 36.75 BY .67 TOOLTIP "Логин"
+DEFINE VARIABLE fi-user-login AS CHARACTER FORMAT "X(40)":U 
+     LABEL "Логин" 
+      VIEW-AS TEXT 
+     SIZE 30.25 BY .67 TOOLTIP "Логин"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-user-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 44.5 BY 1 TOOLTIP "Имя"
-     BGCOLOR 3 FGCOLOR 15  NO-UNDO.
+DEFINE VARIABLE fi-user-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 41.63 BY .67 TOOLTIP "Имя"
+     FGCOLOR 1  NO-UNDO.
+
+DEFINE IMAGE b-select-context
+     FILENAME "cmp/btn-search.bmp":U
+     SIZE 7.5 BY 2.5 TOOLTIP "Выбрать фирму, объект, группу меню (Alt-F10)".
 
 DEFINE IMAGE IMAGE-1
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/btn-off.bmp":U
+     SIZE 7.5 BY 2.5.
 
 DEFINE IMAGE IMAGE-10
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/blank.bmp":U
+     SIZE 7.5 BY 2.5.
 
 DEFINE IMAGE IMAGE-11
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/blank.bmp":U
+     SIZE 7.5 BY 2.5.
 
 DEFINE IMAGE IMAGE-12
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
+     FILENAME "cmp/blank.bmp":U
+     SIZE 3 BY 1.
 DEFINE IMAGE IMAGE-13
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/blank.bmp":U
+     SIZE 3 BY 1.
 
 DEFINE IMAGE IMAGE-14
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-15
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-16
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-17
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-18
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-19
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-2
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/btn-str.bmp":U
+     SIZE 7.5 BY 2.5.
 
 DEFINE IMAGE IMAGE-20
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-21
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-22
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-23
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-24
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-25
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-26
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-27
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-28
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-29
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-3
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/btn-shp.bmp":U
+     SIZE 7.5 BY 2.5.
 
 DEFINE IMAGE IMAGE-30
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-31
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-32
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-33
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-34
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-35
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-36
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-37
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-38
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-39
-     FILENAME "adeicon/blank":U
+     FILENAME "cmp/blank.bmp":U
      SIZE 2.5 BY .75.
 
 DEFINE IMAGE IMAGE-4
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-40
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-41
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-42
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-43
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-44
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-45
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-46
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-47
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-48
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-49
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/btn-res.bmp":U
+     SIZE 7.5 BY 2.5.
 
 DEFINE IMAGE IMAGE-5
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/btn-fin.bmp":U
+     SIZE 7.5 BY 2.5.
 
-DEFINE IMAGE IMAGE-50
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-51
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE IMAGE-52
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+DEFINE IMAGE IMAGE-54
+     FILENAME "cmp/main.bmp":U TRANSPARENT
+     SIZE 108.5 BY 24.13.
 
 DEFINE IMAGE IMAGE-6
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/btn-bge.bmp":U
+     SIZE 7.5 BY 2.5.
 
 DEFINE IMAGE IMAGE-7
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/btn-adm.bmp":U
+     SIZE 7.5 BY 2.5.
 
 DEFINE IMAGE IMAGE-8
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
+     FILENAME "cmp/blank.bmp":U
+     SIZE 7.5 BY 2.5.
 
 DEFINE IMAGE IMAGE-9
-     FILENAME "adeicon/blank":U
-     SIZE 2.5 BY .75.
-
-DEFINE IMAGE logo-image
-     SIZE 46.25 BY 5.08.
+     FILENAME "cmp/blank.bmp":U
+     SIZE 7.5 BY 2.5.
 
 DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 46.5 BY 2.21.
-
-DEFINE RECTANGLE rect-bar-code
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 46.5 BY 5.25.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 46.5 BY 2.38.
 
 DEFINE RECTANGLE rect-db-user
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 46.5 BY 3.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 46.5 BY 3.42.
 
 DEFINE RECTANGLE rect-host-obj
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 46.5 BY 5.25.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 46.5 BY 4.42.
+
+DEFINE RECTANGLE rect-host-obj-2
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 46.63 BY 4.42.
 
 DEFINE RECTANGLE rect-image
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 46.5 BY 4.5.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 46.5 BY 2.46.
 
 DEFINE VARIABLE t-obj-active AS LOGICAL INITIAL no
      LABEL "Активный"
@@ -654,113 +586,98 @@ DEFINE BROWSE br-menu-item
       get-display-name(buffer temp-menu-item) @ v-show-display-name
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-LABELS NO-ROW-MARKERS SIZE 50.5 BY 16.54
-         BGCOLOR 8  FIT-LAST-COLUMN.
+    WITH NO-LABELS NO-ROW-MARKERS SIZE 60.38 BY 17.63
+         BGCOLOR 8  ROW-HEIGHT-CHARS .67 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     ed-menu-item-name AT ROW 2.33 COL 1 NO-LABEL
-     b-copy AT ROW 2.33 COL 48.5
-     b-open-source AT ROW 3.42 COL 48.5
-     br-menu-item AT ROW 4.75 COL 1
-     fi-user-name AT ROW 7.29 COL 51 COLON-ALIGNED NO-LABEL
-     b-show-date AT ROW 8.75 COL 74.5
-     t-obj-active AT ROW 11.04 COL 83.5
-     fi-obj-description AT ROW 11.83 COL 51 COLON-ALIGNED NO-LABEL
-     fi-host-description AT ROW 13.83 COL 51 COLON-ALIGNED NO-LABEL
-     b-select-context AT ROW 14.83 COL 95
-     fi-bar-code AT ROW 16.21 COL 61.5 COLON-ALIGNED
-     b-search-bar-code AT ROW 16.21 COL 95
-     b-open-gds AT ROW 17.46 COL 95.13
-     fi-menu-group-name AT ROW 1.25 COL 1 NO-LABEL
-     fi-nickname AT ROW 5.75 COL 62.13 COLON-ALIGNED WIDGET-ID 114
-     fi-user-login AT ROW 6.5 COL 58.25 COLON-ALIGNED
-     fi-obj-date AT ROW 8.75 COL 60 COLON-ALIGNED
-     fi-close-date AT ROW 8.75 COL 84 COLON-ALIGNED WIDGET-ID 120
-     fi-shift-date AT ROW 9.75 COL 60.13 COLON-ALIGNED
-     fi-shift-name AT ROW 9.75 COL 79.5 COLON-ALIGNED
-     fi-shift-order AT ROW 9.75 COL 93 COLON-ALIGNED
-     fi-obj AT ROW 11.04 COL 59.13 COLON-ALIGNED
-     fi-host AT ROW 13.04 COL 58.13 COLON-ALIGNED
-     fi-host-basecode-desc AT ROW 13.04 COL 80.75 COLON-ALIGNED
-     fi-db-num AT ROW 15.17 COL 55.13 COLON-ALIGNED
-     fi-gds-artic AT ROW 17.46 COL 59.5 COLON-ALIGNED
-     fi-gds-name AT ROW 18.46 COL 59.5 COLON-ALIGNED
-     fi-gds-qnty AT ROW 19.46 COL 59.5 COLON-ALIGNED
-     fi-gds-price-sale AT ROW 20.46 COL 59.5 COLON-ALIGNED
-     "Выбор контекста:" VIEW-AS TEXT
-          SIZE 16.38 BY .67 AT ROW 15 COL 78 WIDGET-ID 118
-     rect-db-user AT ROW 5.5 COL 52
-     rect-host-obj AT ROW 10.71 COL 52
-     rect-bar-code AT ROW 15.96 COL 52
-     rect-image AT ROW 1 COL 52
-     IMAGE-1 AT ROW 1.08 COL 52.5 WIDGET-ID 2
-     IMAGE-2 AT ROW 1.08 COL 56 WIDGET-ID 4
-     IMAGE-3 AT ROW 1.08 COL 59.5 WIDGET-ID 6
-     IMAGE-4 AT ROW 1.08 COL 63 WIDGET-ID 8
-     IMAGE-5 AT ROW 1.08 COL 66.5 WIDGET-ID 10
-     IMAGE-6 AT ROW 1.08 COL 70 WIDGET-ID 12
-     IMAGE-7 AT ROW 1.08 COL 73.5 WIDGET-ID 14
-     IMAGE-8 AT ROW 1.08 COL 77 WIDGET-ID 16
-     IMAGE-9 AT ROW 1.08 COL 80.5 WIDGET-ID 18
-     IMAGE-10 AT ROW 1.08 COL 84 WIDGET-ID 20
-     IMAGE-11 AT ROW 1.08 COL 87.5 WIDGET-ID 22
-     IMAGE-12 AT ROW 1.08 COL 91 WIDGET-ID 24
-     IMAGE-13 AT ROW 1.08 COL 94.5 WIDGET-ID 26
-     IMAGE-14 AT ROW 2.21 COL 52.5 WIDGET-ID 34
-     IMAGE-15 AT ROW 2.21 COL 56 WIDGET-ID 44
-     IMAGE-16 AT ROW 2.21 COL 59.5 WIDGET-ID 46
-     IMAGE-17 AT ROW 2.21 COL 63 WIDGET-ID 48
-     IMAGE-18 AT ROW 2.21 COL 66.5 WIDGET-ID 50
-     IMAGE-19 AT ROW 2.21 COL 70 WIDGET-ID 52
-     IMAGE-20 AT ROW 2.21 COL 73.5 WIDGET-ID 54
-     IMAGE-21 AT ROW 2.21 COL 77 WIDGET-ID 56
-     IMAGE-22 AT ROW 2.21 COL 80.5 WIDGET-ID 58
-     IMAGE-23 AT ROW 2.21 COL 84 WIDGET-ID 36
-     IMAGE-24 AT ROW 2.21 COL 87.5 WIDGET-ID 38
-     IMAGE-25 AT ROW 2.21 COL 91 WIDGET-ID 40
-     IMAGE-26 AT ROW 2.21 COL 94.5 WIDGET-ID 42
-     IMAGE-27 AT ROW 3.29 COL 52.5 WIDGET-ID 60
-     IMAGE-28 AT ROW 3.29 COL 56 WIDGET-ID 62
-     IMAGE-29 AT ROW 3.29 COL 59.5 WIDGET-ID 64
-     IMAGE-30 AT ROW 3.29 COL 63 WIDGET-ID 66
-     IMAGE-31 AT ROW 3.29 COL 66.5 WIDGET-ID 68
-     IMAGE-32 AT ROW 3.29 COL 70 WIDGET-ID 70
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
+     ed-menu-item-name AT ROW 5.04 COL 1.13 NO-LABEL
+     b-copy AT ROW 6.29 COL 58.38
+     br-menu-item AT ROW 7.5 COL 1
+     fi-user-name AT ROW 10.04 COL 61.13 COLON-ALIGNED NO-LABEL
+     b-show-date AT ROW 11.58 COL 85
+     t-obj-active AT ROW 14.13 COL 93.38
+     fi-obj-description AT ROW 15.17 COL 61.13 COLON-ALIGNED NO-LABEL
+     fi-host-description AT ROW 17.21 COL 61.13 COLON-ALIGNED NO-LABEL
+     b-search-bar-code AT ROW 18.58 COL 105.25
+     fi-bar-code AT ROW 18.75 COL 72.38 COLON-ALIGNED NO-LABEL
+     b-open-gds AT ROW 19.67 COL 105.25
+     fi-nickname AT ROW 8 COL 72.38 COLON-ALIGNED WIDGET-ID 114
+     fi-user-login AT ROW 9.04 COL 72.38 COLON-ALIGNED
+     fi-obj-date AT ROW 11.58 COL 70 COLON-ALIGNED
+     fi-close-date AT ROW 11.58 COL 95 COLON-ALIGNED WIDGET-ID 120
+     fi-shift-date AT ROW 12.63 COL 68 COLON-ALIGNED
+     fi-shift-name AT ROW 12.63 COL 89 COLON-ALIGNED
+     fi-shift-order AT ROW 12.63 COL 102.5 COLON-ALIGNED
+     fi-obj AT ROW 14.13 COL 69 COLON-ALIGNED
+     fi-host AT ROW 16.17 COL 68.13 COLON-ALIGNED
+     fi-host-basecode-desc AT ROW 16.17 COL 97.75 COLON-ALIGNED
+     fi-db-num AT ROW 17.79 COL 71.5 COLON-ALIGNED
+     fi-gds-artic AT ROW 19.75 COL 70 COLON-ALIGNED
+     fi-gds-name AT ROW 20.75 COL 68 COLON-ALIGNED
+     fi-gds-qnty AT ROW 21.79 COL 69 COLON-ALIGNED
+     fi-gds-price-sale AT ROW 21.79 COL 92.63 COLON-ALIGNED
+     "Штрих код:" VIEW-AS TEXT
+          SIZE 10.5 BY .67 AT ROW 18.75 COL 63 WIDGET-ID 130
+     rect-db-user AT ROW 7.67 COL 62
+     rect-host-obj AT ROW 13.79 COL 62
+     rect-image AT ROW 5.04 COL 62
+     IMAGE-1 AT ROW 1.79 COL 1.5 WIDGET-ID 2
+     IMAGE-2 AT ROW 1.79 COL 10 WIDGET-ID 4
+     IMAGE-3 AT ROW 1.79 COL 18.5 WIDGET-ID 6
+     IMAGE-4 AT ROW 1.79 COL 27 WIDGET-ID 8
+     IMAGE-5 AT ROW 1.79 COL 35.5 WIDGET-ID 10
+     IMAGE-6 AT ROW 1.79 COL 43.88 WIDGET-ID 12
+     IMAGE-7 AT ROW 1.79 COL 52.38 WIDGET-ID 14
+     IMAGE-8 AT ROW 1.79 COL 60.88 WIDGET-ID 16
+     IMAGE-9 AT ROW 1.79 COL 69.38 WIDGET-ID 18
+     IMAGE-10 AT ROW 1.79 COL 77.88 WIDGET-ID 20
+     IMAGE-11 AT ROW 1.79 COL 86.25 WIDGET-ID 22
+     IMAGE-12 AT ROW 5.04 COL 58.38 WIDGET-ID 24
+     IMAGE-13 AT ROW 5.04 COL 58.38 WIDGET-ID 26
+	 IMAGE-14 AT ROW 5.33 COL 63.5 WIDGET-ID 34
+     IMAGE-15 AT ROW 5.33 COL 67 WIDGET-ID 44
+     IMAGE-16 AT ROW 5.33 COL 70.5 WIDGET-ID 46
+     IMAGE-17 AT ROW 5.33 COL 74 WIDGET-ID 48
+     IMAGE-18 AT ROW 5.33 COL 77.5 WIDGET-ID 50
+     IMAGE-19 AT ROW 5.33 COL 81 WIDGET-ID 52
+     IMAGE-20 AT ROW 5.33 COL 84.5 WIDGET-ID 54
+     IMAGE-21 AT ROW 5.33 COL 88 WIDGET-ID 56
+     IMAGE-22 AT ROW 5.33 COL 91.5 WIDGET-ID 58
+     IMAGE-23 AT ROW 5.33 COL 95 WIDGET-ID 36
+     IMAGE-24 AT ROW 5.33 COL 98.5 WIDGET-ID 38
+     IMAGE-25 AT ROW 5.33 COL 102 WIDGET-ID 40
+     IMAGE-26 AT ROW 5.33 COL 105.5 WIDGET-ID 42
+     IMAGE-27 AT ROW 6.42 COL 63.5 WIDGET-ID 60
+     IMAGE-28 AT ROW 6.42 COL 67 WIDGET-ID 62
+     IMAGE-29 AT ROW 6.42 COL 70.5 WIDGET-ID 64
+     IMAGE-30 AT ROW 6.42 COL 74 WIDGET-ID 66
+     IMAGE-31 AT ROW 6.42 COL 77.5 WIDGET-ID 68
+     IMAGE-32 AT ROW 6.42 COL 81 WIDGET-ID 70
+     IMAGE-33 AT ROW 6.42 COL 84.5 WIDGET-ID 72
+     IMAGE-34 AT ROW 6.42 COL 88 WIDGET-ID 74
+     IMAGE-35 AT ROW 6.42 COL 91.5 WIDGET-ID 76
+     IMAGE-36 AT ROW 6.42 COL 95 WIDGET-ID 78
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1
-         SIZE 97.88 BY 20.29.
+         SIZE 108.5 BY 24.13.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME DEFAULT-FRAME
-     IMAGE-33 AT ROW 3.29 COL 73.5 WIDGET-ID 72
-     IMAGE-34 AT ROW 3.29 COL 77 WIDGET-ID 74
-     IMAGE-35 AT ROW 3.29 COL 80.5 WIDGET-ID 76
-     IMAGE-36 AT ROW 3.29 COL 84 WIDGET-ID 78
-     IMAGE-37 AT ROW 3.29 COL 87.5 WIDGET-ID 80
-     IMAGE-38 AT ROW 3.29 COL 91 WIDGET-ID 82
-     IMAGE-39 AT ROW 3.29 COL 94.38 WIDGET-ID 84
-     IMAGE-40 AT ROW 4.42 COL 52.5 WIDGET-ID 86
-     IMAGE-41 AT ROW 4.42 COL 56 WIDGET-ID 88
-     IMAGE-42 AT ROW 4.42 COL 59.5 WIDGET-ID 90
-     IMAGE-43 AT ROW 4.42 COL 63 WIDGET-ID 92
-     IMAGE-44 AT ROW 4.42 COL 66.5 WIDGET-ID 94
-     IMAGE-45 AT ROW 4.42 COL 70 WIDGET-ID 96
-     IMAGE-46 AT ROW 4.42 COL 73.5 WIDGET-ID 98
-     IMAGE-47 AT ROW 4.42 COL 77 WIDGET-ID 100
-     IMAGE-48 AT ROW 4.42 COL 80.5 WIDGET-ID 102
-     IMAGE-49 AT ROW 4.42 COL 84 WIDGET-ID 104
-     IMAGE-50 AT ROW 4.42 COL 87.5 WIDGET-ID 106
-     IMAGE-51 AT ROW 4.42 COL 91 WIDGET-ID 108
-     IMAGE-52 AT ROW 4.42 COL 94.38 WIDGET-ID 110
-     logo-image AT ROW 16.04 COL 52.13 WIDGET-ID 112
-     RECT-1 AT ROW 8.5 COL 52 WIDGET-ID 116
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
+     IMAGE-37 AT ROW 6.42 COL 98.5 WIDGET-ID 80
+     IMAGE-38 AT ROW 6.42 COL 102 WIDGET-ID 82
+     IMAGE-39 AT ROW 6.42 COL 105.38 WIDGET-ID 84
+     RECT-1 AT ROW 11.25 COL 62 WIDGET-ID 116
+     IMAGE-54 AT ROW 1 COL 1 WIDGET-ID 126
+     rect-host-obj-2 AT ROW 18.38 COL 62 WIDGET-ID 128
+     b-select-context AT ROW 1.79 COL 101 WIDGET-ID 132
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1
-         SIZE 97.88 BY 20.29.
+         SIZE 108.5 BY 24.13.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -778,14 +695,14 @@ DEFINE FRAME DEFAULT-FRAME
 IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
-         TITLE              = "IBS Trade House"
-         HEIGHT             = 20.46
-         WIDTH              = 97.88
-         MAX-HEIGHT         = 20.46
-         MAX-WIDTH          = 97.88
-         VIRTUAL-HEIGHT     = 20.46
-         VIRTUAL-WIDTH      = 97.88
-         RESIZE             = yes
+         TITLE              = "Trade House"
+         HEIGHT             = 24.13
+         WIDTH              = 108.25
+         MAX-HEIGHT         = 42.42
+         MAX-WIDTH          = 240
+         VIRTUAL-HEIGHT     = 42.42
+         VIRTUAL-WIDTH      = 240
+         RESIZE             = no
          SCROLL-BARS        = no
          STATUS-AREA        = no
          BGCOLOR            = ?
@@ -807,13 +724,8 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
   VISIBLE,,RUN-PERSISTENT                                               */
 /* SETTINGS FOR FRAME DEFAULT-FRAME
    FRAME-NAME                                                           */
-/* BROWSE-TAB br-menu-item b-open-source DEFAULT-FRAME */
-/* SETTINGS FOR BUTTON b-open-source IN FRAME DEFAULT-FRAME
-   NO-ENABLE                                                            */
-ASSIGN
-       b-open-source:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
-
-ASSIGN
+/* BROWSE-TAB br-menu-item b-copy DEFAULT-FRAME */
+ASSIGN 
        ed-menu-item-name:READ-ONLY IN FRAME DEFAULT-FRAME        = TRUE.
 
 /* SETTINGS FOR FILL-IN fi-bar-code IN FRAME DEFAULT-FRAME
@@ -826,19 +738,133 @@ ASSIGN
 /* SETTINGS FOR FILL-IN fi-gds-artic IN FRAME DEFAULT-FRAME
    NO-DISPLAY                                                           */
 /* SETTINGS FOR FILL-IN fi-gds-name IN FRAME DEFAULT-FRAME
-   NO-DISPLAY                                                           */
+   NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN fi-gds-price-sale IN FRAME DEFAULT-FRAME
-   NO-DISPLAY                                                           */
+   NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN fi-gds-qnty IN FRAME DEFAULT-FRAME
-   NO-DISPLAY                                                           */
+   NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN fi-host-description IN FRAME DEFAULT-FRAME
    NO-ENABLE                                                            */
-/* SETTINGS FOR FILL-IN fi-menu-group-name IN FRAME DEFAULT-FRAME
-   ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN fi-obj-description IN FRAME DEFAULT-FRAME
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN fi-user-name IN FRAME DEFAULT-FRAME
    NO-ENABLE                                                            */
+ASSIGN 
+       IMAGE-1:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-10:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-11:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-12:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-14:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-15:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-16:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-17:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-18:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-19:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-2:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-20:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-21:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-22:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-23:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-24:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-25:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-26:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-27:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-28:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-29:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-3:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-30:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-31:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-32:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-33:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-34:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-35:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-36:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-37:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-38:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-39:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-4:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-5:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+/* SETTINGS FOR IMAGE IMAGE-54 IN FRAME DEFAULT-FRAME
+   NO-ENABLE                                                            */
+ASSIGN 
+       IMAGE-6:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-7:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-8:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
+ASSIGN 
+       IMAGE-9:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+
 /* SETTINGS FOR TOGGLE-BOX t-obj-active IN FRAME DEFAULT-FRAME
    NO-ENABLE                                                            */
 IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(C-Win)
@@ -917,18 +943,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME b-open-source
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-open-source C-Win
-ON CHOOSE OF b-open-source IN FRAME DEFAULT-FRAME /* b-copy */
-DO:
-  /* для разработчиков - открыть код программы в Multiedit */
-  run menu-item-open-in-multiedit in this-procedure .
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME b-search-bar-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-search-bar-code C-Win
 ON CHOOSE OF b-search-bar-code IN FRAME DEFAULT-FRAME /* b-copy */
@@ -949,22 +963,6 @@ DO:
     ) no-error .
   apply "entry" to fi-bar-code in frame {&frame-name}.
   run search-bar-code in this-procedure .
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b-select-context
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-select-context C-Win
-ON CHOOSE OF b-select-context IN FRAME DEFAULT-FRAME
-DO:
-
-  run trigger-select-context in this-procedure no-error .
-  if error-status :error
-  then do:
-    return no-apply .
-  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1040,6 +1038,17 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-menu-item C-Win
 ON VALUE-CHANGED OF br-menu-item IN FRAME DEFAULT-FRAME
 DO:
+    define buffer buf_menu-group for ub.menu-group .    
+    find first buf_menu-group no-lock
+      where buf_menu-group.menu-code       = v-cntxt-menu-code
+        and buf_menu-group.menu-group-code = v-cntxt-menu-group-code
+      no-error .
+    if available buf_menu-group
+    then do:
+      assign
+        fi-menu-group-name = buf_menu-group.menu-group-name
+      .
+    end.  
   run menu-item-display-full-name in this-procedure .
 END.
 
@@ -1052,17 +1061,6 @@ END.
 ON RETURN OF fi-bar-code IN FRAME DEFAULT-FRAME /* Штрих код */
 DO:
   run search-bar-code in this-procedure .
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME logo-image
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL logo-image C-Win
-ON MOUSE-SELECT-CLICK OF logo-image IN FRAME DEFAULT-FRAME
-DO:
-  run logo in this-procedure.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1109,8 +1107,17 @@ on alt-shift-f5 anywhere do:
   run logo in this-procedure .
 end.
 
-on mouse-select-click, selection of rect-bar-code do:
-  run logo in this-procedure .
+/*on mouse-select-click, selection of rect-bar-code do:*/
+/*  run logo in this-procedure .                       */
+/*end.                                                 */
+on mouse-select-click, selection of
+b-select-context
+do:
+  run trigger-select-context in this-procedure no-error .
+  if error-status :error
+  then do:
+    return no-apply .
+  end.
 end.
 
 on mouse-select-click, selection of
@@ -1152,20 +1159,20 @@ IMAGE-35 ,
 IMAGE-36 ,
 IMAGE-37 ,
 IMAGE-38 ,
-IMAGE-39 ,
-IMAGE-40 ,
-IMAGE-41 ,
-IMAGE-42 ,
-IMAGE-43 ,
-IMAGE-44 ,
-IMAGE-45 ,
-IMAGE-46 ,
-IMAGE-47 ,
-IMAGE-48 ,
-IMAGE-49 ,
-IMAGE-50 ,
-IMAGE-51 ,
-IMAGE-52
+IMAGE-39 
+/*IMAGE-40 ,*/
+/*IMAGE-41 ,*/
+/*IMAGE-42 ,*/
+/*IMAGE-43 ,*/
+/*IMAGE-44 ,*/
+/*IMAGE-45 ,*/
+/*IMAGE-46 ,*/
+/*IMAGE-47 ,*/
+/*IMAGE-48 ,*/
+/*IMAGE-49 ,*/
+/*IMAGE-50 ,*/
+/*IMAGE-51 ,*/
+/*IMAGE-52  */
 do:
   run choose-image in this-procedure
     (input self :private-data
@@ -1287,19 +1294,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ) .
 
   RUN enable_UI.
-
+    image-54:move-to-bottom().
   run fill-temp-image in this-procedure .
 
-  if v-cntxt-developer = true
-  then do:
-    do with frame {&frame-name}
-    :
-      assign
-        b-open-source :visible   = true
-        b-open-source :sensitive = true
-      .
-    end.
-  end.
+/*  if v-cntxt-developer = true  */
+/*  then do:                     */
+/*    do with frame {&frame-name}*/
+/*    :                          */
+/*                               */
+/*    end.                       */
+/*  end.                         */
 
   /* создание меню окна */
   CREATE MENU MENU-BAR-handle.
@@ -3562,6 +3566,7 @@ PROCEDURE disp-static :
       assign
         fi-menu-group-name = buf_menu-group.menu-group-name
       .
+      run menu-item-display-full-name in this-procedure .
     end.
 
     if v-cntxt-level = {&cntxt-firm}
@@ -3638,7 +3643,7 @@ PROCEDURE disp-static :
     do with frame {&frame-name}
     :
       display
-        fi-menu-group-name
+        /*fi-menu-group-name*/
         /*fi-db-num*/
         fi-nickname
         fi-user-login
@@ -3660,9 +3665,9 @@ PROCEDURE disp-static :
         display
           fi-host-description
         with frame {&frame-name} .
-        if v-logo-image-visible <> yes then do:
-          run logo in this-procedure .
-        end.
+/*        if v-logo-image-visible <> yes then do:*/
+/*/*          run logo in this-procedure .*/     */
+/*        end.                                   */
       end.
 
       if v-cntxt-level = {&cntxt-firm}
@@ -3678,24 +3683,24 @@ PROCEDURE disp-static :
           fi-obj-description
           t-obj-active
         in frame {&frame-name} .
-        if v-logo-image-visible <> yes then do:
-          run logo in this-procedure .
-        end.
+/*        if v-logo-image-visible <> yes then do:*/
+/*/*          run logo in this-procedure .*/     */
+/*        end.                                   */
       end.
 
       if v-cntxt-level = {&cntxt-object}
       then do:
-        if v-logo-image-visible = yes then do:
-          hide
-            fi-bar-code
-            fi-gds-artic
-            fi-gds-name
-            fi-gds-qnty
-            fi-gds-price-sale
-            b-open-gds
-            b-search-bar-code
-          in frame {&frame-name} .
-        end.
+/*/*        if v-logo-image-visible = yes then do:*/*/
+/*          hide                                    */
+/*            fi-bar-code                           */
+/*            fi-gds-artic                          */
+/*            fi-gds-name                           */
+/*            fi-gds-qnty                           */
+/*            fi-gds-price-sale                     */
+/*            b-open-gds                            */
+/*            b-search-bar-code                     */
+/*          in frame {&frame-name} .                */
+/*/*        end.*/                                  */
         display
           fi-host
           fi-host-basecode-desc
@@ -3739,25 +3744,22 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY ed-menu-item-name fi-user-name t-obj-active fi-obj-description
-          fi-host-description fi-menu-group-name fi-nickname fi-user-login
-          fi-obj-date fi-close-date fi-shift-date fi-shift-name fi-shift-order
-          fi-obj fi-host fi-host-basecode-desc
+  DISPLAY ed-menu-item-name fi-user-name t-obj-active fi-obj-description 
+          fi-host-description fi-nickname fi-user-login fi-obj-date 
+          fi-close-date fi-shift-date fi-shift-name fi-shift-order fi-obj 
+          fi-host fi-host-basecode-desc fi-gds-artic fi-gds-name fi-gds-qnty 
+          fi-gds-price-sale 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
-  ENABLE rect-db-user rect-host-obj rect-bar-code rect-image IMAGE-1 IMAGE-2
-         IMAGE-3 IMAGE-4 IMAGE-5 IMAGE-6 IMAGE-7 IMAGE-8 IMAGE-9 IMAGE-10
-         IMAGE-11 IMAGE-12 IMAGE-13 IMAGE-14 IMAGE-15 IMAGE-16 IMAGE-17
-         IMAGE-18 IMAGE-19 IMAGE-20 IMAGE-21 IMAGE-22 IMAGE-23 IMAGE-24
-         IMAGE-25 IMAGE-26 IMAGE-27 IMAGE-28 IMAGE-29 IMAGE-30 IMAGE-31
-         IMAGE-32 IMAGE-33 IMAGE-34 IMAGE-35 IMAGE-36 IMAGE-37 IMAGE-38
-         IMAGE-39 IMAGE-40 IMAGE-41 IMAGE-42 IMAGE-43 IMAGE-44 IMAGE-45
-         IMAGE-46 IMAGE-47 IMAGE-48 IMAGE-49 IMAGE-50 IMAGE-51 IMAGE-52
-         logo-image RECT-1 ed-menu-item-name b-copy br-menu-item b-show-date
-         b-select-context fi-bar-code b-search-bar-code b-open-gds
-         fi-menu-group-name fi-nickname fi-user-login fi-obj-date fi-close-date
-         fi-shift-date fi-shift-name fi-shift-order fi-obj fi-host
-         fi-host-basecode-desc fi-gds-artic fi-gds-name fi-gds-qnty
-         fi-gds-price-sale
+  ENABLE rect-db-user rect-host-obj rect-image IMAGE-1 IMAGE-2 IMAGE-3 IMAGE-4 
+         IMAGE-5 IMAGE-6 IMAGE-7 IMAGE-8 IMAGE-9 IMAGE-10 IMAGE-11 IMAGE-12 IMAGE-13
+         IMAGE-14 IMAGE-15 IMAGE-16 IMAGE-17 IMAGE-18 IMAGE-19 IMAGE-20 
+         IMAGE-21 IMAGE-22 IMAGE-23 IMAGE-24 IMAGE-25 IMAGE-26 IMAGE-27 
+         IMAGE-28 IMAGE-29 IMAGE-30 IMAGE-31 IMAGE-32 IMAGE-33 IMAGE-34 
+         IMAGE-35 IMAGE-36 IMAGE-37 IMAGE-38 IMAGE-39 RECT-1 rect-host-obj-2 
+         b-select-context ed-menu-item-name b-copy br-menu-item b-show-date 
+         b-search-bar-code fi-bar-code b-open-gds fi-nickname fi-user-login 
+         fi-obj-date fi-close-date fi-shift-date fi-shift-name fi-shift-order 
+         fi-obj fi-host fi-host-basecode-desc fi-gds-artic 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
   VIEW C-Win.
@@ -3826,19 +3828,19 @@ PROCEDURE fill-temp-image :
       create buf_temp-image . assign buf_temp-image.image-code = 37 buf_temp-image.image-handle = image-37 :handle .
       create buf_temp-image . assign buf_temp-image.image-code = 38 buf_temp-image.image-handle = image-38 :handle .
       create buf_temp-image . assign buf_temp-image.image-code = 39 buf_temp-image.image-handle = image-39 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 40 buf_temp-image.image-handle = image-40 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 41 buf_temp-image.image-handle = image-41 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 42 buf_temp-image.image-handle = image-42 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 43 buf_temp-image.image-handle = image-43 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 44 buf_temp-image.image-handle = image-44 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 45 buf_temp-image.image-handle = image-45 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 46 buf_temp-image.image-handle = image-46 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 47 buf_temp-image.image-handle = image-47 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 48 buf_temp-image.image-handle = image-48 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 49 buf_temp-image.image-handle = image-49 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 50 buf_temp-image.image-handle = image-50 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 51 buf_temp-image.image-handle = image-51 :handle .
-      create buf_temp-image . assign buf_temp-image.image-code = 52 buf_temp-image.image-handle = image-52 :handle .
+/*      create buf_temp-image . assign buf_temp-image.image-code = 40 buf_temp-image.image-handle = image-40 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 41 buf_temp-image.image-handle = image-41 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 42 buf_temp-image.image-handle = image-42 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 43 buf_temp-image.image-handle = image-43 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 44 buf_temp-image.image-handle = image-44 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 45 buf_temp-image.image-handle = image-45 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 46 buf_temp-image.image-handle = image-46 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 47 buf_temp-image.image-handle = image-47 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 48 buf_temp-image.image-handle = image-48 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 49 buf_temp-image.image-handle = image-49 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 50 buf_temp-image.image-handle = image-50 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 51 buf_temp-image.image-handle = image-51 :handle .*/
+/*      create buf_temp-image . assign buf_temp-image.image-code = 52 buf_temp-image.image-handle = image-52 :handle .*/
     end.
 
     for each buf_temp-image
@@ -4958,53 +4960,53 @@ do with frame {&frame-name}:
   and v-cntxt-level = {&cntxt-object}
   then do:
     assign
-      v-logo-image-visible = logo-image:load-image (?)
+/*      v-logo-image-visible = logo-image:load-image (?)*/
       v-logo-image-visible = false
     .
-    logo-image:move-to-bottom().
-    rect-bar-code:move-to-top().
+/*    logo-image:move-to-bottom().*/
+/*    rect-bar-code:move-to-top().*/
   end.
   /* включить картинку */
-  else do:
-    if not v-logo-image-visible then do:
-      assign
-         v-logo-image-visible = logo-image :load-image("cmp/ith150.bmp":U)
-      .
-    end.
-    rect-bar-code:move-to-bottom().
-    logo-image:move-to-top().
-  end.
+/*  else do:                                                                */
+/*    if not v-logo-image-visible then do:                                  */
+/*      assign                                                              */
+/*         v-logo-image-visible = logo-image :load-image("cmp/ith150.gif":U)*/
+/*      .                                                                   */
+/*    end.                                                                  */
+/*/*    rect-bar-code:move-to-bottom().*/                                   */
+/*    logo-image:move-to-top().                                             */
+/*  end.                                                                    */
   /* спрятать то, что под картинкой */
-  if v-logo-image-visible then do:
-      assign
-         fi-bar-code       :visible = FALSE
-         fi-gds-artic      :visible = FALSE
-         fi-gds-name       :visible = FALSE
-         fi-gds-qnty       :visible = FALSE
-         fi-gds-price-sale :visible = FALSE
-         b-open-gds        :visible = FALSE
-         b-search-bar-code :visible = FALSE
-         fi-bar-code       :sensitive = FALSE
-         b-open-gds        :sensitive = FALSE
-         b-search-bar-code :sensitive = FALSE
-      .
-  end.
-  /* включить то, что под картинкой */
-  else do:
-      assign
-         fi-bar-code       :visible = true
-         fi-gds-artic      :visible = true
-         fi-gds-name       :visible = true
-         fi-gds-qnty       :visible = true
-         fi-gds-price-sale :visible = true
-         b-open-gds        :visible = true
-         b-search-bar-code :visible = true
-         fi-bar-code       :sensitive = true
-         b-open-gds        :sensitive = true
-         b-search-bar-code :sensitive = true
-      .
-    apply "entry" to fi-bar-code.
-  end.
+/*  if v-logo-image-visible then do:           */
+/*      assign                                 */
+/*         fi-bar-code       :visible = FALSE  */
+/*         fi-gds-artic      :visible = FALSE  */
+/*         fi-gds-name       :visible = FALSE  */
+/*         fi-gds-qnty       :visible = FALSE  */
+/*         fi-gds-price-sale :visible = FALSE  */
+/*         b-open-gds        :visible = FALSE  */
+/*         b-search-bar-code :visible = FALSE  */
+/*         fi-bar-code       :sensitive = FALSE*/
+/*         b-open-gds        :sensitive = FALSE*/
+/*         b-search-bar-code :sensitive = FALSE*/
+/*      .                                      */
+/*  end.                                       */
+/*  /* включить то, что под картинкой */       */
+/*  else do:                                   */
+/*      assign                                 */
+/*         fi-bar-code       :visible = true   */
+/*         fi-gds-artic      :visible = true   */
+/*         fi-gds-name       :visible = true   */
+/*         fi-gds-qnty       :visible = true   */
+/*         fi-gds-price-sale :visible = true   */
+/*         b-open-gds        :visible = true   */
+/*         b-search-bar-code :visible = true   */
+/*         fi-bar-code       :sensitive = true */
+/*         b-open-gds        :sensitive = true */
+/*         b-search-bar-code :sensitive = true */
+/*      .                                      */
+/*    apply "entry" to fi-bar-code.            */
+/*  end.                                       */
 end.
 END PROCEDURE. /* logo */
 
@@ -5959,14 +5961,14 @@ on error undo, return error return-value
                 ) .
             end.
         end case .
-        run mainmenu-disp-mutable in this-procedure (
-            output v-cur-date-error-code
-        ) no-error.
-        if error-status :error
-        or v-cur-date-error-code > 0
-        then do:
-            undo, return error .
-        end.
+/*        run mainmenu-disp-mutable in this-procedure (*/
+/*            output v-cur-date-error-code             */
+/*        ) no-error.                                  */
+/*        if error-status :error                       */
+/*        or v-cur-date-error-code > 0                 */
+/*        then do:                                     */
+/*            undo, return error .                     */
+/*        end.                                         */
     end.
 end.
 END PROCEDURE.
@@ -6048,12 +6050,13 @@ PROCEDURE menu-item-display-full-name :
   do
   on error undo, return error return-value
   :
+   
     if available temp-menu-item
     then do:
       do with frame {&frame-name}
       :
         assign
-          ed-menu-item-name :screen-value = temp-menu-item.full-name
+          ed-menu-item-name :screen-value = fi-menu-group-name + "/" + temp-menu-item.full-name
         .
       end.
     end.
@@ -6823,11 +6826,11 @@ PROCEDURE select-menu-group :
             assign
                 fi-menu-group-name = buf_menu-group.menu-group-name
             .
-            display
+/*            display
                 fi-menu-group-name
-            with frame {&frame-name} .
+            with frame {&frame-name} .*/
         end.
-
+        APPLY "value-changed" TO br-menu-item.
         run disp-static in this-procedure
         no-error .
         if error-status :error
@@ -7078,7 +7081,7 @@ PROCEDURE set-mainmenu-title :
       (output v-version-name
       ) .
     assign
-      v-version-name-str = substitute("ITH &1", v-version-name)
+      v-version-name-str = substitute("TH &1", v-version-name)
     .
 
     assign
@@ -7629,16 +7632,24 @@ define variable v-lamp-name as character no-undo .
         assign
           buf_temp-image.image-handle :visible = true
         .
-        buf_temp-image.image-handle :load-image(buf_temp-image.image-file-name) .
-        buf_temp-image.image-handle :width-chars  =  3 .
-        buf_temp-image.image-handle :height-chars =  1 .
+        if
+            buf_temp-image.image-handle:image <> buf_temp-image.image-file-name
+        then do:    
+            buf_temp-image.image-handle:load-image(buf_temp-image.image-file-name) .
+        end.
+        if buf_temp-image.image-code > 8 then do:
+            buf_temp-image.image-handle :width-chars  =  3 .
+            buf_temp-image.image-handle :height-chars =  1 .
+        end.
 
       end.
       else do:
+          if buf_temp-image.image-handle:image <> "" then do:         
         buf_temp-image.image-handle :load-image(?) .
         assign
           buf_temp-image.image-handle :visible = false
         .
+        end.
       end.
     end.
   end.

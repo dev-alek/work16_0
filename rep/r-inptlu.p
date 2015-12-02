@@ -74,6 +74,26 @@ define variable j_excel-row      as integer   no-undo .
 define variable j_excel-col      as integer   no-undo .
 define variable vcurr-sheet-name as character no-undo .
 
+define variable v-autoent-obj-code  like doc-attr.attr-value no-undo.
+define variable v-autoent-obj-type  like doc-attr.attr-value no-undo.
+define variable v-car-num           like doc-attr.attr-value no-undo.
+define variable v-car-vol           like doc-attr.attr-value no-undo.
+define variable v-item-pour         like doc-attr.attr-value no-undo.
+define variable v-tank-density      like doc-attr.attr-value no-undo.
+define variable v-tank-temp         like doc-attr.attr-value no-undo.
+define variable v-tank-vol          like doc-attr.attr-value no-undo.
+define variable v-tank-water        like doc-attr.attr-value no-undo.
+define variable v-tank-weight       like doc-attr.attr-value no-undo.
+define variable v-time-pour         like doc-attr.attr-value no-undo.
+define variable v-time-income       like doc-attr.attr-value no-undo.
+define variable v-time-start        like doc-attr.attr-value no-undo.
+define variable v-time-end          like doc-attr.attr-value no-undo.
+define variable v-type-inp-vat      like doc-attr.attr-value no-undo.
+define variable v-fio               like doc-attr.attr-value no-undo.
+define variable v-autoent-obj-code-dec  as integer no-undo.
+define buffer buf_doc-attr for ub.doc-attr.
+{ rep/akt-topl.i init-attr }
+
 define variable g#host-code      as integer   no-undo .
 define variable g#report-num     as integer   no-undo .
 define variable g#quest-print    as logical   no-undo initial yes .
@@ -465,27 +485,21 @@ on error undo, return error return-value
         assign
           gds-cell.price = ( tt-allsum-line.sum-dsc-rubl-acc - tt-allsum-line.transport-rubl-acc ) / bf_doc-line.fact-qnty
         .
+        
+        for each buf_doc-attr no-lock where
+                 buf_doc-attr.doc-code = bf_doc-line.doc-code:
+          case buf_doc-attr.attr-code :
+            { rep/act-ptrl.i when-doc-attr trdcattr-autoent }
+          end case. /* buf_doc-attr.attr-code */
+        end. /* for each buf_doc-attr */
+        { rep/act-ptrl.i dec autoent-obj-code }
+        assign
+            gds-cell.auto-type = v-autoent-obj-type
+          .
+        assign
+          gds-cell.auto-code = v-autoent-obj-code-dec
+        .
 
-        find first bf_doc-line-attr no-lock where
-                   bf_doc-line-attr.doc-code  = bf_doc-line.doc-code and
-                   bf_doc-line-attr.gds-code  = gds-ptrl.gds-code    and
-                   bf_doc-line-attr.attr-code = "autoent-obj-type"   no-error .
-        if available bf_doc-line-attr
-        then do:
-          assign
-            gds-cell.auto-type = bf_doc-line-attr.attr-value
-          .
-        end.
-        find first bf_doc-line-attr no-lock where
-                   bf_doc-line-attr.doc-code  = bf_doc-line.doc-code and
-                   bf_doc-line-attr.gds-code  = gds-ptrl.gds-code    and
-                   bf_doc-line-attr.attr-code = "autoent-obj-code"   no-error .
-        if available bf_doc-line-attr
-        then do:
-          assign
-            gds-cell.auto-code = integer( bf_doc-line-attr.attr-value )
-          .
-        end.
         find first bf_clients no-lock where
                    bf_clients.obj-type = gds-cell.auto-type and
                    bf_clients.obj-code = gds-cell.auto-code no-error .
@@ -1376,12 +1390,12 @@ procedure cr-gds-list :
         end.
         run gds-attr-value in this-procedure
           (  input bf_goods.gds-code
-          ,  input {&attr-is-gas}
+          ,  input {&attr-fuel-type}
           , output v_gds-attr-value
           , output v_gds-attr-type
           ) no-error .
         if not error-status :error and
-           v_gds-attr-value = 'yes':U
+           v_gds-attr-value = 'metan':U
         then do:
           assign
             l_is-gds-gas = yes

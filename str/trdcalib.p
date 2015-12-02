@@ -438,7 +438,26 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-delivery-time
       {&attr-temp-full-code}
-
+      &scop attr-code trdcattr-ptbobj
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-ptb-item-pour
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-autoent
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-car-num
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-fio-driver
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-time-income
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-inspection-cert
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-date-cert
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-condition
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-seals-condition
+      {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры */
       otherwise do:

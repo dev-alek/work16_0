@@ -2822,7 +2822,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop batch-edit-attr-contr-in  0
 &scop attr-contr-in_contr-in-income_tooltip  Обязательная ссылка на договор в приходной накладной
 &scop attr-contr-in_contr-in-expense_tooltip Обязательная ссылка на договор в расходной накладной
-&scop attr-contr-in_contr-qnty-spec_tooltip  Сверять количестов в ПН по спецификации
+&scop attr-contr-in_contr-qnty-spec_tooltip  Сверять количество в ПН по спецификации
 &scop prop-tooltip-list-attr-contr-in        {&attr-contr-in_contr-in-income_tooltip},{&attr-contr-in_contr-in-expense_tooltip},{&attr-contr-in_contr-qnty-spec_tooltip}
 &scop level-way-attr-contr-in "obj,host,global"
 &scop up-way-attr-contr-in "contr-in,contr-in,contr-in"
@@ -2950,21 +2950,23 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-gds-ref true
 &scop output-display-attr-gds-ref false
 &scop other-attr-gds-ref 'spr-ext=adm\shattr21.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-gds-ref 'logical,logical,logical,logical,logical,logical,integer,character,character,logical,logical'
+&scop prop-type-list-attr-gds-ref 'logical,logical,logical,logical,logical,logical,logical,logical,integer,integer,character,character'
 &scop prop-label-list-attr-gds-ref '~
 Разрешено добавление товаров с одинаковыми именами~
 ,Обязательное заведение ДопБК при добавлении товара~
 ,Выключение повторных ДопБК при появлении новых~
 ,Запрет повторных ДопБК для одного производителя~
 ,Запрет повторных ДопБК~
-,импортировать код ТНВЭД в карточку товара~
-,Гр.товаров по умолч.~
-,Опции копирования допинфо по товару ( при соз-дании товара копированием)~
-,Заказные поля в экране покупателя~
+,Импортировать код ТНВЭД в карточку товара~
 ,Уникальный цифровой артикул`создание доп. БК = артикулу~
 ,Разрешено создавать глобальный весовые коды~
+,Гр.товаров по умолч.~
+,Схема хранения фото~
+,Опции копирования допинфо по товару ( при соз-дании товара копированием)~
+,Заказные поля в экране покупателя~
 ,Запрещена работа с Доп-БК~
 '
+&scop prop-list-attr-gds-ref 'dif-nam1,dif-nam2,dpl-off,dif-pdbc,pbc-veto,tnvedimp,unq-artc,is-scgb,dfltggrp,shema-foto,gds-copy,gdsscrvw'
 &scop global-attr-gds-ref true
 &scop host-attr-gds-ref false
 &scop shop-attr-gds-ref false
@@ -3665,6 +3667,27 @@ logical~
 &scop level-way-attr-srv-auth-ASU "obj,host,global"
 &scop up-way-attr-srv-auth-ASU "srv-auth-ASU,srv-auth-ASU,srv-auth-ASU"
 /* pko-cli,srv-auth-adr */
+
+/* Настройки для обмена с ЕГАИС */
+&scop type-attr-egais-host            {&type-char}
+&scop format-attr-egais-host          "x(40)"
+&scop label-attr-egais-host           "Настройки для обмена с ЕГАИС"
+&scop tooltip-attr-egais-host         "Настройки для обмена с ЕГАИС"
+&scop user-can-edit-attr-egais-host   true
+&scop output-display-attr-egais-host  true
+&scop other-attr-egais-host           'spr-ext=gbl\exegais.w':U
+&scop prop-type-list-attr-egais-host  'character,integer':U
+&scop prop-label-list-attr-egais-host 'Номер ФСРАР,Номер внешней системы'
+&scop prop-list-attr-egais-host       'egais-fsrar,egais-exsys'
+&scop global-attr-egais-host false
+&scop host-attr-egais-host true
+&scop shop-attr-egais-host false
+&scop store-attr-egais-host false
+&scop db-attr-egais-host false
+/*&scop batch-edit-attr-egais-host  0*/
+&scop level-way-attr-egais-host ",host,"
+&scop up-way-attr-egais-host ",egais,"
+
 
 /* Общие параметры по АРХИВАМ */
 &scop type-attr-arh-global            {&type-char}
@@ -4645,8 +4668,6 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-images
       {&attr-temp-full-code}
-      &scop attr-code attr-code-range
-      {&attr-temp-full-code}
       &scop attr-code attr-bge-export
       {&attr-temp-full-code}
       &scop attr-code attr-auto-task
@@ -4665,8 +4686,8 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-srv-auth-ASU
       {&attr-temp-full-code}
-
-
+      &scop attr-code attr-egais-host
+      {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры атрибутов объектов TH */
       otherwise do:
@@ -4761,7 +4782,6 @@ on error undo, return error return-value
     {&attr-temp-code}
     &scop attr-code attr-ass-obj
     {&attr-temp-code}
-
     &scop attr-code attr-contr-in
     {&attr-temp-code}
     &scop attr-code attr-overval
@@ -4820,7 +4840,6 @@ on error undo, return error return-value
     {&attr-temp-code}
     &scop attr-code attr-report-firm
     {&attr-temp-code}
-
     &scop attr-code attr-images
     {&attr-temp-code}
     &scop attr-code attr-code-range
@@ -4843,8 +4862,10 @@ on error undo, return error return-value
     {&attr-temp-code}
     &scop attr-code attr-srv-auth-ASU
     {&attr-temp-code}
-    
-    /* сюда добавлять новые параметры атрибутов клиентов */
+    &scop attr-code attr-egais-host
+    {&attr-temp-code}
+
+    /* сюда добавлять новые параметры  */
     otherwise do:
       undo, return error substitute("неизвестный атрибут объекта TH &1 &2"
                                     , p-upper-code
@@ -5546,7 +5567,9 @@ on error undo, return error return-value
     {&attr-legacy-code}
     &scop attr-code attr-srv-auth-ASU
     {&attr-legacy-code}
-
+    &scop attr-code attr-egais-host
+    {&attr-legacy-code}
+    
     /* сюда добавлять новые параметры  */
     otherwise do:
       undo, return error substitute("неизвестная секция параметров TH &1"
@@ -5632,13 +5655,25 @@ end procedure.
 &scop format-attr-is-gas  "+/ "
 &scop label-attr-is-gas   "Природный газ-топливо"
 &scop tooltip-attr-is-gas   "Природный газ-топливо"
-&scop user-can-edit-attr-is-gas  true
-&scop output-display-attr-is-gas  true
+&scop user-can-edit-attr-is-gas  false
+&scop output-display-attr-is-gas  false
 &scop other-attr-is-gas  "check=gds-attr_check-ptrl-divis"
-&scop news-attr-is-gas true
-&scop copy-attr-is-gas  true
-&scop manual-edit-attr-is-gas 1
-&scop batch-edit-attr-is-gas  1
+&scop news-attr-is-gas false
+&scop copy-attr-is-gas  false
+&scop manual-edit-attr-is-gas 6
+&scop batch-edit-attr-is-gas  6
+
+&scop type-attr-fuel-type {&type-char}
+&scop format-attr-fuel-type  "X(50)"
+&scop label-attr-fuel-type   "Тип топлива"
+&scop tooltip-attr-fuel-type   "Тип топлива"
+&scop user-can-edit-attr-fuel-type  true
+&scop output-display-attr-fuel-type  true
+&scop other-attr-fuel-type  "spr-ext=ref\gds-ft.p/spr-param=fuel-type/check=gds-attr_check-ptrl-divis"
+&scop news-attr-fuel-type true
+&scop copy-attr-fuel-type  true
+&scop manual-edit-attr-fuel-type 6
+&scop batch-edit-attr-fuel-type  6
 
 &scop type-attr-ptrl-without-rvs {&type-log}
 &scop format-attr-ptrl-without-rvs  "+/ "
@@ -5649,8 +5684,8 @@ end procedure.
 &scop other-attr-ptrl-without-rvs  "check=gds-attr_check-ptrl-divis"
 &scop news-attr-ptrl-without-rvs true
 &scop copy-attr-ptrl-without-rvs  true
-&scop manual-edit-attr-ptrl-without-rvs 1
-&scop batch-edit-attr-ptrl-without-rvs  1
+&scop manual-edit-attr-ptrl-without-rvs 6
+&scop batch-edit-attr-ptrl-without-rvs  6
 
 &scop type-attr-office-type {&type-char}
 &scop format-attr-office-type  "X(50)"
@@ -5722,8 +5757,8 @@ end procedure.
 &glob other-attr-15x80  "spr-ext=ref\struct-i.w/spr-param=15x80/init=gds-attr_init-15x80"
 &glob news-attr-15x80 true
 &glob copy-attr-15x80  true
-&scop manual-edit-attr-15x80 1
-&scop batch-edit-attr-15x80  1
+&scop manual-edit-attr-15x80 5
+&scop batch-edit-attr-15x80  5
 
 &glob type-attr-8x50 {&type-char}
 &glob format-attr-8x50  "X(255)"
@@ -5734,8 +5769,8 @@ end procedure.
 &glob other-attr-8x50  "spr-ext=ref\struct-i.w/spr-param=8x50/init=gds-attr_init-8x50"
 &glob news-attr-8x50 true
 &glob copy-attr-8x50  true
-&scop manual-edit-attr-8x50 1
-&scop batch-edit-attr-8x50  1
+&scop manual-edit-attr-8x50 5
+&scop batch-edit-attr-8x50  5
 
 
 &glob type-attr-6x50 {&type-char}
@@ -5747,8 +5782,8 @@ end procedure.
 &glob other-attr-6x50  "spr-ext=ref\struct-i.w/spr-param=6x50/init=gds-attr_init-6x50"
 &glob news-attr-6x50 true
 &glob copy-attr-6x50  true
-&scop manual-edit-attr-6x50 1
-&scop batch-edit-attr-6x50  1
+&scop manual-edit-attr-6x50 5
+&scop batch-edit-attr-6x50  5
 
 &glob type-attr-calories {&type-dec}
 &glob format-attr-calories  ">,>>9.9"
@@ -5833,8 +5868,8 @@ end procedure.
 &scop other-attr-ptrl-as-good  "check=gds-attr_check-ptrl-divis"
 &scop news-attr-ptrl-as-good true
 &scop copy-attr-ptrl-as-good  true
-&scop manual-edit-attr-ptrl-as-good 1
-&scop batch-edit-attr-ptrl-as-good  1
+&scop manual-edit-attr-ptrl-as-good 6
+&scop batch-edit-attr-ptrl-as-good  6
 
 &glob type-attr-dflt-insalepr {&type-log}
 &glob format-attr-dflt-insalepr  "+/ "
@@ -5845,8 +5880,8 @@ end procedure.
 &glob other-attr-dflt-insalepr  ""
 &glob news-attr-dflt-insalepr true
 &glob copy-attr-dflt-insalepr  false
-&scop manual-edit-attr-dflt-insalepr 1
-&scop batch-edit-attr-dflt-insalepr  1
+&scop manual-edit-attr-dflt-insalepr 6
+&scop batch-edit-attr-dflt-insalepr  6
 
 /* Диапазоны плотности топлива */
 &scop type-attr-gds-ptrl-densities {&type-char}
@@ -5858,8 +5893,8 @@ end procedure.
 &scop other-attr-gds-ptrl-densities "spr=gds-attr_gds-ptrl-densities"
 &glob news-attr-gds-ptrl-densities true
 &scop copy-attr-gds-ptrl-densities  false
-&scop manual-edit-attr-gds-ptrl-densities  1
-&scop batch-edit-attr-gds-ptrl-densities  1
+&scop manual-edit-attr-gds-ptrl-densities  6
+&scop batch-edit-attr-gds-ptrl-densities  6
 
 /*длина (мм)*/
 &glob type-attr-length-of {&type-int}
@@ -5871,8 +5906,8 @@ end procedure.
 &glob other-attr-length-of  ""
 &glob news-attr-length-of true
 &glob copy-attr-length-of  true
-&scop manual-edit-attr-length-of 1
-&scop batch-edit-attr-length-of  1
+&scop manual-edit-attr-length-of 3
+&scop batch-edit-attr-length-of  3
 
 /*ширина (мм)*/
 &glob type-attr-width-of {&type-int}
@@ -5884,8 +5919,8 @@ end procedure.
 &glob other-attr-width-of  ""
 &glob news-attr-width-of true
 &glob copy-attr-width-of  true
-&scop manual-edit-attr-width-of 1
-&scop batch-edit-attr-width-of  1
+&scop manual-edit-attr-width-of 3
+&scop batch-edit-attr-width-of  3
 
 /*высота (мм)*/
 &glob type-attr-height-of {&type-int}
@@ -5897,8 +5932,8 @@ end procedure.
 &glob other-attr-height-of  ""
 &glob news-attr-height-of true
 &glob copy-attr-height-of  true
-&scop manual-edit-attr-height-of 1
-&scop batch-edit-attr-height-of  1
+&scop manual-edit-attr-height-of 3
+&scop batch-edit-attr-height-of  3
 
 /*Количество в коробке*/
 &glob type-attr-qnty-in-box {&type-int}
@@ -5910,8 +5945,8 @@ end procedure.
 &glob other-attr-qnty-in-box  ""
 &glob news-attr-qnty-in-box true
 &glob copy-attr-qnty-in-box  true
-&scop manual-edit-attr-qnty-in-box 1
-&scop batch-edit-attr-qnty-in-box  1
+&scop manual-edit-attr-qnty-in-box 4
+&scop batch-edit-attr-qnty-in-box  4
 
 /*Вес коробки (товар + коробка)*/
 &glob type-attr-weight-box {&type-dec}
@@ -5923,8 +5958,8 @@ end procedure.
 &glob other-attr-weight-box  ""
 &glob news-attr-weight-box true
 &glob copy-attr-weight-box  true
-&scop manual-edit-attr-weight-box 1
-&scop batch-edit-attr-weight-box  1
+&scop manual-edit-attr-weight-box 4
+&scop batch-edit-attr-weight-box  4
 
 /*Количество на палете*/
 &glob type-attr-qnty-on-pallet {&type-int}
@@ -5936,8 +5971,8 @@ end procedure.
 &glob other-attr-qnty-on-pallet  ""
 &glob news-attr-qnty-on-pallet true
 &glob copy-attr-qnty-on-pallet  true
-&scop manual-edit-attr-qnty-on-pallet 1
-&scop batch-edit-attr-qnty-on-pallet  1
+&scop manual-edit-attr-qnty-on-pallet 4
+&scop batch-edit-attr-qnty-on-pallet  4
 
 /*Вес палеты (товар + коробка)*/
 &glob type-attr-weight-of-pallet {&type-dec}
@@ -5952,8 +5987,18 @@ end procedure.
 &scop manual-edit-attr-weight-of-pallet 1
 &scop batch-edit-attr-weight-of-pallet  1
 
-
-
+/* Изображения */
+&scop           type-attr-image-list {&type-char}
+&scop         format-attr-image-list "X(75)"
+&scop          label-attr-image-list "Изображения"
+&scop        tooltip-attr-image-list "Изображения"
+&scop  user-can-edit-attr-image-list true
+&scop output-display-attr-image-list true
+&scop          other-attr-image-list ""
+&scop           news-attr-image-list true
+&scop           copy-attr-image-list true
+&scop    manual-edit-attr-image-list 1
+&scop     batch-edit-attr-image-list 1
 
 
 /* сюда добавлять новые параметры атрибутов товаров */
@@ -6023,8 +6068,6 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-alcohol-prod
       {&attr-temp-full-code}
-      &scop attr-code attr-is-gas
-      {&attr-temp-full-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-temp-full-code}
       &scop attr-code attr-office-type
@@ -6073,9 +6116,10 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-temp-full-code}
-
-
-
+      &scop attr-code attr-fuel-type
+      {&attr-temp-full-code}
+      &scop attr-code attr-image-list
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный глобальный атрибут товара &1", p-code ).
@@ -6101,8 +6145,6 @@ do
       &scop attr-code attr-gds-attr-lock
       {&attr-temp-code}
       &scop attr-code attr-alcohol-prod
-      {&attr-temp-code}
-      &scop attr-code attr-is-gas
       {&attr-temp-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-temp-code}
@@ -6152,9 +6194,10 @@ do
       {&attr-temp-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-temp-code}
-
-
-
+      &scop attr-code attr-fuel-type
+      {&attr-temp-code}
+      &scop attr-code attr-image-list
+      {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
@@ -6414,8 +6457,6 @@ procedure gds-attr-news :
     case p-code :
       &scop attr-code attr-alcohol-prod
       {&attr-news-code}
-      &scop attr-code attr-is-gas
-      {&attr-news-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-news-code}
       &scop attr-code attr-office-type
@@ -6464,9 +6505,11 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-news-code}
-
-
-
+      &scop attr-code attr-fuel-type
+      {&attr-news-code}
+      &scop attr-code attr-image-list
+      {&attr-news-code}
+      
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный глобальный атрибут товара &1", p-code ).
@@ -6486,8 +6529,6 @@ procedure gds-attr-copy :
     case p-code :
       &scop attr-code attr-alcohol-prod
       {&attr-copy-code}
-      &scop attr-code attr-is-gas
-      {&attr-copy-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-copy-code}
       &scop attr-code attr-office-type
@@ -6536,9 +6577,10 @@ procedure gds-attr-copy :
       {&attr-copy-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-copy-code}
-
-
-
+      &scop attr-code attr-fuel-type
+      {&attr-copy-code}
+      &scop attr-code attr-image-list
+      {&attr-copy-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
@@ -6585,11 +6627,11 @@ procedure gds-attr_check-ptrl-divis :
     end.
     if not v-is-petrolium then do:
       case p-code:
-        when {&attr-is-gas} then do:
-          assign
-            p-error-code = substitute("Товар-топливо типа ГАЗ должен иметь топливную единицу измерения")
-          .
-        end.
+/*        when {&attr-is-gas} then do:                                                                    */
+/*          assign                                                                                        */
+/*            p-error-code = substitute("Товар-топливо типа ГАЗ должен иметь топливную единицу измерения")*/
+/*          .                                                                                             */
+/*        end.                                                                                            */
         when {&attr-ptrl-without-rvs} then do:
           assign
             p-error-code = substitute("Товар-топливо не требующий сверки должен иметь топливную единицу измерения")
@@ -6605,11 +6647,11 @@ procedure gds-attr_check-ptrl-divis :
     end.
     if v-is-pieces then do:
       case p-code:
-        when {&attr-is-gas}  then do:
-          assign
-            p-error-code = substitute("Товар-топливо типа ГАЗ должен иметь дробную единицу измерения")
-          .
-        end.
+/*        when {&attr-is-gas}  then do:                                                                 */
+/*          assign                                                                                      */
+/*            p-error-code = substitute("Товар-топливо типа ГАЗ должен иметь дробную единицу измерения")*/
+/*          .                                                                                           */
+/*        end.                                                                                          */
         when {&attr-ptrl-without-rvs}  then do:
           assign
             p-error-code = substitute("Товар-топливо не требующий сверки должен иметь дробную единицу измерения")
@@ -6905,8 +6947,6 @@ do
     case p-code :
       &scop attr-code attr-alcohol-prod
       {&attr-manual-edit-code}
-      &scop attr-code attr-is-gas
-      {&attr-manual-edit-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-manual-edit-code}
       &scop attr-code attr-office-type
@@ -6955,8 +6995,10 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-manual-edit-code}
-
-
+      &scop attr-code attr-fuel-type
+      {&attr-manual-edit-code}
+      &scop attr-code attr-image-list
+      {&attr-manual-edit-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный атрибут товара &1", p-code ).
@@ -6977,8 +7019,6 @@ do
 
     case p-code :
       &scop attr-code attr-alcohol-prod
-      {&attr-batch-edit-code}
-      &scop attr-code attr-is-gas
       {&attr-batch-edit-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-batch-edit-code}
@@ -7022,8 +7062,10 @@ do
       {&attr-batch-edit-code}
       &scop attr-code attr-weight-of-pallet
       {&attr-batch-edit-code}
-
-
+      &scop attr-code attr-fuel-type
+      {&attr-batch-edit-code}
+      &scop attr-code attr-image-list
+      {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:

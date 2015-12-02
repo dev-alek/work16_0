@@ -89,7 +89,8 @@ define buffer doc-line for ub.doc-line  .
 { gbl/lineattr.i              }
 { str/prslnew.i "proc"        }
 { ref/gdsoattr.i              }
-{ str/cont-ms.i               }
+{ str/cont-ms.i}
+{ref/imagelist.i}
 
 &global-define store-type v-cntxt-obj-type
 &global-define store-code v-cntxt-obj-code
@@ -393,7 +394,7 @@ t-doc.reason-code
 &Scoped-define THIRD-ENABLED-TABLE ub.currency
 &Scoped-define FOURTH-ENABLED-TABLE ub.pay-type
 &Scoped-Define ENABLED-OBJECTS b-exit b-prev b-next b-revis b-arch ~
-b-add-doc b-cnt b-attr b-notes b-history b-print b-help ~
+b-add-doc b-cnt b-attr b-in-attr-fuel b-notes b-history b-print b-help ~
 varcontract-prn-code b-contr-lkp r-clients r-currency r-acc r-outs r-pay ~
 varpurch-code-name r-wrkr r-agnt r-boss r-sht ov-pc b-add-doc-yes m-inc ~
 r-reas a-n-c loc-art loc-name loc-code b-mark b-add b-bc b-prt b-parts ~
@@ -496,14 +497,14 @@ DEFINE BUTTON b-add
 
 DEFINE BUTTON b-add-doc
      LABEL "  ДопРасх":L
-     SIZE 10 BY 1 TOOLTIP "Документ дополнительных расходов".
+     SIZE 12 BY 1 TOOLTIP "Документ дополнительных расходов".
 
 DEFINE BUTTON b-add-doc-yes
      IMAGE-UP FILE "cmp/check.bmp":U
      IMAGE-DOWN FILE "cmp/check.bmp":U
      IMAGE-INSENSITIVE FILE "cmp/check.bmp":U NO-CONVERT-3D-COLORS
      LABEL ""
-     SIZE 2 BY .92 TOOLTIP "Есть документ дополнительных расходов".
+     SIZE 2 BY 0.9 TOOLTIP "Есть документ дополнительных расходов".
 
 DEFINE BUTTON b-arch
      LABEL "Уч&етЦены":L
@@ -512,6 +513,10 @@ DEFINE BUTTON b-arch
 DEFINE BUTTON b-attr
      LABEL "А&трибуты"
      SIZE 10 BY 1.
+
+DEFINE BUTTON b-in-attr-fuel
+     LABEL "Доп. инфо"
+     SIZE 10 BY 1 TOOLTIP "Дополнительные атрибуты по документы при приемке топлива".
 
 DEFINE BUTTON b-bc
      LABEL "&БКод":L
@@ -538,7 +543,7 @@ DEFINE BUTTON b-del
 
 DEFINE BUTTON b-exit AUTO-GO
      LABEL "&Выход":L
-     SIZE 10 BY 1.
+     SIZE 6 BY 1.
 
 DEFINE BUTTON b-help
      LABEL "Помо&щь":L
@@ -566,7 +571,7 @@ DEFINE BUTTON b-next AUTO-GO
 
 DEFINE BUTTON b-notes
      LABEL "Примечание":L
-     SIZE 11 BY 1.
+     SIZE 11.5 BY 1.
 
 DEFINE BUTTON b-parts
      LABEL "Па&рт":L
@@ -591,7 +596,7 @@ DEFINE BUTTON b-renum
 
 DEFINE BUTTON b-revis
      LABEL "С&верки"
-     SIZE 10 BY 1.
+     SIZE 8 BY 1.
 
 DEFINE BUTTON r-acc
      IMAGE-UP FILE "btn-down-arrow":U
@@ -681,51 +686,55 @@ DEFINE VARIABLE varpurch-code-name AS CHARACTER FORMAT "x(22)":U
 
 DEFINE VARIABLE agnt-name AS CHARACTER FORMAT "x(256)":U
       VIEW-AS TEXT
-     SIZE 11.5 BY 1
+     SIZE 12 BY 1
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE boss-name AS CHARACTER FORMAT "x(256)":U
       VIEW-AS TEXT
-     SIZE 11.5 BY 1
+     SIZE 12 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE loc-art AS CHARACTER FORMAT "x(16)"
-     VIEW-AS FILL-IN
-     SIZE 19.5 BY 1 TOOLTIP "Начало артикула"
+DEFINE VARIABLE loc-art AS CHARACTER FORMAT "x(16)" 
+     VIEW-AS FILL-IN 
+     SIZE 14.5 BY 1 TOOLTIP "Начало артикула"
      FGCOLOR 12  NO-UNDO.
 
-DEFINE VARIABLE loc-code AS CHARACTER FORMAT "x(13)":U
-     VIEW-AS FILL-IN
-     SIZE 19.5 BY 1 TOOLTIP "Бар-код (весь)"
+DEFINE VARIABLE loc-code AS CHARACTER FORMAT "x(13)":U 
+     VIEW-AS FILL-IN 
+     SIZE 14.5 BY 1 TOOLTIP "Бар-код (весь)"
      FGCOLOR 12  NO-UNDO.
 
-DEFINE VARIABLE loc-name AS CHARACTER FORMAT "x(40)":U
-     VIEW-AS FILL-IN
-     SIZE 19.5 BY 1 TOOLTIP "Начало названия"
+DEFINE VARIABLE loc-name AS CHARACTER FORMAT "x(40)":U 
+     VIEW-AS FILL-IN 
+     SIZE 14.5 BY 1 TOOLTIP "Начало названия"
      FGCOLOR 12  NO-UNDO.
 
 DEFINE VARIABLE ov-pc AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0
      LABEL "&%"
      VIEW-AS FILL-IN
-     SIZE 12.5 BY 1 TOOLTIP "Изменение цены поставщика: наценка, скидка" NO-UNDO.
+     SIZE 14 BY 1 TOOLTIP "Изменение цены поставщика: наценка, скидка" NO-UNDO.
 
-DEFINE VARIABLE rsn-name AS CHARACTER FORMAT "x(256)":U
-      VIEW-AS TEXT
-     SIZE 59 BY .67
+DEFINE VARIABLE rsn-name AS CHARACTER FORMAT "x(256)":U 
+      VIEW-AS TEXT 
+     SIZE 37.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE varcontract-prn-code AS CHARACTER FORMAT "X(16)"
-     LABEL "До&говор"
-     VIEW-AS FILL-IN
-     SIZE 15 BY 1
+DEFINE VARIABLE varcontract-prn-code AS CHARACTER FORMAT "X(16)" 
+     LABEL "До&говор" 
+     VIEW-AS FILL-IN 
+     SIZE 21.5 BY 1
      FGCOLOR 1  NO-UNDO.
 
 DEFINE VARIABLE wrkr-name AS CHARACTER FORMAT "x(256)":U
       VIEW-AS TEXT
-     SIZE 11.5 BY 1
+     SIZE 12 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE a-n-c AS CHARACTER
+DEFINE IMAGE g-image
+     STRETCH-TO-FIT RETAIN-SHAPE
+     SIZE 14.5 BY 3.25.
+
+DEFINE VARIABLE a-n-c AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS
           "&А", "art",
@@ -785,22 +794,22 @@ DEFINE BROWSE br-dtl
       enable {&sort-clmn_6-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl}
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH SEPARATORS SIZE 98 BY 7.83.
+    WITH SEPARATORS SIZE 107.5 BY 10.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-in-doc
      b-exit AT ROW 1 COL 1
-     b-prev AT ROW 1 COL 11.13
-     b-next AT ROW 1 COL 14.13
-     b-revis AT ROW 1 COL 17.13
-     b-arch AT ROW 1 COL 27
-     b-add-doc AT ROW 1 COL 36.88 WIDGET-ID 2
-     b-add-doc-yes AT ROW 1 COL 37.13 WIDGET-ID 4
-     b-cnt AT ROW 1 COL 46.75
-     b-attr AT ROW 1 COL 56.63
-     b-notes AT ROW 1 COL 66.5
+     b-prev AT ROW 1 COL 7
+     b-next AT ROW 1 COL 10
+     b-revis AT ROW 1 COL 13
+     b-arch AT ROW 1 COL 21
+     b-add-doc AT ROW 1 COL 31 WIDGET-ID 2
+     b-cnt AT ROW 1 COL 43.13
+     b-attr AT ROW 1 COL 53.13
+     b-in-attr-fuel AT ROW 1 COL 63.25
+     b-notes AT ROW 1 COL 73.25
      b-history AT ROW 1 COL 89.5
      b-print AT ROW 1 COL 93
      b-help AT ROW 1 COL 96
@@ -816,7 +825,7 @@ DEFINE FRAME d-in-doc
           SIZE 37 BY 1
           FGCOLOR 4
      varcontract-prn-code AT ROW 2 COL 74 COLON-ALIGNED
-     b-contr-lkp AT ROW 2 COL 91.25
+     b-contr-lkp AT ROW 2 COL 97.5
      r-clients AT ROW 2.04 COL 26
      r-currency AT ROW 3 COL 15.75
      t-doc.exch-code AT ROW 3.04 COL 10 COLON-ALIGNED
@@ -850,7 +859,7 @@ DEFINE FRAME d-in-doc
           SIZE 5 BY 1
           FGCOLOR 4
      r-acc AT ROW 4 COL 26
-     t-doc.tot-cli AT ROW 4 COL 78.88 COLON-ALIGNED
+     t-doc.tot-cli AT ROW 4 COL 87.88 COLON-ALIGNED
           LABEL "Сумма для проверки"
           VIEW-AS FILL-IN
           SIZE 18 BY .92
@@ -863,31 +872,31 @@ DEFINE FRAME d-in-doc
           VIEW-AS FILL-IN
           SIZE 5 BY 1
      t-doc.out-code AT ROW 5 COL 29.5 COLON-ALIGNED
-          LABEL "Ис&т" FORMAT "X(30)"
-          VIEW-AS FILL-IN
-          SIZE 24.5 BY 1 TOOLTIP "Источник"
-     r-outs AT ROW 5 COL 56.25
+          LABEL "Ис&т"
+          VIEW-AS FILL-IN 
+          SIZE 28 BY 1 TOOLTIP "Источник"
+     r-outs AT ROW 5 COL 59.5
      t-doc.pay-code AT ROW 6 COL 7 COLON-ALIGNED
-          VIEW-AS FILL-IN
-          SIZE 7.75 BY 1
+          VIEW-AS FILL-IN 
+          SIZE 7.5 BY 1
      r-pay AT ROW 6 COL 28.63
      varpurch-code-name AT ROW 6 COL 29.5 COLON-ALIGNED NO-LABEL
      t-doc.wrkr AT ROW 7 COL 5 COLON-ALIGNED
           VIEW-AS FILL-IN
           SIZE 9.75 BY 1
      r-wrkr AT ROW 7 COL 28.63
-     t-doc.ord-num AT ROW 7 COL 44 COLON-ALIGNED
-          VIEW-AS FILL-IN
+     t-doc.ord-num AT ROW 7 COL 43.5 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 10 BY 1
           FGCOLOR 4
      t-doc.agnt AT ROW 8 COL 5 COLON-ALIGNED
           VIEW-AS FILL-IN
           SIZE 9.75 BY 1
-     r-agnt AT ROW 8 COL 28.63
+     r-agnt AT ROW 8 COL 28.5
      t-doc.boss AT ROW 9 COL 5 COLON-ALIGNED
           VIEW-AS FILL-IN
           SIZE 9.75 BY 1
-     r-boss AT ROW 9 COL 28.63
+     r-boss AT ROW 9 COL 28.5
      t-doc.doc-date AT ROW 10 COL 5 COLON-ALIGNED
           VIEW-AS FILL-IN
           SIZE 9.75 BY 1
@@ -897,93 +906,93 @@ DEFINE FRAME d-in-doc
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME d-in-doc
-     t-doc.fact-date AT ROW 10 COL 21.25 COLON-ALIGNED
+     t-doc.fact-date AT ROW 10 COL 5 COLON-ALIGNED
           VIEW-AS FILL-IN
-          SIZE 10.25 BY 1
+          SIZE 9.75 BY 1
           FGCOLOR 4
-     t-doc.shift-date AT ROW 10 COL 38.75 COLON-ALIGNED
+     t-doc.shift-date AT ROW 10 COL 21.5 COLON-ALIGNED
           LABEL "&Смена"
           VIEW-AS FILL-IN
           SIZE 9 BY 1
-          FGCOLOR 4
-     t-doc.shift-name AT ROW 10 COL 50.88 COLON-ALIGNED
+          FGCOLOR 4 
+     t-doc.shift-name AT ROW 10 COL 49.63 COLON-ALIGNED
           LABEL "&№"
           VIEW-AS FILL-IN
           SIZE 3 BY 1 TOOLTIP "Номер смены"
-          FGCOLOR 4
-     t-doc.shift-num AT ROW 10 COL 57 COLON-ALIGNED
+          FGCOLOR 4 
+     t-doc.shift-num AT ROW 10 COL 55.75 COLON-ALIGNED
           LABEL "П"
           VIEW-AS FILL-IN
           SIZE 3 BY 1 TOOLTIP "Порядок смен"
-          FGCOLOR 4
-     r-sht AT ROW 10 COL 62
+          FGCOLOR 4 
+     r-sht AT ROW 10 COL 60.75
      t-doc.SLT-type AT ROW 11 COL 5 COLON-ALIGNED
           VIEW-AS COMBO-BOX INNER-LINES 3
           LIST-ITEMS "без","нет","в т. ч."
           DROP-DOWN-LIST
           SIZE 9.75 BY 1
-     t-doc.VAT-type AT ROW 11 COL 21.25 COLON-ALIGNED
+     t-doc.VAT-type AT ROW 11 COL 21.5 COLON-ALIGNED
           VIEW-AS COMBO-BOX INNER-LINES 5
           LIST-ITEMS "Item 1"
           DROP-DOWN-LIST
-          SIZE 10.25 BY 1
+          SIZE 9.75 BY 1
      ov-pc AT ROW 11 COL 38.75 COLON-ALIGNED
      b-add-doc-yes AT ROW 1 COL 31 WIDGET-ID 4
 
      t-doc.tot-transp AT ROW 11.33 COL 62.88 COLON-ALIGNED
           LABEL "Тр"
-          VIEW-AS FILL-IN
-          SIZE 15 BY 1 TOOLTIP "Транспортные расходы"
-          FGCOLOR 4
-     t-doc.tot-other AT ROW 11.33 COL 81.88 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 15 BY .71 TOOLTIP "Транспортные расходы"
+          FGCOLOR 4 
+     t-doc.tot-other AT ROW 11.25 COL 88.5 COLON-ALIGNED
           LABEL "Пр"
-          VIEW-AS FILL-IN
-          SIZE 15 BY 1 TOOLTIP "Прочие расходы"
-          FGCOLOR 4
-     m-inc AT ROW 12.33 COL 69.38 COLON-ALIGNED
-     t-doc.ship-num AT ROW 13.33 COL 77 COLON-ALIGNED
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
+          SIZE 15 BY .71 TOOLTIP "Прочие расходы"
+          FGCOLOR 4 
+     m-inc AT ROW 12.25 COL 25.5 COLON-ALIGNED
+     t-doc.ship-num AT ROW 13.5 COL 10 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 10.5 BY 1 TOOLTIP "№ отгрузки"
-          FGCOLOR 4
-     t-doc.ship-date AT ROW 13.33 COL 87.38 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     t-doc.ship-date AT ROW 13.5 COL 21 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 9.5 BY 1 TOOLTIP "Дата отгрузки"
-          FGCOLOR 4
-     r-reas AT ROW 14.25 COL 15.88
-     a-n-c AT ROW 15 COL 67 NO-LABEL
-     loc-art AT ROW 15 COL 77.5 COLON-ALIGNED NO-LABEL
-     loc-name AT ROW 15 COL 77.5 COLON-ALIGNED NO-LABEL
-     loc-code AT ROW 15 COL 77.5 COLON-ALIGNED NO-LABEL
-     b-mark AT ROW 15.13 COL 1
-     b-add AT ROW 15.13 COL 4
-     b-bc AT ROW 15.13 COL 10
-     b-prt AT ROW 15.13 COL 15
-     b-parts AT ROW 15.13 COL 21
-     b-lkp AT ROW 15.13 COL 27
-     b-chg AT ROW 15.13 COL 33
-     b-del AT ROW 15.13 COL 39
-     b-live AT ROW 15.13 COL 45.13
-     b-renum AT ROW 15.13 COL 52.25
-     varinplnsum AT ROW 15.21 COL 59.38
-     br-dtl AT ROW 16.17 COL 1
-     ub.currency.curr-abbr AT ROW 3 COL 17 COLON-ALIGNED NO-LABEL
-           VIEW-AS TEXT
+          FGCOLOR 4 
+     r-reas AT ROW 13.5 COL 49.5
+     a-n-c AT ROW 14.5 COL 66 NO-LABEL
+     loc-name AT ROW 14.5 COL 76.5 COLON-ALIGNED NO-LABEL
+     loc-art AT ROW 14.5 COL 76.63 COLON-ALIGNED NO-LABEL
+     loc-code AT ROW 14.5 COL 76.75 COLON-ALIGNED NO-LABEL
+     b-mark AT ROW 14.63 COL 1
+     b-add AT ROW 14.63 COL 4
+     b-bc AT ROW 14.63 COL 10
+     b-prt AT ROW 14.63 COL 15
+     b-parts AT ROW 14.63 COL 21
+     b-lkp AT ROW 14.63 COL 27
+     b-chg AT ROW 14.63 COL 33
+     b-del AT ROW 14.63 COL 39
+     b-live AT ROW 14.63 COL 45.13
+     b-renum AT ROW 14.63 COL 52.25
+     varinplnsum AT ROW 14.71 COL 59.38
+     br-dtl AT ROW 15.75 COL 1
+     ub.currency.curr-abbr AT ROW 3 COL 10.75 COLON-ALIGNED NO-LABEL
+           VIEW-AS TEXT 
           SIZE 4 BY 1
-          FGCOLOR 4
-     t-doc.tot-calc AT ROW 4.92 COL 78.88 COLON-ALIGNED
+          FGCOLOR 4 
+     t-doc.tot-calc AT ROW 4.92 COL 87.88 COLON-ALIGNED
           LABEL "По строкам док-та"
            VIEW-AS TEXT
           SIZE 18 BY .67
-          FGCOLOR 4
-     t-doc.road-tax AT ROW 5.63 COL 78.88 COLON-ALIGNED
-           VIEW-AS TEXT
+          FGCOLOR 4 
+     t-doc.road-tax AT ROW 5.63 COL 87.88 COLON-ALIGNED
+           VIEW-AS TEXT 
           SIZE 18 BY .67
           FGCOLOR 4
      ub.pay-type.obj-name AT ROW 6 COL 15 COLON-ALIGNED NO-LABEL
            VIEW-AS TEXT
           SIZE 11.75 BY 1
           FGCOLOR 4
-     t-doc.tot-sale AT ROW 6.33 COL 78.88 COLON-ALIGNED
+     t-doc.tot-sale AT ROW 6.33 COL 87.88 COLON-ALIGNED
           LABEL "Сумма rubl факт"
            VIEW-AS TEXT
           SIZE 18 BY .67
@@ -994,46 +1003,47 @@ DEFINE FRAME d-in-doc
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME d-in-doc
      wrkr-name AT ROW 7 COL 15 COLON-ALIGNED NO-LABEL
-     t-doc.tot-fact AT ROW 7 COL 78.88 COLON-ALIGNED
+     t-doc.tot-fact AT ROW 7 COL 87.88 COLON-ALIGNED
           LABEL "Сумма валюта факт"
            VIEW-AS TEXT
           SIZE 18 BY .67
           FGCOLOR 4
-     t-doc.VAT-rubl AT ROW 7.71 COL 78.88 COLON-ALIGNED
+     t-doc.VAT-rubl AT ROW 7.71 COL 87.88 COLON-ALIGNED
           LABEL "НДС по УЧЕТ ценам(rub)"
            VIEW-AS TEXT
           SIZE 18 BY .71
           BGCOLOR 3 FGCOLOR 15
      agnt-name AT ROW 8 COL 15 COLON-ALIGNED NO-LABEL
-     t-doc.VAT-base AT ROW 8.42 COL 78.88 COLON-ALIGNED
+     t-doc.VAT-base AT ROW 8.42 COL 87.88 COLON-ALIGNED
           LABEL "НДС по УЧЕТ ценам(вал)"
            VIEW-AS TEXT
           SIZE 18 BY .71
           BGCOLOR 3 FGCOLOR 15
      boss-name AT ROW 9 COL 15 COLON-ALIGNED NO-LABEL
-     t-doc.cli-qnty AT ROW 9.17 COL 78.88 COLON-ALIGNED
+     t-doc.cli-qnty AT ROW 9.17 COL 88.5 COLON-ALIGNED
           LABEL "КолТТН"
            VIEW-AS TEXT
           SIZE 12.5 BY .67
           FGCOLOR 4
-     t-doc.doc-qnty AT ROW 9.92 COL 78.88 COLON-ALIGNED
+     t-doc.doc-qnty AT ROW 9.92 COL 88.5 COLON-ALIGNED
           LABEL "Док.кол-во"
            VIEW-AS TEXT
           SIZE 12.5 BY .67
           FGCOLOR 4
-     t-doc.fact-qnty AT ROW 10.58 COL 78.88 COLON-ALIGNED
+     t-doc.fact-qnty AT ROW 10.58 COL 88.5 COLON-ALIGNED
           LABEL "Факт.кол-во"
            VIEW-AS TEXT
           SIZE 12.5 BY .67
-          FGCOLOR 4
-     t-doc.reason-code AT ROW 14.38 COL 10.5 COLON-ALIGNED
+          FGCOLOR 4 
+     t-doc.reason-code AT ROW 13.5 COL 43.5 COLON-ALIGNED
           LABEL "Основание" FORMAT ">>>>"
            VIEW-AS TEXT
           SIZE 4 BY .67 TOOLTIP "Основание заведения документа"
-     rsn-name AT ROW 14.38 COL 16.88 COLON-ALIGNED NO-LABEL
-     SPACE(21.61) SKIP(9.19)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     rsn-name AT ROW 13.5 COL 51 COLON-ALIGNED NO-LABEL
+     g-image AT ROW 12.25 COL 94 WIDGET-ID 6
+     SPACE(0.49) SKIP(10.45)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "<insert dialog title>".
 
 
@@ -1271,6 +1281,42 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-in-attr-fuel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-in-attr-fuel d-in-doc
+ON CHOOSE OF b-in-attr-fuel IN FRAME d-in-doc /* Атр для накладных с топливом */
+DO:
+    run init-attr-general in this-procedure .
+    if t-doc.status_ <> {&fact} then do:
+
+    
+    /*for each tt-upd-attr-fuel :
+    message
+      tt-upd-attr-fuel.code             ' =code            ' skip
+      tt-upd-attr-fuel.type-attr        ' =type-attr       ' skip
+      tt-upd-attr-fuel.format-attr      ' =format-attr     ' skip
+      tt-upd-attr-fuel.fillin_width     ' =fillin_width    ' skip
+      tt-upd-attr-fuel.fillin_height    ' =fillin_height   ' skip
+      tt-upd-attr-fuel.label-attr       ' =label-attr      ' skip
+      tt-upd-attr-fuel.user-can-edit    ' =user-can-edit   ' skip
+      tt-upd-attr-fuel.output-display   ' =output-display  ' skip
+      tt-upd-attr-fuel.hot-key          ' =hot-key         ' skip
+      tt-upd-attr-fuel.can-select       ' =can-select      ' skip
+      tt-upd-attr-fuel.other            ' =other           '  skip
+      tt-upd-attr-fuel.proc-attr        ' =proc-attr       '  skip
+      tt-upd-attr-fuel.proc-win         ' =proc-win        '  skip
+      tt-upd-attr-fuel.proc-func        ' =proc-func       '  skip
+      tt-upd-attr-fuel.full-screen-val  ' =full-screen-val '   .
+    end.
+    */
+      run str/in-laddtrn.w (input ParParentproc, input pardoc-mode, input t-doc.doc-code, input table tt-upd-attr-fuel) no-error.
+    end.
+    else do:
+      run str/in-laddtrn.w (input ParParentproc, input pardoc-mode, input t-doc.doc-code, input table tt-upd-attr-fuel) no-error.
+    end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-bc
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-bc d-in-doc
@@ -1557,6 +1603,17 @@ DO:
   end.
   return no-apply.
 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME g-image
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL g-image d-in-doc
+ON MOUSE-SELECT-DBLCLICK OF g-image IN FRAME d-in-doc
+DO:
+  RUN ref/imagelist.w (PARPARENTPROC, "":U, ub.goods.gds-code,{&lookup}).
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2093,7 +2150,30 @@ END.
 
 /* общие триггеры и процедуры для РН и ПН */
 { str/trn-tr.i in is-fuel}
-{ str/sch-line.i  doc-line {&browse-name} }
+{ str/sch-line.i doc-line {&browse-name} }
+IF mImagePh THEN
+DO:
+    DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
+    DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
+if AVAILABLE goods then do:
+    RUN gds-attr-value ( goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+    RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, goods.gds-code, OUTPUT vImageList).
+    vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
+    g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
+    ASSIGN
+        g-image:HIDDEN     = NO
+        g-image:VISIBLE    = YES
+        g-image:SENSITIVE  = YES
+        .
+end.        
+END.
+ELSE
+    ASSIGN
+        g-image:HIDDEN     = YES
+        g-image:VISIBLE    = NO
+        g-image:SENSITIVE  = NO
+        .
+
 end.
 
 /* ***************************  Main Block  *************************** */
@@ -2223,6 +2303,35 @@ do on error undo main-block, leave main-block :
       when 3 then return error.
     end.
    end.
+   if is-fuel or can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type  
+                                                and ub.clients-attr.obj-code = ub.clients.obj-code
+                                                and ub.clients-attr.attr-code = {&attr-supp-np}
+                                                and ub.clients-attr.attr-value = "yes")
+   then do:
+      b-in-attr-fuel:sensitive = true.
+   end.
+   IF mImagePh THEN
+DO:
+    DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
+    DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
+if AVAILABLE goods then do:
+    RUN gds-attr-value ( goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+    RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, goods.gds-code, OUTPUT vImageList).
+    vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
+    g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
+    ASSIGN
+        g-image:HIDDEN     = NO
+        g-image:VISIBLE    = YES
+        g-image:SENSITIVE  = YES
+        .
+end.        
+END.
+ELSE
+    ASSIGN
+        g-image:HIDDEN     = YES
+        g-image:VISIBLE    = NO
+        g-image:SENSITIVE  = NO
+        .
    if pardoc-mode = {&add-def} then do:
      wait-for go of frame {&frame-name} focus t-doc.cli-code.
    end.
@@ -3235,6 +3344,7 @@ PROCEDURE cr-tt-upd :
 do on error undo, return error return-value :
 
 for each tt-upd-attr: delete tt-upd-attr. end.
+for each tt-upd-attr-fuel: delete tt-upd-attr-fuel. end.
 
 &scop create-record create tt-upd-attr. ~
  assign~
@@ -3253,8 +3363,35 @@ for each tt-upd-attr: delete tt-upd-attr. end.
      tt-upd-attr.proc-attr       ~
      tt-upd-attr.full-screen-val ~
      tt-upd-attr.sort_  ~
-     no-error                   ~
-~}                              ~
+     no-error         ~
+~}                    ~
+ if error-status :error then do:    ~
+   message "Ошибка при установке атрибутов документа." skip ~
+           error-status :get-message(1) skip return-value ~
+   view-as alert-box. ~
+   return error. ~
+ end.
+ 
+ 
+ &scop create-record-fuel create tt-upd-attr-fuel. ~
+ assign~
+  tt-upd-attr-fuel.code =  ~{&~{&attr-code~}~}  . ~
+                                        ~
+~{ str/tdat-cod.i                ~
+     tt-upd-attr-fuel.code           ~
+     tt-upd-attr-fuel.type-attr      ~
+     tt-upd-attr-fuel.format-attr    ~
+     tt-upd-attr-fuel.fillin_width   ~
+     tt-upd-attr-fuel.fillin_height  ~
+     tt-upd-attr-fuel.label-attr     ~
+     tt-upd-attr-fuel.user-can-edit  ~
+     tt-upd-attr-fuel.output-display ~
+     v-other                    ~
+     tt-upd-attr-fuel.proc-attr       ~
+     tt-upd-attr-fuel.full-screen-val ~
+     tt-upd-attr-fuel.sort_  ~
+     no-error         ~
+~}                    ~
  if error-status :error then do:    ~
    message "Ошибка при установке атрибутов документа." skip ~
            error-status :get-message(1) skip return-value ~
@@ -3312,6 +3449,28 @@ if v-is-pharm = "yes":U then do:
   &scop attr-code trdcattr-ser_on_pack
   {&create-record}
 end.
+
+
+&scop attr-code trdcattr-ptbobj
+{&create-record-fuel}
+&scop attr-code trdcattr-ptb-item-pour
+{&create-record-fuel}
+&scop attr-code trdcattr-autoent
+{&create-record-fuel}
+&scop attr-code trdcattr-car-num
+{&create-record-fuel}
+&scop attr-code trdcattr-fio-driver
+{&create-record-fuel}
+&scop attr-code trdcattr-time-income
+{&create-record-fuel}
+&scop attr-code trdcattr-inspection-cert
+{&create-record-fuel}
+&scop attr-code trdcattr-date-cert
+{&create-record-fuel}
+&scop attr-code trdcattr-condition
+{&create-record-fuel}
+&scop attr-code trdcattr-seals-condition
+{&create-record-fuel}
 
 end.
 end procedure.
@@ -3665,7 +3824,7 @@ PROCEDURE enable_UI :
           t-doc.VAT-base t-doc.cli-qnty t-doc.doc-qnty t-doc.fact-qnty
           t-doc.reason-code
       WITH FRAME d-in-doc.
-  ENABLE b-exit b-prev b-next b-revis b-arch b-add-doc b-cnt b-attr b-notes
+  ENABLE b-exit b-prev b-next b-revis b-arch b-add-doc b-cnt b-attr b-in-attr-fuel b-notes
          b-history b-print b-help t-doc.cli-code t-doc.cli-type
          ub.clients.obj-name varcontract-prn-code b-contr-lkp r-clients r-currency
          t-doc.exch-code t-doc.exch-date t-doc.discnt-pc t-doc.cst-code
@@ -5710,6 +5869,14 @@ if pardoc-mode = {&update} then do:
        apply "entry" to  ub.doc-line.fact-qnty in browse {&browse-name}.
     end.
   end.
+end.
+if is-fuel or can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type  
+  and ub.clients-attr.obj-code = ub.clients.obj-code
+  and ub.clients-attr.attr-code = {&attr-supp-np}
+  and ub.clients-attr.attr-value = "yes")
+  then 
+do:
+  b-in-attr-fuel:sensitive = true.
 end.
 if num-results('{&browse-name}') > 0 then do:
    if {&browse-name}:refresh() then.

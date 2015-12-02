@@ -60,6 +60,7 @@ define variable par-is-edoc-nn    as character no-undo .
 define variable par-is-edi        as character no-undo .
 define variable is-edoc-nn-doc    as logical   no-undo .
 define variable is-edi-doc        as logical   no-undo .
+define variable v-dm-edi          as integer   no-undo .
 
 { gbl/getcntxt.i get }
 assign
@@ -89,6 +90,7 @@ g#mainmenu-handle = PARPARENTPROC .
                               , input loc-cli-code
                               , input loc-store-type
                               , input loc-store-code
+                              , output v-dm-edi
                               ) .
 
 function rvs-qnty returns decimal
@@ -830,6 +832,11 @@ DO:
   run ver-value in this-procedure no-error.
   if error-status:error then do:
      return no-apply.
+  end.
+  if  tmp#zakaz.order-cli-qnty = tmp#zakaz.cli-qnty and tmp#zakaz.cli-qnty <> 0
+  then do:
+      message "Нельзя отправлять заказ на коррекцию с тем же количеством, которое было запрошено первоначально!" view-as alert-box .
+      return no-apply.
   end.
   buffer-copy b-ord-line to shar_ord-line
      assign shar_ord-line.doc-code = loc-ord-num

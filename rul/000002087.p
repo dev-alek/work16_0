@@ -111,6 +111,7 @@ define variable l-res as integer no-undo .
 define variable v-es as logical no-undo .
 define variable v-esm as character no-undo .
 define variable v-rv as character no-undo .
+define variable v-dm-edi    as integer   no-undo .
 define buffer buf_ord-doc for ub.ord-doc.
 define buffer buf_ord-doc-rcv for ub.ord-doc-rcv.
 
@@ -356,7 +357,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       first buf_ext-system no-lock where
                 buf_ext-system.esys-id = esys_ext-classif.key#_one
             and buf_ext-system.db-num = 0
-            and buf_ext-system.esys-db-num-exp = g#db-num
+/*            and buf_ext-system.esys-db-num-exp = g#db-num*/
             and buf_ext-system.esys-have-export = yes,
       first buf_ext-classif no-lock where
         buf_ext-classif.classif-name = {&extclass_clients_exite-edi}
@@ -571,7 +572,8 @@ on error undo, return error
       v-cli-type,
       v-cli-code,
       v-current-obj-type,
-      v-current-obj-code
+      v-current-obj-code,
+      output v-dm-edi
   ) then return "return".
     
 /*---------------------------&start-process-rule-call-param&-------------------------------*/

@@ -332,11 +332,10 @@ for each ub.doc-line
   /*“екуща€ продажна€ цена по парти€м ест-но равна текущей продажной партии в строке*/
   if first-of(ub.parts.prod-code) then do:
      /*јтрибуты линии*/
-     find first ub.doc-line-attr where ub.doc-line-attr.doc-code  = ub.doc-line.doc-code and
-                                    ub.doc-line-attr.gds-code  = ub.goods.gds-code    and
-                                    ub.doc-line-attr.attr-code = "car-num" no-lock no-error.
+     find first ub.doc-attr where ub.doc-attr.doc-code  = ub.doc-line.doc-code and
+                                  ub.doc-attr.attr-code = {&trdcattr-car-num} no-lock no-error.
      ASSIGN
-     varcar-num    = if available ub.doc-line-attr then ub.doc-line-attr.attr-value else "".
+     varcar-num    = if available ub.doc-attr then ub.doc-attr.attr-value else "".
      find first ub.doc-line-attr where ub.doc-line-attr.doc-code  = ub.doc-line.doc-code and
                                     ub.doc-line-attr.gds-code  = ub.goods.gds-code    and
                                     ub.doc-line-attr.attr-code = "car-vol" no-lock no-error.

@@ -8,6 +8,7 @@
 "exp-sale" "Выгрузка отчетов для Nielsen" "rep/exp-sl.p" "rep/exp-sale.w" "" yes yes no no "" "djlnldnplqIfiblk" no
 "expkan3" "Экспорт текущих товарных остатков kan3" "cus/exp-kanp.p" "cus/exp-kanf.w" "" yes yes no no "" "GjpcllRbjiioijlb" no
 "goods_rum" "Работа с товарами в автоматическом режиме" "str/goodsrum.p" "" "" yes yes no no "" "bfatafbpQPjkbDcl" yes
+"img-search" "Загрузка фото товаров" "bge/imgsearch-shd.p" "" "" yes yes no no "" "kvaknraZMkstiEfr" no
 "ord_rum" "Работа с заказами в автоматическом режиме" "str/ordrum.p" "" "" yes yes no no "" "pbtjfkdPjmcacbDe" yes
 "rvs-auto" "Автоматическое создание сверок" "str/rvs-auto.p" "" "" yes yes no no "" "XcLllaicGMlXKfIp" no
 "uclcdcpc" "Расчет скидки или категории понакопительному алгоритму ДК" "utl/dcpcuq1.p" "utl/uclcdcpc.w" "" yes no no no "" "imjAjraLaQPjifib" no

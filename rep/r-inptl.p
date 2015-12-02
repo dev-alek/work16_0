@@ -42,7 +42,7 @@ define buffer bef-rvs-doc  for ub.rvs-doc       .
 define buffer aft-rvs-doc  for ub.rvs-doc       .
 define buffer bef-rvs-line for ub.rvs-line      .
 define buffer aft-rvs-line for ub.rvs-line      .
-define buffer car-num-attr for ub.doc-line-attr .
+define buffer car-num-attr for ub.doc-attr .
 define buffer car-vol-attr for ub.doc-line-attr .
 define buffer tests-attr   for ub.doc-line-attr .
 

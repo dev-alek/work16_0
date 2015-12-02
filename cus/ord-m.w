@@ -1397,7 +1397,8 @@ e-method =  e-method  +      ";" +  {&new-line} +
                       input t-deadline   ,
                       input store-type  ,
                       input store-code  ,
-                      input g#type
+                      input g#type      ,
+                      input no
                       ) no-error .
              end.
              else do:
@@ -1438,7 +1439,8 @@ e-method =  e-method  +      ";" +  {&new-line} +
                       input t-deadline ,
                       input store-type  ,
                       input store-code  ,
-                      input g#type
+                      input g#type      ,
+                      input no
                       ) no-error .
              end.
               if error-status :error then do:
@@ -1485,7 +1487,8 @@ e-method =  e-method  +      ";" +  {&new-line} +
                     input t-deadline ,
                     input store-type  ,
                     input store-code  ,
-                    input g#type
+                    input g#type      ,
+                    input no
                     ) no-error .
              end.
              else do:
@@ -1526,7 +1529,8 @@ e-method =  e-method  +      ";" +  {&new-line} +
                     input t-deadline ,
                     input store-type  ,
                     input store-code  ,
-                    input g#type
+                    input g#type      ,
+                    input no
                     ) no-error .
              end.
               if error-status :error then do:

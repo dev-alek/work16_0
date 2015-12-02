@@ -32,6 +32,9 @@ define variable vss-description as character no-undo init "Форма просмотра заказ
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 DEFINE SHARED BUFFER   SHAR-BUF_ORD-DOC FOR UB.ORD-DOC.
+
+define buffer   buf_ord-line-attr for ub.ord-line-attr.
+
 define variable head-col        as character no-undo .
 define variable v-order-column  as character no-undo .
 define variable v-spis-size     as character no-undo .
@@ -41,6 +44,8 @@ define variable hcolumn         as handle extent 100  no-undo.
 
 define variable v-fact-qnty as decimal   no-undo .
 define variable t-action as char no-undo.
+define variable v-min-stock as decimal   no-undo .
+define variable v-gds-way as decimal   no-undo .
 t-action = "lkp":u.
 define buffer b-goods   for ub.goods .
 define buffer b-gds-prt for ub.gds-prt .
@@ -574,6 +579,8 @@ define browse br-docs
       loc-sum-rcv                   column-label "Поставлено! ":c11 format "->>>,>>>,>>9.999"
       shar_ord-line.gds-code        column-label "Код!товара"
       shar_ord-line.initial-qnty    column-label "Расcчитн.!кол-во"
+      v-min-stock                   column-label "Мин!остаток" format "->,>>>,>>9.999"                 /* label-bgcolor 3 label-fgcolor 15                        */
+      v-gds-way                     column-label "Товары!в пути" format "->,>>>,>>9.999"                 /* label-bgcolor 3 label-fgcolor 15                        */
 
       /*(if shar_ord-line.cancel-date = ? then "" else "*" ) column-label "x! " format "x(1)" */
   enable
@@ -778,6 +785,16 @@ DO:
    if available buf_gds-obj then
            v-fact-qnty = buf_gds-obj.fact-qnty.
       else v-fact-qnty = 0 .
+      
+  find first buf_ord-line-attr where buf_ord-line-attr.doc-code = shar_ord-line.doc-code
+    and buf_ord-line-attr.gds-code = shar_ord-line.gds-code
+    and buf_ord-line-attr.attr-code = {&ordlineattr-min-stock} no-error.
+  if available buf_ord-line-attr then v-min-stock = decimal(buf_ord-line-attr.attr-value). 
+  find first buf_ord-line-attr where buf_ord-line-attr.doc-code = shar_ord-line.doc-code
+    and buf_ord-line-attr.gds-code = shar_ord-line.gds-code
+    and buf_ord-line-attr.attr-code = {&ordlineattr-gds-way} no-error.
+  if available buf_ord-line-attr then v-gds-way = decimal(buf_ord-line-attr.attr-value).      
+
 end.
 
 ON ROW-DISPLAY OF BR-DOCS-2 IN FRAME FRAME-A /* Список поставщиков */
@@ -1024,6 +1041,8 @@ then frame {&frame-name}:parent = active-window.
   &sort-clmn_21   =  shar_ord-line.qnty-stk
   &sort-clmn_22   =  v-fact-qnty
   &sort-clmn_23   =  shar_ord-line.gds-code
+  &sort-clmn_24   =  v-min-stock
+  &sort-clmn_25   =  v-gds-way
   &open-query     = "{&open-query-br-docs-sort} BY ~{&sort-clmn_~{&clmn_num~}~} ."
   &open-query-otherwise = "run openbr."
   &sort-column-name     = "sort-column-name"
@@ -1091,7 +1110,7 @@ do on error   undo main-block, leave main-block
   run init-browse-p  in this-procedure .
 
  { gbl/mv-clmn.i
-  &ext-col = 23
+  &ext-col = 25
   &frame-name = "{&frame-name}"
   &browse-name = "br-docs"
   &start-column = "1"

@@ -37,34 +37,34 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
-  if
-  not g#news   /*пересылаем записи  измененные ѕќЋ№«ќ¬ј“≈Ћ≈ћ а не —ѕЌ */
-  OR (g#news
-      and g#db-num = 0
-      and ub.c-gds-season.corr-user-name <> {&nts-user}
-      ) /*транзит из ”Ѕƒ1 через √Ѕƒ в ”Ѕƒ2*/
-      /*здесь надо отсечь данные которые родились в —ѕЌ в ”Ѕƒ и ¬ќ«¬–јўјё“—я в √Ѕƒ!!!!*/
-  or (g#news
-      and ( g#db-num > 0 )
-      and ub.c-gds-season.corr-user-name = {&nts-user}
-      )   /*из ”Ѕƒ - записи рожденные —ѕЌ*/
-  then do:
-    if not (ub.c-gds-season.gds-code = 0 or ub.c-gds-season.gds-code = ?) then do:
-        run str/callnews.p
-                      (input {&table_c-gds-season}
-                      ,input (buffer ub.c-gds-season:handle)
-                        ) no-error .
-        if error-status:error then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "ќшибка при передаче в новости товара по c-gds-season" skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-            undo main-block, return error.
-        end.
-    end.
-  end.
+/*  if                                                                                    */
+/*  not g#news   /*пересылаем записи  измененные ѕќЋ№«ќ¬ј“≈Ћ≈ћ а не —ѕЌ */                */
+/*  OR (g#news                                                                            */
+/*      and g#db-num = 0                                                                  */
+/*      and ub.c-gds-season.corr-user-name <> {&nts-user}                                 */
+/*      ) /*транзит из ”Ѕƒ1 через √Ѕƒ в ”Ѕƒ2*/                                            */
+/*      /*здесь надо отсечь данные которые родились в —ѕЌ в ”Ѕƒ и ¬ќ«¬–јўјё“—я в √Ѕƒ!!!!*/*/
+/*  or (g#news                                                                            */
+/*      and ( g#db-num > 0 )                                                              */
+/*      and ub.c-gds-season.corr-user-name = {&nts-user}                                  */
+/*      )   /*из ”Ѕƒ - записи рожденные —ѕЌ*/                                             */
+/*  then do:                                                                              */
+/*    if not (ub.c-gds-season.gds-code = 0 or ub.c-gds-season.gds-code = ?) then do:      */
+/*        run str/callnews.p                                                              */
+/*                      (input {&table_c-gds-season}                                      */
+/*                      ,input (buffer ub.c-gds-season:handle)                            */
+/*                        ) no-error .                                                    */
+/*        if error-status:error then do:                                                  */
+/*          message                                                                       */
+/*            vss-workfile vss-revision vss-description skip                              */
+/*            "ќшибка при передаче в новости товара по c-gds-season" skip                 */
+/*            error-status :get-message(1) skip                                           */
+/*            return-value skip                                                           */
+/*            view-as alert-box error .                                                   */
+/*            undo main-block, return error.                                              */
+/*        end.                                                                            */
+/*    end.                                                                                */
+/*  end.                                                                                  */
     if g#oxml = yes
     then do:
     run str/calloxml.p (

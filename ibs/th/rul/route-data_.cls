@@ -137,9 +137,11 @@ class Ibs.Th.Rul.route-data_:
       if valid-handle(v_libg) then do:
         run gate-clear in v_libg ( input v_dataseth, input buffer buf_temp-xml-tables:handle).
       end.
-      else do:
-        run gate-clear in v_gc ( input v_dataseth, input buffer buf_temp-xml-tables:handle) no-error .
+      else if valid-handle(v_gc) then do:
+        run gate-clear in v_gc ( input v_dataseth, input buffer buf_temp-xml-tables:handle).
       end.
+      else do :
+      end.    
     end.
   end destructor.
   method public void change-direction ( input p-direction as integer):
@@ -1065,6 +1067,41 @@ class Ibs.Th.Rul.route-data_:
       run set-error in v_eh ( substitute("Ошибка при записи XML файла данными через гейт &1:&2&3"
                                       , v_dataseth:name
                                       , {&new-line}, error-status:get-message(1))).
+      return no.
+    end.
+    return yes.
+  end method.
+  method public logical esys-add-dump-data ( input p-data as memptr
+                                          , input p-esys-cmd-proc-handle as handle
+                                          , input p-esys-cmd-code as integer
+                                          , input p-action as character     ):
+    define variable v-esys-rec-ord as integer no-undo .
+    define variable v-local-xmlh as handle no-undo .
+    define buffer buf_temp-xml-tables for temp-xml-tables.
+
+    if direction = {&route-import} then do:
+        undo, return error substitute("Нельзя маршрутизировать буфер маршрутизации в режиме импорта").
+    end.
+
+    run add-dump-data in p-esys-cmd-proc-handle
+      (input p-esys-cmd-code
+      ,input "xml data"
+      ,input p-action
+      ,input p-data
+      ,output v-esys-rec-ord
+      ) no-error .
+    if error-status :error
+    then do:
+      if valid-handle (p-esys-cmd-proc-handle ) then do:
+        delete procedure p-esys-cmd-proc-handle .
+      end.
+      run set-error in v_eh (substitute("Ошибка при добавлении записи &2 в команду с кодом &3&1&4&1&5"
+                                          ,{&new-line}
+                                          ,"xml data"
+                                          ,p-esys-cmd-code
+                                          ,error-status:get-message(1)
+                                          ,return-value
+                                          )) .
       return no.
     end.
     return yes.

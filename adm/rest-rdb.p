@@ -1617,6 +1617,30 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       v-cli-count = 0
     .
 
+    output stream slog to rest-rdb.txt append .
+    export stream slog "start rest-season" cur-time-string() .
+    output stream slog close .
+    run rest-season in this-procedure
+      ( input ""
+       ,input ?
+      )
+      no-error
+    .
+    if error-status:error then do:
+      output stream slog to rest-rdb.txt append .
+      export stream slog
+      "    !!!!rest-season"
+      substitute( " &1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)) skip.
+      output stream slog close .
+      undo, return error  substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)).
+    end.
+    else do:
+      output stream slog to rest-rdb.txt append .
+      export stream slog
+      "OK rest-season"  skip.
+      output stream slog close .
+    end.
+
     for each ub.clients no-lock
       where ub.clients.db-num = p-db-num
     on error  undo, return error substitute( "&1 (clients-all). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -2734,6 +2758,29 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
       end.
 
+      output stream slog to rest-rdb.txt append .
+      export stream slog "start rest-season-obj" cur-time-string() .
+      output stream slog close .
+      run rest-season in this-procedure
+        ( input ub.clients.obj-type
+         ,input ub.clients.obj-code
+        )
+        no-error
+      .
+      if error-status:error then do:
+        output stream slog to rest-rdb.txt append .
+        export stream slog
+        "    !!!!rest-season-obj"
+        substitute( " &1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)) skip.
+        output stream slog close .
+        undo, return error  substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)).
+      end.
+      else do:
+        output stream slog to rest-rdb.txt append .
+        export stream slog
+        "OK rest-season-obj"  skip.
+        output stream slog close .
+      end.
 
     end. /* for each clients */
 
@@ -5110,6 +5157,77 @@ define input  parameter p-obj-code as integer   no-undo .
 end.
 
 end procedure. /* rest-assort-matrix */
+
+
+procedure rest-season :
+/* восстановление сезонов и товарного наполнения сезона по объектам УБД*/
+define input  parameter p-obj-type as character no-undo .
+define input  parameter p-obj-code as integer   no-undo .
+  do
+  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+  on stop   undo, return error substitute( "&1. stop", vss-workfile )
+  on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+  :
+  disable triggers for load of ub.season.
+  disable triggers for load of ub.season-attr.
+  disable triggers for load of ub.gds-season.
+  disable triggers for load of ub.gds-season-attr.
+  disable triggers for dump of ub.season.
+  disable triggers for dump of ub.season-attr.
+  disable triggers for dump of ub.gds-season.
+  disable triggers for dump of ub.gds-season-attr.
+
+  disable triggers for load of dst.season.
+  disable triggers for load of dst.season-attr.
+  disable triggers for load of dst.gds-season.
+  disable triggers for load of dst.gds-season-attr.
+  disable triggers for dump of dst.season.
+  disable triggers for dump of dst.season-attr.
+  disable triggers for dump of dst.gds-season.
+  disable triggers for dump of dst.gds-season-attr.
+  
+  
+  
+  for each ub.season no-lock:
+  
+    find first ub.season-attr no-lock where ub.season-attr.sea-code =  ub.season.sea-code 
+      and ub.season-attr.db-num = ub.season.db-num
+      and ub.season-attr.attr-code = {&seaattr-obj} no-error.
+    
+    if (available ub.season-attr 
+        and ub.season-attr.attr-value = p-obj-type + string (p-obj-code))
+        or (not available ub.season-attr and p-obj-code = ?)
+    then do:
+      
+      for each ub.season-attr no-lock where ub.season-attr.sea-code = ub.season.sea-code
+        and ub.season-attr.db-num = ub.season.db-num:
+        create dst.season-attr .
+        buffer-copy ub.season-attr to dst.season-attr .  
+      end.
+      
+      for each ub.gds-season no-lock where ub.gds-season.sea-code = ub.season.sea-code
+        and ub.gds-season.db-num = ub.season.db-num:
+        create dst.gds-season .
+        buffer-copy ub.gds-season to dst.gds-season . 
+      end.
+      
+      for each ub.gds-season-attr no-lock where ub.gds-season-attr.sea-code = ub.season.sea-code
+          and ub.gds-season-attr.db-num = ub.season.db-num:
+        create dst.gds-season-attr .
+        buffer-copy ub.gds-season-attr to dst.gds-season-attr .
+      end.
+      
+      create dst.season.
+      buffer-copy ub.season to dst.season.
+      
+    end.
+  
+  end.
+
+end.
+
+end procedure. /* rest-season */
+
 
 procedure rest-fin-ob :
 /* восстановление ФО покупателей закрытые на факт */

@@ -87,6 +87,13 @@ def var i as int.
 
 
 define buffer buf_ext-system         for ub.ext-system.
+define temp-table tt-espcknum no-undo
+  field tt-espr-pack-num  as integer
+  field tt-espr-pack-name as character
+  field tt-espr-pack-date as datetime /*доп. поле для SAP ERP*/
+  index inum tt-espr-pack-num ascending
+  index idate tt-espr-pack-date     ascending
+.
 
 do
 for buf_ext-system
@@ -273,6 +280,43 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 undo _ext-system, next _ext-system.
               end.
             end.
+            /* получение всех файлов, находящихся в heap, 
+            для внешней системы типа OR APM (SPAR) - разибарются все файлы находящиеся в heap
+            в дальнейшем после удачного разбора в обязательном порядке удаляются*/
+            if buf_ext-system.whole-send-news = integer({&esys-dm-contour-edi})
+            then do:
+              run get-num-namepack in this-procedure
+                ( input v-target-dir
+                , input buf_Ext-system.esys-id
+                , input buf_Ext-system.db-num
+                , input buf_ext-system.whole-send-news
+                ) 
+              no-error.
+              if error-status:error then do:
+                if return-value begins "№"
+                then do:
+                  run write-log in p-log-handle (
+                                                  input 2
+                                                , substitute("Пакет &1 уже существует, прием остановлен. &2"
+                                                              ,return-value
+                                                              ,vss-workfile
+                                                            )
+                                  ) .
+                end.
+                else do:
+                  run write-log in p-log-handle (
+                                                  input 2
+                                                , substitute("&1 Ошибка при создание списка пакетов для приема. &2&3&2&4"
+                                                              ,vss-workfile
+                                                              ,{&new-line}
+                                                            ,substitute( "&1", error-status:get-message(error-status:num-messages) )
+                                                            ,substitute( "&1", return-value )
+                                                            )
+                                  ) .
+                end.
+                undo _ext-system, next _ext-system.
+              end.
+            end.
             if lookup( v-action, "analys,take+analys":U ) <> 0 then do:
               rcvd-pack:
               do while TRUE
@@ -288,6 +332,15 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 assign
                 v-custom-pack-name = temp-filelist.file-name.
                 delete temp-filelist.
+              end.
+              if buf_ext-system.whole-send-news = integer({&esys-dm-contour-edi}) then do:
+                find first tt-espcknum use-index inum no-error.
+                if not available tt-espcknum then do:
+                  leave rcvd-pack.
+                end.
+                assign
+                v-custom-pack-name = tt-espcknum.tt-espr-pack-name.
+                delete tt-espcknum.
               end.
               run bge/espcknum.p ( input "get":U
                             ,input buf_ext-system.esys-id
@@ -539,23 +592,122 @@ end procedure. /* set-exch-date-time */
 
 procedure cb_fill-filelist :
 define input parameter p-file-name as character no-undo .
+define input parameter p-dm as integer no-undo .
 define variable v-file-name as character no-undo .
 
 do
 on error undo, return error
 :
+  
   find first temp-filelist where
             temp-filelist.file-name = p-file-name no-error.
-  if not available temp-filelist then do:
-    v-file-name = p-file-name.
-    entry(1, v-file-name, "_") = "".
-    create temp-filelist.
-    assign
-    temp-filelist.file-name = p-file-name
-    temp-filelist.full-name = v-file-name
-    .
-    release temp-filelist.
+  
+  if p-dm = integer({&esys-dm-contour-edi})
+  then do:
+
+    if not available temp-filelist then do:
+      create temp-filelist.
+      if num-entries(p-file-name, '.':u) > 1
+      then do:
+        /* файл имеет расширение */
+        assign
+          temp-filelist.file-extension = entry(num-entries(p-file-name, '.':u), p-file-name,  '.':u )
+          temp-filelist.file-name-no-ext = entry(num-entries(p-file-name, '.':u) - 1, p-file-name, '.':u )
+        .
+      end.
+      else do:
+        /* файл имеет пустое расширение */
+        assign
+          temp-filelist.file-extension = ''
+          temp-filelist.file-extension = p-file-name
+        .
+      end.
+      assign
+      temp-filelist.file-name = p-file-name.
+      release temp-filelist.
+    end.
+
+    
+    
+  end.
+  else do:
+    if not available temp-filelist then do:
+      v-file-name = p-file-name.
+      entry(1, v-file-name, "_") = "".
+      create temp-filelist.
+      assign
+      temp-filelist.file-name = p-file-name
+      temp-filelist.full-name = v-file-name
+      .
+      release temp-filelist.
+    end.
   end.
 end.
 
 end procedure. /* cb_fill-filelist */
+
+procedure get-num-namepack : /*получение имени и номеров пакетов для OR APM (SPAR), которые будут обработаны*/
+define input parameter p-target-dir as character no-undo .
+define input parameter p-esys-id as integer no-undo .
+define input parameter p-db-num as integer no-undo .
+define input parameter p-ext-sys-met as integer no-undo .
+
+define variable datestr as character no-undo.
+define variable timestr as character no-undo.
+
+do
+on error undo, return error
+:
+  define variable xml-source as character no-undo.
+  define variable xml-result as character no-undo. 
+  define variable java as character no-undo.
+  define variable saxon as character no-undo.
+  define variable xsl as character no-undo.
+  define variable v-l-err as logical no-undo.
+  define variable ii as integer no-undo.    
+
+
+  ii = 0.
+  for each temp-filelist where temp-filelist.file-name begins "fail" :
+    ii = ii + 1.
+    create tt-espcknum.
+    assign
+      tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
+      tt-espcknum.tt-espr-pack-num = ii
+    no-error.      
+  end.
+  for each temp-filelist where temp-filelist.file-name begins "ok" :
+    ii = ii + 1.
+    create tt-espcknum.
+    assign
+      tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
+      tt-espcknum.tt-espr-pack-num = ii
+    no-error.
+  end.
+  for each temp-filelist where temp-filelist.file-name begins "ORDRSP" :
+    ii = ii + 1.
+    create tt-espcknum.
+    assign
+      tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
+      tt-espcknum.tt-espr-pack-num = ii
+    no-error.
+  end.
+  for each temp-filelist where temp-filelist.file-name begins "DESADV" :
+    ii = ii + 1.
+    create tt-espcknum.
+    assign
+      tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
+      tt-espcknum.tt-espr-pack-num = ii
+    no-error.            
+  end.
+
+
+  if v-l-err then
+    run write-log in p-log-handle (
+          input 1
+        , input substitute( "При преобразовании файла(ов) возникли ошибки. Проверьте целостность xml пакетов.")
+    ).
+
+end.
+
+end procedure. /* get-num-namepack */

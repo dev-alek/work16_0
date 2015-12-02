@@ -8442,6 +8442,21 @@ define variable v-rid-list as character no-undo .
   end.
 end procedure. /* m_clients-elcos-exe */
 
+procedure m_goods-esys-exe :
+define variable v-rid-list as character no-undo .
+  do
+  on error undo, return error
+  :
+    run ref/esysgds.w ( input parparentproc
+                        ,input (if v-cntxt-db-num > 0 then '':U else "b-add")
+                        ,input {&all}
+                        ,input 0
+                        ,input-output v-rid-list) no-error.
+
+
+  end.
+end procedure. /* m_goods-elcos-exe */
+
 
 procedure m_gds-ef-exe :
 define variable v-rid-list as character no-undo .

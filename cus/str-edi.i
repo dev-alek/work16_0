@@ -149,6 +149,7 @@ FUNCTION status-is-edi{1} RETURN logical ( input p-is-edi as logical
                                          , input p-cli-code as integer
                                          , input p-obj-type     as character
                                          , input p-obj-code     as integer
+                                         , output p-dm-edi as integer
                                          ) .
 
 define variable v-obj-db-num   as integer   no-undo .
@@ -194,7 +195,8 @@ for each buf_ext-classif no-lock
       where buf_ext-system.esys-id = buf_ext-classif.key#_one
         and buf_ext-system.db-num  = 0
         and buf_ext-system.esys-have-export = yes
-        and buf_ext-system.esys-db-num-exp = v-obj-db-num,
+        and (buf_ext-system.esys-db-num-exp = v-obj-db-num
+        or buf_ext-system.esys-db-num-exp = 0),
     first buf2_ext-classif no-lock
             where buf2_ext-classif.uniq-key-rec = v-obj-uniq-key-rec
               and buf2_ext-classif.classif-subject = {&table_clients}
@@ -204,6 +206,7 @@ for each buf_ext-classif no-lock
 end. /*if available buf_ext-classif then do :*/
 
 if available buf_ext-classif then do :
+  p-dm-edi = buf_ext-system.whole-send-news.
   return yes .
 end. /*if available buf_ext-classif then do :*/
 return no .

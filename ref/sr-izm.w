@@ -29,6 +29,7 @@ DEFINE INPUT PARAMETER parparentproc AS WIDGET-HANDLE NO-UNDO.
 DEFINE INPUT PARAMETER bttns AS character NO-UNDO.
 DEFINE INPUT PARAMETER p-mode AS character NO-UNDO.
 DEFINE INPUT-OUTPUT PARAMETER p-node-code AS INTEGER NO-UNDO.
+define output parameter p-sr-type as character no-undo.
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -346,7 +347,8 @@ END.
 ON CHOOSE OF B-sel IN FRAME Dialog-Frame /* Выбор */
 DO:
   if available sr-izmerenia then do :
-    p-node-code = sr-izmerenia.node-code .
+    p-node-code = sr-izmerenia.node-code. 
+    p-sr-type = sr-izmerenia.sr-type.
   end.
   else p-node-code = ? .
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.

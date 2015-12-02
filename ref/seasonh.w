@@ -110,7 +110,7 @@ f_name.
 
 
 /* Definitions for BROWSE BR-docs                                       */
-&Scoped-define FIELDS-IN-QUERY-BR-docs buf_c-season.chip-num buf_c-season.sea-name buf_c-season.sea-month-1 buf_c-season.sea-month-2 {&cop-l14} {&cop-l16} {&cop-l17} {&cop-l18} buf_c-season.sea-code buf_c-season.stts buf_c-season.List_
+&Scoped-define FIELDS-IN-QUERY-BR-docs buf_c-season.chip-num buf_c-season.sea-name date-func(buf_c-season.sea-month-1) date-func(buf_c-season.sea-month-2) {&cop-l14} {&cop-l16} {&cop-l17} {&cop-l18} buf_c-season.sea-code buf_c-season.stts buf_c-season.List_
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-docs {&cop-l14}
 &Scoped-define SELF-NAME BR-docs
 &Scoped-define QUERY-STRING-BR-docs FOR EACH buf_c-season no-lock
@@ -138,6 +138,14 @@ f_name.
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
+/* ************************  Function Prototypes ********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD date-func d-type-tmp
+FUNCTION date-func RETURNS DATE
+( input date-int as int)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 
 /* ***********************  Control Definitions  ********************** */
@@ -188,8 +196,8 @@ DEFINE BROWSE BR-docs
   QUERY BR-docs DISPLAY
       buf_c-season.chip-num  format ">>>>>>>>>>9"
      buf_c-season.sea-name    format "x(40)"
-     buf_c-season.sea-month-1 format ">>"
-     buf_c-season.sea-month-2 format ">>"
+     date-func(buf_c-season.sea-month-1) COLUMN-LABEL "с" FORMAT "99/99/99":U
+     date-func(buf_c-season.sea-month-2) COLUMN-LABEL "по" FORMAT "99/99/99":U
      {&cop-l14}   COLUMN-LABEL {&col-l14}
      {&cop-l16}   COLUMN-LABEL {&col-l16}
      {&cop-l17}   COLUMN-LABEL {&col-l17} format ">>>>9"
@@ -514,6 +522,21 @@ end.
 Open QUery br-changes for each temp-changes.
 
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+/* ************************  Function Implementations ***************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION date-func d-type-tmp
+FUNCTION date-func RETURNS DATE
+( input date-int as int) :
+ define variable date-res as date no-undo.
+   if  date-int <= 12 then return error.
+   assign date-res = date (date-int) no-error.
+ RETURN date-res.   /* Function return value. */
+
+END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

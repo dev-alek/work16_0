@@ -51,7 +51,7 @@ $Archive$
 
   типы цен   cost  - учетна
              sale  - документа
-             crsa  - продажна
+             crsa  - продажна 
    типы валют    rubl
                  base
  Пример  "'cost,sale,rubl,base,scale'"
@@ -62,9 +62,10 @@ define variable is-ptrl  as character no-undo.
 define variable par-type as character no-undo.
 run gbl/conf-rd.p ("is-ptrl", "", "", 0, "", "", "", no, output is-ptrl, output par-type) no-error.
 if error-status :error or par-type <> "l" or is-ptrl <> "yes" then do: assign is-ptrl = "no". end.
-{ rep/menu-doc.i "'*'"   {&act-overvalue}                               "'*'" "'*'" "'Акт переоценки'"                                              "'cost,sale,rubl,base'" "'rep/r-akt.p'"    "'akt'"             "'------'" "''" "'A4port'" "''" ?                 }
+{ rep/menu-doc.i "'*'"   {&act-overvalue}                               "'*'" "'*'" "'Акт переоценки'"                                              "'cost,sale,rubl,base'" "'rep/r-pr-akt.p'"    "'akt'"             "'------'" "''" "'HTML'" "''" ?                 }
+{ rep/menu-doc.i "'*'"   {&act-overvalue}                               "'*'" "'*'" "'Акт переоценки с фото товара'"                                  "'cost,sale,rubl,base'" "'rep/r-pr-akt-foto.p'"    "'akt'"             "'------'" "''" "'HTML'" "''" ?                 }
 { rep/menu-doc.i "'*'"   {&act-overvalue}                               "'*'" "'*'" "'Акт переоценки ТАП-1-ДО'"                                     "'crsa'"                "'rep/r-tap1.p'"   "''"                "'------'" "''" "'A4lans'" "''" ?                 }
-{ rep/menu-doc.i "'*'" "'{&bef-g___new},{&bef-order},{&bef-permitted}'" "'*'" "'*'" "'Приказ на переоценку'"                                        "'cost,sale,rubl,base'" "'rep/r-akt.p'"    "'prik'"            "'------'" "''" "'A4port'" "''" ?                 }
+{ rep/menu-doc.i "'*'" "'{&bef-g___new},{&bef-order},{&bef-permitted}'" "'*'" "'*'" "'Приказ на переоценку'"                                        "'cost,sale,rubl,base'" "'rep/r-prikaz.p'"    "'prik'"            "'------'" "''" "'HTML'" "''" ?                 }
 { rep/menu-doc.i "'*'"   {&act-overvalue}                               "'*'" "'*'" "'Акт переоценки топлива (весовой учет)'"                       "'cost,sale,rubl,base'" "'rep/r-act-kg.p'" "'act'"             "'------'" "''" "'A4port'" "''" "is-ptrl = 'yes'" }
 { rep/menu-doc.i "'*'" "'{&bef-g___new},{&bef-order},{&bef-permitted}'" "'*'" "'*'" "'Приказ на переоценку топлива (весовой учет)'"                 "'cost,sale,rubl,base'" "'rep/r-act-kg.p'" "'ord'"             "'------'" "''" "'A4port'" "''" "is-ptrl = 'yes'" }
 { rep/menu-doc.i "'*'" "'*'"                                            "'*'" "'*'" "'Протокол согласования цен'"                                   "'cost,sale,rubl,base'" "'rep/r-aktp.p'"   "''"                "'------'" "''" "'A4port'" "''" ?                 }

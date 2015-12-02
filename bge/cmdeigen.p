@@ -182,6 +182,11 @@ on error undo, return error return-value
       v-header-schema-name = ""
       v-header-name = "".
     end.
+    when integer({&esys-dm-contour-edi}) then do:
+      assign
+      v-header-schema-name = ""
+      v-header-name = "".
+    end.
     otherwise do:
       assign
       v-header-schema-name = "exe/THheader.xsd"
@@ -257,6 +262,10 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
       end.
       v-schema-name = substitute("exe/&1.xsd",buf_temp_xmllib_rec.recname).
     end.
+    when integer({&esys-dm-contour-edi}) then do:
+      /*ищем первую запись*/
+      v-schema-name = entry (1, v-file-name, "_").
+    end.
     when integer({&esys-dm-oracle-retail}) then do:
       v-esys-id = buf_ext-system.esys-id.
       find first buf_temp_xmllib_rec where
@@ -315,7 +324,8 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
   end.
     end.
   end case.
-  if buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail}) then do:
+  if buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail})
+    or buf_ext-system.delivery-method = integer({&esys-dm-contour-edi}) then do:
     v-pck-num = p-pack-num.
     if not can-find(first ub.clients where
                          ub.clients.obj-type = v-header-obj-type
@@ -331,7 +341,9 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
       return error.
     end.
   end.
-  if buf_ext-system.delivery-method = integer({&esys-dm-exite-edi}) then do:
+  if buf_ext-system.delivery-method = integer({&esys-dm-exite-edi})
+     or buf_ext-system.delivery-method = integer({&esys-dm-contour-edi})
+  then do:
     v-pck-num = p-pack-num.
   end.
   if v-pck-num <> p-pack-num
@@ -363,7 +375,9 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
       undo, return error.
     end.
   end. /* buf_ext-system.imp-conf-wait > 0*/
-  if buf_ext-system.delivery-method <> integer({&esys-dm-exite-edi}) then do:
+  if buf_ext-system.delivery-method <> integer({&esys-dm-exite-edi})
+    or buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi})
+  then do:
     assign
     v-pck-num = 0.
   end.
@@ -382,28 +396,30 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
     delete object v-header-th no-error.
     return '':U.
   end.
-  run get-gate-rec in this-procedure ( v-schema-name
-                                      ,output v-gate-rec) no-error.
-  if error-status:error then do:
-    undo, return error substitute("Не найдено описание xsd-схемы &1 в БД", v-schema-name).
-  end.
-  define variable v-longchar as longchar no-undo .
-  v-longchar = ''.
-  run get-gate-by-rec in this-procedure ( input v-gate-rec
-                                        ,output v_dataseth
-                                        ,input-output v-xmlh
-                                        ,input-output v-longchar
-                                        ) no-error.
-  if error-status:error then do:
-    &scop my-message substitute("Ошибка при создании структуры маршрутизируемых данных согласно гейту:&1&2&3&2&4" ~
-                               , v-gate-rec ~
-                               , ~{&new-line~} ~
-                               , error-status:get-message(1) ~
-                               , return-value )
-    {&display-message}.
-    delete object v-header-th no-error.
-    undo, return error '':U.
-  end.
+    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi}) then do:
+      run get-gate-rec in this-procedure ( v-schema-name
+                                          ,output v-gate-rec) no-error.
+      if error-status:error then do:
+        undo, return error substitute("Не найдено описание xsd-схемы &1 в БД", v-schema-name).
+      end.
+      define variable v-longchar as longchar no-undo .
+      v-longchar = ''.
+      run get-gate-by-rec in this-procedure ( input v-gate-rec
+                                            ,output v_dataseth
+                                            ,input-output v-xmlh
+                                            ,input-output v-longchar
+                                            ) no-error.
+      if error-status:error then do:
+        &scop my-message substitute("Ошибка при создании структуры маршрутизируемых данных согласно гейту:&1&2&3&2&4" ~
+                                  , v-gate-rec ~
+                                  , ~{&new-line~} ~
+                                  , error-status:get-message(1) ~
+                                  , return-value )
+        {&display-message}.
+        delete object v-header-th no-error.
+        undo, return error '':U.
+      end.
+    end.
     if v-header-name <> '' then do:
   v-headerh = v-header-th:default-buffer-handle.
   find first buf_temp-xml-tables where
@@ -512,69 +528,74 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
 
   end. /*  if v-insert-header = yes then do:*/
   else do:
-    run gbl/_tmpfile.p (
-                        input ""
-                      , input "xml"
-                      , output v-schema-tmp-file) .
-    COPY-LOB
-    FROM  OBJECT v-longchar
-    TO  FILE v-schema-tmp-file
-    no-convert
-    NO-ERROR .
-    v-longchar = ''.
-    if error-status :error then do:
-        &scop my-message substitute("Ошибка при создании временного файла xsd со схемой &1:&2&3" ~
-                                    , v_dataseth:name ~
-                                    , ~{&new-line~}   ~
-                                    , error-status:get-message(1) )
-      {&display-message}.
-      run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
-      undo, return error '':U.
+    if buf_ext-system.whole-send-news <> integer({&esys-dm-contour-edi}) then do:
+        run gbl/_tmpfile.p (
+                            input ""
+                          , input "xml"
+                          , output v-schema-tmp-file) .
+        COPY-LOB
+        FROM  OBJECT v-longchar
+        TO  FILE v-schema-tmp-file
+        no-convert
+        NO-ERROR .
+        v-longchar = ''.
+        if error-status :error then do:
+            &scop my-message substitute("Ошибка при создании временного файла xsd со схемой &1:&2&3" ~
+                                        , v_dataseth:name ~
+                                        , ~{&new-line~}   ~
+                                        , error-status:get-message(1) )
+          {&display-message}.
+          run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
+          undo, return error '':U.
+        end.
+      end.
     end.
-  end.
-  assign
-  v-rec-cnt = 0
-  .
-  ASSIGN
-  glog = v_dataseth:read-xml( "file"
-                            ,p-xml-file-name
-                            ,"merge" /*cReadMode*/
-                            ,v-schema-tmp-file /*schemalocation*/
-                            ,? /*override filemapping*/
-                            ,?  /*FieldTypeMapping*/
-                            ,"strict" /*VerifySchemaMode*/
-                            ) no-error .
-  if error-status:error
-  then do:
-      &scop my-message substitute("Ошибка при чтении XML файла &1 данными через гейт &2:&3&4" ~
-                                    , p-xml-file-name ~
-                                    , v_dataseth:name ~
-                                    , ~{&new-line~}   ~
-                                    , error-status:get-message(1))
+    if buf_ext-system.whole-send-news <> integer({&esys-dm-contour-edi}) then do:
+      assign
+      v-rec-cnt = 0
+      .
+      ASSIGN
+      glog = v_dataseth:read-xml( "file"
+                                ,p-xml-file-name
+                                ,"merge" /*cReadMode*/
+                                ,v-schema-tmp-file /*schemalocation*/
+                                ,? /*override filemapping*/
+                                ,?  /*FieldTypeMapping*/
+                                ,"strict" /*VerifySchemaMode*/
+                                ) no-error .
+      if error-status:error
+      then do:
+          &scop my-message substitute("Ошибка при чтении XML файла &1 данными через гейт &2:&3&4" ~
+                                        , p-xml-file-name ~
+                                        , v_dataseth:name ~
+                                        , ~{&new-line~}   ~
+                                        , error-status:get-message(1))
 
-    {&display-message}.
-    run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
-    if buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail}) then do:
-      run set-err-type in p-parent-handle ( input {&ora-err-type-structure}) no-error.
+        {&display-message}.
+        run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
+        if buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail}) then do:
+          run set-err-type in p-parent-handle ( input {&ora-err-type-structure}) no-error.
+        end.
+        undo, return error '':U.
+      end.
+       if not glog then do:
+          &scop my-message substitute("Не прошел верификацию с помощью схемы &1 XML файл &2:&3&4&3&5" ~
+                                        , v_dataseth:name ~
+                                        , p-xml-file-name ~
+                                        , ~{&new-line~}   ~
+                                        , error-status:get-message(1) ~
+                                        , error-status:get-message(2) )
+       {&display-message}.
+        run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
+        os-delete value(v-schema-tmp-file).
+        if buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail}) then do:
+          run set-err-type in p-parent-handle ( input {&ora-err-type-structure}) no-error.
+        end.
+        undo, return error '':U.
+      end.
     end.
-    undo, return error '':U.
-  end.
-  if not glog then do:
-      &scop my-message substitute("Не прошел верификацию с помощью схемы &1 XML файл &2:&3&4&3&5" ~
-                                    , v_dataseth:name ~
-                                    , p-xml-file-name ~
-                                    , ~{&new-line~}   ~
-                                    , error-status:get-message(1) ~
-                                    , error-status:get-message(2) )
-    {&display-message}.
-    run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
-    os-delete value(v-schema-tmp-file).
-    if buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail}) then do:
-      run set-err-type in p-parent-handle ( input {&ora-err-type-structure}) no-error.
-    end.
-    undo, return error '':U.
-  end.
-  if buf_ext-system.delivery-method <>  integer({&esys-dm-exite-edi})  then do:
+  if buf_ext-system.delivery-method <>  integer({&esys-dm-exite-edi})
+    and buf_ext-system.delivery-method <>  integer({&esys-dm-contour-edi})  then do:
   case buf_ext-system.delivery-method:
     when integer({&esys-dm-oracle-retail}) then do:
       find first buf_temp-xml-tables where
@@ -672,7 +693,9 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
     end.
   end.
   */
-  os-delete value(v-schema-tmp-file).
+  if buf_ext-system.whole-send-news <> integer({&esys-dm-contour-edi}) then do:
+    os-delete value(v-schema-tmp-file).
+  end.
   _rule-profile:
   for each buf_temp-param-name WHERE
          (buf_temp-param-name.esys-id = p-esys-id

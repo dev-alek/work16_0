@@ -38,6 +38,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 { str/doc-code.i }
 { gbl/waitfram.i }
 { cus/ord-lib.i create-chain }
+{ str/trdcalib.i }
 
 define temp-table tt-trn-doc  no-undo like ub.trn-doc.
 define temp-table tt-doc-line no-undo like ub.doc-line.
@@ -52,6 +53,7 @@ define buffer ttt_ord-dtl-rcv  for ub.ord-dtl-rcv.
 define buffer bf_ord-chain     for ub.ord-chain.
 define buffer bf_trn-doc       for ub.trn-doc.
 define buffer bf_doc-line      for ub.doc-line.
+define buffer bf_ord-rcv-attr  for ub.ord-rcv-attr.
 
 define buffer new_trn-doc  for ub.trn-doc  .
 define buffer new_doc-line for ub.doc-line .
@@ -307,14 +309,73 @@ define variable n-d as character no-undo .
      message error-status :get-message(1) .
      return.
   end.
-define variable v-print-rubl as logical   no-undo .
-define variable v-curr-r-b as character no-undo .
-    { gbl/curr-r-b.i
-      v-curr-r-b
-    }
-    if v-curr-r-b = {&r-b-base} then v-print-rubl = false .
-    else v-print-rubl = true .
+  
+  define variable v-print-rubl as logical   no-undo .
+  define variable v-curr-r-b as character no-undo .
+  
+  { gbl/curr-r-b.i
+    v-curr-r-b
+  }
+    
+  if v-curr-r-b = {&r-b-base} then v-print-rubl = false .
+  else v-print-rubl = true .
 
+  /* атрибуты накладной */
+  find first bf_ord-rcv-attr no-lock
+    where bf_ord-rcv-attr.doc-code = ttt_ord-doc-rcv.doc-code
+    and bf_ord-rcv-attr.rcv-code = ttt_ord-doc-rcv.rcv-code
+    and bf_ord-rcv-attr.attr-code = {&orddocattr-nids}
+    no-error.
+  if available bf_ord-rcv-attr then do:
+    { str/tdat-wrt.i
+      new_trn-doc.doc-code
+      {&trdcattr-nids}
+      bf_ord-rcv-attr.attr-value
+      no-error
+    }
+  end.
+  
+  find first bf_ord-rcv-attr no-lock
+    where bf_ord-rcv-attr.doc-code = ttt_ord-doc-rcv.doc-code
+    and bf_ord-rcv-attr.rcv-code = ttt_ord-doc-rcv.rcv-code
+    and bf_ord-rcv-attr.attr-code = {&orddocattr-dids}
+    no-error.
+  if available bf_ord-rcv-attr then do:
+    { str/tdat-wrt.i
+      new_trn-doc.doc-code
+      {&trdcattr-dids}
+      bf_ord-rcv-attr.attr-value
+      no-error
+    }
+  end.
+  
+  find first bf_ord-rcv-attr no-lock
+    where bf_ord-rcv-attr.doc-code = ttt_ord-doc-rcv.doc-code
+    and bf_ord-rcv-attr.rcv-code = ttt_ord-doc-rcv.rcv-code
+    and bf_ord-rcv-attr.attr-code = {&orddocattr-invoiceNumber}
+    no-error.
+  if available bf_ord-rcv-attr then do:
+    { str/tdat-wrt.i
+      new_trn-doc.doc-code
+      {&trdcattr-nsf}
+      bf_ord-rcv-attr.attr-value
+      no-error
+    }
+  end.
+  
+  find first bf_ord-rcv-attr no-lock
+    where bf_ord-rcv-attr.doc-code = ttt_ord-doc-rcv.doc-code
+    and bf_ord-rcv-attr.rcv-code = ttt_ord-doc-rcv.rcv-code
+    and bf_ord-rcv-attr.attr-code = {&orddocattr-invoiceDate}
+    no-error.
+  if available bf_ord-rcv-attr then do:
+    { str/tdat-wrt.i
+      new_trn-doc.doc-code
+      {&trdcattr-dsf}
+      bf_ord-rcv-attr.attr-value
+      no-error
+    }
+  end.
 
   assign
   new_trn-doc.contract-code  = v-contract-code

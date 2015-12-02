@@ -698,15 +698,15 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define stop-stat
 { cmp/cr-prep.i 1 all-docs-p-vis "trim(fill('yes,',40) + fill('no,',58) , ',')"                                                                                                                                                                                                                                   " " "trim(fill('yes,',40)  + fill('no,',58) , ',')"                                                                                                                                                                                                                                   }
 
 /* Параметры cli-zakz.w по умолчанию */
-{ cmp/cr-prep.i 1 cli-zakzFP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                             }
-{ cmp/cr-prep.i 1 cli-zakzFP-p-siz 1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10                                  " "  1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10                                 }
-{ cmp/cr-prep.i 1 cli-zakzFP-p-vis yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,yes,yes,no   " "  yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,yes,yes,no  }
-{ cmp/cr-prep.i 1 cli-zakzOP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                             }
-{ cmp/cr-prep.i 1 cli-zakzOP-p-siz 1,3,1,8,20,4,7,10,12,10,10,10,3,9,9,9,12,14,1,9,10                                  " "  1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10                                 }
-{ cmp/cr-prep.i 1 cli-zakzOP-p-vis trim(fill('yes,',21),',')                                                          " "  trim(fill('yes,',21),',')                                                         }
-{ cmp/cr-prep.i 1 cli-zakzOF-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21                             }
-{ cmp/cr-prep.i 1 cli-zakzOF-p-siz 1,3,1,10,26,4,7,9,12,10,10,10,3,11,11,11,12,14,1,9,10                              " "  1,3,1,10,26,4,7,9,12,10,10,10,3,11,11,11,12,14,1,9,10                             }
-{ cmp/cr-prep.i 1 cli-zakzOF-p-vis yes,yes,yes,yes,yes,no,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,yes,yes,no        " "  yes,yes,yes,yes,yes,no,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,yes,yes,no       }
+{ cmp/cr-prep.i 1 cli-zakzFP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              }
+{ cmp/cr-prep.i 1 cli-zakzFP-p-siz 1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10,10,10                                  " "  1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10,10,10                                  }
+{ cmp/cr-prep.i 1 cli-zakzFP-p-vis yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,yes,yes,no,no,no   " "  yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,yes,yes,no,no,no   }
+{ cmp/cr-prep.i 1 cli-zakzOP-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              }
+{ cmp/cr-prep.i 1 cli-zakzOP-p-siz 1,3,1,8,20,4,7,10,12,10,10,10,3,9,9,9,12,14,1,9,10,10,10                                 " "  1,3,1,8,20,4,7,9,12,10,10,10,3,9,9,9,12,14,1,9,10,10,10                                  }
+{ cmp/cr-prep.i 1 cli-zakzOP-p-vis trim(fill('yes,',23),',')                                                                " "  trim(fill('yes,',23),',')                                                                }
+{ cmp/cr-prep.i 1 cli-zakzOF-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23                              }
+{ cmp/cr-prep.i 1 cli-zakzOF-p-siz 1,3,1,10,26,4,7,9,12,10,10,10,3,11,11,11,12,14,1,9,10,10,10                              " "  1,3,1,10,26,4,7,9,12,10,10,10,3,11,11,11,12,14,1,9,10,10,10                              }
+{ cmp/cr-prep.i 1 cli-zakzOF-p-vis yes,yes,yes,yes,yes,no,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no        " "  yes,yes,yes,yes,yes,no,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no        }
 
 /* Параметры contspec.w по умолчанию */
 { cmp/cr-prep.i 1 contspec-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23     " "  1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23  }
@@ -780,6 +780,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 { cmp/cr-prep.i 1 lob-res-list          list         "Список"      list           "List"        }
 { cmp/cr-prep.i 1 lob-res-list-macro    list-macro   "Макрос формир списка"      list-macro           "List Forming Macro"        }
 { cmp/cr-prep.i 1 lob-res-ref           ref          "Справочник"  ref            "Reference"   }
+{ cmp/cr-prep.i 1 lob-egais-wb          egais-wb     "Накладная EGAIS"  egais-wb  "EGAIS Waybill" }
 
 
 &glob clob-res-codes '{&bef-lob-res-data}~
@@ -790,6 +791,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 ,{&bef-lob-res-list}~
 ,{&bef-lob-res-list-macro}~
 ,{&bef-lob-res-ref}~
+,{&bef-lob-egais-wb}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes {&clob-res-codes}" ).
@@ -802,6 +804,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-
 ,{&bef-lob-res-list-full}~
 ,{&bef-lob-res-list-macro-full}~
 ,{&bef-lob-res-ref-full}~
+,{&bef-lob-egais-wb-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes-full {&clob-res-codes-full}" ).
@@ -1883,6 +1886,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-stts-
 { cmp/cr-prep.i 1 esys-dm-CDash           4    "Не архивировать(Панель Руководителя;DKLink)"  4  "No arj(Commanders DashBoard;DKLink)"    }
 { cmp/cr-prep.i 1 esys-dm-exite-edi       5    "Exite-EDI"                                    5  "Exite-EDI"              }
 { cmp/cr-prep.i 1 esys-dm-contour-edi     9    "Контур.EDI"                                   9  "Сontour.EDI"            }
+{ cmp/cr-prep.i 1 esys-dm-egais          10    "ЕГАИС"                                       10  "EGAIS"                  }
 
 &glob esys-dm-list '~
 {&bef-esys-dm-ordinal}~
@@ -1891,6 +1895,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-stts-
 ,{&bef-esys-dm-CDash}~
 ,{&bef-esys-dm-exite-edi}~
 ,{&bef-esys-dm-contour-edi}~
+,{&bef-esys-dm-egais}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-list {&esys-dm-list}" ).
@@ -1902,6 +1907,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-l
 ,{&bef-esys-dm-CDash-full}~
 ,{&bef-esys-dm-exite-edi-full}~
 ,{&bef-esys-dm-contour-edi-full}~
+,{&bef-esys-dm-egais-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-list-full {&esys-dm-list-full}" ).
@@ -2028,7 +2034,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sc-gds-de
 { cmp/cr-prep.i 1  pr-gds-iserv-ptrl   7  " "  7 }
 { cmp/cr-prep.i 1  pr-gds-iban         8  " "  8 }
 
-/* Атрибуты заказа шапка */
+/* Атрибуты заказа шапка и поставки */
 { cmp/cr-prep.i 1 orddocattr-cycle-doc-code        "cycle-doc-code"       " "  "cycle-doc-code"       }
 { cmp/cr-prep.i 1 orddocattr-cycle-day             "cycle-day"            " "  "cycle-day"            }
 { cmp/cr-prep.i 1 orddocattr-cycle-contract-code   "cycle-contract-code"  " "  "cycle-contract-code"  }
@@ -2044,6 +2050,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sc-gds-de
 { cmp/cr-prep.i 1 orddocattr-cycle-base-rate       "base-rate"            " "  "base-rate"            }
 { cmp/cr-prep.i 1 orddocattr-cycle-base-scale      "base-scale"           " "  "base-scale"           }
 { cmp/cr-prep.i 1 orddocattr-ora-exp-seq-num       "ora-exp-seq-num"      " "  "ora-exp-seq-num"      }
+{ cmp/cr-prep.i 1 orddocattr-nids                  "nids"                 " "  "nids"                 }
+{ cmp/cr-prep.i 1 orddocattr-dids                  "dids"                 " "  "dids"                 }
+{ cmp/cr-prep.i 1 orddocattr-invoiceNumber         "invoiceNumber"        " "  "invoiceNumber"        }
+{ cmp/cr-prep.i 1 orddocattr-invoiceDate           "invoiceDate"          " "  "invoiceDate"          }
 
 /* Атрибуты заказа строки */
 { cmp/cr-prep.i 1 ordlineattr-cli-qnty    "cycle-cli-qnty"  " "  "cycle-cli-qnty"     }
@@ -2571,3 +2581,7 @@ run filwrlib_num-lines-get in this-procedure
   ) .
 
 { cmp/cr-prep.i 1 alc-check-price 28  "содержание спирта" 28 "contents alcohol"  }
+
+/* Типы сообщения EGAIS */
+{ cmp/cr-prep.i 1 EGAIS-DictOrg    1     "Справочник организаций"    1    "Dictionary organization"   }
+{ cmp/cr-prep.i 1 EGAIS-DictGds    2     "Справочник товаров"        2    "Dictionary goods"   }   

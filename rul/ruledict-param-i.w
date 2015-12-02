@@ -601,6 +601,7 @@ cb-object-type:LIST-ITEMS IN FRAME {&FRAME-NAME} = {&comma-char} + {&r-b} +
                                                    {&comma-char} + {&table_chk-doc} + "_wth-type_null" +
                                                    {&comma-char} + {&table_chk-doc} + "_wth-type" +
                                                    {&comma-char} + "xsd" +
+                                                   {&comma-char} + "sub-type" +
                                                    {&comma-char} + "output-type" +
                                                    {&comma-char} + "dataset"
 cb-object-type = tt-ruledict-param.param-2-data-type

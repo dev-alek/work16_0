@@ -62,10 +62,10 @@ define variable vss-description as character no-undo init "Вторая закладка расче
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS date-ship date-p-1 date-p-2 g#type BUTTON-1 ~
 EDITOR-1 T-grp radio-column B-neword T-artic B-newcol radio-gds-obj ~
-tog-goods-from-am  tog-det-post FILL-IN-1 FILL-IN-2 FILL-IN-3
+tog-goods-from-am tog-det-post tog-det-prizn FILL-IN-1 FILL-IN-2 FILL-IN-3
 &Scoped-Define DISPLAYED-OBJECTS date-ship date-p-1 date-p-2 g#type ~
 EDITOR-1 T-grp radio-column T-artic radio-gds-obj tog-goods-from-am  ~
-tog-det-post FILL-IN-1 FILL-IN-2 FILL-IN-3
+tog-det-post tog-det-prizn FILL-IN-1 FILL-IN-2 FILL-IN-3
 
 /* Custom List Definitions                                              */
 /* ADM-CREATE-FIELDS,ADM-ASSIGN-FIELDS,List-3,List-4,List-5,List-6      */
@@ -191,6 +191,11 @@ DEFINE VARIABLE tog-goods-from-am AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 25.5 BY .83 TOOLTIP "Только товары из Ассортиментной матрицы объекта" NO-UNDO.
 
+DEFINE VARIABLE tog-det-prizn AS LOGICAL INITIAL no
+     LABEL "Детализация по признакам"
+     VIEW-AS TOGGLE-BOX
+     SIZE 31 BY .83 TOOLTIP "Детализировать шкальные товары по признакам" NO-UNDO.
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -202,15 +207,16 @@ DEFINE FRAME F-Main
      BUTTON-1 AT ROW 3.25 COL 2
      EDITOR-1 AT ROW 4.75 COL 1 NO-LABEL
      T-grp AT ROW 10 COL 5
-     radio-column AT ROW 10 COL 31 NO-LABEL WIDGET-ID 2
-     B-neword AT ROW 10 COL 61
+     radio-column AT ROW 10 COL 37 NO-LABEL WIDGET-ID 2
+     B-neword AT ROW 10 COL 67
      T-artic AT ROW 11 COL 5
-     B-newcol AT ROW 12 COL 61 WIDGET-ID 8
+     B-newcol AT ROW 12 COL 67 WIDGET-ID 8
      radio-gds-obj AT ROW 13.25 COL 5.5 NO-LABEL WIDGET-ID 10
-     tog-goods-from-am AT ROW 14.25 COL 31 WIDGET-ID 20
+     tog-goods-from-am AT ROW 14.25 COL 37 WIDGET-ID 20
      tog-det-post AT ROW 15.5 COL 5.5 WIDGET-ID 18
+     tog-det-prizn AT ROW 15.5 COL 37 WIDGET-ID 22
      FILL-IN-1 AT ROW 9.25 COL 2.5 COLON-ALIGNED NO-LABEL
-     FILL-IN-2 AT ROW 9.25 COL 29 COLON-ALIGNED NO-LABEL WIDGET-ID 6
+     FILL-IN-2 AT ROW 9.25 COL 35 COLON-ALIGNED NO-LABEL WIDGET-ID 6
      FILL-IN-3 AT ROW 12.5 COL 3 COLON-ALIGNED NO-LABEL WIDGET-ID 16
      "Тип заказов" VIEW-AS TEXT
           SIZE 18.5 BY .67 AT ROW 1.25 COL 53
@@ -317,6 +323,20 @@ DO:
      ( input my-handle , input "all-ord":u , g#type ) .
   editor-1 = e-method .
   display editor-1 with frame {&frame-name} .
+
+find first ubflt.usr-flt  no-lock where                                  /* Детализация по признакам только для среднесуточного метода */
+         ubflt.usr-flt.user-name    = v-cntxt-userid and
+         ubflt.usr-flt.call-point   = "all-ord":U    no-error .
+         if not avail ubflt.usr-flt  then do:
+            message error-status :get-message(1) .
+         end.
+if integer(entry(2,(entry(3,ubflt.usr-flt.list_)), "=" )) = 1 and radio-column:screen-value = "no" then do :        /*   if  R-algoritm = 1  */
+    enable tog-det-prizn with frame {&frame-name}.
+end.
+else do :
+    hide tog-det-prizn .
+end.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -329,15 +349,24 @@ ON VALUE-CHANGED OF radio-column IN FRAME F-Main
 DO:
     if radio-column:screen-value = "yes" then do :
         enable b-neword with frame {&frame-name} .
-        hide b-newcol radio-gds-obj fill-in-3 tog-det-post.
+      hide b-newcol radio-gds-obj fill-in-3 tog-det-post tog-det-prizn.
 
     end.
     else do :
+      find first ubflt.usr-flt  no-lock where
+         ubflt.usr-flt.user-name    = v-cntxt-userid and
+         ubflt.usr-flt.call-point   = "all-ord":U    no-error .
+         if not avail ubflt.usr-flt  then do:
+            message error-status :get-message(1) .
+         end.
         enable b-newcol radio-gds-obj fill-in-3 with frame {&frame-name} .
         hide b-neword .
         if radio-gds-obj:screen-value = "no" then do :
           enable tog-det-post with frame {&frame-name}.
         end.
+      if (integer(entry(2,(entry(3,ubflt.usr-flt.list_)), "=" )) = 1) then do :              /* Детализация по признакам только для среднесуточного метода */
+          enable tog-det-prizn with frame {&frame-name}.
+      end.
     end.
     run save-usr-flt.
 END.
@@ -377,6 +406,17 @@ END.
 &Scoped-define SELF-NAME tog-goods-from-am
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tog-goods-from-am V-table-Win
 ON VALUE-CHANGED OF tog-goods-from-am IN FRAME F-Main /* Товары из Асс.матрицы */
+DO:
+  run save-usr-flt.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME tog-det-prizn
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tog-det-prizn V-table-Win
+ON VALUE-CHANGED OF tog-det-prizn IN FRAME F-Main /* Товары из Асс.матрицы */
 DO:
   run save-usr-flt.
 END.
@@ -458,6 +498,7 @@ PROCEDURE my-report :
 
 x-tog-artic = T-artic .
 x-tog-grp   = T-grp   .
+if radio-column then tog-det-prizn = false.
 run cus/r-aord.p ( g#type ) .
 
 END PROCEDURE.
@@ -516,6 +557,7 @@ PROCEDURE my_init :
       radio-gds-obj:screen-value = "yes"
       tog-det-post:screen-value = "yes"
       tog-goods-from-am:screen-value = "no"
+      tog-det-prizn:screen-value = "no"
     .
 
     find first ubflt.usr-flt where
@@ -537,19 +579,34 @@ PROCEDURE my_init :
             WHEN 4 THEN DO:
               tog-goods-from-am:screen-value = ENTRY(v-ii, ubflt.usr-flt.list_, {&delim-par}).
             END.
+            WHEN 5 THEN DO:
+              tog-det-prizn:screen-value     = ENTRY(v-ii, ubflt.usr-flt.list_, {&delim-par}).
+            END.
         end case.
       end.
     end. /*if available ubflt.usr-flt */
 
     apply "value-changed" to radio-column in frame {&frame-name}.
-DISPLAY date-p-1 date-p-2 date-ship EDITOR-1 g#type  FILL-IN-1 FILL-IN-2 FILL-IN-3 tog-det-post WITH FRAME {&FRAME-NAME}.
+DISPLAY date-p-1 date-p-2 date-ship EDITOR-1 g#type  FILL-IN-1 FILL-IN-2 FILL-IN-3 tog-det-post tog-det-prizn WITH FRAME {&FRAME-NAME}.
 if radio-gds-obj:screen-value = "yes" then do :
     hide tog-det-post .
 end.
 else do :
     enable tog-det-post with frame {&frame-name}.
 end.
-if radio-column:screen-value = "yes" then hide FILL-IN-3 tog-det-post .
+if radio-column:screen-value = "yes" then hide FILL-IN-3 tog-det-post tog-det-prizn.
+find first ubflt.usr-flt  no-lock where
+         ubflt.usr-flt.user-name    = v-cntxt-userid and
+         ubflt.usr-flt.call-point   = "all-ord":U    no-error .
+         if not avail ubflt.usr-flt  then do:
+            message error-status :get-message(1) .
+         end.
+if integer(entry(2,(entry(3,ubflt.usr-flt.list_)), "=" )) = 1 and radio-column:screen-value = "no" then do :
+    enable tog-det-prizn with frame {&frame-name}.
+end.
+else do :
+    hide tog-det-prizn .
+end.
 
 END PROCEDURE.
 
@@ -568,6 +625,7 @@ assign frame {&frame-name}
    radio-gds-obj
    tog-det-post
    tog-goods-from-am
+   tog-det-prizn
 .
 find first ubflt.usr-flt where
         ubflt.usr-flt.user-name    = v-cntxt-userid and
@@ -584,8 +642,8 @@ find first ubflt.usr-flt where
             ubflt.usr-flt.list_ = string(radio-column)  + {&delim-par}
                                 + string(radio-gds-obj) + {&delim-par}
                                 + string(tog-det-post)  + {&delim-par}
-                                + string(tog-goods-from-am)
-
+                                + string(tog-goods-from-am) + {&delim-par}
+                                + string(tog-det-prizn)
         .
 
 END PROCEDURE.

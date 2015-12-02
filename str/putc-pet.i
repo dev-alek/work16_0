@@ -85,7 +85,8 @@ define buffer buf_pl-gds-pump for ub.pl-gds-pump.
         v-gds-code = 0.
         for each buf_pl-pump-nozzle no-lock where
                 buf_pl-pump-nozzle.obj-type = p-obj-type
-            AND buf_pl-pump-nozzle.obj-code = i-obj-code,
+            AND buf_pl-pump-nozzle.obj-code = i-obj-code
+            and buf_pl-pump-nozzle.status_  = {&current-status},
             first cash-place no-lock where
                   cash-place.obj-type = p-obj-type
               and cash-place.obj-code = i-obj-code
@@ -154,6 +155,7 @@ define buffer buf_pl-gds-pump for ub.pl-gds-pump.
         for each buf_pl-pump-nozzle no-lock where
                 buf_pl-pump-nozzle.obj-type = p-obj-type
             AND buf_pl-pump-nozzle.obj-code = i-obj-code
+            and buf_pl-pump-nozzle.status_  = {&current-status}
         break
         by buf_pl-pump-nozzle.obj-type
         by buf_pl-pump-nozzle.obj-code
@@ -209,7 +211,8 @@ define buffer buf_pl-gds-pump for ub.pl-gds-pump.
                     buf_pump-nozzle.obj-type = p-obj-type
                and  buf_pump-nozzle.obj-code = i-obj-code
                and buf_pump-nozzle.pump-code = buf_pl-pump-nozzle.pump-code
-               and buf_pump-nozzle.nozzle-code = buf_pl-pump-nozzle.nozzle-code no-error.
+               and buf_pump-nozzle.nozzle-code = buf_pl-pump-nozzle.nozzle-code
+               and buf_pump-nozzle.status_  = {&current-status} no-error.
           if available buf_pump-nozzle then do:
             run bgelib-tag-put in this-procedure ( input 4, input "FPFNozzleID"       , input string(buf_pump-nozzle.ef-nid), input 1 ).
           end.

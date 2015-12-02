@@ -58,10 +58,10 @@ define variable v-load-cfg          as logical      no-undo.
 &Scoped-define DB-AWARE no
 
 /* Name of designated FRAME-NAME and/or first browse and/or first query */
-&Scoped-define FRAME-NAME f-l-i
+&Scoped-define FRAME-NAME FRAME-A
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-OK IMAGE-1 name b-quit password 
+&Scoped-Define ENABLED-OBJECTS b-OK IMAGE-1 name password b-quit 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -87,33 +87,32 @@ DEFINE BUTTON b-quit AUTO-END-KEY  NO-FOCUS
      SIZE 10 BY 1.
 
 DEFINE VARIABLE name AS CHARACTER FORMAT "X(12)":U 
-     LABEL "»м€" 
+     LABEL "Ћогин" 
      VIEW-AS FILL-IN 
-     SIZE 13.5 BY 1 NO-UNDO.
+     SIZE 20 BY 1 NO-UNDO.
 
 DEFINE VARIABLE password AS CHARACTER FORMAT "X(12)":U 
      LABEL "ѕароль" 
      VIEW-AS FILL-IN 
-     SIZE 13.5 BY 1 NO-UNDO.
+     SIZE 20 BY 1 NO-UNDO.
 
 DEFINE IMAGE IMAGE-1
      FILENAME "cmp/ith.bmp":U
-     STRETCH-TO-FIT RETAIN-SHAPE
-     SIZE 24.75 BY 3.25.
+     SIZE 40 BY 8.88.
 
 
 /* ************************  Frame Definitions  *********************** */
 
-DEFINE FRAME f-l-i
-     b-OK AT ROW 9.04 COL 13
-     name AT ROW 5.79 COL 14.5 COLON-ALIGNED
-     b-quit AT ROW 9.04 COL 23
-     password AT ROW 7 COL 14.5 COLON-ALIGNED PASSWORD-FIELD 
-     IMAGE-1 AT ROW 1.79 COL 10
+DEFINE FRAME FRAME-A
+     b-OK AT ROW 8.04 COL 11.75
+     name AT ROW 4.96 COL 10 COLON-ALIGNED
+     password AT ROW 6.17 COL 10 COLON-ALIGNED PASSWORD-FIELD 
+     b-quit AT ROW 8.04 COL 21.88
+     IMAGE-1 AT ROW 1.08 COL 1.13
     WITH 1 DOWN NO-BOX OVERLAY 
          SIDE-LABELS THREE-D 
          AT COL 1 ROW 1
-         SIZE 41.5 BY 10.27.
+         SIZE 40.13 BY 8.96.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -130,15 +129,15 @@ DEFINE FRAME f-l-i
 IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW w-login ASSIGN
          HIDDEN             = YES
-         TITLE              = "IBS Trade House 15.1"
-         COLUMN             = 25.25
-         ROW                = 8.5
-         HEIGHT             = 10.25
-         WIDTH              = 41.5
-         MAX-HEIGHT         = 24.21
-         MAX-WIDTH          = 100
-         VIRTUAL-HEIGHT     = 24.21
-         VIRTUAL-WIDTH      = 100
+         TITLE              = "Trade House 15.1"
+         COLUMN             = 27
+         ROW                = 7.58
+         HEIGHT             = 9.13
+         WIDTH              = 40.25
+         MAX-HEIGHT         = 35.63
+         MAX-WIDTH          = 160
+         VIRTUAL-HEIGHT     = 35.63
+         VIRTUAL-WIDTH      = 160
          RESIZE             = no
          SCROLL-BARS        = yes
          STATUS-AREA        = no
@@ -156,29 +155,20 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
 /* ***********  Runtime Attributes and AppBuilder Settings  *********** */
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
-/* SETTINGS FOR FRAME f-l-i
+/* SETTINGS FOR FRAME FRAME-A
    FRAME-NAME UNDERLINE                                                 */
-/* SETTINGS FOR BUTTON b-OK IN FRAME f-l-i
+/* SETTINGS FOR BUTTON b-OK IN FRAME FRAME-A
    NO-DISPLAY                                                           */
-/* SETTINGS FOR BUTTON b-quit IN FRAME f-l-i
+/* SETTINGS FOR BUTTON b-quit IN FRAME FRAME-A
    NO-DISPLAY                                                           */
-/* SETTINGS FOR FILL-IN name IN FRAME f-l-i
+/* SETTINGS FOR FILL-IN name IN FRAME FRAME-A
    NO-DISPLAY                                                           */
-/* SETTINGS FOR FILL-IN password IN FRAME f-l-i
+/* SETTINGS FOR FILL-IN password IN FRAME FRAME-A
    NO-DISPLAY                                                           */
 IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(w-login)
 THEN w-login:HIDDEN = no.
 
 /* _RUN-TIME-ATTRIBUTES-END */
-&ANALYZE-RESUME
-
-
-/* Setting information for Queries and Browse Widgets fields            */
-
-&ANALYZE-SUSPEND _QUERY-BLOCK FRAME f-l-i
-/* Query rebuild information for FRAME f-l-i
-     _Query            is NOT OPENED
-*/  /* FRAME f-l-i */
 &ANALYZE-RESUME
 
  
@@ -187,20 +177,9 @@ THEN w-login:HIDDEN = no.
 
 /* ************************  Control Triggers  ************************ */
 
-&Scoped-define SELF-NAME w-login
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL w-login w-login
-ON WINDOW-CLOSE OF w-login /* IBS Trade House 15.1 */
-DO:
-  apply "end-error" to frame {&frame-name}.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME b-OK
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-OK w-login
-ON CHOOSE OF b-OK IN FRAME f-l-i /* ¬вод */
+ON CHOOSE OF b-OK IN FRAME FRAME-A /* ¬вод */
 DO:
   if name :screen-value = ""
   then do:
@@ -216,40 +195,6 @@ END.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-OK w-login
-ON ENTRY OF b-OK IN FRAME f-l-i /* ¬вод */
-DO:
-  if lastkey = keycode ("RETURN") then do:
-    apply "CHOOSE" to b-ok in frame {&frame-name}.
-  end.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME name
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL name w-login
-ON RETURN OF name IN FRAME f-l-i /* »м€ */
-DO:
-  apply "entry" to password in frame {&frame-name} .
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME password
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL password w-login
-ON RETURN OF password IN FRAME f-l-i /* ѕароль */
-DO:
-  apply "CHOOSE" to b-ok in frame {&frame-name}.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK w-login 
@@ -258,6 +203,16 @@ END.
 /* ***************************  Main Block  *************************** */
 
 { gbl/app_help.i &disable-button=yes }
+
+on "ENTRY" of b-ok do:
+  if lastkey = keycode ("RETURN") then do:
+    apply "CHOOSE" to b-ok in frame {&frame-name}.
+  end.
+end.
+
+on window-close of {&window-name} do:
+  apply "end-error" to frame {&frame-name}.
+end.
 
 ASSIGN
   CURRENT-WINDOW             = {&WINDOW-NAME}
@@ -589,9 +544,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-OK IMAGE-1 name b-quit password 
-      WITH FRAME f-l-i IN WINDOW w-login.
-  {&OPEN-BROWSERS-IN-QUERY-f-l-i}
+  ENABLE b-OK IMAGE-1 name password b-quit 
+      WITH FRAME FRAME-A IN WINDOW w-login.
+  {&OPEN-BROWSERS-IN-QUERY-FRAME-A}
   VIEW w-login.
 END PROCEDURE.
 

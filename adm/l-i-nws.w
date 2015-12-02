@@ -1,7 +1,7 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME w-login
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS w-login
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS w-login 
 /*
 
 $Revision$
@@ -44,19 +44,19 @@ define variable v-mode          as character no-undo .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
 &Scoped-define PROCEDURE-TYPE WINDOW
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME FRAME-A
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS name password b-OK b-quit
-&Scoped-Define DISPLAYED-OBJECTS name password
+&Scoped-Define ENABLED-OBJECTS name password b-OK b-quit 
+&Scoped-Define DISPLAYED-OBJECTS name password 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -72,41 +72,41 @@ define variable v-mode          as character no-undo .
 DEFINE VAR w-login AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-OK AUTO-GO DEFAULT
-     LABEL "&Ввод":L
+DEFINE BUTTON b-OK AUTO-GO DEFAULT 
+     LABEL "&Ввод":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY DEFAULT
-     LABEL "&Отмена":L
+DEFINE BUTTON b-quit AUTO-END-KEY DEFAULT 
+     LABEL "&Отмена":L 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE name AS CHARACTER FORMAT "X(12)":U
-     LABEL " Имя "
-     VIEW-AS FILL-IN
-     SIZE 13.13 BY 1 NO-UNDO.
+DEFINE VARIABLE name AS CHARACTER FORMAT "X(12)":U 
+     LABEL "Логин" 
+     VIEW-AS FILL-IN 
+     SIZE 20 BY 1 NO-UNDO.
 
-DEFINE VARIABLE password AS CHARACTER FORMAT "X(8)":U
-     LABEL "Пароль"
-     VIEW-AS FILL-IN
-     SIZE 13.13 BY 1 NO-UNDO.
+DEFINE VARIABLE password AS CHARACTER FORMAT "X(8)":U 
+     LABEL "Пароль" 
+     VIEW-AS FILL-IN 
+     SIZE 20 BY 1 NO-UNDO.
 
 DEFINE IMAGE IMAGE-1
      FILENAME "cmp/ith.bmp":U
-     SIZE 24.75 BY 3.25.
+     SIZE 40 BY 8.88.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME FRAME-A
-     name AT ROW 5.83 COL 11.25 COLON-ALIGNED
-     password AT ROW 7.08 COL 11.25 COLON-ALIGNED BLANK
-     b-OK AT ROW 8.75 COL 8.5
-     b-quit AT ROW 8.75 COL 18.5
-     IMAGE-1 AT ROW 1.96 COL 5.63
-    WITH 1 DOWN NO-BOX OVERLAY
-         SIDE-LABELS THREE-D
+     name AT ROW 4.96 COL 10 COLON-ALIGNED
+     password AT ROW 6.17 COL 10 COLON-ALIGNED BLANK 
+     b-OK AT ROW 8 COL 11.75
+     b-quit AT ROW 8 COL 21.88
+     IMAGE-1 AT ROW 1 COL 1
+    WITH 1 DOWN NO-BOX OVERLAY 
+         SIDE-LABELS THREE-D 
          AT COL 1 ROW 1
-         SIZE 35.5 BY 10.21.
+         SIZE 40.13 BY 8.96.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -123,15 +123,15 @@ DEFINE FRAME FRAME-A
 IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW w-login ASSIGN
          HIDDEN             = YES
-         TITLE              = "IBS TH СПН"
-         COLUMN             = 31.5
-         ROW                = 9
-         HEIGHT             = 10.25
-         WIDTH              = 35.5
-         MAX-HEIGHT         = 24.21
-         MAX-WIDTH          = 100
-         VIRTUAL-HEIGHT     = 24.21
-         VIRTUAL-WIDTH      = 100
+         TITLE              = "TH СПН"
+         COLUMN             = 27
+         ROW                = 7.58
+         HEIGHT             = 9.13
+         WIDTH              = 40.25
+         MAX-HEIGHT         = 35.63
+         MAX-WIDTH          = 160
+         VIRTUAL-HEIGHT     = 35.63
+         VIRTUAL-WIDTH      = 160
          RESIZE             = no
          SCROLL-BARS        = yes
          STATUS-AREA        = no
@@ -150,8 +150,8 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR FRAME FRAME-A
-   UNDERLINE                                                            */
-ASSIGN
+   FRAME-NAME UNDERLINE                                                 */
+ASSIGN 
        FRAME FRAME-A:HIDDEN           = TRUE.
 
 /* SETTINGS FOR BUTTON b-OK IN FRAME FRAME-A
@@ -175,7 +175,7 @@ THEN w-login:HIDDEN = yes.
 */  /* FRAME FRAME-A */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -200,7 +200,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK w-login
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK w-login 
 
 
 /* ***************************  Main Block  *************************** */
@@ -442,3 +442,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

@@ -39,6 +39,7 @@ define variable vss-description as character no-undo init "Триггер на запись при
 
 define variable v-date as date no-undo .
 define variable v-time as integer no-undo .
+define variable v-timeplus as integer no-undo .
 define variable v-obj-db-num as integer no-undo .
 define buffer buf_c-dis-some-rule for ub.c-dis-some-rule.
 
@@ -119,6 +120,14 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   if not g#news
   or v-send >= 0 then do:
     run cur-time in this-procedure(output v-date, output v-time).
+    /*эта фишка для уникальности индекса в c-dis-some-rule*/
+    assign v-timeplus = v-time .
+    repeat:
+        find first buf_c-dis-some-rule where buf_c-dis-some-rule.nonunique = ub.dis-some-rule.nonunique + "-" + string(v-timeplus) no-lock no-error .
+        if avail buf_c-dis-some-rule then v-timeplus = v-timeplus + 1 .
+        else leave .
+    end.
+    DO TRANSACTION :
     create buf_c-dis-some-rule.
     buffer-copy old_dis-some-rule
     except
@@ -136,7 +145,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     buf_c-dis-some-rule.pos-type           = ub.dis-some-rule.pos-type
     buf_c-dis-some-rule.discnt-role        = ub.dis-some-rule.discnt-role
     buf_c-dis-some-rule.resource_id        = ub.dis-some-rule.resource_id
-    buf_c-dis-some-rule.nonunique          = ub.dis-some-rule.nonunique
+    buf_c-dis-some-rule.nonunique          = ub.dis-some-rule.nonunique + "-" + string(v-timeplus)
     buf_c-dis-some-rule.corr-time          = v-time
     buf_c-dis-some-rule.corr-user-db-num   = g#db-num
     buf_c-dis-some-rule.corr-user-name     = (if g#news
@@ -147,6 +156,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                               )
     buf_c-dis-some-rule.corr-date          = v-date
     .
+    END .
     CASE buf_c-dis-some-rule.classif-type:
     end case.
   end. /*if not g#news*/

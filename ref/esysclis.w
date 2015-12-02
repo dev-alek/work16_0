@@ -209,7 +209,7 @@ DEFINE BROWSE br-esys-cli
 X_ext-classif.KEY#_one  COLUMN-LABEL "Код!внешней!системы" FORMAT ">>>>>>>>9"
 get-esys-name(X_ext-classif.KEY#_one) COLUMN-LABEL "Внешняя система" FORMAT "X(30)"
 X_ext-classif.charkey_one  COLUMN-LABEL "Тип!объ!во!внеш.!сист." FORMAT "X(3)"
-X_ext-classif.KEY#_two  COLUMN-LABEL "Код!объ.!во!внеш.!сист." FORMAT ">>>>>>>>9"
+X_ext-classif.charkey_three  COLUMN-LABEL "Код!объ.!во!внеш.!сист." FORMAT "X(16)"
 X_clients.obj-type COLUMN-LABEL "Тип!объекта" FORMAT "X(3)"
 X_clients.obj-code COLUMN-LABEL "Код!объекта" FORMAT ">>>>>>>>9"
 X_clients.obj-name COLUMN-LABEL "Название объекта" FORMAT "X(60)"
@@ -680,7 +680,7 @@ DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
 define variable v-rid as recid no-undo .
 DEFINE VARIABLE v-ok AS logical NO-UNDO.
 define variable v-esys-id as integer no-undo .
-DEFINE VARIABLE v-value-integer AS integer NO-UNDO.
+DEFINE VARIABLE v-value-character2 AS character NO-UNDO.
 define variable v-value-character as character no-undo .
 define variable v-uniq-key-rec as character no-undo .
 define variable v-esys-uniq-key-rec as character no-undo .
@@ -745,7 +745,7 @@ if not (buf_clients.obj-type = {&shop}
 end.
 assign
 v-value-character = buf_clients.obj-type
-v-value-integer = buf_clients.obj-code
+v-value-character2 = string(buf_clients.obj-code)
 .
 run ref/esysclii.w ( input {&add-def}
                    ,input substitute("Добавление кода объекта во внешней системе &1 для &2&3"
@@ -753,7 +753,7 @@ run ref/esysclii.w ( input {&add-def}
                               ,buf_clients.obj-type
                               ,buf_clients.obj-code)
                    ,input-output v-value-character
-    , input-output v-value-integer
+                   ,input-output v-value-character2
                    ,output v-ok) no-error.
 if not v-ok then return error.
 run gen-key-rec IN THIS-PROCEDURE ( input {&table_clients}
@@ -766,11 +766,11 @@ run ref/extclas1.p ( INPUT {&add-def}
                     ,INPUT {&extclass_clients_esys} /*p-classif-name*/
                     ,input 0 /*p-db-num*/
                     ,input buf_ext-system.esys-id  /*p-key#_one*/
-                    ,input v-value-integer /*p-Key#_Two*/
+                    ,input 0 /*p-Key#_Two*/
                     ,input 0 /*p-key#_Three*/
                     ,input v-value-character  /*p-CharKey_One */
                     ,input '':U /*p-CharKey_two */
-                    ,input '':U /*p-CharKey_three */
+                    ,input v-value-character2 /*p-CharKey_three */
                     ,input 0 /*p-nonunique */
                     ,input v-uniq-key-rec ) no-error.
 if error-status:error then do:

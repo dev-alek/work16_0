@@ -1143,6 +1143,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_fbr-prn-grp}
             or when {&table_goods-attr}
             or when {&table_gds-season}
+            or when {&table_gds-season-attr}
             or when {&table_gds-grp-attr}
             or when {&table_gds-grp}
             or when {&table_gds-grp-obj}
@@ -1161,6 +1162,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_recipe}
             or when {&table_s-coeff}
             or when {&table_season}
+            or when {&table_season-attr}
             or when {&table_sert-join}
             or when {&table_sert}
             or when {&table_shift-obj}
@@ -1283,6 +1285,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_gds-obj-prop-attr}
             or when {&table_rule-process}
             or when {&table_dis-gds-rule-attr}
+            or when {&table_auto-tank-attr}
             then do:
               run nws/del-rec.p
                 ( input v-key-rec

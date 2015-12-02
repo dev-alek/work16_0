@@ -62,6 +62,7 @@ define variable vv-unit-cli-ord       like ub.ext-artic.unit-cli-ord       no-un
 define variable vv-cli-base-rate-ord  like ub.ext-artic.cli-base-rate-ord  no-undo .
 define variable vv-unit-cli-rcv       like ub.ext-artic.unit-cli-rcv       no-undo .
 define variable vv-cli-base-rate-rcv  like ub.ext-artic.cli-base-rate-rcv  no-undo .
+define variable v-dm-edi    as integer   no-undo .
 
 define variable v-longchar as longchar no-undo .
 
@@ -446,6 +447,7 @@ define variable v-ext-mode as character no-undo .
                                         , input ub.clients.obj-code
                                         , input shar-buf_ord-doc.obj-type
                                         , input shar-buf_ord-doc.obj-code
+                                        , output v-dm-edi
                                         ) .
           if shar-buf_ord-doc.whole-send-news = integer({&doc-dm-empty}) and v-is-edi-doc = yes then do :
             { gbl/chk-actg.i
@@ -644,6 +646,13 @@ define variable v-ext-mode as character no-undo .
               end.
 
               */
+			  if v-dm-edi = integer({&esys-dm-contour-edi})
+              then do:
+              assign
+                shar-buf_ord-doc.ord-int1 = integer({&edi-ordrsp-sts})
+              .
+              end.
+
               assign
               shar-buf_ord-doc.status_ = {&ord-rcv}
               .

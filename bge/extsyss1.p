@@ -231,7 +231,7 @@ if lookup(string(p-esys-type), {&openxml-type-list}) = 0 then do:
     undo _main, return error (if p-silent = yes then v-mess else 'esys-type':U).
   end.
  if p-esys-type = integer({&openxml-type-exite-edi})
-  and p-delivery-method <> integer({&esys-dm-exite-edi}) then do:
+    and (p-delivery-method <> integer({&esys-dm-exite-edi}) or p-delivery-method <> integer({&esys-dm-contour-edi})) then do:
     &scop openxml-type-code string(p-esys-type)
     &scop esys-dm-code {&esys-dm-exite-edi}
     v-mess = substitute("Для ВС типа &2 (&1)&3 метод доставки должен быть &4"

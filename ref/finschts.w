@@ -627,6 +627,9 @@ define buffer buf_clients for ub.clients.
     RS-cli-type
     sch-cli-code
     with frame {&frame-name}.
+
+apply "return":u to sch-cli-code in frame {&frame-name} .
+ 
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -963,6 +966,8 @@ ON VALUE-CHANGED OF RS-cli-type IN FRAME Dialog-Frame
 DO:
   assign
   RS-cli-type.
+  run proc-find-cli-code in this-procedure ( input yes, input frame {&frame-name} sch-cli-code) no-error.
+  if error-status:error then return no-apply.
 END.
 
 /* _UIB-CODE-BLOCK-END */

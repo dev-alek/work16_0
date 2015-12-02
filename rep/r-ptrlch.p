@@ -17,7 +17,7 @@ Creation date: 10/16/05
 
 /*
 *** Информация по состоянию файла:
-ТН-3359 (ТН-15.0) Доработка технлогического отчета по ТЗ. В настоящий момент "заморожен" пункт ТЗ - о группировке ТРК/Назначение и Назначение/ТРК.
+ТН-3359 Доработка технлогического отчета по ТЗ. В настоящий момент "заморожен" пункт ТЗ - о группировке ТРК/Назначение и Назначение/ТРК.
 В связи с этим код для работы с группировкой - частично заблокирован в файле rep/e-ptrlch.w (Закладка-2) виджет выбора группировки сделан невидимым,
 однако всё можно восстановить убрав комментарии.
 В настоящем файле код для группировки - не закомментирован, но не работает, т.к. не получает из rep/e-ptrlch.w параметра p-rs-grp-tech-refuell.
@@ -29,12 +29,12 @@ Creation date: 10/16/05
 define input parameter ParParentProc as logical no-undo.            /* ParParentProc */
 define input parameter p-param-list as character no-undo.           /* Список цифровых кодов типов чеков */
 define input parameter p-rs-grp-tech-refuell as integer no-undo.    /* Группировка итогов для раздела "ТехПролив" (ТРК/Назначение=1 или Назначение/ТРК=2 */
-
-
-
-
-
-
+/*define input parameter p-tog-trans-cancell as logical.  /* 1 – Сброс топливных транзакций */     */
+/*define input parameter p-tog-rcpt-overflow as logical.  /* 2 – Перелив */                        */
+/*define input parameter p-tog-tech-refuel as logical.    /* 3 – Технологический пролив */         */
+/*define input parameter p-tog-trans-transfer as logical. /* 4 – Перевод топливной транзакции */   */
+/*define input parameter p-tog-unlock-trans as logical.   /* 5 – Разблокировка транзакций */       */
+/*define input parameter p-tog-total-tech-chk as logical. /* 6 – Итоги по технологическим чекам  */*/
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -52,42 +52,39 @@ define variable vss-description as character no-undo init "Технологический отчет
 { gbl/prn-lib.i }
 { gbl/cur-time.i }
 
-
-define variable Line   as character no-undo .
-define variable date_string   as character no-undo .
-
+define variable Line as character no-undo.
+define variable date_string as character no-undo.
 
 define variable multi-obj as logical no-undo.
-define variable obj-count as integer   no-undo .
-define variable jj as integer   no-undo .
-define variable v-chk-type like ub.chk-doc.chk-type no-undo .
-define variable v-type-num as integer   no-undo .
+define variable obj-count as integer no-undo.
+define variable jj as integer no-undo.
+define variable v-chk-type like ub.chk-doc.chk-type no-undo.
+define variable v-type-num as integer no-undo.
 
 
-define variable accum-pay-desk-doc-qnty as decimal no-undo .
-define variable accum-pay-desk-sum-base as decimal no-undo .
-define variable accum-pay-desk-trans-number as integer   no-undo .
+define variable accum-pay-desk-doc-qnty as decimal no-undo.
+define variable accum-pay-desk-sum-base as decimal no-undo.
+define variable accum-pay-desk-trans-number as integer no-undo.
   define variable accum-pay-desk-doc-qnty-ns as decimal no-undo.
   define variable accum-pay-desk-sum-base-ns as decimal no-undo.
   define variable accum-pay-desk-trans-number-ns as integer no-undo.
     define variable accum-doc-qnty-dest as decimal no-undo. /* Для итогов в разрезе "Назначение" (destination) */
     define variable accum-sum-base-dest as decimal no-undo. /* Для итогов в разрезе "Назначение" (destination) */
     define variable accum-trans-number-dest as integer no-undo. /* Для итогов в разрезе "Назначение" (destination) */
-define variable accum-gds-code-doc-qnty as decimal no-undo .
-define variable accum-gds-code-sum-base as decimal no-undo .
-define variable accum-gds-code-trans-number as integer   no-undo .
+define variable accum-gds-code-doc-qnty as decimal no-undo.
+define variable accum-gds-code-sum-base as decimal no-undo.
+define variable accum-gds-code-trans-number as integer no-undo.
   define variable accum-gds-code-doc-qnty-ns as decimal no-undo.
   define variable accum-gds-code-sum-base-ns as decimal no-undo.
   define variable accum-gds-code-trans-number-ns as integer no-undo.
-define variable accum-doc-qnty as decimal no-undo .
-define variable accum-sum-base as decimal no-undo .
-define variable accum-trans-number as integer   no-undo .
+define variable accum-doc-qnty as decimal no-undo.
+define variable accum-sum-base as decimal no-undo.
+define variable accum-trans-number as integer no-undo.
   define variable accum-doc-qnty-ns as decimal no-undo.
   define variable accum-sum-base-ns as decimal no-undo.
   define variable accum-trans-number-ns as integer no-undo.
 
 define buffer buf_chk-doc for ub.chk-doc.
-
 define temp-table temp-petrol-chk no-undo
 field obj-type like ub.chk-doc.obj-type init '':U
 field obj-code like ub.chk-doc.obj-code init 0
@@ -103,7 +100,7 @@ field sum-base-ns like ub.chk-gds.sum-base init 0   /* ТН-3359 Арн. 19.01.2015. 
 field write-off-code like ub.chk-gds.write-off-code /* ТН-3359 Арн. 19.01.2015. В отчёт добавлено поле "Вид транзакции" для типов чеков "СбросТрнзкц" */
 field trans-number as integer
 field trans-number-ns as integer                    /* ТН-3359 Арн. 19.01.2015. Не пролито (ns = no spill) */
-field pay-code like ub.chk-pay.pay-code             /* ТН-3359 Арн. 19.01.2015. Вид платежа для выборки и получения имени платежа в отчёте. */
+field pay-code like ub.chk-pay.pay-code          /* ТН-3359 Арн. 19.01.2015. Вид платежа для выборки и получения имени платежа в отчёте. */
 field pay-name as character                         /* ТН-3359 Арн. 19.01.2015. Наименование платежа (см. для столбца отчёта "Назначение") */
 field prim as logical
 index pi is unique primary
@@ -114,7 +111,7 @@ gds-code
 pump
 pump-2
 pay-code
-index  ip
+index ip
 prim
 .
 
@@ -136,11 +133,11 @@ define stream ScreenStream.
 /*
 DEFINE FRAME one-pump
 buf_temp-petrol-chk.pay-desk column-label "Касса" format ">>>9"
-buf_temp-goods.gds-name               column-label "Топливо" format "X(25)"
+buf_temp-goods.gds-name      column-label "Топливо" format "X(25)"
 buf_temp-petrol-chk.pump     column-label "ТРК" format ">>>>9"
-buf_temp-petrol-chk.doc-qnty column-label "Кол-во в л" format      "->>,>>>,>>9.9999999999"
-buf_temp-petrol-chk.sum-base column-label "Сумма"      format "->>>,>>>,>>>,>>9.99"
-buf_temp-petrol-chk.trans-number column-label "Кол-во чеков"      format ">>>,>>>"
+buf_temp-petrol-chk.doc-qnty column-label "Кол-во в л" format "->>,>>>,>>9.9999999999"
+buf_temp-petrol-chk.sum-base column-label "Сумма" format "->>>,>>>,>>>,>>9.99"
+buf_temp-petrol-chk.trans-number column-label "Кол-во чеков" format ">>>,>>>"
 HEADER  date_string format "X(50)" AT 5
 "Страница " AT 95 PAGE-NUMBER(PrnLibStream) AT 105 FORMAT ">>>9" SKIP
 Line format "X(123)"   AT 1
@@ -148,15 +145,15 @@ with width  {&A4_CW0} down stream-io use-text.
 
 DEFINE FRAME two-pump
 buf_temp-petrol-chk.pay-desk column-label "Касса" format ">>>9"
-buf_temp-goods.gds-name               column-label "Топливо" format "X(25)"
+buf_temp-goods.gds-name      column-label "Топливо" format "X(25)"
 buf_temp-petrol-chk.pump     column-label "Откуда:!№ ТРК" format ">>>>9"
 buf_temp-petrol-chk.pump-2   column-label "Kуда:!№ ТРК" format ">>>>9"
-buf_temp-petrol-chk.doc-qnty column-label "Кол-во в л" format      "->>,>>>,>>9.9999999999"
-buf_temp-petrol-chk.sum-base column-label "Сумма"      format "->>>,>>>,>>>,>>9.99"
-buf_temp-petrol-chk.trans-number column-label "Кол-во чеков"      format ">>>,>>>"
+buf_temp-petrol-chk.doc-qnty column-label "Кол-во в л" format "->>,>>>,>>9.9999999999"
+buf_temp-petrol-chk.sum-base column-label "Сумма" format "->>>,>>>,>>>,>>9.99"
+buf_temp-petrol-chk.trans-number column-label "Кол-во чеков" format ">>>,>>>"
 HEADER  date_string format "X(50)" AT 5
 "Страница " AT 95 PAGE-NUMBER(PrnLibStream) AT 105 FORMAT ">>>9" SKIP
-Line format "X(123)"   AT 1
+Line format "X(123)" AT 1
 with width  {&A4_CW0} down stream-io use-text.
 */
 
@@ -177,13 +174,13 @@ end.
 /* **********************  Internal Procedures  *********************** */
 
 
-procedure fill-temp-table :
-define input  parameter p-doc-code like ub.chk-doc.doc-code no-undo .
-define input  parameter p-chk-type like ub.chk-doc.chk-type no-undo .
+procedure fill-temp-table:
+define input parameter p-doc-code like ub.chk-doc.doc-code no-undo.
+define input parameter p-chk-type like ub.chk-doc.chk-type no-undo.
 define variable v-write-off-code like ub.chk-doc.chk-type no-undo. /* ТН-3355 20.01.2015 Арн. Виды транзакций: 0 = не пролито; 1 = пролито. */
-define variable v-pump as integer   no-undo .
-define variable v-pump-2 as integer   no-undo .
-define variable ii as integer   no-undo .
+define variable v-pump as integer no-undo.
+define variable v-pump-2 as integer no-undo.
+define variable ii as integer no-undo.
 define variable v-qnty like ub.chk-gds.doc-qnty no-undo init 0.
 define variable v-sum like ub.chk-gds.sum-base no-undo init 0.
 define variable v-pay-code as integer no-undo. /* ТН-3355 20.01.2015 Арн. */
@@ -209,29 +206,28 @@ define buffer buf_temp-petrol-chk for temp-petrol-chk.
         if buf_chk-gds.doc-qnty < 0 then
         assign
           v-write-off-code = buf_chk-gds.write-off-code /* ТН-3355 20.01.2015 Арн. Считываем значения видов транзакций: 0 = не пролито; 1 = пролито. */
-        v-pump = buf_chk-gds.pump
-        v-qnty = abs(buf_chk-gds.doc-qnty)
-        v-sum  = abs(buf_chk-gds.sum-base)
+          v-pump = buf_chk-gds.pump
+          v-qnty = abs(buf_chk-gds.doc-qnty)
+          v-sum  = abs(buf_chk-gds.sum-base)
         .
         if buf_chk-gds.doc-qnty > 0 then
         assign
           v-write-off-code = buf_chk-gds.write-off-code /* ТН-3355 20.01.2015 Арн. Считываем значения видов транзакций: 0 = не пролито; 1 = пролито. */
-        v-pump-2 = buf_chk-gds.pump
-        v-qnty = abs(buf_chk-gds.doc-qnty)
-        v-sum  = abs(buf_chk-gds.sum-base)
+          v-pump-2 = buf_chk-gds.pump
+          v-qnty = abs(buf_chk-gds.doc-qnty)
+          v-sum  = abs(buf_chk-gds.sum-base)
         .
       end.
       else
       do:
         assign
           v-write-off-code = buf_chk-gds.write-off-code /* ТН-3355 20.01.2015 Арн. Считываем значения видов транзакций: 0 = не пролито; 1 = пролито. */
-        v-pump = buf_chk-gds.pump
-        v-pump-2 = 0
-        v-qnty = buf_chk-gds.doc-qnty
-        v-sum  = (if buf_chk-gds.doc-qnty = 0 then 0 else buf_chk-gds.sum-base)
+          v-pump = buf_chk-gds.pump
+          v-pump-2 = 0
+          v-qnty = buf_chk-gds.doc-qnty
+          v-sum  = (if buf_chk-gds.doc-qnty = 0 then 0 else buf_chk-gds.sum-base)
         .
       end.
-
         /*************************************************/
         if p-chk-type = integer({&rcpt-tech-refuell}) then    /* А */ /* Ветка - Если тип чека "ТехПролив"... */
         do:
@@ -247,7 +243,6 @@ define buffer buf_temp-petrol-chk for temp-petrol-chk.
           do:
             v-pay-code = -1.
           end.
-
           find first buf_temp-petrol-chk where
                 buf_temp-petrol-chk.chk-type = buf_chk-doc.chk-type
             AND buf_temp-petrol-chk.obj-type = buf_chk-doc.obj-type
@@ -289,42 +284,47 @@ define buffer buf_temp-petrol-chk for temp-petrol-chk.
               buf_temp-petrol-chk.trans-number = buf_temp-petrol-chk.trans-number + 1
             .
           end.
+/*message "doc-code" buf_chk-doc.doc-code "v-pay-code" buf_temp-petrol-chk.pay-code "gds" buf_temp-petrol-chk.gds-code  "qnty" buf_temp-petrol-chk.doc-qnty "type " buf_temp-petrol-chk.chk-type view-as alert-box.*/
 
         end.                                                  /* А */
         /*****************************************************************/
         else
         do:
-      if p-chk-type <> integer({&rcpt-trans-transfer})
+          if p-chk-type <> integer({&rcpt-trans-transfer})
           or ii = 2 then
           do:
-        find first buf_temp-petrol-chk where
-                buf_temp-petrol-chk.chk-type = buf_chk-doc.chk-type
-            AND buf_temp-petrol-chk.obj-type = buf_chk-doc.obj-type
-            AND buf_temp-petrol-chk.obj-code = buf_chk-doc.obj-code
-            AND buf_temp-petrol-chk.pay-desk = buf_chk-doc.pay-desk
-            AND buf_temp-petrol-chk.gds-code = buf_bar-code.gds-code
-            AND buf_temp-petrol-chk.pump     = v-pump
-            AND buf_temp-petrol-chk.pump-2   = v-pump-2 no-error .
+          
+            find first buf_temp-petrol-chk where
+                  buf_temp-petrol-chk.chk-type = buf_chk-doc.chk-type
+              AND buf_temp-petrol-chk.obj-type = buf_chk-doc.obj-type
+              AND buf_temp-petrol-chk.obj-code = buf_chk-doc.obj-code
+              AND buf_temp-petrol-chk.pay-desk = buf_chk-doc.pay-desk
+              AND buf_temp-petrol-chk.gds-code = buf_bar-code.gds-code
+              AND buf_temp-petrol-chk.pump     = v-pump
+              AND buf_temp-petrol-chk.pump-2   = v-pump-2 no-error.
 
             if not available buf_temp-petrol-chk then
             do:
-          create buf_temp-petrol-chk.
-          assign
-          buf_temp-petrol-chk.chk-type = buf_chk-doc.chk-type
-          buf_temp-petrol-chk.obj-type = buf_chk-doc.obj-type
-          buf_temp-petrol-chk.obj-code = buf_chk-doc.obj-code
-          buf_temp-petrol-chk.pay-desk = buf_chk-doc.pay-desk
-          buf_temp-petrol-chk.write-off-code = v-write-off-code
-          buf_temp-petrol-chk.gds-code = buf_bar-code.gds-code
-          buf_temp-petrol-chk.pump     = v-pump
-          buf_temp-petrol-chk.pump-2   = v-pump-2
-          buf_temp-petrol-chk.prim     = yes
-          .
-        end.
+              create buf_temp-petrol-chk.
+              assign
+                buf_temp-petrol-chk.chk-type = buf_chk-doc.chk-type
+                buf_temp-petrol-chk.obj-type = buf_chk-doc.obj-type
+                buf_temp-petrol-chk.obj-code = buf_chk-doc.obj-code
+                buf_temp-petrol-chk.pay-desk = buf_chk-doc.pay-desk
+                buf_temp-petrol-chk.write-off-code = v-write-off-code
+                buf_temp-petrol-chk.gds-code = buf_bar-code.gds-code
+                buf_temp-petrol-chk.pump     = v-pump
+                buf_temp-petrol-chk.pump-2   = v-pump-2
+                buf_temp-petrol-chk.prim     = yes
+             .
+            end.
+/*             message  buf_temp-petrol-chk.gds-code "al" buf_temp-petrol-chk.chk-type "type" buf_temp-petrol-chk.doc-qnty  "doc-code" buf_chk-gds.doc-code view-as alert-box.*/
 /*        assign*/
-            if (p-chk-type = integer({&rcpt-trans-cancell}) /*or p-chk-type = integer({&rcpt-unlock-trans})*/)
-            and v-write-off-code = 1 then
+            if (p-chk-type = integer({&rcpt-trans-cancell}) or p-chk-type = integer({&rcpt-unlock-trans}))
+            and v-write-off-code = 1
+             then
             do:
+                
               assign
                 buf_temp-petrol-chk.doc-qnty-ns = buf_temp-petrol-chk.doc-qnty-ns + v-qnty
                 buf_temp-petrol-chk.sum-base-ns = buf_temp-petrol-chk.sum-base-ns + v-sum
@@ -333,14 +333,15 @@ define buffer buf_temp-petrol-chk for temp-petrol-chk.
             end.
             else
             do:
-        assign
-        buf_temp-petrol-chk.doc-qnty = buf_temp-petrol-chk.doc-qnty + v-qnty
-        buf_temp-petrol-chk.sum-base = buf_temp-petrol-chk.sum-base + v-sum
-        buf_temp-petrol-chk.trans-number = buf_temp-petrol-chk.trans-number + 1
-        .
+              assign
+                buf_temp-petrol-chk.doc-qnty = buf_temp-petrol-chk.doc-qnty + v-qnty
+                buf_temp-petrol-chk.sum-base = buf_temp-petrol-chk.sum-base + v-sum
+                buf_temp-petrol-chk.trans-number = buf_temp-petrol-chk.trans-number + 1
+              .
             end.
+            
 /*        .*/
-        end. /*if p-chk-type <> integer({&rcpt-trans-transfer})*/
+          end. /*if p-chk-type <> integer({&rcpt-trans-transfer})*/
        end. /* else A */
     end. /*for each buf_chk-gds*/
   end. /*doe*/
@@ -355,20 +356,20 @@ define variable v-write-off-code2 like ub.chk-doc.chk-type no-undo. /* ТН-3355 2
 define buffer buf_temp-petrol-chk for temp-petrol-chk.
 
 define buffer gds-obj_temp-petrol-chk for temp-petrol-chk.
-/*итоги по товару по объекту pay-desk = 0 pump = 0 */
+/* итоги по товару по объекту pay-desk = 0 pump = 0 */
 
 define buffer pay-desk_temp-petrol-chk for temp-petrol-chk.
-/*итоги по всем типам чеков chk-type = 0 */
+/* итоги по всем типам чеков chk-type = 0 */
 
 
 define buffer gds_temp-petrol-chk for temp-petrol-chk.
-/*итоги по всем объектам по товару pay-desk = 0 pump = 0  obj-code = 0*/
+/* итоги по всем объектам по товару pay-desk = 0 pump = 0  obj-code = 0 */
 
 define buffer gds-obj0_temp-petrol-chk for temp-petrol-chk.
-/*итоги по всем типам чеков по товару по объекту pay-desk = 0 pump = 0 chk-type = 0*/
+/* итоги по всем типам чеков по товару по объекту pay-desk = 0 pump = 0 chk-type = 0 */
 
 define buffer gds0_temp-petrol-chk for temp-petrol-chk.
-/* итоги по всем типам чеков по товару по всем объектам pay-desk = 0 pump = 0  obj-code = 0 chk-type = 0 */
+/* итоги по всем типам чеков по товару по всем обектам pay-desk = 0 pump = 0  obj-code = 0 chk-type = 0 */
 
 define buffer dest_temp-petrol-chk for temp-petrol-chk.
 /* итоги по столбцу "Назначение" */
@@ -399,18 +400,22 @@ define buffer buf_temp-goods for temp-goods.
           AND pay-desk_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
           AND pay-desk_temp-petrol-chk.pump     = buf_temp-petrol-chk.pump
           AND pay-desk_temp-petrol-chk.pump-2   = 0
-          no-error .
+           and pay-desk_temp-petrol-chk.pay-code = 0
+                   
+          no-error.
       if not available pay-desk_temp-petrol-chk then
       do:
         create pay-desk_temp-petrol-chk.
         assign
-        pay-desk_temp-petrol-chk.chk-type = 0
-        pay-desk_temp-petrol-chk.obj-type = buf_temp-petrol-chk.obj-type
-        pay-desk_temp-petrol-chk.obj-code = buf_temp-petrol-chk.obj-code
-        pay-desk_temp-petrol-chk.pay-desk = buf_temp-petrol-chk.pay-desk
-        pay-desk_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
-        pay-desk_temp-petrol-chk.pump     = buf_temp-petrol-chk.pump
-        pay-desk_temp-petrol-chk.pump-2   = 0
+          pay-desk_temp-petrol-chk.chk-type = 0
+          pay-desk_temp-petrol-chk.obj-type = buf_temp-petrol-chk.obj-type
+          pay-desk_temp-petrol-chk.obj-code = buf_temp-petrol-chk.obj-code
+          pay-desk_temp-petrol-chk.pay-desk = buf_temp-petrol-chk.pay-desk
+          pay-desk_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
+          pay-desk_temp-petrol-chk.pay-code = 0
+          
+          pay-desk_temp-petrol-chk.pump     = buf_temp-petrol-chk.pump
+          pay-desk_temp-petrol-chk.pump-2   = 0
         .
       end.
       /* Категория "Для всех чеков" - учитывает пролито/не пролито!!! Заполняем тело таблицы ГруппаИтогов-1 и 2 */
@@ -427,32 +432,36 @@ define buffer buf_temp-goods for temp-goods.
           AND gds-obj_temp-petrol-chk.pay-desk = 0
           AND gds-obj_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
           AND gds-obj_temp-petrol-chk.pump     = 0
-          AND gds-obj_temp-petrol-chk.pump-2   = 0 no-error .
+          and gds-obj_temp-petrol-chk.pay-code = 0
+          AND gds-obj_temp-petrol-chk.pump-2   = 0 no-error.
       if not available gds-obj_temp-petrol-chk then
       do:
         create gds-obj_temp-petrol-chk.
         assign
-        gds-obj_temp-petrol-chk.chk-type = buf_temp-petrol-chk.chk-type
-        gds-obj_temp-petrol-chk.obj-type = buf_temp-petrol-chk.obj-type
-        gds-obj_temp-petrol-chk.obj-code = buf_temp-petrol-chk.obj-code
-        gds-obj_temp-petrol-chk.pay-desk = 0
-        gds-obj_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
-        gds-obj_temp-petrol-chk.write-off-code = buf_temp-petrol-chk.write-off-code
-        gds-obj_temp-petrol-chk.pump     = 0
-        gds-obj_temp-petrol-chk.pump-2   = 0
+          gds-obj_temp-petrol-chk.chk-type = buf_temp-petrol-chk.chk-type
+          gds-obj_temp-petrol-chk.obj-type = buf_temp-petrol-chk.obj-type
+          gds-obj_temp-petrol-chk.obj-code = buf_temp-petrol-chk.obj-code
+          gds-obj_temp-petrol-chk.pay-desk = 0
+          gds-obj_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
+          gds-obj_temp-petrol-chk.write-off-code = buf_temp-petrol-chk.write-off-code
+          gds-obj_temp-petrol-chk.pump     = 0
+          gds-obj_temp-petrol-chk.pump-2   = 0
+           gds-obj_temp-petrol-chk.pay-code = 0
         .
       end.
+      
+      
         do:
-      assign
-      gds-obj_temp-petrol-chk.doc-qnty = gds-obj_temp-petrol-chk.doc-qnty + buf_temp-petrol-chk.doc-qnty
-      gds-obj_temp-petrol-chk.sum-base = gds-obj_temp-petrol-chk.sum-base + buf_temp-petrol-chk.sum-base
-      gds-obj_temp-petrol-chk.trans-number = gds-obj_temp-petrol-chk.trans-number + buf_temp-petrol-chk.trans-number
+          assign
+            gds-obj_temp-petrol-chk.doc-qnty        = gds-obj_temp-petrol-chk.doc-qnty        + buf_temp-petrol-chk.doc-qnty
+            gds-obj_temp-petrol-chk.sum-base        = gds-obj_temp-petrol-chk.sum-base        + buf_temp-petrol-chk.sum-base
+            gds-obj_temp-petrol-chk.trans-number    = gds-obj_temp-petrol-chk.trans-number    + buf_temp-petrol-chk.trans-number
             gds-obj_temp-petrol-chk.doc-qnty-ns     = gds-obj_temp-petrol-chk.doc-qnty-ns     + buf_temp-petrol-chk.doc-qnty-ns
             gds-obj_temp-petrol-chk.sum-base-ns     = gds-obj_temp-petrol-chk.sum-base-ns     + buf_temp-petrol-chk.sum-base-ns
             gds-obj_temp-petrol-chk.trans-number-ns = gds-obj_temp-petrol-chk.trans-number-ns + buf_temp-petrol-chk.trans-number-ns
           .
         end.
-
+       
       /* ******* по "НАЗНАЧЕНИЕ" ******* */
       if buf_temp-petrol-chk.chk-type = integer({&rcpt-tech-refuell}) then
       do:
@@ -517,7 +526,7 @@ define buffer buf_temp-goods for temp-goods.
               pay-desk2_temp-petrol-chk.pump-2   = 0
               pay-desk2_temp-petrol-chk.pay-code = buf_temp-petrol-chk.pay-code
                 pay-desk2_temp-petrol-chk.pay-name = buf_temp-petrol-chk.pay-name
-      .
+            .
           end.
             do:
               assign
@@ -564,6 +573,7 @@ define buffer buf_temp-goods for temp-goods.
                 pay-desk3_temp-petrol-chk.trans-number    = pay-desk3_temp-petrol-chk.trans-number    + buf_temp-petrol-chk.trans-number
               .
             end.
+            
       end.
       /* ******* всех товаров по "КАССЕ" ******* */
 
@@ -612,12 +622,12 @@ define buffer buf_temp-goods for temp-goods.
           AND gds-obj0_temp-petrol-chk.pay-desk = 0
           AND gds-obj0_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
           AND gds-obj0_temp-petrol-chk.pump     = 0
-          AND gds-obj0_temp-petrol-chk.pump-2   = 0 no-error .
+          AND gds-obj0_temp-petrol-chk.pump-2   = 0 no-error.
       if not available gds-obj0_temp-petrol-chk then
       do:
         /*найдем название товара - здесь на это уйдет меньше всего времени*/
         find first buf_goods no-lock where
-                  buf_goods.gds-code = buf_temp-petrol-chk.gds-code no-error .
+                  buf_goods.gds-code = buf_temp-petrol-chk.gds-code no-error.
         find first buf_temp-goods no-lock where
                 buf_temp-goods.gds-code = buf_temp-petrol-chk.gds-code no-error.
         if not available buf_temp-goods then
@@ -632,34 +642,36 @@ define buffer buf_temp-goods for temp-goods.
         end.
         create gds-obj0_temp-petrol-chk.
         assign
-        gds-obj0_temp-petrol-chk.chk-type = 0
-        gds-obj0_temp-petrol-chk.obj-type = buf_temp-petrol-chk.obj-type
-        gds-obj0_temp-petrol-chk.obj-code = buf_temp-petrol-chk.obj-code
-        gds-obj0_temp-petrol-chk.pay-desk = 0
-        gds-obj0_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
-        gds-obj0_temp-petrol-chk.pump     = 0
-        gds-obj0_temp-petrol-chk.pump-2   = 0
+          gds-obj0_temp-petrol-chk.chk-type = 0
+          gds-obj0_temp-petrol-chk.obj-type = buf_temp-petrol-chk.obj-type
+          gds-obj0_temp-petrol-chk.obj-code = buf_temp-petrol-chk.obj-code
+          gds-obj0_temp-petrol-chk.pay-desk = 0
+          gds-obj0_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
+          gds-obj0_temp-petrol-chk.pump     = 0
+          gds-obj0_temp-petrol-chk.pump-2   = 0
         .
       end.
       do:
         /* Формируем ГруппаИтогов-последняя для "Все виды чеков" */
-      assign
+        assign
 /*          gds-obj0_temp-petrol-chk.doc-qnty     = gds-obj0_temp-petrol-chk.doc-qnty     + buf_temp-petrol-chk.doc-qnty    */
 /*          gds-obj0_temp-petrol-chk.sum-base     = gds-obj0_temp-petrol-chk.sum-base     + buf_temp-petrol-chk.sum-base    */
 /*          gds-obj0_temp-petrol-chk.trans-number = gds-obj0_temp-petrol-chk.trans-number + buf_temp-petrol-chk.trans-number*/
-         gds-obj0_temp-petrol-chk.doc-qnty     = gds-obj0_temp-petrol-chk.doc-qnty     + buf_temp-petrol-chk.doc-qnty      + buf_temp-petrol-chk.doc-qnty-ns
-         gds-obj0_temp-petrol-chk.sum-base     = gds-obj0_temp-petrol-chk.sum-base     + buf_temp-petrol-chk.sum-base      + buf_temp-petrol-chk.sum-base-ns
-         gds-obj0_temp-petrol-chk.trans-number = gds-obj0_temp-petrol-chk.trans-number + buf_temp-petrol-chk.trans-number  + buf_temp-petrol-chk.trans-number-ns
-      .
-    end.
+          gds-obj0_temp-petrol-chk.doc-qnty     = gds-obj0_temp-petrol-chk.doc-qnty     + buf_temp-petrol-chk.doc-qnty      + buf_temp-petrol-chk.doc-qnty-ns
+          gds-obj0_temp-petrol-chk.sum-base     = gds-obj0_temp-petrol-chk.sum-base     + buf_temp-petrol-chk.sum-base      + buf_temp-petrol-chk.sum-base-ns
+          gds-obj0_temp-petrol-chk.trans-number = gds-obj0_temp-petrol-chk.trans-number + buf_temp-petrol-chk.trans-number  + buf_temp-petrol-chk.trans-number-ns
+        .
+      end.
     end.
     if multi-obj then
     do:
+     
       for each buf_temp-petrol-chk where
               buf_temp-petrol-chk.prim = no:
         if buf_temp-petrol-chk.pay-desk <> 0 then NEXT.
         if buf_temp-petrol-chk.gds-code = 0 then NEXT.
         if buf_temp-petrol-chk.obj-code = 0 then NEXT.
+        if buf_temp-petrol-chk.pay-code <> 0 then next.
         find first gds_temp-petrol-chk where
                 gds_temp-petrol-chk.chk-type = buf_temp-petrol-chk.chk-type
             AND gds_temp-petrol-chk.obj-type = '':U
@@ -667,37 +679,34 @@ define buffer buf_temp-goods for temp-goods.
             AND gds_temp-petrol-chk.pay-desk = 0
             AND gds_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
             AND gds_temp-petrol-chk.pump     = 0
-            AND gds_temp-petrol-chk.pump-2   = 0 no-error .
+/*           and gds_temp-petrol-chk.pay-code = 0*/
+            AND gds_temp-petrol-chk.pump-2   = 0 no-error.
         if not available gds_temp-petrol-chk then
         do:
           create gds_temp-petrol-chk.
           assign
-          gds_temp-petrol-chk.chk-type = buf_temp-petrol-chk.chk-type
-          gds_temp-petrol-chk.obj-type = '':U
-          gds_temp-petrol-chk.obj-code = 0
-          gds_temp-petrol-chk.pay-desk = 0
-          gds_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
-          gds_temp-petrol-chk.pump     = 0
-          gds_temp-petrol-chk.pump-2   = 0
+            gds_temp-petrol-chk.chk-type = buf_temp-petrol-chk.chk-type
+            gds_temp-petrol-chk.obj-type = '':U
+            gds_temp-petrol-chk.obj-code = 0
+            gds_temp-petrol-chk.pay-desk = 0
+            gds_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
+            gds_temp-petrol-chk.pump     = 0
+            gds_temp-petrol-chk.pump-2   = 0
             v-write-off-code2 = buf_temp-petrol-chk.write-off-code
+/*            gds_temp-petrol-chk.pay-code = 0*/
           .
         end.
-        if v-write-off-code2 = 1 then /* = Пролито */
-        do:
-        assign
-        gds_temp-petrol-chk.doc-qnty = gds_temp-petrol-chk.doc-qnty + buf_temp-petrol-chk.doc-qnty
-        gds_temp-petrol-chk.sum-base = gds_temp-petrol-chk.sum-base + buf_temp-petrol-chk.sum-base
-        gds_temp-petrol-chk.trans-number = gds_temp-petrol-chk.trans-number + buf_temp-petrol-chk.trans-number
-        .
-        end.
-        else
-        do:
+       
+      
           assign
+            gds_temp-petrol-chk.doc-qnty     = gds_temp-petrol-chk.doc-qnty     + buf_temp-petrol-chk.doc-qnty
+            gds_temp-petrol-chk.sum-base     = gds_temp-petrol-chk.sum-base     + buf_temp-petrol-chk.sum-base
+            gds_temp-petrol-chk.trans-number = gds_temp-petrol-chk.trans-number + buf_temp-petrol-chk.trans-number
+
             gds_temp-petrol-chk.doc-qnty-ns     = gds_temp-petrol-chk.doc-qnty-ns     + buf_temp-petrol-chk.doc-qnty-ns
             gds_temp-petrol-chk.sum-base-ns     = gds_temp-petrol-chk.sum-base-ns     + buf_temp-petrol-chk.sum-base-ns
             gds_temp-petrol-chk.trans-number-ns = gds_temp-petrol-chk.trans-number-ns + buf_temp-petrol-chk.trans-number-ns
           .
-        end.
       end. /*for each buf0_temp-petrol-chk*/
     end. /*if multi-obj*/
   end. /*doe*/
@@ -709,7 +718,7 @@ end procedure. /* fill-sub-totals */
 
 /* ТН-3359 11.02.2015 Арн. Комментирование сущ.кода, т.к запрос построен с использованием в Закладка-1 X-Radio-Task (выбор календарные даты, смены, одна смена и т.д.) */
 /*
-FOR EACH obj-list No-LOCK:
+FOR EACH obj-list no-lock:
   CASE X-Radio-Task > 1 :
     WHEN YES THEN DO:
       _shift-chk:
@@ -816,12 +825,12 @@ for each obj-list no-lock:
   end.
 end.
 
-run fill-sub-totals in this-procedure .
+run fill-sub-totals in this-procedure.
 
-run waitfram-hide in this-procedure .
+run waitfram-hide in this-procedure.
 
 /*Line = fill("-", 123).*/
-date_string = cur-time-print() .
+date_string = cur-time-print().
 
 run waitfram-show in this-procedure ("Ждите...").
 run prn-lib-open-stream  in this-procedure (
@@ -848,7 +857,7 @@ do: /* Закомментарено до задачи ТН-3359 Янв 2015. Арн. */
     FORM with FRAME one-pump.
     view stream PrnLibStream frame one-pump .
   END.
-  */
+*/
 end. /* Закомментарено до задачи ТН-3359 Янв 2015. Арн. */
 
 /* Заводим количество листов Excel в зависимости от того, сколько страниц отмечено галочкой в параметрах (см. e-ptrlch.w) */
@@ -893,7 +902,7 @@ do v-ii = 1 to v-count-sheets:
 /*    end.                                          */
 /*  end case.                                       */
 /*  if lookup() = 0 then next.*/
-&scop receipt-code string(v-chk-type)
+  &scop receipt-code string(v-chk-type)
 /*  PUT stream PrnLibStream UNFORMATTED*/
 /*    'Отчёт доступен только в Excel':U*/
 /*    skip (2)                         */
@@ -905,21 +914,20 @@ do v-ii = 1 to v-count-sheets:
   space(20)
   "Технологический отчет по ТРК" skip
   space(23) str1 skip(0)
-  space(23)  (if v-chk-type = 0 then "По всем типам технологических чеков" else {&receipt-name}) skip(0)
+  space(23) (if v-chk-type = 0 then "По всем типам технологических чеков" else {&receipt-name}) skip(0)
   .
   if v-type-num = 1 then
   do:
     if v-chk-type = integer({&rcpt-trans-transfer}) then
     do:
-      FORM with FRAME two-pump .
-      view stream PrnLibStream frame two-pump .
-
+      form with frame two-pump.
+      view stream PrnLibStream frame two-pump.
     end.
     else
     do:
-      FORM with FRAME one-pump.
-      view stream PrnLibStream frame one-pump .
-    END.
+      form with FRAME one-pump.
+      view stream PrnLibStream frame one-pump.
+    end.
   end.
 */
 
@@ -928,8 +936,8 @@ do v-ii = 1 to v-count-sheets:
 
   /* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
 /*
-  hide stream PrnLibStream frame one-pump .
-  hide stream PrnLibStream frame two-pump .
+  hide stream PrnLibStream frame one-pump.
+  hide stream PrnLibStream frame two-pump.
 */
 
 /*  if v-type-num < 6 then*/
@@ -949,14 +957,14 @@ assign
 
 /* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
 /*
-hide stream PrnLibStream frame one-pump .
-hide stream PrnLibStream frame one-pump .
+hide stream PrnLibStream frame one-pump.
+hide stream PrnLibStream frame one-pump.
 */
 /*output STREAM PrnLibStream CLOSE.*/
 
 {&CloseExcel}
 
-run waitfram-hide in this-procedure .
+run waitfram-hide in this-procedure.
 
 run prn-lib-prn-file in this-procedure (
                                           input my-handle
@@ -964,19 +972,17 @@ run prn-lib-prn-file in this-procedure (
                                           ).
 
 
-
 procedure print-one-chk-type :
-define input  parameter p-type-num as integer   no-undo .
-define input  parameter p-chk-type like ub.chk-doc.chk-type no-undo .
+define input parameter p-type-num as integer no-undo.
+define input parameter p-chk-type like ub.chk-doc.chk-type no-undo.
 
-
-define variable loc-obj-count as integer   no-undo .
+define variable loc-obj-count as integer no-undo.
 define buffer bufo_temp-petrol-chk for temp-petrol-chk.
 define buffer bufo2_temp-petrol-chk for temp-petrol-chk. /* Для вывода итогов Б */
 define buffer bufo3_temp-petrol-chk for temp-petrol-chk. /* Для вывода итогов E */
 define buffer bufo_temp-goods for temp-goods.
 define buffer bufo2_temp-goods for temp-goods.
-define variable v-first-good as logical   no-undo init yes.
+define variable v-first-good as logical no-undo init yes.
 
 
   do
@@ -988,9 +994,9 @@ define variable v-first-good as logical   no-undo init yes.
       Sheetf.sheet-num = p-type-num no-error. /* Вносим в системную таблицу кол-во Листов в Excel */
     if not avail sheetf then
     do:
-    create sheetf.
-    sheetf.sheet-num = p-type-num.
-  end.
+      create sheetf.
+      Sheetf.sheet-num = p-type-num.
+    end.
   end.
   &scop receipt-code string(p-chk-type)
 
@@ -1006,8 +1012,8 @@ define variable v-first-good as logical   no-undo init yes.
     Sheetf.ColFOrmat = /* '1=@;2=@' */
                        (if p-chk-type = integer({&rcpt-trans-cancell}) then "4=0.00;5=0.00;7=0.00;8=0.00" else  /* Сброс транзакций */
                           if p-chk-type = integer({&rcpt-overflow}) or                                            /* Перелив */
-                          p-chk-type = 0 /* or                                                                       /* Итоги по технологическим чекам */
-                          p-chk-type = integer({&rcpt-unlock-trans})*/                                              /* Разблокировка транзакций */
+                          p-chk-type = 0 or                                                                       /* Итоги по технологическим чекам */
+                          p-chk-type = integer({&rcpt-unlock-trans})                                              /* Разблокировка транзакций */
                           then "4=0.00;5=0.00" else
                             if p-chk-type = integer({&rcpt-tech-refuell}) or                                        /* Техпролив */
                             p-chk-type = integer({&rcpt-trans-transfer})                                            /* Перевод транзакций */
@@ -1043,7 +1049,7 @@ define variable v-first-good as logical   no-undo init yes.
     +
     "Не пролито Кол-во чеков"
    else
-     /*_if p-chk-type = integer({&rcpt-unlock-trans}) then
+     (if p-chk-type = integer({&rcpt-unlock-trans}) then
       "Предоплата Кол-во в л" + {&comma-char}
       +
       "Предоплата Сумма в {&abbr_rub}." + {&comma-char}
@@ -1054,7 +1060,7 @@ define variable v-first-good as logical   no-undo init yes.
       +
       "Постоплата Сумма в {&abbr_rub}." + {&comma-char}
       +
-      "Постоплата Кол-во чеков" else*/
+      "Постоплата Кол-во чеков" else
      (if p-chk-type = integer({&rcpt-tech-refuell}) and p-rs-grp-tech-refuell = 1 then "Назначение" + {&comma-char}
       else (if p-chk-type = integer({&rcpt-tech-refuell}) and p-rs-grp-tech-refuell = 2 then "№ ТРК" + {&comma-char} else '':U))
       +
@@ -1062,12 +1068,12 @@ define variable v-first-good as logical   no-undo init yes.
       +
       "Сумма в {&abbr_rub}." + {&comma-char}
       +
-      "Кол-во чеков")
+      "Кол-во чеков"))
 
   sheetf.sizes =
       "5" + {&comma-char}
       +
-      "27" + {&comma-char}
+      "25" + {&comma-char}
       +
       (if p-chk-type = integer({&rcpt-trans-transfer}) then
         "8" + {&comma-char}
@@ -1076,9 +1082,9 @@ define variable v-first-good as logical   no-undo init yes.
       else
         (if p-chk-type = integer({&rcpt-tech-refuell}) and p-rs-grp-tech-refuell = 2 then "11" + {&comma-char} else "8" + {&comma-char}))
       +
-      (if p-chk-type = integer({&rcpt-trans-cancell}) /*or p-chk-type = integer({&rcpt-unlock-trans})*/ then
+      (if p-chk-type = integer({&rcpt-trans-cancell}) or p-chk-type = integer({&rcpt-unlock-trans}) then
         "10" + {&comma-char}
-        +
+        +  
         "10" + {&comma-char}
         +
         "10" + {&comma-char}
@@ -1119,7 +1125,7 @@ define variable v-first-good as logical   no-undo init yes.
   FORM HEADER
   Line format "X(123)"
   AT 1 SKIP
-  string( "Продолжение - на следующей странице" ) FORMAT "X(35)" AT 30 SKIP
+  string("Продолжение - на следующей странице") FORMAT "X(35)" AT 30 SKIP
   with FRAME BottomFrame width  {&A4_CW0} PAGE-BOTTOM NO-LABELS NO-BOX .
   VIEW STREAM PrnLibStream FRAME BottomFrame .
   if v-type-num > 1 then do:
@@ -1150,12 +1156,12 @@ define variable v-first-good as logical   no-undo init yes.
 
       for each buf_temp-petrol-chk where
             buf_temp-petrol-chk.obj-type = obj-list.obj-type
-        AND buf_temp-petrol-chk.obj-code = obj-list.obj-code
+        and buf_temp-petrol-chk.obj-code = obj-list.obj-code
         and buf_temp-petrol-chk.chk-type = p-chk-type
-        and (buf_temp-petrol-chk.prim     = yes or p-chk-type = 0)
+        and (buf_temp-petrol-chk.prim    = yes or p-chk-type = 0)
         ,
           first buf_temp-goods where
-               buf_temp-goods.gds-code = buf_temp-petrol-chk.gds-code
+                buf_temp-goods.gds-code = buf_temp-petrol-chk.gds-code
       break
       by buf_temp-petrol-chk.pay-desk
       by buf_temp-petrol-chk.gds-code
@@ -1175,8 +1181,8 @@ define variable v-first-good as logical   no-undo init yes.
             accum-pay-desk-doc-qnty-ns = 0
             accum-pay-desk-sum-base-ns = 0
             accum-pay-desk-trans-number-ns = 0
-        .
-      end.
+          .
+        end.
         if first-of(buf_temp-petrol-chk.gds-code) then
         do:
           assign
@@ -1194,20 +1200,20 @@ define variable v-first-good as logical   no-undo init yes.
             accum-doc-qnty-dest = 0
             accum-sum-base-dest = 0
             accum-trans-number-dest = 0
-        .
-      end.
-      assign
-      accum-pay-desk-doc-qnty     = accum-pay-desk-doc-qnty      + buf_temp-petrol-chk.doc-qnty
-      accum-pay-desk-sum-base     = accum-pay-desk-sum-base      + buf_temp-petrol-chk.sum-base
-      accum-pay-desk-trans-number = accum-pay-desk-trans-number  + buf_temp-petrol-chk.trans-number
+          .
+        end.
+        assign
+          accum-pay-desk-doc-qnty        = accum-pay-desk-doc-qnty        + buf_temp-petrol-chk.doc-qnty
+          accum-pay-desk-sum-base        = accum-pay-desk-sum-base        + buf_temp-petrol-chk.sum-base
+          accum-pay-desk-trans-number    = accum-pay-desk-trans-number    + buf_temp-petrol-chk.trans-number
 
           accum-pay-desk-doc-qnty-ns     = accum-pay-desk-doc-qnty-ns     + buf_temp-petrol-chk.doc-qnty-ns
           accum-pay-desk-sum-base-ns     = accum-pay-desk-sum-base-ns     + buf_temp-petrol-chk.sum-base-ns
           accum-pay-desk-trans-number-ns = accum-pay-desk-trans-number-ns + buf_temp-petrol-chk.trans-number-ns
 
-      accum-gds-code-doc-qnty     = accum-gds-code-doc-qnty      + buf_temp-petrol-chk.doc-qnty
-      accum-gds-code-sum-base     = accum-gds-code-sum-base      + buf_temp-petrol-chk.sum-base
-      accum-gds-code-trans-number = accum-gds-code-trans-number  + buf_temp-petrol-chk.trans-number
+          accum-gds-code-doc-qnty        = accum-gds-code-doc-qnty        + buf_temp-petrol-chk.doc-qnty
+          accum-gds-code-sum-base        = accum-gds-code-sum-base        + buf_temp-petrol-chk.sum-base
+          accum-gds-code-trans-number    = accum-gds-code-trans-number    + buf_temp-petrol-chk.trans-number
 
           accum-gds-code-doc-qnty-ns     = accum-gds-code-doc-qnty-ns     + buf_temp-petrol-chk.doc-qnty-ns
           accum-gds-code-sum-base-ns     = accum-gds-code-sum-base-ns     + buf_temp-petrol-chk.sum-base-ns
@@ -1216,7 +1222,8 @@ define variable v-first-good as logical   no-undo init yes.
           accum-doc-qnty-dest            = accum-doc-qnty-dest            + buf_temp-petrol-chk.doc-qnty
           accum-sum-base-dest            = accum-sum-base-dest            + buf_temp-petrol-chk.sum-base
           accum-trans-number-dest        = accum-trans-number-dest        + buf_temp-petrol-chk.trans-number
-      .
+        .
+
 
 
 /* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
@@ -1291,47 +1298,47 @@ define variable v-first-good as logical   no-undo init yes.
       end.
 */
 
-      /*печатаем в excel*/
-      if first-of(buf_temp-petrol-chk.pay-desk )
-      or first-of(buf_temp-petrol-chk.gds-code)
-      then
+        /*печатаем в excel*/
+        if first-of(buf_temp-petrol-chk.pay-desk)
+        or first-of(buf_temp-petrol-chk.gds-code)
+        then
         /* Столбец-1 ("Касса" Отчёт Excel) */
-      {&PutExcel}
-      buf_temp-petrol-chk.pay-desk                        {&tabulation}
-      .
-      else
+        {&PutExcel}
+          buf_temp-petrol-chk.pay-desk                      {&tabulation}
+        .
+        else
         {&PutExcel}
                                                             {&tabulation}
-      .
+        .
 
         /* Столбец-2 ("Топливо" Отчёт Excel) */
-      if first-of(buf_temp-petrol-chk.gds-code )
-      then
+        if first-of(buf_temp-petrol-chk.gds-code)
+        then
         do:
-      {&PutExcel}
+          {&PutExcel}
             buf_temp-goods.gds-name {&tabulation}
           .
         end.
-      else
+        else
         do:
           {&PutExcel}
                                                             {&tabulation} +
                                                             {&tabulation}
-      .
+          .
         end.
 
         /* Столбец-3 ("ТРК"|"Откуда №ТРК" Pump-1 Отчёт Excel) */
-      {&PutExcel}
+        {&PutExcel}
           (if p-chk-type = integer({&rcpt-tech-refuell}) and p-rs-grp-tech-refuell = 2 then buf_temp-petrol-chk.pay-name
                                                                                        else string(buf_temp-petrol-chk.pump)) {&tabulation}
-      .
+        .
 
         /* Столбец-3.1 ("ТРК"|"Куда №ТРК" Pump-2 Отчёт Excel) */
-      if p-chk-type = integer({&rcpt-trans-transfer})
-      then
-      {&PutExcel}
-      buf_temp-petrol-chk.pump-2                          {&tabulation}
-      .
+        if p-chk-type = integer({&rcpt-trans-transfer})
+        then
+          {&PutExcel}
+            buf_temp-petrol-chk.pump-2                      {&tabulation}
+          .
 
         /* Столбец-3.1.1 "Назначение" Отчёт Excel (Взаимоисключением для Столбец-3.1, и только для чеков "ТехПролив"!) */
         if p-chk-type = integer({&rcpt-tech-refuell}) and p-rs-grp-tech-refuell = 1 then
@@ -1351,20 +1358,20 @@ define variable v-first-good as logical   no-undo init yes.
         end.
 
         /* Столбец-4|Столбец-П4 ("Кол-во в л"|"Пролито Кол-во в л" Отчёт Excel) */
-      {&PutExcel}
-      buf_temp-petrol-chk.doc-qnty                        {&tabulation}
+        {&PutExcel}
+          buf_temp-petrol-chk.doc-qnty                      {&tabulation}
         .
 
         /* Для категории чеков КРОМЕ "СбросТрнзкц", т.е. когда работаем с 6-ю столбцами отчёта! */
-        if p-chk-type <> integer({&rcpt-trans-cancell}) /*and p-chk-type <> integer({&rcpt-unlock-trans})*/ then
+        if p-chk-type <> integer({&rcpt-trans-cancell}) and p-chk-type <> integer({&rcpt-unlock-trans}) then
         do:
           /* Столбец-5|Столбец-П5 ("Сумма в руб."|"Пролито Сумма в руб." Отчёт Excel) */
           {&PutExcel}
-      buf_temp-petrol-chk.sum-base                        {&tabulation}
+            buf_temp-petrol-chk.sum-base                    {&tabulation}
 
             /* Столбец-6 |Столбец-П6 ("Кол-во чеков"|"Пролито Кол-во чеков" Отчёт Excel) */
-      buf_temp-petrol-chk.trans-number
-      skip.
+            buf_temp-petrol-chk.trans-number
+            skip.
         end.
         else /* Иначе - для категории чеков = "СбросТрнзкц", т.е. когда работаем с 9-ю столбцами отчёта! */
         do:
@@ -1424,7 +1431,7 @@ define variable v-first-good as logical   no-undo init yes.
         do:
           case p-chk-type:
             /* Вывод Итогов по товару для случая "СбросТрнзкц" (здесь всего шесть итоговых столбцов в отчёте) */
-            when integer({&rcpt-trans-cancell}) /*or when integer({&rcpt-unlock-trans})*/ /*or when 0*/ then
+            when integer({&rcpt-trans-cancell}) or when integer({&rcpt-unlock-trans}) /*or when 0*/ then
             do:
               {&PutExcel}
                                                                    {&tabulation}
@@ -1458,16 +1465,16 @@ define variable v-first-good as logical   no-undo init yes.
             /* Вывод Итогов по товару для случая "НЕ СбросТрнзкц" (здесь всего три итоговых столбца в отчёте) */
             otherwise
             do:
-               {&PutExcel}
-                                                                  {&tabulation}
-               substitute("Итого по &1", buf_temp-goods.gds-name) {&tabulation}
-                                                                  {&tabulation}
-               (if p-chk-type = integer({&rcpt-trans-transfer}) then {&tabulation}
-                else                                              '':U)
-               accum-gds-code-doc-qnty                           {&tabulation}
-               accum-gds-code-sum-base                           {&tabulation}
-               accum-gds-code-trans-number
-               skip
+              {&PutExcel}
+                                                                   {&tabulation}
+                substitute("Итого по &1", buf_temp-goods.gds-name) {&tabulation}
+                                                                   {&tabulation}
+                (if p-chk-type = integer({&rcpt-trans-transfer}) then {&tabulation}
+                 else                                              '':U)
+                accum-gds-code-doc-qnty                            {&tabulation}
+                accum-gds-code-sum-base                            {&tabulation}
+                accum-gds-code-trans-number
+                skip
               .
             end.
           end case.
@@ -1477,7 +1484,7 @@ define variable v-first-good as logical   no-undo init yes.
         if last-of(buf_temp-petrol-chk.pay-desk) then
         do:
           /* Вывод Итогов по кассе для случая "НЕ СбросТрнзкц" (здесь всего три итоговых столбца в отчёте) */
-          if p-chk-type <> integer({&rcpt-trans-cancell}) /*and p-chk-type <> integer({&rcpt-unlock-trans})*/ then
+          if p-chk-type <> integer({&rcpt-trans-cancell}) and p-chk-type <> integer({&rcpt-unlock-trans}) then
           do:
             /* Итоги C (Собираем итоги из tt с разбивкой по "Назначение") */
             if p-chk-type = integer({&rcpt-tech-refuell}) then
@@ -1485,7 +1492,7 @@ define variable v-first-good as logical   no-undo init yes.
               for each bufo3_temp-petrol-chk where
                        bufo3_temp-petrol-chk.chk-type = p-chk-type
                    and bufo3_temp-petrol-chk.obj-type = obj-list.obj-type
-                   and bufo3_temp-petrol-chk.obj-code = obj-list.obj-cod
+                   and bufo3_temp-petrol-chk.obj-code = obj-list.obj-code
                    and bufo3_temp-petrol-chk.gds-code = 0
                    and bufo3_temp-petrol-chk.pay-desk = buf_temp-petrol-chk.pay-desk
                    and bufo3_temp-petrol-chk.pump = 0
@@ -1493,8 +1500,8 @@ define variable v-first-good as logical   no-undo init yes.
                    and bufo3_temp-petrol-chk.pay-code <> 0 /* "Назначение" (отработка наличия/отсутствия) */
               no-lock:
                 do:
-        {&PutExcel}
-                                                          {&tabulation}
+                  {&PutExcel}
+                                                                   {&tabulation}
                     substitute("Итого по кассе &1", buf_temp-petrol-chk.pay-desk) {&tabulation}  /* C. Итого по товару с разбивкой по "Назначение" */
                     (if p-chk-type = integer({&rcpt-tech-refuell}) and p-rs-grp-tech-refuell = 2
                     then bufo3_temp-petrol-chk.pay-name +          {&tabulation} +
@@ -1513,25 +1520,25 @@ define variable v-first-good as logical   no-undo init yes.
 
             do:
               {&PutExcel}
-                                                           {&tabulation}
+                                                                      {&tabulation}
                 substitute((if p-chk-type = integer({&rcpt-tech-refuell})
                             then "Итого по кассе &1 по всем назначениям:"
                             else "Итого по кассе &1: "), buf_temp-petrol-chk.pay-desk) {&tabulation}
                 (if p-chk-type = integer({&rcpt-tech-refuell}) then   {&tabulation}
                  else                                                         '':U)
                 (if p-chk-type = integer({&rcpt-trans-transfer}) then {&tabulation}
-        else                                              '':U)
-                                                           {&tabulation}
-        accum-pay-desk-doc-qnty                            {&tabulation}
-        accum-pay-desk-sum-base                            {&tabulation}
-        accum-pay-desk-trans-number
+                 else                                                         '':U)
+                                                                      {&tabulation}
+                accum-pay-desk-doc-qnty                               {&tabulation}
+                accum-pay-desk-sum-base                               {&tabulation}
+                accum-pay-desk-trans-number
                 skip
               .
             end.
           end.
 
           /* Вывод Итогов по кассе для случая "СбросТрнзкц" (здесь всего шесть итоговых столбцов в отчёте) */
-          if p-chk-type = integer({&rcpt-trans-cancell}) /*or p-chk-type = integer({&rcpt-unlock-trans})*/ then
+          if p-chk-type = integer({&rcpt-trans-cancell}) or p-chk-type = integer({&rcpt-unlock-trans}) then
           do:
             {&PutExcel}
                                                 {&tabulation}
@@ -1545,52 +1552,57 @@ define variable v-first-good as logical   no-undo init yes.
               accum-pay-desk-trans-number-ns
               skip
             .
-      end.
+          end.
         end. /* Итого по кассе */
         /*** "Итого по кассе" ***/
 
-      if last-of(buf_temp-petrol-chk.pay-desk)
-      and last(buf_temp-petrol-chk.pay-desk)
-      then
-      do:
+        if last-of(buf_temp-petrol-chk.pay-desk)
+          and last(buf_temp-petrol-chk.pay-desk)
+        then
+        do:
           /*итоги по видам топлива (subtotal)*/
 /*          Put Stream PrnLibStream Unformatted*/
 /*          "Итоги по видам топлива:"          */
 /*          skip(0).                           */
 
-        {&PutExcel}
-        "Итоги по видам топлива:"
-        skip.
+          {&PutExcel}
+          "Итоги по видам топлива:"
+          skip.
 
-        assign
-        accum-doc-qnty = 0
-        accum-sum-base = 0
-        accum-trans-number = 0
+          assign
+            accum-doc-qnty = 0
+            accum-sum-base = 0
+            accum-trans-number = 0
             accum-doc-qnty-ns = 0
             accum-sum-base-ns = 0
             accum-trans-number-ns = 0
-        .
-        v-first-good = yes.
-
-        for each bufo_temp-petrol-chk where
-                 bufo_temp-petrol-chk.chk-type = p-chk-type
-             and bufo_temp-petrol-chk.obj-type = obj-list.obj-type
-             and bufo_temp-petrol-chk.obj-code = obj-list.obj-cod
-             and bufo_temp-petrol-chk.pay-desk = 0
-             and bufo_temp-petrol-chk.pump = 0
-             and bufo_temp-petrol-chk.pay-code = 0
-          ,
-              first bufo_temp-goods where
-                  bufo_temp-goods.gds-code = bufo_temp-petrol-chk.gds-code
-          :
-          assign
-          accum-doc-qnty     = accum-doc-qnty      + bufo_temp-petrol-chk.doc-qnty
-          accum-sum-base     = accum-sum-base      + bufo_temp-petrol-chk.sum-base
-          accum-trans-number = accum-trans-number  + bufo_temp-petrol-chk.trans-number
-          accum-doc-qnty-ns     = accum-doc-qnty-ns     + bufo_temp-petrol-chk.doc-qnty-ns
-          accum-sum-base-ns     = accum-sum-base-ns     + bufo_temp-petrol-chk.sum-base-ns
-          accum-trans-number-ns = accum-trans-number-ns + bufo_temp-petrol-chk.trans-number-ns
           .
+          v-first-good = yes.
+
+
+/* run gbl/inidebug.p.*/
+
+          for each bufo_temp-petrol-chk where
+                   bufo_temp-petrol-chk.chk-type = p-chk-type
+               and bufo_temp-petrol-chk.obj-type = obj-list.obj-type
+               and bufo_temp-petrol-chk.obj-code = obj-list.obj-code
+               and bufo_temp-petrol-chk.pay-desk = 0
+               and bufo_temp-petrol-chk.pump = 0
+               and bufo_temp-petrol-chk.pay-code = 0
+
+               
+          ,
+             first bufo_temp-goods where
+                   bufo_temp-goods.gds-code = bufo_temp-petrol-chk.gds-code
+          :
+            assign
+              accum-doc-qnty        = accum-doc-qnty        + bufo_temp-petrol-chk.doc-qnty
+              accum-sum-base        = accum-sum-base        + bufo_temp-petrol-chk.sum-base
+              accum-trans-number    = accum-trans-number    + bufo_temp-petrol-chk.trans-number
+              accum-doc-qnty-ns     = accum-doc-qnty-ns     + bufo_temp-petrol-chk.doc-qnty-ns
+              accum-sum-base-ns     = accum-sum-base-ns     + bufo_temp-petrol-chk.sum-base-ns
+              accum-trans-number-ns = accum-trans-number-ns + bufo_temp-petrol-chk.trans-number-ns
+            .
 
             /* Итоги Б (Собираем итоги в tt по "Назначение", т.е. где: temp-petrol-chk.pay-code <> 0)*/
             if p-chk-type = integer({&rcpt-tech-refuell}) then
@@ -1598,16 +1610,19 @@ define variable v-first-good as logical   no-undo init yes.
               for each bufo2_temp-petrol-chk where
                        bufo2_temp-petrol-chk.chk-type = p-chk-type
                    and bufo2_temp-petrol-chk.obj-type = obj-list.obj-type
-                   and bufo2_temp-petrol-chk.obj-code = obj-list.obj-cod
-                   and bufo2_temp-petrol-chk.gds-code = buf_temp-petrol-chk.gds-code
+                   and bufo2_temp-petrol-chk.obj-code = obj-list.obj-code
+                   and bufo2_temp-petrol-chk.gds-code = bufo_temp-petrol-chk.gds-code
                    and bufo2_temp-petrol-chk.pay-desk = 0
                    and bufo2_temp-petrol-chk.pump = 0
                    and bufo2_temp-petrol-chk.pay-code <> 0
               ,
                  first bufo2_temp-goods where
                        bufo2_temp-goods.gds-code = bufo2_temp-petrol-chk.gds-code
+                       
               :
-                do:
+                  
+       do:
+         
                   {&PutExcel}
                                                                      {&tabulation}
                     substitute("ИТОГО &1", bufo_temp-goods.gds-name) {&tabulation}  /* Б. Итого по товару */
@@ -1623,7 +1638,9 @@ define variable v-first-good as logical   no-undo init yes.
                     skip
                   .
                 end.
+                             
               end. /* for each bufo2_temp-petrol-chk */
+      
             end. /*** Итоги Б (Собираем итоги в tt по "Назначение", т.е. где: temp-petrol-chk.pay-code <> 0) ***/
 
 /* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
@@ -1632,38 +1649,38 @@ define variable v-first-good as logical   no-undo init yes.
             do:
               if not v-first-good then
               do:
-              DOWn 1 Stream PrnLibStream
+                DOWn 1 Stream PrnLibStream
+                with frame two-pump.
+              end.
+              display stream PrnLibStream
+              substitute("ИТОГО по &1", bufo_temp-goods.gds-name) @ buf_temp-goods.gds-name
+              bufo_temp-petrol-chk.doc-qnty     @ buf_temp-petrol-chk.doc-qnty
+              bufo_temp-petrol-chk.sum-base     @ buf_temp-petrol-chk.sum-base
+              bufo_temp-petrol-chk.trans-number @ buf_temp-petrol-chk.trans-number
               with frame two-pump.
             end.
-            display stream PrnLibStream
-            substitute("ИТОГО по &1", bufo_temp-goods.gds-name ) @ buf_temp-goods.gds-name
-            bufo_temp-petrol-chk.doc-qnty     @ buf_temp-petrol-chk.doc-qnty
-            bufo_temp-petrol-chk.sum-base     @ buf_temp-petrol-chk.sum-base
-            bufo_temp-petrol-chk.trans-number @ buf_temp-petrol-chk.trans-number
-            with frame two-pump.
-          end.
-          else
-          do:
-            if not v-first-good then
+            else
             do:
-              DOWn 1 Stream PrnLibStream
+              if not v-first-good then
+              do:
+                DOWn 1 Stream PrnLibStream
+                with frame one-pump.
+              end.
+              display stream PrnLibStream
+              substitute("ИТОГО по &1", bufo_temp-goods.gds-name) @ buf_temp-goods.gds-name
+              bufo_temp-petrol-chk.doc-qnty     @ buf_temp-petrol-chk.doc-qnty
+              bufo_temp-petrol-chk.sum-base     @ buf_temp-petrol-chk.sum-base
+              bufo_temp-petrol-chk.trans-number @ buf_temp-petrol-chk.trans-number
               with frame one-pump.
             end.
-            display stream PrnLibStream
-            substitute("ИТОГО по &1", bufo_temp-goods.gds-name ) @ buf_temp-goods.gds-name
-            bufo_temp-petrol-chk.doc-qnty        @ buf_temp-petrol-chk.doc-qnty
-            bufo_temp-petrol-chk.sum-base        @ buf_temp-petrol-chk.sum-base
-            bufo_temp-petrol-chk.trans-number    @ buf_temp-petrol-chk.trans-number
-            with frame one-pump.
-          end.
 */
 
-          /*печатаем в excel*/
+            /*печатаем в excel*/
             /* Вывод Итогов (subtotal) по товарам-2 (т.е. топливам) для случая "НЕ СбросТрнзкц" (здесь всего три итоговых столбца в отчёте) */
-            if p-chk-type <> integer({&rcpt-trans-cancell}) /*and p-chk-type <> integer({&rcpt-unlock-trans})*/ then
+            if p-chk-type <> integer({&rcpt-trans-cancell}) and p-chk-type <> integer({&rcpt-unlock-trans}) then
             do:
-                {&PutExcel}
-                                                              {&tabulation}
+              {&PutExcel}
+                                                                  {&tabulation}
                 substitute((if p-chk-type = integer({&rcpt-tech-refuell}) then "ИТОГО &1 по всем назначениям:"  /* Только для "ТехПролив" */
                                                                           else "ИТОГО по &1")                   /* Для всех остальных разделов */
                                                                           ,
@@ -1680,8 +1697,9 @@ define variable v-first-good as logical   no-undo init yes.
                 bufo_temp-petrol-chk.sum-base                     {&tabulation}
                 bufo_temp-petrol-chk.trans-number
                 skip
-                .
+              .
               v-first-good = no.
+                
             end.
             else /* Вывод Итогов по товарам (т.е. топливам) для случая "СбросТрнзкц" (здесь всего шесть итоговых столбца в отчёте) */
             do:
@@ -1689,17 +1707,17 @@ define variable v-first-good as logical   no-undo init yes.
                                                                     {&tabulation}
                 substitute("ИТОГО по &1", bufo_temp-goods.gds-name) {&tabulation} /* B. Итого по товару (2) */
                                                                     {&tabulation}
-          bufo_temp-petrol-chk.doc-qnty                             {&tabulation}
-          bufo_temp-petrol-chk.sum-base                             {&tabulation}
+                bufo_temp-petrol-chk.doc-qnty                       {&tabulation}
+                bufo_temp-petrol-chk.sum-base                       {&tabulation}
                 bufo_temp-petrol-chk.trans-number                   {&tabulation}
                 bufo_temp-petrol-chk.doc-qnty-ns                    {&tabulation}
                 bufo_temp-petrol-chk.sum-base-ns                    {&tabulation}
                 bufo_temp-petrol-chk.trans-number-ns
                 skip
               .
-          v-first-good = no.
+              v-first-good = no.
             end.
-        end. /*по всем видам топлива по объекту*/
+          end. /*по всем видам топлива по объекту*/
 
           &scop receipt-code string(p-chk-type)
 
@@ -1707,34 +1725,34 @@ define variable v-first-good as logical   no-undo init yes.
 /*
           if p-chk-type = integer({&rcpt-trans-transfer}) then
           do:
-          DOWn 2 Stream PrnLibStream
-          with frame two-pump.
-          display stream PrnLibStream
-          substitute("ИТОГ по &1"
+            DOWn 2 Stream PrnLibStream
+            with frame two-pump.
+            display stream PrnLibStream
+            substitute("ИТОГ по &1"
                     , (if p-chk-type = 0 then "всем типам чеков" else {&receipt-name})
                     ) @ buf_temp-goods.gds-name
-          accum-doc-qnty @ buf_temp-petrol-chk.doc-qnty
-          accum-sum-base @ buf_temp-petrol-chk.sum-base
-          accum-trans-number @ buf_temp-petrol-chk.trans-number
-          with frame two-pump.
-        end.
+            accum-doc-qnty @ buf_temp-petrol-chk.doc-qnty
+            accum-sum-base @ buf_temp-petrol-chk.sum-base
+            accum-trans-number @ buf_temp-petrol-chk.trans-number
+            with frame two-pump.
+          end.
           else
           do:
-          DOWn 2 Stream PrnLibStream
-          with frame one-pump.
-          display stream PrnLibStream
-          substitute("ИТОГ по &1"
+            DOWn 2 Stream PrnLibStream
+            with frame one-pump.
+            display stream PrnLibStream
+            substitute("ИТОГ по &1"
                     , caps((if p-chk-type = 0 then "всем типам чеков" else {&receipt-name}))) @ buf_temp-goods.gds-name
-          accum-doc-qnty @ buf_temp-petrol-chk.doc-qnty
-          accum-sum-base @ buf_temp-petrol-chk.sum-base
-          accum-trans-number @ buf_temp-petrol-chk.trans-number
-          with frame one-pump.
-        end.
+            accum-doc-qnty @ buf_temp-petrol-chk.doc-qnty
+            accum-sum-base @ buf_temp-petrol-chk.sum-base
+            accum-trans-number @ buf_temp-petrol-chk.trans-number
+            with frame one-pump.
+          end.
 */
 
-        /*печатаем в excel*/
+          /*печатаем в excel*/
           /* Вывод Итогов по типам чеков для случая "НЕ СбросТрнзкц" (здесь всего три итоговых столбца в отчёте) */
-          if p-chk-type <> integer({&rcpt-trans-cancell}) /*and p-chk-type <> integer({&rcpt-unlock-trans})*/ then
+          if p-chk-type <> integer({&rcpt-trans-cancell}) and p-chk-type <> integer({&rcpt-unlock-trans}) then
           do:
             /* Итоги по ТИПУ ЧЕКА (Например, по ТехПролив */
             /* Итоги Е (Собираем итоги в tt по "Назначение", т.е. где: temp-petrol-chk.pay-code <> 0)*/
@@ -1743,7 +1761,7 @@ define variable v-first-good as logical   no-undo init yes.
               for each bufo3_temp-petrol-chk where
                        bufo3_temp-petrol-chk.chk-type = p-chk-type
                    and bufo3_temp-petrol-chk.obj-type = obj-list.obj-type
-                   and bufo3_temp-petrol-chk.obj-code = obj-list.obj-cod
+                   and bufo3_temp-petrol-chk.obj-code = obj-list.obj-code
                    and bufo3_temp-petrol-chk.gds-code = 0
                    and bufo3_temp-petrol-chk.pay-desk = 0
                    and bufo3_temp-petrol-chk.pump = 0
@@ -1766,13 +1784,15 @@ define variable v-first-good as logical   no-undo init yes.
                     skip
                   .
                 end.
+                    
               end.
+     
             end. /*** Итоги Е ***/
 
-        {&PutExcel}
-        skip(0)
-                                                            {&tabulation}
-              substitute((if p-chk-type = integer({&rcpt-tech-refuell}) then "ИТОГ &1 по всем назначениям" else "ИТОГ по &1"), caps((if p-chk-type = 0 then
+            {&PutExcel}
+              skip(0)
+                                                                  {&tabulation}
+              substitute((if p-chk-type = integer({&rcpt-tech-refuell}) then "ИТОГ &1 по всем назначениям" else "ИТОГ &1"), caps((if p-chk-type = 0 then
               "всем типам чеков" else {&receipt-name}))) /* Итог по виду чека (например по "СбросТрнзкц") */
                                                                   {&tabulation}
                                                                   {&tabulation}
@@ -1782,184 +1802,258 @@ define variable v-first-good as logical   no-undo init yes.
               accum-doc-qnty                                      {&tabulation}
               accum-sum-base                                      {&tabulation}
               accum-trans-number
+              
               skip
             .
+           
           end.
           else /* Вывод Итогов по типам чеков для случая "СбросТрнзкц" (здесь всего три итоговых столбца в отчёте) */
           do:
             {&PutExcel}
             skip(0)
-                                                            {&tabulation}
+                                                                  {&tabulation}
             substitute("ИТОГ по &1", caps((if p-chk-type = 0 then "всем типам чеков" else {&receipt-name}))) /* Итог по виду чека (например по "СбросТрнзкц") */
-                                                            {&tabulation}
-                                                            {&tabulation}
-        accum-doc-qnty                        {&tabulation}
-        accum-sum-base                        {&tabulation}
+                                                                  {&tabulation}
+                                                                  {&tabulation}
+            accum-doc-qnty                                        {&tabulation}
+            accum-sum-base                                        {&tabulation}
             accum-trans-number                                    {&tabulation}
             accum-doc-qnty-ns                                     {&tabulation}
             accum-sum-base-ns                                     {&tabulation}
             accum-trans-number-ns
-        skip.
+            skip.
           end.
 
-        /*по всем объектам в общем*/
-        if multi-obj
-        and loc-obj-count = obj-count
+   end. /**if last-of(buf_temp-petrol-chk) and last(buf_temp-pettrol-chk)*/
+          end. /*for each buf_temp-petrol-chk*/
+          
+          
+          
+          /*по всем объектам в общем*/
+          if multi-obj
+          and loc-obj-count = obj-count 
           then
           do:
 
 /* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
 /*
-          Put Stream PrnLibStream UNFORMATTED
-          skip(1)
-          substitute("ПО ВСЕМ ВЫБРАННЫМ ОБЪЕКТАМ") skip.
+            Put Stream PrnLibStream UNFORMATTED
+            skip(1)
+            substitute("ПО ВСЕМ ВЫБРАННЫМ ОБЪЕКТАМ") skip.
 */
-          {&Putexcel}
+            {&Putexcel}
               substitute("ПО ВСЕМ ВЫБРАННЫМ ОБЪЕКТАМ")
               skip
             .
 
-          assign
-          accum-doc-qnty = 0
-          accum-sum-base = 0
-          accum-trans-number = 0
-          .
-          for each bufo_temp-petrol-chk where
-                bufo_temp-petrol-chk.obj-type = '':U
-            AND bufo_temp-petrol-chk.obj-code = 0
-                 and bufo_temp-petrol-chk.chk-type = p-chk-type
-            ,
-                first bufo_temp-goods where
-                    bufo_temp-goods.gds-code = bufo_temp-petrol-chk.gds-code
-          break
-          by bufo_temp-petrol-chk.pay-desk
-          by bufo_temp-petrol-chk.gds-code
-          :
             assign
-            accum-doc-qnty     = accum-doc-qnty      + bufo_temp-petrol-chk.doc-qnty
-            accum-sum-base     = accum-sum-base      + bufo_temp-petrol-chk.sum-base
-            accum-trans-number = accum-trans-number  + bufo_temp-petrol-chk.trans-number
+              accum-doc-qnty = 0
+              accum-sum-base = 0
+              accum-trans-number = 0
+               accum-doc-qnty-ns = 0 
+               accum-sum-base-ns = 0 
+                  accum-trans-number-ns = 0
             .
-
-/* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
-/*
-              if p-chk-type = integer({&rcpt-trans-transfer}) then
-              do:
-              down 1 stream PrnLibStream
-              with frame two-pump.
-              display stream PrnLibStream
-              bufo_temp-goods.gds-name          @  buf_temp-goods.gds-name
-              bufo_temp-petrol-chk.doc-qnty     @  buf_temp-petrol-chk.doc-qnty
-              bufo_temp-petrol-chk.sum-base     @  buf_temp-petrol-chk.sum-base
-              bufo_temp-petrol-chk.trans-number @  buf_temp-petrol-chk.trans-number
-              with frame two-pump.
-            end.
-              else
-              do:
-              down 1 stream PrnLibStream
-              with frame one-pump.
-              display stream PrnLibStream
-              bufo_temp-goods.gds-name          @  buf_temp-goods.gds-name
-              bufo_temp-petrol-chk.doc-qnty      @  buf_temp-petrol-chk.doc-qnty
-              bufo_temp-petrol-chk.sum-base      @  buf_temp-petrol-chk.sum-base
-              bufo_temp-petrol-chk.trans-number  @  buf_temp-petrol-chk.trans-number
-              with frame one-pump.
-            end.
-*/
-
-            {&PutExcel}
-                                                                {&tabulation}
-
-            bufo_temp-goods.gds-name                            {&tabulation}
-                                                                {&tabulation}
-            (if p-chk-type = integer({&rcpt-trans-transfer}) then {&tabulation}
-             else                                               '':u)
-            bufo_temp-petrol-chk.doc-qnty                       {&tabulation}
-            bufo_temp-petrol-chk.sum-base                       {&tabulation}
-            bufo_temp-petrol-chk.trans-number
-                skip
+            for each bufo_temp-petrol-chk where
+                     bufo_temp-petrol-chk.obj-type = '':U
+                 and bufo_temp-petrol-chk.obj-code = 0
+                 and bufo_temp-petrol-chk.chk-type = p-chk-type
+                 and bufo_temp-petrol-chk.pump = 0
+                 and bufo_temp-petrol-chk.pay-desk = 0
+                 and bufo_temp-petrol-chk.pay-code = 0
+                  
+            ,
+               first bufo_temp-goods where
+                    bufo_temp-goods.gds-code = bufo_temp-petrol-chk.gds-code
+            break
+/*            by bufo_temp-petrol-chk.pay-desk*/
+            by bufo_temp-petrol-chk.gds-code
+            :
+              assign
+                accum-doc-qnty     = accum-doc-qnty      + bufo_temp-petrol-chk.doc-qnty
+                accum-sum-base     = accum-sum-base      + bufo_temp-petrol-chk.sum-base
+                accum-trans-number = accum-trans-number  + bufo_temp-petrol-chk.trans-number
+                 accum-doc-qnty-ns     = accum-doc-qnty-ns     + bufo_temp-petrol-chk.doc-qnty-ns
+              accum-sum-base-ns     = accum-sum-base-ns     + bufo_temp-petrol-chk.sum-base-ns
+              accum-trans-number-ns = accum-trans-number-ns + bufo_temp-petrol-chk.trans-number-ns
+            
               .
-          end. /*for each buf_temp-petrol-chk wh*/
+                          /* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
+                          /*
+                                        if p-chk-type = integer({&rcpt-trans-transfer}) then
+                                        do:
+                                          down 1 stream PrnLibStream
+                                          with frame two-pump.
+                                          display stream PrnLibStream
+                                          bufo_temp-goods.gds-name          @ buf_temp-goods.gds-name
+                                          bufo_temp-petrol-chk.doc-qnty     @ buf_temp-petrol-chk.doc-qnty
+                                          bufo_temp-petrol-chk.sum-base     @ buf_temp-petrol-chk.sum-base
+                                          bufo_temp-petrol-chk.trans-number @ buf_temp-petrol-chk.trans-number
+                                          with frame two-pump.
+                                        end.
+                                        else
+                                        do:
+                                          down 1 stream PrnLibStream
+                                          with frame one-pump.
+                                          display stream PrnLibStream
+                                          bufo_temp-goods.gds-name          @ buf_temp-goods.gds-name
+                                          bufo_temp-petrol-chk.doc-qnty     @ buf_temp-petrol-chk.doc-qnty
+                                          bufo_temp-petrol-chk.sum-base     @ buf_temp-petrol-chk.sum-base
+                                          bufo_temp-petrol-chk.trans-number @ buf_temp-petrol-chk.trans-number
+                                          with frame one-pump.
+                                        end.
+                          */
+                      
+                        if p-chk-type <> integer({&rcpt-trans-cancell}) and p-chk-type <> integer({&rcpt-unlock-trans}) then
+                      
+                          do:
+                  
+                              {&PutExcel}
+                                      {&tabulation}
 
-          &scop receipt-code string(p-chk-type)
+                                      bufo_temp-goods.gds-name                        {&tabulation}
+                                      {&tabulation}
+                   
+                                      (if p-chk-type = integer({&rcpt-trans-transfer}) or p-chk-type = integer({&rcpt-tech-refuell}) then {&tabulation}
+                                      else                                           '':u)
+                                                                    
+                                      bufo_temp-petrol-chk.doc-qnty                       {&tabulation}
+                                      bufo_temp-petrol-chk.sum-base                       {&tabulation}
+                                      bufo_temp-petrol-chk.trans-number                   
+                                      skip
+                                      .
+                  
+                          end.
+                      else
+                          do:     
+    
+                              {&PutExcel}
+                                      {&tabulation}
+                                      bufo_temp-goods.gds-name                        {&tabulation}
+                                      {&tabulation}
+                    
+                                      (if p-chk-type = integer({&rcpt-trans-transfer}) or p-chk-type = integer({&rcpt-tech-refuell}) then {&tabulation}
+                                      else                                           '':u)
+                                                                    
+                                      bufo_temp-petrol-chk.doc-qnty                       {&tabulation}
+                                      bufo_temp-petrol-chk.sum-base                       {&tabulation}
+                                      bufo_temp-petrol-chk.trans-number                   {&tabulation}
+                                      bufo_temp-petrol-chk.doc-qnty-ns                    {&tabulation}
+                                      bufo_temp-petrol-chk.sum-base-ns                    {&tabulation}
+                                      bufo_temp-petrol-chk.trans-number-ns
+                                      skip
+                                      .
+                          end.
+                      end. /*for each bufo_temp-petrol-chk wh*/
+
+            &scop receipt-code string(p-chk-type)
+
+                      /* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
+                      /*
+                                  Put Stream PrnLibStream UNFORMATTED
+                                    skip(1)
+                                  .
+                                  if p-chk-type = integer({&rcpt-trans-transfer}) then
+                                  do:
+                                    down 1 stream PrnLibStream
+                                    with frame two-pump.
+                                    display stream PrnLibStream
+                                    substitute("ИТОГ по &1", caps(if p-chk-type = 0 then "всем типам чеков" else {&receipt-name})) @ buf_temp-goods.gds-name
+                                    accum-doc-qnty @ buf_temp-petrol-chk.doc-qnty
+                                    accum-sum-base @ buf_temp-petrol-chk.sum-base
+                                    accum-trans-number @ buf_temp-petrol-chk.trans-number
+                                    with frame two-pump.
+                                  end.
+                                  else
+                                  do:
+                                    down 1 stream PrnLibStream
+                                    with frame one-pump.
+                                    display stream PrnLibStream
+                                    substitute("ИТОГ по &1", caps(if p-chk-type = 0 then "всем типам чеков" else {&receipt-name})) @ buf_temp-goods.gds-name
+                                    accum-doc-qnty @ buf_temp-petrol-chk.doc-qnty
+                                    accum-sum-base @ buf_temp-petrol-chk.sum-base
+                                    accum-trans-number @ buf_temp-petrol-chk.trans-number
+                                    with frame one-pump.
+                                  end.
+                      */
+                    
+                     if p-chk-type <> integer({&rcpt-trans-cancell}) and p-chk-type <> integer({&rcpt-unlock-trans}) then
+                      do:
+                          {&PutExcel}
+                                  skip(1)
+                                  {&tabulation}
+                                  substitute("ИТОГ по &1", caps(if p-chk-type = 0 then "всем типам чеков" else {&receipt-name}))
+                                  {&tabulation}
+                                  {&tabulation}
+                                
+                                  (if p-chk-type = integer({&rcpt-trans-transfer}) or p-chk-type = integer({&rcpt-tech-refuell}) then {&tabulation}
+                                  else                                           '':u)
+                                  accum-doc-qnty                   {&tabulation}
+                                  accum-sum-base                   {&tabulation}
+                                  accum-trans-number              
+                                  skip
+                                  .
+                      end.
+                     else
+                      do: 
+              
+                          {&PutExcel}
+                                  skip(1)
+                                  {&tabulation}
+                                  substitute("ИТОГ по &1", caps(if p-chk-type = 0 then "всем типам чеков" else {&receipt-name}))
+                                  {&tabulation}
+                                  {&tabulation}
+                                
+            
+                                
+                                  (if p-chk-type = integer({&rcpt-trans-transfer}) or p-chk-type = integer({&rcpt-tech-refuell}) then {&tabulation}
+                                  else                                           '':u)
+                                  accum-doc-qnty                    {&tabulation}
+                                  accum-sum-base                    {&tabulation}
+                                  accum-trans-number                {&tabulation}
+                                  accum-doc-qnty-ns                 {&tabulation}
+                                  accum-sum-base-ns                 {&tabulation}
+                                  accum-trans-number-ns           
+                                  skip
+                                  .
+                      end.
+                  end. /*if multi-obj*/
+           
+        
+        
+          
+      /*      if obj-count <> loc-obj-count then                    */
+      /*      do:                                                   */
+      /*/* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */      */
+      /*/*                                                          */
+      /*        if p-chk-type = integer({&rcpt-trans-transfer}) then*/
+      /*        do:                                                 */
+      /*          down 1 stream PrnLibStream                        */
+      /*          with frame two-pump.                              */
+      /*        end.                                                */
+      /*        else                                                */
+      /*        do:                                                 */
+      /*          down 1 stream PrnLibStream                        */
+      /*          with frame one-pump.                              */
+      /*        end.                                                */
+      /**/                                                          */
+      /*                                                            */
+      /*        {&PutExcel}                                         */
+      /*          skip                                              */
+      /*        .                                                   */
+      /*                                                            */
+      /*      end.                                                  */
+      end. /*for each obj-list*/
 
 /* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
 /*
-          Put Stream PrnLibStream UNFORMATTED
-          skip(1)
-          .
-            if p-chk-type = integer({&rcpt-trans-transfer}) then
-            do:
-            down 1 stream PrnLibStream
-            with frame two-pump.
-            display stream PrnLibStream
-            substitute("ИТОГ по &1", caps(if p-chk-type = 0 then "всем типам чеков" else {&receipt-name})) @ buf_temp-goods.gds-name
-            accum-doc-qnty @ buf_temp-petrol-chk.doc-qnty
-            accum-sum-base @ buf_temp-petrol-chk.sum-base
-            accum-trans-number @ buf_temp-petrol-chk.trans-number
-            with frame two-pump.
-          end.
-            else
-            do:
-            down 1 stream PrnLibStream
-            with frame one-pump.
-            display stream PrnLibStream
-            substitute("ИТОГ по &1", caps(if p-chk-type = 0 then "всем типам чеков" else {&receipt-name})) @ buf_temp-goods.gds-name
-            accum-doc-qnty @ buf_temp-petrol-chk.doc-qnty
-            accum-sum-base @ buf_temp-petrol-chk.sum-base
-            accum-trans-number @ buf_temp-petrol-chk.trans-number
-            with frame one-pump.
-          end.
-*/
-
-          {&PutExcel}
-          skip(1)
-                                                              {&tabulation}
-          substitute("ИТОГ по &1", caps(if p-chk-type = 0 then "всем типам чеков" else {&receipt-name}))
-                                                              {&tabulation}
-                                                              {&tabulation}
-              (if p-chk-type = integer({&rcpt-trans-transfer}) then {&tabulation}
-          else '':u)
-          accum-doc-qnty                                      {&tabulation}
-          accum-sum-base                                      {&tabulation}
-          accum-trans-number
-              skip
-            .
-        end. /*if multi-obj*/
-      end. /**if last-of(buf_temp-petrol-chk) and last(buf_temp-pettrol-chk)*/
-    end. /*for each buf_temp-petrol-chk*/
-      if obj-count <> loc-obj-count then
-      do:  /* if obj-count <> loc-obj-count */
-        /* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
-        /*
-                if p-chk-type = integer({&rcpt-trans-transfer}) then
-                do:
-                down 1 stream PrnLibStream
-                with frame two-pump.
-              end.
-                else
-                do:
-                DOWN 1 stream PrnLibStream
-                  with frame one-pump.
-                end.
-        */
-
-        {&PutExcel}
-          skip
-        .
-
-      end. /* if obj-count <> loc-obj-count */
-  end. /*for each obj-list*/
-
-/* Блокируем вывод на экран ТН-3359 10.02.2015 Арн. */
-/*
-  clear frame two-pump.
-  clear frame one-pump.
-  HIDE  STREAM PrnLibStream FRAME BottomFrame .
-  /*if p-chk-type = integer({&rcpt-trans-transfer}) then*/
-  HIDE  STREAM PrnLibStream FRAME two-pump.
-  /*else*/
-  HIDE  STREAM PrnLibStream FRAME one-pump.
+    clear frame two-pump.
+    clear frame one-pump.
+    HIDE  STREAM PrnLibStream FRAME BottomFrame.
+    /*if p-chk-type = integer({&rcpt-trans-transfer}) then*/
+    HIDE  STREAM PrnLibStream FRAME two-pump.
+    /*else*/
+    HIDE  STREAM PrnLibStream FRAME one-pump.
 */
   end.
 

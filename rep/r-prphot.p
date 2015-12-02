@@ -31,9 +31,11 @@ define input  parameter p-skidki-5   as character no-undo .
 define input  parameter p-skidki-6   as character no-undo .
 define input  parameter p-skidki-7   as character no-undo .
 define input  parameter p-skidki-8   as character no-undo .
-
 define input  parameter p-colsize    as integer   no-undo .
 define input  parameter p-hot        as character no-undo .
+define input parameter p-minpart as logical no-undo.
+define input parameter p-ost          as logical no-undo.
+define input parameter p-ref-rec      as character no-undo.
 
 /*
 
@@ -71,6 +73,7 @@ define variable vss-description as character no-undo init "Прайс-лист с фото тов
 { rep/lkp-font.i }
 { cmp/ini-lib.i  }
 { str/bc-gnrt.i new bc } /* используется в процедуре create-bar-code */
+{ str/mplfacor.i }
 
 define temp-table temp-list no-undo
 field f-sort   as character
@@ -99,9 +102,29 @@ define variable v-b-code as integer   no-undo .
 define variable v-ean as character no-undo .
 define variable v-proc-name-err as character no-undo initial 'prphot.err'. /* Имя лога */
 define variable l-error as logical no-undo. /* Есть ли ошибки */
-
+define variable v-ost-qnty as decimal no-undo.
+define variable v-price as decimal no-undo.
+define variable v-fact-order as decimal no-undo.
+define variable v-date as date no-undo.
+define VARIABLE vPar-val as character no-undo .
+define VARIABLE vPar-type  as character no-undo .
+define VARIABLE v-ph-dir as character no-undo .
+define VARIABLE v-path-db-num as character no-undo .
+define VARIABLE v-from-db-num as character no-undo .
+define variable v-param-types   as character  no-undo.
+define variable v-value-char    as character  no-undo.
+define variable v-val-date      as date       no-undo.
+define variable v-val-decimal   as decimal    no-undo.
+define variable v-val-integer   as integer    no-undo.
+define variable v-val-logical   as logical    no-undo.
+define variable v-tthd          as handle     no-undo.
 define variable g#quest-print   as logical      no-undo.
 define variable g#log           as logical      no-undo.
+define variable v-value         as character  no-undo.
+define variable v-type         as character  no-undo.
+define buffer buf_buyer-group for ub.buyer-group.
+define buffer buf_price-all for ub.price-all.
+define buffer buf_bar-code for ub.bar-code.
 
 run get-report-num in p-mainmenu-handle (
     output g#report-num
@@ -113,18 +136,30 @@ run get-quest-print in p-mainmenu-handle (
 { str/writelog.i def v-proc-name-err } /* Запуск лога для ошибок */
 { rep/f-fdec.i }
 { gbl/getcntxt.i get " " p-mainmenu-handle }
-  RUN verify-ini-entry("pict_path":U,
-                        "REP-SETS":U,
-                        "не определен путь к подкаталогу для хранения фото товара" + {&new-line} +
-                        "отсутствует параметр pict_path, секция [REP-SETS] ini-файла",
-                        no,
-                        output Path-To-Dir-Pictures) no-error.
-  if error-status:error
-  or Path-To-Dir-Pictures = ?
-  then do:
-    return error .
-  end.
+{ ref/gds-attr.i }
 
+      /* Путь к папке изображений c текущей базы*/
+      {gbl/conf-rd.i "'ph-dir':u" "'':u" "'':u" 0 "'':u" "'':u" "'':u" NO vPar-val vPar-type no-error}
+     
+     if vPar-val = "" then vPar-Val = "C:\temp". else vPar-Val = vPar-Val.  
+     
+      /*смотрим схему хранения изображения (общая или по товарам)*/ 
+      run adm/shattri.p (
+        input "get":U
+        ,input  '':U /*p-obj-type*/
+        ,input  0 /*p-obj-code*/
+        ,input  {&attr-gds-ref}
+        ,input  {&attr-gds-ref_shema-foto} /*p-param-code*/
+        ,output v-value-char
+        ,output v-val-date
+        ,output v-val-decimal
+        ,output v-val-integer /*1 - общая директория; 2 по товарам*/
+        ,output v-val-logical
+        ,output v-param-types
+        ,INPUT-OUTPUT table-handle v-tthd
+        ) no-error.
+      delete object v-tthd.
+      
   v-dircode1 = search( 'exe/own-logo.jpg' ) .
   v-dircode2 = search( 'exe/own-tel.jpg' ) .
   
@@ -133,83 +168,157 @@ run get-quest-print in p-mainmenu-handle (
   end.
   
   l-error = no.
-  
+    
   for each obj-list :
+      
+      /* Для определения цены по прайсу получим факт-ордер для объекта */
+      if p-ref-rec <> "" then do:
+      { gbl/curobjdt.i obj-list.obj-type obj-list.obj-code v-date}
+      run fact-order-mpl in this-procedure (input v-date,
+                                            input obj-list.obj-type,
+                                            input obj-list.obj-code,
+                                            output v-fact-order) no-error.
+      end.
+    
     for each gds-list :
-       find first ub.gds-obj no-lock where
-                  ub.gds-obj.gds-code = gds-list.gds-code and
-                  ub.gds-obj.obj-type = obj-list.obj-type and
-                  ub.gds-obj.obj-code = obj-list.obj-code no-error .
-        if not available ub.gds-obj  then 
-          do:
-            l-error = yes.
-            run writelog in this-procedure (v-proc-name-err, 1, substitute("У товара &1 &2 нет продажной цены",gds-list.artic,gds-list.gds-name)).
-            next.
+
+      find first ub.gds-obj no-lock where
+        ub.gds-obj.gds-code = gds-list.gds-code and
+        ub.gds-obj.obj-type = obj-list.obj-type and
+        ub.gds-obj.obj-code = obj-list.obj-code no-error .
+      if not available ub.gds-obj  then 
+      do:
+        l-error = yes.
+        run writelog in this-procedure (v-proc-name-err, 1, substitute("У товара &1 &2 нет продажной цены",gds-list.artic,gds-list.gds-name)).
+        next.
+      end.
+      if ub.gds-obj.price-sale = 0  then 
+      do:
+        l-error = yes.
+        run writelog in this-procedure (v-proc-name-err, 1, substitute("У товара &1 &2 нулевая цена продажи",gds-list.artic,gds-list.gds-name)).
+        next.
+      end.
+
+/*определяем путь где лежит картинка*/
+      run gds-attr-value in this-procedure (
+        input gds-list.gds-code
+        ,input "image-list"
+        ,output v-value
+        ,output v-type) no-error.
+
+      if v-value <> "" then 
+      do: /* есть атрибут */
+        if v-val-integer = 1 then 
+        do:
+          Path-To-Dir-Pictures = vPar-val.
+        end.
+        else 
+        do:
+          Path-To-Dir-Pictures = vPar-val + "\" + string(gds-list.gds-code).
+        end.  
+      end. /*if v-value <> "" then*/
+      
+        
+      /* Новые проверки */
+        
+      /* Определение остатка товара: "Свободно"\"Факт" */
+      /*
+      if p-gds-ost-type = 1 then v-ost-qnty = ub.gds-obj.free-qnty.
+      else v-ost-qnty =  ub.gds-obj.fact-qnty.
+      */
+      /*
+      if v-ost-qnty <= 0 then next.
+      */
+      /* "Выводить товар с остатком меньше минимальной партии" так что обработаем не выводить */
+      if  p-minpart and not (gds-list.qnty-cart > 0) then 
+      do:
+        l-error = yes.
+        run writelog in this-procedure (v-proc-name-err, 1, substitute("У товара &1 &2 не указана минимальная партия",gds-list.artic,gds-list.gds-name)).
+        next.       
+      end.
+      if  p-ost and gds-list.qnty-cart > 0 and ub.gds-obj.free-qnty < gds-list.qnty-cart then 
+      do:
+        l-error = yes.
+        run writelog in this-procedure (v-proc-name-err, 1, substitute("У товара &1 &2 остаток меньше минимальной партии или мин.партия не указана",gds-list.artic,gds-list.gds-name)).
+        next.         
+      end.
+        
+      find first temp-list where
+        temp-list.gds-code = ub.gds-obj.gds-code no-error .
+      if not available temp-list then 
+      do:
+        
+        /* Обработаем цену */
+        if p-ref-rec = "" then v-price = ub.gds-obj.price-sale.
+        else 
+        do:
+          /* Определим цену для группы */
+          for first buf_buyer-group where recid (buf_buyer-group) = int(p-ref-rec):
+                
+            run get_price in this-procedure(input ub.gds-obj.obj-type,
+              input ub.gds-obj.obj-code,
+              input buf_buyer-group.bgr-id,
+              input buf_buyer-group.bgr-db-num,
+              input ub.gds-obj.gds-code,
+              input v-fact-order,
+              output v-price).
+            if v-price = 0 then  
+            do:
+              l-error = yes.
+              run writelog in this-procedure (v-proc-name-err, 1, substitute("У товара &1 &2 нулевая цена продажи",gds-list.artic,gds-list.gds-name)).
+              next.
+            end.
           end.
-        if ub.gds-obj.price-sale = 0  then 
-          do:
-            l-error = yes.
-            run writelog in this-procedure (v-proc-name-err, 1, substitute("У товара &1 &2 нулевая цена продажи",gds-list.artic,gds-list.gds-name)).
-            next.
-          end.
-        find first temp-list where
-                   temp-list.gds-code = ub.gds-obj.gds-code no-error .
-        if not available temp-list then do:
+        end.
+        
+        run gbl/newbase.p
+          (input ub.gds-obj.gds-code
+          ,input 16
+          ,output HexStr
+          ).
+        create temp-list.
 
-    run gbl/newbase.p
-      (input ub.gds-obj.gds-code
-      ,input 16
-      ,output HexStr
-      ).
-            create temp-list.
-
-            case p-sort-type :
-              when "sort-name" then do:
-                temp-list.f-sort          = gds-list.gds-name .
-              end.
-              when "sort-code" then do:
-                temp-list.f-sort          = string(ub.gds-obj.gds-code, "9999999999999999").
-              end.
-              when "sort-artic" then do:
-                temp-list.f-sort          = ub.gds-obj.artic.
-              end.
-            end case.
-            assign
-              temp-list.gds-code        = ub.gds-obj.gds-code
-              temp-list.artic           = ub.gds-obj.artic
-              temp-list.gds-name        = gds-list.gds-name
-              temp-list.price-sale      = ub.gds-obj.price-sale
-              temp-list.min-part        = if gds-list.qnty-cart = 0 then  ""  else string(gds-list.qnty-cart)
-              temp-list.f-name          = substitute("&1gds\&2.jpg" ,Path-To-Dir-Pictures, HexStr )
-              .
-
-              { gbl/gdsbcode.i
+        case p-sort-type :
+          when "sort-name" then 
+            do:
+              temp-list.f-sort          = gds-list.gds-name .
+            end.
+          when "sort-code" then 
+            do:
+              temp-list.f-sort          = string(ub.gds-obj.gds-code, "9999999999999999").
+            end.
+          when "sort-artic" then 
+            do:
+              temp-list.f-sort          = ub.gds-obj.artic.
+            end.
+        end case.
+        assign
+          temp-list.gds-code   = ub.gds-obj.gds-code
+          temp-list.artic      = ub.gds-obj.artic
+          temp-list.gds-name   = gds-list.gds-name
+          temp-list.price-sale = v-price
+          temp-list.min-part   = if gds-list.qnty-cart = 0 then  ""  else string(gds-list.qnty-cart)
+          temp-list.f-name     = if v-value > '' then  substitute("&1\&2" ,Path-To-Dir-Pictures, entry(1,v-value) ) else ''
+          .
+          if search(temp-list.f-name) = ? then temp-list.f-name = ''.
+        { gbl/gdsbcode.i
                ub.gds-obj.gds-code
                ?
                v-b-code
                }
-               temp-list.b-code = v-b-code.
+        temp-list.b-code = v-b-code.
 
-                run gen-bc in this-procedure
-                  ( input v-b-code
-                    ,output v-ean
-                  ).
-                temp-list.big-code = v-ean.
+        run gen-bc in this-procedure
+          ( input v-b-code
+          ,output v-ean
+          ).
+        temp-list.big-code = v-ean.
 
 
-              /* Проверить есть ли такой файл на диске */
+        /* Проверить есть ли такой файл на диске */
 
-                assign
-                  file-info:file-name = temp-list.f-name
-                .
-                if file-info:file-type <> ? then do:
-                  /* message file-info:full-pathname . */
-                end.
-                else do:
-                   temp-list.f-name  = "" .
-                end.
-
-          end.
+  
+      end.
     end.
   end.
   
@@ -262,7 +371,7 @@ Sheetf.Bas-Params =
       .
         for each  temp-list break by temp-list.f-sort :
           {&putexcel}
-            temp-list.big-code  {&tabulation}
+            temp-list.artic  {&tabulation}
             temp-list.b-code    {&tabulation}
             temp-list.gds-name  {&tabulation}
             temp-list.price-sal {&tabulation}
@@ -280,3 +389,43 @@ if session:set-wait-state("") then.
 
 os-delete value( string( session:temp-directory ) +
                            {&df_name} + string( g#report-num ) + ".txt":u ) .
+
+
+
+/* **********************  Internal Procedures  *********************** */
+
+procedure get_price:
+/*------------------------------------------------------------------------------
+		Purpose: Узнать цену товара по группе покупателей
+------------------------------------------------------------------------------*/
+
+define input parameter p-obj-type as character no-undo.
+define input parameter p-obj-code as integer no-undo.
+define input parameter p-bgr-id as integer no-undo.
+define input parameter p-bgr-db-num as integer no-undo.
+define input parameter p-gds-code as integer no-undo.
+define input parameter p-fact-order as decimal no-undo.
+define output parameter p-price-sale as decimal no-undo.
+
+define variable v-root-b-code as integer no-undo.
+
+{gbl/gdsbcode.i
+ p-gds-code
+ ?
+ v-root-b-code
+ no-error}
+
+for first buf_price-all no-lock use-index by_fact-order where
+    buf_price-all.obj-type = p-obj-type and
+    buf_price-all.obj-code = p-obj-code and
+    buf_price-all.main-indication = 0 and
+    buf_price-all.b-code = v-root-b-code and
+    buf_price-all.bgr-id = p-bgr-id and
+    buf_price-all.bgr-db-num = p-bgr-db-num and
+    ((buf_price-all.fact-order-sys-from = 0) or (buf_price-all.fact-order-sys-from <= p-fact-order)) and
+    ((buf_price-all.fact-order-sys-to = 0) or (buf_price-all.fact-order-sys-to >= p-fact-order))
+    by buf_price-all.fact-order descending:
+        p-price-sale = buf_price-all.price-sale.
+end.
+
+end procedure.

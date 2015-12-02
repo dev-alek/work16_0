@@ -41,6 +41,7 @@ define variable vss-description as character no-undo init "Печать потребности то
 
 define input parameter parParentProc as widget-handle no-undo .
 define input parameter TABLE FOR export-ras .
+define input parameter TABLE FOR tmp#zakaz-prn .
 define input parameter g#type as character no-undo .
 
 { gbl/getcntxt.i get }
@@ -215,6 +216,7 @@ define variable p-det-post    as logical   no-undo .
 define variable p-only-am     as logical   no-undo .
 define variable v-ok          as logical   no-undo .
 define variable v-mess        as character no-undo .
+define variable tog-det-prizn as logical   no-undo .
 
 define variable SelectObject as character no-undo .
 
@@ -575,6 +577,8 @@ define variable v-ok               as logical no-undo .
 define variable v-mess             as character no-undo .
 define variable v-erase            as logical   no-undo .
 
+define variable prt-name           as character no-undo.
+
 define buffer buf_prod-bc    for ub.prod-bc  .
 define buffer buf_bar-code   for ub.bar-code .
 
@@ -734,7 +738,51 @@ if p-val-gds-obj then do:
         assign
           v-stroka = num#str#   /*номер последней строки по которую суммировать*/
         .
+        if g#type = {&o-f} then run spis-post in this-procedure .
+        /*  Детализация по признакам    */
+        for each tmp#zakaz-prn where tmp#zakaz-prn.artic     = export-ras.artic     and
+                                     tmp#zakaz-prn.prod-type = export-ras.prod-type and
+                                     tmp#zakaz-prn.prod-code = export-ras.prod-code and
+                                     tmp#zakaz-prn.obj-type  = export-ras.obj-type  and
+                                     tmp#zakaz-prn.obj-code  = export-ras.obj-code  no-lock
+        :
+            num#str# = num#str# + 1 .
+            find first gds-prt where gds-prt.node-code = tmp#zakaz-prn.prt-code .
+            num#col# = new-n(1).  run macr_excel_char_with_format in this-procedure ( export-ras.gds-code , num#str# , num#col#  ).
+            /*num#col# = new-n(2).  run macr_excel_char_with_format in this-procedure ( export-ras.artic    , num#str# , num#col#  ).*/
+            num#col# = new-n(3).  run macr_excel_char_with_format in this-procedure ( "__" + ub.goods.gds-name + " " + gds-prt.f-name  , num#str# , num#col#  ).
+            num#col# = new-n(4).  run macr_excel_char_with_format in this-procedure ( ub.goods.grp-name   , num#str# , num#col#  ).
+            num#col# = new-n(5).  run macr_excel_char_with_format in this-procedure ( ub.goods.unit-base  , num#str# , num#col#  ).
+            num#col# = new-n(6).  run macr_excel_char_with_format in this-procedure ( tmp#zakaz-prn.prod-type + " " + string(tmp#zakaz-prn.prod-code) , num#str# , num#col#  ).
+            num#col# = new-n(7).  run macr_excel_char_with_format in this-procedure ( ub.clients.obj-name , num#str# , num#col#  ).
+            num#col# = new-n(8).  run macr_excel_char_with_format in this-procedure ( export-ras.cli-art  , num#str# , num#col#  ).
+            num#col# = new-n(9).  run macr_excel_char_with_format in this-procedure ( export-ras.unit-cli , num#str# , num#col#  ).
+            num#col# = new-n(10). run macr_excel_dec in this-procedure (  ub.goods.deadline               , num#str# , num#col#  ).
+            num#col# = new-n(11). run macr_excel_dec in this-procedure (  export-ras.cli-base-rate        , num#str# , num#col#  ).
+            num#col# = new-n(12). run macr_excel_dec in this-procedure (  ub.goods.qnty-cart              , num#str# , num#col#  ).
+            num#col# = new-n(14). run macr_excel_dec in this-procedure (  tmp#zakaz-prn.qnty-sale , num#str# , num#col#  ).
 
+            find first bufo_clients no-lock
+                where bufo_clients.obj-type = export-ras.obj-type
+                  and bufo_clients.obj-code = export-ras.obj-code
+                no-error .
+
+            num#col# = new-n(22). run macr_excel_char_with_format in this-procedure ( export-ras.obj-type + " " + string(export-ras.obj-code) , num#str# , num#col#  ).
+            num#col# = new-n(32). run macr_excel_char_with_format in this-procedure ( bufo_clients.obj-name , num#str# , num#col# ).
+            num#col# = new-n(23). run macr_excel_char_with_format in this-procedure ( export-ras.negative-rest , num#str# , num#col# ).
+            num#col# = new-n(25). run macr_excel_dec in this-procedure ( tmp#zakaz-prn.qnty-ord , num#str# , num#col# ).
+            /*if kol-obj = 1 then do :
+              num#col# = new-n(26). run macr_excel_char in this-procedure ( v-cntxt-host-name-obj  , num#str# , num#col#  ).
+              num#col# = new-n(29). run macr_excel_dec  in this-procedure ( v-cntxt-host-code-obj  , num#str# , num#col#  ).
+              num#col# = new-n(28). run macr_excel_char in this-procedure ({&cmp}                  , num#str# , num#col#  ).
+            end.*/
+        end.  /*  for each tmp#zakaz-prn   */
+        find first tmp#zakaz-prn where tmp#zakaz-prn.artic     = export-ras.artic     and
+                                       tmp#zakaz-prn.prod-type = export-ras.prod-type and
+                                       tmp#zakaz-prn.prod-code = export-ras.prod-code and
+                                       tmp#zakaz-prn.obj-type  = export-ras.obj-type  and
+                                       tmp#zakaz-prn.obj-code  = export-ras.obj-code  no-lock no-error .
+        if available tmp#zakaz-prn and tog-det-prizn then num#str# = num#str# + 1 .
         if g#type <> {&f-p} or kol-obj = 1 then
         run spis-post in this-procedure .
         if last-of(export-ras.gds-code) and g#type = {&f-p} and kol-obj > 1  then do:
@@ -868,6 +916,52 @@ else do:
         end.
         num#col# = new-n(34). run macr_excel_char_with_format in this-procedure ( v-b-str , num#str# , num#col#  ).
 
+        if g#type = {&o-f} and p-det-post then run spis-post in this-procedure .
+
+        /*  Детализация по признакам    */
+        for each tmp#zakaz-prn where tmp#zakaz-prn.artic     = export-ras.artic     and
+                                     tmp#zakaz-prn.prod-type = export-ras.prod-type and
+                                     tmp#zakaz-prn.prod-code = export-ras.prod-code and
+                                     tmp#zakaz-prn.obj-type  = export-ras.obj-type  and
+                                     tmp#zakaz-prn.obj-code  = export-ras.obj-code  no-lock
+        :
+            num#str# = num#str# + 1 .
+            find first gds-prt where gds-prt.node-code = tmp#zakaz-prn.prt-code .
+            num#col# = new-n(1).  run macr_excel_char_with_format in this-procedure ( export-ras.gds-code , num#str# , num#col#  ).
+            /*num#col# = new-n(2).  run macr_excel_char_with_format in this-procedure ( export-ras.artic    , num#str# , num#col#  ).*/
+            num#col# = new-n(3).  run macr_excel_char_with_format in this-procedure ( "__" + ub.goods.gds-name + " " + gds-prt.f-name  , num#str# , num#col#  ).
+            num#col# = new-n(4).  run macr_excel_char_with_format in this-procedure ( ub.goods.grp-name   , num#str# , num#col#  ).
+            num#col# = new-n(5).  run macr_excel_char_with_format in this-procedure ( ub.goods.unit-base  , num#str# , num#col#  ).
+            num#col# = new-n(6).  run macr_excel_char_with_format in this-procedure ( tmp#zakaz-prn.prod-type + " " + string(tmp#zakaz-prn.prod-code) , num#str# , num#col#  ).
+            num#col# = new-n(7).  run macr_excel_char_with_format in this-procedure ( ub.clients.obj-name , num#str# , num#col#  ).
+            num#col# = new-n(8).  run macr_excel_char_with_format in this-procedure ( export-ras.cli-art  , num#str# , num#col#  ).
+            num#col# = new-n(9).  run macr_excel_char_with_format in this-procedure ( export-ras.unit-cli , num#str# , num#col#  ).
+            num#col# = new-n(10). run macr_excel_dec in this-procedure (  ub.goods.deadline               , num#str# , num#col#  ).
+            num#col# = new-n(11). run macr_excel_dec in this-procedure (  export-ras.cli-base-rate        , num#str# , num#col#  ).
+            num#col# = new-n(12). run macr_excel_dec in this-procedure (  ub.goods.qnty-cart              , num#str# , num#col#  ).
+            num#col# = new-n(14). run macr_excel_dec in this-procedure (  tmp#zakaz-prn.qnty-sale , num#str# , num#col#  ).
+
+            find first bufo_clients no-lock
+                where bufo_clients.obj-type = export-ras.obj-type
+                  and bufo_clients.obj-code = export-ras.obj-code
+                no-error .
+
+            num#col# = new-n(22). run macr_excel_char_with_format in this-procedure ( export-ras.obj-type + " " + string(export-ras.obj-code) , num#str# , num#col#  ).
+            num#col# = new-n(32). run macr_excel_char_with_format in this-procedure ( bufo_clients.obj-name , num#str# , num#col# ).
+            num#col# = new-n(23). run macr_excel_char_with_format in this-procedure ( export-ras.negative-rest , num#str# , num#col# ).
+            num#col# = new-n(25). run macr_excel_dec in this-procedure ( tmp#zakaz-prn.qnty-ord , num#str# , num#col# ).
+            /*if p-det-post then do :
+              num#col# = new-n(26). run macr_excel_char in this-procedure ( v-cntxt-host-name-obj  , num#str# , num#col#  ).
+              num#col# = new-n(29). run macr_excel_dec  in this-procedure ( v-cntxt-host-code-obj  , num#str# , num#col#  ).
+              num#col# = new-n(28). run macr_excel_char in this-procedure ({&cmp}                  , num#str# , num#col#  ).
+            end.*/
+        end.  /*  for each tmp#zakaz-prn   */
+        find first tmp#zakaz-prn where tmp#zakaz-prn.artic     = export-ras.artic     and
+                                       tmp#zakaz-prn.prod-type = export-ras.prod-type and
+                                       tmp#zakaz-prn.prod-code = export-ras.prod-code and
+                                       tmp#zakaz-prn.obj-type  = export-ras.obj-type  and
+                                       tmp#zakaz-prn.obj-code  = export-ras.obj-code  no-lock no-error .
+        if available tmp#zakaz-prn and p-det-post and tog-det-prizn then num#str# = num#str# + 1 .
         assign
         s-qnty                =  s-qnty        +  export-ras.qnty
         s-sum-rubl            =  s-sum-rubl    +  export-ras.sum-rubl
@@ -979,6 +1073,7 @@ assign v-nn = num-entries(p-val).
         when string( "t-gar"      ) then t-gar       = if (entry(2,(entry(i,p-val)), "=" )) = "yes" then true else false .
         when string( "t-min-zapas") then t-min-zapas = if (entry(2,(entry(i,p-val)), "=" )) = "yes" then true else false .
         when string( "R-min-rest3") then R-min-rest3 = if (entry(2,(entry(i,p-val)), "=" )) = "yes" then true else false .
+        /*when string( "tog-det-prizn") then  tog-det-prizn = if (entry(2,(entry(i,p-val)), "=" )) = "yes" then true else false .*/
 
         otherwise do:
         end.
@@ -1010,6 +1105,9 @@ find first ubflt.usr-flt  no-lock where
                   END.
                   WHEN 4 THEN DO:
                     p-only-am     = logical(entry(v-ii, ubflt.usr-flt.list_, {&delim-par})) .
+                  END.
+                  WHEN 5 THEN DO:
+                    tog-det-prizn = logical(entry(v-ii, ubflt.usr-flt.list_, {&delim-par})) .
                   END.
               end case.
             end.

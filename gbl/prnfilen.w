@@ -87,10 +87,9 @@ function check-xslt-files returns logical() forward.
 &Scoped-define FRAME-NAME DIALOG-1
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Exit EDITOR-history b-printer i-printer ~
-b-pdf i-pdf b-screen i-screen b-file i-file b-other b-excel i-excel b-help ~
-fi-description FILL-IN-1
-&Scoped-Define DISPLAYED-OBJECTS EDITOR-history fi-description FILL-IN-1
+&Scoped-Define ENABLED-OBJECTS Exit IMAGE-1 EDITOR-history b-printer b-pdf ~
+b-screen b-file b-other b-excel b-help FILL-IN-1 fi-description 
+&Scoped-Define DISPLAYED-OBJECTS EDITOR-history FILL-IN-1 fi-description 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -105,112 +104,101 @@ fi-description FILL-IN-1
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-excel
-     LABEL " E&xcel"
-     SIZE 11 BY 1.08.
+DEFINE BUTTON b-excel 
+     IMAGE-UP FILE "cmp/prnts_excel.bmp":U
+     IMAGE-DOWN FILE "cmp/prnts_excel.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/prnt_excel.bmp":U
+     LABEL " E&xcel" 
+     SIZE 10 BY 3.33.
 
-DEFINE BUTTON b-file
-     LABEL " &Файл"
-     SIZE 11 BY 1.08.
+DEFINE BUTTON b-file 
+     IMAGE-UP FILE "cmp/prnts_file.bmp":U
+     IMAGE-DOWN FILE "cmp/prnts_file.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/prnt_file.bmp":U
+     LABEL " &Файл" 
+     SIZE 10 BY 3.33.
 
-DEFINE BUTTON b-help DEFAULT
-     LABEL "&Помощь":L
+DEFINE BUTTON b-help DEFAULT 
+     IMAGE-UP FILE "cmp/prnt_help.bmp":U
+     IMAGE-DOWN FILE "cmp/prnt_help.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/prnt_help.bmp":U
+     LABEL "&Помощь":L 
      SIZE 3 BY 1.08
      BGCOLOR 8 .
 
-DEFINE BUTTON b-other
-     LABEL "&Заказная"
-     SIZE 11 BY 1.08.
+DEFINE BUTTON b-other 
+     IMAGE-UP FILE "cmp/prnts_zak.bmp":U
+     IMAGE-DOWN FILE "cmp/prnts_zak.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/prnt_zak.bmp":U
+     LABEL "&Заказная" 
+     SIZE 10 BY 3.33.
 
-DEFINE BUTTON b-pdf
-     LABEL "P&DF"
-     SIZE 11 BY 1.08.
+DEFINE BUTTON b-pdf 
+     IMAGE-UP FILE "cmp/prnts_pdf.bmp":U
+     IMAGE-DOWN FILE "cmp/prnts_pdf.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/prnt_pdf.bmp":U
+     LABEL "P&DF" 
+     SIZE 10 BY 3.33.
 
-DEFINE BUTTON b-printer
-     LABEL "_ &Принтер"
-     SIZE 11 BY 1.08.
+DEFINE BUTTON b-printer 
+     IMAGE-UP FILE "cmp/prnts_prnt.bmp":U
+     IMAGE-DOWN FILE "cmp/prnts_prnt.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/prnt_prnt.bmp":U
+     LABEL "_ &Принтер" 
+     SIZE 10 BY 3.33.
 
-DEFINE BUTTON b-screen
-     LABEL "_ &Экран"
-     SIZE 11 BY 1.08.
+DEFINE BUTTON b-screen 
+     IMAGE-UP FILE "cmp/prnts_screen.bmp":U
+     IMAGE-DOWN FILE "cmp/prnts_screen.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/prnt_screen.bmp":U
+     LABEL "_ &Экран" 
+     SIZE 10 BY 3.33.
 
-DEFINE BUTTON Exit AUTO-END-KEY
-     LABEL "&Выход ":L
-     SIZE 10 BY 1.08.
-
-DEFINE BUTTON i-excel
-     IMAGE-UP FILE "cmp/b-excel.bmp":U
-     IMAGE-DOWN FILE "cmp/b-excel.bmp":U
-     IMAGE-INSENSITIVE FILE "cmp/b-exceld.bmp":U NO-CONVERT-3D-COLORS
-     LABEL ""
-     SIZE 2.75 BY .92.
-
-DEFINE BUTTON i-file
-     IMAGE-UP FILE "cmp/b-file.bmp":U
-     IMAGE-DOWN FILE "cmp/b-file.bmp":U
-     IMAGE-INSENSITIVE FILE "cmp/b-filed.bmp":U NO-CONVERT-3D-COLORS
-     LABEL ""
-     SIZE 2.75 BY .92.
-
-DEFINE BUTTON i-pdf
-     IMAGE-UP FILE "cmp/b-pdf.bmp":U
-     IMAGE-DOWN FILE "cmp/b-pdf.bmp":U
-     IMAGE-INSENSITIVE FILE "cmp/b-pdfd.bmp":U NO-CONVERT-3D-COLORS
-     LABEL ""
-     SIZE 2.75 BY .92.
-
-DEFINE BUTTON i-printer
-     IMAGE-UP FILE "cmp/b-printer.bmp":U
-     IMAGE-DOWN FILE "cmp/b-printer.bmp":U
-     IMAGE-INSENSITIVE FILE "cmp/b-printerd.bmp":U NO-CONVERT-3D-COLORS
-     LABEL ""
-     SIZE 2.75 BY .92.
-
-DEFINE BUTTON i-screen
-     IMAGE-UP FILE "cmp/b-screen.bmp":U
-     IMAGE-DOWN FILE "cmp/b-screen.bmp":U
-     IMAGE-INSENSITIVE FILE "cmp/b-screend.bmp":U NO-CONVERT-3D-COLORS
-     LABEL ""
-     SIZE 2.75 BY .92.
+DEFINE BUTTON Exit AUTO-END-KEY 
+     IMAGE-UP FILE "cmp/prnts_exit.bmp":U
+     IMAGE-DOWN FILE "cmp/prnts_exit.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/prnt_exit.bmp":U
+     LABEL "&Выход ":L 
+     SIZE 10 BY 3.33.
 
 DEFINE VARIABLE EDITOR-history AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 79.5 BY 7.63
-     FGCOLOR 4  NO-UNDO.
+     SIZE 79.5 BY 4.63
+     BGCOLOR 15 FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-description AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 80 BY .67
-     FGCOLOR 4  NO-UNDO.
+DEFINE VARIABLE fi-description AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 80.5 BY .67
+     BGCOLOR 15 FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-1 AS CHARACTER FORMAT "X(256)":U INITIAL "Действия по выводу отчёта"
-      VIEW-AS TEXT
-     SIZE 80 BY .67 NO-UNDO.
+DEFINE VARIABLE FILL-IN-1 AS CHARACTER FORMAT "X(256)":U INITIAL "Действия по выводу отчёта:" 
+      VIEW-AS TEXT 
+     SIZE 26 BY .67
+     BGCOLOR 15  NO-UNDO.
+
+DEFINE IMAGE IMAGE-1
+     FILENAME "cmp/mainprint.bmp":U
+     STRETCH-TO-FIT
+     SIZE 80.5 BY 10.5.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DIALOG-1
-     Exit AT ROW 1 COL 1
-     EDITOR-history AT ROW 4.63 COL 1.75 NO-LABEL
-     b-printer AT ROW 1 COL 11
-     i-printer AT ROW 1.04 COL 12.75 RIGHT-ALIGNED WIDGET-ID 10 NO-TAB-STOP
-     b-pdf AT ROW 1 COL 22
-     i-pdf AT ROW 1.04 COL 23.75 RIGHT-ALIGNED WIDGET-ID 6 NO-TAB-STOP
-     b-screen AT ROW 1 COL 33
-     i-screen AT ROW 1.04 COL 34.88 RIGHT-ALIGNED WIDGET-ID 12 NO-TAB-STOP
-     b-file AT ROW 1 COL 44
-     i-file AT ROW 1.04 COL 45.75 RIGHT-ALIGNED WIDGET-ID 8 NO-TAB-STOP
-     b-other AT ROW 1 COL 55
-     b-excel AT ROW 1 COL 66
-     i-excel AT ROW 1.04 COL 67.75 RIGHT-ALIGNED WIDGET-ID 4 NO-TAB-STOP
-     b-help AT ROW 1 COL 79.63
-     fi-description AT ROW 2.42 COL 1 NO-LABEL
-     FILL-IN-1 AT ROW 3.46 COL 1.25 NO-LABEL
-     SPACE(1.86) SKIP(9.28)
-    WITH VIEW-AS DIALOG-BOX
-         SIDE-LABELS THREE-D  SCROLLABLE
-         BGCOLOR 8
+     Exit AT ROW 1.17 COL 1.25
+     EDITOR-history AT ROW 5.79 COL 1.5 NO-LABEL
+     b-printer AT ROW 1.17 COL 12.25
+     b-pdf AT ROW 1.17 COL 23.25
+     b-screen AT ROW 1.17 COL 34.25
+     b-file AT ROW 1.17 COL 45.25
+     b-other AT ROW 1.17 COL 56.25
+     b-excel AT ROW 1.17 COL 67.25
+     b-help AT ROW 1.17 COL 78
+     FILL-IN-1 AT ROW 4.96 COL 1.5 NO-LABEL
+     fi-description AT ROW 10.63 COL 1 NO-LABEL
+     IMAGE-1 AT ROW 1 COL 1 WIDGET-ID 14
+    WITH VIEW-AS DIALOG-BOX 
+         SIDE-LABELS THREE-D  SCROLLABLE 
          TITLE "Вывод отчета".
 
 
@@ -622,61 +610,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME i-excel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL i-excel DIALOG-1
-ON CHOOSE OF i-excel IN FRAME DIALOG-1
-DO:
-    APPLY "choose" TO b-excel.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME i-file
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL i-file DIALOG-1
-ON CHOOSE OF i-file IN FRAME DIALOG-1
-DO:
-    APPLY "choose" TO b-file.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME i-pdf
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL i-pdf DIALOG-1
-ON CHOOSE OF i-pdf IN FRAME DIALOG-1
-DO:
-    APPLY "choose" TO b-pdf.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME i-printer
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL i-printer DIALOG-1
-ON CHOOSE OF i-printer IN FRAME DIALOG-1
-DO:
-  APPLY "choose" TO b-printer.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME i-screen
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL i-screen DIALOG-1
-ON CHOOSE OF i-screen IN FRAME DIALOG-1
-DO:
-    APPLY "choose" TO b-screen.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK DIALOG-1
@@ -792,7 +725,6 @@ PROCEDURE disable-excel :
     then do:
       assign
         b-excel :sensitive = false
-        i-excel :sensitive = false
         v-excel-printed = yes
       .
     end.
@@ -801,7 +733,6 @@ PROCEDURE disable-excel :
         then do:
             assign
                 b-excel :sensitive = false
-                i-excel :sensitive = false
             .
         end.
     end.
@@ -829,7 +760,6 @@ PROCEDURE disable-option :
       then do:
         assign
           b-printer :sensitive = false
-          i-printer :sensitive = false
         .
       end.
       when 2 or
@@ -837,7 +767,6 @@ PROCEDURE disable-option :
       then do:
         assign
           b-screen :sensitive = false
-          i-screen :sensitive = false
         .
         apply 'entry':u to b-file .
       end.
@@ -846,9 +775,7 @@ PROCEDURE disable-option :
       then do:
         assign
           b-printer :sensitive = false
-          i-printer :sensitive = false
           b-screen  :sensitive = false
-          i-screen  :sensitive = false
         .
         apply 'entry':u to b-file .
       end.
@@ -857,7 +784,6 @@ PROCEDURE disable-option :
       then do:
         assign
           b-file :sensitive = false
-          i-file :sensitive = false
         .
       end.
       when 5 or
@@ -865,9 +791,7 @@ PROCEDURE disable-option :
       then do:
         assign
           b-printer :sensitive = false
-          i-printer :sensitive = false
           b-file    :sensitive = false
-          i-file    :sensitive = false
         .
       end.
       when 6 or
@@ -875,9 +799,7 @@ PROCEDURE disable-option :
       then do:
         assign
           b-screen :sensitive = false
-          i-screen :sensitive = false
           b-file   :sensitive = false
-          i-file   :sensitive = false
         .
         apply 'entry':u to b-file .
       end.
@@ -885,14 +807,10 @@ PROCEDURE disable-option :
       then do:
         assign
           b-screen  :sensitive = false
-          i-screen  :sensitive = false
           b-file    :sensitive = false
-          i-file    :sensitive = false
           b-printer :sensitive = false
-          i-printer :sensitive = false
           b-other   :sensitive = false
           b-pdf     :sensitive = false
-          i-pdf     :sensitive = false
         .
         apply 'entry':u to b-excel .
       end.
@@ -900,11 +818,8 @@ PROCEDURE disable-option :
       then do:
           assign
             b-screen  :sensitive = false
-            i-screen  :sensitive = false
             b-excel   :sensitive = false
-            i-excel   :sensitive = false
             b-printer :sensitive = false
-            i-printer :sensitive = false
           .
           apply 'entry':u to b-file .
       end.
@@ -913,14 +828,10 @@ PROCEDURE disable-option :
     and p-file-name = '' then do:
       assign
         b-screen  :sensitive = false
-        i-screen  :sensitive = false
         b-file    :sensitive = false
-        i-file    :sensitive = false
         b-printer :sensitive = false
-        i-printer :sensitive = false
         b-other   :sensitive = false
         b-pdf     :sensitive = false
-        i-pdf     :sensitive = false
       .
 
     end.
@@ -964,8 +875,8 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY EDITOR-history fi-description FILL-IN-1
       WITH FRAME DIALOG-1.
-  ENABLE Exit EDITOR-history b-printer i-printer b-pdf i-pdf b-screen i-screen
-         b-file i-file b-other b-excel i-excel b-help fi-description FILL-IN-1
+  ENABLE Exit IMAGE-1 EDITOR-history b-printer b-pdf b-screen b-file b-other 
+         b-excel b-help FILL-IN-1 fi-description 
       WITH FRAME DIALOG-1.
   {&OPEN-BROWSERS-IN-QUERY-DIALOG-1}
 END PROCEDURE.

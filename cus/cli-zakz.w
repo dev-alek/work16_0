@@ -72,6 +72,7 @@ define variable v-ok              as logical   no-undo .
 define variable varcontract       as character no-undo .
 define variable v-mastc           as logical   no-undo .
 define variable varcontract-type  as character no-undo .
+define variable v-dm-edi    as integer   no-undo .
 
 define temp-table tt-date no-undo
 field exch-date as date
@@ -161,6 +162,7 @@ run get-report-num  in parParentProc ( output g#report-num ).
 { cus/ord-code.i def }
 
 define buffer l-shar_ord-line for ub.ord-line.
+define buffer buf_ord-line-attr for ub.ord-line-attr.
 define variable store-type as character no-undo .
 define variable store-code as integer   no-undo .
 assign
@@ -230,7 +232,7 @@ define variable a-n-c as character view-as radio-set horizontal radio-buttons
 size 12 by 1 no-undo.
 define variable loc-art  as character  format "x(10)":u label "Нач.артик." view-as fill-in size 14 by 1 fgcolor red_color no-undo .
 define variable loc-name as character  label "Нач.назв."  view-as fill-in size 14 by 1 fgcolor red_color  no-undo.
-define variable loc-code as character  label "Бар-код" view-as fill-in  size 14 by 1 fgcolor red_color  no-undo.
+define variable loc-code as character  format "x(14)":u label "Бар-код" view-as fill-in  size 14 by 1 fgcolor red_color  no-undo.
 
 define variable base-abbr as character format "x(3)":u
       view-as text
@@ -362,6 +364,8 @@ t agnt-name boss-name prod-name goods-name t-auto date-sale-1 date-sale-2 loc-ho
 &scop label-clmn_21       tmp#zakaz.order-cli-qnty
 &scop label-clmn_22       tmp#zakaz.ord-dec1
 &scop label-clmn_23       tmp#zakaz.initial-qnty
+&scop label-clmn_24       tmp#zakaz.min-stock-old
+&scop label-clmn_25       tmp#zakaz.gds-way
 
 &scop label-clmn-lb_1   'ш! '
 &scop label-clmn-lb_2   'Артикул! '
@@ -386,6 +390,8 @@ t agnt-name boss-name prod-name goods-name t-auto date-sale-1 date-sale-2 loc-ho
 &scop label-clmn-lb_21  'Запрошено!количество'
 &scop label-clmn-lb_22  'Запрошена!цена'
 &scop label-clmn-lb_23  'Расcчитн.!кол-во'
+&scop label-clmn-lb_24  'Мин.!остаток'
+&scop label-clmn-lb_25  'Тов.!в пути'
 head-col =
   {&label-clmn-lb_20}     + '#' +
   {&label-clmn-lb_18}     + '#' +
@@ -407,7 +413,9 @@ head-col =
   {&label-clmn-lb_15}     + '#' +
   {&label-clmn-lb_17}     + '#' +
   {&label-clmn-lb_19}     + '#' +
-  {&label-clmn-lb_23}
+  {&label-clmn-lb_23}     + '#' +
+  {&label-clmn-lb_24}     + '#' +
+  {&label-clmn-lb_25}
   .
 /* ***********************  control definitions  ********************** */
 
@@ -716,6 +724,8 @@ define browse br-docs
    {&label-clmn_17}  column-label {&label-clmn-lb_17}    format "x(1)"
    {&label-clmn_19}  column-label {&label-clmn-lb_19}
    {&label-clmn_23}  column-label {&label-clmn-lb_23}
+   {&label-clmn_24}  column-label {&label-clmn-lb_24}
+   {&label-clmn_25}  column-label {&label-clmn-lb_25}
   enable
       {&label-clmn_8}
     with no-assign  separators size-char {&s-with1}  by 8.54.
@@ -1289,7 +1299,7 @@ then frame {&frame-name}:parent = active-window.
 { gbl/srt-clmn.i
   &browse-name    = "{&browse-name}"
   &frame-name     = "{&frame-name}"
-  &ext-col        = 23
+  &ext-col        = 25
   &start-column   = 5
   &table-name     = "{&first-table-in-query-{&browse-name}}"
   &sort-clmn_1    = "{&label-clmn_1}"
@@ -1315,6 +1325,8 @@ then frame {&frame-name}:parent = active-window.
   &sort-clmn_21   = "{&label-clmn_21}"
   &sort-clmn_22   = "{&label-clmn_22}"
   &sort-clmn_23   = "{&label-clmn_23}"
+  &sort-clmn_24   = "{&label-clmn_24}"
+  &sort-clmn_25   = "{&label-clmn_25}"
   &label-clmn_1    = "{&label-clmn-lb_1}"
   &label-clmn_2    = "{&label-clmn-lb_2}"
   &label-clmn_3    = "{&label-clmn-lb_3}"
@@ -1338,6 +1350,8 @@ then frame {&frame-name}:parent = active-window.
   &label-clmn_21   = "{&label-clmn-lb_21}"
   &label-clmn_22   = "{&label-clmn-lb_22}"
   &label-clmn_23   = "{&label-clmn-lb_23}"
+  &label-clmn_24   = "{&label-clmn-lb_24}"
+  &label-clmn_25   = "{&label-clmn-lb_25}"
   &sort-column-name     = "sort-column-name"
   &open-query     = "{&open-query-br-docs-sort} BY ~{&sort-clmn_~{&clmn_num~}~} ."
   &open-query-otherwise = "{&open-query-br-docs-sort} by tmp#zakaz.line-num ."
@@ -1378,7 +1392,7 @@ do on error   undo main-block, leave main-block
 run init-browse-p  in this-procedure .
 apply "VALUE-CHANGED" to {&browse-name} in frame {&frame-name}.
 { gbl/mv-clmn.i
-  &ext-col = 23
+  &ext-col = 25
   &start-column = 1
   &frame-name = "{&frame-name}"
   &browse-name = "br-docs"
@@ -1960,7 +1974,9 @@ define buffer bf2_tmp#zakaz for tmp#zakaz  .
     ( first tmp#zakaz  no-lock    where
       tmp#zakaz.qnty  =  0 or
       tmp#zakaz.qnty  =  ?
-    ) then do:
+    ) 
+  and not is-edi-doc
+  then do:
 
       message "В заказе есть нерассчитанные строки . Удаляем их ? " view-as alert-box question  buttons yes-no update g#log.
        if g#log then do:
@@ -1991,7 +2007,41 @@ define buffer bf2_tmp#zakaz for tmp#zakaz  .
        else do:
          /* return no-apply. */
        end.
-    end.
+  end.
+  if not can-find
+    ( first tmp#zakaz  no-lock    where
+      tmp#zakaz.qnty  <>  0 and
+      tmp#zakaz.qnty  <>  ?
+    )
+  and is-edi-doc
+  then do :
+      message "В заказе все строки нерассчитанные. Такой заказ нельзя отправлять по EDI. Удаляем строки? " view-as alert-box question  buttons yes-no update g#log.
+       if g#log then do:
+            assign
+              ord-qnty = 0
+              ord-sum-cli = 0
+              k = 0
+              .
+            for each tmp#zakaz no-lock :
+                    if not  (tmp#zakaz.qnty = 0  or  tmp#zakaz.qnty = ? ) then do:
+                      assign
+                        k = k + 1
+                        ord-qnty = ord-qnty + tmp#zakaz.qnty
+                        ord-sum-cli = ord-sum-cli + ( tmp#zakaz.qnty * tmp#zakaz.price-cli )
+                        .
+                    end.
+                    else do:
+                        find first shar_ord-line  exclusive-lock   where
+                                    shar_ord-line.doc-code   =  loc-ord-num   and
+                                    shar_ord-line.artic      =   tmp#zakaz.artic and
+                                    shar_ord-line.prod-type  =   tmp#zakaz.prod-type and
+                                    shar_ord-line.prod-code  =   tmp#zakaz.prod-code no-error .
+                          delete shar_ord-line .
+                          delete tmp#zakaz.
+                    end.
+            end. /* foreach*/
+       end. 
+  end.  
 
    is-error = false  .
    is-em = "" .
@@ -2070,7 +2120,8 @@ define buffer bf2_tmp#zakaz for tmp#zakaz  .
           input v-transport-sum      ,
           input v-transport-vat    ,
           input  if v-err-ext then false else is-edoc-nn-doc  , /* если были ошибки то еdoc не передается */
-          input  if v-err-ext then false else is-edi-doc      ) /* если были ошибки то еdoc не передается */
+          input  if v-err-ext then false else is-edi-doc      , /* если были ошибки то еdoc не передается */
+          input v-dm-edi                                      )
           no-error .
      if error-status :error then return error return-value .
    end.
@@ -2558,6 +2609,16 @@ define buffer bufff-units  for ub.units     .
                 tmp#zakaz.unit-base     = ub.goods.unit-base
                 tmp#zakaz.sum           = tmp#zakaz.price-rubl * tmp#zakaz.qnty
            .
+           
+            find first buf_ord-line-attr where buf_ord-line-attr.doc-code = shar_ord-line.doc-code
+              and buf_ord-line-attr.gds-code = shar_ord-line.gds-code
+              and buf_ord-line-attr.attr-code = {&ordlineattr-min-stock} no-error.
+            if available buf_ord-line-attr then tmp#zakaz.min-stock-old = decimal(buf_ord-line-attr.attr-value). 
+            find first buf_ord-line-attr where buf_ord-line-attr.doc-code = shar_ord-line.doc-code
+              and buf_ord-line-attr.gds-code = shar_ord-line.gds-code
+              and buf_ord-line-attr.attr-code = {&ordlineattr-gds-way} no-error.
+            if available buf_ord-line-attr then tmp#zakaz.gds-way = decimal(buf_ord-line-attr.attr-value).
+            
             find bufff-units where bufff-units.unit-name = tmp#zakaz.unit-base no-lock no-error.
             if available bufff-units then
             assign
@@ -3125,6 +3186,7 @@ procedure leave-loc-cli-code.
                               , input loc-cli-code
                               , input loc-store-type
                               , input loc-store-code
+                              , output v-dm-edi
                               ) .
 end.
 end procedure.
@@ -3164,6 +3226,7 @@ procedure leave-loc-cli-type :
                               , input loc-cli-code
                               , input loc-store-type
                               , input loc-store-code
+                              , output v-dm-edi
                               ) .
 
 end.
@@ -4352,6 +4415,7 @@ if loc-cli-type <> "" and loc-cli-code <> 0  then do:
                               , input loc-cli-code
                               , input loc-store-type
                               , input loc-store-code
+                              , output v-dm-edi
                               ) .
 end.
 
@@ -5606,8 +5670,8 @@ define variable ii as integer   no-undo .
 
 repeat ii = 1 to cur-clmn-loc   :
     col-h = hcolumn [ ii ]  .
-    if decimal(entry(ii,v-spis-size))  = 0 then message ii.
-    col-h:width  = decimal(entry(ii,v-spis-size))   .
+/*    if decimal(entry(ii,v-spis-size))  = 0 and ii < 22 then message ii.*/
+    col-h:width  = max (0.1, decimal(entry(ii, v-spis-size))) .
     col-h:visible  = logical(entry(ii,v-spis-vis))  .
  end.
 

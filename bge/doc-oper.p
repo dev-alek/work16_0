@@ -1035,7 +1035,7 @@ define input parameter p-trn-doc-out-code       as character        no-undo.
                         run get-doc-line-attr-character in this-procedure (
                             input p-doc-code
                             , input buf_goods.gds-code
-                            , input "ptbotype":U
+                            , input {&trdcattr-ptbobj}
                             , output v-ptbotype
                             , output v-attr-exists
                         ).
@@ -1044,7 +1044,7 @@ define input parameter p-trn-doc-out-code       as character        no-undo.
                             run get-doc-line-attr-integer in this-procedure (
                                 input p-doc-code
                                 , input buf_goods.gds-code
-                                , input "ptbocode":U
+                                , input {&trdcattr-ptbobj}
                                 , output v-ptbocode
                                 , output v-attr-exists
                             ).
@@ -1068,7 +1068,7 @@ define input parameter p-trn-doc-out-code       as character        no-undo.
                     run get-doc-line-attr-character in this-procedure (
                         input p-doc-code
                         , input buf_goods.gds-code
-                        , input "autoent-obj-type":U
+                        , input {&trdcattr-autoent}
                         , output v-autoent-obj-type
                         , output v-attr-exists
                     ).
@@ -1077,7 +1077,7 @@ define input parameter p-trn-doc-out-code       as character        no-undo.
                         run get-doc-line-attr-integer in this-procedure (
                             input p-doc-code
                             , input buf_goods.gds-code
-                            , input "autoent-obj-code":U
+                            , input {&trdcattr-autoent}
                             , output v-autoent-obj-code
                             , output v-attr-exists
                         ).
@@ -3398,26 +3398,122 @@ define output parameter p-attr-value-character  as character        no-undo.
 define output parameter p-attr-exists           as logical          no-undo.
 
     define buffer buf_doc-line-attr for ub.doc-line-attr.
+    define buffer buf_doc-attr for ub.doc-attr.
 do
 on error undo, return error
 :
-    find first buf_doc-line-attr no-lock
-         where buf_doc-line-attr.doc-code    = p-doc-code
-           and buf_doc-line-attr.gds-code    = p-gds-code
-           and buf_doc-line-attr.attr-code   = p-attr-code
+
+    find first buf_doc-attr no-lock
+         where buf_doc-attr.doc-code    = p-doc-code
+           and buf_doc-attr.attr-code   = p-attr-code
     no-error.
-    if available buf_doc-line-attr
-    then do:
+
+    case p-attr-code:
+      when {&trdcattr-autoent} then do:
         assign
-            p-attr-value-character = buf_doc-line-attr.attr-value
-            p-attr-exists          = yes
-        .
-    end.
-    else do:
+          p-attr-value-character = entry (1, buf_doc-attr.attr-value, ";")
+        no-error.
+        if error-status :error
+        then do:
+            assign
+                p-attr-exists = no
+            .
+        end.
+        else do:
+            assign
+                p-attr-exists = yes
+            .
+        end.
+      end.
+      /*when {&trdcattr-autoent} then do:
         assign
-            p-attr-exists          = no
-        .
-    end.
+          p-attr-value-character = entry (2, buf_doc-attr.attr-value, ";")
+        no-error.
+        if error-status :error
+        then do:
+            assign
+                p-attr-exists = no
+            .
+        end.
+        else do:
+            assign
+                p-attr-exists = yes
+            .
+        end.
+      end.*/
+      when {&trdcattr-ptbobj} then do:
+        assign
+          p-attr-value-character = entry (1, buf_doc-attr.attr-value, ";")
+        no-error.
+        if error-status :error
+        then do:
+            assign
+                p-attr-exists = no
+            .
+        end.
+        else do:
+            assign
+                p-attr-exists = yes
+            .
+        end.
+      end.
+      /*when {&trdcattr-ptbobj} then do:
+        assign
+          p-attr-value-character = entry (2, buf_doc-attr.attr-value, ";")
+        no-error.
+        if error-status :error
+        then do:
+            assign
+                p-attr-exists = no
+            .
+        end.
+        else do:
+            assign
+                p-attr-exists = yes
+            .
+        end.
+      end.*/
+      when {&trdcattr-ptb-item-pour} or 
+      when {&trdcattr-car-num} or
+      when {&trdcattr-fio-driver} or
+      when {&trdcattr-time-income}
+      then do:
+        assign
+            p-attr-value-character = buf_doc-attr.attr-value
+        no-error.
+        if error-status :error
+        then do:
+            assign
+                p-attr-exists = no
+            .
+        end.
+        else do:
+            assign
+                p-attr-exists = yes
+            .
+        end.
+      end.
+      otherwise do:
+        find first buf_doc-line-attr no-lock
+             where buf_doc-line-attr.doc-code    = p-doc-code
+               and buf_doc-line-attr.gds-code    = p-gds-code
+               and buf_doc-line-attr.attr-code   = p-attr-code
+        no-error.
+        if available buf_doc-line-attr
+        then do:
+            assign
+                p-attr-value-character = buf_doc-line-attr.attr-value
+                p-attr-exists          = yes
+            .
+        end.
+        else do:
+            assign
+                p-attr-exists          = no
+            .
+        end.        
+      end.
+    end case.
+
 end.
 end procedure. /* get-doc-line-attr-character */
 
@@ -3431,18 +3527,21 @@ define output parameter p-attr-value-integer    as integer          no-undo.
 define output parameter p-attr-exists           as logical          no-undo.
 
     define buffer buf_doc-line-attr for ub.doc-line-attr.
+    define buffer buf_doc-attr for ub.doc-attr.
 do
 on error undo, return error
 :
-    find first buf_doc-line-attr no-lock
-         where buf_doc-line-attr.doc-code   = p-doc-code
-            and buf_doc-line-attr.gds-code  = p-gds-code
-            and buf_doc-line-attr.attr-code = p-attr-code
+
+
+    find first buf_doc-attr no-lock
+         where buf_doc-attr.doc-code    = p-doc-code
+           and buf_doc-attr.attr-code   = p-attr-code
     no-error.
-    if available buf_doc-line-attr
-    then do:
+
+    case p-attr-code:
+      when {&trdcattr-autoent} then do:
         assign
-            p-attr-value-integer = integer( buf_doc-line-attr.attr-value )
+          p-attr-value-integer = integer (entry (2, buf_doc-attr.attr-value, ";"))
         no-error.
         if error-status :error
         then do:
@@ -3455,7 +3554,54 @@ on error undo, return error
                 p-attr-exists = yes
             .
         end.
-    end.
+      end.
+      when {&trdcattr-ptbobj} then do:
+        assign
+          p-attr-value-integer = integer (entry (2, buf_doc-attr.attr-value, ";"))
+        no-error.
+        if error-status :error
+        then do:
+            assign
+                p-attr-exists = no
+            .
+        end.
+        else do:
+            assign
+                p-attr-exists = yes
+            .
+        end.
+      end.
+      otherwise do:
+        find first buf_doc-line-attr no-lock
+             where buf_doc-line-attr.doc-code    = p-doc-code
+               and buf_doc-line-attr.gds-code    = p-gds-code
+               and buf_doc-line-attr.attr-code   = p-attr-code
+        no-error.
+        if available buf_doc-line-attr
+        then do:
+            assign
+                p-attr-value-integer = integer (buf_doc-line-attr.attr-value)
+            no-error.
+          if error-status :error
+          then do:
+              assign
+                  p-attr-exists = no
+              .
+          end.
+          else do:
+              assign
+                  p-attr-exists = yes
+              .
+          end.
+        end.
+        else do:
+            assign
+                p-attr-exists          = no
+            .
+        end.        
+      end.
+    end case.
+
 end.
 end procedure. /* get-doc-line-attr-integer */
 

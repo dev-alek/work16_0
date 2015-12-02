@@ -11,6 +11,7 @@
 DEFINE TEMP-TABLE status-edi NO-UNDO LIKE ub.ord-blank
        field state as char
        field date-st as char
+       field date-time as datetime
        field transport as character
        field err-code as integer
        field des-err as character
@@ -99,7 +100,7 @@ DEFINE BUFFER buf_status-edi FOR status-edi.
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-edi
 &Scoped-define SELF-NAME BROWSE-edi
 &Scoped-define QUERY-STRING-BROWSE-edi FOR EACH status-edi NO-LOCK where status-edi.gds-code <= 0
-&Scoped-define OPEN-QUERY-BROWSE-edi OPEN QUERY {&SELF-NAME} FOR EACH status-edi NO-LOCK where status-edi.gds-code <= 0.
+&Scoped-define OPEN-QUERY-BROWSE-edi OPEN QUERY {&SELF-NAME} FOR EACH status-edi NO-LOCK where status-edi.gds-code <= 0 by status-edi.date-time descending .
 &Scoped-define TABLES-IN-QUERY-BROWSE-edi status-edi
 &Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-edi status-edi
 
@@ -176,7 +177,7 @@ DEFINE BUTTON B-Help
 
 DEFINE VARIABLE EDITOR-1 AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 39.5 BY 4.43 NO-UNDO.
+     SIZE 42.5 BY 4.43 NO-UNDO.
 
 DEFINE VARIABLE EDITOR-2 AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
@@ -219,12 +220,12 @@ DEFINE BROWSE BROWSE-edi
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-edi Dialog-Frame _FREEFORM
   QUERY BROWSE-edi DISPLAY
       status-edi.state COLUMN-LABEL "Статус" FORMAT "X(24)"
-status-edi.date-st COLUMN-LABEL "Дата\Время" FORMAT "X(18)"
+status-edi.date-st COLUMN-LABEL "Дата\Время" FORMAT "X(21)"
 fill("!", status-edi.err-code) COLUMN-LABEL "Ош" FORMAT "X(3)"
 get-pack-num(status-edi.transport) COLUMN-LABEL "Пакет" FORMAT "X(11)"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 39.5 BY 16
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 42.5 BY 16
          FONT 4 TOOLTIP "История статусов".
 
 DEFINE BROWSE BROWSE-ord
@@ -476,6 +477,7 @@ PROCEDURE cr-status-edi :
 define input  parameter p-gds-code as integer no-undo .
 define input  parameter p-state as character no-undo .
 define input  parameter p-date as character no-undo .
+define input  parameter p-date-time as datetime no-undo .
 define input  parameter p-transport as character no-undo .
 define input  parameter p-err as integer no-undo .
 define input  parameter p-des-err as character no-undo .
@@ -490,6 +492,7 @@ on error undo, return error return-value
   status-edi.gds-code = p-gds-code
   status-edi.state   = p-state
   status-edi.date-st = p-date
+  status-edi.date-time = p-date-time
   status-edi.transport = p-transport
   status-edi.err-code = p-err
   status-edi.des-err = p-des-err
@@ -553,6 +556,7 @@ PROCEDURE init-proc :
 find first buf_ord-doc no-lock where buf_ord-doc.doc-code = p-doc-code no-error .
 define variable v-state as character no-undo .
 define variable v-date as character no-undo .
+define variable v-date-time as datetime no-undo .
 
 define buffer buf_EDI-status for ub.EDI-status  .
 define buffer buf2_ord-doc-rcv for ub.ord-doc-rcv  .
@@ -566,10 +570,12 @@ for each buf_EDI-status no-lock where
     v-state = ''.
     &scop order-stts-int1   buf_EDI-status.state
     v-state = {&edi-stts-name} no-error .
-    v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm" ) .
+    v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm:ss" ) .
+    v-date-time = datetime(buf_EDI-status.date-status, buf_EDI-status.time-status) .
     run cr-status-edi in this-procedure (  input 0
                                          , input v-state
                                          , input v-date
+                                         , input v-date-time
                                          , input buf_edi-status.mess
                                          , INPUT buf_edi-status.err-code
                                          , INPUT buf_edi-status.des-err
@@ -582,10 +588,12 @@ for each buf_EDI-status no-lock where
     v-state = ''.
     &scop order-stts-int1   buf_EDI-status.state
     v-state = {&edi-stts-name} no-error .
-    v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm" ) .
+    v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm:ss" ) .
+    v-date-time = datetime(buf_EDI-status.date-status, buf_EDI-status.time-status) .
     run cr-status-edi in this-procedure (  input INTEGER(ENTRY(2, buf_EDI-status.doc-code, {&delim-par}))
                                          , input v-state
                                          , input v-date
+                                         , input v-date-time
                                          , input buf_edi-status.mess
                                          , INPUT buf_edi-status.err-code
                                          , INPUT buf_edi-status.des-err
@@ -599,10 +607,12 @@ for each buf_EDI-status no-lock where
     v-state = ''.
     &scop order-stts-int1   buf_EDI-status.state
     v-state = {&edi-stts-name} no-error .
-    v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm" ) .
+    v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm:ss" ) .
+    v-date-time = datetime(buf_EDI-status.date-status, buf_EDI-status.time-status) .
     run cr-status-edi in this-procedure (  input integer(entry(2, buf_edi-status.doc-code, {&delim-par}))
                                          , input v-state
                                          , input v-date
+                                         , input v-date-time
                                          , input buf_edi-status.mess
                                          , INPUT buf_edi-status.err-code
                                          , INPUT buf_edi-status.des-err
@@ -623,11 +633,13 @@ for each buf2_ord-doc-rcv no-lock where
     v-state = ''.
     &scop order-stts-int1   buf_EDI-status.state
     v-state = substitute("&1 &2", buf2_ord-doc-rcv.rcv-code, {&edi-stts-name}) no-error .
-    v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm" ) .
+    v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm:ss" ) .
+    v-date-time = datetime(buf_EDI-status.date-status, buf_EDI-status.time-status) .
     run cr-status-edi in this-procedure (
                                            input 0
                                          , input v-state
                                          , input v-date
+                                         , input v-date-time
                                          , input buf_edi-status.mess
                                          , INPUT buf_edi-status.err-code
                                          , INPUT buf_edi-status.des-err
@@ -641,10 +653,12 @@ for each buf2_ord-doc-rcv no-lock where
       v-state = ''.
       &scop order-stts-int1   buf_EDI-status.state
       v-state = substitute("&1 &2", buf2_ord-doc-rcv.rcv-code, {&edi-stts-name}) no-error .
-      v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm" ) .
+      v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm:ss" ) .
+      v-date-time = datetime(buf_EDI-status.date-status, buf_EDI-status.time-status) .
       run cr-status-edi in this-procedure (  input integer(entry(2, buf_edi-status.doc-code, {&delim-par}))
                                            , input v-state
                                            , input v-date
+                                           , input v-date-time
                                            , input buf_edi-status.mess
                                            , INPUT buf_edi-status.err-code
                                            , INPUT buf_edi-status.des-err
@@ -669,10 +683,12 @@ for each buf2_ord-doc-rcv no-lock where
         &scop order-stts-int1   buf_EDI-status.state
         /* Отправка накладной поставщику */    /* статусы накладной TODO*/
         v-state = substitute("&1 &2", buf_trn-doc.doc-code, {&edi-stts-name})  no-error .
-        v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm" ) .
+        v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm:ss" ) .
+        v-date-time = datetime(buf_EDI-status.date-status, buf_EDI-status.time-status) .
         run cr-status-edi in this-procedure ( input 0
                                            ,  input v-state
                                             , input v-date
+                                            , input v-date-time
                                             , input buf_edi-status.mess
                                             , INPUT buf_edi-status.err-code
                                             , INPUT buf_edi-status.des-err
@@ -688,10 +704,12 @@ for each buf2_ord-doc-rcv no-lock where
         v-state = ''.
         /* Отправка накладной поставщику */    /* статусы накладной TODO*/
         v-state = substitute("&1 &2 &3", buf_trn-doc.doc-code, {&edi-stts-name})  no-error .
-        v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm" ) .
+        v-date  = string(buf_EDI-status.date-status , "99/99/9999" ) + " " + string( buf_EDI-status.time-status   , "hh:mm:ss" ) .
+        v-date-time = datetime(buf_EDI-status.date-status, buf_EDI-status.time-status) .
         run cr-status-edi in this-procedure ( input integer(entry(2, buf_edi-status.doc-code, {&delim-par}))
                                             , input v-state
                                             , input v-date
+                                            , input v-date-time
                                             , input buf_edi-status.mess
                                             , INPUT buf_edi-status.err-code
                                             , INPUT buf_edi-status.des-err

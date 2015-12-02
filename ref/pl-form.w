@@ -454,11 +454,13 @@ END.
 ON CHOOSE OF r-sr-izm IN FRAME d-pl-form /*Справочник средств измерения*/
 DO:
   define variable v-node-code as integer no-undo.
+  define variable v-sr-type as character no-undo.
   v-node-code = 0 .
   run ref/sr-izm.w (input parparentproc ,
                     input ""            ,
                     input {&lookup}     ,
-                    input-output v-node-code) no-error.
+                    input-output v-node-code,
+                    output v-sr-type) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
     place-si = v-node-code.
     place-si:screen-value = string(v-node-code).

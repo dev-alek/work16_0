@@ -201,6 +201,8 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
           no-error .
           if not (v-obj-type = {&shop}
                   or
+                  v-obj-type = {&cmp}
+                  or
                   v-obj-type = {&stock}
                   or
                   v-obj-type = ''
@@ -247,7 +249,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
         end. /*when {&extclass_clients_edoc-nn} then do:*/
         when {&extclass_clients_exite-edi} then do:
           if g#db-num > 0 then do:
-            v-mess = substitute("Запрещено добавлять привязку к Exite-EDI в УБД").
+            v-mess = substitute("Запрещено добавлять привязку к EDI в УБД").
             run err-mess in this-procedure ( input-output v-mess).
             undo _main, return error (if p-silent = yes then v-mess else '':U).
           end.
@@ -284,15 +286,15 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
           and  not (p-charkey_one = {&exite-edi-without-ordrsp}
                   or
                   p-charkey_one = {&exite-edi-with-ordrsp} ) then do:
-            v-mess = substitute("Неверное значение Параметра работы через Exite-EDI (&1)"
+            v-mess = substitute("Неверное значение Параметра работы через EDI (&1)"
                                , p-charkey_one
                                , 0).
             run err-mess in this-procedure ( input-output v-mess).
             undo _main, return error (if p-silent = yes then v-mess else '':U).
           end.
           /*если clients.obj-type = {&shop} или {&stock} тогда должна быть одна привязка к */
-          if v-obj-type = {&shop}
-          or v-obj-type = {&stock} then do:
+          if (v-obj-type = {&shop}
+          or v-obj-type = {&stock}) and buf_ext-system.esys-db-num-exp ne 0 then do:
             { gbl/objdbnum.i v-obj-type v-obj-code v-obj-db-num }
             if buf_ext-system.esys-db-num-exp <> v-obj-db-num then do:
               v-mess = substitute("Нельзя привязать объект &1&2 к ВС, которая работает в другой БД"

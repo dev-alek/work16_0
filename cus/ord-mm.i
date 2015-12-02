@@ -142,24 +142,47 @@ for each tmp#zakaz :
     end case.
 
     if  r-min-rest3 then do:  /* сезон */
-        tmp#zakaz.min-stock = 0 .
-        find first ub.season no-lock where
-              ub.season.sea-month-1 <= month (DATE-sale-2) and
-              ub.season.sea-month-2 >= month (DATE-sale-1)
-              no-error .
+/*        tmp#zakaz.min-stock = 0 .*/
 
-          if available ub.season  then do:
+      for each ub.season no-lock where 
+                  ub.season.sea-month-1 <= integer (DATE-sale-2) and
+                  ub.season.sea-month-2 >= integer (DATE-sale-1):
+        find first ub.season-attr where ub.season-attr.sea-code = ub.season.sea-code
+          and ub.season-attr.db-num = ub.season.db-num
+          and ub.season-attr.attr-code = {&seaattr-obj}
+          and ub.season-attr.attr-value = tmp#zakaz.obj-type + string (tmp#zakaz.obj-code) no-error.
+    
                 find first ub.gds-season no-lock where
                 ub.gds-season.gds-code = tmp#zakaz.gds-code and
                 ub.gds-season.sea-code = ub.season.sea-code and
                 ub.gds-season.db-num   = ub.season.db-num
                 no-error .
-
+        if available ub.season-attr and available ub.gds-season 
+        then do:
+          find first ub.gds-season-attr no-lock where ub.gds-season-attr.sea-code = ub.gds-season.sea-code
+            and ub.gds-season-attr.db-num = ub.gds-season.db-num
+            and ub.gds-season-attr.gds-code = ub.gds-season.gds-code
+            and ub.gds-season-attr.attr-code = {&gdsseaattr-season-coef}
+            no-error.
+          if available ub.gds-season-attr then tmp#zakaz.season-coef = decimal (ub.gds-season-attr.attr-value).
+          tmp#zakaz.min-stock = ub.gds-season.min-stock .
+          leave.
+        end.
+        else do:
                 if available ub.gds-season then do:
+            find first ub.gds-season-attr no-lock where ub.gds-season-attr.sea-code = ub.gds-season.sea-code
+              and ub.gds-season-attr.db-num = ub.gds-season.db-num
+              and ub.gds-season-attr.gds-code = ub.gds-season.gds-code
+              and ub.gds-season-attr.attr-code = {&gdsseaattr-season-coef}
+              no-error.
+            if available ub.gds-season-attr then tmp#zakaz.season-coef = decimal (ub.gds-season-attr.attr-value).
                   tmp#zakaz.min-stock = ub.gds-season.min-stock .
                 end.
           end.
       end.
+      if tmp#zakaz.season-coef = ? or tmp#zakaz.season-coef = 0 then assign tmp#zakaz.season-coef = 1.
+
+    end.
 
 end. /* for each tt */
 

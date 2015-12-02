@@ -80,6 +80,7 @@ define buffer buf_goods           for ub.goods.
 define buffer buf_clients         for ub.clients.
 define buffer buf_clients_ship    for ub.clients.
 define buffer buf_doc-line-attr   for ub.doc-line-attr.
+define buffer buf_doc-attr        for ub.doc-attr.
 define buffer buf_rvs-doc_before  for ub.rvs-doc.
 define buffer buf_rvs-doc_after   for ub.rvs-doc.
 define buffer buf_rvs-line_before for ub.rvs-line.
@@ -255,24 +256,29 @@ for each buf_doc-line no-lock
          and buf_doc-line-attr.gds-code = buf_goods.gds-code
     :
         case buf_doc-line-attr.attr-code:
-          { rep/akt-topl.i when autoent-obj-code }
-          { rep/akt-topl.i when autoent-obj-type }
-          { rep/akt-topl.i when car-num          }
           { rep/akt-topl.i when car-vol          }
-          { rep/akt-topl.i when item-pour        }
           { rep/akt-topl.i when tank-density     }
           { rep/akt-topl.i when tank-temp        }
           { rep/akt-topl.i when tank-vol         }
           { rep/akt-topl.i when tank-water       }
           { rep/akt-topl.i when tank-weight      }
-          { rep/akt-topl.i when time-income      }
           { rep/akt-topl.i when time-start       }
           { rep/akt-topl.i when time-end         }
           { rep/akt-topl.i when time-pour        }
           { rep/akt-topl.i when type-inp-vat     }
-          { rep/akt-topl.i when fio              }
         end case.
     end.
+
+    for each buf_doc-attr no-lock where
+             buf_doc-attr.doc-code = buf_trn-doc.doc-code:
+      case buf_doc-attr.attr-code :
+        { rep/akt-topl.i when-doc-attr trdcattr-autoent }
+        { rep/akt-topl.i when-doc-attr trdcattr-car-num }
+        { rep/akt-topl.i when-doc-attr trdcattr-time-income }
+        { rep/akt-topl.i when-doc-attr trdcattr-ptb-item-pour }
+        { rep/akt-topl.i when-doc-attr trdcattr-fio-driver }
+      end case. /* buf_doc-attr.attr-code */
+    end. /* for each buf_doc-attr */
 
     /* ---S---- Переводим табличные значения в Decimal -------- */
           { rep/akt-topl.i dec tank-vol      }

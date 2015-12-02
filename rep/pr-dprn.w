@@ -546,6 +546,7 @@ end.
                       DisabledOptions = 8 .
                   end.
               End case.
+              if Tmp#list.orient <> "HTML":U then 
               run gbl/prnfilen.w
                 (input  ""
                 ,input  DisabledOptions

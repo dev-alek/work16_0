@@ -15,6 +15,7 @@ Creation date: 03/03/06
 
 Дата создания: 08/20/01
 */
+using Ibs.Th.Rul.Route-data_.
 
 define input parameter parParentProc        as widget-handle no-undo.
 define input parameter t-action             as character no-undo .
@@ -33,6 +34,7 @@ define input parameter p-transport-sum        as decimal   no-undo .
 define input parameter p-transport-vat        as decimal   no-undo .
 define input parameter is-edoc-nn-doc         as logical   no-undo .
 define input parameter is-edi-doc             as logical   no-undo .
+define input parameter p-dm-edi               as integer   no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -377,38 +379,47 @@ end.
           (input "Выбор метода отправки заказа поставщику"
           ,input "Выберите один из пунктов "
           ,input "|"
-          ,input "Вручную" + (if g-log then "" else "^disable") + "|EXITE-EDI|Не отправлять"
+          ,input "Вручную" + (if g-log then "" else "^disable") + "|EDI|Не отправлять"
           ,input "Заказ будет обработан вручную|"
-               + "Заказ отправляется ПОСТАВЩИКУ по системе EXITE-EDI и ожидает подтверждения|"
+               + "Заказ отправляется ПОСТАВЩИКУ по системе EDI и ожидает подтверждения|"
                + "Заказ остается в текущем статусе. Его можно корректировать."
           ,input 2 /* значение возвращаемое при нажатии enter */
           ,input 1 /* значение возвращаемое при нажатии escape */
           ,output v-choice
           ).
         end.
-          case v-choice :
-            when 1 then do:
-                assign
-                  shar_ord-doc.whole-send-news = integer({&doc-dm-empty})
-                .
-            end.
-            when 2 then do:
-                assign
-                  shar_ord-doc.whole-send-news = integer({&doc-dm-edi})
-                .
-                run cus/edocsord.p (  input parParentProc
-                                    , input recid(shar_ord-doc)
-                                    , input {&table_ord-doc}
-                                    , input yes
-                                    )  .
-            end.
-            when 3 then do:
-                assign
-                  shar_ord-doc.whole-send-news = integer({&doc-dm-edi})
-                .
-            end.
-          end case.
-      end.
+        case v-choice :
+          when 1 then do:
+              assign
+                shar_ord-doc.whole-send-news = integer({&doc-dm-empty})
+              .
+          end.
+          when 2 then do:
+              assign
+                shar_ord-doc.whole-send-news = integer({&doc-dm-edi})
+              .
+              if not can-find
+                    ( first tmp#zakaz  no-lock    where
+                      tmp#zakaz.qnty  <>  0 and
+                      tmp#zakaz.qnty  <>  ?
+                    )
+              then do :      
+                message "В заказе все строки нерассчитанные. Нельзя отправлять через EDI." view-as alert-box.
+                return no-apply.   
+              end.      
+              run cus/edocsord.p (  input parParentProc
+                                  , input recid(shar_ord-doc)
+                                  , input {&table_ord-doc}
+                                  , input yes
+                                  )  .
+          end.
+          when 3 then do:
+              assign
+                shar_ord-doc.whole-send-news = integer({&doc-dm-edi})
+              .
+          end.
+        end case.
+    end.
 end.
 if t-action = "chg"   then do:
   if ( ( is-edoc-nn-doc and (shar_ord-doc.ord-int1 = int ({&edoc-rpl-ok})   or shar_ord-doc.ord-int1 = int ({&edoc-rpl})))
@@ -443,25 +454,47 @@ define variable v-descriptions as character no-undo .
         end.
       end. /*when integer({&doc-dm-edoc-nn}) then do:*/
       when integer({&doc-dm-edi}) then do:
-        if can-find (first tmp#zakaz  where
-                            tmp#zakaz.ord-dec2 <> tmp#zakaz.cli-qnty or
-                            tmp#zakaz.ord-dec3 <> tmp#zakaz.price-cli )
-        then do:  /* есть несовпадения */
-          assign
-          v-buttons =  "Подтверждаю^disable|C коррекцией|Отложить"
-          v-descriptions =  "Заказ отправляется ПОСТАВЩИКУ и переходит в статус ПОСТАВКА|"
-                  + "Заказ отправляется с отметкой об изменениях ПОСТАВЩИКУ на подтверждение.|"
-                  + "Заказ остается в текущем статусе. Его можно корректировать."
-          .
-        end.
-        else do:
-          assign
-          v-buttons =  "Подтверждаю|На коррекцию^disable|Отложить"
-          v-descriptions =  "Заказ отправляется ПОСТАВЩИКУ и переходит в статус ПОСТАВКА|"
-                  + "Заказ отправляется с отметкой об изменениях ПОСТАВЩИКУ на подтверждение.|"
-                  + "Заказ остается в текущем статусе. Его можно корректировать."
-          .
-        end.
+          if p-dm-edi = integer({&esys-dm-contour-edi}) then do :
+            if can-find (first tmp#zakaz  where
+                                tmp#zakaz.ord-dec2 <> tmp#zakaz.cli-qnty )
+            then do:  /* есть несовпадения */
+              assign
+              v-buttons =  "Подтверждаю^disable|C коррекцией|Отложить"
+              v-descriptions =  "Заказ отправляется ПОСТАВЩИКУ и переходит в статус ПОСТАВКА|"
+                      + "Заказ отправляется с отметкой об изменениях ПОСТАВЩИКУ на подтверждение.|"
+                      + "Заказ остается в текущем статусе. Его можно корректировать."
+              .
+            end.
+            else do:
+              assign
+              v-buttons =  "Подтверждаю|На коррекцию^disable|Отложить"
+              v-descriptions =  "Заказ отправляется ПОСТАВЩИКУ и переходит в статус ПОСТАВКА|"
+                      + "Заказ отправляется с отметкой об изменениях ПОСТАВЩИКУ на подтверждение.|"
+                      + "Заказ остается в текущем статусе. Его можно корректировать."
+              .
+            end.  
+          end.
+          else do :    
+            if can-find (first tmp#zakaz  where
+                                tmp#zakaz.ord-dec2 <> tmp#zakaz.cli-qnty or
+                                tmp#zakaz.ord-dec3 <> tmp#zakaz.price-cli )
+            then do:  /* есть несовпадения */
+              assign
+              v-buttons =  "Подтверждаю^disable|C коррекцией|Отложить"
+              v-descriptions =  "Заказ отправляется ПОСТАВЩИКУ и переходит в статус ПОСТАВКА|"
+                      + "Заказ отправляется с отметкой об изменениях ПОСТАВЩИКУ на подтверждение.|"
+                      + "Заказ остается в текущем статусе. Его можно корректировать."
+              .
+            end.
+            else do:
+              assign
+              v-buttons =  "Подтверждаю|На коррекцию^disable|Отложить"
+              v-descriptions =  "Заказ отправляется ПОСТАВЩИКУ и переходит в статус ПОСТАВКА|"
+                      + "Заказ отправляется с отметкой об изменениях ПОСТАВЩИКУ на подтверждение.|"
+                      + "Заказ остается в текущем статусе. Его можно корректировать."
+              .
+            end.
+          end.  
       end.
       otherwise do:
           /*error*/
@@ -481,9 +514,46 @@ define variable v-descriptions as character no-undo .
       case v-choice :
       when 1 then do:
         if is-edi-doc then do :
-          assign
-          shar_ord-doc.ord-int1 = integer({&edi-ordrsp-yes})
-          .
+          if p-dm-edi = integer({&esys-dm-contour-edi}) then do :
+            define variable p-cmd-code as integer no-undo init 0 .
+            define variable v-last-error-message as character no-undo .
+            define variable v-current-doc-code as character no-undo .
+            define variable v-current-obj-type as character no-undo .
+            define variable v-current-obj-code as integer no-undo .
+            define variable p-parent-handle as handle no-undo.
+            define variable p-log-handle as handle no-undo.
+            define variable v-cli-out-doc as character no-undo .            
+            define variable v-desadv-DELIVERYNOTENUMBER as character no-undo.
+            define variable v-desadv-DELIVERYNOTEDATE as date no-undo.
+            
+            define buffer temp-edi-status for ub.edi-status .
+            { rul/garbcoll.i }
+            { gbl/gate-clb.i }
+            { gbl/key-rec.i }
+            { bge/esysattr.i }
+            { cus/cr-edist.i }            
+            
+            assign
+                shar_ord-doc.ord-int1 = integer({&edi-ordrsp-sts})
+            .            
+            
+            assign
+                v-current-doc-code = shar_ord-doc.doc-code
+                v-current-obj-type = shar_ord-doc.obj-type
+                v-current-obj-code = shar_ord-doc.obj-code
+                p-parent-handle = this-procedure:handle
+            .
+            { cus/send-stat_contour.i }
+            run send-stat_contour ( input "ORDRSP"
+                                    ,input "OK"
+                                    ,input "checking"
+                                    ,input "Сообщение принято"
+                                    ,input ?) .
+          end.  
+          else  
+            assign
+                shar_ord-doc.ord-int1 = integer({&edi-ordrsp-yes})
+            .
         end.
         run cus/ord-clos.p
           ( input  parParentProc
@@ -505,24 +575,27 @@ define variable v-descriptions as character no-undo .
 
         /*  shar_ord-doc.ord-int1 = int ({&edoc-rpl-ok}) orord-int1 = acc*/
         /*  отправить xml acc */
-        run cus/edocsord.p (  input parParentProc
-                              ,input recid(shar_ord-doc)
-                              ,input {&table_ord-doc}
-                              ,input yes
-                              ) no-error  .
-        if error-status :error or
-        (shar_ord-doc.whole-send-news = integer({&doc-dm-edoc-nn})
-        and shar_ord-doc.ord-int1 <> integer({&edoc-acc}))
-        or
-        (shar_ord-doc.whole-send-news = integer({&doc-dm-edi})
-        and not shar_ord-doc.ord-int1 = integer({&edi-ordrsp-yes})
-        )
-        then do:
-          message
-          "Не удалось отправить заказ !" view-as alert-box information .
-           shar_ord-doc.status_ = {&g___new} .
-                 /* А  в новости ушла поставка */
-        end.
+        if p-dm-edi <> integer({&esys-dm-contour-edi}) then do :
+            run cus/edocsord.p (  input parParentProc
+                                  ,input recid(shar_ord-doc)
+                                  ,input {&table_ord-doc}
+                                  ,input yes
+                                  ) no-error  .
+            if error-status :error or
+            (shar_ord-doc.whole-send-news = integer({&doc-dm-edoc-nn})
+            and shar_ord-doc.ord-int1 <> integer({&edoc-acc}))
+            or
+            (shar_ord-doc.whole-send-news = integer({&doc-dm-edi})
+            and p-dm-edi = integer({&esys-dm-exite-edi})
+            and not shar_ord-doc.ord-int1 = integer({&edi-ordrsp-yes})
+            )
+            then do:
+              message
+              "Не удалось отправить заказ !" view-as alert-box information .
+              shar_ord-doc.status_ = {&g___new} .
+              /* А  в новости ушла поставка */
+            end.
+        end.  
       end. /*when 1 then do:*/
       when 2 then do:
         if is-edoc-nn-doc then do :
@@ -532,10 +605,13 @@ define variable v-descriptions as character no-undo .
          .
         end.
         if is-edi-doc then do :
-          assign
-          shar_ord-doc.ord-int1 = integer({&edi-ordrsp-no})
-          shar_ord-doc.ord-int2 = integer({&edi-return})
-          .
+            if p-dm-edi = integer({&esys-dm-contour-edi}) then
+                assign shar_ord-doc.ord-int1 = integer({&edi-orders}) .
+            else
+                assign
+                  shar_ord-doc.ord-int1 = integer({&edi-ordrsp-no})
+                  shar_ord-doc.ord-int2 = integer({&edi-return})
+                .
           run cus/edocsord.p (  input parParentProc
                                 ,input recid(shar_ord-doc)
                                 ,input {&table_ord-doc}
@@ -543,8 +619,13 @@ define variable v-descriptions as character no-undo .
                                 ) no-error  .
           if error-status :error or
             (shar_ord-doc.whole-send-news = integer({&doc-dm-edi})
+            and p-dm-edi = integer({&esys-dm-exite-edi})
             and shar_ord-doc.ord-int1 <> integer({&edi-ordrsp-no})
             )
+          or (shar_ord-doc.whole-send-news = integer({&doc-dm-edi})
+            and p-dm-edi = integer({&esys-dm-contour-edi})
+            and shar_ord-doc.ord-int1 <> integer({&edi-orders})
+            )  
           then do:
             message
             "Не удалось отправить заказ !" view-as alert-box information .

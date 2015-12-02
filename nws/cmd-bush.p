@@ -231,6 +231,71 @@ procedure add-dump :
   return.
 end procedure. /* add-dump */
 
+procedure add-dump-data :
+  define input  parameter p-command-code as integer   no-undo .
+  define input  parameter p-dump-name    as character no-undo .
+  define input  parameter p-action       as character no-undo .
+  define input  parameter p-data         as memptr    no-undo .
+  define output parameter p-rec-ord      as integer   no-undo .
+
+  do
+  on error  undo, return error substitute( "&1 (add-dump). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
+  on stop   undo, return error substitute( "&1 (add-dump). stop", vss-workfile )
+  on endkey undo, return error substitute( "&1 (add-dump). endkey", vss-workfile )
+  :
+
+    define variable v-rec-ord      like ub.route-dump.rec-ord .
+
+    define variable v-first-char as character no-undo .
+    
+    find first for-route
+      where for-route.dump-ord = p-command-code
+      no-error .
+    if not available for-route then do:
+      return error substitute( "&1 (add-dump). Команда с кодом &2 еще не создана!", vss-workfile, p-command-code ) .
+    end.
+
+    assign
+      v-first-char = substring( p-action, 1, 1 ).
+    if trim( p-action ) <> "":U then do:
+      if lookup( v-first-char, "+,-,_":U, ",":U ) = 0 then do:
+        return error substitute( "&1 (add-dump). Ошибка задания входных параметров! &2"
+                                + "Задан параметр action. Первый его символ должен быть '+' или '-' или '_'. "
+                                + "Текущее значение: &3"
+                                ,vss-workfile
+                                ,{&new-line}
+                                ,p-action
+                              ) .
+      end.
+    end.
+
+    find last for-route-dump
+      where for-route-dump.dump-ord = p-command-code
+      no-error .
+    if available for-route-dump then do:
+      assign
+        v-rec-ord = for-route-dump.rec-ord + 1
+      .
+    end.
+    else do:
+      assign
+        v-rec-ord = 1
+      .
+    end.
+
+    create for-route-dump .
+    assign
+      for-route-dump.dump-name    = entry(1, p-dump-name, {&delim-par})
+      for-route-dump.action       = p-action
+      for-route-dump.dump-ord     = p-command-code
+      for-route-dump.rec-ord      = v-rec-ord
+      for-route-dump.value-rec    = p-data
+      p-rec-ord                   = v-rec-ord
+    .
+  end.
+  return.
+end procedure. /* add-dump */
+
 procedure delete-command :
   define input parameter p-command-code as integer   no-undo .
   do
@@ -544,6 +609,14 @@ procedure send-command-esys :
 
     delete for-route .
     p-dmp-ord = v-dmp-ord.
+    
+    for each buf_esys-route where buf_esys-route.esr-dump-ord = v-dmp-ord and buf_esys-route.whole-send-news = 1: /*обмен данными осущ. через гбд удаляем все, т.к. все ушло в новости гбд*/
+      delete buf_esys-route.
+      for each buf_esys-all-attr where buf_esys-all-attr.table-name = {&table_esys-route} and buf_esys-all-attr.key1 = v-dmp-ord:
+        delete buf_esys-all-attr.
+      end.
+    end.
+    
   end.
   return.
 end procedure. /* send-command-esys */

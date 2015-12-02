@@ -119,6 +119,8 @@ define new shared temp-table tt-doc-pl no-undo like ub.doc-pl .
 { gbl/thbj-def.i               }
 { ref/gdsoattr.i               }
 { gbl/clntattr.i               }
+{ gbl/key-rec.i                }
+{ cmp/ini-lib.i                }
 
 define buffer type-inp-vat-attr for ub.doc-line-attr.
 define buffer bf_sysconf        for ub.sysconf.
@@ -255,7 +257,12 @@ define rectangle rect-tot  edge-pixels 2 graphic-edge size 98 by 1.5 bgcolor 8 d
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
 define rectangle rect-tax2 edge-pixels 2 graphic-edge size 61 by 2.9 bgcolor 8 dcolor 5.
 
+{ref/imagelist.i}
 /* ***********************  control definitions  ********************** */
+DEFINE IMAGE g-image
+     /*FILENAME "adeicon/blank":U*/
+     STRETCH-TO-FIT RETAIN-SHAPE
+     SIZE 18.75 BY 6.25.
 DEFINE BUTTON b-choose-last-date
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
@@ -342,11 +349,11 @@ define button r-units
 
 define variable tot-base as decimal format "->>>,>>>,>>>,>>>,>>>,>>>,>>>,>>9.99" initial 0
      view-as fill-in
-     size 42 by 1 no-undo.
+     size 30 by 1 no-undo.
 
 define variable tot-rubl as decimal format "->>>,>>>,>>>,>>>,>>>,>>>,>>>,>>9.99" initial 0
      view-as fill-in
-     size 42 by 1 no-undo.
+     size 30 by 1 no-undo.
 
 define variable prt-doc as decimal format "->>,>>>,>>9.999":u initial 0
      label "Шкала"
@@ -395,7 +402,7 @@ define frame d-in-line
   tt-fr-doc-line.price-cli              at row 12   col 15    colon-aligned label "П&о ТТН" format "->>,>>>,>>>,>>9.9999999999" view-as fill-in size 20 by 1  fgcolor 4
   tt-fr-doc-line.price-base             at row 13   col 15    colon-aligned label "Учет"    format ">>,>>>,>>>,>>9.999"           view-as fill-in size 20    by 1
   tt-fr-doc-line.price-rubl             at row 14   col 15    colon-aligned label "Учет"               view-as fill-in size 20    by 1
-  tt-fr-doc-line.new-price-sale         at row 15   col 50    colon-aligned label "Новая цена продажи" format ">>>,>>>,>>>,>>9.99" view-as fill-in size 18    by 1  fgcolor 4
+  tt-fr-doc-line.new-price-sale         at row 15   col 50    colon-aligned label "Новая цена продажи" format ">>>,>>>,>>>,>>9.99" view-as fill-in size 15    by 1  fgcolor 4
   tt-fr-doc-line.price-prod             at row 16   col 20    colon-aligned label "Цена Производителя" format ">>>,>>>,>>>,>>9.99" view-as fill-in size 18    by 1  fgcolor 4
   tt-fr-doc-line.price-prod-vat         at row 16   col 52    colon-aligned label "Цена с НДС" format ">>>,>>>,>>>,>>9.99" view-as fill-in size 18    by 1  fgcolor 4
   tt-fr-doc-line.num-place              at row 16.2 col 1.5                 label "Кол-во мест"
@@ -418,8 +425,8 @@ define frame d-in-line
   b-help                                at row 1    col 90
   b-addinf                              at row 15   col 90
   b-alc-attr                            at row 15   col 90
-  "Сумма"                               at row 11   col 37  view-as text    size 40    by 1  bgcolor 3 fgcolor 15
-  tt-fr-doc-line.tot-cli                at row 12   col 35.5  colon-aligned  no-label format "->>>,>>>,>>>,>>>,>>>,>>>,>>>,>>9.99"
+  "Сумма"                               at row 11   col 37  view-as text    size 23    by 1  bgcolor 3 fgcolor 15
+  tt-fr-doc-line.tot-cli                at row 12   col 35.5  colon-aligned  no-label format "->>>,>>>,>>>,>>>,>>>,>>>,>>>,>>9.99" VIEW-AS FILL-IN SIZE 30 BY 1
   tot-base                              at row 13   col 35.5  colon-aligned no-label
   tot-rubl                              at row 14   col 35.5  colon-aligned no-label
   road-tax-cli                          at row 15   col 15 colon-aligned  view-as fill-in size 20 by 1 fgcolor 4
@@ -447,13 +454,14 @@ define frame d-in-line
   "Ед. изм."                            at row 4    col 28.5                                           view-as text    size 11    by 1  bgcolor 3 fgcolor 15
   "Коэффициент"                         at row 4    col 38.5                                           view-as text    size 16    by 1  bgcolor 3 fgcolor 15
   "Цена"                                at row 11   col 17                                             view-as text    size 20    by 1  bgcolor 3 fgcolor 15
-  "Вал."                                at row 11   col 72.5                                           view-as text    size 7.5   by 1  bgcolor 3 fgcolor 15
-  tt-fr-doc-line.curr-abbr              at row 12   col 72.5                no-label                   view-as text    size 7.5   by 1  bgcolor 4 fgcolor 15
-  "Б.вал."                              at row 13   col 72.5                                           view-as text    size 7.5   by 1  bgcolor 3 fgcolor 15
-  "{&abbr_rub_allshift}"                at row 14   col 72.5                                           view-as text    size 7.5   by 1  bgcolor 3 fgcolor 15
-  abr-rb                                at row 15   col 72.5                no-label                   view-as text    size 7.5   by 1  bgcolor 1 fgcolor 15
-  abr-rb2                               at row 16   col 72.5                no-label                   view-as text    size 7.5   by 1  bgcolor 1 fgcolor 15
-  b-corr-price-sale                     at row 15   col 70
+  "Вал."                                at row 11   col 60.0                                           view-as text    size 7.5   by 1  bgcolor 3 fgcolor 15
+  tt-fr-doc-line.curr-abbr              at row 12   col 60.0                no-label                   view-as text    size 7.5   by 1  bgcolor 4 fgcolor 15
+  "Б.вал."                              at row 13   col 60.0                                           view-as text    size 7.5   by 1  bgcolor 3 fgcolor 15
+  "{&abbr_rub_allshift}"                at row 14   col 60.0                                           view-as text    size 7.5   by 1  bgcolor 3 fgcolor 15
+  abr-rb                                at row 15   col 60.0                no-label                   view-as text    size 7.5   by 1  bgcolor 1 fgcolor 15
+  abr-rb2                               at row 16   col 60.0                no-label                   view-as text    size 7.5   by 1  bgcolor 1 fgcolor 15
+  b-corr-price-sale                     at row 15   col 66
+  g-image                               AT ROW 11   COL 68
 with keep-tab-order view-as dialog-box
          side-labels three-d scrollable
          default-button b-save
@@ -484,6 +492,15 @@ end function.
 
 /* ************************  control triggers  ************************ */
 
+ON MOUSE-SELECT-DBLCLICK OF g-image IN FRAME {&FRAME-NAME}
+DO:
+    DEFINE VARIABLE v-main-code LIKE ub.bar-code.b-code NO-UNDO.
+    IF AVAILABLE buf_goods THEN
+    DO:
+        { gbl/gdsbcode.i buf_goods.gds-code ? v-main-code }
+        RUN ref/imagelist.w (parparentproc, "":U, v-main-code, {&lookup}).
+    END.
+END.
 on choose of b-choose-last-date in frame {&frame-name}
 do:
   { gbl/stdbtn.i }
@@ -1365,31 +1382,32 @@ do:
      ,input-output v-new-fact-qnty
      ,input-output v-new-density
      ,input-output v-new-cli-fact-qnty
-     ,input-output v-prt-car-num
      ,input-output v-prt-car-vol
      ,input-output v-prt-tests
-     ,input-output v-prt-autoent-obj-type
-     ,input-output v-prt-autoent-obj-code
-     ,input-output v-prt-item-pour
      ,input-output v-prt-time-pour
      ,input-output v-prt-tank-vol
      ,input-output v-prt-tank-temp
      ,input-output v-prt-tank-water
      ,input-output v-prt-tank-density
      ,input-output v-prt-tank-weight
-     ,input-output v-prt-time-income
      ,input-output v-prt-start-real-date
      ,input-output v-prt-start-real-time
      ,input-output v-prt-end-real-date
      ,input-output v-prt-end-real-time
      ,input-output v-prt-mouth
-     ,input-output v-prt-fio
-     ,input-output v-prt-ptbotype
-     ,input-output v-prt-ptbocode
      ,input-output v-prt-a-b-tarir
      ,input-output v-diameter
      ,input-output v-place-si
      ,input-output v-tank-density-pomi
+     ,input-output v-prt-tank-vol-pomi
+     ,input-output v-prt-dens-temp
+     ,input-output v-prt-certif-fuel 
+     ,input-output v-prt-norm-doc 
+     ,input-output v-prt-num-passport 
+     ,input-output v-prt-validity-certif
+     ,input-output v-prt-num-plotn
+     ,input-output v-prt-passport-plotn
+     ,input-output v-prt-date-pov-plotn
     ) no-error .
 
   if error-status :error then do:
@@ -2310,6 +2328,31 @@ else do: /* не добавление (изменение и просмотр) */
   end.
 end. /* не добавление (изменение и просмотр) */
 
+IF mImagePh THEN
+DO:
+    IF AVAILABLE buf_goods THEN
+    DO:
+        DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
+        DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
+        RUN gds-attr-value (buf_goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).       
+        RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, INPUT buf_goods.gds-code ,OUTPUT vImageList).
+        vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
+    END.
+    g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
+END.
+
+IF mImagePh THEN
+    ASSIGN
+        g-image:HIDDEN     = NO
+        g-image:VISIBLE    = YES
+        g-image:SENSITIVE  = YES
+        .
+ELSE
+    ASSIGN
+        g-image:HIDDEN     = YES
+        g-image:VISIBLE    = NO
+        g-image:SENSITIVE  = NO
+        .
 /* заполнение временных таблиц для учета по сладским местам */
 run plgdsfnd in this-procedure
   ( input  no
@@ -2409,31 +2452,32 @@ if varrvs-place = yes then do:
        ,input        "get-attr":U
        ,input        t-doc.doc-code
        ,input        buf_goods.gds-code
-       ,input-output v-prt-car-num
        ,input-output v-prt-car-vol
        ,input-output v-prt-tests
-       ,input-output v-prt-autoent-obj-type
-       ,input-output v-prt-autoent-obj-code
-       ,input-output v-prt-item-pour
        ,input-output v-prt-time-pour
        ,input-output v-prt-tank-vol
        ,input-output v-prt-tank-temp
        ,input-output v-prt-tank-water
        ,input-output v-prt-tank-density
        ,input-output v-prt-tank-weight
-       ,input-output v-prt-time-income
        ,input-output v-prt-start-real-date
        ,input-output v-prt-start-real-time
        ,input-output v-prt-end-real-date
        ,input-output v-prt-end-real-time
        ,input-output v-prt-mouth
-       ,input-output v-prt-fio
-       ,input-output v-prt-ptbotype
-       ,input-output v-prt-ptbocode
        ,input-output v-prt-a-b-tarir
        ,input-output v-diameter
        ,input-output v-place-si
        ,input-output v-tank-density-pomi
+       ,input-output v-prt-tank-vol-pomi
+       ,input-output v-prt-dens-temp
+       ,input-output v-prt-certif-fuel 
+       ,input-output v-prt-norm-doc 
+       ,input-output v-prt-num-passport 
+       ,input-output v-prt-validity-certif
+       ,input-output v-prt-num-plotn
+       ,input-output v-prt-passport-plotn
+       ,input-output v-prt-date-pov-plotn       
        ,      output was_setting
       ) .
 
@@ -5081,33 +5125,34 @@ procedure save-place-rsrv :
         ,input        "set-attr":U
         ,input        t-doc.doc-code
         ,input        buf_goods.gds-code
-        ,input-output v-prt-car-num
         ,input-output v-prt-car-vol
         ,input-output v-prt-tests
-        ,input-output v-prt-autoent-obj-type
-        ,input-output v-prt-autoent-obj-code
-        ,input-output v-prt-item-pour
         ,input-output v-prt-time-pour
         ,input-output v-prt-tank-vol
         ,input-output v-prt-tank-temp
         ,input-output v-prt-tank-water
         ,input-output v-prt-tank-density
         ,input-output v-prt-tank-weight
-        ,input-output v-prt-time-income
         ,input-output v-prt-start-real-date
         ,input-output v-prt-start-real-time
         ,input-output v-prt-end-real-date
         ,input-output v-prt-end-real-time
         ,input-output v-prt-mouth
-        ,input-output v-prt-fio
-        ,input-output v-prt-ptbotype
-        ,input-output v-prt-ptbocode
         ,input-output v-prt-a-b-tarir
         ,input-output v-diameter
         ,input-output v-place-si
         ,input-output v-tank-density-pomi
-        ,      output was_setting
-        ) no-error .
+        ,input-output v-prt-tank-vol-pomi
+        ,input-output v-prt-dens-temp
+        ,input-output v-prt-certif-fuel 
+        ,input-output v-prt-norm-doc 
+        ,input-output v-prt-num-passport 
+        ,input-output v-prt-validity-certif
+        ,input-output v-prt-num-plotn
+        ,input-output v-prt-passport-plotn
+        ,input-output v-prt-date-pov-plotn
+        ,output was_setting
+        )  .
       if error-status :error then do:
         return error substitute( "&1 (save-place-rsrv). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ).
       end.

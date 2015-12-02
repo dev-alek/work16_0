@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -37,50 +37,57 @@ define variable vss-description as character no-undo init "Экран просмотра допол
 { ref/sr-izm.i " " proc }
 { gbl/ptrlprop.i def}
 { gbl/cur-time.i }
-
-
-/* Parameters Definitions ---                                           */
-define input        parameter parparentproc      as   handle                no-undo .
-define input        parameter p-mode             as   character             no-undo .
-define input        parameter p-doc-code         like ub.trn-doc.doc-code   no-undo .
-define input        parameter p-gds-code         like ub.goods.gds-code     no-undo .
-define input-output parameter p-car-num          as   character             no-undo .
-define input-output parameter p-car-vol          as   character             no-undo .
-define input-output parameter p-tests            as   character             no-undo .
-define input-output parameter p-autoent-obj-type as   character             no-undo .
-define input-output parameter p-autoent-obj-code as   character             no-undo .
-define input-output parameter p-item-pour        as   character             no-undo .
-define input-output parameter p-time-pour        as   character             no-undo .
-define input-output parameter p-tank-vol         as   character             no-undo .
-define input-output parameter p-tank-temp        as   character             no-undo .
-define input-output parameter p-tank-water       as   character             no-undo .
-define input-output parameter p-tank-density     as   character             no-undo .
-define input-output parameter p-tank-weight      as   character             no-undo .
-define input-output parameter p-time-income      as   character             no-undo .
-define input-output parameter p-date-start       like ub.rvs-line.real-date no-undo .
-define input-output parameter p-time-start       like ub.rvs-line.real-time no-undo .
-define input-output parameter p-date-end         like ub.rvs-line.real-date no-undo .
-define input-output parameter p-time-end         like ub.rvs-line.real-time no-undo .
-define input-output parameter p-mouth            as   character             no-undo .
-define input-output parameter p-fio              as   character             no-undo .
-define input-output parameter p-ptbotype         as   character             no-undo .
-define input-output parameter p-ptbocode         as   character             no-undo .
-define input-output parameter p-a-b-tarir        as   character             no-undo .
+{ ref/gds-attr.i }
+{ gbl/godendo.i}
+{ gbl/sel-date.i}   
+/* Parameters Definitions ---                                            */
+define input        parameter parparentproc       as   handle                no-undo .
+define input        parameter p-mode              as   character             no-undo .
+define input        parameter p-doc-code          like ub.trn-doc.doc-code   no-undo .
+define input        parameter p-gds-code          like ub.goods.gds-code     no-undo .
+define input-output parameter p-car-vol           as   character             no-undo .
+define input-output parameter p-tests             as   character             no-undo .
+define input-output parameter p-time-pour         as   character             no-undo .
+define input-output parameter p-tank-vol          as   character             no-undo .
+define input-output parameter p-tank-temp         as   character             no-undo .
+define input-output parameter p-tank-water        as   character             no-undo .
+define input-output parameter p-tank-density      as   character             no-undo .
+define input-output parameter p-tank-weight       as   character             no-undo .
+define input-output parameter p-date-start        like ub.rvs-line.real-date no-undo .
+define input-output parameter p-time-start        like ub.rvs-line.real-time no-undo .
+define input-output parameter p-date-end          like ub.rvs-line.real-date no-undo .
+define input-output parameter p-time-end          like ub.rvs-line.real-time no-undo .
+define input-output parameter p-mouth             as   character             no-undo .
+define input-output parameter p-a-b-tarir         as   character             no-undo .
 define input-output parameter p-diameter          as   character             no-undo .
 define input-output parameter p-place-si          as   character             no-undo .
 define input-output parameter p-tank-density-pomi as   character             no-undo .
-define       output parameter p-was-setting      as   logical               no-undo initial no .
+define input-output parameter p-tank-vol-pomi     as   character             no-undo .
+define input-output parameter p-dens-temp         as   character             no-undo .
+define input-output parameter p-certif-fuel       as   character             no-undo .
+define input-output parameter p-norm-doc          as   character             no-undo .
+define input-output parameter p-num-passport      as   character             no-undo .
+define input-output parameter p-validity-certif   as   character             no-undo .
+define input-output parameter p-num-plotn         as   character             no-undo . 
+define input-output parameter p-passport-plotn    as   character             no-undo .
 
+define input-output parameter p-date-pov-plotn    like ub.rvs-line.real-date no-undo .
+define       output parameter p-was-setting       as   logical               no-undo initial no .
 
+define variable rdcvalue      as char initial ? no-undo.
+define variable rdctype       as char initial ? no-undo.
 define variable v-log as logical no-undo .
 define variable v-autoent-obj-type as character no-undo.
 define variable v-autoent-obj-code as integer no-undo.
 define variable v-last-gds-code like ub.goods.gds-code no-undo .
-
-define variable pomi-licvalue as character no-undo.
-define variable pomi-lictype  as character no-undo.
+define variable v-fuel-type as character no-undo.
+define variable v-gds-attr-value as character no-undo .
+define variable v-gds-attr-type  as character no-undo .
+define variable v-sr-type as integer no-undo.  
+define variable rdc-dnstvalue as character no-undo.
+define variable rdc-dnsttype  as character no-undo.
+define buffer buf_clob-bind for ub.clob-bind.
 define stream outstream.
-
 
 
 /* Local Variable Definitions ---                                       */
@@ -92,7 +99,7 @@ define buffer buf_goods for ub.goods .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -103,19 +110,18 @@ define buffer buf_goods for ub.goods .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-save b-quit b-help RECT-3 RECT-1 ~
-f-autoent-obj-code f-autoent-obj-type b-clients f-car-num f-car-vol ~
-b-auto-tank f-tests f-fio f-ptbocode f-ptbotype b-ptb f-hour-pour ~
-f-min-pour f-item-pour f-tank-water f-mouth f-tank-temp f-tank-density ~
-b-calc f-a-b-tarir f-place-si r-sr-izm f-diameter f-tank-density-pomi ~
-f-hour-income f-min-income f-date-start f-hour-start f-min-start f-date-end ~
-f-hour-end f-min-end
-&Scoped-Define DISPLAYED-OBJECTS f-autoent-obj-code f-autoent-obj-type ~
-f-autoent-obj-name f-car-num f-car-vol f-tests f-fio f-ptbocode f-ptbotype ~
-f-ptboname f-hour-pour f-min-pour f-item-pour f-tank-water f-mouth ~
-f-tank-vol f-tank-temp f-tank-density f-tank-weight f-a-b-tarir f-place-si ~
-f-diameter f-tank-density-pomi f-hour-income f-min-income f-date-start ~
-f-hour-start f-min-start f-date-end f-hour-end f-min-end
+&Scoped-Define ENABLED-OBJECTS RECT-3 RECT-1 RECT-4 RECT-5 RECT-6 RECT-8 ~
+b-save b-quit b-help f-tests f-car-vol f-size f-num-passport f-norm-doc ~
+f-certif-fuel f-validity-certif f-a-b-tarir f-mouth f-tank-water ~
+f-tank-temp f-tank-density f-dens-temp f-num-plotn f-date-pov-plotn ~
+f-date-start f-hour-start f-min-start f-date-end f-hour-end f-min-end ~
+f-hour-pour f-min-pour 
+&Scoped-Define DISPLAYED-OBJECTS f-tests f-car-vol f-size ~
+f-num-passport f-norm-doc f-certif-fuel f-validity-certif f-a-b-tarir ~
+f-mouth f-tank-water f-tank-vol f-tank-temp f-tank-density f-dens-temp ~
+f-tank-weight f-place-si f-num-plotn f-date-pov-plotn f-tank-density-pomi ~
+f-tank-vol-pomi f-date-start f-hour-start f-min-start f-date-end f-hour-end ~
+f-min-end f-hour-pour f-min-pour f-place-si-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -130,207 +136,211 @@ f-hour-start f-min-start f-date-end f-hour-end f-min-end
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-auto-tank
-     IMAGE-UP FILE "btn-down-arrow":U
-     IMAGE-DOWN FILE "btn-down-arrow":U
-     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
-     SIZE 3 BY .88.
-
-DEFINE BUTTON b-calc
-     LABEL "Рассчитать"
-     SIZE 11 BY 1
+DEFINE BUTTON b-calc 
+     LABEL "Рассчитать" 
+     SIZE 15 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-clients
+DEFINE BUTTON b-choose-date-pov-plotn 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "b-clients"
-     SIZE 3 BY .88.
+     LABEL "b-choose-date-pov-plotn" 
+     SIZE 3 BY 1.
 
-DEFINE BUTTON b-help
-     LABEL "&Помощь"
+DEFINE BUTTON b-copy-iz 
+     LABEL "Копировать" 
+     SIZE 15 BY 1
+     BGCOLOR 8 .
+
+DEFINE BUTTON b-help 
+     LABEL "&Помощь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-ptb
-     IMAGE-UP FILE "btn-down-arrow":U
-     IMAGE-DOWN FILE "btn-down-arrow":U
-     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "b-ptb"
-     SIZE 3 BY .88.
-
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-save AUTO-GO
-     LABEL "&Сохранить"
+DEFINE BUTTON b-save AUTO-GO 
+     LABEL "&Сохранить" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON r-sr-izm
+DEFINE BUTTON r-sr-izm 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "r-sr-izm"
-     SIZE 3 BY .88.
+     LABEL "r-sr-izm" 
+     SIZE 3 BY 1.
 
-DEFINE VARIABLE f-a-b-tarir AS DECIMAL FORMAT "->>>,>>9.99":U INITIAL 0
-     LABEL "Уровень цистерны относительно тарировочной планки"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-a-b-tarir AS DECIMAL FORMAT "->>>,>>9.99":U INITIAL 0 
+     LABEL "Уровень цистерны относительно тарировочной планки" 
+     VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-autoent-obj-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL ?
-     LABEL "Автопредприятие"
-     VIEW-AS FILL-IN
-     SIZE 11 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-autoent-obj-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 43.88 BY 1.04 NO-UNDO.
-
-DEFINE VARIABLE f-autoent-obj-type AS CHARACTER FORMAT "X(3)":U
-     VIEW-AS FILL-IN
-     SIZE 4 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-car-num AS CHARACTER FORMAT "X(256)":U
-     LABEL "Гос. N автоцистерны"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-car-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Объем по паспорту в литрах" 
+     VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-car-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Объем по паспорту в литрах"
-     VIEW-AS FILL-IN
-     SIZE 14 BY 1 NO-UNDO.
+DEFINE VARIABLE f-certif-fuel AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 61 BY .89 NO-UNDO.
 
-DEFINE VARIABLE f-date-end AS DATE FORMAT "99/99/99":U
-     LABEL "Дата конца слива"
-     VIEW-AS FILL-IN
-     SIZE 10 BY .88 NO-UNDO.
+DEFINE VARIABLE f-date-end AS DATE FORMAT "99/99/99":U 
+     LABEL "Дата конца слива" 
+     VIEW-AS FILL-IN 
+     SIZE 10 BY .89 NO-UNDO.
 
-DEFINE VARIABLE f-date-start AS DATE FORMAT "99/99/99":U
-     LABEL "Дата начала слива"
-     VIEW-AS FILL-IN
-     SIZE 10 BY .88 NO-UNDO.
+DEFINE VARIABLE f-date-pov-plotn AS DATE FORMAT "99/99/99":U 
+     LABEL "Дата поверки" 
+     VIEW-AS FILL-IN 
+     SIZE 10.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-diameter AS DECIMAL FORMAT "->>>,>>9.99":U INITIAL 0
-     LABEL "Внутренний диаметр горловины"
-     VIEW-AS FILL-IN
-     SIZE 14 BY 1 NO-UNDO.
+DEFINE VARIABLE f-date-start AS DATE FORMAT "99/99/99":U 
+     LABEL "Дата начала слива" 
+     VIEW-AS FILL-IN 
+     SIZE 10 BY .89 NO-UNDO.
 
-DEFINE VARIABLE f-fio AS CHARACTER FORMAT "X(256)":U
-     LABEL "Ф.И.О. водителя-экспедитора"
-     VIEW-AS FILL-IN
-     SIZE 49.5 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-hour-end AS INTEGER FORMAT "99":U INITIAL ?
-     LABEL "Время конца слива"
-     VIEW-AS FILL-IN
-     SIZE 3 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-hour-income AS INTEGER FORMAT "99":U INITIAL ?
-     LABEL "Время прибытия на АЗС"
-     VIEW-AS FILL-IN
-     SIZE 3 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-hour-pour AS INTEGER FORMAT "99":U INITIAL ?
-     LABEL "Время налива"
-     VIEW-AS FILL-IN
-     SIZE 3 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-hour-start AS INTEGER FORMAT "99":U INITIAL ?
-     LABEL "Время начала слива"
-     VIEW-AS FILL-IN
-     SIZE 3 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-item-pour AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 80 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-min-end AS INTEGER FORMAT "99":U INITIAL ?
-     VIEW-AS FILL-IN
-     SIZE 3 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-min-income AS INTEGER FORMAT "99":U INITIAL ?
-     VIEW-AS FILL-IN
-     SIZE 3 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-min-pour AS INTEGER FORMAT "99":U INITIAL ?
-     VIEW-AS FILL-IN
-     SIZE 3 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-min-start AS INTEGER FORMAT "99":U INITIAL ?
-     VIEW-AS FILL-IN
-     SIZE 3 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-mouth AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Горловина"
-     VIEW-AS FILL-IN
-     SIZE 14 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-ptbocode AS INTEGER FORMAT ">>>>>>>>9":U INITIAL ?
-     LABEL "Нефтебаза"
-     VIEW-AS FILL-IN
-     SIZE 11 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-ptboname AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 43.5 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-ptbotype AS CHARACTER FORMAT "X(3)":U
-     VIEW-AS FILL-IN
-     SIZE 4 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-tank-density AS DECIMAL FORMAT "9.9999999999":U INITIAL ?
-     LABEL "Плотность топлива"
-     VIEW-AS FILL-IN
-     SIZE 14 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-tank-density-pomi AS DECIMAL FORMAT "9.9999999999":U INITIAL ?
-     LABEL "Плотность топлива для ПО МИ"
-     VIEW-AS FILL-IN
-     SIZE 14 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-tank-temp AS DECIMAL FORMAT "->9.999":U INITIAL ?
-     LABEL "Температура"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-dens-temp AS DECIMAL FORMAT "->9.999":U INITIAL ? 
+     LABEL "Температура замера плотности" 
+     VIEW-AS FILL-IN 
      SIZE 7.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tank-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Объем топлива"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-size AS character init "0"
+     LABEL "Размер горловины" 
+     VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tank-water AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Объем воды"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-hour-end AS INTEGER FORMAT "99":U INITIAL ? 
+     LABEL "Время конца слива" 
+     VIEW-AS FILL-IN 
+     SIZE 3 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-hour-pour AS INTEGER FORMAT "99":U INITIAL ? 
+     LABEL "Время налива" 
+     VIEW-AS FILL-IN 
+     SIZE 3 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-hour-start AS INTEGER FORMAT "99":U INITIAL ? 
+     LABEL "Время начала слива" 
+     VIEW-AS FILL-IN 
+     SIZE 3 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-min-end AS INTEGER FORMAT "99":U INITIAL ? 
+     VIEW-AS FILL-IN 
+     SIZE 3 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-min-pour AS INTEGER FORMAT "99":U INITIAL ? 
+     VIEW-AS FILL-IN 
+     SIZE 3 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-min-start AS INTEGER FORMAT "99":U INITIAL ? 
+     VIEW-AS FILL-IN 
+     SIZE 3 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-mouth AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Объем горловины" 
+     VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tank-weight AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Вес топлива"
-     VIEW-AS FILL-IN
-     SIZE 14 BY 1 NO-UNDO.
+DEFINE VARIABLE f-norm-doc AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 61 BY .89 NO-UNDO.
 
-DEFINE VARIABLE f-tests AS CHARACTER FORMAT "X(256)":U
-     LABEL "Номер пробы"
-     VIEW-AS FILL-IN
-     SIZE 14 BY 1 NO-UNDO.
+DEFINE VARIABLE f-num-passport AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 61 BY .89 NO-UNDO.
 
-DEFINE VARIABLE f-place-si AS INTEGER FORMAT ">>>,>>9":U INITIAL 0
-     LABEL "Средство измерения"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-num-plotn AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Номер" 
+     VIEW-AS FILL-IN 
+     SIZE 54.5 BY .89 NO-UNDO.
+
+DEFINE VARIABLE f-passport-plotn AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Паспорт плотномера №" 
+     VIEW-AS FILL-IN 
+     SIZE 20.75 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-place-si AS INTEGER FORMAT ">>>,>>9":U INITIAL 0 
+     LABEL "Средство измерения" 
+     VIEW-AS FILL-IN 
      SIZE 5.63 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-place-si-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 31.5 BY .78 NO-UNDO.
+
+DEFINE VARIABLE f-tank-density AS DECIMAL FORMAT "9.9999999999":U INITIAL ? 
+     LABEL "Плотность топлива" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-tank-density-pomi AS DECIMAL FORMAT "9.9999999999":U INITIAL ? 
+     LABEL "Плотность приведенная" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-tank-temp AS DECIMAL FORMAT "->9.999":U INITIAL ? 
+     LABEL "Температура замера объема" 
+     VIEW-AS FILL-IN 
+     SIZE 7.38 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-tank-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Объем топлива" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-tank-vol-pomi AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL ? 
+     LABEL "Объем топлива приведенный" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-tank-water AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Объем воды" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-tank-weight AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL ? 
+     LABEL "Вес топлива" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE f-tests AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Номер пробы" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-validity-certif AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 53.5 BY .89 NO-UNDO.
+
 DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
-     SIZE 80.25 BY 8.25.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 81.5 BY 2.74.
 
 DEFINE RECTANGLE RECT-3
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
-     SIZE 80.13 BY 4.21.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 81.5 BY 3.74.
+
+DEFINE RECTANGLE RECT-4
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 81.5 BY 7.
+
+DEFINE RECTANGLE RECT-5
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 81.5 BY 4.15.
+
+DEFINE RECTANGLE RECT-6
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 81.63 BY 6.74.
+
+DEFINE RECTANGLE RECT-8
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 81.5 BY 2.59.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -339,51 +349,61 @@ DEFINE FRAME Dialog-Frame
      b-save AT ROW 1 COL 2
      b-quit AT ROW 1 COL 12
      b-help AT ROW 1 COL 71
-     f-autoent-obj-code AT ROW 2.46 COL 16 COLON-ALIGNED
-     f-autoent-obj-type AT ROW 2.46 COL 27.75 COLON-ALIGNED NO-LABEL
-     f-autoent-obj-name AT ROW 2.46 COL 36 COLON-ALIGNED NO-LABEL
-     b-clients AT ROW 2.58 COL 34.5
-     f-car-num AT ROW 3.75 COL 20 COLON-ALIGNED
-     f-car-vol AT ROW 3.75 COL 65.75 COLON-ALIGNED
-     b-auto-tank AT ROW 3.79 COL 36.38
-     f-tests AT ROW 4.92 COL 20.13 COLON-ALIGNED
-     f-fio AT ROW 6.04 COL 30 COLON-ALIGNED
-     f-ptbocode AT ROW 7.25 COL 16 COLON-ALIGNED
-     f-ptbotype AT ROW 7.25 COL 27.75 COLON-ALIGNED NO-LABEL
-     f-ptboname AT ROW 7.25 COL 36 COLON-ALIGNED NO-LABEL
-     b-ptb AT ROW 7.38 COL 34.5
-     f-hour-pour AT ROW 8.25 COL 73 COLON-ALIGNED
-     f-min-pour AT ROW 8.25 COL 76.5 COLON-ALIGNED NO-LABEL
-     f-item-pour AT ROW 9.5 COL 1.5 NO-LABEL
-     f-tank-water AT ROW 11.71 COL 64.75 COLON-ALIGNED
-     f-mouth AT ROW 11.79 COL 20.75 COLON-ALIGNED
-     f-tank-vol AT ROW 12.96 COL 20.63 COLON-ALIGNED
-     f-tank-temp AT ROW 12.96 COL 64.75 COLON-ALIGNED
-     f-tank-density AT ROW 14.13 COL 20.5 COLON-ALIGNED
-     b-calc AT ROW 14.13 COL 37.5 WIDGET-ID 22
-     f-tank-weight AT ROW 14.13 COL 64.75 COLON-ALIGNED
-     f-a-b-tarir AT ROW 15.13 COL 64.75 COLON-ALIGNED WIDGET-ID 2
-     f-place-si AT ROW 16.25 COL 20.5 COLON-ALIGNED WIDGET-ID 16
-     r-sr-izm AT ROW 16.25 COL 28.5 WIDGET-ID 18
-     f-diameter AT ROW 16.25 COL 64.75 COLON-ALIGNED WIDGET-ID 20
-     f-tank-density-pomi AT ROW 17.5 COL 29.5 COLON-ALIGNED WIDGET-ID 24
-     f-hour-income AT ROW 19.54 COL 71.75 COLON-ALIGNED
-     f-min-income AT ROW 19.54 COL 75.38 COLON-ALIGNED NO-LABEL
-     f-date-start AT ROW 21.25 COL 19.75 COLON-ALIGNED
-     f-hour-start AT ROW 21.25 COL 71.75 COLON-ALIGNED
-     f-min-start AT ROW 21.25 COL 75.38 COLON-ALIGNED NO-LABEL
-     f-date-end AT ROW 22.33 COL 19.75 COLON-ALIGNED
-     f-hour-end AT ROW 22.33 COL 71.75 COLON-ALIGNED
-     f-min-end AT ROW 22.33 COL 75.38 COLON-ALIGNED NO-LABEL
-     "Характеристики цистерны" VIEW-AS TEXT
-          SIZE 23.63 BY .75 AT ROW 10.75 COL 26.25
-     "Примечание к нефтебазе" VIEW-AS TEXT
-          SIZE 25.5 BY 1 AT ROW 8.5 COL 1.5
-     RECT-3 AT ROW 19.25 COL 1.5
-     RECT-1 AT ROW 10.71 COL 1.5
-     SPACE(0.12) SKIP(4.74)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     f-tests AT ROW 2.52 COL 29 COLON-ALIGNED
+     f-car-vol AT ROW 3.74 COL 29 COLON-ALIGNED
+     f-size AT ROW 3.74 COL 65.75 COLON-ALIGNED WIDGET-ID 20
+     f-num-passport AT ROW 5.3 COL 18 COLON-ALIGNED NO-LABEL WIDGET-ID 36
+     f-norm-doc AT ROW 7.15 COL 20 NO-LABEL WIDGET-ID 38
+     f-certif-fuel AT ROW 8.89 COL 20 NO-LABEL WIDGET-ID 44
+     f-validity-certif AT ROW 10.7 COL 27.5 NO-LABEL WIDGET-ID 50
+     f-a-b-tarir AT ROW 12.41 COL 65.5 COLON-ALIGNED WIDGET-ID 2
+     f-mouth AT ROW 13.67 COL 19.5 COLON-ALIGNED
+     f-tank-water AT ROW 13.67 COL 65.5 COLON-ALIGNED
+     f-tank-vol AT ROW 15.04 COL 19.38 COLON-ALIGNED
+     f-tank-temp AT ROW 15.15 COL 65.5 COLON-ALIGNED
+     f-tank-density AT ROW 16.41 COL 19.38 COLON-ALIGNED
+     f-dens-temp AT ROW 16.52 COL 65.5 COLON-ALIGNED WIDGET-ID 26
+     f-tank-weight AT ROW 17.7 COL 19.38 COLON-ALIGNED
+     f-place-si AT ROW 19.48 COL 18.25 COLON-ALIGNED WIDGET-ID 16
+     r-sr-izm AT ROW 19.52 COL 26 WIDGET-ID 18
+     b-copy-iz AT ROW 19.67 COL 66 WIDGET-ID 22
+     f-num-plotn AT ROW 20.7 COL 7 COLON-ALIGNED WIDGET-ID 76
+     f-date-pov-plotn AT ROW 21.74 COL 12.63 COLON-ALIGNED WIDGET-ID 64
+     b-choose-date-pov-plotn AT ROW 21.74 COL 25.5 WIDGET-ID 72
+     f-passport-plotn AT ROW 21.74 COL 57.5 COLON-ALIGNED WIDGET-ID 68
+     f-tank-density-pomi AT ROW 23.3 COL 21 COLON-ALIGNED WIDGET-ID 24
+     b-calc AT ROW 23.82 COL 66 WIDGET-ID 80
+     f-tank-vol-pomi AT ROW 24.52 COL 25.5 COLON-ALIGNED WIDGET-ID 28
+     f-date-start AT ROW 26.3 COL 19.38 COLON-ALIGNED
+     f-hour-start AT ROW 26.3 COL 71.75 COLON-ALIGNED
+     f-min-start AT ROW 26.3 COL 75.38 COLON-ALIGNED NO-LABEL
+     f-date-end AT ROW 27.37 COL 19.38 COLON-ALIGNED
+     f-hour-end AT ROW 27.37 COL 71.75 COLON-ALIGNED
+     f-min-end AT ROW 27.37 COL 75.38 COLON-ALIGNED NO-LABEL
+     f-hour-pour AT ROW 28.59 COL 71.63 COLON-ALIGNED
+     f-min-pour AT ROW 28.59 COL 75.25 COLON-ALIGNED NO-LABEL
+     f-place-si-name AT ROW 19.67 COL 29.63 COLON-ALIGNED NO-LABEL WIDGET-ID 14
+     "Паспорт качества №:" VIEW-AS TEXT
+          SIZE 17 BY .67 AT ROW 5.44 COL 2.5 WIDGET-ID 58
+     "топлива) из паспорта качества:" VIEW-AS TEXT
+          SIZE 25 BY .67 AT ROW 10.74 COL 2.5 WIDGET-ID 54
+     "Срок действия сертификата соответствия завода-изготовителя (на марку моторного" VIEW-AS TEXT
+          SIZE 67.5 BY .67 AT ROW 10 COL 2.5 WIDGET-ID 52
+     "Сертификат соответствия завода-изготовителя (на марку моторного топлива) № :" VIEW-AS TEXT
+          SIZE 78.13 BY .67 AT ROW 8.19 COL 2.5 WIDGET-ID 46
+     "из паспорта качества:" VIEW-AS TEXT
+          SIZE 17.5 BY .67 AT ROW 7.19 COL 2.5 WIDGET-ID 42
+     "Нормативный документ завода-изготовителя (ГОСТ, ТУ на марку моторного топлива)" VIEW-AS TEXT
+          SIZE 78.13 BY .67 AT ROW 6.44 COL 2.5 WIDGET-ID 40
+     RECT-3 AT ROW 19.3 COL 1
+     RECT-1 AT ROW 2.26 COL 1
+     RECT-4 AT ROW 12.15 COL 1 WIDGET-ID 30
+     RECT-5 AT ROW 25.63 COL 1 WIDGET-ID 32
+     RECT-6 AT ROW 5.15 COL 1 WIDGET-ID 34
+     RECT-8 AT ROW 23.04 COL 1 WIDGET-ID 82
+     SPACE(0.37) SKIP(4.43)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Дополнительная информация по приемке топлива"
          DEFAULT-BUTTON b-save CANCEL-BUTTON b-quit.
 
@@ -404,24 +424,51 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-/* SETTINGS FOR FILL-IN f-autoent-obj-name IN FRAME Dialog-Frame
+/* SETTINGS FOR BUTTON b-calc IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-/* SETTINGS FOR FILL-IN f-item-pour IN FRAME Dialog-Frame
+/* SETTINGS FOR BUTTON b-choose-date-pov-plotn IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+ASSIGN 
+       b-choose-date-pov-plotn:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+/* SETTINGS FOR BUTTON b-copy-iz IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN f-certif-fuel IN FRAME Dialog-Frame
    ALIGN-L                                                              */
-/* SETTINGS FOR FILL-IN f-ptboname IN FRAME Dialog-Frame
+ASSIGN 
+       f-date-pov-plotn:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+/* SETTINGS FOR FILL-IN f-norm-doc IN FRAME Dialog-Frame
+   ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN f-passport-plotn IN FRAME Dialog-Frame
+   NO-DISPLAY NO-ENABLE                                                 */
+ASSIGN 
+       f-passport-plotn:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+/* SETTINGS FOR FILL-IN f-place-si IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN f-place-si-name IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN f-tank-density-pomi IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-tank-vol IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN f-tank-vol-pomi IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-tank-weight IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN f-validity-certif IN FRAME Dialog-Frame
+   ALIGN-L                                                              */
+/* SETTINGS FOR BUTTON r-sr-izm IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -430,7 +477,7 @@ ASSIGN
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON GO OF FRAME Dialog-Frame /* Дополнительная информация по приемке топлива */
-DO:
+DO: 
   define variable stfactplvalue as character no-undo initial ? .
   define variable stfactpltype  as character no-undo initial ? .
   define variable v-update      as logical   no-undo initial true .
@@ -481,36 +528,138 @@ DO:
       apply "entry" to f-car-vol in frame {&frame-name} .
       return no-apply .
     end.
-    if input frame {&frame-name} f-tank-vol <= 0 or
-       input frame {&frame-name} f-tank-vol  = ?
-    then do:
-      message "Объем топлива должен быть больше 0." view-as alert-box .
-      apply "entry" to f-tank-vol in frame {&frame-name} .
-      return no-apply .
-    end.
-    if input frame {&frame-name} f-tank-weight <= 0 or
-       input frame {&frame-name} f-tank-weight  = ?
-    then do:
-      message "Вес топлива должен быть больше 0." view-as alert-box .
-      apply "entry" to f-tank-weight in frame {&frame-name} .
-      return no-apply .
-    end.
-    if input frame {&frame-name} f-tank-density = ?
-      or Valid-Density( input frame {&frame-name} f-tank-density, (buf_goods.unit-base = buf_goods.unit-cli) ) <> yes
-    then do:
-      message "Плотность должна быть больше 0 и меньше 1." view-as alert-box .
-      apply "entry" to f-tank-density in frame {&frame-name} .
-      return no-apply .
-    end.
+    if rdc-dnstvalue = "pomi-rn" then do:
+        if input frame {&frame-name} f-certif-fuel = ""
+        then do:
+          message "Не заполнен Сертификат соответствия завода-изготовителя (на марку моторного топлива)." view-as alert-box .
+          apply "entry" to f-certif-fuel in frame {&frame-name} .
+          return no-apply .
+        end.
+        if input frame {&frame-name} f-norm-doc = ""
+        then do:
+          message "Не заполнен Нормативный документ завода-изготовителя." view-as alert-box .
+          apply "entry" to f-norm-doc in frame {&frame-name} .
+          return no-apply .
+        end.
+        if input frame {&frame-name} f-num-passport = ""
+        then do:
+          message "Не заполнен Номер паспорта качества." view-as alert-box .
+          apply "entry" to f-num-passport in frame {&frame-name} .
+          return no-apply .
+        end.
+        if input frame {&frame-name} f-validity-certif = ""
+        then do:
+          message "Не указан Срок действия сертификата соответствия завода-изготовителя." view-as alert-box .
+          apply "entry" to f-validity-certif in frame {&frame-name} .
+          return no-apply .
+        end.        
+        if input frame {&frame-name} f-tank-vol <= 0 or
+           input frame {&frame-name} f-tank-vol  = ?
+        then do:
+          message "Объем топлива должен быть больше 0." view-as alert-box .
+          apply "entry" to f-tank-vol in frame {&frame-name} .
+          return no-apply .
+        end.
+        if input frame {&frame-name} f-tank-weight <= 0 or
+           input frame {&frame-name} f-tank-weight  = ?
+        then do:
+          message "Вес топлива должен быть больше 0." view-as alert-box .
+          apply "entry" to f-tank-weight in frame {&frame-name} .
+          return no-apply .
+        end.
+        if input frame {&frame-name} f-tank-density = ?
+          or Valid-Density( input frame {&frame-name} f-tank-density, (buf_goods.unit-base = buf_goods.unit-cli) ) <> yes
+        then do:
+          message "Плотность должна быть больше 0 и меньше 1." view-as alert-box .
+          apply "entry" to f-tank-density in frame {&frame-name} .
+          return no-apply .
+        end.
+        if input frame {&frame-name} f-place-si = 0
+        then do:
+          message "Введите средство измерения." view-as alert-box .
+          apply "entry" to f-place-si in frame {&frame-name} .
+          return no-apply .
+        end.    
+        if input frame {&frame-name} f-date-start = ""
+        then do:
+          message "Введите дату начала слива." view-as alert-box .
+          apply "entry" to f-date-start in frame {&frame-name} .
+          return no-apply .
+        end.    
+        if input frame {&frame-name} f-date-end = ""
+        then do:
+          message "Введите дату конца слива." view-as alert-box .
+          apply "entry" to f-date-end in frame {&frame-name} .
+          return no-apply .
+        end.    
+        if input frame {&frame-name} f-hour-start = ? or
+           input frame {&frame-name} f-min-start = ?
+        then do:
+          message "Введите время начала слива." view-as alert-box .
+          apply "entry" to f-hour-start in frame {&frame-name} .
+          return no-apply .
+        end.    
+        if input frame {&frame-name} f-hour-end = ? or 
+           input frame {&frame-name} f-min-end = ?
+        then do:
+          message "Введите время конца слива." view-as alert-box .
+          apply "entry" to f-hour-end in frame {&frame-name} .
+          return no-apply .
+        end.    
+        if input frame {&frame-name} f-hour-pour = ? or
+           input frame {&frame-name} f-min-pour = ?
+        then do:
+          message "Введите время налива." view-as alert-box .
+          apply "entry" to f-hour-pour in frame {&frame-name} .
+          return no-apply .
+        end.   
+        if f-place-si:screen-value <> "" then do: 
+           if v-sr-type = 1 or v-sr-type = 2 then do:
+            if input frame {&frame-name} f-num-plotn = ""
+            then do:
+              message "Введите номер измерения." view-as alert-box .
+              apply "entry" to f-num-plotn in frame {&frame-name} .
+              return no-apply .
+            end.
+            if input frame {&frame-name} f-date-pov-plotn = ""
+            then do:
+              message "Введите дату поверки ." view-as alert-box .
+              apply "entry" to f-date-pov-plotn in frame {&frame-name} .
+              return no-apply .
+            end.
+           end. 
+        end.     
+        if f-place-si:screen-value <> "" then do:
+           if v-sr-type = 3 or v-sr-type = 4 then do:
+            if input frame {&frame-name} f-num-plotn = ""
+            then do:
+              message "Введите номер измерения." view-as alert-box .
+              apply "entry" to f-num-plotn in frame {&frame-name} .
+              return no-apply .
+            end.
+            if input frame {&frame-name} f-date-pov-plotn = ""
+            then do:
+              message "Введите дату поверки." view-as alert-box .
+              apply "entry" to f-date-pov-plotn in frame {&frame-name} .
+              return no-apply .
+            end.
+            if input frame {&frame-name} f-passport-plotn = ""
+            then do:
+              message "Введите номер паспорта плотномера." view-as alert-box .
+              apply "entry" to f-passport-plotn in frame {&frame-name} .
+              return no-apply .
+            end.
+          end.
+        end.
+      end.
   end.
-
-  if input frame {&frame-name} f-tank-density <> ?
-    and Valid-Density( input frame {&frame-name} f-tank-density, (buf_goods.unit-base = buf_goods.unit-cli) ) <> yes
-  then do:
-    message "Плотность должна быть больше 0 и меньше 1." view-as alert-box .
-    apply "entry" to f-tank-density in frame {&frame-name} .
-    return no-apply .
-  end.
+/*    if input frame {&frame-name} f-tank-density <> ?                                                                  */
+/*      and Valid-Density( input frame {&frame-name} f-tank-density, (buf_goods.unit-base = buf_goods.unit-cli) ) <> yes*/
+/*    then do:                                                                                                          */
+/*      message "Плотность должна быть больше 0 и меньше 1." view-as alert-box .                                        */
+/*      apply "entry" to f-tank-density in frame {&frame-name} .                                                        */
+/*      return no-apply .                                                                                               */
+/*    end.                                                                                                              */
   if input frame {&frame-name} f-hour-pour <> ?
     and input frame {&frame-name} f-hour-pour > 24
   then do:
@@ -525,12 +674,6 @@ DO:
      apply "entry" to f-hour-start in frame {&frame-name} .
      return no-apply .
   end.
-  if input frame {&frame-name} f-hour-income > 24
-  then do:
-     message "Неверно заведено поле <<час>>." view-as alert-box .
-     apply "entry" to f-hour-income in frame {&frame-name} .
-     return no-apply .
-  end.
   if input frame {&frame-name} f-hour-end > 24
   then do:
      message "Неверно заведено поле час." view-as alert-box .
@@ -541,12 +684,6 @@ DO:
   then do:
      message "Неверно заведено поле <<минуты>>." view-as alert-box .
      apply "entry" to f-min-pour in frame {&frame-name} .
-     return no-apply .
-  end.
-  if input frame {&frame-name} f-min-income > 60
-  then do:
-     message "Неверно заведено поле <<минуты>>." view-as alert-box .
-     apply "entry" to f-min-income in frame {&frame-name} .
      return no-apply .
   end.
   if input frame {&frame-name} f-min-start > 60
@@ -561,91 +698,62 @@ DO:
      apply "entry" to f-min-end in frame {&frame-name} .
      return no-apply .
   end.
-  assign frame {&frame-name} f-car-num f-car-vol f-tests
-                             f-autoent-obj-type f-autoent-obj-code
-                             f-item-pour f-hour-pour f-min-pour
-                             f-hour-income f-min-income
+  assign frame {&frame-name} f-car-vol f-tests
+                             f-hour-pour f-min-pour
                              f-hour-start f-min-start
                              f-hour-end f-min-end
                              f-date-start f-date-end
                              f-tank-vol f-tank-temp
                              f-tank-water f-tank-density
-                             f-mouth f-fio
-                             f-ptbocode
-                             f-ptbotype
+                             f-mouth
                              f-a-b-tarir
+                             f-tank-vol-pomi f-dens-temp
+                             f-certif-fuel f-norm-doc
+                             f-num-passport f-validity-certif
+                             f-date-pov-plotn
+                             f-passport-plotn f-num-plotn
   .
-  find clients no-lock where
-       clients.obj-type = f-autoent-obj-type and
-       clients.obj-code = f-autoent-obj-code no-error .
-  if not available clients
-  then do:
-    assign
-      v-log = no
-    .
-    message "Не найдено автопредприятие " f-autoent-obj-type " " f-autoent-obj-code " ." skip
-            "Cохраняемся без ссылки на автопредприятие?"
-    view-as alert-box question buttons yes-no update v-log .
-    if v-log <> yes
-    then do:
-      return no-apply .
-    end.
-    assign
-      f-autoent-obj-type = ""
-      f-autoent-obj-code = ?
-    .
-  end.
-  find clients no-lock where
-       clients.obj-type = f-ptbotype and
-       clients.obj-code = f-ptbocode no-error .
-  if not available clients
-  then do:
-    assign
-      v-log = no
-    .
-    message "Не найдена нефтебаза " f-ptbotype " " f-ptbocode " ." skip
-            "Cохраняемся без ссылки на нефтебазу?"
-    view-as alert-box question buttons yes-no update v-log .
-    if v-log <> yes
-    then do:
-      return no-apply .
-    end.
-    assign
-      f-ptbotype = ""
-      f-ptbocode = ?
-    .
-  end.
+ 
   assign
-    f-tank-weight = f-tank-vol * f-tank-density
-  .
-  assign
-    p-car-num          = f-car-num
     p-car-vol          = string( f-car-vol )
     p-tests            = f-tests
-    p-autoent-obj-type = f-autoent-obj-type
-    p-autoent-obj-code = string( f-autoent-obj-code )
-    p-item-pour        = f-item-pour
     p-time-pour        = string( f-hour-pour,   "99":U ) + ":" + string( f-min-pour,   "99":U )
-    p-time-income      = string( f-hour-income, "99":U ) + ":" + string( f-min-income, "99":U )
     p-time-start       = f-hour-start * 3600 + f-min-start * 60
     p-time-end         = f-hour-end   * 3600 + f-min-end   * 60
     p-date-start       = f-date-start
     p-date-end         = f-date-end
     p-mouth            = string( f-mouth )
-    p-fio              = f-fio
-    p-ptbotype         = f-ptbotype
-    p-ptbocode         = string( f-ptbocode     )
     p-tank-vol         = string( f-tank-vol     )
     p-tank-temp        = string( f-tank-temp    )
+    p-tank-vol-pomi         = string( f-tank-vol-pomi     )
+    p-dens-temp        = string( f-dens-temp    )
     p-tank-water       = string( f-tank-water   )
     p-tank-density     = string( f-tank-density )
     p-tank-weight      = string( f-tank-weight  )
     p-a-b-tarir        = string( f-a-b-tarir    )
-    p-diameter         = string( f-diameter     )
+    p-diameter         = string( f-size     )
     p-place-si         = string( f-place-si     )
     p-tank-density-pomi = string( f-tank-density-pomi )
-
-  no-error .
+    p-tank-vol-pomi    = string( f-tank-vol-pomi     )
+    p-dens-temp        = string( f-dens-temp    )
+    p-certif-fuel      = string (f-certif-fuel)
+    p-norm-doc         = string (f-norm-doc)
+    p-num-passport     = string (f-num-passport)
+    p-validity-certif  = string (f-validity-certif)
+   no-error.
+  if p-place-si <> "0" then do:
+    if v-sr-type = 1 or v-sr-type = 2 then do:
+      assign
+      p-num-plotn = f-num-plotn
+      p-date-pov-plotn = f-date-pov-plotn.
+    end.
+    if v-sr-type = 3 or v-sr-type = 4 then do:
+      assign
+      p-num-plotn = f-num-plotn
+      p-passport-plotn = f-passport-plotn
+      p-date-pov-plotn = f-date-pov-plotn.
+    end.
+  end.  
   assign
     p-was-setting = yes
   .
@@ -659,67 +767,6 @@ END.
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Дополнительная информация по приемке топлива */
 DO:
   APPLY "END-ERROR":U TO SELF.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b-auto-tank
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-auto-tank Dialog-Frame
-ON CHOOSE OF b-auto-tank IN FRAME Dialog-Frame
-DO:
-define variable v-rec-tank as recid     no-undo.
-define variable v-rec-meas as recid     no-undo.
-assign v-rec-tank = ?
-       v-rec-meas = ?.
-
-if v-autoent-obj-code <> 0 and v-autoent-obj-code <> ?
-and can-find (first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"
-                                             and auto-tank-attr.attr-value = v-autoent-obj-type + string(v-autoent-obj-code))
-then do :
-  run str/auto-tn.w (input parparentproc,
-                input "b-sel",
-                input v-autoent-obj-type,
-                input v-autoent-obj-code,
-               output v-rec-tank,
-               output v-rec-meas) no-error.
-end.
-else do :
-  message
-  "Вы не указали автопредприятие или для " skip
-  "указанного автопредприятия нет автоцистерн."   skip
-  "Справочник будет открыт для всех автоцистерн." skip
-  view-as alert-box information.
-  run str/auto-tn.w (input parparentproc,
-                input "b-sel",
-                input "",
-                input 0,
-                output v-rec-tank,
-                output v-rec-meas) no-error.
-end.
-if v-rec-tank <> ? then do:
-  find first auto-tank where recid (auto-tank) = v-rec-tank no-lock.
-  assign
-      f-car-num    = auto-tank.auto-num
-      f-car-vol    = auto-tank.brutto-qnty
-      f-tank-vol   = f-car-vol
-  .
-  display f-car-num f-car-vol with frame {&frame-name}.
-  if v-rec-meas <> ? then do:
-    find first auto-tank-meas where recid (auto-tank-meas) = v-rec-meas no-lock.
-    assign
-        f-tank-vol = auto-tank-meas.meas-qnty
-    .
-  end.
-  assign
-      f-mouth    = f-tank-vol - f-car-vol
-  .
-  display
-    f-tank-vol
-    f-mouth
-  with frame {&frame-name}.
-end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -744,182 +791,237 @@ DO:
   f-car-vol
   f-tank-vol
   f-a-b-tarir
-  f-diameter
+  f-size
   f-tank-temp
-  f-tank-density-pomi
+  f-tank-density
+  f-dens-temp
+  f-place-si
   .
 
 
-  IF pomi-licvalue = "yes" THEN DO :
-    _trpomi :
-      do on error undo, return no-apply :
+  case rdc-dnstvalue:
+    when "pomi-rn" then do:
+      _trpomi :
+        do on error undo, return no-apply :
+  
 
-
-      /*данные по средству измерения резервуара для ПО МИ*/
-      run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
-                                                  , buffer buf_clob-bind).
-      find first sr-izmerenia no-lock where sr-izmerenia.node-code = f-place-si no-error.
-      if error-status :error or not available sr-izmerenia then do :
-
-        message
-          substitute( 'Не найдено средство измерения с кодом &1', f-place-si ) skip
-        view-as alert-box error.
-        undo _trpomi, return no-apply  .
-
-      end.
-      else do :
-        assign
-          ToolType               = integer(sr-izmerenia.sr-type)
-          DeltaAbs_R             = sr-izmerenia.sr-abs-err-dens
-          DeltaAbs_Tv            = sr-izmerenia.sr-abs-err-temp-vol
-          DeltaAbs_Tr            = sr-izmerenia.sr-abs-err-temp-dens
-          .
-      end.
-      /*..........................................*/
-      find first ub.trn-doc no-lock where ub.trn-doc.doc-code = p-doc-code no-error.
-      { gbl/ptrlprop.i
-        run
-        trn-doc.obj-type
-        trn-doc.obj-code
-      }
-      if not error-status :error then do:
-        if ptrlprop-temp-for-pomi = 1 then temp-for-pomi = 15 .
-                                      else temp-for-pomi = 20 .
-      end.
-      v-proc = "Rosneft.MethodOfMetering31" .
-
-      RELEASE OBJECT v-mm NO-ERROR.
-      v-mm = ?.
-
-      CREATE value("Rosneft.MethodOfMetering31") v-mm no-error.
-      IF ERROR-STATUS:ERROR
-      OR NOT VALID-HANDLE(v-mm)
-      THEN DO:
-        RELEASE OBJECT v-mm NO-ERROR.
-        v-mm = ?.
-        message
-          substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) skip
-        view-as alert-box error.
-        undo _trpomi, return no-apply .
-      END.
-      ELSE DO :
-        if f-car-vol = ? or f-car-vol = 0 then do :
+          /*данные по средству измерения резервуара для ПО МИ*/
+        run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
+                                                    , buffer buf_clob-bind).
+        find first sr-izmerenia no-lock where sr-izmerenia.node-code = f-place-si no-error.
+        if error-status :error or not available sr-izmerenia then do :
+  
           message
-            "Заполнены не все поля, необходимые " skip
-            "для работы библиотеки ПО МИ"         skip
-            "Введите Объем по паспорту в литрах"  skip
-          view-as alert-box error.
-          apply "entry" to f-car-vol in frame {&frame-name} .
-          undo _trpomi, return no-apply  .
-        end.
-        if f-a-b-tarir = ? or f-a-b-tarir = 0 then do :
-          message
-            "Заполнены не все поля, необходимые " skip
-            "для работы библиотеки ПО МИ"         skip
-            "Введите Уровень цистерны относительно тарировочной планки"  skip
-          view-as alert-box error.
-          apply "entry" to f-a-b-tarir in frame {&frame-name} .
-          undo _trpomi, return no-apply  .
-        end.
-        if f-diameter = ? or f-diameter = 0 then do :
-          message
-            "Заполнены не все поля, необходимые " skip
-            "для работы библиотеки ПО МИ"         skip
-            "Введите Внутренний диаметр горловины"  skip
-          view-as alert-box error.
-          apply "entry" to f-diameter in frame {&frame-name} .
-          undo _trpomi, return no-apply  .
-        end.
-        if f-tank-temp = ? then do :
-          message
-            "Заполнены не все поля, необходимые " skip
-            "для работы библиотеки ПО МИ"         skip
-            "Введите Температуру"  skip
-          view-as alert-box error.
-          apply "entry" to f-tank-temp in frame {&frame-name} .
-          undo _trpomi, return no-apply  .
-        end.
-        if f-tank-density-pomi = ? or f-tank-density-pomi = 0 then do :
-          message
-            "Заполнены не все поля, необходимые " skip
-            "для работы библиотеки ПО МИ"         skip
-            "Введите Плотность топлива для ПО МИ"  skip
-          view-as alert-box error.
-          apply "entry" to f-tank-density-pomi in frame {&frame-name} .
-          undo _trpomi, return no-apply  .
-        end.
-        ASSIGN
-          v-mm:V_real                 = f-car-vol
-          v-mm:DeltaH                 = f-a-b-tarir
-          v-mm:Dgor                   = f-diameter
-          v-mm:Tv                     = f-tank-temp
-          v-mm:Tr                     = f-tank-temp
-          v-mm:R                      = ( f-tank-density-pomi * 1000 )
-          v-mm:Tcy                    = temp-for-pomi
-          v-mm:ToolType               = ToolType
-          v-mm:A_Reservoir            = 0.0000125
-          v-mm:DeltaOtn_V             = 0.4
-          v-mm:DeltaAbs_R             = DeltaAbs_R
-          v-mm:DeltaAbs_Tv            = DeltaAbs_Tv
-          v-mm:DeltaAbs_Tr            = DeltaAbs_Tr
-        .
-        output stream outstream to value ("pomi.log") append.
-        put stream outstream
-                                     cur-time-string()       skip
-          'Процедура'                v-proc                  skip
-          'V_real                 =' f-car-vol               skip
-          'DeltaH                 =' f-a-b-tarir             skip
-          'Dgor                   =' f-diameter              skip
-          'Tv                     =' f-tank-temp             skip
-          'Tr                     =' f-tank-temp             skip
-          'R                      =' ( f-tank-density-pomi * 1000 ) skip
-          'Tcy                    =' temp-for-pomi           skip
-          'ToolType               =' ToolType                skip
-          'A_Reservoir            =' 0.0000125               skip
-          'DeltaOtn_V             =' 0.4                     skip
-          'DeltaAbs_R             =' DeltaAbs_R              skip
-          'DeltaAbs_Tv            =' DeltaAbs_Tv             skip
-          'DeltaAbs_Tr            =' DeltaAbs_Tr             skip
-        .
-
-        output stream outstream close.
-
-        v-mm:Exec() .
-
-        if v-mm:Result <> 0 then do :
-          error-string = v-mm:ResultDetail .
-          output stream outstream to value ("pomi.log") append.
-            put stream outstream error-string format "x(1024)" skip.
-          output stream outstream close.
-          RELEASE OBJECT v-mm NO-ERROR.
-          v-mm = ?.
-          message
-            substitute('Ошибка работы библиотеки ПО МИ &1',error-string) skip
+            substitute( 'Не найдено средство измерения с кодом &1', f-place-si ) skip
           view-as alert-box error.
           undo _trpomi, return no-apply  .
+  
         end.
         else do :
           assign
-            f-tank-density    = decimal(v-mm:Rcy) / 1000
-            f-tank-vol        = v-mm:Vcy
-            f-tank-weight     = v-mm:Mcy
-          .
-          display
-            f-tank-density
-            f-tank-vol
-            f-tank-weight
-          with frame {&frame-name}.
-          output stream outstream to value ("pomi.log") append.
-            put stream outstream
-            "v-mm:Rcy" f-tank-density      skip
-            "v-mm:Vcy" f-tank-vol          skip
-            "v-mm:Mcy" f-tank-weight       skip .
-          output stream outstream close.
+            ToolType               = integer(sr-izmerenia.sr-type)
+            DeltaAbs_R             = sr-izmerenia.sr-abs-err-dens
+            DeltaAbs_Tv            = sr-izmerenia.sr-abs-err-temp-vol
+            DeltaAbs_Tr            = sr-izmerenia.sr-abs-err-temp-dens
+            .
+        end.
+        /*..........................................*/
+        find first ub.trn-doc no-lock where ub.trn-doc.doc-code = p-doc-code no-error.
+        { gbl/ptrlprop.i
+          run
+          trn-doc.obj-type
+          trn-doc.obj-code
+        }
+        if not error-status :error then do:
+          if ptrlprop-temp-for-pomi = 1 then temp-for-pomi = 15 .
+                                        else temp-for-pomi = 20 .
+        end.
+        v-proc = "Rosneft.MethodOfMetering31" .
+  
+        RELEASE OBJECT v-mm NO-ERROR.
+        v-mm = ?.
+  
+        CREATE value("Rosneft.MethodOfMetering31") v-mm no-error.
+        IF ERROR-STATUS:ERROR
+        OR NOT VALID-HANDLE(v-mm)
+        THEN DO:
           RELEASE OBJECT v-mm NO-ERROR.
           v-mm = ?.
-        end.
-      END.
+          message
+            substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) skip
+          view-as alert-box error.
+          undo _trpomi, return no-apply .
+        END.
+        ELSE DO :
+          if f-car-vol = ? or f-car-vol = 0 then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПО МИ"         skip
+              "Введите Объем по паспорту в литрах"  skip
+            view-as alert-box error.
+            apply "entry" to f-car-vol in frame {&frame-name} .
+            undo _trpomi, return no-apply  .
+          end.
+          
+          if f-a-b-tarir = ? then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПО МИ"         skip
+              "Введите Уровень цистерны относительно тарировочной планки"  skip
+            view-as alert-box error.
+            apply "entry" to f-a-b-tarir in frame {&frame-name} .
+            undo _trpomi, return no-apply  .
+          end.
+          assign
+            f-size = string (decimal (f-size))
+            f-size:screen-value = string (decimal (f-size)) 
+          no-error.
+          if f-size = ? or f-size = "0" then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПО МИ"         skip
+              "Введите Внутренний диаметр горловины"  skip
+            view-as alert-box error.
+            apply "entry" to f-size in frame {&frame-name} .
+            undo _trpomi, return no-apply  .
+          end.
+          if f-tank-temp = ? then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПО МИ"         skip
+              "Введите Температуру"  skip
+            view-as alert-box error.
+            apply "entry" to f-tank-temp in frame {&frame-name} .
+            undo _trpomi, return no-apply  .
+          end.
+          if f-tank-density = ? or f-tank-density = 0 then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПО МИ"         skip
+              "Введите Плотность топлива для ПО МИ"  skip
+            view-as alert-box error.
+            apply "entry" to f-tank-density in frame {&frame-name} .
+            undo _trpomi, return no-apply  .
+          end.
+          ASSIGN
+            v-mm:V_real                 = f-car-vol
+            v-mm:DeltaH                 = f-a-b-tarir
+            v-mm:Dgor                   = decimal (f-size)
+            v-mm:Tv                     = f-tank-temp
+            v-mm:Tr                     = f-dens-temp
+            v-mm:R                      = ( f-tank-density * 1000 )
+            v-mm:Tcy                    = temp-for-pomi
+            v-mm:ToolType               = ToolType
+            v-mm:A_Reservoir            = 0.0000125
+            v-mm:DeltaOtn_V             = 0.4
+            v-mm:DeltaAbs_R             = DeltaAbs_R
+            v-mm:DeltaAbs_Tv            = DeltaAbs_Tv
+            v-mm:DeltaAbs_Tr            = DeltaAbs_Tr
+          .
+          output stream outstream to value ("pomi.log") append.
+          put stream outstream
+                                       cur-time-string()       skip
+            'Процедура'                v-proc                  skip
+            'V_real                 =' f-car-vol               skip
+            'DeltaH                 =' f-a-b-tarir             skip
+            'Dgor                   =' f-size              skip
+            'Tv                     =' f-tank-temp             skip
+            'Tr                     =' f-dens-temp             skip
+            'R                      =' ( f-tank-density * 1000 ) skip
+            'Tcy                    =' temp-for-pomi           skip
+            'ToolType               =' ToolType                skip
+            'A_Reservoir            =' 0.0000125               skip
+            'DeltaOtn_V             =' 0.4                     skip
+            'DeltaAbs_R             =' DeltaAbs_R              skip
+            'DeltaAbs_Tv            =' DeltaAbs_Tv             skip
+            'DeltaAbs_Tr            =' DeltaAbs_Tr             skip
+          .
+  
+          output stream outstream close.
+  
+          v-mm:Exec() .
+          if v-mm:Result <> 0 then do :
+            error-string = v-mm:ResultDetail .
+            output stream outstream to value ("pomi.log") append.
+              put stream outstream error-string format "x(1024)" skip.
+            output stream outstream close.
+            RELEASE OBJECT v-mm NO-ERROR.
+            v-mm = ?.
+            message
+              substitute('Ошибка работы библиотеки ПО МИ &1',error-string) skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply  .
+          end.
+          else do :
+            assign
+              f-tank-density-pomi    = decimal(v-mm:Rcy) / 1000
+              f-tank-vol-pomi        = v-mm:Vcy 
+              f-tank-weight     = v-mm:Mcy
+            .
+            display
+              f-tank-density-pomi
+              f-tank-vol-pomi
+              f-tank-weight
+            with frame {&frame-name}.
+            output stream outstream to value ("pomi.log") append.
+              put stream outstream
+              "v-mm:Rcy" f-tank-density-pomi      skip
+              "v-mm:Vcy" f-tank-vol-pomi          skip
+              "v-mm:Mcy" f-tank-weight       skip .
+            output stream outstream close.
+            RELEASE OBJECT v-mm NO-ERROR.
+            v-mm = ?.
+          end.
+        END.
+      end.
     end.
+    when "th" then do:
+      run gds-attr-value in this-procedure
+        (  input p-gds-code
+        ,  input {&attr-fuel-type}
+        , output v-gds-attr-value
+        , output v-gds-attr-type
+        ) no-error .
+      if not error-status:error and lookup (v-gds-attr-value, "petrol,diesel-sum,diesel-wint") > 0 then do:
+        assign
+          v-fuel-type = v-gds-attr-value.
+        run str/rdcdnst.p (input f-tank-density * 1000
+                      ,input f-dens-temp
+                      ,input f-tank-vol
+                      ,input f-tank-temp
+                      ,input v-fuel-type
+                      ,output f-tank-density-pomi 
+                      ,output f-tank-vol-pomi)
+        no-error.
+        if not error-status:error then do:
+          assign
+            f-tank-weight     = f-tank-density-pomi * f-tank-vol-pomi
+          .
+          display
+            f-tank-vol-pomi
+            f-tank-density-pomi
+            f-tank-weight
+          with frame {&frame-name}.
+        end.
+        else do:
+          message
+            substitute('Ошибка при рассчете приведенных значений плотности и объема: &1', return-value) 
+          view-as alert-box error.
+          undo, return no-apply  .
+        end.
+      end.
+      else do:
+        message
+          substitute('Ошибка определения типа топлива &1 или не верный тип товлива &2', return-value, v-gds-attr-value) 
+        view-as alert-box error.
+        undo, return no-apply  .
+      end.
+    end.
+    
+  end case.
+
+  IF rdc-dnstvalue = "pomi-rn" THEN DO :
+
   END.
   enable
   f-tank-density
@@ -930,64 +1032,56 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME b-clients
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-clients Dialog-Frame
-ON CHOOSE OF b-clients IN FRAME Dialog-Frame /* b-clients */
+&Scoped-define SELF-NAME b-choose-date-pov-plotn
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-choose-date-pov-plotn Dialog-Frame
+ON CHOOSE OF b-choose-date-pov-plotn IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
 DO:
-define variable ref-list as character no-undo.
-define variable ref-rec  as recid     no-undo.
+  { gbl/stdbtn.i }
 
-find first ub.trn-doc no-lock where ub.trn-doc.doc-code = p-doc-code no-error.
-   run ref/cli-all.w (parparentproc
-                , "b-sel"
-                , {&cmp}
-                , ?
-                , ?
-                , ?
-                , ?
-                , substitute("auto-tank-for-supp=&1&2",ub.trn-doc.cli-type,ub.trn-doc.cli-code)
-                , output ref-list) .
-if ref-list <> "" then do:
-  ref-rec = integer (ref-list).
-  find clients where recid ( clients ) = ref-rec no-lock.
-  disp clients.obj-code @ f-autoent-obj-code
-       clients.obj-type @ f-autoent-obj-type
-       clients.obj-name @ f-autoent-obj-name with frame {&frame-name}.
-  assign
-    v-autoent-obj-type = clients.obj-type
-    v-autoent-obj-code = clients.obj-code
-  .
-end.
+  run sel-date in this-procedure
+    ( input f-date-pov-plotn :handle
+    , input "Дата поверки плотномера"
+    ) .
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME b-ptb
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-ptb Dialog-Frame
-ON CHOOSE OF b-ptb IN FRAME Dialog-Frame /* b-ptb */
+&Scoped-define SELF-NAME b-copy-iz
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-copy-iz Dialog-Frame
+ON CHOOSE OF b-copy-iz IN FRAME Dialog-Frame /* Копировать */
 DO:
-define variable ref-list as character no-undo.
-define variable ref-rec  as recid     no-undo.
 
-find first ub.trn-doc no-lock where ub.trn-doc.doc-code = p-doc-code no-error.
-   run ref/cli-all.w (parparentproc
-                , "b-sel"
-                , {&cmp}
-                , ?
-                , ?
-                , ?
-                , ?
-                , substitute("tank-farm-for-supp=&1&2",ub.trn-doc.cli-type,ub.trn-doc.cli-code)
-                , output ref-list) .
-if ref-list <> "" then do:
-  ref-rec = integer (ref-list).
-  find clients where recid ( clients ) = ref-rec no-lock.
-  disp clients.obj-code @ f-ptbocode
-       clients.obj-type @ f-ptbotype
-       clients.obj-name @ f-ptboname with frame {&frame-name}.
-end.
+    run str/in-copy-iz.w
+      ( input        parParentProc
+       ,input        p-mode
+       ,input        p-gds-code
+       ,output       p-place-si
+       ,output       p-num-plotn
+       ,output       p-passport-plotn
+       ,output       p-date-pov-plotn       
+      ) no-error.
+
+
+  f-place-si:screen-value = string(p-place-si).
+    find first sr-izmerenia where sr-izmerenia.node-code = integer(p-place-si) no-error.
+    if AVAILABLE sr-izmerenia then do:
+    assign
+          f-place-si-name:screen-value = sr-izmerenia.sr-model
+          v-sr-type = integer(sr-izmerenia.sr-type).
+    end.
+
+  apply "leave" to f-place-si.
+
+  
+  f-num-plotn:SCREEN-VALUE = string(p-num-plotn).
+  f-passport-plotn:SCREEN-VALUE = string(p-passport-plotn).
+  f-date-pov-plotn:SCREEN-VALUE = string(p-date-pov-plotn).
+  
+
+
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -999,68 +1093,23 @@ END.
 ON CHOOSE OF b-save IN FRAME Dialog-Frame /* Сохранить */
 DO:
   { gbl/stdbtn.i }
-  apply "LEAVE":U to f-car-vol      in frame {&FRAME-NAME} .
+
+  apply "LEAVE":U to f-car-vol      in frame {&FRAME-NAME} . 
   apply "LEAVE":U to f-tank-density in frame {&FRAME-NAME} .
-  /* apply "GO":U to frame {&FRAME-NAME} . */
+/*  apply "GO":U to frame {&FRAME-NAME} .*/
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME f-autoent-obj-code
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-autoent-obj-code Dialog-Frame
-ON LEAVE OF f-autoent-obj-code IN FRAME Dialog-Frame /* Автопредприятие */
+&Scoped-define SELF-NAME f-a-b-tarir
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-a-b-tarir Dialog-Frame
+ON LEAVE OF f-a-b-tarir IN FRAME Dialog-Frame /* Уровень цистерны относительно тарировочной планки */
 DO:
-  run disp-obj-name.
-END.
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+    run calc-weight-vol in this-procedure.
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-autoent-obj-code Dialog-Frame
-ON RETURN OF f-autoent-obj-code IN FRAME Dialog-Frame /* Автопредприятие */
-DO:
-run disp-obj-name.
-apply "entry" to f-autoent-obj-code in frame {&frame-name}.
-return no-apply.
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME f-autoent-obj-type
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-autoent-obj-type Dialog-Frame
-ON LEAVE OF f-autoent-obj-type IN FRAME Dialog-Frame
-DO:
-    run disp-obj-name.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-autoent-obj-type Dialog-Frame
-ON return OF f-autoent-obj-type IN FRAME Dialog-Frame
-DO:
-  run disp-obj-name.
-  apply "entry" to f-car-num in frame {&frame-name}.
-return no-apply.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME f-car-num
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-car-num Dialog-Frame
-ON return OF f-car-num IN FRAME Dialog-Frame /* Гос. N автоцистерны */
-DO:
-  apply "entry" to f-car-vol in frame {&frame-name}.
-return no-apply.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1071,9 +1120,8 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-car-vol Dialog-Frame
 ON LEAVE OF f-car-vol IN FRAME Dialog-Frame /* Объем по паспорту в литрах */
 DO:
-    display input frame {&frame-name} f-car-vol + input frame {&frame-name} f-mouth @ f-tank-vol with frame {&frame-name}.
-    display input frame {&frame-name} f-tank-vol *
-          input frame {&frame-name} f-tank-density @ f-tank-weight with frame {&frame-name}.
+
+    run calc-weight-vol in this-procedure.
 
 END.
 
@@ -1086,6 +1134,36 @@ ON return OF f-car-vol IN FRAME Dialog-Frame /* Объем по паспорту в литрах */
 DO:
   apply "entry" to f-tests in frame {&frame-name}.
 return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-car-vol Dialog-Frame
+ON VALUE-CHANGED OF f-car-vol IN FRAME Dialog-Frame /* Объем по паспорту в литрах */
+DO:
+  assign
+    f-tank-vol-pomi = ?
+  .
+  display
+    f-tank-vol-pomi with frame {&frame-name}
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-certif-fuel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-certif-fuel Dialog-Frame
+ON return OF f-certif-fuel IN FRAME Dialog-Frame
+DO:
+
+return no-apply.
+
+
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1116,6 +1194,45 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME f-dens-temp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-dens-temp Dialog-Frame
+ON return OF f-dens-temp IN FRAME Dialog-Frame /* Температура замера плотности */
+DO:
+  return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-dens-temp Dialog-Frame
+ON VALUE-CHANGED OF f-dens-temp IN FRAME Dialog-Frame /* Температура замера плотности */
+DO:
+  assign
+    f-tank-density-pomi = ?
+  .
+  display
+    f-tank-density-pomi
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-size
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-size Dialog-Frame
+ON LEAVE OF f-size IN FRAME Dialog-Frame /* Диаметр горловины */
+DO:
+
+    run calc-weight-vol in this-procedure.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME f-hour-end
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-hour-end Dialog-Frame
 ON LEAVE OF f-hour-end IN FRAME Dialog-Frame /* Время конца слива */
@@ -1136,33 +1253,6 @@ END.
 ON return OF f-hour-end IN FRAME Dialog-Frame /* Время конца слива */
 DO:
     apply "entry" to f-min-end in frame {&frame-name}.
-return no-apply.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME f-hour-income
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-hour-income Dialog-Frame
-ON LEAVE OF f-hour-income IN FRAME Dialog-Frame /* Время прибытия на АЗС */
-DO:
-  if input frame {&frame-name} f-hour-income > 24
-  then do:
-     message "Неверно заведено поле <<час>>." view-as alert-box .
-     apply "entry" to f-hour-income in frame {&frame-name} .
-     return no-apply .
-  end.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-hour-income Dialog-Frame
-ON return OF f-hour-income IN FRAME Dialog-Frame /* Время прибытия на АЗС */
-DO:
-        apply "entry" to f-min-income in frame {&frame-name}.
 return no-apply.
 END.
 
@@ -1207,6 +1297,7 @@ DO:
      apply "entry" to f-hour-start in frame {&frame-name} .
      return no-apply .
   end.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1224,18 +1315,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME f-item-pour
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-item-pour Dialog-Frame
-ON return OF f-item-pour IN FRAME Dialog-Frame
-DO:
-    apply "entry" to f-hour-pour in frame {&frame-name}.
-return no-apply.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME f-min-end
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-min-end Dialog-Frame
 ON LEAVE OF f-min-end IN FRAME Dialog-Frame
@@ -1246,6 +1325,7 @@ DO:
      apply "entry" to f-min-end in frame {&frame-name} .
      return no-apply .
   end.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1263,33 +1343,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME f-min-income
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-min-income Dialog-Frame
-ON LEAVE OF f-min-income IN FRAME Dialog-Frame
-DO:
-  if input frame {&frame-name} f-min-income > 60
-  then do:
-     message "Неверно заведено поле <<минуты>>." view-as alert-box .
-     apply "entry" to f-min-income in frame {&frame-name} .
-     return no-apply .
-  end.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-min-income Dialog-Frame
-ON return OF f-min-income IN FRAME Dialog-Frame
-DO:
-        apply "entry" to f-date-start in frame {&frame-name}.
-return no-apply.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME f-min-pour
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-min-pour Dialog-Frame
 ON LEAVE OF f-min-pour IN FRAME Dialog-Frame
@@ -1300,6 +1353,7 @@ DO:
      apply "entry" to f-min-pour in frame {&frame-name} .
      return no-apply .
   end.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1327,6 +1381,7 @@ DO:
      apply "entry" to f-min-start in frame {&frame-name} .
      return no-apply .
   end.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1346,11 +1401,10 @@ END.
 
 &Scoped-define SELF-NAME f-mouth
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-mouth Dialog-Frame
-ON LEAVE OF f-mouth IN FRAME Dialog-Frame /* Горловина */
+ON LEAVE OF f-mouth IN FRAME Dialog-Frame /* Объем горловины */
 DO:
-    display input frame {&frame-name} f-car-vol + input frame {&frame-name} f-mouth @ f-tank-vol with frame {&frame-name}.
-    display input frame {&frame-name} f-tank-vol *
-          input frame {&frame-name} f-tank-density @ f-tank-weight with frame {&frame-name}.
+    
+    run calc-weight-vol in this-procedure.
 
 END.
 
@@ -1359,7 +1413,7 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-mouth Dialog-Frame
-ON return OF f-mouth IN FRAME Dialog-Frame /* Горловина */
+ON return OF f-mouth IN FRAME Dialog-Frame /* Объем горловины */
 DO:
 apply "entry" to f-tank-density in frame {&frame-name}.
 return no-apply.
@@ -1370,47 +1424,89 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME f-ptbocode
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-ptbocode Dialog-Frame
-ON LEAVE OF f-ptbocode IN FRAME Dialog-Frame /* Нефтебаза */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-mouth Dialog-Frame
+ON VALUE-CHANGED OF f-mouth IN FRAME Dialog-Frame /* Объем горловины */
 DO:
-  run disp-f-ptboname.
+  assign
+    f-tank-vol-pomi = ?
+  .
+  display
+    f-tank-vol-pomi with frame {&frame-name}
+  .
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-ptbocode Dialog-Frame
-ON RETURN OF f-ptbocode IN FRAME Dialog-Frame /* Нефтебаза */
+&Scoped-define SELF-NAME f-norm-doc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-norm-doc Dialog-Frame
+ON return OF f-norm-doc IN FRAME Dialog-Frame
 DO:
-    run disp-f-ptboname.
-apply "entry" to f-ptbocode in frame {&frame-name}.
+
 return no-apply.
 
+
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME f-ptbotype
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-ptbotype Dialog-Frame
-ON LEAVE OF f-ptbotype IN FRAME Dialog-Frame
+&Scoped-define SELF-NAME f-num-passport
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-num-passport Dialog-Frame
+ON return OF f-num-passport IN FRAME Dialog-Frame
 DO:
-    run disp-f-ptboname.
-END.
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-ptbotype Dialog-Frame
-ON return OF f-ptbotype IN FRAME Dialog-Frame
-DO:
-    run disp-f-ptboname.
-    apply "entry" to f-hour-pour in frame {&frame-name}.
 return no-apply.
+
+
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-num-plotn
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-num-plotn Dialog-Frame
+ON return OF f-num-plotn IN FRAME Dialog-Frame /* Номер */
+DO:
+
+return no-apply.
+
+
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-place-si
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-place-si Dialog-Frame
+ON LEAVE OF f-place-si IN FRAME Dialog-Frame /* Средство измерения */
+DO:
+define VARIABLE v-node-code as character no-undo.  
+
+  
+  if v-sr-type = 2 or v-sr-type = 1 then do:
+      enable f-num-plotn
+             f-date-pov-plotn 
+             b-choose-date-pov-plotn
+      with frame {&frame-name}.
+      hide f-passport-plotn
+           in frame {&frame-name}.
+  end.
+  if v-sr-type = 3 or v-sr-type = 4 then do:
+      enable f-num-plotn
+             f-date-pov-plotn 
+             f-passport-plotn
+             b-choose-date-pov-plotn
+      with frame {&frame-name}.
+  end.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1421,8 +1517,8 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tank-density Dialog-Frame
 ON LEAVE OF f-tank-density IN FRAME Dialog-Frame /* Плотность топлива */
 DO:
-    display input frame {&frame-name} f-tank-vol *
-          input frame {&frame-name} f-tank-density @ f-tank-weight with frame {&frame-name}.
+  
+    run calc-weight-vol in this-procedure.
 
 END.
 
@@ -1441,12 +1537,55 @@ END.
 &ANALYZE-RESUME
 
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tank-density Dialog-Frame
+ON VALUE-CHANGED OF f-tank-density IN FRAME Dialog-Frame /* Плотность топлива */
+DO:
+  assign
+    f-tank-density-pomi = ?
+  .
+  display
+    f-tank-density-pomi
+  .
+  run calc-weight-vol in this-procedure.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-tank-density-pomi
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tank-density-pomi Dialog-Frame
+ON LEAVE OF f-tank-density-pomi IN FRAME Dialog-Frame /* Плотность приведенная */
+DO:
+  
+    run calc-weight-vol in this-procedure.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME f-tank-temp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tank-temp Dialog-Frame
-ON return OF f-tank-temp IN FRAME Dialog-Frame /* Температура */
+ON return OF f-tank-temp IN FRAME Dialog-Frame /* Температура замера объема */
 DO:
-      apply "entry" to f-hour-income in frame {&frame-name}.
-return no-apply.
+  return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tank-temp Dialog-Frame
+ON VALUE-CHANGED OF f-tank-temp IN FRAME Dialog-Frame /* Температура замера объема */
+DO:
+  assign
+    f-tank-vol-pomi = ?
+  .
+  display
+    f-tank-vol-pomi with frame {&frame-name}
+  .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1465,7 +1604,48 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME f-tank-vol-pomi
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tank-vol-pomi Dialog-Frame
+ON LEAVE OF f-tank-vol-pomi IN FRAME Dialog-Frame /* Объем топлива приведенный */
+DO:
+  
+    run calc-weight-vol in this-procedure.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tank-vol-pomi Dialog-Frame
+ON return OF f-tank-vol-pomi IN FRAME Dialog-Frame /* Объем топлива приведенный */
+DO:
+      apply "entry" to f-tank-water in frame {&frame-name}.
+return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME f-tank-water
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tank-water Dialog-Frame
+ON LEAVE OF f-tank-water IN FRAME Dialog-Frame /* Объем воды */
+DO:
+  assign
+    f-tank-vol-pomi = ?
+  .
+  display
+    f-tank-vol-pomi with frame {&frame-name}
+  .
+  run calc-weight-vol in this-procedure.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tank-water Dialog-Frame
 ON return OF f-tank-water IN FRAME Dialog-Frame /* Объем воды */
 DO:
@@ -1493,7 +1673,22 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tests Dialog-Frame
 ON return OF f-tests IN FRAME Dialog-Frame /* Номер пробы */
 DO:
-    apply "entry" to f-item-pour in frame {&frame-name}.
+
+return no-apply.
+
+
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-validity-certif
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-validity-certif Dialog-Frame
+ON return OF f-validity-certif IN FRAME Dialog-Frame
+DO:
+
 return no-apply.
 
 
@@ -1509,15 +1704,20 @@ END.
 ON CHOOSE OF r-sr-izm IN FRAME Dialog-Frame /* r-sr-izm */
 DO:
   define variable v-node-code as integer no-undo.
+  
   v-node-code = 0 .
   run ref/sr-izm.w (input parparentproc ,
                     input ""            ,
                     input {&lookup}     ,
-                    input-output v-node-code) no-error.
+                    input-output v-node-code,
+                    output v-sr-type) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
     f-place-si = v-node-code.
     f-place-si:screen-value = string(v-node-code).
+  find first sr-izmerenia where sr-izmerenia.node-code = v-node-code.
+    f-place-si-name:screen-value = sr-izmerenia.sr-model.
   end.
+  apply "leave" to f-place-si.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1526,7 +1726,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -1540,11 +1740,9 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-
   find first buf_goods no-lock
     where buf_goods.gds-code = p-gds-code
     .
-
   if p-mode = "set-attr":U then do:
     run loc-get-set-attr in this-procedure
       ( input p-mode
@@ -1590,134 +1788,97 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           return-value skip
           view-as alert-box error .
       end.
-      if not ( ( p-car-num <> "" and p-car-num <> "?" ) or
+      if not ( 
                ( p-tests <> "" and p-tests <> "?" ) or
-               ( p-car-vol <> "" and p-car-vol <> "?" ) or
-               ( p-autoent-obj-type <> "" and p-autoent-obj-type <> "?" ) or
-               ( p-autoent-obj-code <> "" and p-autoent-obj-code <> "?" ) or
-               ( p-ptbotype <> "" and p-ptbotype <> "?" ) or
-               ( p-ptbocode <> "" and p-ptbocode <> "?" )
+               ( p-car-vol <> "" and p-car-vol <> "?" )
                )
       then do :
-      find first ub.doc-line no-lock where ub.doc-line.doc-code = p-doc-code
-                                       and ub.doc-line.doc-density <> 0
+        find first ub.doc-line no-lock where ub.doc-line.doc-code = p-doc-code
+                                        and ub.doc-line.doc-density <> 0
                                         and ub.doc-line.line-num = 1 no-error.
-      find first buf_goods where buf_goods.artic     = ub.doc-line.artic
-                             and buf_goods.prod-code = ub.doc-line.prod-code
-                             and buf_goods.prod-type = ub.doc-line.prod-type no-error.
-      assign
-       v-last-gds-code = p-gds-code.
-       p-gds-code = buf_goods.gds-code
-      .
-
-      run loc-get-set-attr in this-procedure
-        ( input "get-attr":U
-        ) no-error .
-      if error-status :error then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Ошибка при чтении дополнительной информации" skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
+        if available ub.doc-line then do:
+          find first buf_goods where buf_goods.artic     = ub.doc-line.artic
+                                and buf_goods.prod-code = ub.doc-line.prod-code
+                                and buf_goods.prod-type = ub.doc-line.prod-type no-error.
+          assign
+          v-last-gds-code = p-gds-code.
+          p-gds-code = buf_goods.gds-code
+          .
+  
+          run loc-get-set-attr in this-procedure
+            ( input "get-attr":U
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при чтении дополнительной информации" skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+          assign
+            p-car-vol      = "0"
+            p-time-pour    = ?
+            p-time-start   = ?
+            p-time-end     = ?
+            p-date-start   = ?
+            p-date-end     = ?
+            p-mouth        = ""
+            p-tank-vol     = ""
+            p-tank-temp    = ""
+            p-tank-water   = ""
+            p-tank-density = ""
+            p-tank-weight  = ""
+            p-a-b-tarir    = ""
+            p-gds-code     = v-last-gds-code
+            p-diameter     = ""
+            p-place-si     = ""
+            p-tank-density-pomi = ""
+            p-tank-vol-pomi     = ""
+            p-dens-temp    = ""
+            p-certif-fuel  = ""
+            p-norm-doc     = ""
+            p-num-passport = ""
+            p-validity-certif = ""
+            v-sr-type = 0
+            p-date-pov-plotn = ?
+            p-passport-plotn = ""
+            p-num-plotn = ""
+          .
+        end.
       end.
-      assign
-        p-car-vol      = "0"
-        p-item-pour    = ""
-        p-time-pour    = ""
-        p-time-income  = ""
-        p-time-start   = 0
-        p-time-end     = 0
-        p-date-start   = ?
-        p-date-end     = ?
-        p-mouth        = ""
-        p-tank-vol     = ""
-        p-tank-temp    = ""
-        p-tank-water   = ""
-        p-tank-density = ""
-        p-tank-weight  = ""
-        p-a-b-tarir    = ""
-        p-gds-code     = v-last-gds-code
-        p-diameter     = ""
-        p-place-si     = ""
-        p-tank-density-pomi = ""
-
-        .
     end.
   end.
-  end.
-
+run sr-izmerenia_fill-sr-izm in this-procedure ( input p-mode
+                                               , buffer buf_clob-bind).
+  find first sr-izmerenia no-lock where sr-izmerenia.node-code = integer(p-place-si) no-error.
+      if AVAILABLE sr-izmerenia then do:
+        assign
+        f-place-si-name = string(sr-izmerenia.sr-model)
+        v-sr-type = integer(sr-izmerenia.sr-type).                           
+      end.
+     
   find first buf_goods no-lock
     where buf_goods.gds-code = p-gds-code
     .
-
   assign
-    f-car-num = p-car-num
     f-tests = p-tests
   .
   assign
     f-car-vol = decimal(p-car-vol) no-error
   .
+  assign
+    f-certif-fuel = p-certif-fuel
+    f-norm-doc = p-norm-doc
+    f-num-passport = p-num-passport
+    f-validity-certif = p-validity-certif
+    f-num-plotn = p-num-plotn
+    f-date-pov-plotn = p-date-pov-plotn
+    f-passport-plotn = p-passport-plotn.
+
   if error-status:error then
     message "Неверно задан объем автоцистерны по паспорту " p-car-vol " ."
     view-as alert-box error.
-  assign
-    f-autoent-obj-type = p-autoent-obj-type
-  .
-  if f-autoent-obj-type = "" then do:
-    assign
-      f-autoent-obj-type = {&cmp}
-    .
-  end.
-  assign
-    f-autoent-obj-code = integer(p-autoent-obj-code) no-error
-  .
-  if error-status:error then do:
-    message
-      "Неверно указан код клиента " p-autoent-obj-code " ."
-      view-as alert-box error.
-  end.
-  else do:
-    find first clients no-lock
-      where clients.obj-type = f-autoent-obj-type
-        and clients.obj-code = f-autoent-obj-code
-      no-error.
-    if available clients then do:
-      assign
-        f-autoent-obj-name = clients.obj-name
-      .
-    end.
-    else do:
-      assign
-        f-autoent-obj-name = ?
-      .
-    end.
-  end.
-  assign
-    f-ptbotype = p-ptbotype
-  .
-  if f-ptbotype = "" then do:
-    assign
-      f-ptbotype = {&cmp}
-    .
-  end.
-  assign
-    f-ptbocode = integer( p-ptbocode ) no-error
-  .
-  if error-status:error then do:
-    message
-      "Неверно указан код нефтебазы " p-ptbocode " ."
-      view-as alert-box error.
-  end.
-  else do:
-    find first clients no-lock
-      where clients.obj-type = f-ptbotype
-        and clients.obj-code = f-ptbocode
-      no-error.
-    if available clients then assign f-ptboname = clients.obj-name.
-    else assign f-ptboname = ?.
-  end.
-  assign f-item-pour = p-item-pour.
   assign
   f-tank-vol  = decimal(p-tank-vol) no-error.
   if error-status:error then
@@ -1743,63 +1904,49 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   if error-status:error then
     message "Неверно определен вес в цистерне " p-tank-weight " . "
     view-as alert-box.
-  assign f-hour-pour = integer(substring(p-time-pour, 1, 2)) no-error.
-  if error-status:error then do:
-    message "Неверное время налива " p-time-pour
-    view-as alert-box.
-    assign f-hour-pour = 0
-            f-min-pour  = 0.
-  end.
-  else do:
-    assign f-min-pour = integer(substring(p-time-pour, 4, 2)) no-error.
-    if error-status:error then do:
+  
+  if f-hour-pour <> ? and f-min-pour <> ? then do:
+      assign f-hour-pour = integer(substring(p-time-pour, 1, 2)) no-error.
+      if error-status:error then do:
         message "Неверное время налива " p-time-pour
         view-as alert-box.
-        assign f-hour-pour = 0
-              f-min-pour  = 0.
-    end.
+        assign f-hour-pour = ?
+               f-min-pour  = ?.
+      end.
+      else do:
+        assign f-min-pour = integer(substring(p-time-pour, 4, 2)) no-error.
+        if error-status:error then do:
+            message "Неверное время налива " p-time-pour
+            view-as alert-box.
+            assign f-hour-pour = ?
+                  f-min-pour  = ?.
+        end.
+      end.
   end.
-
-  assign f-hour-income = integer(substring(p-time-income, 1, 2)) no-error.
-  if error-status:error then do:
-    message "Неверное время налива " p-time-income
-    view-as alert-box.
-    assign f-hour-income = 0
-            f-min-income  = 0.
-  end.
-  else do:
-    assign f-min-income = integer(substring(p-time-income, 4, 2)) no-error.
-    if error-status:error then do:
-        message "Неверное время налива " p-time-income
-        view-as alert-box.
-        assign f-hour-income = 0
-              f-min-income  = 0.
-    end.
-  end.
+  
   assign
   f-date-start = p-date-start
-  f-date-end   = p-date-end
-  f-hour-start = integer( truncate( p-time-start / 3600 , 0 ) )
-  f-min-start  = integer( ( p-time-start - f-hour-start * 3600 ) / 60 )
-  f-hour-end   = integer( truncate( p-time-end / 3600 , 0 ) )
-  f-min-end    = integer( ( p-time-end - f-hour-end * 3600 ) / 60).
+  f-date-end   = p-date-end.
+  if f-hour-start <> ? then do:
+  f-hour-start = integer( truncate( p-time-start / 3600 , 0 ) ). end.
+  if f-min-start <> ? then do:
+  f-min-start  = integer( ( p-time-start - f-hour-start * 3600 ) / 60 ). end.
+  if f-hour-end <> ? then do:
+  f-hour-end   = integer( truncate( p-time-end / 3600 , 0 ) ). end.
+  if f-min-end <> ? then do:
+  f-min-end    = integer( ( p-time-end - f-hour-end * 3600 ) / 60). end.
   assign
     f-mouth = decimal (p-mouth) no-error.
   if error-status:error then
     message "Неверно определен объем топлива в горловине " p-mouth " . "
     view-as alert-box.
   assign
-    f-fio = p-fio
-    f-ptbocode = integer( p-ptbocode )
-    f-ptbotype = p-ptbotype
-  .
-  assign
   f-a-b-tarir  = decimal(p-a-b-tarir) no-error.
   if error-status:error then
     message "Неверно определен уровень цистерны относительно тарировочной планки " p-a-b-tarir " . "
     view-as alert-box.
   assign
-  f-diameter = decimal (p-diameter) no-error.
+  f-size = p-diameter no-error.
   if error-status:error then
     message "Неверно определен внутренний диаметр горловины" p-diameter " . "
     view-as alert-box.
@@ -1810,63 +1957,155 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     view-as alert-box.
   f-tank-density-pomi = decimal(p-tank-density-pomi) no-error.
   if error-status:error then
-    message "Неверно определена плотность топлива для ПО ИМ" p-tank-density-pomi " . "
+    message "Неверно определена приведенная плотность" p-tank-density-pomi " . "
     view-as alert-box.
-
+  assign
+  f-tank-vol-pomi  = decimal(p-tank-vol-pomi) no-error.
+  if error-status:error then
+    message "Неверно определен объем в цистерне " p-tank-vol " . "
+    view-as alert-box.
+  assign
+  f-dens-temp  = decimal(p-dens-temp) no-error.
+  if error-status:error then
+    message "Неверно определена температура в цистерне " p-tank-temp " . "
+    view-as alert-box.
 
 
   RUN enable_UI.
 
+    if v-sr-type = 0 then 
+      do: 
+        hide 
+            f-num-plotn
+            f-date-pov-plotn
+            b-choose-date-pov-plotn
+            f-passport-plotn
+            in frame {&frame-name}.
+      end.
+      else do:
+        if v-sr-type = 1 or v-sr-type = 2 then 
+        do:
+          enable
+            f-num-plotn
+            f-date-pov-plotn
+            b-choose-date-pov-plotn
+            with frame {&frame-name}.
+          hide 
+            f-passport-plotn
+            in frame {&frame-name}.
+        end.
+        if v-sr-type = 3 or v-sr-type = 4 then 
+        do:
+            enable
+              f-num-plotn
+              f-date-pov-plotn
+              b-choose-date-pov-plotn
+              f-passport-plotn
+              with frame {&frame-name}.
+          end.
+      end.
   display
-    f-car-num f-car-vol f-tests f-autoent-obj-type f-autoent-obj-code f-autoent-obj-name
-    f-item-pour f-hour-pour f-min-pour
-    f-hour-income f-min-income
+    f-car-vol f-tests
+    f-hour-pour f-min-pour
     f-date-start f-hour-start f-min-start
     f-date-end f-hour-end f-min-end
     f-tank-vol f-tank-temp f-tank-water f-tank-density
     f-tank-weight
-    f-mouth    f-fio
-    f-ptbocode
-    f-ptbotype
+    f-mouth
     f-a-b-tarir
+    f-tank-vol-pomi f-dens-temp
+    f-certif-fuel f-norm-doc 
+    f-num-passport f-validity-certif
     with frame {&frame-name}.
 
   if p-mode <> {&update} then do:
     disable
-      f-car-num f-car-vol f-tests f-autoent-obj-type f-autoent-obj-code
-      f-item-pour  f-tank-vol f-tank-temp f-tank-water f-tank-density
+      f-car-vol f-tests
+      f-tank-vol f-tank-temp f-tank-water f-tank-density
       f-tank-weight f-hour-pour f-min-pour
-      f-hour-income f-min-income
       f-date-start f-hour-start f-min-start
       f-date-end f-hour-end f-min-end
+      f-tank-vol-pomi f-dens-temp
+      f-tank-density-pomi
+      f-size
+      f-place-si
+      r-sr-izm
+      b-calc
+      b-copy-iz
       b-save
-      b-clients
-      b-auto-tank
-      f-mouth f-fio
-      f-ptbocode
-      f-ptbotype
+      f-mouth
       f-a-b-tarir
+      f-certif-fuel f-norm-doc f-num-passport f-validity-certif
+      f-date-pov-plotn b-choose-date-pov-plotn f-passport-plotn f-num-plotn
       with frame {&frame-name}.
   end.
-  run gbl/conf-rd.p ("pomi-lic", "", "", 0, "", "", "", no, output pomi-licvalue, output pomi-lictype) no-error.
-  if not error-status:error and pomi-licvalue = "yes" then do :
+  
+  run gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", no, output rdc-dnstvalue, output rdc-dnsttype) no-error.
+  run gds-attr-value in this-procedure
+    (  input p-gds-code
+    ,  input {&attr-fuel-type}
+    , output v-gds-attr-value
+    , output v-gds-attr-type
+    ) no-error .
+  if error-status:error or lookup (v-gds-attr-value, "metan,propan") > 0 then do:
+    rdc-dnstvalue = "not".
+  end.
+  if not error-status:error and rdc-dnstvalue <> "not" and p-mode <> {&lookup}  then do :
     disable
-      f-tank-water
       f-mouth
-      f-tank-density
+      f-tank-density-pomi
       with frame {&frame-name}.
     display
-      f-diameter
+      f-size
       f-place-si
+      r-sr-izm
       f-tank-density-pomi
       b-calc
+      b-copy-iz
       with frame {&frame-name}.
     enable
-      f-diameter
+      f-size
       f-place-si
-      f-tank-density-pomi
+      r-sr-izm
       b-calc
+      b-copy-iz
       with frame {&frame-name}.
+  end.
+  if not error-status:error and rdc-dnstvalue = "manual"
+  then do:
+    disable
+      b-calc
+    with frame {&frame-name}.
+    enable
+      f-tank-vol-pomi
+      f-tank-density-pomi
+      with frame {&frame-name}.
+  
+  end.
+  if rdc-dnstvalue = "" or rdc-dnstvalue = ? or rdc-dnstvalue = "not" then do:
+  rdc-dnstvalue = "not".
+   disable
+    f-tank-vol 
+    f-tank-temp 
+    f-tank-water
+    f-tank-weight
+    f-certif-fuel f-norm-doc 
+    f-num-passport f-validity-certif
+      with frame {&frame-name}.
+    enable
+    f-mouth
+    f-a-b-tarir
+    f-dens-temp
+    f-tank-density
+    f-car-vol f-tests
+    f-hour-pour f-min-pour
+    f-date-start f-hour-start f-min-start
+    f-date-end f-hour-end f-min-end
+      with frame {&frame-name}.
+    hide
+    f-tank-vol-pomi
+    f-tank-density-pomi
+    in frame {&frame-name}.
   end.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -1878,59 +2117,84 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE calc-weight-vol Dialog-Frame 
+PROCEDURE calc-weight-vol :
+
+define variable v-area as decimal no-undo.
+
+assign frame {&frame-name}
+      f-mouth
+      f-a-b-tarir
+      f-size
+      f-tank-density
+      f-tank-weight
+      f-tank-vol
+      f-tank-vol-pomi
+      f-tank-density-pomi
+      f-car-vol
+      f-tank-water
+    .
+    
+    assign
+      f-size = string (decimal (f-size))
+      f-size:screen-value = string (decimal (f-size)) 
+    no-error.
+    if error-status:error then do:
+      assign
+        v-area = decimal (entry (1,f-size, "/")) * decimal (entry (2,f-size, "/")) * 0.000001
+      no-error.
+      if error-status:error then do:
+        message "Неверно указан размер горловины (либо значение диаметра, либо значение сторон для прямоугольной горолвины в виде a/b). Берется по умолчанию 0" view-as alert-box.
+        f-size:screen-value in frame {&frame-name} = "0".
+        v-area = 0.
+      end.
+    end.
+    else do:
+      v-area = 3.14159 * decimal (f-size) * decimal (f-size) * 0.000001 / 4 no-error.
+    end.
+     
+    f-mouth = round (f-a-b-tarir * v-area, 3) .
+    
+    if f-mouth <> decimal (f-mouth:screen-value) then 
+      apply "value-changed" to f-mouth in frame {&FRAME-NAME}.
+      
+    f-tank-vol = f-car-vol + f-mouth - f-tank-water.
+
+    if rdc-dnstvalue = "not" then do:
+        display input frame {&frame-name} f-tank-vol *
+            input frame {&frame-name} f-tank-density @ f-tank-weight with frame {&frame-name}.
+    end.
+    else do:
+        display input frame {&frame-name} f-tank-vol-pomi *
+            input frame {&frame-name} f-tank-density-pomi @ f-tank-weight with frame {&frame-name}.
+    end.
+    assign
+      f-tank-weight.
+    
+    do with frame {&frame-name}:
+      assign
+        f-mouth:screen-value in frame {&frame-name} = string (f-mouth)
+        f-tank-vol:screen-value = string (f-tank-vol).
+      .
+    end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
   /* Hide all frames. */
   HIDE FRAME Dialog-Frame.
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disp-f-ptboname Dialog-Frame
-PROCEDURE disp-f-ptboname :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-  find clients where clients.obj-code = input frame {&frame-name} f-ptbocode and
-                     clients.obj-type = input frame {&frame-name} f-ptbotype no-lock no-error.
-  if available clients then
-  disp clients.obj-name @ f-ptboname with frame {&frame-name}.
-  else do:
-      display ? @ f-ptboname with frame {&frame-name}.
-      apply "choose" to b-ptb in frame {&frame-name}.
-  end.
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disp-obj-name Dialog-Frame
-PROCEDURE disp-obj-name :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-  find clients where clients.obj-code = input frame {&frame-name} f-autoent-obj-code and
-                     clients.obj-type = input frame {&frame-name} f-autoent-obj-type no-lock no-error.
-  if available clients then
-  disp clients.obj-name @ f-autoent-obj-name with frame {&frame-name}.
-  else do:
-      display ? @ f-autoent-obj-name with frame {&frame-name}.
-      apply "choose" to b-clients in frame {&frame-name}.
-  end.
-
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1944,23 +2208,22 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-autoent-obj-code f-autoent-obj-type f-autoent-obj-name f-car-num
-          f-car-vol f-tests f-fio f-ptbocode f-ptbotype f-ptboname f-hour-pour
-          f-min-pour f-item-pour f-tank-water f-mouth f-tank-vol f-tank-temp
-          f-tank-density f-tank-weight f-a-b-tarir
-          f-hour-income f-min-income f-date-start
-          f-hour-start f-min-start f-date-end f-hour-end f-min-end
+  DISPLAY f-tests f-car-vol f-size f-num-passport f-norm-doc f-certif-fuel 
+          f-validity-certif f-a-b-tarir f-mouth f-tank-water f-tank-vol 
+          f-tank-temp f-tank-density f-dens-temp f-tank-weight f-place-si 
+          f-num-plotn f-date-pov-plotn f-passport-plotn f-tank-density-pomi f-tank-vol-pomi 
+          f-date-start f-hour-start f-min-start f-date-end f-hour-end f-min-end 
+          f-hour-pour f-min-pour f-place-si-name 
       WITH FRAME Dialog-Frame.
-  ENABLE b-save b-quit b-help RECT-3 RECT-1 f-autoent-obj-code
-         f-autoent-obj-type b-clients f-car-num f-car-vol b-auto-tank f-tests
-         f-fio f-ptbocode f-ptbotype b-ptb f-hour-pour f-min-pour f-item-pour
-         f-tank-water f-mouth f-tank-temp f-tank-density f-a-b-tarir
-         r-sr-izm f-hour-income
-         f-min-income f-date-start f-hour-start f-min-start f-date-end
-         f-hour-end f-min-end
+  ENABLE RECT-3 RECT-1 RECT-4 RECT-5 RECT-6 RECT-8 b-save b-quit b-help f-tests 
+         f-car-vol f-size f-num-passport f-norm-doc f-certif-fuel 
+         f-validity-certif f-a-b-tarir f-mouth f-tank-water f-tank-temp 
+         f-tank-density f-dens-temp f-num-plotn f-date-pov-plotn f-passport-plotn f-date-start 
+         f-hour-start f-min-start f-date-end f-hour-end f-min-end f-hour-pour 
+         f-min-pour 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1969,10 +2232,9 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE loc-get-set-attr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE loc-get-set-attr Dialog-Frame 
 PROCEDURE loc-get-set-attr :
-
-  define input  parameter p-mode-attr as character no-undo .
+define input  parameter p-mode-attr as character no-undo .
 
   &scop loc-find-attr ~
   find first buf_doc-line-attr ~
@@ -1990,7 +2252,7 @@ PROCEDURE loc-get-set-attr :
   &scop loc-get-attr-int ~
     if available buf_doc-line-attr then do: ~
       assign ~
-        p-~{&attr-name~} = integer( buf_doc-line-attr.attr-value ) ~
+        p-~{&attr-name~} = integer( buf_doc-line-attr.attr-value ) no-error ~
       . ~
     end.
   &scop loc-get-attr-date ~
@@ -2023,17 +2285,8 @@ PROCEDURE loc-get-set-attr :
   on stop   undo, return error substitute( "&1. stop", vss-workfile )
   on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   :
-    define buffer buf_doc-line-attr for ub.doc-line-attr .
 
-    &scop attr-name car-num
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
+    define buffer buf_doc-line-attr for ub.doc-line-attr .
 
 
     &scop attr-name car-vol
@@ -2056,7 +2309,7 @@ PROCEDURE loc-get-set-attr :
       {&loc-set-attr}
     end.
 
-    &scop attr-name autoent-obj-type
+    &scop attr-name certif-fuel
     {&loc-find-attr}
     if p-mode-attr = "get-attr":U then do:
       {&loc-get-attr}
@@ -2065,8 +2318,8 @@ PROCEDURE loc-get-set-attr :
       {&loc-create-attr}
       {&loc-set-attr}
     end.
-
-    &scop attr-name autoent-obj-code
+    
+    &scop attr-name norm-doc
     {&loc-find-attr}
     if p-mode-attr = "get-attr":U then do:
       {&loc-get-attr}
@@ -2075,8 +2328,8 @@ PROCEDURE loc-get-set-attr :
       {&loc-create-attr}
       {&loc-set-attr}
     end.
-
-    &scop attr-name item-pour
+    
+    &scop attr-name num-passport
     {&loc-find-attr}
     if p-mode-attr = "get-attr":U then do:
       {&loc-get-attr}
@@ -2085,18 +2338,47 @@ PROCEDURE loc-get-set-attr :
       {&loc-create-attr}
       {&loc-set-attr}
     end.
+    
+    &scop attr-name validity-certif
+    {&loc-find-attr}
+    if p-mode-attr = "get-attr":U then do:
+      {&loc-get-attr}
+    end.
+    else do:
+      {&loc-create-attr}
+      {&loc-set-attr}
+    end.
+    
+    &scop attr-name passport-plotn
+    {&loc-find-attr}
+    if p-mode-attr = "get-attr":U then do:
+      {&loc-get-attr}
+    end.
+    else do:
+      {&loc-create-attr}
+      {&loc-set-attr}
+    end.
+    &scop attr-name date-pov-plotn
+    {&loc-find-attr}
+    if p-mode-attr = "get-attr":U then do:
+      {&loc-get-attr-date}
+    end.
+    else do:
+      {&loc-create-attr}
+      {&loc-set-attr-date}
+    end.    
 
+    &scop attr-name num-plotn
+    {&loc-find-attr}
+    if p-mode-attr = "get-attr":U then do:
+      {&loc-get-attr}
+    end.
+    else do:
+      {&loc-create-attr}
+      {&loc-set-attr}
+    end.
+    
     &scop attr-name time-pour
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name time-income
     {&loc-find-attr}
     if p-mode-attr = "get-attr":U then do:
       {&loc-get-attr}
@@ -2206,36 +2488,6 @@ PROCEDURE loc-get-set-attr :
       {&loc-set-attr}
     end.
 
-    &scop attr-name fio
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name ptbotype
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name ptbocode
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
     &scop attr-name a-b-tarir
     {&loc-find-attr}
     if p-mode-attr = "get-attr":U then do:
@@ -2275,12 +2527,34 @@ PROCEDURE loc-get-set-attr :
       {&loc-create-attr}
       {&loc-set-attr}
     end.
+    
+    &scop attr-name tank-vol-pomi
+    {&loc-find-attr}
+    if p-mode-attr = "get-attr":U then do:
+      {&loc-get-attr}
+    end.
+    else do:
+      {&loc-create-attr}
+      {&loc-set-attr}
+    end.
 
-
+    &scop attr-name dens-temp
+    {&loc-find-attr}
+    if p-mode-attr = "get-attr":U then do:
+      {&loc-get-attr}
+    end.
+    else do:
+      {&loc-create-attr}
+      {&loc-set-attr}
+    end.
+    
     return .
+
 
   end.
 END PROCEDURE.
 
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

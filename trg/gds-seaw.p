@@ -31,8 +31,14 @@ define variable vss-description as character no-undo init "Триггер на изменение 
 { nws/lib-nws.i }
 DEFINE VARIABLE v-date as date no-undo .
 DEFINE VARIABLE v-time as integer no-undo .
+define variable v-ok as logical no-undo.
+define variable v-seaobj as character no-undo.
+define variable v-sea-code as integer no-undo.
+define variable v-db-num as integer no-undo.
 define buffer buf_c-gds-season for ub.c-gds-season.
 define buffer buf_c-gds-hist     for ub.c-gds-hist.
+define buffer buf_season for ub.season.
+define buffer buf_season-attr for ub.season-attr.
 
 main-block:
 do transaction
@@ -98,7 +104,54 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         view-as alert-box error .
         return error.
     end.
+    for each ub.gds-season-attr where ub.gds-season-attr.sea-code = ub.gds-season.sea-code
+      and ub.gds-season-attr.db-num = ub.gds-season.db-num
+      and ub.gds-season-attr.gds-code = ub.gds-season.gds-code:
+      run str/callnews.p
+        (input {&table_gds-season-attr}
+        ,input (buffer ub.gds-season-attr:handle)
+        ) no-error .
+      if error-status:error then do:
+        message
+          vss-workfile vss-revision vss-description skip
+          "Ошибка при передаче в новости атрибута товара по Сезону" skip
+          error-status :get-message(1) skip
+          return-value skip
+          view-as alert-box error .
+          return error.
+      end.
   end.
+  end.
+  
+  if g#news then do: /* пришел по новостям, проверим не возникли ли пересечения с сезонами измененными на бд приемнике*/
+    find first buf_season no-lock where buf_season.sea-code = ub.gds-season.sea-code 
+      and buf_season.db-num = ub.gds-season.db-num
+      no-error.
+    find first buf_season-attr no-lock where buf_season-attr.sea-code = ub.gds-season.sea-code 
+      and buf_season-attr.db-num = ub.gds-season.db-num
+      and buf_season-attr.attr-code = {&seaattr-obj} no-error.
+    if available buf_season-attr then
+          assign
+            v-seaobj = buf_season-attr.attr-value
+            .
+      run chk-gdssea in this-procedure 
+        ( input ub.gds-season.gds-code,
+          input v-seaobj,
+          input buf_season.sea-month-1,
+          input buf_season.sea-month-2,
+          input rowid(buf_season),
+          output v-sea-code,
+          output v-db-num,
+          output v-ok) no-error.
+      if not v-ok then do:
+        find current buf_season exclusive-lock.
+        assign
+          buf_season.des = "пересечение"
+          .
+      end.
+  end.
+  
+  
     if g#oxml = yes
     then do:
     run str/calloxml.p (

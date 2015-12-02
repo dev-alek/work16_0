@@ -29,6 +29,7 @@ field codex_id as integer
 field ruleset_id as integer
 field order_id as integer
 field param-name as character
+field param-type as character
 field pack-process-uniq-key-rec as character
 index pi is primary unique
 esys-id
@@ -110,6 +111,49 @@ define variable v-ii as integer no-undo .
           buf_temp-param-name.codex_id = buf_rule-call-param.codex_id
           buf_temp-param-name.order_id = buf_rule-call-param.order_id
           buf_temp-param-name.param-name = buf_rule-call-param.param-name
+            buf_temp-param-name.param-type = "xsd"
+            buf_temp-param-name.profile-type = {&codex-profile-type}
+            buf_temp-param-name.pack-process-uniq-key-rec =
+            substitute("&2&1&3&1&4&1&5"
+                                                                      , {&delim-par}
+                                                                      , buf_rule-call-param.call_id
+                                                                      , buf_rule-call-param.codex_id
+                                                                      , buf_rule-call-param.ruleset_id
+                                                                      , buf_rule-call-param.order_id)
+            .
+            end.
+          end.
+        end.
+      end.
+      if buf_rule-call-param.param-2-data-type = "sub-type" then do:
+        find first buf_temp-param-name where
+                buf_temp-param-name.schema-name = buf_rule-call-param.param-value-character
+          and buf_temp-param-name.profile_id = buf_rule-call-param.profile_id
+          and buf_temp-param-name.call_id = buf_rule-call-param.call_id
+          and buf_temp-param-name.once-more = buf_rule-call-param.once-more
+          no-error.
+        if not available buf_temp-param-name then do:
+          do v-ii = 1 to num-entries(v-esys-id-list):
+            find first buf_temp-param-name where
+                    buf_temp-param-name.schema-name = buf_rule-call-param.param-value-character
+              and buf_temp-param-name.profile_id = buf_rule-call-param.profile_id
+              and buf_temp-param-name.call_id = buf_rule-call-param.call_id
+              and buf_temp-param-name.esys-id = integer(entry(v-ii, v-esys-id-list))
+              no-error.
+            if not available buf_temp-param-name then do:
+&scop codex-code buf_rule-call-param.codex_id
+            create buf_temp-param-name.
+            assign
+            buf_temp-param-name.schema-name = buf_rule-call-param.param-value-character
+            buf_temp-param-name.profile_id = buf_rule-call-param.profile_id
+            buf_temp-param-name.call_id = buf_rule-call-param.call_id
+            buf_temp-param-name.once-more = buf_rule-call-param.once-more
+            buf_temp-param-name.esys-id = integer(entry(v-ii, v-esys-id-list))
+            buf_temp-param-name.ruleset_id = buf_rule-call-param.ruleset_id
+            buf_temp-param-name.codex_id = buf_rule-call-param.codex_id
+            buf_temp-param-name.order_id = buf_rule-call-param.order_id
+            buf_temp-param-name.param-name = buf_rule-call-param.param-name
+            buf_temp-param-name.param-type = "no-xsd"
           buf_temp-param-name.profile-type = {&codex-profile-type}
           buf_temp-param-name.pack-process-uniq-key-rec =
           substitute("&2&1&3&1&4&1&5"

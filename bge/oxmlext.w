@@ -53,6 +53,7 @@ define variable vss-description as character no-undo init "Список внешних подсис
 { gbl/getcntxt.i def }
 { cmp/showinf.i     }
 { gbl/color.i       }
+{ gbl/waitfram.i    }
 
     define temp-table temp_select no-undo
         field sel-key   as integer
@@ -70,7 +71,9 @@ define variable v-doc-rec as recid no-undo .
 define variable v-last-list-mode            as character no-undo .
 define variable v-last-esys-type            as integer   no-undo .
 
-define buffer buf_init_ext-system       for ext-system.
+define variable func as character no-undo .
+
+define buffer buf_init_ext-system for ext-system.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -128,6 +131,9 @@ FUNCTION get-selected-mark returns logical
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+DEFINE MENU MENU-B-func
+       MENU-ITEM m_exp-kontur  LABEL "Экспорт информации о структуре"     .
+       
 DEFINE BUTTON b-add
      LABEL "&Добавить"
      SIZE 10 BY 1.
@@ -153,6 +159,10 @@ DEFINE BUTTON b-help
 DEFINE BUTTON b-lkp
      LABEL "&Просмотр"
      SIZE 10 BY 1.
+     
+DEFINE BUTTON b-func
+     LABEL "&Функции"
+     SIZE 10 BY 1.     
 
 DEFINE BUTTON b-sel
      LABEL "*"
@@ -236,6 +246,7 @@ DEFINE FRAME Dialog-Frame
      b-lkp AT ROW 3.62 COL 11
      b-chg AT ROW 3.62 COL 21
      b-del AT ROW 3.62 COL 31
+     b-func AT ROW 3.62 COL 41
      bt-on-off AT ROW 3.62 COL 41
      bt-export AT ROW 3.62 COL 51
      br-table AT ROW 4.81 COL 1
@@ -262,6 +273,8 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
+ASSIGN
+       B-func:POPUP-MENU IN FRAME Dialog-Frame       = MENU MENU-B-func:HANDLE.
 /* BROWSE-TAB br-table bt-export Dialog-Frame */
 ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
@@ -368,6 +381,51 @@ DO:
       apply "value-changed" to br-table.
       apply "entry" to br-table.
   end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_exp-kontur
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_exp-kontur Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_exp-kontur /* Просмотр */
+DO:
+  assign
+  func = "exp-kontur"
+  .
+  APPLY "CHOOSE" TO b-func IN FRAME {&FRAME-NAME}.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-func
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-func Dialog-Frame
+ON CHOOSE OF b-func IN FRAME Dialog-Frame /* Функции */
+DO:
+  if not available buf_init_ext-system THEN return no-apply.
+  if func = "":U then do:
+    run gbl/pop-up.p ( input self :handle, input no ) no-error.
+    if error-status :error then do: return no-apply. end.
+  end.
+  if func = "":U then do:
+      return no-apply.
+  end.
+  if func = "exp-kontur" then do :
+      if buf_init_ext-system.whole-send-news <> integer({&esys-dm-contour-edi}) then do :
+          message "Данная функция доступна только для ВС с методом доставки " {&esys-dm-contour-edi-full} view-as alert-box .
+      end.  
+      else do :
+          run waitfram-show in this-procedure ( input "Ждите... Идет экспорт информации в систему EDI" ).
+          run cus/exp-clients_kontur.p (input parparentproc
+                                       ,buffer buf_init_ext-system
+                                       ) .
+          run waitfram-hide in this-procedure .
+          message "Экспорт завершен" view-as alert-box .                                       
+      end.    
+  end.    
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1214,11 +1272,14 @@ do v-ii = 1 to num-entries({&openxml-special-type-list}):
   .
 end.
 
+b-func:MENU-MOUSE IN frame {&FRAME-NAME} = 1 .
+
 ENABLE
 b-exit
 b-help
 b-add WHEN (lookup("b-add", bttns) > 0 and v-cntxt-db-num = 0 and not transaction)
 b-lkp
+b-func
 b-chg WHEN (lookup("b-add", bttns) > 0 and v-cntxt-db-num = 0 and not transaction)
 b-del WHEN (lookup("b-add", bttns) > 0 and v-cntxt-db-num = 0 and not transaction)
 bt-on-off when (lookup("b-add", bttns) > 0 and v-cntxt-db-num = 0 and not transaction)

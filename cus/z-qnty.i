@@ -128,6 +128,7 @@ end.
    case p-round-m :
           when {&ord-round-qnty-card} then do:
            if buf_goods.qnty-cart  <> 0 then do:
+                if ( p-qnty  > 0 and p-qnty <  buf_goods.qnty-cart ) then p-qnty = buf_goods.qnty-cart .
                 assign
                   p-qnty     = round ( p-qnty / buf_goods.qnty-cart, 0 ) *  buf_goods.qnty-cart
                   .
@@ -316,6 +317,60 @@ define buffer buf_ord-line-attr for ub.ord-line-attr  .
 
 end procedure. /* create-obj-temp */
 
+procedure create-min-stock-gds-way :
+define input  parameter p-ord-doc   as character no-undo .
+define input  parameter p-gds-code  as integer   no-undo .
+define input  parameter p-min-stock as decimal   no-undo .
+define input  parameter p-gds-way   as decimal   no-undo .
+
+define buffer buf_ord-line-attr for ub.ord-line-attr  .
+  do
+  on error undo, return error return-value
+  :
+
+  if p-gds-code = ? or p-gds-code = 0 then return.
+  if p-ord-doc  = ? or p-ord-doc = "" then return.
+
+
+    find first buf_ord-line-attr exclusive-lock where
+              buf_ord-line-attr.doc-code = p-ord-doc  and
+              buf_ord-line-attr.gds-code = p-gds-code and
+              buf_ord-line-attr.attr-code = {&ordlineattr-min-stock}
+                                             no-error .
+    if not available buf_ord-line-attr then do:
+       create buf_ord-line-attr no-error .
+    end.
+    if available buf_ord-line-attr then do:
+    assign
+      buf_ord-line-attr.doc-code  = p-ord-doc
+      buf_ord-line-attr.gds-code  = p-gds-code
+      buf_ord-line-attr.attr-code = {&ordlineattr-min-stock}
+      buf_ord-line-attr.attr-value = string (p-min-stock)
+      no-error
+    .
+    end.
+    
+    find first buf_ord-line-attr exclusive-lock where
+              buf_ord-line-attr.doc-code = p-ord-doc  and
+              buf_ord-line-attr.gds-code = p-gds-code and
+              buf_ord-line-attr.attr-code = {&ordlineattr-gds-way}
+                                             no-error .
+    if not available buf_ord-line-attr then do:
+       create buf_ord-line-attr no-error .
+    end.
+    if available buf_ord-line-attr then do:
+    assign
+      buf_ord-line-attr.doc-code  = p-ord-doc
+      buf_ord-line-attr.gds-code  = p-gds-code
+      buf_ord-line-attr.attr-code = {&ordlineattr-gds-way}
+      buf_ord-line-attr.attr-value = string (p-gds-way)
+      no-error
+    .
+    end.
+    
+  end.
+
+end procedure. /* create-min-stock-gds-way */
 
 &ELSE
 

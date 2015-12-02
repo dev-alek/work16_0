@@ -22,6 +22,9 @@ Author: Svetlana Chernova
 Creation date: 03/19/02
 
 */
+using Progress.Lang.*.
+using Ibs.Th.Gbl.Rep-Out.
+
 define input parameter parParentProc  as widget-handle no-undo.
 define input parameter p-sea-code   like ub.season.sea-code no-undo.
 define input parameter p-db-num like ub.season.db-num no-undo.
@@ -40,12 +43,15 @@ define variable vss-description as character no-undo init "Товары с темпами    "
 { cmp/gds-list.i gds-list def "new shared" }
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
+{ ref/chgdssea.i }
 
 define buffer buf_season    for ub.season.
+define buffer buf_season-attr for ub.season-attr.
 define variable rid-list    as  character no-undo . /* список recid'ов выбранных аписей */
 define variable log-res as log no-undo.
 define variable rr as recid no-undo.
 define variable v-log as logical   no-undo .
+define variable v-cur-time as character no-undo.
 
 define variable line-mode as character no-undo .
 define variable doc-rec as recid no-undo .
@@ -59,19 +65,28 @@ field nn as integer
 index by-nn nn
 index by_gds-code gds-code
 .
+
+define temp-table tt-gds-sea no-undo 
+    field artic like ub.goods.artic
+    field gds-name like ub.goods.gds-name
+    field unit-base like ub.goods.unit-base
+    field min-stock like ub.gds-season.min-stock
+    field season-coef as decimal label "Коэф. спр."
+    field gds-code like ub.goods.gds-code
+    field is-inter as logical
+    index pi gds-code
+.
+
 define variable varschartic       like ub.price-list.artic initial " " no-undo.
 define variable ref-list  as character                     no-undo.
 
 define variable sch-field as character no-undo.
 define buffer buf_gds-season for ub.gds-season.  /* для поиска по номеру, дате, факт */
 define buffer buf_goods      for ub.goods.  /* для поиска по номеру, дате, факт */
+define buffer buf_gds-season-attr      for ub.gds-season-attr.
 
-&Scoped-define OPEN-QUERY-BROWSE-2-alt OPEN QUERY BROWSE-2 FOR EACH ub.gds-season ~
-      WHERE ub.gds-season.sea-code = p-sea-code and ~
-            ub.gds-season.db-num   = p-db-num NO-LOCK, ~
-      EACH ub.goods where ~
-      ub.goods.gds-code = ub.gds-season.gds-code and ~
-      INDEX(ub.goods.gds-name,s-name-cnt) > 0 ~
+&Scoped-define OPEN-QUERY-BROWSE-2-alt OPEN QUERY BROWSE-2 FOR EACH tt-gds-sea ~
+      WHERE INDEX(tt-gds-sea.gds-name,s-name-cnt) > 0 ~
       NO-LOCK ~{&SORTBY-PHRASE}.
 
 define variable sort-column-name as character no-undo .
@@ -94,27 +109,22 @@ define stream sout.
 &Scoped-define BROWSE-NAME BROWSE-2
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
-&Scoped-define INTERNAL-TABLES ub.gds-season ub.goods
+&Scoped-define INTERNAL-TABLES tt-gds-sea
 
 /* Definitions for BROWSE BROWSE-2                                      */
-&Scoped-define FIELDS-IN-QUERY-BROWSE-2 ub.goods.artic ub.goods.gds-name ~
-ub.goods.unit-base ub.gds-season.min-stock ub.goods.gds-code
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2 ub.gds-season.min-stock
-&Scoped-define ENABLED-TABLES-IN-QUERY-BROWSE-2 ub.gds-season
-&Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BROWSE-2 ub.gds-season
-&Scoped-define QUERY-STRING-BROWSE-2 FOR EACH ub.gds-season ~
-      WHERE ub.gds-season.sea-code = p-sea-code and ~
-gds-season.db-num = p-db-num NO-LOCK, ~
-      EACH ub.goods WHERE ub.goods.gds-code = ub.gds-season.gds-code NO-LOCK ~
+&Scoped-define FIELDS-IN-QUERY-BROWSE-2 tt-gds-sea.artic tt-gds-sea.gds-name ~
+tt-gds-sea.unit-base tt-gds-sea.min-stock tt-gds-sea.gds-code
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2 ub.tt-gds-sea.min-stock
+&Scoped-define ENABLED-TABLES-IN-QUERY-BROWSE-2 ub.tt-gds-sea
+&Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BROWSE-2 ub.tt-gds-sea
+&Scoped-define QUERY-STRING-BROWSE-2 FOR EACH tt-gds-sea ~
+      NO-LOCK ~
     ~{&SORTBY-PHRASE}
-&Scoped-define OPEN-QUERY-BROWSE-2 OPEN QUERY BROWSE-2 FOR EACH ub.gds-season ~
-      WHERE ub.gds-season.sea-code = p-sea-code and ~
-gds-season.db-num = p-db-num NO-LOCK, ~
-      EACH ub.goods WHERE ub.goods.gds-code = ub.gds-season.gds-code NO-LOCK ~
+&Scoped-define OPEN-QUERY-BROWSE-2 OPEN QUERY BROWSE-2 FOR EACH tt-gds-sea ~
+      NO-LOCK ~
     ~{&SORTBY-PHRASE}.
-&Scoped-define TABLES-IN-QUERY-BROWSE-2 ub.gds-season ub.goods
-&Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-2 ub.gds-season
-&Scoped-define SECOND-TABLE-IN-QUERY-BROWSE-2 ub.goods
+&Scoped-define TABLES-IN-QUERY-BROWSE-2 tt-gds-sea
+&Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-2 tt-gds-sea
 
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
@@ -218,24 +228,25 @@ DEFINE VARIABLE R-sort AS INTEGER
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BROWSE-2 FOR
-      ub.gds-season,
-      ub.goods SCROLLING.
+      tt-gds-sea SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame _STRUCTURED
   QUERY BROWSE-2 NO-LOCK DISPLAY
-      ub.goods.artic FORMAT "X(16)":U
-      ub.goods.gds-name FORMAT "X(48)":U
-      ub.goods.unit-base FORMAT "X(3)":U
-      ub.gds-season.min-stock FORMAT ">>,>>9.999":U LABEL-FGCOLOR 1
-      ub.goods.gds-code FORMAT "999999999":U
+      tt-gds-sea.artic FORMAT "X(16)":U
+      tt-gds-sea.gds-name FORMAT "X(48)":U
+      tt-gds-sea.unit-base FORMAT "X(3)":U
+      tt-gds-sea.min-stock FORMAT ">>,>>9.999":U LABEL-FGCOLOR 1
+      tt-gds-sea.season-coef FORMAT ">>,>>9.999":U LABEL-FGCOLOR 1
+      tt-gds-sea.gds-code FORMAT "999999999":U
   ENABLE
-      ub.gds-season.min-stock
+      tt-gds-sea.min-stock
+      tt-gds-sea.season-coef
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 87 BY 18.33
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 97 BY 18.33
          BGCOLOR 15 .
 
 
@@ -258,7 +269,7 @@ DEFINE FRAME Dialog-Frame
      BROWSE-2 AT ROW 3.71 COL 1
      FILL-IN-2 AT ROW 2.21 COL 1 NO-LABEL
      mark-num AT ROW 2.96 COL 1 NO-LABEL
-     SPACE(78.00) SKIP(18.41)
+     SPACE(85.00) SKIP(18.41)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
          TITLE "Товары по сезону".
@@ -312,18 +323,14 @@ ASSIGN
 
 &ANALYZE-SUSPEND _QUERY-BLOCK BROWSE BROWSE-2
 /* Query rebuild information for BROWSE BROWSE-2
-     _TblList          = "ub.gds-season,ub.goods WHERE ub.gds-season ..."
+     _TblList          = "tt-gds-sea..."
      _Options          = "NO-LOCK SORTBY-PHRASE"
-     _TblOptList       = ","
-     _Where[1]         = "ub.gds-season.sea-code = p-sea-code and
-gds-season.db-num = p-db-num"
-     _JoinCode[2]      = "ub.goods.gds-code = ub.gds-season.gds-code"
-     _FldNameList[1]   = ub.goods.artic
-     _FldNameList[2]   = ub.goods.gds-name
-     _FldNameList[3]   = ub.goods.unit-base
-     _FldNameList[4]   > ub.gds-season.min-stock
-"ub.gds-season.min-stock" ? ? "decimal" ? ? ? ? 1 ? yes ? no no ? yes no no "U" "" ""
-     _FldNameList[5]   = ub.goods.gds-code
+     _FldNameList[1]   = tt-gds-sea.artic
+     _FldNameList[2]   = tt-gds-sea.gds-name
+     _FldNameList[3]   = tt-gds-sea.unit-base
+     _FldNameList[4]   > tt-gds-sea.min-stock
+"tt-gds-sea.min-stock" ? ? "decimal" ? ? ? ? 1 ? yes ? no no ? yes no no "U" "" ""
+     _FldNameList[5]   = tt-gds-sea.gds-code
      _Query            is OPENED
 */  /* BROWSE BROWSE-2 */
 &ANALYZE-RESUME
@@ -402,6 +409,55 @@ END.
 
 
 &Scoped-define SELF-NAME b-del
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit Dialog-Frame
+ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
+DO:
+
+  for each tt-gds-sea no-lock:
+    find first buf_gds-season exclusive-lock where buf_gds-season.sea-code = p-sea-code 
+      and buf_gds-season.db-num = p-db-num 
+      and buf_gds-season.gds-code = tt-gds-sea.gds-code no-error.
+    find first buf_gds-season-attr exclusive-lock where buf_gds-season-attr.sea-code = p-sea-code 
+      and buf_gds-season-attr.db-num = p-db-num 
+      and buf_gds-season-attr.gds-code = tt-gds-sea.gds-code
+      and buf_gds-season-attr.attr-code = {&gdsseaattr-season-coef} no-error.
+      
+    if not available buf_gds-season then do:
+      create buf_gds-season.
+      assign
+        buf_gds-season.sea-code = p-sea-code
+        buf_gds-season.db-num = p-db-num
+        buf_gds-season.gds-code = tt-gds-sea.gds-code
+        .
+    end.
+    assign
+      buf_gds-season.min-stock = tt-gds-sea.min-stock
+      .
+    
+    if tt-gds-sea.season-coef <> 0 and tt-gds-sea.season-coef <> ? and tt-gds-sea.season-coef <> 1 then do:
+      if not available buf_gds-season-attr then
+        create buf_gds-season-attr.
+      assign 
+        buf_gds-season-attr.sea-code = p-sea-code
+        buf_gds-season-attr.db-num = p-db-num
+        buf_gds-season-attr.gds-code = tt-gds-sea.gds-code
+        buf_gds-season-attr.attr-code = {&gdsseaattr-season-coef}
+        buf_gds-season-attr.attr-value = string (tt-gds-sea.season-coef)
+        .
+    end.
+    else do:
+      if available buf_gds-season-attr then delete buf_gds-season-attr.
+    end.
+    
+  end.
+
+END.
+.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
 DO:
@@ -422,7 +478,7 @@ define variable g-log as logical   no-undo .
     v-log
   }
 if not v-log then return no-apply .
-if not available ub.gds-season then  return no-apply.
+if not available tt-gds-sea then  return no-apply.
 
       message "Удалить запись ? "
       view-as alert-box question
@@ -433,8 +489,12 @@ if not available ub.gds-season then  return no-apply.
   define variable v-recid as integer no-undo .
   define variable ii as integer no-undo .
 
-  find current ub.gds-season exclusive-lock no-error .
-  delete ub.gds-season.
+  find first buf_gds-season exclusive-lock where buf_gds-season.sea-code = p-sea-code
+    and buf_gds-season.db-num = p-db-num
+    and buf_gds-season.gds-code = tt-gds-sea.gds-code no-error .
+  if available buf_gds-season then delete buf_gds-season.
+  find current tt-gds-sea.
+  delete tt-gds-sea.
   {&BROWSE-NAME}:delete-current-row().
 
 END.
@@ -457,13 +517,48 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
+DO:
+v-cur-time = "Проба". 
+  
+define variable v-file-name as character no-undo.
+   run create-rep(output v-file-name).
+   if v-file-name = ? then
+        MESSAGE "Не удалось создать html-файл"
+        VIEW-AS ALERT-BOX.
+    else
+        run open-ie(v-file-name). 
+END.
+
+
+&Scoped-define SELF-NAME tt-gds-sea.season-coef
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-gds-sea.season-coef BROWSE-2
+ON LEAVE OF tt-gds-sea.season-coef IN BROWSE BROWSE-2 /* Список */
+DO:
+  
+  define variable v-rowid as rowid no-undo.
+
+  if tt-gds-sea.season-coef:input-value in browse browse-2 = 0 or tt-gds-sea.season-coef = ? then do:
+    assign
+      tt-gds-sea.season-coef = 1. 
+    message "Коэффициент увеличения спроса не может равняться нулю" view-as alert-box.
+    v-rowid = rowid (tt-gds-sea).
+    {&OPEN-QUERY-BROWSE-2}
+    reposition BROWSE-2 to rowid v-rowid. 
+  end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME b-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel Dialog-Frame
 ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор  */
 DO:
-    if ( available ub.season ) AND ( rid-list = "" ) then
-        rid-list = string( recid( ub.season ) ) .
+    if ( available season ) AND ( rid-list = "" ) then
+        rid-list = string( recid( season ) ) .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -490,7 +585,7 @@ DO:
     v-log
   }
  if not v-log then return no-apply .
- if not available ub.season THEN return no-apply.
+ if not available season THEN return no-apply.
 
 
 END.
@@ -576,13 +671,11 @@ DO:
  assign s-artic = input frame {&frame-name} s-artic.
 
  doc-rec = ?.
- for each buf_gds-season no-lock where
-          buf_gds-season.sea-code = p-sea-code and
-          buf_gds-season.db-num   = p-db-num ,
+ for each tt-gds-sea no-lock,
             first buf_goods no-lock where
-                  buf_goods.gds-code = buf_gds-season.gds-code and
+                  buf_goods.gds-code = tt-gds-sea.gds-code and
                   buf_goods.artic begins s-artic :
-         doc-rec = recid ( buf_gds-season ) .
+         doc-rec = recid ( tt-gds-sea ) .
          leave.
  end.
   if doc-rec = ? then message "Товар не найден !"  .
@@ -609,14 +702,12 @@ DO:
  assign s-name = input frame {&frame-name} s-name.
 
  doc-rec = ?.
- for each buf_gds-season no-lock where
-          buf_gds-season.sea-code = p-sea-code and
-          buf_gds-season.db-num   = p-db-num ,
+ for each tt-gds-sea no-lock,
             first buf_goods no-lock where
-                  buf_goods.gds-code = buf_gds-season.gds-code and
+                  buf_goods.gds-code = tt-gds-sea.gds-code and
                   buf_goods.gds-name begins s-name
                   :
-         doc-rec = recid(buf_gds-season) .
+         doc-rec = recid(tt-gds-sea) .
          leave.
  end.
   if doc-rec = ? then message "Товар не найден !"  .
@@ -643,14 +734,12 @@ DO:
  assign s-name-cnt = input frame {&frame-name} s-name-cnt.
 
  doc-rec = ?.
- for each buf_gds-season no-lock where
-          buf_gds-season.sea-code = p-sea-code and
-          buf_gds-season.db-num   = p-db-num ,
+ for each tt-gds-sea no-lock,
             first buf_goods no-lock where
-                  buf_goods.gds-code = buf_gds-season.gds-code  and
+                  buf_goods.gds-code = tt-gds-sea.gds-code  and
             INDEX (buf_goods.gds-name,s-name-cnt) > 0
             :
-         doc-rec = recid(buf_gds-season) .
+         doc-rec = recid(tt-gds-sea) .
          leave.
  end.
   if doc-rec = ? then message "Товар не найден !"  .
@@ -667,6 +756,20 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define BROWSE-NAME BROWSE-2
+&Scoped-define SELF-NAME BROWSE-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BROWSE-2 Dialog-Frame
+ON ROW-DISPLAY OF BROWSE-2 IN FRAME Dialog-Frame
+DO:
+  if available tt-gds-sea then do:
+    if tt-gds-sea.is-inter 
+        then tt-gds-sea.artic:bgcolor in browse {&browse-name}  = 12.
+        else tt-gds-sea.artic:bgcolor in browse {&browse-name}  = ?.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define BROWSE-NAME BROWSE-2
 &UNDEFINE SELF-NAME
@@ -688,10 +791,10 @@ assign frame {&frame-name}:title = "Товары >>-  " + p-name.
   &browse-name    = "{&browse-name}"
   &frame-name     = "{&frame-name}"
   &table-name     = "{&first-table-in-query-{&browse-name}}"
-  &sort-clmn_1    = "ub.goods.artic"
-  &sort-clmn_2    = "ub.goods.gds-name"
-  &sort-clmn_3    = "ub.goods.unit-base"
-  &sort-clmn_4    = "ub.gds-season.min-stock"
+  &sort-clmn_1    = "tt-gds-sea.artic"
+  &sort-clmn_2    = "tt-gds-sea.gds-name"
+  &sort-clmn_3    = "tt-gds-sea.unit-base"
+  &sort-clmn_4    = "tt-gds-sea.min-stock"
   &open-query     = "run OpenBr."
   &open-query-otherwise = "run OpenBr."
   &sort-column-name     = "sort-column-name"
@@ -706,16 +809,91 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
+  define variable v-seaobj as character no-undo.
+  define variable v-sea-code as integer no-undo.
+  define variable v-db-num as integer no-undo.
+  define variable v-longchar as longchar no-undo .
+  define variable v-ok as logical no-undo init yes.
 
-
-  run enable_UI in this-procedure .
+  define buffer buf1_season for ub.season.
 
   find first  buf_season no-lock where
               buf_season.sea-code = p-sea-code and
               buf_season.db-num   = p-db-num
               no-error .
   if not available buf_season  then return error .
-  IF BUF_SEASON.SEA-MONTH-1 = 0 THEN hide ub.gds-season.min-stock in browse  {&browse-name}  .
+  find first buf_season-attr no-lock where buf_season-attr.sea-code = p-sea-code
+    and buf_season-attr.db-num = p-db-num
+    and buf_season-attr.attr-code = {&seaattr-obj}
+    no-error.
+  if available buf_season-attr then
+        assign
+          v-seaobj = buf_season-attr.attr-value
+          .
+  for each buf_gds-season no-lock where buf_gds-season.sea-code = p-sea-code and buf_gds-season.db-num = p-db-num, 
+    each buf_goods where buf_goods.gds-code = buf_gds-season.gds-code:
+    find first buf_gds-season-attr no-lock where buf_gds-season-attr.db-num = buf_gds-season.db-num 
+      and buf_gds-season-attr.sea-code = buf_gds-season.sea-code 
+      and buf_gds-season-attr.gds-code = buf_gds-season.gds-code
+      and buf_gds-season-attr.attr-code = {&gdsseaattr-season-coef} no-error.
+    create tt-gds-sea.
+    assign
+      tt-gds-sea.artic = buf_goods.artic
+      tt-gds-sea.gds-code = buf_goods.gds-code
+      tt-gds-sea.gds-name = buf_goods.gds-name
+      tt-gds-sea.season-coef = if available buf_gds-season-attr then decimal (buf_gds-season-attr.attr-value) else 1 
+      tt-gds-sea.min-stock = buf_gds-season.min-stock
+      tt-gds-sea.unit-base = buf_goods.unit-base
+    .
+
+    run chk-gdssea in this-procedure 
+        ( input tt-gds-sea.gds-code,
+          input v-seaobj,
+          input buf_season.sea-month-1,
+          input buf_season.sea-month-2,
+          input rowid (buf_season),
+          output v-sea-code,
+          output v-db-num,
+          output v-ok) no-error.
+    if not v-ok then do:
+      find first buf1_season no-lock where buf1_season.sea-code = v-sea-code
+        and buf1_season.db-num = v-db-num
+      no-error.
+      assign
+        v-longchar = v-longchar +
+          substitute ("Товар &1 &2 пересекается с сезоном &3 &4.&5", buf_goods.gds-code, buf_goods.gds-name, v-sea-code, buf1_season.sea-name, {&new-line})
+        v-ok = true
+        tt-gds-sea.is-inter = true
+        .
+    end.
+  end.
+  
+  if v-longchar <> "" then do:
+    run gbl/d-longchar.w (
+            ?,
+            'Editor_row=2\':u
+          + 'title=Проверка товарного наполнения сезона: есть пересечения\':u
+          + 'Editor_col=1\':u
+          + 'Editor_width=96\':u
+          + 'Editor_height=21\':u
+          + 'readonly=yes\':u
+        ,input-output v-longchar
+        ,output v-ok ) no-error .
+        if error-status :error then message
+          vss-workfile vss-revision vss-description skip
+          error-status :get-message(1) skip
+          return-value skip
+          "4"
+          view-as alert-box error
+        .
+    assign
+      v-longchar = "".
+  end.
+  
+  run enable_UI in this-procedure .
+  if can-find (first tt-gds-sea) then BROWSE-2:refresh().
+ 
+  IF BUF_SEASON.SEA-MONTH-1 = 0 THEN hide tt-gds-sea.min-stock tt-gds-sea.season-coef in browse  {&browse-name}  .
   enable  s-artic with frame {&frame-name}.
   Hide      s-name  s-name-cnt in frame {&frame-name}.
   display s-artic with frame {&frame-name}.
@@ -736,8 +914,8 @@ define variable dct-type as character no-undo .
 define variable  stp-cycl as logical no-undo .
 define variable v-num as integer   no-undo .
 define variable v-flag as logical   no-undo init false .
-define buffer bb_gds-season for ub.gds-season.
-define buffer old_season    for ub.season.
+define buffer bb_gds-season for gds-season.
+define buffer old_season    for season.
 stp-cycl = false .
 
 if buf_season.sea-month-1 = 0 then dct-type = "coll". else dct-type = "season" .
@@ -756,7 +934,8 @@ if dct-type = "coll" then do:
               ,output v-num /* выбор пользователя */
               ).
 case v-num :
-when 1 then do:
+  when 1 then 
+    do:
     for each tt-gds-list no-lock  by tt-gds-list.nn :
         lns-cnt  =  lns-cnt + 1 .
         if lns-cnt > 1 then assign line-mode = "ЦИКЛ":U.
@@ -772,19 +951,20 @@ when 1 then do:
                     leave.
            end.
 
-           if  v-flag = false   then do:
-             find first gds-season no-lock
-                  where ub.gds-season.gds-code = tt-gds-list.gds-code
-                    and ub.gds-season.sea-code = p-sea-code
-                    and ub.gds-season.db-num   = p-db-num
-                    and ub.gds-season.min-stock = 0 no-error.
-             if not available gds-season then do :
-               create gds-season.
-               assign
-                   ub.gds-season.gds-code = tt-gds-list.gds-code
-                   ub.gds-season.sea-code = p-sea-code
-                   ub.gds-season.db-num   = p-db-num
-                   ub.gds-season.min-stock = 0
+        if  v-flag = false then 
+        do :
+          find first tt-gds-sea no-lock
+            where tt-gds-sea.gds-code = tt-gds-list.gds-code
+            and tt-gds-sea.min-stock = 0 no-error.
+          if not available tt-gds-sea then 
+          do :
+            create tt-gds-sea.
+            assign
+              tt-gds-sea.gds-code   = tt-gds-list.gds-code
+              tt-gds-sea.artic      = tt-gds-list.artic
+              tt-gds-sea.gds-name   = tt-gds-list.gds-name
+              tt-gds-sea.unit-base  = tt-gds-list.unit-base
+              tt-gds-sea.min-stock  = 0
                .
              end.
           end.
@@ -792,7 +972,8 @@ when 1 then do:
     end.
 
 end.
-when 2 then do:
+  when 2 then 
+    do:
     for each tt-gds-list no-lock  by tt-gds-list.nn :
         lns-cnt  =  lns-cnt + 1 .
         if lns-cnt > 1 then assign line-mode = "ЦИКЛ":U.
@@ -806,26 +987,26 @@ when 2 then do:
                     :
                     delete bb_gds-season .
            end.
-
-            find first gds-season no-lock
-                 where ub.gds-season.gds-code = tt-gds-list.gds-code
-                   and ub.gds-season.sea-code = p-sea-code
-                   and ub.gds-season.db-num   = p-db-num
-                   and ub.gds-season.min-stock = 0 no-error.
-            if not available gds-season then do :
-              create gds-season.
-              assign
-                  ub.gds-season.gds-code = tt-gds-list.gds-code
-                  ub.gds-season.sea-code = p-sea-code
-                  ub.gds-season.db-num   = p-db-num
-                  ub.gds-season.min-stock = 0
+        find first tt-gds-sea no-lock
+          where tt-gds-sea.gds-code = tt-gds-list.gds-code
+          and tt-gds-sea.min-stock = 0 no-error.
+        if not available tt-gds-sea then 
+        do :
+          create tt-gds-sea.
+          assign
+            tt-gds-sea.gds-code   = tt-gds-list.gds-code
+            tt-gds-sea.artic      = tt-gds-list.artic
+            tt-gds-sea.gds-name   = tt-gds-list.gds-name
+            tt-gds-sea.unit-base  = tt-gds-list.unit-base
+            tt-gds-sea.min-stock  = 0
               .
             end.
         if  stp-cycl = true then leave.
     end.
 
 end.
-when 3 then do:
+  when 3 then 
+    do:
     for each tt-gds-list no-lock  by tt-gds-list.nn :
         lns-cnt  =  lns-cnt + 1 .
         if lns-cnt > 1 then assign line-mode = "ЦИКЛ":U.
@@ -839,25 +1020,27 @@ when 3 then do:
                     v-flag = true .
                     leave.
            end.
-           if  v-flag = true  then do:
+        if  v-flag = true  then 
+        do:
                leave .
            end.
         if  stp-cycl = true then leave.
     end.
-        if v-flag <> true then do :
+      if v-flag <> true then 
+      do :
           for each tt-gds-list no-lock  by tt-gds-list.nn :
-            find first gds-season no-lock
-                 where ub.gds-season.gds-code = tt-gds-list.gds-code
-                   and ub.gds-season.sea-code = p-sea-code
-                   and ub.gds-season.db-num   = p-db-num
-                   and ub.gds-season.min-stock = 0 no-error.
-            if not available gds-season then do :
-              create gds-season.
-              assign
-                  ub.gds-season.gds-code = tt-gds-list.gds-code
-                  ub.gds-season.sea-code = p-sea-code
-                  ub.gds-season.db-num   = p-db-num
-                  ub.gds-season.min-stock = 0
+          find first tt-gds-sea no-lock
+            where tt-gds-sea.gds-code = tt-gds-list.gds-code
+            and tt-gds-sea.min-stock = 0 no-error.
+          if not available tt-gds-sea then 
+          do :
+            create tt-gds-sea.
+            assign
+              tt-gds-sea.gds-code   = tt-gds-list.gds-code
+              tt-gds-sea.artic      = tt-gds-list.artic
+              tt-gds-sea.gds-name   = tt-gds-list.gds-name
+              tt-gds-sea.unit-base  = tt-gds-list.unit-base
+              tt-gds-sea.min-stock  = 0
               .
             end.
           end.
@@ -871,24 +1054,84 @@ end case.
 
 end.
 else do:
+  define variable v-ok as logical no-undo.
+  define variable v-seaobj as character no-undo.
+  define variable v-sea-code as integer no-undo.
+  define variable v-db-num as integer no-undo.
+  define variable v-longchar as longchar no-undo .
+  define buffer buf1_season for ub.season.
+  
+  if not available buf_season then
+      return no-apply.
+  find first buf_season-attr no-lock where buf_season-attr.sea-code = p-sea-code
+    and buf_season-attr.db-num = p-db-num
+    and buf_season-attr.attr-code = {&seaattr-obj}
+    no-error.
+  if available buf_season-attr then
+        assign
+          v-seaobj = buf_season-attr.attr-value
+          .
     for each tt-gds-list no-lock  by tt-gds-list.nn :
         lns-cnt  =  lns-cnt + 1 .
         if lns-cnt > 1 then assign line-mode = "ЦИКЛ":U.
-        if not can-find (first ub.gds-season where
-            ub.gds-season.gds-code = tt-gds-list.gds-code and
-            ub.gds-season.sea-code = p-sea-code and
-            ub.gds-season.db-num   = p-db-num no-lock
-            ) then do:
-            create ub.gds-season.
-            assign
-                ub.gds-season.gds-code  = tt-gds-list.gds-code
-                ub.gds-season.sea-code  = p-sea-code
-                ub.gds-season.db-num    = p-db-num
-                ub.gds-season.min-stock = 0
+    if not can-find (first tt-gds-sea where
+      tt-gds-sea.gds-code = tt-gds-list.gds-code no-lock
+      ) then 
+    do:
+      run chk-gdssea in this-procedure 
+          ( input tt-gds-list.gds-code,
+            input v-seaobj,
+            input buf_season.sea-month-1,
+            input buf_season.sea-month-2,
+            input rowid(buf_season),
+            output v-sea-code,
+            output v-db-num,
+            output v-ok) no-error.
+      if not v-ok then do:
+        find first buf_goods no-lock where buf_goods.gds-code = tt-gds-list.gds-code no-error.
+        find first buf1_season no-lock where buf1_season.sea-code = v-sea-code
+          and buf1_season.db-num = v-db-num
+        no-error.
+        assign
+          v-longchar = v-longchar +
+            substitute ("Товар &1 &2 пересекается с сезоном &3 &4.&5", buf_goods.gds-code, buf_goods.gds-name, v-sea-code, buf1_season.sea-name, {&new-line})
+          v-ok = true
+          .
+        next.
+      end.
+      create tt-gds-sea.
+      assign
+        tt-gds-sea.gds-code   = tt-gds-list.gds-code
+        tt-gds-sea.artic      = tt-gds-list.artic
+        tt-gds-sea.gds-name   = tt-gds-list.gds-name
+        tt-gds-sea.unit-base  = tt-gds-list.unit-base
+        tt-gds-sea.min-stock  = 0
+        tt-gds-sea.season-coef = 1
             .
         end.
         if  stp-cycl = true then leave.
     end.
+  if v-longchar <> "" then do:
+    run gbl/d-longchar.w (
+            ?,
+            'Editor_row=2\':u
+          + 'title=Проверка товарного наполнения сезона: невозможно добавить товары\':u
+          + 'Editor_col=1\':u
+          + 'Editor_width=96\':u
+          + 'Editor_height=21\':u
+          + 'readonly=yes\':u
+        ,input-output v-longchar
+        ,output v-ok ) no-error .
+        if error-status :error then message
+          vss-workfile vss-revision vss-description skip
+          error-status :get-message(1) skip
+          return-value skip
+          "4"
+          view-as alert-box error
+        .
+    assign
+      v-longchar = "".
+  end.
 end.
   ASSIGN lns-cnt = lns-cnt + 1 .
 
@@ -928,7 +1171,7 @@ PROCEDURE enable_UI :
   DISPLAY R-sort s-name s-name-cnt s-artic FILL-IN-2 mark-num
       WITH FRAME Dialog-Frame.
   ENABLE b-exit b-add b-del b-list b-help R-sort s-artic BROWSE-2 FILL-IN-2
-         mark-num
+         mark-num b-print
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -956,23 +1199,23 @@ case sort-column-name :
     {&my-open-query}
   end.
 
-  when "ub.goods.artic" then do:
-    &scop SORTBY-PHRASE by ub.goods.artic
+  when "tt-gds-sea.artic" then do:
+    &scop SORTBY-PHRASE by tt-gds-sea.artic
     {&my-open-query}
   end.
 
-  when "ub.goods.gds-name" then do:
-    &scop SORTBY-PHRASE by ub.goods.gds-name
+  when "tt-gds-sea.gds-name" then do:
+    &scop SORTBY-PHRASE by tt-gds-sea.gds-name
     {&my-open-query}
   end.
 
-  when "ub.goods.unit-base" then do:
-    &scop SORTBY-PHRASE by ub.goods.unit-base
+  when "tt-gds-sea.unit-base" then do:
+    &scop SORTBY-PHRASE by tt-gds-sea.unit-base
     {&my-open-query}
   end.
 
-  when "ub.gds-season.min-stock" then do:
-    &scop SORTBY-PHRASE by ub.gds-season.min-stock
+  when "tt-gds-sea.min-stock" then do:
+    &scop SORTBY-PHRASE by tt-gds-sea.min-stock
     {&my-open-query}
   end.
 
@@ -1100,6 +1343,87 @@ END CASE.
 loc-list-option = "":U.
 
 END PROCEDURE.
+
+procedure create-rep:
+    define output parameter p-filename as character no-undo.
+        
+    define variable v-rls-file as character no-undo.
+    define variable v-data-file as character no-undo.
+    define variable v-xsl-file as character no-undo.
+    define variable v-tmp-file as character no-undo.
+    define variable hw as handle no-undo.
+    define variable rep-out as class Rep-Out no-undo.
+    
+    assign
+        v-xsl-file = search("exe/goods-seas.xsl.html")
+        v-data-file = session:temp-directory + string(time) + ".xml"
+        v-tmp-file = session:temp-directory + string(time) + ".html"
+    .
+    
+    
+    create sax-writer hw.
+    hw:formatted = true.
+    hw:set-output-destination ("file", v-data-file).
+    
+    
+    run write-data(hw) .
+    rep-out = new rep-out().
+    v-rls-file = rep-out:xsl-transform(v-data-file, v-xsl-file).    
+    os-delete value(v-tmp-file).
+    os-copy value(v-rls-file) value(v-tmp-file).  
+    os-delete value(v-rls-file).
+    delete object rep-out.
+  
+    p-filename = v-tmp-file.
+    
+end.
+
+procedure write-data:
+    define input parameter hw as handle no-undo.
+        hw:start-document ().
+        
+        hw:start-element ("rep").
+        hw:start-element ("card").
+        
+        hw:insert-attribute ("sea-code", if p-sea-code = ? then "" else  string(p-sea-code) ).
+        hw:insert-attribute ("db-num", if p-db-num = ? then "" else  string(p-db-num) ).
+        hw:insert-attribute ("name", if p-name = ? then "" else  string(p-name) ).
+        
+        
+        for each tt-gds-sea no-lock:
+        hw:start-element ("line").
+        hw:insert-attribute ("gds-artic",if tt-gds-sea.artic = ? then "" else string(tt-gds-sea.artic)).   /* Артикул товара */ 
+        hw:insert-attribute ("gds-name",if tt-gds-sea.gds-name = ? then "" else  string(tt-gds-sea.gds-name) ). /*Название товара*/
+        hw:insert-attribute ("unit-base",if tt-gds-sea.unit-base = ? then "" else string(tt-gds-sea.unit-base)). /* Ед. изм */
+        hw:insert-attribute ("min-stock",if tt-gds-sea.min-stock = ? then "" else string(tt-gds-sea.min-stock,"->>>,>>9.999")). /* Мин. ост.*/
+        hw:insert-attribute ("season-coef",if tt-gds-sea.season-coef = ? then "" else string(tt-gds-sea.season-coef,"->>>,>>9.999")). /* Коэф. спр.*/
+        hw:insert-attribute ("gds-code",if tt-gds-sea.gds-code = ? then "" else string(tt-gds-sea.gds-code)). /*Код товара*/        
+        hw:end-element ("line"). 
+        end.
+       
+        hw:end-element ("card").
+        hw:end-element ("rep").
+        
+        
+        hw:end-document ().
+
+end.
+
+procedure open-ie:
+    define input parameter p-filename as character no-undo.
+    
+    define variable o-IE as com-handle no-undo.
+   
+    
+    create "InternetExplorer.Application" o-IE.
+    /* o-IE:menubar = false. */
+    o-IE:addressbar = false.
+    o-IE:Navigate(p-filename).
+    o-IE:visible = true.
+    release object o-IE.
+
+end.
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

@@ -137,8 +137,8 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW w-login ASSIGN
          HIDDEN             = YES
          TITLE              = "Mobile TH Сервер касс"
-         COLUMN             = 25.25
-         ROW                = 8.5
+         COLUMN             = 27
+         ROW                = 7.58
          HEIGHT             = 10.25
          WIDTH              = 30.88
          MAX-HEIGHT         = 24.21

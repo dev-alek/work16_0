@@ -56,6 +56,7 @@ define variable par-type                      as   character                   n
 define variable par-edi                       as   character                   no-undo .
 define variable is-edoc-nn                    as logical no-undo .
 define variable is-edi                        as logical no-undo .
+define variable v-dm-edi                      as integer   no-undo .
 
 { gbl/conf-rd.i "'edoc-nn'" 0 "''" 0 "''" "''" "''" no par-edoc-nn par-type no-error }
 
@@ -89,6 +90,7 @@ is-edoc-nn = (par-edoc-nn = "yes")
                                   , input buf_trn-doc.cli-code
                                   , input buf_trn-doc.obj-type
                                   , input buf_trn-doc.obj-code
+                                  , output v-dm-edi
                                   ) .
 end.
 else do:
@@ -110,6 +112,7 @@ end.
                                   , input buf_ord-doc.cli-code
                                   , input buf_ord-doc.obj-type
                                   , input buf_ord-doc.obj-code
+                                  , output v-dm-edi
                                   ) .
 end.
 end.
@@ -121,8 +124,9 @@ if p-table-name = {&table_ord-doc} then do:
     v-mess = 'Отсылка Заказа по EDOC'.
   end.
   if v-edi-doc then do:
-    v-profile-id = 77.
-    v-mess = 'Отсылка Заказа по EDI'.
+      if v-dm-edi = integer({&esys-dm-exite-edi}) then v-profile-id = 77.
+      if v-dm-edi = integer({&esys-dm-contour-edi}) then v-profile-id = 91.
+      v-mess = 'Отсылка Заказа по EDI'.
   end.
   if available  buf_ord-doc then do:
     /* Экспорт в oxml */
@@ -151,7 +155,8 @@ if p-table-name = {&table_trn-doc} then do:
     v-mess = 'Отсылка Накладной по EDOC'.
   end.
   if v-edi-doc then do:
-    v-profile-id = 77.
+    if v-dm-edi = integer({&esys-dm-exite-edi}) then v-profile-id = 77.
+    if v-dm-edi = integer({&esys-dm-contour-edi}) then v-profile-id = 91.
     v-mess = 'Отсылка Накладной по EDI'.
   end.
   if available  buf_trn-doc then do:

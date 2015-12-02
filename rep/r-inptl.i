@@ -92,8 +92,7 @@ on error undo, return error return-value
   /* Атрибуты линии */
   find first car-num-attr no-lock
     where car-num-attr.doc-code  = ub.doc-line.doc-code
-      and car-num-attr.gds-code  = gds-list.gds-code
-      and car-num-attr.attr-code = "car-num":U
+      and car-num-attr.attr-code = {&trdcattr-car-num}             
     no-error .
   find first car-vol-attr no-lock
     where car-vol-attr.doc-code  = ub.doc-line.doc-code

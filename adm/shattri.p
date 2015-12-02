@@ -1293,6 +1293,25 @@ v-prop-code = "{&bef-attr-overval_pr-abs-d},{&bef-attr-overval_pr-altex},{&bef-a
 
 end.
 
+    when {&attr-egais-host} then do:
+      v-prop-code = "{&bef-attr-egais-host_egais-exsys}".
+&scop ptype integer
+&scop prop-value 1
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-egais-host_egais-fsrar}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
+    end.
+    
+
     when {&attr-abc-global} then do:
       v-prop-code = {&prop-list-attr-abc-global} .
 
@@ -1792,6 +1811,13 @@ end.
       end.
     end.
     when {&attr-gds-ref} then do:
+      v-prop-code = "{&bef-attr-gds-ref_shema-foto}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype integer
+&scop prop-value 1
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
       v-prop-code = "{&bef-attr-gds-ref_dfltggrp}".
       do v-ii = 1 to num-entries(v-prop-code):
 &scop ptype integer

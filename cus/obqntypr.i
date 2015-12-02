@@ -31,11 +31,13 @@ define input  parameter x-sum-type       like ub.ot-line.sum-type     no-undo.
 define input  parameter x-cat-id         like ub.ot-line.cat-id       no-undo.
 define input  parameter x-ext-doc-type   like ub.ot-line.ext-doc-type no-undo.
 define input  parameter xtog-obj         as   logical no-undo.
+define input  parameter xtog-prn         as   logical no-undo.
 define output parameter p-prih  as decimal no-undo .
 define output parameter p-rash  as decimal no-undo .
 define output parameter p-kassa as decimal no-undo .
 
 define buffer p-doc-line for ub.doc-line.
+define buffer p-gds-dtl  for ub.gds-dtl.
 define variable p-doc-type as character no-undo .
 define variable str-doc-type as character no-undo .
 str-doc-type =
@@ -92,7 +94,43 @@ v-nn = num-entries( str-doc-type ) .
               when  {&tdedt_ras_vnesh_kass}     then if p-t-rvc  then assign p-kassa  = p-kassa  +  p-doc-line.fact-qnty.
               when  {&tdedt_vozvrat_vnesh_kass} then if p-t-rvzc then assign p-kassa  = p-kassa  -  p-doc-line.fact-qnty.
           end case.
+          if xtog-prn then      /*   Детализация по признакам   */
+          for each p-gds-dtl where p-gds-dtl.doc-code  = p-doc-line.doc-code  and
+                                   p-gds-dtl.artic     = p-doc-line.artic     and
+                                   p-gds-dtl.prod-type = p-doc-line.prod-type and
+                                   p-gds-dtl.prod-code = p-doc-line.prod-code no-lock  :
+              find first tmp#zakaz-prn where tmp#zakaz-prn.artic     = p-gds-dtl.artic     and
+                                             tmp#zakaz-prn.prod-type = p-gds-dtl.prod-type and
+                                             tmp#zakaz-prn.prod-code = p-gds-dtl.prod-code and
+                                             tmp#zakaz-prn.obj-type  = p-gds-dtl.obj-type  and
+                                             tmp#zakaz-prn.obj-code  = p-gds-dtl.obj-code  and
+                                             tmp#zakaz-prn.prt-code  = p-gds-dtl.prt-code  no-lock no-error .
+              if not available tmp#zakaz-prn then do :
+                create tmp#zakaz-prn.
+                assign
+                   tmp#zakaz-prn.artic     = p-gds-dtl.artic
+                   tmp#zakaz-prn.prod-type = p-gds-dtl.prod-type
+                   tmp#zakaz-prn.prod-code = p-gds-dtl.prod-code
+                   tmp#zakaz-prn.obj-type  = p-gds-dtl.obj-type
+                   tmp#zakaz-prn.obj-code  = p-gds-dtl.obj-code
+                   tmp#zakaz-prn.prt-code  = p-gds-dtl.prt-code
+                .
     end.
+              case p-doc-line.ext-doc-type:
+                    when  {&tdedt_spi_vnesh}      then if  p-t-sp      then assign tmp#zakaz-prn.qnty-sale = tmp#zakaz-prn.qnty-sale   +  p-gds-dtl.fact-qnty.
+                    when  {&tdedt_spi_prvo}       then if  p-t-sppv    then assign tmp#zakaz-prn.qnty-sale = tmp#zakaz-prn.qnty-sale   +  p-gds-dtl.fact-qnty.
+                    when  {&tdedt_ras_prvo}       then if  p-t-sppv-2  then assign tmp#zakaz-prn.qnty-sale = tmp#zakaz-prn.qnty-sale   +  p-gds-dtl.fact-qnty.
+                    when  {&tdedt_ras_perem}      then if  p-t-sppv-3  then assign tmp#zakaz-prn.qnty-sale = tmp#zakaz-prn.qnty-sale   +  p-gds-dtl.fact-qnty.
+                    when  {&tdedt_vozvrat_perem}  then if  p-t-sppv-4  then assign tmp#zakaz-prn.qnty-sale = tmp#zakaz-prn.qnty-sale   -  p-gds-dtl.fact-qnty.
+                    when  {&tdedt_ras_vnesh}      then if  p-t-rv      then assign tmp#zakaz-prn.qnty-sale = tmp#zakaz-prn.qnty-sale   +  p-gds-dtl.fact-qnty.
+                    when  {&tdedt_vozvrat_vnesh}  then if  p-t-rvz     then assign tmp#zakaz-prn.qnty-sale = tmp#zakaz-prn.qnty-sale   -  p-gds-dtl.fact-qnty.
+                    when  {&tdedt_ras_vnesh_kass}     then if p-t-rvc  then assign tmp#zakaz-prn.qnty-sale = tmp#zakaz-prn.qnty-sale   +  p-gds-dtl.fact-qnty.
+                    when  {&tdedt_vozvrat_vnesh_kass} then if p-t-rvzc then assign tmp#zakaz-prn.qnty-sale = tmp#zakaz-prn.qnty-sale   -  p-gds-dtl.fact-qnty.
+                end case.
+             /*   message substitute("был в obqntypr.i, for each gds-dtl, &1, &2, &3", p-doc-line.artic, tmp#zakaz-prn.prt-code, tmp#zakaz-prn.qnty-sale) view-as alert-box.    */
+          end.    /*   for each p-gds-dtl  */
+
+    end.  /*   for each p-doc-line  */
   end.
 assign
   p-rash  = p-rash

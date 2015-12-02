@@ -55,7 +55,15 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     define variable v-diameter             as character    no-undo .
     define variable v-place-si             as character    no-undo .
     define variable v-tank-density-pomi    as character    no-undo .
-
+    define variable v-prt-tank-vol-pomi    as character    no-undo .
+    define variable v-prt-dens-temp        as character    no-undo .
+    define variable v-prt-certif-fuel      as character    no-undo .
+    define variable v-prt-norm-doc         as character    no-undo .
+    define variable v-prt-num-passport     as character    no-undo .
+    define variable v-prt-validity-certif  as character    no-undo .
+    define variable v-prt-passport-plotn   as   character             no-undo .
+    define variable v-prt-num-plotn        as   character             no-undo .
+    define variable v-prt-date-pov-plotn   like ub.rvs-line.real-date no-undo .
     define variable was_setting            as logical      no-undo initial no .
 
     define variable ptoldfilvalue          as character    no-undo.
@@ -826,32 +834,32 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       define input-output parameter p-new-fact-qnty        like ub.doc-line.fact-qnty    no-undo .
       define input-output parameter p-new-density          like ub.doc-line.fact-density no-undo .
       define input-output parameter p-new-cli-fact-qnty    like ub.doc-line.fact-qnty    no-undo .
-      define input-output parameter p-prt-car-num          as   character                no-undo .
       define input-output parameter p-prt-car-vol          as   character                no-undo .
       define input-output parameter p-prt-tests            as   character                no-undo .
-      define input-output parameter p-prt-autoent-obj-type as   character                no-undo .
-      define input-output parameter p-prt-autoent-obj-code as   character                no-undo .
-      define input-output parameter p-prt-item-pour        as   character                no-undo .
       define input-output parameter p-prt-time-pour        as   character                no-undo .
       define input-output parameter p-prt-tank-vol         as   character                no-undo .
       define input-output parameter p-prt-tank-temp        as   character                no-undo .
       define input-output parameter p-prt-tank-water       as   character                no-undo .
       define input-output parameter p-prt-tank-density     as   character                no-undo .
       define input-output parameter p-prt-tank-weight      as   character                no-undo .
-      define input-output parameter p-prt-time-income      as   character                no-undo .
       define input-output parameter p-prt-start-real-date  like ub.rvs-line.real-date    no-undo .
       define input-output parameter p-prt-start-real-time  like ub.rvs-line.real-time    no-undo .
       define input-output parameter p-prt-end-real-date    like ub.rvs-line.real-date    no-undo .
       define input-output parameter p-prt-end-real-time    like ub.rvs-line.real-time    no-undo .
       define input-output parameter p-prt-mouth            as   character                no-undo .
-      define input-output parameter p-prt-fio              as   character                no-undo .
-      define input-output parameter p-prt-ptbotype         as   character                no-undo .
-      define input-output parameter p-prt-ptbocode         as   character                no-undo .
       define input-output parameter p-prt-a-b-tarir        as   character                no-undo .
       define input-output parameter p-diameter             as   character                no-undo .
       define input-output parameter p-place-si             as   character                no-undo .
       define input-output parameter p-tank-density-pomi    as   character                no-undo .
-
+      define input-output parameter p-prt-tank-vol-pomi    as   character                no-undo .
+      define input-output parameter p-prt-dens-temp        as   character                no-undo .
+      define input-output parameter p-prt-certif-fuel      as   character                no-undo .
+      define input-output parameter p-prt-norm-doc         as   character                no-undo .
+      define input-output parameter p-prt-num-passport     as   character                no-undo .
+      define input-output parameter p-prt-validity-certif  as   character                no-undo .
+      define input-output parameter p-prt-passport-plotn   as   character                no-undo .
+      define input-output parameter p-prt-num-plotn        as   character                no-undo .
+      define input-output parameter p-prt-date-pov-plotn   like ub.rvs-line.real-date    no-undo .
       do
       on error  undo, return error substitute( "&1 (proc-b-addinfo). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
       on stop   undo, return error substitute( "&1 (proc-b-addinfo). stop", vss-workfile )
@@ -948,31 +956,32 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
              ,input        p-mode
              ,input        p-doc-code
              ,input        p-gds-code
-             ,input-output p-prt-car-num
              ,input-output p-prt-car-vol
              ,input-output p-prt-tests
-             ,input-output p-prt-autoent-obj-type
-             ,input-output p-prt-autoent-obj-code
-             ,input-output p-prt-item-pour
              ,input-output p-prt-time-pour
              ,input-output p-prt-tank-vol
              ,input-output p-prt-tank-temp
              ,input-output p-prt-tank-water
              ,input-output p-prt-tank-density
              ,input-output p-prt-tank-weight
-             ,input-output p-prt-time-income
              ,input-output p-prt-start-real-date
              ,input-output p-prt-start-real-time
              ,input-output p-prt-end-real-date
              ,input-output p-prt-end-real-time
              ,input-output p-prt-mouth
-             ,input-output p-prt-fio
-             ,input-output p-prt-ptbotype
-             ,input-output p-prt-ptbocode
              ,input-output p-prt-a-b-tarir
              ,input-output p-diameter
              ,input-output p-place-si
              ,input-output p-tank-density-pomi
+             ,input-output p-prt-tank-vol-pomi
+             ,input-output p-prt-dens-temp
+             ,input-output p-prt-certif-fuel 
+             ,input-output p-prt-norm-doc 
+             ,input-output p-prt-num-passport 
+             ,input-output p-prt-validity-certif
+             ,input-output p-prt-passport-plotn
+             ,input-output p-prt-num-plotn
+             ,input-output p-prt-date-pov-plotn                           
              ,      output v-setting
             ) no-error .
           if error-status :error then do:
@@ -987,6 +996,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             assign
               v-new-fact-qnty = p-new-fact-qnty
             .
+		  def var v-calc-density  like ub.rvs-line.state-density          no-undo .
+          if decimal(p-prt-tank-weight) > 0 and decimal(p-prt-tank-vol) > 0 then v-calc-density = decimal(p-prt-tank-weight) / decimal(p-prt-tank-vol).
             { str/stfactqt.i
               p-stfactplvalue
               p-doc-qnty
@@ -994,7 +1005,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               0.00
               0.00
               p-prt-tank-vol
-              decimal(p-prt-tank-density)
+              v-calc-density            
               no
               v-new-fact-qnty
               v-chg
@@ -1010,7 +1021,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               or v-st-doc    =  yes
             then do:
               assign
-                v-new-density = ( if v-st-doc = yes then p-doc-density else decimal( p-prt-tank-density ) )
+                v-new-density = ( if v-st-doc = yes then p-doc-density else v-calc-density )
                 v-log         = yes
               .
               if decimal( p-prt-tank-vol ) <> p-new-fact-qnty

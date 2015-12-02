@@ -41,6 +41,7 @@ define variable vss-description as character no-undo init "Экран покупателя".
 { cmp/ini-lib.i  }
 { str/libbcrcn.i }
 { gbl/integerm.i }
+{ ref/gds-attr.i }
 
 define variable is-byscrvalue     as character no-undo .
 define variable is-byscrtype      as character no-undo .
@@ -56,7 +57,19 @@ define variable v-type            as character no-undo .
 define variable v-data-valid      as logical   no-undo .
 define variable v-error-message   as character no-undo .
 define variable v-ind             as integer   no-undo .
-
+define VARIABLE vPar-val          as character no-undo .
+define VARIABLE vPar-type         as character no-undo .
+define VARIABLE v-ph-dir          as character no-undo .
+define VARIABLE v-path-db-num     as character no-undo .
+define VARIABLE v-from-db-num     as character no-undo .
+define variable v-param-types     as character  no-undo.
+define variable v-value-char      as character  no-undo.
+define variable v-val-date        as date       no-undo.
+define variable v-val-decimal     as decimal    no-undo.
+define variable v-val-integer     as integer    no-undo.
+define variable v-val-logical     as logical    no-undo.
+define variable v-tthd            as handle     no-undo.
+define variable v-value           as character  no-undo.
 
 define buffer bf_shop          for ub.shop.
 define buffer bf_store         for ub.store.
@@ -911,86 +924,60 @@ DO:
  end.
   if lookup ("foto",vargdsscrvw) > 0
   then do:
-   run gbl/newbase.p
-    (input bf-main_bar-code.b-code
-    ,input 16
-    ,output varhexstr
-    ).
-  RUN verify-ini-entry("pict_path":U,
-                        "REP-SETS":U,
-                        "не определен путь к подкаталогу для хранения фото товара" + {&new-line} +
-                        "отсутствует параметр pict_path, секция [REP-SETS] ini-файла",
-                        no,
-                        output Path-To-Dir-Pictures) no-error.
-  if error-status:error
-  or Path-To-Dir-Pictures = ?
-  then do:
-    if search ("buyerscr.bmp") <> ?
-    then do:
-      if varfoto:load-image( "buyerscr.bmp" ) then.
-      view varfoto in frame {&frame-name}.
-    end.
-    else do:
-      hide varfoto in frame {&frame-name}.
-    end.
-  end.
-  define variable v-param-type as character no-undo .
-  define variable v-value-date as date no-undo .
-  define variable v-value-decimal as decimal no-undo .
-  define variable v-value-integer as INTEGER no-undo .
-  define variable v-value-logical AS LOGICAL no-undo .
-  define variable v-tth as handle no-undo .
+      /* Путь к папке изображений c текущей базы*/
+      {gbl/conf-rd.i "'ph-dir':u" "'':u" "'':u" 0 "'':u" "'':u" "'':u" NO vPar-val vPar-type no-error}
+     
+     if vPar-val = "" then vPar-Val = "C:\temp". else vPar-Val = vPar-Val.  
+     
+      /*смотрим схему хранения изображения (общая или по товарам)*/ 
+      run adm/shattri.p (
+        input "get":U
+        ,input  '':U /*p-obj-type*/
+        ,input  0 /*p-obj-code*/
+        ,input  {&attr-gds-ref}
+        ,input  {&attr-gds-ref_shema-foto} /*p-param-code*/
+        ,output v-value-char
+        ,output v-val-date
+        ,output v-val-decimal
+        ,output v-val-integer /*1 - общая директория; 2 по товарам*/
+        ,output v-val-logical
+        ,output v-param-types
+        ,INPUT-OUTPUT table-handle v-tthd
+        ) no-error.
+      delete object v-tthd.
 
-  run adm/shattri.p (
-      input "get":U
-      ,input  ''
-      ,input  0
-      ,input  {&attr-images}
-      ,input  {&attr-images_imgorder} /*p-param-code*/
-      ,output v-image-order
-      ,output v-value-date
-      ,output v-value-decimal
-      ,output v-value-integer
-      ,output v-value-logical
-      ,output v-param-type
-      ,INPUT-OUTPUT table-handle v-tth
-      ) no-error .
+/*определяем путь где лежит картинка*/
+      run gds-attr-value in this-procedure (
+        input bf_goods.gds-code
+        ,input "image-list"
+        ,output v-value
+        ,output v-type) no-error.
 
-  delete object v-tth.
-  if error-status:error
-  or v-image-order = '':u
-  then do:
-    assign
-      v-image-order = "jpg,bmp".
-  end.
-  assign
-    varfile-name = ?
-  .
-  do v-ind = 1 to num-entries (v-image-order) :
-    if search(Path-To-Dir-Pictures + "gds\" + varhexstr + "." + entry(v-ind, v-image-order)) <> ?
-    then do:
-      assign
-        varfile-name = Path-To-Dir-Pictures + "gds\" + varhexstr + "." + entry(v-ind, v-image-order)
-      .
-      leave.
-    end.
-  end.
-  if search( varfile-name ) = ?
-  then do:
-    if search ("buyerscr.bmp") <> ?
-    then do:
-      if varfoto:load-image( "buyerscr.bmp" ) then.
-      view varfoto in frame {&frame-name}.
-    end.
-    else do:
-      hide varfoto in frame {&frame-name}.
-    end.
-  end.
-  else do:
-   if varfoto:load-image( varfile-name ) then.
-   view varfoto in frame {&frame-name}.
-  end.
-end.
+      if v-value <> "" then 
+      do: /* есть атрибут */
+        if v-val-integer = 1 then 
+        do:
+          Path-To-Dir-Pictures = vPar-val + "\gds\" + entry(1,v-value).
+        end.
+        else 
+        do:
+          Path-To-Dir-Pictures = vPar-val + "\gds\" + string(bf_goods.gds-code) + "\" + entry(1,v-value).
+        end. 
+        
+        if varfoto:load-image( Path-To-Dir-Pictures ) then.
+        view varfoto in frame {&frame-name}. 
+      end. /*if v-value <> "" then*/
+      else do:
+            if search ("cmp/buyerscr.bmp") <> ?
+            then do:
+              if varfoto:load-image( "cmp/buyerscr.bmp" ) then.
+              view varfoto in frame {&frame-name}.
+            end.
+            else do:
+              hide varfoto in frame {&frame-name}.
+            end.
+          end.
+       end.
 
 return no-apply.
 

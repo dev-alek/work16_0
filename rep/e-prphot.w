@@ -31,6 +31,7 @@ define variable vss-description as character no-undo init "Прайс-лист с фото тов
 { rep/rep-bt.i   }
 { gbl/usr-flt.i  }
 
+
 CREATE WIDGET-POOL.
 
 /* ***************************  Definitions  ************************** */
@@ -41,6 +42,9 @@ CREATE WIDGET-POOL.
 
 define variable State-source as  WIDGET-HANDLE.
 define variable g#log as logical   no-undo .
+define variable s-ref-rec as character no-undo. /* Список выбранных групп */
+
+define buffer buf_buyer-group for ub.buyer-group.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -60,15 +64,17 @@ define variable g#log as logical   no-undo .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-6 IMAGE-1 IMAGE-2 f-name f-dostavka ~
-SortType f-orderinfo f-action f-skidki f-skidki-2 f-skidki-3 f-skidki-4 ~
-v-colsize f-skidki-5 f-skidki-6 f-telefon-1 f-skidki-7 f-telefon-2 ~
-f-skidki-8 f-hot f-info 
+SortType f-orderinfo f-action btn-grp EDITOR-grp f-skidki f-skidki-2 ~
+f-skidki-3 t-minpart T-ost f-skidki-4 v-colsize f-skidki-5 f-skidki-6 ~
+f-telefon-1 f-skidki-7 f-telefon-2 f-skidki-8 f-hot f-info 
 &Scoped-Define DISPLAYED-OBJECTS f-name f-dostavka SortType f-orderinfo ~
-f-action f-skidki f-skidki-2 f-skidki-3 f-skidki-4 v-colsize f-skidki-5 ~
-f-skidki-6 f-telefon-1 f-skidki-7 f-telefon-2 f-skidki-8 f-hot f-info 
+f-action EDITOR-grp f-skidki f-skidki-2 f-skidki-3 t-minpart T-ost ~
+f-skidki-4 v-colsize f-skidki-5 f-skidki-6 f-telefon-1 f-skidki-7 ~
+f-telefon-2 f-skidki-8 f-hot f-info 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
+&Scoped-define List-2 btn-grp 
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -79,9 +85,20 @@ f-skidki-6 f-telefon-1 f-skidki-7 f-telefon-2 f-skidki-8 f-hot f-info
 
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON btn-grp 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 3 BY .79 TOOLTIP "Выбор из списка".
+
+DEFINE VARIABLE EDITOR-grp AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 37 BY 2.88 NO-UNDO.
+
 DEFINE VARIABLE f-action AS CHARACTER 
      VIEW-AS EDITOR
-     SIZE 37.5 BY 1 TOOLTIP "Оптовая цена действует при покупке 1 минимальной партии"
+     SIZE 37.63 BY 1 TOOLTIP "Оптовая цена действует при покупке 1 минимальной партии"
      BGCOLOR 15  NO-UNDO.
 
 DEFINE VARIABLE f-hot AS CHARACTER 
@@ -91,89 +108,89 @@ DEFINE VARIABLE f-hot AS CHARACTER
 
 DEFINE VARIABLE f-info AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 88.5 BY 2
+     SIZE 88.63 BY 2
      BGCOLOR 15  NO-UNDO.
 
 DEFINE VARIABLE f-orderinfo AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 37.5 BY 3 TOOLTIP "Заказы по текущему прайс-листу присылайте не позднее 15-ти"
+     SIZE 37.63 BY 1.63 TOOLTIP "Заказы по текущему прайс-листу присылайте не позднее 15-ти"
      BGCOLOR 15  NO-UNDO.
 
 DEFINE VARIABLE f-skidki AS CHARACTER 
      VIEW-AS EDITOR
-     SIZE 28 BY 1 TOOLTIP "Информация по скидкам"
+     SIZE 25 BY 1 TOOLTIP "Информация по скидкам"
      BGCOLOR 15 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE f-skidki-2 AS CHARACTER 
      VIEW-AS EDITOR
-     SIZE 28 BY 1 TOOLTIP "Информация по скидкам"
+     SIZE 25 BY 1 TOOLTIP "Информация по скидкам"
      BGCOLOR 15 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE f-skidki-3 AS CHARACTER 
      VIEW-AS EDITOR
-     SIZE 28 BY 1 TOOLTIP "Информация по скидкам"
+     SIZE 25 BY 1 TOOLTIP "Информация по скидкам"
      BGCOLOR 15 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE f-skidki-4 AS CHARACTER 
      VIEW-AS EDITOR
-     SIZE 28 BY 1 TOOLTIP "Информация по скидкам"
+     SIZE 25 BY 1 TOOLTIP "Информация по скидкам"
      BGCOLOR 15 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE f-skidki-5 AS CHARACTER 
      VIEW-AS EDITOR
-     SIZE 28 BY 1 TOOLTIP "Информация по скидкам"
+     SIZE 25 BY 1 TOOLTIP "Информация по скидкам"
      BGCOLOR 15 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE f-skidki-6 AS CHARACTER 
      VIEW-AS EDITOR
-     SIZE 28 BY 1 TOOLTIP "Информация по скидкам"
+     SIZE 25 BY 1 TOOLTIP "Информация по скидкам"
      BGCOLOR 15 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE f-skidki-7 AS CHARACTER 
      VIEW-AS EDITOR
-     SIZE 28 BY 1 TOOLTIP "Информация по скидкам"
+     SIZE 25 BY 1 TOOLTIP "Информация по скидкам"
      BGCOLOR 15 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE f-skidki-8 AS CHARACTER 
      VIEW-AS EDITOR
-     SIZE 28 BY 1 TOOLTIP "Информация по скидкам"
+     SIZE 25 BY 1 TOOLTIP "Информация по скидкам"
      BGCOLOR 15 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE f-dostavka AS CHARACTER FORMAT "X(256)":U 
      LABEL "Ожидаемая дата поставки" 
      VIEW-AS FILL-IN 
-     SIZE 37.5 BY 1 TOOLTIP "Прибытие, Ожидаемая дата поставки"
+     SIZE 37.63 BY 1 TOOLTIP "Прибытие, Ожидаемая дата поставки"
      BGCOLOR 15  NO-UNDO.
 
 DEFINE VARIABLE f-name AS CHARACTER FORMAT "X(256)":U 
      LABEL "Название" 
      VIEW-AS FILL-IN 
-     SIZE 63.5 BY 1 TOOLTIP "Название прайс-листа"
+     SIZE 63.63 BY 1 TOOLTIP "Название прайс-листа"
      BGCOLOR 15  NO-UNDO.
 
 DEFINE VARIABLE f-telefon-1 AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 31.5 BY 1 TOOLTIP "Телефон 1"
+     SIZE 31.63 BY 1 TOOLTIP "Телефон 1"
      BGCOLOR 15  NO-UNDO.
 
 DEFINE VARIABLE f-telefon-2 AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 31.5 BY 1 TOOLTIP "Телефон 2"
+     SIZE 31.63 BY 1 TOOLTIP "Телефон 2"
      BGCOLOR 15  NO-UNDO.
 
 DEFINE VARIABLE v-colsize AS INTEGER FORMAT ">,>>9":U INITIAL 50 
      LABEL "Высота картинок" 
      VIEW-AS FILL-IN 
-     SIZE 5.5 BY 1 TOOLTIP "Высота картинок в пиксилях"
+     SIZE 5.63 BY 1 TOOLTIP "Высота картинок в пиксилях"
      BGCOLOR 15  NO-UNDO.
 
 DEFINE IMAGE IMAGE-1
      FILENAME "exe/own-logo.jpg":U TRANSPARENT
-     SIZE 9.5 BY 7.5.
+     SIZE 9.63 BY 7.5.
 
 DEFINE IMAGE IMAGE-2
      FILENAME "exe/own-tel.jpg":U TRANSPARENT
-     SIZE 26.5 BY 3.38.
+     SIZE 26.63 BY 3.38.
 
 DEFINE VARIABLE SortType AS CHARACTER 
      VIEW-AS RADIO-SET VERTICAL
@@ -185,52 +202,70 @@ DEFINE VARIABLE SortType AS CHARACTER
 
 DEFINE RECTANGLE RECT-6
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 15.5 BY 4.25.
+     SIZE 15.63 BY 4.04.
+
+DEFINE VARIABLE t-minpart AS LOGICAL INITIAL no 
+     LABEL "Обязательное наличие мин.партии" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 38 BY .83 NO-UNDO.
+
+DEFINE VARIABLE T-ost AS LOGICAL INITIAL no 
+     LABEL "Свободный остаток больше мин.партии" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 39 BY .79 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
-     f-name AT ROW 1.21 COL 26.5 COLON-ALIGNED WIDGET-ID 2
-     f-dostavka AT ROW 2.21 COL 42.5 COLON-ALIGNED WIDGET-ID 4
+     f-name AT ROW 1.21 COL 26.63 COLON-ALIGNED WIDGET-ID 2
+     f-dostavka AT ROW 2.21 COL 42.63 COLON-ALIGNED WIDGET-ID 4
      SortType AT ROW 2.25 COL 3 NO-LABEL
-     f-orderinfo AT ROW 3.21 COL 44.5 NO-LABEL WIDGET-ID 26
-     f-action AT ROW 6.25 COL 44.5 NO-LABEL WIDGET-ID 28
-     f-skidki AT ROW 7.83 COL 3 NO-LABEL WIDGET-ID 22
-     f-skidki-2 AT ROW 8.83 COL 3 NO-LABEL WIDGET-ID 34
-     f-skidki-3 AT ROW 9.83 COL 3 NO-LABEL WIDGET-ID 36
-     f-skidki-4 AT ROW 10.83 COL 3 NO-LABEL WIDGET-ID 38
-     v-colsize AT ROW 11.5 COL 83.5 COLON-ALIGNED WIDGET-ID 32
-     f-skidki-5 AT ROW 11.83 COL 3 NO-LABEL WIDGET-ID 40
-     f-skidki-6 AT ROW 12.83 COL 3 NO-LABEL WIDGET-ID 42
-     f-telefon-1 AT ROW 13.17 COL 58 COLON-ALIGNED NO-LABEL WIDGET-ID 6
-     f-skidki-7 AT ROW 13.83 COL 3 NO-LABEL WIDGET-ID 44
+     f-orderinfo AT ROW 3.21 COL 44.63 NO-LABEL WIDGET-ID 26
+     f-action AT ROW 5.04 COL 45 NO-LABEL WIDGET-ID 28
+     btn-grp AT ROW 6.5 COL 41 WIDGET-ID 76
+     EDITOR-grp AT ROW 6.5 COL 45 NO-LABEL WIDGET-ID 70
+     f-skidki AT ROW 7.79 COL 3 NO-LABEL WIDGET-ID 22
+     f-skidki-2 AT ROW 8.79 COL 3 NO-LABEL WIDGET-ID 34
+     f-skidki-3 AT ROW 9.79 COL 3 NO-LABEL WIDGET-ID 36
+     t-minpart AT ROW 9.79 COL 29 WIDGET-ID 78
+     T-ost AT ROW 10.75 COL 29 WIDGET-ID 68
+     f-skidki-4 AT ROW 10.79 COL 3 NO-LABEL WIDGET-ID 38
+     v-colsize AT ROW 11.5 COL 83.63 COLON-ALIGNED WIDGET-ID 32
+     f-skidki-5 AT ROW 11.79 COL 3 NO-LABEL WIDGET-ID 40
+     f-skidki-6 AT ROW 12.79 COL 3 NO-LABEL WIDGET-ID 42
+     f-telefon-1 AT ROW 13.21 COL 58 COLON-ALIGNED NO-LABEL WIDGET-ID 6
+     f-skidki-7 AT ROW 13.79 COL 3 NO-LABEL WIDGET-ID 44
      f-telefon-2 AT ROW 14.29 COL 58 COLON-ALIGNED NO-LABEL WIDGET-ID 8
-     f-skidki-8 AT ROW 14.83 COL 3 NO-LABEL WIDGET-ID 46
+     f-skidki-8 AT ROW 14.79 COL 3 NO-LABEL WIDGET-ID 46
      f-hot AT ROW 16.67 COL 3 NO-LABEL WIDGET-ID 30
      f-info AT ROW 17.75 COL 3 NO-LABEL WIDGET-ID 20
-     "Телефоны:" VIEW-AS TEXT
-          SIZE 9.5 BY .67 AT ROW 12.38 COL 60.13 WIDGET-ID 50
-     "Дополнительная информация:" VIEW-AS TEXT
-          SIZE 34 BY .67 AT ROW 15.92 COL 1.75 WIDGET-ID 58
-     "Информация о скидках:" VIEW-AS TEXT
-          SIZE 24 BY .67 AT ROW 7.17 COL 1.5 WIDGET-ID 52
-     "Оптовая цена действует при покупке:" VIEW-AS TEXT
-          SIZE 36 BY .67 AT ROW 6.33 COL 8 WIDGET-ID 48
-     "и оплаты:" VIEW-AS TEXT
-          SIZE 9.5 BY .67 AT ROW 4.13 COL 33.75 WIDGET-ID 56
+     "../exe/own-tel.jpg" VIEW-AS TEXT
+          SIZE 19 BY .67 AT ROW 12.21 COL 35 WIDGET-ID 18
      "Условия оформления заказа и оплаты:" VIEW-AS TEXT
           SIZE 25 BY .67 AT ROW 3.5 COL 18.75 WIDGET-ID 54
-     "Сортировка :" VIEW-AS TEXT
-          SIZE 11.5 BY .75 AT ROW 1.58 COL 4.63
-          FGCOLOR 4 
-     "../exe/own-tel.jpg" VIEW-AS TEXT
-          SIZE 19 BY .67 AT ROW 11.25 COL 35.5 WIDGET-ID 18
+     "Доп. информация:" VIEW-AS TEXT
+          SIZE 20.25 BY .67 AT ROW 15.92 COL 1.75 WIDGET-ID 58
+     "Группа" VIEW-AS TEXT
+          SIZE 8 BY .63 AT ROW 6.5 COL 32 WIDGET-ID 72
+     "Телефоны:" VIEW-AS TEXT
+          SIZE 9.63 BY .67 AT ROW 12.38 COL 60.25 WIDGET-ID 50
+     "Информация о скидках:" VIEW-AS TEXT
+          SIZE 24 BY .67 AT ROW 7.21 COL 1.63 WIDGET-ID 52
      "../exe/own-logo.jpg" VIEW-AS TEXT
-          SIZE 19.5 BY .67 AT ROW 10.25 COL 72.5 WIDGET-ID 16
+          SIZE 19.63 BY .67 AT ROW 10.25 COL 72.63 WIDGET-ID 16
+     "и оплаты:" VIEW-AS TEXT
+          SIZE 9.63 BY .67 AT ROW 4.13 COL 34.75 WIDGET-ID 56
+     "Оптовая цена действует при покупке:" VIEW-AS TEXT
+          SIZE 35.63 BY .67 AT ROW 5.29 COL 9 WIDGET-ID 48
+     "Покупателей" VIEW-AS TEXT
+          SIZE 12 BY .63 AT ROW 7.42 COL 32 WIDGET-ID 74
+     "Сортировка :" VIEW-AS TEXT
+          SIZE 11.63 BY .75 AT ROW 1.58 COL 4.63
+          FGCOLOR 4 
      RECT-6 AT ROW 1.25 COL 2
      IMAGE-1 AT ROW 2.5 COL 83 WIDGET-ID 12
-     IMAGE-2 AT ROW 12 COL 32.5 WIDGET-ID 14
+     IMAGE-2 AT ROW 13.13 COL 30 WIDGET-ID 14
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1 SCROLLABLE 
@@ -253,8 +288,8 @@ DEFINE FRAME F-Main
 &ANALYZE-SUSPEND _CREATE-WINDOW
 /* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW s-object ASSIGN
-         HEIGHT             = 19.08
-         WIDTH              = 91.63.
+         HEIGHT             = 18.92
+         WIDTH              = 91.75.
 /* END WINDOW DEFINITION */
                                                                         */
 &ANALYZE-RESUME
@@ -281,6 +316,11 @@ ASSIGN
        FRAME F-Main:SCROLLABLE       = FALSE
        FRAME F-Main:HIDDEN           = TRUE.
 
+/* SETTINGS FOR BUTTON btn-grp IN FRAME F-Main
+   2                                                                    */
+ASSIGN 
+       EDITOR-grp:READ-ONLY IN FRAME F-Main        = TRUE.
+
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -296,6 +336,39 @@ ASSIGN
 
  
 
+
+
+/* ************************  Control Triggers  ************************ */
+
+&Scoped-define SELF-NAME btn-grp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn-grp s-object
+ON CHOOSE OF btn-grp IN FRAME F-Main
+DO:
+  define variable ix        as integer no-undo.
+  define variable  lns-cnt      as integer    no-undo .
+  define variable v-ref-rec as character no-undo.
+  run ref/gr-bupr.w (input  my-handle , "b-sel", input-output v-ref-rec ).
+  s-ref-rec = v-ref-rec.
+  EDITOR-grp = "".
+  for first buf_buyer-group where recid(buf_buyer-group) = int(s-ref-rec):
+    if error-status :error then do:
+      return no-apply.
+    end.
+    assign
+      EDITOR-grp = EDITOR-grp + buf_buyer-group.name + {&new-line}.
+    .
+  end.
+  display
+    EDITOR-grp
+    with frame {&frame-name}
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK s-object 
 
@@ -397,7 +470,18 @@ define variable v-list    as character    no-undo.
      v-colsize     = integer(entry(16,v-list, {&delim-par}))
      f-hot         = entry(17,v-list, {&delim-par})
    .
-
+   
+    /* Новые параметры (чтобы не падало при первом запуске) */
+    assign
+    t-minpart = logical(entry(18,v-list, {&delim-par}))
+    T-ost = logical(entry(19,v-list, {&delim-par}))
+    s-ref-rec = entry(20,v-list, {&delim-par})
+    no-error.
+    /* Заполним EDITOR-grp, если были выбраны группы покупателей */
+    for first buf_buyer-group where recid (buf_buyer-group) = int(s-ref-rec):
+        EDITOR-grp = buf_buyer-group.name.
+    end.
+    
      display
      f-name
      f-dostavka
@@ -416,6 +500,9 @@ define variable v-list    as character    no-undo.
      f-skidki-8
      v-colsize
      f-hot
+     t-minpart
+     T-ost
+     EDITOR-grp
      with frame {&frame-name} .
 
  end.
@@ -451,6 +538,9 @@ define variable v-list    as character    no-undo.
      f-skidki-6
      f-skidki-7
      f-skidki-8
+     t-minpart
+     T-ost
+     EDITOR-grp
      with frame {&frame-name} .
 
  end.
@@ -487,7 +577,7 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-report s-object 
 PROCEDURE my-report :
 /*------------------------------------------------------------------------------
-  Purpose:     здесь происходит вызов  процедуры отчета с любыми параметрами
+  Purpose:     здесь происходит вызов  процедуры отчета с любыми пареметрами
 ------------------------------------------------------------------------------*/
   run rep/r-prphot.p (
    input my-handle,
@@ -508,7 +598,10 @@ PROCEDURE my-report :
    input f-skidki-7   ,
    input f-skidki-8   ,
    input v-colsize    ,
-   input f-hot
+   input f-hot        ,
+   input t-minpart,
+   input T-ost   ,
+   input s-ref-rec
    ).
 
 END PROCEDURE.
@@ -539,13 +632,15 @@ assign frame {&frame-name}  SortType
         f-skidki-7
         f-skidki-8
         v-colsize
-        f-hot
+        f-hot        
+        T-ost
+        t-minpart
        .
 
 x-date-end = x-date-alone.
 
  sheetf.Excel-Column-Lable =
-           "Баркод"
+           "Артикул"
   + ","  + "Код"
   + ","  + "Название товара"
   + ","  + "Опт. цена {&abbr_rub}"
@@ -580,7 +675,10 @@ define variable v-list    as character    no-undo.
     f-skidki-7  + {&delim-par} +
     f-skidki-8  + {&delim-par} +
     string(v-colsize) + {&delim-par} +
-    f-hot      .
+    f-hot + {&delim-par} +
+    string(t-minpart) + {&delim-par} +
+    string(t-ost) + {&delim-par} +
+    s-ref-rec.
 
 
   run uf-set in this-procedure (
