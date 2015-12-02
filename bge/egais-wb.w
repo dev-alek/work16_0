@@ -88,12 +88,12 @@ define buffer buf_goods for ub.goods .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Cancel f-good F-ship f-cons 
-&Scoped-Define DISPLAYED-OBJECTS f-good F-ship f-cons 
+&Scoped-Define ENABLED-OBJECTS Btn_Cancel btn_conn F-ship f-cons 
+&Scoped-Define DISPLAYED-OBJECTS F-ship f-cons 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
-&Scoped-define List-1 b-choose-ship b-choose-cons b-choose-good 
+&Scoped-define List-1 b-choose-ship b-choose-cons 
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -112,13 +112,6 @@ DEFINE BUTTON b-choose-cons
      LABEL "b-choose-date-pov-plotn" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-choose-good 
-     IMAGE-UP FILE "btn-down-arrow":U
-     IMAGE-DOWN FILE "btn-down-arrow":U
-     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "b-choose-good" 
-     SIZE 3 BY 1.
-
 DEFINE BUTTON b-choose-ship 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
@@ -131,10 +124,9 @@ DEFINE BUTTON Btn_Cancel AUTO-END-KEY
      SIZE 15 BY 1.13
      BGCOLOR 8 .
 
-DEFINE BUTTON Btn_OK AUTO-GO 
-     LABEL "OK" 
-     SIZE 15 BY 1.13
-     BGCOLOR 8 .
+DEFINE BUTTON btn_conn 
+     LABEL "Связать" 
+     SIZE 15 BY 1.13.
 
 DEFINE VARIABLE f-cons AS CHARACTER FORMAT "X(256)":U 
      LABEL "Объект" 
@@ -150,18 +142,17 @@ DEFINE VARIABLE F-ship AS CHARACTER FORMAT "X(256)":U
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     Btn_OK AT ROW 1.17 COL 90.38
-     Btn_Cancel AT ROW 1.17 COL 106.38
-     b-choose-ship AT ROW 1.21 COL 28 WIDGET-ID 76
-     F-ship AT ROW 1.25 COL 11.5 COLON-ALIGNED WIDGET-ID 2
-     f-cons AT ROW 1.25 COL 39.38 COLON-ALIGNED WIDGET-ID 4
-     b-choose-cons AT ROW 1.25 COL 56.5 WIDGET-ID 74
-     b-choose-good AT ROW 1.25 COL 83.5 WIDGET-ID 72
-     SPACE(35.00) SKIP(25.32)
+     Btn_Cancel AT ROW 1.25 COL 2
+     btn_conn AT ROW 1.25 COL 18.5 WIDGET-ID 78
+     b-choose-ship AT ROW 1.25 COL 49 WIDGET-ID 76
+     F-ship AT ROW 1.29 COL 32.5 COLON-ALIGNED WIDGET-ID 2
+     f-cons AT ROW 1.29 COL 60.38 COLON-ALIGNED WIDGET-ID 4
+     b-choose-cons AT ROW 1.29 COL 77.5 WIDGET-ID 74
+     SPACE(41.00) SKIP(25.28)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Накладная ЕГАИС"
-         DEFAULT-BUTTON Btn_OK CANCEL-BUTTON Btn_Cancel WIDGET-ID 100.
+         CANCEL-BUTTON Btn_Cancel WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -190,11 +181,6 @@ ASSIGN
 ASSIGN 
        b-choose-cons:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
-/* SETTINGS FOR BUTTON b-choose-good IN FRAME Dialog-Frame
-   NO-ENABLE 1                                                          */
-ASSIGN 
-       b-choose-good:HIDDEN IN FRAME Dialog-Frame           = TRUE.
-
 /* SETTINGS FOR BUTTON b-choose-ship IN FRAME Dialog-Frame
    NO-ENABLE 1                                                          */
 ASSIGN 
@@ -211,7 +197,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON window-close OF FRAME Dialog-Frame /* Накладные ЕГАИС */
+ON window-close OF FRAME Dialog-Frame /* Накладная ЕГАИС */
 do:
   apply "END-ERROR":U to self.
 end.
@@ -219,9 +205,10 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME Btn_Sel
+
+&Scoped-define SELF-NAME b-choose-cons
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-choose-cons Dialog-Frame
-ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* Выбор */
+ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
 DO:
 
   run gbl/userobjs.w (
@@ -284,9 +271,10 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME Btn_Sel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-choose-cons Dialog-Frame
-ON CHOOSE OF b-choose-ship IN FRAME Dialog-Frame /* Выбор */
+
+&Scoped-define SELF-NAME b-choose-ship
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-choose-ship Dialog-Frame
+ON CHOOSE OF b-choose-ship IN FRAME Dialog-Frame /* b-choose-ship */
 DO:
 
   def var v-rid-list as character no-undo.
@@ -354,6 +342,26 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME btn_conn
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_conn Dialog-Frame
+ON CHOOSE OF btn_conn IN FRAME Dialog-Frame /* Связать */
+DO:
+  
+  if bh-wb-gds-EG = ?
+    then do:
+      message "Не выбран товар" view-as alert-box.
+      return no-apply.
+    end.
+  run msdblcl.
+  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&UNDEFINE SELF-NAME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
@@ -379,7 +387,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   }
   { gbl/getcntxt.i get }
 
-  find first ub.ext-system where ub.ext-system.delivery-method = integer ({&esys-dm-egais}).
+  find first ub.ext-system where ub.ext-system.whole-send-news = integer ({&esys-dm-egais}).
   
   assign v-ext-sys = ub.ext-system.esys-id .  
   
@@ -474,43 +482,17 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-S USPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
-PROCEDURE enable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     ENABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we display/view/enable the widgets in the
-               user-interface.  In addition, OPEN all queries
-               associated with each FRAME and BROWSE.
-               These statements here are based on the "Other 
-               Settings" section of the widget Property Sheets.
-------------------------------------------------------------------------------*/
-  f-cons = bh-wb-gds-EG-header:buffer-field ("clientCons"):buffer-value.
-  f-ship = bh-wb-gds-EG-header:buffer-field ("client"):buffer-value.
-  display f-cons F-ship with frame Dialog-Frame.
-  ENABLE Btn_OK Btn_Cancel b-choose-cons b-choose-ship
-      WITH FRAME Dialog-Frame.
-  VIEW FRAME Dialog-Frame.
-  bh-wb-egais:find-first ().
-  if bh-wb-gds-EG-header:buffer-field ("client"):buffer-value <> "" 
-    then disable b-choose-ship with frame Dialog-Frame.
-  if bh-wb-gds-EG-header:buffer-field ("clientCons"):buffer-value <> "" 
-    then disable b-choose-cons with frame Dialog-Frame.
-  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE msdblcl Dialog-Frame 
 PROCEDURE msdblcl :
-
-  def var v-rid-list as character no-undo.
+def var v-rid-list as character no-undo.
   define variable par-alcohol as character no-undo .
   define variable par-type    as character no-undo .
   
   if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> ""
-    then return no-apply.
+    then do:
+      message "Товар уже имеет связку" view-as alert-box.
+      return no-apply.
+    end.
   
   run ref/gds-ref.p
     ( parparentproc
@@ -594,3 +576,4 @@ end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

@@ -237,10 +237,14 @@ DO:
       else message "Создание накладной завершено" view-as alert-box.
   end.
   else do:
+    bh-wb-gds-EG = ?.
+    bh-wb-gds-EG-header = ?.
+    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("indenty"):buffer-value).  
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("indenty"):buffer-value).
     egais:SendRequestUTM().
     if egais:StatusErr
       then message egais:Msg view-as alert-box.
-      else message "Создание накладной завершено" view-as alert-box.
+      else message "Накладная отправлена" view-as alert-box.
     
   end.
     
@@ -440,7 +444,7 @@ case RADIO-SET-1 :
     when 2  then 
     do:
       qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-clob-hndls where tt-wb-clob-hndls.trn-doc-code <> '' ").
+      qh-wb-egais:query-prepare ("for each tt-wb-clob-hndls where tt-wb-clob-hndls.trn-doc-code <> '' and  tt-wb-clob-hndls.is-sent = 'нет' and  tt-wb-clob-hndls.is-fact = 'факт' ").
       qh-wb-egais:query-open.
     end.
   end.

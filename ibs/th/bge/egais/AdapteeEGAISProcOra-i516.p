@@ -36,6 +36,7 @@ using ibs.th.skt.Adapters.*.
 define input  parameter table for  tt-wb-header.
 define input  parameter table for  tt-wb-gds-EG.
 define input  parameter userId_ as character no-undo.
+define output parameter doc-code as character no-undo.
 
 
 define variable iDbNum as integer no-undo.
@@ -116,9 +117,15 @@ procedure pcall-log-file:
   
   define input parameter msg as character no-undo.
   
+  if msg begins "n-d" then do:
+    doc-code = entry (2, msg, "=").
+  end.
+  else do: 
   assign 
     MsgLog = msg + {&new-line}
     .
+  end.
+  
 
 end.
 
