@@ -97,6 +97,7 @@ SYSTEM-DIALOG GET-DIR mOldDir
     INITIAL-DIR  mOldDir
     TITLE "Исходная директория"
     .
+
 IF mOldDir > "":U THEN .
 ELSE RETURN.
 mLogFile = SUBSTITUTE ("&1&2.txt":U, SESSION:TEMP-DIRECTORY, GUID).
@@ -123,11 +124,8 @@ FUNCTION DeBase RETURNS INTEGER PRIVATE
         vCode = ASC (SUBSTRING (iString, vPos, 1)).
         IF vCode < 48 OR vCode > 90 THEN RETURN ?.
         vRes = vRes + vMul * (vCode - IF vCode <= 57 THEN 48 ELSE 55). 
-        IF vPos > 1 THEN do:
-            if vMul < 268435455 then vMul = vMul .
-            else vMul = vMul * iBase.
-        end.
-    END.                      
+        IF vPos > 1 THEN vMul = vMul * iBase.
+    END.
     RETURN vRes.
 END FUNCTION.
 
