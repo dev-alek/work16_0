@@ -572,7 +572,16 @@ END.
 ON CHOOSE OF b-lkp IN FRAME Dialog-Frame /* - */
 DO:
     if available tt-gds and tt-gds.gds-code <> 0 and valid-handle(bh-gds-egais) then do :
-        bh-gds-egais:find-first (substitute("where trim(tt-gds-EG.gds-name) = '&1'", trim(tt-gds.gds-name)), no-lock) no-error.
+        if tt-gds.alc-code <> ? and tt-gds.alc-code <> "" then do :
+            bh-gds-egais:find-unique (substitute("where tt-gds-EG.alc-code = '&1'", tt-gds.alc-code), no-lock) no-error.
+        end.
+        else do :
+            bh-gds-egais:find-unique (substitute("where tt-gds-EG.gds-name = '&1'", tt-gds.gds-name), no-lock) no-error.
+        end.
+        if bh-gds-egais:ambiguous then do :
+            message "В ЕГАИС более одного товара с точно таким же наименованием. Сначала свяжите товар" view-as alert-box .
+            return no-apply .
+        end.
         if bh-gds-egais:available then do :
             run bge/egais-gds-diff.w (input rowid(tt-gds), input buffer tt-gds:handle, input bh-gds-egais:handle).
         end.
@@ -655,9 +664,14 @@ on row-display of br-goods IN FRAME Dialog-Frame /* - */
 DO:
     if tt-gds.gds-code = 0 then tt-gds.gds-code:bgcolor in browse br-goods = yellow_color .
     if valid-handle(bh-gds-egais) then do :
-/*        bh-gds-egais:find-unique (substitute("where trim(tt-gds-EG.gds-name) = '&1'", trim(tt-gds.gds-name)), no-lock) no-error.*/
-        bh-gds-egais:find-unique (substitute("where tt-gds-EG.gds-name = '&1'", tt-gds.gds-name), no-lock) no-error.
+        if tt-gds.alc-code <> ? and tt-gds.alc-code <> "" then do :
+            bh-gds-egais:find-unique (substitute("where tt-gds-EG.alc-code = '&1'", tt-gds.alc-code), no-lock) no-error.
+        end.
+        else do :
+            bh-gds-egais:find-unique (substitute("where tt-gds-EG.gds-name = '&1'", tt-gds.gds-name), no-lock) no-error.
+        end.
         if bh-gds-egais:available and not bh-gds-egais:ambiguous and not tt-gds.fromEgais then do :
+            if bh-gds-egais:buffer-field ("gds-name"):buffer-value <> tt-gds.gds-name then tt-gds.gds-name:bgcolor in browse br-goods = red_color .
             if bh-gds-egais:buffer-field ("ms-base"):buffer-value <> tt-gds.ms-base then tt-gds.ms-base:bgcolor in browse br-goods = red_color .
             if bh-gds-egais:buffer-field ("proof"):buffer-value <> tt-gds.proof then tt-gds.proof:bgcolor in browse br-goods = red_color .
             if bh-gds-egais:buffer-field ("alc-code"):buffer-value <> tt-gds.alc-code then tt-gds.alc-code:bgcolor in browse br-goods = red_color .

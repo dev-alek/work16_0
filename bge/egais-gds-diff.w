@@ -28,8 +28,8 @@
 
 define temp-table tt-gds-diff no-undo
     field label_ as character
-    field TH-value as character
-    field EGAIS-value as character
+    field TH-value as character     format "X(100)"
+    field EGAIS-value as character  format "X(100)"
     index pi as primary
         label_
 .        
@@ -104,12 +104,12 @@ DEFINE BROWSE br-gds-diff
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-objs-diff Dialog-Frame _FREEFORM
   QUERY br-gds-diff DISPLAY
     tt-gds-diff.label_ COLUMN-LABEL "Название поля" FORMAT "X(22)":U 
-    tt-gds-diff.TH-value COLUMN-LABEL "Значение в TH" FORMAT "X(35)":U
-    tt-gds-diff.EGAIS-value COLUMN-LABEL "Значение ЕГАИС" FORMAT "X(35)":U  
+    tt-gds-diff.TH-value COLUMN-LABEL "Значение в TH" FORMAT "X(100)":U width 39
+    tt-gds-diff.EGAIS-value COLUMN-LABEL "Значение ЕГАИС" FORMAT "X(100)":U width 40 
       
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 93 BY 11.19 ROW-HEIGHT-CHARS .57 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 107 BY 11.19 ROW-HEIGHT-CHARS .57 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -211,20 +211,26 @@ RUN disable_UI.
 procedure fill-tt :
     def var ii as integer no-undo .
     bh-gds:find-by-rowid (p-rowid, no-lock) no-error.
-    if bh-gds:available then 
-    bh-gds-egais:find-first (substitute("where trim(tt-gds-EG.gds-name) = '&1'", trim(bh-gds:buffer-field ("gds-name"):buffer-value)), no-lock) no-error.
-    if bh-gds-egais:available then do :
-        do ii = 3 to bh-gds-egais:num-fields :
-            if bh-gds:buffer-field (ii):buffer-value <> bh-gds-egais:buffer-field (ii):buffer-value then do :
-                create tt-gds-diff .
-                assign
-                    tt-gds-diff.label_ = bh-gds:buffer-field (ii):label
-                    tt-gds-diff.TH-value = string(bh-gds:buffer-field (ii):buffer-value)
-                    tt-gds-diff.EGAIS-value = string(bh-gds-egais:buffer-field (ii):buffer-value)
-                .
-            end.             
-        end.           
-    end.  
+    if bh-gds:available then do : 
+        if bh-gds:buffer-field ("alc-code"):buffer-value <> ? and bh-gds:buffer-field ("alc-code"):buffer-value <> "" then do :
+            bh-gds-egais:find-unique (substitute("where tt-gds-EG.alc-code = '&1'", bh-gds:buffer-field ("alc-code"):buffer-value), no-lock) no-error.
+        end.
+        else do :
+            bh-gds-egais:find-unique (substitute("where tt-gds-EG.gds-name = '&1'", bh-gds:buffer-field ("gds-name"):buffer-value), no-lock) no-error.
+        end.
+        if bh-gds-egais:available then do :
+            do ii = 2 to bh-gds-egais:num-fields :
+                if bh-gds:buffer-field (ii):buffer-value <> bh-gds-egais:buffer-field (ii):buffer-value then do :
+                    create tt-gds-diff .
+                    assign
+                        tt-gds-diff.label_ = bh-gds:buffer-field (ii):label
+                        tt-gds-diff.TH-value = string(bh-gds:buffer-field (ii):buffer-value)
+                        tt-gds-diff.EGAIS-value = string(bh-gds-egais:buffer-field (ii):buffer-value)
+                    .
+                end.             
+            end.           
+        end. 
+    end. 
 end procedure.    
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
@@ -258,6 +264,7 @@ PROCEDURE enable_UI :
   ENABLE b-ok br-gds-diff 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
+  br-gds-diff:column-resizable in FRAME Dialog-Frame = true .
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
