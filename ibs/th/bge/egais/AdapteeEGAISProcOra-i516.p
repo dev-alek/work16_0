@@ -104,9 +104,10 @@ do:
     input table temp_doc-line ,
     output num-rec-ok
     ) no-error .
-  MsgLog = return-value + {&new-line} . 
   if error-status:error 
-    then return error MsgLog.
+  then do: 
+    return error MsgLog.
+  end.
   
   
 

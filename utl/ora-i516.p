@@ -297,12 +297,12 @@ for each  temp_trn-doc :
 
    if not (temp_trn-doc.cli-type = {&cmp} or temp_trn-doc.cli-type = {&prs} or temp_trn-doc.cli-type = {&stock} or temp_trn-doc.cli-type = {&shop}) /*для oracle вообще не присылают, значит из tsd*/ 
    then do: 
-      run who-cli-ora in this-procedure (
-          input  temp_trn-doc.cli-code ,
-          output temp_trn-doc.cli-type ,
-          output temp_trn-doc.cli-code
-          ) no-error .
-          if error-status :error then return error return-value .
+     run who-cli-ora in this-procedure (
+       input  temp_trn-doc.cli-code ,
+       output temp_trn-doc.cli-type ,
+       output temp_trn-doc.cli-code
+       ) no-error .
+     if error-status :error then return error return-value .
    end.
    else do:
      is-tsd = true.
@@ -500,6 +500,7 @@ assign
       tt-trn-doc.base-scale
       }
       /* coздание шапки в базе */
+    run pcall-log-file in p-log-handle ( input "n-d=" + n-d ) .
     if v-doc-type     = {&expense} then do:
       if tt-trn-doc.contract-code > 0 then do:
         find first buf_contract no-lock where
@@ -907,7 +908,7 @@ assign
               
 
             
-end.
+          end.
 
   end.
 
@@ -952,28 +953,28 @@ end.
           /* проверка спецификаций */
            if v-specif 
            then do:
-           for each tt-parts          :
-              find first buf_goods no-lock  where
-                    tt-parts.artic     = buf_goods.artic    and
-                    tt-parts.prod-type = buf_goods.prod-type  and
-                    tt-parts.prod-code = buf_goods.prod-code
-                    no-error .
-
-              { str/ckcntspc.i
-                tt-parts.host-code
-                tt-parts.contract-code
-                buf_goods.gds-code
-                tt-parts.price-cli
-                tt-parts.VAT-type
-                tt-parts.VAT-pc
-                no-error
-              }
-          end.
-          if error-status :error then do:
-            v-end-message = substitute("Ошибка  &1 &2 " , error-status :get-message(1)  , return-value ) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            undo, return error v-end-message.
-          end.
+              for each tt-parts          :
+                 find first buf_goods no-lock  where
+                       tt-parts.artic     = buf_goods.artic    and
+                       tt-parts.prod-type = buf_goods.prod-type  and
+                       tt-parts.prod-code = buf_goods.prod-code
+                       no-error .
+   
+                 { str/ckcntspc.i
+                   tt-parts.host-code
+                   tt-parts.contract-code
+                   buf_goods.gds-code
+                   tt-parts.price-cli
+                   tt-parts.VAT-type
+                   tt-parts.VAT-pc
+                   no-error
+                 }
+             end.
+             if error-status :error then do:
+               v-end-message = substitute("Ошибка  &1 &2 " , error-status :get-message(1)  , return-value ) .
+               run pcall-log-file in p-log-handle ( input v-end-message ) .
+               undo, return error v-end-message.
+             end.
           end.
 
       
@@ -997,7 +998,7 @@ end.
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
           end.
-
+          
           if is-tsd then do:
             
             for each ub.doc-line exclusive-lock where new_trn-doc.doc-code = ub.doc-line.doc-code:
@@ -1025,12 +1026,12 @@ end.
           end.
           
           if not is-tsd then do:
-          run gbl/calc-trn.p ( this-procedure  , recid(new_trn-doc)) no-error .
-          if error-status :error then do:
-            v-end-message = substitute(" Ошибка пересчета &1 &2 " , error-status :get-message(1)  , return-value ) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            undo, return error v-end-message.
-          end.
+            run gbl/calc-trn.p ( this-procedure  , recid(new_trn-doc)) no-error .
+            if error-status :error then do:
+              v-end-message = substitute(" Ошибка пересчета &1 &2 " , error-status :get-message(1)  , return-value ) .
+              run pcall-log-file in p-log-handle ( input v-end-message ) .
+              undo, return error v-end-message.
+            end.
           end.
 
           find current new_trn-doc exclusive-lock .
@@ -1106,16 +1107,16 @@ end.
                 ub.doc-line.cli-qnty = temp_doc-line.fact-qnty.
                 
               end.
-
+              
             end.
 
             if not is-tsd then do: 
-            run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
-            if error-status :error then do:
-              v-end-message = substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
-              run pcall-log-file in p-log-handle ( input v-end-message ) .
-              undo, return error v-end-message.
-            end.
+              run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
+              if error-status :error then do:
+                v-end-message = substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
+                run pcall-log-file in p-log-handle ( input v-end-message ) .
+                undo, return error v-end-message.
+              end.
             end.
 
             if v-ext-doc-type = {&TDEDT_Ras_Vnesh} and not is-tsd then do:
@@ -1137,6 +1138,7 @@ end.
                       undo, return error v-end-message.
                   end.
                 end.
+
             run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
                 if error-status:error then do :
                    v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
@@ -1218,7 +1220,8 @@ define variable varflag            like ub.trn-doc.flag     no-undo.
 define variable varcopystatus      like ub.trn-doc.status_  no-undo.
 define variable varcopyflag        like ub.trn-doc.flag     no-undo.
 define variable varcheck-return as logical no-undo .
-define variable varchg-inv as logical no-undo .
+define variable varchg-inv      as logical no-undo .
+
 assign
   varmode         = {&close-doc}
   varstatus       = {&inquiry}
@@ -1534,12 +1537,12 @@ define variable varnew-price like ub.doc-line.price-base no-undo.
        end.
    end.
     if not is-tsd then do:
-    run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
-    if error-status :error then do:
-      v-end-message = substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
-      run pcall-log-file in p-log-handle ( input v-end-message ) .
-      undo, return error v-end-message.
-    end.
+      run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
+      if error-status :error then do:
+        v-end-message = substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
+        run pcall-log-file in p-log-handle ( input v-end-message ) .
+        undo, return error v-end-message.
+      end.
     end.
 
   end.

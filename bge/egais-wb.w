@@ -144,11 +144,11 @@ DEFINE VARIABLE F-ship AS CHARACTER FORMAT "X(256)":U
 DEFINE FRAME Dialog-Frame
      Btn_Cancel AT ROW 1.25 COL 2
      btn_conn AT ROW 1.25 COL 18.5 WIDGET-ID 78
-     b-choose-ship AT ROW 1.25 COL 49 WIDGET-ID 76
-     F-ship AT ROW 1.29 COL 32.5 COLON-ALIGNED WIDGET-ID 2
-     f-cons AT ROW 1.29 COL 60.38 COLON-ALIGNED WIDGET-ID 4
-     b-choose-cons AT ROW 1.29 COL 77.5 WIDGET-ID 74
-     SPACE(41.00) SKIP(25.28)
+     b-choose-ship AT ROW 1.25 COL 61 WIDGET-ID 76
+     F-ship AT ROW 1.29 COL 44.5 COLON-ALIGNED WIDGET-ID 2
+     f-cons AT ROW 1.29 COL 72.38 COLON-ALIGNED WIDGET-ID 4
+     b-choose-cons AT ROW 1.29 COL 89.5 WIDGET-ID 74
+     SPACE(29.00) SKIP(25.28)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Накладная ЕГАИС"
@@ -264,7 +264,7 @@ DO:
   gh-wb-egais-header:query-open.
 
   browse-hdl-wb-egais-header:query = gh-wb-egais-header.
-  run enable_UI.
+  run refresh-view.
 
 END.
 
@@ -334,7 +334,7 @@ DO:
   gh-wb-egais-header:query-open.
 
   browse-hdl-wb-egais-header:query = gh-wb-egais-header.
-  run enable_UI.
+  run refresh-view.
 
 END.
 
@@ -399,7 +399,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       x         = 10
       y         = 42
       width     = 119
-      height    = 4
+      height    = 5
       visible   = true
       read-only = true
       sensitive = true
@@ -454,6 +454,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     bcol = browse-hdl-wb-egais-header:add-like-column('tt-wb-header' + '.' + bh-wb-gds-EG-header:buffer-field (ii):name, 0, 'FILL-IN').
   end.
   run enable_UI.  
+  run refresh-view.
 
   wait-for go of frame {&FRAME-NAME}.
 end.
@@ -477,6 +478,28 @@ PROCEDURE disable_UI :
 ------------------------------------------------------------------------------*/
   /* Hide all frames. */
   HIDE FRAME Dialog-Frame.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
+PROCEDURE enable_UI :
+/*------------------------------------------------------------------------------
+  Purpose:     ENABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we display/view/enable the widgets in the
+               user-interface.  In addition, OPEN all queries
+               associated with each FRAME and BROWSE.
+               These statements here are based on the "Other 
+               Settings" section of the widget Property Sheets.
+------------------------------------------------------------------------------*/
+  DISPLAY F-ship f-cons 
+      WITH FRAME Dialog-Frame.
+  ENABLE Btn_Cancel btn_conn F-ship f-cons 
+      WITH FRAME Dialog-Frame.
+  VIEW FRAME Dialog-Frame.
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -570,10 +593,30 @@ def var v-rid-list as character no-undo.
   gh-wb-egais-header:query-open.
 
   browse-hdl-wb-egais-header:query = gh-wb-egais-header.
-  run enable_UI.
+  run refresh-view.
 
 end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-view Dialog-Frame 
+PROCEDURE refresh-view :
+
+  f-cons = bh-wb-gds-EG-header:buffer-field ("clientCons"):buffer-value.
+  f-ship = bh-wb-gds-EG-header:buffer-field ("client"):buffer-value.
+  display Btn_Cancel b-choose-cons b-choose-ship btn_conn f-cons F-ship with frame Dialog-Frame.
+  ENABLE Btn_Cancel b-choose-cons b-choose-ship btn_conn
+      WITH FRAME Dialog-Frame.
+  VIEW FRAME Dialog-Frame.
+  bh-wb-egais:find-first ().
+  if bh-wb-gds-EG-header:buffer-field ("client"):buffer-value <> "" 
+    then disable b-choose-ship with frame Dialog-Frame.
+  if bh-wb-gds-EG-header:buffer-field ("clientCons"):buffer-value <> "" 
+    then disable b-choose-cons with frame Dialog-Frame.
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
