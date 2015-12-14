@@ -2291,6 +2291,8 @@ define buffer buf_chk-discnt for ub.chk-discnt.
         end.
       end.
     end. /*if exist*/
+    assign
+      disc-d-card = "".
   end.
 
 end procedure. /* proc-disc */
