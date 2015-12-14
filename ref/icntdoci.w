@@ -265,10 +265,10 @@ DEFINE VARIABLE boss-name AS CHARACTER FORMAT "x(256)":U
      SIZE 14 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE v-delta AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0
+DEFINE VARIABLE v-delta AS DECIMAL FORMAT "->>>,>>>,>>>,>>>,>>9.999":U INITIAL 0
      LABEL "Разница"
       VIEW-AS TEXT
-     SIZE 19 BY .67 NO-UNDO.
+     SIZE 23 BY .67 NO-UNDO.
 
 DEFINE VARIABLE wrkr-name AS CHARACTER FORMAT "x(256)":U
       VIEW-AS TEXT
@@ -293,10 +293,10 @@ DEFINE BROWSE br-line
       {&sort-clmn_1-br-dtl}                 COLUMN-LABEL {&label-clmn_1-br-dtl}
 {&sort-clmn_2-br-dtl}                 COLUMN-LABEL {&label-clmn_2-br-dtl}
 {&sort-clmn_3-br-dtl}                 COLUMN-LABEL {&label-clmn_3-br-dtl}
-{&sort-clmn_4-br-dtl}                 COLUMN-LABEL {&label-clmn_4-br-dtl}
-{&sort-clmn_5-br-dtl}                 COLUMN-LABEL {&label-clmn_5-br-dtl}
-{&sort-clmn_6-br-dtl}  @ v-delta-line COLUMN-LABEL {&label-clmn_6-br-dtl} format "->>>,>>>,>>9.999"
-{&sort-clmn_7-br-dtl}                 COLUMN-LABEL {&label-clmn_7-br-dtl}
+{&sort-clmn_4-br-dtl}                 COLUMN-LABEL {&label-clmn_4-br-dtl} FORMAT "->>>,>>>,>>>,>>9.999"
+{&sort-clmn_5-br-dtl}                 COLUMN-LABEL {&label-clmn_5-br-dtl} FORMAT "->>>,>>>,>>>,>>9.999"
+{&sort-clmn_6-br-dtl}  @ v-delta-line COLUMN-LABEL {&label-clmn_6-br-dtl} FORMAT "->>>,>>>,>>>,>>9.999"
+{&sort-clmn_7-br-dtl}                 COLUMN-LABEL {&label-clmn_7-br-dtl} FORMAT "->>>,>>>,>>>,>>9.999"
 {&sort-clmn_8-br-dtl}                 COLUMN-LABEL {&label-clmn_8-br-dtl}
 {&sort-clmn_9-br-dtl}                 COLUMN-LABEL {&label-clmn_9-br-dtl}
 ENABLE
@@ -366,21 +366,21 @@ DEFINE FRAME Dialog-Frame
           SIZE 40 BY .67
           FGCOLOR 4
      wrkr-name AT ROW 4 COL 16 COLON-ALIGNED NO-LABEL
-     tt-icnt-doc.state-el-cnt AT ROW 4 COL 75 COLON-ALIGNED
+     tt-icnt-doc.state-el-cnt AT ROW 4 COL 75 COLON-ALIGNED FORMAT "->>>,>>>,>>>,>>>,>>9.999"
           LABEL "Показания электронных счетчиков"
            VIEW-AS TEXT
-          SIZE 19 BY .67
+          SIZE 23 BY .67
      agnt-name AT ROW 5 COL 16 COLON-ALIGNED NO-LABEL
-     tt-icnt-doc.state-mh-cnt AT ROW 5 COL 75 COLON-ALIGNED
+     tt-icnt-doc.state-mh-cnt AT ROW 5 COL 75 COLON-ALIGNED FORMAT "->>>,>>>,>>>,>>>,>>9.999"
           LABEL "Показания механических счетчиков"
            VIEW-AS TEXT
-          SIZE 19 BY .67
+          SIZE 23 BY .67
      boss-name AT ROW 6 COL 16 COLON-ALIGNED NO-LABEL
      v-delta AT ROW 6 COL 75 COLON-ALIGNED
-     tt-icnt-doc.meas-el-cnt AT ROW 7 COL 75 COLON-ALIGNED
+     tt-icnt-doc.meas-el-cnt AT ROW 7 COL 75 COLON-ALIGNED FORMAT "->>>,>>>,>>>,>>>,>>9.999"
           LABEL "Измерения электронных счетчиков"
            VIEW-AS TEXT
-          SIZE 19 BY .67
+          SIZE 23 BY .67
      SPACE(3.89) SKIP(14.59)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
