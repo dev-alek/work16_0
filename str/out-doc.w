@@ -2029,7 +2029,7 @@ define menu m-ptrl
 { gbl/f2.i br-dtl " " " " parparentproc }
 { gbl/hot-key.i b-mark }
 { str/sch-line.i doc-line br-dtl }
-end.
+
 IF mImagePh THEN
 DO:
     DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
@@ -2052,7 +2052,7 @@ ELSE
         g-image:VISIBLE    = NO
         g-image:SENSITIVE  = NO
         .
-
+end.
 
 on end-error of gds-dtl.doc-qnty in browse {&browse-name} do:
   display gds-dtl.doc-qnty with browse {&browse-name}.

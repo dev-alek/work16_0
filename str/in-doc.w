@@ -827,8 +827,8 @@ DEFINE FRAME d-in-doc
      varcontract-prn-code AT ROW 2 COL 74 COLON-ALIGNED
      b-contr-lkp AT ROW 2 COL 97.5
      r-clients AT ROW 2.04 COL 26
-     r-currency AT ROW 3 COL 15.75
-     t-doc.exch-code AT ROW 3.04 COL 10 COLON-ALIGNED
+     r-currency AT ROW 3 COL 18.25
+     t-doc.exch-code AT ROW 3.04 COL 7.13 COLON-ALIGNED
           LABEL "Ва&люта"
           VIEW-AS FILL-IN
           SIZE 4 BY .92
@@ -906,26 +906,26 @@ DEFINE FRAME d-in-doc
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME d-in-doc
-     t-doc.fact-date AT ROW 10 COL 5 COLON-ALIGNED
+     t-doc.fact-date AT ROW 10 COL 23 COLON-ALIGNED
           VIEW-AS FILL-IN
           SIZE 9.75 BY 1
           FGCOLOR 4
-     t-doc.shift-date AT ROW 10 COL 21.5 COLON-ALIGNED
+     t-doc.shift-date AT ROW 10 COL 39.5 COLON-ALIGNED
           LABEL "&Смена"
           VIEW-AS FILL-IN
           SIZE 9 BY 1
           FGCOLOR 4 
-     t-doc.shift-name AT ROW 10 COL 49.63 COLON-ALIGNED
+     t-doc.shift-name AT ROW 10 COL 53.25 COLON-ALIGNED
           LABEL "&№"
           VIEW-AS FILL-IN
           SIZE 3 BY 1 TOOLTIP "Номер смены"
           FGCOLOR 4 
-     t-doc.shift-num AT ROW 10 COL 55.75 COLON-ALIGNED
+     t-doc.shift-num AT ROW 10 COL 59.38 COLON-ALIGNED
           LABEL "П"
           VIEW-AS FILL-IN
           SIZE 3 BY 1 TOOLTIP "Порядок смен"
           FGCOLOR 4 
-     r-sht AT ROW 10 COL 60.75
+     r-sht AT ROW 10 COL 64.38
      t-doc.SLT-type AT ROW 11 COL 5 COLON-ALIGNED
           VIEW-AS COMBO-BOX INNER-LINES 3
           LIST-ITEMS "без","нет","в т. ч."
@@ -975,7 +975,7 @@ DEFINE FRAME d-in-doc
      b-renum AT ROW 14.63 COL 52.25
      varinplnsum AT ROW 14.71 COL 59.38
      br-dtl AT ROW 15.75 COL 1
-     ub.currency.curr-abbr AT ROW 3 COL 10.75 COLON-ALIGNED NO-LABEL
+     ub.currency.curr-abbr AT ROW 3 COL 11.88 COLON-ALIGNED NO-LABEL
            VIEW-AS TEXT 
           SIZE 4 BY 1
           FGCOLOR 4 
