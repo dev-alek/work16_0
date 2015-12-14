@@ -143,7 +143,7 @@ procedure get-userid:
 
   define output parameter pUserId as character no-undo.
   assign
-    pUserId = userId_
+    pUserId = userId_ + ",egais"
     .
   
 end.
