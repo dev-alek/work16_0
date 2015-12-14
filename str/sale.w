@@ -464,7 +464,7 @@ DEFINE VARIABLE prod-name-v LIKE ub.clients.obj-name
 
 DEFINE VARIABLE for-discnt-chr as character
       VIEW-AS TEXT
-     SIZE 32 BY 1 NO-UNDO FORMAT "X(42)".
+     SIZE 19 BY 1 NO-UNDO FORMAT "X(42)".
 
 DEFINE VARIABLE Cb-doc-kind AS CHARACTER FORMAT "X(256)":U
     VIEW-AS COMBO-BOX INNER-LINES 5
