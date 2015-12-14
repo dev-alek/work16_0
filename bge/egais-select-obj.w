@@ -197,16 +197,25 @@ PROCEDURE create-br :
             read-only   = false
             sensitive   = true
             separators  = true 
+            fit-last-column = false
             column-resizable = true
+            column-scrolling = true
     .
     br-hndl-objs:add-like-column ("tt-objs-eg.regID") .
+    br-hndl-objs:add-like-column ("tt-objs-eg.obj-name-egais") .
+    br-hndl-objs:add-like-column ("tt-objs-eg.obj-name-egais-short") .
     br-hndl-objs:add-like-column ("tt-objs-eg.description_") .
     br-hndl-objs:get-browse-column (1):width-chars = 21.
-    br-hndl-objs:get-browse-column (2):width-chars = 79.
+    br-hndl-objs:get-browse-column (2):width-chars = 35.
+    br-hndl-objs:get-browse-column (3):width-chars = 35.
+    br-hndl-objs:get-browse-column (3):width-chars = 44.
     br-hndl-objs:get-browse-column (1):label = "Регистрационный номер".
-    br-hndl-objs:get-browse-column (2):label = "Адрес".
+    br-hndl-objs:get-browse-column (2):label = "Наименование объекта".
+    br-hndl-objs:get-browse-column (3):label = "Короткое наименование".
+    br-hndl-objs:get-browse-column (4):label = "Адрес".
 
     if qh-objs-egais:num-results > 0 then br-hndl-objs:refresh().
+    br-hndl-objs:num-locked-columns = 1 .
     br-hndl-objs:expandable = true.
 END PROCEDURE.
 

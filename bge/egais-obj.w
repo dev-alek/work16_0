@@ -114,6 +114,8 @@ define variable v-regID     as character no-undo .
 
 define variable v-obj-uniq-key-rec as character no-undo .
 
+define variable glog        as logical no-undo .
+
 define variable v-value-character  as character no-undo .
 define variable v-value-decimal    as decimal   no-undo .
 define variable v-value-integer    as integer   no-undo .
@@ -363,6 +365,18 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-cancel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel Dialog-Frame
+ON CHOOSE OF b-cancel IN FRAME Dialog-Frame /* - */
+DO:
+    message "Все несохранённые данные будут потеряны. Вы уверены, что хотите выйти?"
+    view-as alert-box question buttons yes-no update glog.
+    if not glog then return no-apply . 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME b-save
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-save Dialog-Frame
 ON CHOOSE OF b-save IN FRAME Dialog-Frame /* - */
@@ -457,6 +471,7 @@ DO:
             end. /* if bh-obj-egais:available and not bh-obj-egais:ambiguous */
         end. /* for first tt-objs exclusive-lock */
     end. /* do ii = 1 to num-entries(select-list) */
+    message "Сохранение завершено" view-as alert-box.
     disable b-connect WITH FRAME Dialog-Frame.
     {&browse-name}:refresh() in frame {&frame-name} .
 /*    {&OPEN-QUERY-br-objects}*/

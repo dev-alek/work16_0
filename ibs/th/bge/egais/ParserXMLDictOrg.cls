@@ -21,7 +21,7 @@ class ibs.th.bge.egais.ParserXMLDictOrg inherits EGAISUTM:
         field obj-type          like ub.clients.obj-type
         field obj-code          like ub.clients.obj-code
         field obj-name-th       as character label "Наименование в TH"
-        field obj-name-egais    as character label "Наименование ЕГАИС"
+        field obj-name-egais    as character label "Наименование ЕГАИС"    format "X(100)"
         field regID             as character label "Регистрационный номер" format "X(21)"
         field inn               as character label "ИНН"
         field kpp               as character label "КПП"
@@ -39,6 +39,7 @@ class ibs.th.bge.egais.ParserXMLDictOrg inherits EGAISUTM:
         field description_      as character label "Адрес"                  format "X(100)"
         field fromEgais         as logical
         field connected_        as logical
+        field obj-name-egais-short as character label "Короткое наименование ЕГАИС" format "X(100)"
         index pi 
 /*            as primary*/
 /*         unique*/
@@ -98,6 +99,7 @@ class ibs.th.bge.egais.ParserXMLDictOrg inherits EGAISUTM:
             IF hNoderef:NAME = "oref:INN"         THEN assign tt-objs-EG.inn            = hText:node-value .
             IF hNoderef:NAME = "oref:KPP"         THEN assign tt-objs-EG.kpp            = hText:node-value .
             IF hNoderef:NAME = "oref:FullName"    THEN assign tt-objs-EG.obj-name-egais = hText:node-value .
+            IF hNoderef:NAME = "oref:ShortName"   THEN assign tt-objs-EG.obj-name-egais-short = hText:node-value .
             IF hNoderef:NAME = "oref:Country"     THEN assign tt-objs-EG.country        = hText:node-value .
             IF hNoderef:NAME = "oref:Index"       THEN assign tt-objs-EG.postIndex      = hText:node-value .
             IF hNoderef:NAME = "oref:RegionCode"  THEN assign tt-objs-EG.regionCode     = hText:node-value .
