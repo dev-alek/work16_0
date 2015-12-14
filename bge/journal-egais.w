@@ -45,6 +45,7 @@ define variable bcol1                 as handle no-undo.
 define variable bcol2                 as handle no-undo.
 define variable bcol3                 as handle no-undo.
 define variable bcol4                 as handle no-undo.
+define variable bcol5                 as handle no-undo.
 define variable egais                as class EGAIS   no-undo.
 define variable journal              as class Journal no-undo.
 define variable v-db-num             as integer   no-undo .
@@ -107,7 +108,7 @@ DEFINE BROWSE BROWSE-Journal-egais
   
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 107.5 BY 23 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 135 BY 25.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -115,7 +116,7 @@ DEFINE BROWSE BROWSE-Journal-egais
 DEFINE FRAME Dialog-Frame
      Btn_Cancel AT ROW 1 COL 1
      RADIO-SET-1 AT ROW 1.04 COL 31 NO-LABEL WIDGET-ID 2
-     BROWSE-Journal-egais AT ROW 3 COL 1.5 WIDGET-ID 200
+     BROWSE-Journal-egais AT ROW 3 COL 1 WIDGET-ID 200
      SPACE(0.50) SKIP(0.24)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -219,7 +220,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
           bcol4 = browse-journal-egais:get-browse-column(4).
           
-
+          bcol5 = browse-journal-egais:get-browse-column(5).
+          
 on row-display of browse-journal-egais IN FRAME Dialog-Frame  /* - */
 DO:
     if bh-journal-egais:buffer-field ("jou-status"):buffer-value  = "Запрос отправлен" then do:
@@ -227,7 +229,8 @@ DO:
         bcol2:bgcolor = YELLOW_COLOR.
         bcol3:bgcolor = YELLOW_COLOR.
         bcol4:bgcolor = YELLOW_COLOR.
-        bcol:bgcolor = YELLOW_COLOR . 
+        bcol:bgcolor  = YELLOW_COLOR .
+        bcol5:bgcolor = YELLOW_COLOR .  
     end.
 end.    
 
