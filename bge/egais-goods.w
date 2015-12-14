@@ -410,6 +410,18 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-cancel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel Dialog-Frame
+ON CHOOSE OF b-cancel IN FRAME Dialog-Frame /* - */
+DO:
+    message "Все несохранённые данные будут потеряны. Вы уверены, что хотите выйти?"
+    view-as alert-box question buttons yes-no update glog.
+    if not glog then return no-apply . 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME b-prod
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-prod Dialog-Frame
 ON CHOOSE OF b-prod IN FRAME Dialog-Frame /* - */
@@ -443,7 +455,8 @@ ON CHOOSE OF b-connect IN FRAME Dialog-Frame /* - */
 DO:
     if not available tt-gds then return no-apply.
     assign v-rid = recid(tt-gds) .
-    if tt-gds.gds-code = ? or tt-gds.gds-code = 0 then do :
+/*    if tt-gds.gds-code = ? or tt-gds.gds-code = 0 then do :*/
+    if tt-gds.fromEgais then do :
         run ref/gds-ref.p (parparentproc, 'b-sel', ?, ?, ?, ?, ?, ?, ?, v-cntxt-obj-type, v-cntxt-obj-code, ?, output ref-list) no-error.
         if error-status:error or ref-list = ? or ref-list = "" then 
         do:
@@ -487,7 +500,7 @@ DO:
             else do :
                 bh-gds-egais:find-unique (substitute("where trim(tt-gds-EG.gds-name) = '&1'", trim(tt-gds.gds-name)), no-lock) no-error.
             end.
-            if bh-gds-egais:available and not bh-gds-egais:ambiguous then do transaction :
+            if bh-gds-egais:available and not bh-gds-egais:ambiguous and tt-gds.alc-code <> "" then do transaction :
                 if tt-gds.alc-type-code <> bh-gds-egais:buffer-field("alc-type-code"):buffer-value then do :                        
                     find first ub.alc-type no-lock
                          where ub.alc-type.alc-type-code = trim(bh-gds-egais:buffer-field("alc-type-code"):buffer-value) no-error .
@@ -512,46 +525,46 @@ DO:
                         buf_goods.ms-base  = tt-gds.ms-base
                         buf_goods.proof    = tt-gds.proof
                     .
-                    if tt-gds.alc-code <> "" then do :
-                        run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
-                                                            ,input (buffer buf_goods:handle)
-                                                            ,output v-gds-uniq-key-rec).
-                        find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_goods} 
-                                                                   and X_ext-classif.classif-name = {&extclass_goods_esys} 
-                                                                   AND X_ext-classif.db-num = 0  
-                                                                   and X_ext-classif.key#_one = buf_goods.gds-code
-                                                                   and X_ext-classif.key#_two = v-ext-sys 
-                                                                   and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
-                                                                   no-error. 
-                        if available X_ext-classif then do :    
-                            assign X_ext-classif.charkey_one = tt-gds.alc-code .
-                        end.                                    
-                        else do :                                    
-                            run ref/extclas1.p ( 
-                                INPUT {&add-def}
-                                ,INPUT yes /*p-silent*/
-                                ,INPUT-OUTPUT v-rid
-                                ,INPUT {&table_goods} /*p-classif-subject*/
-                                ,INPUT {&extclass_goods_esys} /*p-classif-name*/
-                                ,input 0  /*p-db-num*/
-                                ,input buf_goods.gds-code  /*p-key#_one*/
-                                ,input v-ext-sys /*p-Key#_Two*/
-                                ,input 0 /*p-key#_Three*/
-                                ,input tt-gds.alc-code  /*p-CharKey_One */
-                                ,input '':U /*p-CharKey_two */
-                                ,input buf_goods.gds-name /*p-CharKey_three */
-                                ,input 0 /*p-nonunique */
-                                ,input v-gds-uniq-key-rec ) no-error.
-                            if error-status:error then
-                            do:
-                                if error-status:get-message(1) = "" then
-                                    message "Ошибка добавления записи в справочник!" view-as alert-box .
-                                else
-                                    message error-status:get-message(1) view-as alert-box .
-                                undo, return no-apply .
-                            end.
-                        end.    
-                    end. /* if tt-gds.alc-code <> "" */
+                    
+                    run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
+                                                        ,input (buffer buf_goods:handle)
+                                                        ,output v-gds-uniq-key-rec).
+                    find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_goods} 
+                                                               and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                                               AND X_ext-classif.db-num = 0  
+                                                               and X_ext-classif.key#_one = buf_goods.gds-code
+                                                               and X_ext-classif.key#_two = v-ext-sys 
+                                                               and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                                               no-error. 
+                    if available X_ext-classif then do :    
+                        assign X_ext-classif.charkey_one = tt-gds.alc-code .
+                    end.                                    
+                    else do :                                    
+                        run ref/extclas1.p ( 
+                            INPUT {&add-def}
+                            ,INPUT yes /*p-silent*/
+                            ,INPUT-OUTPUT v-rid
+                            ,INPUT {&table_goods} /*p-classif-subject*/
+                            ,INPUT {&extclass_goods_esys} /*p-classif-name*/
+                            ,input 0  /*p-db-num*/
+                            ,input buf_goods.gds-code  /*p-key#_one*/
+                            ,input v-ext-sys /*p-Key#_Two*/
+                            ,input 0 /*p-key#_Three*/
+                            ,input tt-gds.alc-code  /*p-CharKey_One */
+                            ,input '':U /*p-CharKey_two */
+                            ,input buf_goods.gds-name /*p-CharKey_three */
+                            ,input 0 /*p-nonunique */
+                            ,input v-gds-uniq-key-rec ) no-error.
+                        if error-status:error then
+                        do:
+                            if error-status:get-message(1) = "" then
+                                message "Ошибка добавления записи в справочник!" view-as alert-box .
+                            else
+                                message error-status:get-message(1) view-as alert-box .
+                            undo, return no-apply .
+                        end.
+                    end.    
+                    
                 end. /* for first buf_goods */
                 find first old_tt-gds exclusive-lock where old_tt-gds.gds-code = tt-gds.gds-code
                                                        and recid(old_tt-gds) <> recid(tt-gds) no-error.
@@ -561,6 +574,7 @@ DO:
             end. /* if bh-gds-egais:available */
         end. /* for first tt-gds */
     end. /* do ii = 1 to num-entries(select-list) */
+    message "Сохранение завершено" view-as alert-box.
     run refresh-query in this-procedure.     
 END.
 
@@ -599,6 +613,10 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-load Dialog-Frame
 ON CHOOSE OF b-load IN FRAME Dialog-Frame /* - */
 DO:
+    if not available buf_clients then do :
+        message "Сначала выберите производителя" view-as alert-box.
+        return no-apply.
+    end.
     egais:SendRequestUTM() .
     glog = egais:IsSent .
     if glog then enable b-answer WITH FRAME Dialog-Frame.
@@ -759,6 +777,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
       ) no-error .
   assign v-ext-sys = v-value-integer .
+  release buf_clients .
 /*  run fill-tt.*/
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
@@ -893,7 +912,7 @@ procedure sel-prod :
     run ref/cli-all.w (
                        input parparentproc
                     ,  input "b-sel"
-                    ,  input {&pro}
+                    ,  input {&all}
                     ,  input {&all}
                     ,  input {&current}
                     ,  input ?
@@ -906,17 +925,17 @@ procedure sel-prod :
         return no-apply.
     end.
     find first buf_clients no-lock where recid(buf_clients) = integer(ref-list) . 
-    if available buf_clients then do :
-        find first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_clients.obj-type 
-                                            and   buf_clients-attr.obj-code  = buf_clients.obj-code 
-                                            and   buf_clients-attr.attr-code = {&attr-cli-alc-producer} no-error.   
-        if not available buf_clients-attr then do : 
-            message 'У производителя должен быть атрибут "Производитель алкогольной продукции"' view-as alert-box.
-            release buf_clients .
-            run sel-prod .
-/*            apply "choose":U to b-prod IN FRAME Dialog-Frame .*/
-        end.    
-    end.
+/*    if available buf_clients then do :                                                                            */
+/*        find first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_clients.obj-type               */
+/*                                            and   buf_clients-attr.obj-code  = buf_clients.obj-code               */
+/*                                            and   buf_clients-attr.attr-code = {&attr-cli-alc-producer} no-error. */
+/*        if not available buf_clients-attr then do :                                                               */
+/*            message 'У производителя должен быть атрибут "Производитель алкогольной продукции"' view-as alert-box.*/
+/*            release buf_clients .                                                                                 */
+/*            run sel-prod .                                                                                        */
+/*/*            apply "choose":U to b-prod IN FRAME Dialog-Frame .*/                                                */
+/*        end.                                                                                                      */
+/*    end.                                                                                                          */
     if available buf_clients then do :
         assign
             v-prod = buf_clients.obj-type + string(buf_clients.obj-code)
@@ -967,7 +986,7 @@ PROCEDURE enable_UI :
     
   DISPLAY rs-sort
       WITH FRAME Dialog-Frame.
-  ENABLE b-mark b-sel-all b-unmark b-load b-answer rs-sort b-save b-lkp b-cancel b-prod br-goods b-connect 
+  ENABLE b-mark b-sel-all b-unmark b-load rs-sort b-save b-lkp b-cancel b-prod br-goods 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   br-goods:column-resizable in FRAME Dialog-Frame = true .
