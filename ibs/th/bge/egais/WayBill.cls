@@ -606,15 +606,17 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             when 'WBInvoiceToMe' then do:
               assign 
                 tt-wb-header.wb-type = {&TDEDT_Pri_Vnesh}
-                tt-wb-header.wb-type-full = "приход вн."
-                tt-wb-clob-hndls.wb-type = "приход вн."
+                tt-wb-header.wb-type-full = "приход вн.".
+              if available (tt-wb-clob-hndls) 
+                then tt-wb-clob-hndls.wb-type = "приход вн."
               .
             end.
             when 'WBInvoiceFromMe' then do:
               assign 
                 tt-wb-header.wb-type = {&TDEDT_Pri_Vnesh}
-                tt-wb-header.wb-type-full = "приход вн."
-                tt-wb-clob-hndls.wb-type = "приход вн."
+                tt-wb-header.wb-type-full = "приход вн.".
+              if available (tt-wb-clob-hndls) 
+                then tt-wb-clob-hndls.wb-type = "приход вн."
               .
             end.
             otherwise do:
