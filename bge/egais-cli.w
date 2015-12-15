@@ -356,6 +356,19 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-cancel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel Dialog-Frame
+ON CHOOSE OF b-cancel IN FRAME Dialog-Frame /* - */
+DO:
+    message "Все несохранённые данные будут потеряны. Вы уверены, что хотите выйти?"
+    view-as alert-box question buttons yes-no update glog.
+    if not glog then return no-apply . 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME m_new-list
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_new-list Dialog-Frame
 ON CHOOSE OF MENU-ITEM m_new-list /* Файл списка клиентов */
@@ -571,6 +584,7 @@ DO:
             end.
         end.
     end.
+    message "Сохранение завершено" view-as alert-box.
     {&browse-name}:refresh() in frame {&frame-name} .
 /*    {&OPEN-QUERY-br-objects}*/
 END.
@@ -605,8 +619,18 @@ DO:
         message "Не выбрано ни одной строки" view-as alert-box .
         return no-apply.
     end.
+    ii1_:
     do ii = 1 to num-entries(select-list) :
-        for first tt-objs no-lock where recid(tt-objs) = integer(entry(ii, select-list)) :
+        for first tt-objs no-lock where recid(tt-objs) = integer(entry(ii, select-list)):
+            if trim(tt-objs.inn) = "" then do :
+                message "Не у всех выделенных клиентов проставлен ИНН. Для них запрос отправлен НЕ будет" view-as alert-box.
+                leave ii1_.  
+            end.              
+        end.
+    end.
+    ii2_:
+    do ii = 1 to num-entries(select-list) :
+        for first tt-objs no-lock where recid(tt-objs) = integer(entry(ii, select-list)) and trim(tt-objs.inn) <> ""  :
             egais:EGAISImpl = new DictOrg(v-fs-rar, tt-objs.inn) .
             egais:SendRequestUTM() .            
         end.
@@ -716,6 +740,10 @@ DO:
             b-connect:label = "Связать" .    
             if tt-objs.answerExist then enable b-connect WITH FRAME Dialog-Frame.
             else disable b-connect WITH FRAME Dialog-Frame.
+        end.
+        if tt-objs.regID <> ? and tt-objs.regID <> "" then do :
+            find tt-objs-eg no-lock where tt-objs-eg.regID = tt-objs.regID no-error.
+            if not ambiguous tt-objs-eg then disable b-connect WITH FRAME Dialog-Frame.
         end.
     end.
 end.      
@@ -1047,7 +1075,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
     
 /*  display v-org v-fs-rar with frame Dialog-Frame.*/
-  ENABLE b-mark b-sel-all b-unmark b-load b-answer b-save b-cancel br-objects b-list b-connect
+  ENABLE b-mark b-sel-all b-unmark b-load b-answer b-save b-cancel br-objects b-list
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   ASSIGN

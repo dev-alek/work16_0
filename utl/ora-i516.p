@@ -59,6 +59,7 @@ define variable vss-description as character no-undo init "Импорт накладных из в
 { gbl/getsect.i def }
 { str/in-vatp.i def  }
 { cmp/trg-def.i }
+{ str/trdcalib.i }
 
 
 
@@ -133,6 +134,7 @@ define variable v-excise-base as decimal   no-undo .
 define variable v-excise-rubl as decimal   no-undo .
 define variable v-main-b-code as integer   no-undo .
 define variable is-tsd as logical no-undo .
+define variable is-egais as logical no-undo .
 define variable is-unit-error   as logical no-undo .
 define variable v-internal      as logical no-undo .
 
@@ -159,6 +161,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
     run get-db-num in parparentproc (output v-cntxt-db-num ) .
     run get-userid in parparentproc (output v-cntxt-userid ) .
+    
+    if num-entries (v-cntxt-userid) > 1 
+    then do:
+      v-cntxt-userid = entry (1, v-cntxt-userid).
+      is-egais = true.
+    end.
 
     { gbl/curr-r-b.i
       v-curr-r-b
@@ -1472,15 +1480,26 @@ define input  parameter p-doc-out as character no-undo .
   do
   on error undo, return error return-value
   :
-  find first ub.doc-attr exclusive-lock where
-           ub.doc-attr.doc-code = p-doc-code and
-           ub.doc-attr.attr-code = {&trdcattr-nids} no-error .
-  if not available ub.doc-attr then create ub.doc-attr.
-  assign
-    ub.doc-attr.doc-code = p-doc-code
-    ub.doc-attr.attr-code = {&trdcattr-nids}
-    ub.doc-attr.attr-value = p-doc-out
-  .
+  if not is-egais 
+  then do:
+    find first ub.doc-attr exclusive-lock where
+             ub.doc-attr.doc-code = p-doc-code and
+             ub.doc-attr.attr-code = {&trdcattr-nids} no-error .
+    if not available ub.doc-attr then create ub.doc-attr.
+    assign
+      ub.doc-attr.doc-code = p-doc-code
+      ub.doc-attr.attr-code = {&trdcattr-nids}
+      ub.doc-attr.attr-value = p-doc-out
+    .
+  end.
+  else do:
+    { str/tdat-wrt.i
+      p-doc-code
+      {&trdcattr-negais}
+      p-doc-out
+      no-error
+    }
+  end.
   end.
 
 end procedure. /* add-nn */

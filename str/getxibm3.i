@@ -200,6 +200,8 @@ define variable c-attr-value as character no-undo.
                                 )
             ub.chk-pay.is-error = no
             .
+            assign 
+              pay-card_ = "".
             if not (c-attr-code = "" or c-attr-code = ?) then do:
               create ub.chk-pay-attr.
               assign 

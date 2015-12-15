@@ -281,10 +281,10 @@ DEFINE BROWSE BR-i-docs
 {&sort-clmn_6}                           COLUMN-LABEL {&label-clmn_6}
 {&sort-clmn_7}                           COLUMN-LABEL {&label-clmn_7} format "x(6)"
 {&sort-clmn_8}                           COLUMN-LABEL {&label-clmn_8}
-{&sort-clmn_9}                           column-label {&label-clmn_9}
-{&sort-clmn_10}                          column-label {&label-clmn_10}
-{&sort-clmn_11}                          column-label {&label-clmn_11} format "->>>,>>>,>>9.999"
-{&sort-clmn_12}                          column-label {&label-clmn_12}
+{&sort-clmn_9}                           column-label {&label-clmn_9} FORMAT "->>>,>>>,>>>,>>>,>>9.999"
+{&sort-clmn_10}                          column-label {&label-clmn_10} FORMAT "->>>,>>>,>>>,>>>,>>9.999"
+{&sort-clmn_11}                          column-label {&label-clmn_11} FORMAT "->>>,>>>,>>>,>>>,>>9.999"
+{&sort-clmn_12}                          column-label {&label-clmn_12} FORMAT "->>>,>>>,>>>,>>>,>>9.999"
 ENABLE
 {&sort-clmn_12}
 /* _UIB-CODE-BLOCK-END */

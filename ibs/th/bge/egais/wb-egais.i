@@ -25,7 +25,7 @@
 &glob wb-clob   3
 
   define temp-table tt-wb-header no-undo
-    field wb-type      as character label "Тип"
+    field wb-type-full as character label "Тип" format "X(10)"
     field num          as character label "№ пост."
     field wb-date      as date label "Дата"
     field shippingdate as date label "Дата поставки"
@@ -39,10 +39,11 @@
     field obj-type     as character label "Тип клиента TH"
     field obj-code     as integer label "Код клиента TH"
     field ps           as character label "Примечание"
-    field wbregid      as integer   label "WBRegId"
-    field indenty      as character label "ID EGAIS"
+    field wbregid      as character label "WBRegId"
+    field Identity     as character label "ID EGAIS"
+    field wb-type      as character label "Тип"
     index pi
-    indenty 
+    Identity 
     .
 
   define temp-table tt-wb-gds-EG no-undo
@@ -52,10 +53,10 @@
     field ms-base       like ub.goods.ms-base label "Объем" format ">>9.9<<"
     field alc-type-code like ub.alc-type.alc-type-code label "Код АП"
     field proof         like ub.goods.proof label "Крепость" format ">9.9"
-    field Identity      as integer label "ID EGAIS"
+    field Identity      as character label "ID EGAIS"
     field doc-qnty      like ub.doc-line.doc-qnty label "Кол-во"
     field price         like ub.doc-line.price-rubl label "Цена"
-    field informbregid  as integer
+    field informbregid  as character
     index pi as primary
     gds-code
     index name_

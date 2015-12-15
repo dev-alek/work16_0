@@ -701,8 +701,8 @@ DO:
     assign
       temp-conn.ri = recid( buf_contract-specif )
       mark-num = mark-num + 1
-      v-mark-seq = v-mark-seq + 1 
-    temp-conn.mark-seq = v-mark-seq
+/*      v-mark-seq = v-mark-seq + 1 */
+/*    temp-conn.mark-seq = v-mark-seq */
     .
     GET next spec-List NO-LOCK .
   end.
@@ -1269,6 +1269,8 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-mark Dialog-Frame
 ON CHOOSE OF B-mark IN FRAME Dialog-Frame /* * */
 DO:
+    define variable v-num-entry as integer no-undo .
+
   if not available buf_contract-specif then return no-apply.
 
   find first temp-conn where temp-conn.ri = recid( buf_contract-specif ) no-error  .
@@ -1286,9 +1288,11 @@ DO:
     end.
     create temp-conn .
     assign
-      temp-conn.ri = recid( buf_contract-specif )
-      mark-num = mark-num + 1
-      v-mark-seq = v-mark-seq + 1
+/*    temp-conn.ri = temp-conn.ri + ( if temp-conn.ri = "":U then "":U else {&comma-char} ) + string( recid( buf_contract-specif) ).*/
+    temp-conn.ri = recid( buf_contract-specif )
+    mark-num = mark-num + 1
+    rid-list = rid-list + ( if rid-list = "":U then "":U else {&comma-char} ) + string(temp-conn.ri).
+/*	v-mark-seq = v-mark-seq + 1 */
     .
   end.
   g-log = spec-List:refresh() .
@@ -1407,11 +1411,6 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel Dialog-Frame
 ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор */
 DO:
-  rid-list = "".
-  for each temp-conn by temp-conn.mark-seq :
-    rid-list = rid-list + ( if rid-list = "":U then "":U else {&comma-char} ) + string(temp-conn.ri).
-  end.
-
   if ( rid-list = "" ) and ( available buf_contract-specif ) then do:
     rid-list = string( recid( buf_contract-specif ) ) .
   end.

@@ -38,11 +38,7 @@ define variable th-wb-egais     as handle  no-undo.
 define variable bh-wb-egais     as handle  no-undo.
 define variable qh-wb-egais     as handle  no-undo.
 define variable browse-hdl-wb-egais as handle no-undo.
-define variable bcol                  as handle no-undo.
-define variable bcol1                 as handle no-undo.
-define variable bcol2                 as handle no-undo.
-define variable bcol3                 as handle no-undo.
-define variable bcol4                 as handle no-undo.
+define variable bcol                 as handle extent 11 no-undo.
 define variable egais                as class EGAIS   no-undo.
 define variable v-db-num             as integer   no-undo .
 define variable v-user-id            as character no-undo .
@@ -112,7 +108,7 @@ DEFINE BUTTON Btn_Save
      BGCOLOR 8 .
 
 DEFINE BUTTON Btn_Sel 
-     LABEL "Выбор" 
+     LABEL "Изменить" 
      SIZE 15 BY 1.13
      BGCOLOR 8 .
 
@@ -189,6 +185,8 @@ DO:
   then do:
     message "Ошибка: " egais:Msg view-as alert-box error.
   end.
+  bh-wb-egais = egais:GetHndlTable(3, "").
+  run refresh-query.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -211,8 +209,8 @@ DO:
     end.
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
-    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("indenty"):buffer-value).  
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("indenty"):buffer-value).
+    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("Identity"):buffer-value).  
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("Identity"):buffer-value).
     find first ub.clients 
       where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("cli-type"):buffer-value
         and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("cli-code"):buffer-value) no-error.
@@ -235,7 +233,7 @@ DO:
       return no-apply.
     end.
     
-    egais:SaveWB(bh-wb-egais:buffer-field ("indenty"):buffer-value).
+    egais:SaveWB(bh-wb-egais:buffer-field ("Identity"):buffer-value).
     if egais:StatusErr
       then message egais:Msg view-as alert-box error.
       else message "Создание накладной завершено" view-as alert-box.
@@ -244,14 +242,15 @@ DO:
   else do:
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
-    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("indenty"):buffer-value).  
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("indenty"):buffer-value).
+    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("Identity"):buffer-value).  
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("Identity"):buffer-value).
     egais:SendRequestUTM().
     if egais:StatusErr
       then message egais:Msg view-as alert-box error.
       else message "Накладная отправлена" view-as alert-box.
     
   end.
+  run refresh-query.
     
   
 END.
@@ -338,14 +337,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   egais:EGAISImpl = new WayBill (v-fs-rar).
   
   bh-wb-egais = egais:GetHndlTable(3, "").
-  
-  if not bh-wb-egais = ? 
-  then do:
-    create query qh-wb-egais.
-    qh-wb-egais:set-buffers (bh-wb-egais).
-    qh-wb-egais:query-prepare ("for each tt-wb-clob-hndls").
-    qh-wb-egais:query-open.
-  end.
+  create query qh-wb-egais.
+  run refresh-query.
 
   
   create browse browse-hdl-wb-egais
@@ -365,12 +358,13 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       column-scrolling = true
       triggers:
         on mouse-move-dblclick persistent run msdblcl.
+/*        on row-leave persistent run proc-row-leave.*/
       end triggers
   .
   if not bh-wb-egais = ? 
   then do:
     do ii = 1 to bh-wb-egais:num-fields:
-      bcol = browse-hdl-wb-egais:add-like-column('tt-wb-clob-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+      bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-clob-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
     end.
   end.
 
@@ -427,7 +421,8 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE msdblcl Dialog-Frame 
 PROCEDURE msdblcl :
-apply "choose" to Btn_Sel in frame {&frame-name} .
+
+  apply "choose" to Btn_Sel in frame {&frame-name} .
 
 end.
 
@@ -438,7 +433,7 @@ end.
 PROCEDURE refresh-query :
 
 if bh-wb-egais = ? 
-  then return no-apply.
+  then return .
   
 case RADIO-SET-1 :
     when 1  then 
@@ -460,3 +455,13 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-row-leave Dialog-Frame 
+PROCEDURE proc-row-leave :
+  if false then do:
+    do ii = 1 to extent (bcol).  
+      bcol[ii]:bgcolor = RED_COLOR.
+    end.
+  end.
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
