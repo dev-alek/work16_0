@@ -116,5 +116,14 @@ curr-code
 .
 */
 
-
+define temp-table temp-chk-dp no-undo
+field doc-code like ub.chk-doc.doc-code
+FIELD b-code like ub.chk-gds.b-code
+field line-sign as logical
+field sum as decimal
+field line-num as integer
+field sign as integer
+field pay-code as integer
+index pi pay-code line-num
+.
 /* $Workfile$ e n d */

@@ -32,6 +32,7 @@ DEFINE VARIABLE var-file-line-num          as   integer               no-undo .
 DEFINE VARIABLE ii                         as   integer               no-undo .
 DEFINE VARIABLE bc-buf                     as   character             no-undo .
 DEFINE VARIABLE b-c                        like ub.bar-code.b-code       no-undo .
+DEFINE VARIABLE v-base-code                like ub.sysconf.base-code  no-undo .
 DEFINE VARIABLE shop-type                  as   character             no-undo .
 DEFINE VARIABLE shop-code                  as   integer               no-undo .
 DEFINE VARIABLE chk-type_                  like ub.chk-doc.chk-type   no-undo .
@@ -104,6 +105,8 @@ DEFINE VARIABLE tot_sum                    as   decimal               no-undo .
 DEFINE VARIABLE curr-chk-type              as   character             no-undo .
 DEFINE VARIABLE mc-curr-chk-type           like ub.chk-doc.chk-type no-undo .
 DEFINE VARIABLE r-bar-code                 like ub.bar-code.b-code       no-undo .
+
+define variable v-curr-r-b                as character               no-undo .
 /*номер строки товара*/
 DEFINE VARIABLE lng                        as   integer               no-undo .
 /*номер строки оплаты*/

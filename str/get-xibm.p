@@ -123,8 +123,6 @@ field src-code as character
 index pi is unique primary
 src-code
 .
-
-
 { str/cd-xmlg.i spool data }
 
 FUNCTION fdecimal returns decimal
@@ -781,7 +779,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
   .
 
   find first temp-cash-desk where
-           temp-cash-desk.cash-num = pay-desk_ no-error.
+           temp-cash-desk.cash-num = (if p-pos-type = {&cd-type-autotank} then 0 else pay-desk_) no-error.
   if not available temp-cash-desk then do:
 
     if p-pos-type = {&cd-type-magia-xml} then
@@ -797,7 +795,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                                             input g#db-num
                                                             ,input p-obj-code
                                                             ,input p-pos-type
-                                                            ,input pay-desk_
+                                                            ,input (if p-pos-type = {&cd-type-autotank} then 0 else pay-desk_)
                                                             ,output v-last-date
                                                             ,output v-last-time
                                                             ,output v-last-shift-num
@@ -807,7 +805,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
 
     create temp-cash-desk.
     assign
-    temp-cash-desk.cash-num = pay-desk_
+    temp-cash-desk.cash-num = (if p-pos-type = {&cd-type-autotank} then 0 else pay-desk_)
     temp-cash-desk.last-date = v-last-date
     temp-cash-desk.last-time = v-last-time
     temp-cash-desk.last-shift-num = v-last-shift-num
@@ -1168,6 +1166,8 @@ on error undo, return error
     b-c = 0
     nozzle_ = 0
     place_ = 0
+   
+    pump_ = 0
     .
     if not exist
     or (v-to-delete[1] = yes
@@ -1198,11 +1198,7 @@ on error undo, return error
               b-c = integer(buf_temp-temp.field-value)
              .
           end.
-          else
-            if buf_temp-temp.field-value = "Коррекция":U then  /* для Autotanka */
-               error-status:error = no .
-
-
+        
         end.
         when "CSPrice":u then do:
           assign
@@ -1288,17 +1284,21 @@ on error undo, return error
           end.
           else do:
             if buf_temp-temp.field-value <> string(0) then do:
-              for each buf_tt-sum-grp where string (buf_tt-sum-grp.grp-code) = buf_temp-temp.field-value:
-                find first ub.goods-attr where ub.goods-attr.gds-code = buf_tt-sum-grp.code-2
-                        and ub.goods-attr.attr-code = {&attr-office-type} and ub.goods-attr.attr-value = {&attr-office-type_oss-pay} no-error.
-                if available ub.goods-attr
-                    then assign v-oss-code = bc-buf.
+              If cstype_ = 37 then v-oss-code =  buf_temp-temp.field-value.  /* Если пополнение, то берем из этого поля код оператора*/
+              else do:
+                  for each buf_tt-sum-grp where string (buf_tt-sum-grp.grp-code) = buf_temp-temp.field-value:    
+                      /* Перевод ОСС по старому */
+                    find first ub.goods-attr where ub.goods-attr.gds-code = buf_tt-sum-grp.code-2
+                            and ub.goods-attr.attr-code = {&attr-office-type} and ub.goods-attr.attr-value = {&attr-office-type_oss-pay} no-error.
+                    if available ub.goods-attr
+                        then assign v-oss-code = bc-buf.
+                  end.
+                  assign
+                  bc-buf = buf_temp-temp.field-value
+                  v-line-type = 'grp'
+                  no-error
+                  .
               end.
-              assign
-              bc-buf = buf_temp-temp.field-value
-              v-line-type = 'grp'
-              no-error
-              .
             end.
             else do:
               assign
@@ -2048,6 +2048,165 @@ end.
 
 end procedure. /* proc-inv */
 
+procedure proc-bonus :
+/*
+тип объекта выполнившего начисление                                                     BAObj
+идентификатор транзакции предоставленный внешней системой                               BATransID
+номер карты                                                                             BACardNo
+код валюты бонуса                                                                       BACurr
+количество единицы бонуcов/компенсации                                                  BAQty
+номер бонусной схемы                                                                    BAReason
+вид бонуса - привяза к товару, к чеку, не определено                                    BAMode Ltype
+номер строки продажи для которой выполнено начисление                                   BAString
+код товара есди бонус привязан к товару                                                 BARelation
+*/
+define variable  bonus-obj_         as integer no-undo .
+define variable  bonus-trans-id_    as integer no-undo .
+define variable  bonus-card-no      as character no-undo .
+define variable  bonus-curr-code_   as integer no-undo .
+define variable  bonus-qty_         as decimal no-undo .
+define variable  bonus-reason_      as integer no-undo .
+define variable  bonus-type-chr_    as character no-undo .
+define variable  bonus-string       as integer no-undo .
+define variable  bonus-src-code_    as decimal no-undo .
+define variable  bonus-src-code-chr as character no-undo .
+define buffer buf_temp-temp for temp-temp .
+define buffer buf_chk-gds for ub.chk-gds.
+define variable local-netto-for-sub-d as decimal no-undo .
+  do
+  on error undo, return error
+  :
+    if not exist then do:
+      for each buf_temp-temp where
+              buf_temp-temp.record-name = "BonusAdd":U
+        AND buf_temp-temp.id = v-id:
+        CASE buf_temp-temp.field-name:
+          when "BAString":U then do:
+            assign
+            bonus-string = integer(buf_temp-temp.field-value)
+            no-error .
+          end.
+          when "BAobj":U then do:
+            assign
+            bonus-obj_ = integer(buf_temp-temp.field-value)
+            no-error .
+          end.
+          when "BATransID":U then do:
+            assign
+            bonus-trans-id_ = integer(buf_temp-temp.field-value)
+            no-error .
+          end.
+          when "BACurr":U then do:
+            assign
+            bonus-curr-code_ = integer(buf_temp-temp.field-value)
+            no-error .
+          end.
+          when "BAReason":U then do:
+            assign
+            bonus-reason_ = integer(buf_temp-temp.field-value)
+            no-error .
+          end.
+          when "Ltype":U then do: /*BAMode*/
+            assign
+            bonus-type-chr_ = buf_temp-temp.field-value
+            no-error .
+          end.
+          when "BAQty":U then do:
+            assign
+            bonus-qty_ = fdecimal(buf_temp-temp.field-value) / 100
+            no-error .
+          end.
+          when "BACardNo":U then do:
+            assign
+            bonus-card-no = buf_temp-temp.field-value
+            no-error .
+          end.
+          otherwise do:
+            error-status:error = no.
+          end.
+        END CASE.
+        if error-status:error then do:
+          {&error-in-file-format}
+        end.
+        delete buf_temp-temp.
+      end.
+      create ub.chk-discnt.
+      assign
+      ub.chk-discnt.doc-code = ub.chk-doc.doc-code
+      ub.chk-discnt.record-type = 4
+      ub.chk-discnt.line-num = ub.chk-gds.line-num
+      ub.chk-discnt.discnt-id = (if bonus-trans-id_ = 0 then ub.chk-discnt.line-num else bonus-trans-id_)
+      chk-discnt.time-oper = chk-gds.time-oper
+      chk-discnt.line-type = (if bonus-type-chr_ = 'I' or bonus-type-chr_ = '0'
+                              then integer({&discnt-gds})
+                              else (if bonus-type-chr_ = 'T'
+                                    then integer({&discnt-sub-total})
+                                    else integer({&discnt-unknown})
+                                   )
+                              )
+      chk-discnt.pass-discnt = bonus-obj_
+      chk-discnt.value-type = integer({&discnt-v-bonus})
+      chk-discnt.src-d-card = bonus-card-no
+      chk-discnt.d-card = bonus-card-no
+      chk-discnt.discnt-value-abs = bonus-qty_
+      chk-discnt.discnt-value-pcnt = (if chk-discnt.line-type = integer({&discnt-gds})
+                                      then bonus-src-code_
+                                      else 0)
+      chk-discnt.discnt-type = bonus-reason_
+      chk-discnt.kateg = (if bonus-curr-code_ > 0
+                          then bonus-curr-code_
+                          else (if bonus-curr-code_ = kassa-rub-code
+                                then 0
+                                else -1 )
+                          )
+      chk-discnt.object-line-num = (if bonus-string <= 0
+                                    then bonus-string
+                                    else chk-gds.line-num)
+      chk-discnt.pay-desk = chk-doc.pay-desk
+      chk-discnt.obj-code = chk-doc.obj-code
+      chk-discnt.obj-type = chk-doc.obj-type
+      chk-discnt.chk-date = chk-doc.chk-date
+      chk-discnt.chk-time = chk-doc.chk-time
+      .
+      if chk-discnt.line-type = integer({&discnt-gds}) then do:
+        if available chk-gds
+        and (bonus-src-code-chr = chk-gds.src-code
+            or bonus-string  = chk-gds.line-num ) then do:
+        end.
+        else do:
+          for each buf_chk-gds no-lock where
+                  buf_Chk-gds.doc-code = chk-doc.doc-code:
+            if buf_chk-gds.src-code = bonus-src-code-chr then do:
+              chk-discnt.object-line-num = buf_chk-gds.line-num.
+              leave.
+            end.
+          end.
+        end.
+      end.
+      if chk-discnt.line-type = integer({&discnt-sub-total})
+      and available chk-gds
+      and chk-discnt.object-line-num = chk-gds.line-num then do:
+        assign
+        chk-discnt.object-sum = local-netto-for-sub-d
+        chk-discnt.discnt-value-pcnt = (if local-netto-for-sub-d <> 0
+                                       and (chk-discnt.kateg = - 1
+                                       or chk-discnt.kateg <> - 1
+                                       and (
+                                            (chk-discnt.kateg = 0
+                                            and v-curr-r-b = {&r-b-rubl}
+                                            )
+                                            or
+                                            (chk-discnt.kateg = v-base-code
+                                            and v-curr-r-b = {&r-b-base})
+                                           ))
+                                       then bonus-qty_ / chk-gds.src-sum 
+                                       else chk-discnt.discnt-value-pcnt)
+        .
+      end.      
+    end. /*if exist*/
+  end.
+
+end procedure. /* proc-bonus */
 
 procedure proc-disc :
 define variable lnd-spl as integer no-undo .
@@ -2135,11 +2294,12 @@ define buffer buf_chk-discnt for ub.chk-discnt.
         end.
         delete buf_temp-temp.
       end.
-      if disc-mode_ <> 'T' then do:
+   /*  if disc-mode_ = "C":U  then return. */ /* Игнорируем тип скидки С, который используется для хранения бонусов на кассе */ 
+      if disc-mode_ <> 'T':U then do:
         find first buf_chk-gds where
-                  buf_chk-gds.doc-code = ub.chk-doc.doc-code
+                  buf_chk-gds.doc-code = chk-doc.doc-code
               AND buf_chk-gds.line-num = lnd-spl no-error .
-        if disc-mode_ = 'I' then do:
+        if disc-mode_ = 'I':U then do:
           if not Available buf_chk-gds then do:
             assign
             p-view-log = yes.
@@ -2158,7 +2318,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
             return.
           end.
         end.
-        else do:
+        else if disc-mode_ <> 'C':U then do:
             assign
             p-view-log = yes.
             run write-log-and-file in p-log-handle (
@@ -2176,9 +2336,12 @@ define buffer buf_chk-discnt for ub.chk-discnt.
             return.
         end.
       end.
-      if disc-mode_ = "T"
+      if disc-mode_ = "T":U
       and lng > lnd-spl
-      and p-pos-type = {&cd-type-ibm-xml}
+      and (p-pos-type = {&cd-type-ibm-xml}
+           or
+           p-pos-type = {&cd-type-autotank}
+           )
       then do:
         for each buf_chk-gds no-lock where
                 buf_chk-gds.doc-code = ub.chk-doc.doc-code
@@ -2207,7 +2370,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
       create ub.chk-discnt.
       assign
       ub.chk-discnt.doc-code = ub.chk-doc.doc-code
-      ub.chk-discnt.record-type = 0
+      ub.chk-discnt.record-type = if disc-mode_ = "C":U then 10 else 0
       ub.chk-discnt.discnt-id = (var-discnt-id + 1)
       ub.chk-discnt.line-num = (if p-pos-type = {&cd-type-ibm-xml}
                                 then lnd-spl
@@ -2261,7 +2424,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
       sub-d = (if ub.chk-discnt.line-type = integer({&discnt-sub-total}) then (sub-d - disc-sum_) else sub-d)
       netto-for-sub-d =  netto-for-sub-d - ub.chk-discnt.discnt-value-abs
       .
-      if available buf_chk-gds then
+      if available buf_chk-gds  and chk-discnt.record-type <> 10 then
       assign
       buf_chk-gds.src-discnt =  (if ub.chk-discnt.line-type <> integer({&discnt-sub-total})
                                  and ub.chk-discnt.value-type = integer({&discnt-v-pcnt})
@@ -2279,6 +2442,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
                                then convert-discount(disc-reason_, disc-type_, ub.chk-discnt.line-type)
                                else integer({&discnt-t-unknown})
       .
+      if chk-discnt.record-type = 10 then chk-discnt.rank = disc-type_.
       if kriv3 = yes
       and disc-mode_ = "I" then do:
         /*должны пройти по всем скидка на итог и скинуть object-sum*/
@@ -2491,8 +2655,11 @@ define variable v-time-loc-char as character no-undo .
                       .
 
             end .
-
           end .
+        end.  
+        when "BonusAdd":U then do:
+          if v-start-check = 1 then
+          run proc-bonus in this-procedure no-error .
         end.
         when "CDisc":U then do:
           if v-start-check = 1 then
@@ -2579,6 +2746,10 @@ define variable v-time-loc-char as character no-undo .
         when "CPay":U
         or
         when "CDisc":U
+        or
+        when "BonusAdd":U
+        or
+        when "BonusAdd":U
         or
         when "Invent":U
         or
