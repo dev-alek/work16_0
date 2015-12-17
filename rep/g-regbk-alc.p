@@ -12,7 +12,7 @@ $Archive$
 Дата создания: 02/02/10
 Author: Arnold Shutilov
 Creation date: 15/10/14
-ТН-15.1
+
 */
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -30,11 +30,11 @@ define input  parameter parParentProc as widget-handle no-undo.
 
 run rep/d-report.w (
                 input parParentProc,
-                input "rep/r-regbk-alc.p " + string(parParentProc), /* Вызываем файл отчёта + Параметр к нему. (Вообще, если работаем с 1 закладкой, то сразу, если есть 2 закладки, то вызов при переходе с 1-й на 2-ю закладку) */
+                input "rep/r-regbk-alc2015.p " + string(parParentProc), /* Вызываем файл отчёта + Параметр к нему. (Вообще, если работаем с 1 закладкой, то сразу, если есть 2 закладки, то вызов при переходе с 1-й на 2-ю закладку) */
                 input "Журнал учёта розничной продажи алкоголя",    /* Наименование окна rep/s-object.w (которое вызовется из d-report.w */
                 input 2,                                            /* Используется две даты (задание периода отчёта) */
                 input "",
-                input "2",
+                input "{&o-currency},{&o-choice}",
                 input "",                                           /* Форма для выбора товара - здесь не используется. */
                 input "",
                 input "all,{&Excel-yes}",                           /* На всякий случай вывод галочки для excel (было в образце) */
