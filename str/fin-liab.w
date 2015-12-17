@@ -1074,11 +1074,11 @@ if not g-log then  return .
     end.
   end.
   else do:
-        if  buf_fin-liab.status_ = {&fin-fact}  then do:
-            message "Финансовое обязательство в статусе ФАКТ не может быть удалено !!!"
-            view-as alert-box information .
-            return no-apply.
-        end.
+/*        if  buf_fin-liab.status_ = {&fin-fact}  then do:                               */
+/*            message "Финансовое обязательство в статусе ФАКТ не может быть удалено !!!"*/
+/*            view-as alert-box information .                                            */
+/*            return no-apply.                                                           */
+/*        end.                                                                           */
         find current buf_fin-liab  exclusive-lock  no-error .
         v-recid = recid ( buf_fin-liab ) .
         if available buf_fin-liab then do:
@@ -1803,7 +1803,7 @@ DO:
 
   IF t-paket= TRUE THEN DO:
       ENABLE B-close
-             B-del when LOOKUP("b-del":U,  bttns) > 0
+             B-del 
              B-lkp when LOOKUP("b-lkp":U,  bttns) > 0
              B-mark
              with frame {&frame-name} .
@@ -1899,18 +1899,6 @@ b-print:menu-mouse = 1.
 { gbl/brwrefre.i  "run OpenBr in this-procedure (yes, no, '':U)." }
 
 define buffer buf_contract for ub.contract  .
-FIND FIRST buf_contract no-lock  no-error .
-if available buf_contract then do:
-        CREATE x-contract.
-        BUFFER-COPY buf_contract TO x-contract  .
-    end.
-    else  do:
-      CREATE x-contract.
-      assign
-        x-contract.contract-code = 1
-        x-contract.host-code = 1
-      .
-    end.
 
 /* Права на просмотр списка */
 define variable v-right-supp as logical no-undo .
@@ -2117,6 +2105,18 @@ CASE par-mode:
   r-1 = 1 .
   r-2 = 1 .
   r-3 = 1 .
+  FIND FIRST buf_contract no-lock  no-error .
+if available buf_contract then do:
+        CREATE xx-contract.
+        BUFFER-COPY buf_contract TO xx-contract  .
+    end.
+    else  do:
+      CREATE xx-contract.
+      assign
+        xx-contract.contract-code = 1
+        xx-contract.host-code = 1
+      .
+    end.
 
   run OpenBR in this-procedure (yes, no, '':U).
 
@@ -2262,7 +2262,7 @@ DISPLAY sch-code p-desc   p-date mark-num FILL-IN-1 FILL-IN-20 FILL-IN-21 FILL-I
          B-Help
          b-sel       when LOOKUP("b-sel":U,  bttns) > 0
          b-mark      when LOOKUP("b-mark":U, bttns) > 0
-         b-del       when LOOKUP("b-del":U,  bttns) > 0
+         b-del    
          b-fact
          BR-docs sch-code p-desc p-date  mark-num
          T-paket
