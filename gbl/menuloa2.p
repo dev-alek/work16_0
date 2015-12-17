@@ -220,6 +220,20 @@ define variable vss-description as character no-undo init "".
 /* {&bef-menuload_service_customs}                                                */
 /* Сервис/Заказные программы                                                  */
 /* -------------------------------------------------------------------------- */
+
+
+{gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Общая сличительная ведомость '"
+  "'rep/g-sl-ved.p'"
+  " "
+  " "
+  " "
+  "'Rosneft-*'"
+  "yes"
+}
+
+
 { gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Сверка транзакций перевода средств ОСС (Кубаньнефтепродукт)'"
