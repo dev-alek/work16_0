@@ -429,6 +429,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Запрет на участие в бонусных программах */
 { cmp/cr-prep.i 1 attr-ban-bonus ban-bonus " " ban-bonus }
 
+/* Разрешена нулевая цена */
+{ cmp/cr-prep.i 1 attr-null-price null-price " " null-price }
+
 /* товар фасуется */
 { cmp/cr-prep.i 1 attr-fasovka            fasovka            " " fasovka       }
 
@@ -502,6 +505,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-fuel-type}~
 ,{&bef-attr-is-loyalty-payment}~
 ,{&bef-attr-ban-bonus}~
+,{&bef-attr-null-price}~
 ,{&bef-attr-fasovka}~
 ,{&bef-attr-15x80}~
 ,{&bef-attr-8x50}~
