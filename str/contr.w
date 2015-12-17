@@ -2482,11 +2482,11 @@ define variable v-is-add as character no-undo .
         a-code-cor-acc-2 [6] = b_contract.cor-acc1-in-payoff
       .
 
-      if COMBO-usl-opl:screen-value <> {&contr-pay-nodef}  then disable COMBO-usl-opl with frame {&frame-name}.
-      if COMBO-usl-opl-2:screen-value <> {&contr-chf-nodef}  then disable COMBO-usl-opl-2 with frame {&frame-name}.
+ /*     if COMBO-usl-opl:screen-value <> {&contr-pay-nodef}  then disable COMBO-usl-opl with frame {&frame-name}. */
+ /*     if COMBO-usl-opl-2:screen-value <> {&contr-chf-nodef}  then disable COMBO-usl-opl-2 with frame {&frame-name}. */
       if   COMBO-usl-opl:screen-value = {&contr-pay-nodef}
         or COMBO-usl-opl:screen-value = {&contr-buyer-ord}
-        or COMBO-usl-opl:screen-value = {&contr-buyer-in}
+ /*       or COMBO-usl-opl:screen-value = {&contr-buyer-in} */
         or COMBO-usl-opl:screen-value = {&contr-pay-fact-in}
         or COMBO-usl-opl:screen-value = {&contr-pay-fact-out}  then  disable srok-opl with frame {&frame-name}.
 
