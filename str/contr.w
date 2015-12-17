@@ -157,14 +157,14 @@ BUTTON-curr contract-date-beg contract-date-end curr-code COMBO-type-contr ~
 b-bank-own b-bank-cli cli-code cli-type BUTTON-cli b-bank-posr posr-code ~
 posr-type BUTTON-posr b-bank-agnt agnt-code agnt-type BUTTON-agnt mngr-code ~
 BUTTON-mngr COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 ~
-srok-opl-2 COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo balance-plat ~
+srok-opl-2 COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo ~
 str-uslov-oplat fin-VAT-pc RADIO-SET-1 b-nal b-cor-acc b-an-uchet ~
 b-cel-nazn b-cor-acc-2 contract-code own-code 
 &Scoped-Define DISPLAYED-OBJECTS contract-prn-code contract-date ~
 contract-city contract-name contract-date-beg contract-date-end curr-code ~
 COMBO-type-contr cli-code cli-type posr-code posr-type agnt-code agnt-type ~
 mngr-code COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 ~
-COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo balance-plat ~
+COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo ~
 str-uslov-oplat fin-VAT-pc RADIO-SET-1 b-nal cor-acc an-uchet cel-nazn ~
 cor-acc-2 contract-code curr-name own-code own-name cli-name posr-name ~
 agnt-name mngr-name 
@@ -349,14 +349,11 @@ DEFINE VARIABLE an-uchet AS CHARACTER FORMAT "X(256)":U
      SIZE 40 BY 1 NO-UNDO.
 
 DEFINE VARIABLE balance-fo AS DECIMAL FORMAT "->>>,>>>,>>>,>>>,>>9.99":U INITIAL 0 
-     LABEL "Баланс ФО" 
+     LABEL "Баланс" 
      VIEW-AS FILL-IN 
-     SIZE 16.5 BY 1 NO-UNDO.
+     SIZE 17.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE balance-plat AS DECIMAL FORMAT "->>>,>>>,>>>,>>>,>>9.99":U INITIAL 0 
-     LABEL "плат." 
-     VIEW-AS FILL-IN 
-     SIZE 16 BY 1 NO-UNDO.
+
 
 DEFINE VARIABLE cel-nazn AS CHARACTER FORMAT "X(256)":U 
      LABEL "Код целевого назначения" 
@@ -566,10 +563,10 @@ DEFINE FRAME Dialog-Frame
      COMBO-auto-pay-2 AT ROW 13.46 COL 79.5 COLON-ALIGNED
      kredit-limit AT ROW 15.58 COL 2.5
      kredit-sum AT ROW 15.58 COL 23 COLON-ALIGNED NO-LABEL
-     balance-fo AT ROW 15.58 COL 53 COLON-ALIGNED
-     balance-plat AT ROW 15.58 COL 79.5 COLON-ALIGNED
+     balance-fo AT ROW 15.58 COL 77.63 COLON-ALIGNED
+     
      str-uslov-oplat AT ROW 16.63 COL 23 COLON-ALIGNED
-     fin-VAT-pc AT ROW 16.63 COL 79.5 COLON-ALIGNED
+     fin-VAT-pc AT ROW 16.63 COL 77.63 COLON-ALIGNED
      RADIO-SET-1 AT ROW 18.25 COL 2.5 NO-LABEL
      b-nal AT ROW 18.25 COL 14 NO-LABEL
      cor-acc AT ROW 18.42 COL 53.5 COLON-ALIGNED
@@ -666,9 +663,6 @@ ASSIGN
 
 ASSIGN 
        balance-fo:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
-
-ASSIGN 
-       balance-plat:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN cel-nazn IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
@@ -2081,7 +2075,7 @@ PROCEDURE enable_UI :
           contract-date-beg contract-date-end curr-code COMBO-type-contr 
           cli-code cli-type posr-code posr-type agnt-code agnt-type mngr-code 
           COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 
-          COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo balance-plat 
+          COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo  
           str-uslov-oplat fin-VAT-pc RADIO-SET-1 b-nal cor-acc an-uchet cel-nazn 
           cor-acc-2 contract-code curr-name own-code own-name cli-name posr-name 
           agnt-name mngr-name 
@@ -2093,7 +2087,7 @@ PROCEDURE enable_UI :
          b-bank-posr posr-code posr-type BUTTON-posr b-bank-agnt agnt-code 
          agnt-type BUTTON-agnt mngr-code BUTTON-mngr COMBO-usl-opl srok-opl 
          COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 COMBO-auto-pay-2 
-         kredit-limit kredit-sum balance-fo balance-plat str-uslov-oplat 
+         kredit-limit kredit-sum balance-fo str-uslov-oplat 
          fin-VAT-pc RADIO-SET-1 b-nal b-cor-acc b-an-uchet b-cel-nazn 
          b-cor-acc-2 contract-code own-code 
       WITH FRAME Dialog-Frame.
@@ -2400,10 +2394,9 @@ define variable v-is-add as character no-undo .
         v-posr-point-code     = b_contract.posr-point-code
         v-posr-point-db-num   = b_contract.posr-point-db-num
 
-        kredit-sum   = b_contract.kredit-sum
-        kredit-limit   = b_contract.kredit-limit
-        balance-fo        = b_contract.balance-fo
-        balance-plat      = b_contract.balance-plat
+        kredit-sum    = b_contract.kredit-sum
+        kredit-limit  = b_contract.kredit-limit
+        balance-fo    = b_contract.balance-fo-rubl - b_contract.balance-plat-rubl
 
         own-name      = b_contract.own-name
         inn-own       = b_contract.own-inn
@@ -2485,8 +2478,8 @@ define variable v-is-add as character no-undo .
  /*     if COMBO-usl-opl:screen-value <> {&contr-pay-nodef}  then disable COMBO-usl-opl with frame {&frame-name}. */
  /*     if COMBO-usl-opl-2:screen-value <> {&contr-chf-nodef}  then disable COMBO-usl-opl-2 with frame {&frame-name}. */
       if   COMBO-usl-opl:screen-value = {&contr-pay-nodef}
-        or COMBO-usl-opl:screen-value = {&contr-buyer-ord}
- /*       or COMBO-usl-opl:screen-value = {&contr-buyer-in} */
+        /*or COMBO-usl-opl:screen-value = {&contr-buyer-ord}*/
+        or COMBO-usl-opl:screen-value = {&contr-buyer-in}
         or COMBO-usl-opl:screen-value = {&contr-pay-fact-in}
         or COMBO-usl-opl:screen-value = {&contr-pay-fact-out}  then  disable srok-opl with frame {&frame-name}.
 
@@ -2575,10 +2568,9 @@ define variable v-is-add as character no-undo .
         agnt-type         = buf_c-contract.agnt-type
         posr-code         = buf_c-contract.posr-code
         posr-type         = buf_c-contract.posr-type
-        kredit-sum   = buf_c-contract.kredit-sum
-        kredit-limit   = buf_c-contract.kredit-limit
-        balance-fo        = buf_c-contract.balance-fo
-        balance-plat      = buf_c-contract.balance-plat
+        kredit-sum        = buf_c-contract.kredit-sum
+        kredit-limit      = buf_c-contract.kredit-limit
+        balance-fo        = buf_c-contract.balance-fo-rubl - buf_c-contract.balance-plat-rubl
 
         v-own-point-code      = buf_c-contract.own-point-code
         v-own-point-db-num    = buf_c-contract.own-point-db-num
