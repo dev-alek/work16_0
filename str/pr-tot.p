@@ -28,7 +28,7 @@ define variable vss-description as character no-undo init "Расчет сумм по докуме
 { str/pr-lattr.i }
 { gbl/waitfram.i }
 { gbl/clntattr.i }
-
+{ ref/gds-attr.i }
 
 define buffer  sub-list for ub.price-list.            /* буфер для спеццены */
 define buffer  sub-code for ub.bar-code.              /* код для спеццены */
@@ -52,6 +52,7 @@ define variable v-price-sale                   as decimal no-undo . /* сумма пер
 define variable v-rest-sale                    as decimal no-undo .
 define variable par-is-pharm         as character no-undo .
 define variable par-type             as character no-undo .
+define variable v-gds-null-price     as character no-undo initial "" .
 
 
   v-price-list-total       = 0.
@@ -81,8 +82,13 @@ end.
       first Buf_goods no-lock where
             Buf_goods.gds-code = Buf_bar-code.gds-code
       on error undo chk-prices, return error:
-    if Buf_price-list.price-sale <= 0 or
-       Buf_price-list.price-sale = ? then do:
+    run gds-attr-value in this-procedure (input Buf_goods.gds-code
+                                         ,input {&attr-null-price}
+                                         ,output v-gds-null-price
+                                         ,output par-type ) no-error .      
+    if Buf_price-list.price-sale < 0 or
+       Buf_price-list.price-sale = ? or
+       (Buf_price-list.price-sale = 0 and not logical(v-gds-null-price)) then do:
       message
         "Цена не должна быть меньше или равна 0, или равна ?." skip
         "Артикул: " Buf_goods.artic Buf_goods.gds-name

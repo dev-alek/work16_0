@@ -74,6 +74,7 @@ define variable vss-description as character no-undo init "Закрытие документа на
 { str/mpl-lib2.i }
 { str/mpl-lib3.i }
 { trg/check-bc.i }
+{ ref/gds-attr.i }
 define buffer buf_price-doc-forming for ub.price-doc-forming  .
 define buffer next_price-doc-forming-gds-qnty for ub.price-doc-forming-gds-qnty  .
 define buffer next_price-doc-forming-gds-sum  for ub.price-doc-forming-gds-sum   .
