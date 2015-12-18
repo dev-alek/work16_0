@@ -212,14 +212,17 @@ on error undo, return error return-value
       ) no-error .
     if error-status :error
     then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Складской архив по товарам" skip
-        "Объект" p-obj-type p-obj-code skip
-        "Ошибка при вызове процедуры doclslib-init-trn-doc" skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
+         if p-message-on = true
+      then do:
+          message
+            vss-workfile vss-revision vss-description skip
+            "Складской архив по товарам" skip
+            "Объект" p-obj-type p-obj-code skip
+            "Ошибка при вызове процедуры doclslib-init-trn-doc" skip
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
+        end.
       undo, return error return-value . /* --->>>--- */
     end.
 
@@ -230,6 +233,8 @@ on error undo, return error return-value
       ) no-error .
     if error-status :error
     then do:
+         if p-message-on = true
+      then do:
       message
         vss-workfile vss-revision vss-description skip
         "Складской архив по товарам" skip
@@ -238,6 +243,7 @@ on error undo, return error return-value
         error-status :get-message(1) skip
         return-value skip
         view-as alert-box error .
+        end.
       undo, return error return-value . /* --->>>--- */
     end.
 
@@ -506,7 +512,7 @@ on error undo, return error return-value
     ) no-error .
   if error-status :error
   then do:
-    if error-status :get-message(1) <> ""
+    if error-status :get-message(1) <> "" and p-message-on = true      
     then do:
       message
         vss-workfile vss-revision vss-description skip
@@ -559,6 +565,8 @@ on error undo, return error return-value
     ) no-error .
   if error-status :error
   then do:
+       if p-message-on = true
+      then do:
     message
       vss-workfile vss-revision vss-description skip
       "Складской архив по товарам" skip
@@ -567,6 +575,7 @@ on error undo, return error return-value
       error-status :get-message(1) skip
       return-value skip
       view-as alert-box error .
+      end.
     undo, return error return-value . /* --->>>--- */
   end.
 
@@ -577,6 +586,8 @@ on error undo, return error return-value
     ) no-error .
   if error-status :error
   then do:
+       if p-message-on = true
+      then do:
     message
       vss-workfile vss-revision vss-description skip
       "Складской архив по товарам" skip
@@ -585,6 +596,7 @@ on error undo, return error return-value
       error-status :get-message(1) skip
       return-value skip
       view-as alert-box error .
+      end.
     undo, return error return-value . /* --->>>--- */
   end.
 
@@ -651,6 +663,8 @@ on error undo, return error return-value
     ) no-error .
   if error-status :error
   then do:
+       if p-message-on = true
+      then do:
     message
       vss-workfile vss-revision vss-description skip
       "Складской архив по товарам" skip
@@ -659,6 +673,7 @@ on error undo, return error return-value
       error-status :get-message(1) skip
       return-value skip
       view-as alert-box error .
+      end.
     undo, return error return-value . /* --->>>--- */
   end.
 
@@ -671,6 +686,8 @@ on error undo, return error return-value
     ) no-error .
   if error-status :error
   then do:
+       if p-message-on = true
+      then do:
     message
       vss-workfile vss-revision vss-description skip
       "Складской архив по товарам" skip
@@ -679,6 +696,7 @@ on error undo, return error return-value
       error-status :get-message(1) skip
       return-value skip
       view-as alert-box error .
+      end.
     undo, return error return-value . /* --->>>--- */
   end.
 
@@ -704,14 +722,17 @@ on error undo, return error return-value
     ) no-error .
   if error-status :error
   then do:
-    message
-      vss-workfile vss-revision vss-description skip
-      "Складской архив по товарам" skip
-      "Объект" p-obj-type p-obj-code skip
-      "Ошибка при вызове процедуры doclslib-calc-arh" skip
-      error-status :get-message(1) skip
-      return-value skip
-      view-as alert-box error .
+     if p-message-on = true
+      then do:  
+        message
+          vss-workfile vss-revision vss-description skip
+          "Складской архив по товарам" skip
+          "Объект" p-obj-type p-obj-code skip
+          "Ошибка при вызове процедуры doclslib-calc-arh" skip
+          error-status :get-message(1) skip
+          return-value skip
+          view-as alert-box error .
+      end.
     undo, return error return-value . /* --->>>--- */
   end.
 

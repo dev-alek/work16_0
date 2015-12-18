@@ -552,8 +552,7 @@ DEFINE BROWSE BR-gds
       tt-gds-info.gds-name COLUMN-LABEL "Название товара" FORMAT "X(48)" width 20
       tt-chk-gds.src-qnty
       tt-chk-gds.src-price
-      tt-chk-gds.src-discnt
-      tt-chk-gds.src-sum COLUMN-LABEL "Сумма в чеке"
+      tt-chk-gds.src-discnt      
       tt-gds-info.src-d-pcnt COLUMN-LABEL "%" FORMAT "->>9.99%"
       tt-gds-info.src-price-netto  COLUMN-LABEL "Цена нетто в чеке" FORMAT "->>>,>>>,>>9.99"
       tt-gds-info.src-sum-netto COLUMN-LABEL "Итого в чеке" FORMAT "->>>,>>>,>>>,>>9.99"
@@ -575,6 +574,7 @@ DEFINE BROWSE BR-gds
       tt-chk-gds.sales-man COLUMN-LABEL "Код!продавца"
       tt-gds-info.salesman-name COLUMN-LABEL "Продавец" FORMAT "X(16)"
       tt-chk-gds.road-tax COLUMN-LABEL "Дор. налог/! или тара"
+      tt-chk-gds.src-sum COLUMN-LABEL "Сумма в чеке"
   ENABLE
       tt-chk-gds.src-code
       tt-chk-gds.b-code

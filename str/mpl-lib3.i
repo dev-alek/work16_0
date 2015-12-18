@@ -449,6 +449,8 @@ end.
 define variable old-price as decimal   no-undo .
 /* Проверка строк с gds */
 define variable v-kol-rec as integer   no-undo .
+define variable v-gds-null-price as character no-undo initial "" .
+define variable v-type as character no-undo .
 v-kol-rec = 0.
 for each buf_price-doc-forming-gds no-lock where
          buf_price-doc-forming-gds.plt-id     = buf_price-doc-forming.plt-id      and
@@ -464,9 +466,16 @@ for each buf_price-doc-forming-gds no-lock where
                ub.goods.prod-code = buf_price-doc-forming-gds.prod-code no-error .
                if error-status :error then return error substitute ("Не найден товар &1 &2 &3" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code) .
     if ub.bar-code.gds-code <> ub.goods.gds-code then return error substitute ("Бар-код &4 не соответствует товару &1 &2 &3" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code, buf_price-doc-forming-gds.b-code ) .
-    if buf_price-doc-forming-gds.price-sale-doc   = ? or buf_price-doc-forming-gds.price-sale-doc   = 0 then return error substitute ("Продажная цена по товару &1 &2 &3 = &4" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code, buf_price-doc-forming-gds.price-sale-doc  ) .
-    if buf_price-doc-forming-gds.price-sale-rubl  = ? or buf_price-doc-forming-gds.price-sale-rubl  = 0 then return error substitute ("Продажная цена по товару &1 &2 &3 = &4" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code, buf_price-doc-forming-gds.price-sale-rubl ) .
-    if buf_price-doc-forming-gds.price-sale-base  = ? or buf_price-doc-forming-gds.price-sale-base  = 0 then return error substitute ("Продажная цена по товару &1 &2 &3 = &4" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code, buf_price-doc-forming-gds.price-sale-base ) .
+    run gds-attr-value in this-procedure (input ub.goods.gds-code
+                                         ,input {&attr-null-price}
+                                         ,output v-gds-null-price
+                                         ,output v-type ) no-error .
+    if buf_price-doc-forming-gds.price-sale-doc   = ? or (buf_price-doc-forming-gds.price-sale-doc   = 0 and not logical(v-gds-null-price) ) 
+                then return error substitute ("Продажная цена по товару &1 &2 &3 = &4" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code, buf_price-doc-forming-gds.price-sale-doc  ) .
+    if buf_price-doc-forming-gds.price-sale-rubl  = ? or (buf_price-doc-forming-gds.price-sale-rubl  = 0 and not logical(v-gds-null-price) )
+                then return error substitute ("Продажная цена по товару &1 &2 &3 = &4" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code, buf_price-doc-forming-gds.price-sale-rubl ) .
+    if buf_price-doc-forming-gds.price-sale-base  = ? or (buf_price-doc-forming-gds.price-sale-base  = 0 and not logical(v-gds-null-price) )
+                then return error substitute ("Продажная цена по товару &1 &2 &3 = &4" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code, buf_price-doc-forming-gds.price-sale-base ) .
     if buf_price-doc-forming-gds.slt-pc = ? then return error substitute ("НсП по товару &1 &2 &3 не определен" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code) .
     if buf_price-doc-forming-gds.vat-pc = ? then return error substitute ("НДС по товару &1 &2 &3 не определен" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code) .
 

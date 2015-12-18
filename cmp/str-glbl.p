@@ -1156,12 +1156,15 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define parts-l_c
 { cmp/cr-prep.i 1 TDEDT_Corr_Minus_Parts   mp "корректировка отрицательных партий" mp "corr minus parts"   }
 { cmp/cr-prep.i 1 TDEDT_Chg_Purch_Code     pc "смена типа приобретения"            pc "change purch code"  }
 { cmp/cr-prep.i 1 TDEDT_Overturn           ot "переоценка"                         ot "overturn"           }
+{ cmp/cr-prep.i 1 TDEDT_Pri_Object         io "приход внутриобъектный"             io "income object"      }
+{ cmp/cr-prep.i 1 TDEDT_Ras_Object         eo "расход внутриобъектный"             eo "expense object"     }
 
 &glob TDEDT_Receipt '{&bef-TDEDT_Pri_Vnesh},~
 {&bef-TDEDT_Vozvrat_Vnesh},~
 {&bef-TDEDT_Pri_Perem},~
 {&bef-TDEDT_Vozvrat_Perem},~
-{&bef-TDEDT_Pri_Prvo}':U
+{&bef-TDEDT_Pri_Prvo},~
+{&bef-TDEDT_Pri_Object}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_Receipt {&TDEDT_Receipt}" ).
 
 &glob TDEDT_Realization '{&bef-TDEDT_Ras_Vnesh},~
@@ -1176,7 +1179,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_Rec
 {&bef-TDEDT_Chg_Purch_Code},~
 {&bef-TDEDT_Ras_Perem},~
 {&bef-TDEDT_Ras_Prvo},~
-{&bef-TDEDT_Spi_Prvo}':U
+{&bef-TDEDT_Spi_Prvo},~
+{&bef-TDEDT_Ras_Object}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_Realization {&TDEDT_Realization}" ).
 
 &glob TDEDT_incorrect_sign '{&bef-TDEDT_Inv},{&bef-TDEDT_Peresort},{&bef-TDEDT_Vozvrat_Vnesh_Kass}':U
@@ -1200,7 +1204,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_inc
 {&bef-TDEDT_Overturn},~
 {&bef-TDEDT_Corr_Acc_Price},~
 {&bef-TDEDT_Corr_Minus_Parts},~
-{&bef-TDEDT_Chg_Purch_Code}':U
+{&bef-TDEDT_Chg_Purch_Code},~
+{&bef-TDEDT_Pri_Object},~
+{&bef-TDEDT_Ras_Object}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_List {&TDEDT_List}" ).
 
 /* типы документов увеличивающих остаток */
@@ -1214,7 +1220,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_Lis
 {&bef-TDEDT_Chg_Purch_Code},~
 {&bef-TDEDT_Pri_Perem},~
 {&bef-TDEDT_Vozvrat_Perem},~
-{&bef-TDEDT_Pri_Prvo}':U
+{&bef-TDEDT_Pri_Prvo},~
+{&bef-TDEDT_Pri_Object}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_in_list {&TDEDT_in_list}" ).
 
 /* типы документов уменьшающих остаток */
@@ -1224,7 +1231,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_in_
 {&bef-TDEDT_Spi_Vnesh},~
 {&bef-TDEDT_Ras_Perem},~
 {&bef-TDEDT_Ras_Prvo},~
-{&bef-TDEDT_Spi_Prvo}':U
+{&bef-TDEDT_Spi_Prvo},~
+{&bef-TDEDT_Ras_Object}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_out_list {&TDEDT_out_list}" ).
 
 &glob TDEDT_List-full '{&bef-TDEDT_Pri_Vnesh-full},~
@@ -1245,7 +1253,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_out
 {&bef-TDEDT_Overturn-full},~
 {&bef-TDEDT_Corr_Acc_Price-full},~
 {&bef-TDEDT_Corr_Minus_Parts-full},~
-{&bef-TDEDT_Chg_Purch_Code-full}':U
+{&bef-TDEDT_Chg_Purch_Code-full},~
+{&bef-TDEDT_Pri_Object-full},~
+{&bef-TDEDT_Ras_Object-full}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_List-full {&TDEDT_List-full}" ).
 
 /* Список документов без переоценки */
@@ -1259,7 +1269,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_Lis
 {&bef-TDEDT_Pri_Perem},~
 {&bef-TDEDT_Ras_Perem},~
 {&bef-TDEDT_Vozvrat_Perem},~
-{&bef-TDEDT_Corr_Acc_Price}':U
+{&bef-TDEDT_Corr_Acc_Price},~
+{&bef-TDEDT_Pri_Object},~
+{&bef-TDEDT_Ras_Object}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_List-ov {&TDEDT_List-ov}" ).
 
 &glob TDEDT_List-ov-full '{&bef-TDEDT_Pri_Vnesh-full},~
@@ -1272,7 +1284,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_Lis
 {&bef-TDEDT_Pri_Perem-full},~
 {&bef-TDEDT_Ras_Perem-full},~
 {&bef-TDEDT_Vozvrat_Perem-full},~
-{&bef-TDEDT_Corr_Acc_Price-full}':U
+{&bef-TDEDT_Corr_Acc_Price-full},~
+{&bef-TDEDT_Pri_Object-full},~
+{&bef-TDEDT_Ras_Object-full}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define TDEDT_List-ov-full {&TDEDT_List-ov-full}" ).
 
 &glob TDEDT_List-not-ver-reason '{&bef-TDEDT_Ras_Vnesh_Kass},~

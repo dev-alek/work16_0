@@ -61,6 +61,7 @@ define variable v-main-prt-b-code as integer no-undo .
 define variable IBM-good-code as character no-undo .
 define variable IBM-good-code-2 as character no-undo .
 define variable IBM2-short      as character no-undo .
+define variable v-gds-null-price as character no-undo .
 
 define variable iii as integer no-undo .
 define variable v-mask-full as character no-undo .
@@ -138,6 +139,11 @@ if action = "U" then do:
         for-price = 0.
       end.
       else do:
+        run gds-attr-value in this-procedure  ( input loc-goods.gds-code
+                                               ,input {&attr-null-price}
+                                               ,output v-gds-null-price
+                                               ,output v-type) no-error.  
+        if (not logical(v-gds-null-price) and for-price = 0) or for-price = ? then 
         return "NEXT".
       end.
     end.

@@ -62,8 +62,8 @@ define variable vss-description as character no-undo init "утилита Пересчет бала
 
     case v-choice :
       when 1 then do:
-        run str/cont-all.w (input ParParentProc, input v-cntxt-host-code-obj, input "b-sel,b-mark", input {&company}, input ?,
-                  input ?, input ?, input ?, input "current":u, input {&income}, input-output doc-list).
+        run str/cont-all.w (input ParParentProc, input v-cntxt-host-code-obj, input "b-sel,b-mark", input {&all}, input ?,
+                  input ?, input ?, input ?, input "current":u, input "all":u, input-output doc-list).
         if doc-list <> "" then do:
           assign v-num = num-entries(doc-list) .
           do ii = 1 to v-num:
@@ -75,7 +75,7 @@ define variable vss-description as character no-undo init "утилита Пересчет бала
         end.
       end.
       when 2 then do:
-        run ref/cli-all.w ( parParentProc, "b-sel,b-mark", {&cmp}, {&all}, {&current}, ?, "yes,yes,yes,,,,ИЛИ,,":u, "without-obj":U, output doc-list ) .
+        run ref/cli-all.w ( parParentProc, "b-sel,b-mark", {&cmp}, {&all}, {&current}, ?, ",,,,,,NO,,":u, ?, output doc-list ) .
         if doc-list <> "" then do:
           assign v-num = num-entries(doc-list) .
           do ii = 1 to v-num:

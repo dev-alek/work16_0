@@ -87,6 +87,7 @@ define variable v-str as character no-undo .
 { cmp/mrk-strf.i }
 { str/pdf-attr.i }
 { gbl/clntattr.i }
+{ ref/gds-attr.i }
 
 define variable gds-rec as integer   no-undo .     /* для f9 */
 define variable g#log   as logical   no-undo .
