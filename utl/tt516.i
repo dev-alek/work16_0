@@ -55,6 +55,8 @@ field price-rubl  as decimal
 field price-cli   as decimal
 field vat-pc      as decimal
 field cons-vat-pc as decimal
+field refA        as character
+field refB        as character
 field line-num-str as integer /* порядок чтения из xml */ /* не присылают */
 index pi
 doc-code

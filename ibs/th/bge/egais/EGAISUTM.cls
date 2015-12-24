@@ -16,6 +16,7 @@ using ibs.th.bge.egais.*.
 class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
  
 {cmp/str-glbl.i class}
+{ gbl/thbj-def.i }
 
   define protected variable ConPar  as character no-undo.
   define protected variable TimeOut as character no-undo.
@@ -25,9 +26,16 @@ class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
    Notes:
   ------------------------------------------------------------------------------*/
 		
-  constructor public EGAISUTM (  ):
+  constructor public EGAISUTM (inOjType as char, inObjCode as int):
     
-    get-key-value section 'EGAIS' key 'ConParameter' value ConPar.
+    define variable v-value-character   as character no-undo .
+    define variable v-value-decimal     as decimal   no-undo .
+    define variable v-value-integer     as integer   no-undo .
+    define variable v-value-logical     as logical   no-undo .
+    define variable v-value-type        as character no-undo .
+    define variable v-value-date        as date      no-undo .
+    
+    /*get-key-value section 'EGAIS' key 'ConParameter' value ConPar.
     if ConPar = ? then do:
       assign
       Msg = substitute("Ошибка ini - файла:&1Секция &2&1Ключ &3&1"
@@ -35,12 +43,28 @@ class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
                         , 'EGAIS'
                         , 'ConParameter')
       StatusErr = true.
-    end.        
+    end.*/        
     get-key-value section 'EGAIS' key 'TimeOut' value TimeOut.
     if TimeOut = ? then do:
       assign
         TimeOut = "5".
-    end.  
+    end.
+    run adm/shattri.p (
+         input "get":U
+        ,input inOjType
+        ,input inObjCode
+        ,input {&attr-egais-host}
+        ,input {&attr-egais-host_egais-utm}
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-value-logical
+        ,output v-value-type
+        ,input-output table thbjattr_thbj-attr
+        ) no-error .
+    ConPar = trim (v-value-character, '/').
+    ConPar = trim (ConPar, '\').
 
 
   end constructor.

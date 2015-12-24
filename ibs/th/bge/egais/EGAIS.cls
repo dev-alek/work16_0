@@ -67,8 +67,10 @@ class ibs.th.bge.egais.EGAIS:
 		
   constructor public EGAIS (inDbNum as int, inUserId as char):
     
-    DbNum = inDbNum.
-    User_Id = inUserId.
+    assign
+      DbNum   = inDbNum
+      User_Id = inUserId
+      .
 		
   end constructor.
   
@@ -76,13 +78,13 @@ class ibs.th.bge.egais.EGAIS:
     define variable glog as logical no-undo.
     assign
       StatusErr = false
-      Msg = "".
+      Msg       = "".
     assign
-      glog = EGAISImpl:SendRequestUTM ()
-      Msg = EGAISImpl:Msg
+      glog      = EGAISImpl:SendRequestUTM ()
+      Msg       = EGAISImpl:Msg
       StatusErr = EGAISImpl:StatusErr
-      ReplyId = EGAISImpl:ReplyId
-    .
+      ReplyId   = EGAISImpl:ReplyId
+      .
     return glog.
   end.
   
@@ -90,12 +92,12 @@ class ibs.th.bge.egais.EGAIS:
     define variable tth as handle no-undo.
     assign
       StatusErr = false
-      Msg = "".
+      Msg       = "".
     assign
-      tth = EGAISImpl:GetHndlTable()
-      Msg = EGAISImpl:Msg
+      tth       = EGAISImpl:GetHndlTable()
+      Msg       = EGAISImpl:Msg
       StatusErr = EGAISImpl:StatusErr
-    .
+      .
     return tth.
   end.
   
@@ -103,12 +105,12 @@ class ibs.th.bge.egais.EGAIS:
     define variable tth as handle no-undo.
     assign
       StatusErr = false
-      Msg = "".
+      Msg       = "".
     assign
-      tth = EGAISImpl:GetHndlTable(inArg, inArg1)
-      Msg = EGAISImpl:Msg
+      tth       = EGAISImpl:GetHndlTable(inArg, inArg1)
+      Msg       = EGAISImpl:Msg
       StatusErr = EGAISImpl:StatusErr
-    .
+      .
     return tth.
   end.
 
@@ -116,12 +118,12 @@ class ibs.th.bge.egais.EGAIS:
     define variable tth as handle no-undo.
     assign
       StatusErr = false
-      Msg = "".
+      Msg       = "".
     EGAISImpl:SaveWB(inArg).
     assign
-      Msg = EGAISImpl:Msg
+      Msg       = EGAISImpl:Msg
       StatusErr = EGAISImpl:StatusErr
-    .
+      .
   end.
 
 end class.
