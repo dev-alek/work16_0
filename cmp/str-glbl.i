@@ -3428,12 +3428,14 @@ end.
 &global-define bef-attr-image-list image-list
 &global-define attr-image-list '{&bef-attr-image-list}':U
 &global-define gds-attr-list 'alcohol-prod,egais-name,is-gas,ptrl-without-rvs,office-type,fuel-type,is-loyalty-payment,ban-bonus,null-price,fasovka,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet,image-list':U
-&global-define bef-prop-list-attr-office-type oss-pay,tso-ret
+&global-define bef-prop-list-attr-office-type oss-pay,tso-ret,card-act
 &global-define prop-list-attr-office-type '{&bef-prop-list-attr-office-type}':U
 &global-define bef-attr-office-type_oss-pay oss-pay
 &global-define attr-office-type_oss-pay '{&bef-attr-office-type_oss-pay}':U
 &global-define bef-attr-office-type_tso-ret tso-ret
 &global-define attr-office-type_tso-ret '{&bef-attr-office-type_tso-ret}':U
+&global-define bef-attr-office-type_card-act card-act
+&global-define attr-office-type_card-act '{&bef-attr-office-type_card-act}':U
 &global-define bef-prop-list-attr-fuel-type petrol,diesel-sum,diesel-wint,metan
 &global-define prop-list-attr-fuel-type '{&bef-prop-list-attr-fuel-type}':U
 &global-define bef-attr-fuel-type_petrol petrol
@@ -7909,10 +7911,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define cpdoc-attr-name 'ÐÐÍ-ÂÁÐÐ,Îñòàëüíûå':U
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
-&global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
+&global-define str-glbl_vss-revision 'Revision':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 5f8096499a5b, 356, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: d87127599462, 358, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 6b61c6e68798, 367, rls ':U
+&global-define str-glbl5_vss-revision 'Revision':U
 &global-define str-glblt_vss-revision 'Revision: 5f8096499a5b, 356, rls ':U
 &endif
