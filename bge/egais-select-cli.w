@@ -40,6 +40,8 @@ define variable br-hndl-objs  as handle no-undo .
 
 define variable ii as integer no-undo .
 
+{ cmp/str-glbl.i }
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -165,6 +167,8 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   run create-br .
+  { gbl/diasize.i &br-hndl=br-hndl-objs }
+  run diasize_init in this-procedure .
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -203,6 +207,7 @@ PROCEDURE create-br :
             column-resizable = true
 /*            resizable   = true*/
     .
+    v-diasize-browse-handle = br-hndl-objs.
     
     br-hndl-objs:add-like-column ("tt-objs-eg.regID") .    
     br-hndl-objs:add-like-column ("tt-objs-eg.obj-name-egais") .
