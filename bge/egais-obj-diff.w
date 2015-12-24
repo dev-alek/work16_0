@@ -41,7 +41,7 @@ define input parameter bh-objs as handle.
 define input parameter bh-objs-egais as handle.
 
 /* Local Variable Definitions ---                                       */
-
+{ cmp/str-glbl.i }
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -197,6 +197,8 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   run fill-tt.
+  { gbl/diasize.i &browse-name=br-objs-diff }
+  run diasize_init in this-procedure .
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.

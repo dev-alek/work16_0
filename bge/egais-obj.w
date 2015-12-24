@@ -445,7 +445,10 @@ DO:
                                                                and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
                                                                no-error.
                     if available X_ext-classif then do :
-                        assign X_ext-classif.charkey_three = tt-objs.regID .
+                        assign
+                            X_ext-classif.charkey_three = tt-objs.regID
+                            X_ext-classif.charkey_two   = tt-objs.obj-type + string(tt-objs.obj-code)
+                        .
                     end.
                     else do :
                         run ref/extclas1.p ( INPUT {&add-def}
@@ -458,7 +461,7 @@ DO:
                                             ,input 0 /*p-Key#_Two*/
                                             ,input 0 /*p-key#_Three*/
                                             ,input '':U  /*p-CharKey_One */
-                                            ,input '':U /*p-CharKey_two */
+                                            ,input (tt-objs.obj-type + string(tt-objs.obj-code)) /*p-CharKey_two */
                                             ,input tt-objs.regID /*p-CharKey_three */
                                             ,input 0 /*p-nonunique */
                                             ,input v-obj-uniq-key-rec ) no-error.
@@ -696,8 +699,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   empty temp-table thbjattr_thbj-attr .
   run adm/shattri.p (
        input "get":U
-      ,input {&cmp}
-      ,input v-cntxt-host-code-obj
+      ,input v-cntxt-obj-type
+      ,input v-cntxt-obj-code
       ,input {&attr-egais-host}
       ,input {&attr-egais-host_egais-fsrar}
       ,output v-value-character
@@ -714,11 +717,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     v-org-inn = buf_firm.inn    
   .
   egais = new EGAIS(v-cntxt-db-num, v-cntxt-userid).
-  egais:EGAISImpl = new DictOrg(v-fs-rar, v-org-inn) .
+  egais:EGAISImpl = new DictOrg(v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-org-inn) .
   run adm/shattri.p (
        input "get":U
-      ,input {&cmp}
-      ,input v-cntxt-host-code-obj
+      ,input '':U
+      ,input 0
       ,input {&attr-egais-host}
       ,input {&attr-egais-host_egais-exsys}
       ,output v-value-character
@@ -733,6 +736,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 /*  egais:EGAISImpl = new RequestDictOrg(v-fs-rar, v-org-inn).  */
 /*  responseDictOrg = new ResponseDictOrg(v-fs-rar, v-org-inn) .*/
   run fill-tt.
+  { gbl/diasize.i &browse-name=br-objects }
+  run diasize_init in this-procedure .
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.

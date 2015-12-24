@@ -38,6 +38,8 @@ define output parameter p-regID     as character no-undo .
 define variable qh-objs-egais as handle no-undo .
 define variable br-hndl-objs  as handle no-undo .
 
+{ cmp/str-glbl.i }
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -162,6 +164,8 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   run create-br .
+  { gbl/diasize.i &br-hndl=br-hndl-objs }
+  run diasize_init in this-procedure .
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -182,7 +186,8 @@ PROCEDURE create-br :
     
     create query qh-objs-egais .
     qh-objs-egais:set-buffers(bh-objs-egais).
-    qh-objs-egais:query-prepare (substitute("for each tt-objs-eg where not tt-objs-EG.connected_ and tt-objs-EG.inn = '&1' and tt-objs-EG.kpp = '&2'", trim(p-inn), trim(p-kpp)) ).
+/*    qh-objs-egais:query-prepare (substitute("for each tt-objs-eg where not tt-objs-EG.connected_ and tt-objs-EG.inn = '&1' and tt-objs-EG.kpp = '&2'", trim(p-inn), trim(p-kpp)) ).*/
+    qh-objs-egais:query-prepare (substitute("for each tt-objs-eg where tt-objs-EG.inn = '&1' and tt-objs-EG.kpp = '&2'", trim(p-inn), trim(p-kpp)) ).
     qh-objs-egais:query-open .
     
     create browse br-hndl-objs
@@ -201,6 +206,8 @@ PROCEDURE create-br :
             column-resizable = true
             column-scrolling = true
     .
+    v-diasize-browse-handle = br-hndl-objs.
+    
     br-hndl-objs:add-like-column ("tt-objs-eg.regID") .
     br-hndl-objs:add-like-column ("tt-objs-eg.obj-name-egais") .
     br-hndl-objs:add-like-column ("tt-objs-eg.obj-name-egais-short") .
