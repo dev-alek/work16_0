@@ -1293,25 +1293,6 @@ v-prop-code = "{&bef-attr-overval_pr-abs-d},{&bef-attr-overval_pr-altex},{&bef-a
 
 end.
 
-    when {&attr-egais-host} then do:
-      v-prop-code = "{&bef-attr-egais-host_egais-exsys}".
-&scop ptype integer
-&scop prop-value 1
-&scop prop-code  entry(v-ii,v-prop-code)
-      do v-ii = 1 to num-entries(v-prop-code):
-        {&create-thbj-attr}.
-      end.
-      v-prop-code = "{&bef-attr-egais-host_egais-fsrar}".
-&scop ptype character
-&scop prop-value ''
-&scop prop-code  entry(v-ii,v-prop-code)
-      do v-ii = 1 to num-entries(v-prop-code):
-        {&create-thbj-attr}.
-      end.
-
-    end.
-    
-
     when {&attr-abc-global} then do:
       v-prop-code = {&prop-list-attr-abc-global} .
 
@@ -1602,7 +1583,31 @@ end.
         {&create-thbj-attr}.
       end.
     end.
+    when {&attr-egais-host} then do:
+      v-prop-code = "{&bef-attr-egais-host_egais-fsrar}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+    v-prop-code = "{&bef-attr-egais-host_egais-utm}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-egais-host_egais-exsys}".
+&scop ptype integer
+&scop prop-value 1
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
 
+
+    end.
     when {&attr-prt-glob} then do:
       v-prop-code = "{&bef-attr-prt-glob_invprn0},{&bef-attr-prt-glob_outprncd},{&bef-attr-prt-glob_sort-prd},{&bef-attr-prt-glob_torg2-no},{&bef-attr-prt-glob_outprops},{&bef-attr-prt-glob_rep-artic}" .
 &scop ptype logical

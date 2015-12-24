@@ -3675,18 +3675,18 @@ logical~
 &scop tooltip-attr-egais-host         "Настройки для обмена с ЕГАИС"
 &scop user-can-edit-attr-egais-host   true
 &scop output-display-attr-egais-host  true
-&scop other-attr-egais-host           'spr-ext=gbl\exegais.w':U
-&scop prop-type-list-attr-egais-host  'character,integer':U
-&scop prop-label-list-attr-egais-host 'Номер ФСРАР,Номер внешней системы'
-&scop prop-list-attr-egais-host       'egais-fsrar,egais-exsys'
-&scop global-attr-egais-host false
-&scop host-attr-egais-host true
-&scop shop-attr-egais-host false
+&scop other-attr-egais-host           'spr-ext=gbl\exegais.w/init-ext=adm\shattri.p':U
+&scop prop-type-list-attr-egais-host  'character,character,integer':U
+&scop prop-label-list-attr-egais-host 'Код ФСРАР,Адрес УТМ,Номер внешней системы'
+&scop prop-list-attr-egais-host       'egais-fsrar,egais-utm,egais-exsys'
+&scop global-attr-egais-host true
+&scop host-attr-egais-host false
+&scop shop-attr-egais-host true
 &scop store-attr-egais-host false
 &scop db-attr-egais-host false
-/*&scop batch-edit-attr-egais-host  0*/
-&scop level-way-attr-egais-host ",host,"
-&scop up-way-attr-egais-host ",egais,"
+&scop batch-edit-attr-egais-host  0
+&scop level-way-attr-egais-host "obj,,global"
+&scop up-way-attr-egais-host "egais,,egais"
 
 
 /* Общие параметры по АРХИВАМ */
