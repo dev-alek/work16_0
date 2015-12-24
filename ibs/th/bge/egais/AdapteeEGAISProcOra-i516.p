@@ -59,7 +59,7 @@ do:
       temp_trn-doc.line-num      = ii
       temp_trn-doc.doc-date      = tt-wb-header.wb-date
       temp_trn-doc.ps            = tt-wb-header.ps
-      temp_trn-doc.doc-code      = tt-wb-header.num
+      temp_trn-doc.doc-code      = tt-wb-header.uniq-key-rec
       temp_trn-doc.ext-doc-type  = tt-wb-header.wb-type
       temp_trn-doc.cli-type      = tt-wb-header.cli-type
       temp_trn-doc.cli-code      = tt-wb-header.cli-code
@@ -87,6 +87,8 @@ do:
       temp_doc-line.price-cli  = tt-wb-gds-EG.price
       temp_doc-line.price-rubl = tt-wb-gds-EG.price
       temp_doc-line.doc-code   = temp_trn-doc.doc-code
+      temp_doc-line.RefA = tt-wb-gds-EG.RefA
+      temp_doc-line.RefB = tt-wb-gds-EG.RefB
       .
     
   end.

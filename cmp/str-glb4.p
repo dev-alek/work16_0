@@ -411,6 +411,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Алкогольная продукция */
 { cmp/cr-prep.i 1 attr-alcohol-prod       alcohol-prod       " " alcohol-prod       }
 
+/* Наименование товара в ЕГАИС */
+{ cmp/cr-prep.i 1 attr-egais-name         egais-name         " " egais-name         }
+
 /* Природный газ-топливо */
 { cmp/cr-prep.i 1 attr-is-gas             is-gas             " " is-gas             }
 
@@ -499,6 +502,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 
 /* список атрибутов товаров */
 &glob gds-attr-list '{&bef-attr-alcohol-prod}~
+,{&bef-attr-egais-name}~
 ,{&bef-attr-is-gas}~
 ,{&bef-attr-ptrl-without-rvs}~
 ,{&bef-attr-office-type}~

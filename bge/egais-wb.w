@@ -55,7 +55,8 @@ define variable v-obj-uniq-key-rec         as character no-undo .
 define variable v-gds-uniq-key-rec         as character no-undo .
 define variable v-ext-sys                  as integer   no-undo .
 define variable v-rid                      as recid     no-undo .
-define variable v-identity                 as character no-undo .
+/*define variable v-identity                 as character no-undo .*/
+define variable v-uniq-key-rec             as character no-undo .
 
 define buffer buf_clients   for ub.clients .
 define buffer x_ext-classif for ub.ext-classif.
@@ -261,7 +262,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
         undo, return no-apply .
       end.
     end.
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, v-identity).
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, v-uniq-key-rec ).
     gh-wb-egais-header:set-buffers (bh-wb-gds-EG-header).
     gh-wb-egais-header:query-prepare ("for each tt-wb-header").
     gh-wb-egais-header:query-open.
@@ -284,7 +285,7 @@ ON CHOOSE OF b-choose-ship IN FRAME Dialog-Frame /* b-choose-ship */
     run ref/cli-all.w (
       input parparentproc
       ,input "b-sel"
-      ,input {&g___object}
+      ,input {&all}
       ,input {&all}
       ,input {&current}
       ,input ?
@@ -335,7 +336,7 @@ ON CHOOSE OF b-choose-ship IN FRAME Dialog-Frame /* b-choose-ship */
         undo, return no-apply .
       end.
     end.
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, v-identity).
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, v-uniq-key-rec).
     gh-wb-egais-header:set-buffers (bh-wb-gds-EG-header).
     gh-wb-egais-header:query-prepare ("for each tt-wb-header").
     gh-wb-egais-header:query-open.
@@ -433,12 +434,11 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       on mouse-move-dblclick persistent run msdblcl.
       on row-display persistent run proc-row-leave.
     end triggers
-      .
-
+    .
 
 
   
-  bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("Identity"):buffer-value).
+  bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
 
   create query gh-wb-egais.
   gh-wb-egais:set-buffers (bh-wb-gds-EG).
@@ -450,9 +450,10 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   extent (bcol) = bh-wb-gds-EG:num-fields.
   do ii = 1 to bh-wb-gds-EG:num-fields:
     bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-gds-EG' + '.' + bh-wb-gds-EG:buffer-field (ii):name, 0, 'FILL-IN').
+    if ii = 2 then bcol[ii]:width = 50.
   end.
   
-  bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("Identity"):buffer-value).
+  bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
   create query gh-wb-egais-header.
   gh-wb-egais-header:set-buffers (bh-wb-gds-EG-header).
   gh-wb-egais-header:query-prepare ("for each tt-wb-header").
@@ -460,15 +461,17 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
 
   browse-hdl-wb-egais-header:query = gh-wb-egais-header.
 
-  do ii = 1 to 9 /*bh-wb-gds-EG-header:num-fields*/ :
+  do ii = 1 to bh-wb-gds-EG-header:num-fields:
     browse-hdl-wb-egais-header:add-like-column('tt-wb-header' + '.' + bh-wb-gds-EG-header:buffer-field (ii):name, 0, 'FILL-IN').
   end.
+  { gbl/diasize.i &br-hndl=browse-hdl-wb-egais }
+  run diasize_init in this-procedure .
   run enable_UI.  
   bh-wb-gds-EG:find-first ("", no-lock) no-error.
   run refresh-view.
   
-  v-identity = bh-wb-egais:buffer-field ("Identity"):buffer-value.
-  
+  v-uniq-key-rec  = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
+
   wait-for go of frame {&FRAME-NAME}.
 end.
 run disable_UI.
@@ -604,7 +607,7 @@ PROCEDURE msdblcl :
     end.
   end.
 
-  bh-wb-gds-EG = egais:GetHndlTable(2, v-identity).
+  bh-wb-gds-EG = egais:GetHndlTable(2, v-uniq-key-rec ).
   create query gh-wb-egais.
   gh-wb-egais:set-buffers (bh-wb-gds-EG).
   gh-wb-egais:query-prepare ("for each tt-wb-gds-EG").

@@ -22,6 +22,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
   &scoped-define diasize_resizable_object browse {&browse-name}
 &endif
 
+&if defined(br-hndl) = 0 &then
+  &scoped-define br-hndl {&diasize_resizable_object} :handle
+&endif
+
 define variable v-diasize-need-maximize        as logical   no-undo init true  .
 define variable v-diasize-orig-frame-height    as decimal   no-undo .
 define variable v-diasize-orig-frame-width     as decimal   no-undo .
@@ -1282,7 +1286,7 @@ procedure diasize_init :
       assign
         v-diasize-orig-frame-height = frame {&frame-name} :height
         v-diasize-orig-frame-width  = frame {&frame-name} :width
-        v-diasize-browse-handle     = {&diasize_resizable_object} :handle
+        v-diasize-browse-handle     = {&br-hndl}
       .
 
       create button v-diasize-resize-button

@@ -295,7 +295,7 @@ DEFINE FRAME Dialog-Frame
      SPACE(1) SKIP(0.32)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Œ·˙ÂÍÚ˚ ≈√¿»—"
+         TITLE " ÎËÂÌÚ˚ ≈√¿»—"
          DEFAULT-BUTTON b-load CANCEL-BUTTON b-cancel WIDGET-ID 100.
 
 assign br-objects:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame = 1 .
@@ -631,7 +631,7 @@ DO:
     ii2_:
     do ii = 1 to num-entries(select-list) :
         for first tt-objs no-lock where recid(tt-objs) = integer(entry(ii, select-list)) and trim(tt-objs.inn) <> ""  :
-            egais:EGAISImpl = new DictOrg(v-fs-rar, tt-objs.inn) .
+            egais:EGAISImpl = new DictOrg(v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, tt-objs.inn) .
             egais:SendRequestUTM() .            
         end.
         glog = egais:StatusErr .
@@ -667,7 +667,7 @@ DO:
     end.
     do ii = 1 to num-entries(select-list) :
         for first tt-objs no-lock where recid(tt-objs) = integer(entry(ii, select-list)) :
-            egais:EGAISImpl = new DictOrg(v-fs-rar, tt-objs.inn) .
+            egais:EGAISImpl = new DictOrg(v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, tt-objs.inn) .
             bh-obj-egais = egais:GetHndlTable() .
             glog = egais:StatusErr .
             if glog then do :
@@ -775,8 +775,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   empty temp-table thbjattr_thbj-attr .
   run adm/shattri.p (
        input "get":U
-      ,input {&cmp}
-      ,input v-cntxt-host-code-obj
+      ,input v-cntxt-obj-type
+      ,input v-cntxt-obj-code
       ,input {&attr-egais-host}
       ,input {&attr-egais-host_egais-fsrar}
       ,output v-value-character
@@ -795,8 +795,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   egais = new EGAIS(v-cntxt-db-num, v-cntxt-userid).
   run adm/shattri.p (
        input "get":U
-      ,input {&cmp}
-      ,input v-cntxt-host-code-obj
+      ,input '':U
+      ,input 0
       ,input {&attr-egais-host}
       ,input {&attr-egais-host_egais-exsys}
       ,output v-value-character
@@ -811,6 +811,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
 /*  run fill-tt.*/
   RUN enable_UI.
+  { gbl/diasize.i &browse-name=br-objects }
+  run diasize_init in this-procedure .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -1083,7 +1085,7 @@ PROCEDURE enable_UI :
        b-list:menu-mouse                             = 1
   .
   br-objects:column-resizable in FRAME Dialog-Frame = true .
-  egais:EGAISImpl = new DictOrg(v-fs-rar, v-org-inn) . 
+  egais:EGAISImpl = new DictOrg(v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-org-inn) . 
   glog = egais:IsSent .
   if glog then enable b-answer WITH FRAME Dialog-Frame.
   else disable b-answer WITH FRAME Dialog-Frame .

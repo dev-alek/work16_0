@@ -52,8 +52,9 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
    Notes:
   ------------------------------------------------------------------------------*/
 		
-  constructor public DictOrg (inFSRAR as char, inINN as char):
-    
+  constructor public DictOrg (inOjType as char, inObjCode as int, inFSRAR as char, inINN as char):
+
+    super (inOjType, inObjCode).
     assign
       parameters = inFSRAR + {&delim-par} + inINN. 
     .

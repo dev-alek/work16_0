@@ -34,25 +34,26 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Журнал запросов ЕГАИС".
 
-define variable th-wb-egais     as handle  no-undo.
-define variable bh-wb-egais     as handle  no-undo.
-define variable qh-wb-egais     as handle  no-undo.
-define variable browse-hdl-wb-egais as handle no-undo.
-define variable bcol                 as handle extent 11 no-undo.
-define variable egais                as class EGAIS   no-undo.
-define variable v-db-num             as integer   no-undo .
-define variable v-user-id            as character no-undo .
-define variable qh-wb-gds-EG-header    as handle  no-undo.
-define variable qh-wb-gds-EG     as handle  no-undo.
-define variable bh-wb-gds-EG-header    as handle  no-undo.
-define variable bh-wb-gds-EG     as handle  no-undo.
+define variable th-wb-egais         as handle    no-undo.
+define variable bh-wb-egais         as handle    no-undo.
+define variable qh-wb-egais         as handle    no-undo.
+define variable browse-hdl-wb-egais as handle    no-undo.
+define variable bcol                as handle    extent 11 no-undo.
+define variable egais               as class     EGAIS no-undo.
+define variable v-db-num            as integer   no-undo .
+define variable v-user-id           as character no-undo .
+define variable qh-wb-gds-EG-header as handle    no-undo.
+define variable qh-wb-gds-EG        as handle    no-undo.
+define variable bh-wb-gds-EG-header as handle    no-undo.
+define variable bh-wb-gds-EG        as handle    no-undo.
 
-define variable v-value-character  as character no-undo .
-define variable v-value-decimal    as decimal   no-undo .
-define variable v-value-integer    as integer   no-undo .
-define variable v-value-logical    as logical   no-undo .
-define variable v-value-type       as character no-undo .
-define variable v-value-date       as date      no-undo .
+define variable v-value-character   as character no-undo .
+define variable v-value-decimal     as decimal   no-undo .
+define variable v-value-integer     as integer   no-undo .
+define variable v-value-logical     as logical   no-undo .
+define variable v-value-type        as character no-undo .
+define variable v-value-date        as date      no-undo .
+define variable v-ext-sys           as integer   no-undo .
 
 define variable v-fs-rar as character no-undo view-as text format "X(15)" label "Код ФС РАР (FSRAR ID)" .
 
@@ -60,7 +61,9 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }
 { gbl/thbjattr.i }
+{ibs/th/bge/egais/wb-egais.i}
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -117,7 +120,7 @@ DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1
      RADIO-BUTTONS 
           "Полученные", 1,
 "Закрытые на факт", 2
-     SIZE 32.88 BY 1.25 NO-UNDO.
+     SIZE 40 BY 1.25 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -127,7 +130,7 @@ DEFINE FRAME Dialog-Frame
      Btn_Sel AT ROW 1.2 COL 18.63 WIDGET-ID 6
      Btn_Save AT ROW 1.2 COL 34.38 WIDGET-ID 10
      Btn_dnlw AT ROW 1.2 COL 50 WIDGET-ID 12
-     RADIO-SET-1 AT ROW 1.2 COL 87.38 NO-LABEL WIDGET-ID 2
+     RADIO-SET-1 AT ROW 1.2 COL 80.38 NO-LABEL WIDGET-ID 2
      SPACE(1.24) SKIP(25.28)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -185,7 +188,6 @@ DO:
   then do:
     message "Ошибка: " egais:Msg view-as alert-box error.
   end.
-  bh-wb-egais = egais:GetHndlTable(3, "").
   run refresh-query.
 END.
 
@@ -202,15 +204,16 @@ DO:
   
   if RADIO-SET-1 = 1 
     then do:
-    if bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value <> "нет"
+    if can-find (first ub.trn-doc where ub.trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
     then do:
       message substitute ( "Накладная с № &1 уже сформирована", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
       view-as alert-box.
+       return no-apply.
     end.
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
-    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("Identity"):buffer-value).  
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("Identity"):buffer-value).
+    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).  
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
     find first ub.clients 
       where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("cli-type"):buffer-value
         and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("cli-code"):buffer-value) no-error.
@@ -233,7 +236,7 @@ DO:
       return no-apply.
     end.
     
-    egais:SaveWB(bh-wb-egais:buffer-field ("Identity"):buffer-value).
+    egais:SaveWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
     if egais:StatusErr
       then message egais:Msg view-as alert-box error.
       else message "Создание накладной завершено" view-as alert-box.
@@ -242,8 +245,7 @@ DO:
   else do:
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
-    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("Identity"):buffer-value).  
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("Identity"):buffer-value).
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
     egais:SendRequestUTM().
     if egais:StatusErr
       then message egais:Msg view-as alert-box error.
@@ -316,8 +318,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   empty temp-table thbjattr_thbj-attr .
   run adm/shattri.p (
        input "get":U
-      ,input {&cmp}
-      ,input v-cntxt-host-code-obj
+      ,input v-cntxt-obj-type
+      ,input v-cntxt-obj-code
       ,input {&attr-egais-host}
       ,input {&attr-egais-host_egais-fsrar}
       ,output v-value-character
@@ -332,9 +334,25 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     v-fs-rar = v-value-character 
   .
   
+  run adm/shattri.p (
+       input "get":U
+      ,input '':U
+      ,input 0
+      ,input {&attr-egais-host}
+      ,input {&attr-egais-host_egais-exsys}
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+      ) no-error .
+  assign v-ext-sys = v-value-integer .  
+  
   egais = new EGAIS(v-db-num, v-user-id).
   
-  egais:EGAISImpl = new WayBill (v-fs-rar).
+  egais:EGAISImpl = new WayBill (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
   
   bh-wb-egais = egais:GetHndlTable(3, "").
   create query qh-wb-egais.
@@ -364,10 +382,11 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   if not bh-wb-egais = ? 
   then do:
     do ii = 1 to bh-wb-egais:num-fields:
-      bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-clob-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+      bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
     end.
   end.
-
+  { gbl/diasize.i &br-hndl=browse-hdl-wb-egais }
+  run diasize_init in this-procedure .
   run enable_UI.  
 
   wait-for go of frame {&FRAME-NAME}.
@@ -422,7 +441,9 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE msdblcl Dialog-Frame 
 PROCEDURE msdblcl :
 
-  apply "choose" to Btn_Sel in frame {&frame-name} .
+  if RADIO-SET-1 <> 1  
+    then apply "choose" to Btn_Save in frame {&frame-name} .
+    else apply "choose" to Btn_Sel in frame {&frame-name} .
 
 end.
 
@@ -438,15 +459,27 @@ if bh-wb-egais = ?
 case RADIO-SET-1 :
     when 1  then 
     do:
+      bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
       qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-clob-hndls where tt-wb-clob-hndls.is-fact <> 'факт' ").
+      qh-wb-egais:query-prepare ("for each tt-wb-hndls").
       qh-wb-egais:query-open.
+      enable Btn_Sel with frame {&FRAME-NAME}.
     end.
     when 2  then 
     do:
+      bh-wb-egais = egais:GetHndlTable({&wb-fact}, "").
       qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-clob-hndls where tt-wb-clob-hndls.is-sent = 'нет' and  tt-wb-clob-hndls.is-fact = 'факт' ").
+      qh-wb-egais:query-prepare ("for each tt-wb-hndls").
       qh-wb-egais:query-open.
+      disable Btn_Sel with frame {&FRAME-NAME}.
+    end.
+    when 3  then 
+    do:
+      bh-wb-egais = egais:GetHndlTable({&wb-ras}, "").
+      qh-wb-egais:set-buffers (bh-wb-egais).
+      qh-wb-egais:query-prepare ("for each tt-wb-hndls").
+      qh-wb-egais:query-open.
+      disable Btn_Sel with frame {&FRAME-NAME}.
     end.
   end.
 

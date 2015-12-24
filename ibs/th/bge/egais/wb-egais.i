@@ -23,6 +23,10 @@
 &glob wb-header 1
 &glob wb-line   2
 &glob wb-clob   3
+&glob wb-ras    4
+&glob wb-fact   5
+&glob wb-refB   6
+
 
   define temp-table tt-wb-header no-undo
     field wb-type-full as character label "Тип" format "X(10)"
@@ -42,13 +46,14 @@
     field wbregid      as character label "WBRegId"
     field Identity     as character label "ID EGAIS"
     field wb-type      as character label "Тип"
+    field uniq-key-rec as character
     index pi
     Identity 
     .
 
   define temp-table tt-wb-gds-EG no-undo
     field gds-code      like ub.goods.gds-code label "Код товара в TH"
-    field gds-name      like ub.goods.gds-name label "Полное наименование"
+    field gds-name      like ub.goods.gds-name label "Полное наименование" format "X(150)"
     field alc-code      as character label "Алкогольный код"
     field ms-base       like ub.goods.ms-base label "Объем" format ">>9.9<<"
     field alc-type-code like ub.alc-type.alc-type-code label "Код АП"
@@ -56,7 +61,8 @@
     field Identity      as character label "ID EGAIS"
     field doc-qnty      like ub.doc-line.doc-qnty label "Кол-во"
     field price         like ub.doc-line.price-rubl label "Цена"
-    field informbregid  as character
+    field refA          as character label "Справка A" format "X(25)"
+    field refB          as character label "Справка B" format "X(25)"
     index pi as primary
     gds-code
     index name_

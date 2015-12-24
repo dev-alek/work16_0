@@ -36,6 +36,8 @@ define variable vss-description as character no-undo init "Журнал учёта рознично
 { rep/fmtcli.i   }
 { cmp/r-pril.i new  } 
 { gbl/clntattr.i }
+{ rep/r-pychk0.i defalgo }
+
 
 define variable v-qnty as decimal.
 define variable v-par-val           as character no-undo.
@@ -102,6 +104,9 @@ define temp-table tt-rep1
     field exp-fact-qnty           like doc-line.fact-qnty /* "->>,>>>,>>9,<<<" */     /* 14. "Количество тары(упаковки)"                      Расход.      */
     field exp-total-quontity      like doc-line.fact-qnty                        /* 15. "Итого расход за отчётный период"                Расход.      */ /* Подобно п.10 */
     field itog_ii                 as integer
+    field exp-time as integer
+    field  exp-name as char
+       field gds-code as integer
     field itog_volume as integer
     field exp-doc-type  like doc-line.ext-doc-type
     index pi is primary alc-type-code       doc-line-code volume-piece-litres
@@ -292,6 +297,24 @@ do: /* S */
         
          
  
+            run rep/rpychk0.p (input "r-shftc2"
+                ,input obj-list.obj-type
+                ,input obj-list.obj-code
+                ,input ?                    /*p-date-from*/
+                ,input ?                    /*p-date-to*/
+                ,input X-date-start         /*p-shift-date-from*/
+                ,input X-date-end           /*p-shift-date-to*/
+                ,input 0                 /*p-shift-num-start*/
+                ,input 99                /*p-shift-num-end*/
+                ,input ?                    /*p-inkas-code*/
+                ) no-error.
+
+            if error-status:error then
+            do:
+                message error-status:get-message(1) view-as alert-box.
+            end.
+            
+            
 /*            { gbl/working.i }*/
             run gbl/conf-rd.p ( /* Запрашиваем - есть ли в текущей БД в указанном объекте(маг,скл...) параметр "алкоголь"?  */
                 "alcohol":U,
@@ -317,9 +340,11 @@ do: /* S */
                     no-lock
                     ,
                     first goods where
-                    goods.gds-code = gds-obj.gds-code
+                    goods.gds-code = gds-obj.gds-code 
+                    
                     :
-
+                        
+        
                     run gds-attr-value(
                         ub.gds-obj.gds-code,
                         {&attr-alcohol-prod},
@@ -334,7 +359,7 @@ do: /* S */
                         v-alc-type-code = "".
                         for first ub.alc-type-gds where /* F Подготовка для определения Вид_Алкогольной_Продукции. */
                             ub.alc-type-gds.gds-code = ub.gds-obj.gds-code no-lock
-                            :
+                            : 
                             do: /* U */
                                 for first ub.alc-type where /* Определение Вид_Алкогольной_Продукции. */
                                     ub.alc-type.alc-type-inner-code = ub.alc-type-gds.alc-type-inner-code no-lock
@@ -344,23 +369,19 @@ do: /* S */
                                             v-alc-type-name = ub.alc-type.alc-type-name /* Запись Вид_Алкогольной_Продукции во временную переменную. */
                                             v-alc-type-code = ub.alc-type.alc-type-code /* Запись Код_Вида_Продукции во временную переменную. */
                                             .
-                                        for each ub.doc-line where 
-                                            ub.doc-line.obj-type = obj-list.obj-type and
-                                            ub.doc-line.obj-code = obj-list.obj-code and
-                                            ub.doc-line.status_ = {&fact} and
-                                            ub.doc-line.fact-order >= v-fact-order-start and
-                                            ub.doc-line.fact-order <= v-fact-order-end and
-                                            ub.doc-line.prod-type = ub.gds-obj.prod-type and
-                                            ub.doc-line.prod-code = ub.gds-obj.prod-code and
-                                            ub.doc-line.artic = ub.gds-obj.artic and
-                                            ( doc-line.ext-doc-type  = {&TDEDT_Ras_Vnesh_Kass}     or
-                                            doc-line.ext-doc-type  = {&TDEDT_Ras_Vnesh}          or
-                                            doc-line.ext-doc-type  = {&TDEDT_Vozvrat_Vnesh_Kass} or
-                                            doc-line.ext-doc-type  = {&TDEDT_Vozvrat_Vnesh} )
+/*                                            find  first ub.bar-code where bar-code.gds-code =  alc-type-gds.gds-code  no-lock no-error.*/
+    for each   ub.bar-code where bar-code.gds-code =  alc-type-gds.gds-code and bar-code.part-code = "" and bar-code.node-code = 1 : 
+
+                                        for each ub.chk-gds-pay where 
+                                            ub.chk-gds-pay.obj-type = obj-list.obj-type and
+                                            ub.chk-gds-pay.obj-code = obj-list.obj-code and
+                                            chk-gds-pay.algo-num = {&current-algo-1} and 
+                                            ub.chk-gds-pay.chk-date >= X-date-Start and
+                                            ub.chk-gds-pay.chk-date <= X-date-End and
+                                            ub.chk-gds-pay.b-code  = ub.bar-code.b-code
+                                           
                                             no-lock
-                                            ,
-                                            first buf_trn-doc where
-                                            buf_trn-doc.doc-code = ub.doc-line.doc-code no-lock
+                                          
                                             :
                                             /*                                                                                                                                                                                             */
                                             /*                                            if (lookup(ub.doc-line.ext-doc-type, {&TDEDT_out_list}) > 0) or (ub.doc-line.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass-full}) then /* Если работаем с Расходом (список кодов расхода содержится в TDEDT_out_list) */*/
@@ -389,33 +410,24 @@ do: /* S */
                                                 tt-rep1.obj-code                = obj-list.obj-code
                                                 tt-rep1.obj-type                = obj-list.obj-type
                                                
-                                                tt-rep1.exp-doc-line-code       = doc-line.doc-code           /* Служебное поле (не на экран) */
+                                                tt-rep1.exp-doc-line-code       = chk-gds-pay.doc-code           /* Служебное поле (не на экран) */
                                                 tt-rep1.exp-alc-type-code       = v-alc-type-code             /* Служебное поле (не на экран) */
-                                                tt-rep1.exp-td-fact-date        = buf_trn-doc.fact-date        /* Служебное поле (не на экран) */
-                                                tt-rep1.doc-line-fact-order     = doc-line.fact-order       /* Служебное поле (не на экран) */
+                                                tt-rep1.exp-time                = chk-gds-pay.chk-time
+                                                tt-rep1.exp-td-fact-date        = chk-gds-pay.chk-date        /* Служебное поле (не на экран) */
+                                                /*                                                tt-rep1.doc-line-fact-order     = chk-gds-pay.chk-date       /* Служебное поле (не на экран) */*/
                                                 /*                                                    tt-rep1.exp-categoryes-prod     = v-name-ext-doc-type       /* 11 */*/
-                                                tt-rep1.exp-alc-type-name       = v-alc-type-name             /* 12 */
+                                                tt-rep1.gds-code                = goods.gds-code
+                                                tt-rep1.exp-name                = goods.gds-name 
+                                                tt-rep1.exp-alc-type-name       = v-alc-type-name       /* 12 */
                                                 tt-rep1.exp-volume-piece-litres = goods.ms-base   
+                                                tt-rep1.cnt-line = tt-rep1.cnt-line + 1 
+                                                 tt-rep1.exp-fact-qnty = tt-rep1.exp-fact-qnty +    chk-gds-pay.eff-doc-qnty
+/*-                                                    (if      = ? then 0 else        chk-gds-pay.eff-doc-qnty)*/
+                                            
                                                 .
-                                            if (doc-line.ext-doc-type  = {&TDEDT_Ras_Vnesh_Kass}     or   
-                                                doc-line.ext-doc-type  = {&TDEDT_Ras_Vnesh})   then 
-                                            do: 
-                                                tt-rep1.exp-fact-qnty = tt-rep1.exp-fact-qnty + 
-                                                    (if doc-line.fact-qnty = ? then 0 else doc-line.fact-qnty)
-                                                    .
-                                            /*                                                                                                          */
+/*                                           message tt-rep1.exp-name chk-gds-pay.chk-date view-as alert-box.*/
                                             end.
-                                     
-                                            if  (doc-line.ext-doc-type  = {&TDEDT_Vozvrat_Vnesh_Kass} or
-                                                doc-line.ext-doc-type  = {&TDEDT_Vozvrat_Vnesh} ) then 
-                                            do: 
-                                                tt-rep1.exp-fact-qnty           = tt-rep1.exp-fact-qnty - 
-                                                    (if doc-line.fact-qnty = ? then 0 else doc-line.fact-qnty)
-                                                    
-                               
-                                                    .
-                                            end.
-                                                                                 end.
+                                                 end.                        
                                         end. /* M */
                                     end.
                                 end. /* U */
@@ -425,43 +437,47 @@ do: /* S */
                 end.
 
 
-         for each tt-rep1  where tt-rep1.obj-type = obj-list.obj-type and tt-rep1.obj-code = obj-list.obj-code break by  tt-rep1.exp-td-fact-date   by  tt-rep1.exp-volume-piece-litres by tt-rep1.exp-alc-type-code  : 
-    
-                
-                if first-of(tt-rep1.exp-volume-piece-litres) and first-of(tt-rep1.exp-alc-type-code ) then 
-                do: 
-
-                    v-qnty = 0.
-                end.
-
-                v-qnty = v-qnty + tt-rep1.exp-fact-qnty.
-
-                if  last-of(tt-rep1.exp-alc-type-code )   then 
-                do:
-                    
-                    find first buf_tt where 
-                    buf_tt.obj-code = obj-list.obj-code and 
-                    buf_tt.obj-type = obj-list.obj-type and 
-                    buf_tt.exp-td-fact-date =   tt-rep1.exp-td-fact-date and
-                        buf_tt.exp-volume-piece-litres = tt-rep1.exp-volume-piece-litres and 
-                        buf_tt.itog_volume = 1 and 
-                        buf_tt.exp-alc-type-code =  tt-rep1.exp-alc-type-code no-lock no-error .
-                    if not available buf_tt then 
-                    do:
-                        create buf_tt.
-                         buf_tt.obj-code = obj-list.obj-code. 
-                    buf_tt.obj-type = obj-list.obj-type .
-                         buf_tt.itog_volume = 1 .
-                        buf_tt.exp-td-fact-date =   tt-rep1.exp-td-fact-date .
-                        buf_tt.exp-alc-type-code =  tt-rep1.exp-alc-type-code .
-                        buf_tt.exp-volume-piece-litres = tt-rep1.exp-volume-piece-litres.   
-                 
-                    end.     
-                      buf_tt.cnt-line = tt-rep1.cnt-line.
-                    buf_tt.exp-alc-type-name = tt-rep1.exp-alc-type-name.
-               buf_tt.exp-fact-qnty = v-qnty.
-                end.  
-            end.
+/*         for each tt-rep1  where tt-rep1.obj-type = obj-list.obj-type and tt-rep1.obj-code = obj-list.obj-code break by  tt-rep1.exp-td-fact-date   by  tt-rep1.exp-volume-piece-litres by tt-rep1.gds-code  :*/
+/*                                                                                                                                                                                                              */
+/*                                                                                                                                                                                                              */
+/*                if  first-of(tt-rep1.gds-code ) then                                                                                                                                                          */
+/*                do:                                                                                                                                                                                           */
+/*                                                                                                                                                                                                              */
+/*                    v-qnty = 0.                                                                                                                                                                               */
+/*                end.                                                                                                                                                                                          */
+/*                                                                                                                                                                                                              */
+/*                v-qnty = v-qnty + tt-rep1.exp-fact-qnty.                                                                                                                                                      */
+/*                                                                                                                                                                                                              */
+/*                if  last-of(tt-rep1.gds-code )   then                                                                                                                                                         */
+/*                do:                                                                                                                                                                                           */
+/*                                                                                                                                                                                                              */
+/*                    find first buf_tt where                                                                                                                                                                   */
+/*                    buf_tt.obj-code = obj-list.obj-code and                                                                                                                                                   */
+/*                    buf_tt.obj-type = obj-list.obj-type and                                                                                                                                                   */
+/*                    buf_tt.exp-td-fact-date =   tt-rep1.exp-td-fact-date and                                                                                                                                  */
+/*                        buf_tt.exp-volume-piece-litres = tt-rep1.exp-volume-piece-litres and                                                                                                                  */
+/*                        buf_tt.itog_volume = 1 and                                                                                                                                                            */
+/*                        buf_tt.gds-code = tt-rep1.gds-code                                                                                                                                                    */
+/*                        and                                                                                                                                                                                   */
+/*                        buf_tt.exp-alc-type-code =  tt-rep1.exp-alc-type-code no-lock no-error .                                                                                                              */
+/*                    if not available buf_tt then                                                                                                                                                              */
+/*                    do:                                                                                                                                                                                       */
+/*                        create buf_tt.                                                                                                                                                                        */
+/*                         buf_tt.obj-code = obj-list.obj-code.                                                                                                                                                 */
+/*                    buf_tt.obj-type = obj-list.obj-type .                                                                                                                                                     */
+/*                         buf_tt.itog_volume = 1 .                                                                                                                                                             */
+/*                         buf_tt.gds-code = tt-rep1.gds-code .                                                                                                                                                 */
+/*                        buf_tt.exp-td-fact-date =   tt-rep1.exp-td-fact-date .                                                                                                                                */
+/*                        buf_tt.exp-alc-type-code =  tt-rep1.exp-alc-type-code .                                                                                                                               */
+/*                        buf_tt.exp-volume-piece-litres = tt-rep1.exp-volume-piece-litres.                                                                                                                     */
+/*                                                                                                                                                                                                              */
+/*                    end.                                                                                                                                                                                      */
+/*                        buf_tt.exp-alc-type-name    = tt-rep1.exp-alc-type-name .                                                                                                                             */
+/*                      buf_tt.cnt-line = tt-rep1.cnt-line.                                                                                                                                                     */
+/*                    buf_tt.exp-name = tt-rep1.exp-name.                                                                                                                                                       */
+/*               buf_tt.exp-fact-qnty = v-qnty.                                                                                                                                                                 */
+/*                end.                                                                                                                                                                                          */
+/*            end.                                                                                                                                                                                              */
 
             end. /* А. Тело_Отчёта */
 
@@ -479,10 +495,10 @@ do: /* S */
 
 /*end.*/
 
-        do:  /* B Присвоение в поля таблицы="№ п/п" номеров по порядку, так будет выглядеть порядок в отчёте. */
-
-            /*FF*****************************************************************************/
-            define variable v-inc-litres-line as decimal   initial 0 no-undo. 
+/*        do:  /* B Присвоение в поля таблицы="№ п/п" номеров по порядку, так будет выглядеть порядок в отчёте. */*/
+/*                                                                                                                */
+/*            /*FF*****************************************************************************/                  */
+            define variable v-inc-litres-line as decimal   initial 0 no-undo.
             define variable v-out-litres-line as decimal   initial 0 no-undo.
             define variable v-inc-litres-tot  as decimal   initial 0 no-undo.
       define variable v-fact-qnty as decimal.
@@ -491,32 +507,32 @@ do: /* S */
    define variable v-liters as decimal.
    define variable itog_ii as integer .
             define variable v-dec             as character no-undo.
-            v-cnt-line = 0.
-
-            for each tt-rep1 no-lock
-                /*        by tt-rep1.alc-type-code*/
-                /*        by tt-rep1.date-trn*/
-                by tt-rep1.doc-line-fact-order
-                /*        by tt-rep1.exp-alc-type-code*/
-                by tt-rep1.exp-td-fact-date
-                :
-             
-
-                /* Для РАСХОДА */
-                v-cnt-line = v-cnt-line + 1.
-                tt-rep1.cnt-line = v-cnt-line.
-                v-out-litres-line =
-                    if ((tt-rep1.exp-volume-piece-litres * tt-rep1.exp-fact-qnty) / 10) = ? then 0
-                else ((tt-rep1.exp-volume-piece-litres * tt-rep1.exp-fact-qnty) / 10).
-                v-out-litres-tot =
-                    (if v-out-litres-tot = ? then 0 else v-out-litres-tot) +
-                    (if v-out-litres-line = ? then 0 else v-out-litres-line). /* 15/1 */
-                v-out-qnty-tot =
-                    (if v-out-qnty-tot = ? then 0 else v-out-qnty-tot) +
-                    (if tt-rep1.exp-fact-qnty = ? then 0 else tt-rep1.exp-fact-qnty). /* 15/2 */
-            end.
-            v-cnt-line = 0.
-        end. /* B */
+/*            v-cnt-line = 0.                                                                                     */
+/*                                                                                                                */
+/*            for each tt-rep1 no-lock                                                                            */
+/*                /*        by tt-rep1.alc-type-code*/                                                            */
+/*                /*        by tt-rep1.date-trn*/                                                                 */
+/*                by tt-rep1.doc-line-fact-order                                                                  */
+/*                /*        by tt-rep1.exp-alc-type-code*/                                                        */
+/*                by tt-rep1.exp-td-fact-date                                                                     */
+/*                :                                                                                               */
+/*                                                                                                                */
+/*                                                                                                                */
+/*                /* Для РАСХОДА */                                                                               */
+/*                v-cnt-line = v-cnt-line + 1.                                                                    */
+/*                tt-rep1.cnt-line = v-cnt-line.                                                                  */
+/*                v-out-litres-line =                                                                             */
+/*                    if ((tt-rep1.exp-volume-piece-litres * tt-rep1.exp-fact-qnty) / 10) = ? then 0              */
+/*                else ((tt-rep1.exp-volume-piece-litres * tt-rep1.exp-fact-qnty) / 10).                          */
+/*                v-out-litres-tot =                                                                              */
+/*                    (if v-out-litres-tot = ? then 0 else v-out-litres-tot) +                                    */
+/*                    (if v-out-litres-line = ? then 0 else v-out-litres-line). /* 15/1 */                        */
+/*                v-out-qnty-tot =                                                                                */
+/*                    (if v-out-qnty-tot = ? then 0 else v-out-qnty-tot) +                                        */
+/*                    (if tt-rep1.exp-fact-qnty = ? then 0 else tt-rep1.exp-fact-qnty). /* 15/2 */                */
+/*            end.                                                                                                */
+/*            v-cnt-line = 0.                                                                                     */
+/*        end. /* B */                                                                                            */
 
         find first tt-rep1 no-lock no-error.
         if error-status:error then
@@ -548,18 +564,14 @@ for each obj-list :
     run define-full-path-Report(input g#report-num, input obj-list.obj-code , output v-file-name-rep-htm).
     run create-file(v-file-name-rep-htm).       
         
-          for each tt-rep1 no-lock where tt-rep1.obj-code = obj-list.obj-code and tt-rep1.obj-type = obj-list.obj-type and tt-rep1.itog_volume = 1
-            break by  tt-rep1.exp-td-fact-date by tt-rep1.exp-alc-type-code  by tt-rep1.exp-volume-piece-litres : 
+          for each tt-rep1 no-lock where tt-rep1.obj-code = obj-list.obj-code and tt-rep1.obj-type = obj-list.obj-type 
+            break by  tt-rep1.exp-alc-type-code  by tt-rep1.exp-volume-piece-litres : 
                 
-                
-    if first-of (tt-rep1.exp-td-fact-date) then do: 
-                    itog_ii = 0 .    
-                    end.
-                    
-        
+
 
             if first-of (tt-rep1.exp-alc-type-code)  then
             do:
+                itog_ii  = 0.
                 v-fact-qnty = 0.
                 v-liters = 0.
                 v-name = "".
@@ -572,11 +584,11 @@ for each obj-list :
            
                                                    
      
-            if last-of (tt-rep1.exp-alc-type-code)  then 
+            if last-of (tt-rep1.exp-alc-type-code)  then  
             do:
                             itog_ii = itog_ii + 1 .
                 
-                find first buf_itog  where buf_itog.exp-td-fact-date = tt-rep1.exp-td-fact-date and 
+                find first buf_itog  where  
                     buf_itog.exp-alc-type-code =  tt-rep1.exp-alc-type-code  and 
                     buf_itog.obj-code =  obj-list.obj-code and 
                     buf_itog.obj-type = obj-list.obj-type and 
@@ -589,7 +601,6 @@ for each obj-list :
                     create buf_itog.
                     assign 
                        buf_itog.exp-volume-piece-litres = 0
-                        buf_itog.exp-td-fact-date  = tt-rep1.exp-td-fact-date
                         buf_itog.exp-alc-type-code = tt-rep1.exp-alc-type-code 
                         buf_itog.obj-code          = obj-list.obj-code  
                         buf_itog.obj-type          = obj-list.obj-type
@@ -597,7 +608,7 @@ for each obj-list :
          
                 end.
                 buf_itog.itog_ii = itog_ii .
-                buf_itog.exp-alc-type-name     = v-name.
+                buf_itog.exp-alc-type-name     = tt-rep1.exp-alc-type-name.
                 buf_itog.exp-volume-piece-litres =  v-liters.
          buf_itog.exp-fact-qnty  =  v-fact-qnty .
                 
@@ -990,43 +1001,53 @@ define variable var-type as char.
         output stream OutStr-html close.
     end.
 
+define variable n_itog as integer.
+define variable n as integer init 0.
     do:
         output stream OutStr-html to value(v-file-name-rep-htm) append convert target 'UTF-8'.
 
-        for each buf_tt no-lock where buf_tt.obj-code = p-obj-code and buf_tt.obj-type = p-obj-type  and   buf_tt.itog_volume = 1 break by buf_tt.exp-td-fact-date  by buf_tt.volume-piece-litres :
-            
+        for each buf_tt no-lock where buf_tt.obj-code = p-obj-code and buf_tt.obj-type = p-obj-type  and   buf_tt.cnt-line <> 0 break by buf_tt.exp-td-fact-date  by buf_tt.exp-time :
+            n = n + 1 .
             v-exp-volume-piece-litres = if buf_tt.exp-volume-piece-litres = 0 and buf_tt.exp-fact-qnty = 0 then "" else fnc-fmt-dec-tc-litres(buf_tt.exp-volume-piece-litres).
             put stream OutStr-html unformatted
-                '       <tr style = "height:60px;">' skip
-                '         <td style="display: yes; text-align: right;">'  +  string(buf_tt.cnt-line) + '</td>' skip
+                '       <tr>' skip
+                '         <td style="display: yes; text-align: right;">'  +  string(n) + '</td>' skip
                 '         <td style="display: yes; text-align:  right;">' + if buf_tt.exp-td-fact-date = ? then "" else fnc-DD-MM-YYYY(date(string(buf_tt.exp-td-fact-date,"99.99.9999"))) +  '</td>' skip
                 '         <td style="display: yes; text-align:  left;">'  '</td>' skip
-                '         <td text_wrap="true" style="display: yes; text-align:  left;">'  +    buf_tt.exp-alc-type-name  + '</td>'  skip
+                '         <td text_wrap="true" style="display: yes; text-align:  left;">'  +    buf_tt.exp-name + '</td>'  skip
                 '         <td style="display: yes; text-align:  right;">'  +      buf_tt.exp-alc-type-code  + '</td>'  skip
                 '         <td style="display: yes; text-align:  right;">'  +       v-exp-volume-piece-litres + '</td>'  skip
                 '         <td style="display: yes; text-align:  right;">'  +       if buf_tt.exp-fact-qnty = 0 and buf_tt.exp-volume-piece-litres = 0 then ""  else string(fnc-fmt-dec-tc-qnty(buf_tt.exp-fact-qnty))     + '</td>'  skip
                 '</tr>' skip
                 .
-                
-            if last-of (buf_tt.exp-td-fact-date) then 
-            do: 
-                
-                find last buf_tt-itog-lvl where buf_tt-itog-lvl.obj-code = p-obj-code  and buf_tt-itog-lvl.obj-type = p-obj-type  and buf_tt-itog-lvl.cnt-line = 0 and  buf_tt-itog-lvl.exp-td-fact-date = buf_tt.exp-td-fact-date no-lock no-error.
+/*                                                                                                                                                                                                                                                    */
+/*            if last-of (buf_tt.exp-td-fact-date) then                                                                                                                                                                                               */
+/*            do:                                                                                                                                                                                                                                     */
+/*                                                                                                                                                                                                                                                    */
+              end.
+              
+                              for each  buf_tt-itog-lvl where buf_tt-itog-lvl.obj-code = p-obj-code  and buf_tt-itog-lvl.obj-type = p-obj-type  and buf_tt-itog-lvl.cnt-line = 0  : 
+                                  
+                                 n_itog = n_itog + 1 .
+                                 end.
+                                 
                   put stream OutStr-html unformatted
-    
-                        '       <tr style = "height:60px;">' skip
+
+   '       <tr style = "height:60px;">' skip
                     
                         
-                        '         <td rowspan = "' +   string(buf_tt-itog-lvl.itog_ii) +  '"   colspan = "3" style="display: yes; vertical-align:  middle; font-weight: bold; text-align:  right;"> ИТОГО</td>' skip
-                        .
-               
-               
-                for each buf_tt-itog where buf_tt-itog.obj-code = p-obj-code  and buf_tt-itog.obj-type = p-obj-type  and buf_tt-itog.cnt-line = 0 and  buf_tt-itog.exp-td-fact-date = buf_tt.exp-td-fact-date : 
+                        '         <td rowspan = "' +   string(n_itog) +  '"   colspan = "3" style="display: yes; vertical-align:  middle; font-weight: bold; text-align:  right;"> ИТОГО</td>' skip
+                 
+               .
+              
+              
+                for each buf_tt-itog where buf_tt-itog.obj-code = p-obj-code  and buf_tt-itog.obj-type = p-obj-type  and buf_tt-itog.cnt-line = 0 break by buf_tt-itog.exp-td-fact-date: 
         
     
     
                    put stream OutStr-html unformatted
                         
+                         
                         
                         '         <td text_wrap="true" style="display: yes; font-weight: bold; text-align: left;">'  +    buf_tt-itog.exp-alc-type-name  + '</td>'  skip
                         '         <td style="display: yes; font-weight: bold; text-align:  right;">'  +      buf_tt-itog.exp-alc-type-code  + '</td>'  skip
@@ -1034,10 +1055,9 @@ define variable var-type as char.
                         '         <td style="display: yes; font-weight: bold; text-align:  right;">'  +       if buf_tt-itog.exp-fact-qnty = 0 and buf_tt-itog.exp-volume-piece-litres = 0 then ""  else string(fnc-fmt-dec-tc-qnty(buf_tt-itog.exp-fact-qnty))     + '</td>'  skip
                         '</tr>' skip
                         .
-                end.
             end.
     
-        end.
+        
     
     
     end.

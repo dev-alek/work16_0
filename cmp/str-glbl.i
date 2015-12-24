@@ -3369,6 +3369,8 @@ end.
 &global-define attr-gds-attr-lock '{&bef-attr-gds-attr-lock}':U
 &global-define bef-attr-alcohol-prod alcohol-prod
 &global-define attr-alcohol-prod '{&bef-attr-alcohol-prod}':U
+&global-define bef-attr-egais-name egais-name
+&global-define attr-egais-name '{&bef-attr-egais-name}':U
 &global-define bef-attr-is-gas is-gas
 &global-define attr-is-gas '{&bef-attr-is-gas}':U
 &global-define bef-attr-ptrl-without-rvs ptrl-without-rvs
@@ -3425,7 +3427,7 @@ end.
 &global-define attr-weight-of-pallet '{&bef-attr-weight-of-pallet}':U
 &global-define bef-attr-image-list image-list
 &global-define attr-image-list '{&bef-attr-image-list}':U
-&global-define gds-attr-list 'alcohol-prod,is-gas,ptrl-without-rvs,office-type,fuel-type,is-loyalty-payment,ban-bonus,null-price,fasovka,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet,image-list':U
+&global-define gds-attr-list 'alcohol-prod,egais-name,is-gas,ptrl-without-rvs,office-type,fuel-type,is-loyalty-payment,ban-bonus,null-price,fasovka,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet,image-list':U
 &global-define bef-prop-list-attr-office-type oss-pay,tso-ret
 &global-define prop-list-attr-office-type '{&bef-prop-list-attr-office-type}':U
 &global-define bef-attr-office-type_oss-pay oss-pay
@@ -5125,10 +5127,14 @@ end.
 &global-define lob-res-ref-full '{&bef-lob-res-ref-full}':U
 &global-define bef-lob-egais-wb egais-wb
 &global-define lob-egais-wb '{&bef-lob-egais-wb}':U
-&global-define bef-lob-egais-wb-full Накладная EGAIS
+&global-define bef-lob-egais-wb-full Накладная ЕГАИС
 &global-define lob-egais-wb-full '{&bef-lob-egais-wb-full}':U
-&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb':U
-&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная EGAIS':U
+&global-define bef-lob-egais-ref-b egais-ref-b
+&global-define lob-egais-ref-b '{&bef-lob-egais-ref-b}':U
+&global-define bef-lob-egais-ref-b-full Справка B ЕГАИС
+&global-define lob-egais-ref-b-full '{&bef-lob-egais-ref-b-full}':U
+&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b':U
+&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС':U
 &global-define blob-res-codes 'data':U
 &global-define blob-res-codes-full 'Данные':U
 &global-define blob-trn-doc-image 'trn-doc-image':U
@@ -6612,7 +6618,7 @@ end.
 &global-define EGAIS-DictGds-full '{&bef-EGAIS-DictGds-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: b6c8ec403436, 320, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 5f8096499a5b, 356, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7891,20 +7897,22 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-srv-auth-ASU_srv-auth-adr '{&bef-attr-srv-auth-ASU_srv-auth-adr}':U
 &global-define bef-attr-egais-host egais
 &global-define attr-egais-host '{&bef-attr-egais-host}':U
-&global-define bef-prop-list-attr-egais-host egais-fsrar,egais-exsys
+&global-define bef-prop-list-attr-egais-host egais-fsrar,egais-utm,egais-exsys
 &global-define prop-list-attr-egais-host '{&bef-prop-list-attr-egais-host}':U
 &global-define bef-attr-egais-host_egais-fsrar egais-fsrar
 &global-define attr-egais-host_egais-fsrar '{&bef-attr-egais-host_egais-fsrar}':U
+&global-define bef-attr-egais-host_egais-utm egais-utm
+&global-define attr-egais-host_egais-utm '{&bef-attr-egais-host_egais-utm}':U
 &global-define bef-attr-egais-host_egais-exsys egais-exsys
 &global-define attr-egais-host_egais-exsys '{&bef-attr-egais-host_egais-exsys}':U
 &global-define cpdoc-attr-code 'rrn-vbrr,cpdoc':U
 &global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U
-&global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU':U
+&global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
 &global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 57eea2004402, 316, rls ':U
-&global-define str-glblt_vss-revision 'Revision: b6c8ec403436, 320, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 5f8096499a5b, 356, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: d87127599462, 358, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 5f8096499a5b, 356, rls ':U
 &endif

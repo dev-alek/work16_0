@@ -40,6 +40,8 @@ define variable br-hndl-gds  as handle no-undo .
 
 define variable ii as integer no-undo .
 
+{ cmp/str-glbl.i }
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -79,6 +81,8 @@ DEFINE BUTTON b-select AUTO-GO
      LABEL "Выбор" 
      SIZE 15 BY 1.14
      BGCOLOR 8 .
+     
+Define variable NameContext as character view-as fill-in size 30 by 1 fgcolor 12 no-undo.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -86,7 +90,8 @@ DEFINE BUTTON b-select AUTO-GO
 DEFINE FRAME Dialog-Frame
      b-select AT ROW 1.24 COL 2
      b-cancel AT ROW 1.24 COL 18
-     SPACE(76) SKIP(10.38)
+     NameContext at row 1.24 COL 45 label "Нач. слова"
+     SPACE(22) SKIP(10.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Выбор товара из ЕГАИС для связки"
@@ -147,6 +152,25 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+ON return OF NameContext IN FRAME {&frame-name} do:
+    assign NameContext.
+    if trim(NameContext) = "" then do :
+        qh-gds-egais:query-prepare (substitute("for each tt-gds-eg where tt-gds-EG.ms-base = '&1'
+                                                                     and tt-gds-EG.proof = '&2'
+                                                                     and trim(tt-gds-EG.alc-type-code) = '&3'",
+                                                                     p-ms-base, p-proof, trim(p-alc-type-code) ) ).
+    end.
+    else do :
+        qh-gds-egais:query-prepare (substitute("for each tt-gds-eg where tt-gds-EG.ms-base = '&1' 
+                                                                     and tt-gds-EG.proof   = '&2' 
+                                                                     and trim(tt-gds-EG.alc-type-code) = '&3'
+                                                                     and tt-gds-EG.gds-name contains '&4'
+                                                                      INDEXED-REPOSITION ",
+                                                                     p-ms-base, p-proof, trim(p-alc-type-code), (trim(NameContext) + "*") ) ).
+    end.
+    qh-gds-egais:query-open .
+end.
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -165,6 +189,8 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   run create-br .
+  { gbl/diasize.i &br-hndl=br-hndl-gds }
+  run diasize_init in this-procedure .
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -204,6 +230,7 @@ PROCEDURE create-br :
             column-resizable = true
 /*            resizable   = true*/
     .
+    v-diasize-browse-handle = br-hndl-gds.
     
     br-hndl-gds:add-like-column ("tt-gds-eg.gds-name") .    
     br-hndl-gds:add-like-column ("tt-gds-eg.alc-code") .
@@ -247,7 +274,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-select b-cancel 
+  ENABLE b-select b-cancel NameContext 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
 /*  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}*/

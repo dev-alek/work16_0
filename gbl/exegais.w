@@ -59,6 +59,7 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 /*if p-obj-type = "" then do:                                     */
 /*if g#db-num <> 0  and p-obj-type = "" then  p-mode = {&lookup} .*/
 /*end.                                                            */
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -74,13 +75,11 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help RECT-1 v-egais-fsrar ~
-v-egais-exsys B-egais-exsys 
-&Scoped-Define DISPLAYED-OBJECTS v-egais-fsrar v-egais-exsys f-egais-exsys 
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help RECT-1 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
-&Scoped-define List-2 v-egais-exsys B-egais-exsys f-egais-exsys 
+&Scoped-define List-2 B-egais-exsys f-egais-exsys 
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -122,9 +121,14 @@ DEFINE VARIABLE v-egais-exsys AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 0
      SIZE 9 BY 1 TOOLTIP "Код внешней системы, используемой для обмена" NO-UNDO.
 
 DEFINE VARIABLE v-egais-fsrar AS CHARACTER FORMAT "X(256)":U 
-     LABEL "Код ФСРАР фирмы" 
+     LABEL "Код ФСРАР" 
      VIEW-AS FILL-IN 
      SIZE 64.88 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-egais-utm AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Адрес УТМ" 
+     VIEW-AS FILL-IN 
+     SIZE 64.88 BY 1 TOOLTIP "255.255.255.255:65536" NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -138,6 +142,7 @@ DEFINE FRAME Dialog-Frame
      B-quit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 74.63
      v-egais-fsrar AT ROW 3.13 COL 17.63 COLON-ALIGNED WIDGET-ID 118
+     v-egais-utm AT ROW 4.71 COL 17.63 COLON-ALIGNED WIDGET-ID 132
      v-egais-exsys AT ROW 4.75 COL 19.63 COLON-ALIGNED WIDGET-ID 22
      B-egais-exsys AT ROW 4.75 COL 30.75 WIDGET-ID 24
      f-egais-exsys AT ROW 4.75 COL 33 COLON-ALIGNED NO-LABEL WIDGET-ID 128
@@ -170,13 +175,32 @@ ASSIGN
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* SETTINGS FOR BUTTON B-egais-exsys IN FRAME Dialog-Frame
-   2                                                                    */
-/* SETTINGS FOR FILL-IN f-egais-exsys IN FRAME Dialog-Frame
    NO-ENABLE 2                                                          */
 ASSIGN 
-       f-egais-exsys:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+       B-egais-exsys:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+/* SETTINGS FOR FILL-IN f-egais-exsys IN FRAME Dialog-Frame
+   NO-DISPLAY NO-ENABLE 2                                               */
 ASSIGN 
+       f-egais-exsys:HIDDEN IN FRAME Dialog-Frame           = TRUE
+       f-egais-exsys:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+
+/* SETTINGS FOR FILL-IN v-egais-exsys IN FRAME Dialog-Frame
+   NO-DISPLAY NO-ENABLE                                                 */
+ASSIGN 
+       v-egais-exsys:HIDDEN IN FRAME Dialog-Frame           = TRUE
        v-egais-exsys:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+
+/* SETTINGS FOR FILL-IN v-egais-fsrar IN FRAME Dialog-Frame
+   NO-DISPLAY NO-ENABLE                                                 */
+ASSIGN 
+       v-egais-fsrar:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+/* SETTINGS FOR FILL-IN v-egais-utm IN FRAME Dialog-Frame
+   NO-DISPLAY NO-ENABLE                                                 */
+ASSIGN 
+       v-egais-utm:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -325,14 +349,30 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY v-egais-fsrar v-egais-exsys f-egais-exsys 
-      WITH FRAME Dialog-Frame.
-  if p-mode = {&update} then do:
-    ENABLE B-exit B-quit B-Help RECT-1 v-egais-fsrar v-egais-exsys B-egais-exsys 
+        ENABLE B-exit B-quit B-Help RECT-1  
         WITH FRAME Dialog-Frame.
-  end.      
+ if p-obj-type = "" then do:
+    DISPLAY v-egais-exsys f-egais-exsys 
+      WITH FRAME Dialog-Frame.
+      if p-mode = {&update} then do:
+        ENABLE v-egais-exsys f-egais-exsys b-egais-exsys
+        WITH FRAME Dialog-Frame.
+        HIDE v-egais-fsrar v-egais-utm
+        IN FRAME Dialog-Frame.
+      end.  
+ end.  
+ else do:
+   DISPLAY v-egais-fsrar v-egais-utm 
+      WITH FRAME Dialog-Frame.
+      if p-mode = {&update} then do:
+        ENABLE v-egais-fsrar v-egais-utm
+        WITH FRAME Dialog-Frame.
+        HIDE v-egais-exsys f-egais-exsys b-egais-exsys
+        IN FRAME Dialog-Frame.
+      end.  
+ end.  
+      
   VIEW FRAME Dialog-Frame.
-
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
   
 END PROCEDURE.
@@ -378,21 +418,29 @@ end.
 
 FOR EACH temp-thbj-attr
   :
-  IF temp-thbj-attr.prop-code = {&attr-egais-host_egais-fsrar} THEN DO:
-     v-egais-fsrar = temp-thbj-attr.property-value-character.
-     display v-egais-fsrar with frame {&frame-name} .
-  END.
-  IF temp-thbj-attr.prop-code = {&attr-egais-host_egais-exsys} THEN DO:
-     find first buf_ext-system no-lock
-        where buf_ext-system.esys-id = temp-thbj-attr.property-value-integer 
-     no-error.
-     if AVAILABLE buf_ext-system then do:
-         v-egais-exsys = buf_ext-system.esys-id.
-         f-egais-exsys = buf_ext-system.esys-name.
-         display v-egais-exsys with frame {&frame-name} .
-         display f-egais-exsys with frame {&frame-name} .
-     end.
-  END.
+  if p-obj-type = "" then do:
+    IF temp-thbj-attr.prop-code = {&attr-egais-host_egais-exsys} THEN DO:
+       find first buf_ext-system no-lock
+          where buf_ext-system.esys-id = temp-thbj-attr.property-value-integer 
+       no-error.
+       if AVAILABLE buf_ext-system then do:
+           v-egais-exsys = buf_ext-system.esys-id.
+           f-egais-exsys = buf_ext-system.esys-name.
+           display v-egais-exsys with frame {&frame-name} .
+           display f-egais-exsys with frame {&frame-name} .
+       end.
+    END.
+  end.
+  else do:  
+    IF temp-thbj-attr.prop-code = {&attr-egais-host_egais-fsrar} THEN DO:
+       v-egais-fsrar = temp-thbj-attr.property-value-character.
+       display v-egais-fsrar with frame {&frame-name} .
+    END.
+    IF temp-thbj-attr.prop-code = {&attr-egais-host_egais-utm} THEN DO:
+       v-egais-utm = temp-thbj-attr.property-value-character.
+       display v-egais-utm with frame {&frame-name} .
+    END.
+  end.
 END.
 
 END PROCEDURE.
@@ -433,17 +481,27 @@ define variable fh as widget-handle no-undo .
 define variable v-same as logical no-undo .
 IF p-mode = {&LOOKUP} THEN RETURN ERROR.
 
+if p-obj-type = "" then do:
 ASSIGN FRAME {&FRAME-NAME}
-    v-egais-fsrar 
     v-egais-exsys
     .
-
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-egais-host_egais-exsys} .
+    temp-thbj-attr.property-value-integer = v-egais-exsys.
+    
+end.
+else do:
+ASSIGN FRAME {&FRAME-NAME}
+    v-egais-fsrar 
+    v-egais-utm
+    .
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-egais-host_egais-fsrar} .
     temp-thbj-attr.property-value-character = v-egais-fsrar.
 
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-egais-host_egais-exsys} .
-    temp-thbj-attr.property-value-integer = v-egais-exsys.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-egais-host_egais-utm} .
+    temp-thbj-attr.property-value-character = v-egais-utm.
 
+end.  
+    
     do transaction:
         RUN thbjattr_set-section IN THIS-PROCEDURE (
              input p-obj-type

@@ -81,7 +81,7 @@ define input parameter bh-gds-egais as handle.
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
-
+{ cmp/str-glbl.i }
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -196,6 +196,8 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  { gbl/diasize.i &browse-name=br-gds-diff }
+  run diasize_init in this-procedure .
   run fill-tt.
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.

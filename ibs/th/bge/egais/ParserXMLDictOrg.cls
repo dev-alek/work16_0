@@ -50,6 +50,14 @@ class ibs.th.bge.egais.ParserXMLDictOrg inherits EGAISUTM:
     DEFINE VARIABLE hRoot AS HANDLE NO-UNDO.
     DEFINE VARIABLE good AS LOGICAL NO-UNDO.
     
+    
+    
+    constructor public ParserXMLDictOrg (inOjType as char, inObjCode as int):
+  
+      super (inOjType, inObjCode).
+      
+    end constructor.
+    
     method override handle ParseResponse(inFileName as char):
         empty temp-table tt-objs-EG .
                 

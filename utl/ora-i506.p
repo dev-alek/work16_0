@@ -275,25 +275,25 @@ for each  temp_trn-doc :
     .
 
 
-define buffer buf_sysconf for ub.sysconf  .
-find first buf_sysconf where buf_sysconf.host-code = v-cntxt-host-code-obj no-lock no-error .
-if error-status :error then do:
-      assign
-      v-end-message =  substitute( "Ошибка нет своей фирмы с кодом &1, &2 &3" , v-cntxt-host-code-obj , return-value , error-status :get-message(1)  )
-      .
-      run pcall-log-file in p-log-handle (input v-end-message) .
-      undo, return error v-end-message.
-end.
-
-assign
-  v-cntxt-cash-pay   = buf_sysconf.cash-pay
-  v-cntxt-base-code  = buf_sysconf.base-code
-  v-cntxt-in-ov      = buf_sysconf.in-ov
-  v-cntxt-rsrv-time  = buf_sysconf.rsrv-time
-  v-cntxt-load-time  = buf_sysconf.load-time
-  v-cntxt-holidays   = buf_sysconf.holidays
-  v-cntxp-out-pay    = buf_sysconf.out-pay
-.
+  define buffer buf_sysconf for ub.sysconf  .
+  find first buf_sysconf where buf_sysconf.host-code = v-cntxt-host-code-obj no-lock no-error .
+  if error-status :error then do:
+        assign
+        v-end-message =  substitute( "Ошибка нет своей фирмы с кодом &1, &2 &3" , v-cntxt-host-code-obj , return-value , error-status :get-message(1)  )
+        .
+        run pcall-log-file in p-log-handle (input v-end-message) .
+        undo, return error v-end-message.
+  end.
+  
+  assign
+    v-cntxt-cash-pay   = buf_sysconf.cash-pay
+    v-cntxt-base-code  = buf_sysconf.base-code
+    v-cntxt-in-ov      = buf_sysconf.in-ov
+    v-cntxt-rsrv-time  = buf_sysconf.rsrv-time
+    v-cntxt-load-time  = buf_sysconf.load-time
+    v-cntxt-holidays   = buf_sysconf.holidays
+    v-cntxp-out-pay    = buf_sysconf.out-pay
+  .
   { str/getctxtp.i get this-procedure }
 
   
@@ -317,98 +317,98 @@ assign
     
 
   
-    run doc-code in this-procedure
-      (input  "main":U,
-       input  temp_trn-doc.obj-type,
-       input  temp_trn-doc.obj-code,
-       input  ? ,
-       output n-d ) no-error.
-
-    if error-status:error then do:
-      v-end-message =  "Ошибка при генерации номера документа. chip"  + return-value  + error-status :get-message(1) .
-      run pcall-log-file in p-log-handle (input v-end-message) .
-      undo, return error v-end-message.
-    end.
-
-    create  tt-trn-doc.
-    buffer-copy  temp_trn-doc  to    tt-trn-doc
-      assign
-      tt-trn-doc.pay-code             = v-cntxp-out-pay
-      tt-trn-doc.status_              = "temp"
-      tt-trn-doc.doc-code             = n-d
-      tt-trn-doc.doc-date             = to-day
-      tt-trn-doc.doc-type             = v-doc-type
-      tt-trn-doc.internal             = false
-      tt-trn-doc.cr-db-num            = v-cntxt-db-num
-      tt-trn-doc.vat-type             = {&inc-vat}
-      tt-trn-doc.slt-type             = {&without-slt}
-      tt-trn-doc.office               = false
-      tt-trn-doc.fact-num             = 0
-      tt-trn-doc.out-code             = temp_trn-doc.doc-code
-      tt-trn-doc.PS                   = substitute("&1 &2 &3 &5&4 ", temp_trn-doc.doc-code , string(temp_trn-doc.doc-date, "99/99/9999") , temp_trn-doc.creid ,temp_trn-doc.ps ,{&new-line} )
-      tt-trn-doc.creid                = v-cntxt-userid
-      tt-trn-doc.flag_                = false
-      tt-trn-doc.ext-doc-type         = v-ext-doc-type
-      tt-trn-doc.discnt-type          = v-discnt-type
-      tt-trn-doc.ret-supp             = v-ret-supp
-      tt-trn-doc.print-rubl           = v-print-rubl
-      tt-trn-doc.hold-doc-code-child  = "no-hold":u
-      tt-trn-doc.hold-doc-code-parent = "no-hold":u
-      tt-trn-doc.exch-rate            = 1
-      tt-trn-doc.exch-scale           = 1
-    .
-    { gbl/hostcode.i
-      tt-trn-doc.obj-type
-      tt-trn-doc.obj-code
-      tt-trn-doc.host-code
-      }
-
-    { gbl/baserate.i
-      tt-trn-doc.host-code
-      tt-trn-doc.doc-date
-      tt-trn-doc.base-rate
-      tt-trn-doc.base-scale
-      }
-
-      /* coздание шапки в базе */
-    { str/crtrndoc.i
-      tt-trn-doc.acc-date
-      tt-trn-doc.bge-date
-      tt-trn-doc.base-rate
-      tt-trn-doc.base-scale
-      tt-trn-doc.cli-code
-      tt-trn-doc.cli-type
-      tt-trn-doc.cli-name
-      tt-trn-doc.cr-db-num
-      tt-trn-doc.creid
-      tt-trn-doc.discnt-type
-      tt-trn-doc.doc-code
-      tt-trn-doc.doc-date
-      tt-trn-doc.doc-type
-      tt-trn-doc.flag_
-      tt-trn-doc.host-code
-      tt-trn-doc.internal
-      tt-trn-doc.obj-code
-      tt-trn-doc.obj-type
-      tt-trn-doc.office
-      tt-trn-doc.pay-code
-      tt-trn-doc.ps
-      tt-trn-doc.ret-supp
-      tt-trn-doc.slt-type
-      tt-trn-doc.status_
-      tt-trn-doc.vat-type
-      tt-trn-doc.ext-doc-type
-      buf_sysconf.purch-code
-      no-error }
-      .
-    if error-status :error then do:
-        v-end-message =  substitute ( "Ошибка при создании шапки документа  &1 &2 &3" , temp_trn-doc.doc-code , return-value , error-status :get-message(1)  ) .
-        run pcall-log-file in p-log-handle ( input v-end-message ) .
+      run doc-code in this-procedure
+        (input  "main":U,
+         input  temp_trn-doc.obj-type,
+         input  temp_trn-doc.obj-code,
+         input  ? ,
+         output n-d ) no-error.
+  
+      if error-status:error then do:
+        v-end-message =  "Ошибка при генерации номера документа. chip"  + return-value  + error-status :get-message(1) .
+        run pcall-log-file in p-log-handle (input v-end-message) .
         undo, return error v-end-message.
-    end.
-
-    find first new_trn-doc where new_trn-doc.doc-code = n-d  exclusive-lock no-error .
-
+      end.
+  
+      create  tt-trn-doc.
+      buffer-copy  temp_trn-doc  to    tt-trn-doc
+        assign
+        tt-trn-doc.pay-code             = v-cntxp-out-pay
+        tt-trn-doc.status_              = "temp"
+        tt-trn-doc.doc-code             = n-d
+        tt-trn-doc.doc-date             = to-day
+        tt-trn-doc.doc-type             = v-doc-type
+        tt-trn-doc.internal             = false
+        tt-trn-doc.cr-db-num            = v-cntxt-db-num
+        tt-trn-doc.vat-type             = {&inc-vat}
+        tt-trn-doc.slt-type             = {&without-slt}
+        tt-trn-doc.office               = false
+        tt-trn-doc.fact-num             = 0
+        tt-trn-doc.out-code             = temp_trn-doc.doc-code
+        tt-trn-doc.PS                   = substitute("&1 &2 &3 &5&4 ", temp_trn-doc.doc-code , string(temp_trn-doc.doc-date, "99/99/9999") , temp_trn-doc.creid ,temp_trn-doc.ps ,{&new-line} )
+        tt-trn-doc.creid                = v-cntxt-userid
+        tt-trn-doc.flag_                = false
+        tt-trn-doc.ext-doc-type         = v-ext-doc-type
+        tt-trn-doc.discnt-type          = v-discnt-type
+        tt-trn-doc.ret-supp             = v-ret-supp
+        tt-trn-doc.print-rubl           = v-print-rubl
+        tt-trn-doc.hold-doc-code-child  = "no-hold":u
+        tt-trn-doc.hold-doc-code-parent = "no-hold":u
+        tt-trn-doc.exch-rate            = 1
+        tt-trn-doc.exch-scale           = 1
+      .
+      { gbl/hostcode.i
+        tt-trn-doc.obj-type
+        tt-trn-doc.obj-code
+        tt-trn-doc.host-code
+        }
+  
+      { gbl/baserate.i
+        tt-trn-doc.host-code
+        tt-trn-doc.doc-date
+        tt-trn-doc.base-rate
+        tt-trn-doc.base-scale
+        }
+  
+        /* coздание шапки в базе */
+      { str/crtrndoc.i
+        tt-trn-doc.acc-date
+        tt-trn-doc.bge-date
+        tt-trn-doc.base-rate
+        tt-trn-doc.base-scale
+        tt-trn-doc.cli-code
+        tt-trn-doc.cli-type
+        tt-trn-doc.cli-name
+        tt-trn-doc.cr-db-num
+        tt-trn-doc.creid
+        tt-trn-doc.discnt-type
+        tt-trn-doc.doc-code
+        tt-trn-doc.doc-date
+        tt-trn-doc.doc-type
+        tt-trn-doc.flag_
+        tt-trn-doc.host-code
+        tt-trn-doc.internal
+        tt-trn-doc.obj-code
+        tt-trn-doc.obj-type
+        tt-trn-doc.office
+        tt-trn-doc.pay-code
+        tt-trn-doc.ps
+        tt-trn-doc.ret-supp
+        tt-trn-doc.slt-type
+        tt-trn-doc.status_
+        tt-trn-doc.vat-type
+        tt-trn-doc.ext-doc-type
+        buf_sysconf.purch-code
+        no-error }
+        .
+      if error-status :error then do:
+          v-end-message =  substitute ( "Ошибка при создании шапки документа  &1 &2 &3" , temp_trn-doc.doc-code , return-value , error-status :get-message(1)  ) .
+          run pcall-log-file in p-log-handle ( input v-end-message ) .
+          undo, return error v-end-message.
+      end.
+  
+      find first new_trn-doc where new_trn-doc.doc-code = n-d  exclusive-lock no-error .
+    
     if not available new_trn-doc then do:
       v-end-message = substitute ( "Ошибка &1" , error-status :get-message(1)  , return-value) .
       run pcall-log-file in p-log-handle ( input v-end-message ) .
@@ -477,7 +477,6 @@ assign
       }
     k = k + 1  .
    end.
-
 
   for each  temp_grp-line  no-lock  where
             temp_grp-line.doc-code = temp_trn-doc.doc-code by temp_grp-line.line-num :
@@ -558,7 +557,7 @@ assign
               ub.gds-obj
               no-error
               }
-
+  
   
 
            find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = new_trn-doc.doc-code
@@ -568,24 +567,24 @@ assign
            no-error  .
            if not available buf_doc-line then 
            do:
-            create anlz-bc .
-            { gbl/gdsbcode.i
-              buf_goods.gds-code
-              ?
-              anlz-bc.b-c
-              no-error }
+             create anlz-bc .
+             { gbl/gdsbcode.i
+                    buf_goods.gds-code
+                    ?
+                    anlz-bc.b-c
+                    no-error }
              if error-status :error then 
              do:
-         v-end-message = substitute("anlz-bc &1 &2 &3 &4" ,
-              buf_goods.gds-code ,
-              anlz-bc.b-c ,
-              return-value ,
-              error-status:get-message(1) ) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            end.
-          k = k + 1  .
+               v-end-message = substitute("anlz-bc &1 &2 &3 &4" ,
+                 buf_goods.gds-code ,
+                 anlz-bc.b-c ,
+                 return-value ,
+                 error-status:get-message(1) ) .
+               run pcall-log-file in p-log-handle ( input v-end-message ) .
+             end.
+             k = k + 1  .
+           end.
      end.
-   end.
    end.
 
    run str/use-list.p (input this-procedure , input-output line-rec, input recid(new_trn-doc) , input false  , input (buffer anlz-bc:handle) ) no-error .
@@ -613,7 +612,7 @@ assign
        
    end.
 
-      run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
+   run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
       if error-status :error then do:
         v-end-message = substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
         run pcall-log-file in p-log-handle ( input v-end-message ) .
@@ -626,7 +625,7 @@ assign
         run pcall-log-file in p-log-handle ( input v-end-message ) .
         undo, return error v-end-message.
     end.
-
+    
    if not not-is-new 
    then do: 
      run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
@@ -639,12 +638,12 @@ assign
     
    if not not-is-new 
    then do: 
-   run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-    if error-status:error then do :
-        v-end-message = substitute(" Ошибка2 &1 &2" , error-status :get-message(1)  , return-value) .
-        run pcall-log-file in p-log-handle ( input v-end-message ) .
-        undo, return error v-end-message.
-    end.
+     run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+      if error-status:error then do :
+          v-end-message = substitute(" Ошибка2 &1 &2" , error-status :get-message(1)  , return-value) .
+          run pcall-log-file in p-log-handle ( input v-end-message ) .
+          undo, return error v-end-message.
+      end.
    end.
 
    if is-tsd 
@@ -663,7 +662,7 @@ assign
         
    end.
 
-    assign
+   assign
         v-end-message =  string(temp_trn-doc.obj-type) + string(temp_trn-doc.obj-code)
                     + {&tabulation} + "Документ инвентаризации:" + string(new_trn-doc.doc-code) + " / " + string(temp_trn-doc.doc-code) + {&tabulation} + string( k ) + " товаров" + {&new-line}
                     .
@@ -678,32 +677,32 @@ define input parameter p-trn-code as character no-undo .
 
 
   do
-  on error undo, return error return-value
-  :
-define buffer buf_s-trn-doc for ub.trn-doc.
-define variable varmode            as   character           no-undo.
-define variable varstatus          like ub.trn-doc.status_  no-undo.
-define variable varflag            like ub.trn-doc.flag     no-undo.
-define variable varcopystatus      like ub.trn-doc.status_  no-undo.
-define variable varcopyflag        like ub.trn-doc.flag     no-undo.
-define variable varcheck-return as logical no-undo .
-define variable varchg-inv as logical no-undo .
+    on error undo, return error return-value
+    :
+    define buffer buf_s-trn-doc for ub.trn-doc.
+    define variable varmode         as character no-undo.
+    define variable varstatus       like ub.trn-doc.status_ no-undo.
+    define variable varflag         like ub.trn-doc.flag no-undo.
+    define variable varcopystatus   like ub.trn-doc.status_ no-undo.
+    define variable varcopyflag     like ub.trn-doc.flag no-undo.
+    define variable varcheck-return as logical   no-undo .
+    define variable varchg-inv      as logical   no-undo .
 
-run str/trn-stat.p (
-    input  parparentproc ,
-    input  this-procedure ,
-    input  {&close-doc} ,
-    input  p-trn-code,
-    input  false /* проверка старого возврата */ ,
-    input  v-cntxt-db-num,
-    input  false /* проверка переоценки */,
-    input  v-cntxt-rsrv-time,
-    input  v-cntxt-load-time,
-    input  v-cntxt-holidays,
-    input  false ,
-    output varchg-inv ,
-    output table gds-list)
-    no-error.
+    run str/trn-stat.p (
+      input  parparentproc ,
+      input  this-procedure ,
+      input  {&close-doc} ,
+      input  p-trn-code,
+      input  false /* проверка старого возврата */ ,
+      input  v-cntxt-db-num,
+      input  false /* проверка переоценки */,
+      input  v-cntxt-rsrv-time,
+      input  v-cntxt-load-time,
+      input  v-cntxt-holidays,
+      input  false ,
+      output varchg-inv ,
+      output table gds-list)
+      no-error.
     if error-status:error then 
     do :
       v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
@@ -732,8 +731,8 @@ run str/trn-stat.p (
         v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
         run pcall-log-file in p-log-handle ( input v-end-message ) .
         undo, return error v-end-message.
+      end.
     end.
-  end.
   end.
 end procedure. /* clos-trn2 */
 
