@@ -567,7 +567,7 @@ attr-srv-auth-ASU
 /*Параметры работы с ЕГАИС*/
 { cmp/cr-prep.i 1 attr-egais-host egais " " egais }
 { cmp/cr-prepc.i 1 prop-list-attr-egais-host
-"egais-fsrar,egais-exsys"
+"egais-fsrar,egais-utm,egais-exsys"
 attr-egais-host }
 
 /* сюда добавлять новые названия атрибутов объектов TH */
@@ -633,6 +633,7 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-petrol}~
 ,{&bef-attr-staff-options}~
 ,{&bef-attr-srv-auth-ASU}~
+,{&bef-attr-egais-host}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list {&thbjattr-list}" ).
 
