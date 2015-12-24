@@ -5651,6 +5651,18 @@ end procedure.
 &scop manual-edit-attr-alcohol-prod 0
 &scop batch-edit-attr-alcohol-prod  0
 
+&scop type-attr-egais-name {&type-char}
+&scop format-attr-egais-name  "X(100)"
+&scop label-attr-egais-name   "Наименование товара в ЕГАИС"
+&scop tooltip-attr-egais-name   "Наименование товара в ЕГАИС"
+&scop user-can-edit-attr-egais-name  false
+&scop output-display-attr-egais-name  false
+&scop other-attr-egais-name  ""
+&scop news-attr-egais-name true
+&scop copy-attr-egais-name  true
+&scop manual-edit-attr-egais-name 0
+&scop batch-edit-attr-egais-name  0
+
 &scop type-attr-is-gas {&type-log}
 &scop format-attr-is-gas  "+/ "
 &scop label-attr-is-gas   "Природный газ-топливо"
@@ -6080,6 +6092,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-alcohol-prod
       {&attr-temp-full-code}
+      &scop attr-code attr-egais-name
+      {&attr-temp-full-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-temp-full-code}
       &scop attr-code attr-office-type
@@ -6159,6 +6173,8 @@ do
       &scop attr-code attr-gds-attr-lock
       {&attr-temp-code}
       &scop attr-code attr-alcohol-prod
+      {&attr-temp-code}
+      &scop attr-code attr-egais-name
       {&attr-temp-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-temp-code}
@@ -6473,6 +6489,8 @@ procedure gds-attr-news :
     case p-code :
       &scop attr-code attr-alcohol-prod
       {&attr-news-code}
+      &scop attr-code attr-egais-name
+      {&attr-news-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-news-code}
       &scop attr-code attr-office-type
@@ -6546,6 +6564,8 @@ procedure gds-attr-copy :
 
     case p-code :
       &scop attr-code attr-alcohol-prod
+      {&attr-copy-code}
+      &scop attr-code attr-egais-name
       {&attr-copy-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-copy-code}
@@ -6967,6 +6987,8 @@ do
     case p-code :
       &scop attr-code attr-alcohol-prod
       {&attr-manual-edit-code}
+      &scop attr-code attr-egais-name
+      {&attr-manual-edit-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-manual-edit-code}
       &scop attr-code attr-office-type
@@ -7041,6 +7063,8 @@ do
 
     case p-code :
       &scop attr-code attr-alcohol-prod
+      {&attr-batch-edit-code}
+      &scop attr-code attr-egais-name
       {&attr-batch-edit-code}
       &scop attr-code attr-ptrl-without-rvs
       {&attr-batch-edit-code}

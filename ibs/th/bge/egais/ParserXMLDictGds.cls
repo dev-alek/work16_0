@@ -25,7 +25,7 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
         field proof             like ub.goods.proof             label "Крепость"            format ">9.9"
         index pi as primary
             gds-code
-        index name_
+        index name_ as word-index
             gds-name
         index alc
             alc-code    
@@ -34,6 +34,12 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
     DEFINE VARIABLE hDoc AS HANDLE NO-UNDO.
     DEFINE VARIABLE hRoot AS HANDLE NO-UNDO.
     DEFINE VARIABLE good AS LOGICAL NO-UNDO.
+    
+    constructor public ParserXMLDictGds (inOjType as char, inObjCode as int):
+  
+      super (inOjType, inObjCode).
+      
+    end constructor.
     
     method override handle ParseResponse(inFileName as char):
         empty temp-table tt-gds-EG .

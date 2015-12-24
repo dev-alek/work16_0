@@ -62,8 +62,9 @@ define temp-table tt-gds no-undo
     field alc-code          as character                    label "Алкогольный код"
     field ms-base           like ub.goods.ms-base           label "Объем"               format ">>9.9<<"
     field alc-type-code     like ub.alc-type.alc-type-code  label "Код АП"
-    field proof             like ub.goods.proof             label "Крепость"            format ">9.9"
+    field proof             like ub.goods.proof             label "Крепость"            format ">9.9"    
     field fromEgais         as logical
+    field egais-name        as character                    label "Наименование ЕГАИС"  format "X(100)"
     index pi as primary
         gds-code
     index name_
@@ -95,6 +96,7 @@ define variable ref-list    as character no-undo .
 define variable ii          as integer   no-undo .
 define variable v-rid       as recid     no-undo .
 define variable par-alcohol as character no-undo .
+define variable par-egais-name as character no-undo .
 define variable par-type    as character no-undo .
 define variable v-kpp       as character no-undo .
 define variable v-org-inn   as character no-undo .
@@ -252,11 +254,12 @@ DEFINE BROWSE br-goods
   QUERY br-goods DISPLAY
     get-mark(BUFFER tt-gds) COLUMN-LABEL "*"  FORMAT "X(1)":U
     tt-gds.gds-code COLUMN-LABEL "Код товара в TH" FORMAT ">>>>>>>>9"
-    tt-gds.gds-name COLUMN-LABEL "Наименование товара" FORMAT "X(100)":U width 35
+    tt-gds.gds-name COLUMN-LABEL "Наименование товара" FORMAT "X(100)":U width 39
     tt-gds.alc-code COLUMN-LABEL "Алкогольный код" FORMAT "X(25)":U 
     tt-gds.ms-base  COLUMN-LABEL "Объем" FORMAT ">>9.9<<"
     tt-gds.proof    COLUMN-LABEL "Крепость" FORMAT ">9.9"
     tt-gds.alc-type-code COLUMN-LABEL "Код АП" FORMAT "X(4)":U
+    tt-gds.egais-name COLUMN-LABEL "Наименование в ЕГАИС" FORMAT "X(100)":U width 39
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 105 BY 20.2 FIT-LAST-COLUMN.
@@ -464,7 +467,12 @@ DO:
             return no-apply.
         end.
         find first buf_goods where recid(buf_goods) = integer(ref-list) no-error.
-        assign tt-gds.gds-code = buf_goods.gds-code .
+        assign
+            tt-gds.gds-code = buf_goods.gds-code
+            tt-gds.gds-name = buf_goods.gds-name
+            tt-gds.ms-base  = buf_goods.ms-base
+            tt-gds.proof    = buf_goods.proof
+        .
     end.
     else do :
         run bge/egais-select-good.w (input tt-gds.ms-base
@@ -518,13 +526,19 @@ DO:
                         .
                     end.
                 end.    
-                buffer tt-gds:handle:buffer-copy (bh-gds-egais, "gds-code") .
+                buffer tt-gds:handle:buffer-copy (bh-gds-egais, "gds-code, gds-name, ms-base, proof") .
+                assign tt-gds.egais-name = bh-gds-egais:buffer-field("gds-name"):buffer-value .
                 for first buf_goods exclusive-lock where buf_goods.gds-code = tt-gds.gds-code :
-                    assign
-                        buf_goods.gds-name = tt-gds.gds-name
-                        buf_goods.ms-base  = tt-gds.ms-base
-                        buf_goods.proof    = tt-gds.proof
-                    .
+                    run gds-attr-write(
+                        buf_goods.gds-code,
+                        {&attr-egais-name},
+                        tt-gds.egais-name
+                    ).    
+/*                    assign                                  */
+/*                        buf_goods.gds-name = tt-gds.gds-name*/
+/*                        buf_goods.ms-base  = tt-gds.ms-base */
+/*                        buf_goods.proof    = tt-gds.proof   */
+/*                    .                                       */
                     
                     run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
                                                         ,input (buffer buf_goods:handle)
@@ -743,8 +757,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   empty temp-table thbjattr_thbj-attr .
   run adm/shattri.p (
        input "get":U
-      ,input {&cmp}
-      ,input v-cntxt-host-code-obj
+      ,input v-cntxt-obj-type
+      ,input v-cntxt-obj-code
       ,input {&attr-egais-host}
       ,input {&attr-egais-host_egais-fsrar}
       ,output v-value-character
@@ -764,8 +778,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   run adm/shattri.p (
        input "get":U
-      ,input {&cmp}
-      ,input v-cntxt-host-code-obj
+      ,input '':U
+      ,input 0
       ,input {&attr-egais-host}
       ,input {&attr-egais-host_egais-exsys}
       ,output v-value-character
@@ -779,6 +793,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   assign v-ext-sys = v-value-integer .
   release buf_clients .
 /*  run fill-tt.*/
+  { gbl/diasize.i &browse-name=br-goods }
+  run diasize_init in this-procedure .
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -848,12 +864,19 @@ PROCEDURE fill-tt :
             output par-type
         ).
         if par-alcohol <> "" and par-alcohol <> "no" then do :
+            run gds-attr-value(
+                buf_goods.gds-code,
+                {&attr-egais-name},
+                output par-egais-name,
+                output par-type
+            ).
             create tt-gds .
             assign
                 tt-gds.gds-code = buf_goods.gds-code
                 tt-gds.gds-name = buf_goods.gds-name
                 tt-gds.ms-base  = buf_goods.ms-base
                 tt-gds.proof    = buf_goods.proof
+                tt-gds.egais-name = par-egais-name
             .
             for first ub.alc-type-gds where ub.alc-type-gds.gds-code = buf_goods.gds-code no-lock,
                 first ub.alc-type where ub.alc-type.alc-type-inner-code = ub.alc-type-gds.alc-type-inner-code no-lock :
@@ -943,7 +966,7 @@ procedure sel-prod :
         . 
         find first buf_firm no-lock where buf_firm.firm-code = buf_clients.obj-code no-error .
         if available buf_firm then do :
-            egais:EGAISImpl = new DictGds(v-fs-rar, buf_firm.inn) .
+            egais:EGAISImpl = new DictGds(v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, buf_firm.inn) .
         end.
     end.     
     display v-prod v-prod-name with frame Dialog-Frame.
