@@ -780,7 +780,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 { cmp/cr-prep.i 1 lob-res-list          list         "Список"      list           "List"        }
 { cmp/cr-prep.i 1 lob-res-list-macro    list-macro   "Макрос формир списка"      list-macro           "List Forming Macro"        }
 { cmp/cr-prep.i 1 lob-res-ref           ref          "Справочник"  ref            "Reference"   }
-{ cmp/cr-prep.i 1 lob-egais-wb          egais-wb     "Накладная EGAIS"  egais-wb  "EGAIS Waybill" }
+{ cmp/cr-prep.i 1 lob-egais-wb          egais-wb     "Накладная ЕГАИС"  egais-wb  "EGAIS Waybill" }
+{ cmp/cr-prep.i 1 lob-egais-ref-b       egais-ref-b  "Справка B ЕГАИС"  egais-ref-b "EGAIS Reference B" }
 
 
 &glob clob-res-codes '{&bef-lob-res-data}~
@@ -792,6 +793,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 ,{&bef-lob-res-list-macro}~
 ,{&bef-lob-res-ref}~
 ,{&bef-lob-egais-wb}~
+,{&bef-lob-egais-ref-b}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes {&clob-res-codes}" ).
@@ -805,6 +807,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-
 ,{&bef-lob-res-list-macro-full}~
 ,{&bef-lob-res-ref-full}~
 ,{&bef-lob-egais-wb-full}~
+,{&bef-lob-egais-ref-b-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes-full {&clob-res-codes-full}" ).
