@@ -209,7 +209,20 @@ ON window-close OF FRAME Dialog-Frame /* Накладная ЕГАИС */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-choose-cons Dialog-Frame
 ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
   DO:
-
+    
+    def var v-old-regId as char no-undo init ?.
+    
+    find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_clients}
+      and X_ext-classif.classif-name = {&extclass_clients_esys}
+      and X_ext-classif.db-num = 0
+      and X_ext-classif.key#_one = v-ext-sys
+      and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
+      and X_eXt-classif.CharKey_Three = bh-wb-gds-EG-header:buffer-field ("regID-cons"):buffer-value
+      no-error.
+    
+    if available (X_eXt-classif) 
+      then v-old-regId = X_eXt-classif.CharKey_Three.
+    
     run gbl/userobjs.w (
       input parparentproc /* parparentproc        */
       , input this-procedure :handle  /* p-callback-handle    */
@@ -235,13 +248,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
       and X_ext-classif.key#_one = v-ext-sys
       and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
       no-error.
-    if available X_ext-classif then 
-    do :
-      assign 
-        X_ext-classif.charkey_three = bh-wb-gds-EG-header:buffer-field ("regID-cons"):buffer-value .
-    end.
-    else 
-    do :
+    if v-old-regId = ? then do:
       run ref/extclas1.p ( input {&add-def}
         ,input yes /*p-silent*/
         ,input-output v-rid
@@ -252,7 +259,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
         ,input 0 /*p-Key#_Two*/
         ,input 0 /*p-key#_Three*/
         ,input '':U  /*p-CharKey_One */
-        ,input '':U /*p-CharKey_two */
+        ,input buf_clients.obj-type + string (buf_clients.obj-code) /*p-CharKey_two */
         ,input bh-wb-gds-EG-header:buffer-field ("regID-cons"):buffer-value /*p-CharKey_three */
         ,input 0 /*p-nonunique */
         ,input v-obj-uniq-key-rec ) no-error.
@@ -262,6 +269,15 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
         undo, return no-apply .
       end.
     end.
+    else do:
+      if not available (x_ext-classif) or v-old-regId <> X_eXt-classif.CharKey_Three
+      then do:
+        message 'Нельзя выбрать объект с другим кодом ЕГАИС' view-as alert-box.
+        return no-apply.
+      end.
+    end.
+    find first ub.clob-bind where ub.clob-bind.uniq-key-rec = v-uniq-key-rec and ub.clob-bind.field-name_ = {&lob-egais-wb}.
+    entry (9, ub.clob-bind.descr, {&delim-par}) = buf_clients.obj-type + string (buf_clients.obj-code).
     bh-wb-gds-EG-header = egais:GetHndlTable(1, v-uniq-key-rec ).
     gh-wb-egais-header:set-buffers (bh-wb-gds-EG-header).
     gh-wb-egais-header:query-prepare ("for each tt-wb-header").
@@ -632,8 +648,8 @@ PROCEDURE refresh-view :
   bh-wb-gds-EG:find-first ().
   if bh-wb-gds-EG-header:buffer-field ("client"):buffer-value <> "" 
     then disable b-choose-ship with frame Dialog-Frame.
-  if bh-wb-gds-EG-header:buffer-field ("clientCons"):buffer-value <> "" 
-    then disable b-choose-cons with frame Dialog-Frame.
+/*  if bh-wb-gds-EG-header:buffer-field ("clientCons"):buffer-value <> ""*/
+/*    then disable b-choose-cons with frame Dialog-Frame.                */
   browse-hdl-wb-egais:refresh ().
   browse-hdl-wb-egais-header:refresh ().
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

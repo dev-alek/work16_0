@@ -231,7 +231,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define temp-table tt-wb-hndls no-undo
     field num          as character label "№ накл."
     field wb-date      as date label "Дата"
-    field shippregid   as character label "ID поставщика"
+    field shippregid   as character label "ID поставщика" format "x(21)"
+    field obj          as character label "Объект"
     field wb-type      as character label "Тип" format "x(10)"
     field trn-doc-code as character label "№ накл. TH"
     field is-fact      as character label "Статус"
@@ -331,7 +332,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               end.
             end.
 
-            find first ub.ext-classif where ub.ext-classif.CharKey_Three = tt-wb-header.regID-Cons no-error.
+            find first ub.ext-classif where ub.ext-classif.CharKey_Three = tt-wb-header.regID-Cons and ext-classif.CharKey_Two = entry (9, buf_clob-bind.descr, {&delim-par}) no-error.
             if available (ub.ext-classif)
               then 
             do:
@@ -354,12 +355,12 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 then tt-wb-gds-EG.gds-code = ub.ext-classif.Key#_One.
               else tt-wb-gds-EG.gds-code = ?.
             end.
+            v-uniq-key-rec = inWbIndenty.
             find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIndenty and buf_clob-bind.field-name_ = {&lob-egais-ref-b} no-error.
             if available (buf_clob-bind) then do:
               find first buf_clob-data exclusive-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
               ParseResponse("", {&wb-refB}).
             end.
-            v-uniq-key-rec = buf_clob-bind.uniq-key-rec.
             find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
             
           end.
@@ -386,6 +387,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               tt-wb-hndls.trn-doc-code = entry (6, buf_clob-bind.descr, {&delim-par})
               tt-wb-hndls.is-sent      = entry (7, buf_clob-bind.descr, {&delim-par})
               tt-wb-hndls.wb-type      = "приход вн."  when entry (8, buf_clob-bind.descr, {&delim-par}) = {&TDEDT_Pri_Vnesh}
+              tt-wb-hndls.obj          = entry (9, buf_clob-bind.descr, {&delim-par}) 
               tt-wb-hndls.uniq-key-rec = tt-wb-hndls.Identity + {&delim-cmd} + tt-wb-hndls.shippregid.
             .
             assign tt-wb-hndls.wbregid = entry (5, buf_clob-bind.descr, {&delim-par}) no-error.
@@ -699,20 +701,26 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             hRow:get-child (hText, 1) no-error.
             
             case true:
-              when hText:node-value matches ("*opt/out/WayBill*") then do:
+              when hText:node-value matches ("*opt/out/WayBill/*") then do:
 
                 os-delete "WayBill.xml".
                 assign
                   inFileName = "WayBill.xml"
                   .  
                 CmdParseXml(hText:node-value).
-                find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Shipper".
-                find first tt-wb-header.
-                
-                v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par}.
 
-                v-info = v-info. 
-                      
+                find first tt-wb-header.
+                find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Consignee".
+                find first buf_ext-classif where buf_ext-classif.CharKey_Three = tt-wb-info-client.regID no-error.
+                
+                if available (buf_ext-classif) then do:
+                  tt-wb-header.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}).
+                  tt-wb-header.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
+                end.
+                
+                find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Shipper".                
+                v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par} + tt-wb-header.obj-type + string (tt-wb-header.obj-code).
+
                 v-clob-db-num = ?.
                 v-int64-id = 0.
                 if can-find (first buf_clob-bind where buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec and buf_clob-bind.field-name_ =  {&lob-egais-wb})
@@ -738,7 +746,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   
   
               end.
-              when hText:node-value matches ("*opt/out/FORMBREGINFO*") then do:
+              when hText:node-value matches ("*opt/out/FORMBREGINFO/*") then do:
 
                 do:
                   os-delete "FORMBREGINFO.xml".
@@ -749,7 +757,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 end.
                 CmdParseXml(hText:node-value).
                 find first tt-wb-header.
-                      
                 v-clob-db-num = ?.
                 v-int64-id = 0.
                 if can-find (first buf_clob-bind where buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec and buf_clob-bind.field-name_ =  {&lob-egais-ref-b})

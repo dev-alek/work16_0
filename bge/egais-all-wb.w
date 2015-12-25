@@ -268,6 +268,7 @@ DO:
   if bh-wb-egais = ? 
     then return no-apply.
   run bge/egais-wb.w (parparentproc, egais, bh-wb-egais:handle).
+  run refresh-query.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -453,10 +454,10 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query Dialog-Frame 
 PROCEDURE refresh-query :
 
-if bh-wb-egais = ? 
-  then return .
+  if bh-wb-egais = ? 
+    then return .
   
-case RADIO-SET-1 :
+  case RADIO-SET-1 :
     when 1  then 
     do:
       bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
