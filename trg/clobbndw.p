@@ -69,7 +69,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       else do:
         v-send = yes.
       end.
-      if ub.clob-bind.resource-type = {&lob-egais-wb} 
+      if ub.clob-bind.resource-type begins 'egais' 
         then v-send = false.
       if v-send then do:
         run str/callnews.p
