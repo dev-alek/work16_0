@@ -26,7 +26,7 @@ using ibs.th.bge.egais.*.
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
-
+define input parameter parparentproc as widget-handle no-undo .
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -50,6 +50,15 @@ define variable egais                as class EGAIS   no-undo.
 define variable journal              as class Journal no-undo.
 define variable v-db-num             as integer   no-undo .
 define variable v-user-id            as character no-undo .
+
+define variable glog                 as logical   no-undo .
+{ cmp/vssrevis.i }
+{ cmp/str-glbl.i }
+{ cmp/library.i  }
+{ str/lib-trn.i  }
+{ gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -192,6 +201,29 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         v-user-id
         no-error
       }
+      
+      
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-adm':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
+  if not glog then  return .    
+
+
+
+
+      
   egais = new EGAIS(v-db-num, v-user-id).
   journal = new Journal().
   
