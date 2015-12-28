@@ -536,7 +536,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gds-attr-
 
 /* типы услуг */
 { cmp/cr-prepc.i 1 prop-list-attr-office-type
-"oss-pay,tso-ret"
+"oss-pay,tso-ret,card-act"
 attr-office-type
 }
 
