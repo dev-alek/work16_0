@@ -864,7 +864,7 @@ define variable var-type as char.
             '         <td style="border: none;"></td>' skip
             '         <td style="border: none;"></td>' skip
             '         <td style="border: none;"></td>' skip
-            '         <td colspan="4" style="border: none;   text-align: right;  font-size: 12pt;">от 19.06.2015 № 153</td>' skip
+            '         <td colspan="4" style="border: none;   text-align: right;  font-size: 12pt;">от 19.06.2015 № 164</td>' skip
 
             '</tr>' skip
             
