@@ -107,6 +107,12 @@ for each  ub.stk-line no-lock where
     :
       delete tt-stk-line .
     end.
+    
+       assign 
+        acc-other-qnty1 = 0
+        acc-other-netto = 0.
+        
+        
     run stk-lnrv in this-procedure
       ( input        pobj-type
       , input        pobj-code
