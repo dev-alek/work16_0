@@ -4668,6 +4668,8 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-images
       {&attr-temp-full-code}
+      &scop attr-code attr-code-range
+      {&attr-temp-full-code}
       &scop attr-code attr-bge-export
       {&attr-temp-full-code}
       &scop attr-code attr-auto-task
