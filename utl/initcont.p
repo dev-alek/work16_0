@@ -95,11 +95,11 @@ procedure calc-archive :
 
 /*    do transaction on error undo, return error return-value :*/
 /*      find first db exclusive-lock where db.db-num = clients.db-num .*/
-      for each ub.trn-doc no-lock
-        where ub.trn-doc.obj-type = ub.clients.obj-type
-          and ub.trn-doc.obj-code = ub.clients.obj-code
-          and ub.trn-doc.status_  = {&fact}
-          and ub.trn-doc.fact-order >= v-fact-order
+      for each trn-doc no-lock
+        where trn-doc.obj-type = obj-list.obj-type
+          and trn-doc.obj-code = obj-list.obj-code
+          and trn-doc.status_  = {&fact}
+          and trn-doc.fact-order >= v-fact-order
         :
         assign Counter1 = Counter1 + 1.
         { rep/repfrm.i disp Counter1 }
