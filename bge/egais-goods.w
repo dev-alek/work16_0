@@ -742,7 +742,23 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
-   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:  
+   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK: 
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-ref':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
+  if not glog then  return . 
   assign
       rs-sort = 1
   .
