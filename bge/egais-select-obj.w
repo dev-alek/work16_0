@@ -187,7 +187,12 @@ PROCEDURE create-br :
     create query qh-objs-egais .
     qh-objs-egais:set-buffers(bh-objs-egais).
 /*    qh-objs-egais:query-prepare (substitute("for each tt-objs-eg where not tt-objs-EG.connected_ and tt-objs-EG.inn = '&1' and tt-objs-EG.kpp = '&2'", trim(p-inn), trim(p-kpp)) ).*/
-    qh-objs-egais:query-prepare (substitute("for each tt-objs-eg where tt-objs-EG.inn = '&1' and tt-objs-EG.kpp = '&2'", trim(p-inn), trim(p-kpp)) ).
+    if p-kpp = ? or trim(p-kpp) = "" then do :
+        qh-objs-egais:query-prepare (substitute("for each tt-objs-eg where tt-objs-EG.inn = '&1'", trim(p-inn)) ).    
+    end.
+    else do :
+        qh-objs-egais:query-prepare (substitute("for each tt-objs-eg where tt-objs-EG.inn = '&1' and tt-objs-EG.kpp = '&2'", trim(p-inn), trim(p-kpp)) ).
+    end.
     qh-objs-egais:query-open .
     
     create browse br-hndl-objs

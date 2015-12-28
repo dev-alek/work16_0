@@ -666,8 +666,20 @@ DO:
                 ii = ii + 1 .
             end.
             b-connect:label = "Связать" .
-            if ii > 1 then enable b-connect WITH FRAME Dialog-Frame.
-            else disable b-connect WITH FRAME Dialog-Frame.
+            if ii > 0 then enable b-connect WITH FRAME Dialog-Frame.
+            else do :
+                qh-obj-egais:query-prepare (substitute("for each tt-objs-eg where tt-objs-EG.inn = '&1'", trim(tt-objs.inn)) ).
+                qh-obj-egais:query-open.
+                ii = 0 .
+                _repeat:
+                repeat:
+                    qh-obj-egais:get-next ().
+                    if qh-obj-egais:query-off-end then leave _repeat.
+                    ii = ii + 1 .
+                end.
+                if ii > 0 then enable b-connect WITH FRAME Dialog-Frame.
+                else disable b-connect WITH FRAME Dialog-Frame.
+            end.
         end.
     end.
 end.    
@@ -688,6 +700,22 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK: 
   { gbl/getcntxt.i get } 
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-obj':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  } 
+  if not glog then  return .
   find first buf_clients no-lock where buf_clients.obj-type = {&cmp} and buf_clients.obj-code = v-cntxt-host-code-obj.
   find first buf_firm no-lock where buf_firm.firm-code = v-cntxt-host-code-obj.
   if valid-handle(bh-obj-egais) then do :
