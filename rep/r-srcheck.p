@@ -3,11 +3,12 @@
 
 /*
 $Revision: $
-$Author$
+$Author$ Shalanin Sergey
 $Date$
 $Workfile$
 $Archive$
 
+Средний чек
 
 
 Автор: Шаланин Сергей
@@ -75,11 +76,11 @@ define temp-table temp-chk no-undo
     field obj-type as char
     field obj-name as char
   fields note_ as char
-  fields sales-man as integer
+  fields sales-man-psn as integer
   
   
     INDEX tt is primary gds-code  obj-code obj-type
-   index tt-grp  grp-lvl  obj-type obj-code grp-code sales-man
+   index tt-grp  grp-lvl  obj-type obj-code grp-code sales-man-psn
 .
 
 define temp-table help-chk no-undo
@@ -172,7 +173,13 @@ define stream OutStr-html.
 
 
 
+define variable p-object as char.
+define variable FixProdAttr as character no-undo.
 
+define variable v-grp-code like ub.gds-grp.node-code no-undo.
+define variable v-grp-name like ub.goods.grp-name no-undo.
+define variable ii-grp as integer no-undo.
+define variable v-found as logical no-undo.
 
 
 /* ************************  Function Implementations ***************** */
@@ -225,15 +232,15 @@ procedure chk-calc:
     v-chk-doc-code= chk-doc.doc-code.
     v-prod = no. 
     
-      
+/*      message chk-gds-pay.doc-code view-as alert-box.*/
             
             
             
-    for each  chk-gds-pay no-lock  where chk-gds-pay.doc-code = v-chk-doc-code 
+   _chk: for each  chk-gds-pay no-lock  where chk-gds-pay.doc-code = v-chk-doc-code 
     and  chk-gds-pay.algo-num = {&current-algo-1} ,
         first ub.bar-code where bar-code.b-code =  chk-gds-pay.b-code no-lock
         break by chk-gds-pay.b-code :
-            
+         
         v-sum-unbase = chk-gds-pay.price-base.
         v-sum-base = chk-gds-pay.tot-r-b.
         v-gds-code = bar-code.gds-code.
@@ -263,11 +270,26 @@ case x-SelectGood:
         when {&g-grp} then 
                 do :
        
-                    find   first tmp#grp no-lock
-                        where tmp#grp.node-code = p-grp-code no-error.
-                    if not available tmp#grp then next.                                  
-                end.
-                
+             assign
+                        v-grp-name = ""
+                        v-found = no
+                    .
+                   
+                    _ii-grp: do ii-grp = 1 to num-entries(buf_goods.grp-name, {&delim-grp}) - 1     /* 1 */ /* где {&delim-grp} = CHR(47) = "/". Фактически это уровни вложенности данной группы товаров */
+                    :
+                        assign
+                            v-grp-name = v-grp-name + entry(ii-grp, buf_goods.grp-name, {&delim-grp}) + {&delim-grp} /* Вытаскиваем из полной цепочки - имя каждой группы для каждого уровня. Цепочка от корня до тек группы. */
+                        .
+                        if can-find(first tmp#grp no-lock where
+                                          tmp#grp.grp-name = v-grp-name) then
+                        do:
+                            assign v-found = yes.
+                            leave _ii-grp.
+                        end.
+                    end. /* 1 */                                                                    /* 1 */
+
+                    if not v-found then next _chk.
+end.
             otherwise 
             do:     /*список товаров*/
                 find  first gds-list no-lock
@@ -315,8 +337,8 @@ end case.
                 temp-chk.obj-code = p-obj-code and 
                 temp-chk.obj-type = p-obj-type and            
                 temp-chk.gds-code = v-gds-code  and
-                temp-chk.grp-code = chk-doc.sales-man 
-                
+                temp-chk.grp-code = chk-doc.sales-man and
+                    temp-chk.sales-man-psn = chk-doc.salesman-psn-code
                 use-index tt no-error 
                 .
 
@@ -330,6 +352,7 @@ end case.
                     temp-chk.obj-type = p-obj-type            
                     temp-chk.gds-code = v-gds-code  
                     temp-chk.grp-code =  chk-doc.sales-man 
+                    temp-chk.sales-man-psn = chk-doc.salesman-psn-code
                     .
     
                 for first buf_goods where buf_goods.gds-code = v-gds-code no-lock :
@@ -382,7 +405,8 @@ do:
         buf-qnty-temp-chk.gds-code = 0 and 
         buf-qnty-temp-chk.obj-code = p-obj-code and 
         buf-qnty-temp-chk.obj-type = p-obj-type and                 
-        buf-qnty-temp-chk.grp-code = chk-doc.sales-man
+        buf-qnty-temp-chk.grp-code = chk-doc.sales-man and 
+         buf-qnty-temp-chk.sales-man-psn = chk-doc.salesman-psn-code
         use-index tt no-error 
         .
             
@@ -397,8 +421,8 @@ do:
             buf-qnty-temp-chk.obj-type  = p-obj-type                     
             buf-qnty-temp-chk.grp-code  = chk-doc.sales-man 
             buf-qnty-temp-chk.grp-lvl   = 1
-            buf-qnty-temp-chk.sales-man = chk-doc.salesman-psn-code
-            .
+            buf-qnty-temp-chk.sales-man-psn = chk-doc.salesman-psn-code
+            . 
     end.
                                      
         if v-prod = no then  buf-qnty-temp-chk.doc-qnty = buf-qnty-temp-chk.doc-qnty  + (if ub.chk-doc.chk-type = integer({&rcpt-return}) then 0 else 1).
@@ -455,28 +479,29 @@ procedure create-fill-tt-chk:
             obj-temp-chk.grp-code = 0. 
         end.
 
-         run rep/rpychk0.p (input "r-shftc2"
+             run rep/rpychk0.p (input "r-shftc2"
                         ,input obj-list.obj-type
                         ,input obj-list.obj-code
                         ,input ?                    /*p-date-from*/
                         ,input ?                    /*p-date-to*/
                         ,input X-date-start         /*p-shift-date-from*/
                         ,input X-date-end           /*p-shift-date-to*/
-                        ,input 1                    /*p-shift-num-start*/
-                        ,input 99                   /*p-shift-num-end*/
+                        ,input 0                 /*p-shift-num-start*/
+                        ,input 99                /*p-shift-num-end*/
                         ,input ?                    /*p-inkas-code*/
                         ) no-error.
 
          if error-status:error then
          do:
              message error-status:get-message(1) view-as alert-box.
-         end.
-
-
 
         if x-TOG-Shift = yes then
         do:  /* if x-TOG-Shift = yes */
-            _c-d: for each ub.chk-doc where
+        
+        
+    
+         end.
+    _c-d: for each ub.chk-doc where
                 ub.chk-doc.obj-type = obj-list.obj-type and
                 ub.chk-doc.obj-code = obj-list.obj-code and
                 (ub.chk-doc.shift-date > X-date-Start or (ub.chk-doc.shift-date = X-date-Start and ub.chk-doc.shift-num >= x-Shift-Start)) and
@@ -491,6 +516,8 @@ procedure create-fill-tt-chk:
         end. /* if x-TOG-Shift = yes */
         else
         do:  /* else if x-TOG-Shift = no */
+          
+      
             _c-d: for each ub.chk-doc where
                 ub.chk-doc.obj-type = obj-list.obj-type and
                 ub.chk-doc.obj-code = obj-list.obj-code and
@@ -899,7 +926,9 @@ if p-tog-raz = yes then do:
                     '         <td style="display: yes; text-align:  right; font-weight: bold">'   + if  buf-html-temp-chk.srchk-kol-tov-uch   <> ?  then fnc-convert-dot-to-colon( buf-html-temp-chk.srchk-kol-tov-uch, "->>>>>>>9.99") + '</td>' else "?" + '</td>' skip
                     '       </tr>' skip
                     .
-                run tt-print-line (input buf-html-temp-chk.obj-type, input buf-html-temp-chk.obj-code, input 1 , input 2). /* Доформирование групп */
+                if p-tog-prod = yes then run tt-print-line (input buf-html-temp-chk.obj-type, input buf-html-temp-chk.obj-code, input -2 , input 2). /* Доформирование групп */
+                if p-tog-prod = no then run tt-print-line (input buf-html-temp-chk.obj-type, input buf-html-temp-chk.obj-code, input 1 , input 2). /* Доформирование групп */
+                
             end. 
  
         end.
@@ -1028,8 +1057,8 @@ procedure transform-tt-level  :
     define buffer buf1_temp-chk    for temp-chk.
     define buffer buf2_help-chk    for help-chk.
     define buffer buf_obj_temp-chk for help-chk.
-  
-
+                 define buffer buftt2_temp-chk for temp-chk.
+    
       do while v-upper-code <> 0:
 
           v-upper-code = 0.
@@ -1089,53 +1118,84 @@ procedure transform-tt-level  :
                 .
   
 
-            if last-of (temp-chk.grp-code) and v-upper-code <> 0  then  
-            do :
-             
-                create buftt_temp-chk .
-
-                assign
-                        buftt_temp-chk.grp-code   = (if temp-chk.grp-lvl = 0 then temp-chk.grp-code
-                    else v-upper-code)                             /* Группа товара (как-бы заголовок для группы) */
-                    buftt_temp-chk.qnty       = v-eff-doc-qnty           /* Количество */
-                    buftt_temp-chk.sum-unbase = v-object-sum               /* Сумма без скидки */
-                    buftt_temp-chk.sum-base   = v-tot-r-b                     /* Сумма со скидкой */
-                    buftt_temp-chk.pok-qnty   = v-pok-qnty                      /* количество покупок*/
-                    buftt_temp-chk.grp-lvl    = v-cur-lvl + 1       /* Уровень группы (относительный, как порядок следования групп: 1, 2, ...) */
-                    buftt_temp-chk.gds-name   = v-gds-name                   /* Наименование uруппы товаров */
-                    buftt_temp-chk.obj-type   = v-obj-type
-                    buftt_temp-chk.obj-code   = v-obj-code
-                    .
+              if last-of (temp-chk.grp-code) and v-upper-code <> 0  then  
+              do :
                 
-                for each help-chk where help-chk.group-chk = temp-chk.grp-code :
+                  find first  buftt_temp-chk   where
+                      buftt_temp-chk.grp-code = (if temp-chk.grp-lvl = 0 then temp-chk.grp-code else v-upper-code)
+                      and buftt_temp-chk.obj-code = v-obj-code 
+                      and buftt_temp-chk.obj-type = v-obj-type 
+                      and    buftt_temp-chk.grp-lvl    = temp-chk.grp-lvl + 1 no-error.
+                      
+              
+                  if  not available buftt_temp-chk then 
+                  do:
+                      create buftt_temp-chk .
+
+                      assign
+                          buftt_temp-chk.grp-code = (if temp-chk.grp-lvl = 0 then temp-chk.grp-code
+                          else v-upper-code)                             /* Группа товара (как-бы заголовок для группы) */
+                      
+                          buftt_temp-chk.grp-lvl  = temp-chk.grp-lvl + 1       /* Уровень группы (относительный, как порядок следования групп: 1, 2, ...) */
+                          /* Наименование uруппы товаров */
+                          buftt_temp-chk.obj-type = v-obj-type
+                          buftt_temp-chk.obj-code = v-obj-code
+                          .
+                  end.
+                  assign 
+                      buftt_temp-chk.qnty       =   buftt_temp-chk.qnty + v-eff-doc-qnty           /* Количество */
+                      buftt_temp-chk.sum-unbase = buftt_temp-chk.sum-unbase + v-object-sum               /* Сумма без скидки */
+                      buftt_temp-chk.sum-base   =   buftt_temp-chk.sum-base + v-tot-r-b                     /* Сумма со скидкой */
+                      buftt_temp-chk.pok-qnty   =  buftt_temp-chk.pok-qnty + v-pok-qnty                      /* количество покупок*/
+                      buftt_temp-chk.gds-name   = v-gds-name  .
+                          
+                  for each help-chk where help-chk.group-chk = temp-chk.grp-code :
                          
-                    buftt_temp-chk.doc-qnty      = buftt_temp-chk.doc-qnty + 1.
-                       
-                    if not can-find(first buf2_help-chk where  buf2_help-chk.doc-code = help-chk.doc-code and 
-                        buf2_help-chk.group-chk = v-upper-code) then 
-                    do:
-                        create buf2_help-chk.             
-                        buf2_help-chk.doc-code = help-chk.doc-code.
-                        buf2_help-chk.group-chk = v-upper-code.
-                    end.     
+                      buftt_temp-chk.doc-qnty      = buftt_temp-chk.doc-qnty + 1.
+                         
+                      if not can-find(first buf2_help-chk where  buf2_help-chk.doc-code = help-chk.doc-code and 
+                          buf2_help-chk.group-chk = v-upper-code) then 
+                      do:
+                          create buf2_help-chk.             
+                          buf2_help-chk.doc-code = help-chk.doc-code.
+                          buf2_help-chk.group-chk = v-upper-code.
+                      end.     
                    
-                end.
+                  end.
       
                 buftt_temp-chk.srchk-kol-tov = buftt_temp-chk.qnty / buftt_temp-chk.doc-qnty.
                 buftt_temp-chk.srchk-sum     = buftt_temp-chk.sum-unbase / buftt_temp-chk.doc-qnty.
                 buftt_temp-chk.srchk-base-sum = buftt_temp-chk.sum-base / buftt_temp-chk.doc-qnty.
                 buftt_temp-chk.srchk-kol-tov-pokup = buftt_temp-chk.pok-qnty  / buftt_temp-chk.doc-qnty.
-
-         
-
             end.
-            
-            
+
         end. /* temp-chk */
-          v-cur-lvl = v-cur-lvl + 1.
+        
+        
+        
+        v-cur-lvl = v-cur-lvl + 1.
 
     end. /* do while */
  
+    for each buftt2_temp-chk where buftt2_temp-chk.grp-code <> 0  and 
+        buftt2_temp-chk.gds-code = 0 : 
+        for each buftt_temp-chk where buftt_temp-chk.grp-code = buftt2_temp-chk.grp-code and buftt2_temp-chk.grp-lvl <> buftt_temp-chk.grp-lvl and    buftt_temp-chk.gds-code = 0  : 
+                        
+                       
+            assign
+                buftt2_temp-chk.qnty       = buftt_temp-chk.qnty  +   buftt2_temp-chk.qnty     /* Количество */
+                buftt2_temp-chk.sum-unbase = buftt_temp-chk.sum-unbase +   buftt2_temp-chk.sum-unbase              /* Сумма без скидки */
+                buftt2_temp-chk.sum-base   = buftt_temp-chk.sum-base + buftt2_temp-chk.sum-base                   /* Сумма со скидкой */
+                buftt2_temp-chk.pok-qnty   = buftt_temp-chk.pok-qnty  + buftt2_temp-chk.pok-qnty       .                /* количество покупок*/
+            /*                      buftt_temp-chk.gds-name   = v-gds-name  .*/
+                        
+            delete buftt_temp-chk.   
+        end.
+                      
+         
+    end.
+   
+   
    
     obj-temp-chk.srchk-uch = 100 .
     obj-temp-chk.srchk-base-uch = 100.
@@ -1160,6 +1220,7 @@ define variable v-display as character no-undo.
 
  
 
+/*              run  gbl/inidebug.p.*/
 
     for each buf-grp_temp-chk where
         buf-grp_temp-chk.upper-code = v-upper-code and
@@ -1202,6 +1263,7 @@ define variable v-display as character no-undo.
                     '          <td style="display: yes; text-align:  right; font-weight: bold"  >'     +  if   buf-grp_temp-chk.srchk-kol-tov-uch   <> ?  then fnc-convert-dot-to-colon(buf-grp_temp-chk.srchk-kol-tov-uch, "->>>>>>>9.99") + '</td>' else "?" + '</td>' skip 
                     '       </tr>' skip
                     . /* Точка для закрытия Put */
+            
             end.
             else /* иначе - если более детальные уровни (v-print-lvl с 3-го и более), то формируем строки с такими уровнями в HTML, но на экран не выводим! */
             do:
@@ -1230,8 +1292,10 @@ define variable v-display as character no-undo.
                     '       </tr>' skip
                     . /* Точка для закрытия Put */
             end.
+/*            output stream outstr-html close.*/
         end.
         if buf-grp_temp-chk.grp-lvl <> 0 then run tt-print-line (input v-obj-type, input v-obj-code, input buf-grp_temp-chk.grp-code, input v-print-lvl + 1 ).
+            
     end.
 
 end procedure.
@@ -1295,9 +1359,9 @@ procedure prod-level:
             temp-chk.srchk-base-uch =   temp-chk.sum-base * 100 / obj-temp-chk.sum-base.
             temp-chk.srchk-uch  = temp-chk.sum-unbase * 100 / obj-temp-chk.sum-unbase.
       
+                                    temp-chk.upper-code =  temp-chk.grp-code.
       
-            temp-chk.upper-code =  temp-chk.grp-code.
-             
+/*            temp-chk.upper-code =  temp-chk.grp-code.*/
 
       
             assign
@@ -1315,9 +1379,9 @@ procedure prod-level:
                     prod-temp-chk.gds-code = 0 and
                     prod-temp-chk.obj-type = temp-chk.obj-type and
                     prod-temp-chk.obj-code = temp-chk.obj-code  and
-                    prod-temp-chk.grp-code = temp-chk.grp-code and 
+                    prod-temp-chk.grp-code = temp-chk.grp-code and
                     prod-temp-chk.grp-lvl = 1       
-                
+                 
                     use-index tt no-error
                     .
 
@@ -1325,23 +1389,23 @@ procedure prod-level:
                 do:
                     create prod-temp-chk .
                     assign
-                           
-                        prod-temp-chk.grp-code   = temp-chk.grp-code          
+                                prod-temp-chk.grp-lvl = 1
+                        prod-temp-chk.grp-code   = temp-chk.grp-code
                         prod-temp-chk.obj-type   = temp-chk.obj-type
                         prod-temp-chk.obj-code   = temp-chk.obj-code 
                         prod-temp-chk.gds-code   = 0.
                         
                 end.
-                 prod-temp-chk.upper-code = 1.
+                 prod-temp-chk.upper-code = -2.
 /*                prod-temp-chk.gds-name = "Продавец не указан" + string(temp-chk.sales-man) + string(temp-chk.grp-code).*/
                  prod-temp-chk.gds-name = "Продавец не указан".
                 v-name = ''.
-              
-                if temp-chk.grp-code <> 0 then  for first ub.person where
-                    ub.person.seller = temp-chk.grp-code no-lock :
-                    v-psn-code =  person.psn-code.
-                
-                    run rep/get-psn.p(input v-psn-code, output v-name ).
+      
+                if prod-temp-chk.grp-code <> 0 then  for first ub.person where
+                    ub.person.psn-code = temp-chk.sales-man-psn no-lock : 
+                    
+               
+                    run rep/get-psn.p(input person.psn-code, output v-name ).
                     prod-temp-chk.gds-name = v-name + '  ' + ub.person.name1 + ' ':U + ub.person.name2.
         
                 end.
@@ -1374,7 +1438,7 @@ procedure prod-level:
  
        
     
-    obj-temp-chk.srchk-uch = 100.
+    obj-temp-chk.srchk-uch = 100. 
     obj-temp-chk.srchk-base-uch = 100.
     obj-temp-chk.srchk-kol-tov-uch = 100.
     obj-temp-chk.srchk-kol-tov       = obj-temp-chk.qnty / obj-temp-chk.doc-qnty.
