@@ -19,9 +19,12 @@ define input  parameter parParentProc as handle    no-undo .
 { cmp/str-glbl.i }
 { cmp/r-page1.i new}
 
+{ gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }
+
 run rep/d-report.w
     ( input parParentProc ,
-      input 'initcont.p',
+      input 'utl/initcont.p',
       "Инициализация фин. архива arh-trn-doc-contract",
       1,
       "":U,

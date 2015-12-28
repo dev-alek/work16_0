@@ -38,6 +38,7 @@ define variable vss-description as character no-undo init "Оборотно-сальдовая ве
 { gbl/cur-time.i }
 { cmp/library.i  }
 { gbl/clntattr.i }
+{ str/farh-def.i }
 
 define Stream OutStream.
 
@@ -781,7 +782,7 @@ procedure CalcOstatFin:
         and buf_arh-fin-doc-contr-schet.cli-type         = temp-cli.obj-type
         and buf_arh-fin-doc-contr-schet.fin-ext-doc-type = p-type
         and buf_arh-fin-doc-contr-schet.calc-curr-code   = v-curr-r-b
-        and buf_arh-fin-doc-contr-schet.sum-type         = "sum-contract"
+        and buf_arh-fin-doc-contr-schet.sum-type         = {&arh-fin-doc-contr-schet-sum-contract}
         and buf_arh-fin-doc-contr-schet.fact-order      < v-fact-order-start
     no-error .
     if available buf_arh-fin-doc-contr-schet then
@@ -807,7 +808,7 @@ procedure CalcOstatFinNal:
         and buf_arh-fin-doc-contr-schet-nal.fin-ext-doc-type = p-type
         and buf_arh-fin-doc-contr-schet-nal.curr-code        = v-curr-r-b
         and buf_arh-fin-doc-contr-schet-nal.calc-curr-code   = v-curr-r-b
-        and buf_arh-fin-doc-contr-schet-nal.sum-type         = "sum-contract"
+        and buf_arh-fin-doc-contr-schet-nal.sum-type         = {&arh-fin-doc-contr-schet-nal-sum-contract}
         and buf_arh-fin-doc-contr-schet-nal.fact-order      < v-fact-order-start
     no-error .
     if available buf_arh-fin-doc-contr-schet-nal then

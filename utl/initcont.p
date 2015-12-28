@@ -14,7 +14,7 @@ Author: Michael Kochetkov
 Creation date: 03/27/06
 
 */
-define input parameter parparentproc as widget-handle no-undo .
+/*define input parameter parparentproc as widget-handle no-undo*/ .
 
 /* ***************************  Definitions  ************************** */
 define variable vss-revision    as character no-undo init "$Revision$":u .
@@ -33,8 +33,8 @@ define variable vss-description as character no-undo init "утилита инициализации
 /*{ trg/partslib.i }*/
 /*{ str/in-vatp.i def }*/
 { gbl/userobjs.i }
-{ gbl/getcntxt.i def }
-{ gbl/getcntxt.i get }
+/*{ gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }*/
 
 on write of ub.arh-trn-doc-contract override do:  end.
 on delete of ub.arh-trn-doc-contract override do:  end.
@@ -95,11 +95,11 @@ procedure calc-archive :
 
 /*    do transaction on error undo, return error return-value :*/
 /*      find first db exclusive-lock where db.db-num = clients.db-num .*/
-      for each ub.trn-doc no-lock
-        where ub.trn-doc.obj-type = ub.clients.obj-type
-          and ub.trn-doc.obj-code = ub.clients.obj-code
-          and ub.trn-doc.status_  = {&fact}
-          and ub.trn-doc.fact-order >= v-fact-order
+      for each trn-doc no-lock
+        where trn-doc.obj-type = obj-list.obj-type
+          and trn-doc.obj-code = obj-list.obj-code
+          and trn-doc.status_  = {&fact}
+          and trn-doc.fact-order >= v-fact-order
         :
         assign Counter1 = Counter1 + 1.
         { rep/repfrm.i disp Counter1 }
@@ -109,7 +109,7 @@ procedure calc-archive :
         { str/catrncnt.i ub.trn-doc.doc-code no-error }
         if error-status :error then message return-value error-status:get-message(1) view-as alert-box.
       end.
-      run clntattr-delete in this-procedure ( input ub.clients.obj-type,input ub.clients.obj-code, input {&attr-arh-trn-doc-contract}, output v-str) .
+      run clntattr-delete in this-procedure ( input obj-list.obj-type,input obj-list.obj-code, input {&attr-arh-trn-doc-contract}, output v-str) .
 /*    end.*/
   end.
 end procedure. /* calc-archive */
