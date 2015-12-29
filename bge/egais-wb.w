@@ -46,6 +46,7 @@ define variable gh-wb-egais-header         as handle    no-undo.
 define variable bh-wb-gds-EG-header        as handle    no-undo.
 define variable browse-hdl-wb-egais-header as handle    no-undo.
 define variable bcol                       as handle    extent no-undo.
+define variable bcol-h                     as handle    extent no-undo.
 define variable v-db-num                   as integer   no-undo .
 define variable v-user-id                  as character no-undo .
 define variable v-user-select              as character no-undo .
@@ -57,8 +58,10 @@ define variable v-ext-sys                  as integer   no-undo .
 define variable v-rid                      as recid     no-undo .
 /*define variable v-identity                 as character no-undo .*/
 define variable v-uniq-key-rec             as character no-undo .
+define variable glog                       as logical no-undo .
 
 define buffer buf_clients   for ub.clients .
+define buffer buf_firm      for ub.firm .
 define buffer x_ext-classif for ub.ext-classif.
 define buffer buf_goods     for ub.goods .
 
@@ -315,6 +318,7 @@ ON CHOOSE OF b-choose-ship IN FRAME Dialog-Frame /* b-choose-ship */
     do:
       return no-apply.
     end.
+/*    find first buf_firm where buf_firm.firm-code = buf_clients.obj-code no-error.*/
 
     run gen-key-rec in this-procedure   ( input {&table_clients}
       ,input buffer buf_clients:handle
@@ -411,7 +415,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   }
   { gbl/getcntxt.i get }
 
-  find first ub.ext-system where ub.ext-system.delivery-method = integer ({&esys-dm-egais}).
+  find first ub.ext-system where ub.ext-system.whole-send-news = integer ({&esys-dm-egais}).
   
   assign 
     v-ext-sys = ub.ext-system.esys-id .  
@@ -476,9 +480,10 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   gh-wb-egais-header:query-open.
 
   browse-hdl-wb-egais-header:query = gh-wb-egais-header.
-
+  extent (bcol-h) = bh-wb-gds-EG-header:num-fields.
   do ii = 1 to bh-wb-gds-EG-header:num-fields:
-    browse-hdl-wb-egais-header:add-like-column('tt-wb-header' + '.' + bh-wb-gds-EG-header:buffer-field (ii):name, 0, 'FILL-IN').
+    bcol-h[ii] = browse-hdl-wb-egais-header:add-like-column('tt-wb-header' + '.' + bh-wb-gds-EG-header:buffer-field (ii):name, 0, 'FILL-IN').
+    if ii = 6 then bcol-h[ii]:width = 20.
   end.
   { gbl/diasize.i &br-hndl=browse-hdl-wb-egais }
   run diasize_init in this-procedure .
@@ -528,7 +533,7 @@ PROCEDURE enable_UI :
   ------------------------------------------------------------------------------*/
   DISPLAY F-ship f-cons 
     WITH FRAME Dialog-Frame.
-  ENABLE Btn_Cancel btn_conn F-ship f-cons 
+  ENABLE Btn_Cancel btn_conn 
     WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -544,60 +549,151 @@ PROCEDURE msdblcl :
   define variable par-type    as character no-undo .
   
   if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> "" and bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> ?
-    then 
+    then
   do:
-    message "Товар уже имеет связку" view-as alert-box.
-    return no-apply.
+    
+    find first buf_goods where buf_goods.gds-code = bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value.
+    run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
+     ,input (buffer buf_goods:handle)
+      ,output v-gds-uniq-key-rec).
+    find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_goods} 
+      and X_ext-classif.classif-name = {&extclass_goods_esys} 
+      AND X_ext-classif.db-num = 0  
+      and X_ext-classif.key#_one = bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value
+      and X_ext-classif.key#_two = v-ext-sys 
+      and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+      no-error. 
   end.
   
-  run ref/gds-ref.p
-    ( parparentproc
-    ,'b-sel'
-    ,?             /*p-stat */
-    ,?             /*p-list  */
-    ,?             /*p-cond  */
-    ,?             /*p-rec   */
-    ,?             /*p-grp   */
-    ,?             /*p-cli-type */
-    ,?             /*p-cli-code  */
-    ,v-cntxt-obj-type    /*p-obj-type  */
-    ,v-cntxt-obj-code     /*p-obj-code  */
-    ,?             /*p-other     */
-    , output v-rid-list) no-error.
-  if v-rid-list = "" or v-rid-list = ? 
-    then return no-apply. 
-  
-  find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock.
-  run gds-attr-value(
-    buf_goods.gds-code,
-    {&attr-alcohol-prod},
-    output par-alcohol,
-    output par-type
-    ).
-  if par-alcohol = "" or par-alcohol = "no" then 
-  do :
-    message "Выбранный товар не является алкогольной продукцией." view-as alert-box.
-    return no-apply.
-  end.
-  
-  run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
-    ,input (buffer buf_goods:handle)
-    ,output v-gds-uniq-key-rec).
-  find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_goods} 
-    and X_ext-classif.classif-name = {&extclass_goods_esys} 
-    AND X_ext-classif.db-num = 0  
-    and X_ext-classif.key#_one = buf_goods.gds-code
-    and X_ext-classif.key#_two = v-ext-sys 
-    and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
-    no-error. 
   if available X_ext-classif then 
   do :
-    message substitute ("Товар &1 уже связан", buf_goods.gds-code) view-as alert-box.  
+    message substitute ("Товар &1 уже связан. Изменить связку?", buf_goods.gds-code) view-as alert-box
+    question buttons yes-no-cancel
+    title "" update v-choise as logical.
+    if v-choise then do:
+      run ref/gds-ref.p
+        ( parparentproc
+        ,'b-sel'
+        ,?             /*p-stat */
+        ,?             /*p-list  */
+        ,?             /*p-cond  */
+        ,?             /*p-rec   */
+        ,?             /*p-grp   */
+        ,?             /*p-cli-type */
+        ,?             /*p-cli-code  */
+        ,v-cntxt-obj-type    /*p-obj-type  */
+        ,v-cntxt-obj-code     /*p-obj-code  */
+        ,?             /*p-other     */
+        , output v-rid-list) no-error.
+      if v-rid-list = "" or v-rid-list = ? 
+        then return no-apply. 
+      
+      find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock.
+      run gds-attr-value(
+        buf_goods.gds-code,
+        {&attr-alcohol-prod},
+        output par-alcohol,
+        output par-type
+        ).
+      if par-alcohol = "" or par-alcohol = "no" then 
+      do :
+        message "Выбранный товар не является алкогольной продукцией." view-as alert-box.
+        return no-apply.
+      end.
+      if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value
+      then do:
+        message "У выбранного товара не соответсвует объем" view-as alert-box.
+      end.
+      if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value
+      then do:
+        message "У выбранного товара не соответсвует содержание спирта" view-as alert-box.
+      end.
+      run gds-attr-delete (
+      bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value,
+      {&attr-egais-name},
+      output glog
+      ).
+      delete x_ext-classif.
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
+       ,input (buffer buf_goods:handle)
+        ,output v-gds-uniq-key-rec).
+      run ref/extclas1.p ( 
+        INPUT {&add-def}
+        ,INPUT yes /*p-silent*/
+        ,INPUT-OUTPUT v-rid
+        ,INPUT {&table_goods} /*p-classif-subject*/
+        ,INPUT {&extclass_goods_esys} /*p-classif-name*/
+        ,input 0  /*p-db-num*/
+        ,input buf_goods.gds-code  /*p-key#_one*/
+        ,input v-ext-sys /*p-Key#_Two*/
+        ,input 0 /*p-key#_Three*/
+        ,input bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value /*p-CharKey_One */
+        ,input '':U /*p-CharKey_two */
+        ,input buf_goods.gds-name /*p-CharKey_three */
+        ,input 0 /*p-nonunique */
+        ,input v-gds-uniq-key-rec ) no-error.
+      if error-status:error then
+      do:
+        if error-status:get-message(1) = "" then
+          message "Ошибка добавления записи в справочник!" view-as alert-box .
+        else
+          message error-status:get-message(1) view-as alert-box .
+        undo, return no-apply .
+      end.
+      run gds-attr-write(
+      buf_goods.gds-code,
+      {&attr-egais-name},
+      bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value
+      ).
+    end.
+    else do:
+      return no-apply.
+    end.
     /*assign 
       X_ext-classif.charkey_one = bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value .*/
   end.                                    
   else 
-  do :                                    
+  do :
+    run ref/gds-ref.p
+      ( parparentproc
+      ,'b-sel'
+      ,?             /*p-stat */
+      ,?             /*p-list  */
+      ,?             /*p-cond  */
+      ,?             /*p-rec   */
+      ,?             /*p-grp   */
+      ,?             /*p-cli-type */
+      ,?             /*p-cli-code  */
+      ,v-cntxt-obj-type    /*p-obj-type  */
+      ,v-cntxt-obj-code     /*p-obj-code  */
+      ,?             /*p-other     */
+      , output v-rid-list) no-error.
+    if v-rid-list = "" or v-rid-list = ? 
+      then return no-apply. 
+    
+    find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock.
+    run gds-attr-value(
+      buf_goods.gds-code,
+      {&attr-alcohol-prod},
+      output par-alcohol,
+      output par-type
+      ).
+    if par-alcohol = "" or par-alcohol = "no" then 
+    do :
+      message "Выбранный товар не является алкогольной продукцией." view-as alert-box.
+      return no-apply.
+    end.
+    if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value
+    then do:
+      message "У выбранного товара не соответсвует объем" view-as alert-box.
+    end.
+    if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value
+    then do:
+      message "У выбранного товара не соответсвует содержание спирта" view-as alert-box.
+    end.
+    run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
+     ,input (buffer buf_goods:handle)
+      ,output v-gds-uniq-key-rec).
     run ref/extclas1.p ( 
       INPUT {&add-def}
       ,INPUT yes /*p-silent*/
@@ -621,7 +717,13 @@ PROCEDURE msdblcl :
         message error-status:get-message(1) view-as alert-box .
       undo, return no-apply .
     end.
+    run gds-attr-write(
+    buf_goods.gds-code,
+    {&attr-egais-name},
+    bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value
+    ).
   end.
+  
 
   bh-wb-gds-EG = egais:GetHndlTable(2, v-uniq-key-rec ).
   create query gh-wb-egais.
@@ -641,8 +743,8 @@ PROCEDURE refresh-view :
 
   f-cons = bh-wb-gds-EG-header:buffer-field ("clientCons"):buffer-value.
   f-ship = bh-wb-gds-EG-header:buffer-field ("client"):buffer-value.
-  display Btn_Cancel b-choose-cons b-choose-ship btn_conn f-cons F-ship with frame Dialog-Frame.
-  ENABLE Btn_Cancel b-choose-cons b-choose-ship btn_conn
+  display Btn_Cancel b-choose-cons b-choose-ship btn_conn with frame Dialog-Frame.
+  ENABLE Btn_Cancel b-choose-cons btn_conn
     WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   bh-wb-gds-EG:find-first ().

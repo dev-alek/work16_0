@@ -14,9 +14,9 @@ using ibs.th.bge.egais.*.
 
 class ibs.th.bge.egais.WayBill inherits EGAISUTM:
 
-{cmp/str-glbl.i class}
-{ibs/th/bge/egais/wb-egais.i}
-{ ref/extclass.i }
+  {cmp/str-glbl.i class}
+  {ibs/th/bge/egais/wb-egais.i}
+  { ref/extclass.i }
 
 &scop xml-act-1 '<?xml version="1.0" encoding="UTF-8"?>~
 <ns:Documents Version="1.0" ~
@@ -208,14 +208,15 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 
   define stream outstr.
   
-  define private buffer buf_clob-bind for ub.clob-bind.
-  define private buffer buf_clob-data for ub.clob-data.
-  define private buffer buf_gds for ub.goods.
-  define private buffer buf_trn-doc for ub.trn-doc.
-  define private buffer buf_doc-attr for ub.doc-attr.
-  define private buffer buf_doc-line for ub.doc-line.
-  define private buffer buf_clients for ub.clients.
-  define private buffer buf_ext-classif for ub.ext-classif.
+  define private buffer buf_clob-bind     for ub.clob-bind.
+  define private buffer buf_clob-data     for ub.clob-data.
+  define private buffer buf_gds           for ub.goods.
+  define private buffer buf_trn-doc       for ub.trn-doc.
+  define private buffer buf_doc-attr      for ub.doc-attr.
+  define private buffer buf_doc-line      for ub.doc-line.
+  define private buffer buf_doc-line-attr for ub.doc-line-attr.
+  define private buffer buf_clients       for ub.clients.
+  define private buffer buf_ext-classif   for ub.ext-classif.
   
   define private variable parameters     as character no-undo.
   define private variable inFileName     as character no-undo.
@@ -225,12 +226,12 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define private variable urlResp        as character no-undo.
   define private variable v-uniq-key-rec as character no-undo.
 
-  define variable v-FS-RAR  as character no-undo .
-  define variable v-ext-sys as integer   no-undo .
+  define         variable v-FS-RAR       as character no-undo .
+  define         variable v-ext-sys      as integer   no-undo .
 
   define temp-table tt-wb-hndls no-undo
     field num          as character label "№ накл."
-    field wb-date      as date label "Дата"
+    field wb-date      as date      label "Дата"
     field shippregid   as character label "ID поставщика" format "x(21)"
     field obj          as character label "Объект"
     field wb-type      as character label "Тип" format "x(10)"
@@ -244,6 +245,14 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     Identity 
     .
 
+  define temp-table tt-wb-act-hndls no-undo
+    field num          as character label "№ акта"
+    field act-date     as date      label "Дата"
+    field status_      as character label "Статус"
+    field wbregid      as character label "ID накл. EGAIS" format "X(21)"
+    index pi
+    wbregid
+    .
 
   define temp-table tt-wb-info-client no-undo
     field obj-type        like ub.clients.obj-type
@@ -272,9 +281,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 
   constructor public WayBill (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
     
-/*    assign                 */
-/*      parameters = inFSRAR.*/
-/*    .                      */
+    /*    assign                 */
+    /*      parameters = inFSRAR.*/
+    /*    .                      */
     super (inOjType, inObjCode).
     v-FS-RAR = inFSRAR.
     v-ext-sys = inExtSys.
@@ -290,7 +299,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       .
     
     if inWbIndenty = "AllWB"
-    then do: 
+      then 
+    do: 
       GetWBUTM().
       return ?.
     end.
@@ -304,7 +314,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           do:
             if inTableType = {&wb-header}
               then empty temp-table tt-wb-header.
-              else empty temp-table tt-wb-gds-EG.
+            else empty temp-table tt-wb-gds-EG.
             find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIndenty and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
             if not available (buf_clob-bind) then 
             do:
@@ -323,12 +333,13 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 ub.clients.obj-type = entry(2, ub.ext-classif.uniq-key-rec, {&delim-key}) and 
                 ub.clients.obj-code = integer(entry(3, ub.ext-classif.uniq-key-rec, {&delim-key})).
               
-              if available (ub.clients) then do:
+              if available (ub.clients) then 
+              do:
                 assign
                   tt-wb-header.cli-type = ub.clients.obj-type
                   tt-wb-header.cli-code = ub.clients.obj-code
-                  tt-wb-header.client = ub.clients.obj-type + string (ub.clients.obj-code)
-                .
+                  tt-wb-header.client   = ub.clients.obj-type + string (ub.clients.obj-code)
+                  .
               end.
             end.
 
@@ -340,12 +351,13 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 ub.clients.obj-type = entry(2, ub.ext-classif.uniq-key-rec, {&delim-key}) and 
                 ub.clients.obj-code = integer(entry(3, ub.ext-classif.uniq-key-rec, {&delim-key})).
               
-              if available (ub.clients) then do:
+              if available (ub.clients) then 
+              do:
                 assign
-                  tt-wb-header.obj-type = ub.clients.obj-type
-                  tt-wb-header.obj-code = ub.clients.obj-code
+                  tt-wb-header.obj-type   = ub.clients.obj-type
+                  tt-wb-header.obj-code   = ub.clients.obj-code
                   tt-wb-header.clientCons = ub.clients.obj-type + string (ub.clients.obj-code)
-                .
+                  .
               end.
             end.
 
@@ -357,7 +369,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             end.
             v-uniq-key-rec = inWbIndenty.
             find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIndenty and buf_clob-bind.field-name_ = {&lob-egais-ref-b} no-error.
-            if available (buf_clob-bind) then do:
+            if available (buf_clob-bind) then 
+            do:
               find first buf_clob-data exclusive-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
               ParseResponse("", {&wb-refB}).
             end.
@@ -373,6 +386,58 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             return buffer tt-wb-gds-EG:handle.
           end.
         end.
+      when {&wb-act-header} or 
+      when {&wb-act-line} then 
+        do:
+          if true /*not (available (buf_clob-bind) and inWbIndenty)*/
+            then 
+          do:
+            if inTableType = {&wb-act-header}
+              then empty temp-table tt-wb-act-header.
+            else empty temp-table tt-wb-act-gds-EG.
+            find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIndenty and buf_clob-bind.field-name_ = {&lob-egais-wb-act} no-error.
+            if not available (buf_clob-bind) then 
+            do:
+              Msg = "Не найден акт с идентификатором " + inWbIndenty.
+              StatusErr = true.
+              return ?.
+            end.
+            find first buf_clob-data exclusive-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
+            ParseResponse("", inTableType).
+            find first tt-wb-act-header.
+            
+            find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins tt-wb-act-header.wbregid no-error.
+            if available (buf_doc-attr) then do:
+              find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-attr.doc-code.
+              
+              for each buf_doc-line where buf_trn-doc.doc-code = buf_doc-line.doc-code:
+                
+                find first buf_gds no-lock where buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type.
+                
+                find first buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code and buf_doc-line-attr.gds-code = buf_gds.gds-code and buf_doc-line-attr.attr-code = 'RefB'no-error.
+                
+                find first tt-wb-act-gds-EG where tt-wb-act-gds-EG.refB = buf_doc-line-attr.attr-value no-error.
+                if not available (tt-wb-act-gds-EG)
+                  then next.
+                assign
+                  tt-wb-act-gds-EG.doc-qnty = buf_doc-line.doc-qnty
+                  tt-wb-act-gds-EG.fact-qnty = buf_doc-line.fact-qnty
+                  tt-wb-act-gds-EG.gds-code = buf_gds.gds-code
+                .
+              end.
+              
+            end.
+            
+          end.
+          if inTableType = {&wb-act-header} then 
+          do:
+            return buffer tt-wb-act-header:handle.
+          end.
+          else 
+          do:
+            return buffer tt-wb-act-gds-EG:handle.
+          end.
+        end.
       when {&wb-clob} then 
         do:
           empty temp-table tt-wb-hndls.
@@ -383,19 +448,36 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               tt-wb-hndls.wb-date      = date (entry (1, buf_clob-bind.descr, {&delim-par}))
               tt-wb-hndls.num          = entry (2, buf_clob-bind.descr, {&delim-par})
               tt-wb-hndls.shippregid   = entry (3, buf_clob-bind.descr, {&delim-par})
-              tt-wb-hndls.Identity      = entry (4, buf_clob-bind.descr, {&delim-par})
+              tt-wb-hndls.Identity     = entry (4, buf_clob-bind.descr, {&delim-par})
               tt-wb-hndls.trn-doc-code = entry (6, buf_clob-bind.descr, {&delim-par})
               tt-wb-hndls.is-sent      = entry (7, buf_clob-bind.descr, {&delim-par})
-              tt-wb-hndls.wb-type      = "приход вн."  when entry (8, buf_clob-bind.descr, {&delim-par}) = {&TDEDT_Pri_Vnesh}
+              tt-wb-hndls.wb-type      = "приход вн."  
+              when entry (8, buf_clob-bind.descr, {&delim-par}) = {&TDEDT_Pri_Vnesh}
               tt-wb-hndls.obj          = entry (9, buf_clob-bind.descr, {&delim-par}) 
               tt-wb-hndls.uniq-key-rec = tt-wb-hndls.Identity + {&delim-cmd} + tt-wb-hndls.shippregid.
             .
-            assign tt-wb-hndls.wbregid = entry (5, buf_clob-bind.descr, {&delim-par}) no-error.
+            assign 
+              tt-wb-hndls.wbregid = entry (5, buf_clob-bind.descr, {&delim-par}) no-error.
             find first buf_trn-doc where buf_trn-doc.doc-code = tt-wb-hndls.trn-doc-code no-error.
             if available (buf_trn-doc)
               then tt-wb-hndls.is-fact = buf_trn-doc.status_.
           end.
           return buffer tt-wb-hndls:handle.
+        end.
+      when {&wb-clob-act} then 
+        do:
+          empty temp-table tt-wb-act-hndls.
+          for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-wb-act}:
+            /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.indenty + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
+            create tt-wb-act-hndls.
+            assign
+              tt-wb-act-hndls.wbregid  = entry (1, buf_clob-bind.descr, {&delim-par})
+              tt-wb-act-hndls.act-date = date (entry (2, buf_clob-bind.descr, {&delim-par}))
+              tt-wb-act-hndls.num      = entry (3, buf_clob-bind.descr, {&delim-par})
+              tt-wb-act-hndls.status_  = entry (4, buf_clob-bind.descr, {&delim-par})
+              .
+          end.
+          return buffer tt-wb-act-hndls:handle.
         end.
       when {&wb-fact} then 
         do:
@@ -403,25 +485,25 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           for each buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais}:
             for each buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-attr.doc-code and buf_trn-doc.status_ = {&fact}:
             
-/*              define variable v-obj-uniq-key-rec as character no-undo .
-              find first buf_clients no-lock where buf_clients.obj-type = buf_trn-doc.cli-type and buf_clients.obj-code = buf_trn-doc.cli-code .
-              run gen-key-rec in this-procedure   ( input {&table_clients}
-                                                   ,input buffer buf_clients:handle
-                                                   ,output v-obj-uniq-key-rec).
-              find first buf_ext-classif exclusive-lock  where buf_ext-classif.classif-subject = {&table_clients}
-                                                         and buf_ext-classif.classif-name = {&extclass_clients_esys}
-                                                         and buf_ext-classif.db-num = 0
-                                                         and buf_ext-classif.key#_one = v-ext-sys
-                                                         and buf_ext-classif.uniq-key-rec = v-obj-uniq-key-rec
-                                                         no-error.*/
-                create tt-wb-hndls. 
-                assign
-                  tt-wb-hndls.wb-date      = buf_trn-doc.doc-date
-                  tt-wb-hndls.num          = buf_trn-doc.doc-code
-                  tt-wb-hndls.trn-doc-code = buf_trn-doc.doc-code
-                  tt-wb-hndls.shippregid   = buf_trn-doc.cli-type + string (buf_trn-doc.cli-code)
-                  tt-wb-hndls.uniq-key-rec = buf_doc-attr.attr-value
-                  tt-wb-hndls.is-fact = buf_trn-doc.status_.
+              /*              define variable v-obj-uniq-key-rec as character no-undo .
+                            find first buf_clients no-lock where buf_clients.obj-type = buf_trn-doc.cli-type and buf_clients.obj-code = buf_trn-doc.cli-code .
+                            run gen-key-rec in this-procedure   ( input {&table_clients}
+                                                                 ,input buffer buf_clients:handle
+                                                                 ,output v-obj-uniq-key-rec).
+                            find first buf_ext-classif exclusive-lock  where buf_ext-classif.classif-subject = {&table_clients}
+                                                                       and buf_ext-classif.classif-name = {&extclass_clients_esys}
+                                                                       and buf_ext-classif.db-num = 0
+                                                                       and buf_ext-classif.key#_one = v-ext-sys
+                                                                       and buf_ext-classif.uniq-key-rec = v-obj-uniq-key-rec
+                                                                       no-error.*/
+              create tt-wb-hndls. 
+              assign
+                tt-wb-hndls.wb-date      = buf_trn-doc.doc-date
+                tt-wb-hndls.num          = buf_trn-doc.doc-code
+                tt-wb-hndls.trn-doc-code = buf_trn-doc.doc-code
+                tt-wb-hndls.shippregid   = buf_trn-doc.cli-type + string (buf_trn-doc.cli-code)
+                tt-wb-hndls.uniq-key-rec = buf_doc-attr.attr-value
+                tt-wb-hndls.is-fact      = buf_trn-doc.status_.
             end.
           end.
           return buffer tt-wb-hndls:handle.
@@ -430,23 +512,23 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         do:
           empty temp-table tt-wb-hndls.
           for each buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
-                                               and buf_ext-classif.classif-name = {&extclass_clients_esys}
-                                               and buf_ext-classif.db-num = 0
-                                               and buf_ext-classif.key#_one = v-ext-sys:
+            and buf_ext-classif.classif-name = {&extclass_clients_esys}
+            and buf_ext-classif.db-num = 0
+            and buf_ext-classif.key#_one = v-ext-sys:
                                                  
             find first buf_clients no-lock where 
               buf_clients.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}) and
               buf_clients.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
             
             for each buf_trn-doc no-lock where buf_trn-doc.cli-code = buf_clients.obj-code and buf_trn-doc.cli-type = buf_clients.obj-type and buf_trn-doc.status_ = {&fact}
-            and buf_trn-doc.doc-type matches "*рас*" :
+              and buf_trn-doc.doc-type matches "*рас*" :
               create tt-wb-hndls.
               assign
                 tt-wb-hndls.wb-date      = buf_trn-doc.doc-date
                 tt-wb-hndls.trn-doc-code = buf_trn-doc.doc-code
                 tt-wb-hndls.shippregid   = buf_ext-classif.charkey_three
-                tt-wb-hndls.wb-type = "расход"
-                tt-wb-hndls.is-fact = buf_trn-doc.status_.
+                tt-wb-hndls.wb-type      = "расход"
+                tt-wb-hndls.is-fact      = buf_trn-doc.status_.
             end.
           end.
           return buffer tt-wb-hndls:handle.
@@ -535,63 +617,64 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           tt-wb-hndls.is-sent = "да". 
         end.
 
-        else do:
-/*          output stream outstr to value ("OutWB.xml") convert target "UTF-8".                                                                                                     */
-/*                                                                                                                                                                                  */
-/*          find first buf_trn-doc where buf_trn-doc.doc-code = tt-wb-hndls.trn-doc-code no-lock.                                                                                   */
-/*                                                                                                                                                                                  */
-/*          for each buf_doc-line no-lock where buf_doc-line.doc-code = tt-wb-hndls.trn-doc-code:                                                                                   */
-/*            find first buf_gds no-lock where buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type.    */
-/*          end.                                                                                                                                                                    */
-/*                                                                                                                                                                                  */
-/*          def var v-date as character no-undo.                                                                                                                                    */
-/*          v-date = substitute ("&1-&2-&3",string (year (now)), string (month (now)), string (day (now))).                                                                         */
-/*                                                                                                                                                                                  */
-/*          outData = substitute ({&xml-wb1}, '020000367672', tt-wb-hndls.trn-doc-code, tt-wb-hndls.trn-doc-code, v-date, v-date, "Packed", "442351234541", "432143124", "2341234").*/
-/*                                                                                                                                                                                  */
-/*          put stream outstr unformatted outData.                                                                                                                                  */
-/*          put stream outstr skip.                                                                                                                                                 */
-/*          output stream outstr close.                                                                                                                                             */
-/*                                                                                                                                                                                  */
-/*          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).               */
-/*          os-command value (cmd).                                                                                                                                                 */
-/*                                                                                                                                                                                  */
-/*          file-info:file-name = search (inFileName).                                                                                                                              */
-/*          if search (inFileName) <> ? and file-info:file-size > 0                                                                                                                 */
-/*            then                                                                                                                                                                  */
-/*          do:                                                                                                                                                                     */
-/*            respValue = ParseRequest (inFileName).                                                                                                                                */
-/*            if respValue = ?                                                                                                                                                      */
-/*              then                                                                                                                                                                */
-/*            do:                                                                                                                                                                   */
-/*              assign                                                                                                                                                              */
-/*                StatusErr = true                                                                                                                                                  */
-/*                Msg       = "Не удалось разобрать данные от UTM"                                                                                                                  */
-/*                .                                                                                                                                                                 */
-/*              undo, return false.                                                                                                                                                 */
-/*            end.                                                                                                                                                                  */
-/*            if not StatusErr                                                                                                                                                      */
-/*              then                                                                                                                                                                */
-/*              ReplyId = respValue:node-value.                                                                                                                                     */
-/*            else                                                                                                                                                                  */
-/*            do:                                                                                                                                                                   */
-/*              assign                                                                                                                                                              */
-/*                StatusErr = true                                                                                                                                                  */
-/*                Msg       = respValue:node-value                                                                                                                                  */
-/*                .                                                                                                                                                                 */
-/*              undo, return false.                                                                                                                                                 */
-/*            end.                                                                                                                                                                  */
-/*          end.                                                                                                                                                                    */
-/*          else                                                                                                                                                                    */
-/*          do:                                                                                                                                                                     */
-/*            assign                                                                                                                                                                */
-/*              StatusErr = true                                                                                                                                                    */
-/*              Msg       = "Не удалось отправить накладную в UTM"                                                                                                                  */
-/*              .                                                                                                                                                                   */
-/*            undo, return false.                                                                                                                                                   */
-/*          end.                                                                                                                                                                    */
-/*          entry (7, buf_clob-bind.descr, {&delim-par}) = "да".                                                                                                                    */
-/*          tt-wb-hndls.is-sent = "да".                                                                                                                                             */
+        else 
+        do:
+        /*          output stream outstr to value ("OutWB.xml") convert target "UTF-8".                                                                                                     */
+        /*                                                                                                                                                                                  */
+        /*          find first buf_trn-doc where buf_trn-doc.doc-code = tt-wb-hndls.trn-doc-code no-lock.                                                                                   */
+        /*                                                                                                                                                                                  */
+        /*          for each buf_doc-line no-lock where buf_doc-line.doc-code = tt-wb-hndls.trn-doc-code:                                                                                   */
+        /*            find first buf_gds no-lock where buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type.    */
+        /*          end.                                                                                                                                                                    */
+        /*                                                                                                                                                                                  */
+        /*          def var v-date as character no-undo.                                                                                                                                    */
+        /*          v-date = substitute ("&1-&2-&3",string (year (now)), string (month (now)), string (day (now))).                                                                         */
+        /*                                                                                                                                                                                  */
+        /*          outData = substitute ({&xml-wb1}, '020000367672', tt-wb-hndls.trn-doc-code, tt-wb-hndls.trn-doc-code, v-date, v-date, "Packed", "442351234541", "432143124", "2341234").*/
+        /*                                                                                                                                                                                  */
+        /*          put stream outstr unformatted outData.                                                                                                                                  */
+        /*          put stream outstr skip.                                                                                                                                                 */
+        /*          output stream outstr close.                                                                                                                                             */
+        /*                                                                                                                                                                                  */
+        /*          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).               */
+        /*          os-command value (cmd).                                                                                                                                                 */
+        /*                                                                                                                                                                                  */
+        /*          file-info:file-name = search (inFileName).                                                                                                                              */
+        /*          if search (inFileName) <> ? and file-info:file-size > 0                                                                                                                 */
+        /*            then                                                                                                                                                                  */
+        /*          do:                                                                                                                                                                     */
+        /*            respValue = ParseRequest (inFileName).                                                                                                                                */
+        /*            if respValue = ?                                                                                                                                                      */
+        /*              then                                                                                                                                                                */
+        /*            do:                                                                                                                                                                   */
+        /*              assign                                                                                                                                                              */
+        /*                StatusErr = true                                                                                                                                                  */
+        /*                Msg       = "Не удалось разобрать данные от UTM"                                                                                                                  */
+        /*                .                                                                                                                                                                 */
+        /*              undo, return false.                                                                                                                                                 */
+        /*            end.                                                                                                                                                                  */
+        /*            if not StatusErr                                                                                                                                                      */
+        /*              then                                                                                                                                                                */
+        /*              ReplyId = respValue:node-value.                                                                                                                                     */
+        /*            else                                                                                                                                                                  */
+        /*            do:                                                                                                                                                                   */
+        /*              assign                                                                                                                                                              */
+        /*                StatusErr = true                                                                                                                                                  */
+        /*                Msg       = respValue:node-value                                                                                                                                  */
+        /*                .                                                                                                                                                                 */
+        /*              undo, return false.                                                                                                                                                 */
+        /*            end.                                                                                                                                                                  */
+        /*          end.                                                                                                                                                                    */
+        /*          else                                                                                                                                                                    */
+        /*          do:                                                                                                                                                                     */
+        /*            assign                                                                                                                                                                */
+        /*              StatusErr = true                                                                                                                                                    */
+        /*              Msg       = "Не удалось отправить накладную в UTM"                                                                                                                  */
+        /*              .                                                                                                                                                                   */
+        /*            undo, return false.                                                                                                                                                   */
+        /*          end.                                                                                                                                                                    */
+        /*          entry (7, buf_clob-bind.descr, {&delim-par}) = "да".                                                                                                                    */
+        /*          tt-wb-hndls.is-sent = "да".                                                                                                                                             */
         
         
         end.
@@ -640,9 +723,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             return hText.
           end.
         otherwise 
-          do:
-            return ?.
-          end.
+        do:
+          return ?.
+        end.
       end case.
     end.
 
@@ -651,11 +734,11 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   
   method private void GetWBUTM ():
     
-    define variable hRoot as handle  no-undo.
-    define variable hDoc  as handle  no-undo.
-    define variable hRow  as handle  no-undo.
-    define variable hText as handle  no-undo.
-    define variable ii    as integer no-undo.
+    define variable hRoot         as handle    no-undo.
+    define variable hDoc          as handle    no-undo.
+    define variable hRow          as handle    no-undo.
+    define variable hText         as handle    no-undo.
+    define variable ii            as integer   no-undo.
     
     define variable v-part-num    as integer   no-undo .
     define variable v-clob-db-num as integer   no-undo .
@@ -670,7 +753,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     
     assign
       inFileName = "ReceiptListOfQuery.xml"
-    .
+      .
     if search ("ReceiptListOfQuery.xml") <> ? then os-delete value (inFileName).
     if search (inFileName) <> ? then os-delete value (inFileName).
     
@@ -680,11 +763,12 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
        
     file-info:file-name = search (inFileName).
     if search (inFileName) = ? or file-info:file-size = 0 
-    then do:
+      then 
+    do:
       assign
         StatusErr = true
-        Msg = "Не удалось получить данные от UTM"
-      .
+        Msg       = "Не удалось получить данные от UTM"
+        .
       return.
     end.
     hDoc:load ("file", inFileName, false).
@@ -699,96 +783,134 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         when "url" then
           do:
             hRow:get-child (hText, 1) no-error.
-            
+        
             case true:
-              when hText:node-value matches ("*opt/out/WayBill/*") then do:
-
-                os-delete "WayBill.xml".
-                assign
-                  inFileName = "WayBill.xml"
-                  .  
-                CmdParseXml(hText:node-value).
-
-                find first tt-wb-header.
-                find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Consignee".
-                find first buf_ext-classif where buf_ext-classif.CharKey_Three = tt-wb-info-client.regID no-error.
-                
-                if available (buf_ext-classif) then do:
-                  tt-wb-header.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}).
-                  tt-wb-header.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
-                end.
-                
-                find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Shipper".                
-                v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par} + tt-wb-header.obj-type + string (tt-wb-header.obj-code).
-
-                v-clob-db-num = ?.
-                v-int64-id = 0.
-                if can-find (first buf_clob-bind where buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec and buf_clob-bind.field-name_ =  {&lob-egais-wb})
-                  then next url_.
-                run gbl/file2clb.p ( input {&add-def}
-                  ,input ",no"
-                  ,input ? /*p-bh*/
-                  ,input tt-wb-header.uniq-key-rec /*p-uniq-key-rec*/
-                  ,input {&lob-egais-wb} /*p-field-*/
-                  ,input v-info /*p-descr*/
-                  ,input-output v-part-num
-                  ,input {&lob-egais-wb}
-                  ,input-output v-clob-db-num
-                  ,input-output v-int64-id
-                  ,input search (inFileName)
-                  ,input '' /*p-src-encoding*/
-                  ) no-error .
-                if error-status:error then 
+              when hText:node-value matches ("*opt/out/WayBill/*") then 
                 do:
-                  Msg = error-status:get-message(1) + {&new-line} + return-value.
-                  StatusErr = true.
-                end.
-  
-  
-              end.
-              when hText:node-value matches ("*opt/out/FORMBREGINFO/*") then do:
 
+                  os-delete "WayBill.xml".
+                  assign
+                    inFileName = "WayBill.xml"
+                    .  
+                  CmdParseXml(hText:node-value).
+
+                  find first tt-wb-header.
+                  find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Consignee".
+                  find first buf_ext-classif where buf_ext-classif.CharKey_Three = tt-wb-info-client.regID no-error.
+            
+                  if available (buf_ext-classif) then 
+                  do:
+                    tt-wb-header.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}).
+                    tt-wb-header.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
+                  end.
+            
+                  find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Shipper".                
+                  v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par} + tt-wb-header.obj-type + string (tt-wb-header.obj-code).
+
+                  v-clob-db-num = ?.
+                  v-int64-id = 0.
+                  if can-find (first buf_clob-bind where buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec and buf_clob-bind.field-name_ =  {&lob-egais-wb})
+                    then next url_.
+                  run gbl/file2clb.p ( input {&add-def}
+                    ,input ",no"
+                    ,input ? /*p-bh*/
+                    ,input tt-wb-header.uniq-key-rec /*p-uniq-key-rec*/
+                    ,input {&lob-egais-wb} /*p-field-*/
+                    ,input v-info /*p-descr*/
+                    ,input-output v-part-num
+                    ,input {&lob-egais-wb}
+                    ,input-output v-clob-db-num
+                    ,input-output v-int64-id
+                    ,input search (inFileName)
+                    ,input '' /*p-src-encoding*/
+                    ) no-error .
+                  if error-status:error then 
+                  do:
+                    Msg = error-status:get-message(1) + {&new-line} + return-value.
+                    StatusErr = true.
+                  end.
+
+
+                end.
+              when hText:node-value matches ("*opt/out/FORMBREGINFO/*") then 
                 do:
+
                   os-delete "FORMBREGINFO.xml".
                   assign
                     inFileName = "FORMBREGINFO.xml"
                     .
-                
+            
+
+                  CmdParseXml(hText:node-value).
+                  find first tt-wb-header.
+                  v-clob-db-num = ?.
+                  v-int64-id = 0.
+                  if can-find (first buf_clob-bind where buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec and buf_clob-bind.field-name_ =  {&lob-egais-ref-b})
+                    then next url_.
+                  run gbl/file2clb.p ( input {&add-def}
+                    ,input ",no"
+                    ,input ? /*p-bh*/
+                    ,input tt-wb-header.uniq-key-rec /*p-uniq-key-rec*/
+                    ,input {&lob-egais-ref-b} /*p-field-*/
+                    ,input '' /*p-descr*/
+                    ,input-output v-part-num
+                    ,input {&lob-egais-ref-b}
+                    ,input-output v-clob-db-num
+                    ,input-output v-int64-id
+                    ,input search (inFileName)
+                    ,input '' /*p-src-encoding*/
+                    ) no-error .
+                  if error-status:error then 
+                  do:
+                    Msg = error-status:get-message(1) + {&new-line} + return-value.
+                    StatusErr = true.
+                  end.
+  
                 end.
-                CmdParseXml(hText:node-value).
-                find first tt-wb-header.
-                v-clob-db-num = ?.
-                v-int64-id = 0.
-                if can-find (first buf_clob-bind where buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec and buf_clob-bind.field-name_ =  {&lob-egais-ref-b})
-                  then next url_.
-                run gbl/file2clb.p ( input {&add-def}
-                  ,input ",no"
-                  ,input ? /*p-bh*/
-                  ,input tt-wb-header.uniq-key-rec /*p-uniq-key-rec*/
-                  ,input {&lob-egais-ref-b} /*p-field-*/
-                  ,input '' /*p-descr*/
-                  ,input-output v-part-num
-                  ,input {&lob-egais-ref-b}
-                  ,input-output v-clob-db-num
-                  ,input-output v-int64-id
-                  ,input search (inFileName)
-                  ,input '' /*p-src-encoding*/
-                  ) no-error .
-                if error-status:error then 
+
+              when hText:node-value matches ("*opt/out/WayBillAct/*") then 
                 do:
-                  Msg = error-status:get-message(1) + {&new-line} + return-value.
-                  StatusErr = true.
+  
+                  os-delete "WayBillAct.xml".
+                  assign
+                    inFileName = "WayBillAct.xml"
+                    .
+                  CmdParseXml(hText:node-value).
+                  find first tt-wb-act-header.
+                  v-clob-db-num = ?.
+                  v-int64-id = 0.
+                  v-info = tt-wb-act-header.wbregid + {&delim-par} + string (tt-wb-act-header.act-date) + {&delim-par} + tt-wb-act-header.num + {&delim-par} + tt-wb-act-header.status_ .
+                  if can-find (first buf_clob-bind where buf_clob-bind.uniq-key-rec = tt-wb-act-header.wbregid and buf_clob-bind.field-name_ =  {&lob-egais-wb-act})
+                    then next url_.
+                  run gbl/file2clb.p ( input {&add-def}
+                    ,input ",no"
+                    ,input ? /*p-bh*/
+                    ,input tt-wb-act-header.wbregid /*p-uniq-key-rec*/
+                    ,input {&lob-egais-wb-act} /*p-field-*/
+                    ,input v-info /*p-descr*/
+                    ,input-output v-part-num
+                    ,input {&lob-egais-wb-act}
+                    ,input-output v-clob-db-num
+                    ,input-output v-int64-id
+                    ,input search (inFileName)
+                    ,input '' /*p-src-encoding*/
+                    ) no-error .
+                  if error-status:error then 
+                  do:
+                    Msg = error-status:get-message(1) + {&new-line} + return-value.
+                    StatusErr = true.
+                  end.
+  
                 end.
-  
-  
-              end.
-              
             end case.
             
             empty temp-table tt-wb-info-client.
             empty temp-table tt-wb-hndls.
+            empty temp-table tt-wb-act-hndls.
             empty temp-table tt-wb-header.
             empty temp-table tt-wb-gds-EG.
+            empty temp-table tt-wb-act-header.
+            empty temp-table tt-wb-act-gds-EG.
           end.
 
       end case.
@@ -799,35 +921,44 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 
   method override void ParseResponse(inContent as char, inTableType as int):
 
-    define variable hDoc  as handle  no-undo.
-    define variable hRoot as handle  no-undo.
+    define variable hDoc  as handle no-undo.
+    define variable hRoot as handle no-undo.
 
-    if not inTableType = {&wb-refB} or inTableType = {&wb-clob} then do:
+    if not inTableType = {&wb-refB} or inTableType = {&wb-clob} then 
+    do:
       empty temp-table tt-wb-info-client.
       empty temp-table tt-wb-header.
       empty temp-table tt-wb-gds-EG.
+      empty temp-table tt-wb-act-header.
+      empty temp-table tt-wb-act-gds-EG.
     end.
                 
     create x-document hDoc.
     create x-noderef hRoot.
 
     case inTableType:
-      when {&wb-header} or when {&wb-line} or when {&wb-refB} then do:
+      when {&wb-header} or 
+      when {&wb-line} or
+      when {&wb-act-line} or 
+      when {&wb-act-header} or  
+      when {&wb-refB} then 
+        do:
         
-        copy-lob
-        from  object buf_clob-data.cdata
-        to  file 'temp.xml'
-        no-convert
-        no-error .
+          copy-lob
+            from  object buf_clob-data.cdata
+            to  file 'temp.xml'
+            no-convert
+            no-error .
 
-        hDoc:encoding = 'utf-8'.
-        hDoc:load("file", search ('temp.xml'), false).
+          hDoc:encoding = 'utf-8'.
+          hDoc:load("file", search ('temp.xml'), false).
         
-      end.
-      when {&wb-clob} then do:
-        hDoc:load("file",inFileName,false).
-        hDoc:encoding = 'utf-8'.
-      end.
+        end.
+      when {&wb-clob} then 
+        do:
+          hDoc:load("file",inFileName,false).
+          hDoc:encoding = 'utf-8'.
+        end.
     end case.
            
     hDoc:get-document-element(hRoot).
@@ -863,67 +994,96 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       /*if hNoderef:name = "ns:FSRAR_ID" then
         assign v-FS-RAR = hText:node-value .*/       
       case hNoderef:name:
-        when "wb:Shipper" or when "wbr:Shipper" then 
-        do:
-          create tt-wb-info-client .
-          tt-wb-info-client.wb-type-client = "Shipper".
-        end.
+        when "wb:Shipper" or 
+        when "wbr:Shipper" then 
+          do:
+            create tt-wb-info-client .
+            tt-wb-info-client.wb-type-client = "Shipper".
+          end.
         when "wb:Consignee" then 
-        do:
-          create tt-wb-info-client .
-          tt-wb-info-client.wb-type-client = "Consignee".
-        end.
+          do:
+            create tt-wb-info-client .
+            tt-wb-info-client.wb-type-client = "Consignee".
+          end.
         when "wb:Supplier" then 
-        do:
-          create tt-wb-info-client .
-          tt-wb-info-client.wb-type-client = "Supplier".
-        end.
+          do:
+            create tt-wb-info-client .
+            tt-wb-info-client.wb-type-client = "Supplier".
+          end.
         when "wb:Position" then 
-        do:
-          create tt-wb-gds-EG .
-        end.
+          do:
+            create tt-wb-gds-EG .
+          end.
+        when "wa:Header" then 
+          do:
+            create tt-wb-act-header .
+          end.
+        when "wa:Position" then 
+          do:
+            create tt-wb-act-gds-EG .
+          end.
       end case.
-      if lookup (hParent:name, "wb:Header,ns:WayBill,wbr:Header") > 0
-      then do: 
+      if lookup (hParent:name, "wb:Header,ns:WayBill,wbr:Header,wa:Header") > 0
+        then 
+      do: 
         if hNoderef:name = "wb:Identity" or hNoderef:name = "wbr:Identity"
-        then do:
+          then 
+        do:
           if not available (tt-wb-header) then create tt-wb-header.
           assign 
             tt-wb-header.Identity = hText:node-value 
-            tt-wb-header.ps = "EGAIS wb:Identity " + hText:node-value 
-          .
+            tt-wb-header.ps       = "EGAIS wb:Identity " + hText:node-value 
+            .
         end.
         if hNoderef:name = "wb:NUMBER" then assign tt-wb-header.num = hText:node-value.
         if hNoderef:name = "wb:Date"         then assign tt-wb-header.wb-date = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
         if hNoderef:name = "wb:ShippingDate" then assign tt-wb-header.shippingdate = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
-        if hNoderef:name = "wb:Type" then do:
+        if hNoderef:name = "wb:Type" then 
+        do:
           case hText:node-value :
-            when 'WBInvoiceFromMe' then do:
+            when 'WBInvoiceFromMe' then 
+              do:
+                assign 
+                  tt-wb-header.wb-type      = {&TDEDT_Pri_Vnesh}
+                  tt-wb-header.wb-type-full = "приход вн.".
+                if available (tt-wb-hndls) 
+                  then tt-wb-hndls.wb-type = "приход вн."
+                    .
+              end.
+            otherwise 
+            do:
               assign 
-                tt-wb-header.wb-type = {&TDEDT_Pri_Vnesh}
-                tt-wb-header.wb-type-full = "приход вн.".
-              if available (tt-wb-hndls) 
-                then tt-wb-hndls.wb-type = "приход вн."
-              .
-            end.
-            otherwise do:
-              assign tt-wb-header.wb-type = ?.
+                tt-wb-header.wb-type = ?.
             end.
           end case.
         end.
         if hNoderef:name = "wb:UnitType"     then assign tt-wb-header.unit-type = hText:node-value .
+        
+        if hNoderef:name = "wa:ACTNUMBER" then assign tt-wb-act-header.num = hText:node-value.
+        if hNoderef:name = "wa:ActDate" then assign tt-wb-act-header.act-date = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
+        if hNoderef:name = "wa:WBRegId" then assign tt-wb-act-header.wbregid = hText:node-value.
+        if hNoderef:name = "wa:IsAccept" then assign tt-wb-act-header.status_ = hText:node-value.
+        if hNoderef:name = "wa:Note" then assign tt-wb-act-header.note = hText:node-value.
+        
+        
       end.
       if lookup (hParent:name, "wb:Shipper,wb:Consignee,wb:Supplier,wbr:Shipper") > 0
-      then do: 
-        if hNoderef:name = "oref:ClientRegId" then do:
+        then 
+      do: 
+        if hNoderef:name = "oref:ClientRegId" then 
+        do:
           assign 
-          tt-wb-info-client.regID = hText:node-value
-          tt-wb-header.regID-Ship = hText:node-value when hParent:name = 'wb:Shipper'
-          tt-wb-header.regID-Ship = hText:node-value when hParent:name = 'wbr:Shipper'
-          tt-wb-header.regID-Cons = hText:node-value when hParent:name = 'wb:Consignee'
-          .
+            tt-wb-info-client.regID = hText:node-value
+            tt-wb-header.regID-Ship = hText:node-value
+            when hParent:name = 'wb:Shipper'
+            tt-wb-header.regID-Ship = hText:node-value 
+            when hParent:name = 'wbr:Shipper'
+            tt-wb-header.regID-Cons = hText:node-value 
+            when hParent:name = 'wb:Consignee'
+            .
           tt-wb-header.uniq-key-rec = tt-wb-header.Identity + {&delim-cmd} + tt-wb-header.regID-Ship.
         end.
+        if hNoderef:name = "oref:ShortName"    then assign tt-wb-header.NameShip = hText:node-value when hParent:name = 'wb:Shipper'.
         if hNoderef:name = "oref:INN"         then assign tt-wb-info-client.inn = hText:node-value .
         if hNoderef:name = "oref:KPP"         then assign tt-wb-info-client.kpp = hText:node-value .
         if hNoderef:name = "oref:FullName"    then assign tt-wb-info-client.obj-name-egais = hText:node-value .
@@ -939,33 +1099,44 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         if hNoderef:name = "oref:liter"       then assign tt-wb-info-client.house-litera = hText:node-value .  
         if hNoderef:name = "oref:description" then assign tt-wb-info-client.description_ = hText:node-value .    
       end.
-      if lookup (hParent:name, "wb:Position,wb:Product") > 0
-      then do:
-        if hNoderef:name = "pref:ShortName"    then assign tt-wb-gds-EG.gds-name        = hText:node-value.
-        if tt-wb-gds-EG.gds-name = "" then if hNoderef:name = "pref:FullName"    then assign tt-wb-gds-EG.gds-name = hText:node-value.
-        if hNoderef:name = "pref:AlcCode"      then assign tt-wb-gds-EG.alc-code        = hText:node-value.
-        if hNoderef:name = "pref:Capacity"     then assign tt-wb-gds-EG.ms-base         = decimal(hText:node-value) .
-        if hNoderef:name = "pref:AlcVolume"    then assign tt-wb-gds-EG.proof           = decimal(hText:node-value) .
+      if lookup (hParent:name, "wb:Position,wb:Product,wa:Position") > 0
+        then 
+      do:
+        if tt-wb-gds-EG.gds-name = "" then
+          if hNoderef:name = "pref:ShortName"    then assign tt-wb-gds-EG.gds-name = hText:node-value.
+
+        if hNoderef:name = "pref:FullName"     then assign tt-wb-gds-EG.gds-name = hText:node-value.
+        if hNoderef:name = "pref:AlcCode"      then assign tt-wb-gds-EG.alc-code = hText:node-value.
+        if hNoderef:name = "pref:Capacity"     then assign tt-wb-gds-EG.ms-base = decimal(hText:node-value) .
+        if hNoderef:name = "pref:AlcVolume"    then assign tt-wb-gds-EG.proof = decimal(hText:node-value) .
         
-        if hNoderef:name = "pref:ProductVCode" then assign tt-wb-gds-EG.alc-type-code   = hText:node-value .
-        if hNoderef:name = "wb:Identity"       then assign tt-wb-gds-EG.Identity        = hText:node-value.
-        if hNoderef:name = "wb:Price"          then assign tt-wb-gds-EG.price           = decimal(hText:node-value) .
-        if hNoderef:name = "wb:Quantity"       then assign tt-wb-gds-EG.doc-qnty        = decimal(hText:node-value) .
+        if hNoderef:name = "pref:ProductVCode" then assign tt-wb-gds-EG.alc-type-code = hText:node-value .
+        if hNoderef:name = "wb:Identity"       then assign tt-wb-gds-EG.Identity = hText:node-value.
+        if hNoderef:name = "wb:Price"          then assign tt-wb-gds-EG.price = decimal(hText:node-value) .
+        if hNoderef:name = "wb:Quantity"       then assign tt-wb-gds-EG.doc-qnty = decimal(hText:node-value) .
+        
+        if hNoderef:name = "wa:InformBRegId"   then assign tt-wb-act-gds-EG.refB = hText:node-value .
+        if hNoderef:name = "wa:RealQuantity"   then assign tt-wb-act-gds-EG.RealQuantity = decimal(hText:node-value) .
+        
       end.
       if lookup (hParent:name, "wb:InformA") > 0
-      then do:
+        then 
+      do:
         if hNoderef:name = "pref:RegId" then assign tt-wb-gds-EG.refA = hText:node-value.
       end.
       if lookup (hParent:name, "wbr:Header") > 0
-      then do:
+        then 
+      do:
         find first tt-wb-header no-error.
         if not available (tt-wb-header) then create tt-wb-header.
         if hNoderef:name = "wbr:WBRegId" then assign tt-wb-header.wbregid = hText:node-value .
         if hNoderef:name = "wbr:Identity" then assign tt-wb-header.Identity = hText:node-value .
       end.
       if lookup (hParent:name, "wbr:Position") > 0
-      then do:
-        if hNoderef:name = "wbr:Identity" then do:
+        then 
+      do:
+        if hNoderef:name = "wbr:Identity" then 
+        do:
           find first tt-wb-gds-EG where tt-wb-gds-EG.Identity = hText:node-value no-error.
         end.
         if available (tt-wb-gds-EG) and hNoderef:name = "wbr:InformBRegId" then assign tt-wb-gds-EG.refB = hText:node-value.
@@ -991,7 +1162,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     end.
     
     if can-find (first tt-wb-gds-EG where tt-wb-gds-EG.RefA = "" or tt-wb-gds-EG.RefB = "")
-    then do:
+      then 
+    do:
       Msg = "Не для всех товаров есть сравка A или B ".
       StatusErr = true.
       return.      
@@ -1004,7 +1176,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       input User_Id,
       output trn-doc-code
       ) no-error.
-    if error-status:error then do:
+    if error-status:error then 
+    do:
       Msg = return-value.
       StatusErr = true.
       return.
@@ -1017,7 +1190,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 
   method private longchar GetXMLAct ():
 
-    def var ii as int no-undo.
+    def var ii       as int      no-undo.
     def var xml-cont as longchar no-undo.
     find first tt-wb-header.
     find first buf_doc-attr where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value = v-uniq-key-rec.
@@ -1053,7 +1226,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     os-command silent value (cmd).
     ParseResponse(inFileName, {&wb-clob}).
     find first tt-wb-header no-error.
-    if not available (tt-wb-header) then 
+    find first tt-wb-act-header no-error.
+    if not available (tt-wb-header) and not available (tt-wb-act-header) then 
     do:
       Msg = 'Ошибка обработки xml'.
       StatusErr = true.

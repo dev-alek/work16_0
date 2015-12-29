@@ -119,7 +119,8 @@ DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
           "Полученные", 1,
-"Закрытые на факт", 2
+"Закрытые на факт", 2,
+"Акты", 3
      SIZE 40 BY 1.25 NO-UNDO.
 
 
@@ -134,7 +135,7 @@ DEFINE FRAME Dialog-Frame
      SPACE(1.24) SKIP(25.28)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Накладные ЕГАИС"
+         TITLE "Накладные/акты ЕГАИС"
          DEFAULT-BUTTON Btn_OK WIDGET-ID 100.
 
 
@@ -267,7 +268,8 @@ ON CHOOSE OF Btn_Sel IN FRAME Dialog-Frame /* Выбор */
 DO:
   if bh-wb-egais = ? 
     then return no-apply.
-  run bge/egais-wb.w (parparentproc, egais, bh-wb-egais:handle).
+  if RADIO-SET-1 = 1 then run bge/egais-wb.w (parparentproc, egais, bh-wb-egais:handle).
+  else run bge/egais-wb-act.w (parparentproc, egais, bh-wb-egais:handle).
   run refresh-query.
 END.
 
@@ -280,9 +282,12 @@ END.
 ON value-changed OF RADIO-SET-1 IN FRAME Dialog-Frame
 do:
   assign RADIO-SET-1 .
-  if RADIO-SET-1 = 1 
+  if RADIO-SET-1 = 1
     then Btn_Save:label = "Сохранить".
     else Btn_Save:label = "Отправить".
+  if RADIO-SET-1 = 3
+  then disable Btn_Save with frame {&FRAME-NAME}.
+  else enable Btn_Save with frame {&FRAME-NAME}.
   run refresh-query.
 end.
 
@@ -354,12 +359,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   egais = new EGAIS(v-db-num, v-user-id).
   
   egais:EGAISImpl = new WayBill (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
-  
-  bh-wb-egais = egais:GetHndlTable(3, "").
   create query qh-wb-egais.
-  run refresh-query.
-
-  
   create browse browse-hdl-wb-egais
     assign 
       title     = 'Накладные ЕГАИС'
@@ -380,6 +380,10 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
 /*        on row-leave persistent run proc-row-leave.*/
       end triggers
   .
+  bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
+  qh-wb-egais:set-buffers (bh-wb-egais).
+  qh-wb-egais:query-prepare ("for each tt-wb-hndls").
+  qh-wb-egais:query-open.
   if not bh-wb-egais = ? 
   then do:
     do ii = 1 to bh-wb-egais:num-fields:
@@ -442,7 +446,7 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE msdblcl Dialog-Frame 
 PROCEDURE msdblcl :
 
-  if RADIO-SET-1 <> 1  
+  if RADIO-SET-1 <> 1 and RADIO-SET-1 <> 3  
     then apply "choose" to Btn_Save in frame {&frame-name} .
     else apply "choose" to Btn_Sel in frame {&frame-name} .
 
@@ -456,32 +460,121 @@ PROCEDURE refresh-query :
 
   if bh-wb-egais = ? 
     then return .
-  
+
   case RADIO-SET-1 :
     when 1  then 
     do:
+      delete object browse-hdl-wb-egais.
+      create browse browse-hdl-wb-egais
+        assign 
+          title     = 'Накладные ЕГАИС'
+          frame     = frame {&FRAME-NAME}:handle
+          query     = qh-wb-egais
+          x         = 10
+          y         = 42
+          width     = 119
+          height    = 25
+          visible   = true
+          read-only = true
+          sensitive = true
+          separators = true
+          column-resizable = true
+          column-scrolling = true
+          triggers:
+            on mouse-move-dblclick persistent run msdblcl.
+          end triggers
+      .
       bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
       qh-wb-egais:set-buffers (bh-wb-egais).
       qh-wb-egais:query-prepare ("for each tt-wb-hndls").
       qh-wb-egais:query-open.
+      if not bh-wb-egais = ? 
+      then do:
+        do ii = 1 to bh-wb-egais:num-fields:
+          bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+        end.
+      end.
+      run diasize_init in this-procedure .
       enable Btn_Sel with frame {&FRAME-NAME}.
     end.
     when 2  then 
     do:
+      delete object browse-hdl-wb-egais.
+      create browse browse-hdl-wb-egais
+        assign 
+          title     = 'Накладные ЕГАИС'
+          frame     = frame {&FRAME-NAME}:handle
+          query     = qh-wb-egais
+          x         = 10
+          y         = 42
+          width     = 119
+          height    = 25
+          visible   = true
+          read-only = true
+          sensitive = true
+          separators = true
+          column-resizable = true
+          column-scrolling = true
+          triggers:
+            on mouse-move-dblclick persistent run msdblcl.
+          end triggers
+      .
       bh-wb-egais = egais:GetHndlTable({&wb-fact}, "").
       qh-wb-egais:set-buffers (bh-wb-egais).
       qh-wb-egais:query-prepare ("for each tt-wb-hndls").
       qh-wb-egais:query-open.
+      if not bh-wb-egais = ? 
+      then do:
+        do ii = 1 to bh-wb-egais:num-fields:
+          bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+        end.
+      end.
+      run diasize_init in this-procedure .
       disable Btn_Sel with frame {&FRAME-NAME}.
     end.
     when 3  then 
+    do:
+      delete object browse-hdl-wb-egais.
+      create browse browse-hdl-wb-egais
+        assign 
+          title     = 'Акты ЕГАИС'
+          frame     = frame {&FRAME-NAME}:handle
+          query     = qh-wb-egais
+          x         = 10
+          y         = 42
+          width     = 119
+          height    = 25
+          visible   = true
+          read-only = true
+          sensitive = true
+          separators = true
+          column-resizable = true
+          column-scrolling = true
+          triggers:
+            on mouse-move-dblclick persistent run msdblcl.
+          end triggers
+      .
+      bh-wb-egais = egais:GetHndlTable({&wb-clob-act}, "").
+      qh-wb-egais:set-buffers (bh-wb-egais).
+      qh-wb-egais:query-prepare ("for each tt-wb-act-hndls").
+      qh-wb-egais:query-open.
+      if not bh-wb-egais = ? 
+      then do:
+        do ii = 1 to bh-wb-egais:num-fields:
+          bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-act-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+        end.
+      end.
+      run diasize_init in this-procedure .
+      disable Btn_Sel with frame {&FRAME-NAME}.
+    end.
+    /*when 4  then 
     do:
       bh-wb-egais = egais:GetHndlTable({&wb-ras}, "").
       qh-wb-egais:set-buffers (bh-wb-egais).
       qh-wb-egais:query-prepare ("for each tt-wb-hndls").
       qh-wb-egais:query-open.
       disable Btn_Sel with frame {&FRAME-NAME}.
-    end.
+    end.*/
   end.
 
 end.

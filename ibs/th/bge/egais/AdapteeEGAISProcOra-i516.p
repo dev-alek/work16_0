@@ -59,7 +59,7 @@ do:
       temp_trn-doc.line-num      = ii
       temp_trn-doc.doc-date      = tt-wb-header.wb-date
       temp_trn-doc.ps            = tt-wb-header.ps
-      temp_trn-doc.doc-code      = tt-wb-header.uniq-key-rec
+      temp_trn-doc.doc-code      = tt-wb-header.wbregid + {&delim-cmd} + tt-wb-header.uniq-key-rec 
       temp_trn-doc.ext-doc-type  = tt-wb-header.wb-type
       temp_trn-doc.cli-type      = tt-wb-header.cli-type
       temp_trn-doc.cli-code      = tt-wb-header.cli-code

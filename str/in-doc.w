@@ -1388,6 +1388,143 @@ DO:
               ).
       end.
   end.
+  else do:
+    if t-doc.status_ <> {&wayb} or t-doc.flag_ then return.
+    define variable varis-fin        as   character                       no-undo.
+    define variable varis-finby      as   character                       no-undo.
+    define buffer bf_contract      for ub.contract.
+    define buffer bf_currency      for ub.currency.
+    define buffer bf-f_contract-specif    for ub.contract-specif.
+    define variable v-value-character like ub.thbj-attr.property-value-character no-undo .
+    define variable v-value-date      like ub.thbj-attr.property-value-date    no-undo .
+    define variable v-value-decimal   like ub.thbj-attr.property-value-decimal no-undo .
+    define variable v-value-logical   like ub.thbj-attr.property-value-logical no-undo .
+    define variable v-value-integer   like ub.thbj-attr.property-value-integer no-undo .
+    define variable varcontract-type as   character                       no-undo.
+    define variable varcontract      as   character                       no-undo.
+    define variable varcontract-code as   integer                         no-undo.
+    define variable v-tth1           as   handle                          no-undo.
+    define variable varexch-rate      like ub.trn-doc.exch-rate           no-undo.
+    define variable varexch-scale     like ub.trn-doc.exch-scale          no-undo.
+    define variable varcurr-abbr     as   character                       no-undo.
+    define variable v-master as character no-undo.
+    
+    run adm/shattri.p (
+      input "get":U
+      ,input t-doc.obj-type
+      ,input t-doc.obj-code
+      ,input {&attr-contr-in}
+      ,input ( if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}  then  "contr-in-expense" else "contr-in-income" )
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output varcontract-type
+      ,INPUT-OUTPUT TABLE-handle v-tth1
+      ) no-error .
+      if error-status :error then
+      message
+        vss-workfile vss-revision vss-description skip
+        error-status :get-message(1) skip
+        return-value skip
+        "adm/shattri.p"
+        view-as alert-box error
+      .
+      delete object v-tth1.
+      if v-value-logical = true then varcontract = "yes" .
+                                else varcontract = "no" .
+    
+    { gbl/conf-rd.i  "'is-fin'"   0               "''"           0              "''" "''" "''" no varis-fin       vartype          no-error }
+    { gbl/conf-rd.i  "'is-finby'" 0               "''"           0              "''" "''" "''" no varis-finby     vartype          no-error }
+    if ( varis-fin = "yes":u
+     and ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or
+           t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or
+         ( t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}     and paris-hold = true   ) or
+         ( t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} and paris-hold = true   )))
+      or ( varis-finby = "yes":u
+      and ( t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}      or
+            t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or
+            t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}  or
+          ( t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}  and paris-hold = true )))
+      then do:
+        find first bf_contract where bf_contract.host-code = t-doc.host-code                          and
+                                     bf_contract.cli-type  = input frame {&frame-name} t-doc.cli-type and
+                                     bf_contract.cli-code  = input frame {&frame-name} t-doc.cli-code no-lock no-error.
+        if not available bf_contract then do:
+  
+  
+        end.
+        else do:
+          run check-contract-code in this-procedure (input  substitute("&1,&2=&3", "choose":u, "doc-type", t-doc.ext-doc-type),
+                                                      input  t-doc.host-code,
+                                                      input  input frame {&frame-name} t-doc.cli-type,
+                                                      input  input frame {&frame-name} t-doc.cli-code,
+                                                      input  ?,
+                                                      input  parparentproc,
+                                                      input  t-doc.doc-date,
+                                                      input  (if ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} ) then {&income} else {&expense}) ,
+                                                      output varcontract-code) no-error.
+          if error-status :error    or
+             varcontract-code = ?  or
+             varcontract-code = 0  then do:
+  
+          end.
+          else do:
+            find first bf_contract where bf_contract.host-code     = t-doc.host-code  and
+                                         bf_contract.contract-code = varcontract-code no-lock.
+            find first bf_currency where bf_currency.curr-code = bf_contract.curr-code no-lock no-error.
+            if not available bf_currency then do:
+              message "В договоре указана валюта " bf_contract.curr-code "." skip
+                      "Но этой валюты нет в справочнике валют."
+              view-as alert-box error.
+              apply "entry" to t-doc.cli-code in frame {&frame-name}.
+              return no-apply.
+            end.
+            { gbl/exchrate.i
+              bf_currency.curr-code
+              t-doc.exch-date
+              varexch-rate
+              varexch-scale
+              varcurr-abbr
+              no-error
+            }
+            if error-status :error then do:
+              message "Ошибка при поиске курса валюты поставки по договору." skip
+                      return-value skip
+                      error-status :get-message( 1 ) skip
+                      error-status :get-message( 2 )
+              view-as alert-box error.
+              return no-apply.
+            end.
+            assign
+              t-doc.contract-code = varcontract-code
+              t-doc.exch-code     = bf_contract.curr-code
+              t-doc.exch-rate     = varexch-rate
+              t-doc.exch-scale    = varexch-scale
+            .
+            v-master = Is-Master-Slave-Contract( buffer bf_contract) .
+            if v-master  = "+" or v-master  = ""  then do :
+              find first bf-f_contract-specif no-lock where bf-f_contract-specif.contract-num = bf_contract.contract-code
+                                                        and bf-f_contract-specif.host-code = bf_contract.host-code no-error.
+            end.
+            else do :
+              find first bf-f_contract-specif no-lock where bf-f_contract-specif.contract-num =integer(v-master)
+                                                        and bf-f_contract-specif.host-code = bf_contract.host-code no-error.
+            end.
+            if available bf-f_contract-specif then do:
+              t-doc.vat-type = bf-f_contract-specif.vat-type .
+            end.
+            run chg-purch-contract in this-procedure.
+          end.
+        end.
+      end.
+      else do:
+        assign
+          t-doc.contract-code  = 0.
+      end.
+  end.
+  
 END.
 
 /* _UIB-CODE-BLOCK-END */
