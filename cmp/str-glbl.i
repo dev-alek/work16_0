@@ -5139,8 +5139,12 @@ end.
 &global-define lob-egais-ab '{&bef-lob-egais-ab}':U
 &global-define bef-lob-egais-ab-full Акт постановки на баланс B ЕГАИС
 &global-define lob-egais-ab-full '{&bef-lob-egais-ab-full}':U
-&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab':U
-&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС':U
+&global-define bef-lob-egais-wb-act egais-wb-act
+&global-define lob-egais-wb-act '{&bef-lob-egais-wb-act}':U
+&global-define bef-lob-egais-wb-act-full Акт подтверждения накладной
+&global-define lob-egais-wb-act-full '{&bef-lob-egais-wb-act-full}':U
+&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-wb-act':U
+&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт подтверждения накладной':U
 &global-define blob-res-codes 'data':U
 &global-define blob-res-codes-full 'Данные':U
 &global-define blob-trn-doc-image 'trn-doc-image':U
@@ -7915,10 +7919,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-obj,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
-&global-define str-glbl_vss-revision 'Revision':U
+&global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 08df7f5c27ec, 386, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: b936e36685f8, 384, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 6b61c6e68798, 367, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: f8d6bc498809, 388, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 5f8096499a5b, 356, rls ':U
 &endif
