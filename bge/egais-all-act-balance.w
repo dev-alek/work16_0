@@ -1,0 +1,517 @@
+&ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
+&ANALYZE-RESUME
+&Scoped-define WINDOW-NAME CURRENT-WINDOW
+&Scoped-define FRAME-NAME Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
+/*------------------------------------------------------------------------
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Список накладных ЕГАИС
+
+  Author: 
+    Автор: Морозов Александр Сергеевич
+    Дата создания: 15/11/03
+    Author: Alexandr Morozov
+    Creation date: 15/11/03
+ 
+------------------------------------------------------------------------*/
+/*          This .W file was created with the Progress AppBuilder.       */
+/*----------------------------------------------------------------------*/
+
+/* ***************************  Definitions  ************************** */
+using ibs.th.bge.egais.*.
+/* Parameters Definitions ---                                           */
+define input parameter parparentproc as widget-handle no-undo .
+/* Local Variable Definitions ---                                       */
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-description as character no-undo init "Журнал запросов ЕГАИС".
+
+define variable th-act-header         as handle    no-undo.
+define variable bh-act-header         as handle    no-undo.
+define variable qh-act-header         as handle    no-undo.
+define variable browse-hdl-act-header as handle    no-undo.
+define variable bcol                as handle    extent 11 no-undo.
+define variable egais               as class     EGAIS no-undo.
+define variable v-db-num            as integer   no-undo .
+define variable v-user-id           as character no-undo .
+define variable qh-ab-gds-EG-header as handle    no-undo.
+define variable qh-ab-gds-EG        as handle    no-undo.
+define variable bh-ab-gds-EG-header as handle    no-undo.
+define variable bh-ab-gds-EG        as handle    no-undo.
+
+define variable glog        as logical no-undo .
+
+define variable v-value-character   as character no-undo .
+define variable v-value-decimal     as decimal   no-undo .
+define variable v-value-integer     as integer   no-undo .
+define variable v-value-logical     as logical   no-undo .
+define variable v-value-type        as character no-undo .
+define variable v-value-date        as date      no-undo .
+define variable v-ext-sys           as integer   no-undo .
+
+define buffer buf_clob-bind     for ub.clob-bind .
+define buffer buf_clob-data     for ub.clob-data .
+
+define variable v-fs-rar as character no-undo view-as text format "X(15)" label "Код ФС РАР (FSRAR ID)" .
+
+{ gbl/color.i }
+{ cmp/str-glbl.i }
+{ cmp/library.i  }
+{ gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }
+{ gbl/thbjattr.i }
+{ibs/th/bge/egais/ab-egais.i new shared }
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
+
+/* ********************  Preprocessor Definitions  ******************** */
+
+&Scoped-define PROCEDURE-TYPE Dialog-Box
+&Scoped-define DB-AWARE no
+
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
+&Scoped-define FRAME-NAME Dialog-Frame
+
+/* Standard List Definitions                                            */
+&Scoped-Define ENABLED-OBJECTS Btn_OK RADIO-SET-1 
+&Scoped-Define DISPLAYED-OBJECTS RADIO-SET-1 
+
+/* Custom List Definitions                                              */
+/* List-1,List-2,List-3,List-4,List-5,List-6                            */
+
+/* _UIB-PREPROCESSOR-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
+/* ***********************  Control Definitions  ********************** */
+
+/* Define a dialog box                                                  */
+
+/* Definitions of the field level widgets                               */
+DEFINE BUTTON Btn_lkp 
+     LABEL "Просмотр" 
+     SIZE 15 BY 1.13.
+     
+DEFINE BUTTON Btn_create 
+     LABEL "Создать" 
+     SIZE 15 BY 1.13.
+
+DEFINE BUTTON Btn_chg 
+     LABEL "Изменить" 
+     SIZE 15 BY 1.13.
+
+DEFINE BUTTON Btn_del 
+     LABEL "Удалить" 
+     SIZE 15 BY 1.13.
+     
+DEFINE BUTTON Btn_send 
+     LABEL "Отправить" 
+     SIZE 15 BY 1.13.
+          
+DEFINE BUTTON Btn_OK AUTO-GO 
+     LABEL "Выход" 
+     SIZE 15 BY 1.13
+     BGCOLOR 8 .
+
+DEFINE BUTTON Btn_Ans 
+     LABEL "Посмотреть ответ" 
+     SIZE 20 BY 1.13
+     BGCOLOR 8 .
+
+
+DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1 
+     VIEW-AS RADIO-SET HORIZONTAL
+     RADIO-BUTTONS 
+          "Новые", 1,
+          "Отправленные", 2
+     SIZE 27 BY 1.25 NO-UNDO.
+
+
+/* ************************  Frame Definitions  *********************** */
+
+DEFINE FRAME Dialog-Frame
+     Btn_OK AT ROW 1.2 COL 2
+     Btn_create at row 1.2 col 17
+     Btn_chg at row 1.2 col 32
+     Btn_del at row 1.2 col 47
+     Btn_send at row 1.2 col 62
+     Btn_Ans AT ROW 1.2 COL 32 WIDGET-ID 10
+     Btn_lkp AT ROW 1.2 COL 17 WIDGET-ID 12
+     RADIO-SET-1 AT ROW 1.2 COL 80 NO-LABEL WIDGET-ID 2
+     SPACE(2) SKIP(23.5)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "Акты постановки на баланс в ЕГАИС"
+         DEFAULT-BUTTON Btn_OK WIDGET-ID 100.
+
+
+/* *********************** Procedure Settings ************************ */
+
+&ANALYZE-SUSPEND _PROCEDURE-SETTINGS
+/* Settings for THIS-PROCEDURE
+   Type: Dialog-Box
+   Allow: Basic,Browse,DB-Fields,Query
+   Other Settings: COMPILE
+ */
+&ANALYZE-RESUME _END-PROCEDURE-SETTINGS
+
+
+
+/* ***********  Runtime Attributes and AppBuilder Settings  *********** */
+
+&ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
+/* SETTINGS FOR DIALOG-BOX Dialog-Frame
+   FRAME-NAME                                                           */
+ASSIGN 
+       FRAME Dialog-Frame:SCROLLABLE       = FALSE
+       FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+/* _RUN-TIME-ATTRIBUTES-END */
+&ANALYZE-RESUME
+
+ 
+
+
+
+/* ************************  Control Triggers  ************************ */
+
+&Scoped-define SELF-NAME Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
+ON window-close OF FRAME Dialog-Frame /* Накладные ЕГАИС */
+do:
+  apply "END-ERROR":U to self.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME Btn_lkp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_lkp Dialog-Frame
+ON CHOOSE OF Btn_lkp IN FRAME Dialog-Frame /* Загрузить */
+DO:
+    if not bh-act-header:available then return no-apply .
+    run bge/egais-act-balance.w (parparentproc, {&lookup}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_create
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_create Dialog-Frame
+ON CHOOSE OF Btn_create IN FRAME Dialog-Frame /* Создать */
+DO:
+    run bge/egais-act-balance.w (parparentproc, {&add-def}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    run refresh-query.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_chg
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_chg Dialog-Frame
+ON CHOOSE OF Btn_chg IN FRAME Dialog-Frame /*  */
+DO:
+    if not bh-act-header:available then return no-apply .
+    run bge/egais-act-balance.w (parparentproc, {&update}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_del
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_del Dialog-Frame
+ON CHOOSE OF Btn_del IN FRAME Dialog-Frame /*  */
+DO:
+    if not bh-act-header:available then return no-apply .
+    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+    delete buf_clob-bind .
+    bh-act-header:buffer-delete () .
+    run refresh-query.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_send
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_send Dialog-Frame
+ON CHOOSE OF Btn_send IN FRAME Dialog-Frame /*  */
+DO:
+    if not bh-act-header:available then return no-apply .
+    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+    find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
+    os-delete "ActChargeOn.xml".
+    copy-lob
+    from  object buf_clob-data.cdata
+    to  file 'ActChargeOn.xml'
+    no-convert
+    no-error .
+    egais:SendRequestUTM() .
+    glog = egais:IsSent .
+    
+    glog = egais:StatusErr .
+    if glog then do :
+        message egais:Msg view-as alert-box.
+        return no-apply.
+    end.
+    else do :
+        entry (3, buf_clob-bind.descr, {&delim-par}) = "yes".
+        
+        bh-act-header:buffer-field ("is-sent"):buffer-value = true.
+    end.
+    run refresh-query.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_Ans
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Ans Dialog-Frame
+ON CHOOSE OF Btn_Ans IN FRAME Dialog-Frame /* Сохранить */
+DO:
+  if bh-act-header = ? 
+    then return no-apply.
+  if (bh-act-header:buffer-field ("answer_"):buffer-value) <> "" then do :
+    message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .    
+  end.
+  else do :
+      egais:GetHndlTable(2, bh-act-header:buffer-field ("num"):buffer-value) .
+      glog = egais:StatusErr .
+      if glog then do :
+            message egais:Msg view-as alert-box.
+            return no-apply.
+      end.
+      else message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .  
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME RADIO-SET-1
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RADIO-SET-1 Dialog-Frame
+ON value-changed OF RADIO-SET-1 IN FRAME Dialog-Frame
+do:
+  assign RADIO-SET-1 .
+  if RADIO-SET-1 = 1 
+  then do :
+    ENABLE Btn_create Btn_chg Btn_del Btn_send 
+      WITH FRAME Dialog-Frame. 
+    HIDE Btn_Ans Btn_lkp in FRAME Dialog-Frame.  
+  end.
+  else do :
+    ENABLE Btn_Ans Btn_lkp 
+      WITH FRAME Dialog-Frame.
+    HIDE Btn_create Btn_chg Btn_del Btn_send in FRAME Dialog-Frame.    
+  end.
+  run refresh-query.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&UNDEFINE SELF-NAME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
+
+
+/* ***************************  Main Block  *************************** */
+
+/* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
+if valid-handle(active-window) and frame {&FRAME-NAME}:PARENT eq ?
+then frame {&FRAME-NAME}:PARENT = active-window.
+
+
+/* Now enable the interface and wait for the exit condition.            */
+/* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
+MAIN-BLOCK:
+do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
+   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
+
+  def var ii as int no-undo.
+  
+  { gbl/getcurus.i
+    v-db-num
+    v-user-id
+    no-error
+  }
+  
+  empty temp-table thbjattr_thbj-attr .
+  run adm/shattri.p (
+       input "get":U
+      ,input v-cntxt-obj-type
+      ,input v-cntxt-obj-code
+      ,input {&attr-egais-host}
+      ,input {&attr-egais-host_egais-fsrar}
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+      ) no-error .
+  assign 
+    v-fs-rar = v-value-character 
+  .
+  
+  run adm/shattri.p (
+       input "get":U
+      ,input '':U
+      ,input 0
+      ,input {&attr-egais-host}
+      ,input {&attr-egais-host_egais-exsys}
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+      ) no-error .
+  assign v-ext-sys = v-value-integer .  
+  
+  egais = new EGAIS(v-db-num, v-user-id).
+  
+  egais:EGAISImpl = new ActBalance (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+  
+  bh-act-header = egais:GetHndlTable(3, "").
+  create query qh-act-header.
+  run refresh-query.
+
+  
+  create browse browse-hdl-act-header
+    assign 
+      title     = 'Акты постановки на баланс ЕГАИС'
+      frame     = frame {&FRAME-NAME}:handle
+      query     = qh-act-header
+      x         = 10
+      y         = 42
+      width     = 105
+      height    = 23
+      visible   = true
+      read-only = true
+      sensitive = true
+      separators = true
+      column-resizable = true
+      column-scrolling = true
+      triggers:
+/*        on mouse-move-dblclick persistent run msdblcl.*/
+/*        on row-leave persistent run proc-row-leave.*/
+      end triggers
+  .
+  if not bh-act-header = ? 
+  then do:
+    do ii = 1 to bh-act-header:num-fields - 2:
+      bcol[ii] = browse-hdl-act-header:add-like-column('tt-act-header' + '.' + bh-act-header:buffer-field (ii):name, 0, 'FILL-IN').
+    end.
+    browse-hdl-act-header:get-browse-column (1):width-chars = 30.
+    browse-hdl-act-header:get-browse-column (2):width-chars = 69.
+  end.
+
+  run enable_UI. 
+  apply "value-changed" to RADIO-SET-1 in frame {&FRAME-NAME}. 
+
+  wait-for go of frame {&FRAME-NAME}.
+end.
+run disable_UI.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+/* **********************  Internal Procedures  *********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
+PROCEDURE disable_UI :
+/*------------------------------------------------------------------------------
+  Purpose:     DISABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we clean-up the user-interface by deleting
+               dynamic widgets we have created and/or hide 
+               frames.  This procedure is usually called when
+               we are ready to "clean-up" after running.
+------------------------------------------------------------------------------*/
+  /* Hide all frames. */
+  HIDE FRAME Dialog-Frame.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
+PROCEDURE enable_UI :
+/*------------------------------------------------------------------------------
+  Purpose:     ENABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we display/view/enable the widgets in the
+               user-interface.  In addition, OPEN all queries
+               associated with each FRAME and BROWSE.
+               These statements here are based on the "Other 
+               Settings" section of the widget Property Sheets.
+------------------------------------------------------------------------------*/
+  DISPLAY RADIO-SET-1 
+      WITH FRAME Dialog-Frame.
+  ENABLE Btn_OK RADIO-SET-1
+      WITH FRAME Dialog-Frame.
+  VIEW FRAME Dialog-Frame.
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query Dialog-Frame 
+PROCEDURE refresh-query :
+
+if bh-act-header = ? 
+  then return .
+  
+case RADIO-SET-1 :
+    when 1  then 
+    do:
+      bh-act-header = egais:GetHndlTable({&ab-clob}, "").
+      qh-act-header:set-buffers (bh-act-header).
+      qh-act-header:query-prepare ("for each tt-act-header where not tt-act-header.is-sent").
+      qh-act-header:query-open.
+    end.
+    when 2  then 
+    do:
+      bh-act-header = egais:GetHndlTable({&ab-clob}, "").
+      qh-act-header:set-buffers (bh-act-header).
+      qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent").
+      qh-act-header:query-open.
+    end.
+  end.
+
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-row-leave Dialog-Frame 
+PROCEDURE proc-row-leave :
+  if false then do:
+    do ii = 1 to extent (bcol).  
+      bcol[ii]:bgcolor = RED_COLOR.
+    end.
+  end.
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
