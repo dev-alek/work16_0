@@ -129,6 +129,11 @@ DEFINE BUTTON b-good
 DEFINE BUTTON b-marks
      LABEL "Ввести марки" 
      SIZE 15 BY 1.14 TOOLTIP "Ввести марки"
+     BGCOLOR 8 .
+     
+DEFINE BUTTON b-del
+     LABEL "Удалить строку" 
+     SIZE 15 BY 1.14 TOOLTIP "Удалить строку акта"
      BGCOLOR 8 .  
      
 DEFINE BUTTON b-save
@@ -178,7 +183,8 @@ DEFINE FRAME Dialog-Frame
     b-cancel at row 1.2 col 2
     b-good at row 1.2 col 17
     b-marks at row 1.2 col 32
-    b-save at row 1.2 col 50
+    b-del at row 1.2 col 47
+    b-save at row 1.2 col 95
     tt-act-header.num at row 2.5 col 2 format "X(20)"
     tt-act-header.date_ at row 2.5 col 32
     br-gds-act at row 4 col 2
@@ -232,9 +238,30 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel Dialog-Frame
 ON CHOOSE OF b-cancel IN FRAME Dialog-Frame /* - */
 DO:
-    message "Все несохранённые данные будут потеряны. Вы уверены, что хотите выйти?"
-    view-as alert-box question buttons yes-no update glog.
-    if not glog then return no-apply . 
+    if p-mode <> {&lookup} then do :
+        message "Все несохранённые данные будут потеряны. Вы уверены, что хотите выйти?"
+        view-as alert-box question buttons yes-no update glog.
+        if not glog then return no-apply . 
+    end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-del
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
+ON CHOOSE OF b-del IN FRAME Dialog-Frame /* - */
+DO:
+    if not available tt-gds-act then do :
+        message "Выберите строку" view-as alert-box .
+        return no-apply.
+    end.
+    else do :
+        delete tt-gds-act .
+        open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+        find first tt-gds-act no-error.
+        if not available tt-gds-act then enable b-good with frame {&FRAME-NAME}.
+    end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -278,6 +305,11 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-marks Dialog-Frame
 ON CHOOSE OF b-save IN FRAME Dialog-Frame /* Создать */
 DO:
+    find first tt-gds-act no-error .
+    if not available tt-gds-act then do :
+        message "В акте нет строк. Сохранение невозможно" view-as alert-box .
+        return no-apply.
+    end.
     run makeXML in this-procedure no-error.
     if error-status:error then return return-value .
     assign
@@ -431,6 +463,8 @@ DO:
         end. 
     end.
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+    find first tt-gds-act no-error.
+    if available tt-gds-act then disable b-good with frame {&FRAME-NAME}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -467,7 +501,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             tt-act-header.is-sent = no
         .
         display tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
-        enable  tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.     
+        enable  tt-act-header.num tt-act-header.date_ b-good with frame {&FRAME-NAME}.     
     end.
     
     if p-mode = {&update} or p-mode = {&lookup} then do :
@@ -482,6 +516,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         display tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
         enable  tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
         open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+        find first tt-gds-act no-error.
+        if available tt-gds-act then disable b-good with frame {&FRAME-NAME}.
     end.
     
 /*    create query qh-gds-act .*/
@@ -525,7 +561,8 @@ procedure makeXML :
                     sw:write-data-element ("ain:Note", "Необходимо поставить товарные позиции на баланс") .
                 sw:end-element ("ain:Header") .
                 sw:start-element ("ain:Content") .
-    for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num : 
+    for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num :
+        if tt-gds-act.qnty < 1 then next. 
                     sw:start-element ("ain:Position") .
                         sw:write-data-element ("ain:Identity", string(tt-gds-act.position_)) .
                         sw:start-element ("ain:Product") .
@@ -642,7 +679,7 @@ procedure GetChildren :
             assign tt-act-header.is-sent = bh-act-header:buffer-field("is-sent"):buffer-value .
         end .
         .
-        IF hNoderef:NAME = "ain:Number" THEN assign tt-act-header.num    = hText:node-value .
+        IF hNoderef:NAME = "ain:Number" THEN assign tt-act-header.num    = hText:node-value no-error .
         IF hNoderef:NAME = "ain:ActDate" THEN 
             assign tt-act-header.date_ = date(substring(hText:node-value, 9, 2) + "/" + substring(hText:node-value, 6, 2) + "/" + substring(hText:node-value, 1, 4)) no-error .    
             
@@ -651,9 +688,9 @@ procedure GetChildren :
             create tt-gds-act .
             assign tt-gds-act.num = tt-act-header.num .
         end.
-        IF hNoderef:NAME = "ain:Identity" THEN assign tt-gds-act.position_ = integer(hText:node-value) .   
+        IF hNoderef:NAME = "ain:Identity" THEN assign tt-gds-act.position_ = integer(hText:node-value) no-error .   
         IF hNoderef:NAME = "pref:AlcCode" THEN do :
-            assign tt-gds-act.alc-code = hText:node-value .
+            assign tt-gds-act.alc-code = hText:node-value no-error .
             find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
                                                and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                                AND X_ext-classif.db-num = 0  
@@ -669,12 +706,12 @@ procedure GetChildren :
             .        
 
         end. 
-        IF hNoderef:NAME = "ain:Quantity" THEN assign tt-gds-act.qnty = integer(hText:node-value) . 
-        IF hNoderef:NAME = "iab:Quantity" THEN assign tt-gds-act.A-qnty = integer(hText:node-value) .
+        IF hNoderef:NAME = "ain:Quantity" THEN assign tt-gds-act.qnty = integer(hText:node-value) no-error . 
+        IF hNoderef:NAME = "iab:Quantity" THEN assign tt-gds-act.A-qnty = integer(hText:node-value) no-error .
         IF hNoderef:NAME = "iab:BottlingDate" THEN assign tt-gds-act.A-bottleDate = date(substring(hText:node-value, 9, 2) + "/" + substring(hText:node-value, 6, 2) + "/" + substring(hText:node-value, 1, 4)) no-error . 
-        IF hNoderef:NAME = "iab:TTNNumber" THEN assign tt-gds-act.A-ttnNumber = hText:node-value .
+        IF hNoderef:NAME = "iab:TTNNumber" THEN assign tt-gds-act.A-ttnNumber = hText:node-value no-error .
         IF hNoderef:NAME = "iab:TTNDate" THEN assign tt-gds-act.A-ttnDate = date(substring(hText:node-value, 9, 2) + "/" + substring(hText:node-value, 6, 2) + "/" + substring(hText:node-value, 1, 4)) no-error .
-        IF hNoderef:NAME = "iab:EGAISFixNumber" THEN assign tt-gds-act.A-fixNumber = hText:node-value . 
+        IF hNoderef:NAME = "iab:EGAISFixNumber" THEN assign tt-gds-act.A-fixNumber = hText:node-value no-error . 
         IF hNoderef:NAME = "iab:EGAISFixDate" THEN assign tt-gds-act.A-fixDate = date(substring(hText:node-value, 9, 2) + "/" + substring(hText:node-value, 6, 2) + "/" + substring(hText:node-value, 1, 4)) no-error .
         
         find first buf_parts no-lock where buf_parts.cst-code = tt-gds-act.A-ttnNumber
@@ -753,11 +790,12 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
 /*  DISPLAY                     */
 /*      WITH FRAME Dialog-Frame.*/
-  ENABLE b-cancel b-good b-marks b-save br-gds-act
+  ENABLE b-cancel b-marks b-save br-gds-act b-del
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   
     if p-mode = {&lookup} then do :
+        disable  tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
         define variable hCol as handle no-undo .
         define variable hBr  as handle no-undo .
         define variable i    as integer no-undo .
@@ -767,7 +805,7 @@ PROCEDURE enable_UI :
             hCol:read-only = true .   
         end.
         
-        hide b-good b-marks b-save in FRAME {&FRAME-NAME}.
+        hide b-good b-marks b-save b-del in FRAME {&FRAME-NAME}.
     end.
     
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
