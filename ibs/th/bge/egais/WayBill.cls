@@ -502,8 +502,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 tt-wb-hndls.num          = buf_trn-doc.doc-code
                 tt-wb-hndls.trn-doc-code = buf_trn-doc.doc-code
                 tt-wb-hndls.shippregid   = buf_trn-doc.cli-type + string (buf_trn-doc.cli-code)
-                tt-wb-hndls.uniq-key-rec = buf_doc-attr.attr-value
-                tt-wb-hndls.is-fact      = buf_trn-doc.status_.
+                tt-wb-hndls.uniq-key-rec = entry (2, buf_doc-attr.attr-value, {&delim-cmd}) + {&delim-cmd} + entry (3, buf_doc-attr.attr-value, {&delim-cmd})
+                tt-wb-hndls.is-fact      = buf_trn-doc.status_
+                tt-wb-hndls.wbregid      = entry (1, buf_doc-attr.attr-value, {&delim-cmd}) no-error.
             end.
           end.
           return buffer tt-wb-hndls:handle.
@@ -1193,7 +1194,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     def var ii       as int      no-undo.
     def var xml-cont as longchar no-undo.
     find first tt-wb-header.
-    find first buf_doc-attr where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value = v-uniq-key-rec.
+    find first buf_doc-attr where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value = tt-wb-header.wbregid + {&delim-cmd} + v-uniq-key-rec.
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_doc-attr.doc-code:
       
       find first buf_gds no-lock where buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type.

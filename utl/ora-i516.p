@@ -64,6 +64,7 @@ define variable vss-description as character no-undo init "Импорт накладных из в
 
 
 define temp-table tt2-doc-line      no-undo like lib-trn_ret-line.
+define temp-table tt2-doc-line-attr no-undo like lib-trn_ret-line-attr.
 define temp-table anlz-bc no-undo
 field b-c as integer
 index pi b-c.
@@ -808,7 +809,24 @@ assign
             tt2-doc-line.obj-code       = tt-trn-doc.obj-code
             tt2-doc-line.obj-type       = tt-trn-doc.obj-type
             .
-
+        if is-egais
+        then do:
+          create tt-doc-line-attr.
+          assign
+            tt-doc-line-attr.attr-code = "RefA"
+            tt-doc-line-attr.doc-code = tt-trn-doc.doc-code
+            tt-doc-line-attr.gds-code = temp_doc-line.gds-code
+            tt-doc-line-attr.attr-value = temp_doc-line.RefA
+          .
+          create tt-doc-line-attr.
+          assign
+            tt-doc-line-attr.attr-code = "RefB"
+            tt-doc-line-attr.doc-code = tt-trn-doc.doc-code
+            tt-doc-line-attr.gds-code = temp_doc-line.gds-code
+            tt-doc-line-attr.attr-value = temp_doc-line.RefB
+          .
+        end.
+        
         create tt-gds-dtl.
         BUFFER-COPY tt2-doc-line  to tt-gds-dtl
           assign

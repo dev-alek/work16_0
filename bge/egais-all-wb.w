@@ -314,13 +314,30 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
    on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
 
   def var ii as int no-undo.
+  def var glog as  log no-undo.
   
   { gbl/getcurus.i
     v-db-num
     v-user-id
     no-error
   }
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-ref':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
   
+  if not glog then  return .
   empty temp-table thbjattr_thbj-attr .
   run adm/shattri.p (
        input "get":U

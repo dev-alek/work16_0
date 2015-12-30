@@ -219,8 +219,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
       and X_ext-classif.classif-name = {&extclass_clients_esys}
       and X_ext-classif.db-num = 0
       and X_ext-classif.key#_one = v-ext-sys
-      and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
-      and X_eXt-classif.CharKey_Three = bh-wb-gds-EG-header:buffer-field ("regID-cons"):buffer-value
+      and X_eXt-classif.CharKey_Two = f-cons
       no-error.
     
     if available (X_eXt-classif) 
@@ -415,7 +414,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   }
   { gbl/getcntxt.i get }
 
-  find first ub.ext-system where ub.ext-system.whole-send-news = integer ({&esys-dm-egais}).
+  find first ub.ext-system where ub.ext-system.delivery-method = integer ({&esys-dm-egais}).
   
   assign 
     v-ext-sys = ub.ext-system.esys-id .  
@@ -743,7 +742,7 @@ PROCEDURE refresh-view :
 
   f-cons = bh-wb-gds-EG-header:buffer-field ("clientCons"):buffer-value.
   f-ship = bh-wb-gds-EG-header:buffer-field ("client"):buffer-value.
-  display Btn_Cancel b-choose-cons b-choose-ship btn_conn with frame Dialog-Frame.
+  display Btn_Cancel f-cons F-ship b-choose-cons b-choose-ship btn_conn with frame Dialog-Frame.
   ENABLE Btn_Cancel b-choose-cons btn_conn
     WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
