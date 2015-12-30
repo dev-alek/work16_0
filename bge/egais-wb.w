@@ -587,8 +587,22 @@ PROCEDURE msdblcl :
         , output v-rid-list) no-error.
       if v-rid-list = "" or v-rid-list = ? 
         then return no-apply. 
-      
       find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock.
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
+       ,input (buffer buf_goods:handle)
+        ,output v-gds-uniq-key-rec).
+      find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_goods} 
+        and X_ext-classif.classif-name = {&extclass_goods_esys} 
+        AND X_ext-classif.db-num = 0  
+        and X_ext-classif.key#_one = buf_goods.gds-code
+        and X_ext-classif.key#_two = v-ext-sys 
+        and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+        no-error.
+      if available (X_ext-classif)
+      then do:
+        message substitute ("Товар &1 уже связан.", buf_goods.gds-code) view-as alert-box.
+        return no-apply.
+      end.
       run gds-attr-value(
         buf_goods.gds-code,
         {&attr-alcohol-prod},
@@ -603,10 +617,33 @@ PROCEDURE msdblcl :
       if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value
       then do:
         message "У выбранного товара не соответсвует объем" view-as alert-box.
+        return no-apply.
       end.
       if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value
       then do:
         message "У выбранного товара не соответсвует содержание спирта" view-as alert-box.
+        return no-apply.
+      end.
+      find first ub.alc-type-gds 
+           where ub.alc-type-gds.gds-code = buf_goods.gds-code
+             and ub.alc-type-gds.create-user-db-num = 0 no-lock no-error.
+      if not available (ub.alc-type-gds) 
+      then do:
+        message "У выбранного товара не задана алкогольная группа" view-as alert-box.
+        return no-apply.
+      end.
+      else do:
+        find first ub.alc-type where ub.alc-type-gds.alc-type-inner-code = ub.alc-type.alc-type-inner-code no-lock no-error.
+        if not available (ub.alc-type) 
+        then do:
+          message "Не найдена алкогольная группа" view-as alert-box.
+          return no-apply.
+        end.
+        if ub.alc-type.alc-type-code <>  bh-wb-gds-EG:buffer-field ("alc-type-code"):buffer-value
+        then do:
+          message "У выбранного товара не соответсвует алкогольная группа" view-as alert-box.
+          return no-apply.
+        end.        
       end.
       run gds-attr-delete (
       bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value,
@@ -669,9 +706,23 @@ PROCEDURE msdblcl :
       ,?             /*p-other     */
       , output v-rid-list) no-error.
     if v-rid-list = "" or v-rid-list = ? 
-      then return no-apply. 
-    
-    find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock.
+      then return no-apply.
+    find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock. 
+    run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
+     ,input (buffer buf_goods:handle)
+      ,output v-gds-uniq-key-rec).
+    find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_goods} 
+      and X_ext-classif.classif-name = {&extclass_goods_esys} 
+      AND X_ext-classif.db-num = 0  
+      and X_ext-classif.key#_one = buf_goods.gds-code
+      and X_ext-classif.key#_two = v-ext-sys 
+      and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+      no-error.
+    if available (X_ext-classif)
+    then do:
+      message substitute ("Товар &1 уже связан.", buf_goods.gds-code) view-as alert-box.
+      return no-apply.
+    end.
     run gds-attr-value(
       buf_goods.gds-code,
       {&attr-alcohol-prod},
@@ -686,14 +737,34 @@ PROCEDURE msdblcl :
     if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value
     then do:
       message "У выбранного товара не соответсвует объем" view-as alert-box.
+      return no-apply.
     end.
     if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value
     then do:
       message "У выбранного товара не соответсвует содержание спирта" view-as alert-box.
+      return no-apply.
     end.
-    run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
-     ,input (buffer buf_goods:handle)
-      ,output v-gds-uniq-key-rec).
+    find first ub.alc-type-gds 
+         where ub.alc-type-gds.gds-code = buf_goods.gds-code
+           and ub.alc-type-gds.create-user-db-num = 0 no-lock no-error.
+    if not available (ub.alc-type-gds) 
+    then do:
+      message "У выбранного товара не задана алкогольная группа" view-as alert-box.
+      return no-apply.
+    end.
+    else do:
+      find first ub.alc-type where ub.alc-type-gds.alc-type-inner-code = ub.alc-type.alc-type-inner-code no-lock no-error.
+      if not available (ub.alc-type) 
+      then do:
+        message "Не найдена алкогольная группа" view-as alert-box.
+        return no-apply.
+      end.
+      if ub.alc-type.alc-type-code <>  bh-wb-gds-EG:buffer-field ("alc-type-code"):buffer-value
+      then do:
+        message "У выбранного товара не соответсвует алкогольная группа" view-as alert-box.
+        return no-apply.
+      end.        
+    end.
     run ref/extclas1.p ( 
       INPUT {&add-def}
       ,INPUT yes /*p-silent*/
