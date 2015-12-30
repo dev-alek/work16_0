@@ -220,6 +220,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
       and X_ext-classif.db-num = 0
       and X_ext-classif.key#_one = v-ext-sys
       and X_eXt-classif.CharKey_Two = f-cons
+      and X_eXt-classif.CharKey_Two <> ""
       no-error.
     
     if available (X_eXt-classif) 
