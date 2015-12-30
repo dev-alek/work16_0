@@ -34,18 +34,20 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Журнал запросов ЕГАИС".
 
-define variable th-wb-egais         as handle    no-undo.
-define variable bh-wb-egais         as handle    no-undo.
-define variable qh-wb-egais         as handle    no-undo.
-define variable browse-hdl-wb-egais as handle    no-undo.
+define variable th-act-header         as handle    no-undo.
+define variable bh-act-header         as handle    no-undo.
+define variable qh-act-header         as handle    no-undo.
+define variable browse-hdl-act-header as handle    no-undo.
 define variable bcol                as handle    extent 11 no-undo.
 define variable egais               as class     EGAIS no-undo.
 define variable v-db-num            as integer   no-undo .
 define variable v-user-id           as character no-undo .
-define variable qh-wb-gds-EG-header as handle    no-undo.
-define variable qh-wb-gds-EG        as handle    no-undo.
-define variable bh-wb-gds-EG-header as handle    no-undo.
-define variable bh-wb-gds-EG        as handle    no-undo.
+define variable qh-ab-gds-EG-header as handle    no-undo.
+define variable qh-ab-gds-EG        as handle    no-undo.
+define variable bh-ab-gds-EG-header as handle    no-undo.
+define variable bh-ab-gds-EG        as handle    no-undo.
+
+define variable glog        as logical no-undo .
 
 define variable v-value-character   as character no-undo .
 define variable v-value-decimal     as decimal   no-undo .
@@ -55,6 +57,9 @@ define variable v-value-type        as character no-undo .
 define variable v-value-date        as date      no-undo .
 define variable v-ext-sys           as integer   no-undo .
 
+define buffer buf_clob-bind     for ub.clob-bind .
+define buffer buf_clob-data     for ub.clob-data .
+
 define variable v-fs-rar as character no-undo view-as text format "X(15)" label "Код ФС РАР (FSRAR ID)" .
 
 { gbl/color.i }
@@ -63,7 +68,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { gbl/thbjattr.i }
-{ibs/th/bge/egais/wb-egais.i}
+{ibs/th/bge/egais/ab-egais.i new shared }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -80,7 +85,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Sel Btn_Save Btn_dnlw RADIO-SET-1 
+&Scoped-Define ENABLED-OBJECTS Btn_OK RADIO-SET-1 
 &Scoped-Define DISPLAYED-OBJECTS RADIO-SET-1 
 
 /* Custom List Definitions                                              */
@@ -96,46 +101,60 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON Btn_dnlw 
-     LABEL "Загрузить" 
+DEFINE BUTTON Btn_lkp 
+     LABEL "Просмотр" 
+     SIZE 15 BY 1.13.
+     
+DEFINE BUTTON Btn_create 
+     LABEL "Создать" 
      SIZE 15 BY 1.13.
 
+DEFINE BUTTON Btn_chg 
+     LABEL "Изменить" 
+     SIZE 15 BY 1.13.
+
+DEFINE BUTTON Btn_del 
+     LABEL "Удалить" 
+     SIZE 15 BY 1.13.
+     
+DEFINE BUTTON Btn_send 
+     LABEL "Отправить" 
+     SIZE 15 BY 1.13.
+          
 DEFINE BUTTON Btn_OK AUTO-GO 
      LABEL "Выход" 
      SIZE 15 BY 1.13
      BGCOLOR 8 .
 
-DEFINE BUTTON Btn_Save 
-     LABEL "Сохранить" 
-     SIZE 15 BY 1.13
+DEFINE BUTTON Btn_Ans 
+     LABEL "Посмотреть ответ" 
+     SIZE 20 BY 1.13
      BGCOLOR 8 .
 
-DEFINE BUTTON Btn_Sel 
-     LABEL "Изменить" 
-     SIZE 15 BY 1.13
-     BGCOLOR 8 .
 
 DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1 
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
-          "Полученные", 1,
-"Закрытые на факт", 2,
-"Акты", 3
-     SIZE 40 BY 1.25 NO-UNDO.
+          "Новые", 1,
+          "Отправленные", 2
+     SIZE 27 BY 1.25 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     Btn_OK AT ROW 1.2 COL 2.63
-     Btn_Sel AT ROW 1.2 COL 18.63 WIDGET-ID 6
-     Btn_Save AT ROW 1.2 COL 34.38 WIDGET-ID 10
-     Btn_dnlw AT ROW 1.2 COL 50 WIDGET-ID 12
-     RADIO-SET-1 AT ROW 1.2 COL 80.38 NO-LABEL WIDGET-ID 2
-     SPACE(1.24) SKIP(25.28)
+     Btn_OK AT ROW 1.2 COL 2
+     Btn_create at row 1.2 col 17
+     Btn_chg at row 1.2 col 32
+     Btn_del at row 1.2 col 47
+     Btn_send at row 1.2 col 62
+     Btn_Ans AT ROW 1.2 COL 32 WIDGET-ID 10
+     Btn_lkp AT ROW 1.2 COL 17 WIDGET-ID 12
+     RADIO-SET-1 AT ROW 1.2 COL 80 NO-LABEL WIDGET-ID 2
+     SPACE(2) SKIP(23.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Накладные/акты ЕГАИС"
+         TITLE "Акты постановки на баланс в ЕГАИС"
          DEFAULT-BUTTON Btn_OK WIDGET-ID 100.
 
 
@@ -180,97 +199,103 @@ end.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME Btn_dnlw
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_dnlw Dialog-Frame
-ON CHOOSE OF Btn_dnlw IN FRAME Dialog-Frame /* Загрузить */
+&Scoped-define SELF-NAME Btn_lkp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_lkp Dialog-Frame
+ON CHOOSE OF Btn_lkp IN FRAME Dialog-Frame /* Загрузить */
 DO:
-  egais:GetHndlTable(?, "AllWB").
-  if egais:StatusErr 
-  then do:
-    message "Ошибка: " egais:Msg view-as alert-box error.
-  end.
-  run refresh-query.
+    if not bh-act-header:available then return no-apply .
+    run bge/egais-act-balance.w (parparentproc, {&lookup}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&Scoped-define SELF-NAME Btn_Save
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Save Dialog-Frame
-ON CHOOSE OF Btn_Save IN FRAME Dialog-Frame /* Сохранить */
+&Scoped-define SELF-NAME Btn_create
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_create Dialog-Frame
+ON CHOOSE OF Btn_create IN FRAME Dialog-Frame /* Создать */
 DO:
-  if bh-wb-egais = ? 
-    then return no-apply.
-  
-  if RADIO-SET-1 = 1 
-    then do:
-    if can-find (first ub.trn-doc where ub.trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
-    then do:
-      message substitute ( "Накладная с № &1 уже сформирована", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
-      view-as alert-box.
-       return no-apply.
-    end.
-    bh-wb-gds-EG = ?.
-    bh-wb-gds-EG-header = ?.
-    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).  
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-    find first ub.clients 
-      where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("cli-type"):buffer-value
-        and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("cli-code"):buffer-value) no-error.
-    if not available (ub.clients)
-    then do:
-      message "Не найден клиент TH для EGAIS контрагентa regID: " + bh-wb-gds-EG-header:buffer-field ('regId-Ship'):buffer-value view-as alert-box.
-      return no-apply.
-    end.
-    find first ub.clients 
-      where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("obj-type"):buffer-value
-        and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("obj-code"):buffer-value) no-error.
-    if not available (ub.clients)
-    then do:
-      message "Не найден объект TH для EGAIS получателя regID: " + bh-wb-gds-EG-header:buffer-field ('regId-Cons'):buffer-value view-as alert-box.
-      return no-apply.
-    end.
-    bh-wb-gds-EG:find-first ("where tt-wb-gds-EG.gds-code = ?", no-lock) no-error.
-    if bh-wb-gds-EG:available then do:
-      message "Не найден товар TH для EGAIS товара AlcCode: " + bh-wb-gds-EG:buffer-field ('alc-code'):buffer-value view-as alert-box.
-      return no-apply.
-    end.
-    
-    egais:SaveWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-    if egais:StatusErr
-      then message egais:Msg view-as alert-box error.
-      else message "Создание накладной завершено" view-as alert-box.
+    run bge/egais-act-balance.w (parparentproc, {&add-def}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
     run refresh-query.
-  end.
-  else do:
-    bh-wb-gds-EG = ?.
-    bh-wb-gds-EG-header = ?.
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-    egais:SendRequestUTM().
-    if egais:StatusErr
-      then message egais:Msg view-as alert-box error.
-      else message "Накладная отправлена" view-as alert-box.
-    
-  end.
-  run refresh-query.
-    
-  
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&Scoped-define SELF-NAME Btn_Sel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Sel Dialog-Frame
-ON CHOOSE OF Btn_Sel IN FRAME Dialog-Frame /* Выбор */
+&Scoped-define SELF-NAME Btn_chg
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_chg Dialog-Frame
+ON CHOOSE OF Btn_chg IN FRAME Dialog-Frame /*  */
 DO:
-  if bh-wb-egais = ? 
+    if not bh-act-header:available then return no-apply .
+    run bge/egais-act-balance.w (parparentproc, {&update}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_del
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_del Dialog-Frame
+ON CHOOSE OF Btn_del IN FRAME Dialog-Frame /*  */
+DO:
+    if not bh-act-header:available then return no-apply .
+    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+    delete buf_clob-bind .
+    bh-act-header:buffer-delete () .
+    run refresh-query.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_send
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_send Dialog-Frame
+ON CHOOSE OF Btn_send IN FRAME Dialog-Frame /*  */
+DO:
+    if not bh-act-header:available then return no-apply .
+    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+    find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
+    os-delete "ActChargeOn.xml".
+    copy-lob
+    from  object buf_clob-data.cdata
+    to  file 'ActChargeOn.xml'
+    no-convert
+    no-error .
+    egais:SendRequestUTM() .
+    glog = egais:IsSent .
+    
+    glog = egais:StatusErr .
+    if glog then do :
+        message egais:Msg view-as alert-box.
+        return no-apply.
+    end.
+    else do :
+        entry (3, buf_clob-bind.descr, {&delim-par}) = "yes".
+        
+        bh-act-header:buffer-field ("is-sent"):buffer-value = true.
+    end.
+    run refresh-query.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_Ans
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Ans Dialog-Frame
+ON CHOOSE OF Btn_Ans IN FRAME Dialog-Frame /* Сохранить */
+DO:
+  if bh-act-header = ? 
     then return no-apply.
-  if RADIO-SET-1 = 1 then run bge/egais-wb.w (parparentproc, egais, bh-wb-egais:handle).
-  else run bge/egais-wb-act.w (parparentproc, egais, bh-wb-egais:handle).
-  run refresh-query.
+  if (bh-act-header:buffer-field ("answer_"):buffer-value) <> "" then do :
+    message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .    
+  end.
+  else do :
+      egais:GetHndlTable(2, bh-act-header:buffer-field ("num"):buffer-value) .
+      glog = egais:StatusErr .
+      if glog then do :
+            message egais:Msg view-as alert-box.
+            return no-apply.
+      end.
+      else message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .  
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -282,12 +307,17 @@ END.
 ON value-changed OF RADIO-SET-1 IN FRAME Dialog-Frame
 do:
   assign RADIO-SET-1 .
-  if RADIO-SET-1 = 1
-    then Btn_Save:label = "Сохранить".
-    else Btn_Save:label = "Отправить".
-  if RADIO-SET-1 = 3
-  then disable Btn_Save with frame {&FRAME-NAME}.
-  else enable Btn_Save with frame {&FRAME-NAME}.
+  if RADIO-SET-1 = 1 
+  then do :
+    ENABLE Btn_create Btn_chg Btn_del Btn_send 
+      WITH FRAME Dialog-Frame. 
+    HIDE Btn_Ans Btn_lkp in FRAME Dialog-Frame.  
+  end.
+  else do :
+    ENABLE Btn_Ans Btn_lkp 
+      WITH FRAME Dialog-Frame.
+    HIDE Btn_create Btn_chg Btn_del Btn_send in FRAME Dialog-Frame.    
+  end.
   run refresh-query.
 end.
 
@@ -358,17 +388,22 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   
   egais = new EGAIS(v-db-num, v-user-id).
   
-  egais:EGAISImpl = new WayBill (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
-  create query qh-wb-egais.
-  create browse browse-hdl-wb-egais
+  egais:EGAISImpl = new ActBalance (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+  
+  bh-act-header = egais:GetHndlTable(3, "").
+  create query qh-act-header.
+  run refresh-query.
+
+  
+  create browse browse-hdl-act-header
     assign 
-      title     = 'Накладные ЕГАИС'
+      title     = 'Акты постановки на баланс ЕГАИС'
       frame     = frame {&FRAME-NAME}:handle
-      query     = qh-wb-egais
+      query     = qh-act-header
       x         = 10
       y         = 42
-      width     = 119
-      height    = 25
+      width     = 105
+      height    = 23
       visible   = true
       read-only = true
       sensitive = true
@@ -376,23 +411,21 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       column-resizable = true
       column-scrolling = true
       triggers:
-        on mouse-move-dblclick persistent run msdblcl.
+/*        on mouse-move-dblclick persistent run msdblcl.*/
 /*        on row-leave persistent run proc-row-leave.*/
       end triggers
   .
-  bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
-  qh-wb-egais:set-buffers (bh-wb-egais).
-  qh-wb-egais:query-prepare ("for each tt-wb-hndls").
-  qh-wb-egais:query-open.
-  if not bh-wb-egais = ? 
+  if not bh-act-header = ? 
   then do:
-    do ii = 1 to bh-wb-egais:num-fields:
-      bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+    do ii = 1 to bh-act-header:num-fields - 2:
+      bcol[ii] = browse-hdl-act-header:add-like-column('tt-act-header' + '.' + bh-act-header:buffer-field (ii):name, 0, 'FILL-IN').
     end.
+    browse-hdl-act-header:get-browse-column (1):width-chars = 30.
+    browse-hdl-act-header:get-browse-column (2):width-chars = 69.
   end.
-  { gbl/diasize.i &br-hndl=browse-hdl-wb-egais }
-  run diasize_init in this-procedure .
-  run enable_UI.  
+
+  run enable_UI. 
+  apply "value-changed" to RADIO-SET-1 in frame {&FRAME-NAME}. 
 
   wait-for go of frame {&FRAME-NAME}.
 end.
@@ -434,7 +467,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY RADIO-SET-1 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw RADIO-SET-1 
+  ENABLE Btn_OK RADIO-SET-1
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -443,138 +476,28 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE msdblcl Dialog-Frame 
-PROCEDURE msdblcl :
-
-  if RADIO-SET-1 <> 1 and RADIO-SET-1 <> 3  
-    then apply "choose" to Btn_Save in frame {&frame-name} .
-    else apply "choose" to Btn_Sel in frame {&frame-name} .
-
-end.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query Dialog-Frame 
 PROCEDURE refresh-query :
 
-  if bh-wb-egais = ? 
-    then return .
-
-  case RADIO-SET-1 :
+if bh-act-header = ? 
+  then return .
+  
+case RADIO-SET-1 :
     when 1  then 
     do:
-      delete object browse-hdl-wb-egais.
-      create browse browse-hdl-wb-egais
-        assign 
-          title     = 'Накладные ЕГАИС'
-          frame     = frame {&FRAME-NAME}:handle
-          query     = qh-wb-egais
-          x         = 10
-          y         = 42
-          width     = 119
-          height    = 25
-          visible   = true
-          read-only = true
-          sensitive = true
-          separators = true
-          column-resizable = true
-          column-scrolling = true
-          triggers:
-            on mouse-move-dblclick persistent run msdblcl.
-          end triggers
-      .
-      bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
-      qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-hndls").
-      qh-wb-egais:query-open.
-      if not bh-wb-egais = ? 
-      then do:
-        do ii = 1 to bh-wb-egais:num-fields:
-          bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-        end.
-      end.
-      run diasize_init in this-procedure .
-      enable Btn_Sel with frame {&FRAME-NAME}.
+      bh-act-header = egais:GetHndlTable({&ab-clob}, "").
+      qh-act-header:set-buffers (bh-act-header).
+      qh-act-header:query-prepare ("for each tt-act-header where not tt-act-header.is-sent").
+      qh-act-header:query-open.
     end.
     when 2  then 
     do:
-      delete object browse-hdl-wb-egais.
-      create browse browse-hdl-wb-egais
-        assign 
-          title     = 'Накладные ЕГАИС'
-          frame     = frame {&FRAME-NAME}:handle
-          query     = qh-wb-egais
-          x         = 10
-          y         = 42
-          width     = 119
-          height    = 25
-          visible   = true
-          read-only = true
-          sensitive = true
-          separators = true
-          column-resizable = true
-          column-scrolling = true
-          triggers:
-            on mouse-move-dblclick persistent run msdblcl.
-          end triggers
-      .
-      bh-wb-egais = egais:GetHndlTable({&wb-fact}, "").
-      qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-hndls").
-      qh-wb-egais:query-open.
-      if not bh-wb-egais = ? 
-      then do:
-        do ii = 1 to bh-wb-egais:num-fields:
-          bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-        end.
-      end.
-      run diasize_init in this-procedure .
-      disable Btn_Sel with frame {&FRAME-NAME}.
+      bh-act-header = egais:GetHndlTable({&ab-clob}, "").
+      qh-act-header:set-buffers (bh-act-header).
+      qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent").
+      qh-act-header:query-open.
     end.
-    when 3  then 
-    do:
-      delete object browse-hdl-wb-egais.
-      create browse browse-hdl-wb-egais
-        assign 
-          title     = 'Акты ЕГАИС'
-          frame     = frame {&FRAME-NAME}:handle
-          query     = qh-wb-egais
-          x         = 10
-          y         = 42
-          width     = 119
-          height    = 25
-          visible   = true
-          read-only = true
-          sensitive = true
-          separators = true
-          column-resizable = true
-          column-scrolling = true
-          triggers:
-            on mouse-move-dblclick persistent run msdblcl.
-          end triggers
-      .
-      bh-wb-egais = egais:GetHndlTable({&wb-clob-act}, "").
-      qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-act-hndls").
-      qh-wb-egais:query-open.
-      if not bh-wb-egais = ? 
-      then do:
-        do ii = 1 to bh-wb-egais:num-fields:
-          bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-act-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-        end.
-      end.
-      run diasize_init in this-procedure .
-      disable Btn_Sel with frame {&FRAME-NAME}.
-    end.
-    /*when 4  then 
-    do:
-      bh-wb-egais = egais:GetHndlTable({&wb-ras}, "").
-      qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-hndls").
-      qh-wb-egais:query-open.
-      disable Btn_Sel with frame {&FRAME-NAME}.
-    end.*/
   end.
 
 end.

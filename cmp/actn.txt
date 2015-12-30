@@ -1,4 +1,4 @@
-"155"
+"156"
 "action-group"
 "edi"      "EDI"                     "Работа с системой EDI"                  "chk-is-edi"
 "action-group"
@@ -592,4 +592,8 @@
 "actn_ibsthpos-annul-card-pay"                       "object" "chk-num-cd"                 "cash"    "(ibsthpos) Аннуляция оплаты банковской картой"                                                                                    "(ibsthpos) Аннуляция оплаты банковской картой"                                                                                                                                                                                           ""
 "actn_ibsthpos-bank-day"                             "object" "chk-num-cd"                 "cash"    "(ibsthpos) Подведение итогов по банковским картам"                                                                                "(ibsthpos) Подведение итогов по банковским картам"                                                                                                                                                                                       ""
 "actn_oss_add-chg-del"                               "global"                              "dir"     ""Справочник операторов сотовой связи (ОСС) доб,изм,удал"                                                                          "ОСС: добавление, изменение, удаление справочника."                                                                                                                                                                                       ""
+"actn_egais-obj"                                     "object"                              "export"     "ЕГАИС. Настройка объектов" 
+"actn_egais-ref"                                     "object"                              "export"     "ЕГАИС. Настройка справочников клиентов и товаров"  
+"actn_egais-doc"                                     "object"                              "export"     "ЕГАИС. Работа с накладными" 
+"actn_egais-adm"                                     "object"                              "export"     "ЕГАИС. Администрирование запросов" 
 ?

@@ -782,6 +782,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 { cmp/cr-prep.i 1 lob-res-ref           ref          "Справочник"  ref            "Reference"   }
 { cmp/cr-prep.i 1 lob-egais-wb          egais-wb     "Накладная ЕГАИС"  egais-wb  "EGAIS Waybill" }
 { cmp/cr-prep.i 1 lob-egais-ref-b       egais-ref-b  "Справка B ЕГАИС"  egais-ref-b "EGAIS Reference B" }
+{ cmp/cr-prep.i 1 lob-egais-ab          egais-ab     "Акт постановки на баланс B ЕГАИС"  egais-ab "EGAIS ActBalance" }
+{ cmp/cr-prep.i 1 lob-egais-wb-act      egais-wb-act "Акт подтверждения накладной" egais-wb-act "EGAIS Waybill Act"  }
 
 
 &glob clob-res-codes '{&bef-lob-res-data}~
@@ -794,6 +796,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 ,{&bef-lob-res-ref}~
 ,{&bef-lob-egais-wb}~
 ,{&bef-lob-egais-ref-b}~
+,{&bef-lob-egais-ab}~
+,{&bef-lob-egais-wb-act}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes {&clob-res-codes}" ).
@@ -808,6 +812,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-
 ,{&bef-lob-res-ref-full}~
 ,{&bef-lob-egais-wb-full}~
 ,{&bef-lob-egais-ref-b-full}~
+,{&bef-lob-egais-ab-full}~
+,{&bef-lob-egais-wb-act-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes-full {&clob-res-codes-full}" ).

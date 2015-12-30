@@ -26,6 +26,9 @@
 &glob wb-ras    4
 &glob wb-fact   5
 &glob wb-refB   6
+&glob wb-clob-act 7
+&glob wb-act-header 8
+&glob wb-act-line   9
 
 
   define temp-table tt-wb-header no-undo
@@ -33,7 +36,8 @@
     field num          as character label "№ пост."
     field wb-date      as date label "Дата"
     field shippingdate as date label "Дата поставки"
-    field regID-Ship   as character format "X(21)" label "Контрагент EGAIS"
+    field regID-Ship   as character format "X(21)" label "RegId контр."
+    field NameShip     as character format "X(150)" label "Контрагент EGAIS"
     field regID-Cons   as character format "X(21)" label "Получатель EGAIS"
     field client       as character label "Контр. TH"
     field clientCons   as character label "Получ. TH" 
@@ -69,4 +73,27 @@
     gds-name
     index alc
     alc-code    
+    .
+
+  define temp-table tt-wb-act-header no-undo
+    field num          as character label "№ пост."
+    field wbregid      as character label "WBRegId" format "X(21)"
+    field act-date     as date label "Дата"
+    field status_      as character label "Статус"
+    field note         as character label "Примечание" format "X(150)"
+    index pi
+    wbregid
+    .
+
+  define temp-table tt-wb-act-gds-EG no-undo
+    field gds-code      as integer label "Код товара в TH"
+    field gds-name      as character label "Полное наименование" format "X(150)"
+    field doc-qnty      as decimal label "Кол-во по док."
+    field fact-qnty     as decimal label "Кол-во факт."
+    field RealQuantity  as decimal label "Кол-во акт"
+    field refB          as character label "Справка B" format "X(25)"
+    index pi as primary
+    gds-code
+    index name_
+    gds-name
     .
