@@ -72,6 +72,19 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-nids true
 &glob sort-trdcattr-nids 100
 
+/* Номер приходной накладной ЕГАИС */
+&glob fillin_width-trdcattr-negais 71
+&glob fillin_height-trdcattr-negais 1
+&glob type-trdcattr-negais {&type-char}
+&glob format-trdcattr-negais "x(70)"
+&glob label-trdcattr-negais "Номер приходной накладной поставщика"
+&glob tooltip-trdcattr-negais "Номер приходной накладной поставщика"
+&glob user-can-edit-trdcattr-negais true
+&glob output-display-trdcattr-negais true
+&glob other-trdcattr-negais 'nws':u
+&glob news-trdcattr-negais true
+&glob sort-trdcattr-negais 100
+
 /* Счет-фактура поставщика: Дата */
 &glob fillin_width-trdcattr-dsf 11
 &glob fillin_height-trdcattr-dsf 1

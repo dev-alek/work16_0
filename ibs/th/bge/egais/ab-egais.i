@@ -30,7 +30,7 @@ define temp-table tt-act-header
     field num           as character        label "№ акта"      format "X(30)"
     field date_         as date             label "Дата акта"
     field is-sent       as logical
-    field answer_       as character        label "Ответ"       format "X(255)"
+    field answer_       as character        label "Ответ"       format "X(1500)"
     index pi as primary unique
         num
 .
