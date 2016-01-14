@@ -56,6 +56,9 @@ class ibs.th.bge.egais.EGAISImpl:
 
   end.
   
+  method public void RejectWB (inArg as char):
+
+  end.
   
   method protected logical GetIsSent ():
 

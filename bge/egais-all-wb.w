@@ -80,7 +80,8 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Sel Btn_Save Btn_dnlw RADIO-SET-1 
+&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_Del ~
+RADIO-SET-1 
 &Scoped-Define DISPLAYED-OBJECTS RADIO-SET-1 
 
 /* Custom List Definitions                                              */
@@ -96,6 +97,10 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON Btn_Del 
+     LABEL "Отказ" 
+     SIZE 7.5 BY 1.13.
+
 DEFINE BUTTON Btn_dnlw 
      LABEL "Загрузить" 
      SIZE 15 BY 1.13.
@@ -127,12 +132,13 @@ DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     Btn_OK AT ROW 1.2 COL 2.63
-     Btn_Sel AT ROW 1.2 COL 18.63 WIDGET-ID 6
-     Btn_Save AT ROW 1.2 COL 34.38 WIDGET-ID 10
-     Btn_dnlw AT ROW 1.2 COL 50 WIDGET-ID 12
-     RADIO-SET-1 AT ROW 1.2 COL 80.38 NO-LABEL WIDGET-ID 2
-     SPACE(1.24) SKIP(25.28)
+     Btn_OK AT ROW 1.21 COL 2.63
+     Btn_Sel AT ROW 1.21 COL 18.63 WIDGET-ID 6
+     Btn_Save AT ROW 1.21 COL 34.38 WIDGET-ID 10
+     Btn_dnlw AT ROW 1.21 COL 50 WIDGET-ID 12
+     Btn_Del AT ROW 1.21 COL 65.5 WIDGET-ID 14
+     RADIO-SET-1 AT ROW 1.21 COL 80.38 NO-LABEL WIDGET-ID 2
+     SPACE(1.24) SKIP(25.27)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Накладные/акты ЕГАИС"
@@ -171,10 +177,30 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON window-close OF FRAME Dialog-Frame /* Накладные ЕГАИС */
+ON window-close OF FRAME Dialog-Frame /* Накладные/акты ЕГАИС */
 do:
   apply "END-ERROR":U to self.
 end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME Btn_Del
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Del Dialog-Frame
+ON CHOOSE OF Btn_Del IN FRAME Dialog-Frame /* - */
+DO:
+  if bh-wb-egais = ? 
+    then return no-apply.
+  if can-find (first ub.trn-doc where ub.trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
+  then do:
+    message substitute ( "Накладная с № &1 уже сформирована, нельзя отправить отказ", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
+    view-as alert-box.
+     return no-apply.
+  end.
+  egais:RejectWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+  run refresh-query.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -247,6 +273,11 @@ DO:
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
     bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    if egais:StatusErr
+    then do:
+      message egais:Msg view-as alert-box error.
+      return no-apply.
+    end.
     egais:SendRequestUTM().
     if egais:StatusErr
       then message egais:Msg view-as alert-box error.
@@ -264,7 +295,7 @@ END.
 
 &Scoped-define SELF-NAME Btn_Sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Sel Dialog-Frame
-ON CHOOSE OF Btn_Sel IN FRAME Dialog-Frame /* Выбор */
+ON CHOOSE OF Btn_Sel IN FRAME Dialog-Frame /* Изменить */
 DO:
   if bh-wb-egais = ? 
     then return no-apply.
@@ -283,8 +314,14 @@ ON value-changed OF RADIO-SET-1 IN FRAME Dialog-Frame
 do:
   assign RADIO-SET-1 .
   if RADIO-SET-1 = 1
-    then Btn_Save:label = "Сохранить".
-    else Btn_Save:label = "Отправить".
+  then do:
+    Btn_Save:label = "Сохранить".
+    Btn_Del:hidden = false.
+  end.
+  else do:
+    Btn_Save:label = "Отправить".
+    Btn_Del:hidden = true.
+  end.
   if RADIO-SET-1 = 3
   then disable Btn_Save with frame {&FRAME-NAME}.
   else enable Btn_Save with frame {&FRAME-NAME}.
@@ -338,6 +375,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   }
   
   if not glog then  return .
+
   empty temp-table thbjattr_thbj-attr .
   run adm/shattri.p (
        input "get":U
@@ -451,7 +489,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY RADIO-SET-1 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw RADIO-SET-1 
+  ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_Del RADIO-SET-1 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -462,8 +500,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE msdblcl Dialog-Frame 
 PROCEDURE msdblcl :
-
-  if RADIO-SET-1 <> 1 and RADIO-SET-1 <> 3  
+if RADIO-SET-1 <> 1 and RADIO-SET-1 <> 3  
     then apply "choose" to Btn_Save in frame {&frame-name} .
     else apply "choose" to Btn_Sel in frame {&frame-name} .
 
@@ -472,10 +509,21 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-row-leave Dialog-Frame 
+PROCEDURE proc-row-leave :
+if false then do:
+    do ii = 1 to extent (bcol).  
+      bcol[ii]:bgcolor = RED_COLOR.
+    end.
+  end.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query Dialog-Frame 
 PROCEDURE refresh-query :
-
-  if bh-wb-egais = ? 
+if bh-wb-egais = ? 
     then return .
 
   case RADIO-SET-1 :
@@ -599,13 +647,3 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-row-leave Dialog-Frame 
-PROCEDURE proc-row-leave :
-  if false then do:
-    do ii = 1 to extent (bcol).  
-      bcol[ii]:bgcolor = RED_COLOR.
-    end.
-  end.
-end.
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
