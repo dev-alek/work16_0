@@ -825,6 +825,9 @@ assign
             tt-doc-line-attr.gds-code = temp_doc-line.gds-code
             tt-doc-line-attr.attr-value = temp_doc-line.RefB
           .
+          if temp_doc-line.importer-th <> "" and temp_doc-line.importer-th <> ? then do:
+            
+          end.
         end.
         
         create tt-gds-dtl.
@@ -890,6 +893,15 @@ assign
               v-end-message = substitute(" Ошибка &1 &2 " , error-status :get-message(1)  , return-value) .
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
+          end.
+          if is-egais then do:
+            find first temp_doc-line no-lock where temp_doc-line.artic = tt-parts.artic
+              and temp_doc-line.prod-code = tt-parts.prod-code
+              and temp_doc-line.prod-type = tt-parts.prod-type no-error.
+            if temp_doc-line.importer <> "" then do:
+              tt-parts.alc-imp-type = substring (temp_doc-line.importer-th, 1, 3).
+              tt-parts.alc-imp-code = integer (substring (temp_doc-line.importer-th, 4, 2)).
+            end.
           end.
           if is-tsd and v-ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
             run unitqnty1 (

@@ -126,4 +126,16 @@ class ibs.th.bge.egais.EGAIS:
       .
   end.
 
+  method public void RejectWB (inArg as char): /*получить хендл на таблицу с различными в зависимости от реализации сущностями egais. если не успешно возвращает ?*/
+    define variable tth as handle no-undo.
+    assign
+      StatusErr = false
+      Msg       = "".
+    EGAISImpl:RejectWB(inArg).
+    assign
+      Msg       = EGAISImpl:Msg
+      StatusErr = EGAISImpl:StatusErr
+      .
+  end.
+
 end class.

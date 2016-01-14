@@ -56,17 +56,19 @@
     .
 
   define temp-table tt-wb-gds-EG no-undo
-    field gds-code      like ub.goods.gds-code label "Код товара в TH"
-    field gds-name      like ub.goods.gds-name label "Полное наименование" format "X(150)"
-    field alc-code      as character label "Алкогольный код" format "X(21)"
-    field ms-base       like ub.goods.ms-base label "Объем" format ">>9.9<<"
-    field alc-type-code like ub.alc-type.alc-type-code label "Код АП"
-    field proof         like ub.goods.proof label "Крепость" format ">9.9"
-    field Identity      as character label "ID EGAIS"
-    field doc-qnty      like ub.doc-line.doc-qnty label "Кол-во"
-    field price         like ub.doc-line.price-rubl label "Цена"
-    field refA          as character label "Справка A" format "X(25)"
-    field refB          as character label "Справка B" format "X(25)"
+    field gds-code       like ub.goods.gds-code label "Код товара в TH"
+    field gds-name       like ub.goods.gds-name label "Полное наименование" format "X(150)"
+    field alc-code       as character label "Алкогольный код" format "X(21)"
+    field ms-base        like ub.goods.ms-base label "Объем" format ">>9.9<<"
+    field alc-type-code  like ub.alc-type.alc-type-code label "Код АП"
+    field proof          like ub.goods.proof label "Крепость" format ">9.9"
+    field regID-Importer as character format "X(21)" label "Импортер"
+    field importer-th    as character label "Импортер TH"
+    field Identity       as character label "ID EGAIS"
+    field doc-qnty       like ub.doc-line.doc-qnty label "Кол-во"
+    field price          like ub.doc-line.price-rubl label "Цена"
+    field refA           as character label "Справка A" format "X(25)"
+    field refB           as character label "Справка B" format "X(25)"
     index pi as primary
     gds-code
     index name_

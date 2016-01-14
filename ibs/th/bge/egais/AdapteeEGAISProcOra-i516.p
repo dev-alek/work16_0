@@ -89,6 +89,7 @@ do:
       temp_doc-line.doc-code   = temp_trn-doc.doc-code
       temp_doc-line.RefA = tt-wb-gds-EG.RefA
       temp_doc-line.RefB = tt-wb-gds-EG.RefB
+      temp_doc-line.importer-th = tt-wb-gds-EG.importer-th
       .
     
   end.
