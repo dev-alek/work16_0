@@ -564,58 +564,58 @@ for each obj-list :
     run define-full-path-Report(input g#report-num, input obj-list.obj-code , output v-file-name-rep-htm).
     run create-file(v-file-name-rep-htm).       
         
-          for each tt-rep1 no-lock where tt-rep1.obj-code = obj-list.obj-code and tt-rep1.obj-type = obj-list.obj-type 
-            break by  tt-rep1.exp-alc-type-code  by tt-rep1.exp-volume-piece-litres : 
+    for each tt-rep1 no-lock where tt-rep1.obj-code = obj-list.obj-code and tt-rep1.obj-type = obj-list.obj-type 
+        break by   tt-rep1.exp-name by  tt-rep1.exp-td-fact-date by tt-rep1.exp-name : 
                 
 
 
-            if first-of (tt-rep1.exp-alc-type-code)  then
-            do:
-                itog_ii  = 0.
-                v-fact-qnty = 0.
-                v-liters = 0.
-                v-name = "".
+        
+        if first-of (tt-rep1.exp-td-fact-date) then 
+        do: 
+            v-fact-qnty = 0.
+            v-liters = 0.
+            v-name = "".
             
-            end.
-            v-name = tt-rep1.exp-alc-type-name.
-            v-liters =  tt-rep1.exp-volume-piece-litres.
-         
-                  v-fact-qnty = v-fact-qnty + tt-rep1.exp-fact-qnty.
-           
-                                                   
-     
-            if last-of (tt-rep1.exp-alc-type-code)  then  
-            do:
-                            itog_ii = itog_ii + 1 .
-                
-                find first buf_itog  where  
-                    buf_itog.exp-alc-type-code =  tt-rep1.exp-alc-type-code  and 
-                    buf_itog.obj-code =  obj-list.obj-code and 
-                    buf_itog.obj-type = obj-list.obj-type and 
-                    buf_itog.exp-volume-piece-litres = 0 
-                    and 
-                    buf_itog.cnt-line  = 0 no-lock no-error .
-                if not  available buf_itog then 
-                do: 
-             
-                    create buf_itog.
-                    assign 
-                       buf_itog.exp-volume-piece-litres = 0
-                        buf_itog.exp-alc-type-code = tt-rep1.exp-alc-type-code 
-                        buf_itog.obj-code          = obj-list.obj-code  
-                        buf_itog.obj-type          = obj-list.obj-type
-                        buf_itog.cnt-line          = 0 .
-         
-                end.
-                buf_itog.itog_ii = itog_ii .
-                buf_itog.exp-alc-type-name     = tt-rep1.exp-alc-type-name.
-                buf_itog.exp-volume-piece-litres =  v-liters.
-         buf_itog.exp-fact-qnty  =  v-fact-qnty .
-                
-            end.
-           
-                    
         end.
+        
+        v-name = tt-rep1.exp-name.
+        v-liters =  tt-rep1.exp-volume-piece-litres.
+      v-fact-qnty = v-fact-qnty + tt-rep1.exp-fact-qnty.        
+  
+         
+        if last-of ( tt-rep1.exp-td-fact-date )  then  
+        do:
+            itog_ii = itog_ii + 1 .
+            find first buf_itog  where  
+                buf_itog.gds-code  =  tt-rep1.gds-code   and 
+                buf_itog.obj-code =  obj-list.obj-code and 
+                buf_itog.obj-type = obj-list.obj-type and
+                buf_itog.exp-volume-piece-litres = 0
+                and
+                buf_itog.exp-td-fact-date = tt-rep1.exp-td-fact-date 
+                and
+                buf_itog.cnt-line  = 0 no-lock no-error .
+                    
+            if not  available buf_itog then 
+            do: 
+             
+                create buf_itog.
+                assign 
+                    buf_itog.exp-td-fact-date        = tt-rep1.exp-td-fact-date
+                    buf_itog.exp-volume-piece-litres = 0
+                    buf_itog.gds-code                = tt-rep1.gds-code
+                    buf_itog.obj-code                = obj-list.obj-code  
+                    buf_itog.obj-type                = obj-list.obj-type
+                    buf_itog.cnt-line                = 0 .
+            end.
+            buf_itog.exp-name    =  v-name.
+            buf_itog.itog_ii = itog_ii .
+            buf_itog.exp-alc-type-code = tt-rep1.exp-alc-type-code.
+            buf_itog.exp-volume-piece-litres =  v-liters.
+            buf_itog.exp-fact-qnty  =  v-fact-qnty .
+        end.
+     
+    end.
       
      
                 run fmtcli-get-client in this-procedure (
@@ -1000,15 +1000,16 @@ define variable var-type as char.
             .
         output stream OutStr-html close.
     end.
-
-define variable n_itog as integer.
-define variable n as integer init 0.
+define variable p-number as integer init 0.
+    define variable n_itog as integer.
+    define variable n      as integer init 0.
     do:
         output stream OutStr-html to value(v-file-name-rep-htm) append convert target 'UTF-8'.
-
-        for each buf_tt no-lock where buf_tt.obj-code = p-obj-code and buf_tt.obj-type = p-obj-type  and   buf_tt.cnt-line <> 0 break by buf_tt.exp-td-fact-date  by buf_tt.exp-time :
-            n = n + 1 .
+        for each buf_tt no-lock where buf_tt.obj-code = p-obj-code and buf_tt.obj-type = p-obj-type  and  buf_tt.cnt-line <> 0  break by buf_tt.exp-td-fact-date   by buf_tt.exp-time  :
+            
             v-exp-volume-piece-litres = if buf_tt.exp-volume-piece-litres = 0 and buf_tt.exp-fact-qnty = 0 then "" else fnc-fmt-dec-tc-litres(buf_tt.exp-volume-piece-litres).
+            n = n + 1 .
+            
             put stream OutStr-html unformatted
                 '       <tr>' skip
                 '         <td style="display: yes; text-align: right;">'  +  string(n) + '</td>' skip
@@ -1024,52 +1025,50 @@ define variable n as integer init 0.
 /*            if last-of (buf_tt.exp-td-fact-date) then                                                                                                                                                                                               */
 /*            do:                                                                                                                                                                                                                                     */
 /*                                                                                                                                                                                                                                                    */
-              end.
               
-                              for each  buf_tt-itog-lvl where buf_tt-itog-lvl.obj-code = p-obj-code  and buf_tt-itog-lvl.obj-type = p-obj-type  and buf_tt-itog-lvl.cnt-line = 0  : 
-                                  
-                                 n_itog = n_itog + 1 .
-                                 end.
-                                 
-                  put stream OutStr-html unformatted
-
-   '       <tr style = "height:60px;">' skip
+              
+               if last-of (buf_tt.exp-td-fact-date) then 
+            do: 
+        for each buf_tt-itog-lvl where buf_tt-itog-lvl.obj-code = p-obj-code  and buf_tt-itog-lvl.obj-type = p-obj-type  and buf_tt-itog-lvl.cnt-line = 0 and  buf_tt-itog-lvl.exp-td-fact-date = buf_tt.exp-td-fact-date :
+            p-number = p-number + 1.
+            end.
+        
+        
+        
+    
+        put stream OutStr-html unformatted
+    
+            '       <tr">' skip
                     
                         
-                        '         <td rowspan = "' +   string(n_itog) +  '"   colspan = "3" style="display: yes; vertical-align:  middle; font-weight: bold; text-align:  right;"> ИТОГО</td>' skip
-                 
-               .
-              
-              
-                for each buf_tt-itog where buf_tt-itog.obj-code = p-obj-code  and buf_tt-itog.obj-type = p-obj-type  and buf_tt-itog.cnt-line = 0 break by buf_tt-itog.exp-td-fact-date: 
-        
-    
-    
-                   put stream OutStr-html unformatted
-                        
+            '         <td rowspan = "' +   string(p-number) +  '"   colspan = "3" style="display: yes; vertical-align:  middle; font-weight: bold; text-align:  right;"> ИТОГО</td>' skip
+            .
                          
-                        
-                        '         <td text_wrap="true" style="display: yes; font-weight: bold; text-align: left;">'  +    buf_tt-itog.exp-alc-type-name  + '</td>'  skip
-                        '         <td style="display: yes; font-weight: bold; text-align:  right;">'  +      buf_tt-itog.exp-alc-type-code  + '</td>'  skip
-                        '         <td style="display: yes; font-weight: bold; text-align:  right;"></td>'  skip
-                        '         <td style="display: yes; font-weight: bold; text-align:  right;">'  +       if buf_tt-itog.exp-fact-qnty = 0 and buf_tt-itog.exp-volume-piece-litres = 0 then ""  else string(fnc-fmt-dec-tc-qnty(buf_tt-itog.exp-fact-qnty))     + '</td>'  skip
-                        '</tr>' skip
-                        .
-            end.
+        for each buf_tt-itog where buf_tt-itog.obj-code = p-obj-code  and buf_tt-itog.obj-type = p-obj-type  and buf_tt-itog.exp-td-fact-date =  buf_tt.exp-td-fact-date  and  buf_tt-itog.cnt-line = 0:  
+            put stream OutStr-html unformatted               
+                '         <td text_wrap="true" style="display: yes; font-weight: bold; text-align: left;">'  +    buf_tt-itog.exp-name  + '</td>'  skip
+                '         <td style="display: yes; font-weight: bold; text-align:  right;">'  +      buf_tt-itog.exp-alc-type-code  + '</td>'  skip
+                '         <td style="display: yes; font-weight: bold; text-align:  right;"></td>'  skip
+                '         <td style="display: yes; font-weight: bold; text-align:  right;">'  +       if buf_tt-itog.exp-fact-qnty = 0 and buf_tt-itog.exp-volume-piece-litres = 0 then ""  else string(fnc-fmt-dec-tc-qnty(buf_tt-itog.exp-fact-qnty))  + '</td>'  skip
+                '</tr>' skip
+                .
+        end.
+    end.
+    p-number = 0.
+end.
     
         
     
-    
-    end.
-    do: 
-        put stream OutStr-html unformatted  
-            '</tbody>'
-            '   </table>' skip
-            '  </body>' skip
-            ' </html>' skip
-            . /* Точка для закрытия Put */
-        output stream OutStr-html close.
-    end.
+end.
+do: 
+    put stream OutStr-html unformatted  
+        '</tbody>'
+        '   </table>' skip
+        '  </body>' skip
+        ' </html>' skip
+        . /* Точка для закрытия Put */
+    output stream OutStr-html close.
+end.
     
 end procedure.
 
