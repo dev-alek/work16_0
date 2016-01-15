@@ -68,6 +68,7 @@ define variable vss-description as character no-undo init "Документ производства
 { cmp/showinf.i  }
 { gbl/userobjs.i }
 { gbl/fltopend.i defproc }
+{ ref/gds-attr.i }
 
 define shared variable br-handle as handle no-undo.
 define shared buffer f-doc      for ub.fbr-doc.
@@ -152,7 +153,7 @@ buf_comp_fbr-line.price-sum-vat-rubl
 
 
 /* Definitions for BROWSE br-ingr                                       */
-&Scoped-define FIELDS-IN-QUERY-br-ingr buf_ingr_fbr-line.artic buf_ingr_fbr-line.recipe-code get-goods-name(recid(buf_ingr_fbr-line)) @ ingr-name buf_ingr_fbr-line.trn-type get-line-OK(recid(buf_comp_fbr-line)) @ ingr-OK buf_ingr_fbr-line.fact-qnty get-unit-base(recid(buf_comp_fbr-line)) @ ingr-unit buf_ingr_fbr-line.is-calc buf_ingr_fbr-line.price-sale buf_ingr_fbr-line.fix-cost buf_ingr_fbr-line.coeff-waste buf_ingr_fbr-line.coeff-value get-netto-qnty(recid(buf_comp_fbr-line)) @ ingr-netto buf_ingr_fbr-line.price-base buf_ingr_fbr-line.price-sum-base buf_ingr_fbr-line.price-sum-vat-base buf_ingr_fbr-line.price-rubl buf_ingr_fbr-line.price-sum-rubl buf_ingr_fbr-line.price-sum-vat-rubl buf_ingr_fbr-line.rsrv-qnty get-prod-ref(recid(buf_comp_fbr-line)) @ ingr-prod   
+&Scoped-define FIELDS-IN-QUERY-br-ingr buf_ingr_fbr-line.artic buf_ingr_fbr-line.recipe-code get-goods-name(recid(buf_ingr_fbr-line)) @ ingr-name buf_ingr_fbr-line.trn-type get-line-OK(recid(buf_comp_fbr-line)) @ ingr-OK buf_ingr_fbr-line.fact-qnty get-unit-base(recid(buf_ingr_fbr-line)) @ ingr-unit buf_ingr_fbr-line.is-calc buf_ingr_fbr-line.price-sale buf_ingr_fbr-line.fix-cost buf_ingr_fbr-line.coeff-waste buf_ingr_fbr-line.coeff-value get-netto-qnty(recid(buf_comp_fbr-line)) @ ingr-netto buf_ingr_fbr-line.price-base buf_ingr_fbr-line.price-sum-base buf_ingr_fbr-line.price-sum-vat-base buf_ingr_fbr-line.price-rubl buf_ingr_fbr-line.price-sum-rubl buf_ingr_fbr-line.price-sum-vat-rubl buf_ingr_fbr-line.rsrv-qnty get-prod-ref(recid(buf_comp_fbr-line)) @ ingr-prod   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-ingr buf_ingr_fbr-line.is-calc ~
 buf_ingr_fbr-line.fix-cost ~
 buf_ingr_fbr-line.fact-qnty ~
@@ -479,7 +480,7 @@ DEFINE BROWSE br-ingr
       buf_ingr_fbr-line.trn-type                                format "X(3)"               column-label "Тип"
       get-line-OK(recid(buf_comp_fbr-line)) @ ingr-OK           format "+/-"                column-label "OK"
       buf_ingr_fbr-line.fact-qnty                               format ">>>>>9.999"         column-label "Брутто"
-      get-unit-base(recid(buf_comp_fbr-line)) @ ingr-unit       format "X(3)"               column-label "Изм"
+      get-unit-base(recid(buf_ingr_fbr-line)) @ ingr-unit       format "X(3)"               column-label "Изм"
       buf_ingr_fbr-line.is-calc                                 format "*/-"                column-label "Ф"
       buf_ingr_fbr-line.price-sale                              format ">>,>>>,>>9.<<"      column-label "Цена продажи"
       buf_ingr_fbr-line.fix-cost                                format "*/-"                column-label "Ф"
@@ -4783,7 +4784,7 @@ case comp-sort-column-name :
     when "comp-unit"
     then do:
         assign
-            comp-sort-column-phrase = "by get-unit-base(recid(buf_comp_fbr-line))"
+            comp-sort-column-phrase = "by (recid(buf_comp_fbr-line))"
         .
     end.
     when "comp-name"
@@ -4894,7 +4895,7 @@ case ingr-sort-column-name :
     when "ingr-unit"
     then do:
         assign
-            ingr-sort-column-phrase = "by get-unit-base(recid(buf_ingr_fbr-line))"
+            ingr-sort-column-phrase = "by (recid(buf_ingr_fbr-line))"
         .
     end.
     when "ingr-name"
@@ -5840,7 +5841,7 @@ FUNCTION get-prod-ref RETURNS CHARACTER
         , output v-prog-string
     ).
     return v-prog-string.
-
+  
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
