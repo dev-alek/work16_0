@@ -808,7 +808,6 @@ g#rep-tblname = ""
 g#rep-tblrid = -101
 g#rep-updflds = string( "Отчет о выручке|" + str1 ) .
 */
-
 &if "{1}" = "tot" &then
 run prn-lib-prn-file in this-procedure (
                                           input parParentProc
@@ -817,7 +816,7 @@ run prn-lib-prn-file in this-procedure (
 &else
 run prn-lib-prn-file in this-procedure (
                                           input parParentProc
-                                          ,input 9
+                                          ,input 0
                                           ).
 
 &endif
