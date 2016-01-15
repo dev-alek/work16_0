@@ -2062,7 +2062,7 @@ procedure validate-trn-doc :
     define variable l-goods-twounit     as logical no-undo .
     define variable v-root-node         like ub.gds-prt.node-code no-undo .
 
-
+/* run gbl\inidebug.p. */
     for each buf_doc-line no-lock
       where buf_doc-line.doc-code = ub.trn-doc.doc-code
     on error undo, return error return-value
@@ -2803,9 +2803,12 @@ procedure validate-trn-doc :
             if buf_parts.in-code = buf_parts.out-code
             then do:
               /* проверяем параметры партии, порожденной не внешним приходом */
+       
               if buf_parts.supp-type <> { trg/partsprm.i "supp-type" "ub.trn-doc." }
               or buf_parts.supp-code <> { trg/partsprm.i "supp-code" "ub.trn-doc." }
               then do:
+                
+                      
                 /* поставщика можно менять только для партий возврата
                   для документа внешнего возврата и документа инвентаризации
                 */
@@ -2918,6 +2921,7 @@ procedure validate-trn-doc :
                 undo, return error return-value .
               end.
             end.
+         end.
 
             if g#news = false
             then do:
@@ -2969,8 +2973,8 @@ procedure validate-trn-doc :
                   undo, return error return-value .
                 end.
               end.
-            end.
-          end.
+            
+         end. 
 
           define variable v-reason       as character no-undo .
           define variable l-process-part as logical no-undo .
