@@ -37,9 +37,9 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
 <wa:WBRegId>&5</wa:WBRegId>~
 <wa:Note>Принимаем продукцию</wa:Note>~
 </wa:Header>~
-<wa:Content>&6</wa:Content>'
+<wa:Content>'
 
-&scop xml-act-2 '</ns:WayBillAct>~
+&scop xml-act-2 '</wa:Content></ns:WayBillAct>~
 </ns:Document>~
 </ns:Documents>'
 
@@ -323,10 +323,15 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIndenty and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
             if not available (buf_clob-bind) then 
             do:
-              Msg = "Не найдена накладная с идентификатором " + inWbIndenty.
-              StatusErr = true.
-              return ?.
+              find first buf_clob-bind exclusive-lock where num-entries (inWbIndenty, {&delim-cmd}) = 4 and entry (1, buf_clob-bind.uniq-key-rec, {&delim-cmd}) = entry (4, inWbIndenty, {&delim-cmd}) and entry (2, buf_clob-bind.uniq-key-rec, {&delim-cmd}) = entry (3, inWbIndenty, {&delim-cmd}) and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
+              if not available (buf_clob-bind) then 
+              do:
+                Msg = "Не найдена накладная с идентификатором " + inWbIndenty.
+                StatusErr = true.
+                return ?.
+              end.
             end.
+            v-uniq-key-rec = buf_clob-bind.uniq-key-rec.
             find first buf_clob-data exclusive-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
 
             ParseResponse("", inTableType).
@@ -373,8 +378,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 then tt-wb-gds-EG.gds-code = ub.ext-classif.Key#_One.
               else tt-wb-gds-EG.gds-code = ?.
             end.
-            v-uniq-key-rec = inWbIndenty.
-            find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIndenty and buf_clob-bind.field-name_ = {&lob-egais-ref-b} no-error.
+/*            v-uniq-key-rec = inWbIndenty.*/
+            find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-ref-b} no-error.
             if available (buf_clob-bind) then 
             do:
               find first buf_clob-data exclusive-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.

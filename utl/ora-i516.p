@@ -265,16 +265,38 @@ for each  temp_trn-doc :
                   undo, return error v-end-message.
      end.
 
+
     find first buf_contract no-lock where
+               not (is-egais or is-tsd) and
                temp_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
                buf_contract.contract-code =  temp_trn-doc.cli-code and
-               buf_contract.host-code     =  temp_trn-doc.host-code no-error .
+               buf_contract.host-code     =  temp_trn-doc.host-code 
+               no-error .
+
    if not available  buf_contract then do:
       temp_trn-doc.contract-code =  0 .
    end.
    else do:
       temp_trn-doc.contract-code =  buf_contract.contract-code .
    end.
+    
+    def var ii as int no-undo.
+    for each buf_contract no-lock where
+           is-egais and
+           temp_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+           buf_contract.cli-code =  temp_trn-doc.cli-code and
+           buf_contract.cli-code =  temp_trn-doc.cli-code and
+           buf_contract.host-code =  temp_trn-doc.host-code 
+           :
+      ii = ii + 1.
+      temp_trn-doc.contract-code =  buf_contract.contract-code .
+      if ii > 1 then do:
+        temp_trn-doc.contract-code =  0 .
+        leave.
+      end.
+    end.
+
+
    v-specif = false .
 
    if temp_trn-doc.contract-code  > 0 then do:
@@ -289,7 +311,6 @@ for each  temp_trn-doc :
       .
 
    end.
-
 
    if temp_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
       if available buf_contract then do:
@@ -486,7 +507,7 @@ assign
       tt-trn-doc.office               = false
       tt-trn-doc.fact-num             = 0
       tt-trn-doc.out-code             = temp_trn-doc.doc-code
-      tt-trn-doc.PS                   = substitute("&1 &2 &3 &5&4 ", temp_trn-doc.doc-code , string(temp_trn-doc.doc-date, "99/99/9999") , temp_trn-doc.creid ,temp_trn-doc.ps ,{&new-line} )
+      tt-trn-doc.PS                   = if not is-egais then substitute("&1 &2 &3 &5&4 ", temp_trn-doc.doc-code , string(temp_trn-doc.doc-date, "99/99/9999") , temp_trn-doc.creid ,temp_trn-doc.ps ,{&new-line} ) else ""
       tt-trn-doc.creid                = v-cntxt-userid
       tt-trn-doc.flag_                = false
       tt-trn-doc.ext-doc-type         = v-ext-doc-type
@@ -786,29 +807,48 @@ assign
           v-root-node
           }
         k = k + 1  .
-        create tt2-doc-line .
-        BUFFER-COPY temp_doc-line  to tt2-doc-line
+        find first tt2-doc-line where 
+          tt2-doc-line.artic = temp_doc-line.artic and
+          tt2-doc-line.prod-code = temp_doc-line.prod-code and
+          tt2-doc-line.prod-type = temp_doc-line.prod-type no-error.
+        
+        if not available (tt2-doc-line)
+        then do:
+          create tt2-doc-line .
+          BUFFER-COPY temp_doc-line  to tt2-doc-line
+            assign
+              tt2-doc-line.cli-qnty       = temp_doc-line.fact-qnty
+              tt2-doc-line.doc-qnty       = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty
+              tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty
+              tt2-doc-line.price-cli      = temp_doc-line.price-cli
+              tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
+              tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
+  
+              tt2-doc-line.doc-code       = n-d
+              tt2-doc-line.status_        = "temp"
+              tt2-doc-line.ext-doc-type   = v-ext-doc-type
+              tt2-doc-line.slt-pc         = 0
+              tt2-doc-line.cli-base-rate  = 1
+              tt2-doc-line.line-num       = next-value (s-line-num, {&db-name_schema})
+              tt2-doc-line.prt-root       = buf_goods.prt-root
+              tt2-doc-line.unit-cli       = buf_goods.unit-base
+              tt2-doc-line.doc-density    = 1 / tt2-doc-line.cli-base-rate
+              tt2-doc-line.fact-density   = 1 / tt2-doc-line.cli-base-rate
+              tt2-doc-line.obj-code       = tt-trn-doc.obj-code
+              tt2-doc-line.obj-type       = tt-trn-doc.obj-type
+              .
+        end.
+        else do:
           assign
-            tt2-doc-line.cli-qnty       = temp_doc-line.fact-qnty
-            tt2-doc-line.doc-qnty       = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty
-            tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty
-            tt2-doc-line.price-cli      = temp_doc-line.price-cli
+            tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + temp_doc-line.fact-qnty
+            tt2-doc-line.doc-qnty       = tt2-doc-line.doc-qnty + if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty
+            tt2-doc-line.fact-qnty      = tt2-doc-line.fact-qnty + temp_doc-line.fact-qnty
+/*            tt2-doc-line.price-cli      = temp_doc-line.price-cli
             tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
-            tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
-
-            tt2-doc-line.doc-code       = n-d
-            tt2-doc-line.status_        = "temp"
-            tt2-doc-line.ext-doc-type   = v-ext-doc-type
-            tt2-doc-line.slt-pc         = 0
-            tt2-doc-line.cli-base-rate  = 1
-            tt2-doc-line.line-num       = next-value (s-line-num, {&db-name_schema})
-            tt2-doc-line.prt-root       = buf_goods.prt-root
-            tt2-doc-line.unit-cli       = buf_goods.unit-base
-            tt2-doc-line.doc-density    = 1 / tt2-doc-line.cli-base-rate
-            tt2-doc-line.fact-density   = 1 / tt2-doc-line.cli-base-rate
-            tt2-doc-line.obj-code       = tt-trn-doc.obj-code
-            tt2-doc-line.obj-type       = tt-trn-doc.obj-type
+            tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale*/
             .
+      end.
+        
         if is-egais
         then do:
           create tt-doc-line-attr.
@@ -825,8 +865,14 @@ assign
             tt-doc-line-attr.gds-code = temp_doc-line.gds-code
             tt-doc-line-attr.attr-value = temp_doc-line.RefB
           .
-          if temp_doc-line.importer-th <> "" and temp_doc-line.importer-th <> ? then do:
-            
+          if temp_trn-doc.contract-code > 0 then do:
+            find first ub.contract-specif no-lock where
+                        ub.contract-specif.gds-code = temp_doc-line.gds-code and
+                        ub.contract-specif.contract-num = temp_trn-doc.contract-code and
+                        ub.contract-specif.host-code     = temp_trn-doc.host-code no-error .
+            if available (ub.contract-specif) then do:
+              tt2-doc-line.VAT-pc = ub.contract-specif.VAT-pc.
+            end.
           end.
         end.
         
@@ -898,6 +944,7 @@ assign
             find first temp_doc-line no-lock where temp_doc-line.artic = tt-parts.artic
               and temp_doc-line.prod-code = tt-parts.prod-code
               and temp_doc-line.prod-type = tt-parts.prod-type no-error.
+            tt-parts.alc-ref-ab-path = temp_doc-line.refA + ',' + temp_doc-line.refB.
             if temp_doc-line.importer <> "" then do:
               tt-parts.alc-imp-type = substring (temp_doc-line.importer-th, 1, 3).
               tt-parts.alc-imp-code = integer (substring (temp_doc-line.importer-th, 4, 2)).
