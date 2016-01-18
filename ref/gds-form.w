@@ -2801,11 +2801,16 @@ if mode = {&add-def} then do:
       do :
         create ub.alc-type-gds.       
       end.
+      else do:
+        delete ub.alc-type-gds.
+        create ub.alc-type-gds.     
+      end.   
       assign
         ub.alc-type-gds.gds-code            = ub.goods.gds-code
         ub.alc-type-gds.alc-type-inner-code = temp-goods.alc-choose-prod
         ub.alc-type-gds.create-user-db-num  = 0
-        .         
+        ub.alc-type-gds.create-date = today
+        .  
       end. /*if temp-goods.alc-prod = yes then */   
    end. /*else do:*/
 end. /*if mode = {&add-def} then do:*/
@@ -2871,10 +2876,15 @@ find first goods share-lock where recid(goods) = gds-rec .
       do :
         create ub.alc-type-gds.       
       end.
+      else do:
+        delete ub.alc-type-gds.
+        create ub.alc-type-gds.     
+      end.  
       assign
         ub.alc-type-gds.gds-code            = ub.goods.gds-code
         ub.alc-type-gds.alc-type-inner-code = temp-goods.alc-choose-prod
         ub.alc-type-gds.create-user-db-num  = 0
+        ub.alc-type-gds.create-date = today
         .                
 
  end.

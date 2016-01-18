@@ -3,6 +3,8 @@
 $Revision$
 $Author$
 $Date$
+$Workfile$
+$Archive$
 
 Списки таблиц по типам маршрутизации
 
@@ -364,10 +366,6 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,c-alc-supp-lic-attr~
 ,alc-supp-lic-type~
 ,c-alc-supp-lic-type~
-,alc-type~
-,c-alc-type~
-,alc-type-attr~
-,c-alc-type-attr~
 ,alc-type-gds~
 ,c-alc-type-gds~
 ,contract~
@@ -392,8 +390,6 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,thbj-attr~
 ,edi-status~
 ":U.
-/*,alc-type-gds~
-,c-alc-type-gds~*/
 
 /*---------------------------------------------------------------------------------------------*/
 
