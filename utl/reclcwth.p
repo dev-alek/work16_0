@@ -86,6 +86,8 @@ for each ub.wth-doc where ub.wth-doc.host-code = varhost-code and
     run waitfram-show in this-procedure ("Пересчитываем остатки по документу " + ub.wth-doc.doc-code + " .").
     run str/stkotwth.p (input recid(ub.wth-doc), input yes, input yes, input 0) no-error.
     if error-status:error then undo tr, return error.
+    
+    
 end.
 end.
 run waitfram-hide in this-procedure .

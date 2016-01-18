@@ -64,7 +64,7 @@ define variable v-gds-price-rubl    as decimal      no-undo.
 define variable v-gds-price-base    as decimal      no-undo.
 
 define temp-table temp-wth-line no-undo like ub.wth-line.
-
+/* run gbl\inidebug.p. */ 
 find first bf_wth-doc where recid(bf_wth-doc) = parrec_wth-doc no-error.
 if not available bf_wth-doc then do:
    return error
@@ -111,6 +111,7 @@ on quit  undo, return error "Ошибка при подсчете оборотов и остатков в файле stk
     assign
     temp-wth-line.fact-sum = temp-wth-line.fact-sum + bf_wth-line.fact-sum
     temp-wth-line.doc-sum = temp-wth-line.doc-sum + bf_wth-line.doc-sum
+    temp-wth-line.aft-sum = temp-wth-line.aft-sum + bf_wth-line.aft-sum
     .
     release temp-wth-line.
   end.
@@ -156,7 +157,6 @@ on quit  undo, return error "Ошибка при подсчете оборотов и остатков в файле stk
           {3} - буфер линии документа
           {4} - суффикс полей
             */
-
             { str/stkotwth.i bf_wth-line. bf_wth-obj. temp-wth-line.}
          end.
          else do:
@@ -189,7 +189,8 @@ on quit  undo, return error "Ошибка при подсчете оборотов и остатков в файле stk
       /*записываем в историю старое значение остатков*/
       if p-wth-doc-close = true
       then do:
-        /*для действия удаления мы пишем историю в процедуре болеее выского уровня - reclcwth.p*/
+       /*    
+        /* для действия удаления мы пишем историю в процедуре болеее выского уровня - reclcwth.p */
         run wth-pobj-hist in this-procedure (
                                               buffer bf_wth-pobj
                                             ,input bf_wth-pobj.obj-type
@@ -222,6 +223,7 @@ on quit  undo, return error "Ошибка при подсчете оборотов и остатков в файле stk
                                             ,input bf_wth-doc.sys-time-int
                                             ,input bf_wth-doc.sys-time
                                             ).
+                                            */
       end.
       /*Считаем их текущими на объекте*/
       if last-of(bf_wth-line.wth-code) then do:
@@ -233,7 +235,7 @@ on quit  undo, return error "Ошибка при подсчете оборотов и остатков в файле stk
         bf_wth-obj.incass-cassa     = bf_wth-line.incass-cassa
         bf_wth-obj.income-cassa     = bf_wth-line.income-cassa
         bf_wth-obj.income-other     = bf_wth-line.income-other
-        .
+        .  
       end.
       assign
       bf_wth-pobj.incass-pl       = bf_wth-line.incass-pl
