@@ -28,16 +28,25 @@ if lookup (bf_wth-doc.ext-doc-type, {&WDEDT_List-Income}) > 0   OR
    (bf_wth-doc.ext-doc-type = {&WDEDT_Inv} AND {3}fact-sum > 0) or
    lookup (bf_wth-doc.ext-doc-type, {&WDEDT_List-Return}) > 0   or
    (bf_wth-doc.ext-doc-type = {&WDEDT_Exch} ) then do:
-   assign
-   {1}income{4}       = {2}income{4} + {3}fact-sum.
-   if bf_wth-doc.ext-doc-type = {&WDEDT_Cas_Inc} then
-   assign
-      {1}income-cassa{4} = {2}income-cassa{4} + {3}fact-sum
-      {1}income-other{4} = {2}income-other{4}.
-   else
-   assign
-      {1}income-other{4} = {2}income-other{4} + {3}fact-sum
-      {1}income-cassa{4} = {2}income-cassa{4}.
+       if bf_wth-doc.ext-doc-type = {&WDEDT_Inv} and bf_wth-doc.doc-code begins '1-' then do:
+            assign 
+              {1}income{4}       = {2}income{4} +  {3}aft-sum
+              {1}income-other{4} = {2}income-other{4} + {3}aft-sum
+              {1}income-cassa{4} = 0.
+             
+              end.
+       else do:
+           assign
+           {1}income{4}       = {2}income{4} + {3}fact-sum.
+           if bf_wth-doc.ext-doc-type = {&WDEDT_Cas_Inc} then
+           assign
+              {1}income-cassa{4} = {2}income-cassa{4} + {3}fact-sum
+              {1}income-other{4} = {2}income-other{4}.
+           else
+           assign
+              {1}income-other{4} = {2}income-other{4} + {3}fact-sum
+              {1}income-cassa{4} = {2}income-cassa{4}.
+      end.
    assign {1}incass{4}       = {2}incass{4}
           {1}incass-bank{4}  = {2}incass-bank{4}
           {1}incass-other{4} = {2}incass-other{4}
@@ -48,7 +57,17 @@ else do:
         or (bf_wth-doc.ext-doc-type = {&WDEDT_Inv} AND {3}fact-sum <= 0)
         and bf_wth-doc.ext-doc-type <> {&WDEDT_Dst_Cli} then do:
         if bf_wth-doc.ext-doc-type = {&WDEDT_Inv} then do:
-         assign
+
+            if bf_wth-doc.doc-code begins '1-' then do:
+            assign 
+              {1}incass{4}       = {2}incass{4}       - {3}aft-sum
+              {1}incass-other{4} = {2}incass-other{4} - {3}aft-sum
+              {1}incass-cassa{4} = 0
+              {1}incass-bank{4}  = 0.
+          
+              end.
+         else 
+             assign
               {1}incass{4}       = {2}incass{4}       - {3}fact-sum
               {1}incass-other{4} = {2}incass-other{4} - {3}fact-sum
               {1}incass-cassa{4} = {2}incass-cassa{4}

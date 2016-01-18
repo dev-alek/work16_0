@@ -4615,15 +4615,13 @@ define variable v-ref-list  as character  no-undo.
 
    t-ret =  session:set-wait-state("general") .
    line-mode = {&add-def} .
-
-define buffer buf_contract-specif for ub.contract-specif  .
  _tt:  for each tt-gds-list :
      ii = ii + 1 .
      if ii > 1 then assign line-mode = "ЦИКЛ":u.
         /* Подключаем инклудник для поиска подчиненных договоров  */
         {str/cont-slave-inc.i
              &FIND_FIRST = YES
-             &BUFFER_SPECIF = buf_contract-specif
+             &BUFFER_SPECIF = contract-specif
              &P_HOST_CODE = v-cntxt-host-code-obj
              &P_CONTRACT_NUM = loc-contract
              &P_GDS_CODE = tt-gds-list.gds-code
@@ -4639,9 +4637,10 @@ define buffer buf_contract-specif for ub.contract-specif  .
 
       */
 
-     if /*v-mastc and */ available buf_contract-specif then do:
+     if /*v-mastc and */ available contract-specif then do:
+       
           run create-tmp in this-procedure  (input "contract-spec":u, "" ) no-error .
-     end.
+     end. 
      else run create-tmp in this-procedure  (input "tt-gds-list":u, "" ) no-error .
      if error-status :error then message
        vss-workfile vss-revision vss-description skip
@@ -5072,16 +5071,16 @@ end.
       input   {&income}       ,
       input-output p-rid-list )
       .
-
-find first buff_contract no-lock where recid(buff_contract) = integer(p-rid-list) no-error .
-    if available buff_contract then
-       loc-contract        =  buff_contract.contract-code .
-       else loc-contract   = 0.
-   display loc-contract with frame {&frame-name}.
-
-  run from-contract no-error .
-  if error-status :error then return error return-value .
-
+    if p-rid-list > '' then do:
+    find first buff_contract no-lock where recid(buff_contract) = integer(p-rid-list) no-error .
+        if available buff_contract then
+           loc-contract        =  buff_contract.contract-code .
+           else loc-contract   = 0.
+       display loc-contract with frame {&frame-name}.
+    
+      run from-contract no-error .
+      if error-status :error then return error return-value .
+    end.
  end. /* do */
 end procedure. /* r-contract-choose */
 

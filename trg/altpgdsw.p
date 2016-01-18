@@ -27,9 +27,10 @@ define variable vss-description as character no-undo init "Триггер ".
 define variable v-field-chg as character no-undo .
 define variable v-date      as date      no-undo .
 define variable v-time      as integer   no-undo .
-
+  
 define buffer bf_c-alc-type-gds for ub.c-alc-type-gds .
 define buffer buf_sys-ctrl   for ub.sys-ctrl .
+define buffer buf_alc-type-gds for ub.alc-type-gds .
 
 { cmp/vssrevis.i "substitute('&1|&2|&3':u, ub.alc-type-gds.alc-type-inner-code, ub.alc-type-gds.create-user-db-num, ub.alc-type-gds.gds-code)" }
 { cmp/trg-def.i } /* глобальности для триггеров */
@@ -75,7 +76,14 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
          /*bf_c-alc-type-gds.action           = integer(if new(ub.alc-type-gds) then {&hn-create} else {&hn-update})*/
       .
    end.
-
+   
+    if g#db-num <> 0 then do:
+     for each buf_alc-type-gds where buf_alc-type-gds.gds-code = ub.alc-type-gds.gds-code 
+                                 and recid(buf_alc-type-gds) <> recid(ub.alc-type-gds):
+     delete buf_alc-type-gds.
+     end.                                    
+    end.  
+   
    run str/callnews.p
       (input {&table_alc-type-gds}
       ,input (buffer ub.alc-type-gds:handle)

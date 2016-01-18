@@ -58,6 +58,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       buf_c-alc-type-gds.corr-user-db-num    = buf_sys-ctrl.db-num
       buf_c-alc-type-gds.corr-user-name      = g#userid
    .
+
+if g#news then do: 
    run nws/cmd-del.p
       ( input "alc-type-gds":U
       ,input (buffer ub.alc-type-gds:handle)
@@ -70,7 +72,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       .
       return error v-message .
    end.
-
+end.
    if g#oxml = yes
    then do:
    run str/calloxml.p (

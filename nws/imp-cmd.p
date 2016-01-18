@@ -853,6 +853,14 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 delete ub.prod-bc.
               end.
             end.
+            when {&table_fin-code-cor-acc} then do:
+              find first ub.fin-code-cor-acc
+                where rowid( ub.fin-code-cor-acc ) = v-tbl-row
+                no-error.
+              if available ub.fin-code-cor-acc then do:
+                delete ub.fin-code-cor-acc.
+              end.
+            end.
             when {&table_tax-rate-gds} then do:
               find first ub.tax-rate-gds
                 where rowid( ub.tax-rate-gds ) = v-tbl-row

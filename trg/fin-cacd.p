@@ -67,8 +67,16 @@ if available sysconf
       view-as alert-box error .
     undo main-block, return error .
   end.
-
-
+ if not g#news then do:
+    run nws/cmd-del.p
+      ( input "fin-code-cor-acc":U
+       ,input (buffer ub.fin-code-cor-acc:handle)
+       ,input "":U
+      ) no-error .
+    if error-status :error then do:
+      undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+    end.
+   end.  
     if g#oxml = yes
     then do:
     run str/calloxml.p (
