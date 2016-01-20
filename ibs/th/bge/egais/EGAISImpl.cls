@@ -60,6 +60,10 @@ class ibs.th.bge.egais.EGAISImpl:
 
   end.
   
+  method public void ConnWB (inArg as char, inArg1 as char):
+
+  end.
+ 
   method protected logical GetIsSent ():
 
   end.

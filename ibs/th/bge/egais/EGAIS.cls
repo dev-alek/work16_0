@@ -114,7 +114,7 @@ class ibs.th.bge.egais.EGAIS:
     return tth.
   end.
 
-  method public void SaveWB (inArg as char): /*получить хендл на таблицу с различными в зависимости от реализации сущностями egais. если не успешно возвращает ?*/
+  method public void SaveWB (inArg as char): /**/
     define variable tth as handle no-undo.
     assign
       StatusErr = false
@@ -126,12 +126,24 @@ class ibs.th.bge.egais.EGAIS:
       .
   end.
 
-  method public void RejectWB (inArg as char): /*получить хендл на таблицу с различными в зависимости от реализации сущностями egais. если не успешно возвращает ?*/
+  method public void RejectWB (inArg as char): /**/
     define variable tth as handle no-undo.
     assign
       StatusErr = false
       Msg       = "".
     EGAISImpl:RejectWB(inArg).
+    assign
+      Msg       = EGAISImpl:Msg
+      StatusErr = EGAISImpl:StatusErr
+      .
+  end.
+
+  method public void ConnWB (inArg as char, inArg1 as char): /**/
+    define variable tth as handle no-undo.
+    assign
+      StatusErr = false
+      Msg       = "".
+    EGAISImpl:ConnWB(inArg, inArg1).
     assign
       Msg       = EGAISImpl:Msg
       StatusErr = EGAISImpl:StatusErr
