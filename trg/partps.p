@@ -200,13 +200,13 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
               + p-in-code                   + {&delim-nws}
               + p-part-code                 + {&delim-nws}
               + string(p-mark-db-num)       + {&delim-nws}
-              + string(p-mark-code)         + {&delim-nws}
-              + string(p-alc-bottling-date) + {&delim-nws}
+              + if p-mark-code = ? then "?" else string(p-mark-code) + {&delim-nws}
+              + if p-mark-code = ? then "?" else string(p-alc-bottling-date) + {&delim-nws}
               + p-alc-ref-ab-path           + {&delim-nws}
               + p-alc-quality-certif-path   + {&delim-nws}
               + p-alc-certif-path           + {&delim-nws}
               + p-alc-imp-type              + {&delim-nws}
-              + STRING(p-alc-imp-code)
+              + if p-mark-code = ? then "?" else STRING(p-alc-imp-code)
       .
       run nws/cr-route.p
         (input  {&send-cmd}

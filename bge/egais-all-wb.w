@@ -64,6 +64,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 { gbl/getcntxt.i get }
 { gbl/thbjattr.i }
 {ibs/th/bge/egais/wb-egais.i}
+{ str/trdcalib.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -80,8 +81,8 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_Del ~
-RADIO-SET-1 
+&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn ~
+Btn_Del RADIO-SET-1 
 &Scoped-Define DISPLAYED-OBJECTS RADIO-SET-1 
 
 /* Custom List Definitions                                              */
@@ -97,27 +98,31 @@ RADIO-SET-1
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON Btn_conn 
+     LABEL "Связать" 
+     SIZE 10 BY 1.13.
+
 DEFINE BUTTON Btn_Del 
      LABEL "Отказ" 
-     SIZE 7.5 BY 1.13.
+     SIZE 10 BY 1.13.
 
 DEFINE BUTTON Btn_dnlw 
      LABEL "Загрузить" 
-     SIZE 15 BY 1.13.
+     SIZE 10 BY 1.13.
 
 DEFINE BUTTON Btn_OK AUTO-GO 
      LABEL "Выход" 
-     SIZE 15 BY 1.13
+     SIZE 10 BY 1.13
      BGCOLOR 8 .
 
 DEFINE BUTTON Btn_Save 
      LABEL "Сохранить" 
-     SIZE 15 BY 1.13
+     SIZE 10 BY 1.13
      BGCOLOR 8 .
 
 DEFINE BUTTON Btn_Sel 
      LABEL "Изменить" 
-     SIZE 15 BY 1.13
+     SIZE 10 BY 1.13
      BGCOLOR 8 .
 
 DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1 
@@ -133,10 +138,11 @@ DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1
 
 DEFINE FRAME Dialog-Frame
      Btn_OK AT ROW 1.21 COL 2.63
-     Btn_Sel AT ROW 1.21 COL 18.63 WIDGET-ID 6
-     Btn_Save AT ROW 1.21 COL 34.38 WIDGET-ID 10
-     Btn_dnlw AT ROW 1.21 COL 50 WIDGET-ID 12
-     Btn_Del AT ROW 1.21 COL 65.5 WIDGET-ID 14
+     Btn_Sel AT ROW 1.21 COL 13.25 WIDGET-ID 6
+     Btn_Save AT ROW 1.21 COL 24 WIDGET-ID 10
+     Btn_dnlw AT ROW 1.21 COL 34.63 WIDGET-ID 12
+     Btn_conn AT ROW 1.21 COL 45 WIDGET-ID 16
+     Btn_Del AT ROW 1.21 COL 55.63 WIDGET-ID 14
      RADIO-SET-1 AT ROW 1.21 COL 80.38 NO-LABEL WIDGET-ID 2
      SPACE(1.24) SKIP(25.27)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -186,9 +192,97 @@ end.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME Btn_conn
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_conn Dialog-Frame
+ON CHOOSE OF Btn_conn IN FRAME Dialog-Frame /* Связать */
+DO:
+
+  def var loc-ref-list as character no-undo.
+  def var v-negais as character no-undo.
+  
+  bh-wb-gds-EG = ?.
+  bh-wb-gds-EG-header = ?.
+  bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+  if egais:StatusErr
+  then do:
+    message egais:Msg view-as alert-box error.
+    return no-apply.
+  end.
+  
+  run str/all-docs.w
+    (  input parparentproc,
+        input v-cntxt-host-code-obj ,
+        input v-cntxt-obj-type ,
+        input v-cntxt-obj-code ,
+        input {&choose},
+        input ?,
+        input {&income},
+        input ?,
+        input ?,
+        input "b-sel":U,
+        input {&TDEDT_Pri_Vnesh},
+        input no,
+        input ?,
+        output loc-ref-list ).
+
+  find first ub.trn-doc no-lock where recid (ub.trn-doc) = integer (loc-ref-list) no-error.
+  
+  if not available (ub.trn-doc) 
+    then return.
+  
+  bh-wb-gds-EG = ?.
+  bh-wb-gds-EG-header = ?.
+  bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).  
+  bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+  find first ub.clients 
+    where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("cli-type"):buffer-value
+      and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("cli-code"):buffer-value) no-error.
+  if not available (ub.clients)
+  then do:
+    message "Не найден клиент TH для EGAIS контрагентa regID: " + bh-wb-gds-EG-header:buffer-field ('regId-Ship'):buffer-value view-as alert-box.
+    return no-apply.
+  end.
+  find first ub.clients 
+    where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("obj-type"):buffer-value
+      and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("obj-code"):buffer-value) no-error.
+  if not available (ub.clients)
+  then do:
+    message "Не найден объект TH для EGAIS получателя regID: " + bh-wb-gds-EG-header:buffer-field ('regId-Cons'):buffer-value view-as alert-box.
+    return no-apply.
+  end.
+  bh-wb-gds-EG:find-first ("where tt-wb-gds-EG.gds-code = ?", no-lock) no-error.
+  if bh-wb-gds-EG:available then do:
+    message "Не найден товар TH для EGAIS товара AlcCode: " + bh-wb-gds-EG:buffer-field ('alc-code'):buffer-value view-as alert-box.
+    return no-apply.
+  end.
+  
+  egais:ConnWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value, ub.trn-doc.doc-code).
+  
+  if egais:StatusErr
+    then message egais:Msg view-as alert-box error.
+  else do:
+    v-negais = (bh-wb-egais:buffer-field ("wbregid"):buffer-value + {&delim-cmd} + bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    { str/tdat-wrt.i
+      ub.trn-doc.doc-code
+      {&trdcattr-negais}
+      v-negais
+      no-error
+    }
+    message "Накладная связана" view-as alert-box.
+  end.
+    
+
+  run refresh-query.
+  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME Btn_Del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Del Dialog-Frame
-ON CHOOSE OF Btn_Del IN FRAME Dialog-Frame /* - */
+ON CHOOSE OF Btn_Del IN FRAME Dialog-Frame /* Отказ */
 DO:
   if bh-wb-egais = ? 
     then return no-apply.
@@ -281,7 +375,7 @@ DO:
     egais:SendRequestUTM().
     if egais:StatusErr
       then message egais:Msg view-as alert-box error.
-      else message "Накладная отправлена" view-as alert-box.
+      else message "Отправлен акт на накладную" view-as alert-box.
     
   end.
   run refresh-query.
@@ -317,10 +411,12 @@ do:
   then do:
     Btn_Save:label = "Сохранить".
     Btn_Del:hidden = false.
+    Btn_conn:hidden = false.
   end.
   else do:
     Btn_Save:label = "Отправить".
     Btn_Del:hidden = true.
+    Btn_conn:hidden = true.
   end.
   if RADIO-SET-1 = 3
   then disable Btn_Save with frame {&FRAME-NAME}.
@@ -362,7 +458,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
-    'actn_egais-ref':U
+    'actn_egais-doc':U
     {&cntxt-object}
     v-cntxt-host-code-obj
     v-cntxt-obj-type
@@ -437,12 +533,13 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   .
   bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
   qh-wb-egais:set-buffers (bh-wb-egais).
-  qh-wb-egais:query-prepare ("for each tt-wb-hndls").
+  qh-wb-egais:query-prepare ("for each tt-wb-hndls by tt-wb-hndls.wb-date").
   qh-wb-egais:query-open.
   if not bh-wb-egais = ? 
   then do:
     do ii = 1 to bh-wb-egais:num-fields:
       bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+      if ii = 1 then bcol[ii]:width = 15.
     end.
   end.
   { gbl/diasize.i &br-hndl=browse-hdl-wb-egais }
@@ -489,7 +586,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY RADIO-SET-1 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_Del RADIO-SET-1 
+  ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn Btn_Del RADIO-SET-1 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -551,15 +648,17 @@ if bh-wb-egais = ?
       .
       bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
       qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-hndls").
+      qh-wb-egais:query-prepare ("for each tt-wb-hndls by tt-wb-hndls.wb-date").
       qh-wb-egais:query-open.
       if not bh-wb-egais = ? 
       then do:
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+          if ii = 1 then bcol[ii]:width = 15.
         end.
       end.
       run diasize_init in this-procedure .
+      Btn_Sel:label = "Изменить".
       enable Btn_Sel with frame {&FRAME-NAME}.
     end.
     when 2  then 
@@ -567,7 +666,7 @@ if bh-wb-egais = ?
       delete object browse-hdl-wb-egais.
       create browse browse-hdl-wb-egais
         assign 
-          title     = 'Накладные ЕГАИС'
+          title     = 'Накладные TH'
           frame     = frame {&FRAME-NAME}:handle
           query     = qh-wb-egais
           x         = 10
@@ -586,12 +685,13 @@ if bh-wb-egais = ?
       .
       bh-wb-egais = egais:GetHndlTable({&wb-fact}, "").
       qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-hndls").
+      qh-wb-egais:query-prepare ("for each tt-wb-hndls by tt-wb-hndls.wb-date").
       qh-wb-egais:query-open.
       if not bh-wb-egais = ? 
       then do:
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+          if ii = 1 then bcol[ii]:width = 10.
         end.
       end.
       run diasize_init in this-procedure .
@@ -627,10 +727,12 @@ if bh-wb-egais = ?
       then do:
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-act-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+          if ii = 1 then bcol[ii]:width = 10.
         end.
       end.
       run diasize_init in this-procedure .
-      disable Btn_Sel with frame {&FRAME-NAME}.
+      Btn_Sel:label = "Просмотр". 
+      enable Btn_Sel with frame {&FRAME-NAME}.
     end.
     /*when 4  then 
     do:

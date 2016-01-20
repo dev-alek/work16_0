@@ -573,7 +573,7 @@ END.
 ON LEAVE OF v-alc-ref-ab-path IN FRAME Dialog-Frame /* Справки А,Б */
 DO:
   /* При нажатии на кнопку выбора файла не проверяем содержимое поля */
-  if last-event:widget-enter <> b-refAB:handle then do:
+  /*if last-event:widget-enter <> b-refAB:handle then do:
     assign frame {&frame-name} v-alc-ref-ab-path.
     if (v-alc-ref-ab-path <> "") and (search (v-alc-ref-ab-path) = ?) then do:
       message "Указанный файл справки А,Б не найден"
@@ -581,7 +581,7 @@ DO:
       apply "entry" to self.
       return no-apply.
     end.
-  end.
+  end.*/
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -621,7 +621,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
   run MyEnable.
-
+  hide b-refAB in frame {&FRAME-NAME}.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -804,12 +804,12 @@ PROCEDURE proc-save :
       End.
   END.
 
-  if (v-alc-ref-ab-path <> "") and (search (v-alc-ref-ab-path) = ?) then do:
+  /*if (v-alc-ref-ab-path <> "") and (search (v-alc-ref-ab-path) = ?) then do:
     message "Указанный файл справки А,Б не найден"
       view-as alert-box error.
     apply "entry" to v-alc-ref-ab-path in frame {&frame-name}.
     return error.
-  end.
+  end.*/
 
   if (v-alc-quality-certif-path <> "") and (search (v-alc-quality-certif-path) = ?) then do:
     message "Указанный файл удостоверения качества не найден"

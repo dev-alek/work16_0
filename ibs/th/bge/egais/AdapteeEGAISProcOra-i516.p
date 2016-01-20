@@ -36,11 +36,14 @@ using ibs.th.skt.Adapters.*.
 define input  parameter table for  tt-wb-header.
 define input  parameter table for  tt-wb-gds-EG.
 define input  parameter userId_ as character no-undo.
-define output parameter doc-code as character no-undo.
+define input  parameter Mode as character no-undo.
+define input-output parameter doc-code as character no-undo.
 
 
 define variable iDbNum as integer no-undo.
 define variable MsgLog as character no-undo.
+
+define buffer buf_goods for ub.goods.
 
 MAIN-BLOCK:
 do:
@@ -100,18 +103,27 @@ do:
     no-error
   }
   
-  run utl/ora-i516.p (
-    input this-procedure ,
-    input this-procedure ,
-    input table temp_trn-doc ,
-    input table temp_doc-line ,
-    output num-rec-ok
-    ) no-error .
-  if error-status:error 
-  then do: 
-    return error MsgLog.
+  if Mode = "set-refAB"
+  then do:
+    run set-refAB no-error.
+    if error-status:error 
+    then do: 
+      return error return-value .
+    end.
   end.
-  
+  else do:
+    run utl/ora-i516.p (
+      input this-procedure ,
+      input this-procedure ,
+      input table temp_trn-doc ,
+      input table temp_doc-line ,
+      output num-rec-ok
+      ) no-error .
+    if error-status:error 
+    then do: 
+      return error MsgLog.
+    end.
+  end.
   
 
 end.
@@ -192,3 +204,41 @@ define output parameter p-cntxt-is-admin              as logical   no-undo . /* 
 
   end.
 end procedure. /* mainmenu_getcntxt */
+
+procedure set-refAB:
+  
+    for each ub.parts exclusive-lock
+      where ub.parts.in-code   = doc-code
+        and ub.parts.artic     = ub.doc-line.artic
+        and ub.parts.prod-type = ub.doc-line.prod-type
+        and ub.parts.prod-code = ub.doc-line.prod-code:
+
+      find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
+      if not available (temp_doc-line) then do:
+        find first temp_doc-line where  temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
+      end.
+      
+      run trg/partps.p ( input buf_goods.gds-code
+                       , input parts.in-code
+                       , input parts.part-code
+                       , input iDbNum
+                       , input ?
+                       , input ?
+                       , input temp_doc-line.refA + ',' + temp_doc-line.refB
+                       , input ""
+                       , input ""
+                       , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 1, 3) else ""
+                       , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 4, 2) else ""
+                       ) no-error .
+      if error-status :error
+      then do:
+        message
+          "Ошибка при вызове процедуры partps.p" skip
+          error-status :get-message(1) skip
+          return-value skip
+          view-as alert-box error .
+        undo, return no-apply .
+      end.
+    end.  
+
+end procedure.

@@ -213,6 +213,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define private buffer buf_gds           for ub.goods.
   define private buffer buf_trn-doc       for ub.trn-doc.
   define private buffer buf_doc-attr      for ub.doc-attr.
+  define private buffer buf_parts         for ub.parts.
   define private buffer buf_doc-line      for ub.doc-line.
   define private buffer buf_doc-line-attr for ub.doc-line-attr.
   define private buffer buf_clients       for ub.clients.
@@ -233,7 +234,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define         variable ObjCode        as integer   no-undo .
 
   define temp-table tt-wb-hndls no-undo
-    field num          as character label "№ накл."
+    field num          as character label "№ накл." format "X(50)"
     field wb-date      as date      label "Дата"
     field shippregid   as character label "ID поставщика" format "x(21)"
     field obj          as character label "Объект"
@@ -421,20 +422,35 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             if available (buf_doc-attr) then do:
               find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-attr.doc-code.
               
-              for each buf_doc-line where buf_trn-doc.doc-code = buf_doc-line.doc-code:
+              for each tt-wb-act-gds-EG :
                 
-                find first buf_gds no-lock where buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type.
+                find first buf_parts no-lock where
+                 buf_parts.obj-type = buf_trn-doc.obj-type and 
+                 buf_parts.obj-code = buf_trn-doc.obj-code and 
+                 buf_parts.in-code = buf_trn-doc.doc-code and
+                 buf_parts.out-code = buf_trn-doc.doc-code and
+                 tt-wb-act-gds-EG.refB = entry (2, buf_parts.alc-ref-ab-path, ",") no-error.
                 
-                find first buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code and buf_doc-line-attr.gds-code = buf_gds.gds-code and buf_doc-line-attr.attr-code = 'RefB'no-error.
-                
-                find first tt-wb-act-gds-EG where tt-wb-act-gds-EG.refB = buf_doc-line-attr.attr-value no-error.
-                if not available (tt-wb-act-gds-EG)
-                  then next.
-                assign
-                  tt-wb-act-gds-EG.doc-qnty = buf_doc-line.doc-qnty
-                  tt-wb-act-gds-EG.fact-qnty = buf_doc-line.fact-qnty
-                  tt-wb-act-gds-EG.gds-code = buf_gds.gds-code
-                .
+                /*if not available (buf_parts)
+                  then do:
+                    message substitute ("Не найдена партия для товара из акта") view-as alert-box. 
+                  end.*/
+
+                if available (buf_parts) then do:
+                  find first buf_gds no-lock where buf_gds.artic = buf_parts.artic and buf_gds.prod-code = buf_parts.prod-code and buf_gds.prod-type = buf_parts.prod-type.
+                  assign
+                    tt-wb-act-gds-EG.doc-qnty = buf_parts.qnty
+                    tt-wb-act-gds-EG.fact-qnty = buf_parts.fact-qnty
+                    tt-wb-act-gds-EG.gds-code = buf_gds.gds-code
+                  .
+                end.
+                else do:
+                  assign
+                    tt-wb-act-gds-EG.doc-qnty = ?
+                    tt-wb-act-gds-EG.fact-qnty = ?
+                    tt-wb-act-gds-EG.gds-code = ?
+                  .
+                end.
               end.
               
             end.
@@ -523,7 +539,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 tt-wb-hndls.status_      = buf_trn-doc.status_
                 tt-wb-hndls.wbregid      = entry (1, buf_doc-attr.attr-value, {&delim-cmd}) no-error.
                 entry (1, tt-wb-hndls.uniq-key-rec, {&delim-cmd}) = "".
-                tt-wb-hndls.uniq-key-rec = trim (tt-wb-hndls.uniq-key-rec, {&delim-cmd}).
+                tt-wb-hndls.uniq-key-rec = left-trim (tt-wb-hndls.uniq-key-rec, {&delim-cmd}).
                 
             end.
           end.
@@ -640,7 +656,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 
         else 
         do:
-        /*          output stream outstr to value ("OutWB.xml") convert target "UTF-8".                                                                                                     */
+        /*          output stream outstr to value ("TTNSingle.xml") convert target "UTF-8".                                                                                                     */
         /*                                                                                                                                                                                  */
         /*          find first buf_trn-doc where buf_trn-doc.doc-code = tt-wb-hndls.trn-doc-code no-lock.                                                                                   */
         /*                                                                                                                                                                                  */
@@ -657,46 +673,48 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         /*          put stream outstr skip.                                                                                                                                                 */
         /*          output stream outstr close.                                                                                                                                             */
         /*                                                                                                                                                                                  */
-        /*          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).               */
-        /*          os-command value (cmd).                                                                                                                                                 */
-        /*                                                                                                                                                                                  */
-        /*          file-info:file-name = search (inFileName).                                                                                                                              */
-        /*          if search (inFileName) <> ? and file-info:file-size > 0                                                                                                                 */
-        /*            then                                                                                                                                                                  */
-        /*          do:                                                                                                                                                                     */
-        /*            respValue = ParseRequest (inFileName).                                                                                                                                */
-        /*            if respValue = ?                                                                                                                                                      */
-        /*              then                                                                                                                                                                */
-        /*            do:                                                                                                                                                                   */
-        /*              assign                                                                                                                                                              */
-        /*                StatusErr = true                                                                                                                                                  */
-        /*                Msg       = "Не удалось разобрать данные от UTM"                                                                                                                  */
-        /*                .                                                                                                                                                                 */
-        /*              undo, return false.                                                                                                                                                 */
-        /*            end.                                                                                                                                                                  */
-        /*            if not StatusErr                                                                                                                                                      */
-        /*              then                                                                                                                                                                */
-        /*              ReplyId = respValue:node-value.                                                                                                                                     */
-        /*            else                                                                                                                                                                  */
-        /*            do:                                                                                                                                                                   */
-        /*              assign                                                                                                                                                              */
-        /*                StatusErr = true                                                                                                                                                  */
-        /*                Msg       = respValue:node-value                                                                                                                                  */
-        /*                .                                                                                                                                                                 */
-        /*              undo, return false.                                                                                                                                                 */
-        /*            end.                                                                                                                                                                  */
-        /*          end.                                                                                                                                                                    */
-        /*          else                                                                                                                                                                    */
-        /*          do:                                                                                                                                                                     */
-        /*            assign                                                                                                                                                                */
-        /*              StatusErr = true                                                                                                                                                    */
-        /*              Msg       = "Не удалось отправить накладную в UTM"                                                                                                                  */
-        /*              .                                                                                                                                                                   */
-        /*            undo, return false.                                                                                                                                                   */
-        /*          end.                                                                                                                                                                    */
-        /*          entry (7, buf_clob-bind.descr, {&delim-par}) = "да".                                                                                                                    */
-        /*          tt-wb-hndls.is-sent = "да".                                                                                                                                             */
-        
+          
+          
+          
+          
+          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTN.xml"), ConPar, inFileName).
+          os-command value (cmd).
+          file-info:file-name = search (inFileName).
+          if search (inFileName) <> ? and file-info:file-size > 0
+            then
+          do:
+            respValue = ParseRequest (inFileName).
+            if respValue = ?
+              then
+            do:
+              assign
+                StatusErr = true
+                Msg       = "Не удалось разобрать данные от UTM"
+                .
+              undo, return false.
+            end.
+            if not StatusErr
+              then
+              ReplyId = respValue:node-value.
+            else
+            do:
+              assign
+                StatusErr = true
+                Msg       = respValue:node-value
+                .
+              undo, return false.
+            end.
+          end.
+          else
+          do:
+            assign
+              StatusErr = true
+              Msg       = "Не удалось отправить накладную в UTM"
+              .
+            undo, return false.
+          end.
+          entry (7, buf_clob-bind.descr, {&delim-par}) = "да".
+          tt-wb-hndls.is-sent = "да".
         
         end.
       end.
@@ -824,7 +842,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                     tt-wb-header.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}).
                     tt-wb-header.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
                   end.
-            
                   find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Shipper".                
                   v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par} + tt-wb-header.obj-type + string (tt-wb-header.obj-code).
 
@@ -1216,7 +1233,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       input table tt-wb-header,
       input table tt-wb-gds-EG,
       input User_Id,
-      output trn-doc-code
+      input "",
+      input-output trn-doc-code
       ) no-error.
     if error-status:error then 
     do:
@@ -1225,7 +1243,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       return.
     end.
     entry (6, buf_clob-bind.descr, {&delim-par}) = trn-doc-code.
-    GetHndlTable ({&wb-clob}, '').    
+    GetHndlTable ({&wb-clob}, '').
     
   end.
 
@@ -1244,10 +1262,63 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     
   end.
 
+  method override public void ConnWB (inWbIndenty as char, inTrnDoc as char):
+    
+    find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIndenty and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
+    if not available (buf_clob-bind) then
+    do:
+      Msg = "Не найдена накладная с идентификатором " + inWbIndenty.
+      StatusErr = true.
+      return.
+    end.
+    if entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ' or entry (6, buf_clob-bind.descr, {&delim-par}) <> ''
+    then do:
+      Msg = "Накладная уже связана или по ней был отказ".
+      StatusErr = true.
+      return.
+    end.
+    
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = inTrnDoc:
+      find first buf_gds no-lock  where
+        buf_doc-line.artic     = buf_gds.artic and
+        buf_doc-line.prod-type = buf_gds.prod-type and
+        buf_doc-line.prod-code = buf_gds.prod-code
+        no-error .
+      
+      find first tt-wb-gds-EG where tt-wb-gds-EG.gds-code = buf_gds.gds-code no-error.
+      if not available (tt-wb-gds-EG)
+      then do:
+        Msg = "Несоответсвие товаров накладной TH товарам накладной ЕГАИС".
+        StatusErr = true.
+        return.
+      end.
+    end.
+    run ibs/th/bge/egais/AdapteeEGAISProcOra-i516.p
+      (
+      input table tt-wb-header,
+      input table tt-wb-gds-EG,
+      input User_Id,
+      input "set-refAB",
+      input-output inTrnDoc
+      ) no-error.
+    if error-status:error then 
+    do:
+      Msg = return-value.
+      StatusErr = true.
+      return.
+    end.
+    entry (6, buf_clob-bind.descr, {&delim-par}) = inTrnDoc.
+    GetHndlTable ({&wb-clob}, '').
+     
+    
+  end.
+
   method private longchar GetXMLAct ():
 
     def var ii       as int      no-undo.
     def var xml-cont as longchar no-undo.
+    def var is-diff  as logical no-undo.
+    
     find first tt-wb-header.
     if not (available (buf_clob-bind) and entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ') then do:
       find first buf_doc-attr where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid).
@@ -1257,18 +1328,17 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         find first tt-wb-gds-EG where tt-wb-gds-EG.gds-code = buf_gds.gds-code.
         if tt-wb-gds-EG.doc-qnty <> buf_doc-line.fact-qnty then 
         do:
-          &scop xml-act-cont '<wa:Position>~
-          <wa:Identity>&1</wa:Identity>~
-          <wa:InformBRegId>&2</wa:InformBRegId>~
-          <wa:RealQuantity>&3</wa:RealQuantity>~
-          </wa:Position>'
-          for each tt-wb-gds-EG no-lock:
-            xml-cont = substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_doc-line.fact-qnty)).
-          end.
+          is-diff = true. 
         end.
+&scop xml-act-cont '<wa:Position>~
+<wa:Identity>&1</wa:Identity>~
+<wa:InformBRegId>&2</wa:InformBRegId>~
+<wa:RealQuantity>&3</wa:RealQuantity>~
+</wa:Position>'
+        xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_doc-line.fact-qnty)).
         
       end.
-      return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', tt-wb-hndls.trn-doc-code, iso-date (date (now)), tt-wb-header.wbregid) + xml-cont + {&xml-act-2}.
+      return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', tt-wb-hndls.trn-doc-code, iso-date (date (now)), tt-wb-header.wbregid) + (if is-diff then xml-cont else "") + {&xml-act-2}.
     end.
     else do:
       xml-cont = substitute ({&xml-act-1}, v-FS-RAR, 'Reject', time, iso-date (date (now)), tt-wb-header.wbregid) + {&xml-act-2}.
@@ -1292,6 +1362,82 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       return.
     end.
     
+  end.
+
+
+  method private handle GetHndlSW (inFileName as char):
+
+    def var sw as handle no-undo. 
+  
+    create sax-writer sw .
+  
+    sw:formatted = true.
+    sw:set-output-destination ("file", inFileName).
+    sw:encoding = "UTF-8".
+    sw:start-document () .
+    sw:start-element ("ns:Documents") .
+    sw:insert-attribute ("Version", "1.0") .
+    sw:insert-attribute ("xmlns:wb", "http://fsrar.ru/WEGAIS/TTNSingle") .
+    sw:insert-attribute ("xmlns:ns", "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01") .
+    sw:insert-attribute ("xmlns:oref", "http://fsrar.ru/WEGAIS/ClientRef") .
+    sw:insert-attribute ("xmlns:pref", "http://fsrar.ru/WEGAIS/ProductRef") .
+  
+  
+    sw:start-element ("ns:Owner") . 
+        sw:write-data-element ("ns:FSRAR_ID", v-fs-rar) .
+    sw:end-element ("ns:Owner") . 
+  
+  
+  
+    sw:start-element ("ns:Document") .
+  
+      sw:start-element ("ns:WayBill") .
+  
+  
+        sw:write-data-element ("wb:Identity", tt-wb-header.Identity) .
+        sw:start-element ("wb:Header") .  
+          sw:write-data-element ("wb:NUMBER", tt-wb-header.Identity).
+          sw:write-data-element ("wb:Date", iso-date (tt-wb-header.wb-date)).
+          sw:write-data-element ("wb:Type", tt-wb-header.wb-type).  
+          sw:write-data-element ("wb:UnitType", 'Packed'). /*??????*/
+          sw:write-data-element ("wb:ShippingDate", iso-date (tt-wb-header.wb-date)).
+          sw:start-element ("wb:Shipper") .
+  /*          sw:write-data-element ("oref:INN", tt-wb-header.wb-date).*/
+  /*          sw:write-data-element ("oref:KPP", tt-wb-header.wb-date).*/
+            sw:write-data-element ("oref:ClientRegId", tt-wb-header.regID-Ship).
+          sw:end-element ("wb:Shipper") .
+          sw:start-element ("wb:Consignee") .
+  /*          sw:write-data-element ("oref:INN", tt-wb-header.wb-date).*/
+  /*          sw:write-data-element ("oref:KPP", tt-wb-header.wb-date).*/
+            sw:write-data-element ("oref:ClientRegId", tt-wb-header.regID-Cons).
+          sw:end-element ("wb:Consignee") .        
+        sw:end-element ("wb:Header") .
+        sw:start-element ("wb:Content") .
+          sw:start-element ("wb:Position") .
+            sw:write-data-element ("wb:Identity", tt-wb-gds-EG.Identity).
+            sw:start-element ("wb:Product") .
+              sw:write-data-element ("pref:FullName", tt-wb-gds-EG.gds-name).
+              sw:write-data-element ("pref:AlcCode", tt-wb-gds-EG.alc-code).
+            sw:end-element ("wb:Product") .
+            sw:write-data-element ("wb:Quantity", string (tt-wb-gds-EG.doc-qnty)).
+            sw:write-data-element ("wb:Price", string (tt-wb-gds-EG.price)).
+            sw:start-element ("wb:InformA") .
+              sw:write-data-element ("pref:RegId", tt-wb-gds-EG.refA).
+            sw:end-element ("wb:InformA") .
+            sw:start-element ("wb:InformB") .
+              sw:start-element ("pref:InformBItem") .
+                sw:write-data-element ("pref:BRegId", tt-wb-gds-EG.refA).
+              sw:end-element ("pref:InformBItem") .
+            sw:end-element ("wb:InformB") .                    
+          sw:end-element ("wb:Position") .
+        sw:end-element ("wb:Content") .
+      sw:end-element ("ns:WayBill") .
+    sw:end-element ("ns:Document") .
+    sw:end-element ("ns:Documents") .
+
+
+    delete object sw.
+
   end.
 
 

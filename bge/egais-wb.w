@@ -548,6 +548,26 @@ PROCEDURE msdblcl :
   define variable par-alcohol as character no-undo .
   define variable par-type    as character no-undo .
   
+  def var glog as  log no-undo.
+  
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-ref':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
+  
+  if not glog then  return .
+  
   if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> "" and bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> ?
     then
   do:
@@ -614,7 +634,7 @@ PROCEDURE msdblcl :
         message "Выбранный товар не является алкогольной продукцией." view-as alert-box.
         return no-apply.
       end.
-      if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value
+      if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value and bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value <> 0
       then do:
         message "У выбранного товара не соответсвует объем" view-as alert-box.
         return no-apply.

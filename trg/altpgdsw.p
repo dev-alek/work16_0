@@ -77,12 +77,12 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       .
    end.
    
-    if g#db-num <> 0 then do:
+/*    if g#db-num <> 0 then do:*/
      for each buf_alc-type-gds where buf_alc-type-gds.gds-code = ub.alc-type-gds.gds-code 
                                  and recid(buf_alc-type-gds) <> recid(ub.alc-type-gds):
      delete buf_alc-type-gds.
      end.                                    
-    end.  
+/*    end.*/
    
    run str/callnews.p
       (input {&table_alc-type-gds}
