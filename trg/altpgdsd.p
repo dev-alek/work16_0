@@ -59,7 +59,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       buf_c-alc-type-gds.corr-user-name      = g#userid
    .
 
-if g#news then do: 
+/*if g#news then do:*/
    run nws/cmd-del.p
       ( input "alc-type-gds":U
       ,input (buffer ub.alc-type-gds:handle)
@@ -72,7 +72,7 @@ if g#news then do:
       .
       return error v-message .
    end.
-end.
+/*end.*/
    if g#oxml = yes
    then do:
    run str/calloxml.p (
