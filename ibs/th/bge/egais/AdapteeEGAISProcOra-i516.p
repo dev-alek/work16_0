@@ -85,8 +85,8 @@ do:
     assign
       temp_doc-line.line-num   = jj
       temp_doc-line.gds-code   = tt-wb-gds-EG.gds-code
-      temp_doc-line.fact-qnty  = tt-wb-gds-EG.doc-qnty
-      temp_doc-line.doc-qnty   = tt-wb-gds-EG.doc-qnty
+      temp_doc-line.fact-qnty  = tt-wb-gds-EG.qnty
+      temp_doc-line.doc-qnty   = tt-wb-gds-EG.qnty
       temp_doc-line.price-cli  = tt-wb-gds-EG.price
       temp_doc-line.price-rubl = tt-wb-gds-EG.price
       temp_doc-line.doc-code   = temp_trn-doc.doc-code
