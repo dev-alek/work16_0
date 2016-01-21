@@ -540,6 +540,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     do ii = 1 to bh-wb-egais:num-fields:
       bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
       if ii = 1 then bcol[ii]:width = 15.
+      if ii = 9 then bcol[ii]:width = 15.
     end.
   end.
   { gbl/diasize.i &br-hndl=browse-hdl-wb-egais }
@@ -655,6 +656,7 @@ if bh-wb-egais = ?
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
           if ii = 1 then bcol[ii]:width = 15.
+          if ii = 9 then bcol[ii]:width = 15.
         end.
       end.
       run diasize_init in this-procedure .
@@ -692,6 +694,7 @@ if bh-wb-egais = ?
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
           if ii = 1 then bcol[ii]:width = 10.
+          if ii = 9 then bcol[ii]:width = 15.
         end.
       end.
       run diasize_init in this-procedure .

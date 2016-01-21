@@ -335,7 +335,7 @@ for each  temp_trn-doc :
      if error-status :error then return error return-value .
    end.
    else do:
-     is-tsd = true.
+     if not is-egais then is-tsd = true.
    end.
 
 /* *******************************88888   */
@@ -630,7 +630,7 @@ assign
         parrec-doc = recid (new_trn-doc)
     .
     
-  if is-tsd and (new_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or new_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) 
+  if (is-tsd or is-egais) and (new_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or new_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) 
     then 
   do:
     find first ub.shift-obj no-lock
@@ -1349,6 +1349,7 @@ end.
                     .
 
      run pcall-log-file in p-log-handle (input v-end-message) .
+
      p-ok-doc = p-ok-doc + 1.
 
 end.
@@ -1505,7 +1506,7 @@ define variable varcopyflag        like ub.trn-doc.flag     no-undo.
 define variable varcheck-return as logical no-undo .
 define variable varchg-inv as logical no-undo .
 
-if is-tsd
+if is-tsd or is-egais
   then return.
 run str/trn-stat.p (
     input  parparentproc ,
