@@ -558,7 +558,10 @@ DO:
                                                                and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
                                                                no-error.
                     if available X_ext-classif then do :
-                        assign X_ext-classif.charkey_three = tt-objs.regID .
+                        assign
+                            X_ext-classif.charkey_three = tt-objs.regID
+                            X_ext-classif.charkey_two   = tt-objs.obj-type + string(tt-objs.obj-code)
+                        .
                     end.
                     else do :
                         run ref/extclas1.p ( INPUT {&add-def}
@@ -571,7 +574,7 @@ DO:
                                             ,input 0 /*p-Key#_Two*/
                                             ,input 0 /*p-key#_Three*/
                                             ,input '':U  /*p-CharKey_One */
-                                            ,input '':U /*p-CharKey_two */
+                                            ,input (tt-objs.obj-type + string(tt-objs.obj-code)) /*p-CharKey_two */
                                             ,input tt-objs.regID /*p-CharKey_three */
                                             ,input 0 /*p-nonunique */
                                             ,input v-obj-uniq-key-rec ) no-error.
