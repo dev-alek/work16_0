@@ -1872,14 +1872,13 @@ define variable loc#log as logical   no-undo .
 /*                run OpenBr in this-procedure (yes, no, '':U).        */
 /*                reposition browse-1 to recid calc-rec no-error .     */
 /*            /* записать в историю */                                 */
-/*                                                                     */
-/*            run upd-br-field in this-procedure .                     */
-/*            /* пересчитать строки по количествам */                  */
-/*            run make-xxx-line in this-procedure .                    */
-/*            v-rec-id = recid(buf_price-doc-forming-gds).             */
+            run upd-br-field in this-procedure .
+            /* пересчитать строки по количествам */
+/*            run make-xxx-line in this-procedure .       */
+/*            v-rec-id = recid(buf_price-doc-forming-gds).*/
 /*            run OpenBr in this-procedure (yes, no, '':U).            */
 /*            reposition browse-1 to recid v-rec-id no-error.          */
-/*            apply "value-changed" to browse-1 in frame {&frame-name}.*/
+            apply "value-changed" to browse-1 in frame {&frame-name}.
     display  {&cop-l7}  with browse browse-1.
 /*    apply "value-changed" to browse-1 in frame {&frame-name}.*/
   end.
