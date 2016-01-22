@@ -626,7 +626,7 @@ assign
         new_trn-doc.agnt  = tt-trn-doc.agnt
         new_trn-doc.boss  = tt-trn-doc.boss
         new_trn-doc.wrkr  = tt-trn-doc.wrkr
-        new_trn-doc.rcv-code = if not is-tsd then "not_delete" else ""  /* нельзя будет открыть, чтоб потом изменить или удалить */
+        new_trn-doc.rcv-code = if not (is-tsd or is-egais) then "not_delete" else ""  /* нельзя будет открыть, чтоб потом изменить или удалить */
         parrec-doc = recid (new_trn-doc)
     .
     
@@ -1641,6 +1641,12 @@ define input  parameter p-doc-out as character no-undo .
       p-doc-code
       {&trdcattr-negais}
       p-doc-out
+      no-error
+    }
+    { str/tdat-wrt.i
+      p-doc-code
+      {&trdcattr-nids}
+      entry(1,p-doc-out,{&delim-cmd})
       no-error
     }
   end.

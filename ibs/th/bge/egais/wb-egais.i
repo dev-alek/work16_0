@@ -65,13 +65,18 @@
     field ms-base        like ub.goods.ms-base label "Объем" format ">>9.9<<"
     field alc-type-code  like ub.alc-type.alc-type-code label "Код АП"
     field proof          like ub.goods.proof label "Крепость" format ">9.9"
-    field regID-Importer as character format "X(21)" label "Импортер"
-    field importer-th    as character label "Импортер TH"
+    field regID-i-p      as character format "X(21)" label "Импортер/Производитель"
+    field i-p-name       as character label "Импортер/Производитель назв."
+    field i-p-th         as character label "Импортер/Производитель TH"
     field qnty           like ub.doc-line.doc-qnty label "Кол-во"
     field price          like ub.doc-line.price-rubl label "Цена"
     field refA           as character label "Справка A" format "X(25)"
     field refB           as character label "Справка B" format "X(25)"
     field Identity       as character label "ID EGAIS"
+    field regID-Importer as character format "X(21)" label "Импортер"
+    field importer-th    as character label "Импортер TH"
+    field regID-Producer as character format "X(21)" label "Производитель"
+    field Producer-th    as character label "Производитель TH"
     index pi as primary
     gds-code
     index name_
