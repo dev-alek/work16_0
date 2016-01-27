@@ -295,7 +295,9 @@ procedure trdcalib_tdat-cod :
       &scop attr-code trdcattr-nids
       {&attr-temp-full-code}
       &scop attr-code trdcattr-negais
-      {&attr-temp-full-code}      
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-egais
+      {&attr-temp-full-code}
       &scop attr-code trdcattr-ddog
       {&attr-temp-full-code}
       &scop attr-code trdcattr-ndog
