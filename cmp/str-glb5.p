@@ -784,6 +784,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 { cmp/cr-prep.i 1 lob-egais-ref-b       egais-ref-b  "Справка B ЕГАИС"  egais-ref-b "EGAIS Reference B" }
 { cmp/cr-prep.i 1 lob-egais-ab          egais-ab     "Акт постановки на баланс B ЕГАИС"  egais-ab "EGAIS ActBalance" }
 { cmp/cr-prep.i 1 lob-egais-wb-act      egais-wb-act "Акт подтверждения накладной" egais-wb-act "EGAIS Waybill Act"  }
+{ cmp/cr-prep.i 1 lob-egais-ticket      egais-ticked "Квитанция ЕГАИС" egais-ticked "EGAIS Ticked"  }
 
 
 &glob clob-res-codes '{&bef-lob-res-data}~
@@ -2594,3 +2595,7 @@ run filwrlib_num-lines-get in this-procedure
 /* Типы сообщения EGAIS */
 { cmp/cr-prep.i 1 EGAIS-DictOrg    1     "Справочник организаций"    1    "Dictionary organization"   }
 { cmp/cr-prep.i 1 EGAIS-DictGds    2     "Справочник товаров"        2    "Dictionary goods"   }   
+
+/* Статусы EGAIS */
+{ cmp/cr-prep.i 1 egais-act-send        0    "Акт отправлен"                  0  "Act send"            }
+{ cmp/cr-prep.i 1 egais-wb-send         1    "Накладная отправлена"           1  "WB send"             }
