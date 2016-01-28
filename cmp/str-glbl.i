@@ -3944,7 +3944,7 @@ end.
 &global-define trdcattr-condition '{&bef-trdcattr-condition}':U
 &global-define bef-trdcattr-seals-condition seals-condition
 &global-define trdcattr-seals-condition '{&bef-trdcattr-seals-condition}':U
-&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition':U
+&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,negais,egais,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition':U
 &global-define bef-lineattr-flora_ps flora_ps
 &global-define lineattr-flora_ps '{&bef-lineattr-flora_ps}':U
 &global-define bef-lineattr-flora_gds-code fl_gds-code
@@ -7936,7 +7936,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: c2f7002c731a, 432, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 5b76fa20060f, 436, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 5d834d1edea8, 434, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 5f8096499a5b, 356, rls ':U
 &endif
