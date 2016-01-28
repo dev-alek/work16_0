@@ -3862,6 +3862,8 @@ end.
 &global-define trdcattr-edi '{&bef-trdcattr-edi}':U
 &global-define bef-trdcattr-negais negais
 &global-define trdcattr-negais '{&bef-trdcattr-negais}':U
+&global-define bef-trdcattr-egais egais
+&global-define trdcattr-egais '{&bef-trdcattr-egais}':U
 &global-define bef-trdcattr-ddov ddov
 &global-define trdcattr-ddov '{&bef-trdcattr-ddov}':U
 &global-define bef-trdcattr-ndov ndov
@@ -7934,7 +7936,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 6b61c6e68798, 367, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: c2f7002c731a, 432, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 38ecbb82a19b, 429, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 5f8096499a5b, 356, rls ':U
 &endif
