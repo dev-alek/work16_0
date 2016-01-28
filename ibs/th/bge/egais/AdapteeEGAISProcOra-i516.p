@@ -120,8 +120,8 @@ do:
       output num-rec-ok
       ) no-error .
     if error-status:error 
-    then do: 
-      return error MsgLog.
+    then do:
+      return error MsgLog + {&new-line} + return-value.
     end.
   end.
   

@@ -233,8 +233,8 @@ DO:
   
   bh-wb-gds-EG = ?.
   bh-wb-gds-EG-header = ?.
-  bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).  
   bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+  bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).  
   find first ub.clients 
     where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("cli-type"):buffer-value
       and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("cli-code"):buffer-value) no-error.
@@ -285,8 +285,14 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Del Dialog-Frame
 ON CHOOSE OF Btn_Del IN FRAME Dialog-Frame /* Отказ */
 DO:
-  if bh-wb-egais = ? 
+  if not bh-wb-egais:available 
     then return no-apply.
+  bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+  if egais:StatusErr
+  then do:
+    message egais:Msg view-as alert-box error.
+    return no-apply.
+  end.
   if can-find (first ub.trn-doc where ub.trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
   then do:
     message substitute ( "Накладная с № &1 уже сформирована, нельзя отправить отказ", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
@@ -321,7 +327,8 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Save Dialog-Frame
 ON CHOOSE OF Btn_Save IN FRAME Dialog-Frame /* Сохранить */
 DO:
-  if bh-wb-egais = ? 
+  
+  if not bh-wb-egais:available 
     then return no-apply.
   
   case cb-1: 
@@ -334,8 +341,8 @@ DO:
     end.
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
-    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).  
     bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).  
     find first ub.clients 
       where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("cli-type"):buffer-value
         and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("cli-code"):buffer-value) no-error.
@@ -382,7 +389,6 @@ DO:
   when 4 then do:
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
-    message bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value view-as alert-box.
     bh-wb-gds-EG-header = egais:GetHndlTable({&wb-ras-header}, bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value).
     if egais:StatusErr
     then do:
@@ -408,10 +414,19 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Sel Dialog-Frame
 ON CHOOSE OF Btn_Sel IN FRAME Dialog-Frame /* Изменить */
 DO:
-  if bh-wb-egais = ? 
+  if not bh-wb-egais:available 
     then return no-apply.
-  if cb-1 = 1 then run bge/egais-wb.w (parparentproc, egais, bh-wb-egais:handle).
-  else run bge/egais-wb-act.w (parparentproc, egais, bh-wb-egais:handle).
+  case cb-1: 
+    when 1 then do:
+      run bge/egais-wb.w (parparentproc, egais, bh-wb-egais:handle).
+    end.
+    when 2 then do:
+      run bge/egais-ticket.w (parparentproc, egais, bh-wb-egais:handle).
+    end.
+    when 3 then do:
+      run bge/egais-wb-act.w (parparentproc, egais, bh-wb-egais:handle).
+    end.
+  end case.
   run refresh-query.
 END.
 
@@ -617,7 +632,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE msdblcl Dialog-Frame 
 PROCEDURE msdblcl :
-if cb-1 <> 1 and cb-1 <> 3  
+if cb-1 <> 1 and cb-1 <> 3 and cb-1 <> 2
     then apply "choose" to Btn_Save in frame {&frame-name} .
     else apply "choose" to Btn_Sel in frame {&frame-name} .
 
@@ -640,6 +655,7 @@ end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query Dialog-Frame 
 PROCEDURE refresh-query :
+
 if bh-wb-egais = ? 
     then return .
 
@@ -719,7 +735,7 @@ if bh-wb-egais = ?
         end.
       end.
       run diasize_init in this-procedure .
-      disable Btn_Sel with frame {&FRAME-NAME}.
+      Btn_Sel:label = "Просмотр".
     end.
     when 3  then 
     do:

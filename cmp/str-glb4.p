@@ -1080,6 +1080,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 { cmp/cr-prep.i 1 trdcattr-edi       "edi"        " "  "edi" }
 /* номер EGAIS */
 { cmp/cr-prep.i 1 trdcattr-negais       "negais"        " "  "negais" }
+/* статус EGAIS */
+{ cmp/cr-prep.i 1 trdcattr-egais       "egais"        " "  "egais" }
 /*Дата доверенности */
 { cmp/cr-prep.i 1 trdcattr-ddov ddov " " ddov }
 /*Номер доверенности */
@@ -1232,6 +1234,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-dispath}~
 ,{&bef-trdcattr-price-target}~
 ,{&bef-trdcattr-edi}~
+,{&bef-trdcattr-negais}~
+,{&bef-trdcattr-egais}~
 ,{&bef-trdcattr-ddov}~
 ,{&bef-trdcattr-ndov}~
 ,{&bef-trdcattr-recipient}~

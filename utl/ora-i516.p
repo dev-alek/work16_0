@@ -1646,7 +1646,13 @@ define input  parameter p-doc-out as character no-undo .
     { str/tdat-wrt.i
       p-doc-code
       {&trdcattr-nids}
-      entry(1,p-doc-out,{&delim-cmd})
+      entry(2,p-doc-out,{&delim-cmd})
+      no-error
+    }
+    { str/tdat-wrt.i
+      p-doc-code
+      {&trdcattr-dids}
+      entry(3,p-doc-out,{&delim-cmd})
       no-error
     }
   end.

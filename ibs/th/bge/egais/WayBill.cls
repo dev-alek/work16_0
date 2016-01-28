@@ -35,7 +35,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
 <wa:ACTNUMBER>&3</wa:ACTNUMBER>~
 <wa:ActDate>&4</wa:ActDate>~
 <wa:WBRegId>&5</wa:WBRegId>~
-<wa:Note>Принимаем продукцию</wa:Note>~
+<wa:Note>&6</wa:Note>~
 </wa:Header>~
 <wa:Content>'
 
@@ -217,6 +217,10 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define private buffer buf_doc-line      for ub.doc-line.
   define private buffer buf_doc-line-attr for ub.doc-line-attr.
   define private buffer buf_clients       for ub.clients.
+  define private buffer buf_clients-attr  for ub.clients-attr.
+  define private buffer buf_firm          for ub.firm.
+  define private buffer buf_shop          for ub.shop.
+  define private buffer buf_store         for ub.store.
   define private buffer buf_ext-classif   for ub.ext-classif.
   
   define private variable parameters     as character no-undo.
@@ -284,6 +288,17 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     inn kpp
     . 
 
+  define temp-table tt-ticket no-undo
+    field regid        as character label "RegId документа" format "X(21)"
+    field doc          as character label "Документ" format "X(10)"
+    field ticket-date  as character label "Дата" format "X(10)"
+    field status_      as character label "Статус"
+    field comment      as character label "Коментарий" format "X(40)"
+    field docId        as character label "DocId" format "X(40)"
+    index pi 
+    regid 
+    .
+
   constructor public WayBill (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
     
     /*    assign                 */
@@ -309,6 +324,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       then 
     do: 
       GetWBUTM().
+      if StatusErr
+        then return ?.
       return ?.
     end.
     
@@ -321,7 +338,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           do:
             if inTableType = {&wb-header}
               then empty temp-table tt-wb-header.
-            else empty temp-table tt-wb-gds-EG.
+              else empty temp-table tt-wb-gds-EG.
             find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIdentity and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
             if not available (buf_clob-bind) then 
             do:
@@ -407,7 +424,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           do:
             if inTableType = {&wb-act-header}
               then empty temp-table tt-wb-act-header.
-            else empty temp-table tt-wb-act-gds-EG.
+              else empty temp-table tt-wb-act-gds-EG.
             find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIdentity and buf_clob-bind.field-name_ = {&lob-egais-wb-act} no-error.
             if not available (buf_clob-bind) then 
             do:
@@ -526,6 +543,15 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           end.
           return buffer tt-wb-act-hndls:handle.
         end.
+      when {&ticket} then 
+        do:
+          empty temp-table tt-ticket.
+          for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ticket} and buf_clob-bind.uniq-key-rec begins inWbIdentity :
+            find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
+            ParseResponse("", inTableType).
+          end.
+          return buffer tt-ticket:handle.
+        end.
       when {&wb-fact} then 
         do:
           empty temp-table tt-wb-hndls.
@@ -572,14 +598,18 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               buf_clients.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}) and
               buf_clients.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
             
-            for each buf_trn-doc no-lock where buf_trn-doc.cli-code = buf_clients.obj-code and buf_trn-doc.cli-type = buf_clients.obj-type and buf_trn-doc.status_ = {&fact}
-              and buf_trn-doc.doc-type matches "*рас*" :
+            for each buf_trn-doc no-lock where buf_trn-doc.obj-code = ObjCode and buf_trn-doc.obj-type = ObjType and 
+              buf_trn-doc.cli-code = buf_clients.obj-code and 
+              buf_trn-doc.cli-type = buf_clients.obj-type and 
+              buf_trn-doc.status_ = {&fact}
+              and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}) :
               create tt-wb-hndls.
               assign
                 tt-wb-hndls.wb-date      = buf_trn-doc.doc-date
                 tt-wb-hndls.trn-doc-code = buf_trn-doc.doc-code
                 tt-wb-hndls.shippregid   = buf_ext-classif.charkey_three
-                tt-wb-hndls.wb-type      = "расход"
+                tt-wb-hndls.wb-type      = {&TDEDT_Ras_Vnesh_VP-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
+                tt-wb-hndls.wb-type      = {&TDEDT_Ras_Vnesh_VP-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
                 tt-wb-hndls.status_      = buf_trn-doc.status_.
             end.
           end.
@@ -591,8 +621,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           def var ii as int    no-undo.
           
           if inTableType = {&wb-ras-header}
-            then empty temp-table tt-wb-act-header.
-          else empty temp-table tt-wb-act-gds-EG.
+            then empty temp-table tt-wb-header.
+          else empty temp-table tt-wb-gds-EG.
           
           find first buf_trn-doc no-lock where buf_trn-doc.doc-code = inWbIdentity no-error.
           
@@ -608,13 +638,17 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             tt-wb-header.Identity = buf_trn-doc.doc-code
             tt-wb-header.wb-type = "WBReturnFromMe"
             tt-wb-header.wb-date = buf_trn-doc.fact-date
+            tt-wb-header.obj-code = buf_trn-doc.obj-code
+            tt-wb-header.obj-type = buf_trn-doc.obj-type
+            tt-wb-header.cli-code = buf_trn-doc.cli-code
+            tt-wb-header.cli-type = buf_trn-doc.cli-type
           .
           
           find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
             and buf_ext-classif.classif-name = {&extclass_clients_esys}
             and buf_ext-classif.db-num = 0
             and buf_ext-classif.key#_one = v-ext-sys
-            and buf_ext-classif.CharKey_Two = buf_trn-doc.obj-type + string (buf_trn-doc.obj-code).
+            and buf_ext-classif.CharKey_Two = buf_trn-doc.obj-type + string (buf_trn-doc.obj-code) no-error.
           if not available (buf_ext-classif)
           then do:
             Msg = "Не найден объект ЕГАИС " + inWbIdentity.
@@ -627,7 +661,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             and buf_ext-classif.classif-name = {&extclass_clients_esys}
             and buf_ext-classif.db-num = 0
             and buf_ext-classif.key#_one = v-ext-sys
-            and buf_ext-classif.CharKey_Two = buf_trn-doc.cli-type + string (buf_trn-doc.cli-code).
+            and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + buf_trn-doc.cli-type + {&delim-key} + string (buf_trn-doc.cli-code) no-error.
           if not available (buf_ext-classif)
           then do:
             Msg = "Не найден клиент ЕГАИС " + inWbIdentity.
@@ -636,13 +670,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           end.
           tt-wb-header.regID-Cons = buf_ext-classif.CharKey_Three.          
           
-          
-          if not available (buf_clob-bind) then 
-          do:
-            Msg = "Не найден акт с идентификатором " + inWbIdentity.
-            StatusErr = true.
-            return ?.
-          end.
           for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code: 
             for each buf_parts no-lock where
               buf_parts.obj-type = buf_trn-doc.obj-type and 
@@ -652,11 +679,18 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               buf_parts.prod-code = buf_doc-line.prod-code and
               buf_parts.out-code = buf_trn-doc.doc-code: 
               ii = ii + 1.
+              find first buf_gds no-lock where buf_gds.artic = buf_parts.artic and buf_gds.prod-code = buf_parts.prod-code and buf_gds.prod-type = buf_parts.prod-type.
+              find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
+                                                 and buf_ext-classif.classif-name = {&extclass_goods_esys} 
+                                                 and buf_ext-classif.db-num = 0  
+                                                 and buf_ext-classif.key#_one = buf_gds.gds-code
+                                                 and buf_ext-classif.key#_two = v-ext-sys 
+                                                 no-error. 
               create tt-wb-gds-EG.
               assign
                 tt-wb-gds-EG.Identity = string (ii)
-/*                tt-wb-gds-EG.gds-name =*/
-/*                tt-wb-gds-EG.alc-code =*/
+                tt-wb-gds-EG.gds-name = buf_gds.gds-name
+                tt-wb-gds-EG.alc-code = buf_ext-classif.charkey_one
                 tt-wb-gds-EG.qnty = buf_parts.fact-qnty
                 tt-wb-gds-EG.price = buf_parts.price-rubl
                 tt-wb-gds-EG.refA = entry (1, buf_parts.alc-ref-ab-path, ",")
@@ -688,7 +722,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       StatusErr = true.
       return no.
     end.
-    
     do trans:
     
       os-delete "RespTTNAct.xml".
@@ -701,7 +734,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       if available (tt-wb-hndls)
         then 
       do:
-        if not tt-wb-hndls.wb-type matches "*расход*" then 
+        if not (tt-wb-hndls.wb-type matches "*расход*" or tt-wb-hndls.wb-type matches "*возврат*") then 
         do:
           output stream outstr to value ("TTNAct.xml") convert target "UTF-8". 
           outData = GetXMLAct() no-error.
@@ -774,14 +807,23 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         /*          put stream outstr skip.                                                                                                                                                 */
         /*          output stream outstr close.                                                                                                                                             */
         /*                                                                                                                                                                                  */
+          inFileName = "TTN.xml".
           
-          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTN.xml"), ConPar, inFileName).
+          WriteXMLWB (inFileName).
+          
+          if StatusErr
+          then
+          do:
+            return false.
+          end.
+          
+          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBill >&4", search ("exe/curl.exe"), search (inFileName), ConPar, "RespTTN.xml").
           os-command value (cmd).
-          file-info:file-name = search (inFileName).
-          if search (inFileName) <> ? and file-info:file-size > 0
+          file-info:file-name = search ("RespTTN.xml").
+          if search ("RespTTN.xml") <> ? and file-info:file-size > 0
             then
           do:
-            respValue = ParseRequest (inFileName).
+            respValue = ParseRequest ("RespTTN.xml").
             if respValue = ?
               then
             do:
@@ -1037,6 +1079,45 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   end.
   
                 end.
+              when hText:node-value matches ("*opt/out/Ticket/*") then 
+                do:
+  
+                  os-delete "Ticket.xml".
+                  assign
+                    inFileName = "Ticket.xml"
+                    .
+                  CmdParseXml(hText:node-value).
+                  if StatusErr then 
+                    return.
+                  find first tt-ticket.
+                  if (tt-ticket.regid = "" or tt-ticket.regid = ?) or tt-ticket.doc <> 'WayBillAct' then do:
+                    next url_.  
+                  end.
+                  v-clob-db-num = ?.
+                  v-int64-id = 0.
+                  
+                  if can-find (first buf_clob-bind where buf_clob-bind.uniq-key-rec = tt-ticket.regid + {&delim-par} + tt-ticket.docId and buf_clob-bind.field-name_ =  {&lob-egais-ticket})
+                    then next url_.
+                  run gbl/file2clb.p ( input {&add-def}
+                    ,input ",no"
+                    ,input ? /*p-bh*/
+                    ,input tt-ticket.regid + {&delim-par} + tt-ticket.docId /*p-uniq-key-rec*/
+                    ,input {&lob-egais-ticket} /*p-field-*/
+                    ,input '' /*p-descr*/
+                    ,input-output v-part-num
+                    ,input {&lob-egais-ticket}
+                    ,input-output v-clob-db-num
+                    ,input-output v-int64-id
+                    ,input search (inFileName)
+                    ,input '' /*p-src-encoding*/
+                    ) no-error .
+                  if error-status:error then 
+                  do:
+                    Msg = error-status:get-message(1) + {&new-line} + return-value.
+                    StatusErr = true.
+                  end.
+  
+                end.
             end case.
             
             empty temp-table tt-wb-info-client.
@@ -1066,6 +1147,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       empty temp-table tt-wb-gds-EG.
       empty temp-table tt-wb-act-header.
       empty temp-table tt-wb-act-gds-EG.
+      empty temp-table tt-ticket.
     end.
                 
     create x-document hDoc.
@@ -1075,7 +1157,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       when {&wb-header} or 
       when {&wb-line} or
       when {&wb-act-line} or 
-      when {&wb-act-header} or  
+      when {&wb-act-header} or
+      when {&ticket} or  
       when {&wb-refB} then 
         do:
         
@@ -1121,10 +1204,14 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       good = hParent:get-child(hNoderef,i).
       if not good then 
         leave.
-      if hNoderef:subtype <> "element" then
+      
+      if hNoderef:subtype <> "element" or hNoderef:num-children = 0 then
         next.
             
-      hNoderef:get-child(hText, 1) no-error .    
+      hNoderef:get-child(hText, 1) no-error .
+      
+      if error-status:error
+        then next.
             
       /*if hNoderef:name = "ns:FSRAR_ID" then
         assign v-FS-RAR = hText:node-value .*/       
@@ -1157,7 +1244,26 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           do:
             create tt-wb-act-gds-EG .
           end.
+        when "ns:Ticket" then 
+          do:
+            create tt-ticket .
+          end.
       end case.
+      if lookup (hParent:name, "ns:Ticket") > 0 then do:
+        if hNoderef:name = "tc:DocId" then assign tt-ticket.docID = hText:node-value.
+        if hNoderef:name = "tc:TicketDate" then assign tt-ticket.ticket-date = hText:node-value.
+        if hNoderef:name = "tc:RegID" 
+        then do:
+          assign tt-ticket.regid = hText:node-value.
+        end.
+        if hNoderef:name = "tc:DocType" then assign tt-ticket.doc = hText:node-value.
+        if hNoderef:name = "tc:DocType" then assign tt-ticket.doc = hText:node-value.
+        
+      end.
+      if lookup (hParent:name, "tc:Result") > 0 then do:
+        if hNoderef:name = "tc:Conclusion" then assign tt-ticket.status_ = hText:node-value.
+        if hNoderef:name = "tc:Comments" then assign tt-ticket.comment = hText:node-value.
+      end.
       if lookup (hParent:name, "ns:Owner") > 0
       then do:
         
@@ -1505,10 +1611,10 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
         end.
       end.
-      return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid) + (if is-diff then xml-cont else "") + {&xml-act-2}.
+      return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию") + (if is-diff then xml-cont else "") + {&xml-act-2}.
     end.
     else do:
-      xml-cont = substitute ({&xml-act-1}, v-FS-RAR, 'Reject', time, iso-date (date (now)), tt-wb-header.wbregid) + {&xml-act-2}.
+      xml-cont = substitute ({&xml-act-1}, v-FS-RAR, 'Rejected', time, iso-date (date (now)), tt-wb-header.wbregid, "Отказ") + {&xml-act-2}.
       return xml-cont.
     end.
     
@@ -1522,7 +1628,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     ParseResponse(inFileName, {&wb-clob}).
     find first tt-wb-header no-error.
     find first tt-wb-act-header no-error.
-    if not available (tt-wb-header) and not available (tt-wb-act-header) then 
+    find first tt-ticket no-error.
+    if not available (tt-wb-header) and not available (tt-wb-act-header) and not available (tt-ticket) then 
     do:
       Msg = 'Ошибка обработки xml'.
       StatusErr = true.
@@ -1569,15 +1676,17 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           sw:write-data-element ("wb:UnitType", 'Packed'). /*??????*/
           sw:write-data-element ("wb:ShippingDate", iso-date (tt-wb-header.wb-date)).
           sw:start-element ("wb:Shipper") .
-  /*          sw:write-data-element ("oref:INN", tt-wb-header.wb-date).*/
-  /*          sw:write-data-element ("oref:KPP", tt-wb-header.wb-date).*/
-            sw:write-data-element ("oref:ClientRegId", tt-wb-header.regID-Ship).
+            AddClientXML(sw, tt-wb-header.obj-type, tt-wb-header.obj-code, tt-wb-header.regID-Ship).
+            if StatusErr
+              then return. 
           sw:end-element ("wb:Shipper") .
           sw:start-element ("wb:Consignee") .
-  /*          sw:write-data-element ("oref:INN", tt-wb-header.wb-date).*/
-  /*          sw:write-data-element ("oref:KPP", tt-wb-header.wb-date).*/
-            sw:write-data-element ("oref:ClientRegId", tt-wb-header.regID-Cons).
-          sw:end-element ("wb:Consignee") .        
+            AddClientXML(sw, tt-wb-header.cli-type, tt-wb-header.cli-code, tt-wb-header.regID-Cons).
+            if StatusErr
+              then return.
+          sw:end-element ("wb:Consignee") .
+          sw:start-element ("wb:Transport") .
+          sw:end-element ("wb:Transport") .
         sw:end-element ("wb:Header") .
         sw:start-element ("wb:Content") .
           sw:start-element ("wb:Position") .
@@ -1606,6 +1715,46 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     delete object sw.
 
   end.
+  
+  method private void AddClientXML (inSW as handle, inObjType as char, inObjCode as int, inRegID as char):
+    
+    find first buf_clients no-lock where buf_clients.obj-type = inObjType and buf_clients.obj-code = inObjCode no-error.
+    if available (buf_clients)
+    then do:
+      if buf_clients.obj-type = {&cmp}
+      then do:
+        find first buf_firm no-lock where buf_firm.firm-code = buf_clients.obj-code no-error.
+      end.
+      else do:
+        find first buf_firm no-lock where buf_firm.firm-code = buf_clients.host-code no-error.
+      end.
+      find first buf_clients-attr no-lock where buf_clients-attr.obj-type = inObjType and buf_clients-attr.obj-code = inObjCode
+        and buf_clients-attr.attr-code = {&attr-kpp} no-error.
+    end.
+    else do:
+      Msg = "Не найден клиент " + inObjType + string (inObjCode).
+      StatusErr = true.
+      return.
+    end.
 
+    if available (buf_firm) and 
+      (available (buf_clients-attr) or (buf_firm.kpp <> "" and not available (buf_clients-attr))) then do:
+      inSW:write-data-element ("oref:INN", buf_firm.inn).
+      inSW:write-data-element ("oref:KPP", if available buf_clients-attr then buf_clients-attr.attr-value else buf_firm.kpp).
+    end.
+    else do:
+      Msg = "Не найден ИНН или КПП объекта " + inObjType + string (inObjCode).
+      StatusErr = true.
+      return.
+    end.
+    inSW:write-data-element ("oref:ClientRegId", inRegID).
+    inSW:write-data-element ("oref:FullName", buf_clients.obj-name).
+    inSW:write-data-element ("oref:ShortName", '').
+    inSW:start-element ("oref:address").
+      inSW:write-data-element ("oref:Country", '643').
+      inSW:write-data-element ("oref:description", '').
+    inSW:end-element ("oref:address").
+    
+  end.
 
 end class.

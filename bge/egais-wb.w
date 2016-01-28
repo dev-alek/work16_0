@@ -415,7 +415,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   }
   { gbl/getcntxt.i get }
 
-  find first ub.ext-system where ub.ext-system.delivery-method = integer ({&esys-dm-egais}).
+  find first ub.ext-system where ub.ext-system.whole-send-news = integer ({&esys-dm-egais}).
   
   assign 
     v-ext-sys = ub.ext-system.esys-id .  
@@ -471,6 +471,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   do ii = 1 to bh-wb-gds-EG:num-fields:
     bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-gds-EG' + '.' + bh-wb-gds-EG:buffer-field (ii):name, 0, 'FILL-IN').
     if ii = 2 then bcol[ii]:width = 50.
+    if ii = 8 then bcol[ii]:width = 20.
   end.
   
   bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).

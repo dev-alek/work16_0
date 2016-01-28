@@ -1,10 +1,10 @@
 /*
 
-$Revision: $
-$Author: $
-$Date: $
-$Workfile: $
-$Archive: $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
                                         
 Файл глобальных определений
 
@@ -3862,6 +3862,8 @@ end.
 &global-define trdcattr-edi '{&bef-trdcattr-edi}':U
 &global-define bef-trdcattr-negais negais
 &global-define trdcattr-negais '{&bef-trdcattr-negais}':U
+&global-define bef-trdcattr-egais egais
+&global-define trdcattr-egais '{&bef-trdcattr-egais}':U
 &global-define bef-trdcattr-ddov ddov
 &global-define trdcattr-ddov '{&bef-trdcattr-ddov}':U
 &global-define bef-trdcattr-ndov ndov
@@ -3942,7 +3944,7 @@ end.
 &global-define trdcattr-condition '{&bef-trdcattr-condition}':U
 &global-define bef-trdcattr-seals-condition seals-condition
 &global-define trdcattr-seals-condition '{&bef-trdcattr-seals-condition}':U
-&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition':U
+&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,negais,egais,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition':U
 &global-define bef-lineattr-flora_ps flora_ps
 &global-define lineattr-flora_ps '{&bef-lineattr-flora_ps}':U
 &global-define bef-lineattr-flora_gds-code fl_gds-code
@@ -5143,8 +5145,12 @@ end.
 &global-define lob-egais-wb-act '{&bef-lob-egais-wb-act}':U
 &global-define bef-lob-egais-wb-act-full Акт подтверждения накладной
 &global-define lob-egais-wb-act-full '{&bef-lob-egais-wb-act-full}':U
-&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-wb-act':U
-&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт подтверждения накладной':U
+&global-define bef-lob-egais-ticket egais-ticket
+&global-define lob-egais-ticket '{&bef-lob-egais-ticket}':U
+&global-define bef-lob-egais-ticket-full Квитанция ЕГАИС
+&global-define lob-egais-ticket-full '{&bef-lob-egais-ticket-full}':U
+&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-wb-act,egais-ticket':U
+&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт подтверждения накладной,':U
 &global-define blob-res-codes 'data':U
 &global-define blob-res-codes-full 'Данные':U
 &global-define blob-trn-doc-image 'trn-doc-image':U
@@ -6626,6 +6632,14 @@ end.
 &global-define EGAIS-DictGds '{&bef-EGAIS-DictGds}':U
 &global-define bef-EGAIS-DictGds-full Справочник товаров
 &global-define EGAIS-DictGds-full '{&bef-EGAIS-DictGds-full}':U
+&global-define bef-egais-act-send 0
+&global-define egais-act-send '{&bef-egais-act-send}':U
+&global-define bef-egais-act-send-full Акт отправлен
+&global-define egais-act-send-full '{&bef-egais-act-send-full}':U
+&global-define bef-egais-wb-send 1
+&global-define egais-wb-send '{&bef-egais-wb-send}':U
+&global-define bef-egais-wb-send-full Накладная отправлена
+&global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 5f8096499a5b, 356, rls  ".
@@ -7922,7 +7936,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 6b61c6e68798, 367, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: f8d6bc498809, 388, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 5b76fa20060f, 436, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 5d834d1edea8, 434, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 5f8096499a5b, 356, rls ':U
 &endif

@@ -31,6 +31,8 @@
 &glob wb-act-line   9
 &glob wb-ras-header 10
 &glob wb-ras-line   11
+&glob ticket        12
+
 
 
 
@@ -50,7 +52,7 @@
     field obj-type     as character label "Тип клиента TH"
     field obj-code     as integer label "Код клиента TH"
     field ps           as character label "Примечание"
-    field wbregid      as character label "WBRegId"
+    field wbregid      as character format "X(21)" label "WBRegId"
     field Identity     as character label "ID EGAIS"
     field wb-type      as character label "Тип"
     field uniq-key-rec as character
@@ -66,7 +68,7 @@
     field alc-type-code  like ub.alc-type.alc-type-code label "Код АП"
     field proof          like ub.goods.proof label "Крепость" format ">9.9"
     field regID-i-p      as character format "X(21)" label "Импортер/Производитель"
-    field i-p-name       as character label "Импортер/Производитель назв."
+    field i-p-name       as character label "Импортер/Производитель назв." format "X(150)" 
     field i-p-th         as character label "Импортер/Производитель TH"
     field qnty           like ub.doc-line.doc-qnty label "Кол-во"
     field price          like ub.doc-line.price-rubl label "Цена"
