@@ -336,7 +336,7 @@ DO:
                   ,input-output v-clob-db-num
                   ,input-output v-int64-id
                   ,input search (v-file)
-                  ,input 'UTF-8' /*p-src-encoding*/
+                  ,input '' /*p-src-encoding*/
                   ) no-error .
          if error-status:error then message return-value view-as alert-box.   
     end.
@@ -352,7 +352,7 @@ DO:
                   ,input-output v-clob-db-num
                   ,input-output v-int64-id
                   ,input search (v-file)
-                  ,input 'UTF-8' /*p-src-encoding*/
+                  ,input '' /*p-src-encoding*/
                   ) no-error .        
     end.
         
@@ -611,7 +611,7 @@ procedure makeXML :
                                     sw:write-data-element ("iab:BottlingDate", string(iso-date(tt-gds-act.A-bottleDate))) no-error .
                                     sw:write-data-element ("iab:TTNNumber", tt-gds-act.A-ttnNumber) .
                                     sw:write-data-element ("iab:TTNDate", string(iso-date(tt-gds-act.A-ttnDate))) no-error .
-                                    sw:write-data-element ("iab:EGAISFixNumber", tt-gds-act.A-fixNumber) .
+                                    sw:write-data-element ("iab:EGAISFixNumber", tt-gds-act.A-fixNumber) no-error .
                                     sw:write-data-element ("iab:EGAISFixDate", string(iso-date(tt-gds-act.A-fixDate))) no-error .
                                 sw:end-element ("ain:InformA") .  
                             sw:end-element ("ain:InformABReg") .
