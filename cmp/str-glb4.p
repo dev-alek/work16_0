@@ -1080,6 +1080,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 { cmp/cr-prep.i 1 trdcattr-edi       "edi"        " "  "edi" }
 /* номер EGAIS */
 { cmp/cr-prep.i 1 trdcattr-negais       "negais"        " "  "negais" }
+/* статус EGAIS */
+{ cmp/cr-prep.i 1 trdcattr-egais       "egais"        " "  "egais" }
 /*Дата доверенности */
 { cmp/cr-prep.i 1 trdcattr-ddov ddov " " ddov }
 /*Номер доверенности */
