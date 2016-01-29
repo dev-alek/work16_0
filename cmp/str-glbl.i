@@ -5150,7 +5150,7 @@ end.
 &global-define bef-lob-egais-ticket-full Квитанция ЕГАИС
 &global-define lob-egais-ticket-full '{&bef-lob-egais-ticket-full}':U
 &global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-wb-act,egais-ticket':U
-&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт подтверждения накладной,':U
+&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт подтверждения накладной,Квитанция ЕГАИС':U
 &global-define blob-res-codes 'data':U
 &global-define blob-res-codes-full 'Данные':U
 &global-define blob-trn-doc-image 'trn-doc-image':U
@@ -7937,6 +7937,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 8831a216da68, 95, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: 5b76fa20060f, 436, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 5d834d1edea8, 434, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 0fdacfb98c72, 443, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 5f8096499a5b, 356, rls ':U
 &endif

@@ -59,6 +59,7 @@ define variable v-rid                      as recid     no-undo .
 /*define variable v-identity                 as character no-undo .*/
 define variable v-uniq-key-rec             as character no-undo .
 define variable glog                       as logical no-undo .
+define variable ii                         as integer no-undo .
 
 define buffer buf_clients   for ub.clients .
 define buffer buf_firm      for ub.firm .
@@ -239,7 +240,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
       , output v-select-obj-type      /* p-select-obj-type    */
       , output v-select-obj-code      /* p-select-obj-code    */
       ) no-error.
-    find first buf_clients no-lock where buf_clients.obj-type = v-select-obj-type and buf_clients.obj-code = v-select-obj-code .
+    find first buf_clients no-lock where buf_clients.obj-type = v-select-obj-type and buf_clients.obj-code = v-select-obj-code no-error.
     if not available (buf_clients) 
       then return no-apply.
     run gen-key-rec in this-procedure   ( input {&table_clients}
@@ -281,11 +282,78 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
     end.
     find first ub.clob-bind where ub.clob-bind.uniq-key-rec = v-uniq-key-rec and ub.clob-bind.field-name_ = {&lob-egais-wb}.
     entry (9, ub.clob-bind.descr, {&delim-par}) = buf_clients.obj-type + string (buf_clients.obj-code).
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, v-uniq-key-rec ).
+
+    delete object browse-hdl-wb-egais-header.
+    delete object browse-hdl-wb-egais.
+    create query gh-wb-egais-header.
+    create browse browse-hdl-wb-egais-header
+      assign 
+      title     = 'Накладная ЕГАИС'
+      frame     = frame {&FRAME-NAME}:handle
+      query     = gh-wb-egais-header
+      x         = 10
+      y         = 42
+      width     = 119
+      height    = 5
+      visible   = true
+      read-only = true
+      sensitive = true
+      separators = true
+      column-resizable = true
+      .
+    
+    
+    create query gh-wb-egais.
+    create browse browse-hdl-wb-egais
+      assign 
+      title     = 'Список товаров ЕГАИС'
+      frame     = frame {&FRAME-NAME}:handle
+      query     = gh-wb-egais
+      x         = 10
+      y         = 102
+      width     = 119
+      height    = 22
+      visible   = true
+      read-only = true
+      sensitive = true
+      separators = true
+      column-resizable = true
+      triggers:
+        on mouse-move-dblclick persistent run msdblcl.
+        on row-display persistent run proc-row-leave.
+      end triggers
+      .
+  
+    egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    if egais:StatusErr
+    then do:
+      message egais:Msg view-as alert-box error.
+      return no-apply.
+    end.
+  
+    bh-wb-gds-EG-header = cast (egais:EGAISImpl, ibs.th.bge.egais.WayBill):HndlHeader.
+    bh-wb-gds-EG = cast (egais:EGAISImpl, ibs.th.bge.egais.WayBill):HndlLine.
+    
+    
     gh-wb-egais-header:set-buffers (bh-wb-gds-EG-header).
     gh-wb-egais-header:query-prepare ("for each tt-wb-header").
     gh-wb-egais-header:query-open.
-
+    
+    do ii = 1 to bh-wb-gds-EG-header:num-fields:
+      bcol-h[ii] = browse-hdl-wb-egais-header:add-like-column('tt-wb-header' + '.' + bh-wb-gds-EG-header:buffer-field (ii):name, 0, 'FILL-IN').
+      if ii = 6 then bcol-h[ii]:width = 20.
+    end.
+    
+    gh-wb-egais:set-buffers (bh-wb-gds-EG).
+    gh-wb-egais:query-prepare ("for each tt-wb-gds-EG by Identity").
+    gh-wb-egais:query-open.
+  
+    do ii = 1 to bh-wb-gds-EG:num-fields:
+      bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-gds-EG' + '.' + bh-wb-gds-EG:buffer-field (ii):name, 0, 'FILL-IN').
+      if ii = 2 then bcol[ii]:width = 50.
+      if ii = 8 then bcol[ii]:width = 20.
+    end.
+  
     run refresh-view.
 
   END.
@@ -301,67 +369,67 @@ ON CHOOSE OF b-choose-ship IN FRAME Dialog-Frame /* b-choose-ship */
 
     def var v-rid-list as character no-undo.
   
-    run ref/cli-all.w (
-      input parparentproc
-      ,input "b-sel"
-      ,input {&all}
-      ,input {&all}
-      ,input {&current}
-      ,input ?
-      ,input ",,,,,,NO,,"
-      ,input "lock-cli-type"
-      ,output v-rid-list ) no-error.
-    if v-rid-list = '':U then return no-apply.
-    find first buf_clients no-lock where
-      recid( buf_clients) = INTEGER( v-rid-list ) no-error.
-    if not available buf_clients then 
-    do:
-      return no-apply.
-    end.
-/*    find first buf_firm where buf_firm.firm-code = buf_clients.obj-code no-error.*/
-
-    run gen-key-rec in this-procedure   ( input {&table_clients}
-      ,input buffer buf_clients:handle
-      ,output v-obj-uniq-key-rec).
-    find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_clients}
-      and X_ext-classif.classif-name = {&extclass_clients_esys}
-      and X_ext-classif.db-num = 0
-      and X_ext-classif.key#_one = v-ext-sys
-      and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
-      no-error.
-    if available X_ext-classif then 
-    do :
-      assign 
-        X_ext-classif.charkey_three = bh-wb-gds-EG-header:buffer-field ("regID-ship"):buffer-value .
-    end.
-    else 
-    do :
-      run ref/extclas1.p ( input {&add-def}
-        ,input yes /*p-silent*/
-        ,input-output v-rid
-        ,input {&table_clients} /*p-classif-subject*/
-        ,input {&extclass_clients_esys} /*p-classif-name*/
-        ,input 0 /*p-db-num*/
-        ,input v-ext-sys  /*p-key#_one*/
-        ,input 0 /*p-Key#_Two*/
-        ,input 0 /*p-key#_Three*/
-        ,input '':U  /*p-CharKey_One */
-        ,input '':U /*p-CharKey_two */
-        ,input bh-wb-gds-EG-header:buffer-field ("regID-ship"):buffer-value /*p-CharKey_three */
-        ,input 0 /*p-nonunique */
-        ,input v-obj-uniq-key-rec ) no-error.
-      if error-status:error then 
-      do:
-        message return-value " " error-status:get-message(1) view-as alert-box .
-        undo, return no-apply .
-      end.
-    end.
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, v-uniq-key-rec).
-    gh-wb-egais-header:set-buffers (bh-wb-gds-EG-header).
-    gh-wb-egais-header:query-prepare ("for each tt-wb-header").
-    gh-wb-egais-header:query-open.
-
-    run refresh-view.
+/*    run ref/cli-all.w (                                                                             */
+/*      input parparentproc                                                                           */
+/*      ,input "b-sel"                                                                                */
+/*      ,input {&all}                                                                                 */
+/*      ,input {&all}                                                                                 */
+/*      ,input {&current}                                                                             */
+/*      ,input ?                                                                                      */
+/*      ,input ",,,,,,NO,,"                                                                           */
+/*      ,input "lock-cli-type"                                                                        */
+/*      ,output v-rid-list ) no-error.                                                                */
+/*    if v-rid-list = '':U then return no-apply.                                                      */
+/*    find first buf_clients no-lock where                                                            */
+/*      recid( buf_clients) = INTEGER( v-rid-list ) no-error.                                         */
+/*    if not available buf_clients then                                                               */
+/*    do:                                                                                             */
+/*      return no-apply.                                                                              */
+/*    end.                                                                                            */
+/*/*    find first buf_firm where buf_firm.firm-code = buf_clients.obj-code no-error.*/               */
+/*                                                                                                    */
+/*    run gen-key-rec in this-procedure   ( input {&table_clients}                                    */
+/*      ,input buffer buf_clients:handle                                                              */
+/*      ,output v-obj-uniq-key-rec).                                                                  */
+/*    find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_clients} */
+/*      and X_ext-classif.classif-name = {&extclass_clients_esys}                                     */
+/*      and X_ext-classif.db-num = 0                                                                  */
+/*      and X_ext-classif.key#_one = v-ext-sys                                                        */
+/*      and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec                                           */
+/*      no-error.                                                                                     */
+/*    if available X_ext-classif then                                                                 */
+/*    do :                                                                                            */
+/*      assign                                                                                        */
+/*        X_ext-classif.charkey_three = bh-wb-gds-EG-header:buffer-field ("regID-ship"):buffer-value .*/
+/*    end.                                                                                            */
+/*    else                                                                                            */
+/*    do :                                                                                            */
+/*      run ref/extclas1.p ( input {&add-def}                                                         */
+/*        ,input yes /*p-silent*/                                                                     */
+/*        ,input-output v-rid                                                                         */
+/*        ,input {&table_clients} /*p-classif-subject*/                                               */
+/*        ,input {&extclass_clients_esys} /*p-classif-name*/                                          */
+/*        ,input 0 /*p-db-num*/                                                                       */
+/*        ,input v-ext-sys  /*p-key#_one*/                                                            */
+/*        ,input 0 /*p-Key#_Two*/                                                                     */
+/*        ,input 0 /*p-key#_Three*/                                                                   */
+/*        ,input '':U  /*p-CharKey_One */                                                             */
+/*        ,input '':U /*p-CharKey_two */                                                              */
+/*        ,input bh-wb-gds-EG-header:buffer-field ("regID-ship"):buffer-value /*p-CharKey_three */    */
+/*        ,input 0 /*p-nonunique */                                                                   */
+/*        ,input v-obj-uniq-key-rec ) no-error.                                                       */
+/*      if error-status:error then                                                                    */
+/*      do:                                                                                           */
+/*        message return-value " " error-status:get-message(1) view-as alert-box .                    */
+/*        undo, return no-apply .                                                                     */
+/*      end.                                                                                          */
+/*    end.                                                                                            */
+/*    bh-wb-gds-EG-header = egais:GetHndlTable(1, v-uniq-key-rec).                                    */
+/*    gh-wb-egais-header:set-buffers (bh-wb-gds-EG-header).                                           */
+/*    gh-wb-egais-header:query-prepare ("for each tt-wb-header").                                     */
+/*    gh-wb-egais-header:query-open.                                                                  */
+/*                                                                                                    */
+/*    run refresh-view.                                                                               */
 
   END.
 
@@ -406,8 +474,6 @@ MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
 
-  def var ii as int no-undo.
-
   { gbl/getcurus.i
     v-db-num
     v-user-id
@@ -415,16 +481,16 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   }
   { gbl/getcntxt.i get }
 
-  find first ub.ext-system where ub.ext-system.whole-send-news = integer ({&esys-dm-egais}).
-  
+  find first ub.ext-system where ub.ext-system.delivery-method = integer ({&esys-dm-egais}).
   assign 
     v-ext-sys = ub.ext-system.esys-id .  
   
+  create query gh-wb-egais-header.
   create browse browse-hdl-wb-egais-header
     assign 
     title     = 'Накладная ЕГАИС'
     frame     = frame {&FRAME-NAME}:handle
-    query     = gh-wb-egais
+    query     = gh-wb-egais-header
     x         = 10
     y         = 42
     width     = 119
@@ -436,6 +502,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     column-resizable = true
     .
   
+  
+  create query gh-wb-egais.
   create browse browse-hdl-wb-egais
     assign 
     title     = 'Список товаров ЕГАИС'
@@ -456,16 +524,30 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     end triggers
     .
 
+  egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+  if egais:StatusErr
+  then do:
+    message egais:Msg view-as alert-box error.
+    return no-apply.
+  end.
 
+  bh-wb-gds-EG-header = cast (egais:EGAISImpl, ibs.th.bge.egais.WayBill):HndlHeader.
+  bh-wb-gds-EG = cast (egais:EGAISImpl, ibs.th.bge.egais.WayBill):HndlLine.
   
-  bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-
-  create query gh-wb-egais.
+  
+  gh-wb-egais-header:set-buffers (bh-wb-gds-EG-header).
+  gh-wb-egais-header:query-prepare ("for each tt-wb-header").
+  gh-wb-egais-header:query-open.
+  
+  extent (bcol-h) = bh-wb-gds-EG-header:num-fields.
+  do ii = 1 to bh-wb-gds-EG-header:num-fields:
+    bcol-h[ii] = browse-hdl-wb-egais-header:add-like-column('tt-wb-header' + '.' + bh-wb-gds-EG-header:buffer-field (ii):name, 0, 'FILL-IN').
+    if ii = 6 then bcol-h[ii]:width = 20.
+  end.
+  
   gh-wb-egais:set-buffers (bh-wb-gds-EG).
-  gh-wb-egais:query-prepare ("for each tt-wb-gds-EG").
+  gh-wb-egais:query-prepare ("for each tt-wb-gds-EG by Identity").
   gh-wb-egais:query-open.
-
-  browse-hdl-wb-egais:query = gh-wb-egais.
 
   extent (bcol) = bh-wb-gds-EG:num-fields.
   do ii = 1 to bh-wb-gds-EG:num-fields:
@@ -474,18 +556,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     if ii = 8 then bcol[ii]:width = 20.
   end.
   
-  bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-  create query gh-wb-egais-header.
-  gh-wb-egais-header:set-buffers (bh-wb-gds-EG-header).
-  gh-wb-egais-header:query-prepare ("for each tt-wb-header").
-  gh-wb-egais-header:query-open.
 
-  browse-hdl-wb-egais-header:query = gh-wb-egais-header.
-  extent (bcol-h) = bh-wb-gds-EG-header:num-fields.
-  do ii = 1 to bh-wb-gds-EG-header:num-fields:
-    bcol-h[ii] = browse-hdl-wb-egais-header:add-like-column('tt-wb-header' + '.' + bh-wb-gds-EG-header:buffer-field (ii):name, 0, 'FILL-IN').
-    if ii = 6 then bcol-h[ii]:width = 20.
-  end.
   { gbl/diasize.i &br-hndl=browse-hdl-wb-egais }
   run diasize_init in this-procedure .
   run enable_UI.  
@@ -548,6 +619,7 @@ PROCEDURE msdblcl :
   def    var      v-rid-list  as character no-undo.
   define variable par-alcohol as character no-undo .
   define variable par-type    as character no-undo .
+  define buffer buf_ext-classif for ub.ext-classif.
   
   def var glog as  log no-undo.
   
@@ -612,18 +684,21 @@ PROCEDURE msdblcl :
       run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
        ,input (buffer buf_goods:handle)
         ,output v-gds-uniq-key-rec).
-      find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_goods} 
-        and X_ext-classif.classif-name = {&extclass_goods_esys} 
-        AND X_ext-classif.db-num = 0  
-        and X_ext-classif.key#_one = buf_goods.gds-code
-        and X_ext-classif.key#_two = v-ext-sys 
-        and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+      
+      
+      find first buf_ext-classif exclusive-lock  where buf_ext-classif.classif-subject = {&table_goods} 
+        and buf_ext-classif.classif-name = {&extclass_goods_esys} 
+        AND buf_ext-classif.db-num = 0  
+        and buf_ext-classif.key#_one = buf_goods.gds-code
+        and buf_ext-classif.key#_two = v-ext-sys 
+        and buf_ext-classif.uniq-key-rec = v-gds-uniq-key-rec
         no-error.
-      if available (X_ext-classif)
+      if available (buf_ext-classif)
       then do:
         message substitute ("Товар &1 уже связан.", buf_goods.gds-code) view-as alert-box.
         return no-apply.
       end.
+      
       run gds-attr-value(
         buf_goods.gds-code,
         {&attr-alcohol-prod},
@@ -732,18 +807,20 @@ PROCEDURE msdblcl :
     run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
      ,input (buffer buf_goods:handle)
       ,output v-gds-uniq-key-rec).
-    find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_goods} 
-      and X_ext-classif.classif-name = {&extclass_goods_esys} 
-      AND X_ext-classif.db-num = 0  
-      and X_ext-classif.key#_one = buf_goods.gds-code
-      and X_ext-classif.key#_two = v-ext-sys 
-      and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+
+    find first buf_ext-classif exclusive-lock  where buf_ext-classif.classif-subject = {&table_goods} 
+      and buf_ext-classif.classif-name = {&extclass_goods_esys} 
+      AND buf_ext-classif.db-num = 0  
+      and buf_ext-classif.key#_one = buf_goods.gds-code
+      and buf_ext-classif.key#_two = v-ext-sys 
+      and buf_ext-classif.uniq-key-rec = v-gds-uniq-key-rec
       no-error.
-    if available (X_ext-classif)
+    if available (buf_ext-classif)
     then do:
       message substitute ("Товар &1 уже связан.", buf_goods.gds-code) view-as alert-box.
       return no-apply.
     end.
+    
     run gds-attr-value(
       buf_goods.gds-code,
       {&attr-alcohol-prod},
@@ -816,12 +893,76 @@ PROCEDURE msdblcl :
     ).
   end.
   
-
-  bh-wb-gds-EG = egais:GetHndlTable(2, v-uniq-key-rec ).
+  delete object browse-hdl-wb-egais-header.
+  delete object browse-hdl-wb-egais.
+  create query gh-wb-egais-header.
+  create browse browse-hdl-wb-egais-header
+    assign 
+    title     = 'Накладная ЕГАИС'
+    frame     = frame {&FRAME-NAME}:handle
+    query     = gh-wb-egais-header
+    x         = 10
+    y         = 42
+    width     = 119
+    height    = 5
+    visible   = true
+    read-only = true
+    sensitive = true
+    separators = true
+    column-resizable = true
+    .
+  
+  
   create query gh-wb-egais.
+  create browse browse-hdl-wb-egais
+    assign 
+    title     = 'Список товаров ЕГАИС'
+    frame     = frame {&FRAME-NAME}:handle
+    query     = gh-wb-egais
+    x         = 10
+    y         = 102
+    width     = 119
+    height    = 22
+    visible   = true
+    read-only = true
+    sensitive = true
+    separators = true
+    column-resizable = true
+    triggers:
+      on mouse-move-dblclick persistent run msdblcl.
+      on row-display persistent run proc-row-leave.
+    end triggers
+    .
+
+  egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+  if egais:StatusErr
+  then do:
+    message egais:Msg view-as alert-box error.
+    return no-apply.
+  end.
+
+  bh-wb-gds-EG-header = cast (egais:EGAISImpl, ibs.th.bge.egais.WayBill):HndlHeader.
+  bh-wb-gds-EG = cast (egais:EGAISImpl, ibs.th.bge.egais.WayBill):HndlLine.
+  
+  
+  gh-wb-egais-header:set-buffers (bh-wb-gds-EG-header).
+  gh-wb-egais-header:query-prepare ("for each tt-wb-header").
+  gh-wb-egais-header:query-open.
+  
+  do ii = 1 to bh-wb-gds-EG-header:num-fields:
+    bcol-h[ii] = browse-hdl-wb-egais-header:add-like-column('tt-wb-header' + '.' + bh-wb-gds-EG-header:buffer-field (ii):name, 0, 'FILL-IN').
+    if ii = 6 then bcol-h[ii]:width = 20.
+  end.
+  
   gh-wb-egais:set-buffers (bh-wb-gds-EG).
-  gh-wb-egais:query-prepare ("for each tt-wb-gds-EG").
+  gh-wb-egais:query-prepare ("for each tt-wb-gds-EG by Identity").
   gh-wb-egais:query-open.
+
+  do ii = 1 to bh-wb-gds-EG:num-fields:
+    bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-gds-EG' + '.' + bh-wb-gds-EG:buffer-field (ii):name, 0, 'FILL-IN').
+    if ii = 2 then bcol[ii]:width = 50.
+    if ii = 8 then bcol[ii]:width = 20.
+  end.
 
   run refresh-view.
 

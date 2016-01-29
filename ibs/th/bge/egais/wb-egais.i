@@ -79,12 +79,7 @@
     field importer-th    as character label "Импортер TH"
     field regID-Producer as character format "X(21)" label "Производитель"
     field Producer-th    as character label "Производитель TH"
-    index pi as primary
-    gds-code
-    index name_
-    gds-name
-    index alc
-    alc-code    
+    index pi Identity ascending    
     .
 
   define temp-table tt-wb-act-header no-undo

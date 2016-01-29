@@ -222,7 +222,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define private buffer buf_shop          for ub.shop.
   define private buffer buf_store         for ub.store.
   define private buffer buf_ext-classif   for ub.ext-classif.
-  
+  define private buffer X_ext-classif     for ub.ext-classif.
   define private variable parameters     as character no-undo.
   define private variable inFileName     as character no-undo.
   define private variable inData         as character no-undo.
@@ -236,6 +236,14 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define         variable v-ext-sys      as integer   no-undo .
   define         variable ObjType        as character no-undo .
   define         variable ObjCode        as integer   no-undo .
+  
+  define property HndlHeader as handle no-undo
+    get.
+    private set. 
+  
+  define property HndlLine as handle no-undo
+    get.
+    private set.
 
   define temp-table tt-wb-hndls no-undo
     field num          as character label "№ накл." format "X(50)"
@@ -355,13 +363,17 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 
             ParseResponse("", inTableType).
             find first tt-wb-header.
-            find first ub.ext-classif where ub.ext-classif.CharKey_Three = tt-wb-header.regID-Ship no-error.
-            if available (ub.ext-classif)
+            find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
+              and buf_ext-classif.classif-name = {&extclass_clients_esys}
+              and buf_ext-classif.db-num = 0
+              and buf_ext-classif.key#_one = v-ext-sys
+              and buf_ext-classif.CharKey_Three = tt-wb-header.regID-Ship no-error.
+            if available (buf_ext-classif)
               then 
             do:
               find first ub.clients no-lock where 
-                ub.clients.obj-type = entry(2, ub.ext-classif.uniq-key-rec, {&delim-key}) and 
-                ub.clients.obj-code = integer(entry(3, ub.ext-classif.uniq-key-rec, {&delim-key})).
+                ub.clients.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}) and 
+                ub.clients.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
               
               if available (ub.clients) then 
               do:
@@ -373,13 +385,18 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               end.
             end.
            
-            find first ub.ext-classif where ub.ext-classif.CharKey_Three = tt-wb-header.regID-Cons and ext-classif.CharKey_Two = entry (9, buf_clob-bind.descr, {&delim-par}) no-error.
-            if available (ub.ext-classif)
+            find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
+              and buf_ext-classif.classif-name = {&extclass_clients_esys}
+              and buf_ext-classif.db-num = 0
+              and buf_ext-classif.key#_one = v-ext-sys
+              and buf_ext-classif.CharKey_Three = tt-wb-header.regID-Cons and buf_ext-classif.CharKey_Two = entry (9, buf_clob-bind.descr, {&delim-par}) no-error.
+            
+            if available (buf_ext-classif)
               then 
             do:
               find first ub.clients no-lock where 
-                ub.clients.obj-type = entry(2, ub.ext-classif.uniq-key-rec, {&delim-key}) and 
-                ub.clients.obj-code = integer(entry(3, ub.ext-classif.uniq-key-rec, {&delim-key})).
+                ub.clients.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}) and 
+                ub.clients.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
               
               if available (ub.clients) then 
               do:
@@ -392,9 +409,14 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             end.
 
             for each tt-wb-gds-EG:
-              find first ub.ext-classif where ub.ext-classif.charkey_one = tt-wb-gds-EG.alc-code no-error.
-              if available (ub.ext-classif)
-                then tt-wb-gds-EG.gds-code = ub.ext-classif.Key#_One.
+              find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                and x_ext-classif.db-num = 0  
+                and X_ext-classif.key#_two = v-ext-sys 
+                and X_ext-classif.CharKey_One = tt-wb-gds-EG.alc-code no-error.
+
+              if available (X_ext-classif)
+                then tt-wb-gds-EG.gds-code = X_ext-classif.Key#_One.
               else tt-wb-gds-EG.gds-code = ?.
             end.
 /*            v-uniq-key-rec = inWbIdentity.*/
@@ -407,6 +429,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
             
           end.
+          HndlHeader = buffer tt-wb-header:handle.
+          HndlLine = buffer tt-wb-gds-EG:handle.
           if inTableType = {&wb-header} then 
           do:
             return buffer tt-wb-header:handle.
@@ -474,6 +498,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             end.
             
           end.
+          HndlHeader = buffer tt-wb-header:handle.
+          HndlLine = buffer tt-wb-gds-EG:handle.
           if inTableType = {&wb-act-header} then 
           do:
             return buffer tt-wb-act-header:handle.
@@ -975,8 +1001,13 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 
                   find first tt-wb-header.
                   find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Consignee".
-                  find first buf_ext-classif where buf_ext-classif.CharKey_Three = tt-wb-info-client.regID no-error.
-            
+                  find first buf_ext-classif no-lock where 
+                        buf_ext-classif.classif-subject = {&table_clients}
+                    and buf_ext-classif.classif-name = {&extclass_clients_esys}
+                    and buf_ext-classif.db-num = 0
+                    and buf_ext-classif.key#_one = v-ext-sys
+                    and buf_ext-classif.CharKey_Three = tt-wb-info-client.regID no-error.
+
                   if available (buf_ext-classif) then 
                   do:
                     tt-wb-header.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}).
