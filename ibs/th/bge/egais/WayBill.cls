@@ -230,6 +230,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define private variable cmd            as character no-undo.
   define private variable urlResp        as character no-undo.
   define private variable v-uniq-key-rec as character no-undo.
+  define private variable nn             as integer   no-undo.
 
   define         variable v-FS-RAR       as character no-undo .
   define         variable inDocFSRAR     as character no-undo .
@@ -1195,12 +1196,12 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         
           copy-lob
             from  object buf_clob-data.cdata
-            to  file 'temp.xml'
+            to  file (if inTableType = {&wb-refB} then "-refb" else "") + 'temp.xml'
             no-convert
             no-error .
 
           hDoc:encoding = 'utf-8'.
-          hDoc:load("file", search ('temp.xml'), false).
+          hDoc:load("file", search ((if inTableType = {&wb-refB} then "-refb" else "") + 'temp.xml'), false).
         
         end.
       when {&wb-clob} then 
@@ -1210,6 +1211,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         end.
     end case.
            
+    nn = 0.
     hDoc:get-document-element(hRoot).
             
     GetChildren(hRoot, 1, {&wb-clob}).
@@ -1266,6 +1268,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         when "wb:Position" then 
           do:
             create tt-wb-gds-EG .
+            nn = nn + 1.
           end.
         when "wa:Header" then 
           do:
@@ -1391,7 +1394,13 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         if hNoderef:name = "pref:AlcVolume"    then assign tt-wb-gds-EG.proof = decimal(hText:node-value) .
         
         if hNoderef:name = "pref:ProductVCode" then assign tt-wb-gds-EG.alc-type-code = hText:node-value .
-        if hNoderef:name = "wb:Identity"       then assign tt-wb-gds-EG.Identity = hText:node-value.
+        if hNoderef:name = "wb:Identity"       
+        then do:
+          assign 
+            tt-wb-gds-EG.Identity = hText:node-value
+            tt-wb-gds-EG.nn = nn
+          .
+        end.
         if hNoderef:name = "wb:Price"          then assign tt-wb-gds-EG.price = decimal(hText:node-value) .
         if hNoderef:name = "wb:Quantity"       then assign tt-wb-gds-EG.qnty = decimal(hText:node-value) .
         
