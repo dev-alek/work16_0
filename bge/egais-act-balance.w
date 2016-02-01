@@ -130,6 +130,11 @@ DEFINE BUTTON b-marks
      LABEL "Ввести марки" 
      SIZE 15 BY 1.14 TOOLTIP "Ввести марки"
      BGCOLOR 8 .
+
+DEFINE BUTTON b-add
+     LABEL "Добавить строку" 
+     SIZE 17 BY 1.14 TOOLTIP "Добавить строку акта"
+     BGCOLOR 8 .
      
 DEFINE BUTTON b-del
      LABEL "Удалить строку" 
@@ -183,7 +188,8 @@ DEFINE FRAME Dialog-Frame
     b-cancel at row 1.2 col 2
     b-good at row 1.2 col 17
     b-marks at row 1.2 col 32
-    b-del at row 1.2 col 47
+    b-add at row 1.2 col 47
+    b-del at row 1.2 col 64
     b-save at row 1.2 col 95
     tt-act-header.num at row 2.5 col 2 format "X(20)"
     tt-act-header.date_ at row 2.5 col 32
@@ -261,6 +267,35 @@ DO:
         open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
         find first tt-gds-act no-error.
         if not available tt-gds-act then enable b-good with frame {&FRAME-NAME}.
+    end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-add
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add Dialog-Frame
+ON CHOOSE OF b-add IN FRAME Dialog-Frame /* - */
+DO:
+    if not available buf_goods then do :
+        message "Выберите товар" view-as alert-box .
+        return no-apply.
+    end.
+    else do :
+        ii = 0.
+        for each tt-gds-act no-lock :
+            ii = ii + 1 .
+        end.        
+        create tt-gds-act .
+        assign
+            tt-gds-act.gds-code         = buf_goods.gds-code
+            tt-gds-act.alc-code         = X_ext-classif.charkey_one
+            tt-gds-act.gds-name         = buf_goods.gds-name
+            tt-gds-act.num              = tt-act-header.num
+            tt-gds-act.position_        = ii + 1
+            tt-gds-act.marks-qnty       = 0
+        . 
+        open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
     end.
 END.
 
@@ -465,6 +500,7 @@ DO:
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
     find first tt-gds-act no-error.
     if available tt-gds-act then disable b-good with frame {&FRAME-NAME}.
+    enable b-add with frame {&FRAME-NAME}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -514,10 +550,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         no-error .
         run parseXML in this-procedure .
         display tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
-        enable  tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
+/*        enable  tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.*/
         open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
         find first tt-gds-act no-error.
         if available tt-gds-act then disable b-good with frame {&FRAME-NAME}.
+        else enable b-good with frame {&FRAME-NAME}. 
+        if available buf_goods then enable b-add with frame {&FRAME-NAME}.
+        if p-mode = {&lookup} then hide b-add in frame {&FRAME-NAME}.
     end.
     
 /*    create query qh-gds-act .*/
@@ -572,25 +611,29 @@ procedure makeXML :
                             sw:write-data-element ("pref:AlcCode", tt-gds-act.alc-code) .
                             sw:write-data-element ("pref:Capacity", string(buf_goods.ms-base)) . 
                             sw:write-data-element ("pref:AlcVolume", string(buf_goods.proof)) . 
+                            
                         for first ub.alc-type-gds where ub.alc-type-gds.gds-code = buf_goods.gds-code no-lock,
                             first ub.alc-type where ub.alc-type.alc-type-inner-code = ub.alc-type-gds.alc-type-inner-code no-lock :
                             sw:write-data-element ("pref:ProductVCode", string(ub.alc-type.alc-type-code)) .
+                        end.
+                        
+                        find first ub.clients no-lock where ub.clients.obj-type = buf_goods.prod-type
+                                                        and ub.clients.obj-code = buf_goods.prod-code .
+                        find first ub.firm no-lock where ub.firm.firm-code = ub.clients.obj-code .
+                        run gen-key-rec in this-procedure   ( input {&table_clients}
+                                                             ,input buffer ub.clients:handle
+                                                             ,output v-obj-uniq-key-rec).
+                        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_clients}
+                                                           and X_ext-classif.classif-name = {&extclass_clients_esys}
+                                                           AND X_ext-classif.db-num = 0
+                                                           and X_ext-classif.key#_one = v-ext-sys
+                                                           and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
+                                                           no-error.
+                        if available X_ext-classif and trim(X_ext-classif.charkey_three) <> "" then do :                                  
                             sw:start-element ("pref:Producer") .
-                                find first ub.clients no-lock where ub.clients.obj-type = buf_goods.prod-type
-                                                                and ub.clients.obj-code = buf_goods.prod-code .
-                                find first ub.firm no-lock where ub.firm.firm-code = ub.clients.obj-code .
-                                run gen-key-rec in this-procedure   ( input {&table_clients}
-                                                                     ,input buffer ub.clients:handle
-                                                                     ,output v-obj-uniq-key-rec).
-                                find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_clients}
-                                                                   and X_ext-classif.classif-name = {&extclass_clients_esys}
-                                                                   AND X_ext-classif.db-num = 0
-                                                                   and X_ext-classif.key#_one = v-ext-sys
-                                                                   and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
-                                                                   no-error.
                                 sw:write-data-element ("oref:INN", ub.firm.inn) .
                                 sw:write-data-element ("oref:KPP", ub.firm.kpp) .
-                                sw:write-data-element ("oref:ClientRegId", if available X_ext-classif then X_ext-classif.charkey_three else "" ) .
+                                sw:write-data-element ("oref:ClientRegId", X_ext-classif.charkey_three) .
                                 sw:write-data-element ("oref:FullName", ub.clients.obj-name) .
                                 sw:write-data-element ("oref:ShortName", ub.clients.obj-name) .
                                 sw:start-element ("oref:address") .
@@ -602,25 +645,31 @@ procedure makeXML :
                                 sw:end-element ("oref:address") .
                             sw:end-element ("pref:Producer") .
                         end.
+                        
                         sw:end-element ("ain:Product") .
                         sw:write-data-element ("ain:Quantity", string(tt-gds-act.qnty)) .
                         sw:start-element ("ain:InformAB") .
                             sw:start-element ("ain:InformABReg") . 
                                 sw:start-element ("ain:InformA") .
-                                    sw:write-data-element ("iab:Quantity", string(tt-gds-act.A-qnty)) .
+                                    sw:write-data-element ("iab:Quantity", string(tt-gds-act.A-qnty)) no-error .
                                     sw:write-data-element ("iab:BottlingDate", string(iso-date(tt-gds-act.A-bottleDate))) no-error .
-                                    sw:write-data-element ("iab:TTNNumber", tt-gds-act.A-ttnNumber) .
+                                    sw:write-data-element ("iab:TTNNumber", tt-gds-act.A-ttnNumber) no-error .
                                     sw:write-data-element ("iab:TTNDate", string(iso-date(tt-gds-act.A-ttnDate))) no-error .
-                                    sw:write-data-element ("iab:EGAISFixNumber", tt-gds-act.A-fixNumber) no-error .
-                                    sw:write-data-element ("iab:EGAISFixDate", string(iso-date(tt-gds-act.A-fixDate))) no-error .
+                                    if tt-gds-act.A-fixNumber <> ? and trim(tt-gds-act.A-fixNumber) <> "" then do :
+                                        sw:write-data-element ("iab:EGAISFixNumber", tt-gds-act.A-fixNumber) no-error .
+                                        sw:write-data-element ("iab:EGAISFixDate", string(iso-date(tt-gds-act.A-fixDate))) no-error .
+                                    end.
                                 sw:end-element ("ain:InformA") .  
                             sw:end-element ("ain:InformABReg") .
                         sw:end-element ("ain:InformAB") .
+        find first tt-marks where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ no-lock no-error.
+        if available tt-marks then do :                
                         sw:start-element ("ain:MarkCodeInfo") .
-        for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
+            for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
                             sw:write-data-element ("ain:MarkCode", tt-marks.mark) .
-        end.    
-                        sw:end-element ("ain:MarkCodeInfo") .         
+            end.    
+                        sw:end-element ("ain:MarkCodeInfo") .
+        end.         
                     sw:end-element ("ain:Position") .                
     end. 
                 sw:end-element ("ain:Content") .
@@ -714,32 +763,34 @@ procedure GetChildren :
         IF hNoderef:NAME = "iab:EGAISFixNumber" THEN assign tt-gds-act.A-fixNumber = hText:node-value no-error . 
         IF hNoderef:NAME = "iab:EGAISFixDate" THEN assign tt-gds-act.A-fixDate = date(substring(hText:node-value, 9, 2) + "/" + substring(hText:node-value, 6, 2) + "/" + substring(hText:node-value, 1, 4)) no-error .
         
-        find first buf_parts no-lock where buf_parts.cst-code = tt-gds-act.A-ttnNumber
-                                       and buf_parts.artic = buf_goods.artic
-                                        and buf_parts.prod-type = buf_goods.prod-type
-                                        and buf_parts.prod-code = buf_goods.prod-code
-                                        and buf_parts.obj-type = v-cntxt-obj-type
-                                        and buf_parts.obj-code = v-cntxt-obj-code
-                                        and buf_parts.out-code = {&free-code}
-                                        no-error .
-        if available buf_parts then do :
-            assign
-                tt-gds-act.part-code = buf_parts.part-code
-                tt-gds-act.doc-code  = buf_parts.in-code    
-            .
-        end.
-        else do :
-            find first ub.doc-attr no-lock where ub.doc-attr.attr-code = {&trdcattr-nids} and ub.doc-attr.attr-value = tt-gds-act.A-ttnNumber no-error .
-            if available ub.doc-attr then do :
-                assign tt-gds-act.doc-code = ub.doc-attr.doc-code .    
+        if available tt-gds-act and tt-gds-act.A-ttnNumber <> "" and tt-gds-act.A-ttnNumber <> ? then do :
+            find first buf_parts no-lock where buf_parts.cst-code = tt-gds-act.A-ttnNumber
+                                           and buf_parts.artic = buf_goods.artic
+                                            and buf_parts.prod-type = buf_goods.prod-type
+                                            and buf_parts.prod-code = buf_goods.prod-code
+                                            and buf_parts.obj-type = v-cntxt-obj-type
+                                            and buf_parts.obj-code = v-cntxt-obj-code
+                                            and buf_parts.out-code = {&free-code}
+                                            no-error .
+            if available buf_parts then do :
+                assign
+                    tt-gds-act.part-code = buf_parts.part-code
+                    tt-gds-act.doc-code  = buf_parts.in-code    
+                .
             end.
             else do :
-                find first buf_trn-doc no-lock where buf_trn-doc.doc-code = tt-gds-act.A-ttnNumber no-error .
-                if available buf_trn-doc then do :
-                    assign tt-gds-act.doc-code = buf_trn-doc.doc-code .    
+                find first ub.doc-attr no-lock where ub.doc-attr.attr-code = {&trdcattr-nids} and ub.doc-attr.attr-value = tt-gds-act.A-ttnNumber no-error .
+                if available ub.doc-attr then do :
+                    assign tt-gds-act.doc-code = ub.doc-attr.doc-code .    
                 end.
-            end.
-        end.    
+                else do :
+                    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = tt-gds-act.A-ttnNumber no-error .
+                    if available buf_trn-doc then do :
+                        assign tt-gds-act.doc-code = buf_trn-doc.doc-code .    
+                    end.
+                end.
+            end.    
+        end.
             
         IF hNoderef:NAME = "ain:MarkCode" THEN do :
             create tt-marks.

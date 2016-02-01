@@ -345,7 +345,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
     end.
     
     gh-wb-egais:set-buffers (bh-wb-gds-EG).
-    gh-wb-egais:query-prepare ("for each tt-wb-gds-EG by Identity").
+    gh-wb-egais:query-prepare ("for each tt-wb-gds-EG by nn").
     gh-wb-egais:query-open.
   
     do ii = 1 to bh-wb-gds-EG:num-fields:
@@ -546,7 +546,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   end.
   
   gh-wb-egais:set-buffers (bh-wb-gds-EG).
-  gh-wb-egais:query-prepare ("for each tt-wb-gds-EG by Identity").
+  gh-wb-egais:query-prepare ("for each tt-wb-gds-EG by nn").
   gh-wb-egais:query-open.
 
   extent (bcol) = bh-wb-gds-EG:num-fields.
@@ -955,7 +955,7 @@ PROCEDURE msdblcl :
   end.
   
   gh-wb-egais:set-buffers (bh-wb-gds-EG).
-  gh-wb-egais:query-prepare ("for each tt-wb-gds-EG by Identity").
+  gh-wb-egais:query-prepare ("for each tt-wb-gds-EG by nn").
   gh-wb-egais:query-open.
 
   do ii = 1 to bh-wb-gds-EG:num-fields:

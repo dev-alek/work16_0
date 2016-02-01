@@ -79,7 +79,8 @@
     field importer-th    as character label "Импортер TH"
     field regID-Producer as character format "X(21)" label "Производитель"
     field Producer-th    as character label "Производитель TH"
-    index pi Identity ascending    
+    field nn             as integer label "№"
+    index pi nn ascending    
     .
 
   define temp-table tt-wb-act-header no-undo

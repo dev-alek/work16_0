@@ -228,7 +228,7 @@ procedure set-refAB:
                        , input ""
                        , input ""
                        , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 1, 3) else ""
-                       , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 4, 2) else ""
+                       , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 4) else ""
                        ) no-error .
       if error-status :error
       then do:

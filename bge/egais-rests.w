@@ -72,7 +72,7 @@ define temp-table tt-gds-rests no-undo
     field prt-rec           as character       
     index pi as primary
         gds-code
-    index name_
+    index name_ as word-index
         gds-name
     index alc
         alc-code    
@@ -121,6 +121,7 @@ define variable v-gds-uniq-key-rec as character no-undo .
 define variable saved as logical no-undo initial no .
 
 define variable gds-rec as recid no-undo .
+define variable tt-rec as recid no-undo .
 
 define variable v-value-character  as character no-undo .
 define variable v-value-decimal    as decimal   no-undo .
@@ -230,7 +231,16 @@ DEFINE BUTTON b-sel-all
 DEFINE BUTTON b-unmark
      LABEL "&-":L
      SIZE 3 BY 1.14 TOOLTIP "Снять все отметки". 
-     
+
+Define variable NameContext as character view-as fill-in size 30 by 1 fgcolor 12 no-undo.
+define variable loc-alc  as character view-as fill-in size 25 by 1 fgcolor 12 no-undo format "x(25)":U.
+define variable loc-code as character view-as fill-in size 20 by 1 fgcolor 12 no-undo. 
+
+define variable a-n-c as character view-as radio-set horizontal radio-buttons
+"Алк. Код","alc",
+"Нач.слова","context",
+"Код TH","code"
+size 30 by 1    fgcolor 0 /* bgcolor 8 */ no-undo.    
 
      
 /* Query definitions                                                    */
@@ -280,8 +290,12 @@ DEFINE FRAME Dialog-Frame
 /*     rs-sort AT ROW 3.6 COL 18 no-label                */
      v-fs-rar at row 2.7 col 10 label "ФСРАР ID"
      b-connect AT ROW 1.24 COL 81
-     b-del at row 2.5 col 81  
-     br-rests AT ROW 4 COL 2 WIDGET-ID 200
+     b-del at row 2.5 col 81 
+     a-n-c at row 4 col 2 label "Поиск по"
+     NameContext at row 4 col 50 label "Контекст"
+     loc-alc at row 4 col 50 no-label
+     loc-code at row 4 col 50 label "Код(весь)"
+     br-rests AT ROW 5.3 COL 2 WIDGET-ID 200
      SPACE(1) SKIP(0.32)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -370,6 +384,116 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&Scoped-define SELF-NAME a-n-c
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL a-n-c Dialog-Frame
+ON value-changed OF a-n-c in FRAME Dialog-Frame /* Объекты ЕГАИС */
+DO:
+    assign a-n-c .
+    assign NameContext = "" loc-code = "" loc-alc = "" loc-alc:screen-value = "" .
+    case a-n-c :
+        when "alc" then do :
+            OPEN QUERY {&browse-name} FOR EACH tt-gds-rests .
+            hide NameContext loc-code in frame Dialog-Frame .
+            display loc-alc with frame Dialog-Frame .
+            apply "entry" to br-rests in frame Dialog-Frame .
+        end.
+        when "context" then do :
+            hide loc-alc loc-code in frame Dialog-Frame .
+            enable NameContext with frame Dialog-Frame .
+            apply "entry" to NameContext in frame Dialog-Frame .
+        end.
+        when "code" then do :
+            OPEN QUERY {&browse-name} FOR EACH tt-gds-rests .
+            hide loc-alc NameContext in frame Dialog-Frame .
+            enable loc-code with frame Dialog-Frame .
+            apply "entry" to loc-code in frame Dialog-Frame .
+        end.
+    end case.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME NameContext
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL NameContext Dialog-Frame
+ON return OF NameContext IN FRAME {&frame-name} do:
+    define variable letter as character no-undo .
+    assign NameContext.
+    if trim(NameContext) = "" then do :
+        OPEN QUERY {&browse-name} FOR EACH tt-gds-rests .
+    end.
+    else do :
+        letter = substring(NameContext, length(NameContext), 1) .
+        if letter = 'н'
+        or letter = 'о'
+        or letter = 'э'
+        or letter = 'ю'
+        or letter = 'я'
+        then do :
+            OPEN QUERY {&browse-name} FOR EACH tt-gds-rests where tt-gds-rests.gds-name contains (trim(NameContext)) INDEXED-REPOSITION .
+        end.
+        else do :
+            OPEN QUERY {&browse-name} FOR EACH tt-gds-rests where tt-gds-rests.gds-name contains (trim(NameContext) + "*") INDEXED-REPOSITION .
+        end.
+    end.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME loc-code
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL loc-code Dialog-Frame
+ON return OF loc-code IN FRAME {&frame-name} do:
+    assign loc-code.
+    find first tt-gds-rests no-lock where tt-gds-rests.gds-code = integer(loc-code) no-error.
+    if not available tt-gds-rests then do :
+        message "Не найден товар с кодом " + loc-code view-as alert-box warning .
+    end.
+    else do :
+        assign tt-rec = recid(tt-gds-rests) .
+        reposition br-rests to recid tt-rec .
+    end.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME br-rests
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-rests Dialog-Frame
+ON any-printable OF br-rests IN FRAME {&frame-name} do:
+    if input frame {&frame-name} a-n-c = "alc" then do:
+        if last-event:label = " " and
+           loc-alc = "" then
+        return no-apply.
+        find first tt-gds-rests no-lock where tt-gds-rests.alc-code begins (loc-alc + last-event:label) no-error.
+        if available tt-gds-rests then do :
+            loc-alc = loc-alc + last-event:label.
+            disp loc-alc with frame {&frame-name}.
+            assign tt-rec = recid(tt-gds-rests) .
+            reposition br-rests to recid tt-rec .
+        end.
+        else bell.
+    end.
+end.
+
+ON backspace OF br-rests IN FRAME {&frame-name} do:
+    if input frame {&frame-name} a-n-c = "alc" then do:
+        if loc-alc = "" then
+          return no-apply.
+        loc-alc = substr (loc-alc, 1, length (loc-alc) - 1).
+        find first tt-gds-rests no-lock where tt-gds-rests.alc-code begins loc-alc no-error.
+        if available tt-gds-rests then do :
+            disp loc-alc with frame {&frame-name}.
+            assign tt-rec = recid(tt-gds-rests) .
+            reposition br-rests to recid tt-rec .
+        end.
+    end.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME b-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark Dialog-Frame
@@ -561,6 +685,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-answer Dialog-Frame
 ON CHOOSE OF b-answer IN FRAME Dialog-Frame /* - */
 DO:
+    empty temp-table tt-gds-rests .
     bh-gds-egais = egais:GetHndlTable() .
     glog = egais:StatusErr .
     if glog then do :
@@ -610,6 +735,8 @@ DO:
     end.
     OPEN QUERY {&browse-name} FOR EACH tt-gds-rests .
     apply "value-changed" to br-rests .
+    enable a-n-c with FRAME {&FRAME-NAME}.
+    apply "value-changed" to a-n-c in FRAME {&FRAME-NAME}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -643,6 +770,10 @@ DO:
     if available tt-gds-rests then do :
         if trim(tt-gds-rests.prt-rec) = "" then disable b-del with frame {&FRAME-NAME} .
         else enable b-del with frame {&FRAME-NAME} .
+    end.
+    if not available tt-gds-rests or recid(tt-gds-rests) <> tt-rec then do :
+        hide loc-alc in frame {&frame-name}.
+        loc-alc = "".
     end.
 end.
 
@@ -812,6 +943,7 @@ PROCEDURE enable_UI :
   ENABLE b-mark b-sel-all b-unmark b-load b-save b-cancel br-rests  b-connect b-del
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
+  hide NameContext loc-alc loc-code in FRAME Dialog-Frame.
   br-rests:column-resizable in FRAME Dialog-Frame = true .
   glog = egais:IsSent .
   if glog then enable b-answer WITH FRAME Dialog-Frame.
