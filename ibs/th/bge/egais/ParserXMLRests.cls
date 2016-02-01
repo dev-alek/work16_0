@@ -31,7 +31,7 @@ class ibs.th.bge.egais.ParserXMLRests inherits EGAISUTM:
     field TH-qnty           as integer                      label "Остаток TH"          
     index pi as primary
         gds-code
-    index name_
+    index name_ as word-index
         gds-name
     index alc
         alc-code    
