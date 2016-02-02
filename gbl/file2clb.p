@@ -106,17 +106,17 @@ do
 on error undo, return error
 :
 if p-mode <> {&deletion} then do:
-  run gbl/filename.p (
-                  input p-file
-                ,output v-full-path
-                ,output v-path
-                ,output v-file-name
-                ,output v-file-name-no-ext
-                ,output v-file-name-ext
-                ) no-error .
-  if error-status:error then do:
-    return error substitute("Не удается найти файл &1", p-file).
-  end.
+run gbl/filename.p (
+                input p-file
+              ,output v-full-path
+              ,output v-path
+              ,output v-file-name
+              ,output v-file-name-no-ext
+              ,output v-file-name-ext
+              ) no-error .
+if error-status:error then do:
+  return error substitute("Не удается найти файл &1", p-file).
+end.
 end.
 if p-resource-type = {&lob-res-data}
 or ((p-resource-type = {&lob-res-report}
@@ -124,30 +124,30 @@ or p-resource-type = {&lob-res-report-xml})
    and p-bh <> ? )
 then do:
   if p-resource-type = {&lob-res-data} then do:
-    run gen-key-rec in this-procedure ( input p-bh:table
-                                      ,input p-bh
-                                      ,output v-uniq-key-rec) no-error .
+  run gen-key-rec in this-procedure ( input p-bh:table
+                                    ,input p-bh
+                                    ,output v-uniq-key-rec) no-error .
 
-    if error-status:error then do:
-      return error return-value .
-    end.
+  if error-status:error then do:
+    return error return-value .
+  end.
   end.
   else do:
     v-uniq-key-rec = p-uniq-key-rec.
   end.
   if p-bh <> ? then do:
-    glog = p-bh:find-current( exclusive-lock) no-error.
-    if error-status:error
-    or not glog
-    then do:
-      undo, return error substitute("Не удалось заблокировать &1 для записи файла &2  в CLOB&3&4&3&5"
-                                    ,v-uniq-key-rec
-                                    ,p-file
-                                    ,{&new-line}
-                                    , error-status:get-message(1)
-                                    , return-value ).
-    end.
+  glog = p-bh:find-current( exclusive-lock) no-error.
+  if error-status:error
+  or not glog
+  then do:
+    undo, return error substitute("Не удалось заблокировать &1 для записи файла &2  в CLOB&3&4&3&5"
+                                  ,v-uniq-key-rec
+                                  ,p-file
+                                  ,{&new-line}
+                                  , error-status:get-message(1)
+                                  , return-value ).
   end.
+end.
 end.
 else do:
   v-uniq-key-rec = p-uniq-key-rec.
@@ -256,6 +256,7 @@ case p-mode :
                                then p-encoding
                                else "")
       buf_clob-data.is-cs = v-send-nws
+      buf_clob-data.resource-type = p-resource-type
       .
       buf_clob-data.file-name_ = (if is-abs-path(p-file) then v-file-name else p-file).
       if p-encoding <> ?
@@ -407,7 +408,6 @@ case p-mode :
                                     ,p-field
                                     ,p-part-num).
     end.
-    if self_clob-bind.resource-type = {&lob-res-gate} then buf_clob-data.is-cs = true. /*некоторые gate от старых версий th стоят без признака отправки в новости, когда не было хранимых списков. для совместимости с новыми кодами gate всегда отправляем в новости, в отличии от хранимых списков*/
     v-send-nws = buf_clob-data.is-cs.
     if p-clob-mode = "override" then do:
       for each other_clob-bind no-lock where
@@ -446,6 +446,7 @@ case p-mode :
                               and p-encoding <> ""
                               then p-encoding
                               else "")
+      buf_clob-data.resource-type = p-resource-type
       v-save-clob = yes
       buf_clob-data.is-cs = v-send-nws
       .
@@ -474,12 +475,12 @@ case p-mode :
         no-convert
         NO-ERROR .
         if error-status :error then do:
+          v-longchar1 = '':U.
+          v-longchar2 = '':U.
           undo, return error substitute("Ошибка при перекодировке файла &1:&2&3"
                                         , v-full-path
                                         , {&new-line}
                                         , error-status:get-message(1) ).
-          v-longchar1 = '':U.
-          v-longchar2 = '':U.
         end.
         assign
         v-longchar2 = codepage-convert(v-longchar1, p-encoding, "1251")
@@ -567,7 +568,7 @@ case p-mode :
                                       , error-status:get-message(1)
                                       , return-value ).
 
-      end.
+  end.
     end.
   end.
   when {&deletion} then do:
@@ -653,6 +654,6 @@ do
 on error undo, return error return-value
 :
   p-send-nws = v-send-nws.
-  end.
+end.
 
 end procedure. /* cb_set-send-nws */
