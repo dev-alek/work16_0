@@ -65,6 +65,8 @@ define temp-table tt-gds no-undo
     field proof             like ub.goods.proof             label "Крепость"            format ">9.9"    
     field fromEgais         as logical
     field egais-name        as character                    label "Наименование ЕГАИС"  format "X(100)"
+    field prod-info         as character
+    field imp-info          as character
     index pi as primary
         gds-code
     index name_
@@ -565,7 +567,7 @@ DO:
                             ,input v-ext-sys /*p-Key#_Two*/
                             ,input 0 /*p-key#_Three*/
                             ,input tt-gds.alc-code  /*p-CharKey_One */
-                            ,input '':U /*p-CharKey_two */
+                            ,input (tt-gds.prod-info + CHR(4) + tt-gds.imp-info) /*p-CharKey_two */
                             ,input buf_goods.gds-name /*p-CharKey_three */
                             ,input 0 /*p-nonunique */
                             ,input v-gds-uniq-key-rec ) no-error.
@@ -982,6 +984,10 @@ procedure sel-prod :
         . 
         find first buf_firm no-lock where buf_firm.firm-code = buf_clients.obj-code no-error .
         if available buf_firm then do :
+            if trim(buf_firm.inn) = "" or buf_firm.inn = ? then do :
+                message "У производителя не заполнен ИНН. Для отправки запроса в ЕГАИС необходим корректный ИНН" view-as alert-box.
+                return error.
+            end.
             egais:EGAISImpl = new DictGds(v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, buf_firm.inn) .
         end.
     end.     

@@ -221,7 +221,7 @@ procedure fill-tt :
             bh-gds-egais:find-unique (substitute("where tt-gds-EG.gds-name = '&1'", bh-gds:buffer-field ("gds-name"):buffer-value), no-lock) no-error.
         end.
         if bh-gds-egais:available then do :
-            do ii = 2 to bh-gds-egais:num-fields :
+            do ii = 2 to (bh-gds-egais:num-fields - 2) :
                 if bh-gds:buffer-field (ii):buffer-value <> bh-gds-egais:buffer-field (ii):buffer-value then do :
                     create tt-gds-diff .
                     assign

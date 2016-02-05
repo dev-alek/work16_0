@@ -23,6 +23,8 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
         field ms-base           like ub.goods.ms-base           label "Объем"               format ">>9.9<<"
         field alc-type-code     like ub.alc-type.alc-type-code  label "Код АП"
         field proof             like ub.goods.proof             label "Крепость"            format ">9.9"
+        field prod-info         as character
+        field imp-info          as character
         index pi as primary
             gds-code
         index name_ as word-index
@@ -34,6 +36,8 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
     DEFINE VARIABLE hDoc AS HANDLE NO-UNDO.
     DEFINE VARIABLE hRoot AS HANDLE NO-UNDO.
     DEFINE VARIABLE good AS LOGICAL NO-UNDO.
+    
+    define variable v-imp as logical .
     
     constructor public ParserXMLDictGds (inOjType as char, inObjCode as int):
   
@@ -65,6 +69,7 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
         DEFINE VARIABLE hNoderef AS HANDLE NO-UNDO.
         DEFINE VARIABLE hText AS HANDLE NO-UNDO.
         
+        
         CREATE X-NODEREF hNoderef.
         CREATE X-NODEREF hText .
         
@@ -91,6 +96,33 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
             IF hNoderef:NAME = "pref:Capacity"     THEN assign tt-gds-EG.ms-base         = decimal(hText:node-value) .
             IF hNoderef:NAME = "pref:AlcVolume"    THEN assign tt-gds-EG.proof           = decimal(hText:node-value) .
             IF hNoderef:NAME = "pref:ProductVCode" THEN assign tt-gds-EG.alc-type-code   = hText:node-value .
+            IF hNoderef:NAME = "pref:Producer"     THEN assign v-imp       = false .
+            IF hNoderef:NAME = "pref:Importer"     THEN assign v-imp       = true .
+            
+            IF hNoderef:NAME = "oref:ClientRegId" THEN DO :
+                if v-imp then assign tt-gds-EG.imp-info          = hText:node-value .
+                else          assign tt-gds-EG.prod-info         = hText:node-value .
+            end.    
+            IF hNoderef:NAME = "oref:INN"         THEN do :
+                if v-imp then assign tt-gds-EG.imp-info          = tt-gds-EG.imp-info + CHR(5) + hText:node-value .
+                else          assign tt-gds-EG.prod-info         = tt-gds-EG.prod-info + CHR(5) + hText:node-value .
+            end.
+            IF hNoderef:NAME = "oref:KPP"         THEN do : 
+                if v-imp then assign tt-gds-EG.imp-info          = tt-gds-EG.imp-info + CHR(5) + hText:node-value .
+                else          assign tt-gds-EG.prod-info         = tt-gds-EG.prod-info + CHR(5) + hText:node-value .
+            end.
+            IF hNoderef:NAME = "oref:FullName"    THEN do :
+                if v-imp then assign tt-gds-EG.imp-info          = tt-gds-EG.imp-info + CHR(5) + hText:node-value .
+                else          assign tt-gds-EG.prod-info         = tt-gds-EG.prod-info + CHR(5) + hText:node-value .
+            end.
+            IF hNoderef:NAME = "oref:Country"     THEN do :
+                if v-imp then assign tt-gds-EG.imp-info          = tt-gds-EG.imp-info + CHR(5) + hText:node-value .
+                else          assign tt-gds-EG.prod-info         = tt-gds-EG.prod-info + CHR(5) + hText:node-value .
+            end.
+            IF hNoderef:NAME = "oref:description" THEN do :
+                if v-imp then assign tt-gds-EG.imp-info          = tt-gds-EG.imp-info + CHR(5) + hText:node-value .
+                else          assign tt-gds-EG.prod-info         = tt-gds-EG.prod-info + CHR(5) + hText:node-value .
+            end.    
                    
             GetChildren(hNoderef, (level + 1)).
         END.
