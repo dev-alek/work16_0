@@ -416,6 +416,14 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                     and buf_temp-chk-gds.b-code = temp-chk-gds.b-code          
                   and temp-chk-gds.line-num = 0
                 no-error .
+                case num-entries(buf_temp-chk-gds.line-type, {&delim-par}):
+                    when 1 then do:
+                      pychk_line-type-chr = temp-chk-gds.line-type + {&delim-par} + {&delim-par} + string(temp-chk-pay.num-lines).
+                    end.
+                    when 2 then do:
+                      pychk_line-type-chr = temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
+                    end.
+                end case.
                 pychk_dop-sumk = min(temp-chk-dp.sum,buf_temp-chk-gds.sum).
                 if abs(temp-chk-pay.tot-r-b - pychk_dop-sumk) <= 0.001 then pychk_dop-sumk = temp-chk-pay.tot-r-b.
                  create buf_chk-gds-pay.
