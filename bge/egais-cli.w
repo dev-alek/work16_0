@@ -507,19 +507,19 @@ DO:
         for first tt-objs exclusive-lock where recid(tt-objs) = integer(entry(ii, select-list)) and tt-objs.connected_ :
             find tt-objs-EG no-lock where tt-objs-EG.regID = tt-objs.regID no-error .             
             if available tt-objs-EG and not ambiguous tt-objs-EG then do transaction :
-                buffer-copy tt-objs-EG except obj-type obj-code obj-name-th description_ to tt-objs .
-                assign    
-                    tt-objs.description_ = (if tt-objs.postIndex       <> ? and tt-objs.postIndex       <> "" then (tt-objs.postIndex + ", ")           else "")
-                                         + (if tt-objs.district        <> ? and tt-objs.district        <> "" then (tt-objs.district + ", ")            else "")
-                                         + (if tt-objs.city            <> ? and tt-objs.city            <> "" then (tt-objs.city + ", ")                else "")
-                                         + (if tt-objs.settlement      <> ? and tt-objs.settlement      <> "" then (tt-objs.settlement + ", ")          else "")
-                                         + (if tt-objs.street          <> ? and tt-objs.street          <> "" then (tt-objs.street + ", ")              else "")
-                                         + (if tt-objs.house-number    <> ? and tt-objs.house-number    <> "" then ("д." + tt-objs.house-number)        else "")
-                                         + (if tt-objs.house-litera    <> ? and tt-objs.house-litera    <> "" then (tt-objs.house-litera + ", ")        else ", ")
-                                         + (if tt-objs.house-case      <> ? and tt-objs.house-case      <> "" then ("кор." + tt-objs.house-case + ", ") else "")
-                                         + (if tt-objs.house-apartment <> ? and tt-objs.house-apartment <> "" then ("кв." + tt-objs.house-apartment)    else "")
-                    tt-objs.description_ = trim(trim(tt-objs.description_), ",")                
-                .
+                buffer-copy tt-objs-EG except obj-type obj-code obj-name-th to tt-objs .
+/*                assign                                                                                                                                            */
+/*                    tt-objs.description_ = (if tt-objs.postIndex       <> ? and tt-objs.postIndex       <> "" then (tt-objs.postIndex + ", ")           else "")  */
+/*                                         + (if tt-objs.district        <> ? and tt-objs.district        <> "" then (tt-objs.district + ", ")            else "")  */
+/*                                         + (if tt-objs.city            <> ? and tt-objs.city            <> "" then (tt-objs.city + ", ")                else "")  */
+/*                                         + (if tt-objs.settlement      <> ? and tt-objs.settlement      <> "" then (tt-objs.settlement + ", ")          else "")  */
+/*                                         + (if tt-objs.street          <> ? and tt-objs.street          <> "" then (tt-objs.street + ", ")              else "")  */
+/*                                         + (if tt-objs.house-number    <> ? and tt-objs.house-number    <> "" then ("д." + tt-objs.house-number)        else "")  */
+/*                                         + (if tt-objs.house-litera    <> ? and tt-objs.house-litera    <> "" then (tt-objs.house-litera + ", ")        else ", ")*/
+/*                                         + (if tt-objs.house-case      <> ? and tt-objs.house-case      <> "" then ("кор." + tt-objs.house-case + ", ") else "")  */
+/*                                         + (if tt-objs.house-apartment <> ? and tt-objs.house-apartment <> "" then ("кв." + tt-objs.house-apartment)    else "")  */
+/*                    tt-objs.description_ = trim(trim(tt-objs.description_), ",")                                                                                  */
+/*                .                                                                                                                                                 */
                 find first buf_clients-attr exclusive-lock  where buf_clients-attr.obj-type = tt-objs.obj-type 
                                                             and   buf_clients-attr.obj-code = tt-objs.obj-code
                                                             and   buf_clients-attr.attr-code = {&attr-requisite-alc-decl}
@@ -543,7 +543,8 @@ DO:
                                             + tt-objs.house-number + "|"
                                             + tt-objs.house-case + "|"
                                             + tt-objs.house-apartment + "|"
-                                            + tt-objs.house-litera + "|" 
+                                            + tt-objs.house-litera + "|||||||" 
+                                            + replace(tt-objs.description_, "|", CHR(5))
                 .
                 
                 if tt-objs.regID <> "" then do :
@@ -942,18 +943,19 @@ PROCEDURE fill-tt :
                     tt-objs.house-litera        = entry(13, buf_clients-attr.attr-value, "|")
                     no-error
                 .
-                assign    
-                    tt-objs.description_ = (if tt-objs.postIndex       <> ? and tt-objs.postIndex       <> "" then (tt-objs.postIndex + ", ")           else "")
-                                         + (if tt-objs.district        <> ? and tt-objs.district        <> "" then (tt-objs.district + ", ")            else "")
-                                         + (if tt-objs.city            <> ? and tt-objs.city            <> "" then (tt-objs.city + ", ")                else "")
-                                         + (if tt-objs.settlement      <> ? and tt-objs.settlement      <> "" then (tt-objs.settlement + ", ")          else "")
-                                         + (if tt-objs.street          <> ? and tt-objs.street          <> "" then (tt-objs.street + ", ")              else "")
-                                         + (if tt-objs.house-number    <> ? and tt-objs.house-number    <> "" then ("д." + tt-objs.house-number)        else "")
-                                         + (if tt-objs.house-litera    <> ? and tt-objs.house-litera    <> "" then (tt-objs.house-litera + ", ")        else ", ")
-                                         + (if tt-objs.house-case      <> ? and tt-objs.house-case      <> "" then ("кор." + tt-objs.house-case + ", ") else "")
-                                         + (if tt-objs.house-apartment <> ? and tt-objs.house-apartment <> "" then ("кв." + tt-objs.house-apartment)    else "")
-                    tt-objs.description_ = trim(trim(tt-objs.description_), ",")                
-                . 
+                assign tt-objs.description_ = replace(entry(20, buf_clients-attr.attr-value, "|"), CHR(5), "|") no-error .
+/*                assign                                                                                                                                            */
+/*                    tt-objs.description_ = (if tt-objs.postIndex       <> ? and tt-objs.postIndex       <> "" then (tt-objs.postIndex + ", ")           else "")  */
+/*                                         + (if tt-objs.district        <> ? and tt-objs.district        <> "" then (tt-objs.district + ", ")            else "")  */
+/*                                         + (if tt-objs.city            <> ? and tt-objs.city            <> "" then (tt-objs.city + ", ")                else "")  */
+/*                                         + (if tt-objs.settlement      <> ? and tt-objs.settlement      <> "" then (tt-objs.settlement + ", ")          else "")  */
+/*                                         + (if tt-objs.street          <> ? and tt-objs.street          <> "" then (tt-objs.street + ", ")              else "")  */
+/*                                         + (if tt-objs.house-number    <> ? and tt-objs.house-number    <> "" then ("д." + tt-objs.house-number)        else "")  */
+/*                                         + (if tt-objs.house-litera    <> ? and tt-objs.house-litera    <> "" then (tt-objs.house-litera + ", ")        else ", ")*/
+/*                                         + (if tt-objs.house-case      <> ? and tt-objs.house-case      <> "" then ("кор." + tt-objs.house-case + ", ") else "")  */
+/*                                         + (if tt-objs.house-apartment <> ? and tt-objs.house-apartment <> "" then ("кв." + tt-objs.house-apartment)    else "")  */
+/*                    tt-objs.description_ = trim(trim(tt-objs.description_), ",")                                                                                  */
+/*                .                                                                                                                                                 */
             end.       
         end.    
     end.      

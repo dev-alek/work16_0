@@ -44,6 +44,7 @@ define variable v-position_         as integer no-undo .
 define variable v-date              as character no-undo .
 define variable v-rid-list          as character no-undo .
 define variable par-alcohol         as character no-undo .
+define variable par-egais-name      as character no-undo .
 define variable par-type            as character no-undo .
 define variable v-attr-value        as character            no-undo .
 define variable v-attr-type         as character            no-undo .
@@ -606,7 +607,13 @@ procedure makeXML :
                         sw:write-data-element ("ain:Identity", string(tt-gds-act.position_)) .
                         sw:start-element ("ain:Product") .
                             sw:write-data-element ("pref:Type", "¿œ") . 
-                            sw:write-data-element ("pref:FullName", tt-gds-act.gds-name) .
+                            run gds-attr-value(
+                                tt-gds-act.gds-code,
+                                {&attr-egais-name},
+                                output par-egais-name,
+                                output par-type
+                            ).
+                            sw:write-data-element ("pref:FullName", par-egais-name) .
                             sw:write-data-element ("pref:ShortName", "") . 
                             sw:write-data-element ("pref:AlcCode", tt-gds-act.alc-code) .
                             sw:write-data-element ("pref:Capacity", string(buf_goods.ms-base)) . 

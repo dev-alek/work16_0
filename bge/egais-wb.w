@@ -710,12 +710,12 @@ PROCEDURE msdblcl :
         message "Выбранный товар не является алкогольной продукцией." view-as alert-box.
         return no-apply.
       end.
-      if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value and bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value <> 0
+      if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value and (bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value <> ?)
       then do:
         message "У выбранного товара не соответсвует объем" view-as alert-box.
         return no-apply.
       end.
-      if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value
+      if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value and (bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> ?)
       then do:
         message "У выбранного товара не соответсвует содержание спирта" view-as alert-box.
         return no-apply.
@@ -832,12 +832,12 @@ PROCEDURE msdblcl :
       message "Выбранный товар не является алкогольной продукцией." view-as alert-box.
       return no-apply.
     end.
-    if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value
+    if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value and (bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value <> ?)
     then do:
       message "У выбранного товара не соответсвует объем" view-as alert-box.
       return no-apply.
     end.
-    if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value
+    if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value and (bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> ?)
     then do:
       message "У выбранного товара не соответсвует содержание спирта" view-as alert-box.
       return no-apply.

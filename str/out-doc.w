@@ -1350,10 +1350,9 @@ DO:
   run local-del no-error.
 if error-status :error then return no-apply.
 run ui-on ("enable":u).
-apply "entry" to br-dtl in frame {&frame-name} .
-prt-rec = del-rec.
-if prt-rec <> ? then reposition br-dtl to recid prt-rec no-error.
-
+/*apply "entry" to br-dtl in frame {&frame-name} .*/
+/*prt-rec = del-rec.                                               */
+/*if prt-rec <> ? then reposition br-dtl to recid prt-rec no-error.*/
 END.
 
 /* _UIB-CODE-BLOCK-END */

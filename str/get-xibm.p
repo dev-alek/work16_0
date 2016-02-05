@@ -1421,7 +1421,7 @@ on error undo, return error
                                 else (if not v-flag-card
                                       and (ub.chk-doc.src-d-card = ? or ub.chk-doc.src-d-card = "":U)
                                       then d-card_
-                                      else "-0":U
+                                      else d-card_
                                       )
                                 )
       ub.chk-doc.src-cli-type   = (if cli-type_ = "":U
@@ -1628,7 +1628,7 @@ on error undo, return error
                                else (if not v-flag-card
                                     and (chk-doc.src-d-card = ? or ub.chk-doc.src-d-card = "":U)
                                     then d-card_
-                                    else "-0":U
+                                    else d-card_
                                     )
                                )
     ub.chk-doc.src-d-mask       = (if d-mask_ = "":U
@@ -2422,7 +2422,8 @@ define buffer buf_chk-discnt for ub.chk-discnt.
                                else buf_chk-gds.src-sum)
       var-discnt-id = var-discnt-id + 1
       sub-d = (if ub.chk-discnt.line-type = integer({&discnt-sub-total}) then (sub-d - disc-sum_) else sub-d)
-      netto-for-sub-d =  netto-for-sub-d - ub.chk-discnt.discnt-value-abs
+       sub-d = (if chk-discnt.line-type = integer({&discnt-sub-total}) then (sub-d - disc-sum_) else sub-d).
+      if chk-discnt.record-type <> 10 then netto-for-sub-d =  netto-for-sub-d - chk-discnt.discnt-value-abs
       .
       if available buf_chk-gds  and chk-discnt.record-type <> 10 then
       assign
