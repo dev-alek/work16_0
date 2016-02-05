@@ -1329,7 +1329,6 @@ define variable rep-rec as recid no-undo .
 define variable  varlns-cnt  as integer   no-undo .
 define variable rr as recid no-undo .
 
-
 if del-list = "" then do:
   /* удаление 1 строки */
   if not available buf_price-doc-forming-gds then do:
@@ -1349,6 +1348,7 @@ if del-list = "" then do:
   run del-doc-line1 ( line-rec ) .
   run OpenBr in this-procedure (yes, no, '':U).
   reposition {&browse-name} to recid rep-rec no-error.
+  run vc-pdf in this-procedure .
 end.
 else do:
   /* удаление отмеченных строк */
@@ -1391,6 +1391,7 @@ else do:
 del-list = "" .
 run OpenBr in this-procedure (yes, no, '':U).
 reposition {&browse-name} to recid rep-rec no-error.
+run vc-pdf in this-procedure .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1501,7 +1502,7 @@ ON CHOOSE OF b-mark IN FRAME Dialog-Frame /* * */
 DO:
   {&stdbtn}
   run proc-b-mark in this-procedure no-error.
-
+  run vc-pdf in this-procedure .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1677,6 +1678,7 @@ DO:
   if not available buf_price-doc-forming-gds then return.
   del-list  = "".
   {&browse-name}:refresh() in frame {&frame-name} .
+  run vc-pdf in this-procedure .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2328,6 +2330,7 @@ end.
   end.
 
 reposition browse-1 to recid vrec no-error .
+run vc-pdf in this-procedure .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2412,6 +2415,7 @@ else do:
    end.
 
 reposition browse-1 to recid vrec no-error .
+run vc-pdf in this-procedure .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3741,7 +3745,7 @@ if not available buf_price-doc-forming-gds then do:
   end.
   { gbl/markstrn.i buf_price-doc-forming-gds del-list }
   {&browse-name}:refresh() in frame {&frame-name} .
-
+  run vc-pdf in this-procedure .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -4883,7 +4887,7 @@ define variable varlog as logical   no-undo .
   assign varlog = {&browse-name} :select-next-row( ) in frame {&frame-name}.
   apply "ENTRY":U to {&browse-name} in frame {&frame-name}.
   {&browse-name}:refresh() in frame {&frame-name} .
-
+  run vc-pdf in this-procedure .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
