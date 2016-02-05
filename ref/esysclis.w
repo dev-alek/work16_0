@@ -726,23 +726,23 @@ message
 view-as alert-box .
 run ref/cli-all.w (   input parparentproc
                   ,input "b-sel"
-                  ,input {&g___object}
+                  ,input {&all}
                   ,input {&all}
                   ,input {&current}
                   ,input ?
                   ,input ",,,,,,NO,,"
-                  ,input "lock-cli-type":U
+                  ,input "":U
                   ,output v-rid-list) no-error.
 if v-rid-list = '':U then return no-apply.
 find first buf_clients where recid (buf_clients) = integer (v-rid-list) no-lock no-error.
-if not (buf_clients.obj-type = {&shop}
-       or
-       buf_clients.obj-type = {&stock}) then do:
-  message
-  "Можно выбрать только МАГАЗИН или СКЛАД"
-  view-as alert-box error .
-  undo, return error .
-end.
+/*if not (buf_clients.obj-type = {&shop}          */
+/*       or                                       */
+/*       buf_clients.obj-type = {&stock}) then do:*/
+/*  message                                       */
+/*  "Можно выбрать только МАГАЗИН или СКЛАД"      */
+/*  view-as alert-box error .                     */
+/*  undo, return error .                          */
+/*end.                                            */
 assign
 v-value-character = buf_clients.obj-type
 v-value-character2 = string(buf_clients.obj-code)
