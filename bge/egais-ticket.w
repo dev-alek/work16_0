@@ -166,7 +166,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       column-scrolling = true
   .
   if bh-wb-egais = ? then return.
-  bh-ticket-egais = egais:GetHndlTable({&ticket}, bh-wb-egais:buffer-field ("wbregid"):buffer-value).
+  if bh-wb-egais:buffer-field ("wb-type"):buffer-value begins "расход" or bh-wb-egais:buffer-field ("wb-type"):buffer-value begins "возврат"
+  then do:
+    bh-ticket-egais = egais:GetHndlTable({&ticket-ras}, bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value).
+  end.
+  else do:
+    bh-ticket-egais = egais:GetHndlTable({&ticket}, bh-wb-egais:buffer-field ("wbregid"):buffer-value).
+  end.
   if egais:StatusErr
   then do:
     message egais:Msg view-as alert-box error.
@@ -181,7 +187,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     extent (bcol) = bh-ticket-egais:num-fields.
     do ii = 1 to bh-ticket-egais:num-fields:
       bcol[ii] = browse-hdl-ticket-egais:add-like-column('tt-ticket' + '.' + bh-ticket-egais:buffer-field (ii):name, 0, 'FILL-IN').
-/*      if ii = 1 then bcol[ii]:width = 15.*/
+      if ii = 5 then bcol[ii]:width = 80.
     end.
   end.
 

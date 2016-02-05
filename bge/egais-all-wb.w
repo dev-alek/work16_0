@@ -1,4 +1,3 @@
-&ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
@@ -130,8 +129,8 @@ DEFINE VARIABLE cb-1 AS INTEGER INITIAL 1
      list-item-pairs
           "Полученные", 1,
           "Закрытые на факт", 2,
-          "Акты", 3
-/*          "Расход", 4*/
+          "Акты", 3,
+          "Расход", 4
      SIZE 40 BY 1.25 NO-UNDO.
 
 
@@ -328,6 +327,8 @@ END.
 ON CHOOSE OF Btn_Save IN FRAME Dialog-Frame /* Сохранить */
 DO:
   
+  def var v-doc-code as character no-undo.
+  
   if not bh-wb-egais:available 
     then return no-apply.
   
@@ -389,6 +390,7 @@ DO:
   when 4 then do:
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
+    v-doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value.
     bh-wb-gds-EG-header = egais:GetHndlTable({&wb-ras-header}, bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value).
     if egais:StatusErr
     then do:
@@ -398,7 +400,15 @@ DO:
     egais:SendRequestUTM().
     if egais:StatusErr
       then message egais:Msg view-as alert-box error.
-      else message "Накладная отправлена" view-as alert-box.
+      else do:
+        { str/tdat-wrt.i
+          v-doc-code
+          {&trdcattr-egais}
+          {&egais-wb-send}
+          no-error
+        }
+        message "Накладная отправлена" view-as alert-box.
+      end.
   end.
   end case.
   run refresh-query.
@@ -425,6 +435,9 @@ DO:
     end.
     when 3 then do:
       run bge/egais-wb-act.w (parparentproc, egais, bh-wb-egais:handle).
+    end.
+    when 4 then do:
+      run bge/egais-ticket.w (parparentproc, egais, bh-wb-egais:handle).
     end.
   end case.
   run refresh-query.
@@ -565,7 +578,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   .
   bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
   qh-wb-egais:set-buffers (bh-wb-egais).
-  qh-wb-egais:query-prepare ("for each tt-wb-hndls by tt-wb-hndls.wb-date").
+  qh-wb-egais:query-prepare ("for each tt-wb-hndls by tt-wb-hndls.wb-date descending").
   qh-wb-egais:query-open.
   if not bh-wb-egais = ? 
   then do:
@@ -575,6 +588,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       if ii = 1 then bcol[ii]:width = 15.
       if ii = 5 then bcol[ii]:width = 15.
       if ii = 9 then bcol[ii]:width = 15.
+      if ii = 6 then bcol[ii]:width = 10.
+      if ii = 8 then bcol[ii]:width = 4.
     end.
   end.
   { gbl/diasize.i &br-hndl=browse-hdl-wb-egais }
@@ -632,7 +647,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE msdblcl Dialog-Frame 
 PROCEDURE msdblcl :
-if cb-1 <> 1 and cb-1 <> 3 and cb-1 <> 2
+if cb-1 <> 1 and cb-1 <> 3 and cb-1 <> 2 and cb-1 <> 4
     then apply "choose" to Btn_Save in frame {&frame-name} .
     else apply "choose" to Btn_Sel in frame {&frame-name} .
 
@@ -684,7 +699,7 @@ if bh-wb-egais = ?
       .
       bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
       qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-hndls by tt-wb-hndls.wb-date").
+      qh-wb-egais:query-prepare ("for each tt-wb-hndls by tt-wb-hndls.wb-date descending").
       qh-wb-egais:query-open.
       if not bh-wb-egais = ? 
       then do:
@@ -693,6 +708,8 @@ if bh-wb-egais = ?
           if ii = 1 then bcol[ii]:width = 15.
           if ii = 5 then bcol[ii]:width = 15.
           if ii = 9 then bcol[ii]:width = 15.
+          if ii = 6 then bcol[ii]:width = 10.
+          if ii = 8 then bcol[ii]:width = 4.
         end.
       end.
       run diasize_init in this-procedure .
@@ -723,7 +740,7 @@ if bh-wb-egais = ?
       .
       bh-wb-egais = egais:GetHndlTable({&wb-fact}, "").
       qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-hndls by tt-wb-hndls.wb-date").
+      qh-wb-egais:query-prepare ("for each tt-wb-hndls by tt-wb-hndls.wb-date descending").
       qh-wb-egais:query-open.
       if not bh-wb-egais = ? 
       then do:
@@ -776,11 +793,43 @@ if bh-wb-egais = ?
     end.
     when 4  then 
     do:
+      delete object browse-hdl-wb-egais.
+      create browse browse-hdl-wb-egais
+        assign 
+          title     = 'Расходные накладные'
+          frame     = frame {&FRAME-NAME}:handle
+          query     = qh-wb-egais
+          x         = 10
+          y         = 42
+          width     = 119
+          height    = 25
+          visible   = true
+          read-only = true
+          sensitive = true
+          separators = true
+          column-resizable = true
+          column-scrolling = true
+          triggers:
+            on mouse-move-dblclick persistent run msdblcl.
+          end triggers
+      .
       bh-wb-egais = egais:GetHndlTable({&wb-ras}, "").
       qh-wb-egais:set-buffers (bh-wb-egais).
-      qh-wb-egais:query-prepare ("for each tt-wb-hndls").
+      qh-wb-egais:query-prepare ("for each tt-wb-hndls by tt-wb-hndls.wb-date descending").
       qh-wb-egais:query-open.
-      disable Btn_Sel with frame {&FRAME-NAME}.
+      if not bh-wb-egais = ? 
+      then do:
+        do ii = 1 to bh-wb-egais:num-fields:
+          bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
+          if ii = 1 then bcol[ii]:width = 10.
+          if ii = 5 then bcol[ii]:width = 15.
+          if ii = 9 then bcol[ii]:width = 15.
+          if ii = 6 then bcol[ii]:width = 17.
+          if ii = 8 then bcol[ii]:width = 15.
+        end.
+      end.
+      Btn_Sel:label = "Просмотр".
+      enable Btn_Sel with frame {&FRAME-NAME}.
     end.
   end.
 
