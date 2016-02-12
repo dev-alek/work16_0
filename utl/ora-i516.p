@@ -1321,7 +1321,7 @@ end.
                            , input g#db-num
                            , input ?
                            , input ?
-                           , input temp_doc-line.refA + ',' + temp_doc-line.refB
+                           , input temp_doc-line.refA + ',' + temp_doc-line.refB + ',' + temp_doc-line.alc-code  + ',' + temp_doc-line.alc-type-code
                            , input ""
                            , input ""
                            , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 1, 3) else ""

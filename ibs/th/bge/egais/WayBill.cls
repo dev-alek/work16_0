@@ -559,9 +559,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           empty temp-table tt-wb-act-hndls.
           for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-wb-act}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.Identity + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
-            if num-entries (buf_clob-bind.descr, {&delim-par}) > 4 then do:
-              if v-FS-RAR <> entry (5, buf_clob-bind.descr, {&delim-par}) then next.
-            end.
             create tt-wb-act-hndls.
             assign
               tt-wb-act-hndls.wbregid  = entry (1, buf_clob-bind.descr, {&delim-par})
@@ -588,6 +585,28 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
             ParseResponse("", inTableType).
           end.
+          find first tt-ticket where tt-ticket.regid <> "" no-error.
+          if available (tt-ticket) then do:
+            find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.doc-code = inWbIdentity no-error.
+            if not available (buf_doc-attr)
+            then do:
+              create buf_doc-attr.
+              assign
+                buf_doc-attr.doc-code = inWbIdentity
+                buf_doc-attr.attr-value = tt-ticket.regid
+                buf_doc-attr.attr-code = {&trdcattr-negais}
+              .
+            end.
+            for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-wb-act} and buf_clob-bind.uniq-key-rec matches "*" + buf_doc-attr.attr-value + "*" :
+              create tt-ticket.
+              assign
+                tt-ticket.regid = entry (1, buf_clob-bind.descr, {&delim-par})
+                tt-ticket.ticket-date = string (iso-date (date (entry (2, buf_clob-bind.descr, {&delim-par}))))
+                tt-ticket.doc = entry (3, buf_clob-bind.descr, {&delim-par})
+                tt-ticket.status_ = entry (4, buf_clob-bind.descr, {&delim-par})
+              .
+            end.
+          end.
           return buffer tt-ticket:handle.          
         end.
       when {&wb-fact} then 
@@ -608,11 +627,16 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                                                                        and buf_ext-classif.key#_one = v-ext-sys
                                                                        and buf_ext-classif.uniq-key-rec = v-obj-uniq-key-rec
                                                                        no-error.*/
+              find first buf_clients where buf_clients.obj-code = buf_trn-doc.cli-code and buf_clients.obj-type = buf_trn-doc.cli-type no-lock.
+              
               create tt-wb-hndls. 
               assign
                 tt-wb-hndls.wb-date      = buf_trn-doc.doc-date
                 tt-wb-hndls.num          = buf_trn-doc.doc-code
                 tt-wb-hndls.trn-doc-code = buf_trn-doc.doc-code
+                tt-wb-hndls.cliname = buf_clients.obj-name
+                tt-wb-hndls.obj = buf_trn-doc.obj-type + string (buf_trn-doc.obj-code)
+                tt-wb-hndls.obj = buf_trn-doc.obj-type + string (buf_trn-doc.obj-code)
                 tt-wb-hndls.shippregid   = buf_trn-doc.cli-type + string (buf_trn-doc.cli-code)
                 tt-wb-hndls.uniq-key-rec = buf_doc-attr.attr-value
                 tt-wb-hndls.status_      = buf_trn-doc.status_
@@ -727,22 +751,36 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                                                  and buf_ext-classif.key#_two = v-ext-sys 
                                                  no-error. 
 
-              find first buf_gds-attr no-lock where buf_gds-attr.gds-code = buf_gds.gds-code and buf_gds-attr.attr-code = {&attr-egais-name} no-error.
-              if not available (buf_gds-attr)
+/*              find first buf_gds-attr no-lock where buf_gds-attr.gds-code = buf_gds.gds-code and buf_gds-attr.attr-code = {&attr-egais-name} no-error.*/
+              /*if not available (buf_gds-attr)
               then do:
                 Msg = "Не найдено наименование ЕГАИС товара - " + string (buf_gds.gds-code).
+                StatusErr = true.
+                return ?.
+              end.*/
+              if num-entries (buf_ext-classif.CharKey_Two, chr(5)) < 3
+              then do:
+                Msg = "В справочнике внешнего классификатора по товарам отсутсвует информация о производителе по товару - " + string (buf_gds.gds-code) + ". Обновите справочник внешнего классификатора по товарам.".
+                StatusErr = true.
+                return ?.
+              end.
+              if num-entries (buf_parts.alc-ref-ab-path, ",") < 3
+              then do:
+                Msg = "В алкогольных атрибутах по партии отсутсвует алкогольный код и код группы для товара - " + string (buf_gds.gds-code) + ". Запустите утилиту заполнения алкогольных атрибутов партии.".
                 StatusErr = true.
                 return ?.
               end.
               create tt-wb-gds-EG.
               assign
                 tt-wb-gds-EG.Identity = string (ii)
-                tt-wb-gds-EG.gds-name = buf_gds-attr.attr-value
+                tt-wb-gds-EG.gds-name = entry (3, buf_ext-classif.CharKey_Two, chr(4))
                 tt-wb-gds-EG.alc-code = buf_ext-classif.charkey_one
                 tt-wb-gds-EG.qnty = buf_parts.fact-qnty
                 tt-wb-gds-EG.price = buf_parts.price-rubl
                 tt-wb-gds-EG.refA = entry (1, buf_parts.alc-ref-ab-path, ",")
                 tt-wb-gds-EG.refB = entry (2, buf_parts.alc-ref-ab-path, ",")
+                tt-wb-gds-EG.alc-code = entry (3, buf_parts.alc-ref-ab-path, ",")
+                tt-wb-gds-EG.alc-type-code = entry (4, buf_parts.alc-ref-ab-path, ",")
               .
               
               if tt-wb-gds-EG.refA = "" or tt-wb-gds-EG.refB = "" or tt-wb-gds-EG.refA = ? or tt-wb-gds-EG.refB = ?
@@ -752,7 +790,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 return ?.
               end.
               
-              tt-wb-gds-EG.Producer-th = buf_gds.prod-type + string (buf_gds.prod-code).
+/*              tt-wb-gds-EG.Producer-th = buf_gds.prod-type + string (buf_gds.prod-code).
               find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
                 and buf_ext-classif.classif-name = {&extclass_clients_esys}
                 and buf_ext-classif.db-num = 0
@@ -782,7 +820,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   return ?.
                 end.
                 tt-wb-gds-EG.regID-Importer = buf_ext-classif.CharKey_Three. 
-              end.
+              end.*/
               
               find first ub.alc-type-gds 
                    where ub.alc-type-gds.gds-code = buf_gds.gds-code
@@ -790,8 +828,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               
               if not available (ub.alc-type-gds) 
               then do:
-                message "У выбранного товара не задана алкогольная группа" view-as alert-box.
-                Msg = "Не задана алкогольная группа у тавра " + string (buf_gds.gds-code).
+                Msg = "Не задана алкогольная группа у товара " + string (buf_gds.gds-code).
                 StatusErr = true.
                 return ?.
               end.
@@ -800,7 +837,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               if not available (ub.alc-type) 
               then do:
                 
-                Msg = "Не найдена алкогольная группа у тавара" + string (buf_gds.gds-code).
+                Msg = "Не найдена алкогольная группа у товара" + string (buf_gds.gds-code).
                 StatusErr = true.
                 return ?.
 
@@ -934,7 +971,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           
           cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBill >&4", search ("exe/curl.exe"), search (inFileName), ConPar, "RespTTN.xml").
           os-command value (cmd).
-
           file-info:file-name = search ("RespTTN.xml").
           if search ("RespTTN.xml") <> ? and file-info:file-size > 0
             then
@@ -1358,6 +1394,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         when "wb:Position" then 
           do:
             create tt-wb-gds-EG .
+            tt-wb-gds-EG.prod-list = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
+            tt-wb-gds-EG.importer-list = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
             nn = nn + 1.
           end.
         when "wa:Header" then 
@@ -1476,6 +1514,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         if hNoderef:name = "oref:liter"       then assign tt-wb-info-client.house-litera = hText:node-value .  
         if hNoderef:name = "oref:description" then assign tt-wb-info-client.description_ = hText:node-value .    
       end.
+      
       if lookup (hParent:name, "wb:Position,wb:Product,wa:Position") > 0
         then 
       do:
@@ -1502,8 +1541,10 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         if hNoderef:name = "wa:RealQuantity"   then assign tt-wb-act-gds-EG.RealQuantity = decimal(hText:node-value) .
         
       end.
+      
       if lookup (hParent:name, "pref:Importer") > 0 then do:
         if hNoderef:name = "oref:ClientRegId" then assign tt-wb-gds-EG.regID-Importer = hText:node-value .
+        
         tt-wb-gds-EG.importer-th = "".
         find first ub.ext-classif no-lock 
           where ub.ext-classif.classif-subject = {&table_clients}
@@ -1515,7 +1556,26 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         if available (ub.ext-classif) then do:
           tt-wb-gds-EG.importer-th = entry (2, ub.ext-classif.uniq-key-rec, {&delim-key}) + entry (3, ub.ext-classif.uniq-key-rec, {&delim-key}).
         end.
+        
+        if hNoderef:name = "oref:ClientRegId" then do:
+          assign entry (1, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+          assign entry (5, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address".
+          assign entry (6, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address".
+        end.
+        if hNoderef:name = "oref:INN"         then assign entry (2, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+        if hNoderef:name = "oref:KPP"         then assign entry (3, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+        if hNoderef:name = "oref:FullName"    then assign entry (4, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+
       end.
+      
+      if available (tt-wb-gds-EG) and hParent:name = "oref:address" and (entry (5, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address")
+      then do:
+        
+        if hText:node-value matches "*" + chr(5) + "*" then message "жопа" view-as alert-box. 
+        if hNoderef:name = "oref:Country"     then assign entry (5, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+        if hNoderef:name = "oref:description" then assign entry (6, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+      end.
+
       if lookup (hParent:name, "pref:Producer") > 0 then do:
         if hNoderef:name = "oref:ClientRegId" then assign tt-wb-gds-EG.regID-Producer = hText:node-value .
         tt-wb-gds-EG.producer-th = "".
@@ -1529,7 +1589,26 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         if available (ub.ext-classif) then do:
           tt-wb-gds-EG.producer-th = entry (2, ub.ext-classif.uniq-key-rec, {&delim-key}) + entry (3, ub.ext-classif.uniq-key-rec, {&delim-key}).
         end.
+        
+        if hNoderef:name = "oref:ClientRegId" 
+        then do: 
+          assign entry (1, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+          assign entry (5, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address".
+          assign entry (6, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address".
+        end.
+        if hNoderef:name = "oref:INN"         then assign entry (2, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+        if hNoderef:name = "oref:KPP"         then assign entry (3, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+        if hNoderef:name = "oref:FullName"    then assign entry (4, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+        
       end.
+      
+      if available (tt-wb-gds-EG) and hParent:name = "oref:address" and (entry (5, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address")
+      then do:
+        if hText:node-value matches "*" + chr(5) + "*" then message "жопа" view-as alert-box.
+        if hNoderef:name = "oref:Country"     then assign entry (5, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+        if hNoderef:name = "oref:description" then assign entry (6, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+      end.
+      
       if lookup (hParent:name, "wb:InformA") > 0
         then 
       do:
@@ -1699,10 +1778,34 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     find first tt-wb-header.
     if not (available (buf_clob-bind) and entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ') then do:
       find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid).
-      for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_doc-attr.doc-code:
-        
-        find first buf_gds no-lock where buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type.
-        for each tt-wb-gds-EG where tt-wb-gds-EG.gds-code = buf_gds.gds-code.
+      
+      for each tt-wb-gds-EG :
+        find first buf_gds no-lock where buf_gds.gds-code = tt-wb-gds-EG.gds-code.
+        find first buf_doc-line no-lock where buf_doc-line.doc-code = buf_doc-attr.doc-code and
+           buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type no-error.
+        if not available (buf_doc-line) then do:
+            Msg = "Не найден товар в накладной, который есть в ЕГАИС - " + buf_doc-line.doc-code + " товар - " + string (tt-wb-gds-EG.gds-code).
+            StatusErr = true.
+            return ?.   
+        end.
+        find first buf_parts where
+          buf_parts.obj-type = buf_doc-line.obj-type and 
+          buf_parts.obj-code = buf_doc-line.obj-code and 
+          buf_parts.artic = buf_doc-line.artic and
+          buf_parts.prod-type = buf_doc-line.prod-type and
+          buf_parts.prod-code = buf_doc-line.prod-code and
+          buf_parts.in-code = buf_doc-line.doc-code and
+          buf_parts.out-code = buf_doc-line.doc-code and
+          buf_parts.alc-ref-ab-path = tt-wb-gds-EG.refA + "," + tt-wb-gds-EG.refB + "," + tt-wb-gds-EG.alc-code + "," + tt-wb-gds-EG.alc-type-code no-lock no-error.
+
+        if not available (buf_parts) then do:
+          Msg = "Не найдена партия для товара " + string (tt-wb-gds-EG.gds-code) + " справка А " + tt-wb-gds-EG.refA + " справка Б " + tt-wb-gds-EG.refB.
+          StatusErr = true.
+          return ?.            
+        end.
+
+        /*if not available (buf_parts)
+        then do:
           find first buf_parts where
             buf_parts.obj-type = buf_doc-line.obj-type and 
             buf_parts.obj-code = buf_doc-line.obj-code and 
@@ -1711,39 +1814,23 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             buf_parts.prod-code = buf_doc-line.prod-code and
             buf_parts.in-code = buf_doc-line.doc-code and
             buf_parts.out-code = buf_doc-line.doc-code and
-            buf_parts.alc-ref-ab-path = tt-wb-gds-EG.refA + "," + tt-wb-gds-EG.refB no-lock no-error.
-            
-          if not available (buf_parts)
-          then do:
-            find first buf_parts where
-              buf_parts.obj-type = buf_doc-line.obj-type and 
-              buf_parts.obj-code = buf_doc-line.obj-code and 
-              buf_parts.artic = buf_doc-line.artic and
-              buf_parts.prod-type = buf_doc-line.prod-type and
-              buf_parts.prod-code = buf_doc-line.prod-code and
-              buf_parts.in-code = buf_doc-line.doc-code and
-              buf_parts.out-code = buf_doc-line.doc-code and
-              buf_parts.qnty = tt-wb-gds-EG.qnty no-lock no-error.
-            if not available (buf_parts) then do:
-              Msg = "Не найдена партия для товара " + string (tt-wb-gds-EG.gds-code) + " справка А " + tt-wb-gds-EG.refA + " справка Б " + tt-wb-gds-EG.refB.
-              StatusErr = true.
-              return ?.            
-            end.
-          end.
+            buf_parts.qnty = tt-wb-gds-EG.qnty no-lock no-error.
+
+        end.*/
           
 
           
-          if tt-wb-gds-EG.qnty <> buf_parts.fact-qnty then 
-          do:
-            is-diff = true. 
-          end.
+        if tt-wb-gds-EG.qnty <> buf_parts.fact-qnty then 
+        do:
+          is-diff = true. 
+        end.
 &scop xml-act-cont '<wa:Position>~
 <wa:Identity>&1</wa:Identity>~
 <wa:InformBRegId>&2</wa:InformBRegId>~
 <wa:RealQuantity>&3</wa:RealQuantity>~
 </wa:Position>'
-          xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
-        end.
+        xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
+        
       end.
       return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию") + (if is-diff then xml-cont else "") + {&xml-act-2}.
     end.
@@ -1800,8 +1887,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     sw:start-element ("ns:Document") .
   
       sw:start-element ("ns:WayBill") .
-  
-  
         sw:write-data-element ("wb:Identity", tt-wb-header.Identity) .
         sw:start-element ("wb:Header") .  
           sw:write-data-element ("wb:NUMBER", tt-wb-header.Identity).
@@ -1823,6 +1908,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           sw:end-element ("wb:Transport") .
         sw:end-element ("wb:Header") .
         sw:start-element ("wb:Content") .
+        
+        for each tt-wb-gds-EG no-lock:
+        
           sw:start-element ("wb:Position") .
             sw:write-data-element ("wb:Identity", tt-wb-gds-EG.Identity).
             sw:start-element ("wb:Product") .
@@ -1832,19 +1920,57 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               sw:write-data-element ("pref:Capacity", string (tt-wb-gds-EG.ms-base)).
               sw:write-data-element ("pref:AlcVolume", string (tt-wb-gds-EG.proof)).
               sw:write-data-element ("pref:ProductVCode", tt-wb-gds-EG.alc-type-code).
-              
-              if tt-wb-gds-EG.regID-Producer <> "" then do:
-                sw:start-element ("pref:Producer") .
-                AddClientXML(sw, substring (tt-wb-gds-EG.Producer-th, 1, 3), integer (substring (tt-wb-gds-EG.Producer-th, 4)), tt-wb-gds-EG.regID-Producer).
-                if StatusErr
-                  then return.
-                sw:end-element ("pref:Producer") .
+
+              find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
+                                                 and buf_ext-classif.classif-name = {&extclass_goods_esys} 
+                                                 and buf_ext-classif.db-num = 0  
+                                                 and buf_ext-classif.key#_one = buf_gds.gds-code
+                                                 and buf_ext-classif.key#_two = v-ext-sys 
+                                                 no-error. 
+
+              if not available (buf_ext-classif) 
+              then do:
+                StatusErr = true.
+                Msg = "Товар не задан во внешнем классификаторе - " + string (tt-wb-gds-EG.gds-code).
+                return.
               end.
-              if tt-wb-gds-EG.regID-Importer <> "" then do:
+              
+              def var v-prod as char no-undo.
+              def var impor as char no-undo.
+              
+              v-prod = entry (1, buf_ext-classif.CharKey_Two, chr(4)).
+              if v-prod = ? or v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) or v-prod = "" 
+              then do:
+                StatusErr = true.
+                Msg = "У товара неизвестен производитель из ЕГАИС - " + string (tt-wb-gds-EG.gds-code) + ". Обновите данные по товарам.".
+                return.
+              end.
+              if num-entries (buf_ext-classif.CharKey_Two, chr(4)) > 1
+                then impor = entry (2, buf_ext-classif.CharKey_Two, chr(4)).
+                else impor = "".
+              
+              
+              sw:start-element ("pref:Producer") .
+/*                sw:write-data-element ("oref:INN", entry (2, v-prod, chr(5)) ).*/
+/*                sw:write-data-element ("oref:KPP", entry (3, v-prod, chr(5)) ).*/
+                sw:write-data-element ("oref:ClientRegId", entry (1, v-prod, chr(5)) ).
+                sw:write-data-element ("oref:FullName", entry (4, v-prod, chr(5)) ).
+                sw:start-element ("oref:address").
+                  sw:write-data-element ("oref:Country", entry (5, v-prod, chr(5)) ).
+                  sw:write-data-element ("oref:description", entry (6, v-prod, chr(5)) ).
+                sw:end-element ("oref:address").
+              sw:end-element ("pref:Producer") .
+
+              if impor <> "" and impor <> ? then do:
                 sw:start-element ("pref:Importer") .
-                AddClientXML(sw, substring (tt-wb-gds-EG.importer-th, 1, 3), integer (substring (tt-wb-gds-EG.importer-th, 4)), tt-wb-gds-EG.regID-Importer).
-                if StatusErr
-                  then return.
+/*                  sw:write-data-element ("oref:INN", entry (2, impor, chr(5)) ).*/
+/*                  sw:write-data-element ("oref:KPP", entry (3, impor, chr(5)) ).*/
+                  sw:write-data-element ("oref:ClientRegId", entry (1, impor, chr(5)) ).
+                  sw:write-data-element ("oref:FullName", entry (4, impor, chr(5)) ).
+                  sw:start-element ("oref:address").
+                    sw:write-data-element ("oref:Country", entry (5, impor, chr(5)) ).
+                    sw:write-data-element ("oref:description", entry (6, impor, chr(5)) ).
+                  sw:end-element ("oref:address").
                 sw:end-element ("pref:Importer") .
               end.
             sw:end-element ("wb:Product") .
@@ -1859,6 +1985,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               sw:end-element ("pref:InformBItem") .
             sw:end-element ("wb:InformB") .                    
           sw:end-element ("wb:Position") .
+        
+        end. /*for each tt-wb-gds-EG*/
+        
         sw:end-element ("wb:Content") .
       sw:end-element ("ns:WayBill") .
     sw:end-element ("ns:Document") .
