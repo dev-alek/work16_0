@@ -29,6 +29,9 @@ define input-output parameter p-alc-mark-db-num         as integer   no-undo.
 define input-output parameter p-alc-mark-code           as integer   no-undo.
 define input-output parameter p-alc-bottling-date       as date      no-undo.
 define input-output parameter p-alc-ref-ab-path         as character no-undo.
+/*define input-output parameter p-alc-ref-b-path as char no-undo.*/
+/*define input-output parameter p-group-alc-prod as char no-undo.*/
+/*define input-output parameter p-code-egais as char no-undo.    */
 define input-output parameter p-alc-quality-certif-path as character no-undo.
 define input-output parameter p-alc-certif-path         as character no-undo.
 define input-output parameter p-alc-imp-type            as character no-undo.
@@ -72,11 +75,11 @@ define buffer buf_clients for ub.clients .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-save B-cancel B-help v-alc-mark-name ~
-b-exmark v-alc-bottling-date b-bottling-date v-alc-ref-ab-path b-refAB ~
+b-exmark v-alc-bottling-date b-bottling-date v-alc-ref-a-path v-alc-ref-b-path~
 v-alc-quality-certif-path b-qltycert v-alc-certif-path b-certif ~
 v-alc-imp-code b-alc-imp
 &Scoped-Define DISPLAYED-OBJECTS v-alc-mark-name v-alc-bottling-date ~
-v-alc-ref-ab-path v-alc-quality-certif-path v-alc-imp-name ~
+v-alc-ref-a-path v-alc-ref-b-path v-alc-quality-certif-path v-alc-imp-name ~
 v-alc-certif-path v-alc-imp-type v-alc-imp-code
 
 /* Custom List Definitions                                              */
@@ -92,127 +95,154 @@ v-alc-certif-path v-alc-imp-type v-alc-imp-code
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-alc-imp
+DEFINE BUTTON b-alc-imp 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 2.88 BY 1 TOOLTIP "Выбор импортера".
 
-DEFINE BUTTON b-bottling-date
+DEFINE BUTTON b-bottling-date 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 2.88 BY 1 TOOLTIP "Выбор акцизной или специальной марки".
 
-DEFINE BUTTON B-cancel AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON B-cancel AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-certif
+DEFINE BUTTON b-certif 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 2.88 BY 1 TOOLTIP "Выбор файла".
 
-DEFINE BUTTON b-exmark
+DEFINE BUTTON b-exmark 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 2.88 BY 1 TOOLTIP "Выбор акцизной или специальной марки".
 
-DEFINE BUTTON B-help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-qltycert
+DEFINE BUTTON b-qltycert 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 2.88 BY 1 TOOLTIP "Выбор файла".
+/*                                              */
+/*DEFINE BUTTON b-refAB                         */
+/*     IMAGE-UP FILE "btn-down-arrow":U         */
+/*     IMAGE-DOWN FILE "btn-down-arrow":U       */
+/*     IMAGE-INSENSITIVE FILE "btn-down-arrow":U*/
+/*     LABEL ""                                 */
+/*     SIZE 2.88 BY 1 TOOLTIP "Выбор файла".    */
 
-DEFINE BUTTON b-refAB
+DEFINE BUTTON b-refB 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 2.88 BY 1 TOOLTIP "Выбор файла".
 
-DEFINE BUTTON B-save AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-save AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE v-alc-bottling-date AS DATE FORMAT "99/99/9999":U
-     LABEL "Дата розлива"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE code-egais AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Код товара в ЕГАИС" 
+     VIEW-AS FILL-IN 
+     SIZE 49 BY 1 NO-UNDO.
+
+DEFINE VARIABLE group-alc-prod AS CHARACTER FORMAT "X(256)":U 
+     LABEL "группа алкогольной продукции" 
+     VIEW-AS FILL-IN 
+     SIZE 49 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-alc-bottling-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата розлива" 
+     VIEW-AS FILL-IN 
      SIZE 11.5 BY 1 TOOLTIP "Дата розлива партии алкогольной продукции" NO-UNDO.
 
-DEFINE VARIABLE v-alc-certif-path AS CHARACTER FORMAT "X(256)":U
-     LABEL "Сертификат соответствия"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-alc-certif-path AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Сертификат соответствия" 
+     VIEW-AS FILL-IN 
      SIZE 49 BY 1 TOOLTIP "Ссылка на файл сертификата соответствия" NO-UNDO.
 
-DEFINE VARIABLE v-alc-imp-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-alc-imp-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 10 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-alc-imp-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
-     SIZE 33.5 BY 1 NO-UNDO.
+DEFINE VARIABLE v-alc-imp-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 36.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-alc-imp-type AS CHARACTER FORMAT "X(3)":U
-     LABEL "Импортер"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-alc-imp-type AS CHARACTER FORMAT "X(3)":U 
+     LABEL "Импортер" 
+     VIEW-AS FILL-IN 
      SIZE 5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-alc-mark-name AS CHARACTER FORMAT "X(20)":U
-     LABEL "Код марки"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-alc-mark-name AS CHARACTER FORMAT "X(20)":U 
+     LABEL "Код марки" 
+     VIEW-AS FILL-IN 
      SIZE 21.5 BY 1 TOOLTIP "Код акцизной или специальной марки" NO-UNDO.
 
-DEFINE VARIABLE v-alc-quality-certif-path AS CHARACTER FORMAT "X(256)":U
-     LABEL "Удостоверение качества"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-alc-quality-certif-path AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Удостоверение качества" 
+     VIEW-AS FILL-IN 
      SIZE 49 BY 1 TOOLTIP "Ссылка на файл удостоверения качества продукции" NO-UNDO.
 
-DEFINE VARIABLE v-alc-ref-ab-path AS CHARACTER FORMAT "X(256)":U
-     LABEL "Справки А,Б"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-alc-ref-a-path AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Справка А" 
+     VIEW-AS FILL-IN 
      SIZE 49 BY 1 TOOLTIP "Ссылка на файл справок A и Б" NO-UNDO.
+
+DEFINE VARIABLE v-alc-ref-b-path AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Справка Б" 
+     VIEW-AS FILL-IN 
+     SIZE 49 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
+     v-alc-mark-name AT ROW 2.75 COL 29 COLON-ALIGNED
+     b-exmark AT ROW 2.75 COL 53.5
+     v-alc-bottling-date AT ROW 4 COL 29 COLON-ALIGNED
+     b-bottling-date AT ROW 4 COL 51
+     v-alc-ref-a-path AT ROW 5.5 COL 29 COLON-ALIGNED
+     v-alc-ref-b-path AT ROW 6.75 COL 29 COLON-ALIGNED WIDGET-ID 12
+     code-egais AT ROW 8.25 COL 29 COLON-ALIGNED WIDGET-ID 20
+     group-alc-prod AT ROW 9.5 COL 29 COLON-ALIGNED WIDGET-ID 22
+     v-alc-quality-certif-path AT ROW 10.75 COL 29 COLON-ALIGNED
+     b-qltycert AT ROW 10.75 COL 80.5
+     v-alc-certif-path AT ROW 12.25 COL 29 COLON-ALIGNED
+     b-certif AT ROW 12.25 COL 80.5
+     v-alc-imp-name AT ROW 13.75 COL 41.5 COLON-ALIGNED NO-LABEL WIDGET-ID 10 NO-TAB-STOP 
+     v-alc-imp-type AT ROW 13.75 COL 24.5 COLON-ALIGNED WIDGET-ID 2
+     v-alc-imp-code AT ROW 13.75 COL 31 COLON-ALIGNED NO-LABEL WIDGET-ID 4
+     b-alc-imp AT ROW 13.75 COL 81 WIDGET-ID 6
      B-save AT ROW 1 COL 1
      B-cancel AT ROW 1 COL 11
      B-help AT ROW 1 COL 70.5
-     v-alc-mark-name AT ROW 2.58 COL 25 COLON-ALIGNED
-     b-exmark AT ROW 2.58 COL 48.5
-     v-alc-bottling-date AT ROW 3.92 COL 25 COLON-ALIGNED
-     b-bottling-date AT ROW 3.92 COL 38.5
-     v-alc-ref-ab-path AT ROW 5.25 COL 25 COLON-ALIGNED
-     b-refAB AT ROW 5.25 COL 76
-     v-alc-quality-certif-path AT ROW 6.58 COL 25 COLON-ALIGNED
-     v-alc-imp-name AT ROW 9.25 COL 40.5 COLON-ALIGNED NO-LABEL WIDGET-ID 10 NO-TAB-STOP
-     b-qltycert AT ROW 6.58 COL 76
-     v-alc-certif-path AT ROW 7.92 COL 25 COLON-ALIGNED
-     b-certif AT ROW 7.92 COL 76
-     v-alc-imp-type AT ROW 9.25 COL 25 COLON-ALIGNED WIDGET-ID 2
-     v-alc-imp-code AT ROW 9.25 COL 30.5 COLON-ALIGNED NO-LABEL WIDGET-ID 4
-     b-alc-imp AT ROW 9.25 COL 76 WIDGET-ID 6
-     SPACE(4.24) SKIP(0.74)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+/*     b-refAB AT ROW 5.5 COL 81*/
+/*     b-refB AT ROW 6.75 COL 81 WIDGET-ID 18*/
+     SPACE(5.11) SKIP(5.28)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Атрибуты алкогольной продукции"
          DEFAULT-BUTTON B-save CANCEL-BUTTON B-cancel.
+
 
 
 /* *********************** Procedure Settings ************************ */
@@ -382,32 +412,7 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME b-refAB
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-refAB Dialog-Frame
-ON CHOOSE OF b-refAB IN FRAME Dialog-Frame
-DO:
-  define variable v-file-name as character no-undo.
-  define variable lOK         as logical no-undo.
 
-  assign frame {&frame-name} v-alc-ref-ab-path.
-  v-file-name = v-alc-ref-ab-path.
-  SYSTEM-DIALOG GET-FILE
-      v-file-name
-      FILTERS    "Все файлы (*.*)" "*.*"
-      MUST-EXIST
-      TITLE      "Выберите файл Справок А и Б ..."
-      USE-FILENAME
-      UPDATE lOK.
-
-  if lOK then do:
-    v-alc-ref-ab-path = v-file-name.
-    display v-alc-ref-ab-path with frame {&frame-name}.
-  end.
-  apply "entry" to v-alc-ref-ab-path in frame {&frame-name}.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 
 &Scoped-define SELF-NAME B-save
@@ -557,7 +562,7 @@ DO:
     assign frame {&frame-name} v-alc-quality-certif-path.
     if (v-alc-quality-certif-path <> "") and (search (v-alc-quality-certif-path) = ?) then do:
       message "Указанный файл удостоверения качества не найден"
-        view-as alert-box error.
+        view-as alert-box error. 
       apply "entry" to self.
       return no-apply.
     end.
@@ -567,22 +572,56 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&Scoped-define SELF-NAME v-alc-ref-ab-path
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-alc-ref-ab-path Dialog-Frame
-ON LEAVE OF v-alc-ref-ab-path IN FRAME Dialog-Frame /* Справки А,Б */
+&Scoped-define SELF-NAME code-egais
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL code-egais Dialog-Frame
+ON LEAVE OF code-egais IN FRAME Dialog-Frame /* Код товара в ЕГАИС */
 DO:
-  /* При нажатии на кнопку выбора файла не проверяем содержимое поля */
-  /*if last-event:widget-enter <> b-refAB:handle then do:
-    assign frame {&frame-name} v-alc-ref-ab-path.
-    if (v-alc-ref-ab-path <> "") and (search (v-alc-ref-ab-path) = ?) then do:
-      message "Указанный файл справки А,Б не найден"
-        view-as alert-box error.
-      apply "entry" to self.
-      return no-apply.
-    end.
-  end.*/
-END.
+assign code-egais.
+
+
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME group-alc-prod
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL group-alc-prod Dialog-Frame
+ON LEAVE OF group-alc-prod IN FRAME Dialog-Frame /* Код группы торваров */
+DO:
+    assign group-alc-prod.
+/*    if group-alc-prod <> "" then                                                            */
+/*    do:                                                                                     */
+/*                                                                                            */
+/*        find first alc-type  where alc-type.alc-type-code = group-alc-prod no-lock no-error.*/
+/*        if not available alc-type then                                                      */
+/*        do:                                                                                 */
+/*            message "Данного кода группы алкогольной продукции нет"                         */
+/*                view-as alert-box error.                                                    */
+/*            apply "entry" to self.                                                          */
+/*            return no-apply.                                                                */
+/*        end.                                                                                */
+/*    end.                                                                                    */
+
+
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+/*&Scoped-define SELF-NAME v-alc-ref-ab-path                                    */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-alc-ref-ab-path Dialog-Frame      */
+/*ON LEAVE OF v-alc-ref-ab-path IN FRAME Dialog-Frame /* Справки А,Б */         */
+/*DO:                                                                           */
+/*  /* При нажатии на кнопку выбора файла не проверяем содержимое поля */       */
+/*  /*if last-event:widget-enter <> b-refAB:handle then do:                     */
+/*    assign frame {&frame-name} v-alc-ref-ab-path.                             */
+/*    if (v-alc-ref-ab-path <> "") and (search (v-alc-ref-ab-path) = ?) then do:*/
+/*      message "Указанный файл справки А,Б не найден"                          */
+/*        view-as alert-box error.                                              */
+/*      apply "entry" to self.                                                  */
+/*      return no-apply.                                                        */
+/*    end.                                                                      */
+/*  end.*/                                                                      */
+/*END.                                                                          */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -621,7 +660,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
   run MyEnable.
-  hide b-refAB in frame {&FRAME-NAME}.
+/*  hide b-refAB in frame {&FRAME-NAME}.*/
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -660,13 +699,14 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY v-alc-mark-name v-alc-bottling-date v-alc-ref-ab-path
-          v-alc-quality-certif-path v-alc-imp-name v-alc-certif-path
-          v-alc-imp-type v-alc-imp-code
+   DISPLAY code-egais group-alc-prod v-alc-ref-b-path v-alc-mark-name 
+          v-alc-bottling-date v-alc-ref-a-path v-alc-quality-certif-path 
+          v-alc-imp-name v-alc-certif-path v-alc-imp-type v-alc-imp-code 
       WITH FRAME Dialog-Frame.
-  ENABLE B-save B-cancel B-help v-alc-mark-name b-exmark v-alc-bottling-date
-         b-bottling-date v-alc-ref-ab-path b-refAB v-alc-quality-certif-path
-         b-qltycert v-alc-certif-path b-certif v-alc-imp-code b-alc-imp
+  ENABLE code-egais group-alc-prod v-alc-ref-b-path B-save B-cancel B-help 
+         v-alc-mark-name b-exmark v-alc-bottling-date b-bottling-date 
+         v-alc-ref-a-path  v-alc-quality-certif-path b-qltycert 
+         v-alc-certif-path b-certif v-alc-imp-code b-alc-imp 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -684,16 +724,20 @@ PROCEDURE MyEnable :
 ------------------------------------------------------------------------------*/
   define buffer buf_clients  for ub.clients.
 
-  assign
-    v-alc-mark-db-num         = p-alc-mark-db-num
-    v-alc-mark-code           = p-alc-mark-code
-    v-alc-bottling-date       = p-alc-bottling-date
-    v-alc-ref-ab-path         = p-alc-ref-ab-path
-    v-alc-quality-certif-path = p-alc-quality-certif-path
-    v-alc-certif-path         = p-alc-certif-path
-    v-alc-imp-type            = p-alc-imp-type
-    v-alc-imp-code            = p-alc-imp-code
-  .
+    assign
+        v-alc-mark-db-num         = p-alc-mark-db-num
+        v-alc-mark-code           = p-alc-mark-code
+        v-alc-bottling-date       = p-alc-bottling-date
+        v-alc-ref-a-path          = entry(1,p-alc-ref-ab-path,",")     
+        v-alc-ref-b-path          = entry(2,p-alc-ref-ab-path,",")  
+        code-egais                = entry(3,p-alc-ref-ab-path,",")
+        group-alc-prod            = entry(4,p-alc-ref-ab-path,",")
+        v-alc-quality-certif-path = p-alc-quality-certif-path
+        v-alc-certif-path         = p-alc-certif-path
+        v-alc-imp-type            = p-alc-imp-type
+        v-alc-imp-code            = p-alc-imp-code
+  no-error.
+  
   find first buf_clients no-lock
     where buf_clients.obj-type = v-alc-imp-type
       and buf_clients.obj-code = v-alc-imp-code
@@ -717,7 +761,10 @@ PROCEDURE MyEnable :
   display
     v-alc-mark-name
     v-alc-bottling-date
-    v-alc-ref-ab-path
+    v-alc-ref-a-path
+    v-alc-ref-b-path
+    code-egais
+    group-alc-prod
     v-alc-quality-certif-path
     v-alc-certif-path
     v-alc-imp-type
@@ -741,7 +788,6 @@ PROCEDURE MyEnable :
   end.
 
   return.
-
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -762,9 +808,12 @@ PROCEDURE proc-save :
   assign frame {&frame-name}
     v-alc-mark-name
     v-alc-bottling-date
-    v-alc-ref-ab-path
+    v-alc-ref-a-path
+    v-alc-ref-b-path
     v-alc-quality-certif-path
     v-alc-certif-path
+    code-egais
+    group-alc-prod
     v-alc-imp-type
     v-alc-imp-code
   .
@@ -826,18 +875,19 @@ PROCEDURE proc-save :
   end.
 
   assign
-    p-alc-mark-db-num         = v-alc-mark-db-num
-    p-alc-mark-code           = v-alc-mark-code
-    p-alc-bottling-date       = v-alc-bottling-date
-    p-alc-ref-ab-path         = v-alc-ref-ab-path
-    p-alc-quality-certif-path = v-alc-quality-certif-path
-    p-alc-certif-path         = v-alc-certif-path
-    p-alc-imp-type            = v-alc-imp-type
-    p-alc-imp-code            = v-alc-imp-code
-    save-flag                 = yes
-  .
+        p-alc-mark-db-num         = v-alc-mark-db-num
+        p-alc-mark-code           = v-alc-mark-code
+        p-alc-bottling-date       = v-alc-bottling-date
+        p-alc-ref-ab-path          = v-alc-ref-a-path + "," + v-alc-ref-b-path + "," +   code-egais + "," +  group-alc-prod      
+                  
+/*        p-alc-ref-b-path          = v-alc-ref-b-path*/
+        p-alc-quality-certif-path = v-alc-quality-certif-path
+        p-alc-certif-path         = v-alc-certif-path
+        p-alc-imp-type            = v-alc-imp-type
+        p-alc-imp-code            = v-alc-imp-code
+        save-flag                 = yes
+        .
   return.
-
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -882,3 +932,8 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+
+
+

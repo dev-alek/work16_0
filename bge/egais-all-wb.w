@@ -338,7 +338,13 @@ DO:
     then do:
       message substitute ( "Накладная с № &1 уже сформирована", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
       view-as alert-box.
-       return no-apply.
+      return no-apply.
+    end.
+    if bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value = 'отказ'
+    then do:
+      message "Накладная в статусе отказ. Нельзя сохранить."
+      view-as alert-box.
+      return no-apply.
     end.
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.

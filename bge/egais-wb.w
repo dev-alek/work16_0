@@ -481,7 +481,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   }
   { gbl/getcntxt.i get }
 
-  find first ub.ext-system where ub.ext-system.delivery-method = integer ({&esys-dm-egais}).
+  find first ub.ext-system where ub.ext-system.whole-send-news = integer ({&esys-dm-egais}).
   assign 
     v-ext-sys = ub.ext-system.esys-id .  
   
@@ -657,7 +657,6 @@ PROCEDURE msdblcl :
       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
       no-error. 
   end.
-  
   if available X_ext-classif then 
   do :
     message substitute ("Товар &1 уже связан. Изменить связку?", buf_goods.gds-code) view-as alert-box
@@ -693,11 +692,11 @@ PROCEDURE msdblcl :
         and buf_ext-classif.key#_two = v-ext-sys 
         and buf_ext-classif.uniq-key-rec = v-gds-uniq-key-rec
         no-error.
-      if available (buf_ext-classif)
+/*      if available (buf_ext-classif)
       then do:
         message substitute ("Товар &1 уже связан.", buf_goods.gds-code) view-as alert-box.
         return no-apply.
-      end.
+      end.*/
       
       run gds-attr-value(
         buf_goods.gds-code,
@@ -715,11 +714,11 @@ PROCEDURE msdblcl :
         message "У выбранного товара не соответсвует объем" view-as alert-box.
         return no-apply.
       end.
-      if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value and (bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> ?)
+      /*if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value and (bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> ?)
       then do:
         message "У выбранного товара не соответсвует содержание спирта" view-as alert-box.
         return no-apply.
-      end.
+      end.*/
       find first ub.alc-type-gds 
            where ub.alc-type-gds.gds-code = buf_goods.gds-code
              and ub.alc-type-gds.create-user-db-num = 0 no-lock no-error.
@@ -815,11 +814,11 @@ PROCEDURE msdblcl :
       and buf_ext-classif.key#_two = v-ext-sys 
       and buf_ext-classif.uniq-key-rec = v-gds-uniq-key-rec
       no-error.
-    if available (buf_ext-classif)
+    /*if available (buf_ext-classif)
     then do:
       message substitute ("Товар &1 уже связан.", buf_goods.gds-code) view-as alert-box.
       return no-apply.
-    end.
+    end.*/
     
     run gds-attr-value(
       buf_goods.gds-code,

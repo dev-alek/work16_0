@@ -70,6 +70,13 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   assign
     v-gds-code = p-gds-code
   .
+  if p-alc-imp-code = ? 
+  then do:
+    assign
+      p-alc-imp-code = 0
+      p-mark-code = 0
+    .
+  end.
   find first buf_goods no-lock
     where buf_goods.gds-code = v-gds-code no-error.
   if not available buf_goods then do:
@@ -200,14 +207,22 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
               + p-in-code                   + {&delim-nws}
               + p-part-code                 + {&delim-nws}
               + string(p-mark-db-num)       + {&delim-nws}
-              + (if p-mark-code = ? then "?" else string(p-mark-code)) + {&delim-nws}
-              + (if p-mark-code = ? then "?" else string(p-alc-bottling-date)) + {&delim-nws}
+              + (if p-mark-code = ? then "0" else string(p-mark-code)) + {&delim-nws}
+              + (if p-alc-bottling-date = ? then "?" else string(p-alc-bottling-date)) + {&delim-nws}
               + p-alc-ref-ab-path           + {&delim-nws}
               + p-alc-quality-certif-path   + {&delim-nws}
               + p-alc-certif-path           + {&delim-nws}
               + p-alc-imp-type              + {&delim-nws}
-              + (if p-mark-code = ? then "?" else STRING(p-alc-imp-code))
+              + (if p-alc-imp-code = ? then "0" else STRING(p-alc-imp-code))
       .
+      if v-cmd = ? 
+      then do:
+        message substitute ('Ошибка генерации комманды - "&1"', ('command|parts|alc-attr'
+          + "|" + string(v-gds-code) + "|" + p-in-code + "|" + p-part-code))
+        view-as alert-box.
+        return error substitute ('Ошибка генерации комманды - "&1"', ('command|parts|alc-attr'
+          + "|" + string(v-gds-code) + "|" + p-in-code + "|" + p-part-code)).
+      end.
       run nws/cr-route.p
         (input  {&send-cmd}
         ,input  v-cmd

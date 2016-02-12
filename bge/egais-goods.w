@@ -67,6 +67,7 @@ define temp-table tt-gds no-undo
     field egais-name        as character                    label "Наименование ЕГАИС"  format "X(100)"
     field prod-info         as character
     field imp-info          as character
+    field old-alc-code      as character
     index pi as primary
         gds-code
     index name_
@@ -76,6 +77,8 @@ define temp-table tt-gds no-undo
 .    
 
 define buffer old_tt-gds for tt-gds .
+define buffer buf_tt-gds for tt-gds .
+define buffer buf2_tt-gds for tt-gds .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -92,6 +95,7 @@ define buffer buf_clients-attr for ub.clients-attr .
 define buffer buf_goods for ub.goods .
 define buffer buf_goods-attr for ub.goods-attr .
 DEFINE BUFFER X_ext-classif FOR ub.ext-classif.
+DEFINE BUFFER XX_ext-classif FOR ub.ext-classif.
 
 define variable select-list as character no-undo .
 define variable ref-list    as character no-undo .
@@ -244,6 +248,16 @@ DEFINE VARIABLE rs-sort AS INTEGER
         "&алк. коду", 3
      SIZE 40 BY 1.14 NO-UNDO.
      
+DEFINE VARIABLE rs-mode AS INTEGER
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS
+        "&изменить", 1,
+        "&добавить", 2
+     SIZE 10 BY 2 TOOLTIP "ИЗМЕНЕНИЕ - если есть алкогольный код, заменяет его на новый, если нет - создает. ДОБАВЛЕНИЕ - добавляет алкогольный код к уже существующим" NO-UNDO .
+ 
+ 
+ define rectangle rect1 edge-pixels 3 graphic-edge no-fill size-chars 13.3 by 3.5 .
+     
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY br-goods FOR 
@@ -284,7 +298,9 @@ DEFINE FRAME Dialog-Frame
      v-prod-name AT ROW 2.7 COL 34 no-label
      "Сортировать по:" VIEW-AS TEXT
           SIZE 15 BY 1.14 AT ROW 3.6 COL 2 WIDGET-ID 18
-     rs-sort AT ROW 3.6 COL 18 no-label   
+     rs-sort AT ROW 3.6 COL 18 no-label 
+     rs-mode at row 2.5 col 82 no-label 
+     rect1 at row 1.2 col 80.9
      b-connect AT ROW 1.24 COL 81  
      br-goods AT ROW 5.16 COL 2 WIDGET-ID 200
      SPACE(1) SKIP(0.32)
@@ -454,6 +470,18 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME rs-mode
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-mode Dialog-Frame
+ON VALUE-CHANGED OF rs-mode IN FRAME Dialog-Frame
+DO:
+  assign
+    rs-mode
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME b-connect
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-connect Dialog-Frame
 ON CHOOSE OF b-connect IN FRAME Dialog-Frame /* - */
@@ -483,7 +511,21 @@ DO:
                                     ,input bh-gds-egais:handle
                                     ,output v-alc-code) .
         if v-alc-code <> "" and v-alc-code <> ? then do :
-            assign tt-gds.alc-code = v-alc-code .
+            if tt-gds.alc-code = "" or tt-gds.alc-code = ? then assign tt-gds.alc-code = v-alc-code .
+            else do :
+                if rs-mode = 1 then assign tt-gds.alc-code = v-alc-code .
+                if rs-mode = 2 then do :
+                    find first buf_tt-gds no-lock where buf_tt-gds.gds-code = tt-gds.gds-code
+                                                    and buf_tt-gds.alc-code = v-alc-code
+                                                    and recid(buf_tt-gds) <> recid(tt-gds) no-error .
+                    if not available buf_tt-gds then do :
+                        create buf2_tt-gds .
+                        buffer-copy tt-gds except alc-code old-alc-code to buf2_tt-gds
+                            assign buf2_tt-gds.alc-code = v-alc-code
+                        .
+                    end.     
+                end.
+            end.    
         end.
     end.
     run refresh-query in this-procedure.
@@ -528,14 +570,18 @@ DO:
                         .
                     end.
                 end.    
-                buffer tt-gds:handle:buffer-copy (bh-gds-egais, "gds-code, gds-name, ms-base, proof") .
-                assign tt-gds.egais-name = bh-gds-egais:buffer-field("gds-name"):buffer-value .
+/*                buffer tt-gds:handle:buffer-copy (bh-gds-egais, "gds-code, gds-name, ms-base, proof") .*/
+                assign
+                    tt-gds.egais-name = bh-gds-egais:buffer-field("gds-name"):buffer-value
+                    tt-gds.imp-info   = bh-gds-egais:buffer-field("imp-info"):buffer-value
+                    tt-gds.prod-info   = bh-gds-egais:buffer-field("prod-info"):buffer-value
+                .
                 for first buf_goods exclusive-lock where buf_goods.gds-code = tt-gds.gds-code :
-                    run gds-attr-write(
-                        buf_goods.gds-code,
-                        {&attr-egais-name},
-                        tt-gds.egais-name
-                    ).    
+/*                    run gds-attr-write(    */
+/*                        buf_goods.gds-code,*/
+/*                        {&attr-egais-name},*/
+/*                        tt-gds.egais-name  */
+/*                    ).                     */
 /*                    assign                                  */
 /*                        buf_goods.gds-name = tt-gds.gds-name*/
 /*                        buf_goods.ms-base  = tt-gds.ms-base */
@@ -551,9 +597,13 @@ DO:
                                                                and X_ext-classif.key#_one = buf_goods.gds-code
                                                                and X_ext-classif.key#_two = v-ext-sys 
                                                                and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                                               and X_eXt-classif.charkey_one = tt-gds.old-alc-code
                                                                no-error. 
                     if available X_ext-classif then do :    
-                        assign X_ext-classif.charkey_one = tt-gds.alc-code .
+                        assign
+                            X_ext-classif.charkey_one = tt-gds.alc-code
+                            X_ext-classif.charkey_two = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name)
+                        .
                     end.                                    
                     else do :                                    
                         run ref/extclas1.p ( 
@@ -567,7 +617,7 @@ DO:
                             ,input v-ext-sys /*p-Key#_Two*/
                             ,input 0 /*p-key#_Three*/
                             ,input tt-gds.alc-code  /*p-CharKey_One */
-                            ,input (tt-gds.prod-info + CHR(4) + tt-gds.imp-info) /*p-CharKey_two */
+                            ,input (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name) /*p-CharKey_two */
                             ,input buf_goods.gds-name /*p-CharKey_three */
                             ,input 0 /*p-nonunique */
                             ,input v-gds-uniq-key-rec ) no-error.
@@ -583,6 +633,7 @@ DO:
                     
                 end. /* for first buf_goods */
                 find first old_tt-gds exclusive-lock where old_tt-gds.gds-code = tt-gds.gds-code
+                                                       and old_tt-gds.alc-code = tt-gds.alc-code
                                                        and recid(old_tt-gds) <> recid(tt-gds) no-error.
                 if available old_tt-gds then do :
                     delete old_tt-gds .
@@ -719,13 +770,13 @@ DO:
     if available tt-gds then do :
         if tt-gds.gds-code = ? or tt-gds.gds-code = 0 then do :
             disable b-good with frame Dialog-Frame .
-            if tt-gds.fromEgais then enable b-connect with frame Dialog-Frame .
-            else disable b-connect with frame Dialog-Frame .
+            if tt-gds.fromEgais then enable b-connect rs-mode with frame Dialog-Frame .
+            else disable b-connect rs-mode with frame Dialog-Frame .
         end.
         else do :
             enable b-good with frame Dialog-Frame .
-            if valid-handle(bh-gds-egais) then enable b-connect with frame Dialog-Frame .
-            else disable b-connect with frame Dialog-Frame .
+            if valid-handle(bh-gds-egais) then enable b-connect rs-mode with frame Dialog-Frame .
+            else disable b-connect rs-mode with frame Dialog-Frame .
         end.            
     end.
 end.    
@@ -763,6 +814,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   if not glog then  return . 
   assign
       rs-sort = 1
+      rs-mode = 1
   .
   find first buf_clients no-lock where buf_clients.obj-type = {&cmp} and buf_clients.obj-code = v-cntxt-host-code-obj.
   find first buf_firm no-lock where buf_firm.firm-code = v-cntxt-host-code-obj.
@@ -882,19 +934,19 @@ PROCEDURE fill-tt :
             output par-type
         ).
         if par-alcohol <> "" and par-alcohol <> "no" then do :
-            run gds-attr-value(
-                buf_goods.gds-code,
-                {&attr-egais-name},
-                output par-egais-name,
-                output par-type
-            ).
+/*            run gds-attr-value(       */
+/*                buf_goods.gds-code,   */
+/*                {&attr-egais-name},   */
+/*                output par-egais-name,*/
+/*                output par-type       */
+/*            ).                        */
             create tt-gds .
             assign
                 tt-gds.gds-code = buf_goods.gds-code
                 tt-gds.gds-name = buf_goods.gds-name
                 tt-gds.ms-base  = buf_goods.ms-base
                 tt-gds.proof    = buf_goods.proof
-                tt-gds.egais-name = par-egais-name
+/*                tt-gds.egais-name = par-egais-name*/
             .
             for first ub.alc-type-gds where ub.alc-type-gds.gds-code = buf_goods.gds-code no-lock,
                 first ub.alc-type where ub.alc-type.alc-type-inner-code = ub.alc-type-gds.alc-type-inner-code no-lock :
@@ -911,7 +963,26 @@ PROCEDURE fill-tt :
                                                and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
                                                no-error. 
             if available X_ext-classif then do :    
-                assign tt-gds.alc-code = X_ext-classif.charkey_one .
+                assign
+                    tt-gds.alc-code = X_ext-classif.charkey_one
+                    tt-gds.old-alc-code = X_ext-classif.charkey_one
+                .
+                assign tt-gds.egais-name = entry(3, X_ext-classif.charkey_two, CHR(4)) no-error.
+                for each XX_ext-classif no-lock where  XX_ext-classif.classif-subject = {&table_goods} 
+                                                   and XX_ext-classif.classif-name = {&extclass_goods_esys} 
+                                                   AND XX_ext-classif.db-num = 0  
+                                                   and XX_ext-classif.key#_one = buf_goods.gds-code
+                                                   and XX_ext-classif.key#_two = v-ext-sys 
+                                                   and XX_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                                   and recid(XX_ext-classif) <> recid(X_ext-classif) :
+                    create buf_tt-gds.
+                    buffer-copy tt-gds except alc-code to buf_tt-gds
+                        assign
+                            buf_tt-gds.alc-code = XX_ext-classif.charkey_one
+                            buf_tt-gds.old-alc-code = XX_ext-classif.charkey_one
+                    .    
+                    assign buf_tt-gds.egais-name = entry(3, XX_ext-classif.charkey_two, CHR(4)) no-error.                             
+                end.                                        
             end.                                    
         end.                             
     end.

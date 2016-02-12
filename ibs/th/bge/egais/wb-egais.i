@@ -81,6 +81,8 @@
     field regID-Producer as character format "X(21)" label "Производитель"
     field Producer-th    as character label "Производитель TH"
     field nn             as integer label "№"
+    field prod-list      as character format "x(1)"
+    field importer-list  as character format "x(1)" 
     index pi nn ascending    
     .
 

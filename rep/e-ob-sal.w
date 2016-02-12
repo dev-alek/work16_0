@@ -389,6 +389,7 @@ END.
 /* If testing in the UIB, initialize the SmartObject. */
   assign  frame {&frame-name}  is-real is-post is-fin is-fo .
   display is-real is-post is-fin is-fo with frame {&frame-name}.
+  enable itog-contract with frame {&frame-name}.
 
 &IF DEFINED(UIB_IS_RUNNING) <> 0 &THEN
   RUN dispatch IN THIS-PROCEDURE ('initialize':U).
