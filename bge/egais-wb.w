@@ -481,7 +481,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   }
   { gbl/getcntxt.i get }
 
-  find first ub.ext-system where ub.ext-system.whole-send-news = integer ({&esys-dm-egais}).
+  find first ub.ext-system where ub.ext-system.delivery-method = integer ({&esys-dm-egais}).
   assign 
     v-ext-sys = ub.ext-system.esys-id .  
   
