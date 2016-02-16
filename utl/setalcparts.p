@@ -166,7 +166,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
                                            and X_ext-classif.db-num = 0  
                                            and X_ext-classif.key#_one = buf_gds.gds-code
                                            and X_ext-classif.key#_two = v-ext-sys 
-                                           and rowid (X_ext-classif) <> rowid (X_ext-classif).
+                                           and rowid (X_ext-classif) <> rowid (buf_ext-classif).
           delete X_ext-classif.
         end.
         find current buf_ext-classif exclusive-lock.

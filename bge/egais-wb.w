@@ -734,11 +734,11 @@ PROCEDURE msdblcl :
           message "Не найдена алкогольная группа" view-as alert-box.
           return no-apply.
         end.
-        if ub.alc-type.alc-type-code <>  bh-wb-gds-EG:buffer-field ("alc-type-code"):buffer-value
+        /*if ub.alc-type.alc-type-code <>  bh-wb-gds-EG:buffer-field ("alc-type-code"):buffer-value
         then do:
           message "У выбранного товара не соответсвует алкогольная группа" view-as alert-box.
           return no-apply.
-        end.        
+        end.*/
       end.
       run gds-attr-delete (
       bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value,
@@ -836,11 +836,11 @@ PROCEDURE msdblcl :
       message "У выбранного товара не соответсвует объем" view-as alert-box.
       return no-apply.
     end.
-    if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value and (bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> ?)
+    /*if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value and (bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> ?)
     then do:
       message "У выбранного товара не соответсвует содержание спирта" view-as alert-box.
       return no-apply.
-    end.
+    end.*/
     find first ub.alc-type-gds 
          where ub.alc-type-gds.gds-code = buf_goods.gds-code
            and ub.alc-type-gds.create-user-db-num = 0 no-lock no-error.
@@ -856,11 +856,11 @@ PROCEDURE msdblcl :
         message "Не найдена алкогольная группа" view-as alert-box.
         return no-apply.
       end.
-      if ub.alc-type.alc-type-code <>  bh-wb-gds-EG:buffer-field ("alc-type-code"):buffer-value
+      /*if ub.alc-type.alc-type-code <>  bh-wb-gds-EG:buffer-field ("alc-type-code"):buffer-value
       then do:
         message "У выбранного товара не соответсвует алкогольная группа" view-as alert-box.
         return no-apply.
-      end.        
+      end.*/        
     end.
     run ref/extclas1.p ( 
       INPUT {&add-def}
