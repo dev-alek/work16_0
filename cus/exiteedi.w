@@ -23,7 +23,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Привязка ВС к клиентам для системы EXITE-EDI
+Привязка ВС к клиентам для системы EDI
 
 Автор: Бахтадзе Наталья Викторовна
 Дата создания: 07/26/10
@@ -67,9 +67,9 @@ define variable vss-description as character no-undo init "Привязка ВС к клиента
 { gbl/fltopend.i defproc }
 define variable sort-column-name as character no-undo.
 define variable filter-point     as character NO-UNDO INIT "exiteedi".
-define variable filter-label     as character NO-UNDO INIT "Привязка ВС к клиентам для системы EXITE-EDI".
+define variable filter-label     as character NO-UNDO INIT "Привязка ВС к клиентам для системы EDI".
 define variable filter-point0    as character NO-UNDO INIT "exiteedi".
-define variable filter-label0    as character NO-UNDO INIT "Привязка ВС к клиентам для системы EXITE-EDI".
+define variable filter-label0    as character NO-UNDO INIT "Привязка ВС к клиентам для системы EDI".
 DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
 define variable v-esys-id as integer no-undo .
 DEFINE VARIABLE v-work-db-num AS INTEGER NO-UNDO.
@@ -705,7 +705,7 @@ filter-point = filter-point0 + p-list-mode .
 
 case p-list-mode:
  when {&all} then do:
-  title0 = "Внешние системы для обмена данными по exite-edi".
+  title0 = "Внешние системы для обмена данными по edi".
   ASSIGN
   frame {&frame-name}:title = substitute("&1", title0)
   filter-label = SUBSTITUTE("&1"
@@ -725,7 +725,7 @@ case p-list-mode:
 
  end.
  when "esys-id" then do:
-  title0 = substitute("Контрагенты, участвущие в обмене данными по exite-edi для внешней системы &1", v-esys-id).
+  title0 = substitute("Контрагенты, участвущие в обмене данными по edi для внешней системы &1", v-esys-id).
   ASSIGN
   frame {&frame-name}:title = substitute("&1", title0)
   filter-label = SUBSTITUTE("&1"
@@ -745,7 +745,7 @@ case p-list-mode:
 
  end.
  when "client" then do:
-  title0 = substitute("Участие контрагента в обмене данными по exite-edi", loc_clients.obj-name).
+  title0 = substitute("Участие контрагента в обмене данными по edi", loc_clients.obj-name).
   ASSIGN
   frame {&frame-name}:title = substitute("&1", title0)
   filter-label = SUBSTITUTE("&1"
@@ -812,7 +812,7 @@ define variable glog as logical no-undo .
 }
 if not glog then undo, return error.
 message
-"Выберите клиента/объект, документооборот которого Вы хотите вести через систему exite-edi"
+"Выберите клиента/объект, документооборот которого Вы хотите вести через систему edi"
 view-as alert-box .
 run ref/cli-all.w (   input parparentproc
                   ,input "b-sel"
@@ -861,7 +861,7 @@ else do:
 end.
 if buf_ext-system.esys-type <> integer({&openxml-type-exite-edi}) then do:
   message
-  "Нужно выбрать ВНЕШНЮЮ СИСТЕМУ типа EXITE-EDI"
+  "Нужно выбрать ВНЕШНЮЮ СИСТЕМУ типа EDI"
   view-as alert-box error .
   undo, return error.
 end.
@@ -883,14 +883,17 @@ or buf_clients.obj-type = {&prs} then do:
   end.
   else do:
     define variable v-type as character no-undo .
-    run gbl/d-list.w (
-                INPUT "b-sel":U
-                ,INPUT "Выберите схему работы"
-                ,INPUT {&exite-edi-without-ordrsp} + {&comma-char} + {&exite-edi-with-ordrsp}
-                ,INPUT {&exite-edi-without-ordrsp-full} + {&comma-char} + {&exite-edi-with-ordrsp-full}
-                ,INPUT {&comma-char}
-                ,INPUT "":U
-                ,output v-ordrsp-option).
+    if not buf_ext-system.whole-send-news = integer ({&esys-dm-contour-edi}) then do:
+      run gbl/d-list.w (
+                  INPUT "b-sel":U
+                  ,INPUT "Выберите схему работы"
+                  ,INPUT {&exite-edi-without-ordrsp} + {&comma-char} + {&exite-edi-with-ordrsp}
+                  ,INPUT {&exite-edi-without-ordrsp-full} + {&comma-char} + {&exite-edi-with-ordrsp-full}
+                  ,INPUT {&comma-char}
+                  ,INPUT "":U
+                  ,output v-ordrsp-option).
+    end.
+    else v-ordrsp-option = {&exite-edi-with-ordrsp}.
     IF v-ordrsp-option = "":u THEN do:
       RETURN error.
     end.
@@ -962,14 +965,17 @@ IF NOT glog  THEN DO:
   RETURN ERROR.
 END.
 define variable v-type as character no-undo .
-run gbl/d-list.w (
-            INPUT "b-sel":U
-            ,INPUT "Выберите схему работы"
-            ,INPUT {&exite-edi-without-ordrsp} + {&comma-char} + {&exite-edi-with-ordrsp}
-            ,INPUT {&exite-edi-without-ordrsp-full} + {&comma-char} + {&exite-edi-with-ordrsp-full}
-            ,INPUT {&comma-char}
-            ,INPUT X_ext-classif.charkey_one
-            ,output v-ordrsp-option).
+if not X_ext-system.whole-send-news = integer ({&esys-dm-contour-edi}) then do:
+  run gbl/d-list.w (
+              INPUT "b-sel":U
+              ,INPUT "Выберите схему работы"
+              ,INPUT {&exite-edi-without-ordrsp} + {&comma-char} + {&exite-edi-with-ordrsp}
+              ,INPUT {&exite-edi-without-ordrsp-full} + {&comma-char} + {&exite-edi-with-ordrsp-full}
+              ,INPUT {&comma-char}
+              ,INPUT X_ext-classif.charkey_one
+              ,output v-ordrsp-option).
+end.
+else v-ordrsp-option = {&exite-edi-with-ordrsp}.
 IF v-ordrsp-option = "":u THEN do:
   RETURN error.
 END.

@@ -118,8 +118,8 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
   
   egais:EGAISImpl = new WayBill (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
   
-  message "Сохранить реквизиты поставщика и импортера в сравочик вн. классификатора по товарам из накладной? Данную информацию также можно получить и сохранить при синохрониации товаров. " view-as alert-box
-    question buttons yes-no title "Вопрос" update v-glog.
+  /*message "Сохранить реквизиты поставщика и импортера в сравочик вн. классификатора по товарам из накладной? Данную информацию также можно получить и сохранить при синохрониации товаров. " view-as alert-box
+    question buttons yes-no title "Вопрос" update v-glog.*/
   
   for each ub.clob-bind where ub.clob-bind.field-name_ = {&lob-egais-wb} no-lock:
     
@@ -152,7 +152,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
       if not bh-wb-gds-EG:available 
         then next.
       
-      find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
+      /*find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
                                          and buf_ext-classif.classif-name = {&extclass_goods_esys} 
                                          and buf_ext-classif.db-num = 0  
                                          and buf_ext-classif.key#_one = buf_gds.gds-code
@@ -161,10 +161,18 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
       
       if v-glog /*num-entries (buf_ext-classif.CharKey_Two, chr (4)) < 3*/
       then do:
+        for each X_ext-classif where X_ext-classif.classif-subject = {&table_goods} 
+                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                           and X_ext-classif.db-num = 0  
+                                           and X_ext-classif.key#_one = buf_gds.gds-code
+                                           and X_ext-classif.key#_two = v-ext-sys 
+                                           and rowid (X_ext-classif) <> rowid (buf_ext-classif).
+          delete X_ext-classif.
+        end.
         find current buf_ext-classif exclusive-lock.
         buf_ext-classif.CharKey_Two = bh-wb-gds-EG:buffer-field ("prod-list"):buffer-value + chr (4) + bh-wb-gds-EG:buffer-field ("importer-list"):buffer-value + chr (4) + bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value.
         release buf_ext-classif.
-      end.
+      end.*/
 
       refA = bh-wb-gds-EG:buffer-field ("refA"):buffer-value.
       refB = bh-wb-gds-EG:buffer-field ("refB"):buffer-value.

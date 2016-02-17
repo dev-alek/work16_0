@@ -1961,7 +1961,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 sw:end-element ("oref:address").
               sw:end-element ("pref:Producer") .
 
-              if impor <> "" and impor <> ? then do:
+              if impor <> "" and impor <> ? and impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) then do:
+                message impor view-as alert-box.
                 sw:start-element ("pref:Importer") .
 /*                  sw:write-data-element ("oref:INN", entry (2, impor, chr(5)) ).*/
 /*                  sw:write-data-element ("oref:KPP", entry (3, impor, chr(5)) ).*/

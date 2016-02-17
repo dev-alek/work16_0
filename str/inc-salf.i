@@ -102,7 +102,7 @@ if p-chk-doc then do:
   or p-office = {&gds-office} then do:
     p-office-to-reserv = (if v-docs-to-reserv = 0
                           then '':U
-                          else fill(p-office, v-docs-to-reserv)).
+                          else trim(fill((p-office + {&comma-char}), v-docs-to-reserv), {&comma-char})).
   end.
   else do:
     assign
