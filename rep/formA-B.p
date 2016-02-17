@@ -99,6 +99,9 @@ define temp-table tt-rep1
     field date-otgr           as date
     field lic-number          as char
     field lic-date-to         as date 
+    field name-obj as char
+    field obj-adress as char
+    field obj-kpp as char
     field lic-org             as char
     field lic-supp-org        as char
     field supp-date-from      as date 
@@ -333,6 +336,9 @@ for each parts no-lock
             tt-rep1.unit-base           = goods.unit-base 
             tt-rep1.month-otgr          = v-month-text-otgr
             tt-rep1.month-rozl          = v-month-text 
+            tt-rep1.name-obj =  v-fmtcli-name
+            tt-rep1.obj-adress = v-fmtcli-full-addres
+            tt-rep1.obj-kpp =   v-kpp
             .
 
 run fmtcli-get-client in this-procedure (
@@ -1088,7 +1094,7 @@ for each tt-rep1 where tt-rep1.ext-doc-type = {&TDEDT_Ras_Perem} or tt-rep1.ext-
               
             '       <tr style="height: 20px;">' skip
             '         <td  style="border: none; text-align: left; border-left: 1px solid black;"></td>' skip          
-            '         <td colspan = "6" style="border: none; text-align: left; border-bottom: 1px solid black;">' + tt-rep1.name-proiz ', ' +  tt-rep1.name-firm + '</td>'  skip 
+            '         <td colspan = "6" style="border: none; text-align: left; border-bottom: 1px solid black;">' + tt-rep1.name-obj ', ' +  tt-rep1.name-firm + '</td>'  skip 
             '         <td  style="border: none; text-align: left;border-right: 1px solid black;"></td>' skip          
             '         <td  style="border: none; text-align: left; border-left: 1px solid black;"></td>' skip          
             '         <td colspan = "6" style="border: none; text-align: left; border-bottom: 1px solid black;">' + tt-rep1.name-kontr + ',  ' + tt-rep1.kontr-firm +     '</td>'  skip 
@@ -1121,7 +1127,7 @@ for each tt-rep1 where tt-rep1.ext-doc-type = {&TDEDT_Ras_Perem} or tt-rep1.ext-
 
             '       <tr style="height: 20px;">' skip
             '         <td  style="border: none; text-align: left; border-left: 1px solid black;"></td>' skip              
-            '         <td colspan = "6" style="border: none;text-align: left; border-bottom: 1px solid black;">' +   substring(tt-rep1.adress-proiz, 1, 50) + '</td>' skip
+            '         <td colspan = "6" style="border: none;text-align: left; border-bottom: 1px solid black;">' +   substring(tt-rep1.obj-adress, 1, 50) + '</td>' skip
             '         <td  style="border: none; text-align: left;border-right: 1px solid black;"></td>' skip          
             '         <td  style="border: none; text-align: left; border-left: 1px solid black;"></td>' skip              
             '         <td colspan = "6" style="border: none;text-align: left; border-bottom: 1px solid black;">' + substring(tt-rep1.adress-kontr, 1, 50) + '</td>' skip
@@ -1137,7 +1143,7 @@ for each tt-rep1 where tt-rep1.ext-doc-type = {&TDEDT_Ras_Perem} or tt-rep1.ext-
             '       <tr style="height: 20px;">' skip
             '         <td  style="border: none; text-align: left; border-left: 1px solid black;"></td>' skip          
             
-            '         <td colspan = "6" style="border: none; text-align: left; border-bottom: 1px solid black;">' +  substring(tt-rep1.adress-proiz, 51, 50) + '</td>'  skip 
+            '         <td colspan = "6" style="border: none; text-align: left; border-bottom: 1px solid black;">' +  substring(tt-rep1.obj-adress, 51, 50) + '</td>'  skip 
             '         <td  style="border: none; text-align: left;border-right: 1px solid black;"></td>' skip          
             '         <td  style="border: none; text-align: left; border-left: 1px solid black;"></td>' skip          
       
@@ -1163,7 +1169,7 @@ for each tt-rep1 where tt-rep1.ext-doc-type = {&TDEDT_Ras_Perem} or tt-rep1.ext-
             '       <tr style="height: 20px;">' skip
             '         <td  style="border: none; text-align: left; border-left: 1px solid black;"></td>' skip          
             
-            '         <td colspan = "6" style="border: none; text-align: left; border-bottom: 1px solid black;">' + substring(tt-rep1.adress-proiz, 101, 70) +    '</td>'  skip 
+            '         <td colspan = "6" style="border: none; text-align: left; border-bottom: 1px solid black;">' + substring(tt-rep1.obj-adress, 101, 70) +    '</td>'  skip 
             '         <td  style="border: none; text-align: left;border-right: 1px solid black;"></td>' skip          
             '         <td  style="border: none; text-align: left; border-left: 1px solid black;"></td>' skip          
       
@@ -1288,7 +1294,7 @@ for each tt-rep1 where tt-rep1.ext-doc-type = {&TDEDT_Ras_Perem} or tt-rep1.ext-
             '       <tr style="height: 20px;">' skip
             '         <td  style="border: none; text-align: left; border-left: 1px solid black;"></td>' skip          
             
-            '         <td colspan = "6" style="border: none; text-align: center; border-bottom: 1px solid black;"> »ÕÕ ' + string(tt-rep1.inn) + ' /  œœ ' + string(tt-rep1.kpp) +   '</td>'  skip 
+            '         <td colspan = "6" style="border: none; text-align: center; border-bottom: 1px solid black;"> »ÕÕ ' + string(tt-rep1.inn-firm) + ' /  œœ ' + string(tt-rep1.obj-kpp) +   '</td>'  skip 
             '         <td  style="border: none; text-align: left;border-right: 1px solid black;"></td>' skip          
             '         <td  style="border: none; text-align: left; border-left: 1px solid black;"></td>' skip          
       

@@ -1013,10 +1013,10 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   method override protected logical GetIsSent ():
     def var repId as char no-undo.
     def var glog  as log  no-undo.
-    glog = CheckCurrentRequest (3, parameters, repId).
+    /*glog = CheckCurrentRequest (3, parameters, repId).
     if glog
       then ReplyId = repId.
-    return glog.
+    return glog.*/
   end.
 
   method protected handle ParseRequest (inFileName as char):
@@ -1962,7 +1962,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               sw:end-element ("pref:Producer") .
 
               if impor <> "" and impor <> ? and impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) then do:
-                message impor view-as alert-box.
                 sw:start-element ("pref:Importer") .
 /*                  sw:write-data-element ("oref:INN", entry (2, impor, chr(5)) ).*/
 /*                  sw:write-data-element ("oref:KPP", entry (3, impor, chr(5)) ).*/
