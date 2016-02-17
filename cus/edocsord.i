@@ -384,7 +384,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       assign
       v-permitted-status-list = {&edi-orders} + {&comma-char} + /*если не ходит status*/
                                 {&edi-orders-sts} + {&comma-char} +
-                                {&edi-ordrsp-no}
+                                {&edi-ordrsp-no} + {&comma-char} +
+                                {&edi-orders-deliv}
      .                           .
     end.
     when integer({&edi-crit-err}) then do:
