@@ -121,6 +121,7 @@ class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
     find first ub.esys-all-attr 
                 where ub.esys-all-attr.table-name = "esys-pck-sent" 
                 and ub.esys-all-attr.attr-code = "egais"
+                and ub.esys-all-attr.key2       = inSubject
                 and ub.esys-all-attr.attr-value = inParameters
                 and ub.esys-all-attr.key3 = string (false)
                 no-error.
