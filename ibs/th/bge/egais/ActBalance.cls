@@ -41,14 +41,19 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
   define variable v-FS-RAR  as character no-undo .
   define variable v-ext-sys as integer   no-undo .
   DEFINE VARIABLE good AS LOGICAL NO-UNDO.
+  
+  define property inNum as character no-undo
+    get.
+    set. 
 
 
   constructor public ActBalance (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
     
-/*    assign                 */
-/*      parameters = inFSRAR.*/
-/*    .                      */
+    
     super (inOjType, inObjCode).
+/*    assign               */
+/*      parameters = inNum.*/
+/*    .                    */
     v-FS-RAR = inFSRAR.
     v-ext-sys = inExtSys.
     IsSent.
@@ -62,6 +67,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     define variable ii    as integer no-undo.
     
     assign
+      parameters = inNum
       StatusErr = false
       Msg       = ""
       .
@@ -158,6 +164,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     def var xml-cont  as char   no-undo.
     def var respValue as handle no-undo.
     assign
+      parameters = inNum
       StatusErr = false
       Msg       = ""
       .

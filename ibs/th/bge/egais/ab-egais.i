@@ -54,6 +54,7 @@ define temp-table tt-gds-act
     field A-fixDate     as date                     label "Дата фикс."
     field inform-B      as character                label "Справка Б"               format "X(20)"
     field marks-qnty    as integer                  label "Кол-во марок"
+    field egais-name    as character
     index pi as primary unique
         position_
     index code

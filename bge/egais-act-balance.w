@@ -356,6 +356,10 @@ DO:
     find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = tt-act-header.num
                                               and buf_clob-bind.field-name_  = {&lob-egais-ab} no-error .
     if available buf_clob-bind then do :
+        if p-mode = {&add-def} then do :
+            message "Акт с таким номером уже существует!" view-as alert-box .
+            return no-apply .
+        end.
         assign
             v-clob-db-num = buf_clob-bind.db-num
             v-int64-id = buf_clob-bind.int64-id
@@ -470,6 +474,7 @@ DO:
             tt-gds-act.A-bottleDate     = buf_parts.alc-bottling-date
             tt-gds-act.A-qnty           = buf_parts.qnty 
         .
+        tt-gds-act.egais-name           =  entry(3, x_ext-classif.charkey_two, CHR(4)) no-error .
         if buf_parts.cst-code <> "" then do :
             assign tt-gds-act.A-ttnNumber      = buf_parts.cst-code .
         end.
@@ -607,13 +612,13 @@ procedure makeXML :
                         sw:write-data-element ("ain:Identity", string(tt-gds-act.position_)) .
                         sw:start-element ("ain:Product") .
                             sw:write-data-element ("pref:Type", "АП") . 
-                            run gds-attr-value(
-                                tt-gds-act.gds-code,
-                                {&attr-egais-name},
-                                output par-egais-name,
-                                output par-type
-                            ).
-                            sw:write-data-element ("pref:FullName", par-egais-name) .
+/*                            run gds-attr-value(       */
+/*                                tt-gds-act.gds-code,  */
+/*                                {&attr-egais-name},   */
+/*                                output par-egais-name,*/
+/*                                output par-type       */
+/*                            ).                        */
+                            sw:write-data-element ("pref:FullName", tt-gds-act.egais-name) .
                             sw:write-data-element ("pref:ShortName", "") . 
                             sw:write-data-element ("pref:AlcCode", tt-gds-act.alc-code) .
                             sw:write-data-element ("pref:Capacity", string(buf_goods.ms-base)) . 

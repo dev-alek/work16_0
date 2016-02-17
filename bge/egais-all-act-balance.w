@@ -259,6 +259,7 @@ DO:
     to  file 'ActChargeOn.xml'
     no-convert
     no-error .
+    cast (egais:EGAISImpl, ibs.th.bge.egais.ActBalance):inNum = bh-act-header:buffer-field ("num"):buffer-value .
     egais:SendRequestUTM() .
     glog = egais:IsSent .
     
@@ -282,12 +283,13 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Ans Dialog-Frame
 ON CHOOSE OF Btn_Ans IN FRAME Dialog-Frame /* Сохранить */
 DO:
-  if bh-act-header = ? 
+  if not bh-act-header:available 
     then return no-apply.
   if (bh-act-header:buffer-field ("answer_"):buffer-value) <> "" then do :
     message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .    
   end.
   else do :
+      cast (egais:EGAISImpl, ibs.th.bge.egais.ActBalance):inNum = bh-act-header:buffer-field ("num"):buffer-value .
       egais:GetHndlTable(2, bh-act-header:buffer-field ("num"):buffer-value) .
       glog = egais:StatusErr .
       if glog then do :
