@@ -416,7 +416,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
 
     if (lookup(string(p-chk-type), {&sale-out-receipt-codes}) > 0
     and p-wro-code < 0)
-    or
+    or 
     (lookup(string(p-chk-type), {&sale-in-receipt-codes}) > 0
     and p-wro-code > 0 and p-src-qnty <> 0)
     or
@@ -650,6 +650,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 
   )
   then do:
+    find first buf_fbr-gds-obj no-lock where
+                buf_fbr-gds-obj.obj-type = p-obj-type
+            AND buf_fbr-gds-obj.obj-code = p-obj-code
+            AND buf_fbr-gds-obj.gds-code = p-gds-code no-error .
     if p-depart-code > 0 then v-depart-code = p-depart-code.
     else do:  
       find first buf_fbr-gds-obj no-lock where
@@ -754,6 +758,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   and not p-pos-type = {&cd-type-autotank}
   and not p-pos-type = {&cd-type-ibm-xml}
   and not p-pos-type = {&cd-type-ibm}
+  and not p-pos-type = {&cd-type-magia-xml}
   then do:
     p-mess = substitute("Товар с кодом &1: цена = 0"
                         ,p-src-code
@@ -3160,7 +3165,7 @@ if avail buf_bar-code then do:
                                     else 0
                                     ))
                       )
-          and not v-is-z-rep
+          and not v-is-z-rep and not v-pos-type-int = integer({&cd-type-magia-xml-int})
           then do:
 &scop my-message  substitute(  ~
                               "!!!Чек &1 - ошибочный (Номер по кассе: &2 Касса: &3)&4" + ~
@@ -3537,7 +3542,7 @@ if avail buf_bar-code then do:
   find first ub.chk-gds no-lock where ub.chk-gds.doc-code = buf_chk-doc.doc-code no-error.
   if trim(buf_chk-doc.office) = "" and not available ub.chk-gds then
       buf_chk-doc.office = {&gds-goods}.
-  p-prev-code = "" .    /* иной раз помогает */
+  if v-pos-type-int <> integer({&cd-type-magia-xml-int})  then p-prev-code = "" .    /* иной раз помогает */
 end. /*doe*/
 error-status:error = no.
 &undefine display-message

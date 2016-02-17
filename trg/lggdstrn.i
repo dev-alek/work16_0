@@ -54,6 +54,7 @@ procedure lggdstrn :
     and parext-doc-type <> {&TDEDT_Vozvrat_Vnesh}
     and parext-doc-type <> {&TDEDT_Vozvrat_Vnesh_Kass}
     and parext-doc-type <> {&TDEDT_Spi_Prvo}
+    and parext-doc-type <> {&TDEDT_Spi_Vnesh}
     then do:
       return error substitute( 'Услуга &2 &3 &4 недопустима в данном типе документа (&1 "&5").'
                              , entry( lookup( parext-doc-type, {&TDEDT_List} ), {&TDEDT_List-full} )
