@@ -243,6 +243,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-v-
 { cmp/cr-prep.i 1 discnt-t-group           18                Группа                18   Group }
 { cmp/cr-prep.i 1 discnt-t-payment         19                Платеж                19   Payment }
 { cmp/cr-prep.i 1 discnt-t-cashloyal       20                ЛНР                  20   "Cash Loyality" }
+{ cmp/cr-prep.i 1 discnt-t-cashround       21                Округление           21   "Cash of Rounding" }
 { cmp/cr-prep.i 1 discnt-t-bonuscard       22                Оплата бонусной картой 22   Payment of bonus card }
 { cmp/cr-prep.i 1 discnt-t-alt-condition  998                Доп.условие         998   Alt-condition }
 { cmp/cr-prep.i 1 discnt-t-another        999                Другое              999   Another }
@@ -269,6 +270,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-v-
 ,{&bef-discnt-t-group}~
 ,{&bef-discnt-t-payment}~
 ,{&bef-discnt-t-cashloyal}~
+,{&bef-discnt-t-cashround}~
 ,{&bef-discnt-t-bonuscard}~
 ,{&bef-discnt-t-alt-condition}~
 ,{&bef-discnt-t-another}~
@@ -297,6 +299,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-ty
 ,{&bef-discnt-t-group-full}~
 ,{&bef-discnt-t-payment-full}~
 ,{&bef-discnt-t-cashloyal-full}~
+,{&bef-discnt-t-cashround-full}~
 ,{&bef-discnt-t-bonuscard-full}~
 ,{&bef-discnt-t-alt-condition-full}~
 ,{&bef-discnt-t-another-full}~

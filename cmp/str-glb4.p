@@ -438,6 +438,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* товар фасуется */
 { cmp/cr-prep.i 1 attr-fasovka            fasovka            " " fasovka       }
 
+/* Группа товаров на кассе */
+{ cmp/cr-prep.i 1 attr-sum-grp-gl              sum-grp-gl               " " sum-grp-gl              }
+
 /* состав сырья 15x80 */
 { cmp/cr-prep.i 1 attr-15x80              15x80         " " 15x80       }
 
@@ -511,6 +514,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-ban-bonus}~
 ,{&bef-attr-null-price}~
 ,{&bef-attr-fasovka}~
+,{&bef-attr-sum-grp-gl}~
 ,{&bef-attr-15x80}~
 ,{&bef-attr-8x50}~
 ,{&bef-attr-6x50}~
