@@ -2747,9 +2747,9 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-fin-global   true
 &scop output-display-attr-fin-global  true
 &scop other-attr-fin-global           'spr-ext=gbl\finglpa.w':U
-&scop prop-type-list-attr-fin-global  'integer,integer,logical,integer,logical,logical':U
-&scop prop-label-list-attr-fin-global 'Где могут создаваться ФО покупателей,Как ходят ФО поставщиков по новостям,Дата закрытия ФО соответствует дате закрытия накладной,Режим работы ФО с мастер договорами,Формирование связи ФО и платежей автоматически при оплате,Удалять связи платежа с ФО автоматом при удалении платежа'
-&scop prop-list-attr-fin-global       'fo-buyer-nws,fo-supp-nws,fo-fact,fo-mc-mode,add-conn-avt,del-conn-avt'
+&scop prop-type-list-attr-fin-global  'integer,integer,logical,integer,logical,logical,integer':U
+&scop prop-label-list-attr-fin-global 'Где могут создаваться ФО покупателей,Как ходят ФО поставщиков по новостям,Дата закрытия ФО соответствует дате закрытия накладной,Режим работы ФО с мастер договорами,Формирование связи ФО и платежей автоматически при оплате,Удалять связи платежа с ФО автоматом при удалении платежа,Генерировать ФО для:'
+&scop prop-list-attr-fin-global       'fo-buyer-nws,fo-supp-nws,fo-fact,fo-mc-mode,add-conn-avt,del-conn-avt,fo-gen'
 &scop global-attr-fin-global          true
 &scop host-attr-fin-global            false
 &scop shop-attr-fin-global            false
@@ -2762,7 +2762,8 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop attr-fin-global-fo-mc-mode-tooltip   (fo-mc-mode) 0-Простая старая схема / 1-Мастер договор / 2-Смешанная схема
 &scop attr-fin-global-add-conn-avt-tooltip  (add-conn-avt) Если параметр включен _то при при оплате ФО связь с платежем будет формироваться автоматически
 &scop attr-fin-global-del-conn-avt-tooltip  (del-conn-avt) Если параметр включен _то при удалении платежа связи платежа с ФО будут удаляться автоматически
-&scop prop-tooltip-list-attr-fin-global    {&attr-fin-global-fo-buyer-nws_tooltip},{&attr-fin-global-fo-supp-nws_tooltip},{&attr-fin-global-fo-fact-tooltip},{&attr-fin-global-fo-mc-mode-tooltip},{&attr-fin-global-add-conn-avt-tooltip},{&attr-fin-global-del-conn-avt-tooltip}
+&scop attr-fin-global-fo-gen-tooltip       Генерировать ФО для заказов и/или накладных
+&scop prop-tooltip-list-attr-fin-global    {&attr-fin-global-fo-buyer-nws_tooltip},{&attr-fin-global-fo-supp-nws_tooltip},{&attr-fin-global-fo-fact-tooltip},{&attr-fin-global-fo-mc-mode-tooltip},{&attr-fin-global-add-conn-avt-tooltip},{&attr-fin-global-del-conn-avt-tooltip},{&attr-fin-global-fo-gen-tooltip}
 &scop level-way-attr-fin-global ",,global"
 &scop up-way-attr-fin-global ",,fin-global"
 

@@ -53,6 +53,7 @@ define variable vss-description as character no-undo initial "Изменение статуса 
 { str/libtfarh.i }
 { str/in-vatp.i  def }
 { cmp/gds-list.i gds-list def }
+{ gbl/getsect.i def }
 
 /* define output parameter table for gds-list. */
 define buffer bf_trn-doc      for ub.trn-doc.
@@ -80,6 +81,9 @@ define buffer old-doc         for ub.trn-doc.
 define buffer unblock-rvs-doc for ub.rvs-doc.
 define buffer exp-dtl         for ub.gds-dtl.
 define buffer c-in            for ub.trn-doc.
+define buffer del_fin-ob-trn  for ub.fin-ob-trn.
+define buffer bf_fin-ob-trn   for ub.fin-ob-trn.
+define buffer del_fin-ob      for ub.fin-ob.
 
 define variable inv-shipvalue-string         as   character                   no-undo.
 define variable inv-shiptype                 as   character                   no-undo.
@@ -139,7 +143,6 @@ define variable varhold-doc                  as   logical                     no
 define variable vartpsi                      as   character                   no-undo.
 define variable vartpsi-type                 as   character                   no-undo.
 define variable is-fin                       as   character                   no-undo.
-define variable par-type                     as   character                   no-undo.
 define variable parcontract-code             as   character                   no-undo.
 define variable parcontract-type             as   character                   no-undo.
 define variable p-status                     as   date                        no-undo .
@@ -147,6 +150,9 @@ define variable varminus-parts               as   character                   no
 define variable varminus-parts-type          as   character                   no-undo.
 define variable varerr                       as   logical                     no-undo.
 define variable rec-inv-line                 as   recid                       no-undo .
+define variable v-fo-gen                     as   integer                     no-undo .
+define variable v-del-fo                     as   logical                     no-undo .
+define variable v-kol-trn-fo                 as   integer                     no-undo .
 define stream str-err.
 
 define temp-table tt-doc-pl no-undo like ub.doc-pl
@@ -227,6 +233,43 @@ run waitfram-show in this-procedure (substitute("Переход документа в статус &1&2
       assign
         is-ok     = yes
         is-recalc = yes.
+    end.
+     /*       Обработка связанных ФО     */
+    v-del-fo = true .
+    v-kol-trn-fo = 0.
+    { gbl/getsect.i run "''" 0  {&attr-fin-global} }
+    for each thbjattr_thbj-attr :
+        if thbjattr_thbj-attr.prop-code = {&attr-fin-global_fo-gen}  then v-fo-gen = thbjattr_thbj-attr.property-value-integer .
+    end.
+    if bf_trn-doc.status_ = {&wayb} or
+       (bf_trn-doc.status_ = {&permitted} and (v-fo-gen = 4 or v-fo-gen = 5))
+       then do :
+        bf_trn-doc.need-buyer = 0.
+        for each del_fin-ob-trn where del_fin-ob-trn.trn-doc-code = bf_trn-doc.doc-code  and
+                                      del_fin-ob-trn.host-code    = bf_trn-doc.host-code exclusive-lock,
+                each del_fin-ob where del_fin-ob.doc-code = del_fin-ob-trn.doc-code  exclusive-lock
+                :
+                for each bf_fin-ob-trn where bf_fin-ob-trn.doc-code = del_fin-ob.doc-code no-lock,
+                    each exp_trn-doc where exp_trn-doc.doc-code = bf_fin-ob-trn.trn-doc-code no-lock :
+                      v-kol-trn-fo = v-kol-trn-fo + 1.
+                end.
+                    if v-kol-trn-fo > 1 then do :
+                      assign
+                        v-del-fo = false .
+                      /* v-mod-fo = true .  */
+                      message substitute ("ФО №&1 по данной накладной не будет удалено, т.к. сформированно по нескольким накладным", del_fin-ob.doc-code) view-as alert-box .
+                    end.
+                if del_fin-ob.status_ <> {&fact}  and v-del-fo then do :
+                  assign
+                    del_fin-ob.is-doc-del = yes.
+                    del_fin-ob-trn.is-doc-del = yes.
+                  delete del_fin-ob.
+                  if available del_fin-ob-trn then delete del_fin-ob-trn.
+                end.
+                else if del_fin-ob.status_ = {&fact} then do :
+                    message substitute ("ФО №&1 по данной накладной не будет удалено, т.к. закрыто на факт", del_fin-ob.doc-code) view-as alert-box .
+                end.
+        end.
     end.
   end.
   when {&inventory} then do:

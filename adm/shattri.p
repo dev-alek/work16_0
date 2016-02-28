@@ -1370,7 +1370,7 @@ end.
 
 
     when {&attr-fin-global} then do:
-      v-prop-code = "{&bef-attr-fin-global_fo-buyer-nws},{&bef-attr-fin-global_fo-supp-nws},{&bef-attr-fin-global_fo-mc-mode}" .
+      v-prop-code = "{&bef-attr-fin-global_fo-buyer-nws},{&bef-attr-fin-global_fo-supp-nws},{&bef-attr-fin-global_fo-mc-mode},{&bef-attr-fin-global_fo-gen}".
 &scop ptype integer
 &scop prop-value 0
 &scop prop-code  entry(v-ii,v-prop-code)
@@ -1378,7 +1378,7 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
-      v-prop-code = "{&bef-attr-fin-global_fo-fact},{&bef-attr-fin-global_add-conn-avt},{&bef-attr-fin-global_del-conn-avt}" .
+      v-prop-code = "{&bef-attr-fin-global_fo-fact}" .
 &scop ptype logical
 &scop prop-value no
 &scop prop-code entry(v-ii,v-prop-code)

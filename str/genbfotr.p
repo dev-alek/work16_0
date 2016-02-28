@@ -89,6 +89,7 @@ define temp-table tt-trn-code no-undo
   field doc-code       as character
   field pc as decimal
   field fact-date      as date
+  field doc-date       as date
   field sum-rubl       as decimal
   field sum-base       as decimal
   field sum-contract   as decimal
@@ -215,7 +216,7 @@ run waitfram-show in this-procedure ("Ждите...").
 define variable var-fin-calc as integer no-undo .
 find first ub.sysconf no-lock where ub.sysconf.host-code = par-host-code no-error .
 var-fin-calc = ub.sysconf.fin-calc   .
-p-usl-opl =  {&o-buyer-trn}     .
+p-usl-opl =  {&o-buyer-trn} + "," + {&o-buyer-ord}    .
 run make-temp-obj-firm in this-procedure .
 assign
   v-type-trn-doc = "{&bef-TDEDT_Ras_Vnesh},{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh},{&bef-TDEDT_Vozvrat_Vnesh_Kass}"
@@ -231,17 +232,46 @@ if p-trn-doc <> ?  then do:
         ( p-adm or
           buf_trn-doc.cr-fo-buyer   = false )             and
           lookup ( buf_trn-doc.ext-doc-type , v-type-trn-doc ) > 0 and
-          buf_trn-doc.status_    = {&fact}                and
-          buf_trn-doc.fact-date <= p-date-end
+         /* buf_trn-doc.status_    = {&fact}                and
+          buf_trn-doc.fact-date <= p-date-end                */
+          buf_trn-doc.doc-date <= p-date-end
           on error undo, return error
           :
-          run proc-body in this-procedure .
+         /* message buf_trn-doc.doc-code buf_trn-doc.doc-date view-as alert-box . */
+          find first buf_contract where buf_contract.contract-code = buf_trn-doc.contract-code and
+                                        buf_contract.host-code     = buf_trn-doc.host-code     no-lock .
+          if (lookup (buf_contract.usl-opl , {&o-buyer-ord} ) > 0 and p-trn-doc = 1) or
+             (lookup (buf_contract.usl-opl , {&o-buyer-trn} ) > 0 and p-trn-doc = 2) or
+             p-trn-doc = 3 or p-trn-doc = 0 then
+                run proc-body in this-procedure .
       end. /* trn-doc */
+      /*уже создано ФО, а накладную изменили*/
+       for each buf_trn-doc no-lock where
+          buf_trn-doc.host-code  = par-host-code          and
+          buf_trn-doc.need-buyer = 1                      and
+          buf_trn-doc.cr-fo-buyer   = true                and
+          lookup ( buf_trn-doc.ext-doc-type , v-type-trn-doc ) > 0 and
+          buf_trn-doc.status_    <> {&wayb} and buf_trn-doc.flag_ <> no  and
+/*          buf_trn-doc.fact-date <= p-date-end*/
+          buf_trn-doc.doc-date <= p-date-end,
+          first buf_fin-ob-trn where buf_fin-ob-trn.trn-doc-code = tt-trn-doc.doc-code
+                               and buf_fin-ob-trn.host-code = tt-trn-doc.host-code
+                               and buf_fin-ob-trn.sum-rubl <> (tt-trn-doc.tot-fact - tt-trn-doc.discnt-rubl)
+          on error undo, return error
+          :
+         /* message buf_trn-doc.doc-code buf_trn-doc.doc-date view-as alert-box . */
+          find first buf_contract where buf_contract.contract-code = buf_trn-doc.contract-code and
+                                        buf_contract.host-code     = buf_trn-doc.host-code     no-lock .
+          if (lookup (buf_contract.usl-opl , {&o-buyer-ord} ) > 0 and p-trn-doc = 1) or
+             (lookup (buf_contract.usl-opl , {&o-buyer-trn} ) > 0 and p-trn-doc = 2) or
+             p-trn-doc = 3 or p-trn-doc = 0 then
+                run proc-body in this-procedure .
+      end. /* for each buf_trn-doc no-lock where */
  end.
  else do: /* по списку накладных */
     for each tt-trn-doc  no-lock  where
         lookup(tt-trn-doc.ext-doc-type , v-type-trn-doc) > 0
-        and    tt-trn-doc.status_    = {&fact}
+       /* and    tt-trn-doc.status_    = {&fact} */
         break by tt-trn-doc.ext-doc-type
         on error undo, return error
         :
@@ -250,6 +280,22 @@ if p-trn-doc <> ?  then do:
            run proc-body in this-procedure .
         end.
     end. /* tt-trn-doc */
+    for each tt-trn-doc  no-lock  where lookup(tt-trn-doc.ext-doc-type , v-type-trn-doc) > 0 
+                                    and buf_trn-doc.cr-fo-buyer   = true  ,
+                  first buf_fin-ob-trn where buf_fin-ob-trn.trn-doc-code = tt-trn-doc.doc-code
+                               and buf_fin-ob-trn.host-code = tt-trn-doc.host-code
+                               and buf_fin-ob-trn.sum-rubl <> (tt-trn-doc.tot-fact - tt-trn-doc.discnt-rubl) and
+        buf_trn-doc.status_    <> {&wayb} and buf_trn-doc.flag_ <> no  
+        break by tt-trn-doc.ext-doc-type
+        on error undo, return error
+        :
+        find first buf_trn-doc no-lock where buf_trn-doc.doc-code = tt-trn-doc.doc-code no-error .
+        if available buf_trn-doc then  do:
+          find first tt-fin-ob no-error .
+           run proc-body in this-procedure .
+        end.
+    end. /* tt-trn-doc */
+
  end.
 
   if p-cons = 1  then do:
@@ -392,20 +438,30 @@ if ( col-trn  modulo temp1 = 0 ) and ( col-trn >= temp1 ) then run waitfram-show
               first buf_contract no-lock where buf_contract.contract-code = buf_trn-doc.contract-code and
                                                buf_contract.host-code     = buf_trn-doc.host-code     and
                                                lookup (buf_contract.usl-opl , p-usl-opl ) > 0
-              and ( can-find (first old_fin-gds-part no-lock where
+              and (( can-find (first old_fin-gds-part no-lock where
                                     old_fin-gds-part.obj-type  = buf_trn-doc.obj-type  and
                                     old_fin-gds-part.obj-code  = buf_trn-doc.obj-code  and
                                     old_fin-gds-part.gds-code  = buf_goods.gds-code    and
                                     old_fin-gds-part.doc-type  = "":U                  and
                                     old_fin-gds-part.out-code  = buf_trn-doc.doc-code  )
-                    = false ) /* на партию не найдено ФО по финпартиям */
+                    = false )
+                     OR ( CAN-FIND (FIRST OLD_FIN-GDS-PART NO-LOCK WHERE
+                                    OLD_FIN-GDS-PART.OBJ-TYPE  = BUF_TRN-DOC.OBJ-TYPE  AND
+                                    OLD_FIN-GDS-PART.OBJ-CODE  = BUF_TRN-DOC.OBJ-CODE  AND
+                                    OLD_FIN-GDS-PART.GDS-CODE  = BUF_GOODS.GDS-CODE    AND
+                                    OLD_FIN-GDS-PART.DOC-TYPE  = "":U                  AND
+                                    OLD_FIN-GDS-PART.OUT-CODE  = BUF_TRN-DOC.DOC-CODE  AND
+                                    OLD_FIN-GDS-PART.SUM-RUBL <> (BUF_TRN-DOC.TOT-FACT - BUF_TRN-DOC.DISCNT-RUBL)  )
+                    = TRUE )
+                     )/* на партию не найдено ФО по финпартиям */
 
               break
               by buf_trn-doc.contract-code
               by buf_doc-line.vat-pc
               on error undo, return error
               :
-              if lookup(buf_contract.usl-opl , {&o-buyer-trn} ) > 0 and v-flag-buy = false then do:
+
+              if /*lookup(buf_contract.usl-opl , {&o-buyer-trn} ) > 0 and*/ v-flag-buy = false then do:
                   run clcprtsl_calc-line in this-procedure ( input recid( buf_doc-line ) ) no-error .
                   if error-status :error then
                   message
@@ -421,7 +477,15 @@ if ( col-trn  modulo temp1 = 0 ) and ( col-trn >= temp1 ) then run waitfram-show
                       var-sum-contract = var-sum-rubl
                       var-sum-base     = var-sum-base + (v-sign) * abs ( tt-allsum-line.sum-dsc-base-doc )
                     .
-
+                    find first temp-parts where 
+                      temp-parts.host-code      = buf_trn-doc.host-code and
+                      temp-parts.contract-code  = buf_trn-doc.contract-code and
+                      temp-parts.out-code       = buf_doc-line.doc-code and
+                      temp-parts.gds-code       = buf_goods.gds-code and
+                      temp-parts.obj-type       = buf_trn-doc.obj-type and
+                      temp-parts.obj-code       = buf_trn-doc.obj-code
+                    no-error .
+                    if available temp-parts then delete temp-parts . 
                     create temp-parts.
                     buffer-copy buf_doc-line  except buf_doc-line.status_ to temp-parts
                     assign
@@ -489,6 +553,16 @@ define input parameter v-sum-base as decimal no-undo .
 define input parameter v-sum-contract as decimal no-undo .
 { str/gen-flpj.i }
   run fin-ob-code in this-procedure ( input g#db-num , output p-doc-code) .
+  define variable min-date as date no-undo .
+
+  if buf_trn-doc.fact-date <> ? then
+        min-date = buf_trn-doc.fact-date.
+  else  min-date = buf_trn-doc.doc-date.
+
+  if  min-date + (if buf_contract.srok-opl <> ? then buf_contract.srok-opl else 0 ) <= n-doc-date
+      then n-pay-date = n-doc-date.
+      else n-pay-date = min-date + (if buf_contract.srok-opl <> ? then buf_contract.srok-opl else 0 ) .
+
   run create-fin-liab in this-procedure (
         input yes                 ,
         input  p-doc-code         ,
@@ -635,6 +709,7 @@ v-pc = if p-nalog = 1 then 0 else v-pc .
             tt-trn-code.host-code     = par-host-code
             tt-trn-code.doc-code      = buf_trn-doc.doc-code
             tt-trn-code.fact-date     = buf_trn-doc.fact-date
+            tt-trn-code.doc-date      = buf_trn-doc.doc-date
             tt-trn-code.sum-rubl      = v-sum-rubl
             tt-trn-code.sum-base      = v-sum-base
             tt-trn-code.sum-contract  = v-sum-contract
@@ -668,7 +743,9 @@ define variable max-date as date no-undo .
       break by tt-trn-code.fact-date DESCENDING
       on error undo, return error
       :
-      min-date = tt-trn-code.fact-date.
+      if tt-trn-code.fact-date <> ? then
+            min-date = tt-trn-code.fact-date.
+      else  min-date = tt-trn-code.doc-date.
   end.
   if  min-date + (if buf_contract.srok-opl <> ? then buf_contract.srok-opl else 0 ) <= n-doc-date
       then n-pay-date = n-doc-date.
@@ -924,7 +1001,9 @@ define variable max-date as date no-undo .
             break by tt-trn-code.fact-date DESCENDING
             on error undo, return error
             :
-            min-date = tt-trn-code.fact-date.
+            if tt-trn-code.fact-date <> ? then
+                 min-date = tt-trn-code.fact-date.
+            else min-date = tt-trn-code.doc-date.
         end.
 
       if  min-date + (if buf_contract.srok-opl <> ? then buf_contract.srok-opl else 0 ) <= n-doc-date
