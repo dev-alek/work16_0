@@ -40,6 +40,7 @@ define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "ЕГАИС Акт постановки на баланс".
 
 define variable ii                  as integer no-undo .
+define variable jj                  as integer no-undo .
 define variable v-position_         as integer no-undo .
 define variable v-date              as character no-undo .
 define variable v-rid-list          as character no-undo .
@@ -48,6 +49,7 @@ define variable par-egais-name      as character no-undo .
 define variable par-type            as character no-undo .
 define variable v-attr-value        as character            no-undo .
 define variable v-attr-type         as character            no-undo .
+define variable p-ext-rec           as recid no-undo .
 
 define variable glog        as logical no-undo .
 
@@ -112,6 +114,12 @@ define buffer buf_clob-data     for ub.clob-data .
 { ref/gds-attr.i }
 { str/trdcalib.i   }
 {ibs/th/bge/egais/ab-egais.i shared }
+
+define new shared temp-table tt-exts
+    field ext-rec as recid
+    index pi as primary unique
+        ext-rec
+.
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -296,8 +304,11 @@ DO:
             tt-gds-act.position_        = ii + 1
             tt-gds-act.marks-qnty       = 0
         . 
+        tt-gds-act.egais-name           =  entry(3, x_ext-classif.charkey_two, CHR(4)) no-error .
         open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
     end.
+    find first tt-gds-act no-error.
+    if available tt-gds-act then disable b-good with frame {&FRAME-NAME}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -437,18 +448,36 @@ DO:
     run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
                                         ,input (buffer buf_goods:handle)
                                         ,output v-gds-uniq-key-rec).
-    find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+    assign jj = 0 .
+    empty temp-table tt-exts .                                    
+    for each X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
                                        and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                        AND X_ext-classif.db-num = 0  
                                        and X_ext-classif.key#_one = buf_goods.gds-code
                                        and X_ext-classif.key#_two = v-ext-sys 
-                                       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
-                                       no-error. 
-    if not available X_ext-classif or trim(X_ext-classif.charkey_one) = "" then do :  
+                                       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec :
+        create tt-exts .
+        assign tt-exts.ext-rec = recid(X_ext-classif) .                                  
+        assign jj = jj + 1 . 
+    end. 
+    if jj = 0 then do :                                  
         message "Выбранный товар не синхронизирован с ЕГАИС. (Нет алкогольного кода)" view-as alert-box.
         return no-apply.  
-/*        assign tt-gds.alc-code = X_ext-classif.charkey_one .*/
     end.
+    else if jj = 1 then do :
+        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                           AND X_ext-classif.db-num = 0  
+                                           and X_ext-classif.key#_one = buf_goods.gds-code
+                                           and X_ext-classif.key#_two = v-ext-sys 
+                                           and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                           .
+    end.
+    else do :
+        run bge/egais-select-alc-code.w (output p-ext-rec) .
+        find first X_ext-classif no-lock where recid(X_ext-classif) = p-ext-rec no-error .
+        if not available X_ext-classif then return no-apply.
+    end. 
     assign ii = 0 .  
     for each buf_parts no-lock where buf_parts.artic = buf_goods.artic 
                                 and buf_parts.prod-type = buf_goods.prod-type 
@@ -629,33 +658,43 @@ procedure makeXML :
                             sw:write-data-element ("pref:ProductVCode", string(ub.alc-type.alc-type-code)) .
                         end.
                         
-                        find first ub.clients no-lock where ub.clients.obj-type = buf_goods.prod-type
-                                                        and ub.clients.obj-code = buf_goods.prod-code .
-                        find first ub.firm no-lock where ub.firm.firm-code = ub.clients.obj-code .
-                        run gen-key-rec in this-procedure   ( input {&table_clients}
-                                                             ,input buffer ub.clients:handle
-                                                             ,output v-obj-uniq-key-rec).
-                        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_clients}
-                                                           and X_ext-classif.classif-name = {&extclass_clients_esys}
-                                                           AND X_ext-classif.db-num = 0
-                                                           and X_ext-classif.key#_one = v-ext-sys
-                                                           and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
-                                                           no-error.
-                        if available X_ext-classif and trim(X_ext-classif.charkey_three) <> "" then do :                                  
+                        run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
+                                        ,input (buffer buf_goods:handle)
+                                        ,output v-gds-uniq-key-rec).
+                        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                       and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                       AND X_ext-classif.db-num = 0  
+                                       and X_ext-classif.key#_one = buf_goods.gds-code
+                                       and X_ext-classif.key#_two = v-ext-sys 
+                                       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                       no-error.
+                        if available X_ext-classif and num-entries(X_ext-classif.charkey_two, CHR(4)) = 3 then do : 
+                          if entry(1, X_ext-classif.charkey_two, CHR(4)) <> "" then do :                                
                             sw:start-element ("pref:Producer") .
-                                sw:write-data-element ("oref:INN", ub.firm.inn) .
-                                sw:write-data-element ("oref:KPP", ub.firm.kpp) .
-                                sw:write-data-element ("oref:ClientRegId", X_ext-classif.charkey_three) .
-                                sw:write-data-element ("oref:FullName", ub.clients.obj-name) .
-                                sw:write-data-element ("oref:ShortName", ub.clients.obj-name) .
+                                sw:write-data-element ("oref:INN", entry(2, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
+                                sw:write-data-element ("oref:KPP", entry(3, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
+                                sw:write-data-element ("oref:ClientRegId", entry(1, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
+                                sw:write-data-element ("oref:FullName", entry(4, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
+                                sw:write-data-element ("oref:ShortName", "") .
                                 sw:start-element ("oref:address") .
-                                    find first ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type 
-                                                                        and   ub.clients-attr.obj-code = ub.clients.obj-code
-                                                                        and   ub.clients-attr.attr-code = {&attr-requisite-alc-decl} no-error.
-                                    sw:write-data-element ("oref:Country", if available ub.clients-attr then entry( 3, ub.clients-attr.attr-value, "|") else "" ) .
-                                    sw:write-data-element ("oref:description", (ub.firm.addres1 + ub.firm.addres2) ) .                                    
+                                    sw:write-data-element ("oref:Country", entry(5, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
+                                    sw:write-data-element ("oref:description", entry(6, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .                                    
                                 sw:end-element ("oref:address") .
                             sw:end-element ("pref:Producer") .
+                          end.
+                          if entry(2, X_ext-classif.charkey_two, CHR(4)) <> "" then do :                                
+                            sw:start-element ("pref:Importer") .
+                                sw:write-data-element ("oref:INN", entry(2, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
+                                sw:write-data-element ("oref:KPP", entry(3, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
+                                sw:write-data-element ("oref:ClientRegId", entry(1, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
+                                sw:write-data-element ("oref:FullName", entry(4, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
+                                sw:write-data-element ("oref:ShortName", "") .
+                                sw:start-element ("oref:address") .
+                                    sw:write-data-element ("oref:Country", entry(5, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
+                                    sw:write-data-element ("oref:description", entry(6, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .                                    
+                                sw:end-element ("oref:address") .
+                            sw:end-element ("pref:Importer") .
+                          end.
                         end.
                         
                         sw:end-element ("ain:Product") .
