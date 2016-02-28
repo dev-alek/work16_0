@@ -3011,7 +3011,7 @@ for each temp-thbj-attr:
   delete temp-thbj-attr.
 end.
 
-
+if p-type = 'glob' then do:
 run adm/shattri.p (
     input "init":U
   , input ""
@@ -3035,6 +3035,8 @@ if error-status:error then do:
   view-as alert-box error .
   undo, return error .
 end.
+end.
+if p-type = 'firm' then do:
 run adm/shattri.p (
     input "init":U
   , input v-obj-type
@@ -3056,7 +3058,8 @@ if error-status:error then do:
   view-as alert-box error .
   undo, return error .
 end.
-
+end.
+if p-type = 'obj' then do:
 run adm/shattri.p (
     input "init":U
   , input p-obj-type
@@ -3079,7 +3082,7 @@ if error-status:error then do:
   view-as alert-box error .
   undo, return error .
 end.
-
+end.
 &scop telo1  IF thbjattr_thbj-attr-o.prop-code = ~{&attr-prt-obj_~{&pole~}~} THEN DO: ~
     ~{&pole~} = thbjattr_thbj-attr-o.property-value-~{&type~}. ~
     ~{&pole~}:private-data in frame {&frame-name} = "recid2=" + string(recid(thbjattr_thbj-attr-o)). ~

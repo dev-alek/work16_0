@@ -3977,7 +3977,7 @@ logical~
 '
 
 &scop prop-list-attr-prt-firm 'factur01,incurrat,tick-w'
-&scop global-attr-prt-firm true
+&scop global-attr-prt-firm false
 &scop host-attr-prt-firm true
 &scop shop-attr-prt-firm false
 &scop store-attr-prt-firm false
@@ -3989,8 +3989,8 @@ logical~
 &scop prop-tooltip-list-attr-prt-firm  {&attr-prt-firm-factur01_tooltip},~
 {&attr-prt-firm-incurrat_tooltip},~
 {&attr-prt-firm-tick-w_tooltip}
-&scop level-way-attr-prt-firm ",host,global"
-&scop up-way-attr-prt-firm ",prt-firm,prt-firm"
+&scop level-way-attr-prt-firm ",host,"
+&scop up-way-attr-prt-firm ",prt-firm,"
 
 
 /* параметры по Печати форм по объектам */
@@ -4049,8 +4049,8 @@ character~
 '
 
 &scop prop-list-attr-prt-obj 'fgdsnind,in-docpr,outappr,outdate,outdisc,outegrp,outhold,outnum,outobj,outprim,outrubl,outssdoc,outsubs,outt12,outares,outsend,outasend,outR,outB,outogr,outC'
-&scop global-attr-prt-obj true
-&scop host-attr-prt-obj true
+&scop global-attr-prt-obj false
+&scop host-attr-prt-obj false
 &scop shop-attr-prt-obj true
 &scop store-attr-prt-obj true
 &scop db-attr-prt-obj false
@@ -4097,8 +4097,8 @@ character~
 {&attr-prt-obj-outB_tooltip},~
 {&attr-prt-obj-outogr_tooltip},~
 {&attr-prt-obj-outC_tooltip}
-&scop level-way-attr-prt-obj "obj,host,global"
-&scop up-way-attr-prt-obj "prt-obj,prt-obj,prt-obj"
+&scop level-way-attr-prt-obj "obj,,"
+&scop up-way-attr-prt-obj "prt-obj,,"
 
 
 
@@ -4109,7 +4109,7 @@ character~
 &scop tooltip-attr-report-glob         "параметры по Отчетам глобально"
 &scop user-can-edit-attr-report-glob   true
 &scop output-display-attr-report-glob  true
-&scop other-attr-report-glob           'spr-ext=gbl\reportpa.w':U
+&scop other-attr-report-glob           'spr-ext=adm\reptglob.p':U
 &scop prop-type-list-attr-report-glob  '~
 logical~
 ,date~
@@ -4174,7 +4174,7 @@ logical~
 &scop tooltip-attr-report-firm         "параметры по Отчетам фирма"
 &scop user-can-edit-attr-report-firm   true
 &scop output-display-attr-report-firm  true
-&scop other-attr-report-firm           'spr-ext=gbl\reportpa.w':U
+&scop other-attr-report-firm           'spr-ext=adm\reptfrm.p':U
 &scop prop-type-list-attr-report-firm  '~
 character~
 ':U
@@ -4183,7 +4183,7 @@ character~
 '
 
 &scop prop-list-attr-report-firm 'xl-delim'
-&scop global-attr-report-firm true
+&scop global-attr-report-firm false
 &scop host-attr-report-firm true
 &scop shop-attr-report-firm false
 &scop store-attr-report-firm false
@@ -4191,8 +4191,8 @@ character~
 &scop batch-edit-attr-report-firm  0
 &scop attr-report-firm-xl-delim_tooltip   (xl-delim) По фирме. Разделитель колонок при старом экспорте в Excel
 &scop prop-tooltip-list-attr-report-firm  {&attr-report-firm-xl-delim_tooltip}
-&scop level-way-attr-report-firm ",host,global"
-&scop up-way-attr-report-firm ",report-firm,report-firm"
+&scop level-way-attr-report-firm ",host,"
+&scop up-way-attr-report-firm ",report-firm,"
 
 
 /* параметры по отчетам по объектам */
@@ -4202,7 +4202,7 @@ character~
 &scop tooltip-attr-report-obj         "параметры по Отчетам по объектам"
 &scop user-can-edit-attr-report-obj   true
 &scop output-display-attr-report-obj  true
-&scop other-attr-report-obj           'spr-ext=gbl\reportpa.w':U
+&scop other-attr-report-obj           'spr-ext=adm\reptobj.p':U
 &scop prop-type-list-attr-report-obj  '~
 logical,~
 character~
@@ -4213,8 +4213,8 @@ character~
 '
 
 &scop prop-list-attr-report-obj 'prt-z-no,shft-qty'
-&scop global-attr-report-obj true
-&scop host-attr-report-obj true
+&scop global-attr-report-obj false
+&scop host-attr-report-obj false
 &scop shop-attr-report-obj true
 &scop store-attr-report-obj true
 &scop db-attr-report-obj false
@@ -4222,8 +4222,8 @@ character~
 &scop attr-report-obj-prt-z-no_tooltip   (prt-z-no) Печатать или нет номера Z-отчетов в 1 - 4 листах сменного отчета
 &scop attr-report-obj-shft-qty_tooltip   (shft-qty) Какое количество (в кг) из сверки брать для 1-го листа сменного отчета system-cli-qnty или state-cli-qnty (расчетно-книжный остаток)
 &scop prop-tooltip-list-attr-report-obj  {&attr-report-obj-prt-z-no_tooltip},{&attr-report-obj-shft-qty_tooltip}
-&scop level-way-attr-report-obj "obj,host,global"
-&scop up-way-attr-report-obj "report-obj,report-obj,report-obj"
+&scop level-way-attr-report-obj "obj,,"
+&scop up-way-attr-report-obj "report-obj,,"
 
 
 

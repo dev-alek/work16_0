@@ -26,6 +26,7 @@ define input parameter parparentproc as widget-handle no-undo.
 define input parameter p-mode        as character no-undo.
 define input parameter p-obj-type    like ub.clients.obj-type no-undo.
 define input parameter p-obj-code    like ub.shop.obj-code no-undo.
+define input parameter p-type        as char no-undo.
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -1013,78 +1014,79 @@ end.
 for each temp-thbj-attr:
   delete temp-thbj-attr.
 end.
-
-
-run adm/shattri.p (
-    input "init":U
-  , input ""
-  , input 0
-  , input {&attr-report-glob}
-  , input "":U
-  , output v-value-character
-  , output v-value-date
-  , output v-value-decimal
-  , output v-value-integer
-  , output v-value-logical
-  , output v-param-type
-  , input-output TABLE-HANDLE v-tthg
-  ) no-error .
-
-if error-status:error then do:
-  message
-  "Ќе удалось получить начальные значени€ настроек GLOB" skip
-  error-status:get-message(1) skip
-  return-value
-  view-as alert-box error .
-  undo, return error .
+if p-type = 'glob' then do:
+  run adm/shattri.p (
+      input "init":U
+    , input ""
+    , input 0
+    , input {&attr-report-glob}
+    , input "":U
+    , output v-value-character
+    , output v-value-date
+    , output v-value-decimal
+    , output v-value-integer
+    , output v-value-logical
+    , output v-param-type
+    , input-output TABLE-HANDLE v-tthg
+    ) no-error .
+  
+  if error-status:error then do:
+    message
+    "Ќе удалось получить начальные значени€ настроек GLOB" skip
+    error-status:get-message(1) skip
+    return-value
+    view-as alert-box error .
+    undo, return error .
 end.
-run adm/shattri.p (
-    input "init":U
-  , input v-obj-type
-  , input v-obj-code
-  , input {&attr-report-firm}
-  , input "":U
-  , output v-value-character
-  , output v-value-date
-  , output v-value-decimal
-  , output v-value-integer
-  , output v-value-logical
-  , output v-param-type
-  , input-output TABLE-HANDLE v-tthf
-  ) no-error .
-if error-status:error then do:
-  message
-  "Ќе удалось получить начальные значени€ настроек firm" skip
-  error-status:get-message(1) return-value
-  view-as alert-box error .
-  undo, return error .
 end.
-
-run adm/shattri.p (
-    input "init":U
-  , input p-obj-type
-  , input p-obj-code
-  , input {&attr-report-obj}
-  , input "":U
-  , output v-value-character
-  , output v-value-date
-  , output v-value-decimal
-  , output v-value-integer
-  , output v-value-logical
-  , output v-param-type
-  , input-output TABLE-HANDLE v-ttho
-  ) no-error .
-
-if error-status:error then do:
-  message
-  "Ќе удалось получить начальные значени€ настроек OBJ" skip
-  error-status:get-message(1) skip
-  return-value skip
-  view-as alert-box error .
-  undo, return error .
+if p-type = 'firm' then do:
+    run adm/shattri.p (
+        input "init":U
+      , input v-obj-type
+      , input v-obj-code
+      , input {&attr-report-firm}
+      , input "":U
+      , output v-value-character
+      , output v-value-date
+      , output v-value-decimal
+      , output v-value-integer
+      , output v-value-logical
+      , output v-param-type
+      , input-output TABLE-HANDLE v-tthf
+      ) no-error .
+    if error-status:error then do:
+      message
+      "Ќе удалось получить начальные значени€ настроек firm" skip
+      error-status:get-message(1) return-value
+      view-as alert-box error .
+      undo, return error .
+    end.
 end.
-
-
+if p-type = 'obj' then do:    
+    run adm/shattri.p (
+        input "init":U
+      , input p-obj-type
+      , input p-obj-code
+      , input {&attr-report-obj}
+      , input "":U
+      , output v-value-character
+      , output v-value-date
+      , output v-value-decimal
+      , output v-value-integer
+      , output v-value-logical
+      , output v-param-type
+      , input-output TABLE-HANDLE v-ttho
+      ) no-error .
+    
+    if error-status:error then do:
+      message
+      "Ќе удалось получить начальные значени€ настроек OBJ" skip
+      error-status:get-message(1) skip
+      return-value skip
+      view-as alert-box error .
+      undo, return error .
+    end.
+end.
 &scop telo1  IF thbjattr_thbj-attr-o.prop-code = ~{&attr-report-obj_~{&pole~}~} THEN DO: ~
     ~{&pole~} = thbjattr_thbj-attr-o.property-value-~{&type~}. ~
     ~{&pole~}:private-data in frame {&frame-name} = "recid2=" + string(recid(thbjattr_thbj-attr-o)). ~
