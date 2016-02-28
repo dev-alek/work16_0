@@ -42,6 +42,7 @@ Create1: Суслов Алексей Юрьевич
 define input parameter parparentproc as handle    no-undo.
 define input parameter parlist-mode  as character no-undo.
 define input parameter parstatus     as character no-undo.
+define output parameter out-rec      as recid     no-undo.
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo initial "$Revision$":U .
@@ -338,14 +339,14 @@ DEFINE BROWSE br-r-docs
      {&sort-clmn_16-br-dtl}
      {&sort-clmn_17-br-dtl}
      {&sort-clmn_18-br-dtl}
-     {&sort-clmn_19-br-dtl}
-     {&sort-clmn_20-br-dtl}
+     {&sort-clmn_19-br-dtl} format "->>,>>>,>>>,>>>.<<<"
+     {&sort-clmn_20-br-dtl} format "->>,>>>,>>>,>>>.<<<"
      {&sort-clmn_21-br-dtl}
      {&sort-clmn_22-br-dtl}
-     {&sort-clmn_23-br-dtl}
-     {&sort-clmn_24-br-dtl}
-     {&sort-clmn_25-br-dtl}
-     {&sort-clmn_26-br-dtl}
+     {&sort-clmn_23-br-dtl} format "->>,>>>,>>>,>>>.<<<"
+     {&sort-clmn_24-br-dtl} format "->>,>>>,>>>,>>>.<<<"
+     {&sort-clmn_25-br-dtl} format "->>,>>>,>>>,>>>.<<<"
+     {&sort-clmn_26-br-dtl} format "->>,>>>,>>>,>>>.<<<"
      {&sort-clmn_27-br-dtl}
      {&sort-clmn_28-br-dtl}
      {&sort-clmn_29-br-dtl}
@@ -1328,7 +1329,7 @@ ON CHOOSE OF b-sel IN FRAME d-all-r-docs /* Выбор */
 DO:
   {&no-rvs}
   assign
-    rvs-rec = recid( r-doc )
+    out-rec = recid( r-doc )
   .
   apply "go" to frame {&frame-name}.
 END.
@@ -1998,6 +1999,24 @@ define variable sort-column-phrase as character no-undo .
           parstatus <> {&fact}            then
           enable b-add b-chg b-del b-close b-open b-inv btn_copy with frame {&frame-name}.
       end.
+      when "choose-control" then do :
+        assign frame {&frame-name}:title = "ДОКУМЕНТЫ СВЕРКИ Объект : " + varobj-type + " " + string (varobj-code) + "  Статус : факт    Тип: контроль".
+        { gbl/fltopend.i
+          &where-cond = "r-doc.obj-type = varobj-type and
+                        r-doc.obj-code = varobj-code and
+                        r-doc.status_  = {&fact}     and
+                        r-doc.rvs-type = {&rvs-control} "
+          &dyn_where-cond = " substitute( '  ~
+                            r-doc.obj-type =  &1&2&1 and ~
+                            r-doc.obj-code =  &3  and  ~
+                            r-doc.status_  =  &1&4&1  ~
+                            r-doc.rvs-type =  &1&5&1  ~
+                            ' , ~{&double-quote~} , varobj-type , varobj-code , {&fact}, {&rvs-control} ) "
+
+          &use-ind    = "  "
+          &by         = "  " }
+        enable b-sel with frame {&frame-name}.   
+      end.    
   end case.
 
   apply "entry" to {&browse-name} in frame {&frame-name}.

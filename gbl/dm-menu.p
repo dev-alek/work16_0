@@ -5561,26 +5561,32 @@ PROCEDURE m_exit-exe :
 END PROCEDURE.
 
 PROCEDURE new-all-rvs :
-run str/all-rvs.w (input parparentproc, input {&status}, input {&g___new}).
+define variable v-rvs-rid as recid no-undo.    
+run str/all-rvs.w (input parparentproc, input {&status}, input {&g___new}, output v-rvs-rid).
 END PROCEDURE.
 
 PROCEDURE prm-all-rvs :
-run str/all-rvs.w (input parparentproc, input {&status}, input {&permitted}).
+define variable v-rvs-rid as recid no-undo.
+run str/all-rvs.w (input parparentproc, input {&status}, input {&permitted}, output v-rvs-rid).
 END PROCEDURE.
 
 PROCEDURE fact-all-rvs :
-run str/all-rvs.w (input parparentproc, input {&status}, input {&fact}).
+define variable v-rvs-rid as recid no-undo.
+run str/all-rvs.w (input parparentproc, input {&status}, input {&fact}, output v-rvs-rid).
 END PROCEDURE.
 
 PROCEDURE obj-all-rvs :
-run str/all-rvs.w (input parparentproc, input {&g___object}, input ?).
+define variable v-rvs-rid as recid no-undo.
+run str/all-rvs.w (input parparentproc, input {&g___object}, input ?, output v-rvs-rid).
 END PROCEDURE.
 
 PROCEDURE firm-all-rvs :
-run str/all-rvs.w (input parparentproc, input {&company}, input ?).
+define variable v-rvs-rid as recid no-undo.
+run str/all-rvs.w (input parparentproc, input {&company}, input ?, output v-rvs-rid).
 END PROCEDURE.
 
 PROCEDURE all-all-rvs :
+  define variable v-rvs-rid as recid no-undo.  
   define variable v-ok as logical   no-undo .
   { gbl/chk-actg.i
     v-cntxt-db-num
@@ -5598,7 +5604,7 @@ PROCEDURE all-all-rvs :
     v-ok
   }
   if v-ok then do:
-    run str/all-rvs.w (input parparentproc, input {&work}, input ?).
+    run str/all-rvs.w (input parparentproc, input {&work}, input ?, output v-rvs-rid).
   end.
 END PROCEDURE.
 
