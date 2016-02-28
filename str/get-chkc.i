@@ -235,6 +235,10 @@ if p-disc-reason <> 0 then do:
     then do:
       return integer({&discnt-t-cashloyal}).
     end.
+    when 11
+    then do:
+      return integer({&discnt-t-cashround}).
+    end.
     when 13
     then do:
       return integer({&discnt-t-bonuscard}).
