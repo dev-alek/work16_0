@@ -220,6 +220,7 @@ define buffer cli-buf    for ub.clients. /* чтоб не поломать покупателя */
 define buffer t-d-b      for ub.trn-doc.
 define buffer d-l-b      for ub.doc-line.
 define buffer bf-trn-doc for ub.trn-doc.
+define buffer bf_parts for ub.parts.
 define buffer l-doc-line for ub.doc-line. /* для поиска  */
 define buffer bf_sysconf for ub.sysconf.
 define variable sort-default       as logical   no-undo .
@@ -1515,6 +1516,9 @@ DO:
             if available bf-f_contract-specif then do:
               t-doc.vat-type = bf-f_contract-specif.vat-type .
             end.
+            for each bf_parts where bf_parts.out-code = t-doc.doc-code and bf_parts.contract-code <> t-doc.contract-code EXCLUSIVE-LOCK :
+              bf_parts.contract-code = t-doc.contract-code .
+            end.              
             run chg-purch-contract in this-procedure.
           end.
         end.
@@ -1524,7 +1528,7 @@ DO:
           t-doc.contract-code  = 0.
       end.
   end.
-  
+run UI-on in this-procedure ( input "enable" ).
 END.
 
 /* _UIB-CODE-BLOCK-END */
