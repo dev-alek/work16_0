@@ -291,6 +291,21 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME itog-contract
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL itog-contract s-object
+ON VALUE-CHANGED OF itog-contract IN FRAME F-Main /* Показать все док-ты по договору */
+DO:
+  assign itog-contract .
+  if itog-contract then do:
+    disable itog-only with frame {&frame-name}.
+  end.
+  else do:
+    enable itog-only with frame {&frame-name}.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL snum s-object
 ON RETURN OF snum IN FRAME F-Main /* № */
@@ -313,7 +328,8 @@ END.
 /* If testing in the UIB, initialize the SmartObject. */
   assign  frame {&frame-name}  is-real is-fin is-fo .
   display is-real is-fin is-fo with frame {&frame-name}.
-
+  enable itog-contract with frame {&frame-name}.
+  
 &IF DEFINED(UIB_IS_RUNNING) <> 0 &THEN
   RUN dispatch IN THIS-PROCEDURE ('initialize':U).
 &ENDIF
