@@ -1394,7 +1394,7 @@ case pardoc-mode :
         return.
       end.  /* без установки клиента док-т не виден, так что эта проверка бессмысленна. */
       /* работает в т.ч. дл€ внутр. ѕЌ */
-      if t-doc.flag_ = yes and t-doc.status_ = {&wayb} and t-doc.doc-type <> {&income} then do:
+      if t-doc.flag_ = yes and t-doc.status_ = {&wayb} and t-doc.doc-type <> {&income} and t-doc.ext-doc-type <> {&TDEDT_Ras_Object} then do:
         find t-doc where recid (t-doc) = pardoc-rec.
         message "‘акт. кол-во можно проставл€ть только в статусе разрешен.".
         undo, return error.

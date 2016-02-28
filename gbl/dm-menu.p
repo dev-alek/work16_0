@@ -7537,6 +7537,47 @@ procedure obj-int-all-exe :
 
 end procedure. /* obj-int-all-exe */
 
+procedure out-int-obj-new-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run dm-doc-exe (INPUT {&status}, INPUT ?, INPUT {&wayb}, INPUT {&expense}, INPUT yes, INPUT {&TDEDT_Ras_Object}, input no) .
+  end.
+
+end procedure. /* out-int-obj-new-exe */
+
+procedure out-int-obj-fact-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run dm-doc-exe (INPUT {&status}, INPUT ?, INPUT {&fact}, INPUT {&expense}, INPUT yes, INPUT {&TDEDT_Ras_Object}, input no) .
+  end.
+
+end procedure. /* out-int-obj-fact-exe */
+
+procedure out-int-obj-all-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run dm-doc-exe (INPUT {&type}, INPUT ?, INPUT '?', INPUT {&expense}, INPUT yes, INPUT {&TDEDT_Ras_Object}, input no) .
+  end.
+
+end procedure. /* out-int-obj-all-exe */
+
+
+procedure in-int-obj-all-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run dm-doc-exe (INPUT {&type}, INPUT ?, INPUT '?', INPUT {&income}, INPUT yes, INPUT {&TDEDT_Pri_Object}, input no) .
+  end.
+
+end procedure. /* in-int-obj-all-exe */
+
 procedure obj-all-exe :
 
   do

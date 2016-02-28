@@ -98,6 +98,8 @@ case parext-doc-type:
   end.
   when {&TDEDT_Pri_Perem}      or
   when {&TDEDT_Ras_Perem}      or
+  when {&TDEDT_Pri_Object}     or
+  when {&TDEDT_Ras_Object}     or
   when {&TDEDT_Vozvrat_Perem}  or
   when {&TDEDT_Pri_Prvo}       or
   when {&TDEDT_Chg_Purch_code} or
@@ -147,6 +149,8 @@ case parext-doc-type:
   end.
   when {&TDEDT_Pri_Perem}      or
   when {&TDEDT_Ras_Perem}      or
+  when {&TDEDT_Pri_Object}     or
+  when {&TDEDT_Ras_Object}     or
   when {&TDEDT_Vozvrat_Perem}  or
   when {&TDEDT_Pri_Prvo}       or
   when {&TDEDT_Overturn}       then do:

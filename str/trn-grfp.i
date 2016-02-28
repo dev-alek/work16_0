@@ -555,6 +555,57 @@ case parext-doc-type:
        end.
      end case.
    end.
+   when {&TDEDT_Ras_Object} then do:
+     case parstatus-current:
+       when {&wayb} then do:
+         case parflag-current:
+           when no then do:
+             &if (defined(obj-exp-wayb-minus) = 0) &then
+                &message "Не задан параметр obj-exp-wayb-minus"
+             &endif
+             {&obj-exp-wayb-minus}
+           end.
+           when yes then do:
+             &if (defined(obj-exp-wayb-plus) = 0) &then
+                &message "Не задан параметр obj-exp-wayb-plus"
+             &endif
+             {&obj-exp-wayb-plus}
+           end.
+           otherwise do:
+             return error substitute ("Недопустимый тип-статус-флаг &1-&2-&3.", pardoc-type, parstatus-current, parflag-current).
+           end.
+         end case.  
+       end.
+       when {&fact} then do:
+         &if (defined(int-exp-fact) = 0) &then
+            &message "Не задан параметр int-exp-fact"
+         &endif
+         {&int-exp-fact}
+       end.
+       otherwise do:
+         return error substitute ('Недопустимый тип-статус &1-&2 или недопустимое оперирование с документом.', pardoc-type, parstatus-current).
+       end.
+     end case.
+   end.
+   when {&TDEDT_Pri_Object} then do:
+     case parstatus-current:
+       when {&wayb} then do:
+         &if (defined(obj-int-wayb) = 0) &then
+            &message "Не задан параметр obj-int-wayb"
+         &endif
+         {&obj-int-wayb} 
+       end.  
+       when {&fact} then do:
+         &if (defined(int-inc-fact) = 0) &then
+            &message "Не задан параметр int-inc-fact"
+         &endif
+         {&int-inc-fact}
+       end.
+       otherwise do:
+         return error substitute ('Недопустимый тип-статус &1-&2 или недопустимое оперирование с документом.', pardoc-type, parstatus-current).
+       end.
+     end case.
+   end.
    otherwise do:
      return error substitute ("Недопустимый расширеный тип &1.", parext-doc-type).
    end.

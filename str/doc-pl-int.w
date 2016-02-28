@@ -11,11 +11,14 @@
 DEFINE BUFFER buf-obj_clients FOR ub.clients.
 DEFINE BUFFER buf_goods FOR ub.goods.
 DEFINE BUFFER buf_place FOR ub.place.
-DEFINE TEMP-TABLE loc-t-doc-pl NO-UNDO LIKE ub.doc-pl.
+DEFINE BUFFER buf_place2 FOR ub.place.
+DEFINE TEMP-TABLE loc-t-doc-pl NO-UNDO LIKE ub.doc-pl
+    field pl-code2 like ub.doc-pl.pl-code
+.
 DEFINE SHARED TEMP-TABLE tt-doc-pl NO-UNDO like ub.doc-pl
     field pl-code2 like ub.doc-pl.pl-code
 .
-
+/*DEFINE VARIABLE f-pl-code2 NO-UNDO LIKE ub.doc-pl.pl-code .*/
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS f-doc-pl
@@ -50,6 +53,7 @@ define input  parameter p-upd-units                 as   character              
 define input  parameter p-doc-code                  like ub.trn-doc.doc-code        no-undo .
 define input  parameter p-gds-code                  like ub.goods.gds-code          no-undo .
 define input  parameter p-pl-code                   like ub.doc-pl.pl-code          no-undo .
+define input  parameter p-pl-code2                  like ub.doc-pl.pl-code          no-undo .
 define input  parameter p-doc-line-unit-cli         like ub.doc-line.unit-cli       no-undo .
 define input  parameter p-doc-line-cli-base-rate    like ub.doc-line.cli-base-rate  no-undo .
 define input  parameter p-doc-line-doc-density      like ub.doc-line.doc-density    no-undo .
@@ -138,6 +142,13 @@ DEFINE BUTTON b-help DEFAULT
      SIZE 10 BY 1.
 
 DEFINE BUTTON b-place
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL ""
+     SIZE 3 BY 1.
+     
+DEFINE BUTTON b-place2
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
@@ -315,23 +326,23 @@ DEFINE FRAME f-doc-pl
      b-quit AT ROW 1 COL 12 WIDGET-ID 18
      b-qnty AT ROW 1 COL 22 WIDGET-ID 16
      b-help AT ROW 1 COL 89 WIDGET-ID 8
-     loc-t-doc-pl.pl-code AT ROW 2.5 COL 16 COLON-ALIGNED WIDGET-ID 68
-          LABEL "Место хранения"
+     loc-t-doc-pl.pl-code AT ROW 3.75 COL 19 COLON-ALIGNED WIDGET-ID 68
+          LABEL "Место хранения  с"
           VIEW-AS FILL-IN
           SIZE 10.5 BY 1
-     b-place AT ROW 2.5 COL 28.5 WIDGET-ID 14
-     buf_place.pl-name AT ROW 2.5 COL 30 COLON-ALIGNED NO-LABEL WIDGET-ID 70 FORMAT "X(66)"
+     b-place AT ROW 3.75 COL 31.5 WIDGET-ID 14
+     buf_place.pl-name AT ROW 3.75 COL 33 COLON-ALIGNED NO-LABEL WIDGET-ID 70 FORMAT "X(66)"
           VIEW-AS FILL-IN
-          SIZE 67 BY 1
+          SIZE 64 BY 1
           BGCOLOR 8
-     buf-obj_clients.obj-type AT ROW 3.75 COL 16 COLON-ALIGNED WIDGET-ID 104
+     buf-obj_clients.obj-type AT ROW 2.5 COL 16 COLON-ALIGNED WIDGET-ID 104
           LABEL "Объект"
           VIEW-AS FILL-IN
           SIZE 4 BY 1
-     buf-obj_clients.obj-code AT ROW 3.75 COL 20.5 COLON-ALIGNED NO-LABEL WIDGET-ID 52
+     buf-obj_clients.obj-code AT ROW 2.5 COL 20.5 COLON-ALIGNED NO-LABEL WIDGET-ID 52
           VIEW-AS FILL-IN
           SIZE 6 BY 1
-     buf-obj_clients.obj-name AT ROW 3.75 COL 30 COLON-ALIGNED NO-LABEL WIDGET-ID 56 FORMAT "X(66)"
+     buf-obj_clients.obj-name AT ROW 2.5 COL 30 COLON-ALIGNED NO-LABEL WIDGET-ID 56 FORMAT "X(66)"
           VIEW-AS FILL-IN
           SIZE 67 BY 1
           BGCOLOR 8
@@ -347,46 +358,67 @@ DEFINE FRAME f-doc-pl
      buf_place.loc4 AT ROW 5 COL 88 COLON-ALIGNED WIDGET-ID 50
           VIEW-AS FILL-IN
           SIZE 9 BY 1
-     buf_goods.gds-code AT ROW 6.75 COL 10 COLON-ALIGNED WIDGET-ID 40
+     buf_place2.pl-name AT ROW 6.25 COL 33 COLON-ALIGNED NO-LABEL WIDGET-ID 170 FORMAT "X(66)"
+          VIEW-AS FILL-IN
+          SIZE 64 BY 1
+          BGCOLOR 8
+     loc-t-doc-pl.pl-code2 AT ROW 6.25 COL 19 COLON-ALIGNED WIDGET-ID 168
+          LABEL "Место хранения на"
+          VIEW-AS FILL-IN
+          SIZE 10.5 BY 1
+     b-place2 AT ROW 6.25 COL 31.5 WIDGET-ID 114
+     buf_place2.loc1 AT ROW 7.5 COL 30 COLON-ALIGNED WIDGET-ID 144
+          VIEW-AS FILL-IN
+          SIZE 8 BY 1
+     buf_place2.loc2 AT ROW 7.5 COL 49 COLON-ALIGNED WIDGET-ID 146
+          VIEW-AS FILL-IN
+          SIZE 8 BY 1
+     buf_place2.loc3 AT ROW 7.5 COL 68 COLON-ALIGNED WIDGET-ID 148
+          VIEW-AS FILL-IN
+          SIZE 8 BY 1
+     buf_place2.loc4 AT ROW 7.5 COL 88 COLON-ALIGNED WIDGET-ID 150
+          VIEW-AS FILL-IN
+          SIZE 9 BY 1
+     buf_goods.gds-code AT ROW 9.25 COL 10 COLON-ALIGNED WIDGET-ID 40
           LABEL "Товар"
           VIEW-AS FILL-IN
           SIZE 10 BY 1
-     buf_goods.gds-name AT ROW 6.75 COL 20.5 COLON-ALIGNED NO-LABEL WIDGET-ID 42 FORMAT "X(74)"
+     buf_goods.gds-name AT ROW 9.25 COL 20.5 COLON-ALIGNED NO-LABEL WIDGET-ID 42 FORMAT "X(74)"
           VIEW-AS FILL-IN
           SIZE 75.5 BY 1
           BGCOLOR 8
-     buf_goods.artic AT ROW 8 COL 10 COLON-ALIGNED WIDGET-ID 4
+     buf_goods.artic AT ROW 10.5 COL 10 COLON-ALIGNED WIDGET-ID 4
           VIEW-AS FILL-IN
           SIZE 17 BY 1
-     buf_goods.prod-type AT ROW 8 COL 34.5 COLON-ALIGNED WIDGET-ID 106
+     buf_goods.prod-type AT ROW 10.5 COL 34.5 COLON-ALIGNED WIDGET-ID 106
           LABEL "Пр-ль"
           VIEW-AS FILL-IN
           SIZE 4 BY 1
-     buf_goods.prod-code AT ROW 8 COL 39 COLON-ALIGNED NO-LABEL WIDGET-ID 72
+     buf_goods.prod-code AT ROW 10.5 COL 39 COLON-ALIGNED NO-LABEL WIDGET-ID 72
           VIEW-AS FILL-IN
           SIZE 10 BY 1
-     f-prod-name AT ROW 8 COL 49.5 COLON-ALIGNED NO-LABEL WIDGET-ID 54
-     f-units-base AT ROW 9.5 COL 45 COLON-ALIGNED HELP
+     f-prod-name AT ROW 10.5 COL 49.5 COLON-ALIGNED NO-LABEL WIDGET-ID 54
+     f-units-base AT ROW 12 COL 45 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 168 FORMAT "X(5)"
-     f-units-cli AT ROW 9.5 COL 61.5 COLON-ALIGNED HELP
+     f-units-cli AT ROW 12 COL 61.5 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 170 FORMAT "X(5)"
-     f-label-density AT ROW 9.5 COL 82 NO-LABEL WIDGET-ID 172
-     loc-t-doc-pl.cli-qnty AT ROW 10.75 COL 16 COLON-ALIGNED WIDGET-ID 180 FORMAT "->>,>>>,>>9.<<<"
+     f-label-density AT ROW 12 COL 82 NO-LABEL WIDGET-ID 172
+     loc-t-doc-pl.cli-qnty AT ROW 13.25 COL 16 COLON-ALIGNED WIDGET-ID 180 FORMAT "->>,>>>,>>9.<<<"
           VIEW-AS FILL-IN
           SIZE 16 BY 1
-     loc-t-doc-pl.doc-qnty AT ROW 10.75 COL 45 COLON-ALIGNED WIDGET-ID 26
+     loc-t-doc-pl.doc-qnty AT ROW 13.25 COL 45 COLON-ALIGNED WIDGET-ID 26
           LABEL "Заявлено"
           VIEW-AS FILL-IN
           SIZE 16 BY 1
-     loc-t-doc-pl.cli-doc-qnty AT ROW 10.75 COL 61.5 COLON-ALIGNED NO-LABEL WIDGET-ID 20
+     loc-t-doc-pl.cli-doc-qnty AT ROW 13.25 COL 61.5 COLON-ALIGNED NO-LABEL WIDGET-ID 20
           VIEW-AS FILL-IN
           SIZE 16 BY 1
-     f-doc-pl-doc-density AT ROW 10.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 204
-     loc-t-doc-pl.fact-qnty AT ROW 11.75 COL 45 COLON-ALIGNED WIDGET-ID 38
+     f-doc-pl-doc-density AT ROW 13.25 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 204
+     loc-t-doc-pl.fact-qnty AT ROW 14.25 COL 45 COLON-ALIGNED WIDGET-ID 38
           LABEL "Фактически"
           VIEW-AS FILL-IN
           SIZE 16 BY 1
-     loc-t-doc-pl.cli-fact-qnty AT ROW 11.75 COL 61.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
+     loc-t-doc-pl.cli-fact-qnty AT ROW 14.25 COL 61.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
           VIEW-AS FILL-IN
           SIZE 16 BY 1
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
@@ -394,81 +426,81 @@ DEFINE FRAME f-doc-pl
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME f-doc-pl
-     f-doc-pl-fact-density AT ROW 11.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 206
-     loc-t-doc-pl.rest-af-qnty AT ROW 12.75 COL 45 COLON-ALIGNED WIDGET-ID 198
+     f-doc-pl-fact-density AT ROW 14.25 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 206
+     loc-t-doc-pl.rest-af-qnty AT ROW 15.25 COL 45 COLON-ALIGNED WIDGET-ID 198
           LABEL "Стало"
           VIEW-AS FILL-IN
           SIZE 16 BY 1
-     loc-t-doc-pl.cli-rest-af-qnty AT ROW 12.75 COL 61.5 COLON-ALIGNED NO-LABEL WIDGET-ID 196
+     loc-t-doc-pl.cli-rest-af-qnty AT ROW 15.25 COL 61.5 COLON-ALIGNED NO-LABEL WIDGET-ID 196
           VIEW-AS FILL-IN
           SIZE 16 BY 1
-     f-doc-pl-rest-density AT ROW 12.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 208
-     v-label-rvs AT ROW 13.75 COL 3 NO-LABEL WIDGET-ID 110
-     f-rvs-measure-qnty AT ROW 13.75 COL 45 COLON-ALIGNED HELP
+     f-doc-pl-rest-density AT ROW 15.25 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 208
+     v-label-rvs AT ROW 16.25 COL 3 NO-LABEL WIDGET-ID 110
+     f-rvs-measure-qnty AT ROW 16.25 COL 45 COLON-ALIGNED HELP
           "" WIDGET-ID 34
           LABEL "Измерено"
-     f-rvs-measure-cli-qnty AT ROW 13.75 COL 61.5 COLON-ALIGNED HELP
+     f-rvs-measure-cli-qnty AT ROW 16.25 COL 61.5 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 32
-     f-rvs-density AT ROW 13.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 176
-     f-rvs-state-measure-qnty AT ROW 14.75 COL 45 COLON-ALIGNED HELP
+     f-rvs-density AT ROW 16.25 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 176
+     f-rvs-state-measure-qnty AT ROW 17.25 COL 45 COLON-ALIGNED HELP
           "" WIDGET-ID 36
           LABEL "Фактически"
-     f-rvs-state-measure-cli-qnty AT ROW 14.75 COL 61.5 COLON-ALIGNED HELP
+     f-rvs-state-measure-cli-qnty AT ROW 17.25 COL 61.5 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 108
-     f-rvs-state-density AT ROW 14.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 178
-     f-tot-doc-pl-rest-af-qnty AT ROW 16.5 COL 45 COLON-ALIGNED HELP
+     f-rvs-state-density AT ROW 17.25 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 178
+     f-tot-doc-pl-rest-af-qnty AT ROW 19 COL 45 COLON-ALIGNED HELP
           "" WIDGET-ID 190
           LABEL "Стало"
-     f-tot-doc-pl-cli-rest-af-qnty AT ROW 16.5 COL 61.5 COLON-ALIGNED HELP
+     f-tot-doc-pl-cli-rest-af-qnty AT ROW 19 COL 61.5 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 76
-     f-tot-doc-pl-rest-density AT ROW 16.5 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 212
-     f-tot-doc-pl-cli-qnty AT ROW 17.5 COL 16 COLON-ALIGNED HELP
+     f-tot-doc-pl-rest-density AT ROW 19 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 212
+     f-tot-doc-pl-cli-qnty AT ROW 20 COL 16 COLON-ALIGNED HELP
           "" WIDGET-ID 186
           LABEL "по ТТН" FORMAT "->>,>>>,>>9.<<<"
-     f-tot-doc-pl-doc-qnty AT ROW 17.5 COL 45 COLON-ALIGNED HELP
+     f-tot-doc-pl-doc-qnty AT ROW 20 COL 45 COLON-ALIGNED HELP
           "" WIDGET-ID 156
           LABEL "Заявлено"
-     f-tot-doc-pl-cli-doc-qnty AT ROW 17.5 COL 61.5 COLON-ALIGNED HELP
+     f-tot-doc-pl-cli-doc-qnty AT ROW 20 COL 61.5 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 152
-     f-tot-doc-pl-fact-qnty AT ROW 18.5 COL 45 COLON-ALIGNED HELP
+     f-tot-doc-pl-fact-qnty AT ROW 21 COL 45 COLON-ALIGNED HELP
           "" WIDGET-ID 158
           LABEL "Фактически"
-     f-tot-doc-pl-cli-fact-qnty AT ROW 18.5 COL 61.5 COLON-ALIGNED HELP
+     f-tot-doc-pl-cli-fact-qnty AT ROW 21 COL 61.5 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 154
-     f-doc-line-rest-af-qnty AT ROW 19.75 COL 45 COLON-ALIGNED HELP
+     f-doc-line-rest-af-qnty AT ROW 22.25 COL 45 COLON-ALIGNED HELP
           "" WIDGET-ID 82
           LABEL "Стало"
-     f-doc-line-cli-rest-af-qnty AT ROW 19.75 COL 61.5 COLON-ALIGNED HELP
+     f-doc-line-cli-rest-af-qnty AT ROW 22.25 COL 61.5 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 188
-     f-doc-line-rest-density AT ROW 19.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 202
-     f-doc-line-cli-qnty AT ROW 20.75 COL 16 COLON-ALIGNED HELP
+     f-doc-line-rest-density AT ROW 22.25 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 202
+     f-doc-line-cli-qnty AT ROW 23.25 COL 16 COLON-ALIGNED HELP
           "" WIDGET-ID 144
           LABEL "по ТТН"
-     f-doc-line-doc-qnty AT ROW 20.75 COL 45 COLON-ALIGNED HELP
+     f-doc-line-doc-qnty AT ROW 23.25 COL 45 COLON-ALIGNED HELP
           "" WIDGET-ID 148
           LABEL "Заявлено"
-     f-doc-line-cli-doc-qnty AT ROW 20.75 COL 61.5 COLON-ALIGNED HELP
+     f-doc-line-cli-doc-qnty AT ROW 23.25 COL 61.5 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 140
-     f-doc-line-doc-density AT ROW 20.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 28
-     f-doc-line-fact-qnty AT ROW 21.75 COL 45 COLON-ALIGNED HELP
+     f-doc-line-doc-density AT ROW 23.25 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 28
+     f-doc-line-fact-qnty AT ROW 24.25 COL 45 COLON-ALIGNED HELP
           "" WIDGET-ID 150
           LABEL "Фактически"
-     f-doc-line-cli-fact-qnty AT ROW 21.75 COL 61.5 COLON-ALIGNED HELP
+     f-doc-line-cli-fact-qnty AT ROW 24.25 COL 61.5 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 142
-     f-doc-line-fact-density AT ROW 21.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 30
+     f-doc-line-fact-density AT ROW 24.25 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 30
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE  WIDGET-ID 100.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME f-doc-pl
-     f-tot-doc-label AT ROW 19.75 COL 3 NO-LABEL WIDGET-ID 210
+     f-tot-doc-label AT ROW 22.25 COL 3 NO-LABEL WIDGET-ID 210
      "Итого по местам хранения:" VIEW-AS TEXT
-          SIZE 26 BY .67 AT ROW 16.5 COL 3 WIDGET-ID 174
+          SIZE 26 BY .67 AT ROW 19 COL 3 WIDGET-ID 174
      "По месту хранения:" VIEW-AS TEXT
-          SIZE 19.5 BY .67 AT ROW 9.5 COL 3 WIDGET-ID 166
-     RECT-1 AT ROW 6.5 COL 2 WIDGET-ID 78
-     RECT-2 AT ROW 9.25 COL 2 WIDGET-ID 80
-     rect-tot AT ROW 16.25 COL 2 WIDGET-ID 112
+          SIZE 19.5 BY .67 AT ROW 12 COL 3 WIDGET-ID 166
+     RECT-1 AT ROW 9 COL 2 WIDGET-ID 78
+     RECT-2 AT ROW 11.75 COL 2 WIDGET-ID 80
+     rect-tot AT ROW 18.75 COL 2 WIDGET-ID 112
      SPACE(0.87) SKIP(0.20)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
@@ -852,9 +884,11 @@ DO:
 
   if loc-t-doc-pl.pl-code = ?
     or loc-t-doc-pl.pl-code = 0
+    or loc-t-doc-pl.pl-code2 = ?
+    or loc-t-doc-pl.pl-code2 = 0
   then do:
     message
-      "Не указано место хранения." skip
+      "Не указаны места хранения." skip
       "Хотите выйти без сохранения?" skip
       view-as alert-box question buttons yes-no update v-quit.
     if v-quit = true then do:
@@ -967,6 +1001,11 @@ DO:
     if loc-t-doc-pl.pl-code = buf_pl-gds.pl-code then do:
       return no-apply .
     end.
+    
+    if loc-t-doc-pl.pl-code2 = buf_pl-gds.pl-code then do:
+      message "Некорректный выбор!" view-as alert-box.
+      return no-apply .
+    end. 
 
     assign
       loc-t-doc-pl.pl-code :screen-value = string( buf_pl-gds.pl-code, loc-t-doc-pl.pl-code :format )
@@ -976,6 +1015,70 @@ DO:
   end.
 
   apply "value-changed" to loc-t-doc-pl.pl-code in frame {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-place2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-place2 f-doc-pl
+ON CHOOSE OF b-place2 IN FRAME f-doc-pl
+DO:
+  { gbl/stdbtn.i }
+
+  define variable v-rid-list as character no-undo .
+  define variable j-pl-code  as integer   no-undo .
+  define variable ref-rec    as recid     no-undo .
+
+  define buffer buf_pl-gds for ub.pl-gds .
+
+  run ref/pl-gdss.w
+    ( input parparentproc
+     ,input "{&Btn_Select}"
+     ,input buf-obj_clients.obj-type
+     ,input buf-obj_clients.obj-code
+     ,input ( if v-is-ptrl = "yes":U then {&petrolium} else {&goods} )
+     ,input recid( buf_goods )
+     ,input ?
+     ,output v-rid-list
+    ) no-error .
+
+  assign
+    ref-rec = integer( entry( 1, v-rid-list ) ) no-error
+  .
+  if error-status :error then do:
+    assign
+      ref-rec = ?
+    .
+  end.
+  find first buf_pl-gds no-lock
+    where recid( buf_pl-gds ) = ref-rec
+    no-error .
+  if available buf_pl-gds then do:
+
+    if loc-t-doc-pl.pl-code2 = buf_pl-gds.pl-code then do:
+      return no-apply .
+    end.
+    
+    if loc-t-doc-pl.pl-code = buf_pl-gds.pl-code then do:
+      message "Некорректный выбор!" view-as alert-box.
+      return no-apply .
+    end.
+    
+    if can-find(first buf-upd_tt-doc-pl no-lock where buf-upd_tt-doc-pl.pl-code2 = buf_pl-gds.pl-code) then do :
+        message "В одном документе нельзя делать перемещение с нескольких резервуаров на один." view-as alert-box.
+        return no-apply .
+    end.
+
+    assign
+      loc-t-doc-pl.pl-code2 :screen-value = string( buf_pl-gds.pl-code )
+      loc-t-doc-pl.pl-code2
+    .
+/*    apply "leave" to loc-t-doc-pl.pl-code in frame {&frame-name} .*/
+
+  end.
+
+  apply "value-changed" to loc-t-doc-pl.pl-code2 in frame {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1711,6 +1814,36 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL loc-t-doc-pl.pl-code2 f-doc-pl
+ON VALUE-CHANGED OF loc-t-doc-pl.pl-code2 IN FRAME f-doc-pl /* Место хранения */
+DO:
+
+  if loc-t-doc-pl.pl-code2 <> ? then do:
+    
+    find first buf_place2 no-lock
+      where buf_place2.obj-type = buf-obj_clients.obj-type
+        and buf_place2.obj-code = buf-obj_clients.obj-code
+        and buf_place2.pl-code  = loc-t-doc-pl.pl-code2
+        and buf_place2.status_ <> {&deleted-status}
+      no-error .
+
+    if available buf_place then do:
+      display
+        buf_place2.pl-name
+        buf_place2.loc1
+        buf_place2.loc2
+        buf_place2.loc3
+        buf_place2.loc4
+        with frame {&frame-name}.
+    end.
+
+  end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME loc-t-doc-pl.rest-af-qnty
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL loc-t-doc-pl.rest-af-qnty f-doc-pl
@@ -1837,6 +1970,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       v-is-add = false
     .
     buffer-copy buf-upd_tt-doc-pl to loc-t-doc-pl .
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then
+    assign
+        loc-t-doc-pl.pl-code  = buf-upd_tt-doc-pl.pl-code2
+        loc-t-doc-pl.pl-code2 = buf-upd_tt-doc-pl.pl-code
+    .    
   end.
   else do:
     assign
@@ -1856,6 +1994,18 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     else do:
       assign
         loc-t-doc-pl.pl-code = p-pl-code
+      .
+    end.
+    if p-pl-code2 = ?
+      or p-pl-code2 = 0
+    then do:
+      assign
+        loc-t-doc-pl.pl-code2 = ?
+      .
+    end.
+    else do:
+      assign
+        loc-t-doc-pl.pl-code2 = p-pl-code2
       .
     end.
     assign
@@ -2021,15 +2171,27 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             and not available buf_rvs-doc
           )
           or buf_trn-doc.doc-type <> {&income}
+          
         )
+        
       then do:
         enable
           loc-t-doc-pl.pl-code
           b-place
+          loc-t-doc-pl.pl-code2
+          b-place2
           with frame {&frame-name}.
-        if loc-t-doc-pl.pl-code = ? then do:
-          apply "choose" to b-place in frame {&frame-name} .
-        end.
+/*        if loc-t-doc-pl.pl-code = ? then do:                */
+/*          apply "choose" to b-place in frame {&frame-name} .*/
+/*        end.                                                */
+      end.
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} and buf_trn-doc.flag_ then do :
+        disable
+          loc-t-doc-pl.pl-code
+          b-place
+          loc-t-doc-pl.pl-code2
+          b-place2
+          with frame {&frame-name} .
       end.
     end.
 
@@ -2108,6 +2270,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
 
   apply "value-changed" to loc-t-doc-pl.pl-code in frame {&frame-name}.
+  apply "value-changed" to loc-t-doc-pl.pl-code2 in frame {&frame-name}.
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -2214,7 +2377,7 @@ PROCEDURE enable_UI :
           buf_place.loc4
       WITH FRAME f-doc-pl.
   IF AVAILABLE loc-t-doc-pl THEN
-    DISPLAY loc-t-doc-pl.pl-code
+    DISPLAY loc-t-doc-pl.pl-code loc-t-doc-pl.pl-code2
       WITH FRAME f-doc-pl.
   ENABLE b-exit b-quit b-help
       WITH FRAME f-doc-pl.

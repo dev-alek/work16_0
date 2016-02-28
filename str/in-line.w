@@ -85,7 +85,9 @@ define temp-table tt-fr-doc-line no-undo like ub.doc-line
   field alc-imp-code            as   integer
 .
 
-define new shared temp-table tt-doc-pl no-undo like ub.doc-pl .
+define new shared temp-table tt-doc-pl no-undo like ub.doc-pl
+    field pl-code2 like ub.doc-pl.pl-code
+.
 
 { cmp/vssrevis.i               }
 { cmp/str-glbl.i               }

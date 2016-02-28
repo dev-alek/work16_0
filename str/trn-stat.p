@@ -1459,7 +1459,9 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       when {&TDEDT_Spi_Vnesh}     or
       when {&TDEDT_Vozvrat_Vnesh} or
       when {&TDEDT_Vozvrat_Perem} or
-      when {&TDEDT_Pri_Perem}
+      when {&TDEDT_Pri_Perem}     or
+      when {&TDEDT_Ras_Object}    or
+      when {&TDEDT_Pri_Object}     
       then do:
         if ( bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}    or
             bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or
@@ -1890,6 +1892,9 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
                   run waitfram-hide in this-procedure no-error.
                   undo, return error substitute( "Ошибка при расчете документа &1 &2 &3.", bf_trn-doc.doc-code , return-value , error-status :get-message(1) ).
                 end.
+                if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
+                    run ie-date in this-procedure.    
+                end.
                 assign bf_trn-doc.status_ = varstatus.
                 if bf_trn-doc.doc-type = {&expense}
                 then do:
@@ -2028,7 +2033,8 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
                       bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}       or
                       bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}      or
                       bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass} or
-                      bf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}          )
+                      bf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}          or
+                      bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object}           )
                   then do:
                     run waitfram-hide in this-procedure no-error.
                     undo, return error substitute( "Для расширенного типа документа &1 недопустима установка фактической даты."
@@ -3021,6 +3027,9 @@ procedure ie-date:
     then do:
      if bf_trn-doc.fact-time = 0 or bf_trn-doc.fact-time = ? then
         bf_trn-doc.fact-time = time.
+      if bf_trn-doc.fact-date = ? and bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
+        { gbl/curobjdt.i bf_trn-doc.obj-type bf_trn-doc.obj-code bf_trn-doc.fact-date }    
+      end.
       run gbl/chk-date.p
           ( input bf_trn-doc.obj-type
           , input bf_trn-doc.obj-code
@@ -3302,7 +3311,9 @@ define buffer buf_goods for ub.goods  .
               {&TDEDT_Chg_Purch_Code} + ","  +
               {&TDEDT_Corr_Minus_Parts} + ","  +
               {&TDEDT_Corr_Acc_Price}   + "," +
-              {&TDEDT_Vozvrat_Perem} ) = 0  and
+              {&TDEDT_Vozvrat_Perem}  + "," +
+              {&TDEDT_Ras_Object}  + "," +
+              {&TDEDT_Pri_Object} ) = 0  and
               ((bf_trn-doc.status_ = {&wayb}    and bf_trn-doc.flag_ = false  ))
     then do:
       var-ok-assort-pol = true .

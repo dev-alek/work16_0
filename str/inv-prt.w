@@ -103,7 +103,9 @@ define variable r-petrol-rec   as   recid                no-undo initial ?.
 { gbl/curr-r-b.i varr-b }
 { gbl/ptrlprop.i  def    }
 
-define new shared temp-table tt-doc-pl no-undo like ub.doc-pl .
+define new shared temp-table tt-doc-pl no-undo like ub.doc-pl 
+    field pl-code2 like ub.doc-pl.pl-code
+.
 
 define buffer b-c-b for ub.bar-code.
 

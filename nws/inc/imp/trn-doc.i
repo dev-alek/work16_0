@@ -97,6 +97,11 @@ on endkey undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}
       create locb-doc-pl.
       { nws/impl-nws.i "doc-pl" "locb-" }
     end.
+    when {&table_doc-pl-attr}
+    then do:
+      create locb-doc-pl-attr.
+      { nws/impl-nws.i "doc-pl-attr" "locb-" }
+    end.
     when {&table_doc-pl-pump}
     then do:
       create locb-doc-pl-pump.
@@ -474,6 +479,20 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}
   create buf_doc-pl.
   buffer-copy locb-doc-pl to buf_doc-pl.
 end.
+/* ------------------------------- doc-pl-attr ---------------------------------------------- */
+for each buf_doc-pl-attr exclusive-lock
+  where buf_doc-pl-attr.out-code = wt-trn-doc.doc-code
+on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
+:
+  delete buf_doc-pl-attr.
+end.
+for each locb-doc-pl-attr no-lock
+  where locb-doc-pl-attr.out-code = wt-trn-doc.doc-code
+on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
+:
+  create buf_doc-pl-attr.
+  buffer-copy locb-doc-pl-attr to buf_doc-pl-attr.
+end.
 /* ------------------------------- doc-pl-pump ---------------------------------------------- */
 for each buf_doc-pl-pump exclusive-lock
   where buf_doc-pl-pump.obj-type = wt-trn-doc.obj-type
@@ -763,6 +782,11 @@ for each locb-doc-pl
 on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
 :
   delete locb-doc-pl.
+end.
+for each locb-doc-pl-attr
+on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
+:
+  delete locb-doc-pl-attr.
 end.
 for each locb-doc-pl-pump
 on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )

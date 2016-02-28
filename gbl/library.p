@@ -7211,6 +7211,26 @@ procedure chkextdt :
           return . /* --->>>--- */
         end.
       end.
+      when {&TDEDT_Pri_Object}
+      then do:
+        if  buf_trn-doc.doc-type    = {&income}
+        and buf_trn-doc.internal    = true
+        and buf_trn-doc.discnt-type = {&percent}
+        and buf_trn-doc.ret-supp    = false
+        then do:
+          return . /* --->>>--- */
+        end.
+      end.
+      when {&TDEDT_Ras_Object}
+      then do:
+        if  buf_trn-doc.doc-type    = {&expense}
+        and buf_trn-doc.internal    = true
+        and buf_trn-doc.discnt-type = {&percent}
+        and buf_trn-doc.ret-supp    = false
+        then do:
+          return . /* --->>>--- */
+        end.
+      end.
       when {&TDEDT_Vozvrat_Perem}
       then do:
         if  buf_trn-doc.doc-type    = {&return}
@@ -7389,6 +7409,18 @@ procedure trnextdt :
         .
       end.
       when {&TDEDT_Ras_Perem}
+      then do:
+        assign
+          p-doc-type = {&expense}
+        .
+      end.
+      when {&TDEDT_Pri_Object}
+      then do:
+        assign
+          p-doc-type = {&income}
+        .
+      end.
+      when {&TDEDT_Ras_Object}
       then do:
         assign
           p-doc-type = {&expense}
@@ -8344,6 +8376,7 @@ procedure part-prc :
 
       /* контроль резервирования порожденных партий для документов */
       if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+      or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object}
       or v-is-hold                = true
       then do:
         /* резервировать нельзя */
@@ -8352,6 +8385,7 @@ procedure part-prc :
         define buffer negative_parts for ub.parts .
 
         if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+        or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object}
         then do:
           /* ищем отрицательную партию в противоположной зоне */
           find first negative_parts no-lock
@@ -11444,6 +11478,7 @@ procedure rsrvtype :
         end.
         else do:
           if buf_trn-doc.status_ = {&permitted}
+          or (buf_trn-doc.status_ = {&wayb} and buf_trn-doc.flag_ = yes and buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object})
           then do:
             assign
               p-rsrv-type = {&rsrvtype_fact}
@@ -12197,6 +12232,24 @@ procedure partcond :
 
         .
       end.
+      when {&TDEDT_Pri_Object}
+      then do:
+        assign
+          p-rsrv-code = {&free-code}
+          p-unrv-code = {&output-code}
+          p-need-rsrv = true
+          p-need-unrv = false
+        .
+      end.
+      when {&TDEDT_Ras_Object}
+      then do:
+        assign
+          p-rsrv-code = {&output-code}
+          p-unrv-code = {&free-code}
+          p-need-rsrv = true
+          p-need-unrv = true
+        .
+      end.
       when {&TDEDT_Vozvrat_Perem}
       then do:
         assign
@@ -12502,6 +12555,18 @@ procedure docextnm :
         then do:
           assign
             p-ext-name = "РВ"
+          .
+        end.
+        when {&TDEDT_Pri_Object}
+        then do:
+          assign
+            p-ext-name = "ПО"
+          .
+        end.
+        when {&TDEDT_Ras_Object}
+        then do:
+          assign
+            p-ext-name = "РО"
           .
         end.
         when {&TDEDT_Vozvrat_Perem}

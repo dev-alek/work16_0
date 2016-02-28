@@ -3820,6 +3820,12 @@ if parinternal then do:
     return error.
   end.
 end.
+if parext-doc-type = {&TDEDT_Pri_Object} then do:
+  message "Для внутриобъектного перемещения можно создать только расход."
+                    "Приход создаётся автоматически."
+  view-as alert-box.
+  return error.
+end. 
 if parext-doc-type = {&TDEDT_Ras_Prvo}     or
    parext-doc-type = {&TDEDT_Spi_Prvo}     or
    parext-doc-type = {&TDEDT_Pri_Prvo}     then do:

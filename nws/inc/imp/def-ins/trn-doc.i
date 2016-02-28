@@ -26,6 +26,7 @@ define buffer buf_gds-dtl                 for ub.gds-dtl.
 define buffer buf_parts                   for ub.parts.
 define buffer buf_doc-prts                for ub.doc-prts.
 define buffer buf_doc-pl                  for ub.doc-pl.
+define buffer buf_doc-pl-attr             for ub.doc-pl-attr.
 define buffer buf_doc-pl-pump             for ub.doc-pl-pump.
 define buffer buf_parts-attr              for ub.parts-attr.
 define buffer buf_parts-supp              for ub.parts-supp.

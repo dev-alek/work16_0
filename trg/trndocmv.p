@@ -58,6 +58,7 @@ define variable vss-description as character no-undo initial "Создание документо
 { str/doc-code.i }
 { str/trdcalib.i }
 { cmp/library.i  }
+{ gbl/lineattr.i }
 
 define variable same_db as logical   no-undo initial no . /* при внутренних перемещениях в одной и той же УБД */
 define variable v-today as date      no-undo.
@@ -84,15 +85,24 @@ define variable v-event-code as character no-undo .
 define variable is-petrolium               as logical   no-undo .
 define variable is-pieces                  as logical   no-undo .
 
+define variable v-ext-doc-type as character no-undo .
+
+define variable v-country-code as integer   no-undo .
+
 define buffer buf_trn-doc       for ub.trn-doc .
 define buffer buf_doc-line      for ub.doc-line .
 define buffer buf_gds-dtl       for ub.gds-dtl .
 define buffer buf_parts         for ub.parts .
+define buffer buf_parts-attr    for ub.parts-attr .
+define buffer new_parts-attr    for ub.parts-attr .
 define buffer buf_doc-pl        for ub.doc-pl .
+define buffer buf_doc-pl-attr   for ub.doc-pl-attr .
 define buffer buf-first_trn-doc for ub.trn-doc .
 define buffer buf-first_parts   for ub.parts .
 define buffer doc-obj           for ub.clients .
 define buffer buf_cliobj        for ub.clients .
+
+{ str/in-vatp.i def }
 
 do
 for buf_trn-doc, buf_doc-line, buf_gds-dtl, buf_parts, buf_doc-pl, doc-obj, buf_cliobj
@@ -367,6 +377,11 @@ find first buf_cliobj no-lock
   where buf_cliobj.obj-type = ub.trn-doc.obj-type
     and buf_cliobj.obj-code = ub.trn-doc.obj-code
   .
+case ub.trn-doc.ext-doc-type :
+    when {&TDEDT_Pri_Perem} then v-ext-doc-type = {&TDEDT_Vozvrat_Perem}  .
+    when {&TDEDT_Ras_Perem} then v-ext-doc-type = {&TDEDT_Pri_Perem} .
+    when {&TDEDT_Ras_Object} then v-ext-doc-type = {&TDEDT_Pri_Object} .
+end case . 
 { gbl/curobjdt.i ub.trn-doc.obj-type ub.trn-doc.obj-code v-today }
 { str/crtrndoc.i
   ?
@@ -394,7 +409,7 @@ find first buf_cliobj no-lock
   ?
   {&wayb}
   ?
-  "(if ub.trn-doc.doc-type = {&expense} then {&TDEDT_Pri_Perem} else {&TDEDT_Vozvrat_Perem})"
+  v-ext-doc-type
   ?
   no-error
   }
@@ -420,13 +435,20 @@ find first buf_cliobj no-lock
     buf_trn-doc.exch-scale    = ub.trn-doc.base-scale     /* ! */
     buf_trn-doc.exch-code     = v-base-code               /* валюта клиента - базовая */
     buf_trn-doc.fact-num      = 0
-    buf_trn-doc.fact-date     = ?
+    buf_trn-doc.fact-date     = if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then ub.trn-doc.fact-date else ?
     buf_trn-doc.print-rubl    = ub.trn-doc.print-rubl
-    buf_trn-doc.wrkr          = ?                         /* ! */
+    buf_trn-doc.wrkr          = if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then ub.trn-doc.wrkr else ?                         /* ! */
     buf_trn-doc.agnt          = ub.trn-doc.agnt           /* ! */
     buf_trn-doc.boss          = ub.trn-doc.boss           /* ! */
     buf_trn-doc.reason-code   = ub.trn-doc.reason-code
   .
+  if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then do :
+      assign
+        buf_trn-doc.shift-date = ub.trn-doc.shift-date
+        buf_trn-doc.shift-name = ub.trn-doc.shift-name
+        buf_trn-doc.shift-num  = ub.trn-doc.shift-num
+      .
+  end.
 
   assign
     n_str = 0
@@ -475,6 +497,50 @@ find first buf_cliobj no-lock
         {&trdcattr-purchcodelist}
         v-attr-value
     }
+  end.
+  
+/*  { str/tdat-xst.i                    */
+/*      ub.trn-doc.doc-code             */
+/*      {&trdcattr-doc-num-in-ext-sys}  */
+/*      v-attr-exist                    */
+/*  }                                   */
+/*  if v-attr-exist = true              */
+/*  then do:                            */
+/*    { str/tdat-val.i                  */
+/*        ub.trn-doc.doc-code           */
+/*        {&trdcattr-doc-num-in-ext-sys}*/
+/*        v-attr-value                  */
+/*        v-attr-type                   */
+/*    }                                 */
+/*    { str/tdat-wrt.i                  */
+/*        buf_trn-doc.doc-code          */
+/*        {&trdcattr-doc-num-in-ext-sys}*/
+/*        v-attr-value                  */
+/*    }                                 */
+/*  end.                                */
+  
+  if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then do :
+        for each buf_doc-pl no-lock where
+                 buf_doc-pl.obj-type    = buf_trn-doc.obj-type and
+                 buf_doc-pl.obj-code    = buf_trn-doc.obj-code and
+                 buf_doc-pl.out-code    = buf_trn-doc.out-code :
+            find first  buf_doc-pl-attr exclusive-lock
+                  where buf_doc-pl-attr.obj-type    = buf_doc-pl.obj-type
+                    and buf_doc-pl-attr.obj-code    = buf_doc-pl.obj-code
+                    and buf_doc-pl-attr.pl-code     = buf_doc-pl.pl-code
+                    and buf_doc-pl-attr.out-code    = buf_doc-pl.out-code            
+                    and buf_doc-pl-attr.gds-code    = buf_doc-pl.gds-code
+                    and buf_doc-pl-attr.attr-code   = 'place2' no-error .
+            if not available buf_doc-pl-attr then do :
+                return error return-value .
+            end.
+            create ub.doc-pl .
+            buffer-copy buf_doc-pl to ub.doc-pl
+            assign
+                ub.doc-pl.out-code = buf_trn-doc.doc-code
+                ub.doc-pl.pl-code = integer(buf_doc-pl-attr.attr-value)
+            .       
+        end.   
   end.
   for each ub.doc-line
     where ub.doc-line.doc-code = ub.trn-doc.doc-code use-index line-num
@@ -709,7 +775,31 @@ find first buf_cliobj no-lock
         next. /* --->>>--- */
       end.
 
-
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then do : 
+          find first ub.goods no-lock
+               where ub.goods.artic     = ub.doc-line.artic
+                 and ub.goods.prod-type = ub.doc-line.prod-type
+                 and ub.goods.prod-code = ub.doc-line.prod-code .
+          find first buf_doc-pl no-lock 
+               where buf_doc-pl.obj-type = ub.trn-doc.obj-type
+                 and buf_doc-pl.obj-code = ub.trn-doc.obj-code
+                 and buf_doc-pl.out-code = ub.trn-doc.doc-code
+                 and buf_doc-pl.gds-code = ub.goods.gds-code
+                 and buf_doc-pl.pl-code  = ub.parts.pl-code no-error .
+          if available buf_doc-pl then do :
+              find first  buf_doc-pl-attr exclusive-lock
+                    where buf_doc-pl-attr.obj-type    = buf_doc-pl.obj-type
+                      and buf_doc-pl-attr.obj-code    = buf_doc-pl.obj-code
+                      and buf_doc-pl-attr.pl-code     = buf_doc-pl.pl-code
+                      and buf_doc-pl-attr.out-code    = buf_doc-pl.out-code            
+                      and buf_doc-pl-attr.gds-code    = buf_doc-pl.gds-code
+                      and buf_doc-pl-attr.attr-code   = 'place2' no-error .
+              if not available buf_doc-pl-attr then do :
+                  undo, return error ("Ошибка! " + return-value) .
+              end.
+          end.
+      end.
+      
       create buf_parts .
       buffer-copy ub.parts to buf_parts
       assign
@@ -718,12 +808,120 @@ find first buf_cliobj no-lock
         buf_parts.obj-code  = buf_trn-doc.obj-code
         buf_parts.status_   = no
         buf_parts.rsrv-free = ?
-        buf_parts.pl-code   = 0
+        buf_parts.pl-code   = if available buf_doc-pl-attr then integer(buf_doc-pl-attr.attr-value) else 0
 
         buf_parts.qnty      = v-part-chg-qnty
         buf_parts.fact-qnty = buf_parts.qnty
         buf_parts.cli-qnty  = 0
+        buf_parts.part-code = if available buf_doc-pl-attr then buf_doc-pl-attr.attr-value else ub.parts.part-code
       .
+      
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then do :
+          find first ub.goods no-lock where ub.goods.artic      = buf_parts.artic
+                                        and ub.goods.prod-type  = buf_parts.prod-type
+                                        and ub.goods.prod-code  = buf_parts.prod-code .
+          find first buf_parts-attr no-lock
+               where buf_parts-attr.in-code   = buf_parts.in-code
+                 and buf_parts-attr.gds-code  = ub.goods.gds-code
+                 and buf_parts-attr.part-code = buf_parts.part-code
+                 no-error .
+          if not available buf_parts-attr then do :
+                run get-country-code in this-procedure
+                  (input  buf_trn-doc.doc-code     /* p-doc-code     */
+                  ,input  buf_trn-doc.ext-doc-type /* p-ext-doc-type */
+                  ,input  ub.goods.gds-code               /* p-gds-code     */
+                  ,output v-country-code           /* p-country-code */
+                  ) .
+              
+                create new_parts-attr .
+
+                assign
+                  new_parts-attr.in-code              = buf_parts.in-code
+                  new_parts-attr.gds-code             = ub.goods.gds-code
+                  new_parts-attr.part-code            = buf_parts.part-code
+                  new_parts-attr.orig-in-code         = buf_parts.in-code
+                  new_parts-attr.orig-gds-code        = ub.goods.gds-code
+                  new_parts-attr.orig-part-code       = buf_parts.part-code
+                  new_parts-attr.income-in-code       = buf_parts.in-code
+                  new_parts-attr.income-gds-code      = ub.goods.gds-code
+                  new_parts-attr.income-part-code     = buf_parts.part-code
+                  new_parts-attr.supp-type            = buf_parts.supp-type
+                  new_parts-attr.supp-code            = buf_parts.supp-code
+                  new_parts-attr.pay-code             = buf_parts.pay-code
+                  new_parts-attr.purch-code           = buf_parts.purch-code
+                  new_parts-attr.cli-qnty             = buf_parts.cli-qnty
+                  new_parts-attr.price-cli            = buf_parts.price-cli
+                  new_parts-attr.unit-cli             = buf_doc-line.unit-cli
+                  new_parts-attr.exch-code            = buf_parts.exch-code
+                  new_parts-attr.exch-rate            = buf_trn-doc.exch-rate
+                  new_parts-attr.exch-scale           = buf_trn-doc.exch-scale
+                  new_parts-attr.cli-base-rate        = buf_parts.cli-base-rate
+                  new_parts-attr.doc-qnty             = buf_parts.qnty
+                  new_parts-attr.fact-qnty            = buf_parts.fact-qnty
+                  new_parts-attr.real-qnty            = buf_parts.real-qnty
+                  new_parts-attr.price-base           = buf_parts.price-base
+                  new_parts-attr.price-rubl           = buf_parts.price-rubl
+                  new_parts-attr.base-rate            = buf_trn-doc.base-rate
+                  new_parts-attr.base-scale           = buf_trn-doc.base-scale
+                  new_parts-attr.vat-type             = buf_parts.vat-type
+                  new_parts-attr.vat-pc               = buf_parts.vat-pc
+                  new_parts-attr.SLT-type             = buf_parts.SLT-type
+                  new_parts-attr.SLT-pc               = buf_parts.SLT-pc
+                  new_parts-attr.road-tax-base        = buf_parts.road-tax-base
+                  new_parts-attr.road-tax-rubl        = buf_parts.road-tax-rubl
+                  new_parts-attr.transport-base       = buf_parts.transport-base
+                  new_parts-attr.transport-rubl       = buf_parts.transport-rubl
+                  new_parts-attr.other-base           = buf_parts.other-base
+                  new_parts-attr.other-rubl           = buf_parts.other-rubl
+                  new_parts-attr.density              = buf_doc-line.doc-density
+                  new_parts-attr.temperature          = buf_doc-line.temperature
+                  new_parts-attr.is-supp              = buf_parts.is-supp
+                  new_parts-attr.cst-code             = buf_parts.cst-code
+                  new_parts-attr.last-date            = buf_parts.last-date
+                  new_parts-attr.line-cli-qnty        = buf_doc-line.cli-qnty
+                  new_parts-attr.line-doc-qnty        = buf_doc-line.doc-qnty
+                  new_parts-attr.line-fact-qnty       = buf_doc-line.fact-qnty
+                  new_parts-attr.wt-brutto            = buf_doc-line.wt-brutto
+                  new_parts-attr.num-place            = buf_doc-line.num-place
+                  new_parts-attr.country-code         = v-country-code
+                  new_parts-attr.obj-type             = buf_trn-doc.obj-type
+                  new_parts-attr.obj-code             = buf_trn-doc.obj-code
+                  new_parts-attr.PS                   = buf_parts.PS
+                  new_parts-attr.fact-date            = buf_trn-doc.fact-date
+                  new_parts-attr.fact-time            = buf_trn-doc.fact-time
+                  new_parts-attr.fact-order           = buf_trn-doc.fact-order
+                  new_parts-attr.shift-num            = buf_trn-doc.shift-num
+                  new_parts-attr.shift-name           = buf_trn-doc.shift-name
+                  new_parts-attr.shift-date           = buf_trn-doc.shift-date
+                  new_parts-attr.ext-doc-type         = buf_trn-doc.ext-doc-type
+                  new_parts-attr.wrkr                 = buf_trn-doc.wrkr
+                  new_parts-attr.agnt                 = buf_trn-doc.agnt
+                  new_parts-attr.boss                 = buf_trn-doc.boss
+                  new_parts-attr.creid                = buf_trn-doc.creid
+                  new_parts-attr.out-code             = buf_trn-doc.out-code
+                  new_parts-attr.inv-num              = buf_trn-doc.inv-num
+                  new_parts-attr.cli-name             = buf_trn-doc.cli-name
+                  new_parts-attr.ord-num              = buf_trn-doc.ord-num
+                  new_parts-attr.is-back-date         = buf_trn-doc.is-back-date
+                  new_parts-attr.is-corr              = buf_trn-doc.is-corr
+                  new_parts-attr.is-del               = buf_trn-doc.is-del
+                  new_parts-attr.contract-code        = buf_parts.contract-code
+                  new_parts-attr.hold-doc-code-child  = buf_trn-doc.hold-doc-code-child
+                  new_parts-attr.hold-doc-code-parent = buf_trn-doc.hold-doc-code-parent
+                .
+    
+                { str/in-vatp.i calc-parts buf_parts. " " loc}
+    
+                assign
+                  new_parts-attr.vat-base         = vat-base-loc
+                  new_parts-attr.vat-rubl         = vat-rubl-loc
+                  new_parts-attr.slt-base         = slt-base-loc
+                  new_parts-attr.slt-rubl         = slt-rubl-loc
+                  new_parts-attr.discnt-base      = 0
+                  new_parts-attr.discnt-rubl      = 0
+                .
+          end.
+      end.
 
       if l-goods-twounit = true
         or ( is-petrolium = true
@@ -1147,3 +1345,67 @@ find first buf_cliobj no-lock
 /*    end.*/
 /*  end.*/
 end.
+
+procedure get-country-code :
+
+  define input  parameter p-trn-doc      as character no-undo .
+  define input  parameter p-ext-doc-type as character no-undo .
+  define input  parameter p-gds-code     as integer   no-undo .
+  define output parameter p-country-code as integer   no-undo .
+
+  define buffer buf_goods   for ub.goods .
+  define buffer buf_country for ub.country .
+
+  define variable v-read-default-code as logical   no-undo .
+  define variable v-attr-value        as character no-undo .
+  define variable v-attr-type         as character no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    assign
+      v-read-default-code = true
+    .
+
+    if p-ext-doc-type = {&TDEDT_Pri_Vnesh}
+    then do:
+      run lineattr-value in this-procedure
+        (input  p-trn-doc               /* p-doc-code */
+        ,input  p-gds-code               /* p-gds-code */
+        ,input  {&lineattr-country-code} /* p-code     */
+        ,output v-attr-value             /* p-value    */
+        ,output v-attr-type              /* p-type     */
+        ) .
+      if v-attr-value <> ""
+      then do:
+        assign
+          v-read-default-code = false
+          p-country-code      = integer(v-attr-value)
+        .
+      end.
+    end.
+
+    if v-read-default-code = true
+    then do:
+      find first buf_goods no-lock
+        where buf_goods.gds-code = p-gds-code
+        no-error .
+      find first buf_country no-lock
+        where buf_country.alpha1 = buf_goods.alpha1
+        no-error .
+      if available buf_country
+      then do:
+        assign
+          p-country-code = buf_country.num-code
+        .
+      end.
+      else do:
+        assign
+          p-country-code = 0
+        .
+      end.
+    end.
+  end.
+
+end procedure. /* get-country-code */
+

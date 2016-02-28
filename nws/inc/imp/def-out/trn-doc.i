@@ -23,6 +23,7 @@ define temp-table locb-gds-dtl              no-undo like ub.gds-dtl.
 define temp-table locb-parts                no-undo like ub.parts.
 define temp-table locb-doc-prts             no-undo like ub.doc-prts.
 define temp-table locb-doc-pl               no-undo like ub.doc-pl.
+define temp-table locb-doc-pl-attr          no-undo like ub.doc-pl-attr.
 define temp-table locb-doc-pl-pump          no-undo like ub.doc-pl-pump.
 define temp-table locb-parts-root           no-undo like ub.parts-root.
 define temp-table locb-parts-attr           no-undo like ub.parts-attr.

@@ -98,6 +98,9 @@ assign
 &int-ret-wayb-plus    = " run int-ret-wayb-plus    . "
 &int-ret-perm-plus    = " run int-ret-perm-plus    . "
 &int-ret-fact         = " run int-ret-fact         . "
+&obj-exp-wayb-minus   = " run obj-exp-wayb-minus   . "
+&obj-exp-wayb-plus    = " run obj-exp-wayb-plus    . "
+&obj-int-wayb         = " run obj-int-wayb         . "
 }
 
 procedure ext-inc-inq-minus :
@@ -888,4 +891,64 @@ end case.
 end procedure.
 procedure peresort-fact:
   return error substitute ('Документ закрыт.').
+end procedure.
+
+procedure obj-exp-wayb-minus:
+/*внутриобъектный расх накл-*/
+case parmode:
+  when {&open-doc} then do:
+    return error substitute ('Документ открыт.').
+  end.
+  when {&close-doc} then do:
+    if varmain-for-active-remote then do:
+      return error substitute ('Нельзя закрыть документ объекта удаленной БД').
+    end.
+    assign parstatus = {&wayb}
+           parflag = yes.
+  end.
+  otherwise do:
+    return error substitute ('Недопустима операция &1 для документа с атрибутами тип-статус-флаг &2-&3-&4.', parmode, pardoc-type, parstatus-current, parflag-current).
+  end.
+end case.
+end procedure.
+procedure obj-exp-wayb-plus:
+/*внутриобъектный расх накл+*/
+case parmode:
+  when {&open-doc} then do:
+    if varmain-for-active-remote then do:
+      return error substitute ('Нельзя открыть документ объекта удаленной БД.').
+    end.
+    assign parstatus = {&wayb}
+           parflag   = no.
+  end.
+  when {&close-doc} then do:
+    if varmain-for-active-remote then do:
+      return error substitute ('Нельзя закрыть документ объекта удаленной БД.').
+    end.
+    assign parstatus = {&fact}
+           parflag   = yes.
+  end.
+  otherwise do:
+    return error substitute ('Недопустима операция &1 для документа с атрибутами тип-статус-флаг &2-&3-&4.', parmode, pardoc-type, parstatus-current, parflag-current).
+  end.
+end case.
+end procedure.
+
+procedure obj-int-wayb:
+/*внутриобъектный приход накл*/
+case parmode:
+  when {&open-doc} then do:
+    return error substitute ('Документ открыт.').
+  end.
+  when {&close-doc} then do:
+    if varmain-for-active-remote then do:
+      return error substitute ('Нельзя закрыть документ объекта удаленной БД.').
+    end.
+    assign parstatus = {&fact}
+           parflag   = yes.
+  end.
+  otherwise do:
+    return error substitute ('Недопустима операция &1 для документа с атрибутами тип-статус-флаг &2-&3-&4.', parmode, pardoc-type, parstatus-current, parflag-current).
+  end.
+end case.
 end procedure.
