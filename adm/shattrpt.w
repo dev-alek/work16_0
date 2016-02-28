@@ -776,6 +776,12 @@ on error undo, return error return-value
           r-temp-for-pomi :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
         .
       end.
+      when {&attr-petrol_rvs-wt-email} then do:
+        assign
+          rvs-wt-email = thbjattr_thbj-attr.property-value-character
+          rvs-wt-email :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+        .
+      end.
     end case.
 
     create temp-thbj-attr.
