@@ -128,6 +128,8 @@ if action = "U":U then do:
                                           input string(cash-gds.office), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "ISComplex" ,
                                           input string(0), input 1 ).
+    run bgelib-tag-put in this-procedure ( input 4, input "ISActivate" ,
+                                          input (if cash-gds.office-type = {&attr-office-type_card-act} then string(1) else string(0)), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "ISNoDiscount" ,
                                             input string(if cash-gds.wgd > 0 then wgd-option else 0), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "ISGaz" ,

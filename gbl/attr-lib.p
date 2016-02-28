@@ -6792,7 +6792,7 @@ on error undo, return error return-value
         return error substitute("(Еще) Нет товара с кодом &1, невозможно выполнить проверку корректности установки атрибута"
                                 , p-gds-code).
       end.
-      if buf_goods.gds-type <> {&gds-office} then do:
+      if buf_goods.gds-type <> {&gds-office} and p-value <> {&attr-office-type_card-act}  then do:
         p-error-code = "Товар должен быть услугой".
       end.
       if lookup(p-value, {&prop-list-attr-office-type}) = 0 then do:
