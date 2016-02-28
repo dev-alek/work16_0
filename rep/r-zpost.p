@@ -59,7 +59,7 @@ define variable    ValType           as   integer no-undo.
 define variable    FirstLine         as  logical  no-undo.
 define variable break_group as logical no-undo init true.
 define variable break_group1 as logical no-undo init true.
-
+define variable v-file-name as char.
 /* Local Variable Definitions ---                                       */
 
 define variable stat     as log no-undo .
@@ -106,6 +106,8 @@ xLavel = 0.
 if  xtog-lavel    then  xLavel        =  xvar-lavel .
 if  xtog-lavel-2  then  xLavel        =  xvar-lavel-2 .
 
+/*run get-report-num in parParentProc(output g#report-num).*/
+   os-delete value(string( session:temp-directory ) + {&DF_Name} + string( g#report-num ) + ".t-t")   .
 
 Run report-execute.
 
@@ -121,6 +123,7 @@ PROCEDURE report-execute :
   { rep/r-formh.i X(189) {&DOS_cw_2}}
   Run Print-Header.
   run rep/extitle.p (1) .
+/*      run gbl/_tmpfile.p ( "ipp", ".txt", output v-file-name) .*/
    /* проход по списку товаров 1 2 3-№ поиска */
   case RetSortType :
       when "sort-code":U then do:
@@ -160,15 +163,15 @@ PROCEDURE report-execute :
                                  else DisabledOptions = 0 .
 
 
-
   run gbl/prnfilen.w
     (input  ""
     ,input  DisabledOptions
-    ,input  string(session :temp-directory) + {&DF_Name} + string( g#report-num )
+    ,input  string(session :temp-directory) + {&DF_Name} + string( g#report-num  ) 
     ,input  ReportFontNum
     ,output v-user-action
     ,output v-printed
     ) .
+      
 END PROCEDURE.
 
 PROCEDURE print-header :
