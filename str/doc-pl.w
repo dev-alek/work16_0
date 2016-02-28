@@ -1689,6 +1689,7 @@ DO:
       where buf_place.obj-type = buf-obj_clients.obj-type
         and buf_place.obj-code = buf-obj_clients.obj-code
         and buf_place.pl-code  = loc-t-doc-pl.pl-code
+        and buf_place.status_ <> {&deleted-status}
       no-error .
 
     if available buf_place then do:
