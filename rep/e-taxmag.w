@@ -44,7 +44,7 @@ define variable vss-description as character no-undo init "Отчет о налогах в маг
 { cmp/showinf.i }
 { gbl/cur-time.i }
 { cmp/r-pril.i new }
-{ cmp/r-page1.i  }
+{ cmp/r-page1.i }
 { gbl/prn-lib.i }
 { cmp/library.i  }
 { str/out-vatp.i def }
@@ -55,92 +55,91 @@ define variable vss-description as character no-undo init "Отчет о налогах в маг
 { gbl/waitfram.i }
 define variable g#report-num as integer no-undo .
 { rep/opclexcl.i }
-
-
-define temp-table sj-goods no-undo
-field b-code                like ub.bar-code.b-code format "9999999999999"
-field artic                 like ub.goods.artic
-field prod-type             like ub.goods.prod-type
-field prod-code             like ub.goods.prod-code
-field name                  like ub.goods.gds-name format "x(30)"
-field unit                  like ub.goods.unit-base
-field qnty                  as decimal
-field obj-price             like ub.price-list.price-sale
-field discnt                as decimal
-field brutto-sum            as decimal
-field discnt-sum            as decimal
-field netto-sum             as decimal
-field uchet-sum             as decimal /*учетные цены*/
-field uchet-with-vat-sum    as decimal /*учетные цены*/
-field n-u-sum               as decimal
-field u-pcnt                as decimal /*% торговой наценки*/
-field is-out                as logical
-field VAT-pc                like ub.doc-line.VAT-pc
-field SLT-pc                like ub.doc-line.SLT-pc
-field VAT-r-b               as decimal /*сумма НДС*/
-field SLT-r-b               as decimal /*сумма налога с продаж */
-field grp-code              as integer
-field grp-name              as character
-INDEX p1 IS PRIMARY b-code SLT-pc VAT-pc
-INDEX p2 is-out DESCENDING
-         b-code ASCENDING
+def temp-table sj-goods no-undo
+field b-code like bar-code.b-code format "9999999999999"
+field artic     like goods.artic
+field prod-type like goods.prod-type
+field prod-code like goods.prod-code
+field name   like goods.gds-name format "x(30)"
+field unit like goods.unit-base
+field qnty              as   decimal
+field obj-price    like price-list.price-sale
+field discnt          as   decimal
+field brutto-sum   as   decimal
+field discnt-sum  as   decimal
+field netto-sum    as   decimal
+field uchet-sum   as decimal /*учетные цены*/
+field uchet-with-vat-sum   as decimal /*учетные цены*/
+field n-u-sum             as   decimal
+field u-pcnt          as decimal /*% торговой наценки*/
+field is-out        as  logical
+field VAT-pc       like doc-line.VAT-pc
+field SLT-pc       like doc-line.SLT-pc
+field VAT-r-b    as decimal /*сумма НДС*/
+field SLT-r-b   as decimal /*сумма налога с продаж */
+field grp-code as integer
+field grp-name as character
+INDEX p1 IS PRIMARY   b-code SLT-pc VAT-pc
+INDEX p2                        is-out DESCENDING
+                                        b-code ASCENDING
 INDEX p3 artic prod-type prod-code SLT-pc VAT-pc
 index p4 grp-name
 .
+
 DEFINE temp-table sj-grp no-undo
-field grp-code              AS integer format "9999999999999"
-field grp-name              AS character format "x(30)"
-field serv-name             AS character format "x(30)"
-field qnty                  as decimal
-field brutto-sum            as decimal
-field discnt-sum            as decimal
-field netto-sum             as decimal
-field uchet-sum             as decimal /*учетные цены*/
-field uchet-with-vat-sum    as decimal /*учетные цены*/
-field n-u-sum               as decimal
-field u-pcnt                as decimal /*% торговой наценки*/
-field VAT-r-b               as decimal /*сумма НДС*/
-field SLT-r-b               as decimal /*сумма налога с продаж */
-INDEX p1 IS PRIMARY grp-code
+field grp-code AS integer format "9999999999999"
+field grp-name   AS character format "x(30)"
+field serv-name   AS character format "x(30)"
+field qnty              as   decimal
+field brutto-sum   as   decimal
+field discnt-sum  as   decimal
+field netto-sum    as   decimal
+field uchet-sum   as decimal /*учетные цены*/
+field uchet-with-vat-sum   as decimal /*учетные цены*/
+field n-u-sum             as   decimal
+field u-pcnt          as decimal /*% торговой наценки*/
+field VAT-r-b    as decimal /*сумма НДС*/
+field SLT-r-b   as decimal /*сумма налога с продаж */
+INDEX p1 IS PRIMARY   grp-code
 INDEX p3 grp-name
 index p4 serv-name
 .
 define buffer t-3 for sj-grp.
 { rep/r-shftgr.i }
 
-
 DEFINE TEMP-TABLE d-slt-vat no-undo
-FIELD SLT-pc                like ub.doc-line.SLT-pc
-FIELD SLT-r-b               like ub.inkas.netto /*сумма налога с продаж*/
-FIELD SLT-r-b-brutto        like ub.inkas.netto /*сумма товаров с таким налогом  с продаж*/
-FIELD VAT-pc                like ub.doc-line.VAT-pc
-FIELD VAT-r-b               like ub.inkas.netto
-FIELD uchet-sum             as decimal
-FIELD uchet-with-vat-sum    as decimal
-FIELD n-u-sum               as decimal
-INDEX p1 IS PRIMARY SLT-pc VAT-pc ASCENDING.
-define variable cas-shft    as logical no-undo.
-define variable cas-num     as integer no-undo.
+FIELD SLT-pc like doc-line.SLT-pc
+FIELD SLT-r-b like inkas.netto /*сумма налога с продаж*/
+FIELD SLT-r-b-brutto like inkas.netto /*сумма товаров с таким налогом  с продаж*/
+FIELD VAT-pc like doc-line.VAT-pc
+FIELD VAT-r-b like inkas.netto
+FIELD uchet-sum as decimal
+FIELD uchet-with-vat-sum as decimal
+FIELD n-u-sum             as   decimal
+INDEX p1 IS PRIMARY SLT-pc VAT-pc ASCENDING .
+define variable cas-shft as logical no-undo.
+define variable cas-num as integer no-undo.
 &global-define  no-benefits    "Не было никаких закрытых продаж на выбранных объектах ~
 в течение заданного Вами периода времени."
 
-define variable Line        as char no-undo.
-define variable date_string as char no-undo.
-define variable choice      as logical no-undo.
-define variable DatePrinted as logical no-undo.
-define variable FrameType   as char no-undo.
-define variable method      as char no-undo.
+define variable Line                as      char    no-undo.
+define variable date_string     as      char    no-undo.
+define variable     choice               as      logical     no-undo.
+define variable     DatePrinted      as      logical     no-undo.
+define variable     FrameType      as      char        no-undo.
+define variable     method            as    char no-undo.
 /*yes - выборочно по товарам*/
 define variable     good-choice as logical init no.
 /*разделять простые и порожденные партии*/
 define variable negparts as logical NO-UNDO.
 /*вспомогательные*/
-define buffer t-doc         for ub.trn-doc.
-define variable jj          as integer no-undo.
-define variable jj-tot      as integer no-undo init 0.
+define buffer t-doc for trn-doc.
+define variable jj as integer no-undo.
+define variable jj-tot as integer no-undo init 0.
 define variable for-netto-without-slt as decimal no-undo.
 define variable vat-pc-val-qnty as integer no-undo.
-
+define variable v-choice-gds as char no-undo.
+define variable gds-str as character no-undo init "".
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -154,7 +153,7 @@ define variable vat-pc-val-qnty as integer no-undo.
 
 &Scoped-define ADM-CONTAINER FRAME
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME F-Main
 
 /* Standard List Definitions                                            */
@@ -247,16 +246,13 @@ DEFINE FRAME F-Main
      T-neg AT ROW 12.2 COL 5
      T-partsneg AT ROW 13.5 COL 5
      "Подитоги по группам" VIEW-AS TEXT
-          SIZE 33.1 BY .87 AT ROW 1.27 COL 47.5 WIDGET-ID 14
-          FGCOLOR 4
-     "Подитоги по группам" VIEW-AS TEXT
           SIZE 33.1 BY .87 AT ROW 1.27 COL 47.5 WIDGET-ID 12
-          FGCOLOR 4
-     "Детализация" VIEW-AS TEXT
-          SIZE 33.1 BY .87 AT ROW 1.43 COL 3.3
           FGCOLOR 4
      "Источник формирования" VIEW-AS TEXT
           SIZE 34.6 BY .83 AT ROW 6.7 COL 3.5
+          FGCOLOR 4
+     "Детализация" VIEW-AS TEXT
+          SIZE 33.1 BY .87 AT ROW 1.43 COL 3.3
           FGCOLOR 4
      RECT-6 AT ROW 1.27 COL 2.3
      RECT-8 AT ROW 6.47 COL 2.3
@@ -264,7 +260,7 @@ DEFINE FRAME F-Main
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
          SIDE-LABELS NO-UNDERLINE THREE-D
          AT COL 1 ROW 1
-         SIZE 91.7 BY 15.
+         SIZE 91.9 BY 15.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -283,7 +279,7 @@ DEFINE FRAME F-Main
 /* DESIGN Window definition (used by the UIB)
   CREATE WINDOW F-Frame-Win ASSIGN
          HEIGHT             = 15
-         WIDTH              = 91.7.
+         WIDTH              = 91.9.
 /* END WINDOW DEFINITION */
                                                                         */
 &ANALYZE-RESUME
@@ -305,7 +301,7 @@ DEFINE FRAME F-Main
 /* SETTINGS FOR WINDOW F-Frame-Win
   VISIBLE,,RUN-PERSISTENT                                               */
 /* SETTINGS FOR FRAME F-Main
-   NOT-VISIBLE                                                          */
+   NOT-VISIBLE FRAME-NAME                                               */
 /* SETTINGS FOR TOGGLE-BOX T-partsneg IN FRAME F-Main
    NO-DISPLAY NO-ENABLE                                                 */
 ASSIGN
@@ -445,21 +441,21 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE cre-sj F-Frame-Win
 PROCEDURE cre-sj :
 define input parameter v-curr-r-b as character no-undo .
-define input parameter  doc-num like ub.trn-doc.doc-code no-undo.
+define input parameter  doc-num like trn-doc.doc-code no-undo.
 define input parameter is-out as integer init 1.
 define input parameter offc as logical no-undo.
 define variable s-price as decimal no-undo .
 define variable cur-discnt as decimal no-undo .
-define variable cur-quant like ub.gds-dtl.doc-qnty no-undo.
+define variable cur-quant like gds-dtl.doc-qnty no-undo.
 define variable slt-calc as dec.
 define variable vat-cost as dec.
-define variable r-bar-code like ub.bar-code.b-code no-undo.
+define variable r-bar-code like bar-code.b-code no-undo.
 DEFINE VARIABLE varsum-dsc-r-b-acc as decimal no-undo .
 DEFINE VARIABLE varvat-r-b-acc     as decimal no-undo .
 DEFINE VARIABLE var-qnty              as decimal no-undo .
 DEFINE VARIABLE varvat-r-b-doc     as decimal no-undo .
 DEFINE VARIABLE varslt-r-b-doc     as decimal no-undo .
-define buffer buf-bar for ub.bar-code.
+define buffer buf-bar for bar-code.
 { str/tax-mag.i grp }
 END PROCEDURE.
 
@@ -514,19 +510,19 @@ PROCEDURE Main_cycle :
 ------------------------------------------------------------------------------*/
 define variable i as integer no-undo .
 define variable tdoc-code     as      char    no-undo.
-define variable real-code like ub.clients.obj-code no-undo.
-define variable real-type like ub.clients.obj-type no-undo.
-define variable doc-num like ub.trn-doc.doc-code no-undo.
+define variable real-code like clients.obj-code no-undo.
+define variable real-type like clients.obj-type no-undo.
+define variable doc-num like trn-doc.doc-code no-undo.
 define variable is-out as integer init 1.
 define variable offc as logical no-undo.
-define variable v-host-code like ub.sysconf.host-code no-undo.
+define variable v-host-code like sysconf.host-code no-undo.
 define variable v-curr-r-b as character no-undo .
 { gbl/curr-r-b.i
   v-curr-r-b
 }
 define buffer buf_sysconf for ub.sysconf.
 define buffer buf_sale-doc for ub.sale-doc.
-define buffer b-tr-doc  for ub.trn-doc .
+define buffer b-tr-doc  for trn-doc .
 
 
 FOR EACH sj-goods :
@@ -539,13 +535,13 @@ _obj-list:
 FOR EACH obj-list NO-LOCK:
     { gbl/hostcode.i obj-list.obj-type obj-list.obj-code v-host-code}
     FIND FIRST buf_sysconf NO-LOCK WHERE buf_sysconf.host-code = v-host-code.
-    IF AVAIL buf_sysconf
-    then
-    assign
-        real-code = buf_sysconf.sale-code
-        real-type = buf_sysconf.sale-type
-    .
+    IF AVAIL buf_sysconf then
+        assign
+            real-code = buf_sysconf.sale-code
+            real-type = buf_sysconf.sale-type
+        .
     else NEXT _obj-list.
+
 
     IF RS-by = 1 then do:
         if x-tog-shift = no then do:
@@ -577,18 +573,18 @@ FOR EACH obj-list NO-LOCK:
         else do:
             _inkas-with--ShiftDate-or-Shift:
             FOR EACH inkas WHERE
-                ub.inkas.shift-date >= X-date-start and
-                ub.inkas.shift-date <= X-date-end AND
-                ub.inkas.obj-code = obj-list.obj-code and
-                ub.inkas.obj-type = obj-list.obj-type AND
-                ub.inkas.status_ = {&fact} NO-LOCK,
+                inkas.shift-date >= X-date-start and
+                inkas.shift-date <= X-date-end AND
+                inkas.obj-code = obj-list.obj-code and
+                inkas.obj-type = obj-list.obj-type AND
+                inkas.status_ = {&fact} NO-LOCK,
                 each buf_sale-doc  no-lock where
-                    buf_sale-doc.inkas-code = ub.inkas.inkas-code
+                    buf_sale-doc.inkas-code = inkas.inkas-code
                 and buf_sale-doc.in-inkas = yes,
                     FIRST t-doc No-LOCK WHERE
                     t-doc.doc-code = buf_sale-doc.doc-code:
-                if ub.inkas.shift-date = x-date-start and inkas.shift-num < x-shift-start then next _inkas-with--ShiftDate-or-Shift.
-                if ub.inkas.shift-date = x-date-end and inkas.shift-num > x-shift-end then next _inkas-with--ShiftDate-or-Shift.
+                if inkas.shift-date = x-date-start and inkas.shift-num < x-shift-start then next _inkas-with--ShiftDate-or-Shift.
+                if inkas.shift-date = x-date-end and inkas.shift-num > x-shift-end then next _inkas-with--ShiftDate-or-Shift.
                 assign
                     doc-num = t-doc.doc-code
                     is-out = buf_sale-doc.dir
@@ -603,6 +599,8 @@ FOR EACH obj-list NO-LOCK:
             END. /*FOR EACH inkas*/
         end. /* else do: */
     END. /* RS-by = 1 then do: */
+
+
     IF RS-by = 3 or RS-by = 4 then do:
         if x-tog-shift = no then do:
             _trn-doc:
@@ -641,9 +639,9 @@ FOR EACH obj-list NO-LOCK:
                     assign
                         doc-num = t-doc.doc-code
                         offc = t-doc.office
-                        is-out = 1
+                        is-out = 1.
+                        if offc and negparts then next _trn-doc--with--ShiftDate--or--Shift
                     .
-                    if offc and negparts then next _trn-doc--with--ShiftDate--or--Shift.
                     run cre-sj in this-procedure (
                         input v-curr-r-b,
                         input doc-num,
@@ -654,20 +652,20 @@ FOR EACH obj-list NO-LOCK:
         end. /* else do: */
 
         if x-tog-shift = no then do:
-      _ret-doc:
-      FOR EACH t-doc NO-LOCK WHERE
-               t-doc.obj-type = obj-list.obj-type AND
-               t-doc.obj-code = obj-list.obj-code AND
-               t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass} AND
-               t-doc.status_ = {&fact} AND
-               t-doc.fact-date >= X-date-start AND
-               t-doc.fact-date <= X-date-end:
+            _ret-doc:
+            FOR EACH t-doc NO-LOCK WHERE
+                t-doc.obj-type = obj-list.obj-type AND
+                t-doc.obj-code = obj-list.obj-code AND
+                t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass} AND
+                t-doc.status_ = {&fact} AND
+                t-doc.fact-date >= X-date-start AND
+                t-doc.fact-date <= X-date-end:
                     assign
                         doc-num = t-doc.doc-code
                         offc = t-doc.office
-                        is-out = -1
+                        is-out = -1.
+                        if offc and negparts then NEXT _ret-doc
                     .
-                    if offc and negparts then NEXT _ret-doc.
                     run cre-sj in this-procedure (
                         input v-curr-r-b,
                         input doc-num,
@@ -690,9 +688,9 @@ FOR EACH obj-list NO-LOCK:
                     assign
                         doc-num = t-doc.doc-code
                         offc = t-doc.office
-                        is-out = -1
+                        is-out = -1.
+                        if offc and negparts then NEXT _ret-doc--with--ShiftDate--or--Shift
                     .
-                    if offc and negparts then NEXT _ret-doc--with--ShiftDate--or--Shift.
                     run cre-sj in this-procedure (
                         input v-curr-r-b,
                         input doc-num,
@@ -703,8 +701,8 @@ FOR EACH obj-list NO-LOCK:
         end. /* else do: */
     END. /* IF RS-by = 3 or RS-by = 4 then do: */
   
-
-  IF RS-by = 2 OR RS-BY = 3 then do:
+  
+    IF RS-by = 2 OR RS-BY = 3 then do:
         if x-tog-shift = no then do:
             _trn-doc2:
             FOR EACH t-doc NO-LOCK WHERE
@@ -722,12 +720,12 @@ FOR EACH obj-list NO-LOCK:
                         is-out = 1
                     .
                     if offc and negparts then NEXT _trn-doc2.
-                    run cre-sj in this-procedure (
-                        input v-curr-r-b,
-                        input doc-num,
-                        input is-out,
-                        input offc)
-                    .
+                        run cre-sj in this-procedure (
+                            input v-curr-r-b,
+                            input doc-num,
+                            input is-out,
+                            input offc)
+                        .
             END. /* FOR EACH t-doc NO-LOCK WHERE */
         end. /* if x-tog-shift = no then do: */
         else do:
@@ -813,7 +811,7 @@ FOR EACH obj-list NO-LOCK:
   END. /* IF RS-by = 2 OR RS-BY = 3 then do: */
   
   
-  IF RS-by = 4 then do:
+    IF RS-by = 4 then do:
         if x-tog-shift = no then do:
             _trn-doc3:
             FOR EACH t-doc NO-LOCK WHERE
@@ -966,7 +964,8 @@ frame {&frame-name} RS-Method
 frame {&frame-name} T-neg
 frame {&frame-name} T-partsneg
 frame {&frame-name} RS-by
-good-choice = (IF X-selectGood = {&g-all} then no else yes)
+/*good-choice = (IF X-selectGood = {&g-all} then no else yes)*/
+
 method = RS-method
 negparts = t-partsneg
 .
@@ -977,10 +976,13 @@ if classify = "n-level":u then do:
   .
 end.
 Assign
- STR-obj-type = ''
- STR-obj-code = ''
- STR-obj-name = ''
- STR-obj      = ''.
+STR-obj-type = ''
+STR-obj-code = ''
+STR-obj-name = ''
+STR-obj      = ''.
+
+
+
 
 For each obj-list no-lock:
  Assign
@@ -1008,10 +1010,10 @@ DEFINE INPUT PARAMETER p-classify AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-tog-level AS logical NO-UNDO.
 DEFINE INPUT PARAMETER p-level AS integer NO-UNDO.
 
-define variable loc-classify    as   integer              no-undo .
-define variable curr-grp-code   like ub.gds-grp.node-code no-undo .
-define variable for-grp-name    like ub.gds-grp.node-name no-undo .
-define buffer buf_gds-grp       for ub.gds-grp.
+define variable loc-classify  as   integer              no-undo .
+define variable curr-grp-code like ub.gds-grp.node-code no-undo .
+define variable for-grp-name  like ub.gds-grp.node-name no-undo .
+define buffer buf_gds-grp for ub.gds-grp.
 
 case p-classify :
   when "no-grp-totals":U
@@ -1045,10 +1047,10 @@ for each sj-grp
 :
   delete sj-grp .
 end.
-if loc-classify = - 1
-then do:
-  return .
-end.
+/*if loc-classify = - 1*/
+/*then do:             */
+/*  return .           */
+/*end.                 */
 if X-selectgood = {&g-grp}
 then do:
   for each tmp#grp no-lock
@@ -1065,9 +1067,9 @@ then do:
                sj-grp.serv-name = for-grp-name
                sj-grp.grp-name  = tmp#grp.grp-name
         .
+
       end.
-      when  0 or
-      when -1
+      when  0
       then do:
         if tmp#grp.is-term = yes
         then do:
@@ -1081,6 +1083,17 @@ then do:
           run t-level in this-procedure ( input tmp#grp.node-code ) no-error .
         end.
       end.
+      
+       when - 1 
+      then do:
+               create sj-grp .
+        assign sj-grp.grp-code  = tmp#grp.node-code
+               sj-grp.serv-name = for-grp-name
+               sj-grp.grp-name  = tmp#grp.grp-name
+        .
+      
+      end.
+      
       when p-level
       then do:
         if tmp#grp.lvl-num >= p-level or
@@ -1191,6 +1204,54 @@ end.
 assign
   XLS-page-num = XLS-page-num + 1
 .
+if X-selectGood =  {&g-choice} or
+         X-selectGood = {&g-spis}     or
+      X-selectGood = {&g-one} then
+    do:
+        v-choice-gds = "По списку товаров: ".
+
+        for each gds-list no-lock:
+            if length(gds-str) + length(gds-list.gds-name) <= 115  then do:
+                
+            gds-str = gds-str + gds-list.gds-name + ", ".
+            end.
+            else
+            do:
+                 gds-str = gds-str + "..." .
+             leave.
+             end.
+        end.
+        gds-str = right-trim( gds-str, " " ).
+        gds-str = right-trim( gds-str, "," ).
+/*        if length(gds-str) > 115 then                                           */
+/*        do:                                                                     */
+/*            v-choice-gds = v-choice-gds + (substring(gds-str, 1, 115) + "..." ).*/
+/*        end.                                                                    */
+/*        else                                                                    */
+/*        do:                                                                     */
+            v-choice-gds = v-choice-gds + gds-str.
+/*        end.*/
+    end.
+    
+   if error-status :error then next. 
+
+    if X-selectGood = {&g-all} then do:
+        v-choice-gds = "Выбор товара: По всем товарам".
+        end.
+        
+if  X-selectGood = {&g-grp} then do: 
+/*       if length(str2) > 115 then                      */
+/*    do:                                                */
+/*                                                       */
+/*        v-choice-gds = substring(str2, 1, 115) + "...".*/
+/*    end.                                               */
+/*    else                                               */
+/*    do:                                                */
+        v-choice-gds = str2.
+/*    end.*/
+    end.
+
+
 for each SheetF where
           SheetF.Sheet-Num > XLS-page-num
 :
@@ -1213,8 +1274,8 @@ sheetf.sizes = "6,9,{&s1}," + (if method = "artic":u
                                then "{&s2},{&s3},"
                                else "{&s23},") +
                "3,12,"  +
-              "13,13,13,2," +
-              "13,13,8,2,13"
+               "13,13,13,2," +
+               "13,13,8,2,13"
 sheetf.colformat = "1=0;2=0;3=@;"  + (if method = "artic":u
                                then ("4=@;5=@;" +
                                     "6=@;7=0.000;"  +
@@ -1256,16 +1317,17 @@ sheetf.colformat = "1=0;2=0;3=@;"  + (if method = "artic":u
 
 Make-Excel = yes
 reportname = "РАСЧЕТ НАЛОГОВ (РЕАЛИЗАЦИЯ В МАГАЗИНЕ) "
-str2 = v-header-base-curr
+  str4 = v-choice-gds
+  str2 = v-header-base-curr
 Sheetf.Bas-File = "exe/Adjustw.bas".
-.
+                  .
 DEFINE FRAME SJ-Base
 sym1 column-label ":!:"                                                     format "X(1)" space(0)
 jj-tot column-label "  N  "                                                 format ">>>>>9" space(0)
 sj-goods.b-code column-label "Код ! "                                       format ">>>>>>>>>9"
-sj-goods.artic column-label "Артикул   ! "                                  format "X(16)"
-sj-goods.name column-label "Наименование  ! "                               format "X(25)"
-ub.clients.obj-name column-label "(Производитель)"                          format "X(15)"
+sj-goods.artic column-label "Артикул   ! "                                  format "x({&s1})"
+sj-goods.name column-label "Наименование  ! "                               format "x({&s2})"
+clients.obj-name column-label "(Производитель)"                             format "x({&s3})"
 sj-goods.unit column-label "Ед.!изм"                                        format "X(3)"
 sj-goods.qnty column-label "Количество ! "                                  format "->>>>>9.<<<"
 sj-goods.uchet-with-vat-sum column-label "Cумма! учет. c  НДС!(вал. продаж)"         format "->>>>>>>>9.99" space(0)
@@ -1288,11 +1350,12 @@ Line format "X(188)" AT 1
 with width {&DOS_CW_2}  down stream-io use-text.
 Line = fill("-", 158).
 run waitfram-show in this-procedure ( "Подождите ..." ).
-run Main_Cycle in this-procedure .
+run Main_Cycle.
 if classify <> "no-grp-totals" then do:
   for each sj-grp:
     for each sj-goods where
             sj-goods.grp-name begins sj-grp.serv-name:
+             
       assign
       sj-grp.qnty       = sj-grp.qnty        + sj-goods.qnty
       sj-grp.brutto-sum = sj-grp.brutto-sum  + sj-goods.brutto-sum
@@ -1326,8 +1389,9 @@ Sheetf.Bas-Params = sheet-name
 .
 PUT STREAM PrnLibStream unformatted
 SPACE(25)  "РАСЧЕТ НАЛОГОВ (РЕАЛИЗАЦИЯ В МАГАЗИНЕ) " + str1 + " ПО ОБЪЕКТАМ"  format "x(90)"  SKIP(0)
-str4 skip(0)
-str2  skip(0)
+
+
+v-choice-gds  skip
 ReportHeader skip(0)
 SPACE(25) (if negparts then "(только порожденные партии)" else "") FORMAT "X(42)" SKIP(0)
    .
@@ -1371,9 +1435,9 @@ FOR EACH sj-goods use-index p2 BREAK BY sj-goods.is-out DESCENDING :
 
   ACCUMULATE sj-goods.b-code (SUB-COUNT BY sj-goods.is-out).
   IF method = "artic":u THEN DO:
-      FIND ub.clients WHERE ub.clients.obj-type = sj-goods.prod-type AND
-                                          ub.clients.obj-code = sj-goods.prod-code NO-LOCK .
-          prodbuf1 = breakstr(ub.clients.obj-name, 25, prodbuf1, prodbuf2).
+      FIND clients WHERE clients.obj-type = sj-goods.prod-type AND
+                                          clients.obj-code = sj-goods.prod-code NO-LOCK .
+          prodbuf1 = breakstr(clients.obj-name, 25, prodbuf1, prodbuf2).
   END.
   namebuf1 = breakstr(sj-goods.name, 18, namebuf1, namebuf2).
   IF method = "b-code":U THEN do:
@@ -1383,7 +1447,7 @@ FOR EACH sj-goods use-index p2 BREAK BY sj-goods.is-out DESCENDING :
     sj-goods.b-code
     sj-goods.artic
     namebuf1 @ sj-goods.name
-    namebuf2   @ ub.clients.obj-name
+    namebuf2   @ clients.obj-name
     sj-goods.qnty
     sj-goods.unit
     sj-goods.uchet-with-vat-sum
@@ -1400,7 +1464,7 @@ FOR EACH sj-goods use-index p2 BREAK BY sj-goods.is-out DESCENDING :
     sj-goods.VAT-r-b
     sym10
     with FRAME SJ-Base .
-   {&PutExcel}
+    {&PutExcel}
     ACCUM SUB-COUNT BY sj-goods.is-out sj-goods.b-code {&tabulation}
     sj-goods.b-code {&tabulation}
     sj-goods.artic  {&tabulation}
@@ -1424,37 +1488,37 @@ FOR EACH sj-goods use-index p2 BREAK BY sj-goods.is-out DESCENDING :
                                     ,input-output XLS-page-num
                                       ).
   end.
-  ELSE  do:
+  ELSE do:
     IF method = "artic":U then do:
-      DISPLAY STREAM PrnLibStream
-      sym1
-      ACCUM SUB-COUNT BY sj-goods.is-out sj-goods.b-code @ jj-tot
-      sj-goods.b-code
-      sj-goods.artic
-      namebuf1 @ sj-goods.name
-      prodbuf1   @ ub.clients.obj-name
-      sj-goods.qnty
-      sj-goods.unit
+        DISPLAY STREAM PrnLibStream
+        sym1
+        ACCUM SUB-COUNT BY sj-goods.is-out sj-goods.b-code @ jj-tot
+        sj-goods.b-code
+        sj-goods.artic
+        namebuf1 @ sj-goods.name
+        prodbuf1   @ clients.obj-name
+        sj-goods.qnty
+        sj-goods.unit
         sj-goods.uchet-with-vat-sum
-      sj-goods.uchet-sum
-      sj-goods.netto-sum
+        sj-goods.uchet-sum
+        sj-goods.netto-sum
         /*
-      sj-goods.SLT-r-b
-      sj-goods.SLT-pc
-      sj-goods.netto-sum - sj-goods.slt-r-b @ for-netto-without-slt
+        sj-goods.SLT-r-b
+        sj-goods.SLT-pc
+        sj-goods.netto-sum - sj-goods.slt-r-b @ for-netto-without-slt
         */
-      sj-goods.n-u-sum
-      sj-goods.u-pcnt
-      sj-goods.VAT-pc
-      sj-goods.VAT-r-b
-      sym10
-      with FRAME SJ-Base .
-       {&putExcel}
+        sj-goods.n-u-sum
+        sj-goods.u-pcnt
+        sj-goods.VAT-pc
+        sj-goods.VAT-r-b
+        sym10
+        with FRAME SJ-Base .
+        {&putExcel}
         ACCUM SUB-COUNT BY sj-goods.is-out sj-goods.b-code {&tabulation}
         sj-goods.b-code {&tabulation}
         sj-goods.artic  {&tabulation}
         sj-goods.name {&tabulation}
-        ub.clients.obj-name {&tabulation}
+        clients.obj-name {&tabulation}
         sj-goods.unit {&tabulation}
         sj-goods.qnty {&tabulation}
         sj-goods.uchet-with-vat-sum {&tabulation}
@@ -1477,40 +1541,40 @@ FOR EACH sj-goods use-index p2 BREAK BY sj-goods.is-out DESCENDING :
     end.
   end.
   IF method <> "TOTALS":U THEN DO:
-  DOWN STREAM PrnLibStream 1 with FRAME SJ-Base .
-  if method = "artic":U AND ( namebuf2 <> "" ) OR ( prodbuf2 <> "" ) then do:
-    DISPLAY STREAM PrnLibStream
-    sym1
-    namebuf2 @ sj-goods.name
-    prodbuf2 @ ub.clients.obj-name
-    sym10
-    with FRAME SJ-Base .
     DOWN STREAM PrnLibStream 1 with FRAME SJ-Base .
-  end.
-END.
-ACCUMULATE
-sj-goods.qnty (TOTAL)
-sj-goods.uchet-sum (TOTAL)
-sj-goods.uchet-sum (SUB-TOTAL BY sj-goods.is-out)
+    if method = "artic":U AND ( namebuf2 <> "" ) OR ( prodbuf2 <> "" ) then do:
+      DISPLAY STREAM PrnLibStream
+      sym1
+      namebuf2 @ sj-goods.name
+      prodbuf2 @ clients.obj-name
+      sym10
+      with FRAME SJ-Base .
+      DOWN STREAM PrnLibStream 1 with FRAME SJ-Base .
+    end.
+  END.
+  ACCUMULATE
+  sj-goods.qnty (TOTAL)
+  sj-goods.uchet-sum (TOTAL)
+  sj-goods.uchet-sum (SUB-TOTAL BY sj-goods.is-out)
   sj-goods.uchet-with-vat-sum (SUB-TOTAL BY sj-goods.is-out)
   sj-goods.uchet-with-vat-sum (TOTAL)
-sj-goods.SLT-r-b (TOTAL)
-sj-goods.SLT-r-b (SUB-TOTAL BY sj-goods.is-out)
-sj-goods.n-u-sum (TOTAL)
-sj-goods.n-u-sum (SUB-TOTAL BY sj-goods.is-out)
-sj-goods.VAT-r-b (TOTAL)
-sj-goods.VAT-r-b (SUB-TOTAL BY sj-goods.is-out)
-sj-goods.netto-sum (TOTAL)
-sj-goods.qnty ( SUB-TOTAL BY sj-goods.is-out )
-sj-goods.netto-sum ( SUB-TOTAL BY sj-goods.is-out )
-.
-if last-of( sj-goods.is-out ) then do:
+  sj-goods.SLT-r-b (TOTAL)
+  sj-goods.SLT-r-b (SUB-TOTAL BY sj-goods.is-out)
+  sj-goods.n-u-sum (TOTAL)
+  sj-goods.n-u-sum (SUB-TOTAL BY sj-goods.is-out)
+  sj-goods.VAT-r-b (TOTAL)
+  sj-goods.VAT-r-b (SUB-TOTAL BY sj-goods.is-out)
+  sj-goods.netto-sum (TOTAL)
+  sj-goods.qnty ( SUB-TOTAL BY sj-goods.is-out )
+  sj-goods.netto-sum ( SUB-TOTAL BY sj-goods.is-out )
+  .
+  if last-of( sj-goods.is-out ) then do:
     UNDERLINE STREAM PrnLibStream
     jj-tot
     sj-goods.b-code
     sj-goods.artic
     sj-goods.name
-    ub.clients.obj-name
+    clients.obj-name
     sj-goods.qnty
     sj-goods.unit
     sj-goods.uchet-with-vat-sum
@@ -1557,7 +1621,7 @@ if last-of( sj-goods.is-out ) then do:
     sj-goods.b-code
     sj-goods.artic
     sj-goods.name
-    ub.clients.obj-name
+    clients.obj-name
     sj-goods.uchet-with-vat-sum
     sj-goods.uchet-sum
     sj-goods.netto-sum
@@ -1618,7 +1682,7 @@ if classify <> "no-grp-totals" then do:
   sj-goods.b-code
   sj-goods.artic
   sj-goods.name
-  ub.clients.obj-name
+  clients.obj-name
   sj-goods.qnty
   sj-goods.unit
   sj-goods.uchet-with-vat-sum
@@ -1666,7 +1730,7 @@ if classify <> "no-grp-totals" then do:
     else "")         @ sj-goods.b-code
     s1 @ sj-goods.artic
     s2 @ sj-goods.name
-    s3 @ ub.clients.obj-name
+    s3 @ clients.obj-name
     sj-grp.qnty @ sj-goods.qnty
     sj-grp.netto-sum @ sj-goods.netto-sum
     sj-grp.uchet-with-vat-sum @ sj-goods.uchet-with-vat-sum
@@ -1687,7 +1751,7 @@ if classify <> "no-grp-totals" then do:
   sj-goods.b-code
   sj-goods.artic
   sj-goods.name
-  ub.clients.obj-name
+  clients.obj-name
   sj-goods.qnty
   sj-goods.unit
   sj-goods.uchet-with-vat-sum
@@ -1713,7 +1777,7 @@ jj-tot
 sj-goods.b-code
 sj-goods.artic
 sj-goods.name
-ub.clients.obj-name
+clients.obj-name
 sj-goods.qnty
 sj-goods.unit
 sj-goods.uchet-with-vat-sum
@@ -1757,7 +1821,7 @@ jj-tot
 sj-goods.b-code
 sj-goods.artic
 sj-goods.name
-ub.clients.obj-name
+clients.obj-name
 sj-goods.qnty
 sj-goods.unit
 sj-goods.uchet-with-vat-sum
@@ -1867,6 +1931,7 @@ sheetf.colformat = "1=0.00;2=0.00;" +
                     + {&delim-par} + {&delim-par} + sheet-name
 Make-Excel = yes
 reportname = "РАСЧЕТ НАЛОГОВ (РЕАЛИЗАЦИЯ В МАГАЗИНЕ) ИТОГИ"
+str4 = v-choice-gds
 str2 = v-header-base-curr
 Sheetf.Bas-File = "exe/Adjustw.bas".
 .
@@ -1882,36 +1947,36 @@ FOR EACH  d-slt-vat break
 by d-slt-vat.VAT-pc
 /*by d-slt-vat.slt-pc*/ :
 
-    ACCUMULATE
-    d-slt-vat.SLT-r-b (TOTAL by d-slt-vat.vat-pc)
-    d-slt-vat.SLT-r-b-brutto (TOTAL by d-slt-vat.vat-pc)
-    d-slt-vat.VAT-r-b (TOTAL by d-slt-vat.vat-pc)
-    d-slt-vat.uchet-with-vat-sum(TOTAL by d-slt-vat.vat-pc)
-    d-slt-vat.uchet-sum (TOTAL by d-slt-vat.vat-pc)
-    d-slt-vat.n-u-sum (TOTAL by d-slt-vat.vat-pc)
-    .
+  ACCUMULATE
+  d-slt-vat.SLT-r-b (TOTAL by d-slt-vat.vat-pc)
+  d-slt-vat.SLT-r-b-brutto (TOTAL by d-slt-vat.vat-pc)
+  d-slt-vat.VAT-r-b (TOTAL by d-slt-vat.vat-pc)
+  d-slt-vat.uchet-with-vat-sum(TOTAL by d-slt-vat.vat-pc)
+  d-slt-vat.uchet-sum (TOTAL by d-slt-vat.vat-pc)
+  d-slt-vat.n-u-sum (TOTAL by d-slt-vat.vat-pc)
+  .
   /*
-    PUT STREAM PrnLibStream
+  PUT STREAM PrnLibStream
   string( /*"Налог с продаж" + string( d-slt-vat.slt-pc, ">>9.<<%") +
           " " + */  string( d-slt-vat.VAT-pc, ">9.9<%") + " " +
-            string(d-slt-vat.slt-r-b-brutto, "->>>,>>>,>>9.99" )  +  ":")
+          string(d-slt-vat.slt-r-b-brutto, "->>>,>>>,>>9.99" ) +  ":")
   AT 14 format "X(22)"
   /*AT 14 format "X(42)"
-    string( string( d-slt-vat.SLT-r-b, "->>>,>>>,>>9.99" ) + ":" )
-    AT 57 format "X(16)"
-    string( string((d-slt-vat.slt-r-b-brutto - d-slt-vat.SLT-r-b),"->>>,>>>,>>9.99" ) + ":" )
+  string( string( d-slt-vat.SLT-r-b, "->>>,>>>,>>9.99" ) + ":" )
+  AT 57 format "X(16)"
+  string( string((d-slt-vat.slt-r-b-brutto - d-slt-vat.SLT-r-b),"->>>,>>>,>>9.99" ) + ":" )
   AT 73 format "X(16)"*/
-    (  string(d-slt-vat.uchet-with-vat-sum, "->>>,>>>,>>9.99" )  +  ":")
+  (  string(d-slt-vat.uchet-with-vat-sum, "->>>,>>>,>>9.99" )  +  ":")
   AT {&at-uchet-sum} format "X(16)"
-    (  string(d-slt-vat.uchet-sum, "->>>,>>>,>>9.99" )  +  ":")
+  (  string(d-slt-vat.uchet-sum, "->>>,>>>,>>9.99" )  +  ":")
       AT {&at-vat-r-b} format "X(16)"
-    (  string(d-slt-vat.VAT-r-b, "->>>,>>>,>>9.99" )  +  ":")
+  (  string(d-slt-vat.VAT-r-b, "->>>,>>>,>>9.99" )  +  ":")
       AT {&at-n-u-sum} format "X(16)"
-    (  string(( d-slt-vat.n-u-sum / d-slt-vat.uchet-sum ) * 100, "->>>,>>9.99" )  +  ":")
+  (  string(( d-slt-vat.n-u-sum / d-slt-vat.uchet-sum ) * 100, "->>>,>>9.99" )  +  ":")
       AT {&at-pcnt-torg-nac}  format "X(16)"
-    (  string(( d-slt-vat.n-u-sum / d-slt-vat.slt-r-b-brutto ) * 100, "->>,>>9.99" )  +  ":")
+  (  string(( d-slt-vat.n-u-sum / d-slt-vat.slt-r-b-brutto ) * 100, "->>,>>9.99" )  +  ":")
       AT {&at-sum-torg-nac} format "X(16)"
-   SKIP.
+  SKIP.
 
   {&putexcel}
   /*string( "НП " + string( d-slt-vat.slt-pc, "99.99%"))  {&tabulation}*/
@@ -1983,7 +2048,7 @@ by d-slt-vat.VAT-pc
 end.
 PUT STREAM PrnLibStream
 line AT 14 format "X(106)" SKIP
-string (  "Итого по налогам          "  +
+string (  "Итого по налогам  "  +
 string(  ( ACCUM TOTAL d-slt-vat.slt-r-b-brutto ) , "->>>,>>>,>>9.99" )  +  ":"   )
 AT 1 format "X(35)"
 /*AT 14 format "X(43)"
@@ -2014,7 +2079,7 @@ string (
 AT {&at-sum-torg-nac} format "X(16)"
 SKIP.
 {&putexcel}
- "Итого по налогам          "  {&tabulation}
+"Итого по налогам          "  {&tabulation}
  /*{&tabulation}*/
 string(  ( ACCUM TOTAL d-slt-vat.slt-r-b-brutto ) , "->>>,>>>,>>9.99" )  {&tabulation}
 /*string( ( ACCUM TOTAL d-slt-vat.SLT-r-b ) , "->>>,>>>,>>9.99" )   {&tabulation}
@@ -2071,6 +2136,7 @@ if classify <> "no-grp-totals" then do:
 
   Make-Excel = yes
   reportname = "РАСЧЕТ НАЛОГОВ (РЕАЛИЗАЦИЯ В МАГАЗИНЕ) - ГРУППЫ"
+  str4 = v-choice-gds
   str2 = v-header-base-curr
   Sheetf.Bas-File = "exe/adjustw.bas"
   .
@@ -2115,7 +2181,7 @@ if classify <> "no-grp-totals" then do:
   ((ACCUM TOTAL sj-goods.netto-sum) -
   (ACCUM TOTAL sj-goods.SLT-r-b  )) {&tabulation}*/
   (ACCUM TOTAL sj-goods.n-u-sum  ) {&tabulation}
-  {&tabulation}
+ 
   (ACCUM TOTAL sj-goods.VAT-r-b  ) skip
   .
 end.
