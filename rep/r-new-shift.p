@@ -166,8 +166,8 @@ run adm/shattri.p (
     input "get":U
     ,input  '' /*p-obj-type*/
     ,input  0 /*p-obj-code*/
-    ,input  {&attr-report-glob}
-    ,input  {&attr-report-glob_rep-shift-format} /*p-param-code*/
+    ,input  {&attr-prt-glob}
+    ,input  {&attr-prt-glob_rep-shift-format} /*p-param-code*/
     ,output v-sort-list
     ,output v-value-date
     ,output v-value-decimal
@@ -1145,14 +1145,15 @@ procedure first-line-tog1-html :
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
-                        <td style="width:60px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:20px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:20px"></td>
+                      <tr class="set_columns">
+                        <td style="width:170px"></td>
+                        <td style="width:30px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:30px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:80px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
@@ -1236,14 +1237,14 @@ procedure first-line-tog1-html :
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
+                        <td style="width:170px"></td>
+                        <td style="width:30px"></td>
+                        <td style="width:80px"></td>
                         <td style="width:80px"></td>
                         <td style="width:30px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:30px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:60px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:80px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
@@ -1389,8 +1390,8 @@ if v-param-code <> 2 and v-report-result = no then do:
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
                         <td style="width:80px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
+                        <td style="width:70px"></td>
+                        <td style="width:90px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
@@ -1398,7 +1399,7 @@ if v-param-code <> 2 and v-report-result = no then do:
                         <td style="width:80px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
-                        <td style="width:50px"></td>
+                        <td style="width:80px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>                        
                       </tr>
@@ -1465,25 +1466,24 @@ if v-param-code <> 2 and v-report-result = no then do:
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
-                        <td style="width:80px"></td>
+                        <td style="width:70px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
                         <td style="width:80px"></td>
+                        <td style="width:70px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:50px"></td>
                         <td style="width:30px"></td>
+                        <td style="width:80px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
-                        <td style="width:30px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:30px"></td>
-                        <td style="width:120px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
+                        <td style="width:80px"></td>
                         <td style="width:60px"></td>
-                        <td style="width:60px"></td>                        
-                      </tr>
+                        <td style="width:60px"></td>   
                     <tr>
                       <td colspan="18"></td>
                     </tr>
@@ -1583,22 +1583,22 @@ if v-param-code <> 2 and v-report-result = no then do:
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
+                        <td style="width:70px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:60px"></td>
+                        <td style="width:60px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:70px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:30px"></td>
                         <td style="width:80px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:170px"></td>
-                        <td style="width:30px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:30px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:30px"></td>
-                        <td style="width:170px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
+                        <td style="width:80px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>                     
                       </tr>
@@ -1655,7 +1655,7 @@ procedure first-line-tog3-html :
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
-                        <td style="width:100px"></td>
+                        <td style="width:120px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
                         <td style="width:100px"></td>
@@ -1663,7 +1663,7 @@ procedure first-line-tog3-html :
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
-                        <td style="width:100px"></td>
+                        <td style="width:120px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
@@ -1735,7 +1735,7 @@ procedure first-line-tog3-html :
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
-                        <td style="width:100px"></td>
+                        <td style="width:120px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
                         <td style="width:100px"></td>
@@ -1743,7 +1743,7 @@ procedure first-line-tog3-html :
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
-                        <td style="width:100px"></td>
+                        <td style="width:120px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
@@ -1826,7 +1826,7 @@ procedure first-line-tog3-html :
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
-                        <td style="width:100px"></td>
+                        <td style="width:120px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
                         <td style="width:100px"></td>
@@ -1834,7 +1834,7 @@ procedure first-line-tog3-html :
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
-                        <td style="width:100px"></td>
+                        <td style="width:120px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
                         <td style="width:70px"></td>
@@ -2851,8 +2851,8 @@ procedure first-line-tog9-html :
                         <td style="width:150px"></td>
                         <td style="width:30px"></td>
                         <td style="width:30px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
@@ -2929,8 +2929,8 @@ procedure first-line-tog9-html :
                         <td style="width:150px"></td>
                         <td style="width:30px"></td>
                         <td style="width:30px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
@@ -3020,8 +3020,8 @@ procedure first-line-tog9-html :
                         <td style="width:150px"></td>
                         <td style="width:30px"></td>
                         <td style="width:30px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>

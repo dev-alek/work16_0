@@ -150,8 +150,8 @@ define temp-table temp-line-pump no-undo /*временная таблица по резервуарам*/
   field pol6          like ub.rvs-line-pump.state-mh-cnt format '>>9.99'
   field pol7          like ub.rvs-line-pump.state-mh-cnt
   field pl-code       like ub.rvs-line-pump.pl-code
-  field error-l       like ub.rvs-line-pump.state-el-cnt
-  field error-kg      like ub.rvs-line-pump.state-el-cnt
+/*  field error-l       like ub.rvs-line-pump.state-el-cnt*/
+/*  field error-kg      like ub.rvs-line-pump.state-el-cnt*/
   field error-19      like ub.rvs-line-pump.state-el-cnt 
 
   
@@ -189,7 +189,7 @@ define temp-table temp-rvs-line no-undo like ub.rvs-line
   field accum-pol8-l   as decimal
   field accum-pol8-kg  as decimal
   field pol8-l         as decimal
-  field pol8-kg        as decimal 
+  field pol8-kg        as decimal format '>>9.99'
   field pol14          as decimal
   field pol15-l        as decimal
   field pol15-kg       as decimal
@@ -202,6 +202,8 @@ define temp-table temp-rvs-line no-undo like ub.rvs-line
   field accum-pol20-l  as decimal
   field accum-pol20-kg as decimal
   field fact-pl        as decimal
+  field error-l        like ub.rvs-line.system-qnty
+  field error-kg       like ub.rvs-line.state-measure-qnty 
 .
 
 define variable v-count    as integer   no-undo .
@@ -424,6 +426,7 @@ on error undo, return error return-value
   
     end. /*if p-tog-1-whole-gds = true*/
 
+  
     if available previous-rvs-doc then 
     do:
       find first previous-rvs-line  no-lock
@@ -453,7 +456,7 @@ on error undo, return error return-value
         temp-line-pump.state-mh-cnt = ub.rvs-line-pump.state-mh-cnt
         temp-line-pump.state-el-cnt = ub.rvs-line-pump.state-el-cnt
         temp-line-pump.pol6         = temp-line-pump.state-mh-cnt
-        temp-line-pump.pol7         = 0
+        
         .
       
       /*найдем показания счетного механизма по пистолету в сменной сверке за пред. смену*/
@@ -474,9 +477,9 @@ on error undo, return error return-value
             temp-line-pump.previous-state-mh-cnt = temp-line-pump.previous-state-mh-cnt + previous-rvs-line-pump.state-mh-cnt
             temp-line-pump.previous-state-el-cnt = temp-line-pump.previous-state-el-cnt + previous-rvs-line-pump.state-el-cnt
             temp-line-pump.pol7                  = temp-line-pump.previous-state-mh-cnt
-            temp-line-pump.error-l               = (temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt) * 1000
-            temp-line-pump.error-kg              = ((temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt) * 1000 ) * temp-rvs-line.state-density
-            temp-line-pump.error-19              = temp-line-pump.error-l * 100 / (temp-line-pump.previous-state-mh-cnt * 1000)
+/*            temp-rvs-line.error-l               = temp-rvs-line.system-qnty       */
+/*            temp-rvs-line.error-kg              = temp-rvs-line.state-measure-qnty*/
+            /*temp-rvs-line.error-19              = temp-line-pump.error-l * 100 / temp-line-pump.previous-state-mh-cnt*/
             .
         end. /*IF available previous-rvs-line-pump*/
       end. /*if available previous-rvs-doc*/
@@ -505,10 +508,10 @@ on error undo, return error return-value
           assign
             temp-line-pump.previous-state-mh-cnt = temp-line-pump.previous-state-mh-cnt + control-rvs-line-pump.state-mh-cnt
             temp-line-pump.previous-state-el-cnt = temp-line-pump.previous-state-el-cnt + control-rvs-line-pump.state-el-cnt
-/*            temp-line-pump.pol7                  = temp-line-pump.previous-state-mh-cnt*/
-            temp-line-pump.error-l               = (temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt) * 1000
-            temp-line-pump.error-kg              = ((temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt) * 1000 )* temp-rvs-line.state-density
-            temp-line-pump.error-19              = temp-line-pump.error-l * 100 / (temp-line-pump.previous-state-mh-cnt * 1000)
+            temp-line-pump.pol7                  = temp-line-pump.previous-state-mh-cnt
+/*            temp-line-pump.error-l               = (temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt)                             */
+/*            temp-line-pump.error-kg              = (temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt)* temp-rvs-line.state-density*/
+/*            temp-line-pump.error-19              = temp-line-pump.error-l * 100 / (temp-line-pump.previous-state-mh-cnt)                                     */
             .
           leave.
         end. /* for each control-rvs-doc no-lock where */
@@ -833,6 +836,8 @@ define VARIABLE v-first as logical no-undo .
         assign
             temp-rvs-line.pol8-l = (temp-line-pump.pol6 - temp-line-pump.pol7)
             temp-rvs-line.pol8-kg = temp-rvs-line.pol8-l * temp-rvs-line.state-density
+/*            num-pol20-l = temp-rvs-line.state-measure-qnty*/
+/*            num-pol20-kg = temp-rvs-line.system-qnty      */
         .      
   
         if v-first then 
@@ -883,7 +888,7 @@ define VARIABLE v-first as logical no-undo .
             ,
             temp-rvs-line.num-trk * 2,
             string(temp-rvs-line.pol8-l,"->>>>>>>>>>>9.99"),
-            string(temp-line-pump.error-l,"->>>>>>>>>>>9.99")
+            string(temp-rvs-line.error-l,"->>>>>>>>>>>9.99")
             ).
           output stream OutStr-html close.    
         
@@ -898,7 +903,7 @@ define VARIABLE v-first as logical no-undo .
                 </tr>'
             ,
             string(temp-rvs-line.pol8-kg,"->>>>>>>>>>>9.99"),
-            string(temp-line-pump.error-kg,"->>>>>>>>>>>9.99")
+            string(temp-rvs-line.error-kg,"->>>>>>>>>>>9.99")
             ).
           output stream OutStr-html close.    
               
@@ -926,22 +931,21 @@ define VARIABLE v-first as logical no-undo .
             string(temp-line-pump.pol6,"->>>>>>>>>>>9.99"),
             string(temp-line-pump.pol7,"->>>>>>>>>>>9.99"),
             string(temp-rvs-line.pol8-l,"->>>>>>>>>>>9.99"),
-            string(temp-line-pump.error-l,"->>>>>>>>>>>9.99"),
+            string(temp-rvs-line.error-l,"->>>>>>>>>>>9.99"),
             string(temp-rvs-line.pol8-kg,"->>>>>>>>>>>9.99"),
-            string(temp-line-pump.error-kg,"->>>>>>>>>>>9.99")
+            string(temp-rvs-line.error-kg,"->>>>>>>>>>>9.99")
             ).
           output stream OutStr-html close.    
-
         end. 
           assign
                 num-pol8-l  = temp-rvs-line.pol8-l + num-pol8-l
                 num-pol8-kg = temp-rvs-line.pol8-kg + num-pol8-kg
                 temp-rvs-line.accum-pol8-l   = num-pol8-l
                 temp-rvs-line.accum-pol8-kg  = num-pol8-kg
-                num-pol20-l = temp-line-pump.error-l + num-pol20-l
-                num-pol20-kg = temp-line-pump.error-kg + num-pol20-kg
-                temp-rvs-line.accum-pol20-l = num-pol20-l
-                temp-rvs-line.accum-pol20-kg = num-pol20-kg
+/*                num-pol20-l = temp-rvs-line.system-qnty + num-pol20-l         */
+/*                num-pol20-kg = temp-rvs-line.state-measure-qnty + num-pol20-kg*/
+/*                temp-rvs-line.accum-pol20-l = num-pol20-l                     */
+/*                temp-rvs-line.accum-pol20-kg = num-pol20-kg                   */
                 v-first     = no
           .           
       end.

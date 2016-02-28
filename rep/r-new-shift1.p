@@ -843,7 +843,7 @@ on error undo, return error return-value
         temp-line-pump.state-mh-cnt = ub.rvs-line-pump.state-mh-cnt
         temp-line-pump.state-el-cnt = ub.rvs-line-pump.state-el-cnt
         temp-line-pump.pol6         = temp-line-pump.state-mh-cnt
-        temp-line-pump.pol7         = 0
+        
         .
       /*найдем показания счетного механизма по пистолету в сменной сверке за пред. смену*/
   
@@ -863,9 +863,9 @@ on error undo, return error return-value
             temp-line-pump.previous-state-mh-cnt = temp-line-pump.previous-state-mh-cnt + previous-rvs-line-pump.state-mh-cnt
             temp-line-pump.previous-state-el-cnt = temp-line-pump.previous-state-el-cnt + previous-rvs-line-pump.state-el-cnt
             temp-line-pump.pol7                  = temp-line-pump.previous-state-mh-cnt
-            temp-line-pump.error-l               = (temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt) * 1000
-            temp-line-pump.error-kg              = ((temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt) * 1000 ) * temp-rvs-line.state-density
-            temp-line-pump.error-19              = temp-line-pump.error-l * 100 / (temp-line-pump.previous-state-mh-cnt * 1000)
+            temp-line-pump.error-l               = temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt
+            temp-line-pump.error-kg              = (temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt) * temp-rvs-line.state-density
+            temp-line-pump.error-19              = temp-line-pump.error-l * 100 / temp-line-pump.previous-state-mh-cnt * temp-rvs-line.state-density
             .
         end. /*IF available previous-rvs-line-pump*/
       end. /*if available previous-rvs-doc*/
@@ -894,10 +894,10 @@ on error undo, return error return-value
           assign
             temp-line-pump.previous-state-mh-cnt = temp-line-pump.previous-state-mh-cnt + control-rvs-line-pump.state-mh-cnt
             temp-line-pump.previous-state-el-cnt = temp-line-pump.previous-state-el-cnt + control-rvs-line-pump.state-el-cnt
-/*            temp-line-pump.pol7                  = temp-line-pump.previous-state-mh-cnt*/
-            temp-line-pump.error-l               = (temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt) * 1000
-            temp-line-pump.error-kg              = ((temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt) * 1000 )* temp-rvs-line.state-density
-            temp-line-pump.error-19              = temp-line-pump.error-l * 100 / (temp-line-pump.previous-state-mh-cnt * 1000)
+            temp-line-pump.pol7                  = temp-line-pump.previous-state-mh-cnt
+            temp-line-pump.error-l               = (temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt)
+            temp-line-pump.error-kg              = ((temp-line-pump.previous-state-el-cnt - temp-line-pump.previous-state-mh-cnt))* temp-rvs-line.state-density
+            temp-line-pump.error-19              = temp-line-pump.error-l * 100 / (temp-line-pump.previous-state-mh-cnt)
             .
           leave.
         end. /* for each control-rvs-doc no-lock where */

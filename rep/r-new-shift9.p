@@ -172,7 +172,8 @@ on error undo, return error
                 <th style="text-align: center;">Касса</th>
                 <th style="text-align: center;">Техпролив</th>
                 <th style="text-align: center;">Разница</th>
-                <th style="text-align: center;">Сброс</th>
+                <th style="text-align: center;">Сброс (не пролито)</th>
+                <th style="text-align: center;">Сброс (пролито)</th>
                 <th style="text-align: center;">Перелив</th>
                 <th style="text-align: center;">Перевод транзакции</th>
             </tr>
@@ -189,6 +190,7 @@ on error undo, return error
                 <th style="text-align: center;">9.10</th>
                 <th style="text-align: center;">9.11</th>
                 <th style="text-align: center;">9.12</th>
+                <th style="text-align: center;">9.13</th>
             </tr>
             '
 
@@ -213,7 +215,7 @@ on error undo, return error
             pol8  = bf_t-9.tech-refuell-qnty
             pol9  = bf_t-9.delta
             pol10  = bf_t-9.cancell-qnty
-/*            pol11  = bf_t-9.cancell-qnty-notot*/
+            pol11  = bf_t-9.cancell-qnty-notot
             pol12 = bf_t-9.overflow-qnty
             pol13 = bf_t-9.trans-qnty
          .
@@ -230,7 +232,7 @@ on error undo, return error
             pol8  = bf_t-9.tech-refuell-qnty
             pol9  = bf_t-9.delta
             pol10  = bf_t-9.cancell-qnty
-/*            pol11  = bf_t-9.cancell-qnty-notot*/
+            pol11  = bf_t-9.cancell-qnty-notot
             pol12 = bf_t-9.overflow-qnty
             pol13 = bf_t-9.trans-qnty
          .
@@ -266,9 +268,11 @@ on error undo, return error
                     <td style="text-align: right;">&1</td>
                     <td style="text-align: right;">&2</td>
                     <td style="text-align: right;">&3</td>
+                    <td style="text-align: right;">&4</td>
                 </tr>'
             ,
             string(pol10,"->>>>>>>>>>>9.99"),
+            string(pol11,"->>>>>>>>>>>9.99"),
             string(pol12,"->>>>>>>>>>>9.99"),
             string(pol13,"->>>>>>>>>>>9.99")
             ).
@@ -280,7 +284,7 @@ on error undo, return error
       accumulate bf_t-9.delta               (Total by bf_t-9.gds-code).
       accumulate bf_t-9.tech-refuell-qnty   (Total by bf_t-9.gds-code).
       accumulate bf_t-9.cancell-qnty        (Total by bf_t-9.gds-code).
-/*      accumulate bf_t-9.cancell-qnty-notot  (Total by bf_t-9.gds-code).*/
+      accumulate bf_t-9.cancell-qnty-notot  (Total by bf_t-9.gds-code).
       accumulate bf_t-9.overflow-qnty       (Total by bf_t-9.gds-code).
       accumulate bf_t-9.trans-qnty          (Total by bf_t-9.gds-code).
 
@@ -296,7 +300,7 @@ on error undo, return error
             pol8  = accum Total by bf_t-9.gds-code bf_t-9.tech-refuell-qnty
             pol9  = accum Total by bf_t-9.gds-code bf_t-9.delta
             pol10 = accum Total by bf_t-9.gds-code bf_t-9.cancell-qnty
-/*            pol11 = accum Total by bf_t-9.gds-code bf_t-9.cancell-qnty-notot*/
+            pol11 = accum Total by bf_t-9.gds-code bf_t-9.cancell-qnty-notot
             pol12 = accum Total by bf_t-9.gds-code bf_t-9.overflow-qnty
             pol13 = accum Total by bf_t-9.gds-code bf_t-9.trans-qnty
          .
@@ -331,9 +335,11 @@ on error undo, return error
                     <td style="text-align: right;">&1</td>
                     <td style="text-align: right;">&2</td>
                     <td style="text-align: right;">&3</td>
+                    <td style="text-align: right;">&4</td>
                 </tr>'
             ,
             string(pol10,"->>>>>>>>>>>9.99"),
+            string(pol11,"->>>>>>>>>>>9.99"),
             string(pol12,"->>>>>>>>>>>9.99"),
             string(pol13,"->>>>>>>>>>>9.99")
             ).
@@ -447,10 +453,10 @@ on error undo, return error return-value
          assign
             buf_t-9.cancell-qnty  = buf_t-9.cancell-qnty  + v-qnty
          .
-/*         if buf_chk-gds.write-off-code = 1 then                              */
-/*         assign                                                              */
-/*            buf_t-9.cancell-qnty-notot  = buf_t-9.cancell-qnty-notot + v-qnty*/
-/*         .                                                                   */
+         if buf_chk-gds.write-off-code = 1 then
+         assign
+            buf_t-9.cancell-qnty-notot  = buf_t-9.cancell-qnty-notot + v-qnty
+         . 
       end.
       WHEN integer({&rcpt-trans-transfer}) THEN DO:
          assign
