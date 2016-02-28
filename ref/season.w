@@ -936,6 +936,9 @@ DO:
         rr = recid( ub.season ).
         run ref/seasoni.w
             (parParentProc , {&update}, input-output rr ).
+            
+            
+      
         run open-br. /*{&open-query-br-season}*/
         reposition br-season to recid rr .
 
@@ -985,8 +988,7 @@ DO:
  
 if RADIO-SET-2:screen-value = "1" then run open-br.
 if RADIO-SET-2:screen-value = "2" then run open-br.  
-if RADIO-SET-2:screen-value = "3" then run open-br-when-b-obj.                                     
-                                                                 
+    if RADIO-SET-2:screen-value = "3"  then run open-br-when-b-obj.                                     
 END.
 
 
@@ -1144,6 +1146,8 @@ PROCEDURE open-br-when-b-obj :
     {&OPEN-QUERY-br-season-loc-obj}
     apply "entry" to br-season in frame {&frame-name}.
   end.
+ 
+  
 END PROCEDURE.  
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE open-br d-type-tmp
@@ -1183,6 +1187,14 @@ if RADIO-SET-1:screen-value in frame {&FRAME-NAME} = "2"
 if RADIO-SET-1:screen-value in frame {&FRAME-NAME} = "2" 
   AND RADIO-SET-2:screen-value in frame {&FRAME-NAME} = "2"  then 
   {&OPEN-QUERY-br-season-loc-cur} 
+
+ if RADIO-SET-1:screen-value in frame {&FRAME-NAME} = "2" 
+  AND RADIO-SET-2:screen-value in frame {&FRAME-NAME} = "3"  then 
+  {&OPEN-QUERY-br-season-loc-obj} 
+
+ 
+
+
 
     
 apply "entry" to br-season in frame {&frame-name}.    
