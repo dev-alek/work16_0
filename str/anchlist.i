@@ -257,7 +257,7 @@ END FUNCTION.
 {1}.chk-num {1}.pay-desk {1}.cashier {1}.cashier-psn-code ~
 {1}.out-code {1}.shift-date shift-name-no-err(buffer {1}) ~
 get-chk-type({1}.doc-code, {1}.chk-type, {1}.is-wth) {1}.d-card ~
-{1}.netto {1}.discnt {1}.tot-doc
+{1}.netto {1}.discnt {1}.tot-doc {1}.doc-num {1}.doc-num2
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-list
 &Scoped-define FIELD-PAIRS-IN-QUERY-BR-list
 &Scoped-define OPEN-QUERY-BR-list OPEN QUERY BR-list FOR EACH {1} NO-LOCK.
@@ -486,6 +486,8 @@ DEFINE BROWSE BR-list
       {1}.netto
       {1}.discnt
       {1}.tot-doc
+      {1}.doc-num
+      {1}.doc-num2      
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 70 BY 15.13.
@@ -4645,6 +4647,10 @@ input-output fld, input-output lab, input-output spr, input-output dim)  no-erro
 run fltfield-add in this-procedure('d-card', 'N дис.карты', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('z-number', 'N Z-отчета', '',
+input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+run fltfield-add in this-procedure('doc-num', 'N заказа', '',
+input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+run fltfield-add in this-procedure('doc-num2', 'N заказа', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 
 run gbl/filter.w ( input parparentproc

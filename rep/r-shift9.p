@@ -92,9 +92,10 @@ define variable pol9  as decimal   no-undo.
 define variable pol10 as decimal  no-undo .
 define variable pol11 as decimal  no-undo .
 define variable pol12 as decimal  no-undo .
+define variable pol13 as decimal  no-undo .
 
-&scop All-sym sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10 sym11
-&scop All-Pol pol1 pol2 pol3 pol4 pol5 pol6 pol7 pol8 pol9 pol10 pol11 pol12
+&scop All-sym sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10 sym11 sym12
+&scop All-Pol pol1 pol2 pol3 pol4 pol5 pol6 pol7 pol8 pol9 pol10 pol11 pol12 pol13
 
 do
 on error undo, return error
@@ -155,11 +156,11 @@ on error undo, return error
 
    /* печать */
    DEFINE FRAME FRAME-9
-      pol1  no-label format "x(30)" space(0)
+      pol1  no-label format "x(28)" space(0)
       sym1  no-label format "x(1)"  space(0)
-      pol2  no-label format "x(12)" space(0)
+      pol2  no-label format "x(3)" space(0)
       sym2  no-label format "x(1)"  space(0)
-      pol3  no-label format "x(12)" space(0)
+      pol3  no-label format "x(5)" space(0)
       sym3  no-label format "x(1)"  space(0)
       pol4  no-label format "->>>,>>>,>>9.99" space(0)
       sym4  no-label format "x(1)"  space(0)
@@ -178,6 +179,8 @@ on error undo, return error
       pol11 no-label format "->>>,>>>,>>9.99" space(0)
       sym11 no-label format "x(1)"  space(0)
       pol12 no-label format "->>>,>>>,>>9.99" space(0)
+      sym12 no-label format "x(1)"  space(0)
+      pol13 no-label format "->>>,>>>,>>9.99" space(0)
 
    with width {&DOS_CW_2} down stream-io use-text NO-BOX.
 
@@ -194,8 +197,8 @@ on error undo, return error
       IF first-of (bf_t-9.gds-code) THEN DO:
          assign
             pol1  = bf_t-9.gds-name
-            pol2  = STRING(bf_t-9.pump-code, ">>>>>>>9")
-            pol3  = STRING(bf_t-9.nozzle-code, ">>>>>>>9")
+            pol2  = STRING(bf_t-9.pump-code, ">>9")
+            pol3  = STRING(bf_t-9.nozzle-code, ">>9")
             pol4  = bf_t-9.start-mh-qnty
             pol5  = bf_t-9.end-mh-qnty
             pol6  = bf_t-9.meas-qnty
@@ -203,15 +206,16 @@ on error undo, return error
             pol8  = bf_t-9.tech-refuell-qnty
             pol9  = bf_t-9.delta
             pol10  = bf_t-9.cancell-qnty
-            pol11 = bf_t-9.overflow-qnty
-            pol12 = bf_t-9.trans-qnty
-         .
+            pol11  = bf_t-9.cancell-qnty-notot
+            pol12 = bf_t-9.overflow-qnty
+            pol13 = bf_t-9.trans-qnty
+        .
       end.
       else do:
          assign
             pol1  = "":U
-            pol2  = STRING(bf_t-9.pump-code, ">>>>>>>9")
-            pol3  = STRING(bf_t-9.nozzle-code, ">>>>>>>9")
+            pol2  = STRING(bf_t-9.pump-code, ">>9")
+            pol3  = STRING(bf_t-9.nozzle-code, ">>9")
             pol4  = bf_t-9.start-mh-qnty
             pol5  = bf_t-9.end-mh-qnty
             pol6  = bf_t-9.meas-qnty
@@ -219,8 +223,9 @@ on error undo, return error
             pol8  = bf_t-9.tech-refuell-qnty
             pol9  = bf_t-9.delta
             pol10  = bf_t-9.cancell-qnty
-            pol11 = bf_t-9.overflow-qnty
-            pol12 = bf_t-9.trans-qnty
+            pol11  = bf_t-9.cancell-qnty-notot
+            pol12 = bf_t-9.overflow-qnty
+            pol13 = bf_t-9.trans-qnty
          .
       end.
 
@@ -243,6 +248,7 @@ on error undo, return error
          pol10  {&tabulation}
          pol11  {&tabulation}
          pol12  {&tabulation}
+         pol13  {&tabulation}         
       SKIP.
 
       accumulate bf_t-9.start-mh-qnty       (Total by bf_t-9.gds-code).
@@ -252,6 +258,7 @@ on error undo, return error
       accumulate bf_t-9.delta               (Total by bf_t-9.gds-code).
       accumulate bf_t-9.tech-refuell-qnty   (Total by bf_t-9.gds-code).
       accumulate bf_t-9.cancell-qnty        (Total by bf_t-9.gds-code).
+      accumulate bf_t-9.cancell-qnty-notot  (Total by bf_t-9.gds-code).
       accumulate bf_t-9.overflow-qnty       (Total by bf_t-9.gds-code).
       accumulate bf_t-9.trans-qnty          (Total by bf_t-9.gds-code).
 
@@ -266,9 +273,10 @@ on error undo, return error
             pol7  = accum Total by bf_t-9.gds-code bf_t-9.doc-qnty
             pol8  = accum Total by bf_t-9.gds-code bf_t-9.tech-refuell-qnty
             pol9  = accum Total by bf_t-9.gds-code bf_t-9.delta
-            pol10  = accum Total by bf_t-9.gds-code bf_t-9.cancell-qnty
-            pol11 = accum Total by bf_t-9.gds-code bf_t-9.overflow-qnty
-            pol12 = accum Total by bf_t-9.gds-code bf_t-9.trans-qnty
+            pol10 = accum Total by bf_t-9.gds-code bf_t-9.cancell-qnty
+            pol11 = accum Total by bf_t-9.gds-code bf_t-9.cancell-qnty-notot
+            pol12 = accum Total by bf_t-9.gds-code bf_t-9.overflow-qnty
+            pol13 = accum Total by bf_t-9.gds-code bf_t-9.trans-qnty
          .
          underline stream PrnLibStream
             {&All-sym}
@@ -299,6 +307,7 @@ on error undo, return error
             pol10  {&tabulation}
             pol11  {&tabulation}
             pol12  {&tabulation}
+            pol13  {&tabulation}            
          SKIP.
       END.
    end. /* each  bf_t-9 */
@@ -406,9 +415,14 @@ on error undo, return error return-value
          .
       end.
       WHEN integer({&rcpt-trans-cancell}) THEN DO:
+         if buf_chk-gds.write-off-code = 0 then
          assign
             buf_t-9.cancell-qnty  = buf_t-9.cancell-qnty  + v-qnty
          .
+         if buf_chk-gds.write-off-code = 1 then
+         assign
+            buf_t-9.cancell-qnty-notot  = buf_t-9.cancell-qnty-notot + v-qnty
+         . 
       end.
       WHEN integer({&rcpt-trans-transfer}) THEN DO:
          assign

@@ -2582,6 +2582,8 @@ if avail buf_bar-code then do:
         buf_chk-doc.chk-type = integer({&rcpt-overflow})
         or
         buf_chk-doc.chk-type = integer({&rcpt-tech-refuell})
+        or
+        buf_chk-doc.chk-type = integer({&rcpt-unlock-trans})
       )
       and
       accum-count <> 1) )
@@ -2713,6 +2715,8 @@ if avail buf_bar-code then do:
       and not (buf_chk-doc.chk-type = integer({&rcpt-trans-transfer})
               or
               buf_chk-doc.chk-type = integer({&rcpt-trans-cancell})
+              or
+              buf_chk-doc.chk-type = integer({&rcpt-unlock-trans})
               )
       )
   then do:
@@ -3275,7 +3279,8 @@ if avail buf_bar-code then do:
     or v-is-ord-check
     then do:
       if accum-pay <> 0
-      or (accum-pay-count <> 0 and buf_chk-doc.chk-type <> int({&rcpt-tech-refuell}))
+      or (accum-pay-count <> 0 
+            and lookup(string(chk-doc.chk-type), ({&rcpt-tech-refuell} + "," + {&rcpt-unlock-trans} + "," + {&rcpt-trans-transfer} + "," + {&rcpt-trans-cancell})) = 0)
       or (buf_chk-doc.discnt <> 0 and not v-is-ord-check)
       then do:
         assign

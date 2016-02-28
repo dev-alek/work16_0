@@ -41,6 +41,7 @@ field doc-qnty       as decimal INITIAL 0
 field delta          as decimal INITIAL 0
 
 field cancell-qnty      as decimal INITIAL 0
+field cancell-qnty-notot as decimal INITIAL 0
 field overflow-qnty     as decimal INITIAL 0
 field trans-qnty        as decimal INITIAL 0
 field tech-refuell-qnty as decimal INITIAL 0

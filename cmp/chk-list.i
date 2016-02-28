@@ -62,7 +62,8 @@ field is-wth     as logical
 field sel-order  as integer
 field znak       as integer
 field to-del     as logical
-field doc-num    like ub.chk-doc.doc-num
+field doc-num    as character label "№ док-та" format "X(22)"
+field doc-num2   as character label "№ заказа" format "X(22)"
 index xpk is primary unique doc-code is-wth
 index znak-order znak sel-order .
 
@@ -108,8 +109,12 @@ else do:
   {1}.chk-type   = {3}.chk-type
   {1}.d-card     = {3}.d-card
   {1}.is-wth     = LOOKUP(string({3}.chk-type), {&wth-receipt-codes}) > 0
+  {1}.doc-num    = {3}.doc-num
 &if "{4}" <> "" &then
   {1}.sel-order  = {4}
+&endif
+&if "{3}" = "chk-doc" &then
+  {1}.doc-num2   = {3}.doc-num2
 &endif
   {1}.to-del = no
   .
