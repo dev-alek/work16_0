@@ -166,8 +166,8 @@ run adm/shattri.p (
     input "get":U
     ,input  '' /*p-obj-type*/
     ,input  0 /*p-obj-code*/
-    ,input  {&attr-prt-glob}
-    ,input  {&attr-prt-glob_rep-shift-format} /*p-param-code*/
+    ,input  {&attr-report-glob}
+    ,input  {&attr-report-glob_rep-shift-format} /*p-param-code*/
     ,output v-sort-list
     ,output v-value-date
     ,output v-value-decimal
