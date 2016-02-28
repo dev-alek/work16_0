@@ -17,7 +17,6 @@ Creation date: 03/22/06
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
-
   create temp-contr .
   assign
     temp-contr.sum        = 0
@@ -73,17 +72,30 @@ initial "@(#)$Workfile$ $Revision$".
         temp-doc.typ        = 1
         temp-doc.styp       = buf_fin-doc.fin-doc-type
       .
-      if x-SET_val_TYPE = 1  then assign temp-doc.sum = buf_fin-doc.sum-rubl .
-      else                        assign temp-doc.sum = buf_fin-doc.sum-base .
-    end.
-    else do:
-      if buf_fin-doc.fin-doc-type = {&income-cashless} or buf_fin-doc.fin-doc-type = {&income-cash} or buf_fin-doc.fin-doc-type = {&income-payoff}  then do:
-        if x-SET_val_TYPE = 1  then assign temp-contr.sum = temp-contr.sum + buf_fin-doc.sum-rubl .
-        else                        assign temp-contr.sum = temp-contr.sum + buf_fin-doc.sum-base .
+
+          if x-SET_val_TYPE = 1  then assign temp-doc.sum = buf_fin-doc.sum-rubl .
+          else                        assign temp-doc.sum = buf_fin-doc.sum-base .
       end.
       else do:
-        if x-SET_val_TYPE = 1  then assign temp-contr.sum = temp-contr.sum - buf_fin-doc.sum-rubl .
-        else                        assign temp-contr.sum = temp-contr.sum - buf_fin-doc.sum-base .
+      if buf_contract.doc-type = {&income} then do:  
+          if buf_fin-doc.fin-doc-type = {&income-cashless} or buf_fin-doc.fin-doc-type = {&income-cash} or buf_fin-doc.fin-doc-type = {&income-payoff}  then do:
+            if x-SET_val_TYPE = 1  then assign temp-contr.sum = temp-contr.sum + buf_fin-doc.sum-rubl .
+            else                        assign temp-contr.sum = temp-contr.sum + buf_fin-doc.sum-base .
+          end.
+          else do:
+            if x-SET_val_TYPE = 1  then assign temp-contr.sum = temp-contr.sum - buf_fin-doc.sum-rubl .
+            else                        assign temp-contr.sum = temp-contr.sum - buf_fin-doc.sum-base .
+          end.
+      end.
+      else do:
+          if buf_fin-doc.fin-doc-type = {&income-cashless} or buf_fin-doc.fin-doc-type = {&income-cash} or buf_fin-doc.fin-doc-type = {&income-payoff}  then do:
+            if x-SET_val_TYPE = 1  then assign temp-contr.sum = temp-contr.sum - buf_fin-doc.sum-rubl .
+            else                        assign temp-contr.sum = temp-contr.sum - buf_fin-doc.sum-base .
+          end.
+          else do:
+            if x-SET_val_TYPE = 1  then assign temp-contr.sum = temp-contr.sum + buf_fin-doc.sum-rubl .
+            else                        assign temp-contr.sum = temp-contr.sum + buf_fin-doc.sum-base .
+          end.
       end.
     end.
   end.

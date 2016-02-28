@@ -131,7 +131,7 @@ initial "@(#)$Workfile$ $Revision$".
     no-error .
     if available buf_arh-fin-ob-contr then
       assign
-        temp-doc.sum3 = temp-doc.sum3 + buf_arh-fin-ob-contr.income - buf_arh-fin-ob-contr.expense
+        temp-doc.sum3 = temp-doc.sum3 + (if available buf_contract and buf_contract.doc-type = {&expense} then (buf_arh-fin-ob-contr.expense - buf_arh-fin-ob-contr.income) else (buf_arh-fin-ob-contr.income - buf_arh-fin-ob-contr.expense))
         temp-cli.sum3 = temp-cli.sum3 + temp-doc.sum3
       .
 
@@ -174,17 +174,17 @@ initial "@(#)$Workfile$ $Revision$".
   if is-fin then do: /* платежи */
     /* остаток на начало по договору */
     run CalcOstatFin(input {&income-cashless}  , output v-sum-e, output v-sum-i) .
-    assign  temp-doc.sum4 = temp-doc.sum4 - v-sum-e .
+    assign  temp-doc.sum4 = temp-doc.sum4 + (if available buf_contract and buf_contract.doc-type = {&expense} then v-sum-e else 0 - v-sum-e) .
     run CalcOstatFin(input {&expense-cashless} , output v-sum-e, output v-sum-i) .
-    assign  temp-doc.sum4 = temp-doc.sum4 + v-sum-i .
+    assign  temp-doc.sum4 = temp-doc.sum4 + (if available buf_contract and buf_contract.doc-type = {&expense} then 0 - v-sum-i else v-sum-i) .
     run CalcOstatFinNal(input {&income-cash}   , output v-sum-e, output v-sum-i) .
-    assign  temp-doc.sum4 = temp-doc.sum4 - v-sum-e .
+    assign  temp-doc.sum4 = temp-doc.sum4 + (if available buf_contract and buf_contract.doc-type = {&expense} then v-sum-e else 0 - v-sum-e)  .
     run CalcOstatFinNal(input {&expense-cash}  , output v-sum-e, output v-sum-i) .
-    assign  temp-doc.sum4 = temp-doc.sum4 + v-sum-i .
+    assign  temp-doc.sum4 = temp-doc.sum4 + (if available buf_contract and buf_contract.doc-type = {&expense} then 0 - v-sum-i else v-sum-i) .
     run CalcOstatFinNal(input {&income-payoff} , output v-sum-e, output v-sum-i) .
-    assign  temp-doc.sum4 = temp-doc.sum4 - v-sum-e .
+    assign  temp-doc.sum4 = temp-doc.sum4 + (if available buf_contract and buf_contract.doc-type = {&expense} then v-sum-e else 0 - v-sum-e) .
     run CalcOstatFinNal(input {&expense-payoff}, output v-sum-e, output v-sum-i) .
-    assign  temp-doc.sum4 = temp-doc.sum4 + v-sum-i .
+    assign  temp-doc.sum4 = temp-doc.sum4 + (if available buf_contract and buf_contract.doc-type = {&expense} then 0 - v-sum-i else v-sum-i) .
     assign temp-cli.sum4 = temp-cli.sum4 + temp-doc.sum4 .
 
     /* оборот по договору */
@@ -212,9 +212,10 @@ initial "@(#)$Workfile$ $Revision$".
         temp-sum.cli-code   = temp-cli.obj-code
       .
       if x-SET_val_TYPE = 1  then assign temp-sum.sum = buf_fin-doc.sum-rubl .
-      else                        assign temp-sum.sum = buf_fin-doc.sum-base .
+      else                        assign temp-sum.sum = buf_fin-doc.sum-base .    
+      
       if buf_fin-doc.fin-ext-doc-type = {&income-cashless} or buf_fin-doc.fin-ext-doc-type = {&income-cash} or buf_fin-doc.fin-ext-doc-type = {&income-payoff} then assign temp-sum.sum = - temp-sum.sum .
-
+       if available buf_contract and buf_contract.doc-type = {&expense} then assign temp-sum.sum = - temp-sum.sum .
       if is-date then run new-date in this-procedure .
       else assign   temp-sum.ind   = temp-doc.num4   temp-doc.num4  = temp-doc.num4 + 1  .
     end.

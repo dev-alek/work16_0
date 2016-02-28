@@ -36,14 +36,25 @@ initial "@(#)$Workfile$ $Revision$".
     :
     assign Counter1 = Counter1 + 1.
     { rep/repfrm.i disp Counter1 }
-
-    if buf_fin-doc.fin-doc-type = {&income-cashless} or buf_fin-doc.fin-doc-type = {&income-cash} or buf_fin-doc.fin-doc-type = {&income-payoff}  then do:
-      if x-SET_val_TYPE = 1  then assign temp-doc.sum4 = temp-doc.sum4 + buf_fin-doc.sum-rubl .
-      else                        assign temp-doc.sum4 = temp-doc.sum4 + buf_fin-doc.sum-base .
+    if buf_contract.doc-type = {&income} then do:
+        if buf_fin-doc.fin-doc-type = {&income-cashless} or buf_fin-doc.fin-doc-type = {&income-cash} or buf_fin-doc.fin-doc-type = {&income-payoff}  then do:
+          if x-SET_val_TYPE = 1  then assign temp-doc.sum4 = temp-doc.sum4 + buf_fin-doc.sum-rubl .
+          else                        assign temp-doc.sum4 = temp-doc.sum4 + buf_fin-doc.sum-base .
+        end.
+        else do:
+          if x-SET_val_TYPE = 1  then assign temp-doc.sum4 = temp-doc.sum4 - buf_fin-doc.sum-rubl .
+          else                        assign temp-doc.sum4 = temp-doc.sum4 - buf_fin-doc.sum-base .
+        end.
     end.
-    else do:
-      if x-SET_val_TYPE = 1  then assign temp-doc.sum4 = temp-doc.sum4 - buf_fin-doc.sum-rubl .
-      else                        assign temp-doc.sum4 = temp-doc.sum4 - buf_fin-doc.sum-base .
+    else do:  /* ƒл€ покупателей платежы вли€ют на баланс с обратным знаком */
+        if buf_fin-doc.fin-doc-type = {&income-cashless} or buf_fin-doc.fin-doc-type = {&income-cash} or buf_fin-doc.fin-doc-type = {&income-payoff}  then do:
+          if x-SET_val_TYPE = 1  then assign temp-doc.sum4 = temp-doc.sum4 - buf_fin-doc.sum-rubl .
+          else                        assign temp-doc.sum4 = temp-doc.sum4 - buf_fin-doc.sum-base .
+        end.
+        else do:
+          if x-SET_val_TYPE = 1  then assign temp-doc.sum4 = temp-doc.sum4 + buf_fin-doc.sum-rubl .
+          else                        assign temp-doc.sum4 = temp-doc.sum4 + buf_fin-doc.sum-base .
+        end.
     end.
   end.
 

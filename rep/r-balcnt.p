@@ -236,17 +236,21 @@ procedure prn-line :
   do on error undo, return error return-value :
     run is-page in this-procedure .
 
-    if temp-doc.contr-type = {&expense} then do:
+    if temp-doc.contr-type = {&expense} then do:   
+        assign   v-sum  = v-sum + temp-doc.sum
+          v-sum1 = v-sum1 + temp-doc.sum   .
+          /*
       if temp-doc.typ = 0 then
         assign
-          v-sum  = v-sum - temp-doc.sum
-          v-sum1 = v-sum1 - temp-doc.sum
+          v-sum  = v-sum + temp-doc.sum
+          v-sum1 = v-sum1 + temp-doc.sum
         .
       else
         if temp-doc.styp = {&income-cashless} or temp-doc.styp = {&income-cash} or temp-doc.styp = {&income-payoff}  then
-          assign  v-sum  = v-sum - temp-doc.sum    v-sum1 = v-sum1 + temp-doc.sum  .
+          assign  v-sum  = v-sum + temp-doc.sum    v-sum1 = v-sum1 + temp-doc.sum  .
         else
-          assign  v-sum  = v-sum + temp-doc.sum    v-sum1 = v-sum1 - temp-doc.sum  .
+          assign  v-sum  = v-sum - temp-doc.sum    v-sum1 = v-sum1 - temp-doc.sum  .
+          */
     end.
     else do:
       if temp-doc.typ = 0 then
