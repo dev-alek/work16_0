@@ -492,14 +492,23 @@ define temp-table temp-rvs no-undo
     END. /* v-attr-value = "no":U */
   END. /* FOR EACH ub.trn-doc */
   /* Расход внутренний */
+
   FOR EACH  ub.trn-doc NO-LOCK WHERE
-            ub.trn-doc.obj-type     = pobj-type          AND
+           ( ub.trn-doc.obj-type     = pobj-type         AND
             ub.trn-doc.obj-code     = pobj-code          AND
             ub.trn-doc.fact-order >= prev-fo             and
             ub.trn-doc.fact-order <= fo                  and
-            ub.trn-doc.internal     = NO                 AND
+/*            ub.trn-doc.internal     = NO                 AND*/
             ub.trn-doc.status_      = {&fact}            AND
-            ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+            ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} ) OR
+          
+          ( ub.trn-doc.obj-type     = pobj-type          AND
+            ub.trn-doc.obj-code     = pobj-code          AND 
+            ub.trn-doc.fact-order >= prev-fo             and
+            ub.trn-doc.fact-order <= fo                  and
+            ub.trn-doc.status_      = {&fact}            AND  
+            ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Object} )
+             
     , FIRST ub.doc-line NO-LOCK WHERE
             ub.doc-line.doc-code  = ub.trn-doc.doc-code AND
             ub.doc-line.artic     = t-2.artic           AND
@@ -539,7 +548,7 @@ _trn-doc:
             ub.trn-doc.status_      = {&fact}                AND
          (  ub.trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}     OR
             ub.trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} OR
-            ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}  )
+            ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}    )
     , FIRST ub.doc-line NO-LOCK WHERE
             ub.doc-line.doc-code  = ub.trn-doc.doc-code AND
             ub.doc-line.artic     = t-2.artic           AND
