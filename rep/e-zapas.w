@@ -45,7 +45,7 @@ define variable g#log as logical   no-undo .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -59,9 +59,9 @@ define variable g#log as logical   no-undo .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-5 RECT-6 Classify SortType ShowZero ~
-Long-name PartsDet
+Long-name PartsDet v-photo  
 &Scoped-Define DISPLAYED-OBJECTS Classify SortType SumsOnly ShowZero ~
-Long-name PartsDet
+Long-name PartsDet v-photo 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -125,6 +125,11 @@ DEFINE VARIABLE SumsOnly AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 16 BY 1 NO-UNDO.
 
+DEFINE VARIABLE v-photo AS LOGICAL INITIAL no 
+     LABEL "Фото":L 
+     VIEW-AS TOGGLE-BOX
+     SIZE 21.13 BY 1.08 NO-UNDO.
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -135,7 +140,9 @@ DEFINE FRAME F-Main
      BUTTON-1 AT ROW 7.5 COL 35
      ShowZero AT ROW 9.17 COL 2.25
      Long-name AT ROW 10.13 COL 2.25
-     PartsDet AT ROW 11.09 COL 2.25
+     PartsDet AT ROW 11.08 COL 2.25
+     v-photo AT ROW 12.21 COL 2.38 WIDGET-ID 2
+/*     v-photo-size AT ROW 12.25 COL 37.13 COLON-ALIGNED WIDGET-ID 4*/
      "Классификация :" VIEW-AS TEXT
           SIZE 15 BY .75 AT ROW 1.33 COL 9.5
           FGCOLOR 4 
@@ -166,7 +173,7 @@ DEFINE FRAME F-Main
 &ANALYZE-SUSPEND _CREATE-WINDOW
 /* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW s-object ASSIGN
-         HEIGHT             = 11.54
+         HEIGHT             = 12.58
          WIDTH              = 56.13.
 /* END WINDOW DEFINITION */
                                                                         */
@@ -259,24 +266,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME SumsOnly
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL SumsOnly s-object
-ON VALUE-CHANGED OF SumsOnly IN FRAME F-Main /* Только итоги */
-DO:
-  ASSIGN SumsOnly .
-  if not SumsOnly then
-      enable PartsDet with frame {&FRAME-NAME} .
-  else do :
-      PartsDet = FALSE .
-      display PartsDet with frame {&FRAME-NAME} .
-      disable PartsDet with frame {&FRAME-NAME} .
-  end.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME Long-name
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Long-name s-object
 ON VALUE-CHANGED OF Long-name IN FRAME F-Main /* В Excel-> ( Английское назв. + Назв. на этикетке) */
@@ -297,6 +286,52 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME SumsOnly
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL SumsOnly s-object
+ON VALUE-CHANGED OF SumsOnly IN FRAME F-Main /* Только итоги */
+DO:
+  ASSIGN SumsOnly .
+  if not SumsOnly then do:
+      enable PartsDet with frame {&FRAME-NAME} .
+      enable v-photo  with frame {&FRAME-NAME} .
+  end.    
+  else do :
+      PartsDet = FALSE .
+      display PartsDet with frame {&FRAME-NAME} .
+      disable PartsDet with frame {&FRAME-NAME} .
+      v-photo = FALSE .
+      display v-photo with frame {&FRAME-NAME} .
+      disable v-photo with frame {&FRAME-NAME} .
+
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME v-photo
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-photo s-object
+ON VALUE-CHANGED OF v-photo IN FRAME F-Main /* Фото */
+DO:
+  ASSIGN v-photo .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+/*&Scoped-define SELF-NAME v-photo-size                          */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-photo-size s-object*/
+/*ON LEAVE OF v-photo-size IN FRAME F-Main /* Размер фото */     */
+/*DO:                                                            */
+/*  ASSIGN v-photo-size .                                        */
+/*END.                                                           */
+/*                                                               */
+/*/* _UIB-CODE-BLOCK-END */                                      */
+/*&ANALYZE-RESUME                                                */
 
 
 &UNDEFINE SELF-NAME
@@ -399,15 +434,15 @@ v-kol = 0.
  End.
   CASE Classify:
     WHEN "no-classify":U    THEN
-        run rep/r-zapas1.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet).
+        run rep/r-zapas1.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo).
     WHEN "grp-goods":U      THEN
-         run rep/r-zapas2.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet).
+         run rep/r-zapas2.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo).
     WHEN "prod":U           THEN
-        run rep/r-zapas3.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet).
+        run rep/r-zapas3.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo).
     WHEN "prod/grp-goods":U THEN
-         run rep/r-zapas4.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet).
+         run rep/r-zapas4.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo).
     WHEN "grp-goods/prod":U THEN
-         run rep/r-zapas5.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet).
+         run rep/r-zapas5.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo).
  End case.
 
 
@@ -434,40 +469,40 @@ ReportHeader = "Классификация : " + t-class + chr(10) +
                (if PartsDet then "Детализировать по партиям"  else "" ).
   if X-SET_PAY_TYPE <> 2 then str3 =  "в ценах РЕАЛИЗАЦИИ".
 
-if PartsDet then do :
-  sheetf.Excel-Column-Lable =
-            "Код"
-    + ","  + "Артикул"
-    + ","  + "Название товара"
-    + ","  + "Бар-код партии"
-    + ","  + "Ед. изм"
-    + ","  + "Количество"
-    + ","  + "Цена"
-    + ","  + "Стоимость"
-    + ","  + "НДС"
-    + ","  + "НП"
-    + ","  + "Цена без НДС"
-    + ","  + "Сумма без НДС".
-  IF  long-name THEN sheetf.Sizes        =  "10,16,100,10,5,15,15,15,15,15,15,15"                      .
-  ELSE sheetf.Sizes        =  "10,16,40,10,5,15,15,15,15,15,15,15"                                     .
-end.
-else do :
- sheetf.Excel-Column-Lable =
-           "Код"
-  + ","  + "Артикул"
-  + ","  + "Название товара"
-  + ","  + "Ед. изм"
-  + ","  + "Количество"
-  + ","  + "Цена"
-  + ","  + "Стоимость"
-  + ","  + "НДС"
-  + ","  + "НП"
-  + ","  + "Цена без НДС"
-  + ","  + "Сумма без НДС".
- IF  long-name THEN sheetf.Sizes        =  "10,16,100,5,15,15,15,15,15,15,15"                      .
-ELSE sheetf.Sizes        =  "10,16,40,5,15,15,15,15,15,15,15"                      .
-end.
- 
+/*if PartsDet then do :                                                                                   */
+/*  sheetf.Excel-Column-Lable =                                                                           */
+/*            "Код"                                                                                       */
+/*    + ","  + "Артикул"                                                                                  */
+/*    + ","  + "Название товара"                                                                          */
+/*    + ","  + "Бар-код партии"                                                                           */
+/*    + ","  + "Ед. изм"                                                                                  */
+/*    + ","  + "Количество"                                                                               */
+/*    + ","  + "Цена"                                                                                     */
+/*    + ","  + "Стоимость"                                                                                */
+/*    + ","  + "НДС"                                                                                      */
+/*    + ","  + "НП"                                                                                       */
+/*    + ","  + "Цена без НДС"                                                                             */
+/*    + ","  + "Сумма без НДС".                                                                           */
+/*  IF  long-name THEN sheetf.Sizes        =  "10,16,100,10,5,15,15,15,15,15,15,15"                      .*/
+/*  ELSE sheetf.Sizes        =  "10,16,40,10,5,15,15,15,15,15,15,15"                                     .*/
+/*end.                                                                                                    */
+/*else do :                                                                                               */
+/*  sheetf.Excel-Column-Lable =                                                                           */
+/*            "Код"                                                                                       */
+/*    + ","  + "Артикул"                                                                                  */
+/*    + ","  + "Название товара"                                                                          */
+/*    + ","  + "Ед. изм"                                                                                  */
+/*    + ","  + "Количество"                                                                               */
+/*    + ","  + "Цена"                                                                                     */
+/*    + ","  + "Стоимость"                                                                                */
+/*    + ","  + "НДС"                                                                                      */
+/*    + ","  + "НП"                                                                                       */
+/*    + ","  + "Цена без НДС"                                                                             */
+/*    + ","  + "Сумма без НДС".                                                                           */
+/*  IF  long-name THEN sheetf.Sizes        =  "10,16,100,5,15,15,15,15,15,15,15"                      .   */
+/*  ELSE sheetf.Sizes        =  "10,16,40,5,15,15,15,15,15,15,15"                                     .   */
+/*end.                                                                                                    */
+
  sheetf.make-correct = ""
  /* "true,true,true,true,true,true,true,true,true,true" */
  .
