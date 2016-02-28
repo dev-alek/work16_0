@@ -894,7 +894,7 @@ PROCEDURE proc-view-changes :
       &scop field-label "Условия генерации"
       {&disp-field}
       &scop field-name auto-pay
-      &scop field-label "status генерации"
+      &scop field-label "Статус генерации"
       {&disp-field}
       &scop field-name srok-opl
       &scop field-label "Срок оплаты"
@@ -1075,6 +1075,24 @@ PROCEDURE proc-view-changes :
       {&disp-field}
       &scop field-name fin-VAT-pc
       &scop field-label "НДС"
+      {&disp-field}
+      &scop field-name kredit-limit
+      &scop field-label "Ограничение кредита"
+      {&disp-field}
+      &scop field-name kredit-sum
+      &scop field-label "Сумма кредита"
+      {&disp-field}
+      &scop field-name usl-opl
+      &scop field-label "Условия оплаты ФО"
+      {&disp-field}
+      &scop field-name srok-opl
+      &scop field-label "Срок оплаты ФО"
+      {&disp-field}
+      &scop field-name gen-factur-srok
+      &scop field-label "Срок генерации счет-фактур"
+      {&disp-field}
+      &scop field-name gen-factur-srok
+      &scop field-label "Конечный статус сгенеренного счета-фактуры"
       {&disp-field}
       &scop field-name fin-SLT-pc
       &scop field-label "НП"
