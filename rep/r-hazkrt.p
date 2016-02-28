@@ -225,7 +225,7 @@ on error undo, return error return-value
     delete object v-tth.
     message
       vss-workfile vss-revision vss-description skip
-      "Ошибка чтения конфигурационного параметра " + {&par-name} + "." skip
+      "Ошибка чтения конфигурационного параметра " + {&attr-report-glob_rep-sort} + "." skip
       "Отчет не может быть сформирован"
       view-as alert-box error.
     undo, return error.
