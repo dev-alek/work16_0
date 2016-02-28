@@ -180,6 +180,9 @@ define variable varinv-prstype as character no-undo.
 define variable v-attr-value   as character no-undo.
 define variable v-attr-type    as character no-undo.
 define variable v-is-foreign-producer as logical no-undo.
+define variable p-cons        as integer no-undo .
+define temp-table tt-trn no-undo like ub.trn-doc.
+define variable res        as character no-undo .
 define stream str-err.
 
 /*define temp-table tt-doc-pl no-undo like ub.doc-pl .*/
@@ -1467,7 +1470,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         end.
         /* проверка на превышение лимита кредита по договору */
         if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and  bf_trn-doc.contract-code > 0 and ( parmode = {&close-doc} or parmode = {&close-fact}) then do:
-          run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale, input bf_trn-doc.tot-fact ) no-error .
+          run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact ) no-error .
           if error-status :error then return error return-value .
         end.
         if (bf_trn-doc.status_ = {&wayb} and bf_trn-doc.flag_ = yes  or
@@ -2660,6 +2663,76 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
     end.
   end case.
 run waitfram-hide in this-procedure.
+
+/*генерация ФО для расходных накладных*/
+for each tt-trn : delete tt-trn. end. /* for each */
+        if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass} or bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass} and bf_trn-doc.contract-code <> 0 and bf_trn-doc.contract-code <> ? then do:
+                p-cons = 0.
+                
+            find first bf_contract where bf_contract.contract-code = bf_trn-doc.contract-code no-error.
+              if available bf_contract then do:
+                if  bf_contract.usl-opl <> '{&bef-contr-pay-nodef}' then do:
+
+/*                define variable v-fo-gen as integer no-undo.                                                                                                    */
+/*                    { gbl/getsect.i run "''" 0  {&attr-fin-global} }                                                                                            */
+/*                    for each thbjattr_thbj-attr :                                                                                                               */
+/*                        if thbjattr_thbj-attr.prop-code = {&attr-fin-global_fo-gen}  then v-fo-gen = thbjattr_thbj-attr.property-value-integer .                */
+/*                    end.                                                                                                                                        */
+/*                    if (varstatus = {&wayb} and v-fo-gen = 3) or (varstatus = {&permitted} and v-fo-gen = 5) or (varstatus = {&fact} and v-fo-gen > 2 ) then do:*/
+                      
+                        if available bf_trn-doc then do:
+                        if not available tt-trn then                                                                                        
+                              create tt-trn.
+                              BUFFER-COPY bf_trn-doc to tt-trn.
+                        end.
+                        if bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord}' then p-cons = 1. /*Предоплата*/
+                        if bf_contract.usl-opl = '{&bef-contr-buyer-in}'  then p-cons = 2. /*По факту поставки*/
+                        if bf_contract.usl-opl = '{&bef-contr-buyer-in-delay}'  then p-cons = 3. /*По всем*/
+                       run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact ) no-error .
+                          if error-status :error then return error return-value .
+    
+                      run str/genbfotr.p (
+                          input parParentProc ,
+                          input bf_contract.host-code ,
+                          input bf_trn-doc.doc-date  ,
+                          input ? ,
+                          input p-cons ,              /* условие оплаты */
+                          input 1 ,
+                          input table tt-trn ,
+                          input-output res ,
+                          input 2,
+                          input yes
+                          ) no-error .
+/*                     end.*/
+
+                end. /*               if  bf_trn-doc.status_ = {&fact} and bf_contract.usl-opl <> {&bef-contr-pay-nodef} then do:*/
+/*               if  bf_trn-doc.status_ = {&wayb} and bf_trn-doc.need-buyer = 1 and bf_contract.usl-opl = '{&bef-contr-buyer-ord}' then do:              */
+/*                    if available bf_trn-doc then do:                                                                                                   */
+/*                      if not available tt-trn then                                                                                                     */
+/*                          create tt-trn.                                                                                                               */
+/*                          BUFFER-COPY bf_trn-doc to tt-trn.                                                                                            */
+/*                    end.                                                                                                                               */
+/*                    if bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord}' then p-cons = 1. /*Предоплата*/*/
+/*                    if bf_contract.usl-opl = '{&bef-contr-buyer-in}'  then p-cons = 2. /*По факту поставки*/                                           */
+/*                    if bf_contract.usl-opl = '{&bef-contr-buyer-in-delay}'  then p-cons = 3. /*По всем*/                                               */
+/*                                                                                                                                                       */
+/*                  run str/genbfotr.p (                                                                                                                 */
+/*                      input parParentProc ,                                                                                                            */
+/*                      input bf_contract.host-code ,                                                                                                    */
+/*                      input bf_trn-doc.doc-date  ,                                                                                                     */
+/*                      input ? ,                                                                                                                        */
+/*                      input p-cons ,              /* условие оплаты */                                                                                 */
+/*                      input 1 ,                                                                                                                        */
+/*                      input table tt-trn ,                                                                                                             */
+/*                      input-output res ,                                                                                                               */
+/*                      input 2,                                                                                                                         */
+/*                      input yes                                                                                                                        */
+/*                      )  .                                                                                                                             */
+/*                                                                                                                                                       */
+/*                                                                                                                                                       */
+/*                end. /*               if  bf_trn-doc.status_ = {&fact} and bf_contract.usl-opl <> {&bef-contr-pay-nodef} then do:*/                    */
+          end.
+        end. /*if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) and (bf_trn-doc.contract-code <> 0 or bf_trn-doc.contract-code <> ?) then do:*/
 end. /* transaction */
 
 

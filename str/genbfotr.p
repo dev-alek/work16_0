@@ -208,23 +208,7 @@ p-res = p-res +  {&new-line}.
 
 { gbl/getcntxt.i get }
 
-define variable g-log as logical no-undo .
-{ gbl/chk-actg.i
-  v-cntxt-db-num
-  v-cntxt-userid
-  {&action-head-code-main}
-  'actn_fin-liability_add-def':U
-  {&cntxt-firm}
-  par-host-code
-  '':U
-  0
-  0
-  0
-  0
-  true
-  g-log
-}
-if not g-log then  return .
+
 
 run waitfram-show in this-procedure ("ֶהטעו...").
 
@@ -570,7 +554,7 @@ define input parameter v-sum-contract as decimal no-undo .
                end.
             find first buf2_trn-doc  exclusive-lock  where buf2_trn-doc.doc-code = buf_trn-doc.doc-code no-error .
             if available buf2_trn-doc then do:
-                if lookup( buf_contract.usl-opl , {&o-buyer-trn}  ) > 0 then do:
+/*                if lookup( buf_contract.usl-opl , {&o-buyer-trn}  ) > 0 then do:*/
                 assign
                   buf2_trn-doc.cr-fo-buyer        = true
                   buf2_trn-doc.buyer-fo-date      = today
@@ -580,12 +564,12 @@ define input parameter v-sum-contract as decimal no-undo .
                         buf2_trn-doc.need-buyer      = 1
                       .
                     end.
-                end.
-                else do:
-                    assign
-                      buf2_trn-doc.need-buyer      = 0
-                    .
-                end.
+/*                end.                                  */
+/*                else do:                              */
+/*                    assign                            */
+/*                      buf2_trn-doc.need-buyer      = 0*/
+/*                    .                                 */
+/*                end.                                  */
             end.
 
   run make-fin-parts in this-procedure ( input p-doc-code , input 1 ) .
@@ -773,7 +757,7 @@ define variable max-date as date no-undo .
 
       find first buf2_trn-doc  exclusive-lock  where buf2_trn-doc.doc-code = tt-trn-code.doc-code no-error .
       if available buf2_trn-doc then do:
-        if lookup( buf_contract.usl-opl , {&o-buyer-trn}  ) > 0 then do:
+/*        if lookup( buf_contract.usl-opl , {&o-buyer-trn}  ) > 0 then do:*/
             assign
               buf2_trn-doc.cr-fo-buyer   = true
               buf2_trn-doc.buyer-fo-date = today
@@ -783,12 +767,12 @@ define variable max-date as date no-undo .
               buf2_trn-doc.need-buyer      = 1
                       .
           end.
-        end.
-          else do:
-              assign
-                buf2_trn-doc.need-buyer      = 0
-              .
-          end.
+/*        end.                                    */
+/*          else do:                              */
+/*              assign                            */
+/*                buf2_trn-doc.need-buyer      = 0*/
+/*              .                                 */
+/*          end.                                  */
        end.
        else do:
           message vss-workfile vss-revision vss-description skip
@@ -1038,7 +1022,7 @@ define variable max-date as date no-undo .
 
       find first buf2_trn-doc  exclusive-lock  where buf2_trn-doc.doc-code = tt-trn-code.doc-code no-error .
       if available buf2_trn-doc then do:
-        if lookup( buf_contract.usl-opl , {&o-buyer-trn}  ) > 0 then do:
+/*        if lookup( buf_contract.usl-opl , {&o-buyer-trn}  ) > 0 then do:*/
             assign
               buf2_trn-doc.cr-fo-buyer   = true
               buf2_trn-doc.buyer-fo-date = today
@@ -1048,12 +1032,12 @@ define variable max-date as date no-undo .
                   buf2_trn-doc.need-buyer      = 1
                   .
               end.
-        end.
-          else do:
-              assign
-                buf2_trn-doc.need-buyer      = 0
-              .
-          end.
+/*        end.                                    */
+/*          else do:                              */
+/*              assign                            */
+/*                buf2_trn-doc.need-buyer      = 0*/
+/*              .                                 */
+/*          end.                                  */
        end.
        else do:
           message vss-workfile vss-revision vss-description skip
