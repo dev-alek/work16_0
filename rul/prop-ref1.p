@@ -109,6 +109,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
     run err-mess in this-procedure ( input-output v-mess).
     return error (if p-silent = yes then v-mess else 'ref-type':U).
   end.
+  /*
   if p-ref-type <> {&sum-id-type-period}
   and p-call-id <> '':U then do:
 &scoped-define  sum-id-type-code  ~{&sum-id-type-period~}
@@ -117,6 +118,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
     run err-mess in this-procedure ( input-output v-mess).
     return error (if p-silent = yes then v-mess else 'ref-type':U).
   end.
+  */
   if p-mode = {&add-def} then do:
     if p-dt-code = 0 then do:
       find last buf_prop-ref no-lock use-index pi no-error.

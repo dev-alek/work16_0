@@ -75,7 +75,8 @@ else do:
   cash-cli.dcr-pcnt-tot    = 0
   cash-cli.ef-format       = 0
   cash-cli.ef-access-key   = ""
-  cash-cli.has-attr        = no
+  cash-cli.has-attrs       = no
+  cash-cli.has-attrs-lim   = no
   .
 end.
 error-status:error = false.
@@ -332,6 +333,49 @@ for each buf_dis-card-property no-lock where
     release cash-cli-attr.
     cash-cli.has-attrs = yes.
   end.
+end.
+
+for each ub.dis-card-property no-lock where
+          ub.dis-card-property.dtm-code = {&dc-prop_dc-limit}
+     and  ub.dis-card-property.d-card = cash-cli.d-card
+/*     and ub.dis-card-property.sum-id <> ""*/
+     AND  ub.dis-card-property.HOST-CODE = 0
+     AND  ub.dis-card-property.obj-type = '':U
+     AND  ub.dis-card-property.obj-code = 0
+  break
+  by ub.dis-card-property.dt-code:
+    
+  for each ub.prop-ref where ub.prop-ref.dtm-code = ub.dis-card-property.dtm-code and ub.prop-ref.sum-id = ub.dis-card-property.sum-id:  
+  find first cash-cli-attr no-lock where
+            cash-cli-attr.d-card = ub.dis-card.d-card and cash-cli-attr.dc-sum-id = ub.dis-card-property.sum-id 
+                                                      and cash-cli-attr.caller_id = ub.prop-ref.Caller_id no-error .
+  if not available cash-cli-attr then do:
+    create cash-cli-attr.
+    assign
+    cash-cli-attr.d-card = ub.dis-card.d-card
+    cash-cli-attr.dc-sum-id = ub.dis-card-property.sum-id
+    cash-cli-attr.caller_id = ub.prop-ref.Caller_id
+    .
+    
+  end.
+  case ub.dis-card-property.node-code:
+    when {&dc_prop_dc-limit_minnum}  then do:
+      assign
+      cash-cli-attr.dc-minnum = ub.dis-card-property.property-value-decimal
+      .
+    end.
+    when {&dc_prop_dc-limit_maxnum} then do:
+      assign
+      cash-cli-attr.dc-maxnum = ub.dis-card-property.property-value-decimal
+      .
+    end.
+  end case.
+  end.
+  if last-of(ub.dis-card-property.dt-code) then do:
+/*    release cash-cli-attr.*/
+    cash-cli.has-attrs-lim = yes.
+  end.
+  
 end.
 
 &if "{1}" <> "mask" &then
