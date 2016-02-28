@@ -5774,6 +5774,19 @@ end procedure.
 &scop manual-edit-attr-fasovka 1
 &scop batch-edit-attr-fasovka  1
 
+/* Группа товаров на кассе */
+&glob type-attr-sum-grp-gl {&type-char}
+&glob format-attr-sum-grp-gl  "X(5)"
+&glob label-attr-sum-grp-gl   "Группа товаров на кассе"
+&glob tooltip-attr-sum-grp-gl   "Номер группы товаров на кассе (IBM-POS)"
+&glob user-can-edit-attr-sum-grp-gl  true
+&glob output-display-attr-sum-grp-gl  true
+&glob other-attr-sum-grp-gl  "spr-ext=gds-glob-sum-grps"
+&glob news-attr-sum-grp-gl true
+&glob copy-attr-sum-grp-gl  true
+&scop manual-edit-attr-sum-grp-gl  1
+&scop batch-edit-attr-sum-grp-gl  1
+
 &glob type-attr-15x80 {&type-char}
 &glob format-attr-15x80  "X(255)"
 &glob label-attr-15x80   "Текст поля СОСТАВ 15x80 (DIGI-SM)"
@@ -6108,6 +6121,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-fasovka
       {&attr-temp-full-code}
+      &scop attr-code attr-sum-grp-gl
+      {&attr-temp-full-code}
       &scop attr-code attr-15x80
       {&attr-temp-full-code}
       &scop attr-code attr-8x50
@@ -6189,6 +6204,8 @@ do
       &scop attr-code attr-null-price
       {&attr-temp-code}
       &scop attr-code attr-fasovka
+      {&attr-temp-code}
+      &scop attr-code attr-sum-grp-gl
       {&attr-temp-code}
       &scop attr-code attr-15x80
       {&attr-temp-code}
@@ -6505,6 +6522,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-fasovka
       {&attr-news-code}
+      &scop attr-code attr-sum-grp-gl
+      {&attr-news-code}
       &scop attr-code attr-15x80
       {&attr-news-code}
       &scop attr-code attr-8x50
@@ -6580,6 +6599,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-null-price
       {&attr-copy-code}
       &scop attr-code attr-fasovka
+      {&attr-copy-code}
+      &scop attr-code attr-sum-grp-gl
       {&attr-copy-code}
       &scop attr-code attr-15x80
       {&attr-copy-code}
@@ -6867,6 +6888,50 @@ end.
 
 end procedure. /* gds-attr_init-15x80 */
 
+procedure gds-glob-sum-grps :
+
+define input parameter p-mode  as character no-undo .
+define input parameter p-gds-code like ub.gds-obj-attr.gds-code no-undo .
+define input-output parameter p-value as integer no-undo .
+define output parameter p-setted as logical no-undo .
+DEFINE VARIABLE rid-list as character no-undo .
+define buffer buf_sum-grp for ub.sum-grp.
+
+  do
+  on error undo, return error
+  :
+    find first buf_sum-grp no-lock where
+               buf_sum-grp.grp-code = integer(p-value) no-error .
+    if avail buf_sum-grp then do:
+      assign
+      rid-list = string(recid(buf_sum-grp))
+      .
+    end.
+    if p-mode = {&lookup} then do:
+    run ref/gds-sumgrp.p ( input this-procedure
+                          ,input ""
+                          ,input-output rid-list).
+    end.
+    else do:
+      run ref/gds-sumgrp.p ( input this-procedure
+                          ,input "b-sel"
+                          ,input-output rid-list).
+    end.
+    if rid-list <> "":U then do:
+      find first buf_sum-grp no-lock where
+                 recid(buf_sum-grp) = integer(entry(1, rid-list)) no-error .
+      if not avail buf_sum-grp then return error.
+
+      assign
+      p-value = buf_sum-grp.grp-code
+      p-setted = yes
+      .
+    end.
+    else p-setted = no.
+  end.
+
+end procedure. /* gds-glob-sum-grps */
+
 procedure gds-attr_init-8x50 :
 define input parameter p-gds-code as integer no-undo .
 define output parameter p-attr-value as character no-undo .
@@ -7003,6 +7068,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-fasovka
       {&attr-manual-edit-code}
+      &scop attr-code attr-sum-grp-gl
+      {&attr-manual-edit-code}
       &scop attr-code attr-15x80
       {&attr-manual-edit-code}
       &scop attr-code attr-8x50
@@ -7079,6 +7146,8 @@ do
       &scop attr-code attr-null-price
       {&attr-batch-edit-code}
       &scop attr-code attr-fasovka
+      {&attr-batch-edit-code}
+      &scop attr-code attr-sum-grp-gl
       {&attr-batch-edit-code}
       &scop attr-code attr-calories
       {&attr-batch-edit-code}
@@ -14007,6 +14076,19 @@ end procedure.
 &scop manual-edit-ggoattr-ban-sales-via-cd 0
 &scop batch-edit-ggoattr-ban-sales-via-cd 0
 
+
+/* Группа товаров на кассе */
+&scop type-ggoattr-sum-grps {&type-int}
+&scop format-ggoattr-sum-grps "999"
+&scop label-ggoattr-sum-grps "Группа товаров на кассе"
+&scop tooltip-ggoattr-sum-grps "Группа товаров на кассе"
+&scop user-can-edit-ggoattr-sum-grps  false
+&scop output-display-ggoattr-sum-grps true
+&scop other-ggoattr-sum-grps '':u
+&scop news-ggoattr-sum-grps true
+&scop manual-edit-ggoattr-sum-grps 0
+&scop batch-edit-ggoattr-sum-grps 0
+
 /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
 
 &scop attr-temp-code ~
@@ -14076,6 +14158,8 @@ procedure ggoattr-code :
       &scop attr-code ggoattr-ban-sales-via-cd
       {&attr-temp-full-code}
 
+      &scop attr-code ggoattr-sum-grps
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
         undo, return error substitute("неизвестный атрибут группы товаров на объекте &1", p-code) .
@@ -14105,6 +14189,8 @@ procedure ggoattr-tooltip :
       &scop attr-code ggoattr-no-inc-auto-rep
       {&attr-temp-code}
       &scop attr-code ggoattr-ban-sales-via-cd
+      {&attr-temp-code}
+      &scop attr-code ggoattr-sum-grps
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
@@ -14407,6 +14493,8 @@ procedure ggoattr-news :
       {&attr-news-code}
       &scop attr-code ggoattr-ban-sales-via-cd
       {&attr-news-code}
+      &scop attr-code ggoattr-sum-grps
+      {&attr-news-code}
 
       /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
       otherwise do:
@@ -14528,6 +14616,8 @@ procedure assmatat-code :
   :
     case p-code :
       &scop attr-code assmatat-RootShablon
+      {&attr-temp-full-code}
+      &scop attr-code ggoattr-sum-grps
       {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */

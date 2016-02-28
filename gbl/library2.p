@@ -2239,9 +2239,9 @@ define variable v-mess as character no-undo .
           p-event-code = entry (1, p-event-code, "-" ) + "-" + v-rest .
           v-event-fullname = entry(lookup(p-event-code,{&izt-event-types}),{&izt-event-types-full}) no-error .
           if error-status :error then do:
-             message
-             p-event-code 'p-event-code'
-             view-as alert-box information .
+/*             message                        */
+/*             p-event-code 'p-event-code'    */
+/*             view-as alert-box information .*/
              p-Ok = true .
           end.
           else do:

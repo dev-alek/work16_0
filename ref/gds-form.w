@@ -56,6 +56,9 @@ define variable vss-description as character no-undo init "Карточка товара".
 { gbl/thbj-def.i }
 { gbl/clntattr.i }
 { ref/imagelist.i }
+{ gbl/ggoattr.i }
+{ gbl/attr-lib.i }
+
 define temp-table temp-goods no-undo like ub.goods
 field alc-prod as logical
 field alc-choose-prod as integer.
@@ -2813,6 +2816,37 @@ if mode = {&add-def} then do:
         .  
       end. /*if temp-goods.alc-prod = yes then */   
    end. /*else do:*/
+   define variable v-value      as character no-undo .
+   define variable v-type       as character no-undo .
+   define buffer buf-grp for ub.gds-grp.
+   define variable v-upper like  ub.gds-grp.node-code.
+   find first buf-grp where buf-grp.node-code = ub.gds-grp.node-code no-lock no-error.
+   do while v-value = '' and available buf-grp:
+      v-upper = buf-grp.upper-code.
+      run ggoattr-value(
+                input buf-grp.node-code,
+                input 0,
+                input "",
+                input 0,
+                input {&ggoattr-sum-grps},
+                output v-value,
+                output v-type
+              ) no-error.
+        if v-value = '' then find first buf-grp where buf-grp.node-code = v-upper no-lock no-error.     
+     end.
+     
+    /*Есть ли атрибут "Группа товаров на кассе" в группе товаров*/
+         
+        if v-value > "" then do:
+          run gds-attr-write IN THIS-PROCEDURE(
+              input ub.goods.gds-code
+             ,INPUT {&attr-sum-grp-gl}
+             ,INPUT v-value ) NO-ERROR.
+        end. 
+        else do:
+          
+           
+        end.     
 end. /*if mode = {&add-def} then do:*/
 
 if mode <> {&add-def} and mode <> {&lookup} then do:

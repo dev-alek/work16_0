@@ -2694,9 +2694,10 @@ for each tt-trn : delete tt-trn. end. /* for each */
                         if bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord}' then p-cons = 1. /*Предоплата*/
                         if bf_contract.usl-opl = '{&bef-contr-buyer-in}'  then p-cons = 2. /*По факту поставки*/
                         if bf_contract.usl-opl = '{&bef-contr-buyer-in-delay}'  then p-cons = 3. /*По всем*/
+                       if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass} then do:
                        run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact ) no-error .
                           if error-status :error then return error return-value .
-    
+                        end.
                       run str/genbfotr.p (
                           input parParentProc ,
                           input bf_contract.host-code ,
