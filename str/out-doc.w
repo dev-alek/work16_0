@@ -210,7 +210,9 @@ define variable varlns-cnt     as integer   no-undo.
 define variable del-rec        as recid     no-undo.
 define variable varprt-mode    as character no-undo.
 
-define new shared temp-table tt-doc-pl no-undo like ub.doc-pl .
+define new shared temp-table tt-doc-pl no-undo like ub.doc-pl 
+    field pl-code2 like ub.doc-pl.pl-code
+.
 
 /* Temp Table Definition */
 function get-mark return character (buffer local-gds-dtl for ub.gds-dtl ).
@@ -3308,8 +3310,9 @@ if t-doc.ext-doc-type <> {&TDEDT_Ras_Vnesh}          and
    t-doc.ext-doc-type <> {&TDEDT_Ras_Vnesh_VP}       and
    t-doc.ext-doc-type <> {&TDEDT_Vozvrat_Vnesh}      and
    t-doc.ext-doc-type <> {&TDEDT_Vozvrat_Vnesh_Kass} and
-   t-doc.ext-doc-type <> {&TDEDT_Spi_Vnesh}          then do:
-   message "Дату факт можно редактировать только во внешнем расходе, возврате поставщику, внешнем возврате, внешнем возврате через кассу или списании."
+   t-doc.ext-doc-type <> {&TDEDT_Spi_Vnesh}          and
+   t-doc.ext-doc-type <> {&TDEDT_Ras_Object}     then do:
+   message "Дату факт можно редактировать только во внешнем расходе, внутриобъектном расходе, возврате поставщику, внешнем возврате, внешнем возврате через кассу или списании."
    view-as alert-box.
    display t-doc.fact-date with frame {&frame-name}.
    return error.
@@ -5390,6 +5393,10 @@ PROCEDURE proc-sht :
           t-doc.fact-time = (24 * 60 * 60).
         display t-doc.fact-date with frame {&frame-name}.
       end.
+/*      if t-doc.ext-doc-type = {&TDEDT_Ras_Object} and t-doc.fact-date <> TODAY then do :*/
+/*        t-doc.fact-date = TODAY .                                                       */
+/*        display t-doc.fact-date with frame {&frame-name}.                               */
+/*      end.                                                                              */
     end.
   end.
 
@@ -6049,7 +6056,51 @@ if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} or
    then do:
      hide varcontract-prn-code b-contr-lkp in frame {&frame-name} .
    end.
-
+/*Расход внутриобъектный*/
+if t-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
+    if pardoc-mode <> {&lookup} then
+    assign 
+        t-doc.cli-type = t-doc.obj-type
+        t-doc.cli-code = t-doc.obj-code
+    .
+    find clients where clients.obj-type = t-doc.cli-type and clients.obj-code = t-doc.cli-code no-lock .
+    display clients.obj-name t-doc.cli-type t-doc.cli-code with frame {&frame-name}.
+    disable t-doc.cli-type t-doc.cli-code r-clients b-fixprice b-cnt with frame {&frame-name}.
+    enable
+        t-doc.reason-code t-doc.doc-date                  
+        t-doc.pay-code 
+    with frame {&frame-name}.
+    if pardoc-mode <> {&lookup} then
+    enable
+        b-add b-del b-mark b-chg
+        t-doc.fact-date t-doc.out-code
+        t-doc.wrkr t-doc.agnt t-doc.boss r-wrkr r-agnt r-boss
+        r-outs r-pay r-reas
+    with frame {&frame-name}.
+    { gbl/objat.i
+       t-doc.obj-type
+       t-doc.obj-code
+       "'shift-on=request'"
+       varlog
+       no-error
+      }
+    if error-status :error then do:
+       message
+       vss-workfile vss-revision vss-description skip
+       "Ошибка при запуске процедуры objat" skip
+       error-status :get-message(1) skip
+       return-value skip
+       view-as alert-box error .
+       return error.
+    end.
+    if varlog and pardoc-mode <> {&lookup} then do:
+      enable t-doc.shift-date t-doc.shift-num t-doc.shift-name r-sht with frame {&frame-name}.
+    end.
+    if t-doc.status_ = {&wayb} and t-doc.flag_ and pardoc-mode = {&update} then do :
+      disable b-add b-del b-mark r-acc r-pay r-outs with frame {&frame-name}.
+      hide t-doc.out-code in frame {&frame-name}.
+    end.
+end.
 display t-doc.wrkr t-doc.agnt t-doc.boss with frame {&frame-name}.
 { str/psn-chk.i wrkr on t-doc ref-rec }
 { str/psn-chk.i agnt on t-doc ref-rec }

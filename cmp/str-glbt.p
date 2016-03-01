@@ -252,7 +252,7 @@ attr-Ass-global }
 /* атрибут глобальный -  Взаиморасчеты ФО */
 { cmp/cr-prep.i 1 attr-fin-global  fin-global fin-global fin-global fin-global fin-global fin-global  }
 { cmp/cr-prepc.i 1 prop-list-attr-fin-global
-"fo-buyer-nws,fo-supp-nws,fo-fact,fo-mc-mode,add-conn-avt,del-conn-avt"
+"fo-buyer-nws,fo-supp-nws,fo-fact,fo-mc-mode,add-conn-avt,del-conn-avt,fo-gen"
 attr-fin-global }
 
 
@@ -570,6 +570,8 @@ attr-srv-auth-ASU
 "egais-fsrar,egais-utm,egais-exsys"
 attr-egais-host }
 
+
+
 /* сюда добавлять новые названия атрибутов объектов TH */
 
 run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-code 'rrn-vbrr,cpdoc':U" ) .
@@ -622,8 +624,8 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-rum_obj}~
 ,{&bef-attr-easyfuel}~
 ,{&bef-attr-images}~
-,{&bef-attr-prt-obj}~
-,{&bef-attr-report-obj}~
+,{&bef-attr-prt-glob}~
+,{&bef-attr-report-glob}~
 ,{&bef-attr-code-range}~
 ,{&bef-attr-bge-export}~
 ,{&bef-attr-auto-task}~

@@ -398,7 +398,6 @@ FOR EACH t-3 No-LOCK WHERE (pclassify <> "totals":U or t-3.grp-code-sheet = 0)
 /*        release buf_shift-grp.*/
       end.
     end.
-
     IF AVAIl tincome-3 then do:
       /* номер документа из атрибутов */
       { str/tdat-val.i
@@ -520,7 +519,7 @@ FOR EACH t-3 No-LOCK WHERE (pclassify <> "totals":U or t-3.grp-code-sheet = 0)
         end.
 
       end. /*if p-batch > 0 */
-  end.
+  
         put stream OutStr-html unformatted
             substitute (
             '  <tr>
@@ -558,7 +557,7 @@ FOR EACH t-3 No-LOCK WHERE (pclassify <> "totals":U or t-3.grp-code-sheet = 0)
             if main-line = no then "" else string(pol12,"->>>>>>>>>>>9.99"),
             if main-line = no then "" else string(pol13,"->>>>>>>>>>>9.99")
             ).
-    
+    END.
     if not available tincome-3 and not available treal-3 then do:
             put stream OutStr-html unformatted
             substitute (

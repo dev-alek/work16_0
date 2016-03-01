@@ -57,6 +57,7 @@ FIELD DepartId         as integer /*1код подразделения где готовится*/
 FIELD fbr-grp-code-0   as integer /*код группы ресторана */
 FIELD fbr-grp-code     as integer /*код группы прайс-листа ресторана*/
 FIELD office           as integer /*услуга*/
+field office-type      as character /*тип услуги*/
 FIELD price-sale       like ub.price-list.price-sale
 FIELD unit-type        like ub.units.type
 FIELD unit-cli-type    like ub.units.type

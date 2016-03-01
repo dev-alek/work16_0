@@ -370,6 +370,12 @@ and get-chkc_context.ptrl-check then
 assign
 accept-types = accept-types + ",14,15,16,17":U.
 
+if is-ptrl and ptrl-check 
+and (p-pos-type = {&cd-type-ibm-xml} or p-pos-type = {&cd-type-Autotank})
+then
+assign
+accept-types = accept-types + ",36":U.
+
 if p-pos-type = {&cd-type-MAGIA-XML}
 or get-chkc_context.annu-check then
 assign
@@ -611,6 +617,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     d-mask_ = "":U
     tot-d-pcnt = 0
     doc-num_ = "":U
+    doc-num2_ = "":U
     chk-num_ = 0
     netto-sum_ = 0
     brutto-sum_ = 0
@@ -737,7 +744,13 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           d-card_ = (if buf_temp-temp.field-value = "0" then "":u else buf_temp-temp.field-value)
           no-error .
         end.
-
+        when "CHAgreement":U then do:
+          if p-pos-type = {&cd-type-ibm-xml} OR p-pos-type = {&cd-type-Autotank} then
+          assign
+          doc-num2_ = (if buf_temp-temp.field-value = "0" then "":u else buf_temp-temp.field-value)
+          no-error .
+        end.
+        
         /*    todo
         when "CHSEnd":U then do:
         end.
@@ -1726,6 +1739,9 @@ on error undo, return error
         accum-src-for-sub-d = accum-src-for-sub-d + ub.chk-gds.src-qnty
         .
       end.
+      
+      chk-doc.doc-num2 = doc-num2_. /* "№ заказа" */
+          
     end.
     else do:
       assign
@@ -2620,7 +2636,8 @@ define variable v-time-loc-char as character no-undo .
             when "14" or
             when "15" or
             when "16" or
-            when "17"
+            when "17" or
+            when "36"
             then do:
               run proc-01-gds in this-procedure no-error .
             end.

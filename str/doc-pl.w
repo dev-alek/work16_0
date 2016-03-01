@@ -12,7 +12,9 @@ DEFINE BUFFER buf-obj_clients FOR ub.clients.
 DEFINE BUFFER buf_goods FOR ub.goods.
 DEFINE BUFFER buf_place FOR ub.place.
 DEFINE TEMP-TABLE loc-t-doc-pl NO-UNDO LIKE ub.doc-pl.
-DEFINE SHARED TEMP-TABLE tt-doc-pl NO-UNDO LIKE ub.doc-pl.
+DEFINE SHARED TEMP-TABLE tt-doc-pl NO-UNDO like ub.doc-pl
+    field pl-code2 like ub.doc-pl.pl-code
+.
 
 
 
@@ -1689,6 +1691,7 @@ DO:
       where buf_place.obj-type = buf-obj_clients.obj-type
         and buf_place.obj-code = buf-obj_clients.obj-code
         and buf_place.pl-code  = loc-t-doc-pl.pl-code
+        and buf_place.status_ <> {&deleted-status}
       no-error .
 
     if available buf_place then do:

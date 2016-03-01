@@ -110,7 +110,6 @@ define buffer buf_firm for ub.firm.
 define buffer buf_sysconf for ub.sysconf.
 define buffer cli_obj for ub.clients.
 
-
 do
 on error undo, return error
 :
@@ -1370,7 +1369,7 @@ end.
 
 
     when {&attr-fin-global} then do:
-      v-prop-code = "{&bef-attr-fin-global_fo-buyer-nws},{&bef-attr-fin-global_fo-supp-nws},{&bef-attr-fin-global_fo-mc-mode}" .
+      v-prop-code = "{&bef-attr-fin-global_fo-buyer-nws},{&bef-attr-fin-global_fo-supp-nws},{&bef-attr-fin-global_fo-mc-mode},{&bef-attr-fin-global_fo-gen}".
 &scop ptype integer
 &scop prop-value 0
 &scop prop-code  entry(v-ii,v-prop-code)
@@ -1378,7 +1377,7 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
-      v-prop-code = "{&bef-attr-fin-global_fo-fact},{&bef-attr-fin-global_add-conn-avt},{&bef-attr-fin-global_del-conn-avt}" .
+      v-prop-code = "{&bef-attr-fin-global_fo-fact}" .
 &scop ptype logical
 &scop prop-value no
 &scop prop-code entry(v-ii,v-prop-code)
@@ -1618,7 +1617,7 @@ end.
       end.
 
 
-      v-prop-code = "{&bef-attr-prt-glob_outrecv},{&bef-attr-prt-glob_rep-sort}" .
+      v-prop-code = "{&bef-attr-prt-glob_outrecv}" .
 &scop ptype character
 &scop prop-value ''
 &scop prop-code entry(v-ii,v-prop-code)
@@ -1668,8 +1667,9 @@ end.
 &scop ptype character
 &scop prop-value 'clad_doc'
 &scop prop-code v-prop-code
+      do v-ii = 1 to num-entries(v-prop-code):
       {&create-thbj-attr}.
-
+      end.
 
     end. /*when {&attr-prt-obj} then do:*/
 

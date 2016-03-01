@@ -41,7 +41,7 @@ end.
      run foreach. /* подсчет */
 
 &if "{1}" <>  "1" &then    /* если есть классиф */
-if first-of({1}) then do  with frame zapas:
+if first-of({1}) then do:
         tmp#stroka = (if string(entry(2,"{1}",".")) <> "grp-name":u then "произв." + gds-zap-prod-name else "группа " + gds-zap-grp-name).
         tmp#stroka0 = tmp#stroka.
         fr0 = true .
@@ -49,7 +49,7 @@ end.
 &endif
 &if "{2}" <>  "1" &then
                  if not sums-only then do:
-                    if first-of({2}) then do  with frame zapas:
+                    if first-of({2}) then do:
                         tmp#stroka = (if string(entry(2,"{2}",".")) <> "grp-name" then "произв." + gds-zap-prod-name else "группа " + gds-zap-grp-name ).
                         fr = true.
                     end.
@@ -59,7 +59,7 @@ end.
      run display-line.
        /* промежуточные итоги*/
 &if "{2}" <>  "1" &then    /* если есть классиф */
-if last-of({2}) then do  with frame zapas:
+if last-of({2}) then do:
   if  not (not show-negativ  and
             ( tot-1-1 = 0 and
                 tot-1-2 = 0 and
@@ -81,7 +81,7 @@ if last-of({2}) then do  with frame zapas:
         end.
       end.
 &if "{1}" <>  "1" &then
-    if last-of({1}) then do  with frame zapas:
+    if last-of({1}) then do:
             if  not (not show-negativ  and
             ( tot-2-1 = 0 and
               tot-2-2 = 0 and

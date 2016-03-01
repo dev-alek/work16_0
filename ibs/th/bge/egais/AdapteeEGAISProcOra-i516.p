@@ -37,7 +37,7 @@ define input  parameter table for  tt-wb-header.
 define input  parameter table for  tt-wb-gds-EG.
 define input  parameter userId_ as character no-undo.
 define input  parameter Mode as character no-undo.
-define input-output parameter doc-code as character no-undo.
+define input-output parameter v-doc-code as character no-undo.
 
 
 define variable iDbNum as integer no-undo.
@@ -53,31 +53,35 @@ do:
   define variable jj         as integer no-undo.
   define variable logWrite   as class   LogWrite no-undo.
 
-  for each tt-wb-header no-lock:
+  find first tt-wb-header no-lock.
     
-    ii = ii + 1.
 
-    create temp_trn-doc.
-    assign
-      temp_trn-doc.line-num      = ii
-      temp_trn-doc.doc-date      = tt-wb-header.wb-date
-      temp_trn-doc.ps            = tt-wb-header.ps
-      temp_trn-doc.doc-code      = tt-wb-header.wbregid + {&delim-cmd} + tt-wb-header.uniq-key-rec 
-      temp_trn-doc.ext-doc-type  = tt-wb-header.wb-type
-      temp_trn-doc.cli-type      = tt-wb-header.cli-type
-      temp_trn-doc.cli-code      = tt-wb-header.cli-code
-      temp_trn-doc.obj-type      = tt-wb-header.obj-type
-      temp_trn-doc.obj-code      = tt-wb-header.obj-code
-      temp_trn-doc.exch-code     = 0
-      temp_trn-doc.exch-rate     = 1
-      temp_trn-doc.exch-scale    = 1
-      temp_trn-doc.contract-code = ?
-      temp_trn-doc.price-type    = if tt-wb-header.wb-type = {&TDEDT_Ras_Vnesh } then "TSFTSD" else ""
-      .
+
+  create temp_trn-doc.
+  assign
+    temp_trn-doc.line-num      = ii
+    temp_trn-doc.doc-date      = tt-wb-header.wb-date
+    temp_trn-doc.ps            = tt-wb-header.ps
+    temp_trn-doc.doc-code      = tt-wb-header.wbregid + {&delim-cmd} + tt-wb-header.uniq-key-rec 
+    temp_trn-doc.ext-doc-type  = tt-wb-header.wb-type
+    temp_trn-doc.cli-type      = tt-wb-header.cli-type
+    temp_trn-doc.cli-code      = tt-wb-header.cli-code
+    temp_trn-doc.obj-type      = tt-wb-header.obj-type
+    temp_trn-doc.obj-code      = tt-wb-header.obj-code
+    temp_trn-doc.cargo-from    = tt-wb-header.cargo-from
+    temp_trn-doc.exch-code     = 0
+    temp_trn-doc.exch-rate     = 1
+    temp_trn-doc.exch-scale    = 1
+    temp_trn-doc.contract-code = ?
+    temp_trn-doc.price-type    = if tt-wb-header.wb-type = {&TDEDT_Ras_Vnesh } then "TSFTSD" else ""
+    .
     
-  end.
+  
   jj = 0.
   for each tt-wb-gds-EG no-lock:
+    
+    
+    find first buf_goods no-lock where buf_goods.gds-code = tt-wb-gds-EG.gds-code no-error.
     
     jj = jj + 1.
     create temp_doc-line.
@@ -85,8 +89,6 @@ do:
     assign
       temp_doc-line.line-num   = jj
       temp_doc-line.gds-code   = tt-wb-gds-EG.gds-code
-      temp_doc-line.fact-qnty  = tt-wb-gds-EG.qnty
-      temp_doc-line.doc-qnty   = tt-wb-gds-EG.qnty
       temp_doc-line.price-cli  = tt-wb-gds-EG.price
       temp_doc-line.price-rubl = tt-wb-gds-EG.price
       temp_doc-line.doc-code   = temp_trn-doc.doc-code
@@ -96,6 +98,22 @@ do:
       temp_doc-line.alc-type-code = tt-wb-gds-EG.alc-type-code
       temp_doc-line.importer-th = tt-wb-gds-EG.importer-th
     .
+
+
+    if tt-wb-header.unit-type = 'Packed' 
+    then
+      assign
+        temp_doc-line.fact-qnty  = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
+        temp_doc-line.doc-qnty   = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
+        temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
+      .
+    else
+      assign
+        temp_doc-line.fact-qnty  = tt-wb-gds-EG.qnty
+        temp_doc-line.doc-qnty   = tt-wb-gds-EG.qnty
+        temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty / buf_goods.cli-base-rate
+      .    
+
     
   end.
   
@@ -136,7 +154,7 @@ procedure pcall-log-file:
   define input parameter msg as character no-undo.
   
   if msg begins "n-d" then do:
-    doc-code = entry (2, msg, "=").
+    v-doc-code = entry (2, msg, "=").
   end.
   else do: 
   assign 
@@ -209,24 +227,24 @@ end procedure. /* mainmenu_getcntxt */
 
 procedure set-refAB:
   
+    find first buf_goods no-lock where buf_goods.gds-code = temp_doc-line.gds-code no-error.  
     for each ub.parts exclusive-lock
-      where ub.parts.in-code   = doc-code
-        and ub.parts.artic     = ub.doc-line.artic
-        and ub.parts.prod-type = ub.doc-line.prod-type
-        and ub.parts.prod-code = ub.doc-line.prod-code:
+      where ub.parts.in-code   = v-doc-code
+        and ub.parts.artic     = buf_goods.artic
+        and ub.parts.prod-type = buf_goods.prod-type
+        and ub.parts.prod-code = buf_goods.prod-code:
 
       find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
       if not available (temp_doc-line) then do:
         find first temp_doc-line where  temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
       end.
-      
       run trg/partps.p ( input buf_goods.gds-code
                        , input parts.in-code
                        , input parts.part-code
                        , input iDbNum
                        , input ?
                        , input ?
-                       , input temp_doc-line.refA + ',' + temp_doc-line.refB
+                       , input temp_doc-line.refA + ',' + temp_doc-line.refB + ',' + temp_doc-line.alc-code + ',' + temp_doc-line.alc-type-code
                        , input ""
                        , input ""
                        , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 1, 3) else ""

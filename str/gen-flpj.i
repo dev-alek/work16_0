@@ -118,7 +118,26 @@ assign
   else do:
        n-trn-doc-code      = ?   .
   end.
+/*если ‘ќ было сделано на статусе накл, а потом было изменено фактическое кол-во*/  
 
+define variable v-sum-fin-ob like ub.fin-ob-trn.sum-rubl no-undo .
+if available buf_trn-doc then do:
+find first tt-trn-code where tt-trn-code.doc-code = buf_trn-doc.doc-code no-error.
+        if not available tt-trn-code then do:
+  v-sum-fin-ob = 0 .
+    for each buf_fin-ob-trn where buf_fin-ob-trn.trn-doc-code = buf_trn-doc.doc-code 
+                                and (buf_trn-doc.tot-fact - buf_trn-doc.discnt-rubl) <> buf_fin-ob-trn.sum-rubl:
+      v-sum-fin-ob = v-sum-fin-ob +  buf_fin-ob-trn.sum-rubl .
+    end.                                   
+     if v-sum-fin-ob <> 0 then do:
+      
+             v-sum-rubl = v-sum-rubl - v-sum-fin-ob.
+             v-sum-base = v-sum-base - v-sum-fin-ob.
+             v-sum-contract = v-sum-contract - v-sum-fin-ob.
+
+        end. 
+     end. 
+end.
 assign
   n-user-db-num-doc    = g#db-num
   n-user-name-doc      = g#userid

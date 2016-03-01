@@ -367,7 +367,7 @@ if p-mode = "" then do:
           input parParentProc ,
           input par-host-code ,
           input date-end   ,
-          input 2 ,              /* условие оплаты */
+          input r-trn ,              /* условие оплаты */
           input r-cons     ,    /* типы оплаты    */
           input r-nalog ,
           input table tt-trn ,
@@ -391,7 +391,20 @@ if p-mode = "" then do:
     ) no-error .
 
   END.
-  IF r-trn = 1 THEN DO:  /* по заказам */
+  IF r-trn = 1 THEN DO:  /* по предоплате */
+      run str/genbfotr.p (
+          input parParentProc ,
+          input par-host-code ,
+          input date-end   ,
+          input r-trn ,              /* условие оплаты */
+          input r-cons     ,    /* типы оплаты    */
+          input r-nalog ,
+          input table tt-trn ,
+          input-output res ,
+          input radio-set-1,
+          input t-adm
+          ) no-error .
+
       run str/gen-flo.p (
         INPUT parParentProc ,
         input par-host-code ,

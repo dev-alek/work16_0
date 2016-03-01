@@ -252,7 +252,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     field wb-date      as date      label "Дата"
     field obj          as character label "Объект"
     field shippregid   as character label "ID поставщика" format "x(21)"
-    field cliname      as character label "Контрагент" format "x(30)"
+    field cli          as character label "Контрагент" format "x(30)"
+    field cliname      as character label "Название контрагента" format "x(30)"
     field wb-type      as character label "Тип" format "x(20)" 
     field trn-doc-code as character label "№ накл. TH"
     field status_      as character label "Статус" format "x(20)"
@@ -380,11 +381,26 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               
               if available (ub.clients) then 
               do:
-                assign
-                  tt-wb-header.cli-type = ub.clients.obj-type
-                  tt-wb-header.cli-code = ub.clients.obj-code
-                  tt-wb-header.client   = ub.clients.obj-type + string (ub.clients.obj-code)
-                  .
+                
+                find first ub.clients-attr where ub.clients-attr.attr-code = {&attr-main-accholder}
+                  and ub.clients-attr.obj-code = ub.clients.obj-code and ub.clients-attr.obj-type = ub.clients.obj-type no-error.
+                
+                if available (ub.clients-attr)
+                then do:
+                  assign
+                    tt-wb-header.cli-type = entry (1, ub.clients-attr.attr-value, ",")
+                    tt-wb-header.cli-code = integer (entry (2, ub.clients-attr.attr-value, ","))
+                    tt-wb-header.client   = entry (1, ub.clients-attr.attr-value, ",") + entry (2, ub.clients-attr.attr-value, ",")
+                    tt-wb-header.cargo-from = ub.clients.obj-type + string (ub.clients.obj-code)
+                    .
+                end.
+                else do:
+                  assign
+                    tt-wb-header.cli-type = ub.clients.obj-type
+                    tt-wb-header.cli-code = ub.clients.obj-code
+                    tt-wb-header.client   = ub.clients.obj-type + string (ub.clients.obj-code)
+                    .                  
+                end.
               end.
             end.
            
@@ -543,6 +559,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               find first buf_clients where buf_clients.obj-type = entry (2, ub.ext-classif.uniq-key-rec, {&delim-key}) and buf_clients.obj-code = integer (entry (3, ub.ext-classif.uniq-key-rec, {&delim-key})) no-error.
               if available (buf_clients)
                 then do: 
+                  tt-wb-hndls.cli = buf_clients.obj-type + string (buf_clients.obj-code).
                   tt-wb-hndls.cliname = buf_clients.obj-name.
                 end.
             end.
@@ -603,7 +620,11 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 tt-ticket.regid = entry (1, buf_clob-bind.descr, {&delim-par})
                 tt-ticket.ticket-date = string (iso-date (date (entry (2, buf_clob-bind.descr, {&delim-par}))))
                 tt-ticket.doc = entry (3, buf_clob-bind.descr, {&delim-par})
-                tt-ticket.status_ = entry (4, buf_clob-bind.descr, {&delim-par})
+                tt-ticket.status_ = entry (4, buf_clob-bind.descr, {&delim-par}).
+                ParseResponse("", {&wb-act-header}).
+                find first tt-wb-act-header no-error.
+                if available (tt-wb-act-header)
+                  then tt-ticket.comment = tt-wb-act-header.note.
               .
             end.
           end.
@@ -629,6 +650,14 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                                                                        no-error.*/
               find first buf_clients where buf_clients.obj-code = buf_trn-doc.cli-code and buf_clients.obj-type = buf_trn-doc.cli-type no-lock.
               
+              find first ub.ext-classif no-lock 
+                where ub.ext-classif.classif-subject = {&table_clients}
+                  and ub.ext-classif.classif-name = {&extclass_clients_esys}
+                  and ub.ext-classif.db-num = 0
+                  and ub.ext-classif.key#_one = v-ext-sys
+                  and ub.ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + buf_trn-doc.cli-type + {&delim-key} + string (buf_trn-doc.cli-code)
+                  no-error.
+              
               create tt-wb-hndls. 
               assign
                 tt-wb-hndls.wb-date      = buf_trn-doc.doc-date
@@ -637,12 +666,14 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 tt-wb-hndls.cliname = buf_clients.obj-name
                 tt-wb-hndls.obj = buf_trn-doc.obj-type + string (buf_trn-doc.obj-code)
                 tt-wb-hndls.obj = buf_trn-doc.obj-type + string (buf_trn-doc.obj-code)
-                tt-wb-hndls.shippregid   = buf_trn-doc.cli-type + string (buf_trn-doc.cli-code)
+                tt-wb-hndls.cli   = buf_trn-doc.cli-type + string (buf_trn-doc.cli-code)
                 tt-wb-hndls.uniq-key-rec = buf_doc-attr.attr-value
                 tt-wb-hndls.status_      = buf_trn-doc.status_
                 tt-wb-hndls.wbregid      = entry (1, buf_doc-attr.attr-value, {&delim-cmd}) no-error.
                 entry (1, tt-wb-hndls.uniq-key-rec, {&delim-cmd}) = "".
                 tt-wb-hndls.uniq-key-rec = left-trim (tt-wb-hndls.uniq-key-rec, {&delim-cmd}).
+                if available (ub.ext-classif)
+                  then tt-wb-hndls.shippregid = ub.ext-classif.CharKey_Three.
                 
             end.
           end.
@@ -670,6 +701,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               assign
                 tt-wb-hndls.wb-date      = buf_trn-doc.doc-date
                 tt-wb-hndls.trn-doc-code = buf_trn-doc.doc-code
+                tt-wb-hndls.obj          = buf_trn-doc.obj-type + string (buf_trn-doc.obj-code)
+                tt-wb-hndls.cliname      = buf_clients.obj-name
                 tt-wb-hndls.shippregid   = buf_ext-classif.charkey_three
                 tt-wb-hndls.wb-type      = {&TDEDT_Ras_Vnesh_VP-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
                 tt-wb-hndls.wb-type      = {&TDEDT_Ras_Perem-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
@@ -702,11 +735,29 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             tt-wb-header.wb-type = "WBReturnFromMe" when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
             tt-wb-header.wb-type = "WBInvoiceFromMe" when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
             tt-wb-header.wb-date = buf_trn-doc.fact-date
-            tt-wb-header.obj-code = buf_trn-doc.obj-code
-            tt-wb-header.obj-type = buf_trn-doc.obj-type
             tt-wb-header.cli-code = buf_trn-doc.cli-code
             tt-wb-header.cli-type = buf_trn-doc.cli-type
+            tt-wb-header.obj-type = buf_trn-doc.obj-type
+            tt-wb-header.obj-code = buf_trn-doc.obj-code
           .
+          
+          /*find first ub.clients-attr where ub.clients-attr.attr-code = {&attr-main-accholder}
+            and ub.clients-attr.obj-code = buf_trn-doc.obj-code and ub.clients-attr.obj-type = buf_trn-doc.obj-type no-error.
+
+          if available (ub.clients-attr)
+          then do:
+            assign
+              tt-wb-header.obj-type = entry (1, ub.clients-attr.attr-value, ",")
+              tt-wb-header.obj-code = integer (entry (2, ub.clients-attr.attr-value, ","))
+              .
+          end.
+          else do:
+            assign
+              tt-wb-header.obj-type = buf_trn-doc.obj-type
+              tt-wb-header.obj-code = buf_trn-doc.obj-code
+              .                  
+          end.*/
+          
           
           find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
             and buf_ext-classif.classif-name = {&extclass_clients_esys}
@@ -775,7 +826,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 tt-wb-gds-EG.Identity = string (ii)
                 tt-wb-gds-EG.gds-name = entry (3, buf_ext-classif.CharKey_Two, chr(4))
                 tt-wb-gds-EG.alc-code = buf_ext-classif.charkey_one
-                tt-wb-gds-EG.qnty = buf_parts.fact-qnty
+                tt-wb-gds-EG.qnty = buf_parts.cli-qnty
                 tt-wb-gds-EG.price = buf_parts.price-rubl
                 tt-wb-gds-EG.refA = entry (1, buf_parts.alc-ref-ab-path, ",")
                 tt-wb-gds-EG.refB = entry (2, buf_parts.alc-ref-ab-path, ",")
@@ -1729,9 +1780,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     end.
     if entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ' or entry (6, buf_clob-bind.descr, {&delim-par}) <> ''
     then do:
-      Msg = "Накладная уже связана или по ней был отказ".
+      /*Msg = "Накладная уже связана или по ней был отказ".
       StatusErr = true.
-      return.
+      return.*/
     end.
     
     for each buf_doc-line no-lock where buf_doc-line.doc-code = inTrnDoc:

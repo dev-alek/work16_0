@@ -526,7 +526,9 @@ if lookup (parext-doc-type ,
           {&TDEDT_Ras_Vnesh_Kass}   + "," +
           {&TDEDT_Vozvrat_Vnesh}    + "," +
           {&TDEDT_Ras_Vnesh_VP} + "," +
-          {&TDEDT_Vozvrat_Perem} ) > 0  then return .
+          {&TDEDT_Vozvrat_Perem}  + "," +
+          {&TDEDT_Ras_Object} + "," +
+          {&TDEDT_Pri_Object} ) > 0  then return .
 
 if parext-doc-type = ? then return .
 

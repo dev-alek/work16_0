@@ -60,6 +60,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 /*Тип касс.платежа*/
 &global-define dc_prop_dc-petrol_cdpay-code 9
 
+/*Классы ограничений*/
+&global-define dc-prop_dc-limit 27
+/*Минимальный диапазон*/
+&global-define dc_prop_dc-limit_minnum 1
+/*Максимальный диапазон*/
+&global-define dc_prop_dc-limit_maxnum 2
+
+
 /*Дата-время обновления*/
 &global-define dc-prop_upd-date-time 19
 /*Дата-время*/

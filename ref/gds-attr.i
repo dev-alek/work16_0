@@ -265,6 +265,30 @@ procedure gds-attr_check-ptrl-divis :
 
 end procedure.
 
+procedure gds-glob-sum-grps :
+  define input  parameter p-mode        as character no-undo .
+  define input  parameter p-gds-code like ub.gds-obj-attr.gds-code no-undo .
+  define input-output parameter p-value as integer no-undo .
+  define output parameter p-setted as logical no-undo .
+
+  do
+  on error undo, return error
+  :
+    &scop proc-name gds-glob-sum-grps
+    {&run_proc_attr-lib}
+      (input p-mode
+      ,input p-gds-code
+      ,input-output p-value
+      ,output p-setted
+      ) no-error .
+    if error-status :error
+    then do:
+      undo, return error return-value .
+    end.
+  end.
+
+end procedure. /* gds-obj-sum-grps */
+
 procedure gds-attr_gds-ptrl-densities :
 
   define input  parameter p-gds-code    like ub.goods-attr.gds-code     no-undo .

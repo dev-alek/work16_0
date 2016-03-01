@@ -1,11 +1,10 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
-          ub               PROGRESS
+/* Connected Databases 
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*------------------------------------------------------------------------
 
 $Revision$
@@ -16,11 +15,10 @@ $Archive$
 
 Планирование платежей
 
-Автор: Чернова Светлана Александровна
+Автор: Кочетков Михаил Юрьевич
 Дата создания: 09/29/05
-Author: Svetlana Chernova
+Author: Michael Kochetkov
 Creation date: 09/29/05
-
 
 */
 
@@ -40,7 +38,9 @@ define variable p-host-code    as integer   no-undo . /* надо передавать фирму *
 define variable p-doc-type     as character no-undo . /* {&income} {&expense} */
 define variable p-fo-type     as character no-undo . /* {&income} {&expense} */
 
+
 /* Local Variable Definitions ---                                       */
+
 def var vss-revision    as character no-undo init "$Revision$":u .
 
 def var vss-author      as character no-undo init "$Author$":u .
@@ -59,7 +59,6 @@ def var vss-description as character no-undo init "Планирование платежей" .
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { gbl/fltopend.i defproc }
-{ gbl/thbjattr.i }
 
 assign
   p-host-code = v-cntxt-host-code-obj
@@ -79,12 +78,12 @@ else do:
   .
 end.
 
-  define buffer buf_fin-doc   for ub.fin-doc .
-  define buffer buf_fin-ob    for ub.fin-ob .
-  define buffer buf_contract  for ub.contract.
-  define buffer buf1_contract for ub.contract.
+  define buffer buf_fin-doc   for fin-doc .
+  define buffer buf_fin-ob    for fin-ob .
+  define buffer buf_contract  for contract.
+  define buffer buf1_contract for contract.
 
-  find first ub.sysconf no-lock where ub.sysconf.host-code = p-host-code .
+  find first sysconf no-lock where sysconf.host-code = p-host-code .
 
   define variable cli-list        as character no-undo .
   define variable cont-list        as character no-undo .
@@ -106,7 +105,7 @@ end.
   define variable ind1 as integer initial 0 no-undo .
   define variable ind2 as integer initial 0 no-undo .
 
-  define variable v-conn-avt  as logical no-undo .
+  define variable v-conn-avt  as character no-undo .
   define variable v-par-type  as character     no-undo.
 
   define variable v-list as character no-undo .
@@ -120,6 +119,8 @@ end.
   define variable v-size-col3 as decimal   no-undo .
   define variable v-size-col4 as decimal   no-undo .
   define variable v-size-col5 as decimal   no-undo .
+  DEFINE VARIABLE v-payer-code as integer  no-undo .    
+  DEFINE VARIABLE v-payer-type as character  no-undo .    
 
   run uf-get in this-procedure(
      input  {&uf-planplat}
@@ -178,13 +179,14 @@ end.
   define buffer temp-contr   for tp-contr.
   define buffer temp-contr1  for tp-contr.
 
+/*фин. обязательства*/
 
 &scop col-l0   '*'
 &scop col-l1  'Т'
 /*&scop col-l2  'Статус'*/
 &scop col-l3  '№ док-та'
 &scop col-l4  'Платеж'
-&scop col-l14 'Сумма в выбр.вал.'
+&scop col-l11 'Сумма в вал. док-та'
 &scop col-l16 'Сумма связи (в.д.)'
 &scop col-l18 'Своб. остаток (в.д.)'
 &scop col-l5  'Закрыт'
@@ -195,7 +197,7 @@ end.
 &scop col-l81 'Плательщик'
 &scop col-l9  'Создан'
 &scop col-l10 'Вал'
-&scop col-l11 'Сумма в вал. док-та'
+&scop col-l14 'Сумма в выбр.вал.'
 &scop col-l12 'Объект'
 &scop col-l13 'Вн.N'
 &scop col-l17 'Условие генерации'
@@ -205,7 +207,7 @@ end.
  {&col-l1} + '#' + ~
  {&col-l3} + '#' + ~
  {&col-l4} + '#' + ~
- {&col-l14} + '#' + ~
+ {&col-l11} + '#' + ~
  {&col-l16} + '#' + ~
  {&col-l18} + '#' + ~
  {&col-l5} + '#' + ~
@@ -216,7 +218,7 @@ end.
  {&col-l81} + '#' + ~
  {&col-l9} + '#' + ~
  {&col-l10} + '#' + ~
- {&col-l11} + '#' + ~
+ {&col-l14} + '#' + ~
  {&col-l12} + '#' + ~
  {&col-l13} + '#' + ~
  {&col-l17}
@@ -249,12 +251,14 @@ end.
 &scop cop-l17 (contract-gen( buf_fin-ob.contract-code))
 &scop dyn_cop-l17 substitute('dynamic-function(&1contract-gen&1,&2)', ~{&double-quote~}, buf_fin-ob.contract-code)
 
+/*платежи*/
+
 &scop col-p0   '*'
 &scop col-p1  'Тип'
 &scop col-p2  'Статус'
 &scop col-p3  '№ док-та'
 &scop col-p4  'Создан'
-&scop col-p15 'Сумма в выбр.вал.'
+&scop col-p12 'Сумма в валюте док-та'
 &scop col-p16 'Сумма связи (в.д.)'
 &scop col-p18 'Своб. остаток (в.д.)'
 &scop col-p5  'Договор'
@@ -266,7 +270,7 @@ end.
 &scop col-p9  'Платеж'
 &scop col-p10 'Закрыт'
 &scop col-p11 'Вал'
-&scop col-p12 'Сумма в валюте док-та'
+&scop col-p15 'Сумма в выбр.вал.'
 &scop col-p13 'Расш.тип'
 &scop col-p14 'Вн.N'
 &scop col-p17 'Объект'
@@ -277,7 +281,7 @@ end.
  {&col-p2} + '#' + ~
  {&col-p3} + '#' + ~
  {&col-p4} + '#' + ~
- {&col-p15} + '#' + ~
+ {&col-p12} + '#' + ~
  {&col-p16} + '#' + ~
  {&col-p18} + '#' + ~
  {&col-p5} + '#' + ~
@@ -289,7 +293,7 @@ end.
  {&col-p9} + '#' + ~
  {&col-p10} + '#' + ~
  {&col-p11} + '#' + ~
- {&col-p12} + '#' + ~
+ {&col-p15} + '#' + ~
  {&col-p13} + '#' + ~
  {&col-p14} + '#' + ~
  {&col-p17}
@@ -321,61 +325,69 @@ end.
 &scop cop-p14 buf_fin-doc.fin-doc-code
 &scop cop-p17 (if buf_fin-doc.obj-code = 0 then '' else (buf_fin-doc.obj-type + ' ' + string(buf_fin-doc.obj-code)))
 
+DEFINE TEMP-TABLE temp_fin-ob NO-UNDO LIKE fin-ob
+       field no-con-sum as decimal
+       field ri as recid .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Dialog-Frame
-&Scoped-define BROWSE-NAME Fin-Ob-List
-&Scoped-define BROWSE-NAME1 Fin-Doc-List
-
+&Scoped-define BROWSE-NAME Fin-Doc-List
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
-&Scoped-define INTERNAL-TABLES buf_fin-doc buf_fin-ob
+&Scoped-define INTERNAL-TABLES buf_fin-doc temp-contr1 buf_fin-ob ~
+temp-contr
 
 /* Definitions for BROWSE Fin-Doc-List                                  */
-&Scoped-define FIELDS-IN-QUERY-Fin-Doc-List {&cop-p0} {&cop-p1} {&cop-p2} {&cop-p3} {&cop-p4} {&cop-p15} @ p-sum {&cop-p16} {&cop-p18} {&cop-p5} @ p-contr {&cop-p6} {&cop-p61} {&cop-p7} {&cop-p71} {&cop-p8} {&cop-p9} {&cop-p10} {&cop-p11} @ l-curr {&cop-p12} {&cop-p13} {&cop-p14} {&cop-p17}
-&Scoped-define ENABLED-FIELDS-IN-QUERY-Fin-Doc-List {&cop-p1}
-&Scoped-define FIELD-PAIRS-IN-QUERY-Fin-Doc-List~
- ~{&FP1}{&cop-p1} ~{&FP2}{&cop-p1} ~{&FP3}
+&Scoped-define FIELDS-IN-QUERY-Fin-Doc-List {&cop-p0} {&cop-p1} {&cop-p3} {&cop-p4} {&cop-p15} @ p-sum {&cop-p7} {&cop-p71} {&cop-p5} @ p-contr {&cop-p16} {&cop-p18} {&cop-p11} @ l-curr {&cop-p12} {&cop-p6} {&cop-p61} {&cop-p8} {&cop-p9} {&cop-p10} {&cop-p2} {&cop-p11} @ l-curr {&cop-p12} {&cop-p13} {&cop-p14} {&cop-p17}   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-Fin-Doc-List {&cop-p1}   
 &Scoped-define SELF-NAME Fin-Doc-List
-&Scoped-define OPEN-QUERY-Fin-Doc-List OPEN QUERY {&SELF-NAME} FOR EACH buf_fin-doc NO-LOCK, first temp-contr1 /*indexed-reposition*/.
-&Scoped-define TABLES-IN-QUERY-Fin-Doc-List buf_fin-doc  temp-contr1
+&Scoped-define QUERY-STRING-Fin-Doc-List FOR EACH buf_fin-doc NO-LOCK, ~
+       first temp-contr1
+&Scoped-define OPEN-QUERY-Fin-Doc-List OPEN QUERY {&SELF-NAME} FOR EACH buf_fin-doc NO-LOCK, ~
+       first temp-contr1.
+&Scoped-define TABLES-IN-QUERY-Fin-Doc-List buf_fin-doc temp-contr1
 &Scoped-define FIRST-TABLE-IN-QUERY-Fin-Doc-List buf_fin-doc
+&Scoped-define SECOND-TABLE-IN-QUERY-Fin-Doc-List temp-contr1
+
 
 /* Definitions for BROWSE Fin-Ob-List                                   */
-&Scoped-define FIELDS-IN-QUERY-Fin-Ob-List {&cop-l0} {&cop-l1}  {&cop-l4} {&cop-l14} @ p-sum {&cop-l16} {&cop-l18} {&cop-l5} {&cop-l6} @ p-contr {&cop-l7} {&cop-l71} {&cop-l8} {&cop-l81} {&cop-l9} {&cop-l10} @ l-curr {&cop-l11} {&cop-l12} {&cop-l13} {&cop-l17} @ p-gen
-&Scoped-define ENABLED-FIELDS-IN-QUERY-Fin-Ob-List {&cop-l1}
-&Scoped-define FIELD-PAIRS-IN-QUERY-Fin-Ob-List~
- ~{&FP1}{&cop-l1} ~{&FP2}{&cop-l1} ~{&FP3}
+&Scoped-define FIELDS-IN-QUERY-Fin-Ob-List {&cop-l0} {&cop-l9} {&cop-l14} @ p-sum {&cop-l8} {&cop-l81} {&cop-l6} @ p-contr {&cop-l3} {&cop-l1} {&cop-l4} {&cop-l16} {&cop-l18} {&cop-l5} {&cop-l7} {&cop-l71} {&cop-l10} @ l-curr {&cop-l11} {&cop-l12} {&cop-l13} {&cop-l17} @ p-gen   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-Fin-Ob-List {&cop-l1}   
 &Scoped-define SELF-NAME Fin-Ob-List
-&Scoped-define OPEN-QUERY-Fin-Ob-List OPEN QUERY {&SELF-NAME} FOR EACH buf_fin-ob NO-LOCK, first temp-contr /*indexed-reposition*/.
+&Scoped-define QUERY-STRING-Fin-Ob-List FOR EACH buf_fin-ob where buf_fin-ob.payer-code = v-payer-code and buf_fin-ob.status_ =  {&fact} and buf_fin-ob.con-stat <> 2 NO-LOCK, ~
+       first temp-contr
+&Scoped-define OPEN-QUERY-Fin-Ob-List OPEN QUERY {&SELF-NAME} FOR EACH buf_fin-ob where buf_fin-ob.payer-code = v-payer-code and buf_fin-ob.status_ =  {&fact} and buf_fin-ob.con-stat <> 2 NO-LOCK, ~
+       first temp-contr.
 &Scoped-define TABLES-IN-QUERY-Fin-Ob-List buf_fin-ob temp-contr
 &Scoped-define FIRST-TABLE-IN-QUERY-Fin-Ob-List buf_fin-ob
+&Scoped-define SECOND-TABLE-IN-QUERY-Fin-Ob-List temp-contr
 
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-quit RECT-status B-conn-add B-conn-view ~
-B-oplat-list B-Help B-conn-fo B-view-fo B-conn-doc ~
-B-view-doc B-del-doc Fin-Ob-List Fin-Doc-List B-mark sum-fin-ob B-mark-2 ~
-sum-fin-doc B-unmark B-allmark B-oplat B-unmark-2 B-allmark-2 sch-code ~
-BUTTON-cli cli-code cli-type RADIO-find-doc RADIO-find-cli sch-date ~
-s-curr-code BUTTON-curr cli-name date-1 Sel-Status Curr-Types Sel-Client ~
-Sel-Contr B-date date-2 mark-num mark-num-2
-&Scoped-Define DISPLAYED-OBJECTS sum-fin-ob sum-fin-doc sch-code cli-code ~
-cli-type RADIO-find-doc RADIO-find-cli sch-date s-curr-code cli-name date-1 ~
-Sel-Status Curr-Types Sel-Client Sel-Contr date-2 mark-num mark-num-2 ~
-curr-name
+&Scoped-Define ENABLED-OBJECTS b-quit B-conn-add B-conn-view B-oplat-list ~
+B-Help RECT-status RECT-1 B-conn-doc B-view-doc B-del-doc B-conn-fo ~
+B-view-fo Fin-Ob-List Fin-Doc-List B-mark-2 B-unmark-2 B-allmark-2 ~
+sum-fin-doc B-mark B-unmark B-allmark B-oplat sum-fin-ob BUTTON-cli ~
+sch-code RADIO-find-cli cli-code cli-type RADIO-find-doc BUTTON-curr ~
+s-curr-code sch-date cli-name Curr-Types Sel-Client Sel-Contr date-1 ~
+Sel-Status B-date date-2 mark-num-2 mark-num 
+&Scoped-Define DISPLAYED-OBJECTS sum-fin-doc sum-fin-ob sch-code ~
+RADIO-find-cli cli-code cli-type RADIO-find-doc s-curr-code sch-date ~
+cli-name Curr-Types Sel-Client Sel-Contr date-1 Sel-Status date-2 ~
+mark-num-2 mark-num curr-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -386,56 +398,56 @@ curr-name
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD contract-gen Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD contract-gen Dialog-Frame 
 FUNCTION contract-gen RETURNS CHARACTER
   ( input p-contract-code as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD contract-id Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD contract-id Dialog-Frame 
 FUNCTION contract-id RETURNS CHARACTER
   ( input p-contract-code as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-curr-sum Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-curr-sum Dialog-Frame 
 FUNCTION get-curr-sum RETURNS decimal
   ( input p-cur as integer, input p-doc-curr as integer, input p-cur-contr as integer, input p-sum-contract as decimal, input p-sum-rubl as decimal, input p-sum-base as decimal, input p-sum-doc as decimal )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-ostat Dialog-Frame
-FUNCTION get-ostat RETURNS decimal
-  ( input p-sum1 as decimal, input p-sum2 as decimal )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-currency Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-currency Dialog-Frame 
 FUNCTION get-currency RETURNS CHARACTER
   ( input curr-code as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-free-sum Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-free-sum Dialog-Frame 
 FUNCTION get-free-sum RETURNS decimal
-  ( BUFFER loc-fin-ob FOR ub.fin-ob )  FORWARD.
+  ( BUFFER loc-fin-ob FOR fin-ob )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-free-sum1 Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-free-sum1 Dialog-Frame 
 FUNCTION get-free-sum1 RETURNS decimal
-  ( BUFFER loc-fin-doc FOR ub.fin-doc )  FORWARD.
+  ( BUFFER loc-fin-doc FOR fin-doc )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD mark-string Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-ostat Dialog-Frame 
+FUNCTION get-ostat RETURNS decimal
+  ( input p-sum1 as decimal, input p-sum2 as decimal )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD mark-string Dialog-Frame 
 FUNCTION mark-string RETURNS CHARACTER
   ( input par-recid as recid, input typ as integer )  FORWARD.
 
@@ -448,267 +460,275 @@ FUNCTION mark-string RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-allmark
-     LABEL "Вд.*"
+DEFINE BUTTON B-allmark 
+     LABEL "Вд.*" 
      SIZE 5 BY 1.
 
-DEFINE BUTTON B-allmark-2
-     LABEL "Вд.*"
+DEFINE BUTTON B-allmark-2 
+     LABEL "Вд.*" 
      SIZE 5 BY 1.
 
-DEFINE BUTTON B-conn-add
-     LABEL "Соз&д.св."
+DEFINE BUTTON B-conn-add 
+     LABEL "Соз&д.св." 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-conn-doc
-     LABEL "Связи пл."
+DEFINE BUTTON B-conn-doc 
+     LABEL "Связи пл." 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-conn-fo
-     LABEL "Связи ф-о"
+DEFINE BUTTON B-conn-fo 
+     LABEL "Связи ф-о" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-conn-view
-     LABEL "Свя&зи все"
+DEFINE BUTTON B-conn-view 
+     LABEL "Свя&зи все" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-date
-     LABEL "Применить"
-     SIZE 10 BY 0.8
+DEFINE BUTTON B-date 
+     LABEL "Применить" 
+     SIZE 10 BY 1.04
      FGCOLOR 4 .
 
-DEFINE BUTTON B-del-doc
-     LABEL "&Удалить"
+DEFINE BUTTON B-del-doc 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-mark-2
-     LABEL "&*"
+DEFINE BUTTON B-mark-2 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-oplat
-     LABEL "О&платить"
+DEFINE BUTTON B-oplat 
+     LABEL "О&платить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-oplat-list
-     LABEL "Cписок"
+DEFINE BUTTON B-oplat-list 
+     LABEL "Cписок" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-unmark
-     LABEL "Сн.*"
+DEFINE BUTTON B-unmark 
+     LABEL "Сн.*" 
      SIZE 5 BY 1.
 
-DEFINE BUTTON B-unmark-2
-     LABEL "Сн.*"
+DEFINE BUTTON B-unmark-2 
+     LABEL "Сн.*" 
      SIZE 5 BY 1.
 
-DEFINE BUTTON B-view-doc
-     LABEL "Просмотр"
+DEFINE BUTTON B-view-doc 
+     LABEL "Просмотр" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-view-fo
-     LABEL "Просмотр"
+DEFINE BUTTON B-view-fo 
+     LABEL "Просмотр" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON BUTTON-cli
+DEFINE BUTTON BUTTON-cli 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "2"
+     LABEL "2" 
      SIZE 2.88 BY 1.
 
-DEFINE BUTTON BUTTON-curr
+DEFINE BUTTON BUTTON-curr 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "1"
+     LABEL "1" 
      SIZE 2.75 BY 1.
 
-DEFINE VARIABLE cli-code AS INTEGER FORMAT "99999" INITIAL 0
-     LABEL "код"
-     VIEW-AS FILL-IN
-     SIZE 6 BY 0.9 .
+DEFINE VARIABLE cli-code AS INTEGER FORMAT "99999" INITIAL 0 
+     LABEL "код" 
+     VIEW-AS FILL-IN 
+     SIZE 6 BY .93.
 
-DEFINE VARIABLE cli-name AS CHARACTER FORMAT "X(14)"
-     LABEL "Наим."
-     VIEW-AS FILL-IN
-     SIZE 13.25 BY .9 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
+DEFINE VARIABLE cli-name AS CHARACTER FORMAT "X(14)" 
+     LABEL "Наим." 
+     VIEW-AS FILL-IN 
+     SIZE 14.5 BY .93 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE cli-type AS CHARACTER FORMAT "X(3)"
-     VIEW-AS FILL-IN
-     SIZE 4.38 BY 0.9 .
+DEFINE VARIABLE cli-type AS CHARACTER FORMAT "X(3)" 
+     VIEW-AS FILL-IN 
+     SIZE 4.38 BY .93.
 
-DEFINE VARIABLE curr-name AS CHARACTER FORMAT "X(5)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE curr-name AS CHARACTER FORMAT "X(5)":U 
+      VIEW-AS TEXT 
      SIZE 4.13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE date-1 AS DATE FORMAT "99/99/9999"
-     LABEL "с"
-     VIEW-AS FILL-IN
-     SIZE 11 BY .92 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
+DEFINE VARIABLE date-1 AS DATE FORMAT "99/99/9999" 
+     LABEL "с" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY .93 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE date-2 AS DATE FORMAT "99/99/9999"
-     LABEL "по"
-     VIEW-AS FILL-IN
-     SIZE 11 BY .92 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
+DEFINE VARIABLE date-2 AS DATE FORMAT "99/99/9999" 
+     LABEL "по" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY .93 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE mark-num AS INTEGER FORMAT ">>>>9":U INITIAL 0
-      VIEW-AS TEXT
+DEFINE VARIABLE mark-num AS INTEGER FORMAT ">>>>9":U INITIAL 0 
+      VIEW-AS TEXT 
      SIZE 5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE mark-num-2 AS INTEGER FORMAT ">>>>9":U INITIAL 0
-      VIEW-AS TEXT
+DEFINE VARIABLE mark-num-2 AS INTEGER FORMAT ">>>>9":U INITIAL 0 
+      VIEW-AS TEXT 
      SIZE 5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE s-curr-code AS INTEGER FORMAT ">>9" INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE s-curr-code AS INTEGER FORMAT ">>9" INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 3 BY 1.
 
-DEFINE VARIABLE sch-code AS CHARACTER FORMAT "X(14)"
-     LABEL "&Нач. номера"
-     VIEW-AS FILL-IN
-     SIZE 11 BY .92 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
+DEFINE VARIABLE sch-code AS CHARACTER FORMAT "X(14)" 
+     LABEL "&Нач. номера" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY .93 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sch-date AS DATE FORMAT "99/99/9999"
-     LABEL "Д&ата"
-     VIEW-AS FILL-IN
-     SIZE 11 BY .9 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
+DEFINE VARIABLE sch-date AS DATE FORMAT "99/99/9999" 
+     LABEL "Д&ата" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY .93 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sum-fin-doc AS DECIMAL FORMAT "->>,>>>,>>9.99":U INITIAL 0
-     LABEL "Сумма"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sum-fin-doc AS DECIMAL FORMAT "->>,>>>,>>9.99":U INITIAL 0 
+     LABEL "Сумма" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
-DEFINE VARIABLE sum-fin-ob AS DECIMAL FORMAT "->>,>>>,>>9.99":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sum-fin-ob AS DECIMAL FORMAT "->>,>>>,>>9.99":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 18.25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE Curr-Types AS CHARACTER INITIAL "all"
+DEFINE VARIABLE Curr-Types AS CHARACTER INITIAL "all" 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", "all",
 "Выбор", "sel"
-     SIZE 8 BY 1.5 NO-UNDO.
+     SIZE 8 BY 1.82 NO-UNDO.
 
-DEFINE VARIABLE RADIO-find-cli AS INTEGER
+DEFINE VARIABLE RADIO-find-cli AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Плательщик", 1,
 "Получатель", 2
-     SIZE 13.38 BY 1.79 NO-UNDO.
+     SIZE 13.38 BY 2.07 NO-UNDO.
 
-DEFINE VARIABLE RADIO-find-doc AS INTEGER
+DEFINE VARIABLE RADIO-find-doc AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Фин.обяз.", 1,
 "Платежи", 2
-     SIZE 12 BY 1.54 NO-UNDO.
+     SIZE 12 BY 1.89 NO-UNDO.
 
-DEFINE VARIABLE Sel-Client AS CHARACTER INITIAL "all"
+DEFINE VARIABLE Sel-Client AS CHARACTER INITIAL "all" 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", "all",
 "Выбор", "sel"
-     SIZE 8 BY 1.42 NO-UNDO.
+     SIZE 8 BY 1.82 NO-UNDO.
 
-DEFINE VARIABLE Sel-Contr AS CHARACTER INITIAL "all"
+DEFINE VARIABLE Sel-Contr AS CHARACTER INITIAL "all" 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", "all",
 "Выбор", "sel"
-     SIZE 8 BY 1.42 NO-UNDO.
+     SIZE 8 BY 1.82 NO-UNDO.
 
-DEFINE VARIABLE Sel-Status AS CHARACTER INITIAL "new"
+DEFINE VARIABLE Sel-Status AS CHARACTER INITIAL "new" 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", "all",
 "Не факт", "new",
 "Факт", "fact"
-     SIZE 10 BY 1.75 NO-UNDO.
+     SIZE 10 BY 1.74 NO-UNDO.
+
+DEFINE RECTANGLE RECT-1
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 132.75 BY 2.33.
 
 DEFINE RECTANGLE RECT-status
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 97.38 BY 2.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 133 BY 2.22.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY Fin-Doc-List FOR
-      buf_fin-doc except , temp-contr1 SCROLLING.
+DEFINE QUERY Fin-Doc-List FOR 
+      buf_fin-doc, 
+      temp-contr1 SCROLLING.
 
-DEFINE QUERY Fin-Ob-List FOR
-      buf_fin-ob except , temp-contr SCROLLING.
+DEFINE QUERY Fin-Ob-List FOR 
+      buf_fin-ob, 
+      temp-contr SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE Fin-Doc-List
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS Fin-Doc-List Dialog-Frame _FREEFORM
   QUERY Fin-Doc-List DISPLAY
-      {&cop-p0}    COLUMN-LABEL {&col-p0}  FORMAT "x(1)"
+     {&cop-p0}    COLUMN-LABEL {&col-p0}  FORMAT "x(1)"
      {&cop-p1}    COLUMN-LABEL {&col-p1}  Format "x(3)"
-     {&cop-p2}    COLUMN-LABEL {&col-p2}  Format "x(6)"
      {&cop-p3}    COLUMN-LABEL {&col-p3}  Format "x(9)"
      {&cop-p4}    COLUMN-LABEL {&col-p4}  format "99/99/99"
-     {&cop-p15} @ p-sum   COLUMN-LABEL {&col-p15}  Format "->>>,>>>,>>>,>>>.99"
+     {&cop-p12}   COLUMN-LABEL {&col-p12}     
+     {&cop-p7}    COLUMN-LABEL {&col-p7}  Format "x(16)"
+     {&cop-p71}   COLUMN-LABEL {&col-p71} Format "x(50)"
+     {&cop-p5}  @ p-contr COLUMN-LABEL {&col-p5} Format "x(16)"
      {&cop-p16}   COLUMN-LABEL {&col-p16}  Format "->>>,>>>,>>>,>>>.99"
      {&cop-p18}   COLUMN-LABEL {&col-p18}  Format "->>>,>>>,>>>,>>>.99"
-     {&cop-p5}  @ p-contr COLUMN-LABEL {&col-p5} Format "x(16)"
+     {&cop-p11} @ l-curr  COLUMN-LABEL {&col-p11} Format "x(3)"
+     {&cop-p12}   COLUMN-LABEL {&col-p12}
      {&cop-p6}    COLUMN-LABEL {&col-p6}  Format "x(10)"
      {&cop-p61}   COLUMN-LABEL {&col-p61} Format "x(50)"
-     {&cop-p7}    COLUMN-LABEL {&col-p7}  Format "x(10)"
-     {&cop-p71}   COLUMN-LABEL {&col-p71} Format "x(50)"
      {&cop-p8}    COLUMN-LABEL {&col-p8}  format "99/99/99"
      {&cop-p9}    COLUMN-LABEL {&col-p9}  format "99/99/99"
      {&cop-p10}   COLUMN-LABEL {&col-p10} format "99/99/99"
+     {&cop-p2}    COLUMN-LABEL {&col-p2}  Format "x(6)"
      {&cop-p11} @ l-curr  COLUMN-LABEL {&col-p11} Format "x(3)"
-     {&cop-p12}   COLUMN-LABEL {&col-p12}
+     {&cop-p15} @ p-sum   COLUMN-LABEL {&col-p15}  Format "->>>,>>>,>>>,>>>.99"
      {&cop-p13}   COLUMN-LABEL {&col-p13} Format "x(3)"
      {&cop-p14}   COLUMN-LABEL {&col-p14}
      {&cop-p17}   COLUMN-LABEL {&col-p17}
      enable {&cop-p1}
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 48 BY 16.08.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 74 BY 16.07 ROW-HEIGHT-CHARS .78.
 
 DEFINE BROWSE Fin-Ob-List
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS Fin-Ob-List Dialog-Frame _FREEFORM
   QUERY Fin-Ob-List DISPLAY
       {&cop-l0}    COLUMN-LABEL {&col-l0}  FORMAT "x(1)"
-     {&cop-l1}    COLUMN-LABEL {&col-l1}  Format "x(1)"
-/*     {&cop-l2}    COLUMN-LABEL {&col-l2}  Format "x(6)"*/
+     {&cop-l9}    COLUMN-LABEL {&col-l9}  format "99/99/99"
+/*     {&cop-l2}    COLUMN-LABEL {&col-l2}  FORMAT "x(1)"*/
+     {&cop-l11}   COLUMN-LABEL {&col-l11}
+     {&cop-l8}    COLUMN-LABEL {&col-l8}  Format "x(16)"
+     {&cop-l81}   COLUMN-LABEL {&col-l81}  Format "x(50)"
+     {&cop-l6} @ p-contr   COLUMN-LABEL {&col-l6} Format "x(16)"
      {&cop-l3}    COLUMN-LABEL {&col-l3}  Format "x(9)"
+     {&cop-l1}    COLUMN-LABEL {&col-l1}  Format "x(1)"
      {&cop-l4}    COLUMN-LABEL {&col-l4}  format "99/99/99"
-     {&cop-l14} @ p-sum  COLUMN-LABEL {&col-l14} Format "->>>,>>>,>>>,>>>.99"
      {&cop-l16}   COLUMN-LABEL {&col-l16}  Format "->>>,>>>,>>>,>>>.99"
      {&cop-l18}   COLUMN-LABEL {&col-l18}  Format "->>>,>>>,>>>,>>>.99"
      {&cop-l5}    COLUMN-LABEL {&col-l5}  format "99/99/99"
-     {&cop-l6} @ p-contr   COLUMN-LABEL {&col-l6} Format "x(16)"
      {&cop-l7}    COLUMN-LABEL {&col-l7}  Format "x(10)"
      {&cop-l71}   COLUMN-LABEL {&col-l71}  Format "x(50)"
-     {&cop-l8}    COLUMN-LABEL {&col-l8}  Format "x(10)"
-     {&cop-l81}   COLUMN-LABEL {&col-l81}  Format "x(50)"
-     {&cop-l9}    COLUMN-LABEL {&col-l9}  format "99/99/99"
      {&cop-l10}  @ l-curr COLUMN-LABEL {&col-l10} Format "x(3)"
-     {&cop-l11}   COLUMN-LABEL {&col-l11}
+     {&cop-l14} @ p-sum  COLUMN-LABEL {&col-l14} Format "->>>,>>>,>>>,>>>.99"     
      {&cop-l12}   COLUMN-LABEL {&col-l12} Format "x(14)"
      {&cop-l13}   COLUMN-LABEL {&col-l13} Format "x(10)"
      {&cop-l17}  @ p-gen  COLUMN-LABEL {&col-l17} Format "x(50)"
      enable {&cop-l1}
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 48 BY 16.08.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 74 BY 16.07 ROW-HEIGHT-CHARS .78.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -718,77 +738,75 @@ DEFINE FRAME Dialog-Frame
      B-conn-add AT ROW 1 COL 11
      B-conn-view AT ROW 1 COL 21
      B-oplat-list AT ROW 1 COL 31
-     B-Help AT ROW 1 COL 88
-     B-conn-fo AT ROW 2 COL 21
-     B-view-fo AT ROW 2 COL 31
-     B-conn-doc AT ROW 2 COL 68
-     B-view-doc AT ROW 2 COL 78
-     B-del-doc AT ROW 2 COL 88
-     Fin-Ob-List AT ROW 3 COL 1.25
-     Fin-Doc-List AT ROW 3 COL 49.75
-     B-mark AT ROW 19.08 COL 1
-     sum-fin-ob AT ROW 19.08 COL 28.88 COLON-ALIGNED NO-LABEL
-     B-mark-2 AT ROW 19.08 COL 50
-     sum-fin-doc AT ROW 19.08 COL 79.75 COLON-ALIGNED
-     B-unmark AT ROW 19.13 COL 9
-     B-allmark AT ROW 19.13 COL 14
-     B-oplat AT ROW 19.13 COL 19.13
-     B-unmark-2 AT ROW 19.13 COL 58
-     B-allmark-2 AT ROW 19.13 COL 63
-     sch-code AT ROW 20.15 COL 32.88 COLON-ALIGNED
-     BUTTON-cli AT ROW 20.04 COL 75.88
-     cli-code AT ROW 20.18 COL 62.5 COLON-ALIGNED
-     cli-type AT ROW 20.18 COL 69 COLON-ALIGNED NO-LABEL
-     RADIO-find-doc AT ROW 20.21 COL 9.25 NO-LABEL
-     RADIO-find-cli AT ROW 20.21 COL 46 NO-LABEL
-     sch-date AT ROW 20.98 COL 32.88 COLON-ALIGNED
-     s-curr-code AT ROW 20.92 COL 82.38 COLON-ALIGNED NO-LABEL
-     BUTTON-curr AT ROW 20.96 COL 93.25
-     cli-name AT ROW 21.04 COL 64 COLON-ALIGNED
-     date-1 AT ROW 22.04 COL 65.75 COLON-ALIGNED
-     Sel-Status AT ROW 22.08 COL 88 NO-LABEL
-     Curr-Types AT ROW 22.13 COL 8.5 NO-LABEL
-     Sel-Client AT ROW 22.25 COL 28 NO-LABEL
-     Sel-Contr AT ROW 22.29 COL 45.5 NO-LABEL
-     B-date AT ROW 23.1 COL 53.25
-     date-2 AT ROW 22.9 COL 65.75 COLON-ALIGNED
-     mark-num AT ROW 19.08 COL 4 NO-LABEL
-     mark-num-2 AT ROW 19.08 COL 53 NO-LABEL
-     curr-name AT ROW 20.92 COL 88 NO-LABEL
-     "Платеж:" VIEW-AS TEXT
-          SIZE 8.13 BY 0.9 AT ROW 22.13 COL 53.63
-          FGCOLOR 4
+     B-Help AT ROW 1 COL 121
+     B-conn-doc AT ROW 2.04 COL 11
+     B-view-doc AT ROW 2.04 COL 21
+     B-del-doc AT ROW 2.04 COL 31
+     B-conn-fo AT ROW 2.04 COL 111
+     B-view-fo AT ROW 2.04 COL 121
+     Fin-Ob-List AT ROW 3.07 COL 76
+     Fin-Doc-List AT ROW 3.11 COL 1.5
+     B-mark-2 AT ROW 19.41 COL 1.5
+     B-unmark-2 AT ROW 19.41 COL 9.5
+     B-allmark-2 AT ROW 19.41 COL 15
+     sum-fin-doc AT ROW 19.41 COL 31.5 COLON-ALIGNED
+     B-mark AT ROW 19.41 COL 77
+     B-unmark AT ROW 19.41 COL 85
+     B-allmark AT ROW 19.41 COL 90
+     B-oplat AT ROW 19.41 COL 95
+     sum-fin-ob AT ROW 19.41 COL 105 COLON-ALIGNED NO-LABEL
+     BUTTON-cli AT ROW 20.85 COL 97.88
+     sch-code AT ROW 20.93 COL 35.5 COLON-ALIGNED
+     RADIO-find-cli AT ROW 20.93 COL 64.5 NO-LABEL
+     cli-code AT ROW 20.93 COL 84.5 COLON-ALIGNED
+     cli-type AT ROW 20.93 COL 91 COLON-ALIGNED NO-LABEL
+     RADIO-find-doc AT ROW 20.96 COL 10.38 NO-LABEL
+     BUTTON-curr AT ROW 21.89 COL 120.88
+     s-curr-code AT ROW 21.93 COL 110 COLON-ALIGNED NO-LABEL
+     sch-date AT ROW 21.96 COL 35.5 COLON-ALIGNED
+     cli-name AT ROW 21.96 COL 84.5 COLON-ALIGNED
+     Curr-Types AT ROW 23.41 COL 11 NO-LABEL
+     Sel-Client AT ROW 23.41 COL 39.5 NO-LABEL
+     Sel-Contr AT ROW 23.41 COL 63 NO-LABEL
+     date-1 AT ROW 23.41 COL 94.25 COLON-ALIGNED
+     Sel-Status AT ROW 23.41 COL 121 NO-LABEL
+     B-date AT ROW 24.22 COL 81.5
+     date-2 AT ROW 24.3 COL 94.38 COLON-ALIGNED
+     mark-num-2 AT ROW 19.41 COL 4.5 NO-LABEL
+     mark-num AT ROW 19.41 COL 80 NO-LABEL
+     curr-name AT ROW 21.85 COL 115.63 NO-LABEL
      "Договоры:" VIEW-AS TEXT
-          SIZE 9.5 BY 1 AT ROW 22.08 COL 36
-          FGCOLOR 4
-     "Контрагенты:" VIEW-AS TEXT
-          SIZE 11 BY 1 AT ROW 22.08 COL 16.5
-          FGCOLOR 4
+          SIZE 9.5 BY 1 AT ROW 23.37 COL 51.5
+          FGCOLOR 4 
      "Валюта:" VIEW-AS TEXT
-          SIZE 7.5 BY .92 AT ROW 22.08 COL 1.2
-          FGCOLOR 4
-     "Фин. обязательства:" VIEW-AS TEXT
-          SIZE 19.63 BY .92 AT ROW 2.04 COL 1.25
-          FGCOLOR 4
-     "Поиск:" VIEW-AS TEXT
-          SIZE 7.38 BY .92 AT ROW 20.21 COL 1.38
-          FGCOLOR 4
-     "Стат.пл.:" VIEW-AS TEXT
-          SIZE 9 BY 1 AT ROW 22.04 COL 79
-          FGCOLOR 4
+          SIZE 7.5 BY .93 AT ROW 23.41 COL 1.5
+          FGCOLOR 4 
      "Платежи:" VIEW-AS TEXT
-          SIZE 8.88 BY .92 AT ROW 2.04 COL 49.75
-          FGCOLOR 4
-     "Договоры:" VIEW-AS TEXT
-          SIZE 9.5 BY 1 AT ROW 22.08 COL 36
-          FGCOLOR 4
+          SIZE 8.88 BY .93 AT ROW 2.04 COL 2
+          FGCOLOR 4 
      "Показ в валюте:" VIEW-AS TEXT
-          SIZE 16.5 BY .67 AT ROW 20.17 COL 80.88
-          FGCOLOR 4
-     RECT-status AT ROW 22 COL 1
-     SPACE(0.00) SKIP(0.16)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          SIZE 16.5 BY .67 AT ROW 20.96 COL 108.5
+          FGCOLOR 4 
+     "Платеж:" VIEW-AS TEXT
+          SIZE 8.13 BY .93 AT ROW 23.33 COL 81.88
+          FGCOLOR 4 
+     "Контрагенты:" VIEW-AS TEXT
+          SIZE 11 BY 1 AT ROW 23.41 COL 27
+          FGCOLOR 4 
+     "Стат.пл.:" VIEW-AS TEXT
+          SIZE 9 BY 1 AT ROW 23.37 COL 110.5
+          FGCOLOR 4 
+     "Фин. обязательства:" VIEW-AS TEXT
+          SIZE 22 BY .93 AT ROW 2.04 COL 76.5
+          FGCOLOR 4 
+     "Поиск:" VIEW-AS TEXT
+          SIZE 7.38 BY .93 AT ROW 21 COL 1.88
+          FGCOLOR 4 
+     RECT-status AT ROW 23.26 COL 1.25
+     RECT-1 AT ROW 20.82 COL 1.38 WIDGET-ID 2
+     SPACE(15.87) SKIP(2.77)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Планирование платежей"
          DEFAULT-BUTTON b-quit CANCEL-BUTTON b-quit.
 
@@ -808,10 +826,10 @@ DEFINE FRAME Dialog-Frame
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
-                                                                        */
-/* BROWSE-TAB Fin-Ob-List B-del-doc Dialog-Frame */
+   FRAME-NAME                                                           */
+/* BROWSE-TAB Fin-Ob-List B-view-fo Dialog-Frame */
 /* BROWSE-TAB Fin-Doc-List Fin-Ob-List Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -830,7 +848,7 @@ ASSIGN
 &ANALYZE-SUSPEND _QUERY-BLOCK BROWSE Fin-Doc-List
 /* Query rebuild information for BROWSE Fin-Doc-List
      _START_FREEFORM
-OPEN QUERY {&SELF-NAME} FOR EACH buf_fin-doc NO-LOCK indexed-reposition.
+OPEN QUERY {&SELF-NAME} FOR EACH buf_fin-doc NO-LOCK, first temp-contr1
      _END_FREEFORM
      _Query            is NOT OPENED
 */  /* BROWSE Fin-Doc-List */
@@ -839,13 +857,13 @@ OPEN QUERY {&SELF-NAME} FOR EACH buf_fin-doc NO-LOCK indexed-reposition.
 &ANALYZE-SUSPEND _QUERY-BLOCK BROWSE Fin-Ob-List
 /* Query rebuild information for BROWSE Fin-Ob-List
      _START_FREEFORM
-OPEN QUERY {&SELF-NAME} FOR EACH buf_fin-ob NO-LOCK indexed-reposition.
+OPEN QUERY {&SELF-NAME} FOR EACH buf_fin-ob where buf_fin-ob.payer-code = v-payer-code NO-LOCK, first temp-contr
      _END_FREEFORM
      _Query            is NOT OPENED
 */  /* BROWSE Fin-Ob-List */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -962,8 +980,8 @@ DO:
       run str/fin-con2.w ( parParentProc, v-cntxt-host-code-obj, temp-fin-ob.ri, v-list, output v-end) .
       if v-end then do:
         for each temp-fin-doc :
-          find first ub.fin-doc no-lock where recid (ub.fin-doc) = temp-fin-doc.ri .
-          if ub.fin-doc.con-stat = 2 then delete temp-fin-doc .
+          find first fin-doc no-lock where recid (fin-doc) = temp-fin-doc.ri .
+          if fin-doc.con-stat = 2 then delete temp-fin-doc .
         end.
         RUN OpenBr(yes, no, '':U) .
         RUN OpenBr1(yes, no, '':U) .
@@ -978,8 +996,8 @@ DO:
       run str/fin-con1.w ( parParentProc, v-cntxt-host-code-obj, temp-fin-doc.ri, v-list, output v-end) .
       if v-end then do:
         for each temp-fin-ob :
-          find first ub.fin-ob no-lock where recid (ub.fin-ob) = temp-fin-ob.ri .
-          if ub.fin-ob.con-stat = 2 then delete temp-fin-ob .
+          find first fin-ob no-lock where recid (fin-ob) = temp-fin-ob.ri .
+          if fin-ob.con-stat = 2 then delete temp-fin-ob .
         end.
         RUN OpenBr(yes, no, '':U) .
         RUN OpenBr1(yes, no, '':U) .
@@ -1084,22 +1102,22 @@ DO:
   }
   if not g-log then return.
 
-  find first ub.fin-doc exclusive-lock where recid(ub.fin-doc) = recid(buf_fin-doc) NO-ERROR.
-  if not avail ub.fin-doc then return no-apply.
-  IF ub.fin-doc.status_ <> {&fin-new}  THEN DO:
+  find first fin-doc exclusive-lock where recid(fin-doc) = recid(buf_fin-doc) NO-ERROR.
+  if not avail fin-doc then return no-apply.
+  IF fin-doc.status_ <> {&fin-new}  THEN DO:
     MESSAGE "Платеж закрыт - удалять нельзя!"  VIEW-AS ALERT-BOX ERROR.
     RETURN .
   END.
   g-log = no.
   MESSAGE
-    "Вы уверены, что хотите удалить платеж N " ub.fin-doc.prn-doc-code " от " string(ub.fin-doc.doc-date,"99/99/9999") "?"
+    "Вы уверены, что хотите удалить платеж N " fin-doc.prn-doc-code " от " string(fin-doc.doc-date,"99/99/9999") "?"
   VIEW-AS ALERT-BOX QUESTION BUTTONS YES-NO UPDATE g-log.
   IF g-log <> YES THEN RETURN .
 
   do on error undo, return on stop undo, return no-apply :
     run trg/findocdl.p ( input parParentProc
-                         ,input ub.fin-doc.host-code
-                         ,input ub.fin-doc.fin-doc-code
+                         ,input fin-doc.host-code
+                         ,input fin-doc.fin-doc-code
                          ,input no
                          ,input no) no-error.
   end.
@@ -1238,31 +1256,20 @@ DO:
       else assign v-list = v-list + "," + string(temp-fin-ob.ri) .
     end.
 
-    define variable  par-type          as character no-undo .
-    define variable  v-found           as logical   no-undo .
-    define variable  v-value-date      as date   no-undo .
-    define variable  v-value-decimal   as decimal   no-undo .
-    define variable  v-value-integer   as integer   no-undo .
-    define variable  v-value-logical   as logical   no-undo .
-    define variable  v-value-character as character no-undo .
+    assign v-conn-avt = "no" .
 
-    run thbjattr_value in this-procedure  (
-      input   "",
-      input   0 ,
-      input   {&attr-fin-global} ,
-      input   'add-conn-avt'  ,
-      output  v-value-character ,
-      output  v-value-date      ,
-      output  v-value-decimal   ,
-      output  v-value-integer   ,
-      output  v-conn-avt  ,
-      output  par-type            ,
-      output  v-found
-      ) no-error
-      .
-    if error-status :error then v-conn-avt = false .
+    run gbl/conf-rd.p ( input "fincnavt"
+                        ,input v-cntxt-host-code-obj
+                        ,input ""
+                        ,input 0
+                        ,input ""
+                        ,input ""
+                        ,input ""
+                        ,input no
+                        ,output v-conn-avt
+                        ,output v-par-type) no-error.
 
-    if v-conn-avt = no then do:
+    if v-conn-avt = "no" then do:
       run str/fin-con1.w ( parParentProc, v-cntxt-host-code-obj, v-ri, v-list, output v-end) .
     end.
     else do:
@@ -1272,8 +1279,8 @@ DO:
 
     if v-end then do:
       for each temp-fin-ob :
-        find first ub.fin-ob no-lock where recid (ub.fin-ob) = temp-fin-ob.ri .
-        if ub.fin-ob.con-stat = 2 then delete temp-fin-ob .
+        find first fin-ob no-lock where recid (fin-ob) = temp-fin-ob.ri .
+        if fin-ob.con-stat = 2 then delete temp-fin-ob .
       end.
     end.
 
@@ -1334,7 +1341,7 @@ DO:
   repeat v-i = 1 to Fin-Ob-List:num-columns :
     v-elem = entry( v-i, v-list , "#") .
     v-pos = lookup( v-elem, {&head-col} , "#") .
-    v-list-new = v-list-new + string(v-pos) + "," .
+/*    v-list-new = v-list-new + string(v-pos) + "," .*/
   end.
 
   v-list-str = "" .
@@ -1372,13 +1379,13 @@ DO:
     if int(v-elem) > 1 then  v-list-str1  = v-list-str1 + v-elem + "," .
   end.
 
-
-  v-list-new = trim(v-list-str ,",")  +  {&delim-par}  + trim(v-list-str1 ,",")  +  {&delim-par}
-              + string(decimal( buf_fin-ob.receiver-name:width  in browse Fin-Ob-List)) +  {&delim-par}
-              + string(decimal( buf_fin-ob.payer-name:width     in browse Fin-Ob-List)) +  {&delim-par}
-              + string(decimal( p-gen:width                     in browse Fin-Ob-List)) +  {&delim-par}
-              + string(decimal( buf_fin-doc.receiver-name:width in browse Fin-Doc-List)) +  {&delim-par}
-              + string(decimal( buf_fin-doc.payer-name:width    in browse Fin-Doc-List)) +  {&delim-par}  .
+    v-list-new = "".
+/*  v-list-new = trim(v-list-str ,",")  +  {&delim-par}  + trim(v-list-str1 ,",")  +  {&delim-par}           */
+/*              + string(decimal( buf_fin-ob.receiver-name:width  in browse Fin-Ob-List)) +  {&delim-par}    */
+/*              + string(decimal( buf_fin-ob.payer-name:width     in browse Fin-Ob-List)) +  {&delim-par}    */
+/*              + string(decimal( p-gen:width                     in browse Fin-Ob-List)) +  {&delim-par}    */
+/*              + string(decimal( buf_fin-doc.receiver-name:width in browse Fin-Doc-List)) +  {&delim-par}   */
+/*              + string(decimal( buf_fin-doc.payer-name:width    in browse Fin-Doc-List)) +  {&delim-par}  .*/
 
   run uf-set in this-procedure(
     input  {&uf-planplat}
@@ -1501,12 +1508,12 @@ DO:
   define variable agnt-list as character no-undo .
   run ref/cli-all.w (parParentProc, "b-sel", {&all}, {&all}, {&current}, ?, ",,,,,,NO,,":u, "without-obj":U, output agnt-list ) .
   if agnt-list <> "" then do:
-    find first ub.clients no-lock where RECID(ub.clients) = int (agnt-list) no-error.
-    if ub.clients.obj-type <> {&prs} and ub.clients.obj-type <> {&cmp} then do:
+    find first clients no-lock where RECID(clients) = int (agnt-list) no-error.
+    if clients.obj-type <> {&prs} and clients.obj-type <> {&cmp} then do:
       message "Контрагент может быть только " {&cmp} " или " {&prs} view-as alert-box ERROR .
       return no-apply.
     end.
-    assign cli-name  = ub.clients.obj-name  cli-code = ub.clients.obj-code  cli-type = ub.clients.obj-type.
+    assign cli-name  = clients.obj-name  cli-code = clients.obj-code  cli-type = clients.obj-type.
   end.
   else assign cli-name = ""   cli-code = ?  cli-type  = ? .
   display cli-name    cli-code     cli-type   with frame {&frame-name}.
@@ -1528,10 +1535,10 @@ DO:
                       ,input "b-sel"
                       ,input-output ri ).
   if ri = ? then return no-apply.
-  find ub.currency where recid ( ub.currency ) = ri no-lock.
+  find currency where recid ( currency ) = ri no-lock.
   assign
-    s-curr-code = ub.currency.curr-code
-    curr-name = ub.currency.curr-abbr
+    s-curr-code = currency.curr-code
+    curr-name = currency.curr-abbr
   .
   display curr-name s-curr-code with frame {&frame-name}.
   RUN OpenBr(yes, no, '':U) .
@@ -1630,8 +1637,8 @@ DO:
       display Curr-Types with frame {&frame-name}.
     end.
     else do:
-      find first  ub.currency where recid ( ub.currency ) = ref-rec no-lock.
-      assign curr-code = ub.currency.curr-code .
+      find first  currency where recid ( currency ) = ref-rec no-lock.
+      assign curr-code = currency.curr-code .
     end.
   end.
   RUN OpenBr(yes, no, '':U) .
@@ -1642,7 +1649,6 @@ END.
 &ANALYZE-RESUME
 
 
-
 &Scoped-define BROWSE-NAME Fin-Doc-List
 &Scoped-define SELF-NAME Fin-Doc-List
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Fin-Doc-List Dialog-Frame
@@ -1650,6 +1656,18 @@ ON RETURN OF Fin-Doc-List IN FRAME Dialog-Frame
 or MOUSE-SELECT-DBLCLICK OF Fin-Doc-List IN FRAME Dialog-Frame
 DO:
     if b-mark-2:sensitive then apply "choose" to b-mark-2 in frame {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Fin-Doc-List Dialog-Frame
+ON VALUE-CHANGED OF Fin-Doc-List IN FRAME Dialog-Frame
+DO:
+  v-payer-code = buf_fin-doc.payer-code.
+  v-payer-type = buf_fin-doc.payer-type.
+  {&OPEN-QUERY-Fin-Ob-List}
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1703,21 +1721,21 @@ END.
 
 &Scoped-define SELF-NAME s-curr-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL s-curr-code Dialog-Frame
-ON LEAVE OF s-curr-code IN FRAME Dialog-Frame /* Показ */
+ON LEAVE OF s-curr-code IN FRAME Dialog-Frame
 DO:
   assign s-curr-code .
   define variable ri as recid init ? no-undo .
-  find first ub.currency where ub.currency.curr-code = s-curr-code no-error.
-  if not available ub.currency then do:
+  find first currency where currency.curr-code = s-curr-code no-error.
+  if not available currency then do:
     run ref/currency.w ( input parparentproc
                         ,input "b-sel"
                         ,input-output ri ).
     if ri = ? then return no-apply.
-    find ub.currency where recid ( ub.currency ) = ri .
+    find currency where recid ( currency ) = ri .
   end.
   assign
-    curr-name = ub.currency.curr-abbr
-    s-curr-code = ub.currency.curr-code
+    curr-name = currency.curr-abbr
+    s-curr-code = currency.curr-code
   .
   display s-curr-code curr-name with frame {&frame-name}.
   RUN OpenBr(yes, no, '':U) .
@@ -1729,21 +1747,21 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL s-curr-code Dialog-Frame
-ON RETURN OF s-curr-code IN FRAME Dialog-Frame /* Показ */
+ON RETURN OF s-curr-code IN FRAME Dialog-Frame
 DO:
   assign s-curr-code .
   define variable ri as recid init ? no-undo .
-  find first ub.currency where ub.currency.curr-code = s-curr-code no-error.
-  if not available ub.currency then do:
+  find first currency where currency.curr-code = s-curr-code no-error.
+  if not available currency then do:
     run ref/currency.w ( input parparentproc
                         ,input "b-sel"
                         ,input-output ri ).
     if ri = ? then return no-apply.
-    find ub.currency where recid ( ub.currency ) = ri .
+    find currency where recid ( currency ) = ri .
   end.
   assign
-    curr-name = ub.currency.curr-abbr
-    s-curr-code = ub.currency.curr-code
+    curr-name = currency.curr-abbr
+    s-curr-code = currency.curr-code
   .
   display s-curr-code curr-name with frame {&frame-name}.
   RUN OpenBr(yes, no, '':U) .
@@ -1821,16 +1839,16 @@ DO:
       for each temp-contr1 where temp-contr1.id <> -1 : delete temp-contr1 . end.
       define variable ii as integer   no-undo .
       do ii = 1 to num-entries (cli-list):
-        find first ub.clients no-lock where recid(ub.clients) = integer (entry (ii, cli-list)) .
-        for each ub.contract no-lock
-          where ub.contract.host-code = v-cntxt-host-code-obj
-            and ub.contract.cli-type = ub.clients.obj-type
-            and ub.contract.cli-code = ub.clients.obj-code
+        find first clients no-lock where recid(clients) = integer (entry (ii, cli-list)) .
+        for each contract no-lock
+          where contract.host-code = v-cntxt-host-code-obj
+            and contract.cli-type = clients.obj-type
+            and contract.cli-code = clients.obj-code
         :
           create temp-contr .
-          assign temp-contr.id = ub.contract.contract-code .
+          assign temp-contr.id = contract.contract-code .
           create temp-contr1 .
-          assign temp-contr1.id = ub.contract.contract-code .
+          assign temp-contr1.id = contract.contract-code .
         end.
       end.
     end.
@@ -1855,8 +1873,8 @@ DO:
   assign cont-list = "" .
   if Sel-Contr = "sel" then do:
     if Sel-Client = "sel" then do:
-      find first ub.clients no-lock where recid(ub.clients) = integer (cli-list) .
-      run str/cont-all.w ( parParentProc, v-cntxt-host-code-obj, "b-add,b-mark,b-sel", {&company}, ub.clients.obj-type, ub.clients.obj-code, ?, ?, "current":U, p-doc-type, input-output cont-list ) .
+      find first clients no-lock where recid(clients) = integer (cli-list) .
+      run str/cont-all.w ( parParentProc, v-cntxt-host-code-obj, "b-add,b-mark,b-sel", {&company}, clients.obj-type, clients.obj-code, ?, ?, "current":U, p-doc-type, input-output cont-list ) .
     end.
     else do:
       run str/cont-all.w ( parParentProc, v-cntxt-host-code-obj, "b-add,b-mark,b-sel", {&company}, ?, ?, ?, ?, "current":U, p-doc-type, input-output cont-list ) .
@@ -1871,26 +1889,26 @@ DO:
       for each temp-contr1 where temp-contr1.id <> -1 : delete temp-contr1 . end.
       define variable ii as integer   no-undo .
       do ii = 1 to num-entries (cont-list):
-        find first ub.contract no-lock where recid(ub.contract) = integer (entry (ii, cont-list)) .
+        find first contract no-lock where recid(contract) = integer (entry (ii, cont-list)) .
         create temp-contr .
-        assign temp-contr.id = ub.contract.contract-code .
+        assign temp-contr.id = contract.contract-code .
         create temp-contr1 .
-        assign temp-contr1.id = ub.contract.contract-code .
+        assign temp-contr1.id = contract.contract-code .
       end.
     end.
   end .
   else do:
     if Sel-Client = "sel" then do:
-        find first ub.clients no-lock where recid(ub.clients) = integer (cli-list) .
-        for each ub.contract no-lock
-          where ub.contract.host-code = p-host-code
-            and ub.contract.cli-type = ub.clients.obj-type
-            and ub.contract.cli-code = ub.clients.obj-code
+        find first clients no-lock where recid(clients) = integer (cli-list) .
+        for each contract no-lock
+          where contract.host-code = p-host-code
+            and contract.cli-type = clients.obj-type
+            and contract.cli-code = clients.obj-code
         :
           create temp-contr .
-          assign temp-contr.id = ub.contract.contract-code .
+          assign temp-contr.id = contract.contract-code .
           create temp-contr1 .
-          assign temp-contr1.id = ub.contract.contract-code .
+          assign temp-contr1.id = contract.contract-code .
         end.
     end.
   end.
@@ -1921,7 +1939,7 @@ END.
 &Scoped-define BROWSE-NAME Fin-Doc-List
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -1949,7 +1967,7 @@ b-quit:SELECTED = no .
 
 /* сорт  колонок*/
 { gbl/srt-clmd.i
-  &table-name     = "{&first-table-in-query-{&browse-name}}"
+  &table-name     = "buf_fin-ob"
   &browse-name = "Fin-Ob-List"
   &frame-name = "{&frame-name}"
   &ext-col = 19
@@ -1957,15 +1975,24 @@ b-quit:SELECTED = no .
   &open-query-otherwise = "run OpenBr(yes, no, '':U)."
   &sort-column-name = "sort-column-name"
   &start-column         = "2"
-  &label-clmn_1         = "{&col-l1}"
-  &sort-clmn_1          = "{&cop-l1}"
-  &label-clmn_2         = "{&col-l3}"
-  &sort-clmn_2          = "{&cop-l3}"
-  &label-clmn_3         = "{&col-l4}"
-  &sort-clmn_3          = "{&cop-l4}"
+  &label-clmn_13        = "{&col-l9}"
+  &sort-clmn_13         = "{&cop-l9}"
   &label-clmn_4         = "{&col-l14}"
   &sort-clmn_4          = "{&cop-l14}"
   &dyn_sort-clmn_4          = "{&dyn_cop-l14}"
+  &label-clmn_11        = "{&col-l8}"
+  &sort-clmn_11         = "{&cop-l8}"
+  &label-clmn_12        = "{&col-l81}"
+  &sort-clmn_12         = "{&cop-l81}"
+  &label-clmn_8         = "{&col-l6}"
+  &sort-clmn_8          = "{&cop-l6}"
+  &dyn_sort-clmn_8          = "{&dyn_cop-l6}"
+  &label-clmn_2         = "{&col-l3}"
+  &sort-clmn_2          = "{&cop-l3}"
+  &label-clmn_1         = "{&col-l1}"
+  &sort-clmn_1          = "{&cop-l1}"
+  &label-clmn_3         = "{&col-l4}"
+  &sort-clmn_3          = "{&cop-l4}"
   &label-clmn_5         = "{&col-l16}"
   &sort-clmn_5          = "{&cop-l16}"
   &label-clmn_6         = "{&col-l18}"
@@ -1973,19 +2000,10 @@ b-quit:SELECTED = no .
   &dyn_sort-clmn_6          = "{&dyn_cop-l18}"
   &label-clmn_7         = "{&col-l5}"
   &sort-clmn_7          = "{&cop-l5}"
-  &label-clmn_8         = "{&col-l6}"
-  &sort-clmn_8          = "{&cop-l6}"
-  &dyn_sort-clmn_8          = "{&dyn_cop-l6}"
   &label-clmn_9         = "{&col-l7}"
   &sort-clmn_9          = "{&cop-l7}"
   &label-clmn_10        = "{&col-l71}"
   &sort-clmn_10         = "{&cop-l71}"
-  &label-clmn_11        = "{&col-l8}"
-  &sort-clmn_11         = "{&cop-l8}"
-  &label-clmn_12        = "{&col-l81}"
-  &sort-clmn_12         = "{&cop-l81}"
-  &label-clmn_13        = "{&col-l9}"
-  &sort-clmn_13         = "{&cop-l9}"
   &label-clmn_14        = "{&col-l10}"
   &sort-clmn_14         = "{&cop-l10}"
   &dyn_sort-clmn_14         = "{&dyn_cop-l10}"
@@ -2002,7 +2020,7 @@ b-quit:SELECTED = no .
   &mv-brw-default = "yes"
  }
 { gbl/srt-clmd.i
-  &table-name     = "{&first-table-in-query-{&browse-name1}}"
+  &table-name     = "buf_fin-doc"
   &browse-name = "Fin-Doc-List"
   &frame-name = "{&frame-name}"
   &ext-col = 21
@@ -2012,8 +2030,6 @@ b-quit:SELECTED = no .
   &start-column         = "2"
   &label-clmn_1         = "{&col-p1}"
   &sort-clmn_1          = "{&cop-p1}"
-  &label-clmn_2         = "{&col-p2}"
-  &sort-clmn_2          = "{&cop-p2}"
   &label-clmn_3         = "{&col-p3}"
   &sort-clmn_3          = "{&cop-p3}"
   &label-clmn_4         = "{&col-p4}"
@@ -2021,33 +2037,35 @@ b-quit:SELECTED = no .
   &label-clmn_5         = "{&col-p15}"
   &sort-clmn_5          = "{&cop-p15}"
   &dyn_sort-clmn_5          = "{&dyn_cop-p15}"
+  &label-clmn_11        = "{&col-p7}"
+  &sort-clmn_11         = "{&cop-p7}"
+  &label-clmn_12        = "{&col-p71}"
+  &sort-clmn_12         = "{&cop-p71}"
+  &label-clmn_8         = "{&col-p5}"
+  &sort-clmn_8          = "{&cop-p5}"
+  &dyn_sort-clmn_8          = "{&dyn_cop-p5}"
   &label-clmn_6         = "{&col-p16}"
   &sort-clmn_6          = "{&cop-p16}"
   &label-clmn_7         = "{&col-p18}"
   &sort-clmn_7          = "{&cop-p18}"
   &dyn_sort-clmn_7          = "{&dyn_cop-p18}"
-  &label-clmn_8         = "{&col-p5}"
-  &sort-clmn_8          = "{&cop-p5}"
-  &dyn_sort-clmn_8          = "{&dyn_cop-p5}"
+  &label-clmn_2         = "{&col-p2}"
+  &sort-clmn_2          = "{&cop-p2}"
+  &label-clmn_16        = "{&col-p11}"
+  &sort-clmn_16         = "{&cop-p11}"
+  &dyn_sort-clmn_16         = "{&dyn_cop-p11}"
+  &label-clmn_17        = "{&col-p12}"
+  &sort-clmn_17         = "{&cop-p12}"
   &label-clmn_9         = "{&col-p6}"
   &sort-clmn_9          = "{&cop-p6}"
   &label-clmn_10        = "{&col-p61}"
   &sort-clmn_10         = "{&cop-p61}"
-  &label-clmn_11        = "{&col-p7}"
-  &sort-clmn_11         = "{&cop-p7}"
-  &label-clmn_12        = "{&col-p71}"
-  &sort-clmn_12         = "{&cop-p71}"
   &label-clmn_13        = "{&col-p8}"
   &sort-clmn_13         = "{&cop-p8}"
   &label-clmn_14        = "{&col-p9}"
   &sort-clmn_14         = "{&cop-p9}"
   &label-clmn_15        = "{&col-p10}"
   &sort-clmn_15         = "{&cop-p10}"
-  &label-clmn_16        = "{&col-p11}"
-  &sort-clmn_16         = "{&cop-p11}"
-  &dyn_sort-clmn_16         = "{&dyn_cop-p11}"
-  &label-clmn_17        = "{&col-p12}"
-  &sort-clmn_17         = "{&cop-p12}"
   &label-clmn_18        = "{&col-p13}"
   &sort-clmn_18         = "{&cop-p13}"
   &label-clmn_19        = "{&col-p14}"
@@ -2121,7 +2139,7 @@ end.
   create temp-contr1 .
   assign temp-contr1.id = -1 .
 
-  find first ub.clients no-lock where ub.clients.obj-type = {&cmp} and ub.clients.obj-code = v-cntxt-host-code-obj .
+  find first clients no-lock where clients.obj-type = {&cmp} and clients.obj-code = v-cntxt-host-code-obj .
 
  { gbl/ed_date.i sch-date }
 /* { gbl/setfltnm.i }*/
@@ -2135,10 +2153,10 @@ end.
     RADIO-find-doc
     RADIO-find-cli
   .
-  find first ub.currency where ub.currency.curr-code = 0 no-error.
+  find first currency where currency.curr-code = 0 no-error.
   assign
-    curr-name = ub.currency.curr-abbr
-    s-curr-code = ub.currency.curr-code
+    curr-name = currency.curr-abbr
+    s-curr-code = currency.curr-code
   .
   display s-curr-code curr-name with frame {&frame-name}.
 
@@ -2172,11 +2190,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-DEFINE TEMP-TABLE temp_fin-ob NO-UNDO LIKE ub.fin-ob
-       field no-con-sum as decimal
-       field ri as recid .
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE conn-avt Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE conn-avt Dialog-Frame 
 PROCEDURE conn-avt :
 do on error undo, return error return-value :
 
@@ -2188,13 +2202,13 @@ do on error undo, return error return-value :
   define variable ii as integer   no-undo .
   define variable p-sys-time  as character no-undo .
 
-  find first ub.fin-doc no-lock where recid(ub.fin-doc) = p-ri .
-  assign csum = ub.fin-doc.sum-contr - ub.fin-doc.con-sum-contr .
+  find first fin-doc no-lock where recid(fin-doc) = p-ri .
+  assign csum = fin-doc.sum-contr - fin-doc.con-sum-contr .
   for each temp_fin-ob : delete temp_fin-ob . end.
   if p-doc-type = {&income} then do:
-    if   ub.fin-doc.fin-doc-type = {&expense-cashless}
-      or ub.fin-doc.fin-doc-type = {&expense-cash}
-      or ub.fin-doc.fin-doc-type = {&expense-payoff} then assign is-plus = yes .
+    if   fin-doc.fin-doc-type = {&expense-cashless}
+      or fin-doc.fin-doc-type = {&expense-cash}
+      or fin-doc.fin-doc-type = {&expense-payoff} then assign is-plus = yes .
     else
       assign
         is-plus = no
@@ -2202,9 +2216,9 @@ do on error undo, return error return-value :
       .
   end.
   else do:
-    if   ub.fin-doc.fin-doc-type = {&income-cashless}
-      or ub.fin-doc.fin-doc-type = {&income-cash}
-      or ub.fin-doc.fin-doc-type = {&income-payoff} then assign is-plus = yes .
+    if   fin-doc.fin-doc-type = {&income-cashless}
+      or fin-doc.fin-doc-type = {&income-cash}
+      or fin-doc.fin-doc-type = {&income-payoff} then assign is-plus = yes .
     else
       assign
         is-plus = no
@@ -2214,15 +2228,15 @@ do on error undo, return error return-value :
 
   define variable p-new as character no-undo .
   DO ii = 1 TO NUM-ENTRIES(p-list) :
-    find first ub.fin-ob NO-LOCK WHERE RECID( ub.fin-ob ) = INT ( ENTRY( ii, p-list) ) .
-    if is-plus = yes and ub.fin-ob.sum-contr > 0 or is-plus = no and ub.fin-ob.sum-contr < 0  then do:
+    find first fin-ob NO-LOCK WHERE RECID( fin-ob ) = INT ( ENTRY( ii, p-list) ) .
+    if is-plus = yes and fin-ob.sum-contr > 0 or is-plus = no and fin-ob.sum-contr < 0  then do:
       if p-new = "" then  assign p-new = ENTRY( ii, p-list).
       else  assign p-new = p-new + "," + ENTRY( ii, p-list) .
     end.
     else do:
       CREATE temp_fin-ob .
-      BUFFER-COPY ub.fin-ob TO temp_fin-ob .
-      assign temp_fin-ob.ri = RECID( ub.fin-ob ) .
+      BUFFER-COPY fin-ob TO temp_fin-ob .
+      assign temp_fin-ob.ri = RECID( fin-ob ) .
       assign
         temp_fin-ob.no-con-sum = temp_fin-ob.sum-contr - temp_fin-ob.con-sum-contr
         csum = csum - temp_fin-ob.no-con-sum
@@ -2233,10 +2247,10 @@ do on error undo, return error return-value :
   assign p-list = p-new .
 
   DO ii = 1 TO NUM-ENTRIES(p-list) :
-    find first ub.fin-ob NO-LOCK WHERE RECID( ub.fin-ob ) = INT ( ENTRY( ii, p-list) ) .
+    find first fin-ob NO-LOCK WHERE RECID( fin-ob ) = INT ( ENTRY( ii, p-list) ) .
     CREATE temp_fin-ob .
-    BUFFER-COPY ub.fin-ob TO temp_fin-ob .
-    assign temp_fin-ob.ri = RECID( ub.fin-ob ) .
+    BUFFER-COPY fin-ob TO temp_fin-ob .
+    assign temp_fin-ob.ri = RECID( fin-ob ) .
     if csum > 0 then do:
       if csum > temp_fin-ob.sum-contr - temp_fin-ob.con-sum-contr then do:
         assign
@@ -2273,72 +2287,72 @@ do on error undo, return error return-value :
 
   for each temp_fin-ob :
     if temp_fin-ob.no-con-sum = 0 then next.
-    create ub.fin-connect .
+    create fin-connect .
     assign
-      ub.fin-connect.connect-code   = next-value( s-fin-connect, {&db-name_schema}  )
-      ub.fin-connect.host-code      = v-cntxt-host-code-obj
-      ub.fin-connect.fin-doc-code   = ub.fin-doc.fin-doc-code
-      ub.fin-connect.fin-ob-code    = temp_fin-ob.doc-code
-      ub.fin-connect.contract-code  = temp_fin-ob.contract-code
-      ub.fin-connect.curr-code      = temp_fin-ob.curr-code
-      ub.fin-connect.base-rate      = temp_fin-ob.base-rate
-      ub.fin-connect.base-scale     = temp_fin-ob.base-scale
-      ub.fin-connect.contract-curr  = temp_fin-ob.contract-curr
-      ub.fin-connect.contract-rate  = temp_fin-ob.contract-rate
-      ub.fin-connect.contract-scale = temp_fin-ob.contract-scale
-      ub.fin-connect.exch-rate      = temp_fin-ob.exch-rate
-      ub.fin-connect.exch-scale     = temp_fin-ob.exch-scale
-      ub.fin-connect.status_        = {&current-status}
-      ub.fin-connect.sum-contr      = temp_fin-ob.no-con-sum
-      ub.fin-connect.sum-rubl       = round(ub.fin-connect.sum-contr * ub.fin-connect.contract-rate / ub.fin-connect.contract-scale,2)
-      ub.fin-connect.sum-base       = ub.fin-connect.sum-rubl * ub.fin-connect.base-scale / ub.fin-connect.base-rate
-      ub.fin-connect.sum-doc        = ub.fin-connect.sum-rubl * ub.fin-connect.exch-scale / ub.fin-connect.exch-rate
-      ub.fin-connect.sum-contr-ob   = ub.fin-connect.sum-contr
-      ub.fin-connect.sum-rubl-ob    = ub.fin-connect.sum-rubl
-      ub.fin-connect.sum-base-ob    = ub.fin-connect.sum-base
+      fin-connect.connect-code   = next-value( s-fin-connect, {&db-name_schema}  )
+      fin-connect.host-code      = v-cntxt-host-code-obj
+      fin-connect.fin-doc-code   = fin-doc.fin-doc-code
+      fin-connect.fin-ob-code    = temp_fin-ob.doc-code
+      fin-connect.contract-code  = temp_fin-ob.contract-code
+      fin-connect.curr-code      = temp_fin-ob.curr-code
+      fin-connect.base-rate      = temp_fin-ob.base-rate
+      fin-connect.base-scale     = temp_fin-ob.base-scale
+      fin-connect.contract-curr  = temp_fin-ob.contract-curr
+      fin-connect.contract-rate  = temp_fin-ob.contract-rate
+      fin-connect.contract-scale = temp_fin-ob.contract-scale
+      fin-connect.exch-rate      = temp_fin-ob.exch-rate
+      fin-connect.exch-scale     = temp_fin-ob.exch-scale
+      fin-connect.status_        = {&current-status}
+      fin-connect.sum-contr      = temp_fin-ob.no-con-sum
+      fin-connect.sum-rubl       = round(fin-connect.sum-contr * fin-connect.contract-rate / fin-connect.contract-scale,2)
+      fin-connect.sum-base       = fin-connect.sum-rubl * fin-connect.base-scale / fin-connect.base-rate
+      fin-connect.sum-doc        = fin-connect.sum-rubl * fin-connect.exch-scale / fin-connect.exch-rate
+      fin-connect.sum-contr-ob   = fin-connect.sum-contr
+      fin-connect.sum-rubl-ob    = fin-connect.sum-rubl
+      fin-connect.sum-base-ob    = fin-connect.sum-base
     .
-    { gbl/curdburt.i  ub.fin-connect.user-db-num  ub.fin-connect.user-name  ub.fin-connect.fact-date  p-sys-time  ub.fin-connect.fact-time }
-    find first ub.fin-ob exclusive-lock where ub.fin-ob.host-code = v-cntxt-host-code-obj and ub.fin-ob.doc-code = temp_fin-ob.doc-code .
+    { gbl/curdburt.i  fin-connect.user-db-num  fin-connect.user-name  fin-connect.fact-date  p-sys-time  fin-connect.fact-time }
+    find first fin-ob exclusive-lock where fin-ob.host-code = v-cntxt-host-code-obj and fin-ob.doc-code = temp_fin-ob.doc-code .
     assign
-      ub.fin-ob.con-sum-contr = ub.fin-ob.con-sum-contr + ub.fin-connect.sum-contr
-      ub.fin-ob.con-sum-base  = ub.fin-ob.con-sum-base  + ub.fin-connect.sum-base
-      ub.fin-ob.con-sum-rubl  = ub.fin-ob.con-sum-rubl  + ub.fin-connect.sum-rubl
-      ub.fin-ob.con-sum-doc   = ub.fin-ob.con-sum-doc   + ub.fin-connect.sum-doc
-      all-sum-contr        = all-sum-contr + ub.fin-connect.sum-contr
-      all-sum-base         = all-sum-base  + ub.fin-connect.sum-base
-      all-sum-rubl         = all-sum-rubl  + ub.fin-connect.sum-rubl
-      all-sum-doc          = all-sum-doc   + ub.fin-connect.sum-doc
+      fin-ob.con-sum-contr = fin-ob.con-sum-contr + fin-connect.sum-contr
+      fin-ob.con-sum-base  = fin-ob.con-sum-base  + fin-connect.sum-base
+      fin-ob.con-sum-rubl  = fin-ob.con-sum-rubl  + fin-connect.sum-rubl
+      fin-ob.con-sum-doc   = fin-ob.con-sum-doc   + fin-connect.sum-doc
+      all-sum-contr        = all-sum-contr + fin-connect.sum-contr
+      all-sum-base         = all-sum-base  + fin-connect.sum-base
+      all-sum-rubl         = all-sum-rubl  + fin-connect.sum-rubl
+      all-sum-doc          = all-sum-doc   + fin-connect.sum-doc
     .
-    if ub.fin-ob.sum-contr > 0 then do:
-      if ub.fin-ob.sum-contr > ub.fin-ob.con-sum-contr then assign ub.fin-ob.con-stat = 1 .
-      else                                            assign ub.fin-ob.con-stat = 2 .
+    if fin-ob.sum-contr > 0 then do:
+      if fin-ob.sum-contr > fin-ob.con-sum-contr then assign fin-ob.con-stat = 1 .
+      else                                            assign fin-ob.con-stat = 2 .
     end.
     else do:
-      if ub.fin-ob.sum-contr < ub.fin-ob.con-sum-contr then assign ub.fin-ob.con-stat = 1 .
-      else                                            assign ub.fin-ob.con-stat = 2 .
+      if fin-ob.sum-contr < fin-ob.con-sum-contr then assign fin-ob.con-stat = 1 .
+      else                                            assign fin-ob.con-stat = 2 .
     end.
   end.
   if all-sum-contr <> 0 then do:
-    find current ub.fin-doc exclusive-lock .
+    find current fin-doc exclusive-lock .
     if is-plus then do:
       assign
-        ub.fin-doc.con-sum-contr = ub.fin-doc.con-sum-contr + all-sum-contr
-        ub.fin-doc.con-sum-base  = ub.fin-doc.con-sum-base  + all-sum-base
-        ub.fin-doc.con-sum-rubl  = ub.fin-doc.con-sum-rubl  + all-sum-rubl
-        ub.fin-doc.con-sum-doc   = ub.fin-doc.con-sum-doc   + all-sum-doc
+        fin-doc.con-sum-contr = fin-doc.con-sum-contr + all-sum-contr
+        fin-doc.con-sum-base  = fin-doc.con-sum-base  + all-sum-base
+        fin-doc.con-sum-rubl  = fin-doc.con-sum-rubl  + all-sum-rubl
+        fin-doc.con-sum-doc   = fin-doc.con-sum-doc   + all-sum-doc
       .
-      if ub.fin-doc.sum-contr > ub.fin-doc.con-sum-contr then assign ub.fin-doc.con-stat = 1 .
-      else                                              assign ub.fin-doc.con-stat = 2 .
+      if fin-doc.sum-contr > fin-doc.con-sum-contr then assign fin-doc.con-stat = 1 .
+      else                                              assign fin-doc.con-stat = 2 .
     end.
     else do:
       assign
-        ub.fin-doc.con-sum-contr = ub.fin-doc.con-sum-contr - all-sum-contr
-        ub.fin-doc.con-sum-base  = ub.fin-doc.con-sum-base  - all-sum-base
-        ub.fin-doc.con-sum-rubl  = ub.fin-doc.con-sum-rubl  - all-sum-rubl
-        ub.fin-doc.con-sum-doc   = ub.fin-doc.con-sum-doc   - all-sum-doc
+        fin-doc.con-sum-contr = fin-doc.con-sum-contr - all-sum-contr
+        fin-doc.con-sum-base  = fin-doc.con-sum-base  - all-sum-base
+        fin-doc.con-sum-rubl  = fin-doc.con-sum-rubl  - all-sum-rubl
+        fin-doc.con-sum-doc   = fin-doc.con-sum-doc   - all-sum-doc
       .
-      if ub.fin-doc.sum-contr > ub.fin-doc.con-sum-contr then assign ub.fin-doc.con-stat = 1 .
-      else                                              assign ub.fin-doc.con-stat = 2 .
+      if fin-doc.sum-contr > fin-doc.con-sum-contr then assign fin-doc.con-stat = 1 .
+      else                                              assign fin-doc.con-stat = 2 .
     end.
   end.
 
@@ -2354,7 +2368,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -2373,20 +2387,20 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY sum-fin-ob sum-fin-doc sch-code cli-code cli-type RADIO-find-doc
-          RADIO-find-cli sch-date s-curr-code cli-name date-1 Sel-Status
-          Curr-Types Sel-Client Sel-Contr date-2 mark-num mark-num-2 curr-name
+  DISPLAY sum-fin-doc sum-fin-ob sch-code RADIO-find-cli cli-code cli-type 
+          RADIO-find-doc s-curr-code sch-date cli-name Curr-Types Sel-Client 
+          Sel-Contr date-1 Sel-Status date-2 mark-num-2 mark-num curr-name 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit RECT-status B-conn-add B-conn-view B-oplat-list B-Help
-         B-conn-fo B-view-fo B-conn-doc B-view-doc B-del-doc
-         Fin-Ob-List Fin-Doc-List B-mark sum-fin-ob B-mark-2 sum-fin-doc
-         B-unmark B-allmark B-oplat B-unmark-2 B-allmark-2 sch-code BUTTON-cli
-         cli-code cli-type RADIO-find-doc RADIO-find-cli sch-date s-curr-code
-         BUTTON-curr cli-name date-1 Sel-Status Curr-Types Sel-Client Sel-Contr
-         B-date date-2 mark-num mark-num-2
+  ENABLE b-quit B-conn-add B-conn-view B-oplat-list B-Help RECT-status RECT-1 
+         B-conn-doc B-view-doc B-del-doc B-conn-fo B-view-fo Fin-Ob-List 
+         Fin-Doc-List B-mark-2 B-unmark-2 B-allmark-2 sum-fin-doc B-mark 
+         B-unmark B-allmark B-oplat sum-fin-ob BUTTON-cli sch-code 
+         RADIO-find-cli cli-code cli-type RADIO-find-doc BUTTON-curr 
+         s-curr-code sch-date cli-name Curr-Types Sel-Client Sel-Contr date-1 
+         Sel-Status B-date date-2 mark-num-2 mark-num 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -2395,7 +2409,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE find-cli Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE find-cli Dialog-Frame 
 PROCEDURE find-cli :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2404,7 +2418,7 @@ PROCEDURE find-cli :
 ------------------------------------------------------------------------------*/
   define input  parameter p-obj-type as character no-undo .
   define input  parameter p-obj-code as integer   no-undo .
-  define buffer buf_clients for ub.clients .
+  define buffer buf_clients for clients .
 
   if p-obj-type <> {&cmp} and p-obj-type <> {&prs} then do:
     find first buf_clients no-lock where buf_clients.obj-type = {&cmp} and buf_clients.obj-code = p-obj-code no-error.
@@ -2435,7 +2449,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2448,7 +2462,7 @@ PROCEDURE OpenBr :
 
   if available buf_fin-ob then assign v-doc-rec = recid (buf_fin-ob) .
 
-  assign frame {&frame-name}:title = "Планирование платежей.  Фирма: (" + string(v-cntxt-host-code-obj) + ")":U + {&space-char} + ub.clients.obj-name  .
+  assign frame {&frame-name}:title = "Планирование платежей.  Фирма: (" + string(v-cntxt-host-code-obj) + ")":U + {&space-char} + clients.obj-name  .
 
   if Sel-Contr = "all" and Sel-Client = "all"  then RUN OpenBrAllContr( p-open-query, p-find-next, p-find-condition) .
   else                                              RUN OpenBrSelContr( p-open-query, p-find-next, p-find-condition) .
@@ -2459,7 +2473,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr1 Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr1 Dialog-Frame 
 PROCEDURE OpenBr1 :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2472,7 +2486,7 @@ PROCEDURE OpenBr1 :
 
   if available buf_fin-doc then assign v-doc-rec1 = recid (buf_fin-doc) .
 
-  assign frame {&frame-name}:title = "Планирование платежей.  Фирма: (" + string(v-cntxt-host-code-obj) + ")":U + {&space-char} + ub.clients.obj-name  .
+  assign frame {&frame-name}:title = "Планирование платежей.  Фирма: (" + string(v-cntxt-host-code-obj) + ")":U + {&space-char} + clients.obj-name  .
 
   if Sel-Contr = "all" and Sel-Client = "all"  then RUN OpenBr1AllContr( p-open-query, p-find-next, p-find-condition) .
   else                                              RUN OpenBr1SelContr( p-open-query, p-find-next, p-find-condition) .
@@ -2483,7 +2497,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr1AllContr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr1AllContr Dialog-Frame 
 PROCEDURE OpenBr1AllContr :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2586,7 +2600,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr1SelContr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr1SelContr Dialog-Frame 
 PROCEDURE OpenBr1SelContr :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2689,7 +2703,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBrAllContr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBrAllContr Dialog-Frame 
 PROCEDURE OpenBrAllContr :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2772,7 +2786,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBrSelContr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBrSelContr Dialog-Frame 
 PROCEDURE OpenBrSelContr :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2855,15 +2869,15 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-check-contract Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-check-contract Dialog-Frame 
 PROCEDURE proc-check-contract :
 /*------------------------------------------------------------------------------
   Purpose:
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-  define buffer b_fin-ob for ub.fin-ob .
-  define buffer b_fin-doc for ub.fin-doc .
+  define buffer b_fin-ob for fin-ob .
+  define buffer b_fin-doc for fin-doc .
   define variable num-cont as integer   no-undo .
   define variable is-del as logical   no-undo .
   define variable obj-type as character no-undo .
@@ -2919,7 +2933,7 @@ PROCEDURE proc-check-contract :
       return error .
     end.
   end.
-  if ub.sysconf.fin-calc = {&fin-calc-obj} and obj-code = 0 then do:
+  if sysconf.fin-calc = {&fin-calc-obj} and obj-code = 0 then do:
     message
       substitute ("По фирме &1 ведется раздельный учет по объектам с поставщиками. Нельзя связать платежи и ФО с разных объектов.",sysconf.host-code)
     view-as alert-box.
@@ -2931,7 +2945,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-cli Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-cli Dialog-Frame 
 PROCEDURE proc-find-cli :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2958,7 +2972,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-cli-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-cli-name Dialog-Frame 
 PROCEDURE proc-find-cli-name :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2985,7 +2999,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-code Dialog-Frame 
 PROCEDURE proc-find-code :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3013,7 +3027,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-date Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-date Dialog-Frame 
 PROCEDURE proc-find-date :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3034,7 +3048,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-mark Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-mark Dialog-Frame 
 PROCEDURE proc-mark :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3070,7 +3084,7 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-mark1 Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-mark1 Dialog-Frame 
 PROCEDURE proc-mark1 :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3106,15 +3120,13 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION contract-gen Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION contract-gen Dialog-Frame 
 FUNCTION contract-gen RETURNS CHARACTER
   ( input p-contract-code as integer ) :
   define variable rr as character no-undo .
-  define buffer buf_contract for ub.contract.
+  define buffer buf_contract for contract.
   find first buf_contract no-lock where  buf_contract.host-code      = p-host-code  and buf_contract.contract-code  = p-contract-code no-error.
   if available buf_contract then   rr = buf_contract.usl-opl .
   else rr = "".
@@ -3124,11 +3136,11 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION contract-id Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION contract-id Dialog-Frame 
 FUNCTION contract-id RETURNS CHARACTER
   ( input p-contract-code as integer ) :
   define variable rr as character no-undo .
-  define buffer buf_contract for ub.contract.
+  define buffer buf_contract for contract.
   find first buf_contract no-lock where  buf_contract.host-code      = p-host-code and buf_contract.contract-code  = p-contract-code  no-error.
   if available buf_contract then   rr = buf_contract.contract-prn-code.
   else rr = "".
@@ -3138,7 +3150,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-curr-sum Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-curr-sum Dialog-Frame 
 FUNCTION get-curr-sum RETURNS decimal
   ( input p-cur as integer, input p-doc-curr as integer, input p-cur-contr as integer, input p-sum-contract as decimal, input p-sum-rubl as decimal, input p-sum-base as decimal, input p-sum-doc as decimal ) :
   define variable sum as decimal   no-undo .
@@ -3159,16 +3171,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-ostat Dialog-Frame
-FUNCTION get-ostat RETURNS decimal
-  ( input p-sum1 as decimal, input p-sum2 as decimal ) :
-  RETURN p-sum1 - p-sum2 .
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-currency Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-currency Dialog-Frame 
 FUNCTION get-currency RETURNS CHARACTER
   ( input curr-code as integer ) :
 /*------------------------------------------------------------------------------
@@ -3176,7 +3179,7 @@ FUNCTION get-currency RETURNS CHARACTER
     Notes:
 ------------------------------------------------------------------------------*/
 define variable var-curr-name as character no-undo.
-define buffer buf_currency for ub.currency.
+define buffer buf_currency for currency.
   find first buf_currency no-lock where buf_currency.curr-code = curr-code no-error .
   if available buf_currency then assign var-curr-name = buf_currency.curr-abbr .
 RETURN var-curr-name.   /* Function return value. */
@@ -3185,9 +3188,9 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-free-sum Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-free-sum Dialog-Frame 
 FUNCTION get-free-sum RETURNS decimal
-  ( BUFFER loc-fin-ob FOR ub.fin-ob ) :
+  ( BUFFER loc-fin-ob FOR fin-ob ) :
   define variable sum as decimal   no-undo .
   if s-curr-code = loc-fin-ob.contract-curr then assign sum = loc-fin-ob.sum-contract - loc-fin-ob.con-sum-contr .
   else do:
@@ -3206,9 +3209,9 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-free-sum1 Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-free-sum1 Dialog-Frame 
 FUNCTION get-free-sum1 RETURNS decimal
-  ( BUFFER loc-fin-doc FOR ub.fin-doc ) :
+  ( BUFFER loc-fin-doc FOR fin-doc ) :
   define variable sum as decimal   no-undo .
   if s-curr-code = 0 then assign sum = loc-fin-doc.sum-rubl - loc-fin-doc.con-sum-rubl .
   else do:
@@ -3237,7 +3240,16 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION mark-string Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-ostat Dialog-Frame 
+FUNCTION get-ostat RETURNS decimal
+  ( input p-sum1 as decimal, input p-sum2 as decimal ) :
+  RETURN p-sum1 - p-sum2 .
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION mark-string Dialog-Frame 
 FUNCTION mark-string RETURNS CHARACTER
   ( input par-recid as recid, input typ as integer ) :
 /*------------------------------------------------------------------------------
@@ -3246,8 +3258,8 @@ FUNCTION mark-string RETURNS CHARACTER
 ------------------------------------------------------------------------------*/
   define variable ret as character no-undo .
   assign ret = "" .
-  define buffer b_fin-ob for ub.fin-ob.
-  define buffer b_fin-doc for ub.fin-doc.
+  define buffer b_fin-ob for fin-ob.
+  define buffer b_fin-doc for fin-doc.
 
   if typ = 0 then do:
     find first temp-fin-ob where temp-fin-ob.ri = par-recid no-error .
@@ -3270,3 +3282,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

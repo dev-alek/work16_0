@@ -58,8 +58,9 @@ define variable vss-description as character no-undo initial "Изменение статуса 
 /* { gbl/getcntxt.i def } контекст здесь неуместен. Работаем с конкретным документом на конкретном объекте */
 { gbl/thbjattr.i     }
 { str/valddnst.i def }
+{ gbl/clntattr.i   }
+{ ref/gds-attr.i }
 { gbl/getsect.i  def }
-{ gbl/clntattr.i }
 define output parameter table for gds-list.
 
 define buffer bf_trn-doc      for ub.trn-doc.
@@ -86,6 +87,7 @@ define buffer old-doc         for ub.trn-doc.
 define buffer exp-dtl         for ub.gds-dtl.
 define buffer c-in            for ub.trn-doc.
 define buffer bf-cnt_parts    for ub.parts.
+define buffer bf_fin-ob-trn   for ub.fin-ob-trn.
 
 define variable inv-shipvalue                as   logical                     no-undo.
 define variable par-gen-mrgn-ie              as   character                   no-undo.
@@ -180,6 +182,9 @@ define variable varinv-prstype as character no-undo.
 define variable v-attr-value   as character no-undo.
 define variable v-attr-type    as character no-undo.
 define variable v-is-foreign-producer as logical no-undo.
+define variable p-cons        as integer no-undo .
+define temp-table tt-trn no-undo like ub.trn-doc.
+define variable res        as character no-undo .
 define stream str-err.
 
 /*define temp-table tt-doc-pl no-undo like ub.doc-pl .*/
@@ -1456,7 +1461,9 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       when {&TDEDT_Spi_Vnesh}     or
       when {&TDEDT_Vozvrat_Vnesh} or
       when {&TDEDT_Vozvrat_Perem} or
-      when {&TDEDT_Pri_Perem}
+      when {&TDEDT_Pri_Perem}     or
+      when {&TDEDT_Ras_Object}    or
+      when {&TDEDT_Pri_Object}     
       then do:
         if ( bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}    or
             bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or
@@ -1467,9 +1474,17 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         end.
         /* проверка на превышение лимита кредита по договору */
         if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and  bf_trn-doc.contract-code > 0 and ( parmode = {&close-doc} or parmode = {&close-fact}) then do:
-          run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale, input bf_trn-doc.tot-fact ) no-error .
-          if error-status :error then return error return-value .
-        end.
+          find first bf_contract where bf_contract.contract-code = bf_trn-doc.contract-code and bf_contract.host-code = bf_trn-doc.host-code 
+          and bf_contract.usl-opl <> '{&bef-contr-pay-nodef}' or bf_contract.usl-opl <> '{&bef-contr-buyer-ord}' or bf_contract.usl-opl <> '{&bef-contr-buyer-ord}'
+          no-error .
+          if not available bf_contract then do:
+          find first bf_fin-ob-trn where bf_fin-ob-trn.trn-doc-code = bf_trn-doc.doc-code and (bf_fin-ob-trn.sum-rubl = bf_trn-doc.tot-fact or bf_fin-ob-trn.sum-rubl = (bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl)) no-error.
+            if not available bf_fin-ob-trn then do: 
+              run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact ) no-error .
+              if error-status :error then return error return-value .
+            end.
+          end.  
+          end.
         if (bf_trn-doc.status_ = {&wayb} and bf_trn-doc.flag_ = yes  or
           parmode = {&close-fact})
           and (bf_trn-doc.contract-code <> 0  and bf_trn-doc.ext-doc-type <> {&TDEDT_Ras_Vnesh_VP} )       /*Если не указан договор, то и не нужно ничего проверять. Если возврат, то возвращаем все что есть, в независимости от спецификации */
@@ -1887,6 +1902,9 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
                   run waitfram-hide in this-procedure no-error.
                   undo, return error substitute( "Ошибка при расчете документа &1 &2 &3.", bf_trn-doc.doc-code , return-value , error-status :get-message(1) ).
                 end.
+                if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
+                    run ie-date in this-procedure.    
+                end.
                 assign bf_trn-doc.status_ = varstatus.
                 if bf_trn-doc.doc-type = {&expense}
                 then do:
@@ -2025,7 +2043,8 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
                       bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}       or
                       bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}      or
                       bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass} or
-                      bf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}          )
+                      bf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}          or
+                      bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object}           )
                   then do:
                     run waitfram-hide in this-procedure no-error.
                     undo, return error substitute( "Для расширенного типа документа &1 недопустима установка фактической даты."
@@ -2355,10 +2374,9 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       end.
       end case.
 
+        { str/st-fo.i bf_trn-doc.doc-code }
       if bf_trn-doc.status_ = {&fact}
       then do:
-        { str/st-fo.i bf_trn-doc.doc-code }
-
         /* Отпускаем запись trn-doc. Больше редактировать нельзя. */
         release bf_trn-doc.
 
@@ -2660,6 +2678,68 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
     end.
   end case.
 run waitfram-hide in this-procedure.
+
+/*генерация ФО для расходных накладных*/
+for each tt-trn : delete tt-trn. end. /* for each */
+        if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass} or bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass} and bf_trn-doc.contract-code <> 0 and bf_trn-doc.contract-code <> ? then do:
+                p-cons = 0.
+                
+            find first bf_contract where bf_contract.contract-code = bf_trn-doc.contract-code no-error.
+              if available bf_contract then do:
+                if  bf_contract.usl-opl <> '{&bef-contr-pay-nodef}' then do:
+                define variable v-fo-gen as integer no-undo.
+                    { gbl/getsect.i run "''" 0  {&attr-fin-global} }
+                    for each thbjattr_thbj-attr :
+                        if thbjattr_thbj-attr.prop-code = {&attr-fin-global_fo-gen}  then v-fo-gen = thbjattr_thbj-attr.property-value-integer .
+                    end.
+                    if ((varstatus = {&wayb} and bf_trn-doc.flag_ = yes and (v-fo-gen = 3 or v-fo-gen = 2 )) or (varstatus = {&permitted} and (v-fo-gen = 4 or v-fo-gen = 5) ) or (varstatus = {&fact} and v-fo-gen > 1 )) or ((bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}') and varstatus = {&permitted}) then do:
+                        if available bf_trn-doc then do:
+                        if not available tt-trn then                                                                                        
+                              create tt-trn.
+                              BUFFER-COPY bf_trn-doc to tt-trn.
+                        end.
+                        if bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}' then p-cons = 1. /*Предоплата*/
+                        if bf_contract.usl-opl = '{&bef-contr-buyer-in}'  then p-cons = 2. /*По факту поставки*/
+                        if bf_contract.usl-opl = '{&bef-contr-buyer-in-delay}'  then p-cons = 3. /*По всем*/
+                        if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass} and bf_trn-doc.cr-fo-buyer = no then do:
+                         if bf_contract.usl-opl <> '{&bef-contr-buyer-ord}' or bf_contract.usl-opl <> '{&bef-contr-buyer-ord-prc}' then do:
+                                 find first bf_fin-ob-trn where bf_fin-ob-trn.trn-doc-code = bf_trn-doc.doc-code and (bf_fin-ob-trn.sum-rubl = bf_trn-doc.tot-fact or bf_fin-ob-trn.sum-rubl = (bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl)) no-error.
+                                  if not available bf_fin-ob-trn then do: 
+                                    run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact ) no-error .
+                                    if error-status :error then return error return-value .
+                                  end.
+                          end.
+                         if (bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}') and (varstatus = {&permitted} or (varstatus = {&fact} and v-fo-gen > 1 )) then do:
+                                  
+                                    run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact ) no-error .
+                                    if error-status :error then return error return-value .
+                                 
+                          end.
+                         if bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}' then do:
+                                 find first bf_fin-ob-trn where bf_fin-ob-trn.trn-doc-code = bf_trn-doc.doc-code and (bf_fin-ob-trn.sum-rubl = bf_trn-doc.tot-fact or bf_fin-ob-trn.sum-rubl = (bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl)) no-error.
+                                  if not available bf_fin-ob-trn then do: 
+                                    run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact ) no-error .
+                                    if error-status :error then return error return-value .
+                                  end.
+                          end.                                  
+                        end.
+                      run str/genbfotr.p (
+                          input parParentProc ,
+                          input bf_contract.host-code ,
+                          input bf_trn-doc.doc-date  ,
+                          input ? ,
+                          input p-cons ,              /* условие оплаты */
+                          input 1 ,
+                          input table tt-trn ,
+                          input-output res ,
+                          input 2,
+                          input yes
+                          ) no-error .
+                     end.           
+
+                end. /*               if  bf_trn-doc.status_ = {&fact} and bf_contract.usl-opl <> {&bef-contr-pay-nodef} then do:*/
+          end.
+        end. /*if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) and (bf_trn-doc.contract-code <> 0 or bf_trn-doc.contract-code <> ?) then do:*/
 end. /* transaction */
 
 
@@ -2948,6 +3028,9 @@ procedure ie-date:
     then do:
      if bf_trn-doc.fact-time = 0 or bf_trn-doc.fact-time = ? then
         bf_trn-doc.fact-time = time.
+      if bf_trn-doc.fact-date = ? and bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
+        { gbl/curobjdt.i bf_trn-doc.obj-type bf_trn-doc.obj-code bf_trn-doc.fact-date }    
+      end.
       run gbl/chk-date.p
           ( input bf_trn-doc.obj-type
           , input bf_trn-doc.obj-code
@@ -3229,7 +3312,9 @@ define buffer buf_goods for ub.goods  .
               {&TDEDT_Chg_Purch_Code} + ","  +
               {&TDEDT_Corr_Minus_Parts} + ","  +
               {&TDEDT_Corr_Acc_Price}   + "," +
-              {&TDEDT_Vozvrat_Perem} ) = 0  and
+              {&TDEDT_Vozvrat_Perem}  + "," +
+              {&TDEDT_Ras_Object}  + "," +
+              {&TDEDT_Pri_Object} ) = 0  and
               ((bf_trn-doc.status_ = {&wayb}    and bf_trn-doc.flag_ = false  ))
     then do:
       var-ok-assort-pol = true .

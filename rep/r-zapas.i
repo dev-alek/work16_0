@@ -14,16 +14,18 @@ Author: Svetlana Chernova
 Creation date: 20/10/00
 
 */
-define input parameter x-store-code like ub.clients.obj-code no-undo.
-define input parameter x-store-type like ub.clients.obj-type no-undo.
-define input parameter x-base-type  like ub.currency.curr-abbr no-undo.
-define input parameter x-base-code  like ub.currency.curr-code no-undo.
-define input parameter xClassify  as character no-undo.
-define input parameter xSortType  as character no-undo.
-define input parameter xSumsOnly  as logical  no-undo.
-define input parameter xShowZero  as logical  no-undo.
-define input parameter xlongName  as logical  no-undo.
-define input parameter xPartsDet  as logical  no-undo.
+define input parameter x-store-code like clients.obj-code no-undo.
+define input parameter x-store-type like clients.obj-type no-undo.
+define input parameter x-base-type  like currency.curr-abbr no-undo.
+define input parameter x-base-code  like currency.curr-code no-undo.
+define input parameter xClassify    as character no-undo.
+define input parameter xSortType    as character no-undo.
+define input parameter xSumsOnly    as logical  no-undo.
+define input parameter xShowZero    as logical  no-undo.
+define input parameter xlongName    as logical  no-undo.
+define input parameter xPartsDet    as logical  no-undo.
+define input parameter x-photo      as logical  no-undo.
+/*define input parameter x-photo-size as character  no-undo.*/
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -35,7 +37,7 @@ define variable vss-description as character no-undo init "Состояние запаса".
 { cmp/str-glbl.i }
 { cmp/r-page1.i }
 { rep/rep-bt.i }
-{ cmp/r-pril.i }
+
 { rep/r-sym.i }
 { rep/r-gl.i }
 { rep/f-fdec.i }
@@ -48,12 +50,10 @@ define variable vss-description as character no-undo init "Состояние запаса".
 { str/prl-vat.i  }
 { trg/partsfnc.i }
 { gbl/alc-lib.i  }
-
+{ gbl/prn-lib.i "new shared" }
 { str/clcprtsl.i "only-one-parts" }
-
-define buffer goods   for ub.goods  .
-define buffer gds-obj for ub.gds-obj  .
-define buffer clients for ub.clients  .
+{ ref/gds-attr.i }
+{ref/imagelist.i}
 
 define variable num#col# as integer no-undo .
 define variable var-1 as integer no-undo .
@@ -61,11 +61,7 @@ define variable var-2 as integer no-undo .
 
 define variable  zap-date   as date no-undo.
 define variable  tPrintRubl as log no-undo.
-define variable time-start as decimal no-undo .
-
-define stream  InStream  .
-define stream  OutStream  .
-define stream  macr_excel .
+define variable  time-start as decimal no-undo .
 
 define variable v-file-name as character no-undo .
 define variable v-ind       as integer   no-undo .
@@ -103,6 +99,7 @@ define variable Tot-2-5 as decimal FORMAT "->>>>>>>>>>9.99"  no-undo init 0.
 define buffer b-clients for clients .
 define buffer buf_parts for ub.parts.
 define buffer buf_tt-allsum for tt-allsum.
+define buffer buf_goods for ub.goods.
 
 define variable    ObjName           as char no-undo.
 define variable    Select-Good       as   integer no-undo.
@@ -116,9 +113,19 @@ define variable    ValType           as   integer no-undo.
 define variable    Line              as  char     no-undo.
 define variable    FirstLine         as  logical  no-undo.
 define variable    Parts-Det         as  logical  no-undo.
+define variable    v-photo           as logical  no-undo.
+/*define variable    v-photo-size      as character  no-undo.*/
 define variable v-goods-alcohol-prod as  logical  no-undo.
 
 define variable v-show-part-code as character no-undo .
+
+define variable parparentproc        as widget-handle no-undo .
+define variable v-file-name-rep-htm as character no-undo .
+define VARIABLE v-col               as integer   no-undo initial 11.
+define stream Out-Stream.
+define stream OutStr-html.
+define VARIABLE p-report-id              as character               no-undo .
+
 
   define variable v-cur-dn  as character no-undo .
   define variable v-price as decimal   no-undo .
@@ -160,76 +167,10 @@ define variable gds-zap-stoim-base    like ub.stk-tot.sum-base FORMAT "->>>>>>>>
 define variable gds-zap-qnty          like ub.stk-tot.sum-base FORMAT "->>>>>>>>>9.999" no-undo.
 define variable gds-zap-Nds           like ub.stk-tot.sum-base FORMAT "->>>>>>>>>>9.99" no-undo.
 define variable gds-zap-Np            like ub.stk-tot.sum-base FORMAT "->>>>>>>>>>9.99" no-undo.
+define variable gds-zap-image         as character              no-undo .
 
-/* ************** frame для формы **************** */
-DEFINE FRAME zapas
-        sym1 column-label ":!:" format "x(1)" space(0)
-        gds-zap-b-code column-label  "Код       ! " space(0)
-        sym2 column-label ":!:" format "x(1)"                space(0)
-        gds-zap-artic column-label "Артикул        ! " format "X(16)" space(0)
-        sym3 column-label ":!:" format "x(1)"                         space(0)
-        gds-zap-gds-name column-label "Название товара! " format "X(40)" space(0)
-        sym4 column-label ":!:" format "x(1)"                                     space(0)
-        gds-zap-unit-base column-label "Ед.!изм" format "X(3)"                  space(0)
-        sym5 column-label ":!:" format "x(1)"                                     space(0)
-        gds-zap-qnty column-label "Количество! " format "->>>>>>9.999"          space(0)
-        sym6 column-label ":!:" format "x(1)"                                          space(0)
-        gds-zap-price-base column-label "Цена!  " format "->>>>>>>>>>>9.99"            space(0)
-        sym7 column-label ":!:" format "x(1)"                                          space(0)
-        gds-zap-stoim-base column-label "Сумма! " format "->>>>>>>>>>>>9.99"           space(0)
-        sym8 column-label ":!:" format "x(1)"                                          space(0)
-        gds-zap-Nds column-label "НДС! " format "->>>>>>>>>>>9.99" space(0)
-        sym9 column-label ":!:" format "x(1)"                                             space(0)
-        gds-zap-Np column-label "НП! " format "->>>>>>>>>9.99" space(0)
-        sym10 column-label ":!:" format "x(1)"                                             space(0)
-        gds-zap-price-nds column-label "Цена!без НДС" format "->>>>>>>>>>>9.99"            space(0)
-        sym11 column-label ":!:" format "x(1)"                             space(0)
-        tot_tqnty column-label "Сумма!без НДС" format "->>>>>>>>>>>9.99"          space(0)
-
-
-    HEADER
-        cur-time-print() AT 5 format "X(35)"
-        "Цены указаны в" (if tPrintRubl then "{&abbr_rub_allshift}" else x-base-type )
-        string( "Страница " + string( PAGE-NUMBER( OutStream ), ">>>>>9") ) AT 115 format "X(17)" skip
-        Line format "X(187)" AT 1
-    with width {&DOS_CW_2} down stream-io use-text NO-BOX.
-
-DEFINE FRAME zapas-parts
-        sym1 column-label ":!:" format "x(1)" space(0)
-        gds-zap-b-code column-label  "Код       ! " space(0)
-        sym2 column-label ":!:" format "x(1)"                space(0)
-        gds-zap-artic column-label "Артикул        ! " format "X(16)" space(0)
-        sym3 column-label ":!:" format "x(1)"                         space(0)
-        gds-zap-gds-name column-label "Название товара! " format "X(40)" space(0)
-        sym4 column-label ":!:" format "x(1)"                         space(0)
-        gds-zap-part-b-code column-label "Бар-код!партии":C9 space(0)
-        sym5 column-label ":!:" format "x(1)"                                     space(0)
-        gds-zap-unit-base column-label "Ед.!изм" format "X(3)"                  space(0)
-        sym6 column-label ":!:" format "x(1)"                                     space(0)
-        gds-zap-qnty column-label "Количество! " format "->>>>>>9.999"          space(0)
-        sym7 column-label ":!:" format "x(1)"                                          space(0)
-        gds-zap-price-base column-label "Цена!  " format "->>>>>>>>>>>9.99"            space(0)
-        sym8 column-label ":!:" format "x(1)"                                          space(0)
-        gds-zap-stoim-base column-label "Сумма! " format "->>>>>>>>>>>>9.99"           space(0)
-        sym9 column-label ":!:" format "x(1)"                                          space(0)
-        gds-zap-Nds column-label "НДС! " format "->>>>>>>>>>>9.99" space(0)
-        sym10 column-label ":!:" format "x(1)"                                             space(0)
-        gds-zap-Np column-label "НП! " format "->>>>>>>>>9.99" space(0)
-        sym11 column-label ":!:" format "x(1)"                                             space(0)
-        gds-zap-price-nds column-label "Цена!без НДС" format "->>>>>>>>>>>9.99"            space(0)
-        sym12 column-label ":!:" format "x(1)"                             space(0)
-        tot_tqnty column-label "Сумма!без НДС" format "->>>>>>>>>>>9.99"          space(0)
-
-
-    HEADER
-        cur-time-print() AT 5 format "X(35)"
-        "Цены указаны в" (if tPrintRubl then "{&abbr_rub_allshift}" else x-base-type )
-        string( "Страница " + string( PAGE-NUMBER( OutStream ), ">>>>>9") ) AT 115 format "X(17)" skip
-        Line format "X(197)" AT 1
-    with width {&DOS_CW_2} down stream-io use-text NO-BOX.
-
-{ rep/repfrm.i def}
-{ rep/repfrm.i on 50 }
+DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
+DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
 /*===================================================================================================================*/
 define variable C-c    as integer no-undo .
 define variable C-str  as character no-undo .
@@ -249,6 +190,8 @@ assign
   Sums-Only     = xSumsOnly
   Show-Negativ  = xShowZero
   Parts-Det     = xPartsDet
+  v-photo       = x-photo
+/*  v-photo-size  = x-photo-size*/
   ValType       = IF (PayType = 1) Then 0  else x-SET_val_TYPE.
   time-start    = time.
 
@@ -262,7 +205,7 @@ procedure foreach :
  on error undo, return error return-value
  :
 
- { rep/repfrm.i disp i  reportname ObjName}
+ 
  FIND LAST  ub.stk-line where
                         ub.stk-line.artic      = gds-zap-artic
                   AND   ub.stk-line.fact-date <= zap-date
@@ -297,7 +240,21 @@ procedure foreach :
           tot_tqnty          = gds-zap-stoim-base - gds-zap-Nds
           gds-zap-price-nds = if (gds-zap-qnty <> 0) Then round( (tot_tqnty / gds-zap-qnty) , 2) Else 0
           .
+              if v-photo = yes then do:
+                  IF mImagePh THEN
+                DO:
 
+                  find first buf_goods where buf_goods.artic = gds-zap-artic and buf_goods.prod-code = gds-zap-prod-code and buf_goods.prod-type = gds-zap-prod-type no-error.
+                  if available buf_goods then do:
+                      RUN gds-attr-value ( buf_goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+                      RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, buf_goods.gds-code, OUTPUT vImageList).
+                  gds-zap-image = entry (1,vImageList).
+                  end.
+
+                v-col = 12.
+                END.
+
+              end.
 
  end. /* do */
 end procedure. /* foreach */
@@ -311,100 +268,115 @@ procedure display-line :
         IF NOT Sums-Only then DO:
           if fr = true then do:
                           if fr0 = true then do:
-
-                              PUT stream  OutStream  tmp#stroka0 format "X(100)" skip .
+                      
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD colspan="' + string(v-col) + '"> ' + tmp#stroka0 + '</TD>'skip
+                            '</TR>'skip
+                            .
+                              PUT stream OutStr-html  tmp#stroka0 format "X(100)" skip .
                               num#str# = num#str# + 1.
                               num#col# = 1.
-                              run macr_excel_char_with_format ( String(tmp#stroka0)  , num#str# , num#col#  ) .
-                              run macr_cell_format
-                              ( 10    ,      /* p-size     */
-                                true  ,      /* p-bold     */
-                                true  ,      /* p-italic   */
-                                33    ,      /* p-color-bg */
-                                num#str# ,      /* p-row      */
-                                num#col# ,      /* p-col      */
-                                num#str# ,   /* p-row-2    */
-                                5 ) . /* p-col-2    */
 
                               fr0 = false .
                            end.
-                        PUT stream  OutStream   space(6) tmp#stroka format "X(100)" skip .
+                       put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD colspan="' + string(v-col) + '"> ' + tmp#stroka + '</TD>'skip
+                            '</TR>'skip
+                            .
+                        PUT stream  OutStr-html   space(6) tmp#stroka format "X(100)" skip .
                         num#str# = num#str# + 1.
                         num#col# = 2.
-                        run macr_excel_char_with_format ( String(tmp#stroka)  , num#str# , num#col#  ) .
-                        run macr_cell_format
-                          ( 10    ,      /* p-size     */
-                            true  ,      /* p-bold     */
-                            true  ,      /* p-italic   */
-                            36    ,      /* p-color-bg */
-                            num#str# ,      /* p-row      */
-                            num#col# ,      /* p-col      */
-                            num#str# ,   /* p-row-2    */
-                            5 ) . /* p-col-2    */
 
                         fr = false .
           end.
             if not Parts-Det then do :
-             DISPLAY stream  OutStream {&all-sym11}
-                              gds-zap-b-code
-                              gds-zap-artic
-                              gds-zap-gds-name
-                              gds-zap-unit-base
-                              gds-zap-qnty
-                              gds-zap-price-base
-                              gds-zap-price-nds
-                              gds-zap-stoim-base
-                              gds-zap-Nds
-                              gds-zap-Np
-                              tot_tqnty
-                              with FRAME  zapas    .
-            DOWN stream  OutStream 1 with FRAME zapas    .
-            run new-tmp-page .
-              num#str# = num#str# + 1.
-              num#col# = 1.
-                run macr_excel_dec  ( gds-zap-b-code     , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                run macr_excel_char ( gds-zap-artic      , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                run macr_excel_char ( (if xlongName then gds-zap-gds-long-name else gds-zap-gds-name)   , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                run macr_excel_char ( gds-zap-unit-base  , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                run macr_excel_dec  ( gds-zap-qnty       , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                run macr_excel_dec  ( gds-zap-price-base , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                run macr_excel_dec  ( gds-zap-stoim-base , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                run macr_excel_dec  ( round(gds-zap-Nds,2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                run macr_excel_dec  ( gds-zap-Np         , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                run macr_excel_dec  ( round(gds-zap-price-nds,2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                run macr_excel_dec  ( round(tot_tqnty,2)          , num#str# , num#col#   ) .
+  
+                if v-photo then do:
+                              put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD style="text-align: center"> ' + string(gds-zap-b-code) + '</TD>'skip
+                                  '<TD style="text-align: center"> ' + string(gds-zap-artic) + '</TD>'skip
+                                  '<TD> ' + string(gds-zap-gds-name) + '</TD>'skip
+                                  '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-qnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-price-base,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-stoim-base,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-Nds,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-Np,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-price-nds,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(tot_tqnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: center; width: 20px;">'skip
+                                  '<img  src="' + gds-zap-image + '"; alt="Фото товара" style="height: 50px;"/>'
+                                  '</TD>'skip
+                              '</TR>'skip    
+                              .                
+                end.  
+                else do:
+                              put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD style="text-align: center"> ' + string(gds-zap-b-code) + '</TD>'skip
+                                  '<TD style="text-align: center"> ' + string(gds-zap-artic) + '</TD>'skip
+                                  '<TD> ' + string(gds-zap-gds-name) + '</TD>'skip
+                                  '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-qnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-price-base,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-stoim-base,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-Nds,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-Np,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(gds-zap-price-nds,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"> ' + string(tot_tqnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                              '</TR>'skip    
+                              .                
+              end.
+                run new-tmp-page .
+                  num#str# = num#str# + 1.
+                  num#col# = 1.
             end.
             else do :
-              DISPLAY stream  OutStream {&all-sym12}
-                                gds-zap-b-code
-                                gds-zap-artic
-                                gds-zap-gds-name
-                                ""  @ gds-zap-part-b-code
-                                gds-zap-unit-base
-                                gds-zap-qnty
-                                gds-zap-price-base
-                                gds-zap-price-nds
-                                gds-zap-stoim-base
-                                gds-zap-Nds
-                                gds-zap-Np
-                                tot_tqnty
-                                with FRAME  zapas-parts    .
-              DOWN stream  OutStream 1 with FRAME zapas-parts    .
+              if v-photo then do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-b-code) + '</TD>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-artic) + '</TD>'skip
+                                '<TD style="text-align: left"> ' + string(gds-zap-gds-name) + '</TD>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-part-b-code) + '</TD>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-qnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-price-base,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-stoim-base,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-Nds,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-Np,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-price-nds,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(tot_tqnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: center; width: 20px;">'skip
+                                  '<img src="' + gds-zap-image + '"; alt="Фото товара" style="height: 50px;"/>'
+                                  '</TD>'skip
+                            '</TR>'skip    
+                            .                          
+              end.
+              else do:  
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-b-code) + '</TD>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-artic) + '</TD>'skip
+                                '<TD style="text-align: left"> ' + string(gds-zap-gds-name) + '</TD>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-part-b-code) + '</TD>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-qnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-price-base,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-stoim-base,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-Nds,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-Np,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(gds-zap-price-nds,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(tot_tqnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                            '</TR>'skip    
+                            .                        
+              end.
               run new-tmp-page .
                 num#str# = num#str# + 1.
                 num#col# = 1.
-                  run macr_excel_dec  ( gds-zap-b-code     , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_char ( gds-zap-artic      , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_char ( (if xlongName then gds-zap-gds-long-name else gds-zap-gds-name)   , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_char ( ""                 , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_char ( gds-zap-unit-base  , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_dec  ( gds-zap-qnty       , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_dec  ( gds-zap-price-base , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_dec  ( gds-zap-stoim-base , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_dec  ( round(gds-zap-Nds,2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_dec  ( gds-zap-Np         , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_dec  ( round(gds-zap-price-nds,2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                  run macr_excel_dec  ( round(tot_tqnty,2)          , num#str# , num#col#   ) .
               for each temp-parts no-lock :
                   { gbl/gdscdat.i
                     gds-zap-b-code
@@ -439,28 +411,8 @@ procedure display-line :
                     gds-zap-part-b-code
                     no-error
                   }
-                  /*if error-status :error or gds-zap-part-b-code = 0  or gds-zap-part-b-code = ? then do:
-                      v-is-part-price = false .
-                  end.
-                  else do:
-                    v-is-part-price = true  .
-                  end.
-                  if v-is-part-price = true  then do:*/
-                      /*{ gbl/bcodeprc.i
-                          buf_parts.obj-type
-                          buf_parts.obj-code
-                          gds-zap-part-b-code
-                          0
-                          v-fact-order-end
-                          v-cur-dn
-                          v-price
-                          v-cur-rt
-                          v-cur-ex
-                          no-error
-                          }
-                      if error-status :error then do:
-                        v-price = ? .
-                      end.*/
+                  if not(gds-zap-part-b-code = 0 or gds-zap-part-b-code = ? ) then do:
+                     
                       { gbl/bcprcex.i
                         buf_parts.obj-type
                         buf_parts.obj-code
@@ -475,7 +427,8 @@ procedure display-line :
                         v-cur-SLT-pc
                         no-error
                       }
-                  /*end.*/
+                  end.
+                  
                       { gbl/consvtpc.i
                         buf_parts.host-code
                         v-cons-vat-pc
@@ -507,101 +460,138 @@ procedure display-line :
 
                   IF PayType = 2 then do :
                     if tPrintRubl then do :
-                      DISPLAY stream  OutStream {&all-sym12}
-                                        ""
-                                        ""
-                                        v-show-part-code  @ gds-zap-gds-name
-                                        gds-zap-part-b-code
-                                        gds-zap-unit-base
-                                        buf_tt-allsum.fact-qnty         @  gds-zap-qnty
-                                        if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty else 0       @  gds-zap-price-base
-                                        if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc) / buf_tt-allsum.fact-qnty else 0      @  gds-zap-price-nds
-                                        buf_tt-allsum.sum-dsc-rubl-acc                @  gds-zap-stoim-base
-                                        buf_tt-allsum.vat-rubl-acc             @  gds-zap-Nds
-                                        buf_tt-allsum.slt-rubl-acc             @  gds-zap-Np
-                                        buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc @  tot_tqnty
-                                        with FRAME  zapas-parts    .
-                      DOWN stream  OutStream 1 with FRAME zapas-parts    .
+                      if v-photo then do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD></TD>'skip
+                                '<TD></TD>'skip
+                                '<TD style="text-align: center"> ' + string(v-show-part-code) + '</TD>'skip
+/*                                '<TD style="text-align: center"> ' + string(gds-zap-part-print-code) + '</TD>'skip*/
+                                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.fact-qnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99" ) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc) / buf_tt-allsum.fact-qnty else 0  ),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.sum-dsc-rubl-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.vat-rubl-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.slt-rubl-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: center; width: 20px;">'skip
+                                  '<img src="' + gds-zap-image + '"; alt="Фото товара" style="height: 50px;"/>'
+                                  '</TD>'skip
+                            '</TR>'skip    
+                            .                          
+                      end.
+                      else do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD></TD>'skip
+                                '<TD></TD>'skip
+                                '<TD style="text-align: center"> ' + string(v-show-part-code) + '</TD>'skip
+                                '<TD style="text-align: center"> ' '</TD>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.fact-qnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99" ) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc) / buf_tt-allsum.fact-qnty else 0  ),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.sum-dsc-rubl-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.vat-rubl-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.slt-rubl-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc),"->>>>>>>>>>>9.99") + '</TD>'skip
+                            '</TR>'skip    
+                            .  
+                        end.
                       run new-tmp-page .
                         num#str# = num#str# + 1.
                         num#col# = 1.
-                          run macr_excel_char ( ""                 , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_char ( ""                 , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_char ( v-show-part-code   , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( gds-zap-part-b-code, num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_char ( gds-zap-unit-base  , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( buf_tt-allsum.fact-qnty  , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty,2) , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( buf_tt-allsum.sum-dsc-rubl-acc , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(buf_tt-allsum.vat-rubl-acc,2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(buf_tt-allsum.slt-rubl-acc,2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(((buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc) / buf_tt-allsum.fact-qnty),2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round((buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc),2) , num#str# , num#col#   ) .
+                    
                     end.  /*   if tPrintRubl   */
                     else do :
-                      DISPLAY stream  OutStream {&all-sym12}
-                                        ""
-                                        ""
-                                        v-show-part-code  @ gds-zap-gds-name
-                                        gds-zap-part-b-code
-                                        gds-zap-unit-base
-                                        buf_tt-allsum.fact-qnty         @  gds-zap-qnty
-                                        if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-base-acc / buf_tt-allsum.fact-qnty else 0       @  gds-zap-price-base
-                                        if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-base-acc - buf_tt-allsum.vat-base-acc) / buf_tt-allsum.fact-qnty else 0      @  gds-zap-price-nds
-                                        buf_tt-allsum.sum-dsc-base-acc                @  gds-zap-stoim-base
-                                        buf_tt-allsum.vat-base-acc             @  gds-zap-Nds
-                                        buf_tt-allsum.slt-base-acc             @  gds-zap-Np
-                                        buf_tt-allsum.sum-dsc-base-acc - buf_tt-allsum.vat-base-acc @  tot_tqnty
-                                        with FRAME  zapas-parts    .
-                      DOWN stream  OutStream 1 with FRAME zapas-parts    .
+                      if v-photo then do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD></TD>'skip
+                                '<TD></TD>'skip
+                                '<TD style="text-align: center"> ' + string(v-show-part-code) + '</TD>'skip
+                                '<TD style="text-align: center"> ' '</TD>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.fact-qnty) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-base-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-base-acc - buf_tt-allsum.vat-base-acc) / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.sum-dsc-base-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.slt-base-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.slt-rubl-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((buf_tt-allsum.sum-dsc-base-acc - buf_tt-allsum.vat-base-acc),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: center; width: 20px;">'skip
+                                  '<img src="' + gds-zap-image + '"; alt="Фото товара" style="height: 50px;"/>'
+                                  '</TD>'skip
+                            '</TR>'skip    
+                            .  
+                      end.
+                      else do:  
+                             put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD></TD>'skip
+                                '<TD></TD>'skip
+                                '<TD style="text-align: center"> ' + string(v-show-part-code) + '</TD>'skip
+                                '<TD style="text-align: center"> '  '</TD>'skip
+                                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.fact-qnty) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-base-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-base-acc - buf_tt-allsum.vat-base-acc) / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.sum-dsc-base-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.slt-base-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.slt-rubl-acc,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((buf_tt-allsum.sum-dsc-base-acc - buf_tt-allsum.vat-base-acc),"->>>>>>>>>>>9.99") + '</TD>'skip
+                            '</TR>'skip    
+                            .  
+                        end.
                       run new-tmp-page .
                         num#str# = num#str# + 1.
                         num#col# = 1.
-                          run macr_excel_char ( ""                 , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_char ( ""                 , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_char ( v-show-part-code   , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( gds-zap-part-b-code, num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_char ( gds-zap-unit-base  , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( buf_tt-allsum.fact-qnty  , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(buf_tt-allsum.sum-dsc-base-acc / buf_tt-allsum.fact-qnty,2) , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( buf_tt-allsum.sum-dsc-base-acc , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(buf_tt-allsum.vat-base-acc,2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(buf_tt-allsum.slt-base-acc,2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(((buf_tt-allsum.sum-dsc-base-acc - buf_tt-allsum.vat-base-acc) / buf_tt-allsum.fact-qnty),2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round((buf_tt-allsum.sum-dsc-base-acc - buf_tt-allsum.vat-base-acc),2) , num#str# , num#col#   ) .
                     end.
                   end.     /*  if PayType = 2    */
                   else do :
-                      DISPLAY stream  OutStream {&all-sym12}
-                                        ""
-                                        ""
-                                        v-show-part-code  @ gds-zap-gds-name
-                                        gds-zap-part-b-code
-                                        gds-zap-unit-base
-                                        buf_tt-allsum.fact-qnty         @  gds-zap-qnty
-                                        v-price /*if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-cur / buf_tt-allsum.fact-qnty else 0 */      @  gds-zap-price-base
-                                        if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-rubl-cur - buf_tt-allsum.vat-rubl-cur) / buf_tt-allsum.fact-qnty else 0      @  gds-zap-price-nds
-                                        buf_tt-allsum.sum-dsc-rubl-cur                @  gds-zap-stoim-base
-                                        buf_tt-allsum.vat-rubl-cur             @  gds-zap-Nds
-                                        buf_tt-allsum.slt-rubl-cur             @  gds-zap-Np
-                                        buf_tt-allsum.sum-dsc-rubl-cur - buf_tt-allsum.vat-rubl-cur @  tot_tqnty
-                                        with FRAME  zapas-parts    .
-                      DOWN stream  OutStream 1 with FRAME zapas-parts    .
+                    if v-photo then do:
+                             put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD></TD>'skip
+                                '<TD></TD>'skip
+                                '<TD> ' + string(v-show-part-code) + '</TD>'skip
+                                '<TD> ' + string(gds-zap-part-b-code) + '</TD>'skip
+                                '<TD> ' + string(gds-zap-unit-base) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.fact-qnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(v-price,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-rubl-cur - buf_tt-allsum.vat-rubl-cur) / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.sum-dsc-rubl-cur,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.vat-rubl-cur,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.slt-rubl-cur,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((buf_tt-allsum.sum-dsc-rubl-cur - buf_tt-allsum.vat-rubl-cur),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: center; width: 20px;">'skip
+                                  '<img src="' + gds-zap-image + '"; alt="Фото товара" style="height: 50px;"/>'
+                                  '</TD>'skip
+                            '</TR>'skip    
+                            .  
+                      end.
+                      else do:
+                              put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD></TD>'skip
+                                '<TD></TD>'skip
+                                '<TD> ' + string(v-show-part-code) + '</TD>'skip
+                                '<TD> ' + string(gds-zap-part-b-code) + '</TD>'skip
+                                '<TD> ' + string(gds-zap-unit-base) + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.fact-qnty,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(v-price,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-rubl-cur - buf_tt-allsum.vat-rubl-cur) / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.sum-dsc-rubl-cur,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.vat-rubl-cur,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(buf_tt-allsum.slt-rubl-cur,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string((buf_tt-allsum.sum-dsc-rubl-cur - buf_tt-allsum.vat-rubl-cur),"->>>>>>>>>>>9.99") + '</TD>'skip
+                            '</TR>'skip    
+                            .
+                      end.  
                       run new-tmp-page .
                         num#str# = num#str# + 1.
                         num#col# = 1.
-                          run macr_excel_char ( ""                 , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_char ( ""                 , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_char ( v-show-part-code   , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( gds-zap-part-b-code, num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_char ( gds-zap-unit-base  , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( buf_tt-allsum.fact-qnty  , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round((buf_tt-allsum.sum-dsc-rubl-cur / buf_tt-allsum.fact-qnty),2) , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( buf_tt-allsum.sum-dsc-rubl-cur , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(buf_tt-allsum.vat-rubl-cur,2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(buf_tt-allsum.slt-rubl-cur,2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round(((buf_tt-allsum.sum-dsc-rubl-cur - buf_tt-allsum.vat-rubl-cur) / buf_tt-allsum.fact-qnty),2), num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-                          run macr_excel_dec  ( round((buf_tt-allsum.sum-dsc-rubl-cur - buf_tt-allsum.vat-rubl-cur),2) , num#str# , num#col#   ) .
                   end.
               end.  /* for each temp-parts */
             end.
@@ -637,32 +627,351 @@ procedure print-header :
  do
  on error undo, return error return-value
  :
+   
+           run get-report-num (
+            output p-report-id
+        ).
+    v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
+    /*шапка*/
+    output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
+    put stream OutStr-html unformatted
+             "<!DOCTYPE HTML>" skip
+                ' <html>' skip
+                '  <head>' skip
+                '   <meta charset="utf-8">' skip
+                '    <style type="text/css">' skip
 
-   PUT stream OutStream  string( v-cntxt-host-name-obj )
-       AT 50 format "X(85)" skip (2)
-          "С О С Т О Я Н И Е    З А П А С А    на  "
-                AT 35  format "X(41)"   zap-date format "99.99.9999" skip (2)
-            "ФАКТИЧЕСКОЕ наличие  " + Trim(str3)  AT 35 format "X(75)" skip (1) .
-
-
-     PUT stream OutStream str2 AT 35 format "x(200)"  skip .
+                '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+                '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+                '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+                '   </style>' skip
+                '  </head>' skip
+            .
+            
+ /*определяем кол-во колонок*/
+ if not Parts-Det then do :
+    if v-photo then do:
+    put stream OutStr-html unformatted
+        '<body>' skip
+        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+        '<thead>' skip
+        '<TR class="set_columns">'skip
+            '<TD style="width: 100px;"></TD>'skip
+            '<TD style="width: 100px;"></TD>'skip
+            '<TD style="width: 200px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 100px;"></TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 14px;">СОСТОЯНИЕ ЗАПАСА</TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 14px;">на ' + string(zap-date,"99.99.9999") + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 14px;">' + string( trim(str3)) + '</TD>'skip
+        '</TR>'skip
+/*        '<TR>'skip                                                                    */
+/*            '<TD colspan="12" STYLE="font-size: 16px;">' + string( str2) + '</TD>'skip*/
+/*        '</TR>'skip                                                                   */
+    .
      Repeat i = 1 to NUM-ENTRIES(str4,chr(10)) :
-       PUT stream OutStream  Entry(i,str4,chr(10))  AT 1 format "X(170)" skip .
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 14px;">' + Entry(i,str4,chr(10)) + '</TD>'skip
+        '</TR>'skip
+    .
+     End.
+     Repeat i = 1 to NUM-ENTRIES(ReportHeader,chr(10)) :
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 14px;">' + Entry(i,ReportHeader,chr(10)) + '</TD>'skip
+        '</TR>'skip
+    .
+     End.
+     if tPrintRubl then do:
+            put stream OutStr-html unformatted
+            '<TR>'skip
+                '<TD colspan="12">Цены указаны в {&abbr_rub_allshift}</TD>'skip
+            '</TR>'skip    
+            .
+     end.
+     else do:
+            put stream OutStr-html unformatted
+            '<TR>'skip
+                '<TD colspan="12">Цены указаны в ' + x-base-type + '</TD>'skip
+            '</TR>'skip    
+            '</thead>' skip
+            .
+     end. 
+     put stream OutStr-html unformatted
+        '<tbody>'
+        '<TR>'skip
+            '<TH style="text-align: center;">Код</TH>'skip
+            '<TH style="text-align: center;">Артикул</TH>'skip
+            '<TH style="text-align: center;">Название товара</TH>'skip
+            '<TH style="text-align: center;">Ед. изм.</TH>'skip
+            '<TH style="text-align: center;">Количество</TH>'skip
+            '<TH style="text-align: center;">Цена</TH>'skip
+            '<TH style="text-align: center;">Стоимость</TH>'skip
+            '<TH style="text-align: center;">НДС</TH>'skip
+            '<TH style="text-align: center;">НП</TH>'skip
+            '<TH style="text-align: center;">Цена без НДС</TH>'skip
+            '<TH style="text-align: center;">Сумма без НДС</TH>'skip
+            '<TH style="text-align: center; width: 20px;">Фото товара</TH>'skip
+        '</TR>'skip    
+            .
+            
+    end.
+    else do:   
+    put stream OutStr-html unformatted
+        '<body>' skip
+        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+        '<thead>' skip
+        '<TR class="set_columns">'skip
+            '<TD style="width: 100px;"></TD>'skip
+            '<TD style="width: 100px;"></TD>'skip
+            '<TD style="width: 200px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">СОСТОЯНИЕ ЗАПАСА</TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">на ' + string(zap-date,"99.99.9999") + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">' + string( trim(str3)) + '</TD>'skip
+        '</TR>'skip
+/*        '<TR>'skip                                                                    */
+/*            '<TD colspan="11" STYLE="font-size: 16px;">' + string( str2) + '</TD>'skip*/
+/*        '</TR>'skip                                                                   */
+    .
+     Repeat i = 1 to NUM-ENTRIES(str4,chr(10)) :
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">' + Entry(i,str4,chr(10)) + '</TD>'skip
+        '</TR>'skip
+    .
      End.
 
      Repeat i = 1 to NUM-ENTRIES(ReportHeader,chr(10)) :
-       PUT stream OutStream  Entry(i,ReportHeader,chr(10))  AT 1 format "X(170)" skip .
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">' + Entry(i,ReportHeader,chr(10)) + '</TD>'skip
+        '</TR>'skip
+    .
      End.
-     i=0.
-      FirstLine = TRUE .
-    if not Parts-Det then do :
-      FORM with FRAME zapas .
-      DOWN stream  OutStream 1 with FRAME zapas.
+     if tPrintRubl then do:
+            put stream OutStr-html unformatted
+            '<TR>'skip
+                '<TD colspan="11">Цены указаны в {&abbr_rub_allshift}</TD>'skip
+            '</TR>'skip    
+            .
+     end.
+     else do:
+            put stream OutStr-html unformatted
+            '<TR>'skip
+                '<TD colspan="11">Цены указаны в ' + x-base-type + '</TD>'skip
+            '</TR>'skip    
+            '</thead>' skip
+            .
+     end. 
+     put stream OutStr-html unformatted
+        '<tbody>'
+        '<TR>'skip
+            '<TH style="text-align: center;">Код</TH>'skip
+            '<TH style="text-align: center;">Артикул</TH>'skip
+            '<TH style="text-align: center;">Название товара</TH>'skip
+            '<TH style="text-align: center;">Ед. изм.</TH>'skip
+            '<TH style="text-align: center;">Количество</TH>'skip
+            '<TH style="text-align: center;">Цена</TH>'skip
+            '<TH style="text-align: center;">Стоимость</TH>'skip
+            '<TH style="text-align: center;">НДС</TH>'skip
+            '<TH style="text-align: center;">НП</TH>'skip
+            '<TH style="text-align: center;">Цена без НДС</TH>'skip
+            '<TH style="text-align: center;">Сумма без НДС</TH>'skip
+        '</TR>'skip    
+            .
+            
+      end. /*else v-photo*/
     end.
     else do :
-      FORM with FRAME zapas-parts .
-      DOWN stream  OutStream 1 with FRAME zapas-parts.
-    end.
+      if v-photo then do:
+          put stream OutStr-html unformatted
+        '<body>' skip
+        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+        '<thead>' skip
+        '<TR class="set_columns">'skip
+            '<TD style="width: 100px;"></TD>'skip
+            '<TD style="width: 100px;"></TD>'skip
+            '<TD style="width: 200px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 50px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 100px;"></TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="13" STYLE="font-size: 16px;">СОСТОЯНИЕ ЗАПАСА</TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="13" STYLE="font-size: 16px;">на ' + string(zap-date,"99.99.9999") + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="13" STYLE="font-size: 16px;">ФАКТИЧЕСКОЕ наличие ' + string( trim(str3)) + '</TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="13" STYLE="font-size: 16px;">' + string( str2) + '</TD>'skip
+        '</TR>'skip
+    .
+     Repeat i = 1 to NUM-ENTRIES(str4,chr(10)) :
+     put stream OutStr-html unformatted 
+        '<TR>'skip
+            '<TD colspan="13" STYLE="font-size: 16px;">' + Entry(i,str4,chr(10)) + '</TD>'skip
+        '</TR>'skip
+    .
+     End.
+     Repeat i = 1 to NUM-ENTRIES(ReportHeader,chr(10)) :
+     put stream OutStr-html unformatted 
+        '<TR>'skip
+            '<TD colspan="13" STYLE="font-size: 16px;">' + Entry(i,ReportHeader,chr(10)) + '</TD>'skip
+        '</TR>'skip
+    .
+     End.
+     if tPrintRubl then do:
+            put stream OutStr-html unformatted
+            '<TR>'skip
+                '<TD colspan="13">Цены указаны в {&abbr_rub_allshift}</TD>'skip
+            '</TR>'skip    
+            .
+     end.
+     else do:
+            put stream OutStr-html unformatted
+            '<TR>'skip
+                '<TD colspan="13">Цены указаны в ' + x-base-type + '</TD>'skip
+            '</TR>'skip 
+            '</thead>'skip   
+            .
+     end. 
+         put stream OutStr-html unformatted
+        '<tbody>'
+        '<TR>'skip
+            '<TH style="text-align: center;">Код</TH>'skip
+            '<TH style="text-align: center;">Артикул</TH>'skip
+            '<TH style="text-align: center;">Название товара</TH>'skip
+            '<TH style="text-align: center;">Бар-код партии</TH>'skip
+            '<TH style="text-align: center;">Ед. изм.</TH>'skip
+            '<TH style="text-align: center;">Количество</TH>'skip
+            '<TH style="text-align: center;">Цена</TH>'skip
+            '<TH style="text-align: center;">Стоимость</TH>'skip
+            '<TH style="text-align: center;">НДС</TH>'skip
+            '<TH style="text-align: center;">НП</TH>'skip
+            '<TH style="text-align: center;">Цена без НДС</TH>'skip
+            '<TH style="text-align: center;">Сумма без НДС</TH>'skip
+            '<TH style="text-align: center; width: 20px;">Фото товара</TH>'skip
+        '</TR>'skip    
+            .
+      end.
+      else do:  
+          put stream OutStr-html unformatted
+        '<body>' skip
+        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+        '<thead>' skip
+        '<TR class="set_columns">'skip
+            '<TD style="width: 100px;"></TD>'skip
+            '<TD style="width: 100px;"></TD>'skip
+            '<TD style="width: 200px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 50px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 16px;">СОСТОЯНИЕ ЗАПАСА</TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 16px;">на ' + string(zap-date,"99.99.9999") + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 16px;">ФАКТИЧЕСКОЕ наличие ' + string( trim(str3)) + '</TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 16px;">' + string( str2) + '</TD>'skip
+        '</TR>'skip
+    .
+     Repeat i = 1 to NUM-ENTRIES(str4,chr(10)) :
+     put stream OutStr-html unformatted 
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 16px;">' + Entry(i,str4,chr(10)) + '</TD>'skip
+        '</TR>'skip
+    .
+     End.
+     Repeat i = 1 to NUM-ENTRIES(ReportHeader,chr(10)) :
+     put stream OutStr-html unformatted 
+        '<TR>'skip
+            '<TD colspan="12" STYLE="font-size: 16px;">' + Entry(i,ReportHeader,chr(10)) + '</TD>'skip
+        '</TR>'skip
+    .
+     End.
+     if tPrintRubl then do:
+            put stream OutStr-html unformatted
+            '<TR>'skip
+                '<TD colspan="12">Цены указаны в {&abbr_rub_allshift}</TD>'skip
+            '</TR>'skip    
+            .
+     end.
+     else do:
+            put stream OutStr-html unformatted
+            '<TR>'skip
+                '<TD colspan="12">Цены указаны в ' + x-base-type + '</TD>'skip
+            '</TR>'skip 
+            '</thead>'skip   
+            .
+     end. 
+         put stream OutStr-html unformatted
+        '<tbody>'
+        '<TR>'skip
+            '<TH style="text-align: center;">Код</TH>'skip
+            '<TH style="text-align: center;">Артикул</TH>'skip
+            '<TH style="text-align: center;">Название товара</TH>'skip
+            '<TH style="text-align: center;">Бар-код партии</TH>'skip
+            '<TH style="text-align: center;">Ед. изм.</TH>'skip
+            '<TH style="text-align: center;">Количество</TH>'skip
+            '<TH style="text-align: center;">Цена</TH>'skip
+            '<TH style="text-align: center;">Стоимость</TH>'skip
+            '<TH style="text-align: center;">НДС</TH>'skip
+            '<TH style="text-align: center;">НП</TH>'skip
+            '<TH style="text-align: center;">Цена без НДС</TH>'skip
+            '<TH style="text-align: center;">Сумма без НДС</TH>'skip
+        '</TR>'skip    
+            .
+    end. /*else do: v-photo*/   
+ end.
 
    Assign
       Tot-1=0
@@ -694,45 +1003,80 @@ procedure Print-Footer :
  define variable var-1 as integer no-undo .
  define variable var-2 as integer no-undo .
     if not Parts-Det then do :
-      DISPLAY stream  OutStream
-                      sym1
-                    " ИТОГО" @ gds-zap-b-code
-                      sym4
-                      sym5
-                      Tot-1  @ gds-zap-qnty
-                      sym6
-                      Tot-2  @ gds-zap-stoim-base
-                      sym7
-                      sym8
-                      Tot-4  @ gds-zap-nds
-                      sym9
-                      Tot-5  @ gds-zap-nP
-                      sym10
-                      Tot-3  @ tot_tqnty
-                      sym11
-                      with FRAME zapas.
-
-      DOWN stream  OutStream 1 with FRAME zapas.
+        if v-photo then do:
+                              put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD> Итого </TD>'skip
+                                  '<TD style="text-align: center"></TD>'skip
+                                  '<TD style="text-align: center"></TD>'skip
+                                  '<TD style="text-align: center"></TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' '</TD>'skip
+                              '</TR>'skip    
+                              .            
+        end.
+        else do:  
+                              put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD> Итого </TD>'skip
+                                  '<TD style="text-align: center"></TD>'skip
+                                  '<TD style="text-align: center"></TD>'skip
+                                  '<TD style="text-align: center"></TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                              '</TR>'skip    
+                              .    
+      end.
     end.
     else do :
-      DISPLAY stream  OutStream
-                      sym1
-                    " ИТОГО" @ gds-zap-b-code
-                      sym6
-                      Tot-1  @ gds-zap-qnty
-                      sym7
-                      Tot-2  @ gds-zap-stoim-base
-                      sym8
-                      sym9
-                      Tot-4  @ gds-zap-nds
-                      sym10
-                      Tot-5  @ gds-zap-nP
-                      sym11
-                      Tot-3  @ tot_tqnty
-                      sym12
-                      with FRAME zapas-parts.
-
-      DOWN stream  OutStream 1 with FRAME zapas-parts.
+      if v-photo then do:
+                              put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD> Итого </TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' '</TD>'skip
+                              '</TR>'skip    
+                              .  
+      end.
+      else do:  
+                              put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD> Итого </TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                  '<TD style="text-align: right"></TD>'skip
+                                  '<TD style="text-align: right">' + string(Tot-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                              '</TR>'skip    
+                              .    
+      end.
     end.
 
       assign
@@ -742,39 +1086,71 @@ procedure Print-Footer :
        var-2 = num#col#
        .
 
-       run macr_excel_char_with_format ( "ИТОГО", num#str# , num#col# ). assign   num#col# = (if Parts-Det then (num#col# + 5) else (num#col# + 4)).
-       run macr_excel_dec ( Tot-1 , num#str# , num#col# ) . assign   num#col# = num#col# + 2.
-       run macr_excel_dec ( Tot-2 , num#str# , num#col# ) . assign   num#col# = num#col# + 1.
-       run macr_excel_dec ( round(Tot-4,2) , num#str# , num#col# ) . assign   num#col# = num#col# + 1.
-       run macr_excel_dec ( Tot-5 , num#str# , num#col# ) . assign   num#col# = num#col# + 2.
-       run macr_excel_dec ( round(Tot-3,2) , num#str# , num#col# ) . assign   num#col# = num#col# + 1.
-/* ********* */
-       run macr_cell_format
-          ( 10    ,      /* p-size     */
-            true  ,      /* p-bold     */
-            false ,      /* p-italic   */
-            ?     ,      /* p-color-bg */
-            var-1 ,      /* p-row      */
-            var-2 ,      /* p-col      */
-            num#str# ,   /* p-row-2    */
-            num#col# ) . /* p-col-2    */
-
       assign
        num#str# = num#str# + 1
        num#col# =  1
        .
-      run macr_excel_char_with_format ( "Время формирования отчета " + string( time - time-start ) , num#str# , num#col# ) .
-
+             if v-photo then do:
+/*                            put stream OutStr-html unformatted*/
+/*                            '<tfoot>'skip                                                                    */
+/*                            '<tr>'                                                                           */
+/*                                '<TD colspan="2"> Время формирования отчета </TD>' skip                      */
+/*                                '<TD style="text-align: right">' + string( time - time-start ) + '</TD>' skip*/
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD></TD>' skip                                                             */
+/*                                '<TD></TD>' skip                                                             */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                            '</tr>'                                                                          */
+/*                            '</Tfoot>'skip                                                                   */
+/*                            .                                                                                */
       run u-line.
-      put stream  outstream unformatted
-        "Итого " tot-1 " единиц , "  " на сумму "    trim( string(tot-2,"->>>>>>>>>>>>9.99"))
-        "(" + (if tprintrubl then "{&abbr_rub_allshift}" else x-base-type ) + ")"
-        skip
-        string("Время формирования отчета ")
-        string( time - time-start)
-      .
-
-
+                            put stream OutStr-html unformatted
+                            '<tfoot>'skip
+                                '<tr>'
+                                    '<TD colspan="12">Итого ' + string(tot-1) + ' единиц , на сумму ' +   string(trim( string(tot-2,"->>>>>>>>>>>>9.99"))) + 
+            '(' + (if tprintrubl then '{&abbr_rub_allshift}' else x-base-type ) + ')</TD>' skip
+                                '</tr>'    
+                                '<tr>'
+                                   '<TD colspan="12">Время формирования отчета ' + string( time - time-start) + '</TD>' skip
+                                '</tr>'    
+                            '</Tfoot>'skip    
+                            .
+             end.
+             else do:  
+/*                            put stream OutStr-html unformatted                                               */
+/*                            '<tfoot>'skip                                                                    */
+/*                            '<tr>'                                                                           */
+/*                                '<TD colspan="2"> Время формирования отчета </TD>' skip                      */
+/*                                '<TD style="text-align: right">' + string( time - time-start ) + '</TD>' skip*/
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD></TD>' skip                                                             */
+/*                                '<TD></TD>' skip                                                             */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                                '<TD style="text-align: right"></TD>' skip                                   */
+/*                            '</tr>'                                                                          */
+/*                            '</Tfoot>'skip                                                                   */
+/*                            .                                                                                */
+      run u-line.
+                            put stream OutStr-html unformatted
+                            '<tfoot>'skip
+                                '<tr>'
+                                    '<TD colspan="11">Итого ' + string(tot-1) + ' единиц , на сумму ' +   string(trim( string(tot-2,"->>>>>>>>>>>>9.99"))) + 
+            '(' + (if tprintrubl then '{&abbr_rub_allshift}' else x-base-type ) + ')</TD>' skip
+                                '</tr>'    
+                                '<tr>'
+                                   '<TD colspan="11">Время формирования отчета ' + string( time - time-start) + '</TD>' skip
+                                '</tr>'    
+                            '</Tfoot>'skip    
+                            .
+                 end.           
  end. /* do */
 end procedure. /* Print-Footer */
 
@@ -786,50 +1162,61 @@ procedure Print-Footer-o :
 
 define variable var-1 as integer no-undo .
 define variable var-2 as integer no-undo .
-      run u-line.
-    if not Parts-Det then do :
-      DISPLAY stream  OutStream
-                      sym1
-                    " ИТОГО по" @ gds-zap-b-code
-                      sym4
-                      objname @ gds-zap-gds-name
-                      sym5
-                      oTot-1  @ gds-zap-qnty
-                      sym6
-                      oTot-2  @ gds-zap-stoim-base
-                      sym7
-                      sym8
-                      oTot-4  @ gds-zap-nds
-                      sym9
-                      oTot-5  @ gds-zap-nP
-                      sym10
-                      oTot-3  @ tot_tqnty
-                      sym11
-                      with FRAME zapas.
 
-      DOWN stream  OutStream 1 with FRAME zapas.
+    if not Parts-Det then do :
+      if v-photo then do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD> Итого по </TD>' skip
+                                '<TD></TD>' skip
+                                '<TD>' + string(objname) + '</TD>' skip
+                                '<TD style="text-align: right">' '</TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-1,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD></TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-2,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-4,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-5,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD></TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-3,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD></TD>' skip
+                            '</TR>'skip    
+                            .   
+      end.
+      else do:   
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD> Итого по </TD>' skip
+                                '<TD></TD>' skip
+                                '<TD>' + string(objname) + '</TD>' skip
+                                '<TD style="text-align: right">' '</TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-1,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD></TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-2,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-4,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-5,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD></TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-3,"->>>>>>>>>>>9.99") + '</TD>' skip
+                            '</TR>'skip    
+                            .   
+      end.
     end.
     else do :
-      DISPLAY stream  OutStream
-                      sym1
-                    " ИТОГО по" @ gds-zap-b-code
-                      sym4
-                      objname @ gds-zap-gds-name
-                      sym6
-                      oTot-1  @ gds-zap-qnty
-                      sym7
-                      oTot-2  @ gds-zap-stoim-base
-                      sym8
-                      sym9
-                      oTot-4  @ gds-zap-nds
-                      sym10
-                      oTot-5  @ gds-zap-nP
-                      sym11
-                      oTot-3  @ tot_tqnty
-                      sym12
-                      with FRAME zapas-parts.
-
-      DOWN stream  OutStream 1 with FRAME zapas-parts.
+                            put stream OutStr-html unformatted
+                            '<TR>' skip
+                                '<TD> Итого по </TD>' skip
+                                '<TD></TD>' skip
+                                '<TD>' + string(objname) + '</TD>' skip
+                                '<TD></TD>' skip
+                                '<TD></TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-1,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD></TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-2,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-4,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-5,"->>>>>>>>>>>9.99") + '</TD>' skip
+                                '<TD></TD>' skip
+                                '<TD style="text-align: right">' + string(oTot-3,"->>>>>>>>>>>9.99") + '</TD>' skip
+                            '</TR>' skip    
+                            .   
     end.
 
       assign
@@ -838,24 +1225,6 @@ define variable var-2 as integer no-undo .
        var-1 = num#str#
        var-2 = num#col#
        .
-       run macr_excel_char_with_format ( "ИТОГО по объекту" + objname  , num#str# , num#col#  ) .
-                                                                   assign  num#col# = (if Parts-Det then (num#col# + 5) else (num#col# + 4)).
-       run macr_excel_dec ( oTot-1, num#str# , num#col# ) .         assign  num#col# = num#col# + 2.
-       run macr_excel_dec ( oTot-2, num#str# , num#col# ) .         assign  num#col# = num#col# + 1.
-       run macr_excel_dec ( round(oTot-4,2), num#str# , num#col# ) .         assign  num#col# = num#col# + 1.
-       run macr_excel_dec ( oTot-5, num#str# , num#col# ) .         assign  num#col# = num#col# + 2.
-       run macr_excel_dec ( round(oTot-3,2), num#str# , num#col# ) .
-      run macr_cell_format
-          ( 10    ,     /* p-size    */
-            true  ,     /*p-bold     */
-            false ,     /*p-italic   */
-            ?     ,     /*p-color-bg */
-            var-1 ,  /*p-row    */
-            var-2 ,  /*p-col    */
-            num#str# ,         /*p-row-2  */
-            num#col#          ) . /*p-col-2 */
-
-
    Assign
       oTot-1=0
       oTot-2=0
@@ -872,60 +1241,8 @@ procedure U-LINE :
  on error undo, return error return-value
  :
   if not Parts-Det then do :
-UNDERLINE stream OutStream
-        sym1
-        gds-zap-b-code
-        sym2
-        gds-zap-artic
-        sym3
-        gds-zap-gds-name
-        sym4
-        gds-zap-unit-base
-        sym5
-        gds-zap-qnty
-        sym6
-        gds-zap-price-base
-        sym7
-        gds-zap-stoim-base
-        sym8
-        gds-zap-Nds
-        sym9
-        gds-zap-NP
-        sym10
-        gds-zap-price-nds
-        tot_tqnty
-        sym11
-        with FRAME zapas .
-        DOWN stream  OutStream 1 with FRAME zapas.
   end.
   else do :
-    UNDERLINE stream OutStream
-        sym1
-        gds-zap-b-code
-        sym2
-        gds-zap-artic
-        sym3
-        gds-zap-gds-name
-        sym4
-        gds-zap-part-b-code
-        sym5
-        gds-zap-unit-base
-        sym6
-        gds-zap-qnty
-        sym7
-        gds-zap-price-base
-        sym8
-        gds-zap-stoim-base
-        sym9
-        gds-zap-Nds
-        sym10
-        gds-zap-NP
-        sym11
-        gds-zap-price-nds
-        tot_tqnty
-        sym12
-        with FRAME zapas-parts .
-        DOWN stream  OutStream 1 with FRAME zapas-parts.
   end.
 
  end. /* do */
@@ -937,52 +1254,8 @@ procedure P-LINE :
  on error undo, return error return-value
  :
   if not Parts-Det then do :
-UNDERLINE stream OutStream
-        sym3
-        gds-zap-gds-name
-        sym4
-        gds-zap-unit-base
-        sym5
-        gds-zap-qnty
-        sym6
-        gds-zap-price-base
-        sym7
-        gds-zap-stoim-base
-        sym8
-        gds-zap-Nds
-        sym9
-        gds-zap-NP
-        sym10
-        gds-zap-price-nds
-        tot_tqnty
-        sym11
-        with FRAME zapas .
-        DOWN stream  OutStream 1 with FRAME zapas.
   end.
   else do :
-    UNDERLINE stream OutStream
-        sym3
-        gds-zap-gds-name
-        sym4
-        gds-zap-part-b-code
-        sym5
-        gds-zap-unit-base
-        sym6
-        gds-zap-qnty
-        sym7
-        gds-zap-price-base
-        sym8
-        gds-zap-stoim-base
-        sym9
-        gds-zap-Nds
-        sym10
-        gds-zap-NP
-        sym11
-        gds-zap-price-nds
-        tot_tqnty
-        sym12
-        with FRAME zapas-parts .
-        DOWN stream  OutStream 1 with FRAME zapas-parts.
   end.
  end. /* do */
 end procedure. /* P-LINE */
@@ -1257,30 +1530,58 @@ procedure proc-prt-1 :
  do
  on error undo, return error return-value
  :
-run new-tmp-page .
+/*run new-tmp-page .                                                                                                                        */
     if not Parts-Det then do :
-      DISPLAY stream  OutStream sym11 sym1 sym5 sym6 sym7 sym8 sym9 sym10
-              substring(tmp#stroka,1,16)  @  gds-zap-artic
-              substring(tmp#stroka,17,60)  @  gds-zap-gds-name
-              Tot-1-1     @  gds-zap-qnty
-              Tot-1-2     @  gds-zap-stoim-base
-              Tot-1-4     @  gds-zap-Nds
-              Tot-1-5     @  gds-zap-Np
-              Tot-1-3     @  tot_tqnty
-              with FRAME  zapas    .
-      DOWN stream  OutStream 1 with FRAME zapas    .
+      if v-photo then do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD colspan="2">' + substring(tmp#stroka,1,16) + '</TD>'skip
+                                '<TD>' + substring(tmp#stroka,17,60) + '</TD>'skip
+                                '<TD style="text-align: center"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                            '</TR>'skip    
+                            .
+      end.
+      else do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD colspan="2">' + substring(tmp#stroka,1,16) + '</TD>'skip
+                                '<TD>' + substring(tmp#stroka,17,60) + '</TD>'skip
+                                '<TD style="text-align: center"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                            '</TR>'skip    
+                            .         
+      end.
     end.
     else do :
-      DISPLAY stream  OutStream sym12 sym1 sym6 sym7 sym8 sym9 sym10 sym11
-              substring(tmp#stroka,1,16)  @  gds-zap-artic
-              substring(tmp#stroka,17,60)  @  gds-zap-gds-name
-              Tot-1-1     @  gds-zap-qnty
-              Tot-1-2     @  gds-zap-stoim-base
-              Tot-1-4     @  gds-zap-Nds
-              Tot-1-5     @  gds-zap-Np
-              Tot-1-3     @  tot_tqnty
-              with FRAME  zapas-parts    .
-      DOWN stream  OutStream 1 with FRAME zapas-parts    .
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD colspan="2">' + substring(tmp#stroka,1,16) + '</TD>'skip
+                                '<TD>' + substring(tmp#stroka,17,60) + '</TD>'skip
+                                '<TD></TD>'skip
+                                '<TD style="text-align: center"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-1-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                            '</TR>'skip    
+                            .           
     end.
       assign
         num#str# = num#str# + 1
@@ -1288,23 +1589,6 @@ run new-tmp-page .
         var-1 = num#str#
         var-2 = num#col#
       .
-
-      run macr_excel_char ( tmp#stroka, num#str# , num#col# ). assign   num#col# = (if Parts-Det then (num#col# + 5) else (num#col# + 4)).
-      run macr_excel_dec ( Tot-1-1 , num#str# , num#col# ) . assign   num#col# = num#col# + 2.
-      run macr_excel_dec ( Tot-1-2 , num#str# , num#col# ) . assign   num#col# = num#col# + 1.
-      run macr_excel_dec ( Tot-1-4 , num#str# , num#col# ) . assign   num#col# = num#col# + 1.
-      run macr_excel_dec ( Tot-1-5 , num#str# , num#col# ) . assign   num#col# = num#col# + 2.
-      run macr_excel_dec ( Tot-1-3 , num#str# , num#col# ) . assign   num#col# = num#col# + 1.
-
-      run macr_cell_format
-          ( 10    ,      /* p-size     */
-            true  ,      /* p-bold     */
-            true  ,      /* p-italic   */
-            ?     ,      /* p-color-bg */
-            var-1 ,      /* p-row      */
-            var-2 ,      /* p-col      */
-            num#str# ,   /* p-row-2    */
-            num#col# ) . /* p-col-2    */
 
     if not sums-only then run u-line.
     assign break_group = true
@@ -1324,32 +1608,82 @@ procedure proc-prt-2 :
  do
  on error undo, return error return-value
  :
-run new-tmp-page .
+
 if not Parts-Det then do :
-DISPLAY stream  OutStream sym11 sym1 sym5 sym6 sym7 sym8 sym9 sym10
-          substring(tmp#stroka,1,10)   @  gds-zap-b-code
-          substring(tmp#stroka,11,18)  @  gds-zap-artic
-          substring(tmp#stroka,29,60)  @  gds-zap-gds-name
-          Tot-2-1     @  gds-zap-qnty
-          Tot-2-2     @  gds-zap-stoim-base
-          Tot-2-4     @  gds-zap-Nds
-          Tot-2-5     @  gds-zap-Np
-          Tot-2-3     @  tot_tqnty
-          with FRAME  zapas    .
-DOWN stream  OutStream 1 with FRAME zapas    .
+  if v-photo then do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD colspan="3">' + substring(tmp#stroka,1,10) + substring(tmp#stroka,11,18) + substring(tmp#stroka,29,60) + '</TD>'skip
+/*                                '<TD>' + substring(tmp#stroka,11,18) + '</TD>'skip*/
+/*                                '<TD>' + substring(tmp#stroka,29,60) + '</TD>'skip*/
+                                '<TD style="text-align: center"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                 '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                            '</TR>'skip    
+                            .
+  end.
+  else do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD colspan="3">' + substring(tmp#stroka,1,10) + substring(tmp#stroka,11,18) + substring(tmp#stroka,29,60) + '</TD>'skip
+/*                                '<TD>' + substring(tmp#stroka,11,18) + '</TD>'skip*/
+/*                                '<TD>' + substring(tmp#stroka,29,60) + '</TD>'skip*/
+                                '<TD style="text-align: center"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                            '</TR>'skip    
+                            .
+  end.                               
 end.
 else do :
-  DISPLAY stream  OutStream sym12 sym1 sym6 sym7 sym8 sym9 sym10 sym11
-            substring(tmp#stroka,1,10)   @  gds-zap-b-code
-            substring(tmp#stroka,11,18)  @  gds-zap-artic
-            substring(tmp#stroka,29,60)  @  gds-zap-gds-name
-            Tot-2-1     @  gds-zap-qnty
-            Tot-2-2     @  gds-zap-stoim-base
-            Tot-2-4     @  gds-zap-Nds
-            Tot-2-5     @  gds-zap-Np
-            Tot-2-3     @  tot_tqnty
-            with FRAME  zapas-parts    .
-  DOWN stream  OutStream 1 with FRAME zapas-parts    .
+  if v-photo then do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD colspan="3">' + substring(tmp#stroka,1,10) + substring(tmp#stroka,11,18) + substring(tmp#stroka,29,60) + '</TD>'skip
+/*                                '<TD>' + substring(tmp#stroka,11,18) + '</TD>'skip*/
+/*                                '<TD>' + substring(tmp#stroka,29,60) + '</TD>'skip*/
+                                '<TD></TD>'skip
+                                '<TD style="text-align: center"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                            '</TR>'skip    
+                            .
+  end.
+  else do:
+                            put stream OutStr-html unformatted
+                            '<TR>'skip
+                                '<TD colspan="3">' + substring(tmp#stroka,1,10) + substring(tmp#stroka,11,18) + substring(tmp#stroka,29,60) + '</TD>'skip
+/*                                '<TD>' + substring(tmp#stroka,11,18) + '</TD>'skip*/
+/*                                '<TD>' + substring(tmp#stroka,29,60) + '</TD>'skip*/
+                                '<TD></TD>'skip
+                                '<TD style="text-align: center"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-1,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-2,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-4,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-5,"->>>>>>>>>>>9.99") + '</TD>'skip
+                                '<TD style="text-align: right"></TD>'skip
+                                '<TD style="text-align: right"> ' + string(Tot-2-3,"->>>>>>>>>>>9.99") + '</TD>'skip
+                            '</TR>'skip    
+                            .   
+  end.
 end.
 
   assign
@@ -1358,24 +1692,6 @@ end.
   var-1 = num#str#
   var-2 = num#col#
   .
-
-  run macr_excel_char ( tmp#stroka, num#str# , num#col# ). assign   num#col# = (if Parts-Det then (num#col# + 5) else (num#col# + 4)).
-  run macr_excel_dec ( Tot-2-1 , num#str# , num#col# ) . assign   num#col# = num#col# + 2.
-  run macr_excel_dec ( Tot-2-2 , num#str# , num#col# ) . assign   num#col# = num#col# + 1.
-  run macr_excel_dec ( Tot-2-4 , num#str# , num#col# ) . assign   num#col# = num#col# + 1.
-  run macr_excel_dec ( Tot-2-5 , num#str# , num#col# ) . assign   num#col# = num#col# + 2.
-  run macr_excel_dec ( Tot-2-3 , num#str# , num#col# ) . assign   num#col# = num#col# + 1.
-  run macr_cell_format
-      ( 10    ,      /* p-size     */
-        true  ,      /* p-bold     */
-        true  ,      /* p-italic   */
-        ?     ,      /* p-color-bg */
-        var-1 ,      /* p-row      */
-        var-2 ,      /* p-col      */
-        num#str# ,   /* p-row-2    */
-        num#col# ) . /* p-col-2    */
-
-
  end. /* do */
 end procedure. /* proc-prt-2 */
 
@@ -1384,24 +1700,13 @@ procedure proc-prt-3 :
  do
  on error undo, return error return-value
  :
-  PUT stream  OutStream  tmp#stroka0 format "X(100)" SKIP.
+  PUT stream  OutStr-html  tmp#stroka0 format "X(100)" SKIP.
   assign
   num#str# = num#str# + 1
   num#col# =  1
   var-1 = num#str#
   var-2 = num#col#
   .
-  run macr_excel_char ( tmp#stroka0, num#str# , num#col# ). assign   num#col# = (if Parts-Det then (num#col# + 5) else (num#col# + 4)).
-  run macr_cell_format
-  ( 10    ,      /* p-size     */
-    true  ,      /* p-bold     */
-    true  ,      /* p-italic   */
-    40    ,      /* p-color-bg */
-    var-1 ,      /* p-row      */
-    var-2 ,      /* p-col      */
-    num#str# ,   /* p-row-2    */
-    num#col# ) . /* p-col-2    */
-
  end. /* do */
 end procedure. /* proc-prt-3 */
 
@@ -1412,8 +1717,6 @@ procedure new-tmp-page :
  :
 
     if   num#str#  >= 63000 then do:
-
-        Output stream Macr_Excel  close .
         /*Запишем в файл параметров */
         run paramls-write in this-procedure
           (input "file"
@@ -1421,8 +1724,6 @@ procedure new-tmp-page :
           ,input v-file-name
           ) .
         /* создаем временный файл */
-        run gbl/_tmpfile.p ( "wb", ".txt", output v-file-name) .
-        output stream  Macr_Excel to value(v-file-name) .
         v-ind = v-ind + 1 .
         num#str# = 0 .
         run proc-print-header-my. /* снова шапку */
@@ -1456,24 +1757,6 @@ procedure proc-print-header-my :
 
     c-i = 0.
     end.
-
-    run macr_cell_format (
-        10       , /*p-size-font */
-        true     , /*p-bold      */
-        false    , /*p-italic    */
-        35       , /*p-color-bg  */
-        var-1 + 1, /*p-row       */
-        1        , /*p-col       */
-        num#str# , /*p-row-2     */
-        num#col# ) /*p-col-2     */
-        .
-  put  stream macr_excel unformatted
-       substitute('select("r&1c&2:r&3c&4 ")' , var-1 + 1 , 1 , num#str# ,  num#col# ) + {&new-line}  +
-        'BORDER( 2 , 2 , 2 , 2 , 2 , ,0,0,0,0,0) '  + {&new-line} +
-       'ALIGNMENT(3 , , 4 , 4 ,)'  + {&new-line}
-       .
-
-
  end. /* do */
 end procedure. /* proc-print-header-my */
 
@@ -1483,24 +1766,11 @@ PROCEDURE report-execute :
  :
 
     { rep/r-val.i }
-    /* создаем временный файл */
-    run gbl/_tmpfile.p ( "wb", ".txt", output v-file-name) .
-    output stream macr_excel to value(v-file-name)   .
+/*     создаем временный файл*/
     v-ind = 1    .
     num#str# = 0 .
 
-  { cmp/open-out.i stream OutStream  " " ReportPageHeight }
-  if not Parts-Det then
-  FORM with FRAME zapas .
-  else
-    FORM with FRAME zapas-parts .
-  Line = fill("-", 200).
-  if not Parts-Det then do :
-  { rep/r-formh.i X(187) {&DOS_cw_2}}
-  end.
-  else do :
-    { rep/r-formh.i X(197) {&DOS_cw_2} "-parts"}
-  end.
+  { cmp/open-out.i stream OutStr-html  " " ReportPageHeight }
   /* от куда печатается. */
   FIND First clients where
              x-store-type = clients.obj-type AND
@@ -1513,55 +1783,13 @@ PROCEDURE report-execute :
       num#str# = num#str# + 1 .
       num#col# =  1 .
 
-      run macr_excel_char_with_format ( ReportNAme , num#str# , num#col#  ).
-      run macr_cell_format
-          ( 12    ,     /* p-size */
-            true  ,     /*p-bold   */
-            false ,     /*p-italic */
-            ?     ,     /*p-color  */
-            num#str# ,  /*p-row    */
-            num#col# ,  /*p-col    */
-            ? ,         /*p-row-2  */
-            ?         ) . /*p-col-2 */
-
-
-
 define variable l-ii  as integer no-undo .
 define variable l-jj  as integer no-undo .
 define variable l-len as integer no-undo .
 define variable l-m   as integer no-undo .
 
-&scop var-print-n    do l-ii = 1 to num-entries( ~{&var-str-n} , "~{&new-line}"  )    :  ~
-      l-len = length (entry( l-ii , ~{&var-str-n}  , "~{&new-line}")) .                 ~
-      l-m = integer( l-len / 220 ) + 1 .                                                ~
-      do l-jj = 1 to  l-m  :                                                            ~
-          num#str# = num#str# + 1 .                                                     ~
-          run macr_excel_char_with_format (                                             ~
-              substring(entry( l-ii , ~{&var-str-n}  , "~{&new-line}") , (( 220 * l-jj ) - 219 )  , 220 )  , num#str# , num#col# ) .~
-      end.                                                                                                       ~
-  end.
-
-&scop var-str-n  str1
-{&var-print-n }
-&scop var-str-n  str2
-{&var-print-n }
-&scop var-str-n  str3
-{&var-print-n }
-&scop var-str-n  str4
-{&var-print-n }
-&scop var-str-n  reportheader
-{&var-print-n }
-
-
   num#str# = num#str# + 1.
   num#col# = 1.
-  run macr_excel_char_with_format ( string(
-      cur-time-print()  +
-      " Цены указаны в " +
-      (if tPrintRubl then "{&abbr_rub_allshift}" else x-base-type )  )
-      , num#str#
-      , num#col#
-        ) .
 /*Печать шапки */
    run proc-print-header-my.
    /* проход по списку товаров 1 2 3-№ поиска */
@@ -1573,14 +1801,11 @@ define variable l-m   as integer no-undo .
         If available clients then  ObjName = clients.obj-name.
                              else  ObjName = "объект не определен".
 
-      PUT stream OutStream  string(  "ПО ОБЬЕКТУ : (" + x-store-type  + string(x-store-code)  +  ") " + ObjName) at 2 format "x(100)" skip .
+      PUT stream OutStr-html  string(  "ПО ОБЬЕКТУ : (" + x-store-type  + string(x-store-code)  +  ") " + ObjName) at 2 format "x(100)" skip .
       assign
        num#str# = num#str# + 1
        num#col# =  1
        .
-       run macr_excel_char_with_format ( objname  , num#str# , num#col#  ) .
-
-
        case retclassify :
           when "no-classify":u  then do:
             run run1.
@@ -1600,20 +1825,7 @@ define variable l-m   as integer no-undo .
       end case.
       run print-footer-o.
   end.
-
-  if not Parts-Det then
-  HIDE stream OutStream FRAME BottomFrame .
-  else
-    HIDE stream OutStream FRAME BottomFrame-parts .
   run print-footer.
-
-  if not Parts-Det then
-  HIDE STREAM   OutStream   FRAME ZAPAS .
-  else
-    HIDE STREAM   OutStream   FRAME ZAPAS-parts .
-  Output stream OutStream   close .
-  Output stream InStream   close .
-  Output stream Macr_Excel  close .
   { rep/repfrm.i off}
     run paramls-write in this-procedure
       (input "file"
@@ -1627,30 +1839,40 @@ define variable l-m   as integer no-undo .
         ,input "2,3,4"
         ) .
 
-  run end-proc .
   define variable v-user-action as character no-undo .
   define variable v-printed as logical   no-undo .
   define variable DisabledOptions as integer   no-undo .
-  define variable v-orient-page as character no-undo .
-  run How-name in this-procedure (
-      input ReportPageHeight,
-      input ReportPageWidth,
-      output v-orient-page )
-      .
-  if v-orient-page = "A4-lans":U then DisabledOptions = 8 .
-                                 else DisabledOptions = 0 .
 
-
-
-  run gbl/prnfilen.w
-    (input  ""
-    ,input  DisabledOptions
-    ,input  string(session :temp-directory) + {&DF_Name} + string( g#report-num )
-    ,input ReportFontNum
-    ,output v-user-action
-    ,output v-printed
-    ) .
+   put stream OutStr-html unformatted
+                                '</tbody>' skip
+                                '</table>' skip
+                                '</body>' skip
+                                '</html>' skip
+                                .
+                                                                                        
+  run prn-lib-reportviewer-report-name in this-procedure (
+                                                          input parParentProc
+                                                          ,input v-file-name-rep-htm
+                                                          ).
  end. /* do */
 END PROCEDURE.
 
-{ rep/r-libmcr.i macr_excel         }
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-report-num automain
+PROCEDURE get-report-num :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define output parameter p-report-num as integer no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run gbl/getrpnum.p (output p-report-num).
+  end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME

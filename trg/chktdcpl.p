@@ -119,6 +119,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   then do:
     return .
   end.
+  
+  if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object}
+  then do:
+    return .
+  end.
 
   else do:
     if lookup( buf_trn-doc.ext-doc-type, {&TDEDT_out_list} ) > 0 then do:

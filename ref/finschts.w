@@ -2061,9 +2061,9 @@ repeat ii = 1 to num-entries(firm-rid-list) :
         ,input buf_sysconf.host-code
         ,input 0
         ,input buf_fin-bank.addres
+        ,input buf_fin-bank.bank-city
         ,input buf_fin-bank.addres1
         ,input buf_fin-bank.bank-name
-        ,input buf_fin-bank.bank-city
         ,input buf_fin-bank.bik
         ,input buf_fin-bank.cor-acc
         ,input buf_fin-bank.e-mail

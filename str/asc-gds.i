@@ -51,6 +51,7 @@ DEFINE VARIABLE slt-value like ub.doc-line.slt-pc no-undo .
 define variable v-disc-price-sale as decimal no-undo .
 define variable v-pdf-id as integer no-undo .
 define variable v-pdf-db-num as integer no-undo .
+define variable v-oss as character no-undo.
 
 define variable v-gtd as character no-undo .
 define variable v-is-gas as character no-undo .
@@ -73,7 +74,7 @@ define buffer buf_price-list for ub.price-list.
 define buffer buf_price-doc-forming-gds FOR UB.PRICE-doc-forming-gds.
 define buffer buf_temp-dis-gds-rule for temp-dis-gds-rule.
 define buffer main-prt-bar-code  for ub.bar-code.
-
+define buffer buf_goods-attr for goods-attr.
 
 &if  "{&called}" <> "send-codes-only" &then
 /*цена нам не нужна если мы только создаем массив кодов*/
@@ -226,7 +227,19 @@ cash-gds.fp = for-fp
 cash-gds.ingredient = loc-goods.struct
 cash-gds.producer = for-producer
 cash-gds.producer-int = for-producer-int
-cash-gds.alpha1     = loc-goods.alpha1
+cash-gds.alpha1     = loc-goods.alpha1.
+
+
+  run gds-attr-value in this-procedure  ( input cash-gds.gds-code
+                                         ,input {&attr-office-type}
+                                         ,output v-oss
+                                         ,output v-type) no-error.
+cash-gds.office-type = v-oss.
+
+
+
+assign
+
 cash-gds.fact-qnty = for-fact-qnty
 cash-gds.okei = loc-bc-units-okei
 cash-gds.kat-discnt-method = kat-discnt-method_

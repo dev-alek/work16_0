@@ -1048,7 +1048,9 @@ DO:
     OR
     WHEN  {&rcpt-overflow}
     OR
-    WHEN  {&rcpt-tech-refuell} THEN DO:
+    WHEN  {&rcpt-tech-refuell} 
+    OR
+    WHEN  {&rcpt-unlock-trans} THEN DO:
          assign
          b-discnt:SENSITIVE IN FRAME {&FRAME-NAME} = NO
          .

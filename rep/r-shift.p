@@ -1285,7 +1285,8 @@ if tog-9 then DO:
                      "Касса"                + {&comma-char} +
                      "Техпролив"            + {&comma-char} +
                      "Разница"              + {&comma-char} +
-                     "Сброс"                + {&comma-char} +
+                     "Сброс (не пролито)"   + {&comma-char} +
+                     "Сброс (пролито)"      + {&comma-char} +
                      "Перелив"              + {&comma-char} +
                      "Перевод  транзакции"  + {&comma-char} +
                      {&new-line} +
@@ -1300,8 +1301,9 @@ if tog-9 then DO:
                      '="9.9"'  + {&comma-char} +
                      '="9.10"' + {&comma-char} +
                      '="9.11"' + {&comma-char} +
-                     '="9.12"'
-      Sheetf.SIzes = "30,12,12,15,15,15,15,15,15,15,15,15"
+                     '="9.12"' + {&comma-char} +
+                     '="9.13"'
+      Sheetf.SIzes = "30,5,5,15,15,15,15,15,15,15,15,15,15"
    .
    run rep/extitle.p ( INPUT 9) no-error.
    run rep/r-shift9.p   (

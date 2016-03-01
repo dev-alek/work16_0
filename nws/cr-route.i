@@ -677,6 +677,7 @@ PROCEDURE cre-dump-trn-doc:
     define buffer buf_parts-root           for ub.parts-root.
     define buffer buf_doc-prts             for ub.doc-prts.
     define buffer buf_doc-pl               for ub.doc-pl.
+    define buffer buf_doc-pl-attr          for ub.doc-pl-attr.
     define buffer buf_doc-pl-pump          for ub.doc-pl-pump.
     define buffer buf_parts-attr           for ub.parts-attr.
     define buffer buf_doc-attr             for ub.doc-attr.
@@ -763,6 +764,10 @@ PROCEDURE cre-dump-trn-doc:
     for each  buf_doc-pl where buf_doc-pl.out-code = buf_trn-doc.doc-code
     on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
       run cre-route-dump( p-act-name, {&table_doc-pl}, (buffer buf_doc-pl:handle), dmp-ord, input-output rc-ord ).
+    end.
+    for each  buf_doc-pl-attr where buf_doc-pl-attr.out-code = buf_trn-doc.doc-code
+    on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+      run cre-route-dump( p-act-name, {&table_doc-pl-attr}, (buffer buf_doc-pl-attr:handle), dmp-ord, input-output rc-ord ).
     end.
     for each  buf_doc-pl-pump where buf_doc-pl-pump.out-code = buf_trn-doc.doc-code
     on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :

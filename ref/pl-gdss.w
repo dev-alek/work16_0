@@ -8,9 +8,9 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER X_goods FOR ub.goods.
-DEFINE BUFFER X_pl-gds FOR ub.pl-gds.
-DEFINE BUFFER X_place FOR ub.place.
+DEFINE BUFFER X_goods FOR goods.
+DEFINE BUFFER X_pl-gds FOR pl-gds.
+DEFINE BUFFER X_place FOR place.
 
 
 
@@ -75,8 +75,8 @@ define variable filter-point as character no-undo init "pl-gdss" .
 define variable filter-point0 as character no-undo init "pl-gdss" .
 define variable filter-label as character no-undo init "Товар-Склд. место" .
 define variable filter-label0 as character no-undo init "Товар-Склд. место" .
-define buffer b-goods for ub.goods.
-define buffer b-place for ub.place.
+define buffer b-goods for goods.
+define buffer b-place for place.
 define VARIABLE shop-type as char no-undo .
 define VARIABLE shop-code as integer no-undo .
 define VARIABLE gdscode as integer no-undo .
@@ -480,7 +480,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-del Dialog-Frame
 ON CHOOSE OF B-del IN FRAME Dialog-Frame /* Удалить */
 DO:
-  define buffer b-pl-gds for ub.pl-gds.
+  define buffer b-pl-gds for pl-gds.
   if available X_pl-gds then do:
     _tr:
     do transaction
@@ -823,7 +823,9 @@ end case.
 &scop flt-open-open-query-tail  , EACH X_goods WHERE X_goods.gds-code = X_pl-gds.gds-code NO-LOCK, ~
       EACH X_place WHERE X_place.obj-code = X_pl-gds.obj-code ~
   AND X_place.obj-type = X_pl-gds.obj-type ~
-  AND X_place.pl-code = X_pl-gds.pl-code NO-LOCK
+  AND X_place.pl-code = X_pl-gds.pl-code ~
+  and X_place.status_ <>  {&deleted-status} NO-LOCK
+   
 
 &scop flt-open-query-was-opened  l-query-was-opened
 

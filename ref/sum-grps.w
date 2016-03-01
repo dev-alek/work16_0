@@ -56,6 +56,7 @@ define variable vss-description as character no-undo init "Справочник групп това
 { gbl/cur-time.i }
 { gbl/waitfram.i }
 { gbl/getcntxt.i def }
+{ ref/gds-attr.i }
 
 define variable log-res as log no-undo.
 define variable rr as recid no-undo.
@@ -100,8 +101,8 @@ define buffer b_sum-grp for ub.sum-grp.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit b-mark b-sel b-add b-chg b-del b-disc ~
-b-hist b-print b-help mark-num br-sumgrps
-&Scoped-Define DISPLAYED-OBJECTS mark-num
+b-goods b-hist b-print b-help mark-num br-sumgrps 
+&Scoped-Define DISPLAYED-OBJECTS mark-num 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -120,22 +121,28 @@ DEFINE MENU MENU-b-disc
        MENU-ITEM m_lookup-disc  LABEL "Просмотр"
        MENU-ITEM m_update-disc  LABEL "Изменение"     .
 
-
+DEFINE MENU MENU-b-goods 
+       MENU-ITEM m_lookup-goods  LABEL "Глобальные"      
+       MENU-ITEM m_update-goods  LABEL "По объекту"     .
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить":L
+DEFINE BUTTON b-add 
+     LABEL "&Добавить":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить":L
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-del
-     LABEL "&Удалить":L
+DEFINE BUTTON b-del 
+     LABEL "&Удалить":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-disc
-     LABEL "&Скидки"
+DEFINE BUTTON b-disc 
+     LABEL "&Скидки" 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON b-goods 
+     LABEL "&Товары" 
      SIZE 10 BY 1.
 
 DEFINE BUTTON b-help
@@ -162,9 +169,9 @@ DEFINE BUTTON b-sel AUTO-GO
      LABEL "Вы&бор ":L
      SIZE 10 BY 1.
 
-DEFINE VARIABLE mark-num AS INTEGER FORMAT ">>9":U INITIAL 0
-     VIEW-AS FILL-IN
-     SIZE 6.3 BY 1
+DEFINE VARIABLE mark-num AS INTEGER FORMAT ">>9":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 6.25 BY 1
      FGCOLOR 10  NO-UNDO.
 
 /* Query definitions                                                    */
@@ -182,7 +189,7 @@ DEFINE BROWSE br-sumgrps
   X_sum-grp.grp-name COLUMN-LABEL "Наименование группы" FORMAT "X(65)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH SEPARATORS SIZE 80 BY 17
+    WITH SEPARATORS SIZE 87 BY 18.83
          BGCOLOR 15 FGCOLOR 0 .
 
 
@@ -196,14 +203,15 @@ DEFINE FRAME d-sum-grp
      b-chg AT ROW 1 COL 38
      b-del AT ROW 1 COL 48
      b-disc AT ROW 1 COL 58 WIDGET-ID 2
-     b-hist AT ROW 1 COL 73
-     b-print AT ROW 1 COL 76
-     b-help AT ROW 1 COL 79
-     mark-num AT ROW 1.03 COL 9.1 COLON-ALIGNED NO-LABEL
-     br-sumgrps AT ROW 2.9 COL 2.5
-     SPACE(0.9) SKIP(0.3)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     b-goods AT ROW 1 COL 68 
+     b-hist AT ROW 1 COL 80.13
+     b-print AT ROW 1 COL 83.13
+     b-help AT ROW 1 COL 86.13
+     mark-num AT ROW 1.04 COL 9.13 COLON-ALIGNED NO-LABEL
+     br-sumgrps AT ROW 2.92 COL 2.5
+     SPACE(1.37) SKIP(0.20)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "ГРУППЫ ТОВАРОВ НА КАССАХ":L.
 
 
@@ -232,6 +240,9 @@ ASSIGN
 ASSIGN
        b-disc:POPUP-MENU IN FRAME d-sum-grp       = MENU MENU-b-disc:HANDLE.
 
+ASSIGN 
+       b-goods:POPUP-MENU IN FRAME d-sum-grp       = MENU MENU-b-goods:HANDLE.
+       
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -436,6 +447,48 @@ DO:
                 ,input v-cntxt-obj-code
                 ,input X_sum-grp.grp-code
                ) NO-ERROR.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-goods
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-goods d-sum-grp
+ON CHOOSE OF b-goods IN FRAME d-sum-grp /* Товары */
+DO:
+ if not available X_sum-grp THEN return no-apply.
+  DEFINE VARIABLE glog AS LOGICAL NO-UNDO.
+  if dgrpr-option = "":U then do:
+    run gbl/pop-up.p ( input self :handle
+                     , input no ) no-error.
+    if error-status :error then do:
+        return no-apply.
+    end.
+  end.
+  if dgrpr-option = "":U then do:
+      return no-apply.
+  end.
+  if dgrpr-option = {&attr-sum-grp-gl} then do:
+  run ref/sum-gds.w (input parparentproc 
+                     ,input dgrpr-option
+                     ,input X_sum-grp.grp-code
+                     ,input v-cntxt-host-code-obj
+                     ,input v-cntxt-obj-type
+                     ,input v-cntxt-obj-code
+                     ,input X_sum-grp.grp-name
+               ) NO-ERROR.
+  end.
+  if dgrpr-option = {&attr-sum-grp-o} then do:
+  run ref/sum-gds-obj.w (input parparentproc 
+                        ,input dgrpr-option
+                        ,input X_sum-grp.grp-code
+                        ,input v-cntxt-host-code-obj
+                        ,input v-cntxt-obj-type
+                        ,input v-cntxt-obj-code
+                        ,input X_sum-grp.grp-name
+               ) NO-ERROR.
+  end.  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -679,6 +732,34 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME m_lookup-goods
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_lookup-goods d-sum-grp
+ON CHOOSE OF MENU-ITEM m_lookup-goods /* Глобальные */
+DO:
+  assign
+  dgrpr-option = {&attr-sum-grp-gl}
+  .
+  APPLY "CHOOSE" TO b-goods IN FRAME {&FRAME-NAME}.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_update-goods
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_update-goods d-sum-grp
+ON CHOOSE OF MENU-ITEM m_update-goods /* По объекту */
+DO:
+    assign
+   dgrpr-option = {&attr-sum-grp-o}
+   .
+   APPLY "CHOOSE" TO b-goods IN FRAME {&FRAME-NAME}.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-sum-grp
@@ -772,6 +853,7 @@ PROCEDURE enable_UI :
 assign
 b-disc:menu-mouse in frame {&frame-name} = 1
 menu-item m_update-disc:sensitive in menu menu-b-disc = lookup("b-add", bttns) > 0 AND v-cntxt-db-num = 0
+b-goods:menu-mouse in frame {&frame-name} = 1
 .
 ENABLE br-sumgrps b-quit
 b-add WHEN lookup("b-add", bttns) > 0 AND v-cntxt-db-num = 0 and not transaction
@@ -779,6 +861,7 @@ b-del WHEN lookup("b-add", bttns) > 0 AND v-cntxt-db-num = 0 and not transaction
 b-sel WHEN lookup("b-sel", bttns) > 0
 b-chg WHEN lookup("b-add", bttns) > 0 AND v-cntxt-db-num = 0 and not transaction
 b-disc
+b-goods
 b-mark when lookup("b-mark", bttns) > 0
 b-hist
 b-print

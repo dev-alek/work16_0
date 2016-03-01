@@ -1696,6 +1696,24 @@ END.
 
 
 on choose of menu-item m_gen-6 in menu popup-menu-b-pay do: /* Фин обязательства */
+  
+  define variable g-log as logical no-undo .
+{ gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_fin-liability_add-def':U
+  {&cntxt-firm}
+  par-host-code
+  '':U
+  0
+  0
+  0
+  0
+  true
+  g-log
+}
+if not g-log then  return .
   run proc-m_gen-6 no-error .
   if error-status :error then return no-apply.
 end.
@@ -3802,6 +3820,12 @@ if parinternal then do:
     return error.
   end.
 end.
+if parext-doc-type = {&TDEDT_Pri_Object} then do:
+  message "Для внутриобъектного перемещения можно создать только расход."
+                    "Приход создаётся автоматически."
+  view-as alert-box.
+  return error.
+end. 
 if parext-doc-type = {&TDEDT_Ras_Prvo}     or
    parext-doc-type = {&TDEDT_Spi_Prvo}     or
    parext-doc-type = {&TDEDT_Pri_Prvo}     then do:

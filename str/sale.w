@@ -179,6 +179,8 @@ define variable auto-comp as logical no-undo.
 define variable prcl-spl as logical no-undo initial no.
 define variable ptwounit as logical no-undo initial yes.
 
+define variable v-to-reserv as logical no-undo initial no.  /* надо ли резервировать после распределения по местам хранения */
+
 define variable compensed as logical no-undo.
 define variable from-compense as logical no-undo.
 define variable p-obj-type like ub.clients.obj-type no-undo.
@@ -214,6 +216,9 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-tth as handle no-undo .
 define variable v-log-handle as handle no-undo . /* для логирования резервирования*/
+
+define variable v-sys-key as character no-undo .
+define variable varpar-type as character no-undo .
 { gbl/thbj-def.i }
 assign
 v-tth = buffer thbjattr_thbj-attr:table-handle .
@@ -400,6 +405,10 @@ DEFINE BUTTON b-parts
 DEFINE BUTTON r-trn
      LABEL "Чеки(&товар)":L
      SIZE 14 BY 1.
+     
+DEFINE BUTTON b-places
+     LABEL "&Места хранения":L
+     SIZE 15 BY 1.     
 
 DEFINE BUTTON b-next AUTO-GO
      LABEL ">&>":L
@@ -567,11 +576,12 @@ auto-fbr AT ROW 5 COL 58  FGCOLOR 4
 rest-dish AT ROW 5 COL 70  FGCOLOR 4
 rest-ingr AT ROW 5 COL 84  FGCOLOR 4
 br-out AT ROW 6 COL 1
+b-places at row 17 col 56
 r-trn at row 17 col 71
 b-parts at row 17 col 85
 prod-name-r AT ROW 5 COL 1  NO-LABEL
 prod-name-v AT ROW 17 COL 1 NO-LABEL
-cb-doc-kind at row 17 col 51 NO-LABEL
+cb-doc-kind at row 17 col 36 NO-LABEL
 br-ret AT ROW 18 COL 1
 rs-sort at row 23.5 col 1 label "Сортировка" fgcolor 4 bgcolor 8
 b-troubl AT ROW 23.5 COL 55 COLON-ALIGNED
@@ -1221,6 +1231,91 @@ define buffer t-clients for ub.clients.
     if NOT glog then return no-apply.
     run proc-chek-tovar in this-procedure no-error.
     IF error-status:error then return no-apply.
+END.
+
+ON choose OF b-places IN FRAME {&frame-name}
+DO:
+    run proc-places in this-procedure no-error.
+    IF error-status:error then return no-apply.
+    if v-to-reserv then do :
+        assign
+            auto-close
+            auto-fbr
+            rest-dish
+            rest-ingr
+            rest-tpsi
+        .
+        if auto-close then do:
+            glog = no.
+            message
+            (IF not b-mail-pressed then "В течение данного сеанса работы с продажей вы не докачивали новые чеки!"
+                                else "")
+            "ВНИМАНИЕ!!! Включен режим автоматического закрытия продажи по результатам резервирования!"
+            skip "Вы уверены, что хотите закрыть продажу?" view-as alert-box WARNING
+            buttons YES-NO update glog.
+            if not glog then return no-apply.
+        end.
+        run b-res-proc in this-procedure (
+                                          buffer ink-doc
+                                         , buffer t-doc
+                                         , buffer ret-doc
+                                        , input no
+                                        , input auto-close
+                                        , input no
+                                        , input rest-dish
+                                        , input "":U
+                                        , input v-is-tpsi-obj
+                                        , input rest-tpsi) no-error.
+        if error-status:error or return-value = "error" then do:
+          run waitfram-hide in this-procedure .
+          return no-apply.
+        end.
+        if auto-close and b-close:sensitive then do:
+          assign
+          v-parameter =     v-curr-r-b                     + {&delim-par} +
+                            ink-doc.inkas-code             + {&delim-par} +
+                          string(0) /*p-auto*/             + {&delim-par} +
+                          string(auto-close)               + {&delim-par} +
+                          string(b-mail-pressed)           + {&delim-par} +
+                          string(auto-comp)                + {&delim-par} +
+                          string(auto-fbr)                 + {&delim-par} +
+                          string(one-curs)                 + {&delim-par} +
+                          string(ub.shop.is-catering)      + {&delim-par} +
+                          string(v-is-tpsi-obj)            + {&delim-par} +
+                          string(rest-dish)                + {&delim-par} +
+                          string(rest-ingr)                + {&delim-par} +
+                          string(rest-tpsi)                + {&delim-par} +
+                          string(neg-tpsi-weight)          + {&delim-par} +
+                          string(neg-tpsi-qnty)            + {&delim-par} +
+                          string(neg-tpsi-oper)            + {&delim-par} +
+                          string(close-in-rfsl)            + {&delim-par} +
+                          pay-gds-algo
+          .
+          run str/diallog.w (
+                input parParentProc
+              , input this-procedure
+              , input ("str/saleclos.p":U + {&delim-par} + "1":U +
+                      "1":U  + {&delim-par} +  /*error-message-option*/
+                      "1":U + {&delim-par} +  /*auto-go-option*/
+                      "1":U)                  /*return-value-option*/
+              , input v-parameter
+              , input no /*p-auto-go*/
+              , input "":U
+              , input substitute("Закрытие продажи &1", Ink-doc.inkas-code)
+          ) no-error.
+            if error-status:error
+            or return-value = "error":U
+            then do:
+                run close-error-processing in this-procedure.
+                return no-apply.
+            end.
+            else do:
+              assign
+              p-next-prev = ?.
+              APPLY "CHOOSE" to b-exit.
+            end.
+        end.    
+    end.       
 END.
 
 ON choose OF b-notes IN FRAME {&frame-name}
@@ -2055,6 +2150,7 @@ ENABLE b-exit
               b-troubl when (NOT t-doc.status_ = {&fact}  and not v-is-inquiry)
               b-troublp  when not v-is-inquiry
               b-troublc
+              b-places when (NOT t-doc.status_ = {&fact} and can-do( {&update}, p-mode ))
               b-parts when NOT v-is-inquiry
               prod-name-r
               cb-doc-kind when v-list-item-pairs <> '':U and num-entries(cb-doc-kind:list-item-pairs) > 2
@@ -2126,6 +2222,12 @@ FIND FIRST ret-doc WHERE ret-doc.doc-code = t-doc.out-code NO-LOCK no-error.
 run openbr in this-procedure ( input t-doc.doc-code, input br-2-doc-code, input yes, input no, input '':U, input '':U).
 APPLY "value-changed" to br-out.
 APPLY "value-changed" to br-ret.
+{ gbl/currsysk.i
+  v-sys-key
+  no-error
+}
+if v-sys-key begins "Rosneft-" then hide b-places in frame {&frame-name}.
+    
 run waitfram-hide in this-procedure .
 END PROCEDURE.
 
@@ -2450,6 +2552,72 @@ PROCEDURE get-gds-rec:
       END.
   END CASE.
 END PROCEDURE.
+
+PROCEDURE proc-places :
+    define variable v-is-petrol as logical no-undo.
+    define variable v-is-pieces as logical no-undo.
+    
+    IF error-status:error then return no-apply.
+    IF (CURRENT-BROWSER = brwh-out-dtl
+    and bh-out-dtl:available )
+    or (CURRENT-BROWSER = brwh-ret-dtl
+    and bh-ret-dtl:available )
+    then do:
+      /*там где фоку запись есть*/
+    end.
+    else do:
+      /*значит пользователь имел в виду другой броуз*/
+      case current-browser:
+        when brwh-out-dtl then do:
+          if bh-ret-dtl:available then
+          assign
+          current-browser = brwh-ret-dtl.
+          else  do:
+            bell.
+            APPLY "ENTRY" to brwh-out-dtl.
+            return error.
+          end.
+        end.
+        when brwh-ret-dtl then do:
+          if bh-out-dtl:available then
+          assign
+          current-browser = brwh-out-dtl.
+          else  do:
+            bell.
+            APPLY "ENTRY" to brwh-ret-dtl.
+            return error.
+          end.
+        end.
+      END CASE.
+    end.
+    assign
+        bhg = current-browser:query:get-buffer-handle({&buffer-goods})
+        bhb = current-browser:query:get-buffer-handle({&buffer-bar-code})        
+    .
+    assign
+        v-gds-code  = bhg:buffer-field({&gds-code-field}):buffer-value
+        v-artic     = bhg:buffer-field({&artic-field}):buffer-value
+        v-prod-type = bhg:buffer-field({&prod-type-field}):buffer-value
+        v-prod-code = bhg:buffer-field({&prod-code-field}):buffer-value
+        v-b-code    = bhb:buffer-field({&b-code-field}):buffer-value
+    .
+    { str/is-petrl.i v-artic v-prod-type v-prod-code v-is-petrol v-is-pieces no-error }
+    if not v-is-petrol then do :
+        message "Выбран нетопливный товар!" view-as alert-box.
+        return no-apply.
+    end. 
+    assign v-to-reserv = no .
+    DO TRANSACTION on ERROR undo, return no-apply
+                        on STOP undo, return no-apply :
+        run  str/sale-plc.w (input parparentproc,
+                             input v-gds-code,
+                             input v-b-code,
+                             buffer ink-doc,
+                             output v-to-reserv) .
+        if return-value = "cancell":U then undo, return no-apply .    
+    END.           
+        
+END PROCEDURE. /* proc-places */    
 
 PROCEDURE proc-chek-tovar:
 DEFINE VARIABLE rid-list as character no-undo .

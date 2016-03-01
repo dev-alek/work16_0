@@ -62,6 +62,7 @@ define buffer prev_rvs-doc   for ub.rvs-doc.
 define buffer prev_icnt-doc  for ub.icnt-doc.
 
 define variable v-ref-rec as recid no-undo .
+
 /* ********************  preprocessor definitions  ******************** */
 &scop open-query-{&browse-name} open query {&browse-name} ~
    for each  ub.rvs-line no-lock where ~
@@ -71,8 +72,9 @@ define variable v-ref-rec as recid no-undo .
      , first ub.place                where ~
              ub.place.obj-type        = ub.rvs-line.obj-type and ~
              ub.place.obj-code        = ub.rvs-line.obj-code and ~
-             ub.place.pl-code         = ub.rvs-line.pl-code
-
+             ub.place.pl-code         = ub.rvs-line.pl-code  and ~
+             ub.place.status_ <>      {&deleted-status}
+             
 
 &scop open-query-{&browse-name}-default {&open-query-{&browse-name}}.
 
@@ -376,8 +378,8 @@ r-doc.system-cli-avrg-qnty    at row 6 col 85.5  colon-aligned label "Вес по ср.
 r-doc.boss                    at row 7 col 4.5   colon-aligned format "999999999"       view-as fill-in size 10 by 1
 boss-name                     at row 7 col 15    colon-aligned no-label                fgcolor 4
 r-boss                        at row 7 col 28    no-label
-r-doc.state-mh-qnty           at row 7 col 38    colon-aligned label "Оборот"           view-as text
-r-doc.state-am-qnty           at row 7 col 63    colon-aligned label "Сумма"            view-as text
+r-doc.state-mh-qnty           at row 7 col 38    colon-aligned label "Оборот"           view-as text format "->,>>>,>>>,>>>.<<<"
+r-doc.state-am-qnty           at row 7 col 63    colon-aligned label "Сумма"            view-as text format "->,>>>,>>>,>>>.<<<"
 r-doc.state-cf-qnty           at row 7 col 85.5  colon-aligned label "Наливы"           view-as text
 /*r-doc.state-measure-tc-qnty   at row 8 col  8                  label "Факт(tc)"         view-as text*/
 /*r-doc.measure-tc-qnty         at row 8 col 47                  label "Измер(tc)"        view-as text*/
@@ -1295,40 +1297,40 @@ case pardoc-mode :
           end.
           run waitfram-show in this-procedure ( input "Просматриваем измеряемые ТРК" ).
           { str/measpmnz.i
-              r-doc.obj-type
-              r-doc.obj-code
-              tt-pump-nozzle
-              no-error
+            r-doc.obj-type
+            r-doc.obj-code
+            tt-pump-nozzle
+            no-error
           }
           if error-status :error then do:
-             message "Ошибка при определении пистолетов ТРК для измерения."
-                     return-value
-             view-as alert-box error.
-             run waitfram-hide in this-procedure.
-             undo tr, return error.
+            message "Ошибка при определении пистолетов ТРК для измерения."
+                    return-value
+            view-as alert-box error.
+            run waitfram-hide in this-procedure.
+            undo tr, return error.
           end.
           if can-find( first tt-pump-nozzle ) then do:
-             run waitfram-show in this-procedure ( input "Делаем сверку по всем ТРК" ).
-             { str/rvs-pump.i
-                parParentProc
-                r-doc.obj-type
-                r-doc.obj-code
-                r-doc.rvs-code
-                varcur-data
-                tt-pump-nozzle-file
-                tt-pump-nozzle
-                no-error
-             }
-             if error-status :error then do:
-                message "Ошибка при получении данных с приборов на ТРК." skip
-                        return-value
-                view-as alert-box error.
-                run waitfram-hide in this-procedure.
-                undo tr, return error.
-             end.
-             if return-value <> "":U then do:
-                message return-value view-as alert-box information.
-             end.
+            run waitfram-show in this-procedure ( input "Делаем сверку по всем ТРК" ).
+            { str/rvs-pump.i
+              parParentProc
+              r-doc.obj-type
+              r-doc.obj-code
+              r-doc.rvs-code
+              varcur-data
+              tt-pump-nozzle-file
+              tt-pump-nozzle
+              no-error
+            }
+            if error-status :error then do:
+              message "Ошибка при получении данных с приборов на ТРК." skip
+                      return-value
+              view-as alert-box error.
+              run waitfram-hide in this-procedure.
+              undo tr, return error.
+            end.
+            if return-value <> "":U then do:
+              message return-value view-as alert-box information.
+            end.
           end.
           run waitfram-show in this-procedure ( input "Пересчитывем строки и шапку" ).
           { str/rvsclchd.i "recid( r-doc )"
@@ -1668,16 +1670,16 @@ else do:
     end.
     
     else do:
-run str/rvs-lin.w
-  (input  parparentproc
-  ,input  recid(ub.rvs-line)
-  ,input  {&update}
-  ,input  " # "     + r-doc.rvs-code +
-          " товар " + buf_goods.artic     + " " +
-                      buf_goods.prod-type + " " +
-                      string(buf_goods.prod-code) +
-          " складское место " + string(ub.rvs-line.pl-code)
-  ) no-error.
+        run str/rvs-lin.w
+        (input  parparentproc
+        ,input  recid(ub.rvs-line)
+        ,input  {&update}
+        ,input  " # "     + r-doc.rvs-code +
+                " товар " + buf_goods.artic     + " " +
+                            buf_goods.prod-type + " " +
+                            string(buf_goods.prod-code) +
+                " складское место " + string(ub.rvs-line.pl-code)
+        ) no-error.
     end.
     
 end.
@@ -1704,72 +1706,72 @@ end procedure.
 
 procedure proc_m-meas-4 :
 define buffer meas_pump-nozzle for ub.pump-nozzle.
-if available ub.rvs-line-pump then do:
-   find first ub.rvs-line where ub.rvs-line.rvs-code = ub.rvs-line-pump.rvs-code and
-                                 ub.rvs-line.obj-type = ub.rvs-line-pump.obj-type and
-                                 ub.rvs-line.obj-code = ub.rvs-line-pump.obj-code and
-                                 ub.rvs-line.pl-code  = ub.rvs-line-pump.pl-code  and
-                                 ub.rvs-line.gds-code = ub.rvs-line-pump.gds-code no-error.
-   assign rvs-line-rec      = (if available ub.rvs-line then recid(ub.rvs-line) else ?)
-          rvs-line-pump-rec = recid(ub.rvs-line-pump).
-   find first meas_pump-nozzle where meas_pump-nozzle.obj-type    = ub.rvs-line-pump.obj-type    and
-                                     meas_pump-nozzle.obj-code    = ub.rvs-line-pump.obj-code    and
-                                     meas_pump-nozzle.pump-code   = ub.rvs-line-pump.pump-code   and
-                                     meas_pump-nozzle.nozzle-code = ub.rvs-line-pump.nozzle-code no-lock.
-   if meas_pump-nozzle.is-meas <> yes then do:
-      message "Пистолет " meas_pump-nozzle.nozzle-code " на ТРК " meas_pump-nozzle.pump-code " не измеряется приборами."
-      view-as alert-box error.
-      return error.
-   end.
-   run waitfram-show in this-procedure ( input "Просматриваем измеряемые ТРК" ).
-   { str/measpmnz.i
-       ub.rvs-line-pump.obj-type
-       ub.rvs-line-pump.obj-code
-       tt-pump-nozzle
-       no-error
-   }
-   if error-status :error then do:
-      message "Ошибка при определении пистолетов ТРК для измерения."
-              return-value
-      view-as alert-box error.
-      run waitfram-hide in this-procedure.
-      return error.
-   end.
-   if can-find(first tt-pump-nozzle) then do:
-      if ptoldfilvalue = "yes":u then do:
-        run gbl/d-askw.w ( input "Выбор источника данных с информацией по ТРК",
-                      "Будем читать текущие данные с ТРК или возьмем данные из файла?",
-                      "|^",
-                      "Текущие данные|Из файлов|Отмена",
-                      "Запускается программа для обращения к датчикам ТРК|Берутся уже сохраненные данные из файла|Ничего не делаем",
-                      1,
-                      3,
-                      output varnum
-                      ).
-        case varnum:
-        when 3 then do:
-          undo, return error.
+  if available ub.rvs-line-pump then do:
+    find first ub.rvs-line where ub.rvs-line.rvs-code = ub.rvs-line-pump.rvs-code and
+                                  ub.rvs-line.obj-type = ub.rvs-line-pump.obj-type and
+                                  ub.rvs-line.obj-code = ub.rvs-line-pump.obj-code and
+                                  ub.rvs-line.pl-code  = ub.rvs-line-pump.pl-code  and
+                                  ub.rvs-line.gds-code = ub.rvs-line-pump.gds-code no-error.
+    assign rvs-line-rec      = (if available ub.rvs-line then recid(ub.rvs-line) else ?)
+            rvs-line-pump-rec = recid(ub.rvs-line-pump).
+    find first meas_pump-nozzle where meas_pump-nozzle.obj-type    = ub.rvs-line-pump.obj-type    and
+                                      meas_pump-nozzle.obj-code    = ub.rvs-line-pump.obj-code    and
+                                      meas_pump-nozzle.pump-code   = ub.rvs-line-pump.pump-code   and
+                                      meas_pump-nozzle.nozzle-code = ub.rvs-line-pump.nozzle-code no-lock.
+    if meas_pump-nozzle.is-meas <> yes then do:
+        message "Пистолет " meas_pump-nozzle.nozzle-code " на ТРК " meas_pump-nozzle.pump-code " не измеряется приборами."
+        view-as alert-box error.
+        return error.
+    end.
+    run waitfram-show in this-procedure ( input "Просматриваем измеряемые ТРК" ).
+    { str/measpmnz.i
+        ub.rvs-line-pump.obj-type
+        ub.rvs-line-pump.obj-code
+        tt-pump-nozzle
+        no-error
+    }
+    if error-status :error then do:
+        message "Ошибка при определении пистолетов ТРК для измерения."
+                return-value
+        view-as alert-box error.
+        run waitfram-hide in this-procedure.
+        return error.
+    end.
+    if can-find(first tt-pump-nozzle) then do:
+        if ptoldfilvalue = "yes":u then do:
+          run gbl/d-askw.w ( input "Выбор источника данных с информацией по ТРК",
+                        "Будем читать текущие данные с ТРК или возьмем данные из файла?",
+                        "|^",
+                        "Текущие данные|Из файлов|Отмена",
+                        "Запускается программа для обращения к датчикам ТРК|Берутся уже сохраненные данные из файла|Ничего не делаем",
+                        1,
+                        3,
+                        output varnum
+                        ).
+          case varnum:
+          when 3 then do:
+            undo, return error.
+          end.
+          when 2 then do:
+            assign
+              varcur-pump = no.
+          end.
+          when 1 then do:
+            assign
+              varcur-pump = yes.
+          end.
+          end case.
         end.
-        when 2 then do:
-          assign
-            varcur-pump = no.
+        else do:
+            assign
+              varcur-pump = yes.
         end.
-        when 1 then do:
-          assign
-            varcur-pump = yes.
-        end.
-        end case.
-      end.
-      else do:
-          assign
-            varcur-pump = yes.
-      end.
-      run waitfram-show in this-procedure ( input "Делаем сверку по всем ТРК" ).
-      tr:
-      do transaction
-      on error undo tr, return no-apply
-      :
-        { str/anls-pmp.i
+        run waitfram-show in this-procedure ( input "Делаем сверку по всем ТРК" ).
+        tr:
+        do transaction
+        on error undo tr, return no-apply
+        :
+          { str/anls-pmp.i
             parParentProc
             r-doc.obj-type
             r-doc.obj-code
@@ -1779,24 +1781,24 @@ if available ub.rvs-line-pump then do:
             varcur-pump
             yes
             no-error
-         }
-         if error-status :error then do:
+          }
+          if error-status :error then do:
             message "Ошибка при получении данных с приборов на ТРК (anls-pmp)." skip
                     error-status :get-message( 1 )                              skip
                     return-value
             view-as alert-box error.
             run waitfram-hide in this-procedure.
             undo tr, return error.
-         end.
-         if return-value <> "":U then do:
+          end.
+          if return-value <> "":U then do:
             message return-value view-as alert-box information.
-         end.
-         { str/fill1pmp.i
-             "recid( ub.rvs-line-pump )"
-             tt-pump-nozzle
-             no-error
-         }
-         if error-status :error then do:
+          end.
+          { str/fill1pmp.i
+            "recid( ub.rvs-line-pump )"
+            tt-pump-nozzle
+            no-error
+          }
+          if error-status :error then do:
             message
               "Ошибка при сохранении данных в строку счетчиков ТРК." skip
               error-status :get-message( 1 ) skip
@@ -1804,10 +1806,10 @@ if available ub.rvs-line-pump then do:
               view-as alert-box error.
             run waitfram-hide in this-procedure.
             undo tr, return error.
-         end.
-         run waitfram-show in this-procedure ( input "Пересчитывем строку и шапку" ).
-         { str/rvsclcln.i "recid( ub.rvs-line )" no-error }
-         if error-status :error then do:
+          end.
+          run waitfram-show in this-procedure ( input "Пересчитывем строку и шапку" ).
+          { str/rvsclcln.i "recid( ub.rvs-line )" no-error }
+          if error-status :error then do:
             message
               "Ошибка при пересчете линии." skip
               error-status :get-message( 1 ) skip
@@ -1815,24 +1817,24 @@ if available ub.rvs-line-pump then do:
               view-as alert-box error.
             run waitfram-hide in this-procedure.
             undo tr, return error.
-         end.
+          end.
 
-         { str/rvsclchd.i "recid( r-doc )"
-                      no                       no-error }
-         if error-status :error then do:
-            message "Ошибка при пересчете документа." skip
-                    return-value
-            view-as alert-box error.
-            run waitfram-hide in this-procedure.
-            undo tr, return error.
-         end.
-      end. /* transaction */
-   end.
-   else message "Нет ни одного измеряемого счетчика ТРК."
-        view-as alert-box information.
-   run waitfram-hide in this-procedure.
-   run ui-on in this-procedure.
-end.
+          { str/rvsclchd.i "recid( r-doc )"
+                        no                       no-error }
+          if error-status :error then do:
+              message "Ошибка при пересчете документа." skip
+                      return-value
+              view-as alert-box error.
+              run waitfram-hide in this-procedure.
+              undo tr, return error.
+          end.
+        end. /* transaction */
+    end.
+    else message "Нет ни одного измеряемого счетчика ТРК."
+          view-as alert-box information.
+    run waitfram-hide in this-procedure.
+    run ui-on in this-procedure.
+  end.
 else message "Неверно выбрана строка" view-as alert-box error.
 end procedure.
 
@@ -1864,39 +1866,91 @@ procedure proc-chg-pump :
     end.
     when {&rvs-shift}
     then do:
-      { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_rvs-shift_upd-revision':U
-        {&cntxt-object}
-        r-doc.host-code
-        r-doc.obj-type
-        r-doc.obj-code
-        0
-        0
-        0
-        true
-        varlog
-      }
+        find first ub.place no-lock where
+                   ub.place.obj-code = ub.rvs-line-pump.obj-code and
+                   ub.place.obj-type = ub.rvs-line-pump.obj-type and
+                   ub.place.pl-code  = ub.rvs-line-pump.pl-code
+        no-error. 
+        if available ub.place then do :
+            if ub.place.is-meas then do :
+              { gbl/chk-actg.i
+                v-cntxt-db-num
+                v-cntxt-userid
+                {&action-head-code-main}
+                'actn_rvs-shift_upd-revision':U
+                {&cntxt-object}
+                r-doc.host-code
+                r-doc.obj-type
+                r-doc.obj-code
+                0
+                0
+                0
+                true
+                varlog
+              }
+            end.
+            else do :
+              { gbl/chk-actg.i
+                v-cntxt-db-num
+                v-cntxt-userid
+                {&action-head-code-main}
+                'actn_rvs-shift_upd-immeas':U
+                {&cntxt-object}
+                r-doc.host-code
+                r-doc.obj-type
+                r-doc.obj-code
+                0
+                0
+                0
+                true
+                varlog
+              }
+            end.      
+        end.  
     end.
     when {&rvs-control}
     then do:
-      { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_rvs-control_upd-revision':U
-        {&cntxt-object}
-        r-doc.host-code
-        r-doc.obj-type
-        r-doc.obj-code
-        0
-        0
-        0
-        true
-        varlog
-      }
+        find first ub.place no-lock where
+                   ub.place.obj-code = ub.rvs-line-pump.obj-code and
+                   ub.place.obj-type = ub.rvs-line-pump.obj-type and
+                   ub.place.pl-code  = ub.rvs-line-pump.pl-code
+        no-error.
+        if available ub.place then do :
+            if ub.place.is-meas then do :
+              { gbl/chk-actg.i
+                v-cntxt-db-num
+                v-cntxt-userid
+                {&action-head-code-main}
+                'actn_rvs-control_upd-revision':U
+                {&cntxt-object}
+                r-doc.host-code
+                r-doc.obj-type
+                r-doc.obj-code
+                0
+                0
+                0
+                true
+                varlog
+              }
+            end.
+            else do :
+              { gbl/chk-actg.i
+                v-cntxt-db-num
+                v-cntxt-userid
+                {&action-head-code-main}
+                'actn_rvs-control_upd-immeas':U
+                {&cntxt-object}
+                r-doc.host-code
+                r-doc.obj-type
+                r-doc.obj-code
+                0
+                0
+                0
+                true
+                varlog
+              } 
+            end.
+        end.         
     end.
     otherwise do:
       message
@@ -2463,24 +2517,24 @@ procedure proc_m-meas-2 :
             varcur-pump = yes.
       end.
       { str/rvs-pump.i
-         parParentProc
-         r-doc.obj-type
-         r-doc.obj-code
-         r-doc.rvs-code
-         varcur-pump
-         tt-pump-nozzle-file
-         tt-pump-nozzle
-         no-error
+        parParentProc
+        r-doc.obj-type
+        r-doc.obj-code
+        r-doc.rvs-code
+        varcur-pump
+        tt-pump-nozzle-file
+        tt-pump-nozzle
+        no-error
       }
       if error-status :error then do:
-         message "Ошибка при получении данных с приборов на ТРК и записи их в строки." skip
-                 return-value
-         view-as alert-box error.
-         run waitfram-hide in this-procedure.
-         undo tr, return error.
+        message "Ошибка при получении данных с приборов на ТРК и записи их в строки." skip
+                return-value
+        view-as alert-box error.
+        run waitfram-hide in this-procedure.
+        undo tr, return error.
       end.
       if return-value <> "":U then do:
-         message return-value view-as alert-box information.
+        message return-value view-as alert-box information.
       end.
 
       run waitfram-show in this-procedure ( input "Пересчитывем строки и шапку" ).

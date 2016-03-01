@@ -35,6 +35,7 @@ define variable vss-description as character no-undo initial "Библиотека для раб
 { str/cntparts.i -lk }
 { trg/partslib.i }
 { trg/factord.i  }
+{ gbl/getsect.i def }
 
 if valid-handle (g#libtfarh)
 and g#libtfarh <> this-procedure :handle
@@ -98,6 +99,8 @@ case parext-doc-type:
   end.
   when {&TDEDT_Pri_Perem}      or
   when {&TDEDT_Ras_Perem}      or
+  when {&TDEDT_Pri_Object}     or
+  when {&TDEDT_Ras_Object}     or
   when {&TDEDT_Vozvrat_Perem}  or
   when {&TDEDT_Pri_Prvo}       or
   when {&TDEDT_Chg_Purch_code} or
@@ -147,6 +150,8 @@ case parext-doc-type:
   end.
   when {&TDEDT_Pri_Perem}      or
   when {&TDEDT_Ras_Perem}      or
+  when {&TDEDT_Pri_Object}     or
+  when {&TDEDT_Ras_Object}     or
   when {&TDEDT_Vozvrat_Perem}  or
   when {&TDEDT_Pri_Prvo}       or
   when {&TDEDT_Overturn}       then do:
@@ -173,9 +178,14 @@ define buffer buf_trn-doc  for ub.trn-doc.
 define buffer buf_parts    for ub.parts.
 define buffer buf_contract for ub.contract.
 define buffer buf_doc-attr for ub.doc-attr  .
+define buffer buf_fin-ob-trn for ub.fin-ob-trn.
+define buffer buf_fin-ob     for ub.fin-ob.
 
 do on error undo, return error return-value :
 find first buf_trn-doc where buf_trn-doc.doc-code = pardoc-code exclusive-lock.
+
+if buf_trn-doc.status_ = {&fact} then do :
+
 assign
   buf_trn-doc.expfo-date      = 01/01/1990
   buf_trn-doc.incfo-date      = 01/01/1990
@@ -340,21 +350,42 @@ end case.
    end.
  end.
 
+end.  /*  if buf_trn-doc.status_ = {&fact}  */
 
 /* покупатели, договор с покупателем проставлен в шапке */
 if ( buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or
      buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} ) and
-     buf_trn-doc.contract-code <> 0 then do:
-    find first buf_contract where buf_contract.contract-code = buf_trn-doc.contract-code no-lock no-error.
+     buf_trn-doc.contract-code <> 0 then
+        for first buf_contract where buf_contract.contract-code = buf_trn-doc.contract-code no-lock :
+          if buf_contract.doc-type = {&expense} and lookup (buf_contract.usl-opl, {&o-buyer-ord}) > 0 then do :
 
-    if available buf_contract and  lookup (buf_contract.usl-opl, {&o-buyer-trn}) > 0 then do:
-        assign
-          buf_trn-doc.need-buyer = 1.
-    end.
-    if available buf_contract and  buf_contract.usl-opl = {&contr-pay-nodef} then do:
-      assign
-        buf_trn-doc.need-buyer = 2.
-    end.
+             define variable v-fo-gen as integer no-undo .
+             { gbl/getsect.i run "''" 0  {&attr-fin-global} }
+              for each thbjattr_thbj-attr :
+                  if thbjattr_thbj-attr.prop-code = {&attr-fin-global_fo-gen}  then v-fo-gen = thbjattr_thbj-attr.property-value-integer .
+              end.
+              if buf_trn-doc.status_ = {&wayb} and buf_trn-doc.flag_ and (v-fo-gen = 2 or v-fo-gen = 3) then buf_trn-doc.need-buyer = 1.
+              if buf_trn-doc.status_ = {&permitted}                  and (v-fo-gen = 4 or v-fo-gen = 5) then buf_trn-doc.need-buyer = 1.
+              if buf_trn-doc.status_ = {&fact}                       and (v-fo-gen = 6 or v-fo-gen = 7) then buf_trn-doc.need-buyer = 1.
+              if buf_trn-doc.status_ = {&fact} then do :
+                for each buf_fin-ob-trn where buf_fin-ob-trn.trn-doc-code = buf_trn-doc.doc-code  and
+                                              buf_fin-ob-trn.host-code    = buf_trn-doc.host-code exclusive-lock,
+                        each buf_fin-ob where buf_fin-ob.doc-code = buf_fin-ob-trn.doc-code  exclusive-lock
+                        :
+                           if buf_fin-ob.status_ <> {&fact} then do :
+                            undo, return error "Данная накладная не может быть закрыта на факт, т.к. по ней есть незакрытое ФО" .
+                           end.
+                end.
+              end.
+          end.
+          if buf_trn-doc.status_ = {&fact} and lookup (buf_contract.usl-opl, {&o-buyer-trn}) > 0 then do:
+              assign
+                buf_trn-doc.need-buyer = 1.
+          end.
+          if buf_trn-doc.status_ = {&fact} and buf_contract.usl-opl = {&contr-pay-nodef} then do:
+            assign
+              buf_trn-doc.need-buyer = 2.
+          end.
 end.
 
 end.

@@ -273,7 +273,7 @@ tt-chk-pay.doc-qnty
 &Scoped-define FIELDS-IN-QUERY-Dialog-Frame tt-chk-doc.src-tot-doc ~
 tt-chk-doc.chk-date tt-chk-doc.cashier tt-chk-doc.sales-man ~
 tt-chk-doc.obj-code tt-chk-doc.d-card tt-chk-doc.pay-desk ~
-tt-chk-doc.chk-num tt-chk-doc.doc-num tt-chk-doc.z-number ~
+tt-chk-doc.chk-num tt-chk-doc.doc-num tt-chk-doc.doc-num2 tt-chk-doc.z-number ~
 tt-chk-doc.src-d-pcnt tt-chk-doc.src-shift-date tt-chk-doc.cash-rate ~
 tt-chk-doc.cash-scale tt-chk-doc.shift-name tt-chk-doc.shift-num ~
 tt-chk-doc.src-d-card tt-chk-doc.PS tt-chk-doc.tot-doc tt-chk-doc.discnt ~
@@ -282,7 +282,7 @@ tt-chk-doc.shift-date
 &Scoped-define ENABLED-FIELDS-IN-QUERY-Dialog-Frame tt-chk-doc.src-tot-doc ~
 tt-chk-doc.chk-date tt-chk-doc.cashier tt-chk-doc.sales-man ~
 tt-chk-doc.obj-code tt-chk-doc.d-card tt-chk-doc.pay-desk ~
-tt-chk-doc.chk-num tt-chk-doc.doc-num tt-chk-doc.z-number ~
+tt-chk-doc.chk-num tt-chk-doc.doc-num tt-chk-doc.doc-num2 tt-chk-doc.z-number ~
 tt-chk-doc.src-d-pcnt tt-chk-doc.src-shift-date tt-chk-doc.cash-rate ~
 tt-chk-doc.cash-scale tt-chk-doc.shift-name tt-chk-doc.shift-num ~
 tt-chk-doc.src-d-card tt-chk-doc.PS tt-chk-doc.tot-doc tt-chk-doc.discnt ~
@@ -302,7 +302,7 @@ tt-chk-doc.shift-date
 &Scoped-Define ENABLED-FIELDS tt-chk-doc.src-tot-doc tt-chk-doc.chk-date ~
 tt-chk-doc.cashier tt-chk-doc.sales-man tt-chk-doc.obj-code ~
 tt-chk-doc.d-card tt-chk-doc.pay-desk tt-chk-doc.chk-num tt-chk-doc.doc-num ~
-tt-chk-doc.z-number tt-chk-doc.src-d-pcnt tt-chk-doc.src-shift-date ~
+tt-chk-doc.doc-num2 tt-chk-doc.z-number tt-chk-doc.src-d-pcnt tt-chk-doc.src-shift-date ~
 tt-chk-doc.cash-rate tt-chk-doc.cash-scale tt-chk-doc.shift-name ~
 tt-chk-doc.shift-num tt-chk-doc.src-d-card tt-chk-doc.PS tt-chk-doc.tot-doc ~
 tt-chk-doc.discnt tt-chk-doc.sub-discnt tt-chk-doc.netto tt-chk-doc.d-pcnt ~
@@ -316,7 +316,7 @@ F-salesman f-cli-name
 &Scoped-Define DISPLAYED-FIELDS tt-chk-doc.src-tot-doc tt-chk-doc.chk-date ~
 tt-chk-doc.cashier tt-chk-doc.sales-man tt-chk-doc.obj-code ~
 tt-chk-doc.d-card tt-chk-doc.pay-desk tt-chk-doc.chk-num tt-chk-doc.doc-num ~
-tt-chk-doc.z-number tt-chk-doc.src-d-pcnt tt-chk-doc.src-shift-date ~
+tt-chk-doc.doc-num2 tt-chk-doc.z-number tt-chk-doc.src-d-pcnt tt-chk-doc.src-shift-date ~
 tt-chk-doc.cash-rate tt-chk-doc.cash-scale tt-chk-doc.shift-name ~
 tt-chk-doc.shift-num tt-chk-doc.src-d-card tt-chk-doc.PS tt-chk-doc.tot-doc ~
 tt-chk-doc.discnt tt-chk-doc.sub-discnt tt-chk-doc.netto tt-chk-doc.d-pcnt ~
@@ -568,7 +568,8 @@ DEFINE BROWSE BR-gds
       tt-chk-gds.loc1 COLUMN-LABEL  "Рез." FORMAT "X(3)"
       tt-chk-gds.src-pl-code COLUMN-LABEL  "Скл.!место!в чеке" FORMAT ">>>>>>>>9"
       tt-chk-gds.pl-code COLUMN-LABEL  "Скл.!место!БД" FORMAT ">>>>>>>>9"
-      {&wro-name} COLUMN-LABEL "Код спис" FORMAT "X(20)"
+      if (tt-chk-gds.write-off-code = 1 and can-do("14,15,16,17,36", string(tt-chk-doc.chk-type))) then "Пролито"       
+      else {&wro-name} COLUMN-LABEL "Код спис" FORMAT "X(20)"
       tt-chk-gds.depart-id COLUMN-LABEL "Объект!кухни!в чеке"
       tt-chk-gds.depart-code COLUMN-LABEL "Объект!кухни!в БД"
       tt-chk-gds.sales-man COLUMN-LABEL "Код!продавца"
@@ -688,6 +689,10 @@ DEFINE FRAME Dialog-Frame
      tt-chk-doc.doc-num AT ROW 5.96 COL 33.88 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 17.13 BY 1
+     tt-chk-doc.doc-num2 AT ROW 5.95 COL 63 COLON-ALIGNED WIDGET-ID 6
+          LABEL "№ заказа"
+          VIEW-AS FILL-IN 
+          SIZE 33 BY 1
      tt-chk-doc.z-number AT ROW 7 COL 33.88 COLON-ALIGNED
           LABEL "Z-отчет"
           VIEW-AS FILL-IN 
@@ -857,6 +862,8 @@ ASSIGN
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN tt-chk-doc.discnt IN FRAME Dialog-Frame
    EXP-LABEL                                                            */
+/* SETTINGS FOR FILL-IN tt-chk-doc.doc-num2 IN FRAME Dialog-Frame
+   EXP-LABEL                                                            */        
 /* SETTINGS FOR FILL-IN tt-chk-doc.netto IN FRAME Dialog-Frame
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN tt-chk-doc.obj-code IN FRAME Dialog-Frame
@@ -1667,6 +1674,8 @@ DEFINE variable old-chk-type AS CHARACTER NO-UNDO.
     WHEN  {&rcpt-tech-refuell}
     or
     when {&rcpt-inventory}
+    or
+    when {&rcpt-unlock-trans}
     THEN DO:
          assign
          menu-item m-write-off:sensitive in menu M-prt = NO
@@ -3301,7 +3310,7 @@ PROCEDURE enable_UI :
   IF AVAILABLE tt-chk-doc THEN 
     DISPLAY tt-chk-doc.src-tot-doc tt-chk-doc.chk-date tt-chk-doc.cashier 
           tt-chk-doc.sales-man tt-chk-doc.obj-code tt-chk-doc.d-card 
-          tt-chk-doc.pay-desk tt-chk-doc.chk-num tt-chk-doc.doc-num 
+          tt-chk-doc.pay-desk tt-chk-doc.chk-num tt-chk-doc.doc-num tt-chk-doc.doc-num2
           tt-chk-doc.z-number tt-chk-doc.src-d-pcnt tt-chk-doc.src-shift-date 
           tt-chk-doc.cash-rate tt-chk-doc.cash-scale tt-chk-doc.shift-name 
           tt-chk-doc.shift-num tt-chk-doc.src-d-card tt-chk-doc.PS 
@@ -3311,7 +3320,7 @@ PROCEDURE enable_UI :
   ENABLE B-exit B-quit B-prev B-next Cb-chk-type tt-chk-doc.src-tot-doc br-attr 
          B-print B-hist B-help tt-chk-doc.chk-date tt-chk-doc.cashier fhour 
          fmin fsec tt-chk-doc.sales-man tt-chk-doc.obj-code tt-chk-doc.d-card 
-         B-card tt-chk-doc.pay-desk b-cd tt-chk-doc.chk-num tt-chk-doc.doc-num 
+         B-card tt-chk-doc.pay-desk b-cd tt-chk-doc.chk-num tt-chk-doc.doc-num tt-chk-doc.doc-num2
          tt-chk-doc.z-number tt-chk-doc.src-d-pcnt tt-chk-doc.src-shift-date 
          tt-chk-doc.cash-rate tt-chk-doc.cash-scale tt-chk-doc.shift-name 
          tt-chk-doc.shift-num tt-chk-doc.src-d-card b-addbonus B-adddiscnt 
@@ -4734,7 +4743,7 @@ end.
           tt-chk-doc.src-shift-date tt-chk-doc.shift-date tt-chk-doc.cash-scale
           tt-chk-doc.cash-rate tt-chk-doc.shift-num tt-chk-doc.shift-name tt-chk-doc.PS
           tt-chk-doc.tot-doc tt-chk-doc.discnt tt-chk-doc.sub-discnt
-          tt-chk-doc.netto tt-chk-doc.d-pcnt tt-chk-doc.doc-num 
+          tt-chk-doc.netto tt-chk-doc.d-pcnt tt-chk-doc.doc-num tt-chk-doc.doc-num2
           tt-chk-doc.src-tot-doc
       WITH FRAME {&frame-name}.
 case PAR-MODE:
@@ -4760,7 +4769,7 @@ case PAR-MODE:
     tt-chk-doc.cash-rate when get-chkc_context.r-b = {&r-b-base} and get-chkc_context.base-code <> 0
     tt-chk-doc.src-shift-DATE WHEN (get-chkc_context.cas-shft and not get-chkc_context.shift-on)
     tt-chk-doc.shift-name WHEN (get-chkc_context.CAS-SHFT AND NOT get-chkc_context.SHiFT-ON)
-    B-adddiscnt  b-addbonus B-addgds br-discnt BR-gds BR-pay tt-chk-doc.PS B-addpay tt-chk-doc.doc-num 
+    B-adddiscnt  b-addbonus B-addgds br-discnt BR-gds BR-pay tt-chk-doc.PS B-addpay tt-chk-doc.doc-num tt-chk-doc.doc-num2
     WITH FRAME {&frame-name}.
     assign
     tt-chk-gds.b-code:read-only in browse br-gds = yes
@@ -4859,6 +4868,7 @@ case PAR-MODE:
     br-discnt BR-gds BR-pay tt-chk-doc.PS
     tt-chk-doc.d-card when dc-change
     tt-chk-doc.doc-num 
+    tt-chk-doc.doc-num2
     WITH FRAME Dialog-Frame.
     assign
     tt-chk-gds.src-code:read-only in browse br-gds = yes
@@ -6076,6 +6086,8 @@ tt-chk-doc.chk-type = if cb-chk-type = {&rcpt-sale}
                       or
                       cb-chk-type = {&rcpt-Z-REP}
                       or
+                      cb-chk-type = {&rcpt-unlock-trans}
+                      or
                       cb-chk-type = {&rcpt-ord-sale-closed}
                       or
                       cb-chk-type = {&rcpt-ord-return-closed}
@@ -6101,6 +6113,7 @@ tt-chk-doc.cash-rate
 tt-chk-doc.cash-scale
 tt-chk-doc.z-number
 tt-chk-doc.doc-num
+tt-chk-doc.doc-num2
 .
 buffer-copy tt-chk-doc
 except

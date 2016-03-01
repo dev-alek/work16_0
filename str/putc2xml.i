@@ -49,7 +49,7 @@ run bgelib-tag-put in this-procedure ( input 3, input "ClientLock"       ,
                                       input  string(if cash-cli.cli-status_ = 0 then 0 else 1), input 0 ).
 run bgelib-tag-close in this-procedure ( input 2, input "Client").
 
-if not cash-cli.mask-card then do:
+
   run bgelib-tag-open in this-procedure ( input 2, input "DiscountCard"
                                         , input substitute("ctrl='&1' tms='&2' code='&3'"
                                         ,
@@ -167,7 +167,62 @@ if not cash-cli.mask-card then do:
     run bgelib-tag-close in this-procedure ( input 2, input "ACWhiteList").
 
   end.
-end. /*не маска*/
+if cash-cli.has-attrs-lim = yes
+    then 
+  do:
+  define variable ii        as integer    no-undo .
+  define variable v-sum-id  as character  no-undo .
+  define variable v-group   as integer    no-undo .
+    for each cash-cli-attr where
+      cash-cli-attr.d-card = cash-cli.d-card and cash-cli-attr.dc-sum-id <> "" and cash-cli-attr.caller_id <> "":
+             ii = 0 .
+      run bgelib-tag-open in this-procedure ( input 2, input "CardClass"
+                                            , input substitute("ctrl='&1' code='&2' tms='&3'"
+                                            ,'ADD', cash-cli-attr.caller_id, OS2-time)
+                                            ).
+          run bgelib-tag-put in this-procedure ( input 3, input "CCRBegin"
+                                                ,  input cash-cli-attr.dc-minnum
+                                                , input 0 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "CCREnd"
+                                                ,  input cash-cli-attr.dc-maxnum
+                                                , input 0 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "CCNoUse"
+                                                ,  input 0
+                                                , input 0 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "CCClassCode"
+                                                ,  input 0
+                                                , input 0 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "CCClassNum"
+                                                ,  input cash-cli-attr.caller_id
+                                                , input 0 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "CCClassLen"
+                                                ,  input 1
+                                                , input 0 ).
+      run bgelib-tag-close in this-procedure ( input 2, input "CardClass").
+  
+      run bgelib-tag-open in this-procedure ( input 2, input "ClassApproved"
+                                            , input substitute("ctrl='&1' code='&2' tms='&3'"
+                                            ,'ADD' , cash-cli-attr.caller_id, OS2-time )).  
+                                            
+      do ii = 1 to num-entries(cash-cli-attr.dc-sum-id):     
+        assign
+          v-sum-id = ""
+          v-group = 0
+          .                                       
+          v-sum-id = entry(ii, cash-cli-attr.dc-sum-id) no-error.
+          if ii = 1 then do: v-group = integer(entry(2,v-sum-id,"-")) no-error. end. else v-group = integer(v-sum-id). 
+          run bgelib-tag-open in this-procedure ( input 3, input "CAGroup", input ""
+                                                 ).    
+                run bgelib-tag-put in this-procedure ( input 4, input "CAGNumber"
+                                                      ,  input v-group
+                                                      , input 0 ).    
+                                         
+          run bgelib-tag-close in this-procedure ( input 3, input "CAGroup").                                           
+      end.
+      run bgelib-tag-close in this-procedure ( input 2, input "ClassApproved").                                      
+    end. /*for each cash-cli-attr where*/
+  end.
+
 
 
 /* $Workfile$ e n d */

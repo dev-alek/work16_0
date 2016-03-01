@@ -147,7 +147,7 @@ procedure lib-trn4_gdnorsrv :
     end.
     else do:
       assign
-        p-process = lookup( bf_trn-doc.ext-doc-type, '{&bef-TDEDT_Pri_Perem},{&bef-TDEDT_Ras_Perem},{&bef-TDEDT_Vozvrat_Perem}':U ) > 0
+        p-process = lookup( bf_trn-doc.ext-doc-type, '{&bef-TDEDT_Pri_Perem},{&bef-TDEDT_Ras_Perem},{&bef-TDEDT_Ras_Object},{&bef-TDEDT_Vozvrat_Perem}':U ) > 0
       .
     end.
   end. /* on error */
@@ -163,7 +163,7 @@ procedure lib-trn4_chk4rsrv :
   on error undo, return error return-value
   :
     if lookup( p-ext-doc-type, '{&bef-TDEDT_Pri_Vnesh},{&bef-TDEDT_Ras_Vnesh},{&bef-TDEDT_Vozvrat_Vnesh}':U ) > 0 or
-       lookup( p-ext-doc-type, '{&bef-TDEDT_Pri_Perem},{&bef-TDEDT_Ras_Perem},{&bef-TDEDT_Vozvrat_Perem}':U ) > 0 and
+       lookup( p-ext-doc-type, '{&bef-TDEDT_Pri_Perem},{&bef-TDEDT_Ras_Perem},{&bef-TDEDT_Pri_Object},{&bef-TDEDT_Ras_Object},{&bef-TDEDT_Vozvrat_Perem}':U ) > 0 and
        p-is-hold-doc = yes
     then do:
       assign
@@ -587,7 +587,8 @@ define variable v-file-n as character no-undo .
     /* Проверка, что документ внутреннего прихода не был раньше документа внутреннего расхода */
     if buf_trn-doc.doc-type = {&income} and
        buf_trn-doc.status_  = {&wayb}   and
-       buf_trn-doc.internal = yes       then do:
+       buf_trn-doc.internal = yes       and
+       buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Object} then do:
       find first exp_trn-doc where exp_trn-doc.doc-code = buf_trn-doc.doc-code no-lock no-error.
       { gbl/curobjdt.i buf_trn-doc.obj-type buf_trn-doc.obj-code varfact-date no-error}
       if error-status:error then do:
@@ -1373,9 +1374,14 @@ define variable v-file-n as character no-undo .
           return error.
         end.
         varlog = no.
-        message "Закрытие накладной № " buf_trn-doc.doc-code "ФАКТ." skip (2)
-                "Вы уверены ?"
-                view-as alert-box question buttons OK-Cancel update varlog.
+        if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then do :
+            varlog = yes.
+        end.
+        else do :
+            message "Закрытие накладной № " buf_trn-doc.doc-code "ФАКТ." skip (2)
+                    "Вы уверены ?"
+                    view-as alert-box question buttons OK-Cancel update varlog.
+        end.
         if not varlog then  return error.
         case buf_trn-doc.doc-type
         :
@@ -2170,7 +2176,9 @@ define variable v-file-n as character no-undo .
               {&TDEDT_Chg_Purch_Code} + ","  +
               {&TDEDT_Corr_Minus_Parts} + ","  +
               {&TDEDT_Corr_Acc_Price}   + "," +
-              {&TDEDT_Vozvrat_Perem} ) = 0
+              {&TDEDT_Vozvrat_Perem} + ","  +
+              {&TDEDT_Pri_Object}   + "," +
+              {&TDEDT_Ras_Object} ) = 0
            then do:
            for each buf_doc-line no-lock where buf_doc-line.doc-code =  buf_trn-doc.doc-code  and
                     buf_doc-line.fact-qnty > 0 :
@@ -2280,6 +2288,17 @@ define variable v-file-n as character no-undo .
                 "Показать список товаров по которым было движение?"
         view-as alert-box question buttons yes-no update varlog .
         if varlog then run str/gds-list.w (input parparentproc, input buf_trn-doc.host-code, input buf_trn-doc.obj-type, input buf_trn-doc.obj-code).
+      end.
+      
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} and buf_trn-doc.status_ = {&fact} then do :
+          define variable v-income-doc-code as character no-undo .
+          v-income-doc-code = replace(buf_trn-doc.doc-code, '-', '=' ).
+          { gbl/int-clos.i
+            parparentproc
+            v-income-doc-code
+            gds-list
+            no-error
+          }
       end.
 
   end.

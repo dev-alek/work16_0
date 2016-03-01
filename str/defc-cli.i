@@ -86,6 +86,7 @@ field dcr-pcnt-tot        as integer
 field dcr-debet-pay       as integer
 field dcr-credit-pay      as integer
 field has-attrs           as logical
+field has-attrs-lim       as logical
 field ef-access-key       as character
 field ef-format           as integer
 FIELD crf as integer
@@ -109,9 +110,15 @@ field dc-limit-type       as character
 field dc-limit            as decimal
 field dc-limit-l          as decimal
 field account-type        as integer
+field dc-sum-id           as character
+field dc-minnum           as decimal
+field dc-maxnum           as decimal
+field caller_id           as character
 index pi is unique primary
 d-card
 dc-petrol-code
+dc-sum-id
+caller_id
 .
 
 

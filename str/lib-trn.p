@@ -4714,7 +4714,9 @@ procedure lib-trn_del-doc :
   define buffer del_doc-line        for ub.doc-line.
   define buffer del_rvs-doc         for ub.rvs-doc.
   define buffer bf_fin-ob           for ub.fin-ob.
+  define buffer del_fin-ob          for ub.fin-ob.
   define buffer bf_fin-ob-before    for ub.fin-ob-before.
+  define buffer del_fin-ob-trn      for ub.fin-ob-trn.
   define buffer bf_fin-ob-trn       for ub.fin-ob-trn.
   define buffer bf_fin-gds-part     for ub.fin-gds-part.
   define buffer bf_clients          for ub.clients.
@@ -5730,6 +5732,71 @@ define variable v-back-date-type as character no-undo .
           undo, return error substitute("Ошибка при удалении складского документа &2&1&3", {&new-line}, del_trn-doc.doc-code, return-value ).
         end.
       end.
+      else do :    /*   del_trn-doc.status_ <> {&fact}   */
+
+        /* Удаляем незакрытые ФО по документу  */
+        define variable v-del-fo as logical no-undo .
+       /* define variable v-del-fo-trn as logical no-undo .
+        define variable v-mod-fo as logical no-undo .   */
+        define variable v-kol-trn-fo as integer no-undo .
+        v-del-fo = true .
+       /* v-del-fo-trn = true .*/
+        /*v-mod-fo = false .*/
+        v-kol-trn-fo = 0.
+        for each del_fin-ob-trn where del_fin-ob-trn.trn-doc-code = del_trn-doc.doc-code  and
+                                      del_fin-ob-trn.host-code    = del_trn-doc.host-code exclusive-lock,
+                each del_fin-ob where del_fin-ob.doc-code = del_fin-ob-trn.doc-code  exclusive-lock
+                :
+
+             /*   for each bf_fin-doc no-lock,
+                    each bf_fin-connect where bf_fin-connect.fin-doc-code = bf_fin-doc.fin-doc-code and
+                                              bf_fin-connect.fin-ob-code  = del_fin-ob.doc-code     no-lock :
+                      v-del-fo = false.
+                      v-del-fo-trn = false.
+                end.  */
+                for each bf_fin-ob-trn where bf_fin-ob-trn.doc-code = del_fin-ob.doc-code and
+						 bf_fin-ob-trn.trn-doc-code <> del_trn-doc.doc-code	 no-lock:
+                      v-kol-trn-fo = v-kol-trn-fo + 1.
+                end.
+                    if v-kol-trn-fo > 0 then do :
+                      assign
+                        v-del-fo = false .
+                      /* v-mod-fo = true .  */
+                      message substitute ("ФО №&1 по данной накладной не будет удалено, т.к. сформированно по нескольким накладным", del_fin-ob.doc-code) view-as alert-box .
+                    end.
+                if del_fin-ob.status_ <> {&fact} or (del_fin-ob.status_ = {&fact} and del_fin-ob.con-stat = 0) and v-del-fo then do :
+                  assign
+                    del_fin-ob.is-doc-del = yes.
+                    del_fin-ob-trn.is-doc-del = yes.
+                  delete del_fin-ob.
+                  if available del_fin-ob-trn then delete del_fin-ob-trn.
+                end.
+                else if del_fin-ob.status_ = {&fact} and del_fin-ob.con-stat <> 0 then do :
+                    message substitute ("ФО №&1 по данной накладной не будет удалено, т.к. есть платежи", del_fin-ob.doc-code) view-as alert-box .
+                end.
+
+                /*if v-mod-fo then do :
+                  assign
+                    del_fin-ob.sum-rubl-orig = del_fin-ob.sum-rubl-orig - del_trn-doc.fact-rubl
+                    del_fin-ob.sum-rubl      = del_fin-ob.sum-rubl      - del_trn-doc.fact-rubl
+                    del_fin-ob.sum-contract  = del_fin-ob.sum-contract  - del_trn-doc.fact-rubl
+                    del_fin-ob.sum-doc-orig  = del_fin-ob.sum-doc-orig  - del_trn-doc.fact-rubl
+                    del_fin-ob.sum-doc       = del_fin-ob.sum-doc       - del_trn-doc.fact-rubl
+
+                    del_fin-ob.sum-base-orig = del_fin-ob.sum-base-orig - del_trn-doc.fact-base
+                    del_fin-ob.sum-base      = del_fin-ob.sum-base      - del_trn-doc.fact-base
+
+                    del_fin-ob.sum-tax-contract  = del_fin-ob.sum-tax-contract  - del_trn-doc.vat-rubl
+                    del_fin-ob.sum-tax-doc       = del_fin-ob.sum-tax-doc       - del_trn-doc.vat-rubl
+                    del_fin-ob.sum-tax-rubl      = del_fin-ob.sum-tax-rubl      - del_trn-doc.vat-rubl
+
+                    del_fin-ob.sum-tax-base      = del_fin-ob.sum-tax-base      - del_trn-doc.vat-base
+                    .
+
+                end.*/
+        end.
+      end.
+
       if del_trn-doc.ext-doc-type = {&TDEDt_Corr_Acc_Price} then do:
         assign
           vardel-line = 0.

@@ -548,6 +548,9 @@ end.
     if not g#news
     then do:
     /* проверяем факт дату, время */
+      if ub.trn-doc.fact-date = ? and ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
+        { gbl/curobjdt.i ub.trn-doc.obj-type ub.trn-doc.obj-code ub.trn-doc.fact-date }    
+      end.
       run gbl/chk-date.p
         (input ub.trn-doc.obj-type
         ,input ub.trn-doc.obj-code
@@ -1030,6 +1033,7 @@ end.
   and lookup(ub.trn-doc.doc-type, {&expense_income}) > 0
   and ub.trn-doc.internal = yes
   and ub.trn-doc.discnt-type <> {&manufactured}
+  and ub.trn-doc.ext-doc-type <> {&TDEDT_Pri_Object}
   then do:
     run show-action in this-procedure
       (input "Создание внутренних перемещений"
@@ -3534,7 +3538,9 @@ procedure process-line :
               {&TDEDT_Chg_Purch_Code} + ","  +
               {&TDEDT_Corr_Minus_Parts} + ","  +
               {&TDEDT_Corr_Acc_Price}   + "," +
-              {&TDEDT_Vozvrat_Perem} ) = 0  and
+              {&TDEDT_Vozvrat_Perem}  + "," +
+              {&TDEDT_Ras_Object}  + "," +
+              {&TDEDT_Pri_Object} ) = 0  and
               ((old-doc.status_ = {&wayb}    and ub.trn-doc.flag_ = true ))
     then do:
       var-ok-assort-pol = true .

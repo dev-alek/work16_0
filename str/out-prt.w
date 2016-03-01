@@ -52,7 +52,9 @@ define buffer g-d-b   for ub.gds-dtl.
 define buffer out-dtl for ub.gds-dtl. /* признак внутренней РН */
 define buffer bf_prod-bc for ub.prod-bc.
 
-define new shared temp-table tt-doc-pl no-undo like ub.doc-pl .
+define new shared temp-table tt-doc-pl no-undo like ub.doc-pl
+    field pl-code2 like ub.doc-pl.pl-code
+.
 
 /* ***************************  Definitions  ************************** */
 /* Parameter Definition */
@@ -2112,6 +2114,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   define buffer buf_doc-pl   for ub.doc-pl.
   define buffer buf_currency for ub.currency  .
+  define buffer buf_doc-pl-attr for ub.doc-pl-attr .
 
   assign
     v-undo-all = false
@@ -2598,6 +2601,28 @@ end.
     :
       create tt-doc-pl .
       buffer-copy buf_doc-pl to tt-doc-pl .
+      if t-doc.ext-doc-type = {&TDEDT_Ras_Object}
+      then 
+      for first buf_doc-pl-attr no-lock
+          where buf_doc-pl-attr.obj-type    = buf_doc-pl.obj-type
+            and buf_doc-pl-attr.obj-code    = buf_doc-pl.obj-code
+            and buf_doc-pl-attr.pl-code     = buf_doc-pl.pl-code
+            and buf_doc-pl-attr.out-code    = buf_doc-pl.out-code            
+            and buf_doc-pl-attr.gds-code    = buf_doc-pl.gds-code
+            and buf_doc-pl-attr.attr-code   = 'place2' :
+           assign tt-doc-pl.pl-code2 = integer(buf_doc-pl-attr.attr-value) .
+      end.
+      if t-doc.ext-doc-type = {&TDEDT_Pri_Object}
+      then
+      for first buf_doc-pl-attr no-lock
+          where buf_doc-pl-attr.obj-type    = buf_doc-pl.obj-type
+            and buf_doc-pl-attr.obj-code    = buf_doc-pl.obj-code
+            and buf_doc-pl-attr.attr-value  = string(buf_doc-pl.pl-code)
+            and buf_doc-pl-attr.out-code    = (replace(buf_doc-pl.out-code, '=', '-'))            
+            and buf_doc-pl-attr.gds-code    = buf_doc-pl.gds-code
+            and buf_doc-pl-attr.attr-code   = 'place2' :
+          assign tt-doc-pl.pl-code2 = buf_doc-pl-attr.pl-code .
+      end.
     end.
 
     find first tt-doc-pl no-lock
@@ -3542,8 +3567,8 @@ PROCEDURE proc-case :
       ub.doc-line.temperature
       with frame {&FRAME-NAME}.
 
-    if t-doc.flag_ = true
-      or t-doc.status_ = {&fact}
+    if (t-doc.flag_ = true or t-doc.status_ = {&fact})
+    and t-doc.ext-doc-type <> {&TDEDT_Pri_Object} and t-doc.ext-doc-type <> {&TDEDT_Ras_Object}
     then do:
       enable
         b-addinf
@@ -3891,6 +3916,7 @@ define variable v-chg-qnty      as decimal   no-undo .
 
   define buffer buf_doc-pl   for ub.doc-pl .
   define buffer buf_parts    for ub.parts  .
+  define buffer buf_doc-pl-attr for ub.doc-pl-attr .
 
   do
   on error undo, return error return-value
@@ -4218,6 +4244,31 @@ define variable v-chg-qnty      as decimal   no-undo .
       :
         create buf_doc-pl .
         buffer-copy tt-doc-pl to buf_doc-pl .
+        
+        if t-doc.ext-doc-type = {&TDEDT_Ras_Object} /*and tt-doc-pl.pl-code2 <> ? and tt-doc-pl.pl-code2 <> 0*/
+        then do :
+            find first  buf_doc-pl-attr exclusive-lock
+                  where buf_doc-pl-attr.obj-type    = tt-doc-pl.obj-type
+                    and buf_doc-pl-attr.obj-code    = tt-doc-pl.obj-code
+                    and buf_doc-pl-attr.pl-code     = tt-doc-pl.pl-code
+                    and buf_doc-pl-attr.out-code    = tt-doc-pl.out-code            
+                    and buf_doc-pl-attr.gds-code    = tt-doc-pl.gds-code
+                    and buf_doc-pl-attr.attr-code   = 'place2' no-error .
+            if not available buf_doc-pl-attr then do :
+                create buf_doc-pl-attr .
+                assign
+                    buf_doc-pl-attr.obj-type = tt-doc-pl.obj-type
+                    buf_doc-pl-attr.obj-code = tt-doc-pl.obj-code 
+                    buf_doc-pl-attr.pl-code  = tt-doc-pl.pl-code
+                    buf_doc-pl-attr.out-code = tt-doc-pl.out-code 
+                    buf_doc-pl-attr.gds-code = tt-doc-pl.gds-code
+                    buf_doc-pl-attr.attr-code = 'place2'
+                .
+            end.
+            assign
+                buf_doc-pl-attr.attr-value = string(tt-doc-pl.pl-code2)
+            .
+        end.
 
         if v-work-with-qnty = "doc":U then do:
           assign

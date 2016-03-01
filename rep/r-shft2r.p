@@ -491,6 +491,51 @@ define temp-table temp-rvs no-undo
                                            , INPUT ?                          ) NO-ERROR.
     END. /* v-attr-value = "no":U */
   END. /* FOR EACH ub.trn-doc */
+  /* Расход внутренний */
+
+  FOR EACH  ub.trn-doc NO-LOCK WHERE
+           ( ub.trn-doc.obj-type     = pobj-type         AND
+            ub.trn-doc.obj-code     = pobj-code          AND
+            ub.trn-doc.fact-order >= prev-fo             and
+            ub.trn-doc.fact-order <= fo                  and
+/*            ub.trn-doc.internal     = NO                 AND*/
+            ub.trn-doc.status_      = {&fact}            AND
+            ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} ) OR
+          
+          ( ub.trn-doc.obj-type     = pobj-type          AND
+            ub.trn-doc.obj-code     = pobj-code          AND 
+            ub.trn-doc.fact-order >= prev-fo             and
+            ub.trn-doc.fact-order <= fo                  and
+            ub.trn-doc.status_      = {&fact}            AND  
+            ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Object} )
+             
+    , FIRST ub.doc-line NO-LOCK WHERE
+            ub.doc-line.doc-code  = ub.trn-doc.doc-code AND
+            ub.doc-line.artic     = t-2.artic           AND
+            ub.doc-line.prod-type = t-2.prod-type       AND
+            ub.doc-line.prod-code = t-2.prod-code
+    :
+      RUN clntattr-value IN THIS-PROCEDURE ( INPUT ub.trn-doc.cli-type , INPUT ub.trn-doc.cli-code, INPUT {&attr-shftrep2}, OUTPUT v-attr-value, OUTPUT v-attr-type ).
+      IF v-attr-value = "no":U THEN DO:
+        RUN clcprtsl_calc-line IN THIS-PROCEDURE ( INPUT RECID( ub.doc-line ) ).
+        FIND FIRST tt-allsum-line NO-LOCK WHERE tt-allsum-line.sum-type = {&sum-general} NO-ERROR.
+        ASSIGN v-sum-base = ( IF AVAILABLE tt-allsum-line THEN tt-allsum-line.sum-dsc-base-doc ELSE 0.0 ).
+        FIND FIRST ub.inv-line NO-LOCK WHERE
+               ub.inv-line.doc-code  = ub.doc-line.doc-code  AND
+               ub.inv-line.artic     = ub.doc-line.artic     AND
+               ub.inv-line.prod-type = ub.doc-line.prod-type AND
+               ub.inv-line.prod-code = ub.doc-line.prod-code NO-ERROR.
+        RUN create-treal-2 IN THIS-PROCEDURE ( INPUT t-2.gds-code
+                                           , INPUT -5
+                                           , INPUT 0
+                                           , INPUT ub.doc-line.fact-qnty
+                                           , INPUT ( IF AVAILABLE ub.inv-line THEN ub.inv-line.wast-cli-qnty ELSE 0 )
+                                           , INPUT v-sum-base
+                                           , INPUT "Расход внутр."
+                                           , INPUT NO
+                                           , INPUT ?                          ) NO-ERROR.
+    END. /* v-attr-value = "no":U */
+  END. /* FOR EACH ub.trn-doc */
 
   /* прочие расходы: списание, возврат внешний, возврат поставщику */
 _trn-doc:
@@ -503,7 +548,7 @@ _trn-doc:
             ub.trn-doc.status_      = {&fact}                AND
          (  ub.trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}     OR
             ub.trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} OR
-            ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}  )
+            ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}    )
     , FIRST ub.doc-line NO-LOCK WHERE
             ub.doc-line.doc-code  = ub.trn-doc.doc-code AND
             ub.doc-line.artic     = t-2.artic           AND

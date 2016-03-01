@@ -77,6 +77,7 @@ define variable v-marg-pr-paraf    as character  no-undo .
 define variable v-level-dis-attr   as character  no-undo .
 define variable v-no-inc-auto-rep  as character  no-undo . 
 define variable v-ban-sales-via-cd as character  no-undo.
+define variable v-sum-grp          as integer    no-undo .
 define variable ix                 as integer    no-undo .
 
 /* Temp-Table and Buffer definitions                                    */
@@ -140,14 +141,14 @@ define buffer buf_gds-grp-obj for ub.gds-grp-obj.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit l-income-cli l-marg l-marg-pr-paraf l-rmethod ~
 l-increase-pc l-notcorr l-alc-min-price l-level-dis b-quit B-Help ~
-BR-temp_obj-list RS-option fi-increase-pc fi-marg-min fi-marg-max ~
+BR-temp_obj-list RS-option fi-increase-pc fi-marg-min fill-sum-grp r-sum-grp fi-marg-max ~
 S-round-method F-base fi-cli-type fi-cli-code r-cli fi-cli-name fi-notcorr ~
 fi-alc-min-price br-level-dis fi-marg-pr-paraf fi-grp-name n-increase-pc l-min ~
-l-max n-rmethod n-income-cli n-notcorr n-alc-min-price n-level-dis
+l-max n-rmethod n-income-cli n-notcorr n-alc-min-price fill-sum-grp r-sum-grp n-level-dis
 &Scoped-Define DISPLAYED-OBJECTS RS-option fi-increase-pc n-marg ~
 fi-marg-min fi-marg-max S-round-method F-base fi-cli-type fi-cli-code ~
 fi-cli-name fi-notcorr fi-alc-min-price n-marg-pr-paraf fi-marg-pr-paraf fi-grp-name ~
-n-increase-pc l-min l-max n-rmethod n-income-cli n-notcorr n-alc-min-price ~
+n-increase-pc fill-sum-grp l-min l-max n-rmethod n-income-cli n-notcorr n-alc-min-price ~
 n-level-dis B-add B-chg B-del
 
 /* Custom List Definitions                                              */
@@ -193,6 +194,14 @@ DEFINE BUTTON r-cli
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL ""
      SIZE 3 BY 1 TOOLTIP "Для заказов ОО".
+
+DEFINE BUTTON r-sum-grp 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 3 BY 1 TOOLTIP "Группа товаров на кассе".
+
 
 DEFINE VARIABLE fi-notcorr AS CHARACTER FORMAT "X(256)":U
      VIEW-AS COMBO-BOX INNER-LINES 2
@@ -259,6 +268,11 @@ DEFINE VARIABLE fi-marg-max AS DECIMAL FORMAT "->>>>9.99" INITIAL 0
 DEFINE VARIABLE fi-marg-min AS DECIMAL FORMAT "->>>>9.99" INITIAL 0
      VIEW-AS FILL-IN
      SIZE 10.63 BY 1.
+
+DEFINE VARIABLE fill-sum-grp AS INTEGER FORMAT ">>9":U INITIAL 0 
+     LABEL "Группа товаров на кассе" 
+     VIEW-AS FILL-IN 
+     SIZE 10 BY 1 NO-UNDO.
 
 DEFINE VARIABLE l-max AS CHARACTER FORMAT "X(256)":U INITIAL "Макс"
       VIEW-AS TEXT
@@ -421,6 +435,8 @@ DEFINE FRAME Dialog-Frame
      n-rmethod AT ROW 13.08 COL 5.88 NO-LABEL
      n-no-inc-auto-rep AT ROW 3 COL 65 NO-LABEL
      n-ban-sales-via-cd AT ROW 4 COL 65 NO-LABEL
+     fill-sum-grp AT ROW 6 COL 88.38 colon-aligned 
+     r-sum-grp AT ROW 6 COL 101.13
      n-income-cli AT ROW 19.42 COL 1.13 NO-LABEL
      n-notcorr AT ROW 20.63 COL 1.13 NO-LABEL WIDGET-ID 6
      n-alc-min-price AT ROW 21.75 COL 1 NO-LABEL WIDGET-ID 10
@@ -1108,6 +1124,31 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME r-sum-grp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sum-grp Dialog-Frame
+ON CHOOSE OF r-sum-grp IN FRAME Dialog-Frame
+DO:
+DEFINE VARIABLE rid-list as character no-undo .
+define buffer buf_sum-grp for ub.sum-grp.
+
+    run ref/sum-grps.w ( input parparentproc
+                        ,input "b-sel"
+                        ,input-output rid-list).
+    if rid-list <> "":U then do:
+      find first buf_sum-grp no-lock where
+                 recid(buf_sum-grp) = integer(entry(1, rid-list)) no-error .
+      assign
+      v-sum-grp = buf_sum-grp.grp-code
+      .
+    end.
+    else v-sum-grp = 0 .
+      fill-sum-grp = v-sum-grp .
+    display fill-sum-grp with frame {&FRAME-NAME}.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME S-round-method
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL S-round-method Dialog-Frame
@@ -1380,6 +1421,7 @@ on error undo, return error
   define input parameter v-no-inc-auto-rep    as character                no-undo .
   define input parameter v-ban-sales-via-cd   as character                no-undo .
 
+  define input parameter v-sum-grp            as character                no-undo .
 
   DEFINE VARIABLE v-node-code  like ub.gds-grp.node-code  no-undo .
   DEFINE VARIABLE v-upper-code like ub.gds-grp.upper-code no-undo .
@@ -1636,6 +1678,33 @@ end.
           undo, return error.
         end.
       end.
+      if v-sum-grp <> ""
+      then do:
+        run ggoattr-write (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-sum-grps}
+          ,input   v-sum-grp
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+       end.
+       else do: 
+        run ggoattr-delete (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-sum-grps}
+          ,output  v-sum-grp
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.  
     end.
     when {&company} then do:
       run grp-obj-write in this-procedure (
@@ -2167,14 +2236,14 @@ PROCEDURE enable_UI :
   DISPLAY RS-option fi-increase-pc n-marg fi-marg-min fi-marg-max S-round-method
           F-base fi-cli-type fi-cli-code fi-cli-name fi-notcorr fi-alc-min-price
           n-marg-pr-paraf fi-marg-pr-paraf fi-grp-name n-increase-pc l-min l-max n-rmethod
-          n-income-cli n-notcorr n-alc-min-price n-level-dis
+          n-income-cli n-notcorr n-alc-min-price n-level-dis fill-sum-grp r-sum-grp
       WITH FRAME Dialog-Frame.
   ENABLE B-exit b-quit B-Help l-income-cli l-marg l-marg-pr-paraf l-rmethod l-increase-pc
          l-notcorr l-alc-min-price l-level-dis BR-temp_obj-list RS-option
          fi-increase-pc fi-marg-min fi-marg-max S-round-method F-base
          fi-cli-type fi-cli-code r-cli fi-cli-name fi-notcorr fi-alc-min-price
          br-level-dis fi-marg-pr-paraf fi-grp-name n-increase-pc l-min l-max n-rmethod
-         n-income-cli n-notcorr n-alc-min-price n-level-dis
+         n-income-cli n-notcorr n-alc-min-price n-level-dis fill-sum-grp r-sum-grp
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -2436,6 +2505,15 @@ if available buf_gds-grp-obj then do:
       ,output  v-ban-sales-via-cd
       ,output  v-type ) no-error .
 
+    run ggoattr-value (
+       input   p-node-code
+      ,input   buf_gds-grp-obj.host-code
+      ,input   buf_gds-grp-obj.obj-type
+      ,input   buf_gds-grp-obj.obj-code
+      ,input   {&ggoattr-sum-grps}
+      ,output  v-sum-grp
+      ,output  v-type ) no-error .
+      
 repeat ix = 1 to num-entries (v-level-dis-attr, {&delim-par}) - 1 :
   create
     tt-level-dis-attr
@@ -2458,6 +2536,7 @@ else do:
     v-alc-min-price = "":U
     v-no-inc-auto-rep = "no":U
     v-ban-sales-via-cd = "no":U
+    v-sum-grp       = 0
     .
 end.
 
@@ -2474,6 +2553,8 @@ PROCEDURE MyEnable :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
+define variable v-value as character no-undo.
+define variable v-type as character no-undo.
 assign
 s-round-method:list-items in frame {&frame-name} = {&pr-rounds}.
 f-base = v-base.
@@ -2552,6 +2633,11 @@ BR-temp_obj-list
     in frame {&frame-name}.
 end.
 
+
+enable 
+  fill-sum-grp 
+  r-sum-grp
+  with frame {&frame-name} .    
 if p-mode = {&lookup} then do:
     disable
      B-exit 
@@ -2580,6 +2666,9 @@ if p-mode = {&lookup} then do:
      n-rmethod 
      n-no-inc-auto-rep 
      n-ban-sales-via-cd
+
+     fill-sum-grp
+     r-sum-grp 
      n-income-cli 
      n-notcorr 
      n-alc-min-price 
@@ -2624,6 +2713,8 @@ assign
 frame {&frame-name}
 n-no-inc-auto-rep
 n-ban-sales-via-cd
+
+fill-sum-grp
 fi-notcorr
 fi-alc-min-price
 fi-cli-type fi-cli-code
@@ -2695,6 +2786,8 @@ run create-attr in this-procedure ( input v-marg-min
                                    ,input v-level-dis-attr
                                    ,input string(n-no-inc-auto-rep)
                                    ,input string(n-ban-sales-via-cd)
+
+                                   ,input fill-sum-grp
                                   ) no-error.
 if error-status:error then do:
    message error-status :get-message(1) .
@@ -2963,6 +3056,8 @@ CASE p-mode:
     disp n-no-inc-auto-rep with frame {&FRAME-NAME}.
     n-ban-sales-via-cd = logical(if v-ban-sales-via-cd = "" then "no" else v-ban-sales-via-cd).
     disp n-ban-sales-via-cd with frame {&FRAME-NAME}.
+    fill-sum-grp = v-sum-grp .
+    display fill-sum-grp with frame {&FRAME-NAME}.
   end.
   when {&add-def} then do:
     hide
@@ -3061,6 +3156,8 @@ CASE p-mode:
     disp n-no-inc-auto-rep with frame {&FRAME-NAME}.
     n-ban-sales-via-cd = logical(if v-ban-sales-via-cd = "" then "no" else v-ban-sales-via-cd).
     disp n-ban-sales-via-cd with frame {&FRAME-NAME}.
+    fill-sum-grp = v-sum-grp .
+    display fill-sum-grp with frame {&FRAME-NAME}.
   end.
 END.
 END PROCEDURE.

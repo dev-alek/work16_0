@@ -9,7 +9,9 @@
 
 /* Temp-Table and Buffer definitions                                    */
 DEFINE BUFFER buf_goods FOR ub.goods.
-DEFINE SHARED TEMP-TABLE tt-doc-pl NO-UNDO LIKE ub.doc-pl.
+DEFINE SHARED TEMP-TABLE tt-doc-pl NO-UNDO like ub.doc-pl
+    field pl-code2 like ub.doc-pl.pl-code
+.
 
 
 
@@ -641,52 +643,54 @@ DO:
 
   define variable v-free-pl-list as   character         no-undo .
   define variable v-pl-code      like ub.doc-pl.pl-code no-undo .
+  define variable v-pl-code2      like ub.doc-pl.pl-code no-undo .
 
-  assign
-    v-free-pl-list = "":U
-  .
-
-  for each buf_pl-gds no-lock
-    where buf_pl-gds.obj-code = buf_trn-doc.obj-code
-      and buf_pl-gds.obj-type = buf_trn-doc.obj-type
-      and buf_pl-gds.gds-code = p-gds-code
-  on error undo, return no-apply
-  :
-    find first tt-doc-pl
-      where tt-doc-pl.gds-code = p-gds-code
-        and tt-doc-pl.obj-code = buf_trn-doc.obj-code
-        and tt-doc-pl.obj-type = buf_trn-doc.obj-type
-        and tt-doc-pl.out-code = buf_trn-doc.doc-code
-        and tt-doc-pl.pl-code  = buf_pl-gds.pl-code
-      no-error .
-    if not available tt-doc-pl then do:
-      if v-free-pl-list <> "":U then do:
-        assign
-          v-free-pl-list = v-free-pl-list + {&comma-char}
-        .
-      end.
-      assign
-        v-free-pl-list = v-free-pl-list + substitute( "&1", buf_pl-gds.pl-code )
-      .
-    end.
-  end.
-
-  if v-free-pl-list = "":U then do:
-    message
-      substitute( "В документе &1 все места хранения товара &2 уже заведены.", p-doc-code, p-gds-code ) skip
-      view-as alert-box information.
-  end.
-  else do:
-    if num-entries( v-free-pl-list, {&comma-char} ) = 1 then do:
-      assign
-        v-pl-code = integer( v-free-pl-list )
-      .
-    end.
-    else do:
+/*  assign                                                                                                    */
+/*    v-free-pl-list = "":U                                                                                   */
+/*  .                                                                                                         */
+/*                                                                                                            */
+/*  for each buf_pl-gds no-lock                                                                               */
+/*    where buf_pl-gds.obj-code = buf_trn-doc.obj-code                                                        */
+/*      and buf_pl-gds.obj-type = buf_trn-doc.obj-type                                                        */
+/*      and buf_pl-gds.gds-code = p-gds-code                                                                  */
+/*  on error undo, return no-apply                                                                            */
+/*  :                                                                                                         */
+/*    find first tt-doc-pl                                                                                    */
+/*      where tt-doc-pl.gds-code = p-gds-code                                                                 */
+/*        and tt-doc-pl.obj-code = buf_trn-doc.obj-code                                                       */
+/*        and tt-doc-pl.obj-type = buf_trn-doc.obj-type                                                       */
+/*        and tt-doc-pl.out-code = buf_trn-doc.doc-code                                                       */
+/*        and tt-doc-pl.pl-code  = buf_pl-gds.pl-code                                                         */
+/*      no-error .                                                                                            */
+/*    if not available tt-doc-pl then do:                                                                     */
+/*      if v-free-pl-list <> "":U then do:                                                                    */
+/*        assign                                                                                              */
+/*          v-free-pl-list = v-free-pl-list + {&comma-char}                                                   */
+/*        .                                                                                                   */
+/*      end.                                                                                                  */
+/*      assign                                                                                                */
+/*        v-free-pl-list = v-free-pl-list + substitute( "&1", buf_pl-gds.pl-code )                            */
+/*      .                                                                                                     */
+/*    end.                                                                                                    */
+/*  end.                                                                                                      */
+/*                                                                                                            */
+/*  if v-free-pl-list = "":U then do:                                                                         */
+/*    message                                                                                                 */
+/*      substitute( "В документе &1 все места хранения товара &2 уже заведены.", p-doc-code, p-gds-code ) skip*/
+/*      view-as alert-box information.                                                                        */
+/*  end.                                                                                                      */
+/*  else do:                                                                                                  */
+/*    if num-entries( v-free-pl-list, {&comma-char} ) = 1 then do:*/
+/*      assign                                                    */
+/*        v-pl-code = integer( v-free-pl-list )                   */
+/*      .                                                         */
+/*    end.                                                        */
+/*    else do:                                                    */
       assign
         v-pl-code = ?
+        v-pl-code2 = ?
       .
-    end.
+/*    end.*/
 
     for each save-tt-doc-pl
     on error undo, return no-apply
@@ -726,35 +730,65 @@ DO:
           view-as alert-box error .
         leave block_create .
       end.
-      run str/doc-pl.w
-        ( input parparentproc
-        , input v-mode
-        , input p-upd-field
-        , input v-upd-units
-        , input p-doc-code
-        , input p-gds-code
-        , input v-pl-code
-        , input p-doc-line-unit-cli
-        , input p-doc-line-cli-base-rate
-        , input p-doc-line-doc-density
-        , input p-doc-line-fact-density
-        , input p-doc-line-cli-qnty
-        , input p-doc-line-doc-qnty
-        , input p-doc-line-fact-qnty
-        , input p-doc-line-doc-cli-qnty
-        , input p-doc-line-fact-cli-qnty
-        , input p-doc-line-rest-density
-        , input p-doc-line-rest-af-qnty
-        , input p-doc-line-cli-rest-af-qnty
-        ) .
-
+      if not available buf_trn-doc then
+      find first buf_trn-doc no-lock
+        where buf_trn-doc.doc-code = p-doc-code
+      .
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
+          run str/doc-pl-int.w
+            ( input parparentproc
+            , input v-mode
+            , input p-upd-field
+            , input v-upd-units
+            , input p-doc-code
+            , input p-gds-code
+            , input v-pl-code
+            , input v-pl-code2
+            , input p-doc-line-unit-cli
+            , input p-doc-line-cli-base-rate
+            , input p-doc-line-doc-density
+            , input p-doc-line-fact-density
+            , input p-doc-line-cli-qnty
+            , input p-doc-line-doc-qnty
+            , input p-doc-line-fact-qnty
+            , input p-doc-line-doc-cli-qnty
+            , input p-doc-line-fact-cli-qnty
+            , input p-doc-line-rest-density
+            , input p-doc-line-rest-af-qnty
+            , input p-doc-line-cli-rest-af-qnty
+            ) .
+      end.
+      else do :
+          run str/doc-pl.w
+            ( input parparentproc
+            , input v-mode
+            , input p-upd-field
+            , input v-upd-units
+            , input p-doc-code
+            , input p-gds-code
+            , input v-pl-code
+            , input p-doc-line-unit-cli
+            , input p-doc-line-cli-base-rate
+            , input p-doc-line-doc-density
+            , input p-doc-line-fact-density
+            , input p-doc-line-cli-qnty
+            , input p-doc-line-doc-qnty
+            , input p-doc-line-fact-qnty
+            , input p-doc-line-doc-cli-qnty
+            , input p-doc-line-fact-cli-qnty
+            , input p-doc-line-rest-density
+            , input p-doc-line-rest-af-qnty
+            , input p-doc-line-cli-rest-af-qnty
+            ) .
+      end.
+      
       run calc-qnty in this-procedure .
     end.
 
     {&OPEN-QUERY-br-doc-pl}
     apply "value-changed" to br-doc-pl IN FRAME {&frame-name}.
     { str/doc-pl.i disp-total }
-  end.
+/*  end.*/
   apply "entry" to browse br-doc-pl .
 END.
 
@@ -801,27 +835,53 @@ DO:
         view-as alert-box error .
       leave block_update .
     end.
-    run str/doc-pl.w
-      ( input parparentproc
-      , input v-mode
-      , input p-upd-field
-      , input v-upd-units
-      , input p-doc-code
-      , input p-gds-code
-      , input tt-doc-pl.pl-code
-      , input p-doc-line-unit-cli
-      , input p-doc-line-cli-base-rate
-      , input p-doc-line-doc-density
-      , input p-doc-line-fact-density
-      , input p-doc-line-cli-qnty
-      , input p-doc-line-doc-qnty
-      , input p-doc-line-fact-qnty
-      , input p-doc-line-doc-cli-qnty
-      , input p-doc-line-fact-cli-qnty
-      , input p-doc-line-rest-density
-      , input p-doc-line-rest-af-qnty
-      , input p-doc-line-cli-rest-af-qnty
-      ) .
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
+        run str/doc-pl-int.w
+          ( input parparentproc
+          , input v-mode
+          , input p-upd-field
+          , input v-upd-units
+          , input p-doc-code
+          , input p-gds-code
+          , input tt-doc-pl.pl-code
+          , input tt-doc-pl.pl-code2
+          , input p-doc-line-unit-cli
+          , input p-doc-line-cli-base-rate
+          , input p-doc-line-doc-density
+          , input p-doc-line-fact-density
+          , input p-doc-line-cli-qnty
+          , input p-doc-line-doc-qnty
+          , input p-doc-line-fact-qnty
+          , input p-doc-line-doc-cli-qnty
+          , input p-doc-line-fact-cli-qnty
+          , input p-doc-line-rest-density
+          , input p-doc-line-rest-af-qnty
+          , input p-doc-line-cli-rest-af-qnty
+          ) .
+    end.
+    else do :
+        run str/doc-pl.w
+          ( input parparentproc
+          , input v-mode
+          , input p-upd-field
+          , input v-upd-units
+          , input p-doc-code
+          , input p-gds-code
+          , input tt-doc-pl.pl-code
+          , input p-doc-line-unit-cli
+          , input p-doc-line-cli-base-rate
+          , input p-doc-line-doc-density
+          , input p-doc-line-fact-density
+          , input p-doc-line-cli-qnty
+          , input p-doc-line-doc-qnty
+          , input p-doc-line-fact-qnty
+          , input p-doc-line-doc-cli-qnty
+          , input p-doc-line-fact-cli-qnty
+          , input p-doc-line-rest-density
+          , input p-doc-line-rest-af-qnty
+          , input p-doc-line-cli-rest-af-qnty
+          ) .
+    end.
 
     run calc-qnty in this-procedure
       .
@@ -890,27 +950,53 @@ DO:
       view-as alert-box.
     return no-apply.
   end.
-  run str/doc-pl.w
-    ( input parparentproc
-     ,input {&lookup}
-     ,input p-upd-field
-     ,input v-upd-units
-     ,input p-doc-code
-     ,input p-gds-code
-     ,input tt-doc-pl.pl-code
-     ,input p-doc-line-unit-cli
-     ,input p-doc-line-cli-base-rate
-     ,input p-doc-line-doc-density
-     ,input p-doc-line-fact-density
-     ,input p-doc-line-cli-qnty
-     ,input p-doc-line-doc-qnty
-     ,input p-doc-line-fact-qnty
-     ,input p-doc-line-doc-cli-qnty
-     ,input p-doc-line-fact-cli-qnty
-     ,input p-doc-line-rest-density
-     ,input p-doc-line-rest-af-qnty
-     ,input p-doc-line-cli-rest-af-qnty
-    ).
+  if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then do :
+      run str/doc-pl-int.w
+        ( input parparentproc
+         ,input {&lookup}
+         ,input p-upd-field
+         ,input v-upd-units
+         ,input p-doc-code
+         ,input p-gds-code
+         ,input tt-doc-pl.pl-code
+         ,input tt-doc-pl.pl-code2
+         ,input p-doc-line-unit-cli
+         ,input p-doc-line-cli-base-rate
+         ,input p-doc-line-doc-density
+         ,input p-doc-line-fact-density
+         ,input p-doc-line-cli-qnty
+         ,input p-doc-line-doc-qnty
+         ,input p-doc-line-fact-qnty
+         ,input p-doc-line-doc-cli-qnty
+         ,input p-doc-line-fact-cli-qnty
+         ,input p-doc-line-rest-density
+         ,input p-doc-line-rest-af-qnty
+         ,input p-doc-line-cli-rest-af-qnty
+        ).
+  end.
+  else do :
+      run str/doc-pl.w
+        ( input parparentproc
+         ,input {&lookup}
+         ,input p-upd-field
+         ,input v-upd-units
+         ,input p-doc-code
+         ,input p-gds-code
+         ,input tt-doc-pl.pl-code
+         ,input p-doc-line-unit-cli
+         ,input p-doc-line-cli-base-rate
+         ,input p-doc-line-doc-density
+         ,input p-doc-line-fact-density
+         ,input p-doc-line-cli-qnty
+         ,input p-doc-line-doc-qnty
+         ,input p-doc-line-fact-qnty
+         ,input p-doc-line-doc-cli-qnty
+         ,input p-doc-line-fact-cli-qnty
+         ,input p-doc-line-rest-density
+         ,input p-doc-line-rest-af-qnty
+         ,input p-doc-line-cli-rest-af-qnty
+        ).
+  end.
   apply "entry" to browse br-doc-pl .
 END.
 
@@ -1109,6 +1195,31 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     where buf_trn-doc.doc-code = p-doc-code
     .
 
+  if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then do :
+      br-doc-pl:handle:add-like-column ("tt-doc-pl.pl-code2", 1) .
+      br-doc-pl:handle:get-browse-column (1):label = "Место хр. c" .
+      br-doc-pl:handle:get-browse-column (2):label = "Место хр. на" .
+      br-doc-pl:handle:get-browse-column (1):width-chars = 11 .
+      br-doc-pl:handle:get-browse-column (2):width-chars = 12 .
+      br-doc-pl:handle:get-browse-column (3):width-chars = 12 .
+      br-doc-pl:handle:get-browse-column (4):width-chars = 13 .
+      br-doc-pl:handle:get-browse-column (5):width-chars = 14 .
+      br-doc-pl:handle:get-browse-column (6):width-chars = 15 .
+      br-doc-pl:handle:get-browse-column (7):width-chars = 16 .
+  end.
+  if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
+      br-doc-pl:handle:add-like-column ("tt-doc-pl.pl-code2", 2) .
+      br-doc-pl:handle:get-browse-column (1):label = "Место хр. c" .
+      br-doc-pl:handle:get-browse-column (2):label = "Место хр. на" .
+      br-doc-pl:handle:get-browse-column (1):width-chars = 11 .
+      br-doc-pl:handle:get-browse-column (2):width-chars = 12 .
+      br-doc-pl:handle:get-browse-column (3):width-chars = 12 .
+      br-doc-pl:handle:get-browse-column (4):width-chars = 13 .
+      br-doc-pl:handle:get-browse-column (5):width-chars = 14 .
+      br-doc-pl:handle:get-browse-column (6):width-chars = 15 .
+      br-doc-pl:handle:get-browse-column (7):width-chars = 16 .
+  end.
+  
   if p-upd-field = "doc":U then do:
     assign
       p-doc-line-fact-cli-qnty = p-doc-line-doc-cli-qnty
@@ -1242,8 +1353,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           if v-mode = {&autoupdate}
             and ( v-single-place = true
                   or ( v-single-place = false
-                       and v-add-mode1 = "update-dens":U
-                     )
+                      and v-add-mode1 = "update-dens":U
+                    )
                 )
           then do:
             return .

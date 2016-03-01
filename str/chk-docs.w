@@ -147,7 +147,7 @@ index pi is unique primary pay-code curr-code
 &Scoped-define INTERNAL-TABLES c-doc
 
 /* Definitions for BROWSE BR-docs                                       */
-&Scoped-define FIELDS-IN-QUERY-BR-docs c-doc.office mark-string(RECID( c-doc), rid-list) c-doc.doc-code {&receipt-name} c-doc.chk-num v-chk-autotank c-doc.chk-date (string (c-doc.chk-time, "HH:MM")) c-doc.shift-date shift-name-no-err(buffer c-doc) c-doc.netto c-doc.tot-doc c-doc.discnt c-doc.sub-discnt c-doc.pay-desk c-doc.cashier c-doc.sales-man c-doc.out-code c-doc.d-card c-doc.doc-num c-doc.src-tot-doc   
+&Scoped-define FIELDS-IN-QUERY-BR-docs c-doc.office mark-string(RECID( c-doc), rid-list) c-doc.doc-code {&receipt-name} c-doc.chk-num v-chk-autotank c-doc.chk-date (string (c-doc.chk-time, "HH:MM")) c-doc.shift-date shift-name-no-err(buffer c-doc) c-doc.netto c-doc.tot-doc c-doc.discnt c-doc.sub-discnt c-doc.pay-desk c-doc.cashier c-doc.sales-man c-doc.out-code c-doc.d-card c-doc.doc-num c-doc.doc-num2 c-doc.src-tot-doc   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-docs c-doc.cashier   
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-docs c-doc
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-docs c-doc
@@ -302,7 +302,8 @@ DEFINE BROWSE BR-docs
       c-doc.sales-man COLUMN-LABEL "Прод-ц" FORMAT "99999":U
       c-doc.out-code COLUMN-LABEL "Номер_РН" FORMAT "X(14)":U
       c-doc.d-card COLUMN-LABEL "N_диск._карты" FORMAT "X(19)":U
-      c-doc.doc-num COLUMN-LABEL "№_док-та" FORMAT "X(19)":U
+      c-doc.doc-num COLUMN-LABEL "№_док-та" FORMAT "X(22)":U
+      c-doc.doc-num2 COLUMN-LABEL "№_заказа" FORMAT "X(22)":U
       c-doc.src-tot-doc COLUMN-LABEL "Брутто-чек" FORMAT "->,>>>,>>9.99"
   ENABLE
       c-doc.cashier

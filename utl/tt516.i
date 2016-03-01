@@ -39,6 +39,7 @@ field exch-rate  as decimal
 field exch-scale as integer
 field vat-type as character
 field price-type as character
+field cargo-from as character
 
 index pi line-num doc-code .
 
@@ -49,6 +50,7 @@ field gds-code    as integer
 field artic       as character     /* не присылают */
 field prod-type   as character     /* не присылают */
 field prod-code   as integer       /* не присылают */
+field cli-qnty    as decimal
 field doc-qnty    as decimal
 field fact-qnty   as decimal
 field price-rubl  as decimal

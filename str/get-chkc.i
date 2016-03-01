@@ -55,6 +55,7 @@ DEFINE VARIABLE cli-code_                  like ub.chk-doc.cli-code   no-undo .
 DEFINE VARIABLE d-mask_                    like ub.chk-doc.d-card     no-undo .
 DEFINE VARIABLE tot-d-pcnt                 like ub.chk-doc.src-d-pcnt no-undo .
 DEFINE VARIABLE doc-num_                   like ub.chk-doc.doc-num    no-undo .
+DEFINE VARIABLE doc-num2_                   like ub.chk-doc.doc-num2  no-undo .
 DEFINE VARIABLE num-str_                   as   integer               no-undo .
 /*глобальный тип чека в спуле* - стринг от цифры */
 DEFINE VARIABLE gbl-type                   as   character             no-undo .
@@ -233,6 +234,10 @@ if p-disc-reason <> 0 then do:
     when 10
     then do:
       return integer({&discnt-t-cashloyal}).
+    end.
+    when 11
+    then do:
+      return integer({&discnt-t-cashround}).
     end.
     when 13
     then do:

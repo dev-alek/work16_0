@@ -614,7 +614,7 @@ define output parameter p-direction          as character no-undo .   /* Направл
 
 define variable v-doc-code as character no-undo .
 define variable v-ext-doc-type as character no-undo .
-define variable v-stat-list as character no-undo extent 80.
+define variable v-stat-list as character no-undo extent 84.
 define variable v-stat-list-all as character no-undo .
 define variable v-jj as integer no-undo .
 define variable v-ii as integer no-undo .
@@ -668,6 +668,8 @@ v-stat-list[lookup({&TDEDT_Peresort}, {&TDEDT_List}) * 4 - 3] =
                                                                 {&fact}         + {&delim-par} + string(yes)
 v-stat-list[lookup({&TDEDT_Pri_Perem}, {&TDEDT_List}) * 4 - 3] = v-stat-list-all
 v-stat-list[lookup({&TDEDT_Ras_Perem}, {&TDEDT_List}) * 4 - 3] = v-stat-list-all
+v-stat-list[lookup({&TDEDT_Pri_Object}, {&TDEDT_List}) * 4 - 3] = v-stat-list-all
+v-stat-list[lookup({&TDEDT_Ras_Object}, {&TDEDT_List}) * 4 - 3] = v-stat-list-all
 v-stat-list[lookup({&TDEDT_Vozvrat_Perem}, {&TDEDT_List}) * 4 - 3] = v-stat-list-all
 v-stat-list[lookup({&TDEDT_Ras_Prvo}, {&TDEDT_List}) * 4 - 3] = v-stat-list-all
 v-stat-list[lookup({&TDEDT_Spi_Prvo}, {&TDEDT_List}) * 4 - 3] =

@@ -2747,9 +2747,9 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-fin-global   true
 &scop output-display-attr-fin-global  true
 &scop other-attr-fin-global           'spr-ext=gbl\finglpa.w':U
-&scop prop-type-list-attr-fin-global  'integer,integer,logical,integer,logical,logical':U
-&scop prop-label-list-attr-fin-global 'Где могут создаваться ФО покупателей,Как ходят ФО поставщиков по новостям,Дата закрытия ФО соответствует дате закрытия накладной,Режим работы ФО с мастер договорами,Формирование связи ФО и платежей автоматически при оплате,Удалять связи платежа с ФО автоматом при удалении платежа'
-&scop prop-list-attr-fin-global       'fo-buyer-nws,fo-supp-nws,fo-fact,fo-mc-mode,add-conn-avt,del-conn-avt'
+&scop prop-type-list-attr-fin-global  'integer,integer,logical,integer,logical,logical,integer':U
+&scop prop-label-list-attr-fin-global 'Где могут создаваться ФО покупателей,Как ходят ФО поставщиков по новостям,Дата закрытия ФО соответствует дате закрытия накладной,Режим работы ФО с мастер договорами,Формирование связи ФО и платежей автоматически при оплате,Удалять связи платежа с ФО автоматом при удалении платежа,Генерировать ФО для:'
+&scop prop-list-attr-fin-global       'fo-buyer-nws,fo-supp-nws,fo-fact,fo-mc-mode,add-conn-avt,del-conn-avt,fo-gen'
 &scop global-attr-fin-global          true
 &scop host-attr-fin-global            false
 &scop shop-attr-fin-global            false
@@ -2762,7 +2762,8 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop attr-fin-global-fo-mc-mode-tooltip   (fo-mc-mode) 0-Простая старая схема / 1-Мастер договор / 2-Смешанная схема
 &scop attr-fin-global-add-conn-avt-tooltip  (add-conn-avt) Если параметр включен _то при при оплате ФО связь с платежем будет формироваться автоматически
 &scop attr-fin-global-del-conn-avt-tooltip  (del-conn-avt) Если параметр включен _то при удалении платежа связи платежа с ФО будут удаляться автоматически
-&scop prop-tooltip-list-attr-fin-global    {&attr-fin-global-fo-buyer-nws_tooltip},{&attr-fin-global-fo-supp-nws_tooltip},{&attr-fin-global-fo-fact-tooltip},{&attr-fin-global-fo-mc-mode-tooltip},{&attr-fin-global-add-conn-avt-tooltip},{&attr-fin-global-del-conn-avt-tooltip}
+&scop attr-fin-global-fo-gen-tooltip       Генерировать ФО для заказов и/или накладных
+&scop prop-tooltip-list-attr-fin-global    {&attr-fin-global-fo-buyer-nws_tooltip},{&attr-fin-global-fo-supp-nws_tooltip},{&attr-fin-global-fo-fact-tooltip},{&attr-fin-global-fo-mc-mode-tooltip},{&attr-fin-global-add-conn-avt-tooltip},{&attr-fin-global-del-conn-avt-tooltip},{&attr-fin-global-fo-gen-tooltip}
 &scop level-way-attr-fin-global ",,global"
 &scop up-way-attr-fin-global ",,fin-global"
 
@@ -3976,7 +3977,7 @@ logical~
 '
 
 &scop prop-list-attr-prt-firm 'factur01,incurrat,tick-w'
-&scop global-attr-prt-firm true
+&scop global-attr-prt-firm false
 &scop host-attr-prt-firm true
 &scop shop-attr-prt-firm false
 &scop store-attr-prt-firm false
@@ -3988,8 +3989,8 @@ logical~
 &scop prop-tooltip-list-attr-prt-firm  {&attr-prt-firm-factur01_tooltip},~
 {&attr-prt-firm-incurrat_tooltip},~
 {&attr-prt-firm-tick-w_tooltip}
-&scop level-way-attr-prt-firm ",host,global"
-&scop up-way-attr-prt-firm ",prt-firm,prt-firm"
+&scop level-way-attr-prt-firm ",host,"
+&scop up-way-attr-prt-firm ",prt-firm,"
 
 
 /* параметры по Печати форм по объектам */
@@ -4048,8 +4049,8 @@ character~
 '
 
 &scop prop-list-attr-prt-obj 'fgdsnind,in-docpr,outappr,outdate,outdisc,outegrp,outhold,outnum,outobj,outprim,outrubl,outssdoc,outsubs,outt12,outares,outsend,outasend,outR,outB,outogr,outC'
-&scop global-attr-prt-obj true
-&scop host-attr-prt-obj true
+&scop global-attr-prt-obj false
+&scop host-attr-prt-obj false
 &scop shop-attr-prt-obj true
 &scop store-attr-prt-obj true
 &scop db-attr-prt-obj false
@@ -4096,8 +4097,8 @@ character~
 {&attr-prt-obj-outB_tooltip},~
 {&attr-prt-obj-outogr_tooltip},~
 {&attr-prt-obj-outC_tooltip}
-&scop level-way-attr-prt-obj "obj,host,global"
-&scop up-way-attr-prt-obj "prt-obj,prt-obj,prt-obj"
+&scop level-way-attr-prt-obj "obj,,"
+&scop up-way-attr-prt-obj "prt-obj,,"
 
 
 
@@ -4108,7 +4109,7 @@ character~
 &scop tooltip-attr-report-glob         "параметры по Отчетам глобально"
 &scop user-can-edit-attr-report-glob   true
 &scop output-display-attr-report-glob  true
-&scop other-attr-report-glob           'spr-ext=gbl\reportpa.w':U
+&scop other-attr-report-glob           'spr-ext=adm\reptglob.p':U
 &scop prop-type-list-attr-report-glob  '~
 logical~
 ,date~
@@ -4173,7 +4174,7 @@ logical~
 &scop tooltip-attr-report-firm         "параметры по Отчетам фирма"
 &scop user-can-edit-attr-report-firm   true
 &scop output-display-attr-report-firm  true
-&scop other-attr-report-firm           'spr-ext=gbl\reportpa.w':U
+&scop other-attr-report-firm           'spr-ext=adm\reptfrm.p':U
 &scop prop-type-list-attr-report-firm  '~
 character~
 ':U
@@ -4182,7 +4183,7 @@ character~
 '
 
 &scop prop-list-attr-report-firm 'xl-delim'
-&scop global-attr-report-firm true
+&scop global-attr-report-firm false
 &scop host-attr-report-firm true
 &scop shop-attr-report-firm false
 &scop store-attr-report-firm false
@@ -4190,8 +4191,8 @@ character~
 &scop batch-edit-attr-report-firm  0
 &scop attr-report-firm-xl-delim_tooltip   (xl-delim) По фирме. Разделитель колонок при старом экспорте в Excel
 &scop prop-tooltip-list-attr-report-firm  {&attr-report-firm-xl-delim_tooltip}
-&scop level-way-attr-report-firm ",host,global"
-&scop up-way-attr-report-firm ",report-firm,report-firm"
+&scop level-way-attr-report-firm ",host,"
+&scop up-way-attr-report-firm ",report-firm,"
 
 
 /* параметры по отчетам по объектам */
@@ -4201,7 +4202,7 @@ character~
 &scop tooltip-attr-report-obj         "параметры по Отчетам по объектам"
 &scop user-can-edit-attr-report-obj   true
 &scop output-display-attr-report-obj  true
-&scop other-attr-report-obj           'spr-ext=gbl\reportpa.w':U
+&scop other-attr-report-obj           'spr-ext=adm\reptobj.p':U
 &scop prop-type-list-attr-report-obj  '~
 logical,~
 character~
@@ -4212,8 +4213,8 @@ character~
 '
 
 &scop prop-list-attr-report-obj 'prt-z-no,shft-qty'
-&scop global-attr-report-obj true
-&scop host-attr-report-obj true
+&scop global-attr-report-obj false
+&scop host-attr-report-obj false
 &scop shop-attr-report-obj true
 &scop store-attr-report-obj true
 &scop db-attr-report-obj false
@@ -4221,8 +4222,8 @@ character~
 &scop attr-report-obj-prt-z-no_tooltip   (prt-z-no) Печатать или нет номера Z-отчетов в 1 - 4 листах сменного отчета
 &scop attr-report-obj-shft-qty_tooltip   (shft-qty) Какое количество (в кг) из сверки брать для 1-го листа сменного отчета system-cli-qnty или state-cli-qnty (расчетно-книжный остаток)
 &scop prop-tooltip-list-attr-report-obj  {&attr-report-obj-prt-z-no_tooltip},{&attr-report-obj-shft-qty_tooltip}
-&scop level-way-attr-report-obj "obj,host,global"
-&scop up-way-attr-report-obj "report-obj,report-obj,report-obj"
+&scop level-way-attr-report-obj "obj,,"
+&scop up-way-attr-report-obj "report-obj,,"
 
 
 
@@ -5774,6 +5775,19 @@ end procedure.
 &scop manual-edit-attr-fasovka 1
 &scop batch-edit-attr-fasovka  1
 
+/* Группа товаров на кассе */
+&glob type-attr-sum-grp-gl {&type-char}
+&glob format-attr-sum-grp-gl  "X(5)"
+&glob label-attr-sum-grp-gl   "Группа товаров на кассе"
+&glob tooltip-attr-sum-grp-gl   "Номер группы товаров на кассе (IBM-POS)"
+&glob user-can-edit-attr-sum-grp-gl  true
+&glob output-display-attr-sum-grp-gl  true
+&glob other-attr-sum-grp-gl  "spr-ext=gds-glob-sum-grps"
+&glob news-attr-sum-grp-gl true
+&glob copy-attr-sum-grp-gl  true
+&scop manual-edit-attr-sum-grp-gl  1
+&scop batch-edit-attr-sum-grp-gl  1
+
 &glob type-attr-15x80 {&type-char}
 &glob format-attr-15x80  "X(255)"
 &glob label-attr-15x80   "Текст поля СОСТАВ 15x80 (DIGI-SM)"
@@ -6108,6 +6122,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-fasovka
       {&attr-temp-full-code}
+      &scop attr-code attr-sum-grp-gl
+      {&attr-temp-full-code}
       &scop attr-code attr-15x80
       {&attr-temp-full-code}
       &scop attr-code attr-8x50
@@ -6189,6 +6205,8 @@ do
       &scop attr-code attr-null-price
       {&attr-temp-code}
       &scop attr-code attr-fasovka
+      {&attr-temp-code}
+      &scop attr-code attr-sum-grp-gl
       {&attr-temp-code}
       &scop attr-code attr-15x80
       {&attr-temp-code}
@@ -6505,6 +6523,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-fasovka
       {&attr-news-code}
+      &scop attr-code attr-sum-grp-gl
+      {&attr-news-code}
       &scop attr-code attr-15x80
       {&attr-news-code}
       &scop attr-code attr-8x50
@@ -6580,6 +6600,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-null-price
       {&attr-copy-code}
       &scop attr-code attr-fasovka
+      {&attr-copy-code}
+      &scop attr-code attr-sum-grp-gl
       {&attr-copy-code}
       &scop attr-code attr-15x80
       {&attr-copy-code}
@@ -6792,7 +6814,7 @@ on error undo, return error return-value
         return error substitute("(Еще) Нет товара с кодом &1, невозможно выполнить проверку корректности установки атрибута"
                                 , p-gds-code).
       end.
-      if buf_goods.gds-type <> {&gds-office} then do:
+      if buf_goods.gds-type <> {&gds-office} and p-value <> {&attr-office-type_card-act}  then do:
         p-error-code = "Товар должен быть услугой".
       end.
       if lookup(p-value, {&prop-list-attr-office-type}) = 0 then do:
@@ -6866,6 +6888,50 @@ on error undo, return error
 end.
 
 end procedure. /* gds-attr_init-15x80 */
+
+procedure gds-glob-sum-grps :
+
+define input parameter p-mode  as character no-undo .
+define input parameter p-gds-code like ub.gds-obj-attr.gds-code no-undo .
+define input-output parameter p-value as integer no-undo .
+define output parameter p-setted as logical no-undo .
+DEFINE VARIABLE rid-list as character no-undo .
+define buffer buf_sum-grp for ub.sum-grp.
+
+  do
+  on error undo, return error
+  :
+    find first buf_sum-grp no-lock where
+               buf_sum-grp.grp-code = integer(p-value) no-error .
+    if avail buf_sum-grp then do:
+      assign
+      rid-list = string(recid(buf_sum-grp))
+      .
+    end.
+    if p-mode = {&lookup} then do:
+    run ref/gds-sumgrp.p ( input this-procedure
+                          ,input ""
+                          ,input-output rid-list).
+    end.
+    else do:
+      run ref/gds-sumgrp.p ( input this-procedure
+                          ,input "b-sel"
+                          ,input-output rid-list).
+    end.
+    if rid-list <> "":U then do:
+      find first buf_sum-grp no-lock where
+                 recid(buf_sum-grp) = integer(entry(1, rid-list)) no-error .
+      if not avail buf_sum-grp then return error.
+
+      assign
+      p-value = buf_sum-grp.grp-code
+      p-setted = yes
+      .
+    end.
+    else p-setted = no.
+  end.
+
+end procedure. /* gds-glob-sum-grps */
 
 procedure gds-attr_init-8x50 :
 define input parameter p-gds-code as integer no-undo .
@@ -7003,6 +7069,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-fasovka
       {&attr-manual-edit-code}
+      &scop attr-code attr-sum-grp-gl
+      {&attr-manual-edit-code}
       &scop attr-code attr-15x80
       {&attr-manual-edit-code}
       &scop attr-code attr-8x50
@@ -7079,6 +7147,8 @@ do
       &scop attr-code attr-null-price
       {&attr-batch-edit-code}
       &scop attr-code attr-fasovka
+      {&attr-batch-edit-code}
+      &scop attr-code attr-sum-grp-gl
       {&attr-batch-edit-code}
       &scop attr-code attr-calories
       {&attr-batch-edit-code}
@@ -14007,6 +14077,19 @@ end procedure.
 &scop manual-edit-ggoattr-ban-sales-via-cd 0
 &scop batch-edit-ggoattr-ban-sales-via-cd 0
 
+
+/* Группа товаров на кассе */
+&scop type-ggoattr-sum-grps {&type-int}
+&scop format-ggoattr-sum-grps "999"
+&scop label-ggoattr-sum-grps "Группа товаров на кассе"
+&scop tooltip-ggoattr-sum-grps "Группа товаров на кассе"
+&scop user-can-edit-ggoattr-sum-grps  false
+&scop output-display-ggoattr-sum-grps true
+&scop other-ggoattr-sum-grps '':u
+&scop news-ggoattr-sum-grps true
+&scop manual-edit-ggoattr-sum-grps 0
+&scop batch-edit-ggoattr-sum-grps 0
+
 /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
 
 &scop attr-temp-code ~
@@ -14076,6 +14159,8 @@ procedure ggoattr-code :
       &scop attr-code ggoattr-ban-sales-via-cd
       {&attr-temp-full-code}
 
+      &scop attr-code ggoattr-sum-grps
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
         undo, return error substitute("неизвестный атрибут группы товаров на объекте &1", p-code) .
@@ -14105,6 +14190,8 @@ procedure ggoattr-tooltip :
       &scop attr-code ggoattr-no-inc-auto-rep
       {&attr-temp-code}
       &scop attr-code ggoattr-ban-sales-via-cd
+      {&attr-temp-code}
+      &scop attr-code ggoattr-sum-grps
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
@@ -14407,6 +14494,8 @@ procedure ggoattr-news :
       {&attr-news-code}
       &scop attr-code ggoattr-ban-sales-via-cd
       {&attr-news-code}
+      &scop attr-code ggoattr-sum-grps
+      {&attr-news-code}
 
       /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
       otherwise do:
@@ -14528,6 +14617,8 @@ procedure assmatat-code :
   :
     case p-code :
       &scop attr-code assmatat-RootShablon
+      {&attr-temp-full-code}
+      &scop attr-code ggoattr-sum-grps
       {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */

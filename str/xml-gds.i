@@ -19,8 +19,10 @@ Creation date: 08/18/03
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 define variable i-entry as integer no-undo .
+define variable v-attr-value as character no-undo .
 define buffer buf_cash-gds for cash-gds.
 define buffer buf_goods-attr for ub.goods-attr.
+define buffer buf_gds-obj-attr for ub.gds-obj-attr.
 
 &if "{1}" <> "7" &then
 if action = 'U':U then do:
@@ -97,9 +99,22 @@ if action = "U":U then do:
     run bgelib-tag-put in this-procedure ( input 3, input "ItemCountry" , input string( cash-gds.alpha1), input 1 ).
   end.
   else do: /*не инфокиоск*/
+  
+find first buf_gds-obj-attr where buf_gds-obj-attr.gds-code = cash-gds.gds-code 
+                              and buf_gds-obj-attr.obj-code = cash-gds.obj-code
+                              and buf_gds-obj-attr.obj-type = cash-gds.obj-type
+                              and buf_gds-obj-attr.attr-code = "sum-grp" no-error.
+  if available buf_gds-obj-attr then do:               
+  v-attr-value = buf_gds-obj-attr.attr-value .
+  end.  
+else do:
+find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "sum-grp-gl" no-error.
+  if available buf_goods-attr then do:
+  v-attr-value = buf_goods-attr.attr-value .
+  end.
+end.                            
 
-
-    run bgelib-tag-put in this-procedure ( input 3, input "ItemGroup"      , input string( cash-gds.grp-code ), input 1 ).
+    run bgelib-tag-put in this-procedure ( input 3, input "ItemGroup"      , input string( if v-attr-value = "" then cash-gds.grp-code else v-attr-value ), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemShop"      , input string( i-obj-code ), input 1 ).
 
     /*статус*/
@@ -128,6 +143,8 @@ if action = "U":U then do:
                                           input string(cash-gds.office), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "ISComplex" ,
                                           input string(0), input 1 ).
+    run bgelib-tag-put in this-procedure ( input 4, input "ISActivate" ,
+                                          input (if cash-gds.office-type = {&attr-office-type_card-act} then string(1) else string(0)), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "ISNoDiscount" ,
                                             input string(if cash-gds.wgd > 0 then wgd-option else 0), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "ISGaz" ,

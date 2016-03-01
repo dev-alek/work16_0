@@ -126,7 +126,6 @@ define buffer buf_c-contract for ub.c-contract.
 define buffer buf_firm for ub.firm.
 define buffer buf_clients for ub.clients.
 
-/* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
@@ -2395,9 +2394,10 @@ define variable v-is-add as character no-undo .
         v-posr-point-db-num   = b_contract.posr-point-db-num
 
         kredit-sum    = b_contract.kredit-sum
-        kredit-limit  = b_contract.kredit-limit
-        balance-fo    = b_contract.balance-fo-rubl - b_contract.balance-plat-rubl
-
+        kredit-limit  = b_contract.kredit-limit.
+        if p-doc-type = {&income} then balance-fo    = b_contract.balance-fo-rubl + b_contract.balance-plat-rubl.
+        else balance-fo    = b_contract.balance-fo-rubl - b_contract.balance-plat-rubl.
+assign 
         own-name      = b_contract.own-name
         inn-own       = b_contract.own-inn
         kpp-own       = b_contract.own-kpp
@@ -2691,11 +2691,8 @@ define variable v-is-add as character no-undo .
   apply "entry"  to contract-prn-code IN FRAME Dialog-Frame .
   apply "LEAVE"  to curr-code  IN FRAME Dialog-Frame .
   apply "VALUE-CHANGED"  to b-nal IN FRAME Dialog-Frame .
-  if p-doc-type = {&income} then do: /* договор на покупку */
-    assign kredit-limit = no .
-    disable kredit-limit with frame {&frame-name}.
-  end.
-  if kredit-limit = no  then  disable kredit-sum with frame {&frame-name}.
+
+
 end.
 END PROCEDURE.
 

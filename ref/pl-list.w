@@ -8,7 +8,7 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER X_place FOR ub.place.
+DEFINE BUFFER X_place FOR place.
 
 
 
@@ -70,6 +70,7 @@ define variable filter-point0 as character no-undo init "pl-list".
 define variable sort-column-name as character no-undo .
 define variable ri          as      recid   no-undo     init ? .
 define variable choice as log no-undo.
+define variable del-choice as logical no-undo.
 define variable mark as char no-undo.
 define variable v-doc-rec as recid no-undo .
 define variable v-rid-list as character no-undo .
@@ -111,7 +112,7 @@ index pi as primary unique
 &Scoped-define INTERNAL-TABLES X_place tt-place-attr
 
 /* Definitions for BROWSE br-pl                                         */
-&Scoped-define FIELDS-IN-QUERY-br-pl mark-string(recid(X_place), v-rid-list) X_place.pl-code X_place.pl-name X_place.loc1 X_place.loc2 X_place.loc3 X_place.loc4 X_place.obj-type X_place.obj-code X_place.is-meas X_place.max-qnty X_place.add-qnty tt-place-attr.place-type tt-place-attr.place-Si tt-place-attr.place-diameter tt-place-attr.dead-balance tt-place-attr.place-rel-error tt-place-attr.place-dens-prov
+&Scoped-define FIELDS-IN-QUERY-br-pl mark-string(recid(X_place), v-rid-list) X_place.pl-code X_place.pl-name x_place.status_ X_place.loc1 X_place.loc2 X_place.loc3 X_place.loc4 X_place.obj-type X_place.obj-code X_place.is-meas X_place.max-qnty X_place.add-qnty tt-place-attr.place-type tt-place-attr.place-Si tt-place-attr.place-diameter tt-place-attr.dead-balance tt-place-attr.place-rel-error tt-place-attr.place-dens-prov
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-pl X_place.pl-name
 &Scoped-define ENABLED-TABLES-IN-QUERY-br-pl X_place
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br-pl X_place
@@ -132,14 +133,14 @@ index pi as primary unique
 
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-FIELDS ub.X_place.PS
-&Scoped-define ENABLED-TABLES ub.X_place
-&Scoped-define FIRST-ENABLED-TABLE ub.X_place
+&Scoped-Define ENABLED-FIELDS X_place.PS
+&Scoped-define ENABLED-TABLES X_place
+&Scoped-define FIRST-ENABLED-TABLE X_place
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel b-add b-chg b-del b-rest ~
 b-level b-print B-hist B-sch b-help br-pl mark-num
-&Scoped-Define DISPLAYED-FIELDS ub.X_place.PS
-&Scoped-define DISPLAYED-TABLES ub.X_place
-&Scoped-define FIRST-DISPLAYED-TABLE ub.X_place
+&Scoped-Define DISPLAYED-FIELDS X_place.PS
+&Scoped-define DISPLAYED-TABLES X_place
+&Scoped-define FIRST-DISPLAYED-TABLE X_place
 &Scoped-Define DISPLAYED-OBJECTS mark-num
 
 /* Custom List Definitions                                              */
@@ -200,12 +201,19 @@ DEFINE BUTTON B-sch
      SIZE 3 BY 1.
 
 DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&бор "
+     LABEL "Вы&бор "  
      SIZE 10 BY 1.
+
+DEFINE VARIABLE rs-stat AS CHARACTER VIEW-AS RADIO-SET HORIZONTAL RADIO-BUTTONS
+"Текущие&+",   {&current},
+"Все&!",       {&all},
+"Удаленные", {&deleted}
+     SIZE 30 BY 1   FGCOLOR 0 /* BGCOLOR 8 */  NO-UNDO.
+
 
 DEFINE VARIABLE mark-num AS INTEGER FORMAT ">>>9":U INITIAL 0
       VIEW-AS TEXT
-     SIZE 4.6 BY .67
+     SIZE 4.63 BY .67
      FGCOLOR 4  NO-UNDO.
 
 /* Query definitions                                                    */
@@ -226,6 +234,7 @@ DEFINE BROWSE br-pl
       mark-string(recid(X_place), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
 X_place.pl-code FORMAT "999999999":U
 X_place.pl-name FORMAT "X(40)":U
+X_place.status_ format "X(8)":U
 X_place.loc1 FORMAT "X(8)":U
 X_place.loc2 FORMAT "X(8)":U
 X_place.loc3 FORMAT "X(8)":U
@@ -245,7 +254,7 @@ ENABLE
 X_place.pl-name
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ASSIGN NO-ROW-MARKERS SEPARATORS SIZE 98 BY 16.77.
+    WITH NO-ASSIGN NO-ROW-MARKERS SEPARATORS SIZE 98 BY 16.75.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -263,12 +272,14 @@ DEFINE FRAME d-pl-list
      B-hist AT ROW 1 COL 89
      B-sch AT ROW 1 COL 92
      b-help AT ROW 1 COL 95
-     br-pl AT ROW 3 COL 1
-     ub.X_place.PS AT ROW 20 COL 1 NO-LABEL
+     br-pl AT ROW 5 COL 1
+     rs-stat at row 3 col 10.5 no-label
+   "Статус :" VIEW-AS TEXT SIZE 9 BY 1 fgcolor 4 AT ROW 3 COL 1.5
+     X_place.PS AT ROW 22 COL 1 NO-LABEL
           VIEW-AS EDITOR
-          SIZE 98 BY 1.77
-     mark-num AT ROW 1.17 COL 12.1 COLON-ALIGNED NO-LABEL
-     SPACE(80.49) SKIP(20.25)
+          SIZE 98 BY 1.75
+     mark-num AT ROW 1.17 COL 12.13 COLON-ALIGNED NO-LABEL
+     SPACE(80.43) SKIP(20.25)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
          TITLE "Складские места".
@@ -379,7 +390,7 @@ run ref/pl-form.w (
                ,input-output v-rep-rec).
 if v-rep-rec <> ? then do:
   v-doc-rec = v-rep-rec.
-   RUn OpenBr in this-procedure ( input yes, input no, input '':U).
+  RUn OpenBr in this-procedure ( input yes, input no, input '':U).
   apply "entry" to br-pl in frame {&frame-name}.
 end.
 else do:
@@ -391,6 +402,16 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&Scoped-define SELF-NAME b-chg
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-stat d-pl-list
+ON value-changed OF rs-stat in frame {&FRAME-NAME}
+DO:
+run proc-rs-stat in this-procedure no-error.
+  if error-status :error then do: return no-apply. end.
+END.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-chg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg d-pl-list
@@ -435,7 +456,7 @@ run ref/pl-form.w (
                ,input-output v-rep-rec).
 if v-rep-rec <> ? then do:
    v-doc-rec = v-rep-rec.
-   RUn OpenBr in this-procedure ( input yes, input no, input '':U).
+   RUn OpenBr in this-procedure (  input yes, input no, input '':U).
    apply "entry" to br-pl in frame {&frame-name}.
 end.
 else do:
@@ -451,24 +472,24 @@ END.
 &Scoped-define SELF-NAME b-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del d-pl-list
 ON CHOOSE OF b-del IN FRAME d-pl-list /* Удалить */
-DO:
-
-  define variable new-rec as recid no-undo.
-  define variable glog as logical no-undo .
-  define variable v-chk-act-host-code as integer   no-undo .
-
-  define buffer buf_place for ub.place.
-
-  if not available X_place then do:
-    message "Неправильно выбрана строка." view-as alert-box .
-    return no-apply.
-  end.
-  { gbl/hostcode.i
+    DO:
+        define variable placelog            as logical no-undo.
+        define variable new-rec             as recid   no-undo.
+        define variable glog                as logical no-undo .
+        define variable v-chk-act-host-code as integer no-undo .
+        define buffer buf_place for ub.place.
+        assign rs-stat.
+        if not available X_place then 
+        do:
+            message "Неправильно выбрана строка." view-as alert-box .
+            return no-apply.
+        end.
+        { gbl/hostcode.i
     p-obj-type
     p-obj-code
     v-chk-act-host-code
   }
-  { gbl/chk-actg.i
+        { gbl/chk-actg.i
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
@@ -483,77 +504,99 @@ DO:
     true
     glog
   }
-  if not glog then do:
-    return no-apply.
-  end.
-  v-doc-rec = recid (X_place).
-  assign
-    glog = no
-  .
-  message
-    "Удалить складское место ?   Вы уверены ?"
-    view-as alert-box question buttons OK-Cancel update glog.
-  if glog <> yes then do:
-    return no-apply.
-  end.
-  assign
-    glog = br-pl:select-next-row()
-  .
-  if not glog then do:
-    glog = br-pl:select-prev-row().
-  end.
-  assign
-    new-rec = recid(X_place)
-  .
+        if not glog then 
+        do:
+            return no-apply.
+        end.
+        v-doc-rec = recid (X_place).
+        assign
+            glog = no
+            .
+   
+        find buf_place exclusive-lock
+            where recid(buf_place) = v-doc-rec
+            .
 
-  find buf_place exclusive-lock
-    where recid(buf_place) = v-doc-rec
-  .
-  _deletion:
-  do on stop undo _deletion, return no-apply:
-    assign
-      glog = no
-    .
-    run trg/placedv.p
-      ( input buf_place.obj-type
-        ,input buf_place.obj-code
-        ,input buf_place.pl-code
-        ,output glog
-      ) no-error.
-    if error-status:error then do:
-      message
-        error-status:get-message(1) skip
-        return-value
-        view-as alert-box error .
-      return no-apply.
-    end.
-    if not glog then do:
-      if return-value <> "" then do:
-        message
-          return-value
-          view-as alert-box error.
-      end.
-      return no-apply.
-    end.
-    if glog = yes then do:
-      ii = 0.
-      do ii = 1 to num-entries({&list-place-attr}):
-        v-code = entry(ii,{&list-place-attr}) .
-        run placelib_del-attr in this-procedure  (input v-code
+        _deletion:
+        do on stop undo _deletion, return no-apply:
+            assign
+                glog = no
+                .
+
+            find first pl-gds-pump where pl-gds-pump.obj-type = buf_place.obj-type and 
+                pl-gds-pump.obj-code = buf_place.obj-code and
+                pl-gds-pump.pl-code = buf_place.pl-code
+          no-error.
+          
+            if available pl-gds-pump then 
+            do:
+                message "К резервуару привязан товар!" skip
+                    "Для удаления данного резервуара удалите данную связку!"
+                    view-as alert-box ERROR.
+                return no-apply.
+            end.
+            
+            if  buf_place.status_ <> {&deleted-status} then 
+            do: 
+                message  "Удалить складское место?" skip(0)
+                    view-as alert-box QUestion buttons yes-no update del-choice.
+
+                if del-choice = yes then 
+                do:
+                    run trg/placedv.p
+                        ( input buf_place.obj-type
+                        ,input buf_place.obj-code
+                        ,input buf_place.pl-code
+                        ,output glog
+                        ) no-error.      
+                        
+                    if glog = yes then 
+                    do:
+                        ii = 0.
+                        do ii = 1 to num-entries({&list-place-attr}):
+                            v-code = entry(ii,{&list-place-attr}) .
+                            run placelib_del-attr in this-procedure  (input v-code
                                 ,input p-obj-code
                                 ,input p-obj-type
                                 ,input buf_place.pl-code
                                 ,input v-value
                                 ,output v-ok      ) no-error.
-      end.
-      delete buf_place.
-    end.
-  end.
-  assign
-    v-doc-rec = new-rec
-  .
-  run OpenBr in this-procedure ( input yes, input no, input '':U).
-END.
+                        end.
+                        delete buf_place.
+                        {&browse-name}:delete-current-row().
+                    end.
+                    else 
+                    do:
+                        buf_place.status_ = {&deleted-status}.
+                    end.
+                      
+                end.
+                else
+                do:                    
+                    return no-apply.
+                end.              
+            end.        
+            else 
+            do: 
+                message
+                    "Восстановить складское место?" skip(0)
+                    view-as alert-box QUestion buttons yes-no update del-choice.
+         
+                if del-choice = yes then 
+                do:
+                    buf_place.status_ = "".
+                /*                    {&current-status}.*/
+                  
+                end.
+                else 
+                do:      
+                    return no-apply.
+                end.
+            end.
+  
+        end.
+        {&browse-name}:refresh().
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -594,11 +637,11 @@ ON CHOOSE OF b-level IN FRAME d-pl-list /* Градуир. */
 DO:
    define variable v-recid as recid no-undo .
    if not avail X_place then return no-apply.
-   run ref/pl-lvls.w   ( input parparentproc
-                       , input p-obj-type
-                       , input p-obj-code
-                       , input X_place.pl-code
-                       ) no-error.
+   run ref/pl-level.w   ( input parparentproc
+                        , input p-obj-type
+                        , input p-obj-code
+                        , input X_place.pl-code
+                        ) no-error.
    IF ERROR-STATUS:ERROR THEN DO:
       message
          error-status:get-message(1) skip
@@ -715,7 +758,7 @@ DO:
                      ,input lab
                      ,input spr
                      ,input dim).
-    RUN OpenBr in this-procedure ( input yes, input no, input '':U).
+    RUN OpenBr in this-procedure (  input yes, input no, input '':U).
   END .
 END.
 
@@ -754,8 +797,8 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.place.PS
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.place.PS d-pl-list
+&Scoped-define SELF-NAME place.PS
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL X_place.PS d-pl-list
 ON ENTRY OF X_place.PS IN FRAME d-pl-list /* Описание */
 DO:
 v-doc-rec = recid (X_place).
@@ -765,7 +808,7 @@ END.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.place.PS d-pl-list
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL X_place.PS d-pl-list
 ON LEAVE OF X_place.PS IN FRAME d-pl-list /* Описание */
 DO:
 define buffer buf_place for ub.place.
@@ -789,10 +832,9 @@ END.
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
-
 { gbl/app_help.i }
 { gbl/setfltnm.i }
-{ gbl/brwrefre.i "v-doc-rec = recid(X_place). run openbr in this-procedure ( input yes, input no, input '':U). reposition br-pl to recid(v-doc-rec). v-doc-rec = ? . " }
+{ gbl/brwrefre.i "v-doc-rec = recid(X_place). run openbr in this-procedure (  input yes, input no, input '':U). reposition br-pl to recid(v-doc-rec). v-doc-rec = ? . " }
 { gbl/brwrepos.i
 &line-num=5 }
 { gbl/hot-key.i b-mark }
@@ -816,7 +858,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
   &sort-clmn_5    = "X_place.loc3"
   &sort-clmn_6    = "X_place.loc4"
   &open-query     = "run OpenBr in this-procedure ( input yes, input no, input '':U)."
-  &open-query-otherwise = "run OpenBr in this-procedure ( input yes, input no, input '':U)."
+  &open-query-otherwise = "run OpenBr in this-procedure (  input yes, input no, input '':U)."
   &sort-column-name = "sort-column-name"
   &re-move-clmn   = "yes"
   &mv-brw-default = "yes"
@@ -850,9 +892,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   assign
   v-doc-rec = integer(entry(1, v-rid-list)).
  end.
-
+display rs-stat with frame {&FRAME-NAME}.
+enable rs-stat with frame {&FRAME-NAME}.
   RUN enable_UI in this-procedure .
-  RUN OpenBR in this-procedure ( input yes, input no, input '':U).
+  RUN OpenBR in this-procedure (  input yes, input no, input '':U).
 { gbl/mv-clmn.i
 &browse-name = "br-pl"
 &frame-name = "{&frame-name}"
@@ -922,8 +965,23 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-rs-stat d-pl-list
+PROCEDURE proc-rs-stat:
+ASSIGN
+FRAME {&FRAME-NAME}
+rs-stat.
+
+RUN openbr IN THIS-PROCEDURE (   input yes, input no, input '':U ).
+
+
+END PROCEDURE.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr d-pl-list
 PROCEDURE OpenBr :
+
 define input  parameter p-open-query     as logical   no-undo .
 define input  parameter p-find-next      as logical   no-undo .
 define input  parameter p-find-condition as character no-undo .
@@ -931,6 +989,8 @@ define input  parameter p-find-condition as character no-undo .
 define variable l-query-was-opened as logical no-undo .
 define buffer buf_place for ub.place.
 
+
+assign FRAME {&FRAME-NAME}   rs-stat.
 run waitfram-show in this-procedure ( input "Ждите...").
 
 define variable sort-column-phrase as character no-undo .
@@ -940,7 +1000,7 @@ for each tt-place-attr :
   delete tt-place-attr.
 end.
 
-for each buf_place where buf_place.obj-code = p-obj-code and buf_place.obj-type = p-obj-type no-lock :
+    for each buf_place where buf_place.obj-code = p-obj-code and buf_place.obj-type = p-obj-type and (if rs-stat = {&all} then true else  buf_place.status_ = (if rs-stat =  {&current} then "" else {&deleted-status})) no-lock :
   find first tt-place-attr exclusive-lock where tt-place-attr.pl-code = buf_place.pl-code no-error.
   if not available tt-place-attr then do :
     create tt-place-attr.
@@ -981,6 +1041,7 @@ for each buf_place where buf_place.obj-code = p-obj-code and buf_place.obj-type 
     end.
   end.
 end.
+
 case sort-column-name :
   when "" then do:
     assign
@@ -1020,9 +1081,9 @@ end case.
 
 CASE p-mode:
     when {&g___object} then do:
-        FIND FIRST ub.clients NO-LOCK WHERE ub.clients.obj-type = p-obj-type AND
-                                         ub.clients.obj-code = p-obj-code NO-ERROR.
-        ASSIGN frame {&frame-name}:TITLE = "Складские места " + ub.clients.obj-name
+        FIND FIRST clients NO-LOCK WHERE clients.obj-type = p-obj-type AND
+                                         clients.obj-code = p-obj-code NO-ERROR.
+        ASSIGN frame {&frame-name}:TITLE = "Складские места " + clients.obj-name
         filter-point = filter-point0 + p-mode
         filter-label = substitute("&1", filter-label0)
         .

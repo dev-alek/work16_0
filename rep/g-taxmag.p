@@ -55,7 +55,7 @@ run rep/d-report.w (
                    ,input 'rep/e-taxmag.w'
                    ,input ('ĞÀÑ×ÅÒ ÍÀËÎÃÎÂ (ĞÅÀËÈÇÀÖÈß Â ÌÀÃÀÇÈÍÅ)')
                    ,input 4
-                   ,input "{&g-all},{&g-choice}"
+                   ,input "{&g-all},{&g-grp},{&g-choice}"
                    ,input "*"
                    ,input ""
                    ,input ""

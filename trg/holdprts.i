@@ -519,6 +519,8 @@ procedure holdprts-doc-type :
             when {&TDEDT_Chg_Purch_Code} or
             when {&TDEDT_Pri_Perem} or
             when {&TDEDT_Ras_Perem} or
+            when {&TDEDT_Pri_Object} or
+            when {&TDEDT_Ras_Object} or
             when {&TDEDT_Vozvrat_Perem} or
             when {&TDEDT_Ras_Prvo} or
             when {&TDEDT_Spi_Prvo} or

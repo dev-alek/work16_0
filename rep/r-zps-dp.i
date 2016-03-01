@@ -51,8 +51,8 @@ END PROCEDURE.
 PROCEDURE display-line :
  def var xx-typeprice as char no-undo.
  def buffer  b-post-stk-line for ub.stk-supp-line .
-
   ii = ii + 1.
+/*  run gbl/inidebug.p.*/
   { rep/r-mess.i ii 10 }
        gds-post-artic     = "" .
        find first ub.ext-artic no-lock where
@@ -117,7 +117,7 @@ PROCEDURE display-line :
                                          ub.stk-line.obj-code   = temp-t-post-stk-line.obj-code
                                          no-lock  no-error .
                   if avail ub.stk-line then do:
-                      IF  tPrintRubl  THEN
+                      IF  tPrintRubl  THEN 
                            ASSIGN
                                   gds-zap-stoim-base  =  ub.stk-line.sum-rubl * (gds-zap-qnty / ub.stk-line.fact-qnty)
                                   gds-zap-Nds         =  ub.stk-line.VAT-rubl * (gds-zap-qnty / ub.stk-line.fact-qnty)
@@ -151,6 +151,10 @@ PROCEDURE display-line :
           tot_tqnty          = gds-zap-stoim-base - gds-zap-Nds.
 
 
+
+
+
+
        IF  NOT (NOT Show-Negativ  AND (gds-zap-qnty = 0 and gds-zap-stoim-base = 0)) then DO:
         IF NOT Sums-Only then DO:
              i = i + 1.
@@ -182,6 +186,7 @@ PROCEDURE display-line :
               excel-sum(tot_tqnty  )         skip.
 
        End.
+       
             Assign TOT-1   = tot-1   + gds-zap-qnty                TOT-3-1 = tot-3-1 + gds-zap-qnty        TOT-0-1 = tot-0-1 + gds-zap-qnty
                    TOT-2   = tot-2   + gds-zap-stoim-base          TOT-3-2 = tot-3-2 + gds-zap-stoim-base  TOT-0-2 = tot-0-2 + gds-zap-stoim-base
                    TOT-3   = tot-3   + tot_tqnty                   TOT-3-3 = tot-3-3 + tot_tqnty           TOT-0-3 = tot-0-3 + tot_tqnty
@@ -259,6 +264,7 @@ if Nx = 2 Then DO:
                 Tot-2-5 = 0 .
         End.
 if Nx = 3 Then DO:
+     IF  NOT (NOT Show-Negativ  AND (gds-zap-qnty = 0 and gds-zap-stoim-base = 0)) then do:
              DISPLAY stream  OutStream {&all-sym12}
                            "Итого по пост-ку" @ gds-zap-artic
                            trim(Name)  @ gds-zap-gds-name
@@ -286,6 +292,7 @@ if Nx = 3 Then DO:
                   Tot-3-4 = 0
                   Tot-3-5 = 0 .
           End.
+          end.
 if Nx = 0 Then DO:
              DISPLAY stream  OutStream {&all-sym12}
                            "Итого  объект: "  @ gds-zap-artic

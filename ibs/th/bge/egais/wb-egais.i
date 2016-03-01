@@ -56,6 +56,7 @@
     field wbregid      as character format "X(21)" label "WBRegId"
     field Identity     as character label "ID EGAIS"
     field wb-type      as character label "Тип"
+    field cargo-from   as character label  "Грузоотправитель"
     field uniq-key-rec as character
     index pi
     Identity 

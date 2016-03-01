@@ -861,6 +861,23 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-add Dialog-Frame
 ON CHOOSE OF B-add IN FRAME Dialog-Frame /* Добавить */
 DO:
+  define variable g-log as logical no-undo .
+{ gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_fin-liability_add-def':U
+  {&cntxt-firm}
+  par-host-code
+  '':U
+  0
+  0
+  0
+  0
+  true
+  g-log
+}
+if not g-log then  return .
   run add-proc in this-procedure .
 END.
 
@@ -1109,6 +1126,23 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exec-fo Dialog-Frame
 ON CHOOSE OF b-exec-fo IN FRAME Dialog-Frame /* Генерация */
 DO:
+  define variable g-log as logical no-undo .
+{ gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_fin-liability_add-def':U
+  {&cntxt-firm}
+  par-host-code
+  '':U
+  0
+  0
+  0
+  0
+  true
+  g-log
+}
+if not g-log then  return .
 if p-doc-type = {&income} then
   run str/gen-fbuy.w
   ( input parParentProc,

@@ -820,6 +820,11 @@ assign
               tt2-doc-line.cli-qnty       = temp_doc-line.fact-qnty
               tt2-doc-line.doc-qnty       = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty
               tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty
+              
+              tt2-doc-line.cli-qnty       = temp_doc-line.cli-qnty when is-egais
+              tt2-doc-line.doc-qnty       = temp_doc-line.doc-qnty when is-egais
+              tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty when is-egais
+              
               tt2-doc-line.price-cli      = temp_doc-line.price-cli
               tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
               tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
@@ -1271,6 +1276,18 @@ end.
         run pcall-log-file in p-log-handle ( input v-end-message ) .
         undo, return error v-end-message.
     end.
+   if temp_trn-doc.cargo-from <> ""
+   then do:
+    find first ub.doc-attr exclusive-lock where
+             ub.doc-attr.doc-code = new_trn-doc.doc-code and
+             ub.doc-attr.attr-code = {&trdcattr-shipper} no-error .
+    if not available ub.doc-attr then create ub.doc-attr.
+    assign
+      ub.doc-attr.doc-code = new_trn-doc.doc-code
+      ub.doc-attr.attr-code = {&trdcattr-shipper}
+      ub.doc-attr.attr-value = temp_trn-doc.cargo-from
+    .
+  end.
    run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
     if error-status:error then do :
         v-end-message = substitute(" Ошибка при закрытиии документа &1 &2" , error-status :get-message(1)  , return-value) .
