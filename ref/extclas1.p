@@ -675,7 +675,7 @@ CASE p-silent:
         end.
           when {&extclass_clients_esys} then do:
             assign
-            p-mess = substitute("Объект во внешней системе &1: &2&3 для объекта &4&5"
+            p-mess = substitute("Объект во внешней системе &1: &2&3 для объекта &4&5 &6&7"
                               , p-key#_one
                               , p-charkey_one
                               , p-key#_two

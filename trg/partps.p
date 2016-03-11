@@ -24,6 +24,7 @@ Creation date: 07/03/07
 
 define input parameter p-gds-code                  as integer                             no-undo .
 define input parameter p-in-code                   as character                           no-undo .
+define input parameter p-out-code                  as character                           no-undo . /*если ? то для всех партий, которые были получены из этой партии, в противном случае только для конкретной партии*/
 define input parameter p-part-code                 as character                           no-undo .
 define input parameter p-mark-db-num               like ub.parts.mark-db-num              no-undo .
 define input parameter p-mark-code                 like ub.parts.mark-code                no-undo .
@@ -146,6 +147,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       and ub.parts.prod-type = v-prod-type
       and ub.parts.prod-code = v-prod-code
       and ub.parts.part-code = p-part-code
+      and (p-out-code = ? or ub.parts.out-code = p-out-code)
   on error undo main-block, return error
   :
     if ( ub.parts.alc-bottling-date       <> p-alc-bottling-date       )  or
@@ -213,7 +215,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
               + p-alc-quality-certif-path   + {&delim-nws}
               + p-alc-certif-path           + {&delim-nws}
               + p-alc-imp-type              + {&delim-nws}
-              + (if p-alc-imp-code = ? then "0" else STRING(p-alc-imp-code))
+              + (if p-alc-imp-code = ? then "0" else STRING(p-alc-imp-code)) + {&delim-nws}
+              + p-out-code
       .
       if v-cmd = ? 
       then do:

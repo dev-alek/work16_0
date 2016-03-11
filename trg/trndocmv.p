@@ -800,6 +800,15 @@ end case .
           end.
       end.
       
+      
+      find first ub.goods no-lock where ub.goods.artic      = ub.parts.artic
+                                    and ub.goods.prod-type  = ub.parts.prod-type
+                                    and ub.goods.prod-code  = ub.parts.prod-code .
+      
+      find first ub.alc-type-gds no-lock
+        where ub.alc-type-gds.gds-code = ub.goods.gds-code and
+        ub.alc-type-gds.create-user-db-num = 0 no-error.
+
       create buf_parts .
       buffer-copy ub.parts to buf_parts
       assign
@@ -813,10 +822,12 @@ end case .
         buf_parts.qnty      = v-part-chg-qnty
         buf_parts.fact-qnty = buf_parts.qnty
         buf_parts.cli-qnty  = 0
-        buf_parts.part-code = if available buf_doc-pl-attr then buf_doc-pl-attr.attr-value else ub.parts.part-code
+        buf_parts.part-code = if available buf_doc-pl-attr then buf_doc-pl-attr.attr-value 
+          else (if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} and available (ub.alc-type-gds) then buf_parts.out-code else ub.parts.part-code)
+        buf_parts.alc-ref-ab-path = if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} and available (ub.alc-type-gds) then "" else ub.parts.alc-ref-ab-path  
       .
       
-      if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} then do :
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} and available (ub.alc-type-gds)) then do :
           find first ub.goods no-lock where ub.goods.artic      = buf_parts.artic
                                         and ub.goods.prod-type  = buf_parts.prod-type
                                         and ub.goods.prod-code  = buf_parts.prod-code .

@@ -354,7 +354,12 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIdentity and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
             if not available (buf_clob-bind) then 
             do:
-              find first buf_clob-bind exclusive-lock where num-entries (inWbIdentity, {&delim-cmd}) = 4 and entry (1, buf_clob-bind.uniq-key-rec, {&delim-cmd}) = entry (4, inWbIdentity, {&delim-cmd}) and entry (2, buf_clob-bind.uniq-key-rec, {&delim-cmd}) = entry (3, inWbIdentity, {&delim-cmd}) and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
+              find first buf_clob-bind exclusive-lock 
+                where num-entries (inWbIdentity, {&delim-cmd}) = 4 and 
+                  (buf_clob-bind.uniq-key-rec = entry (4, inWbIdentity, {&delim-cmd}) + {&delim-cmd} + entry (3, inWbIdentity, {&delim-cmd})
+                  or buf_clob-bind.uniq-key-rec = entry (4, inWbIdentity, {&delim-cmd})) and
+                  buf_clob-bind.field-name_ = {&lob-egais-wb} 
+              no-error.
               if not available (buf_clob-bind) then 
               do:
                 Msg = "Не найдена накладная с идентификатором " + inWbIdentity.
@@ -533,7 +538,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           empty temp-table tt-wb-hndls.
           for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-wb}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.Identity + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
-            if entry (9, buf_clob-bind.descr, {&delim-par}) <> "" and entry (9, buf_clob-bind.descr, {&delim-par}) <> ObjType + string (ObjCode)
+            if entry (9, buf_clob-bind.descr, {&delim-par}) <> "" and entry (9, buf_clob-bind.descr, {&delim-par}) <> "0" and entry (9, buf_clob-bind.descr, {&delim-par}) <> ObjType + string (ObjCode)
               then next.
             create tt-wb-hndls.
             assign
@@ -682,33 +687,36 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       when {&wb-ras} then 
         do:
           empty temp-table tt-wb-hndls.
-          for each buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
-            and buf_ext-classif.classif-name = {&extclass_clients_esys}
-            and buf_ext-classif.db-num = 0
-            and buf_ext-classif.key#_one = v-ext-sys:
-                                                 
-            find first buf_clients no-lock where 
-              buf_clients.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}) and
-              buf_clients.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
             
-            for each buf_trn-doc no-lock where buf_trn-doc.obj-code = ObjCode and buf_trn-doc.obj-type = ObjType and 
-              buf_trn-doc.cli-code = buf_clients.obj-code and 
-              buf_trn-doc.cli-type = buf_clients.obj-type and 
-              buf_trn-doc.status_ = {&fact}
-              and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}) :
+            for each buf_trn-doc no-lock where buf_trn-doc.obj-code = ObjCode and buf_trn-doc.obj-type = ObjType 
+              and buf_trn-doc.status_ = {&fact}
+              and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) :
+
+              find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
+                and buf_ext-classif.classif-name = {&extclass_clients_esys}
+                and buf_ext-classif.db-num = 0
+                and buf_ext-classif.key#_one = v-ext-sys 
+                and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + buf_trn-doc.cli-type + {&delim-key} + string (buf_trn-doc.cli-code)
+                no-error.
+              if not available (buf_ext-classif) 
+                then next.
+              
               find first buf_doc-attr no-lock where buf_doc-attr.doc-code = buf_trn-doc.doc-code and buf_doc-attr.attr-code = {&trdcattr-egais}  no-error.
               create tt-wb-hndls.
               assign
                 tt-wb-hndls.wb-date      = buf_trn-doc.doc-date
                 tt-wb-hndls.trn-doc-code = buf_trn-doc.doc-code
                 tt-wb-hndls.obj          = buf_trn-doc.obj-type + string (buf_trn-doc.obj-code)
-                tt-wb-hndls.cliname      = buf_clients.obj-name
-                tt-wb-hndls.shippregid   = buf_ext-classif.charkey_three
+                tt-wb-hndls.cli          = buf_trn-doc.cli-type + string (buf_trn-doc.cli-code)
+                tt-wb-hndls.cliname      = buf_trn-doc.cli-name
+                tt-wb-hndls.shippregid   = buf_ext-classif.charkey_three when available (buf_ext-classif)
                 tt-wb-hndls.wb-type      = {&TDEDT_Ras_Vnesh_VP-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
                 tt-wb-hndls.wb-type      = {&TDEDT_Ras_Perem-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+                tt-wb-hndls.wb-type      = {&TDEDT_Ras_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
                 tt-wb-hndls.status_      = if available (buf_doc-attr) then {&egais-wb-send-full} else "не отправлена".
+                
             end.
-          end.
+
           return buffer tt-wb-hndls:handle.
         end.
       when {&wb-ras-header} or 
@@ -733,7 +741,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           assign
             tt-wb-header.Identity = buf_trn-doc.doc-code
             tt-wb-header.wb-type = "WBReturnFromMe" when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
-            tt-wb-header.wb-type = "WBInvoiceFromMe" when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+            tt-wb-header.wb-type = "WBInvoiceFromMe" when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
             tt-wb-header.wb-date = buf_trn-doc.fact-date
             tt-wb-header.cli-code = buf_trn-doc.cli-code
             tt-wb-header.cli-type = buf_trn-doc.cli-type
@@ -809,7 +817,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 StatusErr = true.
                 return ?.
               end.*/
-              if num-entries (buf_ext-classif.CharKey_Two, chr(5)) < 3
+              if num-entries (buf_ext-classif.CharKey_Two, chr(4)) < 3
               then do:
                 Msg = "В справочнике внешнего классификатора по товарам отсутсвует информация о производителе по товару - " + string (buf_gds.gds-code) + ". Обновите справочник внешнего классификатора по товарам.".
                 StatusErr = true.
@@ -1189,7 +1197,11 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   end.
                   find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Shipper".                
                   v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par} + tt-wb-header.obj-type + string (tt-wb-header.obj-code).
-
+                  if tt-wb-header.uniq-key-rec = ?
+                  then do:
+                    message "Ошибка приема файла накланой: " v-info view-as alert-box.
+                    next url_.
+                  end.
                   v-clob-db-num = ?.
                   v-int64-id = 0.
                   if can-find (first buf_clob-bind where (buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec or buf_clob-bind.uniq-key-rec = tt-wb-header.Identity + {&delim-cmd} + tt-wb-header.regID-Ship) and buf_clob-bind.field-name_ =  {&lob-egais-wb})
@@ -1229,6 +1241,11 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   v-int64-id = 0.
                   if can-find (first buf_clob-bind where (buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec or buf_clob-bind.uniq-key-rec = tt-wb-header.Identity + {&delim-cmd} + tt-wb-header.regID-Ship) and buf_clob-bind.field-name_ =  {&lob-egais-ref-b})
                     then next url_.
+                  if tt-wb-header.uniq-key-rec = ?
+                  then do:
+                    message "Ошибка приема файла справки Б: " tt-wb-header.wbregid view-as alert-box.
+                    next url_.
+                  end.
                   run gbl/file2clb.p ( input {&add-def}
                     ,input ",no"
                     ,input ? /*p-bh*/
@@ -1264,6 +1281,11 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   v-info = tt-wb-act-header.wbregid + {&delim-par} + string (tt-wb-act-header.act-date) + {&delim-par} + tt-wb-act-header.num + {&delim-par} + tt-wb-act-header.status_ + {&delim-par} + inDocFSRAR.
                   if can-find (first buf_clob-bind where buf_clob-bind.uniq-key-rec = tt-wb-act-header.wbregid and buf_clob-bind.field-name_ =  {&lob-egais-wb-act})
                     then next url_.
+                  if tt-wb-act-header.wbregid = ?
+                  then do:
+                    message "Ошибка приема файла акта " v-info view-as alert-box.
+                    next url_.
+                  end.
                   run gbl/file2clb.p ( input {&add-def}
                     ,input ",no"
                     ,input ? /*p-bh*/
@@ -1302,6 +1324,11 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   v-clob-db-num = ?.
                   v-int64-id = 0.
                   ticketUKR = tt-ticket.regid + {&delim-par} + tt-ticket.docId + {&delim-par} + tt-ticket.Identity +  {&delim-par} + tt-ticket.ticket-date.
+                   if ticketUKR = ?
+                  then do:
+                    message "Ошибка приема файла акта " ticketUKR view-as alert-box.
+                    next url_.
+                  end.
                   if can-find (first buf_clob-bind where 
                         (buf_clob-bind.uniq-key-rec = ticketUKR or (buf_clob-bind.uniq-key-rec = tt-ticket.regid + {&delim-par} + tt-ticket.docId and (tt-ticket.Identity = ? or tt-ticket.Identity = ""))) 
                     and buf_clob-bind.field-name_ =  {&lob-egais-ticket})
@@ -1442,6 +1469,11 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             create tt-wb-info-client .
             tt-wb-info-client.wb-type-client = "Supplier".
           end.
+        when "wb:Content" or when "wbr:Content" then
+          do:
+            assign 
+              tt-wb-header.uniq-key-rec = tt-wb-header.num + {&delim-cmd} + string (tt-wb-header.wb-date) + {&delim-cmd} + tt-wb-header.regID-Ship + {&delim-cmd} + tt-wb-header.Identity.
+          end.
         when "wb:Position" then 
           do:
             create tt-wb-gds-EG .
@@ -1545,9 +1577,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             tt-wb-header.regID-Cons = hText:node-value 
             when hParent:name = 'wb:Consignee'
             .
-          
-          assign 
-            tt-wb-header.uniq-key-rec = tt-wb-header.num + {&delim-cmd} + string (tt-wb-header.wb-date) + {&delim-cmd} + tt-wb-header.regID-Ship + {&delim-cmd} + tt-wb-header.Identity when hParent:name = 'wbr:Shipper' or hParent:name = 'wb:Shipper'.
         end.
         if hNoderef:name = "oref:ShortName"   then assign tt-wb-header.NameShip = hText:node-value when hParent:name = 'wb:Shipper'.
         if hNoderef:name = "oref:INN"         then assign tt-wb-info-client.inn = hText:node-value .
@@ -1616,13 +1645,12 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         if hNoderef:name = "oref:INN"         then assign entry (2, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
         if hNoderef:name = "oref:KPP"         then assign entry (3, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
         if hNoderef:name = "oref:FullName"    then assign entry (4, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
-
+        
       end.
       
       if available (tt-wb-gds-EG) and hParent:name = "oref:address" and (entry (5, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address")
       then do:
         
-        if hText:node-value matches "*" + chr(5) + "*" then message "жопа" view-as alert-box. 
         if hNoderef:name = "oref:Country"     then assign entry (5, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
         if hNoderef:name = "oref:description" then assign entry (6, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
       end.
@@ -1655,7 +1683,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       
       if available (tt-wb-gds-EG) and hParent:name = "oref:address" and (entry (5, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address")
       then do:
-        if hText:node-value matches "*" + chr(5) + "*" then message "жопа" view-as alert-box.
         if hNoderef:name = "oref:Country"     then assign entry (5, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
         if hNoderef:name = "oref:description" then assign entry (6, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
       end.
@@ -1975,7 +2002,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
                                                  and buf_ext-classif.classif-name = {&extclass_goods_esys} 
                                                  and buf_ext-classif.db-num = 0  
-                                                 and buf_ext-classif.key#_one = buf_gds.gds-code
+                                                 and buf_ext-classif.key#_one = tt-wb-gds-EG.gds-code
                                                  and buf_ext-classif.key#_two = v-ext-sys 
                                                  no-error. 
 
@@ -1988,6 +2015,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               
               def var v-prod as char no-undo.
               def var impor as char no-undo.
+              v-prod = ''.
+              impor = ''.
+              
               
               v-prod = entry (1, buf_ext-classif.CharKey_Two, chr(4)).
               if v-prod = ? or v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) or v-prod = "" 

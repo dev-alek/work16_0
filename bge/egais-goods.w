@@ -97,7 +97,7 @@ define buffer buf_goods-attr for ub.goods-attr .
 DEFINE BUFFER X_ext-classif FOR ub.ext-classif.
 DEFINE BUFFER XX_ext-classif FOR ub.ext-classif.
 
-define variable select-list as character no-undo .
+define variable select-list as longchar no-undo .
 define variable ref-list    as character no-undo .
 define variable ii          as integer   no-undo .
 define variable v-rid       as recid     no-undo .
@@ -199,7 +199,7 @@ DEFINE BUTTON b-cancel AUTO-END-KEY
 
 DEFINE BUTTON b-load 
      LABEL "Запрос" 
-     tooltip "Послать запрос в ЕГАИС"
+     tooltip "Отправить запрос в ЕГАИС"
      SIZE 15 BY 1.14
      BGCOLOR 8 .
      
@@ -271,7 +271,7 @@ DEFINE QUERY br-goods FOR
 /* Browse definitions                                                   */
 DEFINE BROWSE br-goods
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-goods Dialog-Frame _FREEFORM
-  QUERY br-goods DISPLAY
+  QUERY br-goods  DISPLAY
     get-mark(BUFFER tt-gds) COLUMN-LABEL "*"  FORMAT "X(1)":U
     tt-gds.gds-code COLUMN-LABEL "Код товара в TH" FORMAT ">>>>>>>>9"
     tt-gds.gds-name COLUMN-LABEL "Наименование товара" FORMAT "X(100)":U width 39
@@ -566,7 +566,9 @@ DO:
         return no-apply.
     end.   
     do ii = 1 to num-entries(select-list) :
-        for first tt-gds exclusive-lock where recid(tt-gds) = integer(entry(ii, select-list)) and tt-gds.gds-code > 0 :
+        def var v-i-element as character no-undo.
+        v-i-element = (entry(ii, select-list)).
+        for first tt-gds exclusive-lock where recid(tt-gds) = integer(v-i-element) and tt-gds.gds-code > 0 :
             if tt-gds.alc-code <> "" and tt-gds.alc-code <> ? then do :
                 bh-gds-egais:find-unique (substitute("where trim(tt-gds-EG.alc-code) = '&1'", trim(tt-gds.alc-code)), no-lock) no-error.
             end.

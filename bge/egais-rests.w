@@ -602,6 +602,7 @@ DO:
                 for first parts no-lock where recid(parts) = integer(entry(jj,tt-gds-rests.prt-rec)) :                                        
                     run trg/partps.p ( input tt-gds-rests.gds-code
                                    , input parts.in-code
+                                   , input {&free-code}
                                    , input parts.part-code
                                    , input v-cntxt-db-num-obj
                                    , input parts.mark-code
@@ -635,6 +636,7 @@ DO:
         for first parts no-lock where recid(parts) = integer(entry(jj,tt-gds-rests.prt-rec)) :                                        
             run trg/partps.p ( input tt-gds-rests.gds-code
                            , input parts.in-code
+                           , input {&free-code}
                            , input parts.part-code
                            , input v-cntxt-db-num-obj
                            , input parts.mark-code
@@ -862,6 +864,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   { gbl/diasize.i &browse-name=br-rests }
   run diasize_init in this-procedure .
   RUN enable_UI.
+  
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
