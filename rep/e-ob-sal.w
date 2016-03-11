@@ -330,8 +330,9 @@ DO:
   assign itog-only .
   if itog-only then do:
     disable itog-contract with frame {&frame-name}.
+    
   end.
-  if contr-code <> 0 and snum <> "" and not itog-only then do:
+  if not itog-only then do:
     enable itog-contract with frame {&frame-name}.
   end.
 END.
