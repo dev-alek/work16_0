@@ -70,7 +70,7 @@ define temp-table tt-gds no-undo
     field old-alc-code      as character
     index pi as primary
         gds-code
-    index name_
+    index name_ as word-index
         gds-name
     index alc
         alc-code    
@@ -183,6 +183,10 @@ end function.
 
 define variable v-prod as character no-undo view-as text format "X(11)" label "Производитель" .
 define variable v-prod-name as character no-undo view-as text format "X(30)" .
+
+define variable letter as character no-undo .
+Define variable NameContext as character view-as fill-in size 30 by 1 fgcolor 12 no-undo .
+Define variable NameContext2 as character no-undo initial "" .
 
 DEFINE BUTTON b-mark 
      LABEL "&*" 
@@ -301,8 +305,9 @@ DEFINE FRAME Dialog-Frame
      rs-sort AT ROW 3.6 COL 18 no-label 
      rs-mode at row 2.5 col 82 no-label 
      rect1 at row 1.2 col 80.9
-     b-connect AT ROW 1.24 COL 81  
-     br-goods AT ROW 5.16 COL 2 WIDGET-ID 200
+     b-connect AT ROW 1.24 COL 81
+     NameContext at row 4.6 col 2 label "Нач. слова"
+     br-goods AT ROW 5.8 COL 2 WIDGET-ID 200
      SPACE(1) SKIP(0.32)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -353,6 +358,22 @@ OPEN QUERY {&SELF-NAME} FOR EACH tt-gds.
 
 
 /* ************************  Control Triggers  ************************ */
+
+ON return OF NameContext IN FRAME {&frame-name} do:
+    assign NameContext.
+    if NameContext = "" then NameContext2 = "" .
+    else do :
+        letter = substring(NameContext, length(NameContext), 1) .
+        if letter = 'н'
+        or letter = 'о'
+        or letter = 'э'
+        or letter = 'ю'
+        or letter = 'я'
+        then NameContext2 = trim(NameContext).
+        else NameContext2 = trim(NameContext) + "*" .
+    end.    
+    run refresh-query in this-procedure.
+end.
 
 on F9 of frame {&frame-name} anywhere do:
   if not available tt-gds then  return no-apply.
@@ -995,23 +1016,44 @@ PROCEDURE refresh-query :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-  case rs-sort :
-    when 1 then do:
-      OPEN QUERY {&browse-name} FOR EACH tt-gds
-                 by tt-gds.gds-name
-                 indexed-reposition .
-    end.
-    when 2 then do:
-      OPEN QUERY {&browse-name} FOR EACH tt-gds
-                 by tt-gds.gds-code
-                 indexed-reposition .
-    end.
-    OTHERWISE do:
-      OPEN QUERY {&browse-name} FOR EACH tt-gds
-                 by tt-gds.alc-code
-                 indexed-reposition .
-    end.
-  end case.
+  if NameContext2 = "" then do :
+      case rs-sort :
+        when 1 then do:
+          OPEN QUERY {&browse-name} FOR EACH tt-gds
+                     by tt-gds.gds-name
+                     indexed-reposition .
+        end.
+        when 2 then do:
+          OPEN QUERY {&browse-name} FOR EACH tt-gds
+                     by tt-gds.gds-code
+                     indexed-reposition .
+        end.
+        OTHERWISE do:
+          OPEN QUERY {&browse-name} FOR EACH tt-gds
+                     by tt-gds.alc-code
+                     indexed-reposition .
+        end.
+      end case.
+  end.
+  else do :
+      case rs-sort :
+        when 1 then do:
+          OPEN QUERY {&browse-name} FOR EACH tt-gds where tt-gds.gds-name contains NameContext2
+                     by tt-gds.gds-name
+                     indexed-reposition .
+        end.
+        when 2 then do:
+          OPEN QUERY {&browse-name} FOR EACH tt-gds where tt-gds.gds-name contains NameContext2
+                     by tt-gds.gds-code
+                     indexed-reposition .
+        end.
+        OTHERWISE do:
+          OPEN QUERY {&browse-name} FOR EACH tt-gds where tt-gds.gds-name contains NameContext2
+                     by tt-gds.alc-code
+                     indexed-reposition .
+        end.
+      end case.
+  end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1102,7 +1144,7 @@ PROCEDURE enable_UI :
     
   DISPLAY rs-sort
       WITH FRAME Dialog-Frame.
-  ENABLE b-mark b-sel-all b-unmark b-load rs-sort b-save b-lkp b-cancel b-prod br-goods 
+  ENABLE b-mark b-sel-all b-unmark b-load rs-sort b-save b-lkp b-cancel b-prod br-goods NameContext
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   br-goods:column-resizable in FRAME Dialog-Frame = true .
