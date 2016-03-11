@@ -604,13 +604,13 @@ DO:
                                    , input parts.in-code
                                    , input parts.part-code
                                    , input v-cntxt-db-num-obj
-                                   , input ?
-                                   , input ?
-                                   , input tt-gds-rests.informA_ + ',' + tt-gds-rests.informB_
-                                   , input ""
-                                   , input ""
-                                   , input ""
-                                   , input ""
+                                   , input parts.mark-code
+                                   , input parts.alc-bottling-date
+                                   , input tt-gds-rests.informA_ + ',' + tt-gds-rests.informB_ + ',' + tt-gds-rests.alc-code + ',' + tt-gds-rests.alc-type-code
+                                   , input parts.alc-quality-certif-path
+                                   , input parts.alc-certif-path
+                                   , input parts.alc-imp-type
+                                   , input parts.alc-imp-code
                                    ) no-error .  
                 end. 
             end.                                
@@ -637,13 +637,13 @@ DO:
                            , input parts.in-code
                            , input parts.part-code
                            , input v-cntxt-db-num-obj
-                           , input ?
-                           , input ?
+                           , input parts.mark-code
+                           , input parts.alc-bottling-date
                            , input ""
-                           , input ""
-                           , input ""
-                           , input ""
-                           , input ""
+                           , input parts.alc-quality-certif-path
+                           , input parts.alc-certif-path
+                           , input parts.alc-imp-type
+                           , input parts.alc-imp-code
                            ) no-error .  
         end. 
     end.
