@@ -40,6 +40,10 @@ def var vss-description as character no-undo init "Печать формы ТОРГ-13".
 { rep/fmtcli.i   }
 { gbl/clntattr.i }
 { cmp/library.i         }
+{ gbl/thbjattr.i }
+{ ref/extclass.i }
+
+
 
 def buffer t-doc       for trn-doc.
 def buffer OurObject   for clients.
@@ -69,7 +73,13 @@ define variable v-kpp                     as char.
 define var      v-inn                     as char.
 define variable var-type                  as char.
 define variable v-host-egrip-num  as char no-undo.
-
+define variable v-value-character         as character no-undo .
+define variable v-value-decimal           as decimal   no-undo .
+define variable v-value-integer           as integer   no-undo .
+define variable v-value-logical           as logical   no-undo .
+define variable v-value-type              as character no-undo .
+define variable v-value-date              as date      no-undo .
+define variable v-ext-sys                 as integer   no-undo .
 
 define temp-table tt-rep1
     field obj-code            as integer
@@ -144,6 +154,7 @@ def var tdoc-code         like trn-doc.doc-code no-undo.
 def var v-doc-date-string as character no-undo.
 define buffer buf_parts for parts.
     define variable   v-alc-mark-name as char.
+    define buffer buf_ext-classif for ub.ext-classif.
     
     
 /* ************************  Function Prototypes ********************** */
@@ -340,17 +351,63 @@ for each parts no-lock
             tt-rep1.obj-adress = v-fmtcli-full-addres
             tt-rep1.obj-kpp =   v-kpp
             .
-
-run fmtcli-get-client in this-procedure (
-            input parts.prod-type,
-            input parts.prod-code
-            ).
-assign
-            tt-rep1.name-proiz          =  v-fmtcli-name 
-            tt-rep1.adress-proiz        = v-fmtcli-full-addres
-             tt-rep1.inn         =  v-fmtcli-inn 
-            tt-rep1.kpp                 = v-fmtcli-kpp   .
+/*                                                              */
+/*run fmtcli-get-client in this-procedure (                     */
+/*            input parts.prod-type,                            */
+/*            input parts.prod-code                             */
+/*            ).                                                */
+/*assign                                                        */
+/*            tt-rep1.name-proiz          =  v-fmtcli-name      */
+/*            tt-rep1.adress-proiz        = v-fmtcli-full-addres*/
+/*             tt-rep1.inn         =  v-fmtcli-inn              */
+/*            tt-rep1.kpp                 = v-fmtcli-kpp   .    */
              
+               define var v-prod as char.
+        empty temp-table thbjattr_thbj-attr .
+             
+        run adm/shattri.p (
+            input "get":U
+            ,input '':U
+            ,input 0
+            ,input {&attr-egais-host}
+            ,input {&attr-egais-host_egais-exsys}
+            ,output v-value-character
+            ,output v-value-date
+            ,output v-value-decimal
+            ,output v-value-integer
+            ,output v-value-logical
+            ,output v-value-type
+            ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+            ) no-error .
+        assign 
+            v-ext-sys = v-value-integer .  
+             
+             
+        find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
+            and buf_ext-classif.classif-name = {&extclass_goods_esys} 
+            and buf_ext-classif.db-num = 0  
+            and buf_ext-classif.key#_one = goods.gds-code
+            and buf_ext-classif.key#_two = v-ext-sys 
+            no-error.     
+        if available buf_ext-classif then 
+        do:
+                    v-prod = entry (1, buf_ext-classif.CharKey_Two, chr(4)).
+            
+            assign
+                tt-rep1.name-proiz   = entry(4, v-prod, chr(5)) + ','
+                tt-rep1.adress-proiz = entry(6, v-prod, chr(5))
+                tt-rep1.inn          = entry(2, v-prod, chr(5))
+                tt-rep1.kpp          = entry(3, v-prod, chr(5))   
+                /*                tt-rep1.code_country = entry(5, v-prod, chr(5))*/
+                
+                .
+        end.            
+        else 
+        do: 
+            message "Товар не задан во внешнем классификаторе  " view-as alert-box error.
+            return no-apply.
+        end.
+
            
 
 

@@ -103,15 +103,14 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-prod-code    as integer   no-undo .
   define variable v-on-line-rest as decimal   no-undo .
   define variable v-cash-parts   as logical   no-undo .
-  define variable v-insalepr     as integer   no-undo .
   define variable p-stop         as logical   no-undo .
 
   define variable v-factur-date like ub.trn-doc.factur-date .
   define variable v-cr-factur   like ub.trn-doc.cr-factur   .
   define variable v-need-factur like ub.trn-doc.need-factur .
-  define variable v-nws-to-cd   as integer no-undo .
+  define variable v-nws-to-cd as integer no-undo .
 
-  define variable v-last-pack   as integer   no-undo .
+  define variable v-last-pack as integer   no-undo .
 
 
   case entry(1,rec-full,{&delim-nws}):
@@ -308,6 +307,18 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 /*            return error.*/
 /*          end.*/
 /*        end.*/
+        when "tgu-ords-imp" then do: /* импорт накладных ТГУ */
+            run bge/tgu-ords-nws.p(
+             p-imp-handle,
+             this-procedure,
+             rec-full
+            ) no-error.
+            
+            if error-status:error then do:
+                run write-to-log(return-value).
+                return error.
+            end.
+        end.
         when "run-file":U then do:
           define variable rf-ii as integer no-undo .
           assign
@@ -355,6 +366,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             then do:
               run trg/partps.p ( input integer(entry(4,rec-full,{&delim-nws})) /* p-gds-code                */
                                , input entry(5,rec-full,{&delim-nws})          /* p-in-code                 */
+                               , if num-entries (rec-full,{&delim-nws}) = 15 then entry(15,rec-full,{&delim-nws}) else ? 
                                , input entry(6,rec-full,{&delim-nws})          /* p-part-code               */
                                , input integer(entry(7,rec-full,{&delim-nws})) /* p-mark-db-num             */
                                , input integer(entry(8,rec-full,{&delim-nws})) /* p-mark-code               */
@@ -415,7 +427,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                                           ,error-status :get-message ( 1 )
                                         )
                             ).
-            return error.
+            return error .
           end.
           find first buf_esys-route exclusive-lock
             where rowid( buf_esys-route ) = v-tbl-row
@@ -430,13 +442,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         when "create" then do:
           case entry(3, rec-full, {&delim-nws}):
             when "code-range" then do:
-
-
-              run cre-loc-sc-code-range ( input entry(4, rec-full, {&delim-nws})
-                                         ,input (if num-entries(rec-full, {&delim-nws}) > 4
-                                                then entry(5, rec-full, {&delim-nws})
-                                                else '')
-                                                ).
+              if entry(5, rec-full, {&delim-nws}) = {&gbl-fd-code} then do :
+                run cre-fdgb-code-range ( input entry(4, rec-full, {&delim-nws}), input entry(5, rec-full, {&delim-nws}), input db-src ).
+              end.
+              else do :
+                run cre-loc-sc-code-range ( input entry(4, rec-full, {&delim-nws}), input entry(5, rec-full, {&delim-nws}) ).
+              end.
             end.
             when "on-line-rest":U then do:
               assign
@@ -469,78 +480,37 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 v-prod-code    = integer(entry(8,rec-full,{&delim-nws}))
                 v-cash-parts    = logical(entry(9,rec-full,{&delim-nws}))
               .
-                /* создаем товар на объекте */
-                { gbl/gdsobjcr.i
-                  v-obj-type
-                  v-obj-code
-                  v-artic
-                  v-prod-type
-                  v-prod-code
-                  buf_gds-obj
-                  no-error
-                }
-                if error-status:error then do:
-                  run write-to-log( substitute("команда cash-parts: не удалось создать gds-obj&1&2&1&3"
-                                   , {&new-line}
-                                   , error-status:get-message(1)
-                                   , return-value
-                                   )).
-                end.
-                  find first buf_gds-obj exclusive-lock
-                    where buf_gds-obj.obj-type  = v-obj-type
-                      and buf_gds-obj.obj-code  = v-obj-code
-                      and buf_gds-obj.artic     = v-artic
-                      and buf_gds-obj.prod-type = v-prod-type
-                      and buf_gds-obj.prod-code = v-prod-code
-                     .
-                  /*нельзя вызывать gdsobjat а то закциклиться*/
+              /* создаем товар на объекте */
+              { gbl/gdsobjcr.i
+                v-obj-type
+                v-obj-code
+                v-artic
+                v-prod-type
+                v-prod-code
+                buf_gds-obj
+                no-error
+              }
+              if error-status:error then do:
+                run write-to-log( substitute("команда cash-parts: не удалось создать gds-obj&1&2&1&3"
+                                  , {&new-line}
+                                  , error-status:get-message(1)
+                                  , return-value
+                                  )).
+              end.
+              find first buf_gds-obj exclusive-lock
+                where buf_gds-obj.obj-type  = v-obj-type
+                  and buf_gds-obj.obj-code  = v-obj-code
+                  and buf_gds-obj.artic     = v-artic
+                  and buf_gds-obj.prod-type = v-prod-type
+                  and buf_gds-obj.prod-code = v-prod-code
+                  .
+              /*нельзя вызывать gdsobjat а то закциклиться*/
               if buf_gds-obj.cash-parts <> v-cash-parts then do:
-                  assign
-                    buf_gds-obj.cash-parts = v-cash-parts
-                  .
-                end.
+                assign
+                  buf_gds-obj.cash-parts = v-cash-parts
+                .
               end.
-            when "insalepr":U then do:
-              assign
-                v-obj-type     = entry(4,rec-full,{&delim-nws})
-                v-obj-code     = integer(entry(5,rec-full,{&delim-nws}))
-                v-artic        = entry(6,rec-full,{&delim-nws})
-                v-prod-type    = entry(7,rec-full,{&delim-nws})
-                v-prod-code    = integer(entry(8,rec-full,{&delim-nws}))
-                v-insalepr    = integer(entry(9,rec-full,{&delim-nws}))
-              .
-                /* создаем товар на объекте */
-                { gbl/gdsobjcr.i
-                  v-obj-type
-                  v-obj-code
-                  v-artic
-                  v-prod-type
-                  v-prod-code
-                  buf_gds-obj
-                  no-error
-                }
-                if error-status:error then do:
-                  run write-to-log( substitute("команда insalepr: не удалось создать gds-obj&1&2&1&3"
-                                   , {&new-line}
-                                   , error-status:get-message(1)
-                                   , return-value
-                                   )).
-                end.
-                  find first buf_gds-obj exclusive-lock
-                    where buf_gds-obj.obj-type  = v-obj-type
-                      and buf_gds-obj.obj-code  = v-obj-code
-                      and buf_gds-obj.artic     = v-artic
-                      and buf_gds-obj.prod-type = v-prod-type
-                      and buf_gds-obj.prod-code = v-prod-code
-                     .
-                  /*нельзя вызывать gdsobjat а то закциклиться*/
-              if buf_gds-obj.insalepr <> v-insalepr then do:
-                  assign
-                    buf_gds-obj.insalepr = v-insalepr
-                  .
-                end.
-              end.
-
+            end.
             otherwise do:
               run write-to-log(substitute( "&1. Отсутствует обработка команды &2", vss-workfile, rec-full ) ).
               return error.
@@ -676,23 +646,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   release gds-list.
                 end.
                 delete ub.bar-code-attr.
-              end.
-            end.
-            when {&table_bar-code-obj-attr} then do:
-              find first ub.bar-code-obj-attr
-                where rowid( ub.bar-code-obj-attr ) = v-tbl-row
-                no-error.
-              if available ub.bar-code-obj-attr then do:
-                find first buf_goods no-lock where
-                            buf_goods.gds-code = ub.bar-code-obj-attr.gds-code no-error .
-                find first gds-list where gds-list.gds-code = ub.bar-code-obj-attr.gds-code no-error.
-                if not avail gds-list then do:
-                  create gds-list.
-                  buffer-copy buf_goods to gds-list
-                    .
-                  release gds-list.
-                end.
-                delete ub.bar-code-obj-attr.
               end.
             end.
             when {&table_dis-card-property} then do:
@@ -1138,7 +1091,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_cli-grp}
             or when {&table_cash-desk}
             or when {&table_cash-pay-attr}
-            or when {&table_cd-trans}
             or when {&table_dis-card-mask}
             or when {&table_dis-card-type}
             or when {&table_dis-card-type-attr}
@@ -1209,8 +1161,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_action-post-user-login}
             or when {&table_action-role}
             or when {&table_action-role-item}
-            or when {&table_action-role-item-gds}
-            or when {&table_action-role-item-gds-grp}
             or when {&table_user-account}
             or when {&table_user-host}
             or when {&table_user-login}
@@ -1221,7 +1171,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_user-obj}
             or when {&table_hist-nws-option}
             or when {&table_schet-fact-doc}
-            or when {&table_profile-by-profile}
             or when {&table_prop-ref-call}
             or when {&table_prop-ref}
             or when {&table_prop-head}
@@ -1276,22 +1225,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_trn-reason}
             or when {&table_trn-reason-host}
             or when {&table_trn-reason-obj}
-            or when {&table_egais-gds}
-            or when {&table_egais-clients}
-            or when {&table_layout}
-            or when {&table_layout-attr}
-            or when {&table_layout-elem}
-            or when {&table_wi-mode}
-            or when {&table_cd-events}
-            or when {&table_cd-events-attr}
-            or when {&table_cd-video-link}
-            or when {&table_cd-video-link-attr}
-            or when {&table_cd-event-log}
-            or when {&table_cd-event-log-attr}
             or when {&table_ord-chain}
             or when {&table_assortment-matrix-attr}
             or when {&table_gds-obj-prop-attr}
-            or when {&table_rule-process}
             or when {&table_dis-gds-rule-attr}
             or when {&table_auto-tank-attr}
             then do:
@@ -1376,6 +1312,15 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             os-delete value(i-f-name).
           end.
 */
+        end.
+        when "resenddoc" then do:
+          run utl/resnddoc.p
+            ( input decimal( entry(3,rec-full,{&delim-nws}) )
+            ) no-error .
+          if error-status :error then do:
+            run write-to-log ( substitute( "Ошибка при запуске утилиты пересылки документов&1&2&1&3", {&new-line}, return-value, error-status :get-message(1) ) ).
+            return error.
+          end.
         end.
         otherwise do:
           run write-to-log(substitute( "&1. Отсутствует обработка команды &2", vss-workfile, rec-full ) ).

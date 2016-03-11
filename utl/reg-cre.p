@@ -577,5 +577,16 @@ on error undo, return error
     buf_regions.reg-name = 'Ямало-Ненецкий автономный округ':U
     buf_regions.status_  = 0
   .
-  
+  create buf_regions.
+  assign
+    buf_regions.reg-code = 91
+    buf_regions.reg-name = 'Республика Крым':U
+    buf_regions.status_  = 0
+  .
+      create buf_regions.
+  assign
+    buf_regions.reg-code = 92
+    buf_regions.reg-name = 'г.Севастополь':U
+    buf_regions.status_  = 0
+  .
 end.

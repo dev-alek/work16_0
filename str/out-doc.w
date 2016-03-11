@@ -1352,9 +1352,39 @@ DO:
   run local-del no-error.
 if error-status :error then return no-apply.
 run ui-on ("enable":u).
-/*apply "entry" to br-dtl in frame {&frame-name} .*/
-/*prt-rec = del-rec.                                               */
-/*if prt-rec <> ? then reposition br-dtl to recid prt-rec no-error.*/
+apply "entry" to br-dtl in frame {&frame-name} .
+prt-rec = del-rec.
+if prt-rec <> ? then reposition br-dtl to recid prt-rec no-error.
+
+IF mImagePh THEN
+DO:
+    DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
+    DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
+if AVAILABLE goods then do:
+    RUN gds-attr-value ( goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+    RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, goods.gds-code, OUTPUT vImageList).
+    vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
+    g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
+    ASSIGN
+        g-image:HIDDEN     = NO
+        g-image:VISIBLE    = YES
+        g-image:SENSITIVE  = YES
+        .
+end.
+else
+      ASSIGN
+        g-image:HIDDEN     = YES
+        g-image:VISIBLE    = NO
+        g-image:SENSITIVE  = NO
+        .   
+END.
+ELSE
+    ASSIGN
+        g-image:HIDDEN     = YES
+        g-image:VISIBLE    = NO
+        g-image:SENSITIVE  = NO
+        .
+apply "value-changed" to br-dtl in frame {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */

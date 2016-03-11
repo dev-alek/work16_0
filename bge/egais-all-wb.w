@@ -1,4 +1,5 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
+&ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
@@ -99,89 +100,89 @@ f-type
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON Btn_conn 
-     LABEL "Связать" 
-     SIZE 10 BY 1.21.
+define button Btn_conn 
+     label "Связать" 
+     size 10 by 1.21.
 
-DEFINE BUTTON Btn_Del 
-     LABEL "Отказ" 
-     SIZE 10 BY 1.21.
+define button Btn_Del 
+     label "Отказ" 
+     size 10 by 1.21.
 
-DEFINE BUTTON Btn_dnlw 
-     LABEL "Загрузить" 
-     SIZE 10 BY 1.21.
+define button Btn_dnlw 
+     label "Загрузить" 
+     size 10 by 1.21.
 
-DEFINE BUTTON Btn_OK 
-     LABEL "Выход" 
-     SIZE 10 BY 1.21
-     BGCOLOR 8 .
+define button Btn_OK 
+     label "Выход" 
+     size 10 by 1.21
+     bgcolor 8 .
 
-DEFINE BUTTON Btn_Save 
-     LABEL "Сохранить" 
-     SIZE 10 BY 1.21
-     BGCOLOR 8 .
+define button Btn_Save 
+     label "Сохранить" 
+     size 10 by 1.21
+     bgcolor 8 .
 
-DEFINE BUTTON Btn_Sel 
-     LABEL "Изменить" 
-     SIZE 10 BY 1.21
-     BGCOLOR 8 .
+define button Btn_Sel 
+     label "Изменить" 
+     size 10 by 1.21
+     bgcolor 8 .
 
-DEFINE VARIABLE cb-1 AS INTEGER FORMAT "->,>>>,>>9" INITIAL 1 
-     VIEW-AS COMBO-BOX 
-     LIST-ITEM-PAIRS "Полученные",1,
+define variable cb-1 as integer format "->,>>>,>>9" initial 1 
+     view-as combo-box 
+     list-item-pairs "Полученные",1,
                      "Закрытые на факт",2,
                      "Акты",3,
                      "Расход",4
-     DROP-DOWN-LIST
-     SIZE 40 BY 1 NO-UNDO.
+     drop-down-list
+     size 40 by 1 no-undo.
 
-DEFINE VARIABLE f-type AS CHARACTER FORMAT "X(256)":U INITIAL "*" 
-     LABEL "Тип" 
-     VIEW-AS COMBO-BOX 
-     LIST-ITEMS "*","приход вн.","возврат пост.","расход внутренний" 
-     DROP-DOWN-LIST
-     SIZE 14 BY 1 NO-UNDO.
+define variable f-type as character format "X(256)":U initial "Все" 
+     label "Тип" 
+     view-as combo-box 
+     list-items "Все","приход вн.","возврат пост.","расход внутренний","расход внешний" 
+     drop-down-list
+     size 14 by 1 no-undo.
 
-DEFINE VARIABLE f-cli-code AS integer FORMAT "->>>>>>9":U 
-     LABEL "Код" 
-     VIEW-AS FILL-IN 
-     SIZE 14 BY 1 NO-UNDO.
+define variable f-cli-code as integer format "->>>>>>9":U initial 0 
+     label "Код" 
+     view-as fill-in 
+     size 14 by 1 no-undo.
 
-DEFINE VARIABLE f-cli-name AS CHARACTER FORMAT "x(256)":U 
-     LABEL "Контрагент" 
-     VIEW-AS FILL-IN 
-     SIZE 14 BY 1 NO-UNDO.
+define variable f-cli-name as character format "x(256)":U 
+     label "Контрагент" 
+     view-as fill-in 
+     size 14 by 1 no-undo.
 
-DEFINE VARIABLE f-date AS DATE FORMAT "99/99/99":U 
-     LABEL "Дата с" 
-     VIEW-AS FILL-IN 
-     SIZE 9.5 BY 1 NO-UNDO.
+define variable f-date as date format "99/99/99":U 
+     label "Дата с" 
+     view-as fill-in 
+     size 9.5 by 1 no-undo.
 
-DEFINE VARIABLE f-date-2 AS DATE FORMAT "99/99/99":U 
-     LABEL "по" 
-     VIEW-AS FILL-IN 
-     SIZE 9.5 BY 1 NO-UNDO.
+define variable f-date-2 as date format "99/99/99":U 
+     label "по" 
+     view-as fill-in 
+     size 9.5 by 1 no-undo.
 
 
 /* ************************  Frame Definitions  *********************** */
 
-DEFINE FRAME Dialog-Frame
-     Btn_OK AT ROW 1.21 COL 2.63
-     Btn_Sel AT ROW 1.21 COL 13.25 WIDGET-ID 6
-     Btn_Save AT ROW 1.21 COL 24 WIDGET-ID 10
-     Btn_dnlw AT ROW 1.21 COL 34.63 WIDGET-ID 12
-     Btn_conn AT ROW 1.21 COL 45 WIDGET-ID 16
-     Btn_Del AT ROW 1.21 COL 55.63 WIDGET-ID 14
-     cb-1 AT ROW 1.21 COL 78.38 COLON-ALIGNED NO-LABEL WIDGET-ID 2
-     f-date AT ROW 2.5 COL 7 COLON-ALIGNED WIDGET-ID 22
-     f-date-2 AT ROW 2.5 COL 19.75 COLON-ALIGNED WIDGET-ID 26
-     f-cli-name AT ROW 2.5 COL 40 COLON-ALIGNED WIDGET-ID 24
-     f-cli-code AT ROW 2.5 COL 60 COLON-ALIGNED WIDGET-ID 30
-     f-type AT ROW 2.5 COL 79.75 COLON-ALIGNED WIDGET-ID 28
-     SPACE(25.87) SKIP(24.55)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Накладные/акты ЕГАИС" WIDGET-ID 100.
+define frame Dialog-Frame
+     Btn_OK at row 1.21 col 2.63
+     Btn_Sel at row 1.21 col 13.25 widget-id 6
+     Btn_Save at row 1.21 col 24 widget-id 10
+     Btn_dnlw at row 1.21 col 34.63 widget-id 12
+     Btn_conn at row 1.21 col 45 widget-id 16
+     Btn_Del at row 1.21 col 55.63 widget-id 14
+     cb-1 at row 1.21 col 78.38 colon-aligned no-label widget-id 2
+     f-date at row 2.5 col 8.63 colon-aligned widget-id 22
+     f-date-2 at row 2.5 col 22.75 colon-aligned widget-id 26
+     f-cli-name at row 2.5 col 45.25 colon-aligned widget-id 24
+     f-cli-code at row 2.5 col 65.25 colon-aligned widget-id 30
+     f-type at row 2.5 col 85 colon-aligned widget-id 28
+     space(20.62) skip(24.72)
+    with view-as dialog-box keep-tab-order 
+         side-labels no-underline three-d  scrollable 
+         title "Накладные/акты ЕГАИС" widget-id 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -201,9 +202,9 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN 
-       FRAME Dialog-Frame:SCROLLABLE       = FALSE
-       FRAME Dialog-Frame:HIDDEN           = TRUE.
+assign 
+       frame Dialog-Frame:SCROLLABLE       = false
+       frame Dialog-Frame:HIDDEN           = true.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -216,7 +217,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON window-close OF FRAME Dialog-Frame /* Накладные/акты ЕГАИС */
+on window-close of frame Dialog-Frame /* Накладные/акты ЕГАИС */
 do:
   apply "END-ERROR":U to self.
 end.
@@ -227,7 +228,7 @@ end.
 
 &Scoped-define SELF-NAME Btn_conn
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_conn Dialog-Frame
-ON choose OF Btn_conn IN FRAME Dialog-Frame /* Связать */
+on choose of Btn_conn in frame Dialog-Frame /* Связать */
 do:
 
   def var loc-ref-list as character no-undo.
@@ -313,7 +314,7 @@ end.
 
 &Scoped-define SELF-NAME Btn_Del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Del Dialog-Frame
-ON choose OF Btn_Del IN FRAME Dialog-Frame /* Отказ */
+on choose of Btn_Del in frame Dialog-Frame /* Отказ */
 do:
   if not bh-wb-egais:available 
     then return no-apply.
@@ -339,14 +340,14 @@ end.
 
 &Scoped-define SELF-NAME Btn_dnlw
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_dnlw Dialog-Frame
-ON choose OF Btn_dnlw IN FRAME Dialog-Frame /* Загрузить */
+on choose of Btn_dnlw in frame Dialog-Frame /* Загрузить */
 do:
   egais:GetHndlTable(?, "AllWB").
   if egais:StatusErr 
   then do:
     message "Ошибка: " egais:Msg view-as alert-box error.
   end.
-  run f-query.
+  run reopen-browse.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -355,7 +356,7 @@ end.
 
 &Scoped-define SELF-NAME Btn_OK
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
-ON choose OF Btn_OK IN FRAME Dialog-Frame /* Выход */
+on choose of Btn_OK in frame Dialog-Frame /* Выход */
 do:
   apply "go" to frame {&FRAME-NAME}.
 end.
@@ -366,7 +367,7 @@ end.
 
 &Scoped-define SELF-NAME Btn_Save
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Save Dialog-Frame
-ON choose OF Btn_Save IN FRAME Dialog-Frame /* Сохранить */
+on choose of Btn_Save in frame Dialog-Frame /* Сохранить */
 do:
   
   def var v-doc-code as character no-undo.
@@ -469,7 +470,7 @@ end.
 
 &Scoped-define SELF-NAME Btn_Sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Sel Dialog-Frame
-ON choose OF Btn_Sel IN FRAME Dialog-Frame /* Изменить */
+on choose of Btn_Sel in frame Dialog-Frame /* Изменить */
 do:
   if not bh-wb-egais:available 
     then return no-apply.
@@ -496,7 +497,7 @@ end.
 
 &Scoped-define SELF-NAME cb-1
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-1 Dialog-Frame
-ON value-changed OF cb-1 IN FRAME Dialog-Frame
+on value-changed of cb-1 in frame Dialog-Frame
 do:
   assign cb-1 .
   if cb-1 = 1
@@ -522,7 +523,7 @@ end.
 
 &Scoped-define SELF-NAME f-cli-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-cli-code Dialog-Frame
-ON leave OF f-cli-code IN FRAME Dialog-Frame /* Код */
+on leave of f-cli-code in frame Dialog-Frame /* Код */
 do:
   run f-query.
 end.
@@ -532,7 +533,7 @@ end.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-cli-code Dialog-Frame
-ON return OF f-cli-code IN FRAME Dialog-Frame /* Код */
+on return of f-cli-code in frame Dialog-Frame /* Код */
 do:
   run f-query.
 end.
@@ -543,7 +544,7 @@ end.
 
 &Scoped-define SELF-NAME f-cli-name
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-cli-name Dialog-Frame
-ON leave OF f-cli-name IN FRAME Dialog-Frame /* Контрагент */
+on leave of f-cli-name in frame Dialog-Frame /* Контрагент */
 do:
   run f-query.
 end.
@@ -553,7 +554,7 @@ end.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-cli-name Dialog-Frame
-ON return OF f-cli-name IN FRAME Dialog-Frame /* Контрагент */
+on return of f-cli-name in frame Dialog-Frame /* Контрагент */
 do:
   run f-query.
 end.
@@ -564,7 +565,7 @@ end.
 
 &Scoped-define SELF-NAME f-date
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date Dialog-Frame
-ON leave OF f-date IN FRAME Dialog-Frame /* Дата с */
+on leave of f-date in frame Dialog-Frame /* Дата с */
 do:
   run f-query.
 end.
@@ -574,7 +575,7 @@ end.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date Dialog-Frame
-ON return OF f-date IN FRAME Dialog-Frame /* Дата с */
+on return of f-date in frame Dialog-Frame /* Дата с */
 do:
   run f-query.
 end.
@@ -585,7 +586,7 @@ end.
 
 &Scoped-define SELF-NAME f-date-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date-2 Dialog-Frame
-ON leave OF f-date-2 IN FRAME Dialog-Frame /* по */
+on leave of f-date-2 in frame Dialog-Frame /* по */
 do:
   run f-query.
 end.
@@ -595,7 +596,7 @@ end.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date-2 Dialog-Frame
-ON return OF f-date-2 IN FRAME Dialog-Frame /* по */
+on return of f-date-2 in frame Dialog-Frame /* по */
 do:
   run f-query.
 end.
@@ -606,7 +607,7 @@ end.
 
 &Scoped-define SELF-NAME f-type
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-type Dialog-Frame
-ON leave OF f-type IN FRAME Dialog-Frame /* Тип */
+on leave of f-type in frame Dialog-Frame /* Тип */
 do:
   run f-query.
 end.
@@ -616,7 +617,7 @@ end.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-type Dialog-Frame
-ON return OF f-type IN FRAME Dialog-Frame /* Тип */
+on return of f-type in frame Dialog-Frame /* Тип */
 do:
   run f-query.
 end.
@@ -626,7 +627,7 @@ end.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-type Dialog-Frame
-ON value-changed OF f-type IN FRAME Dialog-Frame /* Тип */
+on value-changed of f-type in frame Dialog-Frame /* Тип */
 do:
   run f-query.
 end.
@@ -747,11 +748,12 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     extent (bcol) = bh-wb-egais:num-fields.
     do ii = 1 to bh-wb-egais:num-fields:
       bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-      if ii = 1 then bcol[ii]:width = 15.
-      if ii = 5 then bcol[ii]:width = 15.
-      if ii = 9 then bcol[ii]:width = 15.
-      if ii = 6 then bcol[ii]:width = 10.
-      if ii = 8 then bcol[ii]:width = 4.
+      if ii = 1 then bcol[ii]:width = 20.
+      if ii = 4 then bcol[ii]:width = 12.
+      if ii = 5 then bcol[ii]:width = 9.
+      if ii = 6 then bcol[ii]:width = 20.
+      if ii = 7 then bcol[ii]:width = 10.
+      if ii = 9 then bcol[ii]:width = 5.
     end.
   end.
   f-date = date (now) - 31.
@@ -771,7 +773,7 @@ run disable_UI.
 /* **********************  Internal Procedures  *********************** */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
-PROCEDURE disable_UI :
+procedure disable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
@@ -781,14 +783,14 @@ PROCEDURE disable_UI :
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
   /* Hide all frames. */
-  HIDE FRAME Dialog-Frame.
-END PROCEDURE.
+  hide frame Dialog-Frame.
+end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
-PROCEDURE enable_UI :
+procedure enable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     ENABLE the User Interface
   Parameters:  <none>
@@ -798,20 +800,20 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY cb-1 f-date f-date-2 f-cli-name f-cli-code f-type 
-      WITH FRAME Dialog-Frame.
-  ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn Btn_Del cb-1 f-date f-date-2 
+  display cb-1 f-date f-date-2 f-cli-name f-cli-code f-type 
+      with frame Dialog-Frame.
+  enable Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn Btn_Del cb-1 f-date f-date-2 
          f-cli-name f-cli-code f-type 
-      WITH FRAME Dialog-Frame.
-  VIEW FRAME Dialog-Frame.
+      with frame Dialog-Frame.
+  view frame Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-END PROCEDURE.
+end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE f-query Dialog-Frame 
-PROCEDURE f-query :
+procedure f-query :
 def var v-proposition as char no-undo.
   
   assign input frame {&FRAME-NAME}
@@ -825,8 +827,8 @@ def var v-proposition as char no-undo.
   v-proposition = 
     (if f-date <> ? then "tt-wb-hndls.wb-date >= " + string (f-date) else "") +
     (if f-date-2 <> ? then " and tt-wb-hndls.wb-date <= " + string (f-date-2) else "") + 
-    (if f-cli-name <> "" then " and tt-wb-hndls.cliname matches '" + string (f-cli-name) + "'" else "") + 
-    (if f-type <> "" then " and tt-wb-hndls.wb-type matches '" + string (f-type) + "'" else "") +
+    (if f-cli-name <> "" then " and tt-wb-hndls.cliname matches '*" + string (f-cli-name) + "*'" else "") + 
+    (if f-type <> "" and f-type <> "Все" then " and tt-wb-hndls.wb-type matches '" + string (f-type) + "'" else "") +
     (if f-cli-code <> 0 and f-cli-code <> ? then " and tt-wb-hndls.cli matches '*" + string (f-cli-code) + "*'" else "")
     .
     
@@ -866,7 +868,7 @@ end.
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE msdblcl Dialog-Frame 
-PROCEDURE msdblcl :
+procedure msdblcl :
 if cb-1 <> 1 and cb-1 <> 3 and cb-1 <> 2 and cb-1 <> 4
     then apply "choose" to Btn_Save in frame {&frame-name} .
     else apply "choose" to Btn_Sel in frame {&frame-name} .
@@ -877,7 +879,7 @@ end.
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-row-leave Dialog-Frame 
-PROCEDURE proc-row-leave :
+procedure proc-row-leave :
 if false then do:
     do ii = 1 to extent (bcol).  
       bcol[ii]:bgcolor = RED_COLOR.
@@ -889,7 +891,7 @@ end.
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reopen-browse Dialog-Frame 
-PROCEDURE reopen-browse :
+procedure reopen-browse :
 if bh-wb-egais = ? 
     then return .
 
@@ -924,11 +926,12 @@ if bh-wb-egais = ?
       then do:
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-          if ii = 1 then bcol[ii]:width = 15.
-          if ii = 5 then bcol[ii]:width = 15.
-          if ii = 9 then bcol[ii]:width = 15.
-          if ii = 6 then bcol[ii]:width = 10.
-          if ii = 8 then bcol[ii]:width = 4.
+          if ii = 1 then bcol[ii]:width = 20.
+          if ii = 4 then bcol[ii]:width = 12.
+          if ii = 5 then bcol[ii]:width = 9.
+          if ii = 6 then bcol[ii]:width = 20.
+          if ii = 7 then bcol[ii]:width = 10.
+          if ii = 9 then bcol[ii]:width = 5.
         end.
       end.
       run diasize_init in this-procedure .
@@ -965,9 +968,12 @@ if bh-wb-egais = ?
       then do:
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-          if ii = 1 then bcol[ii]:width = 10.
-          if ii = 5 then bcol[ii]:width = 15.
-          if ii = 9 then bcol[ii]:width = 15.
+          if ii = 1 then bcol[ii]:width = 20.
+          if ii = 4 then bcol[ii]:width = 12.
+          if ii = 5 then bcol[ii]:width = 9.
+          if ii = 6 then bcol[ii]:width = 20.
+          if ii = 7 then bcol[ii]:width = 10.
+          if ii = 9 then bcol[ii]:width = 5.
         end.
       end.
       run diasize_init in this-procedure .
@@ -1040,11 +1046,12 @@ if bh-wb-egais = ?
       then do:
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-          if ii = 1 then bcol[ii]:width = 10.
-          if ii = 5 then bcol[ii]:width = 15.
-          if ii = 9 then bcol[ii]:width = 15.
-          if ii = 6 then bcol[ii]:width = 17.
-          if ii = 8 then bcol[ii]:width = 15.
+          if ii = 1 then bcol[ii]:width = 20.
+          if ii = 4 then bcol[ii]:width = 12.
+          if ii = 5 then bcol[ii]:width = 9.
+          if ii = 6 then bcol[ii]:width = 20.
+          if ii = 7 then bcol[ii]:width = 10.
+          if ii = 9 then bcol[ii]:width = 5.
         end.
       end.
       Btn_Sel:label = "Просмотр".
