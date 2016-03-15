@@ -30,6 +30,7 @@ using ibs.th.skt.Adapters.*.
 { cmp/library.i  }
 { utl/tt516.i}
 { gbl/getcntxt.i def }
+{ str/trdcalib.i }
 
 {ibs/th/bge/egais/wb-egais.i}
 
@@ -37,7 +38,7 @@ define input  parameter table for  tt-wb-header.
 define input  parameter table for  tt-wb-gds-EG.
 define input  parameter userId_ as character no-undo.
 define input  parameter Mode as character no-undo.
-define input-output parameter v-doc-code as character no-undo.
+define input-output parameter p-doc-code as character no-undo.
 
 
 define variable iDbNum as integer no-undo.
@@ -123,27 +124,69 @@ do:
     no-error
   }
   
-  if Mode = "set-refAB"
-  then do:
-    run set-refAB no-error.
-    if error-status:error 
-    then do: 
-      return error return-value .
-    end.
-  end.
-  else do:
-    run utl/ora-i516.p (
-      input this-procedure ,
-      input this-procedure ,
-      input table temp_trn-doc ,
-      input table temp_doc-line ,
-      output num-rec-ok
-      ) no-error .
-    if error-status:error 
+  case Mode: 
+    when "set-refAB"
     then do:
-      return error MsgLog + {&new-line} + return-value.
+      run set-refAB no-error.
+      if error-status:error 
+      then do: 
+        return error return-value .
+      end.
     end.
-  end.
+    when "conn" then do:
+      run set-refAB no-error.
+      if error-status:error 
+      then do: 
+        return error return-value .
+      end.
+      def var temp-str as char no-undo.
+      temp-str = string(tt-wb-header.wbregid + {&delim-cmd} + tt-wb-header.uniq-key-rec).
+      { str/tdat-wrt.i
+        p-doc-code
+        {&trdcattr-negais}
+        temp-str 
+        no-error
+      }
+      if error-status:error 
+      then do:
+        return error MsgLog + {&new-line} + return-value.
+      end.
+      { str/tdat-wrt.i
+        p-doc-code
+        {&trdcattr-nids}
+        entry(1,tt-wb-header.uniq-key-rec,{&delim-cmd})
+        no-error
+      }
+      if error-status:error 
+      then do:
+        return error MsgLog + {&new-line} + return-value.
+      end.
+      { str/tdat-wrt.i
+        p-doc-code
+        {&trdcattr-dids}
+        entry(2,tt-wb-header.uniq-key-rec,{&delim-cmd})
+        no-error
+      }
+      if error-status:error 
+      then do:
+        return error MsgLog + {&new-line} + return-value.
+      end.
+
+    end.
+    otherwise do:
+      run utl/ora-i516.p (
+        input this-procedure ,
+        input this-procedure ,
+        input table temp_trn-doc ,
+        input table temp_doc-line ,
+        output num-rec-ok
+        ) no-error .
+      if error-status:error 
+      then do:
+        return error MsgLog + {&new-line} + return-value.
+      end.
+    end.
+  end case.
   
 
 end.
@@ -154,7 +197,7 @@ procedure pcall-log-file:
   define input parameter msg as character no-undo.
   
   if msg begins "n-d" then do:
-    v-doc-code = entry (2, msg, "=").
+    p-doc-code = entry (2, msg, "=").
   end.
   else do: 
   assign 
@@ -227,38 +270,52 @@ end procedure. /* mainmenu_getcntxt */
 
 procedure set-refAB:
   
-    find first buf_goods no-lock where buf_goods.gds-code = temp_doc-line.gds-code no-error.  
-    for each ub.parts exclusive-lock
-      where ub.parts.in-code   = v-doc-code
-        and ub.parts.artic     = buf_goods.artic
-        and ub.parts.prod-type = buf_goods.prod-type
-        and ub.parts.prod-code = buf_goods.prod-code:
-
-      find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
-      if not available (temp_doc-line) then do:
-        find first temp_doc-line where  temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
+    
+    for each tt-wb-gds-EG:
+      
+      find first buf_goods no-lock where buf_goods.gds-code = tt-wb-gds-EG.gds-code no-error.
+      
+      find first ub.trn-doc where ub.trn-doc.doc-code = p-doc-code no-lock.
+      
+      for each ub.parts exclusive-lock
+        where 
+              ub.parts.obj-code  = ub.trn-doc.obj-code
+          and ub.parts.obj-type  = ub.trn-doc.obj-type
+          and ub.parts.artic     = buf_goods.artic
+          and ub.parts.prod-type = buf_goods.prod-type
+          and ub.parts.prod-code = buf_goods.prod-code
+          and ( ub.parts.in-code   = p-doc-code
+                or ub.parts.out-code  = p-doc-code)
+        :
+        
+        find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
+        if not available (temp_doc-line) then do:
+          find first temp_doc-line where  temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
+        end.
+        run trg/partps.p ( input buf_goods.gds-code
+                         , input ub.parts.in-code
+                         , ?
+                         , input ub.parts.part-code
+                         , input iDbNum
+                         , input ?
+                         , input ?
+                         , input temp_doc-line.refA + ',' + temp_doc-line.refB + ',' + temp_doc-line.alc-code + ',' + temp_doc-line.alc-type-code
+                         , input ""
+                         , input ""
+                         , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 1, 3) else ""
+                         , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 4) else ""
+                         ) no-error .
+        if error-status :error
+        then do:
+          message
+            "Ошибка при вызове процедуры partps.p" skip
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
+          undo, return no-apply .
+        end.
       end.
-      run trg/partps.p ( input buf_goods.gds-code
-                       , input parts.in-code
-                       , input parts.part-code
-                       , input iDbNum
-                       , input ?
-                       , input ?
-                       , input temp_doc-line.refA + ',' + temp_doc-line.refB + ',' + temp_doc-line.alc-code + ',' + temp_doc-line.alc-type-code
-                       , input ""
-                       , input ""
-                       , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 1, 3) else ""
-                       , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 4) else ""
-                       ) no-error .
-      if error-status :error
-      then do:
-        message
-          "Ошибка при вызове процедуры partps.p" skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
-        undo, return no-apply .
-      end.
-    end.  
+    
+    end.
 
 end procedure.

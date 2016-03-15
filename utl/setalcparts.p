@@ -136,6 +136,8 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
     
     find first buf_trn-doc where buf_trn-doc.doc-code = entry (6, ub.clob-bind.descr, {&delim-par}) no-error. 
     
+    if not available (buf_trn-doc) then next.
+    
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code: 
       for each buf_parts no-lock where
         buf_parts.obj-type = buf_trn-doc.obj-type and 
@@ -143,7 +145,9 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
         buf_parts.artic = buf_doc-line.artic and
         buf_parts.prod-type = buf_doc-line.prod-type and
         buf_parts.prod-code = buf_doc-line.prod-code and
-        buf_parts.out-code = buf_trn-doc.doc-code: 
+        buf_parts.out-code = buf_trn-doc.doc-code and
+        buf_parts.in-code = buf_trn-doc.doc-code and
+        not buf_trn-doc.doc-code matches "*=*": 
         ii = ii + 1.
       find first buf_gds no-lock where buf_gds.artic = buf_parts.artic and buf_gds.prod-code = buf_parts.prod-code and buf_gds.prod-type = buf_parts.prod-type.
 
@@ -178,10 +182,16 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
       refB = bh-wb-gds-EG:buffer-field ("refB"):buffer-value.
       alc-code = bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value.
       alc-type-code = bh-wb-gds-EG:buffer-field ("alc-type-code"):buffer-value.
-
+      
+      if (refA + ',' + refB + ',' + alc-code  + ',' + alc-type-code) = "" or (refA + ',' + refB + ',' + alc-code  + ',' + alc-type-code) = ? 
+      or buf_parts.alc-ref-ab-path = "" or buf_parts.alc-ref-ab-path = ? 
+        then .
+        else next. 
+      
       if true /*num-entries (buf_parts.alc-ref-ab-path) < 3*/ then
         run trg/partps.p ( input buf_gds.gds-code
                        , input buf_parts.in-code
+                       , input ?
                        , input buf_parts.part-code
                        , input buf_parts.mark-db-num
                        , input buf_parts.mark-code

@@ -858,7 +858,7 @@ assign
             .
       end.
         
-        if is-egais
+        if is-egais or is-tsd
         then do:
           /*create tt-doc-line-attr.
           assign
@@ -874,15 +874,8 @@ assign
             tt-doc-line-attr.gds-code = temp_doc-line.gds-code
             tt-doc-line-attr.attr-value = temp_doc-line.RefB
           .*/
-          if temp_trn-doc.contract-code > 0 then do:
-            find first ub.contract-specif no-lock where
-                        ub.contract-specif.gds-code = temp_doc-line.gds-code and
-                        ub.contract-specif.contract-num = temp_trn-doc.contract-code and
-                        ub.contract-specif.host-code     = temp_trn-doc.host-code no-error .
-            if available (ub.contract-specif) then do:
-              tt2-doc-line.VAT-pc = ub.contract-specif.VAT-pc.
-            end.
-          end.
+          { gbl/pftxvalg.i temp_doc-line.gds-code {&vat-tax-code} ? temp_trn-doc.host-code temp_trn-doc.obj-type temp_trn-doc.obj-code tt2-doc-line.VAT-pc no-error }
+          
         end.
 
         find first tt-gds-dtl where 
@@ -1076,11 +1069,11 @@ end.
                    tt-parts.VAT-pc
                    no-error
                  }
-             end.
-             if error-status :error then do:
-               v-end-message = substitute("Ошибка  &1 &2 " , error-status :get-message(1)  , return-value ) .
-               run pcall-log-file in p-log-handle ( input v-end-message ) .
-               undo, return error v-end-message.
+                 if error-status :error then do:
+                   v-end-message = substitute("Ошибка  &1 &2 " , error-status :get-message(1)  , return-value ) .
+                   run pcall-log-file in p-log-handle ( input v-end-message ) .
+                   undo, return error v-end-message.
+                 end.
              end.
           end.
 
@@ -1334,6 +1327,7 @@ end.
           
           run trg/partps.p ( input buf_goods.gds-code
                            , input parts.in-code
+                           , ?
                            , input parts.part-code
                            , input g#db-num
                            , input ?
@@ -1353,7 +1347,7 @@ end.
               return-value skip
               view-as alert-box error .
             run waitfram-hide.
-            undo, return no-apply .
+            undo, return error .
           end.
         end.      
       end.

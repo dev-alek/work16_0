@@ -819,7 +819,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               end.*/
               if num-entries (buf_ext-classif.CharKey_Two, chr(4)) < 3
               then do:
-                Msg = "В справочнике внешнего классификатора по товарам отсутсвует информация о производителе по товару - " + string (buf_gds.gds-code) + ". Обновите справочник внешнего классификатора по товарам.".
+                Msg = "В справочнике внешнего классификатора по товарам отсутсвует информация о производителе по товару - " + string (buf_gds.gds-code) + ". Выполните синхронизацию товаров.".
                 StatusErr = true.
                 return ?.
               end.
@@ -833,6 +833,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               assign
                 tt-wb-gds-EG.Identity = string (ii)
                 tt-wb-gds-EG.gds-name = entry (3, buf_ext-classif.CharKey_Two, chr(4))
+                tt-wb-gds-EG.gds-code = buf_gds.gds-code
                 tt-wb-gds-EG.alc-code = buf_ext-classif.charkey_one
                 tt-wb-gds-EG.qnty = buf_parts.cli-qnty
                 tt-wb-gds-EG.price = buf_parts.price-rubl
@@ -1777,7 +1778,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       return.
     end.
     entry (6, buf_clob-bind.descr, {&delim-par}) = trn-doc-code.
-    GetHndlTable ({&wb-clob}, '').
     
   end.
 
@@ -1792,7 +1792,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     end.
     entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ'.
     SendRequestUTM().
-    GetHndlTable ({&wb-clob}, '').
     
   end.
 
@@ -1832,7 +1831,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       input table tt-wb-header,
       input table tt-wb-gds-EG,
       input User_Id,
-      input "set-refAB",
+      input "conn",
       input-output inTrnDoc
       ) no-error.
     if error-status:error then 
@@ -1842,7 +1841,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       return.
     end.
     entry (6, buf_clob-bind.descr, {&delim-par}) = inTrnDoc.
-    GetHndlTable ({&wb-clob}, '').
      
     
   end.
@@ -2019,18 +2017,25 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               impor = ''.
               
               
-              v-prod = entry (1, buf_ext-classif.CharKey_Two, chr(4)).
-              if v-prod = ? or v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) or v-prod = "" 
+              v-prod = entry (1, buf_ext-classif.CharKey_Two, chr(4)) no-error.
+              if v-prod = ? or v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) or v-prod = "" or num-entries (v-prod, chr (5)) <> 6 
               then do:
                 StatusErr = true.
-                Msg = "У товара неизвестен производитель из ЕГАИС - " + string (tt-wb-gds-EG.gds-code) + ". Обновите данные по товарам.".
+                Msg = "У товара неизвестен производитель из ЕГАИС - " + string (tt-wb-gds-EG.gds-code) + ". Выполните синхронизацию товаров.".
                 return.
               end.
               if num-entries (buf_ext-classif.CharKey_Two, chr(4)) > 1
-                then impor = entry (2, buf_ext-classif.CharKey_Two, chr(4)).
+                then impor = entry (2, buf_ext-classif.CharKey_Two, chr(4)) no-error.
                 else impor = "".
               
-              
+              if num-entries (impor, chr (5)) > 0 and num-entries (impor, chr (5)) <> 6 
+                then 
+              do:
+                StatusErr = true.
+                Msg = "У товара неверно указан импортер из ЕГАИС - " + string (tt-wb-gds-EG.gds-code) + ". Выполните синхронизацию товаров.".
+                return.
+              end.
+                            
               sw:start-element ("pref:Producer") .
 /*                sw:write-data-element ("oref:INN", entry (2, v-prod, chr(5)) ).*/
 /*                sw:write-data-element ("oref:KPP", entry (3, v-prod, chr(5)) ).*/
