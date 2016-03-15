@@ -78,6 +78,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       p-mark-code = 0
     .
   end.
+  if p-out-code = ?
+  then do:
+    p-out-code = "".
+  end. 
   find first buf_goods no-lock
     where buf_goods.gds-code = v-gds-code no-error.
   if not available buf_goods then do:
@@ -147,7 +151,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       and ub.parts.prod-type = v-prod-type
       and ub.parts.prod-code = v-prod-code
       and ub.parts.part-code = p-part-code
-      and (p-out-code = ? or ub.parts.out-code = p-out-code)
+      and (p-out-code = "" or ub.parts.out-code = p-out-code)
   on error undo main-block, return error
   :
     if ( ub.parts.alc-bottling-date       <> p-alc-bottling-date       )  or

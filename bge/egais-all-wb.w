@@ -295,13 +295,6 @@ do:
   if egais:StatusErr
     then message egais:Msg view-as alert-box error.
   else do:
-    v-negais = (bh-wb-egais:buffer-field ("wbregid"):buffer-value + {&delim-cmd} + bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-    { str/tdat-wrt.i
-      ub.trn-doc.doc-code
-      {&trdcattr-negais}
-      v-negais
-      no-error
-    }
     message "Накладная связана" view-as alert-box.
   end.
   run f-query.

@@ -40,7 +40,6 @@ define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "ЕГАИС Акт постановки на баланс".
 
 define variable ii                  as integer no-undo .
-define variable jj                  as integer no-undo .
 define variable v-position_         as integer no-undo .
 define variable v-date              as character no-undo .
 define variable v-rid-list          as character no-undo .
@@ -49,7 +48,6 @@ define variable par-egais-name      as character no-undo .
 define variable par-type            as character no-undo .
 define variable v-attr-value        as character            no-undo .
 define variable v-attr-type         as character            no-undo .
-define variable p-ext-rec           as recid no-undo .
 
 define variable glog        as logical no-undo .
 
@@ -114,12 +112,6 @@ define buffer buf_clob-data     for ub.clob-data .
 { ref/gds-attr.i }
 { str/trdcalib.i   }
 {ibs/th/bge/egais/ab-egais.i shared }
-
-define new shared temp-table tt-exts
-    field ext-rec as recid
-    index pi as primary unique
-        ext-rec
-.
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -304,11 +296,8 @@ DO:
             tt-gds-act.position_        = ii + 1
             tt-gds-act.marks-qnty       = 0
         . 
-        tt-gds-act.egais-name           =  entry(3, x_ext-classif.charkey_two, CHR(4)) no-error .
         open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
     end.
-    find first tt-gds-act no-error.
-    if available tt-gds-act then disable b-good with frame {&FRAME-NAME}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -336,7 +325,7 @@ DO:
         message "Выберите строку" view-as alert-box .
         return no-apply.
     end. 
-    run bge/egais-ab-marks.w (tt-gds-act.num, tt-gds-act.position_) .
+    run bge/egais-ab-marks.w (tt-gds-act.num, tt-gds-act.position_, tt-gds-act.alc-code) .
     assign ii = 0 .
     for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
         ii = ii + 1 .
@@ -448,36 +437,18 @@ DO:
     run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
                                         ,input (buffer buf_goods:handle)
                                         ,output v-gds-uniq-key-rec).
-    assign jj = 0 .
-    empty temp-table tt-exts .                                    
-    for each X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+    find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
                                        and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                        AND X_ext-classif.db-num = 0  
                                        and X_ext-classif.key#_one = buf_goods.gds-code
                                        and X_ext-classif.key#_two = v-ext-sys 
-                                       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec :
-        create tt-exts .
-        assign tt-exts.ext-rec = recid(X_ext-classif) .                                  
-        assign jj = jj + 1 . 
-    end. 
-    if jj = 0 then do :                                  
+                                       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                       no-error. 
+    if not available X_ext-classif or trim(X_ext-classif.charkey_one) = "" then do :  
         message "Выбранный товар не синхронизирован с ЕГАИС. (Нет алкогольного кода)" view-as alert-box.
         return no-apply.  
+/*        assign tt-gds.alc-code = X_ext-classif.charkey_one .*/
     end.
-    else if jj = 1 then do :
-        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
-                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
-                                           AND X_ext-classif.db-num = 0  
-                                           and X_ext-classif.key#_one = buf_goods.gds-code
-                                           and X_ext-classif.key#_two = v-ext-sys 
-                                           and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
-                                           .
-    end.
-    else do :
-        run bge/egais-select-alc-code.w (output p-ext-rec) .
-        find first X_ext-classif no-lock where recid(X_ext-classif) = p-ext-rec no-error .
-        if not available X_ext-classif then return no-apply.
-    end. 
     assign ii = 0 .  
     for each buf_parts no-lock where buf_parts.artic = buf_goods.artic 
                                 and buf_parts.prod-type = buf_goods.prod-type 
@@ -658,6 +629,7 @@ procedure makeXML :
                             sw:write-data-element ("pref:ProductVCode", string(ub.alc-type.alc-type-code)) .
                         end.
                         
+                        find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code .
                         run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
                                         ,input (buffer buf_goods:handle)
                                         ,output v-gds-uniq-key-rec).
@@ -667,34 +639,60 @@ procedure makeXML :
                                        and X_ext-classif.key#_one = buf_goods.gds-code
                                        and X_ext-classif.key#_two = v-ext-sys 
                                        and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                       and X_ext-classif.charkey_one = tt-gds-act.alc-code
                                        no-error.
                         if available X_ext-classif and num-entries(X_ext-classif.charkey_two, CHR(4)) = 3 then do : 
-                          if entry(1, X_ext-classif.charkey_two, CHR(4)) <> "" then do :                                
-                            sw:start-element ("pref:Producer") .
-                                sw:write-data-element ("oref:INN", entry(2, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
-                                sw:write-data-element ("oref:KPP", entry(3, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
-                                sw:write-data-element ("oref:ClientRegId", entry(1, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
-                                sw:write-data-element ("oref:FullName", entry(4, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
-                                sw:write-data-element ("oref:ShortName", "") .
-                                sw:start-element ("oref:address") .
-                                    sw:write-data-element ("oref:Country", entry(5, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
-                                    sw:write-data-element ("oref:description", entry(6, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .                                    
-                                sw:end-element ("oref:address") .
-                            sw:end-element ("pref:Producer") .
+                          def var v-prod as char no-undo.
+                          def var v-impor as char no-undo.
+                          def var v-msg as char no-undo.
+                          v-prod = ''.
+                          v-impor = ''.
+                          
+                          
+                          v-prod = entry (1, X_ext-classif.CharKey_Two, chr(4)) no-error.
+                          if v-prod = ? or v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) or v-prod = "" or num-entries (v-prod, chr (5)) <> 6 
+                          then do:
+                            v-msg = "У товара неизвестен производитель из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров.".
+                            return error v-msg.
                           end.
-                          if entry(2, X_ext-classif.charkey_two, CHR(4)) <> "" then do :                                
+                          v-impor = entry (2, X_ext-classif.CharKey_Two, chr(4)) no-error.
+
+                          
+                          if num-entries (v-impor, chr (5)) > 0 and num-entries (v-impor, chr (5)) <> 6 
+                            then 
+                          do:
+                            v-msg = "У товара неверно указан импортер из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров.".
+                            return error v-msg.
+                          end.                          
+                          
+                          sw:start-element ("pref:Producer") .
+                            if entry (2, v-prod, chr(5)) <> "" then sw:write-data-element ("oref:INN", entry (2, v-prod, chr(5)) ).
+                            if entry (3, v-prod, chr(5)) <> "" then sw:write-data-element ("oref:KPP", entry (3, v-prod, chr(5)) ).
+                            sw:write-data-element ("oref:ClientRegId", entry (1, v-prod, chr(5)) ).
+                            sw:write-data-element ("oref:FullName", entry (4, v-prod, chr(5)) ).
+                            sw:start-element ("oref:address").
+                              sw:write-data-element ("oref:Country", entry (5, v-prod, chr(5)) ).
+                              sw:write-data-element ("oref:description", entry (6, v-prod, chr(5)) ).
+                            sw:end-element ("oref:address").
+                          sw:end-element ("pref:Producer") .
+            
+                          if v-impor <> "" and v-impor <> ? and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) then do:
                             sw:start-element ("pref:Importer") .
-                                sw:write-data-element ("oref:INN", entry(2, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
-                                sw:write-data-element ("oref:KPP", entry(3, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
-                                sw:write-data-element ("oref:ClientRegId", entry(1, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
-                                sw:write-data-element ("oref:FullName", entry(4, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
-                                sw:write-data-element ("oref:ShortName", "") .
-                                sw:start-element ("oref:address") .
-                                    sw:write-data-element ("oref:Country", entry(5, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .
-                                    sw:write-data-element ("oref:description", entry(6, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) ) .                                    
-                                sw:end-element ("oref:address") .
+                              if entry (2, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:INN", entry (2, v-impor, chr(5)) ).
+                              if entry (3, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:KPP", entry (3, v-impor, chr(5)) ).
+                              sw:write-data-element ("oref:ClientRegId", entry (1, v-impor, chr(5)) ).
+                              sw:write-data-element ("oref:FullName", entry (4, v-impor, chr(5)) ).
+                              sw:start-element ("oref:address").
+                                sw:write-data-element ("oref:Country", entry (5, v-impor, chr(5)) ).
+                                sw:write-data-element ("oref:description", entry (6, v-impor, chr(5)) ).
+                              sw:end-element ("oref:address").
                             sw:end-element ("pref:Importer") .
                           end.
+
+                        end.
+                        else do:
+                          v-msg = "У товара неизвестен производитель из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров.".
+                          return error v-msg.
                         end.
                         
                         sw:end-element ("ain:Product") .

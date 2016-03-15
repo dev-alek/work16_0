@@ -69,7 +69,6 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
         DEFINE VARIABLE hNoderef AS HANDLE NO-UNDO.
         DEFINE VARIABLE hText AS HANDLE NO-UNDO.
         
-        
         CREATE X-NODEREF hNoderef.
         CREATE X-NODEREF hText .
         
@@ -85,8 +84,13 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
             
             IF hNoderef:NAME = "ns:FSRAR_ID" THEN
                 assign v-FS-RAR = hText:node-value .
-            IF hNoderef:NAME = "rap:Product" THEN
+            IF hNoderef:NAME = "rap:Product" THEN DO:
                 create tt-gds-EG .
+                assign
+                  tt-gds-EG.imp-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                  tt-gds-EG.prod-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                .
+             END.
 
             IF hNoderef:NAME = "pref:ShortName"    THEN assign tt-gds-EG.gds-name        = hText:node-value .
             IF hNoderef:NAME = "pref:FullName"     THEN do :
@@ -100,28 +104,28 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
             IF hNoderef:NAME = "pref:Importer"     THEN assign v-imp       = true .
             
             IF hNoderef:NAME = "oref:ClientRegId" THEN DO :
-                if v-imp then assign tt-gds-EG.imp-info          = hText:node-value .
-                else          assign tt-gds-EG.prod-info         = hText:node-value .
+                if v-imp then assign entry (1, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
+                else          assign entry (1, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.    
             IF hNoderef:NAME = "oref:INN"         THEN do :
-                if v-imp then assign tt-gds-EG.imp-info          = tt-gds-EG.imp-info + CHR(5) + hText:node-value .
-                else          assign tt-gds-EG.prod-info         = tt-gds-EG.prod-info + CHR(5) + hText:node-value .
+                if v-imp then assign entry (2, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
+                else          assign entry (2, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.
             IF hNoderef:NAME = "oref:KPP"         THEN do : 
-                if v-imp then assign tt-gds-EG.imp-info          = tt-gds-EG.imp-info + CHR(5) + hText:node-value .
-                else          assign tt-gds-EG.prod-info         = tt-gds-EG.prod-info + CHR(5) + hText:node-value .
+                if v-imp then assign entry (3, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
+                else          assign entry (3, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.
             IF hNoderef:NAME = "oref:FullName"    THEN do :
-                if v-imp then assign tt-gds-EG.imp-info          = tt-gds-EG.imp-info + CHR(5) + hText:node-value .
-                else          assign tt-gds-EG.prod-info         = tt-gds-EG.prod-info + CHR(5) + hText:node-value .
+                if v-imp then assign entry (4, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
+                else          assign entry (4, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.
             IF hNoderef:NAME = "oref:Country"     THEN do :
-                if v-imp then assign tt-gds-EG.imp-info          = tt-gds-EG.imp-info + CHR(5) + hText:node-value .
-                else          assign tt-gds-EG.prod-info         = tt-gds-EG.prod-info + CHR(5) + hText:node-value .
+                if v-imp then assign entry (5, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
+                else          assign entry (5, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.
             IF hNoderef:NAME = "oref:description" THEN do :
-                if v-imp then assign tt-gds-EG.imp-info          = tt-gds-EG.imp-info + CHR(5) + hText:node-value .
-                else          assign tt-gds-EG.prod-info         = tt-gds-EG.prod-info + CHR(5) + hText:node-value .
+                if v-imp then assign entry (6, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
+                else          assign entry (6, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.    
                    
             GetChildren(hNoderef, (level + 1)).
