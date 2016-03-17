@@ -7883,12 +7883,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-fbrattr_fbr-mrgn-max '{&bef-attr-fbrattr_fbr-mrgn-max}':U
 &global-define bef-attr-petrol petrol
 &global-define attr-petrol '{&bef-attr-petrol}':U
-&global-define bef-prop-list-attr-petrol rvsnmter,denstclc,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email
+&global-define bef-prop-list-attr-petrol rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email
 &global-define prop-list-attr-petrol '{&bef-prop-list-attr-petrol}':U
 &global-define bef-attr-petrol_rvsnmter rvsnmter
 &global-define attr-petrol_rvsnmter '{&bef-attr-petrol_rvsnmter}':U
 &global-define bef-attr-petrol_denstclc denstclc
 &global-define attr-petrol_denstclc '{&bef-attr-petrol_denstclc}':U
+&global-define bef-attr-petrol_autopump-izm autopump-izm
+&global-define attr-petrol_autopump-izm '{&bef-attr-petrol_autopump-izm}':U
 &global-define bef-attr-petrol_autopump autopump
 &global-define attr-petrol_autopump '{&bef-attr-petrol_autopump}':U
 &global-define bef-attr-petrol_avtinvpm avtinvpm
