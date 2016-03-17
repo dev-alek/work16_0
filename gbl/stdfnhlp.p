@@ -135,6 +135,8 @@ FUNCTION Int2Base          RETURNS CHARACTER ( INPUT i-int        AS INTEGER,
                                                INPUT i-base       AS INTEGER   ) - конвертация целого числа в число по заданному основанию (не больше 60-ти);
 FUNCTION Base2Int          RETURNS INTEGER   ( INPUT i-hex        AS CHARACTER,
                                                INPUT i-base       AS INTEGER   ) - конвертация числа по заданному основанию (не больше 60-ти) в целого число;
+FUNCTION Base2Int64        RETURNS INT64     ( INPUT i-hex        AS CHARACTER,
+                                               INPUT i-base       AS INTEGER   ) - конвертация числа по заданному основанию (не больше 60-ти) в целого число;
 FUNCTION NumDays           RETURNS INTEGER   ( INPUT i-date       AS DATE      ) - порядковый номер дня с начала года;
 FUNCTION DateNum           RETURNS DATE      ( INPUT i-days       AS INTEGER,
                                                INPUT i-year       AS INTEGER   ) - дата по порядковому номеру дня и году;
@@ -2313,6 +2315,38 @@ procedure GetFunctionHelp1 :
                  'VIEW-AS ALERT-BOX .'                                             + {&new-line}
       .
     end. /* Base2Int */
+    when 'Base2Int64'
+    then do: /* 60 */
+      assign
+        p-help = 'Конвертация целого числа в целое число по заданному основанию.'  + {&new-line} + {&new-line} +
+                 "ФОРМАТ ВЫЗОВА:"                                                  + {&new-line} +
+                 "Base2Int64 RETURNS INT64 ( INPUT i-image AS CHARACTER"           + {&new-line} +
+                 "                         , INPUT i-base  AS INTEGER"             + {&new-line} +
+                 "                         ) ."                                    + {&new-line} + {&new-line} +
+                 "ПАРАМЕТРЫ:"                                                      + {&new-line} +
+                 '  i-image - целое число, которое нужно сконвертировать;'         + {&new-line} +
+                 '  i-base  - основание, по которому нужно сконвертировать число.' + {&new-line} + {&new-line} +
+                 "ПРИМЕР:"                                                         + {&new-line} + {&new-line} +
+                 '/* **************************************************** *\' + {&new-line} +
+                 ' *                                                      *'  + {&new-line} +
+                 ' * Файл: stdfnhlp.p                                     *'  + {&new-line} +
+                 ' * Функция: ' + p-name + fill( ' ':U, 44 - length( p-name ) )             +
+                                                                         '*'  + {&new-line} +
+                 ' * Автор: Булгаков Андрей Николаевич                    *'  + {&new-line} +
+                 ' *                                                      *'  + {&new-line} +
+                 ' * Описание стандартных функций из std-func.i (помощь). *'  + {&new-line} +
+                 ' *                                                      *'  + {&new-line} +
+                 '\* **************************************************** */' + {&new-line} + {&new-line} +
+                 "~&SCOPED-DEFINE f-l Base2Int64"                                  + {&new-line} + {&new-line} +
+                 "~{ gbl/std-func.i ~{~&f-l~} ~}"                                  + {&new-line} + {&new-line} +
+                 'DEFINE VARIABLE c_num  AS CHARACTER NO-UNDO INITIAL "GЖ" .'      + {&new-line} +
+                 'DEFINE VARIABLE j_base AS INTEGER   NO-UNDO INITIAL 60 .'        + {&new-line} + {&new-line} +
+                 'MESSAGE'                                                         + {&new-line} +
+                 '  c_num "по основанию" j_base "-->"'                             + {&new-line} +
+                 '  Base2Int64( c_num, j_base )'                                   + {&new-line} +
+                 'VIEW-AS ALERT-BOX .'                                             + {&new-line}
+      .
+    end. /* Base2Int64 */
     when 'Int2Octal'
     then do: /* 61 */
       assign

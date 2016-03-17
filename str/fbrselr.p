@@ -95,18 +95,19 @@ on error undo, return error
         p-obj-code
         v-host-code
     }
-    run gbl/conf-rd.p (
-          input "fbr-frcp"
-        , input v-host-code
-        , input p-obj-type
-        , input p-obj-code
-        , input "":U
-        , input "":U
-        , input "":U
-        , input no
-        , output v-fbr-frcp
-        , output v-type
-    ) no-error.
+/*    run gbl/conf-rd.p (    */
+/*          input "fbr-frcp" */
+/*        , input v-host-code*/
+/*        , input p-obj-type */
+/*        , input p-obj-code */
+/*        , input "":U       */
+/*        , input "":U       */
+/*        , input "":U       */
+/*        , input no         */
+/*        , output v-fbr-frcp*/
+/*        , output v-type    */
+/*    ) no-error.            */
+    
    run adm/shattri.p ( input "get":U
                      , input  '':u
                      , input  0
@@ -120,6 +121,7 @@ on error undo, return error
                      , output v-param-type
                      , input-output table-handle v-tth
                      ) no-error .
+/*                     message v-fbr-frcp view-as alert-box.*/
    if error-status :error then do:
       /* параметр может быть не задан */
       assign
@@ -144,7 +146,10 @@ on error undo, return error
         , input p-gds-code
         , output v-default-recipe-code
     ).
+    
+/*    run gbl/inidebug.p.*/
     comp-recipe:
+        
     for each buf_recipe no-lock
        where ( buf_recipe.obj-type = p-obj-type
            and buf_recipe.obj-code = p-obj-code
@@ -324,6 +329,7 @@ on error undo, return error
             find first buf_recipe no-lock
                  where buf_recipe.recipe-code = buf_recipe-gds.recipe-code
             .
+            if AVAILABLE buf_recipe then do:
             run writelog in this-procedure (
                   input log-file-name
                 , input 3
@@ -370,7 +376,8 @@ on error undo, return error
                     v-is-integration  = ?
                 .
             end.
-        end.
+          end.
+    end.
     end.
     if p-out-recipe-type = ?
     and p-out-recipe-code = ?
