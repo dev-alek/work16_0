@@ -135,6 +135,9 @@ FUNCTION Int2Base          RETURNS CHARACTER ( INPUT i-int        AS INTEGER,
                                                INPUT i-base       AS INTEGER   ) - конвертация целого числа в число по заданному основанию (не больше 60-ти);
 FUNCTION Base2Int          RETURNS INTEGER   ( INPUT i-hex        AS CHARACTER,
                                                INPUT i-base       AS INTEGER   ) - конвертация числа по заданному основанию (не больше 60-ти) в целого число;
+FUNCTION Base2Int64        RETURNS INT64     ( INPUT i-hex        AS CHARACTER,
+                                               INPUT i-base       AS INTEGER   ) - конвертация числа по заданному основанию (не больше 60-ти) в целого число;
+
 FUNCTION NumDays           RETURNS INTEGER   ( INPUT i-date       AS DATE      ) - порядковый номер дня с начала года;
 FUNCTION DateNum           RETURNS DATE      ( INPUT i-days       AS INTEGER,
                                                INPUT i-year       AS INTEGER   ) - дата по порядковому номеру дня и году;
@@ -185,9 +188,9 @@ FUNCTION Digital           RETURNS LOGICAL   ( INPUT i-string     AS CHARACTER )
 &ENDIF
 
 &GLOB Std-Func_function-number 80
-&GLOB Std-Func_function-list   'LastMonthDate,LastMonthDay,LastDay-MY,LastDate-MY,NextMonth,NextYear,PrevMonth,PrevYear,NextMonth-MY,NextYear-MY,MonthNameRus,MonthNameRusGen,MonthNameRusCase,CalcMonthes,CalcMonth-MY,DateTimeHeader,PrevMonth-MY,PrevYear-MY,MonthNameEng,TimeStamp,Round-M,Trunc-M,get-dec,RedLine,Word-Sum,Total-Word,PutAcc,Roubles,Copecks,Word-Sum-Eng,Word-Curr,Int2Char,PutInt,PutSum,Stamp57,WeekDay-Full,WeekDay-Short,WeekDay-Shrt3,WeekDay-Rus,WeekDay-Full-Eng,WeekDay-Eng2,WeekDay-Eng3,Week-Num,Week-From,Week-Till,Week-Date,Week-Date-Eng,Rec2Char,DelEntry,addl-list,addf-list,addn-list,super-pos,sets-union,sets-intersection,ChooseMark,is-marked,MarkSign,Int2Hex,Hex2Int,Int2Octal,Oct2Int,Int2Bin,Bin2Int,Int2Base,Base2Int,DateNum,NumDays,KeyStamp,Leap-Year,Leap-Year-d,Sparse,SparseSymbol,Compress,CompressSymbol,Centering,CenteringSymbol,ShiftRight,ShiftRightSymbol,Digital'
+&GLOB Std-Func_function-list   'LastMonthDate,LastMonthDay,LastDay-MY,LastDate-MY,NextMonth,NextYear,PrevMonth,PrevYear,NextMonth-MY,NextYear-MY,MonthNameRus,MonthNameRusGen,MonthNameRusCase,CalcMonthes,CalcMonth-MY,DateTimeHeader,PrevMonth-MY,PrevYear-MY,MonthNameEng,TimeStamp,Round-M,Trunc-M,get-dec,RedLine,Word-Sum,Total-Word,PutAcc,Roubles,Copecks,Word-Sum-Eng,Word-Curr,Int2Char,PutInt,PutSum,Stamp57,WeekDay-Full,WeekDay-Short,WeekDay-Shrt3,WeekDay-Rus,WeekDay-Full-Eng,WeekDay-Eng2,WeekDay-Eng3,Week-Num,Week-From,Week-Till,Week-Date,Week-Date-Eng,Rec2Char,DelEntry,addl-list,addf-list,addn-list,super-pos,sets-union,sets-intersection,ChooseMark,is-marked,MarkSign,Int2Hex,Hex2Int,Int2Octal,Oct2Int,Int2Bin,Bin2Int,Int2Base,Base2Int,Base2Int64,DateNum,NumDays,KeyStamp,Leap-Year,Leap-Year-d,Sparse,SparseSymbol,Compress,CompressSymbol,Centering,CenteringSymbol,ShiftRight,ShiftRightSymbol,Digital'
 &SCOP Std-Func_function-used    LastMonthDate,LastMonthDay,LastDay-MY,LastDate-MY,NextMonth,NextYear,PrevMonth,PrevYear,NextMonth-MY,NextYear-MY,MonthNameRus,MonthNameRusGen,CalcMonthes,CalcMonth-MY,DateTimeHeader
-&SCOP Std-Func_func_not_used   ^Word-Sum,^TimeStamp,^RedLine,^get-dec,^Trunc-M,^Round-M,^MonthNameEng,^PrevMonth-MY,^PrevYear-MY,^Total-Word,^PutAcc,^Roubles,^Copecks,^Word-Sum-Eng,^Word-Curr,^Int2Char,^PutInt,^PutSum,^Stamp57,^WeekDay-Full,^WeekDay-Short,^WeekDay-Shrt3,^WeekDay-Rus,^WeekDay-Full-Eng,^WeekDay-Eng2,^WeekDay-Eng3,^Week-Num,^Week-From,^Week-Till,^Week-Date,^Week-Date-Eng,^Rec2Char,^DelEntry,^addl-list,^addf-list,^addn-list,^super-pos,^sets-union,^sets-intersection,^ChooseMark,^is-marked,^MarkSign,^Int2Hex,^Hex2Int,^Int2Octal,^Oct2Int,^Int2Bin,^Bin2Int,^Int2Base,^Base2Int,^DateNum,^NumDays,^KeyStamp,Leap-Year,Leap-Year-d,^Sparse,^SparseSymbol,^Compress,^CompressSymbol,^MonthNameRusCase,^Centering,^CenteringSymbol,^ShiftRight,^ShiftRightSymbol,^Digital
+&SCOP Std-Func_func_not_used   ^Word-Sum,^TimeStamp,^RedLine,^get-dec,^Trunc-M,^Round-M,^MonthNameEng,^PrevMonth-MY,^PrevYear-MY,^Total-Word,^PutAcc,^Roubles,^Copecks,^Word-Sum-Eng,^Word-Curr,^Int2Char,^PutInt,^PutSum,^Stamp57,^WeekDay-Full,^WeekDay-Short,^WeekDay-Shrt3,^WeekDay-Rus,^WeekDay-Full-Eng,^WeekDay-Eng2,^WeekDay-Eng3,^Week-Num,^Week-From,^Week-Till,^Week-Date,^Week-Date-Eng,^Rec2Char,^DelEntry,^addl-list,^addf-list,^addn-list,^super-pos,^sets-union,^sets-intersection,^ChooseMark,^is-marked,^MarkSign,^Int2Hex,^Hex2Int,^Int2Octal,^Oct2Int,^Int2Bin,^Bin2Int,^Int2Base,^Base2Int,^Base2Int64,^DateNum,^NumDays,^KeyStamp,Leap-Year,Leap-Year-d,^Sparse,^SparseSymbol,^Compress,^CompressSymbol,^MonthNameRusCase,^Centering,^CenteringSymbol,^ShiftRight,^ShiftRightSymbol,^Digital
 
   &IF DEFINED( Std-Func_defined-list ) = 0 &THEN
 &IF "{1}" = "" &THEN
@@ -2254,6 +2257,52 @@ PROCEDURE conv-base-to-int :
     ASSIGN p-int = j_sign * p-int.
   END. /* ON ERROR */
 END PROCEDURE. /* conv-base-to-int */
+
+  &ENDIF
+&UNDEF SELF-NAME
+
+&SCOP  SELF-NAME Base2Int64
+  &IF LOOKUP( '*',             {&Std-Func_defined-list} ) > 0 AND
+      LOOKUP( '^{&SELF-NAME}', {&Std-Func_defined-list} ) = 0 OR
+      LOOKUP(  '{&SELF-NAME}', {&Std-Func_defined-list} ) > 0 &THEN
+
+    &IF "{2}" <> "procedure-only" &THEN
+FUNCTION Base2Int64 RETURNS INT64 ( INPUT i-hex AS CHARACTER, INPUT i-base AS INTEGER ) :
+  DEFINE VARIABLE j_num AS INT64 NO-UNDO.
+
+  RUN conv-base-to-int64 IN THIS-PROCEDURE ( INPUT i-hex, INPUT i-base, OUTPUT j_num ) NO-ERROR.
+  RETURN ( IF ERROR-STATUS :ERROR THEN ? ELSE j_num ).
+END FUNCTION. /* Base2Int64 */
+    &ENDIF
+
+PROCEDURE conv-base-to-int64 :
+  DEFINE  INPUT PARAMETER p-num  AS CHARACTER NO-UNDO.
+  DEFINE  INPUT PARAMETER p-base AS INTEGER   NO-UNDO.
+  DEFINE OUTPUT PARAMETER p-int  AS INT64     NO-UNDO.
+
+  DEFINE VARIABLE v_list AS CHARACTER NO-UNDO INITIAL '':U.
+  DEFINE VARIABLE jj     AS INTEGER   NO-UNDO.
+  DEFINE VARIABLE j_sign AS INT64   NO-UNDO.
+
+  DO ON ERROR UNDO, RETURN ERROR :
+    IF p-base > 60 THEN DO:
+      ASSIGN p-int = ?.
+      UNDO, RETURN ERROR.
+    END.
+    ASSIGN v_list = '0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,':U +
+                    'Б,Г,Д,Ё,Ж,З,И,Й,Л,П,У,Ф,Ц,Ч,Ш,Щ,Ъ,Ы,Ь,Э,Ю,Я,@,$':U
+           v_list = SUBSTRING( v_list, 1, p-base * 2 - 1 )
+           p-num  = TRIM( p-num ).
+    IF SUBSTRING( p-num, 1, 1 ) = "-" THEN DO:
+        ASSIGN j_sign = -1
+               p-num  = SUBSTRING( p-num, 2 ).
+    END.                              ELSE DO: ASSIGN j_sign = 1. END.
+    DO jj = 1 TO LENGTH( p-num ) :
+      ASSIGN p-int = p-int * p-base + LOOKUP( SUBSTRING( p-num, jj, 1 ), v_list ) - 1.
+    END.
+    ASSIGN p-int = j_sign * p-int.
+  END. /* ON ERROR */
+END PROCEDURE. /* conv-base-to-int64 */
 
   &ENDIF
 &UNDEF SELF-NAME
