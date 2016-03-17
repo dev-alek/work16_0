@@ -1479,7 +1479,6 @@ define variable v-default-recipe-code   as character    no-undo.
        .
     end.
 
-
     run writelog in this-procedure (
           input log-file-name
         , input 1
@@ -1497,6 +1496,8 @@ define variable v-default-recipe-code   as character    no-undo.
         , input p-gds-code
         , output v-default-recipe-code
     ).
+    
+/*    run gbl/inidebug.p.*/
     comp-recipe:
     for each buf_recipe no-lock
        where ( buf_recipe.obj-type = p-obj-type
@@ -1513,7 +1514,7 @@ define variable v-default-recipe-code   as character    no-undo.
           )
 /*    by buf_recipe.recipe-order*/
     :
-        if buf_recipe.recipe-code <> v-default-recipe-code
+        if  ( p-autofbr = yes or v-value-logical = yes ) and buf_recipe.recipe-code <> v-default-recipe-code
         then do:
             undo comp-recipe, next comp-recipe.
         end.
