@@ -703,7 +703,7 @@ procedure My-Rep:
                     v-obj-chk-counter = 0
                     v-obj_doc-qnty = 0          /* Количество */
                     v-obj_sum-withdisc = 0   /* Сумма без скидки */
-                    v-obj-sum-qnty-bonus = 0
+                    v-obj_qnty-bonus = 0
                 .
 
                 for each buf-obj_dcards where
@@ -818,8 +818,7 @@ procedure My-Rep:
                   v-obj-chk-counter = 0
                     v-obj_doc-qnty = 0          /* Количество */
                     v-obj_sum-withdisc = 0   /* Сумма без скидки */
-                    v-obj-sum-qnty-bonus = 0.
-
+  v-obj_qnty-bonus = 0.
 
             for each buf-obj3_dcards where
                      buf-obj3_dcards.grp-lvl = 0
