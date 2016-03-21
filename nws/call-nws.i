@@ -352,6 +352,7 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,schedule~
 ,schedule-attr~
 ,ext-classif~
+,ext-classif-attr~
 ,dis-thbj-rule~
 ,user-account~
 ,alc-sale-lic~

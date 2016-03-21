@@ -26,8 +26,12 @@ define variable vss-description as character no-undo init "Триггер на изменение 
 
 
 { cmp/vssrevis.i }
+{ cmp/str-glbl.i }
 { cmp/trg-def.i }
+{ ref/extclass.i }
 { gbl/cur-time.i }
+{ nws/lib-nws.i }
+{ gbl/key-rec.i }
 
 main-block:
 do
@@ -35,6 +39,9 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
-
+    run str/callnews.p
+      ( input {&table_ext-classif-attr}
+        ,input (buffer ub.ext-classif-attr:handle )
+      ) .
 
 end. /* main-block */

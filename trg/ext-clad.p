@@ -26,8 +26,12 @@ define variable vss-description as character no-undo init "Триггер на удаление т
 
 
 { cmp/vssrevis.i }
+{ cmp/str-glbl.i }
 { cmp/trg-def.i }
+{ ref/extclass.i }
 { gbl/cur-time.i }
+{ nws/lib-nws.i }
+{ gbl/key-rec.i }
 
 main-block:
 do
@@ -35,6 +39,13 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
-
+    run nws/cmd-del.p
+      ( input {&table_ext-classif-attr}
+        ,input (buffer ub.ext-classif-attr:handle)
+        ,input "":U
+      ) no-error .
+    if error-status :error then do:
+      undo main-block, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+    end.
 
 end. /* main-block */
