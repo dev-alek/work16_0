@@ -1255,6 +1255,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_cd-dlu}
             or when {&table_cd-grp}
             or when {&table_ext-classif}
+            or when {&table_ext-classif-attr}
             or when {&table_pl-gds-attr}
             or when {&table_nozzle-attr}
             or when {&table_place-attr}

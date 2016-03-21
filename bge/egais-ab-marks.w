@@ -411,7 +411,8 @@ DO:
                       
               end.    
             end.    
-        end.  
+        end.
+          delete object ProcFindGds .
          end.
          open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
          
@@ -421,7 +422,7 @@ DO:
         end.
     output stream str-alc close.
     output stream str-err close.            
-delete object ProcFindGds .
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
