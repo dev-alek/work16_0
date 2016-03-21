@@ -22,7 +22,8 @@ Creation date: 12/23/05
                       input {4} ,       /* rvs-type   */
                       input {5} ,       /* prev-code  */
                       input {6} ,       /* shift-date */
-                      input {7} ) {8} . /* shift-num  */
+                      input {7} ,       /*is-full*/
+                      input {8} ) {9} . /* shift-num  */
 
 /* $Workfile$   E n d */
 

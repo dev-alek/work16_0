@@ -4410,10 +4410,11 @@ character~
 &scop user-can-edit-attr-petrol   true
 &scop output-display-attr-petrol  true
 &scop other-attr-petrol 'spr-ext=adm\shattrpt.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-petrol 'logical,character,logical,logical,character,character,integer,logical,integer,integer,character':U
+&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character':U
 &scop prop-label-list-attr-petrol '~
 Расхождение в инвентаризации по сверке делать без учета погрешности измерения,~
 Алгоритм вычисления плотности для продаж,~
+Автоматические сверки создавать только по измеряемым резервуарам,~
 Автоматические сверки создавать с чтением всех счетчиков ТРК,~
 Автом. создание инв. счетчиков ТРК при переполнении разрядности эл. счетчика,~
 Тип ввода топлива в документах прихода внешнего,~

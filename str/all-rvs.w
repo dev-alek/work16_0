@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v9r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,18 +8,18 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE NEW SHARED BUFFER r-doc FOR ub.rvs-doc.
+DEFINE NEW SHARED BUFFER r-doc FOR rvs-doc.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-all-r-docs 
 /*
 
 $Revision$
 $Author$
 $Date$
 $Workfile$
-$Archive$
+$Archive$ 
 
 Список документов сверки
 
@@ -68,9 +68,8 @@ define variable vss-description as character no-undo initial "Список документов 
 { ref/gds-attr.i }
 { str/is-gas.i }
 { str/placelib.i }
-
-define buffer buf-inv_trn-doc     for ub.trn-doc .
-define buffer buf-spi_trn-doc     for ub.trn-doc .
+define buffer buf-inv_trn-doc for ub.trn-doc .
+define buffer buf-spi_trn-doc for ub.trn-doc .
 
 &scop no-rvs ~
   if not available r-doc then do: ~
@@ -85,28 +84,49 @@ define buffer buf-spi_trn-doc     for ub.trn-doc .
     . ~
   end.
 
-define variable br-handle as handle no-undo.
+{str/autorvs.i}
 
-define variable sch-field as char no-undo.
-define variable del-list  as char no-undo.
-define variable mark      as char no-undo.
 
-define variable varobj-type  like ub.rvs-doc.obj-type  no-undo .
-define variable varobj-code  like ub.rvs-doc.obj-code  no-undo .
-define variable varhost-code like ub.rvs-doc.host-code no-undo .
-define variable varstatus_   like ub.rvs-doc.status_   no-undo .
+define temp-table autorvs no-undo
+field attr-code like doc-attr.attr-code
+field attr-value like doc-attr.attr-value
+field rvs-code  like r-doc.rvs-code
+field auto as logical
+.
+
+
+define variable br-handle        as handle    no-undo.
+define variable bcol             as handle    extent 34 no-undo.
+
+define variable ii               as integer.
+define variable sch-field        as char      no-undo.
+define variable del-list         as char      no-undo.
+define variable mark             as char      no-undo.
+define variable auto             as char      no-undo.
+define variable hd-rvs           as handle    no-undo.
+
+define variable varobj-type      like ub.rvs-doc.obj-type no-undo .
+define variable varobj-code      like ub.rvs-doc.obj-code no-undo .
+define variable varhost-code     like ub.rvs-doc.host-code no-undo .
+define variable varstatus_       like ub.rvs-doc.status_ no-undo .
 
 /* для вирт рез */
-define variable is-vir as logical no-undo.
-define variable v-value as character no-undo.
-define variable v-ok as logical no-undo.
+define variable is-vir           as logical   no-undo.
+define variable v-value          as character no-undo.
+define variable v-ok             as logical   no-undo.
 
 define variable sort-column-name as character no-undo.
 define variable filter-point     as character no-undo.
 define variable varstr           as character no-undo.
 define variable varrecid         as recid     no-undo.
-define variable rvs-rec          as   recid            no-undo.
-define variable varlog           as   logical          no-undo.
+define variable rvs-rec          as recid     no-undo.
+define variable varlog           as logical   no-undo.
+define variable p-auto           as char      no-undo.
+/*define variable p-autorvs as logical no-undo.*/
+
+
+
+
 
 &scop label-clmn_1-br-dtl     '*'
 &scop label-clmn_2-br-dtl     ' Tип '
@@ -123,7 +143,8 @@ define variable varlog           as   logical          no-undo.
 &scop sort-clmn_1-br-dtl        mark-string (recid( r-doc)) @ mark
 &scop dyn_sort-clmn_1-br-dtl    substitute('dynamic-function(&1mark-string&1, recid(r-doc)) ', ~{&double-quote~} )
 &scop sort-clmn_2-br-dtl        (substring (r-doc.rvs-type, 1, 9))
-&scop sort-clmn_3-br-dtl        r-doc.is-full
+&scop sort-clmn_3-br-dtl         autorvs (recid(r-doc))
+&scop dyn_sort-clmn_3-br-dtl    substitute('dynamic-function(&1autorvs&1, recid(r-doc)) ', ~{&double-quote~} )
 &scop sort-clmn_4-br-dtl        r-doc.status_
 &scop sort-clmn_5-br-dtl        r-doc.rvs-code
 &scop sort-clmn_6-br-dtl        (substring ((string (r-doc.doc-date)), 1, 5))
@@ -133,7 +154,7 @@ define variable varlog           as   logical          no-undo.
 &scop sort-clmn_10-br-dtl       (substring ((string (r-doc.shift-date)), 1, 5))
 &scop sort-clmn_11-br-dtl       shift-name (recid(r-doc))
 &scop dyn_sort-clmn_11-br-dtl   substitute('dynamic-function(&1shift-name&1, recid( r-doc)) ', ~{&double-quote~} )
-&scop sort-clmn_12-br-dtl       r-doc.state-measure-qnty
+&scop sort-clmn_12-br-dtl       r-doc.state-measure-qnty 
 &scop sort-clmn_13-br-dtl       r-doc.measure-qnty
 &scop sort-clmn_14-br-dtl       r-doc.state-brutto-qnty
 &scop sort-clmn_15-br-dtl       r-doc.brutto-qnty
@@ -146,7 +167,7 @@ define variable varlog           as   logical          no-undo.
 &scop sort-clmn_22-br-dtl       r-doc.state-brutto-cli-qnty
 &scop sort-clmn_23-br-dtl       r-doc.meas-mh-qnty
 &scop sort-clmn_24-br-dtl       r-doc.state-mh-qnty
-&scop sort-clmn_25-br-dtl       r-doc.meas-am-qnty
+&scop sort-clmn_25-br-dtl        r-doc.meas-am-qnty
 &scop sort-clmn_26-br-dtl       r-doc.state-am-qnty
 &scop sort-clmn_27-br-dtl       r-doc.meas-cf-qnty
 &scop sort-clmn_28-br-dtl       r-doc.state-cf-qnty
@@ -162,7 +183,7 @@ define variable varlog           as   logical          no-undo.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -177,8 +198,8 @@ define variable varlog           as   logical          no-undo.
 &Scoped-define INTERNAL-TABLES r-doc
 
 /* Definitions for BROWSE br-r-docs                                     */
-&Scoped-define FIELDS-IN-QUERY-br-r-docs {&sort-clmn_1-br-dtl} {&sort-clmn_2-br-dtl} {&sort-clmn_3-br-dtl} {&sort-clmn_4-br-dtl} {&sort-clmn_5-br-dtl} {&sort-clmn_6-br-dtl} {&sort-clmn_7-br-dtl} {&sort-clmn_8-br-dtl} {&sort-clmn_9-br-dtl} {&sort-clmn_10-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_12-br-dtl} {&sort-clmn_13-br-dtl} {&sort-clmn_14-br-dtl} {&sort-clmn_15-br-dtl} {&sort-clmn_16-br-dtl} {&sort-clmn_17-br-dtl} {&sort-clmn_18-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl} {&sort-clmn_21-br-dtl} {&sort-clmn_22-br-dtl} {&sort-clmn_23-br-dtl} {&sort-clmn_24-br-dtl} {&sort-clmn_25-br-dtl} {&sort-clmn_26-br-dtl} {&sort-clmn_27-br-dtl} {&sort-clmn_28-br-dtl} {&sort-clmn_29-br-dtl} {&sort-clmn_30-br-dtl} {&sort-clmn_31-br-dtl} {&sort-clmn_32-br-dtl} {&sort-clmn_33-br-dtl} {&sort-clmn_34-br-dtl}
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-r-docs {&enabled-clmn}
+&Scoped-define FIELDS-IN-QUERY-br-r-docs {&sort-clmn_1-br-dtl} {&sort-clmn_2-br-dtl} {&sort-clmn_3-br-dtl} @ p-auto {&sort-clmn_4-br-dtl} {&sort-clmn_5-br-dtl} {&sort-clmn_6-br-dtl} {&sort-clmn_7-br-dtl} {&sort-clmn_8-br-dtl} {&sort-clmn_9-br-dtl} {&sort-clmn_10-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_12-br-dtl} {&sort-clmn_13-br-dtl} {&sort-clmn_14-br-dtl} {&sort-clmn_15-br-dtl} {&sort-clmn_16-br-dtl} {&sort-clmn_17-br-dtl} {&sort-clmn_18-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl} {&sort-clmn_21-br-dtl} {&sort-clmn_22-br-dtl} {&sort-clmn_23-br-dtl} {&sort-clmn_24-br-dtl} {&sort-clmn_25-br-dtl} {&sort-clmn_26-br-dtl} {&sort-clmn_27-br-dtl} {&sort-clmn_28-br-dtl} {&sort-clmn_29-br-dtl} {&sort-clmn_30-br-dtl} {&sort-clmn_31-br-dtl} {&sort-clmn_32-br-dtl} {&sort-clmn_33-br-dtl} {&sort-clmn_34-br-dtl}   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-r-docs {&enabled-clmn}   
 &Scoped-define SELF-NAME br-r-docs
 &Scoped-define QUERY-STRING-br-r-docs FOR EACH r-doc
 &Scoped-define OPEN-QUERY-br-r-docs OPEN QUERY {&SELF-NAME} FOR EACH r-doc .
@@ -192,9 +213,9 @@ define variable varlog           as   logical          no-undo.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit b-mark b-sel b-add b-lkp b-chg b-del ~
-b-close b-open b-help Btn_Copy b-inv b-sch b-print br-r-docs ed-notes
+b-close b-open b-help Btn_Copy b-inv b-sch b-print br-r-docs ed-notes 
 &Scoped-Define DISPLAYED-OBJECTS ed-notes f-boss-name f-obj-name ~
-f-agnt-name f-wrkr-name f-cre-name
+f-agnt-name f-wrkr-name f-cre-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -205,16 +226,16 @@ f-agnt-name f-wrkr-name f-cre-name
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD mark-string d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD mark-string d-all-r-docs 
 FUNCTION mark-string RETURNS CHARACTER
     ( p-rec as recid )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD shift-name d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD shift-name d-all-r-docs 
 FUNCTION shift-name RETURNS CHARACTER
-    ( p-rec as recid  )  FORWARD.
+    ( p-rec as recid )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -225,91 +246,91 @@ FUNCTION shift-name RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "Добавить":L
-     SIZE 10 BY 1.
+DEFINE BUTTON b-add 
+    LABEL "Добавить":L 
+    SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg
-     LABEL "Изменить":L
-     SIZE 10 BY 1.
+DEFINE BUTTON b-chg 
+    LABEL "Изменить":L 
+    SIZE 10 BY 1.
 
-DEFINE BUTTON b-close
-     LABEL "Закрыть":L
-     SIZE 10 BY 1.
+DEFINE BUTTON b-close 
+    LABEL "Закрыть":L 
+    SIZE 10 BY 1.
 
-DEFINE BUTTON b-del
-     LABEL "Удалить":L
-     SIZE 10 BY 1.
+DEFINE BUTTON b-del 
+    LABEL "Удалить":L 
+    SIZE 10 BY 1.
 
-DEFINE BUTTON b-help
-     LABEL "Помощь":L
-     SIZE 7 BY 1.
+DEFINE BUTTON b-help 
+    LABEL "Помощь":L 
+    SIZE 7 BY 1.
 
-DEFINE BUTTON b-inv
-     LABEL "Инвент."
-     SIZE 10 BY 1.
+DEFINE BUTTON b-inv 
+    LABEL "Инвент." 
+    SIZE 10 BY 1.
 
-DEFINE BUTTON b-lkp
-     LABEL "Просмотр":L
-     SIZE 10 BY 1.
+DEFINE BUTTON b-lkp 
+    LABEL "Просмотр":L 
+    SIZE 10 BY 1.
 
-DEFINE BUTTON b-mark
-     LABEL "*":L
-     SIZE 3 BY 1.
+DEFINE BUTTON b-mark 
+    LABEL "*":L 
+    SIZE 3 BY 1.
 
-DEFINE BUTTON b-open
-     LABEL "Открыть"
-     SIZE 10 BY 1.
+DEFINE BUTTON b-open 
+    LABEL "Открыть" 
+    SIZE 10 BY 1.
 
-DEFINE BUTTON b-print
-     LABEL "Печать":L
-     SIZE 7 BY 1.
+DEFINE BUTTON b-print 
+    LABEL "Печать":L 
+    SIZE 7 BY 1.
 
-DEFINE BUTTON b-quit AUTO-GO
-     LABEL "Выход":L
-     SIZE 10 BY 1.
+DEFINE BUTTON b-quit AUTO-GO 
+    LABEL "Выход":L 
+    SIZE 10 BY 1.
 
-DEFINE BUTTON b-sch
-     LABEL "&Фильтр":L
-     SIZE 7 BY 1.
+DEFINE BUTTON b-sch 
+    LABEL "&Фильтр":L 
+    SIZE 7 BY 1.
 
-DEFINE BUTTON b-sel
-     LABEL "Выбор":L
-     SIZE 10 BY 1.
+DEFINE BUTTON b-sel 
+    LABEL "Выбор":L 
+    SIZE 10 BY 1.
 
-DEFINE BUTTON Btn_Copy
-     LABEL "&Ст.Смен."
-     SIZE 10 BY 1 TOOLTIP "Сделать сменную сверку на основе контрольной (полной)".
+DEFINE BUTTON Btn_Copy 
+    LABEL "&Ст.Смен." 
+    SIZE 10 BY 1 TOOLTIP "Сделать сменную сверку на основе контрольной (полной)".
 
-DEFINE VARIABLE ed-notes AS CHARACTER
-     VIEW-AS EDITOR
-     SIZE 99 BY 2
-     BGCOLOR 8  NO-UNDO.
+DEFINE VARIABLE ed-notes    AS CHARACTER 
+    VIEW-AS EDITOR
+    SIZE 99 BY 2
+    BGCOLOR 8 NO-UNDO.
 
-DEFINE VARIABLE f-agnt-name AS CHARACTER FORMAT "X(19)":U
-     LABEL "Исп"
-      VIEW-AS TEXT
-     SIZE 19.5 BY .67 NO-UNDO.
+DEFINE VARIABLE f-agnt-name AS CHARACTER FORMAT "X(19)":U 
+    LABEL "Исп" 
+    VIEW-AS TEXT 
+    SIZE 19.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE f-boss-name AS CHARACTER FORMAT "X(19)":U
-     LABEL "М-р"
-      VIEW-AS TEXT
-     SIZE 19.5 BY .67 NO-UNDO.
+DEFINE VARIABLE f-boss-name AS CHARACTER FORMAT "X(19)":U 
+    LABEL "М-р" 
+    VIEW-AS TEXT 
+    SIZE 19.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE f-cre-name AS CHARACTER FORMAT "X(19)":U
-     LABEL "Опер"
-      VIEW-AS TEXT
-     SIZE 19.5 BY .67 NO-UNDO.
+DEFINE VARIABLE f-cre-name  AS CHARACTER FORMAT "X(19)":U 
+    LABEL "Опер" 
+    VIEW-AS TEXT 
+    SIZE 19.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE f-obj-name AS CHARACTER FORMAT "X(13)":U
-     LABEL "Объект"
-      VIEW-AS TEXT
-     SIZE 62.5 BY .67 NO-UNDO.
+DEFINE VARIABLE f-obj-name  AS CHARACTER FORMAT "X(13)":U 
+    LABEL "Объект" 
+    VIEW-AS TEXT 
+    SIZE 62.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE f-wrkr-name AS CHARACTER FORMAT "X(19)":U
-     LABEL "Кл-к"
-      VIEW-AS TEXT
-     SIZE 19.5 BY .67 NO-UNDO.
+DEFINE VARIABLE f-wrkr-name AS CHARACTER FORMAT "X(19)":U 
+    LABEL "Кл-к" 
+    VIEW-AS TEXT 
+    SIZE 19.5 BY .67 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -320,20 +341,20 @@ DEFINE NEW SHARED QUERY {&browse-name} for r-doc SCROLLING.
 /* Browse definitions                                                   */
 DEFINE BROWSE br-r-docs
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-r-docs d-all-r-docs _FREEFORM
-  QUERY br-r-docs DISPLAY
-      {&sort-clmn_1-br-dtl}   COLUMN-LABEL {&label-clmn_1-br-dtl}  FORMAT "x(1)"
+    QUERY br-r-docs DISPLAY
+    {&sort-clmn_1-br-dtl}   COLUMN-LABEL {&label-clmn_1-br-dtl}  FORMAT "x(1)"
      {&sort-clmn_2-br-dtl}   COLUMN-LABEL {&label-clmn_2-br-dtl}  FORMAT "x(9)"
-     {&sort-clmn_3-br-dtl}   COLUMN-LABEL {&label-clmn_3-br-dtl}  format "п/ "
+     {&sort-clmn_3-br-dtl}    COLUMN-LABEL {&label-clmn_3-br-dtl}  format "x(1)" 
      {&sort-clmn_4-br-dtl}   column-label {&label-clmn_4-br-dtl}  format "x(5)"
-     {&sort-clmn_5-br-dtl}   column-label {&label-clmn_5-br-dtl}  format "x(12)"
-     {&sort-clmn_6-br-dtl}   COLUMN-LABEL {&label-clmn_6-br-dtl}  format "x(5)"
-     {&sort-clmn_7-br-dtl}   COLUMN-LABEL {&label-clmn_7-br-dtl}
-     {&sort-clmn_8-br-dtl}   COLUMN-LABEL {&label-clmn_8-br-dtl}
-     {&sort-clmn_9-br-dtl}   column-label {&label-clmn_9-br-dtl}
+     {&sort-clmn_5-br-dtl}  column-label {&label-clmn_5-br-dtl}  format "x(12)"
+     {&sort-clmn_6-br-dtl}  COLUMN-LABEL {&label-clmn_6-br-dtl}  format "x(5)"
+     {&sort-clmn_7-br-dtl}  COLUMN-LABEL {&label-clmn_7-br-dtl}
+     {&sort-clmn_8-br-dtl}  COLUMN-LABEL {&label-clmn_8-br-dtl}
+     {&sort-clmn_9-br-dtl}  column-label {&label-clmn_9-br-dtl}
      {&sort-clmn_10-br-dtl}  column-label {&label-clmn_10-br-dtl} format "x(5)"
-     {&sort-clmn_11-br-dtl}  column-label {&label-clmn_11-br-dtl} format "x(6)"
-     {&sort-clmn_12-br-dtl}
-     {&sort-clmn_13-br-dtl}
+     {&sort-clmn_11-br-dtl} column-label {&label-clmn_11-br-dtl} format "x(6)"
+     {&sort-clmn_12-br-dtl} 
+     {&sort-clmn_13-br-dtl} 
      {&sort-clmn_14-br-dtl}
      {&sort-clmn_15-br-dtl}
      {&sort-clmn_16-br-dtl}
@@ -364,31 +385,31 @@ DEFINE BROWSE br-r-docs
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-all-r-docs
-     b-quit AT ROW 1 COL 1
-     b-mark AT ROW 1 COL 11
-     b-sel AT ROW 1 COL 14
-     b-add AT ROW 1 COL 24
-     b-lkp AT ROW 1 COL 34
-     b-chg AT ROW 1 COL 44
-     b-del AT ROW 1 COL 54
-     b-close AT ROW 1 COL 64
-     b-open AT ROW 1 COL 74
-     b-help AT ROW 1 COL 92.5
-     Btn_Copy AT ROW 2 COL 64
-     b-inv AT ROW 2 COL 74
-     b-sch AT ROW 2 COL 85.5
-     b-print AT ROW 2 COL 92.5
-     br-r-docs AT ROW 3 COL 1
-     ed-notes AT ROW 21.5 COL 1 NO-LABEL
-     f-boss-name AT ROW 20 COL 5 COLON-ALIGNED
-     f-obj-name AT ROW 20 COL 35 COLON-ALIGNED
-     f-agnt-name AT ROW 20.75 COL 5 COLON-ALIGNED
-     f-wrkr-name AT ROW 20.75 COL 35 COLON-ALIGNED
-     f-cre-name AT ROW 20.75 COL 65 COLON-ALIGNED
-     SPACE(13.50) SKIP(2.08)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         TITLE "<insert dialog title>".
+    b-quit AT ROW 1 COL 1
+    b-mark AT ROW 1 COL 11
+    b-sel AT ROW 1 COL 14
+    b-add AT ROW 1 COL 24
+    b-lkp AT ROW 1 COL 34
+    b-chg AT ROW 1 COL 44
+    b-del AT ROW 1 COL 54
+    b-close AT ROW 1 COL 64
+    b-open AT ROW 1 COL 74
+    b-help AT ROW 1 COL 92.5
+    Btn_Copy AT ROW 2 COL 64
+    b-inv AT ROW 2 COL 74
+    b-sch AT ROW 2 COL 85.5
+    b-print AT ROW 2 COL 92.5
+    br-r-docs AT ROW 3 COL 1
+    ed-notes AT ROW 21.5 COL 1 NO-LABEL
+    f-boss-name AT ROW 20 COL 5 COLON-ALIGNED
+    f-obj-name AT ROW 20 COL 35 COLON-ALIGNED
+    f-agnt-name AT ROW 20.75 COL 5 COLON-ALIGNED
+    f-wrkr-name AT ROW 20.75 COL 35 COLON-ALIGNED
+    f-cre-name AT ROW 20.75 COL 65 COLON-ALIGNED
+    SPACE(13.50) SKIP(2.08)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+    TITLE "<insert dialog title>".
 
 
 /* *********************** Procedure Settings ************************ */
@@ -411,13 +432,13 @@ DEFINE FRAME d-all-r-docs
 /* SETTINGS FOR DIALOG-BOX d-all-r-docs
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-r-docs b-print d-all-r-docs */
-ASSIGN
-       FRAME d-all-r-docs:SCROLLABLE       = FALSE
-       FRAME d-all-r-docs:HIDDEN           = TRUE.
+ASSIGN 
+    FRAME d-all-r-docs:SCROLLABLE = FALSE
+    FRAME d-all-r-docs:HIDDEN     = TRUE.
 
-ASSIGN
-       br-r-docs:NUM-LOCKED-COLUMNS IN FRAME d-all-r-docs     = 4
-       br-r-docs:COLUMN-RESIZABLE IN FRAME d-all-r-docs       = TRUE.
+ASSIGN 
+    br-r-docs:NUM-LOCKED-COLUMNS IN FRAME d-all-r-docs = 4
+    br-r-docs:COLUMN-RESIZABLE IN FRAME d-all-r-docs   = TRUE.
 
 /* SETTINGS FOR FILL-IN f-agnt-name IN FRAME d-all-r-docs
    NO-ENABLE                                                            */
@@ -454,7 +475,7 @@ DEFINE NEW SHARED QUERY {&browse-name} for r-doc SCROLLING.
 */  /* DIALOG-BOX d-all-r-docs */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -463,9 +484,9 @@ DEFINE NEW SHARED QUERY {&browse-name} for r-doc SCROLLING.
 &Scoped-define SELF-NAME d-all-r-docs
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL d-all-r-docs d-all-r-docs
 ON WINDOW-CLOSE OF FRAME d-all-r-docs /* <insert dialog title> */
-DO:
-  APPLY "END-ERROR":U TO SELF.
-END.
+    DO:
+        APPLY "END-ERROR":U TO SELF.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -474,61 +495,67 @@ END.
 &Scoped-define SELF-NAME b-add
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add d-all-r-docs
 ON CHOOSE OF b-add IN FRAME d-all-r-docs /* Добавить */
-DO:
-  define buffer bf_icnt-doc for ub.icnt-doc.
-  define buffer bf_rvs-doc  for ub.rvs-doc.
-  find first bf_icnt-doc no-lock
-    where bf_icnt-doc.obj-type  = v-cntxt-obj-type
-      and bf_icnt-doc.obj-code  = v-cntxt-obj-code
-      and bf_icnt-doc.doc-type  = {&icnt-doc}
-      AND bf_icnt-doc.status_  <> {&fact}
-    no-error.
-  if available bf_icnt-doc then do:
-    message
-      "Имеется не закрытый документ инвентаризации счетчиков ТРК " bf_icnt-doc.doc-code " ."
-      view-as alert-box error.
-    return no-apply.
-  end.
-  find first bf_rvs-doc no-lock
-    where bf_rvs-doc.obj-type =  v-cntxt-obj-type
-      and bf_rvs-doc.obj-code =  v-cntxt-obj-code
-      and bf_rvs-doc.status_  <> {&fact}
-      and ( bf_rvs-doc.rvs-type = {&rvs-shift}
+    DO:
+        define buffer bf_icnt-doc for ub.icnt-doc.
+        define buffer bf_rvs-doc  for ub.rvs-doc.
+        find first bf_icnt-doc no-lock
+            where bf_icnt-doc.obj-type  = v-cntxt-obj-type
+            and bf_icnt-doc.obj-code  = v-cntxt-obj-code
+            and bf_icnt-doc.doc-type  = {&icnt-doc}
+            AND bf_icnt-doc.status_  <> {&fact}
+            no-error.
+        if available bf_icnt-doc then 
+        do:
+            message
+                "Имеется не закрытый документ инвентаризации счетчиков ТРК " bf_icnt-doc.doc-code " ."
+                view-as alert-box error.
+            return no-apply.
+        end.
+        find first bf_rvs-doc no-lock
+            where bf_rvs-doc.obj-type =  v-cntxt-obj-type
+            and bf_rvs-doc.obj-code =  v-cntxt-obj-code
+            and bf_rvs-doc.status_  <> {&fact}
+            and ( bf_rvs-doc.rvs-type = {&rvs-shift}
             or bf_rvs-doc.rvs-type = {&rvs-control}
-                and bf_rvs-doc.is-full  = yes
-          )
-    no-error.
-  if available bf_rvs-doc then do:
-    message
-      "Имеется не закрытый документ сверки " bf_rvs-doc.rvs-code " ."
-      view-as alert-box error.
-    return no-apply.
-  end.
+            and bf_rvs-doc.is-full  = yes
+            )
+            no-error.
+    
+    
+        if available bf_rvs-doc then 
+        do:
+            message
+                "Имеется не закрытый документ сверки " bf_rvs-doc.rvs-code " ."
+                view-as alert-box error.
+            return no-apply.
+        end.
 
-  assign
-    rvs-rec = ?
-  .
-  do
-  on stop undo, return no-apply
-  :
-    run str/rvs-add.w
-      ( input parparentproc
-       ,input {&add-def}
-       ,output rvs-rec
-      ) no-error.
-    if error-status :error then do:
-      undo, return no-apply.
-    end.
-  end.
-  if rvs-rec = ? then do:
-    return no-apply.
-  end.
-  message
-    "Новый документ сверки добавлен в Базу Данных."
-    view-as alert-box information.
-  run UI-on in this-procedure.
+        assign
+            rvs-rec = ?
+            .
+        do
+            on stop undo, return no-apply
+            :
+            run str/rvs-add.w
+                ( input parparentproc
+                ,input {&add-def}
+                ,output rvs-rec
+                ) no-error.
+            if error-status :error then 
+            do:
+                undo, return no-apply.
+            end.
+        end.
+        if rvs-rec = ? then 
+        do:
+            return no-apply.
+        end.
+        message
+            "Новый документ сверки добавлен в Базу Данных."
+            view-as alert-box information.
+        run UI-on in this-procedure.
 
-END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -537,46 +564,48 @@ END.
 &Scoped-define SELF-NAME b-chg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg d-all-r-docs
 ON CHOOSE OF b-chg IN FRAME d-all-r-docs /* Изменить */
-DO:
-  define buffer bf_trn-doc for ub.trn-doc.
-  {&no-rvs}
+    DO:
+        define buffer bf_trn-doc for ub.trn-doc.
+        {&no-rvs}
   if r-doc.status_ = {&fact}
     or r-doc.status_ = {&rvs-froze}
   then do:
-    message
-      "Данный документ сверки закрыт по факту или не может быть обработан в этом списке."
-      view-as alert-box.
-    return no-apply.
-  end.
+        message
+            "Данный документ сверки закрыт по факту или не может быть обработан в этом списке."
+            view-as alert-box.
+        return no-apply.
+    end.
 
 
-  find first bf_trn-doc
+find first bf_trn-doc
     where bf_trn-doc.out-code = r-doc.rvs-code
     no-error.
-  if available bf_trn-doc then do:
+if available bf_trn-doc then 
+do:
     message
-      "По сверке есть инвентаризация. Изменять сверку нельзя."
-      view-as alert-box.
+        "По сверке есть инвентаризация. Изменять сверку нельзя."
+        view-as alert-box.
     return no-apply.
-  end.
-  assign
+end.
+assign
     rvs-rec = recid( r-doc )
-  .
-  run str/rvs-doc.w
-    ( input        parparentproc
-     ,input        {&update}
-     ,input        r-doc.rvs-type
-     ,input        no
-     ,input-output rvs-rec
-    ) no-error.
-  if error-status :error then do:
-    find r-doc no-lock
-      where recid (r-doc) = rvs-rec
     .
+run str/rvs-doc.w
+    ( input        parparentproc
+    ,input        {&update}
+    ,input        r-doc.rvs-type
+    ,input        no
+    ,input-output rvs-rec
+    ) no-error.
+if error-status :error then 
+do:
+    find r-doc no-lock
+        where recid (r-doc) = rvs-rec
+        .
     return no-apply.
-  end.
-  apply "entry" to {&browse-name} in frame {&frame-name}.
-  run UI-on in this-procedure .
+end.
+apply "entry" to {&browse-name} in frame {&frame-name}.
+run UI-on in this-procedure .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -586,240 +615,258 @@ END.
 &Scoped-define SELF-NAME b-close
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-close d-all-r-docs
 ON CHOOSE OF b-close IN FRAME d-all-r-docs /* Закрыть */
-DO:
-  define variable varchg-inv as logical no-undo.
-  define variable v-inv-doc  as character no-undo .
+    DO:
+        define variable varchg-inv as logical   no-undo.
+        define variable v-inv-doc  as character no-undo .
 
-  {&no-rvs}
+        {&no-rvs}
   if r-doc.status_ = {&fact}
     or r-doc.status_ = {&rvs-froze}
   then do:
-    message
-      "Данный документ сверки закрыт по факту или не может быть обработан в этом списке."
-      view-as alert-box.
-    return no-apply.
-  end.
-
-  if r-doc.status_ = {&g___new} then do:
+        message
+            "Данный документ сверки закрыт по факту или не может быть обработан в этом списке."
+            view-as alert-box.
+        return no-apply.
+    end.
+if r-doc.status_ = {&g___new} then 
+do:
     assign
-      varlog = no
-    .
+        varlog = no
+        .
     message
-      "Вы хотите завершить редактирование документа сверки?"
-      view-as alert-box question buttons yes-no update varlog .
-    if varlog <> yes then do:
-      return no-apply.
+        "Вы хотите завершить редактирование документа сверки?"
+        view-as alert-box question buttons yes-no update varlog .
+    if varlog <> yes then 
+    do:
+        return no-apply.
     end.
     tr:
     do transaction
-    on error   undo tr, leave
-    on end-key undo tr, leave
-    on stop    undo tr, leave
-    :
-      { str/rvsclose.i
+        on error   undo tr, leave
+        on end-key undo tr, leave
+        on stop    undo tr, leave
+        :
+        { str/rvsclose.i
         parparentproc
         recid(r-doc)
         yes
         no-error
       }
-      if error-status :error then do:
-        message
-          "Ошибка при закрытии документа сверки." skip
-          error-status:get-message(1) skip
-          return-value
-          view-as alert-box error.
-        undo tr, leave.
-      end.
+        if error-status :error then 
+        do:
+            message
+                "Ошибка при закрытии документа сверки." skip
+                error-status:get-message(1) skip
+                return-value
+                view-as alert-box error.
+            undo tr, leave.
+        end.
     end.
-  end.
-  else do:
+end.
+else 
+do:
     find first buf-inv_trn-doc no-lock
-      where buf-inv_trn-doc.out-code = r-doc.rvs-code
-      no-error.
-    if ambiguous buf-inv_trn-doc then do:
-      message
-        "Найдено более одного складского документа связанного со сверкой."
-        view-as alert-box error.
-      return no-apply.
+        where buf-inv_trn-doc.out-code = r-doc.rvs-code
+        no-error.
+    if ambiguous buf-inv_trn-doc then 
+    do:
+        message
+            "Найдено более одного складского документа связанного со сверкой."
+            view-as alert-box error.
+        return no-apply.
     end.
-    if available buf-inv_trn-doc then do:
-      if buf-inv_trn-doc.doc-type <> {&inventory} then do:
-        message
-          "Документ связанный с документом сверки не яв-ся инвентаризацией."
-          view-as alert-box error.
-        return no-apply.
-      end.
-      if buf-inv_trn-doc.status_ <> {&doc-froze}
-        or buf-inv_trn-doc.flag_ <> yes
-      then do:
-        message
-          substitute( "Ошибка в документе инвентаризации &1 по сверке.", buf-inv_trn-doc.doc-code ) skip
-          substitute( "Связанный со сверкой документ инвентаризации не находится в статусе &1", {&doc-froze} )
-          view-as alert-box error.
-        return no-apply.
-      end.
-      assign
-        varstr    = " документ инвентаризации"
-        v-inv-doc = buf-inv_trn-doc.doc-code
-      .
+    if available buf-inv_trn-doc then 
+    do:
+        if buf-inv_trn-doc.doc-type <> {&inventory} then 
+        do:
+            message
+                "Документ связанный с документом сверки не яв-ся инвентаризацией."
+                view-as alert-box error.
+            return no-apply.
+        end.
+        if buf-inv_trn-doc.status_ <> {&doc-froze}
+            or buf-inv_trn-doc.flag_ <> yes
+            then 
+        do:
+            message
+                substitute( "Ошибка в документе инвентаризации &1 по сверке.", buf-inv_trn-doc.doc-code ) skip
+                substitute( "Связанный со сверкой документ инвентаризации не находится в статусе &1", {&doc-froze} )
+                view-as alert-box error.
+            return no-apply.
+        end.
+        assign
+            varstr    = " документ инвентаризации"
+            v-inv-doc = buf-inv_trn-doc.doc-code
+            .
     end.
     assign
-      varlog = no
-    .
+        varlog = no
+        .
     message
-      substitute( "Вы хотите закрыть документ сверки &1?", (if varstr <> "" then "и" else "") + varstr )
-      view-as alert-box question buttons yes-no update varlog.
-    if varlog <> yes then do:
-      return no-apply.
+        substitute( "Вы хотите закрыть документ сверки &1?", (if varstr <> "" then "и" else "") + varstr )
+        view-as alert-box question buttons yes-no update varlog.
+    if varlog <> yes then 
+    do:
+        return no-apply.
     end.
 
     find first ub.rvs-line no-lock
-      where ub.rvs-line.rvs-code           = r-doc.rvs-code
+        where ub.rvs-line.rvs-code           = r-doc.rvs-code
         and ub.rvs-line.state-measure-qnty = ?
-      no-error.
-    if available ub.rvs-line then do:
-      find first ub.goods no-lock
-        where ub.goods.gds-code = ub.rvs-line.gds-code.
+        no-error.
+    if available ub.rvs-line then 
+    do:
+        find first ub.goods no-lock
+            where ub.goods.gds-code = ub.rvs-line.gds-code.
       
-      run placelib_get-attr(input {&place-virtual}
-                           ,input rvs-line.obj-code
-                           ,input rvs-line.obj-type
-                           ,input rvs-line.pl-code
-                           ,output v-value
-                           ,output v-ok) no-error.
+        run placelib_get-attr(input {&place-virtual}
+            ,input rvs-line.obj-code
+            ,input rvs-line.obj-type
+            ,input rvs-line.pl-code
+            ,output v-value
+            ,output v-ok) no-error.
 
-      is-vir = if (v-ok and logical(v-value)) then true else false.
+        is-vir = if (v-ok and logical(v-value)) then true else false.
   
-      if not is-gas(ub.rvs-line.gds-code) and not is-vir then do:
-      message
-        substitute( "Не заданы фактические остатки по товару &1 (&2)", ub.goods.gds-code, ub.goods.gds-name )
-        view-as alert-box error.
-      return no-apply.
-    end.
+        if not is-gas(ub.rvs-line.gds-code) and not is-vir then 
+        do:
+            message
+                substitute( "Не заданы фактические остатки по товару &1 (&2)", ub.goods.gds-code, ub.goods.gds-name )
+                view-as alert-box error.
+            return no-apply.
+        end.
     end.
     tr:
     do transaction
-    on error   undo tr, leave
-    on end-key undo tr, leave
-    on stop    undo tr, leave
-    :
-      { str/rvsclose.i
+        on error   undo tr, leave
+        on end-key undo tr, leave
+        on stop    undo tr, leave
+        :
+        { str/rvsclose.i
         parparentproc
         recid(r-doc)
         yes
         no-error
       }
-      if error-status :error then do:
-        message
-          "Ошибка при закрытии документа сверки." skip
-          error-status:get-message(1) skip
-          return-value
-          view-as alert-box error.
-        undo tr, leave.
-      end.
-
-      release r-doc no-error .
-      if error-status :error then do:
-        message
-          "Ошибка при закрытии документа сверки." skip
-          error-status:get-message(1) skip
-          return-value
-          view-as alert-box error.
-        undo tr, leave.
-      end.
-
-      /* Закрытие инвентаризации */
-      find first buf-inv_trn-doc exclusive-lock
-        where buf-inv_trn-doc.doc-code = v-inv-doc
-        no-error.
-      if available buf-inv_trn-doc then do:
-        assign
-          buf-inv_trn-doc.status_ = {&permitted}
-          buf-inv_trn-doc.flag_   = yes
-        .
-        run str/trn-stat.p
-          ( input parparentproc
-          , input this-procedure
-          , input {&close-doc}
-          , input v-inv-doc
-          , input ?
-          , input v-cntxt-db-num
-          , input ?
-          , input ?
-          , input ?
-          , input ?
-          , input yes
-          , output varchg-inv
-          , output table gds-list
-          ) no-error.
-        if error-status :error then do:
-          message
-            "Не удалось закрыть инвентаризацию." skip
-            return-value                         skip
-            error-status :get-message(1)         skip
-            view-as alert-box error.
-          undo tr, leave.
-        end.
-        release buf-inv_trn-doc no-error .
-        if error-status :error then do:
-          message
-            "Ошибка при закрытии документа интвентаризации." skip
-            error-status:get-message(1) skip
-            return-value
-            view-as alert-box error.
-          undo tr, leave.
-        end.
-
-        find first buf-spi_trn-doc exclusive-lock
-          where buf-spi_trn-doc.out-code = v-inv-doc
-            and buf-spi_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}
-          no-error .
-        /* Закрытие списания */
-        if available buf-spi_trn-doc then do:
-          assign
-            buf-spi_trn-doc.status_ = {&permitted}
-            buf-spi_trn-doc.flag_   = yes
-          .
-          run str/trn-stat.p
-            ( input parparentproc
-            , input this-procedure
-            , input {&close-doc}
-            , input buf-spi_trn-doc.doc-code
-            , input ?
-            , input v-cntxt-db-num
-            , input ?
-            , input ?
-            , input ?
-            , input ?
-            , input yes
-            , output varchg-inv
-            , output table gds-list
-            ) no-error.
-          if error-status :error then do:
+        if error-status :error then 
+        do:
             message
-              "Не удалось закрыть документ списания." skip
-              return-value                            skip
-              error-status:get-message(1)             skip
-              view-as alert-box error.
+                "Ошибка при закрытии документа сверки." skip
+                error-status:get-message(1) skip
+                return-value
+                view-as alert-box error.
             undo tr, leave.
-          end.
-          release buf-spi_trn-doc no-error .
-          if error-status :error then do:
-            message
-              "Ошибка при закрытии документа списания." skip
-              error-status:get-message(1) skip
-              return-value
-              view-as alert-box error.
-            undo tr, leave.
-          end.
         end.
-      end.
+
+        release r-doc no-error .
+        if error-status :error then 
+        do:
+            message
+                "Ошибка при закрытии документа сверки." skip
+                error-status:get-message(1) skip
+                return-value
+                view-as alert-box error.
+            undo tr, leave.
+        end.
+
+        /* Закрытие инвентаризации */
+        find first buf-inv_trn-doc exclusive-lock
+            where buf-inv_trn-doc.doc-code = v-inv-doc
+            no-error.
+        if available buf-inv_trn-doc then 
+        do:
+            assign
+                buf-inv_trn-doc.status_ = {&permitted}
+                buf-inv_trn-doc.flag_   = yes
+                .
+            run str/trn-stat.p
+                ( input parparentproc
+                , input this-procedure
+                , input {&close-doc}
+                , input v-inv-doc
+                , input ?
+                , input v-cntxt-db-num
+                , input ?
+                , input ?
+                , input ?
+                , input ?
+                , input yes
+                , output varchg-inv
+                , output table gds-list
+                ) no-error.
+            if error-status :error then 
+            do:
+                message
+                    "Не удалось закрыть инвентаризацию." skip
+                    return-value                         skip
+                    error-status :get-message(1)         skip
+                    view-as alert-box error.
+                undo tr, leave.
+            end.
+            release buf-inv_trn-doc no-error .
+            if error-status :error then 
+            do:
+                message
+                    "Ошибка при закрытии документа интвентаризации." skip
+                    error-status:get-message(1) skip
+                    return-value
+                    view-as alert-box error.
+                undo tr, leave.
+            end.
+
+            find first buf-spi_trn-doc exclusive-lock
+                where buf-spi_trn-doc.out-code = v-inv-doc
+                and buf-spi_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}
+                no-error .
+            /* Закрытие списания */
+            if available buf-spi_trn-doc then 
+            do:
+                assign
+                    buf-spi_trn-doc.status_ = {&permitted}
+                    buf-spi_trn-doc.flag_   = yes
+                    .
+                run str/trn-stat.p
+                    ( input parparentproc
+                    , input this-procedure
+                    , input {&close-doc}
+                    , input buf-spi_trn-doc.doc-code
+                    , input ?
+                    , input v-cntxt-db-num
+                    , input ?
+                    , input ?
+                    , input ?
+                    , input ?
+                    , input yes
+                    , output varchg-inv
+                    , output table gds-list
+                    ) no-error.
+                if error-status :error then 
+                do:
+                    message
+                        "Не удалось закрыть документ списания." skip
+                        return-value                            skip
+                        error-status:get-message(1)             skip
+                        view-as alert-box error.
+                    undo tr, leave.
+                end.
+                release buf-spi_trn-doc no-error .
+                if error-status :error then 
+                do:
+                    message
+                        "Ошибка при закрытии документа списания." skip
+                        error-status:get-message(1) skip
+                        return-value
+                        view-as alert-box error.
+                    undo tr, leave.
+                end.
+            end.
+        end.
     end.
-  end.
-  find first r-doc no-lock
+end.
+find first r-doc no-lock
     where recid (r-doc) = rvs-rec
-  .
-  run UI-on in this-procedure .
+    .
+run UI-on in this-procedure .
 
 END.
 
@@ -830,18 +877,20 @@ END.
 &Scoped-define SELF-NAME b-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del d-all-r-docs
 ON CHOOSE OF b-del IN FRAME d-all-r-docs /* Удалить */
-DO:
-  if not available r-doc then do:
-    message "Не выбрана сверка, которую нужно удалить." view-as alert-box.
-    return no-apply.
-  end.
-  run proc-del in this-procedure
-    no-error.
-  if error-status :error then do:
-    return no-apply.
-  end.
-  run openbr in this-procedure .
-END.
+    DO:
+        if not available r-doc then 
+        do:
+            message "Не выбрана сверка, которую нужно удалить." view-as alert-box.
+            return no-apply.
+        end.
+        run proc-del in this-procedure
+            no-error.
+        if error-status :error then 
+        do:
+            return no-apply.
+        end.
+        run openbr in this-procedure .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -850,123 +899,141 @@ END.
 &Scoped-define SELF-NAME b-inv
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-inv d-all-r-docs
 ON CHOOSE OF b-inv IN FRAME d-all-r-docs /* Инвент. */
-DO:
+    DO:
 
-  define variable v-docs-info as character no-undo .
+        define variable v-docs-info as character no-undo .
 
-  {&no-rvs}
+        {&no-rvs}
   if r-doc.status_ <> {&permitted} then do:
-    message
-      substitute( "Инвентаризацию можно проводить только по документам сверки в статусе &1.", {&permitted} )
-      view-as alert-box.
-    return no-apply.
-  end.
-  find first ub.rvs-line no-lock
+        message
+            substitute( "Инвентаризацию можно проводить только по документам сверки в статусе &1.", {&permitted} )
+            view-as alert-box.
+        return no-apply.
+    end.
+find first ub.rvs-line no-lock
     where ub.rvs-line.rvs-code           = r-doc.rvs-code
-      and ub.rvs-line.state-measure-qnty = ?
+    and ub.rvs-line.state-measure-qnty = ?
     no-error.
-  if available ub.rvs-line then do:
+if available ub.rvs-line then 
+do:
     find first ub.goods no-lock
-      where ub.goods.gds-code = ub.rvs-line.gds-code.
+        where ub.goods.gds-code = ub.rvs-line.gds-code.
       
-      run placelib_get-attr(input {&place-virtual}
-                           ,input rvs-line.obj-code
-                           ,input rvs-line.obj-type
-                           ,input rvs-line.pl-code
-                           ,output v-value
-                           ,output v-ok) no-error.
+    run placelib_get-attr(input {&place-virtual}
+        ,input rvs-line.obj-code
+        ,input rvs-line.obj-type
+        ,input rvs-line.pl-code
+        ,output v-value
+        ,output v-ok) no-error.
 
-      is-vir = if (v-ok and logical(v-value)) then true else false.
+    is-vir = if (v-ok and logical(v-value)) then true else false.
       
-      if not is-gas(ub.rvs-line.gds-code) and not is-vir then do:
-    message
-      substitute( "Не заданы фактические остатки по товару &1 (&2)", ub.goods.gds-code, ub.goods.gds-name )
-      view-as alert-box error.
-    return no-apply.
-  end.
-  end.
-  find first buf-inv_trn-doc no-lock
+    if not is-gas(ub.rvs-line.gds-code) and not is-vir then 
+    do:
+        message
+            substitute( "Не заданы фактические остатки по товару &1 (&2)", ub.goods.gds-code, ub.goods.gds-name )
+            view-as alert-box error.
+        return no-apply.
+    end.
+end.
+find first buf-inv_trn-doc no-lock
     where buf-inv_trn-doc.out-code = r-doc.rvs-code
     no-error.
-  if ambiguous buf-inv_trn-doc then do:
+if ambiguous buf-inv_trn-doc then 
+do:
     message
-      "Найдено более одного складского документа связанного со сверкой."
-      view-as alert-box error.
-    return no-apply.
-  end.
-  if available buf-inv_trn-doc then do:
-    if buf-inv_trn-doc.doc-type <> {&inventory} then do:
-      message
-        "Документ связанный с документом сверки не яв-ся инвентаризацией."
+        "Найдено более одного складского документа связанного со сверкой."
         view-as alert-box error.
-      return no-apply.
+    return no-apply.
+end.
+if available buf-inv_trn-doc then 
+do:
+    if buf-inv_trn-doc.doc-type <> {&inventory} then 
+    do:
+        message
+            "Документ связанный с документом сверки не яв-ся инвентаризацией."
+            view-as alert-box error.
+        return no-apply.
     end.
     if buf-inv_trn-doc.status_ <> {&doc-froze}
-      or buf-inv_trn-doc.flag_ <> yes
-    then do:
-      message
-        substitute( "Ошибка в документе инвентаризации &1 по сверке.", buf-inv_trn-doc.doc-code ) skip
-        substitute( "Связанный со сверкой документ инвентаризации не находится в статусе &1", {&doc-froze} )
-        view-as alert-box error.
-      return no-apply.
+        or buf-inv_trn-doc.flag_ <> yes
+        then 
+    do:
+        message
+            substitute( "Ошибка в документе инвентаризации &1 по сверке.", buf-inv_trn-doc.doc-code ) skip
+            substitute( "Связанный со сверкой документ инвентаризации не находится в статусе &1", {&doc-froze} )
+            view-as alert-box error.
+        return no-apply.
     end.
     assign
-      varstr = " документ инвентаризации"
-    .
-  end.
-  if available buf-inv_trn-doc then do:
-    assign varlog = no.
+        varstr = " документ инвентаризации"
+        .
+end.
+if available buf-inv_trn-doc then 
+do:
+    assign 
+        varlog = no.
     message
-      "Вы хотите удалить документ инвентаризации?"
-    view-as alert-box question buttons yes-no update varlog.
-    if varlog <> yes then do: return no-apply. end.
+        "Вы хотите удалить документ инвентаризации?"
+        view-as alert-box question buttons yes-no update varlog.
+    if varlog <> yes then 
+    do: 
+        return no-apply. 
+    end.
     /* удаление документа инвентаризации */
     run delete-doc-inv in this-procedure
-      ( input recid(buf-inv_trn-doc)
-      ) no-error.
-    if error-status :error then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при удалении привязанных документов" skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
+        ( input recid(buf-inv_trn-doc)
+        ) no-error.
+    if error-status :error then 
+    do:
+        message
+            vss-workfile vss-revision vss-description skip
+            "Ошибка при удалении привязанных документов" skip
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
     end.
-    else do:
-      message
-        "Удаление завершено."
-        view-as alert-box information.
+    else 
+    do:
+        message
+            "Удаление завершено."
+            view-as alert-box information.
     end.
-  end.
-  else do:
+end.
+else 
+do:
     run str/rvscrdcs.p
-     ( input parparentproc
-      ,input rowid( r-doc )
-      ,output v-docs-info
-     ) no-error.
-    if error-status :error then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при создании документов" skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
-    end.
-    else do:
-      if v-docs-info <> "":U then do:
+        ( input parparentproc
+        ,input rowid( r-doc )
+        ,output v-docs-info
+        ) no-error.
+    if error-status :error then 
+    do:
         message
-          "Создание завершено." skip
-          "Созданы документы:" skip
-          v-docs-info
-          view-as alert-box information.
-      end.
-      else do:
-        message
-          "ДОКУМЕНТЫ НЕ СОЗДАНЫ!!!" skip
-          view-as alert-box warning .
-      end.
+            vss-workfile vss-revision vss-description skip
+            "Ошибка при создании документов" skip
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
     end.
-  end.
+    else 
+    do:
+        if v-docs-info <> "":U then 
+        do:
+            message
+                "Создание завершено." skip
+                "Созданы документы:" skip
+                v-docs-info
+                view-as alert-box information.
+        end.
+        else 
+        do:
+            message
+                "ДОКУМЕНТЫ НЕ СОЗДАНЫ!!!" skip
+                view-as alert-box warning .
+        end.
+    end.
+end.
 
 END.
 
@@ -977,15 +1044,15 @@ END.
 &Scoped-define SELF-NAME b-lkp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-lkp d-all-r-docs
 ON CHOOSE OF b-lkp IN FRAME d-all-r-docs /* Просмотр */
-DO:
-  br-handle = {&browse-name}:handle.
-  {&no-rvs}
+    DO:
+        br-handle = {&browse-name}:handle.
+        {&no-rvs}
   case r-doc.rvs-type
-  :
+            :
     when {&rvs-before-doc}
     or when {&rvs-after-doc}
     then do:
-      { gbl/chk-actg.i
+{ gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
         {&action-head-code-main}
@@ -1000,9 +1067,9 @@ DO:
         true
         varlog
       }
-    end.
+end.
     when {&rvs-shift} then do:
-      { gbl/chk-actg.i
+{ gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
         {&action-head-code-main}
@@ -1017,9 +1084,9 @@ DO:
         true
         varlog
       }
-    end.
+end.
     when {&rvs-control} then do:
-      { gbl/chk-actg.i
+{ gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
         {&action-head-code-main}
@@ -1034,38 +1101,44 @@ DO:
         true
         varlog
       }
-    end.
+end.
     otherwise do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Неизвестный тип документа сверки" skip
-        "Тип документа сверки" r-doc.rvs-type skip
-        "Код документа сверки" r-doc.rvs-code skip
-        view-as alert-box error .
-      undo, return no-apply .
-    end.
-  end case .
-  if varlog <> yes then do: return no-apply. end.
-  do
-  on stop undo, return no-apply
-  :
-    assign rvs-rec = recid( r-doc ).
+message
+    vss-workfile vss-revision vss-description skip
+    "Неизвестный тип документа сверки" skip
+    "Тип документа сверки" r-doc.rvs-type skip
+    "Код документа сверки" r-doc.rvs-code skip
+    view-as alert-box error .
+undo, return no-apply .
+end.
+end case .
+if varlog <> yes then 
+do: 
+    return no-apply. 
+end.
+do
+    on stop undo, return no-apply
+    :
+    assign 
+        rvs-rec = recid( r-doc ).
     run str/rvs-doc.w
-      ( input        parparentproc
-       ,input        {&lookup}
-       ,input        r-doc.rvs-type
-       ,input        no
-       ,input-output rvs-rec
-      ) no-error.
-    if error-status :error then do:
-      return no-apply.
+        ( input        parparentproc
+        ,input        {&lookup}
+        ,input        r-doc.rvs-type
+        ,input        no
+        ,input-output rvs-rec
+        ) no-error.
+    if error-status :error then 
+    do:
+        return no-apply.
     end.
-  end.
-  if br-handle = ? then do:
+end.
+if br-handle = ? then 
+do:
     reposition {&browse-name} to recid rvs-rec no-error.
-  end.
-  apply "entry" to {&browse-name} in frame {&frame-name}.
-  apply "value-changed" to {&browse-name} in frame {&frame-name}.
+end.
+apply "entry" to {&browse-name} in frame {&frame-name}.
+apply "value-changed" to {&browse-name} in frame {&frame-name}.
 
 END.
 
@@ -1076,13 +1149,13 @@ END.
 &Scoped-define SELF-NAME b-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark d-all-r-docs
 ON CHOOSE OF b-mark IN FRAME d-all-r-docs /* * */
-DO:
-  run local-mark in this-procedure .
-  assign
-    varlog = {&browse-name}:select-next-row ()
-  .
-  apply "entry" to {&browse-name} in frame {&frame-name}.
-END.
+    DO:
+        run local-mark in this-procedure .
+        assign
+            varlog = {&browse-name}:select-next-row ()
+            .
+        apply "entry" to {&browse-name} in frame {&frame-name}.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1091,100 +1164,109 @@ END.
 &Scoped-define SELF-NAME b-open
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-open d-all-r-docs
 ON CHOOSE OF b-open IN FRAME d-all-r-docs /* Открыть */
-DO:
-  {&no-rvs}
+    DO:
+        {&no-rvs}
   if r-doc.status_ <> {&permitted} then do:
-    message
-      "Данный документ сверки закрыт по факту или не может быть обработан в этом списке."
-      view-as alert-box error .
-    return no-apply.
-  end.
+        message
+            "Данный документ сверки закрыт по факту или не может быть обработан в этом списке."
+            view-as alert-box error .
+        return no-apply.
+    end.
 
-  find first buf-inv_trn-doc no-lock
+find first buf-inv_trn-doc no-lock
     where buf-inv_trn-doc.out-code = r-doc.rvs-code
     no-error.
-  if ambiguous buf-inv_trn-doc then do:
+if ambiguous buf-inv_trn-doc then 
+do:
     message
-      "Найдено более одного складского документа связанного со сверкой."
-      view-as alert-box error.
-    return no-apply.
-  end.
-  if available buf-inv_trn-doc then do:
-    if buf-inv_trn-doc.doc-type <> {&inventory} then do:
-      message
-        "Документ связанный с документом сверки не яв-ся инвентаризацией."
+        "Найдено более одного складского документа связанного со сверкой."
         view-as alert-box error.
-      return no-apply.
+    return no-apply.
+end.
+if available buf-inv_trn-doc then 
+do:
+    if buf-inv_trn-doc.doc-type <> {&inventory} then 
+    do:
+        message
+            "Документ связанный с документом сверки не яв-ся инвентаризацией."
+            view-as alert-box error.
+        return no-apply.
     end.
     if buf-inv_trn-doc.status_ <> {&doc-froze}
-      or buf-inv_trn-doc.flag_ <> yes
-    then do:
-      message
-        substitute( "Ошибка в документе инвентаризации &1 по сверке.", buf-inv_trn-doc.doc-code ) skip
-        substitute( "Связанный со сверкой документ инвентаризации не находится в статусе &1", {&doc-froze} )
-        view-as alert-box error.
-      return no-apply.
+        or buf-inv_trn-doc.flag_ <> yes
+        then 
+    do:
+        message
+            substitute( "Ошибка в документе инвентаризации &1 по сверке.", buf-inv_trn-doc.doc-code ) skip
+            substitute( "Связанный со сверкой документ инвентаризации не находится в статусе &1", {&doc-froze} )
+            view-as alert-box error.
+        return no-apply.
     end.
     assign
-      varstr = " документ инвентаризации"
-    .
-  end.
-  assign
+        varstr = " документ инвентаризации"
+        .
+end.
+assign
     varlog = no
-  .
-  message
+    .
+message
     substitute( "Вы хотите открыть документ сверки &1?", (if varstr <> "" then "и" else "") + varstr ) skip
     view-as alert-box question buttons yes-no update varlog.
-  if varlog <> yes then do:
+if varlog <> yes then 
+do:
     return no-apply.
-  end.
-  tr:
-  do transaction
-  on error   undo tr, return no-apply
-  on end-key undo tr, return no-apply
-  on stop    undo tr, return no-apply
-  :
-    if available buf-inv_trn-doc then do:
-      run delete-doc-inv in this-procedure
-        ( input recid(buf-inv_trn-doc)
-        ) no-error.
-      if error-status :error then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Ошибка при удалении привязанных документов" skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
-        undo tr, return no-apply .
-      end.
+end.
+tr:
+do transaction
+    on error   undo tr, return no-apply
+    on end-key undo tr, return no-apply
+    on stop    undo tr, return no-apply
+    :
+    if available buf-inv_trn-doc then 
+    do:
+        run delete-doc-inv in this-procedure
+            ( input recid(buf-inv_trn-doc)
+            ) no-error.
+        if error-status :error then 
+        do:
+            message
+                vss-workfile vss-revision vss-description skip
+                "Ошибка при удалении привязанных документов" skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error .
+            undo tr, return no-apply .
+        end.
     end.
     run str/rvs-stat.p
-      ( input parparentproc
-       ,input recid(r-doc)
-       ,input "open":U
-      ) no-error.
-    if error-status :error then do:
-      message
-        "Ошибка при изменении статуса." skip
-        return-value
-        view-as alert-box error.
-      undo tr, return no-apply.
+        ( input parparentproc
+        ,input recid(r-doc)
+        ,input "open":U
+        ) no-error.
+    if error-status :error then 
+    do:
+        message
+            "Ошибка при изменении статуса." skip
+            return-value
+            view-as alert-box error.
+        undo tr, return no-apply.
     end.
 
     release r-doc no-error .
-    if error-status :error then do:
-      message
-        "Ошибка при открытии документа сверки." skip
-        error-status:get-message(1) skip
-        return-value
-        view-as alert-box error.
-      undo tr, leave.
+    if error-status :error then 
+    do:
+        message
+            "Ошибка при открытии документа сверки." skip
+            error-status:get-message(1) skip
+            return-value
+            view-as alert-box error.
+        undo tr, leave.
     end.
-  end.
-  find r-doc no-lock
+end.
+find r-doc no-lock
     where recid (r-doc) = rvs-rec
-  .
-  run UI-on in this-procedure .
+    .
+run UI-on in this-procedure .
 
 END.
 
@@ -1195,15 +1277,17 @@ END.
 &Scoped-define SELF-NAME b-print
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print d-all-r-docs
 ON CHOOSE OF b-print IN FRAME d-all-r-docs /* Печать */
-DO:
-  {&no-rvs}
+    DO:
+        {&no-rvs}
   assign rvs-rec = recid (r-doc).
-  case r-doc.rvs-type
-  :
-    when {&rvs-before-doc}
-    or when {&rvs-after-doc}
-    then do:
-      { gbl/chk-actg.i
+        case r-doc.rvs-type
+            :
+            when {&rvs-before-doc}
+            or 
+            when {&rvs-after-doc}
+            then 
+                do:
+                    { gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
         {&action-head-code-main}
@@ -1218,9 +1302,10 @@ DO:
         true
         varlog
       }
-    end.
-    when {&rvs-shift} then do:
-      { gbl/chk-actg.i
+                end.
+            when {&rvs-shift} then 
+                do:
+                    { gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
         {&action-head-code-main}
@@ -1235,9 +1320,10 @@ DO:
         true
         varlog
       }
-    end.
-    when {&rvs-control} then do:
-      { gbl/chk-actg.i
+                end.
+            when {&rvs-control} then 
+                do:
+                    { gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
         {&action-head-code-main}
@@ -1252,27 +1338,29 @@ DO:
         true
         varlog
       }
-    end.
-    otherwise do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Неизвестный тип документа сверки" skip
-        "Тип документа сверки" r-doc.rvs-type skip
-        "Код документа сверки" r-doc.rvs-code skip
-        view-as alert-box error .
-      undo, return no-apply .
-    end.
-  end case .
-  if varlog <> yes then do:
-    return no-apply.
-  end.
-  run rep/r-rvsdoc.p
-    ( input parparentproc
-     ,input rvs-rec
-    ).
-  apply "entry" to {&browse-name} in frame {&frame-name}.
+                end.
+            otherwise 
+            do:
+                message
+                    vss-workfile vss-revision vss-description skip
+                    "Неизвестный тип документа сверки" skip
+                    "Тип документа сверки" r-doc.rvs-type skip
+                    "Код документа сверки" r-doc.rvs-code skip
+                    view-as alert-box error .
+                undo, return no-apply .
+            end.
+        end case .
+        if varlog <> yes then 
+        do:
+            return no-apply.
+        end.
+        run rep/r-rvsdoc.p
+            ( input parparentproc
+            ,input rvs-rec
+            ).
+        apply "entry" to {&browse-name} in frame {&frame-name}.
 
-END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1281,9 +1369,10 @@ END.
 &Scoped-define SELF-NAME b-quit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit d-all-r-docs
 ON CHOOSE OF b-quit IN FRAME d-all-r-docs /* Выход */
-DO:
-  assign rvs-rec = ?.
-END.
+    DO:
+        assign 
+            rvs-rec = ?.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1292,32 +1381,32 @@ END.
 &Scoped-define SELF-NAME b-sch
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sch d-all-r-docs
 ON CHOOSE OF b-sch IN FRAME d-all-r-docs /* Фильтр */
-DO:
-  assign
-    filter-point = "all-rvs"
-    tbl = 'rvs-doc'
-    join-tbl = 'r-doc'
-    fld = 'host-code,obj-code,obj-type,rvs-code,status_,rvs-type,out-code,fact-date,shift-date,shift-name,shift-num'
-    lab = 'Фирма,Код_объекта,Тип_Объекта,Код_сверки,Статус_сверки,Тип_сверки,Код_накладной,Дата_факт,Дата_смены,Номер_смены,Порядок_смены'
-    spr = ',,,,,,,,,'
-    dim = '10'
-  .
-  do
-  on stop undo, leave
-  :
-    run gbl/filter.w
-      ( input parparentproc
-      ,input filter-point
-      ,input tbl
-      ,input join-tbl
-      ,input fld
-      ,input lab
-      ,input spr
-      ,input dim
-      ).
-    run openbr in this-procedure .
-  end .
-END.
+    DO:
+        assign
+            filter-point = "all-rvs"
+            tbl          = 'rvs-doc'
+            join-tbl     = 'r-doc'
+            fld          = 'host-code,obj-code,obj-type,rvs-code,status_,rvs-type,out-code,fact-date,shift-date,shift-name,shift-num'
+            lab          = 'Фирма,Код_объекта,Тип_Объекта,Код_сверки,Статус_сверки,Тип_сверки,Код_накладной,Дата_факт,Дата_смены,Номер_смены,Порядок_смены'
+            spr          = ',,,,,,,,,'
+            dim          = '10'
+            .
+        do
+            on stop undo, leave
+            :
+            run gbl/filter.w
+                ( input parparentproc
+                ,input filter-point
+                ,input tbl
+                ,input join-tbl
+                ,input fld
+                ,input lab
+                ,input spr
+                ,input dim
+                ).
+            run openbr in this-procedure .
+        end .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1326,13 +1415,13 @@ END.
 &Scoped-define SELF-NAME b-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel d-all-r-docs
 ON CHOOSE OF b-sel IN FRAME d-all-r-docs /* Выбор */
-DO:
-  {&no-rvs}
+    DO:
+        {&no-rvs}
   assign
     out-rec = recid( r-doc )
-  .
-  apply "go" to frame {&frame-name}.
-END.
+            .
+        apply "go" to frame {&frame-name}.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1342,9 +1431,33 @@ END.
 &Scoped-define SELF-NAME br-r-docs
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-r-docs d-all-r-docs
 ON RETURN OF br-r-docs IN FRAME d-all-r-docs
-OR mouse-select-dblclick of {&browse-name} in frame {&frame-name} do:
-  apply "choose" to b-lkp in frame {&frame-name}.
-end.
+    OR mouse-select-dblclick of {&browse-name} in frame {&frame-name} 
+    do:
+        apply "choose" to b-lkp in frame {&frame-name}.
+    end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-r-docs d-all-r-docs
+ON ROW-DISPLAY OF br-r-docs IN FRAME d-all-r-docs
+    DO:
+        
+   
+    if   autorvs(recid(r-doc)) = "А"
+       then
+        do:
+
+            do ii = 1 to 34:
+
+                bcol[ii]:FGcolor  = 7.
+
+
+            end.
+
+        end.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1352,71 +1465,76 @@ end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-r-docs d-all-r-docs
 ON VALUE-CHANGED OF br-r-docs IN FRAME d-all-r-docs
-DO:
-  define buffer buf_clients for ub.clients .
+    DO:
+        define buffer buf_clients for ub.clients .
 
-  if available r-doc then do:
-    assign
-      f-boss-name = ?
-      f-agnt-name = ?
-      f-wrkr-name = ?
-      f-obj-name  = ?
-      f-cre-name  = ?
-    .
-    { gbl/usrfulnm.i
+        if available r-doc then 
+        do:
+            assign
+                f-boss-name = ?
+                f-agnt-name = ?
+                f-wrkr-name = ?
+                f-obj-name  = ?
+                f-cre-name  = ?
+                .
+            { gbl/usrfulnm.i
       r-doc.creid
       f-cre-name
     }
-    find first buf_clients no-lock
-      where buf_clients.obj-type = {&prs}
-        and buf_clients.obj-code = r-doc.boss
-      no-error.
-    if available buf_clients then do:
-      assign
-        f-boss-name = buf_clients.obj-name
-      .
-    end.
-    find first buf_clients no-lock
-      where buf_clients.obj-type = {&prs}
-        and buf_clients.obj-code = r-doc.agnt
-      no-error.
-    if available buf_clients then do:
-      assign
-        f-agnt-name = buf_clients.obj-name
-      .
-    end.
-    find first buf_clients no-lock
-      where buf_clients.obj-type = {&prs}
-        and buf_clients.obj-code = r-doc.wrkr
-      no-error.
-    if available buf_clients then do:
-      assign
-        f-wrkr-name = buf_clients.obj-name
-      .
-    end.
-    find first buf_clients no-lock
-      where buf_clients.obj-type = r-doc.obj-type
-        and buf_clients.obj-code = r-doc.obj-code
-      no-error.
-    if available buf_clients then do:
-      assign
-        f-obj-name = buf_clients.obj-name
-      .
-    end.
+            find first buf_clients no-lock
+                where buf_clients.obj-type = {&prs}
+                and buf_clients.obj-code = r-doc.boss
+                no-error.
+            if available buf_clients then 
+            do:
+                assign
+                    f-boss-name = buf_clients.obj-name
+                    .
+            end.
+            find first buf_clients no-lock
+                where buf_clients.obj-type = {&prs}
+                and buf_clients.obj-code = r-doc.agnt
+                no-error.
+            if available buf_clients then 
+            do:
+                assign
+                    f-agnt-name = buf_clients.obj-name
+                    .
+            end.
+            find first buf_clients no-lock
+                where buf_clients.obj-type = {&prs}
+                and buf_clients.obj-code = r-doc.wrkr
+                no-error.
+            if available buf_clients then 
+            do:
+                assign
+                    f-wrkr-name = buf_clients.obj-name
+                    .
+            end.
+            find first buf_clients no-lock
+                where buf_clients.obj-type = r-doc.obj-type
+                and buf_clients.obj-code = r-doc.obj-code
+                no-error.
+            if available buf_clients then 
+            do:
+                assign
+                    f-obj-name = buf_clients.obj-name
+                    .
+            end.
 
-    assign
-      ed-notes = r-doc.ps
-    .
-    display
-      ed-notes
-      f-obj-name
-      f-boss-name
-      f-agnt-name
-      f-wrkr-name
-      f-cre-name
-      with frame {&frame-name}.
-  end.
-END.
+            assign
+                ed-notes = r-doc.ps
+                .
+            display
+                ed-notes
+                f-obj-name
+                f-boss-name
+                f-agnt-name
+                f-wrkr-name
+                f-cre-name
+                with frame {&frame-name}.
+        end.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1425,20 +1543,22 @@ END.
 &Scoped-define SELF-NAME Btn_Copy
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Copy d-all-r-docs
 ON CHOOSE OF Btn_Copy IN FRAME d-all-r-docs /* Ст.Смен. */
-DO:
-  if not available r-doc then do:
-    message
-      "Не выбрана сверка, из которой нужно сделать сменную."
-      view-as alert-box.
-    return no-apply.
-  end.
-  run proc-copy in this-procedure
-    no-error.
-  if error-status :error then do:
-    return no-apply.
-  end.
-  run UI-on in this-procedure.
-END.
+    DO:
+        if not available r-doc then 
+        do:
+            message
+                "Не выбрана сверка, из которой нужно сделать сменную."
+                view-as alert-box.
+            return no-apply.
+        end.
+        run proc-copy in this-procedure
+            no-error.
+        if error-status :error then 
+        do:
+            return no-apply.
+        end.
+        run UI-on in this-procedure.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1447,23 +1567,25 @@ END.
 &Scoped-define SELF-NAME ed-notes
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ed-notes d-all-r-docs
 ON ENTRY OF ed-notes IN FRAME d-all-r-docs
-DO:
-  if not available r-doc then do:
-    message
-      "Неправильный выбор документа."
-      view-as alert-box .
-    return no-apply.
-  end.
-  assign
-    rvs-rec = recid( r-doc )
-  .
-  if r-doc.status_ <> {&fact} and substring (r-doc.PS, 1, 1) = "@" then do:
-    message
-      "Чтобы программа не могла заново переписать Ваше примечание, удалите знак @."
-      view-as alert-box .
-  end.
+    DO:
+        if not available r-doc then 
+        do:
+            message
+                "Неправильный выбор документа."
+                view-as alert-box .
+            return no-apply.
+        end.
+        assign
+            rvs-rec = recid( r-doc )
+            .
+        if r-doc.status_ <> {&fact} and substring (r-doc.PS, 1, 1) = "@" then 
+        do:
+            message
+                "Чтобы программа не могла заново переписать Ваше примечание, удалите знак @."
+                view-as alert-box .
+        end.
 
-END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1471,21 +1593,21 @@ END.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ed-notes d-all-r-docs
 ON LEAVE OF ed-notes IN FRAME d-all-r-docs
-DO:
-  define buffer bf-rvs for ub.rvs-doc.
-  do
-  on stop  undo, return no-apply
-  on error undo, return no-apply
-  :
-    find first bf-rvs exclusive-lock
-      where recid (bf-rvs) = rvs-rec
-      .
-    assign
-      bf-rvs.PS = input frame {&frame-name} ed-notes
-    .
-  end.
+    DO:
+        define buffer bf-rvs for ub.rvs-doc.
+        do
+            on stop  undo, return no-apply
+            on error undo, return no-apply
+            :
+            find first bf-rvs exclusive-lock
+                where recid (bf-rvs) = rvs-rec
+                .
+            assign
+                bf-rvs.PS = input frame {&frame-name} ed-notes
+                .
+        end.
 
-END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1493,12 +1615,12 @@ END.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ed-notes d-all-r-docs
 ON RETURN OF ed-notes IN FRAME d-all-r-docs
-OR mouse-select-dblclick of {&self-name} in frame {&frame-name}
-DO:
-  apply "entry" to {&browse-name} in frame {&frame-name}.
-  return no-apply.
+    OR mouse-select-dblclick of {&self-name} in frame {&frame-name}
+    DO:
+        apply "entry" to {&browse-name} in frame {&frame-name}.
+        return no-apply.
 
-END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1506,14 +1628,14 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-all-r-docs 
 
 
 /* ***************************  Main Block  *************************** */
 
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
-THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+    THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 
 { gbl/app_help.i }
 
@@ -1541,6 +1663,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
   &sort-clmn_2   = "{&sort-clmn_2-br-dtl}"
   &label-clmn_3  = "{&label-clmn_3-br-dtl}"
   &sort-clmn_3   = "{&sort-clmn_3-br-dtl}"
+    &dyn_sort-clmn_3   = "{&dyn_sort-clmn_3-br-dtl}"
   &label-clmn_4  = "{&label-clmn_4-br-dtl}"
   &sort-clmn_4   = "{&sort-clmn_4-br-dtl}"
   &label-clmn_5  = "{&label-clmn_5-br-dtl}"
@@ -1565,7 +1688,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
   &sort-clmn_16  = "{&sort-clmn_16-br-dtl}"
   &sort-clmn_17  = "{&sort-clmn_17-br-dtl}"
   &sort-clmn_18  = "{&sort-clmn_18-br-dtl}"
-  &sort-clmn_19  = "{&sort-clmn_19-br-dtl}"
+  &sort-clmn_19  = "{&sort-clmn_19-br-dtl}" 
   &sort-clmn_20  = "{&sort-clmn_20-br-dtl}"
   &sort-clmn_21  = "{&sort-clmn_21-br-dtl}"
   &sort-clmn_22  = "{&sort-clmn_22-br-dtl}"
@@ -1592,18 +1715,37 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
-   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-  { gbl/mv-clmn.i
+    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+    { gbl/mv-clmn.i
     &browse-name = "{&browse-name}"
     &frame-name  = "{&frame-name}"
     &start-column = 4
     &ext-col = 34
   }
-  assign
-    filter-point = "all-rvs":U
-  .
-  run UI-on in this-procedure .
-  WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name}.
+  
+  
+  
+
+    /*    gh-journal-egais:query-prepare ("for each tt_journal-egais").*/
+    /*    create query   hd-rvs.    */
+    /*                              */
+    /*   hd-rvs:QUERY-OPEN.         */
+    /*    br-r-docs:QUERY =  hd-rvs.*/
+
+    do ii = 1 to 34:
+ 
+        bcol[ii] = br-r-docs:get-browse-column(ii).
+          
+  
+    end.
+  
+    assign
+        filter-point = "all-rvs":U
+        . 
+        
+    run UI-on in this-procedure .
+    WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name}.
+    
 END.
 RUN disable_UI in this-procedure .
 
@@ -1613,105 +1755,108 @@ RUN disable_UI in this-procedure .
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE delete-doc-inv d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE delete-doc-inv d-all-r-docs 
 PROCEDURE delete-doc-inv :
-define input parameter pardoc-rec as recid no-undo.
+    define input parameter pardoc-rec as recid no-undo.
 
-  do
-  on error  undo, return error substitute( "&1 (delete-doc-inv). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
-  on stop   undo, return error substitute( "&1 (delete-doc-inv). stop", vss-workfile )
-  on endkey undo, return error substitute( "&1 (delete-doc-inv). endkey", vss-workfile )
-  :
-    define variable varchg-inv as logical no-undo.
-    define variable v-docs-list   as character no-undo .
-    define variable v-ind         as integer   no-undo .
-    define variable v-num-entries as integer   no-undo .
-    define variable v-doc-code    as character no-undo .
-    define variable v-chip-num    as integer   no-undo .
-    define variable v-user-action as character no-undo .
-    define variable v-printed     as logical   no-undo .
+    do
+        on error  undo, return error substitute( "&1 (delete-doc-inv). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+        on stop   undo, return error substitute( "&1 (delete-doc-inv). stop", vss-workfile )
+        on endkey undo, return error substitute( "&1 (delete-doc-inv). endkey", vss-workfile )
+        :
+        define variable varchg-inv    as logical   no-undo.
+        define variable v-docs-list   as character no-undo .
+        define variable v-ind         as integer   no-undo .
+        define variable v-num-entries as integer   no-undo .
+        define variable v-doc-code    as character no-undo .
+        define variable v-chip-num    as integer   no-undo .
+        define variable v-user-action as character no-undo .
+        define variable v-printed     as logical   no-undo .
 
-    define buffer buf_parts for ub.parts .
-    define buffer buf-inv_trn-doc for ub.trn-doc .
-    define buffer buf-add_trn-doc for ub.trn-doc .
+        define buffer buf_parts       for ub.parts .
+        define buffer buf-inv_trn-doc for ub.trn-doc .
+        define buffer buf-add_trn-doc for ub.trn-doc .
 
-    find first buf-inv_trn-doc exclusive-lock
-      where recid( buf-inv_trn-doc ) = pardoc-rec
-      .
-    assign
-      v-docs-list = buf-inv_trn-doc.doc-code
-    .
-    for each buf-add_trn-doc
-      where buf-add_trn-doc.out-code = buf-inv_trn-doc.doc-code
-    on error undo, return error return-value
-    :
-      assign
-        v-docs-list = buf-add_trn-doc.doc-code + ",":U + v-docs-list
-      .
-    end.
+        find first buf-inv_trn-doc exclusive-lock
+            where recid( buf-inv_trn-doc ) = pardoc-rec
+            .
+        assign
+            v-docs-list = buf-inv_trn-doc.doc-code
+            .
+        for each buf-add_trn-doc
+            where buf-add_trn-doc.out-code = buf-inv_trn-doc.doc-code
+            on error undo, return error return-value
+            :
+            assign
+                v-docs-list = buf-add_trn-doc.doc-code + ",":U + v-docs-list
+                .
+        end.
 
-    assign
-      v-num-entries = num-entries( v-docs-list )
-    .
-    do v-ind = 1 to v-num-entries
-    on error undo, return error return-value
-    :
-      assign
-        v-doc-code = entry( v-ind, v-docs-list )
-      .
-      find first buf-add_trn-doc exclusive-lock
-        where buf-add_trn-doc.doc-code = v-doc-code
-        .
-      assign
-        buf-add_trn-doc.status_ = {&permitted}
-        buf-add_trn-doc.flag_    = yes
-      .
-      /* разр+ - накл+ */
-      run str/trn-stat.p
-        ( input parparentproc
-        , input this-procedure
-         ,input {&open-doc}
-         ,input buf-add_trn-doc.doc-code
-         ,input ?
-         ,input v-cntxt-db-num
-         ,input ?
-         ,input ?
-         ,input ?
-         ,input ?
-         ,input yes
-         ,output varchg-inv
-         ,output table gds-list
-        ) no-error.
-      if error-status :error then do:
-        undo, return error return-value.
-      end.
-      /* накл+ - накл- */
-      release buf-add_trn-doc.
+        assign
+            v-num-entries = num-entries( v-docs-list )
+            .
+        do v-ind = 1 to v-num-entries
+            on error undo, return error return-value
+            :
+            assign
+                v-doc-code = entry( v-ind, v-docs-list )
+                .
+            find first buf-add_trn-doc exclusive-lock
+                where buf-add_trn-doc.doc-code = v-doc-code
+                .
+            assign
+                buf-add_trn-doc.status_ = {&permitted}
+                buf-add_trn-doc.flag_   = yes
+                .
+            /* разр+ - накл+ */
+            run str/trn-stat.p
+                ( input parparentproc
+                , input this-procedure
+                ,input {&open-doc}
+                ,input buf-add_trn-doc.doc-code
+                ,input ?
+                ,input v-cntxt-db-num
+                ,input ?
+                ,input ?
+                ,input ?
+                ,input ?
+                ,input yes
+                ,output varchg-inv
+                ,output table gds-list
+                ) no-error.
+            if error-status :error then 
+            do:
+                undo, return error return-value.
+            end.
+            /* накл+ - накл- */
+            release buf-add_trn-doc.
 
-      find first buf-add_trn-doc exclusive-lock
-        where buf-add_trn-doc.doc-code = v-doc-code
-      .
-      run str/trn-stat.p
-        ( input parparentproc
-        , input this-procedure
-         ,input {&open-doc}
-         ,input buf-add_trn-doc.doc-code
-         ,input ?
-         ,input v-cntxt-db-num
-         ,input ?
-         ,input ?
-         ,input ?
-         ,input ?
-         ,input yes
-         ,output varchg-inv
-         ,output table gds-list
-        ) no-error.
-      if error-status :error then do:
-        undo, return error return-value.
-      end.
-      case buf-add_trn-doc.doc-type :
-        when {&income} then do:
-          { gbl/chk-actg.i
+            find first buf-add_trn-doc exclusive-lock
+                where buf-add_trn-doc.doc-code = v-doc-code
+                .
+            run str/trn-stat.p
+                ( input parparentproc
+                , input this-procedure
+                ,input {&open-doc}
+                ,input buf-add_trn-doc.doc-code
+                ,input ?
+                ,input v-cntxt-db-num
+                ,input ?
+                ,input ?
+                ,input ?
+                ,input ?
+                ,input yes
+                ,output varchg-inv
+                ,output table gds-list
+                ) no-error.
+            if error-status :error then 
+            do:
+                undo, return error return-value.
+            end.
+            case buf-add_trn-doc.doc-type :
+                when {&income} then 
+                    do:
+                        { gbl/chk-actg.i
             v-cntxt-db-num
             v-cntxt-userid
             {&action-head-code-main}
@@ -1726,9 +1871,10 @@ define input parameter pardoc-rec as recid no-undo.
             true
             varlog
           }
-        end.
-        when {&expense} then do:
-          { gbl/chk-actg.i
+                    end.
+                when {&expense} then 
+                    do:
+                        { gbl/chk-actg.i
             v-cntxt-db-num
             v-cntxt-userid
             {&action-head-code-main}
@@ -1743,9 +1889,10 @@ define input parameter pardoc-rec as recid no-undo.
             true
             varlog
           }
-        end.
-        when {&write-off} then do:
-          { gbl/chk-actg.i
+                    end.
+                when {&write-off} then 
+                    do:
+                        { gbl/chk-actg.i
             v-cntxt-db-num
             v-cntxt-userid
             {&action-head-code-main}
@@ -1760,9 +1907,10 @@ define input parameter pardoc-rec as recid no-undo.
             true
             varlog
           }
-        end.
-        when {&inventory} then do:
-          { gbl/chk-actg.i
+                    end.
+                when {&inventory} then 
+                    do:
+                        { gbl/chk-actg.i
             v-cntxt-db-num
             v-cntxt-userid
             {&action-head-code-main}
@@ -1777,9 +1925,10 @@ define input parameter pardoc-rec as recid no-undo.
             true
             varlog
           }
-        end.
-        when {&return} then do:
-          { gbl/chk-actg.i
+                    end.
+                when {&return} then 
+                    do:
+                        { gbl/chk-actg.i
             v-cntxt-db-num
             v-cntxt-userid
             {&action-head-code-main}
@@ -1794,62 +1943,67 @@ define input parameter pardoc-rec as recid no-undo.
             true
             varlog
           }
-        end.
-        otherwise do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Неизвестный тип документа" skip
-            "Тип документа" buf-add_trn-doc.doc-type skip
-            "Код документа" buf-add_trn-doc.doc-code skip
-            view-as alert-box error .
-          undo, return no-apply .
-        end.
-      end case .
-      if varlog <> yes
-      then do:
-        undo, return error.
-      end.
+                    end.
+                otherwise 
+                do:
+                    message
+                        vss-workfile vss-revision vss-description skip
+                        "Неизвестный тип документа" skip
+                        "Тип документа" buf-add_trn-doc.doc-type skip
+                        "Код документа" buf-add_trn-doc.doc-code skip
+                        view-as alert-box error .
+                    undo, return no-apply .
+                end.
+            end case .
+            if varlog <> yes
+                then 
+            do:
+                undo, return error.
+            end.
 
-      run waitfram-show in this-procedure ( input "Удаление документа № " + buf-add_trn-doc.doc-code + ". Ждите..." ).
+            run waitfram-show in this-procedure ( input "Удаление документа № " + buf-add_trn-doc.doc-code + ". Ждите..." ).
 
-      if search ("del-doc.err") <> ? then do:
-        os-delete "del-doc.err".
-      end.
-      run str/del-doc.p
-        ( input  parparentproc
-        , input  buf-add_trn-doc.doc-code
-        , input  v-cntxt-db-num
-        , input  "del-doc.err":U
-        , input  ?
-        , input  ?
-        , input  v-cntxt-userid
-        , input  0
-        , input  ?
-        , output v-chip-num
-        ) no-error.
-      if error-status:error then do:
-        run waitfram-hide in this-procedure .
-        message
-          vss-workfile vss-revision vss-description skip
-          "Ошибка при удалении документа." skip
-          return-value
-          view-as alert-box error.
-        if search ("del-doc.err") <> ? then do:
-          run gbl/prnfilen.w
-            (input  "Ошибки при удалении документа"
-            ,input  0
-            ,input  "del-doc.err"
-            ,input  7
-            ,output v-user-action
-            ,output v-printed
-            ).
+            if search ("del-doc.err") <> ? then 
+            do:
+                os-delete "del-doc.err".
+            end.
+            run str/del-doc.p
+                ( input  parparentproc
+                , input  buf-add_trn-doc.doc-code
+                , input  v-cntxt-db-num
+                , input  "del-doc.err":U
+                , input  ?
+                , input  ?
+                , input  v-cntxt-userid
+                , input  0
+                , input  ?
+                , output v-chip-num
+                ) no-error.
+            if error-status:error then 
+            do:
+                run waitfram-hide in this-procedure .
+                message
+                    vss-workfile vss-revision vss-description skip
+                    "Ошибка при удалении документа." skip
+                    return-value
+                    view-as alert-box error.
+                if search ("del-doc.err") <> ? then 
+                do:
+                    run gbl/prnfilen.w
+                        (input  "Ошибки при удалении документа"
+                        ,input  0
+                        ,input  "del-doc.err"
+                        ,input  7
+                        ,output v-user-action
+                        ,output v-printed
+                        ).
+                end.
+                undo, return error.
+            end.
+
+            run waitfram-hide in this-procedure .
         end.
-        undo, return error.
-      end.
-
-      run waitfram-hide in this-procedure .
     end.
-  end.
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1857,16 +2011,16 @@ end procedure.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI d-all-r-docs  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     DISABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
-               frames.  This procedure is usually called when
-               we are ready to "clean-up" after running.
-------------------------------------------------------------------------------*/
-  /* Hide all frames. */
-  HIDE FRAME d-all-r-docs.
+    /*------------------------------------------------------------------------------
+      Purpose:     DISABLE the User Interface
+      Parameters:  <none>
+      Notes:       Here we clean-up the user-interface by deleting
+                   dynamic widgets we have created and/or hide 
+                   frames.  This procedure is usually called when
+                   we are ready to "clean-up" after running.
+    ------------------------------------------------------------------------------*/
+    /* Hide all frames. */
+    HIDE FRAME d-all-r-docs.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1874,64 +2028,69 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI d-all-r-docs  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     ENABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we display/view/enable the widgets in the
-               user-interface.  In addition, OPEN all queries
-               associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
-               Settings" section of the widget Property Sheets.
-------------------------------------------------------------------------------*/
-  DISPLAY ed-notes f-boss-name f-obj-name f-agnt-name f-wrkr-name f-cre-name
-      WITH FRAME d-all-r-docs.
-  ENABLE b-quit b-mark b-sel b-add b-lkp b-chg b-del b-close b-open b-help
-         Btn_Copy b-inv b-sch b-print br-r-docs ed-notes
-      WITH FRAME d-all-r-docs.
-  VIEW FRAME d-all-r-docs.
-  {&OPEN-BROWSERS-IN-QUERY-d-all-r-docs}
+    /*------------------------------------------------------------------------------
+      Purpose:     ENABLE the User Interface
+      Parameters:  <none>
+      Notes:       Here we display/view/enable the widgets in the
+                   user-interface.  In addition, OPEN all queries
+                   associated with each FRAME and BROWSE.
+                   These statements here are based on the "Other 
+                   Settings" section of the widget Property Sheets.
+    ------------------------------------------------------------------------------*/
+    DISPLAY ed-notes f-boss-name f-obj-name f-agnt-name f-wrkr-name f-cre-name 
+        WITH FRAME d-all-r-docs.
+    ENABLE b-quit b-mark b-sel b-add b-lkp b-chg b-del b-close b-open b-help 
+        Btn_Copy b-inv b-sch b-print br-r-docs ed-notes 
+        WITH FRAME d-all-r-docs.
+    VIEW FRAME d-all-r-docs.
+    {&OPEN-BROWSERS-IN-QUERY-d-all-r-docs}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark d-all-r-docs 
 PROCEDURE local-mark :
-if not available r-doc then do:
-    message "Неправильный выбор строки.".
-    return .
-  end.
-  { gbl/markstrn.i r-doc del-list }
-  {&browse-name}:refresh() in frame {&frame-name} .
+    if not available r-doc then 
+    do:
+        message "Неправильный выбор строки.".
+        return .
+    end.
+    { gbl/markstrn.i r-doc del-list }
+    {&browse-name}:refresh() in frame {&frame-name} .
 
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr d-all-r-docs 
 PROCEDURE Openbr :
-define variable sort-column-phrase as character no-undo .
-  define variable l-query-was-opened as logical no-undo .
+    define variable sort-column-phrase as character no-undo .
+    define variable l-query-was-opened as logical   no-undo .
 
-  define buffer bf_clients for ub.clients.
+    define buffer bf_clients for ub.clients.
 
-  run waitfram-show in this-procedure
-    (input "Ждите..."
-    ).
 
-  case sort-column-name :
-    when "" then do:
-      assign
-        sort-column-phrase = ""
-      .
-    end.
-    otherwise do:
-      assign
-        sort-column-phrase = "by " + sort-column-name
-      .
-    end.
-  end case.
+
+    run waitfram-show in this-procedure
+        (input "Ждите..."
+        ).
+
+    case sort-column-name :
+        when "" then 
+            do:
+                assign
+                    sort-column-phrase = ""
+                    .
+            end.
+        otherwise 
+        do:
+            assign
+                sort-column-phrase = "by " + sort-column-name
+                .
+        end.
+    end case.
 
   &scop flt-open-open-query         open query {&browse-name} for each r-doc
   &scop flt-open-dyn_open-query     FOR EACH r-doc
@@ -1944,32 +2103,43 @@ define variable sort-column-phrase as character no-undo .
   &scop flt-open-set-filter-name    set-filter-name
   &scop flt-open-indexed-reposition indexed-reposition
 
-  assign
-  varobj-type   = v-cntxt-obj-type
-  varobj-code   = v-cntxt-obj-code
-  varhost-code  = v-cntxt-host-code-obj.
-  find first bf_clients  where bf_clients.obj-type = v-cntxt-obj-type and
-                              bf_clients.obj-code = v-cntxt-obj-code no-lock.
-  case parlist-mode:
-      when {&work} then do:
-        assign frame {&frame-name}:title = "ДОКУМЕНТЫ СВЕРКИ".
-        { gbl/fltopend.i
+  
+
+
+    assign
+        varobj-type  = v-cntxt-obj-type
+        varobj-code  = v-cntxt-obj-code
+        varhost-code = v-cntxt-host-code-obj.
+    find first bf_clients  where bf_clients.obj-type = v-cntxt-obj-type and
+        bf_clients.obj-code = v-cntxt-obj-code no-lock.
+        
+    case parlist-mode:
+        
+        when {&work} then 
+            do:
+                assign 
+                    frame {&frame-name}:title = "ДОКУМЕНТЫ СВЕРКИ".
+                { gbl/fltopend.i
               &where-cond = " true "
               &dyn_where-cond = " 'true' "
               &use-ind    = "  "
               &by         = "  " }
-      end.
-      when {&company} then do:
-        assign frame {&frame-name}:title = "ДОКУМЕНТЫ СВЕРКИ Фирма : " + string(varhost-code).
-        { gbl/fltopend.i
+            end.
+        when {&company} then 
+            do:
+                assign 
+                    frame {&frame-name}:title = "ДОКУМЕНТЫ СВЕРКИ Фирма : " + string(varhost-code).
+                { gbl/fltopend.i
               &where-cond = " r-doc.host-code = varhost-code "
               &dyn_where-cond = " substitute( '  r-doc.host-code = &2 ' , ~{&double-quote~} , varhost-code ) "
               &use-ind    = " use-index host-date "
               &by         = "  " }
-      end.
-      when {&g___object} then do:
-        assign frame {&frame-name}:title = "ДОКУМЕНТЫ СВЕРКИ Объект : " + varobj-type + " " + string (varobj-code).
-            { gbl/fltopend.i
+            end.
+        when {&g___object} then 
+            do:
+                assign 
+                    frame {&frame-name}:title = "ДОКУМЕНТЫ СВЕРКИ Объект : " + varobj-type + " " + string (varobj-code).
+                { gbl/fltopend.i
               &where-cond = " r-doc.obj-type = varobj-type and   r-doc.obj-code = varobj-code  "
               &dyn_where-cond = " substitute( '  ~
                                 r-doc.obj-type =  &1&2&1 and ~
@@ -1977,13 +2147,17 @@ define variable sort-column-phrase as character no-undo .
                                ' , ~{&double-quote~} , varobj-type , varobj-code  ) "
               &use-ind    = "use-index obj-date "
               &by         = "  " }
-              if v-cntxt-db-num = bf_clients.db-num then
-              enable b-add b-chg b-del b-close b-open b-inv btn_copy with frame {&frame-name}.
-      end.
-      when {&status} then do:
-        assign varstatus_ = parstatus.
-        assign frame {&frame-name}:title = "Объект : " + varobj-type + " " + string (varobj-code) + "  Статус : " + varstatus_.
-        { gbl/fltopend.i
+                if v-cntxt-db-num = bf_clients.db-num then
+                    enable b-add b-chg b-del b-close b-open b-inv btn_copy with frame {&frame-name}.
+            end.
+            
+        when {&status} then 
+            do:
+                assign 
+                    varstatus_ = parstatus.
+                assign 
+                    frame {&frame-name}:title = "Объект : " + varobj-type + " " + string (varobj-code) + "  Статус : " + varstatus_.
+                { gbl/fltopend.i
           &where-cond = "r-doc.obj-type = varobj-type and
                         r-doc.obj-code = varobj-code and
                         r-doc.status_  = varstatus_      "
@@ -1995,13 +2169,15 @@ define variable sort-column-phrase as character no-undo .
 
           &use-ind    = "use-index stat-date"
           &by         = "  " }
-        if v-cntxt-db-num = bf_clients.db-num and
-          parstatus <> {&fact}            then
-          enable b-add b-chg b-del b-close b-open b-inv btn_copy with frame {&frame-name}.
-      end.
-      when "choose-control" then do :
-        assign frame {&frame-name}:title = "ДОКУМЕНТЫ СВЕРКИ Объект : " + varobj-type + " " + string (varobj-code) + "  Статус : факт    Тип: контроль".
-        { gbl/fltopend.i
+                if v-cntxt-db-num = bf_clients.db-num and
+                    parstatus <> {&fact}            then
+                    enable b-add b-chg b-del b-close b-open b-inv btn_copy with frame {&frame-name}.
+            end.
+        when "choose-control" then 
+            do :
+                assign 
+                    frame {&frame-name}:title = "ДОКУМЕНТЫ СВЕРКИ Объект : " + varobj-type + " " + string (varobj-code) + "  Статус : факт    Тип: контроль".
+                { gbl/fltopend.i
           &where-cond = "r-doc.obj-type = varobj-type and
                         r-doc.obj-code = varobj-code and
                         r-doc.status_  = {&fact}     and
@@ -2015,108 +2191,121 @@ define variable sort-column-phrase as character no-undo .
 
           &use-ind    = "  "
           &by         = "  " }
-        enable b-sel with frame {&frame-name}.   
-      end.    
-  end case.
+                enable b-sel with frame {&frame-name}.   
+            end.    
+    end case.
 
-  apply "entry" to {&browse-name} in frame {&frame-name}.
+    apply "entry" to {&browse-name} in frame {&frame-name}.
 
-  if rvs-rec <> ? then do:
-    reposition {&browse-name} to recid rvs-rec no-error.
-  end.
+    if rvs-rec <> ? then 
+    do:
+        reposition {&browse-name} to recid rvs-rec no-error.
+    end.
 
-  if available r-doc then do:
-    apply "value-changed" to {&browse-name} in frame {&frame-name}.
-  end.
+    if available r-doc then 
+    do:
+  apply "value-changed" to {&browse-name} in frame {&frame-name}. 
+    end.
 
-  run waitfram-hide in this-procedure .
+    run waitfram-hide in this-procedure .
 
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-copy d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-copy d-all-r-docs 
 PROCEDURE proc-copy :
-define variable v-str as character no-undo.
-  define variable jj    as integer   no-undo.
+    define variable v-str as character no-undo.
+    define variable jj    as integer   no-undo.
 
-  do
-  on error   undo, return error
-  on end-key undo, return error
-  on stop    undo, return error
-  :
-    if not available r-doc then do:
-      message "Не выбрана сверка, из которой нужно сделать сменную." view-as alert-box.
-      return error.
-    end.
-    run str/ctrc2sht.p
-      ( input parparentproc
-       ,input recid( r-doc )
-      ) no-error.
-    if error-status :error then do:
-      assign v-str = "":U.
-      do jj = 1 to error-status :num-messages :
-        assign v-str = v-str + ( if v-str = "":U then "":U else {&new-line} ) + error-status :get-message( jj ).
-      end.
-      assign v-str = v-str + ( if v-str = "":U then "":U else {&new-line} ) + return-value.
-      message
-        "Ошибка создания сверки." skip
-        v-str
-        view-as alert-box error title " О Ш И Б К А ! ! ! ".
-      return error.
-    end.
-  end. /* on error */
+    do
+        on error   undo, return error
+        on end-key undo, return error
+        on stop    undo, return error
+        :
+        if not available r-doc then 
+        do:
+            message "Не выбрана сверка, из которой нужно сделать сменную." view-as alert-box.
+            return error.
+        end.
+        run str/ctrc2sht.p
+            ( input parparentproc
+            ,input recid( r-doc )
+            ) no-error.
+        if error-status :error then 
+        do:
+            assign 
+                v-str = "":U.
+            do jj = 1 to error-status :num-messages :
+                assign 
+                    v-str = v-str + ( if v-str = "":U then "":U else {&new-line} ) + error-status :get-message( jj ).
+            end.
+            assign 
+                v-str = v-str + ( if v-str = "":U then "":U else {&new-line} ) + return-value.
+            message
+                "Ошибка создания сверки." skip
+                v-str
+                view-as alert-box error title " О Ш И Б К А ! ! ! ".
+            return error.
+        end.
+    end. /* on error */
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-del d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-del d-all-r-docs 
 PROCEDURE proc-del :
+    define variable del-rec   as recid   no-undo.
+    define variable unrv-qnty as decimal no-undo. /* количество из gds-dtl, по которому снимаются резервы перед удалением */
+    define variable varfind   as logical no-undo.
 
-  define variable del-rec   as recid   no-undo.
-  define variable unrv-qnty as decimal no-undo. /* количество из gds-dtl, по которому снимаются резервы перед удалением */
-  define variable varfind   as logical no-undo.
+    define buffer bf-prev_rvs-doc  for ub.rvs-doc.
+    define buffer bf_trn-doc       for ub.trn-doc.
+    define buffer bf_doc-line      for ub.doc-line.
+    define buffer bf_goods         for ub.goods.
+    define buffer bf_rvs-line      for ub.rvs-line.
+    define buffer bf-prev_rvs-line for ub.rvs-line.
 
-  define buffer bf-prev_rvs-doc  for ub.rvs-doc.
-  define buffer bf_trn-doc       for ub.trn-doc.
-  define buffer bf_doc-line      for ub.doc-line.
-  define buffer bf_goods         for ub.goods.
-  define buffer bf_rvs-line      for ub.rvs-line.
-  define buffer bf-prev_rvs-line for ub.rvs-line.
-
-  do
-  on error   undo, return error
-  on end-key undo, return error
-  on stop    undo, return error
-  :
-    if r-doc.status_ <> {&g___new}
-      and r-doc.status_ <> {&fact}
-    then do:
-      message
-        "Документ в данном статусе не может быть удален."
-        view-as alert-box.
-      return error.
-    end.
-    if r-doc.status_ = {&fact} then do:
-      if r-doc.rvs-type = {&rvs-shift} then do:
-        message
-          "Документ сверки с типом 'смена' в данном статусе не может быть удален"
-          view-as alert-box.
-        return error.
-      end.
-      else do:
-        if r-doc.rvs-type <> {&rvs-control} then do:
-          message
-            "Закрытый документ сверки с типом, отличным от 'контроль', не может быть удален"
-            view-as alert-box.
-          return error.
+    do
+        on error   undo, return error
+        on end-key undo, return error
+        on stop    undo, return error
+        :
+        if r-doc.status_ <> {&g___new}
+            and r-doc.status_ <> {&fact}
+            then 
+        do:
+            message
+                "Документ в данном статусе не может быть удален."
+                view-as alert-box.
+            return error.
         end.
-        else do:
-          case r-doc.rvs-type :
-            when {&rvs-control} then do:
-              { gbl/chk-actg.i
+        if r-doc.status_ = {&fact} then 
+        do:
+            if r-doc.rvs-type = {&rvs-shift} then 
+            do:
+                message
+                    "Документ сверки с типом 'смена' в данном статусе не может быть удален"
+                    view-as alert-box.
+                return error.
+            end.
+            else 
+            do:
+                if r-doc.rvs-type <> {&rvs-control} then 
+                do:
+                    message
+                        "Закрытый документ сверки с типом, отличным от 'контроль', не может быть удален"
+                        view-as alert-box.
+                    return error.
+                end.
+                else 
+                do:
+                    case r-doc.rvs-type :
+                        when {&rvs-control} then 
+                            do:
+                                { gbl/chk-actg.i
                 v-cntxt-db-num
                 v-cntxt-userid
                 {&action-head-code-main}
@@ -2131,91 +2320,103 @@ PROCEDURE proc-del :
                 true
                 varlog
               }
-            end.
-            otherwise do:
-              message
-                vss-workfile vss-revision vss-description skip
-                "Неизвестный тип документа сверки" skip
-                "Тип документа сверки" r-doc.rvs-type skip
-                "Код документа сверки" r-doc.rvs-code skip
-                view-as alert-box error .
-              undo, return no-apply .
-            end.
-          end case .
-          if varlog <> yes then do: return error. end.
-          for each bf_rvs-line no-lock
-            where bf_rvs-line.rvs-code = r-doc.rvs-code
-          on error undo, return error
-          :
-            assign
-              varfind = no
+                            end.
+                        otherwise 
+                        do:
+                            message
+                                vss-workfile vss-revision vss-description skip
+                                "Неизвестный тип документа сверки" skip
+                                "Тип документа сверки" r-doc.rvs-type skip
+                                "Код документа сверки" r-doc.rvs-code skip
+                                view-as alert-box error .
+                            undo, return no-apply .
+                        end.
+                    end case .
+                    if varlog <> yes then 
+                    do: 
+                        return error. 
+                    end.
+                    for each bf_rvs-line no-lock
+                        where bf_rvs-line.rvs-code = r-doc.rvs-code
+                        on error undo, return error
+                        :
+                        assign
+                            varfind = no
+                            .
+                        for each bf-prev_rvs-doc no-lock
+                            where bf-prev_rvs-doc.obj-type   = r-doc.obj-type
+                            and bf-prev_rvs-doc.obj-code   = r-doc.obj-code
+                            and bf-prev_rvs-doc.fact-order < r-doc.fact-order
+                            ,first bf-prev_rvs-line no-lock
+                            where bf-prev_rvs-line.rvs-code = bf-prev_rvs-doc.rvs-code
+                            and bf-prev_rvs-line.gds-code = bf_rvs-line.gds-code
+                            on error undo, return error
+                            :
+                            assign 
+                                varfind = yes.
+                            leave.
+                        end. /* for each bf-prev_rvs-doc */
+
+                        /* первая сверка */
+                        if varfind <> yes then 
+                        do:
+                            find first bf_goods no-lock
+                                where bf_goods.gds-code = bf_rvs-line.gds-code
+                                .
+                            find first bf_doc-line no-lock
+                                where bf_doc-line.obj-type  = r-doc.obj-type
+                                and bf_doc-line.obj-code  = r-doc.obj-code
+                                and bf_doc-line.artic     = bf_goods.artic
+                                and bf_doc-line.prod-type = bf_goods.prod-type
+                                and bf_doc-line.prod-code = bf_goods.prod-code
+                                no-error.
+                            if available bf_doc-line then 
+                            do:
+                                message
+                                    "Нельзя удалить сверку, являющуюся первой контрольной для товара."
+                                    "На объекте есть складские документы по этому товару. Номер документа " bf_doc-line.doc-code
+                                    " Товар " bf_doc-line.artic " " bf_doc-line.prod-type " " bf_doc-line.prod-code
+                                    view-as alert-box.
+                                return error.
+                            end.
+                        end.
+                        find first bf_trn-doc no-lock where bf_trn-doc.out-code = r-doc.rvs-code no-error.
+                        if available bf_trn-doc then 
+                        do:
+                            message "К сверке есть привязанные складские документы. Удалить нельзя."
+                                "Номер документа " bf_trn-doc.doc-code " ."
+                                view-as alert-box.
+                            return error.
+                        end.
+                    end. /* for each bf_rvs-line */
+                end. /* r-doc.rvs-type = {&rvs-control} */
+            end. /* r-doc.rvs-type <> {&rvs-shift} */
+        end. /* r-doc.status_ = {&fact} */
+
+        assign 
+            varlog = no.
+        message
+            "Удалить документ сверки №" r-doc.rvs-code "?" skip
+            "   Вы уверены ?"
+            view-as alert-box question buttons OK-Cancel update varlog.
+        assign
+            rvs-rec = recid( r-doc )
             .
-            for each bf-prev_rvs-doc no-lock
-              where bf-prev_rvs-doc.obj-type   = r-doc.obj-type
-                and bf-prev_rvs-doc.obj-code   = r-doc.obj-code
-                and bf-prev_rvs-doc.fact-order < r-doc.fact-order
-              ,first bf-prev_rvs-line no-lock
-              where bf-prev_rvs-line.rvs-code = bf-prev_rvs-doc.rvs-code
-                and bf-prev_rvs-line.gds-code = bf_rvs-line.gds-code
-            on error undo, return error
+        if not varlog then 
+        do:
+            find first r-doc no-lock
+                where recid (r-doc) = rvs-rec
+                .
+            return no-apply.
+        end.
+        case r-doc.rvs-type
             :
-              assign varfind = yes.
-              leave.
-            end. /* for each bf-prev_rvs-doc */
-
-            /* первая сверка */
-            if varfind <> yes then do:
-              find first bf_goods no-lock
-                where bf_goods.gds-code = bf_rvs-line.gds-code
-              .
-              find first bf_doc-line no-lock
-                where bf_doc-line.obj-type  = r-doc.obj-type
-                  and bf_doc-line.obj-code  = r-doc.obj-code
-                  and bf_doc-line.artic     = bf_goods.artic
-                  and bf_doc-line.prod-type = bf_goods.prod-type
-                  and bf_doc-line.prod-code = bf_goods.prod-code
-                no-error.
-              if available bf_doc-line then do:
-                message
-                  "Нельзя удалить сверку, являющуюся первой контрольной для товара."
-                  "На объекте есть складские документы по этому товару. Номер документа " bf_doc-line.doc-code
-                  " Товар " bf_doc-line.artic " " bf_doc-line.prod-type " " bf_doc-line.prod-code
-                  view-as alert-box.
-                return error.
-              end.
-            end.
-            find first bf_trn-doc no-lock where bf_trn-doc.out-code = r-doc.rvs-code no-error.
-            if available bf_trn-doc then do:
-              message "К сверке есть привязанные складские документы. Удалить нельзя."
-                      "Номер документа " bf_trn-doc.doc-code " ."
-              view-as alert-box.
-              return error.
-            end.
-          end. /* for each bf_rvs-line */
-        end. /* r-doc.rvs-type = {&rvs-control} */
-      end. /* r-doc.rvs-type <> {&rvs-shift} */
-    end. /* r-doc.status_ = {&fact} */
-
-    assign varlog = no.
-    message
-      "Удалить документ сверки №" r-doc.rvs-code "?" skip
-      "   Вы уверены ?"
-      view-as alert-box question buttons OK-Cancel update varlog.
-    assign
-      rvs-rec = recid( r-doc )
-    .
-    if not varlog then do:
-      find first r-doc no-lock
-        where recid (r-doc) = rvs-rec
-      .
-      return no-apply.
-    end.
-    case r-doc.rvs-type
-    :
-      when {&rvs-before-doc}
-      or when {&rvs-after-doc}
-      then do:
-        { gbl/chk-actg.i
+            when {&rvs-before-doc}
+            or 
+            when {&rvs-after-doc}
+            then 
+                do:
+                    { gbl/chk-actg.i
           v-cntxt-db-num
           v-cntxt-userid
           {&action-head-code-main}
@@ -2230,9 +2431,10 @@ PROCEDURE proc-del :
           true
           varlog
         }
-      end.
-      when {&rvs-shift} then do:
-        { gbl/chk-actg.i
+                end.
+            when {&rvs-shift} then 
+                do:
+                    { gbl/chk-actg.i
           v-cntxt-db-num
           v-cntxt-userid
           {&action-head-code-main}
@@ -2247,9 +2449,10 @@ PROCEDURE proc-del :
           true
           varlog
         }
-      end.
-      when {&rvs-control} then do:
-        { gbl/chk-actg.i
+                end.
+            when {&rvs-control} then 
+                do:
+                    { gbl/chk-actg.i
           v-cntxt-db-num
           v-cntxt-userid
           {&action-head-code-main}
@@ -2264,92 +2467,98 @@ PROCEDURE proc-del :
           true
           varlog
         }
-      end.
-      otherwise do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Неизвестный тип документа сверки" skip
-          "Тип документа сверки" r-doc.rvs-type skip
-          "Код документа сверки" r-doc.rvs-code skip
-          view-as alert-box error .
-        undo, return no-apply .
-      end.
-    end case .
-    if not varlog then do:
-      find first r-doc no-lock
-        where recid (r-doc) = rvs-rec
-      .
-      return no-apply.
-    end.
-    run waitfram-show in this-procedure
-      ( input "Удаление документа сверки № " + r-doc.rvs-code + ". Ждите..."
-      ).
-    assign
-      br-handle = {&browse-name} :handle in frame {&FRAME-NAME}
-      del-rec = recid( r-doc )
-    .
-
-    if valid-handle( br-handle ) then do:
-      assign
-        varlog = br-handle :select-next-row( )
-      .
-      if varlog <> true then do:
+                end.
+            otherwise 
+            do:
+                message
+                    vss-workfile vss-revision vss-description skip
+                    "Неизвестный тип документа сверки" skip
+                    "Тип документа сверки" r-doc.rvs-type skip
+                    "Код документа сверки" r-doc.rvs-code skip
+                    view-as alert-box error .
+                undo, return no-apply .
+            end.
+        end case .
+        if not varlog then 
+        do:
+            find first r-doc no-lock
+                where recid (r-doc) = rvs-rec
+                .
+            return no-apply.
+        end.
+        run waitfram-show in this-procedure
+            ( input "Удаление документа сверки № " + r-doc.rvs-code + ". Ждите..."
+            ).
         assign
-          varlog = br-handle :select-prev-row( )
-        .
-      end.
-      if varlog = true then do:
-        assign
-          rvs-rec = recid( r-doc )
-        .
-      end.
-    end.
+            br-handle = {&browse-name} :handle in frame {&FRAME-NAME}
+            del-rec   = recid( r-doc )
+            .
 
-    del-doc:
-    do transaction
-    on stop    undo del-doc, retry del-doc
-    on error   undo del-doc, retry del-doc
-    on end-key undo del-doc, retry del-doc
-    :
-      if retry then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          substitute("Ошибка при удалении сверки.") skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
-        leave del-doc .
-      end.
-      find first r-doc exclusive-lock
-        where recid( r-doc ) = del-rec
-      .
-      assign
-        r-doc.is-del = true
-      .
-      delete r-doc.
-    end. /* del-doc */
-    run waitfram-hide in this-procedure .
-  end. /* on error */
+        if valid-handle( br-handle ) then 
+        do:
+            assign
+                varlog = br-handle :select-next-row( )
+                .
+            if varlog <> true then 
+            do:
+                assign
+                    varlog = br-handle :select-prev-row( )
+                    .
+            end.
+            if varlog = true then 
+            do:
+                assign
+                    rvs-rec = recid( r-doc )
+                    .
+            end.
+        end.
+
+        del-doc:
+        do transaction
+            on stop    undo del-doc, retry del-doc
+            on error   undo del-doc, retry del-doc
+            on end-key undo del-doc, retry del-doc
+            :
+            if retry then 
+            do:
+                message
+                    vss-workfile vss-revision vss-description skip
+                    substitute("Ошибка при удалении сверки.") skip
+                    error-status :get-message(1) skip
+                    return-value skip
+                    view-as alert-box error .
+                leave del-doc .
+            end.
+            find first r-doc exclusive-lock
+                where recid( r-doc ) = del-rec
+                .
+            assign
+                r-doc.is-del = true
+                .
+            delete r-doc.
+        end. /* del-doc */
+        run waitfram-hide in this-procedure .
+    end. /* on error */
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE UI-on d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE UI-on d-all-r-docs 
 PROCEDURE UI-on :
-ENABLE
-    b-quit
-    b-lkp
-    b-print
-    b-sch
-    b-help
-    ed-notes
-    {&browse-name}
-    WITH FRAME {&frame-name}.
-  ASSIGN
-    {&enabled-clmn}:READ-ONLY in browse {&browse-name} = YES
-  .
-  run OpenBr in this-procedure .
+    ENABLE
+        b-quit
+        b-lkp
+        b-print
+        b-sch
+        b-help
+        ed-notes
+        {&browse-name}
+        WITH FRAME {&frame-name}.
+    ASSIGN
+        {&enabled-clmn}:READ-ONLY in browse {&browse-name} = YES
+    .
+    run OpenBr in this-procedure .
 
 
 END PROCEDURE.
@@ -2359,39 +2568,44 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION mark-string d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION mark-string d-all-r-docs 
 FUNCTION mark-string RETURNS CHARACTER
-  ( p-rec as recid ) :
-  def buffer loc-rvs-doc for ub.rvs-doc  .
-  find first loc-rvs-doc no-lock where  recid ( loc-rvs-doc ) = p-rec no-error  .
-  if error-status :error then return '' .
+    ( p-rec as recid ) :
+    def buffer loc-rvs-doc for ub.rvs-doc  .
+    find first loc-rvs-doc no-lock where  recid ( loc-rvs-doc ) = p-rec no-error  .
+    if error-status :error then return '' .
 
-  if can-do (del-list, string (recid (loc-rvs-doc))) then RETURN "*".
-  else RETURN "".
+    if can-do (del-list, string (recid (loc-rvs-doc))) then RETURN "*".
+    else RETURN "".
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION shift-name d-all-r-docs
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION shift-name d-all-r-docs 
 FUNCTION shift-name RETURNS CHARACTER
-  ( p-rec as recid ) :
-  def buffer loc-rvs-doc for  ub.rvs-doc  .
-  find first loc-rvs-doc no-lock where  recid ( loc-rvs-doc ) = p-rec no-error  .
-  if error-status :error then return '' .
+    ( p-rec as recid ) :
+    def buffer loc-rvs-doc for ub.rvs-doc  .
+    find first loc-rvs-doc no-lock where  recid ( loc-rvs-doc ) = p-rec no-error  .
+    if error-status :error then return '' .
 
-  if loc-rvs-doc.shift-date = ? then do:
-    return "":u.
-  end.
-  else do:
-    if loc-rvs-doc.shift-num = integer(loc-rvs-doc.shift-name) then do:
-      return loc-rvs-doc.shift-name.
+    if loc-rvs-doc.shift-date = ? then 
+    do:
+        return "":u.
     end.
-    else do:
-      return loc-rvs-doc.shift-name + "(" + string(loc-rvs-doc.shift-num) + ")".
+    else 
+    do:
+        if loc-rvs-doc.shift-num = integer(loc-rvs-doc.shift-name) then 
+        do:
+            return loc-rvs-doc.shift-name.
+        end.
+        else 
+        do:
+            return loc-rvs-doc.shift-name + "(" + string(loc-rvs-doc.shift-num) + ")".
+        end.
     end.
-  end.
 end function.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

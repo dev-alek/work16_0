@@ -118,6 +118,7 @@ procedure lib-rvs_place-sh : /* place-sh */
   define input parameter p-prev-code  like ub.rvs-doc.rvs-code   no-undo.
   define input parameter p-shift-date like ub.rvs-doc.shift-date no-undo.
   define input parameter p-shift-num  like ub.rvs-doc.shift-num  no-undo.
+  define input parameter p-rvs-full   like ub.rvs-doc.is-full       no-undo.
 
   define buffer buf_place  for ub.place.
   define buffer buf_pl-gds for ub.pl-gds.
@@ -140,6 +141,14 @@ procedure lib-rvs_place-sh : /* place-sh */
         and buf_pl-gds.pl-code  = buf_place.pl-code
     on error undo, return error return-value
     :
+      
+          IF CAN-FIND( FIRST doc-attr
+      WHERE doc-attr.doc-code  = p-rvs-code
+        AND doc-attr.attr-code = "rvs-auto":U
+        AND doc-attr.attr-value = "Yes":U and  p-rvs-full = yes and buf_place.is-meas = no
+      NO-LOCK)
+  THEN next.
+        
       run gds-attr-value in this-procedure
         ( input  buf_pl-gds.gds-code
          ,input  {&attr-ptrl-without-rvs}

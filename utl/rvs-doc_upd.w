@@ -1190,6 +1190,7 @@ case pardoc-mode :
               "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
               cur_shift-obj.shift-date
               cur_shift-obj.shift-num
+              r-doc.is-full
               no-error
           }
           if error-status :error then do:
@@ -2235,6 +2236,7 @@ do transaction on error undo, return error
        "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
        cur_shift-obj.shift-date
        cur_shift-obj.shift-num
+       r-doc.is-full
        no-error
    }
    if error-status :error then do:

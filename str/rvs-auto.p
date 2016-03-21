@@ -76,7 +76,7 @@ define buffer prev_rvs-doc      for ub.rvs-doc.
 define buffer prev_icnt-doc     for ub.icnt-doc.
 define buffer buf_clients       for ub.clients .
 define buffer buf_doc-attr      for ub.doc-attr .
-
+define variable v-full as logical no-undo.
 define variable v-wrkr    as integer no-undo .
 define variable v-agnt    as integer no-undo .
 define variable v-boss    as integer no-undo .
@@ -272,18 +272,26 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
 
     { gbl/ptrlprop.i run v-obj-type v-obj-code }
     { gbl/getsect.i run v-obj-type v-obj-code {&attr-autosale} }
+    
+    
     for each thbjattr_thbj-attr :
       if thbjattr_thbj-attr.prop-code = {&attr-autosale_wrkr} then assign v-wrkr = thbjattr_thbj-attr.property-value-integer .
       if thbjattr_thbj-attr.prop-code = {&attr-autosale_agnt} then assign v-agnt = thbjattr_thbj-attr.property-value-integer .
       if thbjattr_thbj-attr.prop-code = {&attr-autosale_boss} then assign v-boss = thbjattr_thbj-attr.property-value-integer .
+      
     end.
+    
+        { gbl/getsect.i run v-obj-type v-obj-code {&attr-petrol} }
+  for each thbjattr_thbj-attr :    
+        if thbjattr_thbj-attr.prop-code = {&attr-petrol_autopump-izm} then assign v-full = thbjattr_thbj-attr.property-value-logical .
+end.
+
 
     assign
       v-wrkr  = (if v-wrkr = 0 then ? else v-wrkr)
       v-agnt  = (if v-agnt = 0 then ? else v-agnt)
       v-boss  = (if v-boss = 0 then ? else v-boss)
     .
-
     /* добавление документа */
     run doc-code in this-procedure
       (  input 'main':U
@@ -306,7 +314,7 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
       undo block_obj, next block_obj .
     end.
 
-    { gbl/curobjdt.i
+    { gbl/curobjdt.i 
       v-obj-type
       v-obj-code
       v-obj-date
@@ -327,6 +335,8 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
       buf_rvs-doc.wrkr      = v-wrkr
       buf_rvs-doc.agnt      = v-agnt
       buf_rvs-doc.boss      = v-boss
+      buf_rvs-doc.is-full = v-full
+/*      buf_rvs-doc.whole-send-news = 1*/
     .
     run gbl/factdate.p
       ( input        buf_rvs-doc.obj-type
@@ -371,7 +381,7 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
                             , error-status :get-message( 1 )
                             , return-value
                           )
-        ) .
+        ) . 
     end.
 
     create buf_doc-attr.
@@ -380,8 +390,8 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
       buf_doc-attr.attr-code = "rvs-auto"
       buf_doc-attr.attr-value = "Yes"
     .
-
-    { str/place-sh.i
+    
+      { str/place-sh.i
       buf_rvs-doc.obj-type
       buf_rvs-doc.obj-code
       buf_rvs-doc.rvs-code
@@ -389,8 +399,10 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
       "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
       cur_shift-obj.shift-date
       cur_shift-obj.shift-num
+      buf_rvs-doc.is-full
       no-error
     }
+    
     if error-status :error then do:
       run add-msg in this-procedure
         ( input true
@@ -426,6 +438,7 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
     end.
 
     find first tt-meas no-error .
+    
     if available tt-meas then do:
 
       /* varcur-data = true - при автоматическом создании всегда читаем текущие данные */
