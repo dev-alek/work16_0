@@ -174,14 +174,17 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
           end.
         end. /*when {&extclass_clients_parus-2} then do:*/
         when {&extclass_clients_esys} then do:
-          if g#db-num > 0 then do:
-            v-mess = substitute("Запрещено добавлять коды объектов внешних систем в УБД").
-            run err-mess in this-procedure ( input-output v-mess).
-            undo _main, return error (if p-silent = yes then v-mess else '':U).
-          end.
           find first buf_ext-system no-lock where
                     buf_Ext-system.esys-id = p-key#_one
                 and buf_Ext-system.db-num = 0 no-error.
+          if available buf_Ext-system and buf_Ext-system.whole-send-news <> integer({&esys-dm-egais}) then do :
+              if g#db-num > 0 then do:
+                v-mess = substitute("Запрещено добавлять коды объектов внешних систем в УБД").
+                run err-mess in this-procedure ( input-output v-mess).
+                undo _main, return error (if p-silent = yes then v-mess else '':U).
+              end.
+          end.
+                
           if not available buf_ext-system then do:
             v-mess = substitute("Не найдена внешняя система &1 для БД &2"
                                , p-key#_one
