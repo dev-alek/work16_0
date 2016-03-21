@@ -37,6 +37,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
   define private variable urlResp        as character no-undo.
   define private variable v-uniq-key-rec as character no-undo.
   define private variable v-Answer       as character no-undo.
+  define private variable ticket2        as logical   no-undo.
 
   define variable v-FS-RAR  as character no-undo .
   define variable v-ext-sys as integer   no-undo .
@@ -108,7 +109,8 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
           Msg = "Не заданы настройки соединения для EGAIS".
           return ?.
         end.
-            
+         
+        ticket2 = false .    
         GetSubjectOfRequestUTM().
         
         if StatusErr 
@@ -141,6 +143,33 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
             
         DELETE OBJECT hDoc.
         DELETE OBJECT hRoot.
+        
+        ticket2 = true .
+        if num-entries(urlResp, {&delim-par}) = 2 then do :
+            GetSubjectOfRequestUTM().
+            
+            if StatusErr 
+              then return ?.
+        
+            
+            file-info:file-name = search (inFileName).
+            if search (inFileName) = ? or file-info:file-size = 0 
+            then do:
+              assign
+                StatusErr = true
+                Msg = "Не удалось получить данные от UTM"
+              .
+              return ?.
+            end.
+            
+            hDoc:load ("file", inFileName, false).
+            hDoc:get-document-element(hRoot) .
+            
+            GetChildren(hRoot, 1).
+                
+            DELETE OBJECT hDoc.
+            DELETE OBJECT hRoot.
+        end.
         
         find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = inAbIndenty .
         if num-entries (buf_clob-bind.descr, {&delim-par}) = 3 then
@@ -299,6 +328,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
         DEFINE VARIABLE i AS INTEGER NO-UNDO.
         DEFINE VARIABLE hNoderef AS HANDLE NO-UNDO.
         DEFINE VARIABLE hText AS HANDLE NO-UNDO.
+        define variable v-ok as logical no-undo .
         
         CREATE X-NODEREF hNoderef.
         CREATE X-NODEREF hText .
@@ -314,6 +344,8 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
             hNoderef:GET-CHILD(hText, 1) no-error .    
             
             IF hNoderef:NAME = "tc:Comments" THEN v-Answer = hText:node-value .
+            IF hNoderef:NAME = "tc:OperationResult" THEN v-ok = (hText:node-value = "Accepted") .
+            IF hNoderef:NAME = "tc:OperationComment" and not v-ok THEN v-Answer = v-Answer + {&new-line} + hText:node-value .
                    
             GetChildren(hNoderef, (level + 1)).
         END.
@@ -323,8 +355,12 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
   END.
 
   method public override character GetSubjectOfRequestUTM() :
+      
+    define variable response as character no-undo .
 
-    urlResp = GetURLUTM(ReplyId).
+    if not ticket2 then do :
+        urlResp = GetURLUTM(ReplyId).
+    end.
     
     if urlResp = "" or urlResp = ?
     then do:
@@ -333,14 +369,25 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
       return ?.
     end.
     
-    os-delete "RespActChargeOn.xml".
-    assign
-      inFileName = "RespActChargeOn.xml"
-    .
-
-    cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, urlResp, inFileName).
-    os-command value (cmd).
+    if not ticket2 then do :
+        os-delete "RespActChargeOn.xml".
+        assign
+          inFileName = "RespActChargeOn.xml"
+          response = entry(1,urlResp,{&delim-par})
+        .
+    end.
+    else do :
+        os-delete "RespActChargeOn2.xml".
+        assign
+          inFileName = "RespActChargeOn2.xml"
+        .
+        response = entry(2,urlResp,{&delim-par}) no-error .
+    end.    
     
+    if trim(response) <> "" then do :
+        cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, response, inFileName).
+        os-command value (cmd).
+    end.
   end.
 
   method protected override character GetURLUTM (inReplyId as char):
@@ -350,6 +397,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     define variable hRow  as handle  no-undo.
     define variable hText as handle  no-undo.
     define variable ii    as integer no-undo.
+    define variable files as character no-undo.
     
     create x-document hDoc.
     create x-noderef  hRoot.
@@ -388,14 +436,14 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
             if hRow:get-attribute("replyId") = ReplyId 
             then do:
               hRow:get-child (hText, 1) no-error.
-              return hText:node-value.
+              files = files + {&delim-par} + hText:node-value.
             end.
           end.
       end case.
     end.
+    files = trim(files, {&delim-par}) .
+    return files .
     
-    return ?. 
-
   end.
 
 
