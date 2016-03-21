@@ -221,7 +221,7 @@ DEFINE BUTTON b-del
      
 DEFINE BUTTON b-connect 
      LABEL "Связать" 
-     SIZE 13 BY 1.14
+     SIZE 15 BY 1.14
      BGCOLOR 8 . 
      
 DEFINE BUTTON b-sel-all
@@ -273,24 +273,16 @@ DEFINE BROWSE br-rests
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     b-mark AT ROW 1.24 COL 2
-     b-sel-all AT ROW 1.24 COL 5
-     b-unmark AT ROW 1.24 COL 8
-     b-load AT ROW 1.24 COL 11
-     b-answer AT ROW 1.24 COL 26
-     b-save AT ROW 1.24 COL 41
-/*     b-lkp AT ROW 1.24 COL 56*/
-/*     b-good AT ROW 1.24 COL 71*/
-     b-cancel AT ROW 1.24 COL 94
-/*     v-prod AT ROW 2.7 COL 2               */
-/*     b-prod AT ROW 2.5 COL 29              */
-/*     v-prod-name AT ROW 2.7 COL 34 no-label*/
-/*     "Сортировать по:" VIEW-AS TEXT                    */
-/*          SIZE 15 BY 1.14 AT ROW 3.6 COL 2 WIDGET-ID 18*/
-/*     rs-sort AT ROW 3.6 COL 18 no-label                */
-     v-fs-rar at row 2.7 col 10 label "ФСРАР ID"
-     b-connect AT ROW 1.24 COL 81
-     b-del at row 2.5 col 81 
+     b-mark AT ROW 2.5 COL 2
+     b-sel-all AT ROW 2.5 COL 5
+     b-unmark AT ROW 2.5 COL 8
+     b-load AT ROW 1.24 COL 32
+     b-answer AT ROW 1.24 COL 47
+     b-save AT ROW 1.24 COL 17
+     b-cancel AT ROW 1.24 COL 2
+     v-fs-rar at row 2.7 col 17 label "ФСРАР ID"
+     b-connect AT ROW 1.24 COL 62
+     b-del at row 1.24 col 77 
      a-n-c at row 4 col 2 label "Поиск по"
      NameContext at row 4 col 50 label "Контекст"
      loc-alc at row 4 col 50 no-label
