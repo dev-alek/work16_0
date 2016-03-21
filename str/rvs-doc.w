@@ -1189,6 +1189,7 @@ case pardoc-mode :
               "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
               cur_shift-obj.shift-date
               cur_shift-obj.shift-num
+              no
               no-error
           }
           if error-status :error then do:
@@ -1240,6 +1241,7 @@ case pardoc-mode :
               assign
                 varcur-data = yes.
           end.
+/*run gbl/inidebug.p.*/
           if can-find(first tt-meas) then do:
              run waitfram-show  in this-procedure ( input "Делаем сверку по всем резервуарам" ).
              { str/rvsplace.i
@@ -1766,6 +1768,8 @@ define buffer meas_pump-nozzle for ub.pump-nozzle.
             assign
               varcur-pump = yes.
         end.
+        
+        
         run waitfram-show in this-procedure ( input "Делаем сверку по всем ТРК" ).
         tr:
         do transaction
@@ -2045,7 +2049,6 @@ if available ub.rvs-line then do:
           assign
             varcur-rvs = yes.
       end.
-
       { str/rvsplace.i
          r-doc.obj-type
          r-doc.obj-code
@@ -2336,6 +2339,7 @@ do transaction on error undo, return error
        "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
        cur_shift-obj.shift-date
        cur_shift-obj.shift-num
+       no
        no-error
    }
    if error-status :error then do:
@@ -2419,6 +2423,7 @@ procedure proc_m-meas-1:
           assign
             varcur-rvs = yes.
       end.
+      
       { str/rvsplace.i
           r-doc.obj-type
           r-doc.obj-code
@@ -2516,6 +2521,7 @@ procedure proc_m-meas-2 :
           assign
             varcur-pump = yes.
       end.
+      
       { str/rvs-pump.i
         parParentProc
         r-doc.obj-type

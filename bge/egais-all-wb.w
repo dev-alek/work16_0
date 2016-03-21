@@ -55,7 +55,8 @@ define variable v-value-logical     as logical   no-undo .
 define variable v-value-type        as character no-undo .
 define variable v-value-date        as date      no-undo .
 define variable v-ext-sys           as integer   no-undo .
-
+define variable glog                as logical   no-undo.
+  
 define variable v-fs-rar as character no-undo view-as text format "X(15)" label "Код ФС РАР (FSRAR ID)" .
 
 { gbl/color.i }
@@ -309,6 +310,25 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Del Dialog-Frame
 on choose of Btn_Del in frame Dialog-Frame /* Отказ */
 do:
+  
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-reject':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
+  
+  if not glog then  return .
+  
   if not bh-wb-egais:available 
     then return no-apply.
   bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
@@ -415,6 +435,26 @@ do:
     run f-query.
   end.
   when 2 then do:
+    
+    
+    { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_egais-accept':U
+      {&cntxt-object}
+      v-cntxt-host-code-obj
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      0
+      0
+      0
+      true
+      glog
+    }
+    
+    if not glog then  return .
+    
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
     bh-wb-gds-EG-header = egais:GetHndlTable({&wb-header}, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
@@ -430,6 +470,25 @@ do:
     
   end.
   when 4 then do:
+    
+    { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_egais-send-doc':U
+      {&cntxt-object}
+      v-cntxt-host-code-obj
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      0
+      0
+      0
+      true
+      glog
+    }
+    
+    if not glog then  return .
+    
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
     v-doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value.
@@ -648,7 +707,6 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
    on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
 
   def var ii as int no-undo.
-  def var glog as  log no-undo.
   
   { gbl/getcurus.i
     v-db-num
@@ -807,7 +865,8 @@ end procedure.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE f-query Dialog-Frame 
 procedure f-query :
-def var v-proposition as char no-undo.
+  def var v-proposition as char no-undo.
+  def var v-rowid as rowid no-undo.
   
   assign input frame {&FRAME-NAME}
     f-cli-name
@@ -816,6 +875,9 @@ def var v-proposition as char no-undo.
     f-date-2
     f-type
   .
+  
+  if bh-wb-egais:available 
+    then v-rowid = bh-wb-egais:rowid.
   
   v-proposition = 
     (if f-date <> ? then "tt-wb-hndls.wb-date >= " + string (f-date) else "") +
@@ -854,6 +916,8 @@ def var v-proposition as char no-undo.
       qh-wb-egais:query-open.
     end.
   end case.
+  if bh-wb-egais:available
+    then qh-wb-egais:reposition-to-rowid (v-rowid ).
   
 end.
 

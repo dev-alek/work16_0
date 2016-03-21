@@ -216,7 +216,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
     
     def var v-old-regId as char no-undo init ?.
     
-    find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_clients}
+    find first X_ext-classif no-lock  where X_ext-classif.classif-subject = {&table_clients}
       and X_ext-classif.classif-name = {&extclass_clients_esys}
       and X_ext-classif.db-num = 0
       and X_ext-classif.key#_one = v-ext-sys
@@ -246,7 +246,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
     run gen-key-rec in this-procedure   ( input {&table_clients}
       ,input buffer buf_clients:handle
       ,output v-obj-uniq-key-rec).
-    find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_clients}
+    find first X_ext-classif no-lock  where X_ext-classif.classif-subject = {&table_clients}
       and X_ext-classif.classif-name = {&extclass_clients_esys}
       and X_ext-classif.db-num = 0
       and X_ext-classif.key#_one = v-ext-sys
@@ -280,8 +280,12 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
         return no-apply.
       end.
     end.
-    find first ub.clob-bind where ub.clob-bind.uniq-key-rec = v-uniq-key-rec and ub.clob-bind.field-name_ = {&lob-egais-wb}.
-    entry (9, ub.clob-bind.descr, {&delim-par}) = buf_clients.obj-type + string (buf_clients.obj-code).
+    
+    do trans:
+      find first ub.clob-bind where ub.clob-bind.uniq-key-rec = v-uniq-key-rec and ub.clob-bind.field-name_ = {&lob-egais-wb}.
+      entry (9, ub.clob-bind.descr, {&delim-par}) = buf_clients.obj-type + string (buf_clients.obj-code).
+      release ub.clob-bind.
+    end.
 
     delete object browse-hdl-wb-egais-header.
     delete object browse-hdl-wb-egais.
@@ -649,7 +653,7 @@ PROCEDURE msdblcl :
     run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
      ,input (buffer buf_goods:handle)
       ,output v-gds-uniq-key-rec).
-    find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_goods} 
+    find first X_ext-classif no-lock  where X_ext-classif.classif-subject = {&table_goods} 
       and X_ext-classif.classif-name = {&extclass_goods_esys} 
       AND X_ext-classif.db-num = 0  
       and X_ext-classif.key#_one = bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value
@@ -665,7 +669,7 @@ PROCEDURE msdblcl :
     if v-choise then do:
       run ref/gds-ref.p
         ( parparentproc
-        ,'b-sel'
+        ,'b-add'
         ,?             /*p-stat */
         ,?             /*p-list  */
         ,?             /*p-cond  */
@@ -685,7 +689,7 @@ PROCEDURE msdblcl :
         ,output v-gds-uniq-key-rec).
       
       
-      find first buf_ext-classif exclusive-lock  where buf_ext-classif.classif-subject = {&table_goods} 
+      find first buf_ext-classif no-lock  where buf_ext-classif.classif-subject = {&table_goods} 
         and buf_ext-classif.classif-name = {&extclass_goods_esys} 
         AND buf_ext-classif.db-num = 0  
         and buf_ext-classif.key#_one = buf_goods.gds-code
@@ -745,7 +749,10 @@ PROCEDURE msdblcl :
       {&attr-egais-name},
       output glog
       ).
-      delete x_ext-classif.
+      do trans:
+        find current x_ext-classif exclusive-lock.
+        delete x_ext-classif.
+      end.
       run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
        ,input (buffer buf_goods:handle)
         ,output v-gds-uniq-key-rec).
@@ -788,7 +795,7 @@ PROCEDURE msdblcl :
   do :
     run ref/gds-ref.p
       ( parparentproc
-      ,'b-sel'
+      ,'b-add'
       ,?             /*p-stat */
       ,?             /*p-list  */
       ,?             /*p-cond  */
@@ -807,7 +814,7 @@ PROCEDURE msdblcl :
      ,input (buffer buf_goods:handle)
       ,output v-gds-uniq-key-rec).
 
-    find first buf_ext-classif exclusive-lock  where buf_ext-classif.classif-subject = {&table_goods} 
+    find first buf_ext-classif no-lock  where buf_ext-classif.classif-subject = {&table_goods} 
       and buf_ext-classif.classif-name = {&extclass_goods_esys} 
       AND buf_ext-classif.db-num = 0  
       and buf_ext-classif.key#_one = buf_goods.gds-code

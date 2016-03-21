@@ -537,7 +537,7 @@ attr-fbrattr
 { cmp/cr-prep.i 1 attr-petrol petrol " " petrol }
 
 { cmp/cr-prepc.i 1 prop-list-attr-petrol
-"rvsnmter,denstclc,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email"
+"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email"
 attr-petrol
 }
 

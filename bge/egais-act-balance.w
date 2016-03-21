@@ -83,6 +83,7 @@ define buffer buf_goods         for ub.goods .
 define buffer buf_parts         for ub.parts .
 define buffer buf_trn-doc       for ub.trn-doc .
 define buffer x_ext-classif     for ub.ext-classif .
+define buffer x_ext-classif-attr     for ub.ext-classif-attr .
 define buffer buf_clob-bind     for ub.clob-bind .
 define buffer buf_clob-data     for ub.clob-data .
 
@@ -127,6 +128,8 @@ define new shared temp-table tt-exts
     index pi as primary unique
         ext-rec gds-code
 .
+
+define buffer buf_tt-marks for tt-marks .
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -286,7 +289,11 @@ DO:
     end.
     else do :
         delete tt-gds-act .
-        nn = nn - 1 .
+        nn = 0 .
+        for each tt-gds-act exclusive-lock :
+            nn = nn + 1 .
+            tt-gds-act.position_ = nn .
+        end.
         open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
     end.
 END.
@@ -444,11 +451,15 @@ DO:
                                             
         exts = 0 .                                    
         for each X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
-                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
-                                           AND X_ext-classif.db-num = 0  
-                                           and X_ext-classif.key#_one = buf_goods.gds-code
-                                           and X_ext-classif.key#_two = v-ext-sys 
-                                           and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec :
+                                       and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                       AND X_ext-classif.db-num = 0  
+                                       and X_ext-classif.key#_one = buf_goods.gds-code
+                                       and X_ext-classif.key#_two = v-ext-sys 
+                                       and X_ext-classif.key#_three = 0
+                                       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                       and X_eXt-classif.charkey_two = ""
+                                       and X_eXt-classif.charkey_three = ""
+                                       and X_eXt-classif.nonunique = 0 :
             find first tt-exts no-lock where tt-exts.ext-rec = recid(x_ext-classif)
                                          and tt-exts.gds-code = buf_goods.gds-code no-error.
             if not available tt-exts then do :
@@ -469,12 +480,16 @@ DO:
         end.
         else do :
             find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
-                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
-                                           AND X_ext-classif.db-num = 0  
-                                           and X_ext-classif.key#_one = buf_goods.gds-code
-                                           and X_ext-classif.key#_two = v-ext-sys 
-                                           and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
-                                           .
+                                               and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                               AND X_ext-classif.db-num = 0  
+                                               and X_ext-classif.key#_one = buf_goods.gds-code
+                                               and X_ext-classif.key#_two = v-ext-sys 
+                                               and X_ext-classif.key#_three = 0
+                                               and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                               and X_eXt-classif.charkey_two = ""
+                                               and X_eXt-classif.charkey_three = ""
+                                               and X_eXt-classif.nonunique = 0
+                                               .
         end.
         
         find first buf_parts no-lock where buf_parts.artic = buf_goods.artic 
@@ -515,7 +530,19 @@ DO:
                 tt-gds-act.A-bottleDate     = buf_parts.alc-bottling-date
                 tt-gds-act.A-qnty           = buf_parts.qnty 
             .
-            tt-gds-act.egais-name           =  entry(3, x_ext-classif.charkey_two, CHR(4)) no-error .
+            find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                   and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                   and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                   and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                   and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                   and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                   and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                   and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                   and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                   and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                   and X_ext-classif-attr.attr-code = 'egais-info'
+                                                   no-error .
+            if available X_ext-classif-attr then assign tt-gds-act.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
             if buf_parts.cst-code <> "" then do :
                 assign tt-gds-act.A-ttnNumber      = buf_parts.cst-code .
             end.
@@ -567,8 +594,12 @@ DO:
             find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
                                                and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                                AND X_ext-classif.db-num = 0  
-                                               and X_ext-classif.key#_two = v-ext-sys
-                                               and X_ext-classif.charkey_one = tt-marks.alc-code 
+                                               and X_ext-classif.key#_two = v-ext-sys 
+                                               and X_ext-classif.key#_three = 0
+                                               and X_ext-classif.charkey_one = tt-marks.alc-code
+                                               and X_eXt-classif.charkey_two = ""
+                                               and X_eXt-classif.charkey_three = ""
+                                               and X_eXt-classif.nonunique = 0
                                                .
             find first buf_goods no-lock where buf_goods.gds-code = X_ext-classif.key#_one .                                   
             nn = nn + 1 .
@@ -581,8 +612,23 @@ DO:
                 tt-gds-act.position_        = nn
                 tt-gds-act.marks-qnty       = 0
             .
-            tt-gds-act.egais-name           =  entry(3, x_ext-classif.charkey_two, CHR(4)) no-error .
+            find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                   and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                   and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                   and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                   and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                   and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                   and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                   and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                   and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                   and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                   and X_ext-classif-attr.attr-code = 'egais-info'
+                                                   no-error .
+            if available X_ext-classif-attr then assign tt-gds-act.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
         end.
+        if not can-find(buf_tt-marks where buf_tt-marks.mark = tt-marks.mark 
+                                       and buf_tt-marks.gds-part-position_ <> ?)
+        then
         assign
             tt-marks.gds-part-position_ = tt-gds-act.position_   
             tt-gds-act.marks-qnty       = tt-gds-act.marks-qnty + 1
@@ -641,7 +687,11 @@ DO:
                                        AND X_ext-classif.db-num = 0  
                                        and X_ext-classif.key#_one = buf_goods.gds-code
                                        and X_ext-classif.key#_two = v-ext-sys 
-                                       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec :
+                                       and X_ext-classif.key#_three = 0
+                                       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                       and X_eXt-classif.charkey_two = ""
+                                       and X_eXt-classif.charkey_three = ""
+                                       and X_eXt-classif.nonunique = 0 :
         find first tt-exts no-lock where tt-exts.ext-rec = recid(x_ext-classif)
                                          and tt-exts.gds-code = buf_goods.gds-code no-error.
         if not available tt-exts then do :                                   
@@ -663,7 +713,11 @@ DO:
                                            AND X_ext-classif.db-num = 0  
                                            and X_ext-classif.key#_one = buf_goods.gds-code
                                            and X_ext-classif.key#_two = v-ext-sys 
+                                           and X_ext-classif.key#_three = 0
                                            and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                           and X_eXt-classif.charkey_two = ""
+                                           and X_eXt-classif.charkey_three = ""
+                                           and X_eXt-classif.nonunique = 0
                                            .
     end.
     else do :
@@ -682,7 +736,19 @@ DO:
         tt-gds-act.position_        = nn
         tt-gds-act.marks-qnty       = 0
     .
-    tt-gds-act.egais-name           =  entry(3, x_ext-classif.charkey_two, CHR(4)) no-error .
+    find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                           and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                           and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                           and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                           and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                           and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                           and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                           and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                           and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                           and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                           and X_ext-classif-attr.attr-code = 'egais-info'
+                                           no-error .
+    if available X_ext-classif-attr then assign tt-gds-act.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
     
 END.
@@ -697,6 +763,19 @@ do :
     find first X_ext-classif no-lock where recid(X_ext-classif) = p-ext-rec no-error .
     if not available X_ext-classif then return no-apply.
     assign tt-gds-act.alc-code = X_ext-classif.charkey_one .
+    find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                           and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                           and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                           and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                           and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                           and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                           and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                           and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                           and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                           and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                           and X_ext-classif-attr.attr-code = 'egais-info'
+                                           no-error .
+    if available X_ext-classif-attr then assign tt-gds-act.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
     br-gds-act:refresh() .
 end.
 
@@ -762,7 +841,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     end.
     
     if p-mode = {&update} or p-mode = {&lookup} then do :
-        find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+        find last buf_clob-bind where buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value
+                                  and buf_clob-bind.field-name_ = {&lob-egais-ab} 
+                                  and buf_clob-bind.part-num = 1  .
         find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
         copy-lob
         from  object buf_clob-data.cdata
@@ -780,11 +861,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                             ,input (buffer buf_goods:handle)
                                             ,output v-gds-uniq-key-rec).
             for each X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
-                                               and X_ext-classif.classif-name = {&extclass_goods_esys} 
-                                               AND X_ext-classif.db-num = 0  
-                                               and X_ext-classif.key#_one = tt-gds-act.gds-code
-                                               and X_ext-classif.key#_two = v-ext-sys 
-                                               and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec :
+                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                           AND X_ext-classif.db-num = 0  
+                                           and X_ext-classif.key#_one = buf_goods.gds-code
+                                           and X_ext-classif.key#_two = v-ext-sys 
+                                           and X_ext-classif.key#_three = 0
+                                           and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                           and X_eXt-classif.charkey_two = ""
+                                           and X_eXt-classif.charkey_three = ""
+                                           and X_eXt-classif.nonunique = 0 :
                 find first tt-exts no-lock where tt-exts.ext-rec = recid(x_ext-classif)
                                          and tt-exts.gds-code = buf_goods.gds-code no-error.
                 if not available tt-exts then do :
@@ -1030,16 +1115,34 @@ procedure GetChildren :
             find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
                                                and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                                AND X_ext-classif.db-num = 0  
-                                               and X_ext-classif.key#_two = v-ext-sys
-                                               and X_ext-classif.charkey_one = tt-gds-act.alc-code 
+                                               and X_ext-classif.key#_two = v-ext-sys 
+                                               and X_ext-classif.key#_three = 0
+                                               and X_ext-classif.charkey_one = tt-gds-act.alc-code
+                                               and X_eXt-classif.charkey_two = ""
+                                               and X_eXt-classif.charkey_three = ""
+                                               and X_eXt-classif.nonunique = 0
                                                no-error. 
             if available X_ext-classif then do :
-                find first buf_goods no-lock where buf_goods.gds-code = X_ext-classif.key#_one .    
+                find first buf_goods no-lock where buf_goods.gds-code = X_ext-classif.key#_one .
+                assign
+                    tt-gds-act.gds-code = buf_goods.gds-code
+                    tt-gds-act.gds-name = buf_goods.gds-name
+                .
+                find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                       and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                       and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                       and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                       and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                       and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                       and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                       and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                       and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                       and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                       and X_ext-classif-attr.attr-code = 'egais-info'
+                                                       no-error .
+                if available X_ext-classif-attr then assign tt-gds-act.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.    
             end.
-            assign
-                tt-gds-act.gds-code = buf_goods.gds-code
-                tt-gds-act.gds-name = buf_goods.gds-name
-            .        
+                        
 
         end. 
         IF hNoderef:NAME = "ain:Quantity" THEN assign tt-gds-act.qnty = integer(hText:node-value) no-error . 

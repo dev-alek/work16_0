@@ -45,7 +45,7 @@ define variable r-pump-shift  as recid         no-undo .
 define variable v-rvs-code    as character     no-undo .
 define variable v-attr-value  as character no-undo .
 define variable v-attr-type   as character no-undo .
-
+define buffer buf_doc-attr for ub.doc-attr.
 define buffer bf_rvs-doc          for ub.rvs-doc .
 define buffer bf_rvs-line         for ub.rvs-line .
 define buffer bf_rvs-line-pump    for ub.rvs-line-pump .
@@ -76,6 +76,16 @@ define temp-table tt_pmp-nzzl no-undo
 
 find first ctrl_rvs-doc no-lock where
     recid( ctrl_rvs-doc ) = p-rvs-doc-rec no-error .
+    
+            find first buf_doc-attr where  ctrl_rvs-doc.rvs-code = buf_doc-attr.doc-code and buf_doc-attr.attr-code = "rvs-auto" and buf_doc-attr.attr-value = "Yes" no-error.
+  if  available buf_doc-attr then do:
+ return error substitute( 'Нельзя создать сменную сверку по автоматической!'
+                           ) .
+      end.
+      
+    
+    
+    
 if available ctrl_rvs-doc then do:
   run str/deskshft.p
     ( input parparentproc
@@ -112,14 +122,18 @@ do on error undo Main-Block, return error return-value :
     run waitfram-hide in this-procedure .
     return error 'ОШИБКА! Не найден документ контрольной сверки.' .
   end.
-  if ctrl_rvs-doc.rvs-type <> {&rvs-control} then do:
+
+      
+  if ctrl_rvs-doc.rvs-type <> {&rvs-control}  then do:
+          
+    
     {&SetCursorNo}
     run waitfram-hide in this-procedure .
     return error substitute( 'Сверка должна иметь тип "&1", а не "&2".'
                            , {&rvs-control}
                            , ctrl_rvs-doc.rvs-type ) .
   end.
-  if ctrl_rvs-doc.is-full <> yes then do:
+  if ctrl_rvs-doc.is-full <> yes  then do:
     {&SetCursorNo}
     run waitfram-hide in this-procedure .
     return error 'Контрольная сверка должна быть ПОЛНОЙ.' .
@@ -152,11 +166,17 @@ do on error undo Main-Block, return error return-value :
            ( bf_rvs-doc.rvs-type   = {&rvs-shift}            or
              bf_rvs-doc.rvs-type   = {&rvs-control} )        no-error .
   if available bf_rvs-doc then do:
+                find first buf_doc-attr where  bf_rvs-doc.rvs-code = buf_doc-attr.doc-code and buf_doc-attr.attr-code = "rvs-auto" and buf_doc-attr.attr-value = "Yes" no-error.
+      if not available buf_doc-attr then do: 
+      
+      
+      
     {&SetCursorNo}
     run waitfram-hide in this-procedure .
     return error substitute( 'Имеется более поздний документ сверки "&1" &2.'
                            , bf_rvs-doc.rvs-code
                            , bf_rvs-doc.rvs-type ) .
+  end.
   end.
 
   find first bf_icnt-doc no-lock where

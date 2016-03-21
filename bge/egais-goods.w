@@ -96,6 +96,8 @@ define buffer buf_goods for ub.goods .
 define buffer buf_goods-attr for ub.goods-attr .
 DEFINE BUFFER X_ext-classif FOR ub.ext-classif.
 DEFINE BUFFER XX_ext-classif FOR ub.ext-classif.
+DEFINE BUFFER X_ext-classif-attr FOR ub.ext-classif-attr.
+DEFINE BUFFER XX_ext-classif-attr FOR ub.ext-classif-attr.
 
 define variable select-list as longchar no-undo .
 define variable ref-list    as character no-undo .
@@ -221,7 +223,7 @@ DEFINE BUTTON b-lkp
      
 DEFINE BUTTON b-good 
      LABEL "Товар" 
-     SIZE 10 BY 1.14
+     SIZE 15 BY 1.14
      BGCOLOR 8 .
      
 DEFINE BUTTON b-connect 
@@ -288,24 +290,24 @@ DEFINE BROWSE br-goods
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     b-mark AT ROW 1.24 COL 2
-     b-sel-all AT ROW 1.24 COL 5
-     b-unmark AT ROW 1.24 COL 8
-     b-load AT ROW 1.24 COL 11
-     b-answer AT ROW 1.24 COL 26
-     b-save AT ROW 1.24 COL 41
-     b-lkp AT ROW 1.24 COL 56
-     b-good AT ROW 1.24 COL 71
-     b-cancel AT ROW 1.24 COL 94
-     v-prod AT ROW 2.7 COL 2
-     b-prod AT ROW 2.5 COL 29
-     v-prod-name AT ROW 2.7 COL 34 no-label
+     b-mark AT ROW 2.5 COL 2
+     b-sel-all AT ROW 2.5 COL 5
+     b-unmark AT ROW 2.5 COL 8
+     b-load AT ROW 1.24 COL 32
+     b-answer AT ROW 1.24 COL 47
+     b-save AT ROW 1.24 COL 17
+     b-lkp AT ROW 1.24 COL 62
+     b-good AT ROW 1.24 COL 77
+     b-cancel AT ROW 1.24 COL 2
+     v-prod AT ROW 2.7 COL 13
+     b-prod AT ROW 2.5 COL 40
+     v-prod-name AT ROW 2.7 COL 45 no-label
      "Сортировать по:" VIEW-AS TEXT
           SIZE 15 BY 1.14 AT ROW 3.6 COL 2 WIDGET-ID 18
      rs-sort AT ROW 3.6 COL 18 no-label 
-     rs-mode at row 2.5 col 82 no-label 
-     rect1 at row 1.2 col 80.9
-     b-connect AT ROW 1.24 COL 81
+     rs-mode at row 2.5 col 93 no-label 
+     rect1 at row 1.2 col 91.9
+     b-connect AT ROW 1.24 COL 92
      NameContext at row 4.6 col 2 label "Нач. слова"
      br-goods AT ROW 5.8 COL 2 WIDGET-ID 200
      SPACE(1) SKIP(0.32)
@@ -511,7 +513,7 @@ DO:
     assign v-rid = recid(tt-gds) .
 /*    if tt-gds.gds-code = ? or tt-gds.gds-code = 0 then do :*/
     if tt-gds.fromEgais then do :
-        run ref/gds-ref.p (parparentproc, 'b-sel', ?, ?, ?, ?, ?, ?, ?, v-cntxt-obj-type, v-cntxt-obj-code, ?, output ref-list) no-error.
+        run ref/gds-ref.p (parparentproc, 'b-sel,b-add', ?, ?, ?, ?, ?, ?, ?, v-cntxt-obj-type, v-cntxt-obj-code, ?, output ref-list) no-error.
         if error-status:error or ref-list = ? or ref-list = "" then 
         do:
             message "Ошибка при выборе товара." view-as alert-box.
@@ -619,14 +621,47 @@ DO:
                                                                AND X_ext-classif.db-num = 0  
                                                                and X_ext-classif.key#_one = buf_goods.gds-code
                                                                and X_ext-classif.key#_two = v-ext-sys 
+                                                               and X_ext-classif.key#_three = 0
                                                                and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
                                                                and X_eXt-classif.charkey_one = tt-gds.old-alc-code
+                                                               and X_eXt-classif.charkey_two = ""
+                                                               and X_eXt-classif.charkey_three = ""
+                                                               and X_eXt-classif.nonunique = 0
                                                                no-error. 
                     if available X_ext-classif then do :    
                         assign
                             X_ext-classif.charkey_one = tt-gds.alc-code
-                            X_ext-classif.charkey_two = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name)
+/*                            X_ext-classif.charkey_two = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name)*/
                         .
+                        find first X_ext-classif-attr exclusive-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                                       and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                                       and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                                       and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                                       and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                                       and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                                       and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                                       and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                                       and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                                       and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                                       and X_ext-classif-attr.attr-code = 'egais-info'
+                                                                       no-error .
+                        if not available X_ext-classif-attr then do :
+                            create X_ext-classif-attr .
+                            assign
+                                X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                X_ext-classif-attr.attr-code = 'egais-info' 
+                            .       
+                        end.
+                        assign X_ext-classif-attr.attr-value = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name) .
                     end.                                    
                     else do :                                    
                         run ref/extclas1.p ( 
@@ -652,6 +687,36 @@ DO:
                                 message error-status:get-message(1) view-as alert-box .
                             undo, return no-apply .
                         end.
+                        find first X_ext-classif no-lock where recid(X_ext-classif) = v-rid.
+                        find first X_ext-classif-attr exclusive-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                                       and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                                       and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                                       and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                                       and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                                       and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                                       and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                                       and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                                       and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                                       and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                                       and X_ext-classif-attr.attr-code = 'egais-info'
+                                                                       no-error .
+                        if not available X_ext-classif-attr then do :
+                            create X_ext-classif-attr .
+                            assign
+                                X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                X_ext-classif-attr.attr-code = 'egais-info' 
+                            .       
+                        end.
+                        assign X_ext-classif-attr.attr-value = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name) .
                     end.    
                     
                 end. /* for first buf_goods */
@@ -983,28 +1048,61 @@ PROCEDURE fill-tt :
                                                AND X_ext-classif.db-num = 0  
                                                and X_ext-classif.key#_one = buf_goods.gds-code
                                                and X_ext-classif.key#_two = v-ext-sys 
+                                               and X_ext-classif.key#_three = 0
                                                and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                               and X_eXt-classif.charkey_two = ""
+                                               and X_eXt-classif.charkey_three = ""
+                                               and X_eXt-classif.nonunique = 0
                                                no-error. 
             if available X_ext-classif then do :    
                 assign
                     tt-gds.alc-code = X_ext-classif.charkey_one
                     tt-gds.old-alc-code = X_ext-classif.charkey_one
                 .
-                assign tt-gds.egais-name = entry(3, X_ext-classif.charkey_two, CHR(4)) no-error.
-                for each XX_ext-classif no-lock where  XX_ext-classif.classif-subject = {&table_goods} 
+                find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                       and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                       and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                       and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                       and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                       and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                       and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                       and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                       and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                       and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                       and X_ext-classif-attr.attr-code = 'egais-info'
+                                                       no-error .
+                if available X_ext-classif-attr then assign tt-gds.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
+                
+                for each XX_ext-classif no-lock where XX_ext-classif.classif-subject = {&table_goods} 
                                                    and XX_ext-classif.classif-name = {&extclass_goods_esys} 
                                                    AND XX_ext-classif.db-num = 0  
                                                    and XX_ext-classif.key#_one = buf_goods.gds-code
                                                    and XX_ext-classif.key#_two = v-ext-sys 
+                                                   and XX_ext-classif.key#_three = 0
                                                    and XX_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                                   and XX_eXt-classif.charkey_two = ""
+                                                   and XX_eXt-classif.charkey_three = ""
+                                                   and XX_eXt-classif.nonunique = 0
                                                    and recid(XX_ext-classif) <> recid(X_ext-classif) :
                     create buf_tt-gds.
                     buffer-copy tt-gds except alc-code to buf_tt-gds
                         assign
                             buf_tt-gds.alc-code = XX_ext-classif.charkey_one
                             buf_tt-gds.old-alc-code = XX_ext-classif.charkey_one
-                    .    
-                    assign buf_tt-gds.egais-name = entry(3, XX_ext-classif.charkey_two, CHR(4)) no-error.                             
+                    . 
+                    find first XX_ext-classif-attr no-lock where XX_ext-classif-attr.classif-subject = XX_ext-classif.classif-subject
+                                                           and XX_ext-classif-attr.classif-name = XX_ext-classif.classif-name
+                                                           and XX_ext-classif-attr.db-num = XX_ext-classif.db-num
+                                                           and XX_ext-classif-attr.Key#_One = XX_ext-classif.key#_one
+                                                           and XX_ext-classif-attr.Key#_two = XX_ext-classif.key#_two
+                                                           and XX_ext-classif-attr.Key#_three = XX_ext-classif.key#_three
+                                                           and XX_ext-classif-attr.CharKey_One = XX_eXt-classif.charkey_one
+                                                           and XX_ext-classif-attr.CharKey_two = XX_eXt-classif.charkey_two
+                                                           and XX_ext-classif-attr.CharKey_three = XX_eXt-classif.charkey_three
+                                                           and XX_ext-classif-attr.nonunique = XX_eXt-classif.nonunique
+                                                           and XX_ext-classif-attr.attr-code = 'egais-info'
+                                                           no-error .   
+                    if available XX_ext-classif-attr then assign buf_tt-gds.egais-name = entry(3, XX_ext-classif-attr.attr-value, CHR(4)) no-error.                             
                 end.                                        
             end.                                    
         end.                             

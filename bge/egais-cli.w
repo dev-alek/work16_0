@@ -208,7 +208,7 @@ DEFINE BUTTON b-list
 
 DEFINE BUTTON b-connect 
      LABEL "Связать" 
-     SIZE 10 BY 1.14
+     SIZE 15 BY 1.14
      BGCOLOR 8 .     
 
 DEFINE BUTTON b-mark 
@@ -279,19 +279,19 @@ DEFINE BROWSE br-objects
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     b-mark AT ROW 1.24 COL 2
-     b-sel-all AT ROW 1.24 COL 5
-     b-unmark AT ROW 1.24 COL 8
-     b-load AT ROW 1.24 COL 11
-     b-answer AT ROW 1.24 COL 26
-     b-save AT ROW 1.24 COL 41
-     b-lkp AT ROW 1.24 COL 56
-     b-cancel AT ROW 1.24 COL 94
-     b-list AT ROW 2.7 COL 2
-     b-connect AT ROW 1.24 COL 71
+     b-mark AT ROW 2.6 COL 2
+     b-sel-all AT ROW 2.6 COL 5
+     b-unmark AT ROW 2.6 COL 8
+     b-load AT ROW 1.24 COL 32
+     b-answer AT ROW 1.24 COL 47
+     b-save AT ROW 1.24 COL 17
+     b-lkp AT ROW 1.24 COL 62
+     b-cancel AT ROW 1.24 COL 2
+     b-list AT ROW 2.6 COL 11
+     b-connect AT ROW 1.24 COL 77
 /*     v-org AT ROW 2.7 COL 2    */
 /*     v-fs-rar AT ROW 2.7 COL 52*/
-     br-objects AT ROW 3.86 COL 2 WIDGET-ID 200
+     br-objects AT ROW 3.8 COL 2 WIDGET-ID 200
      SPACE(1) SKIP(0.32)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -556,12 +556,17 @@ DO:
                                                                and X_ext-classif.classif-name = {&extclass_clients_esys}
                                                                AND X_ext-classif.db-num = 0
                                                                and X_ext-classif.key#_one = v-ext-sys
+                                                               and X_ext-classif.key#_two = 0
+                                                               and X_ext-classif.key#_three = 0
                                                                and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
+                                                               and X_eXt-classif.CharKey_One = ''
+                                                               and X_eXt-classif.CharKey_two = (tt-objs.obj-type + string(tt-objs.obj-code))
+                                                               and X_eXt-classif.nonunique = 0
                                                                no-error.
                     if available X_ext-classif then do :
                         assign
                             X_ext-classif.charkey_three = tt-objs.regID
-                            X_ext-classif.charkey_two   = tt-objs.obj-type + string(tt-objs.obj-code)
+/*                            X_ext-classif.charkey_two   = tt-objs.obj-type + string(tt-objs.obj-code)*/
                         .
                     end.
                     else do :
@@ -915,11 +920,16 @@ PROCEDURE fill-tt :
             run gen-key-rec in this-procedure   ( input {&table_clients}
                                                  ,input buffer buf_clients:handle
                                                  ,output v-obj-uniq-key-rec).
-            find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_clients}
+            find first X_ext-classif no-lock  where X_ext-classif.classif-subject = {&table_clients}
                                                and X_ext-classif.classif-name = {&extclass_clients_esys}
                                                AND X_ext-classif.db-num = 0
                                                and X_ext-classif.key#_one = v-ext-sys
+                                               and X_ext-classif.key#_two = 0
+                                               and X_ext-classif.key#_three = 0
                                                and X_eXt-classif.uniq-key-rec = v-obj-uniq-key-rec
+                                               and X_eXt-classif.CharKey_One = ''
+                                               and X_eXt-classif.CharKey_two = (tt-objs.obj-type + string(tt-objs.obj-code))
+                                               and X_eXt-classif.nonunique = 0
                                                no-error.
             if available X_ext-classif then do :
                 assign tt-objs.regID = X_ext-classif.charkey_three .

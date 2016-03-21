@@ -69,8 +69,8 @@ define {1} {2} temp-table tt-marks
     field gds-code      like ub.goods.gds-code              LABEL "Код товара"                 
     field gds-name      as character            LABEL "Наименование"   FORMAT "X(30)" 
     field alc-code      as character            LABEL "Алк. код"       FORMAT "X(20)"     
-    field importer      as character            LABEL "Импортер"       FORMAT "X(30)" 
-    field producer      as character            LABEL "Производитель"
+    field impor-full-name      as character            LABEL "Импортер"       FORMAT "X(30)" 
+    field prod-full-name      as character            LABEL "Производитель"
     index pi as primary unique
         mark
 .

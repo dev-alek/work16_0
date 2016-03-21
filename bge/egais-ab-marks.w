@@ -23,7 +23,7 @@ Creation date: 01/16/07
 /*----------------------------------------------------------------------*/
 
 /* ***************************  Definitions  ************************** */
-
+using ibs.th.bge.egais.*. 
 
 /* Parameters Definitions ---                                           */
 
@@ -37,6 +37,16 @@ define variable l-error as logical no-undo. /* Есть ли ошибки */
 define variable v-user-action    as character no-undo.
 define variable v-printed        as logical   no-undo.
 define variable v-proc-name-err as character no-undo initial 'impmark.err'. /* Имя лога */
+define variable v-proc-name-alc as character no-undo initial 'alc-code.txt'. /* Имя лога */
+def var ProcFindGds as class extgds.
+define variable browse-br-marks       as handle no-undo.
+define variable bcol                  as handle no-undo.
+define variable bcol1                 as handle no-undo.
+define variable bcol2                 as handle no-undo.
+define variable bcol3                 as handle no-undo.
+define variable bcol4                 as handle no-undo.
+define variable bcol5                 as handle no-undo.
+
 /* Local Variable Definitions ---                                       */
 
 
@@ -52,6 +62,7 @@ define variable vss-description as character no-undo init "Акцизные марки".
 {ibs/th/bge/egais/ab-egais.i shared}
 {bge/egais-mark.i}
 { cmp/showinf.i  }
+{ gbl/color.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -111,6 +122,7 @@ define variable v-gds-name as character   no-undo .
 define variable v-alc-code as character   no-undo .
 define variable v-error-lang as logical   no-undo .
 define stream str-err .
+define stream str-alc .
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -130,6 +142,11 @@ DEFINE BROWSE br-marks
     WIDTH 10
     tt-marks.gds-name
     WIDTH 30 
+    tt-marks.impor-full-name
+    WIDTH 30 
+    tt-marks.prod-full-name
+    WIDTH 30 
+    
 
     
 /* _UIB-CODE-BLOCK-END */
@@ -168,6 +185,10 @@ PROCEDURE proc-choose-file :
   do:
     os-delete value(v-proc-name-err).
   end.
+  if search (v-proc-name-alc) <> ? then 
+  do:
+    os-delete value(v-proc-name-alc).
+  end.
   DEFINE VARIABLE vCh AS CHARACTER   NO-UNDO.
   DEFINE VARIABLE vLg AS LOGICAL     NO-UNDO.
   SYSTEM-DIALOG GET-FILE vCh
@@ -176,7 +197,8 @@ PROCEDURE proc-choose-file :
     USE-FILENAME UPDATE vLg.
   IF vCh <> "" THEN
   DO:
-    output stream str-err to value(v-proc-name-err) .
+    output stream str-err to value(v-proc-name-err)  APPEND .
+    output stream str-alc to value(v-proc-name-alc)  APPEND .
     INPUT FROM value(vCh). 
     /*DISABLE TRIGGERS FOR LOAD OF Customer.*/
         
@@ -191,41 +213,70 @@ PROCEDURE proc-choose-file :
         run ProcAlcCode  IN THIS-PROCEDURE (input v-mark, output v-alc-code, output l-error, output v-error-lang ) no-error.
         if v-error-lang then do:
             put stream str-err unformatted
-            "Не корректно считана акцизная марка, перед считыванием переключите клавиатуру на английскую раскладку."
+            "Не корректно считана акцизная марка, акцизная марка содержит не допустимые символы или русские буквы."
              skip .
           v-alc-code = "".
+          l-error = yes .
         end.  
+      else do:
+        ProcFindGds = new ExtGds (yes).
+        ProcFindGds:FindExtGds(v-alc-code).
+        if ProcFindGds:GdsCode = 0 then do:
+                    put stream str-err unformatted
+                    substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)
+                    skip.
+            l-error = yes .    
+        if p-num = "" and p-position = 0 then do:
+          find first tt-marks where tt-marks.mark = v-mark no-error.
+                if not available tt-marks then do:
+                    create tt-marks .
+                end.    
+                    assign
+                      tt-marks.mark               = v-mark 
+                      tt-marks.new_               = true
+                      tt-marks.alc-code           = ProcFindGds:AlcCode 
+                    .
+        end.          
+        end.
         else do:
-        if l-error then 
-        do:
-          put stream str-err unformatted
-            substitute("Алког. код не преобразовывается в десятичную систему из акцизной марки: &1", v-mark
-            ) skip .
+           find first tt-marks where tt-marks.mark = v-mark no-error.
+                if not available tt-marks then do:
+                    create tt-marks .
+                end.    
+                    assign
+                      tt-marks.num                = p-num
+                      tt-marks.gds-part-position_ = p-position 
+                      tt-marks.mark               = v-mark 
+                      tt-marks.new_               = true
+                      tt-marks.gds-code           = ProcFindGds:GdsCode
+                      tt-marks.alc-code           = ProcFindGds:AlcCode 
+                      tt-marks.gds-name           = ProcFindGds:FullNameGds 
+                      tt-marks.prod-full-name     = ProcFindGds:FullNameProd
+                      tt-marks.impor-full-name    = ProcFindGds:FullNameImpor
+                    .
+              if p-num = "" and p-position = 0 then do:
+                put stream str-alc unformatted
+                    substitute  ("Информация по марке: &1:", v-mark) skip .
+                put stream str-alc unformatted
+                    substitute  ("&1 &2 &3 &4 &5 &6 &7 &8 &9", ProcFindGds:AlcCode, ProcFindGds:GdsCode, ProcFindGds:FullNameGds, 
+                                                              ProcFindGds:CliRegIdProd, ProcFindGds:FullNameProd, ProcFindGds:INNProd,
+                                                              ProcFindGds:KPPProd, ProcFindGds:CountryProd, ProcFindGds:CliRegIdImpor).
+                put stream str-alc unformatted
+                    substitute  ("&1 &2 &3 &4", ProcFindGds:FullNameImpor, ProcFindGds:INNImpor, ProcFindGds:KPPImpor, ProcFindGds:CountryImpor) skip .                                           
                       
-          v-alc-code = "".
-        end.
-        else 
-        do:
-          run ProcFindGds IN THIS-PROCEDURE (input v-alc-code, output v-gds-code ) no-error.
-          if v-gds-code = 0 then 
-          do:
-            put stream str-err unformatted
-              substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code) skip .
-            v-alc-code = "".
-            l-error = yes .
-          end.
-          else 
-          do: 
-            run proc-gds IN THIS-PROCEDURE (input v-alc-code, input v-gds-code) no-error . 
-          end. 
-        end.
-      end.
+              end.
+            end.    
+          
+         end.
+    
       end.
       
       
     END. 
     INPUT CLOSE. 
+    output stream str-alc close.
     output stream str-err close.
+    
            if l-error then do: 
             if search (v-proc-name-err) <> ? then 
             do:
@@ -239,43 +290,23 @@ PROCEDURE proc-choose-file :
                 ).
             end.
             end.
+            else do:
+              if p-num = "" and p-position = 0 then do: 
+              message substitute("Импорт акцизных марок завершен успешно и выгружены в &2.",v-proc-name-alc)
+              view-as alert-box.
+              end.
+              else do:
+              message substitute("Импорт акцизных марок завершен успешно.")
+              view-as alert-box.
+              end.  
+            end.  
   END.
+  
   else os-delete value(v-proc-name-err). /* Если нет - удаляем лог */
- 
+delete object ProcFindGds .
 END PROCEDURE.
 
-/*Поиск товара */
-PROCEDURE proc-gds :
-/*  define input parameter p-mark-alc as character no-undo .*/
-  define input parameter v-alc-code as character     no-undo .
-  define input parameter v-gds-code as integer   no-undo . 
-  define buffer buf_goods for ub.goods .
-      if p-alc-code <> "" and p-alc-code <> v-alc-code then do :
-          message "Не тот товар! Вы вводите марки для алк. кода " + p-alc-code skip "Алк. код в марке - " v-alc-code view-as alert-box .
-      end.
-      if (p-alc-code <> "" and p-alc-code = v-alc-code) or p-alc-code = "" then do:
-      find first buf_goods where buf_goods.gds-code = v-gds-code no-error .
-        if available buf_goods then v-gds-name = buf_goods.gds-name . 
-        find first tt-marks where tt-marks.mark = v-mark no-error.
-            if not available tt-marks then do:
-                create tt-marks .
-            end.    
-                assign
-                  tt-marks.num                = p-num
-                  tt-marks.gds-part-position_ = p-position 
-                  tt-marks.mark               = v-mark 
-                  tt-marks.new_               = true
-                  tt-marks.gds-code           = v-gds-code
-                  tt-marks.alc-code           = v-alc-code 
-                  tt-marks.gds-name           = v-gds-name 
-        
-                .      
-        end.    
-      
 
-
-END PROCEDURE .
-&ANALYZE-RESUME _END-PROCEDURE-SETTINGS
 
 
 
@@ -301,12 +332,18 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark Dialog-Frame
 ON return OF v-mark in FRAME Dialog-Frame /* Ввод марок */
 DO:
+
   define variable v-error as logical no-undo init no.
+  output stream str-err to value(v-proc-name-err) append.
+  output stream str-alc to value(v-proc-name-alc) append.
     assign v-mark = v-mark:screen-value .
     RUN ProcAlcCode IN THIS-PROCEDURE (input v-mark, output v-alc-code, output l-error, output v-error-lang) no-error.
       if v-error-lang then do:
             message "Не корректно считана акцизная марка, перед считыванием переключите клавиатуру на английскую раскладку."
       view-as alert-box.
+      put stream str-err unformatted
+            "Не корректно считана акцизная марка, акцизная марка содержит не допустимые символы или русские буквы."
+             skip .
       assign 
         v-mark = ""
         v-mark:screen-value = ""
@@ -317,24 +354,74 @@ DO:
         message substitute ("Алког. код не преобразовывается в десятичную систему из акцизной марки: &1", v-mark)
         view-as alert-box.
         v-alc-code = "".
+        put stream str-err unformatted
+            substitute ("Алког. код не преобразовывается в десятичную систему из акцизной марки: &1", v-mark)
+             skip .
       end.
       else do:
-        run ProcFindGds IN THIS-PROCEDURE (input v-alc-code, output v-gds-code ) no-error.
-            if v-gds-code = 0 then do:
+        ProcFindGds = new ExtGds (yes).
+        ProcFindGds:FindExtGds(v-alc-code).
+        if ProcFindGds:GdsCode = 0 then do:
                     message substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)
                     view-as alert-box.
-                    v-alc-code = "".
-            end.
-            else do:
-              RUN proc-gds IN THIS-PROCEDURE (input v-alc-code, input v-gds-code) no-error .
-            end.  
+                    put stream str-err unformatted
+             substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)
+             skip .
+        if p-num = "" and p-position = 0 then do:
+          find first tt-marks where tt-marks.mark = v-mark no-error.
+                if not available tt-marks then do:
+                    create tt-marks .
+                end.    
+                    assign
+                      tt-marks.mark               = v-mark 
+                      tt-marks.new_               = true
+                      tt-marks.alc-code           = ProcFindGds:AlcCode 
+                    .
+        end.
+        end.
+        else do:
+          if p-alc-code <> "" and p-alc-code <> ProcFindGds:AlcCode then do :
+              message "Не тот товар! Вы вводите марки для алк. кода " + p-alc-code skip "Алк. код в марке - " ProcFindGds:AlcCode view-as alert-box .
+          end.
+          if (p-alc-code <> "" and p-alc-code = ProcFindGds:AlcCode) or p-alc-code = "" then do:
+           find first tt-marks where tt-marks.mark = v-mark no-error.
+                if not available tt-marks then do:
+                    create tt-marks .
+                end.    
+                    assign
+                      tt-marks.num                = p-num
+                      tt-marks.gds-part-position_ = p-position 
+                      tt-marks.mark               = v-mark 
+                      tt-marks.new_               = true
+                      tt-marks.gds-code           = ProcFindGds:GdsCode
+                      tt-marks.alc-code           = ProcFindGds:AlcCode 
+                      tt-marks.gds-name           = ProcFindGds:FullNameGds 
+                      tt-marks.prod-full-name     = ProcFindGds:FullNameProd
+                      tt-marks.impor-full-name    = ProcFindGds:FullNameImpor
+                    .
+              if p-num = "" and p-position = 0 then do:
+                put stream str-alc unformatted
+                    substitute  ("Информация по марке: &1:", v-mark) skip .
+                put stream str-alc unformatted
+                    substitute  ("&1 &2 &3 &4 &5 &6 &7 &8 &9", ProcFindGds:AlcCode, ProcFindGds:GdsCode, ProcFindGds:FullNameGds, 
+                                                              ProcFindGds:CliRegIdProd, ProcFindGds:FullNameProd, ProcFindGds:INNProd,
+                                                              ProcFindGds:KPPProd, ProcFindGds:CountryProd, ProcFindGds:CliRegIdImpor).
+                put stream str-alc unformatted
+                    substitute  ("&1 &2 &3 &4", ProcFindGds:FullNameImpor, ProcFindGds:INNImpor, ProcFindGds:KPPImpor, ProcFindGds:CountryImpor) skip .                                           
+                      
+              end.    
+            end.    
+        end.  
          end.
          open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
+         
         assign v-mark:screen-value = "" .
         assign v-mark .
         apply "entry" to v-mark in FRAME {&FRAME-NAME}.
         end.
-
+    output stream str-alc close.
+    output stream str-err close.            
+delete object ProcFindGds .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -350,6 +437,20 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+         
+          ON ROW-DISPLAY OF br-marks IN FRAME Dialog-Frame
+          DO:
+if p-num = "" and p-position = 0 then do:
+            if tt-marks.gds-code = 0 then do:
+                tt-marks.gds-code:BGCOLOR in browse br-marks = YELLOW_COLOR.
+                tt-marks.alc-code:BGCOLOR in browse br-marks = YELLOW_COLOR.
+                tt-marks.mark:BGCOLOR in browse br-marks = YELLOW_COLOR.
+                tt-marks.gds-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
+                tt-marks.prod-full-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
+                tt-marks.impor-full-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
+            end.
+end.          
+          END.
 &Scoped-define SELF-NAME Btn_Cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel Dialog-Frame
 ON choose OF Btn_Cancel in FRAME Dialog-Frame /* Ввод марок */
