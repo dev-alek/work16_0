@@ -307,12 +307,10 @@ procedure set-refAB:
                          ) no-error .
         if error-status :error
         then do:
-          message
-            "Ошибка при вызове процедуры partps.p" skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo, return no-apply .
+          undo, return error "Ошибка при вызове процедуры partps.p" + 
+                              {&new-line} + 
+                              error-status :get-message(1) + 
+                              {&new-line} + return-value + {&new-line}.
         end.
       end.
     
