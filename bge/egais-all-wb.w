@@ -56,7 +56,10 @@ define variable v-value-type        as character no-undo .
 define variable v-value-date        as date      no-undo .
 define variable v-ext-sys           as integer   no-undo .
 define variable glog                as logical   no-undo.
-  
+define variable v-uniq-key-rec      as character no-undo.
+define variable v-trn-doc           as character no-undo.
+
+
 define variable v-fs-rar as character no-undo view-as text format "X(15)" label " Ó‰ ‘— –¿– (FSRAR ID)" .
 
 { gbl/color.i }
@@ -405,7 +408,8 @@ do:
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
     bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).  
+    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
     find first ub.clients 
       where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("cli-type"):buffer-value
         and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("cli-code"):buffer-value) no-error.
@@ -458,6 +462,7 @@ do:
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
     bh-wb-gds-EG-header = egais:GetHndlTable({&wb-header}, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
     if egais:StatusErr
     then do:
       message egais:Msg view-as alert-box error.
@@ -493,6 +498,7 @@ do:
     bh-wb-gds-EG-header = ?.
     v-doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value.
     bh-wb-gds-EG-header = egais:GetHndlTable({&wb-ras-header}, bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value).
+    v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
     if egais:StatusErr
     then do:
       message egais:Msg view-as alert-box error.
@@ -529,15 +535,18 @@ do:
   case cb-1: 
     when 1 then do:
       run bge/egais-wb.w (parparentproc, egais, bh-wb-egais:handle).
+      v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
     end.
     when 2 then do:
       run bge/egais-ticket.w (parparentproc, egais, bh-wb-egais:handle).
+      v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
     end.
     when 3 then do:
       run bge/egais-wb-act.w (parparentproc, egais, bh-wb-egais:handle).
     end.
     when 4 then do:
       run bge/egais-ticket.w (parparentproc, egais, bh-wb-egais:handle).
+      v-trn-doc = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value.
     end.
   end case.
   run f-query.
@@ -865,7 +874,8 @@ end procedure.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE f-query Dialog-Frame 
 procedure f-query :
-  def var v-proposition as char no-undo.
+  def var v-proposition  as char no-undo.
+  def var v-proposition1 as char no-undo.
   def var v-rowid as rowid no-undo.
   
   assign input frame {&FRAME-NAME}
@@ -876,9 +886,6 @@ procedure f-query :
     f-type
   .
   
-  if bh-wb-egais:available 
-    then v-rowid = bh-wb-egais:rowid.
-  
   v-proposition = 
     (if f-date <> ? then "tt-wb-hndls.wb-date >= " + string (f-date) else "") +
     (if f-date-2 <> ? then " and tt-wb-hndls.wb-date <= " + string (f-date-2) else "") + 
@@ -888,20 +895,23 @@ procedure f-query :
     .
     
   v-proposition = left-trim (v-proposition, " and").
+  v-proposition1 = v-proposition.
   v-proposition = "where " + v-proposition.
 
   case cb-1 :
-    when 1  then 
+    when 1 then 
     do:
       qh-wb-egais:query-close.
       qh-wb-egais:query-prepare ( substitute ("for each tt-wb-hndls &1 by tt-wb-hndls.wb-date descending", v-proposition) ).
       qh-wb-egais:query-open.
+      bh-wb-egais:find-first ( "where (" + v-proposition1 + ")" + "and tt-wb-hndls.uniq-key-rec = " + "'" + v-uniq-key-rec + "'") no-error.
     end.
     when 2 then
     do:
       qh-wb-egais:query-close.
       qh-wb-egais:query-prepare ( substitute ("for each tt-wb-hndls &1 by tt-wb-hndls.wb-date descending", v-proposition) ).
       qh-wb-egais:query-open.
+      bh-wb-egais:find-first ( "where (" + v-proposition1 + ")" + "and tt-wb-hndls.uniq-key-rec = " + "'" + v-uniq-key-rec + "'") no-error.
     end.
     when 3 then
     do:
@@ -914,10 +924,11 @@ procedure f-query :
       qh-wb-egais:query-close.
       qh-wb-egais:query-prepare ( substitute ("for each tt-wb-hndls &1 by tt-wb-hndls.wb-date descending", v-proposition) ).
       qh-wb-egais:query-open.
+      bh-wb-egais:find-first ( "where (" + v-proposition1 + ")" + "and tt-wb-hndls.trn-doc-code = " + "'" + v-trn-doc + "'") no-error.
     end.
   end case.
   if bh-wb-egais:available
-    then qh-wb-egais:reposition-to-rowid (v-rowid ).
+    then qh-wb-egais:reposition-to-rowid ( bh-wb-egais:rowid ).
   
 end.
 
@@ -953,7 +964,7 @@ if bh-wb-egais = ?
     then return .
 
   case cb-1 :
-    when 1  then 
+    when 1 then 
     do:
       delete object browse-hdl-wb-egais.
       create browse browse-hdl-wb-egais
