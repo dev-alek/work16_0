@@ -321,8 +321,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   /* если клиент новый или изменилась группа клиента, */
   /* то изменить полное название группы -- */
   /* путь до группы клиента за исключением корневой группы */
+/*  run gbl/inidebug.p.*/
   if new(ub.clients)
-  or (old-clients.grp-code <> clients.grp-code) then do:
+  or (old-clients.grp-code <> clients.grp-code) or clients.grp-name = "" then do:
     assign
       g-name = ""
     .
