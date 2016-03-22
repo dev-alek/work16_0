@@ -669,7 +669,7 @@ PROCEDURE msdblcl :
     if v-choise then do:
       run ref/gds-ref.p
         ( parparentproc
-        ,'b-add'
+        ,'b-add,b-sel'
         ,?             /*p-stat */
         ,?             /*p-list  */
         ,?             /*p-cond  */
@@ -795,7 +795,7 @@ PROCEDURE msdblcl :
   do :
     run ref/gds-ref.p
       ( parparentproc
-      ,'b-add'
+      ,'b-add,b-sel'
       ,?             /*p-stat */
       ,?             /*p-list  */
       ,?             /*p-cond  */
