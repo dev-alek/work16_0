@@ -1144,10 +1144,10 @@ then do:
   message
   "ВНИМАНИЕ!!!!" skip(2)
   "Выключение обсчета итогов по картам является НЕОБРАТИМОЙ операцией!" skip(0)
-  "и для ее выполнения необходимо получить в IBS специальный пароль!!!" skip(2)
-  "Вы готовы ввести пароль?"
+  "Вы действительно хотите продолжить?"
   view-as alert-box question buttons yes-no update glog.
   if not glog then return error.
+  /*
   define variable v-password as character no-undo .
   define variable v-dc-type as character no-undo .
   define variable v-value as character no-undo .
@@ -1187,6 +1187,7 @@ then do:
      VIEW-AS ALERT-BOX.
      RETURN NO-APPLY.
   END.
+  */
 end.
   /*все правила выключаются одной галкой!!!!*/
   run rcps_set-rule-on-off in this-procedure ( input {&dct-proc_1}
