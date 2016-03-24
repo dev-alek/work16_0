@@ -232,6 +232,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define private variable urlResp        as character no-undo.
   define private variable v-uniq-key-rec as character no-undo.
   define private variable nn             as integer   no-undo.
+  define private variable extGdsObj      as class ExtGds no-undo.
 
   define         variable v-FS-RAR       as character no-undo .
   define         variable inDocFSRAR     as character no-undo .
@@ -313,17 +314,20 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 
   constructor public WayBill (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
     
-    /*    assign                 */
-    /*      parameters = inFSRAR.*/
-    /*    .                      */
     super (inOjType, inObjCode).
     ObjCode = inObjCode.
     ObjType = inOjType.
     v-FS-RAR = inFSRAR.
     v-ext-sys = inExtSys.
     IsSent.
+    extGdsObj = new ExtGds (yes).
     
   end constructor.
+  
+  destructor WayBill ():
+    if valid-object (extGdsObj) 
+      then delete object extGdsObj no-error.
+  end. 
   
   method public override handle GetHndlTable(inTableType as int, inWbIdentity as char) :
 
@@ -348,9 +352,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           if true /*not (available (buf_clob-bind) and inWbIdentity)*/
             then 
           do:
-            if inTableType = {&wb-header}
-              then empty temp-table tt-wb-header.
-              else empty temp-table tt-wb-gds-EG.
+            empty temp-table tt-wb-header.
+            empty temp-table tt-wb-gds-EG.
             find first buf_clob-bind no-lock where buf_clob-bind.uniq-key-rec = inWbIdentity and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
             if not available (buf_clob-bind) then 
             do:
@@ -433,15 +436,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             end.
 
             for each tt-wb-gds-EG:
-              find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
-                and X_ext-classif.classif-name = {&extclass_goods_esys} 
-                and x_ext-classif.db-num = 0  
-                and X_ext-classif.key#_two = v-ext-sys 
-                and X_ext-classif.CharKey_One = tt-wb-gds-EG.alc-code no-error.
-
-              if available (X_ext-classif)
-                then tt-wb-gds-EG.gds-code = X_ext-classif.Key#_One.
-              else tt-wb-gds-EG.gds-code = ?.
+              if extGdsObj:FindExtGds(tt-wb-gds-EG.alc-code)
+                then tt-wb-gds-EG.gds-code = extGdsObj:GdsCode.
+                else tt-wb-gds-EG.gds-code = ?.
             end.
 /*            v-uniq-key-rec = inWbIdentity.*/
             find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-ref-b} no-error.
@@ -802,26 +799,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               buf_parts.out-code = buf_trn-doc.doc-code: 
               ii = ii + 1.
               find first buf_gds no-lock where buf_gds.artic = buf_parts.artic and buf_gds.prod-code = buf_parts.prod-code and buf_gds.prod-type = buf_parts.prod-type.
-              find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
-                                                 and buf_ext-classif.classif-name = {&extclass_goods_esys} 
-                                                 and buf_ext-classif.db-num = 0  
-                                                 and buf_ext-classif.key#_one = buf_gds.gds-code
-                                                 and buf_ext-classif.key#_two = v-ext-sys 
-                                                 no-error. 
-
-/*              find first buf_gds-attr no-lock where buf_gds-attr.gds-code = buf_gds.gds-code and buf_gds-attr.attr-code = {&attr-egais-name} no-error.*/
-              /*if not available (buf_gds-attr)
-              then do:
-                Msg = "Не найдено наименование ЕГАИС товара - " + string (buf_gds.gds-code).
-                StatusErr = true.
-                return ?.
-              end.*/
-              if num-entries (buf_ext-classif.CharKey_Two, chr(4)) < 3
-              then do:
-                Msg = "В справочнике внешнего классификатора по товарам отсутсвует информация о производителе по товару - " + string (buf_gds.gds-code) + ". Выполните синхронизацию товаров.".
-                StatusErr = true.
-                return ?.
-              end.
+              extGdsObj:FindExtGds(entry (3, buf_parts.alc-ref-ab-path, ",")).
               if num-entries (buf_parts.alc-ref-ab-path, ",") < 3
               then do:
                 Msg = "В алкогольных атрибутах по партии отсутсвует алкогольный код и код группы для товара - " + string (buf_gds.gds-code) + ". Запустите утилиту заполнения алкогольных атрибутов партии.".
@@ -831,9 +809,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               create tt-wb-gds-EG.
               assign
                 tt-wb-gds-EG.Identity = string (ii)
-                tt-wb-gds-EG.gds-name = entry (3, buf_ext-classif.CharKey_Two, chr(4))
+                tt-wb-gds-EG.gds-name = extGdsObj:FullNameGds
                 tt-wb-gds-EG.gds-code = buf_gds.gds-code
-                tt-wb-gds-EG.alc-code = buf_ext-classif.charkey_one
                 tt-wb-gds-EG.qnty = buf_parts.cli-qnty
                 tt-wb-gds-EG.price = buf_doc-line.price-rubl
                 tt-wb-gds-EG.refA = entry (1, buf_parts.alc-ref-ab-path, ",")
@@ -848,39 +825,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 StatusErr = true.
                 return ?.
               end.
-              
-/*              tt-wb-gds-EG.Producer-th = buf_gds.prod-type + string (buf_gds.prod-code).
-              find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
-                and buf_ext-classif.classif-name = {&extclass_clients_esys}
-                and buf_ext-classif.db-num = 0
-                and buf_ext-classif.key#_one = v-ext-sys
-                and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + buf_gds.prod-type + {&delim-key} + string (buf_gds.prod-code) no-error.
-              if not available (buf_ext-classif)
-              then do:
-                Msg = "Не найден клиент ЕГАИС для производителя " + tt-wb-gds-EG.Producer-th.
-                StatusErr = true.
-                return ?.
-              end.
-              tt-wb-gds-EG.regID-Producer = buf_ext-classif.CharKey_Three.   
-              
-              
-              tt-wb-gds-EG.importer-th = buf_parts.alc-imp-type + string (buf_parts.alc-imp-code).
-              if tt-wb-gds-EG.importer-th <> "" and tt-wb-gds-EG.importer-th <> ? and tt-wb-gds-EG.importer-th <> '0'
-              then do:
-                find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
-                  and buf_ext-classif.classif-name = {&extclass_clients_esys}
-                  and buf_ext-classif.db-num = 0
-                  and buf_ext-classif.key#_one = v-ext-sys
-                  and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + buf_parts.alc-imp-type + {&delim-key} + string (buf_parts.alc-imp-code) no-error.
-                if not available (buf_ext-classif)
-                then do:
-                  Msg = "Не найден клиент ЕГАИС для импортера " + tt-wb-gds-EG.importer-th.
-                  StatusErr = true.
-                  return ?.
-                end.
-                tt-wb-gds-EG.regID-Importer = buf_ext-classif.CharKey_Three. 
-              end.*/
-              
               find first ub.alc-type-gds 
                    where ub.alc-type-gds.gds-code = buf_gds.gds-code
                      and ub.alc-type-gds.create-user-db-num = 0 no-lock no-error.
@@ -936,6 +880,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     do trans:
     
       os-delete "RespTTNAct.xml".
+      os-delete value (search ("RespTTNAct.xml")).
       assign
         inFileName = "RespTTNAct.xml"
         .
@@ -1002,23 +947,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 
         else 
         do:
-        /*          output stream outstr to value ("TTNSingle.xml") convert target "UTF-8".                                                                                                     */
-        /*                                                                                                                                                                                  */
-        /*          find first buf_trn-doc where buf_trn-doc.doc-code = tt-wb-hndls.trn-doc-code no-lock.                                                                                   */
-        /*                                                                                                                                                                                  */
-        /*          for each buf_doc-line no-lock where buf_doc-line.doc-code = tt-wb-hndls.trn-doc-code:                                                                                   */
-        /*            find first buf_gds no-lock where buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type.    */
-        /*          end.                                                                                                                                                                    */
-        /*                                                                                                                                                                                  */
-        /*          def var v-date as character no-undo.                                                                                                                                    */
-        /*          v-date = substitute ("&1-&2-&3",string (year (now)), string (month (now)), string (day (now))).                                                                         */
-        /*                                                                                                                                                                                  */
-        /*          outData = substitute ({&xml-wb1}, '020000367672', tt-wb-hndls.trn-doc-code, tt-wb-hndls.trn-doc-code, v-date, v-date, "Packed", "442351234541", "432143124", "2341234").*/
-        /*                                                                                                                                                                                  */
-        /*          put stream outstr unformatted outData.                                                                                                                                  */
-        /*          put stream outstr skip.                                                                                                                                                 */
-        /*          output stream outstr close.                                                                                                                                             */
-        /*                                                                                                                                                                                  */
           inFileName = "TTN.xml".
           
           WriteXMLWB (inFileName).
@@ -1177,11 +1105,18 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 do:
 
                   os-delete "WayBill.xml".
+                  os-delete value (search ("WayBill.xml")).
                   assign
                     inFileName = "WayBill.xml"
                     .  
                   CmdParseXml(hText:node-value).
-
+                  if StatusErr
+                  then do:
+                    message "Ошибка приема файла накланой: " v-info skip hText:node-value skip Msg view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
                   find first tt-wb-header.
                   find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Consignee".
                   find first buf_ext-classif no-lock where 
@@ -1200,7 +1135,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par} + tt-wb-header.obj-type + string (tt-wb-header.obj-code).
                   if tt-wb-header.uniq-key-rec = ?
                   then do:
-                    message "Ошибка приема файла накланой: " v-info view-as alert-box.
+                    message "Ошибка приема файла накланой: " v-info skip hText:node-value skip Msg view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
                     next url_.
                   end.
                   v-clob-db-num = ?.
@@ -1232,11 +1169,19 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 do:
 
                   os-delete "FORMBREGINFO.xml".
+                  os-delete value (search ("FORMBREGINFO.xml")).
                   assign
                     inFileName = "FORMBREGINFO.xml"
                     .
 
                   CmdParseXml(hText:node-value).
+                  if StatusErr
+                  then do:
+                    message "Ошибка приема файла справки Б: " tt-wb-header.wbregid skip hText:node-value skip Msg view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
                   find first tt-wb-header.
                   v-clob-db-num = ?.
                   v-int64-id = 0.
@@ -1244,7 +1189,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                     then next url_.
                   if tt-wb-header.uniq-key-rec = ?
                   then do:
-                    message "Ошибка приема файла справки Б: " tt-wb-header.wbregid view-as alert-box.
+                    message "Ошибка приема файла справки Б: " tt-wb-header.wbregid skip hText:node-value skip Msg view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
                     next url_.
                   end.
                   run gbl/file2clb.p ( input {&add-def}
@@ -1272,10 +1219,18 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 do:
   
                   os-delete "WayBillAct.xml".
+                  os-delete value (search ("WayBillAct.xml")).
                   assign
                     inFileName = "WayBillAct.xml"
                     .
                   CmdParseXml(hText:node-value).
+                  if StatusErr
+                  then do:
+                    message "Ошибка приема файла акта " skip hText:node-value skip Msg view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
                   find first tt-wb-act-header.
                   v-clob-db-num = ?.
                   v-int64-id = 0.
@@ -1284,7 +1239,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                     then next url_.
                   if tt-wb-act-header.wbregid = ?
                   then do:
-                    message "Ошибка приема файла акта " v-info view-as alert-box.
+                    message "Ошибка приема файла акта " skip hText:node-value skip Msg view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
                     next url_.
                   end.
                   run gbl/file2clb.p ( input {&add-def}
@@ -1312,12 +1269,18 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   def var ticketUKR as char no-undo.
                   empty temp-table tt-ticket. 
                   os-delete "Ticket.xml".
+                  os-delete value (search ("Ticket.xml")).
                   assign
                     inFileName = "Ticket.xml"
                     .
                   CmdParseXml(hText:node-value).
-                  if StatusErr then 
-                    return.
+                  if StatusErr
+                  then do:
+                    message "Ошибка приема файла квитанции " ticketUKR skip hText:node-value skip Msg view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
                   find first tt-ticket.
                   if (tt-ticket.regid = "" or tt-ticket.regid = ?) or (tt-ticket.doc <> 'WayBillAct' and tt-ticket.doc <> 'WAYBILL') then do:
                     next url_.  
@@ -1325,9 +1288,11 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   v-clob-db-num = ?.
                   v-int64-id = 0.
                   ticketUKR = tt-ticket.regid + {&delim-par} + tt-ticket.docId + {&delim-par} + tt-ticket.Identity +  {&delim-par} + tt-ticket.ticket-date.
-                   if ticketUKR = ?
+                  if ticketUKR = ? or StatusErr
                   then do:
-                    message "Ошибка приема файла акта " ticketUKR view-as alert-box.
+                    message "Ошибка приема файла квитанции " ticketUKR skip hText:node-value skip Msg view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
                     next url_.
                   end.
                   if can-find (first buf_clob-bind where 
@@ -1401,12 +1366,12 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         
           copy-lob
             from  object buf_clob-data.cdata
-            to  file (if inTableType = {&wb-refB} then "-refb" else "") + 'temp.xml'
+            to  file (if inTableType = {&wb-refB} then "refb" else "") + 'temp.xml'
             no-convert
             no-error .
 
           hDoc:encoding = 'utf-8'.
-          hDoc:load("file", search ((if inTableType = {&wb-refB} then "-refb" else "") + 'temp.xml'), false).
+          hDoc:load("file", search ((if inTableType = {&wb-refB} then "refb" else "") + 'temp.xml'), false).
         
         end.
       when {&wb-clob} then 
@@ -1603,7 +1568,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           if hNoderef:name = "pref:ShortName"    then assign tt-wb-gds-EG.gds-name = hText:node-value.
 
         if hNoderef:name = "pref:FullName"     then assign tt-wb-gds-EG.gds-name = hText:node-value.
-        if hNoderef:name = "pref:AlcCode"      then assign tt-wb-gds-EG.alc-code = hText:node-value.
+        if hNoderef:name = "pref:AlcCode"      
+          then assign tt-wb-gds-EG.alc-code = hText:node-value.
         if hNoderef:name = "pref:Capacity"     then assign tt-wb-gds-EG.ms-base = decimal(hText:node-value) .
         if hNoderef:name = "pref:AlcVolume"    then assign tt-wb-gds-EG.proof = decimal(hText:node-value) .
         
@@ -1888,9 +1854,17 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         find first buf_doc-line no-lock where buf_doc-line.doc-code = buf_doc-attr.doc-code and
            buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type no-error.
         if not available (buf_doc-line) then do:
-            Msg = "Не найден товар в накладной, который есть в ЕГАИС - " + buf_doc-line.doc-code + " товар - " + string (tt-wb-gds-EG.gds-code).
-            StatusErr = true.
-            return ?.   
+            message "Не найден товар в накладной, который есть в ЕГАИС - " + buf_doc-line.doc-code + " товар - " + string (tt-wb-gds-EG.gds-code) + " Для данного товара в акте отправлен кол-во 0" view-as alert-box information.
+            is-diff = true.
+&scop xml-act-cont '<wa:Position>~
+<wa:Identity>&1</wa:Identity>~
+<wa:InformBRegId>&2</wa:InformBRegId>~
+<wa:RealQuantity>&3</wa:RealQuantity>~
+</wa:Position>'
+            xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, 0.0).
+            next.
+/*            StatusErr = true.*/
+/*            return ?.        */
         end.
         find first buf_parts where
           buf_parts.obj-type = buf_doc-line.obj-type and 
@@ -1966,9 +1940,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   method private void WriteXMLWB (inFileName as char):
 
     def var sw as handle no-undo. 
-    def var extGdsObj as class ExtGds no-undo.
-    
-    extGdsObj = new ExtGds (yes).
     
     create sax-writer sw .
   
@@ -2146,33 +2117,19 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         def var descr as char no-undo.
         inSW:write-data-element ("oref:Country", entry (3, buf_clients-attr.attr-value, "|")).
         find first buf_country where buf_country.num-code = integer (entry (3, buf_clients-attr.attr-value, "|")) no-error.
-/*        def var ii as int no-undo.                                   */
-/*        do ii = 20 to num-entries (buf_clients-attr.attr-value, "|"):*/
         descr = entry (20, buf_clients-attr.attr-value, "|") no-error.
         descr = replace (descr, {&delim-urt}, "|").
-/*        end.*/
-/*        descr = left-trim (descr, "|").*/
         if descr = ? or descr = ""
         then do: 
           Msg = "Отсутствует андрес ЕГАИС организации " + inObjType + string (inObjCode) + ' ' + buf_clients.obj-name + ". Обновите данные ЕГАИС по организации.".
           StatusErr = true.
           return.
         end.
-        
-        /*(if available (buf_country) then buf_country.long-name + ',' else '') + 
-            entry (4, attr-value, "|") + ',' +
-            entry (6, attr-value, "|") + ',' +
-            entry (7, attr-value, "|") + ',' +
-            entry (8, attr-value, "|") + ',' +
-            entry (9, attr-value, "|") + ',' +
-            entry (10, attr-value, "|") + ',' +
-            entry (11, attr-value, "|") + ',' +
-            entry (12, attr-value, "|") + ',' +
-            entry (13, attr-value, "|") .*/
         inSW:write-data-element ("oref:description", descr).
       end.
     inSW:end-element ("oref:address").
     
   end.
+ 
 
 end class.
