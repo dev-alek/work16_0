@@ -53,13 +53,15 @@ define variable v-user-select              as character no-undo .
 define variable v-select-obj-type          as character no-undo .
 define variable v-select-obj-code          as integer   no-undo .
 define variable v-obj-uniq-key-rec         as character no-undo .
-define variable v-gds-uniq-key-rec         as character no-undo .
 define variable v-ext-sys                  as integer   no-undo .
 define variable v-rid                      as recid     no-undo .
 /*define variable v-identity                 as character no-undo .*/
 define variable v-uniq-key-rec             as character no-undo .
 define variable glog                       as logical no-undo .
 define variable ii                         as integer no-undo .
+define variable extGdsObj                  as class ExtGds no-undo .
+define variable v-prod                     as character no-undo .
+define variable v-impor                    as character no-undo .
 
 define buffer buf_clients   for ub.clients .
 define buffer buf_firm      for ub.firm .
@@ -220,7 +222,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
       and X_ext-classif.classif-name = {&extclass_clients_esys}
       and X_ext-classif.db-num = 0
       and X_ext-classif.key#_one = v-ext-sys
-      and X_eXt-classif.CharKey_Two = f-cons
+      and X_eXt-classif.CharKey_Three = bh-wb-gds-EG-header:buffer-field ("regID-cons"):buffer-value
       and X_eXt-classif.CharKey_Two <> ""
       no-error.
     
@@ -284,6 +286,7 @@ ON CHOOSE OF b-choose-cons IN FRAME Dialog-Frame /* b-choose-date-pov-plotn */
     do trans:
       find first ub.clob-bind where ub.clob-bind.uniq-key-rec = v-uniq-key-rec and ub.clob-bind.field-name_ = {&lob-egais-wb}.
       entry (9, ub.clob-bind.descr, {&delim-par}) = buf_clients.obj-type + string (buf_clients.obj-code).
+      bh-wb-egais:buffer-field ("obj"):buffer-value = buf_clients.obj-type + string (buf_clients.obj-code).
       release ub.clob-bind.
     end.
 
@@ -478,6 +481,8 @@ MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
 
+  extGdsObj = new ExtGds(yes).
+
   { gbl/getcurus.i
     v-db-num
     v-user-id
@@ -644,26 +649,10 @@ PROCEDURE msdblcl :
   }
   
   if not glog then  return .
-  
-  if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> "" and bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> ?
-    then
-  do:
-    
-    find first buf_goods where buf_goods.gds-code = bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value.
-    run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
-     ,input (buffer buf_goods:handle)
-      ,output v-gds-uniq-key-rec).
-    find first X_ext-classif no-lock  where X_ext-classif.classif-subject = {&table_goods} 
-      and X_ext-classif.classif-name = {&extclass_goods_esys} 
-      AND X_ext-classif.db-num = 0  
-      and X_ext-classif.key#_one = bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value
-      and X_ext-classif.key#_two = v-ext-sys 
-      and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
-      no-error. 
-  end.
-  if available X_ext-classif then 
+
+  if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> "" and bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> ? then 
   do :
-    message substitute ("Товар &1 уже связан. Изменить связку?", buf_goods.gds-code) view-as alert-box
+    message substitute ("Товар &1/&2 уже связан. Изменить связку?", bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value, bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value) view-as alert-box
     question buttons yes-no-cancel
     title "" update v-choise as logical.
     if v-choise then do:
@@ -684,24 +673,6 @@ PROCEDURE msdblcl :
       if v-rid-list = "" or v-rid-list = ? 
         then return no-apply. 
       find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock.
-      run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
-       ,input (buffer buf_goods:handle)
-        ,output v-gds-uniq-key-rec).
-      
-      
-      find first buf_ext-classif no-lock  where buf_ext-classif.classif-subject = {&table_goods} 
-        and buf_ext-classif.classif-name = {&extclass_goods_esys} 
-        AND buf_ext-classif.db-num = 0  
-        and buf_ext-classif.key#_one = buf_goods.gds-code
-        and buf_ext-classif.key#_two = v-ext-sys 
-        and buf_ext-classif.uniq-key-rec = v-gds-uniq-key-rec
-        no-error.
-/*      if available (buf_ext-classif)
-      then do:
-        message substitute ("Товар &1 уже связан.", buf_goods.gds-code) view-as alert-box.
-        return no-apply.
-      end.*/
-      
       run gds-attr-value(
         buf_goods.gds-code,
         {&attr-alcohol-prod},
@@ -744,52 +715,35 @@ PROCEDURE msdblcl :
           return no-apply.
         end.*/
       end.
-      run gds-attr-delete (
-      bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value,
-      {&attr-egais-name},
-      output glog
-      ).
-      do trans:
-        find current x_ext-classif exclusive-lock.
-        delete x_ext-classif.
-      end.
-      run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
-       ,input (buffer buf_goods:handle)
-        ,output v-gds-uniq-key-rec).
-      run ref/extclas1.p ( 
-        INPUT {&add-def}
-        ,INPUT yes /*p-silent*/
-        ,INPUT-OUTPUT v-rid
-        ,INPUT {&table_goods} /*p-classif-subject*/
-        ,INPUT {&extclass_goods_esys} /*p-classif-name*/
-        ,input 0  /*p-db-num*/
-        ,input buf_goods.gds-code  /*p-key#_one*/
-        ,input v-ext-sys /*p-Key#_Two*/
-        ,input 0 /*p-key#_Three*/
-        ,input bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value /*p-CharKey_One */
-        ,input '':U /*p-CharKey_two */
-        ,input buf_goods.gds-name /*p-CharKey_three */
-        ,input 0 /*p-nonunique */
-        ,input v-gds-uniq-key-rec ) no-error.
-      if error-status:error then
+      extGdsObj:DeleteExtGds(bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value).
+      
+      v-prod = bh-wb-gds-EG:buffer-field ("prod-list"):buffer-value.
+      v-impor = bh-wb-gds-EG:buffer-field ("importer-list"):buffer-value.
+      extGdsObj:CliRegIdProd = entry (1, v-prod, chr(5)).
+      extGdsObj:INNProd = entry (2, v-prod, chr(5)).
+      extGdsObj:KPPProd = entry (3, v-prod, chr(5)).
+      extGdsObj:FullNameProd = entry (4, v-prod, chr(5)).
+      extGdsObj:CountryProd = entry (5, v-prod, chr(5)).
+      extGdsObj:DescrProd = entry (6, v-prod, chr(5)).
+      
+      extGdsObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
+      extGdsObj:INNImpor = entry (2, v-impor, chr(5)).
+      extGdsObj:KPPImpor = entry (3, v-impor, chr(5)).
+      extGdsObj:FullNameImpor = entry (4, v-impor, chr(5)).
+      extGdsObj:CountryImpor = entry (5, v-impor, chr(5)).
+      extGdsObj:DescrImpor = entry (6, v-impor, chr(5)).
+
+      extGdsObj:FullNameGds = bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value.
+      
+      if not extGdsObj:CreateExtGds(bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value, buf_goods.gds-code) then
       do:
-        if error-status:get-message(1) = "" then
-          message "Ошибка добавления записи в справочник!" view-as alert-box .
-        else
-          message error-status:get-message(1) view-as alert-box .
+        message "Ошибка добавления записи в справочник: " extGdsObj:ReturnMsg view-as alert-box .
         undo, return no-apply .
       end.
-      run gds-attr-write(
-      buf_goods.gds-code,
-      {&attr-egais-name},
-      bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value
-      ).
     end.
     else do:
       return no-apply.
     end.
-    /*assign 
-      X_ext-classif.charkey_one = bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value .*/
   end.                                    
   else 
   do :
@@ -810,23 +764,6 @@ PROCEDURE msdblcl :
     if v-rid-list = "" or v-rid-list = ? 
       then return no-apply.
     find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock. 
-    run gen-key-rec IN THIS-PROCEDURE (  input {&table_goods}
-     ,input (buffer buf_goods:handle)
-      ,output v-gds-uniq-key-rec).
-
-    find first buf_ext-classif no-lock  where buf_ext-classif.classif-subject = {&table_goods} 
-      and buf_ext-classif.classif-name = {&extclass_goods_esys} 
-      AND buf_ext-classif.db-num = 0  
-      and buf_ext-classif.key#_one = buf_goods.gds-code
-      and buf_ext-classif.key#_two = v-ext-sys 
-      and buf_ext-classif.uniq-key-rec = v-gds-uniq-key-rec
-      no-error.
-    /*if available (buf_ext-classif)
-    then do:
-      message substitute ("Товар &1 уже связан.", buf_goods.gds-code) view-as alert-box.
-      return no-apply.
-    end.*/
-    
     run gds-attr-value(
       buf_goods.gds-code,
       {&attr-alcohol-prod},
@@ -869,34 +806,31 @@ PROCEDURE msdblcl :
         return no-apply.
       end.*/        
     end.
-    run ref/extclas1.p ( 
-      INPUT {&add-def}
-      ,INPUT yes /*p-silent*/
-      ,INPUT-OUTPUT v-rid
-      ,INPUT {&table_goods} /*p-classif-subject*/
-      ,INPUT {&extclass_goods_esys} /*p-classif-name*/
-      ,input 0  /*p-db-num*/
-      ,input buf_goods.gds-code  /*p-key#_one*/
-      ,input v-ext-sys /*p-Key#_Two*/
-      ,input 0 /*p-key#_Three*/
-      ,input bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value /*p-CharKey_One */
-      ,input '':U /*p-CharKey_two */
-      ,input buf_goods.gds-name /*p-CharKey_three */
-      ,input 0 /*p-nonunique */
-      ,input v-gds-uniq-key-rec ) no-error.
-    if error-status:error then
+    
+    v-prod = bh-wb-gds-EG:buffer-field ("prod-list"):buffer-value.
+    v-impor = bh-wb-gds-EG:buffer-field ("importer-list"):buffer-value.
+    
+    extGdsObj:CliRegIdProd = entry (1, v-prod, chr(5)).
+    extGdsObj:INNProd = entry (2, v-prod, chr(5)).
+    extGdsObj:KPPProd = entry (3, v-prod, chr(5)).
+    extGdsObj:FullNameProd = entry (4, v-prod, chr(5)).
+    extGdsObj:CountryProd = entry (5, v-prod, chr(5)).
+    extGdsObj:DescrProd = entry (6, v-prod, chr(5)).
+    
+    extGdsObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
+    extGdsObj:INNImpor = entry (2, v-impor, chr(5)).
+    extGdsObj:KPPImpor = entry (3, v-impor, chr(5)).
+    extGdsObj:FullNameImpor = entry (4, v-impor, chr(5)).
+    extGdsObj:CountryImpor = entry (5, v-impor, chr(5)).
+    extGdsObj:DescrImpor = entry (6, v-impor, chr(5)).
+
+    extGdsObj:FullNameGds = bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value.
+    
+    if not extGdsObj:CreateExtGds(bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value, buf_goods.gds-code) then
     do:
-      if error-status:get-message(1) = "" then
-        message "Ошибка добавления записи в справочник!" view-as alert-box .
-      else
-        message error-status:get-message(1) view-as alert-box .
+      message "Ошибка добавления записи в справочник! " extGdsObj:ReturnMsg view-as alert-box .
       undo, return no-apply .
     end.
-    run gds-attr-write(
-    buf_goods.gds-code,
-    {&attr-egais-name},
-    bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value
-    ).
   end.
   
   delete object browse-hdl-wb-egais-header.

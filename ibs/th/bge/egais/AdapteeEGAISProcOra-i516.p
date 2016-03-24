@@ -276,7 +276,7 @@ procedure set-refAB:
       find first buf_goods no-lock where buf_goods.gds-code = tt-wb-gds-EG.gds-code no-error.
       
       find first ub.trn-doc where ub.trn-doc.doc-code = p-doc-code no-lock.
-      
+
       for each ub.parts exclusive-lock
         where 
               ub.parts.obj-code  = ub.trn-doc.obj-code
@@ -284,8 +284,7 @@ procedure set-refAB:
           and ub.parts.artic     = buf_goods.artic
           and ub.parts.prod-type = buf_goods.prod-type
           and ub.parts.prod-code = buf_goods.prod-code
-          and ( ub.parts.in-code   = p-doc-code
-                or ub.parts.out-code  = p-doc-code)
+          and ub.parts.out-code  = p-doc-code
         :
         
         find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.

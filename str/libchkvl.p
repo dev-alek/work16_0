@@ -3665,6 +3665,7 @@ on error undo, return error
             t-gds.first-line-num = buf_chk-gds.line-num
           .
         end.
+        if t-gds.price-sum = t-gds.discnt-sum then t-gds.corr-discnt-rank = t-gds.corr-discnt-rank + 10.
         if buf_chk-gds.discnt <> 0 then do:
         t-gds.corr-discnt-rank = t-gds.corr-discnt-rank - 0.1.
         end.

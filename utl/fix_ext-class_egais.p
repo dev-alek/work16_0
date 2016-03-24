@@ -33,17 +33,32 @@ run adm/shattri.p (
 assign v-ext-sys = v-value-integer .
 
 /* бэкап в файл и перенос во временную таблицу */
-output stream str-ext to value ("ext-classif_egais_backup.d") .
+output stream str-ext to value ("ext-classif_egais_backup.d") append .
+put stream str-ext unformatted "Начало выгрузки - " string(today) + "   " + string(time, "hh:mm:ss") skip .
 for each  ext-classif no-lock
     where ext-classif.classif-subject = 'goods'
       and ext-classif.classif-name = 'exp-esys-gds-code'
       and ext-classif.db-num = 0
       and ext-classif.key#_two = v-ext-sys :
     export stream str-ext delimiter ';' ext-classif .
+    find first ext-classif-attr no-lock where ext-classif-attr.classif-subject = ext-classif.classif-subject
+      and ext-classif-attr.classif-name = ext-classif.classif-name
+      and ext-classif-attr.db-num = ext-classif.db-num
+      and ext-classif-attr.Key#_One = ext-classif.key#_one
+      and ext-classif-attr.Key#_two = ext-classif.key#_two
+      and ext-classif-attr.Key#_three = ext-classif.key#_three
+      and ext-classif-attr.CharKey_One = ext-classif.charkey_one
+      and ext-classif-attr.CharKey_two = ext-classif.charkey_two
+      and ext-classif-attr.CharKey_three = ext-classif.charkey_three
+      and ext-classif-attr.nonunique = ext-classif.nonunique
+      and ext-classif-attr.attr-code = 'egais-info'
+      no-error .
+    if available  ext-classif-attr then next .  
     create tt-ext-classif .
     buffer-copy ext-classif to tt-ext-classif 
     assign tt-ext-classif.charkey_three = "" no-error .
 end.
+put stream str-ext unformatted "Конец выгрузки - " string(today) + "   " + string(time, "hh:mm:ss") skip skip .
 output stream str-ext close .
 /* удаление */.
 for each  ext-classif exclusive-lock
@@ -51,6 +66,19 @@ for each  ext-classif exclusive-lock
       and ext-classif.classif-name = 'exp-esys-gds-code'
       and ext-classif.db-num = 0
       and ext-classif.key#_two = v-ext-sys :
+    find first ext-classif-attr no-lock where ext-classif-attr.classif-subject = ext-classif.classif-subject
+      and ext-classif-attr.classif-name = ext-classif.classif-name
+      and ext-classif-attr.db-num = ext-classif.db-num
+      and ext-classif-attr.Key#_One = ext-classif.key#_one
+      and ext-classif-attr.Key#_two = ext-classif.key#_two
+      and ext-classif-attr.Key#_three = ext-classif.key#_three
+      and ext-classif-attr.CharKey_One = ext-classif.charkey_one
+      and ext-classif-attr.CharKey_two = ext-classif.charkey_two
+      and ext-classif-attr.CharKey_three = ext-classif.charkey_three
+      and ext-classif-attr.nonunique = ext-classif.nonunique
+      and ext-classif-attr.attr-code = 'egais-info'
+      no-error .
+    if available  ext-classif-attr then next .      
     delete ext-classif .
 end.
 /* выделение записей, которые нужно оставить */

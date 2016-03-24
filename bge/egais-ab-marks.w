@@ -300,10 +300,11 @@ PROCEDURE proc-choose-file :
               view-as alert-box.
               end.  
             end.  
+delete object ProcFindGds .
   END.
   
   else os-delete value(v-proc-name-err). /* Если нет - удаляем лог */
-delete object ProcFindGds .
+
 END PROCEDURE.
 
 

@@ -82,14 +82,14 @@ define variable v-twowin-point as character no-undo .
 
 /* Поля для assign НЕЗАБЫТЬ ДОБАВИТЬ СУДА НОВЫЕ !!! */
 
-&Scoped-define page-1p  fgdsnind  invprn0 ~
-outprncd outdisc  outegrp outobj outappr outdate outnum  ~
-sort-prd outhold  outsubs  torg2-no outt12 ~
-outprim outrubl outrecv  outares outsend outprops ~
-outasend rep-artic
-
-&Scoped-define page-2p outssdoc factur01 incurrat tick-w in-docpr  outrecv  ~
-sort-prd torg2-no outprops outR outB outogr outC rep-artic
+/*&Scoped-define page-1p  fgdsnind  invprn0 ~                                  */
+/*outprncd outdisc  outegrp outobj outappr outdate outnum  ~                   */
+/*sort-prd outhold  outsubs  torg2-no outt12 ~                                 */
+/*outprim outrubl outrecv  outares outsend outprops ~                          */
+/*outasend rep-artic                                                           */
+/*                                                                             */
+/*&Scoped-define page-2p outssdoc factur01 incurrat tick-w in-docpr  outrecv  ~*/
+/*sort-prd torg2-no outprops outR outB outogr outC rep-artic                   */
 
 assign
 v-ttho = buffer thbjattr_thbj-attr-o:table-handle .
@@ -113,7 +113,7 @@ v-tthf = buffer thbjattr_thbj-attr-f:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit BUTTON-1 B-quit BUTTON-2 B-Help ~
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help ~
 I-fgdsnind I-in-docpr I-outdisc I-outegrp I-outappr I-outdate I-outhold ~
 I-outnum I-outobj I-invprn0 I-outrecv I-outprncd I-sort-prd I-torg2-no ~
 I-outprim I-outrubl I-outssdoc I-outsubs I-outt12 RECT-2 I-factur01 ~
@@ -125,7 +125,7 @@ B-outappr B-6 outdate B-outdate sort-prd B-8 outnum B-outnum torg2-no B-7 ~
 outhold B-outhold outprops B-12 outsubs B-outsubs B-24 outR B-25 B-13 ~
 outt12 B-outt12 outogr outprim B-outprim B-26 B-18 outb B-19 B-27 outrubl ~
 B-outrubl outc outares B-outares B-21 B-22 outsend B-outsend B-23 outasend ~
-B-outasend F-button-1 F-button-2 FILL-IN-4 v-fgdsnind v-outssdoc v-invprn0 ~
+B-outasend FILL-IN-4 v-fgdsnind v-outssdoc v-invprn0 ~
 v-outprncd v-factur01 v-incurrat v-tick-w v-in-docpr FILL-IN-1 v-outdisc ~
 v-outegrp v-outrecv v-outobj v-outappr v-outdate v-sort-prd v-outnum ~
 v-torg2-no v-outhold v-outprops v-outsubs v-outR v-outogr v-outt12 ~
@@ -134,8 +134,8 @@ rep-artic I-rep-artic v-rep-artic
 &Scoped-Define DISPLAYED-OBJECTS fgdsnind outssdoc invprn0 outprncd ~
 factur01 incurrat tick-w in-docpr outdisc outegrp outrecv outobj outappr ~
 outdate sort-prd outnum torg2-no outhold outprops outsubs outR outt12 ~
-outogr outprim outb outrubl outc outares outsend outasend F-button-1 ~
-F-button-2 FILL-IN-4 v-fgdsnind v-outssdoc v-invprn0 v-outprncd v-factur01 ~
+outogr outprim outb outrubl outc outares outsend outasend ~
+FILL-IN-4 v-fgdsnind v-outssdoc v-invprn0 v-outprncd v-factur01 ~
 v-incurrat v-tick-w v-in-docpr FILL-IN-1 v-outdisc v-outegrp v-outrecv ~
 v-outobj v-outappr v-outdate v-sort-prd v-outnum v-torg2-no v-outhold ~
 v-outprops v-outsubs v-outR v-outogr v-outt12 v-outprim v-outb v-outc ~
@@ -143,7 +143,7 @@ v-outrubl v-outares v-outsend v-outasend rep-artic v-rep-artic
 
 /* Custom List Definitions                                              */
 /* page-1,page-2,no-dis,List-4,List-5,List-6                            */
-&Scoped-define page-1 I-fgdsnind I-outdisc I-outegrp I-outappr I-outdate ~
+&Scoped-define I-fgdsnind I-outdisc I-outegrp I-outappr I-outdate ~
 I-outhold I-outnum I-outobj I-invprn0 I-outprncd I-outprim I-outrubl ~
 I-outsubs I-outt12 I-outares I-outsend I-outasend B-1 fgdsnind invprn0 ~
 outprncd B-3 outdisc B-outdisc outegrp B-outegrp B-4 B-9 outobj B-outobj ~
@@ -152,15 +152,15 @@ B-outhold B-12 outsubs B-outsubs B-13 outt12 B-outt12 outprim B-outprim ~
 B-18 B-19 outrubl B-outrubl outares B-outares B-21 B-22 outsend B-outsend ~
 B-23 outasend B-outasend v-fgdsnind v-invprn0 v-outprncd FILL-IN-1 ~
 v-outdisc v-outegrp v-outobj v-outappr v-outdate v-outnum v-outhold ~
-v-outsubs v-outt12 v-outprim v-outrubl v-outares v-outsend v-outasend
-&Scoped-define page-2 I-in-docpr I-outrecv I-sort-prd I-torg2-no I-outssdoc ~
+v-outsubs v-outt12 v-outprim v-outrubl v-outares v-outsend v-outasend ~
+I-in-docpr I-outrecv I-sort-prd I-torg2-no I-outssdoc ~
 I-factur01 I-incurrat I-tick-w I-outprops I-outR I-outogr I-outb I-outc ~
 B-20 outssdoc B-14 factur01 B-15 incurrat B-16 tick-w B-2 in-docpr ~
 B-outrecv outrecv sort-prd torg2-no outprops B-24 B-25 B-26 B-27 v-outssdoc ~
 v-factur01 v-incurrat v-tick-w v-in-docpr v-outrecv v-sort-prd v-torg2-no ~
 v-outprops v-outR v-outogr v-outb v-outc rep-artic I-rep-artic v-rep-artic
-&Scoped-define no-dis B-exit BUTTON-1 B-quit BUTTON-2 B-Help F-button-1 ~
-F-button-2
+&Scoped-define no-dis B-exit B-quit B-Help 
+
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -174,20 +174,20 @@ F-button-2
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON B-1
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY .79.
+     LABEL "" 
+     SIZE 3 BY .9.
 
 DEFINE BUTTON B-12
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
 DEFINE BUTTON B-13
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-14
+DEFINE BUTTON B-18 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL ""
      SIZE 3 BY 1.
@@ -202,95 +202,96 @@ DEFINE BUTTON B-16
      LABEL ""
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-18
+DEFINE BUTTON B-14
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL ""
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-19
+DEFINE BUTTON B-19 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
+     SIZE 3 BY .9.
+
+DEFINE BUTTON B-2 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-2
+DEFINE BUTTON B-20 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-20
+DEFINE BUTTON B-21 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY .79.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-21
+DEFINE BUTTON B-22 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-22
+DEFINE BUTTON B-23 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-23
+DEFINE BUTTON B-24 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-24
+DEFINE BUTTON B-25 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY .79.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-25
+DEFINE BUTTON B-26 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY .79.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-26
+DEFINE BUTTON B-27 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY .79.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-27
-     IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY .79.
 
-DEFINE BUTTON B-3
+DEFINE BUTTON B-3 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-4
+DEFINE BUTTON B-4 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-5
+DEFINE BUTTON B-5 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-6
+DEFINE BUTTON B-6 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-7
+DEFINE BUTTON B-7 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-8
+DEFINE BUTTON B-8 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
-DEFINE BUTTON B-9
+DEFINE BUTTON B-9 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
+     LABEL "" 
+     SIZE 3 BY .9.
 
 DEFINE BUTTON B-exit AUTO-GO
      LABEL "&Ввод"
@@ -375,26 +376,12 @@ DEFINE BUTTON B-outsubs
 DEFINE BUTTON B-outt12
      IMAGE-UP FILE "cmp/update.bmp":U
      LABEL ""
-     SIZE 3 BY .79.
+     SIZE 3 BY 1.
 
 DEFINE BUTTON B-quit AUTO-END-KEY
      LABEL "&Отмена"
      SIZE 10 BY 1
      BGCOLOR 8 .
-
-DEFINE BUTTON BUTTON-1
-     IMAGE-UP FILE "adeicon\ts-up":U
-     IMAGE-DOWN FILE "adeicon\ts-down":U
-     IMAGE-INSENSITIVE FILE "adeicon\ts-up":U NO-FOCUS
-     LABEL "&1.Параметры"
-     SIZE 14 BY 1.13 TOOLTIP "Закладка №1".
-
-DEFINE BUTTON BUTTON-2
-     IMAGE-UP FILE "adeicon\ts-up":U
-     IMAGE-DOWN FILE "adeicon\ts-down":U
-     IMAGE-INSENSITIVE FILE "adeicon\ts-up":U NO-FOCUS
-     LABEL "&2.Параметры"
-     SIZE 14 BY 1.13 TOOLTIP "Закладка №2".
 
 DEFINE VARIABLE outappr AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
@@ -471,14 +458,6 @@ DEFINE VARIABLE outt12 AS CHARACTER
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE F-button-1 AS CHARACTER FORMAT "X(256)":U INITIAL "№ &1."
-      VIEW-AS TEXT
-     SIZE 5 BY .67 TOOLTIP "Закладка №1" NO-UNDO.
-
-DEFINE VARIABLE F-button-2 AS CHARACTER FORMAT "X(256)":U INITIAL "№ &2."
-      VIEW-AS TEXT
-     SIZE 4.75 BY .67 TOOLTIP "Закладка №2" NO-UNDO.
-
 DEFINE VARIABLE FILL-IN-1 AS CHARACTER FORMAT "X(256)":U INITIAL "Список печатных форм, для которых :"
       VIEW-AS TEXT
      SIZE 35.63 BY .67
@@ -498,7 +477,7 @@ DEFINE VARIABLE v-factur01 AS CHARACTER FORMAT "X(256)":U
 
 DEFINE VARIABLE v-fgdsnind AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT
-     SIZE 70.63 BY .79 NO-UNDO.
+     SIZE 70.63 BY .9 NO-UNDO.
 
 DEFINE VARIABLE v-in-docpr AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT
@@ -558,7 +537,7 @@ DEFINE VARIABLE v-outobj AS CHARACTER FORMAT "X(256)":U
 
 DEFINE VARIABLE v-outogr AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT
-     SIZE 34.63 BY .79 NO-UNDO.
+     SIZE 34.63 BY .9 NO-UNDO.
 
 DEFINE VARIABLE v-outprim AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT
@@ -590,7 +569,7 @@ DEFINE VARIABLE v-outsend AS CHARACTER FORMAT "X(256)":U
 
 DEFINE VARIABLE v-outssdoc AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT
-     SIZE 49 BY .79 NO-UNDO.
+     SIZE 49 BY .9 NO-UNDO.
 
 DEFINE VARIABLE v-outsubs AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT
@@ -658,7 +637,7 @@ DEFINE IMAGE I-outc
 
 DEFINE IMAGE I-outdate
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY 1.04.
+     SIZE 3 BY .9.
 
 DEFINE IMAGE I-outdisc
      FILENAME "cmp/info.bmp":U
@@ -674,7 +653,7 @@ DEFINE IMAGE I-outhold
 
 DEFINE IMAGE I-outnum
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY 1.04.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-outobj
      FILENAME "cmp/info.bmp":U
@@ -714,7 +693,7 @@ DEFINE IMAGE I-outsend
 
 DEFINE IMAGE I-outssdoc
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .79.
+     SIZE 3 BY .9.
 
 DEFINE IMAGE I-outsubs
      FILENAME "cmp/info.bmp":U
@@ -764,7 +743,7 @@ DEFINE VARIABLE outogr AS CHARACTER INITIAL "no_print"
           "Item 1", "no_print",
 "Item 2", "2",
 "Item 3", "3"
-     SIZE 60.63 BY .79
+     SIZE 60 BY .79
      FONT 4 NO-UNDO.
 
 DEFINE VARIABLE outR AS CHARACTER INITIAL "no_print"
@@ -797,7 +776,7 @@ DEFINE VARIABLE factur01 AS LOGICAL INITIAL no
 DEFINE VARIABLE fgdsnind AS LOGICAL INITIAL no
      LABEL ""
      VIEW-AS TOGGLE-BOX
-     SIZE 48.63 BY .79 NO-UNDO.
+     SIZE 48 BY .9 NO-UNDO.
 
 DEFINE VARIABLE incurrat AS LOGICAL INITIAL no
      LABEL ""
@@ -843,165 +822,180 @@ DEFINE VARIABLE rep-artic AS LOGICAL INITIAL no
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
+/*общие*/
      B-exit AT ROW 1 COL 1
-     BUTTON-1 AT ROW 1 COL 34.63 WIDGET-ID 342
      B-quit AT ROW 1 COL 11
-     BUTTON-2 AT ROW 1 COL 48.38 WIDGET-ID 344
      B-Help AT ROW 1 COL 95
-     B-20 AT ROW 2.21 COL 2.75 WIDGET-ID 392
-     B-1 AT ROW 2.21 COL 2.75 WIDGET-ID 80
-     fgdsnind AT ROW 2.21 COL 6 WIDGET-ID 236
-     outssdoc AT ROW 2.25 COL 55 NO-LABEL WIDGET-ID 280
+     RECT-2 AT ROW 2 COL 3.63 WIDGET-ID 346
+     FILL-IN-4 AT ROW 2.25 COL 73 COLON-ALIGNED NO-LABEL WIDGET-ID 352
+/*глобальные*/
      invprn0 AT ROW 3 COL 4.63 WIDGET-ID 134
      outprncd AT ROW 3.75 COL 5 WIDGET-ID 148
-     B-14 AT ROW 4.21 COL 2.75 WIDGET-ID 354
-     factur01 AT ROW 4.21 COL 6 WIDGET-ID 358
-     B-15 AT ROW 5.08 COL 2.75 WIDGET-ID 362
-     incurrat AT ROW 5.08 COL 6 WIDGET-ID 364
-     B-16 AT ROW 5.96 COL 2.75 WIDGET-ID 370
-     tick-w AT ROW 5.96 COL 6 WIDGET-ID 374
-     B-2 AT ROW 7 COL 2.75 WIDGET-ID 82
-     in-docpr AT ROW 7 COL 6 NO-LABEL WIDGET-ID 238
-     B-3 AT ROW 9.21 COL 2.75 WIDGET-ID 84
-     outdisc AT ROW 9.21 COL 6 NO-LABEL WIDGET-ID 240
-     B-outdisc AT ROW 9.21 COL 15.75 WIDGET-ID 250
-     outegrp AT ROW 10.21 COL 6 NO-LABEL WIDGET-ID 242
-     B-outegrp AT ROW 10.21 COL 15.75 WIDGET-ID 248
+     I-invprn0 AT ROW 3 COL 1.63 WIDGET-ID 136
+     I-outprncd AT ROW 3.79 COL 1.63 WIDGET-ID 146
+     v-invprn0 AT ROW 3 COL 6.63 NO-LABEL WIDGET-ID 138
+     v-outprncd AT ROW 3.75 COL 7.25 NO-LABEL WIDGET-ID 150    
      B-outrecv AT ROW 10.21 COL 48.75 WIDGET-ID 154
      outrecv AT ROW 10.25 COL 2.75 NO-LABEL WIDGET-ID 152
-     B-4 AT ROW 10.25 COL 2.75 WIDGET-ID 86
-     B-9 AT ROW 11.21 COL 2.75 WIDGET-ID 108
-     outobj AT ROW 11.21 COL 6 NO-LABEL WIDGET-ID 252
-     B-outobj AT ROW 11.21 COL 15.75 WIDGET-ID 254
-     B-5 AT ROW 12.21 COL 2.75 WIDGET-ID 88
-     outappr AT ROW 12.21 COL 6 NO-LABEL WIDGET-ID 256
-     B-outappr AT ROW 12.21 COL 15.75 WIDGET-ID 258
-     B-6 AT ROW 13.13 COL 2.75 WIDGET-ID 90
-     outdate AT ROW 13.21 COL 6 NO-LABEL WIDGET-ID 262
-     B-outdate AT ROW 13.21 COL 15.75 WIDGET-ID 260
-     sort-prd AT ROW 13.25 COL 2.75 WIDGET-ID 164
-     B-8 AT ROW 14.21 COL 2.75 WIDGET-ID 100
-     outnum AT ROW 14.21 COL 6 NO-LABEL WIDGET-ID 266
-     B-outnum AT ROW 14.21 COL 15.75 WIDGET-ID 264
-     torg2-no AT ROW 14.25 COL 2.75 WIDGET-ID 286
-     B-7 AT ROW 15.21 COL 2.75 WIDGET-ID 92
-     outhold AT ROW 15.21 COL 6 NO-LABEL WIDGET-ID 244
-     B-outhold AT ROW 15.21 COL 15.75 WIDGET-ID 246
-     outprops AT ROW 15.25 COL 2.75 WIDGET-ID 416
-     B-12 AT ROW 16.08 COL 2.75 WIDGET-ID 316
-     outsubs AT ROW 16.08 COL 6 NO-LABEL WIDGET-ID 322
-     B-outsubs AT ROW 16.08 COL 15.75 WIDGET-ID 318
-     B-24 AT ROW 16.13 COL 2.75 WIDGET-ID 430
-     outR AT ROW 16.13 COL 41 NO-LABEL WIDGET-ID 438
-     B-25 AT ROW 17.04 COL 2.75 WIDGET-ID 442
-     B-13 AT ROW 17.04 COL 2.75 WIDGET-ID 326
-     outt12 AT ROW 17.04 COL 6 NO-LABEL WIDGET-ID 332
-     B-outt12 AT ROW 17.04 COL 15.75 WIDGET-ID 328
-     outogr AT ROW 17.04 COL 41 NO-LABEL WIDGET-ID 446
-     outprim AT ROW 17.96 COL 6 NO-LABEL WIDGET-ID 296
-     B-outprim AT ROW 17.96 COL 15.75 WIDGET-ID 294
-     B-26 AT ROW 18 COL 2.75 WIDGET-ID 452
-     B-18 AT ROW 18 COL 2.75 WIDGET-ID 388
-     outb AT ROW 18 COL 41 NO-LABEL WIDGET-ID 456
-     B-19 AT ROW 18.96 COL 2.75 WIDGET-ID 390
-     B-27 AT ROW 19 COL 2.75 WIDGET-ID 462
-     outrubl AT ROW 19 COL 6 NO-LABEL WIDGET-ID 292
-     B-outrubl AT ROW 19 COL 15.75 WIDGET-ID 290
-     outc AT ROW 19 COL 48 NO-LABEL WIDGET-ID 466
-     outares AT ROW 20.04 COL 6 NO-LABEL WIDGET-ID 406
-     B-outares AT ROW 20.04 COL 15.75 WIDGET-ID 398
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         DEFAULT-BUTTON B-exit CANCEL-BUTTON B-quit WIDGET-ID 100.
-
-/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
-DEFINE FRAME Dialog-Frame
-     B-21 AT ROW 20.08 COL 2.75 WIDGET-ID 394
-     B-22 AT ROW 21.04 COL 2.75 WIDGET-ID 396
-     outsend AT ROW 21.08 COL 6 NO-LABEL WIDGET-ID 408
-     B-outsend AT ROW 21.08 COL 15.75 WIDGET-ID 400
-     B-23 AT ROW 22 COL 2.75 WIDGET-ID 420
-     outasend AT ROW 22.04 COL 6 NO-LABEL WIDGET-ID 426
-     B-outasend AT ROW 22.04 COL 15.63 WIDGET-ID 422
-     F-button-1 AT ROW 1.25 COL 34 COLON-ALIGNED NO-LABEL WIDGET-ID 350
-     F-button-2 AT ROW 1.25 COL 47.25 COLON-ALIGNED NO-LABEL WIDGET-ID 348
-     FILL-IN-4 AT ROW 2.21 COL 73.63 COLON-ALIGNED NO-LABEL WIDGET-ID 352
-     v-fgdsnind AT ROW 2.25 COL 8.63 NO-LABEL WIDGET-ID 6
-     v-outssdoc AT ROW 2.29 COL 6 NO-LABEL WIDGET-ID 234
-     v-invprn0 AT ROW 3 COL 6.63 NO-LABEL WIDGET-ID 138
-     v-outprncd AT ROW 3.75 COL 7.25 NO-LABEL WIDGET-ID 150
-     v-factur01 AT ROW 4.21 COL 7.63 NO-LABEL WIDGET-ID 360
-     v-incurrat AT ROW 5.08 COL 9.38 NO-LABEL WIDGET-ID 368
-     v-tick-w AT ROW 5.96 COL 8.63 NO-LABEL WIDGET-ID 376
-     v-in-docpr AT ROW 7 COL 21 NO-LABEL WIDGET-ID 18
-     FILL-IN-1 AT ROW 8.5 COL 1.75 NO-LABEL WIDGET-ID 336
-     v-outdisc AT ROW 9.21 COL 19 NO-LABEL WIDGET-ID 54
-     v-outegrp AT ROW 10.21 COL 19 NO-LABEL WIDGET-ID 60
      v-outrecv AT ROW 10.21 COL 51.75 NO-LABEL WIDGET-ID 144
-     v-outobj AT ROW 11.21 COL 19 NO-LABEL WIDGET-ID 114
-     v-outappr AT ROW 12.21 COL 19 NO-LABEL WIDGET-ID 66
-     v-outdate AT ROW 13.21 COL 19 NO-LABEL WIDGET-ID 78
-     v-sort-prd AT ROW 13.25 COL 6 NO-LABEL WIDGET-ID 166
-     v-outnum AT ROW 14.21 COL 19 NO-LABEL WIDGET-ID 106
-     v-torg2-no AT ROW 14.25 COL 6 NO-LABEL WIDGET-ID 216
-     v-outhold AT ROW 15.21 COL 19 NO-LABEL WIDGET-ID 98
-     v-outprops AT ROW 15.25 COL 5.25 NO-LABEL WIDGET-ID 418
-     v-outsubs AT ROW 16.08 COL 19 NO-LABEL WIDGET-ID 324
-     v-outR AT ROW 16.13 COL 6 NO-LABEL WIDGET-ID 436
-     v-outogr AT ROW 17.04 COL 6 NO-LABEL WIDGET-ID 450
-     v-outt12 AT ROW 17.04 COL 19 NO-LABEL WIDGET-ID 334
-     v-outprim AT ROW 17.96 COL 18 NO-LABEL WIDGET-ID 222
-     v-outb AT ROW 18 COL 6 NO-LABEL WIDGET-ID 460 DISABLE-AUTO-ZAP
-     v-outc AT ROW 19 COL 6 NO-LABEL WIDGET-ID 464 DISABLE-AUTO-ZAP
-     v-outrubl AT ROW 19.04 COL 18.75 NO-LABEL WIDGET-ID 228
-     v-outares AT ROW 20.04 COL 18.75 NO-LABEL WIDGET-ID 410
-     v-outsend AT ROW 21.13 COL 18.75 NO-LABEL WIDGET-ID 412
-     v-outasend AT ROW 22.21 COL 19 NO-LABEL WIDGET-ID 428
-     I-fgdsnind AT ROW 2.21 COL 1 WIDGET-ID 10
-     I-in-docpr AT ROW 7 COL 1 WIDGET-ID 34
-     I-outdisc AT ROW 9.21 COL 1 WIDGET-ID 50
-     I-outegrp AT ROW 10.25 COL 1 WIDGET-ID 56
-     I-outappr AT ROW 12.21 COL 1 WIDGET-ID 64
-     I-outdate AT ROW 13.13 COL 1 WIDGET-ID 72
-     I-outhold AT ROW 15.21 COL 1 WIDGET-ID 94
-     I-outnum AT ROW 14.21 COL 1 WIDGET-ID 104
-     I-outobj AT ROW 11.21 COL 1 WIDGET-ID 110
-     I-invprn0 AT ROW 3 COL 1.63 WIDGET-ID 136
      I-outrecv AT ROW 10.29 COL 1 WIDGET-ID 142
-     I-outprncd AT ROW 3.79 COL 1.63 WIDGET-ID 146
      I-sort-prd AT ROW 13.25 COL 1 WIDGET-ID 162
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         DEFAULT-BUTTON B-exit CANCEL-BUTTON B-quit WIDGET-ID 100.
-
-/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
-DEFINE FRAME Dialog-Frame
-     I-torg2-no AT ROW 14.25 COL 1 WIDGET-ID 212
-     I-outprim AT ROW 18 COL 1 WIDGET-ID 218
-     I-outrubl AT ROW 19.08 COL 1 WIDGET-ID 224
-     I-outssdoc AT ROW 2.33 COL 1 WIDGET-ID 230
-     I-outsubs AT ROW 16.08 COL 1 WIDGET-ID 320
-     I-outt12 AT ROW 17.04 COL 1 WIDGET-ID 330
-     RECT-2 AT ROW 2 COL 3.63 WIDGET-ID 346
      rep-artic AT ROW 12.25 COL 2.75 WIDGET-ID 480
      v-rep-artic AT ROW 12.25 COL 6 NO-LABEL WIDGET-ID 482
      I-rep-artic AT ROW 12.25 COL 1 WIDGET-ID 484
-     I-factur01 AT ROW 4.21 COL 1 WIDGET-ID 356
-     I-incurrat AT ROW 5.08 COL 1 WIDGET-ID 366
-     I-tick-w AT ROW 5.96 COL 1 WIDGET-ID 372
-     I-outares AT ROW 20.08 COL 1 WIDGET-ID 402
-     I-outsend AT ROW 21.21 COL 1 WIDGET-ID 404
+     outprops AT ROW 15.25 COL 2.75 WIDGET-ID 416
+     v-outprops AT ROW 15.25 COL 5.25 NO-LABEL WIDGET-ID 418
      I-outprops AT ROW 15.25 COL 1 WIDGET-ID 414
-     I-outasend AT ROW 22.13 COL 1 WIDGET-ID 424
-     I-outR AT ROW 16.13 COL 1 WIDGET-ID 432
-     I-outogr AT ROW 17.04 COL 1 WIDGET-ID 444
-     I-outb AT ROW 18 COL 1 WIDGET-ID 454
-     I-outc AT ROW 19.08 COL 1 WIDGET-ID 470
-     SPACE(98.99) SKIP(3.18)
+     sort-prd AT ROW 13.25 COL 2.75 WIDGET-ID 164
+     torg2-no AT ROW 14.25 COL 2.75 WIDGET-ID 286
+     v-sort-prd AT ROW 13.25 COL 6 NO-LABEL WIDGET-ID 166
+     v-torg2-no AT ROW 14.25 COL 6 NO-LABEL WIDGET-ID 216
+     I-torg2-no AT ROW 14.25 COL 1 WIDGET-ID 212
+                 
+/*фирма*/
+     B-14 AT ROW 3.58 COL 2.75 WIDGET-ID 354
+     factur01 AT ROW 3.58 COL 6 WIDGET-ID 358
+     B-15 AT ROW 4.46 COL 2.75 WIDGET-ID 362
+     incurrat AT ROW 4.46 COL 6 WIDGET-ID 364
+     B-16 AT ROW 5.33 COL 2.75 WIDGET-ID 370
+     tick-w AT ROW 5.33 COL 6 WIDGET-ID 374
+     FILL-IN-4 AT ROW 2.25 COL 73 COLON-ALIGNED NO-LABEL WIDGET-ID 352
+     v-factur01 AT ROW 3.58 COL 7.63 NO-LABEL WIDGET-ID 360
+     v-incurrat AT ROW 4.46 COL 7.63 COLON-ALIGNED NO-LABEL WIDGET-ID 368
+     v-tick-w AT ROW 5.33 COL 7.63 NO-LABEL WIDGET-ID 376
+     RECT-2 AT ROW 2 COL 3.63 WIDGET-ID 346
+     I-factur01 AT ROW 3.58 COL 1 WIDGET-ID 356
+     I-incurrat AT ROW 4.46 COL 1 WIDGET-ID 366
+     I-tick-w AT ROW 5.33 COL 1 WIDGET-ID 372
+
+/*объетные*/     
+     B-1 AT ROW 2.21 COL 3 WIDGET-ID 392
+     fgdsnind AT ROW 2.21 COL 6 WIDGET-ID 236
+     v-fgdsnind AT ROW 2.21 COL 21 NO-LABEL WIDGET-ID 6
+     I-fgdsnind AT ROW 2.21 COL 1 WIDGET-ID 10
+     
+     B-20 AT ROW 3.25 COL 3 WIDGET-ID 80
+     outssdoc AT ROW 3.25 COL 57.5 NO-LABEL WIDGET-ID 280
+     v-outssdoc AT ROW 3.25 COL 6 NO-LABEL WIDGET-ID 234
+     I-outssdoc AT ROW 3.29 COL 1 WIDGET-ID 230
+
+     B-2 AT ROW 5.75 COL 3 WIDGET-ID 82
+     in-docpr AT ROW 5.75 COL 6 NO-LABEL WIDGET-ID 238
+     I-in-docpr AT ROW 5.79 COL 1 WIDGET-ID 34
+     v-in-docpr AT ROW 5.75 COL 21 NO-LABEL WIDGET-ID 18
+
+     B-24 AT ROW 7 COL 3 WIDGET-ID 430
+     outR AT ROW 7 COL 48 NO-LABEL WIDGET-ID 438
+     v-outR AT ROW 7 COL 6 NO-LABEL WIDGET-ID 436
+     I-outR AT ROW 7.04 COL 1 WIDGET-ID 432
+
+     B-26 AT ROW 9.88 COL 3 WIDGET-ID 388
+     outb AT ROW 9.88 COL 48 NO-LABEL WIDGET-ID 456
+     v-outb AT ROW 9.88 COL 6 NO-LABEL WIDGET-ID 460 DISABLE-AUTO-ZAP
+     I-outb AT ROW 9.92 COL 1 WIDGET-ID 454
+     
+     B-25 AT ROW 7.92 COL 3 WIDGET-ID 326
+     outogr AT ROW 7.92 COL 48 NO-LABEL WIDGET-ID 446
+     v-outogr AT ROW 7.92 COL 6 NO-LABEL WIDGET-ID 450
+     I-outogr AT ROW 7.96 COL 1 WIDGET-ID 444
+     
+     B-27 AT ROW 8.92 COL 3 WIDGET-ID 462
+     outc AT ROW 8.92 COL 48 NO-LABEL WIDGET-ID 466
+     v-outc AT ROW 8.92 COL 6 NO-LABEL WIDGET-ID 464 DISABLE-AUTO-ZAP 
+     I-outc AT ROW 8.96 COL 1 WIDGET-ID 470
+
+     B-3 AT ROW 11.96 COL 3 WIDGET-ID 84
+     outdisc AT ROW 11.96 COL 6 NO-LABEL WIDGET-ID 240
+     v-outdisc AT ROW 12.04 COL 19 NO-LABEL WIDGET-ID 54
+     I-outdisc AT ROW 12 COL 1 WIDGET-ID 50
+     B-outdisc AT ROW 11.96 COL 15.75 WIDGET-ID 250
+
+     B-4 AT ROW 12.96 COL 3 WIDGET-ID 86
+     outegrp AT ROW 12.96 COL 6 NO-LABEL WIDGET-ID 242
+     B-outegrp AT ROW 12.96 COL 15.75 WIDGET-ID 248
+     v-outegrp AT ROW 13.04 COL 19 NO-LABEL WIDGET-ID 60
+     I-outegrp AT ROW 13.04 COL 1 WIDGET-ID 56
+
+     B-9 AT ROW 13.96 COL 3 WIDGET-ID 108
+     outobj AT ROW 13.96 COL 6 NO-LABEL WIDGET-ID 252
+     B-outobj AT ROW 13.96 COL 15.75 WIDGET-ID 254
+     v-outobj AT ROW 14.04 COL 19 NO-LABEL WIDGET-ID 114
+     I-outobj AT ROW 14 COL 1 WIDGET-ID 110
+
+     B-5 AT ROW 14.96 COL 3 WIDGET-ID 88
+     outappr AT ROW 14.96 COL 6 NO-LABEL WIDGET-ID 256
+     B-outappr AT ROW 14.96 COL 15.75 WIDGET-ID 258
+     v-outappr AT ROW 15.04 COL 19 NO-LABEL WIDGET-ID 66
+     I-outappr AT ROW 15 COL 1 WIDGET-ID 64
+  
+     B-6 AT ROW 15.96 COL 3 WIDGET-ID 90
+     outdate AT ROW 15.96 COL 6 NO-LABEL WIDGET-ID 262
+     B-outdate AT ROW 15.96 COL 15.75 WIDGET-ID 260
+     v-outdate AT ROW 16.04 COL 19 NO-LABEL WIDGET-ID 78
+     I-outdate AT ROW 16 COL 1 WIDGET-ID 72
+
+     B-8 AT ROW 16.96 COL 3 WIDGET-ID 100
+     outnum AT ROW 16.96 COL 6 NO-LABEL WIDGET-ID 266
+     B-outnum AT ROW 16.96 COL 15.75 WIDGET-ID 264
+     v-outnum AT ROW 17 COL 19 NO-LABEL WIDGET-ID 106
+     I-outnum AT ROW 17 COL 1 WIDGET-ID 104
+
+     B-7 AT ROW 17.96 COL 3 WIDGET-ID 92
+     outhold AT ROW 17.96 COL 6 NO-LABEL WIDGET-ID 244
+     B-outhold AT ROW 17.96 COL 15.75 WIDGET-ID 246
+     v-outhold AT ROW 18.04 COL 19 NO-LABEL WIDGET-ID 98
+     I-outhold AT ROW 18 COL 1 WIDGET-ID 94
+     
+     B-12 AT ROW 18.96 COL 3 WIDGET-ID 316
+     outsubs AT ROW 18.96 COL 6 NO-LABEL WIDGET-ID 322
+     B-outsubs AT ROW 18.96 COL 15.75 WIDGET-ID 318
+     v-outsubs AT ROW 19.04 COL 19 NO-LABEL WIDGET-ID 324
+     I-outsubs AT ROW 19 COL 1 WIDGET-ID 320
+     
+     B-13 AT ROW 19.96 COL 3 WIDGET-ID 442
+     outt12 AT ROW 19.96 COL 6 NO-LABEL WIDGET-ID 332
+     B-outt12 AT ROW 19.96 COL 15.75 WIDGET-ID 328
+     I-outt12 AT ROW 20 COL 1 WIDGET-ID 330
+     v-outt12 AT ROW 20.04 COL 19 NO-LABEL WIDGET-ID 334
+
+     B-18 AT ROW 20.96 COL 3 WIDGET-ID 452
+     outprim AT ROW 20.96 COL 6 NO-LABEL WIDGET-ID 296
+     B-outprim AT ROW 20.96 COL 15.75 WIDGET-ID 294
+     v-outprim AT ROW 21.04 COL 19 NO-LABEL WIDGET-ID 222
+     I-outprim AT ROW 21 COL 1 WIDGET-ID 218
+
+     B-19 AT ROW 21.96 COL 3 WIDGET-ID 390
+     outrubl AT ROW 21.96 COL 6 NO-LABEL WIDGET-ID 292
+     B-outrubl AT ROW 21.96 COL 15.75 WIDGET-ID 290
+     I-outrubl AT ROW 22 COL 1 WIDGET-ID 224
+     v-outrubl AT ROW 22.04 COL 19 NO-LABEL WIDGET-ID 228
+     
+     B-21 AT ROW 22.96 COL 3 WIDGET-ID 394
+     outares AT ROW 22.96 COL 6 NO-LABEL WIDGET-ID 406
+     B-outares AT ROW 22.96 COL 15.75 WIDGET-ID 398
+     I-outares AT ROW 23 COL 1 WIDGET-ID 402
+     v-outares AT ROW 23.04 COL 19 NO-LABEL WIDGET-ID 410
+     
+     B-22 AT ROW 23.96 COL 3 WIDGET-ID 396
+     outsend AT ROW 23.96 COL 6 NO-LABEL WIDGET-ID 408
+     B-outsend AT ROW 23.96 COL 15.75 WIDGET-ID 400
+     I-outsend AT ROW 24 COL 1 WIDGET-ID 404
+     v-outsend AT ROW 24.04 COL 19 NO-LABEL WIDGET-ID 412
+     
+     B-23 AT ROW 24.96 COL 3 WIDGET-ID 420
+     outasend AT ROW 24.96 COL 6 NO-LABEL WIDGET-ID 426
+     B-outasend AT ROW 24.96 COL 15.75 WIDGET-ID 422
+     I-outasend AT ROW 25.04 COL 1 WIDGET-ID 424
+     v-outasend AT ROW 25.04 COL 19 NO-LABEL WIDGET-ID 428    
+     
+     
+     
+     FILL-IN-1 AT ROW 11.25 COL 1.75 NO-LABEL WIDGET-ID 336
+
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         TITLE "Настройки для ПЕЧАТНЫХ ФОРМ"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON B-quit WIDGET-ID 100.
+
 
 
 /* *********************** Procedure Settings ************************ */
@@ -2477,46 +2471,46 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME BUTTON-1
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BUTTON-1 Dialog-Frame
-ON CHOOSE OF BUTTON-1 IN FRAME Dialog-Frame /* 1.Параметры */
-DO:
-    if fl = '' then do:
-       assign  FRAME {&FRAME-NAME} {&page-2p} .
-    end.
-    fl = ''  .
-    DISPLAY {&page-1} with FRAME {&FRAME-NAME}.
-    HIDE {&page-2} IN FRAME {&FRAME-NAME}.
-button-1:LOAD-IMAGE-UP("adeicon\ts-up":U)        in frame {&frame-name} .
-button-2:LOAD-IMAGE-Up("adeicon\ts-down":U)      in frame {&frame-name} .
-F-button-1:fgcolor = 1   .
-f-button-2:fgcolor = ? .
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME BUTTON-2
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BUTTON-2 Dialog-Frame
-ON CHOOSE OF BUTTON-2 IN FRAME Dialog-Frame /* 2.Параметры */
-DO:
-    assign  FRAME {&FRAME-NAME} {&page-1p} .
-    DISPLAY {&page-2} with FRAME {&FRAME-NAME}.
-    HIDE {&page-1} IN FRAME {&FRAME-NAME}.
-
-    button-2:LOAD-IMAGE-UP("adeicon\ts-up":U)        in frame {&frame-name} .
-    button-1:LOAD-IMAGE-Up("adeicon\ts-down":U)      in frame {&frame-name} .
-    F-button-2:fgcolor = 1   .
-    f-button-1:fgcolor = ? .
-
-
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&Scoped-define SELF-NAME BUTTON-1                                            */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BUTTON-1 Dialog-Frame              */
+/*ON CHOOSE OF BUTTON-1 IN FRAME Dialog-Frame /* 1.Параметры */                */
+/*DO:                                                                          */
+/*    if fl = '' then do:                                                      */
+/*       assign  FRAME {&FRAME-NAME} {&page-2p} .                              */
+/*    end.                                                                     */
+/*    fl = ''  .                                                               */
+/*    DISPLAY {&page-1} with FRAME {&FRAME-NAME}.                              */
+/*    HIDE {&page-2} IN FRAME {&FRAME-NAME}.                                   */
+/*button-1:LOAD-IMAGE-UP("adeicon\ts-up":U)        in frame {&frame-name} .    */
+/*button-2:LOAD-IMAGE-Up("adeicon\ts-down":U)      in frame {&frame-name} .    */
+/*F-button-1:fgcolor = 1   .                                                   */
+/*f-button-2:fgcolor = ? .                                                     */
+/*                                                                             */
+/*END.                                                                         */
+/*                                                                             */
+/*/* _UIB-CODE-BLOCK-END */                                                    */
+/*&ANALYZE-RESUME                                                              */
+/*                                                                             */
+/*                                                                             */
+/*&Scoped-define SELF-NAME BUTTON-2                                            */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BUTTON-2 Dialog-Frame              */
+/*ON CHOOSE OF BUTTON-2 IN FRAME Dialog-Frame /* 2.Параметры */                */
+/*DO:                                                                          */
+/*    assign  FRAME {&FRAME-NAME} {&page-1p} .                                 */
+/*    DISPLAY {&page-2} with FRAME {&FRAME-NAME}.                              */
+/*    HIDE {&page-1} IN FRAME {&FRAME-NAME}.                                   */
+/*                                                                             */
+/*    button-2:LOAD-IMAGE-UP("adeicon\ts-up":U)        in frame {&frame-name} .*/
+/*    button-1:LOAD-IMAGE-Up("adeicon\ts-down":U)      in frame {&frame-name} .*/
+/*    F-button-2:fgcolor = 1   .                                               */
+/*    f-button-1:fgcolor = ? .                                                 */
+/*                                                                             */
+/*                                                                             */
+/*                                                                             */
+/*END.                                                                         */
+/*                                                                             */
+/*/* _UIB-CODE-BLOCK-END */                                                    */
+/*&ANALYZE-RESUME                                                              */
 
 
 &Scoped-define SELF-NAME I-factur01
@@ -2908,7 +2902,7 @@ define variable loc#log as logical   no-undo .
     run enable_UI.
     run init-proc.
     fl = 'new' .  /* флаг для закладок */
-    apply  "CHOOSE":U   to  button-1 in frame {&frame-name} .
+/*    apply  "CHOOSE":U   to  button-1 in frame {&frame-name} .*/
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -2939,46 +2933,185 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     ENABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we display/view/enable the widgets in the
-               user-interface.  In addition, OPEN all queries
-               associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
-               Settings" section of the widget Property Sheets.
-------------------------------------------------------------------------------*/
-  DISPLAY fgdsnind outssdoc invprn0 outprncd factur01 incurrat tick-w in-docpr
-          outdisc outegrp outrecv outobj outappr outdate sort-prd outnum
-          torg2-no outhold outprops outsubs outR outt12 outogr outprim outb
-          outrubl outc outares outsend outasend F-button-1 F-button-2 FILL-IN-4
-          v-fgdsnind v-outssdoc v-invprn0 v-outprncd v-factur01 v-incurrat
-          v-tick-w v-in-docpr FILL-IN-1 v-outdisc v-outegrp v-outrecv v-outobj
-          v-outappr v-outdate v-sort-prd v-outnum v-torg2-no v-outhold
-          v-outprops v-outsubs v-outR v-outogr v-outt12 v-outprim v-outb v-outc
-          v-outrubl v-outares v-outsend v-outasend rep-artic v-rep-artic
+  /*------------------------------------------------------------------------------
+    Purpose:     ENABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we display/view/enable the widgets in the
+                 user-interface.  In addition, OPEN all queries
+                 associated with each FRAME and BROWSE.
+                 These statements here are based on the "Other
+                 Settings" section of the widget Property Sheets.
+  ------------------------------------------------------------------------------*/
+  if p-type = "glob" then 
+  do:
+    DISPLAY FILL-IN-4
+      invprn0  I-invprn0  v-invprn0
+      outprncd I-outprncd v-outprncd
+      outrecv   I-outrecv B-outrecv v-outrecv
+      rep-artic I-rep-artic   v-rep-artic
+      outprops  I-outprops  v-outprops
+      sort-prd  I-sort-prd    v-sort-prd
+      torg2-no   I-torg2-no v-torg2-no
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit BUTTON-1 B-quit BUTTON-2 B-Help I-fgdsnind I-in-docpr I-outdisc
-         I-outegrp I-outappr I-outdate I-outhold I-outnum I-outobj I-invprn0
-         I-outrecv I-outprncd I-sort-prd I-torg2-no I-outprim I-outrubl
-         I-outssdoc I-outsubs I-outt12 RECT-2 I-factur01 I-incurrat I-tick-w
-         I-outares I-outsend I-outprops I-outasend I-outR I-outogr I-outb
-         I-outc B-20 B-1 fgdsnind outssdoc invprn0 outprncd B-14 factur01 B-15
-         incurrat B-16 tick-w B-2 in-docpr B-3 outdisc B-outdisc outegrp
-         B-outegrp B-outrecv outrecv B-4 B-9 outobj B-outobj B-5 outappr
-         B-outappr B-6 outdate B-outdate sort-prd B-8 outnum B-outnum torg2-no
-         B-7 outhold B-outhold outprops B-12 outsubs B-outsubs B-24 outR B-25
-         B-13 outt12 B-outt12 outogr outprim B-outprim B-26 B-18 outb B-19 B-27
-         outrubl B-outrubl outc outares B-outares B-21 B-22 outsend B-outsend
-         B-23 outasend B-outasend F-button-1 F-button-2 FILL-IN-4 v-fgdsnind
-         v-outssdoc v-invprn0 v-outprncd v-factur01 v-incurrat v-tick-w
-         v-in-docpr FILL-IN-1 v-outdisc v-outegrp v-outrecv v-outobj v-outappr
-         v-outdate v-sort-prd v-outnum v-torg2-no v-outhold v-outprops
-         v-outsubs v-outR v-outogr v-outt12 v-outprim v-outb v-outc v-outrubl
-         v-outares v-outsend v-outasend I-rep-artic rep-artic v-rep-artic
+    ENABLE B-exit  B-quit  B-Help FILL-IN-4 RECT-2
+      invprn0  I-invprn0  v-invprn0
+      outprncd I-outprncd v-outprncd
+      outrecv   I-outrecv B-outrecv v-outrecv
+      rep-artic I-rep-artic   v-rep-artic
+      outprops  I-outprops  v-outprops
+      sort-prd  I-sort-prd    v-sort-prd
+      torg2-no   I-torg2-no v-torg2-no
       WITH FRAME Dialog-Frame.
-  VIEW FRAME Dialog-Frame.
-  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+    HIDE  
+      I-factur01 factur01  v-factur01  B-14
+      I-incurrat  incurrat  v-incurrat  B-15
+      I-tick-w  tick-w    v-tick-w  B-16
+      fgdsnind  B-20  I-fgdsnind  v-fgdsnind
+      outssdoc  B-1 I-outssdoc  v-outssdoc
+      in-docpr  B-2 I-in-docpr  v-in-docpr
+      outR    B-24  I-outR    v-outR
+      outB    B-18  I-outb    v-outb
+      outogr    B-13  I-outogr  v-outogr
+      outC    B-27  I-outc    v-outc
+      FILL-IN-1
+      outdisc   B-3 I-outdisc   B-outdisc v-outdisc
+      outegrp   B-4 I-outegrp B-outegrp v-outegrp
+      outobj    B-9   I-outobj  B-outobj  v-outobj
+      outappr   B-5 I-outappr B-outappr   v-outappr
+      outdate   B-6 I-outdate   B-outdate v-outdate
+      outnum    B-8 I-outnum  B-outnum  v-outnum
+      outhold   B-7 I-outhold B-outhold v-outhold
+      outsubs   B-12  I-outsubs B-outsubs v-outsubs
+      outt12    B-25  I-outt12  B-outt12  v-outt12
+      outprim   B-26  I-outprim B-outprim v-outprim
+      outrubl   B-19  I-outrubl B-outrubl v-outrubl
+      outares   B-21  I-outares B-outares v-outares
+      outsend   B-22  I-outsend B-outsend v-outsend
+      outasend  B-23  I-outasend  B-outasend  v-outasend
+      invprn0  I-invprn0  v-invprn0
+      outprncd I-outprncd v-outprncd
+      outrecv   I-outrecv B-outrecv v-outrecv
+      rep-artic I-rep-artic   v-rep-artic
+      outprops  I-outprops  v-outprops
+      sort-prd  I-sort-prd    v-sort-prd
+      torg2-no   I-torg2-no v-torg2-no
+     IN FRAME Dialog-Frame.
+    VIEW FRAME Dialog-Frame.
+    
+    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  end.
+  if p-type = "firm" then 
+  do:
+    DISPLAY FILL-IN-4
+      I-factur01 factur01  v-factur01  B-14
+      I-incurrat  incurrat  v-incurrat  B-15
+      I-tick-w  tick-w    v-tick-w  B-16
+      WITH FRAME Dialog-Frame.
+    ENABLE B-exit  B-quit  B-Help FILL-IN-4 RECT-2
+      I-factur01 factur01  v-factur01  B-14
+      I-incurrat  incurrat  v-incurrat  B-15
+      I-tick-w  tick-w    v-tick-w  B-16
+      WITH FRAME Dialog-Frame.
+    HIDE  
+     invprn0  I-invprn0  v-invprn0
+      outprncd I-outprncd v-outprncd
+      outrecv   I-outrecv B-outrecv v-outrecv
+      rep-artic I-rep-artic   v-rep-artic
+      outprops  I-outprops  v-outprops
+      sort-prd  I-sort-prd    v-sort-prd
+      torg2-no   I-torg2-no v-torg2-no
+      fgdsnind  B-20  I-fgdsnind  v-fgdsnind
+      outssdoc  B-1 I-outssdoc  v-outssdoc
+      in-docpr  B-2 I-in-docpr  v-in-docpr
+      outR    B-24  I-outR    v-outR
+      outB    B-18  I-outb    v-outb
+      outogr    B-13  I-outogr  v-outogr
+      outC    B-27  I-outc    v-outc
+      FILL-IN-1
+      outdisc   B-3 I-outdisc   B-outdisc v-outdisc
+      outegrp   B-4 I-outegrp B-outegrp v-outegrp
+      outobj    B-9   I-outobj  B-outobj  v-outobj
+      outappr   B-5 I-outappr B-outappr   v-outappr
+      outdate   B-6 I-outdate   B-outdate v-outdate
+      outnum    B-8 I-outnum  B-outnum  v-outnum
+      outhold   B-7 I-outhold B-outhold v-outhold
+      outsubs   B-12  I-outsubs B-outsubs v-outsubs
+      outt12    B-25  I-outt12  B-outt12  v-outt12
+      outprim   B-26  I-outprim B-outprim v-outprim
+      outrubl   B-19  I-outrubl B-outrubl v-outrubl
+      outares   B-21  I-outares B-outares v-outares
+      outsend   B-22  I-outsend B-outsend v-outsend
+      outasend  B-23  I-outasend  B-outasend  v-outasend
+     IN FRAME Dialog-Frame.  
+    VIEW FRAME Dialog-Frame.
+    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  end.
+  if p-type = "obj" then 
+  do:
+    DISPLAY FILL-IN-4
+      fgdsnind  B-20  I-fgdsnind  v-fgdsnind
+      outssdoc  B-1 I-outssdoc  v-outssdoc
+      in-docpr  B-2 I-in-docpr  v-in-docpr
+      outR    B-24  I-outR    v-outR
+      outB    B-18  I-outb    v-outb
+      outogr    B-13  I-outogr  v-outogr
+      outC    B-27  I-outc    v-outc
+      FILL-IN-1
+      outdisc   B-3 I-outdisc   B-outdisc v-outdisc
+      outegrp   B-4 I-outegrp B-outegrp v-outegrp
+      outobj    B-9   I-outobj  B-outobj  v-outobj
+      outappr   B-5 I-outappr B-outappr   v-outappr
+      outdate   B-6 I-outdate   B-outdate v-outdate
+      outnum    B-8 I-outnum  B-outnum  v-outnum
+      outhold   B-7 I-outhold B-outhold v-outhold
+      outsubs   B-12  I-outsubs B-outsubs v-outsubs
+      outt12    B-25  I-outt12  B-outt12  v-outt12
+      outprim   B-26  I-outprim B-outprim v-outprim
+      outrubl   B-19  I-outrubl B-outrubl v-outrubl
+      outares   B-21  I-outares B-outares v-outares
+      outsend   B-22  I-outsend B-outsend v-outsend
+      outasend  B-23  I-outasend  B-outasend  v-outasend
+      WITH FRAME Dialog-Frame.
+    ENABLE B-exit  B-quit  B-Help FILL-IN-4 RECT-2
+      fgdsnind  B-20  I-fgdsnind  v-fgdsnind
+      outssdoc  B-1 I-outssdoc  v-outssdoc
+      in-docpr  B-2 I-in-docpr  v-in-docpr
+      outR    B-24  I-outR    v-outR
+      outB    B-18  I-outb    v-outb
+      outogr    B-13  I-outogr  v-outogr
+      outC    B-27  I-outc    v-outc
+      FILL-IN-1
+      outdisc   B-3 I-outdisc   B-outdisc v-outdisc
+      outegrp   B-4 I-outegrp B-outegrp v-outegrp
+      outobj    B-9   I-outobj  B-outobj  v-outobj
+      outappr   B-5 I-outappr B-outappr   v-outappr
+      outdate   B-6 I-outdate   B-outdate v-outdate
+      outnum    B-8 I-outnum  B-outnum  v-outnum
+      outhold   B-7 I-outhold B-outhold v-outhold
+      outsubs   B-12  I-outsubs B-outsubs v-outsubs
+      outt12    B-25  I-outt12  B-outt12  v-outt12
+      outprim   B-26  I-outprim B-outprim v-outprim
+      outrubl   B-19  I-outrubl B-outrubl v-outrubl
+      outares   B-21  I-outares B-outares v-outares
+      outsend   B-22  I-outsend B-outsend v-outsend
+      outasend  B-23  I-outasend  B-outasend  v-outasend
+      WITH FRAME Dialog-Frame.
+      hide
+      I-factur01 factur01  v-factur01  B-14
+      I-incurrat  incurrat  v-incurrat  B-15
+      I-tick-w  tick-w    v-tick-w  B-16
+      invprn0  I-invprn0  v-invprn0
+      outprncd I-outprncd v-outprncd
+      outrecv   I-outrecv B-outrecv v-outrecv
+      rep-artic I-rep-artic   v-rep-artic
+      outprops  I-outprops  v-outprops
+      sort-prd  I-sort-prd    v-sort-prd
+      torg2-no   I-torg2-no v-torg2-no
+      in frame Dialog-Frame.
+    VIEW FRAME Dialog-Frame.
+    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  end.    
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3102,7 +3235,7 @@ END.
     display ~{&pole~} with frame {&frame-name} . ~
 END.
 
-
+if p-type = "glob" then do:
 FOR EACH thbjattr_thbj-attr-g
 :
 
@@ -3122,7 +3255,6 @@ FOR EACH thbjattr_thbj-attr-g
 &scop type logical
 {&telo1g}
 
-
 &scop pole torg2-no
 &scop type logical
 {&telo1g}
@@ -3139,7 +3271,8 @@ FOR EACH thbjattr_thbj-attr-g
   buffer-copy thbjattr_thbj-attr-g to temp-thbj-attr.
 
 end.
-
+end.
+if p-type = "obj" then do:
 FOR EACH thbjattr_thbj-attr-o
 :
 &scop pole outprim
@@ -3157,7 +3290,6 @@ FOR EACH thbjattr_thbj-attr-o
 &scop pole outsend
 &scop type character
 {&telo1}
-
 
 &scop pole outssdoc
 &scop type character
@@ -3207,11 +3339,9 @@ FOR EACH thbjattr_thbj-attr-o
 &scop type character
 {&telo1}
 
-
 &scop pole outasend
 &scop type character
 {&telo1}
-
 
 &scop pole outogr
 &scop type character
@@ -3232,7 +3362,8 @@ FOR EACH thbjattr_thbj-attr-o
   buffer-copy thbjattr_thbj-attr-o to temp-thbj-attr.
 
 END.
-
+end.
+if p-type = "firm" then do:
 FOR EACH thbjattr_thbj-attr-f
 :
 &scop pole factur01
@@ -3247,15 +3378,16 @@ FOR EACH thbjattr_thbj-attr-f
 &scop type logical
 {&telo1f}
 
-
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr-f to temp-thbj-attr.
 
 end.
+end.
+
 define variable v-tooltip as character no-undo .
 define variable v-label   as character no-undo .
 define variable v-tooltip-code as character no-undo .
-
+if p-type = "obj":U then do:
 &scop telo2 run thbjattr_tooltip in this-procedure ( ~
    input   {&attr-prt-obj} ~
   ,input  "~{&pole~}" ~
@@ -3265,29 +3397,7 @@ define variable v-tooltip-code as character no-undo .
   ) no-error . ~
 v-~{&pole~}:screen-value = REPLACE ( entry(2,v-label,":") , "`" , "," ) .  ~
 v-~{&pole~} = v-~{&pole~}:screen-value .  ~
-I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) . ~
-
-&scop telo2g run thbjattr_tooltip in this-procedure ( ~
-   input   {&attr-prt-glob} ~
-  ,input  "~{&pole~}" ~
-  ,output v-tooltip ~
-  ,output v-label ~
-  ,output v-tooltip-code ~
-  ) no-error . ~
-v-~{&pole~}:screen-value = REPLACE ( entry(2,v-label,":") , "`" , "," ) .  ~
-v-~{&pole~} = v-~{&pole~}:screen-value .  ~
-I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
-
-&scop telo2f run thbjattr_tooltip in this-procedure ( ~
-   input   {&attr-prt-firm} ~
-  ,input  "~{&pole~}" ~
-  ,output v-tooltip ~
-  ,output v-label ~
-  ,output v-tooltip-code ~
-  ) no-error . ~
-v-~{&pole~}:screen-value = REPLACE ( entry(2,v-label,":") , "`" , "," ) .  ~
-v-~{&pole~} = v-~{&pole~}:screen-value .  ~
-I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
+I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) . 
 
 &scop pole fgdsnind
 {&telo2}
@@ -3331,7 +3441,6 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 &scop pole outasend
 {&telo2}
 
-
 &scop pole outssdoc
 {&telo2}
 
@@ -3341,6 +3450,30 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 &scop pole outt12
 {&telo2}
 
+&scop pole outR
+{&telo2}
+
+&scop pole outB
+{&telo2}
+
+&scop pole outogr
+{&telo2}
+
+&scop pole outC
+{&telo2}
+
+end.
+if p-type = "glob":U then do:
+&scop telo2g run thbjattr_tooltip in this-procedure ( ~
+   input   {&attr-prt-glob} ~
+  ,input  "~{&pole~}" ~
+  ,output v-tooltip ~
+  ,output v-label ~
+  ,output v-tooltip-code ~
+  ) no-error . ~
+v-~{&pole~}:screen-value = REPLACE ( entry(2,v-label,":") , "`" , "," ) .  ~
+v-~{&pole~} = v-~{&pole~}:screen-value .  ~
+I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 
 &scop pole invprn0
 {&telo2g}
@@ -3360,6 +3493,22 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 &scop pole outprops
 {&telo2g}
 
+&scop pole rep-artic
+{&telo2g}
+
+end.
+if p-type = "firm":U then do:
+&scop telo2f run thbjattr_tooltip in this-procedure ( ~
+   input   {&attr-prt-firm} ~
+  ,input  "~{&pole~}" ~
+  ,output v-tooltip ~
+  ,output v-label ~
+  ,output v-tooltip-code ~
+  ) no-error . ~
+v-~{&pole~}:screen-value = REPLACE ( entry(2,v-label,":") , "`" , "," ) .  ~
+v-~{&pole~} = v-~{&pole~}:screen-value .  ~
+I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
+
 &scop pole factur01
 {&telo2f}
 
@@ -3369,21 +3518,7 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 &scop pole tick-w
 {&telo2f}
 
-&scop pole outR
-{&telo2}
-
-&scop pole outB
-{&telo2}
-
-&scop pole outogr
-{&telo2}
-
-&scop pole outC
-{&telo2}
-
-&scop pole rep-artic
-{&telo2g}
-
+end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3401,7 +3536,7 @@ define variable v-type as character no-undo .
 define variable v-value as character no-undo .
 define variable v-found as decimal   no-undo .
   if p-mode = {&update} then do:
-
+  if p-type = "obj":U then do:
     find first obj_thbj-attr exclusive-lock where
               obj_thbj-attr.obj-type = p-obj-type
         and   obj_thbj-attr.obj-code = p-obj-code
@@ -3416,7 +3551,8 @@ define variable v-found as decimal   no-undo .
         undo, return error.
       end.
 
-
+   end.
+   if p-type = "firm":U then do: 
     find first frm_thbj-attr exclusive-lock where
               frm_thbj-attr.obj-type = v-obj-type
         and   frm_thbj-attr.obj-code = v-obj-code
@@ -3430,7 +3566,8 @@ define variable v-found as decimal   no-undo .
         view-as alert-box error .
         undo, return error.
       end.
-
+    end.
+    if p-type = "glob":U then do:
     find first glb_thbj-attr exclusive-lock where
               glb_thbj-attr.obj-type = ""
         and   glb_thbj-attr.obj-code = 0
@@ -3444,26 +3581,32 @@ define variable v-found as decimal   no-undo .
         view-as alert-box error .
         undo, return error.
       end.
+     end. 
   end.
   else do:
+    if p-type = "obj":U then do:
     find first obj_thbj-attr no-lock where
           obj_thbj-attr.obj-type = p-obj-type
     and   obj_thbj-attr.obj-code = p-obj-code
     and   obj_thbj-attr.upper-prop-code = {&attr-prt-obj}
     and   obj_thbj-attr.prop-code = '':u no-error.
+    end.
+    if p-type = "glob":U then do:
     find first glb_thbj-attr no-lock where
           glb_thbj-attr.obj-type = ""
     and   glb_thbj-attr.obj-code = 0
     and   glb_thbj-attr.upper-prop-code = {&attr-prt-glob}
     and   glb_thbj-attr.prop-code = '':u no-error.
+    end.
+    if p-type = "firm":U then do:
     find first frm_thbj-attr no-lock where
           frm_thbj-attr.obj-type = v-obj-type
     and   frm_thbj-attr.obj-code = v-obj-code
     and   frm_thbj-attr.upper-prop-code = {&attr-prt-firm}
     and   frm_thbj-attr.prop-code = '':u no-error.
-
+    end.
   end.
-
+if p-type = "obj":U then do:
   if not available obj_thbj-attr then do:
     assign
       v-to-create-prt  = true
@@ -3474,7 +3617,8 @@ define variable v-found as decimal   no-undo .
                  view-as alert-box warning.
 
   end.
-
+end.
+if p-type = "glob":U then do:
   if not available glb_thbj-attr then do:
     assign
       v-to-create-prt-g  = true
@@ -3485,6 +3629,8 @@ define variable v-found as decimal   no-undo .
                  view-as alert-box warning.
 
   end.
+end.
+if p-type = "firm":U then do:  
   if not available frm_thbj-attr then do:
     assign
       v-to-create-prt-f  = true
@@ -3495,7 +3641,7 @@ define variable v-found as decimal   no-undo .
                  view-as alert-box warning.
 
   end.
-
+end.
 
   run fill-widgets in this-procedure no-error.
   if error-status:error then undo, return error.
@@ -3511,39 +3657,49 @@ define variable v-found as decimal   no-undo .
   if p-type = "glob":U then do:
     disable all EXCEPT {&no-dis} with frame {&frame-name}.
     enable
-     invprn0
-     outprncd
-     outrecv
-     b-outrecv
-     sort-prd
-     torg2-no
-     outprops
-     rep-artic
+     invprn0  I-invprn0  v-invprn0
+      outprncd I-outprncd v-outprncd
+      outrecv   I-outrecv B-outrecv v-outrecv
+      rep-artic I-rep-artic   v-rep-artic
+      outprops  I-outprops  v-outprops
+      sort-prd  I-sort-prd    v-sort-prd
+      torg2-no   I-torg2-no v-torg2-no
      with frame {&frame-name}.
   end.
-  else if p-type = "firm":U then do:         /* фирменные*/
+  if p-type = "firm":U then do:         /* фирменные*/
     disable all EXCEPT {&no-dis} with frame {&frame-name}.
     enable
-     factur01
-     incurrat
-     tick-w
+      I-factur01  factur01  v-factur01  B-14
+      I-incurrat  incurrat  v-incurrat  B-15
+      I-tick-w  tick-w    v-tick-w  B-16
      with frame {&frame-name}.
   end.
-  else do:
-    disable
-     invprn0
-     outprncd
-     outrecv
-     b-outrecv
-     sort-prd
-     torg2-no
-     outprops
-     factur01
-     incurrat
-     tick-w
-     rep-artic
+  if p-type = "obj":U then do:         /* фирменные*/
+    disable all EXCEPT {&no-dis} with frame {&frame-name}.
+    enable
+      fgdsnind  B-20  I-fgdsnind  v-fgdsnind
+      outssdoc  B-1 I-outssdoc  v-outssdoc
+      in-docpr  B-2 I-in-docpr  v-in-docpr
+      outR    B-24  I-outR    v-outR
+      outB    B-18  I-outb    v-outb
+      outogr    B-13  I-outogr  v-outogr
+      outC    B-27  I-outc    v-outc
+      FILL-IN-1
+      outdisc   B-3 I-outdisc   B-outdisc v-outdisc
+      outegrp   B-4 I-outegrp B-outegrp v-outegrp
+      outobj    B-9   I-outobj  B-outobj  v-outobj
+      outappr   B-5 I-outappr B-outappr   v-outappr
+      outdate   B-6 I-outdate   B-outdate v-outdate
+      outnum    B-8 I-outnum  B-outnum  v-outnum
+      outhold   B-7 I-outhold B-outhold v-outhold
+      outsubs   B-12  I-outsubs B-outsubs v-outsubs
+      outt12    B-25  I-outt12  B-outt12  v-outt12
+      outprim   B-26  I-outprim B-outprim v-outprim
+      outrubl   B-19  I-outrubl B-outrubl v-outrubl
+      outares   B-21  I-outares B-outares v-outares
+      outsend   B-22  I-outsend B-outsend v-outsend
+      outasend  B-23  I-outasend  B-outasend  v-outasend
      with frame {&frame-name}.
-
   end.
   /* не по фирме */
 
@@ -3618,8 +3774,19 @@ define variable loc#log as logical   no-undo .
     loc#log
   }
   if loc#log <> yes then do: return error. end.
-
-ASSIGN
+if p-type = "glob" then do:
+  ASSIGN
+invprn0 FRAME {&FRAME-NAME}
+outprncd
+outrecv
+rep-artic
+outprops
+sort-prd
+torg2-no
+ .
+end.
+if p-type = "obj" then do:
+  ASSIGN
     fgdsnind FRAME {&FRAME-NAME}
     in-docpr
     outappr
@@ -3649,6 +3816,16 @@ ASSIGN
     outC
     rep-artic
  .
+end.
+if p-type = "firm" then do:
+  ASSIGN
+factur01
+incurrat
+tick-w
+ .
+end.
+  
+
 assign
   fh = frame {&frame-name}:first-child
   wh = fh:first-child
