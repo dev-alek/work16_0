@@ -169,8 +169,8 @@ class ibs.th.bge.egais.ExtGds:
       ReturnMsg = "Отсутсвует атрибут egais-info - " + inAlcCode + ". Выполните синхронизацию.".
       if not IsSilent 
         then message ReturnMsg view-as alert-box.
-      AlcCode = "".
-      return false.
+/*      AlcCode = "".*/
+/*      return false.*/
     end.
     
     setProp () no-error.
@@ -233,7 +233,7 @@ class ibs.th.bge.egais.ExtGds:
       if error-status:error
         then 
       do:
-        ReturnMsg = "Непредвиденная ошибка при создании атрибута egais-info  - " + inAlcCode + " TH - " + string (InGdsCode).
+        ReturnMsg = "Непредвиденная ошибка при создании связки  - " + inAlcCode + " TH - " + string (InGdsCode).
         if not IsSilent 
           then message ReturnMsg view-as alert-box.
         AlcCode = "".
@@ -259,12 +259,25 @@ class ibs.th.bge.egais.ExtGds:
       if error-status:error
         then 
       do:
-        ReturnMsg = "Непредвиденная ошибка при создании атрибута egais-info  - " + inAlcCode + " TH - " + string (InGdsCode).
+        ReturnMsg = "Запись уже есть buf_ext-classif-attr. Создание будет продолжено. Непредвиденная ситуация при создании атрибута egais-info  - " + inAlcCode + " TH - " + string (InGdsCode).
         if not IsSilent 
           then message ReturnMsg view-as alert-box.
-        AlcCode = "".
+        find first buf_ext-classif-attr where
+          buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
+          and buf_ext-classif-attr.classif-name    = buf_ext-classif.classif-name
+          and buf_ext-classif-attr.db-num          = buf_ext-classif.db-num
+          and buf_ext-classif-attr.Key#_One        = buf_ext-classif.key#_one
+          and buf_ext-classif-attr.Key#_two        = buf_ext-classif.key#_two
+          and buf_ext-classif-attr.Key#_three      = buf_ext-classif.key#_three
+          and buf_ext-classif-attr.CharKey_One     = buf_ext-classif.charkey_one
+          and buf_ext-classif-attr.CharKey_two     = buf_ext-classif.charkey_two
+          and buf_ext-classif-attr.CharKey_three   = buf_ext-classif.charkey_three
+          and buf_ext-classif-attr.nonunique       = buf_ext-classif.nonunique
+          and buf_ext-classif-attr.attr-code       = 'egais-info'
+        no-error.
+        /*AlcCode = "".
         GdsCode = 0.
-        undo, return false.
+        undo, return false.*/
       end.
   
       if not SaveEGAISInfo ()
@@ -289,42 +302,44 @@ class ibs.th.bge.egais.ExtGds:
         and buf_ext-classif-attr.classif-name = {&extclass_goods_esys} 
         and buf_ext-classif-attr.db-num = 0  
         and buf_ext-classif-attr.key#_two = ExtSystem 
-        and buf_ext-classif-attr.key#_three = 0
+/*        and buf_ext-classif-attr.key#_three = 0*/
         and buf_ext-classif-attr.charkey_one = inAlcCode
-        and buf_ext-classif-attr.charkey_two = ""
-        and buf_ext-classif-attr.charkey_three = ""
-        and buf_ext-classif-attr.nonunique = 0
+/*        and buf_ext-classif-attr.charkey_two = ""*/
+/*        and buf_ext-classif-attr.charkey_three = ""*/
+/*        and buf_ext-classif-attr.nonunique = 0*/
         :
         
         delete buf_ext-classif-attr.
       
       end.
       
-      find first buf_ext-classif exclusive-lock where buf_ext-classif.classif-subject = {&table_goods} 
+      for each buf_ext-classif exclusive-lock where buf_ext-classif.classif-subject = {&table_goods} 
         and buf_ext-classif.classif-name = {&extclass_goods_esys} 
         and buf_ext-classif.db-num = 0  
         and buf_ext-classif.key#_two = ExtSystem 
-        and buf_ext-classif.key#_three = 0
+/*        and buf_ext-classif.key#_three = 0*/
         and buf_ext-classif.charkey_one = inAlcCode
-        and buf_ext-classif.charkey_two = ""
-        and buf_ext-classif.charkey_three = ""
-        and buf_ext-classif.nonunique = 0
-        no-error.
-  
-      if not available (buf_ext-classif)
-        then 
-      do:
-        ReturnMsg = "Непредвидинная ошибка не найден  - " + inAlcCode.
-        if not IsSilent 
-          then message ReturnMsg view-as alert-box.
-        AlcCode = "".
-        GdsCode = 0.
-        undo, return false.
+/*        and buf_ext-classif.charkey_two = ""*/
+/*        and buf_ext-classif.charkey_three = ""*/
+/*        and buf_ext-classif.nonunique = 0*/
+        :
+        
+        delete buf_ext-classif.        
+        
       end.
-  
-      delete buf_ext-classif.
       
-  
+/*      if not available (buf_ext-classif)                              */
+/*        then                                                          */
+/*      do:                                                             */
+/*        ReturnMsg = "Непредвидинная ошибка не найден  - " + inAlcCode.*/
+/*        if not IsSilent                                               */
+/*          then message ReturnMsg view-as alert-box.                   */
+/*        AlcCode = "".                                                 */
+/*        GdsCode = 0.                                                  */
+/*        undo, return false.                                           */
+/*      end.                                                            */
+
+
       
       AlcCode = "".
       GdsCode = 0.
@@ -476,14 +491,15 @@ class ibs.th.bge.egais.ExtGds:
     if num-entries (v-prod, chr (5)) <> 6 
       then 
     do:
-      v-msg = "Некорректный атрибут egais-info - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию товаров.".
+      v-msg = "Некорректный атрибут egais-info v-prod - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию товаров.".
       return error v-msg.
     end.
     
+    v-impor = entry (1, buf_ext-classif-attr.attr-value, chr(4)) no-error.
     if  num-entries (v-impor, chr (5)) <> 6 
       then 
     do:
-      v-msg = "Некорректный атрибут egais-info - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию товаров.".
+      v-msg = "Некорректный атрибут egais-info v-impor - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию товаров.".
       return error v-msg.
     end.
     

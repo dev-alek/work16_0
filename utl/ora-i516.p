@@ -931,7 +931,7 @@ assign
           tt-parts.fact-date      = new_trn-doc.fact-date
           tt-parts.fact-num       = new_trn-doc.fact-num
           tt-parts.VAT-pc         = tt2-doc-line.vat-pc
-          tt-parts.part-code      = string (jj)
+          tt-parts.part-code      = if is-egais then temp_doc-line.line-num-str else string (jj)
           tt-parts.PS             = ""
           tt-parts.pay-code       = new_trn-doc.pay-code
           tt-parts.status_        = no

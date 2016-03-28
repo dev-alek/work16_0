@@ -33,6 +33,7 @@ class ibs.th.bge.egais.Journal inherits ibs.th.bge.egais.EGAISImpl:
     field jou-status  as character LABEL "Состояние запроса"  format "X(20)"
     field jou-param   as character LABEL "Параметр"           format "X(30)"
     field jou-code    as character LABEL "Код запроса"        format "X(38)"
+    field piIndex     as character
     index tt_journal-egais is primary jou-code ascending.
   
   method public override handle GetHndlTable( ):
@@ -50,7 +51,7 @@ class ibs.th.bge.egais.Journal inherits ibs.th.bge.egais.EGAISImpl:
   
 
   for each buf_esys-all-attr where buf_esys-all-attr.table-name = "esys-pck-sent"
-                               and buf_esys-all-attr.attr-code  = "egais"  no-lock:
+                               and buf_esys-all-attr.attr-code  = "egais" no-lock:
     
     create tt_journal-egais.
         if buf_esys-all-attr.key2 = integer({&EGAIS-DictOrg}) then do:
@@ -67,7 +68,6 @@ class ibs.th.bge.egais.Journal inherits ibs.th.bge.egais.EGAISImpl:
           find first ub.user-account where ub.user-account.user-id = buf_esys-all-attr.key8 no-error.
           v-user = ub.user-account.last-name + ' ' + ub.user-account.first-name + ' ' + ub.user-account.second-name .
         end.
-
     assign
       tt_journal-egais.jou-who = v-user
       tt_journal-egais.jou-code = buf_esys-all-attr.key7
@@ -76,6 +76,8 @@ class ibs.th.bge.egais.Journal inherits ibs.th.bge.egais.EGAISImpl:
       tt_journal-egais.jou-subject = v-subject
       tt_journal-egais.jou-status = v-status
       tt_journal-egais.jou-param = replace(buf_esys-all-attr.attr-value,{&delim-par},'|')
+      tt_journal-egais.piIndex = table-name + string (key1) + string (key2) + string (key3) + string (key4) + string (key5) + string (key6) +
+        string (key7) + string (key8) + attr-code.
        .
    end. 
     

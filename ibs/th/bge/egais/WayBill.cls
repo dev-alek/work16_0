@@ -799,13 +799,13 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               buf_parts.out-code = buf_trn-doc.doc-code: 
               ii = ii + 1.
               find first buf_gds no-lock where buf_gds.artic = buf_parts.artic and buf_gds.prod-code = buf_parts.prod-code and buf_gds.prod-type = buf_parts.prod-type.
-              extGdsObj:FindExtGds(entry (3, buf_parts.alc-ref-ab-path, ",")).
               if num-entries (buf_parts.alc-ref-ab-path, ",") < 3
               then do:
-                Msg = "В алкогольных атрибутах по партии отсутсвует алкогольный код и код группы для товара - " + string (buf_gds.gds-code) + ". Запустите утилиту заполнения алкогольных атрибутов партии.".
+                Msg = "В алкогольных атрибутах по партии отсутсвует алкогольный код и код группы для товара - " + string (buf_gds.gds-code) + ".".
                 StatusErr = true.
                 return ?.
               end.
+              extGdsObj:FindExtGds(entry (3, buf_parts.alc-ref-ab-path, ",")).
               create tt-wb-gds-EG.
               assign
                 tt-wb-gds-EG.Identity = string (ii)
@@ -2008,7 +2008,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               if extGdsObj:FullNameProd = ""
               then do:
                 StatusErr = true.
-                Msg = "У товара неизвестен производитель из ЕГАИС - " + string (tt-wb-gds-EG.gds-code) + ". Выполните синхронизацию товаров.".
+                Msg = extGdsObj:ReturnMsg + " У товара неизвестен производитель из ЕГАИС - " + string (tt-wb-gds-EG.gds-code) + ". Выполните синхронизацию товаров.".
                 return.
               end.
                             
@@ -2101,12 +2101,12 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     find first buf_clients-attr no-lock where buf_clients-attr.obj-type = inObjType and buf_clients-attr.obj-code = inObjCode
       and buf_clients-attr.attr-code = {&attr-requisite-alc-decl} no-error.
     inSW:write-data-element ("oref:ClientRegId", inRegID).
-    if available (buf_clients-attr)
+    if available (buf_clients-attr) and num-entries (buf_clients-attr.attr-value, "|") >= 20
     then do:
       inSW:write-data-element ("oref:FullName", entry (1, attr-value, "|")).
     end.
     else do:
-      Msg = "Не заполнены атрибуты для алкогольной декларации клиент - " + inObjType + string (inObjCode).
+      Msg = "Не заполнены/неполные атрибуты для алкогольной декларации. Клиент - " + inObjType + string (inObjCode).
       StatusErr = true.
       return.
     end.

@@ -62,7 +62,7 @@ field refB        as character
 field alc-code as character
 field alc-type-code as character
 field importer-th as character
-field line-num-str as integer /* порядок чтения из xml */ /* не присылают */
+field line-num-str as character /* порядок чтения из xml */ /* не присылают */
 index pi
 doc-code
 line-num

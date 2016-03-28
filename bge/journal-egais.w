@@ -101,6 +101,11 @@ DEFINE BUTTON Btn_Cancel AUTO-END-KEY
      SIZE 15 BY 1.13
      BGCOLOR 8 .
 
+DEFINE BUTTON Btn_del 
+     LABEL "Удалить" 
+     tooltip "Удалить из журнала. Дает возможность отправить повторно запрос."
+     SIZE 15 BY 1.13.
+
 DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1 
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
@@ -124,7 +129,8 @@ DEFINE BROWSE BROWSE-Journal-egais
 
 DEFINE FRAME Dialog-Frame
      Btn_Cancel AT ROW 1 COL 1
-     RADIO-SET-1 AT ROW 1.04 COL 31 NO-LABEL WIDGET-ID 2
+     Btn_del AT ROW 1 COL 16.63 WIDGET-ID 6
+     RADIO-SET-1 AT ROW 1.04 COL 32.88 NO-LABEL WIDGET-ID 2
      BROWSE-Journal-egais AT ROW 3 COL 1 WIDGET-ID 200
      SPACE(0.50) SKIP(0.24)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -174,6 +180,27 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME Btn-del
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn-del Dialog-Frame
+ON choose OF Btn_del IN FRAME Dialog-Frame
+DO:
+
+  find first ub.esys-all-attr where (table-name + string (key1) + string (key2) + string (key3) + string (key4) + string (key5) + string (key6) +
+        string (key7) + string (key8) + attr-code) = bh-journal-egais:buffer-field ('piIndex'):buffer-value () no-error.
+  if available (ub.esys-all-attr)
+    then delete ub.esys-all-attr. 
+
+  if bh-journal-egais:available
+    then bh-journal-egais:buffer-delete ().
+  
+  BROWSE-Journal-egais:refresh ().
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 
 &Scoped-define BROWSE-NAME BROWSE-Journal-egais
 &UNDEFINE SELF-NAME
@@ -193,9 +220,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-
-
-  def var ii as int no-undo.
+       def var ii as int no-undo.
       { gbl/getcurus.i
         v-db-num
         v-user-id
@@ -241,7 +266,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     BROWSE-Journal-egais:QUERY = gh-journal-egais.
 
 
-  do ii = 1 to bh-journal-egais:num-fields:
+  do ii = 1 to bh-journal-egais:num-fields - 1:
      bcol = browse-journal-egais:add-like-column('tt_journal-egais' + '.' + bh-journal-egais:buffer-field (ii):name, 0, 'FILL-IN').
   end.  
           bcol1 = browse-journal-egais:get-browse-column(1).
@@ -308,7 +333,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY RADIO-SET-1 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_Cancel RADIO-SET-1 
+  ENABLE Btn_Cancel Btn_del RADIO-SET-1 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   ENABLE BROWSE-journal-egais 
@@ -339,8 +364,3 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
-
-
- 
