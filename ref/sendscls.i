@@ -2206,7 +2206,7 @@ else do:
                                   ,p-file-name).
             run gbl/syn6.p
               (input v-cmd-line
-              ,input "log.txt"
+              ,input out-dir + "log.txt"
               ,input "∆дите! »дет передача на весы..."
               ,output chr-res
               ) no-error .
