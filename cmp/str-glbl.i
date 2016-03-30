@@ -5155,8 +5155,12 @@ end.
 &global-define lob-egais-ticket '{&bef-lob-egais-ticket}':U
 &global-define bef-lob-egais-ticket-full Квитанция ЕГАИС
 &global-define lob-egais-ticket-full '{&bef-lob-egais-ticket-full}':U
-&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-wb-act,egais-ticket':U
-&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт подтверждения накладной,Квитанция ЕГАИС':U
+&global-define bef-lob-egais-wb-ticket egais-wb-ticket
+&global-define lob-egais-wb-ticket '{&bef-lob-egais-wb-ticket}':U
+&global-define bef-lob-egais-wb-ticket-full Квитанция на акт по накладной ЕГАИС
+&global-define lob-egais-wb-ticket-full '{&bef-lob-egais-wb-ticket-full}':U
+&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-wb-act,egais-ticket,egais-wb-ticket':U
+&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт подтверждения накладной,Квитанция ЕГАИС,Квитанция на акт по накладной ЕГАИС':U
 &global-define blob-res-codes 'data':U
 &global-define blob-res-codes-full 'Данные':U
 &global-define blob-trn-doc-image 'trn-doc-image':U
@@ -6652,7 +6656,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 0c8942711988, 479, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 5a93049abef8, 523, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7951,6 +7955,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 0c8942711988, 479, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: fd13bd78d02f, 563, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 5a93049abef8, 523, rls ':U
 &endif
