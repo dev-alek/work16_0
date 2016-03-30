@@ -233,6 +233,7 @@ class ibs.th.bge.egais.ExtGds:
       if error-status:error
         then 
       do:
+        delete buf_ext-classif.
         ReturnMsg = "Непредвиденная ошибка при создании связки  - " + inAlcCode + " TH - " + string (InGdsCode).
         if not IsSilent 
           then message ReturnMsg view-as alert-box.
@@ -254,11 +255,12 @@ class ibs.th.bge.egais.ExtGds:
         buf_ext-classif-attr.CharKey_three   = buf_ext-classif.charkey_three
         buf_ext-classif-attr.nonunique       = buf_ext-classif.nonunique
         buf_ext-classif-attr.attr-code       = 'egais-info'
-      no-error.
+      .
 
       if error-status:error
         then 
       do:
+        delete buf_ext-classif-attr.
         ReturnMsg = "Запись уже есть buf_ext-classif-attr. Создание будет продолжено. Непредвиденная ситуация при создании атрибута egais-info  - " + inAlcCode + " TH - " + string (InGdsCode).
         if not IsSilent 
           then message ReturnMsg view-as alert-box.
@@ -298,7 +300,8 @@ class ibs.th.bge.egais.ExtGds:
     
     do trans:
       
-      for each buf_ext-classif-attr exclusive-lock where buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
+      for each buf_ext-classif-attr exclusive-lock where 
+            buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
         and buf_ext-classif-attr.classif-name = {&extclass_goods_esys} 
         and buf_ext-classif-attr.db-num = 0  
         and buf_ext-classif-attr.key#_two = ExtSystem 
@@ -313,7 +316,8 @@ class ibs.th.bge.egais.ExtGds:
       
       end.
       
-      for each buf_ext-classif exclusive-lock where buf_ext-classif.classif-subject = {&table_goods} 
+      for each buf_ext-classif exclusive-lock where 
+            buf_ext-classif.classif-subject = {&table_goods} 
         and buf_ext-classif.classif-name = {&extclass_goods_esys} 
         and buf_ext-classif.db-num = 0  
         and buf_ext-classif.key#_two = ExtSystem 
@@ -495,7 +499,7 @@ class ibs.th.bge.egais.ExtGds:
       return error v-msg.
     end.
     
-    v-impor = entry (1, buf_ext-classif-attr.attr-value, chr(4)) no-error.
+    v-impor = entry (2, buf_ext-classif-attr.attr-value, chr(4)) no-error.
     if  num-entries (v-impor, chr (5)) <> 6 
       then 
     do:

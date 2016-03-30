@@ -1844,71 +1844,74 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     def var ii       as int      no-undo.
     def var xml-cont as longchar no-undo.
     def var is-diff  as logical no-undo.
+
+&scop xml-act-cont '<wa:Position>~
+<wa:Identity>&1</wa:Identity>~
+<wa:InformBRegId>&2</wa:InformBRegId>~
+<wa:RealQuantity>&3</wa:RealQuantity>~
+</wa:Position>'
     
     find first tt-wb-header.
     if not (available (buf_clob-bind) and entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ') then do:
       find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid).
       
+      foreach_:
       for each tt-wb-gds-EG :
-        find first buf_gds no-lock where buf_gds.gds-code = tt-wb-gds-EG.gds-code.
-        find first buf_doc-line no-lock where buf_doc-line.doc-code = buf_doc-attr.doc-code and
-           buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type no-error.
-        if not available (buf_doc-line) then do:
-            message "Не найден товар в накладной, который есть в ЕГАИС - " + buf_doc-line.doc-code + " товар - " + string (tt-wb-gds-EG.gds-code) + " Для данного товара в акте отправлен кол-во 0" view-as alert-box information.
-            is-diff = true.
-&scop xml-act-cont '<wa:Position>~
-<wa:Identity>&1</wa:Identity>~
-<wa:InformBRegId>&2</wa:InformBRegId>~
-<wa:RealQuantity>&3</wa:RealQuantity>~
-</wa:Position>'
-            xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, 0.0).
-            next.
-/*            StatusErr = true.*/
-/*            return ?.        */
+        
+        find first buf_gds no-lock where buf_gds.gds-code = tt-wb-gds-EG.gds-code no-error.
+        if available (buf_gds) then do:
+          find first buf_parts where
+            buf_parts.obj-type = tt-wb-header.obj-type and
+            buf_parts.obj-code = tt-wb-header.obj-code and
+            buf_parts.artic = buf_gds.artic and
+            buf_parts.prod-type = buf_gds.prod-type and
+            buf_parts.prod-code = buf_gds.prod-code and
+            buf_parts.out-code = buf_doc-attr.doc-code and
+            buf_parts.alc-ref-ab-path = tt-wb-gds-EG.refA + "," + tt-wb-gds-EG.refB + "," + tt-wb-gds-EG.alc-code + "," + tt-wb-gds-EG.alc-type-code no-lock no-error.
         end.
+        
+        if not available (buf_parts) then do:
         find first buf_parts where
-          buf_parts.obj-type = buf_doc-line.obj-type and 
-          buf_parts.obj-code = buf_doc-line.obj-code and 
-          buf_parts.artic = buf_doc-line.artic and
-          buf_parts.prod-type = buf_doc-line.prod-type and
-          buf_parts.prod-code = buf_doc-line.prod-code and
-          buf_parts.out-code = buf_doc-line.doc-code and
-          buf_parts.alc-ref-ab-path = tt-wb-gds-EG.refA + "," + tt-wb-gds-EG.refB + "," + tt-wb-gds-EG.alc-code + "," + tt-wb-gds-EG.alc-type-code no-lock no-error.
+            buf_parts.out-code = buf_doc-attr.doc-code and
+            buf_parts.obj-type = tt-wb-header.obj-type and 
+            buf_parts.obj-code = tt-wb-header.obj-code and
+            buf_parts.alc-ref-ab-path = tt-wb-gds-EG.refA + "," + tt-wb-gds-EG.refB + "," + tt-wb-gds-EG.alc-code + "," + tt-wb-gds-EG.alc-type-code no-lock no-error.
+        end.
 
         if not available (buf_parts) then do:
-          Msg = "Не найдена партия для товара " + string (tt-wb-gds-EG.gds-code) + " справка А " + tt-wb-gds-EG.refA + " справка Б " + tt-wb-gds-EG.refB.
-          StatusErr = true.
-          return ?.            
+          find first buf_doc-line no-lock where available (buf_gds) and buf_doc-line.doc-code = buf_doc-attr.doc-code and
+             buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type no-error.
+          if not available (buf_doc-line) then do:
+              message "Не найден товар в накладной, который есть в ЕГАИС - " + buf_doc-attr.doc-code + " товар - " + string (tt-wb-gds-EG.gds-code) + " Продолжить, с отправкой для данного товара в акте кол-ва 0?" view-as alert-box 
+                question buttons yes-no
+                title "" update v-choise as logical.
+              if not v-choise then do: 
+                Msg = "Отменено пользователем".
+                StatusErr = true.
+                return ?. 
+              end.
+              is-diff = true.
+              xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, 0.0).
+              next foreach_.
+          end.
+          else do:
+  
+              Msg = "Не найдена партия для товара " + string (tt-wb-gds-EG.gds-code) + "/" + tt-wb-gds-EG.alc-code + " справка А " + tt-wb-gds-EG.refA + " справка Б " + tt-wb-gds-EG.refB.
+              StatusErr = true.
+              return ?.            
+  
+          end.
         end.
 
-        /*if not available (buf_parts)
-        then do:
-          find first buf_parts where
-            buf_parts.obj-type = buf_doc-line.obj-type and 
-            buf_parts.obj-code = buf_doc-line.obj-code and 
-            buf_parts.artic = buf_doc-line.artic and
-            buf_parts.prod-type = buf_doc-line.prod-type and
-            buf_parts.prod-code = buf_doc-line.prod-code and
-            buf_parts.in-code = buf_doc-line.doc-code and
-            buf_parts.out-code = buf_doc-line.doc-code and
-            buf_parts.qnty = tt-wb-gds-EG.qnty no-lock no-error.
-
-        end.*/
-          
-
-          
         if tt-wb-gds-EG.qnty <> buf_parts.fact-qnty then 
         do:
           is-diff = true. 
+          xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
         end.
-&scop xml-act-cont '<wa:Position>~
-<wa:Identity>&1</wa:Identity>~
-<wa:InformBRegId>&2</wa:InformBRegId>~
-<wa:RealQuantity>&3</wa:RealQuantity>~
-</wa:Position>'
-        xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
-        
-      end.
+
+
+      end /*foeach*/.
+      
       return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию") + (if is-diff then xml-cont else "") + {&xml-act-2}.
     end.
     else do:
