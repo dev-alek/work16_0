@@ -973,7 +973,6 @@ else do:
       return error (if p-silent = yes then v-err-mess else var-entry).
     end.
   end.
-message program-name(2) view-as alert-box.
   if buf_dis-card.status_ = {&deleted-status}
   and buf_dis-card.mask-card = yes
   and not program-name(2) begins 'ref/dc-mask2.'
