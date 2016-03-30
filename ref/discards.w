@@ -2133,7 +2133,6 @@ MENU-ITEM m_sourced:sensitive in menu menu-b-add-copy = yes
 
 if cli-recid <> ? then
 FIND b_clients WHERE recid( b_clients ) = cli-recid NO-LOCK .
-
 ENABLE
 br-discard
 b-exit
@@ -2147,7 +2146,7 @@ b-help
 b-chk WHEN p-curr-obj-type = {&shop}
 b-lkp
 b-add WHEN (not transaction and v-cntxt-db-num = 0 and lookup("b-add", bttns) > 0) /*and cli-recid = ?*/
-b-del WHEN (not transaction and v-cntxt-db-num = 0 and lookup("b-add", bttns) > 0) /*and cli-recid = ?*/
+b-del WHEN (not transaction and v-cntxt-db-num = 0 /* and lookup("b-add", bttns) > 0 */) /*and cli-recid = ?*/
 b-chg WHEN (not transaction and v-cntxt-db-num = 0 and lookup("b-add", bttns) > 0) /*and cli-recid = ?*/
 b-prop
 b-disc
@@ -2464,6 +2463,29 @@ CASE p-list-mode:
       assign
       filter-point-name = filter-point-name0 + " " + p-list-mode
       filter-point = filter-point0 + " " + p-list-mode.
+      if rs-search = {&name} then do:
+        &scop flt-open-find-buffer-name  X_clients
+        if sort-column-name = '':u then do:
+          { gbl/fltopend.i
+            &where-cond = " X_dis-card.emitent-host-code = p-curr-host-code "
+            &dyn_where-cond = " substitute('X_dis-card.emitent-host-code = &1', p-curr-host-code) "
+            &use-ind = "  "
+            &by = " by X_dis-card.d-card "
+          }
+
+        end.
+        else do:
+          { gbl/fltopend.i
+            &where-cond = " X_dis-card.emitent-host-code = p-curr-host-code "
+            &dyn_where-cond = " substitute('X_dis-card.emitent-host-code = &1', p-curr-host-code) "
+            &use-ind = "  "
+            &by = "  "
+          }
+        end.
+
+      end.
+      else do:
+        &scop flt-open-find-buffer-name  X_dis-card
       if sort-column-name = '':u then do:
         { gbl/fltopend.i
           &where-cond = " X_dis-card.emitent-host-code = p-curr-host-code "
@@ -2482,6 +2504,7 @@ CASE p-list-mode:
         }
       end.
     end.
+    end. /*when {&company} then do:*/
     when {&all} then do:
       if p-open-query then do:
         ASSIGN
@@ -2490,6 +2513,8 @@ CASE p-list-mode:
       assign
       filter-point-name = filter-point-name0 + " " + p-list-mode
       filter-point = filter-point0 + " " + p-list-mode.
+      if rs-search = {&name} then do:
+        &scop flt-open-find-buffer-name  X_clients
       if sort-column-name = '':u then do:
         { gbl/fltopend.i
           &where-cond = " X_dis-card.emitent-host-code = 0 "
@@ -2505,6 +2530,24 @@ CASE p-list-mode:
         }
        end.
     end.
+      else do:
+        &scop flt-open-find-buffer-name  X_dis-card
+        if sort-column-name = '':u then do:
+          { gbl/fltopend.i
+            &where-cond = " X_dis-card.emitent-host-code = 0 "
+            &use-ind = "  "
+            &by = " by X_dis-card.d-card  "
+          }
+        end.
+        else do:
+          { gbl/fltopend.i
+            &where-cond = " X_dis-card.emitent-host-code = 0 "
+            &use-ind = "  "
+            &by = " "
+          }
+        end.
+       end.
+    end.
     when "client":u then do:
       if p-open-query then do:
         ASSIGN
@@ -2514,6 +2557,7 @@ CASE p-list-mode:
       assign
       filter-point-name = filter-point-name0 + " " + p-list-mode
       filter-point = filter-point0 + " " + p-list-mode.
+      &scop flt-open-find-buffer-name  X_dis-card
         { gbl/fltopend.i
           &where-cond = " X_dis-card.cli-type = b_clients.obj-type AND X_dis-card.cli-code = b_clients.obj-code "
           &dyn_where-cond = " substitute('X_dis-card.cli-type = &1&2&1 AND X_dis-card.cli-code = &3 ', ~{&double-quote~}, b_clients.obj-type, b_clients.obj-code)"
@@ -2530,6 +2574,7 @@ CASE p-list-mode:
       assign
       filter-point-name = filter-point-name0 + " " + p-list-mode
       filter-point = filter-point0 + " " + p-list-mode.
+      &scop flt-open-find-buffer-name  X_dis-card
         { gbl/fltopend.i
           &where-cond = " X_dis-card.first-main-card = p-first-main-card "
           &dyn_where-cond = " substitute('X_dis-card.first-main-card = &1&2&1', ~{&double-quote~}, p-first-main-card )"
@@ -2878,8 +2923,7 @@ p-name = {&double-quote} + p-name + {&double-quote}
 run OpenBr in this-procedure
     (input false /* p-open-query */
     ,input p-next  /* p-find-next  */
-    ,input substitute(" and can-find(first ub.clients where ub.clients.obj-type = X_dis-card.cli-type and " +
-                      " ub.clients.obj-code = X_dis-card.cli-code and ub.clients.obj-name begins &1) "
+    ,input substitute(" and X_clients.obj-name begins &1 "
                       , p-name)).
 
 apply "entry":u to spattern in frame {&frame-name} .

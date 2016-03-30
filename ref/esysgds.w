@@ -704,6 +704,18 @@ PROCEDURE proc-b-del :
 	"¬ы действительно хотите удалить эту запись?"
 	VIEW-AS ALERT-BOX QUESTION BUTTONS YES-NO UPDATE glog.
 	IF NOT glog THEN RETURN ERROR.
+	for each ext-classif-attr exclusive-lock where ext-classif-attr.classif-subject = ext-classif.classif-subject
+      and ext-classif-attr.classif-name = ext-classif.classif-name
+      and ext-classif-attr.db-num = ext-classif.db-num
+      and ext-classif-attr.Key#_One = ext-classif.key#_one
+      and ext-classif-attr.Key#_two = ext-classif.key#_two
+      and ext-classif-attr.Key#_three = ext-classif.key#_three
+      and ext-classif-attr.CharKey_One = ext-classif.charkey_one
+      and ext-classif-attr.CharKey_two = ext-classif.charkey_two
+      and ext-classif-attr.CharKey_three = ext-classif.charkey_three
+      and ext-classif-attr.nonunique = ext-classif.nonunique :
+        delete ext-classif-attr .  
+    end.
 	run ref/extclas3.p ( INPUT NO /*p-silent*/
 						,INPUT v-rec) NO-ERROR.
 	if not error-status:error then do:

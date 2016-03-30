@@ -1,5 +1,8 @@
 { cmp/str-glbl.i }
 { gbl/thbjattr.i }
+{ cmp/trg-def.i }
+{ gbl/cur-time.i }
+{ nws/lib-nws.i }
 define variable v-value-character   as character no-undo .
 define variable v-value-decimal     as decimal   no-undo .
 define variable v-value-integer     as integer   no-undo .
@@ -53,20 +56,20 @@ for each  ext-classif no-lock
       and ext-classif-attr.nonunique = ext-classif.nonunique
       and ext-classif-attr.attr-code = 'egais-info'
       no-error .
-    if available  ext-classif-attr then next .  
+    if available  ext-classif-attr then next .
     create tt-ext-classif .
     buffer-copy ext-classif to tt-ext-classif 
     assign tt-ext-classif.charkey_three = "" no-error .
 end.
 put stream str-ext unformatted " онец выгрузки - " string(today) + "   " + string(time, "hh:mm:ss") skip skip .
 output stream str-ext close .
-/* удаление */.
+/* удаление и отсылка в новости правильных записей */.
 for each  ext-classif exclusive-lock
     where ext-classif.classif-subject = 'goods'
       and ext-classif.classif-name = 'exp-esys-gds-code'
       and ext-classif.db-num = 0
       and ext-classif.key#_two = v-ext-sys :
-    find first ext-classif-attr no-lock where ext-classif-attr.classif-subject = ext-classif.classif-subject
+    find first ext-classif-attr exclusive-lock where ext-classif-attr.classif-subject = ext-classif.classif-subject
       and ext-classif-attr.classif-name = ext-classif.classif-name
       and ext-classif-attr.db-num = ext-classif.db-num
       and ext-classif-attr.Key#_One = ext-classif.key#_one
@@ -78,7 +81,17 @@ for each  ext-classif exclusive-lock
       and ext-classif-attr.nonunique = ext-classif.nonunique
       and ext-classif-attr.attr-code = 'egais-info'
       no-error .
-    if available  ext-classif-attr then next .      
+    if available  ext-classif-attr then do :
+        run str/callnews.p
+          ( input {&table_ext-classif}
+            ,input (buffer ext-classif:handle )
+          ) .
+        run str/callnews.p
+          ( input {&table_ext-classif-attr}
+            ,input (buffer ext-classif-attr:handle )
+          ) .
+        next .  
+    end.      
     delete ext-classif .
 end.
 /* выделение записей, которые нужно оставить */
@@ -110,7 +123,8 @@ for each tt-ext-classif no-lock
     if lookup (string(recid(tt-ext-classif)), v-recid-list, chr(5)) > 0 then do :
         create ext-classif.
         buffer-copy tt-ext-classif to ext-classif
-        assign ext-classif.charkey_two = "" .
+        assign ext-classif.charkey_two = "" no-error .
+        if error-status:error then next .
         create ext-classif-attr.
         buffer-copy ext-classif to ext-classif-attr
         assign ext-classif-attr.attr-code = 'egais-info' .
