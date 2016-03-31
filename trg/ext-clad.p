@@ -39,6 +39,7 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
+  if g#db-num = 0 or not g#news then do :
     run nws/cmd-del.p
       ( input {&table_ext-classif-attr}
         ,input (buffer ub.ext-classif-attr:handle)
@@ -47,5 +48,5 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     if error-status :error then do:
       undo main-block, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
     end.
-
+  end.
 end. /* main-block */
