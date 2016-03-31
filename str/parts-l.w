@@ -1052,17 +1052,31 @@ DO:
   define variable v-parts-ps  as character no-undo .
   define variable v-gds-code  as integer   no-undo .
   define variable v-save-flag as logical   no-undo .
+define variable p-mode as char no-undo.
+
+p-mode = {&lookup}.
+
+
+if not available parts then do: 
+    message 
+    "Нет партий по товару"
+    view-as alert-box.
+    return no-apply.
+    end.
+
+if p-edit-mode = 'update-alc-attr' then do: 
+    p-mode = {&update}.
 
   if v-goods-alcohol-prod <> true then do:
     return no-apply.
   end.
 
-  if not available parts then do:
-    message
-      "Неправильно выбрана строка"
-      view-as alert-box .
-    return no-apply.
-  end.
+/*  if not available parts then do: */
+/*    message                       */
+/*      "Неправильно выбрана строка"*/
+/*      view-as alert-box .         */
+/*    return no-apply.              */
+/*  end.                            */
 
   if p-doc-code = "" then do:
     message
@@ -1079,12 +1093,13 @@ DO:
       view-as alert-box .
     return no-apply .
   end.
-
+end.
   { gbl/gds-code.i
     parts.artic
     parts.prod-type
     parts.prod-code
     v-gds-code
+    no-error
   }
 
   do
@@ -1112,7 +1127,7 @@ DO:
 
     run str/in-alc.w
       (input        parparentproc
-      ,input        {&update}
+      ,input       p-mode
       ,input-output v-alc-mark-db-num
       ,input-output v-alc-mark-code
       ,input-output v-alc-bottling-date
@@ -2165,6 +2180,50 @@ then do:
   undo, return error return-value .
 end.
 
+    define variable v-alcohol-value as character no-undo .
+    define variable v-alcohol-type  as character no-undo .
+define variable v-alcohol-prod as logical.
+    { gbl/conf-rd.i
+      "'alcohol':u"
+      "0"
+      "''"
+      0
+      "''"
+      "''"
+      "''"
+      no
+      v-alcohol-value
+      v-alcohol-type
+      no-error
+    }
+    if  not error-status :error
+    and lookup(v-alcohol-value, 'true,yes':u) > 0
+    then do:
+      { gbl/gdscdat.i
+        p-gds-code
+        "'alcohol-prod=request':u"
+        v-alcohol-prod
+        no-error
+      }
+      if error-status :error
+      then do:
+        message
+          vss-workfile vss-revision vss-description skip
+          "Ошибка при определении атрибута товара" skip
+          "Код товара" p-gds-code skip
+          'alcohol-prod=request':u skip
+          error-status :get-message(1) skip
+          return-value skip
+          view-as alert-box error .
+        undo, return error .
+      end.
+    end.
+    else do:
+      assign
+        v-alcohol-prod = false
+      .
+    end.
+
 if  p-call-point = {&parts-l_call-document}
 and (p-edit-mode = {&update}
      or p-edit-mode = {&add-def}
@@ -2223,7 +2282,7 @@ then do:
   /* партии, которые были добавлены ранее нельзя изменять */
   define buffer buf_trn-doc for ub.trn-doc .
   find first buf_trn-doc no-lock
-    where buf_trn-doc.doc-code = p-doc-code
+    where buf_trn-doc.doc-code = p-doc-code no-error
     .
   if buf_trn-doc.ext-doc-type = {&TDEDT_Corr_Acc_Price}
   then do:
@@ -3605,7 +3664,7 @@ PROCEDURE main-block-procedure :
       b-sel when p-call-point = {&choose}
       ed-notes
       rs-one-all
-      b-alc-attr when p-edit-mode = 'update-alc-attr':u
+      b-alc-attr when v-alcohol-prod = yes
       WITH FRAME {&frame-name}.
 
     assign
