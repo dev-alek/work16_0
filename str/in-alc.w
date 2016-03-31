@@ -730,8 +730,8 @@ PROCEDURE MyEnable :
         v-alc-bottling-date       = p-alc-bottling-date
         v-alc-ref-a-path          = entry(1,p-alc-ref-ab-path,",")     
         v-alc-ref-b-path          = entry(2,p-alc-ref-ab-path,",")  
-        code-egais                = entry(3,p-alc-ref-ab-path,",")
-        group-alc-prod            = entry(4,p-alc-ref-ab-path,",")
+        code-egais                = entry(3,p-alc-ref-ab-path,",") when num-entries (p-alc-ref-ab-path) > 2
+        group-alc-prod            = entry(4,p-alc-ref-ab-path,",") when num-entries (p-alc-ref-ab-path) > 3
         v-alc-quality-certif-path = p-alc-quality-certif-path
         v-alc-certif-path         = p-alc-certif-path
         v-alc-imp-type            = p-alc-imp-type

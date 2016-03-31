@@ -39,9 +39,10 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
+  if g#db-num = 0 or not g#news then do :
     run str/callnews.p
       ( input {&table_ext-classif-attr}
         ,input (buffer ub.ext-classif-attr:handle )
       ) .
-
+  end.
 end. /* main-block */
