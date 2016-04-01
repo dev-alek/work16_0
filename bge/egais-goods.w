@@ -675,8 +675,8 @@ DO:
                             ,input v-ext-sys /*p-Key#_Two*/
                             ,input 0 /*p-key#_Three*/
                             ,input tt-gds.alc-code  /*p-CharKey_One */
-                            ,input (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name) /*p-CharKey_two */
-                            ,input buf_goods.gds-name /*p-CharKey_three */
+                            ,input "" /*p-CharKey_two */
+                            ,input "" /*p-CharKey_three */
                             ,input 0 /*p-nonunique */
                             ,input v-gds-uniq-key-rec ) no-error.
                         if error-status:error then
