@@ -47,7 +47,7 @@ define variable MsgLog as character no-undo.
 define buffer buf_goods for ub.goods.
 
 MAIN-BLOCK:
-do:
+do trans:
   
   define variable num-rec-ok as logical no-undo.
   define variable ii         as integer no-undo.
@@ -270,50 +270,52 @@ define output parameter p-cntxt-is-admin              as logical   no-undo . /* 
 end procedure. /* mainmenu_getcntxt */
 
 procedure set-refAB:
-  
-    
-    for each tt-wb-gds-EG:
-      
-      find first buf_goods no-lock where buf_goods.gds-code = tt-wb-gds-EG.gds-code no-error.
-      
-      find first ub.trn-doc where ub.trn-doc.doc-code = p-doc-code no-lock.
 
-      for each ub.parts exclusive-lock
-        where 
-              ub.parts.obj-code  = ub.trn-doc.obj-code
-          and ub.parts.obj-type  = ub.trn-doc.obj-type
-          and ub.parts.artic     = buf_goods.artic
-          and ub.parts.prod-type = buf_goods.prod-type
-          and ub.parts.prod-code = buf_goods.prod-code
-          and ub.parts.out-code  = p-doc-code
-        :
-        
-        find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
-        if not available (temp_doc-line) then do:
-          find first temp_doc-line where  temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
-        end.
-        run trg/partps.p ( input buf_goods.gds-code
-                         , input ub.parts.in-code
-                         , ?
-                         , input ub.parts.part-code
-                         , input iDbNum
-                         , input ?
-                         , input ?
-                         , input temp_doc-line.refA + ',' + temp_doc-line.refB + ',' + temp_doc-line.alc-code + ',' + temp_doc-line.alc-type-code
-                         , input ""
-                         , input ""
-                         , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 1, 3) else ""
-                         , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 4) else ""
-                         ) no-error .
-        if error-status :error
-        then do:
-          undo, return error "Ошибка при вызове процедуры partps.p" + 
-                              {&new-line} + 
-                              error-status :get-message(1) + 
-                              {&new-line} + return-value + {&new-line}.
-        end.
+  find first ub.trn-doc where ub.trn-doc.doc-code = p-doc-code no-lock.
+
+
+    foreach_:
+    for each ub.parts exclusive-lock
+      where 
+            ub.parts.obj-code  = ub.trn-doc.obj-code
+        and ub.parts.obj-type  = ub.trn-doc.obj-type
+        and ub.parts.artic     = buf_goods.artic
+        and ub.parts.prod-type = buf_goods.prod-type
+        and ub.parts.prod-code = buf_goods.prod-code
+        and ub.parts.out-code  = p-doc-code
+      :
+      
+      find next tt-wb-gds-EG where tt-wb-gds-EG.gds-code = buf_goods.gds-code and tt-wb-gds-EG.qnty =  ub.parts.qnty no-lock no-error. /* на случай если две партии с одинаковым количеством*/
+      if not available (tt-wb-gds-EG) then do:
+        find first tt-wb-gds-EG where  tt-wb-gds-EG.gds-code = buf_goods.gds-code and tt-wb-gds-EG.qnty =  ub.parts.qnty no-lock no-error.
+        if not available (tt-wb-gds-EG) 
+          then find first tt-wb-gds-EG where  tt-wb-gds-EG.gds-code = buf_goods.gds-code no-lock no-error.
+        if not available (tt-wb-gds-EG)
+          then next foreach_.
       end.
-    
+
+      run trg/partps.p ( input buf_goods.gds-code
+                       , input ub.parts.in-code
+                       , ?
+                       , input ub.parts.part-code
+                       , input ub.parts.mark-db-num
+                       , input ub.parts.mark-code
+                       , input ub.parts.alc-bottling-date
+                       , input tt-wb-gds-EG.refA + ',' + tt-wb-gds-EG.refB + ',' + tt-wb-gds-EG.alc-code + ',' + tt-wb-gds-EG.alc-type-code
+                       , input ub.parts.alc-quality-certif-path
+                       , input ub.parts.alc-certif-path
+                       , if tt-wb-gds-EG.importer-th <> "" then substring (tt-wb-gds-EG.importer-th, 1, 3) else ""
+                       , if tt-wb-gds-EG.importer-th <> "" then substring (tt-wb-gds-EG.importer-th, 4) else ""
+                       ) no-error .
+      if error-status :error
+      then do:
+        undo, return error "Ошибка при вызове процедуры partps.p" + 
+                            {&new-line} + 
+                            error-status :get-message(1) + 
+                            {&new-line} + return-value + {&new-line}.
+      end.
     end.
+  
+
 
 end procedure.
