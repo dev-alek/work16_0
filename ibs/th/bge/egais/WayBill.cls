@@ -595,6 +595,10 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
             ParseResponse("", inTableType).
           end.
+          for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-wb-ticket} and buf_clob-bind.uniq-key-rec begins inWbIdentity :
+            find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
+            ParseResponse("", inTableType).
+          end.
           return buffer tt-ticket:handle.
         end.
       when {&ticket-ras} then
@@ -1060,7 +1064,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     define variable v-clob-db-num as integer   no-undo .
     define variable v-int64-id    as int64     no-undo .
     define variable v-info        as character no-undo .
-    
+    define variable ticketUKR     as character no-undo.
     create x-document hDoc.
     create x-noderef  hRoot.
     create x-noderef  hRow.
@@ -1264,9 +1268,63 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   end.
   
                 end.
+              when hText:node-value matches ("*opt/out/WayBillTicket/*") then 
+                do:
+                  empty temp-table tt-ticket.  
+                  os-delete "WayBillTicket.xml".
+                  os-delete value (search ("WayBillTicket.xml")).
+                  assign
+                    inFileName = "WayBillTicket.xml"
+                    .
+                  CmdParseXml(hText:node-value).
+                  if StatusErr
+                  then do:
+                    message "Ошибка приема файла квитанции накладной" ticketUKR skip hText:node-value skip Msg view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
+                  find first tt-ticket.
+                  if (tt-ticket.regid = "" or tt-ticket.regid = ?) or tt-ticket.doc <> 'ConfirmTicket' then do:
+                    next url_.  
+                  end.
+                  v-clob-db-num = ?.
+                  v-int64-id = 0.
+                  ticketUKR = tt-ticket.regid + {&delim-par} + tt-ticket.docId + {&delim-par} + tt-ticket.Identity +  {&delim-par} + tt-ticket.ticket-date.
+                  if ticketUKR = ? or StatusErr
+                  then do:
+                    message "Ошибка приема файла квитанции накладной" ticketUKR skip hText:node-value skip Msg view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
+                  if can-find (first buf_clob-bind where 
+                        (buf_clob-bind.uniq-key-rec = ticketUKR or (buf_clob-bind.uniq-key-rec = tt-ticket.regid + {&delim-par} + tt-ticket.docId and (tt-ticket.Identity = ? or tt-ticket.Identity = ""))) 
+                    and buf_clob-bind.field-name_ =  {&lob-egais-ticket})
+                    then next url_.
+                  run gbl/file2clb.p ( input {&add-def}
+                    ,input ",no"
+                    ,input ? /*p-bh*/
+                    ,input ticketUKR /*p-uniq-key-rec*/
+                    ,input {&lob-egais-wb-ticket} /*p-field-*/
+                    ,input '' /*p-descr*/
+                    ,input-output v-part-num
+                    ,input {&lob-egais-wb-ticket}
+                    ,input-output v-clob-db-num
+                    ,input-output v-int64-id
+                    ,input search (inFileName)
+                    ,input '' /*p-src-encoding*/
+                    ) no-error .
+                  if error-status:error then 
+                  do:
+                    Msg = error-status:get-message(1) + {&new-line} + return-value.
+                    StatusErr = true.
+                    next url_.
+                  end.
+  
+                end.
               when hText:node-value matches ("*opt/out/Ticket/*") then 
                 do:
-                  def var ticketUKR as char no-undo.
                   empty temp-table tt-ticket. 
                   os-delete "Ticket.xml".
                   os-delete value (search ("Ticket.xml")).
@@ -1459,6 +1517,11 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           do:
             create tt-ticket .
           end.
+        when "ns:ConfirmTicket" then 
+          do:
+            create tt-ticket .
+            tt-ticket.doc = 'ConfirmTicket'.
+          end.
       end case.
       if lookup (hParent:name, "ns:Ticket") > 0 then do:
         if hNoderef:name = "tc:DocId" then assign tt-ticket.docID = hText:node-value.
@@ -1471,6 +1534,17 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         if hNoderef:name = "tc:DocType" then assign tt-ticket.doc = hText:node-value.
         
       end.
+
+      if lookup (hParent:name, "ns:ConfirmTicket") > 0 then do:
+        if hNoderef:name = "wt:Identity" then assign tt-ticket.Identity = hText:node-value.
+      end.
+      if lookup (hParent:name, "wt:Header>") > 0 then do:
+        if hNoderef:name = "wt:IsConfirm" then assign tt-ticket.status_ = hText:node-value.
+        if hNoderef:name = "wt:TicketDate" then assign tt-ticket.ticket-date = hText:node-value.
+        if hNoderef:name = "wt:WBRegId" then assign tt-ticket.regid = hText:node-value.
+        if hNoderef:name = "wt:Note" then assign tt-ticket.comment = hText:node-value.
+      end.
+
       if lookup (hParent:name, "tc:Result") > 0 then do:
         if hNoderef:name = "tc:Conclusion" then assign tt-ticket.status_ = hText:node-value.
         if hNoderef:name = "tc:Comments" then assign tt-ticket.comment = hText:node-value.
@@ -1783,6 +1857,16 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   end.
 
   method override public void ConnWB (inWbIdentity as char, inTrnDoc as char):
+
+    def buffer buf_tt-wb-gds-EG for tt-wb-gds-EG.
+        
+    def var isErr     as logical no-undo.
+    def var isWarning as logical no-undo.
+    def var ischoise  as logical no-undo.
+    def var jj        as int     no-undo.
+    def var ii        as int     no-undo.
+    def var THSumm    as decimal no-undo.
+    def var EGAISSumm as decimal no-undo.
     
     find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIdentity and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
     if not available (buf_clob-bind) then
@@ -1791,28 +1875,115 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       StatusErr = true.
       return.
     end.
+    
     if entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ' or entry (6, buf_clob-bind.descr, {&delim-par}) <> ''
     then do:
-      /*Msg = "Накладная уже связана или по ней был отказ".
-      StatusErr = true.
-      return.*/
-    end.
-    
-    for each buf_doc-line no-lock where buf_doc-line.doc-code = inTrnDoc:
-      find first buf_gds no-lock  where
-        buf_doc-line.artic     = buf_gds.artic and
-        buf_doc-line.prod-type = buf_gds.prod-type and
-        buf_doc-line.prod-code = buf_gds.prod-code
-        no-error .
-      
-      find first tt-wb-gds-EG where tt-wb-gds-EG.gds-code = buf_gds.gds-code no-error.
-      if not available (tt-wb-gds-EG)
-      then do:
-        Msg = "Несоответсвие товаров накладной TH товарам накладной ЕГАИС".
+      Msg = "Накладная уже связана или по ней был отказ.".
+      message  Msg + " Вы уверены, что хотите связать накладную?" view-as alert-box question buttons yes-no
+        title "" update isChoise.
+      if not isChoise then do:
         StatusErr = true.
         return.
       end.
     end.
+    
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = inTrnDoc no-error.
+          
+    if not available (buf_trn-doc)
+    then do:
+      Msg = "Не найдена накладная" + inTrnDoc.
+      StatusErr = true.
+      return.
+    end.
+    
+    foreach1_:
+    for each tt-wb-gds-EG break by gds-code:
+      
+      THSumm = 0.
+      EGAISSumm = 0.
+      
+      if not first-of (gds-code) and last-of (gds-code) 
+        then next foreach1_.
+      
+      find first buf_gds no-lock where buf_gds.gds-code = tt-wb-gds-EG.gds-code no-error.
+      if not available (buf_gds) 
+      then do:
+        Msg = Msg + (if Msg <> "" then {&new-line} else '') + substitute ("Товар &1 &2 не имеет связки.", tt-wb-gds-EG.alc-code, tt-wb-gds-EG.gds-name).
+        isErr = true.
+      end.
+      else do:
+        
+        for each ub.parts no-lock
+          where 
+                ub.parts.obj-code  = buf_trn-doc.obj-code
+            and ub.parts.obj-type  = buf_trn-doc.obj-type
+            and ub.parts.artic     = buf_gds.artic
+            and ub.parts.prod-type = buf_gds.prod-type
+            and ub.parts.prod-code = buf_gds.prod-code
+            and ub.parts.out-code  = inTrnDoc:
+        
+          jj = jj + 1.
+          THSumm = THSumm + ub.parts.qnty.
+        
+        end.
+        
+        for each buf_tt-wb-gds-EG where buf_tt-wb-gds-EG.gds-code = buf_gds.gds-code:
+          ii = ii + 1.
+          EGAISSumm = EGAISSumm + buf_tt-wb-gds-EG.qnty.
+        end.
+
+        if EGAISSumm <> THSumm
+        then do:
+          isWarning = true.
+          Msg = Msg + (if Msg <> "" then {&new-line} else '')
+            + substitute ("Не совпадает документарное кол-во. Для товара &5/&1 &2 в накладной ЕГАИС кол-во по партиям - &3 в накладной TH кол-во по партиям - &4.", tt-wb-gds-EG.alc-code, tt-wb-gds-EG.gds-name, ii, jj, buf_gds.gds-code).
+        end.
+        
+        if ii <> jj
+        then do:
+          isWarning = true.
+          Msg = Msg + (if Msg <> "" then {&new-line} else '')
+            + substitute ("Для товара &5/&1 &2 в накладной ЕГАИС партий - &3 в накладной TH партий - &4.", tt-wb-gds-EG.alc-code, tt-wb-gds-EG.gds-name, ii, jj, buf_gds.gds-code).
+          if jj = 0 
+            then Msg = Msg + {&new-line}
+              + substitute ("Для товара &1/&2 &3 при отправке накладной в ЕГАИС акт будет с расхождение и кол-во 0.", buf_gds.gds-code, tt-wb-gds-EG.alc-code, tt-wb-gds-EG.gds-name).
+        end.
+      end.
+      
+    end.
+
+    for each ub.parts no-lock
+      where
+            ub.parts.out-code = inTrnDoc 
+        and ub.parts.obj-code = buf_trn-doc.obj-code
+        and ub.parts.obj-type = buf_trn-doc.obj-type
+        :
+      find first buf_gds no-lock where 
+                ub.parts.artic     = buf_gds.artic
+            and ub.parts.prod-type = buf_gds.prod-type
+            and ub.parts.prod-code = buf_gds.prod-code.
+      find first tt-wb-gds-EG no-lock where tt-wb-gds-EG.gds-code = buf_gds.gds-code no-error.
+      if not available ( tt-wb-gds-EG ) 
+      then do:
+        isWarning = true.
+        Msg = Msg + (if Msg <> "" then {&new-line} else '')
+          + substitute ("Товара &1 &2 в накладной TH отсутствует в накладной ЕГАИС.", buf_gds.gds-code, buf_gds.gds-name).
+      end.
+    end.
+
+    if isErr
+    then do:
+      StatusErr = true.
+      return.
+    end.
+    
+    message  Msg + {&new-line} + " Вы уверены, что хотите связать накладную?" view-as alert-box question buttons yes-no
+      title "" update isChoise.
+    if not isChoise then do:
+      StatusErr = true.
+      return.
+    end.
+
     run ibs/th/bge/egais/AdapteeEGAISProcOra-i516.p
       (
       input table tt-wb-header,
@@ -1882,7 +2053,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           find first buf_doc-line no-lock where available (buf_gds) and buf_doc-line.doc-code = buf_doc-attr.doc-code and
              buf_gds.artic = buf_doc-line.artic and buf_gds.prod-code = buf_doc-line.prod-code and buf_gds.prod-type = buf_doc-line.prod-type no-error.
           if not available (buf_doc-line) then do:
-              message "Не найден товар в накладной, который есть в ЕГАИС - " + buf_doc-attr.doc-code + " товар - " + string (tt-wb-gds-EG.gds-code) + " Продолжить, с отправкой для данного товара в акте кол-ва 0?" view-as alert-box 
+              message "Не найден товар в накладной, который есть в ЕГАИС - " + buf_doc-attr.doc-code + " товар - " + string (tt-wb-gds-EG.gds-code) + " Продолжить с отправкой для данного товара в акте кол-ва 0?" view-as alert-box 
                 question buttons yes-no
                 title "" update v-choise as logical.
               if not v-choise then do: 
@@ -1906,9 +2077,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         if tt-wb-gds-EG.qnty <> buf_parts.fact-qnty then 
         do:
           is-diff = true. 
-          xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
         end.
-
+        xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
 
       end /*foeach*/.
       

@@ -59,6 +59,7 @@ define variable glog                as logical   no-undo.
 define variable v-uniq-key-rec      as character no-undo.
 define variable v-trn-doc           as character no-undo.
 
+define stream strlog.
 
 define variable v-fs-rar as character no-undo view-as text format "X(15)" label "Код ФС РАР (FSRAR ID)" .
 
@@ -74,6 +75,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+define stream strlog.
 
 &ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
@@ -301,6 +303,9 @@ do:
   else do:
     message "Накладная связана" view-as alert-box.
   end.
+  output stream strlog to value ("egaislog.txt") append. 
+  export stream strlog egais:Msg.
+  output stream strlog close.
   run f-query.
   
 end.
