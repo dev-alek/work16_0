@@ -1901,6 +1901,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       
       THSumm = 0.
       EGAISSumm = 0.
+      ii = 0.
+      jj = 0.
+      
       
       if not first-of (gds-code) and last-of (gds-code) 
         then next foreach1_.
@@ -1912,7 +1915,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         isErr = true.
       end.
       else do:
-        
         for each ub.parts no-lock
           where 
                 ub.parts.obj-code  = buf_trn-doc.obj-code
@@ -1936,7 +1938,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
         then do:
           isWarning = true.
           Msg = Msg + (if Msg <> "" then {&new-line} else '')
-            + substitute ("Не совпадает документарное кол-во. Для товара &5/&1 &2 в накладной ЕГАИС кол-во по партиям - &3 в накладной TH кол-во по партиям - &4.", tt-wb-gds-EG.alc-code, tt-wb-gds-EG.gds-name, ii, jj, buf_gds.gds-code).
+            + substitute ("Не совпадает документарное кол-во. Для товара &5/&1 &2 в накладной ЕГАИС кол-во по партиям - &3 в накладной TH кол-во по партиям - &4.", tt-wb-gds-EG.alc-code, tt-wb-gds-EG.gds-name, EGAISSumm, THSumm, buf_gds.gds-code).
         end.
         
         if ii <> jj

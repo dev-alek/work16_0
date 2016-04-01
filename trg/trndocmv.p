@@ -898,9 +898,9 @@ end case .
                   new_parts-attr.obj-type             = buf_trn-doc.obj-type
                   new_parts-attr.obj-code             = buf_trn-doc.obj-code
                   new_parts-attr.PS                   = buf_parts.PS
-                  new_parts-attr.fact-date            = buf_trn-doc.fact-date
-                  new_parts-attr.fact-time            = buf_trn-doc.fact-time
-                  new_parts-attr.fact-order           = buf_trn-doc.fact-order
+                  new_parts-attr.fact-date            = ub.trn-doc.fact-date
+                  new_parts-attr.fact-time            = ub.trn-doc.fact-time
+                  new_parts-attr.fact-order           = ub.trn-doc.fact-order
                   new_parts-attr.shift-num            = buf_trn-doc.shift-num
                   new_parts-attr.shift-name           = buf_trn-doc.shift-name
                   new_parts-attr.shift-date           = buf_trn-doc.shift-date

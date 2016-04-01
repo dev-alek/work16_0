@@ -277,13 +277,20 @@ procedure set-refAB:
     foreach_:
     for each ub.parts exclusive-lock
       where 
-            ub.parts.obj-code  = ub.trn-doc.obj-code
+            ub.parts.out-code  = p-doc-code
+        and ub.parts.obj-code  = ub.trn-doc.obj-code
         and ub.parts.obj-type  = ub.trn-doc.obj-type
-        and ub.parts.artic     = buf_goods.artic
-        and ub.parts.prod-type = buf_goods.prod-type
-        and ub.parts.prod-code = buf_goods.prod-code
-        and ub.parts.out-code  = p-doc-code
       :
+      
+      find first buf_goods where buf_goods.artic = ub.parts.artic and buf_goods.prod-type = ub.parts.prod-type and buf_goods.prod-code = ub.parts.prod-code no-error.
+      
+      if not available (buf_goods) 
+        then return error error-status:get-message (1).
+      
+      find first buf_goods where buf_goods.artic = ub.parts.artic and buf_goods.prod-type = ub.parts.prod-type and buf_goods.prod-code = ub.parts.prod-code no-error.
+      
+      if not available (buf_goods) 
+        then return error error-status:get-message (1).
       
       find next tt-wb-gds-EG where tt-wb-gds-EG.gds-code = buf_goods.gds-code and tt-wb-gds-EG.qnty =  ub.parts.qnty no-lock no-error. /* на случай если две партии с одинаковым количеством*/
       if not available (tt-wb-gds-EG) then do:
