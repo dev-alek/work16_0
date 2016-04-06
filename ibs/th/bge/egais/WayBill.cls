@@ -233,6 +233,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define private variable v-uniq-key-rec as character no-undo.
   define private variable nn             as integer   no-undo.
   define private variable extGdsObj      as class ExtGds no-undo.
+  define private variable isForceAccept  as logical no-undo.
 
   define         variable v-FS-RAR       as character no-undo .
   define         variable inDocFSRAR     as character no-undo .
@@ -247,6 +248,10 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define property HndlLine as handle no-undo
     get.
     private set.
+    
+  define property ActnEGAISAdm as logical no-undo
+    get.
+    set.
 
   define temp-table tt-wb-hndls no-undo
     field num          as character label "№ накл." format "X(50)"
@@ -335,6 +340,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       StatusErr = false
       Msg       = ""
       .
+    
+    isForceAccept = false.
     
     if inWbIdentity = "AllWB"
       then 
@@ -441,13 +448,13 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 else tt-wb-gds-EG.gds-code = ?.
             end.
 /*            v-uniq-key-rec = inWbIdentity.*/
-            find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-ref-b} no-error.
+            find first buf_clob-bind no-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-ref-b} no-error.
             if available (buf_clob-bind) then 
             do:
-              find first buf_clob-data exclusive-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
+              find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
               ParseResponse("", {&wb-refB}).
             end.
-            find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
+            find first buf_clob-bind no-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
             
           end.
           HndlHeader = buffer tt-wb-header:handle.
@@ -533,7 +540,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       when {&wb-clob} then 
         do:
           empty temp-table tt-wb-hndls.
-          for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-wb}:
+          for each buf_clob-bind no-lock where buf_clob-bind.field-name_ = {&lob-egais-wb}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.Identity + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
             if entry (9, buf_clob-bind.descr, {&delim-par}) <> "" and entry (9, buf_clob-bind.descr, {&delim-par}) <> "0" and entry (9, buf_clob-bind.descr, {&delim-par}) <> ObjType + string (ObjCode)
               then next.
@@ -643,17 +650,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             for each buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-attr.doc-code and buf_trn-doc.status_ = {&fact}:
               if ObjCode <> buf_trn-doc.obj-code or ObjType <> buf_trn-doc.obj-type
                 then next.
-              /*              define variable v-obj-uniq-key-rec as character no-undo .
-                            find first buf_clients no-lock where buf_clients.obj-type = buf_trn-doc.cli-type and buf_clients.obj-code = buf_trn-doc.cli-code .
-                            run gen-key-rec in this-procedure   ( input {&table_clients}
-                                                                 ,input buffer buf_clients:handle
-                                                                 ,output v-obj-uniq-key-rec).
-                            find first buf_ext-classif exclusive-lock  where buf_ext-classif.classif-subject = {&table_clients}
-                                                                       and buf_ext-classif.classif-name = {&extclass_clients_esys}
-                                                                       and buf_ext-classif.db-num = 0
-                                                                       and buf_ext-classif.key#_one = v-ext-sys
-                                                                       and buf_ext-classif.uniq-key-rec = v-obj-uniq-key-rec
-                                                                       no-error.*/
+
               find first buf_clients where buf_clients.obj-code = buf_trn-doc.cli-code and buf_clients.obj-type = buf_trn-doc.cli-type no-lock.
               
               find first ub.ext-classif no-lock 
@@ -663,6 +660,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   and ub.ext-classif.key#_one = v-ext-sys
                   and ub.ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + buf_trn-doc.cli-type + {&delim-key} + string (buf_trn-doc.cli-code)
                   no-error.
+
+              find first ub.doc-attr no-lock where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-egais}  no-error.
               
               create tt-wb-hndls. 
               assign
@@ -676,6 +675,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 tt-wb-hndls.uniq-key-rec = buf_doc-attr.attr-value
                 tt-wb-hndls.status_      = buf_trn-doc.status_ + (if buf_trn-doc.flag_ then "+" else "-")
                 tt-wb-hndls.wbregid      = entry (1, buf_doc-attr.attr-value, {&delim-cmd}) no-error.
+                assign
+                  tt-wb-hndls.wb-type      = {&TDEDT_Pri_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} .
+                tt-wb-hndls.is-sent = if available (ub.doc-attr) then "да" else "".
                 entry (1, tt-wb-hndls.uniq-key-rec, {&delim-cmd}) = "".
                 tt-wb-hndls.uniq-key-rec = left-trim (tt-wb-hndls.uniq-key-rec, {&delim-cmd}).
                 if available (ub.ext-classif)
@@ -749,24 +751,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             tt-wb-header.obj-code = buf_trn-doc.obj-code
           .
           
-          /*find first ub.clients-attr where ub.clients-attr.attr-code = {&attr-main-accholder}
-            and ub.clients-attr.obj-code = buf_trn-doc.obj-code and ub.clients-attr.obj-type = buf_trn-doc.obj-type no-error.
-
-          if available (ub.clients-attr)
-          then do:
-            assign
-              tt-wb-header.obj-type = entry (1, ub.clients-attr.attr-value, ",")
-              tt-wb-header.obj-code = integer (entry (2, ub.clients-attr.attr-value, ","))
-              .
-          end.
-          else do:
-            assign
-              tt-wb-header.obj-type = buf_trn-doc.obj-type
-              tt-wb-header.obj-code = buf_trn-doc.obj-code
-              .                  
-          end.*/
-          
-          
           find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
             and buf_ext-classif.classif-name = {&extclass_clients_esys}
             and buf_ext-classif.db-num = 0
@@ -810,13 +794,25 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 return ?.
               end.
               extGdsObj:FindExtGds(entry (3, buf_parts.alc-ref-ab-path, ",")).
+              find first ub.gds-dtl where 
+                    ub.gds-dtl.doc-code = buf_doc-line.doc-code
+                and ub.gds-dtl.artic = buf_parts.artic
+                and ub.gds-dtl.prod-type = buf_parts.prod-type
+                and ub.gds-dtl.prod-code = buf_parts.prod-code no-error.
+              if not available (ub.gds-dtl)
+              then do:
+                Msg = "Отсутствует gds-dtl - " + string (buf_parts.artic) + ".".
+                StatusErr = true.
+                return ?.
+              end.
               create tt-wb-gds-EG.
               assign
                 tt-wb-gds-EG.Identity = string (ii)
                 tt-wb-gds-EG.gds-name = extGdsObj:FullNameGds
                 tt-wb-gds-EG.gds-code = buf_gds.gds-code
                 tt-wb-gds-EG.qnty = buf_parts.cli-qnty
-                tt-wb-gds-EG.price = buf_doc-line.price-rubl
+                tt-wb-gds-EG.price = buf_doc-line.price-rubl when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} 
+                tt-wb-gds-EG.price = ub.gds-dtl.price-rubl when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
                 tt-wb-gds-EG.refA = entry (1, buf_parts.alc-ref-ab-path, ",")
                 tt-wb-gds-EG.refB = entry (2, buf_parts.alc-ref-ab-path, ",")
                 tt-wb-gds-EG.alc-code = entry (3, buf_parts.alc-ref-ab-path, ",")
@@ -888,8 +884,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       assign
         inFileName = "RespTTNAct.xml"
         .
-      
-      find first tt-wb-hndls no-error.
+      find first tt-wb-header. 
+      find first tt-wb-hndls where tt-wb-header.uniq-key-rec = tt-wb-hndls.uniq-key-rec no-error.
       
       if available (tt-wb-hndls)
         then 
@@ -945,7 +941,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               .
             undo, return false.
           end.
+          find current buf_clob-bind exclusive-lock.
           entry (7, buf_clob-bind.descr, {&delim-par}) = "да".
+          find current buf_clob-bind no-lock.
           tt-wb-hndls.is-sent = "да". 
         end.
 
@@ -999,6 +997,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           end.
         end.
       end.
+      else return false.
     end.      
   end.
 
@@ -1116,12 +1115,19 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   CmdParseXml(hText:node-value).
                   if StatusErr
                   then do:
-                    message "Ошибка приема файла накланой: " v-info skip hText:node-value skip Msg view-as alert-box.
+                    message "Ошибка приема файла накланой: " v-info skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
                   end.
-                  find first tt-wb-header.
+                  find first tt-wb-header no-error.
+                  if not available (tt-wb-header)
+                  then do:
+                    message "Ошибка приема файла накланой: " v-info skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
                   find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Consignee".
                   find first buf_ext-classif no-lock where 
                         buf_ext-classif.classif-subject = {&table_clients}
@@ -1139,7 +1145,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par} + tt-wb-header.obj-type + string (tt-wb-header.obj-code).
                   if tt-wb-header.uniq-key-rec = ?
                   then do:
-                    message "Ошибка приема файла накланой: " v-info skip hText:node-value skip Msg view-as alert-box.
+                    message "Ошибка приема файла накланой: " v-info skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
@@ -1181,19 +1187,26 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   CmdParseXml(hText:node-value).
                   if StatusErr
                   then do:
-                    message "Ошибка приема файла справки Б: " tt-wb-header.wbregid skip hText:node-value skip Msg view-as alert-box.
+                    message "Ошибка приема файла справки Б: " tt-wb-header.wbregid skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
                   end.
-                  find first tt-wb-header.
+                  find first tt-wb-header no-error.
+                  if not available (tt-wb-header)
+                  then do:
+                    message "Ошибка приема файла справки Б: " tt-wb-header.wbregid skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
                   v-clob-db-num = ?.
                   v-int64-id = 0.
                   if can-find (first buf_clob-bind where (buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec or buf_clob-bind.uniq-key-rec = tt-wb-header.Identity + {&delim-cmd} + tt-wb-header.regID-Ship) and buf_clob-bind.field-name_ =  {&lob-egais-ref-b})
                     then next url_.
                   if tt-wb-header.uniq-key-rec = ?
                   then do:
-                    message "Ошибка приема файла справки Б: " tt-wb-header.wbregid skip hText:node-value skip Msg view-as alert-box.
+                    message "Ошибка приема файла справки Б: " tt-wb-header.wbregid skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
@@ -1230,7 +1243,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   CmdParseXml(hText:node-value).
                   if StatusErr
                   then do:
-                    message "Ошибка приема файла акта " skip hText:node-value skip Msg view-as alert-box.
+                    message "Ошибка приема файла акта " skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
@@ -1243,7 +1256,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                     then next url_.
                   if tt-wb-act-header.wbregid = ?
                   then do:
-                    message "Ошибка приема файла акта " skip hText:node-value skip Msg view-as alert-box.
+                    message "Ошибка приема файла акта " skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
@@ -1279,7 +1292,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   CmdParseXml(hText:node-value).
                   if StatusErr
                   then do:
-                    message "Ошибка приема файла квитанции накладной" ticketUKR skip hText:node-value skip Msg view-as alert-box.
+                    message "Ошибка приема файла квитанции накладной" ticketUKR skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
@@ -1293,7 +1306,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   ticketUKR = tt-ticket.regid + {&delim-par} + tt-ticket.docId + {&delim-par} + tt-ticket.Identity +  {&delim-par} + tt-ticket.ticket-date.
                   if ticketUKR = ? or StatusErr
                   then do:
-                    message "Ошибка приема файла квитанции накладной" ticketUKR skip hText:node-value skip Msg view-as alert-box.
+                    message "Ошибка приема файла квитанции накладной" ticketUKR skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
@@ -1334,7 +1347,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   CmdParseXml(hText:node-value).
                   if StatusErr
                   then do:
-                    message "Ошибка приема файла квитанции " ticketUKR skip hText:node-value skip Msg view-as alert-box.
+                    message "Ошибка приема файла квитанции " ticketUKR skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
@@ -1348,7 +1361,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                   ticketUKR = tt-ticket.regid + {&delim-par} + tt-ticket.docId + {&delim-par} + tt-ticket.Identity +  {&delim-par} + tt-ticket.ticket-date.
                   if ticketUKR = ? or StatusErr
                   then do:
-                    message "Ошибка приема файла квитанции " ticketUKR skip hText:node-value skip Msg view-as alert-box.
+                    message "Ошибка приема файла квитанции " ticketUKR skip hText:node-value skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
@@ -1786,8 +1799,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   method override public void SaveWB (inWbIdentity as char):
     
     def var trn-doc-code as char no-undo.
-    
-    find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = inWbIdentity and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
+
+    find first buf_clob-bind no-lock where buf_clob-bind.uniq-key-rec = inWbIdentity and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
     if not available (buf_clob-bind) then 
     do:
       Msg = "Не найдена накладная с идентификатором " + inWbIdentity.
@@ -1802,22 +1815,27 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       StatusErr = true.
       return.      
     end.
-    
-    run ibs/th/bge/egais/AdapteeEGAISProcOra-i516.p
-      (
-      input table tt-wb-header,
-      input table tt-wb-gds-EG,
-      input User_Id,
-      input "",
-      input-output trn-doc-code
-      ) no-error.
-    if error-status:error then 
-    do:
-      Msg = return-value.
-      StatusErr = true.
-      return.
+      
+    do trans:
+      run ibs/th/bge/egais/AdapteeEGAISProcOra-i516.p
+        (
+        input table tt-wb-header,
+        input table tt-wb-gds-EG,
+        input User_Id,
+        input "",
+        input-output trn-doc-code
+        ) no-error.
+      if error-status:error then 
+      do:
+        Msg = return-value.
+        StatusErr = true.
+        return.
+      end.
+      find current buf_clob-bind exclusive-lock.
+      entry (6, buf_clob-bind.descr, {&delim-par}) = trn-doc-code.
+      find current buf_clob-bind no-lock.
     end.
-    entry (6, buf_clob-bind.descr, {&delim-par}) = trn-doc-code.
+
     find first tt-wb-hndls where tt-wb-hndls.uniq-key-rec = buf_clob-bind.uniq-key-rec no-error.
     if not available (tt-wb-hndls)
     then do:
@@ -1825,6 +1843,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       StatusErr = true.
       return.
     end.
+    release buf_clob-bind.
     tt-wb-hndls.trn-doc-code = trn-doc-code.
     
   end.
@@ -1845,7 +1864,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       StatusErr = true.
       return.
     end.
+    find current buf_clob-bind exclusive-lock.
     entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ'.
+    find current buf_clob-bind no-lock.
     find first tt-wb-hndls where tt-wb-hndls.uniq-key-rec = buf_clob-bind.uniq-key-rec no-error.
     if not available (tt-wb-hndls)
     then do:
@@ -1876,12 +1897,20 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       return.
     end.
     
-    if entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ' or entry (6, buf_clob-bind.descr, {&delim-par}) <> ''
+    find first buf_trn-doc where buf_trn-doc.doc-code = entry (6, buf_clob-bind.descr, {&delim-par}) no-error.
+    
+    if entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ' or available (buf_trn-doc)
     then do:
       Msg = "Накладная уже связана или по ней был отказ.".
       message  Msg + " Вы уверены, что хотите связать накладную?" view-as alert-box question buttons yes-no
         title "" update isChoise.
       if not isChoise then do:
+        StatusErr = true.
+        return.
+      end.
+      if not ActnEGAISAdm
+      then do:
+        Msg = 'Для связывания нужно право "Администрирование запросов в ЕГАИС"'.
         StatusErr = true.
         return.
       end.
@@ -1979,13 +2008,22 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       return.
     end.
     
-    message  Msg + {&new-line} + " Вы уверены, что хотите связать накладную?" view-as alert-box question buttons yes-no
-      title "" update isChoise.
-    if not isChoise then do:
-      StatusErr = true.
-      return.
+    if isWarning 
+    then do:
+      message  Msg + {&new-line} + " Вы уверены, что хотите связать накладную?" view-as alert-box question buttons yes-no
+        title "" update isChoise.
+      if not isChoise then do:
+        StatusErr = true.
+        return.
+      end.
+      if not ActnEGAISAdm
+      then do:
+        Msg = 'Для связывания нужно право "Администрирование запросов в ЕГАИС"'.
+        StatusErr = true.
+        return.
+      end.
     end.
-
+    
     run ibs/th/bge/egais/AdapteeEGAISProcOra-i516.p
       (
       input table tt-wb-header,
@@ -2000,7 +2038,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       StatusErr = true.
       return.
     end.
+    find current buf_clob-bind exclusive-lock.
     entry (6, buf_clob-bind.descr, {&delim-par}) = inTrnDoc.
+    find current buf_clob-bind no-lock.
     find first tt-wb-hndls where tt-wb-hndls.uniq-key-rec = buf_clob-bind.uniq-key-rec no-error.
     if not available (tt-wb-hndls)
     then do:
@@ -2010,6 +2050,19 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     end.
     tt-wb-hndls.trn-doc-code = inTrnDoc.
     
+  end.
+
+  method public logical SendForceAccept ():
+    
+    isForceAccept = true.
+    if not SendRequestUTM()
+    then do:
+      StatusErr = true.
+      return false.
+    end.
+    isForceAccept = false.
+    return true.
+
   end.
 
   method private longchar GetXMLAct ():
@@ -2025,8 +2078,29 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 </wa:Position>'
     
     find first tt-wb-header.
-    if not (available (buf_clob-bind) and entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ') then do:
+    if not (available (buf_clob-bind) and entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ') and not isForceAccept then do:
+      
+      find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid) no-error.
+      
+      find next buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid) no-error.
+      if available (buf_doc-attr)
+      then do:
+        Msg = substitute ("Несколько связанных накладных c одной накладной ЕГАИС wbregid - &1. Для исправления пересвяжите накладную", tt-wb-header.wbregid) + {&new-line}.
+        for each buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid):
+          Msg = Msg + "Накладаная - " + buf_doc-attr.doc-code + {&new-line}.
+        end.
+        StatusErr = true.
+        return ?.
+      end.
+      
       find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid).
+      
+      if not available (buf_doc-attr)
+      then do:
+        Msg = substitute ("Не найден атрибут документа с номером ЕГАИС WBRegID - &1, пересвяжите накладную", tt-wb-header.wbregid).
+        StatusErr = true.
+        return ?. 
+      end.
       
       foreach_:
       for each tt-wb-gds-EG :
@@ -2069,7 +2143,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
           end.
           else do:
   
-              Msg = "Не найдена партия для товара " + string (tt-wb-gds-EG.gds-code) + "/" + tt-wb-gds-EG.alc-code + " справка А " + tt-wb-gds-EG.refA + " справка Б " + tt-wb-gds-EG.refB.
+              Msg = "Не найдена партия для товара " + string (tt-wb-gds-EG.gds-code) + "/" + tt-wb-gds-EG.alc-code + " справка А " + tt-wb-gds-EG.refA + " справка Б " + tt-wb-gds-EG.refB + ". Документ - " + buf_doc-attr.doc-code +  "/" + buf_doc-attr.attr-value.
               StatusErr = true.
               return ?.            
   
@@ -2087,7 +2161,12 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
       return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию") + (if is-diff then xml-cont else "") + {&xml-act-2}.
     end.
     else do:
-      xml-cont = substitute ({&xml-act-1}, v-FS-RAR, 'Rejected', time, iso-date (date (now)), tt-wb-header.wbregid, "Отказ") + {&xml-act-2}.
+      if isForceAccept
+      then do:
+        find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid). 
+        xml-cont = substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию") + {&xml-act-2}.
+      end.
+      else xml-cont = substitute ({&xml-act-1}, v-FS-RAR, 'Rejected', time, iso-date (date (now)), tt-wb-header.wbregid, "Отказ") + {&xml-act-2}.
       return xml-cont.
     end.
     
@@ -2238,7 +2317,6 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
 
 
     delete object sw.
-    delete object extGdsObj.
 
   end.
   

@@ -573,7 +573,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   run refresh-view.
   
   v-uniq-key-rec  = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
-
+  find first ub.clob-bind exclusive-lock where ub.clob-bind.uniq-key-rec = v-uniq-key-rec and ub.clob-bind.field-name_ = {&lob-egais-wb}.
   wait-for go of frame {&FRAME-NAME}.
 end.
 run disable_UI.

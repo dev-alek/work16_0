@@ -45,6 +45,7 @@ define variable iDbNum as integer no-undo.
 define variable MsgLog as character no-undo.
 
 define buffer buf_goods for ub.goods.
+define buffer buf_doc-attr for ub.doc-attr.
 
 MAIN-BLOCK:
 do trans:
@@ -141,6 +142,11 @@ do trans:
         return error return-value .
       end.
       def var temp-str as char no-undo.
+      
+      for each buf_doc-attr exclusive-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid):
+        delete buf_doc-attr.
+      end.
+      
       temp-str = string(tt-wb-header.wbregid + {&delim-cmd} + tt-wb-header.uniq-key-rec).
       { str/tdat-wrt.i
         p-doc-code
@@ -281,11 +287,6 @@ procedure set-refAB:
         and ub.parts.obj-code  = ub.trn-doc.obj-code
         and ub.parts.obj-type  = ub.trn-doc.obj-type
       :
-      
-      find first buf_goods where buf_goods.artic = ub.parts.artic and buf_goods.prod-type = ub.parts.prod-type and buf_goods.prod-code = ub.parts.prod-code no-error.
-      
-      if not available (buf_goods) 
-        then return error error-status:get-message (1).
       
       find first buf_goods where buf_goods.artic = ub.parts.artic and buf_goods.prod-type = ub.parts.prod-type and buf_goods.prod-code = ub.parts.prod-code no-error.
       
