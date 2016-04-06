@@ -128,6 +128,13 @@ DEFINE BUTTON b-exmark
      LABEL "" 
      SIZE 2.88 BY 1 TOOLTIP "Выбор акцизной или специальной марки".
 
+DEFINE BUTTON b-grp-alc 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 2.88 BY 1 TOOLTIP "Выбор файла".
+
 DEFINE BUTTON B-help 
      LABEL "Помо&щь" 
      SIZE 10 BY 1
@@ -165,7 +172,7 @@ DEFINE VARIABLE code-egais AS CHARACTER FORMAT "X(256)":U
      SIZE 49 BY 1 NO-UNDO.
 
 DEFINE VARIABLE group-alc-prod AS CHARACTER FORMAT "X(256)":U 
-     LABEL "группа алкогольной продукции" 
+     LABEL "Группа алкогольной продукции" 
      VIEW-AS FILL-IN 
      SIZE 49 BY 1 NO-UNDO.
 
@@ -216,28 +223,27 @@ DEFINE VARIABLE v-alc-ref-b-path AS CHARACTER FORMAT "X(256)":U
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     v-alc-mark-name AT ROW 2.75 COL 29 COLON-ALIGNED
-     b-exmark AT ROW 2.75 COL 53.5
-     v-alc-bottling-date AT ROW 4 COL 29 COLON-ALIGNED
+     v-alc-mark-name AT ROW 2.75 COL 30 COLON-ALIGNED
+     b-exmark AT ROW 2.75 COL 54.5
+     v-alc-bottling-date AT ROW 4 COL 30 COLON-ALIGNED
      b-bottling-date AT ROW 4 COL 51
-     v-alc-ref-a-path AT ROW 5.5 COL 29 COLON-ALIGNED
-     v-alc-ref-b-path AT ROW 6.75 COL 29 COLON-ALIGNED WIDGET-ID 12
-     code-egais AT ROW 8.25 COL 29 COLON-ALIGNED WIDGET-ID 20
-     group-alc-prod AT ROW 9.5 COL 29 COLON-ALIGNED WIDGET-ID 22
-     v-alc-quality-certif-path AT ROW 10.75 COL 29 COLON-ALIGNED
-     b-qltycert AT ROW 10.75 COL 80.5
-     v-alc-certif-path AT ROW 12.25 COL 29 COLON-ALIGNED
-     b-certif AT ROW 12.25 COL 80.5
-     v-alc-imp-name AT ROW 13.75 COL 41.5 COLON-ALIGNED NO-LABEL WIDGET-ID 10 NO-TAB-STOP 
-     v-alc-imp-type AT ROW 13.75 COL 24.5 COLON-ALIGNED WIDGET-ID 2
-     v-alc-imp-code AT ROW 13.75 COL 31 COLON-ALIGNED NO-LABEL WIDGET-ID 4
-     b-alc-imp AT ROW 13.75 COL 81 WIDGET-ID 6
+     v-alc-ref-a-path AT ROW 5.75 COL 30 COLON-ALIGNED
+     v-alc-ref-b-path AT ROW 7 COL 30 COLON-ALIGNED WIDGET-ID 12
+     code-egais AT ROW 8.25 COL 30 COLON-ALIGNED WIDGET-ID 20
+     group-alc-prod AT ROW 9.5 COL 30 COLON-ALIGNED WIDGET-ID 22
+     v-alc-quality-certif-path AT ROW 10.75 COL 30 COLON-ALIGNED
+     b-qltycert AT ROW 10.75 COL 82
+     v-alc-certif-path AT ROW 12.25 COL 30 COLON-ALIGNED
+     b-certif AT ROW 12.25 COL 82
+     v-alc-imp-name AT ROW 13.75 COL 42.5 COLON-ALIGNED NO-LABEL WIDGET-ID 10 NO-TAB-STOP 
+     v-alc-imp-type AT ROW 13.75 COL 25.5 COLON-ALIGNED WIDGET-ID 2
+     v-alc-imp-code AT ROW 13.75 COL 31.5 COLON-ALIGNED NO-LABEL WIDGET-ID 4
+     b-alc-imp AT ROW 13.75 COL 82 WIDGET-ID 6
      B-save AT ROW 1 COL 1
      B-cancel AT ROW 1 COL 11
      B-help AT ROW 1 COL 70.5
-/*     b-refAB AT ROW 5.5 COL 81*/
-/*     b-refB AT ROW 6.75 COL 81 WIDGET-ID 18*/
-     SPACE(5.11) SKIP(5.28)
+     b-grp-alc AT ROW 9.5 COL 82 WIDGET-ID 24
+     SPACE(3.49) SKIP(4.53)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Атрибуты алкогольной продукции"
@@ -378,6 +384,31 @@ DO:
     end.
     apply "entry" to v-alc-mark-name in frame {&frame-name}.
   end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-grp-alc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-grp-alc Dialog-Frame
+ON CHOOSE OF b-grp-alc IN FRAME Dialog-Frame
+DO:
+  define variable v-rid-list as character no-undo.
+  define variable p-OK         as logical no-undo.
+
+run ref/alc-type.w (input parparentproc
+                    , input "b-sel"
+                    , input-output v-rid-list
+                    ,  output p-ok
+                               ).   
+
+  if p-OK then do:
+      find first alc-type where v-rid-list = string( recid( alc-type ) ) no-lock no-error.
+      group-alc-prod = alc-type.alc-type-code. 
+    display group-alc-prod with frame {&frame-name}.
+  end.
+  apply "entry" to group-alc-prod in frame {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -699,14 +730,14 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-   DISPLAY code-egais group-alc-prod v-alc-ref-b-path v-alc-mark-name 
-          v-alc-bottling-date v-alc-ref-a-path v-alc-quality-certif-path 
-          v-alc-imp-name v-alc-certif-path v-alc-imp-type v-alc-imp-code 
+  DISPLAY v-alc-mark-name v-alc-bottling-date v-alc-ref-a-path v-alc-ref-b-path 
+          code-egais group-alc-prod v-alc-quality-certif-path v-alc-certif-path 
+          v-alc-imp-name v-alc-imp-type v-alc-imp-code 
       WITH FRAME Dialog-Frame.
-  ENABLE code-egais group-alc-prod v-alc-ref-b-path B-save B-cancel B-help 
-         v-alc-mark-name b-exmark v-alc-bottling-date b-bottling-date 
-         v-alc-ref-a-path  v-alc-quality-certif-path b-qltycert 
-         v-alc-certif-path b-certif v-alc-imp-code b-alc-imp 
+  ENABLE v-alc-mark-name b-exmark v-alc-bottling-date b-bottling-date 
+         v-alc-ref-a-path v-alc-ref-b-path code-egais group-alc-prod 
+         v-alc-quality-certif-path b-qltycert v-alc-certif-path b-certif 
+         v-alc-imp-code b-alc-imp B-save B-cancel B-help b-grp-alc 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -729,7 +760,7 @@ PROCEDURE MyEnable :
         v-alc-mark-code           = p-alc-mark-code
         v-alc-bottling-date       = p-alc-bottling-date
         v-alc-ref-a-path          = entry(1,p-alc-ref-ab-path,",")     
-        v-alc-ref-b-path          = entry(2,p-alc-ref-ab-path,",")  
+        v-alc-ref-b-path          = entry(2,p-alc-ref-ab-path,",")      when num-entries (p-alc-ref-ab-path) > 1
         code-egais                = entry(3,p-alc-ref-ab-path,",") when num-entries (p-alc-ref-ab-path) > 2
         group-alc-prod            = entry(4,p-alc-ref-ab-path,",") when num-entries (p-alc-ref-ab-path) > 3
         v-alc-quality-certif-path = p-alc-quality-certif-path
