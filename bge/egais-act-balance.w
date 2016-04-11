@@ -856,7 +856,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         if p-mode = {&update} then
         for each tt-gds-act no-lock :
             nn = nn + 1 .
-            find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code .
+            find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code no-error .
+            if not available buf_goods then do :
+                message "По алкогольному коду " tt-gds-act.alc-code " не найден товар из TH. Вероятно, кто-то удалил связку." view-as alert-box.
+                next. 
+            end.
             run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
                                             ,input (buffer buf_goods:handle)
                                             ,output v-gds-uniq-key-rec).
