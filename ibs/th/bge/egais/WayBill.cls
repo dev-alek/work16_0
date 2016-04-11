@@ -16,6 +16,7 @@ class ibs.th.bge.egais.WayBill inherits EGAISUTM:
   {cmp/str-glbl.i class}
   {ibs/th/bge/egais/wb-egais.i}
   { ref/extclass.i }
+  { gbl/color.i }
 
 &scop xml-act-1 '<?xml version="1.0" encoding="UTF-8"?>~
 <ns:Documents Version="1.0" ~
@@ -224,6 +225,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define private buffer buf_ext-classif   for ub.ext-classif.
   define private buffer X_ext-classif     for ub.ext-classif.
   define private buffer buf_country       for ub.country.
+  define private buffer buf_tt-wb-gds-EG  for tt-wb-gds-EG.
+  
   define private variable parameters     as character no-undo.
   define private variable inFileName     as character no-undo.
   define private variable inData         as character no-undo.
@@ -232,7 +235,9 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
   define private variable urlResp        as character no-undo.
   define private variable v-uniq-key-rec as character no-undo.
   define private variable nn             as integer   no-undo.
+  define private variable nnList         as integer   no-undo.
   define private variable extGdsObj      as class ExtGds no-undo.
+  define private variable extGdsValueObj as class ExtGdsValue no-undo.
   define private variable isForceAccept  as logical no-undo.
 
   define         variable v-FS-RAR       as character no-undo .
@@ -443,9 +448,25 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             end.
 
             for each tt-wb-gds-EG:
-              if extGdsObj:FindExtGds(tt-wb-gds-EG.alc-code)
-                then tt-wb-gds-EG.gds-code = extGdsObj:GdsCode.
-                else tt-wb-gds-EG.gds-code = ?.
+              extGdsObj:OpenQueryExtGds(0, tt-wb-gds-EG.alc-code).
+              if extGdsObj:NumBundles = 1
+                then do: 
+                  tt-wb-gds-EG.gds-code = extGdsObj:GetExtGdsValue():GdsCode.
+                  find first buf_tt-wb-gds-EG where buf_tt-wb-gds-EG.alc-code = tt-wb-gds-EG.alc-code and recid (buf_tt-wb-gds-EG) <> recid (tt-wb-gds-EG) no-error.
+                  if available (buf_tt-wb-gds-EG)
+                  then do:
+                    buf_tt-wb-gds-EG.color-sts = DARK_GREY_COLOR.
+                    tt-wb-gds-EG.color-sts = DARK_GREY_COLOR. 
+                  end.
+                end.
+                else do:
+                  if extGdsObj:NumBundles > 1
+                  then do: 
+                    assign tt-wb-gds-EG.gds-code = ?.
+                    tt-wb-gds-EG.color-sts = DARK_GREY_COLOR.
+                  end.
+                  else assign tt-wb-gds-EG.gds-code = 0 tt-wb-gds-EG.color-sts = RED_COLOR.
+                end.
             end.
 /*            v-uniq-key-rec = inWbIdentity.*/
             find first buf_clob-bind no-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-ref-b} no-error.
@@ -453,6 +474,23 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
             do:
               find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
               ParseResponse("", {&wb-refB}).
+              for each tt-wb-gds-EG where tt-wb-gds-EG.gds-code = ? :
+                nnList = lookup ( tt-wb-gds-EG.refB, buf_clob-bind.descr).
+                if nnList > 0
+                then do:
+                  extGdsObj:OpenQueryExtGds (integer (entry (nnList - 1, buf_clob-bind.descr)), tt-wb-gds-EG.alc-code).
+                  if extGdsObj:NumBundles > 0
+                  then do:
+                    tt-wb-gds-EG.gds-code = integer (entry (nnList - 1, buf_clob-bind.descr)).
+                  end. 
+                  else do:
+                    tt-wb-gds-EG.color-sts = RED_COLOR.
+                  end.
+                end.
+                else do:
+                  tt-wb-gds-EG.color-sts = DARK_GREY_COLOR.
+                end.
+              end.
             end.
             find first buf_clob-bind no-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-wb} no-error.
             
@@ -666,7 +704,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               create tt-wb-hndls. 
               assign
                 tt-wb-hndls.wb-date      = buf_trn-doc.doc-date
-                tt-wb-hndls.num          = buf_trn-doc.doc-code
+                tt-wb-hndls.num          = entry (2, buf_doc-attr.attr-value, {&delim-cmd})
                 tt-wb-hndls.trn-doc-code = buf_trn-doc.doc-code
                 tt-wb-hndls.cliname = buf_clients.obj-name
                 tt-wb-hndls.obj = buf_trn-doc.obj-type + string (buf_trn-doc.obj-code)
@@ -793,7 +831,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
                 StatusErr = true.
                 return ?.
               end.
-              extGdsObj:FindExtGds(entry (3, buf_parts.alc-ref-ab-path, ",")).
+              extGdsObj:OpenQueryExtGds(buf_gds.gds-code, entry (3, buf_parts.alc-ref-ab-path, ",")).
               find first ub.gds-dtl where 
                     ub.gds-dtl.doc-code = buf_doc-line.doc-code
                 and ub.gds-dtl.artic = buf_parts.artic
@@ -808,7 +846,7 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               create tt-wb-gds-EG.
               assign
                 tt-wb-gds-EG.Identity = string (ii)
-                tt-wb-gds-EG.gds-name = extGdsObj:FullNameGds
+                tt-wb-gds-EG.gds-name = extGdsObj:GetExtGdsValue():FullNameGds
                 tt-wb-gds-EG.gds-code = buf_gds.gds-code
                 tt-wb-gds-EG.qnty = buf_parts.cli-qnty
                 tt-wb-gds-EG.price = buf_doc-line.price-rubl when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} 
@@ -2163,8 +2201,8 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
     else do:
       if isForceAccept
       then do:
-        find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid). 
-        xml-cont = substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию") + {&xml-act-2}.
+        find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid) no-error. 
+        xml-cont = substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', (if available (buf_doc-attr) then buf_doc-attr.doc-code else string (time)), iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию") + {&xml-act-2}.
       end.
       else xml-cont = substitute ({&xml-act-1}, v-FS-RAR, 'Rejected', time, iso-date (date (now)), tt-wb-header.wbregid, "Отказ") + {&xml-act-2}.
       return xml-cont.
@@ -2251,15 +2289,18 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               sw:write-data-element ("pref:Capacity", string (tt-wb-gds-EG.ms-base)).
               sw:write-data-element ("pref:AlcVolume", string (tt-wb-gds-EG.proof)).
               sw:write-data-element ("pref:ProductVCode", tt-wb-gds-EG.alc-type-code).
-
-              if not extGdsObj:FindExtGds (tt-wb-gds-EG.alc-code)
+              
+              extGdsObj:OpenQueryExtGds (tt-wb-gds-EG.gds-code, tt-wb-gds-EG.alc-code).
+              if extGdsObj:NumBundles = 0
               then do:
                 StatusErr = true.
-                Msg = extGdsObj:ReturnMsg.
+                Msg = substitute ("Не найдена связка &1/&2. &3",tt-wb-gds-EG.gds-code, tt-wb-gds-EG.alc-code, extGdsObj:ReturnMsg).
                 return.
               end.
               
-              if extGdsObj:FullNameProd = ""
+              extGdsValueObj = extGdsObj:GetExtGdsValue().
+              
+              if extGdsValueObj:FullNameProd = ""
               then do:
                 StatusErr = true.
                 Msg = extGdsObj:ReturnMsg + " У товара неизвестен производитель из ЕГАИС - " + string (tt-wb-gds-EG.gds-code) + ". Выполните синхронизацию товаров.".
@@ -2267,31 +2308,31 @@ xmlns:wb= http://fsrar.ru/WEGAIS/TTNSingle>~
               end.
                             
               sw:start-element ("pref:Producer") .
-                  if not ( extGdsObj:INNProd = "" or extGdsObj:KPPProd = "")
+                  if not ( extGdsValueObj:INNProd = "" or extGdsValueObj:KPPProd = "")
                   then do:
-                    sw:write-data-element ("oref:INN",  extGdsObj:INNProd ).
-                    sw:write-data-element ("oref:KPP", extGdsObj:KPPProd ).
+                    sw:write-data-element ("oref:INN",  extGdsValueObj:INNProd ).
+                    sw:write-data-element ("oref:KPP", extGdsValueObj:KPPProd ).
                   end.
-                sw:write-data-element ("oref:ClientRegId", extGdsObj:CliRegIdProd ).
-                sw:write-data-element ("oref:FullName", extGdsObj:FullNameProd ).
+                sw:write-data-element ("oref:ClientRegId", extGdsValueObj:CliRegIdProd ).
+                sw:write-data-element ("oref:FullName", extGdsValueObj:FullNameProd ).
                 sw:start-element ("oref:address").
-                  sw:write-data-element ("oref:Country", extGdsObj:CountryProd ).
-                  sw:write-data-element ("oref:description", extGdsObj:DescrProd ).
+                  sw:write-data-element ("oref:Country", extGdsValueObj:CountryProd ).
+                  sw:write-data-element ("oref:description", extGdsValueObj:DescrProd ).
                 sw:end-element ("oref:address").
               sw:end-element ("pref:Producer") .
 
-              if not extGdsObj:FullNameImpor = "" then do:
+              if not extGdsValueObj:FullNameImpor = "" then do:
                 sw:start-element ("pref:Importer") .
-                  if not ( extGdsObj:INNImpor = "" or extGdsObj:KPPImpor = "")
+                  if not ( extGdsValueObj:INNImpor = "" or extGdsValueObj:KPPImpor = "")
                   then do:
-                    sw:write-data-element ("oref:INN",  extGdsObj:INNImpor ).
-                    sw:write-data-element ("oref:KPP", extGdsObj:KPPImpor ).
+                    sw:write-data-element ("oref:INN",  extGdsValueObj:INNImpor ).
+                    sw:write-data-element ("oref:KPP", extGdsValueObj:KPPImpor ).
                   end.
-                  sw:write-data-element ("oref:ClientRegId", extGdsObj:CliRegIdImpor ).
-                  sw:write-data-element ("oref:FullName", extGdsObj:FullNameImpor ).
+                  sw:write-data-element ("oref:ClientRegId", extGdsValueObj:CliRegIdImpor ).
+                  sw:write-data-element ("oref:FullName", extGdsValueObj:FullNameImpor ).
                   sw:start-element ("oref:address").
-                    sw:write-data-element ("oref:Country", extGdsObj:CountryImpor ).
-                    sw:write-data-element ("oref:description", extGdsObj:DescrImpor ).
+                    sw:write-data-element ("oref:Country", extGdsValueObj:CountryImpor ).
+                    sw:write-data-element ("oref:description", extGdsValueObj:DescrImpor ).
                   sw:end-element ("oref:address").
                 sw:end-element ("pref:Importer") .
               end.

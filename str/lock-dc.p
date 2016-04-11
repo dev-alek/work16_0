@@ -94,6 +94,7 @@ on error undo main-block, return error return-value
           and buf_chk-doc.d-card > '':U
       on error undo main-block, return error
       :
+        if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then NEXT .
         find first buf_dis-card no-lock
           where buf_dis-card.d-card = buf_chk-doc.d-card
           no-error .

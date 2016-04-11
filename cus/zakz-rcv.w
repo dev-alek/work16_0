@@ -377,6 +377,7 @@ DEFINE MENU M-print
        MENU-ITEM m_print1       LABEL "ТОРГ-26" ACCELERATOR "ALT-7"
        MENU-ITEM m_print2       LABEL "Печать по форме Поставщика" ACCELERATOR "ALT-8"
        MENU-ITEM m_print4       LABEL "Стандартная форма"
+       menu-item m_print5       label "Заказ с детализацией по объектам"
        RULE
        MENU-ITEM m_print3       LABEL "Выбор формы печати" ACCELERATOR "ALT-9"
  .

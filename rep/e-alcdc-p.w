@@ -956,30 +956,30 @@ for each obj-list no-lock:  /* По всем объектам */
           /* Получим производителя/импортера */
             ext-cl:Release_() .
             if num-entries(temp-parts.alc-ref-ab-path) = 4 and entry(3, temp-parts.alc-ref-ab-path) <> "" then do :
-                ext-cl:FindExtGds(entry(3, temp-parts.alc-ref-ab-path)) .                    
+                ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, temp-parts.alc-ref-ab-path)) .                    
             end.
             
-            if ext-cl:CliRegIdProd <> "" then do :
-                if ext-cl:CliRegIdImpor <> "" then do :
-                        if trim(ext-cl:CountryProd) = "643" /* Россия */
-                        or trim(ext-cl:CountryProd) = "051" /* Армения */
-                        or trim(ext-cl:CountryProd) = "398" /* Казахстан */
-                        or trim(ext-cl:CountryProd) = "417" /* Киргизия */
-                        or trim(ext-cl:CountryProd) = "112" /* Беларусь */
+            if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
+                if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
+                        if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "051" /* Армения */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "398" /* Казахстан */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "417" /* Киргизия */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "112" /* Беларусь */
                         then
                         assign
-                            imp-or-prod-type = ext-cl:CliRegIdProd
+                            imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                             imp-or-prod-code = 0
                         .
                         else
                         assign
-                            imp-or-prod-type = ext-cl:CliRegIdImpor
+                            imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdImpor
                             imp-or-prod-code = 0
                         .
                 end.
                 else
                 assign
-                    imp-or-prod-type = ext-cl:CliRegIdProd
+                    imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                     imp-or-prod-code = 0
                 .
             end.
@@ -1084,30 +1084,30 @@ for each obj-list no-lock:  /* По всем объектам */
               end. /* when {&prs} */
               
               otherwise do : /* egais */
-                    if ext-cl:CliRegIdImpor <> "" then do :
-                        if trim(ext-cl:CountryProd) = "643" /* Россия */
-                        or trim(ext-cl:CountryProd) = "051" /* Армения */
-                        or trim(ext-cl:CountryProd) = "398" /* Казахстан */
-                        or trim(ext-cl:CountryProd) = "417" /* Киргизия */
-                        or trim(ext-cl:CountryProd) = "112" /* Беларусь */
+                    if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
+                        if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "051" /* Армения */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "398" /* Казахстан */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "417" /* Киргизия */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "112" /* Беларусь */
                         then
                         assign
-                            part-1.producer-obj-name = ext-cl:FullNameProd
-                            part-1.producer-inn = ext-cl:INNProd
-                            part-1.producer-kpp = ext-cl:KPPProd
+                            part-1.producer-obj-name = ext-cl:GetExtGdsValue(1):FullNameProd
+                            part-1.producer-inn = ext-cl:GetExtGdsValue(1):INNProd
+                            part-1.producer-kpp = ext-cl:GetExtGdsValue(1):KPPProd
                         .
                         else
                         assign
-                            part-1.producer-obj-name = ext-cl:FullNameImpor
-                            part-1.producer-inn = ext-cl:INNImpor
-                            part-1.producer-kpp = ext-cl:KPPImpor
+                            part-1.producer-obj-name = ext-cl:GetExtGdsValue(1):FullNameImpor
+                            part-1.producer-inn = ext-cl:GetExtGdsValue(1):INNImpor
+                            part-1.producer-kpp = ext-cl:GetExtGdsValue(1):KPPImpor
                         . 
                     end.
                     else do :
                         assign
-                            part-1.producer-obj-name = ext-cl:FullNameProd
-                            part-1.producer-inn = ext-cl:INNProd
-                            part-1.producer-kpp = ext-cl:KPPProd
+                            part-1.producer-obj-name = ext-cl:GetExtGdsValue(1):FullNameProd
+                            part-1.producer-inn = ext-cl:GetExtGdsValue(1):INNProd
+                            part-1.producer-kpp = ext-cl:GetExtGdsValue(1):KPPProd
                         .
                     end.
               end. /* when 'egais' */
@@ -1180,30 +1180,30 @@ for each obj-list no-lock:  /* По всем объектам */
           /* Получим производителя/импортера */
             ext-cl:Release_() .
             if num-entries(temp-parts.alc-ref-ab-path) = 4 and entry(3, temp-parts.alc-ref-ab-path) <> "" then do :
-                ext-cl:FindExtGds(entry(3, temp-parts.alc-ref-ab-path)) .                    
+                ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, temp-parts.alc-ref-ab-path)) .                    
             end.
             
-            if ext-cl:CliRegIdProd <> "" then do :
-                if ext-cl:CliRegIdImpor <> "" then do :
-                        if trim(ext-cl:CountryProd) = "643" /* Россия */
-                        or trim(ext-cl:CountryProd) = "051" /* Армения */
-                        or trim(ext-cl:CountryProd) = "398" /* Казахстан */
-                        or trim(ext-cl:CountryProd) = "417" /* Киргизия */
-                        or trim(ext-cl:CountryProd) = "112" /* Беларусь */
+            if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
+                if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
+                        if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "051" /* Армения */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "398" /* Казахстан */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "417" /* Киргизия */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "112" /* Беларусь */
                         then
                         assign
-                            imp-or-prod-type = ext-cl:CliRegIdProd
+                            imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                             imp-or-prod-code = 0
                         .
                         else
                         assign
-                            imp-or-prod-type = ext-cl:CliRegIdImpor
+                            imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdImpor
                             imp-or-prod-code = 0
                         .
                 end.
                 else
                 assign
-                    imp-or-prod-type = ext-cl:CliRegIdProd
+                    imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                     imp-or-prod-code = 0
                 .
             end.
@@ -1308,30 +1308,30 @@ for each obj-list no-lock:  /* По всем объектам */
               end. /* when {&prs} */
               
               otherwise do : /* egais */
-                    if ext-cl:CliRegIdImpor <> "" then do :
-                        if trim(ext-cl:CountryProd) = "643" /* Россия */
-                        or trim(ext-cl:CountryProd) = "051" /* Армения */
-                        or trim(ext-cl:CountryProd) = "398" /* Казахстан */
-                        or trim(ext-cl:CountryProd) = "417" /* Киргизия */
-                        or trim(ext-cl:CountryProd) = "112" /* Беларусь */
+                    if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
+                        if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "051" /* Армения */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "398" /* Казахстан */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "417" /* Киргизия */
+                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "112" /* Беларусь */
                         then
                         assign
-                            part-1.producer-obj-name = ext-cl:FullNameProd
-                            part-1.producer-inn = ext-cl:INNProd
-                            part-1.producer-kpp = ext-cl:KPPProd
+                            part-1.producer-obj-name = ext-cl:GetExtGdsValue(1):FullNameProd
+                            part-1.producer-inn = ext-cl:GetExtGdsValue(1):INNProd
+                            part-1.producer-kpp = ext-cl:GetExtGdsValue(1):KPPProd
                         .
                         else
                         assign
-                            part-1.producer-obj-name = ext-cl:FullNameImpor
-                            part-1.producer-inn = ext-cl:INNImpor
-                            part-1.producer-kpp = ext-cl:KPPImpor
+                            part-1.producer-obj-name = ext-cl:GetExtGdsValue(1):FullNameImpor
+                            part-1.producer-inn = ext-cl:GetExtGdsValue(1):INNImpor
+                            part-1.producer-kpp = ext-cl:GetExtGdsValue(1):KPPImpor
                         . 
                     end.
                     else do :
                         assign
-                            part-1.producer-obj-name = ext-cl:FullNameProd
-                            part-1.producer-inn = ext-cl:INNProd
-                            part-1.producer-kpp = ext-cl:KPPProd
+                            part-1.producer-obj-name = ext-cl:GetExtGdsValue(1):FullNameProd
+                            part-1.producer-inn = ext-cl:GetExtGdsValue(1):INNProd
+                            part-1.producer-kpp = ext-cl:GetExtGdsValue(1):KPPProd
                         .
                     end.
               end. /* when 'egais' */
@@ -1399,30 +1399,30 @@ for each obj-list no-lock:  /* По всем объектам */
                     /* Получим производителя/импортера */
                     ext-cl:Release_() .
                     if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
-                        ext-cl:FindExtGds(entry(3, buf_parts.alc-ref-ab-path)) .                    
+                        ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, buf_parts.alc-ref-ab-path)) .                    
                     end.
                     
-                    if ext-cl:CliRegIdProd <> "" then do :
-                        if ext-cl:CliRegIdImpor <> "" then do :
-                                if trim(ext-cl:CountryProd) = "643" /* Россия */
-                                or trim(ext-cl:CountryProd) = "051" /* Армения */
-                                or trim(ext-cl:CountryProd) = "398" /* Казахстан */
-                                or trim(ext-cl:CountryProd) = "417" /* Киргизия */
-                                or trim(ext-cl:CountryProd) = "112" /* Беларусь */
+                    if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
+                        if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
+                                if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
+                                or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "051" /* Армения */
+                                or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "398" /* Казахстан */
+                                or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "417" /* Киргизия */
+                                or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "112" /* Беларусь */
                                 then
                                 assign
-                                    imp-or-prod-type = ext-cl:CliRegIdProd
+                                    imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                                     imp-or-prod-code = 0
                                 .
                                 else
                                 assign
-                                    imp-or-prod-type = ext-cl:CliRegIdImpor
+                                    imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdImpor
                                     imp-or-prod-code = 0
                                 .
                         end.
                         else
                         assign
-                            imp-or-prod-type = ext-cl:CliRegIdProd
+                            imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                             imp-or-prod-code = 0
                         .
                     end.
@@ -1529,30 +1529,30 @@ for each obj-list no-lock:  /* По всем объектам */
                         end. /* when {&prs} */
                         
                         otherwise do : /* egais */
-                            if ext-cl:CliRegIdImpor <> "" then do :
-                                if trim(ext-cl:CountryProd) = "643" /* Россия */
-                                or trim(ext-cl:CountryProd) = "051" /* Армения */
-                                or trim(ext-cl:CountryProd) = "398" /* Казахстан */
-                                or trim(ext-cl:CountryProd) = "417" /* Киргизия */
-                                or trim(ext-cl:CountryProd) = "112" /* Беларусь */
+                            if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
+                                if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
+                                or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "051" /* Армения */
+                                or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "398" /* Казахстан */
+                                or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "417" /* Киргизия */
+                                or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "112" /* Беларусь */
                                 then
                                 assign
-                                    part-1.producer-obj-name = ext-cl:FullNameProd
-                                    part-1.producer-inn = ext-cl:INNProd
-                                    part-1.producer-kpp = ext-cl:KPPProd
+                                    part-1.producer-obj-name = ext-cl:GetExtGdsValue(1):FullNameProd
+                                    part-1.producer-inn = ext-cl:GetExtGdsValue(1):INNProd
+                                    part-1.producer-kpp = ext-cl:GetExtGdsValue(1):KPPProd
                                 .
                                 else
                                 assign
-                                    part-1.producer-obj-name = ext-cl:FullNameImpor
-                                    part-1.producer-inn = ext-cl:INNImpor
-                                    part-1.producer-kpp = ext-cl:KPPImpor
+                                    part-1.producer-obj-name = ext-cl:GetExtGdsValue(1):FullNameImpor
+                                    part-1.producer-inn = ext-cl:GetExtGdsValue(1):INNImpor
+                                    part-1.producer-kpp = ext-cl:GetExtGdsValue(1):KPPImpor
                                 . 
                             end.
                             else do :
                                 assign
-                                    part-1.producer-obj-name = ext-cl:FullNameProd
-                                    part-1.producer-inn = ext-cl:INNProd
-                                    part-1.producer-kpp = ext-cl:KPPProd
+                                    part-1.producer-obj-name = ext-cl:GetExtGdsValue(1):FullNameProd
+                                    part-1.producer-inn = ext-cl:GetExtGdsValue(1):INNProd
+                                    part-1.producer-kpp = ext-cl:GetExtGdsValue(1):KPPProd
                                 .
                             end.
                         end. /* when 'egais' */
@@ -1568,13 +1568,13 @@ for each obj-list no-lock:  /* По всем объектам */
                     when "ie" then do: /* приход внешний */
                         if alc-goods.alpha1 <> "RU" then do: /* Импортный товар */
 
-                            if ext-cl:CliRegIdProd <> "" then do :
-                                if ext-cl:CliRegIdImpor <> "" then do :
-                                        if trim(ext-cl:CountryProd) = "643" /* Россия */
-                                        or trim(ext-cl:CountryProd) = "051" /* Армения */
-                                        or trim(ext-cl:CountryProd) = "398" /* Казахстан */
-                                        or trim(ext-cl:CountryProd) = "417" /* Киргизия */
-                                        or trim(ext-cl:CountryProd) = "112" /* Беларусь */
+                            if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
+                                if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
+                                        if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
+                                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "051" /* Армения */
+                                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "398" /* Казахстан */
+                                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "417" /* Киргизия */
+                                        or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "112" /* Беларусь */
                                         then
                                         assign
                                             part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10

@@ -62,15 +62,16 @@ define temp-table tt-gds-act
 .
 
 define {1} {2} temp-table tt-marks
-    field num           as character            label "№ акта"
-    field gds-part-position_   as integer
-    field mark          as character            label "Марка"       format "X(100)"
-    field new_          as logical
-    field gds-code      like ub.goods.gds-code              LABEL "Код товара"                 
-    field gds-name      as character            LABEL "Наименование"   FORMAT "X(30)" 
-    field alc-code      as character            LABEL "Алк. код"       FORMAT "X(20)"     
-    field impor-full-name      as character            LABEL "Импортер"       FORMAT "X(30)" 
+    field num                 as character            label "№ акта"
+    field gds-part-position_  as integer
+    field mark                as character            label "Марка"          format "X(100)"
+    field new_                as logical
+    field gds-code            like ub.goods.gds-code  LABEL "Код товара"                 
+    field gds-name            as character            LABEL "Наименование"   FORMAT "X(30)" 
+    field alc-code            as character            LABEL "Алк. код"       FORMAT "X(20)"     
+    field impor-full-name     as character            LABEL "Импортер"       FORMAT "X(30)" 
     field prod-full-name      as character            LABEL "Производитель"
+    field flag                as logical              label "T"
     index pi as primary unique
         mark
 .

@@ -33,19 +33,19 @@ define input parameter p-alc-code as character   no-undo.
 
 /*define variable v-proc-name-err    as character    no-undo.*/
 
-define variable l-error as logical no-undo. /* Есть ли ошибки */
-define variable v-user-action    as character no-undo.
-define variable v-printed        as logical   no-undo.
+define variable l-error         as logical   no-undo. /* Есть ли ошибки */
+define variable v-user-action   as character no-undo.
+define variable v-printed       as logical   no-undo.
 define variable v-proc-name-err as character no-undo initial 'impmark.err'. /* Имя лога */
 define variable v-proc-name-alc as character no-undo initial 'alc-code.txt'. /* Имя лога */
-def var ProcFindGds as class extgds.
-define variable browse-br-marks       as handle no-undo.
-define variable bcol                  as handle no-undo.
-define variable bcol1                 as handle no-undo.
-define variable bcol2                 as handle no-undo.
-define variable bcol3                 as handle no-undo.
-define variable bcol4                 as handle no-undo.
-define variable bcol5                 as handle no-undo.
+def    var      extGdsObj       as class     extgds.
+define variable browse-br-marks as handle    no-undo.
+define variable bcol            as handle    no-undo.
+define variable bcol1           as handle    no-undo.
+define variable bcol2           as handle    no-undo.
+define variable bcol3           as handle    no-undo.
+define variable bcol4           as handle    no-undo.
+define variable bcol5           as handle    no-undo.
 
 /* Local Variable Definitions ---                                       */
 
@@ -67,7 +67,7 @@ define variable vss-description as character no-undo init "Акцизные марки".
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-define temp-table tt-del-marks like tt-marks .
+  define temp-table tt-del-marks like tt-marks .
 
 &ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
@@ -90,50 +90,62 @@ define temp-table tt-del-marks like tt-marks .
 
 
 
-/* ***********************  Control Definitions  ********************** */
+  /* ***********************  Control Definitions  ********************** */
 
-/* Define a dialog box                                                  */
+  /* Define a dialog box                                                  */
 
-/* Definitions of the field level widgets                               */
-DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
-     LABEL "Отмена" 
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+  /* Definitions of the field level widgets                               */
+  DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
+    LABEL "Отмена" 
+    SIZE 10 BY 1
+    BGCOLOR 8 .
 
-DEFINE BUTTON Btn_OK AUTO-GO 
-     LABEL "Ввод" 
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+  DEFINE BUTTON Btn_OK AUTO-GO 
+    LABEL "Ввод" 
+    SIZE 10 BY 1
+    BGCOLOR 8 .
      
-DEFINE BUTTON Btn_del 
-     LABEL "Удалить" 
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+  DEFINE BUTTON Btn_EXIT AUTO-GO 
+    LABEL "Выход" 
+    SIZE 10 BY 1
+    BGCOLOR 8 .
 
-DEFINE BUTTON Btn_imp 
-     LABEL "Импорт" 
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+  DEFINE BUTTON Btn_del 
+    LABEL "Удалить" 
+    SIZE 10 BY 1
+    BGCOLOR 8 .
+
+  DEFINE BUTTON Btn_imp 
+    LABEL "Импорт" 
+    SIZE 10 BY 1
+    BGCOLOR 8 .
           
-define variable v-mark as character format "X(255)" view-as fill-in size 80 by 1 label "Марка" .
+  DEFINE BUTTON Btn_goods 
+    LABEL "Товары" 
+    SIZE 10 BY 1
+    BGCOLOR 8 .
+     
+  define variable v-mark as character format "X(255)" view-as fill-in size 80 by 1 label "Марка" .
 
-define variable v-gds-code as integer    no-undo .
-define variable v-gds-name as character   no-undo .
-define variable v-alc-code as character   no-undo .
-define variable v-error-lang as logical   no-undo .
-define stream str-err .
-define stream str-alc .
+  define variable v-gds-code    like ub.goods.gds-code     no-undo .
+  define variable v-gds-name    as character    no-undo .
+  define variable v-alc-code    as character    no-undo .
+  define variable v-error-lang  as logical      no-undo .
+  define variable sort-column-name as character no-undo .
+  define stream str-err .
+  define stream str-alc .
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY br-marks FOR 
-      tt-marks SCROLLING.
+  DEFINE QUERY br-marks FOR 
+    tt-marks SCROLLING.
 &ANALYZE-RESUME
 
-/* Browse definitions                                                   */
-DEFINE BROWSE br-marks
+  /* Browse definitions                                                   */
+  DEFINE BROWSE br-marks
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-marks Dialog-Frame _FREEFORM
-  QUERY br-marks  DISPLAY
+    QUERY br-marks  DISPLAY
+    (IF tt-marks.flag THEN "+":U ELSE "-":U) FORMAT "x(1)":U COLUMN-LABEL "Т"
     tt-marks.mark    
     WIDTH 40
     tt-marks.alc-code 
@@ -152,20 +164,22 @@ DEFINE BROWSE br-marks
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 107 BY 20.2 FIT-LAST-COLUMN.
-/* ************************  Frame Definitions  *********************** */
+  /* ************************  Frame Definitions  *********************** */
 
-DEFINE FRAME Dialog-Frame
-     Btn_OK AT ROW 1.24 COL 2
-     Btn_del at row 1.24 col 22
-     Btn_imp at row 1.24 col 32
-     Btn_Cancel AT ROW 1.24 COL 12
-     v-mark at row 2.7 col 2 
-     br-marks at row 4 col 2
-     SPACE(1) SKIP(0.3)
+  DEFINE FRAME Dialog-Frame
+    Btn_OK AT ROW 1.24 COL 2
+    Btn_EXIT AT ROW 1.24 COL 2
+    Btn_del at row 1.24 col 22
+    Btn_imp at row 1.24 col 32
+    Btn_goods at row 1.24 col 42
+    Btn_Cancel AT ROW 1.24 COL 12
+    v-mark at row 2.7 col 2 
+    br-marks at row 4 col 2
+    SPACE(1) SKIP(0.3)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Ввод Акцизных марок"
-         DEFAULT-BUTTON Btn_OK CANCEL-BUTTON Btn_Cancel WIDGET-ID 100.
+    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+    TITLE "Ввод Акцизных марок"
+    DEFAULT-BUTTON Btn_OK CANCEL-BUTTON Btn_Cancel WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -191,6 +205,7 @@ PROCEDURE proc-choose-file :
   end.
   DEFINE VARIABLE vCh AS CHARACTER   NO-UNDO.
   DEFINE VARIABLE vLg AS LOGICAL     NO-UNDO.
+  def var ii as int.
   SYSTEM-DIALOG GET-FILE vCh
     MUST-EXIST
     TITLE "Выбор файла"
@@ -211,63 +226,79 @@ PROCEDURE proc-choose-file :
         tt-marks.mark = v-mark .
                   
         run ProcAlcCode  IN THIS-PROCEDURE (input v-mark, output v-alc-code, output l-error, output v-error-lang ) no-error.
-        if v-error-lang then do:
-            put stream str-err unformatted
+        if v-error-lang then 
+        do:
+          put stream str-err unformatted
             "Не корректно считана акцизная марка, акцизная марка содержит не допустимые символы или русские буквы."
-             skip .
+            skip .
           v-alc-code = "".
           l-error = yes .
         end.  
-      else do:
-        ProcFindGds = new ExtGds (yes).
-        ProcFindGds:FindExtGds(v-alc-code).
-        if ProcFindGds:GdsCode = 0 then do:
-                    put stream str-err unformatted
-                    substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)
-                    skip.
+        else 
+        do:
+          extGdsObj = new ExtGds (true).
+          extGdsObj:OpenQueryExtGds(0, v-alc-code).
+          if extGdsObj:NumBundles = 0 then 
+          do:
+            put stream str-err unformatted
+              substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)
+              skip.
             l-error = yes .    
-        if p-num = "" and p-position = 0 then do:
-          find first tt-marks where tt-marks.mark = v-mark no-error.
-                if not available tt-marks then do:
-                    create tt-marks .
-                end.    
-                    assign
-                      tt-marks.mark               = v-mark 
-                      tt-marks.new_               = true
-                      tt-marks.alc-code           = ProcFindGds:AlcCode 
-                    .
-        end.          
-        end.
-        else do:
-           find first tt-marks where tt-marks.mark = v-mark no-error.
-                if not available tt-marks then do:
-                    create tt-marks .
-                end.    
-                    assign
-                      tt-marks.num                = p-num
-                      tt-marks.gds-part-position_ = p-position 
-                      tt-marks.mark               = v-mark 
-                      tt-marks.new_               = true
-                      tt-marks.gds-code           = ProcFindGds:GdsCode
-                      tt-marks.alc-code           = ProcFindGds:AlcCode 
-                      tt-marks.gds-name           = ProcFindGds:FullNameGds 
-                      tt-marks.prod-full-name     = ProcFindGds:FullNameProd
-                      tt-marks.impor-full-name    = ProcFindGds:FullNameImpor
-                    .
-              if p-num = "" and p-position = 0 then do:
-                put stream str-alc unformatted
-                    substitute  ("Информация по марке: &1:", v-mark) skip .
-                put stream str-alc unformatted
-                    substitute  ("&1 &2 &3 &4 &5 &6 &7 &8 &9", ProcFindGds:AlcCode, ProcFindGds:GdsCode, ProcFindGds:FullNameGds, 
-                                                              ProcFindGds:CliRegIdProd, ProcFindGds:FullNameProd, ProcFindGds:INNProd,
-                                                              ProcFindGds:KPPProd, ProcFindGds:CountryProd, ProcFindGds:CliRegIdImpor).
-                put stream str-alc unformatted
-                    substitute  ("&1 &2 &3 &4", ProcFindGds:FullNameImpor, ProcFindGds:INNImpor, ProcFindGds:KPPImpor, ProcFindGds:CountryImpor) skip .                                           
-                      
-              end.
-            end.    
+            if p-num = "" and p-position = 0 then 
+            do:
+              find first tt-marks where tt-marks.mark = v-mark no-error.
+              if not available tt-marks then 
+              do:
+                create tt-marks .
+              end.    
+              assign
+                tt-marks.mark               = v-mark 
+                tt-marks.new_               = true
+                tt-marks.alc-code           = v-alc-code . 
+            end.          
+          end.
+          else 
+          do:
           
-         end.
+            find first tt-marks where tt-marks.mark = v-mark no-error.
+            if not available tt-marks then 
+            do:
+              create tt-marks .
+            end.    
+            assign
+              tt-marks.num                = p-num
+              tt-marks.gds-part-position_ = p-position 
+              tt-marks.mark               = v-mark 
+              tt-marks.new_               = true
+              tt-marks.gds-code           = extGdsObj:GetExtGdsValue(1):GdsCode
+              tt-marks.alc-code           = v-alc-code
+              /*                      tt-marks.gds-name           = extGdsObj:GetExtGdsValue(1):FullNameGds*/
+              tt-marks.prod-full-name     = extGdsObj:GetExtGdsValue(1):FullNameProd
+              tt-marks.impor-full-name    = extGdsObj:GetExtGdsValue(1):FullNameImpor
+              .
+            v-gds-code = extGdsObj:GetExtGdsValue(1):GdsCode .
+            find first ub.goods where ub.goods.gds-code = v-gds-code no-error.
+            if available ub.goods then tt-marks.gds-name = ub.goods.gds-name .      
+            if extGdsObj:NumBundles > 1 then tt-marks.flag = yes .
+            if p-num = "" and p-position = 0 then 
+            do:
+                
+              put stream str-alc unformatted
+                substitute  ("Информация по марке: &1:", v-mark) skip .
+              do ii = 1 to extGdsObj:NumBundles:
+                find first ub.goods where ub.goods.gds-code = v-gds-code no-error.
+                if available ub.goods then v-gds-name = ub.goods.gds-name .
+                put stream str-alc unformatted
+                  substitute  ("&1 &2 &3 &4 &5 &6 &7 &8 &9",extGdsObj:GetExtGdsValue(ii):AlcCode, extGdsObj:GetExtGdsValue(ii):GdsCode, v-gds-name, 
+                  extGdsObj:GetExtGdsValue(ii):CliRegIdProd, extGdsObj:GetExtGdsValue(ii):FullNameProd, extGdsObj:GetExtGdsValue(ii):INNProd,
+                  extGdsObj:GetExtGdsValue(ii):KPPProd, extGdsObj:GetExtGdsValue(ii):CountryProd, extGdsObj:GetExtGdsValue(ii):CliRegIdImpor).
+                put stream str-alc unformatted
+                  substitute  ("&1 &2 &3 &4", extGdsObj:GetExtGdsValue(ii):FullNameImpor, extGdsObj:GetExtGdsValue(ii):INNImpor, extGdsObj:GetExtGdsValue(ii):KPPImpor, extGdsObj:GetExtGdsValue(ii):CountryImpor) skip .                                           
+              end.      
+            end.
+          end.    
+          
+        end.
     
       end.
       
@@ -277,30 +308,34 @@ PROCEDURE proc-choose-file :
     output stream str-alc close.
     output stream str-err close.
     
-           if l-error then do: 
-            if search (v-proc-name-err) <> ? then 
-            do:
-              run gbl/prnfilen.w
-                (input  substitute ("Не все марки были загружены")
-                ,input  0
-                ,input  v-proc-name-err
-                ,input  7
-                ,output v-user-action
-                ,output v-printed
-                ).
-            end.
-            end.
-            else do:
-              if p-num = "" and p-position = 0 then do: 
-              message substitute("Импорт акцизных марок завершен успешно и выгружены в &2.",v-proc-name-alc)
-              view-as alert-box.
-              end.
-              else do:
-              message substitute("Импорт акцизных марок завершен успешно.")
-              view-as alert-box.
-              end.  
-            end.  
-delete object ProcFindGds .
+    if l-error then 
+    do: 
+      if search (v-proc-name-err) <> ? then 
+      do:
+        run gbl/prnfilen.w
+          (input  substitute ("Не все марки были загружены")
+          ,input  0
+          ,input  v-proc-name-err
+          ,input  7
+          ,output v-user-action
+          ,output v-printed
+          ).
+      end.
+    end.
+    else 
+    do:
+      if p-num = "" and p-position = 0 then 
+      do: 
+        message substitute("Импорт акцизных марок завершен успешно и выгружены в &2.",v-proc-name-alc)
+          view-as alert-box.
+      end.
+      else 
+      do:
+        message substitute("Импорт акцизных марок завершен успешно.")
+          view-as alert-box.
+      end.  
+    end.  
+    delete object extGdsObj .
   END.
   
   else os-delete value(v-proc-name-err). /* Если нет - удаляем лог */
@@ -314,11 +349,11 @@ END PROCEDURE.
 /* ***********  Runtime Attributes and AppBuilder Settings  *********** */
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
-/* SETTINGS FOR DIALOG-BOX Dialog-Frame
-   FRAME-NAME                                                           */
-ASSIGN 
-       FRAME Dialog-Frame:SCROLLABLE       = FALSE
-       FRAME Dialog-Frame:HIDDEN           = TRUE.
+  /* SETTINGS FOR DIALOG-BOX Dialog-Frame
+     FRAME-NAME                                                           */
+  ASSIGN 
+    FRAME Dialog-Frame:SCROLLABLE       = FALSE
+    FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -331,181 +366,245 @@ ASSIGN
 
 &Scoped-define SELF-NAME v-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark Dialog-Frame
-ON return OF v-mark in FRAME Dialog-Frame /* Ввод марок */
-DO:
+  ON return OF v-mark in FRAME Dialog-Frame /* Ввод марок */
+    DO:
 
-  define variable v-error as logical no-undo init no.
-  output stream str-err to value(v-proc-name-err) append.
-  output stream str-alc to value(v-proc-name-alc) append.
-    assign v-mark = v-mark:screen-value .
-    RUN ProcAlcCode IN THIS-PROCEDURE (input v-mark, output v-alc-code, output l-error, output v-error-lang) no-error.
-      if v-error-lang then do:
-            message "Не корректно считана акцизная марка, перед считыванием переключите клавиатуру на английскую раскладку."
-      view-as alert-box.
-      put stream str-err unformatted
-            "Не корректно считана акцизная марка, акцизная марка содержит не допустимые символы или русские буквы."
-             skip .
+      define variable v-error as logical no-undo init no.
+      output stream str-err to value(v-proc-name-err) append.
+      output stream str-alc to value(v-proc-name-alc) append.
+      def var ii as int.
       assign 
-        v-mark = ""
-        v-mark:screen-value = ""
-        .
-      end.
-      else do:
-      if l-error then do:
-        message substitute ("Алког. код не преобразовывается в десятичную систему из акцизной марки: &1", v-mark)
-        view-as alert-box.
-        v-alc-code = "".
+        v-mark = v-mark:screen-value .
+      RUN ProcAlcCode IN THIS-PROCEDURE (input v-mark, output v-alc-code, output l-error, output v-error-lang) no-error.
+      if v-error-lang then 
+      do:
+        message "Не корректно считана акцизная марка, перед считыванием переключите клавиатуру на английскую раскладку."
+          view-as alert-box.
         put stream str-err unformatted
-            substitute ("Алког. код не преобразовывается в десятичную систему из акцизной марки: &1", v-mark)
-             skip .
+          "Не корректно считана акцизная марка, акцизная марка содержит не допустимые символы или русские буквы."
+          skip .
+        assign 
+          v-mark = ""
+          v-mark:screen-value = ""
+          .
       end.
-      else do:
-        ProcFindGds = new ExtGds (yes).
-        ProcFindGds:FindExtGds(v-alc-code).
-        if ProcFindGds:GdsCode = 0 then do:
-                    message substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)
-                    view-as alert-box.
-                    put stream str-err unformatted
-             substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)
-             skip .
-        if p-num = "" and p-position = 0 then do:
-          find first tt-marks where tt-marks.mark = v-mark no-error.
-                if not available tt-marks then do:
-                    create tt-marks .
-                end.    
-                    assign
-                      tt-marks.mark               = v-mark 
-                      tt-marks.new_               = true
-                      tt-marks.alc-code           = ProcFindGds:AlcCode 
-                    .
+      else 
+      do:
+        if l-error then 
+        do:
+          message substitute ("Алког. код не преобразовывается в десятичную систему из акцизной марки: &1", v-mark)
+            view-as alert-box.
+          v-alc-code = "".
+          put stream str-err unformatted
+            substitute ("Алког. код не преобразовывается в десятичную систему из акцизной марки: &1", v-mark)
+            skip .
         end.
-        end.
-        else do:
-          if p-alc-code <> "" and p-alc-code <> ProcFindGds:AlcCode then do :
-              message "Не тот товар! Вы вводите марки для алк. кода " + p-alc-code skip "Алк. код в марке - " ProcFindGds:AlcCode view-as alert-box .
+        else 
+        do:
+          extGdsObj = new ExtGds (true).
+          extGdsObj:OpenQueryExtGds(0, v-alc-code).
+          if extGdsObj:NumBundles = 0 then 
+          do:
+            message substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)
+              view-as alert-box.
+            put stream str-err unformatted
+              substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)
+              skip .
+            if p-num = "" and p-position = 0 then 
+            do:
+              find first tt-marks where tt-marks.mark = v-mark no-error.
+              if not available tt-marks then 
+              do:
+                create tt-marks .
+              end.    
+              assign
+                tt-marks.mark               = v-mark 
+                tt-marks.new_               = true
+                tt-marks.alc-code           = v-alc-code 
+                .
+            end.
           end.
-          if (p-alc-code <> "" and p-alc-code = ProcFindGds:AlcCode) or p-alc-code = "" then do:
-           find first tt-marks where tt-marks.mark = v-mark no-error.
-                if not available tt-marks then do:
-                    create tt-marks .
-                end.    
-                    assign
-                      tt-marks.num                = p-num
-                      tt-marks.gds-part-position_ = p-position 
-                      tt-marks.mark               = v-mark 
-                      tt-marks.new_               = true
-                      tt-marks.gds-code           = ProcFindGds:GdsCode
-                      tt-marks.alc-code           = ProcFindGds:AlcCode 
-                      tt-marks.gds-name           = ProcFindGds:FullNameGds 
-                      tt-marks.prod-full-name     = ProcFindGds:FullNameProd
-                      tt-marks.impor-full-name    = ProcFindGds:FullNameImpor
-                    .
-              if p-num = "" and p-position = 0 then do:
-                put stream str-alc unformatted
-                    substitute  ("Информация по марке: &1:", v-mark) skip .
-                put stream str-alc unformatted
-                    substitute  ("&1 &2 &3 &4 &5 &6 &7 &8 &9", ProcFindGds:AlcCode, ProcFindGds:GdsCode, ProcFindGds:FullNameGds, 
-                                                              ProcFindGds:CliRegIdProd, ProcFindGds:FullNameProd, ProcFindGds:INNProd,
-                                                              ProcFindGds:KPPProd, ProcFindGds:CountryProd, ProcFindGds:CliRegIdImpor).
-                put stream str-alc unformatted
-                    substitute  ("&1 &2 &3 &4", ProcFindGds:FullNameImpor, ProcFindGds:INNImpor, ProcFindGds:KPPImpor, ProcFindGds:CountryImpor) skip .                                           
-                      
+          else 
+          do:
+            if p-alc-code <> "" and p-alc-code <> extGdsObj:GetExtGdsValue(1):AlcCode then 
+            do :
+              message "Не тот товар! Вы вводите марки для алк. кода " + p-alc-code skip "Алк. код в марке - " extGdsObj:GetExtGdsValue(1):AlcCode view-as alert-box .
+            end.
+            if (p-alc-code <> "" and p-alc-code = extGdsObj:GetExtGdsValue(1):AlcCode) or p-alc-code = "" then 
+            do:
+              find first tt-marks where tt-marks.mark = v-mark no-error.
+              if not available tt-marks then 
+              do:
+                create tt-marks .
+              end.    
+              assign
+                tt-marks.num                = p-num
+                tt-marks.gds-part-position_ = p-position 
+                tt-marks.mark               = v-mark 
+                tt-marks.new_               = true
+                tt-marks.gds-code           = extGdsObj:GetExtGdsValue(1):GdsCode
+                tt-marks.alc-code           = extGdsObj:GetExtGdsValue(1):AlcCode 
+                /*                tt-marks.gds-name           = extGdsObj:GetExtGdsValue(1):FullNameGds*/
+                tt-marks.prod-full-name     = extGdsObj:GetExtGdsValue(1):FullNameProd
+                tt-marks.impor-full-name    = extGdsObj:GetExtGdsValue(1):FullNameImpor
+                .
+              v-gds-code = extGdsObj:GetExtGdsValue(1):GdsCode .
+              find first ub.goods where ub.goods.gds-code = v-gds-code no-error.
+              if available ub.goods then tt-marks.gds-name = ub.goods.gds-name .
+              if extGdsObj:NumBundles > 1 then tt-marks.flag = yes .
+              if p-num = "" and p-position = 0 then 
+              do:
+                do ii = 1 to extGdsObj:NumBundles:
+                  find first ub.goods where ub.goods.gds-code = v-gds-code no-error.
+                  if available ub.goods then v-gds-name = ub.goods.gds-name .    
+                  put stream str-alc unformatted
+                    substitute  ("&1 &2 &3 &4 &5 &6 &7 &8 &9",extGdsObj:GetExtGdsValue(ii):AlcCode, extGdsObj:GetExtGdsValue(ii):GdsCode, v-gds-name, 
+                    extGdsObj:GetExtGdsValue(ii):CliRegIdProd, extGdsObj:GetExtGdsValue(ii):FullNameProd, extGdsObj:GetExtGdsValue(ii):INNProd,
+                    extGdsObj:GetExtGdsValue(ii):KPPProd, extGdsObj:GetExtGdsValue(ii):CountryProd, extGdsObj:GetExtGdsValue(ii):CliRegIdImpor).
+                  put stream str-alc unformatted
+                    substitute  ("&1 &2 &3 &4", extGdsObj:GetExtGdsValue(ii):FullNameImpor, extGdsObj:GetExtGdsValue(ii):INNImpor, extGdsObj:GetExtGdsValue(ii):KPPImpor, extGdsObj:GetExtGdsValue(ii):CountryImpor) skip .                                           
+                end.         
               end.    
             end.    
+          end.
+          delete object extGdsObj .
         end.
-          delete object ProcFindGds .
-         end.
-         open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
+        open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
          
-        assign v-mark:screen-value = "" .
+        assign 
+          v-mark:screen-value = "" .
         assign v-mark .
         apply "entry" to v-mark in FRAME {&FRAME-NAME}.
-        end.
-    output stream str-alc close.
-    output stream str-err close.            
+      end.
+      output stream str-alc close.
+      output stream str-err close.            
 
-END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Ввод марок */
-DO:
-  APPLY "END-ERROR":U TO SELF.
-END.
+  ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Ввод марок */
+    DO:
+      APPLY "END-ERROR":U TO SELF.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
          
-          ON ROW-DISPLAY OF br-marks IN FRAME Dialog-Frame
-          DO:
-if p-num = "" and p-position = 0 then do:
-            if tt-marks.gds-code = 0 then do:
-                tt-marks.gds-code:BGCOLOR in browse br-marks = YELLOW_COLOR.
-                tt-marks.alc-code:BGCOLOR in browse br-marks = YELLOW_COLOR.
-                tt-marks.mark:BGCOLOR in browse br-marks = YELLOW_COLOR.
-                tt-marks.gds-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
-                tt-marks.prod-full-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
-                tt-marks.impor-full-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
-            end.
-end.          
-          END.
+  ON ROW-DISPLAY OF br-marks IN FRAME Dialog-Frame
+    DO:
+      if p-num = "" and p-position = 0 then 
+      do:
+        if tt-marks.gds-code = 0 then 
+        do:
+          tt-marks.gds-code:BGCOLOR in browse br-marks = YELLOW_COLOR.
+          tt-marks.alc-code:BGCOLOR in browse br-marks = YELLOW_COLOR.
+          tt-marks.mark:BGCOLOR in browse br-marks = YELLOW_COLOR.
+          tt-marks.gds-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
+          tt-marks.prod-full-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
+          tt-marks.impor-full-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
+        end.
+        if tt-marks.flag = yes then 
+        do:
+          tt-marks.gds-code:BGCOLOR in browse br-marks = RED_COLOR.
+        /*                tt-marks.alc-code:BGCOLOR in browse br-marks = RED_COLOR.       */
+        /*                tt-marks.mark:BGCOLOR in browse br-marks = RED_COLOR.           */
+        /*                tt-marks.gds-name:BGCOLOR in browse br-marks = RED_COLOR.       */
+        /*                tt-marks.prod-full-name:BGCOLOR in browse br-marks = RED_COLOR. */
+        /*                tt-marks.impor-full-name:BGCOLOR in browse br-marks = RED_COLOR.*/
+        end.            
+      end.          
+    END.
 &Scoped-define SELF-NAME Btn_Cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel Dialog-Frame
-ON choose OF Btn_Cancel in FRAME Dialog-Frame /* Ввод марок */
-DO:
-    for each tt-marks exclusive-lock where tt-marks.new_ :
+  ON choose OF Btn_Cancel in FRAME Dialog-Frame /* Ввод марок */
+    DO:
+      for each tt-marks exclusive-lock where tt-marks.new_ :
         delete tt-marks .
-    end.
-    for each tt-del-marks :
+      end.
+      for each tt-del-marks :
         create tt-marks.
         buffer-copy tt-del-marks to tt-marks .
-    end.
-END.
+      end.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &Scoped-define SELF-NAME Btn_ok
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_ok Dialog-Frame
-ON choose OF Btn_ok in FRAME Dialog-Frame /* Ввод марок */
-DO:
-    for each tt-marks exclusive-lock :
-/*      RUN ProcAlcCode IN THIS-PROCEDURE (input tt-marks.mark, output v-alc-code).*/
-      assign tt-marks.new_ = false .
-    end.
-END.
+  ON choose OF Btn_ok in FRAME Dialog-Frame /* Ввод марок */
+    DO:
+      for each tt-marks exclusive-lock :
+        /*      RUN ProcAlcCode IN THIS-PROCEDURE (input tt-marks.mark, output v-alc-code).*/
+        assign 
+          tt-marks.new_ = false .
+      end.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &Scoped-define SELF-NAME Btn_del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_del Dialog-Frame
-ON choose OF Btn_del in FRAME Dialog-Frame /* удалить */
-DO:
-    if not available tt-marks then return no-apply .
-    create tt-del-marks.
-    buffer-copy tt-marks to tt-del-marks .
-    delete tt-marks .
-    open query br-marks for each tt-marks where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position.
-END.
+  ON choose OF Btn_del in FRAME Dialog-Frame /* удалить */
+    DO:
+      if not available tt-marks then return no-apply .
+      create tt-del-marks.
+      buffer-copy tt-marks to tt-del-marks .
+      delete tt-marks .
+      open query br-marks for each tt-marks where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &Scoped-define SELF-NAME Btn_imp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_imp Dialog-Frame
-ON choose OF Btn_imp in FRAME Dialog-Frame /* удалить */
-DO:
-  run proc-choose-file no-error .
-  open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
-    assign v-mark:screen-value = "" .
-    assign v-mark .
-    apply "entry" to v-mark in FRAME {&FRAME-NAME}.
-END.
+  ON choose OF Btn_imp in FRAME Dialog-Frame /* удалить */
+    DO:
+      run proc-choose-file no-error .
+      open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
+      assign 
+        v-mark:screen-value = "" .
+      assign v-mark .
+      apply "entry" to v-mark in FRAME {&FRAME-NAME}.
+    END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_imp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_imp Dialog-Frame
+  ON choose OF Btn_goods in FRAME Dialog-Frame /* удалить */
+    DO:
+      define variable v-gds-code like tt-marks.gds-code no-undo .
+      define variable v-prod-full-name as character no-undo .
+      define variable v-import-full-name as character no-undo .
+      
+      if available tt-marks then 
+      do:
+        run bge/egais-goods-mark.w ( input tt-marks.alc-code, output v-gds-code, output v-gds-name, output v-prod-full-name, output v-import-full-name )  .  
+        if v-gds-code <> 0 then 
+        do:
+          assign
+            tt-marks.gds-code = v-gds-code
+            tt-marks.gds-name = v-gds-name
+            tt-marks.prod-full-name = v-prod-full-name
+            tt-marks.impor-full-name = v-import-full-name
+            .
+        end.   
+        /*  open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .*/
+        Br-marks:refresh() in frame {&frame-name} .
+      end.
+      else
+        message "Не выбран алког. код"
+          view-as alert-box.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -515,24 +614,55 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
-/* ***************************  Main Block  *************************** */
+  /* ***************************  Main Block  *************************** */
 
-/* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
-IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
-THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+  /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
+  IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
+    THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 
 
-/* Now enable the interface and wait for the exit condition.            */
-/* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
-MAIN-BLOCK:
-DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
-   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-  RUN enable_UI.
-  open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
-  apply "entry" to v-mark in FRAME {&FRAME-NAME}.
-  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
-END.
-RUN disable_UI.
+  /* Now enable the interface and wait for the exit condition.            */
+  /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
+  MAIN-BLOCK:
+  DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
+    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+    RUN enable_UI.
+
+    /* сорт  колонок*/
+    /*{ gbl/srt-clmd.i                                                                             */
+    /*  &browse-name    = "{&browse-name}"                                                         */
+    /*  &frame-name     = "{&frame-name}"                                                          */
+    /*  &table-name     = "{&first-table-in-query-{&browse-name}}"                                 */
+    /*  &sort-label     = "tt-marks.mark"                                                          */
+    /*  &sort-clmn_1    = "tt-marks.mark"                                                          */
+    /*  &sort-clmn_2    = "tt-marks.alc-code"                                                      */
+    /*  &sort-clmn_3    = "tt-marks.gds-code"                                                      */
+    /*  &sort-clmn_4    = "tt-marks.gds-name"                                                      */
+    /*  &sort-clmn_5    = " tt-marks.impor-full-name"                                              */
+    /*  &sort-clmn_6    = "tt-marks.prod-full-name"                                                */
+    /*  &open-query     = "run OpenBr in this-procedure ( input yes, input no, input '':U)."       */
+    /*  &open-query-otherwise = "run OpenBr in this-procedure (  input yes, input no, input '':U)."*/
+    /*  &sort-column-name = "sort-column-name"                                                     */
+    /*  &re-move-clmn   = "yes"                                                                    */
+    /*  &mv-brw-default = "yes"                                                                    */
+    /*}       
+                                                                                         */
+    /*{ gbl/srt-clmd.i                                            */
+    /*  &table-name     = "{&first-table-in-query-{&browse-name}}"*/
+    /*  &browse-name = "{&browse-name}"                           */
+    /*  &frame-name = "{&frame-name}"                             */
+    /*  &open-query     = "run OpenBr(yes, no, no)."              */
+    /*  &open-query-otherwise = "run OpenBr(yes, no, no)."        */
+    /*  &sort-column-name = "sort-column-name"                    */
+    /*  &label-clmn_1         = "*"                               */
+    /*  &sort-clmn_1          = "tt-marks.mark"                   */
+    /*  &re-move-clmn   = "yes"                                   */
+    /*  &mv-brw-default = "yes"                                   */
+    /* }                                                          */
+
+    WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+  END.
+  RUN disable_UI.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -542,34 +672,46 @@ RUN disable_UI.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     DISABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide 
-               frames.  This procedure is usually called when
-               we are ready to "clean-up" after running.
-------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+    Purpose:     DISABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we clean-up the user-interface by deleting
+                 dynamic widgets we have created and/or hide 
+                 frames.  This procedure is usually called when
+                 we are ready to "clean-up" after running.
+  ------------------------------------------------------------------------------*/
   /* Hide all frames. */
   HIDE FRAME Dialog-Frame.
 END PROCEDURE.
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     ENABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we display/view/enable the widgets in the
-               user-interface.  In addition, OPEN all queries
-               associated with each FRAME and BROWSE.
-               These statements here are based on the "Other 
-               Settings" section of the widget Property Sheets.
-------------------------------------------------------------------------------*/
-  ENABLE Btn_OK Btn_Cancel Btn_del Btn_imp v-mark br-marks
-      WITH FRAME Dialog-Frame.
+  /*------------------------------------------------------------------------------
+    Purpose:     ENABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we display/view/enable the widgets in the
+                 user-interface.  In addition, OPEN all queries
+                 associated with each FRAME and BROWSE.
+                 These statements here are based on the "Other 
+                 Settings" section of the widget Property Sheets.
+  ------------------------------------------------------------------------------*/
+  ENABLE Btn_OK Btn_Cancel Btn_del Btn_imp Btn_goods Btn_EXIT v-mark br-marks
+    WITH FRAME Dialog-Frame.
+  if p-num = "" and p-position = 0 then 
+  do:
+    disable Btn_Cancel Btn_del Btn_OK 
+      WITH FRAME Dialog-Frame. 
+    hide Btn_OK 
+      IN FRAME Dialog-Frame. 
+  end.
+  else do:
+    hide Btn_EXIT 
+      IN FRAME Dialog-Frame. 
+  end.    
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
@@ -577,3 +719,108 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr d-pl-list
+PROCEDURE OpenBr :
+
+  define input  parameter p-open-query     as logical   no-undo .
+  define input  parameter p-find-next      as logical   no-undo .
+  define input  parameter p-find-condition as character no-undo .
+
+  define variable l-query-was-opened as logical no-undo .
+  define buffer buf_marks for tt-marks.
+
+
+  assign FRAME {&FRAME-NAME}  br-marks .
+  run waitfram-show in this-procedure ( input "Ждите...").
+
+  define variable sort-column-phrase as character no-undo .
+
+  open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
+  apply "entry" to v-mark in FRAME {&FRAME-NAME}.
+
+  case sort-column-name :
+    when "" then 
+      do:
+        assign
+          sort-column-phrase = ""
+          .
+      end.
+    otherwise 
+    do:
+      assign
+        sort-column-phrase = "by " + sort-column-name
+        .
+    end.
+  end case.
+
+&scop flt-open-debug-file
+
+&scop flt-open-open-query OPEN QUERY br-marks FOR EACH tt-marks
+
+&scop flt-open-dyn_open-query FOR EACH tt-marks
+
+&scop flt-open-query-handle QUERY br-marks:handle
+
+&scop flt-open-open-query-tail  , first tt-marks no-lock where where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position
+
+&scop flt-open-dyn_open-query-tail  substitute(', first tt-marks no-lock where where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position' )
+
+&scop flt-open-query-was-opened  l-query-was-opened
+
+&scop flt-open-sort-column-phrase sort-column-phrase
+
+&scop flt-open-call-point filter-point
+
+&scop flt-open-set-filter-name set-filter-name
+
+&scop flt-open-indexed-reposition indexed-reposition
+
+&scop flt-open-waitfram yes
+
+  /*CASE p-mode:                                                                                                                                  */
+  /*    when {&g___object} then do:                                                                                                               */
+  /*        FIND FIRST clients NO-LOCK WHERE clients.obj-type = p-obj-type AND                                                                    */
+  /*                                         clients.obj-code = p-obj-code NO-ERROR.                                                              */
+  /*        ASSIGN frame {&frame-name}:TITLE = "Складские места " + clients.obj-name                                                              */
+  /*        filter-point = filter-point0 + p-mode                                                                                                 */
+  /*        filter-label = substitute("&1", filter-label0)                                                                                        */
+  /*        .                                                                                                                                     */
+  /*          { gbl/fltopend.i                                                                                                                    */
+  /*            &where-cond = " X_place.obj-type = p-obj-type AND X_place.obj-code = p-obj-code "                                                 */
+  /*            &dyn_where-cond = " substitute('X_place.obj-type = &1&2&1 AND X_place.obj-code = &3 ', ~{&double-quote~}, p-obj-type, p-obj-code)"*/
+  /*            &use-ind = "  "                                                                                                                   */
+  /*            &by = "  "                                                                                                                        */
+  /*          }                                                                                                                                   */
+  /*    end.                                                                                                                                      */
+  /*    when {&all} then do:                                                                                                                      */
+  /*        ASSIGN                                                                                                                                */
+  /*        frame {&frame-name}:TITLE = "Складские места "                                                                                        */
+  /*        filter-point = filter-point0 + p-mode                                                                                                 */
+  /*        filter-label = substitute("&1", filter-label0)                                                                                        */
+  /*        .                                                                                                                                     */
+  /*          { gbl/fltopend.i                                                                                                                    */
+  /*            &where-cond = " TRUE "                                                                                                            */
+  /*            &use-ind = "  "                                                                                                                   */
+  /*            &by = "  "                                                                                                                        */
+  /*          }                                                                                                                                   */
+  /*    end.                                                                                                                                      */
+  /*                                                                                                                                              */
+  /*END CASE.                                                                                                                                     */
+
+  /*if v-doc-rec <> ? then reposition br-pl to recid v-doc-rec no-error.*/
+  /*if not p-open-query and v-fltopend-rowid[1] <> ? then               */
+  /*open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .*/
+  apply "entry" to v-mark in FRAME {&FRAME-NAME}.
+
+/*query br-pl:handle:reposition-to-rowid(v-fltopend-rowid) No-ERROR.*/
+/*apply "entry" to br-pl in frame {&frame-name}.                    */
+/*if avail X_place then                                 */
+/*APPLY "VALUE-CHANGED":U to br-pl.                     */
+/*run waitfram-hide in this-procedure .                 */
+/*apply "value-changed" to br-pl in frame {&frame-name}.*/
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME

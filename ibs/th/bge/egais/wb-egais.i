@@ -83,7 +83,8 @@
     field Producer-th    as character label "Производитель TH"
     field nn             as integer label "№"
     field prod-list      as character format "x(1)"
-    field importer-list  as character format "x(1)" 
+    field importer-list  as character format "x(1)"
+    field color-sts      as integer   format "99" init ?
     index pi nn ascending    
     .
 

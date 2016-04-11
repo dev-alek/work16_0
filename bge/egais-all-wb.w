@@ -89,7 +89,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn ~
-Btn_Del Btn-accept cb-1 f-date f-date-2 f-cli-name f-cli-code f-type 
+Btn_Del Btn_accept cb-1 f-date f-date-2 f-cli-name f-cli-code f-type 
 &Scoped-Define DISPLAYED-OBJECTS cb-1 f-date f-date-2 f-cli-name f-cli-code ~
 f-type 
 
@@ -106,7 +106,7 @@ f-type
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON Btn-accept 
+DEFINE BUTTON Btn_accept 
      LABEL "Подтв." 
      SIZE 10 BY 1.21.
 
@@ -183,7 +183,7 @@ DEFINE FRAME Dialog-Frame
      Btn_dnlw AT ROW 1.21 COL 34.63 WIDGET-ID 12
      Btn_conn AT ROW 1.21 COL 45 WIDGET-ID 16
      Btn_Del AT ROW 1.21 COL 55.63 WIDGET-ID 14
-     Btn-accept AT ROW 1.21 COL 66.25 WIDGET-ID 32
+     Btn_accept AT ROW 1.21 COL 66.25 WIDGET-ID 32
      cb-1 AT ROW 1.21 COL 78.38 COLON-ALIGNED NO-LABEL WIDGET-ID 2
      f-date AT ROW 2.5 COL 8.63 COLON-ALIGNED WIDGET-ID 22
      f-date-2 AT ROW 2.5 COL 22.75 COLON-ALIGNED WIDGET-ID 26
@@ -237,9 +237,9 @@ end.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME Btn-accept
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn-accept Dialog-Frame
-ON CHOOSE OF Btn-accept IN FRAME Dialog-Frame /* Подтв. */
+&Scoped-define SELF-NAME Btn_accept
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_accept Dialog-Frame
+ON CHOOSE OF Btn_accept IN FRAME Dialog-Frame /* Подтв. */
 DO:
   
   if not bh-wb-egais:available 
@@ -645,9 +645,9 @@ end.
 ON value-changed OF cb-1 IN FRAME Dialog-Frame
 do:
   assign cb-1 .
-  if cb-1 = 2 and actnEGAISAdm 
-    then Btn-accept:hidden = false.
-    else Btn-accept:hidden = true.
+  if (cb-1 = 2 or cb-1 = 1) and actnEGAISAdm 
+    then Btn_accept:hidden = false.
+    else Btn_accept:hidden = true.
   if cb-1 = 1
   then do:
     Btn_Save:label = "Сохранить".
@@ -931,7 +931,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   { gbl/diasize.i &br-hndl=browse-hdl-wb-egais }
   run diasize_init in this-procedure .
   run enable_UI.
-  Btn-accept:hidden = true.
+  Btn_accept:hidden = false.
   wait-for go of frame {&FRAME-NAME}.
 end.
 run disable_UI.
@@ -972,7 +972,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY cb-1 f-date f-date-2 f-cli-name f-cli-code f-type 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn Btn_Del Btn-accept cb-1 
+  ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn Btn_Del Btn_accept cb-1 
          f-date f-date-2 f-cli-name f-cli-code f-type 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
