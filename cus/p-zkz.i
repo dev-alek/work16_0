@@ -48,6 +48,26 @@ DO:
     END.
 
 
+     ON CHOOSE OF MENU-ITEM m_print5
+        DO:
+   
+            if  g#type = {&f-p} then do:
+
+/*            g#log = true  .                                                   */
+/*                                                                              */
+/*                message "Экспорт в excel ." skip "Продолжать ?"               */
+/*                    view-as alert-box question buttons ok-cancel update g#log.*/
+/*            {&if-not-true}                                                    */
+            IF NOT AVAILABLE shar-buf_ord-doc THEN RETURN .
+            RUN cus/z-tot-det.p (PARPARENTPROC ,  shar-buf_ord-doc.doc-code , shar-buf_ord-doc.obj-TYPE ,shar-buf_ord-doc.obj-code   ).
+ end.
+ else do:      
+     message "Печать документа только для заказов Фирма - Поставщик" view-as alert-box.
+     end.
+        END.
+ 
+ 
+ 
 
 ON CHOOSE OF MENU-ITEM m_PRINT2 /* 7.  */
 DO:
