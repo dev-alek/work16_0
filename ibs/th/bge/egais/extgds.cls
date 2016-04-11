@@ -16,7 +16,7 @@ Creation date: 15/03/16
 */
 
 using Progress.Lang.*.
-
+using ibs.th.bge.egais.*.
 
 class ibs.th.bge.egais.ExtGds: 
   
@@ -24,9 +24,16 @@ class ibs.th.bge.egais.ExtGds:
   { ref/extclass.i }  
   { gbl/thbj-def.i }
   
+  
+  define private temp-table ttObjEgaisAlcProp no-undo
+    field iExtGdsObj as integer
+    field ExtGdsValueObj as class Progress.Lang.Object
+    index pi is primary unique iExtGdsObj .
+  
   define private buffer buf_ext-classif      for ub.ext-classif.
   define private buffer x_ext-classif        for ub.ext-classif.
   define private buffer buf_ext-classif-attr for ub.ext-classif-attr.
+  define private buffer buf_gds for ub.goods.
 
   define property ExtSystem as integer no-undo
     get.
@@ -36,67 +43,19 @@ class ibs.th.bge.egais.ExtGds:
     get.
     set.
   
-  define property CliRegIdProd as character no-undo
-    get.
-    set.
-  
-  define property INNProd as character no-undo
-    get.
-    set.
-  
-  define property KPPProd as character no-undo
-    get.
-    set.
-  
-  define property FullNameProd as character no-undo
-    get.
-    set.
-  
-  define property CountryProd as character no-undo
-    get.
-    set.
-  
-  define property DescrProd as character no-undo
-    get.
-    set.
-
-  define property CliRegIdImpor as character no-undo
-    get.
-    set.
-  
-  define property INNImpor as character no-undo
-    get.
-    set.
-  
-  define property KPPImpor as character no-undo
-    get.
-    set.
-  
-  define property FullNameImpor as character no-undo
-    get.
-    set.
-  
-  define property CountryImpor as character no-undo
-    get.
-    set.
-  
-  define property DescrImpor as character no-undo
-    get.
-    set.
-
-  define property FullNameGds as character no-undo
-    get.
-    set.
-
   define property IsSilent as logical no-undo
     get.
     private set.
 
-  define property GdsCode as integer no-undo init 0
+  define property GdsCodeItemQuery as integer no-undo init 0
     get.
     private set.
 
-  define property AlcCode as character no-undo
+  define property AlcCodeItemQuery as character no-undo
+    get.
+    private set.
+
+  define property NumBundles as integer no-undo
     get.
     private set.
 
@@ -118,87 +77,145 @@ class ibs.th.bge.egais.ExtGds:
     end.
     
   end constructor. 
+  
+  destructor public ExtGds ():
+    
+    ClearProp().
+    
+  end destructor. 
 
-  method public logical FindExtGds (inAlcCode as char):
+  method public logical OpenQueryExtGds (inGdsCode as int, inAlcCode as char):
     
-    ReturnMsg = "".
-    AlcCode = inAlcCode.
+    def var ii as int no-undo.
     
-    find first buf_ext-classif no-lock  where buf_ext-classif.classif-subject = {&table_goods} 
+    ClearProp().
+    
+    assign
+      ReturnMsg = ""
+      AlcCodeItemQuery = inAlcCode
+      GdsCodeItemQuery = inGdsCode
+      ii = 0.
+    
+    for each buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
       and buf_ext-classif.classif-name = {&extclass_goods_esys} 
-      and buf_ext-classif.db-num = 0  
+      and buf_ext-classif.db-num = 0
+      and (GdsCodeItemQuery = 0 or buf_ext-classif.key#_one = GdsCodeItemQuery)   
       and buf_ext-classif.key#_two = ExtSystem 
       and buf_ext-classif.key#_three = 0
-      and buf_ext-classif.charkey_one = inAlcCode
+      and (AlcCodeItemQuery = "" or buf_ext-classif.charkey_one = AlcCodeItemQuery)
       and buf_ext-classif.charkey_two = ""
       and buf_ext-classif.charkey_three = ""
       and buf_ext-classif.nonunique = 0
-      no-error.
-                                               
-
-    if not available (buf_ext-classif)
-      then 
-    do:
-      ClearProp().
-      ReturnMsg = "Отсутсвует связка товара ЕГАИС - " + inAlcCode.
-      if not IsSilent 
-        then message ReturnMsg view-as alert-box.
-      AlcCode = "".
-      return false.
+      :
+      
+      find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
+        and buf_ext-classif-attr.classif-name = buf_ext-classif.classif-name
+        and buf_ext-classif-attr.db-num = buf_ext-classif.db-num
+        and buf_ext-classif-attr.Key#_One = buf_ext-classif.key#_one
+        and buf_ext-classif-attr.Key#_two = buf_ext-classif.key#_two
+        and buf_ext-classif-attr.Key#_three = buf_ext-classif.key#_three
+        and buf_ext-classif-attr.CharKey_One = buf_ext-classif.charkey_one
+        and buf_ext-classif-attr.CharKey_two = buf_ext-classif.charkey_two
+        and buf_ext-classif-attr.CharKey_three = buf_ext-classif.charkey_three
+        and buf_ext-classif-attr.nonunique = buf_ext-classif.nonunique
+        and buf_ext-classif-attr.attr-code = 'egais-info'
+        no-error .
+      
+      if not available (buf_ext-classif-attr)
+        then 
+      do:
+        ClearProp().
+        ReturnMsg = "Отсутсвует атрибут egais-info - " + inAlcCode + ". Выполните синхронизацию.".
+        if not IsSilent 
+          then message ReturnMsg view-as alert-box.
+      end.
+      ii = ii + 1.
+      setProp (ii) no-error.
+      if error-status:error
+        then 
+      do:
+        ReturnMsg = return-value.
+        if not IsSilent 
+          then message ReturnMsg view-as alert-box.
+      end.
     end.
-    
-    GdsCode = buf_ext-classif.key#_one.
-    
-    find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
-      and buf_ext-classif-attr.classif-name = buf_ext-classif.classif-name
-      and buf_ext-classif-attr.db-num = buf_ext-classif.db-num
-      and buf_ext-classif-attr.Key#_One = buf_ext-classif.key#_one
-      and buf_ext-classif-attr.Key#_two = buf_ext-classif.key#_two
-      and buf_ext-classif-attr.Key#_three = buf_ext-classif.key#_three
-      and buf_ext-classif-attr.CharKey_One = buf_ext-classif.charkey_one
-      and buf_ext-classif-attr.CharKey_two = buf_ext-classif.charkey_two
-      and buf_ext-classif-attr.CharKey_three = buf_ext-classif.charkey_three
-      and buf_ext-classif-attr.nonunique = buf_ext-classif.nonunique
-      and buf_ext-classif-attr.attr-code = 'egais-info'
-      no-error .
-    
-    if not available (buf_ext-classif-attr)
-      then 
-    do:
-      ClearProp().
-      ReturnMsg = "Отсутсвует атрибут egais-info - " + inAlcCode + ". Выполните синхронизацию.".
-      if not IsSilent 
-        then message ReturnMsg view-as alert-box.
-/*      AlcCode = "".*/
-/*      return false.*/
-    end.
-    
-    setProp () no-error.
-    if error-status:error
-      then 
-    do:
-      ReturnMsg = return-value.
-      if not IsSilent 
-        then message ReturnMsg view-as alert-box.
-    end.
+    NumBundles = ii.
     return true.
+  end.
   
+  method public class ExtGdsValue GetExtGdsValue () :
+
+    return GetExtGdsValue (1).
+     
+  end.
+  
+  method public class ExtGdsValue GetExtGdsValue (inJJ as int) :
+    
+    find first ttObjEgaisAlcProp where ttObjEgaisAlcProp.iExtGdsObj = inJJ no-error.
+    if not available (ttObjEgaisAlcProp)
+      then return ?.
+    return cast (ttObjEgaisAlcProp.ExtGdsValueObj, ibs.th.bge.egais.ExtGdsValue).
+     
   end.
 
-  method public logical CreateExtGds (inAlcCode as char, InGdsCode as integer):
+  method public logical CreateExtGds (inGdsCode as int, inAlcCode as char):
     
-    ReturnMsg = "".
-    AlcCode = inAlcCode.
-    GdsCode = InGdsCode. 
+    define variable extGdsValueObj as class ExtGdsValue no-undo.
+    define variable glog as logical no-undo.
+    
+    extGdsValueObj = new ExtGdsValue().
+    extGdsValueObj:AlcCode = inAlcCode.
+    extGdsValueObj:GdsCode = inGdsCode.
+    
+    glog = CreateExtGds(extGdsValueObj) .
+    if not glog 
+      then if valid-object (extGdsValueObj) 
+                  then delete object extGdsValueObj. 
+    
+    return glog.
+    
+  end.
+
+  method public logical CreateExtGds (inExtGdsValueObj as class ExtGdsValue):
+    
+    ClearProp().
+    
+    assign
+      ReturnMsg = ""
+      AlcCodeItemQuery = inExtGdsValueObj:AlcCode
+      GdsCodeItemQuery = inExtGdsValueObj:GdsCode
+    .
+    
+    find first buf_gds no-lock where buf_gds.gds-code = inExtGdsValueObj:GdsCode no-error.
+    if not available (buf_gds)
+    then do:
+      ReturnMsg = "Не найден товар TH - " + string (inExtGdsValueObj:GdsCode).
+      if not IsSilent 
+        then message ReturnMsg view-as alert-box.
+      AlcCodeItemQuery = "".
+      GdsCodeItemQuery = 0.
+      undo, return false.
+    end.
+    
+    if inExtGdsValueObj:AlcCode = ? or inExtGdsValueObj:AlcCode = ""
+    then do:
+      ReturnMsg = "Неверное значение AlcCode".
+      if not IsSilent 
+        then message ReturnMsg view-as alert-box.
+      AlcCodeItemQuery = "".
+      GdsCodeItemQuery = 0.
+      undo, return false.      
+    end.
     
     do trans:
     
       find first buf_ext-classif no-lock  where buf_ext-classif.classif-subject = {&table_goods} 
         and buf_ext-classif.classif-name = {&extclass_goods_esys} 
-        and buf_ext-classif.db-num = 0  
+        and buf_ext-classif.db-num = 0
+        and buf_ext-classif.Key#_One = inExtGdsValueObj:GdsCode
         and buf_ext-classif.key#_two = ExtSystem 
         and buf_ext-classif.key#_three = 0
-        and buf_ext-classif.charkey_one = inAlcCode
+        and buf_ext-classif.charkey_one = inExtGdsValueObj:AlcCode
         and buf_ext-classif.charkey_two = ""
         and buf_ext-classif.charkey_three = ""
         and buf_ext-classif.nonunique = 0
@@ -207,11 +224,11 @@ class ibs.th.bge.egais.ExtGds:
       if available (buf_ext-classif)
         then 
       do:
-        ReturnMsg = "Уже есть связка товара ЕГАИС - " + inAlcCode + " c товаром TH - " + string (buf_ext-classif.Key#_One).
+        ReturnMsg = "Уже есть связка товара ЕГАИС - " + inExtGdsValueObj:AlcCode + " c товаром TH - " + string (inExtGdsValueObj:GdsCode).
         if not IsSilent 
           then message ReturnMsg view-as alert-box.
-        AlcCode = "".
-        GdsCode = 0.
+        AlcCodeItemQuery = "".
+        GdsCodeItemQuery = 0.
         undo, return false.
       end.
 
@@ -220,25 +237,25 @@ class ibs.th.bge.egais.ExtGds:
         buf_ext-classif.classif-subject = {&table_goods} 
         buf_ext-classif.classif-name = {&extclass_goods_esys} 
         buf_ext-classif.db-num = 0
-        buf_ext-classif.Key#_One = InGdsCode  
+        buf_ext-classif.Key#_One = inExtGdsValueObj:GdsCode  
         buf_ext-classif.key#_two = ExtSystem 
         buf_ext-classif.key#_three = 0
-        buf_ext-classif.charkey_one = inAlcCode
+        buf_ext-classif.charkey_one = inExtGdsValueObj:AlcCode
         buf_ext-classif.charkey_two = ""
         buf_ext-classif.charkey_three = ""
         buf_ext-classif.nonunique = 0
-        buf_ext-classif.uniq-key-rec = {&table_goods} + {&delim-key} + string (InGdsCode)
+        buf_ext-classif.uniq-key-rec = {&table_goods} + {&delim-key} + string (inExtGdsValueObj:GdsCode)
       no-error.
       
       if error-status:error
         then 
       do:
         delete buf_ext-classif.
-        ReturnMsg = "Непредвиденная ошибка при создании связки  - " + inAlcCode + " TH - " + string (InGdsCode).
+        ReturnMsg = "Непредвиденная ошибка при создании связки  - " + inExtGdsValueObj:AlcCode + " TH - " + string (inExtGdsValueObj:GdsCode).
         if not IsSilent 
           then message ReturnMsg view-as alert-box.
-        AlcCode = "".
-        GdsCode = 0.
+        AlcCodeItemQuery = "".
+        GdsCodeItemQuery = 0.
         undo, return false.
       end.
       
@@ -255,13 +272,13 @@ class ibs.th.bge.egais.ExtGds:
         buf_ext-classif-attr.CharKey_three   = buf_ext-classif.charkey_three
         buf_ext-classif-attr.nonunique       = buf_ext-classif.nonunique
         buf_ext-classif-attr.attr-code       = 'egais-info'
-      .
+      no-error.
 
       if error-status:error
         then 
       do:
         delete buf_ext-classif-attr.
-        ReturnMsg = "Запись уже есть buf_ext-classif-attr. Создание будет продолжено. Непредвиденная ситуация при создании атрибута egais-info  - " + inAlcCode + " TH - " + string (InGdsCode).
+        ReturnMsg = "Запись уже есть buf_ext-classif-attr. Создание будет продолжено. Непредвиденная ситуация при создании атрибута egais-info  - " + inExtGdsValueObj:AlcCode + " TH - " + string (inExtGdsValueObj:GdsCode).
         if not IsSilent 
           then message ReturnMsg view-as alert-box.
         find first buf_ext-classif-attr where
@@ -277,36 +294,54 @@ class ibs.th.bge.egais.ExtGds:
           and buf_ext-classif-attr.nonunique       = buf_ext-classif.nonunique
           and buf_ext-classif-attr.attr-code       = 'egais-info'
         no-error.
-        /*AlcCode = "".
-        GdsCode = 0.
-        undo, return false.*/
       end.
   
-      if not SaveEGAISInfo ()
+      if not SaveEGAISInfoDB (inExtGdsValueObj)
         then do:
-          AlcCode = "".
-          GdsCode = 0.
+          AlcCodeItemQuery = "".
+          GdsCodeItemQuery = 0.
           undo, return false.
         end.
     end.
-      
+    
+    create ttObjEgaisAlcProp.
+    NumBundles = 1.
+    ttObjEgaisAlcProp.iExtGdsObj = 1.
+    cast (ttObjEgaisAlcProp.ExtGdsValueObj, ibs.th.bge.egais.ExtGdsValue) = inExtGdsValueObj.
     return true.
   
   end.
+
+  method public logical DeleteExtGds (inGdsCode as int):
+    
+    if DeleteExtGds ( inGdsCode, ? )
+      then return true.
+      else return false.
+  
+  end.  
   
   method public logical DeleteExtGds (inAlcCode as char):
+    
+    if DeleteExtGds (  ?, inAlcCode )
+      then return true.
+      else return false.
+  
+  end.  
+  
+  method public logical DeleteExtGds (inGdsCode as int, inAlcCode as char):
     
     ReturnMsg = "".
     
     do trans:
       
       for each buf_ext-classif-attr exclusive-lock where 
-            buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
+            buf_ext-classif-attr.classif-subject = {&table_goods}
         and buf_ext-classif-attr.classif-name = {&extclass_goods_esys} 
-        and buf_ext-classif-attr.db-num = 0  
+        and buf_ext-classif-attr.db-num = 0
+        and (inGdsCode = ? or buf_ext-classif-attr.Key#_One = inGdsCode)
         and buf_ext-classif-attr.key#_two = ExtSystem 
 /*        and buf_ext-classif-attr.key#_three = 0*/
-        and buf_ext-classif-attr.charkey_one = inAlcCode
+        and (inAlcCode = ? or buf_ext-classif-attr.charkey_one = inAlcCode)
 /*        and buf_ext-classif-attr.charkey_two = ""*/
 /*        and buf_ext-classif-attr.charkey_three = ""*/
 /*        and buf_ext-classif-attr.nonunique = 0*/
@@ -320,9 +355,10 @@ class ibs.th.bge.egais.ExtGds:
             buf_ext-classif.classif-subject = {&table_goods} 
         and buf_ext-classif.classif-name = {&extclass_goods_esys} 
         and buf_ext-classif.db-num = 0  
-        and buf_ext-classif.key#_two = ExtSystem 
+        and buf_ext-classif.key#_two = ExtSystem
+        and (inGdsCode = ? or buf_ext-classif.Key#_One = inGdsCode) 
 /*        and buf_ext-classif.key#_three = 0*/
-        and buf_ext-classif.charkey_one = inAlcCode
+        and (inAlcCode = ? or buf_ext-classif.charkey_one = inAlcCode)
 /*        and buf_ext-classif.charkey_two = ""*/
 /*        and buf_ext-classif.charkey_three = ""*/
 /*        and buf_ext-classif.nonunique = 0*/
@@ -331,22 +367,6 @@ class ibs.th.bge.egais.ExtGds:
         delete buf_ext-classif.        
         
       end.
-      
-/*      if not available (buf_ext-classif)                              */
-/*        then                                                          */
-/*      do:                                                             */
-/*        ReturnMsg = "Непредвидинная ошибка не найден  - " + inAlcCode.*/
-/*        if not IsSilent                                               */
-/*          then message ReturnMsg view-as alert-box.                   */
-/*        AlcCode = "".                                                 */
-/*        GdsCode = 0.                                                  */
-/*        undo, return false.                                           */
-/*      end.                                                            */
-
-
-      
-      AlcCode = "".
-      GdsCode = 0.
     
     end.
 
@@ -354,89 +374,73 @@ class ibs.th.bge.egais.ExtGds:
   
   end.
   
-  method public logical SaveEGAISInfo ():
+  method public logical SaveEGAISInfo (inExtGdsValueObj as ExtGdsValue):
+    
+    def var glog as log no-undo.
+    
+    do trans:
+
+      find first buf_ext-classif-attr exclusive-lock where 
+            buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
+        and buf_ext-classif-attr.classif-name = {&extclass_goods_esys} 
+        and buf_ext-classif-attr.db-num = 0
+        and buf_ext-classif-attr.Key#_One = inExtGdsValueObj:GdsCode
+        and buf_ext-classif-attr.key#_two = ExtSystem 
+        and buf_ext-classif-attr.key#_three = 0
+        and buf_ext-classif.charkey_one = inExtGdsValueObj:AlcCode
+        and buf_ext-classif-attr.charkey_two = ""
+        and buf_ext-classif-attr.charkey_three = ""
+      no-error.
+
+      glog = SaveEGAISInfoDB (inExtGdsValueObj).
+      
+    end.
+
+    return glog.
+    
+  end.
+
+  method private logical SaveEGAISInfoDB (inExtGdsValueObj as ExtGdsValue):
     
     def var v-prod  as char no-undo.
     def var v-impor as char no-undo.
     def var v-msg   as char no-undo.
     
-    do trans:
-    
-      ReturnMsg = "".
-      
-      v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
-      v-impor = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
-  
-      find current buf_ext-classif-attr exclusive-lock.
-      
-      if error-status:error
-        then 
-      do:
-        ReturnMsg = "Ошибка при сохранении атрибута egais-info  - " + AlcCode + " TH - " + string (GdsCode) + " Не могу заблокировать запись buf_ext-classif-attr".
-        if not IsSilent 
-          then message ReturnMsg view-as alert-box.
-        undo, return false.
-      end.
-      
-      entry (1, v-prod, chr(5)) = CliRegIdProd.
-      entry (2, v-prod, chr(5)) = INNProd.
-      entry (3, v-prod, chr(5)) = KPPProd.
-      entry (4, v-prod, chr(5)) = FullNameProd.
-      entry (5, v-prod, chr(5)) = CountryProd.
-      entry (6, v-prod, chr(5)) = DescrProd.
-      
-      entry (1, v-impor, chr(5)) = CliRegIdImpor.
-      entry (2, v-impor, chr(5)) = INNImpor.
-      entry (3, v-impor, chr(5)) = KPPImpor.
-      entry (4, v-impor, chr(5)) = FullNameImpor.
-      entry (5, v-impor, chr(5)) = CountryImpor.
-      entry (6, v-impor, chr(5)) = DescrImpor.
-  
-      buf_ext-classif-attr.attr-value = v-prod + chr(4) + v-impor + chr(4) + FullNameGds.
-      
-    end.
-
-    find current buf_ext-classif-attr no-lock.
-    return true.
-    
-  end.
-
-  method public character GetListAlcCode (inGdsCode as integer):
-
-    def var v-ListAlcCode as char no-undo.
-
     ReturnMsg = "".
-    inGdsCode = inGdsCode.
- 
-
-    for each x_ext-classif no-lock where x_ext-classif.classif-subject = {&table_goods} 
-      and x_ext-classif.classif-name = {&extclass_goods_esys} 
-      and x_ext-classif.db-num = 0
-      and x_ext-classif.key#_one = inGdsCode  
-      and x_ext-classif.key#_two = ExtSystem 
-      and x_ext-classif.key#_three = 0
-      and x_ext-classif.uniq-key-rec = {&table_goods} + {&delim-key} + string (inGdsCode)
-      and x_ext-classif.charkey_two = ""
-      and x_ext-classif.charkey_three = ""
-      and x_ext-classif.nonunique = 0
-      :
     
-      v-ListAlcCode = v-ListAlcCode + "," + x_ext-classif.charkey_one.
+    v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
+    v-impor = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
     
+    if error-status:error
+      then 
+    do:
+      ReturnMsg = "Ошибка при сохранении атрибута egais-info  - " + inExtGdsValueObj:AlcCode + " TH - " + string (inExtGdsValueObj:GdsCode) + " Не найдена запись buf_ext-classif-attr".
+      if not IsSilent 
+        then message ReturnMsg view-as alert-box.
+      undo, return false.
     end.
     
-    v-ListAlcCode = left-trim (v-ListAlcCode, ",").
-    return v-ListAlcCode.
+    entry (1, v-prod, chr(5)) = inExtGdsValueObj:CliRegIdProd.
+    entry (2, v-prod, chr(5)) = inExtGdsValueObj:INNProd.
+    entry (3, v-prod, chr(5)) = inExtGdsValueObj:KPPProd.
+    entry (4, v-prod, chr(5)) = inExtGdsValueObj:FullNameProd.
+    entry (5, v-prod, chr(5)) = inExtGdsValueObj:CountryProd.
+    entry (6, v-prod, chr(5)) = inExtGdsValueObj:DescrProd.
     
+    entry (1, v-impor, chr(5)) = inExtGdsValueObj:CliRegIdImpor.
+    entry (2, v-impor, chr(5)) = inExtGdsValueObj:INNImpor.
+    entry (3, v-impor, chr(5)) = inExtGdsValueObj:KPPImpor.
+    entry (4, v-impor, chr(5)) = inExtGdsValueObj:FullNameImpor.
+    entry (5, v-impor, chr(5)) = inExtGdsValueObj:CountryImpor.
+    entry (6, v-impor, chr(5)) = inExtGdsValueObj:DescrImpor.
+  
+    buf_ext-classif-attr.attr-value = v-prod + chr(4) + v-impor + chr(4) + inExtGdsValueObj:FullNameGds.
+    release buf_ext-classif-attr.
     
   end.
 
   method public void Release_ ():
     
-    AlcCode = "".
-    GdsCode = 0.
-    release buf_ext-classif.
-    release buf_ext-classif-attr.
     ClearProp().
     
   end.
@@ -470,24 +474,32 @@ class ibs.th.bge.egais.ExtGds:
   
   end.
 
-  method private void setProp ():
+  method private void setProp (inJJ as int):
     
     def var v-prod  as char no-undo.
     def var v-impor as char no-undo.
     def var v-msg   as char no-undo.
+    def var hndlclsExtGdsValueObj as class ExtGdsValue no-undo.
     v-prod = ''.
     v-impor = ''.
     ReturnMsg = "".
     
-    ClearProp().
+    find current buf_ext-classif-attr no-lock.
     
-    find current buf_ext-classif.
-    find current buf_ext-classif-attr.
+    hndlclsExtGdsValueObj = new ExtGdsValue().
+    
+    create ttObjEgaisAlcProp.
+    assign
+      ttObjEgaisAlcProp.iExtGdsObj = inJJ
+      ttObjEgaisAlcProp.ExtGdsValueObj = cast (hndlclsExtGdsValueObj,Progress.Lang.Object).
+    
+    hndlclsExtGdsValueObj:AlcCode = buf_ext-classif-attr.CharKey_One.
+    hndlclsExtGdsValueObj:GdsCode = buf_ext-classif-attr.Key#_One.
     
     if num-entries (buf_ext-classif-attr.attr-value, chr(4)) <> 3
       then 
     do:
-      v-msg = "Некорректный атрибут egais-info - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию товаров.".
+      v-msg = "Некорректный атрибут egais-info - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
       return error v-msg.      
     end.
         
@@ -495,7 +507,7 @@ class ibs.th.bge.egais.ExtGds:
     if num-entries (v-prod, chr (5)) <> 6 
       then 
     do:
-      v-msg = "Некорректный атрибут egais-info v-prod - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию товаров.".
+      v-msg = "Некорректный атрибут egais-info v-prod - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
       return error v-msg.
     end.
     
@@ -503,45 +515,39 @@ class ibs.th.bge.egais.ExtGds:
     if  num-entries (v-impor, chr (5)) <> 6 
       then 
     do:
-      v-msg = "Некорректный атрибут egais-info v-impor - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию товаров.".
+      v-msg = "Некорректный атрибут egais-info v-impor - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
       return error v-msg.
     end.
     
-    CliRegIdProd = entry (1, v-prod, chr(5)).
-    INNProd = entry (2, v-prod, chr(5)).
-    KPPProd = entry (3, v-prod, chr(5)).
-    FullNameProd = entry (4, v-prod, chr(5)).
-    CountryProd = entry (5, v-prod, chr(5)).
-    DescrProd = entry (6, v-prod, chr(5)).
+    hndlclsExtGdsValueObj:CliRegIdProd = entry (1, v-prod, chr(5)).
+    hndlclsExtGdsValueObj:INNProd = entry (2, v-prod, chr(5)).
+    hndlclsExtGdsValueObj:KPPProd = entry (3, v-prod, chr(5)).
+    hndlclsExtGdsValueObj:FullNameProd = entry (4, v-prod, chr(5)).
+    hndlclsExtGdsValueObj:CountryProd = entry (5, v-prod, chr(5)).
+    hndlclsExtGdsValueObj:DescrProd = entry (6, v-prod, chr(5)).
     
-    CliRegIdImpor = entry (1, v-impor, chr(5)).
-    INNImpor = entry (2, v-impor, chr(5)).
-    KPPImpor = entry (3, v-impor, chr(5)).
-    FullNameImpor = entry (4, v-impor, chr(5)).
-    CountryImpor = entry (5, v-impor, chr(5)).
-    DescrImpor = entry (6, v-impor, chr(5)).
+    hndlclsExtGdsValueObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
+    hndlclsExtGdsValueObj:INNImpor = entry (2, v-impor, chr(5)).
+    hndlclsExtGdsValueObj:KPPImpor = entry (3, v-impor, chr(5)).
+    hndlclsExtGdsValueObj:FullNameImpor = entry (4, v-impor, chr(5)).
+    hndlclsExtGdsValueObj:CountryImpor = entry (5, v-impor, chr(5)).
+    hndlclsExtGdsValueObj:DescrImpor = entry (6, v-impor, chr(5)).
 
-    FullNameGds = entry (3, buf_ext-classif-attr.attr-value, chr(4)).
+    hndlclsExtGdsValueObj:FullNameGds = entry (3, buf_ext-classif-attr.attr-value, chr(4)).
+    
     
   end.
 
   method private void ClearProp ():
 
-    CliRegIdProd = "".
-    INNProd = "".
-    KPPProd = "".
-    FullNameProd = "".
-    CountryProd = "".
-    DescrProd = "".
-    
-    CliRegIdImpor = "".
-    INNImpor = "".
-    KPPImpor = "".
-    FullNameImpor = "".
-    CountryImpor = "".
-    DescrImpor = "".
-    
-    FullNameGds = "".
+    AlcCodeItemQuery = "".
+    GdsCodeItemQuery = 0.
+    NumBundles = 0.
+    for each ttObjEgaisAlcProp:
+      if valid-object (ttObjEgaisAlcProp.ExtGdsValueObj)
+        then delete object ttObjEgaisAlcProp.ExtGdsValueObj.
+    end.
+    empty temp-table ttObjEgaisAlcProp.
     
   end.
 

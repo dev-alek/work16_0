@@ -60,6 +60,7 @@ define variable v-uniq-key-rec             as character no-undo .
 define variable glog                       as logical no-undo .
 define variable ii                         as integer no-undo .
 define variable extGdsObj                  as class ExtGds no-undo .
+define variable extGdsValueObj             as class ExtGdsValue no-undo .
 define variable v-prod                     as character no-undo .
 define variable v-impor                    as character no-undo .
 
@@ -67,7 +68,7 @@ define buffer buf_clients   for ub.clients .
 define buffer buf_firm      for ub.firm .
 define buffer x_ext-classif for ub.ext-classif.
 define buffer buf_goods     for ub.goods .
-
+define buffer buf_clob-bind for ub.clob-bind .
 
 {cmp/str-glbl.i}
 { gbl/color.i }
@@ -481,7 +482,7 @@ MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
 
-  extGdsObj = new ExtGds(yes).
+  extGdsObj = new ExtGds(true).
 
   { gbl/getcurus.i
     v-db-num
@@ -573,7 +574,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   run refresh-view.
   
   v-uniq-key-rec  = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
-  find first ub.clob-bind exclusive-lock where ub.clob-bind.uniq-key-rec = v-uniq-key-rec and ub.clob-bind.field-name_ = {&lob-egais-wb}.
+/*  find first ub.clob-bind exclusive-lock where ub.clob-bind.uniq-key-rec = v-uniq-key-rec and ub.clob-bind.field-name_ = {&lob-egais-wb}.*/
   wait-for go of frame {&FRAME-NAME}.
 end.
 run disable_UI.
@@ -629,6 +630,9 @@ PROCEDURE msdblcl :
   define variable par-alcohol as character no-undo .
   define variable par-type    as character no-undo .
   define buffer buf_ext-classif for ub.ext-classif.
+  def var nnList as int no-undo.
+  def var v-add as logical no-undo.
+  def var v-numBnd as int no-undo.
   
   def var glog as  log no-undo.
   
@@ -650,100 +654,169 @@ PROCEDURE msdblcl :
   
   if not glog then  return .
 
-  if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> "" and bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> ? then 
+  if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> "0" then 
   do :
-    message substitute ("Товар &1/&2 уже связан. Изменить связку?", bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value, bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value) view-as alert-box
-    question buttons yes-no-cancel
-    title "" update v-choise as logical.
-    if v-choise then do:
-      run ref/gds-ref.p
-        ( parparentproc
-        ,'b-add,b-sel'
-        ,?             /*p-stat */
-        ,?             /*p-list  */
-        ,?             /*p-cond  */
-        ,?             /*p-rec   */
-        ,?             /*p-grp   */
-        ,?             /*p-cli-type */
-        ,?             /*p-cli-code  */
-        ,v-cntxt-obj-type    /*p-obj-type  */
-        ,v-cntxt-obj-code     /*p-obj-code  */
-        ,?             /*p-other     */
-        , output v-rid-list) no-error.
-      if v-rid-list = "" or v-rid-list = ? 
-        then return no-apply. 
-      find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock.
-      run gds-attr-value(
-        buf_goods.gds-code,
-        {&attr-alcohol-prod},
-        output par-alcohol,
-        output par-type
-        ).
-      if par-alcohol = "" or par-alcohol = "no" then 
-      do :
-        message "Выбранный товар не является алкогольной продукцией." view-as alert-box.
+    extGdsObj:OpenQueryExtGds(0, bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value).
+    v-numBnd = extGdsObj:NumBundles.
+
+
+    run ref/gds-ref.p
+      ( parparentproc
+      ,'b-add,b-sel'
+      ,?             /*p-stat */
+      ,?             /*p-list  */
+      ,?             /*p-cond  */
+      ,?             /*p-rec   */
+      ,?             /*p-grp   */
+      ,?             /*p-cli-type */
+      ,?             /*p-cli-code  */
+      ,v-cntxt-obj-type    /*p-obj-type  */
+      ,v-cntxt-obj-code     /*p-obj-code  */
+      ,?             /*p-other     */
+      , output v-rid-list) no-error.
+    if v-rid-list = "" or v-rid-list = ? 
+      then return no-apply. 
+    find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock.
+    run gds-attr-value(
+      buf_goods.gds-code,
+      {&attr-alcohol-prod},
+      output par-alcohol,
+      output par-type
+      ).
+    if par-alcohol = "" or par-alcohol = "no" then 
+    do :
+      message "Выбранный товар не является алкогольной продукцией." view-as alert-box.
+      return no-apply.
+    end.
+    if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value and (bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value <> ?)
+    then do:
+      message "У выбранного товара не соответсвует объем" view-as alert-box.
+      return no-apply.
+    end.
+    /*if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value and (bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> ?)
+    then do:
+      message "У выбранного товара не соответсвует содержание спирта" view-as alert-box.
+      return no-apply.
+    end.*/
+    find first ub.alc-type-gds 
+         where ub.alc-type-gds.gds-code = buf_goods.gds-code
+           and ub.alc-type-gds.create-user-db-num = 0 no-lock no-error.
+    if not available (ub.alc-type-gds) 
+    then do:
+      message "У выбранного товара не задана алкогольная группа" view-as alert-box.
+      return no-apply.
+    end.
+    else do:
+      find first ub.alc-type where ub.alc-type-gds.alc-type-inner-code = ub.alc-type.alc-type-inner-code no-lock no-error.
+      if not available (ub.alc-type) 
+      then do:
+        message "Не найдена алкогольная группа" view-as alert-box.
         return no-apply.
       end.
-      if buf_goods.ms-base <> bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value and (bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("ms-base"):buffer-value <> ?)
+      /*if ub.alc-type.alc-type-code <>  bh-wb-gds-EG:buffer-field ("alc-type-code"):buffer-value
       then do:
-        message "У выбранного товара не соответсвует объем" view-as alert-box.
-        return no-apply.
-      end.
-      /*if buf_goods.proof <> bh-wb-gds-EG:buffer-field ("proof"):buffer-value and (bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> 0 and bh-wb-gds-EG:buffer-field ("proof"):buffer-value <> ?)
-      then do:
-        message "У выбранного товара не соответсвует содержание спирта" view-as alert-box.
+        message "У выбранного товара не соответсвует алкогольная группа" view-as alert-box.
         return no-apply.
       end.*/
-      find first ub.alc-type-gds 
-           where ub.alc-type-gds.gds-code = buf_goods.gds-code
-             and ub.alc-type-gds.create-user-db-num = 0 no-lock no-error.
-      if not available (ub.alc-type-gds) 
-      then do:
-        message "У выбранного товара не задана алкогольная группа" view-as alert-box.
-        return no-apply.
-      end.
-      else do:
-        find first ub.alc-type where ub.alc-type-gds.alc-type-inner-code = ub.alc-type.alc-type-inner-code no-lock no-error.
-        if not available (ub.alc-type) 
-        then do:
-          message "Не найдена алкогольная группа" view-as alert-box.
-          return no-apply.
-        end.
-        /*if ub.alc-type.alc-type-code <>  bh-wb-gds-EG:buffer-field ("alc-type-code"):buffer-value
-        then do:
-          message "У выбранного товара не соответсвует алкогольная группа" view-as alert-box.
-          return no-apply.
-        end.*/
-      end.
-      extGdsObj:DeleteExtGds(bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value).
-      
-      v-prod = bh-wb-gds-EG:buffer-field ("prod-list"):buffer-value.
-      v-impor = bh-wb-gds-EG:buffer-field ("importer-list"):buffer-value.
-      extGdsObj:CliRegIdProd = entry (1, v-prod, chr(5)).
-      extGdsObj:INNProd = entry (2, v-prod, chr(5)).
-      extGdsObj:KPPProd = entry (3, v-prod, chr(5)).
-      extGdsObj:FullNameProd = entry (4, v-prod, chr(5)).
-      extGdsObj:CountryProd = entry (5, v-prod, chr(5)).
-      extGdsObj:DescrProd = entry (6, v-prod, chr(5)).
-      
-      extGdsObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
-      extGdsObj:INNImpor = entry (2, v-impor, chr(5)).
-      extGdsObj:KPPImpor = entry (3, v-impor, chr(5)).
-      extGdsObj:FullNameImpor = entry (4, v-impor, chr(5)).
-      extGdsObj:CountryImpor = entry (5, v-impor, chr(5)).
-      extGdsObj:DescrImpor = entry (6, v-impor, chr(5)).
+    end.
 
-      extGdsObj:FullNameGds = bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value.
+    
+    extGdsValueObj = new ExtGdsValue().
+    
+    v-prod = bh-wb-gds-EG:buffer-field ("prod-list"):buffer-value.
+    v-impor = bh-wb-gds-EG:buffer-field ("importer-list"):buffer-value.
+    extGdsValueObj:AlcCode = bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value.
+    extGdsValueObj:GdsCode = buf_goods.gds-code.
+    extGdsValueObj:CliRegIdProd = entry (1, v-prod, chr(5)).
+    extGdsValueObj:INNProd = entry (2, v-prod, chr(5)).
+    extGdsValueObj:KPPProd = entry (3, v-prod, chr(5)).
+    extGdsValueObj:FullNameProd = entry (4, v-prod, chr(5)).
+    extGdsValueObj:CountryProd = entry (5, v-prod, chr(5)).
+    extGdsValueObj:DescrProd = entry (6, v-prod, chr(5)).
+    
+    extGdsValueObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
+    extGdsValueObj:INNImpor = entry (2, v-impor, chr(5)).
+    extGdsValueObj:KPPImpor = entry (3, v-impor, chr(5)).
+    extGdsValueObj:FullNameImpor = entry (4, v-impor, chr(5)).
+    extGdsValueObj:CountryImpor = entry (5, v-impor, chr(5)).
+    extGdsValueObj:DescrImpor = entry (6, v-impor, chr(5)).
+
+    extGdsValueObj:FullNameGds = bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value.
+    
+    extGdsObj:OpenQueryExtGds (buf_goods.gds-code, bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value).
+    
+    if extGdsObj:NumBundles = 0 and bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> ? then do:
+      message substitute ("Добавить новую связку для - &1?", bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value) view-as alert-box
+      question buttons yes-no
+      title "" update v-add.
+      if not v-add
+        then message substitute ("Связка будет удалена &1/&2", bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value, bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value) view-as alert-box
+                question buttons ok-cancel title "" update v-ok as log.
+        else message substitute ("Будет добавлена новая связка для - &1", bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value) view-as alert-box 
+                question buttons ok-cancel title "" update v-ok.
+
+      if not v-ok 
+        then undo, return no-apply.
+    end.
+    
+    do trans:
+    
+    if extGdsObj:NumBundles = 0
+    then do:
       
-      if not extGdsObj:CreateExtGds(bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value, buf_goods.gds-code) then
-      do:
+
+      if not v-add
+        then extGdsObj:DeleteExtGds(integer (bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value), bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value).
+      if extGdsObj:CreateExtGds(extGdsValueObj)
+      then do:
+
+          find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-ref-b}.
+          if not available (buf_clob-bind)
+          then do:
+            message "По товарам нет справки Б".
+            undo, return no-apply.
+          end.
+          nnList = lookup (bh-wb-gds-EG:buffer-field ("refB"):buffer-value, buf_clob-bind.descr). 
+          if nnList > 0 
+          then do:
+            entry (nnList - 1, buf_clob-bind.descr) = string (buf_goods.gds-code).
+          end.
+          else do:
+            buf_clob-bind.descr = buf_clob-bind.descr + "," +  string (buf_goods.gds-code) + "," + bh-wb-gds-EG:buffer-field ("refB"):buffer-value.
+            buf_clob-bind.descr = left-trim (buf_clob-bind.descr, ",").
+          end.
+          release buf_clob-bind.
+
+      end. 
+      else do:
         message "Ошибка добавления записи в справочник: " extGdsObj:ReturnMsg view-as alert-box .
         undo, return no-apply .
       end.
+
     end.
     else do:
-      return no-apply.
+
+        find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.field-name_ = {&lob-egais-ref-b}.
+        if not available (buf_clob-bind)
+        then do:
+          message "По товарам нет справки Б".
+          undo, return no-apply.
+        end.
+        nnList = lookup (bh-wb-gds-EG:buffer-field ("refB"):buffer-value, buf_clob-bind.descr). 
+        if nnList > 0 
+        then do:
+          entry (nnList - 1, buf_clob-bind.descr) = string (buf_goods.gds-code).
+        end.
+        else do:
+          buf_clob-bind.descr = buf_clob-bind.descr + "," +  string (buf_goods.gds-code) + "," + bh-wb-gds-EG:buffer-field ("refB"):buffer-value.
+          buf_clob-bind.descr = left-trim (buf_clob-bind.descr, ",").
+        end.
+        release buf_clob-bind.
     end.
+    
+
+    end.
+    
   end.                                    
   else 
   do :
@@ -807,28 +880,31 @@ PROCEDURE msdblcl :
       end.*/        
     end.
     
+    extGdsValueObj = new ExtGdsValue().
+    
     v-prod = bh-wb-gds-EG:buffer-field ("prod-list"):buffer-value.
     v-impor = bh-wb-gds-EG:buffer-field ("importer-list"):buffer-value.
+    extGdsValueObj:AlcCode = bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value.
+    extGdsValueObj:GdsCode = buf_goods.gds-code.
+    extGdsValueObj:CliRegIdProd = entry (1, v-prod, chr(5)).
+    extGdsValueObj:INNProd = entry (2, v-prod, chr(5)).
+    extGdsValueObj:KPPProd = entry (3, v-prod, chr(5)).
+    extGdsValueObj:FullNameProd = entry (4, v-prod, chr(5)).
+    extGdsValueObj:CountryProd = entry (5, v-prod, chr(5)).
+    extGdsValueObj:DescrProd = entry (6, v-prod, chr(5)).
     
-    extGdsObj:CliRegIdProd = entry (1, v-prod, chr(5)).
-    extGdsObj:INNProd = entry (2, v-prod, chr(5)).
-    extGdsObj:KPPProd = entry (3, v-prod, chr(5)).
-    extGdsObj:FullNameProd = entry (4, v-prod, chr(5)).
-    extGdsObj:CountryProd = entry (5, v-prod, chr(5)).
-    extGdsObj:DescrProd = entry (6, v-prod, chr(5)).
-    
-    extGdsObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
-    extGdsObj:INNImpor = entry (2, v-impor, chr(5)).
-    extGdsObj:KPPImpor = entry (3, v-impor, chr(5)).
-    extGdsObj:FullNameImpor = entry (4, v-impor, chr(5)).
-    extGdsObj:CountryImpor = entry (5, v-impor, chr(5)).
-    extGdsObj:DescrImpor = entry (6, v-impor, chr(5)).
+    extGdsValueObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
+    extGdsValueObj:INNImpor = entry (2, v-impor, chr(5)).
+    extGdsValueObj:KPPImpor = entry (3, v-impor, chr(5)).
+    extGdsValueObj:FullNameImpor = entry (4, v-impor, chr(5)).
+    extGdsValueObj:CountryImpor = entry (5, v-impor, chr(5)).
+    extGdsValueObj:DescrImpor = entry (6, v-impor, chr(5)).
 
-    extGdsObj:FullNameGds = bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value.
+    extGdsValueObj:FullNameGds = bh-wb-gds-EG:buffer-field ("gds-name"):buffer-value.
     
-    if not extGdsObj:CreateExtGds(bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value, buf_goods.gds-code) then
+    if not extGdsObj:CreateExtGds(extGdsValueObj) then
     do:
-      message "Ошибка добавления записи в справочник! " extGdsObj:ReturnMsg view-as alert-box .
+      message "Ошибка добавления записи в справочник: " extGdsObj:ReturnMsg view-as alert-box .
       undo, return no-apply .
     end.
   end.
@@ -938,14 +1014,37 @@ end.
 PROCEDURE proc-row-leave :
   
   def var ii as int no-undo.
+
+  do ii = 1 to extent (bcol):  
+    if valid-handle (bcol[ii]) and bh-wb-gds-EG:buffer-field ("color-sts"):buffer-value <> ?
+      then bcol[ii]:bgcolor = bh-wb-gds-EG:buffer-field ("color-sts"):buffer-value.
+  end.
   
-  if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value = "" or bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value = ? then 
+  /*if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value = 0 then 
   do:
     do ii = 1 to extent (bcol):  
       if valid-handle (bcol[ii]) 
         then bcol[ii]:bgcolor = RED_COLOR.
     end.
   end.
+  extGdsObj:OpenQueryExtGds(0, bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value ).
+  if extGdsObj:NumBundles > 1 then 
+  do:
+    do ii = 1 to extent (bcol):  
+      if valid-handle (bcol[ii]) 
+        then bcol[ii]:bgcolor = DARK_GRAY_COLOR.
+    end.
+  end.
+  if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> 0
+    then extGdsObj:OpenQueryExtGds(bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value, "" ).
+  if extGdsObj:NumBundles > 1 then 
+  do:
+    do ii = 1 to extent (bcol):  
+      if valid-handle (bcol[ii]) 
+        then bcol[ii]:bgcolor = DARK_GRAY_COLOR.
+    end.
+  end.*/
+  
 end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
