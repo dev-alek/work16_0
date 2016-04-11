@@ -67,6 +67,7 @@ define temp-table tt-gds no-undo
     field egais-name        as character                    label "Наименование ЕГАИС"  format "X(100)"
     field prod-info         as character
     field imp-info          as character
+    field old-gds-code      like ub.goods.gds-code
     field old-alc-code      as character
     index pi as primary
         gds-code
@@ -84,6 +85,8 @@ define buffer buf2_tt-gds for tt-gds .
 &ANALYZE-RESUME
 
 def var egais as class EGAIS.
+def var extGdsObj as class ExtGds.
+def var numBundles as integer no-undo .
 
 def var bh-gds-egais as handle no-undo .
 def var qh-gds-egais as handle no-undo .
@@ -520,12 +523,29 @@ DO:
             return no-apply.
         end.
         find first buf_goods where recid(buf_goods) = integer(ref-list) no-error.
-        assign
-            tt-gds.gds-code = buf_goods.gds-code
-            tt-gds.gds-name = buf_goods.gds-name
-            tt-gds.ms-base  = buf_goods.ms-base
-            tt-gds.proof    = buf_goods.proof
-        .
+        if tt-gds.gds-code = 0 or tt-gds.gds-code = ? or rs-mode = 1 then do :
+            assign
+                tt-gds.gds-code = buf_goods.gds-code
+                tt-gds.gds-name = buf_goods.gds-name
+                tt-gds.ms-base  = buf_goods.ms-base
+                tt-gds.proof    = buf_goods.proof
+            .
+        end.
+        else do : /* rs-mode = 2 */
+            find first buf_tt-gds no-lock where buf_tt-gds.gds-code = buf_goods.gds-code
+                                            and buf_tt-gds.alc-code = tt-gds.alc-code
+                                            and recid(buf_tt-gds) <> recid(tt-gds) no-error .
+            if not available buf_tt-gds then do :
+                create buf2_tt-gds .
+                buffer-copy tt-gds except gds-code gds-name ms-base proof old-gds-code to buf2_tt-gds
+                    assign
+                        buf2_tt-gds.gds-code = buf_goods.gds-code
+                        buf2_tt-gds.gds-name = buf_goods.gds-name
+                        buf2_tt-gds.ms-base  = buf_goods.ms-base
+                        buf2_tt-gds.proof    = buf_goods.proof
+                .
+            end. 
+        end.
     end.
     else do :
         run bge/egais-select-good.w (input tt-gds.ms-base
@@ -566,7 +586,8 @@ DO:
     if select-list = "" then do :
         message "Не выбрано ни одной строки" view-as alert-box .
         return no-apply.
-    end.   
+    end. 
+    _ii_ :  
     do ii = 1 to num-entries(select-list) :
         def var v-i-element as character no-undo.
         v-i-element = (entry(ii, select-list)).
@@ -601,7 +622,7 @@ DO:
                     tt-gds.imp-info   = bh-gds-egais:buffer-field("imp-info"):buffer-value
                     tt-gds.prod-info   = bh-gds-egais:buffer-field("prod-info"):buffer-value
                 .
-                for first buf_goods exclusive-lock where buf_goods.gds-code = tt-gds.gds-code :
+                for first buf_goods no-lock where buf_goods.gds-code = tt-gds.gds-code :
 /*                    run gds-attr-write(    */
 /*                        buf_goods.gds-code,*/
 /*                        {&attr-egais-name},*/
@@ -619,20 +640,16 @@ DO:
                     find first X_ext-classif exclusive-lock  where X_ext-classif.classif-subject = {&table_goods} 
                                                                and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                                                AND X_ext-classif.db-num = 0  
-                                                               and X_ext-classif.key#_one = buf_goods.gds-code
+                                                               and X_ext-classif.key#_one = tt-gds.old-gds-code
                                                                and X_ext-classif.key#_two = v-ext-sys 
                                                                and X_ext-classif.key#_three = 0
-                                                               and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+/*                                                               and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec*/
                                                                and X_eXt-classif.charkey_one = tt-gds.old-alc-code
                                                                and X_eXt-classif.charkey_two = ""
                                                                and X_eXt-classif.charkey_three = ""
                                                                and X_eXt-classif.nonunique = 0
                                                                no-error. 
                     if available X_ext-classif then do :    
-                        assign
-                            X_ext-classif.charkey_one = tt-gds.alc-code
-/*                            X_ext-classif.charkey_two = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name)*/
-                        .
                         find first X_ext-classif-attr exclusive-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
                                                                        and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
                                                                        and X_ext-classif-attr.db-num = X_ext-classif.db-num
@@ -661,6 +678,19 @@ DO:
                                 X_ext-classif-attr.attr-code = 'egais-info' 
                             .       
                         end.
+                        assign
+                            X_ext-classif.key#_one = tt-gds.gds-code
+                            X_ext-classif.charkey_one = tt-gds.alc-code
+                            X_ext-classif.uniq-key-rec = v-gds-uniq-key-rec
+                        no-error .
+                        if error-status:error then do :
+                            message "Уже есть связка, где код товара в TH " string(tt-gds.gds-code) " - алк. код " tt-gds.alc-code view-as alert-box .
+                            next _ii_ .
+                        end.
+                        assign
+                            X_ext-classif-attr.key#_one = tt-gds.gds-code
+                            X_ext-classif-attr.charkey_one = tt-gds.alc-code
+                        no-error.
                         assign X_ext-classif-attr.attr-value = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name) .
                     end.                                    
                     else do :                                    
@@ -682,10 +712,11 @@ DO:
                         if error-status:error then
                         do:
                             if error-status:get-message(1) = "" then
-                                message "Ошибка добавления записи в справочник!" view-as alert-box .
+                                message "Ошибка добавления записи в справочник!" skip
+                                        "Скорее всего, уже есть связка, где код товара в TH " string(tt-gds.gds-code) " - алк. код " tt-gds.alc-code  view-as alert-box .
                             else
                                 message error-status:get-message(1) view-as alert-box .
-                            undo, return no-apply .
+                            next _ii_ .
                         end.
                         find first X_ext-classif no-lock where recid(X_ext-classif) = v-rid.
                         find first X_ext-classif-attr exclusive-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
@@ -1009,6 +1040,9 @@ PROCEDURE fill-tt :
   Parameters:  <none>
   Notes:
 -------------------------------------------------------------*/
+    define variable v-alc-type-code as character no-undo .
+
+    extGdsObj = new ExtGds(yes).
     for each tt-gds :
         delete tt-gds .
     end. 
@@ -1022,91 +1056,43 @@ PROCEDURE fill-tt :
             output par-type
         ).
         if par-alcohol <> "" and par-alcohol <> "no" then do :
-/*            run gds-attr-value(       */
-/*                buf_goods.gds-code,   */
-/*                {&attr-egais-name},   */
-/*                output par-egais-name,*/
-/*                output par-type       */
-/*            ).                        */
-            create tt-gds .
-            assign
-                tt-gds.gds-code = buf_goods.gds-code
-                tt-gds.gds-name = buf_goods.gds-name
-                tt-gds.ms-base  = buf_goods.ms-base
-                tt-gds.proof    = buf_goods.proof
-/*                tt-gds.egais-name = par-egais-name*/
-            .
+            extGdsObj:OpenQueryExtGds(buf_goods.gds-code, "").
+            v-alc-type-code = "" . 
             for first ub.alc-type-gds where ub.alc-type-gds.gds-code = buf_goods.gds-code no-lock,
                 first ub.alc-type where ub.alc-type.alc-type-inner-code = ub.alc-type-gds.alc-type-inner-code no-lock :
-                assign tt-gds.alc-type-code = ub.alc-type.alc-type-code .    
+                assign v-alc-type-code = ub.alc-type.alc-type-code .    
             end.
-            run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
-                                                ,input (buffer buf_goods:handle)
-                                                ,output v-gds-uniq-key-rec).
-            find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
-                                               and X_ext-classif.classif-name = {&extclass_goods_esys} 
-                                               AND X_ext-classif.db-num = 0  
-                                               and X_ext-classif.key#_one = buf_goods.gds-code
-                                               and X_ext-classif.key#_two = v-ext-sys 
-                                               and X_ext-classif.key#_three = 0
-                                               and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
-                                               and X_eXt-classif.charkey_two = ""
-                                               and X_eXt-classif.charkey_three = ""
-                                               and X_eXt-classif.nonunique = 0
-                                               no-error. 
-            if available X_ext-classif then do :    
+            if extGdsObj:NumBundles = 0 then do :
+                create tt-gds .
                 assign
-                    tt-gds.alc-code = X_ext-classif.charkey_one
-                    tt-gds.old-alc-code = X_ext-classif.charkey_one
+                    tt-gds.gds-code = buf_goods.gds-code
+                    tt-gds.gds-name = buf_goods.gds-name
+                    tt-gds.ms-base  = buf_goods.ms-base
+                    tt-gds.proof    = buf_goods.proof
+                    tt-gds.old-gds-code = buf_goods.gds-code
+                    tt-gds.alc-type-code = v-alc-type-code
                 .
-                find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
-                                                       and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
-                                                       and X_ext-classif-attr.db-num = X_ext-classif.db-num
-                                                       and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
-                                                       and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
-                                                       and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
-                                                       and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
-                                                       and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
-                                                       and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
-                                                       and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
-                                                       and X_ext-classif-attr.attr-code = 'egais-info'
-                                                       no-error .
-                if available X_ext-classif-attr then assign tt-gds.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
-                
-                for each XX_ext-classif no-lock where XX_ext-classif.classif-subject = {&table_goods} 
-                                                   and XX_ext-classif.classif-name = {&extclass_goods_esys} 
-                                                   AND XX_ext-classif.db-num = 0  
-                                                   and XX_ext-classif.key#_one = buf_goods.gds-code
-                                                   and XX_ext-classif.key#_two = v-ext-sys 
-                                                   and XX_ext-classif.key#_three = 0
-                                                   and XX_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
-                                                   and XX_eXt-classif.charkey_two = ""
-                                                   and XX_eXt-classif.charkey_three = ""
-                                                   and XX_eXt-classif.nonunique = 0
-                                                   and recid(XX_ext-classif) <> recid(X_ext-classif) :
-                    create buf_tt-gds.
-                    buffer-copy tt-gds except alc-code to buf_tt-gds
-                        assign
-                            buf_tt-gds.alc-code = XX_ext-classif.charkey_one
-                            buf_tt-gds.old-alc-code = XX_ext-classif.charkey_one
-                    . 
-                    find first XX_ext-classif-attr no-lock where XX_ext-classif-attr.classif-subject = XX_ext-classif.classif-subject
-                                                           and XX_ext-classif-attr.classif-name = XX_ext-classif.classif-name
-                                                           and XX_ext-classif-attr.db-num = XX_ext-classif.db-num
-                                                           and XX_ext-classif-attr.Key#_One = XX_ext-classif.key#_one
-                                                           and XX_ext-classif-attr.Key#_two = XX_ext-classif.key#_two
-                                                           and XX_ext-classif-attr.Key#_three = XX_ext-classif.key#_three
-                                                           and XX_ext-classif-attr.CharKey_One = XX_eXt-classif.charkey_one
-                                                           and XX_ext-classif-attr.CharKey_two = XX_eXt-classif.charkey_two
-                                                           and XX_ext-classif-attr.CharKey_three = XX_eXt-classif.charkey_three
-                                                           and XX_ext-classif-attr.nonunique = XX_eXt-classif.nonunique
-                                                           and XX_ext-classif-attr.attr-code = 'egais-info'
-                                                           no-error .   
-                    if available XX_ext-classif-attr then assign buf_tt-gds.egais-name = entry(3, XX_ext-classif-attr.attr-value, CHR(4)) no-error.                             
-                end.                                        
-            end.                                    
+            end.
+            else
+            do numBundles = 1 to extGdsObj:NumBundles :
+                create tt-gds .
+                assign
+                    tt-gds.gds-code = buf_goods.gds-code
+                    tt-gds.gds-name = buf_goods.gds-name
+                    tt-gds.ms-base  = buf_goods.ms-base
+                    tt-gds.proof    = buf_goods.proof
+                    tt-gds.old-gds-code = buf_goods.gds-code
+                    tt-gds.alc-type-code = v-alc-type-code
+                .
+                assign
+                    tt-gds.alc-code = extGdsObj:GetExtGdsValue(numBundles):AlcCode
+                    tt-gds.old-alc-code = extGdsObj:GetExtGdsValue(numBundles):AlcCode
+                    tt-gds.egais-name = extGdsObj:GetExtGdsValue(numBundles):FullNameGds
+                .
+            end.
         end.                             
     end.
+    delete object extGdsObj no-error .
 END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query Dialog-Frame
