@@ -50,6 +50,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
   run bge/egais-ab-marks.w (
+  input parparentproc ,
   input ""  ,
   input 0   ,
   input ""  

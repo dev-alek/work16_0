@@ -26,7 +26,7 @@ Creation date: 01/16/07
 using ibs.th.bge.egais.*. 
 
 /* Parameters Definitions ---                                           */
-
+define input parameter parparentproc as handle no-undo.
 define input parameter p-num    as character no-undo .
 define input parameter p-position as integer no-undo .
 define input parameter p-alc-code as character   no-undo.
@@ -46,11 +46,8 @@ define variable bcol2           as handle    no-undo.
 define variable bcol3           as handle    no-undo.
 define variable bcol4           as handle    no-undo.
 define variable bcol5           as handle    no-undo.
-
+define variable v-mode          as character no-undo. 
 /* Local Variable Definitions ---                                       */
-
-
-
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -219,7 +216,7 @@ PROCEDURE proc-choose-file :
         
     REPEAT: 
       IMPORT v-mark.
-      find first tt-marks where tt-marks.mark = v-mark no-error .
+      find first tt-marks where tt-marks.mark = v-mark no-lock no-error .
       if not available tt-marks then 
       do:
         create tt-marks.
@@ -246,7 +243,7 @@ PROCEDURE proc-choose-file :
             l-error = yes .    
             if p-num = "" and p-position = 0 then 
             do:
-              find first tt-marks where tt-marks.mark = v-mark no-error.
+              find first tt-marks where tt-marks.mark = v-mark no-lock no-error.
               if not available tt-marks then 
               do:
                 create tt-marks .
@@ -260,7 +257,7 @@ PROCEDURE proc-choose-file :
           else 
           do:
           
-            find first tt-marks where tt-marks.mark = v-mark no-error.
+            find first tt-marks where tt-marks.mark = v-mark no-lock no-error.
             if not available tt-marks then 
             do:
               create tt-marks .
@@ -277,7 +274,7 @@ PROCEDURE proc-choose-file :
               tt-marks.impor-full-name    = extGdsObj:GetExtGdsValue(1):FullNameImpor
               .
             v-gds-code = extGdsObj:GetExtGdsValue(1):GdsCode .
-            find first ub.goods where ub.goods.gds-code = v-gds-code no-error.
+            find first ub.goods where ub.goods.gds-code = v-gds-code no-lock no-error.
             if available ub.goods then tt-marks.gds-name = ub.goods.gds-name .      
             if extGdsObj:NumBundles > 1 then tt-marks.flag = yes .
             if p-num = "" and p-position = 0 then 
@@ -286,7 +283,7 @@ PROCEDURE proc-choose-file :
               put stream str-alc unformatted
                 substitute  ("Информация по марке: &1:", v-mark) skip .
               do ii = 1 to extGdsObj:NumBundles:
-                find first ub.goods where ub.goods.gds-code = v-gds-code no-error.
+                find first ub.goods where ub.goods.gds-code = v-gds-code no-lock no-error.
                 if available ub.goods then v-gds-name = ub.goods.gds-name .
                 put stream str-alc unformatted
                   substitute  ("&1 &2 &3 &4 &5 &6 &7 &8 &9",extGdsObj:GetExtGdsValue(ii):AlcCode, extGdsObj:GetExtGdsValue(ii):GdsCode, v-gds-name, 
@@ -297,12 +294,8 @@ PROCEDURE proc-choose-file :
               end.      
             end.
           end.    
-          
         end.
-    
       end.
-      
-      
     END. 
     INPUT CLOSE. 
     output stream str-alc close.
@@ -412,7 +405,7 @@ END PROCEDURE.
               skip .
             if p-num = "" and p-position = 0 then 
             do:
-              find first tt-marks where tt-marks.mark = v-mark no-error.
+              find first tt-marks where tt-marks.mark = v-mark no-lock no-error.
               if not available tt-marks then 
               do:
                 create tt-marks .
@@ -432,7 +425,7 @@ END PROCEDURE.
             end.
             if (p-alc-code <> "" and p-alc-code = extGdsObj:GetExtGdsValue(1):AlcCode) or p-alc-code = "" then 
             do:
-              find first tt-marks where tt-marks.mark = v-mark no-error.
+              find first tt-marks where tt-marks.mark = v-mark no-lock no-error.
               if not available tt-marks then 
               do:
                 create tt-marks .
@@ -449,13 +442,13 @@ END PROCEDURE.
                 tt-marks.impor-full-name    = extGdsObj:GetExtGdsValue(1):FullNameImpor
                 .
               v-gds-code = extGdsObj:GetExtGdsValue(1):GdsCode .
-              find first ub.goods where ub.goods.gds-code = v-gds-code no-error.
+              find first ub.goods where ub.goods.gds-code = v-gds-code no-lock no-error.
               if available ub.goods then tt-marks.gds-name = ub.goods.gds-name .
               if extGdsObj:NumBundles > 1 then tt-marks.flag = yes .
               if p-num = "" and p-position = 0 then 
               do:
                 do ii = 1 to extGdsObj:NumBundles:
-                  find first ub.goods where ub.goods.gds-code = v-gds-code no-error.
+                  find first ub.goods where ub.goods.gds-code = v-gds-code no-lock no-error.
                   if available ub.goods then v-gds-name = ub.goods.gds-name .    
                   put stream str-alc unformatted
                     substitute  ("&1 &2 &3 &4 &5 &6 &7 &8 &9",extGdsObj:GetExtGdsValue(ii):AlcCode, extGdsObj:GetExtGdsValue(ii):GdsCode, v-gds-name, 
@@ -494,6 +487,25 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define BROWSE-NAME br-marks
+&Scoped-define SELF-NAME br-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-marks Dialog-Frame
+ON VALUE-CHANGED OF br-marks IN FRAME Dialog-Frame
+DO:
+  if available tt-marks then do:
+        if tt-marks.gds-code <> 0 then do:
+          enable Btn_goods 
+          WITH FRAME Dialog-Frame. 
+        end.
+        else do:
+          disable Btn_goods 
+          WITH FRAME Dialog-Frame.
+        end.    
+   end.  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
          
   ON ROW-DISPLAY OF br-marks IN FRAME Dialog-Frame
     DO:
@@ -501,21 +513,16 @@ END PROCEDURE.
       do:
         if tt-marks.gds-code = 0 then 
         do:
-          tt-marks.gds-code:BGCOLOR in browse br-marks = YELLOW_COLOR.
-          tt-marks.alc-code:BGCOLOR in browse br-marks = YELLOW_COLOR.
-          tt-marks.mark:BGCOLOR in browse br-marks = YELLOW_COLOR.
-          tt-marks.gds-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
-          tt-marks.prod-full-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
-          tt-marks.impor-full-name:BGCOLOR in browse br-marks = YELLOW_COLOR.
+          tt-marks.gds-code:BGCOLOR in browse br-marks = red_COLOR.
+          tt-marks.alc-code:BGCOLOR in browse br-marks = red_COLOR.
+          tt-marks.mark:BGCOLOR in browse br-marks = red_COLOR.
+          tt-marks.gds-name:BGCOLOR in browse br-marks = red_COLOR.
+          tt-marks.prod-full-name:BGCOLOR in browse br-marks = red_COLOR.
+          tt-marks.impor-full-name:BGCOLOR in browse br-marks = red_COLOR.
         end.
         if tt-marks.flag = yes then 
         do:
-          tt-marks.gds-code:BGCOLOR in browse br-marks = RED_COLOR.
-        /*                tt-marks.alc-code:BGCOLOR in browse br-marks = RED_COLOR.       */
-        /*                tt-marks.mark:BGCOLOR in browse br-marks = RED_COLOR.           */
-        /*                tt-marks.gds-name:BGCOLOR in browse br-marks = RED_COLOR.       */
-        /*                tt-marks.prod-full-name:BGCOLOR in browse br-marks = RED_COLOR. */
-        /*                tt-marks.impor-full-name:BGCOLOR in browse br-marks = RED_COLOR.*/
+          tt-marks.gds-code:BGCOLOR in browse br-marks = DARK_GREY_COLOR.
         end.            
       end.          
     END.
@@ -578,17 +585,17 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME Btn_imp
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_imp Dialog-Frame
-  ON choose OF Btn_goods in FRAME Dialog-Frame /* удалить */
+&Scoped-define SELF-NAME Btn_goods
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_goods Dialog-Frame
+  ON choose OF Btn_goods in FRAME Dialog-Frame /* товары */
     DO:
-      define variable v-gds-code like tt-marks.gds-code no-undo .
       define variable v-prod-full-name as character no-undo .
       define variable v-import-full-name as character no-undo .
       
       if available tt-marks then 
       do:
-        run bge/egais-goods-mark.w ( input tt-marks.alc-code, output v-gds-code, output v-gds-name, output v-prod-full-name, output v-import-full-name )  .  
+        v-mode = {&lookup}.
+        run bge/egais-goods-mark.w ( input parparentproc, input v-mode, input tt-marks.alc-code, output v-gds-code, output v-gds-name, output v-prod-full-name, output v-import-full-name )  .  
         if v-gds-code <> 0 then 
         do:
           assign
@@ -627,39 +634,6 @@ END PROCEDURE.
   DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
     RUN enable_UI.
-
-    /* сорт  колонок*/
-    /*{ gbl/srt-clmd.i                                                                             */
-    /*  &browse-name    = "{&browse-name}"                                                         */
-    /*  &frame-name     = "{&frame-name}"                                                          */
-    /*  &table-name     = "{&first-table-in-query-{&browse-name}}"                                 */
-    /*  &sort-label     = "tt-marks.mark"                                                          */
-    /*  &sort-clmn_1    = "tt-marks.mark"                                                          */
-    /*  &sort-clmn_2    = "tt-marks.alc-code"                                                      */
-    /*  &sort-clmn_3    = "tt-marks.gds-code"                                                      */
-    /*  &sort-clmn_4    = "tt-marks.gds-name"                                                      */
-    /*  &sort-clmn_5    = " tt-marks.impor-full-name"                                              */
-    /*  &sort-clmn_6    = "tt-marks.prod-full-name"                                                */
-    /*  &open-query     = "run OpenBr in this-procedure ( input yes, input no, input '':U)."       */
-    /*  &open-query-otherwise = "run OpenBr in this-procedure (  input yes, input no, input '':U)."*/
-    /*  &sort-column-name = "sort-column-name"                                                     */
-    /*  &re-move-clmn   = "yes"                                                                    */
-    /*  &mv-brw-default = "yes"                                                                    */
-    /*}       
-                                                                                         */
-    /*{ gbl/srt-clmd.i                                            */
-    /*  &table-name     = "{&first-table-in-query-{&browse-name}}"*/
-    /*  &browse-name = "{&browse-name}"                           */
-    /*  &frame-name = "{&frame-name}"                             */
-    /*  &open-query     = "run OpenBr(yes, no, no)."              */
-    /*  &open-query-otherwise = "run OpenBr(yes, no, no)."        */
-    /*  &sort-column-name = "sort-column-name"                    */
-    /*  &label-clmn_1         = "*"                               */
-    /*  &sort-clmn_1          = "tt-marks.mark"                   */
-    /*  &re-move-clmn   = "yes"                                   */
-    /*  &mv-brw-default = "yes"                                   */
-    /* }                                                          */
-
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
   END.
   RUN disable_UI.
@@ -699,8 +673,10 @@ PROCEDURE enable_UI :
                  These statements here are based on the "Other 
                  Settings" section of the widget Property Sheets.
   ------------------------------------------------------------------------------*/
-  ENABLE Btn_OK Btn_Cancel Btn_del Btn_imp Btn_goods Btn_EXIT v-mark br-marks
+  ENABLE Btn_OK Btn_Cancel Btn_del Btn_imp Btn_EXIT v-mark br-marks
     WITH FRAME Dialog-Frame.
+  DISABLE Btn_goods
+  WITH FRAME Dialog-Frame.   
   if p-num = "" and p-position = 0 then 
   do:
     disable Btn_Cancel Btn_del Btn_OK 
@@ -720,107 +696,4 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr d-pl-list
-PROCEDURE OpenBr :
 
-  define input  parameter p-open-query     as logical   no-undo .
-  define input  parameter p-find-next      as logical   no-undo .
-  define input  parameter p-find-condition as character no-undo .
-
-  define variable l-query-was-opened as logical no-undo .
-  define buffer buf_marks for tt-marks.
-
-
-  assign FRAME {&FRAME-NAME}  br-marks .
-  run waitfram-show in this-procedure ( input "Ждите...").
-
-  define variable sort-column-phrase as character no-undo .
-
-  open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
-  apply "entry" to v-mark in FRAME {&FRAME-NAME}.
-
-  case sort-column-name :
-    when "" then 
-      do:
-        assign
-          sort-column-phrase = ""
-          .
-      end.
-    otherwise 
-    do:
-      assign
-        sort-column-phrase = "by " + sort-column-name
-        .
-    end.
-  end case.
-
-&scop flt-open-debug-file
-
-&scop flt-open-open-query OPEN QUERY br-marks FOR EACH tt-marks
-
-&scop flt-open-dyn_open-query FOR EACH tt-marks
-
-&scop flt-open-query-handle QUERY br-marks:handle
-
-&scop flt-open-open-query-tail  , first tt-marks no-lock where where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position
-
-&scop flt-open-dyn_open-query-tail  substitute(', first tt-marks no-lock where where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position' )
-
-&scop flt-open-query-was-opened  l-query-was-opened
-
-&scop flt-open-sort-column-phrase sort-column-phrase
-
-&scop flt-open-call-point filter-point
-
-&scop flt-open-set-filter-name set-filter-name
-
-&scop flt-open-indexed-reposition indexed-reposition
-
-&scop flt-open-waitfram yes
-
-  /*CASE p-mode:                                                                                                                                  */
-  /*    when {&g___object} then do:                                                                                                               */
-  /*        FIND FIRST clients NO-LOCK WHERE clients.obj-type = p-obj-type AND                                                                    */
-  /*                                         clients.obj-code = p-obj-code NO-ERROR.                                                              */
-  /*        ASSIGN frame {&frame-name}:TITLE = "Складские места " + clients.obj-name                                                              */
-  /*        filter-point = filter-point0 + p-mode                                                                                                 */
-  /*        filter-label = substitute("&1", filter-label0)                                                                                        */
-  /*        .                                                                                                                                     */
-  /*          { gbl/fltopend.i                                                                                                                    */
-  /*            &where-cond = " X_place.obj-type = p-obj-type AND X_place.obj-code = p-obj-code "                                                 */
-  /*            &dyn_where-cond = " substitute('X_place.obj-type = &1&2&1 AND X_place.obj-code = &3 ', ~{&double-quote~}, p-obj-type, p-obj-code)"*/
-  /*            &use-ind = "  "                                                                                                                   */
-  /*            &by = "  "                                                                                                                        */
-  /*          }                                                                                                                                   */
-  /*    end.                                                                                                                                      */
-  /*    when {&all} then do:                                                                                                                      */
-  /*        ASSIGN                                                                                                                                */
-  /*        frame {&frame-name}:TITLE = "Складские места "                                                                                        */
-  /*        filter-point = filter-point0 + p-mode                                                                                                 */
-  /*        filter-label = substitute("&1", filter-label0)                                                                                        */
-  /*        .                                                                                                                                     */
-  /*          { gbl/fltopend.i                                                                                                                    */
-  /*            &where-cond = " TRUE "                                                                                                            */
-  /*            &use-ind = "  "                                                                                                                   */
-  /*            &by = "  "                                                                                                                        */
-  /*          }                                                                                                                                   */
-  /*    end.                                                                                                                                      */
-  /*                                                                                                                                              */
-  /*END CASE.                                                                                                                                     */
-
-  /*if v-doc-rec <> ? then reposition br-pl to recid v-doc-rec no-error.*/
-  /*if not p-open-query and v-fltopend-rowid[1] <> ? then               */
-  /*open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .*/
-  apply "entry" to v-mark in FRAME {&FRAME-NAME}.
-
-/*query br-pl:handle:reposition-to-rowid(v-fltopend-rowid) No-ERROR.*/
-/*apply "entry" to br-pl in frame {&frame-name}.                    */
-/*if avail X_place then                                 */
-/*APPLY "VALUE-CHANGED":U to br-pl.                     */
-/*run waitfram-hide in this-procedure .                 */
-/*apply "value-changed" to br-pl in frame {&frame-name}.*/
-
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
