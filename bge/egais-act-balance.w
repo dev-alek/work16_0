@@ -329,7 +329,7 @@ DO:
         message "Выберите строку" view-as alert-box .
         return no-apply.
     end. 
-    run bge/egais-ab-marks.w (tt-gds-act.num, tt-gds-act.position_, tt-gds-act.alc-code) .
+    run bge/egais-ab-marks.w (parparentproc, tt-gds-act.num, tt-gds-act.position_, tt-gds-act.alc-code) .
     assign ii = 0 .
     for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
         ii = ii + 1 .
@@ -587,7 +587,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-marks Dialog-Frame
 on choose of menu-item m-marks in menu m-add 
 DO:
-    run bge/egais-ab-marks.w (tt-act-header.num, ?, "") .
+    run bge/egais-ab-marks.w (parparentproc, tt-act-header.num, ?, "") .
     for each tt-marks exclusive-lock where tt-marks.gds-part-position_ = ? and tt-marks.num = tt-act-header.num :
         find first tt-gds-act exclusive-lock where tt-gds-act.alc-code = tt-marks.alc-code no-error .
         if not available tt-gds-act then do :
