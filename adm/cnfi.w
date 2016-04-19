@@ -1175,9 +1175,10 @@ ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   &if defined(stand-alone) > 0 &then
     if lookup( cnf-struct.param-type, {&cnf-type-list-protect} ) > 0
-      and ( cnf.param-type = {&type-log}
+      /* and ( cnf.param-type = {&type-log}
             or cnf.param-type = {&type-int}
           )
+          */
     then do:
       enable
         t-beg-date
