@@ -47,6 +47,7 @@ define variable qh-wb-gds-EG-header as handle    no-undo.
 define variable qh-wb-gds-EG        as handle    no-undo.
 define variable bh-wb-gds-EG-header as handle    no-undo.
 define variable bh-wb-gds-EG        as handle    no-undo.
+define variable bh-analiz           as handle    no-undo.
 
 define variable v-value-character   as character no-undo .
 define variable v-value-decimal     as decimal   no-undo .
@@ -89,9 +90,10 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn ~
-Btn_Del Btn_accept cb-1 f-date f-date-2 f-cli-name f-cli-code f-type 
+Btn_Del Btn_accept cb-1 f-date f-date-2 f-cli-name f-cli-code f-type ~
+TOGGLE_NotConn 
 &Scoped-Define DISPLAYED-OBJECTS cb-1 f-date f-date-2 f-cli-name f-cli-code ~
-f-type 
+f-type TOGGLE_NotConn 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -173,6 +175,11 @@ DEFINE VARIABLE f-date-2 AS DATE FORMAT "99/99/99":U
      VIEW-AS FILL-IN 
      SIZE 9.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE TOGGLE_NotConn AS LOGICAL INITIAL no 
+     LABEL "Не связ." 
+     VIEW-AS TOGGLE-BOX
+     SIZE 11.13 BY 1 NO-UNDO.
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -190,7 +197,8 @@ DEFINE FRAME Dialog-Frame
      f-cli-name AT ROW 2.5 COL 45.25 COLON-ALIGNED WIDGET-ID 24
      f-cli-code AT ROW 2.5 COL 65.25 COLON-ALIGNED WIDGET-ID 30
      f-type AT ROW 2.5 COL 85 COLON-ALIGNED WIDGET-ID 28
-     SPACE(20.62) SKIP(25.06)
+     TOGGLE_NotConn AT ROW 2.5 COL 101.75 WIDGET-ID 34
+     SPACE(8.74) SKIP(25.23)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Накладные/акты ЕГАИС" WIDGET-ID 100.
@@ -420,10 +428,15 @@ do:
   then do:
     message substitute ( "Накладная с № &1 уже сформирована, нельзя отправить отказ", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
     view-as alert-box.
-     return no-apply.
+/*    return no-apply.*/
   end.
   egais:RejectWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-  run f-query.
+  if egais:StatusErr
+  then do:
+    message egais:Msg view-as alert-box error.
+    return no-apply.
+  end.
+  else run f-query.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -438,6 +451,18 @@ do:
   if egais:StatusErr 
   then do:
     message "Ошибка: " egais:Msg view-as alert-box error.
+  end.
+  
+  bh-analiz = egaisWBAdv:HndlAnaliz.
+  if bh-analiz <> ? 
+  then do: 
+    bh-analiz:find-first ("where isMany") no-error.
+    if bh-analiz:available
+    then do:
+      message "Имеются накладные с одинаковыми номерами. Посмотреть?" view-as alert-box question buttons yes-no update isChoise as logical.
+      if isChoise 
+        then run bge/egais-analiz.w (input parparentproc, input egaisWBAdv).
+    end.
   end.
   run reopen-browse.
 end.
@@ -502,7 +527,7 @@ do:
       message "Не найден объект TH для EGAIS получателя regID: " + bh-wb-gds-EG-header:buffer-field ('regId-Cons'):buffer-value view-as alert-box.
       return no-apply.
     end.
-    bh-wb-gds-EG:find-first ("where tt-wb-gds-EG.gds-code = ?", no-lock) no-error.
+    bh-wb-gds-EG:find-first ("where tt-wb-gds-EG.gds-code = ? or tt-wb-gds-EG.gds-code = 0", no-lock) no-error.
     if bh-wb-gds-EG:available then do:
       message "Не найден товар TH для EGAIS товара AlcCode: " + bh-wb-gds-EG:buffer-field ('alc-code'):buffer-value view-as alert-box.
       return no-apply.
@@ -784,6 +809,17 @@ end.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME TOGGLE_NotConn
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL TOGGLE_NotConn Dialog-Frame
+ON VALUE-CHANGED OF TOGGLE_NotConn IN FRAME Dialog-Frame /* Не связ. */
+DO:
+  run f-query.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -831,7 +867,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
-    'actn_egais-doc':U
+    'actn_egais-adm':U
     {&cntxt-object}
     v-cntxt-host-code-obj
     v-cntxt-obj-type
@@ -884,7 +920,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   
   egais:EGAISImpl = new WayBill (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
   
-  egaisWBAdv = cast (egais:EGAISImpl, ibs.th.bge.egais.WayBill). 
+  egaisWBAdv = cast (egais:EGAISImpl, ibs.th.bge.egais.WayBill).
   egaisWBAdv:ActnEGAISAdm = actnEGAISAdm.
   
   create query qh-wb-egais.
@@ -905,7 +941,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       column-scrolling = true
       triggers:
         on mouse-move-dblclick persistent run msdblcl.
-/*        on row-leave persistent run proc-row-leave.*/
+        on row-display persistent run proc-row-disp.
       end triggers
   .
   bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").
@@ -970,10 +1006,10 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY cb-1 f-date f-date-2 f-cli-name f-cli-code f-type 
+  DISPLAY cb-1 f-date f-date-2 f-cli-name f-cli-code f-type TOGGLE_NotConn 
       WITH FRAME Dialog-Frame.
   ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn Btn_Del Btn_accept cb-1 
-         f-date f-date-2 f-cli-name f-cli-code f-type 
+         f-date f-date-2 f-cli-name f-cli-code f-type TOGGLE_NotConn 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -994,6 +1030,7 @@ def var v-proposition  as char no-undo.
     f-date
     f-date-2
     f-type
+    TOGGLE_NotConn
   .
   
   v-proposition = 
@@ -1001,7 +1038,8 @@ def var v-proposition  as char no-undo.
     (if f-date-2 <> ? then " and tt-wb-hndls.wb-date <= " + string (f-date-2) else "") + 
     (if f-cli-name <> "" then " and tt-wb-hndls.cliname matches '*" + string (f-cli-name) + "*'" else "") + 
     (if f-type <> "" and f-type <> "Все" then " and tt-wb-hndls.wb-type matches '" + string (f-type) + "'" else "") +
-    (if f-cli-code <> 0 and f-cli-code <> ? then " and tt-wb-hndls.cli matches '*" + string (f-cli-code) + "*'" else "")
+    (if f-cli-code <> 0 and f-cli-code <> ? then " and tt-wb-hndls.cli matches '*" + string (f-cli-code) + "*'" else "") +
+    (if logical (TOGGLE_NotConn) then " and not tt-wb-hndls.isWB" else  "") 
     .
     
   v-proposition = left-trim (v-proposition, " and").
@@ -1056,13 +1094,23 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-row-leave Dialog-Frame 
-PROCEDURE proc-row-leave :
-if false then do:
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-row-disp Dialog-Frame 
+PROCEDURE proc-row-disp :
+  
+  def var ii as int no-undo.
+  
+  if cb-1 = 1 then do:
     do ii = 1 to extent (bcol).  
-      bcol[ii]:bgcolor = RED_COLOR.
+      if valid-handle (bcol[ii]) 
+        then 
+          assign
+            bcol[ii]:bgcolor = DARK_GRAY_COLOR when not bh-wb-egais:buffer-field ("isWb"):buffer-value
+            bcol[ii]:bgcolor = RED_COLOR when bh-wb-egais:buffer-field ("EGAISSts"):buffer-value = 'Rejected'
+            bcol[ii]:bgcolor = DARK_BLUE_COLOR when bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value = 'отказ'
+          .
     end.
   end.
+  
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1094,6 +1142,7 @@ if bh-wb-egais = ?
           column-scrolling = true
           triggers:
             on mouse-move-dblclick persistent run msdblcl.
+            on row-display persistent run proc-row-disp.
           end triggers
       .
       bh-wb-egais = egais:GetHndlTable({&wb-clob}, "").

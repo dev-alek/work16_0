@@ -51,11 +51,18 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   assign
     level = v-start-level
   .
+
+ /* проверка на то, что удаляем записи только из интерфейса формирования машины правил 
+ С учетом того, что в update.p идет проверка атрибутов и сверка с выгрузкой из машины правил, и там есть удлаение, то пока не совсем понятно хорошо или нет удалять эти атрибуты. Видимо мысль в том, что
+    они не должны удаляться... а мы наткнулись на то, что не во всх версиях может быть один и тот же набор (но тут можно в пироге учесть), а можно же и специально удалять неиспользуемые вещи..
+    давайте жить покажет.  если наткнетесь на то, что они не должны удаляться, то смело убирайте коменты.
   _repeat:
-  repeat while program-name( level ) <> ? :
+  repeat while program-name( level ) <> ?  :
     v-p = program-name( level ).
-    if substring(v-p, length(v-p) - length("attrprp0.p") + 1) = "attrprp0.p":U
-    or substring(v-p, length(v-p) - length("attrprp0.p") + 1) = "attrprp0.r":U
+   
+    if length(v-p) >= length("utl/attrprp0.p")  and 
+    substring(v-p, length(v-p) - length("utl/attrprp0.p") + 1) = "utl/attrprp0.p":U
+    or substring(v-p, length(v-p) - length("utl/attrprp0.p") + 1) = "utl/attrprp0.r":U
     then do:
       v-confirmed = yes.
       leave _repeat.
@@ -71,4 +78,5 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       view-as alert-box error .
     undo main-block, return error.
   end.
+ */
 end.

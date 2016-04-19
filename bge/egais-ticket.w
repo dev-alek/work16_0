@@ -151,7 +151,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   create query qh-ticket-egais.
   create browse browse-hdl-ticket-egais
     assign 
-      title     = 'Квитанции ЕГАИС'
+      title     = 'Связанные документы ЕГАИС'
       frame     = frame {&FRAME-NAME}:handle
       query     = qh-ticket-egais
       x         = 10

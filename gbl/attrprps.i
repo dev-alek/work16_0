@@ -20,7 +20,7 @@ Creation date: 09/04/07
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 
-&glob ap-revision  "v15_1.2"
+&glob ap-revision  "v15_1.3"
 &glob ap-md5    { cmp/fixattrp.md5 }
 
 procedure check-ap-version :

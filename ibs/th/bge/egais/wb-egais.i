@@ -58,6 +58,9 @@
     field wb-type      as character label "Тип"
     field cargo-from   as character label  "Грузоотправитель"
     field uniq-key-rec as character
+    field INNShip      as character label "ИНН контрагента"
+    field KPPShip      as character label "КПП контрагента"
+    field TransIdList  as character
     index pi
     Identity 
     .
