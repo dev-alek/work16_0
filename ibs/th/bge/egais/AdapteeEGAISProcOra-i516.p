@@ -85,6 +85,11 @@ do trans:
     
     find first buf_goods no-lock where buf_goods.gds-code = tt-wb-gds-EG.gds-code no-error.
     
+    if not available (buf_goods)
+    then do:
+      return error ("Не найден товар с кодом - " + string (tt-wb-gds-EG.gds-code)).
+    end.
+    
     jj = jj + 1.
     create temp_doc-line.
     

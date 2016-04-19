@@ -32,6 +32,9 @@ Creation date: 10/09/07
       v-prg = ?
   .
 
+  refresh_()  для обновления из пользовательского объекта
+  process events не работает из пользовательского объекта
+
 */
 
 
@@ -84,6 +87,10 @@ CLASS Ibs.Th.Gbl.ProgressBar
          side-labels no-underline three-d
          cancel-button b-cancel
     .
+
+    DEFINE PUBLIC PROPERTY process-event AS logical INITIAL true NO-UNDO /*process events не работает при вызове из пользовательского объекта*/
+      get.
+      set.
 
     DEFINE PUBLIC PROPERTY fg-color AS INTEGER NO-UNDO
         GET :
@@ -252,6 +259,16 @@ CLASS Ibs.Th.Gbl.ProgressBar
         process-events().
     END METHOD.
 
+    METHOD PUBLIC VOID increment(inMsg as char) :
+        DEFINE VARIABLE v-mod       AS INT64     NO-UNDO.
+        DEFINE VARIABLE v-time-diff AS INT64     NO-UNDO.
+        
+        FRAME {&FRAME-NAME}:TITLE = "Обработка..." + inMsg.
+        
+        increment().
+
+    END METHOD.
+    
     METHOD PUBLIC VOID step ( INPUT p-val AS INTEGER ) :
         if p-val <= 0 then return.
         ASSIGN
@@ -342,10 +359,16 @@ CLASS Ibs.Th.Gbl.ProgressBar
     END METHOD.
 
     METHOD PRIVATE VOID process-events () :
-      if can-cancel
+      if can-cancel and process-event
       then do:
         process events.
       end.
+    END METHOD.
+    
+    METHOD PUBLIC VOID refresh_() :
+        HIDE FRAME {&FRAME-NAME}.
+        display r-complete v-prc with frame {&frame-name}.
+        VIEW FRAME {&FRAME-NAME}.
     END METHOD.
 
 END CLASS.

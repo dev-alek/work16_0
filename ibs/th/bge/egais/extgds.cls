@@ -444,6 +444,45 @@ class ibs.th.bge.egais.ExtGds:
     ClearProp().
     
   end.
+  
+  method public logical CopyEgaisInfo (inExtGdsValueObjForm as ExtGdsValue, inExtGdsValueObjTo as ExtGdsValue) :
+    
+    ReturnMsg = "".
+    if not valid-object (inExtGdsValueObjForm) or not valid-object (inExtGdsValueObjTo)
+    then do:
+      ReturnMsg = "Не найден объект inExtGdsValueObjForm или inExtGdsValueObjTo".
+      if not IsSilent 
+        then message ReturnMsg view-as alert-box.
+      return false.      
+    end.
+    
+    assign
+      inExtGdsValueObjTo:CliRegIdProd = inExtGdsValueObjForm:CliRegIdImpor
+      inExtGdsValueObjTo:CliRegIdProd = inExtGdsValueObjForm:CliRegIdProd
+      inExtGdsValueObjTo:CountryImpor = inExtGdsValueObjForm:CountryImpor
+      inExtGdsValueObjTo:CountryProd = inExtGdsValueObjForm:CountryProd
+      inExtGdsValueObjTo:DescrImpor = inExtGdsValueObjForm:DescrImpor
+      inExtGdsValueObjTo:DescrProd = inExtGdsValueObjForm:DescrProd
+      inExtGdsValueObjTo:FullNameGds = inExtGdsValueObjForm:FullNameGds
+      inExtGdsValueObjTo:FullNameImpor = inExtGdsValueObjForm:FullNameImpor
+      inExtGdsValueObjTo:FullNameProd = inExtGdsValueObjForm:FullNameProd
+      inExtGdsValueObjTo:INNImpor = inExtGdsValueObjForm:INNImpor
+      inExtGdsValueObjTo:INNProd = inExtGdsValueObjForm:INNProd
+      inExtGdsValueObjTo:KPPImpor = inExtGdsValueObjForm:KPPImpor
+      inExtGdsValueObjTo:KPPProd = inExtGdsValueObjForm:KPPProd
+    no-error.
+    
+    if error-status:error
+    then do:
+      ReturnMsg = "Ошибка присвоения свойств объекта inExtGdsValueObjTo".
+      if not IsSilent 
+        then message ReturnMsg view-as alert-box.
+      return false.
+    end.
+    
+    return true.
+    
+  end.
 
   method private integer getExtSystem ():
   

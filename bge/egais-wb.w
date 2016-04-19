@@ -41,7 +41,6 @@ define variable th-wb-egais                as handle    no-undo.
 define variable gh-wb-egais                as handle    no-undo.
 define variable bh-wb-gds-EG               as handle    no-undo.
 define variable browse-hdl-wb-egais        as handle    no-undo.
-define variable th-wb-egais-header         as handle    no-undo.
 define variable gh-wb-egais-header         as handle    no-undo.
 define variable bh-wb-gds-EG-header        as handle    no-undo.
 define variable browse-hdl-wb-egais-header as handle    no-undo.
@@ -633,6 +632,10 @@ PROCEDURE msdblcl :
   def var nnList as int no-undo.
   def var v-add as logical no-undo.
   def var v-numBnd as int no-undo.
+  define variable v-prod-full-name as character no-undo .
+  define variable v-import-full-name as character no-undo .
+  define variable v-gds-code as int no-undo .
+  define variable v-gds-name as character no-undo .
   
   def var glog as  log no-undo.
   
@@ -660,7 +663,16 @@ PROCEDURE msdblcl :
     v-numBnd = extGdsObj:NumBundles.
 
 
-    run ref/gds-ref.p
+    run bge/egais-goods-mark.w ( 
+                                input parparentproc, 
+                                input {&update}, 
+                                input bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value, 
+                                output v-gds-code, 
+                                output v-gds-name, 
+                                output v-prod-full-name, 
+                                output v-import-full-name )  .  
+
+    /*run ref/gds-ref.p
       ( parparentproc
       ,'b-add,b-sel'
       ,?             /*p-stat */
@@ -673,10 +685,10 @@ PROCEDURE msdblcl :
       ,v-cntxt-obj-type    /*p-obj-type  */
       ,v-cntxt-obj-code     /*p-obj-code  */
       ,?             /*p-other     */
-      , output v-rid-list) no-error.
-    if v-rid-list = "" or v-rid-list = ? 
+      , output v-rid-list) no-error.*/
+    if v-gds-code = 0 or v-gds-code = ? 
       then return no-apply. 
-    find buf_goods where recid (buf_goods) = integer (v-rid-list) no-lock.
+    find buf_goods where buf_goods.gds-code = v-gds-code no-lock.
     run gds-attr-value(
       buf_goods.gds-code,
       {&attr-alcohol-prod},
