@@ -2004,6 +2004,21 @@ for each part-2 exclusive-lock :
     end.                                       
 end.
 
+/*А теперь сделаем так, чтобы не было строк, в которых prod-code = 0*/
+define variable new-prod-code as integer no-undo .
+assign new-prod-code = 1 .
+for each part-1 exclusive-lock where part-1.prod-code = 0 break by part-1.prod-type :
+    for each part-2 exclusive-lock where part-2.alc-type-code = part-1.alc-type-code 
+                                     and part-2.prod-code = part-1.prod-code
+                                     and part-2.prod-type = part-1.prod-type
+                                     and part-2.obj-code  = part-1.obj-code
+                                     and part-2.obj-type  = part-1.obj-type :
+        assign part-2.prod-code = 10000 + new-prod-code .
+    end.
+    assign part-1.prod-code = 10000 + new-prod-code .            
+    if last-of(part-1.prod-type) then assign new-prod-code = new-prod-code + 1 .                     
+end.
+
 wait-message = string("Идёт формирование отчета").
 run waitfram-show in this-procedure (input wait-message).
 
