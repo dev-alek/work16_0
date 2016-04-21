@@ -5147,6 +5147,10 @@ end.
 &global-define lob-egais-ab '{&bef-lob-egais-ab}':U
 &global-define bef-lob-egais-ab-full Акт постановки на баланс B ЕГАИС
 &global-define lob-egais-ab-full '{&bef-lob-egais-ab-full}':U
+&global-define bef-lob-egais-awo egais-awo
+&global-define lob-egais-awo '{&bef-lob-egais-awo}':U
+&global-define bef-lob-egais-awo-full Акт о списании товара B ЕГАИС
+&global-define lob-egais-awo-full '{&bef-lob-egais-awo-full}':U
 &global-define bef-lob-egais-wb-act egais-wb-act
 &global-define lob-egais-wb-act '{&bef-lob-egais-wb-act}':U
 &global-define bef-lob-egais-wb-act-full Акт подтверждения накладной
@@ -5159,8 +5163,8 @@ end.
 &global-define lob-egais-wb-ticket '{&bef-lob-egais-wb-ticket}':U
 &global-define bef-lob-egais-wb-ticket-full Квитанция на акт по накладной ЕГАИС
 &global-define lob-egais-wb-ticket-full '{&bef-lob-egais-wb-ticket-full}':U
-&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-wb-act,egais-ticket,egais-wb-ticket':U
-&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт подтверждения накладной,Квитанция ЕГАИС,Квитанция на акт по накладной ЕГАИС':U
+&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-awo,egais-wb-act,egais-ticket,egais-wb-ticket':U
+&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт о списании товара B ЕГАИС,Акт подтверждения накладной,Квитанция ЕГАИС,Квитанция на акт по накладной ЕГАИС':U
 &global-define blob-res-codes 'data':U
 &global-define blob-res-codes-full 'Данные':U
 &global-define blob-trn-doc-image 'trn-doc-image':U
@@ -7955,6 +7959,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: fd13bd78d02f, 563, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 7b378c62f47b, 598, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 5a93049abef8, 523, rls ':U
 &endif
