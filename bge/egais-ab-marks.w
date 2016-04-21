@@ -266,12 +266,12 @@ PROCEDURE proc-choose-file :
               tt-marks.num                = p-num
               tt-marks.gds-part-position_ = p-position 
               tt-marks.mark               = v-mark 
-              tt-marks.new_               = true
-              tt-marks.gds-code           = extGdsObj:GetExtGdsValue(1):GdsCode
-              tt-marks.alc-code           = v-alc-code
+              tt-marks.new_               = true .
+              tt-marks.gds-code           = extGdsObj:GetExtGdsValue(1):GdsCode .
+              tt-marks.alc-code           = v-alc-code .
               /*                      tt-marks.gds-name           = extGdsObj:GetExtGdsValue(1):FullNameGds*/
-              tt-marks.prod-full-name     = extGdsObj:GetExtGdsValue(1):FullNameProd
-              tt-marks.impor-full-name    = extGdsObj:GetExtGdsValue(1):FullNameImpor
+              tt-marks.prod-full-name     = extGdsObj:GetExtGdsValue(1):FullNameProd .
+              tt-marks.impor-full-name    = extGdsObj:GetExtGdsValue(1):FullNameImpor .
               .
             v-gds-code = extGdsObj:GetExtGdsValue(1):GdsCode .
             find first ub.goods where ub.goods.gds-code = v-gds-code no-lock no-error.
@@ -434,12 +434,12 @@ END PROCEDURE.
                 tt-marks.num                = p-num
                 tt-marks.gds-part-position_ = p-position 
                 tt-marks.mark               = v-mark 
-                tt-marks.new_               = true
-                tt-marks.gds-code           = extGdsObj:GetExtGdsValue(1):GdsCode
-                tt-marks.alc-code           = extGdsObj:GetExtGdsValue(1):AlcCode 
+                tt-marks.new_               = true .
+                tt-marks.gds-code           = extGdsObj:GetExtGdsValue(1):GdsCode .
+                tt-marks.alc-code           = extGdsObj:GetExtGdsValue(1):AlcCode .
                 /*                tt-marks.gds-name           = extGdsObj:GetExtGdsValue(1):FullNameGds*/
-                tt-marks.prod-full-name     = extGdsObj:GetExtGdsValue(1):FullNameProd
-                tt-marks.impor-full-name    = extGdsObj:GetExtGdsValue(1):FullNameImpor
+                tt-marks.prod-full-name     = extGdsObj:GetExtGdsValue(1):FullNameProd .
+                tt-marks.impor-full-name    = extGdsObj:GetExtGdsValue(1):FullNameImpor .
                 .
               v-gds-code = extGdsObj:GetExtGdsValue(1):GdsCode .
               find first ub.goods where ub.goods.gds-code = v-gds-code no-lock no-error.

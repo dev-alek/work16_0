@@ -259,12 +259,12 @@ define variable v-gds-code as integer no-undo .
       extGdsObj:CreateExtGds (extGdsValueObjnew).
       
       create tt-goods .
-      assign
-        tt-goods.gds-code = extGdsValueObjnew:GdsCode
-        tt-goods.gds-name = ub.goods.gds-name
-        tt-goods.artic    = ub.goods.artic
-        tt-goods.import-full-name = extGdsValueObjnew:FullNameImpor
-        tt-goods.prod-full-name   = extGdsValueObjnew:FullNameProd
+      
+        tt-goods.gds-code = extGdsValueObjnew:GdsCode .
+        tt-goods.gds-name = ub.goods.gds-name .
+        tt-goods.artic    = ub.goods.artic .
+        tt-goods.import-full-name = extGdsValueObjnew:FullNameImpor .
+        tt-goods.prod-full-name   = extGdsValueObjnew:FullNameProd .
         .
   
       
@@ -368,12 +368,12 @@ PROCEDURE enable_goods :
       v-gds-code = extGdsObj:GetExtGdsValue(ii):GdsCode .
       find first ub.goods where ub.goods.gds-code = v-gds-code no-lock no-error.
       create tt-goods .
-      assign
-        tt-goods.gds-code = extGdsObj:GetExtGdsValue(ii):GdsCode
-        tt-goods.gds-name = ub.goods.gds-name
-        tt-goods.artic    = ub.goods.artic
-        tt-goods.import-full-name = extGdsObj:GetExtGdsValue(1):FullNameImpor
-        tt-goods.prod-full-name   = extGdsObj:GetExtGdsValue(1):FullNameProd
+      
+        tt-goods.gds-code = extGdsObj:GetExtGdsValue(ii):GdsCode .
+        tt-goods.gds-name = ub.goods.gds-name . 
+        tt-goods.artic    = ub.goods.artic .
+        tt-goods.import-full-name = extGdsObj:GetExtGdsValue(1):FullNameImpor .
+        tt-goods.prod-full-name   = extGdsObj:GetExtGdsValue(1):FullNameProd .
         .
     end.  
   end.    
