@@ -124,8 +124,8 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
                 else          assign entry (5, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.
             IF hNoderef:NAME = "oref:description" THEN do :
-                if v-imp then assign entry (6, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
-                else          assign entry (6, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
+                if v-imp then assign entry (6, tt-gds-EG.imp-info, chr(5)) = hText:node-value no-error .
+                else          assign entry (6, tt-gds-EG.prod-info, chr(5)) = hText:node-value no-error .
             end.    
                    
             GetChildren(hNoderef, (level + 1)).
