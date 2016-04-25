@@ -133,6 +133,9 @@ define variable v-value-date       as date      no-undo .
 define variable v-org as character no-undo .
 define variable v-fs-rar as character no-undo .
 
+define variable bh-act-header  as handle no-undo .
+{ibs/th/bge/egais/awo-egais.i proc }
+
 FUNCTION get-mark RETURNS CHARACTER
 (buffer local-gds for tt-gds-rests ):
 if lookup (string (recid (local-gds)), select-list) > 0  then return "*".
@@ -187,6 +190,10 @@ end function.
 /*define variable v-prod as character no-undo view-as text format "X(11)" label "Производитель" .*/
 /*define variable v-prod-name as character no-undo view-as text format "X(30)" .                 */
 
+define menu m-func
+    menu-item m-writeOff label "Сформировать акт о списании"
+.    
+
 DEFINE BUTTON b-mark 
      LABEL "&*" 
      SIZE 3 BY 1.14 .
@@ -223,6 +230,11 @@ DEFINE BUTTON b-connect
      LABEL "Связать" 
      SIZE 15 BY 1.14
      BGCOLOR 8 . 
+     
+DEFINE BUTTON b-func 
+     LABEL "Функции" 
+     SIZE 15 BY 1.14
+     BGCOLOR 8 .      
      
 DEFINE BUTTON b-sel-all
      LABEL "&+":L
@@ -283,6 +295,7 @@ DEFINE FRAME Dialog-Frame
      v-fs-rar at row 2.7 col 17 label "ФСРАР ID"
      b-connect AT ROW 1.24 COL 62
      b-del at row 1.24 col 77 
+     b-func at row 1.24 col 92 
      a-n-c at row 4 col 2 label "Поиск по"
      NameContext at row 4 col 50 label "Контекст"
      loc-alc at row 4 col 50 no-label
@@ -736,6 +749,80 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME m-writeOff
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-witeOff Dialog-Frame
+ON CHOOSE OF menu-item m-writeOff in menu m-func /* - */
+DO:
+    define variable v-awo-num as character no-undo .
+    define variable v-awo-date as date no-undo .
+    define variable v-awo-type as character no-undo .
+    define variable v-ok as logical no-undo .
+    define variable v-position as integer no-undo .
+    define variable v-part-num    as integer   no-undo .
+    define variable v-clob-db-num as integer   no-undo .
+    define variable v-int64-id    as int64     no-undo .
+    define variable v-info        as character no-undo .
+    
+    if select-list = "" then do :
+        message "Не выбрано ни одной строки" view-as alert-box .
+        return no-apply.
+    end.  
+    run bge/egais-makeWriteOff.w  (input parparentproc, 
+                                   output v-awo-num,
+                                   output v-awo-date,
+                                   output v-awo-type,
+                                   output v-ok) .
+    if not v-ok then return no-apply .
+    create tt-act-header.
+    assign
+        tt-act-header.num   = v-awo-num
+        tt-act-header.date_ = v-awo-date
+        tt-act-header.type_ = v-awo-type
+        tt-act-header.is-sent = no
+        v-position = 0
+    .
+    
+    do ii = 1 to num-entries(select-list) :
+        for first tt-gds-rests exclusive-lock where recid(tt-gds-rests) = integer(entry(ii, select-list)) :
+            assign v-position = v-position + 1 .
+            create tt-gds-act.
+            assign
+                tt-gds-act.num          = tt-act-header.num
+                tt-gds-act.position_    = v-position
+                tt-gds-act.alc-code     = tt-gds-rests.alc-code
+                tt-gds-act.gds-code     = tt-gds-rests.gds-code
+                tt-gds-act.gds-name     = tt-gds-rests.gds-name
+                tt-gds-act.inform-B     = tt-gds-rests.informB_
+                tt-gds-act.qnty         = tt-gds-rests.egais-qnty - tt-gds-rests.TH-qnty
+            .  
+        end.
+    end.
+    
+    run makeXML in this-procedure .
+    assign
+        v-clob-db-num = ?
+        v-int64-id = 0
+        v-info = tt-act-header.num + {&delim-par} + string(tt-act-header.date_) + {&delim-par} + tt-act-header.type_ + {&delim-par} + string(tt-act-header.is-sent) + {&delim-par} + tt-act-header.answer_
+    .
+    run gbl/file2clb.p ( input {&add-def}
+                          ,input ",no"
+                          ,input ? /*p-bh*/
+                          ,input tt-act-header.num /*p-uniq-key-rec*/
+                          ,input {&lob-egais-awo} /*p-field-*/
+                          ,input v-info /*p-descr*/
+                          ,input-output v-part-num
+                          ,input {&lob-egais-awo}
+                          ,input-output v-clob-db-num
+                          ,input-output v-int64-id
+                          ,input search (v-file)
+                          ,input '' /*p-src-encoding*/
+                          ) no-error .
+    message "Акт сформирован. Вы можете отправить его или изменить количества из интерфейса 'Акты о списании товаров'" view-as alert-box .                      
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define BROWSE-NAME br-rests
 &UNDEFINE SELF-NAME
 
@@ -805,6 +892,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 /*  assign                    */
 /*      rs-sort = 1           */
 /*  .                         */
+
+  assign
+    b-func:popup-menu in frame {&FRAME-NAME} = menu m-func:handle
+    b-func:menu-mouse = 1
+  .
+
   find first buf_clients no-lock where buf_clients.obj-type = {&cmp} and buf_clients.obj-code = v-cntxt-host-code-obj.
   find first buf_firm no-lock where buf_firm.firm-code = v-cntxt-host-code-obj.
   if valid-handle(bh-gds-egais) then do :
@@ -935,7 +1028,7 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
     
-  ENABLE b-mark b-sel-all b-unmark b-load b-save b-cancel br-rests  b-connect b-del
+  ENABLE b-mark b-sel-all b-unmark b-load b-save b-cancel br-rests  b-connect b-del b-func
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   hide NameContext loc-alc loc-code in FRAME Dialog-Frame.
