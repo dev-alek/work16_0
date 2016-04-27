@@ -2832,7 +2832,7 @@ if mode = {&add-def} then do:
                 output v-value,
                 output v-type
               ) no-error.
-        if v-value = '' then find first buf-grp where buf-grp.node-code = v-upper no-lock no-error.     
+        if v-value = '' then find first buf-grp where buf-grp.node-code = v-upper no-lock no-error.    
      end.
      
     /*Есть ли атрибут "Группа товаров на кассе" в группе товаров*/

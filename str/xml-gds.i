@@ -20,9 +20,12 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 define variable i-entry as integer no-undo .
 define variable v-attr-value as character no-undo .
+define variable v-attr-egais as integer no-undo .
 define buffer buf_cash-gds for cash-gds.
 define buffer buf_goods-attr for ub.goods-attr.
 define buffer buf_gds-obj-attr for ub.gds-obj-attr.
+define buffer buf_alc-type  for ub.alc-type.
+define buffer buf_alc-type-gds for ub.alc-type-gds.
 
 &if "{1}" <> "7" &then
 if action = 'U':U then do:
@@ -151,8 +154,23 @@ end.
                                             input string(if cash-gds.is-gas then 1 else 0), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "ISFuelAsUnit" ,
                                             input string(if cash-gds.ptrl-as-good then 1 else 0), input 1 ).
-    run bgelib-tag-close in this-procedure ( input 3, input "ItemStatus").
+/*Алкоголь*/
 
+  find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "alcohol-prod" no-lock no-error. 
+  if available buf_goods-attr then do:   
+  v-attr-egais = 1.
+  find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "mark" no-lock no-error. 
+    if available buf_goods-attr and buf_goods-attr.attr-value = "no" then  do: 
+      run bgelib-tag-put in this-procedure ( input 3, input "ISEgaisNoPDF", input 1, input 1 ). 
+    end. 
+    if available buf_goods-attr and buf_goods-attr.attr-value = "yes" then  do:
+      run bgelib-tag-put in this-procedure ( input 3, input "ISEgaisPDF"      , input 1, input 1 ).
+    end.  
+    if not available buf_goods-attr then do:
+      run bgelib-tag-put in this-procedure ( input 3, input "ISEgaisNoPDF", input 1, input 1 ).
+    end.  
+  end.  
+      run bgelib-tag-close in this-procedure ( input 3, input "ItemStatus").
   end. /*не инфокиоск*/
 
   /*ночная скидка*/
@@ -352,6 +370,21 @@ if pos-type <> {&cd-type-infokiosk} then do:
 end.
 
 run bgelib-tag-close in this-procedure ( input 2, input "Item").
+
+  if v-attr-egais = 1 then do:  
+        run bgelib-tag-open in this-procedure ( input 2, input "ItemMarkCode", input substitute("ctrl='&1' tms='&2' code='&3'"
+                                          ,"ADD":U, OS2-time,cash-gds.b-code)).  
+        find first buf_alc-type-gds where buf_alc-type-gds.gds-code = cash-gds.gds-code no-lock no-error.                                   
+        find first buf_alc-type where buf_alc-type.alc-type-inner-code = buf_alc-type-gds.alc-type-inner-code no-lock no-error.             
+        if available buf_alc-type then do:                     
+          run bgelib-tag-put in this-procedure ( input 3, input "IMarkCode" , input string(buf_alc-type.alc-type-code), input 1 ).  
+        end.                                                                                                                        
+        find first bb_goods where bb_goods.gds-code = cash-gds.gds-code no-lock no-error .                                                  
+        run bgelib-tag-put in this-procedure ( input 3, input "IMarkVolume" , input string(bb_goods.ms-base), input 1 ).
+        run bgelib-tag-put in this-procedure ( input 3, input "IMarkQnty" , input string(cash-gds.cli-base-rate), input 1 ).
+        run bgelib-tag-put in this-procedure ( input 3, input "IMarkAlc" ,    input string(bb_goods.proof), input 1 ).              
+        run bgelib-tag-close in this-procedure ( input 2, input "ItemMarkCode").                                                    
+    end.                                                                                                                          
 
 
 &if "{&called}" = "in-ov" &then

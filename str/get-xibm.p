@@ -46,6 +46,7 @@ DEFINE VARIABLE vss-description as character no-undo init "Программа приема чеко
 /*только чековая часть*/
 { gbl/xmlparse.i }
 { gbl/xmlvalid.i }
+{ str/chkdocat.i }
 define stream stmXMLOut.
 { str/cd-xml.i }
 { cmp/bitoper.i }
@@ -78,6 +79,7 @@ define variable p-second-mode as character no-undo .
 define variable v-is-petrol-check          as logical no-undo .
 define variable autotank-pay-list as character no-undo .
 define variable autotank-sum-return as decimal no-undo .
+define variable v-doc-code like ub.chk-doc.doc-code no-undo .
 define variable spool-date_ as date no-undo .
 define variable spool-time_ as integer no-undo .
 define variable v-eff-date as date no-undo .
@@ -620,6 +622,8 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     doc-num2_ = "":U
     chk-num_ = 0
     netto-sum_ = 0
+    AuthType_ = 0
+    qr-alchol_ = "":u
     brutto-sum_ = 0
     v-flag-salesman  = no
     v-flag-card = no
@@ -730,6 +734,21 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           assign
           netto-sum_ = fdecimal(buf_temp-temp.field-value)
           no-error .
+        end.
+        when "CAuthorization":U then do:
+          CASE buf_temp-temp.field-name:
+              when "CAuthType mes":U then do:
+                assign
+                AuthType_ = fdecimal(buf_temp-temp.field-value)
+                no-error .
+              end.
+              when "CAuthUrl mes":U then do:
+                run xmlchar-decode in this-procedure (
+                      input trim(buf_temp-temp.field-value)
+                    , output qr-alchol_
+                ) no-error.
+              end.
+          end case.
         end.
         when "CSClient":U then do:
           if p-pos-type = {&cd-type-magia-xml} then
@@ -1106,6 +1125,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
         ub.chk-doc.correct = no.
       end.
       prev-code = ub.chk-doc.doc-code.
+v-doc-code = chk-doc.doc-code.
 
       if v-chk-type[1] = integer({&rcpt-annu})
       then do:
@@ -1143,7 +1163,82 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     end. /* not(can-find) */
   end. /*товарные чеки*/
 end.
+end procedure .
 
+procedure proc-CAuthorization :
+define buffer buf_temp-temp for temp-temp.
+define buffer buf_chk-doc for ub.chk-doc.
+define buffer buf_shift-obj for ub.shift-obj.
+
+do
+on error undo, return error
+:
+
+    assign
+    AuthType_ = 0
+    qr-alchol_ = "":u
+    no-error
+    .
+    _buf_temp:
+    for each buf_temp-temp no-lock where
+            buf_temp-temp.record-name = "CAuthorization":U
+       AND buf_temp-temp.id = v-id:
+      CASE buf_temp-temp.field-name:
+              when "CAuthType":U then do:
+                assign
+                AuthType_ = fdecimal(buf_temp-temp.field-value)
+                no-error .
+              end.
+              when "CAuthUrl":U then do:
+                run xmlchar-decode in this-procedure (
+                      input trim(buf_temp-temp.field-value)
+                    , output qr-alchol_
+                ) no-error.
+              end.
+        otherwise do:
+          error-status:error = no.
+        end.
+      END CASE.
+      if error-status:error then do:
+        {&error-in-file-format}
+      end.
+    END.
+  
+define variable v-value as character no-undo .
+define variable v-type  as character no-undo .
+
+{ gbl/conf-rd.i
+  "'alcohol'"
+  0
+  "''"
+  0
+  "''"
+  "''"
+  "''"
+  no
+  v-value
+  v-type
+  no-error
+}
+
+if v-value = "yes" then do:
+    if AuthType_ = 2 then do: /*пиво*/
+      run chkdocat-write IN THIS-PROCEDURE(
+        input v-doc-code
+        ,INPUT "qr-alchol-pv"
+        ,INPUT qr-alchol_ ) NO-ERROR.
+
+    end.  
+    if AuthType_ <> 2 and AuthType_ <> 0 then do: /*алкоголь*/
+      run chkdocat-write IN THIS-PROCEDURE(
+        input v-doc-code
+        ,INPUT "qr-alchol"
+        ,INPUT qr-alchol_ ) NO-ERROR.
+    end.  
+  end.
+  
+end.  
+  
 end procedure. /* proc-00 */
 
 
@@ -1601,11 +1696,18 @@ on error undo, return error
        return .
     end.
 
-    CREATE ub.chk-gds.
+    find first chk-gds where chk-gds.doc-code = chk-doc.doc-code and chk-gds.line-num = (if lng-spl = 0 then - lng else lng-spl) no-error .  
+    if not available chk-gds then do:
+      CREATE chk-gds.
+      assign 
+        chk-gds.doc-code = chk-doc.doc-code
+        chk-gds.line-num = (if lng-spl = 0 then - lng else lng-spl)
+      .      
+    end.  
+    
     assign
-    ub.chk-gds.doc-code = ub.chk-doc.doc-code
     lng = lng + 1
-    ub.chk-gds.line-num = (if lng-spl = 0 then - lng else lng-spl)
+    
     ub.chk-gds.grp-code = 0
     ub.chk-gds.chk-date = ub.chk-doc.chk-date
     ub.chk-gds.b-code = b-c
@@ -1793,6 +1895,77 @@ end.
 
 end procedure. /* proc-01 */
 
+
+procedure proc-02-gds :
+define buffer buf_chk-gds for ub.chk-gds.
+
+define buffer buf_temp-temp for temp-temp.
+define buffer buf_tt-sum-grp for tt-sum-grp.
+do
+on error undo, return error
+:
+
+    for each buf_temp-temp where
+            buf_temp-temp.record-name = "CBarCode":U
+       AND buf_temp-temp.id = v-id:
+      CASE buf_temp-temp.field-name:
+        when "CBCType":U then do:
+                assign
+                CBCType_ = fdecimal(buf_temp-temp.field-value)
+                no-error .
+              end.
+              when "CBCString":U then do:
+                assign
+                CBCString_ = fdecimal(buf_temp-temp.field-value)
+                no-error .
+              end.
+              when "CBCBarcode":U then do:
+                run xmlchar-decode in this-procedure (
+                      input trim(buf_temp-temp.field-value)
+                    , output CBCBarcode_
+                ) no-error.
+              end.
+        otherwise do:
+          error-status:error = no.
+        end.
+      END CASE.
+      if error-status:error then do:
+        {&error-in-file-format}
+      end.
+    end. /*for each buf_temp-temp*/
+    if error-status:error then do:
+      {&error-in-file-format}
+    end.
+    find first chk-gds where chk-gds.doc-code = chk-doc.doc-code and chk-gds.line-num = CBCString_ no-error .
+    if not available chk-gds then do:
+    CREATE chk-gds.
+      assign
+        chk-gds.doc-code = chk-doc.doc-code
+        chk-gds.line-num = CBCString_  
+      .
+    end.
+    if CBCType_ <> 0 then do:
+      find first ub.chk-gds-attr where ub.chk-gds-attr.doc-code = ub.chk-gds.doc-code and 
+        ub.chk-gds-attr.line-num = CBCString_ and
+        ub.chk-gds-attr.attr-code = "mark-code" no-error.
+      if available ub.chk-gds-attr then do:
+      CBCBarcode_ = ub.chk-gds-attr.attr-value + "," + CBCBarcode_ .
+      ub.chk-gds-attr.attr-value =  CBCBarcode_ .
+      end.  
+      else do:
+      create ub.chk-gds-attr.
+      assign
+        ub.chk-gds-attr.doc-code = ub.chk-gds.doc-code
+        ub.chk-gds-attr.line-num = CBCString_
+        ub.chk-gds-attr.attr-code = "mark-code"
+        ub.chk-gds-attr.attr-value =  CBCBarcode_ 
+      .
+      end.
+    end.  
+
+end.
+
+end procedure. /* proc-01 */
 /*
 todo поскольку КАЖЕТСЯ сумма ручной скидки входит  одноверемнно в шапку чека и в строки  то пока закоментарим!!!
 procedure proc-02-gds :
@@ -2612,6 +2785,14 @@ define variable v-time-loc-char as character no-undo .
         end.
         when "CACHistory":U then do:
           run proc-ach in this-procedure ( input exist) no-error .
+        end.  
+        when "CBarCode":U then do:
+          if v-start-check = 1 then
+          run proc-02-gds in this-procedure no-error .
+        end.
+        when "CAuthorization":U then do:
+          if v-start-check = 1 then
+          run proc-CAuthorization in this-procedure no-error .
         end.
         when "ACHData":U then do:
           run proc-ach-data in this-procedure no-error.
@@ -2758,6 +2939,10 @@ define variable v-time-loc-char as character no-undo .
     when "tag-start" then do:
       CASE p-value:
         when "CHead":U
+        or
+        when "CBarCode":U
+        or
+        when "CAuthorization":U
         or
         when "CSale":U
         or

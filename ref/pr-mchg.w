@@ -76,7 +76,10 @@ define variable v-alc-min-price    as character  no-undo .
 define variable v-marg-pr-paraf    as character  no-undo .
 define variable v-level-dis-attr   as character  no-undo .
 define variable v-no-inc-auto-rep  as character  no-undo . 
-define variable v-ban-sales-via-cd as character  no-undo.
+define variable v-ban-sales-via-cd as character  no-undo .
+
+define variable v-alchol           as character  no-undo .
+define variable v-mark             as character  no-undo .
 define variable v-sum-grp          as integer    no-undo .
 define variable ix                 as integer    no-undo .
 
@@ -319,6 +322,24 @@ DEFINE VARIABLE n-ban-sales-via-cd AS LOGICAL
      SIZE 40 BY 1
      FGCOLOR 3  NO-UNDO.
 
+
+
+
+
+
+
+DEFINE VARIABLE n-alchol AS LOGICAL
+    LABEL "По умолчанию алкоголь"
+    VIEW-AS TOGGLE-BOX
+    SIZE 40 BY 1
+    FGCOLOR 3  NO-UNDO.
+
+DEFINE VARIABLE n-mark AS LOGICAL
+    LABEL "По умолчанию обязательная маркировка"
+    VIEW-AS TOGGLE-BOX
+    SIZE 40 BY 1
+    FGCOLOR 3  NO-UNDO.
+    
 DEFINE IMAGE l-alc-min-price
      FILENAME "adeicon\lock":U
      SIZE 2.88 BY 1.
@@ -435,8 +456,11 @@ DEFINE FRAME Dialog-Frame
      n-rmethod AT ROW 13.08 COL 5.88 NO-LABEL
      n-no-inc-auto-rep AT ROW 3 COL 65 NO-LABEL
      n-ban-sales-via-cd AT ROW 4 COL 65 NO-LABEL
-     fill-sum-grp AT ROW 6 COL 88.38 colon-aligned 
-     r-sum-grp AT ROW 6 COL 101.13
+
+     n-alchol AT ROW 6 COL 65 NO-LABEL
+     n-mark AT ROW 7 COL 65 NO-LABEL
+     fill-sum-grp AT ROW 8 COL 88.38 colon-aligned 
+     r-sum-grp AT ROW 8 COL 101.13
      n-income-cli AT ROW 19.42 COL 1.13 NO-LABEL
      n-notcorr AT ROW 20.63 COL 1.13 NO-LABEL WIDGET-ID 6
      n-alc-min-price AT ROW 21.75 COL 1 NO-LABEL WIDGET-ID 10
@@ -1421,7 +1445,9 @@ on error undo, return error
   define input parameter v-no-inc-auto-rep    as character                no-undo .
   define input parameter v-ban-sales-via-cd   as character                no-undo .
 
-  define input parameter v-sum-grp            as character                no-undo .
+  define input parameter v-alchol             as character                no-undo . 
+  define input parameter v-mark               as character                no-undo . 
+  define input parameter v-sum-grp            as character                no-undo . 
 
   DEFINE VARIABLE v-node-code  like ub.gds-grp.node-code  no-undo .
   DEFINE VARIABLE v-upper-code like ub.gds-grp.upper-code no-undo .
@@ -1672,6 +1698,60 @@ end.
           ,input   ""
           ,input   0
           ,input   {&ggoattr-ban-sales-via-cd}
+          ,output  v-delete
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
+      if v-alchol <> ""
+      then do:
+        run ggoattr-write (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-alchol-grp}
+          ,input   v-alchol
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
+      else do:
+        run ggoattr-delete (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-alchol-grp}
+          ,output  v-delete
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
+      if v-mark <> ""
+      then do:
+        run ggoattr-write (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-mark-grp}
+          ,input   v-mark
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
+      else do:
+        run ggoattr-delete (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-mark-grp}
           ,output  v-delete
           ) no-error .
         if error-status :error then do:
@@ -2504,7 +2584,27 @@ if available buf_gds-grp-obj then do:
       ,input   {&ggoattr-ban-sales-via-cd}
       ,output  v-ban-sales-via-cd
       ,output  v-type ) no-error .
+      
 
+    run ggoattr-value (
+       input   p-node-code
+      ,input   buf_gds-grp-obj.host-code
+      ,input   buf_gds-grp-obj.obj-type
+      ,input   buf_gds-grp-obj.obj-code
+      ,input   {&ggoattr-alchol-grp}
+      ,output  v-alchol
+      ,output  v-type ) no-error .
+      
+    run ggoattr-value (
+       input   p-node-code
+      ,input   buf_gds-grp-obj.host-code
+      ,input   buf_gds-grp-obj.obj-type
+      ,input   buf_gds-grp-obj.obj-code
+      ,input   {&ggoattr-mark-grp}
+      ,output  v-mark
+      ,output  v-type ) no-error .
+      
+      
     run ggoattr-value (
        input   p-node-code
       ,input   buf_gds-grp-obj.host-code
@@ -2534,8 +2634,11 @@ else do:
     v-notcorr       = "":U
     v-cli-code      = 0
     v-alc-min-price = "":U
-    v-no-inc-auto-rep = "no":U
-    v-ban-sales-via-cd = "no":U
+    v-no-inc-auto-rep = "no"
+    v-ban-sales-via-cd = "no"
+    
+    v-alchol        = "no"
+    v-mark          = "no"
     v-sum-grp       = 0
     .
 end.
@@ -2634,6 +2737,29 @@ BR-temp_obj-list
 end.
 
 
+
+
+
+v-value = "no".
+{ gbl/conf-rd.i
+  "'alcohol'"
+  0
+  "''"
+  0
+  "''"
+  "''"
+  "''"
+  no
+  v-value
+  v-type
+  no-error
+}
+if v-value = "yes" then do:
+    enable 
+    n-alchol 
+    n-mark
+    with frame {&frame-name}.
+end.
 enable 
   fill-sum-grp 
   r-sum-grp
@@ -2667,6 +2793,8 @@ if p-mode = {&lookup} then do:
      n-no-inc-auto-rep 
      n-ban-sales-via-cd
 
+     n-alchol
+     n-mark
      fill-sum-grp
      r-sum-grp 
      n-income-cli 
@@ -2714,6 +2842,8 @@ frame {&frame-name}
 n-no-inc-auto-rep
 n-ban-sales-via-cd
 
+n-alchol
+n-mark
 fill-sum-grp
 fi-notcorr
 fi-alc-min-price
@@ -2787,6 +2917,8 @@ run create-attr in this-procedure ( input v-marg-min
                                    ,input string(n-no-inc-auto-rep)
                                    ,input string(n-ban-sales-via-cd)
 
+                                   ,input string(n-alchol)
+                                   ,input string(n-mark)
                                    ,input fill-sum-grp
                                   ) no-error.
 if error-status:error then do:
@@ -3056,6 +3188,12 @@ CASE p-mode:
     disp n-no-inc-auto-rep with frame {&FRAME-NAME}.
     n-ban-sales-via-cd = logical(if v-ban-sales-via-cd = "" then "no" else v-ban-sales-via-cd).
     disp n-ban-sales-via-cd with frame {&FRAME-NAME}.
+    
+    
+    n-alchol = logical(if v-alchol = "" then "no" else v-alchol).
+    display n-alchol with frame {&FRAME-NAME}.
+    n-mark = logical(if v-mark = "" then "no" else v-mark).
+    display n-mark with frame {&FRAME-NAME}.
     fill-sum-grp = v-sum-grp .
     display fill-sum-grp with frame {&FRAME-NAME}.
   end.
@@ -3156,6 +3294,12 @@ CASE p-mode:
     disp n-no-inc-auto-rep with frame {&FRAME-NAME}.
     n-ban-sales-via-cd = logical(if v-ban-sales-via-cd = "" then "no" else v-ban-sales-via-cd).
     disp n-ban-sales-via-cd with frame {&FRAME-NAME}.
+   
+   
+    n-alchol = logical(if v-alchol = "" then "no" else v-alchol).
+    display n-alchol with frame {&FRAME-NAME}.
+    n-mark = logical(if v-mark = "" then "no" else v-mark).
+    display n-mark with frame {&FRAME-NAME}.
     fill-sum-grp = v-sum-grp .
     display fill-sum-grp with frame {&FRAME-NAME}.
   end.
