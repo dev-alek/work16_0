@@ -46,6 +46,11 @@ DEFINE VARIABLE z-num_                     like ub.chk-doc.z-number   no-undo.
 DEFINE VARIABLE cash-rate_                 as decimal                 no-undo .
 DEFINE VARIABLE cash-scale_                like ub.chk-doc.cash-scale no-undo .
 DEFINE VARIABLE chk-num_                   like ub.chk-doc.chk-num    no-undo .
+DEFINE VARIABLE AuthType_                  as integer  no-undo .
+DEFINE VARIABLE qr-alchol_                 like ub.chk-doc-attr.attr-value  no-undo .
+DEFINE VARIABLE CBCType_                   as integer  no-undo .
+DEFINE VARIABLE CBCString_                 like ub.chk-gds-attr.line-num  no-undo .
+DEFINE VARIABLE CBCBarcode_                like ub.chk-doc-attr.attr-value  no-undo .
 DEFINE VARIABLE pay-desk_                  like ub.chk-doc.pay-desk   no-undo .
 DEFINE VARIABLE cashier_                   like ub.chk-doc.cashier    no-undo .
 DEFINE VARIABLE sales-man_                 like ub.chk-doc.sales-man  no-undo .

@@ -1945,6 +1945,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-n
 { cmp/cr-prep.i 1 ggoattr-level-dis        level-dis      level-dis     level-dis       level-dis     }
 { cmp/cr-prep.i 1 ggoattr-no-inc-auto-rep    no-inc-auto-rep    no-inc-auto-rep    no-inc-auto-rep    no-inc-auto-rep    }
 { cmp/cr-prep.i 1 ggoattr-ban-sales-via-cd   ban-sales-via-cd   ban-sales-via-cd   ban-sales-via-cd   ban-sales-via-cd   } 
+{ cmp/cr-prep.i 1 ggoattr-table-menu         table-menu         table-menu         table-menu         table-menu         } 
+{ cmp/cr-prep.i 1 ggoattr-alchol-grp         alchol-grp         alchol-grp         alchol-grp         alchol-grp         }
+{ cmp/cr-prep.i 1 ggoattr-mark-grp           mark-grp           mark-grp           mark-grp           mark-grp           }
 { cmp/cr-prep.i 1 ggoattr-sum-grps           sum-grps           sum-grps           sum-grps           sum-grps           } 
 
 /* Атрибуты свойств товаров gds-obj-prop на объекте */

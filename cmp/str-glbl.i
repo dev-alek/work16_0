@@ -3391,6 +3391,8 @@ end.
 &global-define attr-null-price '{&bef-attr-null-price}':U
 &global-define bef-attr-fasovka fasovka
 &global-define attr-fasovka '{&bef-attr-fasovka}':U
+&global-define bef-attr-mark mark
+&global-define attr-mark '{&bef-attr-mark}':U
 &global-define bef-attr-sum-grp-gl sum-grp-gl
 &global-define attr-sum-grp-gl '{&bef-attr-sum-grp-gl}':U
 &global-define bef-attr-15x80 15x80
@@ -3433,7 +3435,7 @@ end.
 &global-define attr-weight-of-pallet '{&bef-attr-weight-of-pallet}':U
 &global-define bef-attr-image-list image-list
 &global-define attr-image-list '{&bef-attr-image-list}':U
-&global-define gds-attr-list 'alcohol-prod,egais-name,is-gas,ptrl-without-rvs,office-type,fuel-type,is-loyalty-payment,ban-bonus,null-price,fasovka,sum-grp-gl,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet,image-list':U
+&global-define gds-attr-list 'alcohol-prod,egais-name,is-gas,ptrl-without-rvs,office-type,fuel-type,is-loyalty-payment,ban-bonus,null-price,fasovka,mark,sum-grp-gl,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet,image-list':U
 &global-define bef-prop-list-attr-office-type oss-pay,tso-ret,card-act
 &global-define prop-list-attr-office-type '{&bef-prop-list-attr-office-type}':U
 &global-define bef-attr-office-type_oss-pay oss-pay
@@ -6058,6 +6060,18 @@ end.
 &global-define ggoattr-ban-sales-via-cd '{&bef-ggoattr-ban-sales-via-cd}':U
 &global-define bef-ggoattr-ban-sales-via-cd-full ban-sales-via-cd
 &global-define ggoattr-ban-sales-via-cd-full '{&bef-ggoattr-ban-sales-via-cd-full}':U
+&global-define bef-ggoattr-table-menu table-menu
+&global-define ggoattr-table-menu '{&bef-ggoattr-table-menu}':U
+&global-define bef-ggoattr-table-menu-full table-menu
+&global-define ggoattr-table-menu-full '{&bef-ggoattr-table-menu-full}':U
+&global-define bef-ggoattr-alchol-grp alchol-grp
+&global-define ggoattr-alchol-grp '{&bef-ggoattr-alchol-grp}':U
+&global-define bef-ggoattr-alchol-grp-full alchol-grp
+&global-define ggoattr-alchol-grp-full '{&bef-ggoattr-alchol-grp-full}':U
+&global-define bef-ggoattr-mark-grp mark-grp
+&global-define ggoattr-mark-grp '{&bef-ggoattr-mark-grp}':U
+&global-define bef-ggoattr-mark-grp-full mark-grp
+&global-define ggoattr-mark-grp-full '{&bef-ggoattr-mark-grp-full}':U
 &global-define bef-ggoattr-sum-grps sum-grps
 &global-define ggoattr-sum-grps '{&bef-ggoattr-sum-grps}':U
 &global-define bef-ggoattr-sum-grps-full sum-grps
@@ -7958,7 +7972,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 7b378c62f47b, 598, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 8072e19e663c, 603, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 8072e19e663c, 603, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 5a93049abef8, 523, rls ':U
 &endif

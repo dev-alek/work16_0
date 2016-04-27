@@ -54,6 +54,32 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scop manual-edit-chk-doc-attr-out-code-2  0
 &scop batch-edit-chk-doc-attr-out-code-2  0
 
+&scop bef-chk-doc-attr-qr-alchol qr-alchol
+&glob chk-doc-attr-qr-alchol '{&bef-chk-doc-attr-qr-alchol}':U
+&glob type-chk-doc-attr-qr-alchol {&type-char}
+&glob format-chk-doc-attr-qr-alchol  "X(64)"
+&glob label-chk-doc-attr-qr-alchol   "Qr-коды от ЕГАИС по алкоголю (кроме пива)"
+&glob tooltip-chk-doc-attr-qr-alchol   "Qr-коды от ЕГАИС по алкоголю, (кроме пива)"
+&glob user-can-edit-chk-doc-attr-qr-alchol  false
+&glob output-display-chk-doc-attr-qr-alchol  true
+&glob other-chk-doc-attr-qr-alchol  '':u
+&glob copy-chk-doc-attr-qr-alchol  true
+&scop manual-edit-chk-doc-attr-qr-alchol  0
+&scop batch-edit-chk-doc-attr-qr-alchol  0
+
+&scop bef-chk-doc-attr-qr-alchol qr-alchol-pv
+&glob chk-doc-attr-qr-alchol-pv '{&bef-chk-doc-attr-qr-alchol-pv}':U
+&glob type-chk-doc-attr-qr-alchol-pv {&type-char}
+&glob format-chk-doc-attr-qr-alchol-pv  "X(64)"
+&glob label-chk-doc-attr-qr-alchol-pv   "Qr-коды от ЕГАИС по пиву)"
+&glob tooltip-chk-doc-attr-qr-alchol-pv   "Qr-коды от ЕГАИС по пиву"
+&glob user-can-edit-chk-doc-attr-qr-alchol-pv  false
+&glob output-display-chk-doc-attr-qr-alchol-pv  true
+&glob other-chk-doc-attr-qr-alchol-pv  '':u
+&glob copy-chk-doc-attr-qr-alchol-pv  true
+&scop manual-edit-chk-doc-attr-qr-alchol-pv  0
+&scop batch-edit-chk-doc-attr-qr-alchol-pv  0
+
 &glob chkdocat-list '{&bef-attr-chk-doc-attr-locko}~
 ,{&bef-chk-doc-attr-out-code-2}~
 ':U
@@ -97,6 +123,10 @@ do
       {&attr-temp-full-code}
       &scop attr-code chk-doc-attr-out-code-2
       {&attr-temp-full-code}
+      &scop attr-code chk-doc-attr-qr-alchol
+      {&attr-temp-full-code}
+      &scop attr-code chk-doc-attr-qr-alchol-pv
+      {&attr-temp-full-code}
 
        /* сюда добавлять новые параметры */
       otherwise do:
@@ -122,6 +152,10 @@ do
       &scop attr-code attr-chk-doc-attr-lock
       {&attr-temp-code}
       &scop attr-code chk-doc-attr-out-code-2
+      {&attr-temp-code}
+      &scop attr-code chk-doc-attr-qr-alchol
+      {&attr-temp-code}
+      &scop attr-code chk-doc-attr-qr-alchol-pv
       {&attr-temp-code}
 
      /* сюда добавлять новые параметры */

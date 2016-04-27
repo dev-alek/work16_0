@@ -186,14 +186,21 @@ do:
     cmd = substitute ("&1  -X DELETE &2", search ("exe/curl.exe"), url_).
     os-command value (cmd).
     do trans:
-      for each ub.clob-bind exclusive-lock where ub.clob-bind.uniq-key-rec = bh-wb-analiz:buffer-field ('uniq-key-rec'):buffer-value ():
-        ub.clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec + "#old".
+      for each ub.clob-bind exclusive-lock 
+        where ub.clob-bind.uniq-key-rec = bh-wb-analiz:buffer-field ('uniq-key-rec'):buffer-value () 
+          and ub.clob-bind.resource-type = bh-wb-analiz:buffer-field ('resource-type'):buffer-value ():
+          
+          ub.clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec + "#отмена".
+      
       end.
+      bh-wb-analiz:buffer-delete ().
     end.
   end.
   else do:
     return no-apply.
   end.
+  
+  run refresh-view.
 
 end.
 
@@ -309,10 +316,14 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-view Dialog-Frame 
 PROCEDURE refresh-view :
-display Btn_Cancel with frame Dialog-Frame.
+  
+  display Btn_Cancel with frame Dialog-Frame.
   ENABLE Btn_Cancel btn_del
     WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
+  qh-analiz:query-close.
+  qh-analiz:query-prepare ("for each tt-analiz where tt-analiz.isMany by tt-analiz.nnOrder").
+  qh-analiz:query-open.
   browse-hdl-analiz:refresh ().
 
 end.

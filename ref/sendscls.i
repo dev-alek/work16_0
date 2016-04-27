@@ -42,7 +42,6 @@ DEFINE VARIABLE var-tara-string as character no-undo .
 DEFINE VARIABLE var-param-code as character no-undo .
 DEFINE VARIABLE v-value as character no-undo .
 DEFINE VARIABLE par-type as character no-undo .
-
   CASE loc-scales.scales-type:
     when "TIGER":U
     or
@@ -369,7 +368,6 @@ CASE p-scales-type:
 END CASE.
 return v-struct.
 END FUNCTION.
-
 
 FUNCTION main-record-string returns character ( buffer buf_goods for ub.goods
                                                ,input p-mode as character
@@ -1153,7 +1151,6 @@ ELSE DO:
           on stop   undo, return error substitute( "&1. stop", vss-workfile )
           on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           :
-
          jj = jj + 1.
           if ( jj modulo 10 = 0 ) then do:
             run show-counter in p-log-handle .
@@ -1324,6 +1321,30 @@ ELSE DO:
           and t-scales.scales-type <> "CAS_CL5000"
           /*для CAS_CL5000J просто команда*/
           then do:
+                        FOR EACH buf_scales-gds WHERE
+                          buf_scales-gds.scales-num = t-scales.scales-num
+                      AND buf_scales-gds.db-num = t-scales.db-num
+                      EXCLUSIVE-LOCK,
+              FIRST buf_bar-code WHERE
+                    buf_bar-code.b-code = buf_scales-gds.b-code NO-LOCK ,
+              FIRST buf_goods WHERE
+                    buf_goods.gds-code = buf_bar-code.gds-code NO-LOCK ,
+              FIRST buf_gds-obj-attr WHERE
+                    buf_gds-obj-attr.gds-code = buf_bar-code.gds-code AND
+                    buf_gds-obj-attr.attr-code = {&attr-scales-code-o} AND
+                    buf_gds-obj-attr.obj-type = buf_scales-gds.obj-type AND
+                    buf_gds-obj-attr.obj-code = buf_scales-gds.obj-code
+                    No-LOCK,
+              FIRST buf_prod-bc WHERE
+                    buf_prod-bc.b-str = buf_gds-obj-attr.attr-value NO-LOCK :
+
+              jj = jj + 1.
+              if ( jj modulo 10 = 0 ) then do:
+                run show-counter in p-log-handle .
+                run write-counter in p-log-handle (substitute("Обработано: &1 товаров на весах № &2"
+                                                                , jj
+                                                                , t-scales.scales-num)).
+              end.
             PUT stream PrnLibStream unformatted
             main-record-string  ( buffer buf_goods
                                 ,input "purge-all"
@@ -1332,7 +1353,7 @@ ELSE DO:
                                 ,input t-scales.scales-num
                                 ,input jj /*plu-code*/
                                 ,input ? /*plu-type*/
-                                ,input '':U /*b-str*/
+                                ,input buf_prod-bc.b-str /*b-str*/
                                 ,input 0.0 /*p-price-sale*/
                                 ,input 0 /*deadline*/
                                 ,input ? /*deaddate*/
@@ -1343,6 +1364,7 @@ ELSE DO:
                                 )
             {&ingridients-del}
             skip .
+          end.
           end.
           FIND FIRST buf_scales-gds WHERE
                       buf_scales-gds.scales-num = t-scales.scales-num
@@ -1399,7 +1421,6 @@ ELSE DO:
                     No-LOCK.
               FIND FIRST buf_prod-bc WHERE
                     buf_prod-bc.b-str = buf_gds-obj-attr.attr-value NO-LOCK.
-
               PUT stream PrnLibStream unformatted
                  main-record-string  ( buffer buf_goods
                               ,input "purge"
@@ -1435,7 +1456,20 @@ ELSE DO:
           end.
           FIND FIRST buf_scales-gds WHERE
                       recid( buf_scales-gds ) = integer( entry( jj, send-rid-list ) ) .
+              FIND FIRST buf_bar-code WHERE
+                    buf_bar-code.b-code = buf_scales-gds.b-code NO-LOCK.
+              FIND FIRST buf_goods WHERE
+                    buf_goods.gds-code = buf_bar-code.gds-code NO-LOCK .
+              FIND FIRST buf_gds-obj-attr WHERE
+                    buf_gds-obj-attr.gds-code = buf_bar-code.gds-code AND
+                    buf_gds-obj-attr.attr-code = {&attr-scales-code-o} AND
+                    buf_gds-obj-attr.obj-type = buf_scales-gds.obj-type AND
+                    buf_gds-obj-attr.obj-code = buf_scales-gds.obj-code
+                    No-LOCK.
+              FIND FIRST buf_prod-bc WHERE
+                    buf_prod-bc.b-str = buf_gds-obj-attr.attr-value NO-LOCK.
           PUT stream PrnLibStream unformatted
+          
          main-record-string  ( buffer buf_goods
                               ,input "purge"
                               ,input t-scales.db-num
@@ -1443,7 +1477,8 @@ ELSE DO:
                               ,input buf_scales-gds.scales-num
                               ,input buf_scales-gds.plu-code
                               ,input buf_scales-gds.plu-type
-                              ,input '':U /*b-str*/
+/*                              ,input '':U /*b-str*/*/
+                              ,input buf_prod-bc.b-str    
                               ,input 0.0 /*p-price-sale*/
                               ,input 0 /*deadline*/
                               ,input ? /*deaddate*/

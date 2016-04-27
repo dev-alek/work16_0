@@ -90,8 +90,8 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn ~
-Btn_Del Btn_accept cb-1 f-date f-date-2 f-cli-name f-cli-code f-type ~
-TOGGLE_NotConn 
+Btn_Del btn_ticket Btn_accept cb-1 f-date f-date-2 f-cli-name f-cli-code ~
+f-type TOGGLE_NotConn 
 &Scoped-Define DISPLAYED-OBJECTS cb-1 f-date f-date-2 f-cli-name f-cli-code ~
 f-type TOGGLE_NotConn 
 
@@ -139,6 +139,10 @@ DEFINE BUTTON Btn_Sel
      SIZE 10 BY 1.21
      BGCOLOR 8 .
 
+DEFINE BUTTON btn_ticket 
+     LABEL "Просмотр" 
+     SIZE 10 BY 1.21.
+
 DEFINE VARIABLE cb-1 AS INTEGER FORMAT "->,>>>,>>9" INITIAL 1 
      VIEW-AS COMBO-BOX 
      LIST-ITEM-PAIRS "Полученные",1,
@@ -146,7 +150,7 @@ DEFINE VARIABLE cb-1 AS INTEGER FORMAT "->,>>>,>>9" INITIAL 1
                      "Акты",3,
                      "Расход",4
      DROP-DOWN-LIST
-     SIZE 40 BY 1 NO-UNDO.
+     SIZE 25.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-type AS CHARACTER FORMAT "X(256)":U INITIAL "Все" 
      LABEL "Тип" 
@@ -190,8 +194,9 @@ DEFINE FRAME Dialog-Frame
      Btn_dnlw AT ROW 1.21 COL 34.63 WIDGET-ID 12
      Btn_conn AT ROW 1.21 COL 45 WIDGET-ID 16
      Btn_Del AT ROW 1.21 COL 55.63 WIDGET-ID 14
-     Btn_accept AT ROW 1.21 COL 66.25 WIDGET-ID 32
-     cb-1 AT ROW 1.21 COL 78.38 COLON-ALIGNED NO-LABEL WIDGET-ID 2
+     btn_ticket AT ROW 1.21 COL 66 WIDGET-ID 36
+     Btn_accept AT ROW 1.21 COL 76.63 WIDGET-ID 32
+     cb-1 AT ROW 1.21 COL 93 COLON-ALIGNED NO-LABEL WIDGET-ID 2
      f-date AT ROW 2.5 COL 8.63 COLON-ALIGNED WIDGET-ID 22
      f-date-2 AT ROW 2.5 COL 22.75 COLON-ALIGNED WIDGET-ID 26
      f-cli-name AT ROW 2.5 COL 45.25 COLON-ALIGNED WIDGET-ID 24
@@ -426,9 +431,10 @@ do:
   end.
   if can-find (first ub.trn-doc where ub.trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
   then do:
-    message substitute ( "Накладная с № &1 уже сформирована, нельзя отправить отказ", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
-    view-as alert-box.
-/*    return no-apply.*/
+    message substitute ( "Накладная с № &1 уже сформирована, все равно отправить отказ", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
+    view-as alert-box question buttons yes-no update isChoise as logical.
+    if not isChoise 
+      then return no-apply.
   end.
   egais:RejectWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
   if egais:StatusErr
@@ -665,6 +671,20 @@ end.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME btn_ticket
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_ticket Dialog-Frame
+ON CHOOSE OF btn_ticket IN FRAME Dialog-Frame /* Просмотр */
+DO:
+  if not bh-wb-egais:available 
+    then return no-apply.
+  run bge/egais-ticket.w (parparentproc, egais, bh-wb-egais:handle).
+  v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME cb-1
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-1 Dialog-Frame
 ON value-changed OF cb-1 IN FRAME Dialog-Frame
@@ -678,11 +698,13 @@ do:
     Btn_Save:label = "Сохранить".
     Btn_Del:hidden = false.
     Btn_conn:hidden = false.
+    btn_ticket:hidden = false.
   end.
   else do:
     Btn_Save:label = "Отправить".
     Btn_Del:hidden = true.
     Btn_conn:hidden = true.
+    btn_ticket:hidden = true.
   end.
   if cb-1 = 3
   then disable Btn_Save with frame {&FRAME-NAME}.
@@ -1008,8 +1030,9 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY cb-1 f-date f-date-2 f-cli-name f-cli-code f-type TOGGLE_NotConn 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn Btn_Del Btn_accept cb-1 
-         f-date f-date-2 f-cli-name f-cli-code f-type TOGGLE_NotConn 
+  ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn Btn_Del btn_ticket 
+         Btn_accept cb-1 f-date f-date-2 f-cli-name f-cli-code f-type 
+         TOGGLE_NotConn 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1096,8 +1119,7 @@ end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-row-disp Dialog-Frame 
 PROCEDURE proc-row-disp :
-  
-  def var ii as int no-undo.
+def var ii as int no-undo.
   
   if cb-1 = 1 then do:
     do ii = 1 to extent (bcol).  
@@ -1106,7 +1128,7 @@ PROCEDURE proc-row-disp :
           assign
             bcol[ii]:bgcolor = DARK_GRAY_COLOR when not bh-wb-egais:buffer-field ("isWb"):buffer-value
             bcol[ii]:bgcolor = RED_COLOR when bh-wb-egais:buffer-field ("EGAISSts"):buffer-value = 'Rejected'
-            bcol[ii]:bgcolor = DARK_BLUE_COLOR when bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value = 'отказ'
+            bcol[ii]:bgcolor = CYAN_COLOR when bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value = 'отказ'
           .
     end.
   end.

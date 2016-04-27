@@ -2681,6 +2681,28 @@ end.
   end.
 
   if prt-mode = {&lookup} then do:
+    if ub.gds-dtl.fact-qnty:hidden = false
+    then do:
+      display
+        v-fact-qnty-kg
+      with frame {&FRAME-NAME}.
+    end.
+    display
+      v-qnty-kg
+    with frame {&FRAME-NAME}.
+              
+    v-qnty-kg             = ub.gds-dtl.doc-qnty / buf_goods.cli-base-rate.
+    v-fact-qnty-kg        = ub.gds-dtl.fact-qnty / buf_goods.cli-base-rate.
+    v-qnty-kg:screen-value = string (v-qnty-kg).
+    v-fact-qnty-kg:screen-value = string (v-fact-qnty-kg).
+    assign
+      ub.gds-dtl.price-rubl :label in frame {&frame-name} = substitute("Цена,&1", buf_goods.unit-base )
+      v-price-rubl-kg       :label in frame {&frame-name} = substitute("Цена,&1", buf_goods.unit-cli )
+      ub.gds-dtl.doc-qnty   :label in frame {&frame-name} = substitute("По док,&1", buf_goods.unit-base )
+      ub.gds-dtl.fact-qnty  :label in frame {&frame-name} = substitute("Факт,&1", buf_goods.unit-base )
+      v-qnty-kg             :label in frame {&frame-name} = substitute("По док,&1", buf_goods.unit-cli )
+      v-fact-qnty-kg        :label in frame {&frame-name} = substitute("Факт,&1", buf_goods.unit-cli )
+    .
     wait-for go of frame {&FRAME-NAME} focus b-exit.
   end.
   else do: /* prt-mode <> {&lookup} */
@@ -2706,6 +2728,30 @@ end.
         wait-for go of frame {&FRAME-NAME} focus v-qnty-kg .
       end. /* q-ty, kg */
       else do: /* q-ty, l */
+        display
+          ub.gds-dtl.doc-qnty
+          v-qnty-kg
+        with frame {&FRAME-NAME}.
+        
+        if ub.gds-dtl.fact-qnty:hidden = false
+        then do:
+          display
+            v-fact-qnty-kg
+          with frame {&FRAME-NAME}.
+        end.
+                  
+        v-qnty-kg             = ub.gds-dtl.doc-qnty / buf_goods.cli-base-rate.
+        v-fact-qnty-kg        = ub.gds-dtl.fact-qnty / buf_goods.cli-base-rate.
+        v-qnty-kg:screen-value = string (v-qnty-kg).
+        v-fact-qnty-kg:screen-value = string (v-fact-qnty-kg).
+        assign
+          ub.gds-dtl.price-rubl :label in frame {&frame-name} = substitute("Цена,&1", buf_goods.unit-base )
+          v-price-rubl-kg       :label in frame {&frame-name} = substitute("Цена,&1", buf_goods.unit-cli )
+          ub.gds-dtl.doc-qnty   :label in frame {&frame-name} = substitute("По док,&1", buf_goods.unit-base )
+          ub.gds-dtl.fact-qnty  :label in frame {&frame-name} = substitute("Факт,&1", buf_goods.unit-base )
+          v-qnty-kg             :label in frame {&frame-name} = substitute("По док,&1", buf_goods.unit-cli )
+          v-fact-qnty-kg        :label in frame {&frame-name} = substitute("Факт,&1", buf_goods.unit-cli )
+        .
         wait-for go of frame {&FRAME-NAME} focus ub.gds-dtl.doc-qnty .
       end. /* q-ty, l */
     end. /* qnty */
@@ -3320,6 +3366,14 @@ PROCEDURE l-doc-qnty :
       with frame {&FRAME-NAME}.
     end. /* density */
   end. /* petrol */
+  else do:
+    assign
+      v-qnty-kg             = decimal (ub.gds-dtl.doc-qnty:screen-value) / buf_goods.cli-base-rate
+      v-fact-qnty-kg        = decimal (ub.gds-dtl.fact-qnty:screen-value) / buf_goods.cli-base-rate
+    no-error.
+    v-qnty-kg:screen-value = string (v-qnty-kg).
+    v-fact-qnty-kg:screen-value = string (v-fact-qnty-kg).
+  end.
 
   if v-old-doc-qnty <> input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty then do:
     if ( is-petrolium = yes

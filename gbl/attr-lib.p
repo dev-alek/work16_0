@@ -5776,6 +5776,19 @@ end procedure.
 &scop manual-edit-attr-fasovka 1
 &scop batch-edit-attr-fasovka  1
 
+/*Требует обязательной маркировки*/
+&glob type-attr-mark {&type-log}
+&glob format-attr-mark  "+/ "
+&glob label-attr-mark   "Товар требует обязательной маркировки"
+&glob tooltip-attr-mark   "Товар требует обязательной маркировки"
+&glob user-can-edit-attr-mark  true
+&glob output-display-attr-mark  true
+&glob other-attr-mark  ""
+&glob news-attr-mark true
+&glob copy-attr-mark  true
+&scop manual-edit-attr-mark 1
+&scop batch-edit-attr-mark  1
+
 /* Группа товаров на кассе */
 &glob type-attr-sum-grp-gl {&type-char}
 &glob format-attr-sum-grp-gl  "X(5)"
@@ -6123,6 +6136,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-fasovka
       {&attr-temp-full-code}
+      &scop attr-code attr-mark
+      {&attr-temp-full-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-temp-full-code}
       &scop attr-code attr-15x80
@@ -6206,6 +6221,8 @@ do
       &scop attr-code attr-null-price
       {&attr-temp-code}
       &scop attr-code attr-fasovka
+      {&attr-temp-code}
+      &scop attr-code attr-mark
       {&attr-temp-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-temp-code}
@@ -6524,6 +6541,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-fasovka
       {&attr-news-code}
+      &scop attr-code attr-mark
+      {&attr-news-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-news-code}
       &scop attr-code attr-15x80
@@ -6601,6 +6620,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-null-price
       {&attr-copy-code}
       &scop attr-code attr-fasovka
+      {&attr-copy-code}
+      &scop attr-code attr-mark
       {&attr-copy-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-copy-code}
@@ -7070,6 +7091,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-fasovka
       {&attr-manual-edit-code}
+      &scop attr-code attr-mark
+      {&attr-manual-edit-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-manual-edit-code}
       &scop attr-code attr-15x80
@@ -7148,6 +7171,8 @@ do
       &scop attr-code attr-null-price
       {&attr-batch-edit-code}
       &scop attr-code attr-fasovka
+      {&attr-batch-edit-code}
+      &scop attr-code attr-mark
       {&attr-batch-edit-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-batch-edit-code}
@@ -14078,6 +14103,29 @@ end procedure.
 &scop manual-edit-ggoattr-ban-sales-via-cd 0
 &scop batch-edit-ggoattr-ban-sales-via-cd 0
 
+/* По умолчанию алкоголь */
+&scop type-ggoattr-alchol-grp {&type-char}
+&scop format-ggoattr-alchol-grp "X(256)"
+&scop label-ggoattr-alchol-grp "По умолчанию алкоголь"
+&scop tooltip-ggoattr-alchol-grp "По умолчанию алкоголь"
+&scop user-can-edit-ggoattr-alchol-grp  false
+&scop output-display-ggoattr-alchol-grp true
+&scop other-ggoattr-alchol-grp '':u
+&scop news-ggoattr-alchol-grp true
+&scop manual-edit-ggoattr-alchol-grp 0
+&scop batch-edit-ggoattr-alchol-grp 0
+
+/* По умолчанию обязательная маркировка */
+&scop type-ggoattr-mark-grp {&type-char}
+&scop format-ggoattr-mark-grp "X(256)"
+&scop label-ggoattr-mark-grp "По умолчанию обязательная маркировка"
+&scop tooltip-ggoattr-mark-grp "По умолчанию обязательная маркировка"
+&scop user-can-edit-ggoattr-mark-grp  false
+&scop output-display-ggoattr-mark-grp true
+&scop other-ggoattr-mark-grp '':u
+&scop news-ggoattr-mark-grp true
+&scop manual-edit-ggoattr-mark-grp 0
+&scop batch-edit-ggoattr-mark-grp 0
 
 /* Группа товаров на кассе */
 &scop type-ggoattr-sum-grps {&type-int}
@@ -14159,7 +14207,10 @@ procedure ggoattr-code :
       {&attr-temp-full-code}
       &scop attr-code ggoattr-ban-sales-via-cd
       {&attr-temp-full-code}
-
+      &scop attr-code ggoattr-alchol-grp
+      {&attr-temp-full-code}
+      &scop attr-code ggoattr-mark-grp
+      {&attr-temp-full-code}
       &scop attr-code ggoattr-sum-grps
       {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -14191,6 +14242,10 @@ procedure ggoattr-tooltip :
       &scop attr-code ggoattr-no-inc-auto-rep
       {&attr-temp-code}
       &scop attr-code ggoattr-ban-sales-via-cd
+      {&attr-temp-code}
+      &scop attr-code ggoattr-alchol-grp
+      {&attr-temp-code}
+      &scop attr-code ggoattr-mark-grp
       {&attr-temp-code}
       &scop attr-code ggoattr-sum-grps
       {&attr-temp-code}
@@ -14495,6 +14550,10 @@ procedure ggoattr-news :
       {&attr-news-code}
       &scop attr-code ggoattr-ban-sales-via-cd
       {&attr-news-code}
+      &scop attr-code ggoattr-alchol-grp
+      {&attr-news-code}
+      &scop attr-code ggoattr-mark-grp
+      {&attr-news-code}
       &scop attr-code ggoattr-sum-grps
       {&attr-news-code}
 
@@ -14618,6 +14677,10 @@ procedure assmatat-code :
   :
     case p-code :
       &scop attr-code assmatat-RootShablon
+      {&attr-temp-full-code}
+      &scop attr-code ggoattr-alchol-grp
+      {&attr-temp-full-code}
+      &scop attr-code ggoattr-mark-grp
       {&attr-temp-full-code}
       &scop attr-code ggoattr-sum-grps
       {&attr-temp-full-code}

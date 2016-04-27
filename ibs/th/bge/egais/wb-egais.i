@@ -60,6 +60,7 @@
     field uniq-key-rec as character
     field INNShip      as character label "ИНН контрагента"
     field KPPShip      as character label "КПП контрагента"
+    field UnitType     as character label "UnitType"
     field TransIdList  as character
     index pi
     Identity 
