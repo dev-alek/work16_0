@@ -122,15 +122,16 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     .
 
   define temp-table tt-analiz no-undo
-    field num          as character label "№ накл." format "X(50)"
-    field wb-type      as character label "Тип" format "X(4)"
-    field wb-date      as date      label "Дата"
-    field wbregid      as character label "WBREGID" format "X(18)"
-    field Identity     as character format "X(50)"
-    field uniq-key-rec as character format "X(50)"
-    field url_         as character format "X(50)"
-    field isMany       as logical format "yes/no"
-    field nnOrder      as integer
+    field num           as character label "№ накл." format "X(50)"
+    field wb-type       as character label "Тип" format "X(4)"
+    field wb-date       as date      label "Дата"
+    field wbregid       as character label "WBREGID" format "X(18)"
+    field Identity      as character format "X(50)"
+    field uniq-key-rec  as character format "X(50)"
+    field url_          as character format "X(50)"
+    field isMany        as logical   format "yes/no"
+    field nnOrder       as integer
+    field resource-type as character format "X(12)"
     index pi
     url_ 
     .
@@ -449,7 +450,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             create tt-wb-hndls.
             assign
               tt-wb-hndls.wb-date      = date (entry (1, buf_clob-bind.descr, {&delim-par}))
-              tt-wb-hndls.num          = entry (2, buf_clob-bind.descr, {&delim-par})
+              tt-wb-hndls.num          = (if buf_clob-bind.uniq-key-rec matches '*отмена*' or buf_clob-bind.uniq-key-rec matches '*old*' then "отмена: " else "") + entry (2, buf_clob-bind.descr, {&delim-par})
               tt-wb-hndls.shippregid   = entry (3, buf_clob-bind.descr, {&delim-par})
               tt-wb-hndls.Identity     = entry (4, buf_clob-bind.descr, {&delim-par})
               tt-wb-hndls.trn-doc-code = entry (6, buf_clob-bind.descr, {&delim-par})
@@ -540,6 +541,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
               .
             end.
             for each buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb-act} and buf_clob-bind.uniq-key-rec matches "*" + buf_doc-attr.attr-value + "*" :
+              find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
               create tt-ticket.
               assign
                 tt-ticket.regid = entry (1, buf_clob-bind.descr, {&delim-par})
@@ -763,6 +765,13 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                 tt-wb-gds-EG.proof = buf_gds.proof
                 tt-wb-gds-EG.alc-type-code = ub.alc-type.alc-type-code
               .
+              if buf_gds.unit-cli <> buf_gds.unit-base
+              then do:
+                tt-wb-header.UnitType = 'UnPacked'.
+              end.
+              else do:
+                tt-wb-header.UnitType = 'Packed'.
+              end. 
               
             end. 
           end.
@@ -1060,6 +1069,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                     tt-analiz.wb-type = "накл"
                     tt-analiz.uniq-key-rec = tt-wb-header.num + {&delim-cmd} + string (tt-wb-header.wb-date) + {&delim-cmd} + tt-wb-header.regID-Ship + {&delim-cmd} + tt-wb-header.Identity
                     tt-analiz.nnOrder = ii
+                    tt-analiz.resource-type = {&lob-egais-wb}
                   .
                   
                   find first buf_tt-analiz where recid (buf_tt-analiz) <> recid (tt-analiz)
@@ -1121,7 +1131,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                   if error-status:error then 
                   do:
                     Msg = error-status:get-message(1) + {&new-line} + return-value.
-                    StatusErr = true.
+                    StatusErr = false.
+                    next url_.
                   end.
 
 
@@ -1164,6 +1175,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                     tt-analiz.wb-type = "спр."
                     tt-analiz.uniq-key-rec = tt-wb-header.num + {&delim-cmd} + string (tt-wb-header.wb-date) + {&delim-cmd} + tt-wb-header.regID-Ship + {&delim-cmd} + tt-wb-header.Identity
                     tt-analiz.nnOrder = ii
+                    tt-analiz.resource-type = {&lob-egais-ref-b}
                   .
                   
                   find first buf_tt-analiz where recid (buf_tt-analiz) <> recid (tt-analiz)
@@ -1175,12 +1187,24 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                     tt-analiz.isMany = true.
                   end.
                   
-                  find first ub.clob-bind where ub.clob-bind.resource-type = {&lob-egais-wb} and ub.clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec no-error.
-                  if available (ub.clob-bind)
+                  find first ub.clob-bind no-lock where ub.clob-bind.resource-type = {&lob-egais-wb} and ub.clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec no-error.
+                  
+                  if available (ub.clob-bind) and (entry (5, ub.clob-bind.descr, {&delim-par}) = ? or entry (5, ub.clob-bind.descr, {&delim-par}) = "")
                   then do:
-                    entry (5, ub.clob-bind.descr, {&delim-par}) = tt-wb-header.wbregid.
+                    if locked (ub.clob-bind)
+                    then do:
+                      message "Запись заблокирована - " ub.clob-bind.uniq-key-rec  " Пропускается. В следющий раз будет попытка опять загрузить" view-as alert-box.
+                      next url_.
+                    end.
+                    else do:
+                      find current ub.clob-bind exclusive-lock no-error.
+                      if available (ub.clob-bind)
+                      then do:
+                        entry (5, ub.clob-bind.descr, {&delim-par}) = tt-wb-header.wbregid.
+                      end.
+                    end.
+                    release ub.clob-bind.
                   end.
-                  release ub.clob-bind.
                   
                   if can-find (first buf_clob-bind where (buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec or buf_clob-bind.uniq-key-rec = tt-wb-header.Identity + {&delim-cmd} + tt-wb-header.regID-Ship) and buf_clob-bind.resource-type =  {&lob-egais-ref-b})
                     then next url_.
@@ -1207,7 +1231,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                   if error-status:error then 
                   do:
                     Msg = error-status:get-message(1) + {&new-line} + return-value.
-                    StatusErr = true.
+                    StatusErr = false.
+                    next url_.
                   end.
   
                 end.
@@ -1257,7 +1282,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                   if error-status:error then 
                   do:
                     Msg = error-status:get-message(1) + {&new-line} + return-value.
-                    StatusErr = true.
+                    StatusErr = false.
+                    next url_.
                   end.
   
                 end.
@@ -1298,6 +1324,27 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                     Msg = "".
                     next url_.
                   end.
+                  
+                  find first ub.clob-bind where ub.clob-bind.resource-type = {&lob-egais-wb} and ((tt-ticket.regid <> "" and entry (5, ub.clob-bind.descr, {&delim-par}) = tt-ticket.regid) or lookup (tt-ticket.TransId, ub.clob-bind.field-name_) > 0) no-error.
+                  if available (ub.clob-bind)
+                  then do:
+                    if num-entries (ub.clob-bind.descr, {&delim-par}) < 10
+                    then do:
+                      ub.clob-bind.descr = ub.clob-bind.descr + {&delim-par}.
+                    end.
+                    if entry (10, ub.clob-bind.descr, {&delim-par}) <> "Accepted"
+                    then do:
+                      entry (10, ub.clob-bind.descr, {&delim-par})  = tt-ticket.status_.
+                    end.
+                  end.
+
+                  if not can-find (first buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb} and lookup (tt-ticket.TransId, buf_clob-bind.field-name_) > 0) or can-find (first buf_clob-bind where buf_clob-bind.field-name_ = tt-ticket.TransId)
+                  then do: 
+                    if (tt-ticket.regid = "" or tt-ticket.regid = ?) or (tt-ticket.doc <> 'WayBillAct' and tt-ticket.doc <> 'WAYBILL') then do:
+                      next url_.
+                    end.  
+                  end.
+                  
                   if can-find (first buf_clob-bind where 
                         (buf_clob-bind.uniq-key-rec = ticketUKR or (buf_clob-bind.uniq-key-rec = tt-ticket.regid + {&delim-par} + tt-ticket.docId and (tt-ticket.Identity = ? or tt-ticket.Identity = ""))) 
                     and buf_clob-bind.resource-type =  {&lob-egais-ticket})
@@ -1399,7 +1446,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                   if error-status:error then 
                   do:
                     Msg = error-status:get-message(1) + {&new-line} + return-value.
-                    StatusErr = true.
+                    StatusErr = false.
                     next url_.
                   end.
   
@@ -2185,7 +2232,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
 
       end /*foeach*/.
       
-      return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию") + (if is-diff then xml-cont else "") + {&xml-act-2}.
+      return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию. " + (if is-diff then "Имеются расхождения." else "")) + (if is-diff then xml-cont else "") + {&xml-act-2}.
     end.
     else do:
       if isForceAccept
@@ -2250,7 +2297,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
           sw:write-data-element ("wb:NUMBER", tt-wb-header.Identity).
           sw:write-data-element ("wb:Date", iso-date (tt-wb-header.wb-date)).
           sw:write-data-element ("wb:Type", tt-wb-header.wb-type).  
-          sw:write-data-element ("wb:UnitType", 'Packed'). /*??????*/
+          sw:write-data-element ("wb:UnitType", tt-wb-header.UnitType). /*??????*/
           sw:write-data-element ("wb:ShippingDate", iso-date (tt-wb-header.wb-date)).
           sw:start-element ("wb:Shipper") .
             AddClientXML(sw, tt-wb-header.obj-type, tt-wb-header.obj-code, tt-wb-header.regID-Ship).
@@ -2275,7 +2322,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
               sw:write-data-element ("pref:FullName", tt-wb-gds-EG.gds-name).
               sw:write-data-element ("pref:AlcCode", tt-wb-gds-EG.alc-code).
               
-              sw:write-data-element ("pref:Capacity", string (tt-wb-gds-EG.ms-base)).
+              if tt-wb-header.UnitType = 'Packed' then sw:write-data-element ("pref:Capacity", string (tt-wb-gds-EG.ms-base)).
               sw:write-data-element ("pref:AlcVolume", string (tt-wb-gds-EG.proof)).
               sw:write-data-element ("pref:ProductVCode", tt-wb-gds-EG.alc-type-code).
               

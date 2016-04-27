@@ -74,13 +74,7 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
       Msg = ""
     .
     
-    find first tt-analiz.
-    
-    if not available (tt-analiz)
-      then return true.
-    
-    assign
-    path = "egais_" + entry (1, (entry (3, tt-analiz.url_, "/")), ":") + "\" no-error.
+    path = "egais\".
     
     file-info:file-name = right-trim (path, "\").
     if file-info:file-type = ?
@@ -95,7 +89,7 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     for each tt-analiz:
     
       assign
-        inFileName = entry (6, tt-analiz.url_, "/") + "_" + entry (7, tt-analiz.url_, "/") + ".xml".
+        inFileName = entry (7, tt-analiz.url_, "/") + "_" + entry (6, tt-analiz.url_, "/").
         .
       
       os-delete value (path + "inFileName").
