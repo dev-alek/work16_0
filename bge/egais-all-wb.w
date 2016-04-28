@@ -90,8 +90,8 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn ~
-Btn_Del btn_ticket Btn_accept cb-1 f-date f-date-2 f-cli-name f-cli-code ~
-f-type TOGGLE_NotConn 
+Btn_Del btn_ticket Btn_accept Btn_delclob cb-1 f-date f-date-2 f-cli-name ~
+f-cli-code f-type TOGGLE_NotConn 
 &Scoped-Define DISPLAYED-OBJECTS cb-1 f-date f-date-2 f-cli-name f-cli-code ~
 f-type TOGGLE_NotConn 
 
@@ -119,6 +119,10 @@ DEFINE BUTTON Btn_conn
 DEFINE BUTTON Btn_Del 
      LABEL "Отказ" 
      SIZE 10 BY 1.21.
+
+DEFINE BUTTON Btn_delclob 
+     LABEL "Удалить" 
+     SIZE 10 BY 1.21 TOOLTIP "Удаляет из базы TH. Если данные в УТМ остались, то будет загружено повторно.".
 
 DEFINE BUTTON Btn_dnlw 
      LABEL "Загрузить" 
@@ -150,7 +154,7 @@ DEFINE VARIABLE cb-1 AS INTEGER FORMAT "->,>>>,>>9" INITIAL 1
                      "Акты",3,
                      "Расход",4
      DROP-DOWN-LIST
-     SIZE 25.38 BY 1 NO-UNDO.
+     SIZE 19.88 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-type AS CHARACTER FORMAT "X(256)":U INITIAL "Все" 
      LABEL "Тип" 
@@ -196,7 +200,8 @@ DEFINE FRAME Dialog-Frame
      Btn_Del AT ROW 1.21 COL 55.63 WIDGET-ID 14
      btn_ticket AT ROW 1.21 COL 66 WIDGET-ID 36
      Btn_accept AT ROW 1.21 COL 76.63 WIDGET-ID 32
-     cb-1 AT ROW 1.21 COL 93 COLON-ALIGNED NO-LABEL WIDGET-ID 2
+     Btn_delclob AT ROW 1.21 COL 86.88 WIDGET-ID 38
+     cb-1 AT ROW 1.21 COL 98.5 COLON-ALIGNED NO-LABEL WIDGET-ID 2
      f-date AT ROW 2.5 COL 8.63 COLON-ALIGNED WIDGET-ID 22
      f-date-2 AT ROW 2.5 COL 22.75 COLON-ALIGNED WIDGET-ID 26
      f-cli-name AT ROW 2.5 COL 45.25 COLON-ALIGNED WIDGET-ID 24
@@ -444,6 +449,47 @@ do:
   end.
   else run f-query.
 end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME Btn_delclob
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_delclob Dialog-Frame
+ON CHOOSE OF Btn_delclob IN FRAME Dialog-Frame /* Удалить */
+DO:
+  if not bh-wb-egais:available 
+    then return no-apply.
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-adm':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    false
+    glog
+  }
+  
+  if not glog then return no-apply.
+  
+  message "Вы уверены что хотите удалить накладную - " bh-wb-egais:buffer-field ('num'):buffer-value () "?" view-as alert-box buttons yes-no update isChoise as logical.
+  
+  if not isChoise then return no-apply.
+  
+  for each ub.clob-bind exclusive-lock where ub.clob-bind.uniq-key-rec = bh-wb-egais:buffer-field ('uniq-key-rec'):buffer-value ():
+    
+    delete ub.clob-bind.
+    
+  end.
+  run reopen-browse.
+  
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -699,12 +745,14 @@ do:
     Btn_Del:hidden = false.
     Btn_conn:hidden = false.
     btn_ticket:hidden = false.
+    Btn_delclob:hidden = false.
   end.
   else do:
     Btn_Save:label = "Отправить".
     Btn_Del:hidden = true.
     Btn_conn:hidden = true.
     btn_ticket:hidden = true.
+    Btn_delclob:hidden = true.
   end.
   if cb-1 = 3
   then disable Btn_Save with frame {&FRAME-NAME}.
@@ -1031,8 +1079,8 @@ PROCEDURE enable_UI :
   DISPLAY cb-1 f-date f-date-2 f-cli-name f-cli-code f-type TOGGLE_NotConn 
       WITH FRAME Dialog-Frame.
   ENABLE Btn_OK Btn_Sel Btn_Save Btn_dnlw Btn_conn Btn_Del btn_ticket 
-         Btn_accept cb-1 f-date f-date-2 f-cli-name f-cli-code f-type 
-         TOGGLE_NotConn 
+         Btn_accept Btn_delclob cb-1 f-date f-date-2 f-cli-name f-cli-code 
+         f-type TOGGLE_NotConn 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
