@@ -852,7 +852,7 @@ else do:
                         , num_resv_res ~
                         , num_resv - num_resv_res)
 {&display-message-laud}.
-    if search (log-file-name) <> ? then do:
+    if search (log-file-name) <> ? and not (auto-close or p-auto-fbr) then do:
       run gbl/prnfilen.w (
             input "Список не зарезервированных товаров":U
           , input 8

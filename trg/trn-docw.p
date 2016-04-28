@@ -3577,7 +3577,7 @@ procedure process-line :
          ub.trn-doc.obj-type
          ub.trn-doc.obj-code
          buf_goods.gds-code
-         "if g#news then false else true"
+         "if g#news then false else false"
          v-min-ass-exist
          }
          end.
