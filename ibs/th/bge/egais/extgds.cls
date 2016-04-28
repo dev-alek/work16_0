@@ -457,7 +457,7 @@ class ibs.th.bge.egais.ExtGds:
     end.
     
     assign
-      inExtGdsValueObjTo:CliRegIdProd = inExtGdsValueObjForm:CliRegIdImpor
+      inExtGdsValueObjTo:CliRegIdImpor = inExtGdsValueObjForm:CliRegIdImpor
       inExtGdsValueObjTo:CliRegIdProd = inExtGdsValueObjForm:CliRegIdProd
       inExtGdsValueObjTo:CountryImpor = inExtGdsValueObjForm:CountryImpor
       inExtGdsValueObjTo:CountryProd = inExtGdsValueObjForm:CountryProd
