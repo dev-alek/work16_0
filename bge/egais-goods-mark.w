@@ -200,13 +200,14 @@ define variable v-gds-code as integer no-undo .
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
   ON choose OF Btn_OK IN FRAME Dialog-Frame /* Ввод */
     DO:
+      if available tt-goods then do:
       assign
         p-gds-code = tt-goods.gds-code
         p-gds-name = tt-goods.gds-name
         p-import-full-name = tt-goods.import-full-name
         p-prod-full-name   = tt-goods.prod-full-name
         .  
-
+       end. 
       RUN disable_UI.
     END.
 
@@ -239,6 +240,8 @@ define variable v-gds-code as integer no-undo .
         ,input ?
         ,output ref-list).
       find first ub.goods where recid (ub.goods) = integer (ref-list) no-lock no-error .
+      find first ub.goods-attr where ub.goods-attr.gds-code = ub.goods.gds-code and goods-attr.attr-code = "alcohol-prod" no-lock no-error .
+      if available ub.goods-attr then do:
       if extGdsObj:NumBundles > 0 then 
         do:
           do ii = 1 to extGdsObj:NumBundles:
@@ -257,7 +260,12 @@ define variable v-gds-code as integer no-undo .
       extGdsValueObjnew:GdsCode = v-GdsCodenew.
       extGdsValueObjnew:AlcCode = p-alc-code.
       extGdsObj:CreateExtGds (extGdsValueObjnew).
+      extGdsObj:OpenQueryExtGds(0, p-alc-code).
       
+      find first tt-goods where tt-goods.gds-code = extGdsValueObjnew:GdsCode and
+        tt-goods.gds-name = ub.goods.gds-name and 
+        tt-goods.artic    = ub.goods.artic no-lock no-error.
+      if not available tt-goods then do:  
       create tt-goods .
       
         tt-goods.gds-code = extGdsValueObjnew:GdsCode .
@@ -266,7 +274,12 @@ define variable v-gds-code as integer no-undo .
         tt-goods.import-full-name = extGdsValueObjnew:FullNameImpor .
         tt-goods.prod-full-name   = extGdsValueObjnew:FullNameProd .
         .
-  
+      end.
+      end.
+      else do:
+        message "Товар не является алкогольным"
+        view-as alert-box.
+      end.  
       
       open query br-goods for each tt-goods .
     END.
@@ -281,6 +294,7 @@ ON choose OF Btn_del IN FRAME Dialog-Frame /* Удалить */
 DO:
       extGdsObj:DeleteExtGds (tt-goods.gds-code, p-alc-code).
       delete tt-goods.
+      extGdsObj:OpenQueryExtGds(0, p-alc-code).
       open query br-goods for each tt-goods .
     END.
 
@@ -292,13 +306,14 @@ DO:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
 ON choose OF Btn_OK IN FRAME Dialog-Frame /* Ввод */
 DO:
+      if available tt-goods then do:
       assign
         p-gds-code = tt-goods.gds-code
         p-gds-name = tt-goods.gds-name
         p-import-full-name = tt-goods.import-full-name
         p-prod-full-name   = tt-goods.prod-full-name
         .  
-
+      end.
       RUN disable_UI.
     END.
 
@@ -398,9 +413,13 @@ PROCEDURE enable_UI :
   ENABLE Btn_OK Btn_Cancel Btn_add Btn_del br-goods
       WITH FRAME Dialog-Frame.
   if p-mode = {&lookup} then do:
-  DISABLE Btn_add Btn_del 
+  DISABLE Btn_add Btn_del  
       WITH FRAME Dialog-Frame.
-  end.      
+  end.
+  else do: 
+  DISABLE Btn_Cancel  
+      WITH FRAME Dialog-Frame.
+  end.       
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.

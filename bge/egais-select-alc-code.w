@@ -26,16 +26,19 @@
 
 define shared temp-table tt-exts
     field ext-rec as recid
+    field gds-code as integer
     index pi as primary unique
-        ext-rec
+        ext-rec gds-code
 .
 
 /* Parameters Definitions ---                                           */
 
+define input parameter p-gds-code as integer no-undo .
 define output parameter p-rec   as recid no-undo .
 
 /* Local Variable Definitions ---                                       */
 define buffer x_ext-classif     for ub.ext-classif .
+define buffer x_ext-classif-attr     for ub.ext-classif-attr .
 
 define variable qh-gds-egais as handle no-undo .
 define variable br-hndl-gds  as handle no-undo .
@@ -70,24 +73,24 @@ define variable ii as integer no-undo .
 
 
 /* ***********************  Control Definitions  ********************** */
-function f-name returns character (buffer loc-exts for X_ext-classif) :
-    if num-entries(x_ext-classif.charkey_two, CHR(4)) = 3 then return entry(3, X_ext-classif.charkey_two, CHR(4)) .
+function f-name returns character (buffer loc-exts for X_ext-classif-attr) :
+    if num-entries(loc-exts.attr-value, CHR(4)) = 3 then return entry(3, loc-exts.attr-value, CHR(4)) .
     else return "" .        
 end function .
 
-function f-prod returns character (buffer loc-exts for X_ext-classif) :
-    if num-entries(x_ext-classif.charkey_two, CHR(4)) = 3 then do :
-        if num-entries(entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)) = 6 then
-            return entry(4, entry(1, X_ext-classif.charkey_two, CHR(4)), CHR(5)).
+function f-prod returns character (buffer loc-exts for X_ext-classif-attr) :
+    if num-entries(loc-exts.attr-value, CHR(4)) = 3 then do :
+        if num-entries(entry(1, loc-exts.attr-value, CHR(4)), CHR(5)) = 6 then
+            return entry(4, entry(1, loc-exts.attr-value, CHR(4)), CHR(5)).
         else return "" .
     end.
     else return "" .        
 end function .
 
-function f-imp returns character (buffer loc-exts for X_ext-classif) :
-    if num-entries(x_ext-classif.charkey_two, CHR(4)) = 3 then do :
-        if num-entries(entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)) = 6 then
-            return entry(4, entry(2, X_ext-classif.charkey_two, CHR(4)), CHR(5)).
+function f-imp returns character (buffer loc-exts for X_ext-classif-attr) :
+    if num-entries(loc-exts.attr-value, CHR(4)) = 3 then do :
+        if num-entries(entry(2, loc-exts.attr-value, CHR(4)), CHR(5)) = 6 then
+            return entry(4, entry(2, loc-exts.attr-value, CHR(4)), CHR(5)).
         else return "" .
     end.
     else return "" .        
@@ -106,14 +109,14 @@ DEFINE BUTTON b-select AUTO-GO
      BGCOLOR 8 .
 
 define query br-exts for
-    tt-exts, x_ext-classif   scrolling . 
+    tt-exts, x_ext-classif, x_ext-classif-attr   scrolling . 
     
 define browse br-exts
     query br-exts display
         X_ext-classif.charkey_one      COLUMN-LABEL "Алкогольный код"           format "X(25)":U width 25
-        f-name(BUFFER x_ext-classif)   COLUMN-LABEL "Наименование товара ЕГАИС" format "X(50)":U width 28
-        f-prod(BUFFER x_ext-classif)   COLUMN-LABEL "Производитель"             format "X(150)":U width 27
-        f-imp(BUFFER x_ext-classif)    COLUMN-LABEL "Импортёр"                  format "X(150)":U width 27
+        f-name(BUFFER x_ext-classif-attr)   COLUMN-LABEL "Наименование товара ЕГАИС" format "X(50)":U width 28
+        f-prod(BUFFER x_ext-classif-attr)   COLUMN-LABEL "Производитель"             format "X(150)":U width 27
+        f-imp(BUFFER x_ext-classif-attr)    COLUMN-LABEL "Импортёр"                  format "X(150)":U width 27
 WITH NO-ROW-MARKERS SEPARATORS SIZE 107 BY 20.2 FIT-LAST-COLUMN.
 
 /* ************************  Frame Definitions  *********************** */
@@ -241,7 +244,19 @@ PROCEDURE enable_UI :
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   br-exts:column-resizable in FRAME Dialog-Frame = true .
-  open query br-exts for each tt-exts no-lock, first x_ext-classif no-lock where recid(x_ext-classif) = tt-exts.ext-rec .
+  open query br-exts for each tt-exts no-lock where tt-exts.gds-code = p-gds-code,
+                         first x_ext-classif no-lock where recid(x_ext-classif) = tt-exts.ext-rec,
+                         first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                           and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                           and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                           and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                           and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                           and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                           and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                           and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                           and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                           and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                           and X_ext-classif-attr.attr-code = 'egais-info' .
 /*  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}*/
 END PROCEDURE.
 

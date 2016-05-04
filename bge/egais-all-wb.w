@@ -441,6 +441,11 @@ do:
     if not isChoise 
       then return no-apply.
   end.
+  else do:
+    message "Отправить отказ?" view-as alert-box question buttons yes-no update isChoise.
+    if not isChoise 
+      then return no-apply.
+  end.
   egais:RejectWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
   if egais:StatusErr
   then do:
@@ -499,7 +504,18 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_dnlw Dialog-Frame
 ON choose OF Btn_dnlw IN FRAME Dialog-Frame /* Загрузить */
 do:
-  egais:GetHndlTable(?, "AllWB").
+  
+  if not search ( v-FS-RAR + '_ReceiptListOfQuery.xml' ) = ?
+  then do:
+  
+    message "Выполнить полную загрузка (переодически рекомендуется выполнять полную загрузку)?" view-as alert-box question buttons yes-no update isChoise as logical.
+    if isChoise 
+      then egaisWBAdv:FastDwnl = false.
+      else egaisWBAdv:FastDwnl = true.
+    
+  end. 
+  
+  egaisWBAdv:GetDocUTM().
   if egais:StatusErr 
   then do:
     message "Ошибка: " egais:Msg view-as alert-box error.
@@ -511,7 +527,7 @@ do:
     bh-analiz:find-first ("where isMany") no-error.
     if bh-analiz:available
     then do:
-      message "Имеются накладные с одинаковыми номерами. Посмотреть?" view-as alert-box question buttons yes-no update isChoise as logical.
+      message "Имеются накладные с одинаковыми номерами. Посмотреть?" view-as alert-box question buttons yes-no update isChoise.
       if isChoise 
         then run bge/egais-analiz.w (input parparentproc, input egaisWBAdv).
     end.

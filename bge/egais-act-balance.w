@@ -350,6 +350,15 @@ DO:
         message "В акте нет строк. Сохранение невозможно" view-as alert-box .
         return no-apply.
     end.
+    if can-find(tt-gds-act no-lock where tt-gds-act.A-ttnNumber = ? or trim(tt-gds-act.A-ttnNumber) = ""
+                                      or tt-gds-act.A-ttnDate = ? or trim(string(tt-gds-act.A-ttnDate)) = "" )
+    then do :
+        message "П Р Е Д У П Р Е Ж Д Е Н И Е" skip
+                "В одной или нескольких строках не заполнены поля номер/дата ТТН." skip
+                "Такой акт не может быть отправлен в ЕГАИС." skip
+                "Всё равно продолжить сохраненине?" view-as alert-box question buttons yes-no update glog .
+        if not glog then return no-apply.        
+    end.                                  
     run makeXML in this-procedure no-error.
     if error-status:error then return return-value .
     assign
@@ -958,19 +967,19 @@ procedure makeXML :
                             sw:write-data-element ("pref:ProductVCode", string(ub.alc-type.alc-type-code)) .
                         end.
                         
-                        find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code .
-                        run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
-                                        ,input (buffer buf_goods:handle)
-                                        ,output v-gds-uniq-key-rec).
-                        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
-                                       and X_ext-classif.classif-name = {&extclass_goods_esys} 
-                                       AND X_ext-classif.db-num = 0  
-                                       and X_ext-classif.key#_one = buf_goods.gds-code
-                                       and X_ext-classif.key#_two = v-ext-sys 
-                                       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
-                                       and X_ext-classif.charkey_one = tt-gds-act.alc-code
-                                       no-error.
-                        if available X_ext-classif and num-entries(X_ext-classif.charkey_two, CHR(4)) = 3 then do : 
+                        find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = {&table_goods}
+                                                               and X_ext-classif-attr.classif-name = {&extclass_goods_esys}
+                                                               and X_ext-classif-attr.db-num = 0
+                                                               and X_ext-classif-attr.Key#_One = tt-gds-act.gds-code
+                                                               and X_ext-classif-attr.Key#_two = v-ext-sys
+                                                               and X_ext-classif-attr.Key#_three = 0
+                                                               and X_ext-classif-attr.CharKey_One = tt-gds-act.alc-code
+                                                               and X_ext-classif-attr.CharKey_two = ""
+                                                               and X_ext-classif-attr.CharKey_three = ""
+                                                               and X_ext-classif-attr.nonunique = 0
+                                                               and X_ext-classif-attr.attr-code = 'egais-info'
+                                                               no-error .                
+                        if available X_ext-classif-attr and num-entries(X_ext-classif-attr.attr-value, CHR(4)) = 3 then do : 
                           def var v-prod as char no-undo.
                           def var v-impor as char no-undo.
                           def var v-msg as char no-undo.
@@ -978,12 +987,12 @@ procedure makeXML :
                           v-impor = ''.
                           
                           
-                          v-prod = entry (1, X_ext-classif.CharKey_Two, chr(4)) no-error.
+                          v-prod = entry (1, X_ext-classif-attr.attr-value, chr(4)) no-error.
                           if v-prod = ? or v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) or v-prod = "" or num-entries (v-prod, chr (5)) <> 6 
                           then do:
                             message "У товара неизвестен производитель из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров и  заново сохраните акт." view-as alert-box.
                           end.
-                          v-impor = entry (2, X_ext-classif.CharKey_Two, chr(4)) no-error.
+                          v-impor = entry (2, X_ext-classif-attr.attr-value, chr(4)) no-error.
 
                           
                           if num-entries (v-impor, chr (5)) > 0 and num-entries (v-impor, chr (5)) <> 6 
