@@ -260,6 +260,7 @@ define variable v-gds-code as integer no-undo .
       extGdsValueObjnew:GdsCode = v-GdsCodenew.
       extGdsValueObjnew:AlcCode = p-alc-code.
       extGdsObj:CreateExtGds (extGdsValueObjnew).
+      extGdsObj:OpenQueryExtGds(0, p-alc-code).
       
       find first tt-goods where tt-goods.gds-code = extGdsValueObjnew:GdsCode and
         tt-goods.gds-name = ub.goods.gds-name and 
@@ -293,6 +294,7 @@ ON choose OF Btn_del IN FRAME Dialog-Frame /* Удалить */
 DO:
       extGdsObj:DeleteExtGds (tt-goods.gds-code, p-alc-code).
       delete tt-goods.
+      extGdsObj:OpenQueryExtGds(0, p-alc-code).
       open query br-goods for each tt-goods .
     END.
 
@@ -411,7 +413,7 @@ PROCEDURE enable_UI :
   ENABLE Btn_OK Btn_Cancel Btn_add Btn_del br-goods
       WITH FRAME Dialog-Frame.
   if p-mode = {&lookup} then do:
-  DISABLE Btn_add Btn_del 
+  DISABLE Btn_add Btn_del  
       WITH FRAME Dialog-Frame.
   end.
   else do: 

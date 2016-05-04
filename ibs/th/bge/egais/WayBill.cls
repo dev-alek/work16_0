@@ -100,6 +100,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
   define property ActnEGAISAdm as logical no-undo
     get.
     set.
+    
+  define property FastDwnl as logical no-undo
+    get.
+    set.
 
   define temp-table tt-wb-hndls no-undo
     field num          as character label "№ накл." format "X(50)"
@@ -212,14 +216,14 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     
     isForceAccept = false.
     
-    if inWbIdentity = "AllWB"
+    /*if inWbIdentity = "AllWB"
       then 
     do: 
-      GetWBUTM().
+      GetDocUTM().
       if StatusErr
         then return ?.
       return ?.
-    end.
+    end.*/
     
     case inTableType:
       when {&wb-header} or 
@@ -979,13 +983,25 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
 
   end.
   
-  method private void GetWBUTM ():
+  method public void GetDocUTM ():
+    
+    GetDocUTMPrivat ().
+    if valid-object (prgObj)
+      then do:
+        prgObj:hide-bar().
+        delete object prgObj.
+      end.
+    
+  end.
+  
+  method private void GetDocUTMPrivat ():
     
     define variable hRoot         as handle    no-undo.
     define variable hDoc          as handle    no-undo.
     define variable hRow          as handle    no-undo.
     define variable hText         as handle    no-undo.
     define variable ii            as integer   no-undo.
+    define variable ListOfQuery   as longchar  no-undo.
     
     define variable v-part-num    as integer   no-undo .
     define variable v-clob-db-num as integer   no-undo .
@@ -1006,7 +1022,18 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     if search ("ReceiptListOfQuery.xml") <> ? then os-delete value (inFileName).
     if search (inFileName) <> ? then os-delete value (inFileName).
     
-
+    
+    if FastDwnl then do:
+      if search ( v-FS-RAR + '_ReceiptListOfQuery.xml' ) <> ?
+      then do:
+        copy-lob 
+          from  file v-FS-RAR + '_ReceiptListOfQuery.xml'
+          to  object ListOfQuery
+          no-convert
+          no-error .
+      end.
+    end.
+    
     cmd = substitute ("&1 --connect-timeout &2 -X GET &3/opt/out?refresh=true >&4",search ("exe/curl.exe"), TimeOut, ConPar, inFileName).
     os-command value (cmd).
        
@@ -1024,6 +1051,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     hDoc:get-document-element(hRoot) .
     
     prgObj = new ProgressBar (1, integer (hRoot:num-children / 2)).
+    prgObj:can-cancel = true.
     prgObj:show-bar().
     
     url_:
@@ -1039,10 +1067,16 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             
             urlStr = hText:node-value.
 
-            prgObj:increment( substring (urlStr, if length (urlStr) <= 30 then 1 else length (urlStr) - 30)).    
+            prgObj:increment( substring (urlStr, if length (urlStr) <= 50 then 1 else length (urlStr) - 50)). 
+            if prgObj:is-canceled 
+              then return.
 
-            prgObj:refresh_().
-        
+            if FastDwnl then 
+            do:
+              if ListOfQuery <> ? and ListOfQuery <> "" and index (ListOfQuery, urlStr) > 0 
+                then next url_.
+            end.
+       
             case true:
               when urlStr matches ("*opt/out/WayBill/*") then 
                 do:
@@ -1457,8 +1491,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
 
       end case.
     end.
-    prgObj:hide-bar().
-    delete object prgObj.
+    
+    os-copy value (search ('ReceiptListOfQuery.xml')) value (v-FS-RAR + '_ReceiptListOfQuery.xml').
 
     HndlAnaliz = buffer tt-analiz:handle.
     

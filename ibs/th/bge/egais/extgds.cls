@@ -370,6 +370,8 @@ class ibs.th.bge.egais.ExtGds:
     
     end.
 
+    ClearProp ().
+
     return true.
   
   end.

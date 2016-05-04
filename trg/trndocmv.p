@@ -824,7 +824,6 @@ end case .
         buf_parts.cli-qnty  = 0
         buf_parts.part-code = if available buf_doc-pl-attr then buf_doc-pl-attr.attr-value 
           else (if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} and available (ub.alc-type-gds) then buf_parts.out-code + "," + ub.parts.part-code else ub.parts.part-code)
-        buf_parts.alc-ref-ab-path = if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} and available (ub.alc-type-gds) then "" else ub.parts.alc-ref-ab-path  
       .
       
       if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} and available (ub.alc-type-gds)) then do :
