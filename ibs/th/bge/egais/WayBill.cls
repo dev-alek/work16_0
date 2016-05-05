@@ -515,7 +515,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
           find first ub.clob-bind where (available (tt-wb-hndls) and ub.clob-bind.resource-type = {&lob-egais-wb} and ub.clob-bind.uniq-key-rec = tt-wb-hndls.uniq-key-rec) no-error.
           
           for each buf_clob-bind where (buf_clob-bind.resource-type = {&lob-egais-ticket} and buf_clob-bind.uniq-key-rec begins inWbIdentity) 
-                                      or (available (ub.clob-bind) and recid (buf_clob-bind) <> recid (ub.clob-bind) and buf_clob-bind.resource-type = {&lob-egais-ticket} and lookup (buf_clob-bind.field-name_, ub.clob-bind.field-name_) > 0):
+                                      or (available (ub.clob-bind) and not buf_clob-bind.uniq-key-rec begins inWbIdentity and buf_clob-bind.resource-type = {&lob-egais-ticket} and lookup (buf_clob-bind.field-name_, ub.clob-bind.field-name_) > 0):
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
             ParseResponse("", inTableType).
           end.
@@ -1462,7 +1462,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                   
                   if can-find (first buf_clob-bind where 
                         ((buf_clob-bind.uniq-key-rec = ticketUKR or (buf_clob-bind.uniq-key-rec = tt-ticket.regid + {&delim-par} + tt-ticket.docId and (tt-ticket.Identity = ? or tt-ticket.Identity = ""))) 
-                    and buf_clob-bind.resource-type =  {&lob-egais-ticket}) or buf_clob-bind.field-name_ = tt-ticket.TransId)
+                    and buf_clob-bind.resource-type =  {&lob-egais-ticket}))
                     then next url_.
                   run gbl/file2clb.p ( input {&add-def}
                     ,input ",no"

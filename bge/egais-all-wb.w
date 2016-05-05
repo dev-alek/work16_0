@@ -516,9 +516,9 @@ do:
   end. 
   
   egaisWBAdv:GetDocUTM().
-  if egais:StatusErr 
+  if egaisWBAdv:StatusErr 
   then do:
-    message "Ошибка: " egais:Msg view-as alert-box error.
+    message "Ошибка: " egaisWBAdv:Msg view-as alert-box error.
   end.
   
   bh-analiz = egaisWBAdv:HndlAnaliz.
