@@ -152,12 +152,14 @@ FOR EACH ub.chk-doc No-LOCK WHERE
         end.
         assign v-doc-code-r = ras-doc.doc-code.
         
-        find first ret-doc no-lock where
-                  ret-doc.doc-code = ras-doc.out-code no-error .
+        /*
+        first ret-doc no-lock where
+                      ret-doc.doc-code = replace(ras-doc.out-code,"у","") no-error .
+        
         
         if not available(ret-doc) then do:
             find first ret-doc no-lock where
-                      ret-doc.doc-code = replace(ras-doc.out-code,"у","") no-error .
+                   ret-doc.doc-code = ras-doc.out-code no-error.
         end.
         
         if not available ret-doc then do:
@@ -171,6 +173,8 @@ FOR EACH ub.chk-doc No-LOCK WHERE
           return error .
         end.
         assign v-doc-code-v = ret-doc.doc-code.
+        */
+        
       end.
       assign
       v-doc-code = v-doc-code-v
@@ -224,6 +228,23 @@ FOR EACH ub.chk-doc No-LOCK WHERE
           END.
           find first buf_goods    no-lock where buf_goods.gds-code  =
                   buf_bar-code.gds-code no-error.
+            v-density = 0.       
+          if lookup(string(ub.chk-doc.chk-type), {&sale-in-receipt-codes}) > 0 then do: /* если чек возврата,то ищем хитро его документ */
+              ret-doc:
+            for each ret-doc fields( ret-doc.doc-code ret-doc.out-code ) no-lock where ret-doc.out-code = ub.chk-doc.out-code,
+                first buf_doc-line no-lock where 
+                  buf_doc-line.doc-code = ret-doc.doc-code AND
+                  buf_doc-line.artic     = buf_goods.artic AND
+                  buf_doc-line.prod-type = buf_goods.prod-type AND
+                  buf_doc-line.prod-code = buf_goods.prod-code :
+                      
+               v-density =  buf_doc-line.fact-density
+                            .
+                   
+                  leave ret-doc.           
+            end.   
+          end. 
+          else do:
           find first buf_doc-line no-lock where
                     buf_doc-line.doc-code  = v-doc-code
                 and buf_doc-line.artic     = buf_goods.artic
@@ -233,7 +254,7 @@ FOR EACH ub.chk-doc No-LOCK WHERE
           v-density = ( if available buf_doc-line
                             then buf_doc-line.fact-density
                             else 0 ).
-
+          end.  
           assign
           treal-2.netto = treal-2.netto +
                                           (if v-curr-r-b = {&r-b-base}
