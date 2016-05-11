@@ -3571,13 +3571,14 @@ procedure process-line :
 
     end.
     /* ѕроверка мин остатка в ассортиментной матрице */
+   
     if ub.trn-doc.status_ = {&fact} then do:
       if v-min-ass-exist = false then do:
        { str/ch-amin.i
          ub.trn-doc.obj-type
          ub.trn-doc.obj-code
          buf_goods.gds-code
-         "if g#news then false else false"
+         "if g#news or g#auto then false else true"
          v-min-ass-exist
          }
          end.
