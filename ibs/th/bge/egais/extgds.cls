@@ -82,7 +82,20 @@ class ibs.th.bge.egais.ExtGds:
     
     ClearProp().
     
-  end destructor. 
+  end destructor.
+  
+  
+  method public logical OpenQueryExtGds (inAlcCode as char):
+    
+    return OpenQueryExtGds (0, inAlcCode).
+    
+  end.
+   
+  method public logical OpenQueryExtGds (inGdsCode as int):
+    
+    return OpenQueryExtGds (inGdsCode, "").
+    
+  end.
 
   method public logical OpenQueryExtGds (inGdsCode as int, inAlcCode as char):
     

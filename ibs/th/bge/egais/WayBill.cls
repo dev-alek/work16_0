@@ -711,7 +711,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                 StatusErr = true.
                 return ?.
               end.
-              extGdsObj:OpenQueryExtGds(buf_gds.gds-code, entry (3, buf_parts.alc-ref-ab-path, ",")).
+/*              extGdsObj:OpenQueryExtGds(buf_gds.gds-code, entry (3, buf_parts.alc-ref-ab-path, ",")).*/
               find first ub.gds-dtl where 
                     ub.gds-dtl.doc-code = buf_doc-line.doc-code
                 and ub.gds-dtl.artic = buf_parts.artic
@@ -726,7 +726,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
               create tt-wb-gds-EG.
               assign
                 tt-wb-gds-EG.Identity = string (ii)
-                tt-wb-gds-EG.gds-name = extGdsObj:GetExtGdsValue():FullNameGds
+/*                tt-wb-gds-EG.gds-name = extGdsObj:GetExtGdsValue():FullNameGds*/
                 tt-wb-gds-EG.gds-code = buf_gds.gds-code
                 tt-wb-gds-EG.qnty = buf_parts.cli-qnty
                 tt-wb-gds-EG.price = buf_doc-line.price-rubl when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} 
@@ -2349,26 +2349,44 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
         sw:start-element ("wb:Content") .
         
         for each tt-wb-gds-EG no-lock:
-        
+          
+          extGdsObj:OpenQueryExtGds (tt-wb-gds-EG.gds-code, tt-wb-gds-EG.alc-code).
+          if extGdsObj:NumBundles = 0
+          then do:
+            Msg = substitute ("Не найдена связка &1/&2. &3",tt-wb-gds-EG.gds-code, tt-wb-gds-EG.alc-code, extGdsObj:ReturnMsg).
+            extGdsObj:OpenQueryExtGds (tt-wb-gds-EG.alc-code).
+            if extGdsObj:NumBundles = 0 
+            then do:
+              StatusErr = true.
+              return.
+            end.
+            else do:
+              extGdsValueObj = extGdsObj:GetExtGdsValue().
+              message substitute ("&1 Продолжить? (информация по алкокоду будет получена от &2/&3).", Msg + {&new-line}, string (extGdsValueObj:GdsCode), extGdsValueObj:AlcCode) view-as alert-box question buttons yes-no title "Вопрос..." update isChoise as logical.
+              if isChoise
+              then do:
+                Msg = "".
+              end.
+              else do:
+                StatusErr = true.
+                return.
+              end.
+            end.
+          end.
+
+          extGdsValueObj = extGdsObj:GetExtGdsValue().
+          
           sw:start-element ("wb:Position") .
             sw:write-data-element ("wb:Identity", tt-wb-gds-EG.Identity).
             sw:start-element ("wb:Product") .
-              sw:write-data-element ("pref:FullName", tt-wb-gds-EG.gds-name).
+              sw:write-data-element ("pref:FullName", extGdsValueObj:FullNameGds).
               sw:write-data-element ("pref:AlcCode", tt-wb-gds-EG.alc-code).
               
               if tt-wb-header.UnitType = 'Packed' then sw:write-data-element ("pref:Capacity", string (tt-wb-gds-EG.ms-base)).
               sw:write-data-element ("pref:AlcVolume", string (tt-wb-gds-EG.proof)).
               sw:write-data-element ("pref:ProductVCode", tt-wb-gds-EG.alc-type-code).
               
-              extGdsObj:OpenQueryExtGds (tt-wb-gds-EG.gds-code, tt-wb-gds-EG.alc-code).
-              if extGdsObj:NumBundles = 0
-              then do:
-                StatusErr = true.
-                Msg = substitute ("Не найдена связка &1/&2. &3",tt-wb-gds-EG.gds-code, tt-wb-gds-EG.alc-code, extGdsObj:ReturnMsg).
-                return.
-              end.
-              
-              extGdsValueObj = extGdsObj:GetExtGdsValue().
+
               
               if extGdsValueObj:FullNameProd = ""
               then do:
@@ -2452,10 +2470,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
       return.
     end.
 
-    if available (buf_firm) and 
-      (available (buf_clients-attr) or (buf_firm.kpp <> "" and not available (buf_clients-attr))) then do:
+    if available (buf_firm) then do:
       inSW:write-data-element ("oref:INN", buf_firm.inn).
-      inSW:write-data-element ("oref:KPP", if available buf_clients-attr then buf_clients-attr.attr-value else buf_firm.kpp).
+      if buf_firm.kpp <> "" or available (buf_clients-attr) 
+        then inSW:write-data-element ("oref:KPP", if available buf_clients-attr then buf_clients-attr.attr-value else buf_firm.kpp).
     end.
     else do:
       Msg = "Не найден ИНН или КПП организации или объекта " + inObjType + string (inObjCode).
