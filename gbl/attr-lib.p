@@ -9363,6 +9363,7 @@ procedure cd-attr-news :
 
       otherwise do:
         p-news = no.
+        p-from-ubd = yes.
       end.
     end.
     return ''.
