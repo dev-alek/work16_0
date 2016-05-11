@@ -103,7 +103,8 @@ on error undo, return error
   if v-err-file-found <> true then do:
     message vss-workfile vss-revision vss-description skip
             "Не найден файл с результатом выполнения задания " SKIP
-            cmd
+            cmd skip
+            err-file
             view-as alert-box ERROR.
     RESULT = "error".
     OS-DELETE value(bat-file).
