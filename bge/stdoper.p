@@ -46,6 +46,34 @@ define variable vss-description as character no-undo init "Ёкспорт товарных оста
 { bge/bgelib.i      }
 { str/get-pr.i def  }
 { ref/gds-attr.i }
+{ gbl/thbjattr.i }
+{ cmp/str-glbl.i }
+{ ref/extclass.i }
+
+
+define variable v-prod as character no-undo.
+define variable v-value-character     as character     no-undo .
+define variable v-value-decimal       as decimal       no-undo .
+define variable v-value-integer       as integer       no-undo .
+define variable v-value-logical       as logical       no-undo .
+define variable v-value-type          as character     no-undo .
+define variable v-value-date          as date          no-undo .
+define variable v-ext-sys             as integer       no-undo .
+define variable v-inn as character no-undo.
+define variable v-kpp as character no-undo.
+define variable v-naim as character no-undo.
+define variable v-PartsAlcAttrBottingDate like parts.alc-bottling-date no-undo.
+define variable v-PartsAlcAttrAlcType like ub.alc-type.alc-type-code no-undo.
+define variable v-PartsAlcAttrAlcCode as char no-undo.
+define variable v-PartsAlcAttrRefA like parts.alc-ref-ab-path no-undo.
+define variable v-PartsAlcAttrRefB like parts.alc-ref-ab-path no-undo.
+define variable v-PartsAlcAttrProd as char no-undo.
+define variable v-PartsAlcAttrQu like parts.alc-quality-certif-path no-undo.
+define variable v-PartsAlcAttrCertifPath like parts.alc-certif-path no-undo.
+define variable v-PartsAlcAttrImpCode like parts.alc-imp-code no-undo.
+define variable v-PartsAlcAttrImpType like parts.alc-imp-type no-undo.
+DEFINE VARIABLE v-par-val             AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-par-type            AS CHARACTER NO-UNDO.
 
     define variable v-goods-counter     as integer      no-undo.
     define variable v-host-code         as integer      no-undo.
@@ -65,6 +93,9 @@ define variable vss-description as character no-undo init "Ёкспорт товарных оста
     define buffer buf_stk-line  for ub.stk-line.
     define buffer buf_clients   for ub.clients.
     define buffer buf_country   for ub.country.
+    define buffer buf_ext-classif for ub.ext-classif.
+    define buffer buf_alc-type-gds    for ub.alc-type-gds .
+    define buffer buf_alc-type        for ub.alc-type .
 
 do
 for buf_gds-obj
@@ -272,7 +303,7 @@ define input parameter p-r-b-is-base    as logical          no-undo.
     define variable v-supp-code as integer no-undo.
     define VARIABLE v-price-cli as decimal no-undo.
     define variable v-cst-code as character no-undo.
-    define VARIABLE v-gds-attr-value-old as character no-undo.
+    define VARIABLE v-gds-attr-value as character no-undo.
     define VARIABLE v-gds-attr-type as character no-undo.
     define VARIABLE v-alc-bottling-date like ub.parts.alc-bottling-date no-undo.
     define VARIABLE v-alc-ref-ab-path like ub.parts.alc-ref-ab-path no-undo.
@@ -546,30 +577,86 @@ on error undo, return error
                    RUN gds-attr-value (
                         INPUT v-gds-code,
                         INPUT {&attr-alcohol-prod},
-                        OUTPUT v-gds-attr-value-old,
+                        OUTPUT v-gds-attr-value,
                         OUTPUT v-gds-attr-type
                         ).
 
-                    if v-gds-attr-value-old = "yes" then do:
+                    if v-gds-attr-value = "yes" then do:
+                       assign                           
+                            v-PartsAlcAttrRefA        = "":U
+                            v-PartsAlcAttrRefB        = "":U
+                            v-PartsAlcAttrAlcCode     = "":U 
+                            v-PartsAlcAttrAlcType     = "":U 
+                            v-PartsAlcAttrQu          = "":U
+                            v-PartsAlcAttrCertifPath  = "":U
+                            v-PartsAlcAttrImpCode     = 0
+                            v-PartsAlcAttrImpType     = "":U 
+                            v-prod = "":U
+                            v-inn = "":U
+                            v-kpp = "":U
+                            v-naim = "":U 
+                            v-PartsAlcAttrProd =  "":U
+                            .  
+                         run adm/shattri.p (
+                            input "get":U
+                            ,input '':U
+                            ,input 0
+                            ,input {&attr-egais-host}
+                            ,input {&attr-egais-host_egais-exsys}
+                            ,output v-value-character
+                            ,output v-value-date
+                            ,output v-value-decimal
+                            ,output v-value-integer
+                            ,output v-value-logical
+                            ,output v-value-type
+                            ,input-output TABLE thbjattr_thbj-attr
+                            ) no-error .
+                        assign 
+                            v-ext-sys = v-value-integer . 
                                   assign
                                   v-alc-bottling-date = buf_reserv_parts.alc-bottling-date
-                                  v-alc-ref-ab-path = buf_reserv_parts.alc-ref-ab-path
+                                  v-PartsAlcAttrRefA = entry(1,buf_reserv_parts.alc-ref-ab-path, ",")
+                                  v-PartsAlcAttrRefB = entry(2,buf_reserv_parts.alc-ref-ab-path, ",")     when num-entries (buf_reserv_parts.alc-ref-ab-path) > 1
+                                  v-PartsAlcAttrAlcCode = entry(3,buf_reserv_parts.alc-ref-ab-path,",")   when num-entries (buf_reserv_parts.alc-ref-ab-path) > 2
+                                  v-PartsAlcAttrAlcType     = entry(4,buf_reserv_parts.alc-ref-ab-path,",")  when num-entries (buf_reserv_parts.alc-ref-ab-path) > 3
                                   v-alc-quality-certif-path = buf_reserv_parts.alc-quality-certif-path
                                   v-alc-certif-path = buf_reserv_parts.alc-certif-path
                                   v-alc-imp-code = buf_reserv_parts.alc-imp-code
                                   v-alc-imp-type = buf_reserv_parts.alc-imp-type.     
-                                                   
-                            run bgelib-tag-open( input 3, input "storePartsAlcAttr", input "" ).
-                                  run bgelib-tag-put( input 4, input "PartsAlcAttrBottingDate"          , input string( v-alc-bottling-date ) , input 1 ).
-                                  run bgelib-tag-put( input 4, input "PartsAlcAttrRefAbPatch"           , input string( v-alc-ref-ab-path ) , input 1 ).
-                                  run bgelib-tag-put( input 4, input "PartsAlcAttrQualityCertify"       , input string( v-alc-quality-certif-path ) , input 1 ).
-                                  run bgelib-tag-put( input 4, input "PartsAlcAttrCertifPath"           , input string( v-alc-certif-path ) , input 1 ).
-                                  run bgelib-tag-put( input 4, input "PartsAlcAttrImpCode"              , input string( v-alc-imp-code ) , input 1 ).
-                                  run bgelib-tag-put( input 4, input "PartsAlcAttrImpType"              , input string( v-alc-imp-type ) , input 1 ).
+                            if not v-PartsAlcAttrAlcType > '' then  for first buf_alc-type-gds where buf_alc-type-gds.gds-code = buf_goods.gds-code no-lock,
+                                      first buf_alc-type where buf_alc-type.alc-type-inner-code = buf_alc-type-gds.alc-type-inner-code no-lock:
+                                       v-PartsAlcAttrAlcType =  buf_alc-type.alc-type-code.                                                   
+                            end.          
+                            find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods}
+                            and buf_ext-classif.classif-name = {&extclass_goods_esys}
+                            and buf_ext-classif.db-num = 0
+                            and buf_ext-classif.key#_one = v-gds-code
+                            and buf_ext-classif.key#_two = v-ext-sys
+                            no-error.
 
-                            run bgelib-tag-close( input 3, input "storePartsAlcAttr").
+                            if available buf_ext-classif then 
+                            do: 
+                                
+                                v-prod = entry (1, buf_ext-classif.CharKey_Two, chr(4)).
+                                v-inn = entry(4, v-prod, chr(5)) + "/" no-error.
+                                v-kpp = entry(2, v-prod, chr(5)) + "/" no-error.
+                                v-naim =   entry(3, v-prod, chr(5)) no-error. 
+                                v-PartsAlcAttrProd =   v-naim   + v-inn  + v-kpp .
+                            end.  
+                       
+                        run bgelib-tag-open( input 3, input "storePartsAlcAttr", input "" ).
+                        run bgelib-tag-put( input 4, input "PartsAlcAttrBottingDate"          , input string( v-alc-bottling-date ) , input 1 ).
+                        run bgelib-tag-put( input 4, input "PartsAlcAttrAlcType"          , input string( v-PartsAlcAttrAlcType ) , input 1 ).
+                        run bgelib-tag-put( input 4, input "PartsAlcAttrAlcCode"          , input string(v-PartsAlcAttrAlcCode ) , input 1 ).
+                        run bgelib-tag-put( input 4, input "PartsAlcAttrRefA"          , input string(v-PartsAlcAttrRefA ) , input 1 ).
+                        run bgelib-tag-put( input 4, input "PartsAlcAttrRefB"          , input string( v-PartsAlcAttrRefB  ) , input 1 ).
+                        run bgelib-tag-put( input 4, input "PartsAlcAttrProd"          , input string( v-PartsAlcAttrProd ) , input 1 ).
+                        run bgelib-tag-put( input 4, input "PartsAlcAttrQualityCertify"       , input string( v-alc-quality-certif-path ) , input 1 ).
+                        run bgelib-tag-put( input 4, input "PartsAlcAttrCertifPath"           , input string( v-alc-certif-path ) , input 1 ).
+                        run bgelib-tag-put( input 4, input "PartsAlcAttrImpCode"              , input string( v-alc-imp-code ) , input 1 ).
+                        run bgelib-tag-put( input 4, input "PartsAlcAttrImpType"              , input string( v-alc-imp-type ) , input 1 ).
+                        run bgelib-tag-close( input 3, input "storePartsAlcAttr").
                     end.
-                    
                 run bgelib-tag-close( input 2, input "storeParts" ).
           end. /*for each buf_reserv_parts where buf_reserv_parts.artic = p-artic*/
         end. /*if p-parts = "yes" then do:*/

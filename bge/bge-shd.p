@@ -552,6 +552,7 @@ on error undo, return error
                         , input v-date-to
                         , input v-cst
                         , input yes
+                        , input yes
                         , input 0
                         /*, input v-gds-grp-list*/
                         , input ?
