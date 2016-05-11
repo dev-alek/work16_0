@@ -1966,6 +1966,18 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            buf_scales-gds.scales-num = loc-scales.scales-num AND
            buf_scales-gds.db-num = loc-scales.db-num AND
            buf_scales-gds.to-del = yes:
+                 FIND FIRST buf_bar-code WHERE
+                      buf_bar-code.b-code = buf_scales-gds.b-code NO-LOCK .
+            FIND FIRST buf_goods WHERE
+                      buf_goods.gds-code = buf_bar-code.gds-code NO-LOCK.
+            FIND FIRST buf_gds-obj-attr WHERE
+                        buf_gds-obj-attr.gds-code = buf_bar-code.gds-code AND
+                        buf_gds-obj-attr.attr-code = {&attr-scales-code-o} AND
+                        buf_gds-obj-attr.obj-type = buf_scales-gds.obj-type AND
+                        buf_gds-obj-attr.obj-code = buf_scales-gds.obj-code
+                        No-LOCK.
+            FIND FIRST buf_prod-bc WHERE
+                        buf_prod-bc.b-str = buf_gds-obj-attr.attr-value NO-LOCK.
     ii = ii + 1.
     if ( ii modulo 10 = 0) then do:
         run show-counter in p-log-handle .
@@ -1981,7 +1993,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                         ,input buf_scales-gds.scales-num
                         ,input buf_scales-gds.plu-code
                         ,input buf_scales-gds.plu-type
-                        ,input '':U /*b-str*/
+                        ,input buf_prod-bc.b-str /*b-str*/
                         ,input 0.0 /*p-price-sale*/
                         ,input 0 /*deadline*/
                         ,input ? /*deaddate*/
