@@ -292,6 +292,360 @@ assign
   RETURN NO-APPLY.
 END.
 
+  ON CHOOSE OF MENU-ITEM m_print6 IN MENU M-print
+    DO:
+      define variable j as integer init 0 no-undo .
+      DEFINE  BUFFER post-firm    for ub.firm.
+      DEFINE  BUFFER zak-firm     for ub.firm.
+      DEFINE  BUFFER ord-blank-1  for ub.ord-blank.
+      DEFINE VARIABLE chExcelApplication      AS COM-HANDLE no-undo .
+      DEFINE VARIABLE chWorkbook              AS COM-HANDLE no-undo .
+      DEFINE VARIABLE chWorksheet             AS COM-HANDLE no-undo .
+
+      define variable PrintRubl  as logical   no-undo .
+      define variable Abbr       as character no-undo .
+      define variable PropisSum  as character no-undo .
+      define variable B-Sum      as decimal   no-undo .
+
+      DEFINE VARIABLE N#ROW         as  integer  no-undo .
+      DEFINE VARIABLE GoodN#ROW     as  integer  no-undo .
+      DEFINE VARIABLE GoodEI#ROW    as  integer  no-undo .
+      DEFINE VARIABLE OKEI#ROW      as  integer  no-undo .
+      DEFINE VARIABLE Qnty#ROW      as  integer  no-undo .
+      DEFINE VARIABLE Cost#ROW      as  integer  no-undo .
+      DEFINE VARIABLE Summa#ROW     as  integer  no-undo .
+      DEFINE VARIABLE N#col         as  integer  no-undo .
+      DEFINE VARIABLE GoodN#col     as  integer  no-undo .
+      DEFINE VARIABLE GoodEI#col    as  integer  no-undo .
+      DEFINE VARIABLE OKEI#col      as  integer  no-undo .
+      DEFINE VARIABLE Qnty#col      as  integer  no-undo .
+      DEFINE VARIABLE Cost#col      as  integer  no-undo .
+      DEFINE VARIABLE Summa#col     as  integer  no-undo .
+      DEFINE VARIABLE Sort#ROW      as  integer  no-undo .
+      DEFINE VARIABLE Sort#COL      as  integer  no-undo .
+      DEFINE VARIABLE GoodCode#ROW  as  integer  no-undo .
+      DEFINE VARIABLE GoodCode#COL  as  integer  no-undo .
+      DEFINE VARIABLE CliArt#ROW    as  integer  no-undo .
+      DEFINE VARIABLE CliArt#COL    as  integer  no-undo .
+      DEFINE VARIABLE Art#ROW       as  integer  no-undo .
+      DEFINE VARIABLE Art#COL       as  integer  no-undo .
+      DEFINE VARIABLE CliName#COL         as  integer  no-undo .
+      DEFINE VARIABLE CliCode#COL         as  integer  no-undo .
+      DEFINE VARIABLE CliType#COL         as  integer  no-undo .
+      DEFINE VARIABLE CliAdress1#COL      as  integer  no-undo .
+      DEFINE VARIABLE CliAdress2#COL      as  integer  no-undo .
+      DEFINE VARIABLE CliName#ROW         as  integer  no-undo .
+      DEFINE VARIABLE CliCode#ROW         as  integer  no-undo .
+      DEFINE VARIABLE CliType#ROW         as  integer  no-undo .
+      DEFINE VARIABLE CliAdress1#ROW      as  integer  no-undo .
+      DEFINE VARIABLE CliAdress2#ROW      as  integer  no-undo .
+      /* define variable v-rez as logical   no-undo . */
+   
+             
+      if not available shar-buf_ord-doc then return .
+      define buffer buf_ord-line-rcv for ub.ord-line-rcv  .
+      define buffer buf_ord-line     for ub.ord-line      .
+      define variable Current-ROW  as integer no-undo .
+      define variable v-rez as logical   no-undo .
+      define variable v-cli-art as character no-undo .
+      define buffer buf_clients for ub.clients  .
+      if blank#name = ?  or blank#name = "" Then
+        Find first ub.ord-blank
+          where ub.ord-blank.cli-code = shar-buf_ord-doc.cli-code
+          and ub.ord-blank.cli-type = shar-buf_ord-doc.cli-type
+          and ub.ord-blank.last-use = TRUE
+          no-lock no-error.
+      else
+        Find first ub.ord-blank
+          where ub.ord-blank.cli-code = shar-buf_ord-doc.cli-code
+          and ub.ord-blank.cli-type = shar-buf_ord-doc.cli-type
+          and ub.ord-blank.blank-name = blank#name
+          no-lock no-error.
+      if not  available  ub.ord-blank  then 
+      do :
+        Message "Для этого поставщика нет формы !   Задайте ее в режиме  <<выбор формы печати>>".
+        Return.
+      End.
+      if  available  ub.ord-blank  then 
+      do :
+        Assign 
+          blank#name = ?.
+        For each ord-blank-1 where ub.ord-blank-1.cli-code = shar-buf_ord-doc.cli-code
+          and ub.ord-blank-1.cli-type = shar-buf_ord-doc.cli-type   exclusive-lock :
+          if  ord-blank.blank-name = ub.ord-blank-1.blank-name and
+            ord-blank.cli-code = ub.ord-blank-1.cli-code     and
+            ord-blank.cli-type = ub.ord-blank-1.cli-type then  ord-blank-1.last-use = TRUE .
+          Else ord-blank-1.last-use = false  .
+        End.
+
+        CREATE "Excel.Application" chExcelApplication.
+        assign
+          chExcelApplication:Visible = false
+          chWorkbook  = chExcelApplication:Workbooks:Add ( ub.ord-blank.file-name )
+          chWorkSheet = chExcelApplication:Sheets:Item (1)
+          chExcelApplication:Interactive    = false
+          chExcelApplication:ScreenUpdating = false
+          .
+
+        /* Шапка */
+        /* Поставщик */
+        Find first post-firm where  post-firm.firm-code = shar-buf_ord-doc.cli-code no-lock  no-error .
+        if available post-firm THEN
+          Assign
+            chWorkSheet:Range ("PosAddres1"):Value   = post-firm.addres1
+            chWorkSheet:Range ("PosAddres2"):Value   = post-firm.addres2
+            chWorkSheet:Range ("PosOKPO")   :Value   = post-firm.okpo
+            chWorkSheet:Range ("PosPhone1") :Value   = post-firm.phone1-note
+            chWorkSheet:Range ("PosPhone2") :Value   = post-firm.phone no-error.
+        /* Заказчик */
+        Find first Zak-firm where  Zak-firm.firm-code = g#host-code no-lock  no-error .
+        if available Zak-firm THEN
+          Assign
+            chWorkSheet:Range ("ZakAddres1"):Value   = Zak-firm.addres1
+            chWorkSheet:Range ("ZakAddres2"):Value   = Zak-firm.addres2
+            chWorkSheet:Range ("ZakOKPO")   :Value   = Zak-firm.okpo
+            chWorkSheet:Range ("ZakPhone1") :Value   = Zak-firm.phone1-note
+            chWorkSheet:Range ("ZakPhone2") :Value   = Zak-firm.phone no-error.
+
+        /*почему-то иногда не выводит, если в 1 assign все поместить!!!*/
+        Assign 
+          chWorkSheet:Range ("ZakFullname"):Value = G#host-name no-error.
+        Assign 
+          chWorkSheet:Range ("Number")     :Value = shar-buf_ord-doc.doc-code no-error .
+        Assign 
+          chWorkSheet:Range ("NumberPost") :Value = entry(1, shar-buf_ord-doc.cli-out-doc, {&delim-par}) no-error.
+        Assign 
+          chWorkSheet:Range ("TimePost")   :Value = string(shar-buf_ord-doc.ship-time, "HH:MM") no-error.
+        Assign 
+          chWorkSheet:Range ("DatePost")   :Value = string(shar-buf_ord-doc.ship-date, "99/99/9999") no-error.
+        Assign 
+          chWorkSheet:Range ("FullName")   :Value = shar-buf_ord-doc.cli-name     no-error.
+        Assign
+          chWorkSheet:Range ("DateDoc") :Value  = if shar-buf_ord-doc.fact-date <> ?
+          THEN string(shar-buf_ord-doc.fact-date, "99/99/9999")
+          Else string(shar-buf_ord-doc.doc-date, "99/99/9999")
+        no-error.
+        Assign 
+          chWorkSheet:Range ("SumShip")   :Value = shar-buf_ord-doc.sum-Ship no-error.
+        Assign 
+          chWorkSheet:Range ("SumService"):Value = shar-buf_ord-doc.sum-Service no-error.
+       
+ 
+        /* Определим обсолютные значения для колонок таблицы - чтобы вставлять произвольное количество строк */
+        Assign
+
+          N#ROW        = chWorkSheet:Range ("N" ):Row
+          N#COL        = chWorkSheet:Range ("N" ):Column
+          Sort#ROW     = chWorkSheet:Range ("Sort" ):Row
+          Sort#COL     = chWorkSheet:Range ("Sort" ):Column
+          GoodCode#ROW = chWorkSheet:Range ("GoodCode" ):Row
+          GoodCode#COL = chWorkSheet:Range ("GoodCode" ):Column
+
+          GoodN#ROW    = chWorkSheet:Range ("GoodN" ):Row
+          GoodEI#ROW   = chWorkSheet:Range ("EIn"   ):Row
+          OKEI#ROW     = chWorkSheet:Range ("GoodEI"):Row
+     Qnty#ROW     = chWorkSheet:Range ("Qnty"  ):Row
+     Cost#ROW     = chWorkSheet:Range ("Cost"  ):Row
+     Summa#ROW    = chWorkSheet:Range ("Summa" ):Row
+     CliArt#ROW   = chWorkSheet:Range ("CliArt"):Row
+     Art#ROW      = chWorkSheet:Range ("Art"   ):Row
+     CliName#ROW  = chWorkSheet:Range ("CliName"   ):ROW
+     CliCode#ROW  = chWorkSheet:Range ("CliCode"   ):ROW
+     CliType#ROW  = chWorkSheet:Range ("CliType"   ):ROW
+     CliAdress1#ROW = chWorkSheet:Range ("CliAdress1"   ):ROW
+     CliAdress2#ROW = chWorkSheet:Range ("CliAdress2"   ):ROW
+
+     GoodN#COL    = chWorkSheet:Range ("GoodN" ):Column
+     GoodEI#COL   = chWorkSheet:Range ("EIn"   ):Column
+     OKEI#COL     = chWorkSheet:Range ("GoodEI"):Column
+     Qnty#COL     = chWorkSheet:Range ("Qnty"  ):Column
+     Cost#COL     = chWorkSheet:Range ("Cost"  ):Column
+     Summa#COL    = chWorkSheet:Range ("Summa" ):Column
+     CliArt#COL   = chWorkSheet:Range ("CliArt"):Column
+     Art#COL      = chWorkSheet:Range ("Art"   ):Column
+     CliName#COL  = chWorkSheet:Range ("CliName"   ):Column
+     CliCode#COL  = chWorkSheet:Range ("CliCode"   ):Column
+     CliType#COL  = chWorkSheet:Range ("CliType"   ):Column
+     CliAdress1#COL = chWorkSheet:Range ("CliAdress1"   ):Column
+     CliAdress2#COL = chWorkSheet:Range ("CliAdress2"   ):Column
+             
+     no-error.
+      /* GoodCode  Sort  */
+
+      Current-ROW = maximum( if N#ROW       = ? then 0 else N#ROW      ,
+        if GoodN#ROW   = ? then 0 else GoodN#ROW  ,
+        if GoodEI#ROW  = ? then 0 else GoodEI#ROW ,
+        if OKEI#ROW    = ? then 0 else OKEI#ROW   ,
+        if Art#ROW  = ? then 0 else Art#ROW ,
+        if CliArt#ROW  = ? then 0 else CliArt#ROW ,
+        if Qnty#ROW    = ? then 0 else Qnty#ROW   ,
+        if Cost#ROW    = ? then 0 else Cost#ROW   ,
+        if Summa#ROW   = ? then 0 else Summa#ROW  ,
+        if CliName#ROW = ? then 0 else CliName#ROW,
+        if CliCode#ROW = ? then 0 else CliCode#ROW,
+        if CliAdress1#ROW = ? then 0 else CliAdress1#ROW,
+        if CliType#ROW = ? then 0 else CliType#ROW,
+        if CliAdress2#ROW = ? then 0 else CliAdress2#ROW)
+        .
+      /* таблица */
+      for each tt-ord-doc-rcv :
+        delete tt-ord-doc-rcv .
+      end.  
+      for each ub.ord-doc-rcv where ub.ord-doc-rcv.doc-code = shar-buf_ord-doc.doc-code:      
+        For each  buf_ord-line-rcv where
+          buf_ord-line-rcv.rcv-code = ub.ord-doc-rcv.rcv-code and
+          buf_ord-line-rcv.doc-code = ub.ord-doc-rcv.doc-code
+          no-lock :
+          chWorkSheet:Rows(Current-ROW):Insert .
+        End.
+
+        For each  buf_ord-line-rcv where
+          buf_ord-line-rcv.rcv-code = ub.ord-doc-rcv.rcv-code and
+          buf_ord-line-rcv.doc-code = ub.ord-doc-rcv.doc-code
+          no-lock :
+            
+          J = J + 1 .
+          FIND FIRST ub.goods No-LOCK WHERE ub.goods.prod-type = buf_ord-line-rcv.prod-type AND
+            ub.goods.prod-code = buf_ord-line-rcv.prod-code AND
+            ub.goods.artic     = buf_ord-line-rcv.artic  NO-ERROR.
+          find first ub.units where ub.units.unit-name = buf_ord-line-rcv.unit-cli no-lock no-error .
+
+                   find first buf_ord-line no-lock where
+                              buf_ord-line.artic = buf_ord-line-rcv.artic and
+                              buf_ord-line.prod-type = buf_ord-line-rcv.prod-type and
+                              buf_ord-line.prod-code = buf_ord-line-rcv.prod-code no-error.
+          if available buf_ord-line then v-cli-art = buf_ord-line.cli-art .
+          else v-cli-art = "" .
+/*      find first tt-ord-doc-rcv where tt-ord-doc-rcv.nn = J and                                */
+/*                                      tt-ord-doc-rcv.gds-name = ub.goods.gds-name and          */
+/*                                      tt-ord-doc-rcv.gds-sort = ub.goods.sort and              */
+/*                                      tt-ord-doc-rcv.gds-code = ub.goods.gds-code and          */
+/*                                      tt-ord-doc-rcv.unit-cli = buf_ord-line-rcv.unit-cli and  */
+/*                                      tt-ord-doc-rcv.cli-art = v-cli-art and                   */
+/*                                      tt-ord-doc-rcv.artic = buf_ord-line-rcv.artic and        */
+/*                                      tt-ord-doc-rcv.cli-qnty = buf_ord-line-rcv.cli-qnty and  */
+/*                                      tt-ord-doc-rcv.price-cli = buf_ord-line-rcv.price-cli and*/
+/*                                      tt-ord-doc-rcv.cost = buf_ord-line-rcv.price-cli and     */
+/*                                      tt-ord-doc-rcv.cli-code = shar-buf_ord-doc.cli-code and  */
+/*                                      tt-ord-doc-rcv.cli-type = shar-buf_ord-doc.cli-type      */
+/*                                      no-lock no-error .                                       */
+/*      if available tt-ord-doc-rcv then delete tt-ord-doc-rcv .                                 */
+          create tt-ord-doc-rcv .
+          assign
+          tt-ord-doc-rcv.nn = J
+          tt-ord-doc-rcv.gds-name = ub.goods.gds-name
+          tt-ord-doc-rcv.gds-sort = ub.goods.Sort
+          tt-ord-doc-rcv.gds-code = ub.goods.gds-code
+          tt-ord-doc-rcv.unit-cli = buf_ord-line-rcv.unit-cli
+          .
+          assign
+          tt-ord-doc-rcv.OKEI = if available ub.units THEN String(ub.units.OKEI,">>>>>") Else "" no-error.
+          assign
+          tt-ord-doc-rcv.cli-art = v-cli-art
+          tt-ord-doc-rcv.artic = buf_ord-line-rcv.artic
+          tt-ord-doc-rcv.cli-qnty = buf_ord-line-rcv.cli-qnty
+          tt-ord-doc-rcv.price-cli = buf_ord-line-rcv.price-cli
+          tt-ord-doc-rcv.cost = buf_ord-line-rcv.price-cli
+          tt-ord-doc-rcv.summa = round ( buf_ord-line-rcv.cli-qnty * buf_ord-line-rcv.price-cli , 2) no-error.
+          assign 
+          tt-ord-doc-rcv.cli-name = ub.ord-doc-rcv.obj-type + " " + string(ub.ord-doc-rcv.obj-code)
+          tt-ord-doc-rcv.cli-code = shar-buf_ord-doc.cli-code
+          tt-ord-doc-rcv.cli-type = shar-buf_ord-doc.cli-type.
+          if ub.ord-doc-rcv.obj-type = {&shop} then do:
+            find first ub.shop where ub.shop.obj-code = ub.ord-doc-rcv.obj-code no-lock no-error.
+            assign
+              tt-ord-doc-rcv.addres1 = ub.shop.addres1
+              tt-ord-doc-rcv.addres2 = ub.shop.addres2
+            .
+          end.
+          if ub.ord-doc-rcv.obj-type = {&stock} then do:
+            find first ub.store where ub.store.obj-code = ub.ord-doc-rcv.obj-code no-lock no-error.
+            assign
+              tt-ord-doc-rcv.addres1 = ub.store.addres1
+              tt-ord-doc-rcv.addres2 = ub.store.addres2
+            .
+          end.
+          .
+                  
+        End.
+      end.   
+
+for each tt-ord-doc-rcv exclusive-lock:
+chWorkSheet:Rows(Current-ROW):Insert .
+end.        
+for each tt-ord-doc-rcv exclusive-lock:
+  B-sum = B-sum + tt-ord-doc-rcv.summa .
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[N#col])        + String(N#ROW        + J)):Value  = tt-ord-doc-rcv.nn no-error.
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[GoodN#col])    + String(GoodN#ROW    + J)):Value  = tt-ord-doc-rcv.gds-name no-error.
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[Sort#col])     + String(Sort#ROW     + J)):Value  = tt-ord-doc-rcv.gds-sort     no-error.
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[GoodCode#col]) + String(GoodCode#ROW + J)):Value  = tt-ord-doc-rcv.gds-code no-error.
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[GoodEI#col])   + String(GoodEI#ROW   + J)):Value  = tt-ord-doc-rcv.unit-cli  no-error.
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[OKEI#col])     + String(OKEI#ROW     + J)):Value  = tt-ord-doc-rcv.OKEI no-error.
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[CliArt#col])   + String(CliArt#ROW   + J)):Value  = tt-ord-doc-rcv.cli-art no-error.
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[Art#col])      + String(Art#ROW      + J)):Value  = tt-ord-doc-rcv.artic no-error.
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[Qnty#col])     + String(Qnty#ROW     + J)):Value  = tt-ord-doc-rcv.cli-qnty no-error .
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[Cost#col])     + String(Cost#ROW     + J)):Value  = tt-ord-doc-rcv.price-cli no-error .
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[Summa#col])    + String(Summa#ROW    + J)):Value  = tt-ord-doc-rcv.summa no-error .
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[Cost#col])     + String(Cost#ROW     + J)):Value  = tt-ord-doc-rcv.price-cli no-error .
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[CliName#COL])  + String(CliName#ROW  + J)):Value  = tt-ord-doc-rcv.cli-name no-error.
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[CliCode#COL])  + String(CliCode#ROW  + J)):Value  = tt-ord-doc-rcv.cli-code no-error.
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[CliType#COL])  + String(CliType#ROW     + J)):Value  = tt-ord-doc-rcv.cli-type no-error .
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[CliAdress1#COL]) + String(CliAdress1#ROW     + J)):Value  = tt-ord-doc-rcv.addres1 no-error .
+          Assign 
+            chWorkSheet:Range (string(COL-NAME[CliAdress2#COL]) + String(CliAdress2#ROW    + J)):Value  = tt-ord-doc-rcv.addres2 no-error .
+          /*
+          if error-status :error and  J  = 1 then message
+            "Внимание ! Шаблон Excel не содержит поля  КОЛИЧЕСТВО !!!"
+            view-as alert-box information
+          .  */
+          chWorkSheet:Rows(Current-ROW):Delete.
+end. 
+          assign
+            chExcelApplication:Interactive    = true
+            chExcelApplication:ScreenUpdating = true
+            chExcelApplication:Visible        = TRUE .
+        FIND ub.currency NO-LOCK WHERE ub.currency.curr-code = shar-buf_ord-doc.exch-code no-error .
+        if shar-buf_ord-doc.exch-code <> 0 then
+          assign
+            PrintRubl = false
+            abbr = ub.currency.curr-abbr
+            .
+        else  PrintRubl =  true .
+
+        if NOT PrintRubl then
+          assign
+            PropisSum = Total-Word( B-Sum, ub.currency.curr-abbr, ub.currency.part-abbr )
+            .
+        else
+          run rep/wp-rub.p ( B-Sum , output PropisSum, output abbr).
+         Assign 
+          chWorkSheet:Range ("SumPropis") :Value = PropisSum  no-error .   
+    End.
+/*  message "Форма подготовлена. Связь с Excel будет закрыта."  view-as alert-box .*/
+  RELEASE OBJECT chWorksheet NO-ERROR.
+  RELEASE OBJECT chWorkbook NO-ERROR.
+  chExcelApplication :QUIT().
+  RELEASE OBJECT  chExcelApplication  NO-ERROR.
+  RETURN NO-APPLY.
+
+END.
+
 ON CHOOSE OF MENU-ITEM m_PRINT3 /* 8. */
 DO:
   if not available shar-buf_ord-doc then return .

@@ -55,7 +55,26 @@ define variable is-edoc-nn as logical no-undo .
 
 define new shared variable doc-rec   as recid   no-undo .
 define new shared variable next-prev as logical no-undo .
-
+define temp-table tt-ord-doc-rcv no-undo
+        field nn as integer
+        field gds-name like ub.goods.gds-name
+        field gds-sort like ub.goods.sort
+        field gds-code like ub.goods.gds-code
+        field unit-cli like ub.ord-line-rcv.unit-cli
+        field OKEI     as character
+        field cli-art  as character
+        field artic    like ub.goods.artic
+        field cli-qnty like ub.ord-line-rcv.cli-qnty
+        field price-cli like ub.ord-line-rcv.price-cli
+        field summa   as decimal
+        field cost    like ub.ord-line-rcv.price-cli
+        field cli-name like ub.ord-doc.cli-name
+        field cli-code like ub.ord-doc.cli-code
+        field cli-type like ub.ord-doc.cli-type
+        field addres1  like ub.firm.addres1
+        field addres2  like ub.firm.addres2    
+        index pi nn
+        .
 
 { gbl/getcntxt.i get }
 
@@ -376,6 +395,7 @@ def MENU m-rep
 DEFINE MENU M-print
        MENU-ITEM m_print1       LABEL "ТОРГ-26" ACCELERATOR "ALT-7"
        MENU-ITEM m_print2       LABEL "Печать по форме Поставщика" ACCELERATOR "ALT-8"
+       MENU-ITEM m_print6       LABEL "Заказ по форме поставщика с детализацией по поставкам"
        MENU-ITEM m_print4       LABEL "Стандартная форма"
        menu-item m_print5       label "Заказ с детализацией по объектам"
        RULE

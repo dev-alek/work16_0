@@ -354,11 +354,19 @@ DO:
                                       or tt-gds-act.A-ttnDate = ? or trim(string(tt-gds-act.A-ttnDate)) = "" )
     then do :
         message "П Р Е Д У П Р Е Ж Д Е Н И Е" skip
-                "В одной или нескольких строках не заполнены поля номер/дата ТТН." skip
+                "В одной или нескольких строках не заполнены поля   номер/дата ТТН." skip
                 "Такой акт не может быть отправлен в ЕГАИС." skip
                 "Всё равно продолжить сохраненине?" view-as alert-box question buttons yes-no update glog .
         if not glog then return no-apply.        
-    end.                                  
+    end. 
+    if can-find(tt-gds-act no-lock where tt-gds-act.A-bottleDate = ? or trim(string(tt-gds-act.A-bottleDate)) = "" )
+    then do :
+        message "П Р Е Д У П Р Е Ж Д Е Н И Е" skip
+                "В одной или нескольких строках не заполнено поле   дата розлива." skip
+                "Такой акт не может быть отправлен в ЕГАИС." skip
+                "Всё равно продолжить сохраненине?" view-as alert-box question buttons yes-no update glog .
+        if not glog then return no-apply.        
+    end.                                 
     run makeXML in this-procedure no-error.
     if error-status:error then return return-value .
     assign
