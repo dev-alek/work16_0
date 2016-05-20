@@ -141,8 +141,6 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
         
         GetChildren(hRoot, 1).
             
-        DELETE OBJECT hDoc.
-        DELETE OBJECT hRoot.
         
         ticket2 = true .
         if num-entries(urlResp, {&delim-par}) = 2 then do :
@@ -167,8 +165,6 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
             
             GetChildren(hRoot, 1).
                 
-            DELETE OBJECT hDoc.
-            DELETE OBJECT hRoot.
         end.
         
         find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = inAbIndenty .
@@ -179,6 +175,9 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
             
         find first tt-act-header where tt-act-header.num = inAbIndenty .
         assign tt-act-header.answer_ = v-Answer .
+        
+        DELETE OBJECT hDoc no-error.
+        DELETE OBJECT hRoot no-error.
         
         return buffer tt-act-header:handle.    
       end.
@@ -222,7 +221,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
 /*          run gbl/inidebug.p .*/
       
           cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/ActChargeOn >&4", search ("exe/curl.exe"), search ("ActChargeOn.xml"), ConPar, inFileName).
-          os-command value (cmd).
+          os-command silent value (cmd).
     
           file-info:file-name = search (inFileName).
           if search (inFileName) <> ? and file-info:file-size > 0 
@@ -343,7 +342,10 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
             
             hNoderef:GET-CHILD(hText, 1) no-error .    
             
-            IF hNoderef:NAME = "tc:Comments" THEN v-Answer = hText:node-value .
+            IF hNoderef:NAME = "tc:Comments" THEN do :
+                if trim(v-Answer) = '' or v-Answer = {&new-line} then v-Answer = hText:node-value .
+                else v-Answer = v-Answer + {&new-line} + hText:node-value .
+            end.
             IF hNoderef:NAME = "tc:OperationResult" THEN v-ok = (hText:node-value = "Accepted") .
             IF hNoderef:NAME = "tc:OperationComment" and not v-ok THEN v-Answer = v-Answer + {&new-line} + hText:node-value .
                    
@@ -386,7 +388,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     
     if trim(response) <> "" then do :
         cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, response, inFileName).
-        os-command value (cmd).
+        os-command silent value (cmd).
     end.
   end.
 
@@ -413,7 +415,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     
 
     cmd = substitute ("&1 --connect-timeout &2 -X GET &3/opt/out?refresh=true >&4",search ("exe/curl.exe"), TimeOut, ConPar, inFileName).
-    os-command value (cmd).
+    os-command silent value (cmd).
        
     file-info:file-name = search (inFileName).
     if search (inFileName) = ? or file-info:file-size = 0 
