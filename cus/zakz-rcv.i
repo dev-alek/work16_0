@@ -594,6 +594,7 @@ END.
 END.
 ON CHOOSE OF MENU-ITEM m-del-cycle in menu m-exec DO:  /* шапки */
   define variable ll-recid as recid no-undo .
+  
   find current shar-buf_ord-doc no-lock no-error .
   if avail shar-buf_ord-doc then do:
     ll-recid = recid (shar-buf_ord-doc).
@@ -1289,9 +1290,10 @@ define variable g-log as logical   no-undo .
  if not g-log then  return .
 
 
-
 next-prev = no.
 br-rcv-handle = br-rcv:handle.
+
+apply "entry" to BR-rcv .
 
 do while next-prev <> ?:
   if not available bufs_ord-doc-rcv then do:
