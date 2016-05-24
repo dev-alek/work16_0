@@ -1107,7 +1107,8 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE f-query Dialog-Frame 
 PROCEDURE f-query :
-def var v-proposition  as char no-undo.
+  
+  def var v-proposition  as char no-undo.
   def var v-proposition1 as char no-undo.
   def var v-rowid as rowid no-undo.
   

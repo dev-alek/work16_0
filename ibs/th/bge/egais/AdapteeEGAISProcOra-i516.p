@@ -97,7 +97,6 @@ do trans:
       temp_doc-line.line-num   = jj
       temp_doc-line.gds-code   = tt-wb-gds-EG.gds-code
       temp_doc-line.price-cli  = tt-wb-gds-EG.price
-      temp_doc-line.price-rubl = tt-wb-gds-EG.price
       temp_doc-line.doc-code   = temp_trn-doc.doc-code
       temp_doc-line.RefA = tt-wb-gds-EG.RefA
       temp_doc-line.RefB = tt-wb-gds-EG.RefB
@@ -114,14 +113,15 @@ do trans:
         temp_doc-line.fact-qnty  = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
         temp_doc-line.doc-qnty   = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
         temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
+        temp_doc-line.price-rubl = tt-wb-gds-EG.price
       .
     else
       assign
         temp_doc-line.fact-qnty  = tt-wb-gds-EG.qnty
         temp_doc-line.doc-qnty   = tt-wb-gds-EG.qnty
         temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty / buf_goods.cli-base-rate
+        temp_doc-line.price-rubl = tt-wb-gds-EG.price * buf_goods.cli-base-rate
       .    
-
     
   end.
   
