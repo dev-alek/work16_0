@@ -114,3 +114,65 @@
     index name_
     gds-name
     .
+    
+  define temp-table tt-wb-info-client no-undo
+    field obj-type        like ub.clients.obj-type
+    field obj-code        like ub.clients.obj-code
+    field obj-name-th     as character 
+    field obj-name-egais  as character
+    field wb-type-client  as character
+    field regID           as character format "X(21)"
+    field inn             as character
+    field kpp             as character
+    field country         as character
+    field regionCode      as character
+    field district        as character
+    field city            as character
+    field settlement      as character
+    field street          as character
+    field house-number    as character
+    field house-case      as character
+    field house-apartment as character
+    field house-litera    as character
+    field postIndex       as character
+    field description_    as character format "X(100)"
+    index pi 
+    inn kpp
+    . 
+    
+  define temp-table tt-ticket no-undo
+    field regid        as character label "RegId документа" format "X(21)"
+    field doc          as character label "Документ" format "X(10)"
+    field ticket-date  as character label "Дата" format "X(10)"
+    field status_      as character label "Статус"
+    field comment      as character label "Коментарий" format "X(150)"
+    field docId        as character label "DocId" format "X(40)"
+    field TransId      as character label "TransId" format "X(40)"
+    field Identity     as character label "Identity" format "X(21)"
+    index pi 
+    regid 
+    .
+    
+  define temp-table tt-analiz no-undo
+    field num           as character label "№ накл." format "X(50)"
+    field wb-type       as character label "Тип" format "X(4)"
+    field wb-date       as date      label "Дата"
+    field wbregid       as character label "WBREGID" format "X(18)"
+    field Identity      as character format "X(50)"
+    field uniq-key-rec  as character format "X(50)"
+    field url_          as character format "X(50)"
+    field isMany        as logical   format "yes/no"
+    field nnOrder       as integer
+    field resource-type as character format "X(12)"
+    index pi
+    url_ 
+    .
+    
+  define temp-table tt-alldoc no-undo
+    field mark          as character format "X(1)" label "*"
+    field url_          as character format "X(256)"
+    field date_         as date      label "Дата"
+    field nnOrder       as integer   label "Порядковый №"
+    index pi
+    nnOrder 
+    .

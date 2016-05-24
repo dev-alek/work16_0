@@ -38,7 +38,9 @@ define variable vss-description            as character no-undo init "Журнал зап
 define variable bh-wb-analiz       as handle    no-undo.
 define variable browse-hdl-analiz  as handle    no-undo.
 define variable qh-analiz          as handle    no-undo.
-define variable bcol               as handle    extent no-undo.
+define variable bcolmark           as handle    no-undo.
+define variable bcolnn             as handle    no-undo.
+define variable bcol               as handle    no-undo. 
 define variable v-db-num           as integer   no-undo .
 define variable v-user-id          as character no-undo .
 define variable v-user-select      as character no-undo .
@@ -57,13 +59,15 @@ define variable v-value-decimal    as decimal   no-undo .
 define variable v-value-integer    as integer   no-undo .
 define variable v-value-logical    as logical   no-undo .
 define variable v-value-type       as character no-undo .
+define variable select-list        as character no-undo .
 define variable v-value-date       as date      no-undo .
-
+define variable v-rec-list         as character no-undo .
+define variable isMarkALL          as logical   no-undo init ?.
+define variable isSave             as logical   no-undo.
 
 define buffer buf_clients   for ub.clients .
 define buffer x_ext-classif for ub.ext-classif.
 define buffer buf_goods     for ub.goods .
-
 
 {cmp/str-glbl.i}
 { gbl/color.i }
@@ -90,7 +94,9 @@ define buffer buf_goods     for ub.goods .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_Cancel btn_del btn_dwl 
+&Scoped-Define ENABLED-OBJECTS Btn_Cancel btn_del btn_dwl btn_look Btn_mark ~
+Btn_markall Btn_desmark f_date 
+&Scoped-Define DISPLAYED-OBJECTS f_date 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -105,31 +111,57 @@ define buffer buf_goods     for ub.goods .
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
-     LABEL "Выход" 
-     SIZE 15 BY 1.17
-     BGCOLOR 8 .
+define button Btn_Cancel auto-end-key 
+     label "Выход" 
+     size 15 by 1.13
+     bgcolor 8 .
 
-DEFINE BUTTON btn_del 
-     LABEL "Удалить" 
-     SIZE 15 BY 1.17 TOOLTIP "Безвозвратное удаления записи с УТМ".
+define button btn_del 
+     label "Удалить" 
+     size 15 by 1.13 tooltip "Безвозвратное удаления записи с УТМ".
 
-DEFINE BUTTON btn_dwl 
-     LABEL "Загрузить" 
-     SIZE 15 BY 1.17.
+define button Btn_desmark 
+     label "-" 
+     size 3.5 by 1.13.
+
+define button btn_dwl 
+     label "Загрузить" 
+     size 15 by 1.13.
+
+define button btn_look 
+     label "Просмотр" 
+     size 15 by 1.13.
+
+define button Btn_mark 
+     label "*" 
+     size 3.5 by 1.13.
+
+define button Btn_markall 
+     label "+" 
+     size 3.5 by 1.13.
+
+define variable f_date as date format "99/99/99":U 
+     label "До даты" 
+     view-as fill-in 
+     size 9 by 1 no-undo.
 
 
 /* ************************  Frame Definitions  *********************** */
 
-DEFINE FRAME Dialog-Frame
-     Btn_Cancel AT ROW 1.25 COL 2
-     btn_del AT ROW 1.25 COL 17.75
-     btn_dwl AT ROW 1.25 COL 33 WIDGET-ID 2
-     SPACE(60.99) SKIP(23.31)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Акт на накладную ЕГАИС"
-         CANCEL-BUTTON Btn_Cancel WIDGET-ID 100.
+define frame Dialog-Frame
+     Btn_Cancel at row 1.25 col 2
+     btn_del at row 1.25 col 17.75
+     btn_dwl at row 1.25 col 33 widget-id 2
+     btn_look at row 1.25 col 48.63 widget-id 14
+     Btn_mark at row 2.63 col 2.5 widget-id 4
+     Btn_markall at row 2.63 col 6.75 widget-id 6
+     Btn_desmark at row 2.63 col 11 widget-id 8
+     f_date at row 2.63 col 22.5 colon-aligned widget-id 12
+     space(76.49) skip(22.10)
+    with view-as dialog-box keep-tab-order 
+         side-labels no-underline three-d  scrollable 
+         title "Содержимое УТМ"
+         cancel-button Btn_Cancel widget-id 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -149,9 +181,9 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN 
-       FRAME Dialog-Frame:SCROLLABLE       = FALSE
-       FRAME Dialog-Frame:HIDDEN           = TRUE.
+assign 
+       frame Dialog-Frame:SCROLLABLE       = false
+       frame Dialog-Frame:HIDDEN           = true.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -164,7 +196,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON window-close OF FRAME Dialog-Frame /* Акт на накладную ЕГАИС */
+on window-close of frame Dialog-Frame /* Содержимое УТМ */
 do:
     apply "END-ERROR":U to self.
   end.
@@ -175,27 +207,45 @@ do:
 
 &Scoped-define SELF-NAME btn_del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_del Dialog-Frame
-ON choose OF btn_del IN FRAME Dialog-Frame /* Удалить */
+on choose of btn_del in frame Dialog-Frame /* Удалить */
 do:
 
   def var cmd as char no-undo.
-    
-  if qh-analiz:get-current () = ?
+  def var qh-del as handle no-undo.
+
+  create query qh-del.
+  qh-del:set-buffers (bh-wb-analiz).
+  qh-del:query-prepare ("for each tt-alldoc where tt-alldoc.mark = '*' ").
+  qh-del:query-open.
+
+  if not qh-del:get-first () 
   then do:
-    message "Установите курсор на запись, которую хотите удалить." view-as alert-box information.
+    message "Выделите записи для удаления." view-as alert-box information.
     return no-apply.
   end.
   
-  url_ = bh-wb-analiz:buffer-field ('url_'):buffer-value ().
+  /*if not isSave
+  then do:
+    message "Перед удалением нужно выполнить загрузку. Для загрузки нажмите загрузить и дождитесь окончания." view-as alert-box information.
+    return no-apply.
+  end.*/
   
-
-  
-  message "Вы уверены что хотите удалить запись " + url_ + "?" view-as alert-box question buttons yes-no update isChoise as log.
+  message "Вы уверены что хотите удалить запись/и?" view-as alert-box question buttons yes-no update isChoise as log.
   
   if isChoise
   then do:
-    cmd = substitute ("&1  -X DELETE &2", search ("exe/curl.exe"), url_).
-    os-command value (cmd).
+  if qh-del:get-first ()
+    then do:
+      url_ = bh-wb-analiz:buffer-field ('url_'):buffer-value ().
+      AdmUtmObj:DelRecord(url_).
+      bh-wb-analiz:buffer-delete ().
+    end.
+  
+    do while qh-del:get-next ():
+      url_ = bh-wb-analiz:buffer-field ('url_'):buffer-value ().
+      AdmUtmObj:DelRecord(url_).
+      bh-wb-analiz:buffer-delete ().
+    end.
   end.
   else do:
     return no-apply.
@@ -208,12 +258,128 @@ end.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME Btn_desmark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_desmark Dialog-Frame
+on choose of Btn_desmark in frame Dialog-Frame /* - */
+do:
+  
+  if qh-analiz:get-first ()
+    then bh-wb-analiz:buffer-field (1):buffer-value () = "".
+  do while qh-analiz:get-next ():
+    bh-wb-analiz:buffer-field (1):buffer-value () = "".
+  end.
+  
+  if qh-analiz:get-first () 
+    then browse-hdl-analiz:refresh ().
+
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME btn_dwl
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_dwl Dialog-Frame
-ON CHOOSE OF btn_dwl IN FRAME Dialog-Frame /* Загрузить */
-DO:
+on choose of btn_dwl in frame Dialog-Frame /* Загрузить */
+do:
   AdmUtmObj:SaveRecords().
-END.
+  if AdmUtmObj:StatusErr 
+    then do:
+      message AdmUtmObj:Msg view-as alert-box.
+      isSave = false.
+    end.
+    else isSave = true.
+  run refresh-view.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME btn_look
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_look Dialog-Frame
+on choose of btn_look in frame Dialog-Frame /* Просмотр */
+do:
+
+  if not qh-analiz:get-current () 
+    then return no-apply.
+  url_ = bh-wb-analiz:buffer-field ('url_'):buffer-value ().
+  AdmUtmObj:LookRec(url_).
+  
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME Btn_mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_mark Dialog-Frame
+on choose of Btn_mark in frame Dialog-Frame /* * */
+do:
+
+  if bh-wb-analiz:available
+  then do:
+    if bcolmark:screen-value = "*"
+      then
+        assign 
+          bh-wb-analiz:buffer-field (1):buffer-value () = ""
+          bcolmark:screen-value = ""
+          .
+      else
+        assign 
+          bh-wb-analiz:buffer-field (1):buffer-value () = "*"
+          bcolmark:screen-value = "*"
+          .
+  end.
+
+
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME Btn_markall
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_markall Dialog-Frame
+on choose of Btn_markall in frame Dialog-Frame /* + */
+do:
+  
+  if qh-analiz:get-first ()
+    then bh-wb-analiz:buffer-field (1):buffer-value () = "*".
+  do while qh-analiz:get-next ():
+    bh-wb-analiz:buffer-field (1):buffer-value () = "*".
+  end.
+  
+  if qh-analiz:get-first () 
+    then browse-hdl-analiz:refresh ().
+  
+  /*isMarkALL = true.
+  if qh-analiz:get-first () 
+    then browse-hdl-analiz:refresh ().
+  isMarkALL = ?.  */
+   
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f_date
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f_date Dialog-Frame
+on leave of f_date in frame Dialog-Frame /* До даты */
+do:
+  run refresh-view.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f_date Dialog-Frame
+on return of f_date in frame Dialog-Frame /* До даты */
+do:
+  run refresh-view.
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -286,14 +452,18 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     frame     = frame {&FRAME-NAME}:handle
     query     = qh-analiz
     x         = 10
-    y         = 42
+    y         = 70
     width     = 100
-    height    = 22
+    height    = 21
     visible   = true
     read-only = true
     sensitive = true
     separators = true
     column-resizable = true
+    triggers:
+      on mouse-move-dblclick persistent run msdblcl.
+      on row-display persistent run proc-row-disp.
+    end triggers
     .
 
   AdmUtmObj = new admutm (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar).
@@ -301,13 +471,19 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   bh-wb-analiz = AdmUtmObj:GetHndlTable().
   create query qh-analiz.
   qh-analiz:set-buffers (bh-wb-analiz).
-  qh-analiz:query-prepare ("for each tt-analiz").
+  qh-analiz:query-prepare ("for each tt-alldoc").
   qh-analiz:query-open.
 
   browse-hdl-analiz:query = qh-analiz.
   
+/*  bcolmark = browse-hdl-analiz:add-calc-column('char', 'x(1)', "", "*", 0, 'FILL-IN').*/
+  
   do ii = 1 to bh-wb-analiz:num-fields:
-    browse-hdl-analiz:add-like-column('tt-analiz' + '.' + bh-wb-analiz:buffer-field (ii):name, 0, 'FILL-IN').
+    if ii = 1 
+      then bcolmark = browse-hdl-analiz:add-like-column('tt-alldoc' + '.' + bh-wb-analiz:buffer-field (ii):name, 0, 'FILL-IN').
+      else bcol = browse-hdl-analiz:add-like-column('tt-alldoc' + '.' + bh-wb-analiz:buffer-field (ii):name, 0, 'FILL-IN').
+    if ii = 2 
+      then bcol:width = 50.
   end.
   { gbl/diasize.i &br-hndl=browse-hdl-analiz }
   run diasize_init in this-procedure .
@@ -325,7 +501,7 @@ run disable_UI.
 /* **********************  Internal Procedures  *********************** */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
-PROCEDURE disable_UI :
+procedure disable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
@@ -335,14 +511,14 @@ PROCEDURE disable_UI :
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
   /* Hide all frames. */
-  HIDE FRAME Dialog-Frame.
-END PROCEDURE.
+  hide frame Dialog-Frame.
+end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
-PROCEDURE enable_UI :
+procedure enable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     ENABLE the User Interface
   Parameters:  <none>
@@ -352,28 +528,72 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE Btn_Cancel btn_del btn_dwl 
-      WITH FRAME Dialog-Frame.
-  VIEW FRAME Dialog-Frame.
+  display f_date 
+      with frame Dialog-Frame.
+  enable Btn_Cancel btn_del btn_dwl btn_look Btn_mark Btn_markall Btn_desmark 
+         f_date 
+      with frame Dialog-Frame.
+  view frame Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-END PROCEDURE.
+end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-view Dialog-Frame 
-PROCEDURE refresh-view :
-  display Btn_Cancel with frame Dialog-Frame.
-  ENABLE Btn_Cancel btn_del
-    WITH FRAME Dialog-Frame.
-  VIEW FRAME Dialog-Frame.
-  qh-analiz:query-close.
-  qh-analiz:query-prepare ("for each tt-analiz").
-  qh-analiz:query-open.
-  browse-hdl-analiz:refresh ().
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE msdblcl Dialog-Frame 
+procedure msdblcl :
+/*if cb-1 <> 1 and cb-1 <> 3 and cb-1 <> 2 and cb-1 <> 4      */
+/*    then apply "choose" to Btn_Save in frame {&frame-name} .*/
+/*    else apply "choose" to Btn_Sel in frame {&frame-name} . */
 
 end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-row-disp Dialog-Frame 
+procedure proc-row-disp :
+  
+  /*if valid-handle (bcolmark) and isMarkALL <> ?
+  then do: 
+    bcolmark:buffer-value () = if isMarkALL then "*" else "".
+  end.*/
+  
+  /*if valid-handle (browse-hdl-analiz:buffer-field) and valid-handle (bcolmark) and bcolmark:screen-value = "*"
+    then v-nn-list = v-nn-list + "," + browse-hdl-analiz:buffer-field ("nnOrder"):buffer-value ().*/
+  
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-view Dialog-Frame 
+procedure refresh-view :
+def var v-proposition  as char no-undo.
+  
+  assign input frame {&FRAME-NAME}
+    f_date
+  .
+  
+  v-proposition = (if f_date <> ? then "(tt-alldoc.date_ = ? or tt-alldoc.date_ < " + string (f_date) + ")" else "").
+  
+  if v-proposition <> "" then v-proposition = "where " + v-proposition.
+  
+  display Btn_Cancel with frame Dialog-Frame.
+  enable Btn_Cancel btn_del
+    with frame Dialog-Frame.
+  view frame Dialog-Frame.
+  qh-analiz:query-close.
+  qh-analiz:query-prepare ("for each tt-alldoc " + v-proposition).
+  qh-analiz:query-open.
+  if qh-analiz:get-first () 
+    then browse-hdl-analiz:refresh ().
+  
+  apply "choose" to Btn_desmark in frame {&FRAME-NAME}.
+  
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 

@@ -74,11 +74,12 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
   define private variable v-uniq-key-rec as character no-undo.
   define private variable nn             as integer   no-undo.
   define private variable nnList         as integer   no-undo.
-  define private variable extGdsObj      as class ExtGds no-undo.
-  define private variable extGdsValueObj as class ExtGdsValue no-undo.
+  define private variable extGdsObj      as class   ExtGds         no-undo.
+  define private variable extGdsValueObj as class   ExtGdsValue    no-undo.
   define private variable isForceAccept  as logical no-undo.
-  define private variable prgObj         as class ProgressBar no-undo .
-  
+  define private variable prgObj         as class   ProgressBar    no-undo .
+  define private variable prsXMLDocWB    as class   ParserXMLDocWB no-undo.
+      
   define         variable v-FS-RAR       as character no-undo .
   define         variable inDocFSRAR     as character no-undo .
   define         variable v-ext-sys      as integer   no-undo .
@@ -125,20 +126,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     Identity 
     .
 
-  define temp-table tt-analiz no-undo
-    field num           as character label "№ накл." format "X(50)"
-    field wb-type       as character label "Тип" format "X(4)"
-    field wb-date       as date      label "Дата"
-    field wbregid       as character label "WBREGID" format "X(18)"
-    field Identity      as character format "X(50)"
-    field uniq-key-rec  as character format "X(50)"
-    field url_          as character format "X(50)"
-    field isMany        as logical   format "yes/no"
-    field nnOrder       as integer
-    field resource-type as character format "X(12)"
-    index pi
-    url_ 
-    .
   define private buffer buf_tt-analiz for tt-analiz.
 
   define temp-table tt-wb-act-hndls no-undo
@@ -150,43 +137,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     wbregid
     .
 
-  define temp-table tt-wb-info-client no-undo
-    field obj-type        like ub.clients.obj-type
-    field obj-code        like ub.clients.obj-code
-    field obj-name-th     as character 
-    field obj-name-egais  as character
-    field wb-type-client  as character
-    field regID           as character format "X(21)"
-    field inn             as character
-    field kpp             as character
-    field country         as character
-    field regionCode      as character
-    field district        as character
-    field city            as character
-    field settlement      as character
-    field street          as character
-    field house-number    as character
-    field house-case      as character
-    field house-apartment as character
-    field house-litera    as character
-    field postIndex       as character
-    field description_    as character format "X(100)"
-    index pi 
-    inn kpp
-    . 
-
-  define temp-table tt-ticket no-undo
-    field regid        as character label "RegId документа" format "X(21)"
-    field doc          as character label "Документ" format "X(10)"
-    field ticket-date  as character label "Дата" format "X(10)"
-    field status_      as character label "Статус"
-    field comment      as character label "Коментарий" format "X(150)"
-    field docId        as character label "DocId" format "X(40)"
-    field TransId      as character label "TransId" format "X(40)"
-    field Identity     as character label "Identity" format "X(21)"
-    index pi 
-    regid 
-    .
 
   constructor public WayBill (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
     
@@ -197,6 +147,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     v-ext-sys = inExtSys.
     IsSent.
     extGdsObj = new ExtGds (yes).
+    prsXMLDocWB = new ParserXMLDocWB().
     
   end constructor.
   
@@ -205,9 +156,16 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
       then delete object extGdsObj no-error.
     if valid-object (prgObj)
       then delete object prgObj.
+    if valid-object (prsXMLDocWB)
+      then delete object prsXMLDocWB.
   end. 
   
   method public override handle GetHndlTable(inTableType as int, inWbIdentity as char) :
+
+    define buffer buf_clob-bind-ref for ub.clob-bind.
+    define buffer buf_clob-data-ref for ub.clob-data.
+    define variable hDoc    as handle no-undo.
+    define variable hDocRef as handle no-undo.
 
     assign
       StatusErr = false
@@ -252,8 +210,19 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             end.
             v-uniq-key-rec = buf_clob-bind.uniq-key-rec.
             find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
+            createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
+            
+            find first buf_clob-bind-ref no-lock where buf_clob-bind-ref.uniq-key-rec = v-uniq-key-rec and buf_clob-bind-ref.resource-type = {&lob-egais-ref-b} no-error.
+            if available (buf_clob-bind-ref) then 
+            do:
+              find first buf_clob-data-ref no-lock where buf_clob-data-ref.db-num = buf_clob-bind-ref.db-num and buf_clob-data-ref.int64-id = buf_clob-bind-ref.int64-id no-error.
+              createhDoc(recid (buf_clob-data-ref), "refbtemp.xml", output hDocRef).
+              prsXMLDocWB:ParseRec(hDoc, hDocRef, output table tt-wb-header, output table tt-wb-gds-EG, output table tt-wb-info-client).
+            end.
+            else do:
+              prsXMLDocWB:ParseRec(hDoc, ?, output table tt-wb-header, output table tt-wb-gds-EG, output table tt-wb-info-client).
+            end.
 
-            ParseResponse("", inTableType).
             find first tt-wb-header.
             tt-wb-header.TransIdList = buf_clob-bind.field-name_.
             find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
@@ -337,20 +306,18 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                   else assign tt-wb-gds-EG.gds-code = 0 tt-wb-gds-EG.color-sts = RED_COLOR.
                 end.
             end.
-/*            v-uniq-key-rec = inWbIdentity.*/
-            find first buf_clob-bind no-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.resource-type = {&lob-egais-ref-b} no-error.
-            if available (buf_clob-bind) then 
+
+            if available (buf_clob-bind-ref) then 
             do:
-              find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
-              ParseResponse("", {&wb-refB}).
+
               for each tt-wb-gds-EG where tt-wb-gds-EG.gds-code = ? :
-                nnList = lookup ( tt-wb-gds-EG.refB, buf_clob-bind.descr).
+                nnList = lookup ( tt-wb-gds-EG.refB, buf_clob-bind-ref.descr).
                 if nnList > 0
                 then do:
-                  extGdsObj:OpenQueryExtGds (integer (entry (nnList - 1, buf_clob-bind.descr)), tt-wb-gds-EG.alc-code).
+                  extGdsObj:OpenQueryExtGds (integer (entry (nnList - 1, buf_clob-bind-ref.descr)), tt-wb-gds-EG.alc-code).
                   if extGdsObj:NumBundles > 0
                   then do:
-                    tt-wb-gds-EG.gds-code = integer (entry (nnList - 1, buf_clob-bind.descr)).
+                    tt-wb-gds-EG.gds-code = integer (entry (nnList - 1, buf_clob-bind-ref.descr)).
                   end. 
                   else do:
                     tt-wb-gds-EG.color-sts = RED_COLOR.
@@ -361,7 +328,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                 end.
               end.
             end.
-            find first buf_clob-bind no-lock where buf_clob-bind.uniq-key-rec = v-uniq-key-rec and buf_clob-bind.resource-type = {&lob-egais-wb} no-error.
             
           end.
           HndlHeader = buffer tt-wb-header:handle.
@@ -392,9 +358,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
               return ?.
             end.
             find first buf_clob-data exclusive-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
-            ParseResponse("", inTableType).
-            find first tt-wb-act-header.
             
+            createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
+            prsXMLDocWB:ParseRec (hDoc, output table tt-wb-act-header, output table tt-wb-act-gds-EG).
+            find first tt-wb-act-header.
             find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins tt-wb-act-header.wbregid no-error.
             if available (buf_doc-attr) then do:
               find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-attr.doc-code.
@@ -517,11 +484,17 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
           for each buf_clob-bind where (buf_clob-bind.resource-type = {&lob-egais-ticket} and buf_clob-bind.uniq-key-rec begins inWbIdentity) 
                                       or (available (ub.clob-bind) and not buf_clob-bind.uniq-key-rec begins inWbIdentity and buf_clob-bind.resource-type = {&lob-egais-ticket} and lookup (buf_clob-bind.field-name_, ub.clob-bind.field-name_) > 0):
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
-            ParseResponse("", inTableType).
+            createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
+            prsXMLDocWB:IsToClearTable = false.
+            prsXMLDocWB:ParseRec (hDoc, output table tt-ticket).
+            prsXMLDocWB:IsToClearTable = true.
           end.
           for each buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb-ticket} and buf_clob-bind.uniq-key-rec begins inWbIdentity :
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
-            ParseResponse("", inTableType).
+            createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
+            prsXMLDocWB:IsToClearTable = false.
+            prsXMLDocWB:ParseRec (hDoc, output table tt-ticket).
+            prsXMLDocWB:IsToClearTable = true.
           end.
           return buffer tt-ticket:handle.
         end.
@@ -530,7 +503,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
           empty temp-table tt-ticket.
           for each buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-ticket} and buf_clob-bind.uniq-key-rec matches "*" + inWbIdentity + "*" :
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
-            ParseResponse("", inTableType).
+            createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
+            prsXMLDocWB:ParseRec (hDoc, output table tt-ticket).
           end.
           find first tt-ticket where tt-ticket.regid <> "" no-error.
           if available (tt-ticket) then do:
@@ -552,7 +526,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                 tt-ticket.ticket-date = string (iso-date (date (entry (2, buf_clob-bind.descr, {&delim-par}))))
                 tt-ticket.doc = entry (3, buf_clob-bind.descr, {&delim-par})
                 tt-ticket.status_ = entry (4, buf_clob-bind.descr, {&delim-par}).
-                ParseResponse("", {&wb-act-header}).
+
+                createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
+                prsXMLDocWB:ParseRec (hDoc, output table tt-wb-act-header, output table tt-wb-act-gds-EG).
+
                 find first tt-wb-act-header no-error.
                 if available (tt-wb-act-header)
                   then tt-ticket.comment = tt-wb-act-header.note.
@@ -1290,7 +1267,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                   find first tt-wb-act-header.
                   v-clob-db-num = ?.
                   v-int64-id = 0.
-                  v-info = tt-wb-act-header.wbregid + {&delim-par} + string (tt-wb-act-header.act-date) + {&delim-par} + tt-wb-act-header.num + {&delim-par} + tt-wb-act-header.status_ + {&delim-par} + inDocFSRAR.
+                  v-info = tt-wb-act-header.wbregid + {&delim-par} + string (tt-wb-act-header.act-date) + {&delim-par} + tt-wb-act-header.num + {&delim-par} + tt-wb-act-header.status_ + {&delim-par} + prsXMLDocWB:FromFSRAR.
                   if can-find (first buf_clob-bind where buf_clob-bind.uniq-key-rec = tt-wb-act-header.wbregid and buf_clob-bind.resource-type =  {&lob-egais-wb-act})
                     then next url_.
                   if tt-wb-act-header.wbregid = ?
@@ -1506,400 +1483,32 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
 
   end.
 
-  method override void ParseResponse(inContent as char, inTableType as int):
-
-    define variable hDoc  as handle no-undo.
-    define variable hRoot as handle no-undo.
-
-    if not inTableType = {&wb-refB} or inTableType = {&wb-clob} then 
-    do:
-      empty temp-table tt-wb-info-client.
-      empty temp-table tt-wb-header.
-      empty temp-table tt-wb-gds-EG.
-      empty temp-table tt-wb-act-header.
-      empty temp-table tt-wb-act-gds-EG.
-    end.
-                
-    create x-document hDoc.
-    create x-noderef hRoot.
-
-    case inTableType:
-      when {&wb-header} or 
-      when {&wb-line} or
-      when {&wb-act-line} or 
-      when {&wb-act-header} or
-      when {&ticket} or
-      when {&ticket-ras} or  
-      when {&wb-refB} then 
-        do:
-        
-          copy-lob
-            from  object buf_clob-data.cdata
-            to  file (if inTableType = {&wb-refB} then "refb" else "") + 'temp.xml'
-            no-convert
-            no-error .
-
-          hDoc:encoding = 'utf-8'.
-          hDoc:load("file", search ((if inTableType = {&wb-refB} then "refb" else "") + 'temp.xml'), false).
-        
-        end.
-      when {&wb-clob} then 
-        do:
-          hDoc:load("file",inFileName,false).
-          hDoc:encoding = 'utf-8'.
-        end.
-    end case.
-           
-    nn = 0.
-    hDoc:get-document-element(hRoot).
-            
-    GetChildren(hRoot, 1, {&wb-clob}).
-        
-    delete object hDoc.
-    delete object hRoot.
-            
-  end.
+  method private void createhDoc (inRecCD as recid, inFileName as char, output outhDoc as handle ):
     
-  method private void GetChildren(hParent as handle, level as integer, inTableType as int):
-        
-    define variable i          as integer no-undo.
-    define variable hNoderef   as handle  no-undo.
-    define variable hText      as handle  no-undo.
-    define variable nameParent as handle  no-undo.
-    define variable good       as logical no-undo.
-        
-    create x-noderef hNoderef.
-    create x-noderef hText .
-        
-        
-    repeat i = 1 to hParent:num-children:
-      good = hParent:get-child(hNoderef,i).
-      if not good then 
-        leave.
-      
-      if hNoderef:subtype <> "element" or hNoderef:num-children = 0 then
-        next.
-            
-      hNoderef:get-child(hText, 1) no-error .
-      
-      if error-status:error
-        then next.
-            
-      /*if hNoderef:name = "ns:FSRAR_ID" then
-        assign v-FS-RAR = hText:node-value .*/       
-      case hNoderef:name:
-        when "wb:Shipper" or 
-        when "wbr:Shipper" then 
-          do:
-            create tt-wb-info-client .
-            tt-wb-info-client.wb-type-client = "Shipper".
-          end.
-        when "wb:Consignee" then 
-          do:
-            create tt-wb-info-client .
-            tt-wb-info-client.wb-type-client = "Consignee".
-          end.
-        when "wb:Supplier" then 
-          do:
-            create tt-wb-info-client .
-            tt-wb-info-client.wb-type-client = "Supplier".
-          end.
-        when "wb:Content" or when "wbr:Content" then
-          do:
-            assign 
-              tt-wb-header.uniq-key-rec = tt-wb-header.num + {&delim-cmd} + string (tt-wb-header.wb-date) + {&delim-cmd} + tt-wb-header.regID-Ship + {&delim-cmd} + tt-wb-header.Identity.
-          end.
-        when "wb:Position" then 
-          do:
-            create tt-wb-gds-EG .
-            tt-wb-gds-EG.prod-list = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
-            tt-wb-gds-EG.importer-list = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
-            nn = nn + 1.
-          end.
-        when "wa:Header" then 
-          do:
-            create tt-wb-act-header .
-          end.
-        when "wa:Position" then 
-          do:
-            create tt-wb-act-gds-EG .
-          end.
-        when "ns:Ticket" then 
-          do:
-            create tt-ticket .
-          end.
-        when "ns:ConfirmTicket" then 
-          do:
-            create tt-ticket .
-            tt-ticket.doc = 'ConfirmTicket'.
-          end.
-      end case.
-      if lookup (hParent:name, "ns:Ticket") > 0 then do:
-        if hNoderef:name = "tc:DocId" then assign tt-ticket.docID = hText:node-value.
-        if hNoderef:name = "tc:TransportId" then assign tt-ticket.TransId = hText:node-value.
-        if hNoderef:name = "tc:TicketDate" then assign tt-ticket.ticket-date = hText:node-value.
-        if hNoderef:name = "tc:RegID" 
-        then do:
-          assign tt-ticket.regid = hText:node-value.
-        end.
-        if hNoderef:name = "tc:Identity" then assign tt-ticket.Identity = hText:node-value.
-        if hNoderef:name = "tc:DocType" then assign tt-ticket.doc = hText:node-value.
-        
-      end.
+    define buffer buf_cd for ub.clob-data.
+    
+    find first buf_cd where recid (buf_cd) = inRecCD no-lock.
+    
+    copy-lob
+      from  object buf_cd.cdata
+      to  file inFileName
+      no-convert
+      no-error .
+    
+    create x-document outhDoc.
+    outhDoc:encoding = 'utf-8'.
+    outhDoc:load("file", search (inFileName), false).
+    
+    release buf_cd.
+    
+  end.
 
-      if lookup (hParent:name, "ns:ConfirmTicket") > 0 then do:
-        if hNoderef:name = "wt:Identity" then assign tt-ticket.Identity = hText:node-value.
-      end.
-      if lookup (hParent:name, "wt:Header>") > 0 then do:
-        if hNoderef:name = "wt:IsConfirm" then assign tt-ticket.status_ = hText:node-value.
-        if hNoderef:name = "wt:TicketDate" then assign tt-ticket.ticket-date = hText:node-value.
-        if hNoderef:name = "wt:WBRegId" then assign tt-ticket.regid = hText:node-value.
-        if hNoderef:name = "wt:Note" then assign tt-ticket.comment = hText:node-value.
-      end.
-
-      if lookup (hParent:name, "tc:Result") > 0 then do:
-        if hNoderef:name = "tc:Conclusion" then assign tt-ticket.status_ = hText:node-value.
-        if hNoderef:name = "tc:Comments" then assign tt-ticket.comment = hText:node-value.
-      end.
-      if lookup (hParent:name, "tc:OperationResult") > 0 then do:
-        if hNoderef:name = "tc:OperationResult" then assign tt-ticket.status_ = hText:node-value.
-        if hNoderef:name = "tc:OperationComment" then assign tt-ticket.comment = hText:node-value.
-      end.
-      if lookup (hParent:name, "ns:Owner") > 0
-      then do:
-        
-        if hNoderef:name = "ns:FSRAR_ID" then assign inDocFSRAR = hText:node-value.
-      end.
-
-      if lookup (hParent:name, "wb:Header,ns:WayBill,wbr:Header,wa:Header") > 0
-        then 
-      do: 
-        if hNoderef:name = "wb:Identity" or hNoderef:name = "wbr:Identity" or hNoderef:name = "wb:NUMBER" or hNoderef:name = "wbr:WBRegId" 
-          then 
-        do:
-          if not available (tt-wb-header) then create tt-wb-header.
-          assign 
-            tt-wb-header.Identity = hText:node-value when hNoderef:name = "wb:Identity"
-            tt-wb-header.ps       = "EGAIS wb:Identity " + hText:node-value when hNoderef:name = "wb:Identity"
-            .
-        end.
-        if hNoderef:name = "wb:NUMBER" or hNoderef:name = "wbr:WBNUMBER" then assign tt-wb-header.num = hText:node-value.
-        if hNoderef:name = "wb:Date" or hNoderef:name = "wbr:WBDate" then assign tt-wb-header.wb-date = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
-        if hNoderef:name = "wb:ShippingDate" then assign tt-wb-header.shippingdate = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
-        if hNoderef:name = "wb:Type" then 
-        do:
-          case hText:node-value :
-            when 'WBInvoiceFromMe' then 
-              do:
-                assign 
-                  tt-wb-header.wb-type      = {&TDEDT_Pri_Vnesh}
-                  tt-wb-header.wb-type-full = "приход вн.".
-                if available (tt-wb-hndls) 
-                  then tt-wb-hndls.wb-type = "приход вн."
-                    .
-              end.
-            otherwise 
-            do:
-              assign 
-                tt-wb-header.wb-type = ?.
-            end.
-          end case.
-        end.
-        if hNoderef:name = "wb:UnitType"     then assign tt-wb-header.unit-type = hText:node-value .
-        
-        if hNoderef:name = "wa:ACTNUMBER" then assign tt-wb-act-header.num = hText:node-value.
-        if hNoderef:name = "wa:ActDate" then assign tt-wb-act-header.act-date = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
-        if hNoderef:name = "wa:WBRegId" then assign tt-wb-act-header.wbregid = hText:node-value.
-        if hNoderef:name = "wa:IsAccept" then assign tt-wb-act-header.status_ = hText:node-value.
-        if hNoderef:name = "wa:Note" then assign tt-wb-act-header.note = hText:node-value.
-        
-        
-      end.
-      if lookup (hParent:name, "wb:Shipper,wb:Consignee,wb:Supplier,wbr:Shipper") > 0
-        then 
-      do: 
-        if hNoderef:name = "oref:ClientRegId" then 
-        do:
-          assign 
-            tt-wb-info-client.regID = hText:node-value
-            tt-wb-header.regID-Ship = hText:node-value
-            when hParent:name = 'wb:Shipper'
-            tt-wb-header.regID-Ship = hText:node-value 
-            when hParent:name = 'wbr:Shipper'
-            tt-wb-header.regID-Cons = hText:node-value 
-            when hParent:name = 'wb:Consignee'
-            .
-        end.
-        if hNoderef:name = "oref:ShortName"   then assign tt-wb-header.NameShip = hText:node-value when hParent:name = 'wb:Shipper'.
-        if hNoderef:name = "oref:INN"         then assign tt-wb-header.INNShip = hText:node-value when hParent:name = 'wb:Shipper'.
-        if hNoderef:name = "oref:KPP"         then assign tt-wb-header.KPPShip = hText:node-value when hParent:name = 'wb:Shipper'.
-        if hNoderef:name = "oref:INN"         then assign tt-wb-info-client.inn = hText:node-value .
-        if hNoderef:name = "oref:KPP"         then assign tt-wb-info-client.kpp = hText:node-value .
-        if hNoderef:name = "oref:FullName"    then assign tt-wb-info-client.obj-name-egais = hText:node-value .
-        if hNoderef:name = "oref:Country"     then assign tt-wb-info-client.country = hText:node-value .
-        if hNoderef:name = "oref:Index"       then assign tt-wb-info-client.postIndex = hText:node-value .
-        if hNoderef:name = "oref:RegionCode"  then assign tt-wb-info-client.regionCode = hText:node-value .
-        if hNoderef:name = "oref:area"        then assign tt-wb-info-client.district = hText:node-value . 
-        if hNoderef:name = "oref:city"        then assign tt-wb-info-client.city = hText:node-value .       
-        if hNoderef:name = "oref:place"       then assign tt-wb-info-client.settlement = hText:node-value .
-        if hNoderef:name = "oref:street"      then assign tt-wb-info-client.street = hText:node-value .
-        if hNoderef:name = "oref:house"       then assign tt-wb-info-client.house-number = hText:node-value .  
-        if hNoderef:name = "oref:building"    then assign tt-wb-info-client.house-case = hText:node-value .
-        if hNoderef:name = "oref:liter"       then assign tt-wb-info-client.house-litera = hText:node-value .  
-        if hNoderef:name = "oref:description" then assign tt-wb-info-client.description_ = hText:node-value .    
-      end.
-      
-      
-      if lookup (hParent:name, "wa:Position") > 0
-      then
-      do:
-        if hNoderef:name = "wa:InformBRegId"   then assign tt-wb-act-gds-EG.refB = hText:node-value .
-        if hNoderef:name = "wa:RealQuantity"   then assign tt-wb-act-gds-EG.RealQuantity = decimal(hText:node-value) .        
-      end.
-      
-      if lookup (hParent:name, "wb:Position,wb:Product") > 0
-        then 
-      do:
-        if tt-wb-gds-EG.gds-name = "" then
-          if hNoderef:name = "pref:ShortName"    then assign tt-wb-gds-EG.gds-name = hText:node-value.
-
-        if hNoderef:name = "pref:FullName"     then assign tt-wb-gds-EG.gds-name = hText:node-value.
-        if hNoderef:name = "pref:AlcCode"      
-          then assign tt-wb-gds-EG.alc-code = hText:node-value.
-        if hNoderef:name = "pref:Capacity"     then assign tt-wb-gds-EG.ms-base = decimal(hText:node-value) .
-        if hNoderef:name = "pref:AlcVolume"    then assign tt-wb-gds-EG.proof = decimal(hText:node-value) .
-        
-        if hNoderef:name = "pref:ProductVCode" then assign tt-wb-gds-EG.alc-type-code = hText:node-value .
-        if hNoderef:name = "wb:Identity"       
-        then do:
-          assign 
-            tt-wb-gds-EG.Identity = hText:node-value
-            tt-wb-gds-EG.nn = nn
-          .
-        end.
-        if hNoderef:name = "wb:Price"          then assign tt-wb-gds-EG.price = decimal(hText:node-value) .
-        if hNoderef:name = "wb:Quantity"       then assign tt-wb-gds-EG.qnty = decimal(hText:node-value) .
-        
-      end.
-      
-      if lookup (hParent:name, "pref:Importer") > 0 then do:
-        if hNoderef:name = "oref:ClientRegId" then assign tt-wb-gds-EG.regID-Importer = hText:node-value .
-        
-        tt-wb-gds-EG.importer-th = "".
-        find first ub.ext-classif no-lock 
-          where ub.ext-classif.classif-subject = {&table_clients}
-            and ub.ext-classif.classif-name = {&extclass_clients_esys}
-            and ub.ext-classif.db-num = 0
-            and ub.ext-classif.key#_one = v-ext-sys
-            and ub.ext-classif.CharKey_Three = tt-wb-gds-EG.regID-Importer
-            no-error.
-        if available (ub.ext-classif) then do:
-          tt-wb-gds-EG.importer-th = entry (2, ub.ext-classif.uniq-key-rec, {&delim-key}) + entry (3, ub.ext-classif.uniq-key-rec, {&delim-key}).
-        end.
-        
-        if hNoderef:name = "oref:ClientRegId" then do:
-          assign entry (1, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
-          assign entry (5, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address".
-          assign entry (6, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address".
-        end.
-        if hNoderef:name = "oref:INN"         then assign entry (2, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:KPP"         then assign entry (3, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:FullName"    then assign entry (4, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
-        
-      end.
-      
-      if available (tt-wb-gds-EG) and hParent:name = "oref:address" and (entry (5, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address")
-      then do:
-        
-        if hNoderef:name = "oref:Country"     then assign entry (5, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:description" then assign entry (6, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
-      end.
-
-      if lookup (hParent:name, "pref:Producer") > 0 then do:
-        if hNoderef:name = "oref:ClientRegId" then assign tt-wb-gds-EG.regID-Producer = hText:node-value .
-        tt-wb-gds-EG.producer-th = "".
-        find first ub.ext-classif no-lock 
-          where ub.ext-classif.classif-subject = {&table_clients}
-            and ub.ext-classif.classif-name = {&extclass_clients_esys}
-            and ub.ext-classif.db-num = 0
-            and ub.ext-classif.key#_one = v-ext-sys
-            and ub.ext-classif.CharKey_Three = tt-wb-gds-EG.regID-Producer
-            no-error.
-        if available (ub.ext-classif) then do:
-          tt-wb-gds-EG.producer-th = entry (2, ub.ext-classif.uniq-key-rec, {&delim-key}) + entry (3, ub.ext-classif.uniq-key-rec, {&delim-key}).
-        end.
-        
-        if hNoderef:name = "oref:ClientRegId" 
-        then do: 
-          assign entry (1, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-          assign entry (5, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address".
-          assign entry (6, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address".
-        end.
-        if hNoderef:name = "oref:INN"         then assign entry (2, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:KPP"         then assign entry (3, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:FullName"    then assign entry (4, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-        
-      end.
-      
-      if available (tt-wb-gds-EG) and hParent:name = "oref:address" and (entry (5, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address")
-      then do:
-        if hNoderef:name = "oref:Country"     then assign entry (5, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:description" then assign entry (6, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-      end.
-      
-      if lookup (hParent:name, "wb:InformA") > 0
-        then 
-      do:
-        if hNoderef:name = "pref:RegId" then assign tt-wb-gds-EG.refA = hText:node-value.
-      end.
-      if lookup (hParent:name, "wbr:Header") > 0
-        then 
-      do:
-        find first tt-wb-header no-error.
-        if not available (tt-wb-header) then create tt-wb-header.
-        if hNoderef:name = "wbr:WBRegId" then assign tt-wb-header.wbregid = hText:node-value .
-        if hNoderef:name = "wbr:Identity" then assign tt-wb-header.Identity = hText:node-value .
-      end.
-      if lookup (hParent:name, "wbr:Position") > 0
-        then 
-      do:
-        if hNoderef:name = "wbr:Identity" then 
-        do:
-          find first tt-wb-gds-EG where tt-wb-gds-EG.Identity = hText:node-value no-error.
-        end.
-        if available (tt-wb-gds-EG) and hNoderef:name = "wbr:InformBRegId" then assign tt-wb-gds-EG.refB = hText:node-value.
-      end.
-      if available (tt-wb-gds-EG) then do:
-        if tt-wb-gds-EG.regID-Importer = ""
-          then
-          assign 
-            tt-wb-gds-EG.regID-i-p = tt-wb-gds-EG.regID-Producer
-            tt-wb-gds-EG.i-p-th = tt-wb-gds-EG.producer-th
-          .
-          else
-          assign 
-            tt-wb-gds-EG.regID-i-p = tt-wb-gds-EG.regID-Importer
-            tt-wb-gds-EG.i-p-th = tt-wb-gds-EG.importer-th
-          .
-          find first ub.ext-classif no-lock 
-            where ub.ext-classif.classif-subject = {&table_clients}
-              and ub.ext-classif.classif-name = {&extclass_clients_esys}
-              and ub.ext-classif.db-num = 0
-              and ub.ext-classif.key#_one = v-ext-sys
-              and ub.ext-classif.CharKey_Three =  tt-wb-gds-EG.regID-i-p
-              no-error.
-          if available (ub.ext-classif) then do:
-            find first buf_clients where buf_clients.obj-type = entry (2, ub.ext-classif.uniq-key-rec, {&delim-key}) and buf_clients.obj-code = integer (entry (3, ub.ext-classif.uniq-key-rec, {&delim-key})) no-error.
-            if available (buf_clients) 
-              then tt-wb-gds-EG.i-p-name = buf_clients.obj-name.
-          end.
-      end.
-      GetChildren(hNoderef, (level + 1), inTableType).
-    end.
-
-
-    delete object hNoderef.
-    delete object hText.
+  method private void createhDoc (inFileName as char, output outhDoc as handle ):
+    
+    create x-document outhDoc.
+    outhDoc:encoding = 'utf-8'.
+    outhDoc:load("file", search (inFileName), false).
+    
   end.
 
   method override public void SaveWB (inWbIdentity as char):
@@ -2062,7 +1671,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             and ub.parts.out-code  = inTrnDoc:
         
           jj = jj + 1.
-          THSumm = THSumm + ub.parts.qnty.
+          THSumm = THSumm + ub.parts.cli-qnty.
         
         end.
         
@@ -2258,7 +1867,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
           end.
         end.
 
-        if tt-wb-gds-EG.qnty <> buf_parts.fact-qnty then 
+        if tt-wb-gds-EG.qnty <> buf_parts.cli-qnty then 
         do:
           is-diff = true. 
         end.
@@ -2283,13 +1892,17 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
 
   method private void CmdParseXml (inType as char):
     
+    define variable hDoc as handle no-undo.
+    
     cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, inType, inFileName).
     os-command silent value (cmd).
-    ParseResponse(inFileName, {&wb-clob}).
+
+    createhDoc(inFileName, output hDoc).
+    prsXMLDocWB:ParseRec (hDoc, output table tt-wb-header, output table tt-wb-act-header, output table tt-ticket, output table tt-wb-info-client).
     find first tt-wb-header no-error.
     find first tt-wb-act-header no-error.
     find first tt-ticket no-error.
-    if not available (tt-wb-header) and not available (tt-wb-act-header) and not available (tt-ticket) then 
+    if not prsXMLDocWB:glog then 
     do:
       Msg = 'Ошибка обработки xml'.
       StatusErr = true.
