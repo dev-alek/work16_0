@@ -595,7 +595,8 @@ END.
       if available tt-marks then 
       do:
         v-mode = {&lookup}.
-        run bge/egais-goods-mark.w ( input parparentproc, input v-mode, input tt-marks.alc-code, output v-gds-code, output v-gds-name, output v-prod-full-name, output v-import-full-name )  .  
+        v-gds-code = 0 .
+        run bge/egais-goods-mark.w ( input parparentproc, input v-mode, input-output tt-marks.alc-code, input-output v-gds-code, output v-gds-name, output v-prod-full-name, output v-import-full-name )  .  
         if v-gds-code <> 0 then 
         do:
           assign
