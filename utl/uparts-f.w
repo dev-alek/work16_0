@@ -729,6 +729,7 @@ DO:
     run str/in-alc.w
       (input        parparentproc
       ,input        {&update}
+      ,input p-gds-code
       ,input-output v-alc-mark-db-num
       ,input-output v-alc-mark-code
       ,input-output v-alc-bottling-date

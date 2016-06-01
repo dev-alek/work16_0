@@ -1508,6 +1508,9 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-value-change-method Dialog-Frame 
 PROCEDURE proc-value-change-method :
 define input parameter p-delivery-method as integer no-undo.
+
+t-delete-pck-on:label in frame {&frame-name} = "”дал. ф-лы из HEAP" .
+
 hide
 f-ftp-ip in frame {&frame-name}
 f-login
@@ -1559,6 +1562,10 @@ case p-delivery-method:
       f-password
       with frame {&frame-name}.
     end.
+  end.
+  when integer({&esys-dm-egais})
+  then do:
+    t-delete-pck-on:label in frame {&frame-name} = '”дал. записи с ”“ћ'.
   end.
   otherwise do:
   end.   

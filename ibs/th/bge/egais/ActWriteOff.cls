@@ -194,7 +194,7 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
 /*          run gbl/inidebug.p .*/
       
           cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/ActWriteOff >&4", search ("exe/curl.exe"), search ("ActWriteOff.xml"), ConPar, inFileName).
-          os-command value (cmd).
+          os-command silent value (cmd).
     
           file-info:file-name = search (inFileName).
           if search (inFileName) <> ? and file-info:file-size > 0 
@@ -340,7 +340,7 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
     .
     
     cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, urlResp, inFileName).
-    os-command value (cmd).
+    os-command silent value (cmd).
   end.
 
   method protected override character GetURLUTM (inReplyId as char):
@@ -365,7 +365,7 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
     
 
     cmd = substitute ("&1 --connect-timeout &2 -X GET &3/opt/out?refresh=true >&4",search ("exe/curl.exe"), TimeOut, ConPar, inFileName).
-    os-command value (cmd).
+    os-command silent value (cmd).
        
     file-info:file-name = search (inFileName).
     if search (inFileName) = ? or file-info:file-size = 0 

@@ -231,7 +231,7 @@ DEFINE VARIABLE F-base AS DECIMAL FORMAT "->>>>9.99":U INITIAL 0
 
 DEFINE VARIABLE fi-alc-min-price AS CHARACTER FORMAT "X(255)"
      VIEW-AS FILL-IN
-     SIZE 25.5 BY 1 TOOLTIP "Для алкоголя"
+     SIZE 25.5 BY 1 TOOLTIP "Для алкоголя, %сод.спирта,мин.цена;%сод.спирта,мин.цена"
      FGCOLOR 4 .
 
 DEFINE VARIABLE fi-cli-code AS INTEGER FORMAT ">>>>>" INITIAL 0
@@ -1143,6 +1143,23 @@ END.
 ON CHOOSE OF r-cli IN FRAME Dialog-Frame
 DO:
   /* 1 */
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME n-alchol
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL n-alchol Dialog-Frame
+ON VALUE-CHANGED OF n-alchol IN FRAME Dialog-Frame /* По умолчанию алкоголь */
+DO:
+  IF n-alchol:checked then do:
+/*  n-alchol = logical(if v-alchol = "" then "no" else v-alchol).*/
+      enable n-mark
+      with frame {&frame-name}.
+  end.
+  else hide
+    n-mark  in frame {&frame-name} 
+  .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2757,9 +2774,13 @@ v-value = "no".
 if v-value = "yes" then do:
     enable 
     n-alchol 
-    n-mark
     with frame {&frame-name}.
 end.
+if v-alchol = "yes" then do:
+    enable 
+    n-mark 
+    with frame {&frame-name}.
+end.  
 enable 
   fill-sum-grp 
   r-sum-grp

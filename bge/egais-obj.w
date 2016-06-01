@@ -240,11 +240,11 @@ DEFINE BROWSE br-objects
     get-obj(buffer tt-objs) COLUMN-LABEL "Объект" FORMAT "X(6)":U 
     tt-objs.inn COLUMN-LABEL "ИНН" FORMAT "X(12)":U
     tt-objs.kpp COLUMN-LABEL "КПП" FORMAT "X(9)":U 
-    tt-objs.obj-name-th COLUMN-LABEL "Наименование в TH" FORMAT "X(25)":U 
-    tt-objs.obj-name-egais COLUMN-LABEL "Наименование ЕГАИС" FORMAT "X(25)":U
+    tt-objs.obj-name-th COLUMN-LABEL "Наименование в TH" FORMAT "X(100)":U width 25
+    tt-objs.obj-name-egais COLUMN-LABEL "Наименование ЕГАИС" FORMAT "X(100)":U width 25
     tt-objs.country COLUMN-LABEL "Страна" FORMAT "X(6)":U
     tt-objs.regionCode COLUMN-LABEL "Регион" FORMAT "X(6)":U
-    tt-objs.description_ COLUMN-LABEL "Адрес" FORMAT "X(87)":U
+    tt-objs.description_ COLUMN-LABEL "Адрес" FORMAT "X(100)":U width 87
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 105 BY 21.5 FIT-LAST-COLUMN.

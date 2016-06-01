@@ -11,7 +11,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Товары по акцизной марке
+Товары ЕГАИС
 
 Автор: Шкляр Елена 
 Дата создания: 01/16/07
@@ -27,8 +27,8 @@ using ibs.th.bge.egais.*.
 
 define input  parameter parparentproc as handle no-undo.
 define input  parameter p-mode     as character   no-undo.
-define input  parameter p-alc-code as character   no-undo.
-define output parameter p-gds-code like ub.goods.gds-code  no-undo.
+define input-output  parameter p-alc-code as character   no-undo.
+define input-output parameter p-gds-code like ub.goods.gds-code  no-undo.
 define output parameter p-gds-name like ub.goods.gds-name  no-undo.
 define output parameter p-prod-full-name as character  no-undo.
 define output parameter p-import-full-name as character  no-undo.
@@ -39,21 +39,34 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Товары по акцизной марке".
+define variable vss-description as character no-undo init "Товары ЕГАИС".
 
-define temp-table tt-goods
+define temp-table tt-goods no-undo
   field gds-code         like goods.gds-code
   field artic            like goods.artic
   field gds-name         like goods.gds-name
+  field alc-code         as character label "Алког.код"
   field import-full-name as character label "Импортер"
   field prod-full-name   as character label "Производитель"
-  index pi as primary unique gds-code .
+  field CliRegIdProd     as character
+  field INNProd          as character
+  field KPPProd          as character
+  field FullNameProd     as character
+  field CountryProd      as character
+  field CliRegIdImpor    as character
+  field INNImpor         as character
+  field KPPImpor         as character
+  field FullNameImpor    as character
+  field CountryImpor     as character   
+  index pi as primary unique gds-code alc-code .
     
-    
-define variable extGdsObj  as class   extgds.
+ 
+define variable extGdsObj  as class   extgds no-undo.
 define variable ii         as integer no-undo .
 define variable v-gds-code as integer no-undo .
-  
+define variable v-gds-code-old as integer no-undo .
+define variable v-alc-code-old as character no-undo .
+
 { cmp/vssrevis.i }
 {bge/egais-mark.i}
 { cmp/showinf.i  }
@@ -79,7 +92,11 @@ define variable v-gds-code as integer no-undo .
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Cancel Btn_add Btn_del br-goods 
+&Scoped-Define ENABLED-OBJECTS RECT-1 RECT-2 RECT-3 Btn_OK Btn_Cancel ~
+Btn_add Btn_del br-goods 
+&Scoped-Define DISPLAYED-OBJECTS v-FullNameProd v-FullNameImpor ~
+v-FullNameGds v-CliRegIdProd v-CliRegIdImpor v-GdsCode v-INNProd v-INNImpor ~
+v-AlcCode v-KPPProd v-KPPImpor v-CountryProd v-CountryImpor 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -89,30 +106,105 @@ define variable v-gds-code as integer no-undo .
 
 
 
-  /* ***********************  Control Definitions  ********************** */
+/* ***********************  Control Definitions  ********************** */
 
-  /* Define a dialog box                                                  */
+/* Define a dialog box                                                  */
 
-  /* Definitions of the field level widgets                               */
-  DEFINE BUTTON Btn_add  
-    LABEL "Добавить" 
-    SIZE 15 BY 1.13
-    BGCOLOR 8 .
+/* Definitions of the field level widgets                               */
+DEFINE BUTTON Btn_add 
+     LABEL "Добавить" 
+     SIZE 15 BY 1.13
+     BGCOLOR 8 .
 
-  DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
-    LABEL "Отмена" 
-    SIZE 15 BY 1.13
-    BGCOLOR 8 .
+DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
+     LABEL "Отмена" 
+     SIZE 15 BY 1.13
+     BGCOLOR 8 .
 
-  DEFINE BUTTON Btn_del 
-    LABEL "Удалить" 
-    SIZE 15 BY 1.13
-    BGCOLOR 8 .
+DEFINE BUTTON Btn_del 
+     LABEL "Удалить" 
+     SIZE 15 BY 1.13
+     BGCOLOR 8 .
 
-  DEFINE BUTTON Btn_OK AUTO-GO 
-    LABEL "Ввод" 
-    SIZE 15 BY 1.13
-    BGCOLOR 8 .
+DEFINE BUTTON Btn_OK AUTO-GO 
+     LABEL "Ввод" 
+     SIZE 15 BY 1.13
+     BGCOLOR 8 .
+
+
+DEFINE VARIABLE v-AlcCode AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Алк.код" 
+     VIEW-AS FILL-IN 
+     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-CliRegIdImpor AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Рег.ID" 
+     VIEW-AS FILL-IN 
+     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-CliRegIdProd AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Рег.ID" 
+     VIEW-AS FILL-IN 
+     SIZE 29.5 BY .9 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-CountryImpor AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Город" 
+     VIEW-AS FILL-IN 
+     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-CountryProd AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Город" 
+     VIEW-AS FILL-IN 
+     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-FullNameGds AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 38.38 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-FullNameImpor AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 38.38 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-FullNameProd AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 38.38 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-GdsCode AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Код" 
+     VIEW-AS FILL-IN 
+     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-INNImpor AS CHARACTER FORMAT "X(256)":U 
+     LABEL "ИНН" 
+     VIEW-AS FILL-IN 
+     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-INNProd AS CHARACTER FORMAT "X(256)":U 
+     LABEL "ИНН" 
+     VIEW-AS FILL-IN 
+     SIZE 29.5 BY .9 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-KPPImpor AS CHARACTER FORMAT "X(256)":U 
+     LABEL "КПП" 
+     VIEW-AS FILL-IN 
+     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE v-KPPProd AS CHARACTER FORMAT "X(256)":U 
+     LABEL "КПП" 
+     VIEW-AS FILL-IN 
+     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+
+DEFINE RECTANGLE RECT-1
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 40 BY 6.25.
+
+DEFINE RECTANGLE RECT-2
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 40 BY 6.25.
+
+DEFINE RECTANGLE RECT-3
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 40 BY 6.25.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -130,28 +222,51 @@ define variable v-gds-code as integer no-undo .
     WIDTH 20
     tt-goods.gds-name 
     WIDTH 30
+    tt-goods.alc-code format "X(256)"
+    WIDTH 30
     tt-goods.import-full-name
     WIDTH 30
     tt-goods.prod-full-name
     WIDTH 30
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 88 BY 17.5 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 121 BY 14.5 FIT-LAST-COLUMN.
+    
 
-
-  /* ************************  Frame Definitions  *********************** */
-
-  DEFINE FRAME Dialog-Frame
-    Btn_OK AT ROW 1.25 COL 1.5
-    Btn_Cancel AT ROW 1.25 COL 16.5
-    Btn_add AT ROW 1.25 COL 31.5 WIDGET-ID 4
-    Btn_del AT ROW 1.25 COL 46.5 WIDGET-ID 2
-    br-goods AT ROW 3 COL 1.5 WIDGET-ID 200
-    SPACE(0.12) SKIP(0.20)
+/* ************************  Frame Definitions  *********************** */
+DEFINE FRAME Dialog-Frame
+     Btn_OK AT ROW 1.25 COL 1.5
+     Btn_Cancel AT ROW 1.25 COL 16.5
+     Btn_add AT ROW 1.25 COL 31.5 WIDGET-ID 4
+     Btn_del AT ROW 1.25 COL 46.5 WIDGET-ID 2
+     br-goods AT ROW 3 COL 1.5 WIDGET-ID 200
+     v-FullNameProd AT ROW 18.83 COL 2 NO-LABEL WIDGET-ID 10 AUTO-RETURN 
+     v-FullNameImpor AT ROW 18.83 COL 42.5 NO-LABEL WIDGET-ID 30 AUTO-RETURN 
+     v-FullNameGds AT ROW 18.83 COL 83 NO-LABEL WIDGET-ID 44 AUTO-RETURN 
+     v-CliRegIdProd AT ROW 19.79 COL 8.88 COLON-ALIGNED WIDGET-ID 14
+     v-CliRegIdImpor AT ROW 19.79 COL 49.38 COLON-ALIGNED WIDGET-ID 26
+     v-GdsCode AT ROW 19.79 COL 89.88 COLON-ALIGNED WIDGET-ID 40
+     v-INNProd AT ROW 20.79 COL 8.88 COLON-ALIGNED WIDGET-ID 16
+     v-INNImpor AT ROW 20.79 COL 49.38 COLON-ALIGNED WIDGET-ID 32
+     v-AlcCode AT ROW 20.79 COL 89.88 COLON-ALIGNED WIDGET-ID 46
+     v-KPPProd AT ROW 21.79 COL 8.88 COLON-ALIGNED WIDGET-ID 18
+     v-KPPImpor AT ROW 21.79 COL 49.38 COLON-ALIGNED WIDGET-ID 34
+     v-CountryProd AT ROW 22.79 COL 8.88 COLON-ALIGNED WIDGET-ID 20
+     v-CountryImpor AT ROW 22.79 COL 49.38 COLON-ALIGNED WIDGET-ID 28
+     "Товар:" VIEW-AS TEXT
+          SIZE 18.5 BY .67 AT ROW 17.88 COL 83 WIDGET-ID 38
+     "Импортер:" VIEW-AS TEXT
+          SIZE 18.5 BY .67 AT ROW 17.88 COL 42.5 WIDGET-ID 24
+     "Производитель:" VIEW-AS TEXT
+          SIZE 18.5 BY .67 AT ROW 17.88 COL 2 WIDGET-ID 12
+     RECT-1 AT ROW 17.75 COL 1.5 WIDGET-ID 6
+     RECT-2 AT ROW 17.75 COL 42 WIDGET-ID 22
+     RECT-3 AT ROW 17.75 COL 82.5 WIDGET-ID 36
+     SPACE(0.87) SKIP(0.28)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-    TITLE "Товары по акцизным маркам"
-    DEFAULT-BUTTON Btn_OK CANCEL-BUTTON Btn_Cancel WIDGET-ID 100.
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "Товары ЕГАИС"
+         DEFAULT-BUTTON Btn_OK CANCEL-BUTTON Btn_Cancel WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -169,13 +284,39 @@ define variable v-gds-code as integer no-undo .
 /* ***********  Runtime Attributes and AppBuilder Settings  *********** */
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
-  /* SETTINGS FOR DIALOG-BOX Dialog-Frame
-     FRAME-NAME                                                           */
-  /* BROWSE-TAB br-goods Btn_del Dialog-Frame */
-  ASSIGN 
-    FRAME Dialog-Frame:SCROLLABLE       = FALSE
-    FRAME Dialog-Frame:HIDDEN           = TRUE.
+/* SETTINGS FOR DIALOG-BOX Dialog-Frame
+   FRAME-NAME                                                           */
+/* BROWSE-TAB br-goods Btn_del Dialog-Frame */
+ASSIGN 
+       FRAME Dialog-Frame:SCROLLABLE       = FALSE
+       FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+/* SETTINGS FOR FILL-IN v-AlcCode IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN v-CliRegIdImpor IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN v-CliRegIdProd IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN v-CountryImpor IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN v-CountryProd IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN v-FullNameGds IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN v-FullNameImpor IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN v-FullNameProd IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN v-GdsCode IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN v-INNImpor IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN v-INNProd IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN v-KPPImpor IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN v-KPPProd IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -187,8 +328,8 @@ define variable v-gds-code as integer no-undo .
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-  ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Товары по акцизным маркам */
-    DO:
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Товары ЕГАИС */
+DO:
       APPLY "END-ERROR":U TO SELF.
     END.
 
@@ -196,28 +337,10 @@ define variable v-gds-code as integer no-undo .
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME Btn_OK
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
-  ON choose OF Btn_OK IN FRAME Dialog-Frame /* Ввод */
-    DO:
-      if available tt-goods then do:
-      assign
-        p-gds-code = tt-goods.gds-code
-        p-gds-name = tt-goods.gds-name
-        p-import-full-name = tt-goods.import-full-name
-        p-prod-full-name   = tt-goods.prod-full-name
-        .  
-       end. 
-      RUN disable_UI.
-    END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 &Scoped-define SELF-NAME Btn_add
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_add Dialog-Frame
-  ON choose OF Btn_add IN FRAME Dialog-Frame /* Добавить */
-    DO:
+ON choose OF Btn_add IN FRAME Dialog-Frame /* Добавить */
+DO:
       define variable ref-list as character no-undo .
       define variable v-cntxt-obj-code as integer no-undo .
       define variable v-cntxt-obj-type as character no-undo .
@@ -260,19 +383,28 @@ define variable v-gds-code as integer no-undo .
       extGdsValueObjnew:GdsCode = v-GdsCodenew.
       extGdsValueObjnew:AlcCode = p-alc-code.
       extGdsObj:CreateExtGds (extGdsValueObjnew).
-      extGdsObj:OpenQueryExtGds(0, p-alc-code).
+      extGdsObj:OpenQueryExtGds(p-gds-code, p-alc-code).
       
       find first tt-goods where tt-goods.gds-code = extGdsValueObjnew:GdsCode and
         tt-goods.gds-name = ub.goods.gds-name and 
         tt-goods.artic    = ub.goods.artic no-lock no-error.
       if not available tt-goods then do:  
       create tt-goods .
-      
+        tt-goods.alc-code = extGdsValueObjnew:AlcCode . 
         tt-goods.gds-code = extGdsValueObjnew:GdsCode .
         tt-goods.gds-name = ub.goods.gds-name .
         tt-goods.artic    = ub.goods.artic .
         tt-goods.import-full-name = extGdsValueObjnew:FullNameImpor .
         tt-goods.prod-full-name   = extGdsValueObjnew:FullNameProd .
+        tt-goods.CliRegIdProd = extGdsValueObjnew:CliRegIdProd .
+        tt-goods.CountryProd = extGdsValueObjnew:CountryProd .
+        tt-goods.INNProd = extGdsValueObjnew:INNProd .
+        tt-goods.KPPProd = extGdsValueObjnew:KPPProd .
+        tt-goods.CliRegIdImpor = extGdsValueObjnew:CliRegIdImpor .
+        tt-goods.CountryImpor = extGdsValueObjnew:CountryImpor .
+        tt-goods.INNImpor = extGdsValueObjnew:INNImpor .
+        tt-goods.KPPImpor = extGdsValueObjnew:KPPImpor .
+
         .
       end.
       end.
@@ -282,21 +414,39 @@ define variable v-gds-code as integer no-undo .
       end.  
       
       open query br-goods for each tt-goods .
-    END.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME Btn_Cancel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel Dialog-Frame
+ON choose OF Btn_Cancel IN FRAME Dialog-Frame /* Отмена */
+DO:
 
+  assign
+    p-alc-code = v-alc-code-old
+    p-gds-code = v-gds-code-old
+  .
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+on value-changed of br-goods do:
+  run local-value-changed.
+end.
+  
 &Scoped-define SELF-NAME Btn_del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_del Dialog-Frame
 ON choose OF Btn_del IN FRAME Dialog-Frame /* Удалить */
 DO:
       extGdsObj:DeleteExtGds (tt-goods.gds-code, p-alc-code).
       delete tt-goods.
-      extGdsObj:OpenQueryExtGds(0, p-alc-code).
+      extGdsObj:OpenQueryExtGds(p-gds-code, p-alc-code).
       open query br-goods for each tt-goods .
-    END.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -308,21 +458,19 @@ ON choose OF Btn_OK IN FRAME Dialog-Frame /* Ввод */
 DO:
       if available tt-goods then do:
       assign
+        p-alc-code = tt-goods.alc-code
         p-gds-code = tt-goods.gds-code
         p-gds-name = tt-goods.gds-name
         p-import-full-name = tt-goods.import-full-name
         p-prod-full-name   = tt-goods.prod-full-name
         .  
-      end.
+       end. 
       RUN disable_UI.
     END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&Scoped-define BROWSE-NAME br-goods
-&UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
@@ -339,6 +487,10 @@ DO:
   MAIN-BLOCK:
   DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+    assign
+      v-gds-code-old = p-gds-code
+      v-alc-code-old = p-alc-code
+    .
     RUN enable_UI.
     RUN enable_goods.
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
@@ -375,24 +527,79 @@ PROCEDURE enable_goods :
     Parameters:  <none>
     Notes:       
   ------------------------------------------------------------------------------*/
+  
+  define variable extGdsValueObj  as class ExtGdsValue no-undo.
+  
   extGdsObj = new ExtGds (true).
-  extGdsObj:OpenQueryExtGds(0, p-alc-code). 
+  extGdsObj:OpenQueryExtGds(p-gds-code, p-alc-code). 
   if extGdsObj:NumBundles > 0 then 
   do:
     do ii = 1 to extGdsObj:NumBundles:
       v-gds-code = extGdsObj:GetExtGdsValue(ii):GdsCode .
       find first ub.goods where ub.goods.gds-code = v-gds-code no-lock no-error.
+      extGdsValueObj = extGdsObj:GetExtGdsValue(ii).
       create tt-goods .
-      
-        tt-goods.gds-code = extGdsObj:GetExtGdsValue(ii):GdsCode .
-        tt-goods.gds-name = ub.goods.gds-name . 
-        tt-goods.artic    = ub.goods.artic .
-        tt-goods.import-full-name = extGdsObj:GetExtGdsValue(1):FullNameImpor .
-        tt-goods.prod-full-name   = extGdsObj:GetExtGdsValue(1):FullNameProd .
-        .
+      assign
+        tt-goods.gds-code = extGdsValueObj:GdsCode
+        tt-goods.alc-code = extGdsValueObj:AlcCode
+        tt-goods.gds-name = ub.goods.gds-name
+        tt-goods.artic    = ub.goods.artic
+        tt-goods.import-full-name = extGdsValueObj:FullNameImpor
+        tt-goods.prod-full-name   = extGdsValueObj:FullNameProd
+        tt-goods.CliRegIdProd = extGdsValueObj:CliRegIdProd
+        tt-goods.CountryProd = extGdsValueObj:CountryProd
+        tt-goods.INNProd = extGdsValueObj:INNProd
+        tt-goods.KPPProd = extGdsValueObj:KPPProd
+        tt-goods.CliRegIdImpor = extGdsValueObj:CliRegIdImpor
+        tt-goods.CountryImpor = extGdsValueObj:CountryImpor
+        tt-goods.INNImpor = extGdsValueObj:INNImpor
+        tt-goods.KPPImpor = extGdsValueObj:KPPImpor
+      .
     end.  
   end.    
   open query br-goods for each tt-goods .
+  run local-value-changed.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_goods Dialog-Frame 
+PROCEDURE local-value-changed :
+/*------------------------------------------------------------------------------
+    Purpose:     
+    Parameters:  <none>
+    Notes:       
+  ------------------------------------------------------------------------------*/
+  if available tt-goods then do:
+    
+    DISPLAY tt-goods.FullNameProd @ v-FullNameProd with frame {&frame-name}.
+    DISPLAY tt-goods.CliRegIdProd @ v-CliRegIdProd with frame {&frame-name}.
+    DISPLAY tt-goods.CountryProd @ v-CountryProd with frame {&frame-name}.
+    DISPLAY tt-goods.INNProd @ v-INNProd with frame {&frame-name}.
+    DISPLAY tt-goods.KPPProd @ v-KPPProd with frame {&frame-name}.         
+    DISPLAY tt-goods.FullNameImpor @ v-FullNameImpor with frame {&frame-name}.
+    DISPLAY tt-goods.CliRegIdImpor @ v-CliRegIdImpor with frame {&frame-name}.
+    DISPLAY tt-goods.CountryImpor @ v-CountryImpor with frame {&frame-name}.
+    DISPLAY tt-goods.INNImpor @ v-INNImpor with frame {&frame-name}.
+    DISPLAY tt-goods.KPPImpor @ v-KPPImpor with frame {&frame-name}.
+    DISPLAY tt-goods.alc-code @ v-AlcCode with frame {&frame-name}.
+    DISPLAY string(tt-goods.gds-code) @ v-GdsCode with frame {&frame-name}.
+    DISPLAY tt-goods.gds-name @ v-FullNameGds with frame {&frame-name}.    
+          
+/*    v-FullNameProd = tt-goods.FullNameProd*/
+/*    v-CliRegIdProd = tt-goods.CliRegIdProd*/
+/*    v-CountryProd = tt-goods.CountryProd*/
+/*    v-INNProd = tt-goods.INNProd        */
+/*    v-KPPProd = tt-goods.KPPProd        */
+/*    v-FullNameImpor = tt-goods.FullNameImpor*/
+/*    v-CliRegIdImpor = tt-goods.CliRegIdImpor*/
+/*    v-CountryImpor = tt-goods.CountryImpor  */
+/*    v-INNImpor = tt-goods.INNImpor          */
+/*    v-KPPImpor = tt-goods.KPPImpor          */
+
+  end.  
 
 END PROCEDURE.
 
@@ -416,10 +623,14 @@ PROCEDURE enable_UI :
   DISABLE Btn_add Btn_del  
       WITH FRAME Dialog-Frame.
   end.
-  else do: 
-  DISABLE Btn_Cancel  
-      WITH FRAME Dialog-Frame.
-  end.       
+  if p-mode = {&update} then do:
+  /*DISABLE Btn_Cancel  
+      WITH FRAME Dialog-Frame.*/
+  end. 
+  if p-mode = {&select}  then do: 
+   DISABLE Btn_add Btn_del Btn_OK WITH FRAME Dialog-Frame.
+
+  end.          
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.

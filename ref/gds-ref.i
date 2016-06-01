@@ -2396,7 +2396,9 @@ PROCEDURE proc-b-add-inf:
   define variable normal-waste_   like ub.goods.normal-waste   no-undo .
   define variable cond-keep-code_ like ub.goods.cond-keep-code no-undo .
   define variable is-alc          as logical                   no-undo .
-  define variable choose-alc-prod_ as integer                  no-undo .     
+  define variable is-alc-mark     as logical                   no-undo .
+  define variable choose-alc-prod_ as integer                  no-undo .
+
 
   define variable prodaddress as character no-undo .
   define variable v-recid     as recid     no-undo .
@@ -2455,6 +2457,7 @@ PROCEDURE proc-b-add-inf:
       end.
 
         define VARIABLE v-attr-value as character no-undo .
+        define VARIABLE v-attr-mark-value as character no-undo .
         define VARIABLE v-value as character no-undo .
 
   
@@ -2473,10 +2476,19 @@ PROCEDURE proc-b-add-inf:
               choose-alc-prod_ = ub.alc-type-gds.alc-type-inner-code
               is-alc           = yes
               .
+          
+            RUN gds-attr-value (
+              INPUT loc-goods.gds-code,
+              INPUT {&attr-mark},
+              OUTPUT v-attr-mark-value,
+              OUTPUT v-value
+              ).
+              if v-attr-mark-value = "yes" then is-alc-mark = yes .
             end.
             if not available ub.alc-type-gds then do:
               assign
-              is-alc = no.
+              is-alc = no
+              is-alc-mark = no .
             end.
           end.
       
@@ -2532,7 +2544,8 @@ PROCEDURE proc-b-add-inf:
                    , input-output normal-waste_
                    , input-output cond-keep-code_
                    , input-output proof_
-				   , input-output is-alc
+                   , input-output is-alc
+                   , INPUT-OUTPUT is-alc-mark
                    , input-output choose-alc-prod_
                    ) .
     end.

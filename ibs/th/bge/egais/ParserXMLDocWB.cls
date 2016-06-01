@@ -24,7 +24,6 @@ class ibs.th.bge.egais.ParserXMLDocWB:
 
 
   define private variable inFileName as character no-undo.
-  define private variable v-ext-sys  as integer   no-undo.
   define private variable nn         as integer   no-undo.
 
   define property glog as logical no-undo
@@ -37,7 +36,17 @@ class ibs.th.bge.egais.ParserXMLDocWB:
   
   define property IsToClearTable as logical no-undo init true
     get.
-    set. 
+    set.
+
+  define property ExtSys as integer no-undo
+    get.
+    private set.
+  
+  constructor public ParserXMLDocWB (inExtSys as int):
+    
+    ExtSys = inExtSys. 
+  
+  end.
   
   method public void ParseRec (hDoc as handle, output table tt-wb-header, output table tt-wb-act-header, output table tt-ticket, output table tt-wb-info-client):
     
@@ -73,12 +82,12 @@ class ibs.th.bge.egais.ParserXMLDocWB:
     
   end.
   
-  method public void ParseRec (hDoc as handle, input-output table tt-alldoc, url_ as char):
+  method public void ParseRec (hDoc as handle, output outDate as date, url_ as char):
     
     define variable hRoot as handle no-undo.
 
     
-    find first tt-alldoc where tt-alldoc.url_ = url_.
+/*    find first tt-alldoc where tt-alldoc.url_ = url_.*/
     
     glog = false.
     empty temp-table tt-wb-header.
@@ -103,14 +112,14 @@ class ibs.th.bge.egais.ParserXMLDocWB:
   
     case true:
       when available tt-wb-header then do:
-        tt-alldoc.date_ = tt-wb-header.wb-date.
+        outDate = tt-wb-header.wb-date.
       end.
       when available tt-wb-act-header then do:
-        tt-alldoc.date_ = tt-wb-act-header.act-date.
+        outDate = tt-wb-act-header.act-date.
       end.
       when available tt-ticket then do:
         assign
-          tt-alldoc.date_ = date (   substring (entry (3, tt-ticket.ticket-date, "-"), 1, 2) + "." + entry (2, tt-ticket.ticket-date, "-") + "." + entry (1, tt-ticket.ticket-date, "-"))
+          outDate = date (   substring (entry (3, tt-ticket.ticket-date, "-"), 1, 2) + "." + entry (2, tt-ticket.ticket-date, "-") + "." + entry (1, tt-ticket.ticket-date, "-"))
         no-error.
       end.
     end case.
@@ -431,7 +440,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
           where ub.ext-classif.classif-subject = {&table_clients}
             and ub.ext-classif.classif-name = {&extclass_clients_esys}
             and ub.ext-classif.db-num = 0
-            and ub.ext-classif.key#_one = v-ext-sys
+            and ub.ext-classif.key#_one = ExtSys
             and ub.ext-classif.CharKey_Three = tt-wb-gds-EG.regID-Importer
             no-error.
         if available (ub.ext-classif) then do:
@@ -463,7 +472,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
           where ub.ext-classif.classif-subject = {&table_clients}
             and ub.ext-classif.classif-name = {&extclass_clients_esys}
             and ub.ext-classif.db-num = 0
-            and ub.ext-classif.key#_one = v-ext-sys
+            and ub.ext-classif.key#_one = ExtSys
             and ub.ext-classif.CharKey_Three = tt-wb-gds-EG.regID-Producer
             no-error.
         if available (ub.ext-classif) then do:
@@ -526,7 +535,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
             where ub.ext-classif.classif-subject = {&table_clients}
               and ub.ext-classif.classif-name = {&extclass_clients_esys}
               and ub.ext-classif.db-num = 0
-              and ub.ext-classif.key#_one = v-ext-sys
+              and ub.ext-classif.key#_one = ExtSys
               and ub.ext-classif.CharKey_Three =  tt-wb-gds-EG.regID-i-p
               no-error.
           if available (ub.ext-classif) then do:
