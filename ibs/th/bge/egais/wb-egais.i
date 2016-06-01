@@ -170,7 +170,9 @@
     
   define temp-table tt-alldoc no-undo
     field mark          as character format "X(1)" label "*"
-    field url_          as character format "X(256)"
+    field url_          as character format "X(256)" label "URL"
+    field typeDoc       as character format "X(14)" label "Тип"
+    field typeDirection as character format "X(3)" label ""
     field date_         as date      label "Дата"
     field nnOrder       as integer   label "Порядковый №"
     index pi

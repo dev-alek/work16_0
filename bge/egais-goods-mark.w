@@ -41,7 +41,7 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "“Ó‚‡˚ ≈√¿»—".
 
-define temp-table tt-goods
+define temp-table tt-goods no-undo
   field gds-code         like goods.gds-code
   field artic            like goods.artic
   field gds-name         like goods.gds-name
@@ -58,13 +58,15 @@ define temp-table tt-goods
   field KPPImpor         as character
   field FullNameImpor    as character
   field CountryImpor     as character   
-  index pi as primary unique gds-code .
+  index pi as primary unique gds-code alc-code .
     
  
-define variable extGdsObj  as class   extgds.
+define variable extGdsObj  as class   extgds no-undo.
 define variable ii         as integer no-undo .
 define variable v-gds-code as integer no-undo .
-  
+define variable v-gds-code-old as integer no-undo .
+define variable v-alc-code-old as character no-undo .
+
 { cmp/vssrevis.i }
 {bge/egais-mark.i}
 { cmp/showinf.i  }
@@ -412,7 +414,22 @@ DO:
       end.  
       
       open query br-goods for each tt-goods .
-    END.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_Cancel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel Dialog-Frame
+ON choose OF Btn_Cancel IN FRAME Dialog-Frame /* ŒÚÏÂÌ‡ */
+DO:
+
+  assign
+    p-alc-code = v-alc-code-old
+    p-gds-code = v-gds-code-old
+  .
+
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -429,7 +446,7 @@ DO:
       delete tt-goods.
       extGdsObj:OpenQueryExtGds(p-gds-code, p-alc-code).
       open query br-goods for each tt-goods .
-    END.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -470,6 +487,10 @@ DO:
   MAIN-BLOCK:
   DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+    assign
+      v-gds-code-old = p-gds-code
+      v-alc-code-old = p-alc-code
+    .
     RUN enable_UI.
     RUN enable_goods.
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
@@ -506,30 +527,34 @@ PROCEDURE enable_goods :
     Parameters:  <none>
     Notes:       
   ------------------------------------------------------------------------------*/
-  extGdsObj = new ExtGds (true).
   
+  define variable extGdsValueObj  as class ExtGdsValue no-undo.
+  
+  extGdsObj = new ExtGds (true).
   extGdsObj:OpenQueryExtGds(p-gds-code, p-alc-code). 
   if extGdsObj:NumBundles > 0 then 
   do:
     do ii = 1 to extGdsObj:NumBundles:
       v-gds-code = extGdsObj:GetExtGdsValue(ii):GdsCode .
       find first ub.goods where ub.goods.gds-code = v-gds-code no-lock no-error.
+      extGdsValueObj = extGdsObj:GetExtGdsValue(ii).
       create tt-goods .
-        tt-goods.gds-code = extGdsObj:GetExtGdsValue(ii):GdsCode .
-        tt-goods.alc-code = extGdsObj:GetExtGdsValue(ii):AlcCode .
-        tt-goods.gds-name = ub.goods.gds-name . 
-        tt-goods.artic    = ub.goods.artic .
-        tt-goods.import-full-name = extGdsObj:GetExtGdsValue(1):FullNameImpor .
-        tt-goods.prod-full-name   = extGdsObj:GetExtGdsValue(1):FullNameProd .
-        tt-goods.CliRegIdProd = extGdsObj:GetExtGdsValue(1):CliRegIdProd .
-        tt-goods.CountryProd = extGdsObj:GetExtGdsValue(1):CountryProd .
-        tt-goods.INNProd = extGdsObj:GetExtGdsValue(1):INNProd .
-        tt-goods.KPPProd = extGdsObj:GetExtGdsValue(1):KPPProd .
-        tt-goods.CliRegIdImpor = extGdsObj:GetExtGdsValue(1):CliRegIdImpor .
-        tt-goods.CountryImpor = extGdsObj:GetExtGdsValue(1):CountryImpor .
-        tt-goods.INNImpor = extGdsObj:GetExtGdsValue(1):INNImpor .
-        tt-goods.KPPImpor = extGdsObj:GetExtGdsValue(1):KPPImpor .
-        .
+      assign
+        tt-goods.gds-code = extGdsValueObj:GdsCode
+        tt-goods.alc-code = extGdsValueObj:AlcCode
+        tt-goods.gds-name = ub.goods.gds-name
+        tt-goods.artic    = ub.goods.artic
+        tt-goods.import-full-name = extGdsValueObj:FullNameImpor
+        tt-goods.prod-full-name   = extGdsValueObj:FullNameProd
+        tt-goods.CliRegIdProd = extGdsValueObj:CliRegIdProd
+        tt-goods.CountryProd = extGdsValueObj:CountryProd
+        tt-goods.INNProd = extGdsValueObj:INNProd
+        tt-goods.KPPProd = extGdsValueObj:KPPProd
+        tt-goods.CliRegIdImpor = extGdsValueObj:CliRegIdImpor
+        tt-goods.CountryImpor = extGdsValueObj:CountryImpor
+        tt-goods.INNImpor = extGdsValueObj:INNImpor
+        tt-goods.KPPImpor = extGdsValueObj:KPPImpor
+      .
     end.  
   end.    
   open query br-goods for each tt-goods .
@@ -598,10 +623,14 @@ PROCEDURE enable_UI :
   DISABLE Btn_add Btn_del  
       WITH FRAME Dialog-Frame.
   end.
-  else do: 
-  DISABLE Btn_Cancel  
-      WITH FRAME Dialog-Frame.
-  end.       
+  if p-mode = {&update} then do:
+  /*DISABLE Btn_Cancel  
+      WITH FRAME Dialog-Frame.*/
+  end. 
+  if p-mode = {&select}  then do: 
+   DISABLE Btn_add Btn_del Btn_OK WITH FRAME Dialog-Frame.
+
+  end.          
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.

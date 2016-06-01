@@ -18,8 +18,11 @@ class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
 {cmp/str-glbl.i class}
 { gbl/thbj-def.i }
 
-  define protected variable ConPar  as character no-undo.
   define protected variable TimeOut as character no-undo.
+
+  define property ConPar as character no-undo
+  get.
+  protected set.
 
   /*------------------------------------------------------------------------------
    Purpose:

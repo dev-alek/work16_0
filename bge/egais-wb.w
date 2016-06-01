@@ -37,6 +37,7 @@ define variable vss-workfile               as character no-undo init "$Workfile$
 define variable vss-archive                as character no-undo init "$Archive$":U .
 define variable vss-description            as character no-undo init "Журнал запросов ЕГАИС".
 
+
 define variable th-wb-egais                as handle    no-undo.
 define variable gh-wb-egais                as handle    no-undo.
 define variable bh-wb-gds-EG               as handle    no-undo.
@@ -62,7 +63,7 @@ define variable extGdsObj                  as class ExtGds no-undo .
 define variable extGdsValueObj             as class ExtGdsValue no-undo .
 define variable v-prod                     as character no-undo .
 define variable v-impor                    as character no-undo .
-
+define variable v-alc-code as character no-undo.
 define buffer buf_clients   for ub.clients .
 define buffer buf_firm      for ub.firm .
 define buffer x_ext-classif for ub.ext-classif.
@@ -662,12 +663,13 @@ PROCEDURE msdblcl :
     extGdsObj:OpenQueryExtGds(0, bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value).
     v-numBnd = extGdsObj:NumBundles.
 
+v-alc-code = bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value.
 
     run bge/egais-goods-mark.w ( 
                                 input parparentproc, 
                                 input {&update}, 
-                                input bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value, 
-                                output v-gds-code, 
+                                input-output v-alc-code , 
+                                input-output  v-gds-code, 
                                 output v-gds-name, 
                                 output v-prod-full-name, 
                                 output v-import-full-name )  .  

@@ -147,7 +147,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     v-ext-sys = inExtSys.
     IsSent.
     extGdsObj = new ExtGds (yes).
-    prsXMLDocWB = new ParserXMLDocWB().
+    prsXMLDocWB = new ParserXMLDocWB(v-ext-sys).
     
   end constructor.
   
@@ -819,7 +819,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             do:
               assign
                 StatusErr = true
-                Msg       = "Не удалось разобрать данные от UTM"
+                Msg       = "Не удалось разобрать данные от УТМ"
                 .
               undo, return false. 
             end.
@@ -839,7 +839,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
           do:
             assign
               StatusErr = true
-              Msg       = "Не удалось отправить акт на накладную в UTM"
+              Msg       = "Не удалось отправить акт на накладную в УТМ"
               .
             undo, return false.
           end.
@@ -874,7 +874,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             do:
               assign
                 StatusErr = true
-                Msg       = "Не удалось разобрать данные от UTM"
+                Msg       = "Не удалось разобрать данные от УТМ"
                 .
               undo, return false.
             end.
@@ -894,7 +894,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
           do:
             assign
               StatusErr = true
-              Msg       = "Не удалось отправить накладную в UTM"
+              Msg       = "Не удалось отправить накладную в УТМ"
               .
             undo, return false.
           end.
@@ -1020,7 +1020,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     do:
       assign
         StatusErr = true
-        Msg       = "Не удалось получить данные от UTM"
+        Msg       = "Не удалось получить данные от УТМ"
         .
       return.
     end.

@@ -1,10 +1,10 @@
  
 /*------------------------------------------------------------------------
-   File        : rests
+   File        : 
    Purpose     : 
    Syntax      : 
    Description : 
-   Author(s)   : sslivenko
+   Author(s)   : asmorozov
    Created     : 
    Notes       : 
  ----------------------------------------------------------------------*/
@@ -18,6 +18,12 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
   {cmp/str-glbl.i class}
   {ibs/th/bge/egais/wb-egais.i}
   
+&scop display-message    run write-log-and-file in inLogHandle (  ~
+        input 1                                                      ~
+      , input LogFileName                                            ~
+      , input 1                                                      ~
+      , input ~{&my-message~})  
+  
   define stream outstr.
   
   define private buffer buf_ext-sys for ub.ext-system.
@@ -30,7 +36,10 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
   define private variable prsXMLDocWB as class ParserXMLDocWB no-undo.
   define private variable prgObj      as class ProgressBar    no-undo .
   define private variable FSRAR       as character no-undo.
-  
+  define private variable LogFileName as character no-undo init "shd-free.log".
+  define private variable DocDate     as date no-undo.
+
+
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -41,11 +50,11 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     set.
 
 		
-  constructor public admutm (inOjType as char, inObjCode as int, inFSRAR as char):
+  constructor public admutm (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as int):
 
     super (inOjType, inObjCode).
     FSRAR = inFSRAR.
-    prsXMLDocWB = new ParserXMLDocWB ().
+    prsXMLDocWB = new ParserXMLDocWB (inExtSys).
     
   end constructor.
 
@@ -91,15 +100,30 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     prgObj:can-cancel = true.
     prgObj:show-bar().
     
-    for each tt-alldoc where true or tt-alldoc.url_ matches "*WayBillTicket*":
+    for each tt-alldoc:
     
       prgObj:increment( substring (tt-alldoc.url_, if length (tt-alldoc.url_) <= 50 then 1 else length (tt-alldoc.url_) - 50)). 
       if prgObj:is-canceled 
-        then return.
+        then do:
+          if valid-object (prgObj)
+            then do:
+              prgObj:hide-bar().
+              delete object prgObj.
+            end.
+          return.
+        end.
     
       SaveRecord(tt-alldoc.url_, output fullFileName).
+      tt-alldoc.date_ = DocDate.
       
-      if StatusErr then return.
+      if StatusErr then do:
+        if valid-object (prgObj)
+          then do:
+            prgObj:hide-bar().
+            delete object prgObj.
+          end.
+        return.
+      end.
       
     end.
     
@@ -154,20 +178,9 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
 
   end. 
 
-  method private character GetURLUTM ():
-    
-    define variable hRoot as handle  no-undo.
-    define variable hDoc  as handle  no-undo.
-    define variable hRow  as handle  no-undo.
-    define variable hText as handle  no-undo.
-    define variable ii    as integer no-undo.
-    define variable jj    as integer no-undo.
-    
-    create x-document hDoc.
-    create x-noderef  hRoot.
-    create x-noderef  hRow.
-    create x-noderef  hText.
-    
+  method private void GetURLUTM ():
+
+    empty temp-table tt-alldoc.
     
     assign
       inFileName = "ReceiptListOfQuery.xml"
@@ -177,7 +190,7 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     
 
     cmd = substitute ("&1 --connect-timeout &2 -X GET &3/opt/out?refresh=true >&4",search ("exe/curl.exe"), TimeOut, ConPar, inFileName).
-    os-command value (cmd).
+    os-command silent value (cmd).
        
     file-info:file-name = search (inFileName).
     if search (inFileName) = ? or file-info:file-size = 0 
@@ -186,42 +199,86 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
         StatusErr = true
         Msg = "Не удалось получить данные от UTM"
       .
-      return ?.
+      return.
     end.
     
-    hDoc:load ("file", inFileName, false).
-    hDoc:get-document-element(hRoot) .
-    jj = 0.
-    do ii = 1 to hRoot:num-children:
-      hRoot:get-child(hRow,ii).
-      case hRow:name:
-        when "url" then
-          do:
-            jj = jj + 1.
-            hRow:get-child (hText, 1) no-error.
-            create tt-alldoc.
-            tt-alldoc.url_ = hText:node-value.
-            tt-alldoc.nnOrder = jj.
-          end.
-      end case.
-    end.
+    ParseUrl(inFileName).
     
-    return ?. 
+    assign
+      inFileName = "ReceiptListInDoc.xml"
+    .
+    if search ("ReceiptListOfQuery.xml") <> ? then os-delete value (inFileName).
+    if search (inFileName) <> ? then os-delete value (inFileName).
+    
+
+    cmd = substitute ("&1 --connect-timeout &2 -X GET &3/opt/in?refresh=true >&4",search ("exe/curl.exe"), TimeOut, ConPar, inFileName).
+    os-command silent value (cmd).
+       
+    file-info:file-name = search (inFileName).
+    if search (inFileName) = ? or file-info:file-size = 0 
+    then do:
+      assign
+        StatusErr = true
+        Msg = "Не удалось получить данные от UTM"
+      .
+      return.
+    end.
+
+    ParseUrl(inFileName).
+    
+    return. 
 
   end.
-  
-  method public void DelBeforDate (input InDate as date): 
+
+
+&scop my-message 'Удаление: ' + url_
+  method public void Cleaning (inBeforDays as integer, inLogHandle as handle): 
+    
+    def var url_ as character no-undo.
+    def buffer buf_tt-alldoc for tt-alldoc.
     
     assign
       StatusErr = false
       Msg = ""
     .
+
+    GetURLUTM().
     
-    for each tt-alldoc where InDate > 01/01/01 :
+    for each buf_tt-alldoc where buf_tt-alldoc.typeDirection = 'out':
       
+      url_ = buf_tt-alldoc.url_.
+      
+      case true:
+        when lookup (buf_tt-alldoc.typeDoc, "ReplyRests,INVENTORYREGINFO,ReplyAP,ReplyPartner" ) > 0 then do:
+          DelRecord(buf_tt-alldoc.url_).
+          if valid-handle (inLogHandle)
+          then do:
+            {&display-message}.
+          end.
+        end.
+        otherwise do:
+          SaveRecord(buf_tt-alldoc.url_).
+          buf_tt-alldoc.date_ = DocDate.
+          if buf_tt-alldoc.date_ < today - inBeforDays and buf_tt-alldoc.date_ <> ?
+            then DelRecord(buf_tt-alldoc.url_).
+          if valid-handle (inLogHandle)
+          then do:
+            {&display-message}.            
+          end.
+        end.
+      end.
+      process events.
+    end.
+    
+    for each buf_tt-alldoc where buf_tt-alldoc.typeDirection = 'in':
+      url_ = buf_tt-alldoc.url_.
+      DelRecord(url_).
+      {&display-message}. 
+      process events.
     end.
     
   end.
+
 
   method public void LookRec (input inUrl as char): 
     
@@ -234,6 +291,10 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     
     SaveRecord(inUrl, output fullFileName).
     if StatusErr then return.
+    if not available (tt-alldoc)
+      then find first tt-alldoc where tt-alldoc.url_ = inUrl no-error.
+    if available (tt-alldoc) 
+      then tt-alldoc.date_ = DocDate.
     os-command silent value(fullFileName).
     
   end.
@@ -248,6 +309,10 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     def var fullFileName as char no-undo.
     SaveRecord (input inUrl, output fullFileName).
     if StatusErr then return.
+    if not available (tt-alldoc)
+      then find first tt-alldoc where tt-alldoc.url_ = inUrl no-error.
+    if available (tt-alldoc) 
+      then tt-alldoc.date_ = DocDate.
   
   end.
 
@@ -300,7 +365,7 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     hDoc:encoding = 'utf-8'.
     hDoc:load ("file", file-info:file-name, false) no-error.
     
-    prsXMLDocWB:ParseRec (hDoc, input-output table tt-alldoc, inUrl).
+    prsXMLDocWB:ParseRec (hDoc, output DocDate, inUrl).
 
     glog = true. 
     
@@ -314,10 +379,109 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     .
     
     cmd = substitute ("&1  -X DELETE &2", search ("exe/curl.exe"), inUrl).
-    message inUrl view-as alert-box.
-/*    os-command silent value (cmd).*/
+/*    message inUrl view-as alert-box.*/
+    os-command silent value (cmd).
     
   end.
 
+  method public void QueryResendDoc (input inWBREGID as char): 
+    
+    def var ContStr as char no-undo.
+    def var FullFileName as char no-undo.
+    def var ContLongCh as longchar no-undo.
+
+&scop xml-rec-wb '<?xml version="1.0" encoding="UTF-8"?>~
+<ns:Documents Version="1.0" ~
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ~
+xmlns:ns="http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" ~
+xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters"> ~
+<ns:Owner><ns:FSRAR_ID>TH-FSRAR</ns:FSRAR_ID>~
+</ns:Owner>~
+<ns:Document>~
+<ns:QueryResendDoc>~
+<qp:Parameters>~
+<qp:Parameter>~
+<qp:Name>WBREGID</qp:Name>~
+<qp:Value>TH-WBREGID</qp:Value>~
+</qp:Parameter>~
+</qp:Parameters>~
+</ns:QueryResendDoc>~
+</ns:Document>~
+</ns:Documents>'
+    
+    ContStr = {&xml-rec-wb}.
+    
+    assign
+      StatusErr = false
+      Msg = ""
+    .
+    
+    ContStr = replace (ContStr, "TH-FSRAR", FSRAR).
+    ContStr = replace (ContStr, "TH-WBREGID", inWBREGID).
+    
+    ContLongCh = ContStr.
+    
+    copy-lob
+      from  object ContLongCh
+      to  file 'QueryResendDoc.xml'
+      no-convert
+      no-error .
+    
+    FullFileName = search ('QueryResendDoc.xml').
+    
+    cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/QueryResendDoc >&4", search ("exe/curl.exe"), FullFileName, ConPar, "RespQueryResendDoc.xml").
+    os-command silent value (cmd).
+    
+    file-info:file-name = search ("RespQueryResendDoc.xml").
+    if search (inFileName) = ? or file-info:file-size = 0 or file-info:file-size = ?
+      then 
+    do:
+      assign
+        StatusErr = true
+        Msg       = substitute ("Не удалось отправить повторный запрос накладной - &1 в УТМ.", inWBREGID)
+        .
+      undo, return.
+    end.
+    
+  end.
+  
+
+  method public void ParseUrl (input inFileName as char):
+    
+    define variable hRoot as handle  no-undo.
+    define variable hDoc  as handle  no-undo.
+    define variable hRow  as handle  no-undo.
+    define variable hText as handle  no-undo.
+    define variable ii    as integer no-undo.
+    define variable jj    as integer no-undo.
+    
+    create x-document hDoc.
+    create x-noderef  hRoot.
+    create x-noderef  hRow.
+    create x-noderef  hText.
+    
+    hDoc:load ("file", inFileName, false).
+    hDoc:get-document-element(hRoot) .
+    jj = 0.
+    do ii = 1 to hRoot:num-children:
+      hRoot:get-child(hRow,ii).
+      case hRow:name:
+        when "url" then
+          do:
+            jj = jj + 1.
+            hRow:get-child (hText, 1) no-error.
+            create tt-alldoc.
+            assign
+              tt-alldoc.url_ = hText:node-value
+              tt-alldoc.nnOrder = jj.
+            assign
+              tt-alldoc.typeDoc = entry (6, hText:node-value, "/")
+              tt-alldoc.typeDirection = entry (5, hText:node-value, "/") no-error
+              .
+          end.
+      end case.
+    end.
+    
+  end.
 
 end class.

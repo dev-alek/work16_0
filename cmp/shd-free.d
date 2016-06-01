@@ -1,5 +1,6 @@
 "accor-ex" "Экспорт данных в систему АККОР" "cus/accor-ep.p" "cus/accor-ex.w" "" yes no no no "" "zzaPsFIqnAdccjks" no
 "ass-g-d" "Ввод и вывод товаров из АМ" "ref/am-igt-a.p" "" "" yes yes no no "" "anbiIcnCddblaOpY" no
+"cleaning-utm" "Очистка УТМ" "utl/cleaning-utm.p" "" "" yes yes no no "" "cfdlCczcbdkWlckb" no
 "dctxt-e" "Экспорт данных по ДК в текст.файл" "cus/dctxtesr.p" "cus/dctxtesp.w" "" yes no no no "" "Qaxjbbbkrznddduc" no
 "dctxt-i" "Импорт данных по ДК из текст.файла" "cus/dctxtisr.p" "cus/dctxtisp.w" "" yes no no no "" "tcECHokkfjkkJjqc" no
 "delrt-auto" "Удаления маршуртизации ВС, работающих без подтверждения" "bge/adelrt.p" "bge/delrtpar.w" "" yes yes no no "" "jqgpklnPdldCqlki" no
