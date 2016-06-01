@@ -86,7 +86,7 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
       output stream outstr close.
   
       cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/QueryRests >&4", search ("exe/curl.exe"), search ("QueryParameters.xml"), ConPar, inFileName).
-      os-command value (cmd).
+      os-command silent value (cmd).
          
       file-info:file-name = search (inFileName).
       if search (inFileName) <> ? and file-info:file-size > 0 
@@ -233,6 +233,17 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
       undo, return ?.
     end.
     
+    urlResp = GetURLUTM(ReplyId, "in").
+    cmd = substitute ("&1 --connect-timeout &2 -X DELETE &3", search ("exe/curl.exe"), TimeOut, urlResp).
+    os-command silent value (cmd).
+    
+    urlResp = GetURLUTM(ReplyId, "out").
+    cmd = substitute ("&1 --connect-timeout &2 -X DELETE &3", search ("exe/curl.exe"), TimeOut, urlResp).
+    os-command silent value (cmd).
+    
+    assign
+      inFileName = "Rests.xml"
+    .
     return ParseResponse(inFileName).
 
     
@@ -240,7 +251,7 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
   
   method public override character GetSubjectOfRequestUTM() :
 
-    urlResp = GetURLUTM(ReplyId).
+    urlResp = GetURLUTM(ReplyId, "out").
     
     if urlResp = "" or urlResp = ?
     then do:
@@ -255,11 +266,11 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
     .
 
     cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, urlResp, inFileName).
-    os-command value (cmd).
+    os-command silent value (cmd).
     
   end.
 
-  method protected override character GetURLUTM (inReplyId as char):
+  method protected character GetURLUTM (inReplyId as char, direction as char):
     
     define variable hRoot as handle  no-undo.
     define variable hDoc  as handle  no-undo.
@@ -280,8 +291,8 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
     if search (inFileName) <> ? then os-delete value (inFileName).
     
 
-    cmd = substitute ("&1 --connect-timeout &2 -X GET &3/opt/out?refresh=true >&4",search ("exe/curl.exe"), TimeOut, ConPar, inFileName).
-    os-command value (cmd).
+    cmd = substitute ("&1 --connect-timeout &2 -X GET &3/opt/&5?refresh=true >&4",search ("exe/curl.exe"), TimeOut, ConPar, inFileName, direction).
+    os-command silent value (cmd).
        
     file-info:file-name = search (inFileName).
     if search (inFileName) = ? or file-info:file-size = 0 
