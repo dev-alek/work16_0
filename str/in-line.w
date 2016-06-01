@@ -1458,6 +1458,7 @@ on choose of b-alc-attr in frame {&frame-name} do:
     run str/in-alc.w
       (input        parParentProc
       ,input        (if parline-mode <> {&lookup} then {&update} else {&lookup})
+      ,input buf_goods.gds-code
       ,input-output tt-fr-doc-line.alc-mark-db-num
       ,input-output tt-fr-doc-line.alc-mark-code
       ,input-output tt-fr-doc-line.alc-bottling-date

@@ -25,6 +25,7 @@ Creation date: 03/01/06
 /* Parameters Definitions ---                                           */
 define input        parameter parParentProc             as widget-handle no-undo.
 define input        parameter p-mode                    as character no-undo.
+define input        parameter p-gds-code as integer no-undo.
 define input-output parameter p-alc-mark-db-num         as integer   no-undo.
 define input-output parameter p-alc-mark-code           as integer   no-undo.
 define input-output parameter p-alc-bottling-date       as date      no-undo.
@@ -55,6 +56,10 @@ define variable vss-description as character no-undo init "Форма для редактирова
 define variable v-alc-mark-db-num as integer   no-undo .
 define variable v-alc-mark-code   as integer   no-undo .
 define variable v-recid-list      as character no-undo .
+define variable v-code-egais       as character   no-undo.
+define variable v-gds-name         as character no-undo.
+define variable v-prod-full-name   as character no-undo.
+define variable v-import-full-name as character no-undo.
 
 define buffer buf_ex-mark for ub.ex-mark.
 define buffer buf_clients for ub.clients .
@@ -74,13 +79,14 @@ define buffer buf_clients for ub.clients .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-save B-cancel B-help v-alc-mark-name ~
-b-exmark v-alc-bottling-date b-bottling-date v-alc-ref-a-path v-alc-ref-b-path~
+&Scoped-Define ENABLED-OBJECTS v-alc-mark-name b-exmark v-alc-bottling-date ~
+b-bottling-date v-alc-ref-a-path v-alc-ref-b-path code-egais group-alc-prod ~
 v-alc-quality-certif-path b-qltycert v-alc-certif-path b-certif ~
-v-alc-imp-code b-alc-imp
+v-alc-imp-code b-alc-imp B-save B-cancel B-help b-grp-alc b-code-egais 
 &Scoped-Define DISPLAYED-OBJECTS v-alc-mark-name v-alc-bottling-date ~
-v-alc-ref-a-path v-alc-ref-b-path v-alc-quality-certif-path v-alc-imp-name ~
-v-alc-certif-path v-alc-imp-type v-alc-imp-code
+v-alc-ref-a-path v-alc-ref-b-path code-egais group-alc-prod ~
+v-alc-quality-certif-path v-alc-certif-path v-alc-imp-name v-alc-imp-type ~
+v-alc-imp-code 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -121,6 +127,13 @@ DEFINE BUTTON b-certif
      LABEL "" 
      SIZE 2.88 BY 1 TOOLTIP "Выбор файла".
 
+DEFINE BUTTON b-code-egais 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 2.88 BY 1 TOOLTIP "Выбор файла".
+
 DEFINE BUTTON b-exmark 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
@@ -141,20 +154,6 @@ DEFINE BUTTON B-help
      BGCOLOR 8 .
 
 DEFINE BUTTON b-qltycert 
-     IMAGE-UP FILE "btn-down-arrow":U
-     IMAGE-DOWN FILE "btn-down-arrow":U
-     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "" 
-     SIZE 2.88 BY 1 TOOLTIP "Выбор файла".
-/*                                              */
-/*DEFINE BUTTON b-refAB                         */
-/*     IMAGE-UP FILE "btn-down-arrow":U         */
-/*     IMAGE-DOWN FILE "btn-down-arrow":U       */
-/*     IMAGE-INSENSITIVE FILE "btn-down-arrow":U*/
-/*     LABEL ""                                 */
-/*     SIZE 2.88 BY 1 TOOLTIP "Выбор файла".    */
-
-DEFINE BUTTON b-refB 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
@@ -243,7 +242,8 @@ DEFINE FRAME Dialog-Frame
      B-cancel AT ROW 1 COL 11
      B-help AT ROW 1 COL 70.5
      b-grp-alc AT ROW 9.5 COL 82 WIDGET-ID 24
-     SPACE(3.49) SKIP(4.53)
+     b-code-egais AT ROW 8.25 COL 82 WIDGET-ID 26
+     SPACE(2.99) SKIP(6.87)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Атрибуты алкогольной продукции"
@@ -342,6 +342,47 @@ DO:
   apply "entry" to v-alc-certif-path in frame {&frame-name}.
 END.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-code-egais
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-code-egais Dialog-Frame
+ON CHOOSE OF b-code-egais IN FRAME Dialog-Frame
+    DO:
+        define variable v-rid-list as character no-undo.
+        define variable p-OK       as logical   no-undo.
+        define variable gds-code   as integer   no-undo.
+        
+        if p-mode = {&lookup} then 
+        do: 
+            run bge/egais-goods-mark.w ( 
+                input parparentproc, 
+                input {&select}, 
+                input-output v-code-egais, 
+                input-output p-gds-code, 
+                output v-gds-name, 
+                output v-prod-full-name, 
+                output v-import-full-name )  . 
+        end.
+        else 
+        do: 
+            run bge/egais-goods-mark.w ( 
+                input parparentproc, 
+                input {&lookup}, 
+                input-output v-code-egais, 
+                input-output p-gds-code, 
+                output v-gds-name, 
+                output v-prod-full-name, 
+                output v-import-full-name )  . 
+            if v-code-egais <> "" then 
+            do: 
+                
+                code-egais:screen-value = v-code-egais.
+            end.
+   
+        END.
+    end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -689,6 +730,8 @@ end.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+enable  b-code-egais  WITH FRAME Dialog-Frame.
+  run MyEnable.
 
   run MyEnable.
 /*  hide b-refAB in frame {&FRAME-NAME}.*/
@@ -737,7 +780,7 @@ PROCEDURE enable_UI :
   ENABLE v-alc-mark-name b-exmark v-alc-bottling-date b-bottling-date 
          v-alc-ref-a-path v-alc-ref-b-path code-egais group-alc-prod 
          v-alc-quality-certif-path b-qltycert v-alc-certif-path b-certif 
-         v-alc-imp-code b-alc-imp B-save B-cancel B-help b-grp-alc 
+         v-alc-imp-code b-alc-imp B-save B-cancel B-help b-grp-alc b-code-egais 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
