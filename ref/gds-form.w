@@ -61,6 +61,7 @@ define variable vss-description as character no-undo init "Карточка товара".
 
 define temp-table temp-goods no-undo like ub.goods
 field alc-prod as logical
+field alc-mark as logical
 field alc-choose-prod as integer.
 define variable v-next-prev as character no-undo .
 define variable v-param-type as character no-undo .
@@ -147,7 +148,7 @@ define variable v-add-prop-par             as integer no-undo .
 define variable v-attr-gbl-par            as integer no-undo .
 DEFINE VARIABLE v-gds-attr-type AS CHARACTER NO-UNDO .      
 DEFINE VARIABLE v-gds-attr-value-old AS character NO-UNDO init "no".
-
+DEFINE VARIABLE v-gds-attr-mark-value-old AS character NO-UNDO init "no".
 
 /* переменные для импорта */
 define variable f-name as char no-undo.
@@ -1316,6 +1317,10 @@ if can-do( {&update_add-def}, mode ) then  do:    /* Вых */
   saved-name2 = saved-name.
       if temp-goods.alc-prod = yes then 
 do:
+  if temp-goods.alc-choose-prod = 0 then do:
+        message "Введите вид алког. продукции в Доп. инфо" VIEW-AS ALERT-BOX .
+        RETURN NO-APPLY. 
+  end.
   if (input frame {&frame-name} ub.goods.ms-base = 0) then 
   do:
     message "Введите объем штуки в карточке товара" VIEW-AS ALERT-BOX .
@@ -2796,7 +2801,24 @@ if mode = {&add-def} then do:
                                     ,return-value).
         undo _main, return error v-err-mess.
       END.
-
+      if temp-goods.alc-mark = yes then do:
+      run gds-attr-write IN THIS-PROCEDURE(
+        input ub.goods.gds-code
+        ,INPUT {&attr-mark}
+        ,INPUT temp-goods.alc-mark ) NO-ERROR.
+      
+      IF ERROR-STATUS:ERROR THEN 
+      DO:
+        assign
+          v-err-mess = substitute("Ошибка при сохранении атрибута товара &1 &2 :&3&4 &5"
+                                    , ub.goods.gds-code
+                                    , {&attr-mark}
+                                    , {&new-line}
+                                    ,error-status:get-message(1)
+                                    ,return-value).
+        undo _main, return error v-err-mess.
+      END.
+      end.  
         find first ub.alc-type-gds 
         where ub.alc-type-gds.gds-code = ub.goods.gds-code
         and ub.alc-type-gds.create-user-db-num = 0 EXCLUSIVE-LOCK no-error.
@@ -2903,6 +2925,46 @@ find first goods share-lock where recid(goods) = gds-rec .
   end. /* temp-goods.alc-prod <> logical (v-gds-attr-value-old) */
   if temp-goods.alc-prod = yes then 
     do:
+      if temp-goods.alc-mark <> logical (v-gds-attr-mark-value-old) then do:
+       
+        run gds-attr-write IN THIS-PROCEDURE(
+        input ub.goods.gds-code
+        ,INPUT {&attr-mark}
+        ,INPUT temp-goods.alc-mark ) NO-ERROR.
+      
+      IF ERROR-STATUS:ERROR THEN 
+      DO:
+        assign
+          v-err-mess = substitute("Ошибка при сохранении атрибута товара &1 &2 :&3&4 &5"
+                                    , ub.goods.gds-code
+                                    , {&attr-mark}
+                                    , {&new-line}
+                                    ,error-status:get-message(1)
+                                    ,return-value).
+
+      END.
+
+/*      else do:                                                                        */
+/*        RUN gds-attr-delete IN THIS-PROCEDURE (                                       */
+/*        input ub.goods.gds-code                                                       */
+/*        ,INPUT {&attr-mark}                                                           */
+/*        ,output v-deleted ) NO-ERROR.                                                 */
+/*      IF NOT v-deleted                                                                */
+/*        or error-status:error                                                         */
+/*        THEN                                                                          */
+/*      DO:                                                                             */
+/*        assign                                                                        */
+/*          v-err-mess = substitute("Ошибка при удалении атрибута товара &1 &2 :&3&4 &5"*/
+/*                                  , ub.goods.gds-code                                 */
+/*                                  , {&attr-mark}                                      */
+/*                                  , {&new-line}                                       */
+/*                                  ,error-status:get-message(1)                        */
+/*                                  ,return-value                                       */
+/*                                  ).                                                  */
+/*                                                                                      */
+/*      END. /*tt0-goods-attr.attr-code*/                                               */
+/*      end.                                                                            */
+      end.
         find first ub.alc-type-gds 
         where ub.alc-type-gds.gds-code = ub.goods.gds-code
         and ub.alc-type-gds.create-user-db-num = 0 EXCLUSIVE-LOCK no-error.
@@ -3879,12 +3941,19 @@ end CASE .
     ).
     
      if v-gds-attr-value-old = "yes" then do:
+     RUN gds-attr-value (
+        INPUT temp-goods.gds-code,
+        INPUT {&attr-mark},
+        OUTPUT v-gds-attr-mark-value-old,
+        OUTPUT v-gds-attr-type
+        ).
      find first ub.alc-type-gds no-lock
      where ub.alc-type-gds.gds-code = temp-goods.gds-code and
      ub.alc-type-gds.create-user-db-num = 0 no-error. 
      if not AVAILABLE ub.alc-type-gds then do:
      assign
         temp-goods.alc-prod = no
+        temp-goods.alc-mark = no 
         .  
      end.
      else   
@@ -3892,6 +3961,7 @@ end CASE .
         temp-goods.alc-choose-prod = ub.alc-type-gds.alc-type-inner-code
         temp-goods.alc-prod = yes
         .
+     if v-gds-attr-mark-value-old = "yes" then temp-goods.alc-mark = yes .
      end. /*v-gds-attr-value-old = yes*/   
 
 END PROCEDURE.
@@ -4398,6 +4468,7 @@ PROCEDURE proc-b-add-inf:
                         , input-output temp-goods.cond-keep-code
                         , input-output temp-goods.proof
 						, INPUT-OUTPUT temp-goods.alc-prod
+						, INPUT-OUTPUT temp-goods.alc-mark
                       	, INPUT-OUTPUT temp-goods.alc-choose-prod
                         ) .
         run get-fields in this-procedure .
@@ -4940,9 +5011,6 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     when {&attr-gds-ref_tnvedimp} then do:
       tnvedimp = thbjattr_thbj-attr.property-value-logical.
     end.
-    when {&attr-gds-ref_unq-artc} then do:
-      par-unq-artc = thbjattr_thbj-attr.property-value-logical.
-    end.
   end case.
 end.
 run adm/shattri.p (
@@ -5157,7 +5225,42 @@ if lookup (mode, {&update_add-def}) > 0 then do:
   }
   if NOT g#log then return error.
 
-  run chkgrp in this-procedure (buffer ub.gds-grp) no-error .
+   define variable v-value      as character no-undo .
+   define variable v-type       as character no-undo .
+   define buffer buf-grp for ub.gds-grp.
+   define variable v-upper like  ub.gds-grp.node-code.
+   find first buf-grp where buf-grp.node-code = ub.gds-grp.node-code no-lock no-error.
+      v-value = ''.  
+      run ggoattr-value(
+                input buf-grp.node-code,
+                input 0,
+                input "",
+                input 0,
+                input {&ggoattr-alchol-grp},
+                output v-value,
+                output v-type
+              ) no-error.
+        if v-value = '' then find first buf-grp where buf-grp.node-code = v-upper no-lock no-error.    
+        else temp-goods.alc-prod = yes .
+        if v-value = "yes" then do:
+     define variable v-value-mark as character no-undo .
+      find first buf-grp where buf-grp.node-code = ub.gds-grp.node-code no-lock no-error.
+      if available buf-grp then v-upper = buf-grp.upper-code.
+      else message "Выберите группу товаров"
+           view-as alert-box.
+      run ggoattr-value(
+                input buf-grp.node-code,
+                input 0,
+                input "",
+                input 0,
+                input {&ggoattr-mark-grp},
+                output v-value-mark,
+                output v-type
+              ) no-error.
+        
+        if v-value-mark = "no" then temp-goods.alc-mark = no . else temp-goods.alc-mark = yes . 
+        end.
+  run chkgrp in this-procedure (buffer gds-grp) no-error .
   if error-status:error then return error.
   grp-full = "".
   RUN grplib-get-full-name in this-procedure (input ub.gds-grp.node-code, output grp-full).
