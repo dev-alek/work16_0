@@ -37,7 +37,8 @@ define output parameter p-netto-price as decimal no-undo .
 define variable v-d-value as decimal no-undo .
 define variable v-type as character no-undo .
 define variable v-value-type as integer no-undo .
-define variable v-time-rule-num as integer no-undo .
+/*define variable v-time-rule-num as integer no-undo .*/
+define variable v-discnt-type as integer no-undo .
 define variable v-rule-num as integer no-undo .
 define variable v-disc-price-sale as decimal no-undo .
 define variable v-pdf-id as integer no-undo .
@@ -46,7 +47,6 @@ define variable v-pdf-db-num as integer no-undo .
 define buffer buf_dis-gds-rule for ub.dis-gds-rule.
 define buffer buf_Dis-rule for ub.dis-rule.
 define buffer term_dis-rule for ub.dis-rule.
-
 main-block:
 do
 on error  undo main-block, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message (1))
@@ -128,17 +128,20 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-include-in
     assign
     v-value-type = term_Dis-rule.value-type
     v-d-value = term_dis-rule.discnt-value
-    v-time-rule-num = term_dis-rule.time-rule-num
+/*    v-time-rule-num = term_dis-rule.time-rule-num*/
+    v-discnt-type = term_dis-rule.discnt-type
     .
   end.
   else do:
     assign
     v-value-type = buf_Dis-rule.value-type
     v-d-value = buf_dis-rule.discnt-value
-    v-time-rule-num = buf_dis-rule.time-rule-num
+/*    v-time-rule-num = buf_dis-rule.time-rule-num*/
+    v-discnt-type = buf_Dis-rule.discnt-type
     .
   end.
-  if v-time-rule-num > 0 then do:
+/*  if v-time-rule-num > 0 then do:*/
+    if v-discnt-type <> {&bef-discnt-t-categ} then do:
      undo main-block, return error substitute("Нельзя найти категорийную скидку - правило категорийной скидки &1 для товара &2 на &3&4 привязано к расписанию"
                                   , buf_dis-gds-rule.rule-num
                                   , p-gds-code
