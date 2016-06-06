@@ -4648,7 +4648,7 @@ run fltfield-add in this-procedure('d-card', 'N дис.карты', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('z-number', 'N Z-отчета', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-run fltfield-add in this-procedure('doc-num', 'N заказа', '',
+run fltfield-add in this-procedure('doc-num', 'N док-та', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('doc-num2', 'N заказа', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
