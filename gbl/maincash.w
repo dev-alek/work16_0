@@ -1779,7 +1779,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       QUIT.
    END.
 
-
    run set-cd-base-code in this-procedure (INPUT v-base-code, OUTPUT v-message, OUTPUT v-ok) .
 
 

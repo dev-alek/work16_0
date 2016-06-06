@@ -46,6 +46,7 @@ define variable glog                    as logical      no-undo .
 define variable v-cur-date-error-code   as integer      no-undo.
 
 define buffer buf_shift-obj for ub.shift-obj .
+define buffer buf_rvs-doc       for ub.rvs-doc.
 
 { gbl/getcntxt.i get }
 /* проверяем, что на объекте включены смены */
@@ -175,29 +176,32 @@ assign
   s-num  = buf_shift-obj.shift-num
   s-name = buf_shift-obj.shift-name
 .
-run check-opened-docs in this-procedure (
-      input v-cntxt-db-num
-    , input buf_shift-obj.obj-type
-    , input buf_shift-obj.obj-code
-    , input buf_shift-obj.shift-date
-    , input buf_shift-obj.shift-num
-    , output v-have-docs
-    , output v-doc-type
-    , output v-doc-code
-    , output v-comment
-).
-if v-have-docs = yes
-then do:
-    message
-        "Нельзя отменить смену. На объекте есть открытые документы."
-        skip (1)
-        skip "Объект:" p-curr-obj-type p-curr-obj-code
-        skip "Тип документов:   " v-doc-type
-        skip "Номера документов:" v-doc-code
-        skip v-comment
-    view-as alert-box error
-    title "Отмена текущей смены".
-    return.
+If not is-closed then do:
+    run check-opened-docs in this-procedure (
+          input v-cntxt-db-num
+        , input buf_shift-obj.obj-type
+        , input buf_shift-obj.obj-code
+        , input buf_shift-obj.shift-date
+        , input buf_shift-obj.shift-num
+        , output v-have-docs
+        , output v-doc-type
+        , output v-doc-code
+        , output v-comment
+    ).
+    if v-have-docs = yes
+    then do:
+        message
+            "Нельзя отменить смену. На объекте есть  документы."
+            skip (1)
+            skip "Объект:" p-curr-obj-type p-curr-obj-code
+            skip "Тип документов:   " v-doc-type
+            skip "Номера документов:" v-doc-code
+            skip v-comment
+            skip 'Смена ' buf_shift-obj.shift-num 'от' buf_shift-obj.shift-date
+        view-as alert-box error
+        title "Отмена текущей смены".
+        return.
+end.
 end.
 
 glog = no.
@@ -214,7 +218,27 @@ if is-closed then do:
   /* отменяем закрытие смены */
   undo-closed:
   do transaction on error undo undo-closed, return on stop undo undo-closed, return:
-    buf_shift-obj.status_ = {&sht-current}.
+    
+    find first buf_rvs-doc exclusive-lock
+         where buf_rvs-doc.obj-type   = buf_shift-obj.obj-type
+           and buf_rvs-doc.obj-code   = buf_shift-obj.obj-code
+           and buf_rvs-doc.shift-date = buf_shift-obj.shift-date
+           and buf_rvs-doc.shift-num  = buf_shift-obj.shift-num
+           and buf_rvs-doc.status_    = {&fact}
+           and buf_rvs-doc.rvs-type   = {&rvs-shift}
+    no-error.
+    if available buf_rvs-doc then do:
+        assign
+        buf_rvs-doc.rvs-type   = {&rvs-control}
+        buf_rvs-doc.is-full = yes
+        .  
+        release buf_rvs-doc.
+    end.  
+    else if locked(buf_rvs-doc) then do:
+        message "Сменная сверка заблокирована!" view-as alert-box.
+        return.
+    end.  
+    buf_shift-obj.status_ = {&sht-current}.   
   end.
 end.
 else do:

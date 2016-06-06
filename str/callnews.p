@@ -190,7 +190,6 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
           v-tbl-name = p-tbl-name
           v-tbl-handle = p-tbl-handle
           .
-          leave.
         end.
         if p-tbl-handle::resource-type = {&lob-res-gate} then do:
          if g#news then do:
@@ -371,12 +370,12 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     .
   if g#db-num = 0 then do:
     if v-is-c then do:
-      for each buf_hist-nws-option where
-            buf_hist-nws-option.db-num > 0
-        and buf_hist-nws-option.table-name = v-tbl-name-prim
-        and buf_hist-nws-option.get-hist-from-nws >= 0
-        and buf_hist-nws-option.charkey_one = '':U
-        and buf_hist-nws-option.key#_one = 0 no-lock
+      for each buf_hist-nws-option no-lock
+        where buf_hist-nws-option.db-num > 0
+          and buf_hist-nws-option.table-name = v-tbl-name-prim
+          and buf_hist-nws-option.get-hist-from-nws >= 0
+          and buf_hist-nws-option.charkey_one = '':U
+          and buf_hist-nws-option.key#_one = 0
       on error  undo,  return  error :
         assign list-remote-db-wsd = list-remote-db-wsd + {&delim-nws} + string(buf_hist-nws-option.db-num).
         if buf_hist-nws-option.db-num <> g#news-source-db then

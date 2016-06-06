@@ -264,7 +264,7 @@ if Nx = 2 Then DO:
                 Tot-2-5 = 0 .
         End.
 if Nx = 3 Then DO:
-     IF  NOT (NOT Show-Negativ  AND (gds-zap-qnty = 0 and gds-zap-stoim-base = 0)) then do:
+     IF  ( Show-Negativ = no  AND ( Tot-3-1  = 0 and  Tot-3-2 = 0)) then next.
              DISPLAY stream  OutStream {&all-sym12}
                            "Итого по пост-ку" @ gds-zap-artic
                            trim(Name)  @ gds-zap-gds-name
@@ -291,7 +291,7 @@ if Nx = 3 Then DO:
                   Tot-3-3 = 0
                   Tot-3-4 = 0
                   Tot-3-5 = 0 .
-          End.
+
           end.
 if Nx = 0 Then DO:
              DISPLAY stream  OutStream {&all-sym12}

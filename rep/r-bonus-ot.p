@@ -463,7 +463,7 @@ end case.
 
             
        for  first   chk-discnt where chk-discnt.line-num = buf_chk-gds.line-num and chk-discnt.doc-code = buf_chk-gds.doc-code and chk-discnt.record-type = 4 :
-                       if  chk-discnt.discnt-value-abs > 0 then  assign dcards.qnty-bonus =  dcards.qnty-bonus + chk-discnt.discnt-value-abs.
+                        assign dcards.qnty-bonus =  dcards.qnty-bonus + chk-discnt.discnt-value-abs.
                      
                      
                 end.
