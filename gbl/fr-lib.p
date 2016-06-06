@@ -1102,7 +1102,7 @@ define output parameter p-fr-last-shift-date as date         no-undo.
 define output parameter p-fr-last-shift-num  as integer      no-undo.
 define output parameter p-fr-lic             as character    no-undo.
 define output parameter p-fr-shift-open      as integer      no-undo. /* 0 - close, 1 - open, 24 - open more then 24h */
-define output parameter p-fr-serial          as integer      no-undo.
+define output parameter p-fr-serial          as char      no-undo.
 
 define variable         v-return             as integer   no-undo .
 define variable         v-datefirstdoc       as character no-undo .
@@ -1194,7 +1194,7 @@ case v-fr-type:
             assign
               p-ok = yes
               p-fr-mode = 0
-              p-fr-serial = int(v-serialNum )
+              p-fr-serial = v-serialNum
               p-fr-time  = int(substr(v-timeKKM,1,2)) * 3600 + int(substr(v-timeKKM,3,2)) * 60
              .
 

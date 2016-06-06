@@ -184,7 +184,7 @@ define buffer bufbr_tt-line for tt-line .
 { str/libthpos_bh-def.i }
 
 
-define variable v-serial-code       as integer           no-undo .
+define variable v-serial-code       as char              no-undo .
 define variable v-r-b               as character         no-undo .
 define variable v-base-code         as integer           no-undo .
 define variable v-src               as character         no-undo .
@@ -233,7 +233,7 @@ define variable v-time-close        as integer           no-undo .  /* момент за
 define variable v-cashier           as integer           no-undo .  /* кассир */
 define variable v-cashier-psn-code  as integer           no-undo .  /* код кассира */
 
-define variable v-context-serial    as integer           no-undo .  /* номер ФР, приписанного к кассе */
+define variable v-context-serial    as char           no-undo .   /* номер ФР, приписанного к кассе */
 
 /* предыдущий режим перед автоматической блокировкой */
 define variable v-cd-mode-pre       as character INIT "0"   no-undo .
@@ -791,7 +791,7 @@ on error undo, return error
    define variable v-fr-date            as date         no-undo.
    define variable v-fr-last-shift-date as date         no-undo.
    define variable v-fr-lic             as character    no-undo.
-   define variable v-fr-serial          as integer    no-undo.
+   define variable v-fr-serial          as char    no-undo.
 
    if not v-emul-mode
    then do:
@@ -3008,7 +3008,7 @@ on error undo, return error
   define variable v-fr-date            as date         no-undo.
   define variable v-fr-last-shift-date as date         no-undo.
   define variable v-fr-lic             as character    no-undo.
-  define variable v-fr-serial          as integer    no-undo.
+  define variable v-fr-serial          as char    no-undo.
 
   { gbl/fr-ctrl.i
     v-cash-drawer-open
@@ -5689,7 +5689,7 @@ define variable v-date    as date         no-undo.
 define variable v-handle    as handle       no-undo.
 define variable v-cont    as integer    no-undo.
 define variable v-data-type    as character    no-undo.
-define variable v-fr-serial          as integer    no-undo.
+define variable v-fr-serial          as char    no-undo.
 
 
    if not v-emul-mode
@@ -12148,7 +12148,7 @@ on error undo, return error
   define variable v-fr-date            as date         no-undo.
   define variable v-fr-last-shift-date as date         no-undo.
   define variable v-fr-lic             as character    no-undo.
-  define variable v-fr-serial          as integer    no-undo.
+  define variable v-fr-serial          as char    no-undo.
   define variable loc-log              as logical no-undo .
 define variable v-price-rub      as decimal      no-undo .
 define variable v-disc-rub       as decimal      no-undo .
@@ -16385,7 +16385,7 @@ end procedure. /* set-cd-prop */
 
 /*==========================================================================*/
 procedure set-context-serial :
-define input   parameter p-serial      as integer          no-undo.
+define input   parameter p-serial      as char          no-undo.
 define input   parameter p-model       as integer          no-undo.
 define output  parameter p-message     as character      no-undo .
 define output  parameter p-ok          as logical          no-undo.
@@ -16426,7 +16426,6 @@ on error undo, return error
          .
       end.
    end case.
-
 end. /* do on error */
 end procedure. /* set-context-serial */
 
