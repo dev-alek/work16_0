@@ -140,10 +140,15 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
         hDoc:get-document-element(hRoot) .
         
         GetChildren(hRoot, 1).
-            
+        
+        DELETE OBJECT hDoc no-error.
+        DELETE OBJECT hRoot no-error.    
         
         ticket2 = true .
         if num-entries(urlResp, {&delim-par}) = 2 then do :
+            create x-document hDoc.
+            create x-noderef  hRoot.
+            
             GetSubjectOfRequestUTM().
             
             if StatusErr 
@@ -164,6 +169,9 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
             hDoc:get-document-element(hRoot) .
             
             GetChildren(hRoot, 1).
+            
+            DELETE OBJECT hDoc no-error.
+            DELETE OBJECT hRoot no-error.
                 
         end.
         
@@ -176,8 +184,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
         find first tt-act-header where tt-act-header.num = inAbIndenty .
         assign tt-act-header.answer_ = v-Answer .
         
-        DELETE OBJECT hDoc no-error.
-        DELETE OBJECT hRoot no-error.
+        
         
         return buffer tt-act-header:handle.    
       end.
@@ -220,7 +227,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
         
 /*          run gbl/inidebug.p .*/
       
-          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/ActChargeOn >&4", search ("exe/curl.exe"), search ("ActChargeOn.xml"), ConPar, inFileName).
+          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActChargeOn >&4", search ("exe/curl.exe"), search ("ActChargeOn.xml"), ConPar, inFileName, TimeOut).
           os-command silent value (cmd).
     
           file-info:file-name = search (inFileName).
