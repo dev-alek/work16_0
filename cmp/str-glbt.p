@@ -567,7 +567,7 @@ attr-srv-auth-ASU
 /*Ïאנאלוענû נאבמעû ס ÅÃÀÈÑ*/
 { cmp/cr-prep.i 1 attr-egais-host egais " " egais }
 { cmp/cr-prepc.i 1 prop-list-attr-egais-host
-"egais-fsrar,egais-utm,egais-exsys"
+"egais-fsrar,egais-utm,egais-ver-xsd,egais-inn,egais-exsys"
 attr-egais-host }
 
 
