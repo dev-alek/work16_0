@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: $
+$Author: $
+$Date: $
+$Workfile: $
+$Archive: $
                                         
 Файл глобальных определений
 
@@ -6674,7 +6674,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 5a93049abef8, 523, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 5650d7c98ac2, 654, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7957,12 +7957,16 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-srv-auth-ASU_srv-auth-adr '{&bef-attr-srv-auth-ASU_srv-auth-adr}':U
 &global-define bef-attr-egais-host egais
 &global-define attr-egais-host '{&bef-attr-egais-host}':U
-&global-define bef-prop-list-attr-egais-host egais-fsrar,egais-utm,egais-exsys
+&global-define bef-prop-list-attr-egais-host egais-fsrar,egais-utm,egais-ver-xsd,egais-inn,egais-exsys
 &global-define prop-list-attr-egais-host '{&bef-prop-list-attr-egais-host}':U
 &global-define bef-attr-egais-host_egais-fsrar egais-fsrar
 &global-define attr-egais-host_egais-fsrar '{&bef-attr-egais-host_egais-fsrar}':U
 &global-define bef-attr-egais-host_egais-utm egais-utm
 &global-define attr-egais-host_egais-utm '{&bef-attr-egais-host_egais-utm}':U
+&global-define bef-attr-egais-host_egais-ver-xsd egais-ver-xsd
+&global-define attr-egais-host_egais-ver-xsd '{&bef-attr-egais-host_egais-ver-xsd}':U
+&global-define bef-attr-egais-host_egais-inn egais-inn
+&global-define attr-egais-host_egais-inn '{&bef-attr-egais-host_egais-inn}':U
 &global-define bef-attr-egais-host_egais-exsys egais-exsys
 &global-define attr-egais-host_egais-exsys '{&bef-attr-egais-host_egais-exsys}':U
 &global-define cpdoc-attr-code 'rrn-vbrr,cpdoc':U
@@ -7974,5 +7978,5 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: 8072e19e663c, 603, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 8072e19e663c, 603, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 5a93049abef8, 523, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 5650d7c98ac2, 654, rls ':U
 &endif
