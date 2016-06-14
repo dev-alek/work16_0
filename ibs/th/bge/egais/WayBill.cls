@@ -383,8 +383,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                 if available (buf_parts) then do:
                   find first buf_gds no-lock where buf_gds.artic = buf_parts.artic and buf_gds.prod-code = buf_parts.prod-code and buf_gds.prod-type = buf_parts.prod-type.
                   assign
-                    tt-wb-act-gds-EG.doc-qnty = buf_parts.qnty
-                    tt-wb-act-gds-EG.fact-qnty = buf_parts.fact-qnty
+                    tt-wb-act-gds-EG.doc-qnty = buf_parts.qnty * buf_parts.cli-base-rate
+                    tt-wb-act-gds-EG.fact-qnty = buf_parts.fact-qnty * buf_parts.cli-base-rate
                     tt-wb-act-gds-EG.gds-code = buf_gds.gds-code
                   .
                 end.
@@ -1870,7 +1870,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
         do:
           is-diff = true. 
         end.
-        xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
+        xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.cli-base-rate * buf_parts.fact-qnty)).
 
       end /*foeach*/.
       
