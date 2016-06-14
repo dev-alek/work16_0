@@ -48,7 +48,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
   
   end.
   
-  method public void ParseRec (hDoc as handle, output table tt-wb-header, output table tt-wb-act-header, output table tt-ticket, output table tt-wb-info-client):
+  method public void ParseRec (hDoc as handle, input-output table tt-wb-header, input-output table tt-wb-act-header, input-output table tt-ticket, input-output table tt-wb-info-client):
     
     define variable hRoot as handle no-undo.
     
@@ -82,7 +82,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
     
   end.
   
-  method public void ParseRec (hDoc as handle, output outDate as date, url_ as char):
+  method public void ParseRec (hDoc as handle, input-output outDate as date, url_ as char):
     
     define variable hRoot as handle no-undo.
 
@@ -129,7 +129,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
     
   end.
   
-  method public void ParseRec (hDocWB as handle, hDocRef as handle, output table tt-wb-header, output table tt-wb-gds-EG, output table tt-wb-info-client):
+  method public void ParseRec (hDocWB as handle, hDocRef as handle, input-output table tt-wb-header, input-output table tt-wb-gds-EG, input-output table tt-wb-info-client):
 
     define variable hRoot as handle no-undo.
 
@@ -164,7 +164,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
 
   end.
   
-  method public void ParseRec (hDocAct as handle, output table tt-wb-act-header, output table tt-wb-act-gds-EG):
+  method public void ParseRec (hDocAct as handle, input-output table tt-wb-act-header, input-output table tt-wb-act-gds-EG):
 
     define variable hRoot as handle no-undo.
 
@@ -188,7 +188,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
             
   end.
   
-  method public void ParseRec (hDocTicket as handle, output table tt-ticket):
+  method public void ParseRec (hDocTicket as handle, input-output table tt-ticket):
 
     define variable hRoot as handle no-undo.
 
