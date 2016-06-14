@@ -217,10 +217,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             do:
               find first buf_clob-data-ref no-lock where buf_clob-data-ref.db-num = buf_clob-bind-ref.db-num and buf_clob-data-ref.int64-id = buf_clob-bind-ref.int64-id no-error.
               createhDoc(recid (buf_clob-data-ref), "refbtemp.xml", output hDocRef).
-              prsXMLDocWB:ParseRec(hDoc, hDocRef, output table tt-wb-header, output table tt-wb-gds-EG, output table tt-wb-info-client).
+              prsXMLDocWB:ParseRec(hDoc, hDocRef, input-output table tt-wb-header, input-output table tt-wb-gds-EG, input-output table tt-wb-info-client).
             end.
             else do:
-              prsXMLDocWB:ParseRec(hDoc, ?, output table tt-wb-header, output table tt-wb-gds-EG, output table tt-wb-info-client).
+              prsXMLDocWB:ParseRec(hDoc, ?, input-output table tt-wb-header, input-output table tt-wb-gds-EG, input-output table tt-wb-info-client).
             end.
 
             find first tt-wb-header.
@@ -360,7 +360,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             find first buf_clob-data exclusive-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
             
             createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
-            prsXMLDocWB:ParseRec (hDoc, output table tt-wb-act-header, output table tt-wb-act-gds-EG).
+            prsXMLDocWB:ParseRec (hDoc, input-output table tt-wb-act-header, input-output table tt-wb-act-gds-EG).
             find first tt-wb-act-header.
             find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins tt-wb-act-header.wbregid no-error.
             if available (buf_doc-attr) then do:
@@ -383,8 +383,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                 if available (buf_parts) then do:
                   find first buf_gds no-lock where buf_gds.artic = buf_parts.artic and buf_gds.prod-code = buf_parts.prod-code and buf_gds.prod-type = buf_parts.prod-type.
                   assign
-                    tt-wb-act-gds-EG.doc-qnty = buf_parts.qnty
-                    tt-wb-act-gds-EG.fact-qnty = buf_parts.fact-qnty
+                    tt-wb-act-gds-EG.doc-qnty = buf_parts.qnty * buf_parts.cli-base-rate
+                    tt-wb-act-gds-EG.fact-qnty = buf_parts.fact-qnty * buf_parts.cli-base-rate
                     tt-wb-act-gds-EG.gds-code = buf_gds.gds-code
                   .
                 end.
@@ -486,14 +486,14 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
             createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
             prsXMLDocWB:IsToClearTable = false.
-            prsXMLDocWB:ParseRec (hDoc, output table tt-ticket).
+            prsXMLDocWB:ParseRec (hDoc, input-output table tt-ticket).
             prsXMLDocWB:IsToClearTable = true.
           end.
           for each buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb-ticket} and buf_clob-bind.uniq-key-rec begins inWbIdentity :
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
             createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
             prsXMLDocWB:IsToClearTable = false.
-            prsXMLDocWB:ParseRec (hDoc, output table tt-ticket).
+            prsXMLDocWB:ParseRec (hDoc, input-output table tt-ticket).
             prsXMLDocWB:IsToClearTable = true.
           end.
           return buffer tt-ticket:handle.
@@ -504,7 +504,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
           for each buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-ticket} and buf_clob-bind.uniq-key-rec matches "*" + inWbIdentity + "*" :
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
             createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
-            prsXMLDocWB:ParseRec (hDoc, output table tt-ticket).
+            prsXMLDocWB:ParseRec (hDoc, input-output table tt-ticket).
           end.
           find first tt-ticket where tt-ticket.regid <> "" no-error.
           if available (tt-ticket) then do:
@@ -528,7 +528,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                 tt-ticket.status_ = entry (4, buf_clob-bind.descr, {&delim-par}).
 
                 createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
-                prsXMLDocWB:ParseRec (hDoc, output table tt-wb-act-header, output table tt-wb-act-gds-EG).
+                prsXMLDocWB:ParseRec (hDoc, input-output table tt-wb-act-header, input-output table tt-wb-act-gds-EG).
 
                 find first tt-wb-act-header no-error.
                 if available (tt-wb-act-header)
@@ -705,7 +705,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
                 tt-wb-gds-EG.Identity = string (ii)
 /*                tt-wb-gds-EG.gds-name = extGdsObj:GetExtGdsValue():FullNameGds*/
                 tt-wb-gds-EG.gds-code = buf_gds.gds-code
-                tt-wb-gds-EG.qnty = buf_parts.cli-qnty
+                tt-wb-gds-EG.qnty = buf_parts.cli-base-rate * buf_parts.fact-qnty /*buf_parts.cli-qnty*/
                 tt-wb-gds-EG.price = buf_doc-line.price-rubl when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} 
                 tt-wb-gds-EG.price = ub.gds-dtl.price-rubl when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
                 tt-wb-gds-EG.refA = entry (1, buf_parts.alc-ref-ab-path, ",")
@@ -1669,12 +1669,11 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
             and ub.parts.prod-type = buf_gds.prod-type
             and ub.parts.prod-code = buf_gds.prod-code
             and ub.parts.out-code  = inTrnDoc:
-        
           jj = jj + 1.
-          THSumm = THSumm + ub.parts.cli-qnty.
-        
+          THSumm = THSumm + buf_parts.cli-base-rate * buf_parts.fact-qnty.
+
         end.
-        
+
         for each buf_tt-wb-gds-EG where buf_tt-wb-gds-EG.gds-code = buf_gds.gds-code:
           ii = ii + 1.
           EGAISSumm = EGAISSumm + buf_tt-wb-gds-EG.qnty.
@@ -1867,11 +1866,11 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
           end.
         end.
 
-        if tt-wb-gds-EG.qnty <> buf_parts.cli-qnty then 
+        if tt-wb-gds-EG.qnty <> buf_parts.cli-base-rate * buf_parts.fact-qnty then 
         do:
           is-diff = true. 
         end.
-        xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
+        xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.cli-base-rate * buf_parts.fact-qnty)).
 
       end /*foeach*/.
       
@@ -1898,7 +1897,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
     os-command silent value (cmd).
 
     createhDoc(inFileName, output hDoc).
-    prsXMLDocWB:ParseRec (hDoc, output table tt-wb-header, output table tt-wb-act-header, output table tt-ticket, output table tt-wb-info-client).
+    prsXMLDocWB:ParseRec (hDoc, input-output table tt-wb-header, input-output table tt-wb-act-header, input-output table tt-ticket, input-output table tt-wb-info-client).
     find first tt-wb-header no-error.
     find first tt-wb-act-header no-error.
     find first tt-ticket no-error.
