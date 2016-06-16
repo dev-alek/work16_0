@@ -27,7 +27,7 @@ using ibs.th.bge.egais.*.
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-mode       as character no-undo .
-define input parameter egais        as class EGAIS no-undo .
+define input parameter egais        as class ActWriteOff no-undo .
 define input parameter v-ext-sys    as integer no-undo .
 define input parameter v-fs-rar     as character no-undo .
 define input parameter bh-act-header  as handle no-undo .

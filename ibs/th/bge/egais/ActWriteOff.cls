@@ -191,9 +191,10 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
         then 
       do:
         
-/*          run gbl/inidebug.p .*/
-      
-          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/ActWriteOff >&4", search ("exe/curl.exe"), search ("ActWriteOff.xml"), ConPar, inFileName).
+          if VerXSD = "1" then
+            cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActWriteOff >&4", search ("exe/curl.exe"), search ("ActWriteOff.xml"), ConPar, inFileName, TimeOut).
+          if VerXSD = "2" then
+            cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActWriteOff_v2 >&4", search ("exe/curl.exe"), search ("ActWriteOff.xml"), ConPar, inFileName, TimeOut).
           os-command silent value (cmd).
     
           file-info:file-name = search (inFileName).

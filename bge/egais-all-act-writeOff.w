@@ -42,7 +42,7 @@ define variable bh-act-header         as handle    no-undo.
 define variable qh-act-header         as handle    no-undo.
 define variable browse-hdl-act-header as handle    no-undo.
 define variable bcol                as handle    extent 11 no-undo.
-define variable egais               as class     EGAIS no-undo.
+define variable egais               as class     ActWriteOff no-undo.
 define variable v-db-num            as integer   no-undo .
 define variable v-user-id           as character no-undo .
 define variable qh-ab-gds-EG-header as handle    no-undo.
@@ -275,8 +275,9 @@ DO:
     find first tt-act-header .
     v-file = 'ActWriteOff.xml' .
     os-delete "ActWriteOff.xml" .
-    run makeXMLegais .
-    cast (egais:EGAISImpl, ibs.th.bge.egais.ActWriteOff):inNum = tt-act-header.num .
+    if egais:VerXSD = "1" then run makeXMLegais .
+    if egais:VerXSD = "2" then run makeXMLegais_v2 .
+    egais:inNum = tt-act-header.num .
     egais:SendRequestUTM() .
     glog = egais:IsSent .
     
@@ -306,7 +307,7 @@ DO:
     message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .    
   end.
   else do :
-      cast (egais:EGAISImpl, ibs.th.bge.egais.ActWriteOff):inNum = bh-act-header:buffer-field ("num"):buffer-value .
+      egais:inNum = bh-act-header:buffer-field ("num"):buffer-value .
       egais:GetHndlTable(2, bh-act-header:buffer-field ("num"):buffer-value) .
       glog = egais:StatusErr .
       if glog then do :
@@ -403,9 +404,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       ) no-error .
   assign v-ext-sys = v-value-integer .  
   
-  egais = new EGAIS(v-db-num, v-user-id).
   
-  egais:EGAISImpl = new ActWriteOff (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+  egais = new ActWriteOff (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
 
   bh-act-header = egais:GetHndlTable(3, "").
   create query qh-act-header.
