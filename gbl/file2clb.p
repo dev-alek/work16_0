@@ -331,9 +331,9 @@ case p-mode :
                                 then  p-resource-type
                                 else buf_clob-data.file-name_)
     .
-    release buf_clob-data no-error.
+    release self_clob-bind no-error.
     if error-status:error then do:
-      undo, return error substitute("&1 &2 &3Ошибки при сохранении clob для &6&7&6&8"
+      undo, return error substitute("&1 &2 &3Ошибки при сохранении связи clob с записью-владельцем &4 &5 &6&7&6&8"
                                     ,vss-workfile
                                     ,vss-revision
                                     ,vss-description
@@ -344,9 +344,9 @@ case p-mode :
                                     , return-value ).
 
     end.
-    release self_clob-bind no-error.
+    release buf_clob-data no-error.
     if error-status:error then do:
-      undo, return error substitute("&1 &2 &3Ошибки при сохранении связи clob с записью-владельцем &4 &5 &6&7&6&8"
+      undo, return error substitute("&1 &2 &3Ошибки при сохранении clob для &6&7&6&8"
                                     ,vss-workfile
                                     ,vss-revision
                                     ,vss-description
@@ -529,9 +529,9 @@ case p-mode :
                                 then  p-resource-type
                                 else buf_clob-data.file-name_)
     .
-    release buf_clob-data no-error.
+    release self_clob-bind no-error.
     if error-status:error then do:
-      undo, return error substitute("&1 &2 &3Ошибки при сохранении clob для &6&7&6&8"
+      undo, return error substitute("&1 &2 &3Ошибки при сохранении связи clob с записью-владельцем &4 &5 &6&7&6&8"
                                     ,vss-workfile
                                     ,vss-revision
                                     ,vss-description
@@ -542,9 +542,9 @@ case p-mode :
                                     , return-value ).
 
     end.
-    release self_clob-bind no-error.
+    release buf_clob-data no-error.
     if error-status:error then do:
-      undo, return error substitute("&1 &2 &3Ошибки при сохранении связи clob с записью-владельцем &4 &5 &6&7&6&8"
+      undo, return error substitute("&1 &2 &3Ошибки при сохранении clob для &6&7&6&8"
                                     ,vss-workfile
                                     ,vss-revision
                                     ,vss-description

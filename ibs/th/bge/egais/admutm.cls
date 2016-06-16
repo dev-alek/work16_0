@@ -365,7 +365,7 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     hDoc:encoding = 'utf-8'.
     hDoc:load ("file", file-info:file-name, false) no-error.
     
-    prsXMLDocWB:ParseRec (hDoc, output DocDate, inUrl).
+    prsXMLDocWB:ParseRec (hDoc, input-output DocDate, inUrl).
 
     glog = true. 
     
@@ -444,7 +444,124 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters"> ~
     end.
     
   end.
-  
+
+  method public void ReqRepealWB (input inWBREGID as char): 
+    
+    def var ContStr as char no-undo.
+    def var FullFileName as char no-undo.
+    def var ContLongCh as longchar no-undo.
+
+&scop xml-RepealWB '<?xml version="1.0" encoding="UTF-8"?>~
+<ns:Documents Version="1.0"~
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"~
+xmlns:ns="http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01"~
+xmlns:qp="http://fsrar.ru/WEGAIS/RequestRepealWB">~
+<ns:Owner>~
+<ns:FSRAR_ID>TH-FSRAR</ns:FSRAR_ID>~
+</ns:Owner>~
+<ns:Document>~
+<ns:RequestRepealWB>~
+<qp:ClientId>TH-FSRAR</qp:ClientId>~
+<qp:RequestNumber></qp:RequestNumber>~
+<qp:RequestDate></qp:RequestDate>~
+<qp:WBRegId>TH-WBREGID</qp:WBRegId>~
+</ns:RequestRepealWB>~
+</ns:Document>~
+</ns:Documents>'
+    
+    ContStr = {&xml-RepealWB}.
+   
+    assign
+      StatusErr = false
+      Msg = ""
+    .
+    
+    ContStr = replace (ContStr, "TH-FSRAR", FSRAR).
+    ContStr = replace (ContStr, "TH-WBREGID", inWBREGID).
+    
+    ContLongCh = ContStr.
+    
+    copy-lob
+      from  object ContLongCh
+      to  file 'RequestRepealWB.xml'
+      no-convert
+      no-error .
+    
+    FullFileName = search ('RequestRepealWB.xml').
+    
+    cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/RequestRepealWB.xml >&4", search ("exe/curl.exe"), FullFileName, ConPar, "RespRequestRepealWB.xml").
+    os-command silent value (cmd).
+    
+    file-info:file-name = search ("RespRequestRepealWB.xml").
+    if search (inFileName) = ? or file-info:file-size = 0 or file-info:file-size = ?
+      then 
+    do:
+      assign
+        StatusErr = true
+        Msg       = substitute ("Не удалось отправить отмену на накладную - &1 в УТМ.", inWBREGID)
+        .
+      undo, return.
+    end.
+    
+  end.
+
+  method public void SendInfoVer (input inInfoVer as char): 
+    
+    def var ContStr as char no-undo.
+    def var FullFileName as char no-undo.
+    def var ContLongCh as longchar no-undo.
+
+&scop xml-info-ver '<?xml version="1.0" encoding="UTF-8"?>~
+<ns:Documents Version="1.0" ~
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ~
+xmlns:ns="http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" ~
+xmlns:qp="http://fsrar.ru/WEGAIS/InfoVersionTTN">~
+<ns:Owner>~
+<ns:FSRAR_ID>TH-FSRAR</ns:FSRAR_ID>~
+</ns:Owner>~
+<ns:Document>~
+<ns:InfoVersionTTN>~
+<qp:ClientId>TH-FSRAR</qp:ClientId>~
+<qp:WBTypeUsed>TH-InfoVer</qp:WBTypeUsed>~
+</ns:InfoVersionTTN>~
+</ns:Document>~
+</ns:Documents>'
+    
+    ContStr = {&xml-info-ver}.
+    
+    assign
+      StatusErr = false
+      Msg = ""
+    .
+    
+    ContStr = replace (ContStr, "TH-FSRAR", FSRAR).
+    ContStr = replace (ContStr, "TH-InfoVer", inInfoVer).
+    
+    ContLongCh = ContStr.
+    
+    copy-lob
+      from  object ContLongCh
+      to  file 'InfoVersionTTN.xml'
+      no-convert
+      no-error .
+    
+    FullFileName = search ('InfoVersionTTN.xml').
+    
+    cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/QueryResendDoc >&4", search ("exe/curl.exe"), FullFileName, ConPar, "RespInfoVersionTTN.xml").
+    os-command silent value (cmd).
+    
+    file-info:file-name = search ("RespInfoVersionTTN.xml").
+    if search (inFileName) = ? or file-info:file-size = 0 or file-info:file-size = ?
+      then 
+    do:
+      assign
+        StatusErr = true
+        Msg       = substitute ("Не удалось отправить уведомление о смене версии в УТМ на &1.", inInfoVer)
+        .
+      undo, return.
+    end.
+    
+  end.
 
   method public void ParseUrl (input inFileName as char):
     

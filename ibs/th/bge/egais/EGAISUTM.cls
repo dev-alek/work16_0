@@ -24,6 +24,14 @@ class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
   get.
   protected set.
 
+  define property VerXSD as character no-undo
+  get.
+  protected set.
+
+  define property INNObj as character no-undo
+  get.
+  protected set.
+
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -69,6 +77,39 @@ class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
     ConPar = trim (v-value-character, '/').
     ConPar = trim (ConPar, '\').
 
+    run adm/shattri.p (
+         input "get":U
+        ,input inOjType
+        ,input inObjCode
+        ,input {&attr-egais-host}
+        ,input {&attr-egais-host_egais-ver-xsd}
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-value-logical
+        ,output v-value-type
+        ,input-output table thbjattr_thbj-attr
+        ) no-error .
+
+    VerXSD = v-value-character.
+
+    run adm/shattri.p (
+         input "get":U
+        ,input inOjType
+        ,input inObjCode
+        ,input {&attr-egais-host}
+        ,input {&attr-egais-host_egais-inn}
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-value-logical
+        ,output v-value-type
+        ,input-output table thbjattr_thbj-attr
+        ) no-error .
+
+    INNObj = v-value-character.
 
   end constructor.
 

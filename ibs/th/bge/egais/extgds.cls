@@ -423,8 +423,8 @@ class ibs.th.bge.egais.ExtGds:
     
     ReturnMsg = "".
     
-    v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
-    v-impor = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
+    v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
+    v-impor = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
     
     if error-status:error
       then 
@@ -441,6 +441,8 @@ class ibs.th.bge.egais.ExtGds:
     entry (4, v-prod, chr(5)) = inExtGdsValueObj:FullNameProd.
     entry (5, v-prod, chr(5)) = inExtGdsValueObj:CountryProd.
     entry (6, v-prod, chr(5)) = inExtGdsValueObj:DescrProd.
+    entry (7, v-prod, chr(5)) = inExtGdsValueObj:CliEgaisTypeProd.
+    entry (8, v-prod, chr(5)) = inExtGdsValueObj:RegionProd.
     
     entry (1, v-impor, chr(5)) = inExtGdsValueObj:CliRegIdImpor.
     entry (2, v-impor, chr(5)) = inExtGdsValueObj:INNImpor.
@@ -448,6 +450,8 @@ class ibs.th.bge.egais.ExtGds:
     entry (4, v-impor, chr(5)) = inExtGdsValueObj:FullNameImpor.
     entry (5, v-impor, chr(5)) = inExtGdsValueObj:CountryImpor.
     entry (6, v-impor, chr(5)) = inExtGdsValueObj:DescrImpor.
+    entry (7, v-impor, chr(5)) = inExtGdsValueObj:CliEgaisTypeImpor.
+    entry (8, v-prod, chr(5)) = inExtGdsValueObj:RegionImpor.
   
     buf_ext-classif-attr.attr-value = v-prod + chr(4) + v-impor + chr(4) + inExtGdsValueObj:FullNameGds.
     release buf_ext-classif-attr.
@@ -558,7 +562,7 @@ class ibs.th.bge.egais.ExtGds:
     end.
         
     v-prod = entry (1, buf_ext-classif-attr.attr-value, chr(4)) no-error.
-    if num-entries (v-prod, chr (5)) <> 6 
+    if num-entries (v-prod, chr (5)) < 6 
       then 
     do:
       v-msg = "Некорректный атрибут egais-info v-prod - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
@@ -566,7 +570,7 @@ class ibs.th.bge.egais.ExtGds:
     end.
     
     v-impor = entry (2, buf_ext-classif-attr.attr-value, chr(4)) no-error.
-    if  num-entries (v-impor, chr (5)) <> 6 
+    if  num-entries (v-impor, chr (5)) < 6 
       then 
     do:
       v-msg = "Некорректный атрибут egais-info v-impor - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
@@ -579,6 +583,10 @@ class ibs.th.bge.egais.ExtGds:
     hndlclsExtGdsValueObj:FullNameProd = entry (4, v-prod, chr(5)).
     hndlclsExtGdsValueObj:CountryProd = entry (5, v-prod, chr(5)).
     hndlclsExtGdsValueObj:DescrProd = entry (6, v-prod, chr(5)).
+    assign
+    hndlclsExtGdsValueObj:CliEgaisTypeProd = entry (7, v-prod, chr(5)) when num-entries (v-prod, chr (5)) > 6
+    hndlclsExtGdsValueObj:RegionProd = entry (8, v-prod, chr(5)) when num-entries (v-prod, chr (5)) > 7
+    .
     
     hndlclsExtGdsValueObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
     hndlclsExtGdsValueObj:INNImpor = entry (2, v-impor, chr(5)).
@@ -586,6 +594,10 @@ class ibs.th.bge.egais.ExtGds:
     hndlclsExtGdsValueObj:FullNameImpor = entry (4, v-impor, chr(5)).
     hndlclsExtGdsValueObj:CountryImpor = entry (5, v-impor, chr(5)).
     hndlclsExtGdsValueObj:DescrImpor = entry (6, v-impor, chr(5)).
+    assign
+    hndlclsExtGdsValueObj:CliEgaisTypeImpor = entry (7, v-impor, chr(5)) when num-entries (v-impor, chr (5)) > 6
+    hndlclsExtGdsValueObj:RegionImpor = entry (8, v-impor, chr(5)) when num-entries (v-impor, chr (5)) > 7
+    .
 
     hndlclsExtGdsValueObj:FullNameGds = entry (3, buf_ext-classif-attr.attr-value, chr(4)).
     

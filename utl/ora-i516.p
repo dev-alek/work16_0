@@ -817,9 +817,9 @@ assign
           create tt2-doc-line .
           BUFFER-COPY temp_doc-line  to tt2-doc-line
             assign
-              tt2-doc-line.cli-qnty       = temp_doc-line.fact-qnty
-              tt2-doc-line.doc-qnty       = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty
-              tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty
+              tt2-doc-line.cli-qnty       = temp_doc-line.fact-qnty when not is-egais
+              tt2-doc-line.doc-qnty       = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty when not is-egais
+              tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty when not is-egais
               
               tt2-doc-line.cli-qnty       = temp_doc-line.cli-qnty when is-egais
               tt2-doc-line.doc-qnty       = temp_doc-line.doc-qnty when is-egais
@@ -833,10 +833,13 @@ assign
               tt2-doc-line.status_        = "temp"
               tt2-doc-line.ext-doc-type   = v-ext-doc-type
               tt2-doc-line.slt-pc         = 0
-              tt2-doc-line.cli-base-rate  = 1
+              tt2-doc-line.cli-base-rate  = 1 when not is-egais
+              tt2-doc-line.cli-base-rate  = buf_goods.cli-base-rate when is-egais
+              
               tt2-doc-line.line-num       = next-value (s-line-num, {&db-name_schema})
               tt2-doc-line.prt-root       = buf_goods.prt-root
-              tt2-doc-line.unit-cli       = buf_goods.unit-base
+              tt2-doc-line.unit-cli       = buf_goods.unit-base when not is-egais
+              tt2-doc-line.unit-cli       = buf_goods.unit-cli when is-egais 
               tt2-doc-line.doc-density    = 1 / tt2-doc-line.cli-base-rate
               tt2-doc-line.fact-density   = 1 / tt2-doc-line.cli-base-rate
               tt2-doc-line.obj-code       = tt-trn-doc.obj-code
@@ -844,18 +847,31 @@ assign
               .
         end.
         else do:
-          assign
-            tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + temp_doc-line.fact-qnty
-            tt2-doc-line.price-cli      = (tt2-doc-line.price-cli * tt2-doc-line.doc-qnty + temp_doc-line.price-cli * if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty) 
-                                        / (tt2-doc-line.doc-qnty + if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty)
-            tt2-doc-line.doc-qnty       = tt2-doc-line.doc-qnty + if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty
-            tt2-doc-line.fact-qnty      = tt2-doc-line.fact-qnty + temp_doc-line.fact-qnty
-            tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
-            tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
-/*            tt2-doc-line.price-cli      = temp_doc-line.price-cli
-            tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
-            tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale*/
-            .
+          if not is-egais
+          then do:
+            assign
+              tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + temp_doc-line.fact-qnty
+              tt2-doc-line.price-cli      = (tt2-doc-line.price-cli * tt2-doc-line.doc-qnty + temp_doc-line.price-cli * if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty) 
+                                          / (tt2-doc-line.doc-qnty + if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty)
+              tt2-doc-line.doc-qnty       = tt2-doc-line.doc-qnty + if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty
+              tt2-doc-line.fact-qnty      = tt2-doc-line.fact-qnty + temp_doc-line.fact-qnty
+              tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
+              tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
+  /*            tt2-doc-line.price-cli      = temp_doc-line.price-cli
+              tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
+              tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale*/
+              .
+          end.
+          else do:
+            assign
+              tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + temp_doc-line.cli-qnty
+              tt2-doc-line.price-cli      = (tt2-doc-line.price-cli * tt2-doc-line.cli-qnty + temp_doc-line.price-cli * temp_doc-line.cli-qnty) 
+                                          / (tt2-doc-line.cli-qnty + temp_doc-line.cli-qnty)
+              tt2-doc-line.doc-qnty       = tt2-doc-line.doc-qnty +  temp_doc-line.doc-qnty
+              tt2-doc-line.fact-qnty      = tt2-doc-line.fact-qnty + temp_doc-line.fact-qnty
+              tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
+              tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale.
+          end.
       end.
         
         if is-egais or is-tsd
@@ -940,11 +956,13 @@ assign
           tt-parts.supp-code      = new_trn-doc.cli-code
           tt-parts.rsrv-free      = ?
           tt-parts.doc-type       = new_trn-doc.doc-type
-          tt-parts.cli-qnty       = tt2-doc-line.fact-qnty
+          tt-parts.cli-qnty       = tt2-doc-line.fact-qnty when not is-egais
+          tt-parts.cli-qnty       = tt2-doc-line.cli-qnty when is-egais
           tt-parts.pl-code        = ?
           tt-parts.VAT-type       = temp_trn-doc.vat-type
           tt-parts.exch-code      = 0
-          tt-parts.cli-base-rate  = 1
+          tt-parts.cli-base-rate  = 1 when not is-egais
+          tt-parts.cli-base-rate  = buf_goods.cli-base-rate when is-egais
           tt-parts.SLT-pc         = 0
           tt-parts.host-code      = new_trn-doc.host-code
           tt-parts.is-supp        = yes
@@ -1206,7 +1224,7 @@ end.
   
                 ub.doc-line.fact-qnty = temp_doc-line.fact-qnty.
                 ub.doc-line.doc-qnty = temp_doc-line.doc-qnty.
-                ub.doc-line.cli-qnty = temp_doc-line.fact-qnty.
+                ub.doc-line.cli-qnty = temp_doc-line.cli-qnty.
                 
               end.
               
@@ -1494,7 +1512,7 @@ run str/trn-stat.p (
       
       ub.doc-line.fact-qnty = temp_doc-line.fact-qnty.
       ub.doc-line.doc-qnty = temp_doc-line.doc-qnty.
-      ub.doc-line.cli-qnty = temp_doc-line.fact-qnty.
+      ub.doc-line.cli-qnty = temp_doc-line.cli-qnty.
       
     end.
     

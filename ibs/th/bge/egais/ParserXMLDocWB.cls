@@ -344,9 +344,12 @@ class ibs.th.bge.egais.ParserXMLDocWB:
                 assign 
                   tt-wb-header.wb-type      = {&TDEDT_Pri_Vnesh}
                   tt-wb-header.wb-type-full = "приход вн.".
-/*                if available (tt-wb-hndls)               */
-/*                  then tt-wb-hndls.wb-type = "приход вн."*/
-/*                    .                                    */
+              end.
+            when 'WBReturnFromMe' then 
+              do:
+                assign 
+                  tt-wb-header.wb-type      = {&TDEDT_Vozvrat_Vnesh}
+                  tt-wb-header.wb-type-full = "возврат".
               end.
             otherwise 
             do:
@@ -355,7 +358,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
             end.
           end case.
         end.
-        if hNoderef:name = "wb:UnitType"     then assign tt-wb-header.unit-type = hText:node-value .
+        if hNoderef:name = "wb:UnitType"     then assign tt-wb-header.UnitType = hText:node-value .
         
         if hNoderef:name = "wa:ACTNUMBER" then assign tt-wb-act-header.num = hText:node-value.
         if hNoderef:name = "wa:ActDate" then assign tt-wb-act-header.act-date = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
@@ -430,6 +433,8 @@ class ibs.th.bge.egais.ParserXMLDocWB:
         if hNoderef:name = "wb:Price"          then assign tt-wb-gds-EG.price = decimal(hText:node-value) .
         if hNoderef:name = "wb:Quantity"       then assign tt-wb-gds-EG.qnty = decimal(hText:node-value) .
         
+        if hNoderef:name = "pref:UnitType"       then assign tt-wb-gds-EG.UnitType = hText:node-value .
+        
       end.
       
       if available (tt-wb-gds-EG) and lookup (hParent:name, "pref:Importer") > 0 then do:
@@ -465,7 +470,14 @@ class ibs.th.bge.egais.ParserXMLDocWB:
         if hNoderef:name = "oref:description" then assign entry (6, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
       end.
 
-      if available (tt-wb-gds-EG) and lookup (hParent:name, "pref:Producer") > 0 then do:
+      if available (tt-wb-gds-EG) and
+        (lookup (hParent:name, "pref:Producer") > 0 
+          or lookup (hParent:name, "oref:UL") > 0 
+          or lookup (hParent:name, "pref:FL") > 0 
+          or lookup (hParent:name, "pref:FO") > 0 
+          or lookup (hParent:name, "pref:TS") > 0
+        ) 
+        then do:
         if hNoderef:name = "oref:ClientRegId" then assign tt-wb-gds-EG.regID-Producer = hText:node-value .
         tt-wb-gds-EG.producer-th = "".
         find first ub.ext-classif no-lock 
@@ -497,11 +509,32 @@ class ibs.th.bge.egais.ParserXMLDocWB:
         if hNoderef:name = "oref:description" then assign entry (6, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
       end.
       
+      
       if lookup (hParent:name, "wb:InformA") > 0
         then 
       do:
         if hNoderef:name = "pref:RegId" then assign tt-wb-gds-EG.refA = hText:node-value.
       end.
+      if lookup (hParent:name, "wb:InformF1") > 0
+        then 
+      do:
+        if hNoderef:name = "pref:RegId" then assign tt-wb-gds-EG.refA = hText:node-value.
+      end.
+      
+      
+      if lookup (hParent:name, "pref:InformBItem") > 0
+        then 
+      do:
+        if hNoderef:name = "pref:BRegId" then assign tt-wb-gds-EG.beforRefB = hText:node-value.
+      end.
+      if lookup (hParent:name, "pref:InformF2Item") > 0
+        then 
+      do:
+        if hNoderef:name = "pref:F2RegId" then assign tt-wb-gds-EG.beforRefB = hText:node-value.
+      end.
+      
+      
+      
       if lookup (hParent:name, "wbr:Header") > 0
         then 
       do:
@@ -517,7 +550,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
         do:
           find first tt-wb-gds-EG where tt-wb-gds-EG.Identity = hText:node-value no-error.
         end.
-        if available (tt-wb-gds-EG) and hNoderef:name = "wbr:InformBRegId" then assign tt-wb-gds-EG.refB = hText:node-value.
+        if available (tt-wb-gds-EG) and (hNoderef:name = "wbr:InformBRegId" or hNoderef:name = "wbr:InformF2RegId") then assign tt-wb-gds-EG.refB = hText:node-value.
       end.
       if available (tt-wb-gds-EG) then do:
         if tt-wb-gds-EG.regID-Importer = ""

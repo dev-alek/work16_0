@@ -106,22 +106,42 @@ do trans:
       temp_doc-line.line-num-str = tt-wb-gds-EG.Identity
     .
 
-
-    if tt-wb-header.unit-type = 'Packed' 
-    then
-      assign
-        temp_doc-line.fact-qnty  = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
-        temp_doc-line.doc-qnty   = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
-        temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
-        temp_doc-line.price-rubl = tt-wb-gds-EG.price
-      .
-    else
-      assign
-        temp_doc-line.fact-qnty  = tt-wb-gds-EG.qnty
-        temp_doc-line.doc-qnty   = tt-wb-gds-EG.qnty
-        temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty / buf_goods.cli-base-rate
-        temp_doc-line.price-rubl = tt-wb-gds-EG.price * buf_goods.cli-base-rate
-      .    
+    if tt-wb-header.UnitType <> ''
+    then do:
+      if tt-wb-header.UnitType = 'UnPacked' 
+      then
+        assign
+          temp_doc-line.fact-qnty  = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
+          temp_doc-line.doc-qnty   = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
+          temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
+          temp_doc-line.price-rubl = tt-wb-gds-EG.price
+        .
+      else
+        assign
+          temp_doc-line.fact-qnty  = tt-wb-gds-EG.qnty
+          temp_doc-line.doc-qnty   = tt-wb-gds-EG.qnty
+          temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
+          temp_doc-line.price-rubl = tt-wb-gds-EG.price
+        .    
+    end.
+    else do:
+      if tt-wb-gds-EG.UnitType = 'UnPacked' 
+      then
+        assign
+          temp_doc-line.fact-qnty  = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
+          temp_doc-line.doc-qnty   = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
+          temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
+          temp_doc-line.price-rubl = tt-wb-gds-EG.price
+        .
+      else
+        assign
+          temp_doc-line.fact-qnty  = tt-wb-gds-EG.qnty
+          temp_doc-line.doc-qnty   = tt-wb-gds-EG.qnty
+          temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
+          temp_doc-line.price-rubl = tt-wb-gds-EG.price
+        .    
+    end.
+    
     
   end.
   

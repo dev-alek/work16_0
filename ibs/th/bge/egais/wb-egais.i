@@ -47,7 +47,6 @@
     field regID-Cons   as character format "X(21)" label "Получатель EGAIS"
     field client       as character label "Контр. TH"
     field clientCons   as character label "Получ. TH" 
-    field unit-type    as character label "Тип единицы измерения"
     field cli-type     as character label "Тип клиента TH"
     field cli-code     as integer label "Код клиента TH"
     field obj-type     as character label "Тип клиента TH"
@@ -60,8 +59,8 @@
     field uniq-key-rec as character
     field INNShip      as character label "ИНН контрагента"
     field KPPShip      as character label "КПП контрагента"
-    field UnitType     as character label "UnitType"
     field TransIdList  as character
+    field UnitType     as character label "Тип единицы измерения"
     index pi
     Identity 
     .
@@ -80,6 +79,7 @@
     field price          like ub.doc-line.price-rubl label "Цена"
     field refA           as character label "Справка A" format "X(25)"
     field refB           as character label "Справка B" format "X(25)"
+    field beforRefB      as character label "Пред. справка B" format "X(25)"
     field Identity       as character label "ID EGAIS"
     field regID-Importer as character format "X(21)" label "Импортер"
     field importer-th    as character label "Импортер TH"
@@ -89,6 +89,7 @@
     field prod-list      as character format "x(1)"
     field importer-list  as character format "x(1)"
     field color-sts      as integer   format "99" init ?
+    field UnitType       as character format "x(1)"
     index pi nn ascending    
     .
 

@@ -75,7 +75,7 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help RECT-1 
+&Scoped-Define ENABLED-OBJECTS B-exit RECT-1 B-quit B-Help 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -125,14 +125,24 @@ DEFINE VARIABLE v-egais-fsrar AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 64.88 BY 1 NO-UNDO.
 
+DEFINE VARIABLE v-egais-inn AS CHARACTER FORMAT "X(256)":U 
+     LABEL "ИНН объекта" 
+     VIEW-AS FILL-IN 
+     SIZE 64.88 BY 1 NO-UNDO.
+
 DEFINE VARIABLE v-egais-utm AS CHARACTER FORMAT "X(256)":U 
      LABEL "Адрес УТМ" 
      VIEW-AS FILL-IN 
      SIZE 64.88 BY 1 TOOLTIP "255.255.255.255:65536" NO-UNDO.
 
+DEFINE VARIABLE v-egais-ver-xsd AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Версия xsd схем" 
+     VIEW-AS FILL-IN 
+     SIZE 64.88 BY 1 NO-UNDO.
+
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 85 BY 4.5.
+     SIZE 85 BY 7.5.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -146,8 +156,12 @@ DEFINE FRAME Dialog-Frame
      v-egais-exsys AT ROW 4.75 COL 19.63 COLON-ALIGNED WIDGET-ID 22
      B-egais-exsys AT ROW 4.75 COL 30.75 WIDGET-ID 24
      f-egais-exsys AT ROW 4.75 COL 33 COLON-ALIGNED NO-LABEL WIDGET-ID 128
+     v-egais-ver-xsd AT ROW 6.25 COL 17.63 COLON-ALIGNED WIDGET-ID 134
+     v-egais-inn AT ROW 7.5 COL 17.63 COLON-ALIGNED WIDGET-ID 136
+     "ИНН заполняется только в случае, если ИНН объекта отличается от ИНН фирмы" VIEW-AS TEXT
+          SIZE 81.5 BY .67 AT ROW 8.75 COL 3 WIDGET-ID 138
      RECT-1 AT ROW 2.25 COL 1.5 WIDGET-ID 116
-     SPACE(0.62) SKIP(0.41)
+     SPACE(0.62) SKIP(0.28)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для обмена с ЕГАИС"
@@ -196,10 +210,20 @@ ASSIGN
 ASSIGN 
        v-egais-fsrar:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
+/* SETTINGS FOR FILL-IN v-egais-inn IN FRAME Dialog-Frame
+   NO-DISPLAY NO-ENABLE                                                 */
+ASSIGN 
+       v-egais-inn:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
 /* SETTINGS FOR FILL-IN v-egais-utm IN FRAME Dialog-Frame
    NO-DISPLAY NO-ENABLE                                                 */
 ASSIGN 
        v-egais-utm:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+/* SETTINGS FOR FILL-IN v-egais-ver-xsd IN FRAME Dialog-Frame
+   NO-DISPLAY NO-ENABLE                                                 */
+ASSIGN 
+       v-egais-ver-xsd:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -285,6 +309,17 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME v-egais-inn
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-egais-inn Dialog-Frame
+ON LEAVE OF v-egais-inn IN FRAME Dialog-Frame /* ИНН объекта */
+DO:
+  disp 1.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -357,15 +392,15 @@ PROCEDURE enable_UI :
       if p-mode = {&update} then do:
         ENABLE v-egais-exsys f-egais-exsys b-egais-exsys
         WITH FRAME Dialog-Frame.
-        HIDE v-egais-fsrar v-egais-utm
+        HIDE v-egais-fsrar v-egais-utm v-egais-ver-xsd v-egais-inn
         IN FRAME Dialog-Frame.
       end.  
  end.  
  else do:
-   DISPLAY v-egais-fsrar v-egais-utm 
+   DISPLAY v-egais-fsrar v-egais-utm v-egais-ver-xsd v-egais-inn
       WITH FRAME Dialog-Frame.
       if p-mode = {&update} then do:
-        ENABLE v-egais-fsrar v-egais-utm
+        ENABLE v-egais-fsrar v-egais-utm v-egais-ver-xsd v-egais-inn
         WITH FRAME Dialog-Frame.
         HIDE v-egais-exsys f-egais-exsys b-egais-exsys
         IN FRAME Dialog-Frame.
@@ -380,7 +415,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame                                   */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -440,6 +475,14 @@ FOR EACH temp-thbj-attr
        v-egais-utm = temp-thbj-attr.property-value-character.
        display v-egais-utm with frame {&frame-name} .
     END.
+    IF temp-thbj-attr.prop-code = {&attr-egais-host_egais-ver-xsd} THEN DO:
+       v-egais-ver-xsd = temp-thbj-attr.property-value-character.
+       display v-egais-ver-xsd with frame {&frame-name} .
+    END.
+    IF temp-thbj-attr.prop-code = {&attr-egais-host_egais-inn} THEN DO:
+       v-egais-inn = temp-thbj-attr.property-value-character.
+       display v-egais-inn with frame {&frame-name} .
+    END.
   end.
 END.
 
@@ -479,6 +522,9 @@ define variable v-gdsreffi as character no-undo .
 define variable wh as widget-handle no-undo .
 define variable fh as widget-handle no-undo .
 define variable v-same as logical no-undo .
+
+define buffer buf_temp-thbj-attr for temp-thbj-attr .
+
 IF p-mode = {&LOOKUP} THEN RETURN ERROR.
 
 if p-obj-type = "" then do:
@@ -493,12 +539,26 @@ else do:
 ASSIGN FRAME {&FRAME-NAME}
     v-egais-fsrar 
     v-egais-utm
+    v-egais-ver-xsd
+    v-egais-inn
     .
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-egais-host_egais-fsrar} .
     temp-thbj-attr.property-value-character = v-egais-fsrar.
 
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-egais-host_egais-utm} .
     temp-thbj-attr.property-value-character = v-egais-utm.
+    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-egais-host_egais-ver-xsd} .
+    temp-thbj-attr.property-value-character = v-egais-ver-xsd.
+    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-egais-host_egais-inn} no-error.
+    if not available (temp-thbj-attr) then do:
+      create temp-thbj-attr.
+      find first buf_temp-thbj-attr.
+      buffer-copy buf_temp-thbj-attr except buf_temp-thbj-attr.prop-value-type to temp-thbj-attr.
+    end.
+    temp-thbj-attr.property-value-character = v-egais-inn.
+    
 
 end.  
     
