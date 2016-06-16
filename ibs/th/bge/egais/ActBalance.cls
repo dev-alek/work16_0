@@ -87,6 +87,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
                 tt-act-header.is-sent   = logical (entry (3, buf_clob-bind.descr, {&delim-par}))                
             .
             assign tt-act-header.answer_   = (entry (4, buf_clob-bind.descr, {&delim-par})) no-error .
+            assign tt-act-header.type_   = (entry (5, buf_clob-bind.descr, {&delim-par})) no-error .
             end.
           return buffer tt-act-header:handle.
         end.
@@ -225,9 +226,13 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
         then 
       do:
         
-/*          run gbl/inidebug.p .*/
-      
+          if VerXSD = "1"
+          then
           cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActChargeOn >&4", search ("exe/curl.exe"), search ("ActChargeOn.xml"), ConPar, inFileName, TimeOut).
+          if VerXSD = "2"
+          then
+          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActChargeOn_v2 >&4", search ("exe/curl.exe"), search ("ActChargeOn_v2.xml"), ConPar, inFileName, TimeOut).
+          
           os-command silent value (cmd).
     
           file-info:file-name = search (inFileName).

@@ -10058,6 +10058,13 @@ run ref/finsttms.w (
               ,input-output v-rid-list).
 end procedure. /* m__fs-exe */
 
+procedure m_EGAIS-all-awo_exe :
+define variable v-RegID as character no-undo .
+
+run bge/egais-all-act-writeOff.w (input parparentproc, input no, output v-RegID ) . 
+    
+end procedure . /* m_EGAIS-all-awo_exe */
+
 
 procedure chk-user-adm :
 

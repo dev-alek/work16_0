@@ -26,6 +26,8 @@ $Archive$
 using ibs.th.bge.egais.*.
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .
+define input parameter p-select as logical   no-undo .
+define output parameter p-RegID as character no-undo .
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -141,6 +143,11 @@ DEFINE BUTTON Btn_Ans
      LABEL "Посмотреть ответ" 
      SIZE 20 BY 1.13
      BGCOLOR 8 .
+     
+DEFINE BUTTON Btn_Sel AUTO-GO
+     LABEL "Выбор" 
+     SIZE 15 BY 1.13
+     BGCOLOR 8 .
 
 
 DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1 
@@ -161,6 +168,7 @@ DEFINE FRAME Dialog-Frame
      Btn_send at row 1.2 col 62
      Btn_Ans AT ROW 1.2 COL 32 WIDGET-ID 10
      Btn_lkp AT ROW 1.2 COL 17 WIDGET-ID 12
+     Btn_Sel AT ROW 1.2 COL 17
      RADIO-SET-1 AT ROW 1.2 COL 80 NO-LABEL WIDGET-ID 2
      SPACE(2) SKIP(23.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -216,6 +224,28 @@ ON CHOOSE OF Btn_lkp IN FRAME Dialog-Frame /* Загрузить */
 DO:
     if not bh-act-header:available then return no-apply .
     run bge/egais-act-writeOff.w (parparentproc, {&lookup}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_Sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Sel Dialog-Frame
+ON CHOOSE OF Btn_Sel IN FRAME Dialog-Frame /* Загрузить */
+DO:
+    if not bh-act-header:available then return no-apply .
+    assign p-RegID = bh-act-header:buffer-field ("RegID"):buffer-value .
+    if p-RegID = "" or p-RegID = ? or num-entries(p-RegID, CHR(5)) <> 2 then do :
+        message "Данный акт либо относится к старой версии ЕГАИС, либо по нему ещё не получен ответ (в этом случае нажмите кнопку 'Посмотреть ответ')." view-as alert-box .
+        p-RegID = "" .
+        return no-apply .
+    end.
+    if entry(2, p-RegID, CHR(5)) = "R" then do :
+        message "Данный акт о списании был отклонён ЕГАИС. Чтобы узнать причину нажмите кнопку 'Посмотреть ответ'" view-as alert-box .
+        p-RegID = "" .
+        return no-apply .
+    end.
+    assign p-RegID = entry(1, p-RegID, CHR(5)) .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -434,7 +464,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   .
   if not bh-act-header = ? 
   then do:
-    do ii = 1 to bh-act-header:num-fields - 2:
+    do ii = 1 to bh-act-header:num-fields - 3:
       bcol[ii] = browse-hdl-act-header:add-like-column('tt-act-header' + '.' + bh-act-header:buffer-field (ii):name, 0, 'FILL-IN').
     end.
     browse-hdl-act-header:get-browse-column (1):width-chars = 30.
@@ -444,6 +474,16 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
 
   run enable_UI. 
   apply "value-changed" to RADIO-SET-1 in frame {&FRAME-NAME}. 
+  
+  if not p-select then hide Btn_sel in FRAME Dialog-Frame.
+  else do :
+      hide Btn_create Btn_chg Btn_del Btn_send RADIO-SET-1 in FRAME Dialog-Frame.
+      assign
+        Btn_lkp:x = Btn_lkp:x + 120
+        Btn_Ans:x = Btn_Ans:x + 120
+      .
+      ENABLE Btn_Ans Btn_lkp Btn_sel WITH FRAME Dialog-Frame.
+  end.
 
   wait-for go of frame {&FRAME-NAME}.
 end.
@@ -500,8 +540,15 @@ PROCEDURE refresh-query :
 
 if bh-act-header = ? 
   then return .
-  
-case RADIO-SET-1 :
+
+if p-select then do :
+    bh-act-header = egais:GetHndlTable({&awo-clob}, "").
+    qh-act-header:set-buffers (bh-act-header).
+    qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent and tt-act-header.type_ = 'Пересортица'").
+    qh-act-header:query-open.
+end.
+else do :  
+  case RADIO-SET-1 :
     when 1  then 
     do:
       bh-act-header = egais:GetHndlTable({&awo-clob}, "").
@@ -516,7 +563,8 @@ case RADIO-SET-1 :
       qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent").
       qh-act-header:query-open.
     end.
-  end.
+  end case.
+end.
 
 end.
 
