@@ -69,7 +69,8 @@ define temp-table tt-gds-rests no-undo
     field informA_          as character                    label "ID справки А"        format "X(30)"
     field informB_          as character                    label "ID справки Б"        format "X(30)"
     field TH-qnty           as integer                      label "Остаток TH"   
-    field prt-rec           as character       
+    field prt-rec           as character  
+    field packed            as logical     
     index pi as primary
         gds-code
     index name_ as word-index
@@ -728,6 +729,8 @@ DO:
             .
         end.
         if available buf_goods then do :
+            if (not tt-gds-rests.packed and buf_goods.unit-cli <> buf_goods.unit-base and buf_goods.cli-base-rate <> 1.0)
+            then assign tt-gds-rests.egais-qnty = tt-gds-rests.egais-qnty * buf_goods.cli-base-rate .
             for each buf_parts no-lock where buf_parts.artic      = buf_goods.artic
                                            and buf_parts.prod-type  = buf_goods.prod-type
                                            and buf_parts.prod-code  = buf_goods.prod-code

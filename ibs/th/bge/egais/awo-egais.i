@@ -32,6 +32,7 @@ define temp-table tt-act-header
     field type_         as character        label "Основание списания" format "X(18)"
     field is-sent       as logical
     field answer_       as character        label "Ответ"       format "X(1500)"
+    field RegID         as character        label "Рег. номер"  format "X(50)"
     index pi as primary unique
         num
 .
@@ -152,6 +153,54 @@ procedure makeXMLegais :
     
 end procedure .
 
+procedure makeXMLegais_v2 :
+    create sax-writer sw .
+    
+    sw:formatted = true.
+    sw:set-output-destination ("file", v-file).
+    sw:encoding = "UTF-8".
+    sw:start-document () .
+    sw:start-element ("ns:Documents") .
+    sw:insert-attribute ("Version", "1.0") .
+    sw:insert-attribute ("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance") .
+    sw:insert-attribute ("xmlns:ns", "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01") .
+    sw:insert-attribute ("xmlns:pref", "http://fsrar.ru/WEGAIS/ProductRef_v2") .
+    sw:insert-attribute ("xmlns:awr", "http://fsrar.ru/WEGAIS/ActWriteOff_v2") .
+    sw:insert-attribute ("xmlns:ce", "http://fsrar.ru/WEGAIS/CommonEnum") .
+        sw:start-element ("ns:Owner") . 
+            sw:write-data-element ("ns:FSRAR_ID", v-fs-rar) .
+        sw:end-element ("ns:Owner") . 
+        sw:start-element ("ns:Document") .
+            sw:start-element ("ns:ActWriteOff_v2") .
+                sw:write-data-element ("awr:Identity", tt-act-header.num) .
+                sw:start-element ("awr:Header") .
+                    sw:write-data-element ("awr:ActNumber", tt-act-header.num) .
+                    sw:write-data-element ("awr:ActDate", string(iso-date(tt-act-header.date_))) no-error .
+                    sw:write-data-element ("awr:TypeWriteOff", tt-act-header.type_) .
+                    sw:write-data-element ("awr:Note", "Необходимо списать товарные позиции с баланса") .
+                sw:end-element ("awr:Header") .
+                sw:start-element ("awr:Content") .
+    for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num :
+        if tt-gds-act.qnty < 1 or trim(tt-gds-act.inform-B) = "" or tt-gds-act.inform-B = ? then next. 
+                    sw:start-element ("awr:Position") .
+                        sw:write-data-element ("awr:Identity", string(tt-gds-act.position_)) .
+                        sw:write-data-element ("awr:Quantity", string(tt-gds-act.qnty)) .
+                        sw:start-element ("awr:InformF1F2") .
+                          sw:start-element ("awr:InformF2") .
+                            sw:write-data-element ("pref:F2RegId", tt-gds-act.inform-B) .    
+                          sw:end-element ("awr:InformF2") .
+                        sw:end-element ("awr:InformF1F2") .
+                    sw:end-element ("awr:Position") .                
+    end. 
+                sw:end-element ("awr:Content") .
+            sw:end-element ("ns:ActWriteOff_v2") .
+        sw:end-element ("ns:Document") .
+    sw:end-element ("ns:Documents") .
+    sw:end-document () .
+    delete object sw.
+    
+end procedure .
+
 procedure parseXML :
     
     define input parameter inFile as character no-undo .
@@ -212,7 +261,8 @@ procedure GetChildren :
         end.
         IF hNoderef:NAME = "awr:Identity" THEN assign tt-gds-act.position_ = integer(hText:node-value) no-error .
         IF hNoderef:NAME = "awr:Quantity" THEN assign tt-gds-act.qnty = integer(hText:node-value) no-error . 
-        IF hNoderef:NAME = "pref:BRegId"  THEN assign tt-gds-act.inform-B = (hText:node-value) no-error .
+        IF hNoderef:NAME = "pref:BRegId"
+        OR hNoderef:NAME = "pref:F2RegId" THEN assign tt-gds-act.inform-B = (hText:node-value) no-error .
         IF hNoderef:NAME = "gds-code"     THEN do :
             assign tt-gds-act.gds-code = integer(hText:node-value) no-error . 
             find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code no-error .

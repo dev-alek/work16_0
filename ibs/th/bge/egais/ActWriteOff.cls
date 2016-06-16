@@ -37,6 +37,7 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
   define private variable urlResp        as character no-undo.
   define private variable v-uniq-key-rec as character no-undo.
   define private variable v-Answer       as character no-undo.
+  define private variable v-RegID        as character no-undo.
 
   define variable v-FS-RAR  as character no-undo .
   define variable v-ext-sys as integer   no-undo .
@@ -87,6 +88,7 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
                 tt-act-header.is-sent   = logical (entry (4, buf_clob-bind.descr, {&delim-par}))                
             .
             assign tt-act-header.answer_   = (entry (5, buf_clob-bind.descr, {&delim-par})) no-error .
+            assign tt-act-header.RegID     = (entry (6, buf_clob-bind.descr, {&delim-par})) no-error .
             end.
           return buffer tt-act-header:handle.
         end.
@@ -145,12 +147,17 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
         
         find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-awo} and buf_clob-bind.uniq-key-rec = inAbIndenty .
         if num-entries (buf_clob-bind.descr, {&delim-par}) = 4 then
-            assign buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-Answer .
+            assign buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-Answer + {&delim-par} + v-RegID .
         else if num-entries (buf_clob-bind.descr, {&delim-par}) = 5 then   
-            assign entry(5, buf_clob-bind.descr, {&delim-par}) = v-Answer .
+            assign entry(5, buf_clob-bind.descr, {&delim-par}) = v-Answer
+                   buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-RegID .
+        else if num-entries (buf_clob-bind.descr, {&delim-par}) = 6 then   
+            assign entry(5, buf_clob-bind.descr, {&delim-par}) = v-Answer
+                   entry(6, buf_clob-bind.descr, {&delim-par}) = v-RegID .           
             
         find first tt-act-header where tt-act-header.num = inAbIndenty .
-        assign tt-act-header.answer_ = v-Answer .
+        assign tt-act-header.answer_ = v-Answer
+               tt-act-header.RegID   = v-RegID .
         
         return buffer tt-act-header:handle.    
       end.
@@ -191,9 +198,10 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
         then 
       do:
         
-/*          run gbl/inidebug.p .*/
-      
-          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/ActWriteOff >&4", search ("exe/curl.exe"), search ("ActWriteOff.xml"), ConPar, inFileName).
+          if VerXSD = "1" then
+            cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActWriteOff >&4", search ("exe/curl.exe"), search ("ActWriteOff.xml"), ConPar, inFileName, TimeOut).
+          if VerXSD = "2" then
+            cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActWriteOff_v2 >&4", search ("exe/curl.exe"), search ("ActWriteOff.xml"), ConPar, inFileName, TimeOut).
           os-command silent value (cmd).
     
           file-info:file-name = search (inFileName).
@@ -314,6 +322,12 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
             
             hNoderef:GET-CHILD(hText, 1) no-error .    
             
+            IF hNoderef:NAME = "tc:RegID"    THEN v-RegID  = hText:node-value .
+            IF hNoderef:NAME = "tc:Conclusion" THEN
+            DO :
+                if hText:node-value = "Rejected" then v-RegID = v-RegID + CHR(5) + "R" .
+                                                 else v-RegID = v-RegID + CHR(5) + "A" .
+            END.
             IF hNoderef:NAME = "tc:Comments" THEN v-Answer = hText:node-value .
 
             GetChildren(hNoderef, (level + 1)).

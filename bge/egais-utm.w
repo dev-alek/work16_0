@@ -95,8 +95,8 @@ define buffer buf_goods     for ub.goods .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Btn_Cancel btn_refresh btn_del btn_dwl ~
-btn_look Btn_reqwb Btn_mark Btn_markall Btn_desmark f_date RADIO-SET-1 ~
-tb_no_date CB_typedoc 
+btn_look Btn_reqwb Btn_chg-xsd Btn_mark Btn_markall Btn_desmark f_date ~
+RADIO-SET-1 tb_no_date CB_typedoc 
 &Scoped-Define DISPLAYED-OBJECTS f_date RADIO-SET-1 tb_no_date CB_typedoc 
 
 /* Custom List Definitions                                              */
@@ -116,6 +116,10 @@ DEFINE BUTTON Btn_Cancel AUTO-END-KEY
      LABEL "Выход" 
      SIZE 10 BY 1.13
      BGCOLOR 8 .
+
+DEFINE BUTTON Btn_chg-xsd 
+     LABEL "Смена вер. XSD" 
+     SIZE 15 BY 1.13.
 
 DEFINE BUTTON btn_del 
      LABEL "Удалить" 
@@ -173,6 +177,10 @@ DEFINE VARIABLE tb_no_date AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 11.13 BY 1.13 NO-UNDO.
 
+DEFINE MENU popup-menu-ver-xsd
+       MENU-ITEM m_ver-xsd-1 LABEL "Изменить версия XSD схем на 1"     ACCELERATOR "ALT-1"
+       MENU-ITEM m_ver-xsd-2 LABEL "Изменить версия XSD схем на 2" ACCELERATOR "ALT-2"
+.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -183,6 +191,7 @@ DEFINE FRAME Dialog-Frame
      btn_dwl AT ROW 1.25 COL 43.38 WIDGET-ID 2
      btn_look AT ROW 1.25 COL 60.75 WIDGET-ID 14
      Btn_reqwb AT ROW 1.25 COL 76.13 WIDGET-ID 16
+     Btn_chg-xsd AT ROW 1.25 COL 91.5 WIDGET-ID 28
      Btn_mark AT ROW 2.63 COL 2.5 WIDGET-ID 4
      Btn_markall AT ROW 2.63 COL 6.75 WIDGET-ID 6
      Btn_desmark AT ROW 2.63 COL 11 WIDGET-ID 8
@@ -190,7 +199,7 @@ DEFINE FRAME Dialog-Frame
      RADIO-SET-1 AT ROW 2.63 COL 34.25 NO-LABEL WIDGET-ID 20
      tb_no_date AT ROW 2.63 COL 46.63 WIDGET-ID 24
      CB_typedoc AT ROW 2.67 COL 61 COLON-ALIGNED WIDGET-ID 26
-     SPACE(26.99) SKIP(22.06)
+     SPACE(26.99) SKIP(22.23)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Содержимое УТМ"
@@ -237,6 +246,37 @@ do:
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME m_ver-xsd-1
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_ver-xsd-1 Dialog-Frame
+on choose of menu-item m_ver-xsd-1 in menu popup-menu-ver-xsd /* Смена вер. XSD */
+DO:
+  
+  AdmUtmObj:SendInfoVer("WayBill_v1").
+  if AdmUtmObj:StatusErr
+  then do:
+    message AdmUtmObj:Msg view-as alert-box error.
+  end.
+  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_ver-xsd-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_ver-xsd-2 Dialog-Frame
+on choose of menu-item m_ver-xsd-2 in menu popup-menu-ver-xsd /* Смена вер. XSD */
+DO:
+
+  AdmUtmObj:SendInfoVer("WayBill_v2").
+  if AdmUtmObj:StatusErr
+  then do:
+    message AdmUtmObj:Msg view-as alert-box error.
+  end.
+  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME btn_del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_del Dialog-Frame
@@ -405,18 +445,6 @@ end.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME tb_no_date
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tb_no_date Dialog-Frame
-ON VALUE-CHANGED OF tb_no_date IN FRAME Dialog-Frame /* Без даты */
-DO:
-  apply "choose" to Btn_desmark in frame {&FRAME-NAME}.
-  run refresh-view.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME btn_refresh
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_refresh Dialog-Frame
 ON CHOOSE OF btn_refresh IN FRAME Dialog-Frame /* Обновить */
@@ -512,6 +540,18 @@ DO:
     assign
     CB_typedoc:hidden = true.
   end.
+  run refresh-view.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME tb_no_date
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tb_no_date Dialog-Frame
+ON VALUE-CHANGED OF tb_no_date IN FRAME Dialog-Frame /* Без даты */
+DO:
+  apply "choose" to Btn_desmark in frame {&FRAME-NAME}.
   run refresh-view.
 END.
 
@@ -624,6 +664,9 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   assign
   CB_typedoc:list-items = "Все,ReplyRests,INVENTORYREGINFO,ReplyAP,ReplyPartner,Ticket,FORMBREGINFO,WAYBILL,WayBillAct,WayBillTicket"
   CB_typedoc = "Все".
+  assign 
+    btn_chg-xsd :popup-menu in frame {&frame-name} = menu popup-menu-ver-xsd:handle
+    btn_chg-xsd:menu-mouse = 1.
   run enable_UI.
   run refresh-view.
   bh-wb-analiz:find-first ("", no-lock) no-error.
@@ -668,8 +711,9 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY f_date RADIO-SET-1 tb_no_date CB_typedoc 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_Cancel btn_refresh btn_del btn_dwl btn_look Btn_reqwb Btn_mark 
-         Btn_markall Btn_desmark f_date RADIO-SET-1 tb_no_date CB_typedoc 
+  ENABLE Btn_Cancel btn_refresh btn_del btn_dwl btn_look Btn_reqwb Btn_chg-xsd 
+         Btn_mark Btn_markall Btn_desmark f_date RADIO-SET-1 tb_no_date 
+         CB_typedoc 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -706,8 +750,7 @@ end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-view Dialog-Frame 
 PROCEDURE refresh-view :
-  
-  def var v-proposition  as char no-undo.
+def var v-proposition  as char no-undo.
   
   assign input frame {&FRAME-NAME}
     f_date

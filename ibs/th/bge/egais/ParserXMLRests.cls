@@ -28,7 +28,8 @@ class ibs.th.bge.egais.ParserXMLRests inherits EGAISUTM:
     field egais-qnty        as integer                      label "Остаток ЕГАИС"
     field informA_          as character                    label "ID справки А"        format "X(30)"
     field informB_          as character                    label "ID справки Б"        format "X(30)"
-    field TH-qnty           as integer                      label "Остаток TH"          
+    field TH-qnty           as integer                      label "Остаток TH"
+    field packed            as logical          
     index pi as primary
         gds-code
     index name_ as word-index
@@ -90,12 +91,15 @@ class ibs.th.bge.egais.ParserXMLRests inherits EGAISUTM:
                 create tt-gds-rests-EG .
 
             IF hNoderef:NAME = "rst:Quantity"    THEN assign tt-gds-rests-EG.egais-qnty        = integer(hText:node-value) .
-            IF hNoderef:NAME = "rst:InformARegId" THEN assign tt-gds-rests-EG.informA_          = hText:node-value .
-            IF hNoderef:NAME = "rst:InformBRegId" THEN assign tt-gds-rests-EG.informB_          = hText:node-value .
+            IF hNoderef:NAME = "rst:InformARegId"
+            OR hNoderef:NAME = "rst:InformF1RegId" THEN assign tt-gds-rests-EG.informA_          = hText:node-value .
+            IF hNoderef:NAME = "rst:InformBRegId"
+            OR hNoderef:NAME = "rst:InformF2RegId" THEN assign tt-gds-rests-EG.informB_          = hText:node-value .
             IF hNoderef:NAME = "pref:FullName"     THEN do :
                 if trim(tt-gds-rests-EG.gds-name) = "" then assign tt-gds-rests-EG.gds-name        = hText:node-value .
             end.
             IF hNoderef:NAME = "pref:AlcCode"      THEN assign tt-gds-rests-EG.alc-code        = hText:node-value .
+            IF hNoderef:NAME = "pref:UnitType"     THEN assign tt-gds-rests-EG.packed          = (hText:node-value = "Packed") .
             IF hNoderef:NAME = "pref:Capacity"     THEN assign tt-gds-rests-EG.ms-base         = decimal(hText:node-value) .
             IF hNoderef:NAME = "pref:AlcVolume"    THEN assign tt-gds-rests-EG.proof           = decimal(hText:node-value) .
             IF hNoderef:NAME = "pref:ProductVCode" THEN assign tt-gds-rests-EG.alc-type-code   = hText:node-value .

@@ -87,8 +87,8 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
             IF hNoderef:NAME = "rap:Product" THEN DO:
                 create tt-gds-EG .
                 assign
-                  tt-gds-EG.imp-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
-                  tt-gds-EG.prod-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                  tt-gds-EG.imp-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                  tt-gds-EG.prod-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
                 .
              END.
 
@@ -103,11 +103,21 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
             IF hNoderef:NAME = "pref:Producer"     THEN assign v-imp       = false .
             IF hNoderef:NAME = "pref:Importer"     THEN assign v-imp       = true .
             
+            IF hNoderef:NAME = "oref:UL"
+            OR hNoderef:NAME = "oref:FL"
+            OR hNoderef:NAME = "oref:FO"
+            OR hNoderef:NAME = "oref:TS"
+            THEN DO :
+                if v-imp then assign entry (7, tt-gds-EG.imp-info, chr(5)) = entry(2, hNoderef:NAME, ":") .
+                else          assign entry (7, tt-gds-EG.prod-info, chr(5)) = entry(2, hNoderef:NAME, ":") .
+            END.
+            
             IF hNoderef:NAME = "oref:ClientRegId" THEN DO :
                 if v-imp then assign entry (1, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
                 else          assign entry (1, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.    
-            IF hNoderef:NAME = "oref:INN"         THEN do :
+            IF hNoderef:NAME = "oref:INN"
+            OR hNoderef:NAME = "oref:TSNUM"       THEN do :
                 if v-imp then assign entry (2, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
                 else          assign entry (2, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.
@@ -122,6 +132,10 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
             IF hNoderef:NAME = "oref:Country"     THEN do :
                 if v-imp then assign entry (5, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
                 else          assign entry (5, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
+            end.
+            IF hNoderef:NAME = "oref:RegionCode"  THEN do :
+                if v-imp then assign entry (8, tt-gds-EG.imp-info, chr(5)) = hText:node-value .
+                else          assign entry (8, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.
             IF hNoderef:NAME = "oref:description" THEN do :
                 if v-imp then assign entry (6, tt-gds-EG.imp-info, chr(5)) = hText:node-value no-error .

@@ -27,7 +27,7 @@ using ibs.th.bge.egais.*.
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-mode       as character no-undo .
-define input parameter egais        as class EGAIS no-undo .
+define input parameter egais        as class ActBalance no-undo .
 define input parameter v-ext-sys    as integer no-undo .
 define input parameter v-fs-rar     as character no-undo .
 define input parameter bh-act-header  as handle no-undo .
@@ -53,6 +53,7 @@ define variable v-attr-value        as character            no-undo .
 define variable v-attr-type         as character            no-undo .
 define variable err-good            as logical no-undo .
 define variable p-ext-rec           as recid no-undo .
+define variable v-RegID             as character no-undo .
 
 define variable glog        as logical no-undo .
 
@@ -218,6 +219,10 @@ DEFINE FRAME Dialog-Frame
     b-save at row 1.2 col 17
     tt-act-header.num at row 2.5 col 2 format "X(20)"
     tt-act-header.date_ at row 2.5 col 32
+    tt-act-header.type_ at row 2.5 col 57
+        view-as combo-box inner-lines 7
+        list-items "Пересортица,Излишки,Продукция полученная до 01.01.2016"
+        DROP-DOWN-LIST
     br-gds-act at row 4 col 2
      SPACE(0.5) SKIP(0.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -264,6 +269,22 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&Scoped-define SELF-NAME tt-act-header.type_
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-act-header.type_ Dialog-Frame
+ON VALUE-CHANGED OF tt-act-header.type_ IN FRAME Dialog-Frame /* cli-type */
+DO:
+  assign tt-act-header.type_.
+  if tt-act-header.type_ = "Пересортица" then do :
+      message "Выберите соответствующий акт о списании" view-as alert-box.
+      run bge/egais-all-act-writeOff.w (input parparentproc, input yes, output v-RegID ) .
+      if v-RegID = ? or v-RegID = "" then do :
+        tt-act-header.type_ = "Продукция полученная до 01.01.2016" .
+        display tt-act-header.type_  with frame {&FRAME-NAME}.
+        message "Акт постановки на баланс с типом 'Пересортица' невозможно отправить без указания соответствующего акта о списании!" view-as alert-box.
+      end.
+  end.
+END.
 
 &Scoped-define SELF-NAME b-cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel Dialog-Frame
@@ -366,13 +387,17 @@ DO:
                 "Такой акт не может быть отправлен в ЕГАИС." skip
                 "Всё равно продолжить сохраненине?" view-as alert-box question buttons yes-no update glog .
         if not glog then return no-apply.        
-    end.                                 
-    run makeXML in this-procedure no-error.
+    end. 
+    if egais:VerXSD = "1" then                                
+        run makeXML in this-procedure no-error.
+    if egais:VerXSD = "2" then                                
+        run makeXML_v2 in this-procedure no-error.
     if error-status:error then return return-value .
     assign
         v-clob-db-num = ?
         v-int64-id = 0
-        v-info = tt-act-header.num + {&delim-par} + string(tt-act-header.date_) + {&delim-par} + string(tt-act-header.is-sent) + {&delim-par} + tt-act-header.answer_
+        v-info = tt-act-header.num + {&delim-par} + string(tt-act-header.date_) + {&delim-par}
+               + string(tt-act-header.is-sent) + {&delim-par} + tt-act-header.answer_ + {&delim-par} + tt-act-header.type_
     .
     find first buf_clob-bind exclusive-lock where buf_clob-bind.uniq-key-rec = tt-act-header.num
                                               and buf_clob-bind.field-name_  = {&lob-egais-ab} no-error .
@@ -842,6 +867,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         b-good:popup-menu in frame {&FRAME-NAME} = menu m-add:handle
         b-good:menu-mouse = 1
         nn = 0
+        tt-act-header.type_:list-items = "Пересортица,Излишки,Продукция полученная до 01.01.2016"
     .
     empty temp-table tt-exts .
     
@@ -852,9 +878,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             tt-act-header.num = v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-'
             tt-act-header.date_ = TODAY
             tt-act-header.is-sent = no
+            tt-act-header.type_ = "Продукция полученная до 01.01.2016"
         .
         display tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
-        enable  tt-act-header.num tt-act-header.date_ b-good with frame {&FRAME-NAME}.     
+        enable  tt-act-header.num tt-act-header.date_ b-good with frame {&FRAME-NAME}.
+        if egais:VerXSD = "2" then do :
+            display tt-act-header.type_ with frame {&FRAME-NAME}.
+            enable  tt-act-header.type_ with frame {&FRAME-NAME}.    
+        end.
+        else hide tt-act-header.type_ in frame {&FRAME-NAME}.      
     end.
     
     if p-mode = {&update} or p-mode = {&lookup} then do :
@@ -869,6 +901,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         no-error .
         run parseXML in this-procedure .
         display tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
+        if egais:VerXSD = "2" then do :
+            display tt-act-header.type_ with frame {&FRAME-NAME}.
+            if p-mode = {&update} then enable  tt-act-header.type_ with frame {&FRAME-NAME}.
+        end.
 /*        enable  tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.*/
         if p-mode = {&update} then
         for each tt-gds-act no-lock :
@@ -954,6 +990,7 @@ procedure makeXML :
                 sw:start-element ("ain:Content") .
     for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num :
         if tt-gds-act.qnty < 1 then next. 
+                    find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code .
                     sw:start-element ("ain:Position") .
                         sw:write-data-element ("ain:Identity", string(tt-gds-act.position_)) .
                         sw:start-element ("ain:Product") .
@@ -996,14 +1033,16 @@ procedure makeXML :
                           
                           
                           v-prod = entry (1, X_ext-classif-attr.attr-value, chr(4)) no-error.
-                          if v-prod = ? or v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) or v-prod = "" or num-entries (v-prod, chr (5)) <> 6 
+                          if v-prod = ?
+                          or v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                          or v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                          or v-prod = ""
+                          or num-entries (v-prod, chr (5)) < 6 
                           then do:
                             message "У товара неизвестен производитель из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров и  заново сохраните акт." view-as alert-box.
                           end.
                           v-impor = entry (2, X_ext-classif-attr.attr-value, chr(4)) no-error.
-
-                          
-                          if num-entries (v-impor, chr (5)) > 0 and num-entries (v-impor, chr (5)) <> 6 
+                          if num-entries (v-impor, chr (5)) > 0 and num-entries (v-impor, chr (5)) < 6 
                             then 
                           do:
                             message "У товара неверно указан импортер из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров и  заново сохраните акт." view-as alert-box.
@@ -1020,7 +1059,10 @@ procedure makeXML :
                             sw:end-element ("oref:address").
                           sw:end-element ("pref:Producer") .
             
-                          if v-impor <> "" and v-impor <> ? and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) then do:
+                          if v-impor <> ""
+                          and v-impor <> ?
+                          and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                          and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) then do:
                             sw:start-element ("pref:Importer") .
                               if entry (2, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:INN", entry (2, v-impor, chr(5)) ).
                               if entry (3, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:KPP", entry (3, v-impor, chr(5)) ).
@@ -1073,6 +1115,172 @@ procedure makeXML :
     
 end procedure .
 
+procedure makeXML_v2 :
+    create sax-writer sw .
+    
+    sw:formatted = true.
+    sw:set-output-destination ("file", v-file).
+    sw:encoding = "UTF-8".
+    sw:start-document () .
+    sw:start-element ("ns:Documents") .
+    sw:insert-attribute ("Version", "1.0") .
+    sw:insert-attribute ("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance") .
+    sw:insert-attribute ("xmlns:ns", "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01") .
+    sw:insert-attribute ("xmlns:oref", "http://fsrar.ru/WEGAIS/ClientRef_v2") .
+    sw:insert-attribute ("xmlns:pref", "http://fsrar.ru/WEGAIS/ProductRef_v2") .
+    sw:insert-attribute ("xmlns:iab", "http://fsrar.ru/WEGAIS/ActInventoryF1F2Info") .
+    sw:insert-attribute ("xmlns:ainp", "http://fsrar.ru/WEGAIS/ActChargeOn_v2") .
+    sw:insert-attribute ("xmlns:ce", "http://fsrar.ru/WEGAIS/CommonEnum") .
+        sw:start-element ("ns:Owner") . 
+            sw:write-data-element ("ns:FSRAR_ID", v-fs-rar) .
+        sw:end-element ("ns:Owner") . 
+        sw:start-element ("ns:Document") .
+            sw:start-element ("ns:ActChargeOn_v2") .
+                sw:start-element ("ainp:Header") .
+                    sw:write-data-element ("ainp:Number", tt-act-header.num) .
+                    sw:write-data-element ("ainp:ActDate", string(iso-date(tt-act-header.date_))) no-error .
+                    sw:write-data-element ("ainp:Note", "Необходимо поставить товарные позиции на баланс") .
+                    if tt-act-header.type_ <> "Продукция полученная до 01.01.2016"
+                    then
+                      sw:write-data-element ("ainp:TypeChargeOn", tt-act-header.type_) .
+                    else
+                      sw:write-data-element ("ainp:TypeChargeOn", "Продукция, полученная до 01.01.2016") .
+                    if tt-act-header.type_ = "Пересортица" and v-RegID <> "" or v-RegID <> ? then do :
+                      sw:write-data-element ("ainp:ActWriteOff", v-RegID) .  
+                    end.
+                sw:end-element ("ainp:Header") .
+                sw:start-element ("ainp:Content") .
+    for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num :
+        if tt-gds-act.qnty < 1 then next. 
+                    find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code .
+                    sw:start-element ("ainp:Position") .
+                        sw:write-data-element ("ainp:Identity", string(tt-gds-act.position_)) .
+                        sw:start-element ("ainp:Product") .
+                            sw:write-data-element ("pref:UnitType", (if buf_goods.unit-base <> buf_goods.unit-cli and buf_goods.cli-base-rate <> 1 then "Unpacked" else "Packed")) . 
+                            sw:write-data-element ("pref:FullName", tt-gds-act.egais-name) no-error .
+                            sw:write-data-element ("pref:ShortName", "") . 
+                            sw:write-data-element ("pref:AlcCode", tt-gds-act.alc-code) .
+                            if not (buf_goods.unit-base <> buf_goods.unit-cli and buf_goods.cli-base-rate <> 1)
+                            then sw:write-data-element ("pref:Capacity", string(buf_goods.ms-base)) . 
+                            sw:write-data-element ("pref:AlcVolume", string(buf_goods.proof)) . 
+                            
+                        for first ub.alc-type-gds where ub.alc-type-gds.gds-code = buf_goods.gds-code no-lock,
+                            first ub.alc-type where ub.alc-type.alc-type-inner-code = ub.alc-type-gds.alc-type-inner-code no-lock :
+                            sw:write-data-element ("pref:ProductVCode", string(ub.alc-type.alc-type-code)) .
+                        end.
+                        
+                        find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = {&table_goods}
+                                                               and X_ext-classif-attr.classif-name = {&extclass_goods_esys}
+                                                               and X_ext-classif-attr.db-num = 0
+                                                               and X_ext-classif-attr.Key#_One = tt-gds-act.gds-code
+                                                               and X_ext-classif-attr.Key#_two = v-ext-sys
+                                                               and X_ext-classif-attr.Key#_three = 0
+                                                               and X_ext-classif-attr.CharKey_One = tt-gds-act.alc-code
+                                                               and X_ext-classif-attr.CharKey_two = ""
+                                                               and X_ext-classif-attr.CharKey_three = ""
+                                                               and X_ext-classif-attr.nonunique = 0
+                                                               and X_ext-classif-attr.attr-code = 'egais-info'
+                                                               no-error .                
+                        if available X_ext-classif-attr and num-entries(X_ext-classif-attr.attr-value, CHR(4)) = 3 then do : 
+                          def var v-prod as char no-undo.
+                          def var v-impor as char no-undo.
+                          def var v-msg as char no-undo.
+                          v-prod = ''.
+                          v-impor = ''.
+                          
+                          
+                          v-prod = entry (1, X_ext-classif-attr.attr-value, chr(4)) no-error.
+                          if v-prod = ?
+                          or v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                          or v-prod = ""
+                          or num-entries (v-prod, chr (5)) < 8 
+                          then do:
+                            message "У товара неизвестен производитель (или его тип) из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров и  заново сохраните акт." view-as alert-box.
+                          end.
+                          
+                          v-impor = entry (2, X_ext-classif-attr.attr-value, chr(4)) no-error.
+                          if num-entries (v-impor, chr (5)) > 0 and num-entries (v-impor, chr (5)) < 8 
+                            then 
+                          do:
+                            message "У товара неверно указан импортер из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров и  заново сохраните акт." view-as alert-box.
+                          end. 
+                          
+                          sw:start-element ("pref:Producer") .
+                           sw:start-element ("oref:" + entry (7, v-prod, chr(5))) .
+                            if entry (7, v-prod, chr(5)) <> "TS" then do :
+                                if entry (2, v-prod, chr(5)) <> "" then sw:write-data-element ("oref:INN", entry (2, v-prod, chr(5)) ).
+                                if entry (3, v-prod, chr(5)) <> "" then sw:write-data-element ("oref:KPP", entry (3, v-prod, chr(5)) ).
+                            end.
+                            else if entry (2, v-prod, chr(5)) <> "" then sw:write-data-element ("oref:TSNUM", entry (2, v-prod, chr(5)) ).
+                            sw:write-data-element ("oref:ClientRegId", entry (1, v-prod, chr(5)) ).
+                            sw:write-data-element ("oref:FullName", entry (4, v-prod, chr(5)) ).
+                            sw:start-element ("oref:address").
+                              sw:write-data-element ("oref:Country", entry (5, v-prod, chr(5)) ).
+                              if entry (8, v-prod, chr(5)) <> "" then sw:write-data-element ("oref:RegionCode", entry (8, v-prod, chr(5)) ).
+                              sw:write-data-element ("oref:description", entry (6, v-prod, chr(5)) ).
+                            sw:end-element ("oref:address").
+                           sw:end-element ("oref:" + entry (7, v-prod, chr(5))) .
+                          sw:end-element ("pref:Producer") .
+                          
+                          if v-impor <> ""
+                          and v-impor <> ?
+                          and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                          and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) then do:
+                            sw:start-element ("pref:Importer") .
+                             sw:start-element ("oref:" + entry (7, v-impor, chr(5))) .
+                              if entry (2, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:INN", entry (2, v-impor, chr(5)) ).
+                              if entry (3, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:KPP", entry (3, v-impor, chr(5)) ).
+                              sw:write-data-element ("oref:ClientRegId", entry (1, v-impor, chr(5)) ).
+                              sw:write-data-element ("oref:FullName", entry (4, v-impor, chr(5)) ).
+                              sw:start-element ("oref:address").
+                                sw:write-data-element ("oref:Country", entry (5, v-impor, chr(5)) ).
+                                if entry (8, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:RegionCode", entry (8, v-impor, chr(5)) ).
+                                sw:write-data-element ("oref:description", entry (6, v-impor, chr(5)) ).
+                              sw:end-element ("oref:address").
+                             sw:end-element ("oref:" + entry (7, v-impor, chr(5))) .
+                            sw:end-element ("pref:Importer") .
+                          end.
+
+                        end.
+                        else do:
+                          message "У товара неизвестен производитель из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров и  заново сохраните акт." view-as alert-box.
+                        end.
+                        
+                        sw:end-element ("ainp:Product") .
+                        sw:write-data-element ("ainp:Quantity", string(tt-gds-act.qnty)) .
+                        sw:start-element ("ainp:InformF1F2") .
+                            sw:start-element ("ainp:InformF1F2Reg") . 
+                                sw:start-element ("ainp:InformF1") .
+                                    sw:write-data-element ("iab:Quantity", string(tt-gds-act.A-qnty)) no-error .
+                                    sw:write-data-element ("iab:BottlingDate", string(iso-date(tt-gds-act.A-bottleDate))) no-error .
+                                    sw:write-data-element ("iab:TTNNumber", tt-gds-act.A-ttnNumber) no-error .
+                                    sw:write-data-element ("iab:TTNDate", string(iso-date(tt-gds-act.A-ttnDate))) no-error .
+                                    if tt-gds-act.A-fixNumber <> ? and trim(tt-gds-act.A-fixNumber) <> "" then do :
+                                        sw:write-data-element ("iab:EGAISFixNumber", tt-gds-act.A-fixNumber) no-error .
+                                        sw:write-data-element ("iab:EGAISFixDate", string(iso-date(tt-gds-act.A-fixDate))) no-error .
+                                    end.
+                                sw:end-element ("ainp:InformF1") .  
+                            sw:end-element ("ainp:InformF1F2Reg") .
+                        sw:end-element ("ainp:InformF1F2") .
+        find first tt-marks where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ no-lock no-error.
+        if available tt-marks then do :                
+                        sw:start-element ("ainp:MarkCodeInfo") .
+            for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
+                            sw:write-data-element ("ainp:MarkCode", tt-marks.mark) .
+            end.    
+                        sw:end-element ("ainp:MarkCodeInfo") .
+        end.         
+                    sw:end-element ("ainp:Position") .                
+    end. 
+                sw:end-element ("ainp:Content") .
+            sw:end-element ("ns:ActChargeOn_v2") .
+        sw:end-element ("ns:Document") .
+    sw:end-element ("ns:Documents") .
+    sw:end-document () .
+    delete object sw.
+    
+end procedure .
+
 procedure parseXML :
     empty temp-table tt-act-header .
     empty temp-table tt-gds-act .
@@ -1115,21 +1323,30 @@ procedure GetChildren :
         
 /*        IF hNoderef:NAME = "ns:FSRAR_ID" THEN   */
 /*            assign v-FS-RAR = hText:node-value .*/
-        IF hNoderef:NAME = "ain:Header" THEN do :
+        IF hNoderef:NAME = "ain:Header" or hNoderef:NAME = "ainp:Header" THEN do :
             create tt-act-header .
             assign tt-act-header.is-sent = bh-act-header:buffer-field("is-sent"):buffer-value .
         end .
         .
-        IF hNoderef:NAME = "ain:Number" THEN assign tt-act-header.num    = hText:node-value no-error .
-        IF hNoderef:NAME = "ain:ActDate" THEN 
+        IF hNoderef:NAME = "ain:Number"
+        OR hNoderef:NAME = "ainp:Number" THEN assign tt-act-header.num    = hText:node-value no-error .
+        IF hNoderef:NAME = "ain:ActDate"
+        OR hNoderef:NAME = "ainp:ActDate" THEN 
             assign tt-act-header.date_ = date(substring(hText:node-value, 9, 2) + "/" + substring(hText:node-value, 6, 2) + "/" + substring(hText:node-value, 1, 4)) no-error .    
+        
+        IF hNoderef:NAME = "ainp:TypeChargeOn" THEN assign tt-act-header.type_    = hText:node-value no-error .
+        if tt-act-header.type_ = "Продукция, полученная до 01.01.2016" then tt-act-header.type_ = "Продукция полученная до 01.01.2016" .
+        
+        IF hNoderef:NAME = "ainp:ActWriteOff" THEN assign v-RegID    = hText:node-value no-error .
             
-        IF hNoderef:NAME = "ain:Position" THEN do :
+        IF hNoderef:NAME = "ain:Position"
+        OR hNoderef:NAME = "ainp:Position" THEN do :
             assign ii = 0 .
             create tt-gds-act .
             assign tt-gds-act.num = tt-act-header.num .
         end.
-        IF hNoderef:NAME = "ain:Identity" THEN assign tt-gds-act.position_ = integer(hText:node-value) no-error .
+        IF hNoderef:NAME = "ain:Identity"
+        OR hNoderef:NAME = "ainp:Identity" THEN assign tt-gds-act.position_ = integer(hText:node-value) no-error .
         IF hNoderef:NAME = "pref:FullName" THEN assign tt-gds-act.egais-name = hText:node-value no-error .   
         IF hNoderef:NAME = "pref:AlcCode" THEN do :
             assign tt-gds-act.alc-code = hText:node-value no-error .
@@ -1166,7 +1383,8 @@ procedure GetChildren :
                         
 
         end. 
-        IF hNoderef:NAME = "ain:Quantity" THEN assign tt-gds-act.qnty = integer(hText:node-value) no-error . 
+        IF hNoderef:NAME = "ain:Quantity"
+        OR hNoderef:NAME = "ainp:Quantity" THEN assign tt-gds-act.qnty = integer(hText:node-value) no-error . 
         IF hNoderef:NAME = "iab:Quantity" THEN assign tt-gds-act.A-qnty = integer(hText:node-value) no-error .
         IF hNoderef:NAME = "iab:BottlingDate" THEN assign tt-gds-act.A-bottleDate = date(substring(hText:node-value, 9, 2) + "/" + substring(hText:node-value, 6, 2) + "/" + substring(hText:node-value, 1, 4)) no-error . 
         IF hNoderef:NAME = "iab:TTNNumber" THEN assign tt-gds-act.A-ttnNumber = hText:node-value no-error .
@@ -1203,7 +1421,8 @@ procedure GetChildren :
             end.    
         end.
             
-        IF hNoderef:NAME = "ain:MarkCode" THEN do :
+        IF hNoderef:NAME = "ain:MarkCode"
+        OR hNoderef:NAME = "ainp:MarkCode" THEN do :
             create tt-marks.
             assign
                 tt-marks.num                    = tt-gds-act.num

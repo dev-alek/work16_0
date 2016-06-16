@@ -183,6 +183,11 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
         or p-tbl-handle::resource-type = {&lob-res-list}
         or p-tbl-handle::resource-type = {&lob-res-list-macro}
         or p-tbl-handle::resource-type = {&lob-res-ref}
+        or p-tbl-handle::resource-type = {&lob-egais-wb}
+        or p-tbl-handle::resource-type = {&lob-egais-ref-b}
+        or p-tbl-handle::resource-type = {&lob-egais-wb-act}
+        or p-tbl-handle::resource-type = {&lob-egais-ticket}
+        or p-tbl-handle::resource-type = {&lob-egais-wb-ticket}
         then do:
           assign
           v-lob-type = p-tbl-handle::resource-type
@@ -249,6 +254,11 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
           or p-tbl-handle::resource-type = {&lob-res-list}
           or p-tbl-handle::resource-type = {&lob-res-list-macro}
           or p-tbl-handle::resource-type = {&lob-res-ref}
+          or p-tbl-handle::resource-type = {&lob-egais-wb}
+          or p-tbl-handle::resource-type = {&lob-egais-ref-b}
+          or p-tbl-handle::resource-type = {&lob-egais-wb-act}
+          or p-tbl-handle::resource-type = {&lob-egais-ticket}
+          or p-tbl-handle::resource-type = {&lob-egais-wb-ticket}
           then do:
             assign
             v-lob-send-non-data = yes
@@ -1192,8 +1202,19 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
         or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-res-list}
         or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-res-list-macro}
         or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-res-ref}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ref-b}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb-act}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ticket}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb-ticket}
         then do:
-          if g#db-num = 0 then do:
+          if g#db-num = 0 and
+          not (v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ref-b}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb-act}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ticket}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb-ticket}) 
+          then do:
             assign
               list-db-for-send = list-remote-db
             .
@@ -1212,8 +1233,19 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
         or v-lob-type = {&lob-res-list}
         or v-lob-type = {&lob-res-list-macro}
         or v-lob-type = {&lob-res-ref}
+        or v-lob-type = {&lob-egais-wb}
+        or v-lob-type = {&lob-egais-ref-b}
+        or v-lob-type = {&lob-egais-wb-act}
+        or v-lob-type = {&lob-egais-ticket}
+        or v-lob-type = {&lob-egais-wb-ticket}
         then do:
-          if g#db-num = 0 then do:
+          if g#db-num = 0 and 
+            not (v-lob-type = {&lob-egais-wb}
+            or v-lob-type = {&lob-egais-ref-b}
+            or v-lob-type = {&lob-egais-wb-act}
+            or v-lob-type = {&lob-egais-ticket}
+            or v-lob-type = {&lob-egais-wb-ticket})
+          then do:
             assign
               list-db-for-send = list-remote-db
             .

@@ -24,6 +24,10 @@ class ibs.th.bge.egais.ExtGdsValue:
     get.
     set.
   
+  define property CliEgaisTypeProd as character no-undo
+    get.
+    set.
+  
   define property INNProd as character no-undo
     get.
     set.
@@ -39,12 +43,20 @@ class ibs.th.bge.egais.ExtGdsValue:
   define property CountryProd as character no-undo
     get.
     set.
+    
+  define property RegionProd as character no-undo
+    get.
+    set.
   
   define property DescrProd as character no-undo
     get.
     set.
 
   define property CliRegIdImpor as character no-undo
+    get.
+    set.
+
+  define property CliEgaisTypeImpor as character no-undo
     get.
     set.
   
@@ -61,6 +73,10 @@ class ibs.th.bge.egais.ExtGdsValue:
     set.
   
   define property CountryImpor as character no-undo
+    get.
+    set.
+    
+  define property RegionImpor as character no-undo
     get.
     set.
   

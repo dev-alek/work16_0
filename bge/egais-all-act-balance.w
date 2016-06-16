@@ -39,7 +39,7 @@ define variable bh-act-header         as handle    no-undo.
 define variable qh-act-header         as handle    no-undo.
 define variable browse-hdl-act-header as handle    no-undo.
 define variable bcol                as handle    extent 11 no-undo.
-define variable egais               as class     EGAIS no-undo.
+define variable egais               as class     ActBalance no-undo.
 define variable v-db-num            as integer   no-undo .
 define variable v-user-id           as character no-undo .
 define variable qh-ab-gds-EG-header as handle    no-undo.
@@ -254,12 +254,22 @@ DO:
     find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
     find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
     os-delete "ActChargeOn.xml".
-    copy-lob
-    from  object buf_clob-data.cdata
-    to  file 'ActChargeOn.xml'
-    no-convert
-    no-error .
-    cast (egais:EGAISImpl, ibs.th.bge.egais.ActBalance):inNum = bh-act-header:buffer-field ("num"):buffer-value .
+    os-delete "ActChargeOn_v2.xml".
+    if egais:VerXSD = "1" then do :
+        copy-lob
+        from  object buf_clob-data.cdata
+        to  file 'ActChargeOn.xml'
+        no-convert
+        no-error .
+    end.
+    if egais:VerXSD = "2" then do :
+        copy-lob
+        from  object buf_clob-data.cdata
+        to  file 'ActChargeOn_v2.xml'
+        no-convert
+        no-error .
+    end.
+    egais:inNum = bh-act-header:buffer-field ("num"):buffer-value .
     egais:SendRequestUTM() .
     glog = egais:IsSent .
     
@@ -289,7 +299,7 @@ DO:
     message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .    
   end.
   else do :
-      cast (egais:EGAISImpl, ibs.th.bge.egais.ActBalance):inNum = bh-act-header:buffer-field ("num"):buffer-value .
+      egais:inNum = bh-act-header:buffer-field ("num"):buffer-value .
       egais:GetHndlTable(2, bh-act-header:buffer-field ("num"):buffer-value) .
       glog = egais:StatusErr .
       if glog then do :
@@ -388,10 +398,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       ) no-error .
   assign v-ext-sys = v-value-integer .  
   
-  egais = new EGAIS(v-db-num, v-user-id).
-  
-  egais:EGAISImpl = new ActBalance (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
-  
+  egais = new ActBalance (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+
   bh-act-header = egais:GetHndlTable(3, "").
   create query qh-act-header.
   run refresh-query.
@@ -419,7 +427,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   .
   if not bh-act-header = ? 
   then do:
-    do ii = 1 to bh-act-header:num-fields - 2:
+    do ii = 1 to bh-act-header:num-fields - 3:
       bcol[ii] = browse-hdl-act-header:add-like-column('tt-act-header' + '.' + bh-act-header:buffer-field (ii):name, 0, 'FILL-IN').
     end.
     browse-hdl-act-header:get-browse-column (1):width-chars = 30.

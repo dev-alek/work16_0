@@ -3677,17 +3677,17 @@ logical~
 &scop user-can-edit-attr-egais-host   true
 &scop output-display-attr-egais-host  true
 &scop other-attr-egais-host           'spr-ext=gbl\exegais.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-egais-host  'character,character,integer':U
-&scop prop-label-list-attr-egais-host 'Код ФСРАР,Адрес УТМ,Номер внешней системы'
-&scop prop-list-attr-egais-host       'egais-fsrar,egais-utm,egais-exsys'
+&scop prop-type-list-attr-egais-host  'character,character,character,character,integer':U
+&scop prop-label-list-attr-egais-host 'Код ФСРАР,Адрес УТМ,Версия XSD схем,ИНН фирмы,Номер внешней системы'
+&scop prop-list-attr-egais-host       'egais-fsrar,egais-utm,egais-ver-xsd,egais-inn,egais-exsys'
 &scop global-attr-egais-host true
 &scop host-attr-egais-host false
 &scop shop-attr-egais-host true
-&scop store-attr-egais-host false
+&scop store-attr-egais-host true
 &scop db-attr-egais-host false
-&scop batch-edit-attr-egais-host  0
+/*&scop batch-edit-attr-egais-host  0*/
 &scop level-way-attr-egais-host "obj,,global"
-&scop up-way-attr-egais-host "egais,,egais"
+&scop up-way-attr-egais-host "egais,egais,egais,egais,egais"
 
 
 /* Общие параметры по АРХИВАМ */

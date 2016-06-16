@@ -69,8 +69,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       else do:
         v-send = yes.
       end.
-      if ub.clob-bind.resource-type begins 'egais' 
-        then v-send = false.
+      if  ub.clob-bind.resource-type = {&lob-egais-ab}
+          or ub.clob-bind.resource-type = {&lob-egais-awo}
+        then v-send = false. 
       if v-send then do:
         run str/callnews.p
           (input {&table_clob-bind}
@@ -91,7 +92,14 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       end.
    end.
    else do: /*если g#news*/
-     if g#db-num = 0 then do:
+     if g#db-num = 0 
+     and not
+      (ub.clob-bind.resource-type = {&lob-egais-wb}
+          or ub.clob-bind.resource-type = {&lob-egais-ref-b}
+          or ub.clob-bind.resource-type = {&lob-egais-wb-act}
+          or ub.clob-bind.resource-type = {&lob-egais-ticket}
+          or ub.clob-bind.resource-type = {&lob-egais-wb-ticket})
+     then do:
       define buffer buf_clob-data for ub.clob-data.
       find first buf_clob-data no-lock where
                 buf_clob-data.db-num = ub.clob-bind.db-num

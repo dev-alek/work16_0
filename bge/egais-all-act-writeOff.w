@@ -26,6 +26,8 @@ $Archive$
 using ibs.th.bge.egais.*.
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .
+define input parameter p-select as logical   no-undo .
+define output parameter p-RegID as character no-undo .
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -42,7 +44,7 @@ define variable bh-act-header         as handle    no-undo.
 define variable qh-act-header         as handle    no-undo.
 define variable browse-hdl-act-header as handle    no-undo.
 define variable bcol                as handle    extent 11 no-undo.
-define variable egais               as class     EGAIS no-undo.
+define variable egais               as class     ActWriteOff no-undo.
 define variable v-db-num            as integer   no-undo .
 define variable v-user-id           as character no-undo .
 define variable qh-ab-gds-EG-header as handle    no-undo.
@@ -141,6 +143,11 @@ DEFINE BUTTON Btn_Ans
      LABEL "Посмотреть ответ" 
      SIZE 20 BY 1.13
      BGCOLOR 8 .
+     
+DEFINE BUTTON Btn_Sel AUTO-GO
+     LABEL "Выбор" 
+     SIZE 15 BY 1.13
+     BGCOLOR 8 .
 
 
 DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1 
@@ -161,6 +168,7 @@ DEFINE FRAME Dialog-Frame
      Btn_send at row 1.2 col 62
      Btn_Ans AT ROW 1.2 COL 32 WIDGET-ID 10
      Btn_lkp AT ROW 1.2 COL 17 WIDGET-ID 12
+     Btn_Sel AT ROW 1.2 COL 17
      RADIO-SET-1 AT ROW 1.2 COL 80 NO-LABEL WIDGET-ID 2
      SPACE(2) SKIP(23.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -221,6 +229,28 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME Btn_Sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Sel Dialog-Frame
+ON CHOOSE OF Btn_Sel IN FRAME Dialog-Frame /* Загрузить */
+DO:
+    if not bh-act-header:available then return no-apply .
+    assign p-RegID = bh-act-header:buffer-field ("RegID"):buffer-value .
+    if p-RegID = "" or p-RegID = ? or num-entries(p-RegID, CHR(5)) <> 2 then do :
+        message "Данный акт либо относится к старой версии ЕГАИС, либо по нему ещё не получен ответ (в этом случае нажмите кнопку 'Посмотреть ответ')." view-as alert-box .
+        p-RegID = "" .
+        return no-apply .
+    end.
+    if entry(2, p-RegID, CHR(5)) = "R" then do :
+        message "Данный акт о списании был отклонён ЕГАИС. Чтобы узнать причину нажмите кнопку 'Посмотреть ответ'" view-as alert-box .
+        p-RegID = "" .
+        return no-apply .
+    end.
+    assign p-RegID = entry(1, p-RegID, CHR(5)) .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME Btn_create
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_create Dialog-Frame
 ON CHOOSE OF Btn_create IN FRAME Dialog-Frame /* Создать */
@@ -275,8 +305,9 @@ DO:
     find first tt-act-header .
     v-file = 'ActWriteOff.xml' .
     os-delete "ActWriteOff.xml" .
-    run makeXMLegais .
-    cast (egais:EGAISImpl, ibs.th.bge.egais.ActWriteOff):inNum = tt-act-header.num .
+    if egais:VerXSD = "1" then run makeXMLegais .
+    if egais:VerXSD = "2" then run makeXMLegais_v2 .
+    egais:inNum = tt-act-header.num .
     egais:SendRequestUTM() .
     glog = egais:IsSent .
     
@@ -306,7 +337,7 @@ DO:
     message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .    
   end.
   else do :
-      cast (egais:EGAISImpl, ibs.th.bge.egais.ActWriteOff):inNum = bh-act-header:buffer-field ("num"):buffer-value .
+      egais:inNum = bh-act-header:buffer-field ("num"):buffer-value .
       egais:GetHndlTable(2, bh-act-header:buffer-field ("num"):buffer-value) .
       glog = egais:StatusErr .
       if glog then do :
@@ -403,9 +434,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       ) no-error .
   assign v-ext-sys = v-value-integer .  
   
-  egais = new EGAIS(v-db-num, v-user-id).
   
-  egais:EGAISImpl = new ActWriteOff (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+  egais = new ActWriteOff (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
 
   bh-act-header = egais:GetHndlTable(3, "").
   create query qh-act-header.
@@ -434,7 +464,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   .
   if not bh-act-header = ? 
   then do:
-    do ii = 1 to bh-act-header:num-fields - 2:
+    do ii = 1 to bh-act-header:num-fields - 3:
       bcol[ii] = browse-hdl-act-header:add-like-column('tt-act-header' + '.' + bh-act-header:buffer-field (ii):name, 0, 'FILL-IN').
     end.
     browse-hdl-act-header:get-browse-column (1):width-chars = 30.
@@ -444,6 +474,16 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
 
   run enable_UI. 
   apply "value-changed" to RADIO-SET-1 in frame {&FRAME-NAME}. 
+  
+  if not p-select then hide Btn_sel in FRAME Dialog-Frame.
+  else do :
+      hide Btn_create Btn_chg Btn_del Btn_send RADIO-SET-1 in FRAME Dialog-Frame.
+      assign
+        Btn_lkp:x = Btn_lkp:x + 120
+        Btn_Ans:x = Btn_Ans:x + 120
+      .
+      ENABLE Btn_Ans Btn_lkp Btn_sel WITH FRAME Dialog-Frame.
+  end.
 
   wait-for go of frame {&FRAME-NAME}.
 end.
@@ -500,8 +540,15 @@ PROCEDURE refresh-query :
 
 if bh-act-header = ? 
   then return .
-  
-case RADIO-SET-1 :
+
+if p-select then do :
+    bh-act-header = egais:GetHndlTable({&awo-clob}, "").
+    qh-act-header:set-buffers (bh-act-header).
+    qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent and tt-act-header.type_ = 'Пересортица'").
+    qh-act-header:query-open.
+end.
+else do :  
+  case RADIO-SET-1 :
     when 1  then 
     do:
       bh-act-header = egais:GetHndlTable({&awo-clob}, "").
@@ -516,7 +563,8 @@ case RADIO-SET-1 :
       qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent").
       qh-act-header:query-open.
     end.
-  end.
+  end case.
+end.
 
 end.
 

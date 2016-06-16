@@ -73,6 +73,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob bef-extclass_oss-ref oss-ref
 &glob extclass_oss-ref '{&bef-extclass_oss-ref}':U
 
+&glob bef-extclass_egais-transId egais-transId
+&glob extclass_egais-transId '{&bef-extclass_egais-transId}':U
 
 &glob bef-extclass_goods_msf   msf-code
 &glob extclass_goods_msf   '{&bef-extclass_goods_msf}':U
@@ -110,6 +112,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,~{&bef-extclass_code_firm_in_ext_client}~
 ,~{&bef-extclass_code_org_code_client}~
 ,~{&bef-extclass_oss-ref}~
+,~{&bef-extclass_egais-transId}~
 ':U
 
 &glob extclass_no-news '~
@@ -127,11 +130,13 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,~{&bef-extclass_goods_th-th150}~
 ,~{&bef-extclass_goods_th-th14}~
 ,~{&bef-extclass_goods_fib}~
+~{&bef-extclass_egais-transId}~
 ':U
 
 /* extclass_extended-data-list */           /*Здесь можно размещать ТОЛЬКО ТЕ ТАБЛИЦЫ, которые НЕ СВЯЗАНЫ с физическими таблицами ТН (!), т.е. таблицы виртуальные, хранящие свои поля в таблице ext-classif, но которые нужно гонять по новостям и формировать историю.    Пояснение: процедура-триггер типа extclasw.p для записи в таблицу ub.ext-classif, до недавнего времени ВСЕГДА генерировала уникальный ключ (процедурой: gen-key-fv) с использованием физич. таблиц ТН. Данный список теперь используется для проверки и обхода процедуры gen-key-fv (в файле триггера extclasw.p)). */
 &glob extclass_extended-data-list '~
 ~{&bef-extclass_oss-ref}~
+~{&bef-extclass_egais-transId}~
 ':U
 
 &endif

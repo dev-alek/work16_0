@@ -75,6 +75,8 @@ define temp-table tt-objs no-undo
     field description_      as character label "Адрес"
     field fromEgais         as logical 
     field connected_        as logical
+    field versionWB         as character format "X(10)"
+    field typeEgais         as character format "X(2)"
     index pi as primary
         obj-type obj-code
     index egais
@@ -98,6 +100,7 @@ define buffer buf_firm for ub.firm .
 define buffer buf_clients for ub.clients .
 define buffer buf_clients-attr for ub.clients-attr .
 DEFINE BUFFER X_ext-classif FOR ub.ext-classif.
+DEFINE BUFFER X_ext-classif-attr FOR ub.ext-classif-attr .
 
 define variable select-list as character no-undo .
 define variable ii          as integer   no-undo .
@@ -385,6 +388,10 @@ DO:
         message "Не выбрано ни одной строки" view-as alert-box .
         return no-apply.
     end.   
+    if bh-obj-egais = ? then do :
+        message "Сначала сделайте запрос в ЕГАИС и получите актуальную информацию" view-as alert-box .
+        return no-apply.
+    end.
     do ii = 1 to num-entries(select-list) :
         for first tt-objs exclusive-lock where recid(tt-objs) = integer(entry(ii, select-list)) and tt-objs.obj-code > 0 :
             if tt-objs.connected_ then do :
@@ -451,10 +458,39 @@ DO:
                                                                and X_eXt-classif.nonunique = 0
                                                                no-error.
                     if available X_ext-classif then do :
+                        find first X_ext-classif-attr exclusive-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                                       and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                                       and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                                       and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                                       and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                                       and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                                       and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                                       and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                                       and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                                       and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                                       and X_ext-classif-attr.attr-code = 'egais-cli-info'
+                                                                       no-error .
+                        if not available X_ext-classif-attr then do :
+                            create X_ext-classif-attr .
+                            assign
+                                X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                X_ext-classif-attr.attr-code = 'egais-cli-info' 
+                            .       
+                        end.
                         assign
                             X_ext-classif.charkey_three = tt-objs.regID
-/*                            X_ext-classif.charkey_two   = tt-objs.obj-type + string(tt-objs.obj-code)*/
+                            X_ext-classif-attr.charkey_three = tt-objs.regID
                         .
+                        assign X_ext-classif-attr.attr-value = tt-objs.versionWB + CHR(4) + tt-objs.typeEgais .
                     end.
                     else do :
                         run ref/extclas1.p ( INPUT {&add-def}
@@ -475,6 +511,36 @@ DO:
                           message return-value skip error-status:get-message(1) view-as alert-box .
                           undo, return no-apply .
                         end.
+                        find first X_ext-classif no-lock where recid(X_ext-classif) = v-rid.
+                        find first X_ext-classif-attr exclusive-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                                       and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                                       and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                                       and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                                       and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                                       and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                                       and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                                       and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                                       and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                                       and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                                       and X_ext-classif-attr.attr-code = 'egais-cli-info'
+                                                                       no-error .
+                        if not available X_ext-classif-attr then do :
+                            create X_ext-classif-attr .
+                            assign
+                                X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                X_ext-classif-attr.attr-code = 'egais-cli-info' 
+                            .       
+                        end.
+                        assign X_ext-classif-attr.attr-value = tt-objs.versionWB + CHR(4) + tt-objs.typeEgais .
                     end.    
                 end. /* if tt-objs.regID <> "" */
             end. /* if bh-obj-egais:available and not bh-obj-egais:ambiguous */

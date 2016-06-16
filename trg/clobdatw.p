@@ -28,6 +28,7 @@ define variable vss-description as character no-undo init "Триггер на запись CLO
 
 define variable v-send as logical   no-undo .
 define variable v-call-handle as handle no-undo .
+define buffer buf_clob-bind for ub.clob-bind.
 
 main-block:
 do
@@ -81,9 +82,19 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
    end.
    end.
    else do:  /*если g#news*/
+      find first buf_clob-bind no-lock where
+        buf_clob-bind.db-num = ub.clob-data.db-num
+        and buf_clob-bind.int64-id = ub.clob-data.int64-id no-error.
      if ub.clob-data.is-cs = yes
      and g#db-num = 0
      and ub.clob-data.crc-field <> '':U
+     and not
+      (available (buf_clob-bind)
+          and (buf_clob-bind.resource-type = {&lob-egais-wb}
+          or buf_clob-bind.resource-type = {&lob-egais-ref-b}
+          or buf_clob-bind.resource-type = {&lob-egais-wb-act}
+          or buf_clob-bind.resource-type = {&lob-egais-ticket}
+          or buf_clob-bind.resource-type = {&lob-egais-wb-ticket}))
      then do:
       run str/callnews.p ( input {&table_clob-data}
                         ,input (buffer ub.clob-data:handle)

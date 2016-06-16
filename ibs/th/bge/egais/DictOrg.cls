@@ -37,6 +37,27 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
 </ns:Document>~
 </ns:Documents>'
 
+&scop xml_v2 '<?xml version="1.0" encoding="UTF-8"?>~
+<ns:Documents Version="1.0" ~
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ~
+xmlns:ns="http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" ~
+xmlns:oref="http://fsrar.ru/WEGAIS/ClientRef" ~
+xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
+<ns:Owner>~
+<ns:FSRAR_ID>&1</ns:FSRAR_ID>~
+</ns:Owner>~
+<ns:Document>~
+<ns:QueryClients_v2>~
+<qp:Parameters>~
+<qp:Parameter>~
+<qp:Name>»ÕÕ</qp:Name>~
+<qp:Value>&2</qp:Value>~
+</qp:Parameter>~
+</qp:Parameters>~
+</ns:QueryClients_v2>~
+</ns:Document>~
+</ns:Documents>'
+
   define stream outstr.
   
   define private buffer buf_ext-sys for ub.ext-system.
@@ -87,13 +108,19 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
       
       output stream outstr to value ("client.xml") convert target "UTF-8". 
       
-      outData = substitute ({&xml}, entry (1, parameters, {&delim-par}), entry (2, parameters, {&delim-par})).
+      if VerXSD = "1" then
+        outData = substitute ({&xml}, entry (1, parameters, {&delim-par}), entry (2, parameters, {&delim-par})).
+      if VerXSD = "2" then
+        outData = substitute ({&xml_v2}, entry (1, parameters, {&delim-par}), entry (2, parameters, {&delim-par})).  
       
       put stream outstr unformatted outData.
       put stream outstr skip.
       output stream outstr close.
   
-      cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/QueryPartner >&4", search ("exe/curl.exe"), search ("client.xml"), ConPar, inFileName).
+      if VerXSD = "1" then
+        cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/QueryPartner >&4", search ("exe/curl.exe"), search ("client.xml"), ConPar, inFileName, TimeOut).
+      if VerXSD = "2" then
+        cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/QueryClients_v2 >&4", search ("exe/curl.exe"), search ("client.xml"), ConPar, inFileName, TimeOut).
       os-command silent value (cmd).
          
       file-info:file-name = search (inFileName).
