@@ -60,7 +60,7 @@ define temp-table tt-gds no-undo
     field gds-code          like ub.goods.gds-code          label "Код товара в TH"
     field gds-name          like ub.goods.gds-name          label "Полное наименование" format "X(100)"
     field alc-code          as character                    label "Алкогольный код"
-    field ms-base           like ub.goods.ms-base           label "Объем"               format ">>9.9<<"
+    field ms-base           like ub.goods.ms-base           label "Объем"               format ">>>9.9<<"
     field alc-type-code     like ub.alc-type.alc-type-code  label "Код АП"
     field proof             like ub.goods.proof             label "Крепость"            format ">9.9"    
     field fromEgais         as logical
@@ -279,9 +279,9 @@ DEFINE BROWSE br-goods
   QUERY br-goods  DISPLAY
     get-mark(BUFFER tt-gds) COLUMN-LABEL "*"  FORMAT "X(1)":U
     tt-gds.gds-code COLUMN-LABEL "Код товара в TH" FORMAT ">>>>>>>>9"
-    tt-gds.gds-name COLUMN-LABEL "Наименование товара" FORMAT "X(100)":U width 39
+    tt-gds.gds-name COLUMN-LABEL "Наименование товара" FORMAT "X(100)":U width 38
     tt-gds.alc-code COLUMN-LABEL "Алкогольный код" FORMAT "X(25)":U 
-    tt-gds.ms-base  COLUMN-LABEL "Объем" FORMAT ">>9.9<<"
+    tt-gds.ms-base  COLUMN-LABEL "Объем" FORMAT ">>>9.9<<"
     tt-gds.proof    COLUMN-LABEL "Крепость" FORMAT ">9.9"
     tt-gds.alc-type-code COLUMN-LABEL "Код АП" FORMAT "X(4)":U
     tt-gds.egais-name COLUMN-LABEL "Наименование в ЕГАИС" FORMAT "X(100)":U width 39
