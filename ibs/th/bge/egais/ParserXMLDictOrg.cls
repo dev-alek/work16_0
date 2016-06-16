@@ -40,6 +40,8 @@ class ibs.th.bge.egais.ParserXMLDictOrg inherits EGAISUTM:
         field fromEgais         as logical
         field connected_        as logical
         field obj-name-egais-short as character label "Короткое наименование ЕГАИС" format "X(100)"
+        field versionWB         as character format "X(10)"
+        field typeEgais         as character format "X(2)"
         index pi 
 /*            as primary*/
 /*         unique*/
@@ -102,7 +104,14 @@ class ibs.th.bge.egais.ParserXMLDictOrg inherits EGAISUTM:
             IF hNoderef:NAME = "rc:Client" THEN do :
                 create tt-objs-EG .
                 assign tt-objs-EG.fromEgais = yes .
-            end.    
+            end.
+            
+            IF hNoderef:NAME = "oref:UL"
+            OR hNoderef:NAME = "oref:FL"
+            OR hNoderef:NAME = "oref:FO"
+            OR hNoderef:NAME = "oref:TS"
+            THEN assign tt-objs-EG.typeEgais = entry(2, hNoderef:NAME, ":") .
+            
             IF hNoderef:NAME = "oref:ClientRegId" THEN assign tt-objs-EG.regID          = hText:node-value .
             IF hNoderef:NAME = "oref:INN"         THEN assign tt-objs-EG.inn            = hText:node-value .
             IF hNoderef:NAME = "oref:KPP"         THEN assign tt-objs-EG.kpp            = hText:node-value .
@@ -118,7 +127,9 @@ class ibs.th.bge.egais.ParserXMLDictOrg inherits EGAISUTM:
             IF hNoderef:NAME = "oref:house"       THEN assign tt-objs-EG.house-number   = hText:node-value .  
             IF hNoderef:NAME = "oref:building"    THEN assign tt-objs-EG.house-case     = hText:node-value .
             IF hNoderef:NAME = "oref:liter"       THEN assign tt-objs-EG.house-litera   = hText:node-value .  
-            IF hNoderef:NAME = "oref:description" THEN assign tt-objs-EG.description_   = hText:node-value .    
+            IF hNoderef:NAME = "oref:description" THEN assign tt-objs-EG.description_   = hText:node-value .
+            
+            IF hNoderef:NAME = "oref:VersionWB"   THEN assign tt-objs-EG.versionWB      = hText:node-value .    
                    
             GetChildren(hNoderef, (level + 1)).
         END.
