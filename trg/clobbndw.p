@@ -28,6 +28,7 @@ define variable vss-description as character no-undo init "Триггер на запись clo
 
 define variable v-send as logical   no-undo .
 define variable v-call-handle as handle no-undo .
+define buffer buf_clob-bind for ub.clob-bind.
 
 main-block:
 do
@@ -61,6 +62,35 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         ub.clob-bind.sys-time-int
       }
     end.
+
+   if g#db-num = 0 
+   and
+    (ub.clob-bind.resource-type = {&lob-egais-wb}
+        or ub.clob-bind.resource-type = {&lob-egais-ref-b}
+        or ub.clob-bind.resource-type = {&lob-egais-wb-act}
+        or ub.clob-bind.resource-type = {&lob-egais-ticket}
+        or ub.clob-bind.resource-type = {&lob-egais-wb-ticket})
+   and not g#news
+   then do:     
+     if ub.clob-bind.db-num = 0 
+       then 
+     do:
+       find first buf_clob-bind no-lock
+         where buf_clob-bind.db-num <> 0 and buf_clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec and recid (buf_clob-bind) <> recid (ub.clob-bind) no-error.
+       if available (buf_clob-bind)
+         then 
+       do:
+         undo main-block,  return error
+           vss-workfile + vss-revision + vss-description + {&new-line} +
+           "Ошибка при вызове при сохранении записи clob-bind" + {&new-line} +
+           "Уже есть запись для " + ub.clob-bind.resource-type + {&new-line} +
+           "С индетификатором " + ub.clob-bind.uniq-key-rec + {&new-line} +
+           "полученная из БД " + string (buf_clob-bind.db-num) + {&new-line}
+           .
+       end.
+     end.
+   end.
+
     if not g#news then do:
       v-call-handle = this-procedure:instantiating-procedure.
       if valid-handle (v-call-handle) and lookup("cb_set-send-nws", v-call-handle:internal-entries) > 0 then do:
@@ -70,8 +100,15 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         v-send = yes.
       end.
       if  ub.clob-bind.resource-type = {&lob-egais-ab}
-          or ub.clob-bind.resource-type = {&lob-egais-awo}
-        then v-send = false. 
+         or ub.clob-bind.resource-type = {&lob-egais-awo}
+         or (g#db-num = 0 
+         and
+          (ub.clob-bind.resource-type = {&lob-egais-wb}
+              or ub.clob-bind.resource-type = {&lob-egais-ref-b}
+              or ub.clob-bind.resource-type = {&lob-egais-wb-act}
+              or ub.clob-bind.resource-type = {&lob-egais-ticket}
+              or ub.clob-bind.resource-type = {&lob-egais-wb-ticket}))
+        then v-send = false.                      
       if v-send then do:
         run str/callnews.p
           (input {&table_clob-bind}
@@ -124,6 +161,21 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       end. /*if available buf_clob-data*/
      end. /*if g#db-num = 0 then do:*/
    end. /*else do: если g#news*/
+   
+   if g#db-num = 0 
+   and
+    (ub.clob-bind.resource-type = {&lob-egais-wb}
+        or ub.clob-bind.resource-type = {&lob-egais-ref-b}
+        or ub.clob-bind.resource-type = {&lob-egais-wb-act}
+        or ub.clob-bind.resource-type = {&lob-egais-ticket}
+        or ub.clob-bind.resource-type = {&lob-egais-wb-ticket})
+   then do:     
+     for each buf_clob-bind where 
+       buf_clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec and recid (buf_clob-bind) <> recid (ub.clob-bind):
+       delete buf_clob-bind. 
+     end.
+   end.
+   
    /*calloxml.p вызывать не надо*/
 end.
 

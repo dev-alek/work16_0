@@ -78,7 +78,6 @@ do trans:
     temp_trn-doc.price-type    = if tt-wb-header.wb-type = {&TDEDT_Ras_Vnesh } then "TSFTSD" else ""
     .
     
-  
   jj = 0.
   for each tt-wb-gds-EG no-lock:
     
@@ -114,14 +113,14 @@ do trans:
           temp_doc-line.fact-qnty  = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
           temp_doc-line.doc-qnty   = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
           temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
-          temp_doc-line.price-rubl = tt-wb-gds-EG.price
+          temp_doc-line.price-cli = tt-wb-gds-EG.price
         .
       else
         assign
           temp_doc-line.fact-qnty  = tt-wb-gds-EG.qnty
           temp_doc-line.doc-qnty   = tt-wb-gds-EG.qnty
           temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
-          temp_doc-line.price-rubl = tt-wb-gds-EG.price
+          temp_doc-line.price-cli = tt-wb-gds-EG.price
         .    
     end.
     else do:
@@ -131,14 +130,14 @@ do trans:
           temp_doc-line.fact-qnty  = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
           temp_doc-line.doc-qnty   = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty
           temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
-          temp_doc-line.price-rubl = tt-wb-gds-EG.price
+          temp_doc-line.price-cli = tt-wb-gds-EG.price
         .
       else
         assign
           temp_doc-line.fact-qnty  = tt-wb-gds-EG.qnty
           temp_doc-line.doc-qnty   = tt-wb-gds-EG.qnty
           temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
-          temp_doc-line.price-rubl = tt-wb-gds-EG.price
+          temp_doc-line.price-cli = tt-wb-gds-EG.price
         .    
     end.
     

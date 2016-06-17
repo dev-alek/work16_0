@@ -410,8 +410,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 if available (buf_parts) then do:
                   find first buf_gds no-lock where buf_gds.artic = buf_parts.artic and buf_gds.prod-code = buf_parts.prod-code and buf_gds.prod-type = buf_parts.prod-type.
                   assign
-                    tt-wb-act-gds-EG.doc-qnty = buf_parts.qnty * buf_parts.cli-base-rate
-                    tt-wb-act-gds-EG.fact-qnty = buf_parts.fact-qnty * buf_parts.cli-base-rate
+                    tt-wb-act-gds-EG.doc-qnty = buf_parts.qnty / buf_parts.cli-base-rate
+                    tt-wb-act-gds-EG.fact-qnty = buf_parts.fact-qnty / buf_parts.cli-base-rate
                     tt-wb-act-gds-EG.gds-code = buf_gds.gds-code
                   .
                 end.
@@ -741,7 +741,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 tt-wb-gds-EG.Identity = string (ii)
 /*                tt-wb-gds-EG.gds-name = extGdsObj:GetExtGdsValue():FullNameGds*/
                 tt-wb-gds-EG.gds-code = buf_gds.gds-code
-                tt-wb-gds-EG.qnty = buf_parts.cli-base-rate * buf_parts.fact-qnty /*buf_parts.cli-qnty*/
+                tt-wb-gds-EG.qnty = buf_parts.fact-qnty / buf_parts.cli-base-rate /*buf_parts.cli-qnty*/
                 tt-wb-gds-EG.price = buf_doc-line.price-rubl when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} 
                 tt-wb-gds-EG.price = ub.gds-dtl.price-rubl when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
                 tt-wb-gds-EG.refA = entry (1, buf_parts.alc-ref-ab-path, ",")
@@ -1734,7 +1734,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
             and ub.parts.prod-code = buf_gds.prod-code
             and ub.parts.out-code  = inTrnDoc:
           jj = jj + 1.
-          THSumm = THSumm + buf_parts.cli-base-rate * buf_parts.fact-qnty.
+          THSumm = THSumm + buf_parts.fact-qnty / buf_parts.cli-base-rate.
 
         end.
 
@@ -1850,7 +1850,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     def var ii           as integer   no-undo.
     def var xml-cont     as longchar  no-undo.
     def var is-diff      as logical   no-undo.
-    def var recidList    as character no-undo.
+    def var docCodeList  as character no-undo.
     def var VerXSDShip   as character no-undo.
 
 &scop xml-act-cont '<wa:Position>~
@@ -1881,29 +1881,32 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       no-error.
     else VerXSDShip = 'WayBill_v1'.
 
-    
     if not (available (buf_clob-bind) and entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ') and not isForceAccept then do:
       
-      recidList = "".
+      docCodeList = "".
       for each buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid) :
-        if can-find (first buf_trn-doc where buf_trn-doc.doc-code = buf_doc-attr.doc-code and buf_trn-doc.status_ <> {&fact} or (buf_trn-doc.doc-type <> {&income} and buf_trn-doc.doc-type <> {&return}))
+        if can-find (first buf_trn-doc where buf_trn-doc.doc-code = buf_doc-attr.doc-code and 
+              not (buf_trn-doc.status_ = {&fact} and (buf_trn-doc.doc-type = {&income} or buf_trn-doc.ext-doc-type = {&WDEDT_Put_Cli})))
           then next.
-        recidList = recidList + "," + string (recid (buf_doc-attr)).
+        docCodeList = docCodeList + "," + buf_doc-attr.doc-code.
       end.
       
-      recidList = left-trim (recidList, ',').
+      docCodeList = left-trim (docCodeList, ',').
 
-      if num-entries (recidList) > 1
+      if num-entries (docCodeList) > 1
       then do:
-        Msg = substitute ("Несколько связанных накладных c одной накладной ЕГАИС wbregid - &1. Для исправления пересвяжите накладную", tt-wb-header.wbregid) + {&new-line}.
+        Msg = substitute ("Несколько связанных накладных c одной накладной ЕГАИС wbregid - &1/&2. Для исправления пересвяжите накладную", tt-wb-header.wbregid, docCodeList) + {&new-line}.
         for each buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid):
           Msg = Msg + "Накладаная - " + buf_doc-attr.doc-code + {&new-line}.
         end.
         StatusErr = true.
         return ?.
       end.
-      
-      find first buf_doc-attr no-lock where string (recid (buf_doc-attr)) = recidList no-error.
+
+      if docCodeList <> ""
+      then do:
+        find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.doc-code = docCodeList no-error.
+      end.
       
       if not available (buf_doc-attr)
       then do:
@@ -1959,16 +1962,15 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
   
           end.
         end.
-
-        if tt-wb-gds-EG.qnty <> buf_parts.cli-base-rate * buf_parts.fact-qnty then 
+        if tt-wb-gds-EG.qnty <> buf_parts.fact-qnty / buf_parts.cli-base-rate then 
         do:
           is-diff = true. 
         end.
         if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
         then
-          xml-cont = xml-cont + substitute ({&xml-act-cont-v2}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
+          xml-cont = xml-cont + substitute ({&xml-act-cont-v2}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string ( buf_parts.fact-qnty / buf_parts.cli-base-rate)).
         else
-          xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string (buf_parts.fact-qnty)).
+          xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string ( buf_parts.fact-qnty / buf_parts.cli-base-rate)).
 
       end /*foeach*/.
       
