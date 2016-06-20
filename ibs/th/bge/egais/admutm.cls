@@ -547,7 +547,7 @@ xmlns:qp="http://fsrar.ru/WEGAIS/InfoVersionTTN">~
     
     FullFileName = search ('InfoVersionTTN.xml').
     
-    cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/QueryResendDoc >&4", search ("exe/curl.exe"), FullFileName, ConPar, "RespInfoVersionTTN.xml").
+    cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/InfoVersionTTN >&4", search ("exe/curl.exe"), FullFileName, ConPar, "RespInfoVersionTTN.xml").
     os-command silent value (cmd).
     
     file-info:file-name = search ("RespInfoVersionTTN.xml").

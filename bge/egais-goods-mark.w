@@ -66,6 +66,12 @@ define variable ii         as integer no-undo .
 define variable v-gds-code as integer no-undo .
 define variable v-gds-code-old as integer no-undo .
 define variable v-alc-code-old as character no-undo .
+define variable v-gds-name   as character no-undo .
+define variable v-gds-name1  as character no-undo .
+define variable v-prod-name  as character no-undo .
+define variable v-prod-name1 as character no-undo .
+define variable v-imp-name   as character no-undo .
+define variable v-imp-name1  as character no-undo .
 
 { cmp/vssrevis.i }
 {bge/egais-mark.i}
@@ -95,8 +101,9 @@ define variable v-alc-code-old as character no-undo .
 &Scoped-Define ENABLED-OBJECTS RECT-1 RECT-2 RECT-3 Btn_OK Btn_Cancel ~
 Btn_add Btn_del br-goods 
 &Scoped-Define DISPLAYED-OBJECTS v-FullNameProd v-FullNameImpor ~
-v-FullNameGds v-CliRegIdProd v-CliRegIdImpor v-GdsCode v-INNProd v-INNImpor ~
-v-AlcCode v-KPPProd v-KPPImpor v-CountryProd v-CountryImpor 
+v-FullNameGds v-FullNameProd-2 v-FullNameImpor-2 v-FullNameGds-2 ~
+v-CliRegIdProd v-CliRegIdImpor v-GdsCode v-INNProd v-INNImpor v-AlcCode ~
+v-KPPProd v-KPPImpor v-CountryProd v-CountryImpor 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -135,76 +142,104 @@ DEFINE BUTTON Btn_OK AUTO-GO
 DEFINE VARIABLE v-AlcCode AS CHARACTER FORMAT "X(256)":U 
      LABEL "Àëê.êîä" 
      VIEW-AS FILL-IN 
-     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 29.5 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-CliRegIdImpor AS CHARACTER FORMAT "X(256)":U 
      LABEL "Ðåã.ID" 
      VIEW-AS FILL-IN 
-     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 29.5 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-CliRegIdProd AS CHARACTER FORMAT "X(256)":U 
      LABEL "Ðåã.ID" 
      VIEW-AS FILL-IN 
-     SIZE 29.5 BY .9 fgcolor 4 NO-UNDO.
+     SIZE 29.5 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-CountryImpor AS CHARACTER FORMAT "X(256)":U 
      LABEL "Ãîðîä" 
      VIEW-AS FILL-IN 
-     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 29.5 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-CountryProd AS CHARACTER FORMAT "X(256)":U 
      LABEL "Ãîðîä" 
      VIEW-AS FILL-IN 
-     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 29.5 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-FullNameGds AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 38.38 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 38.38 BY .92
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE v-FullNameGds-2 AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 38.38 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-FullNameImpor AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 38.38 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 38.38 BY .92
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE v-FullNameImpor-2 AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 38.38 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-FullNameProd AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 38.38 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 38.38 BY .92
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE v-FullNameProd-2 AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 38.38 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-GdsCode AS CHARACTER FORMAT "X(256)":U 
      LABEL "Êîä" 
      VIEW-AS FILL-IN 
-     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 29.5 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-INNImpor AS CHARACTER FORMAT "X(256)":U 
      LABEL "ÈÍÍ" 
      VIEW-AS FILL-IN 
-     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 29.5 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-INNProd AS CHARACTER FORMAT "X(256)":U 
      LABEL "ÈÍÍ" 
      VIEW-AS FILL-IN 
-     SIZE 29.5 BY .9 fgcolor 4 NO-UNDO.
+     SIZE 29.5 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-KPPImpor AS CHARACTER FORMAT "X(256)":U 
      LABEL "ÊÏÏ" 
      VIEW-AS FILL-IN 
-     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 29.5 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE v-KPPProd AS CHARACTER FORMAT "X(256)":U 
      LABEL "ÊÏÏ" 
      VIEW-AS FILL-IN 
-     SIZE 29.5 BY .92 fgcolor 4 NO-UNDO.
+     SIZE 29.5 BY .92
+     FGCOLOR 4  NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 40 BY 6.25.
+     SIZE 40 BY 7.75.
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 40 BY 6.25.
+     SIZE 40 BY 7.75.
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 40 BY 6.25.
+     SIZE 40 BY 7.75.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -224,10 +259,10 @@ DEFINE RECTANGLE RECT-3
     WIDTH 30
     tt-goods.alc-code format "X(256)"
     WIDTH 30
-    tt-goods.import-full-name
+    tt-goods.import-full-name format "X(256)"
     WIDTH 30
-    tt-goods.prod-full-name
-    WIDTH 30
+    tt-goods.prod-full-name format "X(256)"
+    WIDTH 30 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 121 BY 14.5 FIT-LAST-COLUMN.
@@ -242,17 +277,20 @@ DEFINE FRAME Dialog-Frame
      br-goods AT ROW 3 COL 1.5 WIDGET-ID 200
      v-FullNameProd AT ROW 18.83 COL 2 NO-LABEL WIDGET-ID 10 AUTO-RETURN 
      v-FullNameImpor AT ROW 18.83 COL 42.5 NO-LABEL WIDGET-ID 30 AUTO-RETURN 
-     v-FullNameGds AT ROW 18.83 COL 83 NO-LABEL WIDGET-ID 44 AUTO-RETURN 
-     v-CliRegIdProd AT ROW 19.79 COL 8.88 COLON-ALIGNED WIDGET-ID 14
-     v-CliRegIdImpor AT ROW 19.79 COL 49.38 COLON-ALIGNED WIDGET-ID 26
-     v-GdsCode AT ROW 19.79 COL 89.88 COLON-ALIGNED WIDGET-ID 40
-     v-INNProd AT ROW 20.79 COL 8.88 COLON-ALIGNED WIDGET-ID 16
-     v-INNImpor AT ROW 20.79 COL 49.38 COLON-ALIGNED WIDGET-ID 32
-     v-AlcCode AT ROW 20.79 COL 89.88 COLON-ALIGNED WIDGET-ID 46
-     v-KPPProd AT ROW 21.79 COL 8.88 COLON-ALIGNED WIDGET-ID 18
-     v-KPPImpor AT ROW 21.79 COL 49.38 COLON-ALIGNED WIDGET-ID 34
-     v-CountryProd AT ROW 22.79 COL 8.88 COLON-ALIGNED WIDGET-ID 20
-     v-CountryImpor AT ROW 22.79 COL 49.38 COLON-ALIGNED WIDGET-ID 28
+     v-FullNameGds AT ROW 18.83 COL 83 NO-LABEL WIDGET-ID 50 AUTO-RETURN 
+     v-FullNameProd-2 AT ROW 19.88 COL 2 NO-LABEL WIDGET-ID 52 AUTO-RETURN 
+     v-FullNameImpor-2 AT ROW 19.88 COL 42.5 NO-LABEL WIDGET-ID 54 AUTO-RETURN 
+     v-FullNameGds-2 AT ROW 19.88 COL 83 NO-LABEL WIDGET-ID 56 AUTO-RETURN 
+     v-CliRegIdProd AT ROW 21.38 COL 9 COLON-ALIGNED WIDGET-ID 14
+     v-CliRegIdImpor AT ROW 21.38 COL 49.5 COLON-ALIGNED WIDGET-ID 26
+     v-GdsCode AT ROW 21.38 COL 90 COLON-ALIGNED WIDGET-ID 40
+     v-INNProd AT ROW 22.38 COL 9 COLON-ALIGNED WIDGET-ID 16
+     v-INNImpor AT ROW 22.38 COL 49.5 COLON-ALIGNED WIDGET-ID 32
+     v-AlcCode AT ROW 22.38 COL 90 COLON-ALIGNED WIDGET-ID 46
+     v-KPPProd AT ROW 23.38 COL 9 COLON-ALIGNED WIDGET-ID 18
+     v-KPPImpor AT ROW 23.38 COL 49.5 COLON-ALIGNED WIDGET-ID 34
+     v-CountryProd AT ROW 24.38 COL 9 COLON-ALIGNED WIDGET-ID 20
+     v-CountryImpor AT ROW 24.38 COL 49.5 COLON-ALIGNED WIDGET-ID 28
      "Òîâàð:" VIEW-AS TEXT
           SIZE 18.5 BY .67 AT ROW 17.88 COL 83 WIDGET-ID 38
      "Èìïîðòåð:" VIEW-AS TEXT
@@ -262,7 +300,7 @@ DEFINE FRAME Dialog-Frame
      RECT-1 AT ROW 17.75 COL 1.5 WIDGET-ID 6
      RECT-2 AT ROW 17.75 COL 42 WIDGET-ID 22
      RECT-3 AT ROW 17.75 COL 82.5 WIDGET-ID 36
-     SPACE(0.87) SKIP(0.28)
+     SPACE(0.87) SKIP(0.07)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Òîâàðû ÅÃÀÈÑ"
@@ -303,9 +341,15 @@ ASSIGN
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN v-FullNameGds IN FRAME Dialog-Frame
    NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN v-FullNameGds-2 IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
 /* SETTINGS FOR FILL-IN v-FullNameImpor IN FRAME Dialog-Frame
    NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN v-FullNameImpor-2 IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
 /* SETTINGS FOR FILL-IN v-FullNameProd IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN v-FullNameProd-2 IN FRAME Dialog-Frame
    NO-ENABLE ALIGN-L                                                    */
 /* SETTINGS FOR FILL-IN v-GdsCode IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
@@ -434,9 +478,13 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME value-changed
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL value-changed Dialog-Frame
 on value-changed of br-goods do:
   run local-value-changed.
 end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
   
 &Scoped-define SELF-NAME Btn_del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_del Dialog-Frame
@@ -471,6 +519,9 @@ DO:
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&Scoped-define BROWSE-NAME br-goods
+&UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
@@ -565,7 +616,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_goods Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-value-changed Dialog-Frame 
 PROCEDURE local-value-changed :
 /*------------------------------------------------------------------------------
     Purpose:     
@@ -573,21 +624,39 @@ PROCEDURE local-value-changed :
     Notes:       
   ------------------------------------------------------------------------------*/
   if available tt-goods then do:
+
     
-    DISPLAY tt-goods.FullNameProd @ v-FullNameProd with frame {&frame-name}.
+    if length (tt-goods.prod-full-name) > 33 then do:
+      v-prod-name = substring (tt-goods.prod-full-name,1,36,"character") .
+      v-prod-name1 = substring (tt-goods.prod-full-name,37,81,"character") .
+    end.
+    else v-prod-name = tt-goods.prod-full-name .
+    DISPLAY v-prod-name @ v-FullNameProd with frame {&frame-name}.
+    DISPLAY v-prod-name1 @ v-FullNameProd-2 with frame {&frame-name}.
     DISPLAY tt-goods.CliRegIdProd @ v-CliRegIdProd with frame {&frame-name}.
     DISPLAY tt-goods.CountryProd @ v-CountryProd with frame {&frame-name}.
     DISPLAY tt-goods.INNProd @ v-INNProd with frame {&frame-name}.
-    DISPLAY tt-goods.KPPProd @ v-KPPProd with frame {&frame-name}.         
-    DISPLAY tt-goods.FullNameImpor @ v-FullNameImpor with frame {&frame-name}.
+    DISPLAY tt-goods.KPPProd @ v-KPPProd with frame {&frame-name}.   
+    if length (tt-goods.import-full-name) > 33 then do:
+      v-imp-name = substring (tt-goods.import-full-name,1,36,"character") .
+      v-imp-name1 = substring (tt-goods.import-full-name,37,81,"character") .
+    end.
+    else v-imp-name = tt-goods.import-full-name .      
+    DISPLAY v-imp-name @ v-FullNameImpor with frame {&frame-name}.
+    DISPLAY v-imp-name1 @ v-FullNameImpor-2 with frame {&frame-name}.
     DISPLAY tt-goods.CliRegIdImpor @ v-CliRegIdImpor with frame {&frame-name}.
     DISPLAY tt-goods.CountryImpor @ v-CountryImpor with frame {&frame-name}.
     DISPLAY tt-goods.INNImpor @ v-INNImpor with frame {&frame-name}.
     DISPLAY tt-goods.KPPImpor @ v-KPPImpor with frame {&frame-name}.
     DISPLAY tt-goods.alc-code @ v-AlcCode with frame {&frame-name}.
     DISPLAY string(tt-goods.gds-code) @ v-GdsCode with frame {&frame-name}.
-    DISPLAY tt-goods.gds-name @ v-FullNameGds with frame {&frame-name}.    
-          
+    if length (tt-goods.gds-name) > 33 then do:
+      v-gds-name = substring (tt-goods.gds-name,1,33,"character") .
+      v-gds-name1 = substring (tt-goods.gds-name,34,67,"character") .
+    end.
+    else v-gds-name = tt-goods.gds-name .   
+    DISPLAY v-gds-name @ v-FullNameGds with frame {&frame-name}.
+    DISPLAY v-gds-name1 @ v-FullNameGds-2 with frame {&frame-name}.      
 /*    v-FullNameProd = tt-goods.FullNameProd*/
 /*    v-CliRegIdProd = tt-goods.CliRegIdProd*/
 /*    v-CountryProd = tt-goods.CountryProd*/

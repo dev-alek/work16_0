@@ -423,8 +423,8 @@ class ibs.th.bge.egais.ExtGds:
     
     ReturnMsg = "".
     
-    v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
-    v-impor = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
+    v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
+    v-impor = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
     
     if error-status:error
       then 
@@ -451,7 +451,7 @@ class ibs.th.bge.egais.ExtGds:
     entry (5, v-impor, chr(5)) = inExtGdsValueObj:CountryImpor.
     entry (6, v-impor, chr(5)) = inExtGdsValueObj:DescrImpor.
     entry (7, v-impor, chr(5)) = inExtGdsValueObj:CliEgaisTypeImpor.
-    entry (8, v-prod, chr(5)) = inExtGdsValueObj:RegionImpor.
+    entry (8, v-impor, chr(5)) = inExtGdsValueObj:RegionImpor.
   
     buf_ext-classif-attr.attr-value = v-prod + chr(4) + v-impor + chr(4) + inExtGdsValueObj:FullNameGds.
     release buf_ext-classif-attr.
@@ -489,6 +489,12 @@ class ibs.th.bge.egais.ExtGds:
       inExtGdsValueObjTo:INNProd = inExtGdsValueObjForm:INNProd
       inExtGdsValueObjTo:KPPImpor = inExtGdsValueObjForm:KPPImpor
       inExtGdsValueObjTo:KPPProd = inExtGdsValueObjForm:KPPProd
+      
+      inExtGdsValueObjTo:CliEgaisTypeImpor = inExtGdsValueObjForm:CliEgaisTypeImpor
+      inExtGdsValueObjTo:CliEgaisTypeProd = inExtGdsValueObjForm:CliEgaisTypeProd
+      inExtGdsValueObjTo:RegionImpor = inExtGdsValueObjForm:RegionImpor
+      inExtGdsValueObjTo:RegionProd = inExtGdsValueObjForm:RegionProd
+      
     no-error.
     
     if error-status:error

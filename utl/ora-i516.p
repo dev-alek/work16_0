@@ -826,7 +826,7 @@ assign
               tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty when is-egais
               
               tt2-doc-line.price-cli      = temp_doc-line.price-cli
-              tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
+              tt2-doc-line.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / buf_goods.cli-base-rate
               tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
   
               tt2-doc-line.doc-code       = n-d
@@ -864,13 +864,16 @@ assign
           end.
           else do:
             assign
-              tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + temp_doc-line.cli-qnty
+              
               tt2-doc-line.price-cli      = (tt2-doc-line.price-cli * tt2-doc-line.cli-qnty + temp_doc-line.price-cli * temp_doc-line.cli-qnty) 
                                           / (tt2-doc-line.cli-qnty + temp_doc-line.cli-qnty)
+              tt2-doc-line.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / buf_goods.cli-base-rate
+              tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
+              
+              tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + temp_doc-line.cli-qnty
               tt2-doc-line.doc-qnty       = tt2-doc-line.doc-qnty +  temp_doc-line.doc-qnty
               tt2-doc-line.fact-qnty      = tt2-doc-line.fact-qnty + temp_doc-line.fact-qnty
-              tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
-              tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale.
+              .
           end.
       end.
         
@@ -938,10 +941,12 @@ assign
           tt-parts.artic          = tt2-doc-line.artic
           tt-parts.in-code        = new_trn-doc.doc-code
           tt-parts.out-code       = new_trn-doc.doc-code
+
           tt-parts.price-cli      = temp_doc-line.price-cli
-          tt-parts.price-rubl     = temp_doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
+          tt-parts.price-rubl     = (temp_doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / tt-parts.cli-base-rate
+                    
           tt-parts.price-base     = tt-parts.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
-          tt-parts.qnty           = temp_doc-line.fact-qnty
+          tt-parts.qnty           = temp_doc-line.doc-qnty
           tt-parts.obj-type       = new_trn-doc.obj-type
           tt-parts.obj-code       = new_trn-doc.obj-code
           tt-parts.fact-date      = new_trn-doc.fact-date
@@ -956,8 +961,7 @@ assign
           tt-parts.supp-code      = new_trn-doc.cli-code
           tt-parts.rsrv-free      = ?
           tt-parts.doc-type       = new_trn-doc.doc-type
-          tt-parts.cli-qnty       = tt2-doc-line.fact-qnty when not is-egais
-          tt-parts.cli-qnty       = tt2-doc-line.cli-qnty when is-egais
+          tt-parts.cli-qnty       = temp_doc-line.cli-qnty
           tt-parts.pl-code        = ?
           tt-parts.VAT-type       = temp_trn-doc.vat-type
           tt-parts.exch-code      = 0
@@ -1337,11 +1341,15 @@ end.
             and ub.parts.artic     = ub.doc-line.artic
             and ub.parts.prod-type = ub.doc-line.prod-type
             and ub.parts.prod-code = ub.doc-line.prod-code:
-  
+
           find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
           if not available (temp_doc-line) then do:
             find first temp_doc-line where  temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
           end.
+          
+          ub.parts.price-cli = temp_doc-line.price-cli.
+          ub.parts.price-rubl = (temp_doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / ub.parts.cli-base-rate.
+          ub.parts.price-base = ub.parts.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale.
           
           run trg/partps.p ( input buf_goods.gds-code
                            , input parts.in-code
