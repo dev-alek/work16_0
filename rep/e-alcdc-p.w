@@ -1907,7 +1907,7 @@ delete object ext-cl no-error .
 
 /* Теперь надо объединить строки, у которых код АП, КПП и ИНН производителя одинаковые */
 define buffer buf_part-1 for part-1 .
-for each part-1 exclusive-lock :
+for each part-1 exclusive-lock where part-1.producer-inn <> "" :
     if TOGGLE-KPP then do :
         find first buf_part-1 exclusive-lock where buf_part-1.alc-type-code = part-1.alc-type-code
                                                and buf_part-1.producer-inn  = part-1.producer-inn
@@ -1976,6 +1976,9 @@ for each part-2 exclusive-lock :
                                                and buf_part-2.producer-inn  = part-2.producer-inn
                                                and buf_part-2.producer-kpp  = part-2.producer-kpp
                                                and buf_part-2.obj-kpp       = part-2.obj-kpp
+                                               and buf_part-2.TTN           = part-2.TTN
+                                               and buf_part-2.supplier-type = part-2.supplier-type
+                                               and buf_part-2.supplier-code = part-2.supplier-code
                                                and rowid(buf_part-2) <> rowid(part-2) no-error.        
     end.
     else do :
@@ -1984,6 +1987,9 @@ for each part-2 exclusive-lock :
                                                and buf_part-2.producer-kpp  = part-2.producer-kpp
                                                and buf_part-2.obj-type      = part-2.obj-type
                                                and buf_part-2.obj-code      = part-2.obj-code
+                                               and buf_part-2.TTN           = part-2.TTN
+                                               and buf_part-2.supplier-type = part-2.supplier-type
+                                               and buf_part-2.supplier-code = part-2.supplier-code
                                                and rowid(buf_part-2) <> rowid(part-2) no-error.
     end.                                           
     if available buf_part-2 then do :
