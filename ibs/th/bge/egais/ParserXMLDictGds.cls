@@ -36,6 +36,7 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
     DEFINE VARIABLE hDoc AS HANDLE NO-UNDO.
     DEFINE VARIABLE hRoot AS HANDLE NO-UNDO.
     DEFINE VARIABLE good AS LOGICAL NO-UNDO.
+    define variable v-save-info as character no-undo .
     
     define variable v-imp as logical .
     
@@ -138,8 +139,16 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
                 else          assign entry (8, tt-gds-EG.prod-info, chr(5)) = hText:node-value .
             end.
             IF hNoderef:NAME = "oref:description" THEN do :
-                if v-imp then assign entry (6, tt-gds-EG.imp-info, chr(5)) = hText:node-value no-error .
-                else          assign entry (6, tt-gds-EG.prod-info, chr(5)) = hText:node-value no-error .
+                if v-imp then do :
+                    v-save-info = tt-gds-EG.imp-info .
+                    assign entry (6, tt-gds-EG.imp-info, chr(5)) = hText:node-value no-error .
+                    if tt-gds-EG.imp-info = ? then tt-gds-EG.imp-info = v-save-info .
+                end.    
+                else do :
+                    v-save-info = tt-gds-EG.prod-info .
+                    assign entry (6, tt-gds-EG.prod-info, chr(5)) = hText:node-value no-error .
+                    if tt-gds-EG.prod-info = ? then tt-gds-EG.prod-info = v-save-info .
+                end.    
             end.    
                    
             GetChildren(hNoderef, (level + 1)).
