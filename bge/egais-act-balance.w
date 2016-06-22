@@ -1334,8 +1334,10 @@ procedure GetChildren :
         OR hNoderef:NAME = "ainp:ActDate" THEN 
             assign tt-act-header.date_ = date(substring(hText:node-value, 9, 2) + "/" + substring(hText:node-value, 6, 2) + "/" + substring(hText:node-value, 1, 4)) no-error .    
         
-        IF hNoderef:NAME = "ainp:TypeChargeOn" THEN assign tt-act-header.type_    = hText:node-value no-error .
-        if tt-act-header.type_ = "Продукция, полученная до 01.01.2016" then tt-act-header.type_ = "Продукция полученная до 01.01.2016" .
+        IF hNoderef:NAME = "ainp:TypeChargeOn" THEN do :
+            assign tt-act-header.type_    = hText:node-value no-error .
+            if tt-act-header.type_ = "Продукция, полученная до 01.01.2016" then tt-act-header.type_ = "Продукция полученная до 01.01.2016" .
+        end.
         
         IF hNoderef:NAME = "ainp:ActWriteOff" THEN assign v-RegID    = hText:node-value no-error .
             

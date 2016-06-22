@@ -92,16 +92,18 @@ class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
         ,input-output table thbjattr_thbj-attr
         ) no-error .
 
+    if error-status:error 
+      then v-value-character = "1".
     case v-value-character:
       when "1" or when "" or when ? then do:
         VerXSD = "1".
       end.
-      when "2" or when "" or when "" or when ? then do:
+      when "2" then do:
         VerXSD = "2".
       end.
       otherwise do:
-        message "В настройках параметров ЕГАИС для объекта указана неверная версия схем XSD. Продолжение работы не возможно." view-as alert-box.
-        undo, return error.
+        message substitute ("В настройках параметров ЕГАИС для объекта указана неверная версия схем XSD - &1. Будет использована схема по умолчанию 1", VerXSD) view-as alert-box.
+        VerXSD = "1".
       end.
     end.
     
