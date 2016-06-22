@@ -487,11 +487,16 @@ DO:
   
   if not isChoise then return no-apply.
   
-  for each ub.clob-bind exclusive-lock where ub.clob-bind.uniq-key-rec = bh-wb-egais:buffer-field ('uniq-key-rec'):buffer-value ():
-    
-    delete ub.clob-bind.
-    
+  do trans:
+  
+    for each ub.clob-bind exclusive-lock where ub.clob-bind.uniq-key-rec = bh-wb-egais:buffer-field ('uniq-key-rec'):buffer-value ():
+      
+      delete ub.clob-bind.
+      
+    end.
+  
   end.
+  
   run reopen-browse.
   
 END.

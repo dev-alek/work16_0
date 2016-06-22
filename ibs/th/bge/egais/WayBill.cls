@@ -71,25 +71,27 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
   define stream outstr.
   
-  define private buffer buf_clob-bind        for ub.clob-bind.
-  define private buffer buf_clob-data        for ub.clob-data.
-  define private buffer buf_gds              for ub.goods.
-  define private buffer buf_gds-attr         for ub.goods-attr.
-  define private buffer buf_trn-doc          for ub.trn-doc.
-  define private buffer buf_doc-attr         for ub.doc-attr.
-  define private buffer buf_parts            for ub.parts.
-  define private buffer buf_doc-line         for ub.doc-line.
-  define private buffer buf_doc-line-attr    for ub.doc-line-attr.
-  define private buffer buf_clients          for ub.clients.
-  define private buffer buf_clients-attr     for ub.clients-attr.
-  define private buffer buf_firm             for ub.firm.
-  define private buffer buf_shop             for ub.shop.
-  define private buffer buf_store            for ub.store.
-  define private buffer buf_ext-classif      for ub.ext-classif.
-  define private buffer buf_ext-classif-attr for ub.ext-classif-attr.
-  define private buffer X_ext-classif        for ub.ext-classif.
-  define private buffer buf_country          for ub.country.
-  define private buffer buf_tt-wb-gds-EG     for tt-wb-gds-EG.
+  define private buffer buf_clob-bind          for ub.clob-bind.
+  define private buffer buf_clob-bind-wb-hndls for ub.clob-bind.
+  define private buffer buf_clob-bind-temp     for ub.clob-bind.
+  define private buffer buf_clob-data          for ub.clob-data.
+  define private buffer buf_gds                for ub.goods.
+  define private buffer buf_gds-attr           for ub.goods-attr.
+  define private buffer buf_trn-doc            for ub.trn-doc.
+  define private buffer buf_doc-attr           for ub.doc-attr.
+  define private buffer buf_parts              for ub.parts.
+  define private buffer buf_doc-line           for ub.doc-line.
+  define private buffer buf_doc-line-attr      for ub.doc-line-attr.
+  define private buffer buf_clients            for ub.clients.
+  define private buffer buf_clients-attr       for ub.clients-attr.
+  define private buffer buf_firm               for ub.firm.
+  define private buffer buf_shop               for ub.shop.
+  define private buffer buf_store              for ub.store.
+  define private buffer buf_ext-classif        for ub.ext-classif.
+  define private buffer buf_ext-classif-attr   for ub.ext-classif-attr.
+  define private buffer X_ext-classif          for ub.ext-classif.
+  define private buffer buf_country            for ub.country.
+  define private buffer buf_tt-wb-gds-EG       for tt-wb-gds-EG.
   
   define private variable parameters     as character no-undo.
   define private variable inFileName     as character no-undo.
@@ -441,23 +443,23 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       when {&wb-clob} then 
         do:
           empty temp-table tt-wb-hndls.
-          for each buf_clob-bind no-lock where buf_clob-bind.resource-type = {&lob-egais-wb}:
+          for each buf_clob-bind-wb-hndls no-lock where buf_clob-bind-wb-hndls.resource-type = {&lob-egais-wb}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.Identity + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
-            if entry (9, buf_clob-bind.descr, {&delim-par}) <> "" and entry (9, buf_clob-bind.descr, {&delim-par}) <> "0" and entry (9, buf_clob-bind.descr, {&delim-par}) <> ObjType + string (ObjCode)
+            if entry (9, buf_clob-bind-wb-hndls.descr, {&delim-par}) <> "" and entry (9, buf_clob-bind-wb-hndls.descr, {&delim-par}) <> "0" and entry (9, buf_clob-bind-wb-hndls.descr, {&delim-par}) <> ObjType + string (ObjCode)
               then next.
             create tt-wb-hndls.
             assign
-              tt-wb-hndls.wb-date      = date (entry (1, buf_clob-bind.descr, {&delim-par}))
-              tt-wb-hndls.num          = (if buf_clob-bind.uniq-key-rec matches '*отмена*' or buf_clob-bind.uniq-key-rec matches '*old*' then "отмена: " else "") + entry (2, buf_clob-bind.descr, {&delim-par})
-              tt-wb-hndls.shippregid   = entry (3, buf_clob-bind.descr, {&delim-par})
-              tt-wb-hndls.Identity     = entry (4, buf_clob-bind.descr, {&delim-par})
-              tt-wb-hndls.trn-doc-code = entry (6, buf_clob-bind.descr, {&delim-par})
-              tt-wb-hndls.is-sent      = entry (7, buf_clob-bind.descr, {&delim-par})
+              tt-wb-hndls.wb-date      = date (entry (1, buf_clob-bind-wb-hndls.descr, {&delim-par}))
+              tt-wb-hndls.num          = (if buf_clob-bind-wb-hndls.uniq-key-rec matches '*отмена*' or buf_clob-bind-wb-hndls.uniq-key-rec matches '*old*' then "отмена: " else "") + entry (2, buf_clob-bind-wb-hndls.descr, {&delim-par})
+              tt-wb-hndls.shippregid   = entry (3, buf_clob-bind-wb-hndls.descr, {&delim-par})
+              tt-wb-hndls.Identity     = entry (4, buf_clob-bind-wb-hndls.descr, {&delim-par})
+              tt-wb-hndls.trn-doc-code = entry (6, buf_clob-bind-wb-hndls.descr, {&delim-par})
+              tt-wb-hndls.is-sent      = entry (7, buf_clob-bind-wb-hndls.descr, {&delim-par})
               tt-wb-hndls.wb-type      = "приход вн."  
-              when entry (8, buf_clob-bind.descr, {&delim-par}) = {&TDEDT_Pri_Vnesh}
-              tt-wb-hndls.obj          = entry (9, buf_clob-bind.descr, {&delim-par})
-              tt-wb-hndls.EGAISSts     = entry (10, buf_clob-bind.descr, {&delim-par}) when num-entries (buf_clob-bind.descr, {&delim-par}) > 9
-              tt-wb-hndls.uniq-key-rec = buf_clob-bind.uniq-key-rec.
+              when entry (8, buf_clob-bind-wb-hndls.descr, {&delim-par}) = {&TDEDT_Pri_Vnesh}
+              tt-wb-hndls.obj          = entry (9, buf_clob-bind-wb-hndls.descr, {&delim-par})
+              tt-wb-hndls.EGAISSts     = entry (10, buf_clob-bind-wb-hndls.descr, {&delim-par}) when num-entries (buf_clob-bind-wb-hndls.descr, {&delim-par}) > 9
+              tt-wb-hndls.uniq-key-rec = buf_clob-bind-wb-hndls.uniq-key-rec.
             .
             find first ub.ext-classif no-lock 
               where ub.ext-classif.classif-subject = {&table_clients}
@@ -475,7 +477,20 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 end.
             end.
             assign 
-              tt-wb-hndls.wbregid = entry (5, buf_clob-bind.descr, {&delim-par}) no-error.
+              tt-wb-hndls.wbregid = entry (5, buf_clob-bind-wb-hndls.descr, {&delim-par}) no-error.
+            if tt-wb-hndls.wbregid = ""
+            then do:
+              GetHndlTable({&wb-header}, tt-wb-hndls.uniq-key-rec).
+              find first tt-wb-header no-error.
+              find first buf_clob-bind-temp where recid (buf_clob-bind-temp) = recid (buf_clob-bind-wb-hndls) exclusive-lock.
+              if available (tt-wb-header) 
+                then 
+                  assign 
+                    tt-wb-hndls.wbregid = tt-wb-header.wbregid
+                    entry (5, buf_clob-bind-temp.descr, {&delim-par}) = tt-wb-header.wbregid when available (buf_clob-bind-temp).
+                  .
+              release buf_clob-bind-temp.
+            end.
             find first buf_trn-doc where buf_trn-doc.doc-code = tt-wb-hndls.trn-doc-code no-error.
             if available (buf_trn-doc)
               then
