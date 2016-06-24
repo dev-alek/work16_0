@@ -6664,6 +6664,10 @@ end.
 &global-define EGAIS-DictGds '{&bef-EGAIS-DictGds}':U
 &global-define bef-EGAIS-DictGds-full Справочник товаров
 &global-define EGAIS-DictGds-full '{&bef-EGAIS-DictGds-full}':U
+&global-define bef-EGAIS-InfoVer 3
+&global-define EGAIS-InfoVer '{&bef-EGAIS-InfoVer}':U
+&global-define bef-EGAIS-InfoVer-full Уведомление сервера ЕГАИС о смене версии xsd-схем
+&global-define EGAIS-InfoVer-full '{&bef-EGAIS-InfoVer-full}':U
 &global-define bef-egais-act-send 0
 &global-define egais-act-send '{&bef-egais-act-send}':U
 &global-define bef-egais-act-send-full Акт отправлен
@@ -7977,6 +7981,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: 8072e19e663c, 603, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 8072e19e663c, 603, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 8895a23811d7, 677, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 5650d7c98ac2, 654, rls ':U
 &endif
