@@ -180,6 +180,7 @@ DEFINE VARIABLE tb_no_date AS LOGICAL INITIAL no
 DEFINE MENU popup-menu-ver-xsd
        MENU-ITEM m_ver-xsd-1 LABEL "Изменить версия XSD схем на 1"     ACCELERATOR "ALT-1"
        MENU-ITEM m_ver-xsd-2 LABEL "Изменить версия XSD схем на 2" ACCELERATOR "ALT-2"
+       MENU-ITEM m_look-resp-ver-xsd LABEL "Просмотреть ответ" ACCELERATOR "ALT-3"
 .
 
 /* ************************  Frame Definitions  *********************** */
@@ -251,7 +252,13 @@ do:
 on choose of menu-item m_ver-xsd-1 in menu popup-menu-ver-xsd /* Смена вер. XSD */
 DO:
   
-  AdmUtmObj:SendInfoVer("WayBill_v1").
+  if AdmUtmObj:IsSent
+  then do:
+    message "Запрос уже был отправлен. Дождитесь ответа." view-as alert-box error.
+    return no-apply.
+  end.
+  
+  AdmUtmObj:SendInfoVer("WayBill").
   if AdmUtmObj:StatusErr
   then do:
     message AdmUtmObj:Msg view-as alert-box error.
@@ -267,11 +274,45 @@ END.
 on choose of menu-item m_ver-xsd-2 in menu popup-menu-ver-xsd /* Смена вер. XSD */
 DO:
 
+  if AdmUtmObj:IsSent
+  then do:
+    message "Запрос уже был отправлен. Дождитесь ответа." view-as alert-box error.
+    return no-apply.
+  end.
+
   AdmUtmObj:SendInfoVer("WayBill_v2").
   if AdmUtmObj:StatusErr
   then do:
     message AdmUtmObj:Msg view-as alert-box error.
   end.
+  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_look-resp-ver-xsd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_look-resp-ver-xsd Dialog-Frame
+on choose of menu-item m_look-resp-ver-xsd in menu popup-menu-ver-xsd /* */
+DO:
+
+  if not AdmUtmObj:IsSent
+  then do:
+    message "Запрос еще не был отправлен" view-as alert-box error.
+    return no-apply.
+  end.
+
+  AdmUtmObj:GetSubjectOfRequestUTM ().
+  
+  if AdmUtmObj:StatusErr
+  then do:
+    message AdmUtmObj:Msg view-as alert-box error.
+    return no-apply.
+  end.
+
+  url_ = AdmUtmObj:urlResp.
+  AdmUtmObj:LookRec(url_).
+  AdmUtmObj:WriteDbStatusTrue().
   
 END.
 
@@ -641,6 +682,9 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     .
 
   AdmUtmObj = new admutm (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+
+  AdmUtmObj:DbNum = v-db-num.
+  AdmUtmObj:User_Id = v-user-id.
 
   bh-wb-analiz = AdmUtmObj:GetHndlTable().
   create query qh-analiz.

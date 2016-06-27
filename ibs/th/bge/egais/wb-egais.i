@@ -176,6 +176,7 @@
     field typeDirection as character format "X(3)" label ""
     field date_         as date      label "Дата"
     field nnOrder       as integer   label "Порядковый №"
+    field transId_      as date      label ""
     index pi
     nnOrder 
     .

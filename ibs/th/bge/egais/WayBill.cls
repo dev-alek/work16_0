@@ -1749,7 +1749,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
             and ub.parts.prod-code = buf_gds.prod-code
             and ub.parts.out-code  = inTrnDoc:
           jj = jj + 1.
-          THSumm = THSumm + buf_parts.fact-qnty / buf_parts.cli-base-rate.
+          THSumm = THSumm + ub.parts.fact-qnty / ub.parts.cli-base-rate.
 
         end.
 
@@ -1894,7 +1894,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       assign 
         VerXSDShip = entry (1, buf_ext-classif-attr.attr-code, chr(4))
       no-error.
-    else VerXSDShip = 'WayBill_v1'.
+    else VerXSDShip = 'WayBill'.
 
     if not (available (buf_clob-bind) and entry (6, buf_clob-bind.descr, {&delim-par}) = 'отказ') and not isForceAccept then do:
       
@@ -2058,9 +2058,9 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         VerXSDShip = entry (1, buf_ext-classif-attr.attr-code, chr(4))
         CliEgaisType = entry (2, buf_ext-classif-attr.attr-code, chr(4))
       no-error.
-    else VerXSDShip = 'WayBill_v1'.
+    else VerXSDShip = 'WayBill'.
     
-    if VerXSDShip = "WayBill_v1" or VerXSD = "1"
+    if VerXSDShip = "WayBill" or VerXSD = "1"
     then do:
       VerWBXsd = "WayBill".
     end.
