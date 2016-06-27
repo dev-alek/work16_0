@@ -1721,9 +1721,8 @@ end.
 for each temp-thbj-attr:
   delete temp-thbj-attr.
 end.
-
 run adm/shattri.p (
-    input "init":U
+    input "get":U
   , input p-obj-type
   , input p-obj-code
   , input {&attr-overval}
@@ -1780,7 +1779,7 @@ end.
   end.
 
 
-FOR EACH thbjattr_thbj-attr-tt:
+FOR EACH thbjattr_thbj-attr-tt where thbjattr_thbj-attr-tt.obj-type  = p-obj-type :
 
 &scop pframe-name frame-a
 &scop p-pole pr-abs-d
@@ -1828,6 +1827,7 @@ FOR EACH thbjattr_thbj-attr-tt:
 {&code-character}
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr-tt to temp-thbj-attr.
+ /*  message thbjattr_thbj-attr-tt.obj-type  thbjattr_thbj-attr-tt.prop-code view-as alert-box. */
 END.
 
 define variable nn as integer   no-undo .
@@ -2086,11 +2086,10 @@ assign
   fh = frame frame-a:first-child
   wh = fh:first-child
   .
-
 do while valid-handle(wh):
   if wh:private-data begins "recid2=" then do:
     find first thbjattr_thbj-attr-tt where
-              recid(thbjattr_thbj-attr-tt) = integer(entry(2, wh:private-data, '=')).
+              recid(thbjattr_thbj-attr-tt) = integer(entry(2, wh:private-data, '=')) exclusive-lock.
     assign
       buffer thbjattr_thbj-attr-tt:buffer-field("property-value-" + wh:data-type):buffer-value = wh:input-value
       thbjattr_thbj-attr-tt.obj-type = p-obj-type
