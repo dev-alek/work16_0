@@ -1965,6 +1965,60 @@ end.
           undo, return error.
         end.
       end.
+            if v-alchol <> ""
+      then do:
+        run ggoattr-write (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-alchol-grp}
+          ,input   v-alchol
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
+      else do:
+        run ggoattr-delete (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-alchol-grp}
+          ,output  v-delete
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
+      if v-mark <> ""
+      then do:
+        run ggoattr-write (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-mark-grp}
+          ,input   v-mark
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
+      else do:
+        run ggoattr-delete (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-mark-grp}
+          ,output  v-delete
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
     end.
     when {&g___object} then do:
     run grp-obj-write in this-procedure (
@@ -2291,7 +2345,60 @@ end.
           undo, return error.
         end.
       end.
-
+            if v-alchol <> ""
+      then do:
+        run ggoattr-write (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-alchol-grp}
+          ,input   v-alchol
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
+      else do:
+        run ggoattr-delete (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-alchol-grp}
+          ,output  v-delete
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
+      if v-mark <> ""
+      then do:
+        run ggoattr-write (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-mark-grp}
+          ,input   v-mark
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
+      else do:
+        run ggoattr-delete (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-mark-grp}
+          ,output  v-delete
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.
       end.
     end.
   end case.
