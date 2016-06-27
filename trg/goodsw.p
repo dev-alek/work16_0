@@ -313,6 +313,20 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       .
     end.
   end.
+  if old-goods.gds-name     <> ub.goods.gds-name
+  then do:
+    for each ub.contract-specif
+      where ub.contract-specif.artic     = ub.goods.artic
+        and ub.contract-specif.prod-type = ub.goods.prod-type
+        and ub.contract-specif.prod-code = ub.goods.prod-code
+    on error undo main-block, return error
+    :
+      assign
+        ub.contract-specif.gds-name = ub.goods.gds-name
+      
+      .
+    end.
+  end.
 
   if not v-l then do:
     if old-goods.stts = integer({&befor-artic-change-int})
