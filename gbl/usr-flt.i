@@ -908,6 +908,23 @@ avtop
 &glob output-display-uf-i-egais  no
 &glob other-uf-i-egais           ""
 
+&scop bef-uf-alc-rees             alc-rees
+&glob uf-alc-rees                 '{&bef-uf-alc-rees}':U
+&glob label-uf-alc-rees           "Реестр документов ЕГАИС"
+&glob tooltip-uf-alc-rees         "Реестр документов ЕГАИС"
+&glob List_-use-uf-alc-rees        yes
+&glob List_-type-uf-alc-rees      {&type-char}
+&glob List_-format-uf-alc-rees    "X(256)"
+&glob Naim-use-uf-alc-rees        yes
+&glob Naim-type-uf-alc-rees       {&type-char}
+&glob Naim-format-uf-alc-rees     "X(256)"
+&glob print-graft-use-uf-alc-rees no
+&glob sort-gr-use-uf-alc-rees     no
+&glob type-price-use-uf-alc-rees  no
+&glob user-can-edit-uf-alc-rees   no
+&glob output-display-uf-alc-rees  no
+&glob other-uf-alc-rees           ""
+
 &scop bef-uf-e-optprc             e-optprc.w
 &glob uf-e-optprc                 '{&bef-uf-e-optprc}':U
 &glob label-uf-e-optprc           "Оптовый прайс-лист"
@@ -1458,6 +1475,7 @@ info
 ,{&bef-uf-users-2}~
 ,{&bef-uf-bge-dper}~
 ,{&bef-uf-i-egais}~
+,{&bef-uf-alc-rees}~
 ,{&bef-uf-e-optprc}~
 ,{&bef-uf-iecliart}~
 ,{&bef-uf-exp-sl-1}~
@@ -1617,6 +1635,8 @@ procedure uf-name :
       &scop uf-code uf-bge-dper
       {&uf-temp-full-code}
       &scop uf-code uf-i-egais
+      {&uf-temp-full-code}
+      &scop uf-code uf-alc-rees
       {&uf-temp-full-code}
       &scop uf-code uf-e-optprc
       {&uf-temp-full-code}
