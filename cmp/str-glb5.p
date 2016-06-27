@@ -2606,7 +2606,8 @@ run filwrlib_num-lines-get in this-procedure
 
 /* Типы сообщения EGAIS */
 { cmp/cr-prep.i 1 EGAIS-DictOrg    1     "Справочник организаций"    1    "Dictionary organization"   }
-{ cmp/cr-prep.i 1 EGAIS-DictGds    2     "Справочник товаров"        2    "Dictionary goods"   }   
+{ cmp/cr-prep.i 1 EGAIS-DictGds    2     "Справочник товаров"        2    "Dictionary goods"   }
+{ cmp/cr-prep.i 1 EGAIS-InfoVer    3     "Уведомление сервера ЕГАИС о смене версии xsd-схем " 3    "Info Version XSD"   }
 
 /* Статусы EGAIS */
 { cmp/cr-prep.i 1 egais-act-send        0    "Акт отправлен"                  0  "Act send"            }

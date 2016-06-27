@@ -187,7 +187,7 @@ on error undo, return error
     end. /* object-of-list: */
 
     /* дата выгрузки для контрагентов - сегодня */
-    run fill-clntattr in this-procedure ( input v-today ).
+   /*  run fill-clntattr in this-procedure ( input v-today ).  */
     run wp-XMLWriteLog in this-procedure ( input v-log-file-name
                                          , input 1
                                          , input "Дата выгрузки для контрагентов - установлена"

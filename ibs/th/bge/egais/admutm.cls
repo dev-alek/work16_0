@@ -1,4 +1,3 @@
- 
 /*------------------------------------------------------------------------
    File        : 
    Purpose     : 
@@ -27,18 +26,17 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
   define stream outstr.
   
   define private buffer buf_ext-sys for ub.ext-system.
-  define private variable parameters  as character no-undo.
-  define private variable inFileName  as character no-undo.
-  define private variable inData      as character no-undo.
-  define private variable outData     as character no-undo.
-  define private variable cmd         as character no-undo.
-  define private variable urlResp     as character no-undo.
-  define private variable prsXMLDocWB as class ParserXMLDocWB no-undo.
-  define private variable prgObj      as class ProgressBar    no-undo .
-  define private variable FSRAR       as character no-undo.
-  define private variable LogFileName as character no-undo init "shd-free.log".
-  define private variable DocDate     as date no-undo.
-
+  define private variable parameters    as character no-undo.
+  define private variable inFileName    as character no-undo.
+  define private variable inData        as character no-undo.
+  define private variable outData       as character no-undo.
+  define private variable cmd           as character no-undo.
+  define private variable prsXMLDocWB   as class     ParserXMLDocWB no-undo.
+  define private variable prgObj        as class     ProgressBar    no-undo .
+  define private variable FSRAR         as character no-undo.
+  define private variable LogFileName   as character no-undo init "shd-free.log".
+  define private variable DocDate       as date      no-undo.
+  define private variable IsSentInvoVer as logical   no-undo.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -49,12 +47,16 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     get.
     set.
 
+  define property urlResp as character no-undo
+    get.
+    set.
 		
   constructor public admutm (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as int):
 
     super (inOjType, inObjCode).
     FSRAR = inFSRAR.
     prsXMLDocWB = new ParserXMLDocWB (inExtSys).
+    IsSent.
     
   end constructor.
 
@@ -298,6 +300,19 @@ class ibs.th.bge.egais.admutm inherits EGAISUTM:
     os-command silent value(fullFileName).
     
   end.
+  
+  method public void WriteDbStatusTrue ():
+
+    if not WriteDbStatus (integer ({&EGAIS-InfoVer}), parameters , ReplyId, true)
+    then do: 
+      assign
+        StatusErr = true
+        Msg = "Не удалось записать данные о запросе в БД. Запрос не выполен."
+      .
+      return.
+    end.
+  
+  end.
 
   method public void SaveRecord (input inUrl as char):
 
@@ -510,6 +525,7 @@ xmlns:qp="http://fsrar.ru/WEGAIS/RequestRepealWB">~
     def var ContStr as char no-undo.
     def var FullFileName as char no-undo.
     def var ContLongCh as longchar no-undo.
+    def var respValue as handle no-undo.
 
 &scop xml-info-ver '<?xml version="1.0" encoding="UTF-8"?>~
 <ns:Documents Version="1.0" ~
@@ -534,6 +550,12 @@ xmlns:qp="http://fsrar.ru/WEGAIS/InfoVersionTTN">~
       Msg = ""
     .
     
+    if IsSentInvoVer 
+    then do:
+      Msg = "Запрос уже был отправлен.".
+      StatusErr = true.
+    end.
+    
     ContStr = replace (ContStr, "TH-FSRAR", FSRAR).
     ContStr = replace (ContStr, "TH-InfoVer", inInfoVer).
     
@@ -551,7 +573,7 @@ xmlns:qp="http://fsrar.ru/WEGAIS/InfoVersionTTN">~
     os-command silent value (cmd).
     
     file-info:file-name = search ("RespInfoVersionTTN.xml").
-    if search (inFileName) = ? or file-info:file-size = 0 or file-info:file-size = ?
+    if search (FullFileName) = ? or file-info:file-size = 0 or file-info:file-size = ?
       then 
     do:
       assign
@@ -559,6 +581,37 @@ xmlns:qp="http://fsrar.ru/WEGAIS/InfoVersionTTN">~
         Msg       = substitute ("Не удалось отправить уведомление о смене версии в УТМ на &1.", inInfoVer)
         .
       undo, return.
+    end.
+    
+    respValue = ParseRequest (file-info:file-name).
+    if respValue = ? 
+      then 
+    do:
+      assign
+        StatusErr = true
+        Msg       = "Не удалось разобрать данные от УТМ"
+        .
+      return.
+    end.
+    if not StatusErr 
+      then 
+      ReplyId = respValue:node-value.
+    else 
+    do:
+      assign
+        StatusErr = true
+        Msg       = respValue:node-value
+        .
+      return.
+    end.
+  
+    if not WriteDbStatus (integer ({&EGAIS-InfoVer}), parameters , ReplyId, false)
+    then do: 
+      assign
+        StatusErr = true
+        Msg = "Не удалось записать данные о запросе в БД. Запрос не выполен."
+      .
+      return.
     end.
     
   end.
@@ -599,6 +652,96 @@ xmlns:qp="http://fsrar.ru/WEGAIS/InfoVersionTTN">~
       end case.
     end.
     
+  end.
+
+  method override protected logical GetIsSent ():
+    def var repId as char no-undo.
+    def var glog  as log  no-undo.
+    glog = CheckCurrentRequest (integer ({&EGAIS-InfoVer}), parameters, repId).
+    if glog
+      then ReplyId = repId.
+    return glog.
+  end.
+
+  method public override character GetSubjectOfRequestUTM() :
+
+    assign
+      StatusErr = false
+      Msg = ""
+    .
+    
+    urlResp = GetURLUTM(ReplyId, "out").
+    
+    if urlResp = "" or urlResp = ?
+    then do:
+      StatusErr = true.
+      Msg = "Еще не получен ответ от сервера EGAIS по запросу " + ReplyId.
+      return ?.
+    end.
+    
+    os-delete "TicketInfoVer.xml".
+    assign
+      inFileName = "TicketInfoVer.xml"
+    .
+    
+    cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, urlResp, inFileName).
+    os-command silent value (cmd).
+    
+  end.
+
+  method protected character GetURLUTM (inReplyId as char, direction as char):
+    
+    define variable hRoot as handle  no-undo.
+    define variable hDoc  as handle  no-undo.
+    define variable hRow  as handle  no-undo.
+    define variable hText as handle  no-undo.
+    define variable ii    as integer no-undo.
+    
+    create x-document hDoc.
+    create x-noderef  hRoot.
+    create x-noderef  hRow.
+    create x-noderef  hText.
+    
+    
+    assign
+      inFileName = "ReceiptListOfQuery.xml"
+    .
+    if search ("ReceiptListOfQuery.xml") <> ? then os-delete value (inFileName).
+    if search (inFileName) <> ? then os-delete value (inFileName).
+    
+
+    cmd = substitute ("&1 --connect-timeout &2 -X GET &3/opt/&5?refresh=true >&4",search ("exe/curl.exe"), TimeOut, ConPar, inFileName, direction).
+    os-command silent value (cmd).
+       
+    file-info:file-name = search (inFileName).
+    if search (inFileName) = ? or file-info:file-size = 0 
+    then do:
+      assign
+        StatusErr = true
+        Msg = "Не удалось получить данные от UTM"
+      .
+      return ?.
+    end.
+    
+    hDoc:load ("file", inFileName, false).
+    hDoc:get-document-element(hRoot) .
+    
+    do ii = 1 to hRoot:num-children:
+      hRoot:get-child(hRow,ii).
+      case hRow:name:
+        when "url" then
+          do:
+            if hRow:get-attribute("replyId") = ReplyId 
+            then do:
+              hRow:get-child (hText, 1) no-error.
+              return hText:node-value.
+            end.
+          end.
+      end case.
+    end.
+    
+    return ?. 
+
   end.
 
 end class.

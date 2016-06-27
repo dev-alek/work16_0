@@ -107,7 +107,7 @@ do trans:
 
     if tt-wb-header.UnitType <> ''
     then do:
-      if tt-wb-header.UnitType = 'UnPacked' 
+      if true /* tt-wb-header.UnitType = 'UnPacked'*/ 
       then
         assign
           temp_doc-line.fact-qnty  = buf_goods.cli-base-rate * tt-wb-gds-EG.qnty

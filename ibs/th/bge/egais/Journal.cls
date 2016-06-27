@@ -60,6 +60,9 @@ class ibs.th.bge.egais.Journal inherits ibs.th.bge.egais.EGAISImpl:
         if buf_esys-all-attr.key2 = integer({&EGAIS-DictGds}) then do:
           v-subject = {&EGAIS-DictGds-full}.
         end.
+        if buf_esys-all-attr.key2 = integer({&EGAIS-InfoVer}) then do:
+          v-subject = {&EGAIS-InfoVer-full}.
+        end.
         
         if buf_esys-all-attr.key3 = "no" then v-status = "Запрос отправлен".
         else v-status = "Ответ получен".
