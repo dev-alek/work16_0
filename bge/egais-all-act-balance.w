@@ -399,6 +399,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   assign v-ext-sys = v-value-integer .  
   
   egais = new ActBalance (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+  egais:DbNum = v-db-num .
+  egais:User_Id = v-user-id .
 
   bh-act-header = egais:GetHndlTable(3, "").
   create query qh-act-header.

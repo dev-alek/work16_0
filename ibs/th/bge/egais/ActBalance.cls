@@ -179,7 +179,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
         find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = inAbIndenty .
         if num-entries (buf_clob-bind.descr, {&delim-par}) = 3 then
             assign buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-Answer .
-        else if num-entries (buf_clob-bind.descr, {&delim-par}) = 4 then   
+        else if num-entries (buf_clob-bind.descr, {&delim-par}) >= 4 then   
             assign entry(4, buf_clob-bind.descr, {&delim-par}) = v-Answer .
             
         find first tt-act-header where tt-act-header.num = inAbIndenty .
