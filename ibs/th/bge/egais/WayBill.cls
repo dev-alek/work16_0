@@ -797,14 +797,14 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 tt-wb-gds-EG.proof = buf_gds.proof
                 tt-wb-gds-EG.alc-type-code = ub.alc-type.alc-type-code
               .
-              if buf_doc-line.unit-cli <> buf_gds.unit-base
+              if buf_doc-line.unit-cli <> buf_gds.unit-base and buf_doc-line.unit-cli > ""
               then do:
-                tt-wb-gds-EG.UnitType = 'UnPacked'.
-                if tt-wb-header.UnitType = '' or  tt-wb-header.UnitType = 'Packed' then tt-wb-header.UnitType = 'UnPacked'.
+                tt-wb-gds-EG.UnitType = 'Unpacked'.
+                if tt-wb-header.UnitType = '' or  tt-wb-header.UnitType = 'Packed' then tt-wb-header.UnitType = 'Unpacked'.
               end.
               else do:
                 tt-wb-gds-EG.UnitType = 'Packed'.
-                if tt-wb-header.UnitType <> 'UnPacked' then tt-wb-header.UnitType = 'Packed'.
+                if tt-wb-header.UnitType <> 'Unpacked' then tt-wb-header.UnitType = 'Packed'.
               end. 
               
             end. 
@@ -2103,7 +2103,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
           sw:start-element ("wb:Shipper") .
             if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
               then sw:start-element ("wb:" + CliEgaisType) . 
-            AddClientXML(sw, tt-wb-header.obj-type, tt-wb-header.obj-code, tt-wb-header.regID-Ship).
+            AddClientXML(sw, tt-wb-header.obj-type, tt-wb-header.obj-code, tt-wb-header.regID-Ship, yes).
             if StatusErr
               then return.
             if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
@@ -2134,7 +2134,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
             
             if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
               then sw:start-element ("wb:" + CliEgaisType) . 
-            AddClientXML(sw, tt-wb-header.cli-type, tt-wb-header.cli-code, tt-wb-header.regID-Cons).
+            AddClientXML(sw, tt-wb-header.cli-type, tt-wb-header.cli-code, tt-wb-header.regID-Cons, no).
             if StatusErr
               then return.
             if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
@@ -2259,7 +2259,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
   end.
   
-  method private void AddClientXML (inSW as handle, inObjType as char, inObjCode as int, inRegID as char):
+  method private void AddClientXML (inSW as handle, inObjType as char, inObjCode as int, inRegID as char, inShipper as log):
     
     find first buf_clients no-lock where buf_clients.obj-type = inObjType and buf_clients.obj-code = inObjCode no-error.
     if available (buf_clients)
@@ -2281,7 +2281,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     end.
 
     if available (buf_firm) then do:
-      inSW:write-data-element ("oref:INN", if INNObj = "" or INNObj = ? then buf_firm.inn else INNObj).
+      inSW:write-data-element ("oref:INN", if INNObj = "" or INNObj = ? or not inShipper then buf_firm.inn else INNObj).
       if buf_firm.kpp <> "" or available (buf_clients-attr) 
         then inSW:write-data-element ("oref:KPP", if available buf_clients-attr then buf_clients-attr.attr-value else buf_firm.kpp).
     end.
@@ -2302,7 +2302,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       StatusErr = true.
       return.
     end.
-    inSW:write-data-element ("oref:ShortName", '').
+/*    inSW:write-data-element ("oref:ShortName", '').*/
     inSW:start-element ("oref:address").
       if available (buf_clients-attr)
       then do:
