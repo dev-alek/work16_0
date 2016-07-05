@@ -787,7 +787,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 { cmp/cr-prep.i 1 lob-egais-wb-act      egais-wb-act "Акт подтверждения накладной" egais-wb-act "EGAIS Waybill Act"  }
 { cmp/cr-prep.i 1 lob-egais-ticket      egais-ticket "Квитанция ЕГАИС" egais-ticket "EGAIS Ticket"  }
 { cmp/cr-prep.i 1 lob-egais-wb-ticket   egais-wb-ticket "Квитанция на акт по накладной ЕГАИС" egais-wb-ticket "EGAIS Ticket on WB Act"  }
-
+{ cmp/cr-prep.i 1 lob-egais-ab_shop     egais-ab_shop   "Акт постановки на баланс в торговом зале ЕГАИС"  egais-ab_shop "EGAIS ActBalance_shop" }
+{ cmp/cr-prep.i 1 lob-egais-awo_shop    egais-awo_shop  "Акт о списании товара из торогового зала ЕГАИС"  egais-awo_shop "EGAIS ActWriteOff_shop" }
+{ cmp/cr-prep.i 1 lob-egais-tts         egais-tts    "Передача продукции в тороговый зал ЕГАИС"  egais-tts "EGAIS TransferToShop" }
+{ cmp/cr-prep.i 1 lob-egais-tfs         egais-tfs    "Возврат продукции из торогового зала на склад ЕГАИС"  egais-tfs "EGAIS TransferFromShop" }
 
 &glob clob-res-codes '{&bef-lob-res-data}~
 ,{&bef-lob-res-gate}~
@@ -804,6 +807,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 ,{&bef-lob-egais-wb-act}~
 ,{&bef-lob-egais-ticket}~
 ,{&bef-lob-egais-wb-ticket}~
+,{&bef-lob-egais-ab_shop}~
+,{&bef-lob-egais-awo_shop}~
+,{&bef-lob-egais-tts}~
+,{&bef-lob-egais-tfs}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes {&clob-res-codes}" ).
@@ -823,6 +830,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-
 ,{&bef-lob-egais-wb-act-full}~
 ,{&bef-lob-egais-ticket-full}~
 ,{&bef-lob-egais-wb-ticket-full}~
+,{&bef-lob-egais-ab_shop-full}~
+,{&bef-lob-egais-awo_shop-full}~
+,{&bef-lob-egais-tts-full}~
+,{&bef-lob-egais-tfs-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes-full {&clob-res-codes-full}" ).
