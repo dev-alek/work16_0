@@ -5165,8 +5165,24 @@ end.
 &global-define lob-egais-wb-ticket '{&bef-lob-egais-wb-ticket}':U
 &global-define bef-lob-egais-wb-ticket-full Квитанция на акт по накладной ЕГАИС
 &global-define lob-egais-wb-ticket-full '{&bef-lob-egais-wb-ticket-full}':U
-&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-awo,egais-wb-act,egais-ticket,egais-wb-ticket':U
-&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт о списании товара B ЕГАИС,Акт подтверждения накладной,Квитанция ЕГАИС,Квитанция на акт по накладной ЕГАИС':U
+&global-define bef-lob-egais-ab_shop egais-ab_shop
+&global-define lob-egais-ab_shop '{&bef-lob-egais-ab_shop}':U
+&global-define bef-lob-egais-ab_shop-full Акт постановки на баланс в торговом зале ЕГАИС
+&global-define lob-egais-ab_shop-full '{&bef-lob-egais-ab_shop-full}':U
+&global-define bef-lob-egais-awo_shop egais-awo_shop
+&global-define lob-egais-awo_shop '{&bef-lob-egais-awo_shop}':U
+&global-define bef-lob-egais-awo_shop-full Акт о списании товара из торогового зала ЕГАИС
+&global-define lob-egais-awo_shop-full '{&bef-lob-egais-awo_shop-full}':U
+&global-define bef-lob-egais-tts egais-tts
+&global-define lob-egais-tts '{&bef-lob-egais-tts}':U
+&global-define bef-lob-egais-tts-full Передача продукции в тороговый зал ЕГАИС
+&global-define lob-egais-tts-full '{&bef-lob-egais-tts-full}':U
+&global-define bef-lob-egais-tfs egais-tfs
+&global-define lob-egais-tfs '{&bef-lob-egais-tfs}':U
+&global-define bef-lob-egais-tfs-full Возврат продукции из торогового зала на склад ЕГАИС
+&global-define lob-egais-tfs-full '{&bef-lob-egais-tfs-full}':U
+&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-awo,egais-wb-act,egais-ticket,egais-wb-ticket,egais-ab_shop,egais-awo_shop,egais-tts,egais-tfs':U
+&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт о списании товара B ЕГАИС,Акт подтверждения накладной,Квитанция ЕГАИС,Квитанция на акт по накладной ЕГАИС,Акт постановки на баланс в торговом зале ЕГАИС,Акт о списании товара из торогового зала ЕГАИС,Передача продукции в тороговый зал ЕГАИС,Возврат продукции из торогового зала на склад ЕГАИС':U
 &global-define blob-res-codes 'data':U
 &global-define blob-res-codes-full 'Данные':U
 &global-define blob-trn-doc-image 'trn-doc-image':U
@@ -6678,7 +6694,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 5650d7c98ac2, 654, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 44c7cb9eda36, 691, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7980,7 +7996,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 8072e19e663c, 603, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 8895a23811d7, 677, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 5650d7c98ac2, 654, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 44c7cb9eda36, 691, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 363a6325ecd0, 690, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 44c7cb9eda36, 691, rls ':U
 &endif
