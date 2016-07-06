@@ -12,10 +12,10 @@
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
 
-class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
+class ibs.th.bge.egais.TransferToShop inherits EGAISUTM:
 
 {cmp/str-glbl.i class}
-{ibs/th/bge/egais/ab-egais.i}
+{ibs/th/bge/egais/tts-egais.i}
 { ref/extclass.i }
 
   define stream outstr.
@@ -48,7 +48,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     set. 
 
 
-  constructor public ActBalance (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
+  constructor public TransferToShop (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
     
     
     super (inOjType, inObjCode).
@@ -75,10 +75,10 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     
     
     case inTableType:
-      when {&ab-clob} then 
+      when {&awo-clob} then 
         do:
           empty temp-table tt-act-header.
-          for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab}:
+          for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-tts}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.indenty + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
             create tt-act-header.
             assign
@@ -87,11 +87,11 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
                 tt-act-header.is-sent   = logical (entry (3, buf_clob-bind.descr, {&delim-par}))                
             .
             assign tt-act-header.answer_   = (entry (4, buf_clob-bind.descr, {&delim-par})) no-error .
-            assign tt-act-header.type_   = (entry (5, buf_clob-bind.descr, {&delim-par})) no-error .
+/*            assign tt-act-header.type_   = (entry (5, buf_clob-bind.descr, {&delim-par})) no-error .*/
             end.
           return buffer tt-act-header:handle.
         end.
-      when {&ab-answer} then
+      when {&awo-answer} then
       do :       
         
         create x-document hDoc.
@@ -176,7 +176,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
                 
         end.
         
-        find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = inAbIndenty .
+        find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-tts} and buf_clob-bind.uniq-key-rec = inAbIndenty .
         if num-entries (buf_clob-bind.descr, {&delim-par}) = 3 then
             assign buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-Answer .
         else if num-entries (buf_clob-bind.descr, {&delim-par}) >= 4 then   
@@ -215,9 +215,9 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     
     do trans:
     
-      os-delete "RespActChargeOn.xml".
+      os-delete "RespTransferToShop.xml".
       assign
-        inFileName = "RespActChargeOn.xml"
+        inFileName = "RespTransferToShop.xml"
         .
       
       find first tt-act-header no-error.
@@ -226,12 +226,8 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
         then 
       do:
         
-          if VerXSD = "1"
-          then
-          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActChargeOn >&4", search ("exe/curl.exe"), search ("ActChargeOn.xml"), ConPar, inFileName, TimeOut).
-          if VerXSD = "2"
-          then
-          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActChargeOn_v2 >&4", search ("exe/curl.exe"), search ("ActChargeOn_v2.xml"), ConPar, inFileName, TimeOut).
+          
+          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/TransferToShop >&4", search ("exe/curl.exe"), search ("TransferToShop.xml"), ConPar, inFileName, TimeOut).
           
           os-command silent value (cmd).
     
@@ -384,16 +380,16 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     end.
     
     if not ticket2 then do :
-        os-delete "RespActChargeOn.xml".
+        os-delete "RespTransferToShop.xml".
         assign
-          inFileName = "RespActChargeOn.xml"
+          inFileName = "RespTransferToShop.xml"
           response = entry(1,urlResp,{&delim-par})
         .
     end.
     else do :
-        os-delete "RespActChargeOn2.xml".
+        os-delete "RespTransferToShop2.xml".
         assign
-          inFileName = "RespActChargeOn2.xml"
+          inFileName = "RespTransferToShop2.xml"
         .
         response = entry(2,urlResp,{&delim-par}) no-error .
     end.    

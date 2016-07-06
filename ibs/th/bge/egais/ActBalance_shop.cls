@@ -12,10 +12,10 @@
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
 
-class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
+class ibs.th.bge.egais.ActBalance_shop inherits EGAISUTM:
 
 {cmp/str-glbl.i class}
-{ibs/th/bge/egais/ab-egais.i}
+{ibs/th/bge/egais/ab-egais_shop.i}
 { ref/extclass.i }
 
   define stream outstr.
@@ -48,7 +48,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     set. 
 
 
-  constructor public ActBalance (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
+  constructor public ActBalance_shop (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
     
     
     super (inOjType, inObjCode).
@@ -78,7 +78,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
       when {&ab-clob} then 
         do:
           empty temp-table tt-act-header.
-          for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab}:
+          for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab_shop}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.indenty + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
             create tt-act-header.
             assign
@@ -176,10 +176,10 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
                 
         end.
         
-        find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = inAbIndenty .
+        find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab_shop} and buf_clob-bind.uniq-key-rec = inAbIndenty .
         if num-entries (buf_clob-bind.descr, {&delim-par}) = 3 then
             assign buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-Answer .
-        else if num-entries (buf_clob-bind.descr, {&delim-par}) >= 4 then   
+        else if num-entries (buf_clob-bind.descr, {&delim-par}) = 4 then   
             assign entry(4, buf_clob-bind.descr, {&delim-par}) = v-Answer .
             
         find first tt-act-header where tt-act-header.num = inAbIndenty .
@@ -215,9 +215,9 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     
     do trans:
     
-      os-delete "RespActChargeOn.xml".
+      os-delete "RespActChargeOn_Shop.xml".
       assign
-        inFileName = "RespActChargeOn.xml"
+        inFileName = "RespActChargeOn_Shop.xml"
         .
       
       find first tt-act-header no-error.
@@ -226,12 +226,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
         then 
       do:
         
-          if VerXSD = "1"
-          then
-          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActChargeOn >&4", search ("exe/curl.exe"), search ("ActChargeOn.xml"), ConPar, inFileName, TimeOut).
-          if VerXSD = "2"
-          then
-          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActChargeOn_v2 >&4", search ("exe/curl.exe"), search ("ActChargeOn_v2.xml"), ConPar, inFileName, TimeOut).
+          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActChargeOnShop_v2 >&4", search ("exe/curl.exe"), search ("ActChargeOnShop_v2.xml"), ConPar, inFileName, TimeOut).
           
           os-command silent value (cmd).
     
@@ -384,16 +379,16 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     end.
     
     if not ticket2 then do :
-        os-delete "RespActChargeOn.xml".
+        os-delete "RespActChargeOnShop.xml".
         assign
-          inFileName = "RespActChargeOn.xml"
+          inFileName = "RespActChargeOnShop.xml"
           response = entry(1,urlResp,{&delim-par})
         .
     end.
     else do :
-        os-delete "RespActChargeOn2.xml".
+        os-delete "RespActChargeOnShop2.xml".
         assign
-          inFileName = "RespActChargeOn2.xml"
+          inFileName = "RespActChargeOnShop2.xml"
         .
         response = entry(2,urlResp,{&delim-par}) no-error .
     end.    

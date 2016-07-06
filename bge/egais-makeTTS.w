@@ -29,7 +29,6 @@
 define input parameter parparentproc as widget-handle no-undo .
 define output parameter p-num as character no-undo format "X(20)" .
 define output parameter p-date as date no-undo .
-define output parameter p-type as character no-undo format "X(20)" .
 define output parameter p-ok as logical no-undo initial no .
 
 /* Local Variable Definitions ---                                       */
@@ -38,7 +37,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Создание акта о списании ЕГАИС".
+define variable vss-description as character no-undo init "Создание акта о передаче в магазин ЕГАИС".
 
 { cmp/vssrevis.i }
 { cmp/showinf.i  }
@@ -98,10 +97,6 @@ DEFINE FRAME Dialog-Frame
      b-cancel AT ROW 1.24 COL 17
      p-num at row 2.5 col 2 format "X(20)"  label "Номер"
      p-date at row 2.5 col 32   label "Дата"
-     p-type at row 2.5 col 51   label "Основание списания"
-        view-as combo-box inner-lines 7
-        list-items "Пересортица,Недостача,Уценка,Порча,Потери,Проверки,Арест"
-        DROP-DOWN-LIST
      SPACE(0.5) SKIP(0.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -149,15 +144,6 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME p-type
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL p-type Dialog-Frame
-ON VALUE-CHANGED OF p-type IN FRAME Dialog-Frame /* cli-type */
-DO:
-  assign p-type.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-ok
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-ok Dialog-Frame
@@ -166,10 +152,9 @@ DO:
     assign
         p-num
         p-date
-        p-type
     .
     find first buf_clob-bind no-lock where buf_clob-bind.uniq-key-rec = p-num
-                                       and buf_clob-bind.field-name_  = {&lob-egais-awo} no-error .
+                                       and buf_clob-bind.field-name_  = {&lob-egais-tts} no-error .
     if available buf_clob-bind then do :
         message "Акт с таким номером уже существует!" view-as alert-box .
         return no-apply .
@@ -201,15 +186,13 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
        
-  assign p-type:list-items = "Пересортица,Недостача,Уценка,Порча,Потери,Проверки,Арест" . 
   assign v-date = substitute ("&1&2&3",string (year (now)), string (month (now)), string (day (now))).
   assign
-    p-num = "AWO-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-'
+    p-num = "TTS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-'
     p-date = TODAY
-    p-type = "Недостача"
   . 
-  display p-num p-date p-type with frame {&FRAME-NAME}.
-  enable  p-num p-date p-type with frame {&FRAME-NAME}.   
+  display p-num p-date with frame {&FRAME-NAME}.
+  enable  p-num p-date with frame {&FRAME-NAME}.   
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
