@@ -437,7 +437,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                   buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
                   buf_chk-gds-pay.tot-r-b =  pychk_dop-sumk
                                             
-                  buf_chk-gds-pay.eff-base-rate = pychk_exch
+                  buf_chk-gds-pay.eff-base-rate = 1
                   buf_chk-gds-pay.eff-doc-qnty = (if (temp-chk-gds.num-lines = 1
                                                   and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
                                                   and pychk_pays_count = 1) 
@@ -583,6 +583,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           buf_chk-gds-pay.shift-date = ub.chk-doc.shift-date
           buf_chk-gds-pay.shift-num = ub.chk-doc.shift-num
           buf_chk-gds-pay.shift-name= ub.chk-doc.shift-name
+          buf_temp-chk-gds.flag = yes  
           .
         end.
         end.

@@ -54,6 +54,7 @@ define output parameter cst-base-rate_       like ub.goods.cst-base-rate no-undo
 define output parameter normal-wastage_ like ub.goods.normal-wastage no-undo .
 define output parameter normal-waste_ like ub.goods.normal-waste no-undo .
 define output parameter cond-keep-code_ like ub.goods.cond-keep-code no-undo .
+define output parameter proof_      like goods.proof no-undo .
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -86,18 +87,18 @@ define variable rid-tnved as recid no-undo.
 &Scoped-define FRAME-NAME DLGOKCAN
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS l-normal-waste l-attrib l-tnved l-destin ~
-l-normal-wastage l-userrule l-sert l-struct l-unit-cst l-cst-base-rate ~
-l-deadline l-sort RECT-10 l-nationality l-cond-keep-code Btn_Cancel Btn_OK ~
-cond-keep-code b-help n-attrib n-cond-keep-code n-cst-base-rate n-deadline ~
-n-deadline-2 n-destin n-nationality n-normal-wastage n-normal-waste n-sert ~
-n-sort n-struct n-tnved n-unit-cst n-userrule
-&Scoped-Define DISPLAYED-OBJECTS cst-base-rate unit-cst tnved-name Sert ~
-normal-wastage NATIONALITY TNVED Sort Destin cond-keep-code Struct DeadLine ~
-UserRule normal-waste Attrib cond-keep-name n-attrib n-cond-keep-code ~
-n-cst-base-rate n-deadline n-deadline-2 n-destin n-nationality ~
-n-normal-wastage n-normal-waste n-sert n-sort n-struct n-tnved n-unit-cst ~
-n-userrule
+&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Cancel b-help l-normal-waste ~
+l-attrib l-tnved l-destin l-normal-wastage l-userrule l-sert l-struct ~
+l-unit-cst l-cst-base-rate l-deadline l-sort RECT-10 l-nationality ~
+l-cond-keep-code l-proof cond-keep-code n-tnved n-unit-cst n-cst-base-rate ~
+n-nationality n-destin n-attrib n-userrule n-sert n-struct n-deadline-2 ~
+n-sort n-deadline n-normal-wastage n-normal-waste n-cond-keep-code proof
+&Scoped-Define DISPLAYED-OBJECTS TNVED tnved-name unit-cst cst-base-rate ~
+NATIONALITY Destin Attrib UserRule Sert Struct DeadLine Sort normal-wastage ~
+normal-waste cond-keep-code proof n-tnved n-unit-cst n-cst-base-rate ~
+n-nationality n-destin n-attrib n-userrule n-sert n-struct n-deadline-2 ~
+n-sort n-deadline n-normal-wastage n-normal-waste proof n-cond-keep-code ~
+cond-keep-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -254,9 +255,15 @@ DEFINE VARIABLE normal-waste AS DECIMAL FORMAT "->9.99%":U INITIAL 0
      SIZE 7.38 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE Sert AS CHARACTER FORMAT "X(100)":U
-     VIEW-AS FILL-IN
-     size 56.5 by 1
+DEFINE VARIABLE proof AS DECIMAL FORMAT ">9.99%":U INITIAL 0 
+     LABEL "Алкоголь" 
+     VIEW-AS FILL-IN 
+     SIZE 7.5 BY 1
+     BGCOLOR 15 FGCOLOR 0  NO-UNDO.
+
+DEFINE VARIABLE Sert AS CHARACTER FORMAT "X(100)":U 
+     VIEW-AS FILL-IN 
+     SIZE 56.5 BY 1
      BGCOLOR 15 FGCOLOR 0  NO-UNDO.
 
 DEFINE VARIABLE Sort AS CHARACTER FORMAT "X(30)":U
@@ -320,6 +327,10 @@ DEFINE IMAGE l-normal-waste
      FILENAME "adeicon\lock":U
      SIZE 2.38 BY 1.
 
+DEFINE IMAGE l-proof
+     FILENAME "adeicon\lock":U
+     SIZE 2.38 BY 1.
+
 DEFINE IMAGE l-sert
      FILENAME "adeicon\lock":U
      SIZE 2.38 BY 1.
@@ -348,6 +359,10 @@ DEFINE RECTANGLE RECT-10
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
      SIZE 74.5 BY 6.
 
+DEFINE RECTANGLE RECT-12
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
+     SIZE 74.5 BY 1.5.
+
 DEFINE RECTANGLE RECT-9
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
      SIZE 74.5 BY 12.13
@@ -363,42 +378,43 @@ DEFINE VARIABLE NATIONALITY AS CHARACTER INITIAL "Российский"
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DLGOKCAN
-     cst-base-rate AT ROW 5.38 COL 55 COLON-ALIGNED NO-LABEL
-     unit-cst AT ROW 5.25 COL 17.38 COLON-ALIGNED NO-LABEL
-     tnved-name AT ROW 4.04 COL 30.13 COLON-ALIGNED NO-LABEL
-     Sert at row 13.54 col 17.75 COLON-ALIGNED NO-LABEL
-     normal-wastage AT ROW 17.75 COL 16.75 COLON-ALIGNED NO-LABEL
-     NATIONALITY AT ROW 6.58 COL 43.25 NO-LABEL
-     Btn_Cancel at row 1 col 11
+     Btn_OK AT ROW 1 COL 1
+     Btn_Cancel AT ROW 1 COL 11
+     b-help AT ROW 1 COL 61
      TNVED AT ROW 4.04 COL 18 COLON-ALIGNED NO-LABEL
-     Sort at row 16.54 col 62.5 COLON-ALIGNED NO-LABEL
-     Destin at row 9.29 col 16.63 COLON-ALIGNED NO-LABEL
-     r-cst at row 5.33 col 26.5
-     Btn_OK at row 1 col 1
-     r-cnd-keep at row 19.5 col 28
-     cond-keep-code AT ROW 19.5 COL 20.5 COLON-ALIGNED NO-LABEL
-     Struct at row 14.96 col 27.25 COLON-ALIGNED NO-LABEL
-     b-help at row 1 col 61
-     DeadLine at row 16.54 col 42.75 COLON-ALIGNED NO-LABEL
-     UserRule at row 12.13 col 21 COLON-ALIGNED NO-LABEL
+     tnved-name AT ROW 4.04 COL 30.13 COLON-ALIGNED NO-LABEL
+     unit-cst AT ROW 5.25 COL 17.38 COLON-ALIGNED NO-LABEL
+     r-cst AT ROW 5.33 COL 26.5
+     cst-base-rate AT ROW 5.38 COL 55 COLON-ALIGNED NO-LABEL
+     NATIONALITY AT ROW 6.58 COL 43.25 NO-LABEL
+     Destin AT ROW 9.29 COL 16.63 COLON-ALIGNED NO-LABEL
+     Attrib AT ROW 10.71 COL 19.25 COLON-ALIGNED NO-LABEL
+     UserRule AT ROW 12.13 COL 21 COLON-ALIGNED NO-LABEL
+     Sert AT ROW 13.54 COL 17.75 COLON-ALIGNED NO-LABEL
+     Struct AT ROW 14.96 COL 27.25 COLON-ALIGNED NO-LABEL
+     DeadLine AT ROW 16.54 COL 42.75 COLON-ALIGNED NO-LABEL
+     Sort AT ROW 16.54 COL 62.5 COLON-ALIGNED NO-LABEL
+     normal-wastage AT ROW 17.75 COL 16.75 COLON-ALIGNED NO-LABEL
      normal-waste AT ROW 17.88 COL 42.13 COLON-ALIGNED NO-LABEL
-     Attrib at row 10.71 col 19.25 COLON-ALIGNED NO-LABEL
-     cond-keep-name AT ROW 19.5 COL 29.5 COLON-ALIGNED NO-LABEL
-     n-attrib AT ROW 10.71 COL 7.25 NO-LABEL
-     n-cond-keep-code AT ROW 19.25 COL 6.5 NO-LABEL
-     n-cst-base-rate AT ROW 5.42 COL 43.25 NO-LABEL
-     n-deadline AT ROW 16.54 COL 29.5 NO-LABEL
-     n-deadline-2 AT ROW 16.5 COL 29.75 NO-LABEL
-     n-destin AT ROW 9.25 COL 7.13 NO-LABEL
-     n-nationality AT ROW 6.54 COL 17.75 NO-LABEL
-     n-normal-wastage AT ROW 17.75 COL 6.25 NO-LABEL
-     n-normal-waste AT ROW 17.88 COL 31.63 NO-LABEL
-     n-sert AT ROW 13.5 COL 5.75 NO-LABEL
-     n-sort AT ROW 16.5 COL 59.13 NO-LABEL
-     n-struct AT ROW 15.04 COL 5.88 NO-LABEL
+     cond-keep-code AT ROW 19.5 COL 20.5 COLON-ALIGNED NO-LABEL
+     r-cnd-keep AT ROW 19.5 COL 28
+     proof AT ROW 21.25 COL 20.5 COLON-ALIGNED WIDGET-ID 6
      n-tnved AT ROW 4 COL 7 NO-LABEL
      n-unit-cst AT ROW 5.29 COL 9.5 NO-LABEL
+     n-cst-base-rate AT ROW 5.42 COL 43.25 NO-LABEL
+     n-nationality AT ROW 6.54 COL 17.75 NO-LABEL
+     n-destin AT ROW 9.25 COL 7.13 NO-LABEL
+     n-attrib AT ROW 10.71 COL 7.25 NO-LABEL
      n-userrule AT ROW 12.13 COL 7.13 NO-LABEL
+     n-sert AT ROW 13.5 COL 5.75 NO-LABEL
+     n-struct AT ROW 15.04 COL 5.88 NO-LABEL
+     n-deadline-2 AT ROW 16.5 COL 29.75 NO-LABEL
+     n-sort AT ROW 16.5 COL 59.13 NO-LABEL
+     n-deadline AT ROW 16.54 COL 29.5 NO-LABEL
+     n-normal-wastage AT ROW 17.75 COL 6.25 NO-LABEL
+     n-normal-waste AT ROW 17.88 COL 31.63 NO-LABEL
+     n-cond-keep-code AT ROW 19.25 COL 6.5 NO-LABEL
+     cond-keep-name AT ROW 19.5 COL 29.5 COLON-ALIGNED NO-LABEL
      "Таможенные характеристики" VIEW-AS TEXT
           SIZE 25.88 BY 1 AT ROW 2 COL 24
           BGCOLOR 3
@@ -418,10 +434,12 @@ DEFINE FRAME DLGOKCAN
      RECT-10 AT ROW 2.25 COL 2.5
      l-nationality AT ROW 6.5 COL 15
      l-cond-keep-code AT ROW 19.25 COL 3.5
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS THREE-D
-         size 78.88 by 21.04
-         BGCOLOR 8 FGCOLOR 0
+     RECT-12 AT ROW 21 COL 2.5 WIDGET-ID 10
+     l-proof AT ROW 21.25 COL 9.5 WIDGET-ID 12
+     SPACE(66.74) SKIP(0.53)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS THREE-D  SCROLLABLE 
+         BGCOLOR 8 FGCOLOR 0 
          TITLE BGCOLOR 8 FGCOLOR 1 "Введите изменения атрибутов товара для пакетной обработки":L
          DEFAULT-BUTTON Btn_OK CANCEL-BUTTON Btn_Cancel.
 
@@ -493,9 +511,13 @@ ASSIGN
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN normal-waste IN FRAME DLGOKCAN
    NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN proof IN FRAME DLGOKCAN
+   NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON r-cnd-keep IN FRAME DLGOKCAN
    NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON r-cst IN FRAME DLGOKCAN
+   NO-ENABLE                                                            */
+/* SETTINGS FOR RECTANGLE RECT-12 IN FRAME DLGOKCAN
    NO-ENABLE                                                            */
 /* SETTINGS FOR RECTANGLE RECT-9 IN FRAME DLGOKCAN
    NO-ENABLE                                                            */
@@ -573,6 +595,7 @@ define variable choice as log no-undo .
                 normal-wastage
                 normal-waste
                 cond-keep-code
+                proof
                 .
             assign
             destin_ = (if destin:sensitive  then Destin else ?)
@@ -589,6 +612,8 @@ define variable choice as log no-undo .
             normal-wastage_ = if normal-wastage:sensitive then normal-wastage else ?
             normal-waste_ = if normal-waste:sensitive then normal-waste else ?
             cond-keep-code_ = if cond-keep-code:sensitive then cond-keep-code else ?
+            proof_ = if proof:sensitive then proof else ?
+            
             .
 END.
 
@@ -822,6 +847,24 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME l-proof
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL l-proof DLGOKCAN
+ON MOUSE-SELECT-CLICK OF l-proof IN FRAME DLGOKCAN
+DO:
+    IF l-proof:visible then do:
+    assign
+    proof:fgcolor = ?
+    l-proof:visible = false.
+    enable proof with frame {&frame-name}.
+  end.
+
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME l-sert
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL l-sert DLGOKCAN
 ON MOUSE-SELECT-CLICK OF l-sert IN FRAME DLGOKCAN
@@ -987,6 +1030,23 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME proof
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL proof DLGOKCAN
+ON RIGHT-MOUSE-CLICK OF proof IN FRAME DLGOKCAN
+DO:
+
+    assign
+    proof:fgcolor = 15
+    proof = ?
+    l-proof:visible = true.
+    display proof with frame {&frame-name}.
+    disable proof with frame {&frame-name}.
+
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME r-cnd-keep
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-cnd-keep DLGOKCAN
@@ -1273,7 +1333,7 @@ PROCEDURE enable_UI :
   DISPLAY       n-attrib n-cst-base-rate n-deadline
                 n-deadline-2 n-destin n-nationality
                 n-sert n-sort n-struct
-                n-tnved n-unit-cst n-userrule n-normal-wastage n-normal-waste n-cond-keep-code
+                n-tnved n-unit-cst n-userrule n-normal-wastage n-normal-waste n-cond-keep-code proof
     with frame {&frame-name}.
   ENABLE        Btn_OK Btn_Cancel b-help
                 n-attrib n-cst-base-rate n-deadline
@@ -1283,7 +1343,7 @@ PROCEDURE enable_UI :
                 l-attrib l-cst-base-rate l-deadline
                 l-destin l-nationality
                 l-sert l-sort l-struct
-                l-tnved l-unit-cst l-userrule l-normal-wastage l-normal-waste l-cond-keep-code
+                l-tnved l-unit-cst l-userrule l-normal-wastage l-normal-waste l-cond-keep-code l-proof
       WITH FRAME DLGOKCAN.
   {&OPEN-BROWSERS-IN-QUERY-DLGOKCAN}
 END PROCEDURE.

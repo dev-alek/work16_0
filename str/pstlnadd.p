@@ -882,7 +882,7 @@ if varset = yes then do transaction on error undo, return error return-value :
         (
          varqnty-pieces,
          varqnty-pieces,
-         ((bf-add_parts.price-rubl - bf-add_parts.road-tax-rubl - bf-add_parts.transport-rubl - bf-add_parts.other-rubl ) / (varqnty-pieces / - bf-add_parts.fact-qnty )),
+         ((bf-add_parts.price-rubl - bf-add_parts.road-tax-rubl - bf-add_parts.transport-rubl - bf-add_parts.other-rubl ) / (varqnty-pieces / (if available tt-parts then - (bf-add_parts.fact-qnty - tt-parts.fact-qnty) else - bf-add_parts.fact-qnty) )),
          1,
          (if available tt-parts then - (bf-add_parts.fact-qnty - tt-parts.fact-qnty)  else - bf-add_parts.fact-qnty),
          0,

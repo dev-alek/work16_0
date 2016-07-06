@@ -55,6 +55,8 @@ define variable vss-description as character no-undo init "Настройки объектов ЕГ
 { gbl/key-rec.i  }
 { gbl/attr-lib.i }
 { ref/gds-attr.i }
+{ gbl/waitfram.i }
+
 
 define temp-table tt-gds-rests no-undo
     field gds-code          like ub.goods.gds-code          label "Код товара в TH"
@@ -81,13 +83,41 @@ define temp-table tt-gds-rests no-undo
 
 define buffer old_tt-gds-rests for tt-gds-rests .
 
+define temp-table tt-gds-rests_shop no-undo
+    field gds-code          like ub.goods.gds-code          label "Код товара в TH"
+    field gds-name          like ub.goods.gds-name          label "Наименование товара" format "X(100)"
+    field alc-code          as character                    label "Алкогольный код"     format "X(21)"
+    field ms-base           like ub.goods.ms-base           label "Объем"               format ">>9.9<<"
+    field alc-type-code     like ub.alc-type.alc-type-code  label "Код АП"
+    field proof             like ub.goods.proof             label "Крепость"            format ">9.9"    
+    field fromEgais         as logical
+    field egais-name        as character                    label "Наименование ЕГАИС"  format "X(100)"
+    field egais-qnty        as integer                      label "Остаток маг"
+    field TH-qnty           as integer                      label "Остаток TH"   
+    field prt-rec           as character  
+    field packed            as logical  
+    field egais-qnty_stock  as integer                      label "Остаток скл"   
+    index pi as primary
+        gds-code
+    index name_ as word-index
+        gds-name
+    index alc
+        alc-code    
+.    
+
+define buffer old_tt-gds-rests_shop for tt-gds-rests_shop .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-def var egais as class EGAIS.
+def var rests as class Rests.
+def var rests_shop as class Rests_Shop.
 
 def var bh-gds-egais as handle no-undo .
 def var qh-gds-egais as handle no-undo .
+
+def var bh-gds-egais_shop as handle no-undo .
+def var qh-gds-egais_shop as handle no-undo .
 
 
 define buffer buf_firm for ub.firm .
@@ -97,6 +127,26 @@ define buffer buf_goods for ub.goods .
 define buffer buf_goods-attr for ub.goods-attr .
 define buffer buf_parts for ub.parts .
 DEFINE BUFFER X_ext-classif FOR ub.ext-classif.
+
+define variable v-section-names as character no-undo.
+define variable v-page-current as integer no-undo.
+define variable v-page as integer no-undo.
+define variable iTemp as integer no-undo.
+&SCOP max-labels 2
+&SCOP tab-height 25
+
+  DEFINE VARIABLE up-image             AS HANDLE NO-UNDO.  
+  DEFINE VARIABLE tab-type          AS INT NO-UNDO. /* 1,2 */
+  DEFINE VARIABLE char-hdl             AS CHARACTER NO-UNDO.
+  DEFINE VARIABLE page-label           AS HANDLE EXTENT {&max-labels} NO-UNDO.
+  DEFINE VARIABLE image-hdl            AS HANDLE EXTENT {&max-labels} NO-UNDO.
+  DEFINE VARIABLE page-enabled         AS LOGICAL EXTENT {&max-labels} NO-UNDO.
+  
+  DEFINE VARIABLE pos-x             AS integer NO-UNDO init 5.
+  DEFINE VARIABLE pos-y             AS integer NO-UNDO init 100.
+
+  DEF VAR width-tab-values    AS INT INIT [110,72] EXTENT 2 NO-UNDO.
+  DEFINE VARIABLE        number-of-pages    AS INTEGER   NO-UNDO.
 
 define variable select-list as character no-undo .
 define variable ref-list    as character no-undo .
@@ -136,6 +186,8 @@ define variable v-fs-rar as character no-undo .
 
 define variable bh-act-header  as handle no-undo .
 {ibs/th/bge/egais/awo-egais.i proc }
+define variable bh-act-header-tts  as handle no-undo .
+{ibs/th/bge/egais/tts-egais.i proc -tts }
 
 FUNCTION get-mark RETURNS CHARACTER
 (buffer local-gds for tt-gds-rests ):
@@ -176,7 +228,9 @@ end function.
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
+&Scoped-define List-1 b-save b-connect b-del br-rests b-func
 
+&Scoped-define List-2 br-rests_shop br-rests_all t-negative_rests
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -194,6 +248,10 @@ end function.
 define menu m-func
     menu-item m-writeOff label "Сформировать акт о списании"
 .    
+
+define menu m-func_shop
+    menu-item m-tts label "Сформировать акт о передаче продукции в торговый зал"
+. 
 
 DEFINE BUTTON b-mark 
      LABEL "&*" 
@@ -235,7 +293,12 @@ DEFINE BUTTON b-connect
 DEFINE BUTTON b-func 
      LABEL "Функции" 
      SIZE 15 BY 1.14
-     BGCOLOR 8 .      
+     BGCOLOR 8 . 
+
+/*DEFINE BUTTON b-func_shop*/
+/*     LABEL "Функции"     */
+/*     SIZE 15 BY 1.14     */
+/*     BGCOLOR 8 .         */
      
 DEFINE BUTTON b-sel-all
      LABEL "&+":L
@@ -244,6 +307,8 @@ DEFINE BUTTON b-sel-all
 DEFINE BUTTON b-unmark
      LABEL "&-":L
      SIZE 3 BY 1.14 TOOLTIP "Снять все отметки". 
+     
+defin variable t-negative_rests as logical view-as toggle-box label "Отрицательные остатки" initial no no-undo .
 
 Define variable NameContext as character view-as fill-in size 30 by 1 fgcolor 12 no-undo.
 define variable loc-alc  as character view-as fill-in size 25 by 1 fgcolor 12 no-undo format "x(25)":U.
@@ -259,6 +324,10 @@ size 30 by 1    fgcolor 0 /* bgcolor 8 */ no-undo.
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY br-rests FOR 
+      tt-gds-rests SCROLLING.
+DEFINE QUERY br-rests_shop FOR 
+      tt-gds-rests_shop SCROLLING.
+DEFINE QUERY br-rests_all FOR 
       tt-gds-rests SCROLLING.
 &ANALYZE-RESUME
 
@@ -280,9 +349,66 @@ DEFINE BROWSE br-rests
 /*    tt-gds-rests.egais-name COLUMN-LABEL "Наименование в ЕГАИС" FORMAT "X(100)":U width 39*/
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 105 BY 20.2 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 105 BY 20 FIT-LAST-COLUMN.
+    
+DEFINE BROWSE br-rests_shop
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-rests_shop Dialog-Frame _FREEFORM
+  QUERY br-rests_shop  DISPLAY
+    tt-gds-rests_shop.alc-code COLUMN-LABEL "Алкогольный код" FORMAT "X(25)":U
+    tt-gds-rests_shop.gds-name COLUMN-LABEL "Наименование товара" FORMAT "X(100)":U width 39
+    tt-gds-rests_shop.gds-code COLUMN-LABEL "Код товара в TH" FORMAT ">>>>>>>>9"
+/*    tt-gds-rests.ms-base  COLUMN-LABEL "Объем" FORMAT ">>9.9<<"*/
+/*    tt-gds-rests.proof    COLUMN-LABEL "Крепость" FORMAT ">9.9"*/
+    tt-gds-rests_shop.alc-type-code COLUMN-LABEL "Код АП" FORMAT "X(4)":U
+    tt-gds-rests_shop.egais-qnty
+    tt-gds-rests_shop.egais-qnty_stock
+    tt-gds-rests_shop.TH-qnty
+/*    tt-gds-rests.egais-name COLUMN-LABEL "Наименование в ЕГАИС" FORMAT "X(100)":U width 39*/
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 105 BY 12 .
+    
+DEFINE BROWSE br-rests_all
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-rests_all Dialog-Frame _FREEFORM
+  QUERY br-rests_all  DISPLAY
+    tt-gds-rests.alc-code COLUMN-LABEL "Алкогольный код" FORMAT "X(25)":U
+    tt-gds-rests.gds-name COLUMN-LABEL "Наименование товара" FORMAT "X(100)":U width 39
+    tt-gds-rests.gds-code COLUMN-LABEL "Код товара в TH" FORMAT ">>>>>>>>9"
+/*    tt-gds-rests.ms-base  COLUMN-LABEL "Объем" FORMAT ">>9.9<<"*/
+/*    tt-gds-rests.proof    COLUMN-LABEL "Крепость" FORMAT ">9.9"*/
+    tt-gds-rests.alc-type-code COLUMN-LABEL "Код АП" FORMAT "X(4)":U
+    tt-gds-rests.egais-qnty
+    tt-gds-rests.informB_
+/*    tt-gds-rests.egais-name COLUMN-LABEL "Наименование в ЕГАИС" FORMAT "X(100)":U width 39*/
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 105 BY 8 title "Остатки на складе по алкокоду в разрезе справок Б" .
 
+DEFINE RECTANGLE Rect-Bottom
+     EDGE-PIXELS 0    
+     SIZE 33.63 BY .13
+     BGCOLOR 7 .
 
+DEFINE RECTANGLE Rect-Left
+     EDGE-PIXELS 0    
+     SIZE .63 BY 4.25
+     BGCOLOR 15 .
+
+DEFINE RECTANGLE Rect-Main
+     EDGE-PIXELS 1 GRAPHIC-EDGE    
+     SIZE 33.75 BY 4.33
+     BGCOLOR 8 FGCOLOR 0 .
+
+DEFINE RECTANGLE Rect-Right
+     EDGE-PIXELS 0    
+     SIZE .63 BY 4.33
+     BGCOLOR 7 .
+
+DEFINE RECTANGLE Rect-Top
+     EDGE-PIXELS 0    
+     SIZE 33.63 BY .13
+     BGCOLOR 15 .
+     
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
@@ -296,12 +422,21 @@ DEFINE FRAME Dialog-Frame
      v-fs-rar at row 2.7 col 17 label "ФСРАР ID"
      b-connect AT ROW 1.24 COL 62
      b-del at row 1.24 col 77 
-     b-func at row 1.24 col 92 
+     b-func at row 1.24 col 92
+/*     b-func_shop at row 1.24 col 92*/
+     t-negative_rests at row 5.3 col 83
      a-n-c at row 4 col 2 label "Поиск по"
      NameContext at row 4 col 50 label "Контекст"
      loc-alc at row 4 col 50 no-label
      loc-code at row 4 col 50 label "Код(весь)"
-     br-rests AT ROW 5.3 COL 2 WIDGET-ID 200
+     br-rests AT ROW 6.5 COL 2.2 WIDGET-ID 200
+     br-rests_shop AT ROW 6.5 COL 2.2 WIDGET-ID 220
+     br-rests_all AT ROW 18.5 COL 2.2 WIDGET-ID 240
+     Rect-Main AT ROW 5 COL 5.75
+     Rect-Bottom AT ROW 5 COL 3.5
+     Rect-Left AT ROW 1 COL 1.25
+     Rect-Right AT ROW 1 COL 34.25
+     Rect-Top AT ROW 1 COL 1.25
      SPACE(1) SKIP(0.32)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -309,6 +444,8 @@ DEFINE FRAME Dialog-Frame
          DEFAULT-BUTTON b-load CANCEL-BUTTON b-cancel WIDGET-ID 100.
 
 assign br-rests:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame = 1 .
+assign br-rests_shop:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame = 0 .
+assign br-rests_all:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame = 0 .
 
 /* *********************** Procedure Settings ************************ */
 
@@ -390,6 +527,23 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&Scoped-define SELF-NAME t-negative_rests
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-negative_rests Dialog-Frame
+ON value-changed OF t-negative_rests in FRAME Dialog-Frame /* Объекты ЕГАИС */
+DO:
+    assign t-negative_rests.
+    if t-negative_rests
+    then do :
+        open query br-rests_shop for each tt-gds-rests_shop where tt-gds-rests_shop.egais-qnty < 0 .
+    end.
+    else do :
+        open query br-rests_shop for each tt-gds-rests_shop .
+    end.
+END.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME a-n-c
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL a-n-c Dialog-Frame
@@ -669,20 +823,20 @@ END.
 ON CHOOSE OF b-load IN FRAME Dialog-Frame /* - */
 DO:
 
-    egais:SendRequestUTM() .
-    glog = egais:IsSent .
+    rests:SendRequestUTM() .
+    rests_shop:SendRequestUTM() .
+    glog = rests_shop:IsSent .
     if glog then enable b-answer WITH FRAME Dialog-Frame.
     else disable b-answer WITH FRAME Dialog-Frame .
-    glog = egais:StatusErr .
+    glog = rests_shop:StatusErr .
     if glog then do :
-        message egais:Msg view-as alert-box.
+        message rests_shop:Msg view-as alert-box.
         return no-apply.
     end.
-    else do :
-        v-replyId = egais:ReplyId.
-    end.
+/*    else do :                     */
+/*        v-replyId = rests:ReplyId.*/
+/*    end.                          */
         
-/*    if not requestDictOrg:SendRequestUTM() then message requestDictOrg:Msg view-as alert-box.*/
     
 END.
 
@@ -693,14 +847,17 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-answer Dialog-Frame
 ON CHOOSE OF b-answer IN FRAME Dialog-Frame /* - */
 DO:
+    run waitfram-show in this-procedure ("Ждите...") .
     empty temp-table tt-gds-rests .
-    bh-gds-egais = egais:GetHndlTable() .
-    glog = egais:StatusErr .
+    bh-gds-egais = rests:GetHndlTable() .
+    glog = rests:StatusErr .
     if glog then do :
-        message egais:Msg view-as alert-box.
+        run waitfram-hide in this-procedure no-error .
+        message rests:Msg view-as alert-box.
         return no-apply.
     end.
     if not valid-handle(bh-gds-egais) then do :
+        run waitfram-hide in this-procedure no-error .
         message "Ошибка при получении ответа от ЕГАИС" view-as alert-box error .
         return no-apply .
     end.
@@ -747,6 +904,67 @@ DO:
     apply "value-changed" to br-rests .
     enable a-n-c with FRAME {&FRAME-NAME}.
     apply "value-changed" to a-n-c in FRAME {&FRAME-NAME}.
+    
+    empty temp-table tt-gds-rests_shop .
+    bh-gds-egais_shop = rests_shop:GetHndlTable() .
+    glog = rests_shop:StatusErr .
+    if glog then do :
+        run waitfram-hide in this-procedure no-error .
+        message rests_shop:Msg view-as alert-box.
+        return no-apply.
+    end.
+    if not valid-handle(bh-gds-egais_shop) then do :
+        run waitfram-hide in this-procedure no-error .
+        message "Ошибка при получении ответа от ЕГАИС" view-as alert-box error .
+        return no-apply .
+    end.
+    create query qh-gds-egais_shop .
+    qh-gds-egais_shop:set-buffers (bh-gds-egais_shop) .
+    qh-gds-egais_shop:query-prepare ("for each tt-gds-rests-eg_shop").
+    qh-gds-egais_shop:query-open.
+    _repeat_shop:
+    repeat:
+        qh-gds-egais_shop:get-next ().
+        if qh-gds-egais_shop:query-off-end then leave _repeat_shop.
+        create tt-gds-rests_shop.
+        buffer tt-gds-rests_shop:handle:buffer-copy (bh-gds-egais_shop) .
+        assign tt-gds-rests.fromEgais = yes .
+        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                           AND X_ext-classif.db-num = 0
+                                           and X_ext-classif.key#_two = v-ext-sys
+                                           and X_ext-classif.charkey_one = tt-gds-rests_shop.alc-code
+                                           no-error.
+        if available X_ext-classif then do :
+            find first buf_goods no-lock where buf_goods.gds-code = X_ext-classif.key#_one .
+            assign
+                tt-gds-rests_shop.gds-code   = buf_goods.gds-code
+                tt-gds-rests_shop.gds-name   = buf_goods.gds-name
+            .
+        end.
+        if available buf_goods then do :
+            if (not tt-gds-rests_shop.packed and buf_goods.unit-cli <> buf_goods.unit-base and buf_goods.cli-base-rate <> 1.0)
+            then assign tt-gds-rests_shop.egais-qnty = tt-gds-rests_shop.egais-qnty * buf_goods.cli-base-rate .
+            for each buf_parts no-lock where buf_parts.artic      = buf_goods.artic
+                                           and buf_parts.prod-type  = buf_goods.prod-type
+                                           and buf_parts.prod-code  = buf_goods.prod-code
+                                           and buf_parts.out-code   = {&free-code} :
+/*                                           and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_  */
+/*                                           and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :*/
+                                           
+                assign tt-gds-rests.TH-qnty = tt-gds-rests.TH-qnty + buf_parts.fact-qnty .
+/*                assign tt-gds-rests.prt-rec = if tt-gds-rests.prt-rec = "" then string(recid(buf_parts)) else tt-gds-rests.prt-rec + ',' + string(recid(buf_parts)) .*/
+            end.
+        end. 
+        for each tt-gds-rests no-lock where tt-gds-rests.alc-code = tt-gds-rests_shop.alc-code :
+            assign tt-gds-rests_shop.egais-qnty_stock = tt-gds-rests_shop.egais-qnty_stock + tt-gds-rests.egais-qnty . 
+        end.
+    end.
+    OPEN QUERY br-rests_shop FOR EACH tt-gds-rests_shop .
+    apply "value-changed" to br-rests_shop .
+    run waitfram-hide in this-procedure .
+/*    enable a-n-c with FRAME {&FRAME-NAME}.                */
+/*    apply "value-changed" to a-n-c in FRAME {&FRAME-NAME}.*/
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -826,28 +1044,90 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define BROWSE-NAME br-rests
-&UNDEFINE SELF-NAME
+ON 'right-mouse-down':U of br-rests_all
+DO:
+    RUN set_focus (SELF).
+    IF SELF:TYPE = 'BROWSE' THEN DO:
+        RETURN NO-APPLY.
+    END.
+    ELSE DO:
+        APPLY 'menu-drop' TO SELF.
+    END.
+END.
 
-/*on row-display of br-goods IN FRAME Dialog-Frame /* - */                                                                                                          */
-/*DO:                                                                                                                                                               */
-/*    if tt-gds.gds-code = 0 then tt-gds.gds-code:bgcolor in browse br-goods = yellow_color .                                                                       */
-/*    if valid-handle(bh-gds-egais) then do :                                                                                                                       */
-/*        if tt-gds.alc-code <> ? and tt-gds.alc-code <> "" then do :                                                                                               */
-/*            bh-gds-egais:find-unique (substitute("where tt-gds-EG.alc-code = '&1'", tt-gds.alc-code), no-lock) no-error.                                          */
-/*        end.                                                                                                                                                      */
-/*        else do :                                                                                                                                                 */
-/*            bh-gds-egais:find-unique (substitute("where tt-gds-EG.gds-name = '&1'", tt-gds.gds-name), no-lock) no-error.                                          */
-/*        end.                                                                                                                                                      */
-/*        if bh-gds-egais:available and not bh-gds-egais:ambiguous and not tt-gds.fromEgais then do :                                                               */
-/*            if bh-gds-egais:buffer-field ("gds-name"):buffer-value <> tt-gds.gds-name then tt-gds.gds-name:bgcolor in browse br-goods = red_color .               */
-/*            if bh-gds-egais:buffer-field ("ms-base"):buffer-value <> tt-gds.ms-base then tt-gds.ms-base:bgcolor in browse br-goods = red_color .                  */
-/*            if bh-gds-egais:buffer-field ("proof"):buffer-value <> tt-gds.proof then tt-gds.proof:bgcolor in browse br-goods = red_color .                        */
-/*            if bh-gds-egais:buffer-field ("alc-code"):buffer-value <> tt-gds.alc-code then tt-gds.alc-code:bgcolor in browse br-goods = red_color .               */
-/*            if bh-gds-egais:buffer-field ("alc-type-code"):buffer-value <> tt-gds.alc-type-code then tt-gds.alc-type-code:bgcolor in browse br-goods = red_color .*/
-/*        end.                                                                                                                                                      */
-/*    end.                                                                                                                                                          */
-/*end.                                                                                                                                                              */
+ON 'right-mouse-down':U of br-rests
+DO:
+    RUN set_focus (SELF).
+    IF SELF:TYPE = 'BROWSE' THEN DO:
+        RETURN NO-APPLY.
+    END.
+    ELSE DO:
+        APPLY 'menu-drop' TO SELF.
+    END.
+END.
+
+PROCEDURE set_focus.
+DEF INPUT PARAM i_object            AS HANDLE   NO-UNDO.
+DEF VAR l_was_row_one_selected      AS LOG      NO-UNDO.
+DEF VAR l_header_y                  AS DEC      NO-UNDO.
+DEF VAR w_browse_title_bar_height   AS DEC      NO-UNDO INITIAL 19. /* determine this for your UI */
+DEF VAR o_labels                    AS CHAR     NO-UNDO.
+DEF VAR o_procedures                AS CHAR     NO-UNDO.
+DEF VAR h_menu                      AS HANDLE   NO-UNDO.
+DEF VAR h_menu_item                 AS HANDLE   NO-UNDO.
+DEF VAR l_count                     AS INT      NO-UNDO.
+/* given an object ... */
+    IF i_object:TYPE = 'browse' THEN DO:
+        IF i_object:NUM-SELECTED-ROWS = 0
+            THEN ASSIGN l_was_row_one_selected = FALSE.
+            ELSE ASSIGN l_was_row_one_selected = i_object:IS-ROW-SELECTED(1) NO-ERROR.
+        i_object:SELECT-ROW(1) NO-ERROR.
+        IF ERROR-STATUS:ERROR THEN RETURN.
+        l_header_y = MAX(1,i_object:FIRST-COLUMN:Y). /* in case there are no column headers */
+        IF i_object:TITLE <> ? THEN l_header_y = l_header_y - w_browse_title_bar_height.
+        IF l_was_row_one_selected = FALSE THEN i_object:DESELECT-SELECTED-ROW(1) NO-ERROR.
+        /* this section selects the correct row, based on where it was clicked, minus the height of the headers divided by row height */
+        i_object:SELECT-ROW(
+            INT(
+                1 + 
+                TRUNC(
+                      (LAST-EVENT:Y - l_header_y) / i_object:FIRST-COLUMN:HEIGHT-PIXELS
+                     ,0)
+                )
+            )
+            NO-ERROR.
+        APPLY 'ENTRY':u TO i_object. /* to get focus properly */
+        APPLY 'VALUE-CHANGED':u TO i_object.
+        /* use some rule to find associated dynamic menu items, e.g. maintenance options, finding related data*/
+/*        RUN find_menu_stuff (i_object:NAME, OUTPUT o_labels, OUTPUT o_procedures).*/
+/*        IF o_labels = '' THEN RETURN.                                             */
+        o_labels = "Добавить в акт о передаче продукции в торговый зал" .
+        /* this finds a popup menu, if any */
+        h_menu = i_object:POPUP-MENU NO-ERROR.
+
+        IF VALID-HANDLE(h_menu) THEN RETURN. /* already created previously */
+        /* create a popup menu */
+        CREATE MENU h_menu.
+        ASSIGN
+            h_menu:POPUP-ONLY   = TRUE
+            i_object:POPUP-MENU = h_menu
+            .
+        /* add the standard maintenance options (they still may not be supported though) */
+        CREATE MENU-ITEM h_menu_item
+            ASSIGN
+                PARENT      = h_menu
+                LABEL       = o_labels
+                SENSITIVE   = TRUE
+            TRIGGERS:
+                ON CHOOSE PERSISTENT RUN make-TTS IN THIS-PROCEDURE.
+            END TRIGGERS.
+    END.
+    IF VALID-HANDLE(h_menu)
+        THEN APPLY 'menu-drop' TO h_menu.
+    /* MENU-DROP - Supported only when the POPUP-ONLY attribute is set to TRUE and the
+                   menu is set as a popup for some other widget */
+END PROCEDURE.
+
 
 on value-changed of br-rests IN FRAME Dialog-Frame /* - */
 DO:
@@ -860,6 +1140,13 @@ DO:
         loc-alc = "".
     end.
 end.
+
+on value-changed of br-rests_shop IN FRAME Dialog-Frame /* - */
+DO:
+    if available tt-gds-rests_shop then do :
+        OPEN QUERY br-rests_all FOR EACH tt-gds-rests where tt-gds-rests.alc-code = tt-gds-rests_shop.alc-code .
+    end.
+END.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
@@ -896,9 +1183,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 /*      rs-sort = 1           */
 /*  .                         */
 
+  v-page-current = 1.
+  v-section-names = "Склад|Магазин".
+
   assign
     b-func:popup-menu in frame {&FRAME-NAME} = menu m-func:handle
     b-func:menu-mouse = 1
+/*    br-rests_all:popup-menu in frame {&FRAME-NAME} = menu m-func_shop:handle*/
+/*    b-func_shop:menu-mouse = 3                                              */
   .
 
   find first buf_clients no-lock where buf_clients.obj-type = {&cmp} and buf_clients.obj-code = v-cntxt-host-code-obj.
@@ -908,6 +1200,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
   if valid-handle(qh-gds-egais) then do :
       delete object qh-gds-egais .
+  end.
+    if valid-handle(bh-gds-egais_shop) then do :
+      delete object bh-gds-egais_shop .
+  end.
+  if valid-handle(qh-gds-egais_shop) then do :
+      delete object qh-gds-egais_shop .
   end.
   empty temp-table thbjattr_thbj-attr .
   run adm/shattri.p (
@@ -929,7 +1227,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     v-fs-rar = v-value-character
     v-org-inn = buf_firm.inn
   .
-  egais = new EGAIS(v-cntxt-db-num, v-cntxt-userid).
   display v-fs-rar format "X(30)" with frame {&FRAME-NAME}.
   run adm/shattri.p (
        input "get":U
@@ -947,12 +1244,32 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       ) no-error .
   assign v-ext-sys = v-value-integer .
   release buf_clients .
-  egais:EGAISImpl = new Rests(v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-org-inn) .
+  
+  rests = new Rests(v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-org-inn) .
+  rests:DbNum = v-cntxt-db-num .
+  rests:User_Id = v-cntxt-userid .
+  
+  rests_shop = new Rests_shop(v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-org-inn) .
+  rests_shop:DbNum = v-cntxt-db-num .
+  rests_shop:User_Id = v-cntxt-userid .
 /*  run fill-tt.*/
+
+  run set-size(input frame {&FRAME-NAME}:height-pixels - 132, input frame {&FRAME-NAME}:width-pixels - 15).
+  run initialize-folder (v-section-names).
+  run show-current-page(input v-page-current).
   { gbl/diasize.i &browse-name=br-rests }
+  run diasize_add_browse in this-procedure
+  (input  'width':u
+  ,input  browse br-rests_shop :handle
+  ) .
+  run diasize_add_browse in this-procedure
+  (input  'width':u
+  ,input  browse br-rests_all :handle
+  ) .
   run diasize_init in this-procedure .
   RUN enable_UI.
-  
+  hide {&list-2} in frame {&frame-name}.
+
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -1001,6 +1318,162 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK folder-block Dialog-Frame
+{adm/folder.i trg-folder v-page}
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE trg-folder Dialog-Frame 
+PROCEDURE trg-folder :
+
+  v-page-current = v-page.
+  if v-page-current = 1 then do :
+    display {&list-1} with frame {&frame-name}.
+    hide {&list-2} in frame {&frame-name}.
+  end.
+  else
+  if v-page-current = 2 then do :
+    display {&list-2} with frame {&frame-name}.
+    hide {&list-1} in frame {&frame-name}.  
+  end.
+/*  run initialize-section.*/
+  
+end.
+
+procedure make-tts.
+    define variable v-tts-num as character no-undo .
+    define variable v-tts-date as date no-undo .
+    define variable v-ok as logical no-undo .
+    define variable v-position as integer no-undo .
+    define variable v-part-num    as integer   no-undo .
+    define variable v-clob-db-num as integer   no-undo .
+    define variable v-int64-id    as int64     no-undo .
+    define variable v-info        as character no-undo .
+    define variable v-sent as character no-undo .
+    define variable v-rec-clob as recid no-undo .
+    
+    define buffer buf_clob-bind for ub.clob-bind.
+    define buffer buf_clob-data for ub.clob-data.
+/*run gbl/inidebug.p .*/
+/*    if select-list = "" then do :                               */
+/*        message "Не выбрано ни одной строки" view-as alert-box .*/
+/*        return no-apply.                                        */
+/*    end.                                                        */
+    if not available tt-gds-rests then do :
+        message "Ошибка при выборе строки" view-as alert-box.
+        return no-apply.
+    end.
+    clob_ :
+    for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-tts}
+                             and buf_clob-bind.part-num = 1
+                             break by sys-date descending by sys-time descending :
+        v-sent =  entry(3, buf_clob-bind.descr, {&delim-par}).                    
+        if not logical(v-sent)
+        then do :
+            v-rec-clob = recid(buf_clob-bind) .
+            leave clob_ . 
+        end.         
+    end.
+    find first buf_clob-bind where recid(buf_clob-bind) = v-rec-clob no-error .
+    if not available buf_clob-bind
+        then do :
+        run bge/egais-makeTTS.w  (input parparentproc,
+                                       output v-tts-num,
+                                       output v-tts-date,
+                                       output v-ok) .
+        if not v-ok then return no-apply .
+        create tt-act-header-tts.
+        assign
+            tt-act-header-tts.num   = v-tts-num
+            tt-act-header-tts.date_ = v-tts-date
+            tt-act-header-tts.is-sent = no
+            v-position = 0
+        .
+    
+    /*    do ii = 1 to num-entries(select-list) :                                                                */
+    /*        for first tt-gds-rests exclusive-lock where recid(tt-gds-rests) = integer(entry(ii, select-list)) :*/
+        assign v-position = v-position + 1 .
+        create tt-gds-act-tts.
+        assign
+            tt-gds-act-tts.num          = tt-act-header-tts.num
+            tt-gds-act-tts.position_    = v-position
+            tt-gds-act-tts.alc-code     = tt-gds-rests.alc-code
+            tt-gds-act-tts.gds-code     = tt-gds-rests.gds-code
+            tt-gds-act-tts.gds-name     = tt-gds-rests.gds-name
+            tt-gds-act-tts.inform-B     = tt-gds-rests.informB_
+            tt-gds-act-tts.qnty         = tt-gds-rests.egais-qnty
+        .
+    /*        end.*/
+    /*    end.    */
+    
+        run makeXML-tts in this-procedure .
+        assign
+            v-clob-db-num = ?
+            v-int64-id = 0
+            v-info = tt-act-header-tts.num + {&delim-par} + string(tt-act-header-tts.date_) + {&delim-par} + string(tt-act-header-tts.is-sent) + {&delim-par} + tt-act-header-tts.answer_
+        .
+        run gbl/file2clb.p ( input {&add-def}
+                              ,input ",no"
+                              ,input ? /*p-bh*/
+                              ,input tt-act-header-tts.num /*p-uniq-key-rec*/
+                              ,input {&lob-egais-tts} /*p-field-*/
+                              ,input v-info /*p-descr*/
+                              ,input-output v-part-num
+                              ,input {&lob-egais-tts}
+                              ,input-output v-clob-db-num
+                              ,input-output v-int64-id
+                              ,input search (v-file-tts)
+                              ,input '' /*p-src-encoding*/
+                              ) no-error .
+        message "Акт сформирован. Вы можете отправить его или изменить количества из интерфейса 'Передача продукции в торговый зал'" view-as alert-box .
+    end.
+    else do :
+        find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id.
+        copy-lob
+        from  object buf_clob-data.cdata
+        to  file 'temp-tts.xml'
+        no-convert
+        no-error .
+        run parseXML-tts in this-procedure (input "temp-tts.xml") .
+        v-position = 1 .
+        for each tt-gds-act-tts no-lock :
+            v-position = v-position + 1 .
+        end.
+        create tt-gds-act-tts . 
+        assign
+            tt-gds-act-tts.num          = tt-act-header-tts.num
+            tt-gds-act-tts.position_    = v-position
+            tt-gds-act-tts.alc-code     = tt-gds-rests.alc-code
+            tt-gds-act-tts.gds-code     = tt-gds-rests.gds-code
+            tt-gds-act-tts.gds-name     = tt-gds-rests.gds-name
+            tt-gds-act-tts.inform-B     = tt-gds-rests.informB_
+            tt-gds-act-tts.qnty         = tt-gds-rests.egais-qnty
+        .  
+        run makeXML-tts in this-procedure .
+        assign
+            v-clob-db-num = buf_clob-bind.db-num
+            v-int64-id = buf_clob-bind.int64-id
+            v-part-num = buf_clob-bind.part-num
+            v-info = tt-act-header-tts.num + {&delim-par} + string(tt-act-header-tts.date_) + {&delim-par} + string(tt-act-header-tts.is-sent) + {&delim-par} + tt-act-header-tts.answer_
+        .
+        run gbl/file2clb.p ( input {&update}
+                  ,input "add-new,no"
+                  ,input ? /*p-bh*/
+                  ,input tt-act-header-tts.num /*p-uniq-key-rec*/
+                  ,input {&lob-egais-tts} /*p-field-*/
+                  ,input v-info /*p-descr*/
+                  ,input-output v-part-num
+                  ,input {&lob-egais-tts}
+                  ,input-output v-clob-db-num
+                  ,input-output v-int64-id
+                  ,input search (v-file-tts)
+                  ,input '' /*p-src-encoding*/
+                  ) no-error .
+         if error-status:error then message return-value view-as alert-box. 
+         message "Строка добавлена" view-as alert-box.
+    end.
+end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
@@ -1031,12 +1504,15 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
     
-  ENABLE b-mark b-sel-all b-unmark b-load b-save b-cancel br-rests  b-connect b-del b-func
+  ENABLE b-mark b-sel-all b-unmark b-load b-save b-cancel br-rests br-rests_shop br-rests_all
+         b-connect b-del b-func t-negative_rests /*b-func_shop*/
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   hide NameContext loc-alc loc-code in FRAME Dialog-Frame.
   br-rests:column-resizable in FRAME Dialog-Frame = true .
-  glog = egais:IsSent .
+  br-rests_shop:column-resizable in FRAME Dialog-Frame = true .
+  br-rests_all:column-resizable in FRAME Dialog-Frame = true .
+  glog = rests:IsSent .
   if glog then enable b-answer WITH FRAME Dialog-Frame.
 /*  if egais:IsSent then enable b-answer WITH FRAME Dialog-Frame.*/
 /*  else disable b-answer WITH FRAME Dialog-Frame .              */

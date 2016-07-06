@@ -101,6 +101,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       end.
       if  ub.clob-bind.resource-type = {&lob-egais-ab}
          or ub.clob-bind.resource-type = {&lob-egais-awo}
+         or ub.clob-bind.resource-type = {&lob-egais-ab_shop}
+         or ub.clob-bind.resource-type = {&lob-egais-awo_shop}
+         or ub.clob-bind.resource-type = {&lob-egais-tts}
+         or ub.clob-bind.resource-type = {&lob-egais-tfs}
          or (g#db-num = 0 
          and
           (ub.clob-bind.resource-type = {&lob-egais-wb}

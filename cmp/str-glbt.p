@@ -5,7 +5,7 @@ $Author$
 $Date$
 $Workfile$
 $Archive$
-
+ 
 Программа генерации файла s t r - g l b l . i . Часть thbj-attr
 
 Автор: Перваков Михаил Сергеевич

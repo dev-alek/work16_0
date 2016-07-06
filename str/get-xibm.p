@@ -1125,7 +1125,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
         ub.chk-doc.correct = no.
       end.
       prev-code = ub.chk-doc.doc-code.
-v-doc-code = chk-doc.doc-code.
+
 
       if v-chk-type[1] = integer({&rcpt-annu})
       then do:
@@ -1207,37 +1207,24 @@ on error undo, return error
 define variable v-value as character no-undo .
 define variable v-type  as character no-undo .
 
-{ gbl/conf-rd.i
-  "'alcohol'"
-  0
-  "''"
-  0
-  "''"
-  "''"
-  "''"
-  no
-  v-value
-  v-type
-  no-error
-}
 
-if v-value = "yes" then do:
+
     if AuthType_ = 2 then do: /*пиво*/
       run chkdocat-write IN THIS-PROCEDURE(
-        input v-doc-code
+        input chk-doc.doc-code
         ,INPUT "qr-alchol-pv"
         ,INPUT qr-alchol_ ) NO-ERROR.
 
     end.  
     if AuthType_ <> 2 and AuthType_ <> 0 then do: /*алкоголь*/
       run chkdocat-write IN THIS-PROCEDURE(
-        input v-doc-code
+        input chk-doc.doc-code
         ,INPUT "qr-alchol"
         ,INPUT qr-alchol_ ) NO-ERROR.
     end.  
   end.
   
-end.  
+
   
 end procedure. /* proc-00 */
 
@@ -1696,18 +1683,12 @@ on error undo, return error
        return .
     end.
 
-    find first chk-gds where chk-gds.doc-code = chk-doc.doc-code and chk-gds.line-num = (if lng-spl = 0 then - lng else lng-spl) no-error .  
-    if not available chk-gds then do:
-      CREATE chk-gds.
-      assign 
-        chk-gds.doc-code = chk-doc.doc-code
-        chk-gds.line-num = (if lng-spl = 0 then - lng else lng-spl)
-      .      
-    end.  
-    
+
+    CREATE chk-gds.
     assign
+    chk-gds.doc-code = chk-doc.doc-code
     lng = lng + 1
-    
+    chk-gds.line-num = (if lng-spl = 0 then - lng else lng-spl)
     ub.chk-gds.grp-code = 0
     ub.chk-gds.chk-date = ub.chk-doc.chk-date
     ub.chk-gds.b-code = b-c
@@ -1936,16 +1917,8 @@ on error undo, return error
     if error-status:error then do:
       {&error-in-file-format}
     end.
-    find first chk-gds where chk-gds.doc-code = chk-doc.doc-code and chk-gds.line-num = CBCString_ no-error .
-    if not available chk-gds then do:
-    CREATE chk-gds.
-      assign
-        chk-gds.doc-code = chk-doc.doc-code
-        chk-gds.line-num = CBCString_  
-      .
-    end.
     if CBCType_ <> 0 then do:
-      find first ub.chk-gds-attr where ub.chk-gds-attr.doc-code = ub.chk-gds.doc-code and 
+      find first ub.chk-gds-attr where ub.chk-gds-attr.doc-code = ub.chk-doc.doc-code and 
         ub.chk-gds-attr.line-num = CBCString_ and
         ub.chk-gds-attr.attr-code = "mark-code" no-error.
       if available ub.chk-gds-attr then do:
@@ -1955,7 +1928,7 @@ on error undo, return error
       else do:
       create ub.chk-gds-attr.
       assign
-        ub.chk-gds-attr.doc-code = ub.chk-gds.doc-code
+        ub.chk-gds-attr.doc-code = ub.chk-doc.doc-code
         ub.chk-gds-attr.line-num = CBCString_
         ub.chk-gds-attr.attr-code = "mark-code"
         ub.chk-gds-attr.attr-value =  CBCBarcode_ 

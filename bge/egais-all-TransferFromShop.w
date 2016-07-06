@@ -26,8 +26,8 @@ $Archive$
 using ibs.th.bge.egais.*.
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .
-define input parameter p-select as logical   no-undo .
-define output parameter p-RegID as character no-undo .
+/*define input parameter p-select as logical   no-undo .*/
+/*define output parameter p-RegID as character no-undo .*/
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -44,7 +44,7 @@ define variable bh-act-header         as handle    no-undo.
 define variable qh-act-header         as handle    no-undo.
 define variable browse-hdl-act-header as handle    no-undo.
 define variable bcol                as handle    extent 11 no-undo.
-define variable egais               as class     ActWriteOff no-undo.
+define variable egais               as class     TransferFromShop no-undo.
 define variable v-db-num            as integer   no-undo .
 define variable v-user-id           as character no-undo .
 define variable qh-ab-gds-EG-header as handle    no-undo.
@@ -81,7 +81,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 { gbl/getcntxt.i get }
 { gbl/thbjattr.i }
 { ref/extclass.i }
-{ibs/th/bge/egais/awo-egais.i proc }
+{ibs/th/bge/egais/tfs-egais.i proc }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -143,11 +143,6 @@ DEFINE BUTTON Btn_Ans
      LABEL "Посмотреть ответ" 
      SIZE 20 BY 1.13
      BGCOLOR 8 .
-     
-DEFINE BUTTON Btn_Sel AUTO-GO
-     LABEL "Выбор" 
-     SIZE 15 BY 1.13
-     BGCOLOR 8 .
 
 
 DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1 
@@ -168,12 +163,11 @@ DEFINE FRAME Dialog-Frame
      Btn_send at row 1.2 col 62
      Btn_Ans AT ROW 1.2 COL 32 WIDGET-ID 10
      Btn_lkp AT ROW 1.2 COL 17 WIDGET-ID 12
-     Btn_Sel AT ROW 1.2 COL 17
      RADIO-SET-1 AT ROW 1.2 COL 80 NO-LABEL WIDGET-ID 2
      SPACE(2) SKIP(23.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Акты о списании товаров в ЕГАИС"
+         TITLE "Возврат продукции из торгового зала на склад ЕГАИС"
          DEFAULT-BUTTON Btn_OK WIDGET-ID 100.
 
 
@@ -223,39 +217,18 @@ end.
 ON CHOOSE OF Btn_lkp IN FRAME Dialog-Frame /* Загрузить */
 DO:
     if not bh-act-header:available then return no-apply .
-    run bge/egais-act-writeOff.w (parparentproc, {&lookup}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    run bge/egais-TransferFromShop.w (parparentproc, {&lookup}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME Btn_Sel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Sel Dialog-Frame
-ON CHOOSE OF Btn_Sel IN FRAME Dialog-Frame /* Загрузить */
-DO:
-    if not bh-act-header:available then return no-apply .
-    assign p-RegID = bh-act-header:buffer-field ("RegID"):buffer-value .
-    if p-RegID = "" or p-RegID = ? or num-entries(p-RegID, CHR(5)) <> 2 then do :
-        message "Данный акт либо относится к старой версии ЕГАИС, либо по нему ещё не получен ответ (в этом случае нажмите кнопку 'Посмотреть ответ')." view-as alert-box .
-        p-RegID = "" .
-        return no-apply .
-    end.
-    if entry(2, p-RegID, CHR(5)) = "R" then do :
-        message "Данный акт о списании был отклонён ЕГАИС. Чтобы узнать причину нажмите кнопку 'Посмотреть ответ'" view-as alert-box .
-        p-RegID = "" .
-        return no-apply .
-    end.
-    assign p-RegID = entry(1, p-RegID, CHR(5)) .
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME Btn_create
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_create Dialog-Frame
 ON CHOOSE OF Btn_create IN FRAME Dialog-Frame /* Создать */
 DO:
-    run bge/egais-act-writeOff.w (parparentproc, {&add-def}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    run bge/egais-TransferFromShop.w (parparentproc, {&add-def}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
     run refresh-query.
 END.
 
@@ -267,7 +240,7 @@ END.
 ON CHOOSE OF Btn_chg IN FRAME Dialog-Frame /*  */
 DO:
     if not bh-act-header:available then return no-apply .
-    run bge/egais-act-writeOff.w (parparentproc, {&update}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    run bge/egais-TransferFromShop.w (parparentproc, {&update}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
     run refresh-query.
 END.
 
@@ -279,7 +252,7 @@ END.
 ON CHOOSE OF Btn_del IN FRAME Dialog-Frame /*  */
 DO:
     if not bh-act-header:available then return no-apply .
-    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-awo} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-tfs} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
     delete buf_clob-bind .
     bh-act-header:buffer-delete () .
     run refresh-query.
@@ -293,20 +266,19 @@ END.
 ON CHOOSE OF Btn_send IN FRAME Dialog-Frame /*  */
 DO:
     if not bh-act-header:available then return no-apply .
-    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-awo} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-tfs} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
     find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
-    os-delete "temp-ActWriteOff.xml".
+    os-delete "temp-TransferFromShop.xml".
     copy-lob
     from  object buf_clob-data.cdata
-    to  file 'temp-ActWriteOff.xml'
+    to  file 'temp-TransferFromShop.xml'
     no-convert
     no-error .
-    run parseXML in this-procedure (input "temp-ActWriteOff.xml") .
+    run parseXML in this-procedure (input "temp-TransferFromShop.xml") .
     find first tt-act-header .
-    v-file = 'ActWriteOff.xml' .
-    os-delete "ActWriteOff.xml" .
-    if egais:VerXSD = "1" then run makeXMLegais .
-    if egais:VerXSD = "2" then run makeXMLegais_v2 .
+    v-file = 'TransferFromShop.xml' .
+    os-delete "TransferFromShop.xml" .
+    run makeXMLegais_v2 .
     egais:inNum = tt-act-header.num .
     egais:SendRequestUTM() .
     glog = egais:IsSent .
@@ -317,7 +289,7 @@ DO:
         return no-apply.
     end.
     else do :
-        entry (4, buf_clob-bind.descr, {&delim-par}) = "yes".
+        entry (3, buf_clob-bind.descr, {&delim-par}) = "yes".
         
         bh-act-header:buffer-field ("is-sent"):buffer-value = true.
     end.
@@ -435,7 +407,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   assign v-ext-sys = v-value-integer .  
   
   
-  egais = new ActWriteOff (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+  egais = new TransferFromShop (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
   egais:DbNum = v-db-num .
   egais:User_Id = v-user-id .
 
@@ -446,7 +418,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   
   create browse browse-hdl-act-header
     assign 
-      title     = 'Акты о списании товара ЕГАИС'
+      title     = 'Акты о возврате продукции из торгового зала на склад'
       frame     = frame {&FRAME-NAME}:handle
       query     = qh-act-header
       x         = 10
@@ -466,26 +438,16 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   .
   if not bh-act-header = ? 
   then do:
-    do ii = 1 to bh-act-header:num-fields - 3:
+    do ii = 1 to bh-act-header:num-fields - 2:
       bcol[ii] = browse-hdl-act-header:add-like-column('tt-act-header' + '.' + bh-act-header:buffer-field (ii):name, 0, 'FILL-IN').
     end.
     browse-hdl-act-header:get-browse-column (1):width-chars = 30.
-    browse-hdl-act-header:get-browse-column (2):width-chars = 49.
-    browse-hdl-act-header:get-browse-column (3):width-chars = 20.
+    browse-hdl-act-header:get-browse-column (2):width-chars = 69.
   end.
 
   run enable_UI. 
   apply "value-changed" to RADIO-SET-1 in frame {&FRAME-NAME}. 
   
-  if not p-select then hide Btn_sel in FRAME Dialog-Frame.
-  else do :
-      hide Btn_create Btn_chg Btn_del Btn_send RADIO-SET-1 in FRAME Dialog-Frame.
-      assign
-        Btn_lkp:x = Btn_lkp:x + 120
-        Btn_Ans:x = Btn_Ans:x + 120
-      .
-      ENABLE Btn_Ans Btn_lkp Btn_sel WITH FRAME Dialog-Frame.
-  end.
 
   wait-for go of frame {&FRAME-NAME}.
 end.
@@ -543,13 +505,7 @@ PROCEDURE refresh-query :
 if bh-act-header = ? 
   then return .
 
-if p-select then do :
-    bh-act-header = egais:GetHndlTable({&awo-clob}, "").
-    qh-act-header:set-buffers (bh-act-header).
-    qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent and tt-act-header.type_ = 'Пересортица'").
-    qh-act-header:query-open.
-end.
-else do :  
+  
   case RADIO-SET-1 :
     when 1  then 
     do:
@@ -566,7 +522,7 @@ else do :
       qh-act-header:query-open.
     end.
   end case.
-end.
+
 
 end.
 

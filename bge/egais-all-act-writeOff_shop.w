@@ -34,7 +34,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Акты о списании ЕГАИС".
+define variable vss-description as character no-undo init "Акты о списании из торгового зала ЕГАИС".
 
 { cmp/vssrevis.i }
 { cmp/showinf.i  }
@@ -44,7 +44,7 @@ define variable bh-act-header         as handle    no-undo.
 define variable qh-act-header         as handle    no-undo.
 define variable browse-hdl-act-header as handle    no-undo.
 define variable bcol                as handle    extent 11 no-undo.
-define variable egais               as class     ActWriteOff no-undo.
+define variable egais               as class     ActWriteOff_Shop no-undo.
 define variable v-db-num            as integer   no-undo .
 define variable v-user-id           as character no-undo .
 define variable qh-ab-gds-EG-header as handle    no-undo.
@@ -81,7 +81,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 { gbl/getcntxt.i get }
 { gbl/thbjattr.i }
 { ref/extclass.i }
-{ibs/th/bge/egais/awo-egais.i proc }
+{ibs/th/bge/egais/awo-egais_shop.i proc new shared }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -173,7 +173,7 @@ DEFINE FRAME Dialog-Frame
      SPACE(2) SKIP(23.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Акты о списании товаров в ЕГАИС"
+         TITLE "Акты о списании товаров из торгового зала ЕГАИС"
          DEFAULT-BUTTON Btn_OK WIDGET-ID 100.
 
 
@@ -223,7 +223,7 @@ end.
 ON CHOOSE OF Btn_lkp IN FRAME Dialog-Frame /* Загрузить */
 DO:
     if not bh-act-header:available then return no-apply .
-    run bge/egais-act-writeOff.w (parparentproc, {&lookup}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    run bge/egais-act-writeOff_shop.w (parparentproc, {&lookup}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -255,7 +255,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_create Dialog-Frame
 ON CHOOSE OF Btn_create IN FRAME Dialog-Frame /* Создать */
 DO:
-    run bge/egais-act-writeOff.w (parparentproc, {&add-def}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    run bge/egais-act-writeOff_shop.w (parparentproc, {&add-def}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
     run refresh-query.
 END.
 
@@ -267,7 +267,7 @@ END.
 ON CHOOSE OF Btn_chg IN FRAME Dialog-Frame /*  */
 DO:
     if not bh-act-header:available then return no-apply .
-    run bge/egais-act-writeOff.w (parparentproc, {&update}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    run bge/egais-act-writeOff_shop.w (parparentproc, {&update}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
     run refresh-query.
 END.
 
@@ -279,7 +279,7 @@ END.
 ON CHOOSE OF Btn_del IN FRAME Dialog-Frame /*  */
 DO:
     if not bh-act-header:available then return no-apply .
-    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-awo} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-awo_shop} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
     delete buf_clob-bind .
     bh-act-header:buffer-delete () .
     run refresh-query.
@@ -293,20 +293,19 @@ END.
 ON CHOOSE OF Btn_send IN FRAME Dialog-Frame /*  */
 DO:
     if not bh-act-header:available then return no-apply .
-    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-awo} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-awo_shop} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
     find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
-    os-delete "temp-ActWriteOff.xml".
+    os-delete "temp-ActWriteOff_shop.xml".
     copy-lob
     from  object buf_clob-data.cdata
-    to  file 'temp-ActWriteOff.xml'
+    to  file 'temp-ActWriteOff_shop.xml'
     no-convert
     no-error .
-    run parseXML in this-procedure (input "temp-ActWriteOff.xml") .
+    run parseXML in this-procedure (input "temp-ActWriteOff_shop.xml") .
     find first tt-act-header .
-    v-file = 'ActWriteOff.xml' .
-    os-delete "ActWriteOff.xml" .
-    if egais:VerXSD = "1" then run makeXMLegais .
-    if egais:VerXSD = "2" then run makeXMLegais_v2 .
+    v-file = 'ActWriteOff_Shop.xml' .
+    os-delete "ActWriteOff_Shop.xml" .
+    run makeXMLegais_v2 .
     egais:inNum = tt-act-header.num .
     egais:SendRequestUTM() .
     glog = egais:IsSent .
@@ -435,7 +434,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   assign v-ext-sys = v-value-integer .  
   
   
-  egais = new ActWriteOff (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+  egais = new ActWriteOff_Shop (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
   egais:DbNum = v-db-num .
   egais:User_Id = v-user-id .
 
@@ -446,7 +445,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   
   create browse browse-hdl-act-header
     assign 
-      title     = 'Акты о списании товара ЕГАИС'
+      title     = 'Акты о списании товара из торгового зала ЕГАИС'
       frame     = frame {&FRAME-NAME}:handle
       query     = qh-act-header
       x         = 10

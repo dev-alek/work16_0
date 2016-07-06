@@ -97,10 +97,12 @@ define variable varrsrv-qnty              as decimal no-undo.
 define variable vardel-qnty               as decimal no-undo.
 define variable varreal-del-qnty          as decimal no-undo.
 define variable varparts-qnty             as decimal no-undo.
+define variable varcorrect-qnty             as decimal no-undo.
 define variable varqnty-parts             as integer no-undo.
 
 define variable vartotal-rsrv-qnty-parts  like ub.parts.fact-qnty  no-undo.
 define variable varcorrect                as   logical             no-undo.
+define variable varcorrect-many           as   logical             no-undo initial no .
 define variable varqnty-pieces            as   decimal             no-undo.
 define variable varpices-varkoeff         as   decimal             no-undo.
 define variable Loc-cr-varkoeff           as   decimal             no-undo.
@@ -630,14 +632,31 @@ if varhave-chg = yes then do:
                                   bf-chg_parts.fact-qnty < 0                            .
     /*Зачистим задвоенные партии по отной партии списания*/
     assign
+      varcorrect-qnty = 0
       varqnty-parts = 0.
     for each bf-all_parts-root where bf-all_parts-root.doc-code       = bf_trn-doc.doc-code    and
                                      bf-all_parts-root.orig-in-code   = bf-chg_parts.in-code   and
                                      bf-all_parts-root.orig-gds-code  = bf-chg_goods.gds-code  and
                                      bf-all_parts-root.orig-part-code = bf-chg_parts.part-code on error undo, return error :
-      assign
+      if bf-all_parts-root.gds-code <> bf-chg-plus_goods.gds-code then do :
+        find first bf-all-plus_parts where bf-all-plus_parts.obj-type  = bf_trn-doc.obj-type         and
+                                           bf-all-plus_parts.obj-code  = bf_trn-doc.obj-code         and
+                                           (bf-all-plus_parts.artic    <> bf-chg-plus_goods.artic     or
+                                           bf-all-plus_parts.prod-type <> bf-chg-plus_goods.prod-type or
+                                           bf-all-plus_parts.prod-code <> bf-chg-plus_goods.prod-code) and
+                                           bf-all-plus_parts.in-code   = bf-all_parts-root.in-code   and
+                                           bf-all-plus_parts.out-code  = bf_trn-doc.doc-code         and
+                                           bf-all-plus_parts.part-code = bf-all_parts-root.part-code no-error. 
+        if available bf-all-plus_parts then do :
+            assign
+                varcorrect-qnty = varcorrect-qnty + bf-all-plus_parts.fact-qnty
+                varcorrect-many = yes
+            . 
+        end.                                       
+      end.
+      else assign
         varqnty-parts = varqnty-parts + 1.
-      if varqnty-parts > 1 then do:
+      if varqnty-parts > 1 and bf-all_parts-root.gds-code = bf-chg-plus_goods.gds-code then do:
         find first bf-all-plus_parts where bf-all-plus_parts.obj-type  = bf_trn-doc.obj-type         and
                                            bf-all-plus_parts.obj-code  = bf_trn-doc.obj-code         and
                                            bf-all-plus_parts.artic     = bf-chg-plus_goods.artic     and
@@ -645,8 +664,8 @@ if varhave-chg = yes then do:
                                            bf-all-plus_parts.prod-code = bf-chg-plus_goods.prod-code and
                                            bf-all-plus_parts.in-code   = bf-all_parts-root.in-code   and
                                            bf-all-plus_parts.out-code  = bf_trn-doc.doc-code         and
-                                           bf-all-plus_parts.part-code = bf-all_parts-root.part-code .
-        delete bf-all-plus_parts.
+                                           bf-all-plus_parts.part-code = bf-all_parts-root.part-code no-error.
+        delete bf-all-plus_parts no-error.
         delete bf-all_parts-root.
       end.
     end.
@@ -664,12 +683,12 @@ if varhave-chg = yes then do:
         else  varqnty-pieces = max(1,(if available tt-parts then - truncate((bf-chg_parts.fact-qnty - tt-parts.fact-qnty) * varpices-varkoeff, 0) else - truncate(bf-chg_parts.fact-qnty * varpices-varkoeff, 0))).
         Loc-cr-varkoeff =  varqnty-pieces / (if available tt-parts then - (bf-chg_parts.fact-qnty - tt-parts.fact-qnty)  else - bf-chg_parts.fact-qnty).                                       
         assign
-          bf-chg-plus_parts.qnty          = - bf-chg_parts.fact-qnty * Loc-cr-varkoeff
+          bf-chg-plus_parts.qnty          = ( - bf-chg_parts.fact-qnty - (if varcorrect-many then varcorrect-qnty else 0)) * Loc-cr-varkoeff
           bf-chg-plus_parts.fact-qnty     = bf-chg-plus_parts.qnty
           bf-chg-plus_parts.cli-qnty      = bf-chg-plus_parts.qnty
           bf-chg-plus_parts.price-cli     = bf-chg_parts.price-rubl / Loc-cr-varkoeff
           bf-chg-plus_parts.cli-base-rate = 1
-          bf-chg-plus_parts.real-qnty     = - bf-chg_parts.fact-qnty
+          bf-chg-plus_parts.real-qnty     = ( - bf-chg_parts.fact-qnty - (if varcorrect-many then varcorrect-qnty else 0))
           bf-chg-plus_parts.price-base    = bf-chg_parts.price-base / Loc-cr-varkoeff
           bf-chg-plus_parts.price-rubl    = bf-chg_parts.price-rubl / Loc-cr-varkoeff
         .
@@ -678,16 +697,16 @@ if varhave-chg = yes then do:
         varpices-varkoeff = varoutqnty-plus / varoutqnty.
     end.
     else do:
-    assign
-      bf-chg-plus_parts.qnty          = - bf-chg_parts.fact-qnty * varkoeff
-      bf-chg-plus_parts.fact-qnty     = bf-chg-plus_parts.qnty
-      bf-chg-plus_parts.cli-qnty      = bf-chg-plus_parts.qnty
-      bf-chg-plus_parts.price-cli     = bf-chg_parts.price-rubl / varkoeff
-      bf-chg-plus_parts.cli-base-rate = 1
-      bf-chg-plus_parts.real-qnty     = - bf-chg_parts.fact-qnty
-      bf-chg-plus_parts.price-base    = bf-chg_parts.price-base / varkoeff
-      bf-chg-plus_parts.price-rubl    = bf-chg_parts.price-rubl / varkoeff
-    .
+        assign
+          bf-chg-plus_parts.qnty          = - bf-chg_parts.fact-qnty * varkoeff
+          bf-chg-plus_parts.fact-qnty     = bf-chg-plus_parts.qnty
+          bf-chg-plus_parts.cli-qnty      = bf-chg-plus_parts.qnty
+          bf-chg-plus_parts.price-cli     = bf-chg_parts.price-rubl / varkoeff
+          bf-chg-plus_parts.cli-base-rate = 1
+          bf-chg-plus_parts.real-qnty     = - bf-chg_parts.fact-qnty
+          bf-chg-plus_parts.price-base    = bf-chg_parts.price-base / varkoeff
+          bf-chg-plus_parts.price-rubl    = bf-chg_parts.price-rubl / varkoeff
+        .
     end.
     assign
       vartotal-rsrv-qnty-parts = vartotal-rsrv-qnty-parts + bf-chg-plus_parts.qnty.

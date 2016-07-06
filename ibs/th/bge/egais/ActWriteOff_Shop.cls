@@ -12,10 +12,10 @@
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
 
-class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
+class ibs.th.bge.egais.ActWriteOff_Shop inherits EGAISUTM:
 
 {cmp/str-glbl.i class}
-{ibs/th/bge/egais/ab-egais.i}
+{ibs/th/bge/egais/awo-egais_shop.i}
 { ref/extclass.i }
 
   define stream outstr.
@@ -37,6 +37,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
   define private variable urlResp        as character no-undo.
   define private variable v-uniq-key-rec as character no-undo.
   define private variable v-Answer       as character no-undo.
+  define private variable v-RegID        as character no-undo.
   define private variable ticket2        as logical   no-undo.
 
   define variable v-FS-RAR  as character no-undo .
@@ -48,7 +49,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     set. 
 
 
-  constructor public ActBalance (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
+  constructor public ActWriteOff_Shop (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
     
     
     super (inOjType, inObjCode).
@@ -75,23 +76,24 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     
     
     case inTableType:
-      when {&ab-clob} then 
+      when {&awo-clob} then 
         do:
           empty temp-table tt-act-header.
-          for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab}:
+          for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-awo_shop}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.indenty + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
             create tt-act-header.
             assign
                 tt-act-header.num       = (entry (1, buf_clob-bind.descr, {&delim-par}))
                 tt-act-header.date_     = date (entry (2, buf_clob-bind.descr, {&delim-par}))
-                tt-act-header.is-sent   = logical (entry (3, buf_clob-bind.descr, {&delim-par}))                
+                tt-act-header.type_     = (entry (3, buf_clob-bind.descr, {&delim-par}))
+                tt-act-header.is-sent   = logical (entry (4, buf_clob-bind.descr, {&delim-par}))                
             .
-            assign tt-act-header.answer_   = (entry (4, buf_clob-bind.descr, {&delim-par})) no-error .
-            assign tt-act-header.type_   = (entry (5, buf_clob-bind.descr, {&delim-par})) no-error .
+            assign tt-act-header.answer_   = (entry (5, buf_clob-bind.descr, {&delim-par})) no-error .
+            assign tt-act-header.RegID     = (entry (6, buf_clob-bind.descr, {&delim-par})) no-error .
             end.
           return buffer tt-act-header:handle.
         end.
-      when {&ab-answer} then
+      when {&awo-answer} then
       do :       
         
         create x-document hDoc.
@@ -176,16 +178,19 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
                 
         end.
         
-        find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = inAbIndenty .
-        if num-entries (buf_clob-bind.descr, {&delim-par}) = 3 then
-            assign buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-Answer .
-        else if num-entries (buf_clob-bind.descr, {&delim-par}) >= 4 then   
-            assign entry(4, buf_clob-bind.descr, {&delim-par}) = v-Answer .
+        find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-awo_shop} and buf_clob-bind.uniq-key-rec = inAbIndenty .
+        if num-entries (buf_clob-bind.descr, {&delim-par}) = 4 then
+            assign buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-Answer + {&delim-par} + v-RegID .
+        else if num-entries (buf_clob-bind.descr, {&delim-par}) = 5 then   
+            assign entry(5, buf_clob-bind.descr, {&delim-par}) = v-Answer
+                   buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-RegID .
+        else if num-entries (buf_clob-bind.descr, {&delim-par}) = 6 then   
+            assign entry(5, buf_clob-bind.descr, {&delim-par}) = v-Answer
+                   entry(6, buf_clob-bind.descr, {&delim-par}) = v-RegID .           
             
         find first tt-act-header where tt-act-header.num = inAbIndenty .
-        assign tt-act-header.answer_ = v-Answer .
-        
-        
+        assign tt-act-header.answer_ = v-Answer
+               tt-act-header.RegID   = v-RegID .
         
         return buffer tt-act-header:handle.    
       end.
@@ -215,9 +220,9 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     
     do trans:
     
-      os-delete "RespActChargeOn.xml".
+      os-delete "RespActWriteOff_shop.xml".
       assign
-        inFileName = "RespActChargeOn.xml"
+        inFileName = "RespActWriteOff_shop.xml"
         .
       
       find first tt-act-header no-error.
@@ -226,13 +231,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
         then 
       do:
         
-          if VerXSD = "1"
-          then
-          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActChargeOn >&4", search ("exe/curl.exe"), search ("ActChargeOn.xml"), ConPar, inFileName, TimeOut).
-          if VerXSD = "2"
-          then
-          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActChargeOn_v2 >&4", search ("exe/curl.exe"), search ("ActChargeOn_v2.xml"), ConPar, inFileName, TimeOut).
-          
+          cmd = substitute ("&1 --connect-timeout &5 -F xml_file=@&2 &3/opt/in/ActWriteOffShop_v2 >&4", search ("exe/curl.exe"), search ("ActWriteOff_shop.xml"), ConPar, inFileName, TimeOut).
           os-command silent value (cmd).
     
           file-info:file-name = search (inFileName).
@@ -265,7 +264,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
           do:
             assign
               StatusErr = true
-              Msg       = "Не удалось отправить акт постановки на баланс в UTM"
+              Msg       = "Не удалось отправить акт о списании в UTM"
               .
             undo, return false.
           end.
@@ -354,13 +353,18 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
             
             hNoderef:GET-CHILD(hText, 1) no-error .    
             
+            IF hNoderef:NAME = "tc:RegID"    THEN v-RegID  = hText:node-value .
+            IF hNoderef:NAME = "tc:Conclusion" THEN
+            DO :
+                if hText:node-value = "Rejected" then v-RegID = v-RegID + CHR(5) + "R" .
+                                                 else v-RegID = v-RegID + CHR(5) + "A" .
+            END.
             IF hNoderef:NAME = "tc:Comments" THEN do :
                 if trim(v-Answer) = '' or v-Answer = {&new-line} then v-Answer = hText:node-value .
                 else v-Answer = v-Answer + {&new-line} + hText:node-value .
             end.
             IF hNoderef:NAME = "tc:OperationResult" THEN v-ok = (hText:node-value = "Accepted") .
-            IF hNoderef:NAME = "tc:OperationComment" THEN v-Answer = v-Answer + {&new-line} + hText:node-value .
-                   
+            IF hNoderef:NAME = "tc:OperationComment"  THEN v-Answer = v-Answer + {&new-line} + hText:node-value .
             GetChildren(hNoderef, (level + 1)).
         END.
         
@@ -384,16 +388,16 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     end.
     
     if not ticket2 then do :
-        os-delete "RespActChargeOn.xml".
+        os-delete "RespActWriteOff_shop.xml".
         assign
-          inFileName = "RespActChargeOn.xml"
+          inFileName = "RespActWriteOff_shop.xml"
           response = entry(1,urlResp,{&delim-par})
         .
     end.
     else do :
-        os-delete "RespActChargeOn2.xml".
+        os-delete "RespActWriteOff_shop2.xml".
         assign
-          inFileName = "RespActChargeOn2.xml"
+          inFileName = "RespActWriteOff_shop2.xml"
         .
         response = entry(2,urlResp,{&delim-par}) no-error .
     end.    

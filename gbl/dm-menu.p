@@ -10065,6 +10065,13 @@ run bge/egais-all-act-writeOff.w (input parparentproc, input no, output v-RegID 
     
 end procedure . /* m_EGAIS-all-awo_exe */
 
+procedure m_EGAIS-all-awoS_exe :
+define variable v-RegID as character no-undo .
+
+run bge/egais-all-act-writeOff_shop.w (input parparentproc, input no, output v-RegID ) . 
+    
+end procedure . /* m_EGAIS-all-awoS_exe */
+
 
 procedure chk-user-adm :
 
