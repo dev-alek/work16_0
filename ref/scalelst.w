@@ -87,8 +87,11 @@ define buffer l-bar-code for ub.bar-code.
 define buffer l-prod-bc for ub.prod-bc.
 define buffer l-prod-bc-db for ub.prod-bc-db.
 define buffer l-gds-obj-attr for ub.gds-obj-attr.
-define variable rid-list as character no-undo .
+define buffer buf_gds-obj for ub.gds-obj .
+define buffer buf_parts for ub.parts .
 
+define variable rid-list as character no-undo .
+define variable v-last-date as date no-undo .
 /*счетчики кол-ва невесового товара, которые пытались добавить на весы*/
 define variable  ves-err as integer init 0.
 /*переменная цены товара*/
@@ -1894,14 +1897,42 @@ view-as alert-box QUESTION buttons YES-NO update v-update.
               delete gds-list.
             end.
             else do:
+      _parts:
+            for each buf_gds-obj no-lock where 
+                buf_gds-obj.obj-type  = p-obj-type
+            and buf_gds-obj.obj-code  = p-obj-code
+            and buf_gds-obj.artic     = buf_goods.artic
+            and buf_gds-obj.prod-type = buf_goods.prod-type
+            and buf_gds-obj.prod-code = buf_goods.prod-code:
+            for each buf_parts no-lock where
+            buf_parts.artic     = buf_gds-obj.artic
+            and buf_parts.prod-type = buf_gds-obj.prod-type
+            and buf_parts.prod-code = buf_gds-obj.prod-code
+            and buf_parts.out-code  = buf_gds-obj.in-code :
+
+          if v-last-date = ? then next _parts.
+
+          assign
+          v-last-date = (if v-last-date = ?
+                                          or (v-last-date <> ?
+                                              and sclin-ld = 1
+                                              and v-last-date > buf_parts.last-date)
+                                          or (v-last-date <> ?
+                                              and sclin-ld = 2
+                                              and v-last-date < buf_parts.last-date)
+                                              then buf_parts.last-date
+                                              else v-last-date)
+          .
+        end. /*for each buf_parts*/
+        end.
               run ref/ves-pbc.p (
                               input parparentproc
                             , input {&add-def}
                             , input p-obj-type
                             , input p-obj-code
-                            , input ? /*p-deadline*/
-                            , input ? /*p-deaddate*/
-                            , input ?  /*p-deadflag*/
+                            , input (if sclin-ld > 0 then ? else buf_goods.deadline) /*p-deadline*/
+                            , input (if sclin-ld > 0 then (v-last-date - 01/01/2000 + 1) * 24 else ?) /*p-deaddate*/
+                            , input (if sclin-ld > 0 then integer({&sc-gds-deadflag-date}) else integer({&sc-gds-deadflag-days}))  /*p-deadflag*/
                             , input (if from-card then ? else 0) /*p-wt-cart*/
                             , buffer buf_bar-code
                             , buffer b-scales) no-error.

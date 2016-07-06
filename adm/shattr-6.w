@@ -233,7 +233,7 @@ DEFINE BROWSE BR-scales-type
       tt-scales-type.scales-type COLUMN-LABEL "Тип весов" FORMAT "X(16)":U
       tt-scales-type.scales-name COLUMN-LABEL "Название!программы!пересылки!данных" FORMAT "X(20)":U
       tt-scales-type.is-tiger COLUMN-LABEL "Задавать!коды тары" FORMAT "+/":U
-            WIDTH 68.3
+            WIDTH 68.25
   ENABLE
       tt-scales-type.scales-name
 /* _UIB-CODE-BLOCK-END */
@@ -468,6 +468,33 @@ DO:
   end.
   apply "entry" to br-scales in frame {&frame-name}.
 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME RS-sclin-ld
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RS-sclin-ld Dialog-Frame
+ON VALUE-CHANGED OF RS-sclin-ld IN FRAME Dialog-Frame
+DO:
+  DO:
+  IF p-mode <> {&LOOKUP}  THEN
+  ASSIGN
+  RS-sclin-ld.
+  CASE RS-sclin-ld:
+    WHEN 0 THEN DO:
+      RS-sclin-ld = 0.
+    END.
+    WHEN 1 THEN DO:
+      RS-sclin-ld = 1.
+    END.
+    WHEN 2 THEN DO:
+      RS-sclin-ld = 2.
+    END.
+  END CASE.
+  EDITOR-1 = string(RS-sclin-ld) .
+END.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -736,6 +763,7 @@ for each thbjattr_thbj-attr:
   if v-entry = {&attr-scale-inf_noauto-scls} then do:
     v-noauto-scls = thbjattr_thbj-attr.property-value-logical.
   end.
+  
   IF v-entry = {&attr-scale-inf_sclin-ld} THEN DO:
     ASSIGN
     rs-sclin-ld = thbjattr_thbj-attr.property-value-integer
@@ -800,6 +828,7 @@ IF p-mode = {&LOOKUP} THEN DO:
     tt-scales-type.scales-name:READ-ONLY IN browse br-scales-type =  YES
     .
 END.
+APPLY "value-changed" TO rs-sclin-ld.
 RUN OpenBr-scales-type in this-procedure .
 RUN OpenBR-scales in this-procedure .
 END PROCEDURE.
@@ -903,6 +932,13 @@ find first thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-scale-
 assign
 thbjattr_thbj-attr.property-value-logical = v-noauto-scls
 .
+find first thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-scale-inf_sclin-ld}.
+assign
+thbjattr_thbj-attr.property-value-integer = RS-sclin-ld
+.
+
+
+
 
 v-same = yes.
 for each thbjattr_thbj-attr,
