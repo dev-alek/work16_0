@@ -66,6 +66,7 @@ define variable cst-base-rate_       like ub.goods.cst-base-rate no-undo init ?.
 define variable normal-wastage_ like ub.goods.normal-wastage no-undo init ?.
 define variable normal-waste_ like ub.goods.normal-waste no-undo init ?.
 define variable cond-keep-code_       like ub.goods.cond-keep-code no-undo init ?.
+define variable proof_       like ub.goods.proof no-undo init ?.
 define variable glog as logical no-undo .
 
 
@@ -737,7 +738,8 @@ DO:
                     ,output cst-base-rate_
                     ,output normal-wastage_
                     ,output normal-waste_
-                    ,output cond-keep-code_).
+                    ,output cond-keep-code_
+                    ,output proof_).
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -983,6 +985,7 @@ DO:
   (IF normal-wastage_ <> ? then ("Норма ест.убыли=" + string(normal-wastage_, "->9.99%") + {&new-line}) else "") +
   (IF normal-waste_ <> ? then ("Норма отходов=" + string(normal-waste_, "->9.99%") + {&new-line}) else "") +
   (IF cond-keep-code_ <> ? then ("Код услов.хран.=" + string(cond-keep-code_) + {&new-line}) else "") +
+  (IF proof_ <> ? then ("Алкоголь %=" + string(proof_) + {&new-line}) else "") +
   (IF Struct_ <> ? then ("Состав(комплектность)=" + struct_ + {&new-line}) else "") +
   (IF user-rule_ <> ? then ("Правила эксплуатации=" + user-rule_ + {&new-line}) else "") +
   (IF Deadline_ <> ? then ("Срок годности=" + string(deadline_) + {&new-line}) else "") +
@@ -1040,6 +1043,7 @@ DO:
               (IF deadline_ <> ?          then string(deadline_) else "")                                         + {&delim-par} +
               (IF cond-keep-code_ <> ?    then string(cond-keep-code_) else "")                                   + {&delim-par} +
               (IF sort_ <> ?              then sort_ else "")                                                     + {&delim-par} +
+              (IF proof_ <> ?             then string(proof_) else "")                                            + {&delim-par} +              
               (IF normal-wastage_ <> ?    then string(normal-wastage_) else "")                                   + {&delim-par} +
               (IF normal-waste_ <> ?      then string(normal-waste_) else "")                                     + {&delim-par} +
               (IF tnved_ <> ?             then tnved_ else "")                                                    + {&delim-par} +
@@ -1082,6 +1086,7 @@ v-parameter = v-parameter +
               (IF deadline_ <> ?          then "yes" else "no":U)                                                 + {&delim-par} +
               (IF cond-keep-code_ <> ?    then "yes" else "no":U)                                                 + {&delim-par} +
               (IF sort_ <> ?              then "yes" else "no":U)                                                 + {&delim-par} +
+              (IF proof_ <> ?             then "yes" else "no":U)                                                 + {&delim-par} +              
               (IF normal-wastage_ <> ?    then "yes" else "no":U)                                                 + {&delim-par} +
               (IF normal-waste_ <> ?      then "yes" else "no":U)                                                 + {&delim-par} +
               (IF tnved_ <> ?             then "yes" else "no":U)                                                 + {&delim-par} +

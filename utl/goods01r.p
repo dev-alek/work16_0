@@ -52,6 +52,7 @@ define variable p-struct        like ub.goods.struct        no-undo.
 define variable p-deadline      like ub.goods.deadline      no-undo.
 define variable p-cond-keep-code like ub.goods.cond-keep-code no-undo.
 define variable p-sort          like ub.goods.sort          no-undo.
+define variable p-proof         like ub.goods.proof         no-undo.
 define variable p-normal-wastage  like ub.goods.normal-wastage  no-undo.
 define variable p-normal-waste  like ub.goods.normal-waste  no-undo.
 define variable p-tnved         like ub.goods.tnved         no-undo.
@@ -164,16 +165,17 @@ define variable v-host-code like ub.sysconf.host-code no-undo .
 &scop       deadline        24
 &scop       cond-keep-code  25
 &scop       sort            26
-&scop       normal-wastage  27
-&scop       normal-waste    28
-&scop       tnved           29
-&scop       nationality     30
-&scop       unit-cst        31
-&scop       cst-base-rate   32
-&scop       fbr-grp-code    33
-&scop       ps              34
-&scop       stts            35
-&scop       tax             36
+&scop       proof           27
+&scop       normal-wastage  28
+&scop       normal-waste    29
+&scop       tnved           30
+&scop       nationality     31
+&scop       unit-cst        32
+&scop       cst-base-rate   33
+&scop       fbr-grp-code    34
+&scop       ps              35
+&scop       stts            36
+&scop       tax             37
 
 
 
@@ -230,8 +232,8 @@ vnum1 = num-entries(v-val, {&delim-par})
 vnum2 = num-entries(v-do-str, {&delim-par})
 .
 
-if vnum1 <> 39
-or vnum2 <> 36
+if vnum1 <> 40
+or vnum2 <> 37
 then do:
  run write-log-and-file in p-log-handle (
         input 1
@@ -240,15 +242,15 @@ then do:
       , input substitute("Ошибка входных параметров &1:&2неверное количество элементов списка (&3) &4"
                          , p-parameter
                          , {&new-line}
-                         , (if vnum1 <> 39 then vnum1 else vnum2)
-                         , (if vnum1 <> 39 then "значений параметров" else "изменяемых полей")
+                         , (if vnum1 <> 40 then vnum1 else vnum2)
+                         , (if vnum1 <> 40 then "значений параметров" else "изменяемых полей")
                          , return-value
                          )).
   assign
   v-view-log = yes.
   {&view-log}.
 end.
-do v-ii = 1 to 36:
+do v-ii = 1 to 37:
   assign
   v-do[v-ii] = logical(entry(v-ii, v-do-str, {&delim-par}))
   no-error
@@ -299,22 +301,23 @@ p-struct        = entry(26, v-val, {&delim-par})
 p-deadline      = integer(entry(27, v-val, {&delim-par}))
 p-cond-keep-code = integer(entry(28, v-val, {&delim-par}))
 p-sort          = entry(29, v-val, {&delim-par})
-p-normal-wastage = decimal(entry(30, v-val, {&delim-par}))
-p-normal-waste   = decimal(entry(31, v-val, {&delim-par}))
-p-tnved          = entry(32, v-val, {&delim-par})
-p-nationality    = entry(33, v-val, {&delim-par})
-p-unit-cst       = entry(34, v-val, {&delim-par})
-p-cst-base-rate  = decimal(entry(35, v-val, {&delim-par}))
-p-fbr-grp-code   = integer(entry(36, v-val, {&delim-par}))
-p-ps             = entry(37, v-val, {&delim-par})
-v-dop            = entry(38, v-val, {&delim-par})
+p-proof          = decimal(entry(30, v-val, {&delim-par}))
+p-normal-wastage = decimal(entry(31, v-val, {&delim-par}))
+p-normal-waste   = decimal(entry(32, v-val, {&delim-par}))
+p-tnved          = entry(33, v-val, {&delim-par})
+p-nationality    = entry(34, v-val, {&delim-par})
+p-unit-cst       = entry(35, v-val, {&delim-par})
+p-cst-base-rate  = decimal(entry(36, v-val, {&delim-par}))
+p-fbr-grp-code   = integer(entry(37, v-val, {&delim-par}))
+p-ps             = entry(38, v-val, {&delim-par})
+v-dop            = entry(39, v-val, {&delim-par})
 p-date           =  if v-do[{&tax}]
                     then date(integer(substring(v-dop, 4, 2)),
                                         integer(substring(v-dop, 1, 2)),
                                         integer(substring(v-dop, 7, 4))
                                         )
                    else ?
-p-stts           = if v-do[{&stts}] then logical(entry(39, v-val, {&delim-par})) else no
+p-stts           = if v-do[{&stts}] then logical(entry(40, v-val, {&delim-par})) else no
 .
 if error-status:error then do:
  run write-log-and-file in p-log-handle (
@@ -900,7 +903,7 @@ _gds-list:
   , input (IF v-do[{&deadline}] then p-deadline else buf_goods.deadline)
   , input (IF v-do[{&cond-keep-code}] then p-cond-keep-code else buf_goods.cond-keep-code)
   , input (IF v-do[{&sort}] then p-sort else buf_goods.sort)
-  , input  buf_goods.proof
+  , input (IF v-do[{&proof}] then p-proof else buf_goods.proof)
   , input (IF v-do[{&normal-wastage}] then p-normal-wastage else buf_goods.normal-wastage)
   , input (IF v-do[{&normal-waste}] then p-normal-waste else buf_goods.normal-waste)
   , input (IF v-do[{&tnved}]  then p-tnved else buf_goods.tnved)
