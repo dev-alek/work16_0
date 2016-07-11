@@ -871,7 +871,7 @@ DO:
         if qh-gds-egais:query-off-end then leave _repeat.
         create tt-gds-rests.
         buffer tt-gds-rests:handle:buffer-copy (bh-gds-egais) .
-        assign tt-gds-rests.fromEgais = yes .
+        assign tt-gds-rests.fromEgais = yes no-error.
         find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
                                            and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                            AND X_ext-classif.db-num = 0
@@ -883,7 +883,7 @@ DO:
             assign
                 tt-gds-rests.gds-code   = buf_goods.gds-code
                 tt-gds-rests.gds-name   = buf_goods.gds-name
-            .
+            no-error .
         end.
         if available buf_goods then do :
             if (not tt-gds-rests.packed and buf_goods.unit-cli <> buf_goods.unit-base and buf_goods.cli-base-rate <> 1.0)
@@ -895,8 +895,8 @@ DO:
                                            and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_
                                            and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :
                                            
-                assign tt-gds-rests.TH-qnty = tt-gds-rests.TH-qnty + buf_parts.fact-qnty .
-                assign tt-gds-rests.prt-rec = if tt-gds-rests.prt-rec = "" then string(recid(buf_parts)) else tt-gds-rests.prt-rec + ',' + string(recid(buf_parts)) .
+                assign tt-gds-rests.TH-qnty = tt-gds-rests.TH-qnty + buf_parts.fact-qnty no-error .
+                assign tt-gds-rests.prt-rec = if tt-gds-rests.prt-rec = "" then string(recid(buf_parts)) else tt-gds-rests.prt-rec + ',' + string(recid(buf_parts)) no-error .
             end.
         end. 
     end.

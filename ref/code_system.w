@@ -267,7 +267,7 @@ ON CHOOSE OF btn_save IN FRAME Dialog-Frame
                     ,input 0 /*p-key#_Three*/
                     ,input v-value-character  /*p-CharKey_One */
                     ,input '':U /*p-CharKey_two */
-                    ,input buf_goods.gds-name /*p-CharKey_three */
+                    ,input '' /*p-CharKey_three */
                     ,input 0 /*p-nonunique */
                     ,input v-uniq-key-rec ) no-error.
 

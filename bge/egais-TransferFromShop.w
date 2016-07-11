@@ -130,6 +130,13 @@ define new shared temp-table tt-exts
         ext-rec gds-code
 .
 
+define variable select-list as longchar no-undo .
+
+FUNCTION get-mark RETURNS CHARACTER
+(buffer local-gds for tt-gds-act ):
+if lookup (string (recid (local-gds)), select-list) > 0  then return "*".
+                                                           else return "".
+end function.
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -151,6 +158,11 @@ DEFINE BUTTON b-good
      SIZE 15 BY 1.14
      BGCOLOR 8 . 
      
+DEFINE BUTTON b-alc-code
+     LABEL "Выбор алк. кода" 
+     SIZE 20 BY 1.14 TOOLTIP "Выбрать алкогольный код"
+     BGCOLOR 8 .
+     
 DEFINE BUTTON b-del
      LABEL "Удалить строку" 
      SIZE 15 BY 1.14 TOOLTIP "Удалить строку акта"
@@ -161,10 +173,17 @@ DEFINE BUTTON b-save
      SIZE 15 BY 1.14 TOOLTIP "Сохранить в БД"
      BGCOLOR 8 . 
      
-DEFINE BUTTON b-alc-code
-     LABEL "Выбор алк. кода" 
-     SIZE 20 BY 1.14 TOOLTIP "Выбрать алкогольный код"
-     BGCOLOR 8 .
+DEFINE BUTTON b-mark 
+     LABEL "&*" 
+     SIZE 3 BY 1.14 .
+     
+DEFINE BUTTON b-sel-all
+     LABEL "&+":L
+     SIZE 3 BY 1.14 TOOLTIP "Отметить все объекты".
+
+DEFINE BUTTON b-unmark
+     LABEL "&-":L
+     SIZE 3 BY 1.14 TOOLTIP "Снять все отметки".
      
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -176,6 +195,7 @@ DEFINE QUERY br-gds-act FOR
 DEFINE BROWSE br-gds-act
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-gds-act Dialog-Frame _FREEFORM
   QUERY br-gds-act  DISPLAY
+    get-mark(BUFFER tt-gds-act) COLUMN-LABEL "*"  FORMAT "X(1)":U
     tt-gds-act.position_
     tt-gds-act.gds-code
     tt-gds-act.alc-code
@@ -199,7 +219,10 @@ DEFINE FRAME Dialog-Frame
     b-alc-code at row 1.2 col 62
     tt-act-header.num at row 2.5 col 2 format "X(20)"
     tt-act-header.date_ at row 2.5 col 32
-    br-gds-act at row 4 col 2
+    b-mark AT ROW 4 COL 2
+    b-sel-all AT ROW 4 COL 5
+    b-unmark AT ROW 4 COL 8
+    br-gds-act at row 5.2 col 2
      SPACE(0.5) SKIP(0.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -246,6 +269,45 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark Dialog-Frame
+ON CHOOSE OF b-mark IN FRAME Dialog-Frame /* * */
+DO:
+/*  {&stdbtn}*/
+  run proc-b-mark in this-procedure no-error.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-sel-all
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel-all Dialog-Frame
+ON CHOOSE OF b-sel-all IN FRAME Dialog-Frame /* + */
+DO:
+  assign select-list = "".
+  if not available tt-gds-act then return.
+  for each tt-gds-act no-lock :
+    { gbl/markstrn.i tt-gds-act select-list }
+  end.
+  br-gds-act:refresh() in frame {&frame-name} .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-unmark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-unmark Dialog-Frame
+ON CHOOSE OF b-unmark IN FRAME Dialog-Frame /* - */
+DO:
+  if not available tt-gds-act then return.
+  select-list  = "".
+  br-gds-act:refresh() in frame {&frame-name} .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME b-cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel Dialog-Frame
@@ -265,19 +327,29 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* - */
 DO:
-    if not available tt-gds-act then do :
+    define variable v-tt-rec as recid.
+    if available tt-gds-act  AND select-list = ""
+    then
+    select-list = string( recid( tt-gds-act ) ) .
+    
+    if not available tt-gds-act and select-list = "" then do :
         message "Выберите строку" view-as alert-box .
         return no-apply.
     end.
-    else do :
+    else
+    do ii = 1 to num-entries (select-list) :
+      v-tt-rec = integer(entry(ii, select-list)) . 
+      for first tt-gds-act exclusive-lock where recid(tt-gds-act) = v-tt-rec :  
         delete tt-gds-act .
-        nn = 0 .
-        for each tt-gds-act exclusive-lock :
-            nn = nn + 1 .
-            tt-gds-act.position_ = nn .
-        end.
-        open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+      end.  
     end.
+    nn = 0 .
+    for each tt-gds-act exclusive-lock :
+        nn = nn + 1 .
+        tt-gds-act.position_ = nn .
+    end.
+    select-list = "" .
+    open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -708,6 +780,43 @@ RUN disable_UI.
 /* **********************  Internal Procedures  *********************** */
 
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-mark Dialog-Frame
+PROCEDURE proc-b-mark :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+  define variable varlog as logical   no-undo .
+  if not available tt-gds-act then return.
+  run local-mark in this-procedure.
+  assign varlog = br-gds-act :select-next-row( ) in frame {&frame-name}.
+  apply "ENTRY":U to br-gds-act in frame {&frame-name}.
+  br-gds-act:refresh() in frame {&frame-name} .
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark Dialog-Frame
+PROCEDURE local-mark :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+  if not available tt-gds-act then do:
+    message "Неправильный выбор строки.".
+    return no-apply.
+  end.
+  { gbl/markstrn.i tt-gds-act select-list }
+  br-gds-act:refresh() in frame {&frame-name} .
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
 /*------------------------------------------------------------------------------
@@ -738,7 +847,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
 /*  DISPLAY                     */
 /*      WITH FRAME Dialog-Frame.*/
-  ENABLE b-cancel b-save br-gds-act b-del
+  ENABLE b-cancel  b-save br-gds-act b-del b-mark b-sel-all b-unmark 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   
@@ -748,7 +857,7 @@ PROCEDURE enable_UI :
         define variable hBr  as handle no-undo .
         define variable i    as integer no-undo .
         hBr = browse br-gds-act:handle .
-        do i = 5 to 6 :
+        do i = 6 to 7 :
             hCol = hBr:GET-BROWSE-COLUMN(i). 
             hCol:read-only = true .   
         end.

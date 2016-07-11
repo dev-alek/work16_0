@@ -711,11 +711,11 @@ DO:
                             ,input v-gds-uniq-key-rec ) no-error.
                         if error-status:error then
                         do:
-                            if error-status:get-message(1) = "" then
+                            if error-status:get-message(1) = "" and (return-value = '' or return-value = ?) then
                                 message "Ошибка добавления записи в справочник!" skip
                                         "Скорее всего, уже есть связка, где код товара в TH " string(tt-gds.gds-code) " - алк. код " tt-gds.alc-code  view-as alert-box .
                             else
-                                message error-status:get-message(1) view-as alert-box .
+                                message return-value skip error-status:get-message(1) view-as alert-box .
                             next _ii_ .
                         end.
                         find first X_ext-classif no-lock where recid(X_ext-classif) = v-rid.

@@ -50,6 +50,7 @@ define variable v-position_         as integer no-undo .
 define variable v-date              as character no-undo .
 define variable v-rid-list          as character no-undo .
 define variable par-alcohol         as character no-undo .
+define variable par-mark            as character no-undo .
 define variable par-egais-name      as character no-undo .
 define variable par-type            as character no-undo .
 define variable v-attr-value        as character            no-undo .
@@ -80,6 +81,7 @@ define variable v-longchar      as memptr no-undo .
 
 define buffer buf_goods         for ub.goods .
 define buffer buf_parts         for ub.parts .
+define buffer ret_parts         for ub.parts .
 define buffer buf_trn-doc       for ub.trn-doc .
 define buffer buf_doc-line      for ub.doc-line .
 define buffer buf_ink-doc       for ub.inkas .
@@ -133,13 +135,21 @@ define new shared temp-table tt-exts
 
 define buffer buf_tt-marks for tt-marks .
 
+define variable select-list as longchar no-undo .
+
+FUNCTION get-mark RETURNS CHARACTER
+(buffer local-gds for tt-gds-act ):
+if lookup (string (recid (local-gds)), select-list) > 0  then return "*".
+                                                           else return "".
+end function.
+
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
 
 define menu m-add
     menu-item m-goods   label "по складскому документу"
-/*    menu-item m-sale    label "немаркированную продукцию по продаже"*/
+    menu-item m-sale    label "немаркированную продукцию по продаже"
     menu-item m-marks   label "по акцизным маркам"
     menu-item m-one-good label "один товар"
 .
@@ -174,6 +184,18 @@ DEFINE BUTTON b-save
      SIZE 15 BY 1.14 TOOLTIP "Сохранить в БД"
      BGCOLOR 8 . 
      
+DEFINE BUTTON b-mark 
+     LABEL "&*" 
+     SIZE 3 BY 1.14 .
+     
+DEFINE BUTTON b-sel-all
+     LABEL "&+":L
+     SIZE 3 BY 1.14 TOOLTIP "Отметить все объекты".
+
+DEFINE BUTTON b-unmark
+     LABEL "&-":L
+     SIZE 3 BY 1.14 TOOLTIP "Снять все отметки".
+     
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY br-gds-act FOR 
@@ -184,6 +206,7 @@ DEFINE QUERY br-gds-act FOR
 DEFINE BROWSE br-gds-act
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-gds-act Dialog-Frame _FREEFORM
   QUERY br-gds-act  DISPLAY
+    get-mark(BUFFER tt-gds-act) COLUMN-LABEL "*"  FORMAT "X(1)":U
     tt-gds-act.position_
     tt-gds-act.gds-code
     tt-gds-act.alc-code
@@ -209,13 +232,16 @@ DEFINE FRAME Dialog-Frame
     tt-act-header.date_ at row 2.5 col 32
     tt-act-header.type_ at row 2.5 col 60
         view-as combo-box inner-lines 7
-        list-items "Пересортица,Недостача,Уценка,Порча,Потери,Проверки,Арест"
+        list-items "Пересортица,Недостача,Уценка,Порча,Потери,Проверки,Арест,Иные цели,Реализация"
         DROP-DOWN-LIST
-    br-gds-act at row 4 col 2
+    b-mark AT ROW 4 COL 2
+    b-sel-all AT ROW 4 COL 5
+    b-unmark AT ROW 4 COL 8
+    br-gds-act at row 5.2 col 2
      SPACE(0.5) SKIP(0.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Акт о списании товаров" WIDGET-ID 100.
+         TITLE "Акт о списании товаров из торгового зала" WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -258,11 +284,58 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark Dialog-Frame
+ON CHOOSE OF b-mark IN FRAME Dialog-Frame /* * */
+DO:
+/*  {&stdbtn}*/
+  run proc-b-mark in this-procedure no-error.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-sel-all
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel-all Dialog-Frame
+ON CHOOSE OF b-sel-all IN FRAME Dialog-Frame /* + */
+DO:
+  assign select-list = "".
+  if not available tt-gds-act then return.
+  for each tt-gds-act no-lock :
+    { gbl/markstrn.i tt-gds-act select-list }
+  end.
+  br-gds-act:refresh() in frame {&frame-name} .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-unmark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-unmark Dialog-Frame
+ON CHOOSE OF b-unmark IN FRAME Dialog-Frame /* - */
+DO:
+  if not available tt-gds-act then return.
+  select-list  = "".
+  br-gds-act:refresh() in frame {&frame-name} .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME tt-act-header.type_
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-act-header.type_ Dialog-Frame
 ON VALUE-CHANGED OF tt-act-header.type_ IN FRAME Dialog-Frame /* cli-type */
 DO:
   assign tt-act-header.type_.
+  if tt-act-header.type_ = "Проверки"
+  or tt-act-header.type_ = "Арест"
+  then do :
+      enable b-marks with frame {&FRAME-NAME} .
+  end.
+  else do :
+      disable b-marks with frame {&FRAME-NAME} .
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -286,19 +359,29 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* - */
 DO:
-    if not available tt-gds-act then do :
+    define variable v-tt-rec as recid.
+    if available tt-gds-act  AND select-list = ""
+    then
+    select-list = string( recid( tt-gds-act ) ) .
+    
+    if not available tt-gds-act and select-list = "" then do :
         message "Выберите строку" view-as alert-box .
         return no-apply.
     end.
-    else do :
+    else
+    do ii = 1 to num-entries (select-list) :
+      v-tt-rec = integer(entry(ii, select-list)) . 
+      for first tt-gds-act exclusive-lock where recid(tt-gds-act) = v-tt-rec :  
         delete tt-gds-act .
-        nn = 0 .
-        for each tt-gds-act exclusive-lock :
-            nn = nn + 1 .
-            tt-gds-act.position_ = nn .
-        end.
-        open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+      end.  
     end.
+    nn = 0 .
+    for each tt-gds-act exclusive-lock :
+        nn = nn + 1 .
+        tt-gds-act.position_ = nn .
+    end.
+    select-list = "" .
+    open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -504,21 +587,97 @@ END.
 
 &Scoped-define SELF-NAME m-sale
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-sale Dialog-Frame
-/*on choose of menu-item m-sale in menu m-add*/
-/*DO:                                        */
-/*    v-rid-list = "" .                      */
-/*    run str/salelist.w                     */
-/*    (input  parparentproc                  */
-/*    ,input  "b-export":U                   */
-/*    ,input  {&g___object}                  */
-/*    ,input  v-cntxt-host-code-obj          */
-/*    ,input  v-cntxt-obj-type               */
-/*    ,input  v-cntxt-obj-code               */
-/*    ,input-output v-rid-list               */
-/*    ) no-error.                            */
-/*    if v-rid-list = "" or v-rid-list = ?   */
-/*    then return no-apply.                  */
-/*END.                                       */
+on choose of menu-item m-sale in menu m-add
+DO:
+    define variable v-ret-code as character no-undo .
+    
+    v-rid-list = "" .
+    run str/salelist.w
+    (input  parparentproc
+    ,input  "b-sel,b-mark":U
+    ,input  {&g___object}
+    ,input  v-cntxt-host-code-obj
+    ,input  v-cntxt-obj-type
+    ,input  v-cntxt-obj-code
+    ,input-output v-rid-list
+    ) no-error.
+    if v-rid-list = "" or v-rid-list = ?
+    then return no-apply.
+    
+    _ii_ :  
+    do ii = 1 to num-entries(v-rid-list) :
+        for first   buf_ink-doc no-lock where recid(buf_ink-doc) = int(entry(ii, v-rid-list)) :
+            v-ret-code = replace(buf_ink-doc.inkas-code, "-", "=") .
+            for each buf_parts no-lock where buf_parts.obj-type     = buf_ink-doc.obj-type 
+                                         and buf_parts.obj-code     = buf_ink-doc.obj-code 
+                                         and buf_parts.out-code     = buf_ink-doc.inkas-code :
+                find first buf_goods no-lock where buf_goods.artic      = buf_parts.artic
+                                               and buf_goods.prod-type  = buf_parts.prod-type 
+                                               and buf_goods.prod-code  = buf_parts.prod-code .
+                run gds-attr-value(
+                  buf_goods.gds-code,
+                  {&attr-alcohol-prod},
+                  output par-alcohol,
+                  output par-type
+                ).
+                if par-alcohol = "" or par-alcohol = "no" then next .
+                run gds-attr-value(
+                  buf_goods.gds-code,
+                  {&attr-mark},
+                  output par-mark,
+                  output par-type
+                ).
+                if logical(par-mark) then next .
+                
+                assign nn = nn + 1 .
+                create tt-gds-act .
+                assign
+                   tt-gds-act.num          = tt-act-header.num
+                   tt-gds-act.gds-code     = buf_goods.gds-code
+                   tt-gds-act.gds-name     = buf_goods.gds-name    
+                   tt-gds-act.position_    = nn
+                   tt-gds-act.qnty         = buf_parts.fact-qnty
+                .    
+                if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
+                    tt-gds-act.alc-code = entry(3, buf_parts.alc-ref-ab-path) .
+                end.
+                else do :
+                    run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
+                                                       ,input (buffer buf_goods:handle)
+                                                       ,output v-gds-uniq-key-rec).
+                    find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                                      and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                                      AND X_ext-classif.db-num = 0  
+                                                      and X_ext-classif.key#_one = buf_goods.gds-code
+                                                      and X_ext-classif.key#_two = v-ext-sys 
+                                                      and X_ext-classif.key#_three = 0
+                                                      and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                                      and X_eXt-classif.charkey_two = ""
+                                                      and X_eXt-classif.charkey_three = ""
+                                                      and X_eXt-classif.nonunique = 0
+                                                      no-error .
+                    if available X_ext-classif then tt-gds-act.alc-code = X_eXt-classif.charkey_one .
+                    else do :
+                        message "Товар " string(buf_goods.gds-code) " - " buf_goods.gds-name " не синхронизирован с ЕГАИС" view-as alert-box .
+                        delete tt-gds-act.
+                        next.
+                    end.
+                end. 
+                find first ret_parts no-lock where ret_parts.artic        = buf_parts.artic
+                                               and ret_parts.prod-type    = buf_parts.prod-type 
+                                               and ret_parts.prod-code    = buf_parts.prod-code
+                                               and ret_parts.obj-type     = buf_parts.obj-type 
+                                               and ret_parts.obj-code     = buf_parts.obj-code 
+                                               and ret_parts.out-code     = v-ret-code no-error.
+                if available ret_parts then do :
+                    tt-gds-act.qnty = tt-gds-act.qnty - ret_parts.fact-qnty .
+                end.
+            end. /* for each parts */
+        end. /* for first inc-doc */
+    end. /* _ii_ */
+    
+    open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -639,8 +798,8 @@ DO:
                 tt-exts.ext-rec = recid(X_ext-classif)
                 tt-exts.gds-code = buf_goods.gds-code 
             .                                  
-            exts = exts + 1 . 
         end.
+        exts = exts + 1 .
     end. 
     if exts = 0 then do :                                  
         message "Выбранный товар не синхронизирован с ЕГАИС. (Нет алкогольного кода)" view-as alert-box.
@@ -763,7 +922,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         b-good:popup-menu in frame {&FRAME-NAME} = menu m-add:handle
         b-good:menu-mouse = 1
         nn = 0
-        tt-act-header.type_:list-items = "Пересортица,Недостача,Уценка,Порча,Потери,Проверки,Арест"
+        tt-act-header.type_:list-items = "Пересортица,Недостача,Уценка,Порча,Потери,Проверки,Арест,Иные цели,Реализация"
     .
     
     if p-mode = {&add-def} then do :
@@ -851,6 +1010,44 @@ RUN disable_UI.
 /* **********************  Internal Procedures  *********************** */
 
 
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-mark Dialog-Frame
+PROCEDURE proc-b-mark :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+  define variable varlog as logical   no-undo .
+  if not available tt-gds-act then return.
+  run local-mark in this-procedure.
+  assign varlog = br-gds-act :select-next-row( ) in frame {&frame-name}.
+  apply "ENTRY":U to br-gds-act in frame {&frame-name}.
+  br-gds-act:refresh() in frame {&frame-name} .
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark Dialog-Frame
+PROCEDURE local-mark :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+  if not available tt-gds-act then do:
+    message "Неправильный выбор строки.".
+    return no-apply.
+  end.
+  { gbl/markstrn.i tt-gds-act select-list }
+  br-gds-act:refresh() in frame {&frame-name} .
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
 /*------------------------------------------------------------------------------
@@ -881,7 +1078,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
 /*  DISPLAY                     */
 /*      WITH FRAME Dialog-Frame.*/
-  ENABLE b-cancel b-marks b-save br-gds-act b-del
+  ENABLE b-cancel  b-save br-gds-act b-del b-mark b-sel-all b-unmark 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   
@@ -894,7 +1091,7 @@ PROCEDURE enable_UI :
         define variable i    as integer no-undo .
         hBr = browse br-gds-act:handle .
         
-        hCol = hBr:GET-BROWSE-COLUMN(5). 
+        hCol = hBr:GET-BROWSE-COLUMN(6). 
         hCol:read-only = true .   
         
     end.

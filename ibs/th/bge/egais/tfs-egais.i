@@ -32,7 +32,7 @@ define temp-table tt-act-header
 /*    field type_         as character        label "Основание списания" format "X(18)"*/
     field is-sent       as logical
     field answer_       as character        label "Ответ"       format "X(1500)"
-/*    field RegID         as character        label "Рег. номер"  format "X(50)"*/
+    field RegID         as character        label "Рег. номер"  format "X(50)"
     index pi as primary unique
         num
 .
