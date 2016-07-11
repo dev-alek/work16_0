@@ -32,6 +32,7 @@ define temp-table tt-act-header
     field is-sent       as logical
     field answer_       as character        label "Ответ"       format "X(1500)"
     field type_         as character        label "Основание"   format "X(35)"
+    field RegID         as character        label "Рег. номер"  format "X(50)"
     index pi as primary unique
         num
 .

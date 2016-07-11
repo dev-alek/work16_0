@@ -38,6 +38,7 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
   define private variable v-uniq-key-rec as character no-undo.
   define private variable v-Answer       as character no-undo.
   define private variable v-RegID        as character no-undo.
+  define private variable ticket2        as logical   no-undo.
 
   define variable v-FS-RAR  as character no-undo .
   define variable v-ext-sys as integer   no-undo .
@@ -93,17 +94,22 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
           return buffer tt-act-header:handle.
         end.
       when {&awo-answer} then
-      do :       
+      do :   
+          
+        v-Answer = "" .
+        v-RegID = "" .    
         
         create x-document hDoc.
         create x-noderef  hRoot.
             
-        if not IsSent
-        then do:
-          StatusErr = true.
-          Msg = "Акт еще не был отправлен".
-          return ?.
-        end.
+/*        if not IsSent                      */
+/*        then do:                           */
+/*          StatusErr = true.                */
+/*          Msg = "Акт еще не был отправлен".*/
+/*          return ?.                        */
+/*        end.                               */
+        
+        IsSent.
         
         if ConPar = "" or ConPar = ?
         then do:
@@ -112,6 +118,7 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
           return ?.
         end.
          
+        ticket2 = false .    
         GetSubjectOfRequestUTM().
         
         if StatusErr 
@@ -141,9 +148,40 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
         hDoc:get-document-element(hRoot) .
         
         GetChildren(hRoot, 1).
+        
+        DELETE OBJECT hDoc no-error.
+        DELETE OBJECT hRoot no-error.    
+        
+        ticket2 = true .
+        if num-entries(urlResp, {&delim-par}) = 2 then do :
+            create x-document hDoc.
+            create x-noderef  hRoot.
             
-        DELETE OBJECT hDoc.
-        DELETE OBJECT hRoot.
+            GetSubjectOfRequestUTM().
+            
+            if StatusErr 
+              then return ?.
+        
+            
+            file-info:file-name = search (inFileName).
+            if search (inFileName) = ? or file-info:file-size = 0 
+            then do:
+              assign
+                StatusErr = true
+                Msg = "Не удалось получить данные от UTM"
+              .
+              return ?.
+            end.
+            
+            hDoc:load ("file", inFileName, false).
+            hDoc:get-document-element(hRoot) .
+            
+            GetChildren(hRoot, 1).
+            
+            DELETE OBJECT hDoc no-error.
+            DELETE OBJECT hRoot no-error.
+                
+        end.
         
         find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-awo} and buf_clob-bind.uniq-key-rec = inAbIndenty .
         if num-entries (buf_clob-bind.descr, {&delim-par}) = 4 then
@@ -177,13 +215,15 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
       Msg       = ""
       .
     
-    if IsSent 
-      then 
-    do:
-      Msg = "Запрос уже был отправлен".
-      StatusErr = true.
-      return no.
-    end.
+/*    if IsSent                          */
+/*      then                             */
+/*    do:                                */
+/*      Msg = "Запрос уже был отправлен".*/
+/*      StatusErr = true.                */
+/*      return no.                       */
+/*    end.                               */
+    
+    IsSent.
     
     do trans:
     
@@ -253,12 +293,19 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
   end.
 
   method override protected logical GetIsSent ():
-    def var repId as char no-undo.
-    def var glog  as log  no-undo.
-    glog = CheckCurrentRequest (4, parameters, repId).
-    if glog
-      then ReplyId = repId.
-    return glog.
+    find first ub.esys-all-attr 
+                where ub.esys-all-attr.table-name = "esys-pck-sent" 
+                and ub.esys-all-attr.attr-code = "egais"
+                and ub.esys-all-attr.key2       = 4
+                and ub.esys-all-attr.attr-value = parameters
+                no-error.
+    if available (ub.esys-all-attr )
+    then do:
+      ReplyId = ub.esys-all-attr.key7.
+      return true.
+    end.
+    
+    return false.
   end.
 
   method protected handle ParseRequest (inFileName as char):
@@ -308,6 +355,7 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
         DEFINE VARIABLE i AS INTEGER NO-UNDO.
         DEFINE VARIABLE hNoderef AS HANDLE NO-UNDO.
         DEFINE VARIABLE hText AS HANDLE NO-UNDO.
+        define variable v-ok as logical no-undo .
         
         CREATE X-NODEREF hNoderef.
         CREATE X-NODEREF hText .
@@ -328,7 +376,13 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
                 if hText:node-value = "Rejected" then v-RegID = v-RegID + CHR(5) + "R" .
                                                  else v-RegID = v-RegID + CHR(5) + "A" .
             END.
-            IF hNoderef:NAME = "tc:Comments" THEN v-Answer = hText:node-value .
+            IF hNoderef:NAME = "tc:Comments" THEN do :
+                if trim(v-Answer) = '' or v-Answer = {&new-line} then v-Answer = hText:node-value .
+                else v-Answer = v-Answer + {&new-line} + hText:node-value .
+            end.
+            IF hNoderef:NAME = "tc:OperationResult" THEN v-ok = (hText:node-value = "Accepted") .
+            IF hNoderef:NAME = "tc:OperationComment" THEN v-Answer = v-Answer + {&new-line} + hText:node-value .
+                   
 
             GetChildren(hNoderef, (level + 1)).
         END.
@@ -339,7 +393,13 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
 
   method public override character GetSubjectOfRequestUTM() :
       
-    urlResp = GetURLUTM(ReplyId).
+    define variable response as character no-undo .
+
+    if not ticket2 then do :
+        urlResp = GetURLUTM(ReplyId).
+    end.
+    
+    if StatusErr and Msg <> "" and Msg <> ? then return ? .
     
     if urlResp = "" or urlResp = ?
     then do:
@@ -348,13 +408,25 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
       return ?.
     end.
     
-    os-delete "RespActWriteOff.xml".
-    assign
-      inFileName = "RespActWriteOff.xml"
-    .
+    if not ticket2 then do :
+        os-delete "RespActWriteOff.xml".
+        assign
+          inFileName = "RespActWriteOff.xml"
+          response = entry(1,urlResp,{&delim-par})
+        .
+    end.
+    else do :
+        os-delete "RespActWriteOff2.xml".
+        assign
+          inFileName = "RespActWriteOff2.xml"
+        .
+        response = entry(2,urlResp,{&delim-par}) no-error .
+    end.    
     
-    cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, urlResp, inFileName).
-    os-command silent value (cmd).
+    if trim(response) <> "" then do :
+        cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, response, inFileName).
+        os-command silent value (cmd).
+    end.
   end.
 
   method protected override character GetURLUTM (inReplyId as char):
@@ -364,6 +436,7 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
     define variable hRow  as handle  no-undo.
     define variable hText as handle  no-undo.
     define variable ii    as integer no-undo.
+    define variable files as character no-undo.
     
     create x-document hDoc.
     create x-noderef  hRoot.
@@ -402,13 +475,13 @@ class ibs.th.bge.egais.ActWriteOff inherits EGAISUTM:
             if hRow:get-attribute("replyId") = ReplyId 
             then do:
               hRow:get-child (hText, 1) no-error.
-              return hText:node-value.
+              files = files + {&delim-par} + hText:node-value.
             end.
           end.
       end case.
     end.
-    
-    return ?.
+    files = trim(files, {&delim-par}) .
+    return files .
     
   end.
 

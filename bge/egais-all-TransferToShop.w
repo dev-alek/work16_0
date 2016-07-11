@@ -44,6 +44,7 @@ define variable bh-act-header         as handle    no-undo.
 define variable qh-act-header         as handle    no-undo.
 define variable browse-hdl-act-header as handle    no-undo.
 define variable bcol                as handle    extent 11 no-undo.
+define variable calc-col-hndl       as handle    no-undo .
 define variable egais               as class     TransferToShop no-undo.
 define variable v-db-num            as integer   no-undo .
 define variable v-user-id           as character no-undo .
@@ -51,6 +52,7 @@ define variable qh-ab-gds-EG-header as handle    no-undo.
 define variable qh-ab-gds-EG        as handle    no-undo.
 define variable bh-ab-gds-EG-header as handle    no-undo.
 define variable bh-ab-gds-EG        as handle    no-undo.
+define variable v-RegID             as character no-undo .
 
 define variable glog        as logical no-undo .
 
@@ -144,6 +146,11 @@ DEFINE BUTTON Btn_Ans
      SIZE 20 BY 1.13
      BGCOLOR 8 .
 
+DEFINE BUTTON Btn_Edit
+     LABEL "Редактировать" 
+     SIZE 15 BY 1.13 tooltip "Вернуть в 'Новые' для редактирования"
+     BGCOLOR 8 .
+
 
 DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1 
      VIEW-AS RADIO-SET HORIZONTAL
@@ -163,6 +170,7 @@ DEFINE FRAME Dialog-Frame
      Btn_send at row 1.2 col 62
      Btn_Ans AT ROW 1.2 COL 32 WIDGET-ID 10
      Btn_lkp AT ROW 1.2 COL 17 WIDGET-ID 12
+	 Btn_Edit AT ROW 1.2 COL 52
      RADIO-SET-1 AT ROW 1.2 COL 80 NO-LABEL WIDGET-ID 2
      SPACE(2) SKIP(23.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -223,6 +231,35 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME Btn_Edit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Edit Dialog-Frame
+ON CHOOSE OF Btn_Edit IN FRAME Dialog-Frame 
+DO:
+    if not bh-act-header:available then return no-apply .
+    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-tts} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+    entry(3, buf_clob-bind.descr, {&delim-par}) = string(no) no-error .
+    entry(4, buf_clob-bind.descr, {&delim-par}) = "" no-error .
+    entry(5, buf_clob-bind.descr, {&delim-par}) = "" no-error . 
+    bh-act-header:buffer-field ("is-sent"):buffer-value = string(no) no-error .
+    bh-act-header:buffer-field ("answer_"):buffer-value = "" no-error .
+    bh-act-header:buffer-field ("RegID"):buffer-value = "" no-error .
+    
+    find first ub.esys-all-attr 
+                where ub.esys-all-attr.table-name = "esys-pck-sent" 
+                and ub.esys-all-attr.attr-code = "egais"
+                and ub.esys-all-attr.key2       = 4
+                and ub.esys-all-attr.attr-value = buf_clob-bind.uniq-key-rec
+                no-error.
+    if available (ub.esys-all-attr )
+    then do:
+      delete ub.esys-all-attr .
+    end.
+    
+    run refresh-query .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME Btn_create
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_create Dialog-Frame
@@ -305,19 +342,23 @@ ON CHOOSE OF Btn_Ans IN FRAME Dialog-Frame /* Сохранить */
 DO:
   if not bh-act-header:available 
     then return no-apply.
-  if (bh-act-header:buffer-field ("answer_"):buffer-value) <> "" then do :
-    message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .    
-  end.
-  else do :
+/*  if (bh-act-header:buffer-field ("answer_"):buffer-value) <> "" then do :                       */
+/*    message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .*/
+/*  end.                                                                                           */
+/*  else do :                                                                                      */
       egais:inNum = bh-act-header:buffer-field ("num"):buffer-value .
       egais:GetHndlTable(2, bh-act-header:buffer-field ("num"):buffer-value) .
       glog = egais:StatusErr .
-      if glog then do :
+      if glog
+      and (bh-act-header:buffer-field ("answer_"):buffer-value = "" 
+        or bh-act-header:buffer-field ("answer_"):buffer-value = ? )
+      then do :
             message egais:Msg view-as alert-box.
             return no-apply.
       end.
       else message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .  
-  end.
+/*  end.*/
+  run refresh-query.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -333,10 +374,10 @@ do:
   then do :
     ENABLE Btn_create Btn_chg Btn_del Btn_send 
       WITH FRAME Dialog-Frame. 
-    HIDE Btn_Ans Btn_lkp in FRAME Dialog-Frame.  
+    HIDE Btn_Ans Btn_lkp Btn_Edit in FRAME Dialog-Frame.  
   end.
   else do :
-    ENABLE Btn_Ans Btn_lkp 
+    ENABLE Btn_Ans Btn_lkp Btn_Edit
       WITH FRAME Dialog-Frame.
     HIDE Btn_create Btn_chg Btn_del Btn_send in FRAME Dialog-Frame.    
   end.
@@ -436,13 +477,42 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
 /*        on row-leave persistent run proc-row-leave.*/
       end triggers
   .
+  
+  on row-display of browse-hdl-act-header do :
+      if valid-handle (calc-col-hndl) then do :
+          if RADIO-SET-1 = 1 then calc-col-hndl:SCREEN-VALUE = "Новый" .
+          else do : 
+            assign v-RegID = bh-act-header:buffer-field ("RegID"):buffer-value .
+            if v-RegID = "" or v-RegID = ? or num-entries(v-RegID, CHR(5)) <> 2 then calc-col-hndl:SCREEN-VALUE = "Отправлен" .
+            if num-entries(v-RegID, CHR(5)) = 2 then do :
+                if entry(2, v-RegID, CHR(5)) = "R" then do :
+                    calc-col-hndl:SCREEN-VALUE = "Отклонен" .
+                    calc-col-hndl:bgcolor = red_color .
+                end.
+                if entry(2, v-RegID, CHR(5)) = "A" then do :
+                    calc-col-hndl:SCREEN-VALUE = "Принят" .
+                    calc-col-hndl:bgcolor = green_color .
+                end.
+            end.    
+          end.
+      end.
+  end.
+  
+  ON value-changed OF browse-hdl-act-header
+  do:
+      if calc-col-hndl:SCREEN-VALUE = "Отклонен" then enable Btn_Edit with FRAME Dialog-Frame .
+                                                 else disable Btn_Edit with FRAME Dialog-Frame .
+  end.
+  
   if not bh-act-header = ? 
   then do:
-    do ii = 1 to bh-act-header:num-fields - 2:
+    do ii = 1 to bh-act-header:num-fields - 3:
       bcol[ii] = browse-hdl-act-header:add-like-column('tt-act-header' + '.' + bh-act-header:buffer-field (ii):name, 0, 'FILL-IN').
     end.
+	calc-col-hndl = browse-hdl-act-header:add-calc-column("char", "X(10)", "", "Статус") .
     browse-hdl-act-header:get-browse-column (1):width-chars = 30.
-    browse-hdl-act-header:get-browse-column (2):width-chars = 69.
+    browse-hdl-act-header:get-browse-column (2):width-chars = 59.
+	browse-hdl-act-header:get-browse-column (3):width-chars = 10.
   end.
 
   run enable_UI. 
@@ -524,6 +594,7 @@ if bh-act-header = ?
   end case.
 
 
+if valid-handle (browse-hdl-act-header) then apply "value-changed" to browse-hdl-act-header.
 end.
 
 /* _UIB-CODE-BLOCK-END */

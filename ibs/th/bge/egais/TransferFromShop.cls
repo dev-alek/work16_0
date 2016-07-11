@@ -37,6 +37,7 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
   define private variable urlResp        as character no-undo.
   define private variable v-uniq-key-rec as character no-undo.
   define private variable v-Answer       as character no-undo.
+  define private variable v-RegID        as character no-undo.
   define private variable ticket2        as logical   no-undo.
 
   define variable v-FS-RAR  as character no-undo .
@@ -88,21 +89,28 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
             .
             assign tt-act-header.answer_   = (entry (4, buf_clob-bind.descr, {&delim-par})) no-error .
 /*            assign tt-act-header.type_   = (entry (5, buf_clob-bind.descr, {&delim-par})) no-error .*/
+			assign tt-act-header.RegID     = (entry (5, buf_clob-bind.descr, {&delim-par})) no-error .
             end.
           return buffer tt-act-header:handle.
         end.
       when {&awo-answer} then
       do :       
+		
+		v-Answer = "" .
+        v-RegID = "" .
         
         create x-document hDoc.
         create x-noderef  hRoot.
             
-        if not IsSent
-        then do:
-          StatusErr = true.
-          Msg = "Акт еще не был отправлен".
-          return ?.
-        end.
+/*        if not IsSent                      */
+/*        then do:                           */
+/*          StatusErr = true.                */
+/*          Msg = "Акт еще не был отправлен".*/
+/*          return ?.                        */
+/*        end.                               */
+        
+        IsSent.
+        
         
         if ConPar = "" or ConPar = ?
         then do:
@@ -178,14 +186,17 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
         
         find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-tfs} and buf_clob-bind.uniq-key-rec = inAbIndenty .
         if num-entries (buf_clob-bind.descr, {&delim-par}) = 3 then
-            assign buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-Answer .
-        else if num-entries (buf_clob-bind.descr, {&delim-par}) >= 4 then   
-            assign entry(4, buf_clob-bind.descr, {&delim-par}) = v-Answer .
+            assign buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-Answer + {&delim-par} + v-RegID .
+        else if num-entries (buf_clob-bind.descr, {&delim-par}) = 4 then   
+            assign entry(4, buf_clob-bind.descr, {&delim-par}) = v-Answer 
+				   buf_clob-bind.descr = buf_clob-bind.descr + {&delim-par} + v-RegID .
+		else if num-entries (buf_clob-bind.descr, {&delim-par}) = 5 then   
+            assign entry(4, buf_clob-bind.descr, {&delim-par}) = v-Answer
+				   entry(5, buf_clob-bind.descr, {&delim-par}) = v-RegID .
             
         find first tt-act-header where tt-act-header.num = inAbIndenty .
-        assign tt-act-header.answer_ = v-Answer .
-        
-        
+        assign tt-act-header.answer_ = v-Answer
+               tt-act-header.RegID   = v-RegID .
         
         return buffer tt-act-header:handle.    
       end.
@@ -205,13 +216,15 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
       Msg       = ""
       .
     
-    if IsSent 
-      then 
-    do:
-      Msg = "Запрос уже был отправлен".
-      StatusErr = true.
-      return no.
-    end.
+/*    if IsSent                          */
+/*      then                             */
+/*    do:                                */
+/*      Msg = "Запрос уже был отправлен".*/
+/*      StatusErr = true.                */
+/*      return no.                       */
+/*    end.                               */
+    
+    IsSent.
     
     do trans:
     
@@ -280,12 +293,19 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
   end.
 
   method override protected logical GetIsSent ():
-    def var repId as char no-undo.
-    def var glog  as log  no-undo.
-    glog = CheckCurrentRequest (4, parameters, repId).
-    if glog
-      then ReplyId = repId.
-    return glog.
+    find first ub.esys-all-attr 
+                where ub.esys-all-attr.table-name = "esys-pck-sent" 
+                and ub.esys-all-attr.attr-code = "egais"
+                and ub.esys-all-attr.key2       = 4
+                and ub.esys-all-attr.attr-value = parameters
+                no-error.
+    if available (ub.esys-all-attr )
+    then do:
+      ReplyId = ub.esys-all-attr.key7.
+      return true.
+    end.
+    
+    return false.
   end.
 
   method protected handle ParseRequest (inFileName as char):
@@ -350,6 +370,12 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
             
             hNoderef:GET-CHILD(hText, 1) no-error .    
             
+            IF hNoderef:NAME = "tc:RegID"    THEN v-RegID  = hText:node-value .
+            IF hNoderef:NAME = "tc:Conclusion" THEN
+            DO :
+                if hText:node-value = "Rejected" then v-RegID = v-RegID + CHR(5) + "R" .
+                                                 else v-RegID = v-RegID + CHR(5) + "A" .
+            END.
             IF hNoderef:NAME = "tc:Comments" THEN do :
                 if trim(v-Answer) = '' or v-Answer = {&new-line} then v-Answer = hText:node-value .
                 else v-Answer = v-Answer + {&new-line} + hText:node-value .
@@ -371,6 +397,8 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
     if not ticket2 then do :
         urlResp = GetURLUTM(ReplyId).
     end.
+    
+    if StatusErr and Msg <> "" and Msg <> ? then return ? .
     
     if urlResp = "" or urlResp = ?
     then do:
@@ -413,7 +441,6 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
     create x-noderef  hRoot.
     create x-noderef  hRow.
     create x-noderef  hText.
-    
     
     assign
       inFileName = "ReceiptListOfQuery.xml"

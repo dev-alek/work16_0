@@ -94,17 +94,22 @@ class ibs.th.bge.egais.ActWriteOff_Shop inherits EGAISUTM:
           return buffer tt-act-header:handle.
         end.
       when {&awo-answer} then
-      do :       
+      do :   
+          
+        v-Answer = "" .
+        v-RegID = "" .    
         
         create x-document hDoc.
         create x-noderef  hRoot.
             
-        if not IsSent
-        then do:
-          StatusErr = true.
-          Msg = "Акт еще не был отправлен".
-          return ?.
-        end.
+/*        if not IsSent                      */
+/*        then do:                           */
+/*          StatusErr = true.                */
+/*          Msg = "Акт еще не был отправлен".*/
+/*          return ?.                        */
+/*        end.                               */
+        
+        IsSent.
         
         if ConPar = "" or ConPar = ?
         then do:
@@ -210,13 +215,15 @@ class ibs.th.bge.egais.ActWriteOff_Shop inherits EGAISUTM:
       Msg       = ""
       .
     
-    if IsSent 
-      then 
-    do:
-      Msg = "Запрос уже был отправлен".
-      StatusErr = true.
-      return no.
-    end.
+/*    if IsSent                          */
+/*      then                             */
+/*    do:                                */
+/*      Msg = "Запрос уже был отправлен".*/
+/*      StatusErr = true.                */
+/*      return no.                       */
+/*    end.                               */
+    
+    IsSent.
     
     do trans:
     
@@ -283,12 +290,19 @@ class ibs.th.bge.egais.ActWriteOff_Shop inherits EGAISUTM:
   end.
 
   method override protected logical GetIsSent ():
-    def var repId as char no-undo.
-    def var glog  as log  no-undo.
-    glog = CheckCurrentRequest (4, parameters, repId).
-    if glog
-      then ReplyId = repId.
-    return glog.
+    find first ub.esys-all-attr 
+                where ub.esys-all-attr.table-name = "esys-pck-sent" 
+                and ub.esys-all-attr.attr-code = "egais"
+                and ub.esys-all-attr.key2       = 4
+                and ub.esys-all-attr.attr-value = parameters
+                no-error.
+    if available (ub.esys-all-attr )
+    then do:
+      ReplyId = ub.esys-all-attr.key7.
+      return true.
+    end.
+    
+    return false.
   end.
 
   method protected handle ParseRequest (inFileName as char):
@@ -379,6 +393,8 @@ class ibs.th.bge.egais.ActWriteOff_Shop inherits EGAISUTM:
     if not ticket2 then do :
         urlResp = GetURLUTM(ReplyId).
     end.
+    
+    if StatusErr and Msg <> "" and Msg <> ? then return ? .
     
     if urlResp = "" or urlResp = ?
     then do:
