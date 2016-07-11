@@ -37,19 +37,23 @@ DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Журнал учёта рознично
 { cmp/r-pril.i new  } 
 { gbl/clntattr.i }
 { rep/r-pychk0.i defalgo }
+define variable v-grp-code like ub.gds-grp.node-code no-undo.
+define variable v-grp-name like ub.goods.grp-name no-undo.
+define variable ii-grp as integer no-undo.
+define variable v-found as logical no-undo.
 
-DEFINE VARIABLE egais-name            AS CHAR.
-DEFINE VARIABLE v-qnty                AS DECIMAL.
+DEFINE VARIABLE egais-name            AS CHAR no-undo.
+DEFINE VARIABLE v-qnty                AS DECIMAL no-undo.
 DEFINE VARIABLE v-par-val             AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-par-type            AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-fact-order-start    AS DECIMAL   NO-UNDO.
 DEFINE VARIABLE v-fact-order-end      AS DECIMAL   NO-UNDO.
 DEFINE VARIABLE v-begin-date          AS DATE      NO-UNDO.
 DEFINE VARIABLE v-end-date            AS DATE      NO-UNDO.
-DEFINE VARIABLE v-addres              AS CHARACTER.
-DEFINE VARIABLE v-search              AS CHARACTER.
+DEFINE VARIABLE v-addres              AS CHARACTER no-undo.
+DEFINE VARIABLE v-search              AS CHARACTER no-undo.
 DEFINE VARIABLE v-cntxt-host-name-obj AS CHARACTER NO-UNDO .
-DEFINE VARIABLE v-cntxt-host-code-obj AS INTEGER.
+DEFINE VARIABLE v-cntxt-host-code-obj AS INTEGER no-undo.
 DEFINE VARIABLE v-report-name         AS CHARACTER NO-UNDO.         /* Наименование отчёта */
 DEFINE VARIABLE v-period              AS CHARACTER NO-UNDO.              /* Период за который формируется отчёт */
 DEFINE VARIABLE v-short-obj-list      AS CHARACTER NO-UNDO.      /* Перечень выбранных объектов "в одну строку" */
@@ -334,15 +338,61 @@ DO: /* S */
             END. 
             ELSE
             DO: /* Если в указанном объекте(маг,склад...) найден установленный в yes параметр "алкоголь", то... */
-                FOR EACH ub.gds-obj WHERE                               /* Смотрим все связки Товар-Объект (Т-О) по известному объекту(obj-type;obj-code) находим КодТовара */
+               _alc:  FOR EACH ub.gds-obj WHERE                               /* Смотрим все связки Товар-Объект (Т-О) по известному объекту(obj-type;obj-code) находим КодТовара */
                     ub.gds-obj.obj-type = obj-list.obj-type AND
                     ub.gds-obj.obj-code = obj-list.obj-code
                     NO-LOCK
-                    ,
-                    FIRST goods WHERE
-                    goods.gds-code = gds-obj.gds-code 
-                    
                     :
+                       
+                   find   FIRST goods WHERE
+                       goods.gds-code = gds-obj.gds-code no-lock no-error.
+                        
+                       
+                   case x-SelectGood: 
+        
+     
+                       when {&g-all}  then 
+                           do: /* все товары */
+          
+                                         
+                           end.
+                
+                       when {&g-grp} then 
+                           do :
+                               if available goods then 
+                               do: 
+                                   assign
+                                       v-grp-name = ""
+                                       v-found    = no
+                                       .
+                   
+                                   _ii-grp: do ii-grp = 1 to num-entries(goods.grp-name, {&delim-grp}) - 1     /* 1 */ /* где {&delim-grp} = CHR(47) = "/". Фактически это уровни вложенности данной группы товаров */
+                                       :
+                                       assign
+                                           v-grp-name = v-grp-name + entry(ii-grp, goods.grp-name, {&delim-grp}) + {&delim-grp} /* Вытаскиваем из полной цепочки - имя каждой группы для каждого уровня. Цепочка от корня до тек группы. */
+                                           .
+                                       if can-find(first tmp#grp no-lock where
+                                           tmp#grp.grp-name = v-grp-name) then
+                                       do:
+                                           assign 
+                                               v-found = yes.
+                                           leave _ii-grp.
+                                       end.
+                                   end. /* 1 */                                                                    /* 1 */
+
+                                   if not v-found then next _alc.
+                               end.
+                           end.
+                       otherwise 
+                       do:     /*список товаров*/
+                           find  first gds-list no-lock
+                               where goods.artic     = gds-list.artic
+                               and goods.prod-type = gds-list.prod-type
+                               and goods.prod-code = gds-list.prod-code no-error .
+                           if not available  gds-list then next.
+                
+                       end.
+                   end case.
                         
         
                     RUN gds-attr-value(
