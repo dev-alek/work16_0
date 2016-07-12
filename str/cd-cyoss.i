@@ -61,7 +61,7 @@ FOR EACH for-cash-desk NO-LOCK WHERE
   v-versiond = decimal(for-cash-desk.version)
   no-error .
   if error-status:error
-  or v-versiond < 1.12
+  or v-versiond < 1.11
   or for-cash-desk.pos-type <> {&cd-type-IBM-XML}
   then do:
     run write-log-and-file in p-log-handle (
@@ -69,7 +69,7 @@ FOR EACH for-cash-desk NO-LOCK WHERE
         , input log-file-name
         , input 1
         , input substitute( "Невозможно передать на кассу &1 &2&3&4" +
-                            "Данный функционал доступен только для POS &5 с версии ПО кассы 1.12 или POS &6"
+                            "Данный функционал доступен только для POS &5 с версии ПО кассы 1.11 или POS &6"
                           ,  for-cash-desk.cash-num
                           , {&shop}
                           , for-cash-desk.obj-code

@@ -891,6 +891,40 @@ avtop
 &glob output-display-uf-bge-dper  no
 &glob other-uf-bge-dper           ""
 
+&scop bef-uf-bge-active-vbrr              bge-active-vbrr
+&glob uf-bge-active-vbrr                  '{&bef-uf-bge-active-vbrr}':U
+&glob label-uf-bge-active-vbrr            "Параметры для выгрузки документов"
+&glob tooltip-uf-bge-active-vbrr          "Параметры для выгрузки документов"
+&glob List_-use-uf-bge-active-vbrr        yes
+&glob List_-type-uf-bge-active-vbrr       {&type-char}
+&glob List_-format-uf-bge-active-vbrr     "X(256)"
+&glob Naim-use-uf-bge-active-vbrr         yes
+&glob Naim-type-uf-bge-active-vbrr        {&type-char}
+&glob Naim-format-uf-bge-active-vbrr      "X(256)"
+&glob print-graft-use-uf-bge-active-vbrrr no
+&glob sort-gr-use-uf-bge-active-vbrr      no
+&glob type-price-use-uf-bge-active-vbrr   no
+&glob user-can-edit-uf-bge-active-vbrr    no
+&glob output-display-uf-bge-active-vbrr   no
+&glob other-uf-bge-active-vbrr            ""
+
+&scop bef-uf-bge-dper-new             bge-dper-new
+&glob uf-bge-dper-new                 '{&bef-uf-bge-dper-new}':U
+&glob label-uf-bge-dper-new           "Параметры для выгрузки документов(расширенный)"
+&glob tooltip-uf-bge-dper-new         "Параметры для выгрузки документов(расширенный)"
+&glob List_-use-uf-bge-dper-new       yes
+&glob List_-type-uf-bge-dper-new      {&type-char}
+&glob List_-format-uf-bge-dper-new    "X(256)"
+&glob Naim-use-uf-bge-dper-new        yes
+&glob Naim-type-uf-bge-dper-new       {&type-char}
+&glob Naim-format-uf-bge-dper-new     "X(256)"
+&glob print-graft-use-uf-bge-dper-new no
+&glob sort-gr-use-uf-bge-dper-new     no
+&glob type-price-use-uf-bge-dper-new  no
+&glob user-can-edit-uf-bge-dper-new   no
+&glob output-display-uf-bge-dper-new  no
+&glob other-uf-bge-dper-new           ""
+
 &scop bef-uf-i-egais             cus/i-egais.w
 &glob uf-i-egais                 '{&bef-uf-i-egais}':U
 &glob label-uf-i-egais           "Интерфейс импорта классификатора ЕГАИС"
@@ -1474,6 +1508,8 @@ info
 ,{&bef-uf-users-1}~
 ,{&bef-uf-users-2}~
 ,{&bef-uf-bge-dper}~
+,{&bef-uf-bge-active-vbrr}~
+,{&bef-uf-bge-dper-new}~
 ,{&bef-uf-i-egais}~
 ,{&bef-uf-alc-rees}~
 ,{&bef-uf-e-optprc}~
@@ -1633,6 +1669,10 @@ procedure uf-name :
       &scop uf-code uf-users-2
       {&uf-temp-full-code}
       &scop uf-code uf-bge-dper
+      {&uf-temp-full-code}
+       &scop uf-code uf-bge-active-vbrr
+      {&uf-temp-full-code}
+      &scop uf-code uf-bge-dper-new
       {&uf-temp-full-code}
       &scop uf-code uf-i-egais
       {&uf-temp-full-code}

@@ -101,6 +101,41 @@ define variable vss-description as character no-undo init "".
 
 { gbl/menuload.i
   {&bef-menuload_service_impexp}
+   "'Выгрузка товарного классификатора (ВБРР\Скантек) '"
+    " 'bge/exp-VBRR-man.p' "
+    " "
+    " "
+    " "
+    " "
+    "yes"
+}
+
+
+{ gbl/menuload.i
+   {&bef-menuload_service_impexp}
+   "'Экспорт данных по пополнениям и активации для сверки с ВБРР'"
+    " 'bge/bge-active-vbrr-p.p' "
+    " "
+    " "
+    " "
+    "'Rosneft-*'"
+    "yes"
+}
+
+
+{ gbl/menuload.i
+   {&bef-menuload_service_impexp}
+   "'Выгрузка товарного классификатора (Лояльность\Скантек) '"
+    " 'bge/exp-loyal-man.p' "
+    " "
+    " "
+    " "
+    " "
+    "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
   "'Выгрузка информации в систему Carbon'"
   "'bge/exp-carbon-man.p'"
   " "

@@ -33,11 +33,11 @@ run rep/d-report.w
     (
     input parParentProc ,
     input 'rep/e-plat-oss.w',
-    "Платежи ОСС",
+    "Пополнение счетов(карт)",
     4,
     "",
     "*",
     "" ,
     "",
-    "all,{&format-folder},{&Excel-yes}",
+    "all,{&Excel-yes}",
     no).
