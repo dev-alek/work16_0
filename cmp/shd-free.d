@@ -4,9 +4,12 @@
 "dctxt-e" "Экспорт данных по ДК в текст.файл" "cus/dctxtesr.p" "cus/dctxtesp.w" "" yes no no no "" "Qaxjbbbkrznddduc" no
 "dctxt-i" "Импорт данных по ДК из текст.файла" "cus/dctxtisr.p" "cus/dctxtisp.w" "" yes no no no "" "tcECHokkfjkkJjqc" no
 "delrt-auto" "Удаления маршуртизации ВС, работающих без подтверждения" "bge/adelrt.p" "bge/delrtpar.w" "" yes yes no no "" "jqgpklnPdldCqlki" no
+"exp-active-vbrr" "Выгрузка информации по пополнениям и активации для сверки с ВБРР" "bge/bge-active-vbrr-shd.p" "bge/bge-active-vbrr.w" "" yes yes no no "" "jwbQbadljOzcfcll" no
 "exp-carbon" "Выгрузка информации в систему Carbon" "bge/exp-carbon-shd.p" "bge/exp-carbon-par.w" "" yes yes no no "" "obCvcdflkailchRk" no
+"exp-loyal" "Выгрузка товарного классификатора (Лояльность/Скантек)" "bge/exp-loyal-shd.p" "bge/exp-loyal.w" "" yes yes no no "" "llndQBKkalbfptkb" no
 "exp-malina" "Выгрузка информации в систему Малина" "bge/exp-malina-shd.p" "bge/exp-malina.w" "" yes yes no no "" "bjpjsbldjiikgjcr" no
 "exp-sale" "Выгрузка отчетов для Nielsen" "rep/exp-sl.p" "rep/exp-sale.w" "" yes yes no no "" "djlnldnplqIfiblk" no
+"exp-VBRR" "Выгрузка товарного классификатора. ВБРР" "bge/exp-VBRR-shd.p" "bge/exp-VBRR.w" "" yes yes no no "" "lkptpbLhiZjdkbhq" no
 "expkan3" "Экспорт текущих товарных остатков kan3" "cus/exp-kanp.p" "cus/exp-kanf.w" "" yes yes no no "" "GjpcllRbjiioijlb" no
 "goods_rum" "Работа с товарами в автоматическом режиме" "str/goodsrum.p" "" "" yes yes no no "" "bfatafbpQPjkbDcl" yes
 "img-search" "Загрузка фото товаров" "bge/imgsearch-shd.p" "" "" yes yes no no "" "kvaknraZMkstiEfr" no
