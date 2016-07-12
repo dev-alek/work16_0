@@ -150,7 +150,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 /* extclass_extended-data-list */           /*Здесь можно размещать ТОЛЬКО ТЕ ТАБЛИЦЫ, которые НЕ СВЯЗАНЫ с физическими таблицами ТН (!), т.е. таблицы виртуальные, хранящие свои поля в таблице ext-classif, но которые нужно гонять по новостям и формировать историю.    Пояснение: процедура-триггер типа extclasw.p для записи в таблицу ub.ext-classif, до недавнего времени ВСЕГДА генерировала уникальный ключ (процедурой: gen-key-fv) с использованием физич. таблиц ТН. Данный список теперь используется для проверки и обхода процедуры gen-key-fv (в файле триггера extclasw.p)). */
 &glob extclass_extended-data-list '~
 ~{&bef-extclass_oss-ref}~
-~{&bef-extclass_egais-transId}~
+,~{&bef-extclass_egais-transId}~
 ':U
 
 &endif

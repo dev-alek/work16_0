@@ -45,12 +45,15 @@ define variable vss-description as character no-undo init "Свойства платежа Опер
 { ref/gds-attr.i }
 { ref/ossprpdf.i }
 { ref/extclass.i }
-
+{ gbl/getcntxt.i def }
+{ cmp/gds-list.i gds-list def "new shared" }
+{ gbl/getcntxt.i get }
 define variable rid-list as character no-undo.
+define variable v-gds-code as integer.
 
-define buffer buf_ext-classif for ub.ext-classif.
-define buffer buf_sum-grp for ub.sum-grp.
-
+define buffer buf_ext-classif for ext-classif.
+/*define buffer buf_sum-grp for sum-grp.*/
+define buffer buf_goods for goods.
 define temp-table tt-oss-ref no-undo
 
     /* Ключевые поля */
@@ -146,15 +149,15 @@ DEFINE BUTTON b-quit AUTO-END-KEY
 DEFINE VARIABLE f-comission-pcnt AS DECIMAL FORMAT ">9.99":U INITIAL 0 
      LABEL "% комиссии" 
      VIEW-AS FILL-IN 
-     SIZE 13.2 BY 1 NO-UNDO.
+     SIZE 13.25 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-comission-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0 
      LABEL "Сумма комиссии" 
      VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-gds-group-in-cass AS INTEGER FORMAT "->>>>>>9":U INITIAL 0 
-     LABEL "Код группы товаров на кассе        " 
+DEFINE VARIABLE f-gds-group-in-cass AS INTEGER FORMAT "->>>>>>>>>9":U INITIAL 0 
+     LABEL "Код товара на кассе " 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
@@ -180,27 +183,27 @@ DEFINE VARIABLE f-min-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0
 
 DEFINE VARIABLE f-name-gds-grp AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 29 BY .95 NO-UNDO.
+     SIZE 29 BY .96 NO-UNDO.
 
 DEFINE VARIABLE f-oper-abbrev AS CHARACTER FORMAT "X(50)":U 
-     LABEL "Аббревиатура Оператора Связи       " 
+     LABEL "Аббревиатура Оператора пополнения счета" 
      VIEW-AS FILL-IN 
-     SIZE 47.6 BY 1 NO-UNDO.
+     SIZE 47.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-oper-code AS INTEGER FORMAT ">>9":U INITIAL 0 
-     LABEL "Код Оператора Связи                " 
+     LABEL "Код Оператора пополнения счета" 
      VIEW-AS FILL-IN 
      SIZE 6 BY 1 TOOLTIP "Присваивается Системой приема платежей" NO-UNDO.
 
 DEFINE VARIABLE f-oper-name AS CHARACTER FORMAT "X(50)":U 
      LABEL "Название Оператора Связи           " 
      VIEW-AS FILL-IN 
-     SIZE 47.6 BY 1 TOOLTIP "Для печати на слипе" NO-UNDO.
+     SIZE 47.63 BY 1 TOOLTIP "Для печати на слипе" NO-UNDO.
 
-DEFINE VARIABLE f-slip-file AS CHARACTER FORMAT "X(19)":U  /* Экспериментально - текущая касса ограничена передачей 20 символов. 28.01.2015 Арн. */
+DEFINE VARIABLE f-slip-file AS CHARACTER FORMAT "X(19)":U 
      LABEL "Имя файла образа конечного слипа " 
      VIEW-AS FILL-IN 
-     SIZE 46.4 BY 1 NO-UNDO.
+     SIZE 46.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-warning-lim-sum AS DECIMAL FORMAT ">>>,>>>,>>9.99":U INITIAL 0 
      LABEL "Порог суммы для выдачи предупреждения " 
@@ -212,8 +215,9 @@ DEFINE VARIABLE Rs-billing-type AS INTEGER
      RADIO-BUTTONS 
           "Оплата Сотовой Связи", 1,
 "Оплата по договору", 2,
-"Оплата Счёта", 3
-     SIZE 40 BY 3.52 NO-UNDO.
+"Оплата Счёта", 3,
+"Начисление на карту", 4
+     SIZE 39.38 BY 3.38 NO-UNDO.
 
 DEFINE VARIABLE Rs-type-comission AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
@@ -222,62 +226,62 @@ DEFINE VARIABLE Rs-type-comission AS INTEGER
 "Расчёт по % комиссии от вводимой суммы", 1,
 "Расчёт по % комиссии от суммы начисления", 2,
 "Расчёт по сумме комиссии от вводимой суммы", 3
-     SIZE 56.2 BY 4.52 NO-UNDO.
+     SIZE 56.25 BY 4.5 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 88 BY 5.14.
+     SIZE 88 BY 5.13.
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 88 BY 4.05.
+     SIZE 87.88 BY 4.04.
 
 DEFINE VARIABLE t-necessary-authorization AS LOGICAL INITIAL no 
      LABEL "Авторизация необходима" 
      VIEW-AS TOGGLE-BOX
-     SIZE 30.4 BY 1.1 NO-UNDO.
+     SIZE 30.38 BY 1.08 NO-UNDO.
 
 DEFINE VARIABLE t-necessary-slip AS LOGICAL INITIAL no 
      LABEL "Печать слипа необходима" 
      VIEW-AS TOGGLE-BOX
-     SIZE 30.4 BY 1 NO-UNDO.
+     SIZE 30.38 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     f-name-gds-grp AT ROW 2.52 COL 57 COLON-ALIGNED NO-LABEL WIDGET-ID 16
+     f-name-gds-grp AT ROW 2.5 COL 57 COLON-ALIGNED NO-LABEL WIDGET-ID 16
      B-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
-     B-Help AT ROW 1 COL 54.8
-     f-gds-group-in-cass AT ROW 2.52 COL 39 COLON-ALIGNED WIDGET-ID 2
+     B-Help AT ROW 1 COL 54.75
+     f-gds-group-in-cass AT ROW 2.5 COL 39 COLON-ALIGNED WIDGET-ID 2
      b-grp-gds AT ROW 2.67 COL 55 WIDGET-ID 12
-     f-oper-code AT ROW 3.62 COL 39 COLON-ALIGNED
+     f-oper-code AT ROW 3.63 COL 39 COLON-ALIGNED
      f-oper-name AT ROW 4.71 COL 39 COLON-ALIGNED
-     f-oper-abbrev AT ROW 5.81 COL 39 COLON-ALIGNED WIDGET-ID 10
-     f-min-digit-nums AT ROW 6.91 COL 50.4 COLON-ALIGNED
-     f-max-digit-nums AT ROW 8 COL 50.4 COLON-ALIGNED
-     f-min-sum AT ROW 9.1 COL 50.4 COLON-ALIGNED
-     f-max-sum AT ROW 10.19 COL 50.4 COLON-ALIGNED
-     f-warning-lim-sum AT ROW 11.29 COL 50.4 COLON-ALIGNED
-     Rs-type-comission AT ROW 13.57 COL 4.6 NO-LABEL
-     f-comission-pcnt AT ROW 15.91 COL 73 COLON-ALIGNED
+     f-oper-abbrev AT ROW 5.79 COL 40 COLON-ALIGNED WIDGET-ID 10
+     f-min-digit-nums AT ROW 6.92 COL 50.38 COLON-ALIGNED
+     f-max-digit-nums AT ROW 8 COL 50.38 COLON-ALIGNED
+     f-min-sum AT ROW 9.08 COL 50.38 COLON-ALIGNED
+     f-max-sum AT ROW 10.21 COL 50.38 COLON-ALIGNED
+     f-warning-lim-sum AT ROW 11.29 COL 50.38 COLON-ALIGNED
+     Rs-type-comission AT ROW 13.58 COL 4.63 NO-LABEL
+     f-comission-pcnt AT ROW 15.92 COL 73 COLON-ALIGNED
      f-comission-sum AT ROW 17 COL 73 COLON-ALIGNED
-     t-necessary-authorization AT ROW 19 COL 4.6
-     t-necessary-slip AT ROW 20.1 COL 4.6
-     f-slip-file AT ROW 21.19 COL 39.6 COLON-ALIGNED
-     Rs-billing-type AT ROW 23.38 COL 4.6 NO-LABEL
+     t-necessary-authorization AT ROW 19 COL 4.63
+     t-necessary-slip AT ROW 20.08 COL 4.63
+     f-slip-file AT ROW 21.21 COL 39.63 COLON-ALIGNED
+     Rs-billing-type AT ROW 23.5 COL 4.63 NO-LABEL
      "Тип ввода используемой комиссии" VIEW-AS TEXT
-          SIZE 31.4 BY .95 AT ROW 12.81 COL 32.6 WIDGET-ID 6
-     "Тип расчета с Оператором Связи" VIEW-AS TEXT
-          SIZE 31 BY .81 AT ROW 22.67 COL 33.8
-     RECT-1 AT ROW 13.29 COL 2.6 WIDGET-ID 4
-     RECT-2 AT ROW 23.14 COL 2.6 WIDGET-ID 8
-     SPACE(1.19) SKIP(0.47)
+          SIZE 31.38 BY .96 AT ROW 12.79 COL 32.63 WIDGET-ID 6
+     "Тип расчета с Оператором пополнения счетов" VIEW-AS TEXT
+          SIZE 31 BY .79 AT ROW 22.67 COL 33.75
+     RECT-1 AT ROW 13.29 COL 2.63 WIDGET-ID 4
+     RECT-2 AT ROW 23.13 COL 2.63 WIDGET-ID 8
+     SPACE(1.28) SKIP(0.49)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Настройки платежа оператора сотовой связи"
-         DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
+         TITLE "Настройки платежа оператора пополнения счетов"
+         CANCEL-BUTTON b-quit.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -303,7 +307,7 @@ ASSIGN
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -311,7 +315,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Настройки платежа оператора сотовой связи */
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Настройки платежа оператора пополнения счетов */
 DO:
   APPLY "END-ERROR":U TO SELF.
 END.
@@ -324,11 +328,36 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exit Dialog-Frame
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Ввод */
 DO:
+ define variable flag-oss as logical init no.
+ 
+    find first  goods-attr where goods-attr.gds-code = v-gds-code and goods-attr.attr-value = 'oss-pay' 
+    AND goods-attr.attr-code = {&attr-office-type}  no-lock no-error.
+        if available goods-attr then do: 
+            
+/*    if goods-attr.attr-value = 'oss-pay'                   */
+/*    AND goods-attr.attr-code = {&attr-office-type} then do:*/
+   
     run proc-chck-min-max-fields-all-widgets2 no-error.
     if error-status:error then return no-apply.
     RUN proc-save IN THIS-PROCEDURE NO-ERROR.
     IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
-END.
+    
+    
+/*    flag-oss = yes.*/
+    end.
+/*    if flag-oss = no then do:*/
+else do: 
+    
+        message "У данной услуги нет типа услуги oss-pay" view-as alert-box error.
+    
+    end.
+/*    end.*/
+/*    else do:                                                                      */
+/*        message "У данной услуги нет типа услуги oss-pay" view-as alert-box error.*/
+/*                                                                                  */
+/*        end.                                                                      */
+
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -338,15 +367,33 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-grp-gds Dialog-Frame
 ON CHOOSE OF b-grp-gds IN FRAME Dialog-Frame
 DO:
-    run ref/sum-grps.w (input parParentProc
-        ,input 'b-sel':U
-        ,input-output rid-list).
 
-    find first buf_sum-grp no-lock where recid(buf_sum-grp) = integer(rid-list) no-error.
-        if available buf_sum-grp then
+     define variable ri-list         as char no-undo .
+
+  run ref/gds-ref.p   (  parparentproc
+      ,'b-sel'
+      ,?             /*p-stat */
+      ,?             /*p-list  */
+      ,?             /*p-cond  */
+      ,?             /*p-rec   */
+      ,?             /*p-grp   */
+      ,?             /*p-cli-type */
+      ,?             /*p-cli-code  */
+      ,v-cntxt-obj-type    /*p-obj-type  */
+      ,v-cntxt-obj-code     /*p-obj-code  */
+      ,?             /*p-other     */
+      , output ri-list) .
+
+
+
+
+   find first buf_goods where recid(buf_goods) = integer (ri-list) no-lock no-error.
+        if available buf_goods then
             do:
-                f-gds-group-in-cass:screen-value = string(buf_sum-grp.grp-code).
-                f-name-gds-grp:screen-value = string(buf_sum-grp.grp-name).
+
+                f-gds-group-in-cass:screen-value = string(buf_goods.gds-code).
+                f-name-gds-grp:screen-value = buf_goods.gds-name.
+          v-gds-code = buf_goods.gds-code.
             end.
 END.
 
@@ -356,13 +403,13 @@ END.
 
 &Scoped-define SELF-NAME f-gds-group-in-cass
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-gds-group-in-cass Dialog-Frame
-ON LEAVE OF f-gds-group-in-cass IN FRAME Dialog-Frame /* Код группы товаров на кассе         */
+ON LEAVE OF f-gds-group-in-cass IN FRAME Dialog-Frame /* Код товара на кассе  */
 DO:
     assign f-gds-group-in-cass.
-    find first buf_sum-grp where buf_sum-grp.grp-code = f-gds-group-in-cass no-lock no-error.
-        if available buf_sum-grp then
+    find first buf_goods where buf_goods.gds-code = f-gds-group-in-cass no-lock no-error.
+        if available buf_goods then
             do:
-                f-name-gds-grp:screen-value = string(buf_sum-grp.grp-name).
+                f-name-gds-grp:screen-value = string(buf_goods.gds-name).
             end.
         else
             do:
@@ -636,10 +683,10 @@ if Lookup(p-mode, {&add-def} + "," + {&Lookup} + "," +  {&update}) = 0 then retu
             find first buf_ext-classif where rowid (buf_ext-classif) = p-io-rowid.  /* Проверка: ext-classif не пустая табл? */
             if available buf_ext-classif then                               /* Проверка: ext-classif не пустая табл? */
                 do: /* b */
-                    find first buf_sum-grp where buf_sum-grp.grp-code = buf_ext-classif.Key#_Two no-lock no-error. /* Прилепим "на лету" в интерфейсе расшифровку к имени группы товаров, т.к. оно не хранится в нашем справочнике, но думаю, будет полезным. */
-                        if available buf_sum-grp then
+                    find first buf_goods where buf_goods.gds-code = buf_ext-classif.Key#_Two no-lock no-error. /* Прилепим "на лету" в интерфейсе расшифровку к имени группы товаров, т.к. оно не хранится в нашем справочнике, но думаю, будет полезным. */
+                        if available buf_goods then
                             do:
-                                f-name-gds-grp = buf_sum-grp.grp-name.
+                                f-name-gds-grp = buf_goods.gds-name.
                             end.
                         else
                             do:
@@ -926,7 +973,6 @@ define variable v-collect-par-1 AS character no-undo. /* Переменная, в которую с
                         undo, return error.
                     end.
             /* _______________________________________________________________________________________________________ */
-
             create buf_ext-classif.
 
             assign
@@ -938,8 +984,12 @@ define variable v-collect-par-1 AS character no-undo. /* Переменная, в которую с
                 buf_ext-classif.Key#_Two = f-gds-group-in-cass
                 buf_ext-classif.CharKey_One = f-oper-abbrev
                 buf_ext-classif.CharKey_Two = v-collect-par-1
-                p-io-rowid = rowid(buf_ext-classif)
-            no-error.
+              
+            no-error
+            .
+              p-io-rowid = rowid(buf_ext-classif).
+            release   buf_ext-classif    no-error
+            .
         end.
 
     if p-mode = {&update} then
@@ -1002,7 +1052,6 @@ define variable v-collect-par-1 AS character no-undo. /* Переменная, в которую с
                 p-io-rowid = rowid(buf_ext-classif)
             .
             end.
-
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

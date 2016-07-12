@@ -144,49 +144,49 @@ function fnc-cur-time-print returns character forward.
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-define button b-add 
-     label "&Добавить":L 
-     size 10 by 1.
+DEFINE BUTTON b-add 
+     LABEL "&Добавить":L 
+     SIZE 10 BY 1.
 
-define button b-del 
-     label "&Удалить" 
-     size 10 by 1.
+DEFINE BUTTON b-del 
+     LABEL "&Удалить" 
+     SIZE 10 BY 1.
 
-define button b-exit auto-go 
-     label "&Выход ":L 
-     size 10 by 1.
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Выход ":L 
+     SIZE 10 BY 1.
 
-define button b-help 
-     label "Помо&щь":L 
-     size 10 by 1.
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь":L 
+     SIZE 10 BY 1.
 
-define button b-hist 
-     label "Ис&тория" 
-     size 10 by 1.
+DEFINE BUTTON b-hist 
+     LABEL "Ис&тория" 
+     SIZE 10 BY 1.
 
-define button b-lookup 
-     label "Про&смотр":L 
-     size 10 by 1.
+DEFINE BUTTON b-lookup 
+     LABEL "Про&смотр":L 
+     SIZE 10 BY 1.
 
-define button B-mark 
-     label "&*" 
-     size 3 by 1.
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
+     SIZE 3 BY 1.
 
-define button b-print 
-     label "Пе&чать":L 
-     size 10 by 1.
+DEFINE BUTTON b-print 
+     LABEL "Пе&чать":L 
+     SIZE 10 BY 1.
 
-define button b-sel auto-end-key 
-     label "Вы&бор":L
-     size 10 by 1.
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор ":L 
+     SIZE 10 BY 1.
 
-define button b-upd 
-     label "&Изменить":L 
-     size 10 by 1.
+DEFINE BUTTON b-upd 
+     LABEL "&Изменить":L 
+     SIZE 10 BY 1.
 
-define variable mark-num as character format "X(256)":U 
-     view-as fill-in 
-     size 10 by 1 no-undo.
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 10 BY 1 NO-UNDO.
 
 /* Query definitions */
 &ANALYZE-SUSPEND
@@ -204,7 +204,7 @@ define browse br-oss
     tt-oss-ref.oper-code column-label "Код!Операт." format ">>9":U                                      /* Первое (из трёх) ключевое поле справочника ОСС в таблице ext-classif */
     tt-oss-ref.oper-name column-label "Наименование опер." format "X(15)":U                             /* 1. Название Оператора Связи */
     tt-oss-ref.oper-abbrev column-label "Аббревиат. опер." format "X(15)":U                             /* Второе (из трёх) ключевое поле справочника ОСС в таблице ext-classif */
-    tt-oss-ref.gds-group-in-cass column-label "Код!группы тов." format ">>>>>>9":U                      /* Третье (из трёх) ключевое поле справочника ОСС в таблице ext-classif */
+    tt-oss-ref.gds-group-in-cass column-label "Код!товара" format ">>>>>>>>>>>9":U                      /* Третье (из трёх) ключевое поле справочника ОСС в таблице ext-classif */
     tt-oss-ref.min-digit-nums column-label "Мин. кол.!цифр телеф." format ">9":U                        /* 2. Минимальное кол-во цифр для ввода номера сотового телефона */
     tt-oss-ref.max-digit-nums column-label "Макс. кол.!цифр телеф." format ">9":U                       /* 3. Максимальное кол-во цифр для ввода номера сотового телефона */
     tt-oss-ref.min-sum column-label "Мин. сумма" format "->,>>>,>>>,>>>,>>9.99":U                       /* 4. Минимальная сумма начисления */
@@ -216,7 +216,7 @@ define browse br-oss
     tt-oss-ref.necessary-authorization column-label "Необх. авториз."                                   /* 10. Авторизация неохбодима */
     tt-oss-ref.necessary-slip column-label "Необх. печ. слипа"                                          /* 11. Печать слипа необходима */
     tt-oss-ref.slip-file column-label "Имя файла конеч. слипа" format "X(10)":U                         /* 12. Имя файла образа конечного слипа */
-    tt-oss-ref.billing-type column-label "Тип расчёта с опер. связ." format ">9":U                      /* 13. Тип расчёта с оператором */
+    tt-oss-ref.billing-type column-label "Тип расчёта с опер. пополн." format ">9":U                      /* 13. Тип расчёта с оператором */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 100 BY 18 FIT-LAST-COLUMN.
@@ -224,23 +224,23 @@ define browse br-oss
 
 /* ************************  Frame Definitions  *********************** */
 
-define frame Dialog-Frame
-     b-exit at row 1 col 1
-     b-sel at row 1 col 14
-     b-lookup at row 1 col 24 widget-id 2
-     b-hist at row 1 col 33 widget-id 4
-     b-help at row 1 col 43
-     B-mark at row 2 col 1 widget-id 6
-     b-add at row 2 col 4 widget-id 8
-     b-upd at row 2 col 14 widget-id 10
-     b-del at row 2 col 24 widget-id 12
-     b-print at row 2 col 43 widget-id 14
-     mark-num at row 3.05 col 41 colon-aligned no-label widget-id 16
-     br-oss at row 4.1 col 1 widget-id 200
-     space(0.59) skip(0.00)
-    with view-as dialog-box keep-tab-order 
-         side-labels no-underline three-d  scrollable 
-         title "Справочник Операторов Сотовой Связи":L.
+DEFINE FRAME Dialog-Frame
+     b-exit AT ROW 1 COL 1
+     b-sel AT ROW 1 COL 14
+     b-lookup AT ROW 1 COL 24 WIDGET-ID 2
+     b-hist AT ROW 1 COL 33 WIDGET-ID 8
+     b-help AT ROW 1 COL 43
+     B-mark AT ROW 2 COL 1
+     b-add AT ROW 2 COL 4
+     b-upd AT ROW 2 COL 14
+     b-del AT ROW 2 COL 24
+     b-print AT ROW 2 COL 43
+     mark-num AT ROW 3.05 COL 41 COLON-ALIGNED NO-LABEL WIDGET-ID 6
+     br-oss AT ROW 4.1 COL 1 WIDGET-ID 100
+     SPACE(1.00) SKIP(0.00)
+    WITH VIEW-AS DIALOG-BOX 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "Операторы\эмитенты для пополнения счетов":L.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -303,12 +303,14 @@ do:
         input p-db-num,
         input-output v-rowid
         ) no-error.
-
+        
+        
+ 
     if v-rowid <> ? then
         do:
             {&open-query-br-oss}
-            run proc-fill-tt-oss-ref no-error.
-            find first buf_ext-classif where rowid (buf_ext-classif) = v-rowid no-error.
+            run fill-tt-oss-ref no-error.
+            find first buf_ext-classif where rowid (buf_ext-classif) = v-rowid no-error .
             find first tt-oss-ref where rowid (buf_ext-classif) = tt-oss-ref.ext-classif-row no-error.
             v-rowid-tt-oss-ref = rowid (tt-oss-ref) no-error.
             {&open-query-br-oss}
@@ -363,7 +365,7 @@ do:
                         delete buf_ext-classif.
                     end.
         end.
-    run proc-fill-tt-oss-ref no-error.
+    run fill-tt-oss-ref no-error.
     find first tt-oss-ref no-error.
     {&open-query-br-oss}
     reposition br-oss to rowid v-rowid-tt-oss-ref no-error.
@@ -425,7 +427,7 @@ do:
         input-output v-rowid
         ) no-error.
     {&open-query-br-oss}
-    run proc-fill-tt-oss-ref no-error.
+    run fill-tt-oss-ref no-error.
     find first buf_ext-classif where rowid (buf_ext-classif) = v-rowid no-error.
     find first tt-oss-ref where rowid (buf_ext-classif) = tt-oss-ref.ext-classif-row no-error.
     v-rowid = rowid (tt-oss-ref).    
@@ -524,7 +526,7 @@ do:
         input-output v-rowid
         ) no-error.
     {&open-query-br-oss}
-    run proc-fill-tt-oss-ref no-error.
+    run fill-tt-oss-ref no-error.
     find first buf_ext-classif where rowid (buf_ext-classif) = v-rowid no-error.
     find first tt-oss-ref where rowid (buf_ext-classif) = tt-oss-ref.ext-classif-row no-error.
     v-rowid = rowid (tt-oss-ref).    
@@ -604,13 +606,13 @@ then frame {&FRAME-NAME}:PARENT = active-window.
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
-do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
-   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
-  run proc-fill-tt-oss-ref.
-  run proc-MyEnable.
-  wait-for go of frame {&FRAME-NAME}.
-end.
-run disable_UI.
+DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
+   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  RUN fill-tt-oss-ref IN THIS-PROCEDURE.
+  RUN MyEnable.
+  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+END.
+RUN disable_UI.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -653,37 +655,7 @@ procedure enable_UI :
       with frame Dialog-Frame.
   view frame Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-end procedure.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
- 		
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-p-rid-list Include
-procedure fill-p-rid-list:
-/* Получение recid ext-classif по recid-ам временной таблицы tt-oss-ref */
-    define input parameter p-rid-list-tt as character no-undo.
-    define output parameter p-rid-list_ext-classif as character no-undo.
-    define variable v-i as integer no-undo.
-    
-    define buffer buf_tt-oss-ref for tt-oss-ref.
-
-    do v-i = 1 to num-entries (p-rid-list-tt):
-        for each buf_tt-oss-ref where
-        recid(buf_tt-oss-ref) = integer(entry(v-i, p-rid-list-tt, ","))
-        no-lock:
-            if p-rid-list_ext-classif <> "" then
-            do:
-                p-rid-list_ext-classif = p-rid-list_ext-classif + "," + string(buf_tt-oss-ref.ext-classif-row). /* Если в переменной p-rid-list_ext-classif уже что-то содержится, ставим перед записью запятую-разделитель списка. */
-            end.
-            else
-            do:
-                p-rid-list_ext-classif = string(buf_tt-oss-ref.ext-classif-row). /* Если в переменной p-rid-list_ext-classif пусто, то перед первой записью запятую-разделитель списка не ставим. */
-            end.
-        end.
-    end.
-
-end procedure.
+END PROCEDURE.
 	
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -718,15 +690,15 @@ end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-fill-tt-oss-ref Dialog-Frame
-procedure proc-fill-tt-oss-ref:
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-tt-oss-ref Dialog-Frame 
+PROCEDURE fill-tt-oss-ref :
 define variable v-ii as integer no-undo.
 define variable v-i-cnt as integer initial 0 no-undo.
 define variable v-value as character no-undo.
 define variable v-list as character no-undo.
-
     do:
         find first tt-oss-ref no-lock no-error.
+        
         if available tt-oss-ref then
             do:
                 for each tt-oss-ref no-lock:
@@ -746,7 +718,6 @@ define variable v-list as character no-undo.
                     tt-oss-ref.ext-classif-row = rowid(buf_ext-classif)
                     v-list = buf_ext-classif.CharKey_Two
                 .
-
                 do v-ii = 1 to 13: /* Линейно распаковываем аттрибуты Оператора Сотовой Связи во временную таблицу.. Последовательность - см выше, в обявлении временной таблицы tt-oss-ref */
                     do:
                         v-value = trim(string(entry(v-ii, v-list, {&delim-par}))).
@@ -771,20 +742,20 @@ define variable v-list as character no-undo.
         end. /* for each buf_ext-classif */
         if v-i-cnt = 0 then
             do:
-              message "Информация:" skip "Справочник Операторов Сотовой Связи" skip "не содержит ни одной записи."
-              view-as alert-box info.
+              message "Информационно:" skip "Справочник Операторов/эмитентов для пополнения счетов" skip "не имеет ни одной записи!"
+              view-as alert-box.
 /*              return error.*/
             end.
         {&OPEN-QUERY-br-oss}
     end.
-end procedure.
+end procedure. /* procedure fill-tt-oss-ref */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-MyEnable Dialog-Frame
-procedure proc-MyEnable:
-    /*------------------------------------------------------------------------------
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
+PROCEDURE MyEnable :
+/*------------------------------------------------------------------------------
             Purpose:                                                                      
             Notes:                                                                        
     ------------------------------------------------------------------------------*/

@@ -55,121 +55,244 @@ DEFINE BUFFER buf_chk-gds-attr   FOR ub.chk-gds-attr.
 DEFINE BUFFER buf_ext-classif    FOR ub.ext-classif.
 
 DEFINE TEMP-TABLE tt-ref NO-UNDO
-    FIELD obj-name LIKE obj-list.obj-name
+field obj-name like obj-list.obj-name
+    FIELD obj-code LIKE obj-list.obj-code
+    field obj-type like obj-list.obj-type
     FIELD oss-name LIKE ub.ext-classif.charkey_one
     FIELD chk-num AS INTEGER
     FIELD chk-sum AS DECIMAL
+    field tot-r-b as decimal
     .
-
+define variable v-choice-obj as character no-undo.
 DEFINE VARIABLE v-attr-value AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-attr-type AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-oss-name AS CHARACTER NO-UNDO.
-
+define variable v-chk-num as integer.
 DEFINE VARIABLE g#report-num AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-file-name-rep-htm AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-fill-path-RepView AS CHARACTER NO-UNDO.
+define variable p-operator as char no-undo.
+
+function fnc-DD-MM-YYYY returns character 
+(input p-dat-date as date) forward.
+
+function fnc-convert-dot-to-colon returns character 
+(input p-data as decimal, input p-accur as character) forward.
+
+
 
 /* **********************  Internal Procedures  *********************** */
 
 PROCEDURE proc-create-HTML:
 /*************************/
+ define parameter buffer buf_tt for tt-ref.
+ 
+  str4 = replace(str4, chr(10), " "). /* Очищаем текст от служ. символов "Новая линия", пока просмотровщик RepView - не умеет передавать его в Excel */
+    str4 = replace(str4, chr(13), " "). /* Очищаем текст от служ. символов "Перевод каретки". */
+    str4 = replace(str4, chr(9), " "). /* Очищаем текст от служ. символов "Табуляция" */
+    
+    str4 =  left-trim(str4, "Выбор объекта:" ).
+    if length(str4) > 115 then
+    do:
+        v-choice-obj = substring(str4, 1, 115) + "...".
+    end.
+    else
+    do:
+        v-choice-obj = str4.
+    end.
 
-    define parameter buffer buf_tt for tt-ref.
 
+str1 = (if X-TOG-Shift then "С " + fnc-DD-MM-YYYY(date(string(X-Date-Start,"99/99/9999"))) + ", смена № "  + string(X-Shift-Start) +
+                                " по " + fnc-DD-MM-YYYY(date(string(X-Date-End,"99/99/9999"))) + ", смена № " + string(X-Shift-End)
+                           else
+                                "период с " + fnc-DD-MM-YYYY(date(string(X-Date-Start,"99/99/9999"))) + " по " + fnc-DD-MM-YYYY(date(string(X-Date-End,"99/99/9999")))
+                                   ).
+
+ FOR EACH buf_tt where buf_tt.tot-r-b = 0 and  buf_tt.obj-code = 0 NO-LOCK BY buf_tt.oss-name :
+     p-operator = p-operator + " " + buf_tt.oss-name.
+     
+    end.
+     
+
+   
+
+do:
     output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8' /*no-convert*/.
         put stream OutStr-html unformatted
 
-        substitute(
-            '<!doctype html>
-            <html>
-              <head>
-              <meta charset="UTF-8">
-                  <!-- Стили документа -->
-              <style>
-                   table ~{
-                       border-collapse: collapse; 
-                   ~}
-                   tbody td, th ~{
-                       border: 1px solid black;
-                       border-collapse: collapse;
-                 height: 14px;
-                   ~}
-          
-              </style>
-              </head>
-                <body>
-                  <table orientation="landscape" name="лист1" fit_to_page="true">
-                    <thead>
-                        <tr class="set_columns">
-                            <td style="width: 150px;"></td>
-                            <td style="width: 150px;"></td>
-                            <td style="width: 200px;"></td>
-                            <td style="width: 100px;"></td>
-                        </tr>
-                        <tr>
-                        <td colspan="4">Отчет по переводу средств ОСС за период с &1 по &2</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th style="text-align: center;">Объект</th>
-                            <th style="text-align: center;">Оператор</th>
-                            <th style="text-align: center;">Количество чеков</th>
-                            <th style="text-align: center;">Сумма</th>
-                        </tr>'
-            ,
-            string( x-Date-Start),
-            string( x-Date-End)
+      
+       "<!DOCTYPE HTML>" skip
+                ' <html>' skip
+                '  <head>' skip
+                '   <meta charset="utf-8">' skip
+          '    <style type="text/css">' skip
+              
+                '      table ' + chr(123) + ' border-collapse: collapse; font-size:9pt; font-family:Calibri; table-layout: fixed; width: 540px; hight:  padding: 8px;  ' + chr(125) skip
+                '      td ' + chr(123) ' border: 1px black solid; word-wrap:break-word; ' + chr(125) skip
+                '      htm' skip
+                '      .rotate ' + chr(123) skip
+                '        -webkit-transform: rotate(-90deg);' skip
+                '        -moz-transform: rotate(-90deg);' skip
+                '        -ms-transform: rotate(-90deg);' skip
+                '        -o-transform: rotate(-90deg);' skip
+                '        transform: rotate(-90deg);' skip
+
+
+                '        -webkit-transform-origin: 50% 50%;' skip
+                '        -moz-transform-origin: 50% 50%;' skip
+                '        -ms-transform-origin: 50% 50%;' skip
+                '        -o-transform-origin: 50% 50%;' skip
+                '        transform-origin: 50% 50%;' skip
+
+
+                '        filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);' skip
+                '          ' + chr(125) skip
+                '            th' + ' ' + chr(123) skip
+                '            border: 1px black solid;' skip
+                '            word-wrap: break-word;' skip
+                '          ' + chr(125) skip
+                '   </style>' skip
+                '  </head>' skip.
+                
+         end.
+         do:       
+                
+                put stream OutStr-html unformatted
+                 ' <body>' skip
+         '   <table name="Лист1" outline_below="false">' skip
+                       '     <thead>' skip
+         '       <tr class="set_columns">' skip                          
+         '         <td style="width: 100px; border: none;"></td>' skip    /*Объект*/
+         '         <td style="width: 150px; border: none;"></td>' skip      /*Оператор*/
+         '         <td style="width: 100px; border: none;"></td>' skip    /* Количество чеков*/
+         '         <td style="width: 100px; border: none;"></td>' skip   /*Сумма*/
+                
+                
+                   '       </tr>' skip
+         .
+         
+         end.
+         do:
+         
+                    put stream OutStr-html unformatted
+            '       <tr>' skip
+            '         <td colspan="4" style="border: none; text-align: center; height: 11px; font-size: 11pt; font-weight: bold"> Отчет по переводу средств ОСС   </td>' skip
+            '         <td style="border: none"></td>' skip
+            '         <td style="border: none"></td>' skip
+            '         <td style="border: none"></td>' skip
+            '</tr>' skip
             
-        ).
+            
+              '       <tr>' skip
+            '         <td colspan="4" style="border: none; text-align: center; height: 11px; font-size: 11pt; font-weight: bold">' +  str1 + '</td>' skip
+            '         <td style="border: none"></td>' skip
+            '         <td style="border: none"></td>' skip
+            '         <td style="border: none"></td>' skip
+            '</tr>' skip
+            
+              '       <tr>' skip
+            '         <td style="border: none; text-align: left; height: 11px; font-size: 11pt; font-weight: bold">Объекты: </td>' skip
+            '         <td colspan="3" style="border: none"> ' + v-choice-obj +  '</td>' skip
+            
+            '</tr>' skip
+            
+            
+                        '       <tr>' skip
+            '         <td style="border: none; text-align: left; height: 11px; font-size: 11pt; font-weight: bold">Операторы: </td>' skip
+            '         <td colspan="3" style="border: none"> '+ p-operator + '</td>' skip
+           
+            '</tr>' skip
+            
+               '       <tr>' skip
+            '         <td colspan="4" style="border: none; text-align: left; height: 11px; font-size: 11pt; font-weight: bold">  </td>' skip
+            '         <td style="border: none"></td>' skip
+            '         <td style="border: none"></td>' skip
+            '         <td style="border: none"></td>' skip
+            '</tr>' skip
+            .
+            end.
+            
+           
+            
+                  do:  /* Шапка таблицы отчёта (видимой, как таблица) */
+            put stream OutStr-html unformatted
+            '     <tbody>' skip
+            '       <tr>' skip
+                           ' <th style="text-align: center;">Объект</th>' skip
+                            '<th style="text-align: center;">Оператор</th>'skip         
+                           ' <th style="text-align: center;">Количество чеков</th>'skip
+                            '<th style="text-align: center;">Сумма</th>' skip
+                       ' </tr>' skip
+       
         .
+        end.
+        do:
+            
     output stream OutStr-html close.
 
     /* Заполнение линий таблицы "*/
-
+  
     IF v-classified = 1 THEN DO:
-        FOR EACH buf_tt NO-LOCK BY buf_tt.oss-name BY buf_tt.obj-name:
-            OUTPUT STREAM OutStr-html TO VALUE(v-file-name-rep-htm) APPEND CONVERT TARGET 'UTF-8'.
+         OUTPUT STREAM OutStr-html TO VALUE(v-file-name-rep-htm) APPEND CONVERT TARGET 'UTF-8'.
+        FOR EACH buf_tt where buf_tt.tot-r-b = 0 NO-LOCK BY buf_tt.oss-name BY buf_tt.obj-name:
+          
             PUT STREAM OutStr-html UNFORMATTED
-            SUBSTITUTE(
-                    '<tr>
-                        <td >&1</td>
-                        <td >&2</td>
-                        <td >&3</td>
-                        <td >&4</td>
-                     </tr>'
-                ,
-                buf_tt.obj-name,
-                buf_tt.oss-name,
-                buf_tt.chk-num,
-                buf_tt.chk-sum
-            ).
-            OUTPUT STREAM OutStr-html CLOSE.
+    
+                  ' <tr level="1"> ' skip
+                      ' <td style="display: yes; text-align:  left; font-weight: bold">' + buf_tt.obj-name + '</td>' skip
+                      ' <td style="display: yes; text-align:  left; font-weight: bold">'  + buf_tt.oss-name + '</td>' skip
+                    '         <td style="display: yes; text-align:  left; font-weight: bold">'   + if buf_tt.chk-num <> ? then fnc-convert-dot-to-colon( buf_tt.chk-num, "->>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
+                    '         <td style="display: yes; text-align:  left; font-weight: bold">'   + if  buf_tt.chk-sum <> ? then fnc-convert-dot-to-colon(  buf_tt.chk-sum, "->>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
+                    ' </tr>' skip.
+                
+     
+          
         END.
+      
+         FOR EACH buf_tt where buf_tt.tot-r-b <> 0 NO-LOCK BY buf_tt.oss-name BY buf_tt.obj-name:
+               PUT STREAM OutStr-html UNFORMATTED
+         ' <tr level="2"> ' skip
+         
+                      ' <td style="display: yes; text-align:left">'  + buf_tt.obj-name + '</td>' skip
+                      ' <td style="display: yes; text-align:right ">' + if buf_tt.tot-r-b <> ? then fnc-convert-dot-to-colon( buf_tt.tot-r-b, "->>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
+                    '         <td style="display: yes; text-align:left ">'   + if buf_tt.chk-num <> ? then fnc-convert-dot-to-colon( buf_tt.chk-num, "->>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
+                    '         <td style="display: yes; text-align:left ">'   + if  buf_tt.chk-sum <> ? then fnc-convert-dot-to-colon(  buf_tt.chk-sum, "->>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
+                    ' </tr>' skip.
+       
+        end.
     END.
     ELSE IF v-classified = 2 THEN DO:
-        FOR EACH buf_tt NO-LOCK BY buf_tt.obj-name BY buf_tt.oss-name:
-            OUTPUT STREAM OutStr-html TO VALUE(v-file-name-rep-htm) APPEND CONVERT TARGET 'UTF-8'.
+         OUTPUT STREAM OutStr-html TO VALUE(v-file-name-rep-htm) APPEND CONVERT TARGET 'UTF-8'.
+        FOR EACH buf_tt where buf_tt.tot-r-b = 0 NO-LOCK BY buf_tt.obj-name BY buf_tt.oss-name:
+           
             PUT STREAM OutStr-html UNFORMATTED
-            SUBSTITUTE(
-                    '<tr>
-                        <td >&1</td>
-                        <td >&2</td>
-                        <td >&3</td>
-                        <td >&4</td>
-                     </tr>'
-                ,
-                buf_tt.obj-name,
-                buf_tt.oss-name,
-                buf_tt.chk-num,
-                buf_tt.chk-sum
-            ).
-            OUTPUT STREAM OutStr-html CLOSE.
+    
+                  ' <tr level="1"> ' skip
+                      ' <td style="display: yes; text-align:  left; font-weight: bold">'  + buf_tt.obj-name + '</td>' skip
+                      ' <td style="display: yes; text-align:  left; font-weight: bold">'  + buf_tt.oss-name + '</td>' skip
+                    '         <td style="display: yes; text-align:  left; font-weight: bold">'   + if buf_tt.chk-num <> ? then fnc-convert-dot-to-colon( buf_tt.chk-num, "->>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
+                    '         <td style="display: yes; text-align:  left; font-weight: bold">'   + if  buf_tt.chk-sum <> ? then fnc-convert-dot-to-colon(  buf_tt.chk-sum, "->>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
+                    ' </tr>' skip.
+                
+     
+          
         END.
+         
+        FOR EACH buf_tt where buf_tt.tot-r-b <> 0 NO-LOCK BY buf_tt.oss-name BY buf_tt.obj-name:
+                PUT STREAM OutStr-html UNFORMATTED
+         '<tr level="2"> 'skip
+                            ' <td style="display: yes; text-align:  left">'  + buf_tt.obj-name + '</td>' skip
+                      ' <td style="display: yes; text-align:  right">' + if buf_tt.tot-r-b <> ? then fnc-convert-dot-to-colon( buf_tt.tot-r-b, "->>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
+                    '         <td style="display: yes; text-align:  left">'   + if buf_tt.chk-num <> ? then fnc-convert-dot-to-colon( buf_tt.chk-num, "->>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
+                    '         <td style="display: yes; text-align:  left">'   + if  buf_tt.chk-sum <> ? then fnc-convert-dot-to-colon(  buf_tt.chk-sum, "->>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
+                    ' </tr>' skip.
+       
+        end.
     END.
 
     /* Заполнение подвала таблицы */
-    OUTPUT STREAM OutStr-html TO VALUE(v-file-name-rep-htm) APPEND CONVERT TARGET 'UTF-8' /*no-convert*/.
+ /*no-convert*/.
+ 
         PUT STREAM OutStr-html UNFORMATTED
                     '</table>
             </body>
@@ -177,7 +300,7 @@ PROCEDURE proc-create-HTML:
         .
         /* '" */
     OUTPUT STREAM OutStr-html CLOSE.
-
+end.
 END PROCEDURE.
 
 DO: /* S */
@@ -245,7 +368,6 @@ DO: /* S */
                         FIND FIRST buf_chk-gds-attr WHERE buf_chk-gds-attr.doc-code = buf_chk-gds-pay.doc-code
                                                       AND buf_chk-gds-attr.line-num = buf_chk-gds-pay.line-num
                                                       AND buf_chk-gds-attr.attr-code = 'oss-code' NO-LOCK NO-ERROR.
-
                         IF AVAILABLE buf_chk-gds-attr THEN DO:
                             v-oss-name = string(int(buf_chk-gds-attr.attr-value)) no-error.
                             FIND FIRST ext-classif WHERE ext-classif.classif-subject = {&extclass_oss-ref}
@@ -261,14 +383,18 @@ DO: /* S */
                             ASSIGN
                                 v-oss-name = 'Не определено'.
                         END.
+                        
                         /*учитываем только выбранных операторов*/
                         IF v-operator = '0' OR (LOOKUP(STRING(v-oss-name), v-operator) > 0) THEN DO:
                             IF v-classified = 2 THEN DO: /*итоговая строка по объектам*/
-                                FIND FIRST tt-ref WHERE tt-ref.obj-name = obj-list.obj-name 
+                                FIND FIRST tt-ref WHERE tt-ref.obj-code = obj-list.obj-code and
+                                tt-ref.obj-type = obj-list.obj-type 
                                                     AND tt-ref.oss-name = '-' EXCLUSIVE-LOCK NO-ERROR.
 				                IF NOT AVAILABLE tt-ref THEN DO:
 					                CREATE tt-ref.
 					                ASSIGN 
+					                tt-ref.obj-code = obj-list.obj-code
+					                tt-ref.obj-type = obj-list.obj-type
 						                tt-ref.obj-name = obj-list.obj-name
                                         tt-ref.oss-name = '-'
                                         tt-ref.chk-num  = 0
@@ -280,11 +406,13 @@ DO: /* S */
                                     tt-ref.chk-sum = tt-ref.chk-sum + buf_chk-gds-pay.tot-r-b.
                             END.
                             ELSE IF v-classified = 1 THEN DO: /*итоговая строка по операторам*/
-                                FIND FIRST tt-ref WHERE tt-ref.obj-name = '-'
+                                FIND FIRST tt-ref WHERE tt-ref.obj-type = "" and tt-ref.obj-code = 0 
                                                     AND tt-ref.oss-name = v-oss-name EXCLUSIVE-LOCK NO-ERROR.
 				                IF NOT AVAILABLE tt-ref THEN DO:
 					                CREATE tt-ref.
 					                ASSIGN 
+					                tt-ref.obj-type = ""
+					                tt-ref.obj-code = 0
 						                tt-ref.obj-name = '-'
                                         tt-ref.oss-name = v-oss-name
                                         tt-ref.chk-num  = 0
@@ -296,11 +424,14 @@ DO: /* S */
                                     tt-ref.chk-sum = tt-ref.chk-sum + buf_chk-gds-pay.tot-r-b.
                             END.
                             /*считаем по оператору и объекту*/
-		    		        FIND FIRST tt-ref WHERE tt-ref.obj-name = obj-list.obj-name
+		    		        FIND FIRST tt-ref WHERE tt-ref.obj-code = obj-list.obj-code
+		    		        and tt-ref.obj-type = obj-list.obj-type
                                                 AND tt-ref.oss-name = v-oss-name EXCLUSIVE-LOCK NO-ERROR.
 				            IF NOT AVAILABLE tt-ref THEN DO:
     					        CREATE tt-ref.
 	    				        ASSIGN 
+	    				          tt-ref.obj-code = obj-list.obj-code
+                                    tt-ref.obj-type = obj-list.obj-type
 		    				        tt-ref.obj-name = obj-list.obj-name
                                     tt-ref.oss-name = v-oss-name
                                     tt-ref.chk-num  = 0
@@ -309,11 +440,36 @@ DO: /* S */
     				        END.
                             ASSIGN
                                 tt-ref.chk-num = tt-ref.chk-num + 1
-                                tt-ref.chk-sum = tt-ref.chk-sum + buf_chk-gds-pay.tot-r-b.
+                              tt-ref.chk-sum = tt-ref.chk-sum + buf_chk-gds-pay.tot-r-b.
+                                
+                                
+                      find first tt-ref where tt-ref.obj-code = obj-list.obj-code and
+                      tt-ref.obj-type = obj-list.obj-type and
+                      tt-ref.tot-r-b = buf_chk-gds-pay.tot-r-b
+                      and tt-ref.oss-name  = v-oss-name
+                       NO-ERROR.
+                               
+                                IF NOT AVAILABLE tt-ref THEN DO:
+                                CREATE tt-ref.
+                                 ASSIGN 
+                              
+                                 tt-ref.obj-code = obj-list.obj-code
+                                    tt-ref.obj-type = obj-list.obj-type
+                                    tt-ref.obj-name = obj-list.obj-name
+                                    tt-ref.oss-name = v-oss-name
+                                    tt-ref.tot-r-b =  buf_chk-gds-pay.tot-r-b.
+                             
+                                
+                                 end.
+                                  ASSIGN
+                                tt-ref.chk-num = tt-ref.chk-num + 1
+                              tt-ref.chk-sum = tt-ref.chk-sum + buf_chk-gds-pay.tot-r-b.
+                              
                         END. /*IF AVAILABLE buf_chk-gds-attr */ 
                     END. /*FOR EACH buf_chk-doc*/
                 END. /*FOR EACH buf_goods-attr*/
-           /* END. /*FOR EACH buf_shift-obj NO-LOCK*/*/
+            /*END. /*FOR EACH buf_shift-obj NO-LOCK*/*/
+         
         END. /*FOR EACH obj-list NO-LOCK:*/
     END. /* Тело отчёта */
 
@@ -336,3 +492,32 @@ DO: /* S */
     END.
 
 END.
+
+
+
+function fnc-DD-MM-YYYY returns character 
+(input p-dat-date as date):
+/* Преобразование даты в формат: "01.01.2014" */
+
+    define variable result as character no-undo.
+    define variable p-str-date as character no-undo.
+
+    p-str-date = replace(string(p-dat-date,'99.99.9999'), "/", ".").
+
+        return p-str-date.
+
+end function.
+
+function fnc-convert-dot-to-colon returns character
+(input p-data as decimal, input p-accur as character):
+/* Конвертация десятичной точки в запятую с передачей параметра форматирования числа (accuracy - точность) */
+
+    define variable result as character no-undo.
+    define variable v-str-result as character no-undo.
+/*message "dbg-p-data = " p-data skip "p-accur = " p-accur view-as alert-box.*/
+    p-data = round(p-data, 2). /* Чтобы не выйти случайно за рамки формата числа при выводе (несоотвесвие формата результата и формата отображения - приводит к ош) */
+    v-str-result = trim(replace(string(p-data, p-accur), ".", ",")).
+
+    return v-str-result.
+
+end function.

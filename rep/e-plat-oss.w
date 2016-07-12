@@ -98,26 +98,26 @@ RUN set-attribute-list (
 
 /* Definitions of the field level widgets                               */
 DEFINE VARIABLE v-oper-oss AS CHARACTER FORMAT "X(256)":U 
-     LABEL "Операторы сотовой связи" 
+     LABEL "Операторы пополнения счетов" 
      VIEW-AS COMBO-BOX INNER-LINES 2
      LIST-ITEMS "Все","Выборочно..." 
      DROP-DOWN-LIST
-     SIZE 16 BY 1 NO-UNDO.
+     SIZE 19 BY 1 NO-UNDO.
 
 DEFINE VARIABLE rs-classified AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
      RADIO-BUTTONS 
-          "Оператор ОСС|Объект", 1,
-"Объект|Оператор ОСС", 2
-     SIZE 41 BY 2.25 NO-UNDO.
+          "Оператор пополнения счетов|Объект", 1,
+"Объект|Оператор пополнения счетов", 2
+     SIZE 48.5 BY 2.5 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
-     SIZE 44.5 BY 5.5.
+     SIZE 49 BY 6.
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
-     SIZE 44.5 BY 2.75.
+     SIZE 49 BY 2.75.
 
 DEFINE VARIABLE v-sel-oss AS CHARACTER 
      VIEW-AS SELECTION-LIST MULTIPLE SCROLLBAR-VERTICAL 
@@ -127,11 +127,11 @@ DEFINE VARIABLE v-sel-oss AS CHARACTER
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
-     v-oper-oss AT ROW 1.75 COL 27 COLON-ALIGNED WIDGET-ID 8
+     v-oper-oss AT ROW 1.75 COL 28 COLON-ALIGNED WIDGET-ID 8
      v-sel-oss AT ROW 3.25 COL 4 NO-LABEL WIDGET-ID 10
-     rs-classified AT ROW 7.25 COL 4 NO-LABEL WIDGET-ID 12
-     RECT-1 AT ROW 1.25 COL 2
-     RECT-3 AT ROW 7 COL 2
+     rs-classified AT ROW 7.25 COL 1.5 NO-LABEL WIDGET-ID 12
+     RECT-1 AT ROW 1.25 COL 1
+     RECT-3 AT ROW 7 COL 1
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1 SCROLLABLE .
@@ -153,8 +153,8 @@ DEFINE FRAME F-Main
 &ANALYZE-SUSPEND _CREATE-WINDOW
 /* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW V-table-Win ASSIGN
-         HEIGHT             = 9.21
-         WIDTH              = 46.5.
+         HEIGHT             = 17.83
+         WIDTH              = 70.5.
 /* END WINDOW DEFINITION */
                                                                         */
 &ANALYZE-RESUME
@@ -202,7 +202,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME v-oper-oss
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-oper-oss V-table-Win
-ON VALUE-CHANGED OF v-oper-oss IN FRAME F-Main /* Операторы сотовой связи */
+ON VALUE-CHANGED OF v-oper-oss IN FRAME F-Main /* Операторы пополнения счетов */
 DO:
   IF v-oper-oss:SCREEN-VALUE = "Все" THEN
       v-sel-oss:VISIBLE = FALSE.
