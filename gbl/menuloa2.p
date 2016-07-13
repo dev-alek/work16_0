@@ -1119,6 +1119,18 @@ define variable vss-description as character no-undo init "".
   "'1'"
   "'BDC,Suzdal,Moroz'"
 }
+
+ { gbl/menuload.i
+   {&bef-menuload_service_impexp}
+  "'Ёкспорт чеков (расширенный формат)'"
+   "'bge/exp-bgecheck.p'"
+   "no"
+  "'12.2'"
+  "'1'"
+  " "
+  "yes"
+}
+
 { gbl/menuload.i
   {&bef-menuload_service_impexp}
   "'Ёкспорт чеков'"

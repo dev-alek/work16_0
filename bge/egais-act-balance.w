@@ -614,7 +614,7 @@ DO:
                                     and buf_parts.obj-type = v-cntxt-obj-type 
                                     and buf_parts.obj-code = v-cntxt-obj-code 
                                     and buf_parts.out-code = {&free-code} no-error .
-        if not available buf_parts or buf_parts.qnty < 1 then do :
+        if not available buf_parts /* or buf_parts.qnty < 1 */ then do :
             put stream str-log unformatted
                 string(today) + "   " + string(time, "hh:mm:ss") + " :  у товара " + string(buf_goods.gds-code) + "  " + buf_goods.gds-name + "  нет партий свободной зоны" skip.  
             err-good = true .
