@@ -56,6 +56,10 @@ define variable vss-description as character no-undo init "Настройки объектов ЕГ
 { gbl/attr-lib.i }
 { ref/gds-attr.i }
 { gbl/waitfram.i }
+{ cmp/gds-list.i gds-list def "new shared" }
+
+define stream OutStr-html.
+{ gbl/prn-lib.i  }
 
 
 define temp-table tt-gds-rests no-undo
@@ -107,6 +111,20 @@ define temp-table tt-gds-rests_shop no-undo
 
 define buffer old_tt-gds-rests_shop for tt-gds-rests_shop .
 
+define temp-table tt-compare-rests no-undo
+    field gds-code          like ub.goods.gds-code          label "Код товара в TH"
+    field gds-name          like ub.goods.gds-name          label "Наименование товара" format "X(100)"
+    field alc-code          as character                    label "Алкогольный код"     format "X(21)"
+    field alc-type-code     like ub.alc-type.alc-type-code  label "Код АП"
+    field TH-qnty           as integer                      label "Остаток TH"
+    field shop-qnty         as integer                      label "Остаток маг"
+    field stock-qnty        as integer                      label "Остаток скл"
+    index pi as primary
+        alc-code
+    index gds
+        gds-code    
+.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -149,6 +167,7 @@ define variable iTemp as integer no-undo.
   DEFINE VARIABLE        number-of-pages    AS INTEGER   NO-UNDO.
 
 define variable select-list as character no-undo .
+define variable goods-list  as longchar  no-undo .
 define variable ref-list    as character no-undo .
 define variable ii          as integer   no-undo .
 define variable jj          as integer   no-undo .
@@ -224,11 +243,11 @@ end function.
     ~{&OPEN-QUERY-br-goods}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-load b-cancel br-goods 
+&Scoped-Define ENABLED-OBJECTS b-load b-cancel br-rests b-func
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
-&Scoped-define List-1 b-save b-connect b-del br-rests b-func
+&Scoped-define List-1 b-save b-connect b-del br-rests 
 
 &Scoped-define List-2 br-rests_shop br-rests_all t-negative_rests
 /* _UIB-PREPROCESSOR-BLOCK-END */
@@ -247,6 +266,9 @@ end function.
 
 define menu m-func
     menu-item m-writeOff label "Сформировать акт о списании"
+    menu-item m-print label "Печать остатков на складе"
+    menu-item m-print_shop label "Печать остатков в магазине"
+    menu-item m-compare label "Сверка остатков"
 .    
 
 define menu m-func_shop
@@ -386,27 +408,27 @@ DEFINE BROWSE br-rests_all
 
 DEFINE RECTANGLE Rect-Bottom
      EDGE-PIXELS 0    
-     SIZE 33.63 BY .13
+     SIZE 1 BY 1
      BGCOLOR 7 .
 
 DEFINE RECTANGLE Rect-Left
      EDGE-PIXELS 0    
-     SIZE .63 BY 4.25
+     SIZE 1 BY 1
      BGCOLOR 15 .
 
 DEFINE RECTANGLE Rect-Main
      EDGE-PIXELS 1 GRAPHIC-EDGE    
-     SIZE 33.75 BY 4.33
+     SIZE 1 BY 1
      BGCOLOR 8 FGCOLOR 0 .
 
 DEFINE RECTANGLE Rect-Right
      EDGE-PIXELS 0    
-     SIZE .63 BY 4.33
+     SIZE 1 BY 1
      BGCOLOR 7 .
 
 DEFINE RECTANGLE Rect-Top
      EDGE-PIXELS 0    
-     SIZE 33.63 BY .13
+     SIZE 1 BY 1
      BGCOLOR 15 .
      
 /* ************************  Frame Definitions  *********************** */
@@ -437,7 +459,7 @@ DEFINE FRAME Dialog-Frame
      Rect-Left AT ROW 1 COL 1.25
      Rect-Right AT ROW 1 COL 34.25
      Rect-Top AT ROW 1 COL 1.25
-     SPACE(1) SKIP(0.32)
+     SPACE(106) SKIP(24.8)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Остатки ЕГАИС"
@@ -1044,6 +1066,61 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME m-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-print Dialog-Frame
+ON CHOOSE OF menu-item m-print in menu m-func /* - */
+DO:
+    find first tt-gds-rests no-lock no-error .
+    if not available tt-gds-rests
+    then do :
+        message "Сначала получите остатки из ЕГАИС" view-as alert-box .
+        return no-apply .
+    end.
+    run PrintRests.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME    
+
+&Scoped-define SELF-NAME m-print_shop
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-print_shop Dialog-Frame
+ON CHOOSE OF menu-item m-print_shop in menu m-func /* - */
+DO:
+    find first tt-gds-rests no-lock no-error .
+    find first tt-gds-rests_shop no-lock no-error .
+    if not available tt-gds-rests_shop and available tt-gds-rests
+    then do :
+        message "Нет остатков по второму регистру (магазину)" view-as alert-box .
+        return no-apply .
+    end.
+    if not available tt-gds-rests_shop and not available tt-gds-rests
+    then do :
+        message "Сначала получите остатки из ЕГАИС" view-as alert-box .
+        return no-apply .
+    end.
+    run PrintRests_shop.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME   
+
+&Scoped-define SELF-NAME m-compare
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-compare Dialog-Frame
+ON CHOOSE OF menu-item m-compare in menu m-func /* - */
+DO:
+    find first tt-gds-rests no-lock no-error .
+    find first tt-gds-rests_shop no-lock no-error .
+    if not available tt-gds-rests and not available tt-gds-rests_shop
+    then do :
+        message "Сначала получите остатки из ЕГАИС" view-as alert-box .
+        return no-apply .
+    end.
+    run CompareRests.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME 
+
 ON 'right-mouse-down':U of br-rests_all
 DO:
     RUN set_focus (SELF).
@@ -1475,6 +1552,367 @@ procedure make-tts.
     end.
 end.
 
+procedure PrintRests_shop :
+    define var v-act-file as char no-undo.
+    v-act-file  = session:temp-directory + {&DF_Name} +  "egais-rests_shop.html".
+    
+    run waitfram-show in this-procedure ( input "Ждите...").
+    output stream OutStr-html to value(v-act-file) convert target 'UTF-8'/*no-convert*/.
+    put stream OutStr-html unformatted
+        substitute(
+
+        '<!doctype html>
+                 <html>
+              <head>
+              <meta charset="UTF-8">
+                 <!-- Стили документа -->
+              <style>
+                table ~{border-collapse: collapse; ~}
+                tbody td, th ~{border: 1px solid black;~}
+                #myid ~{font-weight: bold;~}
+                .class1 ~{font-style: italic;~}
+                .class2 ~{font-family: Arial;~}
+              </style>
+              </head>
+                  <body>
+                  <table orientation="landscape" name="лист1" repeat_rows="1:1" hide_zero="True">
+                  <thead>
+                  <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                  <tr class="set_columns">
+                        <td style="width:210px"></td>
+                        <td style="width:250px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:60px"></td>
+                        <td style="width:110px"></td>
+                        <td style="width:110px"></td>
+                        <td style="width:110px"></td>
+                  </tr>
+                  <tr>
+                        <td colspan="7" style="front-weight: bold; text-align: center;">Остатки ЕГАИС торговый зал</td>
+                  </tr>
+        </thead>
+            <tbody>
+                <tr>
+                <th>Алкогольный код</th>
+                <th>Наименование товара</th>
+                <th>Код товара в TH</th>
+                <th>Код АП</th>
+                <th>Остаток ЕГАИС торговый зал</th>
+                <th>Остаток ЕГАИС склад</th>
+                <th>Остаток TH</th>
+                </tr>').
+
+    get first br-rests_shop.
+    
+    do while available  tt-gds-rests_shop:
+
+        put stream OutStr-html unformatted
+            substitute(
+            '<tr style="height: 50px;">
+             <td text_wrap="true"> &1 </td>
+             <td text_wrap="true"> &2 </td>
+             <td text_wrap="true"> &3 </td>
+             <td text_wrap="true"> &4 </td>
+             <td text_wrap="true"> &5 </td>
+             <td text_wrap="true"> &6 </td>
+             <td text_wrap="true"> &7 </td>
+             </tr>
+             </tbody>',
+
+            tt-gds-rests_shop.alc-code,
+            tt-gds-rests_shop.gds-name,
+            tt-gds-rests_shop.gds-code,
+            tt-gds-rests_shop.alc-type-code,
+            tt-gds-rests_shop.egais-qnty,
+            tt-gds-rests_shop.egais-qnty_stock,
+            tt-gds-rests_shop.TH-qnty
+            ).
+        get next br-rests_shop.
+
+
+    end.
+    
+
+
+    run waitfram-hide in this-procedure.
+
+    output stream OutStr-html close.
+    run prn-lib-reportviewer-report-name in this-procedure (
+        input parParentProc
+        ,input v-act-file
+        ).
+    
+end.
+
+procedure PrintRests :
+    define var v-act-file as char no-undo.
+    v-act-file  = session:temp-directory + {&DF_Name} +  "egais-rests.html".
+    
+    run waitfram-show in this-procedure ( input "Ждите...").
+    output stream OutStr-html to value(v-act-file) convert target 'UTF-8'/*no-convert*/.
+    put stream OutStr-html unformatted
+        substitute(
+
+        '<!doctype html>
+                 <html>
+              <head>
+              <meta charset="UTF-8">
+                 <!-- Стили документа -->
+              <style>
+                table ~{border-collapse: collapse; ~}
+                tbody td, th ~{border: 1px solid black;~}
+                #myid ~{font-weight: bold;~}
+                .class1 ~{font-style: italic;~}
+                .class2 ~{font-family: Arial;~}
+              </style>
+              </head>
+                  <body>
+                  <table orientation="landscape" name="лист1" repeat_rows="1:1" hide_zero="True">
+                  <thead>
+                  <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                  <tr class="set_columns">
+                        <td style="width:210px"></td>
+                        <td style="width:250px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:60px"></td>
+                        <td style="width:110px"></td>
+                        <td style="width:210px"></td>
+                        <td style="width:210px"></td>
+                        <td style="width:110px"></td>
+                  </tr>
+                  <tr>
+                        <td colspan="8" style="front-weight: bold; text-align: center;">Остатки ЕГАИС склад</td>
+                  </tr>
+        </thead>
+            <tbody>
+                <tr>
+                <th>Алкогольный код</th>
+                <th>Наименование товара</th>
+                <th>Код товара в TH</th>
+                <th>Код АП</th>
+                <th>Остаток ЕГАИС</th>
+                <th>ID справки А</th>
+                <th>ID справки Б</th>
+                <th>Остаток TH</th>
+                </tr>').
+
+    get first br-rests.
+    
+    do while available  tt-gds-rests:
+
+        put stream OutStr-html unformatted
+            substitute(
+            '<tr style="height: 50px;">
+             <td text_wrap="true"> &1 </td>
+             <td text_wrap="true"> &2 </td>
+             <td text_wrap="true"> &3 </td>
+             <td text_wrap="true"> &4 </td>
+             <td text_wrap="true"> &5 </td>
+             <td text_wrap="true"> &6 </td>
+             <td text_wrap="true"> &7 </td>
+             <td text_wrap="true"> &8 </td>
+             </tr>
+             </tbody>',
+
+            tt-gds-rests.alc-code,
+            tt-gds-rests.gds-name,
+            tt-gds-rests.gds-code,
+            tt-gds-rests.alc-type-code,
+            tt-gds-rests.egais-qnty,
+            tt-gds-rests.informA_,
+            tt-gds-rests.informB_,
+            tt-gds-rests.TH-qnty
+            ).
+        get next br-rests.
+
+
+    end.
+    
+
+
+    run waitfram-hide in this-procedure.
+
+    output stream OutStr-html close.
+    run prn-lib-reportviewer-report-name in this-procedure (
+        input parParentProc
+        ,input v-act-file
+        ).
+    
+end.
+
+procedure CompareRests :
+    define variable v-gds-entry as character no-undo .
+    define var v-act-file as char no-undo.
+    v-act-file  = session:temp-directory + {&DF_Name} +  "egais-rests_compare.html".
+    
+    run str/gds-list.w ( input parparentproc, v-cntxt-host-code-obj, v-cntxt-obj-type, v-cntxt-obj-code).
+    for each gds-list no-lock :
+        find goods where
+             goods.gds-code = gds-list.gds-code
+             no-lock no-error.
+        if available goods then do:
+            { gbl/markstrn.i goods goods-list }
+        end.
+    end.
+    empty temp-table tt-compare-rests .
+    run waitfram-show(INPUT "Ждите...") .
+    _ii_ :
+    do ii = 1 to num-entries(goods-list) :
+    v-gds-entry = entry(ii, goods-list) .
+    for first buf_goods no-lock where recid(buf_goods) = integer(v-gds-entry) :
+        run gds-attr-value(
+          buf_goods.gds-code,
+          {&attr-alcohol-prod},
+          output par-alcohol,
+          output par-type
+        ).
+        if par-alcohol = "" or par-alcohol = "no" then next _ii_ .  
+        _parts_ :  
+        for each buf_parts no-lock where buf_parts.artic = buf_goods.artic 
+                                    and buf_parts.prod-type = buf_goods.prod-type 
+                                    and buf_parts.prod-code = buf_goods.prod-code 
+                                    and buf_parts.obj-type = v-cntxt-obj-type 
+                                    and buf_parts.obj-code = v-cntxt-obj-code 
+                                    and buf_parts.out-code = {&free-code} :
+/*            if buf_parts.qnty < 1 then next _parts_ .*/
+            if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
+                find first tt-compare-rests exclusive-lock where tt-compare-rests.alc-code = entry(3, buf_parts.alc-ref-ab-path) no-error.
+                if not available tt-compare-rests then do :
+                    create tt-compare-rests .
+                    assign
+                        tt-compare-rests.alc-code   = entry(3, buf_parts.alc-ref-ab-path)
+                        tt-compare-rests.gds-code   = buf_goods.gds-code
+                        tt-compare-rests.gds-name   = buf_goods.gds-name
+                    .
+                    if entry(4, buf_parts.alc-ref-ab-path) <> "" then tt-compare-rests.alc-type-code = entry(4, buf_parts.alc-ref-ab-path) .
+                end.
+                assign tt-compare-rests.TH-qnty = tt-compare-rests.TH-qnty + buf_parts.qnty .
+            end.
+            else do :
+                find first tt-compare-rests exclusive-lock where tt-compare-rests.gds-code = buf_goods.gds-code
+                                                             and tt-compare-rests.alc-code = "" no-error.
+                if not available tt-compare-rests then do :
+                    create tt-compare-rests .
+                    assign
+                        tt-compare-rests.alc-code   = ""
+                        tt-compare-rests.gds-code   = buf_goods.gds-code
+                        tt-compare-rests.gds-name   = buf_goods.gds-name
+                    .
+                end.
+                assign tt-compare-rests.TH-qnty = tt-compare-rests.TH-qnty + buf_parts.qnty .
+            end.    
+        end.  /* buf_parts */
+        for each tt-gds-rests no-lock :
+            find first tt-compare-rests exclusive-lock where tt-compare-rests.alc-code = tt-gds-rests.alc-code no-error .
+            if not available tt-compare-rests then do :
+                create tt-compare-rests .
+                assign
+                    tt-compare-rests.alc-code   = tt-gds-rests.alc-code
+                    tt-compare-rests.gds-code   = tt-gds-rests.gds-code
+                    tt-compare-rests.gds-name   = tt-gds-rests.gds-name
+                    tt-compare-rests.alc-type-code = tt-gds-rests.alc-type-code
+                .
+            end.
+            assign tt-compare-rests.stock-qnty = tt-compare-rests.stock-qnty + tt-gds-rests.egais-qnty . 
+        end. /* tt-gds-rests */
+        for each tt-gds-rests_shop no-lock :
+            find first tt-compare-rests exclusive-lock where tt-compare-rests.alc-code = tt-gds-rests_shop.alc-code no-error .
+            if not available tt-compare-rests then do :
+                create tt-compare-rests .
+                assign
+                    tt-compare-rests.alc-code   = tt-gds-rests_shop.alc-code
+                    tt-compare-rests.gds-code   = tt-gds-rests_shop.gds-code
+                    tt-compare-rests.gds-name   = tt-gds-rests_shop.gds-name
+                    tt-compare-rests.alc-type-code = tt-gds-rests_shop.alc-type-code
+                .
+            end.
+            assign tt-compare-rests.shop-qnty = tt-gds-rests_shop.egais-qnty .
+        end. /* tt-gds-rests_shop */
+    end.  /* for first buf_goods */  
+    end. /* _ii_ */
+    
+    output stream OutStr-html to value(v-act-file) convert target 'UTF-8'/*no-convert*/.
+    put stream OutStr-html unformatted
+        substitute(
+
+        '<!doctype html>
+                 <html>
+              <head>
+              <meta charset="UTF-8">
+                 <!-- Стили документа -->
+              <style>
+                table ~{border-collapse: collapse; ~}
+                tbody td, th ~{border: 1px solid black;~}
+                #myid ~{font-weight: bold;~}
+                .class1 ~{font-style: italic;~}
+                .class2 ~{font-family: Arial;~}
+              </style>
+              </head>
+                  <body>
+                  <table orientation="landscape" name="лист1" repeat_rows="1:1" hide_zero="True">
+                  <thead>
+                  <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                  <tr class="set_columns">
+                        <td style="width:210px"></td>
+                        <td style="width:250px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:60px"></td>
+                        <td style="width:110px"></td>
+                        <td style="width:110px"></td>
+                        <td style="width:110px"></td>
+                  </tr>
+                  <tr>
+                        <td colspan="7" style="front-weight: bold; text-align: center;">Сверка остатков ЕГАИС</td>
+                  </tr>
+        </thead>
+            <tbody>
+                <tr>
+                <th>Алкогольный код</th>
+                <th>Наименование товара</th>
+                <th>Код товара в TH</th>
+                <th>Код АП</th>
+                <th>Остаток ЕГАИС торговый зал</th>
+                <th>Остаток ЕГАИС склад</th>
+                <th>Остаток TH</th>
+                </tr>').
+
+    for each tt-compare-rests :
+
+        put stream OutStr-html unformatted
+            substitute(
+            '<tr style="height: 50px;">
+             <td text_wrap="true"> &1 </td>
+             <td text_wrap="true"> &2 </td>
+             <td text_wrap="true"> &3 </td>
+             <td text_wrap="true"> &4 </td>
+             <td text_wrap="true"> &5 </td>
+             <td text_wrap="true"> &6 </td>
+             <td text_wrap="true"> &7 </td>
+             </tr>
+             </tbody>',
+
+            tt-compare-rests.alc-code,
+            tt-compare-rests.gds-name,
+            tt-compare-rests.gds-code,
+            tt-compare-rests.alc-type-code,
+            tt-compare-rests.shop-qnty,
+            tt-compare-rests.stock-qnty,
+            tt-compare-rests.TH-qnty
+            ).
+
+    end.
+    
+
+
+    run waitfram-hide in this-procedure.
+
+    output stream OutStr-html close.
+    run prn-lib-reportviewer-report-name in this-procedure (
+        input parParentProc
+        ,input v-act-file
+        ).
+end.
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
 /*------------------------------------------------------------------------------
@@ -1504,7 +1942,7 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
     
-  ENABLE b-mark b-sel-all b-unmark b-load b-save b-cancel br-rests br-rests_shop br-rests_all
+  ENABLE b-mark b-sel-all b-unmark b-load b-func b-save b-cancel br-rests br-rests_shop br-rests_all
          b-connect b-del b-func t-negative_rests /*b-func_shop*/
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
