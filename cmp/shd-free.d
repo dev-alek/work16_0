@@ -5,6 +5,7 @@
 "dctxt-i" "Импорт данных по ДК из текст.файла" "cus/dctxtisr.p" "cus/dctxtisp.w" "" yes no no no "" "tcECHokkfjkkJjqc" no
 "delrt-auto" "Удаления маршуртизации ВС, работающих без подтверждения" "bge/adelrt.p" "bge/delrtpar.w" "" yes yes no no "" "jqgpklnPdldCqlki" no
 "exp-active-vbrr" "Выгрузка информации по пополнениям и активации для сверки с ВБРР" "bge/bge-active-vbrr-shd.p" "bge/bge-active-vbrr.w" "" yes yes no no "" "jwbQbadljOzcfcll" no
+"exp-bgecheck" "Выгрузка чеков(расширенный формат)" "bge/exp-bgecheck-shd.p" "bge/bge-dper-gds-new.w" "" yes yes no no "" "dvSSEackSpaHaTsc" no
 "exp-carbon" "Выгрузка информации в систему Carbon" "bge/exp-carbon-shd.p" "bge/exp-carbon-par.w" "" yes yes no no "" "obCvcdflkailchRk" no
 "exp-loyal" "Выгрузка товарного классификатора (Лояльность/Скантек)" "bge/exp-loyal-shd.p" "bge/exp-loyal.w" "" yes yes no no "" "llndQBKkalbfptkb" no
 "exp-malina" "Выгрузка информации в систему Малина" "bge/exp-malina-shd.p" "bge/exp-malina.w" "" yes yes no no "" "bjpjsbldjiikgjcr" no
