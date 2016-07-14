@@ -77,8 +77,8 @@ define buffer buf_units for units.
 define buffer buf_gds-grp for gds-grp.
 xml-date-file = STRING(YEAR(TODAY), "9999") + "-" + STRING(MONTH(TODAY), "99") + "-" + STRING(DAY(TODAY), "99").
 xml-time-file = substring(string(time,"HH:MM:SS"),1,2) + ":" + substring(string(time,"HH:MM:SS"),4,2) + ":" + substring(string(time,"HH:MM:SS"),7,2).
-v-date-file  = STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING(DAY(TODAY), "99") + substring(string(time,"HH:MM"),1,2) + substring(string(time,"HH:MM"),4,2).
 v-number = substring(string(time,"HH:MM"),1,2) + substring(string(time,"HH:MM"),4,2).
+v-date-file  = STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING(DAY(TODAY), "99") +    string(integer(v-number), fill("9", 5)).
           { gbl/conf-rd.i
  "'spl-ptrl'"
  "''":U
@@ -98,14 +98,14 @@ v-number = substring(string(time,"HH:MM"),1,2) + substring(string(time,"HH:MM"),
 if p-place = 1 then
 do:
     log-file-name = p-directory + "Goods-VBBR.txt":U.
-    file_name = p-directory + ' Goods':U + ptrl + v-date-file  + '.xml'.
+    file_name = p-directory + ' Goods':U + string(integer(ptrl) , fill("9", 5 ))  + v-date-file  + '.xml'.
      
 end.
 
 if p-place = 2 then
 do:
 
-    file_name = session:temp-directory + 'Goods':U + ptrl +  v-date-file  + '.xml'.
+    file_name = session:temp-directory + 'Goods':U +  string(integer(ptrl) , fill("9", 5) )  +  v-date-file  + '.xml'.
     assign
         log-file-name = "Goods-VBBR.log"
         .
@@ -132,8 +132,8 @@ hSAXWriter:WRITE-DATA-ELEMENT("FormatVersion" , "1.0"  ) no-error.
 hSAXWriter:WRITE-DATA-ELEMENT("Sender" , ptrl ) no-error.
 hSAXWriter:WRITE-DATA-ELEMENT("CreationDate" , xml-date-file ) no-error.
 hSAXWriter:WRITE-DATA-ELEMENT("CreationTime" , xml-time-file ) no-error.
-hSAXWriter:WRITE-DATA-ELEMENT("Number" , v-number ) no-error.
-hSAXWriter:WRITE-DATA-ELEMENT("Institution" , ptrl ) no-error.
+hSAXWriter:WRITE-DATA-ELEMENT("Number" ,  string(integer(v-number), fill("9", 5)) ) no-error.
+hSAXWriter:WRITE-DATA-ELEMENT("Institution" , string(integer(ptrl) , fill("9", 5) ) ) no-error.
 hSAXWriter:end-ELEMENT ("FileHeader") no-error.
        
 hSAXWriter:START-ELEMENT ("GoodsLocalSets") no-error.
