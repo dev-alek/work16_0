@@ -1219,7 +1219,7 @@ procedure makeXML_v2 :
                       sw:write-data-element ("ainp:TypeChargeOn", tt-act-header.type_) .
                     else
                       sw:write-data-element ("ainp:TypeChargeOn", "Продукция, полученная до 01.01.2016") .
-                    if tt-act-header.type_ = "Пересортица" and v-RegID <> "" or v-RegID <> ? then do :
+                    if tt-act-header.type_ = "Пересортица" and v-RegID <> "" and v-RegID <> ? then do :
                       sw:write-data-element ("ainp:ActWriteOff", v-RegID) .  
                     end.
                 sw:end-element ("ainp:Header") .
