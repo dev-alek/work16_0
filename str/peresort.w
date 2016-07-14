@@ -1423,6 +1423,7 @@ END.
 ON CHOOSE OF b-parts IN FRAME Dialog-Frame /* ПартСпис */
 DO:
   DEFINE VARIABLE varprt-rec AS RECID NO-UNDO.
+  define variable v-call-point as character no-undo.
   if not available bf_doc-line then do:
     message "Неправильный выбор строки - партии недоступны."
             view-as alert-box.
@@ -1431,6 +1432,7 @@ DO:
   assign
     line-rec = recid( bf_doc-line )
   .
+  if pardoc-mode = {&UPDATE} then v-call-point = {&CHOOSE}. else v-call-point = {&parts-l_call-document} . 
   run str/parts-l.w
     (  input parparentproc
     ,  input bf_trn-doc.obj-type
@@ -1440,7 +1442,7 @@ DO:
     ,  input {&LOOKUP}                 /* p-edit-mode  */
     ,  input {&parts-l_parts-document} /* p-r-parts    */
     ,  input {&parts-l_object-current} /* p-one-all    */
-    ,  input {&parts-l_call-document}  /* p-call-point */
+    ,  input v-call-point  /* p-call-point */
     , output varprt-rec
     ) .
 
