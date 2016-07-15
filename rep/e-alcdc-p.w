@@ -959,6 +959,10 @@ for each obj-list no-lock:  /* По всем объектам */
                 ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, temp-parts.alc-ref-ab-path)) .                    
             end.
             
+            if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
+                    imp-or-prod-type = temp-parts.alc-imp-type
+                    imp-or-prod-code = temp-parts.alc-imp-code.
+            else
             if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                 if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
                         if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
@@ -983,14 +987,9 @@ for each obj-list no-lock:  /* По всем объектам */
                     imp-or-prod-code = 0
                 .
             end.
-            else do :
-                if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
-                    imp-or-prod-type = temp-parts.alc-imp-type
-                    imp-or-prod-code = temp-parts.alc-imp-code.
-                else assign                                     /* Если нет - производителя */
+            else assign                                     /* Если нет - производителя */
                     imp-or-prod-type = temp-parts.prod-type
                     imp-or-prod-code = temp-parts.prod-code.
-            end.
 
           release part-1 no-error.
           if TOGGLE-KPP then do :
@@ -1183,6 +1182,10 @@ for each obj-list no-lock:  /* По всем объектам */
                 ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, temp-parts.alc-ref-ab-path)) .                    
             end.
             
+            if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
+                    imp-or-prod-type = temp-parts.alc-imp-type
+                    imp-or-prod-code = temp-parts.alc-imp-code.
+            else
             if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                 if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
                         if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
@@ -1207,14 +1210,9 @@ for each obj-list no-lock:  /* По всем объектам */
                     imp-or-prod-code = 0
                 .
             end.
-            else do :
-                if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
-                    imp-or-prod-type = temp-parts.alc-imp-type
-                    imp-or-prod-code = temp-parts.alc-imp-code.
-                else assign                                     /* Если нет - производителя */
+            else assign                                     /* Если нет - производителя */
                     imp-or-prod-type = temp-parts.prod-type
                     imp-or-prod-code = temp-parts.prod-code.
-            end.
 
           release part-1 no-error.
           if TOGGLE-KPP then do :
@@ -1402,6 +1400,10 @@ for each obj-list no-lock:  /* По всем объектам */
                         ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, buf_parts.alc-ref-ab-path)) .                    
                     end.
                     
+                    if buf_parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
+                            imp-or-prod-type = buf_parts.alc-imp-type
+                            imp-or-prod-code = buf_parts.alc-imp-code.
+                    else
                     if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                         if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
                                 if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
@@ -1426,14 +1428,9 @@ for each obj-list no-lock:  /* По всем объектам */
                             imp-or-prod-code = 0
                         .
                     end.
-                    else do :
-                        if buf_parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
-                            imp-or-prod-type = buf_parts.alc-imp-type
-                            imp-or-prod-code = buf_parts.alc-imp-code.
-                        else assign                                     /* Если нет - производителя */
-                            imp-or-prod-type = buf_parts.prod-type
-                            imp-or-prod-code = buf_parts.prod-code.
-                    end.
+                    else assign                                     /* Если нет - производителя */
+                        imp-or-prod-type = buf_parts.prod-type
+                        imp-or-prod-code = buf_parts.prod-code.
 
                 /* Первый раздел */
                 
@@ -1566,8 +1563,16 @@ for each obj-list no-lock:  /* По всем объектам */
                 case buf_doc-line.ext-doc-type: /* ie,ee,ep,es,re,rs,we,vt,vp,iv,ev,rv,em,*/
                     
                     when "ie" then do: /* приход внешний */
-                        if alc-goods.alpha1 <> "RU" then do: /* Импортный товар */
+                        if alc-goods.alpha1 <> "RU" and
+                           alc-goods.alpha1 <> "AM" and
+                           alc-goods.alpha1 <> "KZ" and
+                           alc-goods.alpha1 <> "KG" and
+                           alc-goods.alpha1 <> "BY"
+                         then do: /* Импортный товар */
 
+                            if buf_parts.alc-imp-code <> 0 then /* Однозначно по импорту */
+                                    part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                            else
                             if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                                 if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
                                         if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
@@ -1589,16 +1594,11 @@ for each obj-list no-lock:  /* По всем объектам */
                                     part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10
                                 .
                             end.
-                            else do :
-                                if buf_parts.alc-imp-code <> 0 then /* Однозначно по импорту */
-                                    part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10.
-    
-                                else do:
-                                    if part-1.foreign = yes /* Проверим на импортного производителя */
-                                        then part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10.
-                                        else part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10.
-                                end. /* else do */
-                            end.
+                            else do:
+                                if part-1.foreign = yes /* Проверим на импортного производителя */
+                                    then part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                                    else part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                            end. /* else do */
 
                         end. /* if alc-goods.alpha1 <> "RU" */
                         
