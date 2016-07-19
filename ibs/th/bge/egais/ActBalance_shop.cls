@@ -184,7 +184,7 @@ class ibs.th.bge.egais.ActBalance_shop inherits EGAISUTM:
                 
         end.
         
-        find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = inAbIndenty .
+        find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab_shop} and buf_clob-bind.uniq-key-rec = inAbIndenty .
         v-type = (entry (5, buf_clob-bind.descr, {&delim-par})) no-error .
 		if v-type = ? then v-type = "" .
 		if num-entries (buf_clob-bind.descr, {&delim-par}) = 3 then
