@@ -974,7 +974,7 @@ DO:
 /*                                           and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_  */
 /*                                           and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :*/
                                            
-                assign tt-gds-rests.TH-qnty = tt-gds-rests.TH-qnty + buf_parts.fact-qnty .
+                assign tt-gds-rests_shop.TH-qnty = tt-gds-rests_shop.TH-qnty + buf_parts.fact-qnty .
 /*                assign tt-gds-rests.prt-rec = if tt-gds-rests.prt-rec = "" then string(recid(buf_parts)) else tt-gds-rests.prt-rec + ',' + string(recid(buf_parts)) .*/
             end.
         end. 
