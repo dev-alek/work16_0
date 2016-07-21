@@ -950,7 +950,7 @@ DO:
         if qh-gds-egais_shop:query-off-end then leave _repeat_shop.
         create tt-gds-rests_shop.
         buffer tt-gds-rests_shop:handle:buffer-copy (bh-gds-egais_shop) .
-        assign tt-gds-rests.fromEgais = yes .
+        assign tt-gds-rests_shop.fromEgais = yes .
         find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
                                            and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                            AND X_ext-classif.db-num = 0
