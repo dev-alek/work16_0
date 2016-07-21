@@ -382,10 +382,11 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
             hNoderef:GET-CHILD(hText, 1) no-error .    
             
             IF hNoderef:NAME = "tc:RegID"    THEN v-RegID  = hText:node-value .
-            IF hNoderef:NAME = "tc:Conclusion" THEN
+            IF hNoderef:NAME = "tc:Conclusion"
+            OR hNoderef:NAME = "tc:OperationResult" THEN
             DO :
                 if hText:node-value = "Rejected" then v-RegID = v-RegID + CHR(5) + "R" .
-                                                 else v-RegID = v-RegID + CHR(5) + "A" .
+                if hText:node-value = "Accepted" then v-RegID = v-RegID + CHR(5) + "A" .
             END.
             IF hNoderef:NAME = "tc:Comments" THEN do :
                 if trim(v-Answer) = '' or v-Answer = {&new-line} then v-Answer = hText:node-value .

@@ -483,13 +483,19 @@ DO:
   
   if not glog then return no-apply.
   
+  if bh-wb-egais:buffer-field ('DbNum'):buffer-value () 
+  then do:
+    message "Нельзя удалять накладную полученную в другой БД " + bh-wb-egais:buffer-field ('DbNum'):buffer-value ().
+    return no-apply.
+  end.
+  
   message "Вы уверены что хотите удалить накладную - " bh-wb-egais:buffer-field ('num'):buffer-value () "?" view-as alert-box buttons yes-no update isChoise as logical.
   
   if not isChoise then return no-apply.
   
   do trans:
   
-    for each ub.clob-bind exclusive-lock where ub.clob-bind.uniq-key-rec = bh-wb-egais:buffer-field ('uniq-key-rec'):buffer-value ():
+    for each ub.clob-bind exclusive-lock where ub.clob-bind.uniq-key-rec = bh-wb-egais:buffer-field ('uniq-key-rec'):buffer-value () and ub.clob-bind.db-num = bh-wb-egais:buffer-field ('DbNum'):buffer-value ():
       
       delete ub.clob-bind.
       

@@ -397,6 +397,11 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-save Dialog-Frame
 ON CHOOSE OF b-save IN FRAME Dialog-Frame /* Создать */
 DO:
+    assign
+        tt-act-header.num
+        tt-act-header.date_
+        tt-act-header.type_
+    .
     find first tt-gds-act no-error .
     if not available tt-gds-act then do :
         message "В акте нет строк. Сохранение невозможно" view-as alert-box .
