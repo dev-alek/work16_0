@@ -150,6 +150,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     field wbregid      as character label "WBREGID" format "X(18)"
     field Identity     as character format "X(50)"
     field uniq-key-rec as character format "X(50)"
+    field DbNUm        as integer   label "БД"
     field isWB         as logical
     index pi
     Identity 
@@ -238,13 +239,13 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               end.
             end.
             v-uniq-key-rec = buf_clob-bind.uniq-key-rec.
-            find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
+            find first buf_clob-data no-lock where /*buf_clob-data.db-num = buf_clob-bind.db-num and*/ buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
             createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
             
             find first buf_clob-bind-ref no-lock where buf_clob-bind-ref.uniq-key-rec = v-uniq-key-rec and buf_clob-bind-ref.resource-type = {&lob-egais-ref-b} no-error.
             if available (buf_clob-bind-ref) then 
             do:
-              find first buf_clob-data-ref no-lock where buf_clob-data-ref.db-num = buf_clob-bind-ref.db-num and buf_clob-data-ref.int64-id = buf_clob-bind-ref.int64-id no-error.
+              find first buf_clob-data-ref no-lock where /*buf_clob-data-ref.db-num = buf_clob-bind-ref.db-num and*/ buf_clob-data-ref.int64-id = buf_clob-bind-ref.int64-id no-error.
               createhDoc(recid (buf_clob-data-ref), "refbtemp.xml", output hDocRef).
               prsXMLDocWB:ParseRec(hDoc, hDocRef, input-output table tt-wb-header, input-output table tt-wb-gds-EG, input-output table tt-wb-info-client).
             end.
@@ -1174,20 +1175,32 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     next url_.
                   end.
                   find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Consignee".
-                  find first buf_ext-classif no-lock where 
+                  for each buf_ext-classif no-lock where 
                         buf_ext-classif.classif-subject = {&table_clients}
                     and buf_ext-classif.classif-name = {&extclass_clients_esys}
                     and buf_ext-classif.db-num = 0
                     and buf_ext-classif.key#_one = v-ext-sys
-                    and buf_ext-classif.CharKey_Three = tt-wb-info-client.regID no-error.
+                    and buf_ext-classif.CharKey_Three = tt-wb-info-client.regID:
 
-                  if available (buf_ext-classif) then 
-                  do:
-                    tt-wb-header.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}).
-                    tt-wb-header.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
+                    if available (buf_ext-classif) then 
+                    do:
+                      tt-wb-header.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key}).
+                      tt-wb-header.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key})).
+                    end.
+                    find first buf_clients no-lock where buf_clients.obj-type = tt-wb-header.obj-type and buf_clients.obj-code = tt-wb-header.obj-code and buf_clients.db-num = DbNum no-error.
+                    if available (buf_clients)
+                      then leave.
                   end.
+                  
+                  if not available (buf_clients)
+                    then 
+                      assign
+                        tt-wb-header.obj-type = ""
+                        tt-wb-header.obj-code = 0
+                      . 
+                  
                   find first tt-wb-info-client where tt-wb-info-client.wb-type-client = "Shipper".                
-                  v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par} + tt-wb-header.obj-type + string (tt-wb-header.obj-code).
+                  v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par} + tt-wb-header.obj-type + if tt-wb-header.obj-code = 0 or tt-wb-header.obj-code = ? then "" else string (tt-wb-header.obj-code).
                   if tt-wb-header.uniq-key-rec = ?
                   then do:
                     message "Ошибка приема файла накланой: " v-info skip urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
