@@ -2733,8 +2733,10 @@ hSAXWriter:start-element ("Файл").
                         ii-pos = 0.
                         
                         for each part-2 where part-2.alc-type-code = part-1.alc-type-code /* Здесь мы в импортерах и производителях нужного типа продукции, пройдём до поставщиков */
-                                        and   part-2.prod-code = part-1.prod-code
-                                        and   part-2.prod-type = part-1.prod-type
+                                        and  (
+                                              (part-2.prod-code = part-1.prod-code and part-2.prod-type = part-1.prod-type)
+                                           or (part-2.producer-inn = part-1.producer-inn and part-2.producer-kpp = part-1.producer-kpp)
+                                                )
                                         and   part-2.obj-code  = part-1.obj-code
                                         and   part-2.obj-type  = part-1.obj-type
                                         break by part-2.supplier-code:                    /* Разбивая по поставщикам */
