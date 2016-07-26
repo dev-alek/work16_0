@@ -461,6 +461,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               tt-wb-hndls.obj          = entry (9, buf_clob-bind-wb-hndls.descr, {&delim-par})
               tt-wb-hndls.EGAISSts     = entry (10, buf_clob-bind-wb-hndls.descr, {&delim-par}) when num-entries (buf_clob-bind-wb-hndls.descr, {&delim-par}) > 9
               tt-wb-hndls.uniq-key-rec = buf_clob-bind-wb-hndls.uniq-key-rec.
+              tt-wb-hndls.DbNUm        = buf_clob-bind-wb-hndls.db-num.
             .
             find first ub.ext-classif no-lock 
               where ub.ext-classif.classif-subject = {&table_clients}

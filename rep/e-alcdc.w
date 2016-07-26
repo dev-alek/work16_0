@@ -222,6 +222,43 @@ define temp-table alc-supp-licenses /* Лицензии поставщиков для XML */
     field get-from as character
     index pi is unique primary serial-number.
 
+define temp-table tt-parts-info
+    field obj-type          like ub.clients.obj-type         /* Объект pi */
+    field obj-code          like ub.clients.obj-code 
+    field part-code         like ub.parts.part-code
+    field out-code          like ub.parts.out-code
+    field in-code           like ub.parts.in-code
+    field artic             like ub.goods.artic
+    field prod-type         like ub.goods.prod-type 
+    field prod-code         like ub.goods.prod-code
+    field alc-type-code     like ub.alc-type.alc-type-code
+    field producer-obj-name like ub.clients.obj-name       /* 3 */
+    field producer-inn      like ub.firm.inn               /* 4 */
+    field producer-kpp      like ub.firm.kpp               /* 5 */
+    field remain-6          as   decimal decimals 5        /* 6 */
+    field inc-7             as   decimal decimals 5        /* 7 */
+    field inc-8             as   decimal decimals 5        /* 8 */
+    field inc-9             as   decimal decimals 5        /* 9 */
+    field inc-10            as   decimal decimals 5        /* 10 */
+    field inc-11            as   decimal decimals 5        /* 11 */
+    field inc-12            as   decimal decimals 5        /* 12 */
+    field inc-13            as   decimal decimals 5        /* 13 */
+    field inc-14            as   decimal decimals 5        /* 14 */
+    field exp-15            as   decimal decimals 5        /* 15 */
+    field exp-16            as   decimal decimals 5        /* 16 */
+    field exp-17            as   decimal decimals 5        /* 17 */
+    field exp-18            as   decimal decimals 5        /* 18 */
+    field exp-19            as   decimal decimals 5        /* 19 */
+    field remain-20         as   decimal decimals 5        /* 20 */
+    field remain-21         as   decimal decimals 5        /* 21 */
+    field importer          as   character
+    index pi as primary unique
+        obj-type obj-code artic prod-type prod-code in-code out-code part-code
+.
+
+define stream OutStr-html.
+{ gbl/prn-lib.i  }
+     
 /* Buffer Definitions   ---                                               */
 
 define buffer buf_clients           for ub.clients.
@@ -994,6 +1031,29 @@ for each obj-list no-lock:  /* По всем объектам */
           end.  
           if v-inner-code = ? then v-inner-code = alc-goods.type-code .
           
+           /* для информации по партиям */
+           find first tt-parts-info exclusive-lock where tt-parts-info.obj-type         = obj-list.obj-type
+                                                     and tt-parts-info.obj-code         = obj-list.obj-code
+                                                     and tt-parts-info.artic            = alc-goods.artic
+                                                     and tt-parts-info.prod-type        = alc-goods.prod-type
+                                                     and tt-parts-info.prod-code        = alc-goods.prod-code
+                                                     and tt-parts-info.in-code          = temp-parts.in-code
+                                                     and tt-parts-info.out-code         = temp-parts.out-code
+                                                     and tt-parts-info.part-code        = temp-parts.part-code no-error .
+           if not available tt-parts-info then do :
+               create tt-parts-info .
+               assign
+                tt-parts-info.obj-type         = obj-list.obj-type
+                tt-parts-info.obj-code         = obj-list.obj-code
+                tt-parts-info.artic            = alc-goods.artic
+                tt-parts-info.prod-type        = alc-goods.prod-type
+                tt-parts-info.prod-code        = alc-goods.prod-code
+                tt-parts-info.in-code          = temp-parts.in-code
+                tt-parts-info.out-code         = temp-parts.out-code
+                tt-parts-info.part-code        = temp-parts.part-code
+               .
+           end.
+          
             v-kpp = "" . 
         
             for first buf_clients-attr no-lock where buf_clients-attr.obj-code  = obj-list.obj-code /* КПП */
@@ -1012,7 +1072,8 @@ for each obj-list no-lock:  /* По всем объектам */
             
             if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
                     imp-or-prod-type = temp-parts.alc-imp-type
-                    imp-or-prod-code = temp-parts.alc-imp-code.
+                    imp-or-prod-code = temp-parts.alc-imp-code
+                    tt-parts-info.importer = 'Импортер из алк.атр. партии' .
             else
             if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                 if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
@@ -1025,22 +1086,26 @@ for each obj-list no-lock:  /* По всем объектам */
                         assign
                             imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                             imp-or-prod-code = 0
+                            tt-parts-info.importer = 'ЕГАИС. Производитель из Таможенного Союза'
                         .
                         else
                         assign
                             imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdImpor
                             imp-or-prod-code = 0
+                            tt-parts-info.importer = 'ЕГАИС. Импортер'
                         .
                 end.
                 else
                 assign
                     imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                     imp-or-prod-code = 0
+                    tt-parts-info.importer = 'ЕГАИС. Производитель'
                 .
             end.
             else assign                                     /* Если нет - производителя */
                     imp-or-prod-type = temp-parts.prod-type
-                    imp-or-prod-code = temp-parts.prod-code.
+                    imp-or-prod-code = temp-parts.prod-code
+                    tt-parts-info.importer = 'Производитель из карточки товара' .
 
           release part-1 no-error.
           if TOGGLE-KPP then do :
@@ -1168,6 +1233,14 @@ for each obj-list no-lock:  /* По всем объектам */
           end. /* if not available (part-1) */
 
           part-1.remain-20 = part-1.remain-20 + temp-parts.fact-qnty * alc-goods.vol / 10.
+          
+          assign
+            tt-parts-info.alc-type-code     = part-1.alc-type-code
+            tt-parts-info.producer-obj-name = part-1.producer-obj-name
+            tt-parts-info.producer-inn      = part-1.producer-inn
+            tt-parts-info.producer-kpp      = part-1.producer-kpp
+          no-error . 
+          tt-parts-info.remain-20 = temp-parts.fact-qnty * alc-goods.vol / 10 no-error.
 
           /* для проверки акцизной марки */
           find first buf_ex-mark-attr no-lock 
@@ -1176,8 +1249,9 @@ for each obj-list no-lock:  /* По всем объектам */
             and buf_ex-mark-attr.attr-code = "exp-date" no-error.
             
           if available(buf_ex-mark-attr) and buf_ex-mark-attr.attr-value <> ? then do:
-              if date(buf_ex-mark-attr.attr-value) <= FILL-IN-exp-date then
-                part-1.remain-21 = part-1.remain-21 + temp-parts.fact-qnty * alc-goods.vol / 10.
+              if date(buf_ex-mark-attr.attr-value) <= FILL-IN-exp-date then assign
+                part-1.remain-21 = part-1.remain-21 + temp-parts.fact-qnty * alc-goods.vol / 10
+                tt-parts-info.remain-21 = temp-parts.fact-qnty * alc-goods.vol / 10 .
           end.
        end. /* for each temp-parts */
 
@@ -1228,6 +1302,28 @@ for each obj-list no-lock:  /* По всем объектам */
           end.  
           if v-inner-code = ? then v-inner-code = alc-goods.type-code .
           
+           find first tt-parts-info exclusive-lock where tt-parts-info.obj-type         = obj-list.obj-type
+                                                     and tt-parts-info.obj-code         = obj-list.obj-code
+                                                     and tt-parts-info.artic            = alc-goods.artic
+                                                     and tt-parts-info.prod-type        = alc-goods.prod-type
+                                                     and tt-parts-info.prod-code        = alc-goods.prod-code
+                                                     and tt-parts-info.in-code          = temp-parts.in-code
+                                                     and tt-parts-info.out-code         = temp-parts.out-code
+                                                     and tt-parts-info.part-code        = temp-parts.part-code no-error .
+           if not available tt-parts-info then do :
+               create tt-parts-info .
+               assign
+                tt-parts-info.obj-type         = obj-list.obj-type
+                tt-parts-info.obj-code         = obj-list.obj-code
+                tt-parts-info.artic            = alc-goods.artic
+                tt-parts-info.prod-type        = alc-goods.prod-type
+                tt-parts-info.prod-code        = alc-goods.prod-code
+                tt-parts-info.in-code          = temp-parts.in-code
+                tt-parts-info.out-code         = temp-parts.out-code
+                tt-parts-info.part-code        = temp-parts.part-code
+               .
+           end.
+          
             v-kpp = "" . 
         
             for first buf_clients-attr no-lock where buf_clients-attr.obj-code  = obj-list.obj-code /* КПП */
@@ -1246,7 +1342,8 @@ for each obj-list no-lock:  /* По всем объектам */
             
             if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
                     imp-or-prod-type = temp-parts.alc-imp-type
-                    imp-or-prod-code = temp-parts.alc-imp-code.
+                    imp-or-prod-code = temp-parts.alc-imp-code
+                    tt-parts-info.importer = 'Импортер из алк.атр. партии' .
             else
             if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                 if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
@@ -1259,22 +1356,26 @@ for each obj-list no-lock:  /* По всем объектам */
                         assign
                             imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                             imp-or-prod-code = 0
+                            tt-parts-info.importer = 'ЕГАИС. Производитель из Таможенного Союза'
                         .
                         else
                         assign
                             imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdImpor
                             imp-or-prod-code = 0
+                            tt-parts-info.importer = 'ЕГАИС. Импортер'
                         .
                 end.
                 else
                 assign
                     imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                     imp-or-prod-code = 0
+                    tt-parts-info.importer = 'ЕГАИС. Производитель'
                 .
             end.
             else assign                                     /* Если нет - производителя */
                     imp-or-prod-type = temp-parts.prod-type
-                    imp-or-prod-code = temp-parts.prod-code.
+                    imp-or-prod-code = temp-parts.prod-code
+                    tt-parts-info.importer = 'Производитель из карточки товара' .
 
           release part-1 no-error.
           if TOGGLE-KPP then do :
@@ -1401,6 +1502,14 @@ for each obj-list no-lock:  /* По всем объектам */
           end. /* if not available (part-1) */
 
           part-1.remain-6 = part-1.remain-6 + temp-parts.fact-qnty * alc-goods.vol / 10.
+          
+          assign
+            tt-parts-info.alc-type-code     = part-1.alc-type-code
+            tt-parts-info.producer-obj-name = part-1.producer-obj-name
+            tt-parts-info.producer-inn      = part-1.producer-inn
+            tt-parts-info.producer-kpp      = part-1.producer-kpp
+          no-error . 
+          tt-parts-info.remain-6 = temp-parts.fact-qnty * alc-goods.vol / 10.
 
        end. /* for each temp-parts */
 
@@ -1446,6 +1555,29 @@ for each obj-list no-lock:  /* По всем объектам */
                     end.  
                     if v-inner-code = ? then v-inner-code = alc-goods.type-code .
                     
+                    /* для информации по партиям */
+                   find first tt-parts-info exclusive-lock where tt-parts-info.obj-type         = obj-list.obj-type
+                                                             and tt-parts-info.obj-code         = obj-list.obj-code
+                                                             and tt-parts-info.artic            = alc-goods.artic
+                                                             and tt-parts-info.prod-type        = alc-goods.prod-type
+                                                             and tt-parts-info.prod-code        = alc-goods.prod-code
+                                                             and tt-parts-info.in-code          = buf_parts.in-code
+                                                             and tt-parts-info.out-code         = buf_parts.out-code
+                                                             and tt-parts-info.part-code        = buf_parts.part-code no-error .
+                   if not available tt-parts-info then do :
+                       create tt-parts-info .
+                       assign
+                        tt-parts-info.obj-type         = obj-list.obj-type
+                        tt-parts-info.obj-code         = obj-list.obj-code
+                        tt-parts-info.artic            = alc-goods.artic
+                        tt-parts-info.prod-type        = alc-goods.prod-type
+                        tt-parts-info.prod-code        = alc-goods.prod-code
+                        tt-parts-info.in-code          = buf_parts.in-code
+                        tt-parts-info.out-code         = buf_parts.out-code
+                        tt-parts-info.part-code        = buf_parts.part-code
+                       .
+                   end.
+                    
                     v-kpp = "" . 
         
                     for first buf_clients-attr no-lock where buf_clients-attr.obj-code  = obj-list.obj-code /* КПП */
@@ -1464,7 +1596,8 @@ for each obj-list no-lock:  /* По всем объектам */
                     
                     if buf_parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
                             imp-or-prod-type = buf_parts.alc-imp-type
-                            imp-or-prod-code = buf_parts.alc-imp-code.
+                            imp-or-prod-code = buf_parts.alc-imp-code
+                            tt-parts-info.importer = 'Импортер из алк.атр. партии' .
                     else
                     if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                         if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
@@ -1477,22 +1610,26 @@ for each obj-list no-lock:  /* По всем объектам */
                                 assign
                                     imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                                     imp-or-prod-code = 0
+                                    tt-parts-info.importer = 'ЕГАИС. Производитель из Таможенного Союза'
                                 .
                                 else
                                 assign
                                     imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdImpor
                                     imp-or-prod-code = 0
+                                    tt-parts-info.importer = 'ЕГАИС. Импортер'
                                 .
                         end.
                         else
                         assign
                             imp-or-prod-type = ext-cl:GetExtGdsValue(1):CliRegIdProd
                             imp-or-prod-code = 0
+                            tt-parts-info.importer = 'ЕГАИС. Производитель'
                         .
                     end.
                     else assign                                     /* Если нет - производителя */
                         imp-or-prod-type = buf_parts.prod-type
-                        imp-or-prod-code = buf_parts.prod-code.
+                        imp-or-prod-code = buf_parts.prod-code
+                        tt-parts-info.importer = 'Производитель из карточки товара' .
 
                 /* Первый раздел */
 
@@ -1619,6 +1756,13 @@ for each obj-list no-lock:  /* По всем объектам */
                     end case. /* case imp-or-prod-type */
 
                 end. /* if not available (part-1) */
+                
+                assign
+                    tt-parts-info.alc-type-code     = part-1.alc-type-code
+                    tt-parts-info.producer-obj-name = part-1.producer-obj-name
+                    tt-parts-info.producer-inn      = part-1.producer-inn
+                    tt-parts-info.producer-kpp      = part-1.producer-kpp
+                no-error .
 
                 /* Подсчеты количеств */
 
@@ -1632,8 +1776,9 @@ for each obj-list no-lock:  /* По всем объектам */
                            alc-goods.alpha1 <> "BY"
                          then do: /* Импортный товар */
 
-                            if buf_parts.alc-imp-code <> 0 then /* Однозначно по импорту */
-                                    part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                            if buf_parts.alc-imp-code <> 0 then assign /* Однозначно по импорту */
+                                    part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10 
+                                    tt-parts-info.inc-9 = buf_parts.fact-qnty * alc-goods.vol / 10 .
                             else
                             if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                                 if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
@@ -1645,21 +1790,28 @@ for each obj-list no-lock:  /* По всем объектам */
                                         then
                                         assign
                                             part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10
+                                            tt-parts-info.inc-8 = buf_parts.fact-qnty * alc-goods.vol / 10
                                         .
                                         else
                                         assign
                                             part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10
+                                            tt-parts-info.inc-9 = buf_parts.fact-qnty * alc-goods.vol / 10
                                         .
                                 end.
                                 else
                                 assign
                                     part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10
+                                    tt-parts-info.inc-8 = buf_parts.fact-qnty * alc-goods.vol / 10
                                 .
                             end.
                             else do:
                                 if part-1.foreign = yes /* Проверим на импортного производителя */
-                                    then part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10.
-                                    else part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                                    then assign
+                                        part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10
+                                        tt-parts-info.inc-9 = buf_parts.fact-qnty * alc-goods.vol / 10 .
+                                    else assign
+                                        part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10
+                                        tt-parts-info.inc-8 = buf_parts.fact-qnty * alc-goods.vol / 10 .
                             end. /* else do */
 
                         end. /* if alc-goods.alpha1 <> "RU" */
@@ -1670,7 +1822,8 @@ for each obj-list no-lock:  /* По всем объектам */
 
                                 if  buf_trn-doc.cli-code = alc-goods.prod-code /* Если поставил производитель */
                                 and buf_trn-doc.cli-type = alc-goods.prod-type
-                                    then part-1.inc-7 = part-1.inc-7 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                                    then assign part-1.inc-7 = part-1.inc-7 + buf_parts.fact-qnty * alc-goods.vol / 10
+                                                tt-parts-info.inc-8 = buf_parts.fact-qnty * alc-goods.vol / 10 .
 
                                 else do:
                                     release buf_clients-attr no-error. /* Если поставщик является производителем вообще */
@@ -1680,8 +1833,12 @@ for each obj-list no-lock:  /* По всем объектам */
                                                                         and   buf_clients-attr.attr-value = "yes" no-error.
 
                                     if available (buf_clients-attr)
-                                                  then part-1.inc-7 = part-1.inc-7 + buf_parts.fact-qnty * alc-goods.vol / 10.
-                                                  else part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                                                  then assign
+                                                    part-1.inc-7 = part-1.inc-7 + buf_parts.fact-qnty * alc-goods.vol / 10
+                                                    tt-parts-info.inc-7 = buf_parts.fact-qnty * alc-goods.vol / 10 .
+                                                  else assign
+                                                    part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10
+                                                    tt-parts-info.inc-8 = buf_parts.fact-qnty * alc-goods.vol / 10 .
                                 end. /* else do */
                             end. /* for first buf_trn-doc */
 
@@ -1691,31 +1848,37 @@ for each obj-list no-lock:  /* По всем объектам */
                     when "ee" then do: /* расход внешний */
 /*                        message "кол.16 расход внешний " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10 , "->>,>>9.999")  view-as alert-box.*/
                         part-1.exp-16 = part-1.exp-16 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        tt-parts-info.exp-16 = buf_parts.fact-qnty * alc-goods.vol / 10.
                     end.
 
                     when "ep" then do: /* возврат пост. */
 /*                        message "кол.17 возврат пост. " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10 , "->>,>>9.999") view-as alert-box.*/
                         part-1.exp-17 = part-1.exp-17 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        tt-parts-info.exp-17 = buf_parts.fact-qnty * alc-goods.vol / 10.
                     end.
 
                     when "es" then do: /* касса продажа */
 /*                        message "кол.15 касса продажа " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10 , "->>,>>9.999") view-as alert-box.*/
                         part-1.exp-15 = part-1.exp-15 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        tt-parts-info.exp-15 = buf_parts.fact-qnty * alc-goods.vol / 10.
                     end.
 
                     when "re" then do: /* возврат внешний */
 /*                        message "кол.11 возврат внешний " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10 , "->>,>>9.999") view-as alert-box.*/
                         part-1.inc-11 = part-1.inc-11 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        tt-parts-info.inc-11 = buf_parts.fact-qnty * alc-goods.vol / 10.
                     end.
 
                     when "rs" then do: /* касса возврат */
 /*                        message "кол.11 касса возврат " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10 , "->>,>>9.999") view-as alert-box.*/
                         part-1.inc-11 = part-1.inc-11 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        tt-parts-info.inc-11 = buf_parts.fact-qnty * alc-goods.vol / 10.
                     end.
 
                     when "we" then do: /* списание */
 /*                        message "кол.16 списание " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10 , "->>,>>9.999") view-as alert-box.*/
                         part-1.exp-16 = part-1.exp-16 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        tt-parts-info.exp-16 = buf_parts.fact-qnty * alc-goods.vol / 10.
                     end.
 
                     when "vt" then do: /* инвентаризация */
@@ -1725,11 +1888,13 @@ for each obj-list no-lock:  /* По всем объектам */
                             then do:
 /*                                message "кол.12 инвентаризация " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10 , "->>,>>9.999") view-as alert-box.*/
                                 part-1.inc-12 = part-1.inc-12 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                                tt-parts-info.inc-12 = buf_parts.fact-qnty * alc-goods.vol / 10.
                             end.
 
                             else do:
 /*                                message "кол.16 инвентаризация " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10 , "->>,>>9.999") view-as alert-box.*/
                                 part-1.exp-16 = part-1.exp-16 + absolute(buf_parts.fact-qnty) * alc-goods.vol / 10.
+                                tt-parts-info.exp-16 = absolute(buf_parts.fact-qnty) * alc-goods.vol / 10.
                             end.
                     end.
 
@@ -1738,10 +1903,12 @@ for each obj-list no-lock:  /* По всем объектам */
                         then do:
 /*                            message "кол.12 пересортица " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10, "->>,>>9.99") view-as alert-box.*/
                             part-1.inc-12 = part-1.inc-12 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                            tt-parts-info.inc-12 = buf_parts.fact-qnty * alc-goods.vol / 10.
                         end.
                         else do:
 /*                            message "кол.16 пересортица " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10 , "->>,>>9.999") view-as alert-box.*/
                             part-1.exp-16 = part-1.exp-16 + absolute(buf_parts.fact-qnty) * alc-goods.vol / 10.
+                            tt-parts-info.exp-16 = absolute(buf_parts.fact-qnty) * alc-goods.vol / 10.
                         end.
                     end.
 
@@ -1760,17 +1927,20 @@ for each obj-list no-lock:  /* По всем объектам */
                                 if v-kpp = "" then  v-kpp = v-fmtcli-kpp.
                                 
                                 if v-kpp <> part-1.obj-kpp then do :
-                                    part-1.inc-13 = part-1.inc-13 + buf_parts.fact-qnty * alc-goods.vol / 10.    
+                                    part-1.inc-13 = part-1.inc-13 + buf_parts.fact-qnty * alc-goods.vol / 10. 
+                                    tt-parts-info.inc-13 = buf_parts.fact-qnty * alc-goods.vol / 10.   
                                 end.
                             end.
                         end.
-                        else
-                        part-1.inc-13 = part-1.inc-13 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        else assign
+                        part-1.inc-13 = part-1.inc-13 + buf_parts.fact-qnty * alc-goods.vol / 10
+                        tt-parts-info.inc-13 = buf_parts.fact-qnty * alc-goods.vol / 10 .
                     end.
                
                     when "im" then do: /* Приход производства */
 /*                        message "кол.12 Приход производства " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10 , "->>,>>9.999") view-as alert-box.*/
                         part-1.inc-12 = part-1.inc-12 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        tt-parts-info.inc-12 = buf_parts.fact-qnty * alc-goods.vol / 10.
                     end.  
 
                     when "ev" then do: /* расход внутренний */
@@ -1788,12 +1958,14 @@ for each obj-list no-lock:  /* По всем объектам */
                                 if v-kpp = "" then  v-kpp = v-fmtcli-kpp.
                                 
                                 if v-kpp <> part-1.obj-kpp then do :
-                                    part-1.exp-18 = part-1.exp-18 + buf_parts.fact-qnty * alc-goods.vol / 10.    
+                                    part-1.exp-18 = part-1.exp-18 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                                    tt-parts-info.exp-18 = buf_parts.fact-qnty * alc-goods.vol / 10.    
                                 end.
                             end.
                         end.
-                        else
-                        part-1.exp-18 = part-1.exp-18 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        else assign
+                        part-1.exp-18 = part-1.exp-18 + buf_parts.fact-qnty * alc-goods.vol / 10
+                        tt-parts-info.exp-18 = buf_parts.fact-qnty * alc-goods.vol / 10 .
                     end.
 
                     when "rv" then do: /* возврат внутренний */
@@ -1811,17 +1983,20 @@ for each obj-list no-lock:  /* По всем объектам */
                                 if v-kpp = "" then  v-kpp = v-fmtcli-kpp.
                                 
                                 if v-kpp <> part-1.obj-kpp then do :
-                                    part-1.inc-13 = part-1.inc-13 + buf_parts.fact-qnty * alc-goods.vol / 10.    
+                                    part-1.inc-13 = part-1.inc-13 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                                    tt-parts-info.inc-13 = buf_parts.fact-qnty * alc-goods.vol / 10 .    
                                 end.
                             end.
                         end.
-                        else
-                        part-1.inc-13 = part-1.inc-13 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        else assign
+                        part-1.inc-13 = part-1.inc-13 + buf_parts.fact-qnty * alc-goods.vol / 10
+                        tt-parts-info.inc-13 = buf_parts.fact-qnty * alc-goods.vol / 10 .
                     end.
 
                     when "em" then do: /* расход  произв. */
 /*                        message "кол.16 расход  произв. " buf_parts.out-code + " " + string(buf_parts.fact-qnty * alc-goods.vol / 10) view-as alert-box.*/
                         part-1.exp-16 = part-1.exp-16 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        tt-parts-info.exp-16 = buf_parts.fact-qnty * alc-goods.vol / 10 .
                     end.
 
                     when "wm" then do: /* списание произв. */
@@ -1830,6 +2005,7 @@ for each obj-list no-lock:  /* По всем объектам */
 /*                        "Код товара:" alc-goods.gds-code view-as alert-box.                */
                         
                         part-1.exp-16 = part-1.exp-16 + buf_parts.fact-qnty * alc-goods.vol / 10.
+                        tt-parts-info.exp-16 = buf_parts.fact-qnty * alc-goods.vol / 10 .
                     end.                    
                     
                 end case. /* case buf_doc-line.ext-doc-type */
@@ -1839,6 +2015,10 @@ for each obj-list no-lock:  /* По всем объектам */
                 part-1.inc-10 = part-1.inc-7  + part-1.inc-8  + part-1.inc-9.
                 part-1.inc-14 = part-1.inc-10 + part-1.inc-11 + part-1.inc-12 + part-1.inc-13.
                 part-1.exp-19 = part-1.exp-15 + part-1.exp-16 + part-1.exp-17 + part-1.exp-18.
+                
+                tt-parts-info.inc-10 = tt-parts-info.inc-7 + tt-parts-info.inc-8 + tt-parts-info.inc-9 .
+                tt-parts-info.inc-14 = tt-parts-info.inc-10 + tt-parts-info.inc-11 + tt-parts-info.inc-12 + tt-parts-info.inc-13 .
+                tt-parts-info.exp-19 = tt-parts-info.exp-15 + tt-parts-info.exp-16 + tt-parts-info.exp-17 + tt-parts-info.exp-18 .
 
                 /* Второй раздел (Запись делается для каждой партии и только для закупок)*/
 
@@ -2146,6 +2326,7 @@ run waitfram-show in this-procedure (input wait-message).
 
 
 /* Вывод */
+run print-info .
 
 if TOGGLE-Excel = yes then run excel-output.
 if TOGGLE-XML = yes then run xml-output.
@@ -2156,6 +2337,138 @@ apply "go".
 
 END PROCEDURE.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE print-info s-object
+procedure print-info :
+    define var v-act-file as char no-undo.
+    v-act-file  = session:temp-directory + {&DF_Name} +  "alc-dec_parts-info.html".
+    
+    output stream OutStr-html to value(v-act-file) convert target 'UTF-8'/*no-convert*/.
+    put stream OutStr-html unformatted
+        substitute(
+
+        '<!doctype html>
+                 <html>
+              <head>
+              <meta charset="UTF-8">
+                 <!-- Стили документа -->
+              <style>
+                table ~{border-collapse: collapse; ~}
+                tbody td, th ~{border: 1px solid black;~}
+                #myid ~{font-weight: bold;~}
+                .class1 ~{font-style: italic;~}
+                .class2 ~{font-family: Arial;~}
+              </style>
+              </head>
+                  <body>
+                  <table orientation="landscape" name="лист1" repeat_rows="1:1" hide_zero="True">
+                  <thead>
+                  <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                  <tr class="set_columns">
+                        <td style="width:40px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:50px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:180px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:120px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                  </tr>
+                  <tr>
+                        <td colspan="27" style="front-weight: bold; text-align: center;">Информация по партиям для алкогольной декларации</td>
+                  </tr>
+        </thead>
+            <tbody>
+                <tr>
+                <th>Код объекта</th>
+                <th>Тип объекта</th>
+                <th>Код АП</th>
+                <th>Номер приходного документа (in-code)</th>
+                <th>Номер документа (out-code)</th>
+                <th>Номер партии (part-code)</th>
+                <th>Артикул</th>
+                <th>Имя произв.</th>
+                <th>ИНН произв.</th>
+                <th>КПП произв.</th>
+                <th>Откуда</th>
+                <th>6</th>
+                <th>7</th>
+                <th>8</th>
+                <th>9</th>
+                <th>10</th>
+                <th>11</th>
+                <th>12</th>
+                <th>13</th>
+                <th>14</th>
+                <th>15</th>
+                <th>16</th>
+                <th>17</th>
+                <th>18</th>
+                <th>19</th>
+                <th>20</th>
+                <th>21</th>
+                </tr>').
+
+    for each tt-parts-info break by tt-parts-info.obj-type by tt-parts-info.obj-code by tt-parts-info.alc-type-code :
+        put stream OutStr-html unformatted
+            
+            '<tr style="height: 50px;">' skip
+             '<td text_wrap="true">' + string(tt-parts-info.obj-type) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.obj-code) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.alc-type-code) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.in-code) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.out-code) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.part-code) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.artic) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.producer-obj-name) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.producer-inn) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.producer-kpp) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.importer) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.remain-6) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.inc-7) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.inc-8) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.inc-9) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.inc-10) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.inc-11) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.inc-12) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.inc-13) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.inc-14) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.exp-15) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.exp-16) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.exp-17) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.exp-18) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.exp-19) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.remain-20) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.remain-21) + '</td>' skip
+             '</tr>' skip
+             '</tbody>' skip
+          .
+            
+    end.
+    
+    output stream OutStr-html close.
+end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -3005,8 +3318,10 @@ end case.
                         ii-pos = 0.
                         
                         for each part-2 where part-2.alc-type-code = part-1.alc-type-code /* Здесь мы в импортерах и производителях нужного типа продукции, пройдём до поставщиков */
-                                        and   part-2.prod-code = part-1.prod-code
-                                        and   part-2.prod-type = part-1.prod-type
+                                        and  (
+                                              (part-2.prod-code = part-1.prod-code and part-2.prod-type = part-1.prod-type)
+                                           or (part-2.producer-inn = part-1.producer-inn and part-2.producer-kpp = part-1.producer-kpp)
+                                                )
                                         and   part-2.obj-code  = part-1.obj-code
                                         and   part-2.obj-type  = part-1.obj-type
                                         break by part-2.supplier-code:                    /* Разбивая по поставщикам */

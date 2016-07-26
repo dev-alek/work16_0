@@ -483,7 +483,7 @@ DO:
   
   if not glog then return no-apply.
   
-  if bh-wb-egais:buffer-field ('DbNum'):buffer-value () 
+  if bh-wb-egais:buffer-field ('DbNum'):buffer-value () <>  v-cntxt-db-num
   then do:
     message "Нельзя удалять накладную полученную в другой БД " + bh-wb-egais:buffer-field ('DbNum'):buffer-value ().
     return no-apply.

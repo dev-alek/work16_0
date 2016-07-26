@@ -161,7 +161,7 @@ define variable iTemp as integer no-undo.
   DEFINE VARIABLE page-enabled         AS LOGICAL EXTENT {&max-labels} NO-UNDO.
   
   DEFINE VARIABLE pos-x             AS integer NO-UNDO init 5.
-  DEFINE VARIABLE pos-y             AS integer NO-UNDO init 100.
+  DEFINE VARIABLE pos-y             AS integer NO-UNDO init 110.
 
   DEF VAR width-tab-values    AS INT INIT [110,72] EXTENT 2 NO-UNDO.
   DEFINE VARIABLE        number-of-pages    AS INTEGER   NO-UNDO.
@@ -1331,7 +1331,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   rests_shop:User_Id = v-cntxt-userid .
 /*  run fill-tt.*/
 
-  run set-size(input frame {&FRAME-NAME}:height-pixels - 132, input frame {&FRAME-NAME}:width-pixels - 15).
+  run set-size(input frame {&FRAME-NAME}:height-pixels - 182, input frame {&FRAME-NAME}:width-pixels - 40).
   run initialize-folder (v-section-names).
   run show-current-page(input v-page-current).
   { gbl/diasize.i &browse-name=br-rests }
