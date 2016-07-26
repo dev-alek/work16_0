@@ -13,7 +13,6 @@ $Archive$
 Author: Svetlana Chernova
 Creation date: 11/03/06
 
-
 */
 /* message "YRA!!"  . */
 
@@ -43,6 +42,7 @@ define buffer next_doc-line for ub.doc-line .
 define temp-table temp-tt no-undo
 field doc-code   as character
 field fact-order as decimal
+field fact-date  as date
 index pi1
       fact-order
       doc-code
@@ -108,6 +108,7 @@ for each inv_doc-line no-lock where
                                 assign
                                   temp-tt.doc-code   = next_trn-doc.doc-code
                                   temp-tt.fact-order = next_trn-doc.fact-order
+                                  temp-tt.fact-date = next_trn-doc.fact-date
                                 .
                             end.
                             create temp-tt-goods.
@@ -145,7 +146,7 @@ if available temp-tt then do:
      if v-param-value <> "yes" then v-param-value = "no" .
    end.
    if v-param-value = "no" then
-      return error substitute ( "Документ нельзя закрыть или удалить , так как существует инвентаризация после него &1 &3 (&2) установлен параметр inv-fix=&4"  ,temp-tt.doc-code , temp-tt.fact-order , string( date(int(temp-tt.fact-order)), "99/99/9999") , v-param-value ) .
+      return error substitute ( "Документ нельзя закрыть или удалить , так как существует инвентаризация после него &1 &3 (&2) установлен параметр inv-fix=&4"  ,temp-tt.doc-code , temp-tt.fact-order , temp-tt.fact-date /*string( date(int(temp-tt.fact-order)), "99/99/9999")*/ , v-param-value ) .
 end.
 
 

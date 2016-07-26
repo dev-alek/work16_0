@@ -387,13 +387,16 @@ fact-close:
             buf_in_trn-doc.flag_       = yes
             buf_fbr-doc.status_            = {&fact}
         .
-        run str/vtrecalc.p ( input parparentproc , input recid (buf_out_trn-doc)) no-error .
-        if error-status:error
+        if buf_in_trn-doc.fact-date <> date (now)
         then do:
-          undo, return error substitute( "Ошибка при закрытие документа списания производства: &2. &1."
-                                        , return-value
-                                        , buf_out_trn-doc.doc-code
-                                        ).
+          run str/vtrecalc.p ( input parparentproc , input recid (buf_out_trn-doc)) no-error .
+          if error-status:error
+          then do:
+            undo, return error substitute( "Ошибка при закрытие документа списания производства: &2. &1."
+                                          , return-value
+                                          , buf_out_trn-doc.doc-code
+                                          ).
+          end.
         end.
         { str/st-fo.i buf_out_trn-doc.doc-code }
         { str/st-fo.i buf_in_trn-doc.doc-code  }
@@ -471,14 +474,18 @@ fact-close:
           end.
         end.
 
-        run str/vtrecalc.p ( input parparentproc , input recid (buf_in_trn-doc)) no-error .
-        if error-status:error
+        if buf_in_trn-doc.fact-date <> date (now)
         then do:
-          undo, return error substitute( "Ошибка при закрытие документа прихода производства: &2. &1."
-                                        , return-value
-                                        , buf_in_trn-doc.doc-code
-                                        ).
+          run str/vtrecalc.p ( input parparentproc , input recid (buf_in_trn-doc)) no-error .
+          if error-status:error
+          then do:
+            undo, return error substitute( "Ошибка при закрытие документа прихода производства: &2. &1."
+                                          , return-value
+                                          , buf_in_trn-doc.doc-code
+                                          ).
+          end.
         end.
+        
         if buf_in_trn-doc.obj-type = {&shop} then do:
           { str/add-scal.i parparentproc buf_in_trn-doc.obj-type buf_in_trn-doc.obj-code buf_in_trn-doc.doc-code buf_in_trn-doc.doc-type this-procedure no-error }
           if error-status:error
