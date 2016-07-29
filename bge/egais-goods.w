@@ -622,6 +622,7 @@ DO:
                     tt-gds.imp-info   = bh-gds-egais:buffer-field("imp-info"):buffer-value
                     tt-gds.prod-info   = bh-gds-egais:buffer-field("prod-info"):buffer-value
                 .
+                if tt-gds.old-gds-code = 0 or tt-gds.old-gds-code = ? then tt-gds.old-gds-code = tt-gds.gds-code .
                 for first buf_goods no-lock where buf_goods.gds-code = tt-gds.gds-code :
 /*                    run gds-attr-write(    */
 /*                        buf_goods.gds-code,*/
