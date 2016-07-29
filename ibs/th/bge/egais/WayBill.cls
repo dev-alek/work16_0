@@ -239,13 +239,13 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               end.
             end.
             v-uniq-key-rec = buf_clob-bind.uniq-key-rec.
-            find first buf_clob-data no-lock where /*buf_clob-data.db-num = buf_clob-bind.db-num and*/ buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
+            find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
             createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
             
             find first buf_clob-bind-ref no-lock where buf_clob-bind-ref.uniq-key-rec = v-uniq-key-rec and buf_clob-bind-ref.resource-type = {&lob-egais-ref-b} no-error.
             if available (buf_clob-bind-ref) then 
             do:
-              find first buf_clob-data-ref no-lock where /*buf_clob-data-ref.db-num = buf_clob-bind-ref.db-num and*/ buf_clob-data-ref.int64-id = buf_clob-bind-ref.int64-id no-error.
+              find first buf_clob-data-ref no-lock where buf_clob-data-ref.db-num = buf_clob-bind-ref.db-num and buf_clob-data-ref.int64-id = buf_clob-bind-ref.int64-id no-error.
               createhDoc(recid (buf_clob-data-ref), "refbtemp.xml", output hDocRef).
               prsXMLDocWB:ParseRec(hDoc, hDocRef, input-output table tt-wb-header, input-output table tt-wb-gds-EG, input-output table tt-wb-info-client).
             end.
