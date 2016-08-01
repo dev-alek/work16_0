@@ -623,6 +623,7 @@ DO:
                     tt-gds.prod-info   = bh-gds-egais:buffer-field("prod-info"):buffer-value
                 .
                 if tt-gds.old-gds-code = 0 or tt-gds.old-gds-code = ? then tt-gds.old-gds-code = tt-gds.gds-code .
+                if tt-gds.old-alc-code = "" or tt-gds.old-alc-code = ? then tt-gds.old-alc-code = tt-gds.alc-code .
                 for first buf_goods no-lock where buf_goods.gds-code = tt-gds.gds-code :
 /*                    run gds-attr-write(    */
 /*                        buf_goods.gds-code,*/
@@ -841,6 +842,7 @@ DO:
         return no-apply .
     end.
     create query qh-gds-egais .
+    extGdsObj = new ExtGds(yes).
     qh-gds-egais:set-buffers (bh-gds-egais) .
     qh-gds-egais:query-prepare ("for each tt-gds-eg").
     qh-gds-egais:query-open.
@@ -853,9 +855,14 @@ DO:
             create tt-gds.
             buffer tt-gds:handle:buffer-copy (bh-gds-egais) .
             assign tt-gds.fromEgais = yes .
+            extGdsObj:OpenQueryExtGds(0, tt-gds.alc-code).
+            if extGdsObj:NumBundles = 1 then do :
+                tt-gds.gds-code = extGdsObj:GetExtGdsValue(1):GdsCode no-error .
+            end.
         end.                               
     end.
     run refresh-query in this-procedure.
+    delete object extGdsObj no-error .
     apply "value-changed" to br-goods .
 END.
 

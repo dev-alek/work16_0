@@ -482,7 +482,7 @@ DO:
   if dgrpr-option = {&attr-sum-grp-o} then do:
   run ref/sum-gds-obj.w (input parparentproc 
                         ,input dgrpr-option
-                        ,input X_sum-grp.grp-code
+                        ,input string (X_sum-grp.grp-code, "999")
                         ,input v-cntxt-host-code-obj
                         ,input v-cntxt-obj-type
                         ,input v-cntxt-obj-code
