@@ -39,7 +39,7 @@ define variable bh-wb-egais         as handle    no-undo.
 define variable qh-wb-egais         as handle    no-undo.
 define variable browse-hdl-wb-egais as handle    no-undo.
 define variable bcol                as handle    extent no-undo.
-define variable egais               as class     EGAIS no-undo.
+define variable egais               as class     EGAIS   no-undo.
 define variable egaisWBAdv          as class     WayBill no-undo.
 define variable v-db-num            as integer   no-undo .
 define variable v-user-id           as character no-undo .
@@ -60,6 +60,8 @@ define variable glog                as logical   no-undo.
 define variable actnEGAISAdm        as logical   no-undo.
 define variable v-uniq-key-rec      as character no-undo.
 define variable v-trn-doc           as character no-undo.
+define variable v-width             as decimal   no-undo.
+define variable v-height            as decimal   no-undo.
 
 define stream strlog.
 
@@ -1216,8 +1218,14 @@ end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reopen-browse Dialog-Frame 
 PROCEDURE reopen-browse :
-if bh-wb-egais = ? 
-    then return .
+
+  if bh-wb-egais = ? 
+      then return .
+
+  if valid-handle (browse-hdl-wb-egais) then do: /*для правильной работы изменения размеров окна и browse.*/
+    v-width  = browse-hdl-wb-egais:width-chars.
+    v-height = browse-hdl-wb-egais:height-chars.
+  end.
 
   case cb-1 :
     when 1 then 
@@ -1230,8 +1238,8 @@ if bh-wb-egais = ?
           query     = qh-wb-egais
           x         = 10
           y         = 70
-          width     = 119
-          height    = 24
+          width     = if v-width <> 0 then v-width else 119
+          height    = if v-height <> 0 then v-height else 24
           visible   = true
           read-only = true
           sensitive = true
@@ -1259,9 +1267,9 @@ if bh-wb-egais = ?
           if ii = 9 then bcol[ii]:width = 5.
         end.
       end.
-      run diasize_init in this-procedure .
       Btn_Sel:label = "Изменить".
       enable Btn_Sel with frame {&FRAME-NAME}.
+      v-diasize-browse-handle = browse-hdl-wb-egais.
     end.
     when 2  then 
     do:
@@ -1273,8 +1281,8 @@ if bh-wb-egais = ?
           query     = qh-wb-egais
           x         = 10
           y         = 70
-          width     = 119
-          height    = 24
+          width     = if v-width <> 0 then v-width else 119
+          height    = if v-height <> 0 then v-height else 24
           visible   = true
           read-only = true
           sensitive = true
@@ -1301,8 +1309,8 @@ if bh-wb-egais = ?
           if ii = 9 then bcol[ii]:width = 5.
         end.
       end.
-      run diasize_init in this-procedure .
       Btn_Sel:label = "Просмотр".
+      v-diasize-browse-handle = browse-hdl-wb-egais.
     end.
     when 3  then 
     do:
@@ -1314,8 +1322,8 @@ if bh-wb-egais = ?
           query     = qh-wb-egais
           x         = 10
           y         = 70
-          width     = 119
-          height    = 24
+          width     = if v-width <> 0 then v-width else 119
+          height    = if v-height <> 0 then v-height else 24
           visible   = true
           read-only = true
           sensitive = true
@@ -1337,9 +1345,9 @@ if bh-wb-egais = ?
           if ii = 1 then bcol[ii]:width = 10.
         end.
       end.
-      run diasize_init in this-procedure .
       Btn_Sel:label = "Просмотр". 
       enable Btn_Sel with frame {&FRAME-NAME}.
+      v-diasize-browse-handle = browse-hdl-wb-egais.
     end.
     when 4  then 
     do:
@@ -1351,8 +1359,8 @@ if bh-wb-egais = ?
           query     = qh-wb-egais
           x         = 10
           y         = 70
-          width     = 119
-          height    = 24
+          width     = if v-width <> 0 then v-width else 119
+          height    = if v-height <> 0 then v-height else 24
           visible   = true
           read-only = true
           sensitive = true
@@ -1381,6 +1389,7 @@ if bh-wb-egais = ?
       end.
       Btn_Sel:label = "Просмотр".
       enable Btn_Sel with frame {&FRAME-NAME}.
+      v-diasize-browse-handle = browse-hdl-wb-egais.
     end.
   end.
   

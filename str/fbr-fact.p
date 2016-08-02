@@ -387,7 +387,7 @@ fact-close:
             buf_in_trn-doc.flag_       = yes
             buf_fbr-doc.status_            = {&fact}
         .
-        if buf_in_trn-doc.fact-date <> date (now)
+        if buf_in_trn-doc.fact-date <> v-fact-date
         then do:
           run str/vtrecalc.p ( input parparentproc , input recid (buf_out_trn-doc)) no-error .
           if error-status:error
@@ -473,8 +473,8 @@ fact-close:
                                         , buf_in_trn-doc.ext-doc-type ).
           end.
         end.
-
-        if buf_in_trn-doc.fact-date <> date (now)
+        
+        if buf_in_trn-doc.fact-date <> v-fact-date
         then do:
           run str/vtrecalc.p ( input parparentproc , input recid (buf_in_trn-doc)) no-error .
           if error-status:error
