@@ -23,6 +23,7 @@ class ibs.th.bge.egais.ExtGds:
   {cmp/str-glbl.i class}
   { ref/extclass.i }  
   { gbl/thbj-def.i }
+  { gbl/color.i }
   
   
   define private temp-table ttObjEgaisAlcProp no-undo
@@ -34,6 +35,7 @@ class ibs.th.bge.egais.ExtGds:
   define private buffer x_ext-classif        for ub.ext-classif.
   define private buffer buf_ext-classif-attr for ub.ext-classif-attr.
   define private buffer buf_gds for ub.goods.
+  define private buffer buf_cli for ub.clients.
 
   define property ExtSystem as integer no-undo
     get.
@@ -62,6 +64,35 @@ class ibs.th.bge.egais.ExtGds:
   define property ReturnMsg as character no-undo
     get.
     private set.
+
+  define property SettingsTTList as character no-undo init ";;20,yes;23,yes;;;20,yes;20,no;;20,yes;;;;;20,yes;;;;;1,no" /*в порядке полей через ; ширина в симв. поля, видно/не видно поле по умолч. видно*/
+    get.
+    private set.
+
+  define temp-table tt-egaisgds-hndls no-undo
+    field gdsCode          as integer   label "Код товара" format "9999999999"
+    field alcCode          as character label "Алк. код товара" format "x(21)"
+    field gdsName          as character label "Название товара" format "x(256)"
+    field egaisGdsName     as character label "Название товара ЕГАИС" format "x(256)"
+    field artic            as character label "Артикл" format "x(15)"
+    field prod             as character label "Производитель TH" format "x(21)"
+    field prodName         as character label "Производитель TH" format "x(256)"
+    field prodInnkpp       as character label "ИНН/КПП производителя TH" format "x(30)"
+    field prodEgais        as character label "Код производитель ЕГАИС" format "x(21)"
+    field prodEgaisName    as character label "Производитель ЕГАИС" format "x(256)" /*10 поле */
+    field egaisTypeProd    as character label "Тип"
+    field regionProd       as character label "Регион"
+    field prodInnkppEgais  as character label "ИНН/КПП производителя ЕГАИС" format "x(30)"
+    field imporEgais       as character label "Код импортер ЕГАИС" format "x(21)"
+    field imporEgaisName   as character label "Импортер ЕГАИС" format "x(256)"
+    field egaisTypeImpor   as character label "Тип"
+    field regionImpor      as character label "Регион"
+    field imporInnkppEgais as character label "ИНН/КПП импортера ЕГАИС" format "x(30)"
+    field verXSD           as integer   label "Вер. XSD" format "99"
+    field ColorNum         as integer init ?
+    index pi as primary
+    gdsCode alcCode
+    .
 
   constructor public ExtGds (inIsSilent as logical):
     
@@ -94,6 +125,107 @@ class ibs.th.bge.egais.ExtGds:
   method public logical OpenQueryExtGds (inGdsCode as int):
     
     return OpenQueryExtGds (inGdsCode, "").
+    
+  end.
+
+  method public void GetHndlTable (inGdsCode as int, inAlcCode as char, output outTTHndl as handle):
+    
+    def var ExtGdsValueObj as ExtGdsValue no-undo.
+    
+    assign
+      ReturnMsg = ""
+    .
+    
+    for each buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
+      and buf_ext-classif.classif-name = {&extclass_goods_esys} 
+      and buf_ext-classif.db-num = 0
+      and (GdsCodeItemQuery = 0 or buf_ext-classif.key#_one = GdsCodeItemQuery)   
+      and buf_ext-classif.key#_two = ExtSystem 
+      and buf_ext-classif.key#_three = 0
+      and (AlcCodeItemQuery = "" or buf_ext-classif.charkey_one = AlcCodeItemQuery)
+      and buf_ext-classif.charkey_two = ""
+      and buf_ext-classif.charkey_three = ""
+      and buf_ext-classif.nonunique = 0
+      :
+      
+      find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
+        and buf_ext-classif-attr.classif-name = buf_ext-classif.classif-name
+        and buf_ext-classif-attr.db-num = buf_ext-classif.db-num
+        and buf_ext-classif-attr.Key#_One = buf_ext-classif.key#_one
+        and buf_ext-classif-attr.Key#_two = buf_ext-classif.key#_two
+        and buf_ext-classif-attr.Key#_three = buf_ext-classif.key#_three
+        and buf_ext-classif-attr.CharKey_One = buf_ext-classif.charkey_one
+        and buf_ext-classif-attr.CharKey_two = buf_ext-classif.charkey_two
+        and buf_ext-classif-attr.CharKey_three = buf_ext-classif.charkey_three
+        and buf_ext-classif-attr.nonunique = buf_ext-classif.nonunique
+        and buf_ext-classif-attr.attr-code = 'egais-info'
+        no-error .
+
+        assign
+          ExtGdsValueObj = GetInfoObj (buf_ext-classif-attr.attr-value) 
+        no-error.
+        
+        if error-status:error
+          then 
+        do:
+          ReturnMsg = return-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
+          if not IsSilent 
+            then message ReturnMsg view-as alert-box.
+        end.
+
+        ExtGdsValueObj:AlcCode = buf_ext-classif-attr.CharKey_One.
+        ExtGdsValueObj:GdsCode = buf_ext-classif-attr.Key#_One.
+        
+        create tt-egaisgds-hndls.
+        assign 
+          tt-egaisgds-hndls.alcCode = ExtGdsValueObj:AlcCode
+          tt-egaisgds-hndls.gdsCode = ExtGdsValueObj:GdsCode
+          tt-egaisgds-hndls.prodEgaisName = ExtGdsValueObj:FullNameProd
+          tt-egaisgds-hndls.prodEgais = ExtGdsValueObj:CliRegIdProd
+          tt-egaisgds-hndls.imporEgais = ExtGdsValueObj:CliRegIdImpor
+          tt-egaisgds-hndls.imporEgaisName = ExtGdsValueObj:FullNameImpor
+          tt-egaisgds-hndls.imporInnkppEgais = ExtGdsValueObj:INNImpor + (if ExtGdsValueObj:KPPImpor <> "" then "/" + ExtGdsValueObj:KPPImpor else "")
+          tt-egaisgds-hndls.prodInnkppEgais = ExtGdsValueObj:INNProd + (if ExtGdsValueObj:KPPProd <> "" then "/" + ExtGdsValueObj:KPPProd else "")
+          tt-egaisgds-hndls.egaisGdsName = ExtGdsValueObj:FullNameGds
+          tt-egaisgds-hndls.egaisTypeProd = ExtGdsValueObj:CliEgaisTypeProd
+          tt-egaisgds-hndls.regionProd = ExtGdsValueObj:RegionProd
+          tt-egaisgds-hndls.egaisTypeImpor = ExtGdsValueObj:CliEgaisTypeImpor
+          tt-egaisgds-hndls.regionImpor = ExtGdsValueObj:RegionImpor
+        .
+
+        release buf_gds.
+        find first buf_gds no-lock where buf_gds.gds-code = ExtGdsValueObj:GdsCode no-error.
+        release buf_cli.
+        find first buf_cli no-lock where buf_cli.obj-type = buf_gds.prod-type and buf_cli.obj-code = buf_gds.prod-code no-error.
+        
+        if tt-egaisgds-hndls.prodInnkppEgais = "" and  tt-egaisgds-hndls.imporInnkppEgais = ""
+        then do:
+          tt-egaisgds-hndls.ColorNum = RED_COLOR.
+        end.
+        if available (buf_gds)
+        then
+          assign
+            tt-egaisgds-hndls.gdsName = buf_gds.gds-name
+            tt-egaisgds-hndls.artic = buf_gds.artic
+            tt-egaisgds-hndls.prod = buf_gds.prod-type + string (buf_gds.prod-code)
+            tt-egaisgds-hndls.prodName = buf_cli.obj-name
+          .
+        if ExtGdsValueObj:CliEgaisTypeProd = "" and ExtGdsValueObj:CliEgaisTypeImpor = ""
+        then do:
+          assign
+            tt-egaisgds-hndls.verXSD = 1.
+        end. 
+        else do:
+          assign
+            tt-egaisgds-hndls.verXSD = 2.
+        end. 
+
+    end.
+    
+    outTTHndl = buffer tt-egaisgds-hndls:handle.
+    
+    if valid-object (ExtGdsValueObj)
+      then delete object ExtGdsValueObj.
     
   end.
 
@@ -138,7 +270,7 @@ class ibs.th.bge.egais.ExtGds:
         then 
       do:
         ClearProp().
-        ReturnMsg = "Отсутсвует атрибут egais-info - " + inAlcCode + ". Выполните синхронизацию.".
+        ReturnMsg = "Отсутсвует атрибут egais-info - " + buf_ext-classif.charkey_one + "/" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию.".
         if not IsSilent 
           then message ReturnMsg view-as alert-box.
       end.
@@ -509,7 +641,7 @@ class ibs.th.bge.egais.ExtGds:
     
   end.
 
-  method private integer getExtSystem ():
+  method private integer GetExtSystem ():
   
     define variable v-value-character as character no-undo .
     define variable v-value-decimal   as decimal   no-undo .
@@ -544,6 +676,7 @@ class ibs.th.bge.egais.ExtGds:
     def var v-impor as char no-undo.
     def var v-msg   as char no-undo.
     def var hndlclsExtGdsValueObj as class ExtGdsValue no-undo.
+    def var ExtGdsValueObj as class ExtGdsValue no-undo.
     v-prod = ''.
     v-impor = ''.
     ReturnMsg = "".
@@ -557,56 +690,42 @@ class ibs.th.bge.egais.ExtGds:
       ttObjEgaisAlcProp.iExtGdsObj = inJJ
       ttObjEgaisAlcProp.ExtGdsValueObj = cast (hndlclsExtGdsValueObj,Progress.Lang.Object).
     
-    hndlclsExtGdsValueObj:AlcCode = buf_ext-classif-attr.CharKey_One.
-    hndlclsExtGdsValueObj:GdsCode = buf_ext-classif-attr.Key#_One.
-    
-    if num-entries (buf_ext-classif-attr.attr-value, chr(4)) <> 3
-      then 
-    do:
-      v-msg = "Некорректный атрибут egais-info - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
-      return error v-msg.      
-    end.
-        
-    v-prod = entry (1, buf_ext-classif-attr.attr-value, chr(4)) no-error.
-    if num-entries (v-prod, chr (5)) < 6 
-      then 
-    do:
-      v-msg = "Некорректный атрибут egais-info v-prod - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
-      return error v-msg.
-    end.
-    
-    v-impor = entry (2, buf_ext-classif-attr.attr-value, chr(4)) no-error.
-    if  num-entries (v-impor, chr (5)) < 6 
-      then 
-    do:
-      v-msg = "Некорректный атрибут egais-info v-impor - " + buf_ext-classif-attr.attr-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
-      return error v-msg.
-    end.
-    
-    hndlclsExtGdsValueObj:CliRegIdProd = entry (1, v-prod, chr(5)).
-    hndlclsExtGdsValueObj:INNProd = entry (2, v-prod, chr(5)).
-    hndlclsExtGdsValueObj:KPPProd = entry (3, v-prod, chr(5)).
-    hndlclsExtGdsValueObj:FullNameProd = entry (4, v-prod, chr(5)).
-    hndlclsExtGdsValueObj:CountryProd = entry (5, v-prod, chr(5)).
-    hndlclsExtGdsValueObj:DescrProd = entry (6, v-prod, chr(5)).
     assign
-    hndlclsExtGdsValueObj:CliEgaisTypeProd = entry (7, v-prod, chr(5)) when num-entries (v-prod, chr (5)) > 6
-    hndlclsExtGdsValueObj:RegionProd = entry (8, v-prod, chr(5)) when num-entries (v-prod, chr (5)) > 7
-    .
-    
-    hndlclsExtGdsValueObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
-    hndlclsExtGdsValueObj:INNImpor = entry (2, v-impor, chr(5)).
-    hndlclsExtGdsValueObj:KPPImpor = entry (3, v-impor, chr(5)).
-    hndlclsExtGdsValueObj:FullNameImpor = entry (4, v-impor, chr(5)).
-    hndlclsExtGdsValueObj:CountryImpor = entry (5, v-impor, chr(5)).
-    hndlclsExtGdsValueObj:DescrImpor = entry (6, v-impor, chr(5)).
-    assign
-    hndlclsExtGdsValueObj:CliEgaisTypeImpor = entry (7, v-impor, chr(5)) when num-entries (v-impor, chr (5)) > 6
-    hndlclsExtGdsValueObj:RegionImpor = entry (8, v-impor, chr(5)) when num-entries (v-impor, chr (5)) > 7
-    .
+      ExtGdsValueObj = GetInfoObj (buf_ext-classif-attr.attr-value) 
+    no-error.
 
-    hndlclsExtGdsValueObj:FullNameGds = entry (3, buf_ext-classif-attr.attr-value, chr(4)).
+    if error-status:error
+      then 
+    do:
+      return error return-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
+    end.
     
+    ExtGdsValueObj:AlcCode = buf_ext-classif-attr.CharKey_One.
+    ExtGdsValueObj:GdsCode = buf_ext-classif-attr.Key#_One.
+
+    assign
+      hndlclsExtGdsValueObj:AlcCode = ExtGdsValueObj:AlcCode
+      hndlclsExtGdsValueObj:GdsCode = ExtGdsValueObj:GdsCode
+      hndlclsExtGdsValueObj:CliRegIdProd = ExtGdsValueObj:CliRegIdProd
+      hndlclsExtGdsValueObj:INNProd = ExtGdsValueObj:INNProd
+      hndlclsExtGdsValueObj:KPPProd = ExtGdsValueObj:KPPProd
+      hndlclsExtGdsValueObj:FullNameProd = ExtGdsValueObj:FullNameProd
+      hndlclsExtGdsValueObj:CountryProd = ExtGdsValueObj:CountryProd
+      hndlclsExtGdsValueObj:DescrProd = ExtGdsValueObj:DescrProd
+      hndlclsExtGdsValueObj:CliEgaisTypeProd = ExtGdsValueObj:CliEgaisTypeProd
+      hndlclsExtGdsValueObj:RegionProd = ExtGdsValueObj:RegionProd
+      hndlclsExtGdsValueObj:CliRegIdImpor = ExtGdsValueObj:CliRegIdImpor
+      hndlclsExtGdsValueObj:INNImpor = ExtGdsValueObj:INNImpor
+      hndlclsExtGdsValueObj:KPPImpor = ExtGdsValueObj:KPPImpor
+      hndlclsExtGdsValueObj:FullNameImpor = ExtGdsValueObj:FullNameImpor
+      hndlclsExtGdsValueObj:CountryImpor = ExtGdsValueObj:CountryImpor
+      hndlclsExtGdsValueObj:DescrImpor = ExtGdsValueObj:DescrImpor
+      hndlclsExtGdsValueObj:CliEgaisTypeImpor = ExtGdsValueObj:CliEgaisTypeImpor
+      hndlclsExtGdsValueObj:RegionImpor = ExtGdsValueObj:RegionImpor
+      hndlclsExtGdsValueObj:FullNameGds = ExtGdsValueObj:FullNameGds
+    .
+    if valid-object (ExtGdsValueObj)
+      then delete object ExtGdsValueObj.
     
   end.
 
@@ -623,5 +742,65 @@ class ibs.th.bge.egais.ExtGds:
     
   end.
 
+  method private class ExtGdsValue GetInfoObj (inInfoValue as char):
+
+    def var ExtGdsValueObj as class ExtGdsValue no-undo.
+    def var v-msg   as char no-undo.
+    def var v-prod  as char no-undo.
+    def var v-impor as char no-undo.
+    
+    ExtGdsValueObj = new ExtGdsValue().
+    
+    if num-entries (inInfoValue, chr(4)) <> 3
+      then 
+    do:
+      v-msg = "Некорректный атрибут egais-info - " + inInfoValue.
+      return error v-msg.      
+    end.
+        
+    v-prod = entry (1, inInfoValue, chr(4)) no-error.
+    if num-entries (v-prod, chr (5)) < 6 
+      then 
+    do:
+      v-msg = "Некорректный атрибут egais-info v-prod - " + inInfoValue.
+      return error v-msg.
+    end.
+    
+    v-impor = entry (2, inInfoValue, chr(4)) no-error.
+    if  num-entries (v-impor, chr (5)) < 6 
+      then 
+    do:
+      v-msg = "Некорректный атрибут egais-info v-impor - " + inInfoValue.
+      return error v-msg.
+    end.
+
+    
+    ExtGdsValueObj:CliRegIdProd = entry (1, v-prod, chr(5)).
+    ExtGdsValueObj:INNProd = entry (2, v-prod, chr(5)).
+    ExtGdsValueObj:KPPProd = entry (3, v-prod, chr(5)).
+    ExtGdsValueObj:FullNameProd = entry (4, v-prod, chr(5)).
+    ExtGdsValueObj:CountryProd = entry (5, v-prod, chr(5)).
+    ExtGdsValueObj:DescrProd = entry (6, v-prod, chr(5)).
+    assign
+    ExtGdsValueObj:CliEgaisTypeProd = entry (7, v-prod, chr(5)) when num-entries (v-prod, chr (5)) > 6
+    ExtGdsValueObj:RegionProd = entry (8, v-prod, chr(5)) when num-entries (v-prod, chr (5)) > 7
+    .
+    
+    ExtGdsValueObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
+    ExtGdsValueObj:INNImpor = entry (2, v-impor, chr(5)).
+    ExtGdsValueObj:KPPImpor = entry (3, v-impor, chr(5)).
+    ExtGdsValueObj:FullNameImpor = entry (4, v-impor, chr(5)).
+    ExtGdsValueObj:CountryImpor = entry (5, v-impor, chr(5)).
+    ExtGdsValueObj:DescrImpor = entry (6, v-impor, chr(5)).
+    assign
+    ExtGdsValueObj:CliEgaisTypeImpor = entry (7, v-impor, chr(5)) when num-entries (v-impor, chr (5)) > 6
+    ExtGdsValueObj:RegionImpor = entry (8, v-impor, chr(5)) when num-entries (v-impor, chr (5)) > 7
+    .
+
+    ExtGdsValueObj:FullNameGds = entry (3, inInfoValue, chr(4)).
+    
+    return ExtGdsValueObj.
+    
+  end.
 
 end class.
