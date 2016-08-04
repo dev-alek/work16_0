@@ -381,12 +381,18 @@ DO:
     do ii = 1 to num-entries (select-list) :
       v-tt-rec = integer(entry(ii, select-list)) . 
       for first tt-gds-act exclusive-lock where recid(tt-gds-act) = v-tt-rec :  
+        for each tt-marks exclusive-lock where tt-marks.gds-part-position_ = tt-gds-act.position_ :
+            delete tt-marks .
+        end.  
         delete tt-gds-act .
       end.  
     end.
     nn = 0 .
     for each tt-gds-act exclusive-lock :
         nn = nn + 1 .
+        for each tt-marks exclusive-lock where tt-marks.gds-part-position_ = tt-gds-act.position_ :
+            tt-marks.gds-part-position_ = nn .
+        end.
         tt-gds-act.position_ = nn .
     end.
     select-list = "" .
@@ -531,6 +537,9 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-goods Dialog-Frame
 on choose of menu-item m-goods in menu m-add 
 DO:
+    define variable v-user-action    as character no-undo.
+    define variable v-printed        as logical   no-undo.
+    
     run ref/gds-ref.p
     ( parparentproc
     ,'b-sel,b-mark,b-add'
@@ -547,7 +556,10 @@ DO:
     , output v-rid-list) no-error.
     if v-rid-list = "" or v-rid-list = ? 
     then return no-apply.
-    output stream str-log to value("act-bal_log.txt") append .
+    if search ("act-bal_log.err") <> ? then do:
+      os-delete value("act-bal_log.err").
+    end.
+    output stream str-log to value("act-bal_log.err") append .
     err-good = false .
     _goods_ :
     do jj = 1 to num-entries(v-rid-list) :
@@ -696,7 +708,15 @@ DO:
     output stream str-log close .
     
     if err-good then do :
-        message "Не все выбранные товары добавлены в акт. Смотрите лог-файл act-bal_log.txt в рабочей директории" view-as alert-box .
+        message "Не все выбранные товары добавлены в акт!" view-as alert-box .
+        run gbl/prnfilen.w
+           (input  "Ошибки при добавлении товаров"
+           ,input  0
+           ,input  "act-bal_log.err"
+           ,input  7
+           ,output v-user-action
+           ,output v-printed
+           ).
     end.
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
 END.
@@ -951,16 +971,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     empty temp-table tt-exts .
     
     if p-mode = {&add-def} then do :
-        v-date = substitute ("&1&2&3",string (year (now)), string (month (now)), string (day (now))).        
+        v-date = substitute ("&1&2&3", string (day (now), "99"), string (month (now), "99"),substring (string(year (now)), 3,2)).        
         create tt-act-header .
         assign
-            tt-act-header.num = "ACO-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-'
+            tt-act-header.num = "ACO-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-' + string(int(TIME))
             tt-act-header.date_ = TODAY
             tt-act-header.is-sent = no
             tt-act-header.type_ = "Продукция полученная до 01.01.2016"
         .
         display tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
-        enable  tt-act-header.num tt-act-header.date_ b-good with frame {&FRAME-NAME}.
+        enable  tt-act-header.date_ b-good with frame {&FRAME-NAME}.
         if egais:VerXSD = "2" then do :
             display tt-act-header.type_ with frame {&FRAME-NAME}.
             enable  tt-act-header.type_ with frame {&FRAME-NAME}.    

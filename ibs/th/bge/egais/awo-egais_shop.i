@@ -259,7 +259,7 @@ procedure makeXMLegais_v2 :
                         sw:end-element ("awr:Product") .
                         sw:write-data-element ("awr:Quantity", string(tt-gds-act.qnty)) .
         find first tt-marks where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ no-lock no-error.
-        if available tt-marks then do :                
+        if available tt-marks and (tt-act-header.type_ = "Проверки" or tt-act-header.type_ = "Арест") then do :                
                         sw:start-element ("awr:MarkCodeInfo") .
             for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
                             sw:write-data-element ("awr:MarkCode", tt-marks.mark) .

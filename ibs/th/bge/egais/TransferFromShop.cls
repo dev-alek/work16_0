@@ -41,6 +41,9 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
   define private variable ticket2        as logical   no-undo.
 
   define variable v-FS-RAR  as character no-undo .
+  define variable ObjType   as character no-undo .
+  define variable ObjCode   as integer   no-undo .
+  define variable Obj       as character no-undo .
   define variable v-ext-sys as integer   no-undo .
   DEFINE VARIABLE good AS LOGICAL NO-UNDO.
   
@@ -56,6 +59,9 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
 /*    assign               */
 /*      parameters = inNum.*/
 /*    .                    */
+    ObjCode = inObjCode.
+    ObjType = inOjType.
+    Obj = "*" + substring(ObjType,1,1) + string(ObjCode) + "*" .
     v-FS-RAR = inFSRAR.
     v-ext-sys = inExtSys.
     IsSent.
@@ -80,7 +86,9 @@ class ibs.th.bge.egais.TransferFromShop inherits EGAISUTM:
         do:
           empty temp-table tt-act-header.
           for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-tfs}:
-            /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.indenty + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
+            if entry(1, buf_clob-bind.descr, {&delim-par}) matches Obj
+            then .
+            else next .
             create tt-act-header.
             assign
                 tt-act-header.num       = (entry (1, buf_clob-bind.descr, {&delim-par}))

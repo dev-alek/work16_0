@@ -702,15 +702,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     empty temp-table tt-exts .
     
     if p-mode = {&add-def} then do :
-        v-date = substitute ("&1&2&3",string (year (now)), string (month (now)), string (day (now))).        
+        v-date = substitute ("&1&2&3", string (day (now), "99"), string (month (now), "99"),substring (string(year (now)), 3,2)).        
         create tt-act-header .
         assign
-            tt-act-header.num = "TFS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-'
+            tt-act-header.num = "TFS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-' + string(int(TIME))
             tt-act-header.date_ = TODAY
             tt-act-header.is-sent = no
         .
         display tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
-        enable  tt-act-header.num tt-act-header.date_ b-good with frame {&FRAME-NAME}.     
+        enable  tt-act-header.date_ b-good with frame {&FRAME-NAME}.     
     end.
     
     if p-mode = {&update} or p-mode = {&lookup} then do :

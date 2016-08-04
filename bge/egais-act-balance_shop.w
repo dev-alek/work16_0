@@ -796,16 +796,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     empty temp-table tt-exts .
     
     if p-mode = {&add-def} then do :
-        v-date = substitute ("&1&2&3",string (year (now)), string (month (now)), string (day (now))).        
+        v-date = substitute ("&1&2&3", string (day (now), "99"), string (month (now), "99"),substring (string(year (now)), 3,2)).        
         create tt-act-header .
         assign
-            tt-act-header.num = "ACOS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-'
+            tt-act-header.num = "ACOS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-' + string(int(TIME))
             tt-act-header.date_ = TODAY
             tt-act-header.is-sent = no
             tt-act-header.type_ = "Продукция полученная до 01.01.2016"
         .
         display tt-act-header.num tt-act-header.date_ tt-act-header.type_ with frame {&FRAME-NAME}.
-        enable  tt-act-header.num tt-act-header.date_ tt-act-header.type_ b-good with frame {&FRAME-NAME}.
+        enable  tt-act-header.date_ tt-act-header.type_ b-good with frame {&FRAME-NAME}.
 /*        if egais:VerXSD = "2" then do :                          */
 /*            display tt-act-header.type_ with frame {&FRAME-NAME}.*/
 /*            enable  tt-act-header.type_ with frame {&FRAME-NAME}.*/

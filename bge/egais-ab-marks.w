@@ -690,7 +690,7 @@ PROCEDURE enable_UI :
       IN FRAME Dialog-Frame. 
   end.    
   VIEW FRAME Dialog-Frame.
-  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
