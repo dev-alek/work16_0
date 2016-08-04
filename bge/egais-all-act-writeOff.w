@@ -83,7 +83,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 { gbl/getcntxt.i get }
 { gbl/thbjattr.i }
 { ref/extclass.i }
-{ibs/th/bge/egais/awo-egais.i proc }
+{ibs/th/bge/egais/awo-egais.i proc new shared }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

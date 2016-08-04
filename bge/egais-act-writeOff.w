@@ -121,7 +121,7 @@ define stream str-log .
 { str/trdcalib.i   }
 { gbl/color.i    }
 { gbl/waitfram.i }
-{ibs/th/bge/egais/awo-egais.i proc }
+{ibs/th/bge/egais/awo-egais.i proc shared }
 
 define new shared temp-table tt-exts
     field ext-rec as recid
@@ -157,6 +157,16 @@ DEFINE BUTTON b-good
      LABEL "Добавить" 
      SIZE 15 BY 1.14
      BGCOLOR 8 . 
+     
+DEFINE BUTTON b-marks
+     LABEL "Ввести марки" 
+     SIZE 15 BY 1.14 TOOLTIP "Ввести марки"
+     BGCOLOR 8 .
+     
+DEFINE BUTTON b-alc-code
+     LABEL "Выбор алк. кода" 
+     SIZE 20 BY 1.14 TOOLTIP "Выбрать алкогольный код"
+     BGCOLOR 8 .
      
 DEFINE BUTTON b-del
      LABEL "Удалить строку" 
@@ -196,7 +206,8 @@ DEFINE BROWSE br-gds-act
     tt-gds-act.alc-code
     tt-gds-act.gds-name
     tt-gds-act.qnty
-    tt-gds-act.inform-B 
+    tt-gds-act.inform-B
+    tt-gds-act.marks-qnty 
   ENABLE
     tt-gds-act.qnty
     tt-gds-act.inform-B
@@ -209,7 +220,9 @@ DEFINE BROWSE br-gds-act
 DEFINE FRAME Dialog-Frame
     b-cancel at row 1.2 col 2
     b-good at row 1.2 col 32
-    b-del at row 1.2 col 47
+    b-marks at row 1.2 col 47
+    b-alc-code at row 1.2 col 62
+    b-del at row 1.2 col 82
     b-save at row 1.2 col 17
     tt-act-header.num at row 2.5 col 2 format "X(20)"
     tt-act-header.date_ at row 2.5 col 32
@@ -311,6 +324,14 @@ END.
 ON VALUE-CHANGED OF tt-act-header.type_ IN FRAME Dialog-Frame /* cli-type */
 DO:
   assign tt-act-header.type_.
+  if tt-act-header.type_ = "Проверки"
+  or tt-act-header.type_ = "Арест"
+  then do :
+      enable b-marks with frame {&FRAME-NAME} .
+  end.
+  else do :
+      disable b-marks with frame {&FRAME-NAME} .
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -346,13 +367,19 @@ DO:
     else
     do ii = 1 to num-entries (select-list) :
       v-tt-rec = integer(entry(ii, select-list)) . 
-      for first tt-gds-act exclusive-lock where recid(tt-gds-act) = v-tt-rec :  
+      for first tt-gds-act exclusive-lock where recid(tt-gds-act) = v-tt-rec : 
+        for each tt-marks exclusive-lock where tt-marks.gds-part-position_ = tt-gds-act.position_ :
+            delete tt-marks .
+        end. 
         delete tt-gds-act .
       end.  
     end.
     nn = 0 .
     for each tt-gds-act exclusive-lock :
         nn = nn + 1 .
+        for each tt-marks exclusive-lock where tt-marks.gds-part-position_ = tt-gds-act.position_ :
+            tt-marks.gds-part-position_ = nn .
+        end.
         tt-gds-act.position_ = nn .
     end.
     select-list = "" .
@@ -374,11 +401,33 @@ DO:
     for each tt-gds-act exclusive-lock where tt-gds-act.num = prev-num :
         assign tt-gds-act.num = tt-act-header.num .    
     end.
+    for each tt-marks exclusive-lock where tt-marks.num = prev-num :
+        assign tt-marks.num = tt-act-header.num .    
+    end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-marks Dialog-Frame
+ON CHOOSE OF b-marks IN FRAME Dialog-Frame /* Создать */
+DO:
+    if not available tt-gds-act then do :
+        message "Выберите строку" view-as alert-box .
+        return no-apply.
+    end. 
+    run bge/egais-ab-marks.w (parparentproc, tt-gds-act.num, tt-gds-act.position_, tt-gds-act.alc-code) .
+    assign ii = 0 .
+    for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
+        ii = ii + 1 .
+    end.
+    assign tt-gds-act.marks-qnty = ii .
+    open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME 
 
 &Scoped-define SELF-NAME b-save
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-save Dialog-Frame
@@ -589,7 +638,8 @@ DO:
     run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
                                         ,input (buffer buf_goods:handle)
                                         ,output v-gds-uniq-key-rec).
-    find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+    exts = 0 . 
+    for each X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
                                        and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                        AND X_ext-classif.db-num = 0  
                                        and X_ext-classif.key#_one = buf_goods.gds-code
@@ -598,8 +648,40 @@ DO:
                                        and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
                                        and X_eXt-classif.charkey_two = ""
                                        and X_eXt-classif.charkey_three = ""
-                                       and X_eXt-classif.nonunique = 0
-                                       no-error .
+                                       and X_eXt-classif.nonunique = 0 :
+        find first tt-exts no-lock where tt-exts.ext-rec = recid(x_ext-classif)
+                                         and tt-exts.gds-code = buf_goods.gds-code no-error.
+        if not available tt-exts then do :                                   
+            create tt-exts .
+            assign
+                tt-exts.ext-rec = recid(X_ext-classif)
+                tt-exts.gds-code = buf_goods.gds-code 
+            .                                  
+        end.
+        exts = exts + 1 .
+    end. 
+    if exts = 0 then do :                                  
+        message "Выбранный товар не синхронизирован с ЕГАИС. (Нет алкогольного кода)" view-as alert-box.
+        return no-apply.  
+    end.
+    else if exts = 1 then do :
+        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                           AND X_ext-classif.db-num = 0  
+                                           and X_ext-classif.key#_one = buf_goods.gds-code
+                                           and X_ext-classif.key#_two = v-ext-sys 
+                                           and X_ext-classif.key#_three = 0
+                                           and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                           and X_eXt-classif.charkey_two = ""
+                                           and X_eXt-classif.charkey_three = ""
+                                           and X_eXt-classif.nonunique = 0
+                                           .
+    end.
+    else do :
+        run bge/egais-select-alc-code.w (input buf_goods.gds-code, output p-ext-rec) .
+        find first X_ext-classif no-lock where recid(X_ext-classif) = p-ext-rec no-error .
+        if not available X_ext-classif then return no-apply.
+    end.
     nn = nn + 1 .  
     create tt-gds-act .
     assign
@@ -611,11 +693,55 @@ DO:
         tt-gds-act.qnty       = 0
     .
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
-    
+    apply "value-changed" to br-gds-act IN FRAME Dialog-Frame .
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+on choose of b-alc-code IN FRAME Dialog-Frame
+do :
+    if not available tt-gds-act then return no-apply .
+    run bge/egais-select-alc-code.w (input tt-gds-act.gds-code, output p-ext-rec) .
+    find first X_ext-classif no-lock where recid(X_ext-classif) = p-ext-rec no-error .
+    if not available X_ext-classif then return no-apply.
+    assign tt-gds-act.alc-code = X_ext-classif.charkey_one .
+    find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                           and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                           and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                           and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                           and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                           and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                           and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                           and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                           and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                           and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                           and X_ext-classif-attr.attr-code = 'egais-info'
+                                           no-error .
+    if available X_ext-classif-attr then assign tt-gds-act.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
+    br-gds-act:refresh() .
+end.
+
+on row-display of br-gds-act in FRAME Dialog-Frame
+DO :
+    exts = 0 .
+    for each tt-exts no-lock where tt-exts.gds-code = tt-gds-act.gds-code :
+        exts = exts + 1 .
+    end.
+    if exts > 1 then tt-gds-act.alc-code:bgcolor in browse br-gds-act = yellow_color .
+end.
+
+on value-changed of br-gds-act IN FRAME Dialog-Frame
+DO :
+if available tt-gds-act then do :
+    exts = 0 .
+    for each tt-exts no-lock where tt-exts.gds-code = tt-gds-act.gds-code :
+        exts = exts + 1 .
+    end.
+    if exts > 1 then enable b-alc-code WITH FRAME Dialog-Frame.
+    else disable b-alc-code WITH FRAME Dialog-Frame.
+end.
+end.
 
 &UNDEFINE SELF-NAME
 
@@ -644,18 +770,20 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         nn = 0
         tt-act-header.type_:list-items = "Пересортица,Недостача,Уценка,Порча,Потери,Проверки,Арест"
     .
+    if egais:VerXSD = "2" then
+        tt-act-header.type_:list-items = tt-act-header.type_:list-items + ",Иные цели,Реализация" .
     
     if p-mode = {&add-def} then do :
-        v-date = substitute ("&1&2&3",string (year (now)), string (month (now)), string (day (now))).        
+        v-date = substitute ("&1&2&3", string (day (now), "99"), string (month (now), "99"),substring (string(year (now)), 3,2)).        
         create tt-act-header .
         assign
-            tt-act-header.num = "AWO-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-'
+            tt-act-header.num = "AWO-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-' + string(int(TIME))
             tt-act-header.date_ = TODAY
             tt-act-header.type_ = "Недостача"
             tt-act-header.is-sent = no
         .
         display tt-act-header.num tt-act-header.date_ tt-act-header.type_ with frame {&FRAME-NAME}.
-        enable  tt-act-header.num tt-act-header.date_ tt-act-header.type_ b-good with frame {&FRAME-NAME}.     
+        enable  tt-act-header.date_ tt-act-header.type_ b-good with frame {&FRAME-NAME}.     
     end.
     
     if p-mode = {&update} or p-mode = {&lookup} then do :
@@ -672,15 +800,41 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         run parseXML in this-procedure (input "temp.xml") .
         run waitfram-hide in this-procedure .
         display tt-act-header.num tt-act-header.date_ tt-act-header.type_ with frame {&FRAME-NAME}.
-        if p-mode = {&update} then enable  tt-act-header.type_ with frame {&FRAME-NAME}.
+        if p-mode = {&update} then do :
+            enable  tt-act-header.type_ with frame {&FRAME-NAME}.
+            apply "value-changed" to tt-act-header.type_ IN FRAME Dialog-Frame .
+        end .
         if p-mode = {&update} then
         for each tt-gds-act no-lock :
             nn = nn + 1 .
-/*            find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code no-error .                                              */
-/*            if not available buf_goods then do :                                                                                                */
-/*                message "По алкогольному коду " tt-gds-act.alc-code " не найден товар из TH. Вероятно, кто-то удалил связку." view-as alert-box.*/
-/*                next.                                                                                                                           */
-/*            end.                                                                                                                                */
+            find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code no-error .
+            if not available buf_goods then do :
+                message "По алкогольному коду " tt-gds-act.alc-code " не найден товар из TH. Вероятно, кто-то удалил связку." view-as alert-box.
+                next. 
+            end.
+            run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
+                                            ,input (buffer buf_goods:handle)
+                                            ,output v-gds-uniq-key-rec).
+            for each X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                           AND X_ext-classif.db-num = 0  
+                                           and X_ext-classif.key#_one = buf_goods.gds-code
+                                           and X_ext-classif.key#_two = v-ext-sys 
+                                           and X_ext-classif.key#_three = 0
+                                           and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                           and X_eXt-classif.charkey_two = ""
+                                           and X_eXt-classif.charkey_three = ""
+                                           and X_eXt-classif.nonunique = 0 :
+                find first tt-exts no-lock where tt-exts.ext-rec = recid(x_ext-classif)
+                                         and tt-exts.gds-code = buf_goods.gds-code no-error.
+                if not available tt-exts then do :
+                    create tt-exts .
+                    assign
+                        tt-exts.ext-rec = recid(X_ext-classif)
+                        tt-exts.gds-code = tt-gds-act.gds-code 
+                    . 
+                end.                                 
+            end.
             
         end .
         

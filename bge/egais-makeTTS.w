@@ -186,13 +186,13 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
        
-  assign v-date = substitute ("&1&2&3",string (year (now)), string (month (now)), string (day (now))).
+  assign v-date = substitute ("&1&2&3", string (day (now), "99"), string (month (now), "99"),substring (string(year (now)), 3,2)).
   assign
-    p-num = "TTS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-'
+    p-num = "TTS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-' + string(int(TIME))
     p-date = TODAY
   . 
   display p-num p-date with frame {&FRAME-NAME}.
-  enable  p-num p-date with frame {&FRAME-NAME}.   
+  enable  p-date with frame {&FRAME-NAME}.   
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.

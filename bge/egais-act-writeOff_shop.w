@@ -371,13 +371,19 @@ DO:
     else
     do ii = 1 to num-entries (select-list) :
       v-tt-rec = integer(entry(ii, select-list)) . 
-      for first tt-gds-act exclusive-lock where recid(tt-gds-act) = v-tt-rec :  
+      for first tt-gds-act exclusive-lock where recid(tt-gds-act) = v-tt-rec :
+        for each tt-marks exclusive-lock where tt-marks.gds-part-position_ = tt-gds-act.position_ :
+            delete tt-marks .
+        end.  
         delete tt-gds-act .
       end.  
     end.
     nn = 0 .
     for each tt-gds-act exclusive-lock :
         nn = nn + 1 .
+        for each tt-marks exclusive-lock where tt-marks.gds-part-position_ = tt-gds-act.position_ :
+            tt-marks.gds-part-position_ = nn .
+        end.
         tt-gds-act.position_ = nn .
     end.
     select-list = "" .
@@ -852,7 +858,7 @@ DO:
                                            no-error .
     if available X_ext-classif-attr then assign tt-gds-act.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
-    
+    apply "value-changed" to br-gds-act IN FRAME Dialog-Frame .
 END.
 
 on choose of b-alc-code IN FRAME Dialog-Frame
@@ -931,16 +937,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     .
     
     if p-mode = {&add-def} then do :
-        v-date = substitute ("&1&2&3",string (year (now)), string (month (now)), string (day (now))).        
+        v-date = substitute ("&1&2&3", string (day (now), "99"), string (month (now), "99"),substring (string(year (now)), 3,2)).        
         create tt-act-header .
         assign
-            tt-act-header.num = "AWOS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-'
+            tt-act-header.num = "AWOS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-' + string(int(TIME))
             tt-act-header.date_ = TODAY
             tt-act-header.type_ = "Недостача"
             tt-act-header.is-sent = no
         .
         display tt-act-header.num tt-act-header.date_ tt-act-header.type_ with frame {&FRAME-NAME}.
-        enable  tt-act-header.num tt-act-header.date_ tt-act-header.type_ b-good with frame {&FRAME-NAME}.     
+        enable  tt-act-header.date_ tt-act-header.type_ b-good with frame {&FRAME-NAME}.     
     end.
     
     if p-mode = {&update} or p-mode = {&lookup} then do :
@@ -957,7 +963,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         run parseXML in this-procedure (input "temp.xml") .
         run waitfram-hide in this-procedure .
         display tt-act-header.num tt-act-header.date_ tt-act-header.type_ with frame {&FRAME-NAME}.
-        if p-mode = {&update} then enable  tt-act-header.type_ with frame {&FRAME-NAME}.
+        if p-mode = {&update} then do :
+            enable  tt-act-header.type_ with frame {&FRAME-NAME}.
+            apply "value-changed" to tt-act-header.type_ IN FRAME Dialog-Frame .
+        end .
         if p-mode = {&update} then
         for each tt-gds-act no-lock :
             nn = nn + 1 .

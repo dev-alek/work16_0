@@ -45,10 +45,27 @@ define temp-table tt-gds-act
     field gds-name      like ub.goods.gds-name      label "Наименование товара"     format "X(35)"
     field qnty          as integer                  label "Количество"
     field inform-B      as character                label "Справка Б"               format "X(20)"
+    field marks-qnty    as integer                  label "Кол-во марок"
+    field egais-name    as character
     index pi as primary unique
         position_
     index code
         gds-code
+.
+
+define {2} {3} temp-table tt-marks
+    field num                 as character            label "№ акта"
+    field gds-part-position_  as integer
+    field mark                as character            label "Марка"          format "X(100)"
+    field new_                as logical
+    field gds-code            like ub.goods.gds-code  LABEL "Код товара"                 
+    field gds-name            as character            LABEL "Наименование"   FORMAT "X(30)" 
+    field alc-code            as character            LABEL "Алк. код"       FORMAT "X(20)"     
+    field impor-full-name     as character            LABEL "Импортер"       FORMAT "X(130)" 
+    field prod-full-name      as character            LABEL "Производитель"  FORMAT "X(130)" 
+    field flag                as logical              label "T"
+    index pi as primary unique
+        mark
 .
 
 &if "{1}" = "proc" &then
@@ -97,6 +114,11 @@ procedure makeXML :
                         sw:start-element ("awr:InformB") .
                             sw:write-data-element ("pref:BRegId", tt-gds-act.inform-B) no-error .    
                         sw:end-element ("awr:InformB") .
+                        sw:start-element ("awr:MarkCodeInfo") .
+            for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
+                            sw:write-data-element ("awr:MarkCode", tt-marks.mark) .
+            end.    
+                        sw:end-element ("awr:MarkCodeInfo") .                        
                     sw:end-element ("awr:Position") .                
     end. 
                 sw:end-element ("awr:Content") .
@@ -190,6 +212,14 @@ procedure makeXMLegais_v2 :
                             sw:write-data-element ("pref:F2RegId", tt-gds-act.inform-B) .    
                           sw:end-element ("awr:InformF2") .
                         sw:end-element ("awr:InformF1F2") .
+        find first tt-marks where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ no-lock no-error.
+        if available tt-marks and (tt-act-header.type_ = "Проверки" or tt-act-header.type_ = "Арест") then do :                
+                        sw:start-element ("awr:MarkCodeInfo") .
+            for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
+                            sw:write-data-element ("awr:MarkCode", tt-marks.mark) .
+            end.    
+                        sw:end-element ("awr:MarkCodeInfo") .
+        end.                        
                     sw:end-element ("awr:Position") .                
     end. 
                 sw:end-element ("awr:Content") .
@@ -270,6 +300,20 @@ procedure GetChildren :
         end.
         if hNoderef:NAME = "gds-name" and trim(tt-gds-act.gds-name) = "" then assign tt-gds-act.gds-name = (hText:node-value) no-error .
         IF hNoderef:NAME = "alc-code"     THEN assign tt-gds-act.alc-code = (hText:node-value) no-error .
+        
+        IF hNoderef:NAME = "awr:MarkCode" THEN do :
+            create tt-marks.
+            assign
+                tt-marks.num                    = tt-gds-act.num
+                tt-marks.gds-part-position_     = tt-gds-act.position_
+                tt-marks.mark                   = hText:node-value
+                tt-marks.gds-code               = tt-gds-act.gds-code
+                tt-marks.gds-name               = tt-gds-act.gds-name
+                tt-marks.alc-code               = tt-gds-act.alc-code
+                ii = ii + 1.
+            . 
+            assign tt-gds-act.marks-qnty = ii .   
+        end.
              
         run GetChildren (hNoderef, (level + 1)).
         

@@ -144,7 +144,7 @@ end function.
 
 define menu m-add
     menu-item m-goods   label "по складскому документу"
-/*    menu-item m-marks   label "по акцизным маркам"*/
+    menu-item m-free    label "товары по свободной зоне"
     menu-item m-one-good label "один товар"
 .
 
@@ -565,15 +565,170 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-/*&Scoped-define SELF-NAME m-marks                              */
-/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-marks Dialog-Frame*/
-/*on choose of menu-item m-marks in menu m-add                  */
-/*DO:                                                           */
-/*                                                              */
-/*END.                                                          */
-/*                                                              */
-/*/* _UIB-CODE-BLOCK-END */                                     */
-/*&ANALYZE-RESUME                                               */
+&Scoped-define SELF-NAME m-goods
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-goods Dialog-Frame
+on choose of menu-item m-free in menu m-add 
+DO:
+    define variable v-user-action    as character no-undo.
+    define variable v-printed        as logical   no-undo.
+    
+    run ref/gds-ref.p
+    ( parparentproc
+    ,'b-sel,b-mark,b-add'
+    ,?             /*p-stat */
+    ,?             /*p-list  */
+    ,{&free}             /*p-cond  */
+    ,?             /*p-rec   */
+    ,?             /*p-grp   */
+    ,?             /*p-cli-type */
+    ,?             /*p-cli-code  */
+    ,v-cntxt-obj-type    /*p-obj-type  */
+    ,v-cntxt-obj-code     /*p-obj-code  */
+    ,?             /*p-other     */
+    , output v-rid-list) no-error.
+    if v-rid-list = "" or v-rid-list = ? 
+    then return no-apply.
+    if search ("act-TTS_log.err") <> ? then do:
+      os-delete value("act-TTS_log.err").
+    end.
+    output stream str-log to value("act-TTS_log.err") append .
+    err-good = false .
+    _goods_ :
+    do jj = 1 to num-entries(v-rid-list) :
+        find buf_goods where recid (buf_goods) = integer(entry(jj, v-rid-list)) no-lock.
+        run gds-attr-value(
+          buf_goods.gds-code,
+          {&attr-alcohol-prod},
+          output par-alcohol,
+          output par-type
+        ).
+        if par-alcohol = "" or par-alcohol = "no" then 
+        do :
+            put stream str-log unformatted
+                string(today) + "   " + string(time, "hh:mm:ss") + " :  товар " + string(buf_goods.gds-code) + "  " + buf_goods.gds-name + "  не является алкогольной продукцией" skip.
+/*            message "Выбранный товар не является алкогольной продукцией." view-as alert-box.*/
+            err-good = true .
+            next _goods_ .
+        end.
+        run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
+                                            ,input (buffer buf_goods:handle)
+                                            ,output v-gds-uniq-key-rec).
+                                            
+        exts = 0 .                                    
+        for each X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                       and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                       AND X_ext-classif.db-num = 0  
+                                       and X_ext-classif.key#_one = buf_goods.gds-code
+                                       and X_ext-classif.key#_two = v-ext-sys 
+                                       and X_ext-classif.key#_three = 0
+                                       and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                       and X_eXt-classif.charkey_two = ""
+                                       and X_eXt-classif.charkey_three = ""
+                                       and X_eXt-classif.nonunique = 0 :
+            find first tt-exts no-lock where tt-exts.ext-rec = recid(x_ext-classif)
+                                         and tt-exts.gds-code = buf_goods.gds-code no-error.
+            if not available tt-exts then do :
+                create tt-exts .
+                assign
+                    tt-exts.ext-rec = recid(x_ext-classif)
+                    tt-exts.gds-code = buf_goods.gds-code
+                .
+            end.
+            exts = exts + 1 .    
+        end.                                    
+        if exts = 0 then do :
+            put stream str-log unformatted
+                string(today) + "   " + string(time, "hh:mm:ss") + " :  товар " + string(buf_goods.gds-code) + "  " + buf_goods.gds-name + "  не синхронизирован с ЕГАИС" skip.  
+/*            message "Выбранный товар не синхронизирован с ЕГАИС. (Нет алкогольного кода)" view-as alert-box.*/
+            err-good = true .
+            next _goods_ .  
+        end.
+        else do :
+            find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                               and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                               AND X_ext-classif.db-num = 0  
+                                               and X_ext-classif.key#_one = buf_goods.gds-code
+                                               and X_ext-classif.key#_two = v-ext-sys 
+                                               and X_ext-classif.key#_three = 0
+                                               and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                               and X_eXt-classif.charkey_two = ""
+                                               and X_eXt-classif.charkey_three = ""
+                                               and X_eXt-classif.nonunique = 0
+                                               .
+        end.
+        
+        find first buf_parts no-lock where buf_parts.artic = buf_goods.artic 
+                                    and buf_parts.prod-type = buf_goods.prod-type 
+                                    and buf_parts.prod-code = buf_goods.prod-code 
+                                    and buf_parts.obj-type = v-cntxt-obj-type 
+                                    and buf_parts.obj-code = v-cntxt-obj-code 
+                                    and buf_parts.out-code = {&free-code} no-error .
+        if not available buf_parts /* or buf_parts.qnty < 1 */ then do :
+            put stream str-log unformatted
+                string(today) + "   " + string(time, "hh:mm:ss") + " :  у товара " + string(buf_goods.gds-code) + "  " + buf_goods.gds-name + "  нет партий свободной зоны" skip.  
+            err-good = true .
+            next _goods_ .
+        end.
+          
+        _parts_ :  
+        for each buf_parts no-lock where buf_parts.artic = buf_goods.artic 
+                                    and buf_parts.prod-type = buf_goods.prod-type 
+                                    and buf_parts.prod-code = buf_goods.prod-code 
+                                    and buf_parts.obj-type = v-cntxt-obj-type 
+                                    and buf_parts.obj-code = v-cntxt-obj-code 
+                                    and buf_parts.out-code = {&free-code} :
+            if buf_parts.qnty < 1 then next _parts_ .
+            assign nn = nn + 1 .                            
+            create tt-gds-act .
+            assign
+                tt-gds-act.num          = tt-act-header.num
+                tt-gds-act.gds-code     = buf_goods.gds-code
+                tt-gds-act.gds-name     = buf_goods.gds-name    
+                tt-gds-act.position_    = nn
+                tt-gds-act.qnty         = buf_parts.fact-qnty
+            .  
+            if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
+                tt-gds-act.alc-code = entry(3, buf_parts.alc-ref-ab-path) .
+            end.
+            else do :
+                run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
+                                                   ,input (buffer buf_goods:handle)
+                                                   ,output v-gds-uniq-key-rec).
+                find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                                   and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                                   AND X_ext-classif.db-num = 0  
+                                                   and X_ext-classif.key#_one = buf_goods.gds-code
+                                                   and X_ext-classif.key#_two = v-ext-sys 
+                                                   and X_ext-classif.key#_three = 0
+                                                   and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                                   and X_eXt-classif.charkey_two = ""
+                                                   and X_eXt-classif.charkey_three = ""
+                                                   and X_eXt-classif.nonunique = 0
+                                                   no-error .
+                if available X_ext-classif then tt-gds-act.alc-code = X_eXt-classif.charkey_one .
+            end. 
+            if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(2, buf_parts.alc-ref-ab-path) <> "" then do : 
+                tt-gds-act.inform-B = trim(entry(2, buf_parts.alc-ref-ab-path)) .
+            end.
+        end.
+    end.
+    output stream str-log close .
+    
+    if err-good then do :
+        message "Не все выбранные товары добавлены в акт!" view-as alert-box .
+        run gbl/prnfilen.w
+           (input  "Ошибки при добавлении товаров"
+           ,input  0
+           ,input  "act-TTS_log.err"
+           ,input  7
+           ,output v-user-action
+           ,output v-printed
+           ).    end.
+    open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME m-one-good
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-one-good Dialog-Frame
@@ -702,15 +857,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     empty temp-table tt-exts .
     
     if p-mode = {&add-def} then do :
-        v-date = substitute ("&1&2&3",string (year (now)), string (month (now)), string (day (now))).        
+        v-date = substitute ("&1&2&3", string (day (now), "99"), string (month (now), "99"),substring (string(year (now)), 3,2)).        
         create tt-act-header .
         assign
-            tt-act-header.num = "TTS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-'
+            tt-act-header.num = "TTS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-' + string(int(TIME))
             tt-act-header.date_ = TODAY
             tt-act-header.is-sent = no
         .
         display tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
-        enable  tt-act-header.num tt-act-header.date_ b-good with frame {&FRAME-NAME}.     
+        enable  tt-act-header.date_ b-good with frame {&FRAME-NAME}.     
     end.
     
     if p-mode = {&update} or p-mode = {&lookup} then do :
