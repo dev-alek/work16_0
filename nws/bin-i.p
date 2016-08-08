@@ -225,7 +225,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         or p-mode = {&save-db-and-run}
         then do:
           find first buf_ext-file-line where
-                   buf_Ext-file-line.db-num = buf_temp-ext-file.file-num
+                   buf_Ext-file-line.db-num = buf_temp-ext-file-line.db-num
+               and buf_Ext-file-line.from-db-num = buf_temp-ext-file-line.from-db-num
                and buf_Ext-file-line.file-num = buf_temp-ext-file-line.file-num
                and buf_Ext-file-line.line-num = buf_temp-ext-file-line.line-num
                and buf_Ext-file-line.sub-line-num = buf_temp-ext-file-line.sub-line-num no-error.
