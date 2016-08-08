@@ -217,8 +217,8 @@ DEFINE FRAME Dialog-Frame
     b-del at row 1.2 col 47
     b-save at row 1.2 col 17
     b-alc-code at row 1.2 col 62
-    tt-act-header.num at row 2.5 col 2 format "X(20)"
-    tt-act-header.date_ at row 2.5 col 32
+    tt-act-header.num at row 2.5 col 2 format "X(22)"
+    tt-act-header.date_ at row 2.5 col 34
     b-mark AT ROW 4 COL 2
     b-sel-all AT ROW 4 COL 5
     b-unmark AT ROW 4 COL 8
