@@ -239,8 +239,8 @@ DEFINE FRAME Dialog-Frame
     b-alc-code at row 1.2 col 62
     b-del at row 1.2 col 82
     b-save at row 1.2 col 17
-    tt-act-header.num at row 2.5 col 2 format "X(20)"
-    tt-act-header.date_ at row 2.5 col 32
+    tt-act-header.num at row 2.5 col 2 format "X(22)"
+    tt-act-header.date_ at row 2.5 col 34
     tt-act-header.type_ at row 2.5 col 57
         view-as combo-box inner-lines 7
         list-items "Пересортица,Излишки,Продукция полученная до 01.01.2016"
