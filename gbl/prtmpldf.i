@@ -113,6 +113,8 @@ define variable v-max as integer no-undo .
     if p-format = "99:99" then return MAXIMUM(v-max,8).
     CASE p-type:
       when {&type-char} or when {&abl-datatype-character} then do:
+        if p-format = "99:99" or p-format = "99:99-99:99" then return maximum(v-max, 8).
+        else
         return maximum(v-max, integer(right-trim(left-trim(left-trim(p-format, "X":U), "(":U), ")":U))).
       end.
       when {&type-int} or when {&type-dec} or when {&type-date} or
