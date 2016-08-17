@@ -75,6 +75,7 @@ define variable v-imp-name1  as character no-undo .
 
 { cmp/vssrevis.i }
 {bge/egais-mark.i}
+{ cmp/library.i  }
 { cmp/showinf.i  }
 { gbl/color.i }
 { gbl/getcntxt.i def }
@@ -386,12 +387,29 @@ DO:
 ON choose OF Btn_add IN FRAME Dialog-Frame /* Добавить */
 DO:
       define variable ref-list as character no-undo .
-      define variable v-cntxt-obj-code as integer no-undo .
-      define variable v-cntxt-obj-type as character no-undo .
       define variable extGdsValueObjnew as class ExtGdsValue.
       define variable v-GdsCode as integer no-undo .
       define variable v-GdsCodenew as integer no-undo .  
-
+      define variable glog         as logical no-undo.
+      
+ { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-ref':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
+  
+  if not glog then  return .
+  
       run ref/gds-ref.p
         ( input parparentproc
         ,input "b-sel,b-add"
@@ -490,6 +508,27 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_del Dialog-Frame
 ON choose OF Btn_del IN FRAME Dialog-Frame /* Удалить */
 DO:
+      define variable glog         as logical no-undo.
+      
+ { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-ref':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
+  
+  if not glog then  return .
+  
+
       extGdsObj:DeleteExtGds (tt-goods.gds-code, p-alc-code).
       delete tt-goods.
       extGdsObj:OpenQueryExtGds(p-gds-code, p-alc-code).
