@@ -37,7 +37,6 @@ define variable vss-workfile               as character no-undo init "$Workfile$
 define variable vss-archive                as character no-undo init "$Archive$":U .
 define variable vss-description            as character no-undo init "Журнал запросов ЕГАИС".
 
-
 define variable th-wb-egais                as handle    no-undo.
 define variable gh-wb-egais                as handle    no-undo.
 define variable bh-wb-gds-EG               as handle    no-undo.
@@ -63,7 +62,7 @@ define variable extGdsObj                  as class ExtGds no-undo .
 define variable extGdsValueObj             as class ExtGdsValue no-undo .
 define variable v-prod                     as character no-undo .
 define variable v-impor                    as character no-undo .
-define variable v-alc-code as character no-undo.
+
 define buffer buf_clients   for ub.clients .
 define buffer buf_firm      for ub.firm .
 define buffer x_ext-classif for ub.ext-classif.
@@ -639,37 +638,19 @@ PROCEDURE msdblcl :
   define variable v-gds-name as character no-undo .
   
   def var glog as  log no-undo.
-  
-  { gbl/chk-actg.i
-    v-cntxt-db-num
-    v-cntxt-userid
-    {&action-head-code-main}
-    'actn_egais-ref':U
-    {&cntxt-object}
-    v-cntxt-host-code-obj
-    v-cntxt-obj-type
-    v-cntxt-obj-code
-    0
-    0
-    0
-    true
-    glog
-  }
-  
-  if not glog then  return .
 
   if bh-wb-gds-EG:buffer-field ("gds-code"):buffer-value <> "0" then 
   do :
     extGdsObj:OpenQueryExtGds(0, bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value).
     v-numBnd = extGdsObj:NumBundles.
 
-v-alc-code = bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value.
-
+    def var v-alc-code as char no-undo.
+    v-alc-code = bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value.
     run bge/egais-goods-mark.w ( 
                                 input parparentproc, 
                                 input {&update}, 
-                                input-output v-alc-code , 
-                                input-output  v-gds-code, 
+                                input-output v-alc-code, 
+                                input-output v-gds-code, 
                                 output v-gds-name, 
                                 output v-prod-full-name, 
                                 output v-import-full-name )  .  
@@ -834,6 +815,25 @@ v-alc-code = bh-wb-gds-EG:buffer-field ("alc-code"):buffer-value.
   end.                                    
   else 
   do :
+    
+    { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_egais-ref':U
+      {&cntxt-object}
+      v-cntxt-host-code-obj
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      0
+      0
+      0
+      true
+      glog
+    }
+    
+    if not glog then  return .
+    
     run ref/gds-ref.p
       ( parparentproc
       ,'b-add,b-sel'

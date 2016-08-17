@@ -165,16 +165,17 @@ class ibs.th.bge.egais.ExtGds:
           ExtGdsValueObj = GetInfoObj (buf_ext-classif-attr.attr-value) 
         no-error.
         
-        if error-status:error
+        if ReturnMsg <> ""
           then 
         do:
-          ReturnMsg = return-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
+          ReturnMsg = ReturnMsg + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
           if not IsSilent 
             then message ReturnMsg view-as alert-box.
+          ReturnMsg = "".
         end.
 
-        ExtGdsValueObj:AlcCode = buf_ext-classif-attr.CharKey_One.
-        ExtGdsValueObj:GdsCode = buf_ext-classif-attr.Key#_One.
+        ExtGdsValueObj:AlcCode = buf_ext-classif.CharKey_One.
+        ExtGdsValueObj:GdsCode = buf_ext-classif.Key#_One.
         
         create tt-egaisgds-hndls.
         assign 
@@ -276,10 +277,9 @@ class ibs.th.bge.egais.ExtGds:
       end.
       ii = ii + 1.
       setProp (ii) no-error.
-      if error-status:error
+      if ReturnMsg <> ""
         then 
       do:
-        ReturnMsg = return-value.
         if not IsSilent 
           then message ReturnMsg view-as alert-box.
       end.
@@ -527,17 +527,18 @@ class ibs.th.bge.egais.ExtGds:
     
     do trans:
 
-      find first buf_ext-classif-attr exclusive-lock where 
-            buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
+      find first buf_ext-classif-attr where 
+            buf_ext-classif-attr.classif-subject = {&table_goods}
         and buf_ext-classif-attr.classif-name = {&extclass_goods_esys} 
         and buf_ext-classif-attr.db-num = 0
         and buf_ext-classif-attr.Key#_One = inExtGdsValueObj:GdsCode
         and buf_ext-classif-attr.key#_two = ExtSystem 
         and buf_ext-classif-attr.key#_three = 0
-        and buf_ext-classif.charkey_one = inExtGdsValueObj:AlcCode
+        and buf_ext-classif-attr.charkey_one = inExtGdsValueObj:AlcCode
         and buf_ext-classif-attr.charkey_two = ""
         and buf_ext-classif-attr.charkey_three = ""
-      no-error.
+        and buf_ext-classif-attr.attr-code = 'egais-info'
+      .
 
       glog = SaveEGAISInfoDB (inExtGdsValueObj).
       
@@ -557,15 +558,6 @@ class ibs.th.bge.egais.ExtGds:
     
     v-prod = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
     v-impor = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
-    
-    if error-status:error
-      then 
-    do:
-      ReturnMsg = "Ошибка при сохранении атрибута egais-info  - " + inExtGdsValueObj:AlcCode + " TH - " + string (inExtGdsValueObj:GdsCode) + " Не найдена запись buf_ext-classif-attr".
-      if not IsSilent 
-        then message ReturnMsg view-as alert-box.
-      undo, return false.
-    end.
     
     entry (1, v-prod, chr(5)) = inExtGdsValueObj:CliRegIdProd.
     entry (2, v-prod, chr(5)) = inExtGdsValueObj:INNProd.
@@ -694,14 +686,16 @@ class ibs.th.bge.egais.ExtGds:
       ExtGdsValueObj = GetInfoObj (buf_ext-classif-attr.attr-value) 
     no-error.
 
-    if error-status:error
+    if ReturnMsg <> ""
       then 
     do:
-      return error return-value + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
+      ReturnMsg = ReturnMsg + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
+      if not IsSilent 
+        then message ReturnMsg view-as alert-box.
     end.
     
-    ExtGdsValueObj:AlcCode = buf_ext-classif-attr.CharKey_One.
-    ExtGdsValueObj:GdsCode = buf_ext-classif-attr.Key#_One.
+    ExtGdsValueObj:AlcCode = buf_ext-classif.CharKey_One.
+    ExtGdsValueObj:GdsCode = buf_ext-classif.Key#_One.
 
     assign
       hndlclsExtGdsValueObj:AlcCode = ExtGdsValueObj:AlcCode
@@ -742,7 +736,7 @@ class ibs.th.bge.egais.ExtGds:
     
   end.
 
-  method private class ExtGdsValue GetInfoObj (inInfoValue as char):
+  method public class ExtGdsValue GetInfoObj (inInfoValue as char):
 
     def var ExtGdsValueObj as class ExtGdsValue no-undo.
     def var v-msg   as char no-undo.
@@ -754,24 +748,24 @@ class ibs.th.bge.egais.ExtGds:
     if num-entries (inInfoValue, chr(4)) <> 3
       then 
     do:
-      v-msg = "Некорректный атрибут egais-info - " + inInfoValue.
-      return error v-msg.      
+      ReturnMsg = "Некорректный атрибут egais-info - " + inInfoValue.
+      return ExtGdsValueObj.      
     end.
         
     v-prod = entry (1, inInfoValue, chr(4)) no-error.
     if num-entries (v-prod, chr (5)) < 6 
       then 
     do:
-      v-msg = "Некорректный атрибут egais-info v-prod - " + inInfoValue.
-      return error v-msg.
+      ReturnMsg = "Некорректный атрибут egais-info v-prod - " + inInfoValue.
+      return ExtGdsValueObj.
     end.
     
     v-impor = entry (2, inInfoValue, chr(4)) no-error.
     if  num-entries (v-impor, chr (5)) < 6 
       then 
     do:
-      v-msg = "Некорректный атрибут egais-info v-impor - " + inInfoValue.
-      return error v-msg.
+      ReturnMsg = "Некорректный атрибут egais-info v-impor - " + inInfoValue.
+      return ExtGdsValueObj.
     end.
 
     

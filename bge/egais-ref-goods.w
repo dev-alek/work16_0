@@ -35,7 +35,7 @@ define variable vss-workfile               as character no-undo init "$Workfile$
 define variable vss-archive                as character no-undo init "$Archive$":U .
 define variable vss-description            as character no-undo init "Справочник товаров ЕГАИС.".
 
-define variable bh-wb-egais-goods       as handle    no-undo.
+define variable bh-egais-goods       as handle    no-undo.
 define variable browse-hdl-egais-goods  as handle    no-undo.
 define variable qh-egais-goods          as handle    no-undo.
 define variable bcol               as handle    no-undo extent. 
@@ -238,7 +238,7 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_refresh Dialog-Frame
 ON CHOOSE OF btn_refresh IN FRAME Dialog-Frame /* Обновить */
 DO:
-  extGdsObj:GetHndlTable(0, "", output bh-wb-egais-goods).
+  extGdsObj:GetHndlTable(0, "", output bh-egais-goods).
   run refresh-view.
 END.
 
@@ -408,16 +408,16 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   extGdsObj:DbNum = v-db-num.
 /*  extGdsObj:User_Id = v-user-id.*/
 
-  extGdsObj:GetHndlTable(0, "", output bh-wb-egais-goods).
+  extGdsObj:GetHndlTable(0, "", output bh-egais-goods).
   
   create query qh-egais-goods.
-  qh-egais-goods:set-buffers (bh-wb-egais-goods).
+  qh-egais-goods:set-buffers (bh-egais-goods).
 
   browse-hdl-egais-goods:query = qh-egais-goods.
   
-  extent (bcol) = bh-wb-egais-goods:num-fields.
-  do ii = 1 to bh-wb-egais-goods:num-fields:
-    bcol[ii] = browse-hdl-egais-goods:add-like-column('tt-egaisgds-hndls' + '.' + bh-wb-egais-goods:buffer-field (ii):name, 0, 'FILL-IN').
+  extent (bcol) = bh-egais-goods:num-fields.
+  do ii = 1 to bh-egais-goods:num-fields:
+    bcol[ii] = browse-hdl-egais-goods:add-like-column('tt-egaisgds-hndls' + '.' + bh-egais-goods:buffer-field (ii):name, 0, 'FILL-IN').
     if entry (ii, extGdsObj:SettingsTTList, ';') <> ""
     then do:
       v-windth = integer (entry (1, entry (ii, extGdsObj:SettingsTTList, ';'))).
@@ -432,7 +432,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   run diasize_init in this-procedure .
   run enable_UI.
   run refresh-view.
-  bh-wb-egais-goods:find-first ("", no-lock) no-error.
+  bh-egais-goods:find-first ("", no-lock) no-error.
 ASSIGN 
        btn_del:HIDDEN IN FRAME Dialog-Frame           = TRUE.
   wait-for go of frame {&FRAME-NAME}.
@@ -494,10 +494,10 @@ define variable v-prod-full-name as character no-undo .
   define variable v-gds-name as character no-undo .
   define variable v-alc-code as char no-undo.
 
-  v-gds-code = bh-wb-egais-goods:buffer-field ("gdsCode"):buffer-value.
-  v-alc-code = bh-wb-egais-goods:buffer-field ("alcCode"):buffer-value.
+  v-gds-code = bh-egais-goods:buffer-field ("gdsCode"):buffer-value.
+  v-alc-code = bh-egais-goods:buffer-field ("alcCode"):buffer-value.
 
-  if not bh-wb-egais-goods:available 
+  if not bh-egais-goods:available 
     then return no-apply.
 
   run bge/egais-goods-mark.w ( 
@@ -509,8 +509,8 @@ define variable v-prod-full-name as character no-undo .
                               output v-prod-full-name, 
                               output v-import-full-name )  .  
 
-  if bh-wb-egais-goods:available
-    then qh-egais-goods:reposition-to-rowid ( bh-wb-egais-goods:rowid ).
+  if bh-egais-goods:available
+    then qh-egais-goods:reposition-to-rowid ( bh-egais-goods:rowid ).
 
 end.
 
@@ -525,7 +525,7 @@ def var ii as int no-undo.
     if valid-handle (bcol[ii]) 
       then 
         assign
-          bcol[ii]:bgcolor = bh-wb-egais-goods:buffer-field ("ColorNum"):buffer-value
+          bcol[ii]:bgcolor = bh-egais-goods:buffer-field ("ColorNum"):buffer-value
         .
   end.
   
