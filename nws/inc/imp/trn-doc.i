@@ -130,6 +130,10 @@ on endkey undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}
       create tdlocb-chk-gds.
       { nws/impl-nws.i "chk-gds" "tdlocb-" }
     end.
+    when "chk-gds-attr" then do:
+      create tdlocb-chk-gds-attr.
+      { nws/impl-nws.i "chk-gds-attr" "tdlocb-" }
+    end.
     when "chk-doc-attr" then do:
       create tdlocb-chk-doc-attr.
       { nws/impl-nws.i "chk-doc-attr" "tdlocb-" }
@@ -154,10 +158,10 @@ on endkey undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}
 
     otherwise do:
       message
-        "Ќе предусмотрен прием таблицы " rec-name skip
+        "nws/inc/imp/trn-doc.i: Ќе предусмотрен прием таблицы " rec-name skip
         "в составе накладной"
         view-as alert-box error.
-      return error.
+      return error "nws/inc/imp/trn-doc.i: Ќе предусмотрен прием таблицы " + rec-name + {&new-line} + "в составе накладной".
     end.
   END CASE.
 end.

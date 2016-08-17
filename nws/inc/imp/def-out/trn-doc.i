@@ -34,6 +34,7 @@ define temp-table locb-arh-trn-doc-contract no-undo like ub.arh-trn-doc-contract
 define temp-table tdlocb-chk-doc            no-undo like ub.chk-doc.
 define temp-table tdlocb-c-chk-doc          no-undo like ub.c-chk-doc.
 define temp-table tdlocb-chk-gds            no-undo like ub.chk-gds.
+define temp-table tdlocb-chk-gds-attr       no-undo like ub.chk-gds-attr.
 define temp-table tdlocb-c-chk-gds          no-undo like ub.c-chk-gds.
 define temp-table tdlocb-chk-doc-attr       no-undo like ub.chk-doc-attr.
 define temp-table tdlocb-c-chk-doc-attr     no-undo like ub.c-chk-doc-attr.
@@ -47,6 +48,7 @@ PROCEDURE proc-load-trn-doc-inv-chk:
 define buffer buf_chk-doc                  for ub.chk-doc.
 define buffer buf_c-chk-doc                for ub.c-chk-doc.
 define buffer buf_chk-gds                  for ub.chk-gds.
+define buffer buf_chk-gds-attr             for ub.chk-gds-attr.
 define buffer buf_c-chk-gds                for ub.c-chk-gds.
 define buffer buf_chk-doc-attr             for ub.chk-doc-attr.
 define buffer buf_c-chk-doc-attr           for ub.c-chk-doc-attr.
@@ -89,6 +91,11 @@ define buffer buf_c-chk-doc-attr           for ub.c-chk-doc-attr.
     for each buf_chk-gds where buf_chk-gds.out-code = p-doc-code
     on error  undo, return error
     :
+      for each buf_chk-gds-attr where buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code and buf_chk-gds-attr.line-num = buf_chk-gds.line-num
+      on error  undo, return error
+      :
+        delete buf_chk-gds-attr.
+      end.
       delete buf_chk-gds.
     end.
     for each tdlocb-chk-gds where tdlocb-chk-gds.out-code = p-doc-code
@@ -97,6 +104,15 @@ define buffer buf_c-chk-doc-attr           for ub.c-chk-doc-attr.
     :
       create buf_chk-gds.
       buffer-copy tdlocb-chk-gds to buf_chk-gds.
+      
+      for each tdlocb-chk-gds-attr where tdlocb-chk-gds-attr.doc-code = tdlocb-chk-gds.doc-code and tdlocb-chk-gds-attr.line-num = tdlocb-chk-gds.line-num
+                            no-lock
+      on error  undo, return error
+      :
+        create buf_chk-gds-attr.
+        buffer-copy tdlocb-chk-gds-attr to buf_chk-gds-attr.
+      end.
+      
     end.
     /* ------------------------------- chk-pay ---------------------------------------------- */
     /*-----------пропускаем потому что в инвентаризации их быть не может----------------------*/
@@ -179,6 +195,11 @@ define buffer buf_c-chk-doc-attr           for ub.c-chk-doc-attr.
     on error  undo, return error
     :
       delete tdlocb-chk-gds.
+    end.
+    for each tdlocb-chk-gds-attr
+    on error  undo, return error
+    :
+      delete tdlocb-chk-gds-attr.
     end.
     for each tdlocb-c-chk-doc
     on error  undo, return error

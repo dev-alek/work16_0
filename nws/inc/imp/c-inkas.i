@@ -58,10 +58,10 @@ on endkey undo, return error :
     /*так же обходимся с чеками МЦ  и АВТО док-ми МЦ                                  */
 
     otherwise do:
-      message "Не предусмотрен прием таблицы " rec-name skip
+      message " nws/inc/imp/c-inkas.i: Не предусмотрен прием таблицы " rec-name skip
               "в составе накладной"
               view-as alert-box error.
-      return error.
+      return error " nws/inc/imp/c-inkas.i: Не предусмотрен прием таблицы " + rec-name + {&new-line} + "в составе накладной".
     end.
   END CASE.
 end.
