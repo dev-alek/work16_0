@@ -2296,7 +2296,12 @@ define variable old-src-discnt like tt-chk-gds.src-discnt no-undo .
 
     if not avail tt-chk-gds then return no-apply.
     if self:name = "b-code":U and par-mode = {&update} and
-    tt-chk-gds.b-code = integer(tt-chk-gds.b-code:screen-value in browse br-gds) then do:
+    tt-chk-gds.b-code <> integer(tt-chk-gds.b-code:screen-value in browse br-gds) then do:        
+    RUN check-ch-bc-ck in this-procedure ( input gp-price-sale, input tt-chk-gds.price-base) no-error.
+    if error-status:error then do:
+      tt-chk-gds.b-code:screen-value in browse br-gds = string(tt-chk-gds.b-code).
+      return no-apply.
+    end.           
     end.
     else do:
       assign
@@ -6194,11 +6199,12 @@ for each buf-tt-chk-discnt no-lock where
       delete buf-tt-chk-discnt.
       delete loc-chk-discnt.
     end.
-    assign
-    buf-tt-chk-discnt.discnt-value-pcnt = decimal(entry(1, loc-chk-gds.src-code, {&delim-par} ))
-    loc-chk-discnt.discnt-value-pcnt =  buf-tt-chk-discnt.discnt-value-pcnt
-    .
-
+    else do:
+        assign
+        buf-tt-chk-discnt.discnt-value-pcnt = (decimal(entry(1, loc-chk-gds.src-code, {&delim-par} ))) / 100 
+        loc-chk-discnt.discnt-value-pcnt =  buf-tt-chk-discnt.discnt-value-pcnt / 100
+        .
+    end.
   end.
 END.
 

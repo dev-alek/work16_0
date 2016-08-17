@@ -168,11 +168,11 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     .
 
 
-  constructor public WayBill (inOjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
+  constructor public WayBill (inObjType as char, inObjCode as int, inFSRAR as char, inExtSys as integer):
     
-    super (inOjType, inObjCode).
+    super (inObjType, inObjCode).
     ObjCode = inObjCode.
-    ObjType = inOjType.
+    ObjType = inObjType.
     v-FS-RAR = inFSRAR.
     v-ext-sys = inExtSys.
     IsSent.

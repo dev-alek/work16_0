@@ -348,7 +348,7 @@ do:
   
   if isChoise
   then do:
-  if qh-del:get-first ()
+    if qh-del:get-first ()
     then do:
       url_ = bh-wb-analiz:buffer-field ('url_'):buffer-value ().
       AdmUtmObj:SaveRecord(url_).

@@ -73,10 +73,10 @@ on endkey undo, return error :
       { nws/impl-nws.i "c-doc-fbr-gds" "locb-" }
     end.
     otherwise do:
-      message "Ќе предусмотрен прием таблицы " rec-name skip
+      message "nws/inc/imp/c-trn-do.i: Ќе предусмотрен прием таблицы " rec-name skip
               "в составе накладной"
               view-as alert-box error.
-      return error.
+      return error "nws/inc/imp/c-trn-do.i: Ќе предусмотрен прием таблицы " + rec-name + {&new-line} + "в составе накладной".
     end.
   END CASE.
 end.

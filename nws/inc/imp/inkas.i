@@ -117,10 +117,10 @@ on endkey undo, return error :
     end.
 
     otherwise do:
-      message "Ќе предусмотрен прием таблицы " rec-name skip
+      message "nws/inc/imp/inkas.i: Ќе предусмотрен прием таблицы " rec-name skip
               "в составе накладной"
               view-as alert-box error.
-      return error.
+      return error "nws/inc/imp/inkas.i: Ќе предусмотрен прием таблицы " + rec-name + {&new-line} + "в составе накладной".
     end.
   END CASE.
 end.

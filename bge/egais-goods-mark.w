@@ -61,20 +61,22 @@ define temp-table tt-goods no-undo
   index pi as primary unique gds-code alc-code .
     
  
-define variable extGdsObj  as class   extgds no-undo.
-define variable ii         as integer no-undo .
-define variable v-gds-code as integer no-undo .
-define variable v-gds-code-old as integer no-undo .
+define variable extGdsObj      as class     extgds no-undo.
+define variable ii             as integer   no-undo .
+define variable v-gds-code     as integer   no-undo .
+define variable v-gds-code-old as integer   no-undo .
 define variable v-alc-code-old as character no-undo .
-define variable v-gds-name   as character no-undo .
-define variable v-gds-name1  as character no-undo .
-define variable v-prod-name  as character no-undo .
-define variable v-prod-name1 as character no-undo .
-define variable v-imp-name   as character no-undo .
-define variable v-imp-name1  as character no-undo .
+define variable v-gds-name     as character no-undo .
+define variable v-gds-name1    as character no-undo .
+define variable v-prod-name    as character no-undo .
+define variable v-prod-name1   as character no-undo .
+define variable v-imp-name     as character no-undo .
+define variable v-imp-name1    as character no-undo .
+define variable glog           as logical   no-undo .
 
 { cmp/vssrevis.i }
 {bge/egais-mark.i}
+{ cmp/library.i  }
 { cmp/showinf.i  }
 { gbl/color.i }
 { gbl/getcntxt.i def }
@@ -137,7 +139,6 @@ DEFINE BUTTON Btn_OK AUTO-GO
      LABEL "Ввод" 
      SIZE 15 BY 1.13
      BGCOLOR 8 .
-
 
 DEFINE VARIABLE v-AlcCode AS CHARACTER FORMAT "X(256)":U 
      LABEL "Алк.код" 
@@ -266,9 +267,10 @@ DEFINE RECTANGLE RECT-3
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 121 BY 14.5 FIT-LAST-COLUMN.
-    
+
 
 /* ************************  Frame Definitions  *********************** */
+
 DEFINE FRAME Dialog-Frame
      Btn_OK AT ROW 1.25 COL 1.5
      Btn_Cancel AT ROW 1.25 COL 16.5
@@ -386,12 +388,29 @@ DO:
 ON choose OF Btn_add IN FRAME Dialog-Frame /* Добавить */
 DO:
       define variable ref-list as character no-undo .
-      define variable v-cntxt-obj-code as integer no-undo .
-      define variable v-cntxt-obj-type as character no-undo .
       define variable extGdsValueObjnew as class ExtGdsValue.
       define variable v-GdsCode as integer no-undo .
       define variable v-GdsCodenew as integer no-undo .  
-
+      define variable glog         as logical no-undo.
+      
+ { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-ref':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
+  
+  if not glog then  return .
+  
       run ref/gds-ref.p
         ( input parparentproc
         ,input "b-sel,b-add"
@@ -463,6 +482,7 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &Scoped-define SELF-NAME Btn_Cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel Dialog-Frame
 ON choose OF Btn_Cancel IN FRAME Dialog-Frame /* Отмена */
@@ -490,6 +510,27 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_del Dialog-Frame
 ON choose OF Btn_del IN FRAME Dialog-Frame /* Удалить */
 DO:
+      define variable glog         as logical no-undo.
+      
+ { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-ref':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
+  
+  if not glog then  return .
+  
+
       extGdsObj:DeleteExtGds (tt-goods.gds-code, p-alc-code).
       delete tt-goods.
       extGdsObj:OpenQueryExtGds(p-gds-code, p-alc-code).
@@ -588,6 +629,9 @@ PROCEDURE enable_goods :
     do ii = 1 to extGdsObj:NumBundles:
       v-gds-code = extGdsObj:GetExtGdsValue(ii):GdsCode .
       find first ub.goods where ub.goods.gds-code = v-gds-code no-lock no-error.
+      if not available (ub.goods) then do:
+        message "Не найден товар с кодом - " v-gds-code view-as alert-box.
+      end.
       extGdsValueObj = extGdsObj:GetExtGdsValue(ii).
       create tt-goods .
       assign

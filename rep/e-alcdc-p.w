@@ -208,6 +208,7 @@ define temp-table tt-parts-info
     field out-code          like ub.parts.out-code
     field in-code           like ub.parts.in-code
     field artic             like ub.goods.artic
+    field alc-code          as character
     field prod-type         like ub.goods.prod-type 
     field prod-code         like ub.goods.prod-code
     field alc-type-code     like ub.alc-type.alc-type-code
@@ -1016,7 +1017,8 @@ for each obj-list no-lock:  /* По всем объектам */
           /* Получим производителя/импортера */
             ext-cl:Release_() .
             if num-entries(temp-parts.alc-ref-ab-path) = 4 and entry(3, temp-parts.alc-ref-ab-path) <> "" then do :
-                ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, temp-parts.alc-ref-ab-path)) .                    
+                ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, temp-parts.alc-ref-ab-path)) . 
+                tt-parts-info.alc-code =  entry(3, temp-parts.alc-ref-ab-path) .                  
             end.
             
             if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
@@ -1274,7 +1276,8 @@ for each obj-list no-lock:  /* По всем объектам */
           /* Получим производителя/импортера */
             ext-cl:Release_() .
             if num-entries(temp-parts.alc-ref-ab-path) = 4 and entry(3, temp-parts.alc-ref-ab-path) <> "" then do :
-                ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, temp-parts.alc-ref-ab-path)) .                    
+                ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, temp-parts.alc-ref-ab-path)) . 
+                tt-parts-info.alc-code =  entry(3, temp-parts.alc-ref-ab-path) .                   
             end.
             
             if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
@@ -1528,7 +1531,8 @@ for each obj-list no-lock:  /* По всем объектам */
                     /* Получим производителя/импортера */
                     ext-cl:Release_() .
                     if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
-                        ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, buf_parts.alc-ref-ab-path)) .                    
+                        ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, buf_parts.alc-ref-ab-path)) . 
+                        tt-parts-info.alc-code =  entry(3, buf_parts.alc-ref-ab-path) .                   
                     end.
                     
                     if buf_parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
@@ -2256,6 +2260,7 @@ procedure print-info :
                         <td style="width:80px"></td>
                         <td style="width:80px"></td>
                         <td style="width:80px"></td>
+                        <td style="width:120px"></td>
                         <td style="width:180px"></td>
                         <td style="width:80px"></td>
                         <td style="width:80px"></td>
@@ -2275,7 +2280,7 @@ procedure print-info :
                         <td style="width:90px"></td>
                   </tr>
                   <tr>
-                        <td colspan="24" style="front-weight: bold; text-align: center;">Информация по партиям для алкогольной декларации</td>
+                        <td colspan="25" style="front-weight: bold; text-align: center;">Информация по партиям для алкогольной декларации</td>
                   </tr>
         </thead>
             <tbody>
@@ -2287,6 +2292,7 @@ procedure print-info :
                 <th>Номер документа (out-code)</th>
                 <th>Номер партии (part-code)</th>
                 <th>Артикул</th>
+                <th>Алк. Код</th>
                 <th>Имя произв.</th>
                 <th>ИНН произв.</th>
                 <th>КПП произв.</th>
@@ -2317,6 +2323,7 @@ procedure print-info :
              '<td text_wrap="true">' + string(tt-parts-info.out-code) + '</td>' skip
              '<td text_wrap="true">' + string(tt-parts-info.part-code) + '</td>' skip
              '<td text_wrap="true">' + string(tt-parts-info.artic) + '</td>' skip
+             '<td text_wrap="true">' + string(tt-parts-info.alc-code) + '</td>' skip
              '<td text_wrap="true">' + string(tt-parts-info.producer-obj-name) + '</td>' skip
              '<td text_wrap="true">' + string(tt-parts-info.producer-inn) + '</td>' skip
              '<td text_wrap="true">' + string(tt-parts-info.producer-kpp) + '</td>' skip

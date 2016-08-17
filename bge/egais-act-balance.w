@@ -456,6 +456,14 @@ DO:
         message "В акте нет строк. Сохранение невозможно" view-as alert-box .
         return no-apply.
     end.
+    if can-find(tt-gds-act no-lock where tt-gds-act.qnty < 1 )
+    then do :
+        message "П Р Е Д У П Р Е Ж Д Е Н И Е" skip
+                "В одной или нескольких строках не указано количество." skip
+                "Строки с нулевым количеством сохранены не будут!!!" skip
+                "Всё равно продолжить сохраненине?" view-as alert-box question buttons yes-no update glog .
+        if not glog then return no-apply.        
+    end.
     if can-find(tt-gds-act no-lock where tt-gds-act.A-ttnNumber = ? or trim(tt-gds-act.A-ttnNumber) = ""
                                       or tt-gds-act.A-ttnDate = ? or trim(string(tt-gds-act.A-ttnDate)) = "" )
     then do :
