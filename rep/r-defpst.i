@@ -987,6 +987,11 @@ DEFINE {&df} shared FRAME zapas
 &endif
 
 procedure create-temp-t-post-stk-line :
+    
+    define variable str  as char      format "X(60)" no-undo.
+    define variable str2 as char      no-undo.
+    define variable v-r  as character no-undo init "" .
+    define variable i#i  as int       no-undo.
  do
  on error undo, return error return-value
  :
@@ -1009,8 +1014,31 @@ procedure create-temp-t-post-stk-line :
     temp-t-post-stk-line.prod-cli-obj-type = prod-cli.obj-type
   .
 
+            if xlavel > 0 then 
+            do: 
+                
+                repeat i#i =1 to xlavel:
+                    if i#i =1 then str   = entry(1,ub.goods.grp-name, {&delim-grp}) .
+                    else 
+                    do:
+                        str2 = entry(i#i,ub.goods.grp-name, {&delim-grp}) no-error.
+                        if not error-status:error  and str2 <> "":u then
+                            str = str +  {&delim-grp} +  entry(i#i,ub.goods.grp-name, {&delim-grp}) no-error .
+                    end.
+                end.
+                if str <> ? then 
+                do:
+                    temp-t-post-stk-line.goods-grp-name = str + {&delim-grp} .
+                end.
+            end.
+                
+            else  
+            do : 
+                temp-t-post-stk-line.goods-grp-name = ub.goods.grp-name.
+            end.
+                
+        end.
  end.
- end. /* do */
 end procedure. /* create-temp-t-post-stk-line */
 
 /* $Workfile$ e n d */
