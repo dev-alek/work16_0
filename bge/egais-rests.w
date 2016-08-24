@@ -39,7 +39,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Настройки объектов ЕГАИС".
+define variable vss-description as character no-undo init "Работа с остатками ЕГАИС".
 
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -1443,7 +1443,7 @@ procedure make-tts.
     end.
     clob_ :
     for each buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-tts}
-                             and buf_clob-bind.part-num = 1
+                             and buf_clob-bind.part-num = 1 and entry(1, buf_clob-bind.descr, {&delim-par}) matches "*" + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + "*"
                              break by sys-date descending by sys-time descending :
         v-sent =  entry(3, buf_clob-bind.descr, {&delim-par}).                    
         if not logical(v-sent)
