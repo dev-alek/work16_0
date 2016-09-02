@@ -544,7 +544,17 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           end case.
 /* если строчка была принудительно размазана, то пропускаем ее */
           if not (buf_temp-chk-gds.sum = 0 and can-find (first temp-chk-dp no-lock where temp-chk-dp.pay-code = temp-chk-pay.pay-code and temp-chk-dp.doc-code = temp-chk-pay.doc-code and buf_temp-chk-gds.line-num  =  temp-chk-dp.line-num)) then do:
-          create buf_chk-gds-pay.
+              if can-find (first temp-chk-dp no-lock where temp-chk-dp.pay-code = temp-chk-pay.pay-code and temp-chk-dp.doc-code = temp-chk-pay.doc-code) then do:
+                  find first buf_chk-gds-pay where buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
+                  and buf_chk-gds-pay.algo-num = {&current-algo-1}
+                  and buf_chk-gds-pay.pay-code = temp-chk-pay.pay-code
+                  and buf_chk-gds-pay.curr-code = temp-chk-pay.curr-code
+                  and buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+                  and buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
+                  and buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card exclusive-lock no-error.
+                  if not available buf_chk-gds-pay then create buf_chk-gds-pay.
+              end.    
+              else create buf_chk-gds-pay.
           assign
           buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
           buf_chk-gds-pay.chk-type = ub.chk-doc.chk-type
@@ -554,13 +564,13 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
           buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
           buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
-          buf_chk-gds-pay.tot-r-b = (if temp-chk-gds.num-lines = 1
+              buf_chk-gds-pay.tot-r-b = buf_chk-gds-pay.tot-r-b  + (if temp-chk-gds.num-lines = 1
                                     and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
                                     then pychk_dop-sumk
                                     else (pychk_dop-sumk * buf_temp-chk-gds.sum / temp-chk-gds.sum)
                                     )
           buf_chk-gds-pay.eff-base-rate = pychk_exch
-          buf_chk-gds-pay.eff-doc-qnty = (if (temp-chk-gds.num-lines = 1
+              buf_chk-gds-pay.eff-doc-qnty = buf_chk-gds-pay.eff-doc-qnty + (if (temp-chk-gds.num-lines = 1
                                           and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
                                           and pychk_pays_count = 1) 
                                           or (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt) = 0 
