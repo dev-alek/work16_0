@@ -570,7 +570,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                                     else (pychk_dop-sumk * buf_temp-chk-gds.sum / temp-chk-gds.sum)
                                     )
           buf_chk-gds-pay.eff-base-rate = pychk_exch
-              buf_chk-gds-pay.eff-doc-qnty = buf_chk-gds-pay.eff-doc-qnty + (if (temp-chk-gds.num-lines = 1
+              buf_chk-gds-pay.eff-doc-qnty = (if buf_chk-gds-pay.eff-doc-qnty = ? then 0 else buf_chk-gds-pay.eff-doc-qnty) + (if (temp-chk-gds.num-lines = 1
                                           and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
                                           and pychk_pays_count = 1) 
                                           or (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt) = 0 
