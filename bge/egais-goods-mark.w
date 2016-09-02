@@ -331,6 +331,10 @@ ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+ASSIGN 
+       br-goods:column-resizable IN FRAME Dialog-Frame              = TRUE.
+       
+
 /* SETTINGS FOR FILL-IN v-AlcCode IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN v-CliRegIdImpor IN FRAME Dialog-Frame

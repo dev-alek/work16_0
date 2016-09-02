@@ -40,7 +40,7 @@ PROCEDURE ProcAlcCode :
 
   v-alc-code = SUBSTRing (p-mark-alc, 8, 12) .
   /*проверка на русские буквы*/
-  do ii = 1 to 19:
+  do ii = 1 to length (v-alc-code):
     if LOOKUP( SUBSTRING( v-alc-code, ii, 1 ), v_list )  < 1 then
     do:
       p-error-lang = yes .
