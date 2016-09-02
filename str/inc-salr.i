@@ -581,7 +581,7 @@ on error undo, return error return-value
                       and t-gds.b-code = buf_chk-gds.b-code
                       and t-gds.drc = recid(X_chk-doc)
                       AND t-gds.pump = buf_chk-gds.pump
-                      AND t-gds.nozzle-code = buf_chk-gds.nozzle-code
+                      AND if buf_chk-gds.nozzle-code <> 0 then t-gds.nozzle-code = buf_chk-gds.nozzle-code else true
                       NO-ERROR.
                 end.
                 else do:
@@ -590,7 +590,7 @@ on error undo, return error return-value
                     and t-gds.b-code = buf_chk-gds.b-code
                     and t-gds.drc = recid(X_chk-doc)
                     AND t-gds.pump = buf_chk-gds.pump
-                    AND t-gds.nozzle-code = buf_chk-gds.nozzle-code
+                    AND if buf_chk-gds.nozzle-code <> 0 then t-gds.nozzle-code = buf_chk-gds.nozzle-code else true
                     AND t-gds.pl-code = buf_chk-gds.pl-code NO-ERROR.
                 end.
               end.

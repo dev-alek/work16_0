@@ -48,6 +48,7 @@ define variable qh-ab-gds-EG        as handle    no-undo.
 define variable bh-ab-gds-EG-header as handle    no-undo.
 define variable bh-ab-gds-EG        as handle    no-undo.
 define variable v-RegID             as character no-undo .
+define variable ii                  as integer no-undo .
 
 define variable glog        as logical no-undo .
 
@@ -61,6 +62,11 @@ define variable v-ext-sys           as integer   no-undo .
 
 define buffer buf_clob-bind     for ub.clob-bind .
 define buffer buf_clob-data     for ub.clob-data .
+define buffer buf_goods         for ub.goods .
+define buffer buf_parts         for ub.parts .
+define buffer buf_trn-doc       for ub.trn-doc .
+define buffer x_ext-classif     for ub.ext-classif .
+define buffer x_ext-classif-attr     for ub.ext-classif-attr .
 
 define variable v-fs-rar as character no-undo view-as text format "X(15)" label "Код ФС РАР (FSRAR ID)" .
 
@@ -70,7 +76,8 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { gbl/thbjattr.i }
-{ibs/th/bge/egais/ab-egais.i new shared }
+{ ref/extclass.i }
+{ibs/th/bge/egais/ab-egais.i proc new shared }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -134,7 +141,7 @@ DEFINE BUTTON Btn_Ans
      BGCOLOR 8 .
 
 DEFINE BUTTON Btn_Edit
-     LABEL "Редактироватьть" 
+     LABEL "Редактировать" 
      SIZE 15 BY 1.13 tooltip "Вернуть в 'Новые' для редактирования"
      BGCOLOR 8 .
 
@@ -294,19 +301,20 @@ DO:
     find first buf_clob-data no-lock where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
     os-delete "ActChargeOn.xml".
     os-delete "ActChargeOn_v2.xml".
+    os-delete "temp.xml".
+    copy-lob
+    from  object buf_clob-data.cdata
+    to  file 'temp.xml'
+    no-convert
+    no-error .
+    run  parseXML in this-procedure .
     if egais:VerXSD = "1" then do :
-        copy-lob
-        from  object buf_clob-data.cdata
-        to  file 'ActChargeOn.xml'
-        no-convert
-        no-error .
+        v-file = 'ActChargeOn.xml'.
+        run makeXML .
     end.
     if egais:VerXSD = "2" then do :
-        copy-lob
-        from  object buf_clob-data.cdata
-        to  file 'ActChargeOn_v2.xml'
-        no-convert
-        no-error .
+        v-file = 'ActChargeOn_v2.xml'.
+        run makeXML_v2 .
     end.
     egais:inNum = bh-act-header:buffer-field ("num"):buffer-value .
     egais:SendRequestUTM() .
@@ -398,7 +406,6 @@ MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
    on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
 
-  def var ii as int no-undo.
   
   { gbl/getcurus.i
     v-db-num

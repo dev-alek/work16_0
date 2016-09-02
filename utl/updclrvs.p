@@ -33,6 +33,10 @@ define variable vss-description as character no-undo initial "Утилита запуска ре
 
   def var rvs-rec as recid.
   find first rvs-doc where rvs-code = par-doc-code exclusive-lock.
+  if rvs-doc.status_ <> "факт" then do :
+      message "Данная сверка не закрыта на факт!" view-as alert-box .
+      return .
+  end.    
   rvs-rec = recid(rvs-doc).
   run utl/rvs-doc_upd.w
     ( input        parproc

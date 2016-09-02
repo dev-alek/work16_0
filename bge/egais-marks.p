@@ -39,7 +39,7 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Интерфейс для расшифровки акцизной марки".
 
-{ibs/th/bge/egais/ab-egais.i new shared}
+{ibs/th/bge/egais/ab-egais.i 1 new shared}
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
  main-block:
