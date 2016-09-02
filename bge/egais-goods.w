@@ -693,6 +693,21 @@ DO:
                             X_ext-classif-attr.key#_one = tt-gds.gds-code
                             X_ext-classif-attr.charkey_one = tt-gds.alc-code
                         no-error.
+                        
+                        if tt-gds.imp-info = ? or tt-gds.imp-info = ""
+                        or tt-gds.imp-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                        or tt-gds.imp-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                        then
+                        tt-gds.imp-info = entry(2, X_ext-classif-attr.attr-value, CHR(4)) .
+                        
+                        if entry (7, tt-gds.imp-info, chr(5)) = ? or entry (7, tt-gds.imp-info, chr(5)) = ""
+                        then entry (7, tt-gds.imp-info, chr(5)) = entry (7, entry(2, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        
+                        if entry (7, tt-gds.prod-info, chr(5)) = ? or entry (7, tt-gds.prod-info, chr(5)) = ""
+                        then entry (7, tt-gds.prod-info, chr(5)) = entry (7, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        if entry (8, tt-gds.prod-info, chr(5)) = ? or entry (8, tt-gds.prod-info, chr(5)) = ""
+                        then entry (8, tt-gds.prod-info, chr(5)) = entry (8, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        
                         assign X_ext-classif-attr.attr-value = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name) .
                     end.                                    
                     else do :                                    
@@ -749,6 +764,21 @@ DO:
                                 X_ext-classif-attr.attr-code = 'egais-info' 
                             .       
                         end.
+                        
+                        if tt-gds.imp-info = ? or tt-gds.imp-info = ""
+                        or tt-gds.imp-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                        or tt-gds.imp-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
+                        then
+                        tt-gds.imp-info = entry(2, X_ext-classif-attr.attr-value, CHR(4)) .
+                        
+                        if entry (7, tt-gds.imp-info, chr(5)) = ? or entry (7, tt-gds.imp-info, chr(5)) = ""
+                        then entry (7, tt-gds.imp-info, chr(5)) = entry (7, entry(2, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        
+                        if entry (7, tt-gds.prod-info, chr(5)) = ? or entry (7, tt-gds.prod-info, chr(5)) = ""
+                        then entry (7, tt-gds.prod-info, chr(5)) = entry (7, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        if entry (8, tt-gds.prod-info, chr(5)) = ? or entry (8, tt-gds.prod-info, chr(5)) = ""
+                        then entry (8, tt-gds.prod-info, chr(5)) = entry (8, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        
                         assign X_ext-classif-attr.attr-value = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name) .
                     end.    
                     

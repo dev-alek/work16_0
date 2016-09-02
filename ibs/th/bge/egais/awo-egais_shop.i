@@ -208,14 +208,14 @@ procedure makeXMLegais_v2 :
                             v-err = true .
                           end.
                           
-                          v-impor = entry (2, X_ext-classif-attr.attr-value, chr(4)) no-error.
-                          if (num-entries (v-impor, chr (5)) > 0 and num-entries (v-impor, chr (5)) < 8) 
-                              or (trim(v-impor) <> "" and entry (7, v-impor, chr(5)) = "")
-                            then 
-                          do:
-                            message "У товара неверно указан импортер из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров во второй версии XSD  и  заново сохраните акт." view-as alert-box.
-                            v-err-impor = true .
-                          end. 
+/*                          v-impor = entry (2, X_ext-classif-attr.attr-value, chr(4)) no-error.                                                                                                                           */
+/*                          if (num-entries (v-impor, chr (5)) > 0 and num-entries (v-impor, chr (5)) < 8)                                                                                                                 */
+/*                              or (trim(v-impor) <> "" and entry (7, v-impor, chr(5)) = "")                                                                                                                               */
+/*                            then                                                                                                                                                                                         */
+/*                          do:                                                                                                                                                                                            */
+/*                            message "У товара неверно указан импортер из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров во второй версии XSD  и  заново сохраните акт." view-as alert-box.*/
+/*                            v-err-impor = true .                                                                                                                                                                         */
+/*                          end.                                                                                                                                                                                           */
                           
                           if not v-err then do :
                             sw:start-element ("pref:Producer") .
@@ -236,26 +236,26 @@ procedure makeXMLegais_v2 :
                             sw:end-element ("pref:Producer") .
                           end.  
                           
-                          if not v-err-impor then do :  
-                            if trim(v-impor) <> ""
-                            and v-impor <> ?
-                            and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
-                            and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) then do:
-                              sw:start-element ("pref:Importer") .
-                               sw:start-element ("oref:" + entry (7, v-impor, chr(5))) .
-                                if entry (2, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:INN", entry (2, v-impor, chr(5)) ).
-                                if entry (3, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:KPP", entry (3, v-impor, chr(5)) ).
-                                sw:write-data-element ("oref:ClientRegId", entry (1, v-impor, chr(5)) ).
-                                sw:write-data-element ("oref:FullName", entry (4, v-impor, chr(5)) ).
-                                sw:start-element ("oref:address").
-                                  sw:write-data-element ("oref:Country", entry (5, v-impor, chr(5)) ).
-                                  if entry (8, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:RegionCode", entry (8, v-impor, chr(5)) ).
-                                  sw:write-data-element ("oref:description", entry (6, v-impor, chr(5)) ).
-                                sw:end-element ("oref:address").
-                               sw:end-element ("oref:" + entry (7, v-impor, chr(5))) .
-                              sw:end-element ("pref:Importer") .
-                            end.
-                          end.
+/*                          if not v-err-impor then do :                                                                                            */
+/*                            if trim(v-impor) <> ""                                                                                                */
+/*                            and v-impor <> ?                                                                                                      */
+/*                            and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5)                                                             */
+/*                            and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) then do:                                  */
+/*                              sw:start-element ("pref:Importer") .                                                                                */
+/*                               sw:start-element ("oref:" + entry (7, v-impor, chr(5))) .                                                          */
+/*                                if entry (2, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:INN", entry (2, v-impor, chr(5)) ).         */
+/*                                if entry (3, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:KPP", entry (3, v-impor, chr(5)) ).         */
+/*                                sw:write-data-element ("oref:ClientRegId", entry (1, v-impor, chr(5)) ).                                          */
+/*                                sw:write-data-element ("oref:FullName", entry (4, v-impor, chr(5)) ).                                             */
+/*                                sw:start-element ("oref:address").                                                                                */
+/*                                  sw:write-data-element ("oref:Country", entry (5, v-impor, chr(5)) ).                                            */
+/*                                  if entry (8, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:RegionCode", entry (8, v-impor, chr(5)) ).*/
+/*                                  sw:write-data-element ("oref:description", entry (6, v-impor, chr(5)) ).                                        */
+/*                                sw:end-element ("oref:address").                                                                                  */
+/*                               sw:end-element ("oref:" + entry (7, v-impor, chr(5))) .                                                            */
+/*                              sw:end-element ("pref:Importer") .                                                                                  */
+/*                            end.                                                                                                                  */
+/*                          end.                                                                                                                    */
 
                         end.
                         else do:
