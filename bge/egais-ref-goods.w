@@ -35,34 +35,38 @@ define variable vss-workfile               as character no-undo init "$Workfile$
 define variable vss-archive                as character no-undo init "$Archive$":U .
 define variable vss-description            as character no-undo init "Справочник товаров ЕГАИС.".
 
-define variable bh-egais-goods       as handle    no-undo.
-define variable browse-hdl-egais-goods  as handle    no-undo.
-define variable qh-egais-goods          as handle    no-undo.
-define variable bcol               as handle    no-undo extent. 
-define variable v-db-num           as integer   no-undo .
-define variable v-user-id          as character no-undo .
-define variable v-user-select      as character no-undo .
-define variable v-select-obj-type  as character no-undo .
-define variable v-select-obj-code  as integer   no-undo .
-define variable v-obj-uniq-key-rec as character no-undo .
-define variable v-gds-uniq-key-rec as character no-undo .
-define variable v-ext-sys          as integer   no-undo .
-define variable v-fs-rar           as character no-undo. 
-define variable extGdsObj          as class     ExtGds no-undo .
-define variable v-value-character  as character no-undo .
-define variable v-value-decimal    as decimal   no-undo .
-define variable v-value-integer    as integer   no-undo .
-define variable v-value-logical    as logical   no-undo .
-define variable v-value-type       as character no-undo .
-define variable v-value-date       as date      no-undo .
-define variable select-list        as character no-undo .
-define variable v-rec-list         as character no-undo .
-define variable isMarkALL          as logical   no-undo init ?.
-define variable isSave             as logical   no-undo.
+define variable bh-egais-goods         as handle    no-undo.
+define variable browse-hdl-egais-goods as handle    no-undo.
+define variable qh-egais-goods         as handle    no-undo.
+define variable bcol                   as handle    no-undo extent. 
+define variable v-db-num               as integer   no-undo .
+define variable v-user-id              as character no-undo .
+define variable v-user-select          as character no-undo .
+define variable v-select-obj-type      as character no-undo .
+define variable v-select-obj-code      as integer   no-undo .
+define variable v-obj-uniq-key-rec     as character no-undo .
+define variable v-gds-uniq-key-rec     as character no-undo .
+define variable v-ext-sys              as integer   no-undo .
+define variable v-fs-rar               as character no-undo. 
+define variable extGdsObj              as class     ExtGds no-undo .
+define variable v-value-character      as character no-undo .
+define variable v-value-decimal        as decimal   no-undo .
+define variable v-value-integer        as integer   no-undo .
+define variable v-value-logical        as logical   no-undo .
+define variable v-value-type           as character no-undo .
+define variable v-value-date           as date      no-undo .
+define variable select-list            as character no-undo .
+define variable v-rec-list             as character no-undo .
+define variable isMarkALL              as logical   no-undo init ?.
+define variable isSave                 as logical   no-undo.
+define variable glog                   as logical   no-undo.
+define variable v-user-action          as character no-undo .
+define variable v-printed              as logical   no-undo .
 
 define buffer buf_clients   for ub.clients .
 define buffer x_ext-classif for ub.ext-classif.
 define buffer buf_goods     for ub.goods .
+define stream str1.
 
 {cmp/str-glbl.i}
 { gbl/color.i }
@@ -73,6 +77,7 @@ define buffer buf_goods     for ub.goods .
 { gbl/key-rec.i  }
 { gbl/thbjattr.i }
 { ref/gds-attr.i }
+{ gbl/waitfram.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -89,8 +94,9 @@ define buffer buf_goods     for ub.goods .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_Cancel btn_refresh btn_look btn_del ~
-f-gds f-alcgds f-gdsname t-incorr 
+&Scoped-Define ENABLED-OBJECTS Btn_Cancel Btn_mark Btn_markall Btn_desmark ~
+btn_look btn_refresh btn_req btn_asw btn_del f-gds f-alcgds f-gdsname ~
+t-incorr 
 &Scoped-Define DISPLAYED-OBJECTS f-gds f-alcgds f-gdsname t-incorr 
 
 /* Custom List Definitions                                              */
@@ -106,22 +112,42 @@ f-gds f-alcgds f-gdsname t-incorr
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON btn_asw 
+     LABEL "Получить ответ и сохр." 
+     SIZE 22.5 BY 1.13.
+
 DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
      LABEL "Выход" 
-     SIZE 10 BY 1.13
+     SIZE 8.5 BY 1.13
      BGCOLOR 8 .
 
 DEFINE BUTTON btn_del 
      LABEL "Удалить" 
-     SIZE 15 BY 1.13.
+     SIZE 9 BY 1.13.
+
+DEFINE BUTTON Btn_desmark 
+     LABEL "-" 
+     SIZE 3.5 BY 1.13.
 
 DEFINE BUTTON btn_look 
      LABEL "Просмотр" 
-     SIZE 15 BY 1.13.
+     SIZE 9 BY 1.13.
+
+DEFINE BUTTON Btn_mark 
+     LABEL "*" 
+     SIZE 3.5 BY 1.13.
+
+DEFINE BUTTON Btn_markall 
+     LABEL "+" 
+     SIZE 3.5 BY 1.13.
 
 DEFINE BUTTON btn_refresh 
      LABEL "Обновить" 
-     SIZE 15 BY 1.13.
+     SIZE 9 BY 1.13.
+
+DEFINE BUTTON btn_req 
+     LABEL "Запрос" 
+     SIZE 9 BY 1.13.
 
 DEFINE VARIABLE f-alcgds AS CHARACTER FORMAT "X(256)":U 
      LABEL "Алк. код товара" 
@@ -148,9 +174,14 @@ DEFINE VARIABLE t-incorr AS LOGICAL INITIAL no
 
 DEFINE FRAME Dialog-Frame
      Btn_Cancel AT ROW 1.25 COL 2
-     btn_refresh AT ROW 1.25 COL 12.5 WIDGET-ID 18
-     btn_look AT ROW 1.25 COL 28 WIDGET-ID 14
-     btn_del AT ROW 1.25 COL 43.75
+     Btn_mark AT ROW 1.25 COL 12.5 WIDGET-ID 4
+     Btn_markall AT ROW 1.25 COL 16.75 WIDGET-ID 6
+     Btn_desmark AT ROW 1.25 COL 21 WIDGET-ID 8
+     btn_look AT ROW 1.25 COL 25.25 WIDGET-ID 14
+     btn_refresh AT ROW 1.25 COL 34.88 WIDGET-ID 18
+     btn_req AT ROW 1.25 COL 44.38 WIDGET-ID 36
+     btn_asw AT ROW 1.25 COL 54 WIDGET-ID 38
+     btn_del AT ROW 1.25 COL 77
      f-gds AT ROW 2.75 COL 12.38 COLON-ALIGNED WIDGET-ID 20
      f-alcgds AT ROW 2.75 COL 45.13 COLON-ALIGNED WIDGET-ID 22
      f-gdsname AT ROW 2.75 COL 75.25 COLON-ALIGNED WIDGET-ID 24
@@ -206,6 +237,143 @@ do:
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME btn_asw
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_asw Dialog-Frame
+ON CHOOSE OF btn_asw IN FRAME Dialog-Frame /* Получить ответ и сохр. */
+DO:
+
+  def var egaisJournal        as class  Journal     no-undo.
+  def var extGdsValueObj      as class  ExtGdsValue no-undo.
+  def var extGdsValueObjDB    as class  ExtGdsValue no-undo.
+  def var egaisDictGds        as class  DictGds     no-undo.
+  def var bh-journal-egais    as handle no-undo.
+  def var qh-journal-egais    as handle no-undo.
+  def var bh-gds-egais-gotten as handle    no-undo.
+  def var msg                 as character no-undo.
+  def var ii                  as integer   no-undo.
+  def var isQHEmpty           as logical no-undo init true.
+
+  os-delete value (search ("logbund.txt")).
+  
+  output stream str1 to "logbund.txt".
+  
+  egaisJournal = new Journal ().
+  bh-journal-egais = egaisJournal:GetHndlTable().
+
+  create query qh-journal-egais.
+  
+  qh-journal-egais:set-buffers (bh-journal-egais) .
+
+  qh-journal-egais:query-prepare ("for each tt_journal-egais where jou-param matches '*КОД*' and jou-status = 'Запрос отправлен' ").
+  qh-journal-egais:query-open.
+  
+  run waitfram-show in this-procedure ("Ждите...") .
+  
+  journal_:
+  do while qh-journal-egais:get-next ():
+    
+    isQHEmpty = false.
+    
+    egaisDictGds = new DictGds (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, "КОД", entry (3, bh-journal-egais:buffer-field ("jou-param"):buffer-value, '|')).
+    egaisDictGds:DbNum = v-db-num.
+    egaisDictGds:User_Id = v-user-id.
+
+    glog = egaisDictGds:StatusErr .
+    if glog then do :
+        msg = msg + {&new-line} + egaisDictGds:Msg.
+    end.
+    else do:
+      bh-gds-egais-gotten = egaisDictGds:GetHndlTable() .
+      if bh-gds-egais-gotten = ? or not bh-gds-egais-gotten:find-first () 
+      then do:
+        put stream str1 unformatted {&new-line} + egaisDictGds:Msg.
+        delete object egaisDictGds.
+        next journal_.
+      end.
+      extGdsValueObj = extGdsObj:GetInfoObj (bh-gds-egais-gotten:buffer-field("prod-info"):buffer-value + chr(4) + bh-gds-egais-gotten:buffer-field("imp-info"):buffer-value + chr(4) + bh-gds-egais-gotten:buffer-field("gds-name"):buffer-value).
+      extGdsObj:OpenQueryExtGds (bh-gds-egais-gotten:buffer-field("alc-code"):buffer-value).
+      do ii = 1 to extGdsObj:NumBundles:
+        extGdsValueObjDB = extGdsObj:GetExtGdsValue(ii).
+        if extGdsValueObj:CliEgaisTypeProd = ""
+        then do:
+          assign
+            extGdsValueObjDB:CliRegIdImpor = extGdsValueObj:CliRegIdImpor
+            extGdsValueObjDB:CliRegIdProd = extGdsValueObj:CliRegIdProd
+            extGdsValueObjDB:CountryImpor = extGdsValueObj:CountryImpor
+            extGdsValueObjDB:CountryProd = extGdsValueObj:CountryProd
+            extGdsValueObjDB:DescrImpor = extGdsValueObj:DescrImpor
+            extGdsValueObjDB:DescrProd = extGdsValueObj:DescrProd
+            extGdsValueObjDB:FullNameGds = extGdsValueObj:FullNameGds
+            extGdsValueObjDB:FullNameImpor = extGdsValueObj:FullNameImpor
+            extGdsValueObjDB:FullNameProd = extGdsValueObj:FullNameProd
+            extGdsValueObjDB:INNImpor = extGdsValueObj:INNImpor
+            extGdsValueObjDB:INNProd = extGdsValueObj:INNProd
+            extGdsValueObjDB:KPPImpor = extGdsValueObj:KPPImpor
+            extGdsValueObjDB:KPPProd = extGdsValueObj:KPPProd
+          .
+        end.
+        else do:
+          assign
+            extGdsValueObjDB:CliRegIdProd = extGdsValueObj:CliRegIdProd
+            extGdsValueObjDB:CountryProd = extGdsValueObj:CountryProd
+            extGdsValueObjDB:DescrProd = extGdsValueObj:DescrProd
+            extGdsValueObjDB:FullNameGds = extGdsValueObj:FullNameGds
+            extGdsValueObjDB:FullNameProd = extGdsValueObj:FullNameProd
+            extGdsValueObjDB:INNProd = extGdsValueObj:INNProd
+            extGdsValueObjDB:KPPProd = extGdsValueObj:KPPProd
+            extGdsValueObjDB:CliEgaisTypeProd = extGdsValueObj:CliEgaisTypeProd
+            extGdsValueObjDB:RegionProd = extGdsValueObj:RegionProd
+          .
+        end.
+        extGdsObj:SaveEGAISInfo(extGdsValueObjDB).
+        bh-egais-goods:find-first (substitute ("where alcCode = '&1' and gdsCode = &2", extGdsValueObjDB:AlcCode, extGdsValueObjDB:GdsCode )).
+        bh-egais-goods:buffer-field ('ColorNum'):buffer-value () = YELLOW_COLOR .
+        
+      end.
+      
+    end.
+
+
+    delete object egaisDictGds.
+  end.
+  
+  run waitfram-hide in this-procedure.
+  
+  output stream str1 close.
+  
+  file-info:file-name = search ("logbund.txt").
+
+  
+  if search ("logbund.txt") <> ? and file-info:file-size > 0
+  then do:
+    run gbl/prnfilen.w
+    (input  "Отчёт о запросах"
+    ,input  0
+    ,input  search ("logbund.txt")
+    ,input  7
+    ,output v-user-action
+    ,output v-printed
+    ) .
+  end. 
+  
+  if isQHEmpty
+  then do:
+    delete object qh-journal-egais.
+    delete object egaisJournal.
+    message "Нет открытых запросов." view-as alert-box information title "Информация".
+    return.
+  end.
+  else message "Завершено. Сохраненные записи подсвечены желтым." view-as alert-box information title "Сообщение". 
+  delete object qh-journal-egais.
+  delete object egaisJournal.
+  run refresh-view.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME btn_del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_del Dialog-Frame
 ON choose OF btn_del IN FRAME Dialog-Frame /* Удалить */
@@ -214,6 +382,29 @@ do:
   def var cmd as char no-undo.
   def var qh-del as handle no-undo.
   run refresh-view.
+
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME Btn_desmark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_desmark Dialog-Frame
+ON choose OF Btn_desmark IN FRAME Dialog-Frame /* - */
+do:
+  
+  if not qh-egais-goods:is-open
+    then return no-apply.
+  
+  if qh-egais-goods:get-first ()
+    then bh-egais-goods:buffer-field (1):buffer-value () = "".
+  do while qh-egais-goods:get-next ():
+    bh-egais-goods:buffer-field (1):buffer-value () = "".
+  end.
+  
+  if qh-egais-goods:get-first () 
+    then browse-hdl-egais-goods:refresh ().
 
 end.
 
@@ -234,12 +425,112 @@ end.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME Btn_mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_mark Dialog-Frame
+ON choose OF Btn_mark IN FRAME Dialog-Frame /* * */
+do:
+
+  if bh-egais-goods:available
+  then do:
+    if bcol[1]:screen-value = "*"
+      then do:
+        assign 
+          bh-egais-goods:buffer-field (1):buffer-value () = ""
+          bcol[1]:screen-value = ""
+          .
+      end.
+      else do:
+        assign 
+          bh-egais-goods:buffer-field (1):buffer-value () = "*"
+          bcol[1]:screen-value = "*"
+          .
+
+     end.
+     browse-hdl-egais-goods:select-next-row( ).
+  end.
+
+
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME Btn_markall
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_markall Dialog-Frame
+ON choose OF Btn_markall IN FRAME Dialog-Frame /* + */
+do:
+  
+  if qh-egais-goods:get-first ()
+    then bh-egais-goods:buffer-field (1):buffer-value () = "*".
+  do while qh-egais-goods:get-next ():
+    bh-egais-goods:buffer-field (1):buffer-value () = "*".
+  end.
+  
+  if qh-egais-goods:get-first () 
+    then browse-hdl-egais-goods:refresh ().
+  
+  /*isMarkALL = true.
+  if qh-egais-goods:get-first () 
+    then browse-hdl-egais-goods:refresh ().
+  isMarkALL = ?.  */
+   
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME btn_refresh
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_refresh Dialog-Frame
 ON CHOOSE OF btn_refresh IN FRAME Dialog-Frame /* Обновить */
 DO:
-  extGdsObj:GetHndlTable(0, "", output bh-egais-goods).
+  extGdsObj:GetHndlTable(0, "", input-output bh-egais-goods).
   run refresh-view.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME btn_req
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_req Dialog-Frame
+ON CHOOSE OF btn_req IN FRAME Dialog-Frame /* Запрос */
+DO:
+  def var egaisDictGds as class DictGds no-undo.
+  def var qh-egais-goods-mark as handle no-undo.
+  def var isQHEmpty as logical no-undo init true.
+
+  create query qh-egais-goods-mark.
+  qh-egais-goods-mark:set-buffers (bh-egais-goods).
+  qh-egais-goods-mark:query-prepare ("for each tt-egaisgds-hndls where mark = '*' ").
+  qh-egais-goods-mark:query-open.
+
+  run waitfram-show in this-procedure ("Ждите...") .
+
+  do while qh-egais-goods-mark:get-next ():
+    isQHEmpty = false.
+    egaisDictGds = new DictGds (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, "КОД", bh-egais-goods:buffer-field ("alcCode"):buffer-value).
+    egaisDictGds:DbNum = v-db-num.
+    egaisDictGds:User_Id = v-user-id.
+    egaisDictGds:SendRequestUTM() .
+    glog = egaisDictGds:StatusErr .
+    if glog then do :
+        message egaisDictGds:Msg view-as alert-box.
+        run waitfram-hide in this-procedure.
+        return no-apply.
+    end.
+    delete object egaisDictGds.
+  end.
+  delete object qh-egais-goods-mark.
+  run waitfram-hide in this-procedure .
+  if isQHEmpty
+  then do:
+    message "Для отправки запросов отметьте товары." view-as alert-box information title "Информация".
+    return.
+  end.
+  apply "choose" to Btn_desmark in frame {&FRAME-NAME}.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -250,6 +541,8 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-alcgds Dialog-Frame
 ON leave OF f-alcgds IN FRAME Dialog-Frame /* Алк. код товара */
 do:
+  if f-alcgds:screen-value = f-alcgds
+    then return.
   run refresh-view.
 end.
 
@@ -271,6 +564,8 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-gds Dialog-Frame
 ON leave OF f-gds IN FRAME Dialog-Frame /* Код товара */
 do:
+  if f-gds:screen-value = f-gds
+    then return.
   run refresh-view.
 end.
 
@@ -292,6 +587,8 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-gdsname Dialog-Frame
 ON leave OF f-gdsname IN FRAME Dialog-Frame /* Назв. товара */
 do:
+  if f-gdsname:screen-value = f-gdsname
+    then return.
   run refresh-view.
 end.
 
@@ -408,7 +705,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   extGdsObj:DbNum = v-db-num.
 /*  extGdsObj:User_Id = v-user-id.*/
 
-  extGdsObj:GetHndlTable(0, "", output bh-egais-goods).
+  extGdsObj:GetHndlTable(0, "", input-output bh-egais-goods).
   
   create query qh-egais-goods.
   qh-egais-goods:set-buffers (bh-egais-goods).
@@ -433,11 +730,13 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   run enable_UI.
   run refresh-view.
   bh-egais-goods:find-first ("", no-lock) no-error.
-ASSIGN 
+  ASSIGN 
        btn_del:HIDDEN IN FRAME Dialog-Frame           = TRUE.
   wait-for go of frame {&FRAME-NAME}.
   
 end.
+if valid-object (extGdsObj)
+  then delete object extGdsObj.
 run disable_UI.
 
 /* _UIB-CODE-BLOCK-END */
@@ -476,8 +775,8 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY f-gds f-alcgds f-gdsname t-incorr 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_Cancel btn_refresh btn_look btn_del f-gds f-alcgds f-gdsname 
-         t-incorr 
+  ENABLE Btn_Cancel Btn_mark Btn_markall Btn_desmark btn_look btn_refresh 
+         btn_req btn_asw btn_del f-gds f-alcgds f-gdsname t-incorr 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -562,7 +861,7 @@ def var v-proposition  as char no-undo.
 
   if t-incorr = true
   then do:
-    v-proposition = v-proposition + substitute ("ColorNum <> ?").
+    v-proposition = v-proposition + substitute ("ColorNum = &1", RED_COLOR).
   end. 
 
   v-proposition = right-trim (v-proposition, " and ").
@@ -577,6 +876,7 @@ def var v-proposition  as char no-undo.
   qh-egais-goods:query-open.
   if qh-egais-goods:get-first () 
     then browse-hdl-egais-goods:refresh ().
+  apply "choose" to Btn_desmark in frame {&FRAME-NAME}.
   
 end.
 
