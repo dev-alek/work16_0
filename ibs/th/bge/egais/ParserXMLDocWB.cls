@@ -261,8 +261,8 @@ class ibs.th.bge.egais.ParserXMLDocWB:
         when "wb:Position" then 
           do:
             create tt-wb-gds-EG .
-            tt-wb-gds-EG.prod-list = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
-            tt-wb-gds-EG.importer-list = chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
+            tt-wb-gds-EG.prod-list = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
+            tt-wb-gds-EG.importer-list = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
             nn = nn + 1.
           end.
         when "wa:Header" then 
@@ -478,6 +478,12 @@ class ibs.th.bge.egais.ParserXMLDocWB:
           or lookup (hParent:name, "pref:TS") > 0
         ) 
         then do:
+        case hParent:name:
+          when "oref:UL" then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'UL'.
+          when "oref:FL" then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'FL'.
+          when "oref:FO" then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'FO'.
+          when "oref:TS" then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'TS'.
+        end case. 
         if hNoderef:name = "oref:ClientRegId" then assign tt-wb-gds-EG.regID-Producer = hText:node-value .
         tt-wb-gds-EG.producer-th = "".
         find first ub.ext-classif no-lock 
@@ -500,7 +506,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
         if hNoderef:name = "oref:INN"         then assign entry (2, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
         if hNoderef:name = "oref:KPP"         then assign entry (3, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
         if hNoderef:name = "oref:FullName"    then assign entry (4, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-        
+        if hNoderef:name = "oref:RegionCode"    then assign entry (8, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
       end.
       
       if available (tt-wb-gds-EG) and hParent:name = "oref:address" and (entry (5, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address")

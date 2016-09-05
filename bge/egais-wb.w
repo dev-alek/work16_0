@@ -728,6 +728,9 @@ PROCEDURE msdblcl :
     extGdsValueObj:FullNameProd = entry (4, v-prod, chr(5)).
     extGdsValueObj:CountryProd = entry (5, v-prod, chr(5)).
     extGdsValueObj:DescrProd = entry (6, v-prod, chr(5)).
+
+    extGdsValueObj:CliEgaisTypeProd = entry (7, v-prod, chr(5)).
+    extGdsValueObj:RegionProd = entry (8, v-prod, chr(5)).
     
     extGdsValueObj:CliRegIdImpor = entry (1, v-impor, chr(5)).
     extGdsValueObj:INNImpor = entry (2, v-impor, chr(5)).
