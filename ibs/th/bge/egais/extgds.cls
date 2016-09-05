@@ -65,11 +65,12 @@ class ibs.th.bge.egais.ExtGds:
     get.
     private set.
 
-  define property SettingsTTList as character no-undo init ";;20,yes;23,yes;;;20,yes;20,no;;20,yes;;;;;20,yes;;;;;1,no" /*в пор€дке полей через ; ширина в симв. пол€, видно/не видно поле по умолч. видно*/
+  define property SettingsTTList as character no-undo init ";;;20,yes;23,yes;;;20,yes;20,no;;20,yes;;;;;20,yes;;;;;1,yes" /*в пор€дке полей через ; ширина в симв. пол€, видно/не видно поле по умолч. видно*/
     get.
     private set.
 
   define temp-table tt-egaisgds-hndls no-undo
+    field mark             as character format "X(1)" label "*"
     field gdsCode          as integer   label " од товара" format "9999999999"
     field alcCode          as character label "јлк. код товара" format "x(21)"
     field gdsName          as character label "Ќазвание товара" format "x(256)"
@@ -128,13 +129,14 @@ class ibs.th.bge.egais.ExtGds:
     
   end.
 
-  method public void GetHndlTable (inGdsCode as int, inAlcCode as char, output outTTHndl as handle):
+  method public void GetHndlTable (inGdsCode as int, inAlcCode as char, input-output outTTHndl as handle):
     
     def var ExtGdsValueObj as ExtGdsValue no-undo.
     
     assign
       ReturnMsg = ""
     .
+    empty temp-table tt-egaisgds-hndls.
     
     for each buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
       and buf_ext-classif.classif-name = {&extclass_goods_esys} 

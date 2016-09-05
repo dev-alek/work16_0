@@ -28,8 +28,8 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
 <ns:QueryAP>~
 <qp:Parameters>~
 <qp:Parameter>~
-<qp:Name>ÈÍÍ</qp:Name>~
-<qp:Value>&2</qp:Value>~
+<qp:Name>&2</qp:Name>~
+<qp:Value>&3</qp:Value>~
 </qp:Parameter>~
 </qp:Parameters>~
 </ns:QueryAP>~
@@ -48,8 +48,8 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
 <ns:QueryAP_v2>~
 <qp:Parameters>~
 <qp:Parameter>~
-<qp:Name>ÈÍÍ</qp:Name>~
-<qp:Value>&2</qp:Value>~
+<qp:Name>&2</qp:Name>~
+<qp:Value>&3</qp:Value>~
 </qp:Parameter>~
 </qp:Parameters>~
 </ns:QueryAP_v2>~
@@ -75,10 +75,20 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
 
     super (inOjType, inObjCode).
     assign
-      parameters = inFSRAR + {&delim-par} + inINN. 
+      parameters = inFSRAR + {&delim-par} + 'ÈÍÍ' + {&delim-par} + inINN. 
     .
     IsSent.
 		
+  end constructor.
+
+  constructor public DictGds (inOjType as char, inObjCode as int, inFSRAR as char, inQRName as char, inQRValue as char):
+
+    super (inOjType, inObjCode).
+    assign
+      parameters = inFSRAR + {&delim-par} + inQRName + {&delim-par} + inQRValue. 
+    .
+    IsSent.
+    
   end constructor.
 
   method public override logical SendRequestUTM():
@@ -107,9 +117,9 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
       output stream outstr to value ("QueryAPSingle.xml") convert target "UTF-8". 
       
       if VerXSD = "1" then
-        outData = substitute ({&xml}, entry (1, parameters, {&delim-par}), entry (2, parameters, {&delim-par})).
+        outData = substitute ({&xml}, entry (1, parameters, {&delim-par}), entry (2, parameters, {&delim-par}), entry (3, parameters, {&delim-par})).
       if VerXSD = "2" then
-        outData = substitute ({&xml_v2}, entry (1, parameters, {&delim-par}), entry (2, parameters, {&delim-par})).
+        outData = substitute ({&xml_v2}, entry (1, parameters, {&delim-par}), entry (2, parameters, {&delim-par}), entry (3, parameters, {&delim-par})).
         
       put stream outstr unformatted outData.
       put stream outstr skip.
