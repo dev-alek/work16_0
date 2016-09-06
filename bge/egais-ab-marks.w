@@ -56,7 +56,7 @@ define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Акцизные марки".
 
 { cmp/vssrevis.i }
-{ibs/th/bge/egais/ab-egais.i shared}
+{ibs/th/bge/egais/ab-egais.i 1 shared}
 {bge/egais-mark.i}
 { cmp/showinf.i  }
 { gbl/color.i }

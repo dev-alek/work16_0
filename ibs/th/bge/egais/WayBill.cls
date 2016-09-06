@@ -760,7 +760,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 tt-wb-gds-EG.gds-code = buf_gds.gds-code
                 tt-wb-gds-EG.qnty = buf_parts.fact-qnty / buf_parts.cli-base-rate /*buf_parts.cli-qnty*/
                 tt-wb-gds-EG.price = buf_parts.price-cli when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} 
-                tt-wb-gds-EG.price = buf_parts.price-rubl when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+                tt-wb-gds-EG.price = ub.gds-dtl.price-rubl when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
                 tt-wb-gds-EG.refA = entry (1, buf_parts.alc-ref-ab-path, ",")
                 tt-wb-gds-EG.refB = entry (2, buf_parts.alc-ref-ab-path, ",")
                 tt-wb-gds-EG.alc-code = entry (3, buf_parts.alc-ref-ab-path, ",")
