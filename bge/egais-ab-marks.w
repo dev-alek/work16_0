@@ -471,7 +471,7 @@ END PROCEDURE.
       end.
       output stream str-alc close.
       output stream str-err close.            
-
+      apply "value-changed" to br-marks IN FRAME Dialog-Frame .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -691,6 +691,7 @@ PROCEDURE enable_UI :
   end.    
   VIEW FRAME Dialog-Frame.
   open query br-marks for each tt-marks  where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position .
+apply "value-changed" to br-marks IN FRAME Dialog-Frame .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
