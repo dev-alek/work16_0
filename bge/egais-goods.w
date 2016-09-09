@@ -116,6 +116,8 @@ define variable v-outId     as character no-undo .
 define variable v-ext-sys   as integer   no-undo .
 define variable v-replyId   as character no-undo .
 define variable v-alc-code  as character no-undo .
+define variable entry7      as character no-undo .
+define variable entry8      as character no-undo .
 
 define variable glog        as logical no-undo .
 
@@ -700,13 +702,29 @@ DO:
                         then
                         tt-gds.imp-info = entry(2, X_ext-classif-attr.attr-value, CHR(4)) .
                         
+                        if num-entries(tt-gds.imp-info, CHR(5)) = 6
+                        then tt-gds.imp-info = tt-gds.imp-info + chr(5) + chr(5) .
+                        
+                        if num-entries(entry(2, X_ext-classif-attr.attr-value, CHR(4)), CHR(5)) > 6
+                        then entry7 = entry (7, entry(2, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error .
+                        else entry7 = "" .
+                        
                         if entry (7, tt-gds.imp-info, chr(5)) = ? or entry (7, tt-gds.imp-info, chr(5)) = ""
-                        then entry (7, tt-gds.imp-info, chr(5)) = entry (7, entry(2, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        then entry (7, tt-gds.imp-info, chr(5)) = entry7 no-error.
+                        
+                        if num-entries(entry(1, X_ext-classif-attr.attr-value, CHR(4)), CHR(5)) > 6
+                        then entry7 = entry (7, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error .
+                        else entry7 = "" .
                         
                         if entry (7, tt-gds.prod-info, chr(5)) = ? or entry (7, tt-gds.prod-info, chr(5)) = ""
-                        then entry (7, tt-gds.prod-info, chr(5)) = entry (7, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        then entry (7, tt-gds.prod-info, chr(5)) = entry7 no-error.
+                        
+                        if num-entries(entry(1, X_ext-classif-attr.attr-value, CHR(4)), CHR(5)) > 6
+                        then entry8 = entry (8, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error .
+                        else entry8 = "" .
+                        
                         if entry (8, tt-gds.prod-info, chr(5)) = ? or entry (8, tt-gds.prod-info, chr(5)) = ""
-                        then entry (8, tt-gds.prod-info, chr(5)) = entry (8, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        then entry (8, tt-gds.prod-info, chr(5)) = entry8 no-error.
                         
                         assign X_ext-classif-attr.attr-value = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name) .
                     end.                                    
@@ -770,14 +788,29 @@ DO:
                         or tt-gds.imp-info = chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
                         then
                         tt-gds.imp-info = entry(2, X_ext-classif-attr.attr-value, CHR(4)) .
+                        if num-entries(tt-gds.imp-info, CHR(5)) = 6
+                        then tt-gds.imp-info = tt-gds.imp-info + chr(5) + chr(5) .
+                        
+                        if num-entries(entry(2, X_ext-classif-attr.attr-value, CHR(4)), CHR(5)) > 6
+                        then entry7 = entry (7, entry(2, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error .
+                        else entry7 = "" .
                         
                         if entry (7, tt-gds.imp-info, chr(5)) = ? or entry (7, tt-gds.imp-info, chr(5)) = ""
-                        then entry (7, tt-gds.imp-info, chr(5)) = entry (7, entry(2, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        then entry (7, tt-gds.imp-info, chr(5)) = entry7 no-error.
+                        
+                        if num-entries(entry(1, X_ext-classif-attr.attr-value, CHR(4)), CHR(5)) > 6
+                        then entry7 = entry (7, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error .
+                        else entry7 = "" .
                         
                         if entry (7, tt-gds.prod-info, chr(5)) = ? or entry (7, tt-gds.prod-info, chr(5)) = ""
-                        then entry (7, tt-gds.prod-info, chr(5)) = entry (7, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        then entry (7, tt-gds.prod-info, chr(5)) = entry7 no-error.
+                        
+                        if num-entries(entry(1, X_ext-classif-attr.attr-value, CHR(4)), CHR(5)) > 6
+                        then entry8 = entry (8, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error .
+                        else entry8 = "" .
+                        
                         if entry (8, tt-gds.prod-info, chr(5)) = ? or entry (8, tt-gds.prod-info, chr(5)) = ""
-                        then entry (8, tt-gds.prod-info, chr(5)) = entry (8, entry(1, X_ext-classif-attr.attr-value, CHR(4)), chr(5)) no-error.
+                        then entry (8, tt-gds.prod-info, chr(5)) = entry8 no-error.
                         
                         assign X_ext-classif-attr.attr-value = (tt-gds.prod-info + CHR(4) + tt-gds.imp-info + CHR(4) + tt-gds.egais-name) .
                     end.    

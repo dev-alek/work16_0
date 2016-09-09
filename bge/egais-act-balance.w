@@ -437,6 +437,7 @@ DO:
     end.
     assign tt-gds-act.marks-qnty = ii .
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+    apply "value-changed" to br-gds-act IN FRAME Dialog-Frame .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -735,6 +736,7 @@ DO:
            ).
     end.
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+    apply "value-changed" to br-gds-act IN FRAME Dialog-Frame .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -797,6 +799,7 @@ DO:
 /*        message "Не все выбранные товары добавлены в акт. Смотрите лог-файл act-bal_log.txt в рабочей директории" view-as alert-box .*/
 /*    end.                                                                                                                             */
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+    apply "value-changed" to br-gds-act IN FRAME Dialog-Frame .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -907,7 +910,7 @@ DO:
                                            no-error .
     if available X_ext-classif-attr then assign tt-gds-act.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
-    
+    apply "value-changed" to br-gds-act IN FRAME Dialog-Frame .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -952,7 +955,9 @@ if available tt-gds-act then do :
     for each tt-exts no-lock where tt-exts.gds-code = tt-gds-act.gds-code :
         exts = exts + 1 .
     end.
-    if exts > 1 then enable b-alc-code WITH FRAME Dialog-Frame.
+    if exts > 1
+    and not can-find(tt-marks where tt-marks.alc-code = tt-gds-act.alc-code)
+    then enable b-alc-code WITH FRAME Dialog-Frame.
     else disable b-alc-code WITH FRAME Dialog-Frame.
 end.
 end.
