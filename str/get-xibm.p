@@ -1682,6 +1682,10 @@ on error undo, return error
 
        return .
     end.
+    If cstype_ = 37 and (p-pos-type = {&cd-type-ibm-xml} OR p-pos-type = {&cd-type-Autotank}) then assign    /* ≈сли чек пополнени€, то считаем, что количество равно сумме при стоимости 1 руб */
+        curr-string-qnty = sum-from-check
+        price-from-check = 1
+        .
 
 
     CREATE chk-gds.
