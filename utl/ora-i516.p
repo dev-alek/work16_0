@@ -1340,11 +1340,12 @@ end.
           where ub.parts.in-code   = new_trn-doc.doc-code
             and ub.parts.artic     = ub.doc-line.artic
             and ub.parts.prod-type = ub.doc-line.prod-type
-            and ub.parts.prod-code = ub.doc-line.prod-code:
+            and ub.parts.prod-code = ub.doc-line.prod-code 
+            by ub.parts.qnty:
 
-          find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
+          find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock use-index qntyIndex no-error.
           if not available (temp_doc-line) then do:
-            find first temp_doc-line where  temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock no-error.
+            find first temp_doc-line where  temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock use-index qntyIndex no-error.
           end.
           
           ub.parts.price-cli = temp_doc-line.price-cli.
