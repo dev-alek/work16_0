@@ -118,7 +118,7 @@ define variable vss-description as character no-undo init "".
     " "
     " "
     " "
-    "'Rosneft-*'"
+    "'Yukos,Rosneft-*'"
     "yes"
 }
 
@@ -264,7 +264,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  "'Rosneft-*'"
+  "'Yukos,Rosneft-*'"
   "yes"
 }
 
@@ -311,16 +311,7 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Остатки на указанную дату по товарам, оприходованным до ...'"
-  "'rep/g-pstrst.p'"
-  " "
-  " "
-  " "
-  " "
-  "yes"
-}
+
 
 
 { gbl/menuload.i
@@ -344,28 +335,7 @@ define variable vss-description as character no-undo init "".
   "yes"
 
 }
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Продажи топлива по типам оплаты'"
-  "'rep/g-toppay.p'"
-  "no"
-  "''"
-  "''"
-  " "
-  "yes"
-  "'is-ptrl'"
-}
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Топливные платежи по видам топлива'"
-  "'rep/g-paytop.p'"
-  "no"
-  "''"
-  "''"
-  " "
-  "yes"
-  "'is-ptrl'"
-}
+
 { gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Продажи топлива и сервисного элемента'"
@@ -778,67 +748,7 @@ define variable vss-description as character no-undo init "".
   "yes"
 
 }
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Отчет по продажам ниже учетной цены'"
-  "'rep/g-slg-k.p'"
-  "no"
-  "'11.1'"
-  "'1'"
-  "'Spar,ProdS,TopAukc,ODIS,Vavilon'"
-  "yes"
 
-}
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Отчет по количеству наименований'"
-  "'rep/g-slg-g.p'"
-  "no"
-  "'11.1'"
-  "'1'"
-  "'Spar,ProdS,ODIS,Vavilon'"
-  "yes"
-}
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Анализ сбыта'"
-  "'rep/g-slg-s.p'"
-  "no"
-  "'11.1'"
-  "'1'"
-  "'Spar,ProdS,ODIS,Vavilon'"
-  "yes"
-}
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Отчет по закончившимся наименованиям'"
-  "'rep/g-slg-d.p'"
-  "no"
-  "'11.1'"
-  "'1'"
-  "'Spar,ProdS,ODIS,Vavilon'"
-  "yes"
-}
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Оперативный (ежедневный) отчет по закончив. наименованиям'"
-  "'rep/g-slg-e.p'"
-  "no"
-  "'11.1'"
-  "'1'"
-  "'Spar,ProdS'"
-  "yes"
-}
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Расширеный оперативный (ежедневный) отчет по закончив. наименованиям'"
-  "'rep/g-eslg-e.p'"
-  "no"
-  "'11.1'"
-  "'1'"
-  "'Spar,ProdS'"
-  "yes"
-}
 { gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Отчет по движению товара - сводный (Excel) BENETTON'"
@@ -1324,7 +1234,7 @@ define variable vss-description as character no-undo init "".
   "no"
   "'15.0'"
   "'1'"
-  "'Rosneft-*'"
+  "'Yukos,Rosneft-*'"
   "yes"
 }
 { gbl/menuload.i
@@ -1364,7 +1274,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  "'Rosneft-*'"
+  "'Yukos,Rosneft-*'"
   "yes"
 }
 { gbl/menuload.i
@@ -1374,7 +1284,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  "'Rosneft-*'"
+  "'Yukos,Rosneft-*'"
   "yes"
 }
 
@@ -1388,16 +1298,6 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Контроль ассортиментной матрицы'"
-  "'rep/g-ctrasm.p'"
-  "no"
-  "'15.0'"
-  "'1'"
-  " "
-  "yes"
-}
 
 { gbl/menuload.i
   {&bef-menuload_service_customs}
@@ -1406,7 +1306,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Rosneft-*'"
+  "'Yukos,Rosneft-*'"
   "yes"
 }
 
@@ -1428,7 +1328,17 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Rosneft-*'"
+  "'Yukos,Rosneft-*'"
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Сводный отчет по движению СТ. НТФ-8.10 (Кедр-М)'"
+  "'rep/g-trg810.p'"
+  "''"
+  "''"
+  "''"
+  "'Yukos,Rosneft-*'"
   "yes"
 }
 
@@ -1439,7 +1349,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Yukos'"
+  "'Yukos,Rosneft-*'"
   "yes"
 }
 
@@ -1461,7 +1371,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Rosneft-*'"
+  "'Yukos,Rosneft-*'"
   "yes"
 }
 
@@ -1495,7 +1405,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Rosneft-*'"
+  "'Yukos,Rosneft-*'"
   "yes"
 }
 
@@ -1537,7 +1447,7 @@ define variable vss-description as character no-undo init "".
   "no"
   "'15.0'"
   "'1'"
-  "'Rosneft-*'"
+  "'Yukos,Rosneft-*'"
   "yes"
 }
 { gbl/menuload.i
@@ -1566,6 +1476,17 @@ define variable vss-description as character no-undo init "".
 /* Сервис/ Служебные программы                                                */
 /* -------------------------------------------------------------------------- */
 
+
+{gbl/menuload.i
+ {&bef-menuload_service_utility}
+ "'Начальное формирование справочника критериев анализа'"
+ "'utl/abc-utl.p'"
+ "''"
+ "''"
+ "''"
+ " "
+ "yes"
+}
 
 { gbl/menuload.i
   {&bef-menuload_service_utility}
@@ -1608,7 +1529,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  " "
+  "'IBS'"
   "yes"
 }
 

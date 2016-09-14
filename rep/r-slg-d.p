@@ -279,7 +279,7 @@ DEFINE temp-table temp-DiscSales no-undo
     run macr_excel_sum ( temp-DiscSales.sum-sale  ,  v-row, v-col,  2) .   assign v-col = v-col + 1 .
     run macr_excel_sum ( v-prc                    ,  v-row, v-col,  2) .   assign v-col = v-col + 1 .
     run macr_excel_sum ( temp-DiscSales.day       ,  v-row, v-col,  0) .   assign v-col = v-col + 1 .
-    run macr_excel_char( string(temp-DiscSales.last-post,"99/99/99") ,  v-row, v-col) .       assign v-col = v-col + 1 .
+    run macr_excel_char( if temp-DiscSales.last-post <> ? then string(temp-DiscSales.last-post,"99/99/99") else "01/01/90" ,  v-row, v-col) .       assign v-col = v-col + 1 .
     assign v-row = v-row + 1 .
 
     if last-of(temp-DiscSales.grp-name) then do:
