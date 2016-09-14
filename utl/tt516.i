@@ -59,7 +59,7 @@ field vat-pc      as decimal
 field cons-vat-pc as decimal
 field refA        as character
 field refB        as character
-field alc-code as character
+field alc-code    as character
 field alc-type-code as character
 field importer-th as character
 field line-num-str as character /* порядок чтения из xml */ /* не присылают */
@@ -67,4 +67,9 @@ index pi
 doc-code
 line-num
 gds-code
+index qntyIndex
+doc-code
+gds-code
+alc-code
+doc-qnty
 .

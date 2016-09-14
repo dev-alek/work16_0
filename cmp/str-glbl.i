@@ -5181,8 +5181,12 @@ end.
 &global-define lob-egais-tfs '{&bef-lob-egais-tfs}':U
 &global-define bef-lob-egais-tfs-full Возврат продукции из торогового зала на склад ЕГАИС
 &global-define lob-egais-tfs-full '{&bef-lob-egais-tfs-full}':U
-&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-awo,egais-wb-act,egais-ticket,egais-wb-ticket,egais-ab_shop,egais-awo_shop,egais-tts,egais-tfs':U
-&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт о списании товара B ЕГАИС,Акт подтверждения накладной,Квитанция ЕГАИС,Квитанция на акт по накладной ЕГАИС,Акт постановки на баланс в торговом зале ЕГАИС,Акт о списании товара из торогового зала ЕГАИС,Передача продукции в тороговый зал ЕГАИС,Возврат продукции из торогового зала на склад ЕГАИС':U
+&global-define bef-lob-egais-qb egais-qb
+&global-define lob-egais-qb '{&bef-lob-egais-qb}':U
+&global-define bef-lob-egais-qb-full Запрос на получение штрихкода по серии и номеру марки ЕГАИС
+&global-define lob-egais-qb-full '{&bef-lob-egais-qb-full}':U
+&global-define clob-res-codes 'data,gate,upgrade,report,report-xml,list,list-macro,ref,egais-wb,egais-ref-b,egais-ab,egais-awo,egais-wb-act,egais-ticket,egais-wb-ticket,egais-ab_shop,egais-awo_shop,egais-tts,egais-tfs,egais-qb':U
+&global-define clob-res-codes-full 'Данные,Гейт,Апгрейд,Отчет,Отчет-XML,Список,Макрос формир списка,Справочник,Накладная ЕГАИС,Справка B ЕГАИС,Акт постановки на баланс B ЕГАИС,Акт о списании товара B ЕГАИС,Акт подтверждения накладной,Квитанция ЕГАИС,Квитанция на акт по накладной ЕГАИС,Акт постановки на баланс в торговом зале ЕГАИС,Акт о списании товара из торогового зала ЕГАИС,Передача продукции в тороговый зал ЕГАИС,Возврат продукции из торогового зала на склад ЕГАИС,Запрос на получение штрихкода по серии и номеру марки ЕГАИС':U
 &global-define blob-res-codes 'data':U
 &global-define blob-res-codes-full 'Данные':U
 &global-define blob-trn-doc-image 'trn-doc-image':U
@@ -7996,7 +8000,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 44c7cb9eda36, 691, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 363a6325ecd0, 690, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 5819b48185bb, 779, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 5819b48185bb, 779, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 44c7cb9eda36, 691, rls ':U
 &endif

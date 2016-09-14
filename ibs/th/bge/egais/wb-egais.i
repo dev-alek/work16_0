@@ -90,7 +90,11 @@
     field importer-list  as character format "x(1)"
     field color-sts      as integer   format "99" init ?
     field UnitType       as character format "x(1)"
-    index pi nn ascending    
+    index pi nn ascending 
+    index qntyIndex
+    gds-code
+    alc-code
+    qnty
     .
 
   define temp-table tt-wb-act-header no-undo

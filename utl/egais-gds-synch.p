@@ -56,7 +56,7 @@ do:
   
   parserWBObj = new ParserXMLDocWB (extGdsObj:ExtSystem).
   
-  extGdsObj:GetHndlTable(0, "", output bh-egais-goods).
+  extGdsObj:GetHndlTable(0, "", input-output bh-egais-goods).
   create query qh-egais-goods.
   qh-egais-goods:set-buffers (bh-egais-goods).
   

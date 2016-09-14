@@ -123,6 +123,23 @@ define stream str-log .
 { gbl/color.i    }
 {ibs/th/bge/egais/ab-egais_shop.i }
 
+define new shared temp-table tt-marks
+    field num                 as character            label "№ акта"
+    field gds-part-position_  as integer
+    field mark                as character            label "Марка"          format "X(100)"
+    field new_                as logical
+    field gds-code            like ub.goods.gds-code  LABEL "Код товара"                 
+    field gds-name            as character            LABEL "Наименование"   FORMAT "X(30)" 
+    field alc-code            as character            LABEL "Алк. код"       FORMAT "X(20)"     
+    field impor-full-name     as character            LABEL "Импортер"       FORMAT "X(130)" 
+    field prod-full-name      as character            LABEL "Производитель"  FORMAT "X(130)" 
+    field flag                as logical              label "T"
+    index pi as primary unique
+        mark
+.
+
+define buffer buf_tt-marks for tt-marks .
+
 define new shared temp-table tt-exts
     field ext-rec as recid
     field gds-code as integer
@@ -144,7 +161,7 @@ end function.
 
 define menu m-add
     menu-item m-goods   label "товары по свободной зоне"
-/*    menu-item m-doc     label "по складскому документу"*/
+    menu-item m-marks   label "по акцизным маркам"
     menu-item m-one-good label "один товар"
 .
 
@@ -611,6 +628,65 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME m-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-marks Dialog-Frame
+on choose of menu-item m-marks in menu m-add 
+DO:
+    run bge/egais-ab-marks.w (parparentproc, tt-act-header.num, ?, "") .
+    for each tt-marks exclusive-lock where tt-marks.gds-part-position_ = ? and tt-marks.num = tt-act-header.num :
+        find first tt-gds-act exclusive-lock where tt-gds-act.alc-code = tt-marks.alc-code no-error .
+        if not available tt-gds-act then do :
+            find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                               and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                               AND X_ext-classif.db-num = 0  
+                                               and X_ext-classif.key#_two = v-ext-sys 
+                                               and X_ext-classif.key#_three = 0
+                                               and X_ext-classif.charkey_one = tt-marks.alc-code
+                                               and X_eXt-classif.charkey_two = ""
+                                               and X_eXt-classif.charkey_three = ""
+                                               and X_eXt-classif.nonunique = 0
+                                               .
+            find first buf_goods no-lock where buf_goods.gds-code = X_ext-classif.key#_one .                                   
+            nn = nn + 1 .
+            create tt-gds-act .
+            assign
+                tt-gds-act.gds-code         = buf_goods.gds-code
+                tt-gds-act.alc-code         = X_ext-classif.charkey_one
+                tt-gds-act.gds-name         = buf_goods.gds-name
+                tt-gds-act.num              = tt-act-header.num
+                tt-gds-act.position_        = nn
+            .
+            find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                   and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                   and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                   and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                   and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                   and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                   and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                   and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                   and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                   and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                   and X_ext-classif-attr.attr-code = 'egais-info'
+                                                   no-error .
+            if available X_ext-classif-attr then assign tt-gds-act.egais-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
+        end.
+        if not can-find(buf_tt-marks where buf_tt-marks.mark = tt-marks.mark 
+                                       and buf_tt-marks.gds-part-position_ <> ?)
+        then
+        assign
+            tt-marks.gds-part-position_ = tt-gds-act.position_   
+            tt-gds-act.qnty             = tt-gds-act.qnty + 1
+        . 
+    end.
+/*    if err-good then do :                                                                                                            */
+/*        message "Не все выбранные товары добавлены в акт. Смотрите лог-файл act-bal_log.txt в рабочей директории" view-as alert-box .*/
+/*    end.                                                                                                                             */
+    open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+    apply "value-changed" to br-gds-act IN FRAME Dialog-Frame .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME m-one-good
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-one-good Dialog-Frame
@@ -761,7 +837,9 @@ if available tt-gds-act then do :
     for each tt-exts no-lock where tt-exts.gds-code = tt-gds-act.gds-code :
         exts = exts + 1 .
     end.
-    if exts > 1 then enable b-alc-code WITH FRAME Dialog-Frame.
+    if exts > 1
+    and not can-find(tt-marks where tt-marks.alc-code = tt-gds-act.alc-code)
+    then enable b-alc-code WITH FRAME Dialog-Frame.
     else disable b-alc-code WITH FRAME Dialog-Frame.
 end.
 end.
@@ -976,14 +1054,14 @@ procedure makeXML_v2 :
                             v-err = true .
                           end.
                           
-                          v-impor = entry (2, X_ext-classif-attr.attr-value, chr(4)) no-error.
-                          if (num-entries (v-impor, chr (5)) > 0 and num-entries (v-impor, chr (5)) < 8)
-                              or (trim(v-impor) <> "" and entry (7, v-impor, chr(5)) = "") 
-                            then 
-                          do:
-                            message "У товара неверно указан импортер из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров во второй версии XSD и  заново сохраните акт." view-as alert-box.
-                            v-err-impor = true .
-                          end. 
+/*                          v-impor = entry (2, X_ext-classif-attr.attr-value, chr(4)) no-error.                                                                                                                          */
+/*                          if (num-entries (v-impor, chr (5)) > 0 and num-entries (v-impor, chr (5)) < 8)                                                                                                                */
+/*                              or (trim(v-impor) <> "" and entry (7, v-impor, chr(5)) = "")                                                                                                                              */
+/*                            then                                                                                                                                                                                        */
+/*                          do:                                                                                                                                                                                           */
+/*                            message "У товара неверно указан импортер из ЕГАИС - " + string (tt-gds-act.gds-code) + ". Выполните синхронизацию товаров во второй версии XSD и  заново сохраните акт." view-as alert-box.*/
+/*                            v-err-impor = true .                                                                                                                                                                        */
+/*                          end.                                                                                                                                                                                          */
                           
                           if not v-err then do :
                             sw:start-element ("pref:Producer") .
@@ -1004,26 +1082,26 @@ procedure makeXML_v2 :
                             sw:end-element ("pref:Producer") .
                           end.
                           
-                          if not v-err-impor then do :
-                            if trim(v-impor) <> ""
-                            and v-impor <> ?
-                            and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5)
-                            and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) then do:
-                              sw:start-element ("pref:Importer") .
-                               sw:start-element ("oref:" + entry (7, v-impor, chr(5))) .
-                                if entry (2, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:INN", entry (2, v-impor, chr(5)) ).
-                                if entry (3, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:KPP", entry (3, v-impor, chr(5)) ).
-                                sw:write-data-element ("oref:ClientRegId", entry (1, v-impor, chr(5)) ).
-                                sw:write-data-element ("oref:FullName", entry (4, v-impor, chr(5)) ).
-                                sw:start-element ("oref:address").
-                                  sw:write-data-element ("oref:Country", entry (5, v-impor, chr(5)) ).
-                                  if entry (8, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:RegionCode", entry (8, v-impor, chr(5)) ).
-                                  sw:write-data-element ("oref:description", entry (6, v-impor, chr(5)) ).
-                                sw:end-element ("oref:address").
-                               sw:end-element ("oref:" + entry (7, v-impor, chr(5))) .
-                              sw:end-element ("pref:Importer") .
-                            end.
-                          end.
+/*                          if not v-err-impor then do :                                                                                            */
+/*                            if trim(v-impor) <> ""                                                                                                */
+/*                            and v-impor <> ?                                                                                                      */
+/*                            and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5)                                                             */
+/*                            and v-impor <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) then do:                                  */
+/*                              sw:start-element ("pref:Importer") .                                                                                */
+/*                               sw:start-element ("oref:" + entry (7, v-impor, chr(5))) .                                                          */
+/*                                if entry (2, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:INN", entry (2, v-impor, chr(5)) ).         */
+/*                                if entry (3, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:KPP", entry (3, v-impor, chr(5)) ).         */
+/*                                sw:write-data-element ("oref:ClientRegId", entry (1, v-impor, chr(5)) ).                                          */
+/*                                sw:write-data-element ("oref:FullName", entry (4, v-impor, chr(5)) ).                                             */
+/*                                sw:start-element ("oref:address").                                                                                */
+/*                                  sw:write-data-element ("oref:Country", entry (5, v-impor, chr(5)) ).                                            */
+/*                                  if entry (8, v-impor, chr(5)) <> "" then sw:write-data-element ("oref:RegionCode", entry (8, v-impor, chr(5)) ).*/
+/*                                  sw:write-data-element ("oref:description", entry (6, v-impor, chr(5)) ).                                        */
+/*                                sw:end-element ("oref:address").                                                                                  */
+/*                               sw:end-element ("oref:" + entry (7, v-impor, chr(5))) .                                                            */
+/*                              sw:end-element ("pref:Importer") .                                                                                  */
+/*                            end.                                                                                                                  */
+/*                          end.                                                                                                                    */
 
                         end.
                         else do:

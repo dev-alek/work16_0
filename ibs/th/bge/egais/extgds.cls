@@ -675,14 +675,23 @@ class ibs.th.bge.egais.ExtGds:
     v-impor = ''.
     ReturnMsg = "".
     
-    find current buf_ext-classif-attr no-lock.
-    
     hndlclsExtGdsValueObj = new ExtGdsValue().
     
     create ttObjEgaisAlcProp.
     assign
       ttObjEgaisAlcProp.iExtGdsObj = inJJ
       ttObjEgaisAlcProp.ExtGdsValueObj = cast (hndlclsExtGdsValueObj,Progress.Lang.Object).
+    
+    find current buf_ext-classif-attr no-lock no-error.
+
+    if not available (buf_ext-classif-attr)
+      then 
+    do:
+      ReturnMsg = ReturnMsg + " Товар" + string (hndlclsExtGdsValueObj:AlcCode) + "/" + string (hndlclsExtGdsValueObj:GdsCode) + ". Выполните синхронизацию товаров.".
+      if not IsSilent 
+        then message ReturnMsg view-as alert-box.
+      return.
+    end.
     
     assign
       ExtGdsValueObj = GetInfoObj (buf_ext-classif-attr.attr-value) 

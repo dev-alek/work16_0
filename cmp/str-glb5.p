@@ -791,6 +791,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 { cmp/cr-prep.i 1 lob-egais-awo_shop    egais-awo_shop  "Акт о списании товара из торогового зала ЕГАИС"  egais-awo_shop "EGAIS ActWriteOff_shop" }
 { cmp/cr-prep.i 1 lob-egais-tts         egais-tts    "Передача продукции в тороговый зал ЕГАИС"  egais-tts "EGAIS TransferToShop" }
 { cmp/cr-prep.i 1 lob-egais-tfs         egais-tfs    "Возврат продукции из торогового зала на склад ЕГАИС"  egais-tfs "EGAIS TransferFromShop" }
+{ cmp/cr-prep.i 1 lob-egais-qb          egais-qb     "Запрос на получение штрихкода по серии и номеру марки ЕГАИС"  egais-qb "EGAIS QueryBarcode" }
 
 &glob clob-res-codes '{&bef-lob-res-data}~
 ,{&bef-lob-res-gate}~
@@ -811,6 +812,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dr-link-n
 ,{&bef-lob-egais-awo_shop}~
 ,{&bef-lob-egais-tts}~
 ,{&bef-lob-egais-tfs}~
+,{&bef-lob-egais-qb}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes {&clob-res-codes}" ).
@@ -834,6 +836,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-
 ,{&bef-lob-egais-awo_shop-full}~
 ,{&bef-lob-egais-tts-full}~
 ,{&bef-lob-egais-tfs-full}~
+,{&bef-lob-egais-qb-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define clob-res-codes-full {&clob-res-codes-full}" ).

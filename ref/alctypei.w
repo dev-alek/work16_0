@@ -40,6 +40,7 @@ define variable vss-description as character no-undo init "Создание и редактиров
 
 
 define buffer buf_alc-type for ub.alc-type .
+define buffer buf_alc-type-attr for ub.alc-type-attr .
 { gbl/getcntxt.i get }
 
 /* _UIB-CODE-BLOCK-END */
@@ -58,8 +59,8 @@ define buffer buf_alc-type for ub.alc-type .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit B-Help v-name v-code ~
-v-inner-code
-&Scoped-Define DISPLAYED-OBJECTS v-name v-code v-inner-code
+rs-alc-declar v-inner-code 
+&Scoped-Define DISPLAYED-OBJECTS v-name v-code rs-alc-declar v-inner-code 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -89,14 +90,14 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE v-code AS CHARACTER FORMAT "x(8)":U
-     LABEL "Код"
-     VIEW-AS FILL-IN
-     SIZE 8.9 BY 1 NO-UNDO.
+DEFINE VARIABLE v-code AS CHARACTER FORMAT "x(8)":U 
+     LABEL "Код" 
+     VIEW-AS FILL-IN 
+     SIZE 8.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-inner-code AS INTEGER FORMAT ">>>9":U INITIAL 0
-     LABEL "Код внут."
-      VIEW-AS TEXT
+DEFINE VARIABLE v-inner-code AS INTEGER FORMAT ">>>9":U INITIAL 0 
+     LABEL "Код внут." 
+      VIEW-AS TEXT 
      SIZE 14 BY .67
      FGCOLOR 1  NO-UNDO.
 
@@ -104,6 +105,13 @@ DEFINE VARIABLE v-name AS CHARACTER FORMAT "X(80)":U
      LABEL "Название"
      VIEW-AS FILL-IN
      SIZE 80 BY 1 NO-UNDO.
+
+DEFINE VARIABLE rs-alc-declar AS INTEGER 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
+          "Алк. продукция.   Форма декларации: 11", 1,
+"Пивная продукция. Форма декларации: 12", 2
+     SIZE 44 BY 1.96 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -113,11 +121,12 @@ DEFINE FRAME Dialog-Frame
      b-quit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 83.5
      v-name AT ROW 3.13 COL 11.5 COLON-ALIGNED
-     v-code AT ROW 4.2 COL 11.5 COLON-ALIGNED
+     v-code AT ROW 4.21 COL 11.5 COLON-ALIGNED
+     rs-alc-declar AT ROW 4.25 COL 49.5 NO-LABEL WIDGET-ID 4
      v-inner-code AT ROW 2.33 COL 11.5 COLON-ALIGNED
-     SPACE(66.49) SKIP(2.66)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     SPACE(66.49) SKIP(3.49)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE " видов алкоголя"
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
@@ -170,6 +179,7 @@ DO:
       v-inner-code
       v-code
       v-name
+      rs-alc-declar
    .
 
    if p-def = {&add-def} then do:
@@ -222,8 +232,60 @@ DO:
          buf_alc-type.corr-time      = TIME
          buf_alc-type.corr-user-name = v-cntxt-userid
       .
+      case rs-alc-declar:
+        when 1 then do:
+          find first buf_alc-type-attr where buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code 
+                                         and buf_alc-type-attr.attr-code = "alc-type" exclusive-lock no-error .
+            if available buf_alc-type-attr then do:
+              buf_alc-type-attr.attr-value = "1" .
+            end.  
+            else do:
+              create buf_alc-type-attr .
+              assign
+                buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code
+                buf_alc-type-attr.attr-code = "alc-type"
+                buf_alc-type-attr.attr-value = "1"
+                buf_alc-type-attr.corr-date = TODAY
+                buf_alc-type-attr.corr-time = TIME
+                buf_alc-type-attr.create-user = v-cntxt-userid
+                buf_alc-type-attr.create-user-db-num = v-cntxt-db-num
+              .
+            end.  
+        end.
+        when 2 then do:
+          find first buf_alc-type-attr where buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code 
+                                         and buf_alc-type-attr.attr-code = "alc-type" exclusive-lock no-error .
+            if available buf_alc-type-attr then do:
+              buf_alc-type-attr.attr-value = "2" .
+            end.  
+            else do:
+              create buf_alc-type-attr .
+              assign
+                buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code
+                buf_alc-type-attr.attr-code = "alc-type"
+                buf_alc-type-attr.attr-value = "2"
+                buf_alc-type-attr.corr-date = TODAY
+                buf_alc-type-attr.corr-time = TIME
+                buf_alc-type-attr.create-user = v-cntxt-userid
+                buf_alc-type-attr.create-user-db-num = v-cntxt-db-num
+              .
+            end.  
+          
+        end.    
+      end case .  
    END. /* {&add-def} OR {&update} */
 END. /* ON CHOOSE OF b-exit */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME rs-alc-declar
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-alc-declar Dialog-Frame
+ON VALUE-CHANGED OF rs-alc-declar IN FRAME Dialog-Frame
+DO:
+  assign rs-alc-declar .
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -289,9 +351,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY v-name v-code v-inner-code
+  DISPLAY v-name v-code rs-alc-declar v-inner-code 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-quit B-Help v-name v-code v-inner-code
+  ENABLE b-exit b-quit B-Help v-name v-code rs-alc-declar v-inner-code 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -331,11 +393,17 @@ if Lookup(p-def, {&add-def} + "," + {&Lookup} + "," +  {&update})  = 0 then DO:
          v-code       = buf_alc-type.alc-type-code
          /*!!!*/
          .
+         find first buf_alc-type-attr where buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code 
+                                        and buf_alc-type-attr.attr-code = "alc-type" no-lock no-error .
+         if available buf_alc-type-attr then do:
+            rs-alc-declar = integer (buf_alc-type-attr.attr-value) .
+         end.  
+         else rs-alc-declar = 1.
    end.
    else do:
       if p-def = {&add-def} then do:
       /*???
-         v-inner-code = next-value ( s-alc-type ).
+         v-inner-code = next-value ( s-alc-type, {&db-name_schema} ).
       */
       end.
    end.
