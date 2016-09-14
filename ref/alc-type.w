@@ -43,6 +43,13 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "типы алкоголя".
 define buffer br_alc-type for ub.alc-type.
+define buffer br_alc-type-attr for ub.alc-type-attr.
+
+
+define temp-table tt-alc-type no-undo like ub.alc-type
+field alc-type            like ub.alc-type-attr.attr-value 
+field rec                 as recid
+.
 
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -71,15 +78,15 @@ define variable v-ok    as logical      no-undo.
 &Scoped-define BROWSE-NAME BROWSE-2
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
-&Scoped-define INTERNAL-TABLES br_alc-type
+&Scoped-define INTERNAL-TABLES tt-alc-type
 
 /* Definitions for BROWSE BROWSE-2                                      */
-&Scoped-define FIELDS-IN-QUERY-BROWSE-2 (IF ( INDEX (rid-list, string( recid( br_alc-type ) ) ) > 0 ) THEN ("*") ELSE (" ")) @ v-brws-mark br_alc-type.alc-type-code br_alc-type.alc-type-name (IF (br_alc-type.alc-type-status = 0) then ("") else ("помечен на удаление")) @ v-status
+&Scoped-define FIELDS-IN-QUERY-BROWSE-2 (IF ( INDEX (rid-list, string( tt-alc-type.rec ) ) > 0 ) THEN ("*") ELSE (" ")) @ v-brws-mark tt-alc-type.alc-type-code tt-alc-type.alc-type-name tt-alc-type.alc-type (IF (tt-alc-type.alc-type-status = 0) then ("") else ("помечен на удаление")) @ v-status
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2
 &Scoped-define SELF-NAME BROWSE-2
 &Scoped-define OPEN-QUERY-BROWSE-2 /* OPEN QUERY {&SELF-NAME} FOR EACH br_alc-type. */ run refresh-query in this-procedure.
-&Scoped-define TABLES-IN-QUERY-BROWSE-2 br_alc-type
-&Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-2 br_alc-type
+&Scoped-define TABLES-IN-QUERY-BROWSE-2 tt-alc-type
+&Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-2 tt-alc-type
 
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
@@ -156,17 +163,19 @@ DEFINE VARIABLE rs-sort AS INTEGER
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BROWSE-2 FOR
-      br_alc-type SCROLLING.
+      tt-alc-type
+      SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame _FREEFORM
-  QUERY BROWSE-2 DISPLAY
-      (IF ( INDEX (rid-list, string( recid( br_alc-type ) ) ) > 0 ) THEN ("*") ELSE (" ")) @ v-brws-mark
-     br_alc-type.alc-type-code
-     br_alc-type.alc-type-name FORMAT "x(80)"
-    (IF (br_alc-type.alc-type-status = 0) then ("") else ("помечен на удаление")) @ v-status
+  QUERY BROWSE-2 DISPLAY 
+      (IF ( INDEX (rid-list, string( tt-alc-type.rec ) ) > 0 ) THEN ("*") ELSE (" ")) @ v-brws-mark
+     tt-alc-type.alc-type-code
+     tt-alc-type.alc-type-name FORMAT "x(80)"
+     tt-alc-type.alc-type FORMAT "x(20)"
+    (IF (tt-alc-type.alc-type-status = 0) then ("") else ("помечен на удаление")) @ v-status
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 80 BY 13.88 ROW-HEIGHT-CHARS .67 FIT-LAST-COLUMN.
@@ -284,9 +293,9 @@ END.
 ON CHOOSE OF b-cng IN FRAME Dialog-Frame /* Изменить */
 DO:
    define variable v-rr as recid no-undo.
-   if available br_alc-type then do:
+   if available tt-alc-type then do:
       assign
-      v-rr = recid(br_alc-type)
+      v-rr = tt-alc-type.rec
       .
       run ref/alctypei.w ( input parparentproc
                          , input {&update}
@@ -329,9 +338,9 @@ END.
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
 DO:
    define buffer buf_alc-type-gds for ub.alc-type-gds.
-   if available br_alc-type then do:
+   if available tt-alc-type then do:
       if can-find ( first buf_alc-type-gds
-                    where buf_alc-type-gds.alc-type-inner-code = br_alc-type.alc-type-inner-code
+                    where buf_alc-type-gds.alc-type-inner-code = tt-alc-type.alc-type-inner-code
                     no-lock
                     ) then do:
          message "Удалить вид алкоголя невозможно," skip
@@ -342,7 +351,7 @@ DO:
       end.
 
       message "Удалить вид алкоголя?" skip
-      br_alc-type.alc-type-name
+      tt-alc-type.alc-type-name
       view-as alert-box question
       buttons ok-cancel
       update v-ok as logical
@@ -373,12 +382,12 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-goods Dialog-Frame
 ON CHOOSE OF b-goods IN FRAME Dialog-Frame /* Товары */
 DO:
-  if available br_alc-type then do:
+  if available tt-alc-type then do:
     run ref/alc-gds.w
       ( input parparentproc
-      , input br_alc-type.alc-type-inner-code
-      , input br_alc-type.create-user-db-num
-      , input br_alc-type.alc-type-name
+      , input tt-alc-type.alc-type-inner-code
+      , input tt-alc-type.create-user-db-num
+      , input tt-alc-type.alc-type-name
       ) no-error.
     IF ERROR-STATUS :ERROR THEN DO:
       message
@@ -402,11 +411,11 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist Dialog-Frame
 ON CHOOSE OF b-hist IN FRAME Dialog-Frame /* История */
 DO:
-  if not available br_alc-type then return .
+  if not available tt-alc-type then return .
 
   run ref/alctypeh.w ( input parparentproc
-                     , input br_alc-type.alc-type-inner-code
-                     , input br_alc-type.create-user-db-num
+                     , input tt-alc-type.alc-type-inner-code
+                     , input tt-alc-type.create-user-db-num
                      ) no-error .
    IF ERROR-STATUS:ERROR THEN DO:
       message
@@ -450,11 +459,11 @@ ON CHOOSE OF b-mark IN FRAME Dialog-Frame /* * */
 DO:
    define variable v-ok as logical no-undo .
 
-   if not available br_alc-type then do:
+   if not available tt-alc-type then do:
       return no-apply.
    end.
-
-   { gbl/markstrn.i br_alc-type rid-list }
+  
+   { gbl/markstrn.i tt-alc-type rid-list tt-alc-type.rec }
 
    v-ok = {&browse-name}:select-next-row ().
    v-ok = {&browse-name}:refresh( )  in frame {&frame-name}.
@@ -471,11 +480,11 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel Dialog-Frame
 ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбрать */
 DO:
-   IF  available br_alc-type
+   IF  available tt-alc-type
    AND rid-list = ""
    then DO:
       assign
-         rid-list = string( recid( br_alc-type ) )
+         rid-list = string( tt-alc-type.rec )
       .
    end.
    p-ok = true.
@@ -493,9 +502,9 @@ DO:
     if ((lookup  ( "b-add" , bttns) > 0 ) AND ( v-cntxt-db-num = 0 )) then do: /* Проверка, чтобы нельзя было редактировать при отключенной кнопке */
         
      define variable v-rr as recid no-undo.
-   if available br_alc-type then do:
+   if available tt-alc-type then do:
       assign
-      v-rr = recid(br_alc-type)
+      v-rr = tt-alc-type.rec
       .
       run ref/alctypei.w ( input parparentproc
                          , input {&update}
@@ -587,9 +596,10 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
   &frame-name     = "{&frame-name}"
   &table-name     = "{&FIRST-TABLE-IN-QUERY-BROWSE-2}"
   &sort-clmn_1    = "v-brws-mark"
-  &sort-clmn_2    = "br_alc-type.alc-type-code"
-  &sort-clmn_3    = "br_alc-type.alc-type-name"
+  &sort-clmn_2    = "tt-alc-type.alc-type-code"
+  &sort-clmn_3    = "tt-alc-type.alc-type-name"
   &sort-clmn_4    = "v-status"
+  &sort-clmn_5    = "tt-alc-type.alc-type"
   &open-query =           "run refresh-query in this-procedure."
   &open-query-otherwise = "run refresh-query in this-procedure."
   &re-move-clmn   = "no"
@@ -603,16 +613,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
    assign
       rs-sort = 1
-   .
-   assign
-      br_alc-type.alc-type-code  :resizable in browse {&browse-name} = true
-      br_alc-type.alc-type-name  :resizable in browse {&browse-name} = true
-      v-status                   :resizable in browse {&browse-name} = true
-   .
+  .
+  assign
+    tt-alc-type.alc-type-code  :resizable in browse {&browse-name} = true
+    tt-alc-type.alc-type-name  :resizable in browse {&browse-name} = true
+    v-status                   :resizable in browse {&browse-name} = true
+    tt-alc-type.alc-type       :resizable in browse {&browse-name} = true 
+  .
 
-   RUN enable_UI in this-procedure.
-   run post-enable-UI in this-procedure.
-   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+  RUN enable_UI in this-procedure.
+  run post-enable-UI in this-procedure.
+  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI in this-procedure.
 
@@ -632,7 +643,7 @@ PROCEDURE delete-alc-type :
   define buffer del_alc-type for ub.alc-type.
 
   find first del_alc-type
-       where recid(del_alc-type) = recid(br_alc-type)
+       where recid(del_alc-type) = tt-alc-type.rec
        exclusive-lock
        no-error.
   if not available del_alc-type then DO:
@@ -744,20 +755,75 @@ PROCEDURE refresh-query :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-  case rs-sort :
-    when 1 then do:
-      OPEN QUERY {&browse-name} FOR EACH br_alc-type
-/*                 where br_alc-type.alc-type-status = 0 */
-                 by br_alc-type.alc-type-name
-                 indexed-reposition .
-    end.
-    OTHERWISE do:
-      OPEN QUERY {&browse-name} FOR EACH br_alc-type
-/*                 where br_alc-type.alc-type-status = 0 */
-                 by br_alc-type.alc-type-code
-                 indexed-reposition .
-    end.
-  end case.
+ define variable v-alc as integer no-undo initial 0 .
+  for each br_alc-type:
+      find first tt-alc-type where tt-alc-type.alc-type-inner-code = br_alc-type.alc-type-inner-code no-lock no-error .
+      if not available tt-alc-type then do:
+      create tt-alc-type .
+      BUFFER-COPY br_alc-type to tt-alc-type 
+      assign
+      tt-alc-type.rec = recid(br_alc-type).
+      end.
+      find br_alc-type-attr where br_alc-type-attr.alc-type-inner-code = br_alc-type.alc-type-inner-code
+                              and br_alc-type-attr.attr-code = "alc-type" no-lock no-error .
+      if available br_alc-type-attr then do:
+        if br_alc-type-attr.attr-value = "1" then tt-alc-type.alc-type = "Алког. продукция" .
+        else tt-alc-type.alc-type = "Пивная продукция" . 
+      end.
+      
+  end.  
+
+      if (lookup  ( "alc" , bttns) > 0 ) then do: 
+        v-alc = 1 .
+      end.
+      if (lookup  ( "alc-p" , bttns) > 0 ) then do:
+        v-alc = 2 .
+      end.    
+      
+      case v-alc:
+        when 0 then do:
+            case rs-sort :
+              when 1 then do:
+                OPEN QUERY {&browse-name} FOR EACH tt-alc-type
+                           by tt-alc-type.alc-type-name
+                           indexed-reposition .
+              end.
+              OTHERWISE do:
+                OPEN QUERY {&browse-name} FOR EACH tt-alc-type
+                           by tt-alc-type.alc-type-code
+                           indexed-reposition .
+              end.
+            end case.
+        end.
+        when 1 then do:
+            case rs-sort :
+              when 1 then do:
+                OPEN QUERY {&browse-name} FOR EACH tt-alc-type where tt-alc-type.alc-type <> "Пивная продукция"
+                           by tt-alc-type.alc-type-name
+                           indexed-reposition .
+              end.
+              OTHERWISE do:
+                OPEN QUERY {&browse-name} FOR EACH tt-alc-type where tt-alc-type.alc-type <> "Пивная продукция"
+                           by tt-alc-type.alc-type-code
+                           indexed-reposition .
+              end.
+            end case.
+        end.
+        when 2 then do:
+            case rs-sort :
+              when 1 then do:
+                OPEN QUERY {&browse-name} FOR EACH tt-alc-type where tt-alc-type.alc-type = "Пивная продукция"
+                           by tt-alc-type.alc-type-name
+                           indexed-reposition .
+              end.
+              OTHERWISE do:
+                OPEN QUERY {&browse-name} FOR EACH tt-alc-type where tt-alc-type.alc-type = "Пивная продукция"
+                           by tt-alc-type.alc-type-code
+                           indexed-reposition .
+              end.
+            end case.
+        end.      
+      end case.  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

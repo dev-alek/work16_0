@@ -579,7 +579,7 @@ DO:
        
        when 2 then do:
            run ref/alc-type.w ( my-handle
-                              , "b-sel,b-mark"
+                              , "b-sel,b-mark,alc"
                               , input-output alc-types_recids
                               , output l-ok).
            if alc-types_recids = "" then do:
