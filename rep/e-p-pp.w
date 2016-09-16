@@ -76,8 +76,8 @@ def var ii as integer no-undo .
 &Scoped-define FRAME-NAME F-Main
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS T-cost v-kol T-crsa R-all T-nacenka
-&Scoped-Define DISPLAYED-OBJECTS T-cost v-kol T-crsa R-all T-nacenka
+&Scoped-Define ENABLED-OBJECTS T-crsa R-all T-nacenka T-det-obj 
+&Scoped-Define DISPLAYED-OBJECTS T-crsa R-all T-nacenka T-det-obj 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -91,30 +91,25 @@ def var ii as integer no-undo .
 
 
 /* Definitions of the field level widgets                               */
-DEFINE VARIABLE v-kol AS INTEGER FORMAT "9":U INITIAL 5
-     LABEL "Количество последних поставок"
-     VIEW-AS FILL-IN
-     SIZE 2.38 BY 1 NO-UNDO.
-
-DEFINE VARIABLE R-all AS INTEGER
+DEFINE VARIABLE R-all AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
      RADIO-BUTTONS
           "Все товары", 1,
 "Только где цена менялась", 2
      SIZE 27.63 BY 2.08 NO-UNDO.
 
-DEFINE VARIABLE T-cost AS LOGICAL INITIAL no
-     LABEL "Приходные цены"
+DEFINE VARIABLE T-crsa AS LOGICAL INITIAL no 
+     LABEL "Продажные цены" 
      VIEW-AS TOGGLE-BOX
      SIZE 18 BY .83 NO-UNDO.
 
-DEFINE VARIABLE T-crsa AS LOGICAL INITIAL no
-     LABEL "Продажные цены"
+DEFINE VARIABLE T-det-obj AS LOGICAL INITIAL no 
+     LABEL "Детализировать по объектам" 
      VIEW-AS TOGGLE-BOX
-     SIZE 18 BY .83 NO-UNDO.
+     SIZE 41 BY .79 NO-UNDO.
 
-DEFINE VARIABLE T-nacenka AS LOGICAL INITIAL no
-     LABEL "Наценка (из группы товара - справочно)"
+DEFINE VARIABLE T-nacenka AS LOGICAL INITIAL no 
+     LABEL "Наценка (из группы товара - справочно)" 
      VIEW-AS TOGGLE-BOX
      SIZE 41 BY .79 NO-UNDO.
 
@@ -122,13 +117,12 @@ DEFINE VARIABLE T-nacenka AS LOGICAL INITIAL no
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
-     T-cost AT ROW 1.25 COL 2.75
-     v-kol AT ROW 2.25 COL 32.13 COLON-ALIGNED
-     T-crsa AT ROW 3.96 COL 3
-     R-all AT ROW 6.63 COL 2.38 NO-LABEL
-     T-nacenka AT ROW 9.25 COL 2.63
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
+     T-crsa AT ROW 6.57 COL 3
+     R-all AT ROW 2.58 COL 3 NO-LABEL
+     T-nacenka AT ROW 5.24 COL 3
+     T-det-obj AT ROW 1.25 COL 3 WIDGET-ID 2
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1 SCROLLABLE .
 
 
@@ -164,6 +158,13 @@ END.
                                                                         */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB s-object 
+/* ************************* Included-Libraries *********************** */
+
+{src/adm/method/viewer.i}
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 /* ***************  Runtime Attributes and UIB Settings  ************** */
 
@@ -171,8 +172,8 @@ END.
 /* SETTINGS FOR WINDOW s-object
   VISIBLE,,RUN-PERSISTENT                                               */
 /* SETTINGS FOR FRAME F-Main
-   NOT-VISIBLE Size-to-Fit                                              */
-ASSIGN
+   NOT-VISIBLE FRAME-NAME Size-to-Fit                                   */
+ASSIGN 
        FRAME F-Main:SCROLLABLE       = FALSE
        FRAME F-Main:HIDDEN           = TRUE.
 
@@ -191,64 +192,7 @@ ASSIGN
 
 
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB s-object
-/* ************************* Included-Libraries *********************** */
-
-{src/adm/method/viewer.i}
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-
-
-/* ************************  Control Triggers  ************************ */
-
-&Scoped-define SELF-NAME T-cost
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL T-cost s-object
-ON VALUE-CHANGED OF T-cost IN FRAME F-Main /* Приходные цены */
-DO:
-
-  assign
-  t-cost.
-  case t-cost:
-    when yes then do:
-        enable
-        v-kol
-        with frame {&frame-name}.
-
-    end.
-    when no then do:
-        disable
-        v-kol
-        with frame {&frame-name}.
-
-    end.
-  END CASE.
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME v-kol
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-kol s-object
-ON LEAVE OF v-kol IN FRAME F-Main /* Количество последних поставок */
-DO:
-  assign v-kol.
-  if v-kol > 5 then v-kol = 5 .
-/*  display v-kol whit frame {&frame-name}.*/
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&UNDEFINE SELF-NAME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK s-object 
 
 
 /* ***************************  Main Block  *************************** */
@@ -295,10 +239,11 @@ PROCEDURE local-apply-layout :
   /* Dispatch standard ADM method.                             */
   RUN dispatch IN THIS-PROCEDURE ( INPUT 'apply-layout':U ) .
 R-all = 1 .
-T-cost = true .
+/*T-cost = true .*/
 T-crsa = true .
-v-kol = 5 .
-display R-all T-cost T-crsa v-kol with frame {&frame-name} .
+
+/*v-kol = 5 .*/
+display R-all T-crsa with frame {&frame-name} .
   /* Code placed here will execute AFTER standard behavior.    */
 END PROCEDURE.
 
@@ -312,11 +257,10 @@ PROCEDURE my-report :
   Purpose:     здесь происходит вызов  процедуры отчета с любыми параметрами
 ------------------------------------------------------------------------------*/
  run rep/r-p-pp.p
-    ( v-kol ,
-      T-cost ,
-      T-crsa ,
+    ( T-crsa ,
       R-all ,
-      t-nacenka  )  .
+      t-nacenka,
+      T-det-obj  )  .
 
 END PROCEDURE.
 
@@ -332,11 +276,12 @@ PROCEDURE my-var :
 
 ------------------------------------------------------------------------------*/
 assign frame {&frame-name}
-v-kol
-T-cost
+/*v-kol*/
+
 T-crsa
 R-all
 t-nacenka
+T-det-obj
 .
 
 ReportNAme = "Контроль приходных цен" .

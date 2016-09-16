@@ -584,7 +584,7 @@ procedure makeXML_v2 :
         if available tt-marks then do :                
                         sw:start-element ("ainp:MarkCodeInfo") .
             for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
-                            sw:write-data-element ("ainp:MarkCode", tt-marks.mark) .
+                            sw:write-data-element ("MarkCode", tt-marks.mark) .
             end.    
                         sw:end-element ("ainp:MarkCodeInfo") .
         end.         
@@ -757,7 +757,8 @@ procedure GetChildren :
         end.
             
         IF hNoderef:NAME = "ain:MarkCode"
-        OR hNoderef:NAME = "ainp:MarkCode" THEN do :
+        OR hNoderef:NAME = "ainp:MarkCode"
+        OR hNoderef:NAME = "MarkCode" THEN do :
             create tt-marks.
             assign
                 tt-marks.num                    = tt-gds-act.num

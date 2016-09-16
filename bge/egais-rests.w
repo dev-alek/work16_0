@@ -970,6 +970,8 @@ DO:
             for each buf_parts no-lock where buf_parts.artic      = buf_goods.artic
                                            and buf_parts.prod-type  = buf_goods.prod-type
                                            and buf_parts.prod-code  = buf_goods.prod-code
+                                           and buf_parts.obj-type   = v-cntxt-obj-type
+                                           and buf_parts.obj-code   = v-cntxt-obj-code
                                            and buf_parts.out-code   = {&free-code} :
 /*                                           and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_  */
 /*                                           and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :*/

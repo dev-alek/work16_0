@@ -5647,13 +5647,13 @@ end procedure.
 &scop format-attr-alcohol-prod  "+/ "
 &scop label-attr-alcohol-prod   "Алкогольная продукция"
 &scop tooltip-attr-alcohol-prod   "Алкогольная продукция"
-&scop user-can-edit-attr-alcohol-prod  false
-&scop output-display-attr-alcohol-prod  false
+&scop user-can-edit-attr-alcohol-prod  true
+&scop output-display-attr-alcohol-prod  true
 &scop other-attr-alcohol-prod  ""
 &scop news-attr-alcohol-prod true
 &scop copy-attr-alcohol-prod  true
 &scop manual-edit-attr-alcohol-prod 0
-&scop batch-edit-attr-alcohol-prod  0
+&scop batch-edit-attr-alcohol-prod  7
 
 &scop type-attr-egais-name {&type-char}
 &scop format-attr-egais-name  "X(100)"
@@ -5786,8 +5786,8 @@ end procedure.
 &glob other-attr-mark  ""
 &glob news-attr-mark true
 &glob copy-attr-mark  true
-&scop manual-edit-attr-mark 1
-&scop batch-edit-attr-mark  1
+&scop manual-edit-attr-mark 0
+&scop batch-edit-attr-mark  7
 
 /* Группа товаров на кассе */
 &glob type-attr-sum-grp-gl {&type-char}
@@ -6046,13 +6046,14 @@ end procedure.
 &scop         format-attr-image-list "X(75)"
 &scop          label-attr-image-list "Изображения"
 &scop        tooltip-attr-image-list "Изображения"
-&scop  user-can-edit-attr-image-list true
+&scop  user-can-edit-attr-image-list false
 &scop output-display-attr-image-list true
 &scop          other-attr-image-list ""
 &scop           news-attr-image-list true
 &scop           copy-attr-image-list true
-&scop    manual-edit-attr-image-list 1
-&scop     batch-edit-attr-image-list 1
+&scop    manual-edit-attr-image-list 0
+&scop     batch-edit-attr-image-list 0
+
 
 
 /* сюда добавлять новые параметры атрибутов товаров */
