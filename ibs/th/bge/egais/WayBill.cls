@@ -1915,7 +1915,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       docCodeList = "".
       for each buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid) :
         if can-find (first buf_trn-doc where buf_trn-doc.doc-code = buf_doc-attr.doc-code and 
-              not (buf_trn-doc.status_ = {&fact} and (buf_trn-doc.doc-type = {&income} or buf_trn-doc.ext-doc-type = {&WDEDT_Put_Cli})))
+              not (buf_trn-doc.status_ = {&fact}))
           then next.
         docCodeList = docCodeList + "," + buf_doc-attr.doc-code.
       end.
@@ -1931,7 +1931,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         StatusErr = true.
         return ?.
       end.
-
       if docCodeList <> ""
       then do:
         find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.doc-code = docCodeList no-error.
