@@ -35,645 +35,487 @@ define variable vss-description as character no-undo init "".
 { ref/grpobj.i  }
 { trg/factord.i }
 { rep/rep-bt.i  }
-define input  parameter par-kol  as integer   no-undo .
-define input  parameter par-cost as logical   no-undo .
-define input  parameter par-crsa as logical   no-undo .
-define input  parameter par-all as integer   no-undo .
-define input  parameter par-nacenka as logical no-undo .
+{ gbl/prn-lib.i "new shared" }
+{ trg/factord.i  }
+{ rep/html-conv.i }
 
+define input  parameter par-crsa    as logical   no-undo .
+define input  parameter par-all     as integer   no-undo .
+define input  parameter par-nacenka as logical   no-undo .
+define input  parameter par-det-obj as logical   no-undo .
 
-define variable parhost-code as integer   no-undo .
+define variable parhost-code as integer no-undo .
 parhost-code = v-cntxt-host-code-obj.
-define variable kol-post as integer   no-undo .
+define variable kol-post     as integer   no-undo .
 
-if par-cost = true then do:
-    if par-kol > 5 then do:
-       par-kol = 5 .
-    end.
-    if par-kol < 1 then do:
-       par-kol = 5 .
-       message "Не выбрано количество последних поставок! Будет рассчитано на 5 "  view-as alert-box information .
-    end.
-end.
-
-
-    if not can-find (first gds-list) then do:
-      message "Не выбран ни один товар !" view-as alert-box error .
-      return error.
-    end.
-
+define variable v-goods-type as character no-undo .
+define variable v-grp        as character no-undo .
+define variable v-obj        as character no-undo .
+define variable v-num-date   as integer   no-undo .
+define variable v-start-date as date      no-undo .
+define variable ii           as integer   no-undo .
+define variable v-price      as decimal   no-undo .
+define variable v-obj-code   as integer   no-undo .
+define variable v-obj-type   as character no-undo . 
+define variable v-yes        as logical   no-undo .
+define variable v-yes-only   as logical   no-undo .  
+define variable gg           as integer   no-undo .
+define variable v-old-price  as decimal   no-undo .
+define variable v-povtor     as logical   no-undo .
+define variable v-fact-order-start as decimal no-undo .
+define variable v-fact-order-end   as decimal no-undo .
 
 define buffer bf_cli-gds  for ub.cli-gds .
 define buffer bf_doc-line for ub.doc-line.
+define buffer buf_clients for ub.clients .
+define buffer buf_goods   for ub.goods .
+define buffer buf_trn-doc for ub.trn-doc .
 
-define variable v-price-rubl as decimal decimals 2  no-undo .
-define variable v-price-cli  as decimal   no-undo .
-define variable v-goods as logical   no-undo .
+define variable v-price-rubl as decimal decimals 2 no-undo .
+define variable v-price-cli  as decimal no-undo .
+define variable v-goods      as logical no-undo .
 
 define temp-table tt-temp no-undo
-field gds-code   as integer
-field obj-type    as char
-field obj-code    as int
-field cli-code    as int
-field cli-type    as char
-field fact-date   as date
-field price-rubl  as decimal
-field price-cli   as decimal
-index pi gds-code obj-type obj-code fact-date desc
-index pi2 fact-date desc
-.
+  field gds-code   as integer 
+  field gds-name   as char
+  field obj-type   as char
+  field obj-code   as int
+  field obj-name   as char
+  field cli-code   as int
+  field cli-type   as char
+  field cli-name   as char
+  field fact-date  as date
+  field price-rubl as decimal
+  field price-cli  as decimal
+  field price-prod as decimal
+  field nacenka    as character
+  field trn-date   as date
+  field fact-qty   as decimal
+  field resul      as logical
+  index pi  gds-code  obj-type obj-code fact-date
+  index pi2 fact-date desc
+  .
 
 define temp-table tt-goods no-undo
-field gds-code   as integer
-field obj-type    as char
-field obj-code    as int
-field five        as int
-index pi gds-code obj-type obj-code
-.
+  field gds-code as integer
+  field obj-type as char
+  field obj-code as int
+  field five     as int
+  index pi gds-code obj-type obj-code
+  .
 
 define buffer buf_tt for tt-temp .
-define variable jj as integer   no-undo .
+define variable jj                 as integer no-undo .
 define variable v-fact-order-alone as decimal no-undo .
-if par-cost = false  then do:
-   par-kol = 0 .
-  for each gds-list :
-      for each obj-list ,
-        first ub.gds-obj no-lock where
-              ub.gds-obj.gds-code = gds-list.gds-code and
-              ub.gds-obj.obj-code = obj-list.obj-code and
-              ub.gds-obj.obj-type = obj-list.obj-type
-              :
-            jj = jj + 1.
-           { rep/repfrm.i disp JJ obj-list.obj-name }
-                create tt-temp.
-                assign
-                  tt-temp.obj-type   = obj-list.obj-type
-                  tt-temp.obj-code   = obj-list.obj-code
-                  tt-temp.gds-code   = gds-list.gds-code
-                  tt-temp.price-rubl   = 1
-                .
+define variable v-custom           as logical no-undo .
 
-     end.
-  end.
-end.
-if par-cost = true then do:
+define stream Out-Stream.
+define stream OutStr-html.
+define variable v-report-name-html as character no-undo .
+define variable v-report-id        as character no-undo .
 
-run day-begin-fact-order in this-procedure
-    ( input (x-date-alone + 1)
-    , output v-fact-order-alone
-    ).
-define buffer bb_trn-doc for ub.trn-doc .
-  for each obj-list :
-      for  each gds-list ,
+if can-find (first g#customer) then v-custom = yes .   /*Выборочно по контрагентам*/
+run day-begin-fact-order in this-procedure ( input ( x-Date-Start + 1 ),   output v-fact-order-start ).
+run day-begin-fact-order in this-procedure ( input ( x-Date-End + 1 ),     output v-fact-order-end   ).
+for each obj-list no-lock :
+  if v-obj= "" then v-obj = obj-list.obj-name .
+  else  v-obj = v-obj + ", " + obj-list.obj-name .
+  case x-SelectGood:
+    when {&g-all} then 
+      do:
+        /*по всем товарам*/
+        v-goods-type = "Все товары" .
+        _DL :
+        for each buf_trn-doc no-lock where
+          buf_trn-doc.fact-date >= x-Date-Start and
+          buf_trn-doc.fact-date <= x-Date-End and
+          buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+          buf_trn-doc.status_ = {&fact} and
+          buf_trn-doc.obj-code = obj-list.obj-code and
+          buf_trn-doc.obj-type = obj-list.obj-type,
           each bf_doc-line no-lock where
-                bf_doc-line.artic     = gds-list.artic       and
-                bf_doc-line.prod-type = gds-list.prod-type and
-                bf_doc-line.prod-code = gds-list.prod-code and
-                bf_doc-line.obj-type  = obj-list.obj-type and
-                bf_doc-line.obj-code  = obj-list.obj-code and
-                bf_doc-line.ext-doc-type  = {&TDEDT_Pri_Vnesh}  and
-                bf_doc-line.status_       = {&fact} and
-                bf_doc-line.fact-order < v-fact-order-alone
-              by bf_doc-line.fact-order descending
-                :
-
-        find first tt-goods where
-                  tt-goods.gds-code = gds-list.gds-code and
-                  tt-goods.obj-code = obj-list.obj-code and
-                  tt-goods.obj-type = obj-list.obj-type  no-error .
-          if available tt-goods and  tt-goods.five > par-kol  then next.
-
-          v-price-rubl = 0.
-          v-goods = false .
-          v-price-cli = 0 .
-          v-price-rubl = bf_doc-line.price-rubl .
-
-
-            find first tt-goods where
-                      tt-goods.gds-code = gds-list.gds-code and
-                      tt-goods.obj-code = obj-list.obj-code and
-                      tt-goods.obj-type = obj-list.obj-type  no-error .
-            if available tt-goods then do:
-                tt-goods.five = tt-goods.five  + 1 .
-            end.
-            else do:
-              jj = jj + 1.
-            { rep/repfrm.i disp JJ obj-list.obj-name }
-              create tt-goods.
-              assign
-                tt-goods.gds-code = gds-list.gds-code
-                tt-goods.obj-code = obj-list.obj-code
-                tt-goods.obj-type = obj-list.obj-type
-                tt-goods.five = 1
-              .
-            end.
-
-            if tt-goods.five <= par-kol  then do:
-              find first ub.trn-doc no-lock where ub.trn-doc.doc-code = bf_doc-line.doc-code .
-                  create tt-temp.
-                  assign
-                    tt-temp.obj-type   = bf_doc-line.obj-type
-                    tt-temp.obj-code   = bf_doc-line.obj-code
-                    tt-temp.gds-code   = gds-list.gds-code
-                    tt-temp.price-rubl = v-price-rubl
-                    tt-temp.price-cli  = v-price-cli
-                    tt-temp.fact-date  = ub.trn-doc.fact-date
-                    tt-temp.cli-code   = ub.trn-doc.cli-code
-                    tt-temp.cli-type   = ub.trn-doc.cli-type
-                  .
-              end.
-          end.
-    /*end. /*for each ub.trn-doc*/*/
-  end.
-end.
-
-kol-post = par-kol .
-
-define stream  OutStream  .
-define stream  macr_excel .
-
-define variable v-file-name as character no-undo .
-define variable v-ind       as integer   no-undo .
-define variable num#col#    as integer no-undo .
-define variable C-c    as integer no-undo .
-define variable C-str  as character no-undo .
-define variable str--1 as character Format "x(60)" no-undo.
-define variable str--2 as integer no-undo .
-define variable C-i    as integer no-undo .
-define variable p-var  as integer no-undo .
-define variable var-1  as integer no-undo .
-define variable var-2  as integer no-undo .
-def buffer This_Object for  ub.clients .
-
-define variable num-ln as integer   no-undo .
-
-define variable i as int no-undo.
-define variable j as int no-undo.
-define variable Counter1 as integer init 0  no-undo .
-
-define variable LineBuf       as char    no-undo.
-define variable Line       as char    no-undo.
-define variable UndLine    as char    no-undo.
-
-define variable     Lines_Counter as   int  init 0  no-undo.
-define variable     Tmp_Counter   as   int  init 0  no-undo.
-
-define variable vv0 as character no-undo .
-define variable vv1 as character no-undo .
-define variable vv2 as character no-undo .
-define variable vv3 as character no-undo .
-define variable vv4 as character no-undo .
-define variable vv5 as character no-undo .
-define variable vv6 as character no-undo .
-define variable vv7 as character no-undo .
-
-
-{ rep/r-sym.i }
-
-
-define variable t-1 as character no-undo .
-define variable t-2 as character no-undo .
-define variable t-3 as character no-undo .
-define variable t-4 as character no-undo .
-define variable t-5 as character no-undo .
-
-DEFINE FRAME plan-menu
-    HEADER
-    string( "Лист " + string( PAGE-NUMBER(OutStream) , ">>>>9") ) AT 80 format "X(13)" SKIP
-    UndLine format "X(80)" AT 1
-    with width {&DOS_CW} down stream-io use-text NO-UNDERLINE  NO-BOX no-labels.
-
-  if session:set-wait-state("compiler") then.
-    { cmp/open-out.i STREAM OutStream " " {&CS_PS} }
-  define variable v-prn0 as character no-undo .
-
-  assign
-    Line    = fill("-", 230)
-    UndLine = fill("_", 230)
-    LineBuf = fill("_", 240)
-  .
-
-define variable v-is-base as logical no-undo .
-{ gbl/rbisbase.i    v-is-base  }
-
-if v-is-base = true then do:
-end.
-else do:
-end.
-
-/*-----------------------------------------------------------------------------------------------------------------------*/
-v-ind = 0    .
-
-FORM with frame plan-menu .
-
-
-
- /* создаем временный файл */
-    Output stream Macr_Excel  close .
-    num#str# = 0 .
-    run gbl/_tmpfile.p ( "wb", ".txt", output v-file-name) .
-    output stream macr_excel to value(v-file-name)   .
-    v-ind = v-ind + 1.
-
-
-  find ub.clients      where ub.clients.obj-type     = {&cmp}            and ub.clients.obj-code      = v-cntxt-host-code-obj no-lock .
-  run PrintTitul in this-procedure .
-
-  define variable  v-name as character no-undo .
-
-  define variable  v-old  as integer   no-undo .
-  define variable v-artic as character no-undo .
-  define variable v-obj as character no-undo .
-
-  /* по строкам -------------------------------------------------------------------------------------------- */
-  for each gds-list :
-    assign
-    v-old = 0
-    v-name  = gds-list.gds-name
-    v-artic = gds-list.artic
-    .
-    for each obj-list ,
-        first ub.gds-obj no-lock where
-              ub.gds-obj.gds-code = gds-list.gds-code and
-              ub.gds-obj.obj-code = obj-list.obj-code and
-              ub.gds-obj.obj-type = obj-list.obj-type
-              :
-                assign
-                  /*v-obj   = obj-list.obj-type + " " + string(obj-list.obj-code) */
-                  v-obj     = obj-list.obj-name
-                .
-           if not ( ub.gds-obj.price-sale = 0 and par-crsa = true and par-cost = false ) then do:
-              run print-line in this-procedure  ( v-obj , v-artic , v-name ).
-              if return-value <> "no-old":u then
-              assign
-              v-old = gds-list.gds-code .
-           end.
-    end.
-  end.
-  run print-all-itog in this-procedure .
-  /* ... Подвал. --- */
-  run on-same-page in this-procedure (input 3) .
-  run PrintPodval in this-procedure .
-  run paramls-write in this-procedure
-    (input "file"
-    ,input string(v-ind)
-    ,input v-file-name
-    ) .
-     page stream OutStream .
-
-HIDE STREAM OutStream FRAME plan-menu.
-HIDE stream OutStream FRAME BottomFrame .
-HIDE stream OutStream FRAME BottomFrame2 .
-output stream OutStream CLOSE .
-Output stream Macr_Excel  close .
-
-{ rep/repfrm.i off } /* Показать окно информации о текущем процессе */
-
-    run paramls-write in this-procedure
-        (input "charcol"
-        ,input ""
-        ,input "2,3,4"
-        ) .
-
-
-  define variable v-user-action as character no-undo .
-  define variable v-printed as logical   no-undo .
-  define variable DisabledOptions as integer   no-undo .
-
-  run end-proc in this-procedure .
-  if par-kol < 4  and  par-crsa = false and par-nacenka = false
-     then
-       DisabledOptions = 0 .
-     else
-       DisabledOptions = 1 .
-
-
-
-        run gbl/prnfilen.w
-          (input  ""
-          ,input  DisabledOptions
-          ,input  string(session :temp-directory) + {&DF_Name} + string( g#report-num )
-          ,input 7
-          ,output v-user-action
-          ,output v-printed
-          ) .
-/* *************************************************************************************************** */
-procedure print-line :
-do on error undo, return error return-value :
-  define input  parameter p-obj   as character no-undo .
-  define input  parameter p-artic as character no-undo .
-  define input  parameter p-name as character no-undo .
-  define variable v-price as decimal   no-undo .
-  define variable v-delta as decimal   no-undo .
-  define variable kol-d as integer   no-undo .
-    v-delta = 0 .
-    kol-d = 0.
-    v-price = 0 .
-    for each buf_tt where buf_tt.gds-code = gds-list.gds-code and
-                          buf_tt.obj-type = obj-list.obj-type and
-                          buf_tt.obj-code = obj-list.obj-code
-                          :
-        v-price = v-price + buf_tt.price-rubl .
-        v-delta = buf_tt.price-rubl .
-        kol-d = kol-d + 1.
-     end.
-     if v-price = 0 then return "no-old".
-     if par-all = 2 then do:
-        if v-delta = ( v-price / kol-d ) /* and kol-d > 1 */  then return "no-old".
-     end.
-
-   if v-old = gds-list.gds-code then
-      assign
-        p-artic = ""
-        p-name  = ""
-      .
-
-  assign
-     Lines_Counter = Lines_Counter + 1
-    .
-
-  if line-counter( OutStream ) + 2 > page-size( OutStream ) then do:
-     run p-line in this-procedure.
-     page stream OutStream.
-     PUT STREAM OutStream UNFORMATTED
-         string( "Лист " + string( PAGE-NUMBER(OutStream) , ">>>>9") ) AT 100 format "X(13)" SKIP .
-     run print-1 in this-procedure.
-     end.
-
-  if line-counter( OutStream ) < Tmp_Counter then
-    assign
-    .
-
-  assign
-    Tmp_Counter  = line-counter( OutStream )
-    num-ln = num-ln + 1
-  .
-
-  if line-counter( OutStream ) + j > page-size( OutStream ) then  PAGE STREAM OutStream.
-
-define variable v-margins-range     as integer  no-undo.
-define variable v-margins-exists    as logical  no-undo.
-define variable v-increase-range     as integer  no-undo.
-define variable v-increase-exists    as logical  no-undo.
-define variable v-min-marg          as decimal  no-undo.
-define variable v-max-marg          as decimal  no-undo.
-define variable v-increase-pc          as decimal  no-undo.
-define variable v-round-method as character  no-undo.
-define variable v-base              as decimal no-undo .
-define variable v-rmethod-range     as integer  no-undo.
-define variable v-rmethod-exists    as logical  no-undo.
-
-define variable p-pc as character no-undo .
-     p-pc ="" .
-
-  if par-nacenka = true then do:
-    run grp-obj-margin-value in this-procedure
-    (        input gds-list.grp-code
-            , input obj-list.obj-type
-            , input obj-list.obj-code
-            , output v-min-marg
-            , output v-max-marg
-            , output v-increase-pc
-            , output v-round-method
-            , output v-base
-            , output v-margins-range
-            , output v-margins-exists
-            , output v-increase-range
-            , output v-increase-exists
-            , output v-rmethod-range
-            , output v-rmethod-exists
-
-    ) no-error .
-    if v-increase-exists then do:
-        assign
-        p-pc = string( v-increase-pc )
-       .
-    end.
-  end.
-
-PUT STREAM OutStream UNFORMATTED
-    sym1                format "X(1)" space(0)
-    p-obj               format "X(15)" space(0)
-    sym2                format "X(1)" space(0)
-    p-artic             format "X(16)" space(0)
-    sym3                format "X(1)" space(0)
-    p-name              format "X(30)" space(0)
-.
-    num#col# = 1.
-    num#str# = num#str# + 1.
-    run macr_excel_char in this-procedure(p-obj   , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-    run macr_excel_char in this-procedure(p-artic , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-    run macr_excel_char in this-procedure(p-name  , num#str# , num#col#   ) . assign    num#col# = num#col# + 1 .
-    define variable v-count as integer no-undo .
-    if par-cost = true then do:
-        _buf-tt:
-        for each buf_tt where buf_tt.gds-code = gds-list.gds-code and
-                              buf_tt.obj-type = obj-list.obj-type and
-                              buf_tt.obj-code = obj-list.obj-code break by buf_tt.fact-date desc :
-                PUT STREAM OutStream UNFORMATTED
-                    sym1                         format "X(1)" space(0)
-                    string(buf_tt.price-rubl,">>>>>>>9.99")    format "X(11)" space(0)
-                    "(" + string(buf_tt.fact-date ,"99/99/99") + ")"
-
-                    .
-                run macr_excel_dec in this-procedure(buf_tt.price-rubl  , num#str# , num#col#   ) .
-                 assign    num#col# = num#col# + 1 .
-                 run macr_excel_char in this-procedure(" (" + string(buf_tt.fact-date ,"99/99/99") + ")"  , num#str# , num#col#   ) .
-
-                assign    num#col# = num#col# + 1 .
-
-          assign
-          v-count = v-count + 1.
-          if v-count >= par-kol then LEAVE _buf-tt.
+          bf_doc-line.doc-code = buf_trn-doc.doc-code,
+          first buf_goods where buf_goods.artic = bf_doc-line.artic 
+          and buf_goods.prod-code = bf_doc-line.prod-code 
+          and buf_goods.prod-type = bf_doc-line.prod-type no-lock :
+    
+          if v-custom and not can-find (first g#customer where g#customer.obj-code = buf_trn-doc.cli-code 
+            and g#customer.obj-type = buf_trn-doc.cli-type no-lock) then NEXT _DL.
+          if bf_doc-line.fact-qnty = 0 then NEXT _DL .
+          run proc-temp-table .
+                             
         end.
-    end.
-  /* ПРОДАЖНЫЕ цены */
-  num#col# = 4 + ( 2 * par-kol ).
-  if par-crsa = true then do:
-      PUT STREAM OutStream UNFORMATTED
-          sym2                        format "X(1)"  at (( par-kol * 22 ) + 65 )  space(0)
-          string(ub.gds-obj.price-sale,">>>>>>>9.99")  format "X(11)" space(0)
-      .
-    run macr_excel_dec in this-procedure(ub.gds-obj.price-sale , num#str# , num#col#   ) . num#col# = num#col# + 1     .
-  end.
-  if par-nacenka = true then do:
-      PUT STREAM OutStream UNFORMATTED
-        sym3                        format "X(1)"  at (( par-kol * 22 ) + 65 + (if par-crsa then 12 else 0 ))    space(0)
-        p-pc                        format "X(4)" space(0)
-        sym4                        format "X(1)"  space(0)
-        skip
+      end.
+    when {&g-choice} then 
+      do:
+        v-goods-type = "Выборочно" .
+    
+        for each gds-list no-lock, each buf_goods no-lock where buf_goods.gds-code = gds-list.gds-code:  
+          _DL :
+          for each bf_doc-line no-lock where
+            bf_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+            bf_doc-line.status_ = {&fact} and
+            bf_doc-line.obj-code = obj-list.obj-code and
+            bf_doc-line.obj-type = obj-list.obj-type and
+            bf_doc-line.artic = gds-list.artic and
+            bf_doc-line.prod-code = gds-list.prod-code and
+            bf_doc-line.prod-type = gds-list.prod-type and
+            bf_doc-line.fact-order >= v-fact-order-start - 1 and
+            bf_doc-line.fact-order <= v-fact-order-end + 1,
+        
+            first buf_trn-doc where buf_trn-doc.doc-code = bf_doc-line.doc-code and 
+            buf_trn-doc.fact-date >= x-Date-Start and
+            buf_trn-doc.fact-date <= x-Date-End no-lock :
+     
+            if v-custom and not can-find (first g#customer where g#customer.obj-code = buf_trn-doc.cli-code 
+              and g#customer.obj-type = buf_trn-doc.cli-type no-lock) then NEXT _DL.
+                                
+            run proc-temp-table  .
+
+          end. /*for each bf_doc-line no-lock where*/                          
+        end. /*_DL :*/
+      end.  /**/
+    when {&g-grp} then 
+      do:
+        v-goods-type = "По группам" .
+        for each tmp#grp no-lock:
+_DL :
+                         
+          for each buf_goods no-lock where buf_goods.grp-name begins tmp#grp.grp-name :  
+      
+            for each bf_doc-line no-lock where
+              bf_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+              bf_doc-line.status_ = {&fact} and
+              bf_doc-line.obj-code = obj-list.obj-code and
+              bf_doc-line.obj-type = obj-list.obj-type and
+              bf_doc-line.artic = buf_goods.artic and
+              bf_doc-line.prod-code = buf_goods.prod-code and
+              bf_doc-line.prod-type = buf_goods.prod-type and
+              bf_doc-line.fact-order >= v-fact-order-start - 1 and
+              bf_doc-line.fact-order <= v-fact-order-end + 1,
+        
+              first buf_trn-doc where buf_trn-doc.doc-code = bf_doc-line.doc-code and 
+              buf_trn-doc.fact-date >= x-Date-Start and
+              buf_trn-doc.fact-date <= x-Date-End no-lock :
+     
+              if v-custom and not can-find (first g#customer where g#customer.obj-code = buf_trn-doc.cli-code 
+                and g#customer.obj-type = buf_trn-doc.cli-type no-lock) then NEXT _DL.
+                                
+              run proc-temp-table  .
+
+            end. /*for each bf_doc-line no-lock where*/                          
+          end. /*_DL :*/
+        end.  /*else*/
+        end.
+      end case.
+  end.  /*for each obj-list no-lock :*/
+
+/*создание отчета*/
+ 
+run get-report-num in my-handle (
+  output v-report-id
+  ).
+v-report-name-html = session:temp-directory  + string(v-report-id) + ".html". /*формирование имя файла*/        
+
+output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+put stream OutStr-html unformatted
+  '<!doctype html>' skip
+  '  <html> ' skip
+  '   <head> ' skip
+  '    <meta charset="UTF-8"> ' skip
+  '        <!-- Стили документа --> 'skip
+  '    <style> ' skip
+  '         table ~{ ' skip
+  '             border-collapse: collapse; ' skip
+  '             width: 1400px;  ' skip
+  '         ~} ' skip
+  '         .class1 ~{ ' skip
+  '             border-collapse: collapse; ' skip
+  '        ~} ' skip
+  '         tbody td, th ~{ ' skip
+  '             border: 1px solid black; ' skip
+  '             border-collapse: collapse; ' skip
+  '       height: 14px; ' skip
+  '         ~} ' skip
+          
+  '    </style> ' skip
+  '    </head> ' skip
+  '      <body> ' skip
+  '        <table orientation="landscape" name="Цены" fit_to_page="true">  <!-- таблица, в которой содержится шапка отчета --> ' skip
+  '          <thead>  <!-- Шапка отчета --> ' skip
+  '          <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px--> ' skip
+  '            <tr class="set_columns"> ' skip
+  '              <td style="width:170px"></td> ' skip
+  '              <td style="width:70px"></td> ' skip
+  '              <td style="width:250px"></td> ' skip
+  '            </tr> ' skip
+  '          <tr> ' skip
+  '            <td colspan="3">За период с ' + string(x-Date-Start) + ' по ' + string(x-Date-End) + ' </td> ' skip
+  '          </tr> ' skip
+  '          <tr> ' skip
+  '            <td colspan="3">Выбор товара: ' + v-goods-type + '</td> ' skip
+  '          </tr> ' skip
+  '          <tr> ' skip
+  '            <td colspan="3">' + v-grp + '</td> ' skip
+  '          </tr> ' skip
+  '          <tr> ' skip
+  '            <td colspan="3">Выбор объекта: ' + v-obj + '</td> ' skip
+  '          </tr> ' skip
+  '          </thead>' skip
+          
+  .
+    
+/*создание самого отчета*/
+    
+v-num-date = x-Date-End - x-Date-Start + 1 .
+    
+/*шапка отчета*/
+    
+put stream OutStr-html unformatted
+  '<tbody>' skip
+  '<tr>' skip
+  '<th rowspan="2">Наименование поставщика</th>' skip
+  '<th rowspan="2">Код</th>' skip
+  '<th rowspan="2">Название товара</th>' skip
+  .
+if par-det-obj then 
+do: /*детализация по объектам*/
+  put stream OutStr-html unformatted
+    '<th rowspan="2">Объект</th>' skip
     .
-     run macr_excel_char in this-procedure( p-pc , num#str# , num#col#   ) .   num#col# = num#col# + 1 .
-   end.
-  else do:
-      PUT STREAM OutStream UNFORMATTED
-          sym3                format "X(1)" at (( par-kol * 22 ) + 65 + (if par-crsa then 12 else 0 ))    space(0)
-          skip
-      .
-  end.
 end.
-end procedure. /* print-line */
+put stream OutStr-html unformatted
+  '<th colspan="' + string(v-num-date) + '">Стоимость в учетных ценах за ед.</th>' skip
+  .
+if par-crsa then 
+do: /*детализация по объектам*/
+  put stream OutStr-html unformatted
+    '<th rowspan="2">Продажная цена</th>' skip
+    .
+end.
+if par-nacenka then 
+do: /*детализация по объектам*/
+  put stream OutStr-html unformatted
+    '<th rowspan="2">Наценка %</th>' skip
+    .
+end.
+put stream OutStr-html unformatted
+  '</tr>' skip
+  '<tr>' skip
+  .
+      
+/*заполняем шапку таблицы датами*/
+do v-start-date=x-Date-Start to x-Date-End :
+    
+  put stream OutStr-html unformatted
+    '<th>' + string(v-start-date) + '</th>' skip
+    .
+end.
+   
+put stream OutStr-html unformatted
+  '</tr>' skip
+  '<tr>' skip
+  .
+define variable v-det-obj as integer no-undo .
 
+v-det-obj = 3 .
+if par-det-obj then v-det-obj = v-det-obj + 1.    
+if par-crsa then v-det-obj = v-det-obj + 1.
+if par-nacenka then v-det-obj = v-det-obj + 1.
+    
+do v-start-date=(x-Date-Start - v-det-obj) to x-Date-End :
+  ii = ii + 1 .
+  put stream OutStr-html unformatted
+    '<th>' + string(ii) + '</th>' skip
+    .
+end.
+    
+put stream OutStr-html unformatted
+  '</tr>' skip
+  .
+    
+if par-all = 1 then do:
+              v-yes = no .
+              v-yes-only = yes .
+end.               
+else v-yes = yes .
+/*Заполнение строк*/
 
+for each tt-temp where tt-temp.resul = no no-lock:
+  v-yes-only = no .
+  if v-yes then 
+  do:
+    gg = 0.
+    ch-yes:
+    for each buf_tt where buf_tt.gds-code = tt-temp.gds-code and
+        buf_tt.cli-code = tt-temp.cli-code and
+        buf_tt.cli-type = tt-temp.cli-type 
+/*        and                                   */
+/*        buf_tt.obj-code = tt-temp.obj-code and*/
+/*        buf_tt.obj-type = tt-temp.obj-type    */
+        no-lock : 
+        gg = gg + 1.
+        if gg = 1 then v-old-price = buf_tt.price-rubl / buf_tt.fact-qty .
+            if v-old-price <> buf_tt.price-rubl / buf_tt.fact-qty  then do:
+              v-yes-only = yes.
+              leave ch-yes.
+             end. 
+         v-old-price = buf_tt.price-rubl / buf_tt.fact-qty.    
+            
+      end. 
+    end.
+    if v-yes-only or v-yes = no then do:
 
-procedure print-all-itog :
-  /* Итоговые суммы */
-end procedure. /* print-all-itog */
-
-
-procedure PrintTitul :
-  do  on error undo, return error return-value  :
-  define variable cc as integer no-undo .
-  define variable tt as integer no-undo .
-  define variable pp as integer no-undo .
-
-/* ---------------- Создание заголовка :--------------------------------------------------------------------------- */
-PUT STREAM OutStream UNFORMATTED
-space(1)
-   ReportNAme skip
-   "по фирме "  ub.clients.obj-name skip
-   "Дата составления " + cur-time-date()  skip
+    put stream OutStr-html unformatted
+      '<tr>' skip
+      '<td>' + string(tt-temp.cli-name) + '</td>' skip
+      '<td style="text-align: center;">' + string(tt-temp.gds-code) + '</td>' skip
+      '<td>' + string(tt-temp.gds-name) + '</td>' skip
       .
-
-  define variable i as integer no-undo .
-  Repeat i = 1 to NUM-ENTRIES(ReportHeader,chr(10)) :
-    PUT STREAM OutStream UNFORMATTED  Entry(i,ReportHeader,chr(10))  AT 1 format "X(90)" SKIP.
-  End.
-
-    num#str# = 1.
-    num#col# = 1.
-    run macr_excel_char in this-procedure( Reportname , num#str# , num#col#   ) .
-    num#str# = num#str# + 1.
-    run macr_excel_char in this-procedure( "по фирме " + CAPS( ub.clients.obj-name)   , num#str# , num#col#   ) .
-    num#str# = num#str# + 1.
-    run macr_excel_char in this-procedure( ReportHeader , num#str# , num#col#   ) .
-    num#str# = num#str# + 1.
-    run macr_excel_char in this-procedure("Дата составления " + cur-time-date()   , num#str# , num#col#   ) .
-
-/* шапка */
-    num#str# = num#str# + 1.
-    run macr_excel_char in this-procedure("Объект"  , num#str# , num#col#   ) .    run macr_cell_size ( 10 , ? , num#str# , num#col# , ?, ? ) .
-    num#col# = 2.
-    run macr_excel_char in this-procedure("Артикул"  , num#str# , num#col#   ) .  run macr_cell_size ( 16 , ? , num#str# , num#col# , ?, ? ) .
-    num#col# = 3.
-    run macr_excel_char in this-procedure("Наименование"  , num#str# , num#col#   ) . run macr_cell_size ( 30 , ? , num#str# , num#col# , ?, ? ) .
-    repeat i = 1 to kol-post :
-      num#col# = num#col# + 1.
-      run macr_excel_char in this-procedure( "Прих.цена" + string(i) , num#str# , num#col#   ) .
-      run macr_cell_size in this-procedure( 10 , ? , num#str# , num#col# , ?, ? ) .
-      num#col# = num#col# + 1.
-      run macr_excel_char in this-procedure( "Дата" , num#str# , num#col#   ) .
-      run macr_cell_size in this-procedure ( 10 , ? , num#str# , num#col# , ?, ? ) .
-
+    if par-det-obj then 
+    do:
+      put stream OutStr-html unformatted
+        '<td>' + string(tt-temp.obj-name) + '</td>' skip
+        .
     end.
-  if par-crsa  = true then do:
-      num#col# = num#col# + 1.
-      run macr_excel_char in this-procedure( "Продажная цена"  , num#str# , num#col#   ) .
-      run macr_cell_size in this-procedure ( 10 , ? , num#str# , num#col# , ?, ? ) .
+    
+    /*заполняем цены*/
+    do v-start-date = x-Date-Start to x-Date-End :
+     
+      find first buf_tt no-lock where buf_tt.gds-code = tt-temp.gds-code and
+        buf_tt.cli-code = tt-temp.cli-code and
+        buf_tt.cli-type = tt-temp.cli-type and
+        buf_tt.obj-code = tt-temp.obj-code and
+        buf_tt.obj-type = tt-temp.obj-type and
+        buf_tt.trn-date = v-start-date no-error .   
+      if available buf_tt then 
+      do:
+        buf_tt.resul = yes .
+          put stream OutStr-html unformatted
+            '<td num="0.00" val="' + fnc-convert-dot-to-colon((buf_tt.price-rubl / buf_tt.fact-qty),"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon((buf_tt.price-rubl / buf_tt.fact-qty),"->>>>>>>>>>>9.99",2) + '</td>' skip
+            .
+        end.  
+      else 
+      do:
+        put stream OutStr-html unformatted
+          '<td num="0.00" val="' + fnc-convert-dot-to-colon(0.00,"->>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(0.00,"->>>>>>>>>>>9.99",2) + '</td>' skip
+          .
+      end.
+    end.
+    
+    if par-crsa then 
+    do:
+      put stream OutStr-html unformatted
+      '<TD num="0.000" val="' + fnc-convert-dot-to-colon(tt-temp.price-prod,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if tt-temp.price-prod <> ? then fnc-convert-dot-to-colon(tt-temp.price-prod,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+        .
+    end.
+    if par-nacenka then 
+    do:
+      put stream OutStr-html unformatted
+      '<TD num="0.000" val="' + fnc-convert-dot-to-colon(decimal (tt-temp.nacenka),"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if tt-temp.nacenka <> ? then fnc-convert-dot-to-colon(decimal (tt-temp.nacenka),"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+        .
+    end.    
+    put stream OutStr-html unformatted
+      '</tr>' skip
+      .    
   end.
-  if par-nacenka = true then do:
-    num#col# = num#col# + 1.
-    run macr_excel_char in this-procedure( "Наценка (справочно)"  , num#str# , num#col#   ) .
-    run macr_cell_size in this-procedure ( 10 , ? , num#str# , num#col# , ?, ? ) .
-  end.
+end.    
+    
+/*концовка*/
+put stream OutStr-html unformatted
+  '  </tbody>' skip
+  '  </body>' skip
+  '  </html> ' skip
+  .
+output stream OutStr-html close.        
 
-  run print-1 in this-procedure .
+run prn-lib-reportviewer-report-name in this-procedure (
+  input this-procedure
+  ,input v-report-name-html
+  ).
 
+procedure proc-temp-table :
+  /*Заполнение temp таблицы*/
 
-    run macr_cell_format in this-procedure
-    ( 10    ,    /* p-size     */
-      true  ,    /* p-bold     */
-      false  ,   /* p-italic   */
-      ?    ,     /* p-color-bg */
-      1 , /* p-row      */
-      1 ,        /* p-col      */
-      num#str# , /* p-row-2    */
-      num#col# ) .      /* p-col-2    */
-
-     put  stream macr_excel unformatted
-       substitute('select("r&1c&2:r&3c&4 ")' , num#str# , 1 , num#str# ,  num#col# ) + {&new-line}  +
-       'BORDER( 2 , 2 , 2 , 2 , 2 , ,0,0,0,0,0) '  + {&new-line} +
-       'ALIGNMENT(3 , , 4 , 4 ,)'  + {&new-line}
-       .
-    put  stream macr_excel unformatted
-       substitute('select("r&1c&2:r&3c&4 ")' , num#str# , 1 , num#str# ,  3 ) + {&new-line}  +
-       'BORDER( 2, , , , , , , , , , ) '  + {&new-line} .
-
-    /* ... конец создания заголовка. --- */
-  end.
-end procedure. /* PrintTitul */
-
-
-procedure PrintPodval :
-  do on error undo, return error return-value  :
-  define variable pp as integer no-undo .
-  define variable rr as integer no-undo .
-    run p-line in this-procedure.
-
-    /* ... конец создания Подвал. --- */
-  end.
-end procedure. /* PrintPodval */
-
-
-
-PROCEDURE on-same-page :
-  define input parameter p-line-number as integer  no-undo .
-  if p-line-number > page-size( OutStream ) then return .
-  if line-counter( OutStream ) + p-line-number > page-size( OutStream ) then do:
-
-    run p-line in this-procedure.
-    page stream OutStream .
+  find first tt-temp where tt-temp.gds-code = buf_goods.gds-code and
+    tt-temp.trn-date = buf_trn-doc.fact-date and
+    tt-temp.cli-code = buf_trn-doc.cli-code and
+    tt-temp.cli-type = buf_trn-doc.cli-type and
+    tt-temp.obj-code = (if par-det-obj then bf_doc-line.obj-code else 0) and
+    tt-temp.obj-type = (if par-det-obj then bf_doc-line.obj-type else '') no-error .
+   
+  if not available tt-temp then 
+  do:
+    create tt-temp .
+    assign
+      tt-temp.gds-code   = buf_goods.gds-code
+      tt-temp.gds-name   = buf_goods.gds-name
+      tt-temp.trn-date   = buf_trn-doc.fact-date
+      tt-temp.cli-code   = buf_trn-doc.cli-code
+      tt-temp.cli-type   = buf_trn-doc.cli-type
+      tt-temp.obj-code   = if par-det-obj then bf_doc-line.obj-code else 0
+      tt-temp.obj-type   = if par-det-obj then bf_doc-line.obj-type else ''
+    
+      .
+    if par-crsa then 
+    do:
+      find first gds-obj no-lock where                                                 
+        gds-obj.gds-code = buf_goods.gds-code and                                    
+        gds-obj.obj-code = obj-list.obj-code and                                     
+        gds-obj.obj-type = obj-list.obj-type no-error.
+      if available gds-obj then tt-temp.price-prod = gds-obj.price-sale .
     end.
-end procedure. /* on-same-page */
+          
+    find first ub.clients where ub.clients.obj-code = tt-temp.cli-code and ub.clients.obj-type = tt-temp.cli-type no-lock no-error . 
+    if available ub.clients then tt-temp.cli-name = ub.clients.obj-name .
+    find first ub.clients where ub.clients.obj-code = tt-temp.obj-code and ub.clients.obj-type = tt-temp.obj-type no-lock no-error . 
+    if available ub.clients then tt-temp.obj-name = ub.clients.obj-name .
+    if par-nacenka then 
+    do:
+      define variable v-margins-range   as integer   no-undo.
+      define variable v-margins-exists  as logical   no-undo.
+      define variable v-increase-range  as integer   no-undo.
+      define variable v-increase-exists as logical   no-undo.
+      define variable v-min-marg        as decimal   no-undo.
+      define variable v-max-marg        as decimal   no-undo.
+      define variable v-increase-pc     as decimal   no-undo.
+      define variable v-round-method    as character no-undo.
+      define variable v-base            as decimal   no-undo .
+      define variable v-rmethod-range   as integer   no-undo.
+      define variable v-rmethod-exists  as logical   no-undo.
+          
+          
+      run grp-obj-margin-value in this-procedure
+        (        input gds-list.grp-code
+        , input obj-list.obj-type
+        , input obj-list.obj-code
+        , output v-min-marg
+        , output v-max-marg
+        , output v-increase-pc
+        , output v-round-method
+        , output v-base
+        , output v-margins-range
+        , output v-margins-exists
+        , output v-increase-range
+        , output v-increase-exists
+        , output v-rmethod-range
+        , output v-rmethod-exists
+          
+        ) no-error .
+      if v-increase-exists then 
+      do:
+        assign
+          tt-temp.nacenka = string( v-increase-pc )
+          .
+      end.
 
-procedure print-1 :
+          
+    end.  
+    
+           
+  end.  /*if not available tt-temp then do:*/                           
+  tt-temp.price-rubl = tt-temp.price-rubl + (bf_doc-line.price-rubl * bf_doc-line.fact-qnty).
+  tt-temp.fact-qty = tt-temp.fact-qty + bf_doc-line.fact-qnty .      
 
-  do
-  on error undo, return error return-value
-  :
-    run p-line in this-procedure.
-    PUT STREAM OutStream UNFORMATTED  ":Объект"  AT 1 format "X(16)" .
-    PUT STREAM OutStream UNFORMATTED  ":Артикул"  format "X(17)" .
-    PUT STREAM OutStream UNFORMATTED  ":Наименование"  format "X(31)" .
-
-    repeat i = 1 to kol-post :
-      PUT STREAM OutStream UNFORMATTED  ":Прих.цена " + string(i) + "  Дата" format "X(22)" .
-    end.
-
-    if par-crsa  = true then do:
-      PUT STREAM OutStream UNFORMATTED ":Продaж цена" format "X(12)" .
-    end.
-    if par-nacenka = true then do:
-      PUT STREAM OutStream UNFORMATTED ":% нац:" format "X(6)" .
-    end.
-
-    PUT STREAM OutStream UNFORMATTED  skip .
-    run p-line in this-procedure.
-  end.
-
-end procedure. /* print-1 */
-
-procedure p-line :
-
-  do
-  on error undo, return error return-value
-  :
-    PUT STREAM OutStream UNFORMATTED  fill("-",16)  AT 1 format "X(16)" .
-    PUT STREAM OutStream UNFORMATTED  fill("-",31)  format "X(31)" .
-    repeat i = 1 to kol-post :
-      PUT STREAM OutStream UNFORMATTED fill("-",22) format "X(22)" .
-    end.
-    if par-crsa  = true then do:
-       PUT STREAM OutStream UNFORMATTED fill("-",13) format "X(12)" .
-    end.
-    if par-nacenka  = true then do:
-       PUT STREAM OutStream UNFORMATTED fill("-",6) format "X(6)" .
-    end.
-    PUT STREAM OutStream UNFORMATTED fill("-",17) format "X(17)" .
-    PUT STREAM OutStream UNFORMATTED  skip .
-
-  end.
-
-end procedure. /* p-line */
-
-{ rep/r-libmcr.i macr_excel         }
+end procedure.
+                  

@@ -22,10 +22,10 @@ define input  parameter parParentProc  as widget-handle no-undo.
 run rep/d-report.w (
 input parParentProc ,
 input  "rep/e-p-pp.w","Контроль приходных цен",
-input  1,
-input  "{&g-choice}":U,
+input  2,
+input  "{&g-all},{&g-grp},{&g-choice}":U,
 input  "{&o-firm},{&o-currency},{&o-choice}":U,
 input  "",
 input  "",
-input  "all,{&Excel-yes}",
+input  "all,{&Excel-yes},{&customer-yes}",
 input  no).
