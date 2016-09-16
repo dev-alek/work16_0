@@ -533,7 +533,7 @@ END.
       for each tt-marks exclusive-lock where tt-marks.new_ :
         delete tt-marks .
       end.
-      for each tt-del-marks :
+      for each tt-del-marks where not tt-del-marks.new_ :
         create tt-marks.
         buffer-copy tt-del-marks to tt-marks .
       end.
@@ -561,8 +561,12 @@ END.
   ON choose OF Btn_del in FRAME Dialog-Frame /* удалить */
     DO:
       if not available tt-marks then return no-apply .
-      create tt-del-marks.
-      buffer-copy tt-marks to tt-del-marks .
+      find first tt-del-marks no-lock where tt-del-marks.mark = tt-marks.mark no-error .
+      if not available tt-del-marks
+      then do :
+          create tt-del-marks.
+          buffer-copy tt-marks to tt-del-marks .
+      end.
       delete tt-marks .
       open query br-marks for each tt-marks where tt-marks.num = p-num and tt-marks.gds-part-position_ = p-position.
     END.
@@ -674,6 +678,7 @@ PROCEDURE enable_UI :
                  These statements here are based on the "Other 
                  Settings" section of the widget Property Sheets.
   ------------------------------------------------------------------------------*/
+  br-marks:column-resizable in frame dialog-frame = true .
   ENABLE Btn_OK Btn_Cancel Btn_del Btn_imp Btn_EXIT v-mark br-marks
     WITH FRAME Dialog-Frame.
   DISABLE Btn_goods
