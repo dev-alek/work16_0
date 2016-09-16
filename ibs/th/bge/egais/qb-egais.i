@@ -78,14 +78,14 @@ procedure makeXML :
                 sw:write-data-element ("bk:Date", string(iso-date(tt-act-header.date_)) + "T12:00:00") no-error .
                 sw:start-element ("bk:Marks") .
     for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num :
-                    sw:start-element ("bk:mark") .
+                    sw:start-element ("bk:Mark") .
                         sw:write-data-element ("bk:Identity", string(tt-gds-act.position_)) no-error .
                         sw:write-data-element ("bk:Type", tt-gds-act.type_) no-error .
                         sw:write-data-element ("bk:Rank", tt-gds-act.rank) no-error .
                         sw:write-data-element ("bk:Number", tt-gds-act.number) no-error .
                         if tt-gds-act.mark <> ? and tt-gds-act.mark <> ""
                         then sw:write-data-element ("bk:Barcode", tt-gds-act.mark) no-error .
-                    sw:end-element ("bk:mark") .                
+                    sw:end-element ("bk:Mark") .                
     end. 
                 sw:end-element ("bk:Marks") .
             sw:end-element ("ns:QueryBarcode") .
