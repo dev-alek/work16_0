@@ -1942,9 +1942,12 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         StatusErr = true.
         return ?. 
       end.
-      
       foreach_:
       for each tt-wb-gds-EG :
+        
+        release buf_parts.
+        release buf_gds.
+        release buf_doc-line.
         
         find first buf_gds no-lock where buf_gds.gds-code = tt-wb-gds-EG.gds-code no-error.
         if available (buf_gds) then do:
