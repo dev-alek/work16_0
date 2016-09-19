@@ -264,6 +264,7 @@ define stream OutStr-html.
 
 define buffer buf_clients           for ub.clients.
 define buffer buf_alc-type          for ub.alc-type.
+define buffer buf_alc-type-attr     for ub.alc-type-attr.
 define buffer buf_clients-attr      for ub.clients-attr.
 define buffer buf_alc-type-gds      for ub.alc-type-gds.
 define buffer buf_goods             for ub.goods.
@@ -810,21 +811,27 @@ case RADIO-ALC-TYPE:
 
     when 1 then do: /* Убрать бы пивные */
 
-        message "Выберите нужные виды продукции" view-as alert-box warning buttons ok.
-        return.
+/*        message "Выберите нужные виды продукции" view-as alert-box warning buttons ok.*/
+/*        return.                                                                       */
 
 /*        /* Сначала очистим */                                         */
-/*        for each alc-types exclusive-lock:                            */
-/*            delete alc-types.                                         */
-/*        end.                                                          */
-/*                                                                      */
-/*        for each buf_alc-type:                                        */
-/*            create alc-types.                                         */
-/*            assign                                                    */
-/*            alc-types.type-code     = buf_alc-type.alc-type-inner-code*/
-/*            alc-types.alc-type-name = buf_alc-type.alc-type-name      */
-/*            alc-types.alc-type-code = buf_alc-type.alc-type-code.     */
-/*        end.                                                          */
+        for each alc-types exclusive-lock:
+            delete alc-types.
+        end.
+
+        for each buf_alc-type exclusive-lock:
+            find first buf_alc-type-attr where buf_alc-type-attr.attr-code = "alc-type"
+                                     and buf_alc-type-attr.attr-value = "2"
+                                     and buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code no-error .
+            if not available buf_alc-type-attr then do:                                                 
+            create alc-types.
+            assign
+            alc-types.type-code     = buf_alc-type.alc-type-inner-code
+            alc-types.alc-type-name = buf_alc-type.alc-type-name
+            alc-types.alc-type-code = buf_alc-type.alc-type-code.
+            end.
+        end.
+
 
     end.
 
@@ -1181,13 +1188,14 @@ for each obj-list no-lock:  /* По всем объектам */
               find first buf_clients-attr no-lock where buf_clients-attr.obj-code  = imp-or-prod-code /* КПП */
                                                   and   buf_clients-attr.obj-type  = imp-or-prod-type
                                                   and   buf_clients-attr.attr-code = {&attr-kpp} no-error.
-
+              if available buf_clients-attr then do:
               assign
                   part-1.producer-obj-name = buf_clients.obj-name
                   part-1.producer-inn = buf_firm.inn
                   part-1.producer-kpp = (if buf_clients-attr.attr-value <> ""
                                         and buf_clients-attr.attr-value <> ?
                                         then buf_clients-attr.attr-value else buf_firm.kpp).
+              end.                                        
               end. /* when {&shop} or when {&stock} */
 
               when {&prs} then do:

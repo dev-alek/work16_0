@@ -242,6 +242,7 @@ define stream OutStr-html.
 
 define buffer buf_clients           for ub.clients.
 define buffer buf_alc-type          for ub.alc-type.
+define buffer buf_alc-type-attr     for ub.alc-type-attr.
 define buffer buf_clients-attr      for ub.clients-attr.
 define buffer buf_alc-type-gds      for ub.alc-type-gds.
 define buffer buf_goods             for ub.goods.
@@ -776,21 +777,25 @@ case RADIO-ALC-TYPE:
 
     when 1 then do: /* Убрать бы пивные */
 
-        message "Выберите нужные виды продукции" view-as alert-box warning buttons ok.
-        return.
+/*        message "Выберите нужные виды продукции" view-as alert-box warning buttons ok.*/
+/*        return.                                                                       */
 
 /*        /* Сначала очистим */                                         */
-/*        for each alc-types exclusive-lock:                            */
-/*            delete alc-types.                                         */
-/*        end.                                                          */
-/*                                                                      */
-/*        for each buf_alc-type:                                        */
-/*            create alc-types.                                         */
-/*            assign                                                    */
-/*            alc-types.type-code     = buf_alc-type.alc-type-inner-code*/
-/*            alc-types.alc-type-name = buf_alc-type.alc-type-name      */
-/*            alc-types.alc-type-code = buf_alc-type.alc-type-code.     */
-/*        end.                                                          */
+        for each alc-types exclusive-lock:
+            delete alc-types.
+        end.
+
+        for each buf_alc-type,
+            first buf_alc-type-attr where buf_alc-type-attr.attr-code = "alc-type"
+                                     and buf_alc-type-attr.attr-value = "2"
+                                     and buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code
+                                     :
+            create alc-types.
+            assign
+            alc-types.type-code     = buf_alc-type.alc-type-inner-code
+            alc-types.alc-type-name = buf_alc-type.alc-type-name
+            alc-types.alc-type-code = buf_alc-type.alc-type-code.
+        end.
     
     end.
 
