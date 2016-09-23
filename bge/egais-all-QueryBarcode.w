@@ -71,6 +71,8 @@ define variable v-clob-db-num as integer   no-undo .
 define variable v-int64-id    as int64     no-undo .
 define variable v-info        as character no-undo .
 
+define variable v-Answer    as character no-undo .
+
 define buffer buf_clob-bind     for ub.clob-bind .
 define buffer buf_clob-data     for ub.clob-data .
 
@@ -367,7 +369,16 @@ DO:
             return no-apply.
       end.
       run parseXML in this-procedure (input "RespQueryBarcode.xml") .
-      find first tt-act-header .
+      find first tt-act-header no-error .
+      if not available tt-act-header then do :
+          hDoc:load ("file", "RespQueryBarcode.xml", false).
+          hDoc:get-document-element(hRoot) .
+          run ParseResponse(hRoot, 1).
+          DELETE OBJECT hDoc no-error.
+          DELETE OBJECT hRoot no-error.
+          message v-Answer view-as alert-box .
+          return no-apply .
+      end.
       run makeXML in this-procedure no-error.
     if error-status:error then return return-value .
     assign
@@ -668,3 +679,45 @@ PROCEDURE proc-row-leave :
 end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+procedure ParseResponse :
+        define input parameter hParent AS HANDLE .
+        define input parameter level AS INTEGER .
+        
+        DEFINE VARIABLE i AS INTEGER NO-UNDO.
+        DEFINE VARIABLE hNoderef AS HANDLE NO-UNDO.
+        DEFINE VARIABLE hText AS HANDLE NO-UNDO.
+        define variable v-ok as logical no-undo .
+        
+        CREATE X-NODEREF hNoderef.
+        CREATE X-NODEREF hText .
+        
+        
+        REPEAT i = 1 TO hParent:NUM-CHILDREN:
+            good = hParent:GET-CHILD(hNoderef,i).
+            IF NOT good THEN 
+                LEAVE.
+            IF hNoderef:SUBTYPE <> "element" THEN
+                NEXT.
+            
+            hNoderef:GET-CHILD(hText, 1) no-error .    
+            
+/*            IF hNoderef:NAME = "tc:RegID"    THEN v-RegID  = hText:node-value .         */
+/*            IF hNoderef:NAME = "tc:Conclusion"                                          */
+/*            OR hNoderef:NAME = "tc:OperationResult" THEN                                */
+/*            DO :                                                                        */
+/*                if hText:node-value = "Rejected" then v-RegID = v-RegID + CHR(5) + "R" .*/
+/*                if hText:node-value = "Accepted" then v-RegID = v-RegID + CHR(5) + "A" .*/
+/*            END.                                                                        */
+            IF hNoderef:NAME = "tc:Comments" THEN do :
+                v-Answer = hText:node-value .
+            end.
+/*            IF hNoderef:NAME = "tc:OperationResult" THEN v-ok = (hText:node-value = "Accepted") .               */
+/*            IF hNoderef:NAME = "tc:OperationComment" THEN v-Answer = v-Answer + {&new-line} + hText:node-value .*/
+                   
+            run ParseResponse(input hNoderef, input (level + 1)).
+        END.
+        
+        DELETE OBJECT hNoderef.
+        DELETE OBJECT hText.
+  END.

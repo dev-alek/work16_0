@@ -429,6 +429,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                  create buf_chk-gds-pay.
                   assign
                   buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
+                  buf_chk-gds-pay.chk-type = ub.chk-doc.chk-type
                   buf_chk-gds-pay.algo-num = {&current-algo-1}
                   buf_chk-gds-pay.pay-code = temp-chk-pay.pay-code
                   buf_chk-gds-pay.curr-code = temp-chk-pay.curr-code
@@ -450,6 +451,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                   buf_chk-gds-pay.price-base = buf_temp-chk-gds.price-base
                   buf_chk-gds-pay.price-service = buf_temp-chk-gds.price-service
                   buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
+                  buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
                   buf_chk-gds-pay.line-type = pychk_line-type-chr
                   buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
                   buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date

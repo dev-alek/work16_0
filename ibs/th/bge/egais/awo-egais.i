@@ -48,7 +48,7 @@ define temp-table tt-gds-act
     field marks-qnty    as integer                  label "Кол-во марок"
     field egais-name    as character
     index pi as primary unique
-        position_
+        num position_
     index code
         gds-code
 .
