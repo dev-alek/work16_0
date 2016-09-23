@@ -6688,6 +6688,10 @@ end.
 &global-define EGAIS-InfoVer '{&bef-EGAIS-InfoVer}':U
 &global-define bef-EGAIS-InfoVer-full Уведомление сервера ЕГАИС о смене версии xsd-схем
 &global-define EGAIS-InfoVer-full '{&bef-EGAIS-InfoVer-full}':U
+&global-define bef-EGAIS-FormF1 4
+&global-define EGAIS-FormF1 '{&bef-EGAIS-FormF1}':U
+&global-define bef-EGAIS-FormF1-full Справочник справок 1
+&global-define EGAIS-FormF1-full '{&bef-EGAIS-FormF1-full}':U
 &global-define bef-egais-act-send 0
 &global-define egais-act-send '{&bef-egais-act-send}':U
 &global-define bef-egais-act-send-full Акт отправлен
@@ -8001,6 +8005,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: 5819b48185bb, 779, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 5819b48185bb, 779, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 90fea97fc979, 803, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 44c7cb9eda36, 691, rls ':U
 &endif
