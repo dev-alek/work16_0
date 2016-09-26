@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Класс содержащий структуру для создания конкретного объекта содержащий связку и ее свойтсва (egais-info).
+Класс содержащий структуру для создания конкретного объекта содержащий связку товара с товаром ЕГАИС и ее свойтсва (egais-info).
 
 Автор: Морозов Александр Сергеевич
 Дата создания: 15/03/16
@@ -16,7 +16,7 @@ Creation date: 15/03/16
 */
 
 using Progress.Lang.*.
-
+using ibs.th.bge.egais.*.
 
 class ibs.th.bge.egais.ExtGdsValue: 
   
@@ -95,5 +95,24 @@ class ibs.th.bge.egais.ExtGdsValue:
   define property AlcCode as character no-undo
     get.
     set.
+
+  define property extFormF1Obj as class ExtFormF1 no-undo
+    get.
+    private set.
+
+  constructor public extgdsvalue ( ):
+
+    extFormF1Obj = new ExtFormF1 (true). 
+
+  end constructor.
+
+  destructor public extgdsvalue ( ):
+
+    if valid-object (extFormF1Obj)
+      then delete object extFormF1Obj.
+
+  end destructor.
+
+
 
 end class.

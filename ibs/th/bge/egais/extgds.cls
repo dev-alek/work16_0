@@ -131,7 +131,7 @@ class ibs.th.bge.egais.ExtGds:
 
   method public void GetHndlTable (inGdsCode as int, inAlcCode as char, input-output outTTHndl as handle):
     
-    def var ExtGdsValueObj as ExtGdsValue no-undo.
+    def var ExtGdsValueObj as class ExtGdsValue no-undo.
     
     assign
       ReturnMsg = ""
@@ -150,36 +150,39 @@ class ibs.th.bge.egais.ExtGds:
       and buf_ext-classif.nonunique = 0
       :
       
-      find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
-        and buf_ext-classif-attr.classif-name = buf_ext-classif.classif-name
-        and buf_ext-classif-attr.db-num = buf_ext-classif.db-num
-        and buf_ext-classif-attr.Key#_One = buf_ext-classif.key#_one
-        and buf_ext-classif-attr.Key#_two = buf_ext-classif.key#_two
-        and buf_ext-classif-attr.Key#_three = buf_ext-classif.key#_three
-        and buf_ext-classif-attr.CharKey_One = buf_ext-classif.charkey_one
-        and buf_ext-classif-attr.CharKey_two = buf_ext-classif.charkey_two
-        and buf_ext-classif-attr.CharKey_three = buf_ext-classif.charkey_three
-        and buf_ext-classif-attr.nonunique = buf_ext-classif.nonunique
-        and buf_ext-classif-attr.attr-code = 'egais-info'
-        no-error .
+        find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = buf_ext-classif.classif-subject
+          and buf_ext-classif-attr.classif-name = buf_ext-classif.classif-name
+          and buf_ext-classif-attr.db-num = buf_ext-classif.db-num
+          and buf_ext-classif-attr.Key#_One = buf_ext-classif.key#_one
+          and buf_ext-classif-attr.Key#_two = buf_ext-classif.key#_two
+          and buf_ext-classif-attr.Key#_three = buf_ext-classif.key#_three
+          and buf_ext-classif-attr.CharKey_One = buf_ext-classif.charkey_one
+          and buf_ext-classif-attr.CharKey_two = buf_ext-classif.charkey_two
+          and buf_ext-classif-attr.CharKey_three = buf_ext-classif.charkey_three
+          and buf_ext-classif-attr.nonunique = buf_ext-classif.nonunique
+          and buf_ext-classif-attr.attr-code = 'egais-info'
+          no-error .
+
+
+        create tt-egaisgds-hndls.
 
         assign
-          ExtGdsValueObj = GetInfoObj (buf_ext-classif-attr.attr-value) 
+          ExtGdsValueObj = if available (buf_ext-classif-attr) then GetInfoObj (buf_ext-classif-attr.attr-value) else GetInfoObj ("")
         no-error.
         
-        if ReturnMsg <> ""
+        if error-status:error or not available (buf_ext-classif-attr)
           then 
         do:
-          ReturnMsg = ReturnMsg + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
+          ReturnMsg = "Товар" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию товаров.".
           if not IsSilent 
             then message ReturnMsg view-as alert-box.
-          ReturnMsg = "".
+          tt-egaisgds-hndls.ColorNum = RED_COLOR.
         end.
 
         ExtGdsValueObj:AlcCode = buf_ext-classif.CharKey_One.
         ExtGdsValueObj:GdsCode = buf_ext-classif.Key#_One.
         
-        create tt-egaisgds-hndls.
+
         assign 
           tt-egaisgds-hndls.alcCode = ExtGdsValueObj:AlcCode
           tt-egaisgds-hndls.gdsCode = ExtGdsValueObj:GdsCode
@@ -272,7 +275,6 @@ class ibs.th.bge.egais.ExtGds:
       if not available (buf_ext-classif-attr)
         then 
       do:
-        ClearProp().
         ReturnMsg = "Отсутсвует атрибут egais-info - " + buf_ext-classif.charkey_one + "/" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию.".
         if not IsSilent 
           then message ReturnMsg view-as alert-box.
@@ -690,11 +692,10 @@ class ibs.th.bge.egais.ExtGds:
       ReturnMsg = ReturnMsg + " Товар" + string (hndlclsExtGdsValueObj:AlcCode) + "/" + string (hndlclsExtGdsValueObj:GdsCode) + ". Выполните синхронизацию товаров.".
       if not IsSilent 
         then message ReturnMsg view-as alert-box.
-      return.
     end.
     
     assign
-      ExtGdsValueObj = GetInfoObj (buf_ext-classif-attr.attr-value) 
+      ExtGdsValueObj = if available (buf_ext-classif-attr) then GetInfoObj (buf_ext-classif-attr.attr-value) else GetInfoObj ("") 
     no-error.
 
     if ReturnMsg <> ""
@@ -729,6 +730,7 @@ class ibs.th.bge.egais.ExtGds:
       hndlclsExtGdsValueObj:RegionImpor = ExtGdsValueObj:RegionImpor
       hndlclsExtGdsValueObj:FullNameGds = ExtGdsValueObj:FullNameGds
     .
+    hndlclsExtGdsValueObj:extFormF1Obj:OpenQueryExtFormF1(ExtGdsValueObj:AlcCode).
     if valid-object (ExtGdsValueObj)
       then delete object ExtGdsValueObj.
     
