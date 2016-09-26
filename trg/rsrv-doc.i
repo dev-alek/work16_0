@@ -18,8 +18,19 @@ create: Перваков Михаил Сергеевич
 
 */
 
+
+&scop f-l Base2Int64
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+{ gbl/std-func.i {&f-l} }
+
+  define temp-table tt-alc-codes
+    field alc-code      as character
+    field qnty          as decimal
+    index pi as primary unique
+      alc-code
+  .
+
 
 procedure rsrv-doc :
   define input  parameter parparentproc          AS WIDGET-HANDLE           NO-UNDO.
@@ -56,6 +67,13 @@ procedure rsrv-doc :
   define buffer buf_parts    for ub.parts .
   define buffer buf_trn-doc  for ub.trn-doc .
   define buffer buf_doc-line for ub.doc-line .
+  define buffer buf_doc-line-attr for ub.doc-line-attr .
+  define buffer buf_goods    for ub.goods .
+  
+  
+  define variable v-mark as character no-undo .
+  define variable v-alc-code as character no-undo .
+  define variable mark-ii as integer  no-undo .
 
   do
   on error undo, return error return-value
@@ -86,6 +104,36 @@ procedure rsrv-doc :
         "Указатель" p-doc-line-recid skip
         view-as alert-box error .
       undo, return error return-value .
+    end.
+    
+    empty temp-table tt-alc-codes .
+    find first buf_goods no-lock where buf_goods.artic      = buf_doc-line.artic
+                                   and buf_goods.prod-type  = buf_doc-line.prod-type
+                                   and buf_goods.prod-code  = buf_doc-line.prod-code .
+    find first buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = buf_doc-line.doc-code
+                                                  and buf_doc-line-attr.gds-code = buf_goods.gds-code
+                                                  and buf_doc-line-attr.attr-code = 'mark-code'
+                                                  no-error.
+    if available buf_doc-line-attr and buf_doc-line-attr.attr-value <> ''
+    then do mark-ii = 1 to num-entries(buf_doc-line-attr.attr-value) :
+        v-mark = entry(mark-ii, buf_doc-line-attr.attr-value) .
+        run ProcAlcCode (input v-mark, output v-alc-code) no-error.
+        if v-alc-code = ? or v-alc-code = ''
+        then do :
+          message
+            vss-workfile vss-revision vss-description skip
+            "Ошибка определения алкогольного кода" skip
+            "Марка - " v-mark skip
+            view-as alert-box error .
+          undo, return error return-value .  
+        end.
+        find first tt-alc-codes exclusive-lock where tt-alc-codes.alc-code = v-alc-code no-error.
+        if not available tt-alc-codes
+        then do :
+            create tt-alc-codes.
+            assign tt-alc-codes.alc-code = v-alc-code .
+        end.
+        tt-alc-codes.qnty = tt-alc-codes.qnty + 1 .
     end.
 
     /* определяем знак изменяемого количества */
@@ -136,6 +184,7 @@ procedure rsrv-doc :
     end.
 
     define variable v-fifo as logical   no-undo .
+    define variable v-alc-rsrv  as logical   no-undo .
 
     if p-unreserv-other-sign
     then do:
@@ -375,6 +424,11 @@ procedure rsrv-doc :
       .
       if v-rsrv-code = {&free-code}
       then do:
+        find first tt-alc-codes no-error.
+        if available tt-alc-codes
+        then do :
+          v-alc-rsrv = true .
+        end.  
         assign
           v-fifo = true
         .
@@ -452,6 +506,30 @@ procedure rsrv-doc :
             assign
               v-find-first = false
             .
+            if v-alc-rsrv
+            then do :
+              find first tt-alc-codes .
+              assign
+                v-iteration-chg-qnty = tt-alc-codes.qnty
+              .
+              find first buf_parts
+                where buf_parts.obj-type  = buf_doc-line.obj-type
+                  and buf_parts.obj-code  = buf_doc-line.obj-code
+                  and buf_parts.artic     = buf_doc-line.artic
+                  and buf_parts.prod-type = buf_doc-line.prod-type
+                  and buf_parts.prod-code = buf_doc-line.prod-code
+                  and buf_parts.out-code  = v-rsrv-code
+                  and buf_parts.status_   = no
+                  and buf_parts.fact-qnty > 0
+                  and num-entries(buf_parts.alc-ref-ab-path) = 4
+                  and entry(3, buf_parts.alc-ref-ab-path) = tt-alc-codes.alc-code
+                use-index FIFO
+                no-error.
+              if available buf_parts
+              then v-fifo = false .
+              else v-fifo = true .  
+            end.
+            
             if v-fifo = true
             then do:
               find first buf_parts
@@ -466,7 +544,8 @@ procedure rsrv-doc :
                 use-index FIFO
                 no-error.
             end.
-            else do:
+            else if not v-alc-rsrv
+            then do:
               find last buf_parts
                 where buf_parts.obj-type  = buf_doc-line.obj-type
                   and buf_parts.obj-code  = buf_doc-line.obj-code
@@ -482,6 +561,57 @@ procedure rsrv-doc :
           end.
           else do:
             /* ищем следующую доступную партию */
+            if v-alc-rsrv
+            then do :
+              if p-real-chg-qnty = tt-alc-codes.qnty
+              then do :
+                  find next tt-alc-codes no-error.
+                  if available tt-alc-codes
+                  then do :
+                    assign
+                      v-iteration-chg-qnty = tt-alc-codes.qnty
+                    .
+                    find first buf_parts
+                    where buf_parts.obj-type  = buf_doc-line.obj-type
+                      and buf_parts.obj-code  = buf_doc-line.obj-code
+                      and buf_parts.artic     = buf_doc-line.artic
+                      and buf_parts.prod-type = buf_doc-line.prod-type
+                      and buf_parts.prod-code = buf_doc-line.prod-code
+                      and buf_parts.out-code  = v-rsrv-code
+                      and buf_parts.status_   = no
+                      and buf_parts.fact-qnty > 0
+                      and num-entries(buf_parts.alc-ref-ab-path) = 4
+                      and entry(3, buf_parts.alc-ref-ab-path) = tt-alc-codes.alc-code
+                    use-index FIFO
+                    no-error.
+                    if available buf_parts
+                    then v-fifo = false .
+                    else v-fifo = true .  
+                  end. 
+                  else do :
+                    v-fifo = true .  
+                  end.
+              end.    
+              else do :
+/*                  find first tt-alc-codes .*/
+                  find first buf_parts
+                    where buf_parts.obj-type  = buf_doc-line.obj-type
+                      and buf_parts.obj-code  = buf_doc-line.obj-code
+                      and buf_parts.artic     = buf_doc-line.artic
+                      and buf_parts.prod-type = buf_doc-line.prod-type
+                      and buf_parts.prod-code = buf_doc-line.prod-code
+                      and buf_parts.out-code  = v-rsrv-code
+                      and buf_parts.status_   = no
+                      and buf_parts.fact-qnty > 0
+                      and num-entries(buf_parts.alc-ref-ab-path) = 4
+                      and entry(3, buf_parts.alc-ref-ab-path) = tt-alc-codes.alc-code
+                    use-index FIFO
+                    no-error.
+                  if available buf_parts
+                  then v-fifo = false .
+                  else v-fifo = true . 
+              end. 
+            end.
             if v-fifo = true
             then do:
               find next buf_parts
@@ -496,7 +626,8 @@ procedure rsrv-doc :
                 use-index FIFO
                 no-error.
             end.
-            else do:
+            else if not v-alc-rsrv 
+            then do:
               find prev buf_parts
                 where buf_parts.obj-type  = buf_doc-line.obj-type
                   and buf_parts.obj-code  = buf_doc-line.obj-code
@@ -1070,5 +1201,31 @@ procedure unrsrv-negative :
   end.
 
 end procedure.
+
+/*Процедура извличения алкокода из акцизной марки и перевод в 10 систему*/
+PROCEDURE ProcAlcCode :
+  define input  parameter p-mark-alc as character  no-undo .
+  define output parameter p-alc-code as character  no-undo initial ''.
+  define variable v-kol              as integer    no-undo .
+  define variable alc-code as character no-undo .
+  define variable v-result as character no-undo .
+  define variable ii as integer no-undo .  
+
+  alc-code = SUBSTRing (p-mark-alc, 8, 12) .
+  p-alc-code = string (Base2Int64 (alc-code, 36) ) no-error.
+  if (Base2Int64 (alc-code, 36) ) < 0 then 
+  do:
+    p-alc-code = ?.
+  end.
+  else 
+  do:
+    if length(p-alc-code) < 20 then 
+    do:
+      p-alc-code = fill('0', 19 - length(p-alc-code)) + p-alc-code.
+    end.  
+  end.
+  
+    
+END PROCEDURE.
 
 /* $Workfile$   E n d */
