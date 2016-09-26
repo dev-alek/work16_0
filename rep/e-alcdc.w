@@ -23,6 +23,7 @@ Creation date: 03/09/12
 using Progress.Lang.*.
 using Ibs.Th.Gbl.Rep-Out.
 using ibs.th.bge.egais.extgds.
+using ibs.th.bge.egais.extFormF1.
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -92,6 +93,7 @@ define variable v-kpp               as character no-undo .
 define variable v-inner-code        as integer   no-undo .
 
 define variable ext-cl              as class extgds no-undo .
+define variable ext-FormF1          as class extFormF1 no-undo .
 
 /* (остальное определено в rep/fmtcli.i) */
 
@@ -995,6 +997,7 @@ end. /* for each obj-list */
 /* Данные для отчета */
 
 ext-cl = new extgds(yes) .
+ext-FormF1 = new extFormF1(yes) .
 
 /* Получим остатки на конец периода */
 /*run gbl/inidebug.p .*/
@@ -1073,12 +1076,23 @@ for each obj-list no-lock:  /* По всем объектам */
             if v-kpp = "" then  v-kpp = v-fmtcli-kpp.
             
           /* Получим производителя/импортера */
+            ext-FormF1:Release_() .
+            if num-entries(temp-parts.alc-ref-ab-path) = 4 and entry(1, temp-parts.alc-ref-ab-path) <> "" then do :
+                ext-FormF1:OpenQueryExtFormF1(entry(1, temp-parts.alc-ref-ab-path)) . 
+            end.
+          
             ext-cl:Release_() .
             if num-entries(temp-parts.alc-ref-ab-path) = 4 and entry(3, temp-parts.alc-ref-ab-path) <> "" then do :
                 ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, temp-parts.alc-ref-ab-path)) . 
                 tt-parts-info.alc-code =  entry(3, temp-parts.alc-ref-ab-path) .                  
             end.
             
+            if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
+                imp-or-prod-type = ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli .
+                imp-or-prod-code = 0 .
+                tt-parts-info.importer = 'ЕГАИС. Оригинальный клиент из Справки А (Справки 1)' .
+            end.
+            else
             if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
                     imp-or-prod-type = temp-parts.alc-imp-type
                     imp-or-prod-code = temp-parts.alc-imp-code
@@ -1210,6 +1224,12 @@ for each obj-list no-lock:  /* По всем объектам */
               end. /* when {&prs} */
               
               otherwise do : /* egais */
+                    if ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
+                        part-1.producer-obj-name = ext-FormF1:GetExtFormF1Value():FullNameOrigCli .
+                        part-1.producer-inn = ext-FormF1:GetExtFormF1Value():INNOrigCli .
+                        part-1.producer-kpp = ext-FormF1:GetExtFormF1Value():KPPOrigCli .
+                    end.
+                    else
                     if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
                         if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
                         or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "051" /* Армения */
@@ -1345,12 +1365,23 @@ for each obj-list no-lock:  /* По всем объектам */
             if v-kpp = "" then  v-kpp = v-fmtcli-kpp.
           
           /* Получим производителя/импортера */
+            ext-FormF1:Release_() .
+            if num-entries(temp-parts.alc-ref-ab-path) = 4 and entry(1, temp-parts.alc-ref-ab-path) <> "" then do :
+                ext-FormF1:OpenQueryExtFormF1(entry(1, temp-parts.alc-ref-ab-path)) . 
+            end.
+          
             ext-cl:Release_() .
             if num-entries(temp-parts.alc-ref-ab-path) = 4 and entry(3, temp-parts.alc-ref-ab-path) <> "" then do :
                 ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, temp-parts.alc-ref-ab-path)) . 
                 tt-parts-info.alc-code =  entry(3, temp-parts.alc-ref-ab-path) .                   
             end.
             
+            if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
+                imp-or-prod-type = ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli .
+                imp-or-prod-code = 0 .
+                tt-parts-info.importer = 'ЕГАИС. Оригинальный клиент из Справки А (Справки 1)' .
+            end.
+            else
             if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
                     imp-or-prod-type = temp-parts.alc-imp-type
                     imp-or-prod-code = temp-parts.alc-imp-code
@@ -1480,6 +1511,12 @@ for each obj-list no-lock:  /* По всем объектам */
               end. /* when {&prs} */
               
               otherwise do : /* egais */
+                    if ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
+                        part-1.producer-obj-name = ext-FormF1:GetExtFormF1Value():FullNameOrigCli .
+                        part-1.producer-inn = ext-FormF1:GetExtFormF1Value():INNOrigCli .
+                        part-1.producer-kpp = ext-FormF1:GetExtFormF1Value():KPPOrigCli .
+                    end.
+                    else
                     if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
                         if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
                         or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "051" /* Армения */
@@ -1600,12 +1637,23 @@ for each obj-list no-lock:  /* По всем объектам */
                     if v-kpp = "" then  v-kpp = v-fmtcli-kpp.
                     
                     /* Получим производителя/импортера */
+                    ext-FormF1:Release_() .
+                    if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(1, buf_parts.alc-ref-ab-path) <> "" then do :
+                        ext-FormF1:OpenQueryExtFormF1(entry(1, buf_parts.alc-ref-ab-path)) . 
+                    end.
+                    
                     ext-cl:Release_() .
                     if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
                         ext-cl:OpenQueryExtGds(alc-goods.gds-code, entry(3, buf_parts.alc-ref-ab-path)) . 
                         tt-parts-info.alc-code =  entry(3, buf_parts.alc-ref-ab-path) .                   
                     end.
                     
+                    if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
+                        imp-or-prod-type = ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli .
+                        imp-or-prod-code = 0 .
+                        tt-parts-info.importer = 'ЕГАИС. Оригинальный клиент из Справки А (Справки 1)' .
+                    end.
+                    else
                     if buf_parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
                             imp-or-prod-type = buf_parts.alc-imp-type
                             imp-or-prod-code = buf_parts.alc-imp-code
@@ -1737,6 +1785,12 @@ for each obj-list no-lock:  /* По всем объектам */
                         end. /* when {&prs} */
                         
                         otherwise do : /* egais */
+                            if ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
+                                part-1.producer-obj-name = ext-FormF1:GetExtFormF1Value():FullNameOrigCli .
+                                part-1.producer-inn = ext-FormF1:GetExtFormF1Value():INNOrigCli .
+                                part-1.producer-kpp = ext-FormF1:GetExtFormF1Value():KPPOrigCli .
+                            end.
+                            else
                             if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
                                 if trim(ext-cl:GetExtGdsValue(1):CountryProd) = "643" /* Россия */
                                 or trim(ext-cl:GetExtGdsValue(1):CountryProd) = "051" /* Армения */
@@ -1788,6 +1842,20 @@ for each obj-list no-lock:  /* По всем объектам */
                            alc-goods.alpha1 <> "BY"
                          then do: /* Импортный товар */
 
+                            if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
+                                if ext-FormF1:GetExtFormF1Value():CliEgaisTypeOrigCli = 'FO'
+                                then
+                                assign
+                                    part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10
+                                    tt-parts-info.inc-9 = buf_parts.fact-qnty * alc-goods.vol / 10
+                                .
+                                else
+                                assign
+                                    part-1.inc-8 = part-1.inc-8 + buf_parts.fact-qnty * alc-goods.vol / 10
+                                    tt-parts-info.inc-8 = buf_parts.fact-qnty * alc-goods.vol / 10
+                                .
+                            end.
+                            else
                             if buf_parts.alc-imp-code <> 0 then assign /* Однозначно по импорту */
                                     part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10 
                                     tt-parts-info.inc-9 = buf_parts.fact-qnty * alc-goods.vol / 10 .

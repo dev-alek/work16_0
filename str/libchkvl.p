@@ -2754,6 +2754,24 @@ if avail buf_bar-code then do:
   /*теперь разберемся со скидками*/
   CorrValue = 0.
   if p-sub-d <> 0 then do:
+    def var v-excsum as dec no-undo.
+    FOR EACH chk-gds WHERE
+              chk-gds.doc-code = chk-doc.doc-code,
+        first t-gds where
+              t-gds.b-code = chk-gds.b-code and
+              t-gds.drc = recid(chk-doc):
+      find first ub.bar-code where ub.bar-code.b-code = buf_chk-gds.b-code no-error.
+      find first ub.dis-gds-rule where ub.dis-gds-rule.gds-code = ub.bar-code.gds-code and ub.dis-gds-rule.templ-rl-root = 55 no-error.
+      find first ub.clients where ub.clients.obj-type = {&prefix}obj-type and ub.clients.obj-code = {&prefix}obj-code no-error.          
+      if can-find (first ub.dis-rule no-lock where ub.dis-rule.rule-num = ub.dis-gds-rule.rule-num and
+                         ((ub.dis-rule.host-code = 0 and ub.dis-rule.obj-code = 0 and ub.dis-rule.obj-type = "")
+                      or (ub.dis-rule.host-code = ub.clients.host-code and ub.dis-rule.obj-code = 0 and ub.dis-rule.obj-type = "")
+                      or (ub.dis-rule.obj-code = {&prefix}obj-code and ub.dis-rule.obj-type = {&prefix}obj-type))
+                    ) 
+      then do:
+        v-excsum = chk-gds.src-sum + v-excsum.
+      end.
+    end.
     for each buf0_chk-discnt where
               buf0_chk-discnt.doc-code = buf_chk-doc.doc-code
           AND buf0_chk-discnt.record-type = 0 :
@@ -2791,26 +2809,6 @@ if avail buf_bar-code then do:
       .
       /*if lookup({&amount}, for-chk-type)  = 0 and shop.discaloc then do:*/
       /*ВСЕГДА РАЗМАЗЫВАЕМ!!!*/
-        def var v-excsum as dec no-undo.
-        FOR EACH chk-gds WHERE
-                  chk-gds.doc-code = chk-doc.doc-code AND
-                  chk-gds.line-num <= chk-discnt.line-num,
-            first t-gds where
-                  t-gds.b-code = chk-gds.b-code and
-                  t-gds.drc = recid(chk-doc):
-          find first ub.bar-code where ub.bar-code.b-code = buf_chk-gds.b-code no-error.
-          find first ub.dis-gds-rule where ub.dis-gds-rule.gds-code = ub.bar-code.gds-code and ub.dis-gds-rule.templ-rl-root = 55 no-error.
-          find first ub.clients where ub.clients.obj-type = {&prefix}obj-type and ub.clients.obj-code = {&prefix}obj-code no-error.          
-          if can-find (first ub.dis-rule no-lock where ub.dis-rule.rule-num = ub.dis-gds-rule.rule-num and
-                             ((ub.dis-rule.host-code = 0 and ub.dis-rule.obj-code = 0 and ub.dis-rule.obj-type = "")
-                          or (ub.dis-rule.host-code = ub.clients.host-code and ub.dis-rule.obj-code = 0 and ub.dis-rule.obj-type = "")
-                          or (ub.dis-rule.obj-code = {&prefix}obj-code and ub.dis-rule.obj-type = {&prefix}obj-type))
-                        ) 
-          then do:
-            v-excsum = chk-gds.src-sum + v-excsum.
-          end.
-        end.
-
         _buf_chk-gds:
         FOR EACH buf_chk-gds WHERE
                   buf_chk-gds.doc-code = buf_chk-doc.doc-code AND
