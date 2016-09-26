@@ -67,6 +67,7 @@ FIELD type like ub.units.type
 FIELD is-modificator as logical
 FIELD is-null-price as logical
 FIELD doc-code like ub.trn-doc.doc-code
+FIELD marks as character
 index pi is PRIMARY doc-code b-code artic prod-type prod-code node-code pump nozzle-code pl-code
 index ifbr b-code fbr-obj-type fbr-obj-code
 index crfi crf.

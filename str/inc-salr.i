@@ -799,6 +799,15 @@ on error undo, return error return-value
               t-gds.road-sum = t-gds.road-sum + buf_chk-gds.road-tax * buf_chk-gds.doc-qnty
               t-gds.service-sum = t-gds.service-sum + buf_chk-gds.price-service * buf_chk-gds.doc-qnty
               .
+              find first chk-gds-attr no-lock where chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                                                and chk-gds-attr.line-num = buf_chk-gds.line-num
+                                                and chk-gds-attr.attr-code = "mark-code"
+                                                no-error .
+              if available chk-gds-attr
+              and not t-gds.marks matches ("*" + chk-gds-attr.attr-value + "*")
+              then do :
+                t-gds.marks = t-gds.marks + (if t-gds.marks = '' then '' else ',') + chk-gds-attr.attr-value .  
+              end.                                  
             end. /*несуммовой чек*/
           end. /*do dtrg to docs-to-reserv */
           if t-gds.pump > 0
@@ -937,6 +946,23 @@ on error undo, return error return-value
           assign
           buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + abs( t-gds.doc-qnty )
           .
+          if t-gds.marks <> ''
+          then do :
+            find first doc-line-attr exclusive-lock where doc-line-attr.doc-code = buf_doc-line.doc-code
+                                                      and doc-line-attr.gds-code = t-gds.gds-code
+                                                      and doc-line-attr.attr-code = 'mark-code'
+                                                      no-error.
+            if not available doc-line-attr
+            then do :
+              create doc-line-attr .
+              assign
+                doc-line-attr.doc-code = buf_doc-line.doc-code
+                doc-line-attr.gds-code = t-gds.gds-code
+                doc-line-attr.attr-code = 'mark-code'
+              .  
+            end.
+            doc-line-attr.attr-value = t-gds.marks .
+          end.  
           /*ищем нужное складское место*/
           if t-gds.pump > 0
           then cashplace-chk = yes.
