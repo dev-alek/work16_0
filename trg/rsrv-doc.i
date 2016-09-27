@@ -67,8 +67,8 @@ procedure rsrv-doc :
   define buffer buf_parts    for ub.parts .
   define buffer buf_trn-doc  for ub.trn-doc .
   define buffer buf_doc-line for ub.doc-line .
-  define buffer buf_doc-line-attr for ub.doc-line-attr .
-  define buffer buf_goods    for ub.goods .
+  define buffer buf1_doc-line-attr for ub.doc-line-attr .
+  define buffer buf1_goods    for ub.goods .
   
   
   define variable v-mark as character no-undo .
@@ -107,16 +107,16 @@ procedure rsrv-doc :
     end.
     
     empty temp-table tt-alc-codes .
-    find first buf_goods no-lock where buf_goods.artic      = buf_doc-line.artic
-                                   and buf_goods.prod-type  = buf_doc-line.prod-type
-                                   and buf_goods.prod-code  = buf_doc-line.prod-code .
-    find first buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = buf_doc-line.doc-code
-                                                  and buf_doc-line-attr.gds-code = buf_goods.gds-code
-                                                  and buf_doc-line-attr.attr-code = 'mark-code'
+    find first buf1_goods no-lock where buf1_goods.artic      = buf_doc-line.artic
+                                   and buf1_goods.prod-type  = buf_doc-line.prod-type
+                                   and buf1_goods.prod-code  = buf_doc-line.prod-code .
+    find first buf1_doc-line-attr exclusive-lock where buf1_doc-line-attr.doc-code = buf_doc-line.doc-code
+                                                  and buf1_doc-line-attr.gds-code = buf1_goods.gds-code
+                                                  and buf1_doc-line-attr.attr-code = 'mark-code'
                                                   no-error.
-    if available buf_doc-line-attr and buf_doc-line-attr.attr-value <> ''
-    then do mark-ii = 1 to num-entries(buf_doc-line-attr.attr-value) :
-        v-mark = entry(mark-ii, buf_doc-line-attr.attr-value) .
+    if available buf1_doc-line-attr and buf1_doc-line-attr.attr-value <> ''
+    then do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :
+        v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
         run ProcAlcCode (input v-mark, output v-alc-code) no-error.
         if v-alc-code = ? or v-alc-code = ''
         then do :
@@ -135,6 +135,8 @@ procedure rsrv-doc :
         end.
         tt-alc-codes.qnty = tt-alc-codes.qnty + 1 .
     end.
+    release buf1_goods no-error .
+    release buf1_doc-line-attr no-error .
 
     /* определяем знак изменяемого количества */
     assign
@@ -428,6 +430,9 @@ procedure rsrv-doc :
         if available tt-alc-codes
         then do :
           v-alc-rsrv = true .
+        end.
+        else do :
+           v-alc-rsrv = false .  
         end.  
         assign
           v-fifo = true

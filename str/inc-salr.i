@@ -101,6 +101,8 @@ define variable v-rec-inv-line as recid no-undo .
 define variable nff-chk-amount as integer no-undo .
 define variable v-cash-pay-attr as character no-undo.
 
+define variable v-current-gds as integer no-undo.
+
 define buffer buf_trn-doc for ub.trn-doc.
 define buffer buf_fbr-gds-obj for ub.fbr-gds-obj.
 define buffer buf_c-chk-doc for ub.c-chk-doc.
@@ -807,7 +809,9 @@ on error undo, return error return-value
               and not t-gds.marks matches ("*" + chk-gds-attr.attr-value + "*")
               then do :
                 t-gds.marks = t-gds.marks + (if t-gds.marks = '' then '' else ',') + chk-gds-attr.attr-value .  
-              end.                                  
+                v-current-gds = t-gds.gds-code .
+              end.  
+              release chk-gds-attr no-error .                                
             end. /*несуммовой чек*/
           end. /*do dtrg to docs-to-reserv */
           if t-gds.pump > 0
@@ -946,7 +950,7 @@ on error undo, return error return-value
           assign
           buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + abs( t-gds.doc-qnty )
           .
-          if t-gds.marks <> ''
+          if t-gds.marks <> '' and v-current-gds = t-gds.gds-code
           then do :
             find first doc-line-attr exclusive-lock where doc-line-attr.doc-code = buf_doc-line.doc-code
                                                       and doc-line-attr.gds-code = t-gds.gds-code
