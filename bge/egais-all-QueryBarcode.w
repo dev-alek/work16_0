@@ -371,6 +371,8 @@ DO:
       run parseXML in this-procedure (input "RespQueryBarcode.xml") .
       find first tt-act-header no-error .
       if not available tt-act-header then do :
+          create x-document hDoc no-error.
+          create x-noderef  hRoot no-error.
           hDoc:load ("file", "RespQueryBarcode.xml", false).
           hDoc:get-document-element(hRoot) .
           run ParseResponse(hRoot, 1).
