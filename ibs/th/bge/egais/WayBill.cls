@@ -70,6 +70,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 </ns:Documents>'
 
   define stream outstr.
+  define stream str-formF1.
   
   define private buffer buf_clob-bind          for ub.clob-bind.
   define private buffer buf_clob-bind-wb-hndls for ub.clob-bind.
@@ -970,9 +971,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               buf_ext-classif.CharKey_Two = ReplyId 
             no-error.
           end.
-          else do:
-            buf_doc-attr.attr-value = buf_doc-attr.attr-value + "," + ReplyId.
-          end.
         end.
       end.
       else do: 
@@ -983,6 +981,109 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         return false.
       end.
     end.      
+  end.
+  
+  method public logical SendWBActRejUTM (inWbRegId as char):
+    
+    def var VerXSDShip   as character no-undo.
+    def var respValue as handle no-undo.
+    
+    os-delete "RespTTNAct.xml".
+    os-delete value (search ("RespTTNAct.xml")).
+    assign
+      inFileName = "RespTTNAct.xml"
+      .
+      
+    find first tt-wb-header.
+      
+    find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = {&table_clients}
+      and buf_ext-classif-attr.classif-name = {&extclass_clients_esys}
+      and buf_ext-classif-attr.db-num = 0
+      and buf_ext-classif-attr.key#_one = v-ext-sys
+      and buf_ext-classif-attr.CharKey_Three = tt-wb-header.regID-Ship
+      and buf_ext-classif-attr.attr-code = "egais-cli-info" no-error.
+    if available (buf_ext-classif-attr)
+    then 
+      assign 
+        VerXSDShip = entry (1, buf_ext-classif-attr.attr-code, chr(4))
+      no-error.
+    else VerXSDShip = 'WayBill'.
+  
+    output stream outstr to value ("TTNAct.xml") convert target "UTF-8". 
+
+    if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
+    then
+      outData = substitute ({&xml-act-v2-1}, v-FS-RAR, 'Rejected', time, iso-date (date (now)), inWbRegId, "Отказ") + {&xml-act-v2-2}.
+    else
+      outData = substitute ({&xml-act-1}, v-FS-RAR, 'Rejected', time, iso-date (date (now)), inWbRegId, "Отказ") + {&xml-act-2}.
+
+
+    if outData = ? or outData = ""
+    then do:
+      output stream outstr close.
+      return false.
+    end.
+    
+    put stream outstr unformatted outData.
+    put stream outstr skip.
+    output stream outstr close.
+  
+    cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).
+    os-command value (cmd).
+  
+    file-info:file-name = search (inFileName).
+    if search (inFileName) <> ? and file-info:file-size > 0 
+      then 
+    do:
+      respValue = ParseRequest (inFileName).
+      if respValue = ? 
+        then 
+      do:
+        assign
+          StatusErr = true
+          Msg       = "Не удалось разобрать данные от УТМ"
+          .
+        undo, return false. 
+      end.
+      if not StatusErr 
+        then 
+        ReplyId = respValue:node-value.
+      else 
+      do:
+        assign
+          StatusErr = true
+          Msg       = respValue:node-value
+          .
+        undo, return false. 
+      end.
+    end.
+    else 
+    do:
+      assign
+        StatusErr = true
+        Msg       = "Не удалось отправить отказ на накладную в УТМ"
+        .
+      undo, return false.
+    end.
+
+    find first buf_ext-classif no-lock where 
+          buf_ext-classif.classif-name = {&extclass_egais-transId}
+      and buf_ext-classif.db-num = 0
+      and buf_ext-classif.key#_one = v-ext-sys
+      and buf_ext-classif.CharKey_One = tt-wb-header.Identity
+      and buf_ext-classif.CharKey_Two = ReplyId no-error.
+    if not available (buf_ext-classif)
+    then do:
+      create buf_ext-classif.
+      assign
+        buf_ext-classif.classif-name = {&extclass_egais-transId}
+        buf_ext-classif.db-num = 0
+        buf_ext-classif.key#_one = v-ext-sys
+        buf_ext-classif.CharKey_One = tt-wb-header.Identity
+        buf_ext-classif.CharKey_Two = ReplyId 
+      no-error.
+    end.   
+    
   end.
 
   method override protected logical GetIsSent ():
@@ -1037,7 +1138,13 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
   
   method public void GetDocUTM ():
     
+    os-delete value (search ("logFormF1.txt")).
+    output stream str-formF1 to "logFormF1.txt".
+    
     GetDocUTMPrivat ().
+    
+    output stream str-formF1 close.
+    
     if valid-object (prgObj)
       then do:
         prgObj:hide-bar().
@@ -1055,17 +1162,20 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     define variable ii            as integer   no-undo.
     define variable ListOfQuery   as longchar  no-undo.
     
-    define variable v-part-num    as integer   no-undo .
-    define variable v-clob-db-num as integer   no-undo .
-    define variable v-int64-id    as int64     no-undo .
-    define variable v-info        as character no-undo .
+    define variable v-part-num    as integer   no-undo.
+    define variable v-clob-db-num as integer   no-undo.
+    define variable v-int64-id    as int64     no-undo.
+    define variable v-info        as character no-undo.
     define variable ticketUKR     as character no-undo.
     define variable urlStr        as character no-undo.
+    define variable extFormF1Obj  as class     ExtFormF1 no-undo .
+    define variable extFormF1ValueObj as class ExtFormF1Value no-undo .
+    define variable egaisFormF1 as class FormF1 no-undo.
     create x-document hDoc.
     create x-noderef  hRoot.
     create x-noderef  hRow.
     create x-noderef  hText.
-    
+
     empty temp-table tt-analiz.
     
     assign
@@ -1204,7 +1314,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                   v-info = string (tt-wb-header.wb-date) + {&delim-par} + tt-wb-header.num + {&delim-par} + tt-wb-info-client.regID + {&delim-par} + tt-wb-header.Identity + {&delim-par} + tt-wb-header.wbregid + {&delim-par} + "нет" + {&delim-par} + "нет" + {&delim-par} + tt-wb-header.wb-type + {&delim-par} + tt-wb-header.obj-type + if tt-wb-header.obj-code = 0 or tt-wb-header.obj-code = ? then "" else string (tt-wb-header.obj-code).
                   if tt-wb-header.uniq-key-rec = ?
                   then do:
-                    message "Ошибка приема файла накланой: " v-info skip urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
+                    message "Ошибка приема файла накладной: " v-info skip urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
                     StatusErr = false.
                     Msg = "".
                     next url_.
@@ -1231,6 +1341,31 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     Msg = error-status:get-message(1) + {&new-line} + return-value.
                     StatusErr = false.
                     next url_.
+                  end.
+                  extFormF1Obj = new ExtFormF1 (true).
+                  for each tt-wb-gds-EG no-lock where tt-wb-gds-EG.importer-list <> "" and tt-wb-gds-EG.importer-list <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5):
+                    
+                    ExtFormF1Obj:OpenQueryExtFormF1 (tt-wb-gds-EG.refA, tt-wb-gds-EG.alc-code).
+                    if extFormF1Obj:NumBundles > 0
+                    then do:
+                      extFormF1ValueObj = extFormF1Obj:GetExtFormF1Value().
+                      if extFormF1ValueObj:INNOrigCli <> ""
+                        then next.
+                    end.
+                    else do:
+                      ExtFormF1Obj:CreateExtFormF1(tt-wb-gds-EG.refA, tt-wb-gds-EG.alc-code).
+                    end.
+                    find first ub.esys-all-attr where ub.esys-all-attr.key2 = integer({&EGAIS-FormF1}) and esys-all-attr.key3 = "no" and ub.esys-all-attr.attr-value matches substitute ("*&1*", tt-wb-gds-EG.refA) no-error.
+                    if available (ub.esys-all-attr)
+                      then next.
+                    egaisFormF1 = new FormF1 (ObjType, ObjCode, v-fs-rar, tt-wb-gds-EG.refA).
+                    egaisFormF1:DbNum = DbNum.
+                    egaisFormF1:User_Id = User_Id.
+                    egaisFormF1:SendRequestUTM() .
+                    if egaisFormF1:StatusErr then do:
+                        put stream str-formF1 unformatted egaisFormF1:Msg.
+                    end.
+                    delete object egaisFormF1.
                   end.
 
 
@@ -1518,12 +1653,12 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                       entry (10, ub.clob-bind.descr, {&delim-par})  = tt-ticket.status_.
                     end.
                   end.
-                  if not can-find (first buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb} and lookup (tt-ticket.TransId, buf_clob-bind.field-name_) > 0) 
+                  if not (can-find (first buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb} and lookup (tt-ticket.TransId, buf_clob-bind.field-name_) > 0) 
                       or can-find (first buf_clob-bind where buf_clob-bind.field-name_ = tt-ticket.TransId)
                       or can-find (first buf_ext-classif where buf_ext-classif.classif-name = {&extclass_egais-transId}
                           and buf_ext-classif.db-num = 0
                           and buf_ext-classif.key#_one = v-ext-sys
-                          and buf_ext-classif.CharKey_Two = tt-ticket.TransId)
+                          and buf_ext-classif.CharKey_Two = tt-ticket.TransId))
                   then do:  
                     if (tt-ticket.regid = "" or tt-ticket.regid = ?) or (tt-ticket.doc <> 'WayBillAct' and tt-ticket.doc <> 'WAYBILL') then do:
                       next url_.

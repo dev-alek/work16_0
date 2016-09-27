@@ -64,6 +64,7 @@ define variable v-width             as decimal   no-undo.
 define variable v-height            as decimal   no-undo.
 
 define stream strlog.
+define stream str-FormF1.
 
 define variable v-fs-rar as character no-undo view-as text format "X(15)" label "Код ФС РАР (FSRAR ID)" .
 
@@ -75,6 +76,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 { gbl/thbjattr.i }
 {ibs/th/bge/egais/wb-egais.i}
 { str/trdcalib.i }
+{ gbl/waitfram.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -410,6 +412,11 @@ end.
 ON choose OF Btn_Del IN FRAME Dialog-Frame /* Отказ */
 do:
   
+  def var v-doc-code as character no-undo.
+  def var ticketRasObj as class WayBill no-undo.
+  def var bh-TicketHndl as handle no-undo.
+  def var qh-TicketHndl as handle no-undo.
+  
   { gbl/chk-actg.i
     v-cntxt-db-num
     v-cntxt-userid
@@ -428,33 +435,67 @@ do:
   
   if not glog then  return .
   
-  if not bh-wb-egais:available 
-    then return no-apply.
-  bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-  if egais:StatusErr
+  case cb-1: 
+  when 1
   then do:
-    message egais:Msg view-as alert-box error.
-    return no-apply.
-  end.
-  if can-find (first ub.trn-doc where ub.trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
-  then do:
-    message substitute ( "Накладная с № &1 уже сформирована, все равно отправить отказ", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
-    view-as alert-box question buttons yes-no update isChoise as logical.
-    if not isChoise 
+    if not bh-wb-egais:available 
       then return no-apply.
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    if egais:StatusErr
+    then do:
+      message egais:Msg view-as alert-box error.
+      return no-apply.
+    end.
+    if can-find (first ub.trn-doc where ub.trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
+    then do:
+      message substitute ( "Накладная с № &1 уже сформирована, все равно отправить отказ", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
+      view-as alert-box question buttons yes-no update isChoise as logical.
+      if not isChoise 
+        then return no-apply.
+    end.
+    else do:
+      message "Отправить отказ?" view-as alert-box question buttons yes-no update isChoise.
+      if not isChoise 
+        then return no-apply.
+    end.
+    egais:RejectWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    if egais:StatusErr
+    then do:
+      message egais:Msg view-as alert-box error.
+      return no-apply.
+    end.
+    else run f-query.
   end.
-  else do:
-    message "Отправить отказ?" view-as alert-box question buttons yes-no update isChoise.
-    if not isChoise 
-      then return no-apply.
-  end.
-  egais:RejectWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-  if egais:StatusErr
+  when 4
   then do:
-    message egais:Msg view-as alert-box error.
-    return no-apply.
+    ticketRasObj = new WayBill (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+    bh-wb-gds-EG = ?.
+    bh-wb-gds-EG-header = ?.
+    v-doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value.
+    
+    bh-TicketHndl = ticketRasObj:GetHndlTable({&ticket-ras}, bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value).
+    
+    create query qh-TicketHndl.
+    qh-TicketHndl:set-buffers (bh-TicketHndl).
+    
+    qh-TicketHndl:query-close ().
+    qh-TicketHndl:query-prepare ("for each tt-ticket where tt-ticket.regid <> '' and tt-ticket.doc = 'WayBill' by tt-ticket.regid descending").
+    qh-TicketHndl:query-open ().
+
+    if not qh-TicketHndl:is-open or not qh-TicketHndl:get-first ()
+    then do:
+      message "Не найдена накладная ЕГАИС, на которую можно послать отказ.".
+      delete object ticketRasObj.
+      return.
+    end.
+    bh-wb-gds-EG-header = egais:GetHndlTable({&wb-ras-header}, bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value).
+    v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
+    egaisWBAdv:SendWBActRejUTM(bh-TicketHndl:buffer-field ("regid"):buffer-value).
+    message "Отправлен отказ на накладную ЕГАИС - " + bh-TicketHndl:buffer-field ("regid"):buffer-value view-as alert-box information title "Информация".
+    delete object ticketRasObj.
   end.
-  else run f-query.
+  end case.
+  
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -545,6 +586,93 @@ do:
         then run bge/egais-analiz.w (input parparentproc, input egaisWBAdv).
     end.
   end.
+  
+  def var egaisJournal        as class  Journal        no-undo.
+  def var ExtFormF1ValueObj      as class  ExtFormF1Value no-undo.
+  def var ExtFormF1ValueObjDB    as class  ExtFormF1Value no-undo.
+  define variable ExtFormF1Obj           as class     ExtFormF1 no-undo .
+  def var egaisFormF1        as class  FormF1         no-undo.
+  def var bh-journal-egais    as handle no-undo.
+  def var qh-journal-egais    as handle no-undo.
+  def var bh-gds-egais-gotten as handle no-undo.
+  def var msg                 as character no-undo.
+  def var ii                  as integer   no-undo.
+  def var jj                  as integer   no-undo.
+  def var isQHEmpty           as logical no-undo init true.
+
+  os-delete value (search ("logFormF1.txt")).
+  
+  output stream str-FormF1 to "logFormF1.txt".
+  
+  egaisJournal = new Journal ().
+  bh-journal-egais = egaisJournal:GetHndlTable().
+
+  create query qh-journal-egais.
+  
+  qh-journal-egais:set-buffers (bh-journal-egais) .
+
+  qh-journal-egais:query-prepare ( substitute ("for each tt_journal-egais where jou-subject = '&1' and jou-status = 'Запрос отправлен' ", {&EGAIS-FormF1-full})).
+  qh-journal-egais:query-open.
+  
+  run waitfram-show in this-procedure ("Ждите... Идет загрузка справок 1.") .
+  
+  journal_:
+  do while qh-journal-egais:get-next ():
+    
+    isQHEmpty = false.
+    
+    egaisFormF1 = new FormF1 (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, entry (2, bh-journal-egais:buffer-field ("jou-param"):buffer-value, '|')).
+    egaisFormF1:DbNum = v-db-num.
+    egaisFormF1:User_Id = v-user-id.
+
+    glog = egaisFormF1:StatusErr .
+    if glog then do :
+        msg = msg + {&new-line} + egaisFormF1:Msg.
+    end.
+    else do:
+      bh-gds-egais-gotten = egaisFormF1:GetHndlTable() .
+      if bh-gds-egais-gotten = ? or not bh-gds-egais-gotten:find-first () 
+      then do:
+        put stream str-FormF1 unformatted {&new-line} + egaisFormF1:Msg.
+        delete object egaisFormF1.
+        next journal_.
+      end.
+      ExtFormF1ValueObj = bh-gds-egais-gotten:buffer-field("extFormF1ValueObj"):buffer-value.
+      ExtFormF1Obj:OpenQueryExtFormF1 (bh-gds-egais-gotten:buffer-field("formF1code"):buffer-value).
+      do ii = 1 to ExtFormF1Obj:NumBundles:
+        ExtFormF1ValueObjDB = ExtFormF1Obj:GetExtFormF1Value(ii).
+        assign
+          ExtFormF1ValueObjDB:CliRegIdOrigCli = ExtFormF1ValueObj:CliRegIdOrigCli
+          ExtFormF1ValueObjDB:CliEgaisTypeOrigCli = ExtFormF1ValueObj:CliEgaisTypeOrigCli
+          ExtFormF1ValueObjDB:INNOrigCli = ExtFormF1ValueObj:INNOrigCli
+          ExtFormF1ValueObjDB:KPPOrigCli = ExtFormF1ValueObj:KPPOrigCli
+          ExtFormF1ValueObjDB:FullNameOrigCli = ExtFormF1ValueObj:FullNameOrigCli
+          ExtFormF1ValueObjDB:CountryOrigCli = ExtFormF1ValueObj:CountryOrigCli
+          ExtFormF1ValueObjDB:RegionOrigCli = ExtFormF1ValueObj:RegionOrigCli
+          ExtFormF1ValueObjDB:DescrOrigCli = ExtFormF1ValueObj:DescrOrigCli
+        .
+        ExtFormF1Obj:SaveEGAISInfo(ExtFormF1ValueObjDB).
+        put stream str-FormF1 unformatted {&new-line} substitute ('Запись &1/&2 обновлена', ExtFormF1ValueObjDB:AlcCode, ExtFormF1ValueObj:FormF1Code ).
+        jj = jj + 1.
+        
+      end.
+      
+    end.
+
+
+    delete object egaisFormF1.
+  end.
+  
+  run waitfram-hide in this-procedure.
+  
+  output stream str-FormF1 close.
+  
+  file-info:file-name = search ("logFormF1.txt").
+
+  delete object qh-journal-egais.
+  delete object egaisJournal.
+  run refresh-view.
+  
   run reopen-browse.
 end.
 
@@ -768,24 +896,43 @@ do:
   if (cb-1 = 2 or cb-1 = 1) and actnEGAISAdm 
     then Btn_accept:hidden = false.
     else Btn_accept:hidden = true.
-  if cb-1 = 1
+  case cb-1: 
+  when 1
   then do:
+    enable Btn_Save with frame {&FRAME-NAME}.
     Btn_Save:label = "Сохранить".
     Btn_Del:hidden = false.
     Btn_conn:hidden = false.
     btn_ticket:hidden = false.
     Btn_delclob:hidden = false.
   end.
-  else do:
+  when 3
+  then do:
+    disable Btn_Save with frame {&FRAME-NAME}.
+    Btn_Save:label = "Отправить".
+    Btn_Del:hidden = true.
+    Btn_conn:hidden = true.
+    btn_ticket:hidden = true.
+    Btn_delclob:hidden = true.    
+  end.
+  when 4
+  then do:
+    enable Btn_Save with frame {&FRAME-NAME}.
+    Btn_Save:label = "Отправить".
+    Btn_Del:hidden = true.
+    Btn_conn:hidden = true.
+    btn_ticket:hidden = true.
+    Btn_delclob:hidden = true.    
+  end.
+  otherwise do:
+    enable Btn_Save with frame {&FRAME-NAME}.
     Btn_Save:label = "Отправить".
     Btn_Del:hidden = true.
     Btn_conn:hidden = true.
     btn_ticket:hidden = true.
     Btn_delclob:hidden = true.
   end.
-  if cb-1 = 3
-  then disable Btn_Save with frame {&FRAME-NAME}.
-  else enable Btn_Save with frame {&FRAME-NAME}.
+  end case.
   run reopen-browse.
 end.
 
