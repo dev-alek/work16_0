@@ -48,7 +48,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
   
   end.
   
-  method public void ParseRec (hDoc as handle, input-output table tt-wb-header, input-output table tt-wb-act-header, input-output table tt-ticket, input-output table tt-wb-info-client):
+  method public void ParseRec (hDoc as handle, input-output table tt-wb-header, input-output table tt-wb-act-header, input-output table tt-ticket, input-output table tt-wb-info-client, input-output table tt-wb-gds-EG):
     
     define variable hRoot as handle no-undo.
     

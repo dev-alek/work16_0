@@ -166,9 +166,16 @@ class ibs.th.bge.egais.ExtGds:
 
         create tt-egaisgds-hndls.
 
-        assign
-          ExtGdsValueObj = if available (buf_ext-classif-attr) then GetInfoObj (buf_ext-classif-attr.attr-value) else GetInfoObj ("")
-        no-error.
+
+        if available (buf_ext-classif-attr)
+        then
+          assign
+            ExtGdsValueObj = GetInfoObj (buf_ext-classif-attr.attr-value)
+          no-error.
+        else
+          assign
+            ExtGdsValueObj = GetInfoObj ("")
+          no-error.
         
         if error-status:error or not available (buf_ext-classif-attr)
           then 
@@ -693,10 +700,16 @@ class ibs.th.bge.egais.ExtGds:
       if not IsSilent 
         then message ReturnMsg view-as alert-box.
     end.
-    
-    assign
-      ExtGdsValueObj = if available (buf_ext-classif-attr) then GetInfoObj (buf_ext-classif-attr.attr-value) else GetInfoObj ("") 
-    no-error.
+
+    if available (buf_ext-classif-attr)
+    then
+      assign
+        ExtGdsValueObj = GetInfoObj (buf_ext-classif-attr.attr-value)
+      no-error.
+    else
+      assign
+        ExtGdsValueObj = GetInfoObj ("")
+      no-error.
 
     if ReturnMsg <> ""
       then 

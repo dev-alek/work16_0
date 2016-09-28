@@ -264,7 +264,7 @@ DO:
   
   qh-journal-egais:set-buffers (bh-journal-egais) .
 
-  qh-journal-egais:query-prepare ( substitute ("for each tt_journal-egais where jou-subject = '&1' and jou-status = 'Запрос отправлен' ", {&EGAIS-FormF1-full})).
+  qh-journal-egais:query-prepare ( substitute ("for each tt_journal-egais where jou-subject = '&1' and jou-status = 'Запрос отправлен' ", 'Справочник справок 1')).
   qh-journal-egais:query-open.
   
   run waitfram-show in this-procedure ("Ждите... Идет обработка ответов.") .
@@ -290,7 +290,7 @@ DO:
         delete object egaisFormF1.
         next journal_.
       end.
-      ExtFormF1ValueObj = bh-gds-egais-gotten:buffer-field("extFormF1ValueObj"):buffer-value.
+      ExtFormF1ValueObj = cast (bh-gds-egais-gotten:buffer-field("extFormF1ValueObj"):buffer-value, ibs.th.bge.egais.ExtFormF1Value).
       ExtFormF1Obj:OpenQueryExtFormF1 (bh-gds-egais-gotten:buffer-field("formF1code"):buffer-value).
       do ii = 1 to ExtFormF1Obj:NumBundles:
         ExtFormF1ValueObjDB = ExtFormF1Obj:GetExtFormF1Value(ii).
