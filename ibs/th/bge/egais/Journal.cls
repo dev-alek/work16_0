@@ -54,6 +54,7 @@ class ibs.th.bge.egais.Journal inherits ibs.th.bge.egais.EGAISImpl:
                                and buf_esys-all-attr.attr-code  = "egais" no-lock:
     
     create tt_journal-egais.
+        v-subject = "Some".
         if buf_esys-all-attr.key2 = integer({&EGAIS-DictOrg}) then do:
           v-subject = {&EGAIS-DictOrg-full}.
         end.  
@@ -63,8 +64,11 @@ class ibs.th.bge.egais.Journal inherits ibs.th.bge.egais.EGAISImpl:
         if buf_esys-all-attr.key2 = integer({&EGAIS-InfoVer}) then do:
           v-subject = {&EGAIS-InfoVer-full}.
         end.
-        if buf_esys-all-attr.key2 = integer({&EGAIS-FormF1}) then do:
+        /*if buf_esys-all-attr.key2 = integer({&EGAIS-FormF1}) then do:
           v-subject = {&EGAIS-FormF1-full}.
+        end.*/
+        if buf_esys-all-attr.key2 = 7 then do:
+          v-subject = 'Справочник справок 1'.
         end.
         
         if buf_esys-all-attr.key3 = "no" then v-status = "Запрос отправлен".

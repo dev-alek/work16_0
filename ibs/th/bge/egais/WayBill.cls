@@ -1138,8 +1138,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
   
   method public void GetDocUTM ():
     
-    os-delete value (search ("logFormF1.txt")).
-    output stream str-formF1 to "logFormF1.txt".
+    output stream str-formF1 to "loWBgFormF1.txt" append.
     
     GetDocUTMPrivat ().
     
@@ -1336,6 +1335,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     ,input search (inFileName)
                     ,input '' /*p-src-encoding*/
                     ) no-error .
+
                   if error-status:error then 
                   do:
                     Msg = error-status:get-message(1) + {&new-line} + return-value.
@@ -1343,8 +1343,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     next url_.
                   end.
                   extFormF1Obj = new ExtFormF1 (true).
+                  
                   for each tt-wb-gds-EG no-lock where tt-wb-gds-EG.importer-list <> "" and tt-wb-gds-EG.importer-list <> chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5):
-                    
+                    put stream str-formF1 "----" now "-----" {&new-line}.
+                    export stream str-formF1 tt-wb-gds-EG.
                     ExtFormF1Obj:OpenQueryExtFormF1 (tt-wb-gds-EG.refA, tt-wb-gds-EG.alc-code).
                     if extFormF1Obj:NumBundles > 0
                     then do:
@@ -1355,7 +1357,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     else do:
                       ExtFormF1Obj:CreateExtFormF1(tt-wb-gds-EG.refA, tt-wb-gds-EG.alc-code).
                     end.
-                    find first ub.esys-all-attr where ub.esys-all-attr.key2 = integer({&EGAIS-FormF1}) and esys-all-attr.key3 = "no" and ub.esys-all-attr.attr-value matches substitute ("*&1*", tt-wb-gds-EG.refA) no-error.
+                    find first ub.esys-all-attr where ub.esys-all-attr.key2 = 7 and esys-all-attr.key3 = "no" and ub.esys-all-attr.attr-value matches substitute ("*&1*", tt-wb-gds-EG.refA) no-error.
                     if available (ub.esys-all-attr)
                       then next.
                     egaisFormF1 = new FormF1 (ObjType, ObjCode, v-fs-rar, tt-wb-gds-EG.refA).
@@ -1363,7 +1365,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     egaisFormF1:User_Id = User_Id.
                     egaisFormF1:SendRequestUTM() .
                     if egaisFormF1:StatusErr then do:
-                        put stream str-formF1 unformatted egaisFormF1:Msg.
+                        put stream str-formF1 unformatted egaisFormF1:Msg {&new-line}.
                     end.
                     delete object egaisFormF1.
                   end.
@@ -2177,7 +2179,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     os-command silent value (cmd).
 
     createhDoc(inFileName, output hDoc).
-    prsXMLDocWB:ParseRec (hDoc, input-output table tt-wb-header, input-output table tt-wb-act-header, input-output table tt-ticket, input-output table tt-wb-info-client).
+    prsXMLDocWB:ParseRec (hDoc, input-output table tt-wb-header, input-output table tt-wb-act-header, input-output table tt-ticket, input-output table tt-wb-info-client, input-output table tt-wb-gds-EG).
     find first tt-wb-header no-error.
     find first tt-wb-act-header no-error.
     find first tt-ticket no-error.

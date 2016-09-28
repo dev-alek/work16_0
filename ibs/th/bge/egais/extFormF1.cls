@@ -145,9 +145,15 @@ class ibs.th.bge.egais.ExtFormF1:
 
         create tt-egaisformf1-hndls.
         
-        assign
-          ExtFormF1ValueObj = if available (buf_ext-classif-attr) then GetInfoObj (buf_ext-classif-attr.attr-value) else GetInfoObj ("") 
-        no-error.
+        if available (buf_ext-classif-attr)
+        then
+          assign
+            ExtFormF1ValueObj = GetInfoObj (buf_ext-classif-attr.attr-value)
+          no-error.
+        else
+          assign
+            ExtFormF1ValueObj = GetInfoObj ("") 
+          no-error.
         
         if error-status:error or not available (buf_ext-classif-attr)
           then 
@@ -629,9 +635,15 @@ class ibs.th.bge.egais.ExtFormF1:
         then message ReturnMsg view-as alert-box.
     end.
     
-    assign
-      ExtFormF1ValueObj = if available (buf_ext-classif-attr) then GetInfoObj (buf_ext-classif-attr.attr-value) else GetInfoObj ("") 
-    no-error.
+    if available (buf_ext-classif-attr)
+    then
+      assign
+        ExtFormF1ValueObj = GetInfoObj (buf_ext-classif-attr.attr-value)
+      no-error.
+    else
+      assign
+        ExtFormF1ValueObj = GetInfoObj ("") 
+      no-error.
 
     if ReturnMsg <> ""
       then 

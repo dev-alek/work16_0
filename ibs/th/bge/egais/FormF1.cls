@@ -131,7 +131,7 @@ xmlns:qf="http://fsrar.ru/WEGAIS/QueryFormF1F2">~
         undo, return false.
       end.
       
-      if not WriteDbStatus (integer ({&EGAIS-FormF1}), parameters , ReplyId, false)
+      if not WriteDbStatus (7, parameters , ReplyId, false)
       then do: 
         assign
           StatusErr = true
@@ -189,7 +189,7 @@ xmlns:qf="http://fsrar.ru/WEGAIS/QueryFormF1F2">~
   method override protected logical GetIsSent ():
     def var repId as char no-undo.
     def var glog  as log  no-undo.
-    glog = CheckCurrentRequest (integer ({&EGAIS-FormF1}), parameters, repId).
+    glog = CheckCurrentRequest (7, parameters, repId).
     if glog
       then ReplyId = repId.
     return glog.
@@ -232,7 +232,7 @@ xmlns:qf="http://fsrar.ru/WEGAIS/QueryFormF1F2">~
       return ?.
     end.
     
-    if not WriteDbStatus ( integer ({&EGAIS-FormF1}), parameters , ReplyId, true )
+    if not WriteDbStatus ( 7, parameters , ReplyId, true )
     then do: 
       assign
         StatusErr = true

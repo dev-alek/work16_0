@@ -598,28 +598,25 @@ do:
   def var msg                 as character no-undo.
   def var ii                  as integer   no-undo.
   def var jj                  as integer   no-undo.
-  def var isQHEmpty           as logical no-undo init true.
 
-  os-delete value (search ("logFormF1.txt")).
   
-  output stream str-FormF1 to "logFormF1.txt".
+  output stream str-FormF1 to "logWBDnlFormF1.txt" append.
   
   egaisJournal = new Journal ().
+  ExtFormF1Obj = new ExtFormF1 (yes).
   bh-journal-egais = egaisJournal:GetHndlTable().
 
   create query qh-journal-egais.
   
   qh-journal-egais:set-buffers (bh-journal-egais) .
 
-  qh-journal-egais:query-prepare ( substitute ("for each tt_journal-egais where jou-subject = '&1' and jou-status = 'Запрос отправлен' ", {&EGAIS-FormF1-full})).
+  qh-journal-egais:query-prepare ( substitute ("for each tt_journal-egais where jou-subject = '&1' and jou-status = 'Запрос отправлен' ", 'Справочник справок 1')).
   qh-journal-egais:query-open.
   
   run waitfram-show in this-procedure ("Ждите... Идет загрузка справок 1.") .
   
   journal_:
   do while qh-journal-egais:get-next ():
-    
-    isQHEmpty = false.
     
     egaisFormF1 = new FormF1 (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, entry (2, bh-journal-egais:buffer-field ("jou-param"):buffer-value, '|')).
     egaisFormF1:DbNum = v-db-num.
@@ -637,7 +634,7 @@ do:
         delete object egaisFormF1.
         next journal_.
       end.
-      ExtFormF1ValueObj = bh-gds-egais-gotten:buffer-field("extFormF1ValueObj"):buffer-value.
+      ExtFormF1ValueObj = cast (bh-gds-egais-gotten:buffer-field("extFormF1ValueObj"):buffer-value, ibs.th.bge.egais.ExtFormF1Value).
       ExtFormF1Obj:OpenQueryExtFormF1 (bh-gds-egais-gotten:buffer-field("formF1code"):buffer-value).
       do ii = 1 to ExtFormF1Obj:NumBundles:
         ExtFormF1ValueObjDB = ExtFormF1Obj:GetExtFormF1Value(ii).
@@ -666,12 +663,13 @@ do:
   run waitfram-hide in this-procedure.
   
   output stream str-FormF1 close.
-  
-  file-info:file-name = search ("logFormF1.txt").
 
-  delete object qh-journal-egais.
-  delete object egaisJournal.
-  run refresh-view.
+  if valid-object (ExtFormF1Obj) 
+    then delete object ExtFormF1Obj.
+  if valid-handle (qh-journal-egais) 
+    then delete object qh-journal-egais.
+  if valid-object (egaisJournal) 
+    then delete object egaisJournal.
   
   run reopen-browse.
 end.
