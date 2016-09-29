@@ -67,7 +67,7 @@ class ibs.th.bge.egais.ExtFormF1:
     get.
     private set.
 
-  define property SettingsTTList as character no-undo init ";;;;23,yes;;;1,no" /*в порядке полей через ; ширина в симв. поля, видно/не видно поле по умолч. видно*/
+  define property SettingsTTList as character no-undo init ";;;;;23,yes;;;1,no" /*в порядке полей через ; ширина в симв. поля, видно/не видно поле по умолч. видно*/
     get.
     private set.
 
@@ -75,6 +75,7 @@ class ibs.th.bge.egais.ExtFormF1:
     field mark                as character format "X(1)" label "*"
     field formF1Code          as character label "Код справки 1" format "x(21)" 
     field alcCode             as character label "Алк. код товара" format "x(21)"
+    field BottlingDate        as character label "Дата розлива" format "x(10)"
     field CliEgaisTypeOrigCli as character label "Тип" format "x(2)"
     field CliRegIdOrigCli     as character label "Код клиента ЕГАИС" format "x(21)"
     field INNOrigCli          as character label "ИНН клиента ЕГАИС" format "x(10)" /*10 поле */
@@ -170,6 +171,7 @@ class ibs.th.bge.egais.ExtFormF1:
         assign 
           tt-egaisformf1-hndls.alcCode = ExtFormF1ValueObj:AlcCode
           tt-egaisformf1-hndls.formF1Code = ExtFormF1ValueObj:FormF1Code
+          tt-egaisformf1-hndls.BottlingDate = ExtFormF1ValueObj:BottlingDate
           tt-egaisformf1-hndls.CliEgaisTypeOrigCli = ExtFormF1ValueObj:CliEgaisTypeOrigCli
           tt-egaisformf1-hndls.CliRegIdOrigCli = ExtFormF1ValueObj:CliRegIdOrigCli
           tt-egaisformf1-hndls.INNOrigCli = ExtFormF1ValueObj:INNOrigCli
@@ -522,6 +524,7 @@ class ibs.th.bge.egais.ExtFormF1:
     
     ReturnMsg = "".
 
+    listManagObj:WriteElement (v-list-data, "BottlingDate", inExtFormF1ValueObj:BottlingDate).
     listManagObj:WriteElement (v-list-data, "CliRegIdOrigCli", inExtFormF1ValueObj:CliRegIdOrigCli).
     listManagObj:WriteElement (v-list-data, "CliEgaisTypeOrigCli", inExtFormF1ValueObj:CliEgaisTypeOrigCli).
     listManagObj:WriteElement (v-list-data, "INNOrigCli", inExtFormF1ValueObj:INNOrigCli).
@@ -553,6 +556,7 @@ class ibs.th.bge.egais.ExtFormF1:
     end.
     
     assign
+      inExtFormF1ValueObjTo:BottlingDate = inExtFormF1ValueObjForm:BottlingDate
       inExtFormF1ValueObjTo:CliRegIdOrigCli = inExtFormF1ValueObjForm:CliRegIdOrigCli
       inExtFormF1ValueObjTo:CliEgaisTypeOrigCli = inExtFormF1ValueObjForm:CliEgaisTypeOrigCli
       inExtFormF1ValueObjTo:INNOrigCli = inExtFormF1ValueObjForm:INNOrigCli
@@ -659,6 +663,7 @@ class ibs.th.bge.egais.ExtFormF1:
     assign
       hndlclsExtFormF1ValueObj:AlcCode = ExtFormF1ValueObj:AlcCode
       hndlclsExtFormF1ValueObj:FormF1Code = ExtFormF1ValueObj:FormF1Code
+      hndlclsExtFormF1ValueObj:BottlingDate = ExtFormF1ValueObj:BottlingDate
       hndlclsExtFormF1ValueObj:CliRegIdOrigCli = ExtFormF1ValueObj:CliRegIdOrigCli
       hndlclsExtFormF1ValueObj:CliEgaisTypeOrigCli = ExtFormF1ValueObj:CliEgaisTypeOrigCli
       hndlclsExtFormF1ValueObj:INNOrigCli = ExtFormF1ValueObj:INNOrigCli
@@ -691,7 +696,8 @@ class ibs.th.bge.egais.ExtFormF1:
     def var ExtFormF1ValueObj as class ExtFormF1Value no-undo.
     
     ExtFormF1ValueObj = new ExtFormF1Value().
-    
+
+    ExtFormF1ValueObj:BottlingDate = listManagObj:ReadElement (inInfoValue, "BottlingDate").    
     ExtFormF1ValueObj:CliRegIdOrigCli =  listManagObj:ReadElement (inInfoValue, "CliRegIdOrigCli").
     ExtFormF1ValueObj:CliEgaisTypeOrigCli = listManagObj:ReadElement (inInfoValue, "CliEgaisTypeOrigCli").
     ExtFormF1ValueObj:INNOrigCli = listManagObj:ReadElement (inInfoValue, "INNOrigCli").

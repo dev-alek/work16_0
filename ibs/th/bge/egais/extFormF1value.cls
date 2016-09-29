@@ -19,6 +19,10 @@ using Progress.Lang.*.
 
 
 class ibs.th.bge.egais.ExtFormF1Value: 
+
+  define property BottlingDate as character no-undo
+    get.
+    set.
   
   define property CliRegIdOrigCli as character no-undo
     get.
