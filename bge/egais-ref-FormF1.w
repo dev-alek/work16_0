@@ -295,6 +295,7 @@ DO:
       do ii = 1 to ExtFormF1Obj:NumBundles:
         ExtFormF1ValueObjDB = ExtFormF1Obj:GetExtFormF1Value(ii).
         assign
+          ExtFormF1ValueObjDB:BottlingDate = ExtFormF1ValueObj:BottlingDate
           ExtFormF1ValueObjDB:CliRegIdOrigCli = ExtFormF1ValueObj:CliRegIdOrigCli
           ExtFormF1ValueObjDB:CliEgaisTypeOrigCli = ExtFormF1ValueObj:CliEgaisTypeOrigCli
           ExtFormF1ValueObjDB:INNOrigCli = ExtFormF1ValueObj:INNOrigCli

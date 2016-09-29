@@ -131,6 +131,8 @@ class ibs.th.bge.egais.ParserXMLFormF1 inherits EGAISUTM:
         if hnoderef:name = "oref:description" then extFormF1ValueObj:DescrOrigCli = htext:node-value.
         
       end.
+      
+      if hnoderef:name = "rfa:BottlingDate" then extFormF1ValueObj:BottlingDate = htext:node-value.
                    
       GetChildren(hNoderef, (level + 1)).
     end.

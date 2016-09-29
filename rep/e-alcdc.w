@@ -1087,16 +1087,16 @@ for each obj-list no-lock:  /* По всем объектам */
                 tt-parts-info.alc-code =  entry(3, temp-parts.alc-ref-ab-path) .                  
             end.
             
+            if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
+                    imp-or-prod-type = temp-parts.alc-imp-type
+                    imp-or-prod-code = temp-parts.alc-imp-code
+                    tt-parts-info.importer = 'Импортер из алк.атр. партии' .
+            else
             if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
                 imp-or-prod-type = ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli .
                 imp-or-prod-code = 0 .
                 tt-parts-info.importer = 'ЕГАИС. Оригинальный клиент из Справки А (Справки 1)' .
             end.
-            else
-            if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
-                    imp-or-prod-type = temp-parts.alc-imp-type
-                    imp-or-prod-code = temp-parts.alc-imp-code
-                    tt-parts-info.importer = 'Импортер из алк.атр. партии' .
             else
             if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                 if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
@@ -1224,7 +1224,7 @@ for each obj-list no-lock:  /* По всем объектам */
               end. /* when {&prs} */
               
               otherwise do : /* egais */
-                    if ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
+                    if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
                         part-1.producer-obj-name = ext-FormF1:GetExtFormF1Value():FullNameOrigCli .
                         part-1.producer-inn = ext-FormF1:GetExtFormF1Value():INNOrigCli .
                         part-1.producer-kpp = ext-FormF1:GetExtFormF1Value():KPPOrigCli .
@@ -1376,16 +1376,16 @@ for each obj-list no-lock:  /* По всем объектам */
                 tt-parts-info.alc-code =  entry(3, temp-parts.alc-ref-ab-path) .                   
             end.
             
+            if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
+                    imp-or-prod-type = temp-parts.alc-imp-type
+                    imp-or-prod-code = temp-parts.alc-imp-code
+                    tt-parts-info.importer = 'Импортер из алк.атр. партии' .
+            else
             if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
                 imp-or-prod-type = ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli .
                 imp-or-prod-code = 0 .
                 tt-parts-info.importer = 'ЕГАИС. Оригинальный клиент из Справки А (Справки 1)' .
             end.
-            else
-            if temp-parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
-                    imp-or-prod-type = temp-parts.alc-imp-type
-                    imp-or-prod-code = temp-parts.alc-imp-code
-                    tt-parts-info.importer = 'Импортер из алк.атр. партии' .
             else
             if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                 if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
@@ -1511,7 +1511,7 @@ for each obj-list no-lock:  /* По всем объектам */
               end. /* when {&prs} */
               
               otherwise do : /* egais */
-                    if ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
+                    if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
                         part-1.producer-obj-name = ext-FormF1:GetExtFormF1Value():FullNameOrigCli .
                         part-1.producer-inn = ext-FormF1:GetExtFormF1Value():INNOrigCli .
                         part-1.producer-kpp = ext-FormF1:GetExtFormF1Value():KPPOrigCli .
@@ -1648,16 +1648,16 @@ for each obj-list no-lock:  /* По всем объектам */
                         tt-parts-info.alc-code =  entry(3, buf_parts.alc-ref-ab-path) .                   
                     end.
                     
+                    if buf_parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
+                            imp-or-prod-type = buf_parts.alc-imp-type
+                            imp-or-prod-code = buf_parts.alc-imp-code
+                            tt-parts-info.importer = 'Импортер из алк.атр. партии' .
+                    else
                     if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
                         imp-or-prod-type = ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli .
                         imp-or-prod-code = 0 .
                         tt-parts-info.importer = 'ЕГАИС. Оригинальный клиент из Справки А (Справки 1)' .
                     end.
-                    else
-                    if buf_parts.alc-imp-code <> 0 then assign      /* Если есть - берем импортера */
-                            imp-or-prod-type = buf_parts.alc-imp-type
-                            imp-or-prod-code = buf_parts.alc-imp-code
-                            tt-parts-info.importer = 'Импортер из алк.атр. партии' .
                     else
                     if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                         if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :
@@ -1785,7 +1785,7 @@ for each obj-list no-lock:  /* По всем объектам */
                         end. /* when {&prs} */
                         
                         otherwise do : /* egais */
-                            if ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
+                            if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
                                 part-1.producer-obj-name = ext-FormF1:GetExtFormF1Value():FullNameOrigCli .
                                 part-1.producer-inn = ext-FormF1:GetExtFormF1Value():INNOrigCli .
                                 part-1.producer-kpp = ext-FormF1:GetExtFormF1Value():KPPOrigCli .
@@ -1842,6 +1842,10 @@ for each obj-list no-lock:  /* По всем объектам */
                            alc-goods.alpha1 <> "BY"
                          then do: /* Импортный товар */
 
+                            if buf_parts.alc-imp-code <> 0 then assign /* Однозначно по импорту */
+                                    part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10 
+                                    tt-parts-info.inc-9 = buf_parts.fact-qnty * alc-goods.vol / 10 .
+                            else
                             if ext-FormF1:NumBundles > 0 and ext-FormF1:GetExtFormF1Value():CliRegIdOrigCli <> "" then do :
                                 if ext-FormF1:GetExtFormF1Value():CliEgaisTypeOrigCli = 'FO'
                                 then
@@ -1855,10 +1859,6 @@ for each obj-list no-lock:  /* По всем объектам */
                                     tt-parts-info.inc-8 = buf_parts.fact-qnty * alc-goods.vol / 10
                                 .
                             end.
-                            else
-                            if buf_parts.alc-imp-code <> 0 then assign /* Однозначно по импорту */
-                                    part-1.inc-9 = part-1.inc-9 + buf_parts.fact-qnty * alc-goods.vol / 10 
-                                    tt-parts-info.inc-9 = buf_parts.fact-qnty * alc-goods.vol / 10 .
                             else
                             if ext-cl:NumBundles > 0 and ext-cl:GetExtGdsValue(1):CliRegIdProd <> "" then do :
                                 if ext-cl:GetExtGdsValue(1):CliRegIdImpor <> "" then do :

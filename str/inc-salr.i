@@ -101,7 +101,8 @@ define variable v-rec-inv-line as recid no-undo .
 define variable nff-chk-amount as integer no-undo .
 define variable v-cash-pay-attr as character no-undo.
 
-define variable v-current-gds as integer no-undo.
+define variable par-alcohol as character no-undo .
+define variable par-type    as character no-undo .
 
 define buffer buf_trn-doc for ub.trn-doc.
 define buffer buf_fbr-gds-obj for ub.fbr-gds-obj.
@@ -732,6 +733,7 @@ on error undo, return error return-value
                 FIND FIRST t-gds where t-gds.crf = cr + 1 use-index crfi No-ERROR.
                 if not avail t-gds then do:
                   create t-gds.
+                  t-gds.marks = ''.
                 end.
                 else do:
                   assign
@@ -740,6 +742,7 @@ on error undo, return error return-value
                   t-gds.price-service = 0
                   t-gds.doc-code = '':U
                   .
+                  t-gds.marks = ''.
                 end.
                 assign
                 t-gds.doc-code = buf_sale-doc.doc-code
@@ -777,7 +780,26 @@ on error undo, return error return-value
                                         or t-gds.is-modificator
                                         then yes
                                         else t-gds.is-modificator
+                t-gds.marks = ''                        
                 .
+                run gds-attr-value(
+                    t-gds.gds-code,
+                    {&attr-mark},
+                    output par-alcohol,
+                    output par-type
+                ).
+                if par-alcohol = "yes" then do :
+                  find first chk-gds-attr no-lock where chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                                                    and chk-gds-attr.line-num = buf_chk-gds.line-num
+                                                    and chk-gds-attr.attr-code = "mark-code"
+                                                    no-error .
+                  if available chk-gds-attr
+                  and not t-gds.marks matches ("*" + chk-gds-attr.attr-value + "*")
+                  then do :
+                    t-gds.marks = t-gds.marks + (if t-gds.marks = '' then '' else ',') + chk-gds-attr.attr-value .  
+                  end.  
+                  release chk-gds-attr no-error .
+                end.
               end.
               else do:
               end.
@@ -801,17 +823,7 @@ on error undo, return error return-value
               t-gds.road-sum = t-gds.road-sum + buf_chk-gds.road-tax * buf_chk-gds.doc-qnty
               t-gds.service-sum = t-gds.service-sum + buf_chk-gds.price-service * buf_chk-gds.doc-qnty
               .
-              find first chk-gds-attr no-lock where chk-gds-attr.doc-code = buf_chk-gds.doc-code
-                                                and chk-gds-attr.line-num = buf_chk-gds.line-num
-                                                and chk-gds-attr.attr-code = "mark-code"
-                                                no-error .
-              if available chk-gds-attr
-              and not t-gds.marks matches ("*" + chk-gds-attr.attr-value + "*")
-              then do :
-                t-gds.marks = t-gds.marks + (if t-gds.marks = '' then '' else ',') + chk-gds-attr.attr-value .  
-                v-current-gds = t-gds.gds-code .
-              end.  
-              release chk-gds-attr no-error .                                
+                                              
             end. /*несуммовой чек*/
           end. /*do dtrg to docs-to-reserv */
           if t-gds.pump > 0
@@ -950,7 +962,13 @@ on error undo, return error return-value
           assign
           buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + abs( t-gds.doc-qnty )
           .
-          if t-gds.marks <> '' and v-current-gds = t-gds.gds-code
+          run gds-attr-value(
+                t-gds.gds-code,
+                {&attr-mark},
+                output par-alcohol,
+                output par-type
+            ).
+          if t-gds.marks <> '' and par-alcohol = "yes"
           then do :
             find first doc-line-attr exclusive-lock where doc-line-attr.doc-code = buf_doc-line.doc-code
                                                       and doc-line-attr.gds-code = t-gds.gds-code
