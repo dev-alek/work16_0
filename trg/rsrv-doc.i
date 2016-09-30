@@ -72,6 +72,7 @@ procedure rsrv-doc :
   
   
   define variable v-mark as character no-undo .
+  define variable v-mark-list as character no-undo .
   define variable v-alc-code as character no-undo .
   define variable mark-ii as integer  no-undo .
 
@@ -115,7 +116,14 @@ procedure rsrv-doc :
                                                   and buf1_doc-line-attr.attr-code = 'mark-code'
                                                   no-error.
     if available buf1_doc-line-attr and buf1_doc-line-attr.attr-value <> ''
-    then do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :
+    then do :
+      do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :
+        v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
+        if not can-do(v-mark-list, v-mark)
+        then v-mark-list = v-mark-list + (if v-mark-list = '' then '' else ',') + v-mark .
+      end.
+      buf1_doc-line-attr.attr-value = v-mark-list .
+      do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :
         v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
         run ProcAlcCode (input v-mark, output v-alc-code) no-error.
         if v-alc-code = ? or v-alc-code = ''
@@ -134,6 +142,7 @@ procedure rsrv-doc :
             assign tt-alc-codes.alc-code = v-alc-code .
         end.
         tt-alc-codes.qnty = tt-alc-codes.qnty + 1 .
+      end.
     end.
     release buf1_goods no-error .
     release buf1_doc-line-attr no-error .
