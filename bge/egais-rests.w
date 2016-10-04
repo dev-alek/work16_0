@@ -579,10 +579,39 @@ DO:
     assign t-negative_rests.
     if t-negative_rests
     then do :
+        empty temp-table tt-gds-list .
+        for each tt-gds-rests_shop no-lock where tt-gds-rests_shop.alc-code <> "" and tt-gds-rests_shop.egais-qnty < 0 :
+            find first tt-gds-list where tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                                     and tt-gds-list.gds-code = tt-gds-rests_shop.gds-code
+                                     no-error.
+            if not available tt-gds-list
+            then do :
+                create tt-gds-list.
+                assign
+                    tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                    tt-gds-list.gds-code = tt-gds-rests_shop.gds-code
+                .
+            end.
+        end.
         open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.egais-qnty < 0 .
     end.
     else do :
-        open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop .
+        empty temp-table tt-gds-list .
+        for each tt-gds-rests_shop no-lock where tt-gds-rests_shop.alc-code <> "" :
+            find first tt-gds-list where tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                                     and tt-gds-list.gds-code = tt-gds-rests_shop.gds-code
+                                     no-error.
+            if not available tt-gds-list
+            then do :
+                create tt-gds-list.
+                assign
+                    tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                    tt-gds-list.gds-code = tt-gds-rests_shop.gds-code
+                .
+            end.
+        end.
+        open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.alc-code <> ""
+                                                                              and tt-gds-rests_shop.egais-qnty <> 0 .
     end.
 END.
 /* _UIB-CODE-BLOCK-END */
