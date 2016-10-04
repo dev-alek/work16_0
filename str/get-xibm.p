@@ -1921,7 +1921,12 @@ on error undo, return error
     if error-status:error then do:
       {&error-in-file-format}
     end.
-    if CBCType_ <> 0 then do:
+    if CBCType_ <> 0 and 
+        (not exist
+        or (v-to-delete[1] = yes
+            and
+            v-to-delete[2] = no))
+    then do:
       find first ub.chk-gds-attr where ub.chk-gds-attr.doc-code = ub.chk-doc.doc-code and 
         ub.chk-gds-attr.line-num = CBCString_ and
         ub.chk-gds-attr.attr-code = "mark-code" no-error.
@@ -1938,7 +1943,8 @@ on error undo, return error
         ub.chk-gds-attr.attr-value =  CBCBarcode_ 
       .
       end.
-    end.  
+    end.
+    CBCType_ = 0.
 
 end.
 
@@ -2764,10 +2770,15 @@ define variable v-time-loc-char as character no-undo .
           run proc-ach in this-procedure ( input exist) no-error .
         end.  
         when "CBarCode":U then do:
+          CBCType_= 0.
+          CBCString_ = 0.
+          CBCBarcode_ = "".
           if v-start-check = 1 then
           run proc-02-gds in this-procedure no-error .
         end.
         when "CAuthorization":U then do:
+          AuthType_ = 0.
+          qr-alchol_ = "".
           if v-start-check = 1 then
           run proc-CAuthorization in this-procedure no-error .
         end.
