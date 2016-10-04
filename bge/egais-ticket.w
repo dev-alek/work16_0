@@ -56,6 +56,8 @@ define variable bcol                    as handle extent no-undo.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Btn_OK 
+&Scoped-Define DISPLAYED-OBJECTS FILL-IN-1 FILL-IN-3 FILL-IN-2 FILL-IN-4 ~
+FILL-IN-5 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -75,12 +77,42 @@ DEFINE BUTTON Btn_OK AUTO-GO
      SIZE 15 BY 1.13
      BGCOLOR 8 .
 
+DEFINE VARIABLE FILL-IN-1 AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 119.25 BY 1
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE FILL-IN-2 AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 119.25 BY 1
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE FILL-IN-3 AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 119.25 BY 1
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE FILL-IN-4 AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 119.25 BY 1
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE FILL-IN-5 AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 119.25 BY 1
+     FGCOLOR 4  NO-UNDO.
+
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
      Btn_OK AT ROW 1.25 COL 1.5
-     SPACE(104.87) SKIP(15.74)
+     FILL-IN-1 AT ROW 14.71 COL 1.75 NO-LABEL WIDGET-ID 2
+     FILL-IN-3 AT ROW 15.71 COL 1.75 NO-LABEL WIDGET-ID 6
+     FILL-IN-2 AT ROW 16.71 COL 1.75 NO-LABEL WIDGET-ID 4
+     FILL-IN-4 AT ROW 17.71 COL 1.75 NO-LABEL WIDGET-ID 8
+     FILL-IN-5 AT ROW 18.71 COL 1.75 NO-LABEL WIDGET-ID 10
+     SPACE(0.37) SKIP(0.11)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Квитанция по накладной"
@@ -108,6 +140,16 @@ ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+/* SETTINGS FOR FILL-IN FILL-IN-1 IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN FILL-IN-2 IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN FILL-IN-3 IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN FILL-IN-4 IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN FILL-IN-5 IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -154,16 +196,19 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       title     = 'Связанные документы ЕГАИС'
       frame     = frame {&FRAME-NAME}:handle
       query     = qh-ticket-egais
-      x         = 10
+      x         = 6
       y         = 38
       width     = 119
-      height    = 15
+      height    = 12
       visible   = true
       read-only = true
       sensitive = true
       separators = true
       column-resizable = true
       column-scrolling = true
+      triggers:
+        on value-changed persistent run local-value-changed.
+      end triggers
   .
   if bh-wb-egais = ? then return.
   if bh-wb-egais:buffer-field ("wb-type"):buffer-value begins "расход" or bh-wb-egais:buffer-field ("wb-type"):buffer-value begins "возврат"
@@ -192,6 +237,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
 
   RUN enable_UI.
+  run local-value-changed.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -230,11 +276,41 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
+  DISPLAY FILL-IN-1 FILL-IN-3 FILL-IN-2 FILL-IN-4 FILL-IN-5 
+      WITH FRAME Dialog-Frame.
   ENABLE Btn_OK 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-value-changed Dialog-Frame 
+PROCEDURE local-value-changed :
+define variable v-str1 as character no-undo.
+  define variable v-str2 as character no-undo.
+  define variable v-str3 as character no-undo.
+  define variable v-str4 as character no-undo.
+  define variable v-str5 as character no-undo.
+  
+  if not bh-ticket-egais:available 
+    then return no-apply.
+  
+  v-str1 = substring (bh-ticket-egais:buffer-field ("comment"):buffer-value, 1, 115).
+  v-str2 = substring (bh-ticket-egais:buffer-field ("comment"):buffer-value, 116, 115).
+  v-str3 = substring (bh-ticket-egais:buffer-field ("comment"):buffer-value, 231, 115).
+  v-str4 = substring (bh-ticket-egais:buffer-field ("comment"):buffer-value, 346, 115).
+  v-str5 = substring (bh-ticket-egais:buffer-field ("comment"):buffer-value, 461, 115).
+  
+  display v-str1 @ fill-in-1 with frame {&frame-name}.
+  display v-str2 @ fill-in-3 with frame {&frame-name}.
+  display v-str3 @ fill-in-2 with frame {&frame-name}.
+  display v-str4 @ fill-in-4 with frame {&frame-name}.
+  display v-str5 @ fill-in-5 with frame {&frame-name}.
+
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
