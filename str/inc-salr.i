@@ -780,26 +780,8 @@ on error undo, return error return-value
                                         or t-gds.is-modificator
                                         then yes
                                         else t-gds.is-modificator
-                t-gds.marks = ''                        
+/*                t-gds.marks = ''*/
                 .
-                run gds-attr-value(
-                    t-gds.gds-code,
-                    {&attr-mark},
-                    output par-alcohol,
-                    output par-type
-                ).
-                if par-alcohol = "yes" then do :
-                  find first chk-gds-attr no-lock where chk-gds-attr.doc-code = buf_chk-gds.doc-code
-                                                    and chk-gds-attr.line-num = buf_chk-gds.line-num
-                                                    and chk-gds-attr.attr-code = "mark-code"
-                                                    no-error .
-                  if available chk-gds-attr
-                  and not t-gds.marks matches ("*" + chk-gds-attr.attr-value + "*")
-                  then do :
-                    t-gds.marks = t-gds.marks + (if t-gds.marks = '' then '' else ',') + chk-gds-attr.attr-value .  
-                  end.  
-                  release chk-gds-attr no-error .
-                end.
               end.
               else do:
               end.
@@ -823,7 +805,24 @@ on error undo, return error return-value
               t-gds.road-sum = t-gds.road-sum + buf_chk-gds.road-tax * buf_chk-gds.doc-qnty
               t-gds.service-sum = t-gds.service-sum + buf_chk-gds.price-service * buf_chk-gds.doc-qnty
               .
-                                              
+              run gds-attr-value(
+                    t-gds.gds-code,
+                    {&attr-mark},
+                    output par-alcohol,
+                    output par-type
+              ).
+              if par-alcohol = "yes" then do :
+                find first chk-gds-attr no-lock where chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                                                  and chk-gds-attr.line-num = buf_chk-gds.line-num
+                                                  and chk-gds-attr.attr-code = "mark-code"
+                                                  no-error .
+                if available chk-gds-attr
+/*                and not t-gds.marks matches ("*" + chk-gds-attr.attr-value + "*")*/
+                then do :
+                  t-gds.marks = t-gds.marks + (if t-gds.marks = '' then '' else ',') + chk-gds-attr.attr-value .  
+                end.  
+                release chk-gds-attr no-error .
+              end.
             end. /*несуммовой чек*/
           end. /*do dtrg to docs-to-reserv */
           if t-gds.pump > 0
@@ -983,7 +982,8 @@ on error undo, return error return-value
                 doc-line-attr.attr-code = 'mark-code'
               .  
             end.
-            doc-line-attr.attr-value = t-gds.marks .
+            doc-line-attr.attr-value = doc-line-attr.attr-value + ',' + t-gds.marks .
+            doc-line-attr.attr-value = trim(doc-line-attr.attr-value, ',') .
           end.  
           /*ищем нужное складское место*/
           if t-gds.pump > 0
