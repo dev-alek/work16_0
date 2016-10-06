@@ -67,6 +67,10 @@ on endkey undo, return error :
       create locb-chk-pay.
       { nws/impl-nws.i "chk-pay" "locb-" }
     end.
+    when "chk-pay-attr" then do:
+      create locb-chk-pay-attr.
+      { nws/impl-nws.i "chk-pay-attr" "locb-" }
+    end.
     when "chk-discnt" then do:
       create locb-chk-discnt.
       { nws/impl-nws.i "chk-discnt" "locb-" }
@@ -361,6 +365,12 @@ end.
 for each buf_chk-pay where buf_chk-pay.out-code = wt-inkas.inkas-code
 on error  undo, return error
 :
+  for each buf_chk-pay-attr where buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code
+      and buf_chk-pay-attr.line-num = buf_chk-pay.line-num
+  on error  undo, return error
+  :
+    delete buf_chk-pay-attr.
+  end.
   delete buf_chk-pay.
 end.
 for each locb-chk-pay where locb-chk-pay.out-code = wt-inkas.inkas-code
@@ -369,6 +379,14 @@ on error  undo, return error
 :
   create buf_chk-pay.
   buffer-copy locb-chk-pay to buf_chk-pay.
+  for each locb-chk-pay-attr where locb-chk-pay-attr.doc-code = locb-chk-pay.doc-code
+      and locb-chk-pay-attr.line-num = locb-chk-pay.line-num
+                        no-lock
+  on error  undo, return error
+  :
+    create buf_chk-pay-attr.
+    buffer-copy locb-chk-pay-attr to buf_chk-pay-attr.
+  end.
 end.
 /* ------------------------------- chk-discnt --------------------------------------------- */
 for each buf_chk-discnt where buf_chk-discnt.out-code = wt-inkas.inkas-code
@@ -553,6 +571,11 @@ for each locb-chk-pay
 on error  undo, return error
 :
   delete locb-chk-pay.
+end.
+for each locb-chk-pay-attr
+on error  undo, return error
+:
+  delete locb-chk-pay-attr.
 end.
 for each locb-chk-discnt
 on error  undo, return error

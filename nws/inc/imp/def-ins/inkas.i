@@ -27,6 +27,7 @@ define buffer buf_chk-doc        for ub.chk-doc.
 define buffer buf_chk-gds        for ub.chk-gds.
 define buffer buf_chk-gds-attr   for ub.chk-gds-attr.
 define buffer buf_chk-pay        for ub.chk-pay.
+define buffer buf_chk-pay-attr   for ub.chk-pay-attr.
 define buffer buf_chk-discnt     for ub.chk-discnt.
 define buffer buf_chk-doc-attr   for ub.chk-doc-attr.
 define buffer buf_chk-gds-pay    for ub.chk-gds-pay.
@@ -81,6 +82,12 @@ on error undo, return error error-status :get-message (1)
 :
   delete locb-chk-pay.
 end.
+for each locb-chk-pay-attr
+on error undo, return error error-status :get-message (1)
+:
+  delete locb-chk-pay-attr.
+end.
+
 for each locb-chk-discnt
 on error undo, return error error-status :get-message (1)
 :
