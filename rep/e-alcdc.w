@@ -261,6 +261,9 @@ define temp-table tt-parts-info
 
 define stream OutStr-html.
 { gbl/prn-lib.i  }
+
+define stream logStr.
+define variable v-inn-err as logical no-undo .
      
 /* Buffer Definitions   ---                                               */
 
@@ -999,6 +1002,9 @@ end. /* for each obj-list */
 ext-cl = new extgds(yes) .
 ext-FormF1 = new extFormF1(yes) .
 
+output stream logStr to value("alc-dec_errors.txt") .
+v-inn-err = false.
+
 /* Получим остатки на конец периода */
 /*run gbl/inidebug.p .*/
 for each obj-list no-lock:  /* По всем объектам */
@@ -1259,6 +1265,14 @@ for each obj-list no-lock:  /* По всем объектам */
               end. /* when 'egais' */
 
           end case. /* case imp-or-prod-type */
+          
+          if part-1.producer-inn = "" or part-1.producer-inn = ?
+          or part-1.producer-kpp = "" or part-1.producer-kpp = ?
+          then do :
+              put stream logStr unformatted 'Производитель/импортер "'  part-1.producer-obj-name
+               '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Партия по ПН № ' temp-parts.in-code skip .
+              v-inn-err = true .
+          end.
 
           end. /* if not available (part-1) */
 
@@ -1546,6 +1560,14 @@ for each obj-list no-lock:  /* По всем объектам */
               end. /* when 'egais' */
 
           end case. /* case imp-or-prod-type */
+          
+          if part-1.producer-inn = "" or part-1.producer-inn = ?
+          or part-1.producer-kpp = "" or part-1.producer-kpp = ?
+          then do :
+              put stream logStr unformatted 'Производитель/импортер "'  part-1.producer-obj-name
+               '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Партия по ПН № ' temp-parts.in-code skip .
+              v-inn-err = true .
+          end.
 
           end. /* if not available (part-1) */
 
@@ -1820,6 +1842,14 @@ for each obj-list no-lock:  /* По всем объектам */
                         end. /* when 'egais' */
 
                     end case. /* case imp-or-prod-type */
+                    
+                    if part-1.producer-inn = "" or part-1.producer-inn = ?
+                    or part-1.producer-kpp = "" or part-1.producer-kpp = ?
+                    then do :
+                        put stream logStr unformatted 'Производитель/импортер "'  part-1.producer-obj-name
+                         '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Партия по ПН № ' buf_parts.in-code skip .
+                        v-inn-err = true .
+                    end.
 
                 end. /* if not available (part-1) */
                 
@@ -2278,6 +2308,9 @@ for each obj-list no-lock:  /* По всем объектам */
 end. /* for each obj-list */
 
 delete object ext-cl no-error .
+delete object ext-FormF1 no-error .
+
+output stream logStr close .
 
 /* Теперь надо объединить строки, у которых код АП, КПП и ИНН производителя одинаковые */
 define buffer buf_part-1 for part-1 .
@@ -2412,6 +2445,21 @@ if TOGGLE-Excel = yes then run excel-output.
 if TOGGLE-XML = yes then run xml-output.
 
 run waitfram-hide.
+
+if v-inn-err
+then do :
+    define variable v-user-action    as character no-undo.
+    define variable v-printed        as logical   no-undo.
+    message "Есть замечания по формированию декларации" view-as alert-box.
+    run gbl/prnfilen.w
+       (input  "Ошибки алкогольной декларации"
+       ,input  0
+       ,input  "alc-dec_errors.txt"
+       ,input  7
+       ,output v-user-action
+       ,output v-printed
+       ).
+end.
 
 apply "go".
 

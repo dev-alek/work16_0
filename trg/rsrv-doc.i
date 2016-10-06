@@ -65,6 +65,7 @@ procedure rsrv-doc :
   define variable v-check-part-qnty as decimal         no-undo .
 
   define buffer buf_parts    for ub.parts .
+  define buffer buf2_parts   for ub.parts .
   define buffer buf_trn-doc  for ub.trn-doc .
   define buffer buf_doc-line for ub.doc-line .
   define buffer buf1_doc-line-attr for ub.doc-line-attr .
@@ -146,6 +147,23 @@ procedure rsrv-doc :
     end.
     release buf1_goods no-error .
     release buf1_doc-line-attr no-error .
+    
+    for each tt-alc-codes exclusive-lock :
+        for each buf2_parts no-lock
+        where buf2_parts.obj-type  = buf_doc-line.obj-type
+          and buf2_parts.obj-code  = buf_doc-line.obj-code
+          and buf2_parts.artic     = buf_doc-line.artic
+          and buf2_parts.prod-type = buf_doc-line.prod-type
+          and buf2_parts.prod-code = buf_doc-line.prod-code
+          and buf2_parts.out-code  = buf_doc-line.doc-code
+          and buf2_parts.status_   = no
+          and buf2_parts.fact-qnty > 0
+          and num-entries(buf2_parts.alc-ref-ab-path) = 4
+          and entry(3, buf2_parts.alc-ref-ab-path) = tt-alc-codes.alc-code
+        use-index FIFO :
+            tt-alc-codes.qnty = tt-alc-codes.qnty - buf2_parts.fact-qnty .
+        end.
+    end.
 
     /* определяем знак изменяемого количества */
     assign

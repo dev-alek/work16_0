@@ -52,6 +52,8 @@ define variable ii                  as integer no-undo .
 
 define variable glog        as logical no-undo .
 
+define variable v-ans-name as character no-undo .
+
 define variable v-value-character   as character no-undo .
 define variable v-value-decimal     as decimal   no-undo .
 define variable v-value-integer     as integer   no-undo .
@@ -356,7 +358,18 @@ DO:
             message egais:Msg view-as alert-box.
             return no-apply.
       end.
-      else message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .  
+      else do :
+        message (bh-act-header:buffer-field ("answer_"):buffer-value) skip 
+           "Сохранить ответ?" view-as alert-box information buttons yes-no update glog.
+        if glog
+        then do :
+            v-ans-name = bh-act-header:buffer-field ("num"):buffer-value + "_ANS.txt" .
+            output to value(v-ans-name) .
+                put unformatted bh-act-header:buffer-field ("answer_"):buffer-value skip .
+            output close.
+            message "Ответ сохранен в файл " v-ans-name " в рабочей директории" view-as alert-box information .
+        end.   
+      end.  
 /*  end.*/
   run refresh-query.
 END.

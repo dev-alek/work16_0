@@ -51,6 +51,8 @@ abc-analysis-attr~
 ,chk-gds~
 ,c-chk-gds~
 ,chk-pay~
+,chk-gds-attr~
+,chk-pay-attr~
 ,c-chk-pay~
 ,contract-line~
 ,contract-specif-attr~
@@ -997,8 +999,6 @@ abc-analysis-doc-attr~
 ,cd-plu-attr~
 ,cd-trans-attr~
 ,chk-discnt-attr~
-,chk-gds-attr~
-,chk-pay-attr~
 ,cli-art-attr~
 ,cli-gds-attr~
 ,cli-grp-attr~
