@@ -262,6 +262,12 @@ xmlns:qf="http://fsrar.ru/WEGAIS/QueryFormF1F2">~
 
     urlResp = GetURLUTM(ReplyId, "out").
     
+    if Msg = "Не удалось получить данные от UTM"
+    then do:
+      StatusErr = true.
+      return ?.
+    end.
+    
     if urlResp = "" or urlResp = ?
     then do:
       StatusErr = true.

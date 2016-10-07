@@ -284,6 +284,12 @@ DO:
     end.
     else do:
       bh-gds-egais-gotten = egaisFormF1:GetHndlTable() .
+      if egaisFormF1:Msg = 'Не удалось получить данные от UTM'
+      then do:
+        message egaisFormF1:Msg + ". Проверьте соединение с УТМ." view-as alert-box error.
+        run waitfram-hide in this-procedure.
+        return.
+      end.
       if bh-gds-egais-gotten = ? or not bh-gds-egais-gotten:find-first () 
       then do:
         put stream str1 unformatted {&new-line} + egaisFormF1:Msg.
