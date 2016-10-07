@@ -192,6 +192,10 @@ DEFINE VARIABLE TOGGLE_NotConn AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 11.13 BY 1 NO-UNDO.
 
+DEFINE MENU popup-menu-reject
+       MENU-ITEM m_reject LABEL "Отправить акт отказа" ACCELERATOR "ALT-1"
+       MENU-ITEM m_reqRepealWB LABEL "Отправить запрос на отмену проведения накладной" ACCELERATOR "ALT-2"
+.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -411,90 +415,30 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Del Dialog-Frame
 ON choose OF Btn_Del IN FRAME Dialog-Frame /* Отказ */
 do:
-  
-  def var v-doc-code as character no-undo.
-  def var ticketRasObj as class WayBill no-undo.
-  def var bh-TicketHndl as handle no-undo.
-  def var qh-TicketHndl as handle no-undo.
-  
-  { gbl/chk-actg.i
-    v-cntxt-db-num
-    v-cntxt-userid
-    {&action-head-code-main}
-    'actn_egais-reject':U
-    {&cntxt-object}
-    v-cntxt-host-code-obj
-    v-cntxt-obj-type
-    v-cntxt-obj-code
-    0
-    0
-    0
-    true
-    glog
-  }
-  
-  if not glog then  return .
-  
-  case cb-1: 
-  when 1
-  then do:
-    if not bh-wb-egais:available 
-      then return no-apply.
-    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-    if egais:StatusErr
-    then do:
-      message egais:Msg view-as alert-box error.
-      return no-apply.
-    end.
-    if can-find (first ub.trn-doc where ub.trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
-    then do:
-      message substitute ( "Накладная с № &1 уже сформирована, все равно отправить отказ", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
-      view-as alert-box question buttons yes-no update isChoise as logical.
-      if not isChoise 
-        then return no-apply.
-    end.
-    else do:
-      message "Отправить отказ?" view-as alert-box question buttons yes-no update isChoise.
-      if not isChoise 
-        then return no-apply.
-    end.
-    egais:RejectWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-    if egais:StatusErr
-    then do:
-      message egais:Msg view-as alert-box error.
-      return no-apply.
-    end.
-    else run f-query.
-  end.
-  when 4
-  then do:
-    ticketRasObj = new WayBill (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
-    bh-wb-gds-EG = ?.
-    bh-wb-gds-EG-header = ?.
-    v-doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value.
-    
-    bh-TicketHndl = ticketRasObj:GetHndlTable({&ticket-ras}, bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value).
-    
-    create query qh-TicketHndl.
-    qh-TicketHndl:set-buffers (bh-TicketHndl).
-    
-    qh-TicketHndl:query-close ().
-    qh-TicketHndl:query-prepare ("for each tt-ticket where tt-ticket.regid <> '' and tt-ticket.doc = 'WayBill' by tt-ticket.regid descending").
-    qh-TicketHndl:query-open ().
+  run rejectWB.
+end.
 
-    if not qh-TicketHndl:is-open or not qh-TicketHndl:get-first ()
-    then do:
-      message "Не найдена накладная ЕГАИС, на которую можно послать отказ.".
-      delete object ticketRasObj.
-      return.
-    end.
-    bh-wb-gds-EG-header = egais:GetHndlTable({&wb-ras-header}, bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value).
-    v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
-    egaisWBAdv:SendWBActRejUTM(bh-TicketHndl:buffer-field ("regid"):buffer-value).
-    message "Отправлен отказ на накладную ЕГАИС - " + bh-TicketHndl:buffer-field ("regid"):buffer-value view-as alert-box information title "Информация".
-    delete object ticketRasObj.
-  end.
-  end case.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_reject
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_reject Dialog-Frame
+ON choose of menu-item m_reject IN menu popup-menu-reject /* Отказ */
+do:
+  
+  run rejectWB.
+  
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_reqRepealWB
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_reqRepealWB Dialog-Frame
+ON choose of menu-item m_reqRepealWB IN menu popup-menu-reject /* Отказ */
+do:
+  
+  run ReqRepealWB.
   
 end.
 
@@ -628,6 +572,10 @@ do:
     end.
     else do:
       bh-gds-egais-gotten = egaisFormF1:GetHndlTable() .
+      if egaisFormF1:Msg = 'Не удалось получить данные от UTM'
+      then do:
+        message egaisFormF1:Msg + ". Проверьте соединение с УТМ." view-as alert-box error.
+      end. 
       if bh-gds-egais-gotten = ? or not bh-gds-egais-gotten:find-first () 
       then do:
         put stream str-FormF1 unformatted {&new-line} + egaisFormF1:Msg.
@@ -891,9 +839,20 @@ END.
 ON value-changed OF cb-1 IN FRAME Dialog-Frame
 do:
   assign cb-1 .
-  if (cb-1 = 2 or cb-1 = 1) and actnEGAISAdm 
-    then Btn_accept:hidden = false.
-    else Btn_accept:hidden = true.
+  run proc-hide-disp.
+  run reopen-browse.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME proc-hide-disp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL proc-hide-disp Dialog-Frame
+procedure proc-hide-disp:
+
+  if (cb-1:screen-value in frame {&frame-name} = "2" or cb-1:screen-value  in frame {&frame-name} = "1") and actnEGAISAdm 
+    then Btn_accept:hidden in frame {&frame-name} = false.
+    else Btn_accept:hidden in frame {&frame-name} = true.
   case cb-1: 
   when 1
   then do:
@@ -903,6 +862,8 @@ do:
     Btn_conn:hidden = false.
     btn_ticket:hidden = false.
     Btn_delclob:hidden = false.
+    Btn_Del:popup-menu in frame {&frame-name} = menu popup-menu-reject:handle.
+    Btn_Del:menu-mouse = 1.
   end.
   when 3
   then do:
@@ -917,10 +878,12 @@ do:
   then do:
     enable Btn_Save with frame {&FRAME-NAME}.
     Btn_Save:label = "Отправить".
-    Btn_Del:hidden = true.
+    Btn_Del:hidden = false.
     Btn_conn:hidden = true.
     btn_ticket:hidden = true.
-    Btn_delclob:hidden = true.    
+    Btn_delclob:hidden = true.
+    Btn_Del:popup-menu in frame {&frame-name} = ?.
+    Btn_Del:menu-mouse = ?.
   end.
   otherwise do:
     enable Btn_Save with frame {&FRAME-NAME}.
@@ -931,12 +894,10 @@ do:
     Btn_delclob:hidden = true.
   end.
   end case.
-  run reopen-browse.
+  
 end.
-
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
 &Scoped-define SELF-NAME f-cli-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-cli-code Dialog-Frame
@@ -1211,7 +1172,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   { gbl/diasize.i &br-hndl=browse-hdl-wb-egais }
   run diasize_init in this-procedure .
   run enable_UI.
-  Btn_accept:hidden = false.
+  run proc-hide-disp.
   wait-for go of frame {&FRAME-NAME}.
 end.
 run disable_UI.
@@ -1547,3 +1508,160 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rejectWB Dialog-Frame 
+PROCEDURE rejectWB :
+
+  def var v-doc-code as character no-undo.
+  def var ticketRasObj as class WayBill no-undo.
+  def var bh-TicketHndl as handle no-undo.
+  def var qh-TicketHndl as handle no-undo.
+  
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-reject':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
+  
+  if not glog then  return .
+
+  if not bh-wb-egais:available 
+    then return no-apply.
+  
+  case cb-1: 
+  when 1
+  then do:
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    if egais:StatusErr
+    then do:
+      message egais:Msg view-as alert-box error.
+      return no-apply.
+    end.
+    if can-find (first ub.trn-doc where ub.trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
+    then do:
+      message substitute ( "Накладная с № &1 уже сформирована, все равно отправить отказ", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
+      view-as alert-box question buttons yes-no update isChoise as logical.
+      if not isChoise 
+        then return no-apply.
+    end.
+    else do:
+      message "Отправить отказ?" view-as alert-box question buttons yes-no update isChoise.
+      if not isChoise 
+        then return no-apply.
+    end.
+    egais:RejectWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    if egais:StatusErr
+    then do:
+      message egais:Msg view-as alert-box error.
+      return no-apply.
+    end.
+    else run f-query.
+  end.
+  when 4
+  then do:
+    ticketRasObj = new WayBill (v-cntxt-obj-type, v-cntxt-obj-code, v-fs-rar, v-ext-sys).
+    bh-wb-gds-EG = ?.
+    bh-wb-gds-EG-header = ?.
+    v-doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value.
+    
+    bh-TicketHndl = ticketRasObj:GetHndlTable({&ticket-ras}, bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value).
+    
+    create query qh-TicketHndl.
+    qh-TicketHndl:set-buffers (bh-TicketHndl).
+    
+    qh-TicketHndl:query-close ().
+    qh-TicketHndl:query-prepare ("for each tt-ticket where tt-ticket.regid <> '' and tt-ticket.doc = 'WayBill' by tt-ticket.regid descending").
+    qh-TicketHndl:query-open ().
+
+    if not qh-TicketHndl:is-open or not qh-TicketHndl:get-first ()
+    then do:
+      message "Не найдена накладная ЕГАИС, на которую можно послать отказ.".
+      delete object ticketRasObj.
+      return.
+    end.
+    bh-wb-gds-EG-header = egais:GetHndlTable({&wb-ras-header}, bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value).
+    v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
+    egaisWBAdv:SendWBActRejUTM(bh-TicketHndl:buffer-field ("regid"):buffer-value).
+    message "Отправлен отказ на накладную ЕГАИС - " + bh-TicketHndl:buffer-field ("regid"):buffer-value view-as alert-box information title "Информация".
+    delete object ticketRasObj.
+  end.
+  end case.
+  
+end procedure.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rejectWB Dialog-Frame 
+PROCEDURE ReqRepealWB :
+
+  def var v-doc-code as character no-undo.
+  def var ticketRasObj as class WayBill no-undo.
+  def var bh-TicketHndl as handle no-undo.
+  def var qh-TicketHndl as handle no-undo.
+  
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-reject':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    glog
+  }
+  
+  if not glog then  return .
+
+  if not bh-wb-egais:available 
+    then return no-apply.
+  
+  case cb-1: 
+  when 1
+  then do:
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    if egais:StatusErr
+    then do:
+      message egais:Msg view-as alert-box error.
+      return no-apply.
+    end.
+    if can-find (first ub.trn-doc where ub.trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
+    then do:
+      message substitute ( "Накладная с № &1 уже сформирована, все равно отправить запрос на отмену проведения накладной.", bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value)
+      view-as alert-box question buttons yes-no update isChoise as logical.
+      if not isChoise 
+        then return no-apply.
+    end.
+    else do:
+      message "Отправить запрос на отмену проведения накладной?" view-as alert-box question buttons yes-no update isChoise.
+      if not isChoise 
+        then return no-apply.
+    end.
+    egaisWBAdv:SendReqRepealWBUTM(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    if egaisWBAdv:StatusErr
+    then do:
+      message egaisWBAdv:Msg view-as alert-box error.
+      return no-apply.
+    end.
+    else run f-query.
+  end.
+  end case.
+  
+end procedure.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
