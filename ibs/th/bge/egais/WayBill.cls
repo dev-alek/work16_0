@@ -1,13 +1,19 @@
- 
-/*------------------------------------------------------------------------
-   File        : RequestDictOrg
-   Purpose     : 
-   Syntax      : 
-   Description : 
-   Author(s)   : asmorozov
-   Created     : Wed Nov 11 14:29:45 MSK 2015
-   Notes       : 
- ----------------------------------------------------------------------*/
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Библиотека работы с накладной ЕГАИС.
+
+Автор: Морозов Александр Сергеевич
+Дата создания: 11/11/15
+Author: Alexandr Morozov
+Creation date: 11/11/15
+
+*/
 
 using ibs.th.bge.egais.*.
 using Ibs.Th.Gbl.ProgressBar.
@@ -66,6 +72,21 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 <wa:Content>'
 
 &scop xml-act-v2-2 '</wa:Content></ns:WayBillAct_v2>~
+</ns:Document>~
+</ns:Documents>'
+
+&scop xml-ReqRepealWB '<?xml version="1.0" encoding="UTF-8"?>~
+<ns:Documents Version="1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns="http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" xmlns:qp="http://fsrar.ru/WEGAIS/RequestRepealWB">~
+<ns:Owner>~
+<ns:FSRAR_ID>&1</ns:FSRAR_ID>~
+</ns:Owner>~
+<ns:Document>~
+<ns:RequestRepealWB>~
+<qp:ClientId>&2</qp:ClientId>~
+<qp:RequestNumber>&3</qp:RequestNumber>~
+<qp:RequestDate>&4</qp:RequestDate>~
+<qp:WBRegId>&5</qp:WBRegId>~
+</ns:RequestRepealWB>~
 </ns:Document>~
 </ns:Documents>'
 
@@ -1062,6 +1083,91 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       assign
         StatusErr = true
         Msg       = "Не удалось отправить отказ на накладную в УТМ"
+        .
+      undo, return false.
+    end.
+
+    find first buf_ext-classif no-lock where 
+          buf_ext-classif.classif-name = {&extclass_egais-transId}
+      and buf_ext-classif.db-num = 0
+      and buf_ext-classif.key#_one = v-ext-sys
+      and buf_ext-classif.CharKey_One = tt-wb-header.Identity
+      and buf_ext-classif.CharKey_Two = ReplyId no-error.
+    if not available (buf_ext-classif)
+    then do:
+      create buf_ext-classif.
+      assign
+        buf_ext-classif.classif-name = {&extclass_egais-transId}
+        buf_ext-classif.db-num = 0
+        buf_ext-classif.key#_one = v-ext-sys
+        buf_ext-classif.CharKey_One = tt-wb-header.Identity
+        buf_ext-classif.CharKey_Two = ReplyId 
+      no-error.
+    end.   
+    
+  end.
+  
+  method public logical SendReqRepealWBUTM (inWbRegId as char):
+    
+    def var VerXSDShip   as character no-undo.
+    def var respValue as handle no-undo.
+    
+    os-delete "RespRequestRepealWB.xml".
+    os-delete value (search ("RespRequestRepealWB.xml")).
+    assign
+      inFileName = "RespRequestRepealWB.xml"
+      .
+      
+    find first tt-wb-header.
+      
+    output stream outstr to value ("RequestRepealWB.xml") convert target "UTF-8". 
+
+    outData = substitute ({&xml-ReqRepealWB}, v-FS-RAR, tt-wb-header.regID-Ship, tt-wb-header.num + "-" + string (time), iso-date (now), tt-wb-header.wbregid).
+
+    if outData = ? or outData = ""
+    then do:
+      output stream outstr close.
+      return false.
+    end.
+    
+    put stream outstr unformatted outData.
+    put stream outstr skip.
+    output stream outstr close.
+  
+    cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/RequestRepealWB >&4", search ("exe/curl.exe"), search ("RequestRepealWB.xml"), ConPar, inFileName).
+    os-command value (cmd).
+  
+    file-info:file-name = search (inFileName).
+    if search (inFileName) <> ? and file-info:file-size > 0 
+      then 
+    do:
+      respValue = ParseRequest (inFileName).
+      if respValue = ? 
+        then 
+      do:
+        assign
+          StatusErr = true
+          Msg       = "Не удалось разобрать данные от УТМ"
+          .
+        undo, return false. 
+      end.
+      if not StatusErr 
+        then 
+        ReplyId = respValue:node-value.
+      else 
+      do:
+        assign
+          StatusErr = true
+          Msg       = respValue:node-value
+          .
+        undo, return false. 
+      end.
+    end.
+    else 
+    do:
+      assign
+        StatusErr = true
+        Msg       = "Не удалось отправить запрос в УТМ на отмену проведения накладной"
         .
       undo, return false.
     end.
