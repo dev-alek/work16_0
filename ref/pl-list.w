@@ -1000,9 +1000,67 @@ for each tt-place-attr :
   delete tt-place-attr.
 end.
 
+    if p-mode = {&g___object}  then 
+    do:
+    
     for each buf_place where buf_place.obj-code = p-obj-code and buf_place.obj-type = p-obj-type and (if rs-stat = {&all} then true else  buf_place.status_ = (if rs-stat =  {&current} then "" else {&deleted-status})) no-lock :
+        
+            find first tt-place-attr exclusive-lock where tt-place-attr.pl-code = buf_place.pl-code no-error.
+            if not available tt-place-attr then 
+            do :
+                create tt-place-attr.
+                tt-place-attr.pl-code = buf_place.pl-code.
+                ii = 0.
+                do ii = 1 to num-entries({&list-place-attr}):
+                    v-code = entry(ii,{&list-place-attr}) .
+                    run placelib_get-attr in this-procedure  (
+                        input v-code
+                        ,input buf_place.obj-code
+                        ,input buf_place.obj-type
+                        ,input buf_place.pl-code
+                        ,output v-value
+                        ,output v-ok      ) no-error.
+                    case v-code :
+                        when {&place-type} then 
+                            do :
+                                if v-ok then 
+                                do :
+                                    if integer(v-value) = 1 then tt-place-attr.place-type = "Вертикальный"  .
+                                    if integer(v-value) = 2 then tt-place-attr.place-type = "Горизонтальный"  .
+                                end.
+                            end.
+                        when {&place-SI} then 
+                            do :
+                                if v-ok then tt-place-attr.place-Si = integer(v-value) .
+                            end.
+                        when {&place-diameter} then 
+                            do :
+                                if v-ok then tt-place-attr.place-diameter = decimal(v-value) .
+                            end.
+                        when {&dead-balance} then 
+                            do :
+                                if v-ok then tt-place-attr.dead-balance = decimal(v-value) .
+                            end.
+                        when {&place-ratio-error} then 
+                            do :
+                                if v-ok then tt-place-attr.place-rel-error = decimal(v-value) .
+                            end.
+                        when {&place-dens-prov} then 
+                            do :
+                                if v-ok then tt-place-attr.place-dens-prov = decimal(v-value) .
+                            end.
+                    end case.
+                end.
+            end.
+        end.
+    end.
+else 
+do: 
+    for each buf_place where  (if rs-stat = {&all} then true else  buf_place.status_ = (if rs-stat =  {&current} then "" else {&deleted-status})) no-lock :      
+    
   find first tt-place-attr exclusive-lock where tt-place-attr.pl-code = buf_place.pl-code no-error.
-  if not available tt-place-attr then do :
+        if not available tt-place-attr then 
+        do :
     create tt-place-attr.
     tt-place-attr.pl-code = buf_place.pl-code.
     ii = 0.
@@ -1040,6 +1098,7 @@ end.
       end case.
     end.
   end.
+    end.
 end.
 
 case sort-column-name :
