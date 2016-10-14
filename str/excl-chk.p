@@ -42,6 +42,7 @@ define variable vss-description as character no-undo init "Исключение чека из не
 { gbl/tpsi-gds.i }
 { str/inc-salf.i }
 { str/lib-trn.i }
+{ ref/gds-attr.i }
 
 &glob display-message  run waitfram-show in this-procedure (~{&MY-MESSAGE~} )
 
@@ -143,6 +144,11 @@ define variable v-real-qnty like ub.inkas.qnty no-undo .
 define variable v-base-rate like ub.trn-doc.base-rate no-undo .
 define variable v-base-scale like ub.trn-doc.base-scale no-undo .
 
+define variable par-alcohol as character no-undo .
+
+define variable v-mark as character no-undo .
+define variable v-mark-list as character no-undo .
+define variable mark-ii as integer  no-undo .
 
 define variable v-host-code like ub.sysconf.host-code no-undo .
 define variable p-filter-rus as character no-undo .
@@ -525,6 +531,7 @@ on error undo, return error return-value
             t-gds.rgds-dtl = recid(buf_gds-dtl)
             t-gds.type = units.type
             t-gds.grc = (if LOOKUP({&twounit}, units.type) > 0 then recid(buf_chk-gds) else ?)
+            t-gds.marks = ''
             .
           end.
           if t-gds.pump > 0
@@ -554,6 +561,24 @@ on error undo, return error return-value
                             else buf_chk-gds.discnt * buf_chk-gds.doc-qnty)
         t-gds.road-sum = t-gds.road-sum + buf_chk-gds.road-tax * buf_chk-gds.doc-qnty
         .
+        run gds-attr-value(
+                t-gds.gds-code,
+                {&attr-mark},
+                output par-alcohol,
+                output par-type
+          ).
+        if par-alcohol = "yes" then do :
+            find first chk-gds-attr no-lock where chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                                              and chk-gds-attr.line-num = buf_chk-gds.line-num
+                                              and chk-gds-attr.attr-code = "mark-code"
+                                              no-error .
+            if available chk-gds-attr
+/*                and not t-gds.marks matches ("*" + chk-gds-attr.attr-value + "*")*/
+            then do :
+              t-gds.marks = t-gds.marks + (if t-gds.marks = '' then '' else ',') + chk-gds-attr.attr-value .  
+            end.  
+            release chk-gds-attr no-error .
+        end.
       end. /*do gtrg = 1 to num-docs-to*/
     end. /*if docs-to-reserv <> 0*/
     release t-gds.
@@ -596,6 +621,28 @@ on error undo, return error return-value
         r-pl-code = t-gds.pl-code
         .
         FIND FIRST buf_doc-line WHERE recid(buf_doc-line) = t-gds.rdoc-line No-ERROR.
+        run gds-attr-value(
+                t-gds.gds-code,
+                {&attr-mark},
+                output par-alcohol,
+                output par-type
+            ).
+        if t-gds.marks <> '' and par-alcohol = "yes"
+        then do :
+            find first doc-line-attr exclusive-lock where doc-line-attr.doc-code = buf_doc-line.doc-code
+                                                      and doc-line-attr.gds-code = t-gds.gds-code
+                                                      and doc-line-attr.attr-code = 'mark-code'
+                                                      no-error.
+            if available doc-line-attr
+            then do :
+              do mark-ii = 1 to num-entries(doc-line-attr.attr-value) :
+                v-mark = entry(mark-ii, doc-line-attr.attr-value) .
+                if not can-do(t-gds.marks, v-mark)
+                then v-mark-list = v-mark-list + (if v-mark-list = '' then '' else ',') + v-mark .
+              end.
+              doc-line-attr.attr-value = v-mark-list .
+            end.
+        end.
         run  RSRV-line in this-procedure (
                        input buf_sale-doc.dir /*расход или возврат или списание*/
                       ,input no /*p-auto-fbr*/
