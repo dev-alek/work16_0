@@ -65,7 +65,7 @@ class ibs.th.bge.egais.ExtGds:
     get.
     private set.
 
-  define property SettingsTTList as character no-undo init ";;;20,yes;23,yes;;;20,yes;20,no;;20,yes;;;;;20,yes;;;;;1,yes" /*в порядке полей через ; ширина в симв. поля, видно/не видно поле по умолч. видно*/
+  define property SettingsTTList as character no-undo init ";;;20,yes;23,yes;;;20,yes;20,no;;20,yes;;;;;20,yes;;;;;1,no" /*в порядке полей через ; ширина в симв. поля, видно/не видно поле по умолч. видно*/
     get.
     private set.
 
@@ -210,8 +210,18 @@ class ibs.th.bge.egais.ExtGds:
         find first buf_gds no-lock where buf_gds.gds-code = ExtGdsValueObj:GdsCode no-error.
         release buf_cli.
         find first buf_cli no-lock where buf_cli.obj-type = buf_gds.prod-type and buf_cli.obj-code = buf_gds.prod-code no-error.
+
+        if ExtGdsValueObj:CliEgaisTypeProd = ""
+        then do:
+          assign
+            tt-egaisgds-hndls.verXSD = 1.
+        end. 
+        else do:
+          assign
+            tt-egaisgds-hndls.verXSD = 2.
+        end.
         
-        if tt-egaisgds-hndls.prodInnkppEgais = "" and  tt-egaisgds-hndls.imporInnkppEgais = ""
+        if tt-egaisgds-hndls.prodInnkppEgais = "" and  tt-egaisgds-hndls.imporInnkppEgais = "" and tt-egaisgds-hndls.verXSD = 1
         then do:
           tt-egaisgds-hndls.ColorNum = RED_COLOR.
         end.
@@ -223,15 +233,6 @@ class ibs.th.bge.egais.ExtGds:
             tt-egaisgds-hndls.prod = buf_gds.prod-type + string (buf_gds.prod-code)
             tt-egaisgds-hndls.prodName = buf_cli.obj-name
           .
-        if ExtGdsValueObj:CliEgaisTypeProd = "" and ExtGdsValueObj:CliEgaisTypeImpor = ""
-        then do:
-          assign
-            tt-egaisgds-hndls.verXSD = 1.
-        end. 
-        else do:
-          assign
-            tt-egaisgds-hndls.verXSD = 2.
-        end. 
 
     end.
     

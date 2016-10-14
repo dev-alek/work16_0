@@ -76,6 +76,7 @@ procedure rsrv-doc :
   define variable v-mark-list as character no-undo .
   define variable v-alc-code as character no-undo .
   define variable mark-ii as integer  no-undo .
+  define variable v-alc-qnty as decimal no-undo .
 
   do
   on error undo, return error return-value
@@ -124,7 +125,7 @@ procedure rsrv-doc :
         then v-mark-list = v-mark-list + (if v-mark-list = '' then '' else ',') + v-mark .
       end.
       buf1_doc-line-attr.attr-value = v-mark-list .
-      do mark-ii = 1 to min(num-entries(buf1_doc-line-attr.attr-value), p-chg-qnty) :
+      do mark-ii = 1 to min(num-entries(buf1_doc-line-attr.attr-value), buf_doc-line.fact-qnty) :
         v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
         run ProcAlcCode (input v-mark, output v-alc-code) no-error.
         if v-alc-code = ? or v-alc-code = ''
@@ -148,8 +149,18 @@ procedure rsrv-doc :
     release buf1_goods no-error .
     release buf1_doc-line-attr no-error .
     
+    v-alc-qnty = 0 .
     for each tt-alc-codes exclusive-lock :
-        for each buf2_parts no-lock
+        v-alc-qnty = v-alc-qnty + tt-alc-codes.qnty .
+    end.
+    
+/*    А вот здесь начинаются танцы с бубном.                                                                               */
+/*    Случай, когда дорезервируем товар с марками, но который изначально заразервировался или частично заразервировался    */
+/*    по ФИФО, из-за того, что не была найдена партия/партии с алкокодом/алкокодами из марок.                              */
+/*    Боюсь, что до конца всё привести в порядок удасться только когда реализуем помарочный учёт (марки в партиях).        */
+    if p-chg-qnty < v-alc-qnty and p-chg-qnty > 0
+    then
+    for each  buf2_parts no-lock
         where buf2_parts.obj-type  = buf_doc-line.obj-type
           and buf2_parts.obj-code  = buf_doc-line.obj-code
           and buf2_parts.artic     = buf_doc-line.artic
@@ -158,10 +169,46 @@ procedure rsrv-doc :
           and buf2_parts.out-code  = buf_doc-line.doc-code
           and buf2_parts.status_   = no
           and buf2_parts.fact-qnty > 0
-          and num-entries(buf2_parts.alc-ref-ab-path) = 4
-          and entry(3, buf2_parts.alc-ref-ab-path) = tt-alc-codes.alc-code
-        use-index FIFO :
-            tt-alc-codes.qnty = tt-alc-codes.qnty - buf2_parts.fact-qnty .
+    use-index FIFO :
+        if num-entries(buf2_parts.alc-ref-ab-path) = 4
+        and entry(3, buf2_parts.alc-ref-ab-path) <> ""
+        then do :
+            find first tt-alc-codes exclusive-lock where tt-alc-codes.alc-code = entry(3, buf2_parts.alc-ref-ab-path) no-error.
+            if not available tt-alc-codes
+            then do :
+                find first tt-alc-codes exclusive-lock .
+            end.
+            tt-alc-codes.qnty = tt-alc-codes.qnty - min(buf2_parts.fact-qnty, tt-alc-codes.qnty) .
+            v-alc-qnty = v-alc-qnty - min(buf2_parts.fact-qnty, tt-alc-codes.qnty) .
+            if tt-alc-codes.qnty = 0
+            then do :
+                delete tt-alc-codes . 
+                if p-chg-qnty < v-alc-qnty
+                then do :
+                    find next tt-alc-codes exclusive-lock no-error.
+                    if not available tt-alc-codes then find first tt-alc-codes exclusive-lock .
+                    tt-alc-codes.qnty = tt-alc-codes.qnty - (v-alc-qnty - p-chg-qnty) .
+                    v-alc-qnty = p-chg-qnty .
+                    leave .
+                end.
+            end.
+        end.
+        else do :
+            find first tt-alc-codes exclusive-lock .
+            tt-alc-codes.qnty = tt-alc-codes.qnty - min(buf2_parts.fact-qnty, tt-alc-codes.qnty) .
+            v-alc-qnty = v-alc-qnty - min(buf2_parts.fact-qnty, tt-alc-codes.qnty) .
+            if tt-alc-codes.qnty = 0
+            then do :
+                delete tt-alc-codes . 
+                if p-chg-qnty < v-alc-qnty
+                then do :
+                    find next tt-alc-codes exclusive-lock no-error.
+                    if not available tt-alc-codes then find first tt-alc-codes exclusive-lock .
+                    tt-alc-codes.qnty = tt-alc-codes.qnty - (v-alc-qnty - p-chg-qnty) .
+                    v-alc-qnty = p-chg-qnty .
+                    leave .
+                end.
+            end.
         end.
     end.
 

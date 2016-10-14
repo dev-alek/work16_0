@@ -78,6 +78,7 @@ define stream str1.
 { gbl/thbjattr.i }
 { ref/gds-attr.i }
 { gbl/waitfram.i }
+{ cmp/showinf.i  }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -95,9 +96,10 @@ define stream str1.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Btn_Cancel Btn_mark Btn_markall Btn_desmark ~
-btn_look btn_refresh btn_req btn_asw btn_del f-gds f-alcgds f-gdsname ~
-t-incorr 
-&Scoped-Define DISPLAYED-OBJECTS f-gds f-alcgds f-gdsname t-incorr 
+btn_look btn_refresh btn_req btn_asw btn_del t-incorr c_verxsd f-gds ~
+f-alcgds f-gdsname 
+&Scoped-Define DISPLAYED-OBJECTS t-incorr c_verxsd f-gds f-alcgds ~
+f-gdsname 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -149,6 +151,12 @@ DEFINE BUTTON btn_req
      LABEL "Запрос" 
      SIZE 9 BY 1.13.
 
+DEFINE VARIABLE c_verxsd AS CHARACTER FORMAT "X(256)":U INITIAL "V1&V2" 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEMS "V1&V2","V1","V2" 
+     DROP-DOWN-LIST
+     SIZE 9.75 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-alcgds AS CHARACTER FORMAT "X(256)":U 
      LABEL "Алк. код товара" 
      VIEW-AS FILL-IN 
@@ -167,7 +175,7 @@ DEFINE VARIABLE f-gdsname AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE t-incorr AS LOGICAL INITIAL no 
      LABEL "Некорр." 
      VIEW-AS TOGGLE-BOX
-     SIZE 11.13 BY .83 NO-UNDO.
+     SIZE 11.13 BY 1.13 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -182,11 +190,12 @@ DEFINE FRAME Dialog-Frame
      btn_req AT ROW 1.25 COL 44.38 WIDGET-ID 36
      btn_asw AT ROW 1.25 COL 54 WIDGET-ID 38
      btn_del AT ROW 1.25 COL 77
+     t-incorr AT ROW 1.25 COL 86.5 WIDGET-ID 28
+     c_verxsd AT ROW 2.71 COL 93.63 COLON-ALIGNED NO-LABEL WIDGET-ID 40
      f-gds AT ROW 2.75 COL 12.38 COLON-ALIGNED WIDGET-ID 20
      f-alcgds AT ROW 2.75 COL 45.13 COLON-ALIGNED WIDGET-ID 22
      f-gdsname AT ROW 2.75 COL 75.25 COLON-ALIGNED WIDGET-ID 24
-     t-incorr AT ROW 2.75 COL 95.75 WIDGET-ID 28
-     SPACE(2.36) SKIP(22.16)
+     SPACE(14.36) SKIP(21.99)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Справочник товаров ЕГАИС"
@@ -616,6 +625,16 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME c_verxsd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c_verxsd Dialog-Frame
+ON VALUE-CHANGED OF c_verxsd IN FRAME Dialog-Frame /* Некорр. */
+DO:
+  run refresh-view.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &UNDEFINE SELF-NAME
 
@@ -773,10 +792,10 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-gds f-alcgds f-gdsname t-incorr 
+  DISPLAY t-incorr c_verxsd f-gds f-alcgds f-gdsname 
       WITH FRAME Dialog-Frame.
   ENABLE Btn_Cancel Btn_mark Btn_markall Btn_desmark btn_look btn_refresh 
-         btn_req btn_asw btn_del f-gds f-alcgds f-gdsname t-incorr 
+         btn_req btn_asw btn_del t-incorr c_verxsd f-gds f-alcgds f-gdsname 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -842,6 +861,7 @@ def var v-proposition  as char no-undo.
     f-gdsname
     f-alcgds
     t-incorr
+    c_verxsd
   .
  
   if f-gds <> ""
@@ -863,6 +883,17 @@ def var v-proposition  as char no-undo.
   then do:
     v-proposition = v-proposition + substitute ("ColorNum = &1", RED_COLOR).
   end. 
+
+  case c_verxsd:
+    when "V1" then do:
+      v-proposition = v-proposition + substitute ("verXSD = &1", "1").      
+    end.
+    when "V2" then do:
+      v-proposition = v-proposition + substitute ("verXSD = &1", "2").
+    end.
+    when "V1&V2" then do:
+    end.
+  end case.
 
   v-proposition = right-trim (v-proposition, " and ").
   if v-proposition <> "" then v-proposition = "where " + v-proposition.

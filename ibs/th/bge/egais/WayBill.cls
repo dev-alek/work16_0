@@ -17,6 +17,7 @@ Creation date: 11/11/15
 
 using ibs.th.bge.egais.*.
 using Ibs.Th.Gbl.ProgressBar.
+using Ibs.Th.ref.*.
 
 class ibs.th.bge.egais.WayBill inherits EGAISUTM:
 
@@ -124,11 +125,14 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
   define private variable v-uniq-key-rec as character no-undo.
   define private variable nn             as integer   no-undo.
   define private variable nnList         as integer   no-undo.
+  define private variable minPrice       as decimal   no-undo.
+  
   define private variable extGdsObj      as class   ExtGds         no-undo.
   define private variable extGdsValueObj as class   ExtGdsValue    no-undo.
   define private variable isForceAccept  as logical no-undo.
   define private variable prgObj         as class   ProgressBar    no-undo .
   define private variable prsXMLDocWB    as class   ParserXMLDocWB no-undo.
+  define private variable alcTypeAttrObj as class   AlcTypeAttr    no-undo.
       
   define variable v-FS-RAR   as character no-undo .
   define variable inDocFSRAR as character no-undo .
@@ -200,6 +204,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     IsSent.
     extGdsObj = new ExtGds (yes).
     prsXMLDocWB = new ParserXMLDocWB(v-ext-sys).
+    alcTypeAttrObj = new AlcTypeAttr ().
     
   end constructor.
   
@@ -210,6 +215,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       then delete object prgObj.
     if valid-object (prsXMLDocWB)
       then delete object prsXMLDocWB.
+    if valid-object (alcTypeAttrObj)
+      then delete object alcTypeAttrObj.
   end. 
   
   method public override handle GetHndlTable(inTableType as int, inWbIdentity as char) :
@@ -692,7 +699,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
           return buffer tt-wb-hndls:handle.
         end.
-      when {&wb-ras-header} or 
+      when {&wb-ras-header} or
       when {&wb-ras-line} then
         do:
           def var ii as int    no-undo.
@@ -815,6 +822,18 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 return ?.
 
               end.
+              
+              alcTypeAttrObj:GetAlcTypeAttr ( input tt-wb-gds-EG.alc-type-code,
+                                       input   "alc-min-price",
+                                       output  minPrice
+                                    ).
+              
+              if tt-wb-gds-EG.price < minPrice * buf_gds.cli-base-rate 
+              then do:
+              Msg = Msg + (if Msg <> "" then {&new-line} else '')
+                + substitute ("Для товара &2/&1 &3 цена в накладной &4 меньше допустимой &5 по группе &6.", tt-wb-gds-EG.alc-code, buf_gds.gds-code, tt-wb-gds-EG.gds-name, tt-wb-gds-EG.price / buf_gds.cli-base-rate, minPrice, tt-wb-gds-EG.alc-type-code).
+              end.
+
               
               assign
                 tt-wb-gds-EG.ms-base = buf_gds.ms-base
@@ -1882,6 +1901,18 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         StatusErr = true.
         return.
       end.
+      Msg = return-value.
+      if Msg <> "" 
+      then do:
+        message Msg {&new-line} "Сохранить?" view-as alert-box 
+          question buttons yes-no
+          title "" update v-choise as logical.
+        if not v-choise then do: 
+          Msg = "Отменено пользователем".
+          StatusErr = true.
+          return. 
+        end.
+      end.
       find current buf_clob-bind exclusive-lock.
       entry (6, buf_clob-bind.descr, {&delim-par}) = trn-doc-code.
       find current buf_clob-bind no-lock.
@@ -2008,6 +2039,17 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
           jj = jj + 1.
           THSumm = THSumm + ub.parts.fact-qnty / ub.parts.cli-base-rate.
 
+          alcTypeAttrObj:GetAlcTypeAttr ( input tt-wb-gds-EG.alc-type-code,
+                                   input   "alc-min-price",
+                                   output  minPrice
+                                ).
+                                
+          if ub.parts.price-rubl < minPrice or tt-wb-gds-EG.price < minPrice * ub.parts.cli-base-rate 
+          then do:
+          Msg = Msg + (if Msg <> "" then {&new-line} else '')
+            + substitute ("Для товара &5/&1 &2 цена в накладной ЕГАИС или TH меньше допустимой &6 (мин. доп. в ед. поставщика &8) по группе &7. В накладной ЕГАИС цена - &3 в накладной TH цена - &4.", tt-wb-gds-EG.alc-code, tt-wb-gds-EG.gds-name, tt-wb-gds-EG.price, ub.parts.price-rubl, buf_gds.gds-code, minPrice, tt-wb-gds-EG.alc-type-code, minPrice * ub.parts.cli-base-rate).
+          end.
+
         end.
 
         for each buf_tt-wb-gds-EG where buf_tt-wb-gds-EG.gds-code = buf_gds.gds-code:
@@ -2059,6 +2101,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       StatusErr = true.
       return.
     end.
+    
+    output stream outstr to value ("warWBLog.txt").
+    put stream outstr unformatted Msg.
+    output stream outstr close.
     
     if isWarning 
     then do:

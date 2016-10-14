@@ -24,6 +24,14 @@ define input  parameter parParentProc  as widget-handle no-undo.
 define input  parameter p-def          as character no-undo.
 define input-output parameter  p-rr    as recid no-undo.
 
+define variable v-attr-value           as character no-undo .
+define variable v-attr-status          as integer   no-undo .
+define variable v-corr-date            as date      no-undo .  /*дата изменения*/
+define variable v-corr-time            as integer   no-undo .  /*время изменения*/
+define variable v-corr-user-name       as character no-undo .  /*кто внес последние изменения*/
+define variable v-create-date          as date      no-undo .  /*дата создания*/
+define variable v-create-time          as integer   no-undo .  /*время создания*/
+define variable v-create-user          as character no-undo .  /*кто создал*/
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -37,7 +45,7 @@ define variable vss-description as character no-undo init "Создание и редактиров
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { gbl/getcntxt.i def }
-
+{ ref/alc-type-attr.i }
 
 define buffer buf_alc-type for ub.alc-type .
 define buffer buf_alc-type-attr for ub.alc-type-attr .
@@ -59,8 +67,9 @@ define buffer buf_alc-type-attr for ub.alc-type-attr .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit B-Help v-name v-code ~
-rs-alc-declar v-inner-code 
-&Scoped-Define DISPLAYED-OBJECTS v-name v-code rs-alc-declar v-inner-code 
+v-min-price rs-alc-declar v-inner-code 
+&Scoped-Define DISPLAYED-OBJECTS v-name v-code v-min-price rs-alc-declar ~
+v-inner-code 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -101,9 +110,14 @@ DEFINE VARIABLE v-inner-code AS INTEGER FORMAT ">>>9":U INITIAL 0
      SIZE 14 BY .67
      FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE v-name AS CHARACTER FORMAT "X(80)":U
-     LABEL "Название"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-min-price AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     LABEL "Мин.опт.цена" 
+     VIEW-AS FILL-IN 
+     SIZE 8.88 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-name AS CHARACTER FORMAT "X(80)":U 
+     LABEL "Название" 
+     VIEW-AS FILL-IN 
      SIZE 80 BY 1 NO-UNDO.
 
 DEFINE VARIABLE rs-alc-declar AS INTEGER 
@@ -122,6 +136,7 @@ DEFINE FRAME Dialog-Frame
      B-Help AT ROW 1 COL 83.5
      v-name AT ROW 3.13 COL 11.5 COLON-ALIGNED
      v-code AT ROW 4.21 COL 11.5 COLON-ALIGNED
+     v-min-price AT ROW 4.21 COL 35.13 COLON-ALIGNED WIDGET-ID 8
      rs-alc-declar AT ROW 4.25 COL 49.5 NO-LABEL WIDGET-ID 4
      v-inner-code AT ROW 2.33 COL 11.5 COLON-ALIGNED
      SPACE(66.49) SKIP(3.49)
@@ -179,6 +194,7 @@ DO:
       v-inner-code
       v-code
       v-name
+      v-min-price
       rs-alc-declar
    .
 
@@ -232,44 +248,77 @@ DO:
          buf_alc-type.corr-time      = TIME
          buf_alc-type.corr-user-name = v-cntxt-userid
       .
+
+        run alc-type-attr-val (  input   buf_alc-type.alc-type-inner-code,
+                                 input   buf_alc-type.create-user-db-num,
+                                 input   "alc-min-price",
+                                 output  v-attr-value
+                              )  no-error.
+                  IF NOT ERROR-STATUS:ERROR THEN DO:
+
+              run alc-type-attr-delete (  input   buf_alc-type.alc-type-inner-code,
+                                          input   buf_alc-type.create-user-db-num,
+                                          input   "alc-min-price"
+                                       )  no-error.
+
+                  end.
+
+        run alc-type-attr-write (  input    buf_alc-type.alc-type-inner-code,
+                                   input    buf_alc-type.create-user-db-num,
+                                   input    "alc-min-price",
+                                   input    string(v-min-price),
+                                   input    0,
+                                   input    TODAY,
+                                   input    TIME,
+                                   input    v-cntxt-userid,
+                                   input    TODAY,
+                                   input    TIME,
+                                   input    v-cntxt-userid
+                                )  no-error.
+
+      
+
+        run alc-type-attr-val (  input   buf_alc-type.alc-type-inner-code,
+                                 input   buf_alc-type.create-user-db-num,
+                                 input   "alc-type",
+                                 output  v-attr-value
+                              )  no-error.
+                  IF NOT ERROR-STATUS:ERROR THEN DO:
+
+              run alc-type-attr-delete (  input   buf_alc-type.alc-type-inner-code,
+                                          input   buf_alc-type.create-user-db-num,
+                                          input   "alc-type"
+                                       )  no-error.
+
+                  end.
       case rs-alc-declar:
         when 1 then do:
-          find first buf_alc-type-attr where buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code 
-                                         and buf_alc-type-attr.attr-code = "alc-type" exclusive-lock no-error .
-            if available buf_alc-type-attr then do:
-              buf_alc-type-attr.attr-value = "1" .
-            end.  
-            else do:
-              create buf_alc-type-attr .
-              assign
-                buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code
-                buf_alc-type-attr.attr-code = "alc-type"
-                buf_alc-type-attr.attr-value = "1"
-                buf_alc-type-attr.corr-date = TODAY
-                buf_alc-type-attr.corr-time = TIME
-                buf_alc-type-attr.create-user = v-cntxt-userid
-                buf_alc-type-attr.create-user-db-num = v-cntxt-db-num
-              .
-            end.  
+        run alc-type-attr-write (  input    buf_alc-type.alc-type-inner-code,
+                                   input    buf_alc-type.create-user-db-num,
+                                   input    "alc-type",
+                                   input    "1",
+                                   input    0,
+                                   input    TODAY,
+                                   input    TIME,
+                                   input    v-cntxt-userid,
+                                   input    TODAY,
+                                   input    TIME,
+                                   input    v-cntxt-userid
+                                )  no-error.
         end.
         when 2 then do:
-          find first buf_alc-type-attr where buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code 
-                                         and buf_alc-type-attr.attr-code = "alc-type" exclusive-lock no-error .
-            if available buf_alc-type-attr then do:
-              buf_alc-type-attr.attr-value = "2" .
-            end.  
-            else do:
-              create buf_alc-type-attr .
-              assign
-                buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code
-                buf_alc-type-attr.attr-code = "alc-type"
-                buf_alc-type-attr.attr-value = "2"
-                buf_alc-type-attr.corr-date = TODAY
-                buf_alc-type-attr.corr-time = TIME
-                buf_alc-type-attr.create-user = v-cntxt-userid
-                buf_alc-type-attr.create-user-db-num = v-cntxt-db-num
-              .
-            end.  
+        run alc-type-attr-write (  input    buf_alc-type.alc-type-inner-code,
+                                   input    buf_alc-type.create-user-db-num,
+                                   input    "alc-type",
+                                   input    "2",
+                                   input    0,
+                                   input    TODAY,
+                                   input    TIME,
+                                   input    v-cntxt-userid,
+                                   input    TODAY,
+                                   input    TIME,
+                                   input    v-cntxt-userid
+                                )  no-error.
           
         end.    
       end case .  
@@ -351,9 +400,10 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY v-name v-code rs-alc-declar v-inner-code 
+  DISPLAY v-name v-code v-min-price rs-alc-declar v-inner-code 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-quit B-Help v-name v-code rs-alc-declar v-inner-code 
+  ENABLE b-exit b-quit B-Help v-name v-code v-min-price rs-alc-declar 
+         v-inner-code 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -393,12 +443,28 @@ if Lookup(p-def, {&add-def} + "," + {&Lookup} + "," +  {&update})  = 0 then DO:
          v-code       = buf_alc-type.alc-type-code
          /*!!!*/
          .
-         find first buf_alc-type-attr where buf_alc-type-attr.alc-type-inner-code = buf_alc-type.alc-type-inner-code 
-                                        and buf_alc-type-attr.attr-code = "alc-type" no-lock no-error .
-         if available buf_alc-type-attr then do:
-            rs-alc-declar = integer (buf_alc-type-attr.attr-value) .
-         end.  
-         else rs-alc-declar = 1.
+         run alc-type-attr-val (  input   buf_alc-type.alc-type-inner-code,
+                                  input   v-cntxt-db-num,
+                                  input   "alc-type",
+                                  output  v-attr-value
+                               )  no-error.
+          IF ERROR-STATUS:ERROR THEN DO:
+              rs-alc-declar = 1.
+          end.
+          else do:
+              rs-alc-declar = integer (v-attr-value) .
+          end.  
+ 
+         run alc-type-attr-val (  input   buf_alc-type.alc-type-inner-code,
+                                  input   v-cntxt-db-num,
+                                  input   "alc-min-price",
+                                  output  v-attr-value
+                               )  no-error.
+          IF NOT ERROR-STATUS:ERROR THEN DO:
+              v-min-price = decimal (v-attr-value) .
+          end.  
+
+
    end.
    else do:
       if p-def = {&add-def} then do:

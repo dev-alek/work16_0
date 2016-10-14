@@ -497,22 +497,25 @@ on error undo, return error return-value
                                         ,input  j_pump-code
                                         ,input  bf_goods.gds-code
                                         ,output varnozzle-code    ) no-error .
-        if error-status :error or
-          varnozzle-code  = ?    or
-          varnozzle-code  = 0
-        then do:
-          message substitute( 'r-ptrsph.p (find-nzl): не удалось найти пистолет (из чека &4), '
-                            + 'из которого продано топливо &1 &2&3 (&5) смена от &6.'
-                            , bf_goods.artic
-                            , bf_goods.prod-type
-                            , bf_goods.prod-code
-                            , chk-doc.doc-code
-                            , bf_chk-gds.pump
-                            , string(ub.chk-doc.shift-date, "99/99/9999")
-                            )
-          view-as alert-box error .
-          return error .
-        end. /*if error-status :error or*/
+/*        if error-status :error then do: */
+if varnozzle-code = ? then varnozzle-code = 0.
+/*varnozzle-code = bf_chk-gds.nozzle-code.*/
+/*end.                                    */
+
+/*          varnozzle-code  = 0.*/
+/*        then do:*/
+/*          message substitute( 'r-ptrsph.p (find-nzl): не удалось найти пистолет (из чека &4), '*/
+/*                            + 'из которого продано топливо &1 &2&3 (&5) смена от &6.'          */
+/*                            , bf_goods.artic                                                   */
+/*                            , bf_goods.prod-type                                               */
+/*                            , bf_goods.prod-code                                               */
+/*                            , chk-doc.doc-code                                                 */
+/*                            , bf_chk-gds.pump                                                  */
+/*                            , string(ub.chk-doc.shift-date, "99/99/9999")                      */
+/*                            )                                                                  */
+/*          view-as alert-box error .                                                            */
+/*          return error .                                                                       */
+/*        end. /*if error-status :error or*/*/
       end. /*if varnozzle-code = 0*/
       find first tt_line where
                 tt_line.pump-code   = j_pump-code

@@ -110,6 +110,7 @@ FIELD grc as recid /*будет отличен от нуля только для товаров для которых нужно 
 FIELD is-modificator as logical
 FIELD is-null-price as logical
 FIELD doc-code like ub.trn-doc.doc-code
+FIELD marks as character
 index pi is PRIMARY doc-code gds-code b-code artic prod-type prod-code node-code pl-code pump grc
 index ifbr b-code fbr-obj-type fbr-obj-code
 .
