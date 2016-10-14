@@ -3250,10 +3250,10 @@ end case.
                 hSAXWriter:end-element ("ÀäğÎğã").
 case RADIO-SET-form:
     when 1 then do:                
-                hSAXWriter:start-element ("ŞË").
+                hSAXWriter:write-empty-element ("ŞË").
                         hSAXWriter:insert-attribute ("ÈÍÍŞË", v-fmtcli-inn).
                         hSAXWriter:insert-attribute ("ÊÏÏŞË", v-fmtcli-kpp).
-                hSAXWriter:end-element ("ŞË").
+/*                hSAXWriter:end-element ("ŞË").*/
     end.            
 end case.                
             hSAXWriter:end-element ("Ğåêâèçèòû").
