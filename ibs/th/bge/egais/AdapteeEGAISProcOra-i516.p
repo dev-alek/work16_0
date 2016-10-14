@@ -31,6 +31,7 @@ using ibs.th.skt.Adapters.*.
 { utl/tt516.i}
 { gbl/getcntxt.i def }
 { str/trdcalib.i }
+{ ref/alc-type-attr.i }
 
 {ibs/th/bge/egais/wb-egais.i}
 
@@ -39,7 +40,7 @@ define input  parameter table for  tt-wb-gds-EG.
 define input  parameter userId_ as character no-undo.
 define input  parameter Mode as character no-undo.
 define input-output parameter p-doc-code as character no-undo.
-
+define stream outstr.
 
 define variable iDbNum as integer no-undo.
 define variable MsgLog as character no-undo.
@@ -53,11 +54,16 @@ do trans:
   define variable num-rec-ok as logical no-undo.
   define variable ii         as integer no-undo.
   define variable jj         as integer no-undo.
+  define variable minPrice   as decimal no-undo.
   define variable logWrite   as class   LogWrite no-undo.
 
   find first tt-wb-header no-lock.
     
-
+  { gbl/getcurus.i
+    iDbNum
+    userId_
+    no-error
+  }
 
   create temp_trn-doc.
   assign
@@ -104,6 +110,22 @@ do trans:
       temp_doc-line.importer-th = tt-wb-gds-EG.importer-th
       temp_doc-line.line-num-str = tt-wb-gds-EG.Identity
     .
+    
+    find first ub.alc-type where ub.alc-type.alc-type-code = tt-wb-gds-EG.alc-type-code no-error. 
+    
+    if available (ub.alc-type)
+    then do:
+      run alc-type-attr-val (  input   ub.alc-type.alc-type-inner-code,
+                               input   ub.alc-type.create-user-db-num,
+                               input   "alc-min-price",
+                               output  minPrice
+                            )  no-error.
+    end.
+    
+    if tt-wb-gds-EG.price < minPrice * buf_goods.cli-base-rate 
+    then do:
+      MsgLog = MsgLog + {&new-line} + substitute ("Для товара &2/&1 &3 цена в накладной ЕГАИС - &4 меньше допустимой - &5 по группе &6", tt-wb-gds-EG.alc-code, buf_goods.gds-code, tt-wb-gds-EG.gds-name, tt-wb-gds-EG.price * buf_goods.cli-base-rate, minPrice, tt-wb-gds-EG.alc-type-code).
+    end.
 
     if tt-wb-header.UnitType <> ''
     then do:
@@ -121,7 +143,7 @@ do trans:
           temp_doc-line.doc-qnty   = tt-wb-gds-EG.qnty
           temp_doc-line.cli-qnty   = tt-wb-gds-EG.qnty
           temp_doc-line.price-cli = tt-wb-gds-EG.price
-        .    
+        .
     end.
     else do:
       if tt-wb-gds-EG.UnitType = 'UnPacked' 
@@ -144,11 +166,20 @@ do trans:
     
   end.
   
-  { gbl/getcurus.i
-    iDbNum
-    userId_
-    no-error
-  }
+  if MsgLog <> ""
+  then do:
+    output stream outstr to value ("warWBLog.txt").
+    put stream outstr unformatted MsgLog.
+    output stream outstr close.
+    message substitute ("&2&1 Продолжить?", MsgLog, {&new-line}) view-as alert-box question buttons yes-no title "Вопрос..." update isChoise as logical.
+    if isChoise
+    then do:
+      MsgLog = "".
+    end.
+    else do:
+      return error "Отменено пользователем." .
+    end.
+  end.
   
   case Mode: 
     when "set-refAB"
