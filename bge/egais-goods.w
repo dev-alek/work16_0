@@ -589,6 +589,20 @@ DO:
         message "Не выбрано ни одной строки" view-as alert-box .
         return no-apply.
     end. 
+    if not valid-handle(bh-gds-egais)
+    then do :
+        message "Сначала получите ответ из ЕГАИС" view-as alert-box .
+        return no-apply.
+    end.
+    if valid-handle(bh-gds-egais)
+    then do :
+        bh-gds-egais:find-first () no-error.
+        if not bh-gds-egais:available
+        then do :
+            message "По данному производителю (ИНН) ответ из ЕГАИС не содержит позиций" view-as alert-box .
+            return no-apply.
+        end.
+    end.
     _ii_ :  
     do ii = 1 to num-entries(select-list) :
         def var v-i-element as character no-undo.
@@ -937,6 +951,15 @@ DO:
     run refresh-query in this-procedure.
     delete object extGdsObj no-error .
     apply "value-changed" to br-goods .
+    if valid-handle(bh-gds-egais)
+    then do :
+        bh-gds-egais:find-first () no-error.
+        if not bh-gds-egais:available
+        then do :
+            message "По данному производителю (ИНН) ответ из ЕГАИС не содержит позиций" view-as alert-box .
+            return no-apply.
+        end.
+    end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
