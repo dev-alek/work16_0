@@ -62,6 +62,8 @@ define variable v-uniq-key-rec      as character no-undo.
 define variable v-trn-doc           as character no-undo.
 define variable v-width             as decimal   no-undo.
 define variable v-height            as decimal   no-undo.
+define variable v-windth            as integer no-undo.
+define variable v-isDisp            as character no-undo.
 
 define stream strlog.
 define stream str-FormF1.
@@ -77,6 +79,7 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 {ibs/th/bge/egais/wb-egais.i}
 { str/trdcalib.i }
 { gbl/waitfram.i }
+{ cmp/showinf.i  }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -757,6 +760,26 @@ do:
     }
     
     if not glog then  return .
+
+    if bh-wb-egais:buffer-field ("status_"):buffer-value begins {&fact}
+    then do:
+      { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_egais-adm':U
+        {&cntxt-object}
+        v-cntxt-host-code-obj
+        v-cntxt-obj-type
+        v-cntxt-obj-code
+        0
+        0
+        0
+        true
+        glog
+      }      
+      if not glog then  return .
+    end.
     
     bh-wb-gds-EG = ?.
     bh-wb-gds-EG-header = ?.
@@ -1158,12 +1181,15 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     extent (bcol) = bh-wb-egais:num-fields.
     do ii = 1 to bh-wb-egais:num-fields:
       bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-      if ii = 1 then bcol[ii]:width = 20.
-      if ii = 4 then bcol[ii]:width = 12.
-      if ii = 5 then bcol[ii]:width = 9.
-      if ii = 6 then bcol[ii]:width = 20.
-      if ii = 7 then bcol[ii]:width = 10.
-      if ii = 9 then bcol[ii]:width = 5.
+      if entry (ii, egaisWBAdv:SettingsTTList, ';') <> ""
+      then do:
+        v-windth = integer (entry (1, entry (ii, egaisWBAdv:SettingsTTList, ';'))).
+        v-isDisp = entry (2, entry (ii, egaisWBAdv:SettingsTTList, ';')).
+        assign
+          bcol[ii]:width = v-windth when v-windth > 0
+          bcol[ii]:visible = false when v-isDisp = "no"
+        .
+      end.
     end.
   end.
   f-date = date (now) - 31.
@@ -1365,12 +1391,15 @@ PROCEDURE reopen-browse :
       then do:
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-          if ii = 1 then bcol[ii]:width = 20.
-          if ii = 4 then bcol[ii]:width = 12.
-          if ii = 5 then bcol[ii]:width = 9.
-          if ii = 6 then bcol[ii]:width = 20.
-          if ii = 7 then bcol[ii]:width = 10.
-          if ii = 9 then bcol[ii]:width = 5.
+          if entry (ii, egaisWBAdv:SettingsTTList, ';') <> ""
+          then do:
+            v-windth = integer (entry (1, entry (ii, egaisWBAdv:SettingsTTList, ';'))).
+            v-isDisp = entry (2, entry (ii, egaisWBAdv:SettingsTTList, ';')).
+            assign
+              bcol[ii]:width = v-windth when v-windth > 0
+              bcol[ii]:visible = false when v-isDisp = "no"
+            .
+          end.
         end.
       end.
       Btn_Sel:label = "Изменить".
@@ -1407,12 +1436,15 @@ PROCEDURE reopen-browse :
       then do:
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-          if ii = 1 then bcol[ii]:width = 20.
-          if ii = 4 then bcol[ii]:width = 12.
-          if ii = 5 then bcol[ii]:width = 9.
-          if ii = 6 then bcol[ii]:width = 20.
-          if ii = 7 then bcol[ii]:width = 10.
-          if ii = 9 then bcol[ii]:width = 5.
+          if entry (ii, egaisWBAdv:SettingsTTList, ';') <> ""
+          then do:
+            v-windth = integer (entry (1, entry (ii, egaisWBAdv:SettingsTTList, ';'))).
+            v-isDisp = entry (2, entry (ii, egaisWBAdv:SettingsTTList, ';')).
+            assign
+              bcol[ii]:width = v-windth when v-windth > 0
+              bcol[ii]:visible = false when v-isDisp = "no"
+            .
+          end.
         end.
       end.
       Btn_Sel:label = "Просмотр".
@@ -1448,7 +1480,15 @@ PROCEDURE reopen-browse :
       then do:
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-act-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-          if ii = 1 then bcol[ii]:width = 10.
+          if entry (ii, egaisWBAdv:SettingsTTList, ';') <> ""
+          then do:
+            v-windth = integer (entry (1, entry (ii, egaisWBAdv:SettingsTTList, ';'))).
+            v-isDisp = entry (2, entry (ii, egaisWBAdv:SettingsTTList, ';')).
+            assign
+              bcol[ii]:width = v-windth when v-windth > 0
+              bcol[ii]:visible = false when v-isDisp = "no"
+            .
+          end.
         end.
       end.
       Btn_Sel:label = "Просмотр". 
@@ -1485,12 +1525,15 @@ PROCEDURE reopen-browse :
       then do:
         do ii = 1 to bh-wb-egais:num-fields:
           bcol[ii] = browse-hdl-wb-egais:add-like-column('tt-wb-hndls' + '.' + bh-wb-egais:buffer-field (ii):name, 0, 'FILL-IN').
-          if ii = 1 then bcol[ii]:width = 20.
-          if ii = 4 then bcol[ii]:width = 12.
-          if ii = 5 then bcol[ii]:width = 9.
-          if ii = 6 then bcol[ii]:width = 20.
-          if ii = 7 then bcol[ii]:width = 10.
-          if ii = 9 then bcol[ii]:width = 5.
+          if entry (ii, egaisWBAdv:SettingsTTList, ';') <> ""
+          then do:
+            v-windth = integer (entry (1, entry (ii, egaisWBAdv:SettingsTTList, ';'))).
+            v-isDisp = entry (2, entry (ii, egaisWBAdv:SettingsTTList, ';')).
+            assign
+              bcol[ii]:width = v-windth when v-windth > 0
+              bcol[ii]:visible = false when v-isDisp = "no"
+            .
+          end.
         end.
       end.
       Btn_Sel:label = "Просмотр".

@@ -39,6 +39,7 @@ define variable browse-hdl-ticket-egais as handle no-undo.
 define variable bh-ticket-egais         as handle no-undo.
 define variable bcol                    as handle extent no-undo.
 {ibs/th/bge/egais/wb-egais.i}
+{ cmp/showinf.i  }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

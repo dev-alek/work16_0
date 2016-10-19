@@ -161,6 +161,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     get.
     set.
 
+  define property SettingsTTList as character no-undo
+    get.
+    set.
+
   define temp-table tt-wb-hndls no-undo
     field num          as character label "№ накл." format "X(50)"
     field wb-date      as date      label "Дата"
@@ -171,7 +175,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     field wb-type      as character label "Тип" format "x(20)" 
     field trn-doc-code as character label "№ накл. TH"
     field status_      as character label "Статус" format "x(20)"
-    field EGAISSts     as character label "Статус ЕГАИС"
+    field EGAISSts     as character label "Статус ЕГАИС" format "x(20)"
     field is-sent      as character label "Отправлена"
     field wbregid      as character label "WBREGID" format "X(18)"
     field Identity     as character format "X(50)"
@@ -472,6 +476,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         end.
       when {&wb-clob} then 
         do:
+          SettingsTTList = "20,yes;;;12,yes;9,yes;20,yes;10,yes;;6,yes;12,yes;;;;;;".
           empty temp-table tt-wb-hndls.
           for each buf_clob-bind-wb-hndls no-lock where buf_clob-bind-wb-hndls.resource-type = {&lob-egais-wb}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.Identity + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
@@ -534,6 +539,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         end.
       when {&wb-clob-act} then 
         do:
+          SettingsTTList = "10,yes;;;".
           empty temp-table tt-wb-act-hndls.
           for each buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb-act}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.Identity + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
@@ -550,7 +556,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       when {&ticket} then 
         do:
           empty temp-table tt-ticket.
-          
           find current tt-wb-hndls no-error.
           find first ub.clob-bind where (available (tt-wb-hndls) and ub.clob-bind.resource-type = {&lob-egais-wb} and ub.clob-bind.uniq-key-rec = tt-wb-hndls.uniq-key-rec) no-error.
           
@@ -622,9 +627,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         end.
       when {&wb-fact} then 
         do:
+          SettingsTTList = "20,yes;;;12,yes;9,yes;20,yes;10,yes;;6,yes;12,yes;;;;;;".
           empty temp-table tt-wb-hndls.
           for each buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais}:
-            for each buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-attr.doc-code and buf_trn-doc.status_ = {&fact}:
+            for each buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-attr.doc-code and buf_trn-doc.status_ = {&fact} and lookup (buf_trn-doc.doc-type, {&income_return}) > 0 :
               if ObjCode <> buf_trn-doc.obj-code or ObjType <> buf_trn-doc.obj-type
                 then next.
 
@@ -638,7 +644,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                   and ub.ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + buf_trn-doc.cli-type + {&delim-key} + string (buf_trn-doc.cli-code)
                   no-error.
 
-              find first ub.doc-attr no-lock where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-egais}  no-error.
+              find first ub.doc-attr no-lock where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-egais} no-error.
               
               create tt-wb-hndls. 
               assign
@@ -653,7 +659,9 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 tt-wb-hndls.status_      = buf_trn-doc.status_ + (if buf_trn-doc.flag_ then "+" else "-")
                 tt-wb-hndls.wbregid      = entry (1, buf_doc-attr.attr-value, {&delim-cmd}) no-error.
                 assign
-                  tt-wb-hndls.wb-type      = {&TDEDT_Pri_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} .
+                  tt-wb-hndls.wb-type      = {&TDEDT_Pri_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+                  tt-wb-hndls.wb-type      = {&TDEDT_Vozvrat_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}
+                .
                 tt-wb-hndls.is-sent = if available (ub.doc-attr) then "да" else "".
                 entry (1, tt-wb-hndls.uniq-key-rec, {&delim-cmd}) = "".
                 tt-wb-hndls.uniq-key-rec = left-trim (tt-wb-hndls.uniq-key-rec, {&delim-cmd}).
@@ -666,10 +674,11 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         end.
       when {&wb-ras} then 
         do:
+          SettingsTTList = "20,no;;;12,yes;9,yes;20,yes;17,yes;;6,yes;20,yes;;1,no;1,no;1,no;1,no;1,no".
           empty temp-table tt-wb-hndls.
             
             for each buf_trn-doc no-lock where buf_trn-doc.obj-code = ObjCode and buf_trn-doc.obj-type = ObjType 
-              and buf_trn-doc.status_ = {&fact}
+              and (buf_trn-doc.status_ = {&fact} or buf_trn-doc.status_ = {&permitted})
               and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) :
 
               find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
@@ -693,8 +702,12 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 tt-wb-hndls.wb-type      = {&TDEDT_Ras_Vnesh_VP-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
                 tt-wb-hndls.wb-type      = {&TDEDT_Ras_Perem-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
                 tt-wb-hndls.wb-type      = {&TDEDT_Ras_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
-                tt-wb-hndls.status_      = if available (buf_doc-attr) then {&egais-wb-send-full} else "не отправлена".
-                
+                tt-wb-hndls.EGAISSts     = if available (buf_doc-attr) and not buf_doc-attr.attr-value = {&egais-wb-send} then buf_doc-attr.attr-value else ""
+                tt-wb-hndls.EGAISSts     = {&egais-wb-send-full} when  available (buf_doc-attr) and buf_doc-attr.attr-value = {&egais-wb-send}
+                tt-wb-hndls.EGAISSts     = "не отправлена" when not available (buf_doc-attr)
+                tt-wb-hndls.wbregid      = buf_doc-attr.attr-value when available (buf_doc-attr)
+                tt-wb-hndls.status_      = buf_trn-doc.status_ + (if buf_trn-doc.flag_ then "+" else "-")
+              .
             end.
 
           return buffer tt-wb-hndls:handle.
@@ -715,13 +728,20 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
             StatusErr = true.
             return ?.
           end.
+
+          if buf_trn-doc.fact-date = ?
+          then do:
+            Msg = "Неизвестная фактическая дата накладной: " + inWbIdentity + ". Установите фактическую дату в накладной.".
+            StatusErr = true.
+            return ?.
+          end.          
           
           create tt-wb-header.
           assign
             tt-wb-header.Identity = buf_trn-doc.doc-code
             tt-wb-header.wb-type = "WBReturnFromMe" when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
             tt-wb-header.wb-type = "WBInvoiceFromMe" when buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
-            tt-wb-header.wb-date = buf_trn-doc.fact-date
+            tt-wb-header.wb-date = buf_trn-doc.fact-date 
             tt-wb-header.cli-code = buf_trn-doc.cli-code
             tt-wb-header.cli-type = buf_trn-doc.cli-type
             tt-wb-header.obj-type = buf_trn-doc.obj-type
@@ -770,6 +790,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 StatusErr = true.
                 return ?.
               end.
+
 /*              extGdsObj:OpenQueryExtGds(buf_gds.gds-code, entry (3, buf_parts.alc-ref-ab-path, ",")).*/
               find first ub.gds-dtl where 
                     ub.gds-dtl.doc-code = buf_doc-line.doc-code
@@ -826,7 +847,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               alcTypeAttrObj:GetAlcTypeAttr ( input tt-wb-gds-EG.alc-type-code,
                                        input   "alc-min-price",
                                        output  minPrice
-                                    ).
+                                    ) no-error.
               
               if tt-wb-gds-EG.price < minPrice * buf_gds.cli-base-rate 
               then do:
@@ -834,7 +855,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 + substitute ("Для товара &2/&1 &3 цена в накладной &4 меньше допустимой &5 по группе &6.", tt-wb-gds-EG.alc-code, buf_gds.gds-code, tt-wb-gds-EG.gds-name, tt-wb-gds-EG.price / buf_gds.cli-base-rate, minPrice, tt-wb-gds-EG.alc-type-code).
               end.
 
-              
               assign
                 tt-wb-gds-EG.ms-base = buf_gds.ms-base
                 tt-wb-gds-EG.proof = buf_gds.proof
@@ -867,7 +887,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       StatusErr = false
       Msg       = ""
       .
-    
+    output stream outstr close.
     if IsSent 
       then 
     do:
@@ -1048,7 +1068,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         VerXSDShip = entry (1, buf_ext-classif-attr.attr-code, chr(4))
       no-error.
     else VerXSDShip = 'WayBill'.
-  
+    output stream outstr close.
     output stream outstr to value ("TTNAct.xml") convert target "UTF-8". 
 
     if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
@@ -1136,7 +1156,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     assign
       inFileName = "RespRequestRepealWB.xml"
       .
-      
+    output stream outstr close.
     find first tt-wb-header.
       
     output stream outstr to value ("RequestRepealWB.xml") convert target "UTF-8". 
@@ -1263,6 +1283,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
   
   method public void GetDocUTM ():
     
+    output stream str-formF1 close.
     output stream str-formF1 to "loWBgFormF1.txt" append.
     
     GetDocUTMPrivat ().
@@ -1605,6 +1626,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                   assign
                     inFileName = "WayBillAct.xml"
                     .
+                  run gbl\inidebug.p.
                   CmdParseXml(urlStr).
                   if StatusErr
                   then do:
@@ -1645,7 +1667,21 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     StatusErr = false.
                     next url_.
                   end.
-  
+                  find first ub.doc-attr no-lock where ub.doc-attr.attr-code = {&trdcattr-negais} and ub.doc-attr.attr-value = tt-wb-act-header.wbregid no-error.
+                  if available (ub.doc-att)
+                  then do:
+                    find first buf_doc-attr exclusive-lock where buf_doc-attr.doc-code = ub.doc-attr.doc-code and buf_doc-attr.attr-code = {&trdcattr-egais} no-error.
+                    if not available (buf_doc-attr)
+                    then do:
+                      create buf_doc-attr.
+                      assign 
+                        buf_doc-attr.doc-code = ub.doc-attr.doc-code
+                        buf_doc-attr.attr-code = {&trdcattr-egais}
+                      .
+                    end.
+                    buf_doc-attr.attr-value = tt-wb-act-header.status_.
+                    release buf_doc-attr.
+                  end.
                 end.
               when urlStr matches ("*opt/out/WayBillTicket/*") then 
                 do:
@@ -2102,6 +2138,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       return.
     end.
     
+    output stream outstr close.
     output stream outstr to value ("warWBLog.txt").
     put stream outstr unformatted Msg.
     output stream outstr close.
