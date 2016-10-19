@@ -1214,9 +1214,16 @@ for each obj-list no-lock:  /* По всем объектам */
           if part-1.producer-inn = "" or part-1.producer-inn = ?
           or part-1.producer-kpp = "" or part-1.producer-kpp = ?
           then do :
-              put stream logStr unformatted 'Производитель/импортер "'  part-1.producer-obj-name
-               '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Партия по ПН № ' temp-parts.in-code skip .
-              v-inn-err = true .
+              if part-1.producer-inn <> "" and part-1.producer-inn <> ?
+              and (part-1.producer-kpp = "" or part-1.producer-kpp = ?)
+              and tt-parts-info.importer = 'ЕГАИС. Производитель из Таможенного Союза'
+              then do :
+              end.    
+              else do :
+                  put stream logStr unformatted 'Производитель/импортер "'  part-1.producer-obj-name
+                   '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Артикул: ' tt-parts-info.artic ' ; партия по ПН № ' temp-parts.in-code skip .
+                  v-inn-err = true .
+              end.
           end.
 
           end. /* if not available (part-1) */
@@ -1498,9 +1505,16 @@ for each obj-list no-lock:  /* По всем объектам */
           if part-1.producer-inn = "" or part-1.producer-inn = ?
           or part-1.producer-kpp = "" or part-1.producer-kpp = ?
           then do :
-              put stream logStr unformatted 'Производитель/импортер "'  part-1.producer-obj-name
-               '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Партия по ПН № ' temp-parts.in-code skip .
-              v-inn-err = true .
+              if part-1.producer-inn <> "" and part-1.producer-inn <> ?
+              and (part-1.producer-kpp = "" or part-1.producer-kpp = ?)
+              and tt-parts-info.importer = 'ЕГАИС. Производитель из Таможенного Союза'
+              then do :
+              end.    
+              else do :
+                  put stream logStr unformatted 'Производитель/импортер "'  part-1.producer-obj-name
+                   '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Артикул: ' tt-parts-info.artic ' ; партия по ПН № ' temp-parts.in-code skip .
+                  v-inn-err = true .
+              end.
           end.
 
           end. /* if not available (part-1) */
@@ -1780,9 +1794,16 @@ for each obj-list no-lock:  /* По всем объектам */
                     if part-1.producer-inn = "" or part-1.producer-inn = ?
                     or part-1.producer-kpp = "" or part-1.producer-kpp = ?
                     then do :
-                        put stream logStr unformatted 'Производитель/импортер "'  part-1.producer-obj-name
-                         '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Партия по ПН № ' buf_parts.in-code skip .
-                        v-inn-err = true .
+                        if part-1.producer-inn <> "" and part-1.producer-inn <> ?
+                        and (part-1.producer-kpp = "" or part-1.producer-kpp = ?)
+                        and tt-parts-info.importer = 'ЕГАИС. Производитель из Таможенного Союза'
+                        then do :
+                        end.    
+                        else do :
+                            put stream logStr unformatted 'Производитель/импортер "'  part-1.producer-obj-name
+                             '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Артикул: ' tt-parts-info.artic ' ; партия по ПН № ' temp-parts.in-code skip .
+                            v-inn-err = true .
+                        end.
                     end.
 
                 end. /* if not available (part-1) */
