@@ -2680,49 +2680,52 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
 run waitfram-hide in this-procedure.
 
 /*генерация ФО для расходных накладных*/
-for each tt-trn : delete tt-trn. end. /* for each */
-        if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass} or bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass} and bf_trn-doc.contract-code <> 0 and bf_trn-doc.contract-code <> ? then do:
+for each tt-trn: delete tt-trn. end. /* for each */
+        define variable v-sum like ub.fin-ob-trn.sum-rubl no-undo .
+        if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} and bf_trn-doc.contract-code <> 0 and bf_trn-doc.contract-code <> ? then do:
                 p-cons = 0.
                 
-            find first bf_contract where bf_contract.contract-code = bf_trn-doc.contract-code no-error.
+            find first bf_contract no-lock where bf_contract.contract-code = bf_trn-doc.contract-code no-error .
               if available bf_contract then do:
                 if  bf_contract.usl-opl <> '{&bef-contr-pay-nodef}' then do:
                 define variable v-fo-gen as integer no-undo.
                     { gbl/getsect.i run "''" 0  {&attr-fin-global} }
-                    for each thbjattr_thbj-attr :
+                    for each thbjattr_thbj-attr exclusive-lock:
                         if thbjattr_thbj-attr.prop-code = {&attr-fin-global_fo-gen}  then v-fo-gen = thbjattr_thbj-attr.property-value-integer .
                     end.
                     if ((varstatus = {&wayb} and bf_trn-doc.flag_ = yes and (v-fo-gen = 3 or v-fo-gen = 2 )) or (varstatus = {&permitted} and (v-fo-gen = 4 or v-fo-gen = 5) ) or (varstatus = {&fact} and v-fo-gen > 1 )) or ((bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}') and varstatus = {&permitted}) then do:
-                        if available bf_trn-doc then do:
-                        if not available tt-trn then                                                                                        
-                              create tt-trn.
-                              BUFFER-COPY bf_trn-doc to tt-trn.
-                        end.
+                                  for each bf_fin-ob-trn where bf_fin-ob-trn.trn-doc-code = bf_trn-doc.doc-code exclusive-lock:
+                                    v-sum = v-sum + bf_fin-ob-trn.sum-rubl .
+                                  end.
+                                  if (abs (v-sum) <> bf_trn-doc.tot-fact and abs (v-sum) <> (bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl)) or (bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}') and (varstatus = {&permitted} or (varstatus = {&fact} and v-fo-gen > 1 )) then do:
+ 
                         if bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}' then p-cons = 1. /*Предоплата*/
                         if bf_contract.usl-opl = '{&bef-contr-buyer-in}'  then p-cons = 2. /*По факту поставки*/
                         if bf_contract.usl-opl = '{&bef-contr-buyer-in-delay}'  then p-cons = 3. /*По всем*/
-                        if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass} and bf_trn-doc.cr-fo-buyer = no then do:
-                         if bf_contract.usl-opl <> '{&bef-contr-buyer-ord}' or bf_contract.usl-opl <> '{&bef-contr-buyer-ord-prc}' then do:
-                                 find first bf_fin-ob-trn where bf_fin-ob-trn.trn-doc-code = bf_trn-doc.doc-code and (bf_fin-ob-trn.sum-rubl = bf_trn-doc.tot-fact or bf_fin-ob-trn.sum-rubl = (bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl)) no-error.
-                                  if not available bf_fin-ob-trn then do: 
-                                    run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact ) no-error .
-                                    if error-status :error then return error return-value .
-                                  end.
-                          end.
-                         if (bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}') and (varstatus = {&permitted} or (varstatus = {&fact} and v-fo-gen > 1 )) then do:
-                                  
-                                    run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact ) no-error .
+                        if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} then do:
+                         if bf_contract.usl-opl <> '{&bef-contr-buyer-ord}' and bf_contract.usl-opl <> '{&bef-contr-buyer-ord-prc}' then do:
+                                    run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl ) no-error .
                                     if error-status :error then return error return-value .
                                  
                           end.
-                         if bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}' then do:
-                                 find first bf_fin-ob-trn where bf_fin-ob-trn.trn-doc-code = bf_trn-doc.doc-code and (bf_fin-ob-trn.sum-rubl = bf_trn-doc.tot-fact or bf_fin-ob-trn.sum-rubl = (bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl)) no-error.
-                                  if not available bf_fin-ob-trn then do: 
-                                    run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact ) no-error .
+                         if (bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}') and varstatus = {&permitted} then do:
+                                    run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input 0, input  bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl ) no-error .
                                     if error-status :error then return error return-value .
-                                  end.
-                          end.                                  
+                         end.
+                         if (bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}') and (varstatus = {&fact} and v-fo-gen > 1 ) then do:
+                           if abs (v-sum) <> bf_trn-doc.tot-fact and abs (v-sum) <> (bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl) then do:
+                             if bf_trn-doc.fact-qnty <> bf_trn-doc.doc-qnty then do:
+                                find first bf_fin-ob-trn where bf_fin-ob-trn.trn-doc-code = bf_trn-doc.doc-code and v-sum > (bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl) no-error.
+                                if not available bf_fin-ob-trn then do:
+                                      run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl ) no-error .
+                                      if error-status :error then return error return-value .
+                                end.      
+                             end.         
+                           end.
+                         end.
                         end.
+                        if abs (v-sum) <> (bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl) and abs (v-sum) <> (bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl) then do:
+                        BUFFER-COPY bf_trn-doc to tt-trn.
                       run str/genbfotr.p (
                           input parParentProc ,
                           input bf_contract.host-code ,
@@ -2735,11 +2738,12 @@ for each tt-trn : delete tt-trn. end. /* for each */
                           input 2,
                           input yes
                           ) no-error .
+                     end.
                      end.           
-
-                end. /*               if  bf_trn-doc.status_ = {&fact} and bf_contract.usl-opl <> {&bef-contr-pay-nodef} then do:*/
-          end.
-        end. /*if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) and (bf_trn-doc.contract-code <> 0 or bf_trn-doc.contract-code <> ?) then do:*/
+                     end. 
+      end. /*               if  bf_trn-doc.status_ = {&fact} and bf_contract.usl-opl <> {&bef-contr-pay-nodef} then do:*/
+    end.
+  end. /*if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) and (bf_trn-doc.contract-code <> 0 or bf_trn-doc.contract-code <> ?) then do:*/
 end. /* transaction */
 
 
