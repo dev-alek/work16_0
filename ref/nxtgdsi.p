@@ -32,6 +32,7 @@ define input parameter p-destin    as integer no-undo .
 define input parameter p-sert    as integer no-undo .
 define input parameter p-user-rule    as integer no-undo .
 define input parameter p-alpha1       as integer no-undo .
+define input parameter p-grp-code     as integer no-undo .
 /*номер строчки импорта*/
 DEFINE INPUT PARAMETER ii as integer No-UNDO.
 
@@ -50,6 +51,7 @@ define input-output parameter i-destin like ub.goods.destin no-undo .
 define input-output parameter i-sert like ub.goods.sert no-undo .
 define input-output parameter i-user-rule like ub.goods.user-rule no-undo .
 define input-output parameter i-alpha1 like ub.goods.alpha1 no-undo .
+define input-output parameter i-grp-code like ub.goods.grp-code no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -66,7 +68,8 @@ DEFINE SHARED stream gds-file.
 DEFINE var text-string as char no-undo.
 define variable i-prod as character no-undo .
 IMPORT stream gds-file UNFORMATTED text-string NO-ERROR.
-if error-status:error OR text-string = ? or text-string = "" then return error.
+if text-string = ? or text-string = "" then return "END" .
+if error-status:error then return error.
 
 if p-artic > 0
 then
@@ -304,6 +307,14 @@ i-alpha1 = ENTRY(p-alpha1, text-string, ";").
 else
 assign
 i-alpha1 = ""
+.
+if p-grp-code > 0
+then
+assign
+i-grp-code = integer(ENTRY(p-grp-code, text-string, ";")).
+else
+assign
+i-grp-code = 0
 .
 
 IF ERROR-STATUS:error then return error.

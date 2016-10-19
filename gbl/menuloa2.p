@@ -550,6 +550,16 @@ define variable vss-description as character no-undo init "".
   "yes"
 }
 { gbl/menuload.i
+  {&bef-menuload_adm_impexp}
+  "'Импорт товаров'"
+  "'utl/rnp-imp-gds.p'"
+  "no"
+  "'11.1'"
+  "'1'"
+  " "
+  "yes"
+}
+{ gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Пересчет учетной цены в переоценке на момент закрытия по всем объектам'"
   "'utl/pr-csac.p'"
