@@ -125,6 +125,13 @@ procedure rsrv-doc :
         then v-mark-list = v-mark-list + (if v-mark-list = '' then '' else ',') + v-mark .
       end.
       buf1_doc-line-attr.attr-value = v-mark-list .
+      v-mark-list = "" .
+      do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :
+        v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
+        if not can-do(buf1_doc-line-attr.attr-value, ("-" + v-mark)) and not v-mark begins "-"
+        then v-mark-list = v-mark-list + (if v-mark-list = '' then '' else ',') + v-mark .
+      end.
+      buf1_doc-line-attr.attr-value = v-mark-list .
       do mark-ii = 1 to min(num-entries(buf1_doc-line-attr.attr-value), buf_doc-line.fact-qnty) :
         v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
         run ProcAlcCode (input v-mark, output v-alc-code) no-error.

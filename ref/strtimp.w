@@ -44,6 +44,7 @@ define output parameter p-destin     as integer no-undo .
 define output parameter p-sert     as integer no-undo .
 define output parameter p-user-rule     as integer no-undo .
 define output parameter p-alpha1    as integer no-undo .
+define output parameter p-grp-code  as integer no-undo .
 
 
 /* Local Variable Definitions ---                                       */
@@ -79,6 +80,7 @@ DEFINE stream gds-file.
 &SCOPED-DEFINE p-user-rule 12
 &SCOPED-DEFINE p-prod 13
 &SCOPED-DEFINE p-alpha1 14
+&SCOPED-DEFINE p-grp-code 15
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -97,11 +99,11 @@ DEFINE stream gds-file.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-atribut B-exit b-quit B-check B-Help ~
 B-file file-name RS-codir T-engl-name T-unit-base T-VAT-code T-SLT-code ~
-T-struct T-tnved T-destin T-attrib T-user-rule T-sert T-prod T-alpha1 ~
+T-struct T-tnved T-destin T-attrib T-user-rule T-sert T-prod T-alpha1 T-grp-code ~
 text-string
 &Scoped-Define DISPLAYED-OBJECTS file-name T-artic RS-codir T-name ~
 T-engl-name T-unit-base T-VAT-code T-SLT-code T-struct T-tnved T-destin ~
-T-attrib T-user-rule T-sert T-prod T-alpha1 text-string
+T-attrib T-user-rule T-sert T-prod T-alpha1 T-grp-code text-string
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -167,7 +169,7 @@ DEFINE VARIABLE RS-codir AS INTEGER
 
 DEFINE RECTANGLE RECT-atribut
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 41.75 BY 14.83.
+     SIZE 41.75 BY 15.83.
 
 DEFINE VARIABLE T-alpha1 AS LOGICAL INITIAL no
      LABEL "Страна"
@@ -176,6 +178,11 @@ DEFINE VARIABLE T-alpha1 AS LOGICAL INITIAL no
 
 DEFINE VARIABLE T-artic AS LOGICAL INITIAL yes
      LABEL "Артикул"
+     VIEW-AS TOGGLE-BOX
+     SIZE 29 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE T-grp-code AS LOGICAL INITIAL no
+     LABEL "Код группы"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
@@ -264,6 +271,7 @@ DEFINE FRAME Dialog-Frame
      T-sert AT ROW 16.08 COL 24.5
      T-prod AT ROW 17.08 COL 24.5
      T-alpha1 AT ROW 18.08 COL 24.5
+     T-grp-code AT ROW 19.08 COL 24.5
      ii AT ROW 20 COL 2
      text-string AT ROW 21 COL 2.13 NO-LABEL
      "Кодировка" VIEW-AS TEXT
@@ -339,9 +347,10 @@ DO:
   define variable NEN as integer No-UNDO.
   define variable p-text as char no-undo.
   define variable p-int as integer no-undo.
-  define variable vars as integer no-undo EXTENT 14.
+  define variable vars as integer no-undo EXTENT 15.
   define variable lok as logical no-undo.
   define buffer buf_country for ub.country.
+  define buffer buf_gds-grp for ub.gds-grp .
   assign
   file-name
   v_os-file = file-name
@@ -361,6 +370,7 @@ DO:
   T-sert
   T-user-rule
   T-alpha1
+  T-grp-code
   NEN = NEN + integer(T-artic)
   vars[{&p-artic}] = NEN
   p-artic = vars[{&p-artic}]
@@ -403,6 +413,9 @@ DO:
   NEN = NEN + integer(T-alpha1)
     vars[{&p-alpha1}] = if T-alpha1 then NEN else 0
     p-alpha1 = vars[{&p-alpha1}]
+   NEN = NEN + integer(T-grp-code)
+    vars[{&p-grp-code}] = if T-grp-code then NEN else 0
+    p-grp-code = vars[{&p-grp-code}]
 
   .
 
@@ -565,6 +578,21 @@ DO:
             if NOT lok then return no-apply.
         END.
     end.
+    if vars[{&p-grp-code}] > 0 then do:
+        FIND FIRST buf_gds-grp NO-LOCK where
+                   buf_gds-grp.node-code = integer(ENTRY(vars[{&p-grp-code}], text-string, ";"))
+                   No-ERROR.
+        IF NOT avail buf_gds-grp then do:
+            message "Нет в БД группы товаров с вн. номером "
+                    ENTRY(vars[{&p-grp-code}], text-string, ";") skip
+                    " - поле N " vars[{&p-grp-code}]
+                    "   строчка N " ii
+            view-as alert-box ERROR
+            buttons OK-Cancel update lok
+            .
+            if NOT lok then return no-apply.
+        END.
+    end.
 
   END.
   HIDE
@@ -584,7 +612,7 @@ END.
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Ввод */
 DO:
   define variable NEN as integer No-UNDO.
-  define variable vars as integer no-undo EXTENT 14.
+  define variable vars as integer no-undo EXTENT 15.
   assign
   file-name
   v_os-file = file-name
@@ -604,6 +632,7 @@ DO:
   T-sert
   T-user-rule
   T-alpha1
+  T-grp-code
   NEN = NEN + integer(T-artic)
   vars[{&p-artic}] = NEN
   p-artic = vars[{&p-artic}]
@@ -647,6 +676,9 @@ DO:
   NEN = NEN + integer(T-alpha1)
   vars[{&p-alpha1}] = if T-alpha1 then NEN else 0
   p-alpha1 = vars[{&p-alpha1}]
+  NEN = NEN + integer(T-grp-code)
+  vars[{&p-grp-code}] = if T-grp-code then NEN else 0
+  p-alpha1 = vars[{&p-grp-code}]
   .
   if p-tnved > 0 then do:
     if custvalue = "no"  then do:
@@ -802,7 +834,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                string(t-sert)        + {&delim-par} +
                string(t-user-rule)   + {&delim-par} +
                string(t-prod)        + {&delim-par} +
-               string(t-alpha1)
+               string(t-alpha1)      + {&delim-par} +
+               string(t-grp-code)
   v-uf-Naim  = v-init-dir
  .
   run uf-set in this-procedure(
@@ -855,11 +888,11 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY file-name T-artic RS-codir T-name T-engl-name T-unit-base T-VAT-code
           T-SLT-code T-struct T-tnved T-destin T-attrib T-user-rule T-sert
-          T-prod T-alpha1 text-string
+          T-prod T-alpha1 T-grp-code text-string
       WITH FRAME Dialog-Frame.
   ENABLE RECT-atribut B-exit b-quit B-check B-Help B-file file-name RS-codir
          T-engl-name T-unit-base T-VAT-code T-SLT-code T-struct T-tnved
-         T-destin T-attrib T-user-rule T-sert T-prod T-alpha1 text-string
+         T-destin T-attrib T-user-rule T-sert T-prod T-alpha1 T-grp-code text-string
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -908,6 +941,11 @@ run uf-get in this-procedure(
   if num-entries(v-uf-List_, {&delim-par}) >= 14 then
   assign
   T-alpha1       =  logical(entry({&p-alpha1}     ,      v-uf-list_, {&delim-par}))
+  no-error
+  .
+  if num-entries(v-uf-List_, {&delim-par}) >= 15 then
+  assign
+  T-grp-code     =  logical(entry({&p-grp-code}     ,      v-uf-list_, {&delim-par}))
   no-error
   .
 

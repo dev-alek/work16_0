@@ -53,8 +53,8 @@ define variable g#log as logical   no-undo .
 def var     scale_recid       as  recid    no-undo.
 DEF var Sort as int no-undo.
 DEF var Crit as int no-undo.
-DEF var Sc-node like ub.gds-prt.node-code no-undo.
-DEF var Sc-upper like ub.gds-prt.upper-code no-undo.
+DEF var Sc-node like gds-prt.node-code no-undo.
+DEF var Sc-upper like gds-prt.upper-code no-undo.
 
 &glob bs-1    "Макс. количество"
 &glob bs-2    "Макс. сумма продаж в учетных ценах"
@@ -80,9 +80,10 @@ DEF var Sc-upper like ub.gds-prt.upper-code no-undo.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-11 RECT-12 COMBO-crit COMBO-Sort ~
-RECT-10 Tog-Scale Sc_Name BSAmount FILL-IN-1
+RECT-10 Tog-Scale Sc_Name BSAmount FILL-IN-1 
 &Scoped-Define DISPLAYED-OBJECTS COMBO-crit COMBO-Sort Tog-Scale Sc_Name ~
-Scale BSAmount FILL-IN-1
+Scale BSAmount FILL-IN-1 
+
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -158,6 +159,7 @@ DEFINE VARIABLE Tog-Scale AS LOGICAL INITIAL no
      LABEL "По признакам"
      VIEW-AS TOGGLE-BOX
      SIZE 16 BY .83 NO-UNDO.
+
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -292,10 +294,10 @@ DO:
              end.
              else
              do:
-                  find first ub.gds-prt where recid (ub.gds-prt) = scale_recid.
-                  Sc_Name:screen-value IN FRAME {&FRAME-NAME} = ub.gds-prt.node-name.
-                  Sc-node = ub.gds-prt.node-code.
-                  Sc-Upper = ub.gds-prt.upper-code.
+                  find first gds-prt where recid (gds-prt) = scale_recid.
+                  Sc_Name:screen-value IN FRAME {&FRAME-NAME} = gds-prt.node-name.
+                  Sc-node = gds-prt.node-code.
+                  Sc-Upper = gds-prt.upper-code.
              end.
     end.
     else
@@ -428,7 +430,38 @@ if BSAmount = ? or
   return.
 end.
 
+ 
 
+ assign sheetf.Excel-Column-Lable = ""  sheetf.Sizes = "" .
+    if use-column[1]   = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Код,"                     sheetf.Sizes              = sheetf.Sizes +  "10," .
+    if use-column[2]   = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Артикул,"                 sheetf.Sizes              = sheetf.Sizes +  "16," .
+    if use-column[3]   = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Название товара,"         sheetf.Sizes              = sheetf.Sizes +  "40," .
+    if use-column[4]   = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Ед. изм,"                 sheetf.Sizes              = sheetf.Sizes +  "6," .
+    if use-column[5]   = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Количество,"              sheetf.Sizes              = sheetf.Sizes +  "15," .
+    if use-column[6]   = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "в т.ч. Касса,"            sheetf.Sizes              = sheetf.Sizes +  "15," .
+    if use-column[7]   = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Сумма в учетных ценах,"        sheetf.Sizes              = sheetf.Sizes +  "15," .
+    if use-column[8]   = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "в т.ч. Касса в учетных ценах,"          sheetf.Sizes              = sheetf.Sizes +  "15," .
+    if use-column[9]   = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Сумма в ценах док-та,"          sheetf.Sizes              = sheetf.Sizes +  "15," .
+    if use-column[10]   = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "в т.ч. Касса в ценах док-та,"          sheetf.Sizes              = sheetf.Sizes +  "15," .
+    if use-column[11]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Эффективность ,"  sheetf.Sizes              = sheetf.Sizes +  "16," .
+    if use-column[12]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "% (по критерию отбора),"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[13]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Количество (с учетом внеш.расходов),"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[14]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Сумма продажи в уч.ценах (с учетом внеш.расходов),"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[15]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Сумма продажи в ценах документа (с учетом внеш.расходов),"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[16]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Доля в доходах,"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[17]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Остаток на начало,"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[18]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Остаток на конец,"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[19]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Средняя учетная цена,"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[20]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Средняя цена продажи,"           sheetf.Sizes              = sheetf.Sizes +  "12," .  
+    if use-column[21]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Наценка в руб.,"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[22]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Наценка в %,"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[23]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Оборачиваемость в днях,"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+    if use-column[24]  = yes then assign sheetf.Excel-Column-Lable = sheetf.Excel-Column-Lable + "Срок реализации остатка,"           sheetf.Sizes              = sheetf.Sizes +  "12," .
+ 
+ 
+ if LENGTH( sheetf.Excel-Column-Lable ) > 0 then do:
+   substr ( sheetf.Excel-Column-Lable, LENGTH( sheetf.Excel-Column-Lable )) = "" .
+   substr ( sheetf.Sizes, LENGTH( sheetf.Sizes )) = "" .
  run rep/r-bestsl.p
                 ( input v-cntxt-obj-code ,
                   input v-cntxt-obj-type ,
@@ -439,8 +472,9 @@ end.
                   input BSAmount ,
                   input Sc-node,
                   input Sc-upper,
-                  input Tog-Scale).
-
+                  input Tog-Scale
+                  ).
+end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -455,10 +489,10 @@ PROCEDURE my-var :
 ------------------------------------------------------------------------------*/
 assign frame {&frame-name}
         BSAmount COMBO-crit COMBO-Sort FILL-IN-1
-        Sc_Name Scale Tog-Scale.
+        Sc_Name Scale Tog-Scale  .
 
 v-show-all-goods  = false  .
-/*строки в которых содержатся выбранные объекты */
+/*строки в которых содержатся выбранные обекты */
 Assign
  STR-obj-type = ''
  STR-obj-code = ''
@@ -481,12 +515,38 @@ End.
       + "," + "в т.ч. Касса "
       + "," + "Сумма в учетных ценах"
       + "," + "в т.ч. Касса в учетных ценах"
-      + "," + "Сумма в ценах док-та"
+      + "," + "Сумма в ценах док-та" 
       + "," + "в т.ч. Касса в ценах док-та"
       + "," + "Эффективность "
-      + "," + " %" .
+      + "," + " % (по критерию отбора)" 
+      + "," + "Количество (с учетом внеш.расходов)"
+      + "," + "Сумма продажи в уч.ценах (с учетом внеш.расходов)"
+      + "," + "Сумма продажи в ценах документа (с учетом внеш.расходов)"
+      + "," + "Доля в доходах"
+      + "," + "Остаток на начало"
+      + "," + "Остаток на конец"
+      + "," +  "Средняя учетная цена"
+      + "," + "Средняя цена продажи"
+      + "," + "Наценка в руб."
+      + "," + "Наценка в %"
+      + "," + "Оборачиваемость в днях"
+      + "," + "Срок реализации остатка".
+/*Количество (с учетом внеш.расходов)                     */
+/*Сумма продажи в уч.ценах (с учетом внеш.расходов)       */
+/*Сумма продажи в ценах документа (с учетом внеш.расходов)*/
+/*Доля в доходах                                          */
+/*Остаток на начало                                       */
+/*Остаток на конец                                        */
+/*Средняя учетная цена                                    */
+/*Средняя цена продажи                                    */
+/*Наценка в руб.                                          */
+/*Наценка в %                                             */
+/*Оборачиваемость в днях                                  */
+/*Срок реализации остатка                                 */
 
-sheetf.Sizes =  "10,16,40,6,15,15,15,15,15,15,16,12,".
+    sheetf.Sizes =  "10,16,40,6,15,15,15,15,15,15,16,12,16,16,16,16,16,16,16,16,16,16,16,16".
+    sheetf.ColFormat = "2=@;3=@;" .
+    Sheetf.make-correct = "false,false,false,false,true,true,treu,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true" .
 ReportNAme = "Б Е С Т С Е Л Л Е Р Ы ".
             Case COMBO-crit:
                 when {&bs-1}                   then   crit = 1.

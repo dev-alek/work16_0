@@ -103,6 +103,7 @@ define variable v-cash-pay-attr as character no-undo.
 
 define variable par-alcohol as character no-undo .
 define variable par-type    as character no-undo .
+define variable mark-ii     as integer no-undo .
 
 define buffer buf_trn-doc for ub.trn-doc.
 define buffer buf_fbr-gds-obj for ub.fbr-gds-obj.
@@ -812,13 +813,18 @@ on error undo, return error return-value
                     output par-type
               ).
               if par-alcohol = "yes" then do :
-                find first chk-gds-attr no-lock where chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                find first chk-gds-attr exclusive-lock where chk-gds-attr.doc-code = buf_chk-gds.doc-code
                                                   and chk-gds-attr.line-num = buf_chk-gds.line-num
                                                   and chk-gds-attr.attr-code = "mark-code"
                                                   no-error .
                 if available chk-gds-attr
 /*                and not t-gds.marks matches ("*" + chk-gds-attr.attr-value + "*")*/
                 then do :
+                  if buf_chk-gds.doc-qnty < 0
+                  then do mark-ii = 1 to num-entries(chk-gds-attr.attr-value) :
+                      entry(mark-ii, chk-gds-attr.attr-value) = (if entry(mark-ii, chk-gds-attr.attr-value) begins "-" then "" else "-") 
+                                                              + entry(mark-ii, chk-gds-attr.attr-value) .
+                  end.
                   t-gds.marks = t-gds.marks + (if t-gds.marks = '' then '' else ',') + chk-gds-attr.attr-value .  
                 end.  
                 release chk-gds-attr no-error .

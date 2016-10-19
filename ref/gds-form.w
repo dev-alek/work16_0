@@ -170,6 +170,7 @@ define variable p-destin as integer no-undo .
 define variable p-sert as integer no-undo .
 define variable p-user-rule as integer no-undo .
 define variable p-alpha1 as integer no-undo .
+define variable p-grp-code as integer no-undo .
 define variable i-artic as char no-undo.
 define variable i-prod-type as character no-undo .
 define variable i-prod-code as integer no-undo .
@@ -185,6 +186,7 @@ define variable i-destin like ub.goods.destin no-undo .
 define variable i-sert like ub.goods.sert no-undo .
 define variable i-user-rule like ub.goods.user-rule no-undo .
 define variable i-alpha1 like ub.goods.alpha1 no-undo .
+define variable i-grp-code like ub.goods.grp-code no-undo .
 
 /*режим копирования обязательно не no-undo!*/
 define variable copymode as logical.
@@ -4015,6 +4017,7 @@ PROCEDURE start-import:
                           ,OUTPUT p-sert
                           ,OUTPUT p-user-rule
                           ,OUTPUT p-alpha1
+                          ,OUTPUT p-grp-code
                           ) no-error.
     if  error-status:error or f-name = "" then return error.
     CASE choice:
@@ -4076,6 +4079,7 @@ PROCEDURE next-good:
                              ,input p-sert
                              ,input p-user-rule
                              ,input p-alpha1
+                             ,input p-grp-code
                              ,input (impc + 1)
                              ,input-output i-artic
                              ,input-output i-prod-type
@@ -4092,6 +4096,7 @@ PROCEDURE next-good:
                              ,input-output i-sert
                              ,input-output i-user-rule
                              ,input-output i-alpha1
+                             ,input-output i-grp-code
                               ) .
         assign
         impc = impc + 1
@@ -4169,6 +4174,7 @@ i-engl-name @ ub.goods.engl-name
 ""                 @ ub.goods.label-name
 ""                 @ ub.goods.chk-name
 i-unit-base   @ ub.goods.unit-base
+i-unit-base   @ ub.goods.unit-cli
 with frame {&frame-name}
 .
 if p-prod <> 0 then do:
@@ -4185,6 +4191,19 @@ if p-alpha1 <> 0 then do:
   apply "LEAVE" to ub.goods.alpha1 in frame {&frame-name} .
 end.
 
+if p-grp-code <> 0 then do:
+  find first ub.gds-grp no-lock where ub.gds-grp.node-code = i-grp-code no-error .
+  if avail ub.gds-grp then do:
+    RUN grplib-get-full-name in this-procedure(input ub.gds-grp.node-code, output grp-full).
+    DISPLAY
+    (if length(grp-full) > 79
+    then
+    ("..." + substr(grp-full, length(grp-full) - 79))
+    else
+    grp-full) @ grp-full
+    with frame {&frame-name}.
+  end.
+end.
 
 assign
 temp-goods.attrib = i-attrib

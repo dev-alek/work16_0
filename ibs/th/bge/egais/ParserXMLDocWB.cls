@@ -1,14 +1,19 @@
- 
- /*------------------------------------------------------------------------
-    File        : ParseXMLDictGds
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : ASMorozov
-    Created     : 16/05/2016
-    Notes       : 
-  ----------------------------------------------------------------------*/
+/*
 
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Парсинг ЕГАИС.
+
+Автор: Морозов Александр Сергеевич
+Дата создания: 11/11/15
+Author: Alexandr Morozov
+Creation date: 11/11/15
+
+*/
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
 
@@ -361,7 +366,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
         if hNoderef:name = "wb:UnitType"     then assign tt-wb-header.UnitType = hText:node-value .
         
         if hNoderef:name = "wa:ACTNUMBER" then assign tt-wb-act-header.num = hText:node-value.
-        if hNoderef:name = "wa:ActDate" then assign tt-wb-act-header.act-date = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
+        if hNoderef:name = "wa:ActDate" then assign tt-wb-act-header.act-date = date (entry (3, right-trim (hText:node-value), "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, left-trim (hText:node-value), "-")) .
         if hNoderef:name = "wa:WBRegId" then assign tt-wb-act-header.wbregid = hText:node-value.
         if hNoderef:name = "wa:IsAccept" then assign tt-wb-act-header.status_ = hText:node-value.
         if hNoderef:name = "wa:Note" then assign tt-wb-act-header.note = hText:node-value.

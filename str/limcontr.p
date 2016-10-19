@@ -53,7 +53,7 @@ if available buf_contract and buf_contract.kredit-limit = yes then do:
     case p-type :
       when 0 then do:
         if buf_contract.balance-fo-rubl - buf_contract.balance-plat-rubl + p-sum-rubl > v-kredit-sum then
-          return  ERROR substitute('Превышен лимит кредита по договору (вн.№) &1 : текущий баланс &2 {&abbr_rub}; лимит &3 {&abbr_rub}; сумма по документу: &4 {&abbr_rub}', p-contract-code, buf_contract.balance-fo-rubl - buf_contract.balance-plat-rubl, v-kredit-sum , p-sum-rubl) .
+          return  ERROR substitute('Превышен лимит кредита по договору (вн.№) &1 : текущий баланс &2 {&abbr_rub}; лимит &3 {&abbr_rub}; сумма по документу: &4 {&abbr_rub}', p-contract-code, buf_contract.balance-fo-rubl - buf_contract.balance-plat-rubl, v-kredit-sum , p-sum-base) .
       end.
       when 1 then do:
         if buf_contract.balance-fo-base - buf_contract.balance-plat-base + p-sum-base > v-kredit-sum then

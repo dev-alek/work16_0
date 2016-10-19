@@ -51,14 +51,16 @@ ASSIGN parParentProc =  my-handle .
   &scop L1    1
   &scop L2    13
   &scop L3    17
-  &scop L4    40
-  &scop L5    65
-  &scop L6    90
+  &scop L4    47
+  &scop L5    70
+  &scop L6    95
+  &scop L7    120
   &scop F1    "99/99/9999"
   &scop F2    "X(3)"
   &scop F3    "X(20)"
-  &scop F4    "->>>,>>>,>>>,>>>,>>9.99"
-  &scop FL    "X(90)"
+  &scop F4    "X(20)"
+  &scop F5    "->>>,>>>,>>>,>>>,>>9.99"
+  &scop FL    "X(113)"
 
 
 DEFINE temp-table temp-cli no-undo
@@ -81,6 +83,7 @@ DEFINE temp-table temp-doc no-undo
     field   f-o          as decimal
     field   dat          as date
     field   num          as character
+    field   nakl         as character
     field   contr        as integer
     field   contr-type   as character
 /*    field   contr-name   as character*/
@@ -110,7 +113,8 @@ DEFINE temp-table temp-doc no-undo
   define variable v-sm         as decimal   no-undo .
   define variable v-sum        as decimal   no-undo .
   define variable v-sum1       as decimal   no-undo .
-
+  define variable nn           as integer   no-undo .
+  define variable v-nakl       as character no-undo .
   assign  Counter1 = 0 .
   { rep/repfrm.i def } /* Показать окно информации о текущем процессе */
   { rep/repfrm.i on 1 } /* Показать окно информации о текущем процессе */
@@ -119,6 +123,8 @@ DEFINE temp-table temp-doc no-undo
   define buffer buf_clients  for clients .
   define buffer buf_fin-ob   for fin-ob .
   define buffer buf_fin-doc  for fin-doc .
+  define buffer buf_fin-ob-trn for fin-ob-trn .
+  define buffer buf_fin-connect for fin-connect .
   find first G#CUSTOMER no-error .
   if not available G#CUSTOMER then do: /* все поставщики  */
     for each buf_contract no-lock
@@ -180,23 +186,23 @@ DEFINE temp-table temp-doc no-undo
     for each temp-doc break by temp-doc.cli-type by temp-doc.cli-code by temp-doc.contr :
       if first-of(temp-doc.cli-code) and itog-comp = no then do:
         find first temp-cli where temp-cli.cli-code = temp-doc.cli-code and temp-cli.cli-type = temp-doc.cli-type .
-        PUT STREAM PrnLibStream string("| Контрагент: " + temp-cli.cli-name) format "X(89)" "|" at {&L6} skip .
-        PUT STREAM PrnLibStream "| Начальный остаток по контрагенту: " format "X(64)"  "|" at {&L5} temp-cli.sum format {&F4} "|" at {&L6} skip .
+        PUT STREAM PrnLibStream string("| Контрагент: " + temp-cli.cli-name) format "X(89)" "|" at {&L7} skip .
+        PUT STREAM PrnLibStream "| Начальный остаток по контрагенту: " format "X(64)"  "|" at {&L6} temp-cli.sum format {&F5} "|" at {&L7} skip .
         assign v-sum = temp-cli.sum .
       end.
       if first-of(temp-doc.contr) and itog-comp = no  then do:
         find first temp-contr where temp-contr.contr = temp-doc.contr .
-        PUT STREAM PrnLibStream string("| Договор: " + temp-contr.contr-name) format "X(89)" "|" at {&L6}  skip .
-        PUT STREAM PrnLibStream "| Начальный остаток по договору: " format "X(64)"  "|" at {&L5} temp-contr.sum format {&F4} "|" at {&L6} skip .
+        PUT STREAM PrnLibStream string("| Договор: " + temp-contr.contr-name) format "X(89)" "|" at {&L7}  skip .
+        PUT STREAM PrnLibStream "| Начальный остаток по договору: " format "X(64)"  "|" at {&L6} temp-contr.sum format {&F5} "|" at {&L7} skip .
         assign v-sum1 = temp-contr.sum .
       end.
       run prn-line in this-procedure .
       if last-of(temp-doc.contr)  then do:
-        PUT STREAM PrnLibStream string("| Всего по договору: " + temp-contr.contr-name) format "X(64)" "|" at {&L5} v-sum1 format {&F4} "|" at {&L6} skip .
+        PUT STREAM PrnLibStream string("| Всего по договору: " + temp-contr.contr-name) format "X(64)" "|" at {&L6} v-sum1 format {&F5} "|" at {&L7} skip .
       end.
       if last-of(temp-doc.cli-code)  then do:
         PUT STREAM PrnLibStream Line format {&FL} skip .
-        PUT STREAM PrnLibStream string("| Всего по контрагенту: " + temp-cli.cli-name) format "X(64)" "|" at {&L5} v-sum format {&F4}  "|" at {&L6} skip  .
+        PUT STREAM PrnLibStream string("| Всего по контрагенту: " + temp-cli.cli-name) format "X(64)" "|" at {&L6} v-sum format {&F5}  "|" at {&L7} skip  .
         PUT STREAM PrnLibStream Line format {&FL} skip .
       end.
     end.
@@ -205,14 +211,14 @@ DEFINE temp-table temp-doc no-undo
     for each temp-doc break by temp-doc.cli-type by temp-doc.cli-code :
       if first-of(temp-doc.cli-code) /*and itog-comp = no*/ then do:
         find first temp-cli where temp-cli.cli-code = temp-doc.cli-code and temp-cli.cli-type = temp-doc.cli-type .
-        PUT STREAM PrnLibStream string("| Контрагент: " + temp-cli.cli-name) format "X(89)" "|" at {&L6} skip .
-        PUT STREAM PrnLibStream "| Начальный остаток по контрагенту: " format "X(64)"  "|" at {&L5} temp-cli.sum format {&F4} "|" at {&L6} skip .
+        PUT STREAM PrnLibStream string("| Контрагент: " + temp-cli.cli-name) format "X(89)" "|" at {&L7} skip .
+        PUT STREAM PrnLibStream "| Начальный остаток по контрагенту: " format "X(64)"  "|" at {&L6} temp-cli.sum format {&F5} "|" at {&L7} skip .
         assign v-sum = temp-cli.sum .
       end.
       run prn-line in this-procedure .
       if last-of(temp-doc.cli-code)  then do:
         PUT STREAM PrnLibStream Line format {&FL} skip .
-        PUT STREAM PrnLibStream string("| Всего по контрагенту: " + temp-cli.cli-name) format "X(64)" "|" at {&L5} v-sum format {&F4}  "|" at {&L6} skip .
+        PUT STREAM PrnLibStream string("| Всего по контрагенту: " + temp-cli.cli-name) format "X(64)" "|" at {&L6} v-sum format {&F5}  "|" at {&L7} skip .
         PUT STREAM PrnLibStream Line format {&FL} skip .
       end.
     end.
@@ -273,9 +279,10 @@ procedure prn-line :
         "|"  At {&L1}   temp-doc.dat     Format {&f1}
         "|"  At {&L2}   temp-doc.styp    Format {&f2}
         "|"  At {&L3}   temp-doc.num     Format {&f3}
-        "|"  At {&L4}   temp-doc.sum     Format {&f4}
-        "|"  At {&L5}   v-sm             Format {&f4}
-        "|"  At {&L6}
+        "|"  At {&L4}   temp-doc.nakl    Format {&f4}
+        "|"  At {&L5}   temp-doc.sum     Format {&f5}
+        "|"  At {&L6}   v-sm             Format {&f5}
+        "|"  At {&L7}
       skip .
 
 /*    run macr_excel_char(temp-doc.dat  , v-row, 1) .*/
@@ -350,9 +357,10 @@ procedure PrintTitul :
       "|"           " Дата"     format "X(5)"
       "|" at {&L2}  "Тип"       format "X(3)"
       "|" at {&L3}  " № док-та" format "X(10)"
-      "|" at {&L4}  string(" Сумма (" + s-val + ")")  format "X(15)"
-      "|" at {&L5}  string(" Сальдо (" + s-val + ")") format "X(17)"
-      "|" at {&L6}
+      "|" at {&L4}  " № наклад" format "X(10)"
+      "|" at {&L5}  string(" Сумма (" + s-val + ")")  format "X(15)"
+      "|" at {&L6}  string(" Сальдо (" + s-val + ")") format "X(17)"
+      "|" at {&L7}
       skip  Line format {&FL}  skip
     .
   end.

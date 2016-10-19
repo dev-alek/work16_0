@@ -63,8 +63,9 @@ define variable v-ext-doc-type AS CHAR NO-UNDO.
 define variable v-doc-date  like ub.trn-doc.doc-date  NO-UNDO.
 define variable v-fact-date like ub.trn-doc.fact-date NO-UNDO.
 define variable v-cli-name  like ub.trn-doc.cli-name  NO-UNDO.
-define variable v-fact-qnty like ub.trn-doc.fact-qnty NO-UNDO.
-define variable v-fact-rubl like ub.trn-doc.fact-rubl NO-UNDO.
+define variable v-fact-fo   like ub.fin-ob.sum-rubl   NO-UNDO.
+define variable v-fact-qnty like ub.trn-doc.doc-qnty NO-UNDO.
+define variable v-fact-rubl like ub.trn-doc.tot-fact NO-UNDO.
 define variable v-creid     like ub.trn-doc.creid     NO-UNDO.
 define variable v-fact-time as character no-undo .
 
@@ -88,7 +89,7 @@ define variable v-fact-time as character no-undo .
 ord-doc-rcv
 
 /* Definitions for BROWSE BROWSE-1                                      */
-&Scoped-define FIELDS-IN-QUERY-BROWSE-1 v-U @ v-U fin-ob-trn.trn-doc-code fin-ob-trn.doc-code v-ext-doc-type @ v-ext-doc-type v-doc-date @ v-doc-date v-fact-date @ v-fact-date v-cli-name @ v-cli-name v-fact-qnty @ v-fact-qnty v-fact-rubl @ v-fact-rubl v-creid @ v-creid v-fact-time @ v-fact-time
+&Scoped-define FIELDS-IN-QUERY-BROWSE-1 v-U @ v-U fin-ob-trn.trn-doc-code fin-ob-trn.doc-code fin-ob-trn.sum-rubl v-ext-doc-type @ v-ext-doc-type v-doc-date @ v-doc-date v-fact-date @ v-fact-date v-cli-name @ v-cli-name v-fact-rubl @ v-fact-rubl v-creid @ v-creid v-fact-time @ v-fact-time
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-1
 &Scoped-define SELF-NAME BROWSE-1
 &Scoped-define QUERY-STRING-BROWSE-1 FOR EACH fin-ob-trn WHERE                                  fin-ob-trn.doc-code = p-fin-ob-doc-code  NO-LOCK, ~
@@ -297,14 +298,16 @@ DEFINE BROWSE BROWSE-1
       v-U @ v-U COLUMN-LABEL "У" FORMAT "x(1)":U
       fin-ob-trn.trn-doc-code COLUMN-LABEL "№ документа" FORMAT "X(14)":U
       fin-ob-trn.doc-code FORMAT "X(16)":U
+      fin-ob-trn.sum-rubl COLUMN-LABEL "Сумма ФО" FORMAT "->,>>>,>>>,>>>,>>9.99":U
+      WIDTH 12
       v-ext-doc-type @ v-ext-doc-type COLUMN-LABEL "Тип!документа" FORMAT "x(15)":U
       v-doc-date @ v-doc-date COLUMN-LABEL "Дата!документа" FORMAT "99/99/99":U
       v-fact-date @ v-fact-date COLUMN-LABEL "Факт" FORMAT "99/99/99":U
       v-cli-name @ v-cli-name COLUMN-LABEL "Контрагент" FORMAT "X(40)":U
             WIDTH 30
-      v-fact-qnty @ v-fact-qnty COLUMN-LABEL "Фактически" FORMAT "->>,>>>,>>9.<<<":U
-            WIDTH 12
-      v-fact-rubl @ v-fact-rubl COLUMN-LABEL "По докум." FORMAT "->,>>>,>>>,>>>,>>9.99":U
+/*      v-fact-qnty @ v-fact-qnty COLUMN-LABEL "Фактически" FORMAT "->>,>>>,>>9.<<<":U*/
+/*            WIDTH 12                                                                */
+      v-fact-rubl @ v-fact-rubl COLUMN-LABEL "Сумма докум." FORMAT "->,>>>,>>>,>>>,>>9.99":U
       v-creid @ v-creid COLUMN-LABEL "Создал!документ" FORMAT "X(8)":U
       v-fact-time @ v-fact-time COLUMN-LABEL "Время" FORMAT "x(5)":U
 /* _UIB-CODE-BLOCK-END */
@@ -627,8 +630,8 @@ when "" then do:
           v-doc-date  = trn-doc.doc-date
           v-fact-date = trn-doc.fact-date
           v-cli-name  = trn-doc.cli-name
-          v-fact-qnty = trn-doc.fact-qnty
-          v-fact-rubl = trn-doc.fact-rubl
+          v-fact-qnty = trn-doc.doc-qnty
+          v-fact-rubl = trn-doc.tot-fact
           v-creid     = trn-doc.creid
           v-fact-time =  string(trn-doc.fact-time,"hh:mm")
           .
@@ -641,8 +644,8 @@ when "" then do:
             v-doc-date  = c-trn-doc.doc-date
             v-fact-date = c-trn-doc.fact-date
             v-cli-name  = c-trn-doc.cli-name
-            v-fact-qnty = c-trn-doc.fact-qnty
-            v-fact-rubl = c-trn-doc.fact-rubl
+            v-fact-qnty = c-trn-doc.doc-qnty
+            v-fact-rubl = c-trn-doc.tot-fact
             v-creid     = c-trn-doc.creid
             v-fact-time =  string(c-trn-doc.fact-time,"hh:mm")
             .
