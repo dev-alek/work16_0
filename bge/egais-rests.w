@@ -208,6 +208,8 @@ define variable saved as logical no-undo initial no .
 
 define variable gds-rec as recid no-undo .
 define variable tt-rec as recid no-undo .
+define variable tt-row as rowid no-undo .
+define variable tt-row2 as rowid no-undo .
 
 define variable v-value-character  as character no-undo .
 define variable v-value-decimal    as decimal   no-undo .
@@ -626,10 +628,20 @@ DO:
     assign NameContext = "" loc-code = "" loc-alc = "" loc-alc:screen-value = "" .
     case a-n-c :
         when "alc" then do :
-            OPEN QUERY {&browse-name} FOR EACH tt-gds-rests .
-            hide NameContext loc-code in frame Dialog-Frame .
-            display loc-alc with frame Dialog-Frame .
-            apply "entry" to br-rests in frame Dialog-Frame .
+            if v-page-current = 1
+            then do :
+                OPEN QUERY {&browse-name} FOR EACH tt-gds-rests .
+                hide NameContext loc-code in frame Dialog-Frame .
+                display loc-alc with frame Dialog-Frame .
+                apply "entry" to br-rests in frame Dialog-Frame .
+            end.
+            else do :
+                open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.alc-code <> ""
+                                                                              and tt-gds-rests_shop.egais-qnty <> 0 .
+                hide NameContext loc-code in frame Dialog-Frame .
+                display loc-alc with frame Dialog-Frame .
+                apply "entry" to br-rests_shop in frame Dialog-Frame .
+            end.
         end.
         when "context" then do :
             hide loc-alc loc-code in frame Dialog-Frame .
@@ -664,10 +676,22 @@ ON return OF NameContext IN FRAME {&frame-name} do:
         or letter = 'ю'
         or letter = 'я'
         then do :
-            OPEN QUERY {&browse-name} FOR EACH tt-gds-rests where tt-gds-rests.gds-name contains (trim(NameContext)) INDEXED-REPOSITION .
+            if v-page-current = 1
+            then
+                OPEN QUERY {&browse-name} FOR EACH tt-gds-rests where tt-gds-rests.gds-name contains (trim(NameContext)) INDEXED-REPOSITION .
+            else
+                OPEN QUERY br-rests_shop FOR EACH tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.gds-name contains (trim(NameContext))
+                                                                                        and tt-gds-rests_shop.alc-code <> ""
+                                                                                        and tt-gds-rests_shop.egais-qnty <> 0 INDEXED-REPOSITION .
         end.
         else do :
-            OPEN QUERY {&browse-name} FOR EACH tt-gds-rests where tt-gds-rests.gds-name contains (trim(NameContext) + "*") INDEXED-REPOSITION .
+            if v-page-current = 1
+            then
+                OPEN QUERY {&browse-name} FOR EACH tt-gds-rests where tt-gds-rests.gds-name contains (trim(NameContext) + "*") INDEXED-REPOSITION .
+            else
+                OPEN QUERY br-rests_shop FOR EACH tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.gds-name contains (trim(NameContext) + "*")
+                                                                                        and tt-gds-rests_shop.alc-code <> ""
+                                                                                        and tt-gds-rests_shop.egais-qnty <> 0 INDEXED-REPOSITION .
         end.
     end.
 end.
@@ -679,13 +703,26 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL loc-code Dialog-Frame
 ON return OF loc-code IN FRAME {&frame-name} do:
     assign loc-code.
-    find first tt-gds-rests no-lock where tt-gds-rests.gds-code = integer(loc-code) no-error.
-    if not available tt-gds-rests then do :
-        message "Не найден товар с кодом " + loc-code view-as alert-box warning .
+    if v-page-current = 1
+    then do :
+        find first tt-gds-rests no-lock where tt-gds-rests.gds-code = integer(loc-code) no-error.
+        if not available tt-gds-rests then do :
+            message "Не найден товар с кодом " + loc-code view-as alert-box warning .
+        end.
+        else do :
+            assign tt-rec = recid(tt-gds-rests) .
+            reposition br-rests to recid tt-rec .
+        end.
     end.
     else do :
-        assign tt-rec = recid(tt-gds-rests) .
-        reposition br-rests to recid tt-rec .
+        find first tt-gds-rests_shop no-lock where tt-gds-rests_shop.gds-code = integer(loc-code) no-error.
+        if not available tt-gds-rests_shop then do :
+            message "Не найден товар с кодом " + loc-code view-as alert-box warning .
+        end.
+        else do :
+            assign tt-rec = recid(tt-gds-rests_shop) .
+            reposition br-rests_shop to recid tt-rec .
+        end.
     end.
 end.
 
@@ -720,6 +757,50 @@ ON backspace OF br-rests IN FRAME {&frame-name} do:
             disp loc-alc with frame {&frame-name}.
             assign tt-rec = recid(tt-gds-rests) .
             reposition br-rests to recid tt-rec .
+        end.
+    end.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME br-rests_shop
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-rests_shop Dialog-Frame
+ON any-printable OF br-rests_shop IN FRAME {&frame-name} do:
+    if input frame {&frame-name} a-n-c = "alc" then do:
+        if last-event:label = " " and
+           loc-alc = "" then
+        return no-apply.
+        find first tt-gds-rests_shop no-lock where tt-gds-rests_shop.alc-code begins (loc-alc + last-event:label) no-error.
+        if available tt-gds-rests_shop then do :
+            assign tt-row2 = rowid(tt-gds-rests_shop) .
+            find first tt-gds-list no-lock where tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                                             and tt-gds-list.gds-code = tt-gds-rests_shop.gds-code .
+            loc-alc = loc-alc + last-event:label.
+            disp loc-alc with frame {&frame-name}.
+            assign tt-row = rowid(tt-gds-list) .
+            reposition br-rests_shop to rowid tt-row, tt-row2 .
+        end.
+        else bell.
+    end.
+end.
+
+ON backspace OF br-rests_shop IN FRAME {&frame-name} do:
+    if input frame {&frame-name} a-n-c = "alc" then do:
+        if loc-alc = "" then
+          return no-apply.
+        loc-alc = substr (loc-alc, 1, length (loc-alc) - 1).
+        find first tt-gds-rests_shop no-lock where tt-gds-rests_shop.alc-code begins loc-alc no-error.
+        if available tt-gds-rests_shop then do :
+            assign tt-row2 = rowid(tt-gds-rests_shop) .
+            find first tt-gds-list no-lock where tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                                             and tt-gds-list.gds-code = tt-gds-rests_shop.gds-code .
+            disp loc-alc with frame {&frame-name}.
+            assign tt-row = rowid(tt-gds-list) .
+            reposition br-rests_shop to rowid tt-row, tt-row2 .
         end.
     end.
 end.
@@ -1602,6 +1683,8 @@ END PROCEDURE.
 PROCEDURE trg-folder :
 
   v-page-current = v-page.
+  assign NameContext = "" loc-code = "" loc-alc = ""  .
+  loc-alc:screen-value in frame {&frame-name} = ""  .
   if v-page-current = 1 then do :
     display {&list-1} with frame {&frame-name}.
     hide {&list-2} in frame {&frame-name}.
