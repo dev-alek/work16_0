@@ -211,7 +211,10 @@ class ibs.th.bge.egais.ExtGds:
         release buf_cli.
         find first buf_cli no-lock where buf_cli.obj-type = buf_gds.prod-type and buf_cli.obj-code = buf_gds.prod-code no-error.
 
-        if ExtGdsValueObj:CliEgaisTypeProd = ""
+        if valid-object (ExtGdsValueObj)
+          then delete object ExtGdsValueObj.
+
+        if tt-egaisgds-hndls.egaisTypeProd = ""
         then do:
           assign
             tt-egaisgds-hndls.verXSD = 1.
@@ -237,9 +240,7 @@ class ibs.th.bge.egais.ExtGds:
     end.
     
     outTTHndl = buffer tt-egaisgds-hndls:handle.
-    
-    if valid-object (ExtGdsValueObj)
-      then delete object ExtGdsValueObj.
+
     
   end.
 
