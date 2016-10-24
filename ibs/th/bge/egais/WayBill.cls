@@ -1626,7 +1626,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                   assign
                     inFileName = "WayBillAct.xml"
                     .
-                  run gbl\inidebug.p.
                   CmdParseXml(urlStr).
                   if StatusErr
                   then do:

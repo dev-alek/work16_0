@@ -1801,7 +1801,7 @@ for each obj-list no-lock:  /* По всем объектам */
                         end.    
                         else do :
                             put stream logStr unformatted 'Производитель/импортер "'  part-1.producer-obj-name
-                             '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Артикул: ' tt-parts-info.artic ' ; партия по ПН № ' temp-parts.in-code skip .
+                             '" - не заполнен ИНН и/или КПП (' tt-parts-info.importer '). Артикул: ' tt-parts-info.artic ' ; партия по ПН № ' buf_parts.in-code skip .
                             v-inn-err = true .
                         end.
                     end.
