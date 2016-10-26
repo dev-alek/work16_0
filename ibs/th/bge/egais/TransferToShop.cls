@@ -376,7 +376,10 @@ class ibs.th.bge.egais.TransferToShop inherits EGAISUTM:
             
             hNoderef:GET-CHILD(hText, 1) no-error .    
             
-            IF hNoderef:NAME = "tc:RegID"    THEN v-RegID  = hText:node-value .
+            IF hNoderef:NAME = "tc:RegID"    THEN do :
+                v-RegID  = hText:node-value no-error.
+                if v-RegID = ? then v-RegID = "" .
+            end.
             IF hNoderef:NAME = "tc:Conclusion"
             OR hNoderef:NAME = "tc:OperationResult" THEN
             DO :

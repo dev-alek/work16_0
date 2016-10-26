@@ -41,7 +41,10 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Работа с остатками ЕГАИС".
 
+&scop f-l Base2Int64
+
 { cmp/vssrevis.i }
+{ gbl/std-func.i {&f-l} }
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { str/lib-trn.i  }
@@ -126,6 +129,28 @@ define temp-table tt-compare-rests no-undo
         gds-code    
 .
 
+define temp-table tt-marks-compare-rests no-undo
+    field gds-code          like ub.goods.gds-code          label "Код товара в TH"
+    field gds-name          like ub.goods.gds-name          label "Наименование товара" format "X(100)"
+    field alc-code          as character                    label "Алкогольный код"     format "X(21)"
+    field alc-type-code     like ub.alc-type.alc-type-code  label "Код АП"
+    field TH-qnty           as integer                      label "Остаток TH"
+    field shop-qnty         as integer                      label "Остаток маг"
+    field stock-qnty        as integer                      label "Остаток скл"
+    field marks-qnty        as integer                      label "Кол-во марок"
+    index pi as primary
+        alc-code
+    index gds
+        gds-code    
+.
+
+define temp-table tt-marks-qnty
+    field alc-code  as character                    label "Алкогольный код"     format "X(21)"
+    field qnty      as integer                      label "Кол-во марок"
+    index pi as primary
+        alc-code
+.
+
 define temp-table tt-gds-list no-undo
     field alc-code      as character
     field gds-code      as integer
@@ -198,7 +223,7 @@ define variable v-isSent    as logical   no-undo .
 define variable v-outId     as character no-undo .
 define variable v-ext-sys   as integer   no-undo .
 define variable v-replyId   as character no-undo .
-define variable v-alc-code  as character no-undo .
+/*define variable v-alc-code  as character no-undo .*/
 
 define variable glog        as logical no-undo .
 
@@ -223,6 +248,8 @@ define variable v-fs-rar as character no-undo .
 define variable v-fs-rar-list as character no-undo .
 define variable v-num-loads as integer no-undo .
 define variable v-num-objs as integer no-undo .
+
+define stream str-err .
 
 define variable bh-act-header  as handle no-undo .
 {ibs/th/bge/egais/awo-egais.i proc }
@@ -290,6 +317,7 @@ define menu m-func
     menu-item m-print label "Печать остатков на складе"
     menu-item m-print_shop label "Печать остатков в магазине"
     menu-item m-compare label "Сверка остатков"
+    menu-item m-marks-compare label "Сверка по маркам"
     menu-item m-list label "Показать по списку"
     menu-item m-all label "Показать все"
     menu-item m-load-all label "Запрос по всем объектам"
@@ -1266,6 +1294,23 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME 
 
+&Scoped-define SELF-NAME m-marks-compare
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-marks-compare Dialog-Frame
+ON CHOOSE OF menu-item m-marks-compare in menu m-func /* - */
+DO:
+    find first tt-gds-rests no-lock no-error .
+    find first tt-gds-rests_shop no-lock no-error .
+    if not available tt-gds-rests and not available tt-gds-rests_shop
+    then do :
+        message "Сначала получите остатки из ЕГАИС" view-as alert-box .
+        return no-apply .
+    end.
+    run MarksCompareRests.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME 
+
 &Scoped-define SELF-NAME m-list
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-list Dialog-Frame
 ON CHOOSE OF menu-item m-list in menu m-func /* - */
@@ -2195,6 +2240,306 @@ procedure CompareRests :
         ,input v-act-file
         ).
 end.
+
+procedure MarksCompareRests :
+    define variable v-gds-entry as character no-undo .
+    define variable v-mark      as character no-undo .
+    define variable v-alc-code    as character    no-undo .
+    define variable v-error-lang  as logical      no-undo . 
+    define variable l-error         as logical   no-undo INIT NO. /* Есть ли ошибки */
+    define variable v-user-action   as character no-undo.
+    define variable v-printed       as logical   no-undo.
+    define var v-act-file as char no-undo.
+    define variable v_os-file   AS CHAR NO-UNDO INIT "".
+    define variable ll_commit AS LOG    NO-UNDO INIT NO.
+    define variable v-proc-name-err as character no-undo initial 'imp_mark.err'. /* Имя лога */
+    
+    
+    if search (v-proc-name-err) <> ? then 
+    do:
+      os-delete value(v-proc-name-err).
+    end.
+    v-act-file  = session:temp-directory + {&DF_Name} +  "egais-rests_marks-compare.html".
+    empty temp-table tt-marks-compare-rests .
+    empty temp-table tt-marks-qnty .
+    empty temp-table gds-list .
+    
+    run str/gds-list.w ( input parparentproc, v-cntxt-host-code-obj, v-cntxt-obj-type, v-cntxt-obj-code).
+    for each gds-list no-lock :
+        find goods where
+             goods.gds-code = gds-list.gds-code
+             no-lock no-error.
+        if available goods then do:
+            { gbl/markstrn.i goods goods-list }
+        end.
+    end.
+    
+    SYSTEM-DIALOG GET-FILE v_os-file
+        TITLE "Выберите файл с марками"
+        FILTERS
+          " Все текстовые файлы (*.txt) " "*.txt",
+          " Все файлы (*.*) "                      "*.*"
+        INITIAL-FILTER 1
+        DEFAULT-EXTENSION ".txt"
+        USE-FILENAME
+        MUST-EXIST
+        UPDATE ll_commit
+        .
+
+    IF ll_commit <> YES THEN do:
+       RETURN NO-APPLY.
+    end.
+    IF v_os-file = PROGRAM-NAME( 1 ) THEN DO:
+        BELL.
+        MESSAGE "Рекурсия!" VIEW-AS ALERT-BOX ERROR.
+        RETURN NO-APPLY.
+    END.
+    
+    run waitfram-show(INPUT "Ждите...") .
+    
+    output stream str-err to value(v-proc-name-err) .
+    INPUT FROM value(v_os-file).
+    REPEAT: 
+        IMPORT v-mark.
+        run ProcAlcCode  IN THIS-PROCEDURE (input v-mark, output v-alc-code, output l-error, output v-error-lang ) no-error.
+        if v-error-lang then 
+        do:
+          put stream str-err unformatted
+            "Не корректно считана акцизная марка " v-mark ", акцизная марка содержит не допустимые символы или русские буквы."
+            skip .
+          v-alc-code = "".
+          l-error = yes .
+        end.  
+        else 
+        do:
+            find first tt-marks-qnty exclusive-lock where tt-marks-qnty.alc-code = v-alc-code no-error.
+            if not available tt-marks-qnty
+            then do :
+                create tt-marks-qnty .
+                assign
+                    tt-marks-qnty.alc-code = v-alc-code
+                    tt-marks-qnty.qnty = 0
+                .
+            end.
+            tt-marks-qnty.qnty = tt-marks-qnty.qnty + 1 .
+        end.
+    end. 
+    INPUT CLOSE. 
+    output stream str-err close.
+    
+    if l-error then 
+    do: 
+      if search (v-proc-name-err) <> ? then 
+      do:
+        run gbl/prnfilen.w
+          (input  substitute ("Не все марки были загружены")
+          ,input  0
+          ,input  v-proc-name-err
+          ,input  7
+          ,output v-user-action
+          ,output v-printed
+          ).
+      end.
+    end.   
+            
+    _ii_ :
+    do ii = 1 to num-entries(goods-list) :
+    v-gds-entry = entry(ii, goods-list) .
+    for first buf_goods no-lock where recid(buf_goods) = integer(v-gds-entry) :
+        run gds-attr-value(
+          buf_goods.gds-code,
+          {&attr-alcohol-prod},
+          output par-alcohol,
+          output par-type
+        ).
+        if par-alcohol = "" or par-alcohol = "no" then next _ii_ .  
+        _parts_ :  
+        for each buf_parts no-lock where buf_parts.artic = buf_goods.artic 
+                                    and buf_parts.prod-type = buf_goods.prod-type 
+                                    and buf_parts.prod-code = buf_goods.prod-code 
+                                    and buf_parts.obj-type = v-cntxt-obj-type 
+                                    and buf_parts.obj-code = v-cntxt-obj-code 
+                                    and buf_parts.out-code = {&free-code} :
+/*            if buf_parts.qnty < 1 then next _parts_ .*/
+            if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
+                find first tt-marks-compare-rests exclusive-lock where tt-marks-compare-rests.alc-code = entry(3, buf_parts.alc-ref-ab-path) no-error.
+                if not available tt-marks-compare-rests then do :
+                    create tt-marks-compare-rests .
+                    assign
+                        tt-marks-compare-rests.alc-code   = entry(3, buf_parts.alc-ref-ab-path)
+                        tt-marks-compare-rests.gds-code   = buf_goods.gds-code
+                        tt-marks-compare-rests.gds-name   = buf_goods.gds-name
+                    .
+                    if entry(4, buf_parts.alc-ref-ab-path) <> "" then tt-marks-compare-rests.alc-type-code = entry(4, buf_parts.alc-ref-ab-path) .
+                end.
+                assign tt-marks-compare-rests.TH-qnty = tt-marks-compare-rests.TH-qnty + buf_parts.qnty .
+            end.
+            else do :
+                find first tt-marks-compare-rests exclusive-lock where tt-marks-compare-rests.gds-code = buf_goods.gds-code
+                                                             and tt-marks-compare-rests.alc-code = "" no-error.
+                if not available tt-marks-compare-rests then do :
+                    create tt-marks-compare-rests .
+                    assign
+                        tt-marks-compare-rests.alc-code   = ""
+                        tt-marks-compare-rests.gds-code   = buf_goods.gds-code
+                        tt-marks-compare-rests.gds-name   = buf_goods.gds-name
+                    .
+                end.
+                assign tt-marks-compare-rests.TH-qnty = tt-marks-compare-rests.TH-qnty + buf_parts.qnty .
+            end.    
+        end.  /* buf_parts */
+        
+    end.  /* for first buf_goods */  
+    end. /* _ii_ */
+    
+    for each tt-marks-qnty no-lock :
+        find first tt-marks-compare-rests exclusive-lock where tt-marks-compare-rests.alc-code = tt-marks-qnty.alc-code no-error .
+        if not available tt-marks-compare-rests then do :
+            create tt-marks-compare-rests .
+            assign
+                tt-marks-compare-rests.alc-code   = tt-marks-qnty.alc-code
+                tt-marks-compare-rests.gds-code   = 0
+                tt-marks-compare-rests.gds-name   = ""
+                tt-marks-compare-rests.alc-type-code = ""
+            .
+        end.
+        assign tt-marks-compare-rests.marks-qnty = tt-marks-qnty.qnty .
+    end.
+    
+    for each tt-marks-compare-rests exclusive-lock :
+        find first tt-gds-rests_shop no-lock where tt-gds-rests_shop.alc-code = tt-marks-compare-rests.alc-code no-error.
+        if available tt-gds-rests_shop
+        then do :
+            assign tt-marks-compare-rests.shop-qnty = tt-gds-rests_shop.egais-qnty .
+            assign tt-marks-compare-rests.stock-qnty = tt-gds-rests_shop.egais-qnty_stock .
+        end.
+    end.
+    
+    output stream OutStr-html to value(v-act-file) convert target 'UTF-8'/*no-convert*/.
+    put stream OutStr-html unformatted
+        substitute(
+
+        '<!doctype html>
+                 <html>
+              <head>
+              <meta charset="UTF-8">
+                 <!-- Стили документа -->
+              <style>
+                table ~{border-collapse: collapse; ~}
+                tbody td, th ~{border: 1px solid black;~}
+                #myid ~{font-weight: bold;~}
+                .class1 ~{font-style: italic;~}
+                .class2 ~{font-family: Arial;~}
+              </style>
+              </head>
+                  <body>
+                  <table orientation="landscape" name="лист1" repeat_rows="1:1" hide_zero="True">
+                  <thead>
+                  <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                  <tr class="set_columns">
+                        <td style="width:210px"></td>
+                        <td style="width:250px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:60px"></td>
+                        <td style="width:110px"></td>
+                        <td style="width:110px"></td>
+                        <td style="width:110px"></td>
+                        <td style="width:110px"></td>
+                  </tr>
+                  <tr>
+                        <td colspan="8" style="front-weight: bold; text-align: center;">Сверка остатков по маркам ЕГАИС</td>
+                  </tr>
+        </thead>
+            <tbody>
+                <tr>
+                <th>Алкогольный код</th>
+                <th>Наименование товара</th>
+                <th>Код товара в TH</th>
+                <th>Код АП</th>
+                <th>Остаток ЕГАИС торговый зал</th>
+                <th>Остаток ЕГАИС склад</th>
+                <th>Остаток TH</th>
+                <th>Кол-во марок</th>
+                </tr>').
+
+    for each tt-marks-compare-rests :
+
+        put stream OutStr-html unformatted
+            substitute(
+            '<tr style="height: 50px;">
+             <td text_wrap="true"> &1 </td>
+             <td text_wrap="true"> &2 </td>
+             <td text_wrap="true"> &3 </td>
+             <td text_wrap="true"> &4 </td>
+             <td text_wrap="true"> &5 </td>
+             <td text_wrap="true"> &6 </td>
+             <td text_wrap="true"> &7 </td>
+             <td text_wrap="true"> &8 </td>
+             </tr>
+             </tbody>',
+
+            tt-marks-compare-rests.alc-code,
+            tt-marks-compare-rests.gds-name,
+            tt-marks-compare-rests.gds-code,
+            tt-marks-compare-rests.alc-type-code,
+            tt-marks-compare-rests.shop-qnty,
+            tt-marks-compare-rests.stock-qnty,
+            tt-marks-compare-rests.TH-qnty,
+            tt-marks-compare-rests.marks-qnty
+            ).
+
+    end.
+    
+
+
+    run waitfram-hide in this-procedure.
+
+    output stream OutStr-html close.
+    run prn-lib-reportviewer-report-name in this-procedure (
+        input parParentProc
+        ,input v-act-file
+        ).
+end.
+
+/*Процедура извличения алкокода из акцизной марки и перевод в 10 систему*/
+PROCEDURE ProcAlcCode :
+  define input  parameter p-mark-alc as character  no-undo .
+  define output parameter p-alc-code as character  no-undo initial ''.
+  define output parameter p-error as logical no-undo initial no.
+  define output parameter p-error-lang as logical no-undo initial no.
+  define variable v-kol              as integer    no-undo .
+  define variable v-alc-code as character no-undo .
+  define variable v-result as character no-undo .
+  define variable ii as integer no-undo .  
+  DEFINE VARIABLE v_list AS CHARACTER NO-UNDO INITIAL '':U.
+  ASSIGN 
+    v_list = '0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,':U .
+
+  v-alc-code = SUBSTRing (p-mark-alc, 8, 12) .
+  /*проверка на русские буквы*/
+  do ii = 1 to length (v-alc-code):
+    if LOOKUP( SUBSTRING( v-alc-code, ii, 1 ), v_list )  < 1 then
+    do:
+      p-error-lang = yes .
+      leave .
+      
+    end.
+  end.
+  p-alc-code = string (Base2Int64 (v-alc-code, 36) ) no-error.
+  if (Base2Int64 (v-alc-code, 36) ) < 0 then 
+  do:
+    p-error = yes.
+  end.
+  else 
+  do:
+    if length(p-alc-code) < 20 then 
+    do:
+      p-alc-code = fill('0', 19 - length(p-alc-code)) + p-alc-code.
+    end.  
+  end.
+  
+    
+END PROCEDURE.
 
 procedure ListView :
     define variable v-gds-entry as character no-undo .
