@@ -48,7 +48,8 @@ define buffer buf_pl-gds-pump for ub.pl-gds-pump.
             each buf_pl-gds no-lock where
                 buf_pl-gds.obj-type = cash-place.obj-type
             and buf_pl-gds.obj-code = cash-place.obj-code
-            and buf_pl-gds.pl-code = cash-place.pl-code,
+            and buf_pl-gds.pl-code = cash-place.pl-code
+            and buf_pl-gds.status_ <> {&deleted-status},
             each cash-gds no-lock where
                  cash-gds.gds-code = buf_pl-gds.gds-code:
           if cash-gds.b-str = '':U then nEXT.
@@ -86,7 +87,7 @@ define buffer buf_pl-gds-pump for ub.pl-gds-pump.
         for each buf_pl-pump-nozzle no-lock where
                 buf_pl-pump-nozzle.obj-type = p-obj-type
             AND buf_pl-pump-nozzle.obj-code = i-obj-code
-            and buf_pl-pump-nozzle.status_  = {&current-status},
+            and buf_pl-pump-nozzle.status_  <> {&deleted-status},
             first cash-place no-lock where
                   cash-place.obj-type = p-obj-type
               and cash-place.obj-code = i-obj-code
@@ -97,7 +98,8 @@ define buffer buf_pl-gds-pump for ub.pl-gds-pump.
                 and buf_pl-gds-pump.pump-code = buf_pl-pump-nozzle.pump-code
                 and buf_pl-gds-pump.pl-code  = buf_pl-pump-nozzle.pl-code
                 and buf_pl-gds-pump.status_   = {&current-status}  no-error.
-
+          if available buf_pl-gds-pump
+          then
           put stream IBMStream unformatted
           '42' {&space-char}
           {&double-quote} action {&double-quote}  {&space-char}
@@ -119,7 +121,8 @@ define buffer buf_pl-gds-pump for ub.pl-gds-pump.
             each buf_pl-gds no-lock where
                 buf_pl-gds.obj-type = cash-place.obj-type
             and buf_pl-gds.obj-code = cash-place.obj-code
-            and buf_pl-gds.pl-code = cash-place.pl-code,
+            and buf_pl-gds.pl-code = cash-place.pl-code
+            and buf_pl-gds.status_ <> {&deleted-status},
             each cash-gds no-lock where
                  cash-gds.gds-code = buf_pl-gds.gds-code:
           if cash-gds.b-str = '':U then nEXT.
@@ -155,7 +158,7 @@ define buffer buf_pl-gds-pump for ub.pl-gds-pump.
         for each buf_pl-pump-nozzle no-lock where
                 buf_pl-pump-nozzle.obj-type = p-obj-type
             AND buf_pl-pump-nozzle.obj-code = i-obj-code
-            and buf_pl-pump-nozzle.status_  = {&current-status}
+            and buf_pl-pump-nozzle.status_  <> {&deleted-status}
         break
         by buf_pl-pump-nozzle.obj-type
         by buf_pl-pump-nozzle.obj-code
@@ -176,47 +179,50 @@ define buffer buf_pl-gds-pump for ub.pl-gds-pump.
                                                   , (if action = 'U' then 'ADD':U else 'DEL')
                                                   , OS2-time, buf_pl-pump-nozzle.pump-code)).
           end.
-          run bgelib-tag-open in this-procedure ( input 3, input "FPFuel", input '':U).
-          if not available cash-place
-          or not available buf_pl-gds-pump
-          then do:
-            run bgelib-tag-put in this-procedure ( input 4, input "FPFCode"       , input string(0), input 1 ).
-          end.
-          else do:
-            find first cash-gds where cash-gds.gds-code = buf_pl-gds-pump.gds-code.
-            run ibm-gdsc in this-procedure (
-                                            input (p-pos-type = {&cd-type-maria}) /*p-zeros*/
-                                          , output IBM-good-code
-                                          , output IBM-good-code-2
-                                          , output IBM2-short
-                                          ) no-error .
-            if IBM-good-code = "":U then
-            assign
-            IBM-good-code = IBM-good-code-2
-            .
-            run bgelib-tag-put in this-procedure ( input 4, input "FPFCode"       , input IBM-good-code, input 1 ).
-          end.
-          run bgelib-tag-put in this-procedure ( input 4, input "FPFTank"       , input string(if available cash-place
-                                                                                               then integer(cash-place.loc1)
-                                                                                               else 0 ), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 4, input "FPFNzl"        , input string(buf_pl-pump-nozzle.nozzle-code), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 4, input "FPFActive"     , input string((if available buf_pl-gds-pump and
-                                                                                                 buf_pl-gds-pump.status_ = {&current-status}
-                                                                                                then 1
-                                                                                                else 0)), input 1).
-          if not available cash-place then do:
-            run bgelib-tag-put in this-procedure ( input 4, input "FPFUnused"       , input string(0), input 1 ).
-          end.
-          find first buf_pump-nozzle no-lock where
-                    buf_pump-nozzle.obj-type = p-obj-type
-               and  buf_pump-nozzle.obj-code = i-obj-code
-               and buf_pump-nozzle.pump-code = buf_pl-pump-nozzle.pump-code
-               and buf_pump-nozzle.nozzle-code = buf_pl-pump-nozzle.nozzle-code
-               and buf_pump-nozzle.status_  = {&current-status} no-error.
-          if available buf_pump-nozzle then do:
-            run bgelib-tag-put in this-procedure ( input 4, input "FPFNozzleID"       , input string(buf_pump-nozzle.ef-nid), input 1 ).
-          end.
-          run bgelib-tag-close in this-procedure ( input 3, input "FPFuel").
+		  if available buf_pl-gds-pump
+          then do :
+	          run bgelib-tag-open in this-procedure ( input 3, input "FPFuel", input '':U).
+	          if not available cash-place
+	          or not available buf_pl-gds-pump
+	          then do:
+	            run bgelib-tag-put in this-procedure ( input 4, input "FPFCode"       , input string(0), input 1 ).
+	          end.
+	          else do:
+	            find first cash-gds where cash-gds.gds-code = buf_pl-gds-pump.gds-code.
+	            run ibm-gdsc in this-procedure (
+	                                            input (p-pos-type = {&cd-type-maria}) /*p-zeros*/
+	                                          , output IBM-good-code
+	                                          , output IBM-good-code-2
+	                                          , output IBM2-short
+	                                          ) no-error .
+	            if IBM-good-code = "":U then
+	            assign
+	            IBM-good-code = IBM-good-code-2
+	            .
+	            run bgelib-tag-put in this-procedure ( input 4, input "FPFCode"       , input IBM-good-code, input 1 ).
+	          end.
+	          run bgelib-tag-put in this-procedure ( input 4, input "FPFTank"       , input string(if available cash-place
+	                                                                                               then integer(cash-place.loc1)
+	                                                                                               else 0 ), input 1 ).
+	          run bgelib-tag-put in this-procedure ( input 4, input "FPFNzl"        , input string(buf_pl-pump-nozzle.nozzle-code), input 1 ).
+	          run bgelib-tag-put in this-procedure ( input 4, input "FPFActive"     , input string((if available buf_pl-gds-pump and
+	                                                                                                 buf_pl-gds-pump.status_ = {&current-status}
+	                                                                                                then 1
+	                                                                                                else 0)), input 1).
+	          if not available cash-place then do:
+	            run bgelib-tag-put in this-procedure ( input 4, input "FPFUnused"       , input string(0), input 1 ).
+	          end.
+	          find first buf_pump-nozzle no-lock where
+	                    buf_pump-nozzle.obj-type = p-obj-type
+	               and  buf_pump-nozzle.obj-code = i-obj-code
+	               and buf_pump-nozzle.pump-code = buf_pl-pump-nozzle.pump-code
+	               and buf_pump-nozzle.nozzle-code = buf_pl-pump-nozzle.nozzle-code
+	               and buf_pump-nozzle.status_  = {&current-status} no-error.
+	          if available buf_pump-nozzle then do:
+	            run bgelib-tag-put in this-procedure ( input 4, input "FPFNozzleID"       , input string(buf_pump-nozzle.ef-nid), input 1 ).
+	          end.
+	          run bgelib-tag-close in this-procedure ( input 3, input "FPFuel").
+		  end.
           if last-of (buf_pl-pump-nozzle.pump-code) then do:
              run bgelib-tag-close in this-procedure ( input 2, input "FuelPump").
           end.
