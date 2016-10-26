@@ -908,7 +908,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       if available (tt-wb-hndls)
         then 
       do:
-        if not (tt-wb-hndls.wb-type matches "*расход*" or tt-wb-hndls.wb-type matches "*возврат*") then 
+        if not (tt-wb-hndls.wb-type matches "*расход*" or (tt-wb-hndls.wb-type matches "*возврат*" and not tt-wb-hndls.wb-type matches "*возврата от покупателя*")) then 
         do:
           output stream outstr to value ("TTNAct.xml") convert target "UTF-8". 
           outData = GetXMLAct() no-error.
@@ -1161,7 +1161,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       
     output stream outstr to value ("RequestRepealWB.xml") convert target "UTF-8". 
 
-    outData = substitute ({&xml-ReqRepealWB}, v-FS-RAR, tt-wb-header.regID-Ship, tt-wb-header.num + "-" + string (time), iso-date (now), tt-wb-header.wbregid).
+    outData = substitute ({&xml-ReqRepealWB}, v-FS-RAR, v-FS-RAR, tt-wb-header.num + "-" + string (time), iso-date (now), tt-wb-header.wbregid).
 
     if outData = ? or outData = ""
     then do:
