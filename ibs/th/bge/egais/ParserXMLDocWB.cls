@@ -28,8 +28,9 @@ class ibs.th.bge.egais.ParserXMLDocWB:
   define private buffer buf_clients   for ub.clients.
 
 
-  define private variable inFileName as character no-undo.
-  define private variable nn         as integer   no-undo.
+  define private variable inFileName     as character no-undo.
+  define private variable nn             as integer   no-undo.
+  define private variable parentNameOref as character no-undo.
 
   define property glog as logical no-undo
     get.
@@ -218,16 +219,43 @@ class ibs.th.bge.egais.ParserXMLDocWB:
 
   method private void GetChildren(hParent as handle, level as integer):
         
-    define variable i          as integer no-undo.
-    define variable hNoderef   as handle  no-undo.
-    define variable hText      as handle  no-undo.
-    define variable nameParent as handle  no-undo.
-    define variable good       as logical no-undo.
+    define variable i           as integer   no-undo.
+    define variable hNoderef    as handle    no-undo.
+    define variable hText       as handle    no-undo.
+    define variable nameParent  as handle    no-undo.
+    define variable good        as logical   no-undo.
+    define variable parentName  as character no-undo.
+    define variable noderefName as character no-undo.
         
     create x-noderef hNoderef.
     create x-noderef hText .
-        
-        
+    
+
+    parentName = hParent:name.
+    case true:
+      when parentName begins "wb" and not parentName begins "wbr" then do:
+        parentName = "wb:" + entry (2, parentName, ":").
+      end.
+      when parentName begins "wbr" then do:
+        parentName = "wbr:" + entry (2, parentName, ":").
+      end.
+      when parentName begins "wa" then do:
+        parentName = "wa:" + entry (2, parentName, ":").
+      end.
+      when parentName begins "tc" then do:
+        parentName = "tc:" + entry (2, parentName, ":").
+      end.
+      when parentName begins "wt" then do:
+        parentName = "wt:" + entry (2, parentName, ":").
+      end.
+      when parentName begins "oref" then do:
+        parentName = "oref:" + entry (2, parentName, ":").
+      end.
+      when parentName begins "pref" then do:
+        parentName = "pref:" + entry (2, parentName, ":").
+      end.
+    end.
+
     repeat i = 1 to hParent:num-children:
       good = hParent:get-child(hNoderef,i).
       if not good then 
@@ -240,21 +268,49 @@ class ibs.th.bge.egais.ParserXMLDocWB:
       
       if error-status:error
         then next.
+      
+      noderefName = hNoderef:name.
+      case true:
+        when noderefName begins "wb" and not noderefName begins "wbr"  then do:
+          noderefName = "wb:" + entry (2, noderefName, ":").
+        end.
+        when noderefName begins "wbr" then do:
+          noderefName = "wbr:" + entry (2, noderefName, ":").
+        end.
+        when noderefName begins "wa" then do:
+          noderefName = "wa:" + entry (2, noderefName, ":").
+        end.
+        when noderefName begins "tc" then do:
+          noderefName = "tc:" + entry (2, noderefName, ":").
+        end.
+        when noderefName begins "wt" then do:
+          noderefName = "wt:" + entry (2, noderefName, ":").
+        end.
+        when noderefName begins "oref" then do:
+          noderefName = "oref:" + entry (2, noderefName, ":").
+        end.
+        when noderefName begins "pref" then do:
+          noderefName = "pref:" + entry (2, noderefName, ":").
+        end.
+      end.
        
-      case hNoderef:name:
+      case noderefName:
         when "wb:Shipper" or 
         when "wbr:Shipper" then 
           do:
+            parentNameOref = "".
             create tt-wb-info-client .
             tt-wb-info-client.wb-type-client = "Shipper".
           end.
         when "wb:Consignee" then 
           do:
+            parentNameOref = "".
             create tt-wb-info-client .
             tt-wb-info-client.wb-type-client = "Consignee".
           end.
         when "wb:Supplier" then 
           do:
+            parentNameOref = "".
             create tt-wb-info-client .
             tt-wb-info-client.wb-type-client = "Supplier".
           end.
@@ -265,6 +321,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
           end.
         when "wb:Position" then 
           do:
+            parentNameOref = "".
             create tt-wb-gds-EG .
             tt-wb-gds-EG.prod-list = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
             tt-wb-gds-EG.importer-list = chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5) + chr(5).
@@ -288,60 +345,60 @@ class ibs.th.bge.egais.ParserXMLDocWB:
             tt-ticket.doc = 'ConfirmTicket'.
           end.
       end case.
-      if lookup (hParent:name, "ns:Ticket") > 0 then do:
-        if hNoderef:name = "tc:DocId" then assign tt-ticket.docID = hText:node-value.
-        if hNoderef:name = "tc:TransportId" then assign tt-ticket.TransId = hText:node-value.
-        if hNoderef:name = "tc:TicketDate" then assign tt-ticket.ticket-date = hText:node-value.
-        if hNoderef:name = "tc:RegID" 
+      if lookup (parentName, "ns:Ticket") > 0 then do:
+        if noderefName = "tc:DocId" then assign tt-ticket.docID = hText:node-value.
+        if noderefName = "tc:TransportId" then assign tt-ticket.TransId = hText:node-value.
+        if noderefName = "tc:TicketDate" then assign tt-ticket.ticket-date = hText:node-value.
+        if noderefName = "tc:RegID" 
         then do:
           assign tt-ticket.regid = hText:node-value.
         end.
-        if hNoderef:name = "tc:Identity" then assign tt-ticket.Identity = hText:node-value.
-        if hNoderef:name = "tc:DocType" then assign tt-ticket.doc = hText:node-value.
+        if noderefName = "tc:Identity" then assign tt-ticket.Identity = hText:node-value.
+        if noderefName = "tc:DocType" then assign tt-ticket.doc = hText:node-value.
         
       end.
 
-      if lookup (hParent:name, "ns:ConfirmTicket") > 0 then do:
-        if hNoderef:name = "wt:Identity" then assign tt-ticket.Identity = hText:node-value.
+      if lookup (parentName, "ns:ConfirmTicket") > 0 then do:
+        if noderefName = "wt:Identity" then assign tt-ticket.Identity = hText:node-value.
       end.
-      if lookup (hParent:name, "wt:Header") > 0 then do:
-        if hNoderef:name = "wt:IsConfirm" then assign tt-ticket.status_ = hText:node-value.
-        if hNoderef:name = "wt:TicketDate" then assign tt-ticket.ticket-date = hText:node-value.
-        if hNoderef:name = "wt:WBRegId" then assign tt-ticket.regid = hText:node-value.
-        if hNoderef:name = "wt:Note" then assign tt-ticket.comment = hText:node-value.
+      if lookup (parentName, "wt:Header") > 0 then do:
+        if noderefName = "wt:IsConfirm" then assign tt-ticket.status_ = hText:node-value.
+        if noderefName = "wt:TicketDate" then assign tt-ticket.ticket-date = hText:node-value.
+        if noderefName = "wt:WBRegId" then assign tt-ticket.regid = hText:node-value.
+        if noderefName = "wt:Note" then assign tt-ticket.comment = hText:node-value.
       end.
 
-      if lookup (hParent:name, "tc:Result") > 0 then do:
-        if hNoderef:name = "tc:Conclusion" then assign tt-ticket.status_ = hText:node-value.
-        if hNoderef:name = "tc:Comments" then assign tt-ticket.comment = hText:node-value.
+      if lookup (parentName, "tc:Result") > 0 then do:
+        if noderefName = "tc:Conclusion" then assign tt-ticket.status_ = hText:node-value.
+        if noderefName = "tc:Comments" then assign tt-ticket.comment = hText:node-value.
       end.
-      if lookup (hParent:name, "tc:OperationResult") > 0 then do:
-        if hNoderef:name = "tc:OperationResult" then assign tt-ticket.status_ = hText:node-value.
-        if hNoderef:name = "tc:OperationComment" then assign tt-ticket.comment = hText:node-value.
+      if lookup (parentName, "tc:OperationResult") > 0 then do:
+        if noderefName = "tc:OperationResult" then assign tt-ticket.status_ = hText:node-value.
+        if noderefName = "tc:OperationComment" then assign tt-ticket.comment = hText:node-value.
       end.
-      if lookup (hParent:name, "ns:Owner") > 0
+      if lookup (parentName, "ns:Owner") > 0
       then do:
         
-        if hNoderef:name = "ns:FSRAR_ID" then assign FromFSRAR = hText:node-value.
+        if noderefName = "ns:FSRAR_ID" then assign FromFSRAR = hText:node-value.
 
       end.
 
-      if lookup (hParent:name, "wb:Header,ns:WayBill,wbr:Header,wa:Header") > 0
+      if lookup (parentName, "wb:Header,ns:WayBill,ns:WayBill_v2,wbr:Header,wa:Header") > 0
         then 
       do: 
-        if hNoderef:name = "wb:Identity" or hNoderef:name = "wbr:Identity" or hNoderef:name = "wb:NUMBER" or hNoderef:name = "wbr:WBRegId" 
+        if noderefName = "wb:Identity" or noderefName = "wbr:Identity" or noderefName = "wb:NUMBER" or noderefName = "wbr:WBRegId" 
           then 
         do:
           if not available (tt-wb-header) then create tt-wb-header.
           assign 
-            tt-wb-header.Identity = hText:node-value when hNoderef:name = "wb:Identity"
-            tt-wb-header.ps       = "EGAIS wb:Identity " + hText:node-value when hNoderef:name = "wb:Identity"
+            tt-wb-header.Identity = hText:node-value when noderefName = "wb:Identity"
+            tt-wb-header.ps       = "EGAIS wb:Identity " + hText:node-value when noderefName = "wb:Identity"
             .
         end.
-        if hNoderef:name = "wb:NUMBER" or hNoderef:name = "wbr:WBNUMBER" then assign tt-wb-header.num = hText:node-value.
-        if hNoderef:name = "wb:Date" or hNoderef:name = "wbr:WBDate" then assign tt-wb-header.wb-date = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
-        if hNoderef:name = "wb:ShippingDate" then assign tt-wb-header.shippingdate = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
-        if hNoderef:name = "wb:Type" then 
+        if noderefName = "wb:NUMBER" or noderefName = "wbr:WBNUMBER" then assign tt-wb-header.num = hText:node-value.
+        if noderefName = "wb:Date" or noderefName = "wbr:WBDate" then assign tt-wb-header.wb-date = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
+        if noderefName = "wb:ShippingDate" then assign tt-wb-header.shippingdate = date (entry (3, hText:node-value, "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, hText:node-value, "-")) .
+        if noderefName = "wb:Type" then 
         do:
           case hText:node-value :
             when 'WBInvoiceFromMe' then 
@@ -363,87 +420,93 @@ class ibs.th.bge.egais.ParserXMLDocWB:
             end.
           end case.
         end.
-        if hNoderef:name = "wb:UnitType"     then assign tt-wb-header.UnitType = hText:node-value .
+        if noderefName = "wb:UnitType"     then assign tt-wb-header.UnitType = hText:node-value .
         
-        if hNoderef:name = "wa:ACTNUMBER" then assign tt-wb-act-header.num = hText:node-value.
-        if hNoderef:name = "wa:ActDate" then assign tt-wb-act-header.act-date = date (entry (3, right-trim (hText:node-value), "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, left-trim (hText:node-value), "-")) .
-        if hNoderef:name = "wa:WBRegId" then assign tt-wb-act-header.wbregid = hText:node-value.
-        if hNoderef:name = "wa:IsAccept" then assign tt-wb-act-header.status_ = hText:node-value.
-        if hNoderef:name = "wa:Note" then assign tt-wb-act-header.note = hText:node-value.
+        if noderefName = "wa:ACTNUMBER" then assign tt-wb-act-header.num = hText:node-value.
+        if noderefName = "wa:ActDate" then assign tt-wb-act-header.act-date = date (entry (3, right-trim (hText:node-value), "-") + "." + entry (2, hText:node-value, "-") + "." + entry (1, left-trim (hText:node-value), "-")) .
+        if noderefName = "wa:WBRegId" then assign tt-wb-act-header.wbregid = hText:node-value.
+        if noderefName = "wa:IsAccept" then assign tt-wb-act-header.status_ = hText:node-value.
+        if noderefName = "wa:Note" then assign tt-wb-act-header.note = hText:node-value.
         
         
       end.
-      if lookup (hParent:name, "wb:Shipper,wb:Consignee,wb:Supplier,wbr:Shipper") > 0
-        then 
+      
+      if lookup (parentName, "wb:Shipper,wb:Consignee,wb:Supplier,wbr:Shipper")  > 0 or lookup (parentNameOref, "wb:Shipper,wb:Consignee,wb:Supplier,wbr:Shipper")  > 0
+      then 
       do: 
-        if hNoderef:name = "oref:ClientRegId" then 
+        
+        if lookup (noderefName, "oref:UL,oref:FL,oref:FO,oref:TS") > 0 
+        then do:
+          parentNameOref = parentName.
+        end.
+        
+        if noderefName = "oref:ClientRegId" then 
         do:
           assign 
             tt-wb-info-client.regID = hText:node-value
-            tt-wb-header.regID-Ship = hText:node-value
-            when hParent:name = 'wb:Shipper'
+
             tt-wb-header.regID-Ship = hText:node-value 
-            when hParent:name = 'wbr:Shipper'
+            when tt-wb-info-client.wb-type-client = 'Shipper'
             tt-wb-header.regID-Cons = hText:node-value 
-            when hParent:name = 'wb:Consignee'
+            when tt-wb-info-client.wb-type-client = 'Consignee'
             .
         end.
-        if hNoderef:name = "oref:ShortName"   then assign tt-wb-header.NameShip = hText:node-value when hParent:name = 'wb:Shipper'.
-        if hNoderef:name = "oref:INN"         then assign tt-wb-header.INNShip = hText:node-value when hParent:name = 'wb:Shipper'.
-        if hNoderef:name = "oref:KPP"         then assign tt-wb-header.KPPShip = hText:node-value when hParent:name = 'wb:Shipper'.
-        if hNoderef:name = "oref:INN"         then assign tt-wb-info-client.inn = hText:node-value .
-        if hNoderef:name = "oref:KPP"         then assign tt-wb-info-client.kpp = hText:node-value .
-        if hNoderef:name = "oref:FullName"    then assign tt-wb-info-client.obj-name-egais = hText:node-value .
-        if hNoderef:name = "oref:Country"     then assign tt-wb-info-client.country = hText:node-value .
-        if hNoderef:name = "oref:Index"       then assign tt-wb-info-client.postIndex = hText:node-value .
-        if hNoderef:name = "oref:RegionCode"  then assign tt-wb-info-client.regionCode = hText:node-value .
-        if hNoderef:name = "oref:area"        then assign tt-wb-info-client.district = hText:node-value . 
-        if hNoderef:name = "oref:city"        then assign tt-wb-info-client.city = hText:node-value .       
-        if hNoderef:name = "oref:place"       then assign tt-wb-info-client.settlement = hText:node-value .
-        if hNoderef:name = "oref:street"      then assign tt-wb-info-client.street = hText:node-value .
-        if hNoderef:name = "oref:house"       then assign tt-wb-info-client.house-number = hText:node-value .  
-        if hNoderef:name = "oref:building"    then assign tt-wb-info-client.house-case = hText:node-value .
-        if hNoderef:name = "oref:liter"       then assign tt-wb-info-client.house-litera = hText:node-value .  
-        if hNoderef:name = "oref:description" then assign tt-wb-info-client.description_ = hText:node-value .    
+        if noderefName = "oref:FullName"    then assign tt-wb-header.NameShip = hText:node-value when parentName = 'wb:Shipper'.
+        if noderefName = "oref:INN"         then assign tt-wb-header.INNShip = hText:node-value when parentName = 'wb:Shipper'.
+        if noderefName = "oref:KPP"         then assign tt-wb-header.KPPShip = hText:node-value when parentName = 'wb:Shipper'.
+        if noderefName = "oref:INN"         then assign tt-wb-info-client.inn = hText:node-value .
+        if noderefName = "oref:KPP"         then assign tt-wb-info-client.kpp = hText:node-value .
+        if noderefName = "oref:FullName"    then assign tt-wb-info-client.obj-name-egais = hText:node-value .
+        if noderefName = "oref:Country"     then assign tt-wb-info-client.country = hText:node-value .
+        if noderefName = "oref:Index"       then assign tt-wb-info-client.postIndex = hText:node-value .
+        if noderefName = "oref:RegionCode"  then assign tt-wb-info-client.regionCode = hText:node-value .
+        if noderefName = "oref:area"        then assign tt-wb-info-client.district = hText:node-value . 
+        if noderefName = "oref:city"        then assign tt-wb-info-client.city = hText:node-value .       
+        if noderefName = "oref:place"       then assign tt-wb-info-client.settlement = hText:node-value .
+        if noderefName = "oref:street"      then assign tt-wb-info-client.street = hText:node-value .
+        if noderefName = "oref:house"       then assign tt-wb-info-client.house-number = hText:node-value .  
+        if noderefName = "oref:building"    then assign tt-wb-info-client.house-case = hText:node-value .
+        if noderefName = "oref:liter"       then assign tt-wb-info-client.house-litera = hText:node-value .  
+        if noderefName = "oref:description" then assign tt-wb-info-client.description_ = hText:node-value .    
       end.
       
       
-      if lookup (hParent:name, "wa:Position") > 0
+      if lookup (parentName, "wa:Position") > 0
       then
       do:
-        if hNoderef:name = "wa:InformBRegId"   then assign tt-wb-act-gds-EG.refB = hText:node-value .
-        if hNoderef:name = "wa:RealQuantity"   then assign tt-wb-act-gds-EG.RealQuantity = decimal(hText:node-value) .        
+        if noderefName = "wa:InformBRegId"   then assign tt-wb-act-gds-EG.refB = hText:node-value .
+        if noderefName = "wa:RealQuantity"   then assign tt-wb-act-gds-EG.RealQuantity = decimal(hText:node-value) .        
       end.
       
-      if lookup (hParent:name, "wb:Position,wb:Product") > 0
+      if lookup (parentName, "wb:Position,wb:Product") > 0
         then 
       do:
         if tt-wb-gds-EG.gds-name = "" then
-          if hNoderef:name = "pref:ShortName"    then assign tt-wb-gds-EG.gds-name = hText:node-value.
+          if noderefName = "pref:ShortName"    then assign tt-wb-gds-EG.gds-name = hText:node-value.
 
-        if hNoderef:name = "pref:FullName"     then assign tt-wb-gds-EG.gds-name = hText:node-value.
-        if hNoderef:name = "pref:AlcCode"      
+        if noderefName = "pref:FullName"     then assign tt-wb-gds-EG.gds-name = hText:node-value.
+        if noderefName = "pref:AlcCode"      
           then assign tt-wb-gds-EG.alc-code = hText:node-value.
-        if hNoderef:name = "pref:Capacity"     then assign tt-wb-gds-EG.ms-base = decimal(hText:node-value) .
-        if hNoderef:name = "pref:AlcVolume"    then assign tt-wb-gds-EG.proof = decimal(hText:node-value) .
+        if noderefName = "pref:Capacity"     then assign tt-wb-gds-EG.ms-base = decimal(hText:node-value) .
+        if noderefName = "pref:AlcVolume"    then assign tt-wb-gds-EG.proof = decimal(hText:node-value) .
         
-        if hNoderef:name = "pref:ProductVCode" then assign tt-wb-gds-EG.alc-type-code = hText:node-value .
-        if hNoderef:name = "wb:Identity"
+        if noderefName = "pref:ProductVCode" then assign tt-wb-gds-EG.alc-type-code = hText:node-value .
+        if noderefName = "wb:Identity"
         then do:
           assign 
             tt-wb-gds-EG.Identity = hText:node-value
             tt-wb-gds-EG.nn = nn
           .
         end.
-        if hNoderef:name = "wb:Price"          then assign tt-wb-gds-EG.price = decimal(hText:node-value) .
-        if hNoderef:name = "wb:Quantity"       then assign tt-wb-gds-EG.qnty = decimal(hText:node-value) .
+        if noderefName = "wb:Price"          then assign tt-wb-gds-EG.price = decimal(hText:node-value) .
+        if noderefName = "wb:Quantity"       then assign tt-wb-gds-EG.qnty = decimal(hText:node-value) .
         
-        if hNoderef:name = "pref:UnitType"       then assign tt-wb-gds-EG.UnitType = hText:node-value .
+        if noderefName = "pref:UnitType"       then assign tt-wb-gds-EG.UnitType = hText:node-value .
         
       end.
       
-      if available (tt-wb-gds-EG) and lookup (hParent:name, "pref:Importer") > 0 then do:
-        if hNoderef:name = "oref:ClientRegId" then assign tt-wb-gds-EG.regID-Importer = hText:node-value .
+      if available (tt-wb-gds-EG) and lookup (parentName, "pref:Importer") > 0 then do:
+        if noderefName = "oref:ClientRegId" then assign tt-wb-gds-EG.regID-Importer = hText:node-value .
         
         tt-wb-gds-EG.importer-th = "".
         find first ub.ext-classif no-lock 
@@ -457,39 +520,38 @@ class ibs.th.bge.egais.ParserXMLDocWB:
           tt-wb-gds-EG.importer-th = entry (2, ub.ext-classif.uniq-key-rec, {&delim-key}) + entry (3, ub.ext-classif.uniq-key-rec, {&delim-key}).
         end.
         
-        if hNoderef:name = "oref:ClientRegId" then do:
+        if noderefName = "oref:ClientRegId" then do:
           assign entry (1, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
           assign entry (5, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address".
           assign entry (6, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address".
         end.
-        if hNoderef:name = "oref:INN"         then assign entry (2, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:KPP"         then assign entry (3, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:FullName"    then assign entry (4, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:INN"         then assign entry (2, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:KPP"         then assign entry (3, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:FullName"    then assign entry (4, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
         
       end.
       
-      if available (tt-wb-gds-EG) and hParent:name = "oref:address" and (entry (5, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address")
+      if available (tt-wb-gds-EG) and parentName = "oref:address" and (entry (5, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.importer-list, chr(5)) = "oref:address")
       then do:
         
-        if hNoderef:name = "oref:Country"     then assign entry (5, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:description" then assign entry (6, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:Country"     then assign entry (5, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:description" then assign entry (6, tt-wb-gds-EG.importer-list, chr(5)) = hText:node-value .
       end.
 
       if available (tt-wb-gds-EG) and
-        (lookup (hParent:name, "pref:Producer") > 0 
-          or lookup (hParent:name, "oref:UL") > 0 
-          or lookup (hParent:name, "pref:FL") > 0 
-          or lookup (hParent:name, "pref:FO") > 0 
-          or lookup (hParent:name, "pref:TS") > 0
-        ) 
+        lookup (parentName, "pref:Producer,oref:UL,oref:FL,oref:FO,oref:TS") > 0 
         then do:
-        case hParent:name:
-          when "oref:UL" then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'UL'.
-          when "oref:FL" then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'FL'.
-          when "oref:FO" then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'FO'.
-          when "oref:TS" then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'TS'.
+        case parentName:
+          when "oref:UL" 
+            then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'UL'.
+          when "oref:FL" 
+            then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'FL'.
+          when "oref:FO" 
+            then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'FO'.
+          when "oref:TS" 
+            then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'TS'.
         end case. 
-        if hNoderef:name = "oref:ClientRegId" then assign tt-wb-gds-EG.regID-Producer = hText:node-value .
+        if noderefName = "oref:ClientRegId" then assign tt-wb-gds-EG.regID-Producer = hText:node-value .
         tt-wb-gds-EG.producer-th = "".
         find first ub.ext-classif no-lock 
           where ub.ext-classif.classif-subject = {&table_clients}
@@ -502,66 +564,66 @@ class ibs.th.bge.egais.ParserXMLDocWB:
           tt-wb-gds-EG.producer-th = entry (2, ub.ext-classif.uniq-key-rec, {&delim-key}) + entry (3, ub.ext-classif.uniq-key-rec, {&delim-key}).
         end.
         
-        if hNoderef:name = "oref:ClientRegId" 
+        if noderefName = "oref:ClientRegId" 
         then do: 
           assign entry (1, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
           assign entry (5, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address".
           assign entry (6, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address".
         end.
-        if hNoderef:name = "oref:INN"         then assign entry (2, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:KPP"         then assign entry (3, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:FullName"    then assign entry (4, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:RegionCode"    then assign entry (8, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:INN"         then assign entry (2, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:KPP"         then assign entry (3, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:FullName"    then assign entry (4, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:RegionCode"    then assign entry (8, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
       end.
       
-      if available (tt-wb-gds-EG) and hParent:name = "oref:address" and (entry (5, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address")
+      if available (tt-wb-gds-EG) and parentName = "oref:address" and (entry (5, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address" or entry (6, tt-wb-gds-EG.prod-list, chr(5)) = "oref:address")
       then do:
-        if hNoderef:name = "oref:Country"     then assign entry (5, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
-        if hNoderef:name = "oref:description" then assign entry (6, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:Country"     then assign entry (5, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
+        if noderefName = "oref:description" then assign entry (6, tt-wb-gds-EG.prod-list, chr(5)) = hText:node-value .
       end.
       
       
-      if lookup (hParent:name, "wb:InformA") > 0
+      if lookup (parentName, "wb:InformA") > 0
         then 
       do:
-        if hNoderef:name = "pref:RegId" then assign tt-wb-gds-EG.refA = hText:node-value.
+        if noderefName = "pref:RegId" then assign tt-wb-gds-EG.refA = hText:node-value.
       end.
-      if lookup (hParent:name, "wb:InformF1") > 0
+      if lookup (parentName, "wb:InformF1") > 0
         then 
       do:
-        if hNoderef:name = "pref:RegId" then assign tt-wb-gds-EG.refA = hText:node-value.
+        if noderefName = "pref:RegId" then assign tt-wb-gds-EG.refA = hText:node-value.
       end.
       
       
-      if lookup (hParent:name, "pref:InformBItem") > 0
+      if lookup (parentName, "pref:InformBItem") > 0
         then 
       do:
-        if hNoderef:name = "pref:BRegId" then assign tt-wb-gds-EG.beforRefB = hText:node-value.
+        if noderefName = "pref:BRegId" then assign tt-wb-gds-EG.beforRefB = hText:node-value.
       end.
-      if lookup (hParent:name, "pref:InformF2Item") > 0
+      if lookup (parentName, "pref:InformF2Item") > 0
         then 
       do:
-        if hNoderef:name = "pref:F2RegId" then assign tt-wb-gds-EG.beforRefB = hText:node-value.
+        if noderefName = "pref:F2RegId" then assign tt-wb-gds-EG.beforRefB = hText:node-value.
       end.
       
       
       
-      if lookup (hParent:name, "wbr:Header") > 0
+      if lookup (parentName, "wbr:Header") > 0
         then 
       do:
         find first tt-wb-header no-error.
         if not available (tt-wb-header) then create tt-wb-header.
-        if hNoderef:name = "wbr:WBRegId" then assign tt-wb-header.wbregid = hText:node-value .
-        if hNoderef:name = "wbr:Identity" then assign tt-wb-header.Identity = hText:node-value .
+        if noderefName = "wbr:WBRegId" then assign tt-wb-header.wbregid = hText:node-value .
+        if noderefName = "wbr:Identity" then assign tt-wb-header.Identity = hText:node-value .
       end.
-      if lookup (hParent:name, "wbr:Position") > 0
+      if lookup (parentName, "wbr:Position") > 0
         then 
       do:
-        if hNoderef:name = "wbr:Identity" then 
+        if noderefName = "wbr:Identity" then 
         do:
           find first tt-wb-gds-EG where tt-wb-gds-EG.Identity = hText:node-value no-error.
         end.
-        if available (tt-wb-gds-EG) and (hNoderef:name = "wbr:InformBRegId" or hNoderef:name = "wbr:InformF2RegId") then assign tt-wb-gds-EG.refB = hText:node-value.
+        if available (tt-wb-gds-EG) and (noderefName = "wbr:InformBRegId" or noderefName = "wbr:InformF2RegId") then assign tt-wb-gds-EG.refB = hText:node-value.
       end.
       if available (tt-wb-gds-EG) then do:
         if tt-wb-gds-EG.regID-Importer = ""
@@ -590,7 +652,6 @@ class ibs.th.bge.egais.ParserXMLDocWB:
       end.
       GetChildren(hNoderef, (level + 1)).
     end.
-
 
     delete object hNoderef.
     delete object hText.

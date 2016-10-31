@@ -716,7 +716,7 @@ class ibs.th.bge.egais.ExtGds:
     if ReturnMsg <> ""
       then 
     do:
-      ReturnMsg = ReturnMsg + " Товар" + string (buf_ext-classif-attr.key#_one) + ". Выполните синхронизацию товаров.".
+      ReturnMsg = ReturnMsg + " Товар" + string (buf_ext-classif.key#_one) + ". Выполните синхронизацию товаров.".
       if not IsSilent 
         then message ReturnMsg view-as alert-box.
     end.
