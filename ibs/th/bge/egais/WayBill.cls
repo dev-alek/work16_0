@@ -126,13 +126,16 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
   define private variable nn             as integer   no-undo.
   define private variable nnList         as integer   no-undo.
   define private variable minPrice       as decimal   no-undo.
-  
+  define private variable isForceAccept  as logical no-undo.
+  define private variable verPrefXMLNS   as character no-undo.
+    
+      
   define private variable extGdsObj      as class   ExtGds         no-undo.
   define private variable extGdsValueObj as class   ExtGdsValue    no-undo.
-  define private variable isForceAccept  as logical no-undo.
   define private variable prgObj         as class   ProgressBar    no-undo .
   define private variable prsXMLDocWB    as class   ParserXMLDocWB no-undo.
   define private variable alcTypeAttrObj as class   AlcTypeAttr    no-undo.
+
       
   define variable v-FS-RAR   as character no-undo .
   define variable inDocFSRAR as character no-undo .
@@ -173,7 +176,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     field cli          as character label "Контрагент" format "x(30)"
     field cliname      as character label "Название контрагента" format "x(30)"
     field wb-type      as character label "Тип" format "x(20)" 
-    field trn-doc-code as character label "№ накл. TH"
+    field trn-doc-code as character label "№ накл. TH" format "x(20)"
     field status_      as character label "Статус" format "x(20)"
     field EGAISSts     as character label "Статус ЕГАИС" format "x(20)"
     field is-sent      as character label "Отправлена"
@@ -476,7 +479,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         end.
       when {&wb-clob} then 
         do:
-          SettingsTTList = "20,yes;;;12,yes;9,yes;20,yes;10,yes;;6,yes;12,yes;;;;;;".
+          SettingsTTList = "20,yes;;;12,yes;9,yes;20,yes;10,yes;10,yes;6,yes;12,yes;;;;;;".
           empty temp-table tt-wb-hndls.
           for each buf_clob-bind-wb-hndls no-lock where buf_clob-bind-wb-hndls.resource-type = {&lob-egais-wb}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.Identity + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
@@ -674,7 +677,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         end.
       when {&wb-ras} then 
         do:
-          SettingsTTList = "20,no;;;12,yes;9,yes;20,yes;17,yes;;6,yes;20,yes;;1,no;1,no;1,no;1,no;1,no".
+          SettingsTTList = "20,no;;;12,yes;9,yes;20,yes;17,yes;10,yes;6,yes;20,yes;;1,no;1,no;1,no;1,no;1,no".
           empty temp-table tt-wb-hndls.
             
             for each buf_trn-doc no-lock where buf_trn-doc.obj-code = ObjCode and buf_trn-doc.obj-type = ObjType 
@@ -978,7 +981,15 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
             return false.
           end.
           
-          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBill >&4", search ("exe/curl.exe"), search (inFileName), ConPar, "RespTTN.xml").
+          case VerWBXsd:
+          when 'WayBill' then do:
+            cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBill >&4", search ("exe/curl.exe"), search (inFileName), ConPar, "RespTTN.xml").
+          end.
+          when 'WayBill_v2' then do:
+            cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBill_v2 >&4", search ("exe/curl.exe"), search (inFileName), ConPar, "RespTTN.xml").
+          end.
+          end case.
+          
           os-command value (cmd).
           file-info:file-name = search ("RespTTN.xml").
           if search ("RespTTN.xml") <> ? and file-info:file-size > 0
@@ -1385,7 +1396,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
             end.
        
             case true:
-              when urlStr matches ("*opt/out/WayBill/*") then 
+              when urlStr matches ("*opt/out/WayBill/*") or urlStr matches ("*opt/out/WayBill_v2/*") then 
                 do:
 
                   os-delete "WayBill.xml".
@@ -1518,7 +1529,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
 
                 end.
-              when urlStr matches ("*opt/out/FORMBREGINFO/*") then 
+              when urlStr matches ("*opt/out/FORMBREGINFO/*") or urlStr matches ("*opt/out/FORM2REGINFO/*") then 
                 do:
 
                   os-delete "FORMBREGINFO.xml".
@@ -1528,6 +1539,17 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     .
 
                   CmdParseXml(urlStr).
+                  
+                  if urlStr matches ("*opt/out/FORM2REGINFO/*")
+                  then do:
+                    for each tt-wb-header.
+                      export stream str-formF1 tt-wb-header.
+                    end.
+                    for each tt-wb-gds-EG:
+                      export stream str-formF1 tt-wb-gds-EG.
+                    end.
+                  end.
+                  
                   if StatusErr
                   then do:
                     message "Ошибка приема файла справки Б: " tt-wb-header.wbregid skip urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
@@ -2383,9 +2405,11 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
   method private void WriteXMLWB (inFileName as char):
 
-    def var sw as handle no-undo.
-    def var VerXSDShip as character no-undo.
-    def var CliEgaisType as character no-undo. 
+    def var sw               as handle    no-undo.
+    def var VerXSDShip       as character no-undo.
+    def var CliEgaisTypeShip as character no-undo.
+    def var CliEgaisTypeCons as character no-undo. 
+    def var ii               as integer   no-undo.
     
     find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = {&table_clients}
       and buf_ext-classif-attr.classif-name = {&extclass_clients_esys}
@@ -2393,20 +2417,51 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       and buf_ext-classif-attr.key#_one = v-ext-sys
       and buf_ext-classif-attr.CharKey_Three = tt-wb-header.regID-Ship
       and buf_ext-classif-attr.attr-code = "egais-cli-info" no-error.
+      
     if available (buf_ext-classif-attr)
     then 
       assign 
-        VerXSDShip = entry (1, buf_ext-classif-attr.attr-code, chr(4))
-        CliEgaisType = entry (2, buf_ext-classif-attr.attr-code, chr(4))
+        VerXSDShip = entry (1, buf_ext-classif-attr.attr-value, chr(4))
+        CliEgaisTypeShip = entry (2, buf_ext-classif-attr.attr-value, chr(4))
       no-error.
     else VerXSDShip = 'WayBill'.
     
-    if VerXSDShip = "WayBill" or VerXSD = "1"
+    if VerXSDShip = ? or VerXSDShip = "" or VerXSDShip = "WayBill" or VerXSD = "1"
     then do:
       VerWBXsd = "WayBill".
+      verPrefXMLNS = "".
     end.
     else do:
       VerWBXsd = "WayBill_v2".
+      verPrefXMLNS = "2".
+    end.
+    
+    if VerWBXsd = "WayBill_v2" 
+    then do:
+      find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = {&table_clients}
+        and buf_ext-classif-attr.classif-name = {&extclass_clients_esys}
+        and buf_ext-classif-attr.db-num = 0
+        and buf_ext-classif-attr.key#_one = v-ext-sys
+        and buf_ext-classif-attr.CharKey_Three = tt-wb-header.regID-Cons
+        and buf_ext-classif-attr.attr-code = "egais-cli-info" no-error.
+      if available (buf_ext-classif-attr)
+      then do:
+        assign 
+          CliEgaisTypeCons = entry (2, buf_ext-classif-attr.attr-value, chr(4))
+        no-error.
+        if CliEgaisTypeCons = ? or CliEgaisTypeCons = ""
+        then do:
+          VerWBXsd = "WayBill".
+          verPrefXMLNS = "".
+/*          StatusErr = true.                                                                                                                                                            */
+/*          Msg =  substitute ("У клиента ЕГАИС неизвестен тип. Обновите информацию по клиентам. Клиент - &1/&2.", buf_ext-classif-attr.CharKey_two, buf_ext-classif-attr.CharKey_Three).*/
+/*          return.                                                                                                                                                                      */
+        end.
+      end.
+      else do:
+        VerWBXsd = "WayBill".
+        verPrefXMLNS = "".
+      end.
     end.
     
     create sax-writer sw .
@@ -2417,11 +2472,20 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     sw:start-document () .
     sw:start-element ("ns:Documents") .
     sw:insert-attribute ("Version", "1.0") .
-    sw:insert-attribute ("xmlns:wb", "http://fsrar.ru/WEGAIS/TTNSingle") .
-    sw:insert-attribute ("xmlns:ns", "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01") .
-    sw:insert-attribute ("xmlns:oref", "http://fsrar.ru/WEGAIS/ClientRef") .
-    sw:insert-attribute ("xmlns:pref", "http://fsrar.ru/WEGAIS/ProductRef") .
-  
+    case VerWBXsd:
+      when "WayBill" then do:
+        sw:insert-attribute ("xmlns:wb", "http://fsrar.ru/WEGAIS/TTNSingle").
+        sw:insert-attribute ("xmlns:ns", "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01").
+        sw:insert-attribute ("xmlns:oref", "http://fsrar.ru/WEGAIS/ClientRef").
+        sw:insert-attribute ("xmlns:pref", "http://fsrar.ru/WEGAIS/ProductRef").
+      end.
+      when "WayBill_v2" then do:
+        sw:insert-attribute ("xmlns:wb2", "http://fsrar.ru/WEGAIS/TTNSingle_v2").
+        sw:insert-attribute ("xmlns:ns", "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01").
+        sw:insert-attribute ("xmlns:oref2", "http://fsrar.ru/WEGAIS/ClientRef_v2").
+        sw:insert-attribute ("xmlns:pref2", "http://fsrar.ru/WEGAIS/ProductRef_v2").        
+      end.
+    end case.
   
     sw:start-element ("ns:Owner") . 
         sw:write-data-element ("ns:FSRAR_ID", v-fs-rar) .
@@ -2430,63 +2494,44 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     sw:start-element ("ns:Document") .
   
       sw:start-element ("ns:" + VerWBXsd) .
-        sw:write-data-element ("wb:Identity", tt-wb-header.Identity) .
-        sw:start-element ("wb:Header") .  
-          sw:write-data-element ("wb:NUMBER", tt-wb-header.Identity).
-          sw:write-data-element ("wb:Date", iso-date (tt-wb-header.wb-date)).
-          sw:write-data-element ("wb:Type", tt-wb-header.wb-type).  
-          sw:write-data-element ("wb:UnitType", tt-wb-header.UnitType). /*??????*/
-          sw:write-data-element ("wb:ShippingDate", iso-date (tt-wb-header.wb-date)).
+        sw:write-data-element ("wb" + verPrefXMLNS + ":Identity", tt-wb-header.Identity) .
+        sw:start-element ("wb" + verPrefXMLNS + ":Header") .  
+          sw:write-data-element ("wb" + verPrefXMLNS + ":NUMBER", tt-wb-header.Identity).
+          sw:write-data-element ("wb" + verPrefXMLNS + ":Date", iso-date (tt-wb-header.wb-date)).
+          sw:write-data-element ("wb" + verPrefXMLNS + ":Type", tt-wb-header.wb-type).
+          if VerWBXsd = 'WayBill'  
+            then sw:write-data-element ("wb" + verPrefXMLNS + ":UnitType", tt-wb-header.UnitType). /*??????*/
+          sw:write-data-element ("wb" + verPrefXMLNS + ":ShippingDate", iso-date (tt-wb-header.wb-date)).
 
-              
-
-              
-          sw:start-element ("wb:Shipper") .
-            if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
-              then sw:start-element ("wb:" + CliEgaisType) . 
+          sw:start-element ("wb" + verPrefXMLNS + ":Shipper") .
+            if VerWBXsd = 'WayBill_v2'
+              then sw:start-element ("oref" + verPrefXMLNS + ":" + CliEgaisTypeShip) . 
             AddClientXML(sw, tt-wb-header.obj-type, tt-wb-header.obj-code, tt-wb-header.regID-Ship, yes).
             if StatusErr
               then return.
-            if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
-              then sw:end-element ("wb:" + CliEgaisType) .
+            if VerWBXsd = 'WayBill_v2'
+              then sw:end-element ("oref" + verPrefXMLNS + ":" + CliEgaisTypeShip) .
 
-          sw:end-element ("wb:Shipper") .
-          sw:start-element ("wb:Consignee") .
-
-            if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
-            then do:
-              find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = {&table_clients}
-                and buf_ext-classif-attr.classif-name = {&extclass_clients_esys}
-                and buf_ext-classif-attr.db-num = 0
-                and buf_ext-classif-attr.key#_one = v-ext-sys
-                and buf_ext-classif-attr.CharKey_Three = tt-wb-header.regID-Cons
-                and buf_ext-classif-attr.attr-code = "egais-cli-info" no-error.
-              if available (buf_ext-classif-attr)
-              then 
-                assign 
-                  CliEgaisType = entry (2, buf_ext-classif-attr.attr-code, chr(4))
-                no-error.
-              else do:
-                StatusErr = true.
-                Msg =  "У клиента ЕГАИС неизвестен тип. Обновите информацию по клиентам".
-                return.
-              end.
-            end.
+          sw:end-element ("wb" + verPrefXMLNS + ":Shipper") .
+          sw:start-element ("wb" + verPrefXMLNS + ":Consignee") .
             
-            if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
-              then sw:start-element ("wb:" + CliEgaisType) . 
+            if VerWBXsd = 'WayBill_v2'
+              then sw:start-element ("oref" + verPrefXMLNS + ":" + CliEgaisTypeCons) . 
             AddClientXML(sw, tt-wb-header.cli-type, tt-wb-header.cli-code, tt-wb-header.regID-Cons, no).
             if StatusErr
               then return.
-            if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
-              then sw:end-element ("wb:" + CliEgaisType) .
-          sw:end-element ("wb:Consignee") .
-          sw:start-element ("wb:Transport") .
-          sw:end-element ("wb:Transport") .
-        sw:end-element ("wb:Header") .
-        sw:start-element ("wb:Content") .
+            if VerWBXsd = 'WayBill_v2'
+              then sw:end-element ("oref" + verPrefXMLNS + ":" + CliEgaisTypeCons) .
+          sw:end-element ("wb" + verPrefXMLNS + ":Consignee") .
+          sw:start-element ("wb" + verPrefXMLNS + ":Transport") .
+          sw:end-element ("wb" + verPrefXMLNS + ":Transport") .
+        sw:end-element ("wb" + verPrefXMLNS + ":Header") .
+        sw:start-element ("wb" + verPrefXMLNS + ":Content") .
         
+        ii = 0.
         for each tt-wb-gds-EG no-lock:
+          
+          ii = ii + 1.
           
           extGdsObj:OpenQueryExtGds (tt-wb-gds-EG.gds-code, tt-wb-gds-EG.alc-code).
           if extGdsObj:NumBundles = 0
@@ -2514,22 +2559,23 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
           extGdsValueObj = extGdsObj:GetExtGdsValue().
           
-          sw:start-element ("wb:Position") .
-            sw:write-data-element ("wb:Identity", tt-wb-gds-EG.Identity).
-            sw:start-element ("wb:Product") .
-              sw:write-data-element ("pref:FullName", extGdsValueObj:FullNameGds).
-              sw:write-data-element ("pref:AlcCode", tt-wb-gds-EG.alc-code).
+          sw:start-element ("wb" + verPrefXMLNS + ":Position") .
+            sw:write-data-element ("wb" + verPrefXMLNS + ":Identity", tt-wb-gds-EG.Identity).
+            sw:start-element ("wb" + verPrefXMLNS + ":Product") .
+              sw:write-data-element ("pref" + verPrefXMLNS + ":FullName", extGdsValueObj:FullNameGds).
+              sw:write-data-element ("pref" + verPrefXMLNS + ":AlcCode", tt-wb-gds-EG.alc-code).
               
-              if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
+              if VerWBXsd = 'WayBill_v2'
               then do:
-                if tt-wb-gds-EG.UnitType = 'Packed' then sw:write-data-element ("pref:Capacity", string (tt-wb-gds-EG.ms-base)).
+                if tt-wb-gds-EG.UnitType = 'Packed' then sw:write-data-element ("pref" + verPrefXMLNS + ":Capacity", string (tt-wb-gds-EG.ms-base)).
+                sw:write-data-element ("pref" + verPrefXMLNS + ":UnitType", tt-wb-gds-EG.UnitType).
               end.  
               else do:
-                if tt-wb-header.UnitType = 'Packed' then sw:write-data-element ("pref:Capacity", string (tt-wb-gds-EG.ms-base)).
+                if tt-wb-header.UnitType = 'Packed' then sw:write-data-element ("pref" + verPrefXMLNS + ":Capacity", string (tt-wb-gds-EG.ms-base)).
               end.
               
-              sw:write-data-element ("pref:AlcVolume", string (tt-wb-gds-EG.proof)).
-              sw:write-data-element ("pref:ProductVCode", tt-wb-gds-EG.alc-type-code).
+              sw:write-data-element ("pref" + verPrefXMLNS + ":AlcVolume", string (tt-wb-gds-EG.proof)).
+              sw:write-data-element ("pref" + verPrefXMLNS + ":ProductVCode", tt-wb-gds-EG.alc-type-code).
               
               if extGdsValueObj:FullNameProd = ""
               then do:
@@ -2537,60 +2583,89 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 Msg = extGdsObj:ReturnMsg + " У товара неизвестен производитель из ЕГАИС - " + string (tt-wb-gds-EG.gds-code) + ". Выполните синхронизацию товаров.".
                 return.
               end.
-                            
-              sw:start-element ("pref:Producer") .
               
-                if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
-                then sw:start-element ("wb:" + extGdsValueObj:CliEgaisTypeProd) .
+              if VerWBXsd = 'WayBill_v2' and (extGdsValueObj:CliEgaisTypeProd = "")
+              then do:
+                StatusErr = true.
+                Msg = Msg + extGdsObj:ReturnMsg + " У товара неизвестен тип производителя из ЕГАИС - " + string (tt-wb-gds-EG.gds-code) + ". Выполните синхронизацию товаров во второй схеме XSD." + {&new-line}.
+              end.
+                            
+              sw:start-element ("pref" + verPrefXMLNS + ":Producer") .
+              
+                if VerWBXsd = 'WayBill_v2' and not extGdsValueObj:CliEgaisTypeProd = ""
+                  then sw:start-element ("oref" + verPrefXMLNS + ":" + extGdsValueObj:CliEgaisTypeProd) .
                 if not ( extGdsValueObj:INNProd = "" or extGdsValueObj:KPPProd = "")
                 then do:
-                  sw:write-data-element ("oref:INN",  extGdsValueObj:INNProd ).
-                  sw:write-data-element ("oref:KPP", extGdsValueObj:KPPProd ).
+                  sw:write-data-element ("oref" + verPrefXMLNS + ":INN",  extGdsValueObj:INNProd ).
+                  sw:write-data-element ("oref" + verPrefXMLNS + ":KPP", extGdsValueObj:KPPProd ).
                 end.
-                sw:write-data-element ("oref:ClientRegId", extGdsValueObj:CliRegIdProd ).
-                sw:write-data-element ("oref:FullName", extGdsValueObj:FullNameProd ).
-                sw:start-element ("oref:address").
-                  sw:write-data-element ("oref:Country", extGdsValueObj:CountryProd ).
-                  if VerWBXsd = "WayBill_v2"
-                    then sw:write-data-element ("oref:RegionCode", extGdsValueObj:RegionProd ). 
-                  sw:write-data-element ("oref:description", extGdsValueObj:DescrProd ).
-                sw:end-element ("oref:address").
-                if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
-                  then sw:end-element ("wb:" + extGdsValueObj:CliEgaisTypeProd) .
+                sw:write-data-element ("oref" + verPrefXMLNS + ":ClientRegId", extGdsValueObj:CliRegIdProd ).
+                sw:write-data-element ("oref" + verPrefXMLNS + ":FullName", extGdsValueObj:FullNameProd ).
+                sw:start-element ("oref" + verPrefXMLNS + ":address").
+                  sw:write-data-element ("oref" + verPrefXMLNS + ":Country", extGdsValueObj:CountryProd ).
+                  if VerWBXsd = "WayBill_v2" and extGdsValueObj:RegionProd <> ""
+                    then sw:write-data-element ("oref" + verPrefXMLNS + ":RegionCode", extGdsValueObj:RegionProd ). 
+                  sw:write-data-element ("oref" + verPrefXMLNS + ":description", extGdsValueObj:DescrProd ).
+                sw:end-element ("oref" + verPrefXMLNS + ":address").
+                if VerWBXsd = 'WayBill_v2' and not extGdsValueObj:CliEgaisTypeProd = ""
+                  then sw:end-element ("oref" + verPrefXMLNS + ":" + extGdsValueObj:CliEgaisTypeProd) .
                   
-              sw:end-element ("pref:Producer") .
+              sw:end-element ("pref" + verPrefXMLNS + ":Producer") .
 
               if not extGdsValueObj:FullNameImpor = "" and VerXSD <> '2' then do:
-                sw:start-element ("pref:Importer") .
+                sw:start-element ("pref" + verPrefXMLNS + ":Importer") .
                   if not ( extGdsValueObj:INNImpor = "" or extGdsValueObj:KPPImpor = "")
                   then do:
-                    sw:write-data-element ("oref:INN",  extGdsValueObj:INNImpor ).
-                    sw:write-data-element ("oref:KPP", extGdsValueObj:KPPImpor ).
+                    sw:write-data-element ("oref" + verPrefXMLNS + ":INN",  extGdsValueObj:INNImpor ).
+                    sw:write-data-element ("oref" + verPrefXMLNS + ":KPP", extGdsValueObj:KPPImpor ).
                   end.
-                  sw:write-data-element ("oref:ClientRegId", extGdsValueObj:CliRegIdImpor ).
-                  sw:write-data-element ("oref:FullName", extGdsValueObj:FullNameImpor ).
-                  sw:start-element ("oref:address").
-                    sw:write-data-element ("oref:Country", extGdsValueObj:CountryImpor ).
-                    sw:write-data-element ("oref:description", extGdsValueObj:DescrImpor ).
-                  sw:end-element ("oref:address").
-                sw:end-element ("pref:Importer") .
+                  sw:write-data-element ("oref" + verPrefXMLNS + ":ClientRegId", extGdsValueObj:CliRegIdImpor ).
+                  sw:write-data-element ("oref" + verPrefXMLNS + ":FullName", extGdsValueObj:FullNameImpor ).
+                  sw:start-element ("oref" + verPrefXMLNS + ":address").
+                    sw:write-data-element ("oref" + verPrefXMLNS + ":Country", extGdsValueObj:CountryImpor ).
+                    sw:write-data-element ("oref" + verPrefXMLNS + ":description", extGdsValueObj:DescrImpor ).
+                  sw:end-element ("oref" + verPrefXMLNS + ":address").
+                sw:end-element ("pref" + verPrefXMLNS + ":Importer") .
               end.
-            sw:end-element ("wb:Product") .
-            sw:write-data-element ("wb:Quantity", string (tt-wb-gds-EG.qnty)).
-            sw:write-data-element ("wb:Price", string (tt-wb-gds-EG.price)).
-            sw:start-element ("wb:InformA") .
-              sw:write-data-element ("pref:RegId", tt-wb-gds-EG.refA).
-            sw:end-element ("wb:InformA") .
-            sw:start-element ("wb:InformB") .
-              sw:start-element ("pref:InformBItem") .
-                sw:write-data-element ("pref:BRegId", tt-wb-gds-EG.refB).
-              sw:end-element ("pref:InformBItem") .
-            sw:end-element ("wb:InformB") .                    
-          sw:end-element ("wb:Position") .
+            sw:end-element ("wb" + verPrefXMLNS + ":Product") .
+            sw:write-data-element ("wb" + verPrefXMLNS + ":Quantity", string (tt-wb-gds-EG.qnty)).
+            sw:write-data-element ("wb" + verPrefXMLNS + ":Price", string (tt-wb-gds-EG.price)).
+/*            sw:write-data-element ("wb" + verPrefXMLNS + ":Pack_ID", "Паллета").*/
+/*            sw:write-data-element ("wb" + verPrefXMLNS + ":Party", string (ii)).*/
+            
+            case VerWBXsd:
+            when 'WayBill' then do:
+              sw:start-element ("wb" + verPrefXMLNS + ":InformA") .
+                sw:write-data-element ("pref" + verPrefXMLNS + ":RegId", tt-wb-gds-EG.refA).
+              sw:end-element ("wb" + verPrefXMLNS + ":InformA") .
+              sw:start-element ("wb" + verPrefXMLNS + ":InformB") .
+                sw:start-element ("pref" + verPrefXMLNS + ":InformBItem") .
+                  sw:write-data-element ("pref" + verPrefXMLNS + ":BRegId", tt-wb-gds-EG.refB).
+                sw:end-element ("pref" + verPrefXMLNS + ":InformBItem") .
+              sw:end-element ("wb" + verPrefXMLNS + ":InformB") .
+            end.
+            when 'WayBill_v2' then do:
+              sw:start-element ("wb" + verPrefXMLNS + ":InformF1") .
+                sw:write-data-element ("pref" + verPrefXMLNS + ":RegId", tt-wb-gds-EG.refA).
+              sw:end-element ("wb" + verPrefXMLNS + ":InformF1") .
+              sw:start-element ("wb" + verPrefXMLNS + ":InformF2") .
+                sw:start-element ("pref" + verPrefXMLNS + ":InformF2Item") .
+                  sw:write-data-element ("pref" + verPrefXMLNS + ":F2RegId", tt-wb-gds-EG.refB).
+                sw:end-element ("pref" + verPrefXMLNS + ":InformF2Item") .
+              sw:end-element ("wb" + verPrefXMLNS + ":InformF2") .
+            end.
+            end case.                    
+
+          sw:end-element ("wb" + verPrefXMLNS + ":Position") .
         
         end. /*for each tt-wb-gds-EG*/
         
-        sw:end-element ("wb:Content") .
+        if StatusErr
+        then do:
+          return.
+        end.
+        
+        sw:end-element ("wb" + verPrefXMLNS + ":Content") .
       sw:end-element ("ns:" + VerWBXsd) .
     sw:end-element ("ns:Document") .
     sw:end-element ("ns:Documents") .
@@ -2622,9 +2697,9 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     end.
 
     if available (buf_firm) then do:
-      inSW:write-data-element ("oref:INN", if INNObj = "" or INNObj = ? or not inShipper then buf_firm.inn else INNObj).
+      inSW:write-data-element ("oref" + verPrefXMLNS + ":INN", if INNObj = "" or INNObj = ? or not inShipper then buf_firm.inn else INNObj).
       if buf_firm.kpp <> "" or available (buf_clients-attr) 
-        then inSW:write-data-element ("oref:KPP", if available buf_clients-attr then buf_clients-attr.attr-value else buf_firm.kpp).
+        then inSW:write-data-element ("oref" + verPrefXMLNS + ":KPP", if available buf_clients-attr then buf_clients-attr.attr-value else buf_firm.kpp).
     end.
     else do:
       Msg = "Не найден ИНН или КПП организации или объекта " + inObjType + string (inObjCode).
@@ -2633,24 +2708,25 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     end.
     find first buf_clients-attr no-lock where buf_clients-attr.obj-type = inObjType and buf_clients-attr.obj-code = inObjCode
       and buf_clients-attr.attr-code = {&attr-requisite-alc-decl} no-error.
-    inSW:write-data-element ("oref:ClientRegId", inRegID).
+    inSW:write-data-element ("oref" + verPrefXMLNS + ":ClientRegId", inRegID).
     if available (buf_clients-attr) and num-entries (buf_clients-attr.attr-value, "|") >= 20
     then do:
-      inSW:write-data-element ("oref:FullName", entry (1, attr-value, "|")).
+      inSW:write-data-element ("oref" + verPrefXMLNS + ":FullName", entry (1, attr-value, "|")).
     end.
     else do:
       Msg = "Не заполнены/неполные атрибуты для алкогольной декларации. Заполните и синхронизируйте с ЕГАИС. Клиент - " + inObjType + string (inObjCode).
       StatusErr = true.
       return.
     end.
-/*    inSW:write-data-element ("oref:ShortName", '').*/
-    inSW:start-element ("oref:address").
+
+/*    inSW:write-data-element ("oref" + verPrefXMLNS + ":ShortName", '').*/
+    inSW:start-element ("oref" + verPrefXMLNS + ":address").
       if available (buf_clients-attr)
       then do:
         def var descr as char no-undo.
-        inSW:write-data-element ("oref:Country", entry (3, buf_clients-attr.attr-value, "|")).
+        inSW:write-data-element ("oref" + verPrefXMLNS + ":Country", entry (3, buf_clients-attr.attr-value, "|")).
         if VerWBXsd = "WayBill_v2"
-          then inSW:write-data-element ("oref:RegionCode", entry (5, buf_clients-attr.attr-value, "|") ).
+          then inSW:write-data-element ("oref" + verPrefXMLNS + ":RegionCode", entry (5, buf_clients-attr.attr-value, "|") ).
         find first buf_country where buf_country.num-code = integer (entry (3, buf_clients-attr.attr-value, "|")) no-error.
         descr = entry (20, buf_clients-attr.attr-value, "|") no-error.
         descr = replace (descr, {&delim-urt}, "|").
@@ -2660,9 +2736,9 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
           StatusErr = true.
           return.
         end.
-        inSW:write-data-element ("oref:description", descr).
+        inSW:write-data-element ("oref" + verPrefXMLNS + ":description", descr).
       end.
-    inSW:end-element ("oref:address").
+    inSW:end-element ("oref" + verPrefXMLNS + ":address").
     
   end.
  
