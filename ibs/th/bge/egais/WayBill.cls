@@ -885,7 +885,9 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     
     def var ii        as int    no-undo.
     def var xml-cont  as char   no-undo.
+    def var verDocXsd as char   no-undo.
     def var respValue as handle no-undo.
+    
     assign
       StatusErr = false
       Msg       = ""
@@ -924,8 +926,14 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
           put stream outstr unformatted outData.
           put stream outstr skip.
           output stream outstr close.
-      
-          cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).
+
+          case tt-wb-header.verXSD:
+            when "WayBill" 
+              then cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).
+            when "WayBill_v2" 
+              then cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct_v2 >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).  
+          end case.
+          
           os-command value (cmd).
     
           file-info:file-name = search (inFileName).
@@ -981,7 +989,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
             return false.
           end.
           
-          case VerWBXsd:
+          case tt-wb-header.verXSD:
           when 'WayBill' then do:
             cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBill >&4", search ("exe/curl.exe"), search (inFileName), ConPar, "RespTTN.xml").
           end.
@@ -1076,7 +1084,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     if available (buf_ext-classif-attr)
     then 
       assign 
-        VerXSDShip = entry (1, buf_ext-classif-attr.attr-code, chr(4))
+        VerXSDShip = entry (1, buf_ext-classif-attr.attr-value, chr(4))
       no-error.
     else VerXSDShip = 'WayBill'.
     output stream outstr close.
@@ -1540,16 +1548,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
                   CmdParseXml(urlStr).
                   
-                  if urlStr matches ("*opt/out/FORM2REGINFO/*")
-                  then do:
-                    for each tt-wb-header.
-                      export stream str-formF1 tt-wb-header.
-                    end.
-                    for each tt-wb-gds-EG:
-                      export stream str-formF1 tt-wb-gds-EG.
-                    end.
-                  end.
-                  
                   if StatusErr
                   then do:
                     message "Ошибка приема файла справки Б: " tt-wb-header.wbregid skip urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
@@ -1640,7 +1638,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
   
                 end.
 
-              when urlStr matches ("*opt/out/WayBillAct/*") then 
+              when urlStr matches ("*opt/out/WayBillAct/*") or urlStr matches ("*opt/out/WayBillAct_v2/*") then 
                 do:
   
                   os-delete "WayBillAct.xml".
@@ -2253,7 +2251,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     if available (buf_ext-classif-attr)
     then 
       assign 
-        VerXSDShip = entry (1, buf_ext-classif-attr.attr-code, chr(4))
+        VerXSDShip = entry (1, buf_ext-classif-attr.attr-value, chr(4))
       no-error.
     else VerXSDShip = 'WayBill'.
 
@@ -2463,6 +2461,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         verPrefXMLNS = "".
       end.
     end.
+    
+    tt-wb-header.verXSD = VerWBXsd.
     
     create sax-writer sw .
   
@@ -2742,5 +2742,74 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     
   end.
  
+  method private void GetVerXsd (output outVerDocXsd as char):
+    
+    define variable CliEgaisTypeShip as character no-undo.
+    define variable CliEgaisTypeCons as character no-undo.
+    define variable VerXSDShip       as character no-undo. 
+    
+    find first tt-wb-header no-error.
+    
+    if not available (tt-wb-header)
+    then do:
+      Msg = "Ошибка определения версии XSD схемы документа".
+      StatusErr = true.
+      return.
+    end.
+    
+    find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = {&table_clients}
+      and buf_ext-classif-attr.classif-name = {&extclass_clients_esys}
+      and buf_ext-classif-attr.db-num = 0
+      and buf_ext-classif-attr.key#_one = v-ext-sys
+      and buf_ext-classif-attr.CharKey_Three = tt-wb-header.regID-Ship
+      and buf_ext-classif-attr.attr-code = "egais-cli-info" no-error.
+      
+    if available (buf_ext-classif-attr)
+    then 
+      assign 
+        VerXSDShip = entry (1, buf_ext-classif-attr.attr-value, chr(4))
+        CliEgaisTypeShip = entry (2, buf_ext-classif-attr.attr-value, chr(4))
+      no-error.
+    else VerXSDShip = 'WayBill'.
+    
+    if VerXSDShip = ? or VerXSDShip = "" or VerXSDShip = "WayBill" or VerXSD = "1"
+    then do:
+      outVerDocXsd = "WayBill".
+      verPrefXMLNS = "".
+    end.
+    else do:
+      outVerDocXsd = "WayBill_v2".
+      verPrefXMLNS = "2".
+    end.
+    
+    if outVerDocXsd = "WayBill_v2" 
+    then do:
+      find first buf_ext-classif-attr no-lock where buf_ext-classif-attr.classif-subject = {&table_clients}
+        and buf_ext-classif-attr.classif-name = {&extclass_clients_esys}
+        and buf_ext-classif-attr.db-num = 0
+        and buf_ext-classif-attr.key#_one = v-ext-sys
+        and buf_ext-classif-attr.CharKey_Three = tt-wb-header.regID-Cons
+        and buf_ext-classif-attr.attr-code = "egais-cli-info" no-error.
+      if available (buf_ext-classif-attr)
+      then do:
+        assign 
+          CliEgaisTypeCons = entry (2, buf_ext-classif-attr.attr-value, chr(4))
+        no-error.
+        if CliEgaisTypeCons = ? or CliEgaisTypeCons = ""
+        then do:
+          outVerDocXsd = "WayBill".
+          verPrefXMLNS = "".
+/*          StatusErr = true.                                                                                                                                                            */
+/*          Msg =  substitute ("У клиента ЕГАИС неизвестен тип. Обновите информацию по клиентам. Клиент - &1/&2.", buf_ext-classif-attr.CharKey_two, buf_ext-classif-attr.CharKey_Three).*/
+/*          return.                                                                                                                                                                      */
+        end.
+      end.
+      else do:
+        outVerDocXsd = "WayBill".
+        verPrefXMLNS = "".
+      end.
+    end.
+    
+  end.
 
 end class.

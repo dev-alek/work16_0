@@ -56,6 +56,7 @@ Creation date: 11/11/15
     field KPPShip      as character label "КПП контрагента"
     field TransIdList  as character
     field UnitType     as character label "Тип единицы измерения"
+    field verXSD       as character label "Версия XSD"
     index pi
     Identity 
     .

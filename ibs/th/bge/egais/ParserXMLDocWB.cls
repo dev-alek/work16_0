@@ -383,9 +383,21 @@ class ibs.th.bge.egais.ParserXMLDocWB:
 
       end.
 
+      case noderefName:
+      when 'ns:WayBill' then do:
+        if not available (tt-wb-header) then create tt-wb-header.
+        tt-wb-header.verXSD = 'WayBill'.
+      end.
+      when 'ns:WayBill_v2' then do:
+        if not available (tt-wb-header) then create tt-wb-header.
+        tt-wb-header.verXSD = 'WayBill_v2'.
+      end.
+      end case.
+
       if lookup (parentName, "wb:Header,ns:WayBill,ns:WayBill_v2,wbr:Header,wa:Header") > 0
         then 
-      do: 
+      do:
+        
         if noderefName = "wb:Identity" or noderefName = "wbr:Identity" or noderefName = "wb:NUMBER" or noderefName = "wbr:WBRegId" 
           then 
         do:
