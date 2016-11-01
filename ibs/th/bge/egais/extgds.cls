@@ -601,7 +601,7 @@ class ibs.th.bge.egais.ExtGds:
     
   end.
   
-  method public logical CopyEgaisInfo (inExtGdsValueObjForm as ExtGdsValue, inExtGdsValueObjTo as ExtGdsValue) :
+  method public logical CopyEgaisInfo (inExtGdsValueObjForm as ExtGdsValue, inExtGdsValueObjTo as class ExtGdsValue) :
     
     ReturnMsg = "".
     if not valid-object (inExtGdsValueObjForm) or not valid-object (inExtGdsValueObjTo)
