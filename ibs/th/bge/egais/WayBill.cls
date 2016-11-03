@@ -913,7 +913,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       if available (tt-wb-hndls)
         then 
       do:
-        if not (tt-wb-hndls.wb-type matches "*расход*" or (tt-wb-hndls.wb-type matches "*возврат*" and not tt-wb-hndls.wb-type matches "*возврата от покупателя*")) then 
+        if not (tt-wb-hndls.wb-type matches "*расход*" or (tt-wb-hndls.wb-type matches "*возврат*" 
+              and not tt-wb-hndls.wb-type matches "*возврат от покупателя*" and not tt-wb-hndls.wb-type matches "*возврат внешний*")) then 
         do:
           output stream outstr to value ("TTNAct.xml") convert target "UTF-8". 
           outData = GetXMLAct() no-error.
