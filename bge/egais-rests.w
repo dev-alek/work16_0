@@ -314,6 +314,7 @@ end function.
 
 define menu m-func
     menu-item m-writeOff label "Сформировать акт о списании"
+    menu-item m-tts label "Сформировать акт передачи в торговый зал"
     menu-item m-print label "Печать остатков на складе"
     menu-item m-print_shop label "Печать остатков в магазине"
     menu-item m-compare label "Сверка остатков"
@@ -1234,6 +1235,78 @@ DO:
                           ,input '' /*p-src-encoding*/
                           ) no-error .
     message "Акт сформирован. Вы можете отправить его или изменить количества из интерфейса 'Акты о списании товаров'" view-as alert-box .                      
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m-tts
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-tts Dialog-Frame
+ON CHOOSE OF menu-item m-tts in menu m-func /* - */
+DO:
+    define variable v-tts-num as character no-undo .
+    define variable v-tts-date as date no-undo .
+    define variable v-tts-type as character no-undo .
+    define variable v-ok as logical no-undo .
+    define variable v-position as integer no-undo .
+    define variable v-part-num    as integer   no-undo .
+    define variable v-clob-db-num as integer   no-undo .
+    define variable v-int64-id    as int64     no-undo .
+    define variable v-info        as character no-undo .
+    
+    if select-list = "" then do :
+        message "Не выбрано ни одной строки" view-as alert-box .
+        return no-apply.
+    end.  
+    run bge/egais-makeTTS.w  (input parparentproc,
+                               output v-tts-num,
+                               output v-tts-date,
+                               output v-ok) .
+    if not v-ok then return no-apply .
+    create tt-act-header-tts.
+    assign
+        tt-act-header-tts.num   = v-tts-num
+        tt-act-header-tts.date_ = v-tts-date
+        tt-act-header-tts.is-sent = no
+        v-position = 0
+    .
+    
+    do ii = 1 to num-entries(select-list) :
+        for first tt-gds-rests exclusive-lock where recid(tt-gds-rests) = integer(entry(ii, select-list)) :
+            assign v-position = v-position + 1 .
+            create tt-gds-act-tts.
+            assign
+                tt-gds-act-tts.num          = tt-act-header-tts.num
+                tt-gds-act-tts.position_    = v-position
+                tt-gds-act-tts.alc-code     = tt-gds-rests.alc-code
+                tt-gds-act-tts.gds-code     = tt-gds-rests.gds-code
+                tt-gds-act-tts.gds-name     = tt-gds-rests.gds-name
+                tt-gds-act-tts.inform-B     = tt-gds-rests.informB_
+                tt-gds-act-tts.qnty         = tt-gds-rests.egais-qnty
+            . 
+        end.
+    end.
+    
+    run makeXML-tts in this-procedure .
+    assign
+        v-clob-db-num = ?
+        v-int64-id = 0
+        v-info = tt-act-header-tts.num + {&delim-par} + string(tt-act-header-tts.date_) + {&delim-par} + string(tt-act-header-tts.is-sent) + {&delim-par} + tt-act-header-tts.answer_
+    .
+    run gbl/file2clb.p ( input {&add-def}
+                          ,input ",no"
+                          ,input ? /*p-bh*/
+                          ,input tt-act-header-tts.num /*p-uniq-key-rec*/
+                          ,input {&lob-egais-tts} /*p-field-*/
+                          ,input v-info /*p-descr*/
+                          ,input-output v-part-num
+                          ,input {&lob-egais-tts}
+                          ,input-output v-clob-db-num
+                          ,input-output v-int64-id
+                          ,input search (v-file-tts)
+                          ,input '' /*p-src-encoding*/
+                          ) no-error .
+    message "Акт сформирован. Вы можете отправить его или изменить количества из интерфейса 'Передача продукции в торговый зал'" view-as alert-box .                      
 END.
 
 /* _UIB-CODE-BLOCK-END */

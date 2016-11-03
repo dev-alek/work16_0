@@ -100,7 +100,7 @@ DEFINE FRAME Dialog-Frame
      SPACE(0.5) SKIP(0.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Акт о списании"
+         TITLE "Акт о передаче продукции в торговый зал"
          DEFAULT-BUTTON b-ok CANCEL-BUTTON b-cancel WIDGET-ID 100.
 
 
