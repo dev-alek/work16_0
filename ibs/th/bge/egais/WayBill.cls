@@ -617,13 +617,26 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 tt-ticket.doc = entry (3, buf_clob-bind.descr, {&delim-par})
                 tt-ticket.status_ = entry (4, buf_clob-bind.descr, {&delim-par}).
 
-                createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
-                prsXMLDocWB:ParseRec (hDoc, input-output table tt-wb-act-header, input-output table tt-wb-act-gds-EG).
+              createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
+              prsXMLDocWB:ParseRec (hDoc, input-output table tt-wb-act-header, input-output table tt-wb-act-gds-EG).
 
-                find first tt-wb-act-header no-error.
-                if available (tt-wb-act-header)
-                  then tt-ticket.comment = tt-wb-act-header.note.
-              .
+              find first tt-wb-act-header no-error.
+              if available (tt-wb-act-header)
+              then do: 
+                tt-ticket.comment = tt-wb-act-header.note.
+                find first ub.doc-attr exclusive-lock where ub.doc-attr.doc-code = inWbIdentity and ub.doc-attr.attr-code = {&trdcattr-egais} no-error.
+                if not available (ub.doc-attr)
+                then do:
+                  create ub.doc-attr.
+                  assign 
+                    ub.doc-attr.doc-code = buf_doc-attr.doc-code
+                    ub.doc-attr.attr-code = {&trdcattr-egais}
+                  .
+                end.
+                ub.doc-attr.attr-value = tt-wb-act-header.status_.
+                release ub.doc-attr.
+                tt-wb-hndls.status_ = tt-wb-act-header.status_.
+              end.
             end.
           end.
           return buffer tt-ticket:handle.          
@@ -1688,7 +1701,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     next url_.
                   end.
                   find first ub.doc-attr no-lock where ub.doc-attr.attr-code = {&trdcattr-negais} and ub.doc-attr.attr-value = tt-wb-act-header.wbregid no-error.
-                  if available (ub.doc-att)
+                  if available (ub.doc-attr)
                   then do:
                     find first buf_doc-attr exclusive-lock where buf_doc-attr.doc-code = ub.doc-attr.doc-code and buf_doc-attr.attr-code = {&trdcattr-egais} no-error.
                     if not available (buf_doc-attr)
