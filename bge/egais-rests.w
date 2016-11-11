@@ -91,7 +91,7 @@ define temp-table tt-gds-rests no-undo
 define buffer old_tt-gds-rests for tt-gds-rests .
 
 define temp-table tt-gds-rests_shop no-undo
-    field gds-code          like ub.goods.gds-code          label "Код товара в TH"
+    field gds-code          as character                    label "Код товара в TH"
     field gds-name          like ub.goods.gds-name          label "Наименование товара" format "X(100)"
     field alc-code          as character                    label "Алкогольный код"     format "X(21)"
     field ms-base           like ub.goods.ms-base           label "Объем"               format ">>9.9<<"
@@ -116,7 +116,7 @@ define temp-table tt-gds-rests_shop no-undo
 define buffer old_tt-gds-rests_shop for tt-gds-rests_shop .
 
 define temp-table tt-compare-rests no-undo
-    field gds-code          like ub.goods.gds-code          label "Код товара в TH"
+    field gds-code          as character                    label "Код товара в TH"
     field gds-name          like ub.goods.gds-name          label "Наименование товара" format "X(100)"
     field alc-code          as character                    label "Алкогольный код"     format "X(21)"
     field alc-type-code     like ub.alc-type.alc-type-code  label "Код АП"
@@ -153,7 +153,7 @@ define temp-table tt-marks-qnty
 
 define temp-table tt-gds-list no-undo
     field alc-code      as character
-    field gds-code      as integer
+    field gds-code      as character
     index pi as primary unique
         alc-code gds-code
 .
@@ -207,7 +207,8 @@ define variable iTemp as integer no-undo.
   DEF VAR width-tab-values    AS INT INIT [110,72] EXTENT 2 NO-UNDO.
   DEFINE VARIABLE        number-of-pages    AS INTEGER   NO-UNDO.
 
-define variable select-list as character no-undo .
+define variable select-list as longchar  no-undo .
+define variable v-sel-entry as character no-undo .
 define variable goods-list  as longchar  no-undo .
 define variable ref-list    as character no-undo .
 define variable ii          as integer   no-undo .
@@ -431,7 +432,7 @@ DEFINE BROWSE br-rests_shop
   QUERY br-rests_shop  DISPLAY
     tt-gds-rests_shop.alc-code COLUMN-LABEL "Алкогольный код" FORMAT "X(25)":U
     tt-gds-rests_shop.gds-name COLUMN-LABEL "Наименование товара" FORMAT "X(100)":U width 39
-    tt-gds-rests_shop.gds-code COLUMN-LABEL "Код товара в TH" FORMAT ">>>>>>>>9"
+    tt-gds-rests_shop.gds-code COLUMN-LABEL "Код товара в TH" FORMAT "X(25)"
 /*    tt-gds-rests.ms-base  COLUMN-LABEL "Объем" FORMAT ">>9.9<<"*/
 /*    tt-gds-rests.proof    COLUMN-LABEL "Крепость" FORMAT ">9.9"*/
     tt-gds-rests_shop.alc-type-code COLUMN-LABEL "Код АП" FORMAT "X(4)":U
@@ -744,7 +745,7 @@ ON return OF loc-code IN FRAME {&frame-name} do:
         end.
     end.
     else do :
-        find first tt-gds-rests_shop no-lock where tt-gds-rests_shop.gds-code = integer(loc-code) no-error.
+        find first tt-gds-rests_shop no-lock where tt-gds-rests_shop.gds-code = loc-code no-error.
         if not available tt-gds-rests_shop then do :
             message "Не найден товар с кодом " + loc-code view-as alert-box warning .
         end.
@@ -938,7 +939,8 @@ DO:
         return no-apply.
     end.
     do ii = 1 to num-entries(select-list) :
-        for first tt-gds-rests exclusive-lock where recid(tt-gds-rests) = integer(entry(ii, select-list))
+        v-sel-entry = entry(ii, select-list) .
+        for first tt-gds-rests exclusive-lock where recid(tt-gds-rests) = integer(v-sel-entry)
                                                 and tt-gds-rests.gds-code > 0
                                                 and tt-gds-rests.prt-rec <> ? :
             do jj = 1 to num-entries(tt-gds-rests.prt-rec) :                                        
@@ -1059,7 +1061,11 @@ DO:
                                            and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                            AND X_ext-classif.db-num = 0
                                            and X_ext-classif.key#_two = v-ext-sys
-                                           and X_ext-classif.charkey_one = tt-gds-rests.alc-code
+                                           and X_ext-classif.key#_three = 0
+                                           and X_ext-classif.charkey_one = tt-gds-rests_shop.alc-code
+                                           and X_ext-classif.charkey_two = ""
+                                           and X_ext-classif.charkey_three = ""
+                                           and X_ext-classif.nonunique = 0
                                            no-error.
         if available X_ext-classif then do :
             find first buf_goods no-lock where buf_goods.gds-code = X_ext-classif.key#_one .
@@ -1074,6 +1080,8 @@ DO:
             for each buf_parts no-lock where buf_parts.artic      = buf_goods.artic
                                            and buf_parts.prod-type  = buf_goods.prod-type
                                            and buf_parts.prod-code  = buf_goods.prod-code
+                                           and buf_parts.obj-type   = v-cntxt-obj-type
+                                           and buf_parts.obj-code   = v-cntxt-obj-code
                                            and buf_parts.out-code   = {&free-code}
                                            and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_
                                            and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :
@@ -1112,20 +1120,21 @@ DO:
         create tt-gds-rests_shop.
         buffer tt-gds-rests_shop:handle:buffer-copy (bh-gds-egais_shop) .
         assign tt-gds-rests_shop.fromEgais = yes .
-        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+        for each X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
                                            and X_ext-classif.classif-name = {&extclass_goods_esys} 
                                            AND X_ext-classif.db-num = 0
                                            and X_ext-classif.key#_two = v-ext-sys
+                                           and X_ext-classif.key#_three = 0
                                            and X_ext-classif.charkey_one = tt-gds-rests_shop.alc-code
-                                           no-error.
-        if available X_ext-classif then do :
+                                           and X_ext-classif.charkey_two = ""
+                                           and X_ext-classif.charkey_three = ""
+                                           and X_ext-classif.nonunique = 0 :
             find first buf_goods no-lock where buf_goods.gds-code = X_ext-classif.key#_one .
             assign
-                tt-gds-rests_shop.gds-code   = buf_goods.gds-code
+                tt-gds-rests_shop.gds-code   = if tt-gds-rests_shop.gds-code = "" then string(buf_goods.gds-code) else tt-gds-rests_shop.gds-code + ", " + string(buf_goods.gds-code)
                 tt-gds-rests_shop.gds-name   = buf_goods.gds-name
             .
-        end.
-        if available buf_goods then do :
+            
             if (not tt-gds-rests_shop.packed and buf_goods.unit-cli <> buf_goods.unit-base and buf_goods.cli-base-rate <> 1.0)
             then assign tt-gds-rests_shop.egais-qnty = tt-gds-rests_shop.egais-qnty * buf_goods.cli-base-rate .
             for each buf_parts no-lock where buf_parts.artic      = buf_goods.artic
@@ -1133,7 +1142,8 @@ DO:
                                            and buf_parts.prod-code  = buf_goods.prod-code
                                            and buf_parts.obj-type   = v-cntxt-obj-type
                                            and buf_parts.obj-code   = v-cntxt-obj-code
-                                           and buf_parts.out-code   = {&free-code} :
+                                           and buf_parts.out-code   = {&free-code}
+                                           and entry(3, buf_parts.alc-ref-ab-path) = tt-gds-rests_shop.alc-code :
 /*                                           and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_  */
 /*                                           and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :*/
                                            
@@ -1200,7 +1210,8 @@ DO:
     .
     
     do ii = 1 to num-entries(select-list) :
-        for first tt-gds-rests exclusive-lock where recid(tt-gds-rests) = integer(entry(ii, select-list)) :
+        v-sel-entry = entry(ii, select-list) .
+        for first tt-gds-rests exclusive-lock where recid(tt-gds-rests) = integer(v-sel-entry) :
             assign v-position = v-position + 1 .
             create tt-gds-act.
             assign
@@ -1272,7 +1283,8 @@ DO:
     .
     
     do ii = 1 to num-entries(select-list) :
-        for first tt-gds-rests exclusive-lock where recid(tt-gds-rests) = integer(entry(ii, select-list)) :
+        v-sel-entry = entry(ii, select-list) .
+        for first tt-gds-rests exclusive-lock where recid(tt-gds-rests) = integer(v-sel-entry) :
             assign v-position = v-position + 1 .
             create tt-gds-act-tts.
             assign
@@ -2181,7 +2193,7 @@ procedure CompareRests :
                     create tt-compare-rests .
                     assign
                         tt-compare-rests.alc-code   = entry(3, buf_parts.alc-ref-ab-path)
-                        tt-compare-rests.gds-code   = buf_goods.gds-code
+                        tt-compare-rests.gds-code   = string(buf_goods.gds-code)
                         tt-compare-rests.gds-name   = buf_goods.gds-name
                     .
                     if entry(4, buf_parts.alc-ref-ab-path) <> "" then tt-compare-rests.alc-type-code = entry(4, buf_parts.alc-ref-ab-path) .
@@ -2189,13 +2201,13 @@ procedure CompareRests :
                 assign tt-compare-rests.TH-qnty = tt-compare-rests.TH-qnty + buf_parts.qnty .
             end.
             else do :
-                find first tt-compare-rests exclusive-lock where tt-compare-rests.gds-code = buf_goods.gds-code
+                find first tt-compare-rests exclusive-lock where tt-compare-rests.gds-code = string(buf_goods.gds-code)
                                                              and tt-compare-rests.alc-code = "" no-error.
                 if not available tt-compare-rests then do :
                     create tt-compare-rests .
                     assign
                         tt-compare-rests.alc-code   = ""
-                        tt-compare-rests.gds-code   = buf_goods.gds-code
+                        tt-compare-rests.gds-code   = string(buf_goods.gds-code)
                         tt-compare-rests.gds-name   = buf_goods.gds-name
                     .
                 end.
@@ -2649,13 +2661,13 @@ procedure ListView :
 /*            if buf_parts.qnty < 1 then next _parts_ .*/
             if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
                 find first tt-gds-list exclusive-lock where tt-gds-list.alc-code = entry(3, buf_parts.alc-ref-ab-path)
-                                                        and tt-gds-list.gds-code = buf_goods.gds-code no-error .
+                                                        and tt-gds-list.gds-code = string(buf_goods.gds-code) no-error .
                 if not available tt-gds-list
                 then do :
                     create tt-gds-list.
                     assign
                         tt-gds-list.alc-code = entry(3, buf_parts.alc-ref-ab-path)
-                        tt-gds-list.gds-code = buf_goods.gds-code
+                        tt-gds-list.gds-code = string(buf_goods.gds-code)
                     .
                 end.
                 find first tt-gds-rests_shop exclusive-lock where tt-gds-rests_shop.alc-code = tt-gds-list.alc-code 
@@ -2664,7 +2676,7 @@ procedure ListView :
                     create tt-gds-rests_shop .
                     assign
                         tt-gds-rests_shop.alc-code   = tt-gds-list.alc-code
-                        tt-gds-rests_shop.gds-code   = buf_goods.gds-code
+                        tt-gds-rests_shop.gds-code   = string(buf_goods.gds-code)
                         tt-gds-rests_shop.gds-name   = buf_goods.gds-name
                         tt-gds-rests_shop.egais-qnty = 0
                         tt-gds-rests_shop.in-list    = true
@@ -2683,13 +2695,13 @@ procedure ListView :
             end.
             else do :
                 find first tt-gds-list exclusive-lock where tt-gds-list.alc-code = ""
-                                                        and tt-gds-list.gds-code = buf_goods.gds-code no-error .
+                                                        and tt-gds-list.gds-code = string(buf_goods.gds-code) no-error .
                 if not available tt-gds-list
                 then do :
                     create tt-gds-list.
                     assign
                         tt-gds-list.alc-code = ""
-                        tt-gds-list.gds-code = buf_goods.gds-code
+                        tt-gds-list.gds-code = string(buf_goods.gds-code)
                     .
                 end.
                 find first tt-gds-rests_shop exclusive-lock where tt-gds-rests_shop.alc-code = "" 
@@ -2699,7 +2711,7 @@ procedure ListView :
                     create tt-gds-rests_shop .
                     assign
                         tt-gds-rests_shop.alc-code   = ""
-                        tt-gds-rests_shop.gds-code   = buf_goods.gds-code
+                        tt-gds-rests_shop.gds-code   = string(buf_goods.gds-code)
                         tt-gds-rests_shop.gds-name   = buf_goods.gds-name
                         tt-gds-rests_shop.egais-qnty = 0
                         tt-gds-rests_shop.egais-qnty_stock = 0

@@ -2359,6 +2359,16 @@ procedure lib-trn4_int-open :
       undo, return error return-value .
     end.
 
+    find first ub.doc-attr where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-negais} no-error.
+    if available (ub.doc-attr)
+    then do:
+      message "Документ создан из накладной ЕГАИС!" skip
+              "Этот документ запрещено открывать!" skip
+              "Номер документа" p-doc-code
+              view-as alert-box information .
+      undo, return error return-value .
+    end.	
+	
     if buf_trn-doc.rcv-code = "not_delete" then do:
        if not ( buf_trn-doc.ext-doc-type = {&TDEDT_Inv} and
                 buf_trn-doc.status_ = {&permitted} ) then do:

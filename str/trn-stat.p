@@ -464,7 +464,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
               varhold-doc = yes
               )
       then do:
-        if varchk-prs
+        if varchk-prs and not (bf_trn-doc.status_ = {&wayb} and varflag = true)
         then do:
           define buffer buf_sale-doc for ub.sale-doc.
           if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then do:

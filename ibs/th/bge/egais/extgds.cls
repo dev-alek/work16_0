@@ -553,6 +553,22 @@ class ibs.th.bge.egais.ExtGds:
         and buf_ext-classif-attr.attr-code = 'egais-info'
       .
 
+      if not available (buf_ext-classif-attr)
+      then do:
+        create buf_ext-classif-attr.
+        assign
+          buf_ext-classif-attr.classif-subject = {&table_goods}
+          buf_ext-classif-attr.classif-name = {&extclass_goods_esys} 
+          buf_ext-classif-attr.db-num = 0
+          buf_ext-classif-attr.Key#_One = inExtGdsValueObj:GdsCode
+          buf_ext-classif-attr.key#_two = ExtSystem 
+          buf_ext-classif-attr.key#_three = 0
+          buf_ext-classif-attr.charkey_one = inExtGdsValueObj:AlcCode
+          buf_ext-classif-attr.charkey_two = ""
+          buf_ext-classif-attr.charkey_three = ""
+          buf_ext-classif-attr.attr-code = 'egais-info'.
+      end.
+
       glog = SaveEGAISInfoDB (inExtGdsValueObj).
       
     end.

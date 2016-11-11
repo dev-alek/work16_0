@@ -1544,7 +1544,7 @@ define variable varcopyflag        like ub.trn-doc.flag     no-undo.
 define variable varcheck-return as logical no-undo .
 define variable varchg-inv as logical no-undo .
 
-if is-tsd or is-egais
+if is-tsd
   then return.
 run str/trn-stat.p (
     input  parparentproc ,
