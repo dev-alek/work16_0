@@ -1083,6 +1083,7 @@ DO:
                                            and buf_parts.obj-type   = v-cntxt-obj-type
                                            and buf_parts.obj-code   = v-cntxt-obj-code
                                            and buf_parts.out-code   = {&free-code}
+                                           and num-entries(buf_parts.alc-ref-ab-path) = 4
                                            and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_
                                            and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :
                                            
@@ -1143,6 +1144,7 @@ DO:
                                            and buf_parts.obj-type   = v-cntxt-obj-type
                                            and buf_parts.obj-code   = v-cntxt-obj-code
                                            and buf_parts.out-code   = {&free-code}
+                                           and num-entries(buf_parts.alc-ref-ab-path) = 4
                                            and entry(3, buf_parts.alc-ref-ab-path) = tt-gds-rests_shop.alc-code :
 /*                                           and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_  */
 /*                                           and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :*/
