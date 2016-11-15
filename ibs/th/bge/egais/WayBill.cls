@@ -23,6 +23,7 @@ class ibs.th.bge.egais.WayBill inherits EGAISUTM:
 
   {cmp/str-glbl.i class}
   {ibs/th/bge/egais/wb-egais.i}
+  {ibs/th/bge/egais/tts-egais.i }
   { ref/extclass.i }
   { gbl/color.i }
 
@@ -126,15 +127,16 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
   define private variable nn             as integer   no-undo.
   define private variable nnList         as integer   no-undo.
   define private variable minPrice       as decimal   no-undo.
-  define private variable isForceAccept  as logical no-undo.
+  define private variable isForceAccept  as logical   no-undo.
   define private variable verPrefXMLNS   as character no-undo.
-    
+  define private variable bh-act-tts-header  as handle    no-undo.
       
   define private variable extGdsObj      as class   ExtGds         no-undo.
   define private variable extGdsValueObj as class   ExtGdsValue    no-undo.
   define private variable prgObj         as class   ProgressBar    no-undo .
   define private variable prsXMLDocWB    as class   ParserXMLDocWB no-undo.
   define private variable alcTypeAttrObj as class   AlcTypeAttr    no-undo.
+  define private variable egaisTTS       as class   TransferToShop no-undo.
 
       
   define variable v-FS-RAR   as character no-undo .
@@ -181,6 +183,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     field EGAISSts     as character label "Статус ЕГАИС" format "x(20)"
     field is-sent      as character label "Отправлена"
     field wbregid      as character label "WBREGID" format "X(18)"
+    field tts          as character label "Акт передачи в торг. зал." format "X(30)"
+    field tts-status_  as character label "Статус" format "x(10)"
     field Identity     as character format "X(50)"
     field uniq-key-rec as character format "X(50)"
     field DbNUm        as integer   label "БД"
@@ -479,7 +483,14 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         end.
       when {&wb-clob} then 
         do:
-          SettingsTTList = "20,yes;;;12,yes;9,yes;20,yes;10,yes;10,yes;6,yes;12,yes;;;;;;".
+          SettingsTTList = "20,yes;;;12,yes;9,yes;20,yes;10,yes;10,yes;6,yes;12,yes;;;30,yes;10,yes;;;;".
+                  
+          egaisTTS = new TransferToShop (ObjType, ObjCode, v-FS-RAR, v-ext-sys).
+          egaisTTS:DbNum =  DbNum.
+          egaisTTS:User_Id = User_Id.
+          bh-act-tts-header = egaisTTS:GetHndlTable(3, "").
+          bh-act-tts-header = egaisTTS:GetHndlTable({&awo-clob}, "").
+
           empty temp-table tt-wb-hndls.
           for each buf_clob-bind-wb-hndls no-lock where buf_clob-bind-wb-hndls.resource-type = {&lob-egais-wb}:
             /*v-info = string (tt-wb-header.wb-date) + {&-par} + tt-wb-header.num + {&-par} + tt-wb-info-client.regID + {&-par} + tt-wb-header.Identity + {&-par} + string (tt-wb-header.wbregid) + {&-par} + "нет" + {&-par} + "нет" + {&-par}.*/
@@ -500,6 +511,32 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               tt-wb-hndls.uniq-key-rec = buf_clob-bind-wb-hndls.uniq-key-rec.
               tt-wb-hndls.DbNUm        = buf_clob-bind-wb-hndls.db-num.
             .
+            bh-act-tts-header:find-first (substitute ("where tt-act-header.num matches '*&1*'", trn-doc-code), no-lock ) no-error.
+            if bh-act-tts-header:available
+            then do:
+              tt-wb-hndls.tts = bh-act-tts-header:buffer-field ("num"):buffer-value ().
+              if num-entries (bh-act-tts-header:buffer-field ("RegID"):buffer-value (), chr(5) ) <> 2
+              then do:
+                if bh-act-tts-header:buffer-field ("is-sent"):buffer-value = true
+                then do:
+                  tt-wb-hndls.tts-status_ = 'Отправлен'.
+                end.
+                else do:
+                  tt-wb-hndls.tts-status_ = 'Новый'.
+                end.
+              end.
+              else do:
+                case entry(2, bh-act-tts-header:buffer-field ("RegID"):buffer-value, chr(5)):
+                when "R" then do:
+                  tt-wb-hndls.tts-status_ = 'Отправлен'.
+                end.
+                when "A" then do:
+                  tt-wb-hndls.tts-status_ = 'Новый'.
+                end.
+                end case.
+              end.
+            end.
+            
             find first ub.ext-classif no-lock 
               where ub.ext-classif.classif-subject = {&table_clients}
                 and ub.ext-classif.classif-name = {&extclass_clients_esys}
@@ -538,6 +575,8 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 tt-wb-hndls.isWB = true.
               else tt-wb-hndls.isWB = false. 
           end.
+          if valid-object (egaisTTS)
+            then delete object egaisTTS.
           return buffer tt-wb-hndls:handle.
         end.
       when {&wb-clob-act} then 
@@ -643,12 +682,21 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         end.
       when {&wb-fact} then 
         do:
-          SettingsTTList = "20,yes;;;12,yes;9,yes;20,yes;10,yes;;6,yes;12,yes;;;;;;".
+          SettingsTTList = "20,yes;;;12,yes;9,yes;20,yes;10,yes;;6,yes;12,yes;;;30,yes;10,yes;;;;".
           empty temp-table tt-wb-hndls.
+          
+          egaisTTS = new TransferToShop (ObjType, ObjCode, v-FS-RAR, v-ext-sys).
+          egaisTTS:DbNum =  DbNum.
+          egaisTTS:User_Id = User_Id.
+          bh-act-tts-header = egaisTTS:GetHndlTable(3, "").
+          bh-act-tts-header = egaisTTS:GetHndlTable({&awo-clob}, "").
+          
           for each buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais}:
             for each buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-attr.doc-code and buf_trn-doc.status_ = {&fact} and lookup (buf_trn-doc.doc-type, {&income_return}) > 0 :
               if ObjCode <> buf_trn-doc.obj-code or ObjType <> buf_trn-doc.obj-type
                 then next.
+
+              find first ub.doc-attr no-lock where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-egais} no-error.
 
               find first buf_clients where buf_clients.obj-code = buf_trn-doc.cli-code and buf_clients.obj-type = buf_trn-doc.cli-type no-lock.
               
@@ -673,24 +721,54 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 tt-wb-hndls.cli   = buf_trn-doc.cli-type + string (buf_trn-doc.cli-code)
                 tt-wb-hndls.uniq-key-rec = buf_doc-attr.attr-value
                 tt-wb-hndls.status_      = buf_trn-doc.status_ + (if buf_trn-doc.flag_ then "+" else "-")
+                tt-wb-hndls.EGAISSts     = if available (ub.doc-attr) and not ub.doc-attr.attr-value <> "" then ub.doc-attr.attr-value else ""
+                
+                tt-wb-hndls.EGAISSts = "Accepted".
+                
                 tt-wb-hndls.wbregid      = entry (1, buf_doc-attr.attr-value, {&delim-cmd}) no-error.
                 assign
                   tt-wb-hndls.wb-type      = {&TDEDT_Pri_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
                   tt-wb-hndls.wb-type      = {&TDEDT_Vozvrat_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}
                 .
+                bh-act-tts-header:find-first (substitute ("where tt-act-header.num matches '*&1*'", trn-doc-code), no-lock ) no-error.
+                if bh-act-tts-header:available
+                then do:
+                  tt-wb-hndls.tts = bh-act-tts-header:buffer-field ("num"):buffer-value ().
+                  if num-entries (bh-act-tts-header:buffer-field ("RegID"):buffer-value (), chr(5) ) <> 2
+                  then do:
+                    if bh-act-tts-header:buffer-field ("is-sent"):buffer-value = true
+                    then do:
+                      tt-wb-hndls.tts-status_ = 'Отправлен'.
+                    end.
+                    else do:
+                      tt-wb-hndls.tts-status_ = 'Новый'.
+                    end.
+                  end.
+                  else do:
+                    case entry(2, bh-act-tts-header:buffer-field ("RegID"):buffer-value, chr(5)):
+                    when "R" then do:
+                      tt-wb-hndls.tts-status_ = 'Отправлен'.
+                    end.
+                    when "A" then do:
+                      tt-wb-hndls.tts-status_ = 'Новый'.
+                    end.
+                    end case.
+                  end.
+                end.
                 tt-wb-hndls.is-sent = if available (ub.doc-attr) then "да" else "".
                 entry (1, tt-wb-hndls.uniq-key-rec, {&delim-cmd}) = "".
                 tt-wb-hndls.uniq-key-rec = left-trim (tt-wb-hndls.uniq-key-rec, {&delim-cmd}).
                 if available (ub.ext-classif)
                   then tt-wb-hndls.shippregid = ub.ext-classif.CharKey_Three.
-                
             end.
           end.
+          if valid-object (egaisTTS)
+            then delete object egaisTTS.
           return buffer tt-wb-hndls:handle.
         end.
       when {&wb-ras} then 
         do:
-          SettingsTTList = "20,no;;;12,yes;9,yes;20,yes;17,yes;10,yes;6,yes;20,yes;;1,no;1,no;1,no;1,no;1,no".
+          SettingsTTList = "20,no;;;12,yes;9,yes;20,yes;17,yes;10,yes;6,yes;20,yes;;1,no;1,no;1,no;1,no;1,no;1,no;1,no".
           empty temp-table tt-wb-hndls.
             
             for each buf_trn-doc no-lock where buf_trn-doc.obj-code = ObjCode and buf_trn-doc.obj-type = ObjType 
@@ -1104,11 +1182,14 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     output stream outstr close.
     output stream outstr to value ("TTNAct.xml") convert target "UTF-8". 
 
-    if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
+    case tt-wb-header.verXSD:
+    when "WayBill_v2"
     then
       outData = substitute ({&xml-act-v2-1}, v-FS-RAR, 'Rejected', time, iso-date (date (now)), inWbRegId, "Отказ") + {&xml-act-v2-2}.
-    else
+    when "WayBill"
+    then
       outData = substitute ({&xml-act-1}, v-FS-RAR, 'Rejected', time, iso-date (date (now)), inWbRegId, "Отказ") + {&xml-act-2}.
+    end case.
 
 
     if outData = ? or outData = ""
@@ -1884,6 +1965,26 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     StatusErr = false.
                     next url_.
                   end.
+ 
+                  if tt-ticket.regid <> ""
+                  then do:
+                    find first buf_ext-classif where buf_ext-classif.classif-name = {&extclass_egais-transId}
+                            and buf_ext-classif.db-num = 0
+                            and buf_ext-classif.key#_one = v-ext-sys
+                            and buf_ext-classif.CharKey_Two = tt-ticket.TransId no-error.
+                    if available (buf_ext-classif) then do:
+                    find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.doc-code = buf_ext-classif.CharKey_One no-error.
+                      if not available (buf_doc-attr)
+                      then do:
+                        create buf_doc-attr.
+                        assign
+                          buf_doc-attr.doc-code = buf_ext-classif.CharKey_One
+                          buf_doc-attr.attr-value = tt-ticket.regid
+                          buf_doc-attr.attr-code = {&trdcattr-negais}
+                        .
+                      end.
+                    end.
+                  end.
   
                 end.
             end case.
@@ -2356,29 +2457,38 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         do:
           is-diff = true. 
         end.
-        if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
+        case tt-wb-header.verXSD:
+        when "WayBill_v2"
         then
           xml-cont = xml-cont + substitute ({&xml-act-cont-v2}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string ( buf_parts.fact-qnty / buf_parts.cli-base-rate)).
-        else
+        when "WayBill"
+        then
           xml-cont = xml-cont + substitute ({&xml-act-cont}, string (tt-wb-gds-EG.Identity), tt-wb-gds-EG.refB, string ( buf_parts.fact-qnty / buf_parts.cli-base-rate)).
+        end case.
 
       end /*foeach*/.
       
-      if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
+      case tt-wb-header.verXSD:
+      when "WayBill_v2"
       then
         return substitute ({&xml-act-v2-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию. " + (if is-diff then "Имеются расхождения." else "")) + (if is-diff then xml-cont else "") + {&xml-act-v2-2}.
-      else
+      when "WayBill"
+      then
         return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию. " + (if is-diff then "Имеются расхождения." else "")) + (if is-diff then xml-cont else "") + {&xml-act-2}.
+      end case.
     end.
     else do:
       if isForceAccept
       then do:
         find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais} and buf_doc-attr.attr-value begins (tt-wb-header.wbregid) no-error.
-        if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
+        case tt-wb-header.verXSD:
+        when "WayBill_v2"
         then
           xml-cont = substitute ({&xml-act-v2-1}, v-FS-RAR, 'Accepted', (if available (buf_doc-attr) then buf_doc-attr.doc-code else string (time)), iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию") + {&xml-act-v2-2}.
-        else
+        when "WayBill"
+        then
           xml-cont = substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', (if available (buf_doc-attr) then buf_doc-attr.doc-code else string (time)), iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию") + {&xml-act-2}.
+        end case.
       end.
       else do:
         if VerXSDShip = 'WayBill_v2' and VerXSD = '2'

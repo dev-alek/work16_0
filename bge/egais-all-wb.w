@@ -48,6 +48,9 @@ define variable qh-wb-gds-EG        as handle    no-undo.
 define variable bh-wb-gds-EG-header as handle    no-undo.
 define variable bh-wb-gds-EG        as handle    no-undo.
 define variable bh-analiz           as handle    no-undo.
+define variable bh-act-header       as handle    no-undo.
+define variable nn                  as integer   no-undo.
+define variable ii                  as integer   no-undo.
 
 define variable v-value-character   as character no-undo .
 define variable v-value-decimal     as decimal   no-undo .
@@ -64,9 +67,23 @@ define variable v-width             as decimal   no-undo.
 define variable v-height            as decimal   no-undo.
 define variable v-windth            as integer no-undo.
 define variable v-isDisp            as character no-undo.
+define variable par-alcohol         as character no-undo .
+define variable par-type            as character no-undo .
+define variable v-gds-uniq-key-rec  as character no-undo .
+
 
 define stream strlog.
 define stream str-FormF1.
+
+define buffer buf_goods          for ub.goods.
+define buffer buf_parts          for ub.parts .
+define buffer buf_trn-doc        for ub.trn-doc .
+define buffer buf_doc-line       for ub.doc-line .
+define buffer x_ext-classif      for ub.ext-classif .
+define buffer x_ext-classif-attr for ub.ext-classif-attr .
+define buffer buf_clob-bind      for ub.clob-bind .
+define buffer buf_clob-data      for ub.clob-data .
+
 
 define variable v-fs-rar as character no-undo view-as text format "X(15)" label "Код ФС РАР (FSRAR ID)" .
 
@@ -80,6 +97,9 @@ define variable v-fs-rar as character no-undo view-as text format "X(15)" label 
 { str/trdcalib.i }
 { gbl/waitfram.i }
 { cmp/showinf.i  }
+{ibs/th/bge/egais/tts-egais.i proc }
+{ ref/extclass.i }
+{ ref/gds-attr.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -338,74 +358,215 @@ ON choose OF Btn_conn IN FRAME Dialog-Frame /* Связать */
 do:
 
   def var loc-ref-list as character no-undo.
-  def var v-negais as character no-undo.
+  def var v-negais     as character no-undo.
+  def var v-date       as character no-undo.
   
-  bh-wb-gds-EG = ?.
-  bh-wb-gds-EG-header = ?.
-  bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-  if egais:StatusErr
-  then do:
-    message egais:Msg view-as alert-box error.
-    return no-apply.
+  define variable v-part-num    as integer   no-undo.
+  define variable v-clob-db-num as integer   no-undo.
+  define variable v-int64-id    as int64     no-undo.
+  define variable v-info        as character no-undo.
+  
+  if not bh-wb-egais:available 
+    then return no-apply.
+  
+  v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
+  
+  case cb-1: 
+  when 1 then do: 
+    bh-wb-gds-EG = ?.
+    bh-wb-gds-EG-header = ?.
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    if egais:StatusErr
+    then do:
+      message egais:Msg view-as alert-box error.
+      return no-apply.
+    end.
+    
+    run str/all-docs.w
+      (  input parparentproc,
+          input v-cntxt-host-code-obj ,
+          input v-cntxt-obj-type ,
+          input v-cntxt-obj-code ,
+          input {&choose},
+          input ?,
+          input {&income},
+          input ?,
+          input ?,
+          input "b-sel":U,
+          input {&TDEDT_Pri_Vnesh},
+          input no,
+          input ?,
+          output loc-ref-list ).
+  
+    find first ub.trn-doc no-lock where recid (ub.trn-doc) = integer (loc-ref-list) no-error.
+    
+    if not available (ub.trn-doc) 
+      then return.
+    
+    bh-wb-gds-EG = ?.
+    bh-wb-gds-EG-header = ?.
+    bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
+    bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).  
+    find first ub.clients 
+      where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("cli-type"):buffer-value
+        and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("cli-code"):buffer-value) no-error.
+    if not available (ub.clients)
+    then do:
+      message "Не найден клиент TH для EGAIS контрагентa regID: " + bh-wb-gds-EG-header:buffer-field ('regId-Ship'):buffer-value view-as alert-box.
+      return no-apply.
+    end.
+    find first ub.clients 
+      where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("obj-type"):buffer-value
+        and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("obj-code"):buffer-value) no-error.
+    if not available (ub.clients)
+    then do:
+      message "Не найден объект TH для EGAIS получателя regID: " + bh-wb-gds-EG-header:buffer-field ('regId-Cons'):buffer-value view-as alert-box.
+      return no-apply.
+    end.
+    bh-wb-gds-EG:find-first ("where tt-wb-gds-EG.gds-code = ?", no-lock) no-error.
+    if bh-wb-gds-EG:available then do:
+      message "Не найден товар TH для EGAIS товара AlcCode: " + bh-wb-gds-EG:buffer-field ('alc-code'):buffer-value view-as alert-box.
+      return no-apply.
+    end.
+    
+    egais:ConnWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value, ub.trn-doc.doc-code).
+    
+    if egais:StatusErr
+      then message egais:Msg view-as alert-box error.
+    else do:
+      message "Накладная связана" view-as alert-box.
+    end.
+    output stream strlog to value ("egaislog.txt") append. 
+    export stream strlog egais:Msg.
+    output stream strlog close.
   end.
-  
-  run str/all-docs.w
-    (  input parparentproc,
-        input v-cntxt-host-code-obj ,
-        input v-cntxt-obj-type ,
-        input v-cntxt-obj-code ,
-        input {&choose},
-        input ?,
-        input {&income},
-        input ?,
-        input ?,
-        input "b-sel":U,
-        input {&TDEDT_Pri_Vnesh},
-        input no,
-        input ?,
-        output loc-ref-list ).
+  when 2 then do:
+    
+    if bh-wb-egais:buffer-field ("EGAISSts"):buffer-value () <> "Accepted"
+    then do:
+      message 'Aкт передачи в торговый зал возможно сформировать только для накладной в статусе "Accepted"!' view-as alert-box information title "Информация".
+      undo, return.
+    end.
+    
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value no-error .
+    if error-status :error then return .
+    
+    v-date = substitute ("&1&2&3", string (day (now), "99"), string (month (now), "99"),substring (string(year (now)), 3,2)).
+    
+    create tt-act-header .
+    assign
+        tt-act-header.num = "TTS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-' + buf_trn-doc.doc-code
+        tt-act-header.date_ = TODAY
+        tt-act-header.is-sent = no
+    .
+    
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code :
+        find first buf_goods no-lock where buf_goods.artic      = buf_doc-line.artic
+                                       and buf_goods.prod-type  = buf_doc-line.prod-type 
+                                       and buf_goods.prod-code  = buf_doc-line.prod-code .
+        run gds-attr-value(
+          buf_goods.gds-code,
+          {&attr-alcohol-prod},
+          output par-alcohol,
+          output par-type
+        ).
+        if par-alcohol = "" or par-alcohol = "no" then next .
+        
+        for each buf_parts no-lock where buf_parts.artic        = buf_doc-line.artic
+                                     and buf_parts.prod-type    = buf_doc-line.prod-type 
+                                     and buf_parts.prod-code    = buf_doc-line.prod-code
+                                     and buf_parts.obj-type     = buf_doc-line.obj-type 
+                                     and buf_parts.obj-code     = buf_doc-line.obj-code 
+                                     and buf_parts.out-code     = buf_doc-line.doc-code :
+             assign nn = nn + 1 .
+             create tt-gds-act .
+             assign
+                tt-gds-act.num          = tt-act-header.num
+                tt-gds-act.gds-code     = buf_goods.gds-code
+                tt-gds-act.gds-name     = buf_goods.gds-name    
+                tt-gds-act.position_    = nn
+                tt-gds-act.qnty         = buf_parts.fact-qnty
+             .    
+             if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
+                 tt-gds-act.alc-code = entry(3, buf_parts.alc-ref-ab-path) .
+             end.
+             else do :
+                 run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
+                                                    ,input (buffer buf_goods:handle)
+                                                    ,output v-gds-uniq-key-rec).
+                 find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                                   and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                                   AND X_ext-classif.db-num = 0  
+                                                   and X_ext-classif.key#_one = buf_goods.gds-code
+                                                   and X_ext-classif.key#_two = v-ext-sys 
+                                                   and X_ext-classif.key#_three = 0
+                                                   and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                                   and X_eXt-classif.charkey_two = ""
+                                                   and X_eXt-classif.charkey_three = ""
+                                                   and X_eXt-classif.nonunique = 0
+                                                   no-error .
+                 if available X_ext-classif then tt-gds-act.alc-code = X_eXt-classif.charkey_one .
+             end. 
+             if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(2, buf_parts.alc-ref-ab-path) <> "" then do : 
+                 tt-gds-act.inform-B = trim(entry(2, buf_parts.alc-ref-ab-path)) .
+             end.                 
+        end .                              
+    end .
+    
+    find first tt-gds-act no-error .
+    if not available tt-gds-act then do :
+        message "В акте нет строк. Сохранение невозможно" view-as alert-box .
+        return no-apply.
+    end.
+    if can-find(tt-gds-act where tt-gds-act.qnty < 1)
+    or can-find(tt-gds-act where trim(tt-gds-act.inform-B) = "")
+    then do :
+        message "Строки, в которых не указана справка Б, и строки, в которых количество меньше 1, не будут учтены при отправке в ЕГАИС!" skip "Продолжить?"
+        view-as alert-box question buttons yes-no update glog .
+        if not glog then return no-apply.
+    end.
+    run makeXML in this-procedure no-error.
+    if error-status:error then return return-value .
+    assign
+        v-clob-db-num = ?
+        v-int64-id = 0
+        v-info = tt-act-header.num + {&delim-par} + string(tt-act-header.date_) + {&delim-par} + string(tt-act-header.is-sent) + {&delim-par} + tt-act-header.answer_
+    .
+    find first buf_clob-bind exclusive-lock where buf_clob-bind.field-name_  = {&lob-egais-tts} 
+      and buf_clob-bind.uniq-key-rec matches substitute ("*&1*", buf_trn-doc.doc-code) no-error .
+    if available buf_clob-bind 
+    then do :
+      message "Акт с таким номером уже существует!" view-as alert-box information
+        title "Информация".
+        release buf_clob-bind.
+        return no-apply .
+    end.
+    run gbl/file2clb.p ( input {&add-def}
+              ,input ",no"
+              ,input ? /*p-bh*/
+              ,input tt-act-header.num /*p-uniq-key-rec*/
+              ,input {&lob-egais-tts} /*p-field-*/
+              ,input v-info /*p-descr*/
+              ,input-output v-part-num
+              ,input {&lob-egais-tts}
+              ,input-output v-clob-db-num
+              ,input-output v-int64-id
+              ,input search (v-file)
+              ,input '' /*p-src-encoding*/
+              ) no-error .  
+    if error-status:error then message return-value view-as alert-box.   
+    
+    bh-wb-egais:buffer-field ("tts"):buffer-value () = tt-act-header.num.
+    bh-wb-egais:buffer-field ("tts-status_"):buffer-value () = "Новый".
+    
+    message substitute ("Создан акт № &1 перемещения в торговый зал", buf_trn-doc.doc-code) view-as alert-box title "Сообщение".
+    release buf_clob-bind.
+    empty temp-table tt-act-header.
+    empty temp-table tt-gds-act.
+    
+  end.
+  end case.
 
-  find first ub.trn-doc no-lock where recid (ub.trn-doc) = integer (loc-ref-list) no-error.
-  
-  if not available (ub.trn-doc) 
-    then return.
-  
-  bh-wb-gds-EG = ?.
-  bh-wb-gds-EG-header = ?.
-  bh-wb-gds-EG-header = egais:GetHndlTable(1, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).
-  bh-wb-gds-EG = egais:GetHndlTable(2, bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value).  
-  find first ub.clients 
-    where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("cli-type"):buffer-value
-      and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("cli-code"):buffer-value) no-error.
-  if not available (ub.clients)
-  then do:
-    message "Не найден клиент TH для EGAIS контрагентa regID: " + bh-wb-gds-EG-header:buffer-field ('regId-Ship'):buffer-value view-as alert-box.
-    return no-apply.
-  end.
-  find first ub.clients 
-    where ub.clients.obj-type = bh-wb-gds-EG-header:buffer-field ("obj-type"):buffer-value
-      and ub.clients.obj-code = integer (bh-wb-gds-EG-header:buffer-field ("obj-code"):buffer-value) no-error.
-  if not available (ub.clients)
-  then do:
-    message "Не найден объект TH для EGAIS получателя regID: " + bh-wb-gds-EG-header:buffer-field ('regId-Cons'):buffer-value view-as alert-box.
-    return no-apply.
-  end.
-  bh-wb-gds-EG:find-first ("where tt-wb-gds-EG.gds-code = ?", no-lock) no-error.
-  if bh-wb-gds-EG:available then do:
-    message "Не найден товар TH для EGAIS товара AlcCode: " + bh-wb-gds-EG:buffer-field ('alc-code'):buffer-value view-as alert-box.
-    return no-apply.
-  end.
-  
-  egais:ConnWB(bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value, ub.trn-doc.doc-code).
-  
-  if egais:StatusErr
-    then message egais:Msg view-as alert-box error.
-  else do:
-    message "Накладная связана" view-as alert-box.
-  end.
-  output stream strlog to value ("egaislog.txt") append. 
-  export stream strlog egais:Msg.
-  output stream strlog close.
   run f-query.
   
 end.
@@ -882,11 +1043,23 @@ procedure proc-hide-disp:
     enable Btn_Save with frame {&FRAME-NAME}.
     Btn_Save:label = "Сохранить".
     Btn_Del:hidden = false.
+    Btn_conn:label = "Связать".
+    Btn_conn:tooltip = 'Связать накладную ЕГАИС с накладной TH'.
     Btn_conn:hidden = false.
     btn_ticket:hidden = false.
     Btn_delclob:hidden = false.
     Btn_Del:popup-menu in frame {&frame-name} = menu popup-menu-reject:handle.
     Btn_Del:menu-mouse = 1.
+  end.
+  when 2 then do:
+    enable Btn_Save with frame {&FRAME-NAME}.
+    Btn_Save:label = "Отправить".
+    Btn_Del:hidden = true.
+    Btn_conn:label = "Акт торг.".
+    Btn_conn:tooltip = 'Передача продукции в торговый зал ЕГАИС'.
+    Btn_conn:hidden = false.
+    btn_ticket:hidden = true.
+    Btn_delclob:hidden = true.
   end.
   when 3
   then do:
@@ -907,14 +1080,6 @@ procedure proc-hide-disp:
     Btn_delclob:hidden = true.
     Btn_Del:popup-menu in frame {&frame-name} = ?.
     Btn_Del:menu-mouse = ?.
-  end.
-  otherwise do:
-    enable Btn_Save with frame {&FRAME-NAME}.
-    Btn_Save:label = "Отправить".
-    Btn_Del:hidden = true.
-    Btn_conn:hidden = true.
-    btn_ticket:hidden = true.
-    Btn_delclob:hidden = true.
   end.
   end case.
   
@@ -1066,8 +1231,6 @@ MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
    on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
 
-  def var ii as int no-undo.
-  
   { gbl/getcurus.i
     v-db-num
     v-user-id

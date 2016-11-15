@@ -2359,16 +2359,6 @@ procedure lib-trn4_int-open :
       undo, return error return-value .
     end.
 
-    find first ub.doc-attr where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-negais} no-error.
-    if available (ub.doc-attr)
-    then do:
-      message "Документ создан из накладной ЕГАИС!" skip
-              "Этот документ запрещено открывать!" skip
-              "Номер документа" p-doc-code
-              view-as alert-box information .
-      undo, return error return-value .
-    end.	
-	
     if buf_trn-doc.rcv-code = "not_delete" then do:
        if not ( buf_trn-doc.ext-doc-type = {&TDEDT_Inv} and
                 buf_trn-doc.status_ = {&permitted} ) then do:
@@ -2381,6 +2371,34 @@ procedure lib-trn4_int-open :
     { gbl/getcntxt.i get }
     { str/getctxtp.i get }
 
+    find first ub.doc-attr where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-negais} no-error.
+    if available (ub.doc-attr)
+    then do:
+      { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_egais-chg-sts-doc':U
+        {&cntxt-object}
+        v-cntxt-host-code-obj
+        v-cntxt-obj-type
+        v-cntxt-obj-code
+        0
+        0
+        0
+        true
+        varlog
+      }
+      
+      if not varlog then do:
+        /*message "Документ создан из накладной ЕГАИС!" skip
+                'Для открытия этого документа нужно обладать правом "Администрирование запросов в ЕГАИС"!' skip
+                "Номер документа" p-doc-code
+                view-as alert-box information .*/
+        undo, return error return-value .
+      end.
+    end.
+	
     assign varmode = {&open-doc}.
     /*Проверим на возможность открытия*/
     run str/trn-graf.p (input  buf_trn-doc.doc-code,
