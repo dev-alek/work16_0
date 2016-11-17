@@ -1062,7 +1062,7 @@ DO:
                                            AND X_ext-classif.db-num = 0
                                            and X_ext-classif.key#_two = v-ext-sys
                                            and X_ext-classif.key#_three = 0
-                                           and X_ext-classif.charkey_one = tt-gds-rests_shop.alc-code
+                                           and X_ext-classif.charkey_one = tt-gds-rests.alc-code
                                            and X_ext-classif.charkey_two = ""
                                            and X_ext-classif.charkey_three = ""
                                            and X_ext-classif.nonunique = 0

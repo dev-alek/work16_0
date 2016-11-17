@@ -52,6 +52,8 @@ define variable ii                  as integer no-undo .
 
 define variable glog        as logical no-undo .
 
+define variable v-act-num as character no-undo .
+
 define variable v-ans-name as character no-undo .
 
 define variable v-value-character   as character no-undo .
@@ -262,6 +264,7 @@ END.
 ON CHOOSE OF Btn_create IN FRAME Dialog-Frame /* Создать */
 DO:
     run bge/egais-act-balance.w (parparentproc, {&add-def}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    bh-act-header = egais:GetHndlTable({&ab-clob}, "").
     run refresh-query.
 END.
 
@@ -273,6 +276,7 @@ END.
 ON CHOOSE OF Btn_chg IN FRAME Dialog-Frame /*  */
 DO:
     if not bh-act-header:available then return no-apply .
+    v-act-num = bh-act-header:buffer-field ("num"):buffer-value .
     run bge/egais-act-balance.w (parparentproc, {&update}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
 	run refresh-query.
 END.
@@ -344,34 +348,32 @@ ON CHOOSE OF Btn_Ans IN FRAME Dialog-Frame /* Сохранить */
 DO:
   if not bh-act-header:available 
     then return no-apply.
-/*  if (bh-act-header:buffer-field ("answer_"):buffer-value) <> "" then do :                       */
-/*    message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .*/
-/*  end.                                                                                           */
-/*  else do :                                                                                      */
-      egais:inNum = bh-act-header:buffer-field ("num"):buffer-value .
-      egais:GetHndlTable(2, bh-act-header:buffer-field ("num"):buffer-value) .
-      glog = egais:StatusErr .
-      if glog
-      and (bh-act-header:buffer-field ("answer_"):buffer-value = "" 
-        or bh-act-header:buffer-field ("answer_"):buffer-value = ? )
-      then do :
-            message egais:Msg view-as alert-box.
-            return no-apply.
-      end.
-      else do :
-        message (bh-act-header:buffer-field ("answer_"):buffer-value) skip 
-           "Сохранить ответ?" view-as alert-box information buttons yes-no update glog.
-        if glog
-        then do :
-            v-ans-name = bh-act-header:buffer-field ("num"):buffer-value + "_ANS.txt" .
-            output to value(v-ans-name) .
-                put unformatted bh-act-header:buffer-field ("answer_"):buffer-value skip .
-            output close.
-            message "Ответ сохранен в файл " v-ans-name " в рабочей директории" view-as alert-box information .
-        end.   
-      end.  
-/*  end.*/
+  v-act-num = bh-act-header:buffer-field ("num"):buffer-value .
+  
+  egais:inNum = bh-act-header:buffer-field ("num"):buffer-value .
+  egais:GetHndlTable(2, bh-act-header:buffer-field ("num"):buffer-value) .
+  glog = egais:StatusErr .
+  if glog
+  and (bh-act-header:buffer-field ("answer_"):buffer-value = "" 
+    or bh-act-header:buffer-field ("answer_"):buffer-value = ? )
+  then do :
+        message egais:Msg view-as alert-box.
+        return no-apply.
+  end.
+  else do :
+    message (bh-act-header:buffer-field ("answer_"):buffer-value) skip(1)
+       "Сохранить ответ?" view-as alert-box information buttons yes-no update glog.
+    if glog
+    then do :
+        v-ans-name = bh-act-header:buffer-field ("num"):buffer-value + "_ANS.txt" .
+        output to value(v-ans-name) .
+            put unformatted bh-act-header:buffer-field ("answer_"):buffer-value skip .
+        output close.
+        message "Ответ сохранен в файл " v-ans-name " в рабочей директории" view-as alert-box information .
+    end.   
+  end.  
   run refresh-query.
+  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -466,6 +468,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   egais:User_Id = v-user-id .
 
   bh-act-header = egais:GetHndlTable(3, "").
+/*  v-act-num = bh-act-header:buffer-field ("num"):buffer-value .*/
   create query qh-act-header.
   run refresh-query.
 
@@ -592,21 +595,28 @@ if bh-act-header = ?
 case RADIO-SET-1 :
     when 1  then 
     do:
-      bh-act-header = egais:GetHndlTable({&ab-clob}, "").
+      qh-act-header:query-close.
+/*      bh-act-header = egais:GetHndlTable({&ab-clob}, "").*/
       qh-act-header:set-buffers (bh-act-header).
-      qh-act-header:query-prepare ("for each tt-act-header where not tt-act-header.is-sent").
+      qh-act-header:query-prepare ("for each tt-act-header where not tt-act-header.is-sent by tt-act-header.date_ descending").
       qh-act-header:query-open.
+      bh-act-header:find-first ( "where tt-act-header.num = " + "'" + v-act-num + "'" ) no-error .
     end.
     when 2  then 
     do:
-      bh-act-header = egais:GetHndlTable({&ab-clob}, "").
+      qh-act-header:query-close.
+/*      bh-act-header = egais:GetHndlTable({&ab-clob}, "").*/
       qh-act-header:set-buffers (bh-act-header).
-      qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent").
+      qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent by tt-act-header.date_ descending").
       qh-act-header:query-open.
+      bh-act-header:find-first ( "where tt-act-header.num = " + "'" + v-act-num + "'" ) no-error .
     end.
   end.
 
+if bh-act-header:available
+  then qh-act-header:reposition-to-rowid ( bh-act-header:rowid ) no-error.
 if valid-handle (browse-hdl-act-header) then apply "value-changed" to browse-hdl-act-header.
+  
 end.
 
 /* _UIB-CODE-BLOCK-END */

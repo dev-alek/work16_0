@@ -652,14 +652,14 @@ if bh-act-header = ?
     do:
       bh-act-header = egais:GetHndlTable({&awo-clob}, "").
       qh-act-header:set-buffers (bh-act-header).
-      qh-act-header:query-prepare ("for each tt-act-header where not tt-act-header.is-sent").
+      qh-act-header:query-prepare ("for each tt-act-header where not tt-act-header.is-sent by tt-act-header.date_ descending").
       qh-act-header:query-open.
     end.
     when 2  then 
     do:
       bh-act-header = egais:GetHndlTable({&awo-clob}, "").
       qh-act-header:set-buffers (bh-act-header).
-      qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent").
+      qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent by tt-act-header.date_ descending").
       qh-act-header:query-open.
     end.
   end case.

@@ -59,6 +59,10 @@ define variable p-ext-rec           as recid no-undo .
 
 define variable glog        as logical no-undo .
 
+define variable cmd            as character no-undo.
+define variable src            as character no-undo.
+define variable path           as character no-undo.
+
 define variable v-obj-uniq-key-rec as character no-undo .
 
 
@@ -123,6 +127,8 @@ define stream str-log .
 { gbl/waitfram.i }
 {ibs/th/bge/egais/qb-egais.i proc }
 
+define stream OutStr-html.
+{ gbl/prn-lib.i  }
 
 define variable select-list as longchar no-undo .
 
@@ -160,6 +166,11 @@ DEFINE BUTTON b-del
 DEFINE BUTTON b-save
      LABEL "Сохранить" 
      SIZE 15 BY 1.14 TOOLTIP "Сохранить в БД"
+     BGCOLOR 8 . 
+     
+DEFINE BUTTON b-print
+     LABEL "Печать" 
+     SIZE 15 BY 1.14 TOOLTIP "Печать"
      BGCOLOR 8 . 
      
 /*DEFINE BUTTON b-mark                               */
@@ -204,6 +215,7 @@ DEFINE FRAME Dialog-Frame
     b-add at row 1.2 col 32
     b-del at row 1.2 col 52
     b-save at row 1.2 col 17
+    b-print at row 1.2 col 94
     tt-act-header.num at row 2.5 col 2 format "X(22)"
     tt-act-header.date_ at row 2.5 col 34
     br-gds-act at row 3.5 col 2
@@ -302,6 +314,113 @@ DO:
         view-as alert-box question buttons yes-no update glog.
         if not glog then return no-apply . 
     end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
+ON CHOOSE OF b-print IN FRAME Dialog-Frame /* - */
+DO:
+  do trans :
+      
+    os-delete value("egais-marks.txt") no-error.
+      
+    output to value("egais-marks.txt").
+    for each tt-gds-act no-lock :
+        put unformatted tt-gds-act.mark skip .
+    end.
+    output close .
+    
+    path = session:temp-directory + "egais-marks\".
+    
+    os-delete value(right-trim (path, "\")) RECURSIVE.
+    
+    file-info:file-name = right-trim (path, "\").
+    if file-info:file-type = ?
+    then do:
+      os-create-dir value(right-trim (path, "\")).
+      if os-error <> 0 then do:
+        message substitute("Невозможно создать директорию &1 для загрузки в неё марок",path) view-as alert-box error.
+        return no-apply.
+      end.
+    end.
+    
+    cmd = substitute ('&1 --output="&3egais-marks\mark~~~~~~.png" --batch --border=2 --barcode=55 --input="&2"', search ("exe/Zint/zint.exe"), search ("egais-marks.txt"), session:temp-directory).
+         
+    os-command silent value (cmd).
+    
+    define var v-act-file as char no-undo.
+    v-act-file  = "egais-marks.html".
+    
+    
+    output stream OutStr-html to value(v-act-file) convert target 'UTF-8'/*no-convert*/.
+    put stream OutStr-html unformatted
+        substitute(
+
+        '<!doctype html>
+                 <html>
+              <head>
+              <meta charset="UTF-8">
+                 <!-- Стили документа -->
+              <style>
+                table ~{border-collapse: collapse; ~}
+                tbody td, th ~{border: 1px solid black;~}
+                #myid ~{font-weight: bold;~}
+                .class1 ~{font-style: italic;~}
+                .class2 ~{font-family: Arial;~}
+              </style>
+              </head>
+                  <body>
+                  <table orientation="landscape" name="лист1" repeat_rows="1:1" hide_zero="True">
+                  <thead>
+                  <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+                  <tr class="set_columns">
+                        <td style="width:40px"></td>
+                        <td style="width:210px"></td>
+                        <td style="width:320px"></td>
+                  </tr>
+                  <tr>
+                        <td colspan="3" style="front-weight: bold; text-align: center;">Акцизные марки егаис </td>
+                  </tr>
+        </thead>
+            <tbody>
+                <tr>
+                <th>№ пп</th>
+                <th>Тип, серия и номер</th>
+                <th>Марка</th>
+                </tr>').
+
+    
+    
+    get first br-gds-act.
+    
+    do while available  tt-gds-act:
+        src = substitute ('<img src="&1egais-marks/mark', session:temp-directory) + string(tt-gds-act.position_, "999") + substitute ('.png" alt="&1">', tt-gds-act.mark) .
+        put stream OutStr-html unformatted
+            substitute(
+            '<tr style="height: 90px;">
+             <td text_wrap="true"> &1 </td>
+             <td text_wrap="true"> &2 </td>
+             <td text_wrap="true"> &3 </td>
+             </tr>
+             </tbody>',
+            string(tt-gds-act.position_),
+            (tt-gds-act.type_ + " " + tt-gds-act.rank + " " + tt-gds-act.number),
+            src
+            ).
+        get next br-gds-act.
+    end.    
+
+    output stream OutStr-html close.
+    run prn-lib-reportviewer-report-name in this-procedure (
+        input this-procedure
+        ,input v-act-file
+        ).
+        
+    os-delete value("egais-marks.txt") no-error.   
+  end.  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -632,7 +751,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
 /*  DISPLAY                     */
 /*      WITH FRAME Dialog-Frame.*/
-  ENABLE b-cancel  b-save br-gds-act b-del 
+  ENABLE b-cancel  b-save br-gds-act b-del b-print
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   
@@ -652,6 +771,7 @@ PROCEDURE enable_UI :
         
         hide b-add b-save b-del in FRAME {&FRAME-NAME}.
     end.
+    else hide b-print in FRAME {&FRAME-NAME}.
     
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
