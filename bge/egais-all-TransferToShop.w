@@ -56,6 +56,8 @@ define variable v-RegID             as character no-undo .
 
 define variable glog        as logical no-undo .
 
+define variable v-act-num as character no-undo .
+
 define variable ii                  as integer no-undo .
 
 define variable v-value-character   as character no-undo .
@@ -266,6 +268,7 @@ END.
 ON CHOOSE OF Btn_create IN FRAME Dialog-Frame /* Создать */
 DO:
     run bge/egais-TransferToShop.w (parparentproc, {&add-def}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    bh-act-header = egais:GetHndlTable(3, "").
     run refresh-query.
 END.
 
@@ -277,6 +280,7 @@ END.
 ON CHOOSE OF Btn_chg IN FRAME Dialog-Frame /*  */
 DO:
     if not bh-act-header:available then return no-apply .
+    v-act-num = bh-act-header:buffer-field ("num"):buffer-value .
     run bge/egais-TransferToShop.w (parparentproc, {&update}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
     run refresh-query.
 END.
@@ -342,6 +346,8 @@ ON CHOOSE OF Btn_Ans IN FRAME Dialog-Frame /* Сохранить */
 DO:
   if not bh-act-header:available 
     then return no-apply.
+    
+    v-act-num = bh-act-header:buffer-field ("num"):buffer-value .
 /*  if (bh-act-header:buffer-field ("answer_"):buffer-value) <> "" then do :                       */
 /*    message (bh-act-header:buffer-field ("answer_"):buffer-value) view-as alert-box information .*/
 /*  end.                                                                                           */
@@ -579,21 +585,24 @@ if bh-act-header = ?
   case RADIO-SET-1 :
     when 1  then 
     do:
-      bh-act-header = egais:GetHndlTable({&awo-clob}, "").
+      qh-act-header:query-close.
       qh-act-header:set-buffers (bh-act-header).
-      qh-act-header:query-prepare ("for each tt-act-header where not tt-act-header.is-sent").
+      qh-act-header:query-prepare ("for each tt-act-header where not tt-act-header.is-sent by tt-act-header.date_ descending").
       qh-act-header:query-open.
+      bh-act-header:find-first ( "where tt-act-header.num = " + "'" + v-act-num + "'" ) no-error .
     end.
     when 2  then 
     do:
-      bh-act-header = egais:GetHndlTable({&awo-clob}, "").
+      qh-act-header:query-close.
       qh-act-header:set-buffers (bh-act-header).
-      qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent").
+      qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent by tt-act-header.date_ descending").
       qh-act-header:query-open.
+      bh-act-header:find-first ( "where tt-act-header.num = " + "'" + v-act-num + "'" ) no-error .
     end.
   end case.
 
-
+if bh-act-header:available
+  then qh-act-header:reposition-to-rowid ( bh-act-header:rowid ) no-error.
 if valid-handle (browse-hdl-act-header) then apply "value-changed" to browse-hdl-act-header.
 end.
 
