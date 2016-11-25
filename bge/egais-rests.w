@@ -2108,9 +2108,8 @@ procedure PrintRests :
                 <th>Остаток TH</th>
                 </tr>').
 
-    get first br-rests.
-    
-    do while available  tt-gds-rests:
+       
+    for each tt-gds-rests no-lock:
 
         put stream OutStr-html unformatted
             substitute(
@@ -2135,7 +2134,7 @@ procedure PrintRests :
             tt-gds-rests.informB_,
             tt-gds-rests.TH-qnty
             ).
-        get next br-rests.
+        
 
 
     end.
