@@ -942,7 +942,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         assign
             tt-act-header.num = "AWOS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-' + string(int(TIME))
             tt-act-header.date_ = TODAY
-            tt-act-header.type_ = "Недостача"
+            tt-act-header.type_ = "Реализация"
             tt-act-header.is-sent = no
         .
         display tt-act-header.num tt-act-header.date_ tt-act-header.type_ with frame {&FRAME-NAME}.
