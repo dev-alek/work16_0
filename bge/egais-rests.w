@@ -2014,9 +2014,7 @@ procedure PrintRests_shop :
                 <th>Остаток TH</th>
                 </tr>').
 
-    get first br-rests_shop.
-    
-    do while available  tt-gds-rests_shop:
+    for each tt-gds-rests_shop no-lock :
 
         put stream OutStr-html unformatted
             substitute(
@@ -2039,8 +2037,6 @@ procedure PrintRests_shop :
             tt-gds-rests_shop.egais-qnty_stock,
             tt-gds-rests_shop.TH-qnty
             ).
-        get next br-rests_shop.
-
 
     end.
     
