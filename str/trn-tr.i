@@ -750,9 +750,14 @@ if varhold = "yes" then do:
         end.
         else do:
           if paris-hold = yes then do:
+            if varcontract-code <> 0 then do:
+              find first bf_contract where bf_contract.contract-code  = varcontract-code       no-lock no-error.
+            end.
+            else do:  
             find first bf_contract where bf_contract.host-code = t-doc.host-code  and
                                         bf_contract.cli-type  = {&cmp}                                    and
                                         bf_contract.cli-code  = buf_sysconf.host-code                     no-lock no-error.
+            end.
           if not available bf_contract then do:
             if varcontract-cli <> "yes" then do:
               assign

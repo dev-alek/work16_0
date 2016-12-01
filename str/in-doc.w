@@ -1416,9 +1416,10 @@ if pardoc-mode <> {&lookup} then do:
       assign
         varrecid = integer(entry(1, varrid-list)).
     find first buf_contract where recid(buf_contract) = varrecid no-lock no-error.
+    if available buf_contract then do:
        assign
     t-doc.contract-code = buf_contract.contract-code.
-
+    end.
     for each bf_parts where bf_parts.out-code = t-doc.doc-code and bf_parts.contract-code <> t-doc.contract-code EXCLUSIVE-LOCK :
               bf_parts.contract-code = t-doc.contract-code .
      end. 

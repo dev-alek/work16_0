@@ -1329,9 +1329,16 @@ ON CHOOSE OF b-contr-lkp IN FRAME d-out-doc
 DO:
  define buffer buf_contract for ub.contract  .
  if t-doc.contract-code <> 0 then do:
- find first buf_contract no-lock where
-            buf_contract.host-code     = ( if is-doc-hold then t-doc.cli-code  else t-doc.host-code )  and
+   if is-doc-hold then do:
+      find first buf_contract no-lock where
             buf_contract.contract-code = t-doc.contract-code no-error .
+     
+   end.
+   else do:
+      find first buf_contract no-lock where
+            buf_contract.host-code     = t-doc.host-code   and
+            buf_contract.contract-code = t-doc.contract-code no-error .
+   end.    
       if available buf_contract then do:
           run str/sh-contr.p
               ( input parParentProc ,
@@ -6066,8 +6073,7 @@ frame {&frame-name}:title = frame {&frame-name}:title
 { gbl/hold-doc.i t-doc.doc-code is-doc-hold no-error }
 
 if paris-hold = yes then do:
-find first bf_contract where bf_contract.host-code     = t-doc.host-code  and
-                             bf_contract.contract-code = t-doc.contract-code no-lock no-error.
+find first bf_contract where bf_contract.contract-code = t-doc.contract-code no-lock no-error.
 end.  
 else do:
 find first bf_contract where bf_contract.host-code     = ( if is-doc-hold then t-doc.cli-code  else t-doc.host-code )  and
