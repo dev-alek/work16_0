@@ -723,8 +723,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 tt-wb-hndls.status_      = buf_trn-doc.status_ + (if buf_trn-doc.flag_ then "+" else "-")
                 tt-wb-hndls.EGAISSts     = if available (ub.doc-attr) and not ub.doc-attr.attr-value <> "" then ub.doc-attr.attr-value else ""
                 
-                tt-wb-hndls.EGAISSts = "Accepted".
-                
                 tt-wb-hndls.wbregid      = entry (1, buf_doc-attr.attr-value, {&delim-cmd}) no-error.
                 assign
                   tt-wb-hndls.wb-type      = {&TDEDT_Pri_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
@@ -2822,11 +2820,13 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
     if available (buf_firm) then do:
       inSW:write-data-element ("oref" + verPrefXMLNS + ":INN", if INNObj = "" or INNObj = ? or not inShipper then buf_firm.inn else INNObj).
-      if buf_firm.kpp <> "" or available (buf_clients-attr) 
-        then inSW:write-data-element ("oref" + verPrefXMLNS + ":KPP", if available buf_clients-attr then buf_clients-attr.attr-value else buf_firm.kpp).
+      if buf_firm.kpp <> "" and (not buf_clients.obj-type <> {&shop} and not buf_clients.obj-type <> {&stock}) and not available (buf_clients-attr)
+        then inSW:write-data-element ("oref" + verPrefXMLNS + ":KPP", buf_firm.kpp).
+      if available (buf_clients-attr) and buf_clients-attr.attr-value <> ""
+        then inSW:write-data-element ("oref" + verPrefXMLNS + ":KPP", buf_clients-attr.attr-value).
     end.
     else do:
-      Msg = "Не найден ИНН или КПП организации или объекта " + inObjType + string (inObjCode).
+      Msg = "Не найден ИНН организации или объекта " + inObjType + string (inObjCode).
       StatusErr = true.
       return.
     end.
