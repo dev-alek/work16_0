@@ -61,7 +61,7 @@ class ibs.th.bge.egais.ActWriteOff_Shop inherits EGAISUTM:
 /*    .                    */
     ObjCode = inObjCode.
     ObjType = inOjType.
-    Obj = "*" + substring(ObjType,1,1) + string(ObjCode) + "*" .
+    Obj = "*-" + substring(ObjType,1,1) + string(ObjCode) + "-*" .
     v-FS-RAR = inFSRAR.
     v-ext-sys = inExtSys.
     IsSent.
@@ -240,7 +240,7 @@ class ibs.th.bge.egais.ActWriteOff_Shop inherits EGAISUTM:
         inFileName = "RespActWriteOff_shop.xml"
         .
       
-      find first tt-act-header no-error.
+      find first tt-act-header where tt-act-header.num = inNum no-error.
       
       if available (tt-act-header)
         then 
