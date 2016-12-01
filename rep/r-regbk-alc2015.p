@@ -920,13 +920,13 @@ PROCEDURE proc-create-HTML:
        
         '     <thead>' SKIP
         '       <tr class="set_columns">' SKIP                 
-        '         <td style="width: 80px; border: none;"></td>' SKIP  
-        '         <td style="width: 80px; border: none;"></td>' SKIP   
-        '         <td style="width: 80px; border: none;"></td>' SKIP     
-        '         <td style="width: 200px; border: none;"></td>' SKIP    
-        '         <td style="width: 100px; border: none;"></td>' SKIP 
-        '         <td style="width: 120px; border: none;"></td>' SKIP  
-        '         <td style="width: 150px; border: none;"></td>' SKIP  
+        '         <td style="width: 41px; border: none;"></td>' SKIP  
+        '         <td style="width: 74px; border: none;"></td>' SKIP   
+        '         <td style="width: 83px; border: none;"></td>' SKIP     
+        '         <td style="width: 573px; border: none;"></td>' SKIP    
+        '         <td style="width: 77px; border: none;"></td>' SKIP 
+        '         <td style="width: 70px; border: none;"></td>' SKIP  
+        '         <td style="width: 77px; border: none;"></td>' SKIP  
         '       </tr>' SKIP
         .
         
