@@ -551,7 +551,7 @@ class ibs.th.bge.egais.ExtGds:
         and buf_ext-classif-attr.charkey_two = ""
         and buf_ext-classif-attr.charkey_three = ""
         and buf_ext-classif-attr.attr-code = 'egais-info'
-      .
+      no-error.
 
       if not available (buf_ext-classif-attr)
       then do:
