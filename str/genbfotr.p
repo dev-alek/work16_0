@@ -207,7 +207,7 @@ assign
 
 p-res = p-res +  {&new-line}.
 
-{ gbl/getcntxt.i get }
+/*{ gbl/getcntxt.i get }*/
 
 
 
@@ -215,7 +215,7 @@ run waitfram-show in this-procedure ("ֶהטעו...").
 
 define variable var-fin-calc as integer no-undo .
 find first ub.sysconf no-lock where ub.sysconf.host-code = par-host-code no-error .
-var-fin-calc = ub.sysconf.fin-calc   .
+if available ub.sysconf then var-fin-calc = ub.sysconf.fin-calc   .
 p-usl-opl =  {&o-buyer-trn} + "," + {&o-buyer-ord}    .
 run make-temp-obj-firm in this-procedure .
 assign

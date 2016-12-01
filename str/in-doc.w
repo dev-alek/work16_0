@@ -1389,7 +1389,42 @@ DO:
               ).
       end.
   end.
-  else do:
+if pardoc-mode <> {&lookup} then do:
+    define variable varrid-list as character no-undo.
+    define variable varrecid    as recid     no-undo.
+    find first buf_contract where buf_contract.host-code = t-doc.host-code no-lock no-error .
+    if available buf_contract then do:
+            run str/cont-all.w (input parParentProc,
+                      input t-doc.host-code,
+                      input "b-sel",
+                      input "firm-curr" ,
+                      input t-doc.cli-type,
+                      input t-doc.cli-code,
+                      input ?,
+                      input ?,
+                      input "current":u,
+                      input "all":u,
+                      input-output varrid-list ) no-error.
+      if error-status:error then do:
+        message "Ошибка при вызове справочника договоров." skip
+                return-value                skip
+                error-status:get-message(1) skip
+                error-status:get-message(2)
+        view-as alert-box error.
+        return no-apply.
+      end.
+      assign
+        varrecid = integer(entry(1, varrid-list)).
+    find first buf_contract where recid(buf_contract) = varrecid no-lock no-error.
+       assign
+    t-doc.contract-code = buf_contract.contract-code.
+
+    for each bf_parts where bf_parts.out-code = t-doc.doc-code and bf_parts.contract-code <> t-doc.contract-code EXCLUSIVE-LOCK :
+              bf_parts.contract-code = t-doc.contract-code .
+     end. 
+    end.
+    end.
+    else do:  
     if t-doc.status_ <> {&wayb} or t-doc.flag_ then return.
     define variable varis-fin        as   character                       no-undo.
     define variable varis-finby      as   character                       no-undo.

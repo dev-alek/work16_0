@@ -768,7 +768,8 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
 
 
               assign
-                 var-host-code = ( if varhold-doc then bf_trn-doc.host-code  else bf_parts.host-code )
+              var-host-code = bf_parts.host-code
+/*                var-host-code = ( if varhold-doc then bf_trn-doc.host-code  else bf_parts.host-code )*/
               .
               { str/ckcntspc.i
                 var-host-code
@@ -1526,7 +1527,8 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
                   varvat-type = substitute("&1,&2", {&inc-vat}, bf_trn-doc.doc-code).
                 end.
                 assign
-                  var-host-code = ( if varhold-doc then bf_trn-doc.cli-code  else bf_trn-doc.host-code )
+                  var-host-code = bf_trn-doc.host-code 
+/*                  var-host-code = ( if varhold-doc then bf_trn-doc.cli-code  else bf_trn-doc.host-code )*/
                 .
                 { str/ckcntspc.i
                   var-host-code
@@ -2704,23 +2706,27 @@ for each tt-trn: delete tt-trn. end. /* for each */
                         if bf_contract.usl-opl = '{&bef-contr-buyer-in-delay}'  then p-cons = 3. /*По всем*/
                         if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} then do:
                          if bf_contract.usl-opl <> '{&bef-contr-buyer-ord}' and bf_contract.usl-opl <> '{&bef-contr-buyer-ord-prc}' then do:
-                                    run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl ) no-error .
+                             find first bf_fin-ob-trn where bf_fin-ob-trn.trn-doc-code = bf_trn-doc.doc-code and v-sum > (bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl) no-error.
+                                if not available bf_fin-ob-trn then do:
+                                    run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl - v-sum, input bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl - v-sum ) no-error .
                                     if error-status :error then return error return-value .
-                                 
+                                end.      
                           end.
                          if (bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}') and varstatus = {&permitted} then do:
+                                    
                                     run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input 0, input  bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl ) no-error .
                                     if error-status :error then return error return-value .
                          end.
                          if (bf_contract.usl-opl = '{&bef-contr-buyer-ord}' or bf_contract.usl-opl = '{&bef-contr-buyer-ord-prc}') and (varstatus = {&fact} and v-fo-gen > 1 ) then do:
                            if abs (v-sum) <> bf_trn-doc.tot-fact and abs (v-sum) <> (bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl) then do:
-                             if bf_trn-doc.fact-qnty <> bf_trn-doc.doc-qnty then do:
+                             if (bf_trn-doc.fact-qnty <> bf_trn-doc.doc-qnty) or v-sum = 0 then do:
                                 find first bf_fin-ob-trn where bf_fin-ob-trn.trn-doc-code = bf_trn-doc.doc-code and v-sum > (bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl) no-error.
                                 if not available bf_fin-ob-trn then do:
                                       run str/limcontr.p ( input bf_trn-doc.host-code, input bf_trn-doc.contract-code, input 0, input bf_trn-doc.tot-sale - bf_trn-doc.discnt-rubl, input bf_trn-doc.tot-fact - bf_trn-doc.discnt-rubl ) no-error .
                                       if error-status :error then return error return-value .
                                 end.      
-                             end.         
+                             end.   
+                                   
                            end.
                          end.
                         end.

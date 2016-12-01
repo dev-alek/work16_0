@@ -6064,8 +6064,15 @@ frame {&frame-name}:title = frame {&frame-name}:title
     ( if parext-doc-mode = "reason-code" then " кода основания"         else "":U ) ) ).
 
 { gbl/hold-doc.i t-doc.doc-code is-doc-hold no-error }
+
+if paris-hold = yes then do:
+find first bf_contract where bf_contract.host-code     = t-doc.host-code  and
+                             bf_contract.contract-code = t-doc.contract-code no-lock no-error.
+end.  
+else do:
 find first bf_contract where bf_contract.host-code     = ( if is-doc-hold then t-doc.cli-code  else t-doc.host-code )  and
                              bf_contract.contract-code = t-doc.contract-code no-lock no-error.
+end.                             
 if available bf_contract then do:
   assign
     varcontract-prn-code = bf_contract.contract-prn-code.

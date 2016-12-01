@@ -54,6 +54,7 @@ define buffer bf-src_gds-dtl       for ub.gds-dtl.
 define buffer bf-src_parts         for ub.parts.
 define buffer bf-src_units         for ub.units.
 define buffer bf_trn-doc           for ub.trn-doc.
+define buffer buf_trn-doc          for ub.trn-doc.
 define buffer bf-cur-obj_clients   for ub.clients.
 define buffer bf-hold-obj_clients  for ub.clients.
 define buffer bf-hold_sysconf      for ub.sysconf.
@@ -67,6 +68,7 @@ define buffer bf_parts             for ub.parts.
 define buffer bf_contract          for ub.contract.
 define buffer bf_currency          for ub.currency.
 define buffer bf_goods             for ub.goods.
+
 
 define variable v-base-code-cur  like ub.currency.curr-code     no-undo.
 define variable v-base-code-hold like ub.currency.curr-code     no-undo.
@@ -173,7 +175,6 @@ on error undo main-block, return error return-value
   }
 
   if error-status :error or v-is-hold = false then return .
-
   if not available bf-hold_sysconf or
      bf-src_trn-doc.cli-type <> {&cmp} or
      (bf-src_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}    and bf-src_trn-doc.hold-doc-code-child  = "no-hold") or
@@ -526,12 +527,14 @@ on error undo main-block, return error return-value
     bf_trn-doc.hold-obj-code           = bf-src_trn-doc.obj-code
     bf_trn-doc.reason-code             = bf-src_trn-doc.reason-code
   .
-
   /*ѕриходную накладную оформим через р_у_бли*/
   if bf_trn-doc.ext-doc-type      =  {&TDEDT_Pri_Vnesh} and
      bf-src_trn-doc.contract-code <> 0                  then do:
-    find first bf_contract where bf_contract.host-code     = bf_trn-doc.host-code         and
-                                 bf_contract.contract-code = bf-src_trn-doc.contract-code no-lock.
+    find bf_contract where bf_contract.host-code     = bf_trn-doc.host-code and  bf_contract.cli-code = bf_trn-doc.cli-code and bf_contract.status_ <> {&close-contr} no-lock no-error.
+      if available bf_contract then do:
+      if ambiguous bf_contract then bf_trn-doc.contract-code = 0 . else bf_trn-doc.contract-code = bf_contract.contract-code .
+      end.
+    find first bf_contract where bf_contract.contract-code = bf-src_trn-doc.contract-code no-lock.
     find first bf_currency where bf_currency.curr-code = bf_contract.curr-code no-lock no-error.
     if not available bf_currency then do:
       return error substitute ("¬ договоре на приход указана валюта &1. Ќо этой валюты нет в справочнике валют.", bf_contract.curr-code).
@@ -548,7 +551,7 @@ on error undo main-block, return error return-value
        return error "ќшибка при поиске курса валюты поставки по договору.".
      end.
      assign
-       bf_trn-doc.contract-code = bf_contract.contract-code
+      
        bf_trn-doc.exch-code     = bf_contract.curr-code
        bf_trn-doc.exch-rate     = varexch-rate
        bf_trn-doc.exch-scale    = varexch-scale
@@ -574,6 +577,16 @@ on error undo main-block, return error return-value
     end.
   end.
   else do:
+
+find first buf_trn-doc where buf_trn-doc.doc-code = bf-src_trn-doc.out-code no-lock no-error .
+if available buf_trn-doc then do:
+  find first bf_contract where bf_contract.contract-code = buf_trn-doc.contract-code no-lock no-error.
+  if available bf_contract then bf_trn-doc.contract-code = bf_contract.contract-code.
+end.   
+else do:
+  find first bf_contract where bf_contract.host-code = bf_trn-doc.host-code and bf_contract.cli-code = bf_trn-doc.cli-code  no-lock no-error.
+  if available bf_contract then bf_trn-doc.contract-code = bf_contract.contract-code.
+end.  
     if bf-src_trn-doc.exch-code <> 0 then do:
       /*ищем баз валюты обоих фирм*/
       { gbl/basecode.i bf-src_trn-doc.host-code v-base-code-from }
@@ -694,7 +707,8 @@ on error undo main-block, return error return-value
       buffer-copy bf-src_parts except bf-src_parts.qnty bf-src_parts.fact-qnty to lib-trn_ret-parts.
       assign
         lib-trn_ret-parts.qnty      = (if bf-src_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then bf-src_parts.qnty - bf-src_parts.fact-qnty else bf-src_parts.fact-qnty)
-        lib-trn_ret-parts.fact-qnty = lib-trn_ret-parts.qnty.
+        lib-trn_ret-parts.fact-qnty = lib-trn_ret-parts.qnty
+      	lib-trn_ret-parts.contract-code = bf_trn-doc.contract-code .
         if bf-src_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}  then do:
            lib-trn_ret-parts.hold-date = v-today .
         end.
@@ -804,7 +818,7 @@ on error undo main-block, return error return-value
   end.
   /* закрываем накладную       */
   /* накл- -> накл+ */
-  run str/trn-stat.p (input ?,  /* parparentproc */
+  run str/trn-stat.p (input this-procedure,  /* parparentproc */
                   input ?,
                   input {&close-doc},
                   input vardoc-code,
