@@ -151,6 +151,7 @@ define menu m-add
     menu-item m-goods   label "по складскому документу"
     menu-item m-sale    label "немаркированную продукцию по продаже"
     menu-item m-marks   label "по акцизным маркам"
+    menu-item m-file    label "из файла"
     menu-item m-one-good label "один товар"
 .
 
@@ -749,6 +750,109 @@ DO:
 /*        message "Не все выбранные товары добавлены в акт. Смотрите лог-файл act-bal_log.txt в рабочей директории" view-as alert-box .*/
 /*    end.                                                                                                                             */
     open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m-file
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-file Dialog-Frame
+on choose of menu-item m-file in menu m-add 
+DO:
+    define variable ll_commit AS LOG    NO-UNDO INIT NO.
+    define variable v-init-dir as character no-undo .
+    DEFINE variable v_os-file   AS CHAR NO-UNDO INIT "".
+    define variable v-line as character no-undo .
+    define variable v-err AS LOG    NO-UNDO INIT NO.
+    define variable v-user-action    as character no-undo.
+    define variable v-printed        as logical   no-undo.
+    
+    SYSTEM-DIALOG GET-FILE v_os-file
+        TITLE "Выберите файл для импорта"
+        FILTERS
+          " Текстовые файлы (*.csv) " "*.csv",
+          " Текстовые файлы (*.txt) " "*.txt",
+          " Все файлы (*.*) "                      "*.*"
+        INITIAL-DIR v-init-dir
+        /*return-to-start-dir*/
+        must-exist
+        update ll_commit
+        default-extension "csv"
+        .
+    IF ll_commit <> YES THEN do:
+       RETURN NO-APPLY.
+    end.
+    IF v_os-file = PROGRAM-NAME( 1 ) THEN DO:
+        BELL.
+        MESSAGE "Рекурсия!" VIEW-AS ALERT-BOX ERROR.
+        RETURN NO-APPLY.
+    END.
+    
+    input from value(v_os-file) .
+        repeat :
+            import unformatted v-line .
+            nn = nn + 1 .  
+            create tt-gds-act .
+            assign
+/*                tt-gds-act.gds-code         = buf_goods.gds-code*/
+                tt-gds-act.alc-code         = entry(1, v-line, ";")
+/*                tt-gds-act.gds-name         = buf_goods.gds-name*/
+                tt-gds-act.num              = tt-act-header.num
+                tt-gds-act.qnty             = integer(entry(2, v-line, ";"))
+                tt-gds-act.position_        = nn
+            .
+            find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                               and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                               AND X_ext-classif.db-num = 0  
+                                               and X_ext-classif.key#_two = v-ext-sys 
+                                               and X_ext-classif.key#_three = 0
+                                               and X_eXt-classif.charkey_one = tt-gds-act.alc-code
+                                               and X_eXt-classif.charkey_two = ""
+                                               and X_eXt-classif.charkey_three = ""
+                                               and X_eXt-classif.nonunique = 0 no-error .
+            if available X_ext-classif
+            then do :
+                assign tt-gds-act.gds-code = X_ext-classif.key#_one .
+                find first X_ext-classif-attr no-lock where X_ext-classif-attr.classif-subject = X_ext-classif.classif-subject
+                                                       and X_ext-classif-attr.classif-name = X_ext-classif.classif-name
+                                                       and X_ext-classif-attr.db-num = X_ext-classif.db-num
+                                                       and X_ext-classif-attr.Key#_One = X_ext-classif.key#_one
+                                                       and X_ext-classif-attr.Key#_two = X_ext-classif.key#_two
+                                                       and X_ext-classif-attr.Key#_three = X_ext-classif.key#_three
+                                                       and X_ext-classif-attr.CharKey_One = X_eXt-classif.charkey_one
+                                                       and X_ext-classif-attr.CharKey_two = X_eXt-classif.charkey_two
+                                                       and X_ext-classif-attr.CharKey_three = X_eXt-classif.charkey_three
+                                                       and X_ext-classif-attr.nonunique = X_eXt-classif.nonunique
+                                                       and X_ext-classif-attr.attr-code = 'egais-info'
+                                                       no-error .
+                if available X_ext-classif-attr then
+                assign tt-gds-act.gds-name = entry(3, X_ext-classif-attr.attr-value, CHR(4)) no-error.
+            end.
+        end.
+    input close .    
+    
+    output to value("alccodes-imp_log.txt") .
+    for each tt-gds-act exclusive-lock where tt-gds-act.gds-code = 0 or tt-gds-act.gds-code = ? :
+        v-err = true .
+        put unformatted tt-gds-act.alc-code " - не найдено соответствие с товаром TH" skip .
+        delete tt-gds-act .
+    end.
+    output close .
+    
+    if v-err then do :
+        message "Не все строки добавлены в акт!" view-as alert-box .
+        run gbl/prnfilen.w
+           (input  "Ошибки при добавлении товаров"
+           ,input  0
+           ,input  "alccodes-imp_log.txt"
+           ,input  7
+           ,output v-user-action
+           ,output v-printed
+           ).
+    end.
+        
+    open QUERY br-gds-act FOR each tt-gds-act exclusive-lock .
+    
 END.
 
 /* _UIB-CODE-BLOCK-END */

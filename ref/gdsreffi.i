@@ -147,6 +147,24 @@ else do:
 end.
 return v-value.
 end FUNCTION.
+FUNCTION gdsreffi_in-doc-cli-name returns character ( buffer buf_goods for ub.goods
+                                          ,input p-obj-type as character
+                                          ,input p-obj-code as integer):
+define buffer buf_gds-obj for ub.gds-obj.
+define buffer buf_trn-doc for ub.trn-doc.
+define buffer buf_clients for ub.clients.
+define variable v-value as decimal no-undo .
+
+for first buf_gds-obj no-lock where
+            buf_gds-obj.gds-code = buf_goods.gds-code
+      AND  buf_gds-obj.obj-type = p-obj-type
+      AND  buf_gds-obj.obj-code = p-obj-code ,  
+          first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_gds-obj.in-code,
+          first buf_clients no-lock where buf_clients.obj-type = buf_trn-doc.cli-type and  buf_clients.obj-code = buf_trn-doc.cli-code:  
+        return buf_clients.obj-name .      
+end.
+
+end FUNCTION.
 
 
 PROCEDURE gds-ref-fi:

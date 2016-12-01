@@ -335,6 +335,8 @@ DO:
         bh-act-header:buffer-field ("is-sent"):buffer-value = true.
     end.
     run refresh-query.
+    
+    message "Акт " egais:inNum " отправлен" view-as alert-box .
 END.
 
 /* _UIB-CODE-BLOCK-END */

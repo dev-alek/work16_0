@@ -3399,6 +3399,7 @@ PROCEDURE proc-b-grp:
   define variable was-deleted as integer initial 0 no-undo.
   define variable loc_g-grp as character no-undo .
   define variable lns-cnt as integer no-undo .
+  define variable v-ok as logical no-undo .
 
   define buffer buf_gds-grp for ub.gds-grp.
 
@@ -3481,6 +3482,7 @@ PROCEDURE proc-b-grp:
     assign
       gds-rec = integer( entry( lns-cnt, rid-list ) )
     .
+    
     FIND FIRST loc-goo-doc WHERE RECID( loc-goo-doc ) = gds-rec.
     IF loc-goo-doc.stts <> 0 then do:
       assign
@@ -3489,13 +3491,18 @@ PROCEDURE proc-b-grp:
       .
       next.
     end.
-    loc-goo-doc.grp-code = buf_gds-grp.node-code.
-    FIND FIRST loc-goo-doc NO-LOCK WHERE RECID( loc-goo-doc ) = gds-rec .
+
+    FIND FIRST loc-goo-doc WHERE RECID( loc-goo-doc ) = gds-rec .
     assign
       lns-cnt   = lns-cnt + 1
       v-chg-rec = gds-rec
     .
-    run recalc-assgds in this-procedure  ( input loc-goo-doc.gds-code ) .
+    run recalc-assgds in this-procedure  ( input loc-goo-doc.gds-code, 
+                                           input loc-goo-doc.grp-code,
+                                           input buf_gds-grp.node-code,
+                                           output v-ok    ) .
+
+    if v-ok then loc-goo-doc.grp-code = buf_gds-grp.node-code. 
   END .
   { gbl/working.i }
   assign
@@ -4230,6 +4237,9 @@ END PROCEDURE.
 
 procedure recalc-assgds :
 define input  parameter p-gds-code as integer   no-undo .
+define input  parameter p-old-grp as integer   no-undo .
+define input  parameter p-new-grp as integer   no-undo .
+define output parameter p-ok      as logical    no-undo .
 define buffer buf_assortment-matrix       for ub.assortment-matrix  .
 define buffer buf_assortment-matrix-goods for ub.assortment-matrix-goods  .
   do
@@ -4246,7 +4256,7 @@ define buffer buf_assortment-matrix-goods for ub.assortment-matrix-goods  .
             buf_assortment-matrix.asmt-id = buf_assortment-matrix-goods.asmt-id  and
             buf_assortment-matrix.db-num  = buf_assortment-matrix-goods.db-num
            :
-       run utl/uassmgrp.p ( buf_assortment-matrix.asmt-id , buf_assortment-matrix.db-num ) .
+       run utl/uassmgrp.p ( p-old-grp, p-new-grp, buf_assortment-matrix.asmt-id , buf_assortment-matrix.db-num, output p-ok ) no-error.
   end.
   end.
 end procedure. /* recalc-assgds */

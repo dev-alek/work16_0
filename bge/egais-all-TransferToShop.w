@@ -315,12 +315,14 @@ DO:
     to  file 'temp-TransferToShop.xml'
     no-convert
     no-error .
+    
     run parseXML in this-procedure (input "temp-TransferToShop.xml") .
     find first tt-act-header .
     v-file = 'TransferToShop.xml' .
     os-delete "TransferToShop.xml" .
     run makeXMLegais_v2 .
     egais:inNum = tt-act-header.num .
+/*    egais:ReplyId = "" .*/
     egais:SendRequestUTM() .
     glog = egais:IsSent .
     
@@ -331,10 +333,12 @@ DO:
     end.
     else do :
         entry (3, buf_clob-bind.descr, {&delim-par}) = "yes".
-        
+/*        tt-act-header.is-sent = true .*/
         bh-act-header:buffer-field ("is-sent"):buffer-value = true.
     end.
+    
     run refresh-query.
+    message "Акт " egais:inNum " отправлен" view-as alert-box .
 END.
 
 /* _UIB-CODE-BLOCK-END */

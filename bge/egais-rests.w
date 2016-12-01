@@ -1057,8 +1057,8 @@ DO:
         create tt-gds-rests.
         buffer tt-gds-rests:handle:buffer-copy (bh-gds-egais) .
         assign tt-gds-rests.fromEgais = yes no-error.
-        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
-                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
+        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods}
+                                           and X_ext-classif.classif-name = {&extclass_goods_esys}
                                            AND X_ext-classif.db-num = 0
                                            and X_ext-classif.key#_two = v-ext-sys
                                            and X_ext-classif.key#_three = 0
@@ -1086,11 +1086,11 @@ DO:
                                            and num-entries(buf_parts.alc-ref-ab-path) = 4
                                            and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_
                                            and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :
-                                           
+
                 assign tt-gds-rests.TH-qnty = tt-gds-rests.TH-qnty + buf_parts.fact-qnty no-error .
                 assign tt-gds-rests.prt-rec = if tt-gds-rests.prt-rec = "" then string(recid(buf_parts)) else tt-gds-rests.prt-rec + ',' + string(recid(buf_parts)) no-error .
             end.
-        end. 
+        end.
     end.
     OPEN QUERY {&browse-name} FOR EACH tt-gds-rests .
     apply "value-changed" to br-rests .
@@ -1168,7 +1168,8 @@ DO:
             .
         end.
     end.
-    OPEN QUERY br-rests_shop FOR each tt-gds-list, EACH tt-gds-rests_shop .
+    OPEN QUERY br-rests_shop FOR each tt-gds-list, EACH tt-gds-rests_shop where tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
+                                                                            and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code .
     apply "value-changed" to br-rests_shop .
     run waitfram-hide in this-procedure .
 /*    enable a-n-c with FRAME {&FRAME-NAME}.                */
@@ -1443,7 +1444,8 @@ DO:
             .
         end.
     end.
-    OPEN QUERY br-rests_shop FOR EACH tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.alc-code <> ""
+    OPEN QUERY br-rests_shop FOR EACH tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
+                                                                            and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code
                                                                             and tt-gds-rests_shop.egais-qnty <> 0 .
 END.
 

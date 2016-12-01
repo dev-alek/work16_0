@@ -512,7 +512,7 @@ if ( varis-fin = "yes":u
                                                   input  ?,
                                                   input  parparentproc,
                                                   input  t-doc.doc-date,
-                                                  input  (if ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} ) then {&income} else {&expense}) ,
+                                                  input if paris-hold = yes then "all" else (if ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} ) then {&income} else {&expense}) ,
                                                   output varcontract-code) no-error.
       if error-status :error    or
          varcontract-code = ?  or
@@ -749,6 +749,33 @@ if varhold = "yes" then do:
             t-doc.contract-code = 0.
         end.
         else do:
+          if paris-hold = yes then do:
+            if varcontract-code <> 0 then do:
+              find first bf_contract where bf_contract.contract-code  = varcontract-code       no-lock no-error.
+            end.
+            else do:  
+            find first bf_contract where bf_contract.host-code = t-doc.host-code  and
+                                        bf_contract.cli-type  = {&cmp}                                    and
+                                        bf_contract.cli-code  = buf_sysconf.host-code                     no-lock no-error.
+            end.
+          if not available bf_contract then do:
+            if varcontract-cli <> "yes" then do:
+              assign
+                t-doc.contract-code  = 0.
+            end.
+            else do:
+              message "По клиенту " t-doc.host-code " " {&cmp}
+                      " на фирме " input frame {&frame-name} t-doc.cli-code " нет ни одного договора. Приход не может быть оформлен."
+              view-as alert-box error.
+              apply "entry" to t-doc.cli-code in frame {&frame-name}.
+              return error.
+            end.
+          end.
+          else do:
+            t-doc.contract-code = bf_contract.contract-code.
+          end.  
+          end. /*if paris-hold = yes then do:*/
+          else do:   
           find first bf_contract where bf_contract.host-code = input frame {&frame-name} t-doc.cli-code  and
                                        bf_contract.cli-type  = {&cmp}                                    and
                                        bf_contract.cli-code  = t-doc.host-code                           no-lock no-error.
@@ -801,7 +828,8 @@ if varhold = "yes" then do:
                 t-doc.contract-code = varcontract-code.
             end.
           end.
-        end.
+          end.
+        end. /*else do*/
       end.
       else do:
         if available buf_sysconf then do:

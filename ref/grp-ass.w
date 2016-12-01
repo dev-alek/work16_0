@@ -1112,13 +1112,15 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-recalc Dlg-grp
 ON CHOOSE OF b-recalc IN FRAME Dlg-grp /* Пересчитать */
 DO:
+define VARIABLE v-old-grp as integer   no-undo .
+define VARIABLE v-new-grp as integer   no-undo .
+define VARIABLE v-ok1      as logical    no-undo .
 message "Запустить утилиту пересчета ассортимента по каждой группе ? Это займет время."
  view-as alert-box question
        BUTTONS yes-no
       update v-ok as logical.
   if not v-ok then return .
-
-   run utl/uassmgrp.p ( input p-id,input p-db-num ) no-error .
+   run utl/uassmgrp.p ( v-old-grp, v-new-grp, p-id , p-db-num, output v-ok1 ) no-error.
    if error-status :error then message
      vss-workfile vss-revision vss-description skip
      error-status :get-message(1) skip
@@ -4921,13 +4923,16 @@ PROCEDURE ver-attr :
   Notes:
 -------------------------------------------------------------*/
 define buffer buf1_gds-grp-obj-attr for ub.gds-grp-obj-attr  .
+define VARIABLE v-old-grp as integer   no-undo .
+define VARIABLE v-new-grp as integer   no-undo .
+define VARIABLE v-ok      as logical    no-undo .
 find first buf1_gds-grp-obj-attr no-lock where
            buf1_gds-grp-obj-attr.attr-code = {&ggoattr-QntyAssMat} and
            buf1_gds-grp-obj-attr.obj-type  = string(p-id) and
            buf1_gds-grp-obj-attr.obj-code  = p-db-num and
            buf1_gds-grp-obj-attr.host-code = 0 no-error .
 if not available buf1_gds-grp-obj-attr then do:
-   run utl/uassmgrp.p ( input p-id,input p-db-num ) no-error .
+   run utl/uassmgrp.p ( v-old-grp, v-new-grp, p-id , p-db-num, output v-ok ) no-error.
    if error-status :error then message
      vss-workfile vss-revision vss-description skip
      error-status :get-message(1) skip

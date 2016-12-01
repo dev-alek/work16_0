@@ -69,9 +69,18 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       undo main-block, return error.
   end.
   if ub.pl-gds.fact-qnty <> 0 or
-     ub.pl-gds.free-qnty <> 0 then do:
+     ub.pl-gds.free-qnty <> 0 or 
+     ub.pl-gds.cli-free-qnty <> 0 or 
+     ub.pl-gds.cli-fact-qnty <> 0
+      then do:
       message vss-workfile skip vss-date skip vss-revision skip( 1 ) vss-description skip( 1 )
               "Количество по товару не равно 0!" skip
+              "Код товара" pl-gds.gds-code skip
+              "Код резервуара" pl-gds.pl-code skip             
+              "Факт кол-во (е.п.)" pl-gds.cli-fact-qnty skip
+              "Свободно кол-во (е.п.)" pl-gds.cli-free-qnty skip
+              "Факт (кол-во)" pl-gds.fact-qnty skip
+              "Свободно (кол-во)" pl-gds.free-qnty skip
               "Удаление невозможно!"
       view-as alert-box error.
       undo main-block, return error.
@@ -93,7 +102,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     undo main-block, return error.
   end.
 
-  if lookup( {&petrolium},  buf_units.type ) > 0 and
+  if lookup( {&petrolium},  buf_units.type ) > 0 or
      lookup( {&divisional}, buf_units.type ) > 0 then do:
     /* процедура проверки возможности удаления связки топливо-резервуар */
     assign
