@@ -477,7 +477,7 @@ define variable FI-4 as character view-as text size 30 by 1 no-undo format "x(49
 define variable FI-5 as character view-as text size 45 by 1 no-undo format "x(49)":U.
 define variable FI-6 as character view-as text size 30 by 1 no-undo format "x(49)":U.
 define variable FI-7 as character view-as text size 45 by 1 no-undo format "x(49)":U.
-define variable FI-8 as character view-as text size 20 by 1 no-undo format "x(49)":U.
+define variable FI-8 as character view-as text size 30 by 1 no-undo format "x(49)":U.
 
 define variable v-obj-type as character view-as fill-in size  4 by 1 fgcolor 12 no-undo.
 define variable v-obj-code as integer   view-as fill-in size  6 by 1 fgcolor 12 no-undo.
