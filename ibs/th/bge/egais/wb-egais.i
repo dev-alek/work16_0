@@ -143,7 +143,7 @@ Creation date: 11/11/15
     
   define temp-table tt-ticket no-undo
     field regid        as character label "RegId документа" format "X(21)"
-    field doc          as character label "Документ" format "X(10)"
+    field doc          as character label "Документ" format "X(30)"
     field ticket-date  as character label "Дата" format "X(10)"
     field status_      as character label "Статус"
     field comment      as character label "Коментарий" format "X(150)"

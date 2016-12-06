@@ -488,7 +488,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
           egaisTTS = new TransferToShop (ObjType, ObjCode, v-FS-RAR, v-ext-sys).
           egaisTTS:DbNum =  DbNum.
           egaisTTS:User_Id = User_Id.
-          bh-act-tts-header = egaisTTS:GetHndlTable(3, "").
           bh-act-tts-header = egaisTTS:GetHndlTable({&awo-clob}, "").
 
           empty temp-table tt-wb-hndls.
@@ -515,7 +514,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
             if bh-act-tts-header:available
             then do:
               tt-wb-hndls.tts = bh-act-tts-header:buffer-field ("num"):buffer-value ().
-              if num-entries (bh-act-tts-header:buffer-field ("RegID"):buffer-value (), chr(5) ) <> 2
+              if num-entries (bh-act-tts-header:buffer-field ("RegID"):buffer-value (), chr(5) ) < 2
               then do:
                 if bh-act-tts-header:buffer-field ("is-sent"):buffer-value = true
                 then do:
@@ -528,10 +527,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               else do:
                 case entry(2, bh-act-tts-header:buffer-field ("RegID"):buffer-value, chr(5)):
                 when "R" then do:
-                  tt-wb-hndls.tts-status_ = 'Отправлен'.
+                  tt-wb-hndls.tts-status_ = 'Отклонен'.
                 end.
                 when "A" then do:
-                  tt-wb-hndls.tts-status_ = 'Новый'.
+                  tt-wb-hndls.tts-status_ = 'Принят'.
                 end.
                 end case.
               end.
@@ -602,7 +601,12 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
           find first ub.clob-bind where (available (tt-wb-hndls) and ub.clob-bind.resource-type = {&lob-egais-wb} and ub.clob-bind.uniq-key-rec = tt-wb-hndls.uniq-key-rec) no-error.
           
           for each buf_clob-bind where (buf_clob-bind.resource-type = {&lob-egais-ticket} and buf_clob-bind.uniq-key-rec begins inWbIdentity) 
-                                      or (available (ub.clob-bind) and not buf_clob-bind.uniq-key-rec begins inWbIdentity and buf_clob-bind.resource-type = {&lob-egais-ticket} and lookup (buf_clob-bind.field-name_, ub.clob-bind.field-name_) > 0):
+                                      or (available (ub.clob-bind) and not buf_clob-bind.uniq-key-rec begins inWbIdentity and buf_clob-bind.resource-type = {&lob-egais-ticket} and lookup (buf_clob-bind.field-name_, ub.clob-bind.field-name_) > 0)
+                                      or can-find (first buf_ext-classif where buf_ext-classif.classif-name = {&extclass_egais-transId}
+                                        and buf_ext-classif.db-num = 0
+                                        and buf_ext-classif.key#_one = v-ext-sys
+                                        and buf_ext-classif.CharKey_One = inWbIdentity
+                                        and buf_ext-classif.CharKey_Two = buf_clob-bind.field-name_):
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
             createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
             prsXMLDocWB:IsToClearTable = false.
@@ -688,7 +692,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
           egaisTTS = new TransferToShop (ObjType, ObjCode, v-FS-RAR, v-ext-sys).
           egaisTTS:DbNum =  DbNum.
           egaisTTS:User_Id = User_Id.
-          bh-act-tts-header = egaisTTS:GetHndlTable(3, "").
           bh-act-tts-header = egaisTTS:GetHndlTable({&awo-clob}, "").
           
           for each buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-negais}:
@@ -722,17 +725,69 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 tt-wb-hndls.uniq-key-rec = buf_doc-attr.attr-value
                 tt-wb-hndls.status_      = buf_trn-doc.status_ + (if buf_trn-doc.flag_ then "+" else "-")
                 tt-wb-hndls.EGAISSts     = if available (ub.doc-attr) and not ub.doc-attr.attr-value <> "" then ub.doc-attr.attr-value else ""
-                
                 tt-wb-hndls.wbregid      = entry (1, buf_doc-attr.attr-value, {&delim-cmd}) no-error.
+                
+                if tt-wb-hndls.EGAISSts <> "" and tt-wb-hndls.EGAISSts <> "Accepted"
+                then do:
+                  find first buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb} and buf_clob-bind.descr matches "*" + tt-wb-hndls.wbregid + "*" no-lock no-error.
+                  if available (buf_clob-bind) 
+                  then do:
+                    assign
+                      tt-wb-hndls.EGAISSts = entry (10, buf_clob-bind.descr, {&delim-par}) when num-entries (buf_clob-bind.descr, {&delim-par}) > 9.
+                    if not available (ub.doc-attr)
+                    then do:
+                      create ub.doc-attr.
+                      assign 
+                        ub.doc-attr.doc-code = buf_trn-doc.doc-code
+                        ub.doc-attr.attr-code = {&trdcattr-egais}
+                      .
+                    end.
+                    else do:
+                      find current ub.doc-attr exclusive-lock.
+                    end.
+                    if tt-wb-hndls.EGAISSts <> ub.doc-attr.attr-value
+                    then do:
+                      assign
+                        ub.doc-attr.attr-value = entry (10, buf_clob-bind.descr, {&delim-par}) when num-entries (buf_clob-bind.descr, {&delim-par}) > 9 and tt-wb-hndls.EGAISSts = "".
+                    end.
+                  end.
+                  find current ub.doc-attr no-lock.
+                end.
+                
+                if tt-wb-hndls.EGAISSts = ""
+                then do:
+                  find first buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb} and buf_clob-bind.descr matches "*" + tt-wb-hndls.wbregid + "*" no-lock no-error.
+                  if available (buf_clob-bind) 
+                  then do:
+                    assign
+                      tt-wb-hndls.EGAISSts = entry (10, buf_clob-bind.descr, {&delim-par}) when num-entries (buf_clob-bind.descr, {&delim-par}) > 9.
+                    if not available (ub.doc-attr)
+                    then do:
+                      create ub.doc-attr.
+                      assign 
+                        ub.doc-attr.doc-code = buf_trn-doc.doc-code
+                        ub.doc-attr.attr-code = {&trdcattr-egais}
+                      .
+                    end.
+                    else do:
+                      find current ub.doc-attr exclusive-lock.
+                    end.
+                    assign
+                      ub.doc-attr.attr-value = entry (10, buf_clob-bind.descr, {&delim-par}) when num-entries (buf_clob-bind.descr, {&delim-par}) > 9.
+                    find current ub.doc-attr no-lock.
+                  end.
+                end.
                 assign
                   tt-wb-hndls.wb-type      = {&TDEDT_Pri_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
                   tt-wb-hndls.wb-type      = {&TDEDT_Vozvrat_Vnesh-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}
+                  tt-wb-hndls.wb-type      = {&TDEDT_Vozvrat_Perem-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem}
+                  tt-wb-hndls.wb-type      = {&TDEDT_Pri_Perem-full} when buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
                 .
                 bh-act-tts-header:find-first (substitute ("where tt-act-header.num matches '*&1*'", trn-doc-code), no-lock ) no-error.
                 if bh-act-tts-header:available
                 then do:
                   tt-wb-hndls.tts = bh-act-tts-header:buffer-field ("num"):buffer-value ().
-                  if num-entries (bh-act-tts-header:buffer-field ("RegID"):buffer-value (), chr(5) ) <> 2
+                  if num-entries (bh-act-tts-header:buffer-field ("RegID"):buffer-value (), chr(5) ) < 2
                   then do:
                     if bh-act-tts-header:buffer-field ("is-sent"):buffer-value = true
                     then do:
@@ -745,10 +800,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                   else do:
                     case entry(2, bh-act-tts-header:buffer-field ("RegID"):buffer-value, chr(5)):
                     when "R" then do:
-                      tt-wb-hndls.tts-status_ = 'Отправлен'.
+                      tt-wb-hndls.tts-status_ = 'Отклонен'.
                     end.
                     when "A" then do:
-                      tt-wb-hndls.tts-status_ = 'Новый'.
+                      tt-wb-hndls.tts-status_ = 'Принят'.
                     end.
                     end case.
                   end.
@@ -1327,7 +1382,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
           buf_ext-classif.classif-name = {&extclass_egais-transId}
       and buf_ext-classif.db-num = 0
       and buf_ext-classif.key#_one = v-ext-sys
-      and buf_ext-classif.CharKey_One = tt-wb-header.Identity
+      and buf_ext-classif.CharKey_One = tt-wb-header.wbregid
       and buf_ext-classif.CharKey_Two = ReplyId no-error.
     if not available (buf_ext-classif)
     then do:
@@ -1336,7 +1391,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         buf_ext-classif.classif-name = {&extclass_egais-transId}
         buf_ext-classif.db-num = 0
         buf_ext-classif.key#_one = v-ext-sys
-        buf_ext-classif.CharKey_One = tt-wb-header.Identity
+        buf_ext-classif.CharKey_One = tt-wb-header.wbregid
         buf_ext-classif.CharKey_Two = ReplyId 
       no-error.
     end.   
@@ -1417,6 +1472,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     define variable hRow          as handle    no-undo.
     define variable hText         as handle    no-undo.
     define variable ii            as integer   no-undo.
+    define variable jj            as integer   no-undo.
     define variable ListOfQuery   as longchar  no-undo.
     
     define variable v-part-num    as integer   no-undo.
@@ -1683,21 +1739,49 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                   
                   find first ub.clob-bind no-lock where ub.clob-bind.resource-type = {&lob-egais-wb} and ub.clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec no-error.
                   
-                  if available (ub.clob-bind) and (entry (5, ub.clob-bind.descr, {&delim-par}) = ? or entry (5, ub.clob-bind.descr, {&delim-par}) = "")
+                  if available (ub.clob-bind) and num-entries ( ub.clob-bind.descr, {&delim-par}) > 4
                   then do:
-                    if locked (ub.clob-bind)
+                    if entry (5, ub.clob-bind.descr, {&delim-par}) = ? or entry (5, ub.clob-bind.descr, {&delim-par}) = ""
                     then do:
-                      message "Запись заблокирована - " ub.clob-bind.uniq-key-rec  " Пропускается. В следющий раз будет попытка опять загрузить" view-as alert-box.
-                      next url_.
+                      if locked (ub.clob-bind)
+                      then do:
+                        message "Запись заблокирована - " ub.clob-bind.uniq-key-rec  " Пропускается. В следющий раз будет попытка опять загрузить" view-as alert-box.
+                        next url_.
+                      end.
+                      else do:
+                        find current ub.clob-bind exclusive-lock no-error.
+                        if available (ub.clob-bind)
+                        then do:
+                          entry (5, ub.clob-bind.descr, {&delim-par}) = tt-wb-header.wbregid.
+                        end.
+                      end.
+                      release ub.clob-bind.
                     end.
                     else do:
-                      find current ub.clob-bind exclusive-lock no-error.
-                      if available (ub.clob-bind)
+                      if entry (5, ub.clob-bind.descr, {&delim-par}) <> tt-wb-header.wbregid and not buf_tt-analiz.isMany
                       then do:
-                        entry (5, ub.clob-bind.descr, {&delim-par}) = tt-wb-header.wbregid.
+                        jj_:
+                        do jj = 1 to 100:
+                          if not can-find (first buf_clob-bind where ub.clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec + "#" + string (jj) )
+                            then leave jj_.
+                        end.
+                        if jj = 101 then do:
+                          message "Ошибка приема файла справки Б: " tt-wb-header.wbregid skip urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
+                          StatusErr = false.
+                          Msg = "".
+                        end.
+                        else do:
+                          find current ub.clob-bind exclusive-lock.
+                          ub.clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec + "#" + string (jj).
+                          find first ub.clob-bind exclusive-lock where ub.clob-bind.resource-type = {&lob-egais-ref-b} and ub.clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec no-error.
+                          if available (ub.clob-bind)
+                          then do:
+                            ub.clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec + "#1".
+                          end.
+                          release ub.clob-bind.
+                        end.                        
                       end.
                     end.
-                    release ub.clob-bind.
                   end.
                   
                   if can-find (first buf_clob-bind where (buf_clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec or buf_clob-bind.uniq-key-rec = tt-wb-header.Identity + {&delim-cmd} + tt-wb-header.regID-Ship) and buf_clob-bind.resource-type =  {&lob-egais-ref-b})
@@ -1779,21 +1863,6 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     StatusErr = false.
                     next url_.
                   end.
-                  find first ub.doc-attr no-lock where ub.doc-attr.attr-code = {&trdcattr-negais} and ub.doc-attr.attr-value = tt-wb-act-header.wbregid no-error.
-                  if available (ub.doc-attr)
-                  then do:
-                    find first buf_doc-attr exclusive-lock where buf_doc-attr.doc-code = ub.doc-attr.doc-code and buf_doc-attr.attr-code = {&trdcattr-egais} no-error.
-                    if not available (buf_doc-attr)
-                    then do:
-                      create buf_doc-attr.
-                      assign 
-                        buf_doc-attr.doc-code = ub.doc-attr.doc-code
-                        buf_doc-attr.attr-code = {&trdcattr-egais}
-                      .
-                    end.
-                    buf_doc-attr.attr-value = tt-wb-act-header.status_.
-                    release buf_doc-attr.
-                  end.
                 end.
               when urlStr matches ("*opt/out/WayBillTicket/*") then 
                 do:
@@ -1844,6 +1913,21 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     then do:
                       entry (10, ub.clob-bind.descr, {&delim-par})  = tt-ticket.status_.
                     end.
+                  end.
+                  find first ub.doc-attr where ub.doc-attr.attr-code = {&trdcattr-negais} and ub.doc-attr.attr-value = tt-ticket.regid no-error.
+                  if available (ub.doc-attr)
+                  then do:
+                    find first buf_doc-attr exclusive-lock where buf_doc-attr.doc-code = ub.doc-attr.doc-code and buf_doc-attr.attr-code = {&trdcattr-egais} no-error.
+                    if not available (buf_doc-attr)
+                    then do:
+                      create buf_doc-attr.
+                      assign 
+                        buf_doc-attr.doc-code = ub.doc-attr.doc-code
+                        buf_doc-attr.attr-code = {&trdcattr-egais}
+                      .
+                    end.
+                    buf_doc-attr.attr-value = tt-wb-act-header.status_.
+                    release buf_doc-attr.
                   end.
 
                   if not can-find (first buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb} and lookup (tt-ticket.TransId, buf_clob-bind.field-name_) > 0) or can-find (first buf_clob-bind where buf_clob-bind.field-name_ = tt-ticket.TransId)
@@ -1935,7 +2019,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                           and buf_ext-classif.key#_one = v-ext-sys
                           and buf_ext-classif.CharKey_Two = tt-ticket.TransId))
                   then do:  
-                    if (tt-ticket.regid = "" or tt-ticket.regid = ?) or (tt-ticket.doc <> 'WayBillAct' and tt-ticket.doc <> 'WAYBILL') then do:
+                    if (tt-ticket.regid = "" or tt-ticket.regid = ?) or (tt-ticket.doc <> 'WayBillAct' and tt-ticket.doc <> 'WAYBILL')  then do:
                       next url_.
                     end.  
                   end.
@@ -2329,6 +2413,15 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     end.
     isForceAccept = false.
     return true.
+
+  end.
+
+  method public logical ReleaseTable_ ():
+    
+    release buf_clob-bind.
+    release buf_clob-bind-temp.
+    release buf_clob-bind-wb-hndls.
+    release buf_clob-data.
 
   end.
 

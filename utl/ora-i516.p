@@ -1319,13 +1319,16 @@ end.
             run pcall-log-file in p-log-handle ( input v-end-message ) .
             undo, return error v-end-message.
         end.
-        v-end-message = substitute("Закрытиии внешнего возврата &1 на статус ФАКТ ", new_trn-doc.doc-code ) .
-        run pcall-log-file in p-log-handle ( input v-end-message ) .
-        run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-        if error-status:error then do :
-            v-end-message = substitute(" Ошибка при закрытиии внешнего возврата на статус ФАКТ &1 &2" , error-status :get-message(1)  , return-value) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            undo, return error v-end-message.
+        if not is-egais
+        then do:
+          v-end-message = substitute("Закрытиии внешнего возврата &1 на статус ФАКТ ", new_trn-doc.doc-code ) .
+          run pcall-log-file in p-log-handle ( input v-end-message ) .
+          run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+          if error-status:error then do :
+              v-end-message = substitute(" Ошибка при закрытиии внешнего возврата на статус ФАКТ &1 &2" , error-status :get-message(1)  , return-value) .
+              run pcall-log-file in p-log-handle ( input v-end-message ) .
+              undo, return error v-end-message.
+          end.
         end.
     end.
 
@@ -1544,7 +1547,7 @@ define variable varcopyflag        like ub.trn-doc.flag     no-undo.
 define variable varcheck-return as logical no-undo .
 define variable varchg-inv as logical no-undo .
 
-if is-tsd
+if is-tsd or is-egais
   then return.
 run str/trn-stat.p (
     input  parparentproc ,

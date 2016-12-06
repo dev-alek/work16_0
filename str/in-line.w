@@ -123,6 +123,7 @@ define new shared temp-table tt-doc-pl no-undo like ub.doc-pl
 { gbl/clntattr.i               }
 { gbl/key-rec.i                }
 { cmp/ini-lib.i                }
+{ str/trdcalib.i               }
 
 define buffer type-inp-vat-attr for ub.doc-line-attr.
 define buffer bf_sysconf        for ub.sysconf.
@@ -254,6 +255,9 @@ define variable v-vat-goods                 as   logical                     no-
 define variable v-round-vat-sum             as logical                       no-undo .
 define variable v-goods-ms-base             as decimal format ">>,>>9.999"   no-undo .
 define variable rvslog                      as logical                       no-undo.
+define variable varvalue                    as character                     no-undo .
+define variable vartype                     as character                     no-undo .
+define variable isEgais                     as logical                       no-undo .
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 98 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
@@ -1889,6 +1893,15 @@ empty temp-table thbjattr_thbj-attr.
 
     end.
 
+     { str/tdat-val.i
+        t-doc.doc-code
+        {&trdcattr-negais}
+        varvalue
+        vartype
+        }
+     if varvalue <> ? and varvalue <> ""
+       then isEgais = true.
+
    assign
      rdtaxcdvalue  = {&road-tax-code}
      exctaxcdvalue = {&excise-tax-code}
@@ -1926,7 +1939,7 @@ empty temp-table thbjattr_thbj-attr.
    case parline-mode:
      when {&lookup} then wait-for go of frame {&frame-name} focus b-quit.
      otherwise do:
-       if not t-doc.flag_ then do:
+       if not t-doc.flag_ and not isEgais then do:
          if tt-fr-doc-line.cli-qnty :sensitive in frame {&frame-name} then do:
            if tt-fr-doc-line.cli-qnty <> ?
              and tt-fr-doc-line.cli-qnty <> 0.0
@@ -1971,6 +1984,10 @@ empty temp-table thbjattr_thbj-attr.
          end.
        end.
        else do:
+         if isEgais
+         then do:
+           disable tt-fr-doc-line.unit-cli r-units tt-fr-doc-line.cli-qnty tt-fr-doc-line.doc-qnty tt-fr-doc-line.cli-base-rate with frame {&frame-name}.
+         end.
          if varupd-fact-qnty = no then do:
            wait-for go of frame {&frame-name} focus b-save.
          end.

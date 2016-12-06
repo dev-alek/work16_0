@@ -210,6 +210,7 @@ define variable is-doc-hold                 as   logical                       n
 define variable d-reason                    as   character                     no-undo.
 define variable is-fuel as logical no-undo initial no.
 define variable choice as integer no-undo.
+define variable isEgais  as logical   no-undo .
 
 define variable d-kg-after-qnty like ub.doc-line.fact-qnty  no-undo.
 define variable d-kg-price-rubl like ub.doc-line.price-rubl no-undo.
@@ -2442,6 +2443,17 @@ do on error undo main-block, leave main-block :
    else do:
      assign
        m-inc = "1".
+   end.
+   { str/tdat-val.i
+     t-doc.doc-code
+     {&trdcattr-negais}
+     varvalue
+     vartype
+     no-error
+   }
+   if varvalue <> "" and varvalue <> ? then do:
+     assign
+       isEgais = yes.
    end.
 
    display varinplnsum m-inc with frame {&frame-name}.
@@ -5658,6 +5670,8 @@ if lookup( fnc, "enable" ) > 0 then do:
             if t-doc.flag_ = yes then do: assign  ub.doc-line.cli-qnty  :read-only in browse {&browse-name} = yes. end.
                                   else do: assign  ub.doc-line.fact-qnty :read-only in browse {&browse-name} = yes. end.
           end.
+          if isEgais
+            then doc-line.cli-qnty  :read-only in browse {&browse-name} = yes.
 
   case pardoc-mode :
     when {&add-def} then do:
@@ -5858,10 +5872,12 @@ if lookup( fnc, "enable" ) > 0 then do:
         enable t-doc.pay-code r-pay t-doc.doc-date
                varpurch-code-name when t-doc.contract-code = 0
                varinplnsum   when var-inp_sum = false
-               b-add b-del b-mark t-doc.tot-cli
+               b-mark t-doc.tot-cli
                t-doc.out-code m-inc
                with frame {&frame-name}.
-
+        if isEgais
+          then disable b-add b-del with frame {&frame-name}.
+          else enable b-add b-del with frame {&frame-name}.
 
         enable t-doc.base-rate t-doc.base-scale with frame {&frame-name}.
         if is-ovvalue <> "no" then enable ov-pc with frame {&frame-name}.
