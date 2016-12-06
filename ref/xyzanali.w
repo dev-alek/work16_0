@@ -8,7 +8,8 @@
 
 /* Temp-Table and Buffer definitions                                    */
 DEFINE BUFFER x-criterion-analysis FOR ub.criterion-analysis.
-DEFINE TEMP-TABLE x-XYZ-analysis NO-UNDO LIKE ub.XYZ-analysis.
+DEFINE TEMP-TABLE x-XYZ-analysis NO-UNDO LIKE ub.XYZ-analysis
+field r-goods as integer .
 DEFINE TEMP-TABLE x-XYZ-analysis-doc NO-UNDO LIKE ub.XYZ-analysis-doc.
 DEFINE TEMP-TABLE x-XYZ-analysis-obj NO-UNDO LIKE ub.XYZ-analysis-obj.
 DEFINE TEMP-TABLE x-XYZ-analysis-period NO-UNDO LIKE ub.XYZ-analysis-period.
@@ -52,6 +53,7 @@ define variable vss-description as character no-undo init "Форма задания парамет
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 { cmp/r-pril.i new }
+{ cmp/gds-list.i gds-list def "new shared" }
 { gbl/waitfram.i }
 { gbl/prn-lib.i  }
 { gbl/cur-time.i }
@@ -112,7 +114,8 @@ index pi date1
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
 &Scoped-define INTERNAL-TABLES x-XYZ-analysis-obj x-XYZ-analysis-period ~
-temp-rez x-XYZ-analysis-doc x-XYZ-analysis x-criterion-analysis
+temp-rez x-XYZ-analysis-doc x-XYZ-analysis x-criterion-analysis ~
+x-XYZ-analysis
 
 /* Definitions for BROWSE BROWSE-obj                                    */
 &Scoped-define FIELDS-IN-QUERY-BROWSE-obj x-XYZ-analysis-obj.obj-type ~
@@ -168,55 +171,63 @@ x-XYZ-analysis-doc.db-num = x-XYZ-analysis.db-num NO-LOCK INDEXED-REPOSITION.
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 &Scoped-define FIELDS-IN-QUERY-Dialog-Frame x-XYZ-analysis.xyz-name ~
-x-XYZ-analysis.xyz-x x-XYZ-analysis.xyz-z x-XYZ-analysis.xyz-des ~
-x-XYZ-analysis.xyz-id x-XYZ-analysis.cral-id x-criterion-analysis.cral-name ~
-x-XYZ-analysis.xyz-who-create x-XYZ-analysis.xyz-date-create ~
-x-XYZ-analysis.xyz-db-num-create
+x-XYZ-analysis.xyz-x x-XYZ-analysis.xyz-z x-abc-analysis.r-goods ~
+x-XYZ-analysis.xyz-des x-XYZ-analysis.xyz-id x-XYZ-analysis.cral-id ~
+x-criterion-analysis.cral-name x-XYZ-analysis.xyz-who-create ~
+x-XYZ-analysis.xyz-date-create x-XYZ-analysis.xyz-db-num-create 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-Dialog-Frame x-XYZ-analysis.xyz-name ~
-x-XYZ-analysis.xyz-x x-XYZ-analysis.xyz-z x-XYZ-analysis.xyz-des ~
-x-XYZ-analysis.xyz-id x-XYZ-analysis.cral-id x-criterion-analysis.cral-name ~
-x-XYZ-analysis.xyz-who-create x-XYZ-analysis.xyz-date-create ~
-x-XYZ-analysis.xyz-db-num-create
+x-XYZ-analysis.xyz-x x-XYZ-analysis.xyz-z x-abc-analysis.r-goods ~
+x-XYZ-analysis.xyz-des x-XYZ-analysis.xyz-id x-XYZ-analysis.cral-id ~
+x-criterion-analysis.cral-name x-XYZ-analysis.xyz-who-create ~
+x-XYZ-analysis.xyz-date-create x-XYZ-analysis.xyz-db-num-create 
 &Scoped-define ENABLED-TABLES-IN-QUERY-Dialog-Frame x-XYZ-analysis ~
-x-criterion-analysis
+x-XYZ-analysis x-criterion-analysis
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-Dialog-Frame x-XYZ-analysis
-&Scoped-define SECOND-ENABLED-TABLE-IN-QUERY-Dialog-Frame x-criterion-analysis
+&Scoped-define SECOND-ENABLED-TABLE-IN-QUERY-Dialog-Frame x-XYZ-analysis
+&Scoped-define THIRD-ENABLED-TABLE-IN-QUERY-Dialog-Frame x-criterion-analysis
 &Scoped-define OPEN-BROWSERS-IN-QUERY-Dialog-Frame ~
     ~{&OPEN-QUERY-BROWSE-obj}~
     ~{&OPEN-QUERY-BROWSE-period}~
     ~{&OPEN-QUERY-BROWSE-rez}~
     ~{&OPEN-QUERY-BROWSE-type-doc}
 &Scoped-define QUERY-STRING-Dialog-Frame FOR EACH x-XYZ-analysis NO-LOCK, ~
-      EACH x-criterion-analysis WHERE TRUE /* Join to x-XYZ-analysis incomplete */ NO-LOCK
+      EACH x-criterion-analysis WHERE TRUE /* Join to x-XYZ-analysis incomplete */ NO-LOCK, ~
+      EACH x-XYZ-analysis WHERE TRUE /* Join to x-XYZ-analysis incomplete */ NO-LOCK
 &Scoped-define OPEN-QUERY-Dialog-Frame OPEN QUERY Dialog-Frame FOR EACH x-XYZ-analysis NO-LOCK, ~
-      EACH x-criterion-analysis WHERE TRUE /* Join to x-XYZ-analysis incomplete */ NO-LOCK.
+      EACH x-criterion-analysis WHERE TRUE /* Join to x-XYZ-analysis incomplete */ NO-LOCK, ~
+      EACH x-XYZ-analysis WHERE TRUE /* Join to x-XYZ-analysis incomplete */ NO-LOCK.
 &Scoped-define TABLES-IN-QUERY-Dialog-Frame x-XYZ-analysis ~
-x-criterion-analysis
+x-criterion-analysis x-XYZ-analysis
 &Scoped-define FIRST-TABLE-IN-QUERY-Dialog-Frame x-XYZ-analysis
 &Scoped-define SECOND-TABLE-IN-QUERY-Dialog-Frame x-criterion-analysis
+&Scoped-define THIRD-TABLE-IN-QUERY-Dialog-Frame x-abc-analysis
 
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-FIELDS x-XYZ-analysis.xyz-name x-XYZ-analysis.xyz-x ~
-x-XYZ-analysis.xyz-z x-XYZ-analysis.xyz-des x-XYZ-analysis.xyz-id ~
-x-XYZ-analysis.cral-id x-criterion-analysis.cral-name ~
-x-XYZ-analysis.xyz-who-create x-XYZ-analysis.xyz-date-create ~
-x-XYZ-analysis.xyz-db-num-create
-&Scoped-define ENABLED-TABLES x-XYZ-analysis x-criterion-analysis
-&Scoped-define FIRST-ENABLED-TABLE x-XYZ-analysis
-&Scoped-define SECOND-ENABLED-TABLE x-criterion-analysis
-&Scoped-Define ENABLED-OBJECTS b-quit B-exit B-save-rang B-save-doc-typd ~
-B-rez B-Help B-crt B-add-obj B-del-obj B-add-period B-del-period B-add-doc ~
-B-del-doc BROWSE-obj BROWSE-period BROWSE-type-doc BROWSE-rez FILL-IN-1 ~
-FILL-IN-2 FILL-IN-9 FILL-IN-3 FILL-IN-10 FILL-rez F-time
-&Scoped-Define DISPLAYED-FIELDS x-XYZ-analysis.xyz-name ~
-x-XYZ-analysis.xyz-x x-XYZ-analysis.xyz-z x-XYZ-analysis.xyz-des ~
+x-XYZ-analysis.xyz-z x-XYZ-analysis.r-goods x-XYZ-analysis.xyz-des ~
 x-XYZ-analysis.xyz-id x-XYZ-analysis.cral-id x-criterion-analysis.cral-name ~
 x-XYZ-analysis.xyz-who-create x-XYZ-analysis.xyz-date-create ~
-x-XYZ-analysis.xyz-db-num-create
-&Scoped-define DISPLAYED-TABLES x-XYZ-analysis x-criterion-analysis
+x-XYZ-analysis.xyz-db-num-create 
+&Scoped-define ENABLED-TABLES x-XYZ-analysis x-XYZ-analysis ~
+x-criterion-analysis
+&Scoped-define FIRST-ENABLED-TABLE x-XYZ-analysis
+&Scoped-define SECOND-ENABLED-TABLE x-XYZ-analysis
+&Scoped-define THIRD-ENABLED-TABLE x-criterion-analysis
+&Scoped-Define ENABLED-OBJECTS b-quit B-exit B-save-rang B-save-doc-typd ~
+B-rez B-Help B-crt B-add-obj B-del-obj B-add-period B-del-period B-add-doc ~
+B-del-doc BROWSE-obj BROWSE-period BROWSE-type-doc B-gds-list BROWSE-rez ~
+FILL-IN-1 FILL-IN-2 FILL-IN-9 FILL-IN-3 FILL-IN-10 FILL-rez F-time 
+&Scoped-Define DISPLAYED-FIELDS x-XYZ-analysis.xyz-name ~
+x-XYZ-analysis.xyz-x x-XYZ-analysis.xyz-z x-XYZ-analysis.r-goods ~
+x-XYZ-analysis.xyz-des x-XYZ-analysis.xyz-id x-XYZ-analysis.cral-id ~
+x-criterion-analysis.cral-name x-XYZ-analysis.xyz-who-create ~
+x-XYZ-analysis.xyz-date-create x-XYZ-analysis.xyz-db-num-create 
+&Scoped-define DISPLAYED-TABLES x-XYZ-analysis x-XYZ-analysis ~
+x-criterion-analysis
 &Scoped-define FIRST-DISPLAYED-TABLE x-XYZ-analysis
-&Scoped-define SECOND-DISPLAYED-TABLE x-criterion-analysis
+&Scoped-define SECOND-DISPLAYED-TABLE x-XYZ-analysis
+&Scoped-define THIRD-DISPLAYED-TABLE x-criterion-analysis
 &Scoped-Define DISPLAYED-OBJECTS v-IN_xyz-y v-IN_xyz-y-2 FILL-IN-1 ~
 FILL-IN-2 FILL-IN-9 FILL-IN-3 FILL-IN-10 FILL-rez F-time
 
@@ -280,8 +291,15 @@ DEFINE BUTTON B-exit AUTO-GO
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-gds-list 
+     IMAGE-UP FILE "cmp/btn-fnd.bmp":U
+     IMAGE-DOWN FILE "cmp/btn-fnd.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/btn-fnd.bmp":U
+     LABEL "?" 
+     SIZE 3 BY .88.
+
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
@@ -438,6 +456,13 @@ DEFINE FRAME Dialog-Frame
           SIZE 10 BY 1
      v-IN_xyz-y AT ROW 10.25 COL 66 COLON-ALIGNED
      v-IN_xyz-y-2 AT ROW 10.25 COL 79 COLON-ALIGNED NO-LABEL
+     x-XYZ-analysis.r-goods AT ROW 12 COL 66 NO-LABEL WIDGET-ID 4
+          VIEW-AS RADIO-SET VERTICAL
+          RADIO-BUTTONS 
+                    "По всем товарам", 1,
+"Выборочно", 2
+          SIZE 18.5 BY 1.75
+     B-gds-list AT ROW 13 COL 84.38 WIDGET-ID 2
      x-XYZ-analysis.xyz-des AT ROW 14.25 COL 1 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 96 BY 2.25
@@ -561,9 +586,9 @@ x-XYZ-analysis-obj.db-num = x-XYZ-analysis.db-num"
      _Where[1]         = "x-XYZ-analysis-period.XYZ-id = x-XYZ-analysis.XYZ-id and
 x-XYZ-analysis-period.db-num = x-XYZ-analysis.db-num"
      _FldNameList[1]   > Temp-Tables.x-XYZ-analysis-period.XYZp-start
-"x-XYZ-analysis-period.XYZp-start" "Начало" ? "date" ? ? ? ? ? ? no ? no no ? yes no no "U" "" ""
+"x-XYZ-analysis-period.XYZp-start" "Начало" ? "date" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > Temp-Tables.x-XYZ-analysis-period.XYZp-end
-"x-XYZ-analysis-period.XYZp-end" "Конец" ? "date" ? ? ? ? ? ? no ? no no ? yes no no "U" "" ""
+"x-XYZ-analysis-period.XYZp-end" "Конец" ? "date" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is OPENED
 */  /* BROWSE BROWSE-period */
 &ANALYZE-RESUME
@@ -584,14 +609,14 @@ OPEN QUERY {&SELF-NAME} FOR EACH temp-rez .
      _Where[1]         = "x-XYZ-analysis-doc.XYZ-id = x-XYZ-analysis.XYZ-id and
 x-XYZ-analysis-doc.db-num = x-XYZ-analysis.db-num"
      _FldNameList[1]   > "_<CALC>"
-"f-name-doc ( buffer x-XYZ-analysis-doc)" "Тип документа" "x(22)" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" ""
+"f-name-doc ( buffer x-XYZ-analysis-doc)" "Тип документа" "x(22)" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is OPENED
 */  /* BROWSE BROWSE-type-doc */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _QUERY-BLOCK DIALOG-BOX Dialog-Frame
 /* Query rebuild information for DIALOG-BOX Dialog-Frame
-     _TblList          = "Temp-Tables.x-XYZ-analysis,Temp-Tables.x-criterion-analysis WHERE Temp-Tables.x-XYZ-analysis ..."
+     _TblList          = "Temp-Tables.x-XYZ-analysis,Temp-Tables.x-criterion-analysis WHERE Temp-Tables.x-XYZ-analysis ...,Temp-Tables.x-abc-analysis WHERE Temp-Tables.x-XYZ-analysis ..."
      _Options          = "no-lock"
      _Query            is NOT OPENED
 */  /* DIALOG-BOX Dialog-Frame */
@@ -980,6 +1005,34 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-gds-list
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-gds-list Dialog-Frame
+ON CHOOSE OF B-gds-list IN FRAME Dialog-Frame /* ? */
+DO:
+define variable v-ps as character no-undo .
+v-ps = "".
+for each gds-list-hist:
+  v-ps = v-ps + gds-list-hist.des + {&new-line}.
+end.
+  run gbl/d-prompt.w (
+        'title=':u + "Список товаров" + '\':u
+      + 'format=' + "x(1000)" + '\':u
+      + 'type=' + "edit" + '\':u
+      + 'fillin_row=2\':u
+      + 'fillin_col=4\':u
+      + 'fillin_width=60\':u
+      + 'fillin_height=10\':u
+      + 'max-chars=1000\':u     /*- максимальное количество символов для редактора*/
+      + 'readonly=yes\':u
+      , input-output v-ps
+      ) no-error.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME B-rez
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-rez Dialog-Frame
 ON CHOOSE OF B-rez IN FRAME Dialog-Frame /* Результат анализа */
@@ -1165,6 +1218,21 @@ DO:
 
 
   END.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME x-abc-analysis.r-goods
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL x-abc-analysis.r-goods Dialog-Frame
+ON VALUE-CHANGED OF x-XYZ-analysis.r-goods IN FRAME Dialog-Frame
+DO:
+    ASSIGN x-XYZ-analysis.r-goods.
+    IF x-XYZ-analysis.r-goods = 2 THEN DO:
+       run str/gds-list.w (input parParentProc, input v-cntxt-host-code-obj, input v-cntxt-obj-type, input v-cntxt-obj-code ).
+    END.
+    
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1396,8 +1464,11 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY v-IN_xyz-y v-IN_xyz-y-2 FILL-IN-1 FILL-IN-2 FILL-IN-9 FILL-IN-3
-          FILL-IN-10 FILL-rez F-time
+  DISPLAY v-IN_xyz-y v-IN_xyz-y-2 FILL-IN-1 FILL-IN-2 FILL-IN-9 FILL-IN-3 
+          FILL-IN-10 FILL-rez F-time 
+      WITH FRAME Dialog-Frame.
+  IF AVAILABLE x-XYZ-analysis THEN 
+    DISPLAY x-XYZ-analysis.r-goods 
       WITH FRAME Dialog-Frame.
   IF AVAILABLE x-criterion-analysis THEN
     DISPLAY x-criterion-analysis.cral-name
@@ -1408,15 +1479,15 @@ PROCEDURE enable_UI :
           x-XYZ-analysis.xyz-who-create x-XYZ-analysis.xyz-date-create
           x-XYZ-analysis.xyz-db-num-create
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-exit B-save-rang B-save-doc-typd B-rez B-Help
-         x-XYZ-analysis.xyz-name B-crt B-add-obj B-del-obj B-add-period
-         B-del-period B-add-doc B-del-doc BROWSE-obj BROWSE-period
-         BROWSE-type-doc x-XYZ-analysis.xyz-x x-XYZ-analysis.xyz-z
-         x-XYZ-analysis.xyz-des BROWSE-rez x-XYZ-analysis.xyz-id
-         x-XYZ-analysis.cral-id x-criterion-analysis.cral-name FILL-IN-1
-         FILL-IN-2 FILL-IN-9 FILL-IN-3 FILL-IN-10 FILL-rez
-         x-XYZ-analysis.xyz-who-create x-XYZ-analysis.xyz-date-create F-time
-         x-XYZ-analysis.xyz-db-num-create
+  ENABLE b-quit B-exit B-save-rang B-save-doc-typd B-rez B-Help 
+         x-XYZ-analysis.xyz-name B-crt B-add-obj B-del-obj B-add-period 
+         B-del-period B-add-doc B-del-doc BROWSE-obj BROWSE-period 
+         BROWSE-type-doc x-XYZ-analysis.xyz-x x-XYZ-analysis.xyz-z 
+         x-XYZ-analysis.r-goods B-gds-list x-XYZ-analysis.xyz-des BROWSE-rez 
+         x-XYZ-analysis.xyz-id x-XYZ-analysis.cral-id 
+         x-criterion-analysis.cral-name FILL-IN-1 FILL-IN-2 FILL-IN-9 FILL-IN-3 
+         FILL-IN-10 FILL-rez x-XYZ-analysis.xyz-who-create 
+         x-XYZ-analysis.xyz-date-create F-time x-XYZ-analysis.xyz-db-num-create 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1631,7 +1702,9 @@ IF AVAILABLE x-XYZ-analysis THEN DO:
           x-XYZ-analysis.XYZ-date-create   when p-mode <> {&add-def}
           f-time                           when p-mode <> {&add-def}
           x-XYZ-analysis.XYZ-db-num-create when p-mode <> {&add-def}
-          x-XYZ-analysis.XYZ-id when p-mode <> {&add-def}
+          x-XYZ-analysis.XYZ-id            when p-mode <> {&add-def}
+          x-XYZ-analysis.r-goods           when p-mode <> {&add-def}
+          b-gds-list                       when p-mode <> {&lookup}
       WITH FRAME Dialog-Frame.
 
     find first x-criterion-analysis no-lock where x-criterion-analysis.cral-id = x-XYZ-analysis.cral-id no-error .
@@ -1662,6 +1735,8 @@ IF AVAILABLE x-XYZ-analysis THEN DO:
       B-crt                   when p-mode <> {&lookup}
       x-XYZ-analysis.XYZ-x    when p-mode <> {&lookup}
       x-XYZ-analysis.XYZ-z    when p-mode <> {&lookup}
+      x-XYZ-analysis.r-goods  when p-mode <> {&lookup}
+      b-gds-list              when p-mode <> {&lookup}
 
       FILL-IN-1
       B-add-obj               when p-mode <> {&lookup}
@@ -1750,6 +1825,7 @@ x-XYZ-analysis.XYZ-id
 x-XYZ-analysis.XYZ-name
 x-XYZ-analysis.XYZ-x
 x-XYZ-analysis.XYZ-z
+x-XYZ-analysis.r-goods
 .
 IF  x-XYZ-analysis.XYZ-x  >= 100 or
     x-XYZ-analysis.XYZ-z >= 100  or
@@ -1793,6 +1869,7 @@ assign
                 ,x-XYZ-analysis.xyz-z-qnty
                 ,x-XYZ-analysis.xyz-z-sum-prc
                 ,x-XYZ-analysis.xyz-z-sum
+                ,x-XYZ-analysis.r-goods
                 ,table x-XYZ-analysis-doc
                 ,table x-XYZ-analysis-obj
                 ,table x-XYZ-analysis-period

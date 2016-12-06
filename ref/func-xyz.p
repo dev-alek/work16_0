@@ -15,7 +15,8 @@ Creation date: 05/19/05
 
 */
 { ref/def-abct.i }
-define temp-table    x-analysis         no-undo  like ub.XYZ-analysis.
+define temp-table    x-analysis         no-undo  like ub.XYZ-analysis
+field r-goods as integer.
 define temp-table    x-analysis-period  no-undo  like ub.XYZ-analysis-period.
 
 define input         parameter table for    x-analysis.

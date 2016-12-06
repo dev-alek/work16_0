@@ -13,6 +13,7 @@ DEFINE BUFFER buf_assortment-matrix-goods FOR ub.assortment-matrix-goods.
 DEFINE BUFFER Buf_gds-obj-prop FOR ub.gds-obj-prop.
 DEFINE NEW SHARED BUFFER buf_goods FOR ub.goods.
 DEFINE BUFFER buf_XYZ-analysis FOR ub.XYZ-analysis.
+define buffer buf_XYZ-analysis-attr FOR ub.xyz-analysis-attr.
 DEFINE BUFFER buf_XYZ-analysis-gds-obj FOR ub.XYZ-analysis-gds-obj.
 DEFINE NEW SHARED BUFFER Buf_XYZ-analysis-goods FOR ub.XYZ-analysis-goods.
 DEFINE BUFFER Buf_XYZ-analysis-obj FOR ub.XYZ-analysis-obj.
@@ -68,6 +69,7 @@ define variable vss-description as character no-undo init "Просмотр результатов 
 { gbl/assmatat.i }   /* Библиотека для работы с атрибутами АМ */
 { gbl/thbj-def.i }
 { ref/ass-mat.i &DEF_PROC=YES}    /* Процедуры и функции для работы с АМ (по задаче "Процент отклонения матрицы от шаблона") */
+{ rep/html-conv.i }
 
 
 define variable filter-point as character no-undo init "Просмотр XYZ анализа" .
@@ -86,6 +88,13 @@ define variable v-obj-igt     as character no-undo .
  define variable v-grop-max-stock              as decimal   no-undo .
  define variable v-grop-level-always-presence  as decimal   no-undo .
  define variable v-grop-min-order              as decimal   no-undo .
+
+
+define stream Out-Stream.
+define stream OutStr-html.
+define VARIABLE p-report-id              as character               no-undo .
+define variable v-file-name-rep-htm as character no-undo .
+
 
 v-err-ext = false  .
 v-longchar = "".
@@ -1159,7 +1168,9 @@ APPLY "VALUE-CHANGED" TO BROWSE-goods in frame {&frame-name}.
 
 
 {&SetCursorNo}
-{&OPEN-QUERY-BROWSE-obj}
+  if available  buf_XYZ-analysis-goods then do:
+     {&OPEN-QUERY-BROWSE-OBJ}
+  end.
 
 END PROCEDURE.
 
@@ -1175,209 +1186,245 @@ PROCEDURE print-proc :
 -------------------------------------------------------------*/
 define input  parameter p-obj as logical   no-undo .
 
-def var sym1  as char format "X(1)" init ":".
-def var sym2  as char format "X(1)" init ":".
-def var sym3  as char format "X(1)" init ":".
-def var sym4  as char format "X(1)" init ":".
-def var sym5  as char format "X(1)" init ":".
-def var sym6  as char format "X(1)" init ":".
-def var sym7  as char format "X(1)" init ":".
-def var sym8  as char format "X(1)" init ":".
-def var sym9  as char format "X(1)" init ":".
-def var sym10 as char format "X(1)" init ":".
-def var sym11 as char format "X(1)" init ":".
-def var sym12 as char format "X(1)" init ":".
 
 def var date_string     as      char    no-undo.
 def var Line                as      char    no-undo.
 def var for-time as char.
 
+/*Печать HTML*/
+           run get-report-num (
+            output p-report-id
+        ).
+        
+        
+    v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
+    /*шапка*/
+    output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
+    put stream OutStr-html unformatted
+             "<!DOCTYPE HTML>" skip
+                ' <html>' skip
+                '  <head>' skip
+                '   <meta charset="utf-8">' skip
+                '    <style type="text/css">' skip
 
-DEFINE FRAME prt-frame
-      buf_goods.artic COLUMN-LABEL "Артикул! !" FORMAT "X(16)":U
-      buf_goods.gds-name COLUMN-LABEL "Название! !" FORMAT "X(20)":U
-      Buf_XYZ-analysis-goods.XYZg-XYZ COLUMN-LABEL "X!Y!Z" FORMAT "X(1)":U
-      Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate COLUMN-LABEL "Коэфф-т!вариац!% " FORMAT ">>9.99":U
-      Buf_XYZ-analysis-goods.kol-period              COLUMN-LABEL "Кол-во!период!продаж" FORMAT ">>>>>9":U
-      Buf_XYZ-analysis-goods.XYZg-sum-for-estimate COLUMN-LABEL "Сумма!для оценки!по критер" FORMAT "->>>>>>9.<<<":U
-      v-izt      COLUMN-LABEL "ИЖТ! !"           FORMAT "X(8)":U
-      v-Amin     COLUMN-LABEL "Ассорт.!min!"     FORMAT "X(9)":U
-      v-Acc-mat  COLUMN-LABEL "Ассорт.!матрица!" FORMAT "X(9)":U
-      Buf_XYZ-analysis-goods.XYZg-qnty COLUMN-LABEL "Количество!по!реализац." FORMAT "->>>>>>9.<<<":U
-      Buf_XYZ-analysis-goods.XYZg-stock-qnty COLUMN-LABEL "Остаток!кол-тво!" FORMAT "->>>>>>9.<<<":U
-      Buf_XYZ-analysis-goods.XYZg-stock-price-acc COLUMN-LABEL "Остаток!товара в!учет.ценах" FORMAT "->>>>>>>9.99":U
-      Buf_XYZ-analysis-goods.XYZg-stock-price-sale COLUMN-LABEL "Остаток!товара в!продаж.ценах" FORMAT "->>>>>>>9.99":U
-      Buf_XYZ-analysis-goods.XYZg-sum-acc COLUMN-LABEL "Сумма!реализац. в!учет.ценах" FORMAT "->>>>>>>9.99":U
-      Buf_XYZ-analysis-goods.XYZg-sum-cur COLUMN-LABEL "Сумма!реализац. в!прод.ценах" FORMAT "->>>>>>>9.99":U
-      Buf_XYZ-analysis-goods.XYZg-sum-doc COLUMN-LABEL "Сумма!реализац. в!ценах докум." FORMAT "->>>>>>>9.99":U
-      Buf_XYZ-analysis-goods.XYZg-temp-sale-goods COLUMN-LABEL "Темп!продаж!среднесут." FORMAT "->>>>>9.<<<":U
-      Buf_XYZ-analysis-goods.XYZg-order-qnty COLUMN-LABEL "Заказ.!кол-во!товара" FORMAT ">>>>9.<<<":U
-        HEADER  date_string AT 5 format "X(35)"
-                    string( "Страница " ) format "X(9)" AT 50 PAGE-NUMBER( PrnLibStream) AT 70 FORMAT ">>>>9" SKIP
-                    Line format "X(198)" AT 1
-    with width {&DOS_CW_2} down stream-io use-text    .
+                '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+                '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+                '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+                '   </style>' skip
+                '  </head>' skip
+            .
+ /*определяем кол-во колонок*/
 
-    Line = fill("-", 255).
-    date_string = cur-time-print() .
-    run prn-lib-open-stream  in this-procedure (
-       input parParentProc
-      ,input {&LS_PS_A4}
-      ,input yes  /* p-is-stream*/
-      ,input no   /* p-append*/
-      ).
-
-    FORM HEADER
-            Line format "X(198)" AT 1 SKIP
-            "Продолжение - на следующей странице" AT 30 SKIP
-            with FRAME BottomFrame width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS NO-BOX .
-    VIEW  STREAM PrnLibStream FRAME BottomFrame .
-
-    FORM with FRAME prt-frame  .
-
-    PUT  STREAM PrnLibStream
-    space(25) ( frame {&frame-name}:title )
-    format "x(116)" skip
-    "Вн.Код     : "   string(buf_XYZ-analysis.XYZ-id )   skip
-    "Название   : "   buf_XYZ-analysis.XYZ-name  skip
-    "Критерий   : "   buf_criterion-analysis.cral-name  skip
-    "Коментарии : "   buf_XYZ-analysis.XYZ-des   skip
-    "Создание анализа : " buf_XYZ-analysis.XYZ-date-create " " string(buf_XYZ-analysis.XYZ-time-create,"hh:mm") buf_XYZ-analysis.XYZ-who-create
-    skip
+    put stream OutStr-html unformatted
+        '<body>' skip
+        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+        '<thead>' skip
+        '<TR class="set_columns">'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 150px;"></TD>'skip
+            '<TD style="width: 30px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="18" STYLE="font-size: 14px;">Вн.Код     :' + string(buf_XYZ-analysis.XYZ-id) + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="18" STYLE="font-size: 14px;">Название   :' + string(buf_XYZ-analysis.XYZ-name) + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="18" STYLE="font-size: 14px;">Критерий   :' + string(buf_criterion-analysis.cral-name) + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="18" STYLE="font-size: 14px;">Коментарии :' + string(buf_XYZ-analysis.XYZ-des) + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="18" STYLE="font-size: 14px;">Создание анализа :' + string(buf_XYZ-analysis.XYZ-date-create,"99.99.9999") + '' + string(buf_XYZ-analysis.XYZ-time-create,"hh:mm") + '' + buf_XYZ-analysis.XYZ-who-create + '</TD>' skip
+        '</TR>'skip
     .
-
     define buffer bufp_XYZ-analysis-obj for ub.XYZ-analysis-obj.
-    PUT  STREAM PrnLibStream  "Объекты : "    .
+    define VARIABLE v-obj as character no-undo .
+
     for each bufp_XYZ-analysis-obj no-lock where bufp_XYZ-analysis-obj.db-num = buf_XYZ-analysis.db-num and
                                                  bufp_XYZ-analysis-obj.XYZ-id = buf_XYZ-analysis.XYZ-id :
-       PUT  STREAM PrnLibStream  trim(bufp_XYZ-analysis-obj.obj-type) + " " + trim(string(bufp_XYZ-analysis-obj.obj-code)) "," .
+       v-obj = v-obj + "," + trim(bufp_XYZ-analysis-obj.obj-type) + " " + trim(string(bufp_XYZ-analysis-obj.obj-code)) . 
     end.
-    PUT  STREAM PrnLibStream  skip .
 
+    v-obj = TRIM (v-obj,",") .
+    
+        put stream OutStr-html unformatted            
+        '<TR>'skip
+            '<TD colspan="18" STYLE="font-size: 14px;">Объекты    :' + string(v-obj) + '</TD>' skip
+        '</TR>'skip       
+        .
+        
     define buffer bufp_XYZ-analysis-period for ub.XYZ-analysis-period.
-    PUT  STREAM PrnLibStream  "Периоды : "    .
+    define VARIABLE v-period as character no-undo .
+
     for each bufp_XYZ-analysis-period no-lock where bufp_XYZ-analysis-period.db-num = buf_XYZ-analysis.db-num and
                                                     bufp_XYZ-analysis-period.XYZ-id = buf_XYZ-analysis.XYZ-id :
-       PUT  STREAM PrnLibStream  bufp_XYZ-analysis-period.XYZp-start "-" bufp_XYZ-analysis-period.XYZp-end "," .
+       v-period = v-period + "," + string(bufp_XYZ-analysis-period.XYZp-start,"99.99.9999") + "-" + string(bufp_XYZ-analysis-period.XYZp-end,"99.99.9999") .
     end.
-    PUT  STREAM PrnLibStream  skip .
-
+        v-period = TRIM (v-period,",") .
+    
+        put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="18" STYLE="font-size: 14px;">Периоды    :' + string(v-period) + '</TD>' skip
+        '</TR>'skip       
+        .
+        
     define buffer bufp_XYZ-analysis-doc for ub.XYZ-analysis-doc.
-    PUT  STREAM PrnLibStream  "Типы документов : "    .
+    define VARIABLE v-doc-type as character no-undo .
+
     for each bufp_XYZ-analysis-doc no-lock where bufp_XYZ-analysis-doc.db-num = buf_XYZ-analysis.db-num and
                                                  bufp_XYZ-analysis-doc.XYZ-id = buf_XYZ-analysis.XYZ-id :
-       PUT  STREAM PrnLibStream UNFORMATTED func-get-name-from-ext-type ( bufp_XYZ-analysis-doc.XYZd-ext-doc-type , false ) "," .
+       v-doc-type = v-doc-type + "," + func-get-name-from-ext-type( bufp_XYZ-analysis-doc.XYZd-ext-doc-type , false ) .
     end.
-    PUT  STREAM PrnLibStream  skip .
 
-    run waitfram-show in this-procedure ("Ждите печатаю...").
+        v-doc-type = TRIM (v-doc-type,",") .
 
-     run OpenBR (yes, no, '':U).
+        put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="18" STYLE="font-size: 14px;">Типы документов  :' + string(v-doc-type) + '</TD>' skip
+        '</TR>'skip
+        .
+        
+        put stream OutStr-html unformatted                       
+        '</thead>'skip
+    .
 
+
+     put stream OutStr-html unformatted
+        '<tbody>'
+        '<TR>'skip
+            '<TH style="text-align: center;">Артикул</TH>'skip
+            '<TH style="text-align: center;">Название</TH>'skip
+            '<TH style="text-align: center;">XYZ</TH>'skip
+            '<TH style="text-align: center;">Коэфф-т вариац %</TH>'skip
+            '<TH style="text-align: center;">Кол-во период продаж</TH>'skip
+            '<TH style="text-align: center;">Сумма для оценки по критер</TH>'skip
+            '<TH style="text-align: center;">ИЖТ</TH>'skip
+            '<TH style="text-align: center;">Ассорт. min</TH>'skip
+            '<TH style="text-align: center;">Ассорт. матрица</TH>'skip
+            '<TH style="text-align: center;">Кол-во по реализац</TH>'skip
+            '<TH style="text-align: center;">Остаток кол-во</TH>'skip
+            '<TH style="text-align: center;">Остаток товара в учет.ценах</TH>'skip
+            '<TH style="text-align: center;">Остаток товара в продаж.ценах</TH>'skip
+            '<TH style="text-align: center;">Сумма реализ. в учет.ценах</TH>'skip
+            '<TH style="text-align: center;">Сумма реализ. в прод.ценах</TH>'skip
+            '<TH style="text-align: center;">Сумма реализ. в ценах докум.</TH>'skip
+            '<TH style="text-align: center;">Темп продаж среднесут</TH>'skip
+            '<TH style="text-align: center;">Заказ кол-во товара </TH>'skip
+        '</TR>'skip
+        .
+
+            
+define variable ii as integer no-undo .
+                if p-obj = true then do:
+               {&OPEN-QUERY-BROWSE-obj}
+                DO WHILE available Buf_XYZ-analysis-obj :
+                    ii = ii + 1 .    
+                get next browse-obj.
+                end.
+                end.            
+                ii = ii + 1 .
+     run OpenBR in this-procedure (yes, no, '':U).                
      DO WHILE available Buf_XYZ-analysis-goods :
         run prt-goods in this-procedure .
-        Display STREAM PrnLibStream
-            buf_goods.artic
-            buf_goods.gds-name
-            Buf_XYZ-analysis-goods.XYZg-XYZ
-            Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate
-            Buf_XYZ-analysis-goods.kol-period
-            Buf_XYZ-analysis-goods.XYZg-sum-for-estimate
-            v-izt    @ v-izt
-            v-Amin   @  v-Amin
-            v-Acc-mat @ v-Acc-mat
-            Buf_XYZ-analysis-goods.XYZg-qnty
-            Buf_XYZ-analysis-goods.XYZg-stock-qnty
-            Buf_XYZ-analysis-goods.XYZg-stock-price-acc
-            Buf_XYZ-analysis-goods.XYZg-stock-price-sale
-            Buf_XYZ-analysis-goods.XYZg-sum-acc
-            Buf_XYZ-analysis-goods.XYZg-sum-cur
-            Buf_XYZ-analysis-goods.XYZg-sum-doc
-            Buf_XYZ-analysis-goods.XYZg-temp-sale-goods
-            Buf_XYZ-analysis-goods.XYZg-order-qnty
-            with FRAME prt-frame .
-            DOWN STREAM PrnLibStream 1 with FRAME prt-frame  .
+
+                
+            put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD rowspan="' + string(ii) + '"> ' + string(buf_goods.artic) + '</TD>'skip
+                                  '<TD> ' + string(buf_goods.gds-name) + '</TD>'skip
+                                  '<TD rowspan="' + string(ii) + '"> ' + string(Buf_XYZ-analysis-goods.XYZg-XYZ) + '</TD>'skip
+                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD rowspan="' + string(ii) + '" num="0" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.kol-period,"->>>>>>>>>>>9",0) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.kol-period <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.kol-period,"->>>>>>>>>>>9",0) + '</TD>' else "" + '</td>' skip
+                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-for-estimate,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-for-estimate <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-for-estimate,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD> ' + string(v-izt) + '</TD>'skip
+                                  '<TD> ' + string(v-Amin) + '</TD>'skip
+                                  '<TD> ' + string(v-Acc-mat) + '</TD>'skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-price-acc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-sale,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-price-sale <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-sale,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-acc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-cur,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-cur <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-cur,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-doc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-doc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-doc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-temp-sale-goods <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-order-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-order-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-order-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                              '</TR>'skip    
+                              .
+                                                          
             if p-obj = true then do:
                /* расшифровка по объектам */
                {&OPEN-QUERY-BROWSE-obj}
                 DO WHILE available Buf_XYZ-analysis-obj :
                     run disp-obj in this-procedure .
-                    Display STREAM PrnLibStream
-                        "" @ buf_goods.artic
-                        Buf_XYZ-analysis-obj.obj-type + " " + string(Buf_XYZ-analysis-obj.obj-code)  @ buf_goods.gds-name
-                        "" @ Buf_XYZ-analysis-goods.XYZg-XYZ
-                        "" @ Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate
-                        "" @ Buf_XYZ-analysis-goods.XYZg-sum-for-estimate
-                        v-obj-igt     @ v-izt
-                        string( v-obj-AssMin , "да/нет" ) @ v-Amin
-                        v-ass-name    @ v-Acc-mat
-                        Buf_XYZ-analysis-gds-obj.XYog-qnty              @ Buf_XYZ-analysis-goods.XYZg-qnty
-                        Buf_XYZ-analysis-gds-obj.XYog-stock-qnty        @ Buf_XYZ-analysis-goods.XYZg-stock-qnty
-                                                                     "" @ Buf_XYZ-analysis-goods.XYZg-stock-price-acc
-                       (Buf_XYZ-analysis-gds-obj.XYog-stock-qnty * buf_XYZ-analysis-gds-obj.XYog-price-crc )  @ Buf_XYZ-analysis-goods.XYZg-stock-price-sale
-                        Buf_XYZ-analysis-gds-obj.XYog-sum-acc           @ Buf_XYZ-analysis-goods.XYZg-sum-acc
-                        Buf_XYZ-analysis-gds-obj.XYog-sum-cur           @ Buf_XYZ-analysis-goods.XYZg-sum-cur
-                        Buf_XYZ-analysis-gds-obj.XYog-sum-doc           @ Buf_XYZ-analysis-goods.XYZg-sum-doc
-                        Buf_XYZ-analysis-gds-obj.XYog-temp-sale-goods   @ Buf_XYZ-analysis-goods.XYZg-temp-sale-goods
-                        ""                                              @ Buf_XYZ-analysis-goods.XYZg-order-qnty
-                        with frame prt-frame .
-                        down stream prnlibstream 1 with frame prt-frame  .
-                        get next browse-obj.
+                    
+                    put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD> ' + string(Buf_XYZ-analysis-obj.obj-type + " " + string(Buf_XYZ-analysis-obj.obj-code)) + '</TD>'skip
+                                  '<TD> ' + string(v-obj-igt) + '</TD>'skip
+                                  '<TD> ' + string( v-obj-AssMin , "да/нет" ) + '</TD>'skip
+                                  '<TD> ' + string(v-ass-name) + '</TD>'skip
+                                  .
+                    if AVAILABLE Buf_XYZ-analysis-gds-obj then do:
+                    put stream OutStr-html unformatted              
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-stock-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-stock-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-stock-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon((Buf_XYZ-analysis-gds-obj.XYog-stock-qnty * buf_XYZ-analysis-gds-obj.XYog-price-crc ),"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if (Buf_XYZ-analysis-gds-obj.XYog-stock-qnty * buf_XYZ-analysis-gds-obj.XYog-price-crc ) <> ? then fnc-convert-dot-to-colon((Buf_XYZ-analysis-gds-obj.XYog-stock-qnty * buf_XYZ-analysis-gds-obj.XYog-price-crc ),"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-sum-acc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-cur,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-sum-cur <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-cur,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-doc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-sum-doc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-doc,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-temp-sale-goods <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                              '</TR>'skip    
+                              .
+                    end.
+                    else do:
+                    put stream OutStr-html unformatted                        
+                                  '<TD style="text-align: right">' + "?" + '</TD>'skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>'skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
+                              '</TR>'skip    
+                              .
+                        
+                    end.    
+                    get next browse-obj.
                 END.
-                  UNDERLINE  STREAM PrnLibStream
-                        buf_goods.gds-name
-                        Buf_XYZ-analysis-goods.XYZg-XYZ
-                        Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate
-                        Buf_XYZ-analysis-goods.kol-period
-                        Buf_XYZ-analysis-goods.XYZg-sum-for-estimate
-                        v-izt
-                        v-Amin
-                        v-Acc-mat
-                        Buf_XYZ-analysis-goods.XYZg-qnty
-                        Buf_XYZ-analysis-goods.XYZg-stock-qnty
-                        Buf_XYZ-analysis-goods.XYZg-stock-price-acc
-                        Buf_XYZ-analysis-goods.XYZg-stock-price-sale
-                        Buf_XYZ-analysis-goods.XYZg-sum-acc
-                        Buf_XYZ-analysis-goods.XYZg-sum-cur
-                        Buf_XYZ-analysis-goods.XYZg-sum-doc
-                        Buf_XYZ-analysis-goods.XYZg-temp-sale-goods
-                        Buf_XYZ-analysis-goods.XYZg-order-qnty
-                with FRAME prt-frame .
-
             end.
 
             GET next BROWSE-goods.
       END.
-      UNDERLINE  STREAM PrnLibStream
-            buf_goods.artic
-            buf_goods.gds-name
-            Buf_XYZ-analysis-goods.XYZg-XYZ
-            Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate
-            Buf_XYZ-analysis-goods.kol-period
-            Buf_XYZ-analysis-goods.XYZg-sum-for-estimate
-            v-izt
-            v-Amin
-            v-Acc-mat
-            Buf_XYZ-analysis-goods.XYZg-qnty
-            Buf_XYZ-analysis-goods.XYZg-stock-qnty
-            Buf_XYZ-analysis-goods.XYZg-stock-price-acc
-            Buf_XYZ-analysis-goods.XYZg-stock-price-sale
-            Buf_XYZ-analysis-goods.XYZg-sum-acc
-            Buf_XYZ-analysis-goods.XYZg-sum-cur
-            Buf_XYZ-analysis-goods.XYZg-sum-doc
-            Buf_XYZ-analysis-goods.XYZg-temp-sale-goods
-            Buf_XYZ-analysis-goods.XYZg-order-qnty
-
-    with FRAME prt-frame .
-
-    HIDE  STREAM PrnLibStream FRAME BottomFrame .
-    HIDE  STREAM PrnLibStream FRAME CheckList.
-    output  STREAM PrnLibStream CLOSE.
-    run OpenBR in this-procedure (yes, no, '':U).
-    run waitfram-hide in this-procedure .
-    run prn-lib-prn-file in this-procedure (
-        input parParentProc
-       ,input 8
-        ).
+   put stream OutStr-html unformatted
+                                '</tbody>' skip
+                                '</table>' skip
+                                '</body>' skip
+                                '</html>' skip
+                                .
+output stream OutStr-html close.                                
+                                                          
+  run prn-lib-reportviewer-report-name in this-procedure (
+                                                          input parParentProc
+                                                          ,input v-file-name-rep-htm
+                                                          ).
 
 END PROCEDURE.
 
@@ -1873,6 +1920,26 @@ FOR EACH Buf_XYZ-analysis-obj WHERE
       .
 
 end.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-report-num automain
+PROCEDURE get-report-num :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define output parameter p-report-num as integer no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run gbl/getrpnum.p (output p-report-num).
+  end.
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
