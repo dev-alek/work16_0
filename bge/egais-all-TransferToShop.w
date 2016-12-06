@@ -152,6 +152,21 @@ DEFINE BUTTON Btn_Edit
      LABEL "Редактировать" 
      SIZE 15 BY 1.13 tooltip "Вернуть в 'Новые' для редактирования"
      BGCOLOR 8 .
+     
+DEFINE VARIABLE f-date AS DATE FORMAT "99/99/99":U 
+     LABEL "Дата с" 
+     VIEW-AS FILL-IN 
+     SIZE 9.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-date-2 AS DATE FORMAT "99/99/99":U 
+     LABEL "по" 
+     VIEW-AS FILL-IN 
+     SIZE 9.5 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE f-num AS character FORMAT "X(30)":U 
+     LABEL "номер" 
+     VIEW-AS FILL-IN 
+     SIZE 30 BY 1 NO-UNDO.
 
 
 DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1 
@@ -174,7 +189,10 @@ DEFINE FRAME Dialog-Frame
      Btn_lkp AT ROW 1.2 COL 17 WIDGET-ID 12
 	 Btn_Edit AT ROW 1.2 COL 52
      RADIO-SET-1 AT ROW 1.2 COL 80 NO-LABEL WIDGET-ID 2
-     SPACE(2) SKIP(23.5)
+     f-date AT ROW 2.5 COL 8.63 COLON-ALIGNED WIDGET-ID 22
+     f-date-2 AT ROW 2.5 COL 22.75 COLON-ALIGNED WIDGET-ID 26
+     f-num AT ROW 2.5 COL 45 COLON-ALIGNED WIDGET-ID 56
+     SPACE(2) SKIP(22.2)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Передача продукции в торговый зал ЕГАИС"
@@ -397,6 +415,56 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME f-date
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date Dialog-Frame
+ON leave OF f-date IN FRAME Dialog-Frame /* Дата с */
+do:
+  run refresh-query.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date Dialog-Frame
+ON return OF f-date IN FRAME Dialog-Frame /* Дата с */
+do:
+  run refresh-query.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-date-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date-2 Dialog-Frame
+ON leave OF f-date-2 IN FRAME Dialog-Frame /* по */
+do:
+  run refresh-query.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date-2 Dialog-Frame
+ON return OF f-date-2 IN FRAME Dialog-Frame /* по */
+do:
+  run refresh-query.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-num Dialog-Frame
+ON return OF f-num IN FRAME Dialog-Frame /* по */
+do:
+  run refresh-query.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &UNDEFINE SELF-NAME
 
@@ -464,6 +532,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
 
   bh-act-header = egais:GetHndlTable(3, "").
   create query qh-act-header.
+  f-date = date (now) - 31.
+  f-date-2 = ?.
   run refresh-query.
 
   
@@ -473,9 +543,9 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       frame     = frame {&FRAME-NAME}:handle
       query     = qh-act-header
       x         = 10
-      y         = 42
-      width     = 105
-      height    = 23
+      y         = 60
+      width     = 104
+      height    = 22
       visible   = true
       read-only = true
       sensitive = true
@@ -567,9 +637,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY RADIO-SET-1 
+  DISPLAY RADIO-SET-1 f-date f-date-2 f-num 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_OK RADIO-SET-1
+  ENABLE Btn_OK RADIO-SET-1 f-date f-date-2 f-num
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -581,27 +651,41 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-query Dialog-Frame 
 PROCEDURE refresh-query :
+    
+def var v-proposition  as char no-undo.
 
 if bh-act-header = ? 
   then return .
 
   
-  case RADIO-SET-1 :
+  assign input frame {&FRAME-NAME}
+    f-date
+    f-date-2
+    f-num
+  .
+  
+  v-proposition = 
+    (if f-date <> ? then " and tt-act-header.date_ >= " + string (f-date) else "") +
+    (if f-date-2 <> ? then " and tt-act-header.date_ <= " + string (f-date-2) else "") +
+    (if f-num <> ? and f-num <> "" then (" and tt-act-header.num matches '*" + f-num + "*'") else "")
+    .
+  
+case RADIO-SET-1 :
     when 1  then 
     do:
       qh-act-header:query-close.
       qh-act-header:set-buffers (bh-act-header).
-      qh-act-header:query-prepare ("for each tt-act-header where not tt-act-header.is-sent by tt-act-header.date_ descending").
+      qh-act-header:query-prepare ( substitute ("for each tt-act-header where not tt-act-header.is-sent &1 by tt-act-header.date_ descending", v-proposition) ).
       qh-act-header:query-open.
-      bh-act-header:find-first ( "where tt-act-header.num = " + "'" + v-act-num + "'" ) no-error .
+      bh-act-header:find-first ( "where tt-act-header.num = " + "'" + v-act-num + "'" + v-proposition) no-error .
     end.
     when 2  then 
     do:
       qh-act-header:query-close.
       qh-act-header:set-buffers (bh-act-header).
-      qh-act-header:query-prepare ("for each tt-act-header where tt-act-header.is-sent by tt-act-header.date_ descending").
+      qh-act-header:query-prepare ( substitute ("for each tt-act-header where tt-act-header.is-sent &1 by tt-act-header.date_ descending", v-proposition) ).
       qh-act-header:query-open.
-      bh-act-header:find-first ( "where tt-act-header.num = " + "'" + v-act-num + "'" ) no-error .
+      bh-act-header:find-first ( "where tt-act-header.num = " + "'" + v-act-num + "'" + v-proposition ) no-error .
     end.
   end case.
 
