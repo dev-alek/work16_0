@@ -234,6 +234,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     do ii = 1 to bh-ticket-egais:num-fields:
       bcol[ii] = browse-hdl-ticket-egais:add-like-column('tt-ticket' + '.' + bh-ticket-egais:buffer-field (ii):name, 0, 'FILL-IN').
       if ii = 5 then bcol[ii]:width = 80.
+      if ii = 2 then bcol[ii]:width = 15.
     end.
   end.
 

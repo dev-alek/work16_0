@@ -739,6 +739,16 @@ do:
       if egaisFormF1:Msg = 'Не удалось получить данные от UTM'
       then do:
         message egaisFormF1:Msg + ". Проверьте соединение с УТМ." view-as alert-box error.
+        run waitfram-hide in this-procedure.
+        output stream str-FormF1 close.
+        if valid-object (ExtFormF1Obj) 
+          then delete object ExtFormF1Obj.
+        if valid-handle (qh-journal-egais) 
+          then delete object qh-journal-egais.
+        if valid-object (egaisJournal) 
+          then delete object egaisJournal.
+        run reopen-browse.
+        return.
       end. 
       if bh-gds-egais-gotten = ? or not bh-gds-egais-gotten:find-first () 
       then do:
@@ -1473,6 +1483,7 @@ PROCEDURE f-query :
   end case.
   if bh-wb-egais:available
     then qh-wb-egais:reposition-to-rowid ( bh-wb-egais:rowid ).
+  egaisWBAdv:ReleaseTable_().
   
 end.
 
@@ -1494,15 +1505,23 @@ end.
 PROCEDURE proc-row-disp :
 def var ii as int no-undo.
   
-  if cb-1 = 1 then do:
+  if cb-1 = 1 or cb-1 = 2 then do:
     do ii = 1 to extent (bcol).  
       if valid-handle (bcol[ii]) 
-        then 
+        then do: 
+        assign
+          bcol[ii]:bgcolor = DARK_GRAY_COLOR when not bh-wb-egais:buffer-field ("isWb"):buffer-value and not cb-1 = 2
+          bcol[ii]:bgcolor = RED_COLOR when bh-wb-egais:buffer-field ("EGAISSts"):buffer-value = 'Rejected'
+          bcol[ii]:bgcolor = CYAN_COLOR when bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value = 'отказ'
+        .
+        if bh-wb-egais:buffer-field (ii) = bh-wb-egais:buffer-field ("tts-status_")
+        then do:
           assign
-            bcol[ii]:bgcolor = DARK_GRAY_COLOR when not bh-wb-egais:buffer-field ("isWb"):buffer-value
-            bcol[ii]:bgcolor = RED_COLOR when bh-wb-egais:buffer-field ("EGAISSts"):buffer-value = 'Rejected'
-            bcol[ii]:bgcolor = CYAN_COLOR when bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value = 'отказ'
+            bcol[ii]:bgcolor = GREEN_COLOR when bh-wb-egais:buffer-field ("tts-status_"):buffer-value = "Принят"
+            bcol[ii]:bgcolor = RED_COLOR when bh-wb-egais:buffer-field ("tts-status_"):buffer-value = "Отклонен"
           .
+        end.
+      end.
     end.
   end.
   
@@ -1588,6 +1607,7 @@ PROCEDURE reopen-browse :
           column-resizable = true
           column-scrolling = true
           triggers:
+            on row-display persistent run proc-row-disp.
             on mouse-move-dblclick persistent run msdblcl.
           end triggers
       .
