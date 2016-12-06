@@ -1758,11 +1758,11 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                       release ub.clob-bind.
                     end.
                     else do:
-                      if entry (5, ub.clob-bind.descr, {&delim-par}) <> tt-wb-header.wbregid and not buf_tt-analiz.isMany
+                      if entry (5, ub.clob-bind.descr, {&delim-par}) <> tt-wb-header.wbregid and not available (buf_tt-analiz)
                       then do:
                         jj_:
                         do jj = 1 to 100:
-                          if not can-find (first buf_clob-bind where ub.clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec + "#" + string (jj) )
+                          if not can-find (first buf_clob-bind where ub.clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec + "#" + string (jj) )
                             then leave jj_.
                         end.
                         if jj = 101 then do:
@@ -1771,14 +1771,9 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                           Msg = "".
                         end.
                         else do:
-                          find current ub.clob-bind exclusive-lock.
-                          ub.clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec + "#" + string (jj).
-                          find first ub.clob-bind exclusive-lock where ub.clob-bind.resource-type = {&lob-egais-ref-b} and ub.clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec no-error.
-                          if available (ub.clob-bind)
-                          then do:
-                            ub.clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec + "#1".
+                          for each ub.clob-bind exclusive-lock where ub.clob-bind.uniq-key-rec = tt-wb-header.uniq-key-rec:
+                            ub.clob-bind.uniq-key-rec = ub.clob-bind.uniq-key-rec + "#" + string (jj).
                           end.
-                          release ub.clob-bind.
                         end.                        
                       end.
                     end.
