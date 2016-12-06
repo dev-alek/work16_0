@@ -68,6 +68,8 @@ define variable vss-description as character no-undo init "Список заголовков ABC
 { gbl/thbjattr.i }
 { gbl/fltopend.i defproc }
 { cmp/mrk-strf.i }
+{ rep/html-conv.i }
+
 
 &scop cop-l1       mark-string(recid(x-abc-analysis) , p-rid-list)
 &scop dyn_cop-l1       substitute('dynamic-function(&1mark-string&1, recid(x-abc-analysis), &1&2&1)', ~{&double-quote~}, p-rid-list)
@@ -160,6 +162,11 @@ define variable p-curr-obj-type as character no-undo .
 define variable v-order-col as character no-undo .
 define variable v-size-col1 as decimal   no-undo .
 define variable v-size-col2 as decimal   no-undo .
+
+define stream Out-Stream.
+define stream OutStr-html.
+define VARIABLE p-report-id              as character               no-undo .
+define variable v-file-name-rep-htm as character no-undo .
 
 assign
   p-curr-obj-type    = v-cntxt-obj-type
@@ -1357,109 +1364,146 @@ PROCEDURE proc-b-print :
   Parameters:  <none>
   Notes:
 -------------------------------------------------------------*/
-def var sym1  as char format "X(1)" init ":".
-def var sym2  as char format "X(1)" init ":".
-def var sym3  as char format "X(1)" init ":".
-def var sym4  as char format "X(1)" init ":".
-def var sym5  as char format "X(1)" init ":".
-def var sym6  as char format "X(1)" init ":".
-def var sym7  as char format "X(1)" init ":".
-def var sym8  as char format "X(1)" init ":".
-def var sym9  as char format "X(1)" init ":".
-def var sym10 as char format "X(1)" init ":".
-def var sym11 as char format "X(1)" init ":".
-def var sym12 as char format "X(1)" init ":".
-
 def var date_string     as      char    no-undo.
 def var Line                as      char    no-undo.
 def var for-time as char.
 define variable v-time  as character no-undo .
 
-DEFINE FRAME prt-frame
-      x-abc-analysis.abc-name                         COLUMN-LABEL "Наименование" FORMAT "X(10)":U
-      x-criterion-analysis.cral-name                  COLUMN-LABEL "Критерий!анализа" FORMAT "X(55)":U
-      x-abc-analysis.double-line-proc                 COLUMN-LABEL "I!A%" FORMAT ">>.<":U
-      x-abc-analysis.abc-a                            COLUMN-LABEL "II!A%" FORMAT ">9.<":U
-      x-abc-analysis.abc-b                            COLUMN-LABEL "II!B%" FORMAT ">9.<":U
-      x-abc-analysis.LE-proc                          COLUMN-LABEL "=<!E%" FORMAT ">>.999":U
-      x-abc-analysis.abc-string-obj                   COLUMN-LABEL "Строка!объектов" FORMAT "X(30)":U
-      x-abc-analysis.abc-string-period                COLUMN-LABEL "Строка!периодов" FORMAT "X(30)":U
-      x-abc-analysis.abc-string-doc                   COLUMN-LABEL "Строка!документов" FORMAT "X(15)":U
-      x-abc-analysis.abc-date-create                  COLUMN-LABEL "Дата!создания" FORMAT "99/99/99":U
-      v-time COLUMN-LABEL "Время!созд" FORMAT "x(5)":U
-      x-abc-analysis.abc-db-num-create                COLUMN-LABEL "БД" FORMAT ">>>>9":U
-      x-abc-analysis.abc-who-create                   COLUMN-LABEL "Кто провел!анализ" FORMAT "X(10)":U
-      HEADER  date_string AT 5 format "X(35)"
-      string( "Страница " ) format "X(9)" AT 50 PAGE-NUMBER( PrnLibStream) AT 70 FORMAT ">>>>9" SKIP
-      Line format "X(199)" AT 1
-    with width {&DOS_CW_2} down stream-io use-text    .
-
-    Line = fill("-", 255).
-    date_string = cur-time-print() .
-    run prn-lib-open-stream  in this-procedure (
-       input parParentProc
-      ,input {&LS_PS_A4}
-      ,input yes /*p-is-stream*/
-      ,input no /*p-append*/
-      ).
-    PUT  STREAM PrnLibStream
-    SPACE(25) ( frame {&frame-name}:title )
-    format "x(232)" SKIP(1) .
-    FORM HEADER
-            Line format "X(199)" AT 1 SKIP
-            "Продолжение - на следующей странице" AT 30 SKIP
-            with FRAME BottomFrame width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS NO-BOX .
-    VIEW  STREAM PrnLibStream FRAME BottomFrame .
-
-    FORM with FRAME prt-frame  .
-    run waitfram-show in this-procedure ("Ждите печатаю...").
-
-    run OpenBR in this-procedure .
-     DO WHILE available x-abc-analysis :
-        Display STREAM PrnLibStream
-            x-abc-analysis.abc-name
-            x-criterion-analysis.cral-name
-            x-abc-analysis.abc-a
-            x-abc-analysis.abc-b
-            x-abc-analysis.double-line-proc
-            x-abc-analysis.le-proc
-            x-abc-analysis.abc-string-obj
-            x-abc-analysis.abc-string-period
-            x-abc-analysis.abc-string-doc
-            x-abc-analysis.abc-date-create
-            STRING (x-abc-analysis.abc-time-create,'HH:MM') @ v-time
-            x-abc-analysis.abc-db-num-create
-            x-abc-analysis.abc-who-create
-            with FRAME prt-frame .
-            DOWN STREAM PrnLibStream 1 with FRAME prt-frame  .
-            GET next BROWSE-ABC.
-      END.
-      UNDERLINE  STREAM PrnLibStream
-            x-abc-analysis.abc-name
-            x-criterion-analysis.cral-name
-            x-abc-analysis.abc-a
-            x-abc-analysis.abc-b
-            x-abc-analysis.double-line-proc
-            x-abc-analysis.le-proc
-            x-abc-analysis.abc-string-obj
-            x-abc-analysis.abc-string-period
-            x-abc-analysis.abc-string-doc
-            x-abc-analysis.abc-date-create
-            v-time
-            x-abc-analysis.abc-db-num-create
-            x-abc-analysis.abc-who-create
-    with FRAME prt-frame .
-
-    HIDE  STREAM PrnLibStream FRAME BottomFrame .
-    HIDE  STREAM PrnLibStream FRAME CheckList.
-    output  STREAM PrnLibStream CLOSE.
-    run waitfram-hide in this-procedure .
-    run prn-lib-prn-file in this-procedure (
-        input parParentProc
-       ,input 8
+/*Печать HTML*/
+           run get-report-num (
+            output p-report-id
         ).
+        
+    v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
+    /*шапка*/
+    output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
+    put stream OutStr-html unformatted
+             "<!DOCTYPE HTML>" skip
+                ' <html>' skip
+                '  <head>' skip
+                '   <meta charset="utf-8">' skip
+                '    <style type="text/css">' skip
+
+                '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+                '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+                '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+                '   </style>' skip
+                '  </head>' skip
+            .
+            
+ /*определяем кол-во колонок*/
+
+    put stream OutStr-html unformatted
+        '<body>' skip
+        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+        '<thead>' skip
+        '<TR class="set_columns">'skip
+            '<TD style="width: 150px;"></TD>'skip
+            '<TD style="width: 150px;"></TD>'skip
+            '<TD style="width: 50px;"></TD>'skip
+            '<TD style="width: 50px;"></TD>'skip
+            '<TD style="width: 50px;"></TD>'skip
+            '<TD style="width: 50px;"></TD>'skip
+            '<TD style="width: 70px;"></TD>'skip
+            '<TD style="width: 70px;"></TD>'skip
+            '<TD style="width: 50px;"></TD>'skip
+            '<TD style="width: 70px;"></TD>'skip
+            '<TD style="width: 50px;"></TD>'skip
+            '<TD style="width: 30px;"></TD>'skip
+            '<TD style="width: 50px;"></TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="13" STYLE="font-size: 14px;">Список ABC-анализов</TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="13" STYLE="font-size: 14px;">Дата печати: ' + string(date_string,"99.99.9999") + '</TD>' skip
+        '</TR>'skip
+        '</thead>'skip
+    .
+
+     put stream OutStr-html unformatted
+        '<tbody>'
+        '<TR>'skip
+            '<TH rowspan="2" style="text-align: center;">Наименование</TH>'skip
+            '<TH rowspan="2" style="text-align: center;">Критерий анализа</TH>'skip
+            '<TH style="text-align: center;">I</TH>'skip
+            '<TH style="text-align: center;">II</TH>'skip
+            '<TH style="text-align: center;">III</TH>'skip
+            '<TH style="text-align: center;">=<</TH>'skip
+            '<TH rowspan="2" style="text-align: center;">Строка объектов</TH>'skip
+            '<TH rowspan="2" style="text-align: center;">Строка периодов</TH>'skip
+            '<TH rowspan="2" style="text-align: center;">Строка документов</TH>'skip
+            '<TH rowspan="2" style="text-align: center;">Дата создания</TH>'skip
+            '<TH rowspan="2" style="text-align: center;">Время создания</TH>'skip
+            '<TH rowspan="2" style="text-align: center;">БД</TH>'skip
+            '<TH rowspan="2" style="text-align: center;">Кто провел анализ</TH>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TH style="text-align: center;">A%</TH>'skip
+            '<TH style="text-align: center;">A%</TH>'skip
+            '<TH style="text-align: center;">B%</TH>'skip
+            '<TH style="text-align: center;">E%</TH>'skip
+        '</TR>'skip
+        .
+
+            
+     for each x-abc-analysis :
+       
+put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD style="text-align: center"> ' + string(x-abc-analysis.abc-name) + '</TD>'skip
+                                  '<TD style="text-align: center"> ' + string(x-criterion-analysis.cral-name) + '</TD>'skip
+                                  '<TD num="0" val="' + fnc-convert-dot-to-colon(x-abc-analysis.abc-a,"->>>>>>>>>>>9",0) + '" style="text-align: right"> ' + if x-abc-analysis.abc-a <> ? then fnc-convert-dot-to-colon(x-abc-analysis.abc-a,"->>>>>>>>>>>9",0) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0" val="' + fnc-convert-dot-to-colon(x-abc-analysis.abc-b,"->>>>>>>>>>>9",0) + '" style="text-align: right"> ' + if x-abc-analysis.abc-b <> ? then fnc-convert-dot-to-colon(x-abc-analysis.abc-b,"->>>>>>>>>>>9",0) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0" val="' + fnc-convert-dot-to-colon(x-abc-analysis.double-line-proc,"->>>>>>>>>>>9",0) + '" style="text-align: right"> ' + if x-abc-analysis.double-line-proc <> ? then fnc-convert-dot-to-colon(x-abc-analysis.double-line-proc,"->>>>>>>>>>>9",0) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0" val="' + fnc-convert-dot-to-colon(x-abc-analysis.le-proc,"->>>>>>>>>>>9",0) + '" style="text-align: right"> ' + if x-abc-analysis.le-proc <> ? then fnc-convert-dot-to-colon(x-abc-analysis.le-proc,"->>>>>>>>>>>9",0) + '</TD>' else "" + '</td>' skip
+                                  '<TD> ' + string(x-abc-analysis.abc-string-obj) + '</TD>'skip
+                                  '<TD> ' + string(x-abc-analysis.abc-string-period) + '</TD>'skip
+                                  '<TD> ' + string(x-abc-analysis.abc-string-doc) + '</TD>'skip
+                                  '<TD> ' + string(x-abc-analysis.abc-date-create,"99/99/99") + '</TD>'skip
+                                  '<TD> ' + STRING (x-abc-analysis.abc-time-create,'HH:MM') + '</TD>'skip
+                                  '<TD num="0" val="' + fnc-convert-dot-to-colon(x-abc-analysis.abc-db-num-create,"->>>>>>>>>>>9",0) + '" style="text-align: right"> ' + if x-abc-analysis.abc-db-num-create <> ? then fnc-convert-dot-to-colon(x-abc-analysis.abc-db-num-create,"->>>>>>>>>>>9",0) + '</TD>' else "" + '</td>' skip
+                                  '<TD> ' + STRING (x-abc-analysis.abc-who-create) + '</TD>'skip
+                              '</TR>'skip    
+                              .
+      END.
+                                     
+   put stream OutStr-html unformatted
+                                '</tbody>' skip
+                                '</table>' skip
+                                '</body>' skip
+                                '</html>' skip
+                                .
+output stream OutStr-html close.                                
+                                                          
+  run prn-lib-reportviewer-report-name in this-procedure (
+                                                          input parParentProc
+                                                          ,input v-file-name-rep-htm
+                                                          ).
 
 END PROCEDURE.
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-report-num automain
+PROCEDURE get-report-num :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define output parameter p-report-num as integer no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run gbl/getrpnum.p (output p-report-num).
+  end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

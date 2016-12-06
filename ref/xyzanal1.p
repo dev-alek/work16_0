@@ -43,6 +43,7 @@ define input parameter p-xyz-z-prc-qnty           like ub.XYZ-analysis.xyz-z-prc
 define input parameter p-xyz-z-qnty               like ub.XYZ-analysis.xyz-z-qnty                       no-undo .
 define input parameter p-xyz-z-sum-prc            like ub.XYZ-analysis.xyz-z-sum-prc                    no-undo .
 define input parameter p-xyz-z-sum                like ub.XYZ-analysis.xyz-z-sum                        no-undo .
+define input parameter p-xyz-r-good               like ub.xyz-analysis-attr.xyza-attr-value             no-undo .
 
 define input PARAMETER TABLE FOR    x-XYZ-analysis-doc.
 define input PARAMETER TABLE FOR    x-XYZ-analysis-obj.
@@ -221,6 +222,20 @@ run cur-time in this-procedure(output v-date, output v-time).
     ub.XYZ-analysis.xyz-z-sum-prc           = p-xyz-z-sum-prc
     ub.XYZ-analysis.xyz-z-sum               = p-xyz-z-sum
   .
+  find first ub.xyz-analysis-attr where ub.xyz-analysis-attr.db-num = ub.xyz-analysis.db-num
+                                    and ub.xyz-analysis-attr.xyz-id = ub.xyz-analysis.xyz-id
+                                    and ub.xyz-analysis-attr.xyza-attr-code = "r-goods" exclusive-lock no-error .
+    if not available ub.xyz-analysis-attr then do:
+      create ub.xyz-analysis-attr .
+      assign
+        ub.xyz-analysis-attr.db-num = ub.xyz-analysis.db-num
+        ub.xyz-analysis-attr.xyz-id = ub.xyz-analysis.xyz-id
+        ub.xyz-analysis-attr.xyza-attr-code = "r-goods"
+      .
+    end.                                           
+    assign
+      ub.xyz-analysis-attr.xyza-attr-value = p-xyz-r-good
+    .
 for each ub.XYZ-analysis-doc exclusive-lock where
          ub.XYZ-analysis-doc.XYZ-id = ub.XYZ-analysis.XYZ-id and
          ub.XYZ-analysis-doc.db-num = ub.XYZ-analysis.db-num   :

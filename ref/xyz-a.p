@@ -26,7 +26,9 @@ define variable vss-description as character no-undo init "Формирование таблицы 
 { trg/factord.i  }
 { ref/def-abct.i }
 { gbl/waitfram.i }
-DEFINE TEMP-TABLE x-analysis        no-undo  LIKE ub.xyz-analysis.
+{ cmp/gds-list.i gds-list def shared }
+DEFINE TEMP-TABLE x-analysis        no-undo  LIKE ub.xyz-analysis
+field r-goods as integer.
 DEFINE TEMP-TABLE x-analysis-doc    no-undo  LIKE ub.xyz-analysis-doc.
 DEFINE TEMP-TABLE x-analysis-obj    no-undo  LIKE ub.xyz-analysis-obj.
 DEFINE TEMP-TABLE x-analysis-period no-undo  LIKE ub.xyz-analysis-period.
@@ -125,6 +127,9 @@ run waitfram-show ("Формирование таблицы оборотов...").
             buf_gds-obj.obj-type = x-analysis-obj.obj-type and
             buf_gds-obj.obj-code = x-analysis-obj.obj-code
             :
+              if x-analysis.r-goods = 2 then do:
+                   if not can-find( first gds-list where buf_gds-obj.gds-code = gds-list.gds-code) then next .
+                end.
             run def-sum (
                input  x-analysis-obj.obj-type
               ,input  x-analysis-obj.obj-code
@@ -942,6 +947,7 @@ find first buf_xyz-analysis no-lock where
                 ,x-analysis.xyz-z-qnty
                 ,x-analysis.xyz-z-sum-prc
                 ,x-analysis.xyz-z-sum
+                ,x-analysis.r-goods
                 ,table x-analysis-doc
                 ,table x-analysis-obj
                 ,table x-analysis-period

@@ -120,6 +120,7 @@ define temp-table tt-report no-undo
   field fact-order    as decimal
   field fact-date     as date
   field doc-code      like ub.trn-doc.doc-code
+  FIELD num-ship      like ub.trn-doc.doc-code  
   field doc-sum       as decimal
   field tara-sum      as decimal
   field buh-1         as character
@@ -258,7 +259,7 @@ define frame torg29
   sym1                            column-label ": " format "X(2)"                             space(0)
   tt-report.fact-date             column-label "   Дата" format {&col-fmtl-date}                space(0)
   sym2                            column-label ": " format "X(2)"                             space(0)
-  tt-report.doc-code              column-label "  Номер документа" format {&col-fmtl-code}     space(0)
+  tt-report.num-ship              column-label "  Номер документа" format {&col-fmtl-code}     space(0)
   sym3                            column-label ":" format "X(2)"                             space(0)
   tt-report.doc-sum               column-label "Сумма товара    " format {&gds-sum-fmt}          space(0)
   sym4                            column-label ":" format "X(2)"                             space(0)
@@ -1124,7 +1125,10 @@ procedure fill-tt-rep :
   do on error undo, return error return-value :
     define input parameter p-gds-code as integer no-undo .
     define input  parameter p-type as character no-undo .
-    
+
+    DEFINE VARIABLE v-attr-type     as character no-undo .
+    DEFINE VARIABLE v-attr-value    as character no-undo .
+
     define variable v-doc-date          as date      no-undo .
     define variable v-vat-pc            as decimal   no-undo.
     
@@ -1158,7 +1162,23 @@ procedure fill-tt-rep :
         tt-report.real-ext-doc-type  = buf_ot-line.ext-doc-type
       tt-report.break-ext-doc-type  = (if p-ext-doc-type-subtotals
                                        then  tt-report.real-ext-doc-type
-                                       else '')
+                                       else '').
+      if tt-report.real-ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
+                run gbl/trdcat-v.p   ( input tt-report.doc-code
+                           , input {&trdcattr-nids} /* номер приходной накладной поставщика */
+                           , output v-attr-value
+                           , output v-attr-type
+                           ) NO-ERROR .
+        if v-attr-value <> "" then tt-report.num-ship = v-attr-value. else tt-report.num-ship = tt-report.doc-code .                            
+      end.                                             
+      if tt-report.real-ext-doc-type <> {&TDEDT_Pri_Vnesh} then do:
+                run gbl/trdcat-v.p   ( input tt-report.doc-code
+                           , input {&trdcattr-print-num} /*номер документа для печати*/
+                           , output v-attr-value
+                           , output v-attr-type
+                           ) NO-ERROR .
+        if v-attr-value <> "" then tt-report.num-ship = v-attr-value. else tt-report.num-ship = tt-report.doc-code .                            
+      end.   
       tt-report.cli-name      = (if available buf_trn-doc
                                  then buf_trn-doc.cli-name
                                  else (if buf_ot-line.ext-doc-type = {&TDEDT_Overturn}
@@ -1274,10 +1294,10 @@ on error undo, return error return-value
 &if "{&has-name-column}" = "yes" &then
     sym7   substitute("Остаток на &1" , string(x-date-start, "99/99/9999"))   @ v-name
     sym2    p-fmt-align-string( {&none-symbol} , {&col-fmtl-date-l} , "center")  @ tt-report.fact-date
-    sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center")  @ tt-report.doc-code
+    sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center")  @ tt-report.num-ship
 &else
     sym2   x-Date-Start @ tt-report.fact-date
-    sym3   "Остаток на "  @ tt-report.doc-code
+    sym3   "Остаток на "  @ tt-report.num-ship
 &endif
       sym4   v-ost-gds-1  @ tt-report.doc-sum
       sym5   v-ost-tara-1 @ tt-report.tara-sum
@@ -1289,9 +1309,9 @@ on error undo, return error return-value
 &if "{&has-name-column}" = "yes" &then
      sym7   "Приход "  @ v-name
      sym2    p-fmt-align-string( {&none-symbol} , {&col-fmtl-date-l} , "center") @ tt-report.fact-date
-     sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.doc-code
+     sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.num-ship
 &else
-    "Приход"  @ tt-report.doc-code
+    "Приход"  @ tt-report.num-ship
     sym2
     sym3
 &endif
@@ -1333,7 +1353,7 @@ on error undo, return error return-value
         sym7
         func-get-name-from-ext-type( tt-report.real-ext-doc-type, no) @ v-name
   &else
-        '' @ tt-report.doc-code
+        '' @ tt-report.num-ship
   &endif
         sym2
         sym3
@@ -1358,17 +1378,17 @@ on error undo, return error return-value
       tt-report.cli-name @ v-name
 &else
 &endif
-        sym2        tt-report.fact-date
-        sym3        tt-report.doc-code
-        sym4        tt-report.doc-sum
-        sym5        tt-report.tara-sum
-        sym6        tt-report.buh-1
-        sym1
+      sym2        tt-report.fact-date
+      sym3        tt-report.num-ship
+      sym4        tt-report.doc-sum
+      sym5        tt-report.tara-sum
+      sym6        tt-report.buh-1
+      sym1
       with frame torg29.
       down stream out-stream with frame torg29.
       run torg29xl-sheet1-write-line-data ( input tt-report.cli-name
                                           , input tt-report.fact-date
-                                          , input tt-report.doc-code
+                                          , input tt-report.num-ship
                                           , input string(tt-report.doc-sum)
                                           , input string(tt-report.tara-sum)
                                           , input tt-report.buh-1
@@ -1418,7 +1438,7 @@ on error undo, return error return-value
           sym7 shiftright(buf_cash-pay.obj-name, {&cp-name-length})  @ v-name
           sym3
 &else
-          sym3 shiftright(buf_cash-pay.obj-name, {&cp-name-length}) @ tt-report.doc-code
+          sym3 shiftright(buf_cash-pay.obj-name, {&cp-name-length}) @ tt-report.naum-ship
 &endif
           sym2
           sym4 (- doc_temp-cp.sum)   @ tt-report.doc-sum
@@ -1445,11 +1465,11 @@ on error undo, return error return-value
         sym7
         substitute("ИТОГО &1", func-get-name-from-ext-type( tt-report.real-ext-doc-type, no)) @ v-name
         sym2    p-fmt-align-string( {&none-symbol} , {&col-fmtl-date-l} , "center")  @ tt-report.fact-date
-        sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center")  @ tt-report.doc-code
+        sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center")  @ tt-report.num-ship
   &else
         sym2
         sym3
-        "" @ tt-report.doc-code
+        "" @ tt-report.num-ship
   &endif
         sym4 v-ext-doc-type-doc-sum   @ tt-report.doc-sum
         sym5 v-ext-doc-type-tara-sum  @ tt-report.tara-sum
@@ -1474,10 +1494,10 @@ on error undo, return error return-value
       sym7
       "Итого по приходу"  @ v-name
      sym2    p-fmt-align-string( {&none-symbol} , {&col-fmtl-date-l} , "center") @ tt-report.fact-date
-     sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.doc-code
+     sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.num-ship
 &else
       sym2
-      sym3  "Итого по приходу"  @ tt-report.doc-code
+      sym3  "Итого по приходу"  @ tt-report.num-ship
 &endif
 
       sym4     v-total-gds @ tt-report.doc-sum
@@ -1499,10 +1519,10 @@ on error undo, return error return-value
       sym7
       "Итого с остатком" @ v-name
      sym2    p-fmt-align-string( {&none-symbol} , {&col-fmtl-date-l} , "center") @ tt-report.fact-date
-     sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.doc-code
+     sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.num-ship
 &else
       sym2
-      sym3 "Итого с остатком" @ tt-report.doc-code
+      sym3 "Итого с остатком" @ tt-report.num-ship
 &endif
 
       sym4   v-itog-s-ost-gds @ tt-report.doc-sum
@@ -1525,10 +1545,10 @@ on error undo, return error return-value
     sym7
     "Расход" @ v-name
      sym2    p-fmt-align-string( {&none-symbol} , {&col-fmtl-date-l} , "center") @ tt-report.fact-date
-     sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.doc-code
+     sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.num-ship
 &else
     sym2
-    sym3 "Расход" @ tt-report.doc-code
+    sym3 "Расход" @ tt-report.num-ship
 &endif
 
     sym4
@@ -1567,7 +1587,7 @@ on error undo, return error return-value
         sym7
         func-get-name-from-ext-type( tt-report.real-ext-doc-type, no) @ v-name
   &else
-        "" @ tt-report.doc-code
+        "" @ tt-report.num-ship
   &endif
         sym2
         sym3
@@ -1590,17 +1610,17 @@ on error undo, return error return-value
       sym7        tt-report.cli-name @ v-name
 &else
 &endif
-        sym2        tt-report.fact-date
-        sym3        tt-report.doc-code
-        sym4        tt-report.doc-sum
-        sym5        tt-report.tara-sum
-        sym6        tt-report.buh-1
-        sym1
+      sym2        tt-report.fact-date
+      sym3        tt-report.num-ship
+      sym4        tt-report.doc-sum
+      sym5        tt-report.tara-sum
+      sym6        tt-report.buh-1
+      sym1
       with frame torg29.
       down stream out-stream with frame torg29.
       run torg29xl-sheet2-write-line-data ( input tt-report.cli-name
                                           , input tt-report.fact-date
-                                          , input tt-report.doc-code
+                                          , input tt-report.num-ship
                                           , input string(tt-report.doc-sum)
                                           , input string(tt-report.tara-sum)
                                           , input tt-report.buh-1
@@ -1619,7 +1639,7 @@ on error undo, return error return-value
         sym7 "В т.ч.по типам касс.плат." @ v-name
         sym3
 &else
-        sym3 "В т.ч.по типам касс.плат." @ tt-report.doc-code
+        sym3 "В т.ч.по типам касс.плат." @ tt-report.num-ship
 &endif
         sym2
         sym4
@@ -1676,11 +1696,11 @@ on error undo, return error return-value
         sym7
         substitute("ИТОГО &1", func-get-name-from-ext-type( tt-report.real-ext-doc-type, no)) @ v-name
         sym2    p-fmt-align-string( {&none-symbol} , {&col-fmtl-date-l} , "center")  @ tt-report.fact-date
-        sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center")  @ tt-report.doc-code
+        sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center")  @ tt-report.num-ship
   &else
         sym2
         sym3
-        '' @ tt-report.doc-code
+        '' @ tt-report.num-ship
   &endif
         sym4 v-ext-doc-type-doc-sum  @ tt-report.doc-sum
         sym5 v-ext-doc-type-tara-sum @ tt-report.tara-sum
@@ -1721,10 +1741,10 @@ on error undo, return error return-value
 &if "{&has-name-column}" = "yes" &then
       sym7 "Автоматическая переоценка" @ v-name
      sym2    p-fmt-align-string( {&none-symbol} , {&col-fmtl-date-l} , "center") @ tt-report.fact-date
-     sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.doc-code
+     sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.num-ship
 &else
       sym2
-      sym3  "Автоматическая переоценка" @ tt-report.doc-code
+      sym3  "Автоматическая переоценка" @ tt-report.num-ship
 &endif
 
         sym4   v-avt-ovt-gds @ tt-report.doc-sum
@@ -1748,10 +1768,10 @@ on error undo, return error return-value
 &if "{&has-name-column}" = "yes" &then
     sym7 "Итого по расходу" @ v-name
     sym2    p-fmt-align-string( {&none-symbol} , {&col-fmtl-date-l} , "center") @ tt-report.fact-date
-    sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.doc-code
+    sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center") @ tt-report.num-ship
 &else
     sym2
-    sym3  "Итого по расходу" @ tt-report.doc-code
+    sym3  "Итого по расходу" @ tt-report.num-ship
 &endif
 
       sym4     v-total-gds @ tt-report.doc-sum
@@ -1765,10 +1785,10 @@ on error undo, return error return-value
 &if "{&has-name-column}" = "yes" &then
     sym7   substitute("Остаток на &1" , string(x-date-end, "99/99/9999"))   @ v-name
     sym2    p-fmt-align-string( {&none-symbol} , {&col-fmtl-date-l} , "center")  @ tt-report.fact-date
-    sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center")  @ tt-report.doc-code
+    sym3    p-fmt-align-string( {&none-symbol} , {&col-fmtl-code-l} , "center")  @ tt-report.num-ship
 &else
-      sym2      x-Date-End    @ tt-report.fact-date
-      sym3      "Остаток на " @ tt-report.doc-code
+    sym2      x-Date-End    @ tt-report.fact-date
+    sym3      "Остаток на " @ tt-report.num-ship
 &endif
       sym4      v-ost-gds-2   @ tt-report.doc-sum
       sym5      v-ost-tara-2  @ tt-report.tara-sum

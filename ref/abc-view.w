@@ -71,6 +71,8 @@ define variable vss-description as character no-undo init "Просмотр результатов 
 { gbl/assmatat.i }   /* Библиотека для работы с атрибутами АМ */
 { gbl/thbj-def.i }
 { ref/ass-mat.i &DEF_PROC=YES}    /* Процедуры и функции для работы с АМ (по задаче "Процент отклонения матрицы от шаблона") */
+{ rep/html-conv.i }
+
 
 define variable filter-point as character no-undo init "Просмотр АВС анализа" .
 define variable filter-point0 as character no-undo init "Просмотр_АВС_анализа" .
@@ -91,6 +93,10 @@ define variable v-Amin     as character no-undo .
 define variable v-obj-AssMin  as logical   no-undo .
 define variable v-obj-igt     as character no-undo .
 
+define stream Out-Stream.
+define stream OutStr-html.
+define VARIABLE p-report-id              as character               no-undo .
+define variable v-file-name-rep-htm as character no-undo .
 
 define variable rid-list   as character no-undo .
 
@@ -1726,205 +1732,247 @@ PROCEDURE print-proc :
 -------------------------------------------------------------*/
 define input  parameter p-obj as logical   no-undo .
 
-define variable sym1  as char format "X(1)" init ":".
-define variable sym2  as char format "X(1)" init ":".
-define variable sym3  as char format "X(1)" init ":".
-define variable sym4  as char format "X(1)" init ":".
-define variable sym5  as char format "X(1)" init ":".
-define variable sym6  as char format "X(1)" init ":".
-define variable sym7  as char format "X(1)" init ":".
-define variable sym8  as char format "X(1)" init ":".
-define variable sym9  as char format "X(1)" init ":".
-define variable sym10 as char format "X(1)" init ":".
-define variable sym11 as char format "X(1)" init ":".
-define variable sym12 as char format "X(1)" init ":".
-
 define variable date_string     as      char    no-undo.
 define variable Line                as      char    no-undo.
 define variable for-time as char.
 
+  
+/*Печать HTML*/
+           run get-report-num (
+            output p-report-id
+        ).
+        
+    v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
+    /*шапка*/
+    output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
+    put stream OutStr-html unformatted
+             "<!DOCTYPE HTML>" skip
+                ' <html>' skip
+                '  <head>' skip
+                '   <meta charset="utf-8">' skip
+                '    <style type="text/css">' skip
 
-DEFINE FRAME prt-frame
-      buf_goods.artic COLUMN-LABEL "Артикул! !" FORMAT "X(16)":U
-      buf_goods.gds-name COLUMN-LABEL "Название! !" FORMAT "X(20)":U
-      Buf_abc-analysis-goods.abcg-abc COLUMN-LABEL "A!B!C" FORMAT "X(1)":U
-      Buf_abc-analysis-goods.abcg-prcnt-for-estimate COLUMN-LABEL "% по  !крите-!рию   " FORMAT ">>9.99":U
-      Buf_abc-analysis-goods.abcg-sum-for-estimate COLUMN-LABEL "Сумма!для оценки!по критерию" FORMAT "->>>>>>9.<<<":U
-      v-izt      COLUMN-LABEL "ИЖТ! !"           FORMAT "X(15)":U
-      v-Amin     COLUMN-LABEL "Ассорт.!min!"     FORMAT "X(9)":U
-      v-Acc-mat  COLUMN-LABEL "Ассорт.!матрица!" FORMAT "X(9)":U
-      Buf_abc-analysis-goods.abcg-qnty COLUMN-LABEL "Количество!по!реализац." FORMAT "->>>>>>9.<<<":U
-      Buf_abc-analysis-goods.abcg-stock-qnty COLUMN-LABEL "Остаток!кол-тво!" FORMAT "->>>>>>9.<<<":U
-      Buf_abc-analysis-goods.abcg-stock-price-acc COLUMN-LABEL "Остаток!товара в!учет.ценах" FORMAT "->>>>>>>9.99":U
-      Buf_abc-analysis-goods.abcg-stock-price-sale COLUMN-LABEL "Остаток!товара в!продаж.ценах" FORMAT "->>>>>>>9.99":U
-      Buf_abc-analysis-goods.abcg-sum-acc COLUMN-LABEL "Сумма!реализац. в!учет.ценах" FORMAT "->>>>>>>9.99":U
-      Buf_abc-analysis-goods.abcg-sum-cur COLUMN-LABEL "Сумма!реализац. в!прод.ценах" FORMAT "->>>>>>>9.99":U
-      Buf_abc-analysis-goods.abcg-sum-doc COLUMN-LABEL "Сумма!реализац. в!ценах докум." FORMAT "->>>>>>>9.99":U
-      Buf_abc-analysis-goods.abcg-temp-sale-goods COLUMN-LABEL "Темп!продаж!среднесут." FORMAT "->>>>>9.<<<":U
-      Buf_abc-analysis-goods.abcg-order-qnty COLUMN-LABEL "Заказ.!кол-во!товара" FORMAT ">>>>9.<<<":U
-        HEADER  date_string AT 5 format "X(35)"
-                    string( "Страница " ) format "X(9)" AT 50 PAGE-NUMBER( PrnLibStream) AT 70 FORMAT ">>>>9" SKIP
-                    Line format "X(198)" AT 1
-    with width {&DOS_CW_2} down stream-io use-text    .
+                '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+                '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+                '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+                '   </style>' skip
+                '  </head>' skip
+            .
 
-    Line = fill("-", 255).
-    date_string = cur-time-print() .
-    run prn-lib-open-stream  in this-procedure (
-       input parParentProc
-      ,input {&LS_PS_A4}
-      ,input yes  /* p-is-stream*/
-      ,input no   /* p-append*/
-      ).
+ /*определяем кол-во колонок*/
 
-    FORM HEADER
-            Line format "X(198)" AT 1 SKIP
-            "Продолжение - на следующей странице" AT 30 SKIP
-            with FRAME BottomFrame width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS NO-BOX .
-    VIEW  STREAM PrnLibStream FRAME BottomFrame .
-
-    FORM with FRAME prt-frame  .
-
-    PUT  STREAM PrnLibStream
-    space(25) ( frame {&frame-name}:title )
-    format "x(116)" skip
-    "Вн.Код     : "   string(buf_abc-analysis.abc-id )   skip
-    "Название   : "   buf_abc-analysis.abc-name  skip
-    "Критерий   : "   buf_criterion-analysis.cral-name  skip
-    "Коментарии : "   buf_abc-analysis.abc-des   skip
-    "Создание анализа : " buf_abc-analysis.abc-date-create " " string(buf_abc-analysis.abc-time-create,"hh:mm") buf_abc-analysis.abc-who-create
-    skip
-    .
-
+    put stream OutStr-html unformatted
+        '<body>' skip
+        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+        '<thead>' skip
+        '<TR class="set_columns">'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 150px;"></TD>'skip
+            '<TD style="width: 30px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 80px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+            '<TD style="width: 60px;"></TD>'skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="17" STYLE="font-size: 14px;">Вн.Код     :' + string(buf_abc-analysis.abc-id) + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="17" STYLE="font-size: 14px;">Название   :' + string(buf_abc-analysis.abc-name) + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="17" STYLE="font-size: 14px;">Критерий   :' + string(buf_criterion-analysis.cral-name) + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="17" STYLE="font-size: 14px;">Коментарии :' + string(buf_abc-analysis.abc-des) + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="17" STYLE="font-size: 14px;">Создание анализа :' + string(buf_abc-analysis.abc-date-create,"99.99.9999") + '' + string(buf_abc-analysis.abc-time-create,"hh:mm") + '' + buf_abc-analysis.abc-who-create + '</TD>' skip
+        '</TR>'skip
+    .        
+  
+  
+     
     define buffer bufp_abc-analysis-obj for ub.abc-analysis-obj.
-    PUT  STREAM PrnLibStream  "Объекты : "    .
+    define VARIABLE v-obj as character no-undo .
+
     for each bufp_abc-analysis-obj no-lock where bufp_abc-analysis-obj.db-num = buf_abc-analysis.db-num and
                                                  bufp_abc-analysis-obj.abc-id = buf_abc-analysis.abc-id :
-       PUT  STREAM PrnLibStream  trim(bufp_abc-analysis-obj.obj-type) + " " + trim(string(bufp_abc-analysis-obj.obj-code)) "," .
+       v-obj = v-obj + "," + trim(bufp_abc-analysis-obj.obj-type) + " " + trim(string(bufp_abc-analysis-obj.obj-code)) . 
     end.
-    PUT  STREAM PrnLibStream  skip .
 
+    v-obj = TRIM (v-obj,",") .
+    
+        put stream OutStr-html unformatted            
+        '<TR>'skip
+            '<TD colspan="17" STYLE="font-size: 14px;">Объекты    :' + string(v-obj) + '</TD>' skip
+        '</TR>'skip       
+        .
+        
     define buffer bufp_abc-analysis-period for ub.abc-analysis-period.
-    PUT  STREAM PrnLibStream  "Периоды : "    .
+    define VARIABLE v-period as character no-undo .
+
     for each bufp_abc-analysis-period no-lock where bufp_abc-analysis-period.db-num = buf_abc-analysis.db-num and
                                                     bufp_abc-analysis-period.abc-id = buf_abc-analysis.abc-id :
-       PUT  STREAM PrnLibStream  bufp_abc-analysis-period.abcp-start "-" bufp_abc-analysis-period.abcp-end "," .
+       v-period = v-period + "," + string(bufp_abc-analysis-period.abcp-start,"99.99.9999") + "-" + string(bufp_abc-analysis-period.abcp-end,"99.99.9999") .
     end.
-    PUT  STREAM PrnLibStream  skip .
-
+        v-period = TRIM (v-period,",") .
+    
+        put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="17" STYLE="font-size: 14px;">Периоды    :' + string(v-period) + '</TD>' skip
+        '</TR>'skip       
+        .
+        
     define buffer bufp_abc-analysis-doc for ub.abc-analysis-doc.
-    PUT  STREAM PrnLibStream  "Типы документов : "    .
+    define VARIABLE v-doc-type as character no-undo .
+
     for each bufp_abc-analysis-doc no-lock where bufp_abc-analysis-doc.db-num = buf_abc-analysis.db-num and
                                                  bufp_abc-analysis-doc.abc-id = buf_abc-analysis.abc-id :
-       PUT  STREAM PrnLibStream UNFORMATTED func-get-name-from-ext-type ( bufp_abc-analysis-doc.abcd-ext-doc-type , false ) "," .
+       v-doc-type = v-doc-type + "," + func-get-name-from-ext-type( bufp_abc-analysis-doc.abcd-ext-doc-type , false ) .
     end.
-    PUT  STREAM PrnLibStream  skip .
 
-    run waitfram-show in this-procedure ("Ждите печатаю...").
+        v-doc-type = TRIM (v-doc-type,",") .
 
+        put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="17" STYLE="font-size: 14px;">Типы документов  :' + string(v-doc-type) + '</TD>' skip
+        '</TR>'skip
+        .
+        
+        put stream OutStr-html unformatted                       
+        '</thead>'skip
+    .
+
+       put stream OutStr-html unformatted
+        '<tbody>'
+        '<TR>'skip
+            '<TH style="text-align: center;">Артикул</TH>'skip
+            '<TH style="text-align: center;">Название</TH>'skip
+            '<TH style="text-align: center;">ABC</TH>'skip
+            '<TH style="text-align: center;">% по критерию</TH>'skip
+            '<TH style="text-align: center;">Сумма для оценки по критерию</TH>'skip
+            '<TH style="text-align: center;">ИЖТ</TH>'skip
+            '<TH style="text-align: center;">Ассорт. min</TH>'skip
+            '<TH style="text-align: center;">Ассорт. матрица</TH>'skip
+            '<TH style="text-align: center;">Кол-во по реализац</TH>'skip
+            '<TH style="text-align: center;">Остаток кол-во</TH>'skip
+            '<TH style="text-align: center;">Остаток товара в учет.ценах</TH>'skip
+            '<TH style="text-align: center;">Остаток товара в продаж.ценах</TH>'skip
+            '<TH style="text-align: center;">Сумма реализ. в учет.ценах</TH>'skip
+            '<TH style="text-align: center;">Сумма реализ. в прод.ценах</TH>'skip
+            '<TH style="text-align: center;">Сумма реализ. в ценах докум.</TH>'skip
+            '<TH style="text-align: center;">Темп продаж среднесут</TH>'skip
+            '<TH style="text-align: center;">Заказ кол-во товара </TH>'skip
+        '</TR>'skip
+        .
+    
+    define variable ii as integer no-undo .
+                if p-obj = true then do:
+               {&OPEN-QUERY-BROWSE-obj}
+                DO WHILE available Buf_abc-analysis-obj :
+                    ii = ii + 1 .    
+                get next browse-obj.
+                end.
+                end.            
+                ii = ii + 1 .
+                
      run OpenBR in this-procedure (yes, no, '':U).
-
      DO WHILE available Buf_abc-analysis-goods :
+
         run prt-goods in this-procedure .
-        Display STREAM PrnLibStream
-            buf_goods.artic
-            buf_goods.gds-name
-            Buf_abc-analysis-goods.abcg-abc
-            Buf_abc-analysis-goods.abcg-prcnt-for-estimate
-            Buf_abc-analysis-goods.abcg-sum-for-estimate
-            v-izt    @ v-izt
-            v-Amin   @  v-Amin
-            v-Acc-mat @ v-Acc-mat
-            Buf_abc-analysis-goods.abcg-qnty
-            Buf_abc-analysis-goods.abcg-stock-qnty
-            Buf_abc-analysis-goods.abcg-stock-price-acc
-            Buf_abc-analysis-goods.abcg-stock-price-sale
-            Buf_abc-analysis-goods.abcg-sum-acc
-            Buf_abc-analysis-goods.abcg-sum-cur
-            Buf_abc-analysis-goods.abcg-sum-doc
-            Buf_abc-analysis-goods.abcg-temp-sale-goods
-            Buf_abc-analysis-goods.abcg-order-qnty
-            with FRAME prt-frame .
-            DOWN STREAM PrnLibStream 1 with FRAME prt-frame  .
+        
+             put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD rowspan="' + string(ii) + '"> ' + string(buf_goods.artic) + '</TD>'skip
+                                  '<TD> ' + string(buf_goods.gds-name) + '</TD>'skip
+                                  '<TD rowspan="' + string(ii) + '"> ' + string(Buf_abc-analysis-goods.abcg-abc) + '</TD>'skip
+                                  '<TD rowspan="' + string(ii) + '" num="0.000" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-prcnt-for-estimate,"->>>>>>>>>>>9.999",3) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-prcnt-for-estimate <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-prcnt-for-estimate,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
+                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-sum-for-estimate,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-sum-for-estimate <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-sum-for-estimate,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD> ' + string(v-izt) + '</TD>'skip
+                                  '<TD> ' + string(v-Amin) + '</TD>'skip
+                                  '<TD> ' + string(v-Acc-mat) + '</TD>'skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-qnty <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-stock-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-stock-qnty <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-stock-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-stock-price-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-stock-price-acc <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-stock-price-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-stock-price-sale,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-stock-price-sale <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-stock-price-sale,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-sum-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-sum-acc <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-sum-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-sum-cur,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-sum-cur <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-sum-cur,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-sum-doc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-sum-doc <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-sum-doc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-temp-sale-goods <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-order-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-goods.abcg-order-qnty <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-goods.abcg-order-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                              '</TR>'skip    
+                              .       
+        
+
             if p-obj = true then do:
                /* расшифровка по объектам */
                {&OPEN-QUERY-BROWSE-obj}
                 DO WHILE available Buf_abc-analysis-obj :
                     run disp-obj in this-procedure .
-                    Display STREAM PrnLibStream
-                        "" @ buf_goods.artic
-                        Buf_abc-analysis-obj.obj-type + " " + string(Buf_abc-analysis-obj.obj-code)  @ buf_goods.gds-name
-                        "" @ Buf_abc-analysis-goods.abcg-abc
-                        "" @ Buf_abc-analysis-goods.abcg-prcnt-for-estimate
-                        "" @ Buf_abc-analysis-goods.abcg-sum-for-estimate
-                        v-obj-igt     @ v-izt
-                        string( v-obj-AssMin , "да/нет" ) @ v-Amin
-                        v-ass-name    @ v-Acc-mat
-                        Buf_abc-analysis-gds-obj.abog-qnty              @ Buf_abc-analysis-goods.abcg-qnty
-                        Buf_abc-analysis-gds-obj.abog-stock-qnty        @ Buf_abc-analysis-goods.abcg-stock-qnty
-                                                                     "" @ Buf_abc-analysis-goods.abcg-stock-price-acc
-                        buf_abc-analysis-gds-obj.abog-price-crc         @ Buf_abc-analysis-goods.abcg-stock-price-sale
-                        Buf_abc-analysis-gds-obj.abog-sum-acc           @ Buf_abc-analysis-goods.abcg-sum-acc
-                        Buf_abc-analysis-gds-obj.abog-sum-cur           @ Buf_abc-analysis-goods.abcg-sum-cur
-                        Buf_abc-analysis-gds-obj.abog-sum-doc           @ Buf_abc-analysis-goods.abcg-sum-doc
-                        Buf_abc-analysis-gds-obj.abog-temp-sale-goods   @ Buf_abc-analysis-goods.abcg-temp-sale-goods
-                        ""                                              @ Buf_abc-analysis-goods.abcg-order-qnty
-                        with frame prt-frame .
-                        down stream prnlibstream 1 with frame prt-frame  .
+
+                    put stream OutStr-html unformatted
+                              '<TR>'skip
+                                  '<TD> ' + string(Buf_abc-analysis-obj.obj-type + " " + string(Buf_abc-analysis-obj.obj-code)) + '</TD>'skip
+                                  '<TD> ' + string(v-obj-igt) + '</TD>'skip
+                                  '<TD> ' + string( v-obj-AssMin , "да/нет" ) + '</TD>'skip
+                                  '<TD> ' + string(v-ass-name) + '</TD>'skip
+                                  .
+                    if AVAILABLE buf_abc-analysis-gds-obj then do:
+                    put stream OutStr-html unformatted              
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-gds-obj.abog-qnty <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-stock-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-gds-obj.abog-stock-qnty <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-stock-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(buf_abc-analysis-gds-obj.abog-price-crc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if buf_abc-analysis-gds-obj.abog-price-crc <> ? then fnc-convert-dot-to-colon(buf_abc-analysis-gds-obj.abog-price-crc,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-sum-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-gds-obj.abog-sum-acc <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-sum-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-sum-cur,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-gds-obj.abog-sum-cur <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-sum-cur,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-sum-doc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-gds-obj.abog-sum-doc <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-sum-doc,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_abc-analysis-gds-obj.abog-temp-sale-goods <> ? then fnc-convert-dot-to-colon(Buf_abc-analysis-gds-obj.abog-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                              '</TR>'skip    
+                              .
+                    end.
+                    else do:
+                    put stream OutStr-html unformatted                        
+                                  '<TD style="text-align: right">' + "?" + '</TD>'skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>'skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
+                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
+                              '</TR>'skip    
+                              .
+                        
+                    end.    
+
                         get next browse-obj.
                 END.
-                  UNDERLINE  STREAM PrnLibStream
-                        buf_goods.gds-name
-                        Buf_abc-analysis-goods.abcg-abc
-                        Buf_abc-analysis-goods.abcg-prcnt-for-estimate
-                        Buf_abc-analysis-goods.abcg-sum-for-estimate
-                        v-izt
-                        v-Amin
-                        v-Acc-mat
-                        Buf_abc-analysis-goods.abcg-qnty
-                        Buf_abc-analysis-goods.abcg-stock-qnty
-                        Buf_abc-analysis-goods.abcg-stock-price-acc
-                        Buf_abc-analysis-goods.abcg-stock-price-sale
-                        Buf_abc-analysis-goods.abcg-sum-acc
-                        Buf_abc-analysis-goods.abcg-sum-cur
-                        Buf_abc-analysis-goods.abcg-sum-doc
-                        Buf_abc-analysis-goods.abcg-temp-sale-goods
-                        Buf_abc-analysis-goods.abcg-order-qnty
-                with FRAME prt-frame .
 
             end.
 
             GET next BROWSE-goods.
       END.
-      UNDERLINE  STREAM PrnLibStream
-            buf_goods.artic
-            buf_goods.gds-name
-            Buf_abc-analysis-goods.abcg-abc
-            Buf_abc-analysis-goods.abcg-prcnt-for-estimate
-            Buf_abc-analysis-goods.abcg-sum-for-estimate
-            v-izt
-            v-Amin
-            v-Acc-mat
-            Buf_abc-analysis-goods.abcg-qnty
-            Buf_abc-analysis-goods.abcg-stock-qnty
-            Buf_abc-analysis-goods.abcg-stock-price-acc
-            Buf_abc-analysis-goods.abcg-stock-price-sale
-            Buf_abc-analysis-goods.abcg-sum-acc
-            Buf_abc-analysis-goods.abcg-sum-cur
-            Buf_abc-analysis-goods.abcg-sum-doc
-            Buf_abc-analysis-goods.abcg-temp-sale-goods
-            Buf_abc-analysis-goods.abcg-order-qnty
-
-    with FRAME prt-frame .
-
-    HIDE  STREAM PrnLibStream FRAME BottomFrame .
-    HIDE  STREAM PrnLibStream FRAME CheckList.
-    output  STREAM PrnLibStream CLOSE.
-    run OpenBR in this-procedure (yes, no, '':U).
-    run waitfram-hide in this-procedure .
-    run prn-lib-prn-file in this-procedure (
-        input parParentProc
-       ,input 8
-        ).
+   put stream OutStr-html unformatted
+                                '</tbody>' skip
+                                '</table>' skip
+                                '</body>' skip
+                                '</html>' skip
+                                .
+output stream OutStr-html close.                                
+                                                          
+  run prn-lib-reportviewer-report-name in this-procedure (
+                                                          input parParentProc
+                                                          ,input v-file-name-rep-htm
+                                                          ).
 
 END PROCEDURE.
 
@@ -2454,6 +2502,26 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-report-num automain
+PROCEDURE get-report-num :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define output parameter p-report-num as integer no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run gbl/getrpnum.p (output p-report-num).
+  end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 /* ************************  Function Implementations ***************** */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION mark-string Dialog-Frame

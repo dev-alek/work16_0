@@ -2155,6 +2155,7 @@ procedure CompareRests :
     v-act-file  = session:temp-directory + {&DF_Name} +  "egais-rests_compare.html".
     empty temp-table tt-compare-rests .
     empty temp-table gds-list .
+    goods-list = "" .
     
     run str/gds-list.w ( input parparentproc, v-cntxt-host-code-obj, v-cntxt-obj-type, v-cntxt-obj-code).
     for each gds-list no-lock :
@@ -2347,6 +2348,7 @@ procedure MarksCompareRests :
     empty temp-table tt-marks-compare-rests .
     empty temp-table tt-marks-qnty .
     empty temp-table gds-list .
+    goods-list = "" .
     
     run str/gds-list.w ( input parparentproc, v-cntxt-host-code-obj, v-cntxt-obj-type, v-cntxt-obj-code).
     for each gds-list no-lock :
@@ -2629,6 +2631,7 @@ procedure ListView :
     define variable v-gds-entry as character no-undo .
     empty temp-table tt-gds-list .
     empty temp-table gds-list .
+    goods-list = "" .
     
     run str/gds-list.w ( input parparentproc, v-cntxt-host-code-obj, v-cntxt-obj-type, v-cntxt-obj-code).
     for each gds-list no-lock :
