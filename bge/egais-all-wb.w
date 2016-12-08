@@ -804,6 +804,10 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
 ON choose OF Btn_OK IN FRAME Dialog-Frame /* Выход */
 do:
+  if valid-object (egais)
+    then delete object egais.
+  if valid-object (egaisWBAdv)
+    then delete object egaisWBAdv.
   apply "go" to frame {&FRAME-NAME}.
 end.
 
