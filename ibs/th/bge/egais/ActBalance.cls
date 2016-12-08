@@ -192,7 +192,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
                 
         end.
         
-        find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = inAbIndenty .
+        find last buf_clob-bind exclusive-lock where buf_clob-bind.field-name_ = {&lob-egais-ab} and buf_clob-bind.uniq-key-rec = inAbIndenty .
         v-type = (entry (5, buf_clob-bind.descr, {&delim-par})) no-error .
 		if v-type = ? then v-type = "" .
 		if num-entries (buf_clob-bind.descr, {&delim-par}) = 3 then
@@ -208,6 +208,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
             assign entry(4, buf_clob-bind.descr, {&delim-par}) = v-Answer 
 				   entry(5, buf_clob-bind.descr, {&delim-par}) = v-type
 				   entry(6, buf_clob-bind.descr, {&delim-par}) = v-RegID .
+        release buf_clob-bind .
             
         find first tt-act-header where tt-act-header.num = inAbIndenty .
         assign tt-act-header.answer_ = v-Answer
@@ -312,7 +313,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
   end.
 
   method override protected logical GetIsSent ():
-    find first ub.esys-all-attr 
+    find first ub.esys-all-attr exclusive-lock
                 where ub.esys-all-attr.table-name = "esys-pck-sent" 
                 and ub.esys-all-attr.attr-code = "egais"
                 and ub.esys-all-attr.key2       = 4
@@ -321,6 +322,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     if available (ub.esys-all-attr )
     then do:
       ReplyId = ub.esys-all-attr.key7.
+      release ub.esys-all-attr .
       return true.
     end.
     

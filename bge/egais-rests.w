@@ -598,6 +598,8 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Объекты ЕГАИС */
 DO:
+    delete object Rests no-error .
+    delete object Rests_shop no-error .
   APPLY "END-ERROR":U TO SELF.
 END.
 
