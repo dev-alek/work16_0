@@ -223,6 +223,7 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON window-close OF FRAME Dialog-Frame /* Накладные ЕГАИС */
 do:
+    delete object egais no-error .
   apply "END-ERROR":U to self.
 end.
 

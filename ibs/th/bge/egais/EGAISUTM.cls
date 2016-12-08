@@ -1,13 +1,19 @@
- 
-/*------------------------------------------------------------------------
-   File        : EGAISUTM
-   Purpose     : 
-   Syntax      : 
-   Description : 
-   Author(s)   : asmorozov
-   Created     : Fri Nov 13 16:37:34 MSK 2015
-   Notes       : 
- ----------------------------------------------------------------------*/
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Класс работы с УТМ
+
+Автор: Морозов Александр Сергеевич
+Дата создания: 11/11/15
+Author: Alexandr Morozov
+Creation date: 11/11/15
+
+*/
 
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
@@ -163,12 +169,14 @@ class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
       no-error.
       if error-status:error
       then do:
+        release ub.esys-all-attr.
         return false.
       end.
     end.
     else
       return false.
     
+    release ub.esys-all-attr.
     return true.
     
   end method.
@@ -185,6 +193,7 @@ class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:
     if available (ub.esys-all-attr )
     then do:
       outReplyId = ub.esys-all-attr.key7.
+      release ub.esys-all-attr.
       return true.
     end.
     
