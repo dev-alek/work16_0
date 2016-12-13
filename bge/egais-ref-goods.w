@@ -62,6 +62,8 @@ define variable isSave                 as logical   no-undo.
 define variable glog                   as logical   no-undo.
 define variable v-user-action          as character no-undo .
 define variable v-printed              as logical   no-undo .
+define variable v-windth               as integer   no-undo.
+define variable v-isDisp               as character no-undo.
 
 define buffer buf_clients   for ub.clients .
 define buffer x_ext-classif for ub.ext-classif.
@@ -494,8 +496,9 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_refresh Dialog-Frame
 ON CHOOSE OF btn_refresh IN FRAME Dialog-Frame /* Обновить */
 DO:
-  extGdsObj:GetHndlTable(0, "", input-output bh-egais-goods).
-  run refresh-view.
+
+  run reopen-browse.  
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -653,8 +656,6 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
 
   def var ii as int no-undo.
-  def var v-windth as integer no-undo.
-  def var v-isDisp as character no-undo. 
 
   { gbl/getcurus.i
     v-db-num
@@ -881,15 +882,15 @@ def var v-proposition  as char no-undo.
 
   if t-incorr = true
   then do:
-    v-proposition = v-proposition + substitute ("ColorNum = &1", RED_COLOR).
+    v-proposition = v-proposition + substitute ("ColorNum = &1 and ", RED_COLOR).
   end. 
 
   case c_verxsd:
     when "V1" then do:
-      v-proposition = v-proposition + substitute ("verXSD = &1", "1").      
+      v-proposition = v-proposition + substitute ("verXSD = &1 and ", "1").      
     end.
     when "V2" then do:
-      v-proposition = v-proposition + substitute ("verXSD = &1", "2").
+      v-proposition = v-proposition + substitute ("verXSD = &1 and ", "2").
     end.
     when "V1&V2" then do:
     end.
@@ -914,3 +915,63 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reopen-browse Dialog-Frame 
+PROCEDURE reopen-browse :
+  
+  define variable ii       as integer no-undo.
+  define variable v-width  as decimal no-undo.
+  define variable v-height as decimal no-undo.
+  
+  
+  if valid-handle (browse-hdl-egais-goods) then do: /*для правильной работы изменения размеров окна и browse.*/
+    v-width  = browse-hdl-egais-goods:width-chars.
+    v-height = browse-hdl-egais-goods:height-chars.
+  end.
+  
+  extGdsObj:GetHndlTable(0, "", input-output bh-egais-goods).
+  delete object qh-egais-goods no-error.
+  delete object browse-hdl-egais-goods no-error.
+  extGdsObj:GetHndlTable(0, "", input-output bh-egais-goods).
+  
+  create query qh-egais-goods.
+  qh-egais-goods:set-buffers (bh-egais-goods).
+
+  create browse browse-hdl-egais-goods
+    assign 
+    title     = 'Товары'
+    frame     = frame {&FRAME-NAME}:handle
+    query     = qh-egais-goods
+    x         = 10
+    y         = 70
+    width     = if v-width <> 0 then v-width else 107
+    height    = if v-height <> 0 then v-height else 21.5
+    visible   = true
+    read-only = true
+    sensitive = true
+    separators = true
+    column-resizable = true
+    triggers:
+      on mouse-move-dblclick persistent run msdblcl.
+      on row-display persistent run proc-row-disp.
+    end triggers
+    .
+  
+  do ii = 1 to bh-egais-goods:num-fields:
+    bcol[ii] = browse-hdl-egais-goods:add-like-column('tt-egaisgds-hndls' + '.' + bh-egais-goods:buffer-field (ii):name, 0, 'FILL-IN').
+    if entry (ii, extGdsObj:SettingsTTList, ';') <> ""
+    then do:
+      v-windth = integer (entry (1, entry (ii, extGdsObj:SettingsTTList, ';'))).
+      v-isDisp = entry (2, entry (ii, extGdsObj:SettingsTTList, ';')).
+      assign
+        bcol[ii]:width = v-windth when v-windth > 0
+        bcol[ii]:visible = false when v-isDisp = "no"
+      .
+    end.
+  end.
+  v-diasize-browse-handle = browse-hdl-egais-goods.
+  run refresh-view.
+  
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
