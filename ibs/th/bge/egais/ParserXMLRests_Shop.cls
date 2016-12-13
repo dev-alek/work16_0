@@ -16,6 +16,10 @@ class ibs.th.bge.egais.ParserXMLRests_Shop inherits EGAISUTM:
     
     define variable v-FS-RAR as character no-undo .
     
+    define property v-date-time as character no-undo 
+      get.
+      set.
+    
     define temp-table tt-gds-rests-EG_shop no-undo
     field gds-code          like ub.goods.gds-code          label "Код товара в TH"
     field gds-name          like ub.goods.gds-name          label "Наименование товара" format "X(100)"
@@ -87,6 +91,8 @@ class ibs.th.bge.egais.ParserXMLRests_Shop inherits EGAISUTM:
                 assign v-FS-RAR = hText:node-value .
             IF hNoderef:NAME = "rst:ShopPosition" THEN
                 create tt-gds-rests-EG_shop .
+                
+            IF hNoderef:NAME = "rst:RestsDate"   THEN assign v-date-time        = hText:node-value .    
 
             IF hNoderef:NAME = "rst:Quantity"    THEN assign tt-gds-rests-EG_shop.egais-qnty        = integer(hText:node-value) .
             IF hNoderef:NAME = "pref:FullName"     THEN do :
