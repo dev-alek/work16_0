@@ -138,6 +138,7 @@ define temp-table tt-marks-compare-rests no-undo
     field shop-qnty         as integer                      label "Остаток маг"
     field stock-qnty        as integer                      label "Остаток скл"
     field marks-qnty        as integer                      label "Кол-во марок"
+    field gds-codes         as character
     index pi as primary
         alc-code
     index gds
@@ -250,6 +251,14 @@ define variable v-fs-rar-list as character no-undo .
 define variable v-num-loads as integer no-undo .
 define variable v-num-objs as integer no-undo .
 
+define variable v-fn-rests as character no-undo .
+define variable v-fn-rests_shop as character no-undo .
+
+define variable v-DT-rests as character no-undo 
+    view-as text format "X(20)" label "Дата и время" .
+define variable v-DT-rests_shop as character no-undo 
+    view-as text format "X(20)" label "Дата и время" .
+
 define stream str-err .
 
 define variable bh-act-header  as handle no-undo .
@@ -296,9 +305,9 @@ end function.
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
-&Scoped-define List-1 b-save b-connect b-del br-rests 
+&Scoped-define List-1 b-save b-connect b-del br-rests v-DT-rests 
 
-&Scoped-define List-2 br-rests_shop br-rests_all t-negative_rests
+&Scoped-define List-2 br-rests_shop br-rests_all t-negative_rests v-DT-rests_shop
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -323,6 +332,7 @@ define menu m-func
     menu-item m-list label "Показать по списку"
     menu-item m-all label "Показать все"
     menu-item m-load-all label "Запрос по всем объектам"
+    menu-item m-file label "Загрузить из файла"
 .    
 
 define menu m-func_shop
@@ -505,6 +515,8 @@ DEFINE FRAME Dialog-Frame
      NameContext at row 4 col 50 label "Контекст"
      loc-alc at row 4 col 50 no-label
      loc-code at row 4 col 50 label "Код(весь)"
+     v-DT-rests at row 2.8 col 48
+     v-DT-rests_shop at row 2.8 col 48
      br-rests AT ROW 6.5 COL 2.2 WIDGET-ID 200
      br-rests_shop AT ROW 6.5 COL 2.2 WIDGET-ID 220
      br-rests_all AT ROW 18.5 COL 2.2 WIDGET-ID 240
@@ -627,7 +639,9 @@ DO:
                 .
             end.
         end.
-        open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.egais-qnty < 0 .
+        open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
+                                                                                and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code
+                                                                                and tt-gds-rests_shop.egais-qnty < 0 .
     end.
     else do :
         empty temp-table tt-gds-list .
@@ -645,6 +659,8 @@ DO:
             end.
         end.
         open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.alc-code <> ""
+                                                                              and tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
+                                                                              and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code
                                                                               and tt-gds-rests_shop.egais-qnty <> 0 .
     end.
 END.
@@ -669,6 +685,8 @@ DO:
             end.
             else do :
                 open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.alc-code <> ""
+                                                                              and tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
+                                                                              and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code
                                                                               and tt-gds-rests_shop.egais-qnty <> 0 .
                 hide NameContext loc-code in frame Dialog-Frame .
                 display loc-alc with frame Dialog-Frame .
@@ -714,6 +732,8 @@ ON return OF NameContext IN FRAME {&frame-name} do:
             else
                 OPEN QUERY br-rests_shop FOR EACH tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.gds-name contains (trim(NameContext))
                                                                                         and tt-gds-rests_shop.alc-code <> ""
+                                                                                        and tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
+                                                                                        and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code
                                                                                         and tt-gds-rests_shop.egais-qnty <> 0 INDEXED-REPOSITION .
         end.
         else do :
@@ -723,6 +743,8 @@ ON return OF NameContext IN FRAME {&frame-name} do:
             else
                 OPEN QUERY br-rests_shop FOR EACH tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.gds-name contains (trim(NameContext) + "*")
                                                                                         and tt-gds-rests_shop.alc-code <> ""
+                                                                                        and tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
+                                                                                        and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code
                                                                                         and tt-gds-rests_shop.egais-qnty <> 0 INDEXED-REPOSITION .
         end.
     end.
@@ -752,8 +774,11 @@ ON return OF loc-code IN FRAME {&frame-name} do:
             message "Не найден товар с кодом " + loc-code view-as alert-box warning .
         end.
         else do :
-            assign tt-rec = recid(tt-gds-rests_shop) .
-            reposition br-rests_shop to recid tt-rec .
+            assign tt-row2 = rowid(tt-gds-rests_shop) .
+            find first tt-gds-list no-lock where tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                                             and tt-gds-list.gds-code = tt-gds-rests_shop.gds-code .
+            assign tt-row = rowid(tt-gds-list) .
+            reposition br-rests_shop to rowid tt-row, tt-row2 .
         end.
     end.
 end.
@@ -1035,7 +1060,7 @@ END.
 ON CHOOSE OF b-answer IN FRAME Dialog-Frame /* - */
 DO:
     run waitfram-show in this-procedure ("Ждите...") .
-    empty temp-table tt-gds-rests .
+    
     bh-gds-egais = rests:GetHndlTable() .
     glog = rests:StatusErr .
     if glog then do :
@@ -1048,6 +1073,7 @@ DO:
         message "Ошибка при получении ответа от ЕГАИС" view-as alert-box error .
         return no-apply .
     end.
+    empty temp-table tt-gds-rests .
     create query qh-gds-egais .
     qh-gds-egais:set-buffers (bh-gds-egais) .
     qh-gds-egais:query-prepare ("for each tt-gds-rests-eg").
@@ -1098,8 +1124,11 @@ DO:
     apply "value-changed" to br-rests .
     enable a-n-c with FRAME {&FRAME-NAME}.
     apply "value-changed" to a-n-c in FRAME {&FRAME-NAME}.
+/*    run waitfram-hide in this-procedure no-error .*/
+    v-DT-rests = substring(replace(rests:v-date-time, "T", " "), 1, length(rests:v-date-time) - 4) .
+    if v-page-current = 1 then display v-DT-rests with FRAME {&FRAME-NAME}.
     
-    empty temp-table tt-gds-rests_shop .
+    
     bh-gds-egais_shop = rests_shop:GetHndlTable() .
     glog = rests_shop:StatusErr .
     if glog then do :
@@ -1112,6 +1141,8 @@ DO:
         message "Ошибка при получении ответа от ЕГАИС" view-as alert-box error .
         return no-apply .
     end.
+    empty temp-table tt-gds-rests_shop .
+    empty temp-table tt-gds-list .
     create query qh-gds-egais_shop .
     qh-gds-egais_shop:set-buffers (bh-gds-egais_shop) .
     qh-gds-egais_shop:query-prepare ("for each tt-gds-rests-eg_shop").
@@ -1533,7 +1564,184 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME 
 
+&Scoped-define SELF-NAME m-file
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-file Dialog-Frame
+ON CHOOSE OF menu-item m-file in menu m-func /* - */
+DO:
+    if search(v-fn-rests) = ? and search(v-fn-rests_shop) = ?
+    then do :
+        message "Не найдены файлы с последними остатками из ЕГАИС" view-as alert-box .
+        return no-apply.
+    end.
+    else if search(v-fn-rests) = ?
+    then do :
+        message "Не найден файл с последними остатками на Складе из ЕГАИС" skip
+                "Будут загружены остатки в Магазине" view-as alert-box .
+    end.
+    else if search(v-fn-rests_shop) = ?
+    then do :
+        message "Не найден файл с последними остатками в Магазине из ЕГАИС" skip
+                "Будут загружены остатки на Складе" view-as alert-box .
+    end.
+    
+    if search(v-fn-rests) <> ?
+    then do :
+        run waitfram-show in this-procedure ("Ждите...") .
+        empty temp-table tt-gds-rests .
+        bh-gds-egais = rests:ParseResponse(v-fn-rests) .
+        glog = rests:StatusErr .
+        if glog then do :
+            run waitfram-hide in this-procedure no-error .
+            message rests:Msg view-as alert-box.
+            return no-apply.
+        end.
+        if not valid-handle(bh-gds-egais) then do :
+            run waitfram-hide in this-procedure no-error .
+            message "Ошибка при загрузке остатков на Складе ЕГАИС" view-as alert-box error .
+            return no-apply .
+        end.
+        create query qh-gds-egais .
+        qh-gds-egais:set-buffers (bh-gds-egais) .
+        qh-gds-egais:query-prepare ("for each tt-gds-rests-eg").
+        qh-gds-egais:query-open.
+        _repeat:
+        repeat:
+            qh-gds-egais:get-next ().
+            if qh-gds-egais:query-off-end then leave _repeat.
+            create tt-gds-rests.
+            buffer tt-gds-rests:handle:buffer-copy (bh-gds-egais) .
+            assign tt-gds-rests.fromEgais = yes no-error.
+            find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods}
+                                               and X_ext-classif.classif-name = {&extclass_goods_esys}
+                                               AND X_ext-classif.db-num = 0
+                                               and X_ext-classif.key#_two = v-ext-sys
+                                               and X_ext-classif.key#_three = 0
+                                               and X_ext-classif.charkey_one = tt-gds-rests.alc-code
+                                               and X_ext-classif.charkey_two = ""
+                                               and X_ext-classif.charkey_three = ""
+                                               and X_ext-classif.nonunique = 0
+                                               no-error.
+            if available X_ext-classif then do :
+                find first buf_goods no-lock where buf_goods.gds-code = X_ext-classif.key#_one .
+                assign
+                    tt-gds-rests.gds-code   = buf_goods.gds-code
+                    tt-gds-rests.gds-name   = buf_goods.gds-name
+                no-error .
+            end.
+            if available buf_goods then do :
+                if (not tt-gds-rests.packed and buf_goods.unit-cli <> buf_goods.unit-base and buf_goods.cli-base-rate <> 1.0)
+                then assign tt-gds-rests.egais-qnty = tt-gds-rests.egais-qnty * buf_goods.cli-base-rate .
+                for each buf_parts no-lock where buf_parts.artic      = buf_goods.artic
+                                               and buf_parts.prod-type  = buf_goods.prod-type
+                                               and buf_parts.prod-code  = buf_goods.prod-code
+                                               and buf_parts.obj-type   = v-cntxt-obj-type
+                                               and buf_parts.obj-code   = v-cntxt-obj-code
+                                               and buf_parts.out-code   = {&free-code}
+                                               and num-entries(buf_parts.alc-ref-ab-path) = 4
+                                               and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_
+                                               and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :
+    
+                    assign tt-gds-rests.TH-qnty = tt-gds-rests.TH-qnty + buf_parts.fact-qnty no-error .
+                    assign tt-gds-rests.prt-rec = if tt-gds-rests.prt-rec = "" then string(recid(buf_parts)) else tt-gds-rests.prt-rec + ',' + string(recid(buf_parts)) no-error .
+                end.
+            end.
+        end.
+        OPEN QUERY {&browse-name} FOR EACH tt-gds-rests .
+        apply "value-changed" to br-rests in FRAME {&FRAME-NAME}.
+        enable a-n-c with FRAME {&FRAME-NAME}.
+        apply "value-changed" to a-n-c in FRAME {&FRAME-NAME}.
+/*        run waitfram-hide in this-procedure no-error .*/
+        v-DT-rests = substring(replace(rests:v-date-time, "T", " "), 1, length(rests:v-date-time) - 4) .
+        if v-page-current = 1 then display v-DT-rests with FRAME {&FRAME-NAME}.
+    end.
+    
+    if search(v-fn-rests_shop) <> ?
+    then do :
+        empty temp-table tt-gds-rests_shop .
+        empty temp-table tt-gds-list .
+        bh-gds-egais_shop = rests_shop:ParseResponse(v-fn-rests_shop) .
+        glog = rests_shop:StatusErr .
+        if glog then do :
+            run waitfram-hide in this-procedure no-error .
+            message rests_shop:Msg view-as alert-box.
+            return no-apply.
+        end.
+        if not valid-handle(bh-gds-egais_shop) then do :
+            run waitfram-hide in this-procedure no-error .
+            message "Ошибка при получении ответа от ЕГАИС" view-as alert-box error .
+            return no-apply .
+        end.
+        create query qh-gds-egais_shop .
+        qh-gds-egais_shop:set-buffers (bh-gds-egais_shop) .
+        qh-gds-egais_shop:query-prepare ("for each tt-gds-rests-eg_shop").
+        qh-gds-egais_shop:query-open.
+        _repeat_shop:
+        repeat:
+            qh-gds-egais_shop:get-next ().
+            if qh-gds-egais_shop:query-off-end then leave _repeat_shop.
+            create tt-gds-rests_shop.
+            buffer tt-gds-rests_shop:handle:buffer-copy (bh-gds-egais_shop) .
+            assign tt-gds-rests_shop.fromEgais = yes .
+            for each X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                               and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                               AND X_ext-classif.db-num = 0
+                                               and X_ext-classif.key#_two = v-ext-sys
+                                               and X_ext-classif.key#_three = 0
+                                               and X_ext-classif.charkey_one = tt-gds-rests_shop.alc-code
+                                               and X_ext-classif.charkey_two = ""
+                                               and X_ext-classif.charkey_three = ""
+                                               and X_ext-classif.nonunique = 0 :
+                find first buf_goods no-lock where buf_goods.gds-code = X_ext-classif.key#_one .
+                assign
+                    tt-gds-rests_shop.gds-code   = if tt-gds-rests_shop.gds-code = "" then string(buf_goods.gds-code) else tt-gds-rests_shop.gds-code + ", " + string(buf_goods.gds-code)
+                    tt-gds-rests_shop.gds-name   = buf_goods.gds-name
+                .
+                
+                if (not tt-gds-rests_shop.packed and buf_goods.unit-cli <> buf_goods.unit-base and buf_goods.cli-base-rate <> 1.0)
+                then assign tt-gds-rests_shop.egais-qnty = tt-gds-rests_shop.egais-qnty * buf_goods.cli-base-rate .
+                for each buf_parts no-lock where buf_parts.artic      = buf_goods.artic
+                                               and buf_parts.prod-type  = buf_goods.prod-type
+                                               and buf_parts.prod-code  = buf_goods.prod-code
+                                               and buf_parts.obj-type   = v-cntxt-obj-type
+                                               and buf_parts.obj-code   = v-cntxt-obj-code
+                                               and buf_parts.out-code   = {&free-code}
+                                               and num-entries(buf_parts.alc-ref-ab-path) = 4
+                                               and entry(3, buf_parts.alc-ref-ab-path) = tt-gds-rests_shop.alc-code :
+    /*                                           and entry(1, buf_parts.alc-ref-ab-path) = tt-gds-rests.informA_  */
+    /*                                           and entry(2, buf_parts.alc-ref-ab-path) = tt-gds-rests.informB_ :*/
+                                               
+                    assign tt-gds-rests_shop.TH-qnty = tt-gds-rests_shop.TH-qnty + buf_parts.fact-qnty .
+    /*                assign tt-gds-rests.prt-rec = if tt-gds-rests.prt-rec = "" then string(recid(buf_parts)) else tt-gds-rests.prt-rec + ',' + string(recid(buf_parts)) .*/
+                end.
+            end. 
+            for each tt-gds-rests no-lock where tt-gds-rests.alc-code = tt-gds-rests_shop.alc-code :
+                assign tt-gds-rests_shop.egais-qnty_stock = tt-gds-rests_shop.egais-qnty_stock + tt-gds-rests.egais-qnty . 
+            end.
+            find first tt-gds-list where tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                                     and tt-gds-list.gds-code = tt-gds-rests_shop.gds-code
+                                     no-error.
+            if not available tt-gds-list
+            then do :
+                create tt-gds-list.
+                assign
+                    tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                    tt-gds-list.gds-code = tt-gds-rests_shop.gds-code
+                .
+            end.
+        end.
+        OPEN QUERY br-rests_shop FOR each tt-gds-list, EACH tt-gds-rests_shop where tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
+                                                                                and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code .
+        apply "value-changed" to br-rests_shop in FRAME {&FRAME-NAME}.
+        run waitfram-hide in this-procedure no-error .
+        v-DT-rests_shop = substring(replace(rests_shop:v-date-time, "T", " "), 1, length(rests_shop:v-date-time) - 4) .
+        if v-page-current = 2 then display v-DT-rests_shop with FRAME {&FRAME-NAME}.
+    end.
+    
+    run waitfram-hide in this-procedure .
+END.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME 
 
 ON 'right-mouse-down':U of br-rests_all
 DO:
@@ -1760,6 +1968,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   run diasize_init in this-procedure .
   RUN enable_UI.
   hide {&list-2} in frame {&frame-name}.
+  
+  v-fn-rests = "Rests-" + v-fs-rar + ".xml" .
+  v-fn-rests_shop = "Rests_Shop-" + v-fs-rar + ".xml" .
+  
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -2490,6 +2702,17 @@ procedure MarksCompareRests :
                 tt-marks-compare-rests.gds-name   = ""
                 tt-marks-compare-rests.alc-type-code = ""
             .
+            for each X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                           and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                           AND X_ext-classif.db-num = 0
+                                           and X_ext-classif.key#_two = v-ext-sys
+                                           and X_ext-classif.key#_three = 0
+                                           and X_ext-classif.charkey_one = tt-marks-compare-rests.alc-code
+                                           and X_ext-classif.charkey_two = ""
+                                           and X_ext-classif.charkey_three = ""
+                                           and X_ext-classif.nonunique = 0 : 
+                tt-marks-compare-rests.gds-codes = tt-marks-compare-rests.gds-codes + (if tt-marks-compare-rests.gds-codes = "" then "" else ",") + string(X_ext-classif.key#_one) .                                 
+            end.                                   
         end.
         assign tt-marks-compare-rests.marks-qnty = tt-marks-qnty.qnty .
     end.
@@ -2551,7 +2774,7 @@ procedure MarksCompareRests :
                 </tr>').
 
     for each tt-marks-compare-rests :
-
+         
         put stream OutStr-html unformatted
             substitute(
             '<tr style="height: 50px;">
@@ -2568,7 +2791,7 @@ procedure MarksCompareRests :
 
             tt-marks-compare-rests.alc-code,
             tt-marks-compare-rests.gds-name,
-            tt-marks-compare-rests.gds-code,
+            (if tt-marks-compare-rests.gds-code <> 0 then string(tt-marks-compare-rests.gds-code) else tt-marks-compare-rests.gds-codes),
             tt-marks-compare-rests.alc-type-code,
             tt-marks-compare-rests.shop-qnty,
             tt-marks-compare-rests.stock-qnty,

@@ -319,13 +319,13 @@ DEFINE VARIABLE f-d-pcnt AS DECIMAL FORMAT ">9.99":U INITIAL 0
      SIZE 6 BY 1
      FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE F-price-brutto AS DECIMAL FORMAT ">,>>>,>>9.99":U INITIAL 0
+DEFINE VARIABLE F-price-brutto AS DECIMAL FORMAT "->,>>>,>>9.99":U INITIAL 0
      LABEL "Цена б/скидки"
       VIEW-AS TEXT
      SIZE 13 BY .67
      FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE f-price-discnt AS DECIMAL FORMAT ">,>>>,>>9.99":U INITIAL 0
+DEFINE VARIABLE f-price-discnt AS DECIMAL FORMAT "->,>>>,>>9.99":U INITIAL 0
      LABEL "Скидка за ед."
      VIEW-AS FILL-IN
      SIZE 13 BY 1
@@ -349,19 +349,19 @@ DEFINE VARIABLE f-sale-qnty AS DECIMAL FORMAT ">>,>>>,>>9.<<<" INITIAL 0
      SIZE 14 BY .67
      FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE f-sum-brutto AS DECIMAL FORMAT ">,>>>,>>9.99":U INITIAL 0
+DEFINE VARIABLE f-sum-brutto AS DECIMAL FORMAT "->,>>>,>>9.99":U INITIAL 0
      LABEL "Сумма б/скидки"
       VIEW-AS TEXT
      SIZE 13 BY .67
      FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE f-sum-discnt AS DECIMAL FORMAT ">,>>>,>>9.99":U INITIAL 0
+DEFINE VARIABLE f-sum-discnt AS DECIMAL FORMAT "->,>>>,>>9.99":U INITIAL 0
      LABEL "Сумма скидки"
      VIEW-AS FILL-IN
      SIZE 13 BY 1
      FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE f-sum-netto AS DECIMAL FORMAT ">,>>>,>>9.99":U INITIAL 0
+DEFINE VARIABLE f-sum-netto AS DECIMAL FORMAT "->,>>>,>>9.99":U INITIAL 0
      LABEL "Сумма со скидкой"
      VIEW-AS FILL-IN
      SIZE 13 BY 1

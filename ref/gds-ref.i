@@ -4245,7 +4245,13 @@ define buffer buf_assortment-matrix-goods for ub.assortment-matrix-goods  .
   do
   on error undo, return error return-value
   :
-
+  find first buf_assortment-matrix-goods no-lock where
+               buf_assortment-matrix-goods.gds-code =  p-gds-code and
+               buf_assortment-matrix-goods.obj-type <> "" and
+               buf_assortment-matrix-goods.asmg-status =  0 no-error.
+  if not AVAILABLE buf_assortment-matrix-goods then do: p-ok = yes .
+  end.
+  else do:  
   for each buf_assortment-matrix-goods no-lock where
            buf_assortment-matrix-goods.gds-code =  p-gds-code and
            buf_assortment-matrix-goods.obj-type <> "" and
@@ -4257,6 +4263,7 @@ define buffer buf_assortment-matrix-goods for ub.assortment-matrix-goods  .
             buf_assortment-matrix.db-num  = buf_assortment-matrix-goods.db-num
            :
        run utl/uassmgrp.p ( p-old-grp, p-new-grp, buf_assortment-matrix.asmt-id , buf_assortment-matrix.db-num, output p-ok ) no-error.
+  end.
   end.
   end.
 end procedure. /* recalc-assgds */

@@ -244,7 +244,7 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
     os-command silent value (cmd).
     
     assign
-      inFileName = "Rests_shop.xml"
+      inFileName = "Rests_shop-" + entry(1, parameters, {&delim-par}) + ".xml"
     .
     return ParseResponse(inFileName).
 
@@ -252,6 +252,7 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
   end.
   
   method public override character GetSubjectOfRequestUTM() :
+    define variable v-fn as character no-undo .
 
     urlResp = GetURLUTM(ReplyId, "out").
     
@@ -262,9 +263,10 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
       return ?.
     end.
     
-    os-delete "Rests_shop.xml".
+    v-fn = "Rests_shop-" + entry(1, parameters, {&delim-par}) + ".xml" .
+    os-delete v-fn.
     assign
-      inFileName = "Rests_shop.xml"
+      inFileName = "Rests_shop-" + entry(1, parameters, {&delim-par}) + ".xml"
     .
 
     cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, urlResp, inFileName).
