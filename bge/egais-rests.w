@@ -1204,6 +1204,10 @@ DO:
     OPEN QUERY br-rests_shop FOR each tt-gds-list, EACH tt-gds-rests_shop where tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
                                                                             and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code .
     apply "value-changed" to br-rests_shop .
+    run waitfram-hide in this-procedure no-error .
+    v-DT-rests_shop = substring(replace(rests_shop:v-date-time, "T", " "), 1, length(rests_shop:v-date-time) - 4) .
+    if v-page-current = 2 then display v-DT-rests_shop with FRAME {&FRAME-NAME}.
+        
     run waitfram-hide in this-procedure .
 /*    enable a-n-c with FRAME {&FRAME-NAME}.                */
 /*    apply "value-changed" to a-n-c in FRAME {&FRAME-NAME}.*/
@@ -2601,6 +2605,7 @@ procedure MarksCompareRests :
     INPUT FROM value(v_os-file).
     REPEAT: 
         IMPORT v-mark.
+        v-mark = trim(v-mark) .
         run ProcAlcCode  IN THIS-PROCEDURE (input v-mark, output v-alc-code, output l-error, output v-error-lang ) no-error.
         if v-error-lang then 
         do:

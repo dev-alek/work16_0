@@ -92,6 +92,25 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 </ns:Document>~
 </ns:Documents>'
 
+&scop xml-ConfirmRepealWB '<?xml version="1.0" encoding="UTF-8"?>~
+<ns:Documents Version="1.0" xmlns:ns= "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" xmlns:wt= "http://fsrar.ru/WEGAIS/ConfirmRepealWB">~
+<ns:Owner>~
+<ns:FSRAR_ID>&1</ns:FSRAR_ID>~
+</ns:Owner>~
+<ns:Document>~
+<ns:ConfirmRepealWB>~
+<wt:Header>~
+<wt:IsConfirm>&2</wt:IsConfirm>~
+<wt:ConfirmNumber>&3</wt:ConfirmNumber>~
+<wt:ConfirmDate>&4</wt:ConfirmDate>~
+<wt:WBRegId>&5</wt:WBRegId>~
+<wt:Note>~
+</wt:Note>~
+</wt:Header>~
+</ns:ConfirmRepealWB>~
+</ns:Document>~
+</ns:Documents>'
+
   define stream outstr.
   define stream str-formF1.
   
@@ -159,6 +178,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     private set.
     
   define property ActnEGAISAdm as logical no-undo
+    get.
+    set.
+
+  define property ActnEGAISSts as logical no-undo
     get.
     set.
     
@@ -234,8 +257,9 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
     define buffer buf_clob-bind-ref for ub.clob-bind.
     define buffer buf_clob-data-ref for ub.clob-data.
-    define variable hDoc    as handle no-undo.
-    define variable hDocRef as handle no-undo.
+    define variable hDoc    as handle  no-undo.
+    define variable hDocRef as handle  no-undo.
+    define variable ii      as integer no-undo.
 
     assign
       StatusErr = false
@@ -482,7 +506,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
           end.
         end.
       when {&wb-clob} then 
-        do:
+        do: 
           SettingsTTList = "20,yes;;;12,yes;9,yes;20,yes;10,yes;10,yes;6,yes;12,yes;;;30,yes;10,yes;;;;".
                   
           egaisTTS = new TransferToShop (ObjType, ObjCode, v-FS-RAR, v-ext-sys).
@@ -504,7 +528,9 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               tt-wb-hndls.trn-doc-code = entry (6, buf_clob-bind-wb-hndls.descr, {&delim-par})
               tt-wb-hndls.is-sent      = entry (7, buf_clob-bind-wb-hndls.descr, {&delim-par})
               tt-wb-hndls.wb-type      = "приход вн."  
-              when entry (8, buf_clob-bind-wb-hndls.descr, {&delim-par}) = {&TDEDT_Pri_Vnesh}
+                when entry (8, buf_clob-bind-wb-hndls.descr, {&delim-par}) = {&TDEDT_Pri_Vnesh}
+              tt-wb-hndls.wb-type      = "возврат вн."  
+                when entry (8, buf_clob-bind-wb-hndls.descr, {&delim-par}) = {&TDEDT_Vozvrat_Vnesh}
               tt-wb-hndls.obj          = entry (9, buf_clob-bind-wb-hndls.descr, {&delim-par})
               tt-wb-hndls.EGAISSts     = entry (10, buf_clob-bind-wb-hndls.descr, {&delim-par}) when num-entries (buf_clob-bind-wb-hndls.descr, {&delim-par}) > 9
               tt-wb-hndls.uniq-key-rec = buf_clob-bind-wb-hndls.uniq-key-rec.
@@ -597,6 +623,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       when {&ticket} then 
         do:
           empty temp-table tt-ticket.
+          ii = 0.
           find current tt-wb-hndls no-error.
           find first ub.clob-bind where (available (tt-wb-hndls) and ub.clob-bind.resource-type = {&lob-egais-wb} and ub.clob-bind.uniq-key-rec = tt-wb-hndls.uniq-key-rec) no-error.
           
@@ -607,15 +634,17 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                                         and buf_ext-classif.key#_one = v-ext-sys
                                         and buf_ext-classif.CharKey_One = inWbIdentity
                                         and buf_ext-classif.CharKey_Two = buf_clob-bind.field-name_):
+            ii = ii + 1.
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
-            createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
+            createhDoc(recid (buf_clob-data), string (ii) + "temp.xml", output hDoc).
             prsXMLDocWB:IsToClearTable = false.
             prsXMLDocWB:ParseRec (hDoc, input-output table tt-ticket).
             prsXMLDocWB:IsToClearTable = true.
           end.
           for each buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb-ticket} and buf_clob-bind.uniq-key-rec begins inWbIdentity :
+            ii = ii + 1.
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
-            createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
+            createhDoc(recid (buf_clob-data), string (ii) + "temp.xml", output hDoc).
             prsXMLDocWB:IsToClearTable = false.
             prsXMLDocWB:ParseRec (hDoc, input-output table tt-ticket).
             prsXMLDocWB:IsToClearTable = true.
@@ -626,15 +655,16 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         do:
           empty temp-table tt-ticket.
           for each buf_clob-bind where 
-            (buf_clob-bind.resource-type = {&lob-egais-ticket} and buf_clob-bind.uniq-key-rec matches "*" + inWbIdentity + "*") 
+            ((buf_clob-bind.resource-type = {&lob-egais-ticket} or buf_clob-bind.resource-type = {&lob-egais-wb-ticket}) and buf_clob-bind.uniq-key-rec matches "*" + inWbIdentity + "*") 
             or (can-find (first buf_ext-classif where buf_ext-classif.classif-name = {&extclass_egais-transId}
                   and buf_ext-classif.db-num = 0
                   and buf_ext-classif.key#_one = v-ext-sys
                   and buf_ext-classif.CharKey_One = inWbIdentity
                   and buf_ext-classif.CharKey_Two = buf_clob-bind.field-name_))
             :
+            ii = ii + 1.
             find first buf_clob-data where buf_clob-data.db-num = buf_clob-bind.db-num and buf_clob-data.int64-id = buf_clob-bind.int64-id no-error.
-            createhDoc(recid (buf_clob-data), "temp.xml", output hDoc).
+            createhDoc(recid (buf_clob-data), string (ii) + "temp.xml", output hDoc).
             prsXMLDocWB:IsToClearTable = false.
             prsXMLDocWB:ParseRec (hDoc, input-output table tt-ticket).
             prsXMLDocWB:IsToClearTable = true.
@@ -862,11 +892,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       when {&wb-ras-header} or
       when {&wb-ras-line} then
         do:
-          def var ii as int    no-undo.
           
           empty temp-table tt-wb-header.
           empty temp-table tt-wb-gds-EG.
-          
+          ii = 0.
           find first buf_trn-doc no-lock where buf_trn-doc.doc-code = inWbIdentity no-error.
           
           if not available (buf_trn-doc)
@@ -1374,6 +1403,90 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       assign
         StatusErr = true
         Msg       = "Не удалось отправить запрос в УТМ на отмену проведения накладной"
+        .
+      undo, return false.
+    end.
+
+    find first buf_ext-classif no-lock where 
+          buf_ext-classif.classif-name = {&extclass_egais-transId}
+      and buf_ext-classif.db-num = 0
+      and buf_ext-classif.key#_one = v-ext-sys
+      and buf_ext-classif.CharKey_One = tt-wb-header.wbregid
+      and buf_ext-classif.CharKey_Two = ReplyId no-error.
+    if not available (buf_ext-classif)
+    then do:
+      create buf_ext-classif.
+      assign
+        buf_ext-classif.classif-name = {&extclass_egais-transId}
+        buf_ext-classif.db-num = 0
+        buf_ext-classif.key#_one = v-ext-sys
+        buf_ext-classif.CharKey_One = tt-wb-header.wbregid
+        buf_ext-classif.CharKey_Two = ReplyId 
+      no-error.
+    end.   
+    
+  end.
+
+  method public logical ConfirmRepealWB (inWbRegId as char, inIsConfirm as char):
+    
+    def var respValue as handle no-undo.
+    
+    os-delete "RespConfirmRepealWB.xml".
+    os-delete value (search ("RespConfirmRepealWB.xml")).
+    assign
+      inFileName = "RespConfirmRepealWB.xml"
+      .
+    output stream outstr close.
+    find first tt-wb-header.
+      
+    output stream outstr to value ("ConfirmRepealWB.xml") convert target "UTF-8". 
+
+    outData = substitute ({&xml-ConfirmRepealWB}, v-FS-RAR, inIsConfirm, tt-wb-header.num + "-" + string (time), iso-date (date(now)), inWbRegId).
+
+    if outData = ? or outData = ""
+    then do:
+      output stream outstr close.
+      return false.
+    end.
+    
+    put stream outstr unformatted outData.
+    put stream outstr skip.
+    output stream outstr close.
+
+    cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/ConfirmRepealWB >&4", search ("exe/curl.exe"), search ("ConfirmRepealWB.xml"), ConPar, inFileName).
+    os-command value (cmd).
+  
+    file-info:file-name = search (inFileName).
+    if search (inFileName) <> ? and file-info:file-size > 0 
+      then 
+    do:
+      respValue = ParseRequest (inFileName).
+      if respValue = ? 
+        then 
+      do:
+        assign
+          StatusErr = true
+          Msg       = "Не удалось разобрать данные от УТМ"
+          .
+        undo, return false. 
+      end.
+      if not StatusErr 
+        then 
+        ReplyId = respValue:node-value.
+      else 
+      do:
+        assign
+          StatusErr = true
+          Msg       = respValue:node-value
+          .
+        undo, return false. 
+      end.
+    end.
+    else 
+    do:
+      assign
+        StatusErr = true
+        Msg       = "Не удалось отправить подт./отказ в УТМ на запрос распроведения накладной"
         .
       undo, return false.
     end.
@@ -1921,17 +2034,185 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                         buf_doc-attr.attr-code = {&trdcattr-egais}
                       .
                     end.
-                    buf_doc-attr.attr-value = tt-wb-act-header.status_.
+                    assign
+                      buf_doc-attr.attr-value = tt-ticket.status_.
                     release buf_doc-attr.
                   end.
 
-                  if not can-find (first buf_clob-bind where buf_clob-bind.resource-type = {&lob-egais-wb} and lookup (tt-ticket.TransId, buf_clob-bind.field-name_) > 0) or can-find (first buf_clob-bind where buf_clob-bind.field-name_ = tt-ticket.TransId)
-                  then do: 
-                    if (tt-ticket.regid = "" or tt-ticket.regid = ?) or (tt-ticket.doc <> 'WayBillAct' and tt-ticket.doc <> 'WAYBILL') then do:
-                      next url_.
-                    end.  
+                  if can-find (first buf_clob-bind where 
+                        (buf_clob-bind.uniq-key-rec = ticketUKR or (buf_clob-bind.uniq-key-rec = tt-ticket.regid + {&delim-par} + tt-ticket.docId and (tt-ticket.Identity = ? or tt-ticket.Identity = ""))) 
+                    and buf_clob-bind.resource-type =  {&lob-egais-ticket})
+                    then next url_.
+                  run gbl/file2clb.p ( input {&add-def}
+                    ,input ",yes"
+                    ,input ? /*p-bh*/
+                    ,input ticketUKR /*p-uniq-key-rec*/
+                    ,input {&lob-egais-wb-ticket} /*p-field-*/
+                    ,input '' /*p-descr*/
+                    ,input-output v-part-num
+                    ,input {&lob-egais-wb-ticket}
+                    ,input-output v-clob-db-num
+                    ,input-output v-int64-id
+                    ,input search (inFileName)
+                    ,input '' /*p-src-encoding*/
+                    ) no-error .
+                  if error-status:error then 
+                  do:
+                    Msg = error-status:get-message(1) + {&new-line} + return-value.
+                    StatusErr = false.
+                    next url_.
+                  end.
+  
+                end.
+              when urlStr matches ("*opt/out/ConfirmRepealWB/*") then 
+                do:
+                  empty temp-table tt-ticket.  
+                  os-delete "ConfirmRepealWB.xml".
+                  os-delete value (search ("ConfirmRepealWB.xml")).
+                  assign
+                    inFileName = "ConfirmRepealWB.xml"
+                    .
+                  CmdParseXml(urlStr).
+                  if StatusErr
+                  then do:
+                    message "Ошибка приема подтверждения распроведение накладной" urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
+                  find first tt-ticket no-error.
+                  if not available (tt-ticket)
+                  then do:
+                    Msg = error-status:get-message(1) + {&new-line} + return-value.
+                    message "Ошибка приема подтверждения распроведение накладной" urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
+                    StatusErr = false.
+                    next url_.
+                  end.
+                  if (tt-ticket.regid = "" or tt-ticket.regid = ?) or tt-ticket.doc <> 'ConfirmRepealWB' then do:
+                    next url_.  
+                  end.
+                  v-clob-db-num = ?.
+                  v-int64-id = 0.
+                  ticketUKR = tt-ticket.regid + {&delim-par} + tt-ticket.docId + {&delim-par} + tt-ticket.Identity +  {&delim-par} + tt-ticket.ticket-date.
+                  if ticketUKR = ? or StatusErr
+                  then do:
+                    message "Ошибка приема подтверждения распроведение накладной" ticketUKR skip urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
                   end.
                   
+                  find first ub.clob-bind where ub.clob-bind.resource-type = {&lob-egais-wb} and ((tt-ticket.regid <> "" and entry (5, ub.clob-bind.descr, {&delim-par}) = tt-ticket.regid) or lookup (tt-ticket.TransId, ub.clob-bind.field-name_) > 0) no-error.
+                  if available (ub.clob-bind)
+                  then do:
+                    if num-entries (ub.clob-bind.descr, {&delim-par}) < 10
+                    then do:
+                      ub.clob-bind.descr = ub.clob-bind.descr + {&delim-par}.
+                    end.
+                    if  num-entries (ub.clob-bind.descr, {&delim-par}) > 9
+                    then do:
+                      assign 
+                        entry (10, ub.clob-bind.descr, {&delim-par})  = "Распроведена" when tt-ticket.status_ = "Accepted"
+                      .
+                    end.
+                  end.
+                  find first ub.doc-attr where ub.doc-attr.attr-code = {&trdcattr-negais} and ub.doc-attr.attr-value = tt-ticket.regid no-error.
+                  if available (ub.doc-attr)
+                  then do:
+                    find first buf_doc-attr exclusive-lock where buf_doc-attr.doc-code = ub.doc-attr.doc-code and buf_doc-attr.attr-code = {&trdcattr-egais} no-error.
+                    if not available (buf_doc-attr)
+                    then do:
+                      create buf_doc-attr.
+                      assign 
+                        buf_doc-attr.doc-code = ub.doc-attr.doc-code
+                        buf_doc-attr.attr-code = {&trdcattr-egais}
+                      .
+                    end.
+                    assign
+                      buf_doc-attr.attr-value = "Распроведена" when tt-ticket.status_ = "Accepted".
+                    release buf_doc-attr.
+                  end.
+                  
+                  if can-find (first buf_clob-bind where 
+                        (buf_clob-bind.uniq-key-rec = ticketUKR or (buf_clob-bind.uniq-key-rec = tt-ticket.regid + {&delim-par} + tt-ticket.docId and (tt-ticket.Identity = ? or tt-ticket.Identity = ""))) 
+                    and buf_clob-bind.resource-type =  {&lob-egais-ticket})
+                    then next url_.
+                  run gbl/file2clb.p ( input {&add-def}
+                    ,input ",yes"
+                    ,input ? /*p-bh*/
+                    ,input ticketUKR /*p-uniq-key-rec*/
+                    ,input {&lob-egais-wb-ticket} /*p-field-*/
+                    ,input '' /*p-descr*/
+                    ,input-output v-part-num
+                    ,input {&lob-egais-wb-ticket}
+                    ,input-output v-clob-db-num
+                    ,input-output v-int64-id
+                    ,input search (inFileName)
+                    ,input '' /*p-src-encoding*/
+                    ) no-error .
+                  if error-status:error then 
+                  do:
+                    Msg = error-status:get-message(1) + {&new-line} + return-value.
+                    StatusErr = false.
+                    next url_.
+                  end.
+  
+                end.
+              when urlStr matches ("*opt/out/RequestRepealWB/*") then 
+                do:
+                  empty temp-table tt-ticket.  
+                  os-delete "RequestRepealWB.xml".
+                  os-delete value (search ("RequestRepealWB.xml")).
+                  assign
+                    inFileName = "ConfirmRepealWB.xml"
+                    .
+                  CmdParseXml(urlStr).
+                  if StatusErr
+                  then do:
+                    message "Ошибка приема файла запроса на распроведение накладной" urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
+                  find first tt-ticket no-error.
+                  if not available (tt-ticket)
+                  then do:
+                    Msg = error-status:get-message(1) + {&new-line} + return-value.
+                    message "Ошибка приема файла запроса на распроведение накладной" urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
+                    StatusErr = false.
+                    next url_.
+                  end.
+                  if (tt-ticket.regid = "" or tt-ticket.regid = ?) or tt-ticket.doc <> 'RequestRepealWB' then do:
+                    next url_.  
+                  end.
+                  v-clob-db-num = ?.
+                  v-int64-id = 0.
+                  ticketUKR = tt-ticket.regid + {&delim-par} + tt-ticket.docId + {&delim-par} + tt-ticket.Identity +  {&delim-par} + tt-ticket.ticket-date.
+                  if ticketUKR = ? or StatusErr
+                  then do:
+                    message "Ошибка приема файла запроса на распроведение накладной" ticketUKR skip urlStr skip Msg skip " Прием документов будет продолжен" view-as alert-box.
+                    StatusErr = false.
+                    Msg = "".
+                    next url_.
+                  end.
+                  
+                  find first ub.doc-attr where ub.doc-attr.attr-code = {&trdcattr-negais} and ub.doc-attr.attr-value = tt-ticket.regid no-error.
+                  if available (ub.doc-attr)
+                  then do:
+                    find first buf_doc-attr exclusive-lock where buf_doc-attr.doc-code = ub.doc-attr.doc-code and buf_doc-attr.attr-code = {&trdcattr-egais} no-error.
+                    if not available (buf_doc-attr)
+                    then do:
+                      create buf_doc-attr.
+                      assign 
+                        buf_doc-attr.doc-code = ub.doc-attr.doc-code
+                        buf_doc-attr.attr-code = {&trdcattr-egais}
+                      .
+                    end.
+                    assign
+                      buf_doc-attr.attr-value = "Распроведена" when tt-ticket.status_ = "Accepted".
+                    release buf_doc-attr.
+                  end.
+
                   if can-find (first buf_clob-bind where 
                         (buf_clob-bind.uniq-key-rec = ticketUKR or (buf_clob-bind.uniq-key-rec = tt-ticket.regid + {&delim-par} + tt-ticket.docId and (tt-ticket.Identity = ? or tt-ticket.Identity = ""))) 
                     and buf_clob-bind.resource-type =  {&lob-egais-ticket})
@@ -2173,7 +2454,14 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       return.
     end.
     release buf_clob-bind.
+    find first buf_trn-doc where buf_trn-doc.doc-code = trn-doc-code no-error.
     tt-wb-hndls.trn-doc-code = trn-doc-code.
+    if available (buf_trn-doc)
+    then do:
+      tt-wb-hndls.status_ = buf_trn-doc.status_ + if buf_trn-doc.flag_ then "+" else "-".
+      tt-wb-hndls.isWB = true.
+    end.
+    release buf_trn-doc.
     
   end.
 
@@ -2905,10 +3193,9 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       StatusErr = true.
       return.
     end.
-
     if available (buf_firm) then do:
       inSW:write-data-element ("oref" + verPrefXMLNS + ":INN", if INNObj = "" or INNObj = ? or not inShipper then buf_firm.inn else INNObj).
-      if buf_firm.kpp <> "" and (not buf_clients.obj-type <> {&shop} and not buf_clients.obj-type <> {&stock}) and not available (buf_clients-attr)
+      if buf_firm.kpp <> "" and (not buf_clients.obj-type = {&shop} and not buf_clients.obj-type = {&stock}) and not available (buf_clients-attr)
         then inSW:write-data-element ("oref" + verPrefXMLNS + ":KPP", buf_firm.kpp).
       if available (buf_clients-attr) and buf_clients-attr.attr-value <> ""
         then inSW:write-data-element ("oref" + verPrefXMLNS + ":KPP", buf_clients-attr.attr-value).

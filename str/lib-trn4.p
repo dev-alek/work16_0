@@ -1253,18 +1253,44 @@ define variable v-file-n as character no-undo .
 
     if varstatus = {&fact} and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) 
     then do:
-      find first ub.doc-attr where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-negais} no-error.
-      if available (ub.doc-attr)
+      { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_egais-chg-sts-doc':U
+        {&cntxt-object}
+        buf_trn-doc.host-code
+        buf_trn-doc.obj-type
+        buf_trn-doc.obj-code
+        0
+        0
+        0
+        false
+        varlog
+      }
+      if not varlog
       then do:
-        find first ub.doc-attr where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-egais} no-error.
-        if not available (ub.doc-attr) or ub.doc-attr.attr-value <> "Accepted" 
+        find first ub.doc-attr where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-negais} no-error.
+        if available (ub.doc-attr)
         then do:
-          message "Запрещено закрывать накладную на факт, которая отправлена в ЕГАИС и отсутствует акт подтверждения от контрагента."
-          view-as alert-box error.
-          return error.
+          find first ub.doc-attr where ub.doc-attr.doc-code = buf_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-egais} no-error.
+          if not available (ub.doc-attr) or ub.doc-attr.attr-value <> "Accepted" 
+          then do:
+            message 'Для закрытия накладной на факт, которая отправлена в ЕГАИС и отсутствует акт подтверждения от контрагента, требуется право "Изменение статуса документа ЕГАИС".'
+            view-as alert-box error.
+            return error.
+          end.
         end.
       end.
     end.
+    else do:
+      varlog = false.
+      message "Вы уверены что хотите закрыть накладную, которая отправлена в ЕГАИС и отсутствует акт подтверждения от контрагента?"
+            "Вы уверены ?" view-as alert-box question buttons OK-Cancel update varlog.
+      if not varlog 
+        then return error. 
+    end.
+
 
     if buf_trn-doc.flag_                and
       buf_trn-doc.status_ = {&inquiry} then do:
