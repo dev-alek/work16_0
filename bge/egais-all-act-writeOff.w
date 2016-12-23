@@ -323,6 +323,7 @@ DO:
     if not bh-act-header:available then return no-apply .
     v-act-num = bh-act-header:buffer-field ("num"):buffer-value .
     run bge/egais-act-writeOff.w (parparentproc, {&update}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    bh-act-header = egais:GetHndlTable(3, "").
     run refresh-query.
 END.
 

@@ -291,6 +291,7 @@ DO:
     if not bh-act-header:available then return no-apply .
     v-act-num = bh-act-header:buffer-field ("num"):buffer-value .
     run bge/egais-act-balance.w (parparentproc, {&update}, egais, v-ext-sys, v-fs-rar, bh-act-header:handle) .
+    bh-act-header = egais:GetHndlTable(3, "").
 	run refresh-query.
 END.
 
@@ -686,7 +687,7 @@ case RADIO-SET-1 :
 if bh-act-header:available
   then qh-act-header:reposition-to-rowid ( bh-act-header:rowid ) no-error.
 if valid-handle (browse-hdl-act-header) then apply "value-changed" to browse-hdl-act-header.
-  
+
 end.
 
 /* _UIB-CODE-BLOCK-END */

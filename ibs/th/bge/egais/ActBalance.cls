@@ -117,8 +117,15 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
 /*          Msg = "Акт еще не был отправлен".*/
 /*          return ?.                        */
 /*        end.                               */
-        
+        ReplyID = "" .
         IsSent.
+        
+        if ReplyID = "" or ReplyID = ?
+        then do:
+          StatusErr = true.
+          Msg = "Не найден запрос в журнале запросов или код запроса пуст".
+          return ?.
+        end.
         
         if ConPar = "" or ConPar = ?
         then do:
@@ -244,9 +251,9 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     
     do trans:
     
-      os-delete "RespActChargeOn.xml".
+      os-delete "RespActChargeOn0.xml".
       assign
-        inFileName = "RespActChargeOn.xml"
+        inFileName = "RespActChargeOn0.xml"
         .
       
       find first tt-act-header where tt-act-header.num = inNum no-error.
@@ -313,7 +320,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
   end.
 
   method override protected logical GetIsSent ():
-    find first ub.esys-all-attr exclusive-lock
+    find last ub.esys-all-attr no-lock
                 where ub.esys-all-attr.table-name = "esys-pck-sent" 
                 and ub.esys-all-attr.attr-code = "egais"
                 and ub.esys-all-attr.key2       = 4
@@ -322,7 +329,6 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     if available (ub.esys-all-attr )
     then do:
       ReplyId = ub.esys-all-attr.key7.
-      release ub.esys-all-attr .
       return true.
     end.
     
@@ -428,7 +434,7 @@ class ibs.th.bge.egais.ActBalance inherits EGAISUTM:
     if urlResp = "" or urlResp = ?
     then do:
       StatusErr = true.
-      Msg = "Еще не получен ответ от сервера EGAIS по запросу " + ReplyId.
+      Msg = "Еще не получен ответ от сервера EGAIS по запросу " + ReplyId + {&new-line} + "Либо ответ уже автоматически удалён".
       return ?.
     end.
     
