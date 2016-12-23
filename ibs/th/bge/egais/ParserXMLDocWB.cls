@@ -338,11 +338,25 @@ class ibs.th.bge.egais.ParserXMLDocWB:
         when "ns:Ticket" then 
           do:
             create tt-ticket .
+            tt-ticket.docType = "Ticket".
           end.
         when "ns:ConfirmTicket" then 
           do:
             create tt-ticket .
             tt-ticket.doc = 'ConfirmTicket'.
+            tt-ticket.docType = 'ConfirmTicket'.
+          end.
+        when "ns:ConfirmRepealWB" then 
+          do:
+            create tt-ticket .
+            tt-ticket.doc = 'ConfirmRepealWB'.
+            tt-ticket.docType = 'ConfirmRepealWB'.
+          end.
+        when "ns:RequestRepealWB" then 
+          do:
+            create tt-ticket .
+            tt-ticket.doc = 'RequestRepealWB'.
+            tt-ticket.docType = 'RequestRepealWB'.
           end.
       end case.
       if lookup (parentName, "ns:Ticket") > 0 then do:
@@ -354,11 +368,11 @@ class ibs.th.bge.egais.ParserXMLDocWB:
           assign tt-ticket.regid = hText:node-value.
         end.
         if noderefName = "tc:Identity" then assign tt-ticket.Identity = hText:node-value.
-        if noderefName = "tc:DocType" then assign tt-ticket.doc = hText:node-value.
+        if noderefName = "tc:DocType" then assign tt-ticket.doc = "ticket/" + hText:node-value.
         
       end.
 
-      if lookup (parentName, "ns:ConfirmTicket") > 0 then do:
+      if lookup (parentName, "ns:ConfirmTicket,ns:ConfirmRepealWB") > 0 then do:
         if noderefName = "wt:Identity" then assign tt-ticket.Identity = hText:node-value.
       end.
       if lookup (parentName, "wt:Header") > 0 then do:
@@ -366,6 +380,11 @@ class ibs.th.bge.egais.ParserXMLDocWB:
         if noderefName = "wt:TicketDate" then assign tt-ticket.ticket-date = hText:node-value.
         if noderefName = "wt:WBRegId" then assign tt-ticket.regid = hText:node-value.
         if noderefName = "wt:Note" then assign tt-ticket.comment = hText:node-value.
+      end.
+      if lookup (parentName, "ns:RequestRepealWB") > 0 then do:
+        if noderefName = "qp:RequestDate" then assign tt-ticket.ticket-date = hText:node-value.
+        if noderefName = "qp:WBRegId" then assign tt-ticket.regid = hText:node-value.
+        if noderefName = "qp:RequestNumber" then assign tt-ticket.Identity = hText:node-value.
       end.
 
       if lookup (parentName, "tc:Result") > 0 then do:
@@ -423,7 +442,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
               do:
                 assign 
                   tt-wb-header.wb-type      = {&TDEDT_Vozvrat_Vnesh}
-                  tt-wb-header.wb-type-full = "возврат".
+                  tt-wb-header.wb-type-full = "возврат вн.".
               end.
             otherwise 
             do:

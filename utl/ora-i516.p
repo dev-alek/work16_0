@@ -1164,47 +1164,56 @@ end.
       when {&TDEDT_Ras_Vnesh}    
       or when {&TDEDT_Ras_Perem}
       or when {&TDEDT_Vozvrat_Vnesh}    then do:
-          { str/copy-ret.i
-            this-procedure
-            new_trn-doc.doc-code
-            new_trn-doc.doc-type
-            new_trn-doc.status_
-            new_trn-doc.internal
-            new_trn-doc.cli-type
-            new_trn-doc.cli-code
-            new_trn-doc.discnt-type
-            new_trn-doc.tot-calc
-            new_trn-doc.discnt-pc
-            new_trn-doc.agnt
-            new_trn-doc.boss
-            new_trn-doc.wrkr
-            new_trn-doc.base-rate
-            new_trn-doc.base-scale
-            new_trn-doc.exch-code
-            new_trn-doc.vat-type
-            new_trn-doc.doc-code
-            no
-            new_trn-doc.discnt-pc
-            new_trn-doc.agnt
-            new_trn-doc.boss
-            new_trn-doc.wrkr
-            new_trn-doc.base-rate
-            new_trn-doc.base-scale
-            v-cntxt-cash-pay
-            v-cntxt-base-code
-            tt2-doc-line
-            tt-gds-dtl
-            tt-parts
-            no
-            yes
-            yes
-            yes
-            no-error }
-
-            if error-status:error then do :
-                v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
-                run pcall-log-file in p-log-handle ( input v-end-message ) .
-                undo, return error v-end-message.
+          
+          if not is-egais
+          then do:
+            { str/copy-ret.i
+              this-procedure
+              new_trn-doc.doc-code
+              new_trn-doc.doc-type
+              new_trn-doc.status_
+              new_trn-doc.internal
+              new_trn-doc.cli-type
+              new_trn-doc.cli-code
+              new_trn-doc.discnt-type
+              new_trn-doc.tot-calc
+              new_trn-doc.discnt-pc
+              new_trn-doc.agnt
+              new_trn-doc.boss
+              new_trn-doc.wrkr
+              new_trn-doc.base-rate
+              new_trn-doc.base-scale
+              new_trn-doc.exch-code
+              new_trn-doc.vat-type
+              new_trn-doc.doc-code
+              no
+              new_trn-doc.discnt-pc
+              new_trn-doc.agnt
+              new_trn-doc.boss
+              new_trn-doc.wrkr
+              new_trn-doc.base-rate
+              new_trn-doc.base-scale
+              v-cntxt-cash-pay
+              v-cntxt-base-code
+              tt2-doc-line
+              tt-gds-dtl
+              tt-parts
+              no
+              yes
+              yes
+              yes
+              no-error }
+  
+              if error-status:error then do :
+                  v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
+                  run pcall-log-file in p-log-handle ( input v-end-message ) .
+                  undo, return error v-end-message.
+              end.
+            end.
+            else do:
+              for each tt2-doc-line :
+                run create-line(new_trn-doc.doc-code, input-output table tt2-doc-line).
+              end.
             end.
 
             if is-tsd then do:
@@ -1547,7 +1556,7 @@ define variable varcopyflag        like ub.trn-doc.flag     no-undo.
 define variable varcheck-return as logical no-undo .
 define variable varchg-inv as logical no-undo .
 
-if is-tsd or is-egais
+if is-tsd or (is-egais and not v-ext-doc-type = {&TDEDT_Vozvrat_Vnesh})
   then return.
 run str/trn-stat.p (
     input  parparentproc ,
@@ -1901,3 +1910,97 @@ procedure unitqnty1 :
   end.
 
 end procedure. /* unitqnty */
+
+procedure create-line:
+    define input parameter p-doc-code as character no-undo.
+    define input-output parameter table for tt2-doc-line.
+
+    def var gds-code as int no-undo.
+    def var cli-qnty as dec no-undo.
+    def var v-root-node as int no-undo.
+    def var vat-pc as dec no-undo.
+    
+    /* найдем накладную */
+    find first ub.trn-doc no-lock
+        where ub.trn-doc.doc-code = p-doc-code
+        no-error.
+    if error-status:error then
+        return error subst("Не найден документ с кодом &1", p-doc-code).
+
+    { gbl/pftxvalg.i
+      ub.goods.gds-code
+      {&vat-tax-code}
+      today
+      ub.trn-doc.host-code
+      ub.trn-doc.obj-type
+      ub.trn-doc.obj-code
+      vat-pc
+      no-error
+    }
+    
+    /* создаем линию накладной */
+    { str/crdoclin.i
+      ub.trn-doc.doc-code
+      tt2-doc-line.artic
+      tt2-doc-line.prod-type
+      tt2-doc-line.prod-code
+      ub.trn-doc.obj-type
+      ub.trn-doc.obj-code
+      "''"
+      trn-doc.ext-doc-type
+      tt2-doc-line.prt-root
+      tt2-doc-line.vat-pc
+      0
+      0
+      no-error
+    }
+    if error-status:error then
+        return error substitute("Ошибка при создании линии накладной &1, &2", ub.trn-doc.doc-code, return-value).
+        
+    /* ищем линии для дописывания дополнительных параметров */
+    find first ub.doc-line
+        where ub.doc-line.doc-code = ub.trn-doc.doc-code            
+        and ub.doc-line.artic = tt2-doc-line.artic
+        and ub.doc-line.prod-type = tt2-doc-line.prod-type
+        and ub.doc-line.prod-code = tt2-doc-line.prod-code
+        share-lock.
+        
+    buffer-copy tt2-doc-line to ub.doc-line.
+    
+    { gbl/rootnode.i
+      ub.doc-line.artic
+      ub.doc-line.prod-type
+      ub.doc-line.prod-code
+      v-root-node
+    }
+
+    /* создание признака */
+    { str/crgdsdtl.i
+      ub.trn-doc.obj-code
+      ub.trn-doc.obj-type
+      ub.trn-doc.doc-code
+      ub.doc-line.artic
+      ub.doc-line.prod-code
+      ub.doc-line.prod-type
+      v-root-node
+      true
+    }
+    
+    find first ub.gds-dtl share-lock
+        where ub.gds-dtl.doc-code = ub.trn-doc.doc-code
+        and ub.gds-dtl.artic = tt2-doc-line.artic
+        and ub.gds-dtl.prod-type = tt2-doc-line.prod-type
+        and ub.gds-dtl.prod-code = tt2-doc-line.prod-code
+        and ub.gds-dtl.prt-code = v-root-node.
+    
+    buffer-copy ub.doc-line to ub.gds-dtl.
+    for each tt-parts
+      where tt-parts.artic = tt2-doc-line.artic
+        and tt-parts.prod-type = tt2-doc-line.prod-type
+        and tt-parts.prod-code = tt2-doc-line.prod-code:
+      create ub.parts.
+        buffer-copy tt-parts except tt-parts.supp-type tt-parts.supp-code to ub.parts 
+          assign ub.parts.pl-code = 0.
+    end.
+        
+end.

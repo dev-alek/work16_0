@@ -61,6 +61,7 @@ define variable v-value-date        as date      no-undo .
 define variable v-ext-sys           as integer   no-undo .
 define variable glog                as logical   no-undo.
 define variable actnEGAISAdm        as logical   no-undo.
+define variable actnEGAISSts        as logical   no-undo.
 define variable v-uniq-key-rec      as character no-undo.
 define variable v-trn-doc           as character no-undo.
 define variable v-width             as decimal   no-undo.
@@ -871,6 +872,7 @@ do:
       then message egais:Msg view-as alert-box error.
       else message "Создание накладной завершено" view-as alert-box.
     run f-query.
+    run proc-row-disp.
   end.
   when 2 then do:
     
@@ -1011,6 +1013,7 @@ do:
       v-trn-doc = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value.
     end.
   end case.
+  run proc-row-disp.
   run f-query.
 end.
 
@@ -1024,8 +1027,10 @@ ON CHOOSE OF btn_ticket IN FRAME Dialog-Frame /* Просмотр */
 DO:
   if not bh-wb-egais:available 
     then return no-apply.
-  run bge/egais-ticket.w (parparentproc, egais, bh-wb-egais:handle).
+  run bge/egais-ticket.w (parparentproc, egais, bh-wb-egais).
   v-uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value.
+  run proc-row-disp.
+  run f-query.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1283,8 +1288,24 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     false
     glog
   }
-  
   actnEGAISAdm = if glog then true else false.
+
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_egais-chg-sts-doc':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    false
+    glog
+  }
+  actnEGAISSts = if glog then true else false.
 
   empty temp-table thbjattr_thbj-attr .
   run adm/shattri.p (
@@ -1327,6 +1348,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   
   egaisWBAdv = cast (egais:EGAISImpl, ibs.th.bge.egais.WayBill).
   egaisWBAdv:ActnEGAISAdm = actnEGAISAdm.
+  egaisWBAdv:ActnEGAISSts = actnEGAISSts.
   
   create query qh-wb-egais.
   create browse browse-hdl-wb-egais
@@ -1515,7 +1537,8 @@ def var ii as int no-undo.
         then do: 
         assign
           bcol[ii]:bgcolor = DARK_GRAY_COLOR when not bh-wb-egais:buffer-field ("isWb"):buffer-value and not cb-1 = 2
-          bcol[ii]:bgcolor = RED_COLOR when bh-wb-egais:buffer-field ("EGAISSts"):buffer-value = 'Rejected'
+          bcol[ii]:bgcolor = WHITE_COLOR when bh-wb-egais:buffer-field ("isWb"):buffer-value and not cb-1 = 2
+          bcol[ii]:bgcolor = RED_COLOR when bh-wb-egais:buffer-field ("EGAISSts"):buffer-value = 'Rejected' or bh-wb-egais:buffer-field ("EGAISSts"):buffer-value = 'Распроведена'
           bcol[ii]:bgcolor = CYAN_COLOR when bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value = 'отказ'
         .
         if bh-wb-egais:buffer-field (ii) = bh-wb-egais:buffer-field ("tts-status_")

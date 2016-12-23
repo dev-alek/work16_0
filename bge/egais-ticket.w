@@ -34,13 +34,20 @@ define input parameter bh-wb-egais as handle no-undo.
 
 /* Local Variable Definitions ---                                       */
 
-define variable qh-ticket-egais         as handle no-undo.
-define variable browse-hdl-ticket-egais as handle no-undo.
-define variable bh-ticket-egais         as handle no-undo.
+define variable qh-ticket-egais         as handle  no-undo.
+define variable qh-ticket-egais-last    as handle  no-undo.
+define variable browse-hdl-ticket-egais as handle  no-undo.
+define variable bh-ticket-egais         as handle  no-undo.
+define variable isRepealWB              as logical no-undo.
+define variable wbregIdRepeal           as character no-undo.
 define variable bcol                    as handle extent no-undo.
+define variable egaisWBAdv              as class WayBill no-undo.
 {ibs/th/bge/egais/wb-egais.i}
 { cmp/showinf.i  }
-
+{cmp/str-glbl.i  }
+  
+define buffer buf_doc-attr for ub.doc-attr.
+  
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -56,9 +63,9 @@ define variable bcol                    as handle extent no-undo.
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_OK 
-&Scoped-Define DISPLAYED-OBJECTS FILL-IN-1 FILL-IN-3 FILL-IN-2 FILL-IN-4 ~
-FILL-IN-5 
+&Scoped-Define ENABLED-OBJECTS Btn_OK btn_accRepeal btn_rejRepeal cb_status 
+&Scoped-Define DISPLAYED-OBJECTS cb_status FILL-IN-1 FILL-IN-3 FILL-IN-2 ~
+FILL-IN-4 FILL-IN-5 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -73,10 +80,25 @@ FILL-IN-5
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON btn_accRepeal 
+     LABEL "Подт. расп." 
+     SIZE 15 BY 1.13.
+
 DEFINE BUTTON Btn_OK AUTO-GO 
      LABEL "Выход" 
      SIZE 15 BY 1.13
      BGCOLOR 8 .
+
+DEFINE BUTTON btn_rejRepeal 
+     LABEL "Отказ расп." 
+     SIZE 15 BY 1.13.
+
+DEFINE VARIABLE cb_status AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Статус" 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEMS "Accepted","Rejected","Распроведена","Отсутствует" 
+     DROP-DOWN-LIST
+     SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE FILL-IN-1 AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
@@ -108,6 +130,9 @@ DEFINE VARIABLE FILL-IN-5 AS CHARACTER FORMAT "X(256)":U
 
 DEFINE FRAME Dialog-Frame
      Btn_OK AT ROW 1.25 COL 1.5
+     btn_accRepeal AT ROW 1.25 COL 17.13 WIDGET-ID 12
+     btn_rejRepeal AT ROW 1.25 COL 32.88 WIDGET-ID 14
+     cb_status AT ROW 1.25 COL 55.5 COLON-ALIGNED WIDGET-ID 16
      FILL-IN-1 AT ROW 14.71 COL 1.75 NO-LABEL WIDGET-ID 2
      FILL-IN-3 AT ROW 15.71 COL 1.75 NO-LABEL WIDGET-ID 6
      FILL-IN-2 AT ROW 16.71 COL 1.75 NO-LABEL WIDGET-ID 4
@@ -171,6 +196,97 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME btn_accRepeal
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_accRepeal Dialog-Frame
+ON CHOOSE OF btn_accRepeal IN FRAME Dialog-Frame /* Подт. расп. */
+DO:
+  egaisWBAdv:ConfirmRepealWB(wbregIdRepeal, "Accepted").
+  if egaisWBAdv:StatusErr
+  then do:
+    message egaisWBAdv:Msg view-as alert-box error.
+    return no-apply.
+  end.
+  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME btn_rejRepeal
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_rejRepeal Dialog-Frame
+ON CHOOSE OF btn_rejRepeal IN FRAME Dialog-Frame /* Отказ расп. */
+DO:
+  egaisWBAdv:ConfirmRepealWB(wbregIdRepeal, "Rejected").
+  if egaisWBAdv:StatusErr
+  then do:
+    message egaisWBAdv:Msg view-as alert-box error.
+    return no-apply.
+  end.
+  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME cb_status
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb_status Dialog-Frame
+ON VALUE-CHANGED OF cb_status IN FRAME Dialog-Frame /* Статус */
+DO:
+  message  substitute ("Вы уверены, что хотите изменить статус накладной с &1 на &2?", bh-wb-egais:buffer-field ("EGAISSts"):buffer-value, cb_status:screen-value) view-as alert-box question buttons yes-no
+    title "" update isChoise as logical.
+  if isChoise
+  then do:
+    if egaisWBAdv:ActnEGAISAdm
+    then do:
+      if bh-wb-egais:buffer-field ("wb-type"):buffer-value begins "расход" or bh-wb-egais:buffer-field ("wb-type"):buffer-value begins "возврат"
+      then do:
+        find first ub.doc-attr exclusive-lock 
+          where ub.doc-attr.doc-code = bh-wb-egais:buffer-field ("trn-doc-code"):buffer-value and ub.doc-attr.attr-code = {&trdcattr-egais} no-error.
+        if available (ub.doc-attr)
+          then 
+        do:
+          ub.doc-attr.attr-value = if cb_status:screen-value = "Отсутствует" then "" else cb_status:screen-value.
+        end.
+        release ub.doc-attr.
+      end.
+      else do:
+        for each ub.clob-bind where ub.clob-bind.resource-type = {&lob-egais-wb} and ub.clob-bind.uniq-key-rec = bh-wb-egais:buffer-field ("uniq-key-rec"):buffer-value:
+          if num-entries (ub.clob-bind.descr, {&delim-par}) = 9
+          then do:
+            ub.clob-bind.descr = ub.clob-bind.descr + {&delim-par}.
+          end.
+          if num-entries (ub.clob-bind.descr, {&delim-par}) > 9
+          then
+            assign
+              entry (10, ub.clob-bind.descr, {&delim-par}) = if cb_status:screen-value = "Отсутствует" then "" else cb_status:screen-value
+            .
+        end.
+        for each buf_doc-attr no-lock 
+          where buf_doc-attr.doc-code = bh-wb-egais:buffer-field ("wbregid"):buffer-value and buf_doc-attr.attr-code = {&trdcattr-negais}:
+          find first ub.doc-attr exclusive-lock where ub.doc-attr.doc-code = buf_doc-attr.doc-code and ub.doc-attr.attr-code = {&trdcattr-egais} no-error.
+          if available (ub.doc-attr)
+            then ub.doc-attr.attr-value = if cb_status:screen-value = "Отсутствует" then "" else cb_status:screen-value.
+          release ub.doc-attr.
+        end.
+      end.
+      bh-wb-egais:buffer-field ("EGAISSts"):buffer-value = cb_status:screen-value .
+      return.
+    end.
+    else do:
+      message 'Для изменения статуса остутсвует необходимое право "Администрирование запросов в ЕГАИС"' view-as alert-box error title "".
+    end.
+  end.
+  cb_status:screen-value = bh-wb-egais:buffer-field ("EGAISSts"):buffer-value.
+  return no-apply.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -190,6 +306,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
   def var ii as int no-undo.
+
+  egaisWBAdv = cast (egais:EGAISImpl, ibs.th.bge.egais.WayBill).
 
   create query qh-ticket-egais.
   create browse browse-hdl-ticket-egais
@@ -233,13 +351,24 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     extent (bcol) = bh-ticket-egais:num-fields.
     do ii = 1 to bh-ticket-egais:num-fields:
       bcol[ii] = browse-hdl-ticket-egais:add-like-column('tt-ticket' + '.' + bh-ticket-egais:buffer-field (ii):name, 0, 'FILL-IN').
-      if ii = 5 then bcol[ii]:width = 80.
+      if ii = 6 then bcol[ii]:width = 80.
       if ii = 2 then bcol[ii]:width = 15.
+      if ii = 3 then bcol[ii]:width = 15.
     end.
   end.
 
+  isRepealWB = bh-ticket-egais:find-last ("where docType = 'RequestRepealWB'", no-lock) no-error.
+  if isRepealWB 
+    then wbregIdRepeal = bh-ticket-egais:buffer-field ("regid"):buffer-value.
+  if lookup (bh-wb-egais:buffer-field ("EGAISSts"):buffer-value, cb_status:list-items ) = 0 and (bh-wb-egais:buffer-field ("EGAISSts"):buffer-value <> ? and bh-wb-egais:buffer-field ("EGAISSts"):buffer-value <> "")
+    then cb_status:list-items = cb_status:list-items + "," + bh-wb-egais:buffer-field ("EGAISSts"):buffer-value.  
+  cb_status = if bh-wb-egais:buffer-field ("EGAISSts"):buffer-value = "" or bh-wb-egais:buffer-field ("EGAISSts"):buffer-value = ? then "Отсутствует" else bh-wb-egais:buffer-field ("EGAISSts"):buffer-value.
   RUN enable_UI.
+  run hide-disp.
+  bh-ticket-egais:find-first ("") no-error.
   run local-value-changed.
+  if not egaisWBAdv:ActnEGAISSts
+    then cb_status:sensitive = false.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -278,13 +407,32 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY FILL-IN-1 FILL-IN-3 FILL-IN-2 FILL-IN-4 FILL-IN-5 
+  DISPLAY cb_status FILL-IN-1 FILL-IN-3 FILL-IN-2 FILL-IN-4 FILL-IN-5 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_OK 
+  ENABLE Btn_OK btn_accRepeal btn_rejRepeal cb_status 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE hide-disp Dialog-Frame 
+PROCEDURE hide-disp :
+do with frame {&frame-name}:
+    if isRepealWB 
+    then do:
+      btn_accRepeal:hidden = false.
+      btn_rejRepeal:hidden = false.
+    end.
+    else do:
+      btn_accRepeal:hidden = true.
+      btn_rejRepeal:hidden = true.
+    end.
+  end.
+  
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
