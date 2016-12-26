@@ -769,7 +769,7 @@ ON return OF loc-code IN FRAME {&frame-name} do:
         end.
     end.
     else do :
-        find first tt-gds-rests_shop no-lock where tt-gds-rests_shop.gds-code = loc-code no-error.
+        find first tt-gds-rests_shop no-lock where tt-gds-rests_shop.gds-code matches ("*" + loc-code + "*") no-error.
         if not available tt-gds-rests_shop then do :
             message "Не найден товар с кодом " + loc-code view-as alert-box warning .
         end.
@@ -1305,6 +1305,7 @@ DO:
     define variable v-int64-id    as int64     no-undo .
     define variable v-info        as character no-undo .
     
+    empty temp-table tt-gds-act-tts .
     if select-list = "" then do :
         message "Не выбрано ни одной строки" view-as alert-box .
         return no-apply.
