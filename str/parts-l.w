@@ -1113,6 +1113,7 @@ end.
     define variable v-alc-certif-path          as character no-undo .
     define variable v-alc-imp-type             as character no-undo .
     define variable v-alc-imp-code             as integer   no-undo .
+    define variable v-mode-alc                 as character no-undo .
 
     assign
       v-alc-mark-db-num         = parts.mark-db-num
@@ -1125,9 +1126,18 @@ end.
       v-alc-imp-code            = parts.alc-imp-code
     .
 
+
+    if p-mode = {&lookup} and ub.parts.out-code = {&free-code}
+    then do:
+      v-mode-alc = {&update}. 
+    end.
+    else do:
+      v-mode-alc = p-mode.
+    end.
+    
     run str/in-alc.w
       (input        parparentproc
-      ,input       p-mode
+      ,input       v-mode-alc
       ,input p-gds-code
       ,input-output v-alc-mark-db-num
       ,input-output v-alc-mark-code
@@ -1160,7 +1170,7 @@ end.
       run waitfram-show ("Сохранение новых значений и отправка их по новостям ...").
       run trg/partps.p ( input v-gds-code
                        , input parts.in-code
-                       , input if ub.parts.doc-type = {&expense} then ub.parts.out-code else ?
+                       , input if ub.parts.doc-type = {&expense} or ub.parts.out-code = {&free-code} then ub.parts.out-code else ?
                        , input parts.part-code
                        , input v-alc-mark-db-num
                        , input v-alc-mark-code

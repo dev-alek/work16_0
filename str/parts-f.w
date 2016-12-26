@@ -805,86 +805,72 @@ DO:
       where recid(buf_parts) = v-parts-recid
       no-error .
     if available buf_parts
-    then do:   
-    if buf_parts.status_ then do: /* изменения: если накладная закрыта, то разрешаем менять атрибуты */
-      run str/in-alc.w
-          (input        parparentproc
-          ,input        {&update}
-              ,input p-gds-code 
-          ,input-output v-alc-mark-db-num
-          ,input-output v-alc-mark-code
-          ,input-output v-alc-bottling-date
-          ,input-output v-alc-ref-ab-path
-          ,input-output v-alc-quality-certif-path
-          ,input-output v-alc-certif-path
-          ,input-output v-alc-imp-type
-          ,input-output v-alc-imp-code
-          ,output       v-save-flag
-      ) no-error .
-    end.
-    else do:
-      run str/in-alc.w
-      (input        parparentproc
-          ,input        p-mode
+    then do:  
+        if buf_parts.status_ then do: /* если накладная закрыта, то разрешаем менять атрибуты */
+          run str/in-alc.w
+              (input parparentproc
+              ,input {&update}
               ,input p-gds-code
-          ,input-output v-alc-mark-db-num
-          ,input-output v-alc-mark-code
-          ,input-output v-alc-bottling-date
-          ,input-output v-alc-ref-ab-path
-          ,input-output v-alc-quality-certif-path
-          ,input-output v-alc-certif-path
-          ,input-output v-alc-imp-type
-          ,input-output v-alc-imp-code
-          ,output       v-save-flag
-      ) no-error .
-    if error-status :error
-    then do:
-      if error-status :get-message(1) <> '':u
-      then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Ошибка при вызове процедуры in-alc.w" skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
-      end.
-      undo, return no-apply .
-    end.
-    end.
-    define variable v-display-part-code as character no-undo .
-
-    run partsfnc_get-parts-show-code in this-procedure
-      (input  v-new-parts-part-code
-      ,input  v-alc-mark-db-num
-      ,input  v-alc-mark-code
-      ,input  v-alc-bottling-date
-      ,input  v-alcohol-prod
-      ,output v-display-part-code
-      ) .
-    assign
-      parts.part-code :screen-value = string(v-display-part-code
-                                            ,parts.part-code :format
-                                            )
-    .
-    if p-mode <> {&lookup} then do:
-          /*assign
-                buf_parts.mark-db-num             = v-alc-mark-db-num
-                buf_parts.mark-code               = v-alc-mark-code
-                buf_parts.alc-bottling-date       = v-alc-bottling-date
-                buf_parts.alc-ref-ab-path         = v-alc-ref-ab-path
-                buf_parts.alc-quality-certif-path = v-alc-quality-certif-path
-                buf_parts.alc-certif-path         = v-alc-certif-path
-                buf_parts.alc-imp-type            = v-alc-imp-type
-                buf_parts.alc-imp-code            = v-alc-imp-code
-              .*/
-              
-              if v-save-flag then do:
-              run trg/alc-attrib.p
-                (input buf_parts.in-code   /* p-in-code   */
-                ,input buf_parts.artic     /* p-artic     */
-                ,input buf_parts.prod-type /* p-prod-type */
-                ,input buf_parts.prod-code /* p-prod-code */
-                ,input buf_parts.part-code /* p-part-code */
+              ,input-output v-alc-mark-db-num
+              ,input-output v-alc-mark-code
+              ,input-output v-alc-bottling-date
+              ,input-output v-alc-ref-ab-path
+              ,input-output v-alc-quality-certif-path
+              ,input-output v-alc-certif-path
+              ,input-output v-alc-imp-type
+              ,input-output v-alc-imp-code
+              ,output       v-save-flag
+          ) no-error .
+        end.
+        else do:
+            run str/in-alc.w
+            (  input parparentproc
+              ,input p-mode
+              ,input p-gds-code
+              ,input-output v-alc-mark-db-num
+              ,input-output v-alc-mark-code
+              ,input-output v-alc-bottling-date
+              ,input-output v-alc-ref-ab-path
+              ,input-output v-alc-quality-certif-path
+              ,input-output v-alc-certif-path
+              ,input-output v-alc-imp-type
+              ,input-output v-alc-imp-code
+              ,output       v-save-flag
+            ) no-error .
+            if error-status :error
+            then do:
+              if error-status :get-message(1) <> '':u
+              then do:
+                message
+                  vss-workfile vss-revision vss-description skip
+                  "Ошибка при вызове процедуры in-alc.w" skip
+                  error-status :get-message(1) skip
+                  return-value skip
+                  view-as alert-box error .
+              end.
+              undo, return no-apply .
+            end.
+        end.
+        define variable v-display-part-code as character no-undo .
+        run partsfnc_get-parts-show-code in this-procedure
+          (input  v-new-parts-part-code
+          ,input  v-alc-mark-db-num
+          ,input  v-alc-mark-code
+          ,input  v-alc-bottling-date
+          ,input  v-alcohol-prod
+          ,output v-display-part-code
+          ) .
+        assign
+          parts.part-code :screen-value = string(v-display-part-code
+                                                ,parts.part-code :format
+                                                )
+        .
+        if p-mode <> {&lookup} then do:
+            if v-save-flag then do:
+              run trg/partps.p ( input p-gds-code
+                , input buf_parts.in-code
+                , input if buf_parts.in-code <> buf_parts.out-code then buf_parts.out-code else ?
+                , input buf_parts.part-code
                 ,input v-alc-mark-db-num
                 ,input v-alc-mark-code
                 ,input v-alc-bottling-date
@@ -893,63 +879,50 @@ DO:
                 ,input v-alc-certif-path
                 ,input v-alc-imp-type
                 ,input v-alc-imp-code
-                ) .
+                ) no-error .
               end.
             end.
-            else do:
-                if v-save-flag then do:
-                    if    buf_parts.mark-db-num     <> v-alc-mark-db-num or buf_parts.mark-code <> v-alc-mark-code
-                    or    v-alc-bottling-date       <> buf_parts.alc-bottling-date
-                    or    v-alc-ref-ab-path         <> buf_parts.alc-ref-ab-path
-                    or    v-alc-quality-certif-path <> buf_parts.alc-quality-certif-path
-                    or    v-alc-certif-path         <> buf_parts.alc-certif-path
-                    or    v-alc-imp-type            <> buf_parts.alc-imp-type
-                    or    v-alc-imp-code            <> buf_parts.alc-imp-code 
-                    then do: 
-                        define variable chk-message as character no-undo.
-                        define variable chk-changes as logical no-undo.
-                        chk-message = "ВНИМАНИЕ! Изменения не будут переданы в другие базы данных." + {&new-line} + "Вы собираетесь изменить следующие поля:" + {&new-line}.
-                        if buf_parts.mark-db-num     <> v-alc-mark-db-num or buf_parts.mark-code <> v-alc-mark-code then chk-message = chk-message + "- Код марки" + {&new-line}.
-                        if v-alc-bottling-date       <> buf_parts.alc-bottling-date           then chk-message = chk-message + "- Дата розлива" + {&new-line}.
-                        if v-alc-ref-ab-path         <> buf_parts.alc-ref-ab-path             then chk-message = chk-message + "- Справки А, Б" + {&new-line}.
-                        if v-alc-quality-certif-path <> buf_parts.alc-quality-certif-path     then chk-message = chk-message + "- Удостоверение качества" + {&new-line}.
-                        if v-alc-certif-path         <> buf_parts.alc-certif-path             then chk-message = chk-message + "- Сертификат соответствия" + {&new-line}.
-                        if v-alc-imp-code            <> buf_parts.alc-imp-code or v-alc-imp-type            <> buf_parts.alc-imp-type                then chk-message = chk-message + "- Импортер" + {&new-line}.
-                        chk-message = chk-message + "Сохранить изменения?".
-                        message chk-message view-as alert-box question button yes-no update chk-changes.
-                        if chk-changes then do:
-                          /* assign
-                            buf_parts.mark-db-num             = v-alc-mark-db-num
-                            buf_parts.mark-code               = v-alc-mark-code
-                            buf_parts.alc-bottling-date       = v-alc-bottling-date
-                            buf_parts.alc-ref-ab-path         = v-alc-ref-ab-path
-                            buf_parts.alc-quality-certif-path = v-alc-quality-certif-path
-                            buf_parts.alc-certif-path         = v-alc-certif-path
-                            buf_parts.alc-imp-type            = v-alc-imp-type
-                            buf_parts.alc-imp-code            = v-alc-imp-code
-                          .*/
-                          
-                          run trg/alc-attrib.p
-                            (input buf_parts.in-code   /* p-in-code   */
-                            ,input buf_parts.artic     /* p-artic     */
-                            ,input buf_parts.prod-type /* p-prod-type */
-                            ,input buf_parts.prod-code /* p-prod-code */
-                            ,input buf_parts.part-code /* p-part-code */
-                            ,input v-alc-mark-db-num
-                            ,input v-alc-mark-code
-                            ,input v-alc-bottling-date
-                            ,input v-alc-ref-ab-path
-                            ,input v-alc-quality-certif-path
-                            ,input v-alc-certif-path
-                            ,input v-alc-imp-type
-                            ,input v-alc-imp-code
-                            ) .
-                        end.
+        else do:
+            if v-save-flag then do:
+                if    buf_parts.mark-db-num     <> v-alc-mark-db-num or buf_parts.mark-code <> v-alc-mark-code
+                or    v-alc-bottling-date       <> buf_parts.alc-bottling-date
+                or    v-alc-ref-ab-path         <> buf_parts.alc-ref-ab-path
+                or    v-alc-quality-certif-path <> buf_parts.alc-quality-certif-path
+                or    v-alc-certif-path         <> buf_parts.alc-certif-path
+                or    v-alc-imp-type            <> buf_parts.alc-imp-type
+                or    v-alc-imp-code            <> buf_parts.alc-imp-code 
+                then do: 
+                    define variable chk-message as character no-undo.
+                    define variable chk-changes as logical no-undo.
+                    chk-message = "ВНИМАНИЕ!" + (if buf_parts.in-code <> buf_parts.out-code then " Изменения только по расходной партии." else " Изменения по всем документам порожденным из исходного." ) + {&new-line} + "Вы собираетесь изменить следующие поля:" + {&new-line}.
+                    if buf_parts.mark-db-num     <> v-alc-mark-db-num or buf_parts.mark-code <> v-alc-mark-code then chk-message = chk-message + "- Код марки" + {&new-line}.
+                    if v-alc-bottling-date       <> buf_parts.alc-bottling-date           then chk-message = chk-message + "- Дата розлива" + {&new-line}.
+                    if v-alc-ref-ab-path         <> buf_parts.alc-ref-ab-path             then chk-message = chk-message + "- Справки А, Б" + {&new-line}.
+                    if v-alc-quality-certif-path <> buf_parts.alc-quality-certif-path     then chk-message = chk-message + "- Удостоверение качества" + {&new-line}.
+                    if v-alc-certif-path         <> buf_parts.alc-certif-path             then chk-message = chk-message + "- Сертификат соответствия" + {&new-line}.
+                    if v-alc-imp-code            <> buf_parts.alc-imp-code or v-alc-imp-type            <> buf_parts.alc-imp-type                then chk-message = chk-message + "- Импортер" + {&new-line}.
+                    chk-message = chk-message + "Сохранить изменения?".
+                    message chk-message view-as alert-box question button yes-no update chk-changes.
+                    if chk-changes then do:
+                    run trg/partps.p ( input p-gds-code
+                      , input buf_parts.in-code
+                      , input if buf_parts.in-code <> buf_parts.out-code then buf_parts.out-code else ?
+                      , input buf_parts.part-code
+                      ,input v-alc-mark-db-num
+                      ,input v-alc-mark-code
+                      ,input v-alc-bottling-date
+                      ,input v-alc-ref-ab-path
+                      ,input v-alc-quality-certif-path
+                      ,input v-alc-certif-path
+                      ,input v-alc-imp-type
+                      ,input v-alc-imp-code
+                      ) no-error .
                     end.
+                  end.
                 end.
             end. /* else*/
-      end.
-  end.
+        end. /* available buf_parts */
+    end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
