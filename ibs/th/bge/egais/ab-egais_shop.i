@@ -46,7 +46,7 @@ define temp-table tt-gds-act
     field doc-date      like ub.trn-doc.fact-date   label "Дата TH"
     field alc-code      as character                label "Алкогольный код"         format "X(21)"
     field gds-name      like ub.goods.gds-name      label "Наименование товара"     format "X(35)"
-    field qnty          as integer                  label "Количество"
+    field qnty          as decimal                  label "Количество"
     field egais-name    as character
     index pi as primary unique
         position_

@@ -43,7 +43,7 @@ define temp-table tt-gds-act{2}
     field gds-code      like ub.goods.gds-code      label "Код товара   "
     field alc-code      as character                label "Алкогольный код"         format "X(21)"
     field gds-name      like ub.goods.gds-name      label "Наименование товара"     format "X(35)"
-    field qnty          as integer                  label "Количество"
+    field qnty          as decimal                  label "Количество"
     field inform-B      as character                label "Справка Б"               format "X(20)"
     index pi as primary unique
         position_
@@ -159,18 +159,18 @@ procedure parseXML{2} :
     empty temp-table tt-act-header{2} .
     empty temp-table tt-gds-act{2} .
     
-    CREATE X-DOCUMENT hDoc.
-    CREATE X-NODEREF hRoot.
+    CREATE X-DOCUMENT hDoc{2}.
+    CREATE X-NODEREF hRoot{2}.
    
-    hDoc:encoding = 'utf-8'.
-    hDoc:LOAD("file", search(inFile),FALSE).
+    hDoc{2}:encoding = 'utf-8'.
+    hDoc{2}:LOAD("file", search(inFile),FALSE).
    
-    hDoc:GET-DOCUMENT-ELEMENT(hRoot).
+    hDoc{2}:GET-DOCUMENT-ELEMENT(hRoot{2}).
     
-    RUN GetChildren{2}(hRoot, 1).
+    RUN GetChildren{2}(hRoot{2}, 1).
 
-    DELETE OBJECT hDoc.
-    DELETE OBJECT hRoot.    
+    DELETE OBJECT hDoc{2}.
+    DELETE OBJECT hRoot{2}.    
 end procedure .
 
 procedure GetChildren{2} :
@@ -210,7 +210,7 @@ procedure GetChildren{2} :
             assign tt-gds-act{2}.num = tt-act-header{2}.num .
         end.
         IF hNoderef:NAME = "tts:Identity" THEN assign tt-gds-act{2}.position_ = integer(hText:node-value) no-error .
-        IF hNoderef:NAME = "tts:Quantity" THEN assign tt-gds-act{2}.qnty = integer(hText:node-value) no-error . 
+        IF hNoderef:NAME = "tts:Quantity" THEN assign tt-gds-act{2}.qnty = decimal(hText:node-value) no-error . 
         IF hNoderef:NAME = "pref:BRegId"
         OR hNoderef:NAME = "pref:F2RegId" THEN assign tt-gds-act{2}.inform-B = (hText:node-value) no-error .
         IF hNoderef:NAME = "gds-code"     THEN do :
