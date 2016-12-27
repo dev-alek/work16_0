@@ -29,8 +29,8 @@ class ibs.th.bge.egais.ParserXMLRests_Shop inherits EGAISUTM:
     field proof             like ub.goods.proof             label "Крепость"            format ">9.9"    
     field fromEgais         as logical
     field egais-name        as character                    label "Наименование ЕГАИС"  format "X(100)"
-    field egais-qnty        as integer                      label "Остаток ЕГАИС"
-    field TH-qnty           as integer                      label "Остаток TH"
+    field egais-qnty        as decimal                      label "Остаток ЕГАИС"
+    field TH-qnty           as decimal                      label "Остаток TH"
     field packed            as logical          
     index pi as primary
         gds-code
@@ -94,7 +94,7 @@ class ibs.th.bge.egais.ParserXMLRests_Shop inherits EGAISUTM:
                 
             IF hNoderef:NAME = "rst:RestsDate"   THEN assign v-date-time        = hText:node-value .    
 
-            IF hNoderef:NAME = "rst:Quantity"    THEN assign tt-gds-rests-EG_shop.egais-qnty        = integer(hText:node-value) .
+            IF hNoderef:NAME = "rst:Quantity"    THEN assign tt-gds-rests-EG_shop.egais-qnty        = decimal(hText:node-value) .
             IF hNoderef:NAME = "pref:FullName"     THEN do :
                 if trim(tt-gds-rests-EG_shop.gds-name) = "" then assign tt-gds-rests-EG_shop.gds-name        = hText:node-value .
             end.

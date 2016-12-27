@@ -46,9 +46,9 @@ define temp-table tt-gds-act
     field doc-date      like ub.trn-doc.fact-date   label "Дата TH"
     field alc-code      as character                label "Алкогольный код"         format "X(21)"
     field gds-name      like ub.goods.gds-name      label "Наименование товара"     format "X(35)"
-    field qnty          as integer                  label "Количество"
+    field qnty          as decimal                  label "Количество"
     field inform-A      as character                label "Справка А"               format "X(20)"
-    field A-qnty        as integer                  label "Кол-во в справке"        
+    field A-qnty        as decimal                  label "Кол-во в справке"        
     field A-bottleDate  as date                     label "Дата розлива"
     field A-ttnNumber   as character                label "№ ТТН справки А"         format "X(15)"
     field A-ttnDate     as date                     label "Дата"
@@ -717,8 +717,8 @@ procedure GetChildren :
 
         end. 
         IF hNoderef:NAME = "ain:Quantity"
-        OR hNoderef:NAME = "ainp:Quantity" THEN assign tt-gds-act.qnty = integer(hText:node-value) no-error . 
-        IF hNoderef:NAME = "iab:Quantity" THEN assign tt-gds-act.A-qnty = integer(hText:node-value) no-error .
+        OR hNoderef:NAME = "ainp:Quantity" THEN assign tt-gds-act.qnty = decimal(hText:node-value) no-error . 
+        IF hNoderef:NAME = "iab:Quantity" THEN assign tt-gds-act.A-qnty = decimal(hText:node-value) no-error .
         IF hNoderef:NAME = "iab:BottlingDate" THEN assign tt-gds-act.A-bottleDate = date(substring(hText:node-value, 9, 2) + "/" + substring(hText:node-value, 6, 2) + "/" + substring(hText:node-value, 1, 4)) no-error . 
         IF hNoderef:NAME = "iab:TTNNumber" THEN assign tt-gds-act.A-ttnNumber = hText:node-value no-error .
         IF hNoderef:NAME = "iab:TTNDate" THEN assign tt-gds-act.A-ttnDate = date(substring(hText:node-value, 9, 2) + "/" + substring(hText:node-value, 6, 2) + "/" + substring(hText:node-value, 1, 4)) no-error .

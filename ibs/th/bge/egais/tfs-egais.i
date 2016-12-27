@@ -43,7 +43,7 @@ define temp-table tt-gds-act
     field gds-code      like ub.goods.gds-code      label "Код товара   "
     field alc-code      as character                label "Алкогольный код"         format "X(21)"
     field gds-name      like ub.goods.gds-name      label "Наименование товара"     format "X(35)"
-    field qnty          as integer                  label "Количество"
+    field qnty          as decimal                  label "Количество"
     field inform-B      as character                label "Справка Б"               format "X(20)"
     index pi as primary unique
         position_
@@ -210,7 +210,7 @@ procedure GetChildren :
             assign tt-gds-act.num = tt-act-header.num .
         end.
         IF hNoderef:NAME = "tfs:Identity" THEN assign tt-gds-act.position_ = integer(hText:node-value) no-error .
-        IF hNoderef:NAME = "tfs:Quantity" THEN assign tt-gds-act.qnty = integer(hText:node-value) no-error . 
+        IF hNoderef:NAME = "tfs:Quantity" THEN assign tt-gds-act.qnty = decimal(hText:node-value) no-error . 
         IF hNoderef:NAME = "pref:BRegId"
         OR hNoderef:NAME = "pref:F2RegId" THEN assign tt-gds-act.inform-B = (hText:node-value) no-error .
         IF hNoderef:NAME = "gds-code"     THEN do :

@@ -1329,7 +1329,7 @@ procedure GetChildren :
 
         end. 
         IF hNoderef:NAME = "ain:Quantity"
-        OR hNoderef:NAME = "ainp:Quantity" THEN assign tt-gds-act.qnty = integer(hText:node-value) no-error . 
+        OR hNoderef:NAME = "ainp:Quantity" THEN assign tt-gds-act.qnty = decimal(hText:node-value) no-error . 
         
         run GetChildren (hNoderef, (level + 1)).
         

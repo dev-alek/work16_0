@@ -74,10 +74,10 @@ define temp-table tt-gds-rests no-undo
     field proof             like ub.goods.proof             label "Крепость"            format ">9.9"    
     field fromEgais         as logical
     field egais-name        as character                    label "Наименование ЕГАИС"  format "X(100)"
-    field egais-qnty        as integer                      label "Остаток ЕГАИС"
+    field egais-qnty        as decimal                      label "Остаток ЕГАИС"
     field informA_          as character                    label "ID справки А"        format "X(30)"
     field informB_          as character                    label "ID справки Б"        format "X(30)"
-    field TH-qnty           as integer                      label "Остаток TH"   
+    field TH-qnty           as decimal                      label "Остаток TH"   
     field prt-rec           as character  
     field packed            as logical     
     index pi as primary
@@ -99,11 +99,11 @@ define temp-table tt-gds-rests_shop no-undo
     field proof             like ub.goods.proof             label "Крепость"            format ">9.9"    
     field fromEgais         as logical
     field egais-name        as character                    label "Наименование ЕГАИС"  format "X(100)"
-    field egais-qnty        as integer                      label "Остаток маг"
-    field TH-qnty           as integer                      label "Остаток TH"   
+    field egais-qnty        as decimal                      label "Остаток маг"
+    field TH-qnty           as decimal                      label "Остаток TH"   
     field prt-rec           as character  
     field packed            as logical  
-    field egais-qnty_stock  as integer                      label "Остаток скл"   
+    field egais-qnty_stock  as decimal                      label "Остаток скл"   
     field in-list           as logical
     index pi as primary
         gds-code
@@ -120,9 +120,9 @@ define temp-table tt-compare-rests no-undo
     field gds-name          like ub.goods.gds-name          label "Наименование товара" format "X(100)"
     field alc-code          as character                    label "Алкогольный код"     format "X(21)"
     field alc-type-code     like ub.alc-type.alc-type-code  label "Код АП"
-    field TH-qnty           as integer                      label "Остаток TH"
-    field shop-qnty         as integer                      label "Остаток маг"
-    field stock-qnty        as integer                      label "Остаток скл"
+    field TH-qnty           as decimal                      label "Остаток TH"
+    field shop-qnty         as decimal                      label "Остаток маг"
+    field stock-qnty        as decimal                      label "Остаток скл"
     index pi as primary
         alc-code
     index gds
@@ -134,9 +134,9 @@ define temp-table tt-marks-compare-rests no-undo
     field gds-name          like ub.goods.gds-name          label "Наименование товара" format "X(100)"
     field alc-code          as character                    label "Алкогольный код"     format "X(21)"
     field alc-type-code     like ub.alc-type.alc-type-code  label "Код АП"
-    field TH-qnty           as integer                      label "Остаток TH"
-    field shop-qnty         as integer                      label "Остаток маг"
-    field stock-qnty        as integer                      label "Остаток скл"
+    field TH-qnty           as decimal                      label "Остаток TH"
+    field shop-qnty         as decimal                      label "Остаток маг"
+    field stock-qnty        as decimal                      label "Остаток скл"
     field marks-qnty        as integer                      label "Кол-во марок"
     field gds-codes         as character
     index pi as primary
@@ -209,6 +209,7 @@ define variable iTemp as integer no-undo.
   DEFINE VARIABLE        number-of-pages    AS INTEGER   NO-UNDO.
 
 define variable select-list as longchar  no-undo .
+define variable select-list_shop as longchar  no-undo .
 define variable v-sel-entry as character no-undo .
 define variable goods-list  as longchar  no-undo .
 define variable ref-list    as character no-undo .
@@ -265,10 +266,19 @@ define variable bh-act-header  as handle no-undo .
 {ibs/th/bge/egais/awo-egais.i proc }
 define variable bh-act-header-tts  as handle no-undo .
 {ibs/th/bge/egais/tts-egais.i proc -tts }
+define buffer x_ext-classif-attr     for ub.ext-classif-attr .
+define variable bh-act-header-awos  as handle no-undo .
+{ibs/th/bge/egais/awo-egais_shop.i proc " " " " -awos }
 
 FUNCTION get-mark RETURNS CHARACTER
 (buffer local-gds for tt-gds-rests ):
 if lookup (string (recid (local-gds)), select-list) > 0  then return "*".
+                                                           else return "".
+end function.
+
+FUNCTION get-mark_shop RETURNS CHARACTER
+(buffer local-gds_shop for tt-gds-rests_shop ):
+if lookup (string (recid (local-gds_shop)), select-list_shop) > 0  then return "*".
                                                            else return "".
 end function.
 
@@ -305,9 +315,9 @@ end function.
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
-&Scoped-define List-1 b-save b-connect b-del br-rests v-DT-rests 
+&Scoped-define List-1 b-save b-connect b-del br-rests v-DT-rests b-func
 
-&Scoped-define List-2 br-rests_shop br-rests_all t-negative_rests v-DT-rests_shop
+&Scoped-define List-2 br-rests_shop br-rests_all t-negative_rests v-DT-rests_shop b-func_shop
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -327,16 +337,25 @@ define menu m-func
     menu-item m-tts label "Сформировать акт передачи в торговый зал"
     menu-item m-print label "Печать остатков на складе"
     menu-item m-print_shop label "Печать остатков в магазине"
+/*    menu-item m-compare label "Сверка остатков"       */
+/*    menu-item m-marks-compare label "Сверка по маркам"*/
+/*    menu-item m-list label "Показать по списку"       */
+/*    menu-item m-all label "Показать все"              */
+    menu-item m-load-all label "Запрос по всем объектам"
+    menu-item m-file label "Загрузить из файла"
+.    
+
+define menu m-func_shop
+    menu-item m-writeOff_shop label "Сформировать акт о списании из торгового зала"
+/*    menu-item m-tts label "Сформировать акт о передаче продукции в торговый зал"*/
+    menu-item m-print label "Печать остатков на складе"
+    menu-item m-print_shop label "Печать остатков в магазине"
     menu-item m-compare label "Сверка остатков"
     menu-item m-marks-compare label "Сверка по маркам"
     menu-item m-list label "Показать по списку"
     menu-item m-all label "Показать все"
     menu-item m-load-all label "Запрос по всем объектам"
     menu-item m-file label "Загрузить из файла"
-.    
-
-define menu m-func_shop
-    menu-item m-tts label "Сформировать акт о передаче продукции в торговый зал"
 . 
 
 DEFINE BUTTON b-mark 
@@ -381,10 +400,10 @@ DEFINE BUTTON b-func
      SIZE 15 BY 1.14
      BGCOLOR 8 . 
 
-/*DEFINE BUTTON b-func_shop*/
-/*     LABEL "Функции"     */
-/*     SIZE 15 BY 1.14     */
-/*     BGCOLOR 8 .         */
+DEFINE BUTTON b-func_shop
+     LABEL "Функции"
+     SIZE 15 BY 1.14
+     BGCOLOR 8 .
      
 DEFINE BUTTON b-sel-all
      LABEL "&+":L
@@ -440,6 +459,7 @@ DEFINE BROWSE br-rests
 DEFINE BROWSE br-rests_shop
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-rests_shop Dialog-Frame _FREEFORM
   QUERY br-rests_shop  DISPLAY
+    get-mark_shop(BUFFER tt-gds-rests_shop) COLUMN-LABEL "*"  FORMAT "X(1)":U
     tt-gds-rests_shop.alc-code COLUMN-LABEL "Алкогольный код" FORMAT "X(25)":U
     tt-gds-rests_shop.gds-name COLUMN-LABEL "Наименование товара" FORMAT "X(100)":U width 39
     tt-gds-rests_shop.gds-code COLUMN-LABEL "Код товара в TH" FORMAT "X(25)"
@@ -509,7 +529,7 @@ DEFINE FRAME Dialog-Frame
      b-connect AT ROW 1.24 COL 62
      b-del at row 1.24 col 77 
      b-func at row 1.24 col 92
-/*     b-func_shop at row 1.24 col 92*/
+     b-func_shop at row 1.24 col 92
      t-negative_rests at row 5.3 col 83
      a-n-c at row 4 col 2 label "Поиск по"
      NameContext at row 4 col 50 label "Контекст"
@@ -532,7 +552,7 @@ DEFINE FRAME Dialog-Frame
          DEFAULT-BUTTON b-load CANCEL-BUTTON b-cancel WIDGET-ID 100.
 
 assign br-rests:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame = 1 .
-assign br-rests_shop:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame = 0 .
+assign br-rests_shop:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame = 1 .
 assign br-rests_all:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame = 0 .
 
 /* *********************** Procedure Settings ************************ */
@@ -871,8 +891,13 @@ end.
 ON CHOOSE OF b-mark IN FRAME Dialog-Frame /* * */
 DO:
 /*  {&stdbtn}*/
-  run proc-b-mark in this-procedure no-error.
-
+  if v-page-current = 1
+  then do : 
+    run proc-b-mark in this-procedure no-error.
+  end.  
+  else do :
+    run proc-b-mark_shop in this-procedure no-error.
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -882,12 +907,23 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel-all Dialog-Frame
 ON CHOOSE OF b-sel-all IN FRAME Dialog-Frame /* + */
 DO:
-  assign select-list = "".
-  if not available tt-gds-rests then return.
-  for each tt-gds-rests no-lock :
-    { gbl/markstrn.i tt-gds-rests select-list }
+  if v-page-current = 1
+  then do : 
+      assign select-list = "".
+      if not available tt-gds-rests then return.
+      for each tt-gds-rests no-lock :
+        { gbl/markstrn.i tt-gds-rests select-list }
+      end.
+      {&browse-name}:refresh() in frame {&frame-name} .
   end.
-  {&browse-name}:refresh() in frame {&frame-name} .
+  else do :
+      assign select-list_shop = "".
+      if not available tt-gds-rests_shop then return.
+      for each tt-gds-rests_shop no-lock :
+        { gbl/markstrn.i tt-gds-rests_shop select-list_shop }
+      end.
+      br-rests_shop:refresh() in frame {&frame-name} .
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -897,9 +933,17 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-unmark Dialog-Frame
 ON CHOOSE OF b-unmark IN FRAME Dialog-Frame /* - */
 DO:
-  if not available tt-gds-rests then return.
-  select-list  = "".
-  {&browse-name}:refresh() in frame {&frame-name} .
+  if v-page-current = 1
+  then do :
+      if not available tt-gds-rests then return.
+      select-list  = "".
+      {&browse-name}:refresh() in frame {&frame-name} .
+  end.
+  else do :
+      if not available tt-gds-rests_shop then return.
+      select-list_shop  = "".
+      br-rests_shop:refresh() in frame {&frame-name} .
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1234,6 +1278,7 @@ DO:
         message "Не выбрано ни одной строки" view-as alert-box .
         return no-apply.
     end.  
+    empty temp-table tt-gds-act .
     run bge/egais-makeWriteOff.w  (input parparentproc, 
                                    output v-awo-num,
                                    output v-awo-date,
@@ -1286,6 +1331,81 @@ DO:
                           ,input '' /*p-src-encoding*/
                           ) no-error .
     message "Акт сформирован. Вы можете отправить его или изменить количества из интерфейса 'Акты о списании товаров'" view-as alert-box .                      
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m-writeOff
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-witeOff Dialog-Frame
+ON CHOOSE OF menu-item m-writeOff_shop in menu m-func_shop /* - */
+DO:
+    define variable v-awos-num as character no-undo .
+    define variable v-awos-date as date no-undo .
+    define variable v-awos-type as character no-undo .
+    define variable v-ok as logical no-undo .
+    define variable v-position as integer no-undo .
+    define variable v-part-num    as integer   no-undo .
+    define variable v-clob-db-num as integer   no-undo .
+    define variable v-int64-id    as int64     no-undo .
+    define variable v-info        as character no-undo .
+    
+    if select-list_shop = "" then do :
+        message "Не выбрано ни одной строки" view-as alert-box .
+        return no-apply.
+    end.  
+    empty temp-table tt-gds-act-awos .
+    run bge/egais-makeWriteOff.w  (input parparentproc, 
+                                   output v-awos-num,
+                                   output v-awos-date,
+                                   output v-awos-type,
+                                   output v-ok) .
+    if not v-ok then return no-apply .
+    create tt-act-header-awos.
+    assign
+        tt-act-header-awos.num   = substring(v-awos-num, 1, 3) + "S" + substring(v-awos-num, 4)
+        tt-act-header-awos.date_ = v-awos-date
+        tt-act-header-awos.type_ = v-awos-type
+        tt-act-header-awos.is-sent = no
+        v-position = 0
+    .
+    
+    do ii = 1 to num-entries(select-list_shop) :
+        v-sel-entry = entry(ii, select-list_shop) .
+        for first tt-gds-rests_shop exclusive-lock where recid(tt-gds-rests_shop) = integer(v-sel-entry) :
+            assign v-position = v-position + 1 .
+            create tt-gds-act-awos.
+            assign
+                tt-gds-act-awos.num          = tt-act-header-awos.num
+                tt-gds-act-awos.position_    = v-position
+                tt-gds-act-awos.alc-code     = tt-gds-rests_shop.alc-code
+                tt-gds-act-awos.gds-name     = tt-gds-rests_shop.gds-name
+                tt-gds-act-awos.qnty         = tt-gds-rests_shop.egais-qnty - tt-gds-rests_shop.TH-qnty
+            .  
+            tt-gds-act-awos.gds-code     = integer(tt-gds-rests_shop.gds-code) no-error .
+        end.
+    end.
+    
+    run makeXML-awos in this-procedure .
+    assign
+        v-clob-db-num = ?
+        v-int64-id = 0
+        v-info = tt-act-header-awos.num + {&delim-par} + string(tt-act-header-awos.date_) + {&delim-par} + tt-act-header-awos.type_ + {&delim-par} + string(tt-act-header-awos.is-sent) + {&delim-par} + tt-act-header-awos.answer_
+    .
+    run gbl/file2clb.p ( input {&add-def}
+                          ,input ",no"
+                          ,input ? /*p-bh*/
+                          ,input tt-act-header-awos.num /*p-uniq-key-rec*/
+                          ,input {&lob-egais-awo_shop} /*p-field-*/
+                          ,input v-info /*p-descr*/
+                          ,input-output v-part-num
+                          ,input {&lob-egais-awo_shop}
+                          ,input-output v-clob-db-num
+                          ,input-output v-int64-id
+                          ,input search (v-file-awos)
+                          ,input '' /*p-src-encoding*/
+                          ) no-error .
+    message "Акт сформирован. Вы можете отправить его или изменить количества из интерфейса 'Акты о списании товаров из торгового зала'" view-as alert-box .                      
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1368,6 +1488,7 @@ END.
 &Scoped-define SELF-NAME m-print
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-print Dialog-Frame
 ON CHOOSE OF menu-item m-print in menu m-func /* - */
+OR CHOOSE OF menu-item m-print in menu m-func_shop
 DO:
     find first tt-gds-rests no-lock no-error .
     if not available tt-gds-rests
@@ -1384,6 +1505,7 @@ END.
 &Scoped-define SELF-NAME m-print_shop
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-print_shop Dialog-Frame
 ON CHOOSE OF menu-item m-print_shop in menu m-func /* - */
+OR CHOOSE OF menu-item m-print_shop in menu m-func_shop
 DO:
     find first tt-gds-rests no-lock no-error .
     find first tt-gds-rests_shop no-lock no-error .
@@ -1405,11 +1527,10 @@ END.
 
 &Scoped-define SELF-NAME m-compare
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-compare Dialog-Frame
-ON CHOOSE OF menu-item m-compare in menu m-func /* - */
+ON CHOOSE OF menu-item m-compare in menu m-func_shop
 DO:
-    find first tt-gds-rests no-lock no-error .
     find first tt-gds-rests_shop no-lock no-error .
-    if not available tt-gds-rests and not available tt-gds-rests_shop
+    if not available tt-gds-rests_shop
     then do :
         message "Сначала получите остатки из ЕГАИС" view-as alert-box .
         return no-apply .
@@ -1422,11 +1543,10 @@ END.
 
 &Scoped-define SELF-NAME m-marks-compare
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-marks-compare Dialog-Frame
-ON CHOOSE OF menu-item m-marks-compare in menu m-func /* - */
+ON CHOOSE OF menu-item m-marks-compare in menu m-func_shop /* - */
 DO:
-    find first tt-gds-rests no-lock no-error .
     find first tt-gds-rests_shop no-lock no-error .
-    if not available tt-gds-rests and not available tt-gds-rests_shop
+    if not available tt-gds-rests_shop
     then do :
         message "Сначала получите остатки из ЕГАИС" view-as alert-box .
         return no-apply .
@@ -1439,11 +1559,10 @@ END.
 
 &Scoped-define SELF-NAME m-list
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-list Dialog-Frame
-ON CHOOSE OF menu-item m-list in menu m-func /* - */
+ON CHOOSE OF menu-item m-list in menu m-func_shop /* - */
 DO:
-    find first tt-gds-rests no-lock no-error .
     find first tt-gds-rests_shop no-lock no-error .
-    if not available tt-gds-rests and not available tt-gds-rests_shop
+    if not available tt-gds-rests_shop
     then do :
         message "Сначала получите остатки из ЕГАИС" view-as alert-box .
         return no-apply .
@@ -1459,11 +1578,10 @@ END.
 
 &Scoped-define SELF-NAME m-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-all Dialog-Frame
-ON CHOOSE OF menu-item m-all in menu m-func /* - */
+ON CHOOSE OF menu-item m-all in menu m-func_shop /* - */
 DO:
-    find first tt-gds-rests no-lock no-error .
     find first tt-gds-rests_shop no-lock no-error .
-    if not available tt-gds-rests and not available tt-gds-rests_shop
+    if available tt-gds-rests_shop
     then do :
         message "Сначала получите остатки из ЕГАИС" view-as alert-box .
         return no-apply .
@@ -1493,6 +1611,7 @@ END.
 &Scoped-define SELF-NAME m-load-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-load-all Dialog-Frame
 ON CHOOSE OF menu-item m-load-all in menu m-func /* - */
+OR CHOOSE OF menu-item m-load-all in menu m-func_shop
 DO:
     v-num-objs = 0 .
     empty temp-table tt-obj-list .
@@ -1572,6 +1691,7 @@ END.
 &Scoped-define SELF-NAME m-file
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-file Dialog-Frame
 ON CHOOSE OF menu-item m-file in menu m-func /* - */
+OR CHOOSE OF menu-item m-file in menu m-func_shop
 DO:
     if search(v-fn-rests) = ? and search(v-fn-rests_shop) = ?
     then do :
@@ -1893,8 +2013,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   assign
     b-func:popup-menu in frame {&FRAME-NAME} = menu m-func:handle
     b-func:menu-mouse = 1
-/*    br-rests_all:popup-menu in frame {&FRAME-NAME} = menu m-func_shop:handle*/
-/*    b-func_shop:menu-mouse = 3                                              */
+    b-func_shop:popup-menu in frame {&FRAME-NAME} = menu m-func_shop:handle
+    b-func_shop:menu-mouse = 1
   .
 
   find first buf_clients no-lock where buf_clients.obj-type = {&cmp} and buf_clients.obj-code = v-cntxt-host-code-obj.
@@ -2007,6 +2127,25 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-mark_shop Dialog-Frame
+PROCEDURE proc-b-mark_shop :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+  define variable varlog as logical   no-undo .
+  if not available tt-gds-rests_shop then return.
+  run local-mark_shop in this-procedure.
+  assign varlog = br-rests_shop :select-next-row( ) in frame {&frame-name}.
+  apply "ENTRY":U to br-rests_shop in frame {&frame-name}.
+  br-rests_shop:refresh() in frame {&frame-name} .
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark Dialog-Frame
 PROCEDURE local-mark :
 /* -----------------------------------------------------------
@@ -2020,6 +2159,25 @@ PROCEDURE local-mark :
   end.
   { gbl/markstrn.i tt-gds-rests select-list }
   {&browse-name}:refresh() in frame {&frame-name} .
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark Dialog-Frame
+PROCEDURE local-mark_shop :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+  if not available tt-gds-rests_shop then do:
+    message "Неправильный выбор строки.".
+    return no-apply.
+  end.
+  { gbl/markstrn.i tt-gds-rests_shop select-list_shop }
+  br-rests_shop:refresh() in frame {&frame-name} .
 
 END PROCEDURE.
 
@@ -2988,7 +3146,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
     
   ENABLE b-mark b-sel-all b-unmark b-load b-func b-save b-cancel br-rests br-rests_shop br-rests_all
-         b-connect b-del b-func t-negative_rests /*b-func_shop*/
+         b-connect b-del b-func t-negative_rests b-func_shop
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   hide NameContext loc-alc loc-code in FRAME Dialog-Frame.

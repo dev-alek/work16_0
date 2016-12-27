@@ -29,10 +29,10 @@ class ibs.th.bge.egais.ParserXMLRests inherits EGAISUTM:
     field proof             like ub.goods.proof             label "Крепость"            format ">9.9"    
     field fromEgais         as logical
     field egais-name        as character                    label "Наименование ЕГАИС"  format "X(100)"
-    field egais-qnty        as integer                      label "Остаток ЕГАИС"
+    field egais-qnty        as decimal                      label "Остаток ЕГАИС"
     field informA_          as character                    label "ID справки А"        format "X(30)"
     field informB_          as character                    label "ID справки Б"        format "X(30)"
-    field TH-qnty           as integer                      label "Остаток TH"
+    field TH-qnty           as decimal                      label "Остаток TH"
     field packed            as logical          
     index pi as primary
         gds-code
@@ -96,7 +96,7 @@ class ibs.th.bge.egais.ParserXMLRests inherits EGAISUTM:
                 
             IF hNoderef:NAME = "rst:RestsDate"   THEN assign v-date-time        = hText:node-value .
 
-            IF hNoderef:NAME = "rst:Quantity"    THEN assign tt-gds-rests-EG.egais-qnty        = integer(hText:node-value) .
+            IF hNoderef:NAME = "rst:Quantity"    THEN assign tt-gds-rests-EG.egais-qnty        = decimal(hText:node-value) .
             IF hNoderef:NAME = "rst:InformARegId"
             OR hNoderef:NAME = "rst:InformF1RegId" THEN assign tt-gds-rests-EG.informA_          = hText:node-value .
             IF hNoderef:NAME = "rst:InformBRegId"
