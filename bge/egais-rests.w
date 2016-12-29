@@ -317,7 +317,7 @@ end function.
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
 &Scoped-define List-1 b-save b-connect b-del br-rests v-DT-rests b-func
 
-&Scoped-define List-2 br-rests_shop br-rests_all t-negative_rests v-DT-rests_shop b-func_shop
+&Scoped-define List-2 br-rests_shop br-rests_all t-negative_rests t-not_eq_rests v-DT-rests_shop b-func_shop
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -414,6 +414,8 @@ DEFINE BUTTON b-unmark
      SIZE 3 BY 1.14 TOOLTIP "Снять все отметки". 
      
 defin variable t-negative_rests as logical view-as toggle-box label "Отрицательные остатки" initial no no-undo .
+
+defin variable t-not_eq_rests as logical view-as toggle-box label "Расхождения кол-ва" initial no no-undo .
 
 Define variable NameContext as character view-as fill-in size 30 by 1 fgcolor 12 no-undo.
 define variable loc-alc  as character view-as fill-in size 25 by 1 fgcolor 12 no-undo format "x(25)":U.
@@ -531,6 +533,7 @@ DEFINE FRAME Dialog-Frame
      b-func at row 1.24 col 92
      b-func_shop at row 1.24 col 92
      t-negative_rests at row 5.3 col 83
+     t-not_eq_rests at row 5.3 col 60
      a-n-c at row 4 col 2 label "Поиск по"
      NameContext at row 4 col 50 label "Контекст"
      loc-alc at row 4 col 50 no-label
@@ -643,6 +646,11 @@ END.
 ON value-changed OF t-negative_rests in FRAME Dialog-Frame /* Объекты ЕГАИС */
 DO:
     assign t-negative_rests.
+    if t-not_eq_rests
+    then do :
+        t-not_eq_rests = false.
+        display t-not_eq_rests with frame {&frame-name}.
+    end.
     if t-negative_rests
     then do :
         empty temp-table tt-gds-list .
@@ -662,6 +670,60 @@ DO:
         open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
                                                                                 and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code
                                                                                 and tt-gds-rests_shop.egais-qnty < 0 .
+    end.
+    else do :
+        empty temp-table tt-gds-list .
+        for each tt-gds-rests_shop no-lock where tt-gds-rests_shop.alc-code <> "" :
+            find first tt-gds-list where tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                                     and tt-gds-list.gds-code = tt-gds-rests_shop.gds-code
+                                     no-error.
+            if not available tt-gds-list
+            then do :
+                create tt-gds-list.
+                assign
+                    tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                    tt-gds-list.gds-code = tt-gds-rests_shop.gds-code
+                .
+            end.
+        end.
+        open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.alc-code <> ""
+                                                                              and tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
+                                                                              and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code
+                                                                              and tt-gds-rests_shop.egais-qnty <> 0 .
+    end.
+END.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME t-not_eq_rests
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-not_eq_rests Dialog-Frame
+ON value-changed OF t-not_eq_rests in FRAME Dialog-Frame /* Объекты ЕГАИС */
+DO:
+    assign t-not_eq_rests.
+    if t-negative_rests
+    then do :
+        t-negative_rests = false.
+        display t-negative_rests with frame {&frame-name}. 
+    end.
+    if t-not_eq_rests
+    then do :
+        empty temp-table tt-gds-list .
+        for each tt-gds-rests_shop no-lock where tt-gds-rests_shop.alc-code <> "" and (tt-gds-rests_shop.egais-qnty <> tt-gds-rests_shop.TH-qnty)  :
+            find first tt-gds-list where tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                                     and tt-gds-list.gds-code = tt-gds-rests_shop.gds-code
+                                     no-error.
+            if not available tt-gds-list
+            then do :
+                create tt-gds-list.
+                assign
+                    tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
+                    tt-gds-list.gds-code = tt-gds-rests_shop.gds-code
+                .
+            end.
+        end.
+        open query br-rests_shop for each tt-gds-list, each tt-gds-rests_shop where tt-gds-rests_shop.alc-code = tt-gds-list.alc-code
+                                                                                and tt-gds-rests_shop.gds-code = tt-gds-list.gds-code
+                                                                                and tt-gds-rests_shop.egais-qnty <> tt-gds-rests_shop.TH-qnty .
     end.
     else do :
         empty temp-table tt-gds-list .
@@ -1307,7 +1369,13 @@ DO:
                 tt-gds-act.gds-name     = tt-gds-rests.gds-name
                 tt-gds-act.inform-B     = tt-gds-rests.informB_
                 tt-gds-act.qnty         = tt-gds-rests.egais-qnty - tt-gds-rests.TH-qnty
-            .  
+            . 
+            find first buf_goods no-lock where buf_goods.gds-code = tt-gds-rests.gds-code no-error .
+            if available buf_goods
+            and (not tt-gds-rests.packed and buf_goods.unit-cli <> buf_goods.unit-base and buf_goods.cli-base-rate <> 1.0)
+            then do :
+                tt-gds-act.qnty = tt-gds-act.qnty / buf_goods.cli-base-rate .
+            end. 
         end.
     end.
     
@@ -1383,6 +1451,12 @@ DO:
                 tt-gds-act-awos.qnty         = tt-gds-rests_shop.egais-qnty - tt-gds-rests_shop.TH-qnty
             .  
             tt-gds-act-awos.gds-code     = integer(tt-gds-rests_shop.gds-code) no-error .
+            find first buf_goods no-lock where buf_goods.gds-code = integer(tt-gds-rests_shop.gds-code) no-error .
+            if available buf_goods
+            and (not tt-gds-rests_shop.packed and buf_goods.unit-cli <> buf_goods.unit-base and buf_goods.cli-base-rate <> 1.0)
+            then do :
+                tt-gds-act-awos.qnty = tt-gds-act-awos.qnty / buf_goods.cli-base-rate .
+            end.
         end.
     end.
     
@@ -1457,6 +1531,12 @@ DO:
                 tt-gds-act-tts.inform-B     = tt-gds-rests.informB_
                 tt-gds-act-tts.qnty         = tt-gds-rests.egais-qnty
             . 
+            find first buf_goods no-lock where buf_goods.gds-code = tt-gds-rests.gds-code no-error .
+            if available buf_goods
+            and (not tt-gds-rests.packed and buf_goods.unit-cli <> buf_goods.unit-base and buf_goods.cli-base-rate <> 1.0)
+            then do :
+                tt-gds-act-tts.qnty = tt-gds-act-tts.qnty / buf_goods.cli-base-rate .
+            end.
         end.
     end.
     
@@ -3146,7 +3226,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
     
   ENABLE b-mark b-sel-all b-unmark b-load b-func b-save b-cancel br-rests br-rests_shop br-rests_all
-         b-connect b-del b-func t-negative_rests b-func_shop
+         b-connect b-del b-func t-negative_rests t-not_eq_rests b-func_shop
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   hide NameContext loc-alc loc-code in FRAME Dialog-Frame.
