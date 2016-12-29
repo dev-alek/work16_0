@@ -157,7 +157,25 @@ procedure makeXMLegais_v2{4} :
                 sw{4}:start-element ("awr:Content") .
     for each tt-gds-act{4} no-lock where tt-gds-act{4}.num = tt-act-header{4}.num :
         if tt-gds-act{4}.qnty < 1 then next. 
-                    find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code .
+                    find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code no-error .
+                    if not available buf_goods and (tt-gds-act.gds-code = 0 or tt-gds-act.gds-code =?)
+                    then do :
+                        find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods}
+                                                               and X_ext-classif.classif-name = {&extclass_goods_esys}
+                                                               and X_ext-classif.db-num = 0
+                                                               and X_ext-classif.Key#_two = v-ext-sys
+                                                               and X_ext-classif.Key#_three = 0
+                                                               and X_ext-classif.CharKey_One = tt-gds-act.alc-code
+                                                               and X_ext-classif.CharKey_two = ""
+                                                               and X_ext-classif.CharKey_three = ""
+                                                               and X_ext-classif.nonunique = 0
+                                                               no-error .
+                        if available X_ext-classif
+                        then do :
+                            tt-gds-act.gds-code = X_ext-classif.Key#_One .
+                            find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code . 
+                        end.                                       
+                    end.
                     sw{4}:start-element ("awr:Position") .
                         sw{4}:write-data-element ("awr:Identity", string(tt-gds-act{4}.position_)) .
                         sw{4}:start-element ("awr:Product") .
