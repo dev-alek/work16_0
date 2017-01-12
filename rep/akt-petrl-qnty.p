@@ -15,6 +15,8 @@ Creation date: 08/07/14
 
 */
 
+using ibs.th.str.*.
+
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -54,35 +56,20 @@ define variable v-date   as character no-undo .
 define variable v-t-start   as character no-undo .
 define variable v-t-end   as character no-undo .
 define variable ii        as integer   no-undo init 0.
-
 define variable v-doc-code         like ub.trn-doc.doc-code   no-undo .
 define variable v-gds-code         like ub.goods.gds-code     no-undo .
-define variable v-car-num          as   character             no-undo .
-define variable v-car-vol          as   character             no-undo .
-define variable v-tests            as   character             no-undo .
 define variable v-autoent-obj-type as   character             no-undo .
 define variable v-autoent-obj-code as   character             no-undo .
 define variable v-item-pour        as   character             no-undo .
-define variable v-time-pour        as   character             no-undo .
-define variable v-tank-vol         as   character             no-undo .
-define variable v-tank-vol-pomi    as   character             no-undo .
-define variable v-tank-temp        as   character             no-undo .
-define variable v-tank-water       as   character             no-undo .
-define variable v-tank-density     as   character             no-undo .
-define variable v-tank-density-pomi  as   character             no-undo .
-define variable v-tank-weight      as   character             no-undo .
 define variable v-time-income      as   character             no-undo .
-define variable v-date-start       like ub.rvs-line.real-date no-undo .
-define variable v-time-start       like ub.rvs-line.real-time no-undo .
+define variable v-car-num          as   character             no-undo .
 define variable v-time-start-min   like ub.rvs-line.real-time no-undo .
-define variable v-date-end         like ub.rvs-line.real-date no-undo .
-define variable v-time-end         like ub.rvs-line.real-time no-undo .
 define variable v-time-end-max     like ub.rvs-line.real-time no-undo .
-define variable v-mouth            as   character             no-undo .
+define variable v-date-start-min   like ub.rvs-line.real-date no-undo .
+define variable v-date-end-max     like ub.rvs-line.real-date no-undo .
 define variable v-fio              as   character             no-undo .
 define variable v-ptbotype         as   character             no-undo .
 define variable v-ptbocode         as   character             no-undo .
-define variable v-a-b-tarir        as   character             no-undo .
 define variable v-gds-attr-value   as   character             no-undo .
 define variable v-gds-attr-type    as   character             no-undo .
 define variable v-type             as   character             no-undo .
@@ -98,6 +85,10 @@ define variable v-acc_qnty_kg      as decimal                 no-undo .
 define variable v-natural_loss     as decimal                 no-undo .
 define variable v-diff_mass        as decimal                 no-undo .
 define variable v-admittance_error_mass as decimal            no-undo .
+define variable v-InfoSectionsTotal as class InfoSectionsTotal no-undo .
+def var iNum as int no-undo.
+def var v-sortpetrl as character no-undo.
+        
 
 &global-define month-list-for-date '€нвар€,феврал€,марта,апрел€,ма€,июн€,июл€,августа,сент€бр€,окт€бр€,но€бр€,декабр€':U
 
@@ -118,6 +109,486 @@ do
 
     { str/getctxtp.i get p-mainmenu-handle }
 
+    find first buf_trn-doc no-lock
+         where recid( buf_trn-doc ) = rec_id.
+
+
+    v-InfoSectionsTotal = new InfoSectionsTotal().
+    run cr-begin-general.
+    _foreachgds:
+    for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code :  
+
+    { str/is-petrl.i
+      buf_doc-line.artic
+      buf_doc-line.prod-type
+      buf_doc-line.prod-code
+      is-petrolium
+      is-pieces
+      no-error
+      }
+      if error-status :error
+      then do:
+        return error return-value .
+      end.
+      if is-petrolium then do
+      :
+
+        find first buf_goods where buf_goods.artic     = buf_doc-line.artic
+                               and buf_goods.prod-code = buf_doc-line.prod-code
+                               and buf_goods.prod-type = buf_doc-line.prod-type no-lock no-error.
+        assign
+            v-doc-code = buf_doc-line.doc-code
+            v-gds-code = buf_goods.gds-code
+        .
+        v-InfoSectionsTotal:Initialization(v-doc-code, v-gds-code).
+        v-InfoSectionsTotal:GetDBAllAttr().
+
+        find first clients where clients.obj-code = buf_trn-doc.boss and
+                                 clients.obj-type = {&prs} no-lock no-error.
+        find first person where person.psn-code = buf_trn-doc.boss no-lock no-error.
+        
+        
+        run gds-attr-value in this-procedure
+          (  input buf_goods.gds-code
+          ,  input {&attr-fuel-type}
+          , output v-gds-attr-value
+          , output v-gds-attr-type
+          ) no-error .
+        
+        case v-gds-attr-value :
+          when "petrol" then do:
+            assign
+              v-list-gds-name = v-list-gds-name + "," + buf_goods.gds-name
+              v-sortpetrl = "бензин".
+          end.
+          when "diesel-sum" or when "diesel-wint" then do:
+            assign
+              v-list-gds-name = v-list-gds-name + "," + buf_goods.gds-name
+              v-sortpetrl = buf_goods.gds-name.
+          end.
+          otherwise next _foreachgds.
+        end case.
+
+
+        if v-date-start-min = ? or datetime (v-date-start-min, v-time-start-min) > datetime (v-InfoSectionsTotal:StartRealDate, v-InfoSectionsTotal:StartRealTime) then do:
+          assign
+            v-date-start-min = v-InfoSectionsTotal:StartRealDate.
+            v-time-start-min = v-InfoSectionsTotal:StartRealTime
+            .
+        end.
+        
+        if v-date-end-max = ? or datetime (v-date-end-max, v-time-end-max) < datetime (v-InfoSectionsTotal:EndRealDate, v-InfoSectionsTotal:EndRealTime) then do:
+          assign
+            v-time-end-max = v-InfoSectionsTotal:EndRealTime
+            v-date-end-max = v-InfoSectionsTotal:EndRealDate
+          .
+        end.
+        
+        do iNum = 1 to v-InfoSectionsTotal:SectionNum:
+
+          ii = ii + 1.
+          if ii > 4 then do:
+            run cr-end-general.
+            run cr-begin-general.
+            ii = 1.
+            if iNum >= v-InfoSectionsTotal:SectionNum
+              then v-list-gds-name = "".
+          end.
+
+          run aktpq-xl-write-cell-data in this-procedure (
+                input {&aktpq-xl-gdsname} + string (ii)
+              , input buf_goods.gds-name
+          ).
+  
+          run aktpq-xl-write-cell-data in this-procedure (
+                input {&aktpq-xl-sectionnum} + string (ii)
+              , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):SectionName
+          ).
+  
+          run aktpq-xl-write-cell-data in this-procedure (
+                input {&aktpq-xl-vol} + string (ii)
+              , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):CarVol
+          ).        
+  
+         run aktpq-xl-write-cell-data in this-procedure (
+                input {&aktpq-xl-temp} + string (ii)
+              , input buf_doc-line.temperature
+          ). 
+         run aktpq-xl-write-cell-data in this-procedure (
+                input {&aktpq-xl-petrlvol} + string (ii)
+              , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):FactQnty
+          ). 
+         run aktpq-xl-write-cell-data in this-procedure (
+                input {&aktpq-xl-dens} + string (ii)
+              , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocDensity * 1000
+          ).         
+         run aktpq-xl-write-cell-data in this-procedure (
+                input {&aktpq-xl-weight} + string (ii)
+              , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty
+          ).    
+         run aktpq-xl-write-cell-data in this-procedure (
+                input {&aktpq-xl-mark} + string (ii)
+              , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):ABTarir
+          ).
+  
+          
+          find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc} and buf_rvs-doc.out-code = buf_trn-doc.doc-code no-error.
+          
+          def var v-loc1 as char no-undo.
+          def var v-state-level-total as decimal no-undo.
+          def var v-state-measure-qnty as decimal no-undo.
+          def var v-state-measure-cli-qnty as decimal no-undo.
+          def var v-state-temperature as decimal no-undo.
+          def var v-availrvsline as logical no-undo.          
+
+          assign
+            v-state-level-total = 0
+            v-state-measure-qnty = 0
+            v-state-measure-cli-qnty = 0
+            v-state-temperature = 0
+            v-availrvsline = false
+            v-loc1 = ""
+          .
+
+          if available (buf_rvs-doc) then do:
+            for each buf_rvs-line where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and buf_rvs-line.gds-code = buf_goods.gds-code no-lock:
+            
+              find first ub.place where ub.place.pl-code = buf_rvs-line.pl-code no-lock no-error.
+              if available (ub.place)
+              then do:
+                v-loc1 = if v-loc1 <> "" then v-loc1 + "," + ub.place.loc1 else ub.place.loc1.
+              end.
+              v-availrvsline = true.
+              assign
+                v-state-level-total = v-state-level-total + buf_rvs-line.state-level-total 
+                v-state-measure-qnty = v-state-measure-qnty + buf_rvs-line.state-measure-qnty
+                v-state-measure-cli-qnty = v-state-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty
+                v-state-temperature = buf_rvs-line.state-temperature
+              .
+              
+            end.
+          end.
+          
+          
+          if v-availrvsline then do:          
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-beforelevtotal} + string (ii)
+              , input v-state-level-total
+              ).
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-beforemeasqnty} + string (ii)
+              , input v-state-measure-qnty
+              ).
+            assign
+              v-beforemeasqnty = v-state-measure-qnty.
+              
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-beforestatetemp} + string (ii)
+              , input v-state-temperature
+              ).
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-beforestatedens} + string (ii)
+              , input v-state-measure-cli-qnty / v-state-measure-qnty * 1000
+              ).
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-beforestateweight} + string (ii)
+              , input v-state-measure-cli-qnty
+              ).
+            assign
+              v-beforestateweight = v-state-measure-cli-qnty.
+          end.
+
+          find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc} and buf_rvs-doc.out-code = buf_trn-doc.doc-code no-error.
+          assign
+            v-state-level-total = 0
+            v-state-measure-qnty = 0
+            v-state-measure-cli-qnty = 0
+            v-state-temperature = 0
+            v-availrvsline = false
+            v-loc1 = ""
+          .
+          if available (buf_rvs-doc) then do:
+            for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and buf_rvs-line.gds-code = buf_goods.gds-code :
+              find first ub.place where ub.place.pl-code = buf_rvs-line.pl-code no-lock no-error.
+              if available (ub.place)
+              then do:
+                v-loc1 = if v-loc1 <> "" then v-loc1 + "," + ub.place.loc1 else ub.place.loc1.
+              end.
+              v-availrvsline = true.
+              assign
+                v-state-level-total = buf_rvs-line.state-level-total + v-state-level-total
+                v-state-measure-qnty = v-state-measure-qnty + buf_rvs-line.state-measure-qnty
+                v-state-measure-cli-qnty = v-state-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty
+                v-state-temperature = buf_rvs-line.state-temperature
+              .
+            end.
+          end.
+          
+          if v-availrvsline then do:
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-afterlevtotal} + string (ii)
+              , input v-state-level-total
+              ).
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-aftermeasqnty} + string (ii)
+              , input  v-state-measure-qnty
+              ).
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-afterstatetemp} + string (ii)
+              , input v-state-temperature
+              ).
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-afterstatedens} + string (ii)
+              , input v-state-measure-cli-qnty / v-state-measure-qnty * 1000
+              ).
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-afterstateweight} + string (ii)
+              , input v-state-measure-cli-qnty
+              ).
+            assign  
+              v-acc_qnty = v-state-measure-qnty - v-beforemeasqnty
+              v-acc_qnty_kg = v-state-measure-cli-qnty - v-beforestateweight
+            .
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-acc_qnty} + string (ii)
+              , input string (v-acc_qnty)
+              ).
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-acc_qnty_kg} + string (ii)
+              , input string (v-acc_qnty_kg)
+              ).
+          end.
+
+          run aktpq-xl-write-cell-data in this-procedure (
+                input {&aktpq-xl-sortpetrl} + string (ii)
+              , input v-sortpetrl
+          ).
+          
+
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-mouth} + string (ii)
+            , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):Mouth
+            ).
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-factvol} + string (ii)
+            , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol
+            ).
+
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-denspomi} + string (ii)
+            , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi * 1000
+            ).
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-volpomi} + string (ii)
+            , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi
+            ).
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-factweight} + string (ii)
+            , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight
+            ).
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-measur_error} + string (ii)
+            , input "0.65"
+            ).
+          assign
+            v-admittance_error_mass = 0.0065 * v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight no-error.
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-admittance_error_mass} + string (ii)
+            , input string (v-admittance_error_mass)
+            ).
+          assign
+            v-revision = decimal (entry (2, v-factpl, ";")) no-error.  
+          if (entry (2, v-factpl, ";")) begins "revision=" 
+          then do:
+            assign
+              v-diff_mass = v-acc_qnty_kg - v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty no-error.
+          end.
+          else do:
+            assign
+              v-diff_mass = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight - v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty no-error.
+          end.
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-diff_mass} + string (ii)
+            , input string (v-diff_mass)
+            ).
+          
+          if (buf_trn-doc.fact-date = ? and 3 < month (today) and month (today) < 10)
+              or (buf_trn-doc.fact-date <> ? and 3 <  month (buf_trn-doc.fact-date) and  month (buf_trn-doc.fact-date) < 10 )
+          then do:
+            case v-gds-attr-value:
+              when "petrol" then do:
+                v-natural_loss = v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty * 0.0211 / 100.
+              end.
+              when "diesel-sum" then do:
+                v-natural_loss = v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty * 0.0006 / 100.
+              end.
+              when "diesel-wint" then do:
+                v-natural_loss = v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty * 0.0021 / 100.
+              end.
+            end case.
+          end.
+          else do:
+            case v-gds-attr-value:
+              when "petrol" then do:
+                v-natural_loss = v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty * 0.0134 / 100.
+              end.
+              when "diesel-sum" then do:
+                v-natural_loss = v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty * 0.0003 / 100.
+              end.
+              when "diesel-wint" then do:
+                v-natural_loss = v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty * 0.0012 / 100.
+              end.
+            end case.
+          end.
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-natural_loss} + string (ii)
+            , input string (v-natural_loss)
+            ).
+          if v-diff_mass > 0 then do:
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-surpluse} + string (ii)
+              , input if v-diff_mass - v-admittance_error_mass > 0 then v-diff_mass - v-admittance_error_mass else 0
+              ).
+          end.
+          else do:
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-surpluse} + string (ii)
+              , input if v-diff_mass + v-admittance_error_mass + v-natural_loss < 0 then v-diff_mass + v-admittance_error_mass + v-natural_loss else 0
+              ).
+          end.
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-accept_accod_kg} + string (ii)
+            , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):FactKgQnty
+            ).
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-accept_accod_l} + string (ii)
+            , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):FactQnty
+            ).
+
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-coor} + string (ii)
+            , input v-loc1
+            ).
+          
+          
+          if num-entries (v-InfoSectionsTotal:GetInfoSectionProp(iNum):Diameter, "/") = 2
+          then do:
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-la} + string (ii)
+              , input entry (1,v-InfoSectionsTotal:GetInfoSectionProp(iNum):Diameter, "/")
+              ).
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-lb} + string (ii)
+              , input entry (2,v-InfoSectionsTotal:GetInfoSectionProp(iNum):Diameter, "/")
+              ).
+          end.
+          else do:
+            run aktpq-xl-write-cell-data in this-procedure (
+              input {&aktpq-xl-diametr} + string (ii)
+              , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):Diameter
+              ).
+          end.
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-temp1} + string (ii)
+            , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankTemp
+            ).
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-tempexp} + string (ii)
+            , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):DensTemp
+            ).
+          run aktpq-xl-write-cell-data in this-procedure (
+            input {&aktpq-xl-densexp} + string (ii)
+            , input v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity * 1000
+            ).
+
+        
+        end.
+        
+      end.    /*      if is-petrolium        */
+    end.    /*        for each buf_doc-line     */
+    
+    run cr-end-general.
+
+    { gbl/stopwork.i }
+    
+
+
+end.
+
+
+
+PROCEDURE loc-doc-get-attr :
+
+  &scop loc-find-doc-attr ~
+  find first buf_doc-attr ~
+    where buf_doc-attr.doc-code  = v-doc-code ~
+      and buf_doc-attr.attr-code = "~{&attr-name~}" ~
+    no-error.
+  
+  &scop loc-get-doc-attr ~
+    if available buf_doc-attr then do: ~
+      assign ~
+        v-~{&attr-name~} = buf_doc-attr.attr-value ~
+      . ~
+    end.
+
+  do
+  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+  on stop   undo, return error substitute( "&1. stop", vss-workfile )
+  on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+  :
+
+      &scop attr-name {&bef-trdcattr-car-num}
+      {&loc-find-doc-attr}
+      {&loc-get-doc-attr}
+  
+      &scop attr-name {&bef-trdcattr-autoent}
+      {&loc-find-doc-attr}
+      &scop attr-name autoent-obj-type
+      assign
+        v-{&attr-name} = entry (1, buf_doc-attr.attr-value, ";")
+      no-error.
+  
+      &scop attr-name {&bef-trdcattr-autoent}
+      {&loc-find-doc-attr}
+      &scop attr-name autoent-obj-code
+      assign
+        v-{&attr-name} = entry (2, buf_doc-attr.attr-value, ";")
+      no-error.
+  
+      &scop attr-name {&bef-trdcattr-ptb-item-pour}
+      {&loc-find-doc-attr}
+      &scop attr-name item-pour
+      {&loc-get-doc-attr}
+  
+      &scop attr-name {&bef-trdcattr-fio-driver}
+      {&loc-find-doc-attr}
+      &scop attr-name fio
+      {&loc-get-doc-attr}
+  
+      &scop attr-name {&bef-trdcattr-ptbobj}
+      {&loc-find-doc-attr}
+      &scop attr-name ptbotype
+      assign
+        v-{&attr-name} = entry (1, buf_doc-attr.attr-value, ";")
+      no-error.
+  
+      &scop attr-name {&bef-trdcattr-ptbobj}
+      {&loc-find-doc-attr}
+      &scop attr-name ptbocode
+      assign
+        v-{&attr-name} = entry (2, buf_doc-attr.attr-value, ";")
+      no-error.
+  
+      &scop attr-name {&bef-trdcattr-time-income}
+      {&loc-find-doc-attr}
+      {&loc-get-doc-attr}
+
+  end.
+END PROCEDURE.
+
+procedure cr-begin-general:
+  
     run get-report-num in p-mainmenu-handle (
         output g#report-num
     ).
@@ -126,9 +597,6 @@ do
         output g#quest-print
     ).
 
-
-    find first buf_trn-doc no-lock
-         where recid( buf_trn-doc ) = rec_id.
 
     { str/tdat-val.i buf_trn-doc.doc-code {&trdcattr-nids} v-attr-value v-attr-type }
     if v-attr-value > "" then do :
@@ -148,13 +616,11 @@ do
     output stream out-stream close.
             
     assign
-      v-doc-code = buf_trn-doc.doc-code
+      v-doc-code = buf_trn-doc.doc-code.
     .
-    run loc-get-set-attr in this-procedure
-      ( input "get-attr-doc":U
-      ) no-error .
-
-
+    
+    run loc-doc-get-attr in this-procedure no-error .
+    
     find first buf_clients where buf_clients.obj-code = buf_trn-doc.obj-code and buf_clients.obj-type = buf_trn-doc.obj-type no-error.
     if available buf_clients then do:
       run aktpq-xl-write-cell-data in this-procedure (
@@ -427,294 +893,12 @@ do
 
     { gbl/conf-rd.i "'stfactpl'" "''" "''" 0 "''" "''" "''" no v-factpl v-factpltype no-error }
 
-    _foreachgds:
-    for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code and ii < 4:
-    { str/is-petrl.i
-      buf_doc-line.artic
-      buf_doc-line.prod-type
-      buf_doc-line.prod-code
-      is-petrolium
-      is-pieces
-      no-error
-      }
-      if error-status :error
-      then do:
-        return error return-value .
-      end.
-      if is-petrolium then do
-      :
+  
+  
+end.
 
-        find first buf_goods where buf_goods.artic     = buf_doc-line.artic
-                               and buf_goods.prod-code = buf_doc-line.prod-code
-                               and buf_goods.prod-type = buf_doc-line.prod-type no-lock no-error.
-        assign
-            v-doc-code = buf_doc-line.doc-code
-            v-gds-code = buf_goods.gds-code
-        .
-
-        find first clients where clients.obj-code = buf_trn-doc.boss and
-                                 clients.obj-type = {&prs} no-lock no-error.
-        find first person where person.psn-code = buf_trn-doc.boss no-lock no-error.
-        
-        run loc-get-set-attr in this-procedure
-          ( input "get-attr":U
-          ) no-error .
-        
-        run gds-attr-value in this-procedure
-          (  input buf_goods.gds-code
-          ,  input {&attr-fuel-type}
-          , output v-gds-attr-value
-          , output v-gds-attr-type
-          ) no-error .
-        
-        case v-gds-attr-value :
-          when "petrol" then do:
-            assign
-              ii = ii + 1
-              v-list-gds-name = v-list-gds-name + "," + buf_goods.gds-name.
-            run aktpq-xl-write-cell-data in this-procedure (
-                  input {&aktpq-xl-sortpetrl} + string (ii)
-                , input "бензин"
-            ).
-          end.
-          when "diesel-sum" or when "diesel-wint" then do:
-            assign
-              ii = ii + 1
-              v-list-gds-name = v-list-gds-name + "," + buf_goods.gds-name.
-            run aktpq-xl-write-cell-data in this-procedure (
-                  input {&aktpq-xl-sortpetrl} + string (ii)
-                , input buf_goods.gds-name
-            ).
-          end.
-          otherwise next _foreachgds.
-        end case.
-
-        
-        if v-time-start-min = 0 or v-time-start-min = ? or v-time-start-min > v-time-start then do:
-          assign
-            v-time-start-min = v-time-start
-          .
-        end.
-        
-        if v-time-end-max = 0 or v-time-end-max = ? or v-time-end-max < v-time-end then do:
-          assign
-            v-time-end-max = v-time-end
-          .
-        end.
-        
-        run aktpq-xl-write-cell-data in this-procedure (
-              input {&aktpq-xl-gdsname} + string (ii)
-            , input buf_goods.gds-name
-        ).
-
-        run aktpq-xl-write-cell-data in this-procedure (
-              input {&aktpq-xl-vol} + string (ii)
-            , input v-car-vol
-        ).        
-
-       run aktpq-xl-write-cell-data in this-procedure (
-              input {&aktpq-xl-temp} + string (ii)
-            , input buf_doc-line.temperature
-        ). 
-       run aktpq-xl-write-cell-data in this-procedure (
-              input {&aktpq-xl-petrlvol} + string (ii)
-            , input buf_doc-line.fact-qnty
-        ). 
-       run aktpq-xl-write-cell-data in this-procedure (
-              input {&aktpq-xl-dens} + string (ii)
-            , input buf_doc-line.fact-density * 1000
-        ).         
-       run aktpq-xl-write-cell-data in this-procedure (
-              input {&aktpq-xl-weight} + string (ii)
-            , input buf_doc-line.cli-qnty
-        ).    
-       run aktpq-xl-write-cell-data in this-procedure (
-              input {&aktpq-xl-mark} + string (ii)
-            , input v-a-b-tarir
-        ).    
-
-        find first buf_rvs-doc where buf_rvs-doc.rvs-type = {&rvs-before-doc} and buf_rvs-doc.out-code = buf_trn-doc.doc-code no-error.
-        find first buf_rvs-line where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and buf_rvs-line.gds-code = buf_goods.gds-code no-error.
-        
-        if available buf_rvs-line then do:
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-beforelevtotal} + string (ii)
-            , input buf_rvs-line.state-level-total
-            ).
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-beforemeasqnty} + string (ii)
-            , input buf_rvs-line.state-brutto-qnty
-            ).
-          assign
-            v-beforemeasqnty = buf_rvs-line.state-brutto-qnty.
-            
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-beforestatetemp} + string (ii)
-            , input buf_rvs-line.state-temperature
-            ).
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-beforestatedens} + string (ii)
-            , input buf_rvs-line.state-density * 1000
-            ).
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-beforestateweight} + string (ii)
-            , input buf_rvs-line.state-brutto-cli-qnty
-            ).
-          assign
-            v-beforestateweight = buf_rvs-line.state-brutto-cli-qnty.
-          
-        end.
-
-        find first buf_rvs-doc where buf_rvs-doc.rvs-type = {&rvs-after-doc} and buf_rvs-doc.out-code = buf_trn-doc.doc-code no-error.
-        find first buf_rvs-line where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and buf_rvs-line.gds-code = buf_goods.gds-code no-error.
-        
-        if available buf_rvs-line then do:
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-afterlevtotal} + string (ii)
-            , input buf_rvs-line.state-level-total
-            ).
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-aftermeasqnty} + string (ii)
-            , input buf_rvs-line.state-brutto-qnty
-            ).
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-afterstatetemp} + string (ii)
-            , input buf_rvs-line.state-temperature
-            ).
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-afterstatedens} + string (ii)
-            , input buf_rvs-line.state-density * 1000
-            ).
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-afterstateweight} + string (ii)
-            , input buf_rvs-line.state-brutto-cli-qnty
-            ).
-          assign  
-            v-acc_qnty = buf_rvs-line.state-brutto-qnty - v-beforemeasqnty
-            v-acc_qnty_kg = buf_rvs-line.state-brutto-cli-qnty - v-beforestateweight
-          .
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-acc_qnty} + string (ii)
-            , input string (v-acc_qnty)
-            ).
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-acc_qnty_kg} + string (ii)
-            , input string (v-acc_qnty_kg)
-            ).
-        end.
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-mouth} + string (ii)
-          , input v-mouth
-          ).
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-factvol} + string (ii)
-          , input v-tank-vol
-          ).
-        def var v-dTemp as decimal no-undo.
-        assign 
-          v-dTemp = decimal (v-tank-density-pomi) * 1000 no-error.
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-denspomi} + string (ii)
-          , input v-dTemp
-          ).
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-volpomi} + string (ii)
-          , input v-tank-vol-pomi
-          ).
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-factweight} + string (ii)
-          , input v-tank-weight
-          ).
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-measur_error} + string (ii)
-          , input "0.65"
-          ).
-        assign
-          v-admittance_error_mass = 0.0065 * decimal (v-tank-weight) no-error.
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-admittance_error_mass} + string (ii)
-          , input string (v-admittance_error_mass)
-          ).
-        assign
-          v-revision = decimal (entry (2, v-factpl, ";")) no-error.  
-        if (entry (2, v-factpl, ";")) begins "revision=" 
-        then do:
-          assign
-            v-diff_mass = v-acc_qnty_kg - buf_doc-line.cli-qnty no-error.
-        end.
-        else do:
-          assign
-            v-diff_mass = decimal (v-tank-weight) - buf_doc-line.cli-qnty no-error.
-        end.
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-diff_mass} + string (ii)
-          , input string (v-diff_mass)
-          ).
-        
-        if (buf_trn-doc.fact-date = ? and 3 < month (today) and month (today) < 10)
-            or (buf_trn-doc.fact-date <> ? and 3 <  month (buf_trn-doc.fact-date) and  month (buf_trn-doc.fact-date) < 10 )
-        then do:
-          case v-gds-attr-value:
-            when "petrol" then do:
-              v-natural_loss = buf_doc-line.cli-qnty * 0.0211 / 100.
-            end.
-            when "diesel-sum" then do:
-              v-natural_loss = buf_doc-line.cli-qnty * 0.0006 / 100.
-            end.
-            when "diesel-wint" then do:
-              v-natural_loss = buf_doc-line.cli-qnty * 0.0021 / 100.
-            end.
-          end case.
-        end.
-        else do:
-          case v-gds-attr-value:
-            when "petrol" then do:
-              v-natural_loss = buf_doc-line.cli-qnty * 0.0134 / 100.
-            end.
-            when "diesel-sum" then do:
-              v-natural_loss = buf_doc-line.cli-qnty * 0.0003 / 100.
-            end.
-            when "diesel-wint" then do:
-              v-natural_loss = buf_doc-line.cli-qnty * 0.0012 / 100.
-            end.
-          end case.
-        end.
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-natural_loss} + string (ii)
-          , input string (v-natural_loss)
-          ).
-        if v-diff_mass > 0 then do:
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-surpluse} + string (ii)
-            , input if v-diff_mass - v-admittance_error_mass > 0 then v-diff_mass - v-admittance_error_mass else 0
-            ).
-        end.
-        else do:
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-surpluse} + string (ii)
-            , input if v-diff_mass + v-admittance_error_mass + v-natural_loss < 0 then v-diff_mass + v-admittance_error_mass + v-natural_loss else 0
-            ).
-        end.
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-accept_accod_kg} + string (ii)
-          , input buf_doc-line.cli-qnty
-          ).
-        run aktpq-xl-write-cell-data in this-procedure (
-          input {&aktpq-xl-accept_accod_l} + string (ii)
-          , input buf_doc-line.fact-qnty
-          ).
-        find first ub.pl-gds no-lock where ub.pl-gds.gds-code = v-gds-code no-error.
-        if available ub.pl-gds then do:
-          find first ub.place where ub.place.pl-code = ub.pl-gds.pl-code no-lock no-error.
-          run aktpq-xl-write-cell-data in this-procedure (
-            input {&aktpq-xl-coor} + string (ii)
-            , input ub.place.loc1
-            ).
-        end.
-        
-      end.    /*      if is-petrolium        */
-    end.    /*        for each buf_doc-line     */
-    
+procedure cr-end-general:
+  
     run aktpq-xl-write-cell-data in this-procedure (
           input {&aktpq-xl-listgdsname}
         , input trim (v-list-gds-name, ",")
@@ -749,293 +933,6 @@ do
     end.
     
     run aktpq-xl-close in this-procedure .
-    { rep/q-print.i 4 }
-    { gbl/stopwork.i }
-
+    { rep/q-print.i 4 }  
+  
 end.
-
-
-
-PROCEDURE loc-get-set-attr :
-
-  define input  parameter p-mode-attr as character no-undo .
-
-  &scop loc-find-attr ~
-  find first buf_doc-line-attr ~
-    where buf_doc-line-attr.doc-code  = v-doc-code ~
-      and buf_doc-line-attr.gds-code  = v-gds-code ~
-      and buf_doc-line-attr.attr-code = "~{&attr-name~}" ~
-    no-error.
-
-  &scop loc-find-doc-attr ~
-  find first buf_doc-attr ~
-    where buf_doc-attr.doc-code  = v-doc-code ~
-      and buf_doc-attr.attr-code = "~{&attr-name~}" ~
-    no-error.
-
-  &scop loc-get-attr ~
-    if available buf_doc-line-attr then do: ~
-      assign ~
-        v-~{&attr-name~} = buf_doc-line-attr.attr-value ~
-      . ~
-    end.
-  &scop loc-get-doc-attr ~
-    if available buf_doc-attr then do: ~
-      assign ~
-        v-~{&attr-name~} = buf_doc-attr.attr-value ~
-      . ~
-    end.
-  &scop loc-get-attr-int ~
-    if available buf_doc-line-attr then do: ~
-      assign ~
-        v-~{&attr-name~} = integer( buf_doc-line-attr.attr-value ) no-error ~
-      . ~
-    end.
-  &scop loc-get-attr-date ~
-    if available buf_doc-line-attr then do: ~
-      assign ~
-        v-~{&attr-name~} = date( buf_doc-line-attr.attr-value ) ~
-      . ~
-    end.
-  &scop loc-create-attr ~
-    if not available buf_doc-line-attr then do: ~
-      create buf_doc-line-attr . ~
-      assign ~
-        buf_doc-line-attr.doc-code  = v-doc-code ~
-        buf_doc-line-attr.gds-code  = v-gds-code ~
-        buf_doc-line-attr.attr-code = "~{&attr-name~}":U ~
-      . ~
-    end.
-
-  &scop loc-set-attr ~
-    assign ~
-      buf_doc-line-attr.attr-value = substitute( "&1", v-~{&attr-name~} ) ~
-    .
-  &scop loc-set-attr-date ~
-    assign ~
-      buf_doc-line-attr.attr-value = string( v-~{&attr-name~}, "99/99/9999" )~
-    .
-
-  do
-  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
-  on stop   undo, return error substitute( "&1. stop", vss-workfile )
-  on endkey undo, return error substitute( "&1. endkey", vss-workfile )
-  :
-    define buffer buf_doc-line-attr for ub.doc-line-attr .
-
-
-    if p-mode-attr = "get-attr-doc":U then do:
-
-      &scop attr-name {&bef-trdcattr-car-num}
-      {&loc-find-doc-attr}
-      {&loc-get-doc-attr}
-  
-      &scop attr-name {&bef-trdcattr-autoent}
-      {&loc-find-doc-attr}
-      &scop attr-name autoent-obj-type
-      assign
-        v-{&attr-name} = entry (1, buf_doc-attr.attr-value, ";")
-      no-error.
-  
-      &scop attr-name {&bef-trdcattr-autoent}
-      {&loc-find-doc-attr}
-      &scop attr-name autoent-obj-code
-      assign
-        v-{&attr-name} = entry (2, buf_doc-attr.attr-value, ";")
-      no-error.
-  
-      &scop attr-name {&bef-trdcattr-ptb-item-pour}
-      {&loc-find-doc-attr}
-      &scop attr-name item-pour
-      {&loc-get-doc-attr}
-  
-      &scop attr-name {&bef-trdcattr-fio-driver}
-      {&loc-find-doc-attr}
-      &scop attr-name fio
-      {&loc-get-doc-attr}
-  
-      &scop attr-name {&bef-trdcattr-ptbobj}
-      {&loc-find-doc-attr}
-      &scop attr-name ptbotype
-      assign
-        v-{&attr-name} = entry (1, buf_doc-attr.attr-value, ";")
-      no-error.
-  
-      &scop attr-name {&bef-trdcattr-ptbobj}
-      {&loc-find-doc-attr}
-      &scop attr-name ptbocode
-      assign
-        v-{&attr-name} = entry (2, buf_doc-attr.attr-value, ";")
-      no-error.
-  
-      &scop attr-name {&bef-trdcattr-time-income}
-      {&loc-find-doc-attr}
-      {&loc-get-doc-attr}
-
-    end.
-
-
-    &scop attr-name car-vol
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name tests
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name time-pour
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name date-start
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr-date}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr-date}
-    end.
-
-    &scop attr-name time-start
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr-int}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name date-end
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr-date}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr-date}
-    end.
-
-    &scop attr-name time-end
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr-int}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name tank-vol
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name tank-vol-pomi
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name tank-temp
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name tank-water
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name tank-density
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name tank-density-pomi
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name tank-weight
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name mouth
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    &scop attr-name a-b-tarir
-    {&loc-find-attr}
-    if p-mode-attr = "get-attr":U then do:
-      {&loc-get-attr}
-    end.
-    else do:
-      {&loc-create-attr}
-      {&loc-set-attr}
-    end.
-
-    return .
-
-  end.
-END PROCEDURE.

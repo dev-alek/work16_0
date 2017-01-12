@@ -3660,6 +3660,10 @@ end.
 {&create-record-fuel}
 &scop attr-code trdcattr-seals-condition
 {&create-record-fuel}
+&scop attr-code trdcattr-date-pour
+{&create-record-fuel}
+&scop attr-code trdcattr-time-pour
+{&create-record-fuel}
 
 end.
 end procedure.

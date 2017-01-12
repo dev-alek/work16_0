@@ -69,6 +69,7 @@ initial "@(#)$Workfile$ $Revision$".
 &global-define aktpq-xl-trnday               "trnday":U
 &global-define aktpq-xl-trnmonth             "trnmonth":U
 &global-define aktpq-xl-trnyear              "trnyear":U
+&global-define aktpq-xl-sectionnum           "sectionnum":U
 
 &global-define aktpq-xl-invoicenum           "invoicenum":U
 &global-define aktpq-xl-invoiceday           "invoiceday":U
@@ -84,6 +85,13 @@ initial "@(#)$Workfile$ $Revision$".
 &global-define aktpq-xl-dens                 "dens":U
 &global-define aktpq-xl-weight               "weight":U
 &global-define aktpq-xl-mark                 "mark":U
+
+&global-define aktpq-xl-diametr              "diametr":U
+&global-define aktpq-xl-la                   "la":U
+&global-define aktpq-xl-lb                   "lb":U
+&global-define aktpq-xl-tempexp              "tempexp":U
+&global-define aktpq-xl-densexp              "densexp":U
+
 
 &global-define aktpq-xl-mouth                "mouth":U
 &global-define aktpq-xl-factvol              "factvol":U

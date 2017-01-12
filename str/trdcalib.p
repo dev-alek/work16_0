@@ -454,6 +454,10 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-time-income
       {&attr-temp-full-code}
+      &scop attr-code trdcattr-time-pour
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-date-pour
+      {&attr-temp-full-code}
       &scop attr-code trdcattr-inspection-cert
       {&attr-temp-full-code}
       &scop attr-code trdcattr-date-cert

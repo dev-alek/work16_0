@@ -18,6 +18,8 @@ create : Суслов Алексей Юрьевич
 
 */
 
+using ibs.th.str.*.
+
 &scop FRAME-NAME     d-in-line
 
 define  input parameter parparentproc   as   handle               no-undo .
@@ -323,6 +325,10 @@ define button b-addinf
     label "Доп.инф."
     size 9 by 1.
 
+define button b-docsec
+    label "По сек."
+    size 9 by 1.
+
 define button b-alc-attr
     label "АлкАтр"
     size 9 by 1 TOOLTIP "Атрибуты алкогольной продукции".
@@ -386,6 +392,7 @@ define frame d-in-line
   b-choose-last-date                   AT ROW 2    COL 83
   tt-fr-doc-line.last-num-day          at row 2    col 86    format "->>>>9" no-label
   tt-fr-doc-line.cli-art               at row 3    col 20    colon-aligned label "Артикул поставщика"   format "x(16)"
+  b-docsec                             at row 7    col 32  
   v-goods-ms-base                      at row 3    col 42    label "Объем штуки"                                               fgcolor 4  
 
   tt-fr-doc-line.alpha1                at row 3    col 77    colon-aligned label "Страна"             view-as text    size 4    by 0.7
@@ -572,7 +579,8 @@ do:
 
   if keyfunction(lastkey) <> "end-error"
     and not ( last-event :event-type   = "progress":u
-              and last-event :widget-enter = b-quit :handle
+              and (last-event :widget-enter = b-quit :handle
+                  or last-event :widget-enter = b-docsec :handle)
             )
   then do:
     if input frame {&frame-name} tt-fr-doc-line.cli-qnty = 0
@@ -672,7 +680,8 @@ do:
 
   if keyfunction(lastkey) <> "end-error" and
      not ( last-event :event-type   = "progress":u and
-           last-event :widget-enter = b-quit :handle )
+           (last-event :widget-enter = b-quit :handle or 
+           last-event :widget-enter = b-docsec :handle))
   then do:
     if input frame {&frame-name} tt-fr-doc-line.doc-qnty = 0 or
        input frame {&frame-name} tt-fr-doc-line.doc-qnty = ?
@@ -742,7 +751,8 @@ do:
 
   if keyfunction(lastkey) <> "end-error" and
      not ( last-event :event-type   = "progress":u and
-           last-event :widget-enter = b-quit :handle )
+           (last-event :widget-enter = b-quit :handle 
+           or last-event :widget-enter = b-docsec :handle) )
   then do:
 
     if input frame {&frame-name} tt-fr-doc-line.fact-qnty < 0
@@ -868,7 +878,8 @@ on leave of tt-fr-doc-line.doc-density in frame {&frame-name} do:
 
   if keyfunction(lastkey) <> "end-error"
     and not ( last-event :event-type   = "progress":u
-              and last-event :widget-enter = b-quit :handle
+              and (last-event :widget-enter = b-quit :handle 
+              or last-event :widget-enter = b-docsec :handle)
             )
   then do:
     if input frame {&frame-name} tt-fr-doc-line.doc-density = 0 or
@@ -1375,6 +1386,10 @@ do:
     v-new-density       = tt-fr-doc-line.fact-density
     v-new-cli-fact-qnty = tt-fr-doc-line.fact-qnty-kg
   .
+  infoSectionsTotal:DocQntyLine = tt-fr-doc-line.doc-qnty.
+  infoSectionsTotal:DocDensLine = tt-fr-doc-line.doc-density.
+  infoSectionsTotal:DocCliLine = tt-fr-doc-line.cli-qnty.
+  infoSectionsTotal:FlagTrn = t-doc.flag_.
   run proc-b-addinfo in this-procedure
     ( input        parparentproc
      ,input        ( if parline-mode <> {&lookup} then {&update} else {&lookup} )
@@ -1388,32 +1403,11 @@ do:
      ,input-output v-new-fact-qnty
      ,input-output v-new-density
      ,input-output v-new-cli-fact-qnty
-     ,input-output v-prt-car-vol
-     ,input-output v-prt-tests
-     ,input-output v-prt-time-pour
-     ,input-output v-prt-tank-vol
-     ,input-output v-prt-tank-temp
-     ,input-output v-prt-tank-water
-     ,input-output v-prt-tank-density
-     ,input-output v-prt-tank-weight
+     ,input-output infoSectionsTotal
      ,input-output v-prt-start-real-date
      ,input-output v-prt-start-real-time
      ,input-output v-prt-end-real-date
      ,input-output v-prt-end-real-time
-     ,input-output v-prt-mouth
-     ,input-output v-prt-a-b-tarir
-     ,input-output v-diameter
-     ,input-output v-place-si
-     ,input-output v-tank-density-pomi
-     ,input-output v-prt-tank-vol-pomi
-     ,input-output v-prt-dens-temp
-     ,input-output v-prt-certif-fuel 
-     ,input-output v-prt-norm-doc 
-     ,input-output v-prt-num-passport 
-     ,input-output v-prt-validity-certif
-     ,input-output v-prt-num-plotn
-     ,input-output v-prt-passport-plotn
-     ,input-output v-prt-date-pov-plotn
     ) no-error .
 
   if error-status :error then do:
@@ -1438,6 +1432,73 @@ do:
     tt-fr-doc-line.fact-qnty
     tt-fr-doc-line.fact-qnty-kg when tt-fr-doc-line.fact-qnty-kg :visible = true
     with frame {&frame-name} .
+
+end.
+
+on choose of b-docsec in frame {&frame-name}
+do:
+
+  { gbl/stdbtn.i }
+
+  define variable v-new-fact-qnty        like ub.doc-line.fact-qnty    no-undo .
+  define variable v-new-density          like ub.doc-line.fact-density no-undo .
+  define variable v-new-cli-fact-qnty    like ub.doc-line.fact-qnty    no-undo .
+
+  assign
+    v-new-fact-qnty     = tt-fr-doc-line.fact-qnty
+    v-new-density       = tt-fr-doc-line.fact-density
+    v-new-cli-fact-qnty = tt-fr-doc-line.fact-qnty-kg
+  .
+  if parline-mode <> {&add-def} then infoSectionsTotal:GetDBAllAttr().
+  infoSectionsTotal:DocQntyLine = tt-fr-doc-line.doc-qnty.
+  infoSectionsTotal:DocDensLine = tt-fr-doc-line.doc-density.
+  infoSectionsTotal:DocCliLine = tt-fr-doc-line.cli-qnty.
+  infoSectionsTotal:FlagTrn = t-doc.flag_.
+  run str/in-ladd.w
+    ( input        parParentProc
+     ,input        parline-mode
+     ,input        infoSectionsTotal:TrnDocNum
+     ,input        infoSectionsTotal:GdsCode
+     ,input-output InfoSectionsTotal
+     ,output was_setting
+    ) no-error .
+  if error-status :error then do:
+    return no-apply.
+  end.
+
+  if was_setting = false 
+  then infoSectionsTotal:GetDBAllAttr().
+  else do:
+    infoSectionsTotal:CalculateTotal().
+    if not infoSectionsTotal:CliQntyInput then do:
+      tt-fr-doc-line.doc-density:screen-value = string (infoSectionsTotal:DocDensityAvg).
+      tt-fr-doc-line.doc-qnty:screen-value = string (infoSectionsTotal:DocQntyTotal).
+      apply "leave" to tt-fr-doc-line.doc-qnty in frame {&frame-name} .
+      apply "leave" to tt-fr-doc-line.doc-density in frame {&frame-name} .
+    end.
+    if not infoSectionsTotal:DensityInput then do:
+      tt-fr-doc-line.doc-qnty:screen-value = string (infoSectionsTotal:DocQntyTotal).
+      tt-fr-doc-line.cli-qnty:screen-value = string (infoSectionsTotal:CliQntyTotal).
+      apply "leave" to tt-fr-doc-line.doc-qnty in frame {&frame-name} .
+      apply "leave" to tt-fr-doc-line.cli-qnty in frame {&frame-name} .
+    end.
+    if not infoSectionsTotal:DocQntyInput then do:
+      tt-fr-doc-line.doc-density:screen-value = string (infoSectionsTotal:DocDensityAvg).
+      tt-fr-doc-line.cli-qnty:screen-value = string (infoSectionsTotal:CliQntyTotal).
+      apply "leave" to tt-fr-doc-line.cli-qnty in frame {&frame-name} .
+      apply "leave" to tt-fr-doc-line.doc-density in frame {&frame-name} .
+    end.
+  end.
+  
+/*     ,input-output v-new-fact-qnty*/
+/*     ,input-output v-new-density*/
+/*     ,input-output v-new-cli-fact-qnty*/
+
+
+/*  display                                                                       */
+/*    tt-fr-doc-line.fact-qnty                                                    */
+/*    tt-fr-doc-line.fact-qnty-kg when tt-fr-doc-line.fact-qnty-kg :visible = true*/
+/*    with frame {&frame-name} .                                                  */
 
 end.
 
@@ -1735,6 +1796,8 @@ do:
   if error-status :error then do:
     return no-apply .
   end.
+  if valid-object (infoSectionsTotal) 
+    then infoSectionsTotal:SaveDB().
 
 end.
 
@@ -2051,6 +2114,7 @@ assign
   b-rvs-bf                              :visible = no
   b-rvs-af                              :visible = no
   b-addinf                              :visible = no
+  b-docsec                              :visible = no
   b-alc-attr                            :visible = no
 .
 
@@ -2428,10 +2492,17 @@ if varrvs-place = yes then do:
         b-rvs-af:menu-mouse = 1
       .
     end.
+    
+    enable
+      b-docsec
+      with frame {&frame-name}.
 
     if t-doc.flag_ = true
       or t-doc.status_ = {&fact}
     then do:
+      hide
+        b-docsec
+        in frame {&frame-name}.
       if lookup(v-ptrl-without-rvs, 'true,yes':u) = 0 then do:
         enable
           b-rvs-bf
@@ -2457,51 +2528,45 @@ if varrvs-place = yes then do:
       end.
     end.
 
-    assign
-      v-car-num          = v-prt-car-num
-      v-car-vol          = v-prt-car-vol
+    /*assign
+      v-car-num          = infoSectionsTotal:CarNum
+      v-car-vol          = string ( infoSectionsTotal:CarVolTotal )
       v-autoent-obj-type = v-prt-autoent-obj-type
       v-autoent-obj-code = v-prt-autoent-obj-code
       v-fio              = v-prt-fio
       v-ptbotype         = v-prt-ptbotype
       v-ptbocode         = v-prt-ptbocode
-    .
+    .*/
+    
+    infoSectionsTotal = new InfoSectionsTotal().
 
-    run str/in-ladd.w
+    infoSectionsTotal:Initialization(t-doc.doc-code, buf_goods.gds-code).
+    assign
+      infoSectionsTotal:CliQntyInput = varcli-qnty-input
+      infoSectionsTotal:DensityInput = vardensity-input
+      infoSectionsTotal:DocQntyInput = vardoc-qnty-input
+      .
+
+    if parline-mode <> {&add-def} then do:
+      infoSectionsTotal:GetDBAllAttr().
+      v-prt-start-real-date = infoSectionsTotal:StartRealDate.
+      v-prt-start-real-time = infoSectionsTotal:StartRealTime.
+      v-prt-end-real-date = infoSectionsTotal:EndRealDate.
+      v-prt-end-real-time = infoSectionsTotal:EndRealTime.
+    end.
+    
+    
+    
+    /*run str/in-ladd.w
       ( input        parParentProc
        ,input        "get-attr":U
        ,input        t-doc.doc-code
        ,input        buf_goods.gds-code
-       ,input-output v-prt-car-vol
-       ,input-output v-prt-tests
-       ,input-output v-prt-time-pour
-       ,input-output v-prt-tank-vol
-       ,input-output v-prt-tank-temp
-       ,input-output v-prt-tank-water
-       ,input-output v-prt-tank-density
-       ,input-output v-prt-tank-weight
-       ,input-output v-prt-start-real-date
-       ,input-output v-prt-start-real-time
-       ,input-output v-prt-end-real-date
-       ,input-output v-prt-end-real-time
-       ,input-output v-prt-mouth
-       ,input-output v-prt-a-b-tarir
-       ,input-output v-diameter
-       ,input-output v-place-si
-       ,input-output v-tank-density-pomi
-       ,input-output v-prt-tank-vol-pomi
-       ,input-output v-prt-dens-temp
-       ,input-output v-prt-certif-fuel 
-       ,input-output v-prt-norm-doc 
-       ,input-output v-prt-num-passport 
-       ,input-output v-prt-validity-certif
-       ,input-output v-prt-num-plotn
-       ,input-output v-prt-passport-plotn
-       ,input-output v-prt-date-pov-plotn       
+       ,input-output infoSectionsTotal
        ,      output was_setting
-      ) .
-
-      IF  was_setting = YES
+      ) .*/
+      
+      /*IF  was_setting = YES
       AND (
             v-car-num          <> v-prt-car-num
          OR v-car-vol          <> v-prt-car-vol
@@ -2515,7 +2580,7 @@ if varrvs-place = yes then do:
          assign
             v-change = TRUE
          .
-      end.
+      end.*/
 
      if stfactplvalue <> ""  then do:
        { str/chkqtpl.i
@@ -3477,9 +3542,9 @@ procedure save-action:
   end. /* zap: transaction */
   if parline-mode <> {&lookup} then do: assign parline-mode = {&update}. end.
   find t-doc where recid( t-doc ) = pardoc-rec.
-  if v-change THEN DO:
+/*  if v-change THEN DO:
      run chg-attr in THIS-PROCEDURE .
-  END.
+  END.*/
 end procedure. /* save-action */
 
 procedure local-cor-line:
@@ -5140,42 +5205,17 @@ procedure save-place-rsrv :
     end. /* for each tt-doc-pl */
 
     if b-addinf :sensitive in frame {&frame-name} = true then do:
-      run str/in-ladd.w
+      /*run str/in-ladd.w
         ( input        parParentProc
         ,input        "set-attr":U
         ,input        t-doc.doc-code
         ,input        buf_goods.gds-code
-        ,input-output v-prt-car-vol
-        ,input-output v-prt-tests
-        ,input-output v-prt-time-pour
-        ,input-output v-prt-tank-vol
-        ,input-output v-prt-tank-temp
-        ,input-output v-prt-tank-water
-        ,input-output v-prt-tank-density
-        ,input-output v-prt-tank-weight
-        ,input-output v-prt-start-real-date
-        ,input-output v-prt-start-real-time
-        ,input-output v-prt-end-real-date
-        ,input-output v-prt-end-real-time
-        ,input-output v-prt-mouth
-        ,input-output v-prt-a-b-tarir
-        ,input-output v-diameter
-        ,input-output v-place-si
-        ,input-output v-tank-density-pomi
-        ,input-output v-prt-tank-vol-pomi
-        ,input-output v-prt-dens-temp
-        ,input-output v-prt-certif-fuel 
-        ,input-output v-prt-norm-doc 
-        ,input-output v-prt-num-passport 
-        ,input-output v-prt-validity-certif
-        ,input-output v-prt-num-plotn
-        ,input-output v-prt-passport-plotn
-        ,input-output v-prt-date-pov-plotn
+        ,input-output infoSectionsTotal
         ,output was_setting
         )  .
       if error-status :error then do:
         return error substitute( "&1 (save-place-rsrv). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ).
-      end.
+      end.*/
     end.
   end.
 
@@ -5241,7 +5281,7 @@ end procedure. /* correct-fact-qnty */
 
 /*==========================================================================*/
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE chg-attr {&FRAME-NAME}
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE chg-attr {&FRAME-NAME}
 PROCEDURE chg-attr :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5447,7 +5487,7 @@ on error undo, return error
       END. /* EACH old_doc-line */
    END. /* v-ok */
 end.  /* do on error */
-END PROCEDURE. /* chg-attr */
+END PROCEDURE. /* chg-attr */*/
 
 procedure new-price-prod :
 /* продажная цена до закрытия прихода на факт */

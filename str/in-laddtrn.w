@@ -75,11 +75,11 @@ define buffer buf_goods for ub.goods .
 &Scoped-Define ENABLED-OBJECTS b-save b-quit b-help f-autoent-obj-code ~
 f-autoent-obj-type b-clients f-car-num b-auto-tank f-condition ~
 f-seals-condition f-insp-cert f-date-cert f-fio f-ptbocode f-ptbotype b-ptb ~
-f-hour-pour f-min-pour f-item-pour 
+f-date-pour f-hour-pour f-min-pour f-hour-income f-min-income f-item-pour 
 &Scoped-Define DISPLAYED-OBJECTS f-autoent-obj-code f-autoent-obj-type ~
 f-autoent-obj-name f-car-num f-condition f-seals-condition f-insp-cert ~
-f-date-cert f-fio f-ptbocode f-ptbotype f-ptboname f-hour-pour f-min-pour ~
-f-item-pour 
+f-date-cert f-fio f-ptbocode f-ptbotype f-ptboname f-date-pour f-hour-pour ~
+f-min-pour f-hour-income f-min-income f-item-pour 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -99,14 +99,14 @@ DEFINE BUTTON b-auto-tank
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "" 
-     SIZE 3 BY .89.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON b-clients 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "b-clients" 
-     SIZE 3 BY .89.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON b-help 
      LABEL "&Помощь" 
@@ -118,7 +118,7 @@ DEFINE BUTTON b-ptb
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "b-ptb" 
-     SIZE 3 BY .89.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON b-quit AUTO-END-KEY 
      LABEL "&Отмена" 
@@ -158,13 +158,23 @@ DEFINE VARIABLE f-date-cert AS DATE FORMAT "99/99/99":U
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-date-pour AS DATE FORMAT "99/99/99":U 
+     LABEL "Дата налива" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-fio AS CHARACTER FORMAT "X(256)":U 
      LABEL "Ф.И.О. водителя-экспедитора" 
      VIEW-AS FILL-IN 
      SIZE 54.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-hour-pour AS INTEGER FORMAT "99":U INITIAL ? 
+DEFINE VARIABLE f-hour-income AS INTEGER FORMAT "99":U INITIAL ? 
      LABEL "Время прибытия на азс" 
+     VIEW-AS FILL-IN 
+     SIZE 3 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-hour-pour AS INTEGER FORMAT "99":U INITIAL ? 
+     LABEL "Время налива" 
      VIEW-AS FILL-IN 
      SIZE 3 BY 1 NO-UNDO.
 
@@ -176,6 +186,10 @@ DEFINE VARIABLE f-insp-cert AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE f-item-pour AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
      SIZE 80 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-min-income AS INTEGER FORMAT "99":U INITIAL ? 
+     VIEW-AS FILL-IN 
+     SIZE 3 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-min-pour AS INTEGER FORMAT "99":U INITIAL ? 
      VIEW-AS FILL-IN 
@@ -206,27 +220,30 @@ DEFINE FRAME Dialog-Frame
      b-save AT ROW 1 COL 2.13
      b-quit AT ROW 1 COL 12.13
      b-help AT ROW 1 COL 71.13
-     f-autoent-obj-code AT ROW 2.44 COL 16.13 COLON-ALIGNED
-     f-autoent-obj-type AT ROW 2.44 COL 27.88 COLON-ALIGNED NO-LABEL
-     f-autoent-obj-name AT ROW 2.44 COL 36 COLON-ALIGNED NO-LABEL
-     b-clients AT ROW 2.59 COL 34.63
-     f-car-num AT ROW 3.74 COL 17.63 COLON-ALIGNED
-     b-auto-tank AT ROW 3.78 COL 34.75
-     f-condition AT ROW 5 COL 1.12 WIDGET-ID 30
-     f-seals-condition AT ROW 6.22 COL 19.13 COLON-ALIGNED
-     f-insp-cert AT ROW 6.22 COL 62.5 COLON-ALIGNED WIDGET-ID 26
-     f-date-cert AT ROW 7.44 COL 62.25 COLON-ALIGNED WIDGET-ID 34
-     f-fio AT ROW 8.59 COL 24.88 COLON-ALIGNED
-     f-ptbocode AT ROW 9.82 COL 16.13 COLON-ALIGNED
-     f-ptbotype AT ROW 9.82 COL 27.88 COLON-ALIGNED NO-LABEL
-     f-ptboname AT ROW 9.82 COL 36.13 COLON-ALIGNED NO-LABEL
-     b-ptb AT ROW 9.93 COL 34.63
-     f-hour-pour AT ROW 10.82 COL 73.13 COLON-ALIGNED
-     f-min-pour AT ROW 10.82 COL 76.63 COLON-ALIGNED NO-LABEL
-     f-item-pour AT ROW 12.37 COL 1.63 NO-LABEL
+     f-autoent-obj-code AT ROW 2.46 COL 16.13 COLON-ALIGNED
+     f-autoent-obj-type AT ROW 2.46 COL 27.88 COLON-ALIGNED NO-LABEL
+     f-autoent-obj-name AT ROW 2.46 COL 36 COLON-ALIGNED NO-LABEL
+     b-clients AT ROW 2.58 COL 34.63
+     f-car-num AT ROW 3.75 COL 20 COLON-ALIGNED
+     b-auto-tank AT ROW 3.79 COL 36.75
+     f-condition AT ROW 5 COL 1.13 WIDGET-ID 30
+     f-seals-condition AT ROW 6.21 COL 22 COLON-ALIGNED
+     f-insp-cert AT ROW 6.21 COL 62.5 COLON-ALIGNED WIDGET-ID 26
+     f-date-cert AT ROW 7.46 COL 62.25 COLON-ALIGNED WIDGET-ID 34
+     f-fio AT ROW 8.58 COL 28 COLON-ALIGNED
+     f-ptbocode AT ROW 9.83 COL 16.13 COLON-ALIGNED
+     f-ptbotype AT ROW 9.83 COL 27.88 COLON-ALIGNED NO-LABEL
+     f-ptboname AT ROW 9.83 COL 36.13 COLON-ALIGNED NO-LABEL
+     b-ptb AT ROW 9.92 COL 34.63
+     f-date-pour AT ROW 11 COL 12.88 COLON-ALIGNED WIDGET-ID 40
+     f-hour-pour AT ROW 11 COL 42 COLON-ALIGNED WIDGET-ID 38
+     f-min-pour AT ROW 11 COL 46 COLON-ALIGNED NO-LABEL WIDGET-ID 36
+     f-hour-income AT ROW 11 COL 73.13 COLON-ALIGNED
+     f-min-income AT ROW 11 COL 76.63 COLON-ALIGNED NO-LABEL
+     f-item-pour AT ROW 13.29 COL 1.63 NO-LABEL
      "Примечание к нефтебазе" VIEW-AS TEXT
-          SIZE 25.5 BY 1 AT ROW 11.33 COL 1.63
-     SPACE(55.36) SKIP(1.25)
+          SIZE 25.5 BY 1 AT ROW 12.17 COL 1.63
+     SPACE(57.75) SKIP(1.32)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Дополнительная информация по приемке топлива"
@@ -299,25 +316,28 @@ DO:
                               f-ptbocode
                               f-ptbotype
                               f-ptboname
+                              f-hour-income
+                              f-min-income
+                              f-item-pour
                               f-hour-pour
                               f-min-pour
-                              f-item-pour
+                              f-date-pour
   .
  
-  if input frame {&frame-name} f-hour-pour <> ?
-    and input frame {&frame-name} f-hour-pour > 24
+  if input frame {&frame-name} f-hour-income <> ?
+    and input frame {&frame-name} f-hour-income > 24
   then do:
      message "Неверно заведено поле <<час>>." view-as alert-box .
-     apply "entry" to f-hour-pour in frame {&frame-name} .
+     apply "entry" to f-hour-income in frame {&frame-name} .
      return no-apply .
   end.
 
   
   
-  if input frame {&frame-name} f-min-pour > 60
+  if input frame {&frame-name} f-min-income > 60
   then do:
      message "Неверно заведено поле <<минуты>>." view-as alert-box .
-     apply "entry" to f-min-pour in frame {&frame-name} .
+     apply "entry" to f-min-income in frame {&frame-name} .
      return no-apply .
   end.
   find ub.clients no-lock where
@@ -366,8 +386,14 @@ DO:
     return no-apply.
   end.
   
-  if f-min-pour = ? or f-hour-pour = ? then do:
+  if f-min-income = ? or f-hour-income = ? then do:
     MESSAGE "Введите время прибытия на АЗС"
+    VIEW-AS ALERT-BOX.
+    return no-apply.
+  end.
+  
+  if f-min-pour = ? or f-hour-pour = ? then do:
+    MESSAGE "Введите время налива"
     VIEW-AS ALERT-BOX.
     return no-apply.
   end.
@@ -404,7 +430,7 @@ DO:
     p-autoent-obj-type = f-autoent-obj-type
     p-autoent-obj-code = string( f-autoent-obj-code )
     p-item-pour        = f-item-pour
-    p-time-pour        = string( f-hour-pour,   "99":U ) + ":" + string( f-min-pour,   "99":U )
+    p-time-pour        = string( f-hour-income,   "99":U ) + ":" + string( f-min-income,   "99":U )
     p-time-income      = string( f-hour-income, "99":U ) + ":" + string( f-min-income, "99":U )
     p-time-start       = f-hour-start * 3600 + f-min-start * 60
     p-time-end         = f-hour-end   * 3600 + f-min-end   * 60
@@ -637,14 +663,41 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME f-hour-pour
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-hour-pour Dialog-Frame
-ON LEAVE OF f-hour-pour IN FRAME Dialog-Frame /* Время прибытия на азс */
+&Scoped-define SELF-NAME f-hour-income
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-hour-income Dialog-Frame
+ON LEAVE OF f-hour-income IN FRAME Dialog-Frame /* Время прибытия на азс */
 DO:
-  if input frame {&frame-name} f-hour-pour > 24
+  if input frame {&frame-name} f-hour-income > 24
   then do:
      message "Неверно заведено поле <<час>>." view-as alert-box .
-     apply "entry" to f-hour-pour in frame {&frame-name} .
+     apply "entry" to f-hour-income in frame {&frame-name} .
+     return no-apply .
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-hour-income Dialog-Frame
+ON return OF f-hour-income IN FRAME Dialog-Frame /* Время прибытия на азс */
+DO:
+      apply "entry" to f-min-income in frame {&frame-name}.
+return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-hour-pour
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-hour-pour Dialog-Frame
+ON LEAVE OF f-hour-pour IN FRAME Dialog-Frame /* Время налива */
+DO:
+  if input frame {&frame-name} f-hour-income > 24
+  then do:
+     message "Неверно заведено поле <<час>>." view-as alert-box .
+     apply "entry" to f-hour-income in frame {&frame-name} .
      return no-apply .
   end.
 END.
@@ -654,9 +707,9 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-hour-pour Dialog-Frame
-ON return OF f-hour-pour IN FRAME Dialog-Frame /* Время прибытия на азс */
+ON return OF f-hour-pour IN FRAME Dialog-Frame /* Время налива */
 DO:
-      apply "entry" to f-min-pour in frame {&frame-name}.
+      apply "entry" to f-min-income in frame {&frame-name}.
 return no-apply.
 END.
 
@@ -683,7 +736,34 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-item-pour Dialog-Frame
 ON return OF f-item-pour IN FRAME Dialog-Frame
 DO:
-    apply "entry" to f-hour-pour in frame {&frame-name}.
+    apply "entry" to f-hour-income in frame {&frame-name}.
+return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-min-income
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-min-income Dialog-Frame
+ON LEAVE OF f-min-income IN FRAME Dialog-Frame
+DO:
+  if input frame {&frame-name} f-min-income > 60
+  then do:
+     message "Неверно заведено поле <<минуты>>." view-as alert-box .
+     apply "entry" to f-min-income in frame {&frame-name} .
+     return no-apply .
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-min-income Dialog-Frame
+ON return OF f-min-income IN FRAME Dialog-Frame
+DO:
+
 return no-apply.
 END.
 
@@ -695,10 +775,10 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-min-pour Dialog-Frame
 ON LEAVE OF f-min-pour IN FRAME Dialog-Frame
 DO:
-  if input frame {&frame-name} f-min-pour > 60
+  if input frame {&frame-name} f-min-income > 60
   then do:
      message "Неверно заведено поле <<минуты>>." view-as alert-box .
-     apply "entry" to f-min-pour in frame {&frame-name} .
+     apply "entry" to f-min-income in frame {&frame-name} .
      return no-apply .
   end.
 END.
@@ -757,7 +837,7 @@ END.
 ON return OF f-ptbotype IN FRAME Dialog-Frame
 DO:
     run disp-f-ptboname.
-    apply "entry" to f-hour-pour in frame {&frame-name}.
+    apply "entry" to f-hour-income in frame {&frame-name}.
 return no-apply.
 END.
 
@@ -864,9 +944,27 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         end.
         when {&trdcattr-time-income} then do:
   
-          assign f-hour-pour = integer(substring(buf_doc-attr.attr-value, 1, 2)) no-error.
+          assign f-hour-income = integer(substring(buf_doc-attr.attr-value, 1, 2)) no-error.
           if error-status:error then do:
             message "Неверное время прибытия " buf_doc-attr.attr-value
+            view-as alert-box.
+            assign f-hour-income = 0
+                    f-min-income  = 0.
+          end.
+          else do:
+            assign f-min-income = integer(substring(buf_doc-attr.attr-value, 4, 2)) no-error.
+            if error-status:error then do:
+                message "Неверное время прибытия " buf_doc-attr.attr-value
+                view-as alert-box.
+                assign f-hour-income = 0
+                      f-min-income  = 0.
+            end.
+          end.
+        end.
+        when {&trdcattr-time-pour} then do:
+            assign f-hour-pour = integer(substring(buf_doc-attr.attr-value, 1, 2)) no-error.
+          if error-status:error then do:
+            message "Неверное время налива " buf_doc-attr.attr-value
             view-as alert-box.
             assign f-hour-pour = 0
                     f-min-pour  = 0.
@@ -880,6 +978,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                       f-min-pour  = 0.
             end.
           end.
+        end.
+        when {&trdcattr-date-pour} then do:
+            assign
+              f-date-pour = date(buf_doc-attr.attr-value).
         end.
         when {&trdcattr-inspection-cert} then do:
             assign
@@ -942,9 +1044,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-ptbocode
       f-ptbotype
       f-ptboname
+      f-hour-income
+      f-min-income
+      f-item-pour
       f-hour-pour
       f-min-pour
-      f-item-pour
     with frame {&frame-name}.
   if p-mode <> {&update} and  p-mode <> {&add-def} then do:
     disable
@@ -963,8 +1067,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-ptbocode
       f-ptbotype
       f-ptboname
-      f-hour-pour
-      f-min-pour
+      f-hour-income
+      f-min-income
       f-item-pour
       with frame {&frame-name}.
   end.
@@ -1050,12 +1154,13 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY f-autoent-obj-code f-autoent-obj-type f-autoent-obj-name f-car-num 
           f-condition f-seals-condition f-insp-cert f-date-cert f-fio f-ptbocode 
-          f-ptbotype f-ptboname f-hour-pour f-min-pour f-item-pour 
+          f-ptbotype f-ptboname f-date-pour f-hour-pour f-min-pour f-hour-income 
+          f-min-income f-item-pour 
       WITH FRAME Dialog-Frame.
   ENABLE b-save b-quit b-help f-autoent-obj-code f-autoent-obj-type b-clients 
          f-car-num b-auto-tank f-condition f-seals-condition f-insp-cert 
-         f-date-cert f-fio f-ptbocode f-ptbotype b-ptb f-hour-pour f-min-pour 
-         f-item-pour 
+         f-date-cert f-fio f-ptbocode f-ptbotype b-ptb f-date-pour f-hour-pour 
+         f-min-pour f-hour-income f-min-income f-item-pour 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1101,7 +1206,15 @@ PROCEDURE save-attr :
         end.
         when {&trdcattr-time-income} then do:
             assign
+              v-attr-value = string( f-hour-income,   "99":U ) + ":" + string( f-min-income,   "99":U ) when f-hour-income <> ? and f-min-income <> ?.
+        end.
+        when {&trdcattr-time-pour} then do:
+            assign
               v-attr-value = string( f-hour-pour,   "99":U ) + ":" + string( f-min-pour,   "99":U ) when f-hour-pour <> ? and f-min-pour <> ?.
+        end.
+        when {&trdcattr-date-pour} then do:
+            assign
+              v-attr-value = string(f-date-pour) when string(f-date-pour) <> "".
         end.
         when {&trdcattr-inspection-cert} then do:
             assign
