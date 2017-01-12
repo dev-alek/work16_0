@@ -708,7 +708,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                 end.
                 ub.doc-attr.attr-value = tt-wb-act-header.status_.
                 release ub.doc-attr.
-                tt-wb-hndls.status_ = tt-wb-act-header.status_.
+                tt-wb-hndls.EGAISSts = tt-wb-act-header.status_.
               end.
             end.
           end.
@@ -1970,6 +1970,22 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     Msg = error-status:get-message(1) + {&new-line} + return-value.
                     StatusErr = false.
                     next url_.
+                  end.
+                  find first ub.doc-attr where ub.doc-attr.attr-code = {&trdcattr-negais} and ub.doc-attr.attr-value = tt-wb-act-header.wbregid no-error.
+                  if available (ub.doc-attr)
+                  then do:
+                    find first buf_doc-attr exclusive-lock where buf_doc-attr.doc-code = ub.doc-attr.doc-code and buf_doc-attr.attr-code = {&trdcattr-egais} no-error.
+                    if not available (buf_doc-attr)
+                    then do:
+                      create buf_doc-attr.
+                      assign 
+                        buf_doc-attr.doc-code = ub.doc-attr.doc-code
+                        buf_doc-attr.attr-code = {&trdcattr-egais}
+                      .
+                    end.
+                    assign
+                      buf_doc-attr.attr-value = tt-ticket.status_.
+                    release buf_doc-attr.
                   end.
                 end.
               when urlStr matches ("*opt/out/WayBillTicket/*") then 
