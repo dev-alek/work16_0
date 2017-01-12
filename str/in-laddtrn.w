@@ -1049,6 +1049,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-item-pour
       f-hour-pour
       f-min-pour
+      f-date-pour
+      f-hour-pour
+      f-min-pour
+      b-save
     with frame {&frame-name}.
   if p-mode <> {&update} and  p-mode <> {&add-def} then do:
     disable
@@ -1070,6 +1074,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-hour-income
       f-min-income
       f-item-pour
+      f-date-pour
+      f-hour-pour
+      f-min-pour
+      b-save
       with frame {&frame-name}.
   end.
     
