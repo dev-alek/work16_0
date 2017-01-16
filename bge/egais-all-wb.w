@@ -1049,73 +1049,6 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME proc-hide-disp
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL proc-hide-disp Dialog-Frame
-procedure proc-hide-disp:
-
-  if (cb-1:screen-value in frame {&frame-name} = "2" or cb-1:screen-value  in frame {&frame-name} = "1") and actnEGAISAdm 
-    then Btn_accept:hidden in frame {&frame-name} = false.
-    else Btn_accept:hidden in frame {&frame-name} = true.
-  case cb-1: 
-  when 1
-  then do:
-    enable Btn_Save with frame {&FRAME-NAME}.
-    Btn_Save:label = "Сохранить".
-    Btn_Del:hidden = false.
-    Btn_conn:label = "Связать".
-    Btn_conn:tooltip = 'Связать накладную ЕГАИС с накладной TH'.
-    Btn_conn:hidden = false.
-    btn_ticket:hidden = false.
-    Btn_delclob:hidden = false.
-    Btn_Del:popup-menu in frame {&frame-name} = menu popup-menu-reject:handle.
-    Btn_Del:menu-mouse = 1.
-  end.
-  when 2 then do:
-    enable Btn_Save with frame {&FRAME-NAME}.
-    Btn_Save:label = "Отправить".
-    Btn_Del:hidden = true.
-    Btn_conn:label = "Акт торг.".
-    Btn_conn:tooltip = 'Передача продукции в торговый зал ЕГАИС'.
-    Btn_conn:hidden = false.
-    btn_ticket:hidden = true.
-    Btn_delclob:hidden = true.
-  end.
-  when 3
-  then do:
-    disable Btn_Save with frame {&FRAME-NAME}.
-    Btn_Save:label = "Отправить".
-    Btn_Del:hidden = true.
-    Btn_conn:hidden = true.
-    btn_ticket:hidden = true.
-    Btn_delclob:hidden = true.    
-  end.
-  when 4
-  then do:
-    enable Btn_Save with frame {&FRAME-NAME}.
-    Btn_Save:label = "Отправить".
-    Btn_Del:hidden = false.
-    Btn_conn:hidden = true.
-    btn_ticket:hidden = true.
-    Btn_delclob:hidden = true.
-    Btn_Del:popup-menu in frame {&frame-name} = ?.
-    Btn_Del:menu-mouse = ?.
-  end.
-  end case.
-  
-end.
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME f-cli-code
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-cli-code Dialog-Frame
-ON leave OF f-cli-code IN FRAME Dialog-Frame /* Код */
-do:
-  run f-query.
-end.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-cli-code Dialog-Frame
 ON return OF f-cli-code IN FRAME Dialog-Frame /* Код */
@@ -1854,7 +1787,7 @@ end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rejectWB Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ReqRepealWB Dialog-Frame 
 PROCEDURE ReqRepealWB :
 
   def var v-doc-code as character no-undo.
@@ -1916,5 +1849,71 @@ PROCEDURE ReqRepealWB :
   
 end procedure.
   
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-hide-disp Dialog-Frame 
+procedure proc-hide-disp:
+
+  if (cb-1:screen-value in frame {&frame-name} = "2" or cb-1:screen-value  in frame {&frame-name} = "1") and actnEGAISAdm 
+    then Btn_accept:hidden in frame {&frame-name} = false.
+    else Btn_accept:hidden in frame {&frame-name} = true.
+  case cb-1: 
+  when 1
+  then do:
+    enable Btn_Save with frame {&FRAME-NAME}.
+    Btn_Save:label = "Сохранить".
+    Btn_Del:hidden = false.
+    Btn_conn:label = "Связать".
+    Btn_conn:tooltip = 'Связать накладную ЕГАИС с накладной TH'.
+    Btn_conn:hidden = false.
+    btn_ticket:hidden = false.
+    Btn_delclob:hidden = false.
+    Btn_Del:popup-menu in frame {&frame-name} = menu popup-menu-reject:handle.
+    Btn_Del:menu-mouse = 1.
+  end.
+  when 2 then do:
+    enable Btn_Save with frame {&FRAME-NAME}.
+    Btn_Save:label = "Отправить".
+    Btn_Del:hidden = true.
+    Btn_conn:label = "Акт торг.".
+    Btn_conn:tooltip = 'Передача продукции в торговый зал ЕГАИС'.
+    Btn_conn:hidden = false.
+    btn_ticket:hidden = true.
+    Btn_delclob:hidden = true.
+  end.
+  when 3
+  then do:
+    disable Btn_Save with frame {&FRAME-NAME}.
+    Btn_Save:label = "Отправить".
+    Btn_Del:hidden = true.
+    Btn_conn:hidden = true.
+    btn_ticket:hidden = true.
+    Btn_delclob:hidden = true.    
+  end.
+  when 4
+  then do:
+    enable Btn_Save with frame {&FRAME-NAME}.
+    Btn_Save:label = "Отправить".
+    Btn_Del:hidden = false.
+    Btn_conn:hidden = true.
+    btn_ticket:hidden = true.
+    Btn_delclob:hidden = true.
+    Btn_Del:popup-menu in frame {&frame-name} = ?.
+    Btn_Del:menu-mouse = ?.
+  end.
+  end case.
+  
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME f-cli-code
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-cli-code Dialog-Frame
+ON leave OF f-cli-code IN FRAME Dialog-Frame /* Код */
+do:
+  run f-query.
+end.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

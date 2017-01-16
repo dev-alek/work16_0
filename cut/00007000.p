@@ -221,6 +221,7 @@ define stream LogStream.
 { trg/factord.i  }
 { gbl/key-rec.i  }
 { ref/grp-attr.i }
+{ ref/extclass.i }
 
 do
 on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)) :
@@ -1200,7 +1201,9 @@ end.
 { utl/00000002.i lvl-name   }
 { utl/00000002.i lvl-name-attr   }
 { utl/00000002.i ext-classif   " where old-ext-classif.classif-subject = {&table_gds-grp} " }
+{ utl/00000002.i ext-classif   " where old-ext-classif.classif-name = {&extclass_goods_esys} " }
 { utl/00000002.i ext-classif-attr   " where old-ext-classif-attr.classif-subject = {&table_gds-grp} " }
+{ utl/00000002.i ext-classif-attr   " where old-ext-classif-attr.classif-name = {&extclass_goods_esys} " }
 if varstay-history then do:
   { utl/00000002.i c-ext-classif   " where old-c-ext-classif.classif-subject = {&table_gds-grp} " }
 end.

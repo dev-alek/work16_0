@@ -14,6 +14,7 @@ Author: Svetlana Chernova
 Creation date: 10/05/2006
 
 */
+using ibs.th.str.*.
 
 define input  parameter parparentproc   as   widget-handle       no-undo.
 define input  parameter parparenthandle as   handle              no-undo.
@@ -88,6 +89,7 @@ define buffer exp-dtl         for ub.gds-dtl.
 define buffer c-in            for ub.trn-doc.
 define buffer bf-cnt_parts    for ub.parts.
 define buffer bf_fin-ob-trn   for ub.fin-ob-trn.
+define buffer bf_doc-line-attr for ub.doc-line-attr.
 
 define variable inv-shipvalue                as   logical                     no-undo.
 define variable par-gen-mrgn-ie              as   character                   no-undo.
@@ -185,6 +187,9 @@ define variable v-is-foreign-producer as logical no-undo.
 define variable p-cons        as integer no-undo .
 define temp-table tt-trn no-undo like ub.trn-doc.
 define variable res        as character no-undo .
+define variable infoSectionsTotal as class InfoSectionsTotal no-undo.
+
+
 define stream str-err.
 
 /*define temp-table tt-doc-pl no-undo like ub.doc-pl .*/
@@ -355,6 +360,112 @@ if varhold-doc = true then do:
     end.
   end. /*for each*/
 end.
+define variable stfactplvalue as character no-undo.
+define variable stfactpltype as character no-undo.
+{ gbl/conf-rd.i
+  "'stfactpl'"
+  "''"
+  "''"
+  0
+  "''"
+  "''"
+  "''"
+  no
+  stfactplvalue
+  stfactpltype
+  no-error
+}
+define variable varupd-fact-qnty       as logical      no-undo initial yes .
+define variable varrevision            as logical      no-undo initial no  .
+define variable varpercrev             as decimal      no-undo initial ?   .
+define variable varauto-tank           as logical      no-undo initial no  .
+define variable varpercauto            as decimal      no-undo initial ?   .
+define variable varinv                 as logical      no-undo initial no  .
+define variable varpercinv             as decimal      no-undo initial ?   .
+define variable varinv-set             as logical      no-undo initial no  .
+
+if stfactplvalue <> ""  then 
+do:
+  { str/chkqtpl.i
+   stfactplvalue
+   varupd-fact-qnty
+   varrevision
+   varpercrev
+   varauto-tank
+   varpercauto
+   varinv
+   varpercinv
+   varinv-set
+   no-error
+ }
+  if error-status :error then 
+  do:
+    message
+      vss-workfile vss-revision vss-description skip
+      "Разборе строки параметра stfactpl" skip
+      error-status :get-message(1) skip
+      return-value skip
+      view-as alert-box error .
+    return error .
+  end.
+end.
+
+if ((varstatus = {&wayb} and varflag) or varstatus = {&fact}) and varauto-tank = true and stfactplvalue <> ""
+then do:
+  
+  for each bf_doc-line-attr where bf_doc-line-attr.doc-code = bf_trn-doc.doc-code and bf_doc-line-attr.attr-code = "n":
+    
+    infoSectionsTotal = new InfoSectionsTotal().
+    infoSectionsTotal:Initialization(bf_trn-doc.doc-code, bf_doc-line-attr.gds-code).
+    infoSectionsTotal:GetDBAllAttr().
+    
+    infoSectionsTotal:CalculateTotal().
+    find first bf_goods no-lock where bf_goods.gds-code = bf_doc-line-attr.gds-code. 
+    find first bf_doc-line no-lock where
+                               bf_doc-line.doc-code = bf_trn-doc.doc-code
+                           and bf_goods.artic= bf_doc-line.artic
+                           and bf_goods.prod-code = bf_doc-line.prod-code
+                           and bf_goods.prod-type = bf_doc-line.prod-type no-error.
+    
+    if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 0.001
+      or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 0.001
+      or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 0.001
+    then do:
+      v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    по ТТН - &3&1    плотность - &4&1    по накл. - &5&1По доп. инфо:&1    по ТТН - &6&1    плотность - &7&1    по накл. - &8&1Произведите исправления." ,
+                                      {&new-line}, 
+                                      bf_doc-line.artic,
+                                      bf_doc-line.doc-qnty,
+                                      bf_doc-line.doc-density,
+                                      bf_doc-line.cli-qnty,
+                                      infoSectionsTotal:DocQntyTotal,
+                                      infoSectionsTotal:DocDensityAvg,
+                                      infoSectionsTotal:CliQntyTotal
+                                      ).
+      delete object infoSectionsTotal.
+      undo, return error v-mess.
+    end.
+    if varstatus = {&fact} then do:
+      if absolute (infoSectionsTotal:FactQntyTotal - bf_doc-line.fact-qnty) > 0.001
+         or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 0.001
+      then do:
+        v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    факт. кол-во - &3&1    Факт. кол-во, вес - &4&1По доп. инфо:&1    факт. кол-во - &5&1    Факт. кол-во, вес - &6&1Произведите исправления." ,
+                                        {&new-line}, 
+                                        bf_doc-line.artic,
+                                        bf_doc-line.fact-qnty,
+                                        bf_doc-line.fact-density * bf_doc-line.fact-qnty,
+                                        infoSectionsTotal:FactQntyTotal,
+                                        infoSectionsTotal:FactKgQntyTotal
+                                        ).
+        delete object infoSectionsTotal.
+        undo, return error v-mess.
+      end.
+    end.
+    
+    
+    delete object infoSectionsTotal.
+  end.
+end.
+
 
 if  varstatus = {&fact}
 and bf_trn-doc.doc-type = {&expense}

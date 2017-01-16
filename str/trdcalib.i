@@ -1220,6 +1220,32 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-seals-condition true
 &glob sort-trdcattr-seals-condition 190
 
+/* Дата налива */
+&glob fillin_width-trdcattr-date-pour 11
+&glob fillin_height-trdcattr-date-pour 1
+&glob type-trdcattr-date-pour {&type-date}
+&glob format-trdcattr-date-pour "99/99/9999"
+&glob label-trdcattr-date-pour "Дата налива"
+&glob tooltip-trdcattr-date-pour "Дата налива"
+&glob user-can-edit-trdcattr-date-pour true
+&glob output-display-trdcattr-date-pour true
+&glob other-trdcattr-date-pour '':u
+&glob news-trdcattr-date-pour true
+&glob sort-trdcattr-date-pour 100
+
+/* Время налива */
+&glob fillin_width-trdcattr-time-pour 20
+&glob fillin_height-trdcattr-time-pour 1
+&glob type-trdcattr-time-pour {&type-char}
+&glob format-trdcattr-time-pour "X(20)"
+&glob label-trdcattr-time-pour "Время налива"
+&glob tooltip-trdcattr-time-pour "Время налива"
+&glob user-can-edit-trdcattr-time-pour true
+&glob output-display-trdcattr-time-pour true
+&glob other-trdcattr-time-pour '':u
+&glob news-trdcattr-time-pour true
+&glob sort-trdcattr-time-pour 190
+
 define new global shared variable g#trdcalib as handle no-undo.
 
   &glob include_trdcalib yes

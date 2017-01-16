@@ -782,7 +782,7 @@ DEFINE FRAME d-gds-form
           size 15 by 3.28
      label-increase-pc NO-LABEL
           at row 11.42 col 89.75
-     goods.increase-pc at row 13.5 col 87.88 COLON-ALIGNED
+     goods.increase-pc format "->>9.99" at row 13.5 col 87.88 COLON-ALIGNED
           NO-LABEL
           VIEW-AS FILL-IN
           size 8.63 by 1

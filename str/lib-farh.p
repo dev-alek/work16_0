@@ -388,8 +388,8 @@ do on error undo, return error return-value :
   v-is-cashless = lookup(bf_fin-doc.fin-ext-doc-type, {&fin-ext-doc-cashless-types}) > 0
   v-is-payoff = lookup(bf_fin-doc.fin-ext-doc-type, {&fin-ext-doc-payoff-types}) > 0
   .
+  define variable v-obj-db-num as integer init ? no-undo .
   if bf_fin-doc.obj-type <> ''  then do:
-    define variable v-obj-db-num as integer no-undo .
     { gbl/objdbnum.i bf_fin-doc.obj-type bf_fin-doc.obj-code v-obj-db-num }
     if bf_fin-doc.shift-flag = integer({&fin-flag-shift})
     and (v-obj-db-num = v-curr-db-num or v-recalc or v-curr-db-num = 0)
@@ -398,9 +398,11 @@ do on error undo, return error return-value :
     end. /*if bf_fin-doc.shift-flag = integer({&fin-flag-shift})*/
   end. /*if p-obj-type <> '' then do:*/
     /*ППП, РПП (безнал)*/
+  if v-obj-db-num = ? then  v-obj-db-num = bf_sysconf.firm-db-num.  /*Фирменные и глобальные архивы считаются только для активных объектов. Иначе пересечение по fact-order. */
+
     if v-is-cashless then do:
     if pararh-name = "all":u                        or
-    lookup ({&table_arh-fin-doc-an}, pararh-name) > 0 then do:
+    lookup ({&table_arh-fin-doc-an}, pararh-name) > 0  and  v-curr-db-num = v-obj-db-num then do:
       if bf_sysconf.firm-db-num = v-curr-db-num then
       run libfarhp_calc-arh-fin-doc-an in g#libfarhp (input parmode,
                                                       input bf_fin-doc.host-code,
@@ -547,7 +549,7 @@ do on error undo, return error return-value :
     else do:
     if pararh-name = "all":u                        or
     lookup ({&table_arh-fin-doc-an-nal}, pararh-name) > 0 then do:
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -581,7 +583,7 @@ do on error undo, return error return-value :
                                                         input varznaksum-slt-base ,
                                                         input varznaksum-slt-contr
                                                         ).
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -617,7 +619,7 @@ do on error undo, return error return-value :
                                                         ).
 
       /*суммарная без учета валюты платежа*/
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -652,7 +654,7 @@ do on error undo, return error return-value :
                                                         input varznaksum-slt-base
                                                         ).
       /*Суммарная без учета кодов и счетов*/
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -687,7 +689,7 @@ do on error undo, return error return-value :
                                                         input varznaksum-slt-contr
                                                         ).
       /*Итоговая по коду аналитического учета*/
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num  and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -721,7 +723,7 @@ do on error undo, return error return-value :
                                                         input varznaksum-slt-base ,
                                                         input varznaksum-slt-contr
                                                        ).
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num  and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -757,7 +759,7 @@ do on error undo, return error return-value :
                                                        ).
 
       /*Итоговая по коду целевого назначения*/
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num  and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -791,7 +793,7 @@ do on error undo, return error return-value :
                                                         input varznaksum-slt-base ,
                                                         input varznaksum-slt-contr
                                                         ).
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -827,7 +829,7 @@ do on error undo, return error return-value :
                                                         ).
 
       /*Итоговая по корреспондирующему счету*/
-     if bf_sysconf.firm-db-num = v-curr-db-num then
+     if bf_sysconf.firm-db-num = v-curr-db-num and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -861,7 +863,7 @@ do on error undo, return error return-value :
                                                         input varznaksum-slt-base ,
                                                         input varznaksum-slt-contr
                                                         ).
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -897,7 +899,7 @@ do on error undo, return error return-value :
                                                         ).
 
       /*Итоговая по коду аналитического учета без учета валюты платежа*/
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -932,7 +934,7 @@ do on error undo, return error return-value :
                                                         input varznaksum-slt-base
                                                         ).
       /*Итоговая по коду целевого назначения без учета валюты платежа*/
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -967,7 +969,7 @@ do on error undo, return error return-value :
                                                         input varznaksum-slt-base
                                                         ).
       /*Итоговая по корреспондирующему счету без учета валюты платежа*/
-      if bf_sysconf.firm-db-num = v-curr-db-num then
+      if bf_sysconf.firm-db-num = v-curr-db-num and  v-curr-db-num = v-obj-db-num then
       run libfarhp_calc-arh-fin-doc-an-n in g#libfarhp (input parmode,
                                                         input bf_fin-doc.host-code,
                                                         input bf_fin-doc.payer-type,
@@ -1005,8 +1007,8 @@ do on error undo, return error return-value :
             lookup ({&table_arh-fin-doc-an-nal}, pararh-name) > 0 then do:*/
   end. /*else if v-is cashless*/
     if v-is-cashless then do:
-    if pararh-name = "all":u                               or
-    lookup ({&table_arh-fin-doc-contr-schet}, pararh-name) > 0  then do:
+    if (pararh-name = "all":u                               or
+    lookup ({&table_arh-fin-doc-contr-schet}, pararh-name) > 0) and  v-curr-db-num = v-obj-db-num then do:
       if bf_sysconf.firm-db-num = v-curr-db-num then
       run libfarhp_calc-arh-fin-doc-contr-schet in g#libfarhp (input parmode,
                                                                input bf_fin-doc.host-code,
@@ -1120,8 +1122,8 @@ do on error undo, return error return-value :
               lookup ({&table_arh-fin-doc-contr-schet-obj}, pararh-name) > 0  then do: */
     end. /*if bf_sysconf.fin-calc = {&fin-calc-obj} then do:*/
       /*итоговая по договору*/
-    if pararh-name = "all":u                               or
-    lookup ({&table_arh-fin-doc-contr-schet}, pararh-name) > 0  then do:
+    if (pararh-name = "all":u                               or
+    lookup ({&table_arh-fin-doc-contr-schet}, pararh-name) > 0)  and  v-curr-db-num = v-obj-db-num then do:
       if bf_sysconf.firm-db-num = v-curr-db-num then
       run libfarhp_calc-arh-fin-doc-contr-schet in g#libfarhp (input parmode,
                                                                input bf_fin-doc.host-code,
@@ -1236,8 +1238,8 @@ do on error undo, return error return-value :
     end. /*if bf_sysconf.fin-calc = {&fin-calc-obj} then do:*/
   end. /*if v-is-cashless then do:*/
     else do:
-    if pararh-name = "all":u                               or
-    lookup ({&table_arh-fin-doc-contr-schet-nal}, pararh-name) > 0  then do:
+    if (pararh-name = "all":u                               or
+    lookup ({&table_arh-fin-doc-contr-schet-nal}, pararh-name) > 0 ) and  v-curr-db-num = v-obj-db-num  then do:
       if bf_sysconf.firm-db-num = v-curr-db-num then
       run libfarhp_calc-arh-fin-doc-contr-schet-n in g#libfarhp (input parmode,
                                                                  input bf_fin-doc.host-code,
@@ -1350,8 +1352,8 @@ do on error undo, return error return-value :
       end. /*  if pararh-name = "all":u                               or
               lookup ({&table_arh-fin-doc-contr-s-nal-obj}, pararh-name) > 0  then do:     */
     end. /*if bf_sysconf.fin-calc = {&fin-calc-obj} then do:*/
-    if pararh-name = "all":u                               or
-    lookup ({&table_arh-fin-doc-contr-schet-nal}, pararh-name) > 0  then do:
+    if (pararh-name = "all":u                       or
+    lookup ({&table_arh-fin-doc-contr-schet-nal}, pararh-name) > 0) and  v-curr-db-num = v-obj-db-num then do:
       if bf_sysconf.firm-db-num = v-curr-db-num then
       run libfarhp_calc-arh-fin-doc-contr-schet-n in g#libfarhp (input parmode,
                                                                  input bf_fin-doc.host-code,
@@ -1639,8 +1641,8 @@ do on error undo, return error return-value :
                    lookup ({&table_arh-fin-doc-contr-s-tax-obj}, pararh-name) > 0 then do:*/
           end.
           /*итоговая по договору*/
-          if pararh-name = "all":u                                     or
-          lookup ({&table_arh-fin-doc-contr-schet-tax}, pararh-name) > 0 then do:
+          if (pararh-name = "all":u                                     or
+          lookup ({&table_arh-fin-doc-contr-schet-tax}, pararh-name) > 0) and  v-curr-db-num = v-obj-db-num then do:
           if bf_sysconf.firm-db-num = v-curr-db-num then
           run libfarhp_calc-arh-fin-doc-contr-schet-tax in g#libfarhp (input parmode,
                                                                        input bf_fin-doc.host-code,
@@ -1770,8 +1772,8 @@ do on error undo, return error return-value :
           end. /*if bf_sysconf.fin-calc = {&fin-calc-obj} then do:*/
         end. /**if v-is-cashless*/
         else do:
-          if pararh-name = "all":u                                     or
-          lookup ({&table_arh-fin-doc-c-schet-tax-nal}, pararh-name) > 0 then do:
+          if (pararh-name = "all":u                                     or
+          lookup ({&table_arh-fin-doc-c-schet-tax-nal}, pararh-name) > 0)  and  v-curr-db-num = v-obj-db-num then do:
           if bf_sysconf.firm-db-num = v-curr-db-num then
           run libfarhp_calc-arh-fin-doc-contr-schet-tax-n in g#libfarhp (input parmode,
                                                                          input bf_fin-doc.host-code,
@@ -1900,8 +1902,8 @@ do on error undo, return error return-value :
                   lookup ({&table_arh-fin-doc-c-s-tax-nal-obj}, pararh-name) > 0 then do:  */
           end. /*if bf_sysconf.fin-calc = {&fin-calc-obj} then do:*/
           /*итоговая по договору*/
-          if pararh-name = "all":u                                     or
-          lookup ({&table_arh-fin-doc-c-schet-tax-nal}, pararh-name) > 0 then do:
+          if (pararh-name = "all":u                                     or
+          lookup ({&table_arh-fin-doc-c-schet-tax-nal}, pararh-name) > 0) and  v-curr-db-num = v-obj-db-num then do:
           if bf_sysconf.firm-db-num = v-curr-db-num then
           run libfarhp_calc-arh-fin-doc-contr-schet-tax-n in g#libfarhp (input parmode,
                                                                          input bf_fin-doc.host-code,
@@ -2038,8 +2040,8 @@ do on error undo, return error return-value :
             lookup ({&table_arh-fin-doc-c-schet-tax-nal}, pararh-name) > 0 or
             lookup ({&table_arh-fin-doc-c-s-tax-nal-obj}, pararh-name) > 0 or  then do:  */
     if v-is-cashless then do:
-    if pararh-name = "all":u                           or
-    lookup ({&table_arh-fin-doc-schet}, pararh-name) > 0 then do:
+    if (pararh-name = "all":u                           or
+    lookup ({&table_arh-fin-doc-schet}, pararh-name) > 0) and  v-curr-db-num = v-obj-db-num then do:
       if bf_sysconf.firm-db-num = v-curr-db-num then
       run libfarhp_calc-arh-fin-doc-schet in g#libfarhp  (input parmode,
                                                           input bf_fin-doc.host-code,
@@ -2224,8 +2226,8 @@ do on error undo, return error return-value :
 
   end. /*if v-is-cashless*/
     else do:
-    if pararh-name = "all":u                           or
-    lookup ({&table_arh-fin-doc-schet-nal}, pararh-name) > 0 then do:
+    if (pararh-name = "all":u                           or
+    lookup ({&table_arh-fin-doc-schet-nal}, pararh-name) > 0 ) and  v-curr-db-num = v-obj-db-num then do:
       if bf_sysconf.firm-db-num = v-curr-db-num then
       run libfarhp_calc-arh-fin-doc-schet-n in g#libfarhp  (input parmode,
                                                             input bf_fin-doc.host-code,
@@ -2460,8 +2462,8 @@ do on error undo, return error return-value :
       .
       if last-of (bf_fin-doc-tax.with-slt) then do:
         if v-is-cashless then do:
-          if pararh-name = "all":u                               or
-          lookup ({&table_arh-fin-doc-schet-tax}, pararh-name) > 0
+          if (pararh-name = "all":u                               or
+          lookup ({&table_arh-fin-doc-schet-tax}, pararh-name) > 0 )   and  v-curr-db-num = v-obj-db-num
           then do:
           if bf_sysconf.firm-db-num = v-curr-db-num then
           run libfarhp_calc-arh-fin-doc-schet-tax in g#libfarhp (input parmode,
@@ -2499,8 +2501,8 @@ do on error undo, return error return-value :
           end. /*if pararh-name = "all":u                               or*/
         end. /*if v-is-cashless*/
         else do:
-          if pararh-name = "all":u                               or
-          lookup ({&table_arh-fin-doc-schet-tax-nal}, pararh-name) > 0
+          if (pararh-name = "all":u                               or
+          lookup ({&table_arh-fin-doc-schet-tax-nal}, pararh-name) > 0 )   and  v-curr-db-num = v-obj-db-num
           then do:
           if bf_sysconf.firm-db-num = v-curr-db-num then
           run libfarhp_calc-arh-fin-doc-schet-tax-n in g#libfarhp (input parmode,

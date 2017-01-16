@@ -2492,13 +2492,13 @@ do on error undo main-block, leave main-block :
       when 3 then return error.
     end.
    end.
-   if is-fuel or can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type  
+   /*if is-fuel or can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type  
                                                 and ub.clients-attr.obj-code = ub.clients.obj-code
                                                 and ub.clients-attr.attr-code = {&attr-supp-np}
                                                 and ub.clients-attr.attr-value = "yes")
-   then do:
-      b-in-attr-fuel:sensitive = true.
-   end.
+   then do:*/
+   b-in-attr-fuel:sensitive = true.
+   /*end.*/
    IF mImagePh THEN
 DO:
     DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
@@ -3659,6 +3659,10 @@ end.
 &scop attr-code trdcattr-condition
 {&create-record-fuel}
 &scop attr-code trdcattr-seals-condition
+{&create-record-fuel}
+&scop attr-code trdcattr-date-pour
+{&create-record-fuel}
+&scop attr-code trdcattr-time-pour
 {&create-record-fuel}
 
 end.
@@ -5891,9 +5895,9 @@ if lookup( fnc, "enable" ) > 0 then do:
          define variable varhold-doc as logical no-undo.
          { gbl/hold-doc.i t-doc.doc-code varhold-doc }
          if varhold-doc then do:
-           enable t-doc.cst-code t-doc.ord-num with frame {&frame-name}.
+           enable t-doc.cst-code with frame {&frame-name}.
          end.
-         enable b-revis with frame {&frame-name}.
+         enable b-revis t-doc.ord-num with frame {&frame-name}.
       end.
     end. /* when {&update} */
   end case.
@@ -6063,14 +6067,14 @@ if pardoc-mode = {&update} then do:
     end.
   end.
 end.
-if is-fuel or can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type  
+/*if is-fuel or can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type  
   and ub.clients-attr.obj-code = ub.clients.obj-code
   and ub.clients-attr.attr-code = {&attr-supp-np}
   and ub.clients-attr.attr-value = "yes")
   then 
-do:
-  b-in-attr-fuel:sensitive = true.
-end.
+do:*/
+b-in-attr-fuel:sensitive = true.
+/*end.*/
 if num-results('{&browse-name}') > 0 then do:
    if {&browse-name}:refresh() then.
 end.

@@ -941,7 +941,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
           end.
 
-          run str/in-ladd.w
+          run str/in-laddout.w
             ( input        parParentProc
              ,input        p-mode
              ,input        p-doc-code

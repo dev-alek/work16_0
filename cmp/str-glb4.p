@@ -1181,6 +1181,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Время прибытия на АЗС */
 { cmp/cr-prep.i 1 trdcattr-time-income "time-income" " " "time-income" }
 
+/* Дата налива */
+{ cmp/cr-prep.i 1 trdcattr-time-pour "time-pour" " " "time-pour" }
+
+/* Время налива */
+{ cmp/cr-prep.i 1 trdcattr-date-pour "date-pour" " " "date-pour" }
+
 /* Свидетельство о проверке */
 { cmp/cr-prep.i 1 trdcattr-inspection-cert "inspection-cert" " " "inspection-cert" }
 

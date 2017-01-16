@@ -153,6 +153,7 @@ FUNCTION gdsreffi_in-doc-cli-name returns character ( buffer buf_goods for ub.go
 define buffer buf_gds-obj for ub.gds-obj.
 define buffer buf_trn-doc for ub.trn-doc.
 define buffer buf_clients for ub.clients.
+define buffer buf_parts for ub.parts.
 define variable v-value as decimal no-undo .
 
 for first buf_gds-obj no-lock where
@@ -163,7 +164,18 @@ for first buf_gds-obj no-lock where
           first buf_clients no-lock where buf_clients.obj-type = buf_trn-doc.cli-type and  buf_clients.obj-code = buf_trn-doc.cli-code:  
         return buf_clients.obj-name .      
 end.
-
+/* ≈сли докуммента не нашли, а это может быть в случае обрезани€, то берем из партии */
+for first buf_parts no-lock where
+           buf_parts.artic = buf_goods.artic
+      and  buf_parts.prod-type = buf_goods.prod-type
+      and  buf_parts.prod-code = buf_goods.prod-code
+      AND  buf_parts.obj-type = p-obj-type
+      AND  buf_parts.obj-code = p-obj-code
+      and  buf_parts.out-code = {&free-code} ,  
+          
+          first buf_clients no-lock where buf_clients.obj-type = buf_parts.supp-type and  buf_clients.obj-code = buf_parts.supp-code:  
+        return buf_clients.obj-name .      
+end.
 end FUNCTION.
 
 

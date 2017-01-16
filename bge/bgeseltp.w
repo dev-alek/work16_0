@@ -414,6 +414,10 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+       
+/*           run gbl/inidebug.p.*/
+       
+       
    run init-fields in this-procedure no-error.
    if error-status :error
    then do:
@@ -478,8 +482,8 @@ PROCEDURE b-mark-press :
   Notes:
 ------------------------------------------------------------------------------*/
 define input parameter p-mode as character  no-undo.
+define buffer buf_temp_doc-type for temp_doc-type.
 
-    define buffer buf_temp_doc-type for temp_doc-type.
 do
 for buf_temp_doc-type
 with frame {&frame-name}
@@ -650,6 +654,8 @@ PROCEDURE init-fields :
     define variable v-what-doc-amount   as integer no-undo .
 
     define buffer buf_temp_doc-type     for temp_doc-type.
+        
+
 do
 for buf_temp_doc-type
 on error undo, return error
@@ -703,7 +709,7 @@ on error undo, return error
                     end.
                     create buf_temp_doc-type.
                     assign
-                        buf_temp_doc-type.dtp-key           = ( v-what-doc-counter - 1) * v-what-doc-amount + v-counter
+                        buf_temp_doc-type.dtp-key           = 100 *  ( v-what-doc-counter - 1) * v-what-doc-amount + v-counter
                         buf_temp_doc-type.doc-type          = entry( v-counter, {&fin-ext-doc-types} )
                         buf_temp_doc-type.doc-type-label    = entry( v-counter, {&fin-ext-doc-types-full} )
                     .
@@ -732,7 +738,7 @@ on error undo, return error
                 :
                     create buf_temp_doc-type.
                     assign
-                        buf_temp_doc-type.dtp-key           = ( v-what-doc-counter - 1) * v-what-doc-amount + v-counter
+                        buf_temp_doc-type.dtp-key           = 200 * ( v-what-doc-counter - 1) * v-what-doc-amount + v-counter
                         buf_temp_doc-type.doc-type-label    = v-fdoctype-bank-type-list[ v-counter * 3 - 2 ]
                         buf_temp_doc-type.doc-type          = v-fdoctype-bank-type-list[ v-counter * 3 - 1 ]
                     .
@@ -761,7 +767,7 @@ on error undo, return error
                 :
                 create buf_temp_doc-type.
                 assign
-                    buf_temp_doc-type.dtp-key           = ( v-what-doc-counter - 1) * v-what-doc-amount + v-counter
+                    buf_temp_doc-type.dtp-key           = 300 * ( v-what-doc-counter - 1) * v-what-doc-amount + v-counter
                     buf_temp_doc-type.doc-type-label    = v-conttype-type-list[ v-counter * 2 - 1 ]
                     buf_temp_doc-type.doc-type          = v-conttype-type-list[ v-counter * 2 ]
                 .

@@ -94,7 +94,7 @@ define variable g#dm-menu-handle               as handle    no-undo .
 define variable v-menu-control-number          as character no-undo.
 define variable parparentproc                  as widget-handle       no-undo.
 DEFINE VARIABLE fi-menu-group-name AS CHARACTER no-undo.
-define variable v-show-display-name as character format "x(46)" label "Μενώ" .
+define variable v-show-display-name as character format "x(60)" label "Μενώ" .
 define variable v-logo-image-visible    as logical      no-undo.
 
 define temp-table temp-menu-item no-undo
