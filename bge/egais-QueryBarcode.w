@@ -347,7 +347,7 @@ DO:
       end.
     end.
     
-    cmd = substitute ('&1 --output="&3egais-marks\mark~~~~~~.png" --batch --border=2 --barcode=55 --input="&2"', search ("exe/Zint/zint.exe"), search ("egais-marks.txt"), session:temp-directory).
+    cmd = substitute ('&1 --output="&3egais-marks\mark~~~~~~.png" --batch --height=0 --scale=0.5 --border=2 --barcode=55 --input="&2"', search ("exe/Zint/zint.exe"), search ("egais-marks.txt"), session:temp-directory).
          
     os-command silent value (cmd).
     
@@ -381,12 +381,10 @@ DO:
                         <td style="width:210px"></td>
                         <td style="width:320px"></td>
                   </tr>
-                  <tr>
-                        <td colspan="3" style="front-weight: bold; text-align: center;">Акцизные марки егаис </td>
-                  </tr>
+
         </thead>
-            <tbody>
-                <tr>
+            <tbody style="page-break-after: always;">
+                <tr style="height: 25px;">
                 <th>№ пп</th>
                 <th>Тип, серия и номер</th>
                 <th>Марка</th>
@@ -396,19 +394,34 @@ DO:
     
     for each tt-gds-act no-lock break by tt-gds-act.position_ :
         src = substitute ('<img src="&1egais-marks/mark', session:temp-directory) + string(tt-gds-act.position_, "999") + substitute ('.png" alt="&1">', tt-gds-act.mark) .
+            
         put stream OutStr-html unformatted
             substitute(
-            '<tr style="height: 90px;">
+            '<tr style="height: 88px;">
              <td text_wrap="true"> &1 </td>
              <td text_wrap="true"> &2 </td>
              <td text_wrap="true"> &3 </td>
-             </tr>
-             </tbody>',
+             </tr>',
             string(tt-gds-act.position_),
             (tt-gds-act.type_ + " " + tt-gds-act.rank + " " + tt-gds-act.number),
             src
             ).
-    end.    
+            
+        if tt-gds-act.position_ modulo 15 = 0
+        then
+            put stream OutStr-html unformatted
+                '<tr style="height: 33px;">
+                <th>№ пп</th>
+                <th>Тип, серия и номер</th>
+                <th>Марка</th>
+                </tr>'
+            .    
+    end.   
+    put stream OutStr-html unformatted
+        '</tbody>
+         </body>
+         </html>'
+    . 
 
     output stream OutStr-html close.
     run prn-lib-reportviewer-report-name in this-procedure (
@@ -563,7 +576,7 @@ DO:
             v-part-num = buf_clob-bind.part-num
         .
         run gbl/file2clb.p ( input {&update}
-                  ,input "add-new,no"
+                  ,input "add-new,yes"
                   ,input ? /*p-bh*/
                   ,input tt-act-header.num /*p-uniq-key-rec*/
                   ,input {&lob-egais-qb} /*p-field-*/
@@ -579,7 +592,7 @@ DO:
     end.
     else do :
         run gbl/file2clb.p ( input {&add-def}
-                  ,input ",no"
+                  ,input ",yes"
                   ,input ? /*p-bh*/
                   ,input tt-act-header.num /*p-uniq-key-rec*/
                   ,input {&lob-egais-qb} /*p-field-*/
