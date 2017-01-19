@@ -389,7 +389,7 @@ on F9 of frame {&frame-name} anywhere do:
   gds-rec = recid(goods) .
   run ref/gds-form.w
     (input  parParentProc
-    ,input  {&lookup}
+    ,input  {&update}
     ,input  v-cntxt-obj-type
     ,input  v-cntxt-obj-code
     ,input ? /*p-call-handle*/
