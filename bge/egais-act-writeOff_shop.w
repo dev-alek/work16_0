@@ -474,7 +474,7 @@ DO:
             v-part-num = buf_clob-bind.part-num
         .
         run gbl/file2clb.p ( input {&update}
-                  ,input "add-new,no"
+                  ,input "add-new,yes"
                   ,input ? /*p-bh*/
                   ,input tt-act-header.num /*p-uniq-key-rec*/
                   ,input {&lob-egais-awo_shop} /*p-field-*/
@@ -490,7 +490,7 @@ DO:
     end.
     else do :
         run gbl/file2clb.p ( input {&add-def}
-                  ,input ",no"
+                  ,input ",yes"
                   ,input ? /*p-bh*/
                   ,input tt-act-header.num /*p-uniq-key-rec*/
                   ,input {&lob-egais-awo_shop} /*p-field-*/
@@ -602,6 +602,7 @@ END.
 on choose of menu-item m-sale in menu m-add
 DO:
     define variable v-ret-code as character no-undo .
+    define variable v-alc-code as character no-undo .
     
     v-rid-list = "" .
     run str/salelist.w
@@ -640,18 +641,9 @@ DO:
                   output par-type
                 ).
                 if logical(par-mark) then next .
-                
-                assign nn = nn + 1 .
-                create tt-gds-act .
-                assign
-                   tt-gds-act.num          = tt-act-header.num
-                   tt-gds-act.gds-code     = buf_goods.gds-code
-                   tt-gds-act.gds-name     = buf_goods.gds-name    
-                   tt-gds-act.position_    = nn
-                   tt-gds-act.qnty         = buf_parts.fact-qnty
-                .    
+                v-alc-code = "" .
                 if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
-                    tt-gds-act.alc-code = entry(3, buf_parts.alc-ref-ab-path) .
+                    v-alc-code = entry(3, buf_parts.alc-ref-ab-path) .
                 end.
                 else do :
                     run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
@@ -668,23 +660,86 @@ DO:
                                                       and X_eXt-classif.charkey_three = ""
                                                       and X_eXt-classif.nonunique = 0
                                                       no-error .
-                    if available X_ext-classif then tt-gds-act.alc-code = X_eXt-classif.charkey_one .
+                    if available X_ext-classif then v-alc-code = X_eXt-classif.charkey_one .
                     else do :
                         message "Товар " string(buf_goods.gds-code) " - " buf_goods.gds-name " не синхронизирован с ЕГАИС" view-as alert-box .
                         delete tt-gds-act.
                         next.
                     end.
-                end. 
-                find first ret_parts no-lock where ret_parts.artic        = buf_parts.artic
-                                               and ret_parts.prod-type    = buf_parts.prod-type 
-                                               and ret_parts.prod-code    = buf_parts.prod-code
-                                               and ret_parts.obj-type     = buf_parts.obj-type 
-                                               and ret_parts.obj-code     = buf_parts.obj-code 
-                                               and ret_parts.out-code     = v-ret-code no-error.
-                if available ret_parts then do :
-                    tt-gds-act.qnty = tt-gds-act.qnty - ret_parts.fact-qnty .
                 end.
-            end. /* for each parts */
+                
+                find first tt-gds-act exclusive-lock where tt-gds-act.alc-code = v-alc-code no-error.
+                if not available tt-gds-act
+                then do :
+                    assign nn = nn + 1 .
+                    create tt-gds-act .
+                    assign
+                       tt-gds-act.num          = tt-act-header.num
+                       tt-gds-act.alc-code     = v-alc-code
+                       tt-gds-act.gds-code     = buf_goods.gds-code
+                       tt-gds-act.gds-name     = buf_goods.gds-name    
+                       tt-gds-act.position_    = nn
+                       tt-gds-act.qnty         = buf_parts.fact-qnty
+                    .
+                end.    
+                else do :
+                    assign tt-gds-act.qnty  = tt-gds-act.qnty + buf_parts.fact-qnty .
+                end.       
+                 
+            end. /* for each buf_parts */
+            for each ret_parts no-lock where   ret_parts.obj-type     = buf_ink-doc.obj-type 
+                                           and ret_parts.obj-code     = buf_ink-doc.obj-code 
+                                           and ret_parts.out-code     = v-ret-code :
+                find first buf_goods no-lock where buf_goods.artic      = buf_parts.artic
+                                               and buf_goods.prod-type  = buf_parts.prod-type 
+                                               and buf_goods.prod-code  = buf_parts.prod-code .
+                run gds-attr-value(
+                  buf_goods.gds-code,
+                  {&attr-alcohol-prod},
+                  output par-alcohol,
+                  output par-type
+                ).
+                if par-alcohol = "" or par-alcohol = "no" then next .
+                run gds-attr-value(
+                  buf_goods.gds-code,
+                  {&attr-mark},
+                  output par-mark,
+                  output par-type
+                ).
+                if logical(par-mark) then next .
+                v-alc-code = "" .
+                if num-entries(ret_parts.alc-ref-ab-path) = 4 and entry(3, ret_parts.alc-ref-ab-path) <> "" then do :
+                    v-alc-code = entry(3, ret_parts.alc-ref-ab-path) .
+                end.
+                else do :
+                    run gen-key-rec IN THIS-PROCEDURE ( input {&table_goods}
+                                                       ,input (buffer buf_goods:handle)
+                                                       ,output v-gds-uniq-key-rec).
+                    find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 
+                                                      and X_ext-classif.classif-name = {&extclass_goods_esys} 
+                                                      AND X_ext-classif.db-num = 0  
+                                                      and X_ext-classif.key#_one = buf_goods.gds-code
+                                                      and X_ext-classif.key#_two = v-ext-sys 
+                                                      and X_ext-classif.key#_three = 0
+                                                      and X_eXt-classif.uniq-key-rec = v-gds-uniq-key-rec
+                                                      and X_eXt-classif.charkey_two = ""
+                                                      and X_eXt-classif.charkey_three = ""
+                                                      and X_eXt-classif.nonunique = 0
+                                                      no-error .
+                    if available X_ext-classif then v-alc-code = X_eXt-classif.charkey_one .
+                    else do :
+                        message "Товар " string(buf_goods.gds-code) " - " buf_goods.gds-name " не синхронизирован с ЕГАИС" view-as alert-box .
+                        delete tt-gds-act.
+                        next.
+                    end.
+                end.      
+                
+                find first tt-gds-act exclusive-lock where tt-gds-act.alc-code = v-alc-code no-error.
+                if available tt-gds-act
+                then do : 
+                    assign tt-gds-act.qnty = tt-gds-act.qnty - ret_parts.fact-qnty .
+                end.                            
+            end. /* for each ret_parts */
         end. /* for first inc-doc */
     end. /* _ii_ */
     

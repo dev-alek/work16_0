@@ -188,6 +188,13 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
         or p-tbl-handle::resource-type = {&lob-egais-wb-act}
         or p-tbl-handle::resource-type = {&lob-egais-ticket}
         or p-tbl-handle::resource-type = {&lob-egais-wb-ticket}
+		or p-tbl-handle::resource-type = {&lob-egais-ab}
+        or p-tbl-handle::resource-type = {&lob-egais-awo}
+        or p-tbl-handle::resource-type = {&lob-egais-ab_shop}
+        or p-tbl-handle::resource-type = {&lob-egais-awo_shop}
+        or p-tbl-handle::resource-type = {&lob-egais-tts}
+        or p-tbl-handle::resource-type = {&lob-egais-tfs}
+        or p-tbl-handle::resource-type = {&lob-egais-qb}
         then do:
           assign
           v-lob-type = p-tbl-handle::resource-type
@@ -259,6 +266,13 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
           or p-tbl-handle::resource-type = {&lob-egais-wb-act}
           or p-tbl-handle::resource-type = {&lob-egais-ticket}
           or p-tbl-handle::resource-type = {&lob-egais-wb-ticket}
+          or p-tbl-handle::resource-type = {&lob-egais-ab}
+          or p-tbl-handle::resource-type = {&lob-egais-awo}
+          or p-tbl-handle::resource-type = {&lob-egais-ab_shop}
+          or p-tbl-handle::resource-type = {&lob-egais-awo_shop}
+          or p-tbl-handle::resource-type = {&lob-egais-tts}
+          or p-tbl-handle::resource-type = {&lob-egais-tfs}
+          or p-tbl-handle::resource-type = {&lob-egais-qb}
           then do:
             assign
             v-lob-send-non-data = yes
@@ -1207,13 +1221,27 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
         or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb-act}
         or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ticket}
         or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb-ticket}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ab}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-awo}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ab_shop}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-awo_shop}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-tts}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-tfs}
+        or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-qb}
         then do:
           if g#db-num = 0 and
           not (v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb}
           or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ref-b}
           or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb-act}
           or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ticket}
-          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb-ticket}) 
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-wb-ticket}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ab}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-awo}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-ab_shop}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-awo_shop}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-tts}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-tfs}
+          or v-tbl-handle:buffer-field("resource-type"):buffer-value = {&lob-egais-qb})
           then do:
             assign
               list-db-for-send = list-remote-db
@@ -1238,13 +1266,27 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
         or v-lob-type = {&lob-egais-wb-act}
         or v-lob-type = {&lob-egais-ticket}
         or v-lob-type = {&lob-egais-wb-ticket}
+        or v-lob-type = {&lob-egais-ab}
+        or v-lob-type = {&lob-egais-awo}
+        or v-lob-type = {&lob-egais-ab_shop}
+        or v-lob-type = {&lob-egais-awo_shop}
+        or v-lob-type = {&lob-egais-tts}
+        or v-lob-type = {&lob-egais-tfs}
+        or v-lob-type = {&lob-egais-qb}
         then do:
           if g#db-num = 0 and 
             not (v-lob-type = {&lob-egais-wb}
             or v-lob-type = {&lob-egais-ref-b}
             or v-lob-type = {&lob-egais-wb-act}
             or v-lob-type = {&lob-egais-ticket}
-            or v-lob-type = {&lob-egais-wb-ticket})
+            or v-lob-type = {&lob-egais-wb-ticket}
+            or v-lob-type = {&lob-egais-ab}
+            or v-lob-type = {&lob-egais-awo}
+            or v-lob-type = {&lob-egais-ab_shop}
+            or v-lob-type = {&lob-egais-awo_shop}
+            or v-lob-type = {&lob-egais-tts}
+            or v-lob-type = {&lob-egais-tfs}
+            or v-lob-type = {&lob-egais-qb})
           then do:
             assign
               list-db-for-send = list-remote-db

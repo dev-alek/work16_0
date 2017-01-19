@@ -69,7 +69,14 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         or ub.clob-bind.resource-type = {&lob-egais-ref-b}
         or ub.clob-bind.resource-type = {&lob-egais-wb-act}
         or ub.clob-bind.resource-type = {&lob-egais-ticket}
-        or ub.clob-bind.resource-type = {&lob-egais-wb-ticket})
+        or ub.clob-bind.resource-type = {&lob-egais-wb-ticket}
+        or ub.clob-bind.resource-type = {&lob-egais-ab}
+        or ub.clob-bind.resource-type = {&lob-egais-awo}
+        or ub.clob-bind.resource-type = {&lob-egais-ab_shop}
+        or ub.clob-bind.resource-type = {&lob-egais-awo_shop}
+        or ub.clob-bind.resource-type = {&lob-egais-tts}
+        or ub.clob-bind.resource-type = {&lob-egais-tfs}
+        or ub.clob-bind.resource-type = {&lob-egais-qb})
    and not g#news
    then do:     
      if ub.clob-bind.db-num = 0 
@@ -99,20 +106,20 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       else do:
         v-send = yes.
       end.
-      if  ub.clob-bind.resource-type = {&lob-egais-ab}
-         or ub.clob-bind.resource-type = {&lob-egais-awo}
-         or ub.clob-bind.resource-type = {&lob-egais-ab_shop}
-         or ub.clob-bind.resource-type = {&lob-egais-awo_shop}
-         or ub.clob-bind.resource-type = {&lob-egais-tts}
-         or ub.clob-bind.resource-type = {&lob-egais-tfs}
-         or ub.clob-bind.resource-type = {&lob-egais-qb}
-         or (g#db-num = 0 
+      if (g#db-num = 0 
          and
           (ub.clob-bind.resource-type = {&lob-egais-wb}
               or ub.clob-bind.resource-type = {&lob-egais-ref-b}
               or ub.clob-bind.resource-type = {&lob-egais-wb-act}
               or ub.clob-bind.resource-type = {&lob-egais-ticket}
-              or ub.clob-bind.resource-type = {&lob-egais-wb-ticket}))
+              or ub.clob-bind.resource-type = {&lob-egais-wb-ticket}
+              or ub.clob-bind.resource-type = {&lob-egais-ab}
+              or ub.clob-bind.resource-type = {&lob-egais-awo}
+              or ub.clob-bind.resource-type = {&lob-egais-ab_shop}
+              or ub.clob-bind.resource-type = {&lob-egais-awo_shop}
+              or ub.clob-bind.resource-type = {&lob-egais-tts}
+              or ub.clob-bind.resource-type = {&lob-egais-tfs}
+              or ub.clob-bind.resource-type = {&lob-egais-qb}))
         then v-send = false.                      
       if v-send then do:
         run str/callnews.p
@@ -140,7 +147,14 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
           or ub.clob-bind.resource-type = {&lob-egais-ref-b}
           or ub.clob-bind.resource-type = {&lob-egais-wb-act}
           or ub.clob-bind.resource-type = {&lob-egais-ticket}
-          or ub.clob-bind.resource-type = {&lob-egais-wb-ticket})
+          or ub.clob-bind.resource-type = {&lob-egais-wb-ticket}
+          or ub.clob-bind.resource-type = {&lob-egais-ab}
+          or ub.clob-bind.resource-type = {&lob-egais-awo}
+          or ub.clob-bind.resource-type = {&lob-egais-ab_shop}
+          or ub.clob-bind.resource-type = {&lob-egais-awo_shop}
+          or ub.clob-bind.resource-type = {&lob-egais-tts}
+          or ub.clob-bind.resource-type = {&lob-egais-tfs}
+          or ub.clob-bind.resource-type = {&lob-egais-qb})
      then do:
       define buffer buf_clob-data for ub.clob-data.
       find first buf_clob-data no-lock where
