@@ -328,7 +328,7 @@ DO:
     os-delete value("egais-marks.txt") no-error.
       
     output to value("egais-marks.txt").
-    for each tt-gds-act no-lock :
+    for each tt-gds-act no-lock break by tt-gds-act.position_ :
         put unformatted tt-gds-act.mark skip .
     end.
     output close .
@@ -394,9 +394,7 @@ DO:
 
     
     
-    get first br-gds-act.
-    
-    do while available  tt-gds-act:
+    for each tt-gds-act no-lock break by tt-gds-act.position_ :
         src = substitute ('<img src="&1egais-marks/mark', session:temp-directory) + string(tt-gds-act.position_, "999") + substitute ('.png" alt="&1">', tt-gds-act.mark) .
         put stream OutStr-html unformatted
             substitute(
@@ -410,7 +408,6 @@ DO:
             (tt-gds-act.type_ + " " + tt-gds-act.rank + " " + tt-gds-act.number),
             src
             ).
-        get next br-gds-act.
     end.    
 
     output stream OutStr-html close.
