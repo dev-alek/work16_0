@@ -834,25 +834,25 @@ DEFINE INPUT PARAMETER p-param-list AS CHARACTER NO-UNDO.
     ,buffer lock-batchprocess
     ) no-error .
 
-  FIND FIRST buf_schedule-attr NO-LOCK WHERE
-    buf_schedule-attr.task-type   = p-task-type
-    and buf_schedule-attr.cre-db-num = INTEGER(p-db-num-char)
-    and buf_schedule-attr.attr-code = ({&attr-schd-free-id} + {&delim-par} + 'exp-loyal') NO-ERROR.
-  IF AVAILABLE  buf_schedule-attr
-    AND buf_schedule-attr.task-num <> p-task-num
-    AND buf_schedule-attr.task-num <> - 1
-    and p-task-num <> - 1
-    THEN 
-  DO:
-    MESSAGE
-      substitute("Уже есть расписание сохранения параметров выгрузки товарного классификатора в L7  для БД &1&2" +
-      "номер расписания &3"
-      ,buf_schedule-attr.cre-db-num
-      ,{&NEW-LINE}
-      ,buf_schedule-attr.task-num)
-      VIEW-AS ALERT-BOX ERROR.
-    UNDO, RETURN ERROR.
-  END.
+/*  FIND FIRST buf_schedule-attr NO-LOCK WHERE                                                                      */
+/*    buf_schedule-attr.task-type   = p-task-type                                                                   */
+/*    and buf_schedule-attr.cre-db-num = INTEGER(p-db-num-char)                                                     */
+/*    and buf_schedule-attr.attr-code = ({&attr-schd-free-id} + {&delim-par} + 'exp-loyal') NO-ERROR.               */
+/*  IF AVAILABLE  buf_schedule-attr                                                                                 */
+/*    AND buf_schedule-attr.task-num <> p-task-num                                                                  */
+/*    AND buf_schedule-attr.task-num <> - 1                                                                         */
+/*    and p-task-num <> - 1                                                                                         */
+/*    THEN                                                                                                          */
+/*  DO:                                                                                                             */
+/*    MESSAGE                                                                                                       */
+/*      substitute("Уже есть расписание сохранения параметров выгрузки товарного классификатора в L7  для БД &1&2" +*/
+/*      "номер расписания &3"                                                                                       */
+/*      ,buf_schedule-attr.cre-db-num                                                                               */
+/*      ,{&NEW-LINE}                                                                                                */
+/*      ,buf_schedule-attr.task-num)                                                                                */
+/*      VIEW-AS ALERT-BOX ERROR.                                                                                    */
+/*    UNDO, RETURN ERROR.                                                                                           */
+/*  END.                                                                                                            */
   find first buf_schedule no-lock
     where buf_schedule.task-type   = p-task-type
     and buf_schedule.cre-db-num  = INTEGER(p-db-num-char)
