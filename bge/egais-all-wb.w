@@ -543,7 +543,7 @@ do:
         return no-apply .
     end.
     run gbl/file2clb.p ( input {&add-def}
-              ,input ",no"
+              ,input ",yes"
               ,input ? /*p-bh*/
               ,input tt-act-header.num /*p-uniq-key-rec*/
               ,input {&lob-egais-tts} /*p-field-*/

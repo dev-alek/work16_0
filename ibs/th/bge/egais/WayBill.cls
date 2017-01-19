@@ -1984,7 +1984,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                       .
                     end.
                     assign
-                      buf_doc-attr.attr-value = tt-ticket.status_.
+                      buf_doc-attr.attr-value = tt-wb-act-header.status_.
                     release buf_doc-attr.
                   end.
                 end.
@@ -2919,6 +2919,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
     def var sw               as handle    no-undo.
     def var VerXSDShip       as character no-undo.
+    def var VerXSDCons       as character no-undo.
     def var CliEgaisTypeShip as character no-undo.
     def var CliEgaisTypeCons as character no-undo. 
     def var ii               as integer   no-undo.
@@ -2959,9 +2960,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       if available (buf_ext-classif-attr)
       then do:
         assign 
+          VerXSDCons = entry (1, buf_ext-classif-attr.attr-value, chr(4))
           CliEgaisTypeCons = entry (2, buf_ext-classif-attr.attr-value, chr(4))
         no-error.
-        if CliEgaisTypeCons = ? or CliEgaisTypeCons = ""
+        if VerXSDCons = ? or VerXSDCons = ""
         then do:
           VerWBXsd = "WayBill".
           verPrefXMLNS = "".
