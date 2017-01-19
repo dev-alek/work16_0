@@ -18,7 +18,7 @@ class ibs.th.bge.egais.ParserXMLDictGds inherits EGAISUTM:
     
     define temp-table tt-gds-EG no-undo
         field gds-code          like ub.goods.gds-code          label "Код товара в TH"
-        field gds-name          like ub.goods.gds-name          label "Полное наименование"
+        field gds-name          like ub.goods.gds-name          label "Полное наименование" format "X(120)"
         field alc-code          as character                    label "Алкогольный код"     format "X(30)"
         field ms-base           like ub.goods.ms-base           label "Объем"               format ">>9.9<<"
         field alc-type-code     like ub.alc-type.alc-type-code  label "Код АП"

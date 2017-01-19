@@ -1386,7 +1386,7 @@ DO:
         v-info = tt-act-header.num + {&delim-par} + string(tt-act-header.date_) + {&delim-par} + tt-act-header.type_ + {&delim-par} + string(tt-act-header.is-sent) + {&delim-par} + tt-act-header.answer_
     .
     run gbl/file2clb.p ( input {&add-def}
-                          ,input ",no"
+                          ,input ",yes"
                           ,input ? /*p-bh*/
                           ,input tt-act-header.num /*p-uniq-key-rec*/
                           ,input {&lob-egais-awo} /*p-field-*/
@@ -1467,7 +1467,7 @@ DO:
         v-info = tt-act-header-awos.num + {&delim-par} + string(tt-act-header-awos.date_) + {&delim-par} + tt-act-header-awos.type_ + {&delim-par} + string(tt-act-header-awos.is-sent) + {&delim-par} + tt-act-header-awos.answer_
     .
     run gbl/file2clb.p ( input {&add-def}
-                          ,input ",no"
+                          ,input ",yes"
                           ,input ? /*p-bh*/
                           ,input tt-act-header-awos.num /*p-uniq-key-rec*/
                           ,input {&lob-egais-awo_shop} /*p-field-*/
@@ -1547,7 +1547,7 @@ DO:
         v-info = tt-act-header-tts.num + {&delim-par} + string(tt-act-header-tts.date_) + {&delim-par} + string(tt-act-header-tts.is-sent) + {&delim-par} + tt-act-header-tts.answer_
     .
     run gbl/file2clb.p ( input {&add-def}
-                          ,input ",no"
+                          ,input ",yes"
                           ,input ? /*p-bh*/
                           ,input tt-act-header-tts.num /*p-uniq-key-rec*/
                           ,input {&lob-egais-tts} /*p-field-*/
@@ -2362,7 +2362,7 @@ procedure make-tts.
             v-info = tt-act-header-tts.num + {&delim-par} + string(tt-act-header-tts.date_) + {&delim-par} + string(tt-act-header-tts.is-sent) + {&delim-par} + tt-act-header-tts.answer_
         .
         run gbl/file2clb.p ( input {&add-def}
-                              ,input ",no"
+                              ,input ",yes"
                               ,input ? /*p-bh*/
                               ,input tt-act-header-tts.num /*p-uniq-key-rec*/
                               ,input {&lob-egais-tts} /*p-field-*/
@@ -2406,7 +2406,7 @@ procedure make-tts.
             v-info = tt-act-header-tts.num + {&delim-par} + string(tt-act-header-tts.date_) + {&delim-par} + string(tt-act-header-tts.is-sent) + {&delim-par} + tt-act-header-tts.answer_
         .
         run gbl/file2clb.p ( input {&update}
-                  ,input "add-new,no"
+                  ,input "add-new,yes"
                   ,input ? /*p-bh*/
                   ,input tt-act-header-tts.num /*p-uniq-key-rec*/
                   ,input {&lob-egais-tts} /*p-field-*/

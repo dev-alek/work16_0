@@ -94,7 +94,14 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
           or buf_clob-bind.resource-type = {&lob-egais-ref-b}
           or buf_clob-bind.resource-type = {&lob-egais-wb-act}
           or buf_clob-bind.resource-type = {&lob-egais-ticket}
-          or buf_clob-bind.resource-type = {&lob-egais-wb-ticket}))
+          or buf_clob-bind.resource-type = {&lob-egais-wb-ticket}
+          or buf_clob-bind.resource-type = {&lob-egais-ab}
+          or buf_clob-bind.resource-type = {&lob-egais-awo}
+          or buf_clob-bind.resource-type = {&lob-egais-ab_shop}
+          or buf_clob-bind.resource-type = {&lob-egais-awo_shop}
+          or buf_clob-bind.resource-type = {&lob-egais-tts}
+          or buf_clob-bind.resource-type = {&lob-egais-tfs}
+          or buf_clob-bind.resource-type = {&lob-egais-qb}))
      then do:
       run str/callnews.p ( input {&table_clob-data}
                         ,input (buffer ub.clob-data:handle)

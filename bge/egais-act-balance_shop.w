@@ -446,7 +446,7 @@ DO:
             v-part-num = buf_clob-bind.part-num
         .
         run gbl/file2clb.p ( input {&update}
-                  ,input "add-new,no"
+                  ,input "add-new,yes"
                   ,input ? /*p-bh*/
                   ,input tt-act-header.num /*p-uniq-key-rec*/
                   ,input {&lob-egais-ab_shop} /*p-field-*/
@@ -462,7 +462,7 @@ DO:
     end.
     else do :
         run gbl/file2clb.p ( input {&add-def}
-                  ,input ",no"
+                  ,input ",yes"
                   ,input ? /*p-bh*/
                   ,input tt-act-header.num /*p-uniq-key-rec*/
                   ,input {&lob-egais-ab_shop} /*p-field-*/
