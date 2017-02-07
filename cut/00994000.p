@@ -150,7 +150,7 @@ end. /*do v-ii to */
 
 
 do v-ii = 1 to num-entries(lob-reslist-date-egais):
-  v-entry = entry(v-ii, lob-res-list).
+  v-entry = entry(v-ii, lob-reslist-date-egais).
   for each old-clob-bind no-lock where
       lookup (old-clob-bind.resource-type, lob-reslist-date-egais) > 0 and old-clob-bind.sys-date >= vardate-actual-docs
   and old-clob-bind.db-num = 0
