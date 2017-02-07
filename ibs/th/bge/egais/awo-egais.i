@@ -157,7 +157,7 @@ procedure makeXMLegais :
                 sw:end-element ("awr:Header") .
                 sw:start-element ("awr:Content") .
     for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num :
-        if tt-gds-act.qnty < 1 or trim(tt-gds-act.inform-B) = "" or tt-gds-act.inform-B = ? then next. 
+        if tt-gds-act.qnty <= 0 or trim(tt-gds-act.inform-B) = "" or tt-gds-act.inform-B = ? then next. 
                     sw:start-element ("awr:Position") .
                         sw:write-data-element ("awr:Identity", string(tt-gds-act.position_)) .
                         sw:write-data-element ("awr:Quantity", string(tt-gds-act.qnty)) .
@@ -203,7 +203,7 @@ procedure makeXMLegais_v2 :
                 sw:end-element ("awr:Header") .
                 sw:start-element ("awr:Content") .
     for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num :
-        if tt-gds-act.qnty < 1 or trim(tt-gds-act.inform-B) = "" or tt-gds-act.inform-B = ? then next. 
+        if tt-gds-act.qnty <= 0 or trim(tt-gds-act.inform-B) = "" or tt-gds-act.inform-B = ? then next. 
                     sw:start-element ("awr:Position") .
                         sw:write-data-element ("awr:Identity", string(tt-gds-act.position_)) .
                         sw:write-data-element ("awr:Quantity", string(tt-gds-act.qnty)) .

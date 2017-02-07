@@ -663,7 +663,6 @@ DO:
                     if available X_ext-classif then v-alc-code = X_eXt-classif.charkey_one .
                     else do :
                         message "Товар " string(buf_goods.gds-code) " - " buf_goods.gds-name " не синхронизирован с ЕГАИС" view-as alert-box .
-                        delete tt-gds-act.
                         next.
                     end.
                 end.
@@ -690,9 +689,9 @@ DO:
             for each ret_parts no-lock where   ret_parts.obj-type     = buf_ink-doc.obj-type 
                                            and ret_parts.obj-code     = buf_ink-doc.obj-code 
                                            and ret_parts.out-code     = v-ret-code :
-                find first buf_goods no-lock where buf_goods.artic      = buf_parts.artic
-                                               and buf_goods.prod-type  = buf_parts.prod-type 
-                                               and buf_goods.prod-code  = buf_parts.prod-code .
+                find first buf_goods no-lock where buf_goods.artic      = ret_parts.artic
+                                               and buf_goods.prod-type  = ret_parts.prod-type 
+                                               and buf_goods.prod-code  = ret_parts.prod-code .
                 run gds-attr-value(
                   buf_goods.gds-code,
                   {&attr-alcohol-prod},
@@ -729,7 +728,6 @@ DO:
                     if available X_ext-classif then v-alc-code = X_eXt-classif.charkey_one .
                     else do :
                         message "Товар " string(buf_goods.gds-code) " - " buf_goods.gds-name " не синхронизирован с ЕГАИС" view-as alert-box .
-                        delete tt-gds-act.
                         next.
                     end.
                 end.      
@@ -853,7 +851,7 @@ DO:
                 tt-gds-act.alc-code         = entry(1, v-line, ";")
 /*                tt-gds-act.gds-name         = buf_goods.gds-name*/
                 tt-gds-act.num              = tt-act-header.num
-                tt-gds-act.qnty             = integer(entry(2, v-line, ";"))
+                tt-gds-act.qnty             = decimal(entry(2, v-line, ";"))
                 tt-gds-act.position_        = nn
             .
             find first X_ext-classif no-lock where X_ext-classif.classif-subject = {&table_goods} 

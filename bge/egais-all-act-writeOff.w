@@ -45,6 +45,7 @@ define variable qh-act-header         as handle    no-undo.
 define variable browse-hdl-act-header as handle    no-undo.
 define variable bcol                as handle    extent 11 no-undo.
 define variable calc-col-hndl       as handle    no-undo .
+define variable calc-col-hndl2      as handle    no-undo .
 define variable egais               as class     ActWriteOff no-undo.
 define variable v-db-num            as integer   no-undo .
 define variable v-user-id           as character no-undo .
@@ -591,6 +592,13 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
             end.    
           end.
       end.
+      if valid-handle (calc-col-hndl2) then do :
+          if RADIO-SET-1 = 1 then calc-col-hndl2:SCREEN-VALUE = " - " .
+          else do : 
+            assign v-RegID = bh-act-header:buffer-field ("RegID"):buffer-value .
+            calc-col-hndl2:SCREEN-VALUE = entry(1, v-RegID, CHR(5)) .
+          end.
+      end.
   end.
   
   ON value-changed OF browse-hdl-act-header
@@ -605,10 +613,12 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       bcol[ii] = browse-hdl-act-header:add-like-column('tt-act-header' + '.' + bh-act-header:buffer-field (ii):name, 0, 'FILL-IN').
     end.
     calc-col-hndl = browse-hdl-act-header:add-calc-column("char", "X(10)", "", "Статус") .
+    calc-col-hndl2 = browse-hdl-act-header:add-calc-column("char", "X(20)", "", "RegID") .
     browse-hdl-act-header:get-browse-column (1):width-chars = 30.
-    browse-hdl-act-header:get-browse-column (2):width-chars = 39.
+    browse-hdl-act-header:get-browse-column (2):width-chars = 17.
     browse-hdl-act-header:get-browse-column (3):width-chars = 20.
     browse-hdl-act-header:get-browse-column (4):width-chars = 10.
+    browse-hdl-act-header:get-browse-column (5):width-chars = 20.
   end.
 
   run enable_UI. 

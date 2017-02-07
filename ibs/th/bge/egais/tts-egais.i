@@ -133,7 +133,7 @@ procedure makeXMLegais_v2{2} :
                 sw{2}:end-element ("tts:Header") .
                 sw{2}:start-element ("tts:Content") .
     for each tt-gds-act{2} no-lock where tt-gds-act{2}.num = tt-act-header{2}.num :
-        if tt-gds-act.qnty < 1 or trim(tt-gds-act.inform-B) = "" or tt-gds-act{2}.inform-B = ? then next. 
+        if tt-gds-act.qnty <= 0 or trim(tt-gds-act.inform-B) = "" or tt-gds-act{2}.inform-B = ? then next. 
                     sw{2}:start-element ("tts:Position") .
                         sw{2}:write-data-element ("tts:Identity", string(tt-gds-act{2}.position_)) .
                         sw{2}:write-data-element ("tts:ProductCode", tt-gds-act{2}.alc-code) no-error .

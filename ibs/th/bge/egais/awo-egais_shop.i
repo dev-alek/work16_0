@@ -156,7 +156,7 @@ procedure makeXMLegais_v2{4} :
                 sw{4}:end-element ("awr:Header") .
                 sw{4}:start-element ("awr:Content") .
     for each tt-gds-act{4} no-lock where tt-gds-act{4}.num = tt-act-header{4}.num :
-        if tt-gds-act{4}.qnty < 1 then next. 
+        if tt-gds-act{4}.qnty <= 0 then next. 
                     find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code no-error .
                     if not available buf_goods and (tt-gds-act.gds-code = 0 or tt-gds-act.gds-code =?)
                     then do :
