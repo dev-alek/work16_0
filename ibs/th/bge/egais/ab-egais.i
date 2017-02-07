@@ -124,7 +124,7 @@ procedure makeXML_TH :
                 sw:end-element ("ain:Header") .
                 sw:start-element ("ain:Content") .
     for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num :
-        if tt-gds-act.qnty < 1 then next. 
+        if tt-gds-act.qnty <= 0 then next. 
                     find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code .
                     sw:start-element ("ain:Position") .
                         sw:write-data-element ("ain:Identity", string(tt-gds-act.position_)) .
@@ -295,7 +295,7 @@ procedure makeXML :
                 sw:end-element ("ain:Header") .
                 sw:start-element ("ain:Content") .
     for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num :
-        if tt-gds-act.qnty < 1 then next. 
+        if tt-gds-act.qnty <= 0 then next. 
                     find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code .
                     sw:start-element ("ain:Position") .
                         sw:write-data-element ("ain:Identity", string(tt-gds-act.position_)) .
@@ -458,7 +458,7 @@ procedure makeXML_v2 :
                 sw:end-element ("ainp:Header") .
                 sw:start-element ("ainp:Content") .
     for each tt-gds-act no-lock where tt-gds-act.num = tt-act-header.num :
-        if tt-gds-act.qnty < 1 then next. 
+        if tt-gds-act.qnty <= 0 then next. 
                     find first buf_goods no-lock where buf_goods.gds-code = tt-gds-act.gds-code .
                     sw:start-element ("ainp:Position") .
                         sw:write-data-element ("ainp:Identity", string(tt-gds-act.position_)) .

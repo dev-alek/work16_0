@@ -1350,6 +1350,27 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         buffer-copy src.clob-bind to dst.clob-bind .
       end.
     end.
+    lob-res-list = {&lob-egais-ab} + {&comma-char} + {&lob-egais-awo}
+      + {&comma-char} + {&lob-egais-ab_shop} + {&comma-char} + {&lob-egais-awo_shop}
+      + {&comma-char} + {&lob-egais-wb} + {&comma-char} + {&lob-egais-ref-b} + {&comma-char} + {&lob-egais-wb-act} + {&comma-char} + {&lob-egais-ticket} + {&comma-char} + {&lob-egais-wb-ticket}.
+    do v-jj = 1 to num-entries(lob-res-list):
+      v-entry = entry(v-jj, lob-res-list).
+      for each src.clob-bind no-lock
+        where src.clob-bind.resource-type = v-entry
+        ,each src.clob-data no-lock
+        where src.clob-data.db-num = dst.clob-bind.db-num
+          and src.clob-data.int64-id = dst.clob-bind.int64-id
+      on error  undo, return error substitute( "&1 (clob-data). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (clob-data). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (clob-data). endkey", vss-workfile )
+      :
+        if src.clob-data.is-cs = no then next.
+        create dst.clob-data .
+        buffer-copy src.clob-data to dst.clob-data .
+        create dst.clob-bind .
+        buffer-copy src.clob-bind to dst.clob-bind .
+      end.
+    end.
 
 
     output stream slog to rest-rdb.txt append .
