@@ -605,6 +605,7 @@ do:
       if error-status :error then do:
         return no-apply.
       end.
+      run calc-vat-pc in this-procedure.
 
       if varrvs-place = true
         and not ( last-event :event-type = "progress":u
@@ -1134,7 +1135,7 @@ end.
 on leave of sum-vat in frame {&frame-name} do:
 if keyfunction(lastkey) <> "end-error" and
    not (last-event:event-type   = "progress":u and last-event:widget-enter = b-quit:handle) then do:
-   if /*input frame {&frame-name} sum-vat <> sum-vat and*/ sum-vat <> ? then do:      /*проверка на вопрос, чтобы пока экран не прорисован не было проверок*/
+   if input frame {&frame-name} sum-vat <> sum-vat and sum-vat <> ? then do:      /*проверка на вопрос, чтобы пока экран не прорисован не было проверок*/
      if tt-fr-doc-line.price-cli <> 0 and
         input frame {&frame-name} sum-vat >=
         (tt-fr-doc-line.cli-qnty * tt-fr-doc-line.price-cli -
@@ -3613,13 +3614,19 @@ procedure calc-vat-pc:
     assign tt-fr-doc-line.vat-pc = (sum-vat / (tt-fr-doc-line.tot-cli
              * ( 1 - (if t-doc.slt-type = {&inc-slt} then (tt-fr-doc-line.slt-pc / (100 + tt-fr-doc-line.slt-pc)) else 0))
             - (if t-doc.vat-type =  {&inc-vat} then sum-vat else 0))) * 100.
+    if tt-fr-doc-line.vat-pc = ? then
+    assign 
+      tt-fr-doc-line.vat-pc = v-clcdoc-vat-pc
+      sum-vat = 0
+    .
   end.
   else do:
     assign tt-fr-doc-line.vat-pc = (sum-vat / (tt-fr-doc-line.cli-qnty * tt-fr-doc-line.price-cli
              * ( 1 - (if t-doc.slt-type = {&inc-slt} then (tt-fr-doc-line.slt-pc / (100 + tt-fr-doc-line.slt-pc)) else 0))
             - (if t-doc.vat-type =  {&inc-vat} then sum-vat else 0))) * 100.
+    if tt-fr-doc-line.vat-pc = ? then tt-fr-doc-line.vat-pc = v-clcdoc-vat-pc.
   end.
-  display tt-fr-doc-line.vat-pc with frame {&frame-name}.
+  display tt-fr-doc-line.vat-pc sum-vat with frame {&frame-name}.
 end procedure.
 
 procedure cr-tt-fr-doc-line:
