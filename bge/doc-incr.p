@@ -68,6 +68,8 @@ define variable vss-description as character no-undo init "Экспорт документов по
 { str/trdcalib.i        }
 { str/in-vatp.i def     }
 { str/out-vatp.i def    }
+{ gbl/thbjattr.i }
+{ ref/extclass.i }
 
 define variable v-parts-cst-code  like ub.parts.cst-code     no-undo.
 define variable v-exists-sale_ot-supp-tot   as logical      no-undo.
@@ -2187,9 +2189,24 @@ on endkey undo, return error return-value
               
                         end.
                     end.
+                                    
+                for each buf_doc-pl where buf_doc-pl.obj-type = buf_doc-line.obj-type
+                                      and buf_doc-pl.obj-code = buf_doc-line.obj-code
+                                      and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                      and buf_doc-pl.gds-code = buf_goods.gds-code  :
+                
+                run wp-xmltagopen in this-procedure ( input 4, input "PLDoc", input "" ).
+                run wp-xmltagput( 5, "PLCode",   string(buf_doc-pl.pl-code) , 0 ).
+                run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).
+                run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).
+                run wp-xmltagput( 5, "PLDensity",  string(buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty) , 0 ).
+                run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).                                          
+                                          
+                end.             
+                    end.
                 end.
                 /*---END----------- Для топлива дополнительно экспортировать вес ---------------------*/
-            end.      /* available buf_doc-line  */
+                  /* available buf_doc-line  */
             else do:
                 run wp-XMLWriteLog(  sLogFile, 1, "*** ERR: *** Не найдено строк документа " + string( p-doc-code ) ).
             end.      /* NOT ( available buf_doc-line  ) */
@@ -3275,6 +3292,9 @@ on error undo, return error
             run wp-xmltagput( input 5, input "priceDiscnt"  , input string( buf_chk-gds.discnt )        , input 2 ).
             run wp-xmltagput( input 5, input "lineNum"      , input string( buf_chk-gds.line-num )      , input 2 ).
             run wp-xmltagput( input 5, input "pump"         , input string( buf_chk-gds.pump )          , input 2 ).
+            run wp-xmltagput( input 5, input "pl"           , input string( buf_chk-gds.loc1)           , input 2 ).
+            run wp-xmltagput( input 5, input "nozzle"       , input string( buf_chk-gds.nozzle-code)    , input 2 ).            
+            run wp-xmltagput( input 5, input "density"      , input string( buf_chk-gds.density)        , input 2 ).
             run wp-xmltagput( input 5, input "roadTax"      , input string( buf_chk-gds.road-tax )      , input 2 ).
             run wp-xmltagput( input 5, input "crcCode"      , input string( entry(1, buf_chk-gds.src-code, {&delim-par}) )      , input 2 ).
             run wp-xmltagput( input 5, input "srcQnty"      , input string( buf_chk-gds.src-qnty )      , input 2 ).
@@ -3319,6 +3339,7 @@ on error undo, return error
                                                                                                  and buf_chk-discnt.kateg = ?
                                                                                                  then buf_dis-card.category
                                                                                                  else buf_chk-discnt.kateg )        , input 2 ).
+          run wp-xmltagput in this-procedure ( input 5, input "discntType"        , input string(buf_chk-discnt.discnt-type)  , input 1 ).
           run wp-xmltagclose in this-procedure ( input 4, input "checkDiscount" ).
         end. /* for each buf_chk-dicsnt no-lock  */
         /*Добавляем в выгрузку скидок еще и скидки, которыми выравниваются погрешности*/
@@ -3341,7 +3362,8 @@ on error undo, return error
                                                                                                  and buf_dis-card.d-card = buf_chk-discnt.src-d-card
                                                                                                  and buf_chk-discnt.kateg = ?
                                                                                                  then buf_dis-card.category
-                                                                                                 else buf_chk-discnt.kateg )            , input 2 ).
+                                                                                                 else buf_chk-discnt.kateg )        , input 2 ).
+          run wp-xmltagput in this-procedure ( input 5, input "discntType"        , input string(buf_chk-discnt.discnt-type)  , input 1 ).                                                                                                 
           run wp-xmltagclose in this-procedure ( input 4, input "checkDiscount" ).
         end. /* for each buf_chk-dicsnt no-lock  */
 
