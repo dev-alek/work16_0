@@ -29,6 +29,7 @@ define shared var CostPrice    as logical                          no-undo.
 define shared var sort-name    as logical                          no-undo.
 define shared var sort-gr      as logical                          no-undo.
 define shared var print-graft  as logical                          no-undo.
+define shared var no-vat       as logical                          no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -75,6 +76,9 @@ define variable v-sys-key           as character    no-undo.
     define variable v-tot-ned-qnty      as decimal      no-undo.
     define variable v-tot-per-izl-qnty  as decimal      no-undo.
     define variable v-tot-per-ned-qnty  as decimal      no-undo.
+
+    define variable v-par-type          as character    no-undo.
+
 
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_doc-line      for ub.doc-line.
@@ -336,6 +340,7 @@ on error undo, return error
             .
             if costprice = yes
             then do:
+                if no-vat = no then do:
                 if PrintRubl = yes
                 then do:
                     assign
@@ -349,6 +354,24 @@ on error undo, return error
                         p-ned-sum  = 0.0
                     .
                 end.
+
+                end.
+                else do:
+                if PrintRubl = yes
+                then do:
+                    assign
+                        p-izl-sum  = buf_doc-line-sum.cost-sum-rubl - buf_doc-line-sum.cost-VAT-rubl
+                        p-ned-sum  = 0.0
+                    .
+                end.
+                else do:
+                    assign
+                        p-izl-sum  = buf_doc-line-sum.cost-sum-base - buf_doc-line-sum.cost-VAT-base
+                        p-ned-sum  = 0.0
+                    .
+                end.
+
+                end.        
             end.
             else do:
                 if PrintRubl = yes
@@ -373,19 +396,36 @@ on error undo, return error
             .
             if costprice = yes
             then do:
-                if PrintRubl = yes
-                then do:
-                    assign
-                        p-izl-sum  = 0.0
-                        p-ned-sum  = -1.0 * buf_doc-line-sum.cost-sum-rubl
-                    .
-                end.
+                if no-vat = no then do:
+                    if PrintRubl = yes
+                    then do:
+                        assign
+                            p-izl-sum  = 0.0
+                            p-ned-sum  = -1.0 * buf_doc-line-sum.cost-sum-rubl
+                        .
+                    end.
+                    else do:
+                        assign
+                            p-izl-sum  = 0.0
+                            p-ned-sum  = -1.0 * buf_doc-line-sum.cost-sum-base
+                        .
+                    end.
+                 end.   
                 else do:
-                    assign
-                        p-izl-sum  = 0.0
-                        p-ned-sum  = -1.0 * buf_doc-line-sum.cost-sum-base
-                    .
-                end.
+                    if PrintRubl = yes
+                    then do:
+                        assign
+                            p-izl-sum  = 0.0
+                            p-ned-sum  = -1.0 * (buf_doc-line-sum.cost-sum-rubl - buf_doc-line-sum.cost-VAT-rubl)
+                        .
+                    end.
+                    else do:
+                        assign
+                            p-izl-sum  = 0.0
+                            p-ned-sum  = -1.0 * (buf_doc-line-sum.cost-sum-base - buf_doc-line-sum.cost-VAT-base)
+                        .
+                    end.
+                 end.
             end.
             else do:
                 if PrintRubl = yes

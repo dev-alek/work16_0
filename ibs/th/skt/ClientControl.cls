@@ -29,8 +29,7 @@ class ibs.th.skt.ClientControl:
   define private variable ii       as integer no-undo.
   define private variable logWrite as class   LogWrite no-undo.
 	
-  method public class IResponse SendRequest ( numcmd as int, req as class IRequest ):
-    define variable resp as class IResponse no-undo.
+  method public void SendRequest ( numcmd as int, req as class IRequest, resp as class IResponse ):
     
     logWrite = new LogWrite().
     
@@ -40,8 +39,7 @@ class ibs.th.skt.ClientControl:
       logWrite:LogStr = "Для данного клиента не создана комманда.".
       return error .
     end.
-    resp = cast(ttCommands.objCommand, ibs.th.skt.Commands.ICommand):Execute_(req).    
-    return resp.
+    cast(ttCommands.objCommand, ibs.th.skt.Commands.ICommand):Execute_(req, output resp).    
   end method.
 
 

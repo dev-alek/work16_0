@@ -68,6 +68,8 @@ define variable vss-description as character no-undo init "Экспорт документов по
 { str/trdcalib.i        }
 { str/in-vatp.i def     }
 { str/out-vatp.i def    }
+{ gbl/thbjattr.i }
+{ ref/extclass.i }
 
 define variable v-parts-cst-code  like ub.parts.cst-code     no-undo.
 define variable v-exists-sale_ot-supp-tot   as logical      no-undo.
@@ -1480,8 +1482,23 @@ define input parameter p-cli-code               as integer          no-undo.
     define variable v-time              as integer      no-undo.
     define variable v-scale-is-empty    as logical      no-undo.
 
-    define variable v-tank-vol          as character    no-undo.
-    define variable v-tank-density      as character    no-undo.
+           define variable ii                      as integer   no-undo.
+        define variable v-attrcode              as char no-undo.
+        define variable v-SectionName           as char no-undo.
+        define variable v-DocQnty               as decimal no-undo.
+        define variable v-CliQnty               as decimal no-undo.
+        define variable v-FactQnty              as decimal no-undo.
+        define variable v-FactDensity           as decimal no-undo.
+        define variable v-DocDensity            as decimal no-undo.
+        define variable v-TankVol               as decimal no-undo.
+        define variable v-TankDensity           as decimal no-undo.
+        define variable v-TankDensityPomi       as decimal no-undo.
+        define variable v-TankVolPomi           as decimal no-undo.  
+        define variable v-tank-vol              as decimal   no-undo .
+        define variable v-tank-density          as decimal   no-undo .
+        define variable v-SectionNum            as integer   no-undo.
+        define variable v-total-tank-density    as decimal   no-undo.
+        define variable v-tankweight            as decimal   no-undo.
     
     define buffer buf_ot-tot-sale           for ub.ot-tot.
     define buffer buf_ot-tot-cost           for ub.ot-tot.
@@ -2112,53 +2129,84 @@ on endkey undo, return error return-value
                         run wp-xmltagput( 4, "quantityDoc",   string( buf_doc-line.doc-qnty            ), 0 ).
                         run wp-xmltagput( 4, "petrolDensityDoc",    trim(string( buf_doc-line.doc-density , ">>>>>>>>>9.9999999999")), 0 ).
                         
-                        
-                        
-                    for each buf_doc-pl no-lock
-                      where
-                         buf_doc-pl.gds-code  =  buf_goods.gds-code and
-                         buf_doc-pl.out-code = buf_doc-line.doc-code
-                         :
-                      run wp-xmltagopen( 4, "docPl","" ).
-                      run wp-xmltagput( 5, "PlCode",      string( buf_doc-pl.pl-code ), 0 ).
-                      run wp-xmltagput( 5, "PlQuantity",     string( buf_doc-pl.fact-qnty   ), 0 ).
-                      run wp-xmltagput( 5, "PlWeight",  string( buf_doc-pl.cli-fact-qnty), 0 ).
-                      run wp-xmltagclose( 4, "docPl" ).
-                   
-            
-                    end.
-                        
-                        
                         find first buf_goods no-lock
                         where buf_goods.artic      = buf_doc-line.artic
                           and buf_goods.prod-type  = buf_doc-line.prod-type
                           and buf_goods.prod-code  = buf_doc-line.prod-code.
                         
-                        find first buf_doc-line-attr
-                          where buf_doc-line-attr.doc-code  = p-doc-code
-                            and buf_doc-line-attr.gds-code  = buf_goods.gds-code
-                            and buf_doc-line-attr.attr-code = "tank-vol"
-                        no-error.
-                        if available buf_doc-line-attr then do :
-                          v-tank-vol = buf_doc-line-attr.attr-value .
+                  find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code 
+                            and doc-line-attr.gds-code = buf_goods.gds-code 
+                            and doc-line-attr.attr-code = "n" no-lock no-error.
+                        
+                        if available doc-line-attr then
+           
+                            assign
+                                v-SectionNum = integer ( doc-line-attr.attr-value) .         
+            
+                        else   v-SectionNum = 1 .
+                        v-tank-vol = 0 .
+                        v-tank-density  = 0.
+                        v-tankweight = 0 .
+     
+                         do ii = 1 to v-SectionNum :
+                   
+             
+                            for each doc-line-attr where doc-line-attr.doc-code = p-doc-code
+                                and doc-line-attr.gds-code = buf_goods.gds-code
+                                and    (entry (1, doc-line-attr.attr-code, {&delim-par})) =  'tank-vol'
+                                and (v-SectionNum = 1 or (num-entries (doc-line-attr.attr-code, {&delim-par}) > 1 and (entry (2, doc-line-attr.attr-code, {&delim-par})) = string (ii) and v-SectionNum > 1)):
+                   
+                                assign
+                                    v-tank-vol = v-tank-vol + decimal ( doc-line-attr.attr-value)  .
+            
+                    end.
+                        
+                            for each doc-line-attr where doc-line-attr.doc-code = p-doc-code
+                                and doc-line-attr.gds-code = buf_goods.gds-code
+                                and    (entry (1, doc-line-attr.attr-code, {&delim-par})) =  'tank-vol'
+                                and (v-SectionNum = 1 or (num-entries (doc-line-attr.attr-code, {&delim-par}) > 1 and (entry (2, doc-line-attr.attr-code, {&delim-par})) = string (ii) and v-SectionNum > 1)):
+                        
+                                assign
+                                    v-tank-density =    v-tank-density + decimal(doc-line-attr.attr-value) .
+                        
                         end.
-                        run wp-xmltagput( 4, "petrolTankVol",   string( v-tank-vol            ), 0 ).
+                            for each doc-line-attr where doc-line-attr.doc-code = p-doc-code
+                                and doc-line-attr.gds-code = buf_goods.gds-code
+                                and    (entry (1, doc-line-attr.attr-code, {&delim-par})) =  'tank-weight'  
+                                and (v-SectionNum = 1 or (num-entries (doc-line-attr.attr-code, {&delim-par}) > 1 and (entry (2, doc-line-attr.attr-code, {&delim-par})) = string (ii) and v-SectionNum > 1)):
+                                v-tankweight =  v-tankweight + decimal (doc-line-attr.attr-value).
+                            end.
+                        end.
+                        
+                        if v-tank-vol <> 0 then
+                            run wp-xmltagput( 4, "petrolTankVol",   trim(string(v-tank-vol , ">>>>>>>>>9.9999999999")), 0 ).             
+                     
+                        if v-tank-density <> 0 and v-tankweight  <> 0  then 
+                        do :
+                            v-total-tank-density = v-tankweight / v-tank-density .
         
-                        find first buf_doc-line-attr
-                          where buf_doc-line-attr.doc-code  = p-doc-code
-                            and buf_doc-line-attr.gds-code  = buf_goods.gds-code
-                            and buf_doc-line-attr.attr-code = "tank-density"
-                        no-error.
-                        if available buf_doc-line-attr then do :
-                          v-tank-density = buf_doc-line-attr.attr-value .
+                            run wp-xmltagput( 4, "petrolTankDensity",    trim(string(v-total-tank-density , ">>>>>>>>>9.9999999999")), 0 ).
+              
                         end.
-                        if v-tank-density <> "" then do :
-                          run wp-xmltagput( 4, "petrolTankDensity",    right-trim(string( decimal(v-tank-density) , "9.9999999999"),"0"), 0 ).
-                        end.
+                    end.
+                                    
+                for each buf_doc-pl where buf_doc-pl.obj-type = buf_doc-line.obj-type
+                                      and buf_doc-pl.obj-code = buf_doc-line.obj-code
+                                      and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                      and buf_doc-pl.gds-code = buf_goods.gds-code  :
+                
+                run wp-xmltagopen in this-procedure ( input 4, input "PLDoc", input "" ).
+                run wp-xmltagput( 5, "PLCode",   string(buf_doc-pl.pl-code) , 0 ).
+                run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).
+                run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).
+                run wp-xmltagput( 5, "PLDensity",  string(buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty) , 0 ).
+                run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).                                          
+                                          
+                end.             
                     end.
                 end.
                 /*---END----------- Для топлива дополнительно экспортировать вес ---------------------*/
-            end.      /* available buf_doc-line  */
+                  /* available buf_doc-line  */
             else do:
                 run wp-XMLWriteLog(  sLogFile, 1, "*** ERR: *** Не найдено строк документа " + string( p-doc-code ) ).
             end.      /* NOT ( available buf_doc-line  ) */
@@ -2219,6 +2267,110 @@ on endkey undo, return error return-value
         run wp-xmltagput( 4, "quantity",   string( v-qnty ), 0 ).
         run wp-xmltagput( 4, "comment",    string( buf_goods.ps ), 0 ).
 /*--S------- Для всех кроме переоценки выводим строку ГТД и количество ----------*/
+
+    if v-is-petrol  = yes                                                                                 
+            and v-is-pieces = no                                                                              
+            then                                                                                              
+        do: 
+            
+            /*            find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code*/
+            /*                and doc-line-attr.gds-code = buf_goods.gds-code                 */
+            /*                and doc-line-attr.attr-code = "n" no-lock no-error.             */
+            /*                                                                                */
+            /*            if available doc-line-attr then                                     */
+            /*                                                                                */
+            /*                assign                                                          */
+            /*                    v-SectionNum = integer ( doc-line-attr.attr-value) .        */
+            /*                                                                                */
+            /*                else   v-SectionNum = 1 .                                       */
+            do ii = 1 to v-SectionNum :
+                   
+             
+                for each doc-line-attr where doc-line-attr.doc-code = p-doc-code
+                    and doc-line-attr.gds-code = buf_goods.gds-code
+                    and  not  doc-line-attr.attr-code = "n" 
+                    and (v-SectionNum = 1 or (num-entries (doc-line-attr.attr-code, {&delim-par}) > 1 and (entry (2, doc-line-attr.attr-code, {&delim-par})) = string (ii) and v-SectionNum > 1)):
+        
+                    /*                          v-attrCode = entry (1, doc-line-attr.attr-code, {&delim-par}) .*/
+                    /*        if error-status:error then next.      
+                            
+                                                                          */
+                     
+                               
+                            
+                        
+                        
+                                                 
+                    case (entry (1, doc-line-attr.attr-code, {&delim-par})):
+                        when 'section-name' then 
+                            do:
+                                assign
+                                    v-SectionName = doc-line-attr.attr-value no-error.
+                            end.
+                        when 'doc-qnty' then 
+                            do:
+                                assign
+                                    v-DocQnty = decimal (doc-line-attr.attr-value) no-error.
+                            end.
+                        when 'fact-qnty' then 
+                            do:
+                                assign
+                                    v-FactQnty = decimal (doc-line-attr.attr-value) 
+                                    v-CliQnty  = v-DocDensity * v-FactQnty no-error.
+                            end.
+                        when 'fact-dens' then 
+                            do:
+                                assign
+                                    v-FactDensity = decimal (doc-line-attr.attr-value) .
+                            end.   
+                            
+                        when 'doc-dens' then 
+                            do:
+                                assign
+                                    v-DocDensity = decimal (doc-line-attr.attr-value) 
+                                    v-CliQnty    = v-DocDensity * v-FactQnty no-error.
+                            end.
+                        when 'tank-vol' then 
+                            do:
+                                assign
+                                    v-TankVol = decimal (doc-line-attr.attr-value) no-error.
+                            end.
+                        when 'tank-density' then 
+                            do:
+                                assign
+                                    v-TankDensity = decimal (doc-line-attr.attr-value) no-error.
+                            end.
+        
+                        when 'tank-density-pomi' then 
+                            do:
+                                assign
+                                    v-TankDensityPomi = decimal (doc-line-attr.attr-value) no-error.
+                            end.
+                        when 'tank-vol-pomi' then 
+                            do:
+                                assign
+                                    v-TankVolPomi = decimal (doc-line-attr.attr-value) no-error.
+                            end.
+        
+                    end  case.
+                end.
+                     
+                run wp-xmltagopen in this-procedure ( input 3, input "Tank", input "" ).
+                run wp-xmltagput( 4, "TankNum",   v-SectionName , 0 ).
+                run wp-xmltagput( 4, "TankDocVol",  string(v-DocQnty  ) , 0 ).
+                run wp-xmltagput( 4, "TankDocDensity",  trim(string(v-DocDensity , ">>>>>>>>>9.9999999999")) , 0 ).
+                run wp-xmltagput( 4, "TankVol",  string(v-TankVol   ) , 0 ).
+                run wp-xmltagput( 4, "TankDensity",  trim(string(v-TankDensity , ">>>>>>>>>9.9999999999")) , 0 ).
+                run wp-xmltagput( 5, "TankFactVol",  string(v-FactQnty ) , 0 ).
+                run wp-xmltagput( 5, "TankFactDensity",  trim(string(v-FactDensity , ">>>>>>>>>9.9999999999")) , 0 ).
+                run wp-xmltagput( 4, "RdcDensity",  trim(string(v-TankDensityPomi , ">>>>>>>>>9.9999999999")) , 0 ).
+                run wp-xmltagput( 4, "RdcVol",  string( v-TankVolPomi) , 0 ).
+                run wp-xmltagclose in this-procedure ( input 3, input "Tank"  ).
+                        
+            end.
+  
+        end.
+
         if p-ext-doc-type <> {&TDEDT_Overturn}
         then do:
             { gbl/gdsat.i
@@ -3140,6 +3292,9 @@ on error undo, return error
             run wp-xmltagput( input 5, input "priceDiscnt"  , input string( buf_chk-gds.discnt )        , input 2 ).
             run wp-xmltagput( input 5, input "lineNum"      , input string( buf_chk-gds.line-num )      , input 2 ).
             run wp-xmltagput( input 5, input "pump"         , input string( buf_chk-gds.pump )          , input 2 ).
+            run wp-xmltagput( input 5, input "pl"           , input string( buf_chk-gds.loc1)           , input 2 ).
+            run wp-xmltagput( input 5, input "nozzle"       , input string( buf_chk-gds.nozzle-code)    , input 2 ).            
+            run wp-xmltagput( input 5, input "density"      , input string( buf_chk-gds.density)        , input 2 ).
             run wp-xmltagput( input 5, input "roadTax"      , input string( buf_chk-gds.road-tax )      , input 2 ).
             run wp-xmltagput( input 5, input "crcCode"      , input string( entry(1, buf_chk-gds.src-code, {&delim-par}) )      , input 2 ).
             run wp-xmltagput( input 5, input "srcQnty"      , input string( buf_chk-gds.src-qnty )      , input 2 ).
@@ -3184,6 +3339,7 @@ on error undo, return error
                                                                                                  and buf_chk-discnt.kateg = ?
                                                                                                  then buf_dis-card.category
                                                                                                  else buf_chk-discnt.kateg )        , input 2 ).
+          run wp-xmltagput in this-procedure ( input 5, input "discntType"        , input string(buf_chk-discnt.discnt-type)  , input 1 ).
           run wp-xmltagclose in this-procedure ( input 4, input "checkDiscount" ).
         end. /* for each buf_chk-dicsnt no-lock  */
         /*Добавляем в выгрузку скидок еще и скидки, которыми выравниваются погрешности*/
@@ -3206,7 +3362,8 @@ on error undo, return error
                                                                                                  and buf_dis-card.d-card = buf_chk-discnt.src-d-card
                                                                                                  and buf_chk-discnt.kateg = ?
                                                                                                  then buf_dis-card.category
-                                                                                                 else buf_chk-discnt.kateg )            , input 2 ).
+                                                                                                 else buf_chk-discnt.kateg )        , input 2 ).
+          run wp-xmltagput in this-procedure ( input 5, input "discntType"        , input string(buf_chk-discnt.discnt-type)  , input 1 ).                                                                                                 
           run wp-xmltagclose in this-procedure ( input 4, input "checkDiscount" ).
         end. /* for each buf_chk-dicsnt no-lock  */
 
@@ -3373,7 +3530,7 @@ on error undo, return error
     :
         find first buf_gds-prt no-lock
              where buf_gds-prt.node-code = buf_gds-dtl.prt-code
-        .
+        no-error .
         { str/out-vatp.i calc-gds-dtl buf_doc-line. buf_trn-doc. buf_gds-dtl. }
         assign
             v-fact-qnty           = buf_gds-dtl.fact-qnty
@@ -3635,6 +3792,31 @@ procedure export-part :
 define input parameter p-gds-code           as integer          no-undo.
 define input parameter p-parts-rowid        as rowid            no-undo.
 
+define variable v-PartsAlcAttrBottingDate like parts.alc-bottling-date no-undo.
+define variable v-PartsAlcAttrAlcType like ub.alc-type.alc-type-code no-undo.
+define variable v-PartsAlcAttrAlcCode as char no-undo.
+define variable v-PartsAlcAttrRefA like parts.alc-ref-ab-path no-undo.
+define variable v-PartsAlcAttrRefB like parts.alc-ref-ab-path no-undo.
+define variable v-PartsAlcAttrProd as char no-undo.
+define variable v-PartsAlcAttrQu like parts.alc-quality-certif-path no-undo.
+define variable v-PartsAlcAttrCertifPath like parts.alc-certif-path no-undo.
+define variable v-PartsAlcAttrImpCode like parts.alc-imp-code no-undo.
+define variable v-PartsAlcAttrImpType like parts.alc-imp-type no-undo.
+DEFINE VARIABLE v-par-val             AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-par-type            AS CHARACTER NO-UNDO.
+
+define variable v-prod as character no-undo.
+define variable v-value-character     as character     no-undo .
+define variable v-value-decimal       as decimal       no-undo .
+define variable v-value-integer       as integer       no-undo .
+define variable v-value-logical       as logical       no-undo .
+define variable v-value-type          as character     no-undo .
+define variable v-value-date          as date          no-undo .
+define variable v-ext-sys             as integer       no-undo .
+define variable v-inn as character no-undo.
+define variable v-kpp as character no-undo.
+define variable v-naim as character no-undo.
+
     define variable v-fact-qnty             as decimal      no-undo.
     define variable v-sum-base              as decimal      no-undo.
     define variable v-sum-rubl              as decimal      no-undo.
@@ -3665,6 +3847,12 @@ define input parameter p-parts-rowid        as rowid            no-undo.
     define variable v-parts-attr-exch-rate  as decimal       no-undo.
     define variable v-parts-attr-exch-scale as integer       no-undo.
     define variable v-parts-attr-unit-cli   as character     no-undo.
+
+define buffer  X_ext-classif-attr for ext-classif-attr.
+define buffer buf_ext-classif for ub.ext-classif.
+define buffer buf_alc-type-gds    for ub.alc-type-gds .
+define buffer buf_alc-type        for ub.alc-type .
+
 
     define buffer buf_contract      for ub.contract.
     define buffer buf_parts         for ub.parts.
@@ -3732,6 +3920,91 @@ on error undo, return error
         no-error.
         if available buf_goods
         then do:
+            
+            
+            RUN gds-attr-value(
+                ub.buf_goods.gds-code,
+                {&attr-alcohol-prod},
+                OUTPUT v-par-val,
+                OUTPUT v-par-type
+                ).
+            IF v-par-val <> "" AND
+                v-par-val <> "no" THEN
+            DO: /* 1 */
+            assign                           
+                            v-PartsAlcAttrRefA        = "":U
+                            v-PartsAlcAttrRefB        = "":U
+                            v-PartsAlcAttrAlcCode     = "":U 
+                            v-PartsAlcAttrAlcType     = "":U 
+                            v-PartsAlcAttrQu          = "":U
+                            v-PartsAlcAttrCertifPath  = "":U
+                            v-PartsAlcAttrImpCode     = 0
+                            v-PartsAlcAttrImpType     = "":U 
+                            v-prod = "":U
+                            v-inn = "":U
+                            v-kpp = "":U
+                            v-naim = "":U 
+                            v-PartsAlcAttrProd =  "":U
+                            .
+            
+                          run adm/shattri.p (
+                            input "get":U
+                            ,input '':U
+                            ,input 0
+                            ,input {&attr-egais-host}
+                            ,input {&attr-egais-host_egais-exsys}
+                            ,output v-value-character
+                            ,output v-value-date
+                            ,output v-value-decimal
+                            ,output v-value-integer
+                            ,output v-value-logical
+                            ,output v-value-type
+                            ,input-output TABLE thbjattr_thbj-attr
+                            ) no-error .
+                        assign 
+                            v-ext-sys = v-value-integer . 
+                            
+                            
+                    
+               assign
+                            v-PartsAlcAttrBottingDate = buf_parts.alc-bottling-date
+                            v-PartsAlcAttrRefA        = entry(1,buf_parts.alc-ref-ab-path, ",")
+                            v-PartsAlcAttrRefB        = entry(2,buf_parts.alc-ref-ab-path,",")    
+                            when num-entries (buf_parts.alc-ref-ab-path) > 1
+                            v-PartsAlcAttrAlcCode     = entry(3,buf_parts.alc-ref-ab-path,",")    
+                            when num-entries (buf_parts.alc-ref-ab-path) > 2
+                            v-PartsAlcAttrAlcType     = entry(4,buf_parts.alc-ref-ab-path,",")    
+                            when num-entries (buf_parts.alc-ref-ab-path) > 3
+                            v-PartsAlcAttrQu          = buf_parts.alc-quality-certif-path
+                            v-PartsAlcAttrCertifPath  = buf_parts.alc-certif-path
+                            v-PartsAlcAttrImpCode     = buf_parts.alc-imp-code
+                            v-PartsAlcAttrImpType     = buf_parts.alc-imp-type
+                            .
+                             if not v-PartsAlcAttrAlcType > '' then  for first buf_alc-type-gds where buf_alc-type-gds.gds-code = ub.buf_goods.gds-code no-lock,
+                                      first buf_alc-type where buf_alc-type.alc-type-inner-code = buf_alc-type-gds.alc-type-inner-code no-lock:
+                                       v-PartsAlcAttrAlcType =  buf_alc-type.alc-type-code.     
+                                   end.
+           
+           
+                      find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods}
+                            and buf_ext-classif.classif-name = {&extclass_goods_esys}
+                            and buf_ext-classif.db-num = 0
+                            and buf_ext-classif.key#_one = buf_goods.gds-code
+                            and buf_ext-classif.key#_two = v-ext-sys
+                            no-error.
+
+                        if available buf_ext-classif then 
+                        do: 
+                            
+                            v-prod = entry (1, buf_ext-classif.CharKey_Two, chr(4)).
+                            v-inn = entry(4, v-prod, chr(5)) + "/" no-error.
+                            v-kpp = entry(2, v-prod, chr(5)) + "/" no-error.
+                            v-naim =   entry(3, v-prod, chr(5)) no-error. 
+                            v-PartsAlcAttrProd =    v-naim   + v-inn    + v-kpp .
+                        end.  
+                    end.
+           
+                    
             find first buf_parts-attr no-lock
                     where buf_parts-attr.in-code   = buf_parts.in-code
                     and buf_parts-attr.gds-code  = p-gds-code
@@ -3818,8 +4091,27 @@ on error undo, return error
         run wp-xmltagput in this-procedure ( input 6, input "attrExchRate":U    , input string( v-parts-attr-exch-rate  ), input 2 ).
         run wp-xmltagput in this-procedure ( input 6, input "attrExchScale":U   , input string( v-parts-attr-exch-scale ), input 2 ).
         run wp-xmltagput in this-procedure ( input 6, input "attrUnitCli":U     , input string( v-parts-attr-unit-cli   ), input 0 ).
-        run wp-xmltagclose in this-procedure ( input 5, input "part" ).
 
+
+    IF v-par-val <> "" AND
+        v-par-val <> "no" THEN
+    DO: /* 1 */
+        run wp-xmltagopen in this-procedure ( input 6, input "PartsAlcAttr":U, input "" ).
+        run wp-xmltagput in this-procedure ( input 7, input "PartsAlcAttrBottingDate":U              , input string( v-PartsAlcAttrBottingDate               ), input 2 ).
+        run wp-xmltagput in this-procedure ( input 7, input "PartsAlcAttrAlcType":U              , input string( v-PartsAlcAttrAlcType               ), input 2 ).
+        run wp-xmltagput in this-procedure ( input 7, input "PartsAlcAttrAlcCode":U              , input string( v-PartsAlcAttrAlcCode               ), input 2 ).
+        run wp-xmltagput in this-procedure ( input 7, input "PartsAlcAttrRefA":U              , input string( v-PartsAlcAttrRefA             ), input 2 ).
+        run wp-xmltagput in this-procedure ( input 7, input "PartsAlcAttrRefB":U              , input string( v-PartsAlcAttrRefB              ), input 2 ).
+        run wp-xmltagput in this-procedure ( input 7, input "PartsAlcAttrProd":U              , input string( v-PartsAlcAttrProd              ), input 2 ).
+        run wp-xmltagput in this-procedure ( input 7, input "PartsAlcAttrQualityCertify":U              , input string( v-PartsAlcAttrQu               ), input 2 ).
+        run wp-xmltagput in this-procedure ( input 7, input "PartsAlcAttrCertifPath":U              , input string( v-PartsAlcAttrCertifPath               ), input 2 ).
+        run wp-xmltagput in this-procedure ( input 7, input "PartsAlcAttrImpCode":U              , input string( v-PartsAlcAttrImpCode               ), input 2 ).
+        run wp-xmltagput in this-procedure ( input 7, input "PartsAlcAttrImpType":U              , input string( v-PartsAlcAttrImpType               ), input 2 ).
+        
+        run wp-xmltagclose in this-procedure ( input 6, input "PartsAlcAttr":U ).
+                   
+    end.
+    run wp-xmltagclose in this-procedure ( input 5, input "part":U ).
 end.
 end procedure. /* export-part */
 

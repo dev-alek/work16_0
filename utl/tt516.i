@@ -34,12 +34,18 @@ field ps as character
 field host-code as integer        /* не присылают */
 field contract-code as integer    /* не присылают */
 field pay-code   as integer
+field reason-code   as integer
 field exch-code  as integer
 field exch-rate  as decimal
 field exch-scale as integer
 field vat-type as character
 field price-type as character
 field cargo-from as character
+field stts as character
+field hold-obj-type as character
+field hold-obj-code as integer
+field ship-num as character
+field ship-date as date
 
 index pi line-num doc-code .
 

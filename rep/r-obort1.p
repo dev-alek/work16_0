@@ -269,17 +269,15 @@ PROCEDURE foreach1 :  /*  Без классификации */
              by gds-prop.b-code :
 
           run CheckNullOborot in this-procedure .
-          if NullStr < 2 then do:    /* проверка на не 0        */
-            if NullStr = 0 then do:
+          if NullStr < 1 then do:    /* проверка на не 0        */
               run PutTitul in this-procedure .  /* вывод шапок */
               run PrintLine in this-procedure .     /* вывод данных            */
-            end.
             run CalculSum in this-procedure (2) . /* суммирование по объекту */
             run CalculSum in this-procedure (1) . /* суммирование всего      */
           end.
         End. /*for each gds-prop */
 
-        run PutItogSum in this-procedure (2) .  /* вывод сумм */
+                run PutItogSum in this-procedure (2) .  /* вывод сумм */
 
       end.
       else do:
@@ -288,11 +286,11 @@ PROCEDURE foreach1 :  /*  Без классификации */
             and gds-prop.obj-code = obj-list.obj-code
              by gds-prop.artic :
           run CheckNullOborot in this-procedure .
-          if NullStr < 2 then do:    /* проверка на не 0        */
-            if NullStr = 0 then do:
+          if NullStr < 1 then do:    /* проверка на не 0        */
+
               run PutTitul in this-procedure .  /* вывод шапок */
               run PrintLine in this-procedure .     /* вывод данных            */
-            end.
+
             run CalculSum in this-procedure (2) . /* суммирование по объекту */
             run CalculSum in this-procedure (1) . /* суммирование всего */
           end.
@@ -307,8 +305,8 @@ PROCEDURE foreach1 :  /*  Без классификации */
       for each gds-prop
         by gds-prop.b-code :
         run CheckNullOborot in this-procedure .
-        if NullStr < 2 then do:    /* проверка на не 0        */
-          if NullStr = 0 then run PrintLine in this-procedure .     /* вывод данных            */
+        if NullStr < 1 then do:    /* проверка на не 0        */
+          run PrintLine in this-procedure .     /* вывод данных            */
           run CalculSum in this-procedure (1) . /* суммирование всего      */
         end.
       End. /*for each gds-prop */
@@ -317,8 +315,8 @@ PROCEDURE foreach1 :  /*  Без классификации */
       for each gds-prop
            by gds-prop.artic :
         run CheckNullOborot in this-procedure .
-        if NullStr < 2 then do:    /* проверка на не 0        */
-          if NullStr = 0 then run PrintLine in this-procedure .     /* вывод данных            */
+        if NullStr < 1 then do:    /* проверка на не 0        */
+          run PrintLine in this-procedure .     /* вывод данных            */
           run CalculSum in this-procedure (1) . /* суммирование всего */
         end.
       End. /*for each gds-prop */

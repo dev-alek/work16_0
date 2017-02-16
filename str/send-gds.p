@@ -34,6 +34,7 @@ define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Простая пересылка товаров на кассу по списку товаров":U.
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
+{ gbl/clntattr.i     }
 
 define variable v-cntxt-db-num        as integer   no-undo . /* текущая БД            */
 define variable v-cntxt-userid        as character no-undo . /* текущий пользователь  */

@@ -37,7 +37,7 @@ class ibs.th.skt.Commands.TableMenuCommand implements ICommand:
   define private variable hndlSocket as handle no-undo.
   define private variable logWrite   as class  LogWrite  no-undo.
 
-  method public ibs.th.skt.Commands.IResponse Execute_( input req as ibs.th.skt.Commands.IRequest ):
+  method public void Execute_( input req as ibs.th.skt.Commands.IRequest, output resp as class IResponse ):
 		
     logWrite = new LogWrite().
     tm = new TableMenu().

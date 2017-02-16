@@ -854,17 +854,17 @@ define input parameter p-trn-doc-out-code       as character        no-undo.
 
 /*    define buffer buf_temp_PlDoc             for temp_PlDoc.*/
   define variable ii                   as integer no-undo.
-    define variable v-attrcode           as char.
-    define variable v-SectionName        as char.
-    define variable v-DocQnty            as decimal.
-    define variable v-CliQnty            as decimal.
-    define variable v-FactQnty           as decimal.
-    define variable v-DocDensity         as decimal.
-    define variable v-TankVol            as decimal.
-    define variable v-TankDensity        as decimal.
-    define variable v-TankDensityPomi    as decimal.
-    define variable v-TankVolPomi        as decimal.  
-
+    define variable v-attrcode           as char no-undo.
+    define variable v-SectionName        as char no-undo.
+    define variable v-DocQnty            as decimal no-undo.
+    define variable v-CliQnty            as decimal no-undo .
+    define variable v-FactQnty           as decimal no-undo.
+    define variable v-DocDensity         as decimal no-undo.
+    define variable v-FactDensity        as decimal no-undo.
+    define variable v-TankVol            as decimal no-undo.
+    define variable v-TankDensity        as decimal no-undo.
+    define variable v-TankDensityPomi    as decimal no-undo.
+    define variable v-TankVolPomi        as decimal no-undo.  
     define variable v-tank-vol           as decimal no-undo .
     define variable v-tank-density       as decimal no-undo .
     define variable v-SectionNum         as integer no-undo.
@@ -987,12 +987,12 @@ define input parameter p-trn-doc-out-code       as character        no-undo.
                          buf_doc-pl.gds-code  =  buf_goods.gds-code and
                          buf_doc-pl.out-code = buf_doc-line.doc-code
                          :
-                      run wp-xmltagopen( 4, "docPl","" ).
-                      run wp-xmltagput( 5, "PlCode",      string( buf_doc-pl.pl-code ), 0 ).
-                      run wp-xmltagput( 5, "PlQuantity",     string( buf_doc-pl.fact-qnty   ), 0 ).
-                      run wp-xmltagput( 5, "PlWeight",  string( buf_doc-pl.cli-fact-qnty), 0 ).
-                      run wp-xmltagclose( 4, "docPl" ).
-
+                        run wp-xmltagopen in this-procedure ( input 4, input "PLDoc", input "" ).
+                        run wp-xmltagput( 5, "PLCode",   string(buf_doc-pl.pl-code) , 0 ).
+                        run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).
+                        run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).
+                        run wp-xmltagput( 5, "PLDensity",  string((buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty),">>>>>>>>>9.9999999999") , 0 ).
+                        run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).       
                     end.
 
 find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code 
@@ -1113,6 +1113,21 @@ find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code
                     run wp-xmltagput in this-procedure ( input 4, input "petrolDiffQnty":U    , input string( v-diff-qnty       ), input 1 ).
                     run wp-xmltagput in this-procedure ( input 4, input "petrolAbsDiffQnty":U , input string( v-abs-diff-qnty   ), input 1 ).
                 end.
+                
+/*                for each buf_doc-pl where buf_doc-pl.obj-type = buf_doc-line.obj-type                                                      */
+/*                                      and buf_doc-pl.obj-code = buf_doc-line.obj-code                                                      */
+/*                                      and buf_doc-pl.out-code = buf_doc-line.doc-code                                                      */
+/*                                      and buf_doc-pl.gds-code = buf_goods.gds-code                                                         */
+/*                                      :                                                                                                    */
+/*                                                                                                                                           */
+/*                run wp-xmltagopen in this-procedure ( input 4, input "PLDoc", input "" ).                                                  */
+/*                run wp-xmltagput( 5, "PLCode",   string(buf_doc-pl.pl-code) , 0 ).                                                         */
+/*                run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).                                                        */
+/*                run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).                                                  */
+/*                run wp-xmltagput( 5, "PLDensity",  string((buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty),">>>>>>>>>9.9999999999") , 0 ).*/
+/*                run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).                                                          */
+/*                                                                                                                                           */
+/*                end.                                                                                                                       */
             end.        /* if v-is-petrol  = yes */
             /*---END----------- Для топлива дополнительно экспортировать вес ---------------------*/
         end.      /* available buf_doc-line  */
@@ -1336,6 +1351,12 @@ find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code
                                     v-FactQnty = decimal (doc-line-attr.attr-value) 
                                     v-CliQnty  = v-DocDensity * v-FactQnty no-error.
                             end.
+                        when 'fact-dens' then 
+                            do:
+                                assign
+                                    v-FactDensity = decimal (doc-line-attr.attr-value) .
+                            end.
+                            
                         when 'doc-dens' then 
                             do:
                                 assign
@@ -1373,6 +1394,8 @@ find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code
                 run wp-xmltagput( 5, "TankDocDensity",  trim(string(v-DocDensity , ">>>>>>>>>9.9999999999")) , 0 ).
                 run wp-xmltagput( 5, "TankVol",  string(v-TankVol   ) , 0 ).
                 run wp-xmltagput( 5, "TankDensity",  trim(string(v-TankDensity , ">>>>>>>>>9.9999999999")) , 0 ).
+                run wp-xmltagput( 5, "TankFactVol",  string(v-FactQnty ) , 0 ).
+                run wp-xmltagput( 5, "TankFactDensity",  trim(string(v-FactDensity , ">>>>>>>>>9.9999999999")) , 0 ).
                 run wp-xmltagput( 5, "RdcDensity",  trim(string(v-TankDensityPomi , ">>>>>>>>>9.9999999999")) , 0 ).
                 run wp-xmltagput( 5, "RdcVol",  string( v-TankVolPomi) , 0 ).
                 run wp-xmltagclose in this-procedure ( input 4, input "Tank"  ).
@@ -2004,6 +2027,7 @@ define output parameter p-exists-after  as logical      no-undo.
         {&trdcattr-addsum}
         v-attr-value
         v-attr-type
+        no-error
     }
     if lookup( {&sum-before-doc}, v-attr-value ) <> 0
     then do:
@@ -4391,6 +4415,7 @@ on error undo, return error
         run wp-xmltagput( input 4, input "shiftDateXml", input bge-xml-date( buf_chk-doc.shift-date )                    , input 2 ).
         run wp-xmltagput( input 4, input "shiftNum" , input string( buf_chk-doc.shift-num )                              , input 2 ).
         run wp-xmltagput( input 4, input "dCard"    , input string( buf_chk-doc.d-card   )                               , input 2 ).
+        run wp-xmltagput( input 4, input "CHDoc"    , input string( buf_chk-doc.doc-num   )                              , input 2 ).
         if available buf_dis-card
         then do:
           run wp-xmltagput( input 4, input "dCardCliType" , input string( buf_dis-card.cli-type )                        , input 2 ).
@@ -4488,6 +4513,9 @@ on error undo, return error
             run wp-xmltagput( input 5, input "priceDiscnt"  , input string( buf_chk-gds.discnt )        , input 2 ).
             run wp-xmltagput( input 5, input "lineNum"      , input string( buf_chk-gds.line-num )      , input 2 ).
             run wp-xmltagput( input 5, input "pump"         , input string( buf_chk-gds.pump)           , input 2 ).
+            run wp-xmltagput( input 5, input "pl"           , input string( buf_chk-gds.loc1)           , input 2 ).
+            run wp-xmltagput( input 5, input "nozzle"       , input string( buf_chk-gds.nozzle-code)    , input 2 ).            
+            run wp-xmltagput( input 5, input "density"      , input string( buf_chk-gds.density)        , input 2 ).
             run wp-xmltagput( input 5, input "roadTax"      , input string( buf_chk-gds.road-tax )      , input 2 ).
             run wp-xmltagput( input 5, input "crcCode"      , input string( entry(1, buf_chk-gds.src-code, {&delim-par}) )      , input 2 ).
             run wp-xmltagput( input 5, input "srcQnty"      , input string( buf_chk-gds.src-qnty )      , input 2 ).
@@ -4531,8 +4559,10 @@ on error undo, return error
                                                                                                  and buf_dis-card.d-card = buf_chk-discnt.src-d-card
                                                                                                  and buf_chk-discnt.kateg = ?
                                                                                                  then buf_dis-card.category
-                                                                                                 else buf_chk-discnt.kateg )            , input 2 ).
-          run wp-xmltagclose in this-procedure ( input 4, input "checkDiscount" ).
+                                                                                                 else buf_chk-discnt.kateg )        , input 2 ).
+          run wp-xmltagput in this-procedure ( input 5, input "discntType"        , input string(buf_chk-discnt.discnt-type)  , input 1 ).
+                    run wp-xmltagclose in this-procedure ( input 4, input "checkDiscount" ).
+          
         end. /* for each buf_chk-dicsnt no-lock  */
 
         /*Добавляем в выгрузку скидок еще и скидки, которыми выравниваются погрешности*/
@@ -4556,7 +4586,8 @@ on error undo, return error
                                                                                                  and buf_chk-discnt.kateg = ?
                                                                                                  then buf_dis-card.category
                                                                                                  else buf_chk-discnt.kateg )        , input 2 ).
-          run wp-xmltagclose in this-procedure ( input 4, input "checkDiscount" ).
+			run wp-xmltagput in this-procedure ( input 5, input "discntType"        , input string(buf_chk-discnt.discnt-type)  , input 1 ).          
+			run wp-xmltagclose in this-procedure ( input 4, input "checkDiscount" ).
         end. /* for each buf_chk-dicsnt no-lock  */
 
         run wp-xmltagclose( input 3, input "check" ).

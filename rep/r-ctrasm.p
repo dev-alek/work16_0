@@ -29,6 +29,7 @@ define input  parameter p-is-schedule           as logical   no-undo .
 define input  parameter p-date-start            as date      no-undo .
 define input  parameter p-date-finish           as date      no-undo .
 define input  parameter p-gds-by-am             as logical   no-undo .
+define input  parameter p-group-by-order        as logical   no-undo .
 define input  parameter p-group-by-post         as logical   no-undo .
 define input  parameter p-critical-qnty-balance as decimal   no-undo .
 define input  parameter p-critical-qnty-sale    as decimal   no-undo .
@@ -62,6 +63,7 @@ define variable vss-description as character no-undo init "Отчет Контроль АМ".
 { rep/lkp-font.i    }
 { ref/grplibfn.i    }
 { gbl/paramls.i     }
+{ rep/html-conv.i }
 
 define variable g#report-num  as integer   no-undo .
 
@@ -186,19 +188,26 @@ define variable v-archive-ok  as logical   no-undo .
 define variable v-comment     as character no-undo .
 define variable v-can-print   as logical   no-undo .
 
+define stream Out-Stream.
+define stream OutStr-html.
+define VARIABLE p-report-id              as character               no-undo .
+define variable v-file-name-rep-htm as character no-undo .
+
 do
 on error undo, return error return-value
 :
-  run get-report-num in parparentproc (output g#report-num).
+  run get-report-num in parparentproc (output p-report-id).
   { cmp/open-out.i stream sout " " {&CS_PS} }
-  if p-is-schedule = yes
+ v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
+ 
+ if p-is-schedule = yes
   then do:
     assign
-      make-excel  = yes
+
       my-handle   = parparentproc
       ReportName  = "Контроль ассортиментной матрицы":U
     .
-    run openforexcel in this-procedure .
+
   end.
 
   assign
@@ -208,33 +217,61 @@ on error undo, return error return-value
     v-date-from   = v-date-start
     v-date-to     = v-date-finish
   .
+        
+    output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
+    put stream OutStr-html unformatted
+             "<!DOCTYPE HTML>" skip
+                ' <html>' skip
+                '  <head>' skip
+                '   <meta charset="utf-8">' skip
+                '    <style type="text/css">' skip
 
+                '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+                '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+                '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+                '   </style>' skip
+                '  </head>' skip
+            .
+
+
+    put stream OutStr-html unformatted
+        '<body>' skip
+        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+        '<thead>' skip
+
+        .
+
+    put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">' + string(ReportNAme) + '</TD>' skip
+        '</TR>'skip
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">За период с' + string(v-date-start,"99.99.9999") + ' по ' + string(v-date-finish,"99.99.9999") + '</TD>' skip
+        '</TR>'skip
+    .        
   run empty-tt in this-procedure .
   run fill-tt in this-procedure .
   run print-report in this-procedure .
   run empty-tt in this-procedure .
 
-  put stream sout unformatted " " skip.
-  output stream sout close.
-  {&CloseExcel}
   /* выводим на печать */
   define variable v-user-action   as character no-undo .
   define variable v-printed       as logical   no-undo .
   define variable DisabledOptions as integer   no-undo .
   define variable v-orient-page as character no-undo .
-  if p-is-schedule = no then do:
-    run gbl/prnfilen.w
-        (input  ""
-        ,input  20
-        ,input  string(session :temp-directory) + {&DF_Name} + string( g#report-num )
-        ,input  ReportFontNum
-        ,output v-user-action
-        ,output v-printed
-        ) .
-  end.
-  else do:
-    run rep/runexcel.p ( input string(session :temp-directory) + {&DF_Name} + string( g#report-num )) .
-  end.
+
+   put stream OutStr-html unformatted
+                                '</tbody>' skip
+                                '</table>' skip
+                                '</body>' skip
+                                '</html>' skip
+                                .
+                                                                                        
+  run prn-lib-reportviewer-report-name in this-procedure (
+                                                          input parParentProc
+                                                          ,input v-file-name-rep-htm
+                                                          ).
+                                                          
 end.
 
 /* ============================================================================= */
@@ -1392,6 +1429,7 @@ procedure print-no-schedule-no-supp :
   define buffer buf_tt-goods      for tt-goods.
 
   define variable v-i               as integer   no-undo .
+  define variable ii                as integer   no-undo .
   define variable v-line-1          as character no-undo .
   define variable v-clmn-label-1    as character no-undo .
   define variable v-clmn-label-2    as character no-undo .
@@ -1425,6 +1463,9 @@ procedure print-no-schedule-no-supp :
   define variable v-gds-tot-count           as decimal   no-undo .
 
   define variable v-gds-asm-count           as decimal   no-undo .
+  define variable v-balance                 as decimal   no-undo .
+  define variable v-balance-last            as decimal   no-undo .
+  define variable v-sum-sale                as decimal   no-undo .
   define variable v-gds-asm-tot-count       as decimal   no-undo .
   define variable v-tot-num-days-wo-balance as decimal   no-undo .
   define variable v-tot-num-days-wo-sale    as decimal   no-undo .
@@ -1439,17 +1480,17 @@ procedure print-no-schedule-no-supp :
   define variable v-grp-start-line          as integer   no-undo .
   define variable v-grp-end-line            as integer   no-undo .
   define variable v-grp-list                as character no-undo .
-
+  define variable jj                        as integer   no-undo .
+  define VARIABLE v-jj                      as integer   no-undo .
+  DEFINE VARIABLE v-first                   as LOGICAL   NO-UNDO .
+  DEFINE VARIABLE v-last                    as LOGICAL   NO-UNDO .
 do
 on error undo, return error return-value
 :
   assign
     v-days-count = p-date-finish - p-date-start + 1
   .
-  for each sheetf
-  :
-    delete sheetf.
-  end.
+
   for each buf_tt-obj-list
   :
     run waitfram-show in this-procedure ( input substitute( "Расчет итогов по объекту &1 &2...":U
@@ -1467,59 +1508,6 @@ on error undo, return error return-value
       v-clmn-sizes    = '':u
       v-line-1        = '':u
     .
-    do while v-tmp-date <= p-date-finish
-    :
-      assign
-        v-clmn-label-1 = v-clmn-label-1 + string(v-tmp-date,"99.99.9999") + {&comma-char} + {&comma-char} + {&comma-char}
-        v-clmn-label-2 = v-clmn-label-2 + "О" + {&comma-char} + "П" + {&comma-char} + "З" + {&comma-char}
-        v-clmn-format  = v-clmn-format  + substitute("&1={&balance-fmt};&2={&sale-fmt};&3={&order-fmt};", v-i , (v-i + 1), (v-i + 2) )
-        v-clmn-sizes   = v-clmn-sizes   + "{&balance-width}" + {&comma-char} + "{&sale-width}" + {&comma-char} + "{&order-width}" + {&comma-char}
-        v-line-1       = v-line-1       + substitute("&1:&2,", v-i , (v-i + 2))
-        v-i            = v-i + 3
-        v-tmp-date     = v-tmp-date + 1
-      .
-    end. /* do while v-tmp-date <= p-date-finish */
-    find first sheetf
-      where sheetf.sheet-num = v-list-num
-    no-error .
-    if not available sheetf then do:
-      create sheetf.
-    end.
-
-    /* обрезаем лишние знаки */
-    assign
-      v-clmn-label-1  = "Артикул" + {&comma-char} + "Название товара" + {&comma-char} + v-clmn-label-1 + "Итого %" + {&comma-char} + {&comma-char} + {&comma-char}
-      v-clmn-label-2  = {&comma-char} + {&comma-char} + v-clmn-label-2 + "% прис" + {&comma-char} + "% прод" + {&comma-char} + "% зак" + {&comma-char}
-      v-clmn-format   = "1=@;2=@;" + v-clmn-format  + substitute("&1={&balance-fmt};&2={&sale-fmt};&3={&order-fmt};", v-i , (v-i + 1), (v-i + 2) )
-      v-clmn-sizes    = "20" + {&comma-char} + "50" + {&comma-char} + v-clmn-sizes   + "{&balance-width}" + {&comma-char} + "{&sale-width}" + {&comma-char} + "{&order-width}" + {&comma-char}
-      v-line-1        = v-line-1       + substitute("&1:&2,", v-i , (v-i + 2))
-      v-clmn-label-2  = {&comma-char} + {&comma-char} + trim(v-clmn-label-2, {&comma-char} )
-      v-clmn-format   = trim(v-clmn-format , ";") + {&delim-par} + {&delim-par} + substring(buf_tt-obj-list.obj-name, 1, 31)
-      v-clmn-sizes    = trim(v-clmn-sizes  , {&comma-char} )
-      v-line-1        = trim(v-line-1 , ",")
-      sheetf.sheet-num          = v-list-num
-      sheetf.MergeCellsH        = v-line-1
-      sheetf.MergeCellsV        = "1=1:2/2=1:2"
-      sheetf.Excel-Column-Lable = v-clmn-label-1
-                                  + {&new-line}
-                                  + v-clmn-label-2
-      sheetf.colformat          = v-clmn-format
-      sheetf.Sizes              = v-clmn-sizes
-      sheetf.Bas-File           = "exe/ctrasm.bas"
-      sheetf.Bas-Param-Add      = yes
-      sheetf.silent-save        = p-is-schedule
-      sheetf.file-name          = substitute( "&1КонтрольАМ_за_период_&2_&3_&4-&5_&6_&7-&8.xls"
-                                            , p-dir-name
-                                            ,string(year (p-date-start ) , "9999")
-                                            ,string(month(p-date-start ) , "99"  )
-                                            ,string(day  (p-date-start ) , "99"  )
-                                            ,string(year (p-date-finish) , "9999")
-                                            ,string(month(p-date-finish) , "99"  )
-                                            ,string(day  (p-date-finish) , "99"  )
-                                            , p-rep-code
-                                            )
-      ReportHeader = "":U
-    .
     if p-gds-by-am = yes
     then do:
       assign
@@ -1535,48 +1523,123 @@ on error undo, return error return-value
         .
       end.
 
-      assign
-        ReportHeader = {&new-line} + substitute("По АМ на &1 товаров":U , v-i )
-      .
+      put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">' + string(substitute("По АМ на &1 товаров":U , v-i )) + '</TD>' skip
+        '</TR>'skip
+    .     
+    
     end.
     if p-group-by-post = yes
     then do:
-      assign
-        ReportHeader = ReportHeader + {&new-line} + "Группировка по поставщику":U
-      .
+      put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">Группировка по поставщику</TD>' skip
+        '</TR>'skip
+    .     
+       
     end.
-/*    if p-detailed = yes*/
-/*    then do:*/
-/*      assign*/
-/*        ReportHeader = ReportHeader + {&new-line} + "Детализированный отчет":U*/
-/*      .*/
-/*    end.*/
-
-    assign
-      ReportHeader = ReportHeader + {&new-line} + substitute( "Критический остаток: &1" , p-critical-qnty-balance ) +
-                                    {&new-line} + substitute( "Критическая продажа: &1" , p-critical-qnty-sale    ) +
-                                    {&new-line} + substitute( "Критический заказ: &1"   , p-critical-qnty-order   ) +
-                                    {&new-line} + substitute( "Фильтры:"                                          ) +
-                                    {&new-line} + substitute( "Дней без товара: &1"     , p-days-wt-goods         )
-    .
-    assign
-      ReportHeader = ReportHeader + {&new-line} + "Показывать товары с ИЖТ:":U +
-      ( if p-igt-all   = yes then {&all} else
+   put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">' + string(substitute( "Критический остаток: &1" , p-critical-qnty-balance )) + '</TD>' skip
+        '</TR>'skip
+    .  
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">' + string(substitute( "Критическая продажа: &1" , p-critical-qnty-sale    )) + '</TD>' skip
+        '</TR>'skip
+    .  
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">' + string(substitute( "Критический заказ: &1"   , p-critical-qnty-order   )) + '</TD>' skip
+        '</TR>'skip
+    .  
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">' + string(substitute( "Фильтры:"                                          )) + '</TD>' skip
+        '</TR>'skip
+    .  
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">' + string(substitute( "Дней без товара: &1"     , p-days-wt-goods         )) + '</TD>' skip
+        '</TR>'skip
+    .  
+      put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="11" STYLE="font-size: 14px;">Показывать товары с ИЖТ:' + string(( if p-igt-all   = yes then {&all} else
       ( if p-igt-new   = yes then {&ass-izd-new}   + "," else "" ) +
       ( if p-igt-com   = yes then {&ass-izd-com}   + "," else "" ) +
       ( if p-igt-spec  = yes then {&ass-izd-spec}  + "," else "" ) +
       ( if p-igt-del   = yes then {&ass-izd-del}   + "," else "" ) +
-      ( if p-igt-empty = yes then {&ass-izd-empty}       else "" ) )
-    .
-    assign
-      ReportHeader = ReportHeader + {&new-line}
-    .
-    run rep/extitle.p (v-list-num).
-    assign
-      v-grp-start-line  = 1
-      v-grp-end-line    = 0
-      v-grp-list        = ''
-    .
+      ( if p-igt-empty = yes then {&ass-izd-empty}       else "" ) )) + '</TD>' skip
+        '</TR>'skip
+        '</thead>'skip
+    .  
+     
+       put stream OutStr-html unformatted
+        '<tbody>'
+        '<TR>'skip
+            '<TH rowspan="2" style="text-align: center; width: 40px;">Артикул</TH>'skip
+            '<TH rowspan="2" style="text-align: center; width: 60px;">Название</TH>'skip
+        .            
+        
+        if p-group-by-order then do:
+            v-jj = 3 .
+        end.
+        else do:
+            v-jj = 2 .
+        end.
+    do while v-tmp-date <= p-date-finish
+    :
+        put stream OutStr-html unformatted
+            '<TH colspan ="' + string(v-jj) + '" style="text-align: center;">' + string(v-tmp-date,"99.99.9999") + '</TH>'skip
+        .
+        v-tmp-date     = v-tmp-date + 1.
+        ii = ii + 1. 
+    end. /* do while v-tmp-date <= p-date-finish */
+
+       put stream OutStr-html unformatted
+            '<TH colspan="' + string(v-jj) + '" style="text-align: center;">Итого %</TH>'skip
+       .     
+       put stream OutStr-html unformatted     
+            '<TH rowspan="2" style="text-align: center; width: 60px;">Средний товарный запас</TH>'skip
+            '<TH rowspan="2" style="text-align: center; width: 60px;">Об. дн.</TH>'skip
+            '<TH rowspan="2" style="text-align: center; width: 60px;">Об раз</TH>'skip
+        .
+       
+       put stream OutStr-html unformatted             
+        '</TR>'skip
+        '<TR>'skip 
+        .
+    v-tmp-date      = p-date-start.
+    do while v-tmp-date <= p-date-finish
+    :
+        put stream OutStr-html unformatted
+            '<TH colstyle="text-align: center; width: 20px;">О</TH>'skip
+            '<TH colstyle="text-align: center; width: 20px;">П</TH>'skip
+        .
+        if p-group-by-order = yes then do:
+        put stream OutStr-html UNFORMATTED        
+            '<TH colstyle="text-align: center; width: 20px;">З</TH>'skip
+        .
+        end.
+        v-tmp-date     = v-tmp-date + 1.
+    end. /* do while v-tmp-date <= p-date-finish */
+    if p-group-by-order = yes then do:
+       put stream OutStr-html unformatted
+            '<TH colstyle="text-align: center; width: 20px;">% прис</TH>'skip
+            '<TH colstyle="text-align: center; width: 20px;">% прод</TH>'skip
+            '<TH colstyle="text-align: center; width: 20px;">% зак</TH>'skip
+        '</TR>'skip
+        .
+    end.
+    else do:
+       put stream OutStr-html unformatted
+            '<TH colstyle="text-align: center; width: 20px;">% прис</TH>'skip
+            '<TH colstyle="text-align: center; width: 20px;">% прод</TH>'skip
+        '</TR>'skip
+        .
+    end.    
     for each buf_tt-report
       where buf_tt-report.obj-type = buf_tt-obj-list.obj-type
         and buf_tt-report.obj-code = buf_tt-obj-list.obj-code
@@ -1584,6 +1647,8 @@ on error undo, return error return-value
           by buf_tt-report.gds-code
           by buf_tt-report.r-date
     :
+      v-first = no .
+      v-last = no .  
       if first-of(buf_tt-report.gds-code)
       then do:
         find first buf_tt-goods
@@ -1593,18 +1658,57 @@ on error undo, return error return-value
         no-error .
         if available buf_tt-goods
         then do:
-          {&PutExcel}
-            buf_tt-goods.artic                {&tabulation}
-            buf_tt-goods.gds-name             {&tabulation}
-          .
+            assign
+                v-balance = 0
+                v-balance-last = 0
+                v-sum-sale = 0
+            .     
+            v-first = yes .
+        put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD style="text-align: center;">' + buf_tt-goods.artic + '</TD>'skip
+            '<TD style="text-align: center;">' + buf_tt-goods.gds-name + '</TD>'skip
+        .        
+        end.
+      end.
+      if last-of(buf_tt-report.gds-code)
+      then do:
+        find first buf_tt-goods
+          where buf_tt-goods.obj-type = buf_tt-report.obj-type
+            and buf_tt-goods.obj-code = buf_tt-report.obj-code
+            and buf_tt-goods.gds-code = buf_tt-report.gds-code
+        no-error .
+        if available buf_tt-goods
+        then do:
+           v-last = yes . 
+           v-balance-last = buf_tt-report.balance / 2.
+
         end.
       end.
       /* выводим показатели по товару за день */
-      {&PutExcel}
-        buf_tt-report.balance         {&tabulation}
-        buf_tt-report.sale            {&tabulation}
-        buf_tt-report.order           {&tabulation}
-      .
+
+        put stream OutStr-html unformatted
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon(buf_tt-report.balance,"->>>>>>>>>>>9.999",3) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(buf_tt-report.balance,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon(buf_tt-report.sale,"->>>>>>>>>>>9.999",3) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(buf_tt-report.sale,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .    
+    if p-group-by-order then do:
+        put stream OutStr-html unformatted
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon(buf_tt-report.order,"->>>>>>>>>>>9.999",3) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(buf_tt-report.order,"->>>>>>>>>>>9.999",3) +  '</TD>'skip
+        .    
+    end.    
+      if v-first = yes then do:
+          v-balance = buf_tt-report.balance / 2 .
+      end.       
+      else do:
+          if v-last = yes then do:
+              v-balance = v-balance + v-balance-last.
+          end.  
+          else do:
+              v-balance = v-balance + buf_tt-report.balance.
+          end.    
+      end.
+      v-sum-sale = v-sum-sale + buf_tt-report.sale . 
+      
       /* проверяем критерии присутствия */
       if buf_tt-report.balance <= p-critical-qnty-balance
       then do:
@@ -1632,16 +1736,44 @@ on error undo, return error return-value
           v-gds-prc-balance = ( ( v-days-count - v-num-days-wo-balance ) / v-days-count ) * 100
           v-gds-prc-sale    = ( ( v-days-count - v-num-days-wo-sale    ) / v-days-count ) * 100
           v-gds-prc-order   = ( ( v-days-count - v-num-days-wo-order   ) / v-days-count ) * 100
-/*          v-grp-prc-balance = v-grp-prc-balance + v-gds-prc-balance*/
-/*          v-grp-prc-sale    = v-grp-prc-sale    + v-gds-prc-sale*/
-/*          v-grp-prc-order   = v-grp-prc-order   + v-gds-prc-order*/
           v-grp-end-line    = v-grp-end-line + 1
         .
-        {&PutExcel}
-          string( v-gds-prc-balance , ">>9.999" ) {&tabulation}
-          string( v-gds-prc-sale    , ">>9.999" ) {&tabulation}
-          string( v-gds-prc-order   , ">>9.999" ) {&tabulation}
-        skip.
+        put stream OutStr-html unformatted
+                '<TD num="0.000" val="' + fnc-convert-dot-to-colon(v-gds-prc-balance,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon(v-gds-prc-balance,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+                '<TD num="0.000" val="' + fnc-convert-dot-to-colon(v-gds-prc-sale,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon(v-gds-prc-sale,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        if p-group-by-order then do:
+        put stream OutStr-html unformatted
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon(v-gds-prc-order,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon(v-gds-prc-order,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        
+        end.    
+        put stream OutStr-html unformatted            
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon((v-balance / (ii - 1)),"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((v-balance / (ii - 1)),"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        if v-sum-sale <> 0 then do:
+        put stream OutStr-html unformatted            
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon((((v-balance / (ii - 1)) * ii ) / v-sum-sale  ),"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((((v-balance / (ii - 1)) * ii ) / v-sum-sale  ),"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        end.
+        else do:
+            put stream OutStr-html unformatted            
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon(0.000,"->>>>>>>>>>>9.999",3) + '"style="text-align:right;">' + fnc-convert-dot-to-colon(0.000,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        end.
+        if v-balance <> 0 then do:
+        put stream OutStr-html unformatted            
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon(v-sum-sale /(v-balance / (ii - 1)),"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon(v-sum-sale /(v-balance / (ii - 1)),"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        end.
+        else do:
+            put stream OutStr-html unformatted            
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon(0.000,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon(0.000,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        end.                    
+       put stream OutStr-html unformatted             
+        '</TR>'skip
+        .
         assign
           v-tot-num-days-wo-balance = v-tot-num-days-wo-balance + v-num-days-wo-balance
           v-tot-num-days-wo-sale    = v-tot-num-days-wo-sale    + v-num-days-wo-sale
@@ -1678,10 +1810,11 @@ on error undo, return error return-value
         no-error .
         if available buf_tt-goods
         then do:
-          {&PutExcel}
-            substitute( "Итого % группы &1" , buf_tt-goods.grp-name)  {&tabulation}
-            ""                                                        {&tabulation}
-          .
+            
+        put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan = "2" style="text-align: center;">Итого % группы' + buf_tt-goods.grp-name + '</TD>'skip
+        .        
         end.
 
         for each buf_tt-report-day
@@ -1711,11 +1844,15 @@ on error undo, return error return-value
           end.
           if last-of(buf_tt-report-day.r-date)
           then do:
-            {&PutExcel}
-              string( ((v-gds-grp-count - v-grp-balance) / v-gds-grp-count) * 100 , ">>9.999" ) {&tabulation}
-              string( ((v-gds-grp-count - v-grp-sale   ) / v-gds-grp-count) * 100 , ">>9.999" ) {&tabulation}
-              string( ((v-gds-grp-count - v-grp-order  ) / v-gds-grp-count) * 100 , ">>9.999" ) {&tabulation}
-            .
+        put stream OutStr-html unformatted
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon(((v-gds-grp-count - v-grp-balance) / v-gds-grp-count) * 100,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon(((v-gds-grp-count - v-grp-balance) / v-gds-grp-count) * 100,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon( ((v-gds-grp-count - v-grp-sale   ) / v-gds-grp-count) * 100 ,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon( ((v-gds-grp-count - v-grp-sale   ) / v-gds-grp-count) * 100 ,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+         .
+        if p-group-by-order then do:
+        put stream OutStr-html unformatted
+            '<TD num="0.000" val="' + fnc-convert-dot-to-colon(((v-gds-grp-count - v-grp-order  ) / v-gds-grp-count) * 100 ,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon(((v-gds-grp-count - v-grp-order  ) / v-gds-grp-count) * 100 ,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        end.                              
             assign
               v-grp-tot-balance = v-grp-tot-balance + v-grp-balance
               v-grp-tot-sale    = v-grp-tot-sale    + v-grp-sale
@@ -1729,12 +1866,25 @@ on error undo, return error return-value
         assign
           v-gds-grp-tot-count = v-gds-grp-count * v-days-count
         .
-
-        {&PutExcel}
-          string( (v-gds-grp-tot-count - v-grp-tot-balance) / ( v-gds-grp-tot-count ) * 100 , ">>9.999" ) {&tabulation}
-          string( (v-gds-grp-tot-count - v-grp-tot-sale   ) / ( v-gds-grp-tot-count ) * 100 , ">>9.999" ) {&tabulation}
-          string( (v-gds-grp-tot-count - v-grp-tot-order  ) / ( v-gds-grp-tot-count ) * 100 , ">>9.999" ) {&tabulation}
-        skip.
+        put stream OutStr-html unformatted
+        '<TD num="0.000" val="' + fnc-convert-dot-to-colon((v-gds-grp-tot-count - v-grp-tot-balance) / ( v-gds-grp-tot-count ) * 100,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((v-gds-grp-tot-count - v-grp-tot-balance) / ( v-gds-grp-tot-count ) * 100,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        '<TD num="0.000" val="' + fnc-convert-dot-to-colon((v-gds-grp-tot-count - v-grp-tot-sale   ) / ( v-gds-grp-tot-count ) * 100,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((v-gds-grp-tot-count - v-grp-tot-sale   ) / ( v-gds-grp-tot-count ) * 100,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        if p-group-by-order then do:
+        put stream OutStr-html unformatted
+        '<TD num="0.000" val="' + fnc-convert-dot-to-colon((v-gds-grp-tot-count - v-grp-tot-order  ) / ( v-gds-grp-tot-count ) * 100 ,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((v-gds-grp-tot-count - v-grp-tot-order  ) / ( v-gds-grp-tot-count ) * 100 ,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        end.    
+        put stream OutStr-html unformatted            
+            '<TD style="text-align: center;"></TD>'skip
+            '<TD style="text-align: center;"></TD>'skip
+            '<TD style="text-align: center;"></TD>'skip
+        .            
+        
+        put stream OutStr-html unformatted             
+        '</TR>'skip
+        .
+        
         assign
           v-grp-tot-balance = 0
           v-grp-tot-sale    = 0
@@ -1743,10 +1893,10 @@ on error undo, return error return-value
         .
       end.
     end.
-    {&PutExcel}
-      "Итого по матрице":u  {&tabulation}
-      ""                    {&tabulation}
-    .
+            put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan = "2" style="text-align: center;">Итого по матрице</TD>'skip
+        .  
     for each buf_tt-report-day
       where buf_tt-report-day.obj-type = buf_tt-obj-list.obj-type
         and buf_tt-report-day.obj-code = buf_tt-obj-list.obj-code
@@ -1773,11 +1923,16 @@ on error undo, return error return-value
       end.
       if last-of(buf_tt-report-day.r-date)
       then do:
-        {&PutExcel}
-          string( (v-gds-tot-count - v-tot-balance  ) / v-gds-tot-count * 100 , ">>9.999" ) {&tabulation}
-          string( (v-gds-tot-count - v-tot-sale     ) / v-gds-tot-count * 100 , ">>9.999" ) {&tabulation}
-          string( (v-gds-tot-count - v-tot-order    ) / v-gds-tot-count * 100 , ">>9.999" ) {&tabulation}
-        .
+        put stream OutStr-html unformatted
+        '<TD num="0.000" val="' + fnc-convert-dot-to-colon((v-gds-tot-count - v-tot-balance  ) / v-gds-tot-count * 100 ,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((v-gds-tot-count - v-tot-balance  ) / v-gds-tot-count * 100,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        '<TD num="0.000" val="' + fnc-convert-dot-to-colon((v-gds-tot-count - v-tot-sale     ) / v-gds-tot-count * 100 ,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((v-gds-tot-count - v-tot-sale     ) / v-gds-tot-count * 100 ,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .    
+        if p-group-by-order then do:
+        put stream OutStr-html unformatted
+        '<TD num="0.000" val="' + fnc-convert-dot-to-colon((v-gds-tot-count - v-tot-order    ) / v-gds-tot-count * 100 ,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((v-gds-tot-count - v-tot-order    ) / v-gds-tot-count * 100 ,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .    
+        
+        end.    
         assign
           v-tot-asm-balance = v-tot-asm-balance + v-tot-balance
           v-tot-asm-sale    = v-tot-asm-sale    + v-tot-sale
@@ -1791,21 +1946,32 @@ on error undo, return error return-value
     assign
       v-tot-asm-gds-count = v-gds-tot-count * v-days-count
     .
-    {&PutExcel}
-      string( (v-tot-asm-gds-count - v-tot-asm-balance ) / v-tot-asm-gds-count * 100 , ">>9.999" ) {&tabulation}
-      string( (v-tot-asm-gds-count - v-tot-asm-sale    ) / v-tot-asm-gds-count * 100 , ">>9.999" ) {&tabulation}
-      string( (v-tot-asm-gds-count - v-tot-asm-order   ) / v-tot-asm-gds-count * 100 , ">>9.999" ) {&tabulation}
-    skip.
+        put stream OutStr-html unformatted
+        '<TD num="0.000" val="' + fnc-convert-dot-to-colon((v-tot-asm-gds-count - v-tot-asm-balance ) / v-tot-asm-gds-count * 100 ,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((v-tot-asm-gds-count - v-tot-asm-balance ) / v-tot-asm-gds-count * 100,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        '<TD num="0.000" val="' + fnc-convert-dot-to-colon((v-tot-asm-gds-count - v-tot-asm-sale    ) / v-tot-asm-gds-count * 100 ,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((v-tot-asm-gds-count - v-tot-asm-sale    ) / v-tot-asm-gds-count * 100 ,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+        if p-group-by-order then do:
+        put stream OutStr-html unformatted
+        '<TD num="0.000" val="' + fnc-convert-dot-to-colon((v-tot-asm-gds-count - v-tot-asm-order   ) / v-tot-asm-gds-count * 100 ,"->>>>>>>>>>>9.999",3) + '"style="text-align: right;">' + fnc-convert-dot-to-colon((v-tot-asm-gds-count - v-tot-asm-order   ) / v-tot-asm-gds-count * 100 ,"->>>>>>>>>>>9.999",3) + '</TD>'skip
+        .
+
+        end.    
+        put stream OutStr-html unformatted
+            '<TD style="text-align: center;"></TD>'skip
+            '<TD style="text-align: center;"></TD>'skip
+            '<TD style="text-align: center;"></TD>'skip
+        .        
+
+        put stream OutStr-html unformatted             
+        '</TR>'skip
+        .
     assign
       v-tot-asm-gds-count = 0
       v-tot-asm-balance   = 0
       v-tot-asm-sale      = 0
       v-tot-asm-order     = 0
       v-gds-tot-count     = 0
-      sheetf.Bas-Params   = trim( v-grp-list, {&delim-par})
     .
-    /* следующий Excel лист */
-    {&PageExcel}
   end. /* for each buf_tt-obj-list */
 
   run waitfram-hide in this-procedure .
@@ -1899,7 +2065,65 @@ on error undo, return error return-value
                                                           , buf_tt-obj-list.obj-type
                                                           , buf_tt-obj-list.obj-code
                                                           )
-                                        ) .
+                                        ) .                                                          
+            /*определяем кол-во колонок*/
+
+   if p-gds-by-am = yes
+    then do:
+    
+      put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="8" STYLE="font-size: 14px;">' + string(substitute("По АМ на &1 товаров":U , v-gds-tot-count )) + '</TD>' skip
+        '</TR>'skip
+    .     
+
+   
+    end.
+    if p-group-by-post = yes
+    then do:
+      put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="8" STYLE="font-size: 14px;">Группировка по поставщику</TD>' skip
+        '</TR>'skip
+    .     
+       
+    end.
+   put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="8" STYLE="font-size: 14px;">' + string(substitute( "Критический остаток: &1" , p-critical-qnty-balance )) + '</TD>' skip
+        '</TR>'skip
+    .  
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="8" STYLE="font-size: 14px;">' + string(substitute( "Критическая продажа: &1" , p-critical-qnty-sale    )) + '</TD>' skip
+        '</TR>'skip
+    .  
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="8" STYLE="font-size: 14px;">' + string(substitute( "Критический заказ: &1"   , p-critical-qnty-order   )) + '</TD>' skip
+        '</TR>'skip
+    .  
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="8" STYLE="font-size: 14px;">' + string(substitute( "Фильтры:"                                          )) + '</TD>' skip
+        '</TR>'skip
+    .  
+     put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="8" STYLE="font-size: 14px;">' + string(substitute( "Дней без товара: &1"     , p-days-wt-goods         )) + '</TD>' skip
+        '</TR>'skip
+    .  
+      put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TD colspan="8" STYLE="font-size: 14px;">Показывать товары с ИЖТ:' + string(( if p-igt-all   = yes then {&all} else
+      ( if p-igt-new   = yes then {&ass-izd-new}   + "," else "" ) +
+      ( if p-igt-com   = yes then {&ass-izd-com}   + "," else "" ) +
+      ( if p-igt-spec  = yes then {&ass-izd-spec}  + "," else "" ) +
+      ( if p-igt-del   = yes then {&ass-izd-del}   + "," else "" ) +
+      ( if p-igt-empty = yes then {&ass-izd-empty}       else "" ) )) + '</TD>' skip
+        '</TR>'skip
+        '</thead>'skip
+    .  
     assign
       v-tmp-date      = p-date-start
       v-i             = 3
@@ -1910,60 +2134,63 @@ on error undo, return error return-value
       v-clmn-sizes    = '':u
       v-line-1        = '':u
     .
+
+   put stream OutStr-html unformatted
+        '<tbody>'
+        '<TR>'skip
+            '<TH rowspan="2" style="text-align: center;">Артикул</TH>'skip
+            '<TH rowspan="2" style="text-align: center;">Название</TH>'skip
+        .   
+    define VARIABLE v-jj as integer no-undo .
+        if p-group-by-order then do:
+            v-jj = 3 .
+        end.
+        else do:
+            v-jj = 2 .
+        end.             
     do while v-tmp-date <= p-date-finish
     :
-      assign
-        v-clmn-label-1 = v-clmn-label-1 + string(v-tmp-date,"99.99.9999") + {&comma-char} + {&comma-char} + {&comma-char}
-        v-clmn-label-2 = v-clmn-label-2 + "О" + {&comma-char} + "П" + {&comma-char} + "З" + {&comma-char}
-        v-clmn-format  = v-clmn-format  + substitute("&1={&balance-fmt};&2={&sale-fmt};&3={&order-fmt};", v-i , (v-i + 1), (v-i + 2) )
-        v-clmn-sizes   = v-clmn-sizes   + "{&balance-width}" + {&comma-char} + "{&sale-width}" + {&comma-char} + "{&order-width}" + {&comma-char}
-        v-line-1       = v-line-1       + substitute("&1:&2,", v-i , (v-i + 2))
-        v-i            = v-i + 3
-        v-tmp-date     = v-tmp-date + 1
-      .
+    put stream OutStr-html unformatted
+            '<TH colspan ="' + string(v-jj) + '" style="text-align: center;">' + string(v-tmp-date,"99.99.9999") + '</TH>'skip
+        .
+        v-tmp-date     = v-tmp-date + 1.
     end. /* do while v-tmp-date <= p-date-finish */
-    find first sheetf
-      where sheetf.sheet-num = v-list-num
-    no-error .
-    if not available sheetf then do:
-      create sheetf.
-    end.
 
-    /* обрезаем лишние знаки */
-    assign
-      v-clmn-label-1  = "Артикул" + {&comma-char} + "Название товара" + {&comma-char} + v-clmn-label-1 + "Итого %" + {&comma-char} + {&comma-char} + {&comma-char}
-      v-clmn-label-2  = {&comma-char} + {&comma-char} + v-clmn-label-2 + "% прис" + {&comma-char} + "% прод" + {&comma-char} + "% зак" + {&comma-char}
-      v-clmn-format   = "1=@;2=@;" + v-clmn-format  + substitute("&1={&balance-fmt};&2={&sale-fmt};&3={&order-fmt};", v-i , (v-i + 1), (v-i + 2) )
-      v-clmn-sizes    = "20" + {&comma-char} + "50" + {&comma-char} + v-clmn-sizes   + "{&balance-width}" + {&comma-char} + "{&sale-width}" + {&comma-char} + "{&order-width}" + {&comma-char}
-      v-line-1        = v-line-1       + substitute("&1:&2,", v-i , (v-i + 2))
-      v-clmn-label-2  = {&comma-char} + {&comma-char} + trim(v-clmn-label-2, {&comma-char} )
-      v-clmn-format   = trim(v-clmn-format , ";") + {&delim-par} + {&delim-par} + substring(buf_tt-obj-list.obj-name , 1, 31)
-      v-clmn-sizes    = trim(v-clmn-sizes  , {&comma-char} )
-      v-line-1        = trim(v-line-1 , ",")
-      sheetf.sheet-num          = v-list-num
-      sheetf.MergeCellsH        = v-line-1
-      sheetf.MergeCellsV        = "1=1:2/2=1:2"
-      sheetf.Excel-Column-Lable = v-clmn-label-1
-                                  + {&new-line}
-                                  + v-clmn-label-2
-      sheetf.colformat          = v-clmn-format
-      sheetf.Sizes              = v-clmn-sizes
-      sheetf.Bas-File           = "exe/ctrasm.bas"
-      sheetf.Bas-Param-Add      = yes
-      sheetf.silent-save        = p-is-schedule
-      sheetf.file-name          = substitute( "&1КонтрольАМ_за_период_&2_&3_&4-&5_&6_&7-&8.xls"
-                                            , p-dir-name
-                                            ,string(year (p-date-start ) , "9999")
-                                            ,string(month(p-date-start ) , "99"  )
-                                            ,string(day  (p-date-start ) , "99"  )
-                                            ,string(year (p-date-finish) , "9999")
-                                            ,string(month(p-date-finish) , "99"  )
-                                            ,string(day  (p-date-finish) , "99"  )
-                                            , p-rep-code
-                                            )
-      ReportHeader    = "":U
-      v-gds-tot-count = 0
-    .
+       put stream OutStr-html unformatted
+            '<TH colspan="' + string(v-jj) + '" style="text-align: center;">Итого %</TH>'skip
+        '</TR>'skip
+        .
+    v-tmp-date      = p-date-start.
+    do while v-tmp-date <= p-date-finish
+    :
+        put stream OutStr-html unformatted
+            '<TH colstyle="text-align: center;">О</TH>'skip
+            '<TH colstyle="text-align: center;">П</TH>'skip
+        .
+        if p-group-by-order then do:
+        put stream OutStr-html unformatted
+            '<TH colstyle="text-align: center;">З</TH>'skip
+        .        
+        end.    
+        v-tmp-date     = v-tmp-date + 1.
+    end. /* do while v-tmp-date <= p-date-finish */
+
+        if p-group-by-order then do:
+       put stream OutStr-html unformatted
+            '<TH colstyle="text-align: center;">% прис</TH>'skip
+            '<TH colstyle="text-align: center;">% прод</TH>'skip
+            '<TH colstyle="text-align: center;">% зак</TH>'skip
+        '</TR>'skip
+        .
+        end.    
+        else do:
+       put stream OutStr-html unformatted
+            '<TH colstyle="text-align: center;">% прис</TH>'skip
+            '<TH colstyle="text-align: center;">% прод</TH>'skip
+        '</TR>'skip
+        .
+
+        end.    
     for each buf_tt-goods
       where buf_tt-goods.obj-type = buf_tt-obj-list.obj-type
         and buf_tt-goods.obj-code = buf_tt-obj-list.obj-code
@@ -1973,46 +2200,6 @@ on error undo, return error return-value
       .
     end.
 
-    if p-gds-by-am = yes
-    then do:
-      assign
-        ReportHeader = {&new-line} + substitute("По АМ на &1 товаров":U , v-gds-tot-count )
-      .
-    end.
-    if p-group-by-post = yes
-    then do:
-      assign
-        ReportHeader = ReportHeader + {&new-line} + "Группировка по поставщику":U
-      .
-    end.
-
-    assign
-      ReportHeader = ReportHeader + {&new-line} + substitute( "Критический остаток: &1" , p-critical-qnty-balance ) +
-                                    {&new-line} + substitute( "Критическая продажа: &1" , p-critical-qnty-sale    ) +
-                                    {&new-line} + substitute( "Критический заказ: &1"   , p-critical-qnty-order   ) +
-                                    {&new-line} + substitute( "Фильтры:"                                          ) +
-                                    {&new-line} + substitute( "Дней без товара: &1"     , p-days-wt-goods         )
-    .
-    assign
-      ReportHeader = ReportHeader + {&new-line} + "Показывать товары с ИЖТ:":U +
-      ( if p-igt-all   = yes then {&all} else
-      ( if p-igt-new   = yes then {&ass-izd-new}   + "," else "" ) +
-      ( if p-igt-com   = yes then {&ass-izd-com}   + "," else "" ) +
-      ( if p-igt-spec  = yes then {&ass-izd-spec}  + "," else "" ) +
-      ( if p-igt-del   = yes then {&ass-izd-del}   + "," else "" ) +
-      ( if p-igt-empty = yes then {&ass-izd-empty}       else "" ) )
-    .
-    assign
-      ReportHeader = ReportHeader + {&new-line}
-    .
-    run rep/extitle.p (v-list-num).
-    assign
-      v-grp-start-line  = 1
-      v-grp-end-line    = 0
-      v-supp-start-line = 1
-      v-supp-end-line   = 0
-      v-grp-list        = ''
-    .
 
     for each buf_tt-report
       where buf_tt-report.obj-type = buf_tt-obj-list.obj-type
@@ -2032,19 +2219,24 @@ on error undo, return error return-value
         no-error .
         if available buf_tt-goods
         then do:
-          {&PutExcel}
-            buf_tt-goods.artic                {&tabulation}
-            buf_tt-goods.gds-name             {&tabulation}
-          .
+        put stream OutStr-html unformatted
+        '<TR>'skip
+            '<TH style="text-align: center;">' + buf_tt-goods.artic + '</TH>'skip
+            '<TH style="text-align: center;">' + buf_tt-goods.gds-name + '</TH>'skip
+        .             
         end.
       end. /* if first-of(buf_tt-report.gds-code) */
 
       /* выводим показатели по товару за день */
-      {&PutExcel}
-        buf_tt-report.balance         {&tabulation}
-        buf_tt-report.sale            {&tabulation}
-        buf_tt-report.order           {&tabulation}
-      .
+        put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string(buf_tt-report.balance) + '</TH>'skip
+            '<TH style="text-align: center;">' + string(buf_tt-report.sale) + '</TH>'skip
+        .    
+        if p-group-by-order then do:
+        put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string(buf_tt-report.order) + '</TH>'skip
+        .    
+        end.    
       /* проверяем критерии присутствия */
       if buf_tt-report.balance <= p-critical-qnty-balance
       then do:
@@ -2074,11 +2266,21 @@ on error undo, return error return-value
           v-gds-prc-order   = ( ( v-days-count - v-gds-order   ) / v-days-count ) * 100
           v-grp-end-line    = v-grp-end-line + 1
         .
-        {&PutExcel}
-          string( v-gds-prc-balance , ">>9.999" ) {&tabulation}
-          string( v-gds-prc-sale    , ">>9.999" ) {&tabulation}
-          string( v-gds-prc-order   , ">>9.999" ) {&tabulation}
-        skip.
+        if p-group-by-order then do:
+        put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-gds-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-gds-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-gds-prc-order   , ">>9.999" ) + '</TH>'skip
+        '</TR>'skip
+        .           
+        end.
+        else do:
+       put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-gds-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-gds-prc-sale    , ">>9.999" ) + '</TH>'skip
+        '</TR>'skip
+        .     
+        end.    
         /* обнуляем счетчик потовару */
         assign
           v-gds-balance = 0
@@ -2097,10 +2299,10 @@ on error undo, return error return-value
         no-error .
         if available buf_tt-goods
         then do:
-          {&PutExcel}
-            substitute( "Итого % группы &1" , buf_tt-goods.grp-name) {&tabulation}
-            ""                                                       {&tabulation}
-          .
+           put stream OutStr-html unformatted
+            '<TR>'skip
+                '<TH colspan = "2" style="text-align: center;">Итого % группы' + buf_tt-goods.grp-name + '</TH>'skip
+            .                    
         end.
 
         assign
@@ -2158,11 +2360,22 @@ on error undo, return error return-value
               v-grp-prc-sale    = ((v-gds-grp-count - v-grp-sale   ) / v-gds-grp-count) * 100
               v-grp-prc-order   = ((v-gds-grp-count - v-grp-order  ) / v-gds-grp-count) * 100
             .
-            {&PutExcel}
-              string( v-grp-prc-balance , ">>9.999" ) {&tabulation}
-              string( v-grp-prc-sale    , ">>9.999" ) {&tabulation}
-              string( v-grp-prc-order   , ">>9.999" ) {&tabulation}
-            .
+         if p-group-by-order then do:   
+         put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-grp-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-order   , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
+        .              
+         end.
+         else do:
+         put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-grp-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-sale    , ">>9.999" ) + '</TH>'skip
+           '</TR>'skip
+        .                
+         end.       
+
             assign
               v-grp-tot-balance = v-grp-tot-balance + v-grp-balance
               v-grp-tot-sale    = v-grp-tot-sale    + v-grp-sale
@@ -2184,11 +2397,21 @@ on error undo, return error return-value
           v-gds-sup-count     = v-gds-sup-count + v-gds-grp-count
           v-gds-grp-count     = 0
         .
-        {&PutExcel}
-          string( v-grp-prc-balance , ">>9.999" ) {&tabulation}
-          string( v-grp-prc-sale    , ">>9.999" ) {&tabulation}
-          string( v-grp-prc-order   , ">>9.999" ) {&tabulation}
-        skip.
+        if p-group-by-order then do:
+        put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-grp-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-order   , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
+        .    
+        end.
+        else do:
+        put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-grp-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
+        .                
+        end.    
       end. /* if last-of(buf_tt-report.grp-code) */
       if last-of(buf_tt-report.supp-type) or
          last-of(buf_tt-report.supp-code)
@@ -2196,10 +2419,10 @@ on error undo, return error return-value
         if buf_tt-report.supp-type = "" and
            buf_tt-report.supp-code = 0
         then do:
-          {&PutExcel}
-            "Итого по поставщику Неизвестный поставщик" {&tabulation}
-            ""                                          {&tabulation}
-          .
+        put stream OutStr-html unformatted
+            '<TR>'skip
+            '<TH colspan="2" style="text-align: center;">Итого по поставщику Неизвестный поставщик</TH>'skip
+        . 
         end.
         else do:
           find first buf_clients no-lock
@@ -2208,10 +2431,6 @@ on error undo, return error return-value
           no-error .
           if available buf_clients
           then do:
-            {&PutExcel}
-              substitute("Итого % по поставщику &1":U , buf_clients.obj-name ) {&tabulation}
-              ""                                                               {&tabulation}
-            .
           end.
         end.
         for each buf_tt-report-day
@@ -2247,11 +2466,21 @@ on error undo, return error return-value
               v-sup-prc-sale    = ((v-gds-sup-count - v-sup-sale   ) / v-gds-sup-count) * 100
               v-sup-prc-order   = ((v-gds-sup-count - v-sup-order  ) / v-gds-sup-count) * 100
             .
-            {&PutExcel}
-              string( v-sup-prc-balance , ">>9.999" ) {&tabulation}
-              string( v-sup-prc-sale    , ">>9.999" ) {&tabulation}
-              string( v-sup-prc-order   , ">>9.999" ) {&tabulation}
-            .
+        if p-group-by-order then do:
+        put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-grp-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-order   , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
+        .
+        end.
+        else do:
+        put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-grp-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
+        .            
+        end.    
             assign
               v-sup-tot-balance = v-sup-tot-balance + v-sup-balance
               v-sup-tot-sale    = v-sup-tot-sale    + v-sup-sale
@@ -2281,18 +2510,27 @@ on error undo, return error return-value
           v-gds-sup-tot-count = 0
 
         .
-        {&PutExcel}
-          string( v-sup-prc-balance , ">>9.999" ) {&tabulation}
-          string( v-sup-prc-sale    , ">>9.999" ) {&tabulation}
-          string( v-sup-prc-order   , ">>9.999" ) {&tabulation}
-        skip.
+        if p-group-by-order then do:
+       put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-grp-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-order   , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
+        .
+        end.
+        else do:
+       put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-grp-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-grp-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
+        .            
+        end.    
       end. /* if last-of(buf_tt-report.supp-type) or */
     end. /* for each buf_tt-report */
-
-    {&PutExcel}
-      "Итого по матрице":u  {&tabulation}
-      ""                    {&tabulation}
-    .
+           put stream OutStr-html unformatted
+            '<TR>'skip
+                '<TH colspan = "2" style="text-align: center;">Итого по матрице</TH>'skip
+            .   
 
     define variable v-asm-flag-balance  as logical   no-undo .
     define variable v-asm-flag-sale     as logical   no-undo .
@@ -2363,11 +2601,22 @@ on error undo, return error return-value
           v-asm-prc-sale    = ((v-gds-tot-count - v-asm-sale   ) / v-gds-tot-count) * 100
           v-asm-prc-order   = ((v-gds-tot-count - v-asm-order  ) / v-gds-tot-count) * 100
         .
-        {&PutExcel}
-          string( v-asm-prc-balance , ">>9.999" ) {&tabulation}
-          string( v-asm-prc-sale    , ">>9.999" ) {&tabulation}
-          string( v-asm-prc-order   , ">>9.999" ) {&tabulation}
+        if p-group-by-order then do:
+                put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-asm-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-asm-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-asm-prc-order   , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
         .
+        end.
+        else do:
+                put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-asm-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-asm-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
+        .
+            
+        end.    
         assign
           v-asm-tot-balance = v-asm-tot-balance + v-asm-balance
           v-asm-tot-sale    = v-asm-tot-sale    + v-asm-sale
@@ -2385,21 +2634,30 @@ on error undo, return error return-value
       v-asm-prc-sale      = (v-gds-asm-tot-count - v-asm-tot-sale   ) / v-gds-asm-tot-count * 100
       v-asm-prc-order     = (v-gds-asm-tot-count - v-asm-tot-order  ) / v-gds-asm-tot-count * 100
     .
-    {&PutExcel}
-      string( v-asm-prc-balance , ">>9.999" ) {&tabulation}
-      string( v-asm-prc-sale    , ">>9.999" ) {&tabulation}
-      string( v-asm-prc-order   , ">>9.999" ) {&tabulation}
-    skip.
+    if p-group-by-order then do:
+            put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-asm-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-asm-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-asm-prc-order   , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
+        .
+     end.
+     else do:
+            put stream OutStr-html unformatted
+            '<TH style="text-align: center;">' + string( v-asm-prc-balance , ">>9.999" ) + '</TH>'skip
+            '<TH style="text-align: center;">' + string( v-asm-prc-sale    , ">>9.999" ) + '</TH>'skip
+            '</TR>'skip
+        .         
+     end.       
     assign
       v-asm-tot-balance     = 0
       v-asm-tot-sale        = 0
       v-asm-tot-order       = 0
       v-gds-asm-count       = 0
       v-gds-asm-tot-count   = 0
-      sheetf.Bas-Params     = trim( v-grp-list, {&delim-par})
     .
     /* следующий Excel лист */
-    {&PageExcel}
+
   end. /* for each buf_tt-obj-list */
   run waitfram-hide in this-procedure .
 end.

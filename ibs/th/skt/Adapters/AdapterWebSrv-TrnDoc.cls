@@ -19,17 +19,19 @@ using Progress.Lang.*.
 using ibs.th.skt.Adapters.*. 
 
 
-class ibs.th.skt.Adapters.AdapterOra-i506 implements IAdapter: 
+class ibs.th.skt.Adapters.AdapterWebSrv-TrnDoc implements IAdapter: 
 
-  {ibs/th/skt/ControlledClients/TSDTT.i}
+  {ibs/th/skt/ControlledClients/websrvTT.i}
 
   define property StrLog as character no-undo
     get.
     set.
-  
+
+
   define property UserId_ as character no-undo
     get.
     set.
+
 
 
   /*------------------------------------------------------------------------------
@@ -38,14 +40,17 @@ class ibs.th.skt.Adapters.AdapterOra-i506 implements IAdapter:
 ------------------------------------------------------------------------------*/
 		
   method public void WriteDB (output glog as log):
-    
-    run ibs/th/skt/Adapters/AdapteeProcOra-i506.p
+    define variable ERR as logical no-undo init no .
+    run ibs/th/skt/Adapters/AdapteeWebSrv-TrnDoc.p
       (
       input table TempTrnDoc,
       input table TempDocLine,
-      input UserId_
+      input table TempDocAttr,
+      input table TempGdsDtl,
+      input table TempParts,
+      output ERR
       ) no-error.
-    if error-status:error then
+    if ERR then
     do:
       assign
         StrLog = return-value
@@ -56,10 +61,14 @@ class ibs.th.skt.Adapters.AdapterOra-i506 implements IAdapter:
       glog = true.
 
   end method.
-
-  method public void SetTempTable (input table TempTrnDoc, input table TempDocLine, input userId_ as char):
-    UserId_ = userId_.
-  end method.
   
+  method public void SetTempTable (input table TempTrnDoc,
+                                   input table TempDocLine,
+                                   input table TempGdsDtl,
+                                   input table TempParts,
+                                   input table TempDocAttr):
+    
+    
+  end method.
 
 end class.

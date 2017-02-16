@@ -44,14 +44,13 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
   define private variable sn          as character no-undo.
   define private variable hndlSocket  as handle    no-undo.
 
-  method public IResponse Execute_( input req as IRequest ):
+  method public void Execute_( input req as IRequest, output resp as class IResponse ):
   
   do transaction:
 
     &scop CRLF chr(13) + chr(10)
     &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
-    
-    define variable resp       as class     IResponse no-undo.
+
     define variable contLength as integer   no-undo.
     define variable strLog     as character no-undo.
     define variable str        as character no-undo.
@@ -151,7 +150,6 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
                 LogWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
                 tsd:SomeStr = tsd:getStatusXml(false, "Не известный штрих-код:" + TempDocLine.b-code).
                 writeSock("").
-                return resp.                
               end.
               
             end.
@@ -238,8 +236,6 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     end.
     
   end /*trans*/.
-    
-  return resp.
     
   end method.
 
@@ -350,42 +346,42 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     set-size(mbuffer1) = 0.
     if arg = "dictionaries" then 
     do:
-      os-command silent value( 'set pro >>procarch') .
-      if search ("procarch") = ? 
-      then do:
-        LogWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
-        return false.
-      end.    
-  
-      input from value (search('procarch')) no-convert.
-      import tempStr.
-      if not index ("PROCESSOR_ARCHITECTURE=AMD64", tempStr) = 0
-        then assign is-ProcArch64 = true.
-      import tempStr.
-      if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
-        then assign is-ProcArch64 = true.
-      input close.
-  
-      os-copy value(search("exe/DBInit.exe")) value ("DBInit.exe").    
-      
-      if is-ProcArch64 
-      then do:
-        os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
-      end.
-      else do:
-        os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
-      end.    
-      
-      
-      os-command silent value( 'DBInit.exe 9 31') .
-      if search ("dictionaries.s3db") = ? 
-      then do:
+    os-command silent value( 'set pro >>procarch') .
+    if search ("procarch") = ? 
+    then do:
+      LogWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
+      return false.
+    end.    
+
+    input from value (search('procarch')) no-convert.
+    import tempStr.
+    if not index ("PROCESSOR_ARCHITECTURE=AMD64", tempStr) = 0
+      then assign is-ProcArch64 = true.
+    import tempStr.
+    if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
+      then assign is-ProcArch64 = true.
+    input close.
+
+    os-copy value(search("exe/DBInit.exe")) value ("DBInit.exe").    
+    
+    if is-ProcArch64 
+    then do:
+      os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
+    end.
+    else do:
+      os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
+    end.    
+    
+    
+    os-command silent value( 'DBInit.exe 9 31') .
+    if search ("dictionaries.s3db") = ? 
+    then do:
         LogWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
-        return false.
-      end.
-      assign
-        file-info:file-name = "dictionaries.s3db"
-        .
+      return false.
+    end.
+    assign
+      file-info:file-name = "dictionaries.s3db"
+      .
       set-size (mbuffer1) = file-info:file-size.
       input from value (file-info:file-name) binary no-convert.
       import mbuffer1.

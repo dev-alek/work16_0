@@ -21,11 +21,9 @@ initial "@(#)$Workfile$".
           run Create-gds-sum in this-procedure (3) .
         End.
         run CheckNullOborot in this-procedure .
-        if NullStr < 2 then do:    /* проверка на не 0        */
-          if NullStr = 0 then do:
+        if NullStr < 1 then do:    /* проверка на не 0        */
             run PutTitul in this-procedure .  /* вывод шапок */
             run PrintLine in this-procedure .     /* вывод данных            */
-          end.
           run CalculSum in this-procedure (1) .  /* суммирование всего */
           if tog-obj = true then run CalculSum in this-procedure (2) .  /* суммирование по объекту */
           run CalculSum in this-procedure (3) .  /* суммирование  по произв-лю */
@@ -81,11 +79,9 @@ initial "@(#)$Workfile$".
           end .
         End .
         run CheckNullOborot in this-procedure .
-        if NullStr < 2 then do:    /* проверка на не 0        */
-          if NullStr = 0 then do:
+        if NullStr < 1 then do:    /* проверка на не 0        */
             run PutTitul in this-procedure .  /* вывод шапок */
             run PrintLine in this-procedure .     /* вывод данных            */
-          end.
           run CalculSum in this-procedure (1) .  /* суммирование всего */
           if tog-obj = true then run CalculSum in this-procedure (2) .  /* суммирование по объекту */
           run CalculSum in this-procedure (3) .  /* суммирование  по группам */
@@ -140,11 +136,9 @@ initial "@(#)$Workfile$".
           end.
         end.
         run CheckNullOborot in this-procedure .
-        if NullStr < 2 then do:    /* проверка на не 0        */
-          if NullStr = 0 then do:
+        if NullStr < 1 then do:    /* проверка на не 0        */
             run PutTitul in this-procedure .  /* вывод шапок */
             run PrintLine in this-procedure .     /* вывод данных            */
-          end.
           run CalculSum in this-procedure (1) .  /* суммирование всего */
           if tog-obj = true then run CalculSum in this-procedure (2) .  /* суммирование по объекту */
           for each tt-grp-tree :
@@ -165,11 +159,9 @@ initial "@(#)$Workfile$".
           run Create-gds-sum in this-procedure (4) .
         End.
         run CheckNullOborot in this-procedure .
-        if NullStr < 2 then do:    /* проверка на не 0        */
-          if NullStr = 0 then do:
+        if NullStr < 1 then do:    /* проверка на не 0        */
             run PutTitul in this-procedure .  /* вывод шапок */
             run PrintLine in this-procedure .     /* вывод данных            */
-          end.
           run CalculSum in this-procedure (1) .  /* суммирование всего */
           if tog-obj = true then run CalculSum in this-procedure (2) .  /* суммирование по объекту */
           run CalculSum in this-procedure (3) .  /* суммирование  по произв-лю */
@@ -199,11 +191,11 @@ initial "@(#)$Workfile$".
           run Create-gds-sum in this-procedure (4) .
         End.
         run CheckNullOborot in this-procedure .
-        if NullStr < 2 then do:    /* проверка на не 0        */
-          if NullStr = 0 then do:
+        if NullStr < 1 then do:    /* проверка на не 0        */
+  
             run PutTitul in this-procedure .  /* вывод шапок */
             run PrintLine in this-procedure .     /* вывод данных            */
-          end.
+
           run CalculSum in this-procedure (1) .  /* суммирование всего */
           if tog-obj = true then run CalculSum in this-procedure (2) .  /* суммирование по объекту */
           run CalculSum in this-procedure (3) .  /* суммирование  по произв-лю */
@@ -229,11 +221,11 @@ initial "@(#)$Workfile$".
           run Create-gds-sum in this-procedure (3) .
         End.
         run CheckNullOborot in this-procedure .
-        if NullStr < 2 then do:    /* проверка на не 0        */
-          if NullStr = 0 then do:
+        if NullStr < 1 then do:    /* проверка на не 0        */
+
             run PutTitul in this-procedure .  /* вывод шапок */
             run PrintLine in this-procedure .     /* вывод данных            */
-          end.
+
           run CalculSum in this-procedure (1) .  /* суммирование всего */
           if tog-obj = true then run CalculSum in this-procedure (2) .  /* суммирование по объекту */
           run CalculSum in this-procedure (3) .  /* суммирование  по произв-лю */

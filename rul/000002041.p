@@ -114,6 +114,7 @@ define buffer buf_temp-rule-call-param for temp-rule-call-param.
 
   define variable p-period-type as character no-undo .
   define variable p-gds-by-am as logical no-undo .
+  define variable p-group-by-order as logical no-undo .
   define variable p-group-by-post as logical no-undo .
   define variable p-critical-qnty-balance as decimal   no-undo .
   define variable p-critical-qnty-sale    as decimal   no-undo .
@@ -203,6 +204,7 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
                       ,input v-date1
                       ,input v-date2
                       ,input p-gds-by-am
+                      ,input p-group-by-order
                       ,input p-group-by-post
                       ,input p-critical-qnty-balance
                       ,input p-critical-qnty-sale

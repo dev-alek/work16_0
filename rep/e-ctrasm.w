@@ -51,6 +51,7 @@ define variable v-critical-qnty-balance   as decimal   no-undo .
 define variable v-critical-qnty-sale      as decimal   no-undo .
 define variable v-critical-qnty-order     as decimal   no-undo .
 define variable v-group-by-post           as logical   no-undo .
+define variable v-group-by-order          as logical   no-undo .
 define variable v-detailed                as logical   no-undo .
 
 /* _UIB-CODE-BLOCK-END */
@@ -71,11 +72,12 @@ define variable v-detailed                as logical   no-undo .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-8 RECT-9 RECT-10 tg-gds-by-am ~
+tg-group-by-order fi-days-wt-goods fi-critical-qnty-balance ~
+fi-critical-qnty-sale fi-critical-qnty-order tog-1 tog-2 tog-3 tog-4 tog-5 ~
+tog-6 
+&Scoped-Define DISPLAYED-OBJECTS tg-gds-by-am tg-group-by-order ~
 fi-days-wt-goods fi-critical-qnty-balance fi-critical-qnty-sale ~
-fi-critical-qnty-order tog-1 tog-2 tog-3 tog-4 tog-5 tog-6
-&Scoped-Define DISPLAYED-OBJECTS tg-gds-by-am fi-days-wt-goods ~
-fi-critical-qnty-balance fi-critical-qnty-sale fi-critical-qnty-order tog-1 ~
-tog-2 tog-3 tog-4 tog-5 tog-6
+fi-critical-qnty-order tog-1 tog-2 tog-3 tog-4 tog-5 tog-6 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -124,8 +126,8 @@ DEFINE RECTANGLE RECT-10
      SIZE 32.5 BY 10.5.
 
 DEFINE RECTANGLE RECT-8
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 71 BY 4.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 71 BY 5.25.
 
 DEFINE RECTANGLE RECT-9
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
@@ -141,13 +143,18 @@ DEFINE VARIABLE tg-gds-by-am AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 43.5 BY .83 NO-UNDO.
 
-DEFINE VARIABLE tg-group-by-post AS LOGICAL INITIAL no
-     LABEL "Группировка по поставщикам"
+DEFINE VARIABLE tg-group-by-order AS LOGICAL INITIAL no 
+     LABEL "По заказам" 
      VIEW-AS TOGGLE-BOX
      SIZE 43 BY .83 NO-UNDO.
 
-DEFINE VARIABLE tog-1 AS LOGICAL INITIAL no
-     LABEL "Item1"
+DEFINE VARIABLE tg-group-by-post AS LOGICAL INITIAL no 
+     LABEL "Группировка по поставщикам" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 43 BY .83 NO-UNDO.
+
+DEFINE VARIABLE tog-1 AS LOGICAL INITIAL no 
+     LABEL "Item1" 
      VIEW-AS TOGGLE-BOX
      SIZE 28 BY .83 NO-UNDO.
 
@@ -181,36 +188,37 @@ DEFINE VARIABLE tog-6 AS LOGICAL INITIAL no
 
 DEFINE FRAME F-Main
      tg-gds-by-am AT ROW 2 COL 2 WIDGET-ID 2
-     tg-group-by-post AT ROW 3 COL 2 WIDGET-ID 4
-     tg-detailed AT ROW 4 COL 2 WIDGET-ID 6
-     fi-days-wt-goods AT ROW 5.75 COL 3.5 WIDGET-ID 14
-     fi-critical-qnty-balance AT ROW 6 COL 42 WIDGET-ID 24
-     fi-gds-qnty AT ROW 6.75 COL 1.5 WIDGET-ID 16
-     fi-critical-qnty-sale AT ROW 7 COL 42.12 WIDGET-ID 26
-     fi-critical-qnty-order AT ROW 8 COL 44 WIDGET-ID 28
-     tog-1 AT ROW 9.25 COL 2 WIDGET-ID 42
-     tog-2 AT ROW 10.25 COL 2 WIDGET-ID 44
-     tog-3 AT ROW 11.25 COL 2 WIDGET-ID 46
-     tog-4 AT ROW 12.25 COL 2 WIDGET-ID 48
-     tog-5 AT ROW 13.25 COL 2 WIDGET-ID 50
-     tog-6 AT ROW 14.25 COL 2 WIDGET-ID 54
+     tg-group-by-order AT ROW 3 COL 2 WIDGET-ID 56
+     tg-group-by-post AT ROW 3.92 COL 2.13 WIDGET-ID 4
+     tg-detailed AT ROW 4.92 COL 2.13 WIDGET-ID 6
+     fi-days-wt-goods AT ROW 7.25 COL 3.5 WIDGET-ID 14
+     fi-critical-qnty-balance AT ROW 7.5 COL 42 WIDGET-ID 24
+     fi-gds-qnty AT ROW 8.25 COL 1.5 WIDGET-ID 16
+     fi-critical-qnty-sale AT ROW 8.5 COL 42.13 WIDGET-ID 26
+     fi-critical-qnty-order AT ROW 9.5 COL 44 WIDGET-ID 28
+     tog-1 AT ROW 10.75 COL 2 WIDGET-ID 42
+     tog-2 AT ROW 11.75 COL 2 WIDGET-ID 44
+     tog-3 AT ROW 12.75 COL 2 WIDGET-ID 46
+     tog-4 AT ROW 13.75 COL 2 WIDGET-ID 48
+     tog-5 AT ROW 14.75 COL 2 WIDGET-ID 50
+     tog-6 AT ROW 15.75 COL 2 WIDGET-ID 54
      "Критерии" VIEW-AS TEXT
-          SIZE 8 BY .67 AT ROW 5.25 COL 41 WIDGET-ID 22
-          FGCOLOR 4
-     "Показывать товары с ИЖТ:" VIEW-AS TEXT
-          SIZE 26 BY .67 AT ROW 8.25 COL 3 WIDGET-ID 52
+          SIZE 8 BY .67 AT ROW 6.75 COL 41 WIDGET-ID 22
+          FGCOLOR 4 
+     "Фильтры" VIEW-AS TEXT
+          SIZE 8 BY .67 AT ROW 6.75 COL 1.5 WIDGET-ID 12
+          FGCOLOR 4 
      "Общее" VIEW-AS TEXT
           SIZE 8 BY .67 AT ROW 1.25 COL 1.5 WIDGET-ID 18
-          FGCOLOR 4
-     "Фильтры" VIEW-AS TEXT
-          SIZE 8 BY .67 AT ROW 5.25 COL 1.5 WIDGET-ID 12
-          FGCOLOR 4
+          FGCOLOR 4 
+     "Показывать товары с ИЖТ:" VIEW-AS TEXT
+          SIZE 26 BY .67 AT ROW 9.75 COL 3 WIDGET-ID 52
      RECT-8 AT ROW 1 COL 1 WIDGET-ID 8
-     RECT-9 AT ROW 5 COL 1 WIDGET-ID 10
-     RECT-10 AT ROW 5 COL 39.5 WIDGET-ID 20
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
-         AT COL 1 ROW 1 SCROLLABLE
+     RECT-9 AT ROW 6.25 COL 1 WIDGET-ID 10
+     RECT-10 AT ROW 6.25 COL 39.5 WIDGET-ID 20
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
+         AT COL 1 ROW 1 SCROLLABLE 
          BGCOLOR 8 .
 
 
@@ -240,7 +248,7 @@ END.
 &ANALYZE-SUSPEND _CREATE-WINDOW
 /* DESIGN Window definition (used by the UIB)
   CREATE WINDOW s-object ASSIGN
-         HEIGHT             = 14.67
+         HEIGHT             = 16.04
          WIDTH              = 71.5.
 /* END WINDOW DEFINITION */
                                                                         */
@@ -438,6 +446,7 @@ define variable v-naim           as character        no-undo.
             fi-critical-qnty-order    = v-critical-qnty-order
             tg-gds-by-am              = v-gds-by-am
             tg-group-by-post          = v-group-by-post
+            tg-group-by-order         = v-group-by-order  
           .
           /*выключить все галки которые в режиме по расписанию не нужны*/
           display
@@ -449,12 +458,13 @@ define variable v-naim           as character        no-undo.
             /*tg-group-by-post*/
           with frame {&frame-name} .
           enable
-            fi-days-wt-goods
-            fi-critical-qnty-balance
-            fi-critical-qnty-sale
-            fi-critical-qnty-order
-            tg-gds-by-am
-            /*tg-group-by-post*/
+          fi-days-wt-goods
+          fi-critical-qnty-balance
+          fi-critical-qnty-sale
+          fi-critical-qnty-order
+          tg-gds-by-am
+          tg-group-by-order
+          /*tg-group-by-post*/
           with frame {&frame-name} .
           assign tog-1 = yes.
           display
@@ -477,7 +487,7 @@ define variable v-naim           as character        no-undo.
                 , output v-type-price
                 , output v-type-val
                 ) .
-      if num-entries(v-list , {&delim-par}) = 14
+      if num-entries(v-list , {&delim-par}) = 15
       then do:
         assign
           tg-gds-by-am              = logical(entry( 1, v-list, {&delim-par}))
@@ -494,9 +504,11 @@ define variable v-naim           as character        no-undo.
           tog-4                     = logical(entry( 12, v-list, {&delim-par}))
           tog-5                     = logical(entry( 13, v-list, {&delim-par}))
           tog-6                     = logical(entry( 14, v-list, {&delim-par}))
+          tg-group-by-order         = logical(entry( 15, v-list, {&delim-par}))
         no-error .
         display
           tg-gds-by-am
+          tg-group-by-order
           /*tg-group-by-post*/
     /*      tg-detailed*/
           fi-critical-qnty-balance
@@ -515,6 +527,7 @@ define variable v-naim           as character        no-undo.
       else do:
         display
           tg-gds-by-am
+          tg-group-by-order
           /*tg-group-by-post*/
     /*      tg-detailed*/
           fi-critical-qnty-balance
@@ -656,6 +669,7 @@ CASE p-action:
         fi-critical-qnty-sale
         fi-critical-qnty-order
         tg-gds-by-am
+        tg-group-by-order
         tg-group-by-post
         tg-detailed
       .
@@ -776,6 +790,7 @@ define variable v-type-val       as logical          no-undo.
     fi-critical-qnty-sale
     fi-critical-qnty-order
     tg-gds-by-am
+    tg-group-by-order
     tg-group-by-post
     tg-detailed
     tog-1
@@ -813,7 +828,8 @@ define variable v-type-val       as logical          no-undo.
               string(tog-3            , "yes/no") + {&delim-par} +
               string(tog-4            , "yes/no") + {&delim-par} +
               string(tog-5            , "yes/no") + {&delim-par} +
-              string(tog-6            , "yes/no")
+              string(tog-6            , "yes/no") + {&delim-par} +
+              string(tg-group-by-order, "yes/no")
   .
 
   run uf-set( input {&uf-ctrasm}
@@ -832,6 +848,7 @@ define variable v-type-val       as logical          no-undo.
                      , input x-date-start
                      , input x-date-end
                      , input tg-gds-by-am
+                     , input tg-group-by-order
                      , input tg-group-by-post
                      , input fi-critical-qnty-balance
                      , input fi-critical-qnty-sale
@@ -865,6 +882,7 @@ PROCEDURE my-var :
     fi-critical-qnty-sale
     fi-critical-qnty-order
     tg-gds-by-am
+    tg-group-by-order
     tg-group-by-post
     tg-detailed
     tog-1

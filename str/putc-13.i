@@ -25,8 +25,10 @@ define input parameter p-cash-os like ub.cash-desk.cash-os no-undo .
 define input parameter p-call-from-goods as logical no-undo .
 define variable ii as integer no-undo .
 define variable v-rate-code like ub.tax-rate.rate-code no-undo .
+define variable v-envd as LOGICAL no-undo .
 define variable v-plu as integer no-undo .
 define buffer buf_tax-rate for ub.tax-rate.
+define buffer buf_tax-rate-attr for ub.tax-rate-attr.
 
 if cash-txr.rate-value = ?
 and not (cash-txr.news-action OR cash-txr.status_ <> {&current-status})
@@ -111,16 +113,29 @@ CASE pos-type:
     end.
   end.
   when {&cd-type-IBM-XML} then do:
+      find first buf_tax-rate-attr where buf_tax-rate-attr.rate-code = cash-txr.rate-code
+                                     and buf_tax-rate-attr.tax-code = cash-txr.tax-code
+                                     and buf_tax-rate-attr.attr-code = "envd" no-error .
+       if AVAILABLE buf_tax-rate-attr then do:
+           v-envd = yes .
+       end.
+       else v-envd = no .                                           
     run bgelib-tag-open in this-procedure ( input 3, input "TaxCodes"
                                           , input "":U).
     run bgelib-tag-put in this-procedure ( input 4, input "TCCode"
                                           , input string(cash-txr.rate-code), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "TCType"
                                           , input string((if cash-txr.tax-type = {&percentive} then 2 else 1)), input 1 ).
+    if v-envd then do:
+    run bgelib-tag-put in this-procedure ( input 4, input "TCValue"
+                                          , input string(-1), input 1 ).    
+    end.    
+    else do:
     run bgelib-tag-put in this-procedure ( input 4, input "TCValue"
                                           , input string(if cash-txr.rate-value = ?
                                                          then 0
                                                          else cash-txr.rate-value), input 1 ).
+    end.                                                     
     run bgelib-tag-put in this-procedure ( input 4, input "TCInclude"
                                           , input string(1), input 1 ).
     run bgelib-tag-close in this-procedure ( input 3, input "TaxCodes").

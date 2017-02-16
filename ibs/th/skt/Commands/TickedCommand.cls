@@ -37,14 +37,14 @@ class ibs.th.skt.Commands.TickedCommand implements ICommand:
   define private variable logWrite    as class     LogWrite no-undo.
   define private variable hndlSocket as handle no-undo.
 
-  method public ibs.th.skt.Commands.IResponse Execute_( input req as ibs.th.skt.Commands.IRequest ):
+  method public void Execute_( input req as ibs.th.skt.Commands.IRequest, output resp as class IResponse ):
     
-    define variable resp   as character no-undo.
+    resp = new SimpleResponse().
     
     logWrite = new LogWrite().
     ticked = new Ticked().
     hndlsocket = cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket.
-    resp = ticked:AuthorizationTicked(cast(req, ibs.th.skt.Commands.SimpleRequest)).
+    ticked:AuthorizationTicked(cast(req, ibs.th.skt.Commands.SimpleRequest)).
     writeSock("").
 
   end method.

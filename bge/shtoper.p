@@ -90,12 +90,83 @@ define variable vss-description as character no-undo init "Ёкспорт XML смены".
         field gds-name   as character
         field envd       as logical
         field fact-qnty  as decimal
+        field pl-code   as integer
+        field qnty       as decimal
+        field cli-qnty   as decimal
+        field state-density  as decimal
 
         index pi is primary unique
             artic
             prod-type
             prod-code
     .
+    
+
+    define temp-table temp_chk-doc no-undo
+        field gds-code      as integer
+        field b-code        as integer
+        field fact-qnty     as decimal
+        field pl-code       as integer
+        field qnty          as decimal
+        field cli-qnty      as decimal
+        field state-density as decimal
+        field chk-date      as date
+        FIELD doc-code      as character
+        field pay-desk      as integer
+        field pump          as decimal
+        field nozzle-code   as integer
+        field sum-qnty      as decimal
+        field sum-cli-qnty  as decimal
+
+        index pi is primary unique
+            b-code
+            doc-code
+    .
+
+
+    define temp-table temp_stkShiftOpen no-undo
+        field gds-code   as integer
+        field artic      as character
+        field prod-type  as character
+        field prod-code  as integer
+        field gds-name   as character
+        field envd       as logical
+        field qnty       as decimal
+        field cli-qnty   as decimal
+
+        index pi is primary unique
+            gds-code
+    .
+    define temp-table temp_stkPlShiftOpen no-undo
+        field gds-code   as integer
+        field pl-code   as integer
+        field qnty       as decimal
+        field cli-qnty   as decimal
+        field state-density  as decimal
+        field state-add-quantity as decimal
+        field system-qnty as decimal
+        field systen-cli-qnty as decimal
+
+        index pi is primary unique
+            gds-code
+            pl-code
+    .
+    define temp-table temp_stkTrkShiftOpen no-undo
+        field pl-code   as integer
+        field pump-code as integer
+        field nozzle-code as integer
+        field gds-code as integer
+        field state-mh-cnt as decimal
+
+        index pi is primary unique
+            pl-code
+            pump-code
+            nozzle-code
+        index igds
+            gds-code
+    .
+
+    
     define temp-table temp_stkShiftEnd no-undo
         field gds-code   as integer
         field artic      as character
@@ -116,6 +187,8 @@ define variable vss-description as character no-undo init "Ёкспорт XML смены".
         field cli-qnty   as decimal
         field state-density  as decimal
         field state-add-quantity as decimal
+        field system-qnty as decimal
+        field systen-cli-qnty as decimal
 
         index pi is primary unique
             gds-code
@@ -294,7 +367,8 @@ on error undo, return error
                             )
         ).
     end.
-    run export-stkShiftEnd in this-procedure (
+
+    run export-stkShift in this-procedure (
           input p-obj-type
         , input p-obj-code
         , input p-shift-date
@@ -386,9 +460,13 @@ on error undo, return error
     run wp-xmltagput( input 3, "objType"    , input string( buf_shift-obj.obj-type                  ), input 0 ).
     run wp-xmltagput( input 3, "objCode"    , input string( buf_shift-obj.obj-code                  ), input 0 ).
     run wp-xmltagput( input 3, "objName"    , input string( buf_clients.obj-name                    ), input 0 ).
-    run wp-xmltagput( input 3, "shiftDate"  , input string( buf_shift-obj.shift-date, "99.99.9999"  ), input 0 ).
     run wp-xmltagput( input 3, "shiftNum"   , input string( buf_shift-obj.shift-num                 ), input 0 ).
     run wp-xmltagput( input 3, "shiftName"  , input string( buf_shift-obj.shift-name                ), input 0 ).
+    run wp-xmltagput( input 3, "shiftDate"  , input string( buf_shift-obj.shift-date, "99.99.9999"  ), input 0 ).
+    run wp-xmltagput( input 3, "shiftTime"  , input string( buf_shift-obj.open-time, "HH:MM:SS"     ), input 0 ).
+    run wp-xmltagput( input 3, "shiftEndDate"  , input string( buf_shift-obj.close-date, "99.99.9999"  ), input 0 ).
+    run wp-xmltagput( input 3, "shiftEndTime"  , input string( buf_shift-obj.close-time, "HH:MM:SS"     ), input 0 ).
+
     run wp-xmltagclose( input 2, input "shift" ).
 end.
 end procedure. /* export-shift */
@@ -808,13 +886,23 @@ define input parameter p-shift-num  as integer          no-undo.
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_doc-line      for ub.doc-line.
     define buffer buf_goods         for ub.goods.
+    define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle.
     define buffer buf_temp_techPro  for temp_techPro.
+    define buffer buf_doc-pl        for ub.doc-pl.
+    define buffer buf_chk-gds       for ub.chk-gds.
+    define buffer buf_chk-gds-pay   for ub.chk-gds-pay.
+    DEFINE buffer buf_chk-doc       for ub.chk-doc.
+    define buffer buf_temp_chk-doc  for temp_chk-doc.
+    define buffer buf_bar-code      for ub.bar-code.
 do
 for buf_clients
   , buf_trn-doc
   , buf_doc-line
   , buf_goods
   , buf_temp_techPro
+  , buf_doc-pl
+  , buf_chk-gds
+  , buf_bar-code
 on error undo, return error
 :
     empty temp-table buf_temp_techPro.
@@ -832,61 +920,113 @@ on error undo, return error
         then do:
             sum-all-trn-doc-tech-pro:
             for each buf_trn-doc no-lock
-               where buf_trn-doc.obj-type   = p-obj-type
-                 and buf_trn-doc.obj-code   = p-obj-code
-                 and buf_trn-doc.shift-date = p-shift-date
-                 and buf_trn-doc.shift-num  = p-shift-num
-                 and buf_trn-doc.status_    = {&fact}
-            on error undo, return error
-            :
+                where buf_trn-doc.obj-type   = p-obj-type
+                and buf_trn-doc.obj-code   = p-obj-code
+                and buf_trn-doc.shift-date = p-shift-date
+                and buf_trn-doc.shift-num  = p-shift-num
+                and buf_trn-doc.status_    = {&fact}
+                on error undo, return error
+                :
                 if  buf_trn-doc.cli-type = buf_clients.obj-type   and
                     buf_trn-doc.cli-code = buf_clients.obj-code   and
                     buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}
-                then do:
+                    then 
+                do:
                     if not can-find(first ub.sale-doc where ub.sale-doc.doc-code = buf_trn-doc.doc-code and ub.sale-doc.doc-kind = {&sale-add-tech-refuell})
-                    then do:
-                      /* это не техпролив */
-                      undo sum-all-trn-doc-tech-pro, next sum-all-trn-doc-tech-pro.
+                        then 
+                    do:
+                        /* это не техпролив */
+                        undo sum-all-trn-doc-tech-pro, next sum-all-trn-doc-tech-pro.
                     end.
                     for each buf_doc-line no-lock
-                       where buf_doc-line.doc-code = buf_trn-doc.doc-code
-                    on error undo, return error
-                    :
+                        where buf_doc-line.doc-code = buf_trn-doc.doc-code
+                        on error undo, return error
+                        :
                         find first buf_temp_techPro
-                             where buf_temp_techPro.artic       = buf_doc-line.artic
-                               and buf_temp_techPro.prod-type   = buf_doc-line.prod-type
-                               and buf_temp_techPro.prod-code   = buf_doc-line.prod-code
-                        no-error.
+                            where buf_temp_techPro.artic       = buf_doc-line.artic
+                            and buf_temp_techPro.prod-type   = buf_doc-line.prod-type
+                            and buf_temp_techPro.prod-code   = buf_doc-line.prod-code
+                            no-error.
                         if not available buf_temp_techPro
-                        then do:
+                            then 
+                        do:
                             create buf_temp_techPro.
                             assign
-                                buf_temp_techPro.artic       = buf_doc-line.artic
-                                buf_temp_techPro.prod-type   = buf_doc-line.prod-type
-                                buf_temp_techPro.prod-code   = buf_doc-line.prod-code
-                            .
+                                buf_temp_techPro.artic     = buf_doc-line.artic
+                                buf_temp_techPro.prod-type = buf_doc-line.prod-type
+                                buf_temp_techPro.prod-code = buf_doc-line.prod-code
+                                .
                             find first buf_goods no-lock
-                                 where buf_goods.artic     = buf_temp_techPro.artic
-                                   and buf_goods.prod-type = buf_temp_techPro.prod-type
-                                   and buf_goods.prod-code = buf_temp_techPro.prod-code
-                            no-error.
+                                where buf_goods.artic     = buf_temp_techPro.artic
+                                and buf_goods.prod-type = buf_temp_techPro.prod-type
+                                and buf_goods.prod-code = buf_temp_techPro.prod-code
+                                no-error.
                             if available buf_goods
-                            then do:
+                                then 
+                            do:
                                 assign
                                     buf_temp_techPro.gds-code = buf_goods.gds-code
                                     buf_temp_techPro.gds-name = buf_goods.gds-name
-                                .
+                                    .
                                 run get-goods-envd in this-procedure (
-                                      input p-obj-type
+                                    input p-obj-type
                                     , input p-obj-code
                                     , input buf_goods.gds-code
                                     , output buf_temp_techPro.envd
-                                ).
+                                    ).
+
+                                for each buf_doc-pl no-lock
+                                    where buf_doc-pl.gds-code = buf_goods.gds-code 
+                                    and buf_doc-pl.obj-code = p-obj-code
+                                    and buf_doc-pl.obj-type = p-obj-type
+                                    and buf_doc-pl.out-code = buf_trn-doc.doc-code:
+                                      
+                                    assign
+                                        buf_temp_techPro.pl-code       = buf_doc-pl.pl-code
+                                        buf_temp_techPro.qnty          = buf_doc-pl.fact-qnty
+                                        buf_temp_techPro.cli-qnty      = buf_doc-pl.cli-fact-qnty
+                                        buf_temp_techPro.state-density = buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty 
+                                        .
+                                end.
                             end.
                         end.
                         assign
                             buf_temp_techPro.fact-qnty = buf_temp_techPro.fact-qnty + buf_doc-line.fact-qnty
-                        .
+                            .
+                        for each buf_bar-code no-lock
+                            where buf_bar-code.gds-code = buf_goods.gds-code :
+                            for each buf_chk-doc where buf_chk-doc.chk-type = integer({&rcpt-tech-refuell}) 
+                                and buf_chk-doc.out-code = buf_trn-doc.out-code:
+                                        
+                                find first buf_chk-gds no-lock where buf_chk-gds.b-code = buf_bar-code.b-code
+                                    and  buf_chk-gds.doc-code = buf_chk-doc.doc-code no-error .
+                                            
+                                if AVAILABLE buf_chk-gds then 
+                                do:
+                                    find first buf_temp_chk-doc where buf_temp_chk-doc.b-code = buf_chk-gds.b-code and
+                                        buf_temp_chk-doc.doc-code = buf_chk-gds.doc-code  no-error.
+
+                                    if not AVAILABLE buf_temp_chk-doc then
+                                    do:
+
+                                        create buf_temp_chk-doc .
+                                        ASSIGN
+                                            buf_temp_chk-doc.doc-code      = buf_chk-gds.doc-code
+                                            buf_temp_chk-doc.gds-code      = buf_goods.gds-code
+                                            buf_temp_chk-doc.b-code        = buf_chk-gds.b-code
+                                            buf_temp_chk-doc.chk-date      = buf_chk-doc.chk-date
+                                            buf_temp_chk-doc.qnty          = buf_chk-gds.doc-qnty
+                                            buf_temp_chk-doc.nozzle-code   = buf_chk-gds.nozzle-code
+                                            buf_temp_chk-doc.pump          = buf_chk-gds.pump
+                                            buf_temp_chk-doc.state-density = buf_chk-gds.density
+                                            buf_temp_chk-doc.pay-desk      = buf_chk-doc.pay-desk
+                                            buf_temp_chk-doc.pl-code       = integer(buf_chk-gds.loc1)
+                                            .
+                                    end.
+                                end.                            
+                            end.                          
+                        end.         
+
                     end.        /* for each buf_doc-line */
                 end.
             end.        /* for each buf_trn-doc */
@@ -908,20 +1048,48 @@ on error undo, return error
             run wp-xmltagput( input 3, "tprGdsName" , input string( buf_temp_techPro.gds-name    ), input 0 ).
             run wp-xmltagput( input 3, "tprGdsENVD" , input string( buf_temp_techPro.envd        ), input 3 ).
             run wp-xmltagput( input 3, "tprFactQnty", input string( buf_temp_techPro.fact-qnty   ), input 0 ).
-            run wp-xmltagclose( input 3, input "techPro").
+            run wp-xmltagopen( input 3, input "tprProPL", input "" ).
+                    run wp-xmltagput( input 4, "tprProPLCode"  , input string( buf_temp_techPro.pl-code     ), input 0 ).
+                    run wp-xmltagput( input 4, "tprProQnty"    , input string( buf_temp_techPro.qnty        ), input 0 ).
+                    run wp-xmltagput( input 4, "tprProCliQnty" , input string( buf_temp_techPro.cli-qnty    ), input 0 ).
+                    run wp-xmltagput( input 4, "tprProDensity" , input string( buf_temp_techPro.state-density, ">>>>>9.99"), input 0 ).
+            run wp-xmltagclose( input 3, input "tprProPL").
+        
+            for each buf_temp_chk-doc where buf_temp_chk-doc.gds-code = buf_temp_techPro.gds-code:
+                run wp-xmltagopen( input 3, input "techProChk", input "" ).
+                    run wp-xmltagput( input 4, "ChkDate"    , input string( buf_temp_chk-doc.chk-date   ), input 0 ).
+                    run wp-xmltagput( input 4, "ChkNum"     , input string( buf_temp_chk-doc.doc-code   ), input 0 ).
+                    run wp-xmltagput( input 4, "ChkNumDesk" , input string( buf_temp_chk-doc.pay-desk   ), input 0 ).
+                    run wp-xmltagput( input 4, "ChkQnty"    , input string( buf_temp_chk-doc.qnty       ), input 0 ).
+                    run wp-xmltagput( input 4, "ChkTRK"     , input string( buf_temp_chk-doc.pump       ), input 0 ).
+                    run wp-xmltagput( input 4, "ChkNozzle"  , input string( buf_temp_chk-doc.nozzle-code), input 0 ).
+                    run wp-xmltagput( input 4, "ChkPL"      , input string( buf_temp_chk-doc.pl-code    ), input 2 ).            
+                run wp-xmltagclose( input 3, input "techProChk").
+                
+                
+                end.            
+            run wp-xmltagclose( input 2, input "techPro").
         end.
     end.
 end.
 end procedure. /* export-techPro */
 
 
-
 /*==========================================================================*/
-procedure export-stkShiftEnd :
+procedure export-stkShift :
 define input parameter p-obj-type   as character        no-undo.
 define input parameter p-obj-code   as integer          no-undo.
 define input parameter p-shift-date as date             no-undo.
 define input parameter p-shift-num  as integer          no-undo.
+define VARIABLE v-shift-date as date             no-undo.
+define VARIABLE v-shift-num  as integer          no-undo.
+
+define buffer end_shift-obj      for ub.shift-obj .
+define buffer previous-shift-obj for ub.shift-obj.
+define variable fo      as decimal no-undo init 0.
+define variable prev-fo as decimal no-undo init 0.
+define variable moving  as logical no-undo init yes.
+
 
     define buffer buf_rvs-doc           for ub.rvs-doc.
     define buffer buf_rvs-line          for ub.rvs-line.
@@ -930,6 +1098,53 @@ define input parameter p-shift-num  as integer          no-undo.
     define buffer buf_temp_stkShiftEnd  for temp_stkShiftEnd.
     define buffer buf_temp_stkPlShiftEnd  for temp_stkPlShiftEnd.
     define buffer buf_temp_stkTRKShiftEnd  for temp_stkTRKShiftEnd.
+    define buffer buf_temp_stkShiftOpen  for temp_stkShiftOpen.
+    define buffer buf_temp_stkPlShiftOpen  for temp_stkPlShiftOpen.
+    define buffer buf_temp_stkTRKShiftOpen  for temp_stkTRKShiftOpen.
+    
+find first end_shift-obj share-lock
+  where end_shift-obj.obj-type   = p-obj-type
+    and end_shift-obj.obj-code   = p-obj-code
+    and end_shift-obj.shift-date = p-shift-date
+    and end_shift-obj.shift-num  = p-shift-num
+    no-error.
+if not available end_shift-obj then do:
+         run wp-XMLWriteLog in this-procedure (
+              input p-log-file-name
+            , input 1
+            , input substitute( "&1. Ќе найдена смена с пор€дковым номером &2 от &3 дл€ объекта &4 &5. &6. &7. &8."
+                                    , vss-description
+                                    , p-shift-num
+                                    , p-shift-date
+                                    , p-obj-type
+                                    , p-obj-code
+                                    , return-value
+                                    , trim(error-status :get-message(1))
+                                    , trim(error-status :get-message(2))
+                            )
+        ).
+end.
+else do:
+  assign
+    fo = end_shift-obj.fact-order
+  .
+end.
+find last previous-shift-obj share-lock
+  where previous-shift-obj.obj-type = p-obj-type
+    and previous-shift-obj.obj-code = p-obj-code
+    and (( previous-shift-obj.shift-date = p-shift-date
+           and previous-shift-obj.shift-num < p-shift-num
+         )
+         or previous-shift-obj.shift-date < p-shift-date
+        )
+    use-index pi no-error.
+if available previous-shift-obj then do:
+
+    assign
+      prev-fo = previous-shift-obj.fact-order
+    .
+end.    
+    
 do
 for buf_rvs-doc
   , buf_rvs-line
@@ -942,6 +1157,13 @@ on error undo, return error
     empty temp-table buf_temp_stkShiftEnd.
     empty temp-table buf_temp_stkPlShiftEnd.
     empty temp-table buf_temp_stkTRKShiftEnd.
+
+if available previous-shift-obj then do:
+    assign
+    v-shift-date = previous-shift-obj.shift-date
+    v-shift-num = previous-shift-obj.shift-num
+    .
+end.
 
     find first buf_rvs-doc no-lock
          where buf_rvs-doc.obj-type     = p-obj-type
@@ -1014,6 +1236,8 @@ on error undo, return error
                   buf_temp_stkPlShiftEnd.qnty      = buf_rvs-line.state-measure-qnty
                   buf_temp_stkPlShiftEnd.cli-qnty  = buf_rvs-line.state-measure-cli-qnty
                   buf_temp_stkPlShiftEnd.state-density  = buf_rvs-line.state-density
+                  buf_temp_stkPlShiftEnd.system-qnty = buf_rvs-line.system-qnty
+                  buf_temp_stkPlShiftEnd.systen-cli-qnty = buf_rvs-line.system-cli-qnty
                   .
                 end. /*if available buf_goods*/
             end. /*if not available buf_temp_stkPlShiftEnd*/
@@ -1029,17 +1253,120 @@ on error undo, return error
           if first-of(buf_rvs-line-pump.nozzle-code) then do:
             find first buf_temp_stkTrkShiftEnd where
                    buf_temp_stkTrkShiftEnd.pump-code = buf_rvs-line-pump.pump-code
-                and buf_temp_stkTrkShiftEnd.nozzle-code = buf_rvs-line-pump.nozzle-code 
-                and buf_temp_stkTrkShiftEnd.pl-code = buf_rvs-line-pump.pl-code
-                no-error.
+                and buf_temp_stkTrkShiftEnd.nozzle-code = buf_rvs-line-pump.nozzle-code
+                and buf_temp_stkTRKShiftEnd.pl-code = buf_rvs-line-pump.pl-code no-error.
             if not available buf_temp_stkTrkShiftEnd then do:
               create buf_temp_stkTrkShiftEnd.
               assign
+              buf_temp_stkTRKShiftEnd.pl-code = buf_rvs-line-pump.pl-code
               buf_temp_stkTrkShiftEnd.pump-code = buf_rvs-line-pump.pump-code
               buf_temp_stkTrkShiftEnd.nozzle-code = buf_rvs-line-pump.nozzle-code
               buf_temp_stkTrkShiftEnd.gds-code = buf_rvs-line-pump.gds-code
-               buf_temp_stkTrkShiftEnd.pl-code = buf_rvs-line-pump.pl-code
               buf_temp_stkTrkShiftEnd.state-mh-cnt = buf_rvs-line-pump.state-mh-cnt
+              .
+            end.
+          end. /*if first-of(buf_rvs-line-pump.nozzle-code) then do:*/
+        end. /*        for each buf_rvs-line-pump no-lock where*/
+    end. /*if available buf_rvs-doc*/
+
+        find first buf_rvs-doc no-lock
+         where buf_rvs-doc.obj-type     = p-obj-type
+           and buf_rvs-doc.obj-code     = p-obj-code
+           and buf_rvs-doc.shift-date   = v-shift-date
+           and buf_rvs-doc.shift-num    = v-shift-num
+           and buf_rvs-doc.status_      = {&fact}
+           and buf_rvs-doc.rvs-type     = {&rvs-shift}
+    use-index shift
+    no-error.
+    if available buf_rvs-doc
+    then do:
+        for each buf_rvs-line no-lock
+           where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+             and buf_rvs-line.obj-type = p-obj-type
+             and buf_rvs-line.obj-code = p-obj-code
+        on error undo, return error
+        :
+            find first buf_temp_stkShiftOpen
+                 where buf_temp_stkShiftOpen.gds-code = buf_rvs-line.gds-code
+            no-error.
+            if not available buf_temp_stkShiftOpen
+            then do:
+                create buf_temp_stkShiftOpen.
+                assign
+                    buf_temp_stkShiftOpen.gds-code = buf_rvs-line.gds-code
+                .
+                find first buf_goods no-lock
+                     where buf_goods.gds-code = buf_rvs-line.gds-code
+                no-error.
+                if available buf_goods
+                then do:
+                    assign
+                        buf_temp_stkShiftOpen.artic     = buf_goods.artic
+                        buf_temp_stkShiftOpen.prod-type = buf_goods.prod-type
+                        buf_temp_stkShiftOpen.prod-code = buf_goods.prod-code
+                        buf_temp_stkShiftOpen.gds-name  = buf_goods.gds-name
+                        buf_temp_stkShiftOpen.qnty      = 0.0
+                        buf_temp_stkShiftOpen.cli-qnty  = 0.0
+                    .
+                    run get-goods-envd in this-procedure (
+                          input p-obj-type
+                        , input p-obj-code
+                        , input buf_goods.gds-code
+                        , output buf_temp_stkShiftOpen.envd
+                    ).
+                end.
+            end.
+            assign
+                buf_temp_stkShiftOpen.qnty = buf_temp_stkShiftOpen.qnty + buf_rvs-line.state-measure-qnty
+                buf_temp_stkShiftOpen.cli-qnty = buf_temp_stkShiftOpen.cli-qnty + buf_rvs-line.state-measure-cli-qnty
+            .
+            find first buf_temp_stkPlShiftOpen
+                 where buf_temp_stkPlShiftOpen.gds-code = buf_rvs-line.gds-code
+                   and buf_temp_stkPlShiftOpen.pl-code = buf_rvs-line.pl-code
+            no-error.
+            if not available buf_temp_stkPlShiftOpen
+            then do:
+                create buf_temp_stkPlShiftOpen.
+                assign
+                buf_temp_stkPlShiftOpen.gds-code = buf_rvs-line.gds-code
+                buf_temp_stkPlShiftOpen.pl-code = buf_rvs-line.pl-code
+                .
+                find first buf_goods no-lock
+                     where buf_goods.gds-code = buf_rvs-line.gds-code
+                no-error.
+                if available buf_goods
+                then do:
+                  assign
+                  buf_temp_stkPlShiftOpen.qnty      = buf_rvs-line.state-measure-qnty
+                  buf_temp_stkPlShiftOpen.cli-qnty  = buf_rvs-line.state-measure-cli-qnty
+                  buf_temp_stkPlShiftOpen.state-density  = buf_rvs-line.state-density
+                  buf_temp_stkPlShiftOpen.system-qnty = buf_rvs-line.system-qnty
+                  buf_temp_stkPlShiftOpen.systen-cli-qnty = buf_rvs-line.system-cli-qnty
+                  .
+                end. /*if available buf_goods*/
+            end. /*if not available buf_temp_stkPlShiftEnd*/
+        end.        /* for each buf_rvs-line */
+        for each buf_rvs-line-pump no-lock where
+              buf_rvs-line-pump.rvs-code = buf_rvs-doc.rvs-code
+          and buf_rvs-line-pump.obj-type = p-obj-type
+          and buf_rvs-line-pump.obj-code = p-obj-code
+          break
+        by buf_rvs-line-pump.pump-code
+        by buf_rvs-line-pump.nozzle-code
+        on error undo, return error:
+          if first-of(buf_rvs-line-pump.nozzle-code) then do:
+            find first buf_temp_stkTrkShiftOpen where
+                   buf_temp_stkTrkShiftOpen.pump-code = buf_rvs-line-pump.pump-code
+                and buf_temp_stkTrkShiftOpen.nozzle-code = buf_rvs-line-pump.nozzle-code
+                and buf_temp_stkTRKShiftOpen.pl-code = buf_rvs-line-pump.pl-code no-error.
+            if not available buf_temp_stkTrkShiftOpen then do:
+              create buf_temp_stkTrkShiftOpen.
+              assign
+              buf_temp_stkTRKShiftOpen.pl-code = buf_rvs-line-pump.pl-code
+              buf_temp_stkTrkShiftOpen.pump-code = buf_rvs-line-pump.pump-code
+              buf_temp_stkTrkShiftOpen.nozzle-code = buf_rvs-line-pump.nozzle-code
+              buf_temp_stkTrkShiftOpen.gds-code = buf_rvs-line-pump.gds-code
+              buf_temp_stkTrkShiftOpen.state-mh-cnt = buf_rvs-line-pump.state-mh-cnt
               .
     end.
           end. /*if first-of(buf_rvs-line-pump.nozzle-code) then do:*/
@@ -1047,42 +1374,63 @@ on error undo, return error
     end. /*if available buf_rvs-doc*/
     for each buf_temp_stkShiftEnd
     :
-            run wp-xmltagopen( input 2, input "stkShiftEnd", input "" ).
-            run wp-xmltagput( input 3, "objType"    , input string( p-obj-type                      ), input 0 ).
-            run wp-xmltagput( input 3, "objCode"    , input string( p-obj-code                      ), input 0 ).
-            run wp-xmltagput( input 3, "shiftDate"  , input string( p-shift-date, "99.99.9999"      ), input 0 ).
-            run wp-xmltagput( input 3, "shiftNum"   , input string( p-shift-num                     ), input 0 ).
-            run wp-xmltagput( input 3, "sseArtic"   , input string( buf_temp_stkShiftEnd.artic      ), input 0 ).
-            run wp-xmltagput( input 3, "sseProdType", input string( buf_temp_stkShiftEnd.prod-type  ), input 0 ).
-            run wp-xmltagput( input 3, "sseProdCode", input string( buf_temp_stkShiftEnd.prod-code  ), input 0 ).
-            run wp-xmltagput( input 3, "sseGdsCode" , input string( buf_temp_stkShiftEnd.gds-code   ), input 0 ).
-            run wp-xmltagput( input 3, "sseGdsName" , input string( buf_temp_stkShiftEnd.gds-name   ), input 0 ).
-            run wp-xmltagput( input 3, "sseGdsENVD" , input string( buf_temp_stkShiftEnd.envd       ), input 3 ).
-            run wp-xmltagput( input 3, "sseFactQnty", input string( buf_temp_stkShiftEnd.qnty       ), input 0 ).
+      run wp-xmltagopen( input 2, input "stkShiftEnd", input "" ).
+      run wp-xmltagput( input 3, "objType"    , input string( p-obj-type                      ), input 0 ).
+      run wp-xmltagput( input 3, "objCode"    , input string( p-obj-code                      ), input 0 ).
+      run wp-xmltagput( input 3, "shiftDate"  , input string( p-shift-date, "99.99.9999"      ), input 0 ).
+      run wp-xmltagput( input 3, "shiftNum"   , input string( p-shift-num                     ), input 0 ).
+      run wp-xmltagput( input 3, "sseArtic"   , input string( buf_temp_stkShiftEnd.artic      ), input 0 ).
+      run wp-xmltagput( input 3, "sseProdType", input string( buf_temp_stkShiftEnd.prod-type  ), input 0 ).
+      run wp-xmltagput( input 3, "sseProdCode", input string( buf_temp_stkShiftEnd.prod-code  ), input 0 ).
+      run wp-xmltagput( input 3, "sseGdsCode" , input string( buf_temp_stkShiftEnd.gds-code   ), input 0 ).
+      run wp-xmltagput( input 3, "sseGdsName" , input string( buf_temp_stkShiftEnd.gds-name   ), input 0 ).
+      run wp-xmltagput( input 3, "sseGdsENVD" , input string( buf_temp_stkShiftEnd.envd       ), input 3 ).
+      run wp-xmltagput( input 3, "sseFactQnty", input string( buf_temp_stkShiftEnd.qnty       ), input 0 ).
       run wp-xmltagput( input 3, "sseCliFactQnty", input string( buf_temp_stkShiftEnd.cli-qnty       ), input 0 ).
-      for each buf_temp_stkPlShiftEnd where
-              buf_temp_stkPlShiftEnd.gds-code = buf_temp_stkShiftEnd.gds-code
-      :
-          if buf_temp_stkPlShiftEnd.qnty <> 0
-          then do:
+
+      for each buf_temp_stkPlShiftEnd where buf_temp_stkPlShiftEnd.gds-code = buf_temp_stkShiftEnd.gds-code:
+          for first buf_temp_stkPlShiftOpen where buf_temp_stkPlShiftOpen.gds-code = buf_temp_stkPlShiftEnd.gds-code 
+                                         and buf_temp_stkPlShiftOpen.pl-code = buf_temp_stkPlShiftEnd.pl-code :
+              run wp-xmltagopen( input 3, input "stkPlShiftOpen", input "" ).
+              run wp-xmltagput( input 4, "ssePlCode", input string( buf_temp_stkPlShiftOpen.pl-code       ), input 0 ).
+              run wp-xmltagput( input 4, "ssePlFactQnty", input string( buf_temp_stkPlShiftOpen.qnty       ), input 0 ).
+              run wp-xmltagput( input 4, "ssePlCliFactQnty", input string( buf_temp_stkPlShiftOpen.cli-qnty       ), input 0 ).
+              run wp-xmltagput( input 4, "ssePlDensity", input string( buf_temp_stkPlShiftOpen.state-density), input 0 ).
+              run wp-xmltagput( input 4, "ssePlAddQuantity", input string( buf_temp_stkPlShiftOpen.state-add-quantity), input 0 ).
+              run wp-xmltagput( input 4, "ssePlSysQnty", input string( buf_temp_stkPlShiftOpen.system-qnty), input 0 ).
+              run wp-xmltagput( input 4, "ssePlSysWeight", input string( buf_temp_stkPlShiftOpen.systen-cli-qnty), input 0 ).
+              run wp-xmltagclose( input 3, input "stkPlShiftOpen").
+           end.
               run wp-xmltagopen( input 3, input "stkPlShiftEnd", input "" ).
               run wp-xmltagput( input 4, "ssePlCode", input string( buf_temp_stkPlShiftEnd.pl-code       ), input 0 ).
               run wp-xmltagput( input 4, "ssePlFactQnty", input string( buf_temp_stkPlShiftEnd.qnty       ), input 0 ).
               run wp-xmltagput( input 4, "ssePlCliFactQnty", input string( buf_temp_stkPlShiftEnd.cli-qnty       ), input 0 ).
               run wp-xmltagput( input 4, "ssePlDensity", input string( buf_temp_stkPlShiftEnd.state-density), input 0 ).
               run wp-xmltagput( input 4, "ssePlAddQuantity", input string( buf_temp_stkPlShiftEnd.state-add-quantity), input 0 ).
+              run wp-xmltagput( input 4, "ssePlSysQnty", input string( buf_temp_stkPlShiftEnd.system-qnty), input 0 ).
+              run wp-xmltagput( input 4, "ssePlSysWeight", input string( buf_temp_stkPlShiftEnd.systen-cli-qnty), input 0 ).
               run wp-xmltagclose( input 3, input "stkPlShiftEnd").
-        end.
-    end.
-      for each buf_temp_stkTrkShiftEnd where
-              buf_temp_stkTrkShiftEnd.gds-code = buf_temp_stkShiftEnd.gds-code
-      :
-        run wp-xmltagopen( input 3, input "stkTRKShiftEnd", input "" ).
-        run wp-xmltagput( input 4, "ssePlCode", input string( buf_temp_stkTRKShiftEnd.pl-code       ), input 0 ).
-        run wp-xmltagput( input 4, "sseTRKPump", input string( buf_temp_stkTRKShiftEnd.pump-code   ), input 0 ).
-        run wp-xmltagput( input 4, "sseTRKNozzle", input string( buf_temp_stkTRKShiftEnd.nozzle-code   ), input 0 ).
-        run wp-xmltagput( input 4, "sseTRKCnt", input string( buf_temp_stkTRKShiftEnd.state-mh-cnt   ), input 0 ).
-        run wp-xmltagclose( input 3, input "stkTRKShiftEnd").
+      end.
+        for each buf_temp_stkTrkShiftEnd where buf_temp_stkTrkShiftEnd.gds-code = buf_temp_stkShiftEnd.gds-code:
+            for first  buf_temp_stkTrkShiftOpen where buf_temp_stkTrkShiftOpen.gds-code = buf_temp_stkShiftEnd.gds-code
+                                                and buf_temp_stkTRKShiftOpen.gds-code = buf_temp_stkTRKShiftEnd.gds-code   
+                                                and buf_temp_stkTRKShiftOpen.pl-code = buf_temp_stkTRKShiftEnd.pl-code
+                                                and buf_temp_stkTRKShiftOpen.pump-code = buf_temp_stkTRKShiftEnd.pump-code
+                                                and buf_temp_stkTRKShiftOpen.nozzle-code = buf_temp_stkTRKShiftEnd.nozzle-code :              
+            
+                run wp-xmltagopen( input 3, input "stkTRKShiftOpen", input "" ).
+                run wp-xmltagput( input 4, "sseTRKPlCode", input string( buf_temp_stkTRKShiftOpen.pl-code   ), input 0 ).
+                run wp-xmltagput( input 4, "sseTRKPump", input string( buf_temp_stkTRKShiftOpen.pump-code   ), input 0 ).
+                run wp-xmltagput( input 4, "sseTRKNozzle", input string( buf_temp_stkTRKShiftOpen.nozzle-code   ), input 0 ).
+                run wp-xmltagput( input 4, "sseTRKCnt", input string( buf_temp_stkTRKShiftOpen.state-mh-cnt   ), input 0 ).
+                run wp-xmltagclose( input 3, input "stkTRKShiftOpen").
+            end.
+            run wp-xmltagopen( input 3, input "stkTRKShiftEnd", input "" ).
+            run wp-xmltagput( input 4, "sseTRKPlCode", input string( buf_temp_stkTRKShiftEnd.pl-code   ), input 0 ).
+            run wp-xmltagput( input 4, "sseTRKPump", input string( buf_temp_stkTRKShiftEnd.pump-code   ), input 0 ).
+            run wp-xmltagput( input 4, "sseTRKNozzle", input string( buf_temp_stkTRKShiftEnd.nozzle-code   ), input 0 ).
+            run wp-xmltagput( input 4, "sseTRKCnt", input string( buf_temp_stkTRKShiftEnd.state-mh-cnt   ), input 0 ).
+            run wp-xmltagclose( input 3, input "stkTRKShiftEnd").
       end.
       run wp-xmltagclose( input 2, input "stkShiftEnd").
     end. /*for each buf_temp_stkShiftEnd*/
@@ -1097,14 +1445,6 @@ define input parameter p-obj-code   as integer          no-undo.
 define input parameter p-shift-date as date             no-undo.
 define input parameter p-shift-num  as integer          no-undo.
 
-/*    define variable v-archive-ok            as logical      no-undo.*/
-/*    define variable v-comment               as character    no-undo.*/
-/*    define variable v-can-print             as logical      no-undo.*/
-/*    define variable v-current-shift-date    as date         no-undo.*/
-/*    define variable v-previous-shift-date   as date         no-undo.*/
-
-/*    define buffer buf_shift-obj     for shift-obj.*/
-/*buf_shift-obj*/
 
     define variable v-fact-order-from   as decimal      no-undo.
     define variable v-fact-order-to     as decimal      no-undo.

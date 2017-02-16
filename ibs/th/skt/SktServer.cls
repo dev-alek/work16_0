@@ -40,7 +40,7 @@ class ibs.th.skt.SktServer:
   ------------------------------------------------------------------------------*/
 
   define private variable clientControl as class     ClientControl no-undo.
-  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk". /*список клиентов через запятую, с которыми работает сокет-сервер*/
+  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv". /*список клиентов через запятую, с которыми работает сокет-сервер*/
 
   define private variable req           as class     IRequest      no-undo.
   define private variable resp          as class     IResponse     no-undo.
@@ -62,6 +62,7 @@ class ibs.th.skt.SktServer:
     define variable tickedCommand as class TickedCommand.
     define variable tmCommand     as class TableMenuCommand.
     define variable kioskCommand  as class KioskCommand.
+    define variable webCommand    as class webCommand.
 		
     clientControl = new ClientControl(). /*количество возможных комманд соответсвует кол-ву клиентов*/
     
@@ -83,6 +84,11 @@ class ibs.th.skt.SktServer:
       kioskCommand = new KioskCommand().
       clientControl:SetCommandForClient(lookup("kiosk",clientList), kioskCommand).
     end.
+    run gbl/conf-rd.p ("is-wbsrv", "", "", 0, "", "", "", no, output conf-par, output par-type) .
+    if logical (conf-par) then do:
+      webCommand = new webCommand().
+      clientControl:SetCommandForClient(lookup("websrv",clientList), webCommand).
+    end.
 
   end constructor.
 
@@ -91,7 +97,7 @@ class ibs.th.skt.SktServer:
    Purpose: Публичный метод, который все что нужно дальше делает с контентом. Его и вызываем для обработки контента.
    Notes:
   ------------------------------------------------------------------------------*/
-  method public memptr RequestProcessing (content as longchar, hndlSocket as handle):
+  method public void RequestProcessing (content as longchar, hndlSocket as handle):
     req = new SimpleRequest().
     resp = new SimpleResponse().
     cast(req, ibs.th.skt.Commands.SimpleRequest):Content = content.
@@ -99,12 +105,12 @@ class ibs.th.skt.SktServer:
     identifyClients().
     if client_ <> ? then 
     do:
-      resp = clientControl:SendRequest(lookup (client_,clientList), req) no-error.
+      clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
       if error-status:error then 
       do:
         return error return-value.
       end.
-      return ? /*cast(resp, ibs.th.skt.Commands.SimpleResponse):Content*/.
+/*      return ? /*cast(resp, ibs.th.skt.Commands.SimpleResponse):Content*/.*/
     end.
     delete object req no-error.
     delete object resp no-error.

@@ -65,10 +65,9 @@ class ibs.th.skt.Commands.KioskCommand implements ICommand:
   define private variable i          as integer   no-undo.
   define private variable bcode      as character no-undo.
 
-  method public IResponse Execute_( input req as ibs.th.skt.Commands.IRequest ):
+  method public void Execute_( input req as ibs.th.skt.Commands.IRequest, output resp as class IResponse):
 
     define variable contLength     as integer   no-undo.
-    define variable resp           as class     IResponse no-undo.
     define variable priceSale      as character no-undo.
     define variable chHeader       as character no-undo.
     define variable chImage        as character no-undo.
@@ -145,7 +144,7 @@ class ibs.th.skt.Commands.KioskCommand implements ICommand:
         ,input  '':U /*p-obj-type*/
         ,input  0 /*p-obj-code*/
         ,input  {&attr-gds-ref}
-        ,input  "" /*{&attr-gds-ref_shema-foto} p-param-code*/
+        ,input  {&attr-gds-ref_shema-foto} /*p-param-code*/
         ,output v-value-char
         ,output v-val-date
         ,output v-val-decimal
@@ -156,16 +155,16 @@ class ibs.th.skt.Commands.KioskCommand implements ICommand:
         ) no-error.
       mPhotomgd = if v-val-integer = 2 then yes else no.
       
-/*      for each buf_gds-attr where buf_gds-attr.gds-code = buf_goods.gds-code and buf_gds-attr.attr-code = {&attr-image-list} no-lock.      */
-/*        chImage = if true /*search ("gds/" + entry (1, buf_gds-attr.attr-value)) <> ?*/                                                    */
-/*          then "" + (if mPhotomgd then string(buf_goods.gds-code) + "/":U else '':U) + entry (1, buf_gds-attr.attr-value) + ""             */
-/*          else "".                                                                                                                         */
-/*        do i = 1 to num-entries (buf_gds-attr.attr-value):                                                                                 */
-/*          chGallery = chGallery + if true /*search ("gds/" + entry (i, buf_gds-attr.attr-value)) <> ?*/                                    */
-/*            then "<img>" + (if mPhotomgd then string(buf_goods.gds-code) + "/":U else '':U) + entry (i, buf_gds-attr.attr-value) + "</img>"*/
-/*            else "".                                                                                                                       */
-/*        end.                                                                                                                               */
-/*      end.                                                                                                                                 */
+      for each buf_gds-attr where buf_gds-attr.gds-code = buf_goods.gds-code and buf_gds-attr.attr-code = {&attr-image-list} no-lock.
+        chImage = if true /*search ("gds/" + entry (1, buf_gds-attr.attr-value)) <> ?*/ 
+          then "" + (if mPhotomgd then string(buf_goods.gds-code) + "/":U else '':U) + entry (1, buf_gds-attr.attr-value) + ""
+          else "".
+        do i = 1 to num-entries (buf_gds-attr.attr-value):
+          chGallery = chGallery + if true /*search ("gds/" + entry (i, buf_gds-attr.attr-value)) <> ?*/ 
+            then "<img>" + (if mPhotomgd then string(buf_goods.gds-code) + "/":U else '':U) + entry (i, buf_gds-attr.attr-value) + "</img>"
+            else "".
+        end.
+      end.
       
       assign
         priceSale = if available buf_price-all then trim (string (buf_price-all.price-sale, "->>>>>>>>>>>>>>>>>>>>>>>>>>9.99"), " ") else "0.00"
@@ -217,10 +216,6 @@ class ibs.th.skt.Commands.KioskCommand implements ICommand:
 
     writeSock ( "").
     LogWrite:LogStr = "Ответ отправлен".
-    
-    
-    return resp.
-    
     
   end method.
   
