@@ -25,7 +25,7 @@ interface ibs.th.skt.Adapters.IAdapter:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method public logical WriteDB(  ).
+  method public void WriteDB(output arg as log).
 
 
 end interface.

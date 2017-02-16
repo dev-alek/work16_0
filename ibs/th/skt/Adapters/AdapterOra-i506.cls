@@ -37,7 +37,7 @@ class ibs.th.skt.Adapters.AdapterOra-i506 implements IAdapter:
  Notes:
 ------------------------------------------------------------------------------*/
 		
-  method public logical WriteDB ():
+  method public void WriteDB (output glog as log):
     
     run ibs/th/skt/Adapters/AdapteeProcOra-i506.p
       (
@@ -50,10 +50,10 @@ class ibs.th.skt.Adapters.AdapterOra-i506 implements IAdapter:
       assign
         StrLog = return-value
         .
-      return false.
+      glog = false.
     end.
     else
-      return true.
+      glog = true.
 
   end method.
 

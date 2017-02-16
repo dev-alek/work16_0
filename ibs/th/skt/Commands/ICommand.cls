@@ -19,7 +19,7 @@ using ibs.th.skt.Commands.*.
 
 interface ibs.th.skt.Commands.ICommand :
   
-  method class IResponse Execute_(req as class IRequest).
+  method public void Execute_(req as class IRequest, output resp as class IResponse).
 
 
 end interface.

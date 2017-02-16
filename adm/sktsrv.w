@@ -451,8 +451,9 @@ PROCEDURE connproc :
           define variable sktserv  as class SktServer no-undo.
           define variable logWrite as class LogWrite  no-undo.
 
+          logWrite = new LogWrite().          
           sktserv = new SktServer().
-          logWrite = new LogWrite().
+
           sktserv:RequestProcessing(v-content, hsocket) no-error.
           resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
           logWrite:LogStr = "".
