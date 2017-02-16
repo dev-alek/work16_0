@@ -85,10 +85,11 @@ define stream StreamLog.
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS btn_start btn_save Btn_close code_pool ~
- per-izm  v-place v-directory v-ftp-address v-login v-password 
-&Scoped-Define DISPLAYED-OBJECTS code_pool  per-izm  v-place ~
-v-directory v-ftp-address v-login v-password 
+&Scoped-Define ENABLED-OBJECTS RECT-3 RECT-4 RECT-5 RECT-6 RECT-7 RECT-8 ~
+btn_start btn_save Btn_close code_pool v-long-code cb-spl-ptrl  type-exp ~
+per-izm v-place v-ftp-address v-login v-password v-directory 
+&Scoped-Define DISPLAYED-OBJECTS code_pool v-long-code cb-spl-ptrl  type-exp ~
+per-izm v-place v-ftp-address v-login v-password v-directory 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -118,8 +119,19 @@ DEFINE BUTTON btn_start
      SIZE 15 BY 1.13
      BGCOLOR 8 .
 
+DEFINE VARIABLE cb-spl-ptrl AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Код системы-отправителя" 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     DROP-DOWN-LIST
+     SIZE 27.5 BY 1 NO-UNDO.
+
 DEFINE VARIABLE code_pool AS CHARACTER FORMAT "X(256)":U 
      LABEL "Код пула кодировок" 
+     VIEW-AS FILL-IN 
+     SIZE 30.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE per-izm AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Период изменения" 
      VIEW-AS FILL-IN 
      SIZE 30.5 BY 1 NO-UNDO.
 
@@ -129,19 +141,8 @@ DEFINE VARIABLE v-directory AS CHARACTER FORMAT "X(256)":U
      SIZE 30.5 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE per-izm AS CHARACTER FORMAT "X(256)":U 
-     LABEL "Период изменения" 
-     VIEW-AS FILL-IN 
-     SIZE 30.5 BY 1 NO-UNDO.
-     
 DEFINE VARIABLE v-ftp-address AS CHARACTER FORMAT "X(256)":U 
      LABEL "FTP" 
-     VIEW-AS FILL-IN 
-     SIZE 30.5 BY 1 NO-UNDO.
-
-  
-     DEFINE VARIABLE v-long-code AS integer init 8
-     LABEL "Длина кода товара" 
      VIEW-AS FILL-IN 
      SIZE 30.5 BY 1 NO-UNDO.
 
@@ -150,17 +151,15 @@ DEFINE VARIABLE v-login AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 30.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE v-long-code AS INTEGER FORMAT "->,>>>,>>9" INITIAL 8 
+     LABEL "Длина кода товара" 
+     VIEW-AS FILL-IN 
+     SIZE 30.5 BY 1 NO-UNDO.
+
 DEFINE VARIABLE v-password AS CHARACTER FORMAT "X(256)":U 
      LABEL "Пароль" 
      VIEW-AS FILL-IN 
      SIZE 30.5 BY 1 NO-UNDO.
-
-DEFINE VARIABLE v-place AS INTEGER 
-     VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS 
-          "Локальная директория", 1,
-"FTP адрес", 2
-     SIZE 24 BY 3 NO-UNDO.
 
 DEFINE VARIABLE type-exp AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
@@ -169,30 +168,65 @@ DEFINE VARIABLE type-exp AS INTEGER
 "Инкремент", 2
      SIZE 14 BY 2 NO-UNDO.
 
+DEFINE VARIABLE v-place AS INTEGER 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
+          "Локальная директория", 1,
+"FTP адрес", 2
+     SIZE 24 BY 3 NO-UNDO.
+
+DEFINE RECTANGLE RECT-3
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 74.5 BY 8.5.
+
+DEFINE RECTANGLE RECT-4
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 74.5 BY 4.5.
+
+DEFINE RECTANGLE RECT-5
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 27 BY 4.75.
+
+DEFINE RECTANGLE RECT-6
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 16.5 BY 4.
+
+DEFINE RECTANGLE RECT-7
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 74.5 BY 2.
+
+DEFINE RECTANGLE RECT-8
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 74.5 BY 2.75.
+
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
      btn_start AT ROW 2 COL 3.5
      btn_save AT ROW 2 COL 31
-     Btn_close AT ROW 2 COL 51.5
+     Btn_close AT ROW 2 COL 61
      code_pool AT ROW 3.75 COL 29 COLON-ALIGNED WIDGET-ID 2
      v-long-code AT ROW 5 COL 29 COLON-ALIGNED WIDGET-ID 22
-     
-     per-izm AT ROW 8 COL 29 COLON-ALIGNED WIDGET-ID 4
- type-exp AT ROW 6 COL 20 NO-LABEL WIDGET-ID 16
-     v-place AT ROW 9 COL 20 NO-LABEL WIDGET-ID 8
-     v-directory AT ROW 12.5 COL 29 COLON-ALIGNED WIDGET-ID 12
-     v-ftp-address AT ROW 13.75 COL 29 COLON-ALIGNED WIDGET-ID 14
-     v-login AT ROW 15 COL 29 COLON-ALIGNED WIDGET-ID 16
-     v-password AT ROW 16.25 COL 29 COLON-ALIGNED WIDGET-ID 18
+     cb-spl-ptrl  AT ROW 7 COL 28.5 COLON-ALIGNED WIDGET-ID 24
+     type-exp AT ROW 10.5 COL 6.5 NO-LABEL WIDGET-ID 16
+     per-izm AT ROW 11 COL 42.5 COLON-ALIGNED WIDGET-ID 4
+     v-place AT ROW 15.5 COL 6.5 NO-LABEL WIDGET-ID 8
+     v-ftp-address AT ROW 15.5 COL 42.5 COLON-ALIGNED WIDGET-ID 14
+     v-login AT ROW 16.75 COL 42.5 COLON-ALIGNED WIDGET-ID 16
+     v-password AT ROW 18 COL 42.5 COLON-ALIGNED WIDGET-ID 18
+     v-directory AT ROW 20.25 COL 42.5 COLON-ALIGNED WIDGET-ID 12
       "Путь выгрузки:" VIEW-AS TEXT
-          SIZE 14 BY 1.25 AT ROW 9 COL 5 WIDGET-ID 20
-     SPACE(29.99) SKIP(7.07)
-     
+          SIZE 14 BY 1.25 AT ROW 14.25 COL 6.5 WIDGET-ID 20
     "Тип выгрузки:" VIEW-AS TEXT
-          SIZE 13.5 BY 1.25 AT ROW 6 COL 5 WIDGET-ID 20
-     SPACE(29.99) SKIP(7.07)
+          SIZE 13.5 BY 1 AT ROW 9.25 COL 6 WIDGET-ID 20
+     RECT-3 AT ROW 13.5 COL 3 WIDGET-ID 30
+     RECT-4 AT ROW 8.75 COL 3 WIDGET-ID 32
+     RECT-5 AT ROW 14 COL 5 WIDGET-ID 34
+     RECT-6 AT ROW 9 COL 5 WIDGET-ID 36
+     RECT-7 AT ROW 6.5 COL 3 WIDGET-ID 38
+     RECT-8 AT ROW 3.5 COL 3 WIDGET-ID 40
+     SPACE(2.37) SKIP(17.07)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Выгрузка товарного классификатора. Лояльность"
@@ -231,7 +265,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON WINDOW-CLOSE OF FRAME Dialog-Frame /* <insert dialog title> */
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Выгрузка товарного классификатора. Лояльность */
 DO:
   APPLY "END-ERROR":U TO SELF.
 END.
@@ -241,8 +275,9 @@ END.
 
 
 
-&Scoped-define SELF-NAME btn-save
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn-save gDialog
+
+&Scoped-define SELF-NAME btn-start
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn-start gDialog
 ON CHOOSE OF btn_start IN FRAME {&FRAME-NAME} /* Запустить */
 DO:
     assign 
@@ -266,7 +301,8 @@ DO:
              per-izm,     
             code_pool,
             type-exp,
-            v-long-code
+            v-long-code,
+            cb-spl-ptrl
        
             ) .
     if v-place = 2 then    run bge\exp-loyal-p.p ( this-procedure:handle,
@@ -277,7 +313,8 @@ DO:
               per-izm,     
             code_pool,
             type-exp,
-            v-long-code
+            v-long-code,
+            cb-spl-ptrl
            
             ) .
     apply "go".
@@ -291,7 +328,7 @@ DO:
 
 
 &Scoped-define SELF-NAME btn_save
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_save gDialog
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_save Dialog-Frame
 ON CHOOSE OF btn_save IN FRAME Dialog-Frame /* Сохранить */
 DO:
     
@@ -300,6 +337,7 @@ DO:
 run check-param no-error.
     If error-status:error then return no-apply.
     ASSIGN 
+        cb-spl-ptrl
          v-place
          v-ftp-address
         type-exp
@@ -337,10 +375,10 @@ run check-param no-error.
             leave.
         end. /*if not */
     end. /* else */
-if v-place = 1 then   v-param-list =  v-directory + {&delim-par} + string(v-place) + {&delim-par} + v-login + {&delim-par} + v-password  + {&delim-par} + string(type-exp) + {&delim-par} + string(code_pool) + {&delim-par} + per-izm + {&delim-par} +  string(v-long-code).
+if v-place = 1 then   v-param-list =  v-directory + {&delim-par} + string(v-place) + {&delim-par} + v-login + {&delim-par} + v-password  + {&delim-par} + string(type-exp) + {&delim-par} + string(code_pool) + {&delim-par} + per-izm + {&delim-par} +  string(v-long-code) + {&delim-par} +  cb-spl-ptrl.
 if v-place = 2 then do:
      v-ftp-address = trim(trim(replace(v-ftp-address,'ftp:',""),{&slash-char}),{&back-slash-char}).
-      v-param-list = v-ftp-address + {&delim-par} + string(v-place) + {&delim-par} + v-login + {&delim-par} + v-password + {&delim-par} + string(type-exp) + {&delim-par} +  string(code_pool) + {&delim-par} + per-izm  + {&delim-par} +  string(v-long-code).
+      v-param-list = v-ftp-address + {&delim-par} + string(v-place) + {&delim-par} + v-login + {&delim-par} + v-password + {&delim-par} + string(type-exp) + {&delim-par} +  string(code_pool) + {&delim-par} + per-izm  + {&delim-par} +  string(v-long-code) + {&delim-par} +  cb-spl-ptrl.
                      end.
    
 
@@ -363,9 +401,9 @@ END.
 &ANALYZE-RESUME
 
     
-        &Scoped-define SELF-NAME per-izm
+&Scoped-define SELF-NAME per-izm
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL per-izm Dialog-Frame
-ON VALUE-CHANGED OF per-izm IN FRAME Dialog-Frame
+ON VALUE-CHANGED OF per-izm IN FRAME Dialog-Frame /* Период изменения */
 DO:
 
     assign per-izm.
@@ -375,47 +413,18 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-    &Scoped-define SELF-NAME v-place
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-place Dialog-Frame
-ON VALUE-CHANGED OF v-place IN FRAME Dialog-Frame
+&Scoped-define SELF-NAME cb-spl-ptrl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-spl-ptrl Dialog-Frame
+ON VALUE-CHANGED OF cb-spl-ptrl IN FRAME Dialog-Frame /* Код системы-отправителя */
 DO:
-  ASSIGN
-   v-place
-  .
-  CASE v-place:
-      WHEN 2
-      THEN DO:
-           DISABLE v-directory WITH FRAME Dialog-Frame.
-        ENABLE
-            v-ftp-address
-            v-login
-            v-password
-        WITH FRAME Dialog-Frame.
-          DISPLAY
-             v-ftp-address
-             v-login
-             v-password
-          WITH FRAME Dialog-Frame.
-      END.
-      OTHERWISE DO:
-          DISABLE
-              v-ftp-address
-              v-login
-              v-password
-              
-          WITH FRAME Dialog-Frame.
-         enable v-directory WITH FRAME Dialog-Frame.
-         display v-directory WITH FRAME Dialog-Frame.
-      END.
-  END CASE.
+  assign cb-spl-ptrl.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-    &Scoped-define SELF-NAME type-exp
+&Scoped-define SELF-NAME type-exp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL type-exp Dialog-Frame
 ON VALUE-CHANGED OF type-exp IN FRAME Dialog-Frame
 DO:
@@ -454,6 +463,45 @@ END.
 &ANALYZE-RESUME
     
 
+&Scoped-define SELF-NAME v-place
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-place Dialog-Frame
+ON VALUE-CHANGED OF v-place IN FRAME Dialog-Frame
+DO:
+  ASSIGN
+   v-place
+  .
+  CASE v-place:
+      WHEN 2
+      THEN DO:
+           DISABLE v-directory WITH FRAME Dialog-Frame.
+        ENABLE
+            v-ftp-address
+            v-login
+            v-password
+        WITH FRAME Dialog-Frame.
+          DISPLAY
+             v-ftp-address
+             v-login
+             v-password
+          WITH FRAME Dialog-Frame.
+      END.
+      OTHERWISE DO:
+          DISABLE
+              v-ftp-address
+              v-login
+              v-password
+              
+          WITH FRAME Dialog-Frame.
+         enable v-directory WITH FRAME Dialog-Frame.
+         display v-directory WITH FRAME Dialog-Frame.
+      END.
+  END CASE.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -473,12 +521,16 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
  "''":U
  "''":U
  "''":U
- Yes
+ NO
  lty
  par-type
  NO-ERROR
  }
+
+
  if error-status:error or lty = "" then  return error .
+cb-spl-ptrl:LIST-ITEMS = lty.
+
  
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
@@ -496,6 +548,8 @@ RUN disable_UI.
 
 
 /* **********************  Internal Procedures  *********************** */
+
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
@@ -525,12 +579,12 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY code_pool  per-izm  type-exp v-place v-directory v-ftp-address 
-          v-login v-password v-long-code
+  DISPLAY code_pool v-long-code cb-spl-ptrl  type-exp per-izm v-place 
+          v-ftp-address v-login v-password v-directory 
       WITH FRAME Dialog-Frame.
-  ENABLE btn_start btn_save Btn_close code_pool type-exp   v-place  per-izm 
-         v-directory v-ftp-address 
-          v-login v-password v-long-code
+  ENABLE RECT-3 RECT-4 RECT-5 RECT-6 RECT-7 RECT-8 btn_start btn_save Btn_close 
+         code_pool v-long-code cb-spl-ptrl  type-exp per-izm v-place 
+         v-ftp-address v-login v-password v-directory 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -539,6 +593,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-enable Dialog-Frame 
 PROCEDURE my-enable :
     
    
@@ -588,13 +643,16 @@ PROCEDURE my-enable :
                             code_pool   = entry(6,v-param-list,{&delim-par})
                             per-izm     = entry(7,v-param-list,{&delim-par})
                            v-long-code = integer(entry(8,v-param-list,{&delim-par}))
+                           cb-spl-ptrl = entry(9,v-param-list,{&delim-par})
    NO-ERROR.
           
                         display v-directory  
                             type-exp 
                             per-izm  
                             v-place
-                            code_pool v-long-code with frame {&FRAME-NAME}.
+                            code_pool
+                            cb-spl-ptrl 
+                             v-long-code with frame {&FRAME-NAME}.
                         
                         disable v-ftp-address v-login v-password with frame {&FRAME-NAME}.
                         if type-exp = 2 then display per-izm  with frame {&FRAME-NAME}.
@@ -613,7 +671,9 @@ PROCEDURE my-enable :
                             type-exp      = integer(entry(5,v-param-list,{&delim-par}))
                             code_pool     = entry(6,v-param-list,{&delim-par})
                             per-izm       = entry(7,v-param-list,{&delim-par})
-                        v-long-code = integer(entry(8,v-param-list,{&delim-par}))  no-error.
+                        v-long-code = integer(entry(8,v-param-list,{&delim-par}))
+                       cb-spl-ptrl = entry(9,v-param-list,{&delim-par}) 
+                          no-error.
                         
                         DISPLAY
                             v-ftp-address
@@ -622,7 +682,9 @@ PROCEDURE my-enable :
                             type-exp 
                             per-izm  
                             v-place
-                            code_pool   v-long-code with frame {&FRAME-NAME}.
+                            code_pool 
+                            cb-spl-ptrl
+                              v-long-code with frame {&FRAME-NAME}.
                         
                         disable v-directory with frame {&FRAME-NAME}.
                     

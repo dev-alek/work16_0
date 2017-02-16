@@ -32,6 +32,7 @@ define input parameter p-izm-N as integer no-undo.
 define input parameter p-code_pool as char no-undo.
 define input parameter p-type-exp as integer no-undo.
 define input parameter p-long-code as integer no-undo.
+define input parameter p-cb-spl-ptrl as character no-undo.
 
 define variable v-localcode   as char      no-undo.
 define variable v-is-petrol   as logical   no-undo.
@@ -62,21 +63,21 @@ v-date-file  = STRING(YEAR(TODAY), "9999") + STRING(MONTH(TODAY), "99") + STRING
 
 
 
-          { gbl/conf-rd.i
- "'spl-lty'"
- "''":U
- "''":U
- "''":U
- "''":U
- "''":U
- "''":U
- NO
- lty
- par-type
- NO-ERROR
- }
- 
- 
+/*          { gbl/conf-rd.i*/
+/* "'spl-lty'"             */
+/* "''":U                  */
+/* "''":U                  */
+/* "''":U                  */
+/* "''":U                  */
+/* "''":U                  */
+/* "''":U                  */
+/* NO                      */
+/* lty                     */
+/* par-type                */
+/* NO-ERROR                */
+/* }                       */
+/*                         */
+/*                         */
  
 if p-place = 1 then
 do:
@@ -115,7 +116,7 @@ hSAXWriter:WRITE-data-ELEMENT("Guid" , vGUID ) no-error.
 hSAXWriter:WRITE-data-ELEMENT("ReportType" , "GoodsAndGroups" ) no-error.
 hSAXWriter:WRITE-DATA-ELEMENT("ReportDate" , xml-date-file ) no-error.
 hSAXWriter:WRITE-DATA-ELEMENT("Time_Report" , string(integer (xml-time-file))) no-error.
-hSAXWriter:WRITE-data-ELEMENT("PartnerCode" , lty ) no-error.
+hSAXWriter:WRITE-data-ELEMENT("PartnerCode" , p-cb-spl-ptrl ) no-error.
 hSAXWriter:WRITE-DATA-ELEMENT("DataSetName" , p-code_pool ) no-error.
 hSAXWriter:end-ELEMENT ("Header") no-error.
 
@@ -159,6 +160,7 @@ hSAXWriter:START-ELEMENT ("Goods") no-error .
         for each buf_goods  : 
                 if buf_goods.gds-type = "ò"  then v-gds-type = "g".
                 if buf_goods.gds-type = "ó" then v-gds-type = "s".
+              { gbl/pgtxvalg.i buf_goods.gds-code {&vat-tax-code} ? v-vat-pc no-error}
                 
             if not  can-find (first goods-attr where goods-attr.gds-code = buf_goods.gds-code and  goods-attr.attr-code = {&attr-office-type})
             
@@ -176,6 +178,8 @@ hSAXWriter:START-ELEMENT ("Goods") no-error .
                 hSAXWriter:WRITE-DATA-ELEMENT("Status" , string(buf_goods.stts)  ) no-error.
                 hSAXWriter:WRITE-DATA-ELEMENT("GrpCode" , string(buf_goods.grp-code)  ) no-error.
                 hSAXWriter:WRITE-DATA-ELEMENT("Units" , buf_goods.unit-base  ) no-error.
+                hSAXWriter:WRITE-DATA-ELEMENT("VAT" , string(v-vat-pc)  ) no-error.
+                
                 hSAXWriter:WRITE-DATA-ELEMENT("Type" , v-gds-type  ) no-error.
                 hSAXWriter:WRITE-DATA-ELEMENT("Name" , buf_goods.gds-name  ) no-error. 
                  hSAXWriter:WRITE-DATA-ELEMENT("LabelName" , buf_goods.engl-name) no-error.
@@ -189,6 +193,10 @@ if p-type-exp = 2 then
 do:
 
     for each buf_goods:
+        
+                      { gbl/pgtxvalg.i buf_goods.gds-code {&vat-tax-code} ? v-vat-pc no-error}
+        
+        
          if buf_goods.gds-type = "ò"  then v-gds-type = "g".
                 if buf_goods.gds-type = "ó" then v-gds-type = "s".
         if not can-find ( goods-attr where goods-attr.gds-code = buf_goods.gds-code and goods-attr.attr-code = {&attr-office-type}) then
@@ -204,6 +212,8 @@ do:
                 hSAXWriter:WRITE-DATA-ELEMENT("Status" , string(buf_goods.stts)  ) no-error.
                 hSAXWriter:WRITE-DATA-ELEMENT("GrpCode" , string(buf_goods.grp-code)  ) no-error.
                 hSAXWriter:WRITE-DATA-ELEMENT("Units" , buf_goods.unit-base  ) no-error.
+                hSAXWriter:WRITE-DATA-ELEMENT("VAT" , string(v-vat-pc)  ) no-error.
+                
                 hSAXWriter:WRITE-DATA-ELEMENT("Type" , v-gds-type  ) no-error.
                 hSAXWriter:WRITE-DATA-ELEMENT("Name" , buf_goods.gds-name  ) no-error. 
                 hSAXWriter:WRITE-DATA-ELEMENT("LabelName" , buf_goods.engl-name) no-error.
