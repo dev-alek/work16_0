@@ -854,17 +854,17 @@ define input parameter p-trn-doc-out-code       as character        no-undo.
 
 /*    define buffer buf_temp_PlDoc             for temp_PlDoc.*/
   define variable ii                   as integer no-undo.
-    define variable v-attrcode           as char.
-    define variable v-SectionName        as char.
-    define variable v-DocQnty            as decimal.
-    define variable v-CliQnty            as decimal.
-    define variable v-FactQnty           as decimal.
-    define variable v-DocDensity         as decimal.
-    define variable v-TankVol            as decimal.
-    define variable v-TankDensity        as decimal.
-    define variable v-TankDensityPomi    as decimal.
-    define variable v-TankVolPomi        as decimal.  
-
+    define variable v-attrcode           as char no-undo.
+    define variable v-SectionName        as char no-undo.
+    define variable v-DocQnty            as decimal no-undo.
+    define variable v-CliQnty            as decimal no-undo .
+    define variable v-FactQnty           as decimal no-undo.
+    define variable v-DocDensity         as decimal no-undo.
+    define variable v-FactDensity        as decimal no-undo.
+    define variable v-TankVol            as decimal no-undo.
+    define variable v-TankDensity        as decimal no-undo.
+    define variable v-TankDensityPomi    as decimal no-undo.
+    define variable v-TankVolPomi        as decimal no-undo.  
     define variable v-tank-vol           as decimal no-undo .
     define variable v-tank-density       as decimal no-undo .
     define variable v-SectionNum         as integer no-undo.
@@ -1336,6 +1336,12 @@ find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code
                                     v-FactQnty = decimal (doc-line-attr.attr-value) 
                                     v-CliQnty  = v-DocDensity * v-FactQnty no-error.
                             end.
+                        when 'fact-dens' then 
+                            do:
+                                assign
+                                    v-FactDensity = decimal (doc-line-attr.attr-value) .
+                            end.
+                            
                         when 'doc-dens' then 
                             do:
                                 assign
@@ -1373,6 +1379,8 @@ find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code
                 run wp-xmltagput( 5, "TankDocDensity",  trim(string(v-DocDensity , ">>>>>>>>>9.9999999999")) , 0 ).
                 run wp-xmltagput( 5, "TankVol",  string(v-TankVol   ) , 0 ).
                 run wp-xmltagput( 5, "TankDensity",  trim(string(v-TankDensity , ">>>>>>>>>9.9999999999")) , 0 ).
+                run wp-xmltagput( 5, "TankFactVol",  string(v-FactQnty ) , 0 ).
+                run wp-xmltagput( 5, "TankFactDensity",  trim(string(v-FactDensity , ">>>>>>>>>9.9999999999")) , 0 ).
                 run wp-xmltagput( 5, "RdcDensity",  trim(string(v-TankDensityPomi , ">>>>>>>>>9.9999999999")) , 0 ).
                 run wp-xmltagput( 5, "RdcVol",  string( v-TankVolPomi) , 0 ).
                 run wp-xmltagclose in this-procedure ( input 4, input "Tank"  ).
@@ -2004,6 +2012,7 @@ define output parameter p-exists-after  as logical      no-undo.
         {&trdcattr-addsum}
         v-attr-value
         v-attr-type
+        no-error
     }
     if lookup( {&sum-before-doc}, v-attr-value ) <> 0
     then do:
