@@ -755,24 +755,24 @@ procedure check-date :
       end.
     end.
 
-
-    /* даты правильные - проверяем наличие новых документов */
-    /* при необходимости производим дорасчет */
-    if p-last-stk-date = ?
-    or (p-last-stk-date <> ?
-        and p-date-end >= p-last-stk-date
-        )
-    or (p-recalc-date <> ?
-        and p-date-end >= p-recalc-date
-       )
-    then do:
-    /* Уточнение календарной даты до даты окончания смены */
     define variable v-date-shift as date      no-undo .
     run ver-shift in this-procedure (
         input   p-date-end ,
         input   p-obj-type ,
         input   p-obj-code ,
         output  v-date-shift ) no-error .
+    /* даты правильные - проверяем наличие новых документов */
+    /* при необходимости производим дорасчет */
+    if p-last-stk-date = ?
+    or (p-last-stk-date <> ?
+        and p-date-end >= p-last-stk-date) or v-date-shift <= p-last-stk-date
+        
+    or (p-recalc-date <> ?
+        and p-date-end >= p-recalc-date
+       )
+    then do:
+    /* Уточнение календарной даты до даты окончания смены */
+
 
       case p-ahz-type
       :
