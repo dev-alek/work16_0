@@ -20,7 +20,7 @@ Creation date: 09/04/07
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 
-&glob cl-revision  "v15_1.9"
+&glob cl-revision  "v15_1.10"
 &glob cl-md5    { cmp/fixcstml.md5 }
 
 procedure check-cl-version :
