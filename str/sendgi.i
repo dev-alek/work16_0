@@ -166,17 +166,51 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
            return error prichina.
         end.
       end.
+      
+     
+      define VARIABLE v-attr-val    as character no-undo .
+      define VARIABLE v-attr-type   as character no-undo .
+       
+      run clntattr-value in this-procedure  ( input {&shop}
+                                            , input ub.shop.obj-code
+                                            , input "envd"
+                                            , output v-attr-val
+                                            , output v-attr-type
+                                            ) no-error.
+
+       
       if tax-cass and new-good then do:
           tax-string = "".
           /*сформируем строчку по всем налогам  отправляемым на кассу*/
           _tt-tax:
           FOR EACH tt-tax No-LOCK:
             if NOT tt-tax.to-cashdesk  then NEXT _tt-tax.
+            if v-attr-val = "yes" then do:
+                find first ub.tax-rate-attr where ub.tax-rate-attr.attr-code = "envd" no-error.
+                
+                if AVAILABLE ub.tax-rate-attr then do:
+                    tax-string = tax-string + " " + (if tt-tax.individual
+                                              then (if tt-tax.rate-value <> 0
+                                                        then string(ub.tax-rate-attr.rate-code + txfixnum)
+                                                        else "")
+                                              else string(ub.tax-rate-attr.rate-code)).
+                                               
+                end.      
+                else do:
+                    tax-string = tax-string + " " + (if tt-tax.individual
+                                              then (if tt-tax.rate-value <> 0
+                                                        then string(tt-tax.rate-code + txfixnum)
+                                                        else "")
+                                              else string(tt-tax.rate-code)).
+                end.                  
+            end.
+            else do:
             tax-string = tax-string + " " + (if tt-tax.individual
                                               then (if tt-tax.rate-value <> 0
                                                         then string(tt-tax.rate-code + txfixnum)
                                                         else "")
                                               else string(tt-tax.rate-code)).
+            end.
             if tt-tax.individual and tt-tax.rate-value <> 0 then do:
               FIND FIRST cash-txr where
                         cash-txr.tax-code = tt-tax.tax-code

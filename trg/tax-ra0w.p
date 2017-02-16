@@ -35,6 +35,9 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
-
+  run str/callnews.p
+    (input {&table_tax-rate-attr}
+    ,input (buffer ub.tax-rate-attr:handle)
+    ).
 
 end. /* main-block */

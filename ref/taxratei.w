@@ -49,7 +49,8 @@ define variable vss-description as character no-undo init "Карточка ставки налог
 { cmp/showinf.i }
 
 define variable taxcode like ub.tax.tax-code no-undo.
-
+define buffer buf_tax-rate-attr for ub.tax-rate-attr .
+define VARIABLE v-envd-old as LOGICAL NO-UNDO .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -78,7 +79,7 @@ define variable taxcode like ub.tax.tax-code no-undo.
 &Scoped-Define ENABLED-FIELDS tt-tax-rate.rate-code tt-tax-rate.rate-name
 &Scoped-define ENABLED-TABLES tt-tax-rate
 &Scoped-define FIRST-ENABLED-TABLE tt-tax-rate
-&Scoped-Define ENABLED-OBJECTS b-exit b-quit B-help
+&Scoped-Define ENABLED-OBJECTS b-exit b-quit B-help T-envd 
 &Scoped-Define DISPLAYED-FIELDS tt-tax-rate.tax-code tt-tax-rate.rate-code ~
 tt-tax-rate.rate-name
 &Scoped-define DISPLAYED-TABLES tt-tax-rate
@@ -103,15 +104,20 @@ DEFINE BUTTON b-exit AUTO-GO
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-help
-     LABEL "Помо&щь"
-     SIZE 3 BY 1
+DEFINE BUTTON B-help 
+     LABEL "Помо&щь" 
+     SIZE 10 BY 1
      BGCOLOR 8 .
 
 DEFINE BUTTON b-quit AUTO-END-KEY
      LABEL "&Отмена"
      SIZE 10 BY 1
      BGCOLOR 8 .
+
+DEFINE VARIABLE T-envd AS LOGICAL INITIAL no 
+     LABEL "ЕНВД" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 11.13 BY .83 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -124,22 +130,23 @@ DEFINE QUERY d-add-tax-rate FOR
 DEFINE FRAME d-add-tax-rate
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
-     B-help AT ROW 1 COL 50
-     tt-tax-rate.tax-code AT ROW 3.13 COL 21.9 COLON-ALIGNED
+     B-help AT ROW 1 COL 40
+     T-envd AT ROW 3.08 COL 42 WIDGET-ID 2
+     tt-tax-rate.tax-code AT ROW 3.13 COL 21.88 COLON-ALIGNED
           LABEL "Код вида налога"
           VIEW-AS FILL-IN
           SIZE 7 BY 1
-     tt-tax-rate.rate-code AT ROW 4.77 COL 21.9 COLON-ALIGNED
+     tt-tax-rate.rate-code AT ROW 4.42 COL 21.88 COLON-ALIGNED
           LABEL "Код ставки налога" FORMAT ">>>>>9"
-          VIEW-AS FILL-IN
-          SIZE 9.9 BY 1
-     tt-tax-rate.rate-name AT ROW 6.37 COL 21.9 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 9.88 BY 1
+     tt-tax-rate.rate-name AT ROW 5.71 COL 21.88 COLON-ALIGNED
           LABEL "Название ставки"
           VIEW-AS FILL-IN
           SIZE 30.5 BY 1
-     SPACE(0.97) SKIP(0.70)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     SPACE(0.99) SKIP(1.36)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Ставка налога"
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
@@ -204,6 +211,29 @@ DO:
  tt-tax-rate.rate-name
  tt-tax-rate.tax-code
  .
+ if v-envd-old <> t-envd then do:
+     find first buf_tax-rate-attr where buf_tax-rate-attr.tax-code = tt-tax-rate.tax-code
+                                    and buf_tax-rate-attr.attr-code = "envd" no-error .
+        if AVAILABLE buf_tax-rate-attr then do:
+                 if t-envd then do:
+                     MESSAGE SUBSTITUTE ("У кода ставки налога &1, уже есть атрибут ЕНВД", buf_tax-rate-attr.rate-code)
+                     VIEW-AS ALERT-BOX.
+                 end.
+                 else do:
+                    delete buf_tax-rate-attr.
+                 end. 
+        end.  
+        else do:
+
+                     create buf_tax-rate-attr .
+                     assign
+                        buf_tax-rate-attr.tax-code = tt-tax-rate.tax-code
+                        buf_tax-rate-attr.attr-code = "envd"
+                        buf_tax-rate-attr.rate-code = tt-tax-rate.rate-code
+                     .
+        end.                                 
+ 
+  end.       
  run ref/taxrati1.p
  ( input-output rid
  , input ref-mode
@@ -248,6 +278,21 @@ END.
 ON CHOOSE OF b-quit IN FRAME d-add-tax-rate /* Отмена */
 DO:
   rid = ?.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME T-envd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL T-envd d-add-tax-rate
+ON VALUE-CHANGED OF T-envd IN FRAME d-add-tax-rate /* ЕНВД */
+DO:
+    IF T-envd:checked then do:
+            assign T-envd 
+            .
+     end.        
+     else t-envd = no.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -362,10 +407,13 @@ PROCEDURE enable_UI :
 
   {&OPEN-QUERY-d-add-tax-rate}
   GET FIRST d-add-tax-rate.
-  IF AVAILABLE tt-tax-rate THEN
-    DISPLAY tt-tax-rate.tax-code tt-tax-rate.rate-code tt-tax-rate.rate-name
+  DISPLAY T-envd 
       WITH FRAME d-add-tax-rate.
-  ENABLE b-exit b-quit B-help tt-tax-rate.rate-code tt-tax-rate.rate-name
+  IF AVAILABLE tt-tax-rate THEN 
+    DISPLAY tt-tax-rate.tax-code tt-tax-rate.rate-code tt-tax-rate.rate-name 
+      WITH FRAME d-add-tax-rate.
+  ENABLE b-exit b-quit B-help T-envd tt-tax-rate.rate-code 
+         tt-tax-rate.rate-name 
       WITH FRAME d-add-tax-rate.
   VIEW FRAME d-add-tax-rate.
   {&OPEN-BROWSERS-IN-QUERY-d-add-tax-rate}
@@ -388,13 +436,23 @@ PROCEDURE MyEnable :
     tt-tax-rate.rate-code
     tt-tax-rate.rate-name
     WITH FRAME D-add-tax-rate.
+  find first buf_tax-rate-attr where buf_tax-rate-attr.tax-code = tt-tax-rate.tax-code
+                                    and buf_tax-rate-attr.rate-code = tt-tax-rate.rate-code
+                                    and buf_tax-rate-attr.attr-code = "envd" no-error .
+    if AVAILABLE buf_tax-rate-attr then do:
+     T-envd = yes.
+     v-envd-old = yes.
+    end.    
+    
   ENABLE
   B-exit
   B-quit
   B-Help
   tt-tax-rate.rate-name
+  T-envd
   WITH FRAME D-add-tax-rate.
   VIEW FRAME D-add-tax-rate.
+  display t-envd with frame {&FRAME-NAME}.
   ENABLE
   tt-tax-rate.rate-code when ref-mode = {&add-def}
   WITH FRAME {&frame-name}.

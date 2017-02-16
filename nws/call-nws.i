@@ -67,6 +67,7 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,c-tax~
 ,tax-rate~
 ,c-tax-rate~
+,tax-rate-attr~
 ,tax-rate-gds-grp~
 ,c-tax-rate-gds-grp~
 ,gds-grp-attr~

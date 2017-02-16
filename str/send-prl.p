@@ -38,6 +38,7 @@ define variable vss-description as character no-undo init "Пересылка и удаление 
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 { gbl/getcntxt.i def }
+{ gbl/clntattr.i }
 
 define variable action as character no-undo .
 define variable p-doc-num like ub.price-doc.doc-num no-undo .
