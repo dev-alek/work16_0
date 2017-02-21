@@ -3611,14 +3611,17 @@ end procedure. /* local-cor-line */
 
 procedure calc-vat-pc:
   if tt-fr-doc-line.tot-cli:sensitive in frame {&frame-name} then do:
-    assign tt-fr-doc-line.vat-pc = (sum-vat / (tt-fr-doc-line.tot-cli
-             * ( 1 - (if t-doc.slt-type = {&inc-slt} then (tt-fr-doc-line.slt-pc / (100 + tt-fr-doc-line.slt-pc)) else 0))
-            - (if t-doc.vat-type =  {&inc-vat} then sum-vat else 0))) * 100.
-    if tt-fr-doc-line.vat-pc = ? then
-    assign 
-      tt-fr-doc-line.vat-pc = v-clcdoc-vat-pc
-      sum-vat = 0
-    .
+    if  integer(tt-fr-doc-line.tot-cli:screen-value) <> 0
+    then do : 
+        assign tt-fr-doc-line.vat-pc = (sum-vat / (tt-fr-doc-line.tot-cli
+                 * ( 1 - (if t-doc.slt-type = {&inc-slt} then (tt-fr-doc-line.slt-pc / (100 + tt-fr-doc-line.slt-pc)) else 0))
+                - (if t-doc.vat-type =  {&inc-vat} then sum-vat else 0))) * 100.
+        if tt-fr-doc-line.vat-pc = ? then
+        assign 
+          tt-fr-doc-line.vat-pc = v-clcdoc-vat-pc
+          sum-vat = 0
+        .
+    end.    
   end.
   else do:
     assign tt-fr-doc-line.vat-pc = (sum-vat / (tt-fr-doc-line.cli-qnty * tt-fr-doc-line.price-cli
