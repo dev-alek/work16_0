@@ -469,12 +469,12 @@ DEFINE QUERY br-option FOR
 DEFINE BROWSE BR-list
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-list Dialog-Frame _STRUCTURED
   QUERY BR-list DISPLAY
-      {1}.doc-code
+      {1}.doc-code format "X(22)"
       {1}.obj-type
       {1}.obj-code
       {1}.chk-date
       string({1}.chk-time, "hh:mm:ss":U)
-      {1}.chk-num COLUMN-LABEL "№ чека!на кассе" format "-99999"
+      {1}.chk-num COLUMN-LABEL "№ чека!на кассе" format "->>>>99999"
       {1}.pay-desk
       {1}.cashier
       {1}.cashier-psn-code
