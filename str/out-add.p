@@ -199,7 +199,7 @@ define variable vartotal-discnt-base-fact                 like ub.gds-dtl.price-
 define variable vartotal-discnt-rubl-fact                 like ub.gds-dtl.price-base      no-undo.
 define variable flag-incr-disc-vat                        as   logical initial no         no-undo.
 define variable flag-update                               as   logical initial no         no-undo.
-define variable chg-qnty                                  like ub.gds-dtl.doc-qnty initial ? no-undo.
+define variable chg-qnty                                  like ub.gds-dtl.doc-qnty        no-undo initial ?.
 define variable no-end-all-operation                      as   logical   initial yes      no-undo.
 define variable varrep                                    as   logical   initial no       no-undo.
 define variable unrv-qnty                                 like ub.gds-dtl.doc-qnty           no-undo.
@@ -1131,6 +1131,8 @@ on error undo, return error return-value
                 no-error.
           if available ub.gds-dtl then do:
             assign v-sum-vat = round(((ub.gds-dtl.price-rubl - ub.gds-dtl.price-rubl * p-doc-line.slt-pc / (100 + p-doc-line.slt-pc) ) * p-doc-line.vat-pc / (100 + p-doc-line.vat-pc) ) * p-doc-line.cli-qnty, 2 ) .
+            if v-sum-vat <> 0 and v-sum-vat <> ?
+            then  
             assign p-doc-line.vat-pc = (v-sum-vat / ( p-doc-line.cli-qnty * ub.gds-dtl.price-rubl
                     * ( 1 - (p-doc-line.slt-pc / (100 + p-doc-line.slt-pc)))
                     - v-sum-vat )) * 100.
