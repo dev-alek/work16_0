@@ -1128,7 +1128,7 @@ if vardate-actual-goods <> ? then do:
   define variable v-tbl-row as rowid no-undo .
   define variable v-tbl-name as character no-undo .
   for each old-ext-classif no-lock
-    where old-ext-classif.classif-subject = {&table_goods}
+    where old-ext-classif.classif-subject = {&table_goods} and not old-ext-classif.classif-name = {&extclass_goods_esys}
   break by old-ext-classif.uniq-key-rec
   on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
     if first-of(old-ext-classif.uniq-key-rec) then do:

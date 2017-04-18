@@ -163,6 +163,7 @@ on write of dst.user-obj                      override do: end.
 on write of dst.user-obj-attr                 override do: end.
 on write of dst.menu-user                     override do: end.
 on write of dst.menu-user-attr                override do: end.
+on write of dst.c-usr-hist                    override do: end.
 
 
 
@@ -204,11 +205,11 @@ end.
 { utl/00000002.i menu-user  }
 { utl/00000002.i menu-user-attr  }
 
-output stream str-gen close.
 return "Произведен экспорт таблиц: usr-flt usr-flt-attr menu-user-call menu-user-call-attr user-context-history user-context-history-attr user-window-attr ~
 db-usr-flt db-usr-flt-attr ~
 user-login c-user-login c-user-log c-usr-hist user-login-action-item user-login-action-item-attr user-login-action-role ~
 user-login-action-role-attr user-login-attr user-conn-attr ~
 user-host user-host-attr user-menu-group user-menu-group-attr user-obj user-obj-attr ~
 menu-user menu-user-attr .".
+output stream str-gen close.
 end.
