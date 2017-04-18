@@ -227,6 +227,39 @@ xmlns:qp="http://fsrar.ru/WEGAIS/QueryParameters">~
     return glog.
   end.
   
+  method public class ExtGdsValue GetExtGdsObjValueFromUTM () :
+    
+    define variable extGdsObj           as class  ExtGds      no-undo.
+    define variable extGdsValueObj      as class  ExtGdsValue no-undo.
+    define variable bh-gds-egais-gotten as handle no-undo.
+    
+    bh-gds-egais-gotten = GetHndlTable().
+    
+    extGdsObj = new ExtGds (yes).
+    
+    if bh-gds-egais-gotten = ? or not bh-gds-egais-gotten:find-first () 
+    then do:
+      delete object extGdsObj.
+      StatusErr = true.
+      return ?.
+    end.
+
+    extGdsValueObj = extGdsObj:GetInfoObj (
+      bh-gds-egais-gotten:buffer-field("prod-info"):buffer-value + 
+      chr(4) + bh-gds-egais-gotten:buffer-field("imp-info"):buffer-value + 
+      chr(4) + bh-gds-egais-gotten:buffer-field("gds-name"):buffer-value + 
+      chr(4) + bh-gds-egais-gotten:buffer-field("ms-base"):buffer-value).
+    if extGdsObj:ReturnMsg <> ""
+    then do:
+      Msg = extGdsObj:ReturnMsg.
+      StatusErr = true. 
+    end.
+    extGdsValueObj:AlcCode = bh-gds-egais-gotten:buffer-field("alc-code"):buffer-value.
+    delete object extGdsObj.
+    return extGdsValueObj.
+    
+  end.
+
   method public override handle GetHndlTable() :
 
     assign

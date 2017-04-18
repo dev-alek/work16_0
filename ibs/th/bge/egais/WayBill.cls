@@ -2033,7 +2033,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     then do:
                       ub.clob-bind.descr = ub.clob-bind.descr + {&delim-par}.
                     end.
-                    if entry (10, ub.clob-bind.descr, {&delim-par}) <> "Accepted"
+                    if entry (10, ub.clob-bind.descr, {&delim-par}) <> tt-ticket.status_
                     then do:
                       entry (10, ub.clob-bind.descr, {&delim-par})  = tt-ticket.status_.
                     end.
@@ -2057,7 +2057,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
                   if can-find (first buf_clob-bind where 
                         (buf_clob-bind.uniq-key-rec = ticketUKR or (buf_clob-bind.uniq-key-rec = tt-ticket.regid + {&delim-par} + tt-ticket.docId and (tt-ticket.Identity = ? or tt-ticket.Identity = ""))) 
-                    and buf_clob-bind.resource-type =  {&lob-egais-ticket})
+                    and buf_clob-bind.resource-type =  {&lob-egais-wb-ticket})
                     then next url_.
                   run gbl/file2clb.p ( input {&add-def}
                     ,input ",yes"
@@ -3083,7 +3083,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               
               if VerWBXsd = 'WayBill_v2'
               then do:
-                if tt-wb-gds-EG.UnitType = 'Packed' then sw:write-data-element ("pref" + verPrefXMLNS + ":Capacity", string (tt-wb-gds-EG.ms-base)).
+                if tt-wb-gds-EG.UnitType = 'Packed' then sw:write-data-element ("pref" + verPrefXMLNS + ":Capacity", if extGdsValueObj:Capacity <> 0 and extGdsValueObj:Capacity <> ? then string (extGdsValueObj:Capacity) else string (tt-wb-gds-EG.ms-base)).
                 sw:write-data-element ("pref" + verPrefXMLNS + ":UnitType", tt-wb-gds-EG.UnitType).
               end.  
               else do:

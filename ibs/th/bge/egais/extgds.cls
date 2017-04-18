@@ -65,7 +65,7 @@ class ibs.th.bge.egais.ExtGds:
     get.
     private set.
 
-  define property SettingsTTList as character no-undo init ";;;20,yes;23,yes;;;20,yes;20,no;;20,yes;;;;;20,yes;;;;;1,no" /*в порядке полей через ; ширина в симв. поля, видно/не видно поле по умолч. видно*/
+  define property SettingsTTList as character no-undo init ";;;20,yes;23,yes;;;20,yes;20,no;;20,yes;;;;;20,yes;;;;;1,no;" /*в порядке полей через ; ширина в симв. поля, видно/не видно поле по умолч. видно*/
     get.
     private set.
 
@@ -91,6 +91,7 @@ class ibs.th.bge.egais.ExtGds:
     field imporInnkppEgais as character label "ИНН/КПП импортера ЕГАИС" format "x(30)"
     field verXSD           as integer   label "Вер. XSD" format "99"
     field ColorNum         as integer init ?
+    field capacity         as decimal   label "Объем"
     index pi as primary
     gdsCode alcCode
     .
@@ -141,10 +142,10 @@ class ibs.th.bge.egais.ExtGds:
     for each buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods} 
       and buf_ext-classif.classif-name = {&extclass_goods_esys} 
       and buf_ext-classif.db-num = 0
-      and (GdsCodeItemQuery = 0 or buf_ext-classif.key#_one = GdsCodeItemQuery)   
+      and (inGdsCode = 0 or buf_ext-classif.key#_one = inGdsCode)   
       and buf_ext-classif.key#_two = ExtSystem 
       and buf_ext-classif.key#_three = 0
-      and (AlcCodeItemQuery = "" or buf_ext-classif.charkey_one = AlcCodeItemQuery)
+      and (inAlcCode = "" or buf_ext-classif.charkey_one = inAlcCode)
       and buf_ext-classif.charkey_two = ""
       and buf_ext-classif.charkey_three = ""
       and buf_ext-classif.nonunique = 0
@@ -200,6 +201,7 @@ class ibs.th.bge.egais.ExtGds:
           tt-egaisgds-hndls.imporInnkppEgais = ExtGdsValueObj:INNImpor + (if ExtGdsValueObj:KPPImpor <> "" then "/" + ExtGdsValueObj:KPPImpor else "")
           tt-egaisgds-hndls.prodInnkppEgais = ExtGdsValueObj:INNProd + (if ExtGdsValueObj:KPPProd <> "" then "/" + ExtGdsValueObj:KPPProd else "")
           tt-egaisgds-hndls.egaisGdsName = ExtGdsValueObj:FullNameGds
+          tt-egaisgds-hndls.capacity = ExtGdsValueObj:Capacity
           tt-egaisgds-hndls.egaisTypeProd = ExtGdsValueObj:CliEgaisTypeProd
           tt-egaisgds-hndls.regionProd = ExtGdsValueObj:RegionProd
           tt-egaisgds-hndls.egaisTypeImpor = ExtGdsValueObj:CliEgaisTypeImpor
@@ -606,7 +608,7 @@ class ibs.th.bge.egais.ExtGds:
     entry (7, v-impor, chr(5)) = inExtGdsValueObj:CliEgaisTypeImpor.
     entry (8, v-impor, chr(5)) = inExtGdsValueObj:RegionImpor.
   
-    buf_ext-classif-attr.attr-value = v-prod + chr(4) + v-impor + chr(4) + inExtGdsValueObj:FullNameGds.
+    buf_ext-classif-attr.attr-value = v-prod + chr(4) + v-impor + chr(4) + inExtGdsValueObj:FullNameGds + chr(4) + string (inExtGdsValueObj:Capacity).
     release buf_ext-classif-attr.
     
   end.
@@ -636,6 +638,7 @@ class ibs.th.bge.egais.ExtGds:
       inExtGdsValueObjTo:DescrImpor = inExtGdsValueObjForm:DescrImpor
       inExtGdsValueObjTo:DescrProd = inExtGdsValueObjForm:DescrProd
       inExtGdsValueObjTo:FullNameGds = inExtGdsValueObjForm:FullNameGds
+      inExtGdsValueObjTo:Capacity = inExtGdsValueObjForm:Capacity
       inExtGdsValueObjTo:FullNameImpor = inExtGdsValueObjForm:FullNameImpor
       inExtGdsValueObjTo:FullNameProd = inExtGdsValueObjForm:FullNameProd
       inExtGdsValueObjTo:INNImpor = inExtGdsValueObjForm:INNImpor
@@ -760,6 +763,7 @@ class ibs.th.bge.egais.ExtGds:
       hndlclsExtGdsValueObj:CliEgaisTypeImpor = ExtGdsValueObj:CliEgaisTypeImpor
       hndlclsExtGdsValueObj:RegionImpor = ExtGdsValueObj:RegionImpor
       hndlclsExtGdsValueObj:FullNameGds = ExtGdsValueObj:FullNameGds
+      hndlclsExtGdsValueObj:Capacity = ExtGdsValueObj:Capacity
     .
     hndlclsExtGdsValueObj:extFormF1Obj:OpenQueryExtFormF1(ExtGdsValueObj:AlcCode).
     if valid-object (ExtGdsValueObj)
@@ -789,7 +793,7 @@ class ibs.th.bge.egais.ExtGds:
     
     ExtGdsValueObj = new ExtGdsValue().
     
-    if num-entries (inInfoValue, chr(4)) <> 3
+    if num-entries (inInfoValue, chr(4)) < 3
       then 
     do:
       ReturnMsg = "Некорректный атрибут egais-info - " + inInfoValue.
@@ -836,6 +840,14 @@ class ibs.th.bge.egais.ExtGds:
     .
 
     ExtGdsValueObj:FullNameGds = entry (3, inInfoValue, chr(4)).
+    if num-entries (inInfoValue, chr(4)) > 3
+    then do:
+      ExtGdsValueObj:Capacity = decimal (entry (4, inInfoValue, chr(4))) no-error.
+      if error-status:error
+      then do:
+        ExtGdsValueObj:Capacity = 0.
+      end.
+    end.
     
     return ExtGdsValueObj.
     
