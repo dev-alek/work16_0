@@ -709,7 +709,7 @@ if NOT FirstLine Then  Run Display-Title  in this-procedure .
     FirstLine = TRUE .
     if xTog-obj and   x-SelectObject <> "currency":U   Then  DO:
           {&PUT-u1}
-          string(  "он наэейрс : (" + x-store-type  + string(x-store-code)  +  ") " + ObjName)
+          string(  "он назейрс : (" + x-store-type  + string(x-store-code)  +  ") " + ObjName)
           AT 30 format "X(170)" SKIP.
           End.
           FORM {&WFz} .   {&FRAME-d} .
