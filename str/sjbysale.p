@@ -254,6 +254,7 @@ on error undo, return error
             ub.goods.gds-code = ub.bar-code.gds-code
     by ub.chk-doc.obj-type
     by ub.chk-doc.obj-code
+	by ub.chk-gds.b-code
     by ub.chk-doc.chk-date
     by ub.chk-doc.chk-time:
       v-doc-code = '':U.
