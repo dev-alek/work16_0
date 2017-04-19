@@ -44,6 +44,7 @@ define variable vss-description as character no-undo init "Печать товаров с исте
 { rep/rep-bt.i   }
 { rep/lkp-font.i }
 { gbl/paramls.i  }
+{ ref/grplibfn.i    }
 
 define temp-table temp_result-line no-undo
     field line-order      as integer
@@ -209,7 +210,7 @@ on error undo, return error
             end.        /* for each buf_goods */
             end.        /* for each buf_goods */
         end.        /* when 1 */
-        when {&g-grp}
+        when {&g-prod}
         then do:        /* Товары выбирать по поставщикам */
             for each buf_temp_prod
             on error undo, return error
@@ -233,13 +234,18 @@ on error undo, return error
                 end.        /* for each buf_goods */
             end.        /* for each buf_temp_prod */
         end.        /* when 2 */
-        when {&g-prod}
+        when {&g-grp}
         then do:        /* Товары выбирать по группам */
+        define variable v-curr-grp-name               as character no-undo .
             for each buf_temp_goods-grp
             on error undo, return error
             :
-                for each buf_goods no-lock
-                   where buf_goods.grp-code = buf_temp_goods-grp.node-code
+          run grplib-get-full-name in this-procedure( input buf_temp_goods-grp.node-code, output v-curr-grp-name ) .
+          for each buf_goods no-lock
+            where buf_goods.grp-name begins v-curr-grp-name
+/*          :                                                               */
+/*                for each buf_goods no-lock                                */
+/*                   where buf_goods.grp-code = buf_temp_goods-grp.node-code*/
                 on error undo, return error
                 :
                     for each obj-list :

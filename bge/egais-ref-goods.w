@@ -272,7 +272,6 @@ DO:
   bh-journal-egais = egaisJournal:GetHndlTable().
 
   create query qh-journal-egais.
-  
   qh-journal-egais:set-buffers (bh-journal-egais) .
 
   qh-journal-egais:query-prepare ("for each tt_journal-egais where jou-param matches '*КОД*' and jou-status = 'Запрос отправлен' ").
@@ -294,15 +293,14 @@ DO:
         msg = msg + {&new-line} + egaisDictGds:Msg.
     end.
     else do:
-      bh-gds-egais-gotten = egaisDictGds:GetHndlTable() .
-      if bh-gds-egais-gotten = ? or not bh-gds-egais-gotten:find-first () 
+      extGdsValueObj = egaisDictGds:GetExtGdsObjValueFromUTM() .
+      if egaisDictGds:StatusErr = true 
       then do:
         put stream str1 unformatted {&new-line} + egaisDictGds:Msg.
         delete object egaisDictGds.
         next journal_.
       end.
-      extGdsValueObj = extGdsObj:GetInfoObj (bh-gds-egais-gotten:buffer-field("prod-info"):buffer-value + chr(4) + bh-gds-egais-gotten:buffer-field("imp-info"):buffer-value + chr(4) + bh-gds-egais-gotten:buffer-field("gds-name"):buffer-value).
-      extGdsObj:OpenQueryExtGds (bh-gds-egais-gotten:buffer-field("alc-code"):buffer-value).
+      extGdsObj:OpenQueryExtGds (extGdsValueObj:AlcCode).
       do ii = 1 to extGdsObj:NumBundles:
         extGdsValueObjDB = extGdsObj:GetExtGdsValue(ii).
         if extGdsValueObj:CliEgaisTypeProd = ""
@@ -315,6 +313,7 @@ DO:
             extGdsValueObjDB:DescrImpor = extGdsValueObj:DescrImpor
             extGdsValueObjDB:DescrProd = extGdsValueObj:DescrProd
             extGdsValueObjDB:FullNameGds = extGdsValueObj:FullNameGds
+            extGdsValueObjDB:Capacity = extGdsValueObj:Capacity
             extGdsValueObjDB:FullNameImpor = extGdsValueObj:FullNameImpor
             extGdsValueObjDB:FullNameProd = extGdsValueObj:FullNameProd
             extGdsValueObjDB:INNImpor = extGdsValueObj:INNImpor
@@ -329,6 +328,7 @@ DO:
             extGdsValueObjDB:CountryProd = extGdsValueObj:CountryProd
             extGdsValueObjDB:DescrProd = extGdsValueObj:DescrProd
             extGdsValueObjDB:FullNameGds = extGdsValueObj:FullNameGds
+            extGdsValueObjDB:Capacity = extGdsValueObj:Capacity
             extGdsValueObjDB:FullNameProd = extGdsValueObj:FullNameProd
             extGdsValueObjDB:INNProd = extGdsValueObj:INNProd
             extGdsValueObjDB:KPPProd = extGdsValueObj:KPPProd
@@ -928,7 +928,6 @@ PROCEDURE reopen-browse :
     v-height = browse-hdl-egais-goods:height-chars.
   end.
   
-  extGdsObj:GetHndlTable(0, "", input-output bh-egais-goods).
   delete object qh-egais-goods no-error.
   delete object browse-hdl-egais-goods no-error.
   extGdsObj:GetHndlTable(0, "", input-output bh-egais-goods).

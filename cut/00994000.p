@@ -59,6 +59,30 @@ define buffer new-ext-classif for dst.ext-classif.
 define buffer old-doc-attr    for src.doc-attr.
 define buffer new-doc-attr    for dst.doc-attr.
 
+on write of dst.ext-classif   override 
+  do: 
+  end.
+on write of dst.ext-classif-attr override 
+  do: 
+  end.
+on delete of dst.ext-classif   override 
+  do: 
+  end.
+on delete of dst.ext-classif-attr override 
+  do: 
+  end.
+on write of dst.clob-bind   override 
+  do: 
+  end.
+on write of dst.clob-bind override 
+  do: 
+  end.
+on delete of dst.clob-bind   override 
+  do: 
+  end.
+on delete of dst.clob-bind override 
+  do: 
+  end.
 
 do
 on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)) :
@@ -151,100 +175,120 @@ end. /*do v-ii to */
 
 do v-ii = 1 to num-entries(lob-reslist-date-egais):
   v-entry = entry(v-ii, lob-reslist-date-egais).
+  cicl0_:
   for each old-clob-bind no-lock where
-      lookup (old-clob-bind.resource-type, lob-reslist-date-egais) > 0 and old-clob-bind.sys-date >= vardate-actual-docs
-  and old-clob-bind.db-num = 0
-  and old-clob-bind.int64-id > 0
+      old-clob-bind.resource-type = v-entry and old-clob-bind.sys-date >= vardate-actual-docs
   on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
     create new-clob-bind.
-    buffer-copy old-clob-bind to new-clob-bind.
+    buffer-copy old-clob-bind to new-clob-bind no-error.
+    if error-status:error then do:
+      delete new-clob-bind.
+      next cicl0_.
+    end.
     for  EACH old-clob-data NO-LOCK
-        where      (old-clob-data.db-num = old-clob-bind.db-num
-                and old-clob-data.int64-id = old-clob-bind.int64-id )
-                or (old-clob-data.file-name = old-clob-bind.uniq-key-rec
-                    and
-                    old-clob-bind.uniq-key-rec begins "exe/")
+        where old-clob-data.db-num = old-clob-bind.db-num
+                and old-clob-data.int64-id = old-clob-bind.int64-id 
       on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
       create new-clob-data.
-      buffer-copy old-clob-data to new-clob-data.
+      buffer-copy old-clob-data to new-clob-data no-error.
+      if error-status:error then do:
+        delete new-clob-data.
+        next cicl0_.
+      end.
     end.
   end.
 
 end. /*do v-ii to */
 
-
+cicl1_:
 for each old-clob-bind no-lock where
     old-clob-bind.resource-type = {&lob-egais-wb}
-and old-clob-bind.int64-id > 0
 on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
   v-doc-code = entry (6, old-clob-bind.descr, {&delim-par}) no-error.
   if v-doc-code <> ? and v-doc-code <> ""
   then do:
     if not can-find (first new-trn-doc where new-trn-doc.doc-code = v-doc-code)
-      then next.
+      then next cicl1_.
   end.
-  else next.
+  else next cicl1_.
   
   create new-clob-bind.
-  buffer-copy old-clob-bind to new-clob-bind.
+  buffer-copy old-clob-bind to new-clob-bind no-error.
+  if error-status:error then do:
+    delete new-clob-bind.
+    next cicl1_.
+  end.
+
   for  EACH old-clob-data NO-LOCK
-      where      (old-clob-data.db-num = old-clob-bind.db-num
-              and old-clob-data.int64-id = old-clob-bind.int64-id )
-              or (old-clob-data.file-name = old-clob-bind.uniq-key-rec
-                  and
-                  old-clob-bind.uniq-key-rec begins "exe/")
+        where old-clob-data.db-num = old-clob-bind.db-num
+                and old-clob-data.int64-id = old-clob-bind.int64-id
     on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
     create new-clob-data.
-    buffer-copy old-clob-data to new-clob-data.
+    buffer-copy old-clob-data to new-clob-data no-error.
+    if error-status:error then do:
+      delete new-clob-data.
+      next cicl1_.
+    end.
   end.
 end.
 
+cicl2_:
 for each old-clob-bind no-lock where
     old-clob-bind.resource-type = {&lob-egais-ref-b}
-and old-clob-bind.int64-id > 0
 on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
   
   if not can-find (first new-clob-bind where new-clob-bind.uniq-key-rec = old-clob-bind.uniq-key-rec )
-    then next.
+    then next cicl2_.
   create new-clob-bind.
-  buffer-copy old-clob-bind to new-clob-bind.
+  buffer-copy old-clob-bind to new-clob-bind no-error.
+  if error-status:error then do:
+    delete new-clob-bind.
+    next cicl2_.
+  end.
   for  EACH old-clob-data NO-LOCK
-      where      (old-clob-data.db-num = old-clob-bind.db-num
-              and old-clob-data.int64-id = old-clob-bind.int64-id )
-              or (old-clob-data.file-name = old-clob-bind.uniq-key-rec
-                  and
-                  old-clob-bind.uniq-key-rec begins "exe/")
+        where old-clob-data.db-num = old-clob-bind.db-num
+                and old-clob-data.int64-id = old-clob-bind.int64-id
     on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
     create new-clob-data.
-    buffer-copy old-clob-data to new-clob-data.
+    buffer-copy old-clob-data to new-clob-data no-error.
+    if error-status:error then do:
+      delete new-clob-data.
+      next cicl2_.
+    end.
   end.
 end.
 
+cicl5_:
 for each old-clob-bind no-lock where
     (old-clob-bind.resource-type = {&lob-egais-tts} or old-clob-bind.resource-type = {&lob-egais-tfs}) 
-and old-clob-bind.int64-id > 0
 on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
   
   create new-clob-bind.
-  buffer-copy old-clob-bind to new-clob-bind.
+  buffer-copy old-clob-bind to new-clob-bind no-error.
+  if error-status:error then do:
+    delete new-clob-bind.
+    next cicl5_.
+  end.
   for  EACH old-clob-data NO-LOCK
-      where      (old-clob-data.db-num = old-clob-bind.db-num
-              and old-clob-data.int64-id = old-clob-bind.int64-id )
-              or (old-clob-data.file-name = old-clob-bind.uniq-key-rec
-                  and
-                  old-clob-bind.uniq-key-rec begins "exe/")
+        where old-clob-data.db-num = old-clob-bind.db-num
+                and old-clob-data.int64-id = old-clob-bind.int64-id
     on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
     create new-clob-data.
-    buffer-copy old-clob-data to new-clob-data.
+    buffer-copy old-clob-data to new-clob-data no-error.
+    if error-status:error then do:
+      delete new-clob-data.
+      next cicl5_.
+    end.
   end.
 end.
 
 
 
-for each buf_new-clob-bind where buf_new-clob-bind.resource-type = {&lob-egais-wb} no-lock. /*перенос квитанций по приходным документам*/
+for each buf_new-clob-bind where buf_new-clob-bind.resource-type = {&lob-egais-wb} no-lock: /*перенос квитанций по приходным документам*/
 
   { utl/00000002.i ext-classif   " where old-ext-classif.classif-name = {&extclass_egais-transId} and old-ext-classif.CharKey_One = buf_new-clob-bind.uniq-key-rec" }
 
+  cicl6_:
   for each old-clob-bind where (old-clob-bind.resource-type = {&lob-egais-ticket} and old-clob-bind.uniq-key-rec begins buf_new-clob-bind.uniq-key-rec) 
                               or (not old-clob-bind.uniq-key-rec begins buf_new-clob-bind.uniq-key-rec and old-clob-bind.resource-type = {&lob-egais-ticket} and lookup (old-clob-bind.field-name_, buf_new-clob-bind.field-name_) > 0)
                               or can-find (first new-ext-classif where new-ext-classif.classif-name = {&extclass_egais-transId}
@@ -254,36 +298,47 @@ for each buf_new-clob-bind where buf_new-clob-bind.resource-type = {&lob-egais-w
   on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
     
     create new-clob-bind.
-    buffer-copy old-clob-bind to new-clob-bind.
+    buffer-copy old-clob-bind to new-clob-bind no-error.
+    if error-status:error then do:
+      delete new-clob-bind.
+      next cicl6_.
+    end.
     for  EACH old-clob-data NO-LOCK
-        where      (old-clob-data.db-num = old-clob-bind.db-num
-                and old-clob-data.int64-id = old-clob-bind.int64-id )
-                or (old-clob-data.file-name = old-clob-bind.uniq-key-rec
-                    and
-                    old-clob-bind.uniq-key-rec begins "exe/")
+        where old-clob-data.db-num = old-clob-bind.db-num
+                and old-clob-data.int64-id = old-clob-bind.int64-id
       on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
       create new-clob-data.
-      buffer-copy old-clob-data to new-clob-data.
+      buffer-copy old-clob-data to new-clob-data no-error.
+      if error-status:error then do:
+        delete new-clob-data.
+        next cicl6_.
+      end.
     end.
 
 
   end.
   
+  cicl7_:
   for each old-clob-bind where old-clob-bind.resource-type = {&lob-egais-wb-ticket} and old-clob-bind.uniq-key-rec begins buf_new-clob-bind.uniq-key-rec
     on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
     
 
     create new-clob-bind.
-    buffer-copy old-clob-bind to new-clob-bind.
+    buffer-copy old-clob-bind to new-clob-bind no-error.
+    if error-status:error then do:
+      delete new-clob-bind.
+      next cicl7_.
+    end.
     for  EACH old-clob-data NO-LOCK
-        where      (old-clob-data.db-num = old-clob-bind.db-num
-                and old-clob-data.int64-id = old-clob-bind.int64-id )
-                or (old-clob-data.file-name = old-clob-bind.uniq-key-rec
-                    and
-                    old-clob-bind.uniq-key-rec begins "exe/")
+        where old-clob-data.db-num = old-clob-bind.db-num
+                and old-clob-data.int64-id = old-clob-bind.int64-id
       on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
       create new-clob-data.
-      buffer-copy old-clob-data to new-clob-data.
+      buffer-copy old-clob-data to new-clob-data no-error.
+      if error-status:error then do:
+        delete new-clob-data.
+        next cicl7_.
+      end.
     end.
 
   end.
@@ -298,6 +353,7 @@ for each old-ext-classif where old-ext-classif.classif-name = {&extclass_egais-t
   create new-ext-classif.
   buffer-copy old-ext-classif to new-ext-classif.
 
+  cicl3_:
   for each old-clob-bind where 
     old-ext-classif.CharKey_Two = old-clob-bind.field-name_
     on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
@@ -307,24 +363,25 @@ for each old-ext-classif where old-ext-classif.classif-name = {&extclass_egais-t
     buffer-copy old-clob-bind to new-clob-bind no-error.
     if error-status:error then do:
       delete new-clob-bind.
-      next.
+      next cicl3_.
     end.
     for  EACH old-clob-data NO-LOCK
-        where      (old-clob-data.db-num = old-clob-bind.db-num
-                and old-clob-data.int64-id = old-clob-bind.int64-id )
-                or (old-clob-data.file-name = old-clob-bind.uniq-key-rec
-                    and
-                    old-clob-bind.uniq-key-rec begins "exe/")
+        where old-clob-data.db-num = old-clob-bind.db-num
+                and old-clob-data.int64-id = old-clob-bind.int64-id
       on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
       create new-clob-data.
-      buffer-copy old-clob-data to new-clob-data.
+      buffer-copy old-clob-data to new-clob-data no-error.
+      if error-status:error then do:
+        delete new-clob-data.
+        next cicl3_.
+      end.
     end.
   
   end.
 
 end.          
 
-
+cicl4_:
 for each old-clob-bind where 
       old-clob-bind.resource-type = {&lob-egais-wb-act} 
   and can-find (first new-doc-attr where new-doc-attr.attr-code = {&trdcattr-negais} and old-clob-bind.uniq-key-rec matches ("*" + new-doc-attr.attr-value + "*"))
@@ -334,17 +391,18 @@ for each old-clob-bind where
   buffer-copy old-clob-bind to new-clob-bind no-error.
   if error-status:error then do:
     delete new-clob-bind.
-    next.
+    next cicl4_.
   end.
   for  EACH old-clob-data NO-LOCK
-      where      (old-clob-data.db-num = old-clob-bind.db-num
-              and old-clob-data.int64-id = old-clob-bind.int64-id )
-              or (old-clob-data.file-name = old-clob-bind.uniq-key-rec
-                  and
-                  old-clob-bind.uniq-key-rec begins "exe/")
+        where old-clob-data.db-num = old-clob-bind.db-num
+                and old-clob-data.int64-id = old-clob-bind.int64-id
     on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2)):
     create new-clob-data.
-    buffer-copy old-clob-data to new-clob-data.
+    buffer-copy old-clob-data to new-clob-data no-error.
+    if error-status:error then do:
+      delete new-clob-data.
+      next cicl4_.
+    end.
   end.
   
 end.          

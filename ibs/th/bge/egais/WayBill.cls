@@ -1284,7 +1284,12 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     put stream outstr skip.
     output stream outstr close.
   
-    cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).
+    case tt-wb-header.verXSD:
+      when "WayBill" 
+        then cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).
+      when "WayBill_v2" 
+        then cmd = substitute ("&1 --connect-timeout 1 -F xml_file=@&2 &3/opt/in/WayBillAct_v2 >&4", search ("exe/curl.exe"), search ("TTNAct.xml"), ConPar, inFileName).  
+    end case.
     os-command value (cmd).
   
     file-info:file-name = search (inFileName).
@@ -2033,7 +2038,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
                     then do:
                       ub.clob-bind.descr = ub.clob-bind.descr + {&delim-par}.
                     end.
-                    if entry (10, ub.clob-bind.descr, {&delim-par}) <> "Accepted"
+                    if entry (10, ub.clob-bind.descr, {&delim-par}) <> tt-ticket.status_
                     then do:
                       entry (10, ub.clob-bind.descr, {&delim-par})  = tt-ticket.status_.
                     end.
@@ -2057,7 +2062,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
                   if can-find (first buf_clob-bind where 
                         (buf_clob-bind.uniq-key-rec = ticketUKR or (buf_clob-bind.uniq-key-rec = tt-ticket.regid + {&delim-par} + tt-ticket.docId and (tt-ticket.Identity = ? or tt-ticket.Identity = ""))) 
-                    and buf_clob-bind.resource-type =  {&lob-egais-ticket})
+                    and buf_clob-bind.resource-type =  {&lob-egais-wb-ticket})
                     then next url_.
                   run gbl/file2clb.p ( input {&add-def}
                     ,input ",yes"
@@ -2881,7 +2886,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         end case.
       end.
       else do:
-        if VerXSDShip = 'WayBill_v2' and VerXSD = '2'
+        if tt-wb-header.verXSD = 'WayBill_v2'
         then
           xml-cont = substitute ({&xml-act-v2-1}, v-FS-RAR, 'Rejected', time, iso-date (date (now)), tt-wb-header.wbregid, "Отказ") + {&xml-act-v2-2}.
         else
@@ -3083,7 +3088,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               
               if VerWBXsd = 'WayBill_v2'
               then do:
-                if tt-wb-gds-EG.UnitType = 'Packed' then sw:write-data-element ("pref" + verPrefXMLNS + ":Capacity", string (tt-wb-gds-EG.ms-base)).
+                if tt-wb-gds-EG.UnitType = 'Packed' then sw:write-data-element ("pref" + verPrefXMLNS + ":Capacity", if extGdsValueObj:Capacity <> 0 and extGdsValueObj:Capacity <> ? then string (extGdsValueObj:Capacity) else string (tt-wb-gds-EG.ms-base)).
                 sw:write-data-element ("pref" + verPrefXMLNS + ":UnitType", tt-wb-gds-EG.UnitType).
               end.  
               else do:

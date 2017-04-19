@@ -87,6 +87,10 @@ class ibs.th.bge.egais.ExtGdsValue:
   define property FullNameGds as character no-undo
     get.
     set.
+    
+  define property Capacity as decimal no-undo
+    get.
+    set.
 
   define property GdsCode as integer no-undo init 0
     get.
