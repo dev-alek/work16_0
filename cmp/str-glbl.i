@@ -3309,8 +3309,6 @@ end.
 &global-define attr-cli-upd-date-time '{&bef-attr-cli-upd-date-time}':U
 &global-define bef-attr-holdfirm-code holdfirm-code
 &global-define attr-holdfirm-code '{&bef-attr-holdfirm-code}':U
-&global-define bef-attr-taxation taxation
-&global-define attr-taxation '{&bef-attr-taxation}':U
 &global-define bef-attr-bge-incr-last-shift-date bge-incr-last-shift-date
 &global-define attr-bge-incr-last-shift-date '{&bef-attr-bge-incr-last-shift-date}':U
 &global-define bef-attr-bge-incr-last-shift-num bge-incr-last-shift-num
@@ -3367,7 +3365,7 @@ end.
 &global-define attr-auto-tank-for '{&bef-attr-auto-tank-for}':U
 &global-define bef-attr-cli-for-close-fo cli-for-close-fo
 &global-define attr-cli-for-close-fo '{&bef-attr-cli-for-close-fo}':U
-&global-define clntattr-list 'doc-start,arh-detail,arh-start,ahsp-detail,ahsp-start,aht-detail,aht-start,arh-del,ahsp-del,aht-del,arh-calc,ahsp-calc,aht-calc,arh-recalc,ahsp-recalc,aht-recalc,is-inkassator,shftrep2,db,is-superviser,purch-code,als-gds,alien,envd,kpp,pharm,upd-date-time,holdfirm-code,vat-register,taxation,bge-incr-last-shift-date,bge-incr-last-shift-num,bge-sap-sng-last-shift,egrip-date,egrip-num,cli-local,cli-alc-producer,region-code,foreign-producer,main-accholder,not-corr-op,veto-man-doc,requisite-alc-decl,division-code,supp-np,tank-farm-for,auto-tank-for,cli-for-close-fo':U
+&global-define clntattr-list 'doc-start,arh-detail,arh-start,ahsp-detail,ahsp-start,aht-detail,aht-start,arh-del,ahsp-del,aht-del,arh-calc,ahsp-calc,aht-calc,arh-recalc,ahsp-recalc,aht-recalc,is-inkassator,shftrep2,db,is-superviser,purch-code,als-gds,alien,envd,kpp,pharm,upd-date-time,holdfirm-code,vat-register,bge-incr-last-shift-date,bge-incr-last-shift-num,bge-sap-sng-last-shift,egrip-date,egrip-num,cli-local,cli-alc-producer,region-code,foreign-producer,main-accholder,not-corr-op,veto-man-doc,requisite-alc-decl,division-code,supp-np,tank-farm-for,auto-tank-for,cli-for-close-fo':U
 &global-define clntattr-list-to-dc-list 'db,is-superviser':u
 &global-define bef-attr-gds-attr-lock lock
 &global-define attr-gds-attr-lock '{&bef-attr-gds-attr-lock}':U
@@ -8008,7 +8006,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 9a87a59c06c8, 929, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 05b519d108b3, 974, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 90fea97fc979, 803, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 44c7cb9eda36, 691, rls ':U
 &endif
