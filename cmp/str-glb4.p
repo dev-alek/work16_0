@@ -264,7 +264,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 { cmp/cr-prep.i 1 attr-holdfirm-code          holdfirm-code            " " holdfirm-code }
 
 /* Система налогообложения */
-{ cmp/cr-prep.i 1 attr-taxation taxation " " taxation }
+
 
 /* Дата последней выгруженной смены для объекта */
 { cmp/cr-prep.i 1 attr-bge-incr-last-shift-date bge-incr-last-shift-date " " bge-incr-last-shift-date }
@@ -374,7 +374,6 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 ,{&bef-attr-cli-upd-date-time}~
 ,{&bef-attr-holdfirm-code}~
 ,{&bef-attr-vat-register}~
-,{&bef-attr-taxation}~
 ,{&bef-attr-bge-incr-last-shift-date}~
 ,{&bef-attr-bge-incr-last-shift-num}~
 ,{&bef-attr-bge-sap-sng-last-shift}~
