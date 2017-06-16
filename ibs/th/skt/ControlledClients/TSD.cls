@@ -521,7 +521,7 @@ class ibs.th.skt.ControlledClients.TSD :
       
       adapterOra-i516:SetTempTable(table TempTrnDoc, table TempDocLine, userId_).
       
-      glog =  adapterOra-i516:WriteDB().
+      adapterOra-i516:WriteDB(output glog).
   
       LogWrite:LogStr = LogWrite:LogStr + {&new-line} + adapterOra-i516:StrLog.
       delete object AdapterOra-i516.
