@@ -88,9 +88,8 @@ define input parameter        p-unit-cli-perm       like ub.shop.unit-cli-perm  
 define input parameter        p-with-serv           like ub.shop.with-serv                no-undo .
 define input parameter        p-work-hours          like ub.shop.work-hours               no-undo .
 define input parameter        p-purch-code          as   integer                          no-undo .
-define input parameter        p-envd                as   logical                          no-undo .
+define input parameter        p-envd                as   logical                          no-undo . 
 define input parameter        p-pharm               as   logical                          no-undo .
-define input parameter        p-taxation            as   character                        no-undo .
 define input parameter        p-KPP                 as   character                        no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -310,8 +309,7 @@ ON STOP UNDO, RETURN ERROR:
     ub.clients.host-code = p-host-code
     ub.shop.obj-code = p-obj-code
     ub.shop.host-code   = p-host-code
-    p-rec = recid(ub.clients)
-    .
+    p-rec = recid(ub.clients).
   end.
   else do:
     FIND FIRST ub.clients where
@@ -415,6 +413,7 @@ ON STOP UNDO, RETURN ERROR:
   p-rec = recid(ub.clients )
   .
  release ub.clients no-error.
+ 
  if error-status:error then do:
     run err-mess in this-procedure (substitute("Îøèáêà ïğè ñîõğàíåíèè çàïèñè ÊËÈÅÍÒ äëÿ ÌÀÃÀÇÈÍÀ &1:&2&3&2&4"
                           , p-obj-code
@@ -523,21 +522,8 @@ ON STOP UNDO, RETURN ERROR:
         input  "yes":u).
     end.
   end.
-  if p-taxation = "ÅÍÂÄ":U
-  then do:
-      run clntattr-write in this-procedure
-       (input  {&shop},
-        input  p-obj-code,
-        input  {&attr-taxation},
-        input  "ÅÍÂÄ":U ).
-  end.
-  else do:
-      run clntattr-delete in this-procedure
-       (input {&shop},
-        input  p-obj-code,
-        input  {&attr-taxation},
-        output v-delete).
-  end.
+  
+  
  if p-mode = {&add-def} then do:
     run trg/curr-shc.p (p-obj-code) no-error .
     if error-status :error   then do:

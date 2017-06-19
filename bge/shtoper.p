@@ -112,15 +112,33 @@ define variable vss-description as character no-undo init "Экспорт XML смены".
         field state-density as decimal
         field chk-date      as date
         FIELD doc-code      as character
+        FIELD chk-num       as integer
+        FIELD chk-time      as integer
+        FIELD cashier       as integer
         field pay-desk      as integer
         field pump          as decimal
         field nozzle-code   as integer
         field sum-qnty      as decimal
         field sum-cli-qnty  as decimal
+        field chk-type      as integer
+        index pi is primary unique
+            doc-code
+    .
 
+    define temp-table temp_chk-gds no-undo
+        field gds-code      as integer
+        field b-code        as integer
+        field pl-code       as integer
+        field qnty          as decimal
+        FIELD doc-code      as character
+        field pump          as decimal
+        field nozzle-code   as integer
+        field line-num      as INTEGER
+        field sbros-type    as character
         index pi is primary unique
             b-code
             doc-code
+            line-num
     .
 
 
@@ -361,6 +379,27 @@ on error undo, return error
             , input substitute( "&1. Ошибка выгрузки &2. &3. &4. &5."
                                     , vss-description
                                     , "технологической прокачки"
+                                    , return-value
+                                    , trim(error-status :get-message(1))
+                                    , trim(error-status :get-message(2))
+                            )
+        ).
+    end.
+
+    run export-techChk in this-procedure (
+          input p-obj-type
+        , input p-obj-code
+        , input p-shift-date
+        , input p-shift-num
+    ) no-error.
+    if error-status :error
+    then do:
+        run wp-XMLWriteLog in this-procedure (
+              input p-log-file-name
+            , input 1
+            , input substitute( "&1. Ошибка выгрузки &2. &3. &4. &5."
+                                    , vss-description
+                                    , "технологические чеки"
                                     , return-value
                                     , trim(error-status :get-message(1))
                                     , trim(error-status :get-message(2))
@@ -1004,7 +1043,8 @@ on error undo, return error
                                 if AVAILABLE buf_chk-gds then 
                                 do:
                                     find first buf_temp_chk-doc where buf_temp_chk-doc.b-code = buf_chk-gds.b-code and
-                                        buf_temp_chk-doc.doc-code = buf_chk-gds.doc-code  no-error.
+                                        buf_temp_chk-doc.doc-code = buf_chk-gds.doc-code and
+                                        buf_temp_chk-doc.chk-type = integer({&rcpt-tech-refuell})  no-error.
 
                                     if not AVAILABLE buf_temp_chk-doc then
                                     do:
@@ -1021,6 +1061,10 @@ on error undo, return error
                                             buf_temp_chk-doc.state-density = buf_chk-gds.density
                                             buf_temp_chk-doc.pay-desk      = buf_chk-doc.pay-desk
                                             buf_temp_chk-doc.pl-code       = integer(buf_chk-gds.loc1)
+                                            buf_temp_chk-doc.chk-type      = integer({&rcpt-tech-refuell})
+                                            buf_temp_chk-doc.cashier       = buf_chk-doc.cashier
+                                            buf_temp_chk-doc.chk-num       = buf_chk-doc.chk-num
+                                            buf_temp_chk-doc.chk-time      = buf_chk-doc.chk-time 
                                             .
                                     end.
                                 end.                            
@@ -1055,7 +1099,7 @@ on error undo, return error
                     run wp-xmltagput( input 4, "tprProDensity" , input string( buf_temp_techPro.state-density, ">>>>>9.99"), input 0 ).
             run wp-xmltagclose( input 3, input "tprProPL").
         
-            for each buf_temp_chk-doc where buf_temp_chk-doc.gds-code = buf_temp_techPro.gds-code:
+            for each buf_temp_chk-doc where buf_temp_chk-doc.gds-code = buf_temp_techPro.gds-code and buf_temp_chk-doc.chk-type = integer({&rcpt-tech-refuell}) :
                 run wp-xmltagopen( input 3, input "techProChk", input "" ).
                     run wp-xmltagput( input 4, "ChkDate"    , input string( buf_temp_chk-doc.chk-date   ), input 0 ).
                     run wp-xmltagput( input 4, "ChkNum"     , input string( buf_temp_chk-doc.doc-code   ), input 0 ).
@@ -1066,14 +1110,186 @@ on error undo, return error
                     run wp-xmltagput( input 4, "ChkPL"      , input string( buf_temp_chk-doc.pl-code    ), input 2 ).            
                 run wp-xmltagclose( input 3, input "techProChk").
                 
-                
+                end.
                 end.            
             run wp-xmltagclose( input 2, input "techPro").
         end.
-    end.
+
+
 end.
 end procedure. /* export-techPro */
 
+
+/*==========================================================================*/
+procedure export-techChk :
+    define input parameter p-obj-type   as character        no-undo.
+    define input parameter p-obj-code   as integer          no-undo.
+    define input parameter p-shift-date as date             no-undo.
+    define input parameter p-shift-num  as integer          no-undo.
+
+    define buffer buf_goods        for ub.goods.
+    define buffer buf_chk-gds      for ub.chk-gds.
+    DEFINE buffer buf_chk-doc      for ub.chk-doc.
+    define buffer buf_temp_chk-doc for temp_chk-doc.
+    define buffer buf_temp_chk-gds for  temp_chk-gds.
+    define buffer buf_bar-code     for ub.bar-code.
+    do
+        for buf_goods
+        , buf_chk-gds
+        , buf_bar-code
+        , buf_chk-doc
+        on error undo, return error
+        :
+            empty temp-table buf_temp_chk-doc.
+            empty temp-table buf_temp_chk-gds.
+            
+        for each buf_chk-doc where (buf_chk-doc.chk-type = integer({&rcpt-trans-transfer}) or buf_chk-doc.chk-type = integer({&rcpt-trans-cancell}) or 
+            buf_chk-doc.chk-type = integer({&rcpt-unlock-trans}) or buf_chk-doc.chk-type = integer({&rcpt-overflow})) 
+            and buf_chk-doc.shift-date = p-shift-date and buf_chk-doc.shift-num = p-shift-num
+            and buf_chk-doc.obj-code = p-obj-code and buf_chk-doc.obj-type = p-obj-type    :
+            find first buf_temp_chk-doc where buf_temp_chk-doc.doc-code = buf_chk-doc.doc-code no-error.
+
+            if not AVAILABLE buf_temp_chk-doc then
+            do:
+                create buf_temp_chk-doc .
+                ASSIGN
+                    buf_temp_chk-doc.doc-code = buf_chk-doc.doc-code
+                    buf_temp_chk-doc.chk-date = buf_chk-doc.chk-date
+                    buf_temp_chk-doc.pay-desk = buf_chk-doc.pay-desk
+                    buf_temp_chk-doc.chk-type = buf_chk-doc.chk-type
+                    buf_temp_chk-doc.cashier  = buf_chk-doc.cashier
+                    buf_temp_chk-doc.chk-num  = buf_chk-doc.chk-num
+                    buf_temp_chk-doc.chk-time = buf_chk-doc.chk-time 
+                    .
+            end.
+                                        
+            for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code :
+                                                                            
+                find first buf_bar-code where buf_bar-code.b-code = buf_chk-gds.b-code no-error .
+                if AVAILABLE buf_bar-code then 
+                do:
+                    find FIRST buf_goods where buf_goods.gds-code = buf_bar-code.gds-code no-error .
+                    if AVAILABLE buf_goods then 
+                    do:
+                        find first buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_chk-gds.doc-code and buf_temp_chk-gds.line-num = buf_chk-gds.line-num no-error . 
+                        if not AVAILABLE buf_temp_chk-gds then 
+                        do:
+                            create buf_temp_chk-gds .
+                            assign      
+                                buf_temp_chk-gds.doc-code    = buf_chk-gds.doc-code         
+                                buf_temp_chk-gds.gds-code    = buf_goods.gds-code
+                                buf_temp_chk-gds.b-code      = buf_chk-gds.b-code
+                                buf_temp_chk-gds.qnty        = buf_chk-gds.doc-qnty
+                                buf_temp_chk-gds.nozzle-code = buf_chk-gds.nozzle-code
+                                buf_temp_chk-gds.pump        = buf_chk-gds.pump
+                                buf_temp_chk-gds.line-num    = buf_chk-gds.line-num
+                                . 
+                            if buf_chk-doc.chk-type = integer({&rcpt-trans-cancell}) then 
+                            do:
+                                if buf_chk-gds.write-off-code = 0 then buf_temp_chk-gds.sbros-type = "не пролито".
+                                if buf_chk-gds.write-off-code = 1 then buf_temp_chk-gds.sbros-type = "пролито".
+                            end.     
+                        end.
+                    end.    
+                end.                        
+            end.   
+        end.                       
+        run wp-xmltagopen( input 2, input "TechChk", input "" ).
+        
+        for each buf_temp_chk-doc where buf_temp_chk-doc.chk-type = integer({&rcpt-trans-transfer}): 
+            run wp-xmltagopen( input 3, input "Check", input "" ).
+            run wp-xmltagput( input 4, "ChkTypeName", input string( "ПеревТрнзкц" ), input 0 ).
+            run wp-xmltagput( input 4, "ChkType"    , input string( {&rcpt-trans-transfer}   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkDate"    , input string( buf_temp_chk-doc.chk-date   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkTime"    , input string( buf_temp_chk-doc.chk-time, "hh:mm:ss"   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkDocNum"  , input string( buf_temp_chk-doc.doc-code   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkNum"     , input string( buf_temp_chk-doc.chk-num   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkNumDesk" , input string( buf_temp_chk-doc.pay-desk   ), input 0 ).
+            run wp-xmltagput( input 4, "Cashier"    , input string( buf_temp_chk-doc.cashier   ), input 0 ).
+            for each buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_temp_chk-doc.doc-code:
+                run wp-xmltagopen( input 4, input "CheckGds", input "" ).
+                run wp-xmltagput( input 5, "ChkGds-code", input string( buf_temp_chk-gds.gds-code   ), input 0 ).
+                run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>9.99"       ), input 0 ).
+                run wp-xmltagput( input 5, "ChkTRK"     , input string( buf_temp_chk-gds.pump       ), input 0 ).
+                run wp-xmltagput( input 5, "ChkNozzle"  , input string( buf_temp_chk-gds.nozzle-code), input 0 ).
+                run wp-xmltagput( input 5, "ChkPL"      , input string( buf_temp_chk-gds.pl-code    ), input 2 ).
+                run wp-xmltagclose( input 4, input "CheckGds").
+            end.            
+            run wp-xmltagclose( input 3, input "Check").
+        end.
+        
+        for each buf_temp_chk-doc where buf_temp_chk-doc.chk-type = integer({&rcpt-trans-cancell}): 
+            run wp-xmltagopen( input 3, input "Check", input "" ).
+            run wp-xmltagput( input 4, "ChkTypeName", input string( "СбросТрнзкц" ), input 0 ).
+            run wp-xmltagput( input 4, "ChkType"    , input string( {&rcpt-trans-cancell}   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkDate"    , input string( buf_temp_chk-doc.chk-date   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkTime"    , input string( buf_temp_chk-doc.chk-time, "hh:mm:ss"   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkDocNum"  , input string( buf_temp_chk-doc.doc-code   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkNum"     , input string( buf_temp_chk-doc.chk-num   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkNumDesk" , input string( buf_temp_chk-doc.pay-desk   ), input 0 ).
+            run wp-xmltagput( input 4, "Cashier"    , input string( buf_temp_chk-doc.cashier   ), input 0 ).
+            for each buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_temp_chk-doc.doc-code:
+                run wp-xmltagopen( input 4, input "CheckGds", input "" ).
+                run wp-xmltagput( input 5, "ChkGds-code", input string( buf_temp_chk-gds.gds-code   ), input 0 ).
+                run wp-xmltagput( input 5, "ChkReason"  , input string( buf_temp_chk-gds.sbros-type   ), input 0 ).
+                run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>9.99"       ), input 0 ).
+                run wp-xmltagput( input 5, "ChkTRK"     , input string( buf_temp_chk-gds.pump       ), input 0 ).
+                run wp-xmltagput( input 5, "ChkNozzle"  , input string( buf_temp_chk-gds.nozzle-code), input 0 ).
+                run wp-xmltagput( input 5, "ChkPL"      , input string( buf_temp_chk-gds.pl-code    ), input 2 ).
+                run wp-xmltagclose( input 4, input "CheckGds").
+            end.            
+            run wp-xmltagclose( input 3, input "Check").
+        end.
+
+        
+        for each buf_temp_chk-doc where buf_temp_chk-doc.chk-type = integer({&rcpt-unlock-trans}): 
+            run wp-xmltagopen( input 3, input "Check", input "" ).
+            run wp-xmltagput( input 4, "ChkTypeName", input string( "РазблТрнзкц" ), input 0 ).
+            run wp-xmltagput( input 4, "ChkType"    , input string( {&rcpt-unlock-trans}   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkDate"    , input string( buf_temp_chk-doc.chk-date   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkTime"    , input string( buf_temp_chk-doc.chk-time, "hh:mm:ss"   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkDocNum"  , input string( buf_temp_chk-doc.doc-code   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkNum"     , input string( buf_temp_chk-doc.chk-num   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkNumDesk" , input string( buf_temp_chk-doc.pay-desk   ), input 0 ).
+            run wp-xmltagput( input 4, "Cashier"    , input string( buf_temp_chk-doc.cashier   ), input 0 ).
+            for each buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_temp_chk-doc.doc-code:
+                run wp-xmltagopen( input 4, input "CheckGds", input "" ).
+                run wp-xmltagput( input 5, "ChkGds-code", input string( buf_temp_chk-gds.gds-code   ), input 0 ).
+                run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>9.99"       ), input 0 ).
+                run wp-xmltagput( input 5, "ChkTRK"     , input string( buf_temp_chk-gds.pump       ), input 0 ).
+                run wp-xmltagput( input 5, "ChkNozzle"  , input string( buf_temp_chk-gds.nozzle-code), input 0 ).
+                run wp-xmltagput( input 5, "ChkPL"      , input string( buf_temp_chk-gds.pl-code    ), input 2 ).
+                run wp-xmltagclose( input 4, input "CheckGds").
+            end.            
+            run wp-xmltagclose( input 3, input "Check").
+        end.
+        
+        
+        for each buf_temp_chk-doc where buf_temp_chk-doc.chk-type = integer({&rcpt-overflow}): 
+            run wp-xmltagopen( input 3, input "Check", input "" ).
+            run wp-xmltagput( input 4, "ChkTypeName", input string( "Перелив" ), input 0 ).
+            run wp-xmltagput( input 4, "ChkType"    , input string( {&rcpt-overflow}   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkDate"    , input string( buf_temp_chk-doc.chk-date   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkTime"    , input string( buf_temp_chk-doc.chk-time, "hh:mm:ss"   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkDocNum"  , input string( buf_temp_chk-doc.doc-code   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkNum"     , input string( buf_temp_chk-doc.chk-num   ), input 0 ).
+            run wp-xmltagput( input 4, "ChkNumDesk" , input string( buf_temp_chk-doc.pay-desk   ), input 0 ).
+            run wp-xmltagput( input 4, "Cashier"    , input string( buf_temp_chk-doc.cashier   ), input 0 ).
+            for each buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_temp_chk-doc.doc-code:
+                run wp-xmltagopen( input 4, input "CheckGds", input "" ).
+                run wp-xmltagput( input 5, "ChkGds-code", input string( buf_temp_chk-gds.gds-code   ), input 0 ).
+                run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>9.99"       ), input 0 ).
+                run wp-xmltagput( input 5, "ChkTRK"     , input string( buf_temp_chk-gds.pump       ), input 0 ).
+                run wp-xmltagput( input 5, "ChkNozzle"  , input string( buf_temp_chk-gds.nozzle-code), input 0 ).
+                run wp-xmltagput( input 5, "ChkPL"      , input string( buf_temp_chk-gds.pl-code    ), input 2 ).
+                run wp-xmltagclose( input 4, input "CheckGds").
+            end.            
+            run wp-xmltagclose( input 3, input "Check").
+        end.
+            run wp-xmltagclose( input 2, input "TechChk").
+
+    end.
+end procedure. /* export-techChk */
 
 /*==========================================================================*/
 procedure export-stkShift :
@@ -1752,6 +1968,7 @@ on error undo, return error
     assign
         p-is-envd = no
     .
+/***
     find first buf_clients-attr no-lock
          where buf_clients-attr.obj-type  = p-obj-type
            and buf_clients-attr.obj-code  = p-obj-code
@@ -1783,6 +2000,6 @@ on error undo, return error
                 .
             end.
         end.
-    end.
+    end.       ***/
 end.
 end procedure. /* get-goods-envd */

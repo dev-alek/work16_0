@@ -64,7 +64,6 @@ define input parameter        p-work-hours          like ub.store.work-hours    
 define input parameter        p-purch-code          as   integer                           no-undo .
 define input parameter        p-envd                as   logical                           no-undo .
 define input parameter        p-pharm               as   logical                           no-undo .
-define input parameter        p-taxation            as   character                         no-undo .
 define input parameter        p-KPP                 as   character                         no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -405,21 +404,6 @@ ON STOP UNDO, RETURN ERROR:
         input  {&attr-envd},
         input  "yes":u).
     end.
-  end.
-  if p-taxation = "ลอยฤ":U
-  then do:
-      run clntattr-write in this-procedure
-       (input  {&stock},
-        input  p-obj-code,
-        input  {&attr-taxation},
-        input  "ลอยฤ":U ).
-  end.
-  else do:
-      run clntattr-delete in this-procedure
-       (input {&stock},
-        input  p-obj-code,
-        input  {&attr-taxation},
-        output v-delete).
   end.
 end. /*doe*/
 

@@ -70,6 +70,7 @@ define variable vss-description as character no-undo init "Экспорт документов по
 { str/out-vatp.i def    }
 { gbl/thbjattr.i }
 { ref/extclass.i }
+{ ref/gds-attr.i }
 
 define variable v-parts-cst-code  like ub.parts.cst-code     no-undo.
 define variable v-exists-sale_ot-supp-tot   as logical      no-undo.
@@ -250,6 +251,11 @@ on error undo, return error return-value
     define variable v-error-message     as character    no-undo.
     define variable v-stop-fo           as decimal      no-undo.
 
+    define variable v-is-envd_              as logical      no-undo.   
+    define variable vartype                 as character    no-undo.
+    define variable varenvd                 as character    no-undo.                          
+    define variable v-pr-doc-type           as logical      no-undo. 
+    define variable v-sum-all-parts         as decimal      no-undo. 
 
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_c-trn-doc     for ub.c-trn-doc.
@@ -861,10 +867,43 @@ on error undo, return error return-value
                                          , input 1
                                          , input 'Выгрузка документов по fact-order...'
                                          ).
-
     _docs-cycle:
     for each buf_tt-docs no-lock
-    :
+    :                          
+      find first buf_trn-doc share-lock
+        where buf_trn-doc.doc-code = buf_tt-docs.doc-code          
+        no-error .
+        
+      if avail buf_trn-doc 
+        then assign v-ext-doc-type = buf_trn-doc.ext-doc-type .
+      else v-ext-doc-type = " " .       
+        
+      if  v-ext-doc-type = {&TDEDT_Pri_Vnesh}            
+          /* or v-ext-doc-type = {&TDEDT_Ras_Vnesh_VP}    возврат поставщику */
+          then assign v-pr-doc-type = YES .    
+    
+
+      { str/tdat-val.i                                    
+         buf_tt-docs.doc-code
+         {&trdcattr-envd}
+         varenvd 
+         vartype } 
+            
+      if    varenvd eq "YES"                                                          
+          and v-pr-doc-type eq YES
+          then                
+          v-is-envd_ = YES .  
+      else  v-is-envd_ = NO .   
+
+      if v-is-envd_ = YES 
+        then                                                                         
+        run calc-lines in this-procedure (
+        input  buf_tt-docs.doc-code ,
+        output v-sum-all-parts
+        ) no-error. 
+      else  
+        v-sum-all-parts = 0 .    
+                                    
       _export-block:
       do transaction
       on error undo _export-block , return error return-value
@@ -980,6 +1019,8 @@ on error undo, return error return-value
                   , input ?
                   , input ?
                   , input ?
+                  , input v-is-envd_ 
+                  , input v-sum-all-parts
               ) no-error.
               if error-status :error
               then do:
@@ -1192,6 +1233,8 @@ on error undo, return error return-value
                   , input buf_trn-doc.d-card
                   , input buf_trn-doc.cli-type
                   , input buf_trn-doc.cli-code
+                  , input v-is-envd_
+                  , input v-sum-all-parts
               ) no-error.
               if error-status :error
               then do:
@@ -1465,6 +1508,8 @@ define input parameter p-d-card                 as character        no-undo.
 define input parameter p-cli-type               as character        no-undo.
 define input parameter p-cli-code               as integer          no-undo.
 
+define input parameter p-is-envd_               as logical          no-undo.
+define input parameter p-sum-all-parts          as decimal          no-undo.
     define variable v-exists-before     as logical      no-undo.
     define variable v-exists-after      as logical      no-undo.
     define variable v-obj-type          as character    no-undo.
@@ -1500,6 +1545,7 @@ define input parameter p-cli-code               as integer          no-undo.
         define variable v-total-tank-density    as decimal   no-undo.
         define variable v-tankweight            as decimal   no-undo.
     
+        define variable v-sum-parts             as decimal   no-undo.
     define buffer buf_ot-tot-sale           for ub.ot-tot.
     define buffer buf_ot-tot-cost           for ub.ot-tot.
     define buffer buf_ot-tot-crsa           for ub.ot-tot.
@@ -1634,7 +1680,8 @@ on endkey undo, return error return-value
         , input p-d-card
         , input p-cli-type
         , input p-cli-code
-    ).
+    ) no-error.
+
     /*---START--------- Суммы по видам кассовых платежей ---------------------*/
     if p-ext-doc-type <> {&TDEDT_Overturn}
     and p-pay-code = yes
@@ -1673,7 +1720,10 @@ on endkey undo, return error return-value
                     , input yes /*p-petrol*/
                     , input yes /*p-goods*/
                     , input yes /*p-services*/
-                ).
+                ) no-error.
+                if ERROR-STATUS:error then do:
+                    run wp-XMLWriteLog(  sLogFile, 1, error-status:get-message(1) + string( p-doc-code ) ).
+                end.    
                 if p-pay-code = yes
                 then do:
                     run get-inkas-pay-desk in this-procedure (
@@ -1714,7 +1764,12 @@ on endkey undo, return error return-value
     then do:
         run wp-xmltagopen( 3, "docSum","" ).
         run wp-xmltagput( 4, "sumr"      , string( abs( buf_ot-tot-sale.sum-rubl       ) ), 1 ).
-        run wp-xmltagput( 4, "VATr"      , string( abs( buf_ot-tot-sale.vat-rubl       ) ), 1 ).
+        
+        if p-is-envd_ eq NO then
+          run wp-xmltagput( 4, "VATr"      , string( abs( buf_ot-tot-sale.vat-rubl     ) ), 1 ). 
+        else
+          run wp-xmltagput( 4, "VATr"      , string( abs( p-sum-all-parts              ) ), 1 ).  
+          
         run wp-xmltagput( 4, "SLTr"      , string( abs( buf_ot-tot-sale.slt-rubl       ) ), 1 ).
         run wp-xmltagput( 4, "roadTaxr"  , string( abs( buf_ot-tot-sale.road-tax-rubl  ) ), 1 ).
         run wp-xmltagput( 4, "transportr", string( abs( buf_ot-tot-sale.transport-rubl ) ), 1 ).
@@ -1749,7 +1804,12 @@ on endkey undo, return error return-value
         then do:
             run wp-xmltagopen( 3, "costSum", "" ).
             run wp-xmltagput( 4, "sumr",        string( abs( buf_ot-tot-cost.sum-rubl       ) ), 1 ).
-            run wp-xmltagput( 4, "VATr",        string( abs( buf_ot-tot-cost.vat-rubl       ) ), 1 ).
+            
+            if p-is-envd_ eq NO then
+              run wp-xmltagput( 4, "VATr",        string( abs( buf_ot-tot-cost.vat-rubl     ) ), 1 ). 
+            else 
+              run wp-xmltagput( 4, "VATr",        string( abs( p-sum-all-parts              ) ), 1 ).
+            
             run wp-xmltagput( 4, "SLTr",        string( abs( buf_ot-tot-cost.slt-rubl       ) ), 1 ).
             run wp-xmltagput( 4, "roadTaxr",    string( abs( buf_ot-tot-cost.road-tax-rubl  ) ), 1 ).
             run wp-xmltagput( 4, "transportr",  string( abs( buf_ot-tot-cost.transport-rubl ) ), 1 ).
@@ -2184,9 +2244,8 @@ on endkey undo, return error return-value
                         if v-tank-density <> 0 and v-tankweight  <> 0  then 
                         do :
                             v-total-tank-density = v-tankweight / v-tank-density .
-        
-                            run wp-xmltagput( 4, "petrolTankDensity",    trim(string(v-total-tank-density , ">>>>>>>>>9.9999999999")), 0 ).
-              
+                            
+                            run wp-xmltagput( 4, "petrolTankDensity",    trim(string(v-total-tank-density , "->>>>>>>>>9.9999999999")), 0 ).
                         end.
                     end.
                                     
@@ -2199,7 +2258,7 @@ on endkey undo, return error return-value
                 run wp-xmltagput( 5, "PLCode",   string(buf_doc-pl.pl-code) , 0 ).
                 run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).
                 run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).
-                run wp-xmltagput( 5, "PLDensity",  string(buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty) , 0 ).
+                run wp-xmltagput( 5, "PLDensity",  string( (buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty), "->>>>>>>>>9.99") , 0 ).
                 run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).                                          
                                           
                 end.             
@@ -2401,6 +2460,7 @@ on endkey undo, return error return-value
                 assign
                     v-parts-cst-code = ""
                 .
+                assign v-sum-parts = 0 .
                 for each buf_parts no-lock
                     where buf_parts.out-code   = p-doc-code
                         and buf_parts.obj-type   = buf_ot-line-crsa-loop.obj-type
@@ -2413,9 +2473,13 @@ on endkey undo, return error return-value
                 :
                     if p-parts = yes
                     then do:
+                        { str/in-vatp.i calc-parts buf_parts. " " loc}
+                                                      
+                        v-sum-parts = v-sum-parts + ((price-rubl-with-tax-loc / (100 + buf_parts.VAT-pc )) * buf_parts.VAT-pc)  * buf_parts.fact-qnty .
                         run export-part in this-procedure (
                               input ( if available buf_goods then buf_goods.gds-code else 0 )
                             , input rowid( buf_parts )
+                            , input p-is-envd_
                         ).
                     end.        /* p-parts = yes */
                     if p-cst = yes
@@ -2476,7 +2540,12 @@ on endkey undo, return error return-value
                 if p-ext-doc-type = {&TDEDT_Overturn}
                 then do:
                         run wp-xmltagput( 5, "sumr",       string( buf_ot-line-sale.sum-rubl         ), 1 ).
-                        run wp-xmltagput( 5, "VATr",       string( buf_ot-line-sale.vat-rubl         ), 2 ).
+                        
+                        if p-is-envd_ eq NO then
+                          run wp-xmltagput( 5, "VATr",       string( buf_ot-line-sale.vat-rubl       ), 2 ).
+                        else
+                          run wp-xmltagput( 5, "VATr",       string( v-sum-parts                     ), 2 ).
+                        
                         run wp-xmltagput( 5, "SLTr",       string( buf_ot-line-sale.slt-rubl         ), 2 ).
                         run wp-xmltagput( 5, "roadTaxr",   string( buf_ot-line-sale.road-tax-rubl    ), 2 ).
                         run wp-xmltagput( 5, "transportr", string( buf_ot-line-sale.transport-rubl   ), 2 ).
@@ -2492,7 +2561,12 @@ on endkey undo, return error return-value
                 end.      /* p-ext-doc-type = {&TDEDT_Overturn} */
                 else do:
                         run wp-xmltagput( 5, "sumr",       string( abs( buf_ot-line-sale.sum-rubl       ) ), 1 ).
-                        run wp-xmltagput( 5, "VATr",       string( abs( buf_ot-line-sale.vat-rubl       ) ), 2 ).
+                        
+                        if p-is-envd_ eq NO then
+                          run wp-xmltagput( 5, "VATr",       string( abs( buf_ot-line-sale.vat-rubl     ) ), 2 ).
+                        else
+                          run wp-xmltagput( 5, "VATr",       string( v-sum-parts                        ), 2 ).                 
+                        
                         run wp-xmltagput( 5, "SLTr",       string( abs( buf_ot-line-sale.slt-rubl       ) ), 2 ).
                         run wp-xmltagput( 5, "roadTaxr",   string( abs( buf_ot-line-sale.road-tax-rubl  ) ), 2 ).
                         run wp-xmltagput( 5, "transportr", string( abs( buf_ot-line-sale.transport-rubl ) ), 2 ).
@@ -2528,7 +2602,12 @@ on endkey undo, return error return-value
                 then do:
                         run wp-xmltagopen( 4, "costSum", "" ).
                         run wp-xmltagput( 5, "sumr",       string( abs( buf_ot-line-cost.sum-rubl       ) ), 1 ).
-                        run wp-xmltagput( 5, "VATr",       string( abs( buf_ot-line-cost.vat-rubl       ) ), 2 ).
+                        
+                        if p-is-envd_ eq NO then
+                          run wp-xmltagput( 5, "VATr",       string( abs( buf_ot-line-cost.vat-rubl     ) ), 2 ).  
+                        else
+                          run wp-xmltagput( 5, "VATr",       string( v-sum-parts                        ), 2 ).  
+                        
                         run wp-xmltagput( 5, "SLTr",       string( abs( buf_ot-line-cost.slt-rubl       ) ), 2 ).
                         run wp-xmltagput( 5, "roadTaxr",   string( abs( buf_ot-line-cost.road-tax-rubl  ) ), 2 ).
                         run wp-xmltagput( 5, "transportr", string( abs( buf_ot-line-cost.transport-rubl ) ), 2 ).
@@ -3159,6 +3238,7 @@ define input parameter p-obj-code       as integer      no-undo.
     define buffer buf_c-chk-doc     for ub.c-chk-doc.
     define buffer buf_chk-discnt    for ub.chk-discnt.
     define buffer buf_dis-card      for ub.dis-card.
+    define buffer buf_chk-gds-pay   for ub.chk-gds-pay.
 
 
 do
@@ -3314,6 +3394,17 @@ on error undo, return error
             run wp-xmltagput( input 5, input "lineNum"      , input string( buf_chk-pay.line-num  )    , input 2 ).
             run wp-xmltagclose( input 4, input "checkPay" ).
         end.        /* for each buf_chk-pay no-lock */
+        for each buf_chk-gds-pay no-lock
+           where buf_chk-gds-pay.doc-code = buf_chk-doc.doc-code
+        :
+            run wp-xmltagopen( input 4, input "checkGdsPay", input "" ).
+            run wp-xmltagput( input 5, input "line-num"      , input string( buf_chk-gds-pay.line-num )     , input 2 ).
+            run wp-xmltagput( input 5, input "cpline-num"    , input string( buf_chk-gds-pay.cpline-num )   , input 2 ).
+            run wp-xmltagput( input 5, input "sum-rubl"      , input string( buf_chk-gds-pay.tot-r-b )      , input 2 ).
+            run wp-xmltagput( input 5, input "CGPqnty"       , input string( buf_chk-gds-pay.eff-doc-qnty ) , input 2 ).     
+            run wp-xmltagput( input 5, input "pay-code"      , input string( buf_chk-gds-pay.pay-code )     , input 2 ).
+            run wp-xmltagclose( input 4, input "checkGdsPay" ).
+        end.     /* for each buf_chk-gds-pay */ 
 
 &scop discnt-type-code string(buf_chk-discnt.discnt-type)
 &scop discnt-target-code string(buf_chk-discnt.line-type)
@@ -3792,6 +3883,7 @@ procedure export-part :
 define input parameter p-gds-code           as integer          no-undo.
 define input parameter p-parts-rowid        as rowid            no-undo.
 
+define input parameter  p-is-envd           as logical          no-undo.
 define variable v-PartsAlcAttrBottingDate like parts.alc-bottling-date no-undo.
 define variable v-PartsAlcAttrAlcType like ub.alc-type.alc-type-code no-undo.
 define variable v-PartsAlcAttrAlcCode as char no-undo.
@@ -4066,7 +4158,12 @@ on error undo, return error
         run wp-xmltagput in this-procedure ( input 6, input "hostCode"          , input string( v-parts-host-code       ), input 2 ).
         run wp-xmltagput in this-procedure ( input 6, input "contractCode"      , input string( v-parts-contract-code   ), input 2 ).
         run wp-xmltagput in this-procedure ( input 6, input "sumr"                , input string( v-sum-rubl              ), input 1 ).
-        run wp-xmltagput in this-procedure ( input 6, input "VATr"              , input string( v-vat-rubl              ), input 2 ).
+
+        if p-is-envd eq NO then
+          run wp-xmltagput in this-procedure ( input 6, input "VATr"                , input string( v-vat-rubl         ), input 2 ).
+        else 
+          run wp-xmltagput in this-procedure ( input 6, input "VATr"                , input string(((price-rubl-with-tax-loc / (100 + buf_parts.VAT-pc )) * buf_parts.VAT-pc)  * buf_parts.fact-qnty ), input 2 ).
+        
         run wp-xmltagput in this-procedure ( input 6, input "SLTr"              , input string( v-slt-rubl              ), input 2 ).
         run wp-xmltagput in this-procedure ( input 6, input "roadTaxr"          , input string( v-road-tax-rubl         ), input 2 ).
         run wp-xmltagput in this-procedure ( input 6, input "transportr"        , input string( v-transport-rubl        ), input 2 ).
@@ -4618,3 +4715,25 @@ on error undo, return error return-value
   end. /* bc-cycle: */
 end.
 end procedure. /* export-bc-price */
+/*==========================================================================*/
+procedure calc-lines :
+do
+on error undo, return error
+:
+  define input parameter  p-doc-code      as character        no-undo.
+  define output parameter p-sum-all-parts as decimal          no-undo.
+                                                            
+  DEFINE BUFFER t-doc FOR trn-doc.  
+  define variable p-fact-qnty             as decimal          no-undo.
+                                     
+  find first t-doc no-lock
+       where t-doc.doc-code   = p-doc-code
+       no-error.
+  if avail t-doc then         
+       ASSIGN 
+       p-sum-all-parts = vat-rubl .         
+        
+end .         
+end procedure.
+
+
