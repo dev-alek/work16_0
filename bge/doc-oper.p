@@ -324,9 +324,10 @@ on error undo, return error
       v-obj-list = substitute( "&1,&2" , p-obj-type , p-obj-code )
     .
 
-    if  p-ext-doc-type = {&TDEDT_Pri_Vnesh} or
-        p-ext-doc-type = {&TDEDT_Ras_Vnesh_VP} 
-        then assign v-pr-doc-type = YES .                                                 
+    if  p-ext-doc-type = {&TDEDT_Pri_Vnesh} 
+        /* or p-ext-doc-type = {&TDEDT_Ras_Vnesh_VP}     возврат поставщику*/ 
+        then assign v-pr-doc-type = YES .                                                            
+
     export-documents-arch:
     for each buf_ot-tot-crsa-loop no-lock
        where buf_ot-tot-crsa-loop.obj-type     = p-obj-type
@@ -379,6 +380,7 @@ on error undo, return error
             v-ot-tot-cost-exists    = no
             v-ot-tot-crsa-exists    = no
         .
+        assign v-sum-all-parts = 0 .
         if v-is-envd_ = YES 
           then                                                                         
           run calc-lines in this-procedure (
@@ -1454,6 +1456,31 @@ define input parameter p-is-envd_               as logical          no-undo.
             end.
             run wp-xmltagclose in this-procedure ( input 4, input "dtlSum" ).
         end.
+
+        assign
+        v-sum-line = 0 .        
+        
+        if p-is-envd_ eq YES and 
+           p-parts eq NO 
+          then do: 
+          
+            for each buf_parts no-lock
+               where buf_parts.out-code   = p-doc-code
+                 and buf_parts.obj-type   = buf_ot-line-crsa-loop.obj-type
+                 and buf_parts.obj-code   = buf_ot-line-crsa-loop.obj-code
+                 and buf_parts.prod-type  = buf_ot-line-crsa-loop.prod-type
+                 and buf_parts.prod-code  = buf_ot-line-crsa-loop.prod-code
+                 and buf_parts.artic      = buf_ot-line-crsa-loop.artic
+                 and buf_parts.status_    = true
+                 on error undo, return error return-value
+                  :
+                    { str/in-vatp.i calc-parts buf_parts. " " loc}
+                    assign
+                    v-sum-line = v-sum-line + ((price-rubl-with-tax-loc / (100 + buf_doc-line.VAT-pc )) * buf_doc-line.VAT-pc)  * buf_parts.fact-qnty  .
+            end.
+        end.
+
+
         if p-cst = yes
         or p-parts = yes
         then do:        /* Надо экспортировать номера ГТД или партии */
@@ -1467,8 +1494,8 @@ define input parameter p-is-envd_               as logical          no-undo.
                 v-supp-ndog      = "":U
                 v-supp-ddog      = "":U
             .
-            assign
-            v-sum-line = 0 .
+ 
+
             for each buf_parts no-lock
                where buf_parts.out-code   = p-doc-code
                  and buf_parts.obj-type   = buf_ot-line-crsa-loop.obj-type
@@ -4714,39 +4741,17 @@ on error undo, return error
   define input parameter  p-doc-code      as character        no-undo.
   define output parameter p-sum-all-parts as decimal          no-undo.
                                                             
-  define buffer     buf_ot-line-cost-loop for ub.ot-line. 
-  define buffer     buf_doc-line          for doc-line .  
-  define buffer     buf_parts             for parts  .   
+  DEFINE BUFFER t-doc FOR trn-doc.  
            
   define variable p-fact-qnty             as decimal      no-undo.
                                      
-  for each buf_doc-line no-lock
-       where buf_doc-line.doc-code   = p-doc-code
-       on error undo, return error
-       :                              
-        
-      for each buf_parts no-lock
-               where buf_parts.out-code   = p-doc-code
-                 and buf_parts.obj-type   = buf_doc-line.obj-type
-                 and buf_parts.obj-code   = buf_doc-line.obj-code
-                 and buf_parts.prod-type  = buf_doc-line.prod-type
-                 and buf_parts.prod-code  = buf_doc-line.prod-code
-                 and buf_parts.artic      = buf_doc-line.artic
-                 and buf_parts.status_    = true
-                 on error undo, return error return-value
-            :
-         if p-parts = yes
-                then do:
-                    { str/in-vatp.i calc-parts buf_parts. " " loc}
-                    ASSIGN
-
-                        p-fact-qnty     = buf_parts.fact-qnty
-                        p-sum-all-parts = p-sum-all-parts + ((price-rubl-with-tax-loc / (100 + buf_doc-line.VAT-pc )) * buf_doc-line.VAT-pc * p-fact-qnty) .
-                        .
-         end.        
-      end. 
-        
-  end.                                          
+  find first t-doc no-lock
+       where t-doc.doc-code   = p-doc-code
+       no-error.
+  if avail t-doc then         
+       ASSIGN 
+       p-sum-all-parts = vat-rubl .
+       
 end .         
 end procedure.
-/*==========================================================================*/
+

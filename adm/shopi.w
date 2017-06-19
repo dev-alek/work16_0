@@ -166,7 +166,7 @@ tt-shop.is-catering tt-shop.is-kitchen tt-shop.is-kitchen-store
 &Scoped-Define ENABLED-OBJECTS B-exit RECT-10 RECT-kitchen-store ~
 RECT-sub-store b-quit b-reset CliPS b-tocd b-host b-db B-hist B-Help B-attr ~
 Btn_trn-reason b-inpay b-outpay b-retpay b-suppay b-spipay b-invpay ~
-b-realpay b-fbrpay b-sub-store b-kitchen-store b-holdfirm cs-taxation ~
+b-realpay b-fbrpay b-sub-store b-kitchen-store b-holdfirm ~
 varenvd varpharm 
 &Scoped-Define DISPLAYED-FIELDS tt-clients.db-num tt-shop.obj-code ~
 tt-clients.obj-name tt-shop.director tt-shop.addres1 tt-shop.phone ~
@@ -182,7 +182,7 @@ tt-shop.is-catering tt-shop.is-kitchen tt-shop.is-kitchen-store
 &Scoped-define DISPLAYED-TABLES tt-clients tt-shop
 &Scoped-define FIRST-DISPLAYED-TABLE tt-clients
 &Scoped-define SECOND-DISPLAYED-TABLE tt-shop
-&Scoped-Define DISPLAYED-OBJECTS KPP varpurch-code-name cs-taxation varenvd ~
+&Scoped-Define DISPLAYED-OBJECTS KPP varpurch-code-name varenvd ~
 varpharm fi-holdfirm-code fi-holdfirm-name 
 
 /* Custom List Definitions                                              */
@@ -330,12 +330,12 @@ DEFINE BUTTON CliPS
      LABEL "&Доп. инф." 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE cs-taxation AS CHARACTER FORMAT "X(8)":U 
-     LABEL "Сист. налогообл. для выгрузки в XML" 
-     VIEW-AS COMBO-BOX INNER-LINES 5
-     LIST-ITEMS "стандарт","ЕНВД" 
-     DROP-DOWN-LIST
-     SIZE 13 BY 1 NO-UNDO.
+
+
+
+
+
+
 
 DEFINE VARIABLE varpurch-code-name AS CHARACTER FORMAT "X(256)":U 
      LABEL "Тип приобретения" 
@@ -602,7 +602,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "Склад для кухни"
           VIEW-AS TOGGLE-BOX
           SIZE 41 BY .79
-     cs-taxation AT ROW 23.5 COL 36 COLON-ALIGNED
+     
      varenvd AT ROW 23.5 COL 55
      varpharm AT ROW 23.5 COL 65.5 WIDGET-ID 4
      fi-holdfirm-code AT ROW 22.5 COL 22 COLON-ALIGNED
@@ -1379,12 +1379,12 @@ DO:
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME cs-taxation
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cs-taxation Dialog-Frame
-ON VALUE-CHANGED OF cs-taxation IN FRAME Dialog-Frame /* Сист. налогообл. для выгрузки в XML */
-DO:
-  ASSIGN FRAME {&FRAME-NAME} varpurch-code-name.
-END.
+
+
+
+
+
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1785,22 +1785,22 @@ if p-mode = {&add-def}  then do:
      OUTPUT var-type).
    kpp:screen-value = v-kpp.
   
-  DEFINE VARIABLE v-taxation AS CHARACTER  NO-UNDO.
-  RUN clntattr-value IN THIS-PROCEDURE
-    (INPUT {&shop},
-     INPUT tt-shop.obj-code,
-     input {&attr-taxation},
-     OUTPUT v-taxation,
-     OUTPUT var-type).
-  IF v-taxation = "ЕНВД":U THEN DO:
-    ASSIGN
-      cs-taxation = "ЕНВД":U.
-  END.
-  ELSE DO:
-    ASSIGN
-      cs-taxation = "стандарт":U.
-  END.
-    run init-firmhold in this-procedure.
+   run init-firmhold in this-procedure.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   RUN Myenable.
   if p-mode = {&add-def} then
@@ -1867,7 +1867,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY KPP varpurch-code-name cs-taxation varenvd varpharm fi-holdfirm-code 
+  DISPLAY KPP varpurch-code-name varenvd varpharm fi-holdfirm-code 
           fi-holdfirm-name 
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-clients THEN 
@@ -1900,7 +1900,7 @@ PROCEDURE enable_UI :
          tt-shop.sub-store-type tt-shop.sub-store-code b-sub-store 
          tt-shop.discaloc tt-shop.shift-on tt-shop.kitchen-store-code 
          b-kitchen-store tt-shop.sub-store-on tt-shop.is-catering 
-         tt-shop.is-kitchen b-holdfirm tt-shop.is-kitchen-store cs-taxation 
+         tt-shop.is-kitchen b-holdfirm tt-shop.is-kitchen-store 
          varenvd varpharm 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
@@ -2065,7 +2065,7 @@ IF AVAILABLE tt-clients THEN
     varpurch-code-name
     VARenvd
     varpharm
-    cs-taxation
+    
     WITH FRAME Dialog-Frame.
   ENABLE
   RECT-sub-store
@@ -2141,7 +2141,7 @@ IF AVAILABLE tt-clients THEN
     varpurch-code-name
     varenvd
     varpharm
-    cs-taxation
+    
     KPP
     WITH FRAME {&frame-name} .
   end.
@@ -2334,7 +2334,7 @@ tt-shop.with-serv
 .
 assign
 frame {&frame-name}
-    cs-taxation
+    
     KPP
 .
 if not p-save then return.
@@ -2419,7 +2419,7 @@ run adm/shop01.p (
              ,input    (if varpurch-code-name = {&purch-like-firm} then ? else lookup (varpurch-code-name, {&purchase-codes-full}))
              ,INPUT    varenvd
              ,INPUT    varpharm
-             ,INPUT    cs-taxation
+             
              ,input    KPP
             )
              no-error .

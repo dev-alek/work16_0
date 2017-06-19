@@ -878,9 +878,10 @@ on error undo, return error return-value
         then assign v-ext-doc-type = buf_trn-doc.ext-doc-type .
       else v-ext-doc-type = " " .       
         
-      if  v-ext-doc-type = {&TDEDT_Pri_Vnesh} or           /***/
-          v-ext-doc-type = {&TDEDT_Ras_Vnesh_VP} 
+      if  v-ext-doc-type = {&TDEDT_Pri_Vnesh}            
+          /* or v-ext-doc-type = {&TDEDT_Ras_Vnesh_VP}    возврат поставщику */
           then assign v-pr-doc-type = YES .    
+    
 
       { str/tdat-val.i                                    
          buf_tt-docs.doc-code
@@ -4722,39 +4723,17 @@ on error undo, return error
   define input parameter  p-doc-code      as character        no-undo.
   define output parameter p-sum-all-parts as decimal          no-undo.
                                                             
-  define buffer     buf_ot-line-cost-loop for ub.ot-line. 
-  define buffer     buf_doc-line          for doc-line .  
-  define buffer     buf_parts             for parts  .   
-           
-  define variable p-fact-qnty             as decimal      no-undo.
+  DEFINE BUFFER t-doc FOR trn-doc.  
+  define variable p-fact-qnty             as decimal          no-undo.
                                      
-  for each buf_doc-line no-lock
-       where buf_doc-line.doc-code   = p-doc-code
-       on error undo, return error
-       :                              
+  find first t-doc no-lock
+       where t-doc.doc-code   = p-doc-code
+       no-error.
+  if avail t-doc then         
+       ASSIGN 
+       p-sum-all-parts = vat-rubl .         
         
-      for each buf_parts no-lock
-               where buf_parts.out-code   = p-doc-code
-                 and buf_parts.obj-type   = buf_doc-line.obj-type
-                 and buf_parts.obj-code   = buf_doc-line.obj-code
-                 and buf_parts.prod-type  = buf_doc-line.prod-type
-                 and buf_parts.prod-code  = buf_doc-line.prod-code
-                 and buf_parts.artic      = buf_doc-line.artic
-                 and buf_parts.status_    = true
-                 on error undo, return error return-value
-            :
-         if p-parts = yes
-                then do:
-                    { str/in-vatp.i calc-parts buf_parts. " " loc}
-                    ASSIGN
-
-                        p-fact-qnty     = buf_parts.fact-qnty
-                        p-sum-all-parts = p-sum-all-parts + ((price-rubl-with-tax-loc / (100 + buf_doc-line.VAT-pc )) * buf_doc-line.VAT-pc * p-fact-qnty) .
-                        .
-         end.        
-      end. 
-        
-  end.                                          
 end .         
 end procedure.
-/*==========================================================================*/
+
+

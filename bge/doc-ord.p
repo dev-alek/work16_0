@@ -594,6 +594,7 @@ on error undo, return error return-value
       run wp-xmltagput( 4, "priceCli"     , string( buf_ord-line.price-cli        ), 1 ).
       run wp-xmltagput( 4, "cliBaseRate"  , string( buf_ord-line.cli-base-rate    ), 1 ).
 
+      /***
       if v-bge-xml-shift-mode = yes
       then do:
           run get-goods-envd in this-procedure ( input p-obj-type
@@ -603,6 +604,7 @@ on error undo, return error return-value
                                               ).
           run wp-xmltagput in this-procedure ( 4, "ENVD":U, string( v-is-envd ), 1 ).
       end.        /* if v-bge-xml-shift-mode = yes */
+      ***/
 
 
       run wp-xmltagput in this-procedure ( 4, "quantity" , string( buf_ord-line.qnty ), 1 ).
@@ -803,58 +805,4 @@ on error undo, return error
 end.
 end procedure. /* run-callback-write-doc-code */
 
-
-/*==========================================================================*/
-procedure get-goods-envd :
-define input parameter p-obj-type   as character        no-undo.
-define input parameter p-obj-code   as integer          no-undo.
-define input parameter p-gds-code   as integer          no-undo.
-define output parameter p-is-envd   as logical          no-undo.
-
-    define variable v-host-code    as integer      no-undo.
-
-    define buffer buf_clients-attr      for clients-attr.
-    define buffer buf_gds-host-attr     for gds-host-attr.
-do
-for buf_clients-attr
-  , buf_gds-host-attr
-on error undo, return error
-:
-    assign
-        p-is-envd = no
-    .
-    find first buf_clients-attr no-lock
-         where buf_clients-attr.obj-type  = p-obj-type
-           and buf_clients-attr.obj-code  = p-obj-code
-           and buf_clients-attr.attr-code = {&attr-taxation}
-    no-error.
-    if available buf_clients-attr
-    then do:
-        { gbl/hostcode.i
-            p-obj-type
-            p-obj-code
-            v-host-code
-        }
-        if caps( buf_clients-attr.attr-value ) = "ลอยฤ":U
-        then do:
-            find first buf_gds-host-attr no-lock
-                 where buf_gds-host-attr.host-code = v-host-code
-                   and buf_gds-host-attr.gds-code  = p-gds-code
-                   and buf_gds-host-attr.attr-code = "no-envd":U
-            no-error.
-            if not available buf_gds-host-attr
-            then do:
-                assign
-                    p-is-envd = yes
-                .
-            end.
-            else do:
-                assign
-                    p-is-envd = ( buf_gds-host-attr.attr-value = "no":U )
-                .
-            end.
-        end.
-    end.
-end.
-end procedure. /* get-goods-envd */
 

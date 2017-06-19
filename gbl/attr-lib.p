@@ -597,17 +597,7 @@ end.
 &scop manual-edit-attr-vat-register  1
 &scop batch-edit-attr-vat-register  1
 
-/* Система налогообложения */
-&scop type-attr-taxation            {&type-char}
-&scop format-attr-taxation          "X(8)"
-&scop label-attr-taxation           "Система налогообложения"
-&scop tooltip-attr-taxation         "Система налогообложения - стандарт или ЕНВД"
-&scop user-can-edit-attr-taxation   false
-&scop output-display-attr-taxation  false
-&scop other-attr-taxation           '':U
-&scop news-attr-taxation            true
-&scop manual-edit-attr-taxation  0
-&scop batch-edit-attr-taxation  0
+
 
 /* Дата последней выгруженной смены для объекта */
 &scop type-attr-bge-incr-last-shift-date {&type-char}
@@ -1029,8 +1019,6 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-vat-register
       {&attr-temp-full-code}
-      &scop attr-code attr-taxation
-      {&attr-temp-full-code}
       &scop attr-code attr-bge-incr-last-shift-date
       {&attr-temp-full-code}
       &scop attr-code attr-bge-incr-last-shift-num
@@ -1173,8 +1161,6 @@ procedure clntattr-tooltip :
       &scop attr-code attr-arh-trn-doc-contract
       {&attr-temp-code}
       &scop attr-code attr-vat-register
-      {&attr-temp-code}
-      &scop attr-code attr-taxation
       {&attr-temp-code}
       &scop attr-code attr-bge-incr-last-shift-date
       {&attr-temp-code}
@@ -1525,8 +1511,6 @@ procedure clntattr-news :
       &scop attr-code attr-arh-trn-doc-contract
       {&attr-news-code}
       &scop attr-code attr-vat-register
-      {&attr-news-code}
-      &scop attr-code attr-taxation
       {&attr-news-code}
       &scop attr-code attr-bge-incr-last-shift-date
       {&attr-news-code}

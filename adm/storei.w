@@ -107,7 +107,7 @@ tt-clients.PS
 &Scoped-define SECOND-ENABLED-TABLE tt-store
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit b-reset b-host b-db B-hist ~
 B-Help RECT-10 B-attr Btn_trn-reason KPP b-inpay b-outpay b-retpay b-suppay ~
-b-spipay b-invpay b-fbrpay varpharm varenvd b-holdfirm cs-taxation 
+b-spipay b-invpay b-fbrpay varpharm varenvd b-holdfirm  
 &Scoped-Define DISPLAYED-FIELDS tt-clients.db-num tt-store.obj-code ~
 tt-clients.obj-name tt-store.store-man tt-store.store-boss tt-store.addres1 ~
 tt-store.phone tt-store.addres2 tt-store.fax tt-store.work-hours ~
@@ -121,7 +121,7 @@ tt-clients.PS
 &Scoped-define FIRST-DISPLAYED-TABLE tt-clients
 &Scoped-define SECOND-DISPLAYED-TABLE tt-store
 &Scoped-Define DISPLAYED-OBJECTS KPP varpharm varenvd varpurch-code-name ~
-EDITOR-1 cs-taxation fi-holdfirm-code fi-holdfirm-name 
+EDITOR-1 fi-holdfirm-code fi-holdfirm-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -238,12 +238,6 @@ DEFINE BUTTON b-suppay
 DEFINE BUTTON Btn_trn-reason 
      LABEL "Коды оснований" 
      SIZE 20 BY 1 TOOLTIP "Код оснований (причин) создания документов по умолчанию на складе".
-
-DEFINE VARIABLE cs-taxation AS CHARACTER FORMAT "X(8)":U 
-     VIEW-AS COMBO-BOX INNER-LINES 5
-     LIST-ITEMS "стандарт","ЕНВД" 
-     DROP-DOWN-LIST
-     SIZE 13 BY 1 NO-UNDO.
 
 DEFINE VARIABLE varpurch-code-name AS CHARACTER FORMAT "X(256)":U 
      LABEL "Тип приобретения" 
@@ -456,7 +450,6 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS EDITOR
           SIZE 46 BY 2.52
      EDITOR-1 AT ROW 20 COL 60 NO-LABEL
-     cs-taxation AT ROW 20.24 COL 83.6 COLON-ALIGNED NO-LABEL
      fi-holdfirm-code AT ROW 18.52 COL 58 COLON-ALIGNED
      fi-holdfirm-name AT ROW 18.52 COL 68 COLON-ALIGNED NO-LABEL
      "Оплаты :" VIEW-AS TEXT
@@ -1019,17 +1012,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME cs-taxation
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cs-taxation Dialog-Frame
-ON VALUE-CHANGED OF cs-taxation IN FRAME Dialog-Frame
-DO:
-  ASSIGN FRAME {&FRAME-NAME} varpurch-code-name.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME tt-clients.db-num
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-clients.db-num Dialog-Frame
 ON CTRL-enter OF tt-clients.db-num IN FRAME Dialog-Frame /* Номер БД */
@@ -1352,21 +1334,6 @@ if p-mode = {&add-def}  then do:
       varpharm = NO.
   END.
 
-  DEFINE VARIABLE v-taxation AS CHARACTER  NO-UNDO.
-  RUN clntattr-value IN THIS-PROCEDURE
-    (INPUT {&stock},
-     INPUT tt-store.obj-code,
-     input {&attr-taxation},
-     OUTPUT v-taxation,
-     OUTPUT v-type).
-  IF v-taxation = "ЕНВД":U THEN DO:
-    ASSIGN
-      cs-taxation = "ЕНВД":U.
-  END.
-  ELSE DO:
-    ASSIGN
-      cs-taxation = "стандарт":U.
-  END.
   run init-firmhold in this-procedure.
 
 
@@ -1437,7 +1404,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY KPP varpharm varenvd varpurch-code-name EDITOR-1 cs-taxation 
+  DISPLAY KPP varpharm varenvd varpurch-code-name EDITOR-1  
           fi-holdfirm-code fi-holdfirm-name 
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-clients THEN 
@@ -1464,7 +1431,7 @@ PROCEDURE enable_UI :
          tt-store.out-line-discnt tt-store.down-pay b-spipay tt-store.out-rate 
          tt-store.in-ov tt-store.inv-pay b-invpay tt-store.inout-price 
          tt-store.fbr-pay b-fbrpay tt-store.shift-on varpharm varenvd 
-         b-holdfirm tt-clients.PS cs-taxation 
+         b-holdfirm tt-clients.PS  
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1624,7 +1591,6 @@ IF AVAILABLE tt-clients THEN
     varpurch-code-name
     varenvd
     varpharm
-    cs-taxation
    WITH FRAME Dialog-Frame.
   ENABLE
   RECT-10
@@ -1692,7 +1658,6 @@ IF AVAILABLE tt-clients THEN
     varpurch-code-name
     varenvd
     varpharm
-    cs-taxation
     WITH FRAME Dialog-Frame.
   end.
   if p-mode <> {&add-def} then do:
@@ -1808,7 +1773,6 @@ tt-store.work-hours
 .
 assign
 frame {&frame-name}
-    cs-taxation
     kpp
 .
 if varpharm = true and  tt-store.doc-prt = true  then do:
@@ -1858,7 +1822,6 @@ run adm/store01.p (
              ,input    (if varpurch-code-name = {&purch-like-firm} then ? else lookup (varpurch-code-name, {&purchase-codes-full}))
              ,INPUT    varenvd
              ,INPUT    varpharm
-             ,INPUT    cs-taxation
              ,INPUT    KPP
             )
              no-error .

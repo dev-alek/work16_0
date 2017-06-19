@@ -1968,6 +1968,7 @@ on error undo, return error
     assign
         p-is-envd = no
     .
+/***
     find first buf_clients-attr no-lock
          where buf_clients-attr.obj-type  = p-obj-type
            and buf_clients-attr.obj-code  = p-obj-code
@@ -1999,6 +2000,6 @@ on error undo, return error
                 .
             end.
         end.
-    end.
+    end.       ***/
 end.
 end procedure. /* get-goods-envd */
