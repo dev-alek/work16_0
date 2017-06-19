@@ -1634,7 +1634,8 @@ on endkey undo, return error return-value
         , input p-d-card
         , input p-cli-type
         , input p-cli-code
-    ).
+    ) no-error.
+
     /*---START--------- Суммы по видам кассовых платежей ---------------------*/
     if p-ext-doc-type <> {&TDEDT_Overturn}
     and p-pay-code = yes
@@ -1673,7 +1674,10 @@ on endkey undo, return error return-value
                     , input yes /*p-petrol*/
                     , input yes /*p-goods*/
                     , input yes /*p-services*/
-                ).
+                ) no-error.
+                if ERROR-STATUS:error then do:
+                    run wp-XMLWriteLog(  sLogFile, 1, error-status:get-message(1) + string( p-doc-code ) ).
+                end.    
                 if p-pay-code = yes
                 then do:
                     run get-inkas-pay-desk in this-procedure (

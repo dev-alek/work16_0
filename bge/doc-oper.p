@@ -3044,7 +3044,10 @@ on error undo, return error
             , input yes /*p-petrol*/
             , input yes /*p-goods*/
             , input yes /*p-services*/
-        ).
+        )no-error.
+                if ERROR-STATUS:error then do:
+                    run wp-XMLWriteLog(  sLogFile, 1, error-status:get-message(1) + string( p-doc-code ) ).
+                end.    
 /*        if p-pay-code = yes*/
 /*        then do:*/
             run get-inkas-pay-desk in this-procedure (
