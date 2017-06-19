@@ -2188,9 +2188,8 @@ on endkey undo, return error return-value
                         if v-tank-density <> 0 and v-tankweight  <> 0  then 
                         do :
                             v-total-tank-density = v-tankweight / v-tank-density .
-        
-                            run wp-xmltagput( 4, "petrolTankDensity",    trim(string(v-total-tank-density , ">>>>>>>>>9.9999999999")), 0 ).
-              
+                            
+                            run wp-xmltagput( 4, "petrolTankDensity",    trim(string(v-total-tank-density , "->>>>>>>>>9.9999999999")), 0 ).
                         end.
                     end.
                                     
@@ -2203,7 +2202,7 @@ on endkey undo, return error return-value
                 run wp-xmltagput( 5, "PLCode",   string(buf_doc-pl.pl-code) , 0 ).
                 run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).
                 run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).
-                run wp-xmltagput( 5, "PLDensity",  string(buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty) , 0 ).
+                run wp-xmltagput( 5, "PLDensity",  string(buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty), "->>>>>>>>>9.99" , 0 ).
                 run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).                                          
                                           
                 end.             

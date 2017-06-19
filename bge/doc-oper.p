@@ -981,21 +981,8 @@ define input parameter p-trn-doc-out-code       as character        no-undo.
                     run wp-xmltagput( 4, "quantityDoc",   string( buf_doc-line.doc-qnty            ), 0 ).
                     run wp-xmltagput( 4, "petrolDensityDoc",    trim(string( buf_doc-line.doc-density , ">>>>>>>>>9.9999999999")), 0 ).
 
-                
-                    for each buf_doc-pl no-lock
-                      where
-                         buf_doc-pl.gds-code  =  buf_goods.gds-code and
-                         buf_doc-pl.out-code = buf_doc-line.doc-code
-                         :
-                        run wp-xmltagopen in this-procedure ( input 4, input "PLDoc", input "" ).
-                        run wp-xmltagput( 5, "PLCode",   string(buf_doc-pl.pl-code) , 0 ).
-                        run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).
-                        run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).
-                        run wp-xmltagput( 5, "PLDensity",  string((buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty),">>>>>>>>>9.9999999999") , 0 ).
-                        run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).       
-                    end.
-
-find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code 
+                  
+                    find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code 
                         and doc-line-attr.gds-code = buf_goods.gds-code 
                         and doc-line-attr.attr-code = "n" no-lock no-error.
       
@@ -1114,20 +1101,20 @@ find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code
                     run wp-xmltagput in this-procedure ( input 4, input "petrolAbsDiffQnty":U , input string( v-abs-diff-qnty   ), input 1 ).
                 end.
                 
-/*                for each buf_doc-pl where buf_doc-pl.obj-type = buf_doc-line.obj-type                                                      */
-/*                                      and buf_doc-pl.obj-code = buf_doc-line.obj-code                                                      */
-/*                                      and buf_doc-pl.out-code = buf_doc-line.doc-code                                                      */
-/*                                      and buf_doc-pl.gds-code = buf_goods.gds-code                                                         */
-/*                                      :                                                                                                    */
-/*                                                                                                                                           */
-/*                run wp-xmltagopen in this-procedure ( input 4, input "PLDoc", input "" ).                                                  */
-/*                run wp-xmltagput( 5, "PLCode",   string(buf_doc-pl.pl-code) , 0 ).                                                         */
-/*                run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).                                                        */
-/*                run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).                                                  */
-/*                run wp-xmltagput( 5, "PLDensity",  string((buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty),">>>>>>>>>9.9999999999") , 0 ).*/
-/*                run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).                                                          */
-/*                                                                                                                                           */
-/*                end.                                                                                                                       */
+                for each buf_doc-pl where buf_doc-pl.obj-type = buf_doc-line.obj-type
+                                      and buf_doc-pl.obj-code = buf_doc-line.obj-code
+                                      and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                      and buf_doc-pl.gds-code = buf_goods.gds-code
+                                      :
+                
+                run wp-xmltagopen in this-procedure ( input 4, input "PLDoc", input "" ).
+                run wp-xmltagput( 5, "PLCode",   string(buf_doc-pl.pl-code) , 0 ).
+                run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).
+                run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).
+                run wp-xmltagput( 5, "PLDensity",  string((buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty),"->>>>>>>>>9.9999999999") , 0 ).
+                run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).                                          
+                                          
+                end.                                          
             end.        /* if v-is-petrol  = yes */
             /*---END----------- Для топлива дополнительно экспортировать вес ---------------------*/
         end.      /* available buf_doc-line  */
