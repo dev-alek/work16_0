@@ -142,6 +142,17 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       ,input (buffer ub.fin-doc:handle)
       ).
   end.
+  if oldb.prn-doc-code <> ub.fin-doc.prn-doc-code
+  AND not new(ub.fin-doc) and g#db-num <> 0 
+  and oldb.status_ = ub.fin-doc.status_
+  and ub.fin-doc.status_ = {&fin-fact}
+  then do:      
+  run nws/cr-route.p ( input {&send-cmd}
+                ,input "command":U + {&delim-nws} + "fin-doc-prn-doc":U + {&delim-nws} + string(ub.fin-doc.fin-doc-code) + {&delim-nws} + string(ub.fin-doc.host-code) + {&delim-nws} + string(ub.fin-doc.prn-doc-code) + {&delim-nws} + "yes" + {&delim-nws} + "1"
+                ,input ?
+                ,input 0
+               ).      
+  end.
 
 
     if g#oxml = yes

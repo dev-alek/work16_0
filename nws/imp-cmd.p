@@ -109,10 +109,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-factur-date like ub.trn-doc.factur-date .
   define variable v-cr-factur   like ub.trn-doc.cr-factur   .
   define variable v-need-factur like ub.trn-doc.need-factur .
-  define variable v-nws-to-cd   as integer no-undo .
-
-  define variable v-last-pack   as integer   no-undo .
-
+  define variable v-nws-to-cd as integer no-undo .
+  DEFINE VARIABLE v-prn-doc-code as character no-undo .
+  define variable v-last-pack as integer   no-undo .
 
   case entry(1,rec-full,{&delim-nws}):
     when "command" then do:
@@ -255,6 +254,27 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               buf_fin-doc.factur-date = v-factur-date
               buf_fin-doc.cr-factur   = v-cr-factur
               buf_fin-doc.need-factur = v-need-factur
+            .
+          end.
+/*          else do:*/
+/*            run write-to-log( vss-workfile + {&space-char} + "Ошибка при записи даты генерации счета-фактуры в платеж на удаленке !"  ).*/
+/*            return error.*/
+/*          end.*/
+        end.
+        when "fin-doc-prn-doc":U then do:
+          assign v-doc-code    = entry(3,rec-full,{&delim-nws}) no-error .
+          assign v-host-code   = int(entry(4,rec-full,{&delim-nws})) no-error .
+          assign v-prn-doc-code = entry(5,rec-full,{&delim-nws}) no-error .
+/*          assign v-cr-factur   = logical(entry(6,rec-full,{&delim-nws})) no-error .*/
+/*          assign v-need-factur = int(entry(7,rec-full,{&delim-nws})) no-error .    */
+          define buffer bf_fin-doc for ub.fin-doc .
+
+          find first bf_fin-doc exclusive-lock where bf_fin-doc.fin-doc-code = int(v-doc-code) and bf_fin-doc.host-code = v-host-code  no-error .
+          if available bf_fin-doc then do:
+            assign
+              bf_fin-doc.prn-doc-code = v-prn-doc-code
+/*              buf_fin-doc.cr-factur   = v-cr-factur  */
+/*              buf_fin-doc.need-factur = v-need-factur*/
             .
           end.
 /*          else do:*/
