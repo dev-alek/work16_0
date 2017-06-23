@@ -153,10 +153,10 @@ DEFINE BUTTON Btn_Ans
      SIZE 20 BY 1.13
      BGCOLOR 8 .
 
-/*DEFINE BUTTON Btn_Edit                                             */
-/*     LABEL "Редактировать"                                         */
-/*     SIZE 15 BY 1.13 tooltip "Вернуть в 'Новые' для редактирования"*/
-/*     BGCOLOR 8 .                                                   */
+DEFINE BUTTON Btn_Edit
+     LABEL "Редактировать"
+     SIZE 15 BY 1.13 tooltip "Вернуть в 'Новые' для редактирования"
+     BGCOLOR 8 .
 
 
 DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1 
@@ -177,6 +177,7 @@ DEFINE FRAME Dialog-Frame
      Btn_send at row 1.2 col 62
      Btn_Ans AT ROW 1.2 COL 32 WIDGET-ID 10
      Btn_lkp AT ROW 1.2 COL 17 WIDGET-ID 12
+     Btn_Edit AT ROW 1.2 COL 52 
      RADIO-SET-1 AT ROW 1.2 COL 80 NO-LABEL WIDGET-ID 2
      SPACE(2) SKIP(23.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -237,35 +238,34 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-/*&Scoped-define SELF-NAME Btn_Edit                                                                                                                                */
-/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Edit Dialog-Frame                                                                                                  */
-/*ON CHOOSE OF Btn_Edit IN FRAME Dialog-Frame                                                                                                                      */
-/*DO:                                                                                                                                                              */
-/*    if not bh-act-header:available then return no-apply .                                                                                                        */
-/*    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-tts} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .*/
-/*    entry(3, buf_clob-bind.descr, {&delim-par}) = string(no) no-error .                                                                                          */
-/*    entry(4, buf_clob-bind.descr, {&delim-par}) = "" no-error .                                                                                                  */
-/*    entry(5, buf_clob-bind.descr, {&delim-par}) = "" no-error .                                                                                                  */
-/*    bh-act-header:buffer-field ("is-sent"):buffer-value = string(no) no-error .                                                                                  */
-/*    bh-act-header:buffer-field ("answer_"):buffer-value = "" no-error .                                                                                          */
-/*    bh-act-header:buffer-field ("RegID"):buffer-value = "" no-error .                                                                                            */
-/*                                                                                                                                                                 */
-/*    find first ub.esys-all-attr                                                                                                                                  */
-/*                where ub.esys-all-attr.table-name = "esys-pck-sent"                                                                                              */
-/*                and ub.esys-all-attr.attr-code = "egais"                                                                                                         */
-/*                and ub.esys-all-attr.key2       = 4                                                                                                              */
-/*                and ub.esys-all-attr.attr-value = buf_clob-bind.uniq-key-rec                                                                                     */
-/*                no-error.                                                                                                                                        */
-/*    if available (ub.esys-all-attr )                                                                                                                             */
-/*    then do:                                                                                                                                                     */
-/*      delete ub.esys-all-attr .                                                                                                                                  */
-/*    end.                                                                                                                                                         */
-/*                                                                                                                                                                 */
-/*    run refresh-query .                                                                                                                                          */
-/*END.                                                                                                                                                             */
-/*                                                                                                                                                                 */
-/*/* _UIB-CODE-BLOCK-END */                                                                                                                                        */
-/*&ANALYZE-RESUME                                                                                                                                                  */
+&Scoped-define SELF-NAME Btn_Edit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Edit Dialog-Frame
+ON CHOOSE OF Btn_Edit IN FRAME Dialog-Frame
+DO:
+    if not bh-act-header:available then return no-apply .
+    message "Вы уверены, что хотите вернуть акт " bh-act-header:buffer-field ("num"):buffer-value " в 'новые' для редактирования?"
+    view-as alert-box question buttons yes-no update glog .
+    if not glog then return no-apply .
+    find last buf_clob-bind where buf_clob-bind.field-name_ = {&lob-egais-qb} and buf_clob-bind.uniq-key-rec = bh-act-header:buffer-field ("num"):buffer-value .
+    entry(3, buf_clob-bind.descr, {&delim-par}) = string(no) no-error .
+    bh-act-header:buffer-field ("is-sent"):buffer-value = string(no) no-error .
+
+    find first ub.esys-all-attr
+                where ub.esys-all-attr.table-name = "esys-pck-sent"
+                and ub.esys-all-attr.attr-code = "egais"
+                and ub.esys-all-attr.key2       = 4
+                and ub.esys-all-attr.attr-value = buf_clob-bind.uniq-key-rec
+                no-error.
+    if available (ub.esys-all-attr )
+    then do:
+      delete ub.esys-all-attr .
+    end.
+
+    run refresh-query .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME Btn_create
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_create Dialog-Frame
@@ -447,10 +447,10 @@ do:
   then do :
     ENABLE Btn_create Btn_chg Btn_del Btn_send 
       WITH FRAME Dialog-Frame. 
-    HIDE Btn_Ans Btn_lkp in FRAME Dialog-Frame.  
+    HIDE Btn_Ans Btn_lkp Btn_Edit in FRAME Dialog-Frame.  
   end.
   else do :
-    ENABLE Btn_Ans Btn_lkp 
+    ENABLE Btn_Ans Btn_lkp Btn_Edit 
       WITH FRAME Dialog-Frame.
     HIDE Btn_create Btn_chg Btn_del Btn_send in FRAME Dialog-Frame.    
   end.
