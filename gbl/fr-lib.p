@@ -1332,8 +1332,8 @@ case v-fr-type:
             .
             RETURN.
          END.
-
-         /* Переполнение ЭКЛЗ */
+/*
+         /* Переполнение ЭКЛЗ .  Это просто предупреждение */
          IF v-fr:IsEKLZOverflow
          THEN DO:
             ASSIGN
@@ -1341,7 +1341,7 @@ case v-fr-type:
             .
             RETURN.
          END.
-
+*/
          /* Последняя запись ВФПИ спорчена */
          IF v-fr:IsLastFMRecordCorrupted
          THEN DO:

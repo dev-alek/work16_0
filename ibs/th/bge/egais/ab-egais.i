@@ -163,7 +163,7 @@ procedure makeXML_TH :
                                                                and X_ext-classif-attr.nonunique = 0
                                                                and X_ext-classif-attr.attr-code = 'egais-info'
                                                                no-error .                
-                        if available X_ext-classif-attr and num-entries(X_ext-classif-attr.attr-value, CHR(4)) = 3 then do : 
+                        if available X_ext-classif-attr and num-entries(X_ext-classif-attr.attr-value, CHR(4)) >= 3 then do : 
                           def var v-prod as char no-undo.
                           def var v-impor as char no-undo.
                           def var v-msg as char no-undo.
@@ -330,7 +330,7 @@ procedure makeXML :
                                                                and X_ext-classif-attr.nonunique = 0
                                                                and X_ext-classif-attr.attr-code = 'egais-info'
                                                                no-error .                
-                        if available X_ext-classif-attr and num-entries(X_ext-classif-attr.attr-value, CHR(4)) = 3 then do : 
+                        if available X_ext-classif-attr and num-entries(X_ext-classif-attr.attr-value, CHR(4)) >= 3 then do : 
                           def var v-prod as char no-undo.
                           def var v-impor as char no-undo.
                           def var v-msg as char no-undo.
@@ -488,7 +488,7 @@ procedure makeXML_v2 :
                                                                and X_ext-classif-attr.nonunique = 0
                                                                and X_ext-classif-attr.attr-code = 'egais-info'
                                                                no-error .                
-                        if available X_ext-classif-attr and num-entries(X_ext-classif-attr.attr-value, CHR(4)) = 3 then do : 
+                        if available X_ext-classif-attr and num-entries(X_ext-classif-attr.attr-value, CHR(4)) >= 3 then do : 
                           def var v-prod as char no-undo.
                           def var v-impor as char no-undo.
                           def var v-msg as char no-undo.

@@ -30,10 +30,10 @@ class ibs.th.bge.egais.WayBill inherits EGAISUTM:
 &scop xml-act-1 '<?xml version="1.0" encoding="UTF-8"?>~
 <ns:Documents Version="1.0" ~
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ~
-xmlns:ns= "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" ~
+xmlns:ns="http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" ~
 xmlns:oref="http://fsrar.ru/WEGAIS/ClientRef" ~
 xmlns:pref="http://fsrar.ru/WEGAIS/ProductRef" ~
-xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
+xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle">~
 <ns:Owner>~
 <ns:FSRAR_ID>&1</ns:FSRAR_ID>~
 </ns:Owner>~
@@ -55,10 +55,10 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle">~
 &scop xml-act-v2-1 '<?xml version="1.0" encoding="UTF-8"?>~
 <ns:Documents Version="1.0" ~
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ~
-xmlns:ns= "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" ~
+xmlns:ns="http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" ~
 xmlns:oref="http://fsrar.ru/WEGAIS/ClientRef" ~
 xmlns:pref="http://fsrar.ru/WEGAIS/ProductRef" ~
-xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
+xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 <ns:Owner>~
 <ns:FSRAR_ID>&1</ns:FSRAR_ID>~
 </ns:Owner>~
@@ -93,7 +93,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 </ns:Documents>'
 
 &scop xml-ConfirmRepealWB '<?xml version="1.0" encoding="UTF-8"?>~
-<ns:Documents Version="1.0" xmlns:ns= "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" xmlns:wt= "http://fsrar.ru/WEGAIS/ConfirmRepealWB">~
+<ns:Documents Version="1.0" xmlns:ns="http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" xmlns:wt= "http://fsrar.ru/WEGAIS/ConfirmRepealWB">~
 <ns:Owner>~
 <ns:FSRAR_ID>&1</ns:FSRAR_ID>~
 </ns:Owner>~
@@ -2745,7 +2745,7 @@ xmlns:wa= "http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
 
 &scop xml-act-cont-v2 '<wa:Position>~
 <wa:Identity>&1</wa:Identity>~
-<wa:InformF2RegId>&2</wa:InformBRegId>~
+<wa:InformF2RegId>&2</wa:InformF2RegId>~
 <wa:RealQuantity>&3</wa:RealQuantity>~
 </wa:Position>'
 
