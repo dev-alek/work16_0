@@ -2290,6 +2290,12 @@ for each obj-list no-lock:  /* По всем объектам */
                             assign
                             v-obj-code = buf_alc-supp-lic.cli-code
                             v-obj-type = buf_alc-supp-lic.cli-type.
+                            find first buf_part-2 no-lock where buf_part-2.supplier-serial-number = part-2.supplier-serial-number
+                                                            and buf_part-2.supplier-code <> v-obj-code no-error .
+                            if available buf_part-2
+                            then do :
+                                part-2.supplier-serial-number = part-2.supplier-serial-number + " " .
+                            end.                                
                         end.
                         else do:
 /*                            message "Для накладной " buf_trn-doc.doc-code " не было найдено контрагента с лицензией."*/
@@ -2446,7 +2452,7 @@ for each part-1 exclusive-lock where part-1.producer-inn <> "" :
     end.                                       
 end.
 
-define buffer buf_part-2 for part-2 .
+/*define buffer buf_part-2 for part-2 .*/
 for each part-2 exclusive-lock :
     if TOGGLE-KPP then do :
         find first buf_part-2 exclusive-lock where buf_part-2.alc-type-code = part-2.alc-type-code
@@ -3251,7 +3257,7 @@ hSAXWriter:start-element ("Файл").
                                 
                                 /* Атрибуты */
                                 hSAXWriter:insert-attribute ("ИдЛицензии", string(alc-supp-licenses.id)).
-                                hSAXWriter:insert-attribute ("П000000000011", alc-supp-licenses.serial-number).
+                                hSAXWriter:insert-attribute ("П000000000011", right-trim(alc-supp-licenses.serial-number)).
                                 hSAXWriter:insert-attribute ("П000000000012", alc-supp-licenses.date-get).
                                 hSAXWriter:insert-attribute ("П000000000013", alc-supp-licenses.date-to).
                                 hSAXWriter:insert-attribute ("П000000000014", alc-supp-licenses.get-from).
