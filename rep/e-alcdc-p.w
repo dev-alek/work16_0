@@ -2326,7 +2326,7 @@ for each part-1 exclusive-lock where part-1.producer-inn <> "" :
     end.                                       
 end.
 
-define buffer buf_part-2 for part-2 .
+/*define buffer buf_part-2 for part-2 .*/
 for each part-2 exclusive-lock :
     if TOGGLE-KPP then do :
         find first buf_part-2 exclusive-lock where buf_part-2.alc-type-code = part-2.alc-type-code
