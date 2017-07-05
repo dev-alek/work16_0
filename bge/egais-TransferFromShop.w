@@ -530,7 +530,7 @@ DO:
                 tt-gds-act.gds-code     = buf_goods.gds-code
                 tt-gds-act.gds-name     = buf_goods.gds-name    
                 tt-gds-act.position_    = nn
-                tt-gds-act.qnty         = buf_parts.fact-qnty
+                tt-gds-act.qnty         = buf_parts.fact-qnty / buf_parts.cli-base-rate
              .    
              if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
                  tt-gds-act.alc-code = entry(3, buf_parts.alc-ref-ab-path) .
