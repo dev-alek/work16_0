@@ -570,8 +570,12 @@ class ibs.th.bge.egais.ParserXMLDocWB:
       end.
 
       if available (tt-wb-gds-EG) and
-        lookup (parentName, "pref:Producer,oref:UL,oref:FL,oref:FO,oref:TS") > 0 
+        lookup (parentName, "pref:Producer") > 0 or lookup (parentNameOref, "pref:Producer") > 0  
+      then do:
+        if lookup (noderefName, "oref:UL,oref:FL,oref:FO,oref:TS") > 0 
         then do:
+          parentNameOref = parentName.
+        end.
         case parentName:
           when "oref:UL" 
             then entry (7, tt-wb-gds-EG.prod-list, chr(5)) = 'UL'.

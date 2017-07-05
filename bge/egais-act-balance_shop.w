@@ -589,7 +589,7 @@ DO:
                                     and buf_parts.obj-code = v-cntxt-obj-code 
                                     and buf_parts.out-code = {&free-code} ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_parts.in-code :
-            if buf_parts.qnty < 1 then next _parts_ .
+            if buf_parts.qnty <= 0 then next _parts_ .
             assign nn = nn + 1 .                            
             create tt-gds-act.
             assign

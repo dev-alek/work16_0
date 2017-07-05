@@ -562,7 +562,7 @@ DO:
                 tt-gds-act.gds-code     = buf_goods.gds-code
                 tt-gds-act.gds-name     = buf_goods.gds-name    
                 tt-gds-act.position_    = nn
-                tt-gds-act.qnty         = buf_parts.fact-qnty
+                tt-gds-act.qnty         = buf_parts.fact-qnty / buf_parts.cli-base-rate
              .    
              if num-entries(buf_parts.alc-ref-ab-path) = 4 and entry(3, buf_parts.alc-ref-ab-path) <> "" then do :
                  tt-gds-act.alc-code = entry(3, buf_parts.alc-ref-ab-path) .
@@ -678,11 +678,11 @@ DO:
                        tt-gds-act.gds-code     = buf_goods.gds-code
                        tt-gds-act.gds-name     = buf_goods.gds-name    
                        tt-gds-act.position_    = nn
-                       tt-gds-act.qnty         = buf_parts.fact-qnty
+                       tt-gds-act.qnty         = buf_parts.fact-qnty / buf_parts.cli-base-rate
                     .
                 end.    
                 else do :
-                    assign tt-gds-act.qnty  = tt-gds-act.qnty + buf_parts.fact-qnty .
+                    assign tt-gds-act.qnty  = tt-gds-act.qnty + (buf_parts.fact-qnty / buf_parts.cli-base-rate) .
                 end.       
                  
             end. /* for each buf_parts */
@@ -735,7 +735,7 @@ DO:
                 find first tt-gds-act exclusive-lock where tt-gds-act.alc-code = v-alc-code no-error.
                 if available tt-gds-act
                 then do : 
-                    assign tt-gds-act.qnty = tt-gds-act.qnty - ret_parts.fact-qnty .
+                    assign tt-gds-act.qnty = tt-gds-act.qnty - (ret_parts.fact-qnty / ret_parts.cli-base-rate) .
                 end.                            
             end. /* for each ret_parts */
         end. /* for first inc-doc */
