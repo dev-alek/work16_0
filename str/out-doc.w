@@ -3876,6 +3876,8 @@ for each tt-upd-attr : delete tt-upd-attr . end.
 {&create-record}
 &scop attr-code trdcattr-print-num
 {&create-record}
+&scop attr-code trdcattr-idCountryContr
+{&create-record}
 &scop attr-code trdcattr-nsf
 {&create-record}
 &scop attr-code trdcattr-dsf
@@ -4201,6 +4203,9 @@ define variable varexist                  as logical   no-undo.
 {&create-record}
 &scop attr-val  ""
 &scop attr-code trdcattr-print-num
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-idCountryContr
 {&create-record}
 &scop attr-val  ""
 &scop attr-code trdcattr-nsf

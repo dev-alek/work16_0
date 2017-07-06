@@ -3886,6 +3886,8 @@ end.
 &global-define trdcattr-shiftname '{&bef-trdcattr-shiftname}':U
 &global-define bef-trdcattr-print-num print-num
 &global-define trdcattr-print-num '{&bef-trdcattr-print-num}':U
+&global-define bef-trdcattr-idCountryContr idCountryContr
+&global-define trdcattr-idCountryContr '{&bef-trdcattr-idCountryContr}':U
 &global-define bef-trdcattr-oldsuppcntr olsuppcntr
 &global-define trdcattr-oldsuppcntr '{&bef-trdcattr-oldsuppcntr}':U
 &global-define bef-trdcattr-car-time car-time
@@ -3954,7 +3956,7 @@ end.
 &global-define trdcattr-condition '{&bef-trdcattr-condition}':U
 &global-define bef-trdcattr-seals-condition seals-condition
 &global-define trdcattr-seals-condition '{&bef-trdcattr-seals-condition}':U
-&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,negais,egais,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition':U
+&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,negais,egais,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,idCountryContr,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition':U
 &global-define bef-lineattr-flora_ps flora_ps
 &global-define lineattr-flora_ps '{&bef-lineattr-flora_ps}':U
 &global-define bef-lineattr-flora_gds-code fl_gds-code

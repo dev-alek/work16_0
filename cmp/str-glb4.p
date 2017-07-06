@@ -1105,6 +1105,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 { cmp/cr-prep.i 1 trdcattr-shiftname shn " " shn }
 /*Номер документа для печати*/
 { cmp/cr-prep.i 1 trdcattr-print-num "print-num" " " "print-num" }
+/*Идентификатор государственного контракта*/
+{ cmp/cr-prep.i 1 trdcattr-idCountryContr "idCountryContr" " " "idCountryContr" }
 /*Документ пересортицы по тем же контрагентам и договорам*/
 { cmp/cr-prep.i 1 trdcattr-oldsuppcntr "olsuppcntr" " " "oldsuppcntr" }
 /* Время прихода машины */
@@ -1256,6 +1258,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-auto}~
 ,{&bef-trdcattr-driver}~
 ,{&bef-trdcattr-print-num}~
+,{&bef-trdcattr-idCountryContr}~
 ,{&bef-trdcattr-oldsuppcntr}~
 ,{&bef-trdcattr-t_pass-fname}~
 ,{&bef-trdcattr-t_pass-position}~

@@ -2719,7 +2719,9 @@ define output parameter p-trn-doc-office    as logical          no-undo.
 
     define variable v-doc-exch-code   as integer      no-undo.
     define variable v-doc-exch-rate   as decimal      no-undo.
-    define variable v-doc-exch-scale  as integer      no-undo.
+    define variable v-doc-exch-scale  as integer      no-undo.    
+    define variable v-idContr         as character    no-undo. 
+
 
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_price-doc     for ub.price-doc.
@@ -2885,7 +2887,10 @@ on error undo, return error
               input "head":U
             , input p-doc-code
         ).
-    end.
+    end.  
+                              
+    { str/tdat-val.i p-doc-code {&trdcattr-idCountryContr} v-idContr v-attr-type no-error }  
+    
     run wp-xmltagopen( 2, "operation","" ).
     run wp-xmltagput( 3, "referenceNo",        string( p-doc-code                   ), 0 ).
     run wp-xmltagput( 3, "codeOperation",      string( v-ext-doc-type               ), 0 ).
@@ -2905,7 +2910,10 @@ on error undo, return error
     run wp-xmltagput( 3, "shiftNum",           string( v-shift-num                  ), 0 ).
     run wp-xmltagput( 3, "shiftName",          string( v-shift-name                 ), 0 ).
     run wp-xmltagput( 3, "valutCode",          string( v-base-code                  ), 0 ).
-    run wp-xmltagput( 3, "valutCodeOKV",       string( v-base-code-okv              ), 0 ).
+    run wp-xmltagput( 3, "valutCodeOKV",       string( v-base-code-okv              ), 0 ). 
+    
+    run wp-xmltagput( 3, "GosContract",        string( v-idContr                 ), 0 ).        
+    
     run wp-xmltagput( input 3, input "exchCode"   , input string( v-doc-exch-code                     ), input 0 ).
     run wp-xmltagput( input 3, input "exchRate"   , input string( v-doc-exch-rate                     ), input 0 ).
     run wp-xmltagput( input 3, input "exchScale"  , input string( v-doc-exch-scale                    ), input 0 ).

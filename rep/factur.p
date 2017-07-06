@@ -2092,7 +2092,9 @@ define output parameter p-curr-abbr         as character    no-undo.
     define variable v-base-name      as character           no-undo.
     define variable v-base-abbr      as character           no-undo.
     define variable v-rubl-name      as character           no-undo.
-    define variable t-currency       as character           no-undo.
+    define variable t-currency       as character           no-undo.  
+    define variable v-idContr        as character           no-undo. 
+    define variable v-attr-type      as character           no-undo.  
 
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_currency      for ub.currency.
@@ -2230,6 +2232,8 @@ on error undo, return error
                                              else v-out-name)) format "X(190)" skip
             .
          end.
+         
+    { str/tdat-val.i p-doc-code {&trdcattr-idCountryContr} v-idContr v-attr-type no-error }     
 
     run facturxl-write-cell-data in this-procedure (
           input {&facturxl-h_docCode}
@@ -2251,6 +2255,10 @@ on error undo, return error
           input {&facturxl-h_supplierINN}
         , input t-inn
     ).
+    run facturxl-write-cell-data in this-procedure (                                
+          input {&facturxl-h_idContract}
+        , input v-idContr
+    ).    
     assign
         t-inn = substitute( "&1&2&3", v-torgconf-saler-inn, ( if v-torgconf-saler-kpp = "":U then "":U else "/":U ), v-torgconf-saler-kpp )
     .
@@ -2340,9 +2348,18 @@ on error undo, return error
         put stream Out-stream
         space(5)  /*  space(10)    */
             string( "Валюта:  " +
-            trim( ( if invers and buf_trn-doc.doc-type <> {&income} then v-curr-name else ( if PrintRubl then v-rubl-name else v-base-name  ) ) ) ) format "X(120)"
+            trim( ( if invers and buf_trn-doc.doc-type <> {&income} then v-curr-name else ( if PrintRubl then v-rubl-name else v-base-name  ) ) ) ) format "X(120)" skip
         .
     end.
+
+    put stream Out-stream
+        space(5)  
+        "Идентификатор государственного контракта, договора (соглашения ):  " 																																			
+         /*skip  space(5)*/ 
+         + trim(v-idContr) format "X(120)" "(8)" at 196 skip(0)
+    .
+    
+
     if v-torgconf-outprim = no
     then do:
         put stream Out-stream
@@ -2353,9 +2370,9 @@ on error undo, return error
             ) format "X(120)"
         .
     end.
-    put stream Out-stream
+/*    put stream Out-stream
         skip
-    .
+    .*/
 end.
 end procedure. /* print-header */
 

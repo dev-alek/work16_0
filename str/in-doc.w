@@ -3618,6 +3618,8 @@ end.
 {&create-record}
 &scop attr-code trdcattr-print-num
 {&create-record}
+&scop attr-code trdcattr-idCountryContr
+{&create-record}
 &scop attr-code trdcattr-car-time
 {&create-record}
 &scop attr-code trdcattr-t_pass-fname
@@ -4300,6 +4302,9 @@ define variable varexist                  as logical   no-undo.
 {&create-record}
 &scop attr-val  ""
 &scop attr-code trdcattr-print-num
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-idCountryContr
 {&create-record}
 &scop attr-val  ""
 &scop attr-code trdcattr-car-time

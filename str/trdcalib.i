@@ -738,7 +738,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-driver true
 &glob sort-trdcattr-driver 20
 
-/* Номер документа для печати */
+/* Номер документа для печати  */
 &glob fillin_width-trdcattr-print-num 71
 &glob fillin_height-trdcattr-print-num 1
 &glob type-trdcattr-print-num {&type-char}
@@ -749,7 +749,20 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob output-display-trdcattr-print-num true
 &glob other-trdcattr-print-num 'nws':u
 &glob news-trdcattr-print-num true
-&glob sort-trdcattr-print-num 120
+&glob sort-trdcattr-print-num 120   
+
+/* Идентификатор государственного контракта */
+&glob fillin_width-trdcattr-idCountryContr 71
+&glob fillin_height-trdcattr-idCountryContr 1
+&glob type-trdcattr-idCountryContr {&type-char}
+&glob format-trdcattr-idCountryContr "X(70)"
+&glob label-trdcattr-idCountryContr "Идентификатор государственного контракта"
+&glob tooltip-trdcattr-idCountryContr "Идентификатор государственного контракта"
+&glob user-can-edit-trdcattr-idCountryContr true
+&glob output-display-trdcattr-idCountryContr true
+&glob other-trdcattr-idCountryContr 'nws':u
+&glob news-trdcattr-idCountryContr true
+&glob sort-trdcattr-idCountryContr 120
 
 /* Документ пересортицы делается по тем же контрагентам и договорам */
 &glob fillin_width-trdcattr-oldsuppcntr 3

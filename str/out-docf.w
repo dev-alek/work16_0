@@ -2909,6 +2909,8 @@ run attr-property in this-procedure ( ~
 {&create-record}
 &scop attr-code trdcattr-print-num
 {&create-record}
+&scop attr-code trdcattr-idCountryContr
+{&create-record}
 &scop attr-code trdcattr-auto
 {&create-record}
 &scop attr-code trdcattr-cargo-desc
@@ -2963,6 +2965,8 @@ define variable varexist                  as logical   no-undo.
 &scop attr-code trdcattr-ord_dl
 {&create-record}
 &scop attr-code trdcattr-print-num
+{&create-record}    
+&scop attr-code trdcattr-idCountryContr
 {&create-record}
 &scop attr-code trdcattr-auto
 {&create-record}
