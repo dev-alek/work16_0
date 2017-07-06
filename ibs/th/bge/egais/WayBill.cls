@@ -2905,6 +2905,14 @@ xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
     cmd = substitute ("&1 --connect-timeout &2 -X GET &3 >&4", search ("exe/curl.exe"), TimeOut, inType, inFileName).
     os-command silent value (cmd).
 
+    file-info:file-name = search (inFileName).
+    if file-info:file-size = 0
+    then do:
+      Msg = substitute ('По адресу &1 получен пустой файл. Возможно нужно увеличить timeout в настройках INI файда секция EGAIS', inType).
+      StatusErr = true.
+      return.
+    end.
+    
     createhDoc(inFileName, output hDoc).
     prsXMLDocWB:ParseRec (hDoc, input-output table tt-wb-header, input-output table tt-wb-act-header, input-output table tt-ticket, input-output table tt-wb-info-client, input-output table tt-wb-gds-EG).
     find first tt-wb-header no-error.
