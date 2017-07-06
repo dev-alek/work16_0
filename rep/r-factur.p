@@ -2343,7 +2343,8 @@ define output parameter p-curr-abbr         as character    no-undo.
     define variable t-currency       as character           no-undo.
     define variable v-suppNUM        as character           no-undo.
     define variable v-ordNUM         as character           no-undo.
-    define variable v-attr-type      as character           no-undo.
+    define variable v-attr-type      as character           no-undo.  
+    define variable v-idContr        as character           no-undo.    
 
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_currency      for ub.currency.
@@ -2543,7 +2544,7 @@ end.
       end.
   end.
 
-
+    { str/tdat-val.i p-doc-code {&trdcattr-idCountryContr} v-idContr v-attr-type no-error }
 
     run facturxl-write-cell-data in this-procedure (
           input {&facturxl-h_docCode}
@@ -2565,6 +2566,11 @@ end.
           input {&facturxl-h_supplierINN}
         , input t-inn
     ).
+    run facturxl-write-cell-data in this-procedure (                                 
+          input {&facturxl-h_idContract}
+        , input v-idContr
+    ).    
+    
 /*    run facturxl-write-cell-data in this-procedure (
           input {&facturxl-h_cargoFrom}
         , input ( if buf_trn-doc.office = yes
@@ -2687,7 +2693,15 @@ end.
             string( "Валюта:  " +
             trim( ( if invers and buf_trn-doc.doc-type <> {&income} then v-curr-name else ( if PrintRubl then v-rubl-name else v-base-name  ) ) ) ) format "X(120)" "(7)" at 196 skip(0)
         .
-    end.
+    end.    
+ 
+    put stream Out-stream
+        space(5)  
+        "Идентификатор государственного контракта, договора (соглашения):  " 																																			
+         /*skip*  space(5) */
+         + trim(v-idContr) format "X(120)" "(8)" at 196 skip(0)
+    .
+    
     if lookup("TopAukc", p-mode) <> 0 then do :
       find first buf_ext-classif where buf_ext-classif.classif-subject  = {&table_clients}                    and
                                        buf_ext-classif.classif-name     = {&extclass_code_firm_in_ext_client} and
@@ -2727,7 +2741,7 @@ end.
     end.
 /*    put stream Out-stream
         skip
-    .*/
+    . */
 end.
 end procedure. /* print-header */
 

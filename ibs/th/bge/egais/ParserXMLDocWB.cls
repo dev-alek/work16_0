@@ -316,6 +316,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
           end.
         when "wb:Content" or when "wbr:Content" then
           do:
+            parentNameOref = "".
             assign 
               tt-wb-header.uniq-key-rec = tt-wb-header.num + {&delim-cmd} + string (tt-wb-header.wb-date) + {&delim-cmd} + tt-wb-header.regID-Ship + {&delim-cmd} + tt-wb-header.Identity.
           end.
@@ -329,31 +330,37 @@ class ibs.th.bge.egais.ParserXMLDocWB:
           end.
         when "wa:Header" then 
           do:
+            parentNameOref = "".
             create tt-wb-act-header .
           end.
         when "wa:Position" then 
           do:
+            parentNameOref = "".
             create tt-wb-act-gds-EG .
           end.
         when "ns:Ticket" then 
           do:
+            parentNameOref = "".
             create tt-ticket .
             tt-ticket.docType = "Ticket".
           end.
         when "ns:ConfirmTicket" then 
           do:
+            parentNameOref = "".
             create tt-ticket .
             tt-ticket.doc = 'ConfirmTicket'.
             tt-ticket.docType = 'ConfirmTicket'.
           end.
         when "ns:ConfirmRepealWB" then 
           do:
+            parentNameOref = "".
             create tt-ticket .
             tt-ticket.doc = 'ConfirmRepealWB'.
             tt-ticket.docType = 'ConfirmRepealWB'.
           end.
         when "ns:RequestRepealWB" then 
           do:
+            parentNameOref = "".
             create tt-ticket .
             tt-ticket.doc = 'RequestRepealWB'.
             tt-ticket.docType = 'RequestRepealWB'.
@@ -570,7 +577,7 @@ class ibs.th.bge.egais.ParserXMLDocWB:
       end.
 
       if available (tt-wb-gds-EG) and
-        lookup (parentName, "pref:Producer") > 0 or lookup (parentNameOref, "pref:Producer") > 0  
+        (lookup (parentName, "pref:Producer") > 0 or lookup (parentNameOref, "pref:Producer") > 0)  
       then do:
         if lookup (noderefName, "oref:UL,oref:FL,oref:FO,oref:TS") > 0 
         then do:

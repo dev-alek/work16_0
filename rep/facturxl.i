@@ -47,6 +47,7 @@ initial "@(#)$Workfile$ $Revision$".
 &global-define facturxl-h_currency "h_currency":U
 &global-define facturxl-h_suppNUM "h_suppNUM":U
 &global-define facturxl-h_ordNUM "h_ordNUM":U
+&global-define facturxl-h_idContract "h_idContract":U
 
 &global-define facturxl-it_SumNoVAT "it_SumNoVAT":U
 &global-define facturxl-it_VATsum "it_VATsum":U

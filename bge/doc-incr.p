@@ -3690,7 +3690,9 @@ define input parameter p-cli-code               as integer          no-undo.
   define variable v-doc-exch-code     as integer      no-undo.
   define variable v-doc-exch-rate     as decimal      no-undo.
   define variable v-doc-exch-scale    as integer      no-undo.
-
+  define variable v-fact-time         as integer      no-undo.
+  define variable v-idContr           as character    no-undo. 
+  
   define buffer buf_ord-chain   for ub.ord-chain.
   define buffer buf_ord-doc-rcv for ub.ord-doc-rcv.
   define buffer buf_trn-doc     for ub.trn-doc.
@@ -3707,6 +3709,7 @@ on error undo, return error
       v-doc-exch-code   = ?
       v-doc-exch-rate   = ?
       v-doc-exch-scale  = ?
+      v-fact-time = ?
     .
     if p-ext-doc-type = {&TDEDT_Pri_Vnesh}
     then do:
@@ -3726,8 +3729,11 @@ on error undo, return error
         v-doc-exch-code   = buf_trn-doc.exch-code
         v-doc-exch-rate   = buf_trn-doc.exch-rate
         v-doc-exch-scale  = buf_trn-doc.exch-scale
+        v-fact-time       = buf_trn-doc.fact-time
       .
     end.
+    
+    { str/tdat-val.i p-doc-code {&trdcattr-idCountryContr} v-idContr v-attr-type no-error } 
 
     run wp-xmltagopen( 2, "operation","" ).
     run wp-xmltagput( input 3, input "referenceNo"  , input string( p-doc-code                          ), input 0 ).
@@ -3742,8 +3748,12 @@ on error undo, return error
     run wp-xmltagput( input 3, input "dateDocXml"   , input bge-xml-date( p-doc-date )                   , input 0 ).
     run wp-xmltagput( input 3, input "dateFact"     , input string( p-fact-date,"99.99.9999"            ), input 0 ).
     run wp-xmltagput( input 3, input "dateFactXml"  , input bge-xml-date( p-fact-date )                  , input 0 ).
+    run wp-xmltagput( input 3, input "timeFact"     , input string( v-fact-time,"hh:mm:ss"              ), input 1 ).
     run wp-xmltagput( input 3, input "valutCode"    , input string( v-base-code                         ), input 0 ).
     run wp-xmltagput( input 3, input "valutCodeOKV" , input string( v-base-code-okv                     ), input 0 ).
+    
+    run wp-xmltagput( input 3, input "GosContract"  , input string( v-idContr                           ), input 0 ).  
+    
     run wp-xmltagput( input 3, input "exchCode"     , input string( v-doc-exch-code                     ), input 0 ).
     run wp-xmltagput( input 3, input "exchRate" , input string( v-doc-exch-rate                     ), input 0 ).
     run wp-xmltagput( input 3, input "exchScale", input string( v-doc-exch-scale                    ), input 0 ).

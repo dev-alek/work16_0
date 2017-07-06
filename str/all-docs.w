@@ -119,6 +119,7 @@ define variable v-sale             as   logical               no-undo.
 { str/all-doca.i {&bef-trdcattr-auto           } }
 { str/all-doca.i {&bef-trdcattr-driver         } }
 { str/all-doca.i {&bef-trdcattr-print-num      } }
+{ str/all-doca.i {&bef-trdcattr-idCountryContr } }
 { str/all-doca.i {&bef-trdcattr-oldsuppcntr    } }
 { str/all-doca.i {&bef-trdcattr-nosn           } }
 

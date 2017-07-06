@@ -67,6 +67,7 @@ initial "@(#)$Workfile$ $Revision$".
                     with frame factur.
                 run facturxl-write-line-data in this-procedure (
                       input fill(" ", 19) + v-tax-name          /*  p-Name     */
+                    , input "":U                                /*  p-OKEI       */  
                     , input "":U                                /*  p-EI       */
                     , input string( v-{2}qnty )                 /*  p-qnty     */
                     , input &if "{2}" = "prt-" &then
@@ -89,6 +90,7 @@ initial "@(#)$Workfile$ $Revision$".
                               &else
                                   (if v-qnty <> 0 then v-tax * v-{2}qnty / v-qnty else 0 )
                               &endif
+                    , input "":U                /*  p-country-code  */
                     , input "":U                /*  p-country  */
                     , input "":U                /*  p-GTD      */
                 ).

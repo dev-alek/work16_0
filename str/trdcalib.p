@@ -398,6 +398,8 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-print-num
       {&attr-temp-full-code}
+      &scop attr-code trdcattr-idCountryContr
+      {&attr-temp-full-code}
       &scop attr-code trdcattr-oldsuppcntr
       {&attr-temp-full-code}
       &scop attr-code trdcattr-car-time
