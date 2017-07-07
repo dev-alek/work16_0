@@ -317,7 +317,12 @@ xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               prsXMLDocWB:ParseRec(hDoc, ?, input-output table tt-wb-header, input-output table tt-wb-gds-EG, input-output table tt-wb-info-client).
             end.
 
-            find first tt-wb-header.
+            find first tt-wb-header no-error.
+            if not available ( tt-wb-header )
+            then do:
+              message "Неудалось распарсить документ." view-as alert-box.
+              return ?.
+            end.
             tt-wb-header.TransIdList = buf_clob-bind.field-name_.
             find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_clients}
               and buf_ext-classif.classif-name = {&extclass_clients_esys}
@@ -380,6 +385,11 @@ xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
             end.
 
             for each tt-wb-gds-EG:
+              if tt-wb-gds-EG.alc-code = ? or tt-wb-gds-EG.alc-code = ""
+              then do:
+                message "Документ распарсен с ошибками." view-as alert-box.
+                return ?.
+              end.
               extGdsObj:OpenQueryExtGds(0, tt-wb-gds-EG.alc-code).
               if extGdsObj:NumBundles = 1
                 then do: 
@@ -581,16 +591,18 @@ xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               tt-wb-hndls.wbregid = entry (5, buf_clob-bind-wb-hndls.descr, {&delim-par}) no-error.
             if tt-wb-hndls.wbregid = ""
             then do:
-              GetHndlTable({&wb-header}, tt-wb-hndls.uniq-key-rec).
-              find first tt-wb-header no-error.
-              find first buf_clob-bind-temp where recid (buf_clob-bind-temp) = recid (buf_clob-bind-wb-hndls) exclusive-lock.
-              if available (tt-wb-header) 
-                then 
-                  assign 
-                    tt-wb-hndls.wbregid = tt-wb-header.wbregid
-                    entry (5, buf_clob-bind-temp.descr, {&delim-par}) = tt-wb-header.wbregid when available (buf_clob-bind-temp).
-                  .
-              release buf_clob-bind-temp.
+              if GetHndlTable({&wb-header}, tt-wb-hndls.uniq-key-rec) <> ?
+              then do:
+                find first tt-wb-header no-error.
+                find first buf_clob-bind-temp where recid (buf_clob-bind-temp) = recid (buf_clob-bind-wb-hndls) exclusive-lock.
+                if available (tt-wb-header) 
+                  then 
+                    assign 
+                      tt-wb-hndls.wbregid = tt-wb-header.wbregid
+                      entry (5, buf_clob-bind-temp.descr, {&delim-par}) = tt-wb-header.wbregid when available (buf_clob-bind-temp).
+                    .
+                release buf_clob-bind-temp.
+              end.
             end.
             find first buf_trn-doc where buf_trn-doc.doc-code = tt-wb-hndls.trn-doc-code no-error.
             if available (buf_trn-doc)
