@@ -1,10 +1,10 @@
 /*
 
-$Revision: $
-$Author: $
-$Date: $
-$Workfile: $
-$Archive: $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
                                         
 Файл глобальных определений
 
@@ -8008,7 +8008,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 05b519d108b3, 974, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 8bd22cd37f97, 994, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 90fea97fc979, 803, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 44c7cb9eda36, 691, rls ':U
 &endif
