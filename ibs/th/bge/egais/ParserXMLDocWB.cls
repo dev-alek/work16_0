@@ -248,10 +248,10 @@ class ibs.th.bge.egais.ParserXMLDocWB:
       when parentName begins "wt" then do:
         parentName = "wt:" + entry (2, parentName, ":").
       end.
-      when parentName begins "oref" then do:
+      when parentName begins "oref" or parentName begins "d5p1" or parentName begins "d7p1" then do:
         parentName = "oref:" + entry (2, parentName, ":").
       end.
-      when parentName begins "pref" then do:
+      when parentName begins "pref" or parentName begins "d6p1" then do:
         parentName = "pref:" + entry (2, parentName, ":").
       end.
     end.
@@ -286,10 +286,10 @@ class ibs.th.bge.egais.ParserXMLDocWB:
         when noderefName begins "wt" then do:
           noderefName = "wt:" + entry (2, noderefName, ":").
         end.
-        when noderefName begins "oref" then do:
+        when noderefName begins "oref" or noderefName begins "d5p1" or noderefName begins "d7p1"  then do:
           noderefName = "oref:" + entry (2, noderefName, ":").
         end.
-        when noderefName begins "pref" then do:
+        when noderefName begins "pref" or noderefName begins "d6p1" then do:
           noderefName = "pref:" + entry (2, noderefName, ":").
         end.
       end.
