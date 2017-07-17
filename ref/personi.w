@@ -443,7 +443,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "ֲûהאם"
           VIEW-AS FILL-IN
           SIZE 82 BY 1
-          BGCOLOR 15
+          BGCOLOR 15 FORMAT "X(128)"
      B-add AT ROW 16 COL 49
      B-del AT ROW 16 COL 59
      tt-clients.lim-kr AT ROW 16.13 COL 1.1
