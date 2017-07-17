@@ -2382,7 +2382,7 @@ ON LEAVE OF tt-chk-gds.pump IN BROWSE br-gds,
 end.
 
 ON LEAVE OF tt-chk-discnt.discnt-value-abs IN BROWSE br-discnt DO:
-  if tt-chk-discnt.value-type <> Integer({&discnt-v-abs}) then do:
+  if tt-chk-discnt.value-type <> Integer({&discnt-v-abs}) and tt-chk-discnt.value-type <> Integer({&discnt-v-bonus}) then do:
     message
     "Для % и др. скидки редактируйте % значение скидки"
     view-as alert-box error.
@@ -2396,7 +2396,7 @@ ON LEAVE OF tt-chk-discnt.discnt-value-abs IN BROWSE br-discnt DO:
 end.
 
 ON LEAVE OF tt-chk-discnt.discnt-value-pcnt IN BROWSE br-discnt DO:
-  if tt-chk-discnt.value-type = Integer({&discnt-v-abs}) then do:
+  if tt-chk-discnt.value-type = Integer({&discnt-v-abs})  or tt-chk-discnt.value-type = Integer({&discnt-v-bonus})  then do:
     message
     "Для абс скидки редактируйте асб значение скидки"
     view-as alert-box error.
@@ -5213,6 +5213,7 @@ if error-status:error then return error.
 if discnt-option = "":U then do:
   run gbl/pop-up.p ( input self:handle, input no) no-error.
 end.
+
 if par-mode = {&add-def} then do:
   run str/add-bon.w ( input parparentproc
                  ,input par-mode
@@ -5222,11 +5223,14 @@ if par-mode = {&add-def} then do:
                  ,input-output v-discnt-id
                  ,input-output v-kateg
                  ,output v-updated ) no-error.
+            
  if not v-updated then return error.
   find first buf_tt-chk-discnt no-lock where
             buf_tt-chk-discnt.doc-code = tt-chk-doc.doc-code
         and buf_tt-chk-discnt.record-type = 4
-        and buf_tt-chk-discnt.discnt-id = v-discnt-id no-error.
+        and buf_tt-chk-discnt.discnt-id = v-discnt-id
+        and buf_tt-chk-discnt.line-num = v-line-num 
+        no-error.
   if available buf_tt-chk-discnt then do:
     message
     "В данном чеке уже есть строка начисления бонуса с таким номером внешней транзакции"
@@ -5267,7 +5271,7 @@ assign
 tt-chk-discnt.doc-code = tt-chk-doc.doc-code
 tt-chk-discnt.line-num = v-line-num
 tt-chk-discnt.record-type = 4
-tt-chk-discnt.discnt-id = v-discnt-id + 1
+tt-chk-discnt.discnt-id = v-discnt-id
 tt-chk-discnt.line-type = integer(entry(1, discnt-option))
 tt-chk-discnt.pass-discnt = integer({&discnt-p-manual})
 tt-chk-discnt.value-type = integer(entry(2, discnt-option))
@@ -5966,7 +5970,7 @@ else do:
     AND locked_chk-discnt.line-num = tt-chk-discnt.line-num
     AND locked_chk-discnt.object-line-num = tt-chk-discnt.object-line-num
     AND locked_chk-discnt.discnt-id = tt-chk-discnt.discnt-id.
-  IF LOCKED_chk-discnt.value-type = INTEGER({&discnt-v-abs}) THEN DO:
+  IF LOCKED_chk-discnt.value-type = INTEGER({&discnt-v-abs}) or LOCKED_chk-discnt.value-type = INTEGER({&discnt-v-bonus})  THEN DO:
       assign
       locked_chk-discnt.discnt-value-abs = decimal(tt-chk-discnt.discnt-value-abs:screen-value in browse br-discnt    )
       tt-chk-discnt.discnt-value-abs = locked_chk-discnt.discnt-value-abs
@@ -6200,10 +6204,12 @@ for each buf-tt-chk-discnt no-lock where
       delete loc-chk-discnt.
     end.
     else do:
+        /*
         assign
         buf-tt-chk-discnt.discnt-value-pcnt = (decimal(entry(1, loc-chk-gds.src-code, {&delim-par} ))) / 100 
         loc-chk-discnt.discnt-value-pcnt =  buf-tt-chk-discnt.discnt-value-pcnt / 100
         .
+        */
     end.
   end.
 END.

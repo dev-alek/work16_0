@@ -3019,7 +3019,7 @@ if avail buf_bar-code then do:
                 buf_Chk-gds.doc-code = buf_chk-doc.doc-code
             and buf_Chk-gds.line-num = buf0_chk-discnt.object-line-num no-error.
       if not available buf_chk-gds
-      or (p-wmode = {&update} and decimal(entry(1, buf_chk-gds.src-code, {&delim-par} )) <> buf0_chk-discnt.discnt-value-pcnt)
+      /* or (p-wmode = {&update} and decimal(entry(1, buf_chk-gds.src-code, {&delim-par} )) <> buf0_chk-discnt.discnt-value-pcnt) ме онмърмн нрйсдю рюйне сякнбхе, мн леьюер псвмнлс гюбедемхч анмсянб*/
       then do:
         assign
         buf0_chk-discnt.discnt-value-pcnt = 0
