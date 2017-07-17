@@ -117,7 +117,7 @@ find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and 
   end.
 end.                            
 
-    run bgelib-tag-put in this-procedure ( input 3, input "ItemGroup"      , input string( if v-attr-value = "" then cash-gds.grp-code else v-attr-value ), input 1 ).
+    run bgelib-tag-put in this-procedure ( input 3, input "ItemGroup"      , input string( if v-attr-value = "" then string(cash-gds.grp-code) else v-attr-value ), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemShop"      , input string( i-obj-code ), input 1 ).
 
     /*статус*/

@@ -241,7 +241,16 @@ CASE pos-type:
   or when {&cd-type-maria}
   or when {&cd-type-autotank}
   then do:
+      
     assign
+    v-length = (if pos-type = {&cd-type-ibm} or pos-type = {&cd-type-IBM-XML} then 22 else 40 )
+    v-length = (if pos-type = {&cd-type-maria} then 24 else v-length)
+    v-length = (if pos-type = {&cd-type-maria} and lookup({&petrolium}, cash-gds.unit-cli-type) > 0
+                then 5
+                else v-length)
+    nam-2str-shift = (if nam-2str then v-length else 0)
+    .
+
     chk_name = chk-name_ibm_maria_ibm-xml_infokiosk_ibs-th ( input pos-type
                                          ,input nam-2str
                                          ,input nam-artc
