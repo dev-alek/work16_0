@@ -216,7 +216,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       OS-DELETE value(bat-file).
       if not (p-news = ? and p-auto = ?) then
       OS-DELETE value(p-post-file-name).
-      return "error".
+/*      return "error".*/
     end.
     else do:
       run write-log-and-file in p-log-handle (

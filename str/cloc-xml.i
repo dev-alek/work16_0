@@ -143,7 +143,8 @@ then do:
       assign
       v-view-log = yes
       .
-      return "error":U.
+
+/*      return "error":U.*/
     end.
   end.
   if not available ub.shop then do:
@@ -198,7 +199,8 @@ then do:
       &if "{&subject}" ="file" &then
         v-reply-file-name = return-value .
       &endif
-      return "error":U.
+      
+/*      return "error":U.*/
     end.
     &if "{&subject}" ="file" &then
       v-reply-file-name = return-value .
