@@ -220,7 +220,7 @@ tt-chk-pay tt-pay-info tt-chk-doc
 
 
 /* Definitions for BROWSE BR-gds                                        */
-&Scoped-define FIELDS-IN-QUERY-BR-gds tt-chk-gds.line-num tt-chk-gds.src-code tt-chk-gds.is-error tt-chk-gds.b-code tt-gds-info.artic tt-gds-info.gds-name tt-chk-gds.src-qnty tt-chk-gds.src-price tt-chk-gds.src-discnt tt-gds-info.src-d-pcnt tt-gds-info.src-price-netto tt-gds-info.src-sum-netto tt-gds-info.prt-name tt-chk-gds.doc-qnty tt-chk-gds.price-base tt-chk-gds.discnt tt-gds-info.d-pcnt tt-gds-info.price-netto tt-gds-info.sum-netto tt-chk-gds.pump tt-chk-gds.nozzle-code tt-chk-gds.loc1 tt-chk-gds.src-pl-code tt-chk-gds.pl-code if (tt-chk-gds.write-off-code = 1 and can-do("14,15,16,17,36", string(tt-chk-doc.chk-type))) then "Пролито" else {&wro-name} tt-chk-gds.depart-id tt-chk-gds.depart-code tt-chk-gds.sales-man tt-gds-info.salesman-name tt-chk-gds.road-tax tt-chk-gds.src-sum   
+&Scoped-define FIELDS-IN-QUERY-BR-gds tt-chk-gds.line-num tt-chk-gds.src-code tt-chk-gds.is-error tt-chk-gds.b-code tt-gds-info.artic tt-gds-info.gds-name tt-chk-gds.src-qnty tt-chk-gds.src-price tt-chk-gds.src-discnt tt-gds-info.src-d-pcnt tt-gds-info.src-price-netto tt-gds-info.src-sum-netto tt-gds-info.prt-name tt-chk-gds.doc-qnty tt-chk-gds.price-base tt-chk-gds.discnt tt-gds-info.d-pcnt tt-gds-info.price-netto tt-gds-info.sum-netto tt-chk-gds.pump tt-chk-gds.nozzle-code tt-chk-gds.loc1 tt-chk-gds.src-pl-code tt-chk-gds.pl-code tt-chk-gds.density if (tt-chk-gds.write-off-code = 1 and can-do("14,15,16,17,36", string(tt-chk-doc.chk-type))) then "Пролито" else {&wro-name} tt-chk-gds.depart-id tt-chk-gds.depart-code tt-chk-gds.sales-man tt-gds-info.salesman-name tt-chk-gds.road-tax tt-chk-gds.src-sum   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-gds tt-chk-gds.src-code ~
 tt-chk-gds.b-code ~
 tt-chk-gds.doc-qnty ~
@@ -233,7 +233,8 @@ tt-chk-gds.depart-code ~
 tt-chk-gds.src-qnty ~
 tt-chk-gds.src-price ~
 tt-chk-gds.src-discnt ~
-tt-chk-gds.road-tax   
+tt-chk-gds.road-tax ~
+tt-chk-gds.density 
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-gds tt-chk-gds
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-gds tt-chk-gds
 &Scoped-define SELF-NAME BR-gds
@@ -578,6 +579,7 @@ DEFINE BROWSE BR-gds
       tt-gds-info.salesman-name COLUMN-LABEL "Продавец" FORMAT "X(16)"
       tt-chk-gds.road-tax COLUMN-LABEL "Дор. налог/! или тара"
       tt-chk-gds.src-sum COLUMN-LABEL "Сумма в чеке"
+      tt-chk-gds.density COLUMN-LABEL "Плотность"
   ENABLE
       tt-chk-gds.src-code
       tt-chk-gds.b-code
