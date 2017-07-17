@@ -317,7 +317,7 @@ xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
               prsXMLDocWB:ParseRec(hDoc, ?, input-output table tt-wb-header, input-output table tt-wb-gds-EG, input-output table tt-wb-info-client).
             end.
 
-            find first tt-wb-header no-error.
+            find first tt-wb-header.
             if not available ( tt-wb-header )
             then do:
               message "Неудалось распарсить документ." view-as alert-box.
@@ -1099,7 +1099,8 @@ xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         then 
       do:
         if not (tt-wb-hndls.wb-type matches "*расход*" or (tt-wb-hndls.wb-type matches "*возврат*" 
-              and not tt-wb-hndls.wb-type matches "*возврат от покупателя*" and not tt-wb-hndls.wb-type matches "*возврат внешний*")) then 
+              and not tt-wb-hndls.wb-type matches "*возврат от покупателя*" and not tt-wb-hndls.wb-type matches "*возврат внешний*"
+              and not tt-wb-hndls.wb-type matches "*возврат вн.*")) then 
         do:
           output stream outstr to value ("TTNAct.xml") convert target "UTF-8". 
           outData = GetXMLAct() no-error.

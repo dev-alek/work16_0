@@ -423,7 +423,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "ֲûהאם"
           VIEW-AS FILL-IN
           SIZE 82 BY 1 TOOLTIP "ִכÿ ֱֿ־Þֻ"
-          BGCOLOR 15 FGCOLOR 0
+          BGCOLOR 15 FGCOLOR 0 FORMAT "X(128)"
      fcli AT ROW 20.28 COL 14 COLON-ALIGNED
      b-cli AT ROW 20.28 COL 59
      b-cli-cl AT ROW 20.28 COL 62.5

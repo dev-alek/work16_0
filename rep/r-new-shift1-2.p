@@ -163,10 +163,10 @@ define temp-table temp-line-pump no-undo /*временная таблица по резервуарам*/
     nozzle-code
 .
 
-define VARIABLE num-pol8-l  as integer no-undo . 
-define VARIABLE num-pol8-kg as integer no-undo .
-define VARIABLE num-pol20-l  as integer no-undo . 
-define VARIABLE num-pol20-kg as integer no-undo .
+define VARIABLE num-pol8-l  as DECIMAL no-undo . 
+define VARIABLE num-pol8-kg as DECIMAL no-undo .
+define VARIABLE num-pol20-l  as DECIMAL no-undo . 
+define VARIABLE num-pol20-kg as DECIMAL no-undo .
 
 define temp-table temp-rvs-line no-undo like ub.rvs-line
   field gds-name   like ub.goods.gds-name

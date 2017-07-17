@@ -55,7 +55,7 @@ define variable ref-list    as character                     no-undo.
 define variable sch-field   as character no-undo.
 define variable sort-column-name as character no-undo .
 define variable list-option as character no-undo.
-
+define variable v-brws-mark as character no-undo COLUMN-LABEL "*"        FORMAT "X(1)":U  .
 define stream sout.
 
 define temp-table tt-gds-list no-undo like ub.goods
@@ -94,7 +94,7 @@ define buffer buf_alc-type     for ub.alc-type.
 &Scoped-define INTERNAL-TABLES alc-type-gds goods
 
 /* Definitions for BROWSE BROWSE-2                                      */
-&Scoped-define FIELDS-IN-QUERY-BROWSE-2 goods.artic goods.gds-name ~
+&Scoped-define FIELDS-IN-QUERY-BROWSE-2 (IF ( INDEX (rid-list, string( recid(alc-type-gds) ) ) > 0 ) THEN ("*") ELSE (" ")) @ v-brws-mark goods.artic goods.gds-name ~
 goods.gds-code 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2 
 &Scoped-define QUERY-STRING-BROWSE-2 FOR EACH alc-type-gds ~
@@ -116,7 +116,7 @@ goods.gds-code
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-add b-del b-help r-sort s-artic ~
-s-code BROWSE-2 FILL-IN-2 
+s-code BROWSE-2 FILL-IN-2 b-mark
 &Scoped-Define DISPLAYED-OBJECTS r-sort s-artic s-name s-name-cnt s-code ~
 FILL-IN-2 
 
@@ -129,10 +129,18 @@ FILL-IN-2
 
 
 /* ***********************  Control Definitions  ********************** */
+/* Menu Definitions                                                     */
+DEFINE MENU POPUP-MENU-b-mark
+       MENU-ITEM m_mark_all     LABEL "Выбрать все"
+       MENU-ITEM m_mark_no_one  LABEL "Снять выбор у всех"
+       MENU-ITEM m_mark_invert  LABEL "Инвертировать выбор".
 
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON b-mark
+     LABEL "&*"
+     SIZE 3 BY 1.
 DEFINE BUTTON b-add 
      LABEL "&Добавить":L 
      SIZE 10 BY 1.
@@ -187,13 +195,16 @@ DEFINE VARIABLE r-sort AS INTEGER
 &ANALYZE-SUSPEND
 DEFINE QUERY BROWSE-2 FOR 
       alc-type-gds, 
-      goods SCROLLING.
+      goods
+      SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame _STRUCTURED
   QUERY BROWSE-2 NO-LOCK DISPLAY
+
+      (IF ( INDEX (rid-list, string( recid(alc-type-gds)) ) > 0 ) THEN ("*") ELSE (" ")) @ v-brws-mark                               
       goods.artic FORMAT "X(16)":U
       goods.gds-name FORMAT "X(48)":U
       goods.gds-code FORMAT "999999999":U
@@ -206,6 +217,7 @@ DEFINE BROWSE BROWSE-2
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
+     b-mark AT ROW 1.0 COL 33
      b-exit AT ROW 1 COL 1
      b-add AT ROW 1 COL 12
      b-del AT ROW 1 COL 22
@@ -244,6 +256,8 @@ DEFINE FRAME Dialog-Frame
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+       ASSIGN
+       b-mark:POPUP-MENU IN FRAME Dialog-Frame       = MENU POPUP-MENU-b-mark:HANDLE.
 
 /* SETTINGS FOR BUTTON b-print IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
@@ -275,9 +289,93 @@ ASSIGN
 
  
 
-
-
 /* ************************  Control Triggers  ************************ */
+
+&Scoped-define SELF-NAME b-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark Dialog-Frame
+ON CHOOSE OF b-mark IN FRAME Dialog-Frame /* * */
+or insert-mode of browse-2 IN FRAME Dialog-Frame
+  /*or mouse-select-click of browse-2 IN FRAME Dialog-Frame*/
+or MOUSE-SELECT-DBLCLICK OF BROWSE-2 IN FRAME Dialog-Frame
+DO:
+   define variable v-ok as logical no-undo .
+          
+   { gbl/markstrn.i alc-type-gds rid-list }
+                                                         
+   v-ok = {&browse-name}:select-next-row () no-error .
+   v-ok = {&browse-name}:refresh( )  in frame {&frame-name} no-error .      
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
+&Scoped-define SELF-NAME m_mark_all
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_mark_all Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_mark_all                            /* Выбрать все */
+or + of browse-2 IN FRAME Dialog-Frame
+DO:
+   define variable v-ok as logical no-undo .
+   assign rid-list = "" .
+                                               
+     for each alc-type-gds
+      WHERE alc-type-gds.alc-type-inner-code = p-alc-type-inner-code  NO-LOCK, 
+      EACH goods WHERE goods.gds-code = alc-type-gds.gds-code NO-LOCK 
+      :
+      rid-list = rid-list + string( recid(alc-type-gds) ) .
+       
+   
+   end .
+   v-ok = {&browse-name}:refresh( )  in frame {&frame-name} no-error.    
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+                                                                           
+&Scoped-define SELF-NAME m_mark_no_one
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_mark_no_one Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_mark_no_one                     /* Снять выбор у всех */
+or - of browse-2 IN FRAME Dialog-Frame
+DO:
+
+   define variable v-ok as logical no-undo .
+                                               
+   rid-list =  " " .
+   v-ok = {&browse-name}:refresh( )  in frame {&frame-name} no-error.   
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME    
+
+&Scoped-define SELF-NAME m_mark_invert
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_mark_invert Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_mark_invert                  /* Инвертировать выбор */
+or * of browse-2 IN FRAME Dialog-Frame  
+DO:                                                                       
+
+   define variable v-ok as logical no-undo .
+                                               
+     for each alc-type-gds
+      WHERE alc-type-gds.alc-type-inner-code = p-alc-type-inner-code  NO-LOCK, 
+      EACH goods WHERE goods.gds-code = alc-type-gds.gds-code NO-LOCK 
+      :
+    
+      { gbl/markstrn.i alc-type-gds rid-list } 
+   
+   end .
+   v-ok = {&browse-name}:refresh( )  in frame {&frame-name} no-error.   
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME                                                                               
+    
+
+
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
@@ -352,8 +450,17 @@ run str/chsgdsls.w
             view-as alert-box error .
          return no-apply.
       end.
-       {&OPEN-QUERY-{&BROWSE-NAME}}
     end.
+    {&OPEN-QUERY-{&BROWSE-NAME}} 
+    
+    for first goods WHERE recid (goods) = integer (entry (1, ref-list)), 
+     first alc-type-gds where goods.gds-code = alc-type-gds.gds-code NO-LOCK    
+     :
+       def var p-rec as recid no-undo .
+       p-rec = recid(alc-type-gds) .
+          
+       REPOSITION {&browse-name} TO RECID p-rec  NO-ERROR. 
+    end .      
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -364,22 +471,39 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
 DO:
-   define variable g-log as logical   no-undo .
-   define variable v-recid as integer no-undo .
-   define variable ii as integer no-undo .
+      define buffer del_alc-type-gds for ub.alc-type-gds.
+      
+      message "Удалить выбранные записи ?" 
+      view-as alert-box question
+      buttons ok-cancel
+      update v-ok as logical
+      .
+      if v-ok then do:       
+      
+        if string(rid-list) eq "" then do:
+          { gbl/markstrn.i alc-type-gds rid-list }   
+           v-ok = {&browse-name}:select-next-row () no-error .    
+           if v-ok eq no then v-ok = {&browse-name}:select-prev-row () no-error .
+        end .    
 
-   if not available ub.alc-type-gds then  return no-apply.
+       def var p-int as int no-undo . 
+       do  p-int = 1 to NUM-ENTRIES(rid-list) :
+           
+           find first del_alc-type-gds 
+            WHERE   ENTRY( p-int , rid-list )  eq string( recid(del_alc-type-gds)) no-error.   
+                                            
+           delete del_alc-type-gds. 
+       end .
+ 
+        assign rid-list = "" .
+      end .  
 
-
-   message "Удалить запись ? "
-   view-as alert-box question
-   buttons yes-no
-   update g-log.
-   if g-log = false then return no-apply.
-
-  find current ub.alc-type-gds exclusive-lock no-error .
-  delete ub.alc-type-gds.
-  {&BROWSE-NAME}:delete-current-row().
+      v-ok = {&browse-name}:select-prev-row () no-error .
+      
+      if v-ok eq YES then 
+       v-ok = {&browse-name}:select-next-row () no-error .
+      
+      v-ok = {&browse-name}:refresh( )  in frame {&frame-name} no-error. 
 
 END.
 
@@ -793,7 +917,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY r-sort s-artic s-name s-name-cnt s-code FILL-IN-2 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-add b-del b-help r-sort s-artic s-code BROWSE-2 FILL-IN-2 
+  ENABLE b-exit b-add b-del b-help r-sort s-artic s-code BROWSE-2 FILL-IN-2 b-mark
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
