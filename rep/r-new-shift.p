@@ -1282,7 +1282,7 @@ procedure first-line-tog1-html :
                       <td colspan="20"> </td>
                     </tr>'
                   ,
-                  rep-shift-store-name,
+                  v-host-name,
                   string(p-obj-code),
                   string(v-rep-shift-close-date,"99.99.9999"),
                   String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
