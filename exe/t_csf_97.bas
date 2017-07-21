@@ -48,6 +48,7 @@ Dim i As Integer
 Dim vLines As Long
 Dim A As Long
 Dim V As Long
+DIM DLT As Long
 '
 ' Макрос1 Макрос
 ' Макрос записан 01.12.2004 (VGuntner)
@@ -245,10 +246,16 @@ On Error GoTo errStartFromTemplate
         Kill sDataFileName
     End If
     Application.Interactive = True
-    vLines = (lastRow - 27) / 4
+    vLines = (lastRow - 31 - (iSheetNumber / 2)) / 4
+    DLT = 19
     For i = 1 to vLines
-      A = i * 4 + 15
-      V = i * 4 + 18
+      A = i * 4 + DLT
+      V = i * 4 + DLT + 3      
+	  If (( i - 5 ) mod 11) = 0 _
+      Then
+          V = V + 1
+		  DLT = DLT + 1
+      End If
       Range("A" + trim(str(A)) + ":V" + trim(str(V))).Select
       With Selection
           .HorizontalAlignment = xlCenter
@@ -269,7 +276,7 @@ errStartFromTemplate:
 End Sub
 
 Sub s_Merge()
-    Range("A19:V22").Select
+    Range("A23:V26").Select
     With Selection
         .HorizontalAlignment = xlCenter
         .VerticalAlignment = xlTop
