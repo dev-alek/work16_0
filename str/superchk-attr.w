@@ -95,18 +95,17 @@ DEFINE BUTTON b-quit AUTO-GO
 DEFINE QUERY br-attr FOR 
       tt-chk-attr SCROLLING.
 &ANALYZE-RESUME
-
 /* Browse definitions                                                   */
 DEFINE BROWSE br-attr
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-attr Dialog-Frame _FREEFORM
-  QUERY br-attr DISPLAY
-      tt-chk-attr.attr-num COLUMN-LABEL "Номер" FORMAT "999":U
-      tt-chk-attr.attr-code COLUMN-LABEL "Код" FORMAT "X(20)":U
-    tt-chk-attr.attr-value COLUMN-LABEL "Значение атрибута" WIDTH 25 FORMAT "X(220)":U    
+    QUERY br-attr DISPLAY
+    tt-chk-attr.attr-num COLUMN-LABEL "Номер" width 5 FORMAT "999":U
+    tt-chk-attr.attr-code COLUMN-LABEL "Код" width 10 FORMAT "X(20)":U
+    tt-chk-attr.attr-value COLUMN-LABEL "Значение атрибута" WIDTH 70 FORMAT "X(220)":U    
     tt-chk-attr.attr-type COLUMN-LABEL "Тип" FORMAT "X(20)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH SEPARATORS SIZE 79 BY 11.25 FIT-LAST-COLUMN.
+    WITH SEPARATORS SIZE 102.5 BY 15.5 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -114,7 +113,7 @@ DEFINE BROWSE br-attr
 DEFINE FRAME Dialog-Frame
      b-quit AT ROW 1 COL 1
      br-attr AT ROW 2.75 COL 1 WIDGET-ID 200
-     SPACE(0.24) SKIP(0.12)
+     SPACE(0.74) SKIP(0.20)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Атрибуты чека"

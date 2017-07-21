@@ -1572,6 +1572,7 @@ assign v-add-str = ""
                 v-VAT       = ( if PrintRubl then vat-rubl-buyer        else vat-base-buyer )
                 v-SLT       = ( if PrintRubl then slt-rubl-sale         else slt-base-sale )
                 v-tax-price = ( if PrintRubl then road-tax-rubl-sale    else road-tax-base-sale )
+                v-doc-VAT   = v-VAT
             .
             if v-VAT = ?        then assign v-VAT       = 0.
             if v-SLT = ?        then assign v-SLT       = 0.

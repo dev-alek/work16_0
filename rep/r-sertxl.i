@@ -45,19 +45,22 @@ define temp-table temp_cell-data no-undo
     index pi is primary unique data-key
 .
 define temp-table temp_line-data no-undo
-    field data-key     as character
-    field xl-line-id   as integer
-    field num            as integer
-    field artic          as character
-    field name           as character
-    field numblank       as character
-    field numsertif      as character
-    field date1          as character
-    field date2          as character
-    field orgsertif      as character
+    field data-key   as character
+    field xl-line-id as integer
+    field num        as integer
+    field artic      as character
+    field name       as character
+    field numblank   as character
+    field numsertif  as character
+    field date1      as character
+    field date2      as character
+    field orgsertif  as character
+    field srok       as character
+    field datestart  as character
+    field techusl    as character
 
     index pi is primary unique xl-line-id
-.
+    .
 
 define variable v-r-sertxl-current-data-row     as integer      no-undo.
 define variable v-r-sertxl-cell-file-name       as character    no-undo.
@@ -95,15 +98,15 @@ for buf_temp_cell-data on error undo, return error :
     ).
     run r-sertxl-write-cell-data in this-procedure (
           input {&r-sertxl-columnList}
-        , input "num,artic,name,numblank,numsertif,date1,date2,orgsertif":U
+        , input "num,artic,name,numblank,numsertif,date1,date2,orgsertif,srok,datestart,techusl":U
     ).
     run r-sertxl-write-cell-data in this-procedure (
           input {&r-sertxl-columnType}
-        , input "I,S,S,S,S,S,S,S":U
+        , input "I,S,S,S,S,S,S,S,S,S,S":U
     ).
     run r-sertxl-write-cell-data in this-procedure (
           input {&r-sertxl-columnAmount}
-        , input "8":U
+        , input "11":U
     ).
 /*    run r-sertxl-write-cell-data in this-procedure (*/
 /*          input {&r-sertxl-subtotalList}*/
@@ -179,6 +182,9 @@ define input parameter p-numsertif        as character        no-undo.
 define input parameter p-date1            as character        no-undo.
 define input parameter p-date2            as character        no-undo.
 define input parameter p-orgsertif        as character        no-undo.
+define input parameter p-srok             as character        no-undo.
+define input parameter p-date-start       as character        no-undo.
+define input parameter p-tech-usl         as character        no-undo.
 
     define buffer buf_temp_line-data        for temp_line-data.
 do
@@ -195,17 +201,20 @@ on error undo, return error
         v-r-sertxl-current-data-row = v-r-sertxl-current-data-row + 1
     .
     assign
-        buf_temp_line-data.data-key     = {&r-sertxl-line-data-key}
-        buf_temp_line-data.xl-line-id   = v-r-sertxl-current-data-row
-        buf_temp_line-data.num            = p-num
-        buf_temp_line-data.artic          = p-artic
-        buf_temp_line-data.name           = p-name
-        buf_temp_line-data.numblank       = p-numblank
-        buf_temp_line-data.numsertif      = p-numsertif
-        buf_temp_line-data.date1          = p-date1
-        buf_temp_line-data.date2          = p-date2
-        buf_temp_line-data.orgsertif      = p-orgsertif
-    .
+        buf_temp_line-data.data-key   = {&r-sertxl-line-data-key}
+        buf_temp_line-data.xl-line-id = v-r-sertxl-current-data-row
+        buf_temp_line-data.num        = p-num
+        buf_temp_line-data.artic      = p-artic
+        buf_temp_line-data.name       = p-name
+        buf_temp_line-data.numblank   = p-numblank
+        buf_temp_line-data.numsertif  = p-numsertif
+        buf_temp_line-data.date1      = p-date1
+        buf_temp_line-data.date2      = p-date2
+        buf_temp_line-data.orgsertif  = p-orgsertif
+        buf_temp_line-data.srok       = p-srok
+        buf_temp_line-data.datestart  = p-date-start
+        buf_temp_line-data.techusl    = p-tech-usl     
+        .
     put stream excel-line unformatted
                         buf_temp_line-data.data-key
         {&tabulation}   buf_temp_line-data.num
@@ -216,6 +225,9 @@ on error undo, return error
         {&tabulation}   buf_temp_line-data.date1
         {&tabulation}   buf_temp_line-data.date2
         {&tabulation}   buf_temp_line-data.orgsertif
+        {&tabulation}   buf_temp_line-data.srok
+        {&tabulation}   buf_temp_line-data.datestart
+        {&tabulation}   buf_temp_line-data.techusl
         {&new-line}
     .
 end.

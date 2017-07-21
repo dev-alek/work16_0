@@ -1584,6 +1584,9 @@ for each obj-list no-lock:  /* По всем объектам */
                                           and   buf_parts.prod-code = alc-goods.prod-code
                                           and   buf_parts.artic     = alc-goods.artic
                                           and   buf_parts.out-code  = buf_doc-line.doc-code:
+                    
+                    if buf_parts.fact-qnty = 0
+                    then next .
                                           
                     /* Если выборочно по поставщикам */
                     if RADIO-SUPPLIER = 2 and

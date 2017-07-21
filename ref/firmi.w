@@ -1481,6 +1481,12 @@ IF AVAILABLE tt-firm THEN
   tt-clients.turnover-buyer
   tt-clients.turnover-buyer-gds
   WITH FRAME Dialog-Frame.
+if tt-firm.tobj-code <> 0 then do:
+    find first buf_clients no-lock where buf_clients.obj-code = tt-firm.tobj-code and buf_clients.obj-type = {&prs} no-error .
+    if AVAILABLE buf_clients then fcli = buf_clients.obj-name .
+    display
+    fcli with frame {&frame-name}.
+end.    
 assign
 frame {&frame-name} :title = "Î Ð Ã À Í È Ç À Ö È ß:" + {&space-char} + p-mode
 .
@@ -1509,7 +1515,7 @@ if p-mode <> {&lookup} then do:
   Docs   when p-mode <> {&add-def} and v-cntxt-level = {&cntxt-object}
   b-hist when p-mode <> {&add-def}
   b-cli
-  b-cli-cl
+/*  b-cli-cl*/
   B-Help
   b-region
   b-sysconf
