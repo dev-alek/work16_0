@@ -150,7 +150,7 @@ procedure proc-in :
   create criterion-analysis.
         assign
           criterion-analysis.cral-id     = 8
-          criterion-analysis.cral-name   = "Прибыль с учетом налогов в нац.валюте"
+          criterion-analysis.cral-name   = "Прибыль в нац.валюте"
           criterion-analysis.cral-des    = "Сумма реализ. товара в  ценах док. без налогов минус сумма в учетных ценах без налогов (нац.валюта)"
           criterion-analysis.cral-status = 0
           .
@@ -158,7 +158,7 @@ procedure proc-in :
   create criterion-analysis.
         assign
           criterion-analysis.cral-id     = 9
-          criterion-analysis.cral-name   = "Прибыль с учетом налогов в баз.валюте"
+          criterion-analysis.cral-name   = "Прибыль в баз.валюте"
           criterion-analysis.cral-des    = "Сумма реализ. товара в  ценах док. без налогов минус сумма в учетных ценах без налогов (баз. вал.)"
           criterion-analysis.cral-status = 0
           .
@@ -166,7 +166,7 @@ procedure proc-in :
   create criterion-analysis.
         assign
           criterion-analysis.cral-id     = 10
-          criterion-analysis.cral-name   = "Прибыль в нац.валюте"
+          criterion-analysis.cral-name   = "Прибыль с учетом налогов в нац.валюте"
           criterion-analysis.cral-des    = "Сумма реализ. в  ценах док. минус сумма в учетных ценах (нац.валюта)"
           criterion-analysis.cral-status = 0
           .
@@ -174,7 +174,7 @@ procedure proc-in :
   create criterion-analysis.
         assign
           criterion-analysis.cral-id     = 11
-          criterion-analysis.cral-name   = "Прибыль в баз.валюте"
+          criterion-analysis.cral-name   = "Прибыль с учетом налогов в баз.валюте"
           criterion-analysis.cral-des    = "Сумма реализ. в  ценах док. минус сумма в учетных ценах (баз. вал.)"
           criterion-analysis.cral-status = 0
           .
@@ -182,7 +182,7 @@ procedure proc-in :
   create criterion-analysis.
         assign
           criterion-analysis.cral-id     = 12
-          criterion-analysis.cral-name   = "Потенциальная прибыль с учетом налогов в нац.валюте"
+          criterion-analysis.cral-name   = "Потенциальная прибыль в нац.валюте"
           criterion-analysis.cral-des    = "Сумма реализ. в  тек. прод ценах без налогов минус сумма в учетных ценах без налогов (нац.валюта)"
           criterion-analysis.cral-status = 0
           .
@@ -190,7 +190,7 @@ procedure proc-in :
   create criterion-analysis.
         assign
           criterion-analysis.cral-id     = 13
-          criterion-analysis.cral-name   = "Потенциальная прибыль с учетом налогов в баз.валюте"
+          criterion-analysis.cral-name   = "Потенциальная прибыль в баз.валюте"
           criterion-analysis.cral-des    = "Сумма реализ. в  тек. прод. ценах  без налогов минус сумма в учетных ценах без налогов (баз. вал.)"
           criterion-analysis.cral-status = 0
           .
@@ -198,7 +198,7 @@ procedure proc-in :
   create criterion-analysis.
         assign
           criterion-analysis.cral-id     = 14
-          criterion-analysis.cral-name   = "Потенциальная прибыль в нац.валюте"
+          criterion-analysis.cral-name   = "Потенциальная прибыль с учетом налогов в нац.валюте"
           criterion-analysis.cral-des    = "Сумма реализ. товара в тек. прод. ценах  минус сумма в учетных ценах (нац.валюта)"
           criterion-analysis.cral-status = 0
           .
@@ -206,7 +206,7 @@ procedure proc-in :
   create criterion-analysis.
         assign
           criterion-analysis.cral-id     = 15
-          criterion-analysis.cral-name   = "Потенциальная прибыль в баз.валюте"
+          criterion-analysis.cral-name   = "Потенциальная прибыль с учетом налогов в баз.валюте"
           criterion-analysis.cral-des    = "Сумма реализ. товара в тек. прод. ценах  минус сумма в учетных ценах (баз. вал.)"
           criterion-analysis.cral-status = 0
           .
