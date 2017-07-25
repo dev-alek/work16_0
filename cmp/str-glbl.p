@@ -1103,6 +1103,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define nwsdochs_
 run filwrlib_append-new-line in this-procedure ( input "&global-define nwsdochs_action_update {&nwsdochs_action_update}" ).
 &glob nwsdochs_action_delete 'delete':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define nwsdochs_action_delete {&nwsdochs_action_delete}" ).
+&glob nwsdochs_action_update_err 'update_err':U
+run filwrlib_append-new-line in this-procedure ( input "&global-define nwsdochs_action_update_err {&nwsdochs_action_update_err}" ).
+&glob nwsdochs_action_delete_err 'delete_err':U
+run filwrlib_append-new-line in this-procedure ( input "&global-define nwsdochs_action_delete_err {&nwsdochs_action_delete_err}" ).
 &glob nwsdochs_action_command-bush 'command-bush':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define nwsdochs_action_command-bush {&nwsdochs_action_command-bush}" ).
 &glob nwsdochs_action_command-pbush 'command-pbush':U
