@@ -2879,7 +2879,7 @@ xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       case tt-wb-header.verXSD:
       when "WayBill_v2"
       then
-        return substitute ({&xml-act-v2-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию. " + (if is-diff then "Имеются расхождения." else "")) + (if is-diff then xml-cont else "") + {&xml-act-v2-2}.
+        return substitute ({&xml-act-v2-1}, v-FS-RAR, (if is-diff then 'Differences' else 'Accepted'), buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию. " + (if is-diff then "Имеются расхождения." else "")) + (if is-diff then xml-cont else "") + {&xml-act-v2-2}.
       when "WayBill"
       then
         return substitute ({&xml-act-1}, v-FS-RAR, 'Accepted', buf_doc-attr.doc-code, iso-date (date (now)), tt-wb-header.wbregid, "Принимаем продукцию. " + (if is-diff then "Имеются расхождения." else "")) + (if is-diff then xml-cont else "") + {&xml-act-2}.

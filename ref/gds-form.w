@@ -5259,7 +5259,7 @@ if lookup (mode, {&update_add-def}) > 0 then do:
                 output v-value,
                 output v-type
               ) no-error.
-        if v-value = '' then find first buf-grp where buf-grp.node-code = v-upper no-lock no-error.    
+        if v-value = '' or v-value = "no" then find first buf-grp where buf-grp.node-code = v-upper no-lock no-error.    
         else temp-goods.alc-prod = yes .
         if v-value = "yes" then do:
      define variable v-value-mark as character no-undo .
