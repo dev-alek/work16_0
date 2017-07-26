@@ -895,6 +895,8 @@ end.
 &global-define nwsdochs_action_create 'create':U
 &global-define nwsdochs_action_update 'update':U
 &global-define nwsdochs_action_delete 'delete':U
+&global-define nwsdochs_action_update_err 'update_err':U
+&global-define nwsdochs_action_delete_err 'delete_err':U
 &global-define nwsdochs_action_command-bush 'command-bush':U
 &global-define nwsdochs_action_command-pbush 'command-pbush':U
 &global-define parts-l_object-all 'âñå':U
@@ -3748,6 +3750,8 @@ end.
 &global-define attr-schedule-free '{&bef-attr-schedule-free}':U
 &global-define bef-attr-ora-exp-seq ora-exp-seq
 &global-define attr-ora-exp-seq '{&bef-attr-ora-exp-seq}':U
+&global-define bef-attr-mess-id-video mess-id-video
+&global-define attr-mess-id-video '{&bef-attr-mess-id-video}':U
 &global-define db-attr-list 'schedule-nws,schedule-arc,schedule-exp,schedule-oxml,need-gen-new-pack,last-unload-db-key,schedule-cdimp,schedule-getcd,schedule-sale,schedule-suz,cut-date,cut-fin-date,unload-after-cut,cut-db-list,schedule-cbnk,arh-disable,ahsp-disable,aht-disable,schedule-free,ora-exp-seq':u
 &global-define bef-attr-need-gen-new-xpack need-gen-new-xpack
 &global-define attr-need-gen-new-xpack '{&bef-attr-need-gen-new-xpack}':U
@@ -6706,7 +6710,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 44c7cb9eda36, 691, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 25d2bd615c4f, 1022, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -8005,10 +8009,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define cpdoc-attr-name 'ÐÐÍ-ÂÁÐÐ,Îñòàëüíûå':U
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,report-glob,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
-&global-define str-glbl_vss-revision 'Revision: 25c0ccdb9bc0, 342, rls ':U
+&global-define str-glbl_vss-revision 'Revision: 45325775eda4, 1021, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 8bd22cd37f97, 994, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 45325775eda4, 1021, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 90fea97fc979, 803, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 44c7cb9eda36, 691, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 25d2bd615c4f, 1022, rls ':U
 &endif
