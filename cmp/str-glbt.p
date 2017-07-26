@@ -14,7 +14,7 @@ Author: Mikhail Pervakov
 Creation date: 04/05/06
 
 Инструкции по использованию см в файле s t r - g l b l . p
-
+ 
 */
 
 define input  parameter p-file-name    as character no-undo .
