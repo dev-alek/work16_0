@@ -929,6 +929,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 /* Номер последней выгрузки в Oracle Retail */
 { cmp/cr-prep.i 1 attr-ora-exp-seq            ora-exp-seq           " " ora-exp-seq          }
 
+/* Номер MessageID для видеонаблюдения */
+{ cmp/cr-prep.i 1 attr-mess-id-video          mess-id-video         " " mess-id-video        }
+
 
 /* сюда добавлять новые названия атрибутов баз данных */
 

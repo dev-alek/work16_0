@@ -274,6 +274,7 @@ DEFINE BROWSE br-objects
     tt-objs.country COLUMN-LABEL "Страна" FORMAT "X(6)":U
     tt-objs.regionCode COLUMN-LABEL "Регион" FORMAT "X(6)":U
     tt-objs.description_ COLUMN-LABEL "Адрес" width 87
+    tt-objs.versionWB COLUMN-LABEL "Версия XSD" width 10
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 105 BY 21.5 FIT-LAST-COLUMN.
@@ -795,6 +796,7 @@ DO:
         if tt-objs-eg.regID             <> tt-objs.regID            then tt-objs.country:bgcolor        in browse br-objects = red_color .                     
         if tt-objs-eg.description_      <> tt-objs.description_     then tt-objs.description_:bgcolor   in browse br-objects = red_color .      
         if tt-objs-eg.regionCode        <> tt-objs.regionCode       then tt-objs.regionCode:bgcolor     in browse br-objects = red_color .
+        if tt-objs.versionWB            = ? or tt-objs.versionWB = "" then tt-objs.regionCode:bgcolor     in browse br-objects = red_color .
     end. 
 
 end. 
@@ -1016,6 +1018,35 @@ PROCEDURE fill-tt :
                     no-error
                 .
                 assign tt-objs.description_ = replace(entry(20, buf_clients-attr.attr-value, "|"), CHR(5), "|") no-error .
+
+
+                run gen-key-rec in this-procedure   ( input {&table_clients}
+                                                     ,input buffer buf_clients:handle
+                                                     ,output v-obj-uniq-key-rec).
+
+                find first X_ext-classif-attr no-lock  where X_ext-classif-attr.classif-subject = {&table_clients}
+                                                           and X_ext-classif-attr.classif-name = {&extclass_clients_esys}
+                                                           AND X_ext-classif-attr.db-num = 0
+                                                           and X_ext-classif-attr.key#_one = v-ext-sys
+                                                           and X_ext-classif-attr.key#_two = 0
+                                                           and X_ext-classif-attr.key#_three = 0
+                                                           and X_ext-classif-attr.CharKey_One = ''
+                                                           and X_ext-classif-attr.CharKey_two = (tt-objs.obj-type + string(tt-objs.obj-code))
+                                                           and X_ext-classif-attr.CharKey_Three = tt-objs.regID
+                                                           and X_ext-classif-attr.nonunique = 0
+                                                           and X_ext-classif-attr.attr-code = 'egais-cli-info'
+                                                           no-error.
+                  if not available (X_ext-classif-attr)
+                  then do:
+                    tt-objs.versionWB = ?.
+                  end.
+                  else do:
+                    assign
+                      tt-objs.versionWB = entry (1, X_ext-classif-attr.attr-value, chr(4)) 
+                      tt-objs.typeEgais = entry (2, X_ext-classif-attr.attr-value, chr(4))
+                      no-error.
+                  end.
+
 /*                assign                                                                                                                                            */
 /*                    tt-objs.description_ = (if tt-objs.postIndex       <> ? and tt-objs.postIndex       <> "" then (tt-objs.postIndex + ", ")           else "")  */
 /*                                         + (if tt-objs.district        <> ? and tt-objs.district        <> "" then (tt-objs.district + ", ")            else "")  */

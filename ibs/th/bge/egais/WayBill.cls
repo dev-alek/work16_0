@@ -2954,6 +2954,7 @@ xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
       and buf_ext-classif-attr.classif-name = {&extclass_clients_esys}
       and buf_ext-classif-attr.db-num = 0
       and buf_ext-classif-attr.key#_one = v-ext-sys
+      and buf_ext-classif-attr.CharKey_two = (tt-wb-header.obj-type + string(tt-wb-header.obj-code))
       and buf_ext-classif-attr.CharKey_Three = tt-wb-header.regID-Ship
       and buf_ext-classif-attr.attr-code = "egais-cli-info" no-error.
       
@@ -2981,6 +2982,7 @@ xmlns:wa="http://fsrar.ru/WEGAIS/ActTTNSingle_v2">~
         and buf_ext-classif-attr.classif-name = {&extclass_clients_esys}
         and buf_ext-classif-attr.db-num = 0
         and buf_ext-classif-attr.key#_one = v-ext-sys
+        and buf_ext-classif-attr.CharKey_two = (tt-wb-header.cli-type + string(tt-wb-header.cli-code))
         and buf_ext-classif-attr.CharKey_Three = tt-wb-header.regID-Cons
         and buf_ext-classif-attr.attr-code = "egais-cli-info" no-error.
       if available (buf_ext-classif-attr)
