@@ -3321,6 +3321,8 @@ end.
 &global-define attr-bge-sap-sng-last-shift '{&bef-attr-bge-sap-sng-last-shift}':U
 &global-define bef-attr-bge-exp-malina-last-shift bge-exp-malina-last-shift
 &global-define attr-bge-exp-malina-last-shift '{&bef-attr-bge-exp-malina-last-shift}':U
+&global-define bef-attr-bge-exp-last-atd bge-exp-last-atd
+&global-define attr-bge-exp-last-atd '{&bef-attr-bge-exp-last-atd}':U
 &global-define bef-attr-egrip-date egrip-date
 &global-define attr-egrip-date '{&bef-attr-egrip-date}':U
 &global-define bef-attr-egrip-num egrip-num
@@ -8012,7 +8014,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 45325775eda4, 1021, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 45325775eda4, 1021, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 0f3e0a12029d, 1026, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 90fea97fc979, 803, rls ':U
 &global-define str-glblt_vss-revision 'Revision: 25d2bd615c4f, 1022, rls ':U
 &endif
