@@ -276,6 +276,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 { cmp/cr-prep.i 1 attr-bge-sap-sng-last-shift bge-sap-sng-last-shift " " bge-sap-sng-last-shift }
 /* Дата и номер последней выгруженной смены в Малину */
 { cmp/cr-prep.i 1 attr-bge-exp-malina-last-shift bge-exp-malina-last-shift " " bge-exp-malina-last-shift }
+/* Дата последней выгруженной смены в систему АТД */
+{ cmp/cr-prep.i 1 attr-bge-exp-last-atd bge-exp-last-atd " " bge-exp-last-atd }
 /* Дата ЕГРИП */
 { cmp/cr-prep.i 1 attr-egrip-date egrip-date " " egrip-date }
 /* Номер ЕГРИП */
