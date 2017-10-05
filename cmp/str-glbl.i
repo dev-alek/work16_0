@@ -3900,6 +3900,12 @@ end.
 &global-define trdcattr-car-time '{&bef-trdcattr-car-time}':U
 &global-define bef-trdcattr-first-price first-price
 &global-define trdcattr-first-price '{&bef-trdcattr-first-price}':U
+&global-define bef-trdcattr-acc-ship acc-ship
+&global-define trdcattr-acc-ship '{&bef-trdcattr-acc-ship}':U
+&global-define bef-trdcattr-doc-not doc-not
+&global-define trdcattr-doc-not '{&bef-trdcattr-doc-not}':U
+&global-define bef-trdcattr-spisok-not-doc spisok-not-doc
+&global-define trdcattr-spisok-not-doc '{&bef-trdcattr-spisok-not-doc}':U
 &global-define bef-trdcattr-t_pass-fname t_pass-fname
 &global-define trdcattr-t_pass-fname '{&bef-trdcattr-t_pass-fname}':U
 &global-define bef-trdcattr-t_pass-position t_pass-position
@@ -3962,7 +3968,11 @@ end.
 &global-define trdcattr-condition '{&bef-trdcattr-condition}':U
 &global-define bef-trdcattr-seals-condition seals-condition
 &global-define trdcattr-seals-condition '{&bef-trdcattr-seals-condition}':U
-&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,negais,egais,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,idCountryContr,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition':U
+&global-define bef-trdcattr-doc-not doc-not
+&global-define trdcattr-doc-not '{&bef-trdcattr-doc-not}':U
+&global-define bef-trdcattr-spisok-not-doc spisok-not-doc
+&global-define trdcattr-spisok-not-doc '{&bef-trdcattr-spisok-not-doc}':U
+&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,negais,egais,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,idCountryContr,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition,doc-not,spisok-not-doc':U
 &global-define bef-lineattr-flora_ps flora_ps
 &global-define lineattr-flora_ps '{&bef-lineattr-flora_ps}':U
 &global-define bef-lineattr-flora_gds-code fl_gds-code
@@ -6712,7 +6722,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 25d2bd615c4f, 1022, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: da4a5b9c3eec, 1028, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7615,7 +7625,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-inv-obj '{&bef-attr-inv-obj}':U
 &global-define bef-attr-inv-obj-full inv-obj
 &global-define attr-inv-obj-full '{&bef-attr-inv-obj-full}':U
-&global-define bef-prop-list-attr-inv-obj invclcsp,invdnull,mxpcdcp,mxpcicp,mxsmdcp,mxsmicp,pstunqtn,wastage,pstgrp
+&global-define bef-prop-list-attr-inv-obj invclcsp,invdnull,mxpcdcp,mxpcicp,mxsmdcp,mxsmicp,pstunqtn,wastage,pstgrp,izlcstpr
 &global-define prop-list-attr-inv-obj '{&bef-prop-list-attr-inv-obj}':U
 &global-define bef-attr-inv-obj_invclcsp invclcsp
 &global-define attr-inv-obj_invclcsp '{&bef-attr-inv-obj_invclcsp}':U
@@ -7635,6 +7645,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-inv-obj_wastage '{&bef-attr-inv-obj_wastage}':U
 &global-define bef-attr-inv-obj_pstgrp pstgrp
 &global-define attr-inv-obj_pstgrp '{&bef-attr-inv-obj_pstgrp}':U
+&global-define bef-attr-inv-obj_izlcstpr izlcstpr
+&global-define attr-inv-obj_izlcstpr '{&bef-attr-inv-obj_izlcstpr}':U
 &global-define bef-attr-arh-global arh-global
 &global-define attr-arh-global '{&bef-attr-arh-global}':U
 &global-define bef-attr-arh-global-full arh-global
@@ -7943,7 +7955,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-fbrattr_fbr-mrgn-max '{&bef-attr-fbrattr_fbr-mrgn-max}':U
 &global-define bef-attr-petrol petrol
 &global-define attr-petrol '{&bef-attr-petrol}':U
-&global-define bef-prop-list-attr-petrol rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email
+&global-define bef-prop-list-attr-petrol rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert
 &global-define prop-list-attr-petrol '{&bef-prop-list-attr-petrol}':U
 &global-define bef-attr-petrol_rvsnmter rvsnmter
 &global-define attr-petrol_rvsnmter '{&bef-attr-petrol_rvsnmter}':U
@@ -7969,6 +7981,16 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-petrol_temp-for-pomi '{&bef-attr-petrol_temp-for-pomi}':U
 &global-define bef-attr-petrol_rvs-wt-email rvs-wt-email
 &global-define attr-petrol_rvs-wt-email '{&bef-attr-petrol_rvs-wt-email}':U
+&global-define bef-attr-petrol_CriticalDif CriticalDif
+&global-define attr-petrol_CriticalDif '{&bef-attr-petrol_CriticalDif}':U
+&global-define bef-attr-petrol_algoincome algoincome
+&global-define attr-petrol_algoincome '{&bef-attr-petrol_algoincome}':U
+&global-define bef-attr-petrol_mand-choice-autocar mand-choice-autocar
+&global-define attr-petrol_mand-choice-autocar '{&bef-attr-petrol_mand-choice-autocar}':U
+&global-define bef-attr-petrol_Delta-mass-horiz Delta-mass-horiz
+&global-define attr-petrol_Delta-mass-horiz '{&bef-attr-petrol_Delta-mass-horiz}':U
+&global-define bef-attr-petrol_Delta-mass-vert Delta-mass-vert
+&global-define attr-petrol_Delta-mass-vert '{&bef-attr-petrol_Delta-mass-vert}':U
 &global-define bef-attr-staff-options staff
 &global-define attr-staff-options '{&bef-attr-staff-options}':U
 &global-define bef-prop-list-attr-staff-options noanshftstaff,obyznumbukv,minparol
@@ -8014,7 +8036,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 45325775eda4, 1021, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 0f3e0a12029d, 1026, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: da4a5b9c3eec, 1028, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 90fea97fc979, 803, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 25d2bd615c4f, 1022, rls ':U
+&global-define str-glblt_vss-revision 'Revision: da4a5b9c3eec, 1028, rls ':U
 &endif
