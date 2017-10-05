@@ -416,7 +416,7 @@ attr-inv-global }
 /* атрибут объектный  -  ИНВЕНТАРИЗАЦИЯ настройки */
 { cmp/cr-prep.i 1 attr-inv-obj  inv-obj inv-obj inv-obj inv-obj }
 { cmp/cr-prepc.i 1 prop-list-attr-inv-obj
-"invclcsp,invdnull,mxpcdcp,mxpcicp,mxsmdcp,mxsmicp,pstunqtn,wastage,pstgrp"
+"invclcsp,invdnull,mxpcdcp,mxpcicp,mxsmdcp,mxsmicp,pstunqtn,wastage,pstgrp,izlcstpr"
 attr-inv-obj }
 /* атрибут глобальный -  АРХИВЫ */
 { cmp/cr-prep.i 1 attr-arh-global arh-global arh-global arh-global arh-global }
@@ -537,7 +537,7 @@ attr-fbrattr
 { cmp/cr-prep.i 1 attr-petrol petrol " " petrol }
 
 { cmp/cr-prepc.i 1 prop-list-attr-petrol
-"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email"
+"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert"
 attr-petrol
 }
 

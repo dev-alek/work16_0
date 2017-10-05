@@ -1118,7 +1118,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 { cmp/cr-prep.i 1 trdcattr-car-time "car-time" " " "car-time" }
 /* Переоценка создана равной ценам ПН */
 { cmp/cr-prep.i 1 trdcattr-first-price "first-price" " " "first-price" }
-
+/*Допустимый % погрешности поставщика*/
+{ cmp/cr-prep.i 1 trdcattr-acc-ship acc-ship " " acc-ship }
+/* Документы НЕ предоставлены */
+{ cmp/cr-prep.i 1 trdcattr-doc-not "doc-not" " " "doc-not" }
+/* Список не предоставленных документов */
+{ cmp/cr-prep.i 1 trdcattr-spisok-not-doc "spisok-not-doc" " " "spisok-not-doc" }
 
 /*Сдал/Принял*/
 { cmp/cr-prep.i 1 trdcattr-t_pass-fname      "t_pass-fname" " "      "t_pass-fname" }
@@ -1204,6 +1209,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 
 /* Пломбы, их состояние */
 { cmp/cr-prep.i 1 trdcattr-seals-condition "seals-condition" " " "seals-condition" }
+
+/* Документы НЕ предоставлены */
+{ cmp/cr-prep.i 1 trdcattr-doc-not "doc-not" " " "doc-not" }
+
+/* Список не предоставленных документов */
+{ cmp/cr-prep.i 1 trdcattr-spisok-not-doc "spisok-not-doc" " " "spisok-not-doc" }
 
 &glob trdcattr-list '~
 {&bef-trdcattr-hold-part-code}~
@@ -1292,6 +1303,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-inspection-cert}~
 ,{&bef-trdcattr-condition}~
 ,{&bef-trdcattr-seals-condition}~
+,{&bef-trdcattr-doc-not}~
+,{&bef-trdcattr-spisok-not-doc}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define trdcattr-list {&trdcattr-list}" ).
 
