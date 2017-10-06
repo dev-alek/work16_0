@@ -36,5 +36,8 @@ on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
-
+  run str/callnews.p
+    (input {&table_sum-grp-attr}
+    ,input (buffer ub.sum-grp-attr:handle)
+    ).
 end. /* main-block */

@@ -31,6 +31,9 @@ define variable v-prev-grp-code as integer no-undo .
 define variable v-dop as character no-undo .
 define variable v-maria-rule-num as integer no-undo .
 define variable v-shift-fields as integer no-undo .
+DEFINE variable v-image-group as character no-undo .
+DEFINE variable v-image-Visible as character no-undo .
+DEFINE BUFFER buf_sum-grp-attr for ub.sum-grp-attr .
 
 CASE pos-type:
     when {&cd-type-ibm}
@@ -79,6 +82,21 @@ CASE pos-type:
             if p-subject = '':u then do:
               run bgelib-tag-put in this-procedure ( input 3, input "GroupLock"         , input cash-grp.stts, input 1 ).
             end.
+
+              for each buf_sum-grp-attr where buf_sum-grp-attr.grp-code = cash-grp.grp-code:
+                  if buf_sum-grp-attr.attr-code = "grp-image" then 
+                  do:
+                     if buf_sum-grp-attr.attr-value = "yes" then v-image-Visible = "1".
+                     else v-image-Visible = "0" .
+                    run bgelib-tag-put in this-procedure ( input 3, input "GroupVisible"         , input v-image-Visible, input 1 ).
+                  end.     
+                  if buf_sum-grp-attr.attr-code = "image-list" then 
+                  do:
+                   v-image-group = "grp" + "/" + buf_sum-grp-attr.attr-value .
+                      run bgelib-tag-put in this-procedure ( input 3, input "GroupImage"         , input v-image-group, input 1 ).
+                  end.         
+
+              end.    
             run bgelib-tag-close in this-procedure ( input 2, input "Group").
           END.
         end.
