@@ -28,15 +28,20 @@ FIELD qnty1 as decimal
 FIELD netto as decimal  /*это всегда base*/
 FIELD out-name as character format "X(20)"
 FIELD is-pay as logical
+FIELD discnt-type   as integer
+FIELD brutto as decimal 
+FIELD discount-sum as decimal
+FIELD chk-qnty as int
 /*счетчик внутри товара*/
 FIELD ii as integer
 INDEX pi IS UNIQUE PRIMARY
       gds-code
       cpay-code
+	  discnt-type	
       curr-code
       is-pay DESCENDING
 INDEX vi
-IS UNIQUE
+/*IS UNIQUE*/
       gds-code
       ii
 .

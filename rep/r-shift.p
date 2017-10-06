@@ -575,7 +575,8 @@ if tog-2 or tog-3 or tog-4 or tog-8 then do:
                  ,INPUT tog-8
                  ,INPUT (Xclassify = "totals":U)
                  ,INPUT (x-selectgood = {&g-grp})
-                 ,INPUT p-batch)
+                 ,INPUT p-batch
+                 ,input no )
   no-error.
   /*после этого появляются записи в таблицах treal-2 treal-3 treal-4 */
 

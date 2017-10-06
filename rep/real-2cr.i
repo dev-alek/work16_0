@@ -56,6 +56,9 @@ DO ON ERROR UNDO _main, return error:
     {1}.out-name = pout-name
     {1}.is-pay = pis-pay
     {1}.ii = pii
+&if not "{2}" = "bge" &then
+    {1}.discnt-type = -99
+&endif
 &if "{2}" = "bge" &then
     {1}.pay-desk = p-pay-desk
     {1}.prefix   = p-prefix
