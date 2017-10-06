@@ -10916,15 +10916,15 @@ end procedure.
 &scop manual-edit-attr-doc-tickets-o  1
 &scop batch-edit-attr-doc-tickets-o  1
 
-&glob type-attr-normal-wastage-o {&type-dec}
-&glob format-attr-normal-wastage-o  ">9.999"
+&glob type-attr-normal-wastage-o {&type-char}
+&glob format-attr-normal-wastage-o  "X(21)"
 &glob label-attr-normal-wastage-o   "Нормы естественной убыли для топлива кг/т"
 &glob tooltip-attr-normal-wastage-o   "Нормы естественной убыли для топлива кг/т"
 &glob user-can-edit-attr-normal-wastage-o  true
 &glob output-display-attr-normal-wastage-o  true
-&glob other-attr-normal-wastage-o  "check=gds-obj-attr_check-ptrl-divis"
+&glob other-attr-normal-wastage-o  "spr=gds-obj-normal-wastage"
 &glob news-attr-normal-wastage-o true
-&glob copy-attr-normal-wastage-o  false
+&glob copy-attr-normal-wastage-o  true
 &scop manual-edit-attr-normal-wastage-o 1
 &scop batch-edit-attr-normal-wastage-o  1
 
@@ -11367,6 +11367,35 @@ DEFINE VARIABLE v-value as character no-undo .
   end.
 
 end procedure. /* gds-obj-gds-margin */
+
+procedure gds-obj-normal-wastage :
+define input parameter p-gds-code like ub.gds-obj-attr.gds-code no-undo .
+define input parameter p-obj-type like ub.gds-obj-attr.obj-type no-undo .
+define input parameter p-obj-code like ub.gds-obj-attr.obj-code no-undo .
+define input-output parameter p-value as character no-undo .
+define output parameter p-setted as logical no-undo .
+DEFINE VARIABLE v-value as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    assign
+    v-value = p-value.
+    run ref/gdswastage.w (
+                    input p-gds-code
+                   ,input p-obj-type
+                   ,input p-obj-code
+                   ,input-output v-value) no-error .
+                   
+    if p-value <> v-value then do:
+      assign
+      p-setted = yes
+      p-value = v-value
+      .
+    end.
+  end.
+
+end procedure. /* gds-obj-normal-wastage */
 
 procedure gds-obj-doc-tickets :
 define input parameter p-gds-code like ub.gds-obj-attr.gds-code no-undo .

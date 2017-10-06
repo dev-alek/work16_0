@@ -268,6 +268,35 @@ procedure gds-obj-gds-margins :
 
 end procedure. /* gds-obj-gds-margin */
 
+
+procedure gds-obj-normal-wastage :
+
+  define input  parameter p-gds-code    like ub.gds-obj-attr.gds-code no-undo .
+  define input  parameter p-obj-type    like ub.gds-obj-attr.obj-type no-undo .
+  define input  parameter p-obj-code    like ub.gds-obj-attr.obj-code no-undo .
+  define input-output parameter p-value as character no-undo .
+  define output parameter p-setted      as logical no-undo .
+
+  do
+  on error undo, return error
+  :
+    &scop proc-name gds-obj-normal-wastage
+    {&run_proc_attr-lib}
+      (input  p-gds-code
+      ,input  p-obj-type
+      ,input  p-obj-code
+      ,input-output p-value
+      ,output p-setted
+      ) no-error .
+    if error-status :error
+    then do:
+      undo, return error return-value .
+    end.
+  end.
+
+end procedure. /* gds-obj-normal-wastage */
+
+
 procedure gds-attr-margin-value :
 
   define input  parameter p-gds-code         as integer   no-undo .
