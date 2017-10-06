@@ -118,7 +118,12 @@ define temp-table temp_obj-list no-undo
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Cancel Btn_Help 
+&Scoped-Define ENABLED-OBJECTS RECT-1 Btn_OK Btn_Cancel v-per time-days ~
+date-from date-to code_pnpo v-directory ed-object rs-1 bt-sel-obj ~
+bge-inf-po gds-inf-po bt-v-inf-pop bge-active gds-active bt-v-active 
+&Scoped-Define DISPLAYED-OBJECTS v-per time-days date-from date-to ~
+code_pnpo v-directory ed-object rs-1 bge-inf-po gds-inf-po bge-active ~
+gds-active 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -134,112 +139,123 @@ define temp-table temp_obj-list no-undo
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON bt-sel-obj 
-    IMAGE-UP FILE "btn-down-arrow":U
-    IMAGE-DOWN FILE "btn-down-arrow":U
-    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-    LABEL "..." 
-    SIZE 3.63 BY 1.04.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "..." 
+     SIZE 3.6 BY 1.05.
 
 DEFINE BUTTON bt-v-active 
-    IMAGE-UP FILE "btn-down-arrow":U
-    IMAGE-DOWN FILE "btn-down-arrow":U
-    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-    LABEL "..." 
-    SIZE 3.63 BY 1.04.
-
-DEFINE VARIABLE ed-object AS CHARACTER 
-    VIEW-AS EDITOR NO-BOX
-    SIZE 30 BY 6.38
-    FGCOLOR 1 NO-UNDO.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "..." 
+     SIZE 3.6 BY 1.05.
 
 DEFINE BUTTON bt-v-inf-pop 
-    IMAGE-UP FILE "btn-down-arrow":U
-    IMAGE-DOWN FILE "btn-down-arrow":U
-    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-    LABEL "..." 
-    SIZE 3.63 BY 1.04.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "..." 
+     SIZE 3.6 BY 1.05.
 
 DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
-    LABEL "Отмена" 
-    SIZE 15 BY 1.13.
+     LABEL "Отмена" 
+     SIZE 15 BY 1.14.
 
 DEFINE BUTTON Btn_OK AUTO-GO 
-    LABEL "Запустить" 
-    SIZE 15 BY 1.13.
+     LABEL "Запустить" 
+     SIZE 15 BY 1.14.
 
-DEFINE VARIABLE time-days   AS CHARACTER INITIAL "дней" 
-    VIEW-AS EDITOR NO-BOX
-    SIZE 10 BY 1 NO-UNDO.
+DEFINE VARIABLE ed-object AS CHARACTER 
+     VIEW-AS EDITOR NO-BOX
+     SIZE 43 BY 2.71
+     FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE code_pnpo   AS CHARACTER FORMAT "X(256)":U 
-    LABEL "ПНПО" 
-    VIEW-AS FILL-IN 
-    SIZE 19 BY 1 NO-UNDO.
+DEFINE VARIABLE time-days AS CHARACTER INITIAL "дней" 
+     VIEW-AS EDITOR NO-BOX
+     SIZE 10 BY 1 NO-UNDO.
 
-DEFINE VARIABLE date-from   AS DATE      FORMAT "99/99/9999":U 
-    LABEL "Дата с" 
-    VIEW-AS FILL-IN 
-    SIZE 14 BY 1 NO-UNDO.
+DEFINE VARIABLE code_pnpo AS CHARACTER FORMAT "X(256)":U 
+     LABEL "ПНПО" 
+     VIEW-AS FILL-IN 
+     SIZE 19 BY 1 NO-UNDO.
 
-DEFINE VARIABLE date-to     AS DATE      FORMAT "99/99/9999":U 
-    LABEL "по" 
-    VIEW-AS FILL-IN 
-    SIZE 14 BY 1 NO-UNDO.
+DEFINE VARIABLE date-from AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата с" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE gds-active  AS INTEGER   FORMAT "->>>>>>>>>>>>9" INITIAL 0 
-    VIEW-AS FILL-IN 
-    SIZE 20.5 BY 1 NO-UNDO.
+DEFINE VARIABLE date-to AS DATE FORMAT "99/99/9999":U 
+     LABEL "по" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE gds-inf-po  AS INTEGER   FORMAT "->>>>>>>>>>9" INITIAL 0 
-    VIEW-AS FILL-IN 
-    SIZE 20.5 BY 1 NO-UNDO.
+DEFINE VARIABLE gds-active AS INTEGER FORMAT "->>>>>>>>>>>>9" INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 20.6 BY 1 NO-UNDO.
+
+DEFINE VARIABLE gds-inf-po AS INTEGER FORMAT "->>>>>>>>>>9" INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 20.6 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-directory AS CHARACTER FORMAT "X(256)":U 
-    LABEL "Директория" 
-    VIEW-AS FILL-IN 
-    SIZE 19 BY 1 NO-UNDO.
+     LABEL "Директория" 
+     VIEW-AS FILL-IN 
+     SIZE 19 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-per       AS INTEGER   FORMAT "->>>>>>9" INITIAL 0 
-    LABEL "За последние" 
-    VIEW-AS FILL-IN 
-    SIZE 13 BY 1 NO-UNDO.
+DEFINE VARIABLE v-per AS INTEGER FORMAT "->>>>>>9" INITIAL 0 
+     LABEL "За последние" 
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE bge-active  AS LOGICAL   INITIAL no 
-    LABEL "Выгружать данные по активации" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 39 BY .83 NO-UNDO.
+DEFINE VARIABLE rs-1 AS INTEGER 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
+          "по фирме", 2,
+"по объектам", 3
+     SIZE 19 BY 2.52 NO-UNDO.
 
-DEFINE VARIABLE bge-inf-po  AS LOGICAL   INITIAL no 
-    LABEL "Выгружать информацию по пополнениям" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 39 BY .83 NO-UNDO.
+DEFINE RECTANGLE RECT-1
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 72 BY 3.81.
+
+DEFINE VARIABLE bge-active AS LOGICAL INITIAL no 
+     LABEL "Выгружать данные по активации" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 39 BY .81 NO-UNDO.
+
+DEFINE VARIABLE bge-inf-po AS LOGICAL INITIAL no 
+     LABEL "Выгружать информацию по пополнениям" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 39 BY .81 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-    Btn_OK AT ROW 2 COL 3
-    Btn_Cancel AT ROW 2 COL 43.5
-    v-per AT ROW 3.75 COL 20.5 COLON-ALIGNED WIDGET-ID 20
-    time-days AT ROW 3.75 COL 36.5 NO-LABEL WIDGET-ID 52
-    date-from AT ROW 4 COL 14.5 COLON-ALIGNED
-    date-to AT ROW 4 COL 35 COLON-ALIGNED
-    code_pnpo AT ROW 5.5 COL 14.5 COLON-ALIGNED WIDGET-ID 2
-    v-directory AT ROW 7 COL 14.5 COLON-ALIGNED WIDGET-ID 12
-    bt-sel-obj AT ROW 8.75 COL 19.5 WIDGET-ID 6
-    ed-object  AT ROW 8.75 COL 24 NO-LABEL
-    bge-inf-po AT ROW 10.75 COL 5.5 WIDGET-ID 8
-    gds-inf-po AT ROW 10.75 COL 44.5 COLON-ALIGNED NO-LABEL WIDGET-ID 14
-    bt-v-inf-pop AT ROW 10.75 COL 68.5 WIDGET-ID 54
-    bge-active AT ROW 12 COL 5.5 WIDGET-ID 10
-    gds-active AT ROW 12 COL 44.5 COLON-ALIGNED NO-LABEL WIDGET-ID 16
-    bt-v-active AT ROW 12 COL 68.5 WIDGET-ID 56
-    "По объектам:" VIEW-AS TEXT
-    SIZE 14 BY .67 AT ROW 9 COL 5.5 WIDGET-ID 58
-    SPACE(57.49) SKIP(5.90)
+     Btn_OK AT ROW 2 COL 3
+     Btn_Cancel AT ROW 2 COL 43.6
+     v-per AT ROW 3.76 COL 20.6 COLON-ALIGNED WIDGET-ID 20
+     time-days AT ROW 3.76 COL 36.6 NO-LABEL WIDGET-ID 52
+     date-from AT ROW 4 COL 14.6 COLON-ALIGNED
+     date-to AT ROW 4 COL 35 COLON-ALIGNED
+     code_pnpo AT ROW 5.52 COL 14.6 COLON-ALIGNED WIDGET-ID 2
+     v-directory AT ROW 7 COL 14.6 COLON-ALIGNED WIDGET-ID 12
+     ed-object AT ROW 8.76 COL 30 NO-LABEL
+     rs-1 AT ROW 8.86 COL 4 NO-LABEL WIDGET-ID 62
+     bt-sel-obj AT ROW 10.29 COL 25 WIDGET-ID 6
+     bge-inf-po AT ROW 12.67 COL 5 WIDGET-ID 8
+     gds-inf-po AT ROW 12.67 COL 44 COLON-ALIGNED NO-LABEL WIDGET-ID 14
+     bt-v-inf-pop AT ROW 12.67 COL 68 WIDGET-ID 54
+     bge-active AT ROW 13.91 COL 5 WIDGET-ID 10
+     gds-active AT ROW 13.91 COL 44 COLON-ALIGNED NO-LABEL WIDGET-ID 16
+     bt-v-active AT ROW 13.91 COL 68 WIDGET-ID 56
+     RECT-1 AT ROW 8.38 COL 3 WIDGET-ID 60
+     SPACE(1.99) SKIP(3.38)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-    TITLE "Выгрузка информации по пополнениям и активации для сверки с ВБРР"
+         TITLE "Выгрузка информации по пополнениям и активации для сверки с ВБРР"
          DEFAULT-BUTTON Btn_OK CANCEL-BUTTON Btn_Cancel WIDGET-ID 100.
 
 
@@ -275,7 +291,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON WINDOW-CLOSE OF FRAME Dialog-Frame /* <insert dialog title> */
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Выгрузка информации по пополнениям и активации для сверки с ВБРР */
 DO:
   APPLY "END-ERROR":U TO SELF.
     END.
@@ -285,9 +301,9 @@ DO:
 
 
 &Scoped-define SELF-NAME bge-active
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bge-active Dialog-frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bge-active Dialog-Frame
 ON VALUE-CHANGED OF bge-active IN FRAME Dialog-Frame /* Выгружать данные по активации */
-    DO:
+DO:
         assign bge-active.
         if bge-active = no then 
         do: 
@@ -309,7 +325,7 @@ ON VALUE-CHANGED OF bge-active IN FRAME Dialog-Frame /* Выгружать данные по акти
 &Scoped-define SELF-NAME bge-inf-po
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bge-inf-po Dialog-Frame
 ON VALUE-CHANGED OF bge-inf-po IN FRAME Dialog-Frame /* Выгружать информацию по пополнениям */
-    DO:
+DO:
         assign bge-inf-po.
         if bge-inf-po then 
         do: 
@@ -328,55 +344,15 @@ ON VALUE-CHANGED OF bge-inf-po IN FRAME Dialog-Frame /* Выгружать информацию по 
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME bt-v-active
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-v-active Dialog-Frame
-ON CHOOSE OF bt-v-active IN FRAME Dialog-Frame /* ... */
-    DO:
-        if bge-active = yes then 
-        do: 
-    
-    
-            run ref/gds-ref.p
-                ( input parparentproc
-                ,input "b-sel"
-                ,input {&current}
-                ,input {&all}
-                ,input {&all}
-                ,input ?
-                ,input ?
-                ,input ?
-                ,input ?
-                ,input ?
-                ,input ?
-                ,input ?
-                ,output ref-list).
-      
-            if ref-list = ? OR ref-list = "" then return.
-    
-            find first ub.goods no-lock  
-                where recid(ub.goods) = int(ref-list).
-    
-            assign
-                v-gds-active = ub.goods.gds-name
-                v-gds-rec    = ub.goods.gds-code.
-                
-   
-        end.
-
-        gds-active:screen-value   = string(v-gds-rec).
-               
-    END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME bt-v-active
+&Scoped-define SELF-NAME bt-sel-obj
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-sel-obj Dialog-Frame
-ON choose OF bt-sel-obj  IN FRAME Dialog-Frame 
-    DO:
+ON choose OF bt-sel-obj IN FRAME Dialog-Frame /* ... */
+DO:
    
         define variable v-host-code        like ub.sysconf.host-code no-undo .
+     assign
+        rs-1 :screen-value  = "3"
+    .
    
         define variable v-object-available as logical no-undo .
         { gbl/uobjclr.i }
@@ -465,10 +441,53 @@ ON choose OF bt-sel-obj  IN FRAME Dialog-Frame
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME bt-v-active
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-v-active Dialog-Frame
+ON CHOOSE OF bt-v-active IN FRAME Dialog-Frame /* ... */
+DO:
+        if bge-active = yes then 
+        do: 
+    
+    
+            run ref/gds-ref.p
+                ( input parparentproc
+                ,input "b-sel"
+                ,input {&current}
+                ,input {&all}
+                ,input {&all}
+                ,input ?
+                ,input ?
+                ,input ?
+                ,input ?
+                ,input ?
+                ,input ?
+                ,input ?
+                ,output ref-list).
+      
+            if ref-list = ? OR ref-list = "" then return.
+    
+            find first ub.goods no-lock  
+                where recid(ub.goods) = int(ref-list).
+    
+            assign
+                v-gds-active = ub.goods.gds-name
+                v-gds-rec    = ub.goods.gds-code.
+                
+   
+        end.
+
+        gds-active:screen-value   = string(v-gds-rec).
+               
+    END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME bt-v-inf-pop
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-v-inf-pop Dialog-Frame
 ON CHOOSE OF bt-v-inf-pop IN FRAME Dialog-Frame /* ... */
-    DO:
+DO:
         define variable ref-list-inf as char no-undo.
     
         assign bge-inf-po.
@@ -511,7 +530,7 @@ ON CHOOSE OF bt-v-inf-pop IN FRAME Dialog-Frame /* ... */
 &Scoped-define SELF-NAME Btn_Cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel Dialog-Frame
 ON CHOOSE OF Btn_Cancel IN FRAME Dialog-Frame /* Отмена */
-    DO:
+DO:
         assign
             p-cancel = yes
             .
@@ -523,13 +542,19 @@ ON CHOOSE OF Btn_Cancel IN FRAME Dialog-Frame /* Отмена */
 
 
 &Scoped-define SELF-NAME Btn_OK
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
 ON CHOOSE OF Btn_OK IN FRAME Dialog-Frame /* Запустить */
-    DO:
+DO:
+define variable v-obj-range as integer no-undo . /* Диапазон: 1 - глобально, 2 - по фирме, 3 - список объектов */
+define variable v-host-code as integer no-undo . /* Код текущей фирмы для p-range = 2 */
 
-        if date-from > date-to 
-         
-            then 
+
+assign 
+date-from
+date-to
+.
+
+        if date-from > date-to then 
         do:
             message
                 "Даты интервала заданы неверно. "
@@ -540,13 +565,8 @@ ON CHOOSE OF Btn_OK IN FRAME Dialog-Frame /* Запустить */
             apply "entry" to date-from.
             undo, return no-apply.
         end.
-        
-        
-        
-        assign bge-active
-            bge-inf-po.
      
-     
+
         DEFINE VARIABLE l-dircrt  AS LOGICAL       NO-UNDO. /* Для ответа на создание директории */
         define variable h-par     as widget-handle no-undo.
         DEFINE variable loghandle AS HANDLE        no-undo.
@@ -557,8 +577,7 @@ ON CHOOSE OF Btn_OK IN FRAME Dialog-Frame /* Запустить */
             v-directory
        
             .
-      
-               
+ 
         v-directory = right-trim(v-directory,'/\') + '\'.
     
         /* Проверим каталог */
@@ -590,24 +609,9 @@ ON CHOOSE OF Btn_OK IN FRAME Dialog-Frame /* Запустить */
        
        
         FILE-INFO:FILE-NAME = v-directory.
-     
-/*     p-obj-list = "".                                                                         */
-/*        for each temp_obj-list                                                                */
-/*            :                                                                                 */
-/*            assign                                                                            */
-/*                p-obj-list = p-obj-list                                                       */
-/*                            + ( if p-obj-list = "" then "" else "," ) + temp_obj-list.obj-type*/
-/*                            + "," + string( temp_obj-list.obj-code )                          */
-/*                .                                                                             */
-/*        end.                                                                                  */
-/*        if p-obj-list = "" then                                                               */
-/*        do:                                                                                   */
-/*            p-obj-list =   v-cntxt-obj-type  + "," + string(v-cntxt-obj-code).                */
-/*        end.                                                                                  */
             
-        assign date-to
-            date-from
-ed-object
+        assign
+            rs-1
             code_pnpo
             bge-active 
             bge-inf-po
@@ -616,34 +620,57 @@ ed-object
             gds-active
             .
             
-            
-        if num-entries(ed-object) > 1 then 
-        do : 
-                
-            p-obj-list =  ed-object.
+      case rs-1 :screen-value :
+        when "2" then do:
+          assign
+            v-obj-range = 2
+            v-host-code = p-curr-host-code
+            p-obj-list  = string(p-curr-host-code)
+          .
         end.
-        else 
-        do: 
-            p-obj-list =   v-cntxt-obj-type  + "," + string(v-cntxt-obj-code).   
-                            
+        when "3" then do:
+          assign
+            v-obj-range = 3
+            p-obj-list  = ""
+          .
+          for each temp_obj-list :
+            p-obj-list = p-obj-list + "," + temp_obj-list.obj-type + "," + string( temp_obj-list.obj-code ) .
+          end.
+          p-obj-list = substring(p-obj-list, 2).
         end.
-                        
-            
+        otherwise assign
+          v-obj-range = 2
+          v-host-code = p-curr-host-code
+          p-obj-list  = string(p-curr-host-code)
+        .
+      end case.
+        
+
         if p-mode = "shd" then 
         do:
-            
-            
-            
-            v-param-list =    string(gds-inf-po) + {&delim-par} + string(gds-active) 
-                + {&delim-par} + v-directory + {&delim-par} + code_pnpo + {&delim-par} + string(bge-active) + {&delim-par} + string(bge-inf-po) + {&delim-par} + string(v-per)+ {&delim-par} + p-obj-list .
-                
+            v-param-list =
+                string(gds-inf-po) + {&delim-par} +
+                string(gds-active) + {&delim-par} +
+                v-directory + {&delim-par} +
+                code_pnpo + {&delim-par} +
+                string(bge-active) + {&delim-par} +
+                string(bge-inf-po) + {&delim-par} +
+                string(v-per)
+            .
             run attach-attr-to-schedule-line in this-procedure ( INPUT v-param-list ).
 
+define variable v-list as character no-undo .
+                
+            v-list = substitute( "&1:&2"
+                             , v-obj-range
+                             , p-obj-list
+                             ).
+                
             run schedule-attr-write in this-procedure (input p-db-num-char, 
                 input p-task-type,
                 input p-task-num,
                 input {&attr-schedule-obj-list-h},
-                input v-obj-list).
+                input v-list).
    
     
             message "Параметры сохранены!" view-as alert-box information.
@@ -654,7 +681,9 @@ ed-object
         do: 
     
             run bge/active-vbrr.p (input parparentproc
-                , input p-obj-list
+                ,input v-obj-range
+                ,input v-host-code
+                ,input p-obj-list
                 ,input date-to
                 ,input date-from
                 ,input gds-inf-po
@@ -684,12 +713,31 @@ END.
 
 
 &Scoped-define SELF-NAME date-to
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL date-to Dialog-frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL date-to Dialog-Frame
 ON RETURN OF date-to IN FRAME Dialog-Frame /* по */
-    DO:
+DO:
         APPLY "ENTRY" TO btn_ok IN FRAME {&FRAME-NAME}.
         RETURN NO-APPLY.
     END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME rs-1
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-1 Dialog-Frame
+ON VALUE-CHANGED OF rs-1 IN FRAME Dialog-Frame
+DO:
+run object-select in this-procedure no-error .
+if error-status :error
+then do:
+    undo, return no-apply.
+end.
+assign
+    rs-1
+.
+bt-sel-obj:SENSITIVE = ( rs-1 = 3 ).
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -712,8 +760,25 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 ASSIGN
     date-from = v-today
     date-to   = v-today
-    .
+    v-directory = ""
+    code_pnpo   = ""
+    bge-active  = false
+    bge-inf-po  = false
+.
+    
 { gbl/getcntxt.i get }
+/*
+ v-cntxt-db-num используется в триггере on choose OF bt-sel-obj
+ 
+ в режиме shd на вход не передаются значения p-curr-host-code, p-curr-obj-type, p-curr-obj-code;
+ берём их из output v-cntxt-host-code-obj, output v-cntxt-obj-type, output v-cntxt-obj-code
+  
+*/
+if p-curr-obj-code = 0 then assign
+  p-curr-host-code = v-cntxt-host-code-obj
+  p-curr-obj-type  = v-cntxt-obj-type
+  p-curr-obj-code  = v-cntxt-obj-code
+.
 
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
@@ -722,15 +787,44 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   RUN enable_UI.
 
-    assign 
-        v-directory
-        code_pnpo
-        date-from
-        date-to
-        bge-active
-        bge-inf-po
+    run get-host-name in this-procedure ( output v-host-name ) no-error .
+    if error-status :error
+    then do:
+        message
+          vss-workfile vss-revision vss-description
+          skip "Ошибка при определении имени фирмы"
+          skip "Код фирмы:" p-curr-host-code
+          skip "Имя фирмы будет отображаться как '" + {&cmp} + string( p-curr-host-code ) + "'"
+          skip return-value
+          skip trim(error-status :get-message(1))
+               trim(error-status :get-message(2))
+               trim(error-status :get-message(3))
+               trim(error-status :get-message(4))
+               trim(error-status :get-message(5))
+        view-as alert-box warning.
+        assign
+            v-host-name = {&cmp} + string( p-curr-host-code )
         .
+    end.
+    
+    assign
+        rs-1 :screen-value in frame dialog-frame = "2"
+        ed-object :screen-value in frame Dialog-frame = {&cmp} + string( p-curr-host-code ) + " " + v-host-name
+    .
+    assign
+        rs-1
+    .
+    
+    if p-mode = "run" then 
+    do:
+        run flt-load in this-procedure .
+    end.
 
+    if rs-1 <> 3 then 
+    do: 
+        disable bt-sel-obj with frame {&frame-name} .
+    end.
+    
     if bge-active = no then 
     do: 
         disable gds-active  with frame {&frame-name} .
@@ -755,18 +849,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         Btn_OK:LABEL = "Запустить".
     end.
 
-    assign
-        date-to = today
-        .
-    display
-        date-to
-        with frame {&frame-name}.
             
-    if p-mode = "run" then 
-    do:
-        run flt-load in this-procedure .
-    end.
-
     run myenable .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -805,16 +888,16 @@ PROCEDURE enable_UI :
                associated with each FRAME and BROWSE.
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
-    ------------------------------------------------------------------------------*/
-    DISPLAY v-per time-days date-from ed-object date-to code_pnpo v-directory bge-inf-po 
-        gds-inf-po bge-active gds-active 
-        WITH FRAME Dialog-Frame.
-    ENABLE Btn_OK Btn_Cancel ed-object v-per date-from date-to code_pnpo v-directory 
-        bt-sel-obj bge-inf-po gds-inf-po bt-v-inf-pop bge-active gds-active 
-        bt-v-active 
-        WITH FRAME Dialog-frame.
-    VIEW FRAME Dialog-frame.
-    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+------------------------------------------------------------------------------*/
+  DISPLAY v-per time-days date-from date-to code_pnpo v-directory ed-object rs-1 
+          bge-inf-po gds-inf-po bge-active gds-active 
+      WITH FRAME Dialog-Frame.
+  ENABLE RECT-1 Btn_OK Btn_Cancel v-per time-days date-from date-to code_pnpo 
+         v-directory ed-object rs-1 bt-sel-obj bge-inf-po gds-inf-po 
+         bt-v-inf-pop bge-active gds-active bt-v-active 
+      WITH FRAME Dialog-Frame.
+  VIEW FRAME Dialog-Frame.
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -822,7 +905,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE myenable Dialog-Frame 
 PROCEDURE myenable :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
       Purpose:     
       Parameters:  <none>
       Notes:       
@@ -912,25 +995,25 @@ PROCEDURE attach-attr-to-schedule-line :
         ,buffer lock-batchprocess
         ) no-error .
 
-    FIND FIRST buf_schedule-attr NO-LOCK WHERE
-        buf_schedule-attr.task-type   = p-task-type
-        and buf_schedule-attr.cre-db-num = INTEGER(p-db-num-char)
-        and buf_schedule-attr.attr-code = ({&attr-schd-free-id} + {&delim-par} + 'exp-active-vbrr') NO-ERROR.
-    IF AVAILABLE  buf_schedule-attr
-        AND buf_schedule-attr.task-num <> p-task-num
-        AND buf_schedule-attr.task-num <> - 1
-        and p-task-num <> - 1
-        THEN 
-    DO:
-        MESSAGE
-            substitute("Уже есть расписание сохранения параметров выгрузки чеков для БД &1&2" +
-            "номер расписания &3"
-            ,buf_schedule-attr.cre-db-num
-            ,{&NEW-LINE}
-            ,buf_schedule-attr.task-num)
-            VIEW-AS ALERT-BOX ERROR.
-        UNDO, RETURN ERROR.
-    END.
+/*    FIND FIRST buf_schedule-attr NO-LOCK WHERE                                                               */
+/*        buf_schedule-attr.task-type   = p-task-type                                                          */
+/*        and buf_schedule-attr.cre-db-num = INTEGER(p-db-num-char)                                            */
+/*        and buf_schedule-attr.attr-code = ({&attr-schd-free-id} + {&delim-par} + 'exp-active-vbrr') NO-ERROR.*/
+/*    IF AVAILABLE  buf_schedule-attr                                                            */
+/*        AND buf_schedule-attr.task-num <> p-task-num                                           */
+/*        AND buf_schedule-attr.task-num <> - 1                                                  */
+/*        and p-task-num <> - 1                                                                  */
+/*        THEN                                                                                   */
+/*    DO:                                                                                        */
+/*        MESSAGE                                                                                */
+/*            substitute("Уже есть расписание сохранения параметров выгрузки чеков для БД &1&2" +*/
+/*            "номер расписания &3"                                                              */
+/*            ,buf_schedule-attr.cre-db-num                                                      */
+/*            ,{&NEW-LINE}                                                                       */
+/*            ,buf_schedule-attr.task-num)                                                       */
+/*            VIEW-AS ALERT-BOX ERROR.                                                           */
+/*        UNDO, RETURN ERROR.                                                                    */
+/*    END.                                                                                       */
     find first buf_schedule no-lock
         where buf_schedule.task-type   = p-task-type
         and buf_schedule.cre-db-num  = INTEGER(p-db-num-char)
@@ -964,6 +1047,72 @@ PROCEDURE attach-attr-to-schedule-line :
 
 END PROCEDURE.
 
+PROCEDURE object-select :
+do on error undo, return error :
+
+case rs-1 :screen-value in frame Dialog-frame:
+    when "2" then do:
+        assign
+          ed-object :screen-value in frame Dialog-frame = {&cmp} + string( p-curr-host-code ) + " " + v-host-name
+        .
+    end.
+    when "3" then do:
+        for each temp_obj-list :
+            delete temp_obj-list.
+        end.
+        create temp_obj-list.
+        assign
+            temp_obj-list.obj-type  = p-curr-obj-type
+            temp_obj-list.obj-code  = p-curr-obj-code
+            ed-object :screen-value = p-curr-obj-type + string( p-curr-obj-code )
+        .
+    end.
+    otherwise ed-object :screen-value = "".
+    
+end case.
+
+end.
+END PROCEDURE.
+
+PROCEDURE get-host-name :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+do
+on error undo, return error
+:
+define output parameter p-host-name as character    no-undo.
+
+define buffer buf_clients   for ub.clients.
+
+    find first buf_clients no-lock
+/*         where buf_clients.obj-type = p-curr-obj-type*/
+/*           and buf_clients.obj-code = p-curr-obj-code*/
+         where buf_clients.obj-type = {&cmp}
+           and buf_clients.obj-code = p-curr-host-code
+    no-error.
+    if not available buf_clients
+    then do:
+        message
+          vss-workfile vss-revision vss-description
+          skip "Не удалось найти текущую фирму"
+          skip return-value
+          skip trim(error-status :get-message(1))
+               trim(error-status :get-message(2))
+               trim(error-status :get-message(3))
+               trim(error-status :get-message(4))
+               trim(error-status :get-message(5))
+        view-as alert-box error.
+        undo, return error .
+    end.
+    else assign
+            p-host-name = buf_clients.obj-name
+    .
+end.
+END PROCEDURE. /* get-host-name */
+
 
 PROCEDURE flt-save :
     /*------------------------------------------------------------------------------
@@ -988,16 +1137,36 @@ PROCEDURE flt-save :
         :
             
         assign frame {&frame-name}
-    
             date-to
             date-from
             gds-inf-po
             gds-active
             v-directory
             code_pnpo
+            rs-1
             bge-active 
             bge-inf-po
             .
+  case rs-1 :screen-value  :
+  when "2"  then assign
+          v-obj-range = 2
+          v-obj-list = string(p-curr-host-code)
+      .
+  when "3"  then do:
+      assign
+          v-obj-range = 3
+          v-obj-list = ""
+      .
+      for each temp_obj-list :
+        v-obj-list = v-obj-list + "," + temp_obj-list.obj-type + "," + string( temp_obj-list.obj-code ) .
+      end.
+      v-obj-list = substring(v-obj-list, 2).
+  end.
+  otherwise assign
+          v-obj-range = 2
+          v-obj-list = string(p-curr-host-code)
+  .
+  end case.
     
         v-naim = string(date-to) + "," 
             + string(date-from) + "," 
@@ -1006,10 +1175,13 @@ PROCEDURE flt-save :
             + v-directory + ","
             + code_pnpo + ","
             + string(bge-active) + ","
-            + string(bge-inf-po) + ","
-            + p-obj-list
+            + string(bge-inf-po)
             .
-    
+        v-list = substitute( "&1:&2"
+                             , v-obj-range
+                             , v-obj-list
+                             )
+        .
         run uf-set ( input {&uf-bge-active-vbrr}
             , input v-cntxt-userid
             , input v-list
@@ -1023,6 +1195,11 @@ PROCEDURE flt-save :
 end procedure.
     
 PROCEDURE flt-load :
+  define variable v-obj-range      as integer   no-undo .
+  define variable v-obj-list       as character no-undo .
+  define variable v-obj-type       as character no-undo .
+  define variable v-obj-code       as integer   no-undo .
+  define variable v-i              as integer   no-undo .
     define variable v-naim        as character no-undo .
     define variable v-list        as character no-undo .
     define variable v-print-graft as logical   no-undo .
@@ -1030,7 +1207,6 @@ PROCEDURE flt-load :
     define variable v-type-price  as logical   no-undo .
     define variable v-type-val    as logical   no-undo .
     define variable v-found       as logical   no-undo .
-    define variable v-str         as character no-undo .
     define variable v-obj-tot     as integer   no-undo .
     define variable v-ed-object   as char      no-undo.
     
@@ -1051,9 +1227,8 @@ PROCEDURE flt-load :
             , output  v-type-price
             , output  v-type-val
             ) .
-        if num-entries(v-naim) >= 8 then 
+        if num-entries(v-naim) = 8 then 
         do: 
-    
             assign
                 date-to     = date( entry( 1, v-naim ) )
                 date-from   = date(  entry( 2, v-naim ) )
@@ -1065,18 +1240,12 @@ PROCEDURE flt-load :
                 bge-inf-po  = logical(entry( 8, v-naim ) )
                 no-error
                 .
-            do while i <> (num-entries(v-naim) - 8) :
-                p-obj-list =  p-obj-list + entry(8 + (i * 2 - 1 ) , v-naim) + "," + entry((8 + (i * 2)) ,  v-naim ) + "," no-error.
-                i = i + 1 .
-            end.
-            i = 1.
-p-obj-list = right-trim(p-obj-list, ",").
-/*message p-obj-list view-as alert-box.*/
-
-    
         end.
+        date-from = date-to + 1. 
+        date-to = today.
+        date-from = minimum(date-from, date-to). 
+        ed-object = "".
         display
-    
             date-to
             date-from
             gds-inf-po
@@ -1087,22 +1256,55 @@ p-obj-list = right-trim(p-obj-list, ",").
             bge-inf-po
             ed-object
             with frame {&frame-name}.
-            
-/*        do while i <> num-entries(p-obj-list) + 1    :        */
-/*            v-ed-object = v-ed-object + entry(i, p-obj-list) .*/
-/*            if i modulo 2  = 0 then                           */
-/*            do:                                               */
-/*                v-ed-object = trim(v-ed-object, ',') + ",".   */
-/*            end.                                              */
-/*            i = i + 1.                                        */
-/*        end.                                                  */
-            
-        ed-object :SCREEN-VALUE = p-obj-list
+
+    if num-entries(v-list,':') = 2
+    then do:
+      assign
+        rs-1        = integer(entry(1, v-list, ':'))
+        v-obj-list  = entry(2, v-list, ':')
+        v-obj-tot   = num-entries(v-obj-list)
+      .
+      display
+        rs-1
+      with frame {&frame-name}.
+      for each temp_obj-list :
+        delete temp_obj-list.
+      end.
+      case rs-1:
+        when 2 then do:
+          ed-object :screen-value in frame Dialog-frame = {&cmp} + v-obj-list.
+        end.
+        when 3 then do:
+          if v-obj-tot modulo 2 = 0
+          then do:
+            do v-i = 1 to v-obj-tot / 2 :
+              assign
+                v-obj-type =          entry( v-i * 2 - 1, v-obj-list )
+                v-obj-code = integer( entry( v-i * 2,     v-obj-list ) )
+              .
+              find first temp_obj-list no-lock
+                where temp_obj-list.obj-type = v-obj-type
+                  and temp_obj-list.obj-code = v-obj-code no-error .
+              if available temp_obj-list then next.
+              create temp_obj-list.
+              assign
+                temp_obj-list.obj-type = v-obj-type
+                temp_obj-list.obj-code = v-obj-code
+              .
+            end. /* do v-i = 1 to v-obj-tot / 2 */
+            assign
+              ed-object :screen-value in frame {&frame-name} = v-obj-list
             .
+          end. /* if v-obj-tot modulo 2 = 0 */
+        end. /* when 3 */
+      end case.
+    end. /* if num-entries(v-str,':') = 2 */
+
+
+p-obj-list = v-obj-list.
             
     end.
 end procedure.
-    
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

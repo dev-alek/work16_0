@@ -28,7 +28,13 @@ DEFINE VARIABLE p-action         AS CHARACTER NO-UNDO.
 DEFINE VARIABLE p-cancel         AS LOGICAL NO-UNDO.
 DEFINE VARIABLE p-params         AS CHARACTER NO-UNDO.
 
-
+    { gbl/getcntxt.i def }
+    { gbl/getcntxt.i get }
+    assign
+        p-curr-host-code  = v-cntxt-host-code-obj
+        p-curr-obj-type = v-cntxt-obj-type
+        p-curr-obj-code = v-cntxt-obj-code
+    .
 
 run bge/bge-active-vbrr.w ( parparentproc
               , p-curr-host-code
