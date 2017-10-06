@@ -1123,6 +1123,12 @@ procedure lib-rvs_rvsplace : /* revision-place */
   on endkey undo, return error substitute( "&1(lib-rvs_rvsplace). endkey", vss-workfile )
   :
 
+    
+
+      define variable v-value       as character no-undo.
+      define variable v-ok          as logical   no-undo.
+      define variable pl-twice-code as character no-undo.
+    
     define variable anl-loc       like ub.place.loc1 no-undo.
     define variable v_string-tmp  as   character     no-undo.
     define variable v_command     as   character     no-undo.
@@ -1264,6 +1270,8 @@ procedure lib-rvs_rvsplace : /* revision-place */
     .
     rpt:
     repeat :
+         is_FatalError = no.
+        pl-twice-code = "" . 
       import stream str-anl unformatted v_string-tmp.
       /* Отсекем комментарий */
       if index( v_string-tmp, v_comment ) > 0 then do:
@@ -1285,7 +1293,26 @@ procedure lib-rvs_rvsplace : /* revision-place */
             and bf_place.obj-code = p-obj-code
             and bf_place.loc1     = trim( entry( 2, v_string-tmp, '=' ) )
           no-error.
-        if not available bf_place then do:
+          
+          
+          if not available bf_place  then 
+          do:
+              twice-code:  for each  place where place.obj-code =  p-obj-code and place.obj-type = p-obj-type and place.is-meas = yes : 
+                  run placelib_get-attr  ( input {&place-twice-code}
+                      ,input p-obj-code
+                      ,input p-obj-type
+                      ,input place.pl-code
+                      ,output v-value
+                      ,output v-ok      ) no-error.   
+        
+                  if v-ok then pl-twice-code = v-value .
+                  if pl-twice-code =  trim( entry( 2, v_string-tmp, '=' ) ) then leave twice-code.
+              end.
+                                message pl-twice-code  view-as alert-box.
+              
+              if pl-twice-code = ""  then 
+              do: 
+/*                  message "1" view-as alert-box.*/
           put stream str-err unformatted substitute( 'Не найден резервуар по системе с локальным кодом(коорд1) &1 .'
                                                   , trim( entry( 2, v_string-tmp, '=' ) ) ) skip .
           assign
@@ -1293,7 +1320,12 @@ procedure lib-rvs_rvsplace : /* revision-place */
           .
           next rpt .
         end.
-        if bf_place.is-meas = no then do:
+          end.
+          
+          if   pl-twice-code = "" and available bf_place then 
+          do: 
+              if bf_place.is-meas = no   then 
+              do:
           put stream str-err unformatted substitute( 'Получены данные с приборов по резервуару &1 '
                                                   + 'с локальным кодом(коорд1) &2, определенного в системе как '
                                                   + 'неизмеряемый.'
@@ -1304,14 +1336,40 @@ procedure lib-rvs_rvsplace : /* revision-place */
           .
           next rpt .
         end.
-        create tt-meas-file.
-        assign
-          tt-meas-file.obj-type = p-obj-type
-          tt-meas-file.obj-code = p-obj-code
-          tt-meas-file.pl-code  = bf_place.pl-code
-          tt-meas-file.loc1     = bf_place.loc1
-          l_read = yes
-        .
+          end.
+          if   pl-twice-code = "" then 
+          do: 
+              find first tt-meas-file where tt-meas-file.obj-type = p-obj-type
+                  and tt-meas-file.obj-code = p-obj-code
+                  and tt-meas-file.pl-code  = bf_place.pl-code
+                  and tt-meas-file.loc1     = bf_place.loc1 no-error .
+              if not AVAILABLE tt-meas-file then do:                    
+              create tt-meas-file.
+              assign
+                  tt-meas-file.obj-type = p-obj-type
+                  tt-meas-file.obj-code = p-obj-code
+                  tt-meas-file.pl-code  = bf_place.pl-code
+                  tt-meas-file.loc1     = bf_place.loc1
+                  l_read                = yes
+                  .
+              end.    
+          end.
+          else 
+          do: 
+              find first tt-meas-file where tt-meas-file.obj-type = p-obj-type
+                  and tt-meas-file.obj-code = p-obj-code
+                  and tt-meas-file.loc1     = pl-twice-code no-error .
+              if not AVAILABLE tt-meas-file then do:    
+              create tt-meas-file.
+              assign
+                  tt-meas-file.obj-type = p-obj-type
+                  tt-meas-file.obj-code = p-obj-code
+                  /*          tt-meas-file.pl-code  = bf_place.pl-code*/
+                  tt-meas-file.loc1     = pl-twice-code
+                  l_read                = yes
+                  .
+              end.                
+          end.
       end.
       else do:
         /* если резервуар корректный, то читаем по нему данные */
@@ -1383,12 +1441,16 @@ procedure lib-rvs_rvsplace : /* revision-place */
                                        bf_pl-level.obj-code = tt-meas-file.obj-code and
                                        bf_pl-level.pl-code  = tt-meas-file.pl-code  and
                                        bf_pl-level.pl-level = varlevel-sm           no-error.
-          if not available bf_pl-level then do:
+            if not available bf_pl-level then 
+            do:  
+                if tt-meas-file.pl-code <> 0 then 
+                do: 
             assign
               is_FatalError = yes
              .
             put stream str-err "Вычисляем объем резервуаров через градуировочные таблицы. Для резервуара " tt-meas-file.loc1 " не задан объем для уровня " varlevel-sm skip.
           end.
+            end.
           else do:
             if varlevel-sm = tt-meas-file.level-total then do:
               assign
@@ -1516,15 +1578,28 @@ procedure lib-rvs_rvsplace : /* revision-place */
       find first tt-meas where
                 tt-meas.obj-type = tt-meas-file.obj-type and
                 tt-meas.obj-code = tt-meas-file.obj-code and
-                tt-meas.pl-code  = tt-meas-file.pl-code  no-error .
+                tt-meas.pl-code  = tt-meas-file.pl-code  and
+                tt-meas.loc1     = tt-meas-file.loc1 no-error .
       if not available tt-meas then do:
-        if p-one-place = ? then do:
+          if tt-meas-file.loc1 <> "" and tt-meas-file.pl-code = 0  then 
+          do: 
+              create tt-meas .
+              assign
+                  tt-meas.obj-type = tt-meas-file.obj-type 
+                  tt-meas.obj-code = tt-meas-file.obj-code 
+                  tt-meas.loc1     = tt-meas-file.loc1 no-error.
+          end.
+          else 
+          do: 
+              if p-one-place = ? then 
+              do:
           assign
             is_FatalError = yes
           .
         end.
         put stream str-err unformatted substitute( 'Получены данные по резервуару &1 по которому нет запроса.'
                                                 , tt-meas-file.pl-code ) skip .
+      end.
       end.
     end. /* tt-meas-file */
     input  stream str-anl close.

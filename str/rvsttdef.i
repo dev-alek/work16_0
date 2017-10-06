@@ -70,7 +70,9 @@ create: Булгаков Андрей Николаевич
     field brutto-tc-qnty like ub.rvs-line.brutto-tc-qnty
     field meas-vol-oil   as logical initial no
     field meas-vol-water as logical initial no
-    field water-qnty     like ub.rvs-line.measure-qnty.
+    field water-qnty     like ub.rvs-line.measure-qnty
+    field log-brutto as logical
+    index pi        as primary   unique loc1.
 &endif
 
 &scop self-name tt-meas-file
@@ -80,7 +82,8 @@ create: Булгаков Андрей Николаевич
                                '{&temp-table_list}'   = 'rvs'  or
                                '{&temp-table_list}'   = 'file' or
       lookup( '{&self-name}',  '{&temp-table_list}' ) > 0      &then
-  define temp-table tt-meas-file no-undo like tt-meas.
+  define temp-table tt-meas-file no-undo like tt-meas
+  .
 &endif
 
 &scop self-name tt-pump-nozzle
