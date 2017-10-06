@@ -48,6 +48,7 @@ define buffer buf_rrdb-option for rrdb-option.
 define variable conf-par as character no-undo.
 define variable ser-wth-conf-par as logical no-undo.
 define variable par-type as character no-undo.
+define variable fin-doc-par as integer no-undo.
 
 define temp-table temp-cash-desk no-undo
   field last-date like ub.chk-doc.chk-date
@@ -1843,7 +1844,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                           ,input p-db-num
                           ,input ub.clients.obj-type
                           ,input ub.clients.obj-code
-                          ,input ub.clients.obj-code
+                          ,input ub.clients.host-code
                           ,input count-str
                           ,input {&all-query-buffers}
                           ,input {&all-query-buffers-export}
@@ -2140,17 +2141,43 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           )
         .
         if p-unload-history then do:
+        output stream slog to rest-rdb.txt append .
+        export stream slog "start rest-c-wth-doc " cur-time-string() .
+        output stream slog close .
+
+        run rest-c-wth-doc in this-procedure
+          ( input ub.clients.obj-type
+          ,input ub.clients.obj-code
+          )
+        .
+        end.
+      end.
+      /*----S----Финансовые-документы----*/
+      { gbl/cashbook.i ub.clients.obj-type ub.clients.obj-code fin-doc-par no-error }
+
+      if fin-doc-par = integer({&cash-book-object}) then do :
+        output stream slog to rest-rdb.txt append .
+        export stream slog "start rest-fin-doc " cur-time-string() .
+        output stream slog close .
+
+        run rest-fin-doc in this-procedure
+          ( input ub.clients.obj-type
+          ,input ub.clients.obj-code
+          )
+        .
+        if p-unload-history then do:
           output stream slog to rest-rdb.txt append .
-          export stream slog "start rest-c-wth-doc " cur-time-string() .
+          export stream slog "start rest-c-fin-doc " cur-time-string() .
           output stream slog close .
 
-          run rest-c-wth-doc in this-procedure
+          run rest-c-fin-doc in this-procedure
             ( input ub.clients.obj-type
             ,input ub.clients.obj-code
             )
           .
         end.
       end.
+      /*----E----Финансовые-документы----*/
       if ub.clients.obj-type = {&shop} then do:
 
         output stream slog to rest-rdb.txt append .
@@ -4291,6 +4318,179 @@ procedure rest-c-wth-doc :
   end.
   return.
 end procedure. /* rest-c-wth-doc */
+
+procedure rest-fin-doc :
+  define input parameter p-fin-doc_obj-type as character no-undo .
+  define input parameter p-fin-doc_obj-code as integer   no-undo .
+
+
+  do
+  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+  on stop   undo, return error substitute( "&1. stop", vss-workfile )
+  on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+  :
+      assign ind1 = 0
+             fl   = "fin-doc".
+      for each ub.fin-doc no-lock
+          where ub.fin-doc.obj-type = p-fin-doc_obj-type
+            and ub.fin-doc.obj-code = p-fin-doc_obj-code
+      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+      :
+        assign  ind1 = ind1 + 1.
+        display ind1 count-str fl with frame ddd view-as dialog-box.
+        create dst.fin-doc.
+        buffer-copy  ub.fin-doc to dst.fin-doc.
+        for each ub.fin-doc-attr no-lock
+            where ub.fin-doc-attr.host-code     = ub.fin-doc.host-code
+              and ub.fin-doc-attr.fin-doc-code  = ub.fin-doc.fin-doc-code
+        on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+        :
+          create dst.fin-doc-attr.
+          buffer-copy ub.fin-doc-attr to dst.fin-doc-attr.
+        end.
+        for each ub.fin-doc-cor-acc-lk no-lock
+            where ub.fin-doc-cor-acc-lk.host-code     = ub.fin-doc.host-code
+              and ub.fin-doc-cor-acc-lk.fin-doc-code  = ub.fin-doc.fin-doc-code
+        on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+        :
+          create dst.fin-doc-cor-acc-lk.
+          buffer-copy ub.fin-doc-cor-acc-lk to dst.fin-doc-cor-acc-lk.
+          for each ub.fin-doc-cor-acc-lk-attr no-lock
+              where ub.fin-doc-cor-acc-lk-attr.fin-code = ub.fin-doc-cor-acc-lk.fin-code
+          on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+          :
+            create dst.fin-doc-cor-acc-lk-attr.
+            buffer-copy ub.fin-doc-cor-acc-lk-attr to dst.fin-doc-cor-acc-lk-attr.
+          end.
+        end.
+        for each ub.fin-doc-schet-lk no-lock
+            where ub.fin-doc-schet-lk.host-code     = ub.fin-doc.host-code
+              and ub.fin-doc-schet-lk.fin-doc-code  = ub.fin-doc.fin-doc-code
+        on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+        :
+          create dst.fin-doc-schet-lk.
+          buffer-copy ub.fin-doc-schet-lk to dst.fin-doc-schet-lk.
+          for each ub.fin-doc-schet-lk-attr no-lock
+              where ub.fin-doc-schet-lk-attr.code-schet = ub.fin-doc-schet-lk.code-schet
+          on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+          :
+            create dst.fin-doc-schet-lk-attr.
+            buffer-copy ub.fin-doc-schet-lk-attr to dst.fin-doc-schet-lk-attr.
+          end.
+        end.
+        for each ub.fin-doc-tax no-lock
+            where ub.fin-doc-tax.host-code    = ub.fin-doc.host-code
+              and ub.fin-doc-tax.fin-doc-code = ub.fin-doc.fin-doc-code
+        on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+        :
+          create dst.fin-doc-tax.
+          buffer-copy ub.fin-doc-tax to dst.fin-doc-tax.
+          for each ub.fin-doc-tax-attr no-lock
+              where ub.fin-doc-tax-attr.fin-doc-code = ub.fin-doc-tax.fin-doc-code
+          on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+          :
+            create dst.fin-doc-tax-attr.
+            buffer-copy ub.fin-doc-tax-attr to dst.fin-doc-tax-attr.
+          end.
+        end.
+      end.
+      for each ub.fin-doc-obj no-lock
+          where ub.fin-doc-obj.obj-type = p-fin-doc_obj-type
+            and ub.fin-doc-obj.obj-code = p-fin-doc_obj-code
+      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+      :
+        assign  ind1 = ind1 + 1.
+        display ind1 count-str fl with frame ddd view-as dialog-box.
+        create dst.fin-doc-obj.
+        buffer-copy  ub.fin-doc-obj to dst.fin-doc-obj.
+        for each ub.fin-doc-obj-attr no-lock
+            where ub.fin-doc-obj-attr.host-code     = ub.fin-doc-obj.host-code
+              and ub.fin-doc-obj-attr.fin-doc-code  = ub.fin-doc-obj.fin-doc-code
+        on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+        :
+          create dst.fin-doc-obj-attr.
+          buffer-copy ub.fin-doc-obj-attr to dst.fin-doc-obj-attr.
+        end.
+      end.
+    /*  архивы  */
+/*      for each ub.arh-fin-doc-schet-obj no-lock                                                                                                                */
+/*          where ub.arh-fin-doc-schet-obj.obj-type = p-fin-doc_obj-type                                                                                         */
+/*            and ub.arh-fin-doc-schet-obj.obj-code = p-fin-doc_obj-code                                                                                         */
+/*      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )*/
+/*      :                                                                                                                                                        */
+/*        assign  ind1 = ind1 + 1.                                                                                                                               */
+/*        display ind1 count-str fl with frame ddd view-as dialog-box.                                                                                           */
+/*        create dst.arh-fin-doc-schet-obj.                                                                                                                      */
+/*        buffer-copy  ub.arh-fin-doc-schet-obj to dst.arh-fin-doc-schet-obj.                                                                                    */
+/*      end.                                                                                                                                                     */
+/*      for each ub.arh-fin-doc-schet-obj-attr no-lock                                                                                                           */
+/*          where ub.arh-fin-doc-schet-obj-attr.obj-type = p-fin-doc_obj-type                                                                                    */
+/*            and ub.arh-fin-doc-schet-obj-attr.obj-code = p-fin-doc_obj-code                                                                                    */
+/*      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )*/
+/*      :                                                                                                                                                        */
+/*        assign  ind1 = ind1 + 1.                                                                                                                               */
+/*        display ind1 count-str fl with frame ddd view-as dialog-box.                                                                                           */
+/*        create dst.arh-fin-doc-schet-obj-attr.                                                                                                                 */
+/*        buffer-copy  ub.arh-fin-doc-schet-obj-attr to dst.arh-fin-doc-schet-obj-attr.                                                                          */
+/*      end.                                                                                                                                                     */
+/*                                                                                                                                                               */
+/*      for each ub.arh-fin-doc-schet-nal-obj no-lock                                                                                                            */
+/*          where ub.arh-fin-doc-schet-nal-obj.obj-type = p-fin-doc_obj-type                                                                                     */
+/*            and ub.arh-fin-doc-schet-nal-obj.obj-code = p-fin-doc_obj-code                                                                                     */
+/*      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )*/
+/*      :                                                                                                                                                        */
+/*        assign  ind1 = ind1 + 1.                                                                                                                               */
+/*        display ind1 count-str fl with frame ddd view-as dialog-box.                                                                                           */
+/*        create dst.arh-fin-doc-schet-nal-obj.                                                                                                                  */
+/*        buffer-copy  ub.arh-fin-doc-schet-nal-obj to dst.arh-fin-doc-schet-nal-obj.                                                                            */
+/*      end.                                                                                                                                                     */
+
+  end.
+
+end procedure.  /*  rest-fin-doc  */
+
+procedure rest-c-fin-doc :
+  define input parameter p-find_obj-type as character no-undo .
+  define input parameter p-find_obj-code as integer   no-undo .
+
+  do
+  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+  on stop   undo, return error substitute( "&1. stop", vss-workfile )
+  on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+  :
+
+    assign ind1 = 0
+           fl   = "c-fin-doc".
+    for each ub.c-fin-doc no-lock
+        where ub.c-fin-doc.obj-type = p-find_obj-type
+          and ub.c-fin-doc.obj-code = p-find_obj-code
+          and ub.c-fin-doc.is-del = yes
+    on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+    :
+      assign  ind1 = ind1 + 1.
+      display ind1 count-str fl with frame ddd view-as dialog-box.
+      create dst.c-fin-doc.
+      buffer-copy ub.c-fin-doc to dst.c-fin-doc.
+      for each ub.c-fin-doc-attr no-lock
+          where ub.c-fin-doc-attr.host-code     = ub.c-fin-doc.host-code
+            and ub.c-fin-doc-attr.fin-doc-code  = ub.c-fin-doc.fin-doc-code
+      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+      :
+        create dst.c-fin-doc-attr.
+        buffer-copy ub.c-fin-doc-attr to dst.c-fin-doc-attr.
+      end.
+      for each ub.c-fin-doc-tax no-lock
+          where ub.c-fin-doc-tax.host-code     = ub.c-fin-doc.host-code
+            and ub.c-fin-doc-tax.fin-doc-code  = ub.c-fin-doc.fin-doc-code
+      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+      :
+        create dst.c-fin-doc-tax.
+        buffer-copy ub.c-fin-doc-tax to dst.c-fin-doc-tax.
+      end.
+    end.
+  end.
+end procedure.    /*  rest-c-fin-doc  */
+
 procedure rest-wth-doc-full :
   do
   on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
