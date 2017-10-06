@@ -1040,3 +1040,22 @@ on error undo, return error return-value
     end.
     end.
 end.
+
+        /*писать в журнал действий пользователя*/
+        if g#news <> yes
+            then do:
+                run trg/userlog.p (
+                      input {&nwsdochs_action_update}
+                    , input {&table_c-sht-hist}
+                    , input ( buffer buf_c-sht-hist :handle )
+                ) no-error.
+                if error-status :error
+                then do:
+                    undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                                        , {&new-line}
+                                        , vss-workfile
+                                        , return-value
+                                        , error-status :get-message ( 1 ) ).
+                end.
+/*            end.*/
+end.

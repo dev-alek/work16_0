@@ -142,7 +142,31 @@ if not is-super then do:
     view-as alert-box.
   return.
 end.
-
+else do:
+  /* Отмена смены */
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_shift_cancel':U
+    {&cntxt-object}
+    v-chk-act-host-code
+    p-curr-obj-type
+    p-curr-obj-code
+    0
+    0
+    0
+    false
+    glog
+  }
+end.
+if not glog then do:
+  message
+    "Вы не имеете право для отмены смены." skip
+    "Объект:" p-curr-obj-type p-curr-obj-code
+    view-as alert-box.
+  return.
+end.
 /* ищем текущую смену */
 find first buf_shift-obj where
            buf_shift-obj.obj-type = p-curr-obj-type and

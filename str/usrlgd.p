@@ -52,5 +52,21 @@ on error undo, return error
                 , input entry( 1, v-field-value-list, {&delim-key} )
             ).
         end.        /* when "fbr-doc":U */
+        when "c-sht-hist":U
+        then do:
+             DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.    
+             run ref/cshthist.w (
+                  INPUT parParentProc
+                 ,input ''
+                 ,input ?
+                 ,input '':U /* bttns  */
+                 ,input 'one':U /*p-mode  */
+                 ,INPUT entry( 1, v-field-value-list, {&delim-key} )
+                 ,INPUT entry( 2, v-field-value-list, {&delim-key} )
+                 ,INPUT entry( 3, v-field-value-list, {&delim-key} )
+                 ,INPUT entry( 4, v-field-value-list, {&delim-key} )
+                 ,INPUT '':U /*p-subject*/
+                 ,INPUT-OUTPUT v-rid-list) NO-ERROR.
+         end.        
     end case.       /* case p-table-name */
 end.
