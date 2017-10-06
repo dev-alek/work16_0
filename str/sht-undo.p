@@ -44,8 +44,15 @@ define variable v-doc-code              as character    no-undo.
 define variable v-comment               as character    no-undo.
 define variable glog                    as logical      no-undo .
 define variable v-cur-date-error-code   as integer      no-undo.
-
 define buffer buf_shift-obj for ub.shift-obj .
+define variable v-vid-action        as integer no-undo .
+define variable v-vid-ok            as logical  no-undo .
+define variable v-vid-mes           as character no-undo .
+define variable v-vid-param         as longchar no-undo .
+
+define variable v-shift-staff-list  as character no-undo .
+define variable v-shift-manager     as character no-undo .
+
 define buffer buf_rvs-doc       for ub.rvs-doc.
 
 { gbl/getcntxt.i get }
@@ -214,6 +221,45 @@ If not is-closed then do:
     ).
     if v-have-docs = yes
     then do:
+        for each ub.shift-staff no-lock where ub.shift-staff.obj-type = buf_shift-obj.obj-type
+                                          and ub.shift-staff.obj-code = buf_shift-obj.obj-code
+                                          and ub.shift-staff.shift-num = buf_shift-obj.shift-num
+                                          and ub.shift-staff.shift-date = buf_shift-obj.shift-date
+                                          and ub.shift-staff.next-shift = no :
+            if ub.shift-staff.staff-role
+            then
+            assign
+                v-shift-manager = ub.shift-staff.name
+            .
+            else
+            assign
+                v-shift-staff-list = v-shift-staff-list + (if v-shift-staff-list = "" then "" else ", ") + ub.shift-staff.name
+            .                                  
+        end.
+        
+        v-vid-action = 53 .
+        v-vid-param = "SHOP_NUM=" + string(buf_shift-obj.obj-code) + {&delim-par} +
+                      "SHIFT_NUM=" + string(buf_shift-obj.shift-num) + string(buf_shift-obj.shift-date, "99999999") + {&delim-par} +
+                      "ShiftManager=" + v-shift-manager + {&delim-par} +
+                      "ShiftStaff=" + v-shift-staff-list + {&delim-par} +
+                      "RESULT=1" + {&delim-par} + 
+                      "Description=Нельзя отменить смену. На объекте есть  документы.".
+        run trg/userlog.p (
+              input {&nwsdochs_action_update_err}
+            , input {&table_shift-obj}
+            , input ( buffer buf_shift-obj :handle )
+            , input v-vid-action
+            , input v-vid-param
+        ) no-error.
+        if error-status :error
+        then do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                                , {&new-line}
+                                , vss-workfile
+                                , return-value
+                                , error-status :get-message ( 1 ) ).
+        end.    
+                  
         message
             "Нельзя отменить смену. На объекте есть  документы."
             skip (1)
@@ -262,7 +308,49 @@ if is-closed then do:
         message "Сменная сверка заблокирована!" view-as alert-box.
         return.
     end.  
-    buf_shift-obj.status_ = {&sht-current}.   
+    buf_shift-obj.status_ = {&sht-current}.
+    for each ub.shift-staff no-lock where ub.shift-staff.obj-type = buf_shift-obj.obj-type
+                                      and ub.shift-staff.obj-code = buf_shift-obj.obj-code
+                                      and ub.shift-staff.shift-num = buf_shift-obj.shift-num
+                                      and ub.shift-staff.shift-date = buf_shift-obj.shift-date
+                                      and ub.shift-staff.next-shift = no :
+        if ub.shift-staff.staff-role
+        then
+        assign
+            v-shift-manager = ub.shift-staff.name
+        .
+        else
+        assign
+            v-shift-staff-list = v-shift-staff-list + (if v-shift-staff-list = "" then "" else ", ") + ub.shift-staff.name
+        .                                  
+    end.   
+    release buf_shift-obj no-error.
+    if error-status:error
+    then do :
+        
+        v-vid-action = 53 .
+        v-vid-param = "SHOP_NUM=" + string(buf_shift-obj.obj-code) + {&delim-par} +
+                      "SHIFT_NUM=" + string(buf_shift-obj.shift-num) + string(buf_shift-obj.shift-date, "99999999") + {&delim-par} +
+                      "ShiftManager=" + v-shift-manager + {&delim-par} +
+                      "ShiftStaff=" + v-shift-staff-list + {&delim-par} +
+                      "RESULT=1" + {&delim-par} + 
+                      "Description=" + error-status :get-message(1) .
+        run trg/userlog.p (
+              input {&nwsdochs_action_update_err}
+            , input {&table_shift-obj}
+            , input ( buffer buf_shift-obj :handle )
+            , input v-vid-action
+            , input v-vid-param
+        ) no-error.
+        if error-status :error
+        then do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                                , {&new-line}
+                                , vss-workfile
+                                , return-value
+                                , error-status :get-message ( 1 ) ).
+        end.
+    end.
   end.
 end.
 else do:

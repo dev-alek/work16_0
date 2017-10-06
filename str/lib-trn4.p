@@ -69,6 +69,7 @@ on delete of this-procedure do:
 end.
 
 define stream str-err .
+define variable v-mess as character no-undo.
 
 /* Какие товары, требующие резервирования по складским местам, можно включать в документ без резервирования. */
 procedure lib-trn4_gdnorsrv :
@@ -2313,17 +2314,20 @@ define variable v-file-n as character no-undo .
             output  table gds-list )
             no-error.
       if error-status :error then do:
+        v-mess = 
+          vss-workfile + vss-revision + vss-description + {&new-line} +
+          "Ошибка при закрытии документа " + buf_trn-doc.doc-code + {&new-line} +
+          return-value + {&new-line} +
+          trim( error-status :get-message( 1 ) ) +
+          trim( error-status :get-message( 2 ) ) + 
+          trim( error-status :get-message( 3 ) ) +
+          trim( error-status :get-message( 4 ) ) +
+          trim( error-status :get-message( 5 ) ) + {&new-line}.
+        run userlogingerr in this-procedure ( buffer buf_trn-doc, 57, v-mess, v-cntxt-db-num) no-error.
         message
-          vss-workfile vss-revision vss-description skip
-          "Ошибка при закрытии документа " buf_trn-doc.doc-code skip
-          return-value skip
-          trim( error-status :get-message( 1 ) )
-          trim( error-status :get-message( 2 ) )
-          trim( error-status :get-message( 3 ) )
-          trim( error-status :get-message( 4 ) )
-          trim( error-status :get-message( 5 ) ) skip
+          v-mess
         view-as alert-box error.
-        return error.
+        return error v-mess.
       end.
       if varchg-inv = yes then do:
         assign varlog = no.
@@ -2692,17 +2696,19 @@ procedure lib-trn4_int-open :
                     output table gds-list) no-error.
     if error-status:error
     then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при открытии документа " buf_trn-doc.doc-code skip
-        return-value skip
-        trim(error-status :get-message(1))
-        trim(error-status :get-message(2))
-        trim(error-status :get-message(3))
-        trim(error-status :get-message(4))
-        trim(error-status :get-message(5)) skip
-        view-as alert-box error.
-      undo, return error return-value .
+        v-mess = 
+          vss-workfile + vss-revision + vss-description + {&new-line} +
+          "Ошибка при открытии документа " + buf_trn-doc.doc-code + {&new-line} +
+          return-value + {&new-line} +
+          trim( error-status :get-message( 1 ) ) +
+          trim( error-status :get-message( 2 ) ) + 
+          trim( error-status :get-message( 3 ) ) +
+          trim( error-status :get-message( 4 ) ) +
+          trim( error-status :get-message( 5 ) ) + {&new-line}.
+        run userlogingerr in this-procedure ( buffer buf_trn-doc, 57, v-mess, v-cntxt-db-num) no-error.
+        message v-mess
+          view-as alert-box error.
+      undo, return error v-mess .
     end.
   end.
 
@@ -2930,5 +2936,59 @@ if v-qnty-spec = false  then return .
        end.
  end.
 end procedure. /* lib-trn4_corrsprc */
+
+PROCEDURE userlogingerr :
+  
+  define parameter buffer bf_trn-doc for ub.trn-doc .
+  define input parameter p-vid-action as integer no-undo.
+  define input parameter p-mess as character no-undo.
+  define input parameter p-db-num as integer no-undo.
+
+  define buffer bf_clients for ub.clients .
+  define variable v-vid-param       as character no-undo .
+  define variable v-action          as character no-undo .
+  define variable varshift-date as date      no-undo.
+  define variable varshift-num  as integer   no-undo.
+  define variable varshift-name as character no-undo.
+  
+  
+  
+  find first bf_clients no-lock where bf_clients.obj-type = {&prs} and  bf_clients.obj-code = bf_trn-doc.boss no-error.
+  
+  { gbl/curshift.i
+    c-trn-doc.obj-type
+    c-trn-doc.obj-code
+    varshift-date
+    varshift-num
+    varshift-name
+    no-error
+  }
+
+  
+  if available (bf_trn-doc)
+  then do:
+    v-vid-param = "Initiator=" + "User" + {&delim-par} +
+                  "ResponsiblePerson=" + ( if available (bf_clients) then bf_clients.obj-name else "" ) + {&delim-par} +
+                  "SHOP_NUM=" + string(bf_trn-doc.obj-code) + {&delim-par} +
+                  "Contractor=" + bf_trn-doc.cli-name + {&delim-par} +
+                  "DocNum=" + string(bf_trn-doc.doc-code) + {&delim-par} +
+                  "FactDate=" + (if string(bf_trn-doc.fact-date) = ? then '' else string(bf_trn-doc.fact-date)) + {&delim-par} +
+                  "DocType=" + string(bf_trn-doc.doc-type) + {&delim-par} +
+                  "SHIFT_NUM_DOC=" + (if string(bf_trn-doc.shift-num) = ? then '' else string(bf_trn-doc.shift-num)) + (if string(bf_trn-doc.shift-date) = ? then '' else string(bf_trn-doc.shift-date, "99999999")) + {&delim-par} +
+                  "SHIFT_NUM=" + (if string(varshift-num) = ? then '' else string(varshift-num)) + (if string(varshift-date) = ? then '' else string(varshift-date, "99999999")) + {&delim-par} +
+                  "StatusOld=" + "" + {&delim-par} +
+                  "StatusNew=" + string(bf_trn-doc.status_) + (if bf_trn-doc.flag then "+" else "-" ) + {&delim-par} +
+                  "RESULT=" + string( 1 ) + {&delim-par} + 
+                  "Description=" + p-mess no-error.
+  end.
+  
+  run trg/userlog.p (
+        input {&nwsdochs_action_update_err}
+      , input {&table_trn-doc} 
+      , input buffer bf_trn-doc:handle
+      , input p-vid-action
+      , input v-vid-param
+  ) no-error.
+end procedure. /* userloging */
 
 /* $Workfile$   E n d */

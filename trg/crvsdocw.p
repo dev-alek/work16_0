@@ -27,8 +27,14 @@ define variable vss-description as character no-undo initial "Триггер на запись 
 { cmp/vssrevis.i "substitute('&1|&2|&3',ub.c-rvs-doc.rvs-code,ub.c-rvs-doc.chip-num,ub.c-rvs-doc.status_)" }
 { cmp/trg-def.i  }
 
-define variable v-host-code like c-rvs-doc.host-code no-undo.
 
+
+
+
+
+define variable v-vid-action        as integer no-undo .
+define variable v-vid-param         as longchar no-undo .
+define variable v-host-code like ub.c-rvs-doc.host-code no-undo.
 main-block :
 do on error   undo main-block, return error
    on end-key undo main-block, return error
@@ -94,6 +100,57 @@ do on error   undo main-block, return error
     view-as alert-box error.
     undo main-block, return error.
   end.
+/*
+    define buffer old_c-rvs-doc for c-rvs-doc .
+    define variable v-person as character no-undo.
+    for last  old_c-rvs-doc no-lock where
+        old_c-rvs-doc.rvs-code = c-rvs-doc.rvs-code and
+        old_c-rvs-doc.corr-user-db-num = g#db-num and
+        old_c-rvs-doc.chip-num < c-rvs-doc.chip-num  :
+    
+        if old_c-rvs-doc.status_ <> ub.c-rvs-doc.status_ then 
+        do:
+            for first  ub.clients where ub.clients.obj-type = {&prs} and  ub.clients.obj-code = ub.c-rvs-doc.boss no-lock : 
+                v-person = clients.obj-name.
+            end.
+                { str/initiator.i }
+                v-vid-action = 58 .
+                v-vid-param =
+                    "Initiator=" + v-initiator + {&delim-par} +
+                    "ResponsiblePerson=" + (if v-person <> ?  then v-person else "") + {&delim-par} + 
+                    "SHOP_NUM=" + string(ub.c-rvs-doc.obj-code) + {&delim-par} +
+                     "DocType=" + string(ub.c-rvs-doc.rvs-type) + {&delim-par} +
+                    
+                    "DocNum=" + string(ub.c-rvs-doc.rvs-code) + {&delim-par} +
+                    "FactDate=" + (if ub.c-rvs-doc.status_ = {&fact} then string(old_c-rvs-doc.fact-date) else "") + {&delim-par} +
+                    "ShiftNum=" + string(ub.c-rvs-doc.shift-num) + {&delim-par} +
+                    "ShiftDate=" + string(ub.c-rvs-doc.shift-date) + {&delim-par} +
+                    /*              "ShiftNumCurr=" + string(ub.c-rvs-doc.shift-num) + {&delim-par} +  */
+                    /*              "ShiftDateCurr=" + string(ub.c-rvs-doc.shift-date) + {&delim-par} +*/
+                    "StatusOld=" + string(old_c-rvs-doc.status_) + {&delim-par} +
+                    "StatusNew=" + string(ub.c-rvs-doc.status_) + {&delim-par} +
+                    "RESULT=0" + {&delim-par} +
+                    "Description=".
+
+                run trg/userlog.p (
+                    input {&nwsdochs_action_update}
+                    , input {&table_c-rvs-doc}
+                    , input ( buffer ub.c-rvs-doc :handle )
+                    , input v-vid-action
+                    , input v-vid-param
+                    ) no-error.
+                if error-status :error
+                    then 
+                do:
+                   return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                        , {&new-line}
+                        , vss-workfile
+                        , return-value
+                        , error-status :get-message ( 1 ) ).
+                end.
+            end.
+        end.
+*/
 
   if g#news <> yes then do:
     if ub.c-rvs-doc.corr-user-name = "":U then do: assign ub.c-rvs-doc.corr-user-name = g#userid. end.

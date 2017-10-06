@@ -12634,6 +12634,20 @@ end procedure.
 &scop manual-edit-attr-ora-exp-seq 0
 &scop batch-edit-attr-ora-exp-seq 0
 
+
+/* Номер сообщения видеонаблюдения */
+&scop type-attr-mess-id-video {&type-log}
+&scop format-attr-mess-id-video "+/-"
+&scop label-attr-mess-id-video "Номер сообщения видеонаблюдения"
+&scop tooltip-attr-mess-id-video "Номер сообщения видеонаблюдения"
+&scop user-can-edit-attr-mess-id-video false
+&scop output-display-attr-mess-id-video true
+&scop other-attr-mess-id-video '':u
+&scop news-attr-mess-id-video no
+&scop manual-edit-attr-mess-id-video 0
+&scop batch-edit-attr-mess-id-video 0
+
+
 /* сюда добавлять новые параметры атрибутов баз данных */
 
 &scop attr-temp-code ~
@@ -12728,6 +12742,9 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-ora-exp-seq
       {&attr-temp-full-code}
+      &scop attr-code attr-mess-id-video
+      {&attr-temp-full-code}
+
 
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
@@ -12784,6 +12801,8 @@ procedure db-attr-tooltip :
       &scop attr-code attr-schedule-free
       {&attr-temp-code}
       &scop attr-code attr-ora-exp-seq
+      {&attr-temp-code}
+      &scop attr-code attr-mess-id-video
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -13030,6 +13049,8 @@ procedure db-attr-news :
       &scop attr-code attr-schedule-free
       {&attr-news-code}
       &scop attr-code attr-ora-exp-seq
+      {&attr-news-code}
+      &scop attr-code attr-mess-id-video
       {&attr-news-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */

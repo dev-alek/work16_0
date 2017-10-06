@@ -114,6 +114,15 @@ define variable add-option as character no-undo .
 define variable tpsi-mode as integer no-undo .
 define variable l-shift-on as logical no-undo .
 define variable v-rid-list as character no-undo .
+define variable v-vid-action      as integer   no-undo .
+define variable v-vid-param       as longchar  no-undo .
+define variable varobj-shift-date as date      no-undo.
+define variable varobj-shift-num  as integer   no-undo.
+define variable varobj-shift-name as character no-undo.
+define variable v-mess            as character no-undo.
+define buffer bf_clients for ub.clients.
+define buffer buf_trn-doc for ub.trn-doc.
+{ str/initiator.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -702,6 +711,35 @@ DO:
     }
     if NOT v-ok then  return no-apply.
     v-parameter = ink-doc.inkas-code.
+      
+      
+      find first buf_trn-doc no-lock where
+        buf_trn-doc.doc-code = ink-doc.inkas-code no-error.
+      
+      if available (buf_trn-doc)
+      then do:
+        find first bf_clients no-lock where bf_clients.obj-type = {&prs} and  bf_clients.obj-code = buf_trn-doc.boss no-error.
+        { gbl/curshift.i
+        inkas.obj-type
+        inkas.obj-code
+        varobj-shift-date
+        varobj-shift-num
+        varobj-shift-name
+        no-error
+        }
+        
+        v-vid-param = "Initiator=" + "User" + {&delim-par} +
+                      "ResponsiblePerson=" + (if available (bf_clients) then bf_clients.obj-name else "") + {&delim-par} +
+                      "SHOP_NUM=" + string(ink-doc.obj-code) + {&delim-par} +
+                      "Contractor=" + buf_trn-doc.cli-name + {&delim-par} +
+                      "DocNum=" + string(ink-doc.inkas-code) + {&delim-par} +
+                      "FactDate=" + (if string(ink-doc.fact-date) = ? then '' else string(ink-doc.fact-date)) + {&delim-par} +
+                      "DocType=" + "Продажа" + {&delim-par} +
+                      "SHIFT_NUM_DOC=" + (if string(ink-doc.shift-num) = ? then '' else string(ink-doc.shift-num)) + (if string(ink-doc.shift-date) = ? then '' else string(ink-doc.shift-date, "99999999")) + {&delim-par} +
+                      "SHIFT_NUM=" + (if string(varobj-shift-num) = ? then '' else string(varobj-shift-num)) + (if string(varobj-shift-date) = ? then '' else string(varobj-shift-date, "99999999")) + {&delim-par} +
+                      "Status=" + string(ink-doc.status_) no-error.
+    end.
+    
     run str/diallog.w (
           input parParentProc
         , input this-procedure
@@ -718,17 +756,75 @@ DO:
     and return-value <> "error"
     and return-value <> ""
     then do:
-      message
-      substitute("&1 &2"
+      
+      v-mess = substitute("&1 &2"
                 , error-status:get-message(1)
-                , return-value )
+                , return-value ).
+      if v-vid-param <> "" or v-vid-param <> ? 
+      then do:
+        
+        
+        v-vid-param = v-vid-param + {&delim-par}+ "RESULT=" + string( 1 ) + {&delim-par} + "Description=" + v-mess.
+      
+        v-vid-action = 59 .
+        run trg/userlog.p (
+              input {&nwsdochs_action_delete_err}
+            , input {&table_inkas}
+            , input ( buffer ink-doc:handle )
+            , input v-vid-action
+            , input v-vid-param
+        ) no-error.
+      
+      end.
+      message
+        v-mess
       view-as alert-box error .
       return no-apply .
     end.
     if return-value = "error":U then do:
+      
+      v-mess = substitute("&1 &2"
+                , error-status:get-message(1)
+                , return-value ).
+      if v-vid-param <> "" or v-vid-param <> ? 
+      then do:
+        
+        
+        v-vid-param = v-vid-param + {&delim-par}+ "RESULT=" + string( 1 ) + {&delim-par} + "Description=" + v-mess.
+      
+        v-vid-action = 59 .
+        run trg/userlog.p (
+              input {&nwsdochs_action_delete_err}
+            , input {&table_inkas}
+            , input ( buffer ink-doc:handle )
+            , input v-vid-action
+            , input v-vid-param
+        ) no-error.
+      
+      end.
+      
       return no-apply .
     end.
     else do:
+      
+      if v-vid-param <> "" or v-vid-param <> ? 
+      then do:
+        
+        find last ub.c-inkas no-lock where ub.c-inkas.inkas-code = v-parameter and ub.c-inkas.corr-user-db-num = v-cntxt-db-num no-error.
+        
+        v-vid-param = v-vid-param + {&delim-par}+ "RESULT=" + string( 0 ) + {&delim-par} + "Description=".
+      
+        v-vid-action = 59 .
+        run trg/userlog.p (
+              input {&nwsdochs_action_delete}
+            , input {&table_c-inkas}
+            , input ( buffer ub.c-inkas:handle )
+            , input v-vid-action
+            , input v-vid-param
+        ) no-error.
+      
+      end.
+      
       run Openbr in this-procedure ( input yes, input no, input '':U).
       reposition br-docs to recid ri no-error.
     end.

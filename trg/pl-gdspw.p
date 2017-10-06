@@ -69,7 +69,6 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     run cur-time in this-procedure(output v-today, output v-time).
 
     /*пишем куст для c-plc-hist*/
-
     create buf_c-pl-gds-pump.
     buffer-copy old_pl-gds-pump
     except
@@ -92,6 +91,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     buf_c-pl-gds-pump.corr-user-name     = g#userid
     buf_c-pl-gds-pump.corr-date          = v-today
     .
+
     create buf_c-plc-hist.
     buffer-copy buf_c-pl-gds-pump to buf_c-plc-hist
     assign
@@ -99,7 +99,43 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     buf_c-plc-hist.subject = {&table_pl-gds-pump}
     buf_c-plc-hist.is-news = g#news
     .
+      if buf_c-pl-gds-pump.status_ <> new_pl-gds-pump.status_ then 
+      do:
+          define variable v-vid-param as LONGCHAR  no-undo .
+          define variable v-gds-name  as character no-undo .
+          find first ub.goods no-lock where ub.goods.gds-code = buf_c-plc-hist.gds-code no-error .    
+          if AVAILABLE ub.goods then                                                                   
+          do:                                                                                         
+              v-gds-name = ub.goods.gds-name .                                                         
+          end.
+{ str/initiator.i }
 
+          v-vid-param = 
+              "Initiator=" + v-initiator + {&delim-par} +
+              "SHOP_NUM=" + string(buf_c-plc-hist.obj-code) + {&delim-par} +
+              "pl-code=" + string(buf_c-plc-hist.pl-code) + {&delim-par} +
+              "old-status_=" + buf_c-pl-gds-pump.status_  + {&delim-par} +
+              "status_=" + new_pl-gds-pump.status_ + {&delim-par} +
+              "gds-code=" + string(buf_c-plc-hist.gds-code) + {&delim-par} +
+              "gds-name=" + v-gds-name.
+              
+          run trg/userlog.p (
+              input {&nwsdochs_action_update}
+              , input {&table_c-plc-hist}
+              , input ( buffer buf_c-plc-hist :handle )
+              , input 61
+              , input v-vid-param
+              ) no-error.
+          if error-status :error
+              then 
+          do:
+              undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                  , {&new-line}
+                  , vss-workfile
+                  , return-value
+                  , error-status :get-message ( 1 ) ).
+          end.
+      end.    
     /*создаем куст для c-gds-hist*/
     { gbl/hostcode.i new_pl-gds-pump.obj-type new_pl-gds-pump.obj-code v-host-code }
 

@@ -1577,9 +1577,14 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable v-value           as character no-undo.
   define variable v-ok              as logical   no-undo.
 
-  /*параметры для работы с библиотекой ПО МИ*/
-  define variable v-mm as com-handle.
-  define variable v-proc as character no-undo.
+    /*параметры для видеонаблюдения */
+    define variable v-vid-ok  as logical   no-undo .
+    define variable v-vid-mes as character no-undo .
+    define variable v-vid-action as integer    no-undo .
+    define variable v-vid-param  as longchar   no-undo .  
+    /*параметры для работы с библиотекой ПО МИ*/
+    define variable v-mm         as com-handle.
+    define variable v-proc       as character  no-undo.
 
   define variable place-type        as integer no-undo.
   define variable place-SI          as integer no-undo.
@@ -1966,6 +1971,82 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
         end.
       END.
     end.
+    { str/initiator.i }
+    
+    
+
+      /* на объекте включены смены */
+
+    define variable v-shift-date like ub.shift-obj.shift-date no-undo .
+    define variable v-shift-num  like ub.shift-obj.shift-num no-undo .
+    define variable v-shift-name like ub.shift-obj.shift-name no-undo.
+    define variable v-person     as character no-undo.
+    
+          { gbl/curshift.i
+        bf_rvs-line.obj-type
+        bf_rvs-line.obj-code
+        v-shift-date
+        v-shift-num
+        v-shift-name
+        no-error
+      }
+
+    for first  ub.rvs-doc no-lock
+        where ub.rvs-doc.rvs-code = bf_rvs-line.rvs-code : 
+    
+        
+        v-vid-action = 56 .
+        v-vid-param = 
+             "Initiator=" + v-initiator + {&delim-par} +
+            "SHOP_NUM=" + string(ub.rvs-doc.obj-code) + {&delim-par} +
+            "DocType=" + string(ub.rvs-doc.rvs-type) + {&delim-par} +
+            "DocNum=" + string(ub.rvs-doc.rvs-code) + {&delim-par} +
+             /*            "ShiftNum=" + string(ub.rvs-doc.shift-num) + {&delim-par} +  */
+             /*            "ShiftDate=" + string(ub.rvs-doc.shift-date) + {&delim-par} +*/
+
+             "SHIFT_NUM_DOC=" + (if string(ub.rvs-doc.shift-num) = ? then '' else string(ub.rvs-doc.shift-num)) + (if string(ub.rvs-doc.shift-date) = ? then '' else string(ub.rvs-doc.shift-date, "99999999")) + {&delim-par} +  
+             "SHIFT_NUM=" + (if string(v-shift-num) = ? then '' else string(v-shift-num)) + (if string(v-shift-date) = ? then '' else string(v-shift-date, "99999999")) + {&delim-par} +
+
+
+            "PlCode=" + string(bf_rvs-line.pl-code) + {&delim-par} +
+/*            "Density=" + string( bf_rvs-line.density ) + {&delim-par} +*/
+            "Temperature=" + string(bf_rvs-line.state-temperature) + {&delim-par} +
+            "StateDensity=" + string( bf_rvs-line.state-density) + {&delim-par} +
+            "StateMeasureQnty=" + string(  bf_rvs-line.state-measure-qnty  ) + {&delim-par} + 
+            "StateBruttoQnty=" +  string(bf_rvs-line.state-brutto-qnty ) + {&delim-par} +
+            "StateMeasureCliQnty=" + string(bf_rvs-line.state-measure-cli-qnty)  + {&delim-par} +
+            "StateBruttoCliQnty=" + string(bf_rvs-line.state-brutto-cli-qnty ) +  {&delim-par} +
+            "StateLevelTotal=" + string(  bf_rvs-line.state-level-total) +  {&delim-par} +
+            "StateLevelPetrol=" + string(  bf_rvs-line.state-level-petrol  ) +  {&delim-par} + 
+            "StateLevelWater=" + string(  bf_rvs-line.state-level-water    ) +  {&delim-par} +  
+            "StateMeasureTcQnty=" + string(  bf_rvs-line.state-measure-tc-qnty  ) +   {&delim-par} +  
+            "StateBruttoTcQnty=" + string(   bf_rvs-line.state-brutto-tc-qnty ) +   {&delim-par} +              
+            "RESULT=" + string( 0 ) + {&delim-par} + 
+            "Description="  no-error.
+        
+        /*    run trg/video-action.p (input v-vid-action,*/
+        /*        input v-vid-param,                     */
+        /*        output v-vid-ok,                       */
+        /*        output v-vid-mes) .                    */
+        /*                                               */
+        
+        run trg/userlog.p (
+            input {&nwsdochs_action_create}
+            , input {&table_rvs-doc}
+            , input ( buffer ub.rvs-doc :handle )
+            , input v-vid-action
+            , input v-vid-param
+            ) no-error.
+        if error-status :error
+            then
+        do:
+          return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+end.
   END.
   /* Для тех у кого установлен параметр olddens */
   if ptrlprop-olddens = true then do:

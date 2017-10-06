@@ -110,6 +110,14 @@ define variable overval-err-str               as character no-undo .
 define variable v-base                        as logical   no-undo .
 define variable l-ok as logical   no-undo .
 define variable v-chk-act-host-code as integer   no-undo .
+define variable v-mess as character no-undo .
+define variable v-vid-action        as integer no-undo .
+define variable v-vid-param         as longchar no-undo .
+define variable varoldstatus        as character no-undo .
+define variable varshift-date as date      no-undo.
+define variable varshift-num  as integer   no-undo.
+define variable varshift-name as character no-undo.
+{ str/initiator.i }
 
 
 
@@ -655,7 +663,16 @@ if buf_price-list-type.main = true then do:
             .
             if trim(buf_price-doc-forming.name,"@") <> "" then
                     buf_price-doc.PS  =  trim ( buf_price-doc-forming.name,"@" ) .
-
+            
+            varoldstatus = buf_price-doc.status_.
+            { gbl/curshift.i
+                buf_price-doc.obj-type
+                buf_price-doc.obj-code
+                varshift-date
+                varshift-num
+                varshift-name
+                no-error
+              }
             run str/pr-stat.p
               ( input parParentProc
               , input p-log-handle
@@ -666,14 +683,41 @@ if buf_price-list-type.main = true then do:
               , input p-do                     /* оптим */
               ) no-error .
               if error-status :error then do:
+                 v-mess = substitute("Ошибка закрытия переоценки N &3...&1 &2   ",error-status :get-message(1),return-value, buf_price-doc.doc-num). 
                   run write-log-and-file in p-log-handle (
                         input 1
                       , input log-file-name
                       , input 1
-                      , input substitute("Ошибка закрытия переоценки N &3...&1 &2   ",error-status :get-message(1),return-value, buf_price-doc.doc-num)).
-              overval-err = true .
-              overval-err-str = overval-err-str + return-value + " №" + buf_price-doc.doc-num + " " .
-              return error return-value .
+                      , input v-mess ).
+                overval-err = true .
+                overval-err-str = overval-err-str + return-value + " №" + buf_price-doc.doc-num + " " .
+                if available (buf_price-doc)
+                then do:
+                  v-vid-action = 57 .
+                  v-vid-param = "Initiator=" + v-initiator + {&delim-par} +
+                                "SHOP_NUM=" + string(buf_price-doc.obj-code) + {&delim-par} +
+                                "DocNum=" + string(buf_price-doc.doc-num) + {&delim-par} +
+                                "DocType=" + "Переоценка" + {&delim-par} +
+                                "FactDate=" + (if string(buf_price-doc.fact-date) = ? then '' else string(buf_price-doc.fact-date)) + {&delim-par} +
+                                "ShiftNum=" + (if string(buf_price-doc.shift-num) = ? then '' else string(buf_price-doc.shift-num)) + {&delim-par} +
+                                "ShiftDate=" + (if string(buf_price-doc.shift-date) = ? then '' else string(buf_price-doc.shift-date)) + {&delim-par} +
+                                "ShiftNumCurr=" + (if string(varshift-num) = ? then '' else string(varshift-num)) + {&delim-par} +
+                                "ShiftDateCurr=" + (if string(varshift-date) = ? then '' else string(varshift-date)) + {&delim-par} +
+                                "StatusOld=" + varoldstatus + {&delim-par} +
+                                "StatusNew=" + string(buf_price-doc.status_) + {&delim-par} +
+                                "RESULT=1" + {&delim-par} + 
+                                "Description=" + v-mess.
+                  
+                  run trg/userlog.p (
+                        input {&nwsdochs_action_update_err}
+                      , input {&table_price-doc}
+                      , input ( buffer buf_price-doc :handle )
+                      , input v-vid-action
+                      , input v-vid-param
+                  ) no-error.
+                end.
+                return error return-value + {&new-line} + v-mess .
+                
               end.
               find current buf_price-doc no-lock no-error .
               if available buf_price-doc then do:
@@ -682,6 +726,31 @@ if buf_price-list-type.main = true then do:
                       , input log-file-name
                       , input 1
                       , input substitute("Готова переоценка &1 в статусе &2 ",buf_price-doc.doc-num,buf_price-doc.status_)).
+                  v-vid-action = 57 .
+                  v-vid-param = "Initiator=" + v-initiator + {&delim-par} +
+                                "SHOP_NUM=" + string(buf_price-doc.obj-code) + {&delim-par} +
+                                "DocNum=" + string(buf_price-doc.doc-num) + {&delim-par} +
+                                "DocType=" + "Переоценка" + {&delim-par} +
+                                "FactDate=" + (if string(buf_price-doc.fact-date) = ? then '' else string(buf_price-doc.fact-date)) + {&delim-par} +
+                                "SHIFT_NUM_DOC=" + (if string(buf_price-doc.shift-num) = ? then '' else string(buf_price-doc.shift-num)) + (if string(buf_price-doc.shift-date) = ? then '' else string(buf_price-doc.shift-date, "99999999")) + {&delim-par} +
+                                "SHIFT_NUM=" + (if string(varshift-num) = ? then '' else string(varshift-num)) + (if string(varshift-date) = ? then '' else string(varshift-date, "99999999")) + {&delim-par} +
+                                "StatusOld=" + varoldstatus + {&delim-par} +
+                                "StatusNew=" + string(buf_price-doc.status_) + {&delim-par} +
+                                "RESULT=" + {&delim-par} + 
+                                "Description=" no-error.
+                  
+                  find last ub.c-price-doc no-lock where ub.c-price-doc.doc-num = buf_price-doc.doc-num no-error.   
+                  if available (ub.c-price-doc)
+                  then do:
+                    run trg/userlog.p (
+                          input {&nwsdochs_action_update}
+                        , input {&table_c-price-doc}
+                        , input ( buffer ub.c-price-doc :handle )
+                        , input v-vid-action
+                        , input v-vid-param
+                    ) no-error.
+                  end.
+              
               end.
 
         end.

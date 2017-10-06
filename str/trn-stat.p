@@ -106,6 +106,8 @@ define variable clspl-code                   like ub.place.pl-code            no
 define variable fact-ok                      as   logical initial yes         no-undo.  /* факт закрытие без коррекции */
 define variable varstatus                    like ub.trn-doc.status_          no-undo.
 define variable varflag                      like ub.trn-doc.flag_            no-undo.
+define variable varoldstatus                 like ub.trn-doc.status_          no-undo.
+define variable varoldflag                   like ub.trn-doc.flag_            no-undo.
 define variable varcopystatus                like ub.trn-doc.status_          no-undo.
 define variable varcopyflag                  like ub.trn-doc.flag_            no-undo.
 define variable is-ok                        as   logical                     no-undo.
@@ -185,6 +187,9 @@ define variable v-attr-value   as character no-undo.
 define variable v-attr-type    as character no-undo.
 define variable v-is-foreign-producer as logical no-undo.
 define variable p-cons        as integer no-undo .
+define variable v-vid-action        as integer no-undo .
+define variable v-vid-param         as longchar no-undo .
+{ str/initiator.i }
 define temp-table tt-trn no-undo like ub.trn-doc.
 define variable res        as character no-undo .
 define variable infoSectionsTotal as class InfoSectionsTotal no-undo.
@@ -237,6 +242,12 @@ then do:
   run waitfram-hide in this-procedure no-error.
   return error substitute( 'Не найден документ с номером "&1".', bf_trn-doc.doc-code ).
 end.
+
+assign
+  varoldstatus = bf_trn-doc.status_
+  varoldflag = bf_trn-doc.flag_ 
+  .
+
 if search( replace( bf_trn-doc.doc-code, "*", "$" ) + ".err" ) <> ?
 then do:
   os-delete value( replace( bf_trn-doc.doc-code, "*", "$" ) + ".err" ).
@@ -2861,6 +2872,57 @@ for each tt-trn: delete tt-trn. end. /* for each */
       end. /*               if  bf_trn-doc.status_ = {&fact} and bf_contract.usl-opl <> {&bef-contr-pay-nodef} then do:*/
     end.
   end. /*if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) and (bf_trn-doc.contract-code <> 0 or bf_trn-doc.contract-code <> ?) then do:*/
+  
+  find first bf_clients no-lock where bf_clients.obj-type = {&prs} and  bf_clients.obj-code = bf_trn-doc.boss no-error.
+  find last ub.c-trn-doc no-lock where ub.c-trn-doc.doc-code = bf_trn-doc.doc-code and ub.c-trn-doc.corr-user-db-num = v-curr-db-num no-error.
+  
+  if available bf_trn-doc
+  then do:
+  
+    { gbl/curshift.i
+      bf_trn-doc.obj-type
+      bf_trn-doc.obj-code
+      varobj-shift-date
+      varobj-shift-num
+      varobj-shift-name
+      no-error
+    }
+  
+    v-vid-action = 57 .
+    v-vid-param = "Initiator=" + v-initiator + {&delim-par} +
+                  "ResponsiblePerson=" + (if available (bf_clients) then bf_clients.obj-name else "") + {&delim-par} +
+                  "SHOP_NUM=" + string(bf_trn-doc.obj-code) + {&delim-par} +
+                  "Contractor=" + bf_trn-doc.cli-name + {&delim-par} +
+                  "DocNum=" + string(bf_trn-doc.doc-code) + {&delim-par} +
+                  "FactDate=" + (if string(bf_trn-doc.fact-date) = ? then '' else string(bf_trn-doc.fact-date)) + {&delim-par} +
+                  "DocType=" + string(bf_trn-doc.doc-type) + {&delim-par} +
+                  "SHIFT_NUM_DOC=" + (if string(bf_trn-doc.shift-num) = ? then '' else string(bf_trn-doc.shift-num)) + (if string(bf_trn-doc.shift-date) = ? then '' else string(bf_trn-doc.shift-date, "99999999")) + {&delim-par} +
+                  "SHIFT_NUM=" + (if string(varobj-shift-num) = ? then '' else string(varobj-shift-num)) + (if string(varobj-shift-date) = ? then '' else string(varobj-shift-date, "99999999")) + {&delim-par} +
+                  "StatusOld=" + varoldstatus + (if varoldflag then "+" else "-" ) + {&delim-par} +
+                  "StatusNew=" + string(bf_trn-doc.status_) + (if bf_trn-doc.flag then "+" else "-" ) + {&delim-par} +
+                  "RESULT=0" + {&delim-par} + 
+                  "Description=" no-error.
+    
+    if available (ub.c-trn-doc)
+      then 
+      run trg/userlog.p (
+            input {&nwsdochs_action_update}
+          , input {&table_c-trn-doc}
+          , input ( buffer ub.c-trn-doc :handle )
+          , input v-vid-action
+          , input v-vid-param
+      ) no-error.
+      else
+      run trg/userlog.p (
+          input {&nwsdochs_action_update}
+        , input {&table_trn-doc}
+        , input ( buffer bf_trn-doc :handle )
+        , input v-vid-action
+        , input v-vid-param
+      ) no-error.
+    
+  end.
+  
 end. /* transaction */
 
 

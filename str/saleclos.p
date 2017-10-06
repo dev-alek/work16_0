@@ -153,6 +153,15 @@ define variable v-value-decimal   as decimal   no-undo .
 define variable v-value-integer   as integer   no-undo .
 define variable v-close-day-period AS LOGICAL no-undo .
 define variable v-log-handle as handle no-undo.
+define variable v-vid-action      as integer   no-undo .
+define variable v-vid-param       as longchar  no-undo .
+define variable varoldstatus      like ub.trn-doc.status_ no-undo.
+define variable varoldflag        like ub.trn-doc.flag_ no-undo.
+define variable varobj-shift-date as date      no-undo.
+define variable varobj-shift-num  as integer   no-undo.
+define variable varobj-shift-name as character no-undo.
+define variable v-mess            as character no-undo.
+{ str/initiator.i }
 
 
 define buffer buf_cash-pay for ub.cash-pay.
@@ -163,7 +172,7 @@ define buffer buf_ret-doc for ub.trn-doc.
 define buffer locked_inkas for ub.inkas.
 define buffer locked_trn-doc for ub.trn-doc.
 define buffer buf_prt-obj for ub.prt-obj.
-
+define buffer bf_clients for ub.clients.
 
 &glob display-message  run write-log-and-file in p-log-handle ( ~
           input 1 ~
@@ -258,19 +267,22 @@ end.
 
 
 run proc-main in this-procedure no-error .
+
 if error-status:error then do:
-  run write-log-and-file in p-log-handle (
-        input 1
-      , input log-file-name
-      , input 1
-      , input substitute("Ошибка при закрытии продажи &1 &2&3:&4&5 &6"
+  v-mess = substitute("Ошибка при закрытии продажи &1 &2&3:&4&5 &6"
                          , p-inkas-code
                          , (if v-obj-type <> "":U then v-obj-type else "":U)
                          , (if v-obj-code <> 0 then string(v-obj-code) else "":U)
                          , {&new-line}
                          , error-status:get-message(1)
                          , return-value
-                         )).
+                         ).
+  
+  run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input v-mess).
   assign
   v-view-log = yes.
   {&view-log}.
@@ -280,39 +292,129 @@ if error-status:error then do:
   run fbrhist-table-to-base in this-procedure no-error.
   if error-status:error
   then do:
-    run write-log-and-file in p-log-handle (
-          input 1
-        , input log-file-name
-        , input 1
-        , input substitute("Ошибка при закрытии продажи &1:&2Ошибка записи истории производства в базу данных.&2&3 &4"
+    v-mess = substitute("Ошибка при закрытии продажи &1:&2Ошибка записи истории производства в базу данных.&2&3 &4"
                           , p-inkas-code
                           , {&new-line}
                           , error-status:get-message(1)
                           , return-value
-                          )).
+                          ).
+    run write-log-and-file in p-log-handle (
+          input 1
+        , input log-file-name
+        , input 1
+        , input v-mess).
     assign
     v-view-log = yes.
     {&view-log}.
   end.
-if v-view-log
-and p-auto = 0
-then do:
-  message
-  "!!!При закрытии продажи произошли ошибки!!!" skip
-  "!!!Внимательно прочитайте Log-file!!"
-  view-as alert-box error .
-  define variable v-user-action   as character no-undo .
-  define variable v-printed       as logical   no-undo .
-  run gbl/prnfilen.w
-    (input  "Ошибки, возникшие при закрытии продажи"
-    ,input  0
-    ,input  "./saleclos.log":U
-    ,input  7
-    ,output v-user-action
-    ,output v-printed
-    ) .
+  if v-view-log
+  and p-auto = 0
+  then do:
+    message
+    "!!!При закрытии продажи произошли ошибки!!!" skip
+    "!!!Внимательно прочитайте Log-file!!"
+    view-as alert-box error .
+    define variable v-user-action   as character no-undo .
+    define variable v-printed       as logical   no-undo .
+    run gbl/prnfilen.w
+      (input  "Ошибки, возникшие при закрытии продажи"
+      ,input  0
+      ,input  "./saleclos.log":U
+      ,input  7
+      ,output v-user-action
+      ,output v-printed
+      ) .
+  
+  end.
+  
+  find first buf_inkas no-lock where
+                buf_inkas.inkas-code = p-inkas-code no-error.
+  find first buf_trn-doc no-lock where
+    buf_trn-doc.doc-code = p-inkas-code no-error.
+  find last ub.c-inkas no-lock where ub.c-inkas.inkas-code = buf_inkas.inkas-code and ub.c-inkas.corr-user-db-num = v-db-num no-error.
+  
+  if available (buf_inkas) and available (ub.c-inkas )
+  then do:
+    
+    find first bf_clients no-lock where bf_clients.obj-type = {&prs} and  bf_clients.obj-code = buf_trn-doc.boss no-error.
+    { gbl/curshift.i
+    buf_inkas.obj-type
+    buf_inkas.obj-code
+    varobj-shift-date
+    varobj-shift-num
+    varobj-shift-name
+    no-error
+    }
+  
+    v-vid-action = 57 .
+    v-vid-param = "Initiator=" + v-initiator + {&delim-par} +
+                  "ResponsiblePerson=" + (if available (bf_clients) then bf_clients.obj-name else "") + {&delim-par} +
+                  "SHOP_NUM=" + string(buf_inkas.obj-code) + {&delim-par} +
+                  "Contractor=" + buf_trn-doc.cli-name + {&delim-par} +
+                  "DocNum=" + string(buf_inkas.inkas-code) + {&delim-par} +
+                  "FactDate=" + (if string(buf_inkas.fact-date) = ? then '' else string(buf_inkas.fact-date)) + {&delim-par} +
+                  "DocType=" + "Продажа" + {&delim-par} +
+                  "SHIFT_NUM_DOC=" + (if string(buf_inkas.shift-num) = ? then '' else string(buf_inkas.shift-num)) + (if string(buf_inkas.shift-date) = ? then '' else string(buf_inkas.shift-date, "99999999")) + {&delim-par} +
+                  "SHIFT_NUM=" + (if string(varobj-shift-num) = ? then '' else string(varobj-shift-num)) + (if string(varobj-shift-date) = ? then '' else string(varobj-shift-date, "99999999")) + {&delim-par} +
+                  "Status=" + string(buf_inkas.status_) + {&delim-par} +
+                  "RESULT=1" + {&delim-par} + 
+                  "Description=" + v-mess no-error.
+    
+    run trg/userlog.p (
+          input {&nwsdochs_action_update}
+        , input {&table_c-inkas}
+        , input ( buffer ub.c-inkas:handle )
+        , input v-vid-action
+        , input v-vid-param
+    ) no-error.
+  
+  end.
 
 end.
+
+else do:
+  find first buf_inkas no-lock where
+                buf_inkas.inkas-code = p-inkas-code no-error.
+  find first buf_trn-doc no-lock where
+    buf_trn-doc.doc-code = p-inkas-code no-error.
+  find last ub.c-inkas no-lock where ub.c-inkas.inkas-code = buf_inkas.inkas-code and ub.c-inkas.corr-user-db-num = v-db-num no-error.
+  if available (buf_inkas) and available (ub.c-inkas )
+  then do:
+    
+    find first bf_clients no-lock where bf_clients.obj-type = {&prs} and  bf_clients.obj-code = buf_trn-doc.boss no-error.
+    { gbl/curshift.i
+    buf_inkas.obj-type
+    buf_inkas.obj-code
+    varobj-shift-date
+    varobj-shift-num
+    varobj-shift-name
+    no-error
+    }
+  
+    v-vid-action = 57 .
+    v-vid-param = "Initiator=" + v-initiator + {&delim-par} +
+                  "ResponsiblePerson=" + (if available (bf_clients) then bf_clients.obj-name else "") + {&delim-par} +
+                  "SHOP_NUM=" + string(buf_inkas.obj-code) + {&delim-par} +
+                  "Contractor=" + buf_trn-doc.cli-name + {&delim-par} +
+                  "DocNum=" + string(buf_inkas.inkas-code) + {&delim-par} +
+                  "FactDate=" + (if string(buf_inkas.fact-date) = ? then '' else string(buf_inkas.fact-date)) + {&delim-par} +
+                  "DocType=" + "Продажа" + {&delim-par} +
+                  "SHIFT_NUM_DOC=" + (if string(buf_inkas.shift-num) = ? then '' else string(buf_inkas.shift-num)) + (if string(buf_inkas.shift-date) = ? then '' else string(buf_inkas.shift-date, "99999999")) + {&delim-par} +
+                  "SHIFT_NUM=" + (if string(varobj-shift-num) = ? then '' else string(varobj-shift-num)) + (if string(varobj-shift-date) = ? then '' else string(varobj-shift-date, "99999999")) + {&delim-par} +
+                  "StatusOld=" + varoldstatus + (if varoldflag then "+" else "-" ) + {&delim-par} +
+                  "StatusNew=" + string(buf_inkas.status_) + {&delim-par} +
+                  "RESULT=0" + {&delim-par} + 
+                  "Description=" no-error.
+    
+    run trg/userlog.p (
+          input {&nwsdochs_action_update}
+        , input {&table_c-inkas}
+        , input ( buffer ub.c-inkas:handle )
+        , input v-vid-action
+        , input v-vid-param
+    ) no-error.
+  
+  end.
 end.
 
 
@@ -364,6 +466,10 @@ on error undo, return error return-value
       return "":U.
     end.
   end.
+  assign
+    varoldstatus = buf_inkas.status_
+    varoldflag = buf_inkas.flag_ 
+    .
   assign
   v-obj-type = buf_inkas.obj-type
   v-obj-code = buf_inkas.obj-code
