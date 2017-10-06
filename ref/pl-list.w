@@ -248,7 +248,7 @@ X_place.add-qnty COLUMN-LABEL "Доп. кол-во" FORMAT "->>,>>>,>>9.<<<":U
 tt-place-attr.pl-twice-code column-label "Код сдвоенного резервуара" format "X(8)":U
 tt-place-attr.place-type      COLUMN-LABEL "Тип резервуара" FORMAT "X(14)":U
 tt-place-attr.place-Si        COLUMN-LABEL "Средство!измерения" Format ">>>,>>9":U
-tt-place-attr.place-diameter  COLUMN-LABEL "Диаметр резервуара (мм)" format ">>>,>>9.99":U
+tt-place-attr.place-diameter  COLUMN-LABEL "Диаметр резервуара (мм)" format ">,>>>,>>9":U
 tt-place-attr.dead-balance  COLUMN-LABEL "Мертвый остаток" format "->>,>>>,>>9.<<<":U
 tt-place-attr.place-rel-error COLUMN-LABEL "Относительная погрешность!составлениия калибровочной таблицы " FORMAT "9.99":U
 tt-place-attr.place-dens-prov COLUMN-LABEL "Плотность при! поверке резервуара" FORMAT "9.999999999"

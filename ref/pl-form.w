@@ -142,7 +142,7 @@ DEFINE VARIABLE dens-prov AS DECIMAL FORMAT "9.9999999999" INITIAL 0
      VIEW-AS FILL-IN
      SIZE 18 BY 1 NO-UNDO.
      
-DEFINE VARIABLE place-diameter AS DECIMAL FORMAT ">>>>>>>>>,>>>>>>>>>,>>>>>>>>>>>999999999,999999999":U INITIAL 0 
+DEFINE VARIABLE place-diameter AS DECIMAL FORMAT ">,>>>,>>9":U INITIAL 0 
      LABEL "Диаметр резервуара(мм)" 
      VIEW-AS FILL-IN 
      SIZE 11.63 BY 1 NO-UNDO.
