@@ -2853,7 +2853,10 @@ if avail buf_bar-code then do:
           then do:
             NEXT _buf_chk-gds.
           end.
-
+          if buf0_chk-discnt.object-sum - v-excsum = 0
+          then do:
+            v-excsum = v-excsum - buf_chk-gds.doc-qnty. /* все равно применяем скидку, так как другого товара нету */
+          end.
           assign
           str-dec = if buf0_chk-discnt.object-sum <> 0
                     then (if buf0_chk-discnt.discnt-value-pcnt = 100
