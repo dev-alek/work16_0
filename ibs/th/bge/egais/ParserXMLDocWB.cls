@@ -219,39 +219,44 @@ class ibs.th.bge.egais.ParserXMLDocWB:
 
   method private void GetChildren(hParent as handle, level as integer):
         
-    define variable i           as integer   no-undo.
-    define variable hNoderef    as handle    no-undo.
-    define variable hText       as handle    no-undo.
-    define variable nameParent  as handle    no-undo.
-    define variable good        as logical   no-undo.
-    define variable parentName  as character no-undo.
-    define variable noderefName as character no-undo.
+    define variable i             as integer   no-undo.
+    define variable hNoderef      as handle    no-undo.
+    define variable hText         as handle    no-undo.
+    define variable nameParent    as handle    no-undo.
+    define variable good          as logical   no-undo.
+    define variable parentName    as character no-undo.
+    define variable parentNS-URI  as character no-undo.
+    define variable noderefName   as character no-undo.
+    define variable noderefNS-URI as character no-undo.
         
     create x-noderef hNoderef.
     create x-noderef hText .
     
-
+    parentNS-URI = hParent:namespace-uri.
     parentName = hParent:name.
     case true:
-      when parentName begins "wb" and not parentName begins "wbr" then do:
+      when parentNS-URI = "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" then do:
+        parentName = "ns:" + entry (2, parentName, ":").
+      end.
+      when parentNS-URI = "http://fsrar.ru/WEGAIS/TTNSingle_v2" or parentNS-URI = "http://fsrar.ru/WEGAIS/TTNSingle" then do:
         parentName = "wb:" + entry (2, parentName, ":").
       end.
-      when parentName begins "wbr" then do:
+      when parentNS-URI = "http://fsrar.ru/WEGAIS/TTNInformF2Reg" or parentNS-URI = "http://fsrar.ru/WEGAIS/TTNInformBReg" then do:
         parentName = "wbr:" + entry (2, parentName, ":").
       end.
-      when parentName begins "wa" then do:
+      when parentNS-URI = "http://fsrar.ru/WEGAIS/ActTTNSingle_v2" or parentNS-URI = "http://fsrar.ru/WEGAIS/ActTTNSingle" then do:
         parentName = "wa:" + entry (2, parentName, ":").
       end.
-      when parentName begins "tc" then do:
+      when parentNS-URI = "http://fsrar.ru/WEGAIS/Ticket" then do:
         parentName = "tc:" + entry (2, parentName, ":").
       end.
       when parentName begins "wt" then do:
         parentName = "wt:" + entry (2, parentName, ":").
       end.
-      when parentName begins "oref" or parentName begins "d5p1" or parentName begins "d7p1" then do:
+      when parentNS-URI = "http://fsrar.ru/WEGAIS/ClientRef_v2" or parentNS-URI = "http://fsrar.ru/WEGAIS/ClientRef" then do:
         parentName = "oref:" + entry (2, parentName, ":").
       end.
-      when parentName begins "pref" or parentName begins "d6p1" then do:
+      when parentNS-URI = "http://fsrar.ru/WEGAIS/ProductRef_v2" or parentNS-URI = "http://fsrar.ru/WEGAIS/ProductRef" then do:
         parentName = "pref:" + entry (2, parentName, ":").
       end.
     end.
@@ -269,27 +274,31 @@ class ibs.th.bge.egais.ParserXMLDocWB:
       if error-status:error
         then next.
       
+      noderefNS-URI = hNoderef:namespace-uri.
       noderefName = hNoderef:name.
       case true:
-        when noderefName begins "wb" and not noderefName begins "wbr"  then do:
+        when noderefNS-URI = "http://fsrar.ru/WEGAIS/WB_DOC_SINGLE_01" then do:
+          noderefName = "ns:" + entry (2, noderefName, ":").
+        end.
+        when noderefNS-URI = "http://fsrar.ru/WEGAIS/TTNSingle_v2" or noderefNS-URI = "http://fsrar.ru/WEGAIS/TTNSingle" then do:
           noderefName = "wb:" + entry (2, noderefName, ":").
         end.
-        when noderefName begins "wbr" then do:
+        when noderefNS-URI = "http://fsrar.ru/WEGAIS/TTNInformF2Reg" or noderefNS-URI = "http://fsrar.ru/WEGAIS/TTNInformBReg" then do:
           noderefName = "wbr:" + entry (2, noderefName, ":").
         end.
-        when noderefName begins "wa" then do:
+        when noderefNS-URI = "http://fsrar.ru/WEGAIS/ActTTNSingle_v2" or noderefNS-URI = "http://fsrar.ru/WEGAIS/ActTTNSingle" then do:
           noderefName = "wa:" + entry (2, noderefName, ":").
         end.
-        when noderefName begins "tc" then do:
+        when noderefNS-URI = "http://fsrar.ru/WEGAIS/Ticket" then do:
           noderefName = "tc:" + entry (2, noderefName, ":").
         end.
         when noderefName begins "wt" then do:
           noderefName = "wt:" + entry (2, noderefName, ":").
         end.
-        when noderefName begins "oref" or noderefName begins "d5p1" or noderefName begins "d7p1"  then do:
+        when noderefNS-URI = "http://fsrar.ru/WEGAIS/ClientRef_v2" or noderefNS-URI = "http://fsrar.ru/WEGAIS/ClientRef" then do:
           noderefName = "oref:" + entry (2, noderefName, ":").
         end.
-        when noderefName begins "pref" or noderefName begins "d6p1" then do:
+        when noderefNS-URI = "http://fsrar.ru/WEGAIS/ProductRef_v2" or noderefNS-URI = "http://fsrar.ru/WEGAIS/ProductRef" then do:
           noderefName = "pref:" + entry (2, noderefName, ":").
         end.
       end.
