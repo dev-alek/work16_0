@@ -96,8 +96,8 @@ define variable varfunc-delta       like ub.icnt-doc.state-el-cnt no-undo.
 &scop label-clmn_6     'Смена'
 &scop label-clmn_7     '№'
 &scop label-clmn_8     'Объект'
-&scop label-clmn_9     'Показания!электронных!счетчиков'
-&scop label-clmn_10    'Показания!механических!счетчиков'
+&scop label-clmn_9     'Количество!по счетчику'
+&scop label-clmn_10    'Количество!по мернику'
 &scop label-clmn_11    'Разница'
 &scop label-clmn_12    'Измерения!электронных!счетчиков'
 

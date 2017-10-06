@@ -54,6 +54,9 @@ define buffer buf_doc-pl          for ub.doc-pl .
 define buffer buf_goods           for ub.goods .
 define buffer buf_clients         for ub.clients .
 define buffer previous-shift-obj  for ub.shift-obj.
+define buffer buf_icnt-doc for ub.icnt-doc .
+define buffer buf_icnt-line for ub.icnt-line .
+
 define variable v-file-name-rep-htm as character no-undo.
 define variable var-report-num as int no-undo.
 
@@ -73,33 +76,36 @@ define stream OutStr-html.
 
 
 DEFINE TEMP-TABLE tt-rep NO-UNDO
-FIELD shift-date          like ub.trn-doc.shift-date
-FIELD shift-num           like ub.trn-doc.shift-num
-FIELD time-start          like ub.shift-obj.open-time
-FIELD time-end            like ub.shift-obj.close-time
-FIELD date-end            like ub.shift-obj.close-date
-FIELD gds-code            like ub.goods.gds-code
-FIELD pl-code             LIKE ub.doc-pl.pl-code
-FIELD goods-name          LIKE ub.goods.gds-name
-FIELD rest_start_measure-kg  LIKE ub.rvs-line.state-measure-qnty
-FIELD rest_start_book-kg     LIKE ub.rvs-line.system-qnty /* расчет. остаток на начло кг*/
-FIELD rest_start_measure-l   LIKE ub.rvs-line.state-measure-qnty
-FIELD rest_start_book-l      LIKE ub.rvs-line.system-qnty /* расчет. остаток на начло лт*/
-FIELD wayb_fact-kg        LIKE ub.trn-doc.cli-qnty /* приход кг*/
-FIELD wayb_fact-l         LIKE ub.trn-doc.fact-qnty /* приход лт*/
-FIELD exp-kg              LIKE ub.trn-doc.cli-qnty  /* расход кг*/
-FIELD exp-l               LIKE ub.trn-doc.fact-qnty  /* расход лт*/
-FIELD rest_end_measure-kg   LIKE ub.rvs-line.state-measure-cli-qnty /* факт остаток на конец кг*/
-FIELD rest_end_book-kg      LIKE ub.rvs-line.system-qnty /* расчет. остаток на конец кг*/
-FIELD rest_end_measure-l    LIKE ub.rvs-line.state-measure-qnty /* факт остаток на конец лт*/
-FIELD rest_end_book-l       LIKE ub.rvs-line.system-qnty /* расчет. остаток на конец лт*/
-FIELD rest_end_balans-kg    LIKE ub.rvs-line.state-measure-cli-qnty  /* результат кг */
-FIELD rest_end_balans-l     LIKE ub.rvs-line.system-qnty /* результат лт */
-FIELD err-kg                LIKE ub.rvs-line.state-measure-qnty  /* погрешность кг*/
-FIELD err-l                 LIKE ub.rvs-line.system-qnty
-FIELD staff                 like ub.shift-staff.name
-FIELD place_loc1            like ub.place.loc1
-INDEX pi AS UNIQUE PRIMARY gds-code pl-code shift-date shift-num 
+    FIELD shift-date            like ub.trn-doc.shift-date
+    FIELD shift-num             like ub.trn-doc.shift-num
+    FIELD time-start            like ub.shift-obj.open-time
+    FIELD time-end              like ub.shift-obj.close-time
+    FIELD date-end              like ub.shift-obj.close-date
+    FIELD gds-code              like ub.goods.gds-code
+    FIELD pl-code               LIKE ub.doc-pl.pl-code
+    FIELD goods-name            LIKE ub.goods.gds-name
+    FIELD rest_start_measure-kg LIKE ub.rvs-line.state-measure-qnty
+    FIELD rest_start_book-kg    LIKE ub.rvs-line.system-qnty /* расчет. остаток на начло кг*/
+    FIELD rest_start_measure-l  LIKE ub.rvs-line.state-measure-qnty
+    FIELD rest_start_book-l     LIKE ub.rvs-line.system-qnty /* расчет. остаток на начло лт*/
+    FIELD wayb_fact-kg          LIKE ub.trn-doc.cli-qnty /* приход кг*/
+    FIELD wayb_fact-l           LIKE ub.trn-doc.fact-qnty /* приход лт*/
+    FIELD exp-kg                LIKE ub.trn-doc.cli-qnty  /* расход кг*/
+    FIELD exp-l                 LIKE ub.trn-doc.fact-qnty  /* расход лт*/
+    FIELD rest_end_measure-kg   LIKE ub.rvs-line.state-measure-cli-qnty /* факт остаток на конец кг*/
+    FIELD rest_end_book-kg      LIKE ub.rvs-line.system-qnty /* расчет. остаток на конец кг*/
+    FIELD rest_end_measure-l    LIKE ub.rvs-line.state-measure-qnty /* факт остаток на конец лт*/
+    FIELD rest_end_book-l       LIKE ub.rvs-line.system-qnty /* расчет. остаток на конец лт*/
+    FIELD rest_end_balans-kg    LIKE ub.rvs-line.state-measure-cli-qnty  /* результат кг */
+    FIELD rest_end_balans-l     LIKE ub.rvs-line.system-qnty /* результат лт */
+    field state-el-cnt          like icnt-line.state-el-cnt
+    field state-mh-cnt          like icnt-line.state-mh-cnt
+    FIELD err-kg                LIKE ub.rvs-line.state-measure-qnty  /* погрешность кг*/
+    FIELD err-l                 LIKE ub.rvs-line.system-qnty
+    FIELD staff                 like ub.shift-staff.name
+    FIELD place_loc1            like ub.place.loc1
+    field density               like ub.rvs-line.density
+    INDEX pi AS UNIQUE PRIMARY gds-code pl-code shift-date shift-num 
  .
 
 define variable var-gds-rest_start_measure-kg  LIKE ub.rvs-line.state-measure-qnty  no-undo.
@@ -216,7 +222,7 @@ assign
               tt-rep.staff               = var-shift-staff
               tt-rep.time-start          = ub.shift-obj.open-time
               tt-rep.time-end            = ub.shift-obj.close-time
-              tt-rep.date-end            =  ub.shift-obj.close-date
+              tt-rep.date-end            = ub.shift-obj.close-date
               .    
 
    
@@ -252,6 +258,7 @@ assign
                 assign
                   tt-rep.wayb_fact-l = tt-rep.wayb_fact-l + ub.doc-pl.fact-qnty
                   tt-rep.wayb_fact-kg = tt-rep.wayb_fact-kg + ub.doc-pl.cli-fact-qnty
+                  tt-rep.density = tt-rep.wayb_fact-kg / tt-rep.wayb_fact-l 
                 .
               end. /* for each doc-line where  */
             end. /* for each ub.trn-doc where  */
@@ -338,7 +345,7 @@ assign
                         
                                    
             for first previous-rvs-doc no-lock
-                  where previous-rvs-doc.obj-type   = parobj-type
+                  where previous-rvs-doc.obj-type = parobj-type
                   and previous-rvs-doc.obj-code   = parobj-code
                   and previous-rvs-doc.shift-date = var-prev-shift-date
                   and previous-rvs-doc.shift-num  = var-prev-shift-num
@@ -356,41 +363,53 @@ assign
                      tt-rep.rest_start_book-l       = buf_rvs-line.system-qnty
                      .                  
              end.     
-             /*
-             for last buf_icnt-doc no-lock
-              where buf_icnt-doc.obj-type     = pobj-type
-                and buf_icnt-doc.obj-code     = pobj-code
+    
+             for each buf_icnt-doc no-lock
+              where buf_icnt-doc.obj-type     = parobj-type
+                and buf_icnt-doc.obj-code     = parobj-code
                 and buf_icnt-doc.doc-type     = {&icnt-err}
                 and buf_icnt-doc.ext-doc-type = {&TDEICNT_Err-meas}
                 and buf_icnt-doc.status_      = {&fact}                
-                and buf_icnt-doc.fact-order   <= ub.shift-obj.fact-order
+                and buf_icnt-doc.shift-num = ub.shift-obj.shift-num
+                and buf_icnt-doc.shift-date = ub.shift-obj.shift-date
             on error undo, return error return-value
             :
               for each buf_icnt-line no-lock
                 where buf_icnt-line.doc-code = buf_icnt-doc.doc-code
                   and buf_icnt-line.obj-code = buf_icnt-doc.obj-code
-                  and buf_icnt-line.obj-type = buf_icnt-doc.obj-type,
-                  first 
-              on error undo, return error return-value
-              :
-                find first buf_goods no-lock
-                  where buf_goods.gds-code = buf_icnt-line.gds-code
-                  no-error .
-                create t-7.
-                assign
-                  t-7.pump-code    = buf_icnt-line.pump-code
-                  t-7.nozzle-code  = buf_icnt-line.nozzle-code
-                  t-7.gds-code     = buf_icnt-line.gds-code
-                  t-7.gds-name     = ( if available buf_goods then buf_goods.gds-name else "Неизвестное название" )
-                  t-7.state-el-cnt = buf_icnt-line.state-el-cnt
-                  t-7.state-mh-cnt = buf_icnt-line.state-mh-cnt
-                  t-7.fact-order   = buf_icnt-doc.fact-order
-                .
+                  and buf_icnt-line.obj-type = buf_icnt-doc.obj-type:
+                  find first ub.pl-gds-pump where ub.pl-gds-pump.obj-code = buf_icnt-line.obj-code
+                                            and ub.pl-gds-pump.obj-type = buf_icnt-line.obj-type
+                                            and ub.pl-gds-pump.pump-code = buf_icnt-line.pump-code
+                                            and ub.pl-gds-pump.status_ <> {&blocked-status}
+                                            and ub.pl-gds-pump.gds-code = buf_icnt-line.gds-code no-error .
+                    if not AVAILABLE ub.pl-gds-pump then do:
+                       find first ub.pl-gds-pump where ub.pl-gds-pump.obj-code = buf_icnt-line.obj-code
+                                            and ub.pl-gds-pump.obj-type = buf_icnt-line.obj-type
+                                            and ub.pl-gds-pump.pump-code = buf_icnt-line.pump-code
+                                            and ub.pl-gds-pump.gds-code = buf_icnt-line.gds-code no-error .
+                    end.                                                   
+/*                  first ub.pl-pump-nozzle where ub.pl-pump-nozzle.nozzle-code = buf_icnt-line.nozzle-code */
+/*                                            and ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code      */
+/*                                            and ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type      */
+/*                                            and ub.pl-pump-nozzle.pump-code = ub.pl-pump-nozzle.pump-code,*/
+
+               find first tt-rep where tt-rep.shift-date   = ub.shift-obj.shift-date
+                              and tt-rep.shift-num    = ub.shift-obj.shift-num
+                              and tt-rep.gds-code    = buf_icnt-line.gds-code
+                              and tt-rep.pl-code     = ub.pl-gds-pump.pl-code
+              no-error .
+                if AVAILABLE tt-rep then do:
+                 assign
+                     tt-rep.state-el-cnt       = buf_icnt-line.state-el-cnt
+                     tt-rep.state-mh-cnt       = buf_icnt-line.state-mh-cnt
+                     tt-rep.err-l = tt-rep.err-l + (tt-rep.state-el-cnt - tt-rep.state-mh-cnt)
+                     tt-rep.err-kg = tt-rep.err-l * tt-rep.density
+                     .
+                 end.                      
               end.
-              
-              
             end.
-            */
+
             var-prev-shift-num = ub.shift-obj.shift-num.
             var-prev-shift-date = ub.shift-obj.shift-date.
     end. /* for each shift-obj */ 
@@ -430,7 +449,7 @@ assign
           v-first-time = tt-rep.time-start.
       end.     
      for last tt-rep by tt-rep.shift-date by tt-rep.shift-num :
-          v-last-date = tt-rep.shift-date.
+          v-last-date = tt-rep.date-end.
           v-last-time = tt-rep.time-end.
       end.  
       output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8' /*no-convert*/.
