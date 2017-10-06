@@ -26,6 +26,9 @@ define input parameter p-action            as character no-undo .
 define input parameter p-no-check-rvs-code as character no-undo .
 define input parameter p-is-berate         as logical   no-undo .
 
+define variable v-auto as logical no-undo.
+
+
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
@@ -58,19 +61,31 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     undo main-block, return error substitute( '&1: не найден документ сверки "&2"', vss-workfile, p-rvs-code ) .
   end.
 
-  for each ub.rvs-line no-lock
-    where ub.rvs-line.rvs-code = ub.rvs-doc.rvs-code
-  on error undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
-  :
-    run trg/lockplgd.p
-      ( input ub.rvs-line.obj-type    /* p-obj-type          */
-      , input ub.rvs-line.obj-code    /* p-obj-code          */
-      , input ub.rvs-line.pl-code     /* p-pl-code           */
-      , input ub.rvs-line.gds-code    /* p-gds-code          */
-      , input p-action                /* p-action            */
-      , input p-no-check-rvs-code     /* p-no-check-rvs-code */
-      , input p-is-berate             /* выводить сообщения  */
-      ) .
-  end.
 
+    find first  doc-attr where 
+        doc-attr.doc-code = rvs-doc.rvs-code and 
+        doc-attr.attr-code = "rvs-auto" and 
+        doc-attr.attr-value = "Yes" no-lock no-error.
+    if available doc-attr then 
+    do: 
+        v-auto = yes .
+    end.
+                
+    if v-auto <> yes then 
+    do: 
+        for each ub.rvs-line no-lock
+            where ub.rvs-line.rvs-code = ub.rvs-doc.rvs-code
+            on error undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+            :
+            run trg/lockplgd.p
+                ( input ub.rvs-line.obj-type    /* p-obj-type          */
+                , input ub.rvs-line.obj-code    /* p-obj-code          */
+                , input ub.rvs-line.pl-code     /* p-pl-code           */
+                , input ub.rvs-line.gds-code    /* p-gds-code          */
+                , input p-action                /* p-action            */
+                , input p-no-check-rvs-code     /* p-no-check-rvs-code */
+                , input p-is-berate             /* выводить сообщения  */
+                ) .
+        end.
+    end.
 end.

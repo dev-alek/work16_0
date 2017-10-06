@@ -35,6 +35,7 @@ define variable vss-description as character no-undo initial "Переход по статуса
 { cmp/library.i  }
 { str/lib-trn.i  }
 { str/lib-rvs.i  }
+{str/autorvs.i}
 { gbl/getsect.i def }
 
 tr:
@@ -61,6 +62,11 @@ define variable v-dif-res       as character no-undo.
     where recid(buf_rvs-doc) = parrecid
   .
   
+    if   autorvs(recid(buf_rvs-doc)) = "А"
+        then
+    do:
+        v-auto = yes.
+    end.
       
             { gbl/getsect.i run  buf_rvs-doc.obj-type  buf_rvs-doc.obj-code  {&attr-petrol} }
     
@@ -133,12 +139,28 @@ define variable v-dif-res       as character no-undo.
             where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
           on error undo, return error return-value
           :
-            find first buf_pl-gds exclusive-lock
-              where buf_pl-gds.obj-type = buf_rvs-doc.obj-type
-                and buf_pl-gds.obj-code = buf_rvs-doc.obj-code
-                and buf_pl-gds.pl-code  = buf_rvs-line.pl-code
-                and buf_pl-gds.gds-code = buf_rvs-line.gds-code
-            .
+              if  v-auto <> yes then 
+              do: 
+                  
+                  find first buf_pl-gds exclusive-lock
+                      where buf_pl-gds.obj-type = buf_rvs-doc.obj-type
+                      and buf_pl-gds.obj-code = buf_rvs-doc.obj-code
+                      and buf_pl-gds.pl-code  = buf_rvs-line.pl-code
+                      and buf_pl-gds.gds-code = buf_rvs-line.gds-code
+                      .
+              end.
+              else 
+              do: 
+                  find first buf_pl-gds no-lock
+                      where buf_pl-gds.obj-type = buf_rvs-doc.obj-type
+                      and buf_pl-gds.obj-code = buf_rvs-doc.obj-code
+                      and buf_pl-gds.pl-code  = buf_rvs-line.pl-code
+                      and buf_pl-gds.gds-code = buf_rvs-line.gds-code
+                      .
+                
+                
+                end.
+            
             find first buf_place no-lock
               where buf_place.obj-type = buf_rvs-doc.obj-type
                 and buf_place.obj-code = buf_rvs-doc.obj-code
