@@ -27,8 +27,8 @@ temp-aht-ot-line -> temp-aht-ot-tot
 
 */
 
-define input  parameter p-doc-code as character no-undo .
-define input  parameter p-cut-date as date      no-undo .
+define input  parameter p-doc-code   as character no-undo .
+define input  parameter p-cut-date   as date      no-undo .
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
@@ -39,6 +39,7 @@ define variable vss-description as character no-undo initial "Создание складског
 { cmp/vssrevis.i "substitute('&1|&2':u,p-doc-code,p-cut-date)" }
 { cmp/str-glbl.i }
 { cmp/library.i  }
+{ cmp/trg-def.i  }
 { gbl/aht.i      }
 { trg/factord.i  }
 { gbl/cur-time.i }
@@ -52,6 +53,9 @@ define variable v-doc-date                  as date      no-undo .
 define variable v-start-time                as integer   no-undo .
 define variable v-current-time              as character no-undo .
 define variable v-current-action            as character no-undo .
+define variable v-message-on                as logical   no-undo . /* true - отображать message на экране, false - возвращать message в return-value ("Молчаливый режим") */
+define variable v-msgstr                    as character no-undo .
+
 
 do transaction
 on error undo, return error
@@ -69,6 +73,7 @@ on error undo, return error
   display
     p-doc-code
     with frame a .
+  v-message-on = (not g#auto) .
 
   run process-trn-doc in this-procedure
     (input p-doc-code /* p-doc-code */
@@ -76,13 +81,18 @@ on error undo, return error
     ) no-error .
   if error-status :error
   then do:
-    message
-      vss-workfile vss-revision vss-description skip
-      "Ошибка при обработке документа" skip
-      "Документ" p-doc-code skip
-      "Ограничение на обновление складского архива" p-cut-date skip
-      view-as alert-box error .
-    undo, return error .
+    v-msgstr = 
+      vss-workfile + " " + vss-revision + " " + vss-description + {&new-line}
+      + "Ошибка при обработке документа" + {&new-line}
+      + "Документ " + p-doc-code + {&new-line}
+      + "Ограничение на обновление складского архива " + string(p-cut-date) + {&new-line}
+      + return-value
+    .
+    if v-message-on then
+      message
+        v-msgstr
+        view-as alert-box error .
+    undo, return error v-msgstr .
   end.
 end.
 
@@ -98,6 +108,7 @@ procedure process-trn-doc :
 
   define variable v-today as date      no-undo .
   define variable v-time  as integer   no-undo .
+  define variable v-msgstr as character no-undo .
 
   define buffer buf_trn-doc for ub.trn-doc .
 
@@ -109,11 +120,13 @@ procedure process-trn-doc :
       no-error .
     if not available buf_trn-doc
     then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Не найден документ" p-doc-code skip
-        view-as alert-box error .
-      undo, return error .
+      v-msgstr = "Не найден документ " + p-doc-code .
+      if v-message-on then 
+        message
+          vss-workfile vss-revision vss-description skip
+          v-msgstr skip
+          view-as alert-box error .
+      undo, return error v-msgstr .
     end.
 
     assign
@@ -125,12 +138,16 @@ procedure process-trn-doc :
 
     if buf_trn-doc.status_ <> {&fact}
     then do:
+      v-msgstr = 
+        "Нельзя рассчитать складской архив по типам приобретения для складского документа не закрытого до статуса " + {&fact} + {&new-line}
+        + "Документ " + p-doc-code
+      .
+      if v-message-on then
       message
         vss-workfile vss-revision vss-description skip
-        "Нельзя рассчитать складской архив по типам приобретения для складского документа не закрытого до статуса" {&fact} skip
-        "Документ" p-doc-code skip
+        v-msgstr
         view-as alert-box error .
-      undo, return error .
+      undo, return error v-msgstr .
     end.
 
     define variable v-shift-on as logical   no-undo .
@@ -143,14 +160,17 @@ procedure process-trn-doc :
     }
     if error-status :error
     then do:
+      v-msgstr = 
+        "Ошибка при запуске процедуры objat" + {&new-line}
+        + "Объект " + buf_trn-doc.obj-type + " " + string(buf_trn-doc.obj-code) + {&new-line}
+        + error-status:get-message (1) + {&new-line}
+        + return-value
+      .
       message
         vss-workfile vss-revision vss-description skip
-        "Ошибка при запуске процедуры objat" skip
-        "Объект" buf_trn-doc.obj-type buf_trn-doc.obj-code skip
-        error-status :get-message(1) skip
-        return-value skip
+        v-msgstr
         view-as alert-box error .
-      undo, return error .
+      undo, return error v-msgstr.
     end.
 
     define variable v-curr-r-b as character no-undo .
@@ -173,22 +193,26 @@ procedure process-trn-doc :
     or v-fact-order = ?
     or v-fact-order = 0
     then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при определении фактического номера складского документа" skip
-        "doc-code"               buf_trn-doc.doc-code   skip
-        "fact-date"              buf_trn-doc.fact-date  skip
-        "fact-time"              buf_trn-doc.fact-time  skip
-        "fact-num"               buf_trn-doc.fact-num   skip
-        "shift-date"             buf_trn-doc.shift-date skip
-        "shift-num"              buf_trn-doc.shift-num  skip
-        "v-fact-order"           v-fact-order           skip
-        "v-shift-end-fact-order" v-shift-end-fact-order skip
-        "v-day-end-fact-order"   v-day-end-fact-order   skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
-      undo, return error .
+      v-msgstr = 
+        "Ошибка при определении фактического номера складского документа" + {&new-line}
+        + "doc-code " +          buf_trn-doc.doc-code   + {&new-line}
+        + "fact-date " +  string(buf_trn-doc.fact-date) + {&new-line}
+        + "fact-time " +  string(buf_trn-doc.fact-time, "HH:MM") + {&new-line}
+        + "fact-num " +   string(buf_trn-doc.fact-num)  + {&new-line}
+        + "shift-date " + string(buf_trn-doc.shift-date) + {&new-line}
+        + "shift-num " +  string(buf_trn-doc.shift-num) + {&new-line}
+        + "v-fact-order " + string(v-fact-order)        + {&new-line}
+        + "v-shift-end-fact-order " + string(v-shift-end-fact-order) + {&new-line}
+        + "v-day-end-fact-order" + string(v-day-end-fact-order) + {&new-line}
+        + error-status:get-message(1) + {&new-line}
+        + return-value
+      . 
+      if v-message-on then
+        message
+          vss-workfile vss-revision vss-description skip
+          v-msgstr
+          view-as alert-box error .
+      undo, return error v-msgstr .
     end.
 
     if p-cut-date = ?
@@ -225,14 +249,18 @@ procedure process-trn-doc :
       ) no-error .
     if error-status :error
     then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при добавлении документа в складской архив по типам приобретения" skip
-        "Документ" p-doc-code skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
-      undo, return error return-value .
+      v-msgstr =
+        "Ошибка при добавлении документа в складской архив по типам приобретения" + {&new-line}
+        + "Документ " + p-doc-code + {&new-line}
+        + error-status:get-message(1) + {&new-line}
+        + return-value
+      . 
+      if v-message-on then
+        message
+          vss-workfile vss-revision vss-description skip
+          v-msgstr skip
+          view-as alert-box error .
+      undo, return error v-msgstr .
     end.
 
     run aht_add-date in this-procedure
@@ -246,14 +274,18 @@ procedure process-trn-doc :
       ) no-error .
     if error-status :error
     then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при добавлении даты в складской архив по типам приобретения" skip
-        "Документ" p-doc-code skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
-      undo, return error return-value .
+      v-msgstr =
+        "Ошибка при добавлении даты в складской архив по типам приобретения" + {&new-line}
+        + "Документ " + p-doc-code + {&new-line}
+        + error-status:get-message(1) + {&new-line}
+        + return-value
+      . 
+      if v-message-on then
+        message
+          vss-workfile vss-revision vss-description skip
+          v-msgstr skip
+          view-as alert-box error .
+      undo, return error v-msgstr .
     end.
 
 
@@ -294,15 +326,19 @@ procedure process-trn-doc :
         ) no-error .
       if error-status :error
       then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Ошибка при обработке строки документа" skip
-          "Документ" buf_doc-line.doc-code skip
-          "Артикул" buf_doc-line.artic buf_doc-line.prod-type buf_doc-line.prod-code skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
-        undo, return error .
+        v-msgstr =
+          "Ошибка при обработке строки документа" + {&new-line} 
+          + "Документ " + buf_doc-line.doc-code + {&new-line}
+          + "Артикул " + buf_doc-line.artic + " " + buf_doc-line.prod-type + " " + string(buf_doc-line.prod-code) + {&new-line}
+          + error-status:get-message(1) + {&new-line}
+          + return-value
+        .
+        if v-message-on then
+          message
+            vss-workfile vss-revision vss-description skip
+            v-msgstr skip
+            view-as alert-box error .
+        undo, return error v-msgstr .
       end.
 
       assign
@@ -335,13 +371,17 @@ procedure process-trn-doc :
       ) no-error .
     if error-status :error
     then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при расчете оборотов по документу" skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
-      undo, return error .
+      v-msgstr =
+        "Ошибка при расчете оборотов по документу" + {&new-line}
+        + error-status:get-message(1) + {&new-line}
+        + return-value
+      . 
+      if v-message-on then
+        message
+          vss-workfile vss-revision vss-description skip
+          v-msgstr skip
+          view-as alert-box error .
+      undo, return error v-msgstr .
     end.
 
     run show-action in this-procedure
@@ -351,13 +391,17 @@ procedure process-trn-doc :
     run aht_store-ot-table in this-procedure no-error .
     if error-status :error
     then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при сохранении оборотов по документу" skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
-      undo, return error .
+      v-msgstr =
+        "Ошибка при сохранении оборотов по документу" + {&new-line}
+        + error-status:get-message(1) + {&new-line}
+        + return-value
+      . 
+      if v-message-on then
+        message
+          vss-workfile vss-revision vss-description skip
+          v-msgstr skip
+          view-as alert-box error .
+      undo, return error v-msgstr .
     end.
 
     run show-action in this-procedure
@@ -372,13 +416,17 @@ procedure process-trn-doc :
       ) no-error .
     if error-status :error
     then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при расчете остатков" skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
-      undo, return error .
+      v-msgstr =
+        "Ошибка при расчете остатков" + {&new-line} 
+        + error-status:get-message(1) + {&new-line}
+        + return-value
+      . 
+      if v-message-on then
+        message
+          vss-workfile vss-revision vss-description skip
+          v-msgstr skip
+          view-as alert-box error .
+      undo, return error v-msgstr .
     end.
 
     run show-action in this-procedure
@@ -442,15 +490,19 @@ procedure process-doc-line :
       ) no-error .
     if error-status :error
     then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при вызове процедуры clcprtsl_calc-line" skip
-        "Документ" p-doc-code skip
-        "Артикул" p-artic p-prod-type p-prod-code skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
-      undo, return error .
+      v-msgstr = 
+        "Ошибка при вызове процедуры clcprtsl_calc-line" + {&new-line}
+        + "Документ " + p-doc-code + {&new-line}
+        + "Артикул " + p-artic + " " + p-prod-type + " " + string(p-prod-code) + {&new-line}
+        + error-status:get-message(1) + {&new-line}
+        + return-value
+      . 
+      if v-message-on then
+        message
+          vss-workfile vss-revision vss-description skip
+          v-msgstr skip
+          view-as alert-box error .
+      undo, return error v-msgstr .
     end.
 
     aht-type_block:
@@ -535,9 +587,11 @@ procedure process-doc-line :
       &scop fl3  or
       {&price-single-list}
       then do:
+        v-msgstr = "Программа clcprtsl.i вернула неопределенные значения" . 
+        if v-message-on then
         message
           vss-workfile vss-revision vss-description skip
-          "Программа clcprtsl.i вернула неопределенные значения" skip
+          v-msgstr skip
           "Документ" p-doc-code skip
           "Артикул" p-artic p-prod-type p-prod-code skip
           "Тип суммы" v-allsum-sum-type skip
@@ -549,7 +603,7 @@ procedure process-doc-line :
           &scop fp4
           {&price-pair-list}
           view-as alert-box error .
-        undo, return error .
+        undo, return error v-msgstr .
       end.
 
       if
@@ -559,9 +613,11 @@ procedure process-doc-line :
       &scop fl3  or
       {&price-single-list}
       then do:
+        v-msgstr = "Программа clcprtsl.i вернула неопределенные значения" . 
+        if v-message-on then
         message
           vss-workfile vss-revision vss-description skip
-          "Программа clcprtsl.i вернула неопределенные значения" skip
+          v-msgstr skip
           "Документ" p-doc-code skip
           "Артикул" p-artic p-prod-type p-prod-code skip
           "Тип суммы" v-allsum-sum-type skip
@@ -573,7 +629,7 @@ procedure process-doc-line :
           &scop fp4
           {&price-pair-list}
           view-as alert-box error .
-        undo, return error .
+        undo, return error v-msgstr .
       end.
 
       if
@@ -583,9 +639,11 @@ procedure process-doc-line :
       &scop fl3  or
       {&price-single-list}
       then do:
+        v-msgstr = "Программа clcprtsl.i вернула неопределенные значения" . 
+        if v-message-on then
         message
           vss-workfile vss-revision vss-description skip
-          "Программа clcprtsl.i вернула неопределенные значения" skip
+          v-msgstr skip
           "Документ" p-doc-code skip
           "Артикул" p-artic p-prod-type p-prod-code skip
           "Тип суммы" v-allsum-sum-type skip
@@ -597,7 +655,7 @@ procedure process-doc-line :
           &scop fp4
           {&price-pair-list}
           view-as alert-box error .
-        undo, return error .
+        undo, return error v-msgstr .
       end.
 
 
@@ -629,16 +687,20 @@ procedure process-doc-line :
         ) no-error .
       if error-status :error
       then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Ошибка при сохранении сумм по документу" skip
-          "Тип приобретения" v-aht-type skip
-          "Документ" p-doc-code skip
-          "Артикул" p-artic p-prod-type p-prod-code skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
-        undo, return error .
+        v-msgstr =
+          "Ошибка при сохранении сумм по документу" + {&new-line}
+          + "Тип приобретения " + v-aht-type + {&new-line}
+          + "Документ " + p-doc-code + {&new-line}
+          + "Артикул " + p-artic + " " + p-prod-type + " " + string(p-prod-code) + {&new-line}
+          + error-status:get-message(1) + {&new-line}
+          + return-value
+        . 
+        if v-message-on then
+          message
+            vss-workfile vss-revision vss-description skip
+            v-msgstr skip
+            view-as alert-box error .
+        undo, return error v-msgstr .
       end.
     end.
   end.
