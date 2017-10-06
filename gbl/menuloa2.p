@@ -261,6 +261,17 @@ define variable vss-description as character no-undo init "".
   "'clntbank'"
 }
 
+{ gbl/menuload.i
+  {&bef-menuload_service_fin_impexp}
+  "'Импорт договоров с поставщиками'"
+  "'bge/impcontract.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+  
+}
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_service_customs}                                                */
 /* Сервис/Заказные программы                                                  */
