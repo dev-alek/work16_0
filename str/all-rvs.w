@@ -899,8 +899,50 @@ ON CHOOSE OF b-del IN FRAME d-all-r-docs /* Удалить */
             no-error.
         if error-status :error then 
         do:
+    run userlogrvs(60, return-value + error-status:get-message(1) ) no-error.
+      /*  v-mess = return-value.
+        for first  ub.clients where ub.clients.obj-type = {&prs} and  ub.clients.obj-code = ub.c-rvs-doc.boss no-lock : 
+            v-person = clients.obj-name.
+        end.
+        v-vid-action = 60.
+        v-vid-param =
+            "Initiator=" + "User" + {&delim-par} +
+            "ResponsiblePerson=" + (if v-person <> ?  then v-person else "") + {&delim-par} + 
+            "SHOP_NUM=" + string(r-doc.obj-code) + {&delim-par} +
+            "DocNum=" + string(r-doc.rvs-code) + {&delim-par} +
+            "FactDate=" + (if string(r-doc.fact-date) = ? then '' else string(r-doc.fact-date)) + {&delim-par} +
+            "DocType=" + string(r-doc.rvs-type) + {&delim-par} +
+            "ShiftNum=" + string(r-doc.shift-num) + {&delim-par} +
+            "ShiftDate=" + string(r-doc.shift-date) + {&delim-par} +
+            /*                "ShiftNumCurr=" + (if string(parshift-num) = ? then '' else string(parshift-num)) + {&delim-par} +   */
+            /*                "ShiftDateCurr=" + (if string(parshift-date) = ? then '' else string(parshift-date)) + {&delim-par} +*/
+            "Status=" + string(r-doc.status_) + {&delim-par} +
+            "RESULT=0" + {&delim-par} +
+            "Description=" + v-mess.
+        
+         
+        run trg/userlog.p (
+            input {&nwsdochs_action_delete_err}
+            , input {&table_rvs-doc}
+            , input ( buffer r-doc :handle )
+            , input v-vid-action
+            , input v-vid-param
+            ) no-error.
+            */
+        if error-status :error
+            then 
+        do:
+            message substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ) 
+                view-as alert-box.
             return no-apply.
         end.
+        
+    end.
+
         run openbr in this-procedure .
     END.
 
