@@ -35,6 +35,7 @@ define variable vss-description as character no-undo initial "Переход по статуса
 { cmp/library.i  }
 { str/lib-trn.i  }
 { str/lib-rvs.i  }
+{ gbl/getsect.i def }
 
 tr:
 do transaction
@@ -44,16 +45,28 @@ on endkey undo tr, return error substitute( "&1. endkey", vss-workfile )
 :
   define variable vardata-type as character no-undo.
   define variable was_found    as logical   no-undo initial no.
-
+    define variable v-auto as logical no-undo.
   define buffer buf_rvs-doc  for ub.rvs-doc .
   define buffer buf_rvs-line for ub.rvs-line .
   define buffer buf_doc-pl   for ub.doc-pl .
   define buffer buf_pl-gds   for ub.pl-gds .
   define buffer buf_place    for ub.place .
 
+define variable v-cardif        as integer no-undo.
+define variable v-abs-critdif   as decimal no-undo.
+define variable v-dif-res-count as integer no-undo.
+define variable v-dif-res       as character no-undo.
+
   find first buf_rvs-doc exclusive-lock
     where recid(buf_rvs-doc) = parrecid
   .
+  
+      
+            { gbl/getsect.i run  buf_rvs-doc.obj-type  buf_rvs-doc.obj-code  {&attr-petrol} }
+    
+    for each thbjattr_thbj-attr :    
+        if thbjattr_thbj-attr.prop-code = {&attr-petrol_CriticalDif} then assign v-cardif = integer( thbjattr_thbj-attr.property-value-character) .
+    end.
 
   if buf_rvs-doc.rvs-type <> {&rvs-shift}
     and buf_rvs-doc.rvs-type <> {&rvs-control}
@@ -82,6 +95,17 @@ on endkey undo tr, return error substitute( "&1. endkey", vss-workfile )
               buf_rvs-line.orig-system-qnty     = buf_rvs-line.system-qnty
               buf_rvs-line.orig-system-cli-qnty = buf_rvs-line.system-cli-qnty
             .
+            find first rvs-line-attr exclusive-lock
+                  where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                  and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                  and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                  and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                  and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                  and rvs-line-attr.attr-code = "CriticalDif" no-error.
+            if available rvs-line-attr then 
+            do :
+                delete rvs-line-attr .
+            end.
           end.
         end.
         otherwise do:
@@ -129,6 +153,42 @@ on endkey undo tr, return error substitute( "&1. endkey", vss-workfile )
               buf_rvs-line.orig-system-qnty     = buf_rvs-line.system-qnty
               buf_rvs-line.orig-system-cli-qnty = buf_rvs-line.system-cli-qnty
             .
+            
+           
+              if  v-cardif > 0 and abs(  buf_rvs-line.system-cli-qnty - buf_rvs-line.state-measure-cli-qnty ) > ( buf_rvs-line.state-measure-cli-qnty * v-cardif / 100 ) then 
+              do: 
+                
+                  v-abs-critdif =  abs( buf_rvs-line.system-cli-qnty - buf_rvs-line.state-measure-cli-qnty ) -  ( buf_rvs-line.state-measure-cli-qnty * v-cardif / 100 ).
+                
+                  if v-abs-critdif <> 0  then 
+                  do:               
+                      find first rvs-line-attr exclusive-lock
+                          where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                          and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                          and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                          and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                          and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                          and rvs-line-attr.attr-code = "CriticalDif" no-error.
+                      if available rvs-line-attr then 
+                      do :
+                          rvs-line-attr.attr-value = ( string  (abs (  v-abs-critdif)) )  .
+                      end.
+                      else 
+                      do :
+                          create rvs-line-attr.
+                          assign
+                              rvs-line-attr.obj-code   = buf_rvs-line.obj-code
+                              rvs-line-attr.obj-type   = buf_rvs-line.obj-type
+                              rvs-line-attr.gds-code   = buf_rvs-line.gds-code
+                              rvs-line-attr.pl-code    = buf_rvs-line.pl-code
+                              rvs-line-attr.rvs-code   = buf_rvs-line.rvs-code
+                              rvs-line-attr.attr-code  = "CriticalDif"
+                              rvs-line-attr.attr-value = string ( v-abs-critdif ).
+                      end.
+                  end.
+              end.  
+            
+            
           end.
           { str/rvsclchd.i
             recid(buf_rvs-doc)
@@ -191,6 +251,7 @@ on endkey undo tr, return error substitute( "&1. endkey", vss-workfile )
                   buf_rvs-line.orig-system-qnty     = buf_rvs-line.orig-system-qnty     + buf_doc-pl.fact-qnty
                   buf_rvs-line.orig-system-cli-qnty = buf_rvs-line.orig-system-cli-qnty + buf_doc-pl.cli-fact-qnty
                 .
+               
               end.
             end.
           end case.
@@ -203,9 +264,71 @@ on endkey undo tr, return error substitute( "&1. endkey", vss-workfile )
             undo tr, return error "Ошибка при пересчете документа.".
           end.
           assign
-            buf_rvs-doc.status_ = {&fact}
-          .
-        end.
+              buf_rvs-doc.status_ = {&fact}
+              .
+          for each buf_rvs-line exclusive-lock
+              where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+              on error undo, return error return-value
+              :   
+              if  v-cardif > 0 and abs( buf_rvs-line.system-cli-qnty  - buf_rvs-line.state-measure-cli-qnty ) > ( buf_rvs-line.state-measure-cli-qnty * v-cardif / 100 ) then 
+              do: 
+                
+                  v-abs-critdif = abs  (  buf_rvs-line.system-cli-qnty  - buf_rvs-line.state-measure-cli-qnty ) -  abs ( buf_rvs-line.state-measure-cli-qnty * v-cardif / 100 ).
+                
+                  if v-abs-critdif <> 0  then 
+                  do:               
+                      find first rvs-line-attr exclusive-lock
+                          where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                          and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                          and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                          and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                          and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                          and rvs-line-attr.attr-code = "CriticalDif" no-error.
+                      if available rvs-line-attr then 
+                      do :
+                          rvs-line-attr.attr-value = ( string  (abs (  v-abs-critdif)) )  .
+                      end.
+                      else 
+                      do :
+                          create rvs-line-attr.
+                          assign
+                              rvs-line-attr.obj-code   = buf_rvs-line.obj-code
+                              rvs-line-attr.obj-type   = buf_rvs-line.obj-type
+                              rvs-line-attr.gds-code   = buf_rvs-line.gds-code
+                              rvs-line-attr.pl-code    = buf_rvs-line.pl-code
+                              rvs-line-attr.rvs-code   = buf_rvs-line.rvs-code
+                              rvs-line-attr.attr-code  = "CriticalDif"
+                              rvs-line-attr.attr-value = string ( v-abs-critdif ).
+                      end.
+                  end.
+              end.  
+          end.
+          if buf_rvs-doc.rvs-type =  {&rvs-shift} then 
+          do: 
+              v-dif-res-count = 0 .
+              v-dif-res = "" .
+              for each rvs-line-attr no-lock
+                  where rvs-line-attr.obj-code  = buf_rvs-doc.obj-code
+                  and rvs-line-attr.obj-type  = buf_rvs-doc.obj-type
+                  and rvs-line-attr.rvs-code  = buf_rvs-doc.rvs-code
+                  and rvs-line-attr.attr-code = "CriticalDif" : 
+                      
+                  v-dif-res-count = v-dif-res-count + 1 .
+                  v-dif-res = v-dif-res + (if v-dif-res <> "" then ", " else "") + string(rvs-line-attr.pl-code) .   
+                  
+              end.
+              if v-dif-res-count = 1
+              then do :
+                  message "В сменной сверке есть расхождения массы в резервуаре"  v-dif-res  view-as alert-box.
+              end.
+              if v-dif-res-count > 1
+              then do :
+                  message "В сменной сверке есть расхождения массы в резервуарах"  v-dif-res  view-as alert-box.
+              end.
+          end.
+      end.
+          
+     
         when {&fact} then do:
           undo tr, return error "Невозможно закрыть документ. Документ в статусе " + {&fact} + " .".
         end.
