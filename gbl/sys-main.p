@@ -51,9 +51,15 @@ define variable v-userio-id            as integer   no-undo .
 
 define variable v-get-ro_read-only     as logical   no-undo .
 
+define variable v-vid-ok            as logical  no-undo .
+define variable v-vid-mes           as character no-undo .
+define variable v-vid-param         as longchar no-undo .
+
 define buffer buf_sys-ctrl     for ub.sys-ctrl .
 define buffer buf_user-account for ub.user-account .
 define buffer buf_user-login   for ub.user-login .
+
+define variable v-TH-name as character no-undo .
 
 do
 on error undo, return error return-value
@@ -71,6 +77,11 @@ on error undo, return error return-value
 
   if absolute(v-diff-time) > v-max-diff-minute
   then do:
+    v-vid-param = "Login=" + p-user-login + {&delim-par} + "RESULT=110" + {&delim-par} + "Description=Время на компьютере отличается от времени на сервере" .
+    run trg/video-action.p (input 50,
+                        input v-vid-param,
+                        output v-vid-ok,
+                        output v-vid-mes) .
     message
       "Текущее время на Вашем компьютере " skip
       "" (if v-diff-time < 0 then "больше" else "меньше" ) " времени на сервере " skip
@@ -129,6 +140,12 @@ on error undo, return error return-value
             buf_user-login.user-id
             v-user-name
           }
+          
+          v-vid-param = "Login=" + p-user-login + {&delim-par} + "THname=" + v-user-name + {&delim-par} + "RESULT=111" + {&delim-par} + "Description=Такой пользователь уже работает в системе." .
+          run trg/video-action.p (input 50,
+                                input v-vid-param,
+                                output v-vid-ok,
+                                output v-vid-mes) .
 
           message
             substitute("Пользователь &1 уже работает в системе", p-user-login) skip
@@ -144,12 +161,22 @@ on error undo, return error return-value
             view-as alert-box error .
         end.
         else do:
+          v-vid-param = "Login=" + p-user-login + {&delim-par} + "RESULT=112" + {&delim-par} + "Description=Такой пользователь уже работает в системе." .
+          run trg/video-action.p (input 50,
+                                input v-vid-param,
+                                output v-vid-ok,
+                                output v-vid-mes) .
           message
             substitute("Пользователь &1 уже работает в системе", p-user-login) skip
             view-as alert-box error .
         end.
       end.
       else do:
+        v-vid-param = "Login=" + p-user-login + {&delim-par} + "RESULT=113" + {&delim-par} + "Description=Не найден такой пользователь." .
+        run trg/video-action.p (input 50,
+                                input v-vid-param,
+                                output v-vid-ok,
+                                output v-vid-mes) .
         message
           substitute("Не найден пользователь &1", p-user-login) skip
           "Невозможно продолжить работу системы" skip
@@ -194,6 +221,11 @@ on error undo, return error return-value
     ) no-error .
   if error-status :error
   then do:
+    v-vid-param = "Login=" + p-user-login + {&delim-par} + "RESULT=114" + {&delim-par} + "Description=Ошибка при установке глобальных переменных." .
+    run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
     message
       vss-workfile vss-revision vss-description skip
       "Ошибка при установке глобальных переменных" skip
@@ -247,6 +279,11 @@ on error undo, return error return-value
     end.
     if v-license-left-day < 0
     then do:
+      v-vid-param = "Login=" + p-user-login + {&delim-par} + "RESULT=115" + {&delim-par} + "Description=Срок действия лицензии закончился." .
+      run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
       message
         "Срок действия лицензии закончился" date (conf-par) skip
         "Вход в систему невозможен" skip
@@ -295,6 +332,11 @@ on error undo, return error return-value
       ).
     if v-license-usr-num = ?
     then do:
+      v-vid-param = "Login=" + p-user-login + {&delim-par} + "RESULT=116" + {&delim-par} + "Description=Не задано количество пользователей системы." .
+      run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
       message
         "Доступ запрещен: не задано количество пользователей системы" conf-par skip
         view-as alert-box error.
@@ -302,6 +344,11 @@ on error undo, return error return-value
     end.
     if v-work-usr-num >= v-license-usr-num
     then do:
+      v-vid-param = "Login=" + p-user-login + {&delim-par} + "RESULT=117" + {&delim-par} + "Description=Превышено число пользователей системы." .
+      run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
       message
         "Доступ запрещен: превышено число пользователей" conf-par skip
         view-as alert-box error.
@@ -338,6 +385,11 @@ on error undo, return error return-value
 
   run gbl/update.p no-error .
   if error-status :error then do:
+    v-vid-param = "Login=" + p-user-login + {&delim-par} + "RESULT=118" + {&delim-par} + "Description=Ошибка при проверке соответствия r-cod-ов внутренним структурам данных." .
+    run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
     message
       vss-workfile vss-revision vss-description skip
       "Ошибка при проверке соответствия r-cod-ов внутренним структурам данных" skip
@@ -359,6 +411,25 @@ on error undo, return error return-value
       return .
     end.
   end.
+  
+  if available buf_user-login
+  then do :
+      
+          { gbl/usrfulnm.i
+            buf_user-login.user-id
+            v-TH-name
+          }
+      
+  end.
+  
+  v-vid-param = "Login=" + p-user-login + {&delim-par} + 
+                (if v-TH-name <> "" then ("THname=" + v-TH-name + {&delim-par}) else "") +
+                "RESULT=0" + {&delim-par} + 
+                "Description=" .
+  run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
 
   run gbl/mainmenu.w
     (input v-computer-process-pid

@@ -30,6 +30,14 @@ define variable vss-description as character no-undo init "Триггер на удаление с
 DEFINE VARIABLE v-today as date no-undo .
 DEFINE VARIABLE v-time as integer no-undo .
 
+define variable v-vid-action        as integer no-undo .
+define variable v-vid-ok            as logical  no-undo .
+define variable v-vid-mes           as character no-undo .
+define variable v-vid-param         as longchar no-undo .
+
+define variable v-shift-staff-list  as character no-undo .
+define variable v-shift-manager     as character no-undo .
+
 define buffer buf_shift-staff for ub.shift-staff.
 define buffer buf_c-shift-obj for ub.c-shift-obj.
 define buffer buf_c-sht-hist  for ub.c-sht-hist.
@@ -75,7 +83,20 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       and buf_shift-staff.shift-num  = ub.shift-obj.shift-num
   on error undo main-block, return error return-value
   :
-    /*в триггер на delete напишем историю в c-sht-hist и c-shift-staff*/
+    
+    if not buf_shift-staff.next-shift
+    then do :
+        if buf_shift-staff.staff-role
+        then
+        assign
+            v-shift-manager = buf_shift-staff.name
+        .
+        else
+        assign
+            v-shift-staff-list = v-shift-staff-list + (if v-shift-staff-list = "" then "" else ", ") + buf_shift-staff.name
+        .
+    end.
+    /*в триггер на delete напишем историю в c-sht-hist и c-shift-staff*/     
     delete buf_shift-staff.
   end.
 
@@ -102,6 +123,30 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         buf_c-sht-hist.subject    = {&table_shift-obj}
         buf_c-sht-hist.is-news    = g#news
     .
+    
+    v-vid-action = 54 .
+    v-vid-param = "SHOP_NUM=" + string(ub.shift-obj.obj-code) + {&delim-par} +
+                  "SHIFT_NUM=" + string(ub.shift-obj.shift-num) + string(ub.shift-obj.shift-date, "99999999") + {&delim-par} +
+                  "ShiftManager=" + v-shift-manager + {&delim-par} +
+                  "ShiftStaff=" + v-shift-staff-list + {&delim-par} +
+                  "RESULT=0" + {&delim-par} + 
+                  "Description=".
+                  
+    run trg/userlog.p (
+          input {&nwsdochs_action_delete}
+        , input {&table_c-sht-hist}
+        , input ( buffer buf_c-sht-hist :handle )
+        , input v-vid-action
+        , input v-vid-param
+    ) no-error.
+    if error-status :error
+    then do:
+        undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                            , {&new-line}
+                            , vss-workfile
+                            , return-value
+                            , error-status :get-message ( 1 ) ).
+    end.              
   end.
 
   if g#oxml = yes then do:

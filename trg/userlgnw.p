@@ -110,6 +110,8 @@ on end-key undo main-block, return error substitute('userlgnd end-key main-block
                       input {&nwsdochs_action_update}
                     , input {&table_c-usr-hist}
                     , input ( buffer buf_c-usr-hist :handle )
+                    , input ?
+                    , input "" 
                 ) no-error.
                 if error-status :error
                 then do:

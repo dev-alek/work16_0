@@ -21,6 +21,8 @@ Output:
 define input parameter p-action         as character        no-undo.
 define input parameter p-tbl-name       as character        no-undo.
 define input parameter p-table-handle  as handle           no-undo.
+define input parameter p-video-action  as integer           no-undo.
+define input parameter p-video-param   as longchar          no-undo.
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -29,11 +31,14 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Процедура заполнения таблицы истории пользователя.".
 { cmp/vssrevis.i }
-{ cmp/str-glbl.i }
+{ cmp/trg-def.i  }
 { cmp/library.i  }
 { trg/userlog.i  }
 { gbl/schemlib.i }
-{ gbl/key-rec.i }
+{ gbl/key-rec.i  }
+{ gbl/cur-time.i }
+{ gbl/usrnickf.i }
+{ gbl/db-attr.i  }
 
     define variable v-field-handle          as handle       no-undo.
     define variable v-corr-user-db-num      as integer      no-undo.
@@ -48,30 +53,112 @@ define variable vss-description as character no-undo init "Процедура заполнения 
     define variable v-corr-date             as date         no-undo.
     define variable v-corr-time             as integer      no-undo.
     define variable v-corr-user-name        as character    no-undo.
+    define variable v-db-attr-value         as character    no-undo .
+    define variable v-db-attr-type          as character    no-undo .
+    define variable v-mess-id               as integer      no-undo .
 
+    define buffer buf_user-login            for ub.user-login .
     define buffer buf_c-user-log            for c-user-log.
     define buffer buf_temp_userlog-bush     for temp_userlog-bush.
+    
+    define variable par-type as character no-undo .
+    define variable par-is-cctv as character no-undo .
+    define variable is-cctv as logical no-undo .
+
+    define variable v-action-type   as character no-undo .
+     
 do
 for buf_c-user-log
   , buf_temp_userlog-bush
 on error undo, return error
 :
+    if p-action = 'report':U then do:
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid
+            buf_c-user-log.des              = "Отчет " + entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = 'report:':U + {&delim-key} + entry(2,p-tbl-name,{&delim-key}) 
+            buf_c-user-log.head-table       = 'report':U
+            buf_c-user-log.uniq-key-rec     = 'report:':U + {&delim-key} + entry(2,p-tbl-name,{&delim-key}) 
+         no-error.      
+        return.
+    end.   
+    if p-action = 'utl':U then do:
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid
+            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = 'utl:':U + {&delim-key} + entry(2,p-tbl-name,{&delim-key}) 
+            buf_c-user-log.head-table       = 'utl':U
+            buf_c-user-log.uniq-key-rec     = 'utl:':U + {&delim-key} + entry(2,p-tbl-name,{&delim-key}) 
+         no-error.      
+        return.
+    end. 
+ 
+    if p-action = 'printdoc':U then do:      
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid
+            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = 'prtdoc:':U + {&delim-key} + substring(p-tbl-name,index(p-tbl-name,{&delim-key}) + 1)
+            buf_c-user-log.head-table       = 'prtdoc':U
+            buf_c-user-log.uniq-key-rec     = 'prtdoc:':U + {&delim-key} + substring(p-tbl-name,index(p-tbl-name,{&delim-key}) + 1)
+         no-error.      
+        return.
+    end.
+    
+    case p-action :
+        when {&nwsdochs_action_delete}      then v-action-type = "Удаление" .
+        when {&nwsdochs_action_create}      then v-action-type = "Создание" .
+        when {&nwsdochs_action_update}      then v-action-type = "Изменение" .
+        when {&nwsdochs_action_update_err}  then v-action-type = "Изменение ОШ." .
+        when {&nwsdochs_action_delete_err}  then v-action-type = "Удаление ОШ." .
+    end case.
+
+    
     if not p-table-handle :available
     then do:
         undo, return error substitute( "&1. Ошибка задания входных параметров. Переданый буфер таблицы &2 не доступен", vss-description, p-tbl-name ).
     end.
-    if not valid-handle( p-table-handle :buffer-field( "corr-user-db-num":U ) )
-    then do:
-        undo, return error substitute( "&1. Ошибка структуры c-таблицы. В таблице &2 нет поля corr-user-db-num", vss-description, p-tbl-name ).
-    end.
-    if not valid-handle( p-table-handle :buffer-field( "corr-date":U ) )
-    then do:
-        undo, return error substitute( "&1. Ошибка структуры c-таблицы. В таблице &2 нет поля corr-date", vss-description, p-tbl-name ).
-    end.
-    if not valid-handle( p-table-handle :buffer-field( "corr-time":U ) )
-    then do:
-        undo, return error substitute( "&1. Ошибка структуры c-таблицы. В таблице &2 нет поля corr-time", vss-description, p-tbl-name ).
-    end.
+/*    if p-action <>  {&nwsdochs_action_create} then                                                                                                 */
+/*    do:                                                                                                                                            */
+/*        if not valid-handle( p-table-handle :buffer-field( "corr-user-db-num":U ) )                                                                */
+/*            then                                                                                                                                   */
+/*        do:                                                                                                                                        */
+/*            undo, return error substitute( "&1. Ошибка структуры c-таблицы. В таблице &2 нет поля corr-user-db-num", vss-description, p-tbl-name ).*/
+/*        end.                                                                                                                                       */
+/*        if not valid-handle( p-table-handle :buffer-field( "corr-date":U ) )                                                                       */
+/*            then                                                                                                                                   */
+/*        do:                                                                                                                                        */
+/*            undo, return error substitute( "&1. Ошибка структуры c-таблицы. В таблице &2 нет поля corr-date", vss-description, p-tbl-name ).       */
+/*        end.                                                                                                                                       */
+/*        if not valid-handle( p-table-handle :buffer-field( "corr-time":U ) )                                                                       */
+/*            then                                                                                                                                   */
+/*        do:                                                                                                                                        */
+/*            undo, return error substitute( "&1. Ошибка структуры c-таблицы. В таблице &2 нет поля corr-time", vss-description, p-tbl-name ).       */
+/*        end.                                                                                                                                       */
+/*    end.                                                                                                                                           */
     run gen-key-rec in this-procedure (
           input p-tbl-name
         , input p-table-handle
@@ -87,11 +174,29 @@ on error undo, return error
         return error substitute( "&1. Уникальный ключ имеет неопределенное значение. Имя таблицы &2.", vss-workfile, p-tbl-name ).
     end.
     assign
-        v-corr-user-db-num = p-table-handle :buffer-field( "corr-user-db-num":U ) :buffer-value
-        v-corr-date        = p-table-handle :buffer-field( "corr-date":U ) :buffer-value
-        v-corr-time        = p-table-handle :buffer-field( "corr-time":U ) :buffer-value
-        v-corr-user-name   = p-table-handle :buffer-field( "corr-user-name":U ) :buffer-value
+        v-corr-user-db-num = p-table-handle :buffer-field( "corr-user-db-num":U ) :buffer-value            
+        v-corr-date        = p-table-handle :buffer-field( "corr-date":U ) :buffer-value   
+        v-corr-time        = p-table-handle :buffer-field( "corr-time":U ) :buffer-value 
+        v-corr-user-name   = p-table-handle :buffer-field( "corr-user-name":U ) :buffer-value no-error
     .
+    if error-status :error then 
+    do: 
+        if not p-tbl-name begins "c-"
+        then 
+        do: 
+            run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+            assign
+                v-corr-user-db-num = g#db-num
+                v-corr-date        = v-corr-date
+                v-corr-time        = v-corr-time
+                v-corr-user-name   = g#userid .
+        end.
+        else 
+        do: 
+            undo, return error substitute( "Ошибка структуры c-таблицы  &2 ", vss-description, p-tbl-name ).
+        end.
+    end.
+        
     if v-corr-user-db-num   = ?
     or v-corr-date          = ?
     or v-corr-time          = ?
@@ -193,11 +298,9 @@ on error undo, return error
             buf_c-user-log.corr-user-db-num = v-corr-user-db-num
             buf_c-user-log.cusr-id          = next-value( s-user-history )
             buf_c-user-log.chip-num         = 0
-            buf_c-user-log.corr-date        = p-table-handle :buffer-field( "corr-date":U ) :buffer-value
-            buf_c-user-log.corr-time        = p-table-handle :buffer-field( "corr-time":U ) :buffer-value
-            buf_c-user-log.corr-user-name   = p-table-handle :buffer-field( "corr-user-name":U ) :buffer-value
+         
             buf_c-user-log.des              = substitute( "&1 &2 &3":U
-                                                , ( if p-action = {&nwsdochs_action_delete} then "Удаление" else "Изменение" )
+                                                , v-action-type
                                                 , buf_temp_userlog-bush.ulbDesc
                                                 , buf_temp_userlog-bush.ulbParentDesc
                                             )
@@ -206,8 +309,21 @@ on error undo, return error
             buf_c-user-log.head-table       = v-parent-name
             buf_c-user-log.uniq-key-rec     = v-unique-key-rec
         .
+        assign
+        buf_c-user-log.corr-date        = p-table-handle :buffer-field( "corr-date":U ) :buffer-value
+        buf_c-user-log.corr-time        = p-table-handle :buffer-field( "corr-time":U ) :buffer-value
+        buf_c-user-log.corr-user-name   = p-table-handle :buffer-field( "corr-user-name":U ) :buffer-value no-error.
+        if error-status :error then 
+        do: 
+            assign
+                buf_c-user-log.corr-date      = v-corr-date
+                buf_c-user-log.corr-time      = v-corr-time
+                buf_c-user-log.corr-user-name = g#userid.
+                
+        end.
+        
         if buf_c-user-log.corr-user-name = "" then do:
-               buf_c-user-log.corr-user-name = p-table-handle :buffer-field( "user-id":U ) :buffer-value. 
+               buf_c-user-log.corr-user-name = p-table-handle :buffer-field( "user-id":U ) :buffer-value no-error. /*нужно разбираться*/ 
         end.    
     end.
     /* Обработка таблиц истории, связанных в кусты */
@@ -262,7 +378,7 @@ on error undo, return error
                 buf_c-user-log.corr-time        = p-table-handle :buffer-field( "corr-time":U ) :buffer-value
                 buf_c-user-log.corr-user-name   = p-table-handle :buffer-field( "corr-user-name":U ) :buffer-value
                 buf_c-user-log.des              = substitute( "&1 &2 &3":U
-                                                    , ( if p-action = {&nwsdochs_action_delete} then "Удаление" else "Изменение" )
+                                                    , v-action-type
                                                     , buf_temp_userlog-bush.ulbDesc
                                                     , buf_temp_userlog-bush.ulbParentDesc
                                                 )
@@ -277,4 +393,55 @@ on error undo, return error
     then do:
         delete object v-parent-buffer-handle.
     end.
+end.
+
+{ gbl/conf-rd.i "'is-cctv'"  "''" "''" 0 "''" "''" "''"  no par-is-cctv par-type      no-error}
+is-cctv = lookup(par-is-cctv, "true,yes":U) > 0 .
+
+if p-video-action <> 0 and p-video-action <> ? and is-cctv
+    then 
+do :
+    define variable v-vid-ok  as logical   no-undo .
+    define variable v-vid-mes as character no-undo .
+    if not p-video-param begins "Login=" then 
+    do :
+        find first buf_user-login no-lock
+            where buf_user-login.db-num  = g#db-num
+            and buf_user-login.user-id = g#userid
+            no-error .
+        if available buf_user-login
+            then 
+        do:
+            assign
+                p-video-param = p-video-param + {&delim-par} +
+                            "Login=" + buf_user-login.user-login + {&delim-par} +
+                            "THname=" + usrnickf(buf_user-login.user-id)
+                .
+        end.
+    end.
+
+    run db-attr-value in this-procedure ( input g#db-num
+                                          , input {&attr-mess-id-video}
+                                          , output v-db-attr-value
+                                          , output v-db-attr-type
+                                          ) no-error .
+    assign
+      v-mess-id = integer (v-db-attr-value) no-error.
+    
+    if v-mess-id = ?
+      then v-mess-id = 0.
+
+    p-video-param = p-video-param + {&delim-par} +
+      "MESSAGE_ID=" + string (v-mess-id)
+    .
+    v-mess-id = v-mess-id + 1.
+    run db-attr-write in this-procedure ( input g#db-num
+                                        , input {&attr-mess-id-video}
+                                        , input string (v-mess-id)
+                                        ) no-error .
+
+    run trg/video-action.p (input p-video-action,
+        input p-video-param,
+        output v-vid-ok,
+        output v-vid-mes) .
 end.

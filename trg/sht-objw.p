@@ -53,6 +53,14 @@ define variable v-ptrl-without-rvs as character no-undo .
 define variable v-attr-type        as character no-undo .
 define variable v-edit-time        as logical   no-undo .
 
+define variable v-vid-action        as integer no-undo .
+define variable v-vid-ok            as logical  no-undo .
+define variable v-vid-mes           as character no-undo .
+define variable v-vid-param         as longchar no-undo .
+
+define variable v-shift-staff-list  as character no-undo .
+define variable v-shift-manager     as character no-undo .
+
 define buffer buf_inkas    for ub.inkas .
 define buffer buf_pl-gds   for ub.pl-gds .
 define buffer buf_goods    for ub.goods .
@@ -481,6 +489,16 @@ on error undo, return error return-value
           ub.shift-obj.open-id   = g#userid
           ub.shift-obj.open-date = v-obj-date
         .
+        
+        v-vid-action = 51 .
+        v-vid-param = "SHOP_NUM=" + string(ub.shift-obj.obj-code) + {&delim-par} +
+                      "SHIFT_NUM=" + string(ub.shift-obj.shift-num) + string(ub.shift-obj.shift-date, "99999999") + {&delim-par} +
+                      "RESULT=0" + {&delim-par} + 
+                      "Description=".
+/*        run trg/video-action.p (input 51,          */
+/*                                input v-vid-param, */
+/*                                output v-vid-ok,   */
+/*                                output v-vid-mes) .*/
       end.
       /*---START--------- Проверяем закрытие смены ---------------------*/
       if ub.shift-obj.status_ = {&sht-closed} then do:
@@ -857,6 +875,34 @@ on error undo, return error return-value
         assign
             ub.shift-obj.fact-order = v-shift-end-fact-order
         .
+        
+        for each ub.shift-staff no-lock where ub.shift-staff.obj-type = ub.shift-obj.obj-type
+                                          and ub.shift-staff.obj-code = ub.shift-obj.obj-code
+                                          and ub.shift-staff.shift-num = ub.shift-obj.shift-num
+                                          and ub.shift-staff.shift-date = ub.shift-obj.shift-date
+                                          and ub.shift-staff.next-shift = no :
+            if ub.shift-staff.staff-role
+            then
+            assign
+                v-shift-manager = ub.shift-staff.name
+            .
+            else
+            assign
+                v-shift-staff-list = v-shift-staff-list + (if v-shift-staff-list = "" then "" else ", ") + ub.shift-staff.name
+            .                                  
+        end.
+        
+        v-vid-action = 62 .
+        v-vid-param = "SHOP_NUM=" + string(ub.shift-obj.obj-code) + {&delim-par} +
+                      "SHIFT_NUM=" + string(ub.shift-obj.shift-num) + string(ub.shift-obj.shift-date, "99999999") + {&delim-par} +
+                      "ShiftManager=" + v-shift-manager + {&delim-par} +
+                      "ShiftStaff=" + v-shift-staff-list + {&delim-par} +
+                      "RESULT=0" + {&delim-par} + 
+                      "Description=".
+/*        run trg/video-action.p (input 62,          */
+/*                                input v-vid-param, */
+/*                                output v-vid-ok,   */
+/*                                output v-vid-mes) .*/
       end.
       /*---END----------- Проверяем закрытие смены ---------------------*/
       /*---START--------- Проверяем отмену закрытой смены ---------------------*/
@@ -898,6 +944,30 @@ on error undo, return error return-value
           undo main-block, return error .
         end.
         ub.shift-obj.fact-order = 0.
+        
+        for each ub.shift-staff no-lock where ub.shift-staff.obj-type = ub.shift-obj.obj-type
+                                          and ub.shift-staff.obj-code = ub.shift-obj.obj-code
+                                          and ub.shift-staff.shift-num = ub.shift-obj.shift-num
+                                          and ub.shift-staff.shift-date = ub.shift-obj.shift-date
+                                          and ub.shift-staff.next-shift = no :
+            if ub.shift-staff.staff-role
+            then
+            assign
+                v-shift-manager = ub.shift-staff.name
+            .
+            else
+            assign
+                v-shift-staff-list = v-shift-staff-list + (if v-shift-staff-list = "" then "" else ", ") + ub.shift-staff.name
+            .                                  
+        end.
+        
+        v-vid-action = 53 .
+        v-vid-param = "SHOP_NUM=" + string(ub.shift-obj.obj-code) + {&delim-par} +
+                      "SHIFT_NUM=" + string(ub.shift-obj.shift-num) + string(ub.shift-obj.shift-date, "99999999") + {&delim-par} +
+                      "ShiftManager=" + v-shift-manager + {&delim-par} +
+                      "ShiftStaff=" + v-shift-staff-list + {&delim-par} +
+                      "RESULT=0" + {&delim-par} + 
+                      "Description=".
       end.
       /*---END----------- Проверяем отмену закрытой смены ---------------------*/
 
@@ -961,6 +1031,30 @@ on error undo, return error return-value
             view-as alert-box error .
           undo main-block, return error .
         end.
+        
+        for each ub.shift-staff no-lock where ub.shift-staff.obj-type = ub.shift-obj.obj-type
+                                          and ub.shift-staff.obj-code = ub.shift-obj.obj-code
+                                          and ub.shift-staff.shift-num = ub.shift-obj.shift-num
+                                          and ub.shift-staff.shift-date = ub.shift-obj.shift-date
+                                          and ub.shift-staff.next-shift = no :
+            if ub.shift-staff.staff-role
+            then
+            assign
+                v-shift-manager = ub.shift-staff.name
+            .
+            else
+            assign
+                v-shift-staff-list = v-shift-staff-list + (if v-shift-staff-list = "" then "" else ", ") + ub.shift-staff.name
+            .                                  
+        end.
+        
+        v-vid-action = 53 .
+        v-vid-param = "SHOP_NUM=" + string(ub.shift-obj.obj-code) + {&delim-par} +
+                      "SHIFT_NUM=" + string(ub.shift-obj.shift-num) + string(ub.shift-obj.shift-date, "99999999") + {&delim-par} +
+                      "ShiftManager=" + v-shift-manager + {&delim-par} +
+                      "ShiftStaff=" + v-shift-staff-list + {&delim-par} +
+                      "RESULT=0" + {&delim-par} + 
+                      "Description=".
       end.
       /*---END----------- Проверяем отмену открытой смены ---------------------*/
     end.        /* oldb.status_ <> ub.shift-obj.status_ */
@@ -1048,6 +1142,8 @@ end.
                       input {&nwsdochs_action_update}
                     , input {&table_c-sht-hist}
                     , input ( buffer buf_c-sht-hist :handle )
+                    , input v-vid-action
+                    , input v-vid-param
                 ) no-error.
                 if error-status :error
                 then do:
