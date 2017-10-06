@@ -5166,6 +5166,7 @@ END PROCEDURE.
 
 PROCEDURE m_sr-izmeren :
   define variable v-node-code as integer no-undo.
+  define variable v-sr-type as character no-undo.
   do
   on error undo, return error return-value
   :
@@ -5174,6 +5175,7 @@ PROCEDURE m_sr-izmeren :
                     ,input "b-add"
                     ,input {&UPDATE}
                     ,input-output v-node-code
+                    ,output v-sr-type
                     ).
   end.
 END PROCEDURE.
@@ -5270,7 +5272,7 @@ procedure m_auto-tank :
     then do:
       run str/auto-tn.w
         (input parparentproc
-        ,input  'b-add,b-chg':u
+        ,input  'b-add,b-chg,b-del':u
         ,input ""
         ,input 0
         ,output varrec-tank
