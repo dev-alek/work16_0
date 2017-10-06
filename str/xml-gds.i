@@ -78,10 +78,14 @@ if action = "U":U then do:
   define buffer bb_goods for ub.goods.
   define variable vVal as character no-undo .
   define variable vType as character no-undo .
+  
+    find FIRST buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "image-list" no-error.
+	if available buf_goods-attr then do:
+     vVal = entry(1,buf_goods-attr.attr-value).    
+	end.
   if pos-type = {&cd-type-infokiosk} then do:
     find first bb_goods no-lock where bb_goods.gds-code = cash-gds.gds-code.
- 	find FIRST buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "image-list".
- 	vVal = entry(1,buf_goods-attr.attr-value).    
+ 
     run bgelib-tag-put in this-procedure ( input 3, input "ItemNameLong"  , input string( bb_goods.gds-name ), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemDetails"    , input string( bb_goods.Ps ), input 1 ).
 
@@ -117,9 +121,42 @@ find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and 
   end.
 end.                            
 
+    /* Режим отдельных поддиректорий для каждого товара */
+define variable v-param-types   as character  no-undo.
+define variable v-value-char    as character  no-undo.
+define variable v-val-date      as date       no-undo.
+define variable v-val-decimal   as decimal    no-undo.
+define variable v-val-integer   as integer    no-undo.
+define variable v-val-logical   as logical    no-undo.
+define variable v-tthd          as handle     no-undo.
+
+if  vVal <> "" and v-val-integer = 0 then do:
+        run adm/shattri.p (
+        input "get":U
+        ,input  '':U /*p-obj-type*/
+        ,input  0 /*p-obj-code*/
+        ,input  {&attr-gds-ref}
+        ,input  {&attr-gds-ref_shema-foto} /*p-param-code*/
+        ,output v-value-char
+        ,output v-val-date
+        ,output v-val-decimal
+        ,output v-val-integer
+        ,output v-val-logical
+        ,output v-param-types
+        ,INPUT-OUTPUT table-handle v-tthd
+        ) no-error.
+        delete object v-tthd.
+end.        
+    /* {gbl/conf-rd.i "'photomgd':u"  "'':u" "'':u" 0 "'':u" "'':u" "'':u" no vPar-val vPar-type no-error}  */
+        
     run bgelib-tag-put in this-procedure ( input 3, input "ItemGroup"      , input string( if v-attr-value = "" then string(cash-gds.grp-code) else v-attr-value ), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemShop"      , input string( i-obj-code ), input 1 ).
-
+    if v-val-integer = 1 and vVal <> "" then do:
+        run bgelib-tag-put in this-procedure ( input 3, input "ItemImage"    , input string( entry(1,vVal)), input 1 ).
+    end.
+    if v-val-integer = 2 and vVal <> "" then do:
+        run bgelib-tag-put in this-procedure ( input 3, input "ItemImage"    , input string(string(cash-gds.gds-code) + "/" + entry(1,vVal)), input 1 ).
+    end.      
     /*статус*/
     run bgelib-tag-open in this-procedure ( input 3, input "ItemStatus", input "" ).
     run bgelib-tag-put in this-procedure ( input 4, input "ISWeight" ,
