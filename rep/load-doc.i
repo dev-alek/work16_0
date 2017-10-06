@@ -253,5 +253,5 @@ end.
 { rep/menu-doc.i {&income} "'*'" "'*'"   "'*'"   "'Акт приемки нефтепродуктов по количеству'"                      "'cost,sale,rubl,base'" "'rep/akt-petrl-qnty.p'"  "''"                       "'-------'"  "'Pskov'"             "'A4port'"     "''"              "is-ptrl = 'yes'" }
 { rep/menu-doc.i {&income} "'*'" "'*'"   "'*'"   "'Этикетка проб'"                                                 "'cost,sale,rubl,base'" "'rep/ticket-prob.p'"  "''"                       "'-------'"  "'Rosneft-*'"                   "'HTML'"     "''"              "is-ptrl = 'yes'" }
 { rep/menu-doc.i {&income} "'*'" "'*'"   "'*'"   "'Акт отбора проб'"                                                 "'cost,sale,rubl,base'" "'rep/akt-prob.p'"  "''"                       "'-------'"  "'Rosneft-*'"                   "'HTML'"     "''"              "is-ptrl = 'yes'" }
-
+{ rep/menu-doc.i {&income} "'*'" "'*'"   "'*'"   "'Акт приема нефтепродуктов'"                                                 "'cost,sale,rubl,base'" "'rep/akt-petrol.p'"  "''"                       "'-------'"  "'Rosneft-*'"                   "'HTML'"     "''"              "is-ptrl = 'yes'" }
 /* $Workfile$   E n d */
