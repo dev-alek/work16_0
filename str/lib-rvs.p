@@ -1222,6 +1222,7 @@ define variable      v-water-qnty as decimal no-undo.
         where bf_place.obj-type = tt-meas.obj-type
           and bf_place.obj-code = tt-meas.obj-code
           and bf_place.pl-code  = tt-meas.pl-code
+          and bf_place.status_ = ""
         no-error.
       assign
         anl-loc = trim( bf_place.loc1 )
@@ -1342,12 +1343,14 @@ define variable      v-water-qnty as decimal no-undo.
           where bf_place.obj-type = p-obj-type
             and bf_place.obj-code = p-obj-code
             and bf_place.loc1     = trim( entry( 2, v_string-tmp, '=' ) )
+            and bf_place.status_ = ""
           no-error.
           
           
           if not available bf_place  then 
           do:
-              twice-code:  for each  place where place.obj-code =  p-obj-code and place.obj-type = p-obj-type and place.is-meas = yes and bf_place.status_ = "" : 
+              
+              twice-code:  for each  place where place.obj-code =  p-obj-code and place.obj-type = p-obj-type and place.is-meas = yes : 
                   run placelib_get-attr  ( input {&place-twice-code}
                       ,input p-obj-code
                       ,input p-obj-type
@@ -1819,6 +1822,11 @@ define variabl v-file-name as character no-undo.
     return error substitute( 'Ошибка. С приборов не получены данные по резервуару &1 .'
                            , p-pl-code ) .
   end.
+    find first tt-meas-file
+    where tt-meas-file.obj-type = tt-meas.obj-type
+      and tt-meas-file.obj-code = tt-meas.obj-code
+      and tt-meas-file.pl-code  = tt-meas.pl-code
+    no-error.
 
   { gbl/ptrlprop.i run p-obj-type p-obj-code }
 
@@ -1880,6 +1888,7 @@ assign
     bf_rvs-line.state-temperature      = bf_rvs-line.temperature
     bf_rvs-line.density                = if tt-meas.density > 0 then tt-meas.density else  bf_rvs-line.state-density
     bf_rvs-line.brutto-cli-qnty        = if bf_rvs-line.brutto-cli-qnty <> 0 then bf_rvs-line.brutto-cli-qnty else bf_rvs-line.brutto-qnty * bf_rvs-line.density     
+    bf_rvs-line.measure-cli-qnty       = if bf_rvs-line.measure-cli-qnty <> 0 then bf_rvs-line.measure-cli-qnty else bf_rvs-line.measure-qnty * bf_rvs-line.density
     bf_rvs-line.state-density          = if bf_rvs-line.density > 0 then bf_rvs-line.density else bf_rvs-line.state-density
     bf_rvs-line.state-measure-cli-qnty = bf_rvs-line.state-measure-qnty * bf_rvs-line.state-density
     bf_rvs-line.state-brutto-cli-qnty  = bf_rvs-line.state-brutto-qnty  * bf_rvs-line.state-density
