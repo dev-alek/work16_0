@@ -2091,8 +2091,10 @@ run gds-attr-value in this-procedure
 assign frame {&frame-name} tt-rvs-line.state-density.
 assign
   tt-rvs-line.state-measure-cli-qnty = tt-rvs-line.state-measure-qnty * tt-rvs-line.state-density
+  tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty + varstate-water-qnty
 .
 display tt-rvs-line.state-measure-cli-qnty with frame {&frame-name}.
+display tt-rvs-line.state-brutto-cli-qnty with frame {&frame-name}.
 if tt-rvs-line.state-measure-cli-qnty > tt-rvs-line.state-brutto-cli-qnty then do:
   message "Измеренный вес больше веса брутто. Подставить измеренный вес в вес брутто?"
   view-as alert-box question buttons yes-no update varlog.
@@ -2343,12 +2345,23 @@ if vartarirvalue = "yes" then do:
                   varstate-water-qnty = bf_pl-level.pl-qnty  .
               display  varstate-water-qnty with frame {&frame-name}.
               display tt-rvs-line.state-brutto-qnty +  varstate-water-qnty  @ tt-rvs-line.state-brutto-qnty
-  with frame {&frame-name}.
- 
+              with frame {&frame-name}.
+              DISPLAY tt-rvs-line.state-measure-qnty with frame {&frame-name} .
           end.
       end.  
+          else do:
+              assign
+                  varstate-water-qnty = 0  .
+              display  varstate-water-qnty with frame {&frame-name}.
+                
+              display tt-rvs-line.state-brutto-qnty @ tt-rvs-line.state-brutto-qnty
+              with frame {&frame-name}.
+              DISPLAY tt-rvs-line.state-measure-qnty with frame {&frame-name} .
+
+          end.    
+
       assign
-            tt-rvs-line.state-brutto-qnty = input frame {&frame-name} tt-rvs-line.state-measure-qnty.
+        tt-rvs-line.state-brutto-qnty = input frame {&frame-name} tt-rvs-line.state-measure-qnty + varstate-water-qnty.
         display tt-rvs-line.state-brutto-qnty with frame {&frame-name}.
         if tt-rvs-line.state-density <> 0 and
             tt-rvs-line.state-density <> ? then 
