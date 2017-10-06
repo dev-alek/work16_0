@@ -5582,6 +5582,13 @@ define variable v-rvs-rid as recid no-undo.
 run str/all-rvs.w (input parparentproc, input {&g___object}, input ?, output v-rvs-rid).
 END PROCEDURE.
 
+
+PROCEDURE c-obj-rvs-exe :
+define variable v-rvs-rid as recid no-undo.
+run str/rvsalldocws-c.w (input parparentproc, input {&g___object}, input ?, output v-rvs-rid).
+END PROCEDURE.
+
+
 PROCEDURE firm-all-rvs :
 define variable v-rvs-rid as recid no-undo.
 run str/all-rvs.w (input parparentproc, input {&company}, input ?, output v-rvs-rid).

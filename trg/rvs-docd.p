@@ -82,6 +82,29 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     undo Main-Block, return error v-mess .
   end.
 
+    if  (ub.rvs-doc.status_ = {&fact}  and ub.rvs-doc.is-del = true)
+    
+        then 
+    do:
+
+        { str/hstc-rvs.i
+      "buffer ub.rvs-doc"
+        integer({&hn-delete})
+      ub.rvs-doc.rvs-code
+      "dynamic-next-value('s-corr-chip':U,'{&db-name_schema}':U)"
+      no-error
+    }
+        if error-status :error then 
+        do:
+            message
+                vss-workfile vss-revision vss-description skip
+                substitute("Ошибка записи истории удаления документа сверки &1", ub.rvs-doc.rvs-code ) skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error .
+            undo main-block, return error .
+        end.
+    end.
 
   if ub.rvs-doc.status_ = {&fact} then do:
   run adm/shattri.p (
