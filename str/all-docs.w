@@ -122,6 +122,7 @@ define variable v-sale             as   logical               no-undo.
 { str/all-doca.i {&bef-trdcattr-idCountryContr } }
 { str/all-doca.i {&bef-trdcattr-oldsuppcntr    } }
 { str/all-doca.i {&bef-trdcattr-nosn           } }
+{ str/all-doca.i {&bef-trdcattr-acc-ship       } }
 
 define variable p-par as character no-undo .
 define new shared buffer t-doc for ub.trn-doc.

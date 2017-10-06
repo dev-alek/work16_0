@@ -30,6 +30,8 @@ define variable ptrlprop-olddens       as logical   no-undo initial false .
 define variable ptrlprop-invclipt      as integer   no-undo initial ? .
 define variable ptrlprop-algrvspt      as integer   no-undo initial 1 .
 define variable ptrlprop-temp-for-pomi as integer   no-undo initial 1 .
+define variable ptrlprop-algoincome as integer no-undo init 0.
+define variable ptrlprop-mand-choice-autocar as logical no-undo init false.
 procedure get-ptrl-prop :
   define input  parameter p-obj-type as character no-undo .
   define input  parameter p-obj-code as integer   no-undo .
@@ -140,6 +142,20 @@ procedure get-ptrl-prop :
           if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-integer} then do:
             assign
               ptrlprop-temp-for-pomi = thbjattr_thbj-attr.property-value-integer
+            .
+          end.
+        end.
+        when {&attr-petrol_algoincome} then do:
+          if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-integer} then do:
+            assign
+              ptrlprop-algoincome = thbjattr_thbj-attr.property-value-integer
+            .
+          end.
+        end.
+        when {&attr-petrol_mand-choice-autocar} then do:
+          if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-logical} then do:
+            assign
+              ptrlprop-mand-choice-autocar = thbjattr_thbj-attr.property-value-logical
             .
           end.
         end.

@@ -117,6 +117,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable O_FACT                              as   decimal                       no-undo.
   define variable v-metering-error                    as   decimal                       no-undo.
   define variable v-normal-wastage                    as   decimal                       no-undo.
+  define variable v-normal-wastage-winter             as   decimal                       no-undo init ?.
+  define variable v-normal-wastage-summer             as   decimal                       no-undo init ?.
   define variable v-rsrv-qnty                         like ub.doc-line.fact-qnty         no-undo.
 
   define variable O_PKH-base                          as   decimal                       no-undo.
@@ -397,14 +399,15 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         and buf_goods.prod-code = buf_doc-line.prod-code
     on error undo block_cre-inv, retry block_cre-inv
     :
-    run gdsoattr-value in this-procedure
-                      ( input  {&attr-normal-wastage-o}
-                       ,input  buf_goods.gds-code
-                       ,input  buf_trn-doc.obj-type
-                       ,input  buf_trn-doc.obj-code
-                       ,output v-normal-wastage
-                       ,output v-type
-                      ) no-error .
+      run gds-o-normal-wastage-value in this-procedure
+                        ( input buf_goods.gds-code
+                         , input buf_trn-doc.obj-type
+                         , input buf_trn-doc.obj-type
+                         , input if buf_trn-doc.fact-date <> ? then buf_trn-doc.fact-date else buf_trn-doc.doc-date
+                         , output v-normal-wastage-winter
+                         , output v-normal-wastage-summer
+                         , output v-normal-wastage
+                        ) no-error.
 
       if v-normal-wastage = ? then do:
         assign

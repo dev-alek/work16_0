@@ -260,6 +260,8 @@ define variable rvslog                      as logical                       no-
 define variable varvalue                    as character                     no-undo .
 define variable vartype                     as character                     no-undo .
 define variable isEgais                     as logical                       no-undo .
+define variable v-vid-action                as integer                       no-undo .
+define variable v-vid-param                 as longchar                      no-undo .
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 98 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
@@ -1798,7 +1800,58 @@ do:
     return no-apply .
   end.
   if valid-object (infoSectionsTotal) 
-    then infoSectionsTotal:SaveDB().
+  then do:
+    
+    infoSectionsTotal:SaveDB().
+  
+    if infoSectionsTotal:isFlagKPChg
+    then do:
+      define variable varobj-shift-date as date      no-undo.
+      define variable varobj-shift-num  as integer   no-undo.
+      define variable varobj-shift-name as character no-undo.
+      
+      { gbl/curshift.i
+        bf-trn-doc.obj-type
+        bf-trn-doc.obj-code
+        varobj-shift-date
+        varobj-shift-num
+        varobj-shift-name
+        no-error
+      }
+      
+      v-vid-action = 68 .
+      v-vid-param = "Initiator=" + "User" + {&delim-par} +
+                    "ResponsiblePerson=" + bf-trn-doc.cli-name + {&delim-par} +
+                    "SHOP_NUM=" + string(bf-trn-doc.obj-code) + {&delim-par} +
+                    "Contractor=" + bf-trn-doc.cli-name + {&delim-par} +
+                    "DocNum=" + string(bf-trn-doc.doc-code) + {&delim-par} +
+                    "FactDate=" + (if string(bf-trn-doc.fact-date) = ? then '' else string(bf-trn-doc.fact-date)) + {&delim-par} +
+                    "DocType=" + string(bf-trn-doc.doc-type) + {&delim-par} +
+                    "SHIFT_NUM_DOC=" + (if string(bf-trn-doc.shift-num) = ? then '' else string(bf-trn-doc.shift-num)) + (if string(bf-trn-doc.shift-date) = ? then '' else string(bf-trn-doc.shift-date)) + {&delim-par} +
+                    "SHIFT_NUM=" + (if string(varobj-shift-num) = ? then '' else string(varobj-shift-num)) + (if string(varobj-shift-date) = ? then '' else string(varobj-shift-date, "99999999")) + {&delim-par} +
+                    "Status=" + string(bf-trn-doc.status_) + (if bf-trn-doc.flag then "+" else "-" ) + {&delim-par} +
+                    "RESULT=1" + {&delim-par} + 
+                    "Description=" + "Включен комиссионный прием нефтепродукта" no-error.
+      
+      
+      if available (bf-trn-doc)
+      then do:
+      
+        run trg/userlog.p (
+              input {&nwsdochs_action_update_err}
+            , input {&table_trn-doc}
+            , input ( buffer bf-trn-doc :handle )
+            , input v-vid-param
+            , input v-vid-param
+        ) no-error.
+        
+      end.
+      
+      delete object infoSectionsTotal no-error.
+      
+    end.
+  
+  end.
 
 end.
 
@@ -2539,13 +2592,108 @@ if varrvs-place = yes then do:
       v-ptbocode         = v-prt-ptbocode
     .*/
     
+    
+    
+    define variable v-normal-wastage        as decimal no-undo init ?.
+    define variable v-normal-wastage-winter as decimal no-undo init ?.
+    define variable v-normal-wastage-summer as decimal no-undo init ?.
+
+    if stfactplvalue <> ""  then 
+    do:
+      { str/chkqtpl.i
+         stfactplvalue
+         varupd-fact-qnty
+         varrevision
+         varpercrev
+         varauto-tank
+         varpercauto
+         varinv
+         varpercinv
+         varinv-set
+         no-error
+       }
+      if error-status :error then 
+      do:
+        message
+          vss-workfile vss-revision vss-description skip
+          "Разборе строки параметра stfactpl" skip
+          error-status :get-message(1) skip
+          return-value skip
+          view-as alert-box error .
+        return error .
+      end.
+    end.
+
+    run gds-o-normal-wastage-value in this-procedure
+    ( input buf_goods.gds-code
+     , input t-doc.obj-type
+     , input t-doc.obj-code
+     , input today
+     , output v-normal-wastage-winter
+     , output v-normal-wastage-summer
+     , output v-normal-wastage
+    ).
+
     infoSectionsTotal = new InfoSectionsTotal().
+
+    define variable l-ok as logical   no-undo .
+  
+      { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_income_petrol-сommission':U
+        {&cntxt-object}
+        t-doc.host-code
+        t-doc.obj-type
+        t-doc.obj-code
+        0
+        0
+        0
+        false
+        l-ok
+      }
+  
+     if l-ok = true
+      then do:
+        infoSectionsTotal:IsActnComm = true.
+      end.
+
+     { str/tdat-val.i
+        t-doc.doc-code
+        {&trdcattr-car-num}
+        varcar-num
+        vartype
+        }
+    
+     { str/tdat-val.i
+        t-doc.doc-code
+        {&trdcattr-acc-ship}
+        varvalue
+        vartype
+        }
+    
+    varrn-acc-ship = decimal (varvalue) no-error.
+    if varrn-acc-ship = ?
+      then varrn-acc-ship = 0.
+    
+    { gbl/ptrlprop.i
+      run
+      t-doc.obj-type
+      t-doc.obj-code
+    }
+
 
     infoSectionsTotal:Initialization(t-doc.doc-code, buf_goods.gds-code).
     assign
       infoSectionsTotal:CliQntyInput = varcli-qnty-input
       infoSectionsTotal:DensityInput = vardensity-input
       infoSectionsTotal:DocQntyInput = vardoc-qnty-input
+      infoSectionsTotal:NormalWastage = if v-normal-wastage = ? then 0 else v-normal-wastage
+      infoSectionsTotal:IsRNAlgo = if ptrlprop-algoincome = 2 then true else false
+      infoSectionsTotal:PercAcc = varpercauto
+      infoSectionsTotal:AccShip = varrn-acc-ship
+      infoSectionsTotal:CarNum = varcar-num
       .
 
     if parline-mode <> {&add-def} then do:
@@ -4743,7 +4891,7 @@ procedure check-place-rsrv :
       return .
     end.
 
-    if not( t-doc.status_ = {&wayb}
+    /*if not( t-doc.status_ = {&wayb}
             and t-doc.flag_ = false
           )
     then do:
@@ -4757,7 +4905,7 @@ procedure check-place-rsrv :
           view-as alert-box error .
         undo, return error .
       end.
-    end.
+    end.*/
 
     assign
       d_fact-qnty     = 0.00

@@ -3666,6 +3666,12 @@ end.
 {&create-record-fuel}
 &scop attr-code trdcattr-time-pour
 {&create-record-fuel}
+&scop attr-code trdcattr-acc-ship
+{&create-record-fuel}
+&scop attr-code trdcattr-doc-not
+{&create-record-fuel}
+&scop attr-code trdcattr-spisok-not-doc
+{&create-record-fuel}
 
 end.
 end procedure.

@@ -187,6 +187,7 @@ define variable v-attr-value   as character no-undo.
 define variable v-attr-type    as character no-undo.
 define variable v-is-foreign-producer as logical no-undo.
 define variable p-cons        as integer no-undo .
+define variable v-iskp              as logical no-undo .
 define variable v-vid-action        as integer no-undo .
 define variable v-vid-param         as longchar no-undo .
 { str/initiator.i }
@@ -442,7 +443,7 @@ then do:
       or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 0.001
       or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 0.001
     then do:
-      v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    по ТТН - &3&1    плотность - &4&1    по накл. - &5&1По доп. инфо:&1    по ТТН - &6&1    плотность - &7&1    по накл. - &8&1Произведите исправления." ,
+      v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    по ТТН - &3&1    плотность - &4&1    по накл. - &5&1По доп. инфо:&1    по ТТН - &6&1    плотность - &7&1    по накл. - &8",
                                       {&new-line}, 
                                       bf_doc-line.artic,
                                       bf_doc-line.doc-qnty,
@@ -456,10 +457,10 @@ then do:
       undo, return error v-mess.
     end.
     if varstatus = {&fact} then do:
-      if absolute (infoSectionsTotal:FactQntyTotal - bf_doc-line.fact-qnty) > 0.001
-         or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 0.001
+      if (infoSectionsTotal:FactQntyTotal = ? or infoSectionsTotal:FactKgQntyTotal = ? ) or (absolute (infoSectionsTotal:FactQntyTotal - bf_doc-line.fact-qnty) > 0.001
+         or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 0.001)
       then do:
-        v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    факт. кол-во - &3&1    Факт. кол-во, вес - &4&1По доп. инфо:&1    факт. кол-во - &5&1    Факт. кол-во, вес - &6&1Произведите исправления." ,
+        v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    факт. кол-во - &3&1    Факт. кол-во, вес - &4&1По доп. инфо:&1    факт. кол-во - &5&1    Факт. кол-во, вес - &6",
                                         {&new-line}, 
                                         bf_doc-line.artic,
                                         bf_doc-line.fact-qnty,
@@ -471,9 +472,44 @@ then do:
         undo, return error v-mess.
       end.
     end.
+    v-iskp = false.
+    do ii = 1 to infoSectionsTotal:SectionNum : 
+      def var infoSectionObj as class InfoSection no-undo.
+      infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii).
+      if not v-iskp 
+      then do:
+        v-iskp = infoSectionObj:IsKP.
+      end.
+   end.
     
     
     delete object infoSectionsTotal.
+    
+    if v-iskp
+    then do:
+      { gbl/chk-actg.i
+        v-curr-db-num
+        v-curr-userid
+        {&action-head-code-main}
+        'actn_inventory_fact_not-peresort':U
+        {&cntxt-object}
+        bf_trn-doc.host-code
+        bf_trn-doc.obj-type
+        bf_trn-doc.obj-code
+        0
+        0
+        0
+        true
+        varlog
+      }
+      
+      if not varlog
+      then do:
+        undo, return error substitute( 'По секциям включен комиссионный прием нефтепродукта. Отсутствует право.').
+      end.
+      
+    end.
+    
   end.
 end.
 

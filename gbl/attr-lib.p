@@ -4412,7 +4412,7 @@ character~
 &scop user-can-edit-attr-petrol   true
 &scop output-display-attr-petrol  true
 &scop other-attr-petrol 'spr-ext=adm\shattrpt.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character':U
+&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character,integer,integer,logical':U
 &scop prop-label-list-attr-petrol '~
 Расхождение в инвентаризации по сверке делать без учета погрешности измерения,~
 Алгоритм вычисления плотности для продаж,~
@@ -4424,7 +4424,10 @@ character~
 Контрагент для списания ЕУ при инвентаризации топлива по сверке,~
 В документы по умолчанию ставится плотность и темп. из предыдущего документа,~
 Настройки инвентаризации по сверке,~
-Температура к которой приводится плотность и объем (°С),При воде в сверке отправлять сообщения на список адресов~
+Температура к которой приводится плотность и объем (°С),При воде в сверке отправлять сообщения на список адресов,~
+Допустимый % расхождения массы в резервуаре,~
+Алгоритм принятия топлива к учету,~
+Обязательный выбор автотранспорта из справочника~
 '
 &scop global-attr-petrol true
 &scop host-attr-petrol true
@@ -11561,6 +11564,72 @@ p-range-margin  = (if v-exists-margin then (- 1) else p-range-margin)
 p-range-increase = (if v-exists-increase then (- 1) else p-range-increase)
 p-range-rmethod  = (if v-exists-rmethod then  (- 1 )else p-range-rmethod)
 .
+end. /*doe*/
+end procedure.
+
+
+procedure gds-o-normal-wastage-value :
+do
+on error undo, return error
+:
+  define input parameter p-gds-code  as integer      no-undo.
+  define input parameter p-obj-type  as character    no-undo.
+  define input parameter p-obj-code  as integer      no-undo.
+  define input parameter p-date      as date      no-undo.
+  define output parameter p-normal-wastage-winter as decimal      no-undo init ?. /*ест. убыль зимой*/
+  define output parameter p-normal-wastage-summer as decimal      no-undo init ?. /*ест. убыль летом*/
+  define output parameter p-normal-wastage-date   as decimal      no-undo init ?. /*ест. убыль на указанную дату если p-date не ?*/
+  define variable v-mes as character no-undo .
+  
+  define buffer buf_goods for ub.goods.
+  define buffer buf_normal-wastage-gds-obj-attr      for ub.gds-obj-attr.
+  
+  find first buf_goods no-lock where
+             buf_goods.gds-code = p-gds-code no-error .
+  if not avail buf_goods then do:
+    message
+      skip "Не удалось найти товар с кодом" p-gds-code
+      view-as alert-box error .
+    undo, return error .
+  end.
+
+  find first buf_normal-wastage-gds-obj-attr no-lock
+      where buf_normal-wastage-gds-obj-attr.gds-code = p-gds-code
+        and buf_normal-wastage-gds-obj-attr.attr-code = {&attr-normal-wastage-o}
+        and buf_normal-wastage-gds-obj-attr.obj-type  = p-obj-type
+        and buf_normal-wastage-gds-obj-attr.obj-code  = p-obj-code
+  no-error .
+  if available buf_normal-wastage-gds-obj-attr then do:
+
+    define variable v-temp-str1 as character no-undo .
+    v-temp-str1 = buf_normal-wastage-gds-obj-attr.attr-value.
+    
+    if num-entries (v-temp-str1, ";") = 2 then do:
+      assign
+        p-normal-wastage-summer   =  decimal(trim(entry(1, v-temp-str1, ";":U)))
+        p-normal-wastage-winter   =  decimal(trim(entry(2, v-temp-str1, ";":U)))
+      .
+    end.
+    else do:
+      assign
+        p-normal-wastage-summer   =  decimal(trim(v-temp-str1))
+        p-normal-wastage-winter   =  decimal(trim(v-temp-str1))
+      .
+    end.
+    if p-date <> ?
+    then do:
+      if 3 < month (p-date) and month (p-date) < 10
+      then do:
+        p-normal-wastage-date = p-normal-wastage-summer.
+      end.
+      else do:
+        p-normal-wastage-date = p-normal-wastage-winter.
+      end.
+       
+    end.
+    
+  end.
+
 end. /*doe*/
 end procedure.
 

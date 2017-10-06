@@ -793,6 +793,7 @@ procedure cr-begin-general:
       v-trndocattr
       v-type
     } 
+    v-trndocattr = replace (v-trndocattr, {&delim-par}, ",").
     run aktpq-xl-write-cell-data in this-procedure (
           input {&aktpq-xl-sealscondition}
         , input v-trndocattr

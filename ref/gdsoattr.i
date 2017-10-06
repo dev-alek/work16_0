@@ -312,6 +312,33 @@ procedure gds-attr-margin-value :
   end.
 end procedure.
 
+procedure gds-o-normal-wastage-value :
+do
+on error undo, return error
+:
+  define input parameter p-gds-code  as integer      no-undo.
+  define input parameter p-obj-type  as character    no-undo.
+  define input parameter p-obj-code  as integer      no-undo.
+  define input parameter p-date      as date         no-undo.
+  define output parameter p-normal-wastage-winter as decimal      no-undo init ?. /*ест. убыль зимой*/
+  define output parameter p-normal-wastage-summer as decimal      no-undo init ?. /*ест. убыль летом*/
+  define output parameter p-normal-wastage-date   as decimal      no-undo init ?. /*ест. убыль на указанную дату если p-date не ?*/
+    &scop proc-name gds-o-normal-wastage-value
+    {&run_proc_attr-lib}
+      (input  p-gds-code
+      ,input  p-obj-type
+      ,input  p-obj-code
+      ,input  p-date
+      ,output p-normal-wastage-winter
+      ,output p-normal-wastage-summer
+      ,output p-normal-wastage-date
+      ) no-error .
+    if error-status :error
+    then do:
+      undo, return error return-value .
+    end.
+  end.
+end.
 
 procedure gdsoattr-copy :
 

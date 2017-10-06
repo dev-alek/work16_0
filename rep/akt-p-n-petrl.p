@@ -109,6 +109,8 @@ define variable v-date-pour         as   character             no-undo.
 define variable v-time-pour         as   character             no-undo.
 define variable v-tank-vol          as   character             no-undo.
 define variable v-tank-temp         as   character             no-undo.
+define variable v-doc-not           as   logical               no-undo.
+define variable v-spisok-not-doc    as   character             no-undo. 
 define variable v-tank-water        as   character             no-undo.
 define variable v-tank-density      as   character             no-undo.
 define variable v-tank-weight       as   character             no-undo.
@@ -444,6 +446,18 @@ do
             , input v-validity-certif
         ).
 
+/*        /* "Докуметы НЕ представленные*/              */
+/*        run apn-xl-write-cell-data in this-procedure (*/
+/*              input {&apn-xl-doc-not}                 */
+/*            , input v-validity-certif                 */
+/*        ).                                            */
+/*                                                      */
+/*                                                      */
+/*        /* Список не предоставленных документов */    */
+/*        run apn-xl-write-cell-data in this-procedure (*/
+/*              input {&apn-xl-spisok-doc-not}          */
+/*            , input v-validity-certif                 */
+/*        ).                                            */
   run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
                                                , buffer buf_clob-bind).
   find first sr-izmerenia no-lock where sr-izmerenia.node-code = integer(v-place-si) no-error.
@@ -1246,6 +1260,29 @@ procedure loc-get-set-attr :
 
     end.
 
+    &scop attr-name {&bef-trdcattr-doc-not}
+    {&loc-find-doc-attr}
+    if p-mode-attr = "get-attr":U then do:
+      &scop attr-name doc-not
+      assign
+        v-{&attr-name} = logical(buf_doc-attr.attr-value) 
+      no-error.
+    end.
+    else do:
+
+    end.
+    
+    &scop attr-name {&bef-trdcattr-spisok-not-doc}
+    {&loc-find-doc-attr}
+    if p-mode-attr = "get-attr":U then do:
+      &scop attr-name spisok-not-doc
+      assign
+        v-{&attr-name} = buf_doc-attr.attr-value 
+      no-error.
+    end.
+    else do:
+
+    end.
     &scop attr-name car-vol
     &scop attr-name-class CarVol
     {&loc-get-attr}
