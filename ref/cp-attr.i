@@ -151,6 +151,39 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scop manual-edit-cp-attr-bal_malina 1
 &scop batch-edit-cp-attr-bal_malina  0
 
+/* Максимальный % порог от суммы  */
+&scop bef-cp-attr-max_proc_sum max_proc_sum
+&glob cp-attr-max_proc_sum '{&bef-cp-attr-max_proc_sum}':U
+&scop type-cp-attr-max_proc_sum {&type-dec}
+&scop format-cp-attr-max_proc_sum ">>9.99"
+&scop label-cp-attr-max_proc_sum "Максимальный % порог от суммы"
+&scop tooltip-cp-attr-max_proc_sum "Максимальный % порог от суммы"
+/*область действия  - глобально или фирма или объект*/
+&scop range-cp-attr-max_proc_sum  ~{&bef-global-int~}
+&scop user-can-edit-cp-attr-max_proc_sum true
+&scop output-display-cp-attr-max_proc_sum true
+&scop other-cp-attr-max_proc_sum '':u
+&scop news-cp-attr-max_proc_sum true
+&scop hist-cp-attr-max_proc_sum true
+&scop manual-edit-cp-attr-max_proc_sum 1
+&scop batch-edit-cp-attr-max_proc_sum  0
+
+/* Маска карты\купона  */
+&scop bef-cp-attr-mask_card_kup mask_card_kup
+&glob cp-attr-mask_card_kup '{&bef-cp-attr-mask_card_kup}':U
+&scop type-cp-attr-mask_card_kup {&type-char}
+&scop format-cp-attr-mask_card_kup "x(129)"
+&scop label-cp-attr-mask_card_kup "Маска карты\купона"
+&scop tooltip-cp-attr-mask_card_kup "Маска карты\купона"
+/*область действия  - глобально или фирма или объект*/
+&scop range-cp-attr-mask_card_kup  ~{&bef-global-int~}
+&scop user-can-edit-cp-attr-mask_card_kup true
+&scop output-display-cp-attr-mask_card_kup true
+&scop other-cp-attr-mask_card_kup '':u
+&scop news-cp-attr-mask_card_kup true
+&scop hist-cp-attr-mask_card_kup true
+&scop manual-edit-cp-attr-mask_card_kup 1
+&scop batch-edit-cp-attr-mask_card_kup  0
 /* Создание дополнительного документа */
 &scop bef-cp-attr-dop-doc dop-doc
 &glob cp-attr-dop-doc '{&bef-cp-attr-dop-doc}':U
@@ -178,6 +211,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,{&bef-cp-attr-paycard-edit-prefix}~
 ,{&bef-cp-attr-form_km3}~
 ,{&bef-cp-attr-bal_malina}~
+,{&bef-cp-attr-max_proc_sum}~
+,{&bef-cp-attr-mask_card_kup}~
 ':u
 
 /* ------------------------------------------------------------------- */
@@ -261,8 +296,10 @@ procedure cp-attr-code :
       {&attr-temp-full-code}
       &scop attr-code cp-attr-bal_malina
       {&attr-temp-full-code}
-
-
+      &scop attr-code cp-attr-max_proc_sum
+      {&attr-temp-full-code}
+      &scop attr-code cp-attr-mask_card_kup
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры */
       otherwise do:
         undo, return error substitute("неизвестный атрибут типа кассового платежа &1", p-code ).
@@ -297,6 +334,10 @@ procedure cp-attr-tooltip :
       &scop attr-code cp-attr-form_km3
       {&attr-temp-code}
       &scop attr-code cp-attr-bal_malina
+      {&attr-temp-code}
+      &scop attr-code cp-attr-max_proc_sum
+      {&attr-temp-code}
+      &scop attr-code cp-attr-mask_card_kup
       {&attr-temp-code}
 
 
@@ -577,6 +618,10 @@ procedure cp-attr-news :
       {&attr-news-code}
       &scop attr-code cp-attr-bal_malina
       {&attr-news-code}
+      &scop attr-code cp-attr-max_proc_sum
+      {&attr-news-code}
+      &scop attr-code cp-attr-mask_card_kup
+      {&attr-news-code}
 
 
       /* сюда добавлять новые параметры */
@@ -607,6 +652,10 @@ procedure cp-attr-hist :
       &scop attr-code cp-attr-form_km3
       {&attr-hist-code}
       &scop attr-code cp-attr-bal_malina
+      {&attr-hist-code}
+      &scop attr-code cp-attr-max_proc_sum
+      {&attr-hist-code}
+      &scop attr-code cp-attr-mask_card_kup
       {&attr-hist-code}
 
 
@@ -788,6 +837,10 @@ do on error undo, return error return-value
       {&attr-manual-edit-code}
       &scop attr-code cp-attr-bal_malina
       {&attr-manual-edit-code}
+      &scop attr-code cp-attr-max_proc_sum
+      {&attr-manual-edit-code}
+      &scop attr-code cp-attr-mask_card_kup
+      {&attr-manual-edit-code}
 
 
 
@@ -821,6 +874,10 @@ do
       &scop attr-code cp-attr-form_km3
       {&attr-batch-edit-code}
       &scop attr-code cp-attr-bal_malina
+      {&attr-batch-edit-code}
+      &scop attr-code cp-attr-max_proc_sum
+      {&attr-batch-edit-code}
+      &scop attr-code cp-attr-mask_card_kup
       {&attr-batch-edit-code}
 
 

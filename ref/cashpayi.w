@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,15 +8,15 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER buf_currency FOR ub.currency.
-DEFINE BUFFER buf_pay-type FOR ub.pay-type.
-DEFINE BUFFER buf_wealth FOR ub.wealth.
-DEFINE BUFFER locked_cash-pay FOR ub.cash-pay.
-DEFINE TEMP-TABLE tt-cash-pay NO-UNDO LIKE ub.cash-pay.
+DEFINE BUFFER buf_currency FOR currency.
+DEFINE BUFFER buf_pay-type FOR pay-type.
+DEFINE BUFFER buf_wealth FOR wealth.
+DEFINE BUFFER locked_cash-pay FOR cash-pay.
+DEFINE TEMP-TABLE tt-cash-pay NO-UNDO LIKE cash-pay.
+DEFINE buffer buf_cash-pay-attr for ub.cash-pay-attr .
 
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -69,7 +69,7 @@ define variable tcode like ub.cash-pay.cdpay-code no-undo.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -89,12 +89,12 @@ tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8 ~
 tt-cash-pay.is-service-pay tt-cash-pay.atr16 tt-cash-pay.is-all-pay ~
 tt-cash-pay.atr32 tt-cash-pay.is-card-swap tt-cash-pay.atr64 ~
 tt-cash-pay.is-bar-read tt-cash-pay.is-credit tt-cash-pay.is-advance ~
-tt-cash-pay.pay-card-view
+tt-cash-pay.pay-card-view 
 &Scoped-define ENABLED-TABLES tt-cash-pay
 &Scoped-define FIRST-ENABLED-TABLE tt-cash-pay
-&Scoped-Define ENABLED-OBJECTS B-exit RECT-3 b-quit B-attr B-hist B-Help ~
-b-curr b-pay b-wealth T-register T-kbo T-can-mix T-lnr T-has-return ~
-T-has-overpay for-curr-name for-pay-name for-wth-name
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-attr B-hist B-Help RECT-3 ~
+b-curr b-pay b-wealth cb-prop T-register T-kbo T-can-mix T-lnr T-has-return ~
+T-has-overpay for-curr-name for-pay-name for-wth-name 
 &Scoped-Define DISPLAYED-FIELDS tt-cash-pay.cdpay-code tt-cash-pay.obj-name ~
 tt-cash-pay.curr-code tt-cash-pay.pay-code tt-cash-pay.wth-code ~
 tt-cash-pay.pay-limit tt-cash-pay.rule-file-name tt-cash-pay.slip-file-name ~
@@ -104,11 +104,11 @@ tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8 ~
 tt-cash-pay.is-service-pay tt-cash-pay.atr16 tt-cash-pay.is-all-pay ~
 tt-cash-pay.atr32 tt-cash-pay.is-card-swap tt-cash-pay.atr64 ~
 tt-cash-pay.is-bar-read tt-cash-pay.is-credit tt-cash-pay.is-advance ~
-tt-cash-pay.pay-card-view
+tt-cash-pay.pay-card-view 
 &Scoped-define DISPLAYED-TABLES tt-cash-pay
 &Scoped-define FIRST-DISPLAYED-TABLE tt-cash-pay
-&Scoped-Define DISPLAYED-OBJECTS T-register T-kbo T-can-mix T-lnr ~
-T-has-return T-has-overpay for-curr-name for-pay-name for-wth-name
+&Scoped-Define DISPLAYED-OBJECTS cb-prop T-register T-kbo T-can-mix T-lnr ~
+T-has-return T-has-overpay for-curr-name for-pay-name for-wth-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -123,101 +123,116 @@ T-has-return T-has-overpay for-curr-name for-pay-name for-wth-name
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-attr
-     LABEL "&Атрибуты"
+DEFINE BUTTON B-attr 
+     LABEL "&Атрибуты" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-curr
+DEFINE BUTTON b-curr 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
+     LABEL "":L 
      SIZE 3 BY 1
      BGCOLOR 8 FGCOLOR 0 .
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-hist
-     LABEL "Ис&тория"
+DEFINE BUTTON B-hist 
+     LABEL "Ис&тория" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-pay
+DEFINE BUTTON b-pay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
+     LABEL "":L 
      SIZE 3 BY 1
      BGCOLOR 8 FGCOLOR 0 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-wealth
+DEFINE BUTTON b-wealth 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
+     LABEL "":L 
      SIZE 3 BY 1
      BGCOLOR 8 FGCOLOR 0 .
 
-DEFINE VARIABLE for-curr-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 25.8 BY .67
+DEFINE VARIABLE cb-prop AS CHARACTER FORMAT "X(256)":U INITIAL "0" 
+     LABEL "Тип" 
+     VIEW-AS COMBO-BOX INNER-LINES 8
+     LIST-ITEM-PAIRS "Тип не определен","0",
+                     "Наличные","1",
+                     "Банковская карта","2",
+                     "Банковская карта оффлайн","3",
+                     "Топливная карта","4",
+                     "Талоны","5",
+                     "Топливные купоны","13",
+                     "Виртуальная топливная карта","14"
+     DROP-DOWN-LIST
+     SIZE 44.88 BY 1
+     BGCOLOR 15  NO-UNDO.
+
+DEFINE VARIABLE for-curr-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 25.75 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE for-pay-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 25.8 BY .67
+DEFINE VARIABLE for-pay-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 25.75 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE for-wth-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 25.8 BY .67
+DEFINE VARIABLE for-wth-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 25.75 BY .67
      FGCOLOR 4  NO-UNDO.
 
 DEFINE RECTANGLE RECT-3
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 96.5 BY 15.47.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 96.5 BY 15.46.
 
-DEFINE VARIABLE T-can-mix AS LOGICAL INITIAL no
-     LABEL "Разрешена смеш.оплата"
+DEFINE VARIABLE T-can-mix AS LOGICAL INITIAL no 
+     LABEL "Разрешена смеш.оплата" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .8 NO-UNDO.
+     SIZE 45 BY .79 NO-UNDO.
 
-DEFINE VARIABLE T-has-overpay AS LOGICAL INITIAL no
-     LABEL "Разрешена переплата"
+DEFINE VARIABLE T-has-overpay AS LOGICAL INITIAL no 
+     LABEL "Разрешена переплата" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .8 NO-UNDO.
+     SIZE 45 BY .79 NO-UNDO.
 
-DEFINE VARIABLE T-has-return AS LOGICAL INITIAL no
-     LABEL "Разрешен возврат"
+DEFINE VARIABLE T-has-return AS LOGICAL INITIAL no 
+     LABEL "Разрешен возврат" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .8 NO-UNDO.
+     SIZE 45 BY .79 NO-UNDO.
 
-DEFINE VARIABLE T-kbo AS LOGICAL INITIAL no
-     LABEL "КБО"
+DEFINE VARIABLE T-kbo AS LOGICAL INITIAL no 
+     LABEL "КБО" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .8 TOOLTIP "Косвенная безналичная оплата" NO-UNDO.
+     SIZE 45 BY .79 TOOLTIP "Косвенная безналичная оплата" NO-UNDO.
 
-DEFINE VARIABLE T-lnr AS LOGICAL INITIAL no
-     LABEL "ЛНР"
+DEFINE VARIABLE T-lnr AS LOGICAL INITIAL no 
+     LABEL "ЛНР" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .8 TOOLTIP "Лояльность за наличный расчет" NO-UNDO.
+     SIZE 45 BY .79 TOOLTIP "Лояльность за наличный расчет" NO-UNDO.
 
-DEFINE VARIABLE T-register AS LOGICAL INITIAL no
-     LABEL "Ведомость"
+DEFINE VARIABLE T-register AS LOGICAL INITIAL no 
+     LABEL "Ведомость" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .8 NO-UNDO.
+     SIZE 45 BY .79 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -228,139 +243,140 @@ DEFINE FRAME Dialog-Frame
      B-attr AT ROW 1 COL 51
      B-hist AT ROW 1 COL 92
      B-Help AT ROW 1 COL 95
-     tt-cash-pay.cdpay-code AT ROW 2.27 COL 19 COLON-ALIGNED
+     tt-cash-pay.cdpay-code AT ROW 2.25 COL 19 COLON-ALIGNED
           LABEL "Код типа платежа" FORMAT "9999"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 11.5 BY 1
-     tt-cash-pay.obj-name AT ROW 2.27 COL 45.5 COLON-ALIGNED
+     tt-cash-pay.obj-name AT ROW 2.25 COL 45.5 COLON-ALIGNED
           LABEL "Название"
-          VIEW-AS FILL-IN
-          SIZE 45.4 BY 1
-     tt-cash-pay.curr-code AT ROW 3.77 COL 19 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 45.38 BY 1
+     tt-cash-pay.curr-code AT ROW 3.75 COL 19 COLON-ALIGNED
           LABEL "Код валюты платежа"
-          VIEW-AS FILL-IN
-          SIZE 3.8 BY .97
-     b-curr AT ROW 3.77 COL 26
+          VIEW-AS FILL-IN 
+          SIZE 3.75 BY .96
+     b-curr AT ROW 3.75 COL 26
      tt-cash-pay.pay-code AT ROW 5 COL 9 COLON-ALIGNED
           LABEL "Оплата"
-          VIEW-AS FILL-IN
-          SIZE 8.1 BY 1
+          VIEW-AS FILL-IN 
+          SIZE 8.13 BY 1
      b-pay AT ROW 5 COL 20
      tt-cash-pay.wth-code AT ROW 5 COL 56 COLON-ALIGNED
           LABEL "Код МЦ"
-          VIEW-AS FILL-IN
-          SIZE 10.6 BY 1
+          VIEW-AS FILL-IN 
+          SIZE 10.63 BY 1
      b-wealth AT ROW 5 COL 69
-     tt-cash-pay.pay-limit AT ROW 6.6 COL 23.6 COLON-ALIGNED
+     tt-cash-pay.pay-limit AT ROW 6.58 COL 23.63 COLON-ALIGNED
           LABEL "Предел без авторизации"
-          VIEW-AS FILL-IN
-          SIZE 15.6 BY 1
-     tt-cash-pay.rule-file-name AT ROW 7.87 COL 71.6 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 15.63 BY 1
+     cb-prop AT ROW 6.58 COL 48.63 COLON-ALIGNED WIDGET-ID 14
+     tt-cash-pay.rule-file-name AT ROW 7.88 COL 71.63 COLON-ALIGNED
           LABEL "Имя файла правил обработки"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 22 BY 1
-     tt-cash-pay.slip-file-name AT ROW 7.9 COL 17.1 COLON-ALIGNED
+     tt-cash-pay.slip-file-name AT ROW 7.92 COL 17.13 COLON-ALIGNED
           LABEL "Имя файла слипа"
-          VIEW-AS FILL-IN
-          SIZE 22 BY .97
-     tt-cash-pay.is-cash AT ROW 9.8 COL 2.1
+          VIEW-AS FILL-IN 
+          SIZE 22 BY .96
+     tt-cash-pay.is-cash AT ROW 9.79 COL 2.13
           LABEL "Платеж наличными"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.atr128 AT ROW 9.8 COL 48.6
+     tt-cash-pay.atr128 AT ROW 9.79 COL 48.63
           LABEL "Платеж по топливной карте"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.atr1 AT ROW 10.8 COL 2.1
+     tt-cash-pay.atr1 AT ROW 10.79 COL 2.13
           LABEL "Разрешается сдача и возврат"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-credit-card AT ROW 10.8 COL 48.6
+     tt-cash-pay.is-credit-card AT ROW 10.79 COL 48.63
           LABEL "Кредитная карта"
           VIEW-AS TOGGLE-BOX
-          SIZE 45.4 BY .93
-     tt-cash-pay.atr2 AT ROW 11.8 COL 2.1
+          SIZE 45.38 BY .92
+     tt-cash-pay.atr2 AT ROW 11.79 COL 2.13
           LABEL "Разрешен перевод оплаты на платеж"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-debet-card AT ROW 11.8 COL 48.6
+     tt-cash-pay.is-debet-card AT ROW 11.79 COL 48.63
           LABEL "Расчетная (дебетовая) карта"
           VIEW-AS TOGGLE-BOX
-          SIZE 45.4 BY .93
-     tt-cash-pay.atr4 AT ROW 12.8 COL 2.1
+          SIZE 45.38 BY .92
+     tt-cash-pay.atr4 AT ROW 12.79 COL 2.13
           LABEL "Принудительная печать слипа по платежу"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-goods-pay AT ROW 12.8 COL 48.6
+     tt-cash-pay.is-goods-pay AT ROW 12.79 COL 48.63
           LABEL "Платеж за товары"
           VIEW-AS TOGGLE-BOX
-          SIZE 45.4 BY .93
-     tt-cash-pay.atr8 AT ROW 13.8 COL 2.1
+          SIZE 45.38 BY .92
+     tt-cash-pay.atr8 AT ROW 13.79 COL 2.13
           LABEL "Принудительная печать фактуры по платежу"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-service-pay AT ROW 13.8 COL 48.7
+     tt-cash-pay.is-service-pay AT ROW 13.79 COL 48.75
           LABEL "Сервисный платеж"
           VIEW-AS TOGGLE-BOX
-          SIZE 45.4 BY .93
-     tt-cash-pay.atr16 AT ROW 14.8 COL 2.1
+          SIZE 45.38 BY .92
+     tt-cash-pay.atr16 AT ROW 14.79 COL 2.13
           LABEL "Необходима on-line авторизация"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-all-pay AT ROW 14.8 COL 48.7
+     tt-cash-pay.is-all-pay AT ROW 14.79 COL 48.75
           LABEL "'Общий' платеж"
           VIEW-AS TOGGLE-BOX
-          SIZE 45.4 BY .93
-     tt-cash-pay.atr32 AT ROW 15.8 COL 2.1
-          LABEL "Обязателен ввод PIN-кода"
-          VIEW-AS TOGGLE-BOX
-          SIZE 45 BY 1
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          SIZE 45.38 BY .92
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     tt-cash-pay.is-card-swap AT ROW 15.8 COL 48.9
+     tt-cash-pay.atr32 AT ROW 15.79 COL 2.13
+          LABEL "Обязателен ввод PIN-кода"
+          VIEW-AS TOGGLE-BOX
+          SIZE 45 BY 1
+     tt-cash-pay.is-card-swap AT ROW 15.79 COL 48.88
           LABEL "Запрос ввода карты"
           VIEW-AS TOGGLE-BOX
-          SIZE 45.4 BY .93
-     tt-cash-pay.atr64 AT ROW 16.8 COL 2.1
+          SIZE 45.38 BY .92
+     tt-cash-pay.atr64 AT ROW 16.79 COL 2.13
           LABEL "Топливный платеж"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-bar-read AT ROW 16.8 COL 48.9
+     tt-cash-pay.is-bar-read AT ROW 16.79 COL 48.88
           LABEL "Запрашивать сканирование баркода талона для платежа"
           VIEW-AS TOGGLE-BOX
-          SIZE 48.8 BY .93
-     tt-cash-pay.is-credit AT ROW 17.8 COL 2.1
+          SIZE 48.75 BY .92
+     tt-cash-pay.is-credit AT ROW 17.79 COL 2.13
           LABEL "Платеж <В кредит>"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1 TOOLTIP "Не кредитная карта!!!!"
-     tt-cash-pay.is-advance AT ROW 17.8 COL 48.9
+     tt-cash-pay.is-advance AT ROW 17.79 COL 48.88
           LABEL "Учет авансового платежа"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     T-register AT ROW 18.8 COL 2.1 WIDGET-ID 2
-     T-kbo AT ROW 18.8 COL 48.9 WIDGET-ID 4
-     T-can-mix AT ROW 19.8 COL 2.1 WIDGET-ID 6
-     T-lnr AT ROW 19.8 COL 48.9 WIDGET-ID 8
-     T-has-return AT ROW 20.8 COL 2.1 WIDGET-ID 10
-     T-has-overpay AT ROW 20.8 COL 48.8 WIDGET-ID 12
-     tt-cash-pay.pay-card-view AT ROW 21.93 COL 1
+     T-register AT ROW 18.79 COL 2.13 WIDGET-ID 2
+     T-kbo AT ROW 18.79 COL 48.88 WIDGET-ID 4
+     T-can-mix AT ROW 19.79 COL 2.13 WIDGET-ID 6
+     T-lnr AT ROW 19.79 COL 48.88 WIDGET-ID 8
+     T-has-return AT ROW 20.79 COL 2.13 WIDGET-ID 10
+     T-has-overpay AT ROW 20.79 COL 48.75 WIDGET-ID 12
+     tt-cash-pay.pay-card-view AT ROW 21.92 COL 1
           LABEL "Префиксы N плат.карт для просмотра"
-          VIEW-AS FILL-IN
-          SIZE 52.3 BY 1 TOOLTIP "Список префикс номеров платежных карт, которые будут видны в BO"
-     for-curr-name AT ROW 3.77 COL 34.5 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 52.25 BY 1 TOOLTIP "Список префикс номеров платежных карт, которые будут видны в BO"
+     for-curr-name AT ROW 3.75 COL 34.5 COLON-ALIGNED NO-LABEL
      for-pay-name AT ROW 5 COL 21 COLON-ALIGNED NO-LABEL
      for-wth-name AT ROW 5 COL 70 COLON-ALIGNED NO-LABEL
      "Свойства платежа :" VIEW-AS TEXT
-          SIZE 18 BY .77 AT ROW 9.03 COL 38
-          BGCOLOR 8 FGCOLOR 4
+          SIZE 18 BY .75 AT ROW 9.04 COL 38
+          BGCOLOR 8 FGCOLOR 4 
      RECT-3 AT ROW 6.33 COL 1.5
-     SPACE(0.19) SKIP(1.16)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     SPACE(0.19) SKIP(1.17)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры типа кассового платежа"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -388,7 +404,7 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -460,7 +476,7 @@ ASSIGN
 */  /* DIALOG-BOX Dialog-Frame */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -597,6 +613,17 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME cb-prop
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-prop Dialog-Frame
+ON VALUE-CHANGED OF cb-prop IN FRAME Dialog-Frame /* Тип */
+DO:
+  assign cb-prop .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME tt-cash-pay.cdpay-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-cash-pay.cdpay-code Dialog-Frame
 ON LEAVE OF tt-cash-pay.cdpay-code IN FRAME Dialog-Frame /* Код типа платежа */
@@ -666,7 +693,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -723,7 +750,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -742,36 +769,36 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY T-register T-kbo T-can-mix T-lnr T-has-return T-has-overpay
-          for-curr-name for-pay-name for-wth-name
+  DISPLAY cb-prop T-register T-kbo T-can-mix T-lnr T-has-return T-has-overpay 
+          for-curr-name for-pay-name for-wth-name 
       WITH FRAME Dialog-Frame.
-  IF AVAILABLE tt-cash-pay THEN
-    DISPLAY tt-cash-pay.cdpay-code tt-cash-pay.obj-name tt-cash-pay.curr-code
-          tt-cash-pay.pay-code tt-cash-pay.wth-code tt-cash-pay.pay-limit
-          tt-cash-pay.rule-file-name tt-cash-pay.slip-file-name
-          tt-cash-pay.is-cash tt-cash-pay.atr128 tt-cash-pay.atr1
-          tt-cash-pay.is-credit-card tt-cash-pay.atr2 tt-cash-pay.is-debet-card
-          tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8
-          tt-cash-pay.is-service-pay tt-cash-pay.atr16 tt-cash-pay.is-all-pay
-          tt-cash-pay.atr32 tt-cash-pay.is-card-swap tt-cash-pay.atr64
-          tt-cash-pay.is-bar-read tt-cash-pay.is-credit tt-cash-pay.is-advance
-          tt-cash-pay.pay-card-view
+  IF AVAILABLE tt-cash-pay THEN 
+    DISPLAY tt-cash-pay.cdpay-code tt-cash-pay.obj-name tt-cash-pay.curr-code 
+          tt-cash-pay.pay-code tt-cash-pay.wth-code tt-cash-pay.pay-limit 
+          tt-cash-pay.rule-file-name tt-cash-pay.slip-file-name 
+          tt-cash-pay.is-cash tt-cash-pay.atr128 tt-cash-pay.atr1 
+          tt-cash-pay.is-credit-card tt-cash-pay.atr2 tt-cash-pay.is-debet-card 
+          tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8 
+          tt-cash-pay.is-service-pay tt-cash-pay.atr16 tt-cash-pay.is-all-pay 
+          tt-cash-pay.atr32 tt-cash-pay.is-card-swap tt-cash-pay.atr64 
+          tt-cash-pay.is-bar-read tt-cash-pay.is-credit tt-cash-pay.is-advance 
+          tt-cash-pay.pay-card-view 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit RECT-3 b-quit B-attr B-hist B-Help tt-cash-pay.cdpay-code
-         tt-cash-pay.obj-name tt-cash-pay.curr-code b-curr tt-cash-pay.pay-code
-         b-pay tt-cash-pay.wth-code b-wealth tt-cash-pay.pay-limit
-         tt-cash-pay.rule-file-name tt-cash-pay.slip-file-name
-         tt-cash-pay.is-cash tt-cash-pay.atr128 tt-cash-pay.atr1
-         tt-cash-pay.is-credit-card tt-cash-pay.atr2 tt-cash-pay.is-debet-card
-         tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8
-         tt-cash-pay.is-service-pay tt-cash-pay.atr16 tt-cash-pay.is-all-pay
-         tt-cash-pay.atr32 tt-cash-pay.is-card-swap tt-cash-pay.atr64
-         tt-cash-pay.is-bar-read tt-cash-pay.is-credit tt-cash-pay.is-advance
-         T-register T-kbo T-can-mix T-lnr T-has-return T-has-overpay
-         tt-cash-pay.pay-card-view for-curr-name for-pay-name for-wth-name
+  ENABLE B-exit b-quit B-attr B-hist B-Help RECT-3 tt-cash-pay.cdpay-code 
+         tt-cash-pay.obj-name tt-cash-pay.curr-code b-curr tt-cash-pay.pay-code 
+         b-pay tt-cash-pay.wth-code b-wealth tt-cash-pay.pay-limit cb-prop 
+         tt-cash-pay.rule-file-name tt-cash-pay.slip-file-name 
+         tt-cash-pay.is-cash tt-cash-pay.atr128 tt-cash-pay.atr1 
+         tt-cash-pay.is-credit-card tt-cash-pay.atr2 tt-cash-pay.is-debet-card 
+         tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8 
+         tt-cash-pay.is-service-pay tt-cash-pay.atr16 tt-cash-pay.is-all-pay 
+         tt-cash-pay.atr32 tt-cash-pay.is-card-swap tt-cash-pay.atr64 
+         tt-cash-pay.is-bar-read tt-cash-pay.is-credit tt-cash-pay.is-advance 
+         T-register T-kbo T-can-mix T-lnr T-has-return T-has-overpay 
+         tt-cash-pay.pay-card-view for-curr-name for-pay-name for-wth-name 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -780,7 +807,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-tables Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-tables Dialog-Frame 
 PROCEDURE fill-tables :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -850,8 +877,13 @@ else do:
     end.
 
 end.
-
-
+     find first buf_cash-pay-attr where buf_cash-pay-attr.host-code = p-host-code
+                                 and buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+                                 and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
+                                 and buf_cash-pay-attr.attr-code = "cash-prop" no-error .
+    if AVAILABLE buf_cash-pay-attr then do:
+    cb-prop = buf_cash-pay-attr.attr-value .                                 
+    end.
 
 
 
@@ -860,7 +892,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable Dialog-Frame 
 PROCEDURE Myenable :
 DISPLAY
 for-curr-name
@@ -905,6 +937,7 @@ tt-cash-pay.is-service-pay
 tt-cash-pay.rule-file-name
 tt-cash-pay.slip-file-name
 t-register
+cb-prop
 t-kbo
 t-lnr
 t-can-mix
@@ -959,7 +992,8 @@ when {&add-def} then do:
       tt-cash-pay.rule-file-name
       tt-cash-pay.slip-file-name
       t-register
-      t-kbo
+      cb-prop
+	  t-kbo
       t-lnr
       t-can-mix
       t-has-return
@@ -1006,6 +1040,7 @@ when {&update} then do:
       tt-cash-pay.rule-file-name
       tt-cash-pay.slip-file-name
       t-register
+      cb-prop
       t-kbo
       t-lnr
       t-can-mix
@@ -1035,7 +1070,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save-record Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save-record Dialog-Frame 
 PROCEDURE proc-save-record :
 IF par-mode = {&lookup} THEN DO:
     RETURN error.
@@ -1070,6 +1105,7 @@ tt-cash-pay.rule-file-name
 tt-cash-pay.slip-file-name
 t-register
 tt-cash-pay.register = (IF t-register THEN 1 ELSE 0)
+cb-prop
 t-kbo
 tt-cash-pay.is-kbo = (IF t-kbo THEN 1 ELSE 0)
 t-lnr
@@ -1128,8 +1164,28 @@ tt-cash-pay.can-mix = (IF t-can-mix THEN 1 ELSE 0)
     { gbl/reterhnd.i error }
     undo, return error.
    END.
-
+     find first buf_cash-pay-attr where buf_cash-pay-attr.host-code = p-host-code
+                                 and buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+                                 and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
+                                 and buf_cash-pay-attr.attr-code = "cash-prop" no-error .
+    if not AVAILABLE buf_cash-pay-attr then do:
+        create buf_cash-pay-attr .
+        assign
+            buf_cash-pay-attr.host-code = p-host-code
+            buf_cash-pay-attr.obj-code = p-obj-code
+            buf_cash-pay-attr.obj-type = p-obj-type
+            buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+            buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
+            buf_cash-pay-attr.attr-code = "cash-prop"
+            buf_cash-pay-attr.attr-value = cb-prop 
+        .
+    end.
+    else do:
+        buf_cash-pay-attr.attr-value = cb-prop .
+    end.  
+   
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

@@ -83,9 +83,10 @@ define variable v-maria-rule-num as integer no-undo .
 define variable v-maria-discnt-value as character no-undo .
 define variable v-skip-fields as integer no-undo .
 define variable v-version-dec as decimal no-undo .
+define variable v-paymentetc as character no-undo .
 define buffer BUF_DIS-RULE for UB.DIS-RULE.
 define buffer buf_dis-cp-rule for ub.dis-cp-rule.
-
+define buffer buf_cash-pay-attr for ub.cash-pay-attr.
 
 &scop check-cp-is-use  if not cp-isuse ( input  ub.cash-pay.cdpay-code ~
                                  ,input  ub.cash-pay.curr-code         ~
