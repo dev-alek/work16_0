@@ -73,6 +73,7 @@ create: Булгаков Андрей Николаевич
     field water-qnty     like ub.rvs-line.measure-qnty
     field log-brutto as logical
     index pi        as primary   unique loc1.
+    
 &endif
 
 &scop self-name tt-meas-file
