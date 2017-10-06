@@ -34,7 +34,7 @@ define variable vss-description as character no-undo init "создание топливных до
 { cmp/gds-list.i gds-list def }
 { gbl/getcntxt.i def }
 { str/getctxtp.i def }
-{ gbl/ptrlprop.i  def }
+{ gbl/ptrlprop.i def }
 { ref/gdsoattr.i     }
 
 do
@@ -43,8 +43,9 @@ on stop   undo, return error substitute( "&1. stop", vss-workfile )
 on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 :
 
-  define buffer buf_rvs-doc      for ub.rvs-doc .
-  define buffer buf_rvs-line     for ub.rvs-line .
+  define buffer buf_rvs-doc       for ub.rvs-doc .
+  define buffer buf_rvs-line      for ub.rvs-line .
+  define buffer buf_rvs-line-attr for ub.rvs-line-attr .
 
   define buffer buf-add_clients     for ub.clients .
   define buffer buf_sysconf         for ub.sysconf .
@@ -155,7 +156,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-type              as character no-undo .
 
   { gbl/getcntxt.i get }
-
   find first buf_rvs-doc
     where rowid( buf_rvs-doc ) = p-rvs-rowid
   .
@@ -385,7 +385,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         K1 = 0.0
       .
     end.
-
+    define variable K1-all as decimal no-undo.
+    K1-all = K1.
+    
     for each buf_doc-line exclusive-lock
       where buf_doc-line.doc-code = v-inv-code
       ,first buf_inv-line exclusive-lock

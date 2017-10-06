@@ -63,7 +63,7 @@ define variable vss-description as character no-undo initial "Экран работы со ст
 { gbl/ptrlprop.i def}
 { gbl/cur-time.i }
 { cmp/trg-def.i  }
-
+{ gbl/getsect.i def }
 { str/initiator.i }
 
 
@@ -80,6 +80,7 @@ define variable rdc-type  as character no-undo.
 
 define variable v-value           as character no-undo.
 define variable v-ok              as logical   no-undo.
+define VARIABLE ii as integer no-undo .
 
 
 define buffer buf_goods        for ub.goods .
@@ -88,6 +89,7 @@ define buffer buf_rvs-line     for ub.rvs-line .
 define buffer bf_pl-level     for ub.pl-level.
 define buffer buf-nxt_pl-level for ub.pl-level.
 define buffer buf2_place       for ub.place.
+define stream sinp .
 
 define stream outstream.
 
@@ -315,64 +317,63 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
           FGCOLOR 4 
-     CriticalDif AT ROW 4.25 COL 31 COLON-ALIGNED WIDGET-ID 2
-     tt-rvs-line.measure-qnty AT ROW 6.88 COL 28.25 COLON-ALIGNED
+     tt-rvs-line.measure-qnty AT ROW 5.75 COL 28.25 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-measure-qnty AT ROW 6.88 COL 73.25 COLON-ALIGNED
+     tt-rvs-line.state-measure-qnty AT ROW 5.75 COL 73.25 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.meas-calc-qnty AT ROW 7.88 COL 34 COLON-ALIGNED WIDGET-ID 20
+     tt-rvs-line.meas-calc-qnty AT ROW 6.75 COL 34 COLON-ALIGNED WIDGET-ID 20
+          LABEL "Остаток рассчит. по измер."
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.measure-tc-qnty AT ROW 8.88 COL 28.25 COLON-ALIGNED
+     tt-rvs-line.measure-tc-qnty AT ROW 7.75 COL 28.25 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-measure-tc-qnty AT ROW 8.88 COL 73.25 COLON-ALIGNED
+     tt-rvs-line.state-measure-tc-qnty AT ROW 7.75 COL 73.25 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.density AT ROW 9.88 COL 28.25 COLON-ALIGNED FORMAT "9.9999999999"
+     tt-rvs-line.density AT ROW 8.75 COL 28.25 COLON-ALIGNED FORMAT "9.9999999999"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-density AT ROW 9.88 COL 73.25 COLON-ALIGNED FORMAT "9.9999999999"
+     tt-rvs-line.state-density AT ROW 8.75 COL 73.25 COLON-ALIGNED FORMAT "9.9999999999"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     b-calc AT ROW 9.88 COL 89 WIDGET-ID 6
-     tt-rvs-line.meas-calc-dens AT ROW 10.88 COL 34 COLON-ALIGNED WIDGET-ID 8
+     b-calc AT ROW 8.75 COL 89 WIDGET-ID 6
+     tt-rvs-line.meas-calc-dens AT ROW 9.75 COL 34 COLON-ALIGNED WIDGET-ID 8
+          LABEL "Плотность расчит. по измер."
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.izmer-density AT ROW 10.88 COL 79 COLON-ALIGNED WIDGET-ID 4
+     tt-rvs-line.izmer-density AT ROW 9.75 COL 79 COLON-ALIGNED WIDGET-ID 4
+          LABEL "Плотность измер.для ПО МИ"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.add-qnty AT ROW 11.88 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.add-qnty AT ROW 10.75 COL 28.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-add-qnty AT ROW 11.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-add-qnty AT ROW 10.75 COL 73.5 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.brutto-qnty AT ROW 12.88 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.brutto-qnty AT ROW 11.75 COL 28.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-brutto-qnty AT ROW 12.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-brutto-qnty AT ROW 11.75 COL 73.5 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.brutto-tc-qnty AT ROW 13.88 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.brutto-tc-qnty AT ROW 12.75 COL 28.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-brutto-tc-qnty AT ROW 13.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-brutto-tc-qnty AT ROW 12.75 COL 73.5 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     varmeasure-water-qnty AT ROW 14.88 COL 28.13 COLON-ALIGNED
-     varstate-water-qnty AT ROW 14.88 COL 73.5 COLON-ALIGNED
-     tt-rvs-line.measure-cli-qnty AT ROW 15.88 COL 28.13 COLON-ALIGNED
+     varmeasure-water-qnty AT ROW 13.75 COL 28.13 COLON-ALIGNED
+     varstate-water-qnty AT ROW 13.75 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.measure-cli-qnty AT ROW 14.75 COL 28.13 COLON-ALIGNED
           LABEL "Измер. вес"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-measure-cli-qnty AT ROW 15.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-measure-cli-qnty AT ROW 14.75 COL 73.5 COLON-ALIGNED
           LABEL "Факт вес"
-          VIEW-AS FILL-IN 
-          SIZE 13 BY .88
-     tt-rvs-line.meas-cli-calc-qnty AT ROW 16.88 COL 34 COLON-ALIGNED WIDGET-ID 10
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -381,81 +382,85 @@ DEFINE FRAME Dialog-Frame
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     tt-rvs-line.brutto-cli-qnty AT ROW 17.88 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.meas-cli-calc-qnty AT ROW 15.75 COL 34 COLON-ALIGNED WIDGET-ID 10
+          LABEL "Вес расчит. по измер."
+          VIEW-AS FILL-IN
+          SIZE 13 BY .88
+     tt-rvs-line.brutto-cli-qnty AT ROW 16.75 COL 28.13 COLON-ALIGNED
           LABEL "Измер. брутто вес"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-brutto-cli-qnty AT ROW 17.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-brutto-cli-qnty AT ROW 16.75 COL 73.5 COLON-ALIGNED
           LABEL "Факт брутто вес"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     varmeasure-water-cli-qnty AT ROW 18.88 COL 28.13 COLON-ALIGNED
-     varstate-water-cli-qnty AT ROW 18.88 COL 73.5 COLON-ALIGNED
-     tt-rvs-line.level-petrol AT ROW 19.88 COL 28.13 COLON-ALIGNED
+     varmeasure-water-cli-qnty AT ROW 17.75 COL 28.13 COLON-ALIGNED
+     varstate-water-cli-qnty AT ROW 17.75 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.level-petrol AT ROW 18.75 COL 28.13 COLON-ALIGNED
           LABEL "Измер. уровень топлива"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-level-petrol AT ROW 19.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-level-petrol AT ROW 18.75 COL 73.5 COLON-ALIGNED format ">>,>>9.999"
           LABEL "Факт уровень топлива"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.level-total AT ROW 20.88 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.level-total AT ROW 19.75 COL 28.13 COLON-ALIGNED
           LABEL "Измер. общий уровень"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-level-total AT ROW 20.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-level-total AT ROW 19.75 COL 73.5 COLON-ALIGNED format ">>,>>9.999"
           LABEL "Факт общий уровень"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.level-water AT ROW 21.88 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.level-water AT ROW 20.75 COL 28.13 COLON-ALIGNED
           LABEL "Измер. уровень воды"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-level-water AT ROW 21.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-level-water AT ROW 20.75 COL 73.5 COLON-ALIGNED format ">>,>>9.999"
           LABEL "Факт уровень воды"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.temperature AT ROW 22.88 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.temperature AT ROW 21.75 COL 28.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-temperature AT ROW 22.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-temperature AT ROW 21.75 COL 73.5 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.temp-layer1 AT ROW 23.88 COL 8.5 COLON-ALIGNED
+     tt-rvs-line.temp-layer1 AT ROW 22.75 COL 8.5 COLON-ALIGNED
           LABEL "ИзмT1"
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.temp-layer2 AT ROW 23.88 COL 23.88 COLON-ALIGNED
+     tt-rvs-line.temp-layer2 AT ROW 22.75 COL 23.88 COLON-ALIGNED
           LABEL "ИзмT2"
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.temp-layer3 AT ROW 23.88 COL 39.25 COLON-ALIGNED
+     tt-rvs-line.temp-layer3 AT ROW 22.75 COL 39.25 COLON-ALIGNED
           LABEL "ИзмT3"
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.state-temp-layer1 AT ROW 23.88 COL 54.5 COLON-ALIGNED
+     tt-rvs-line.state-temp-layer1 AT ROW 22.75 COL 54.5 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.state-temp-layer2 AT ROW 23.88 COL 71.63 COLON-ALIGNED
+     tt-rvs-line.state-temp-layer2 AT ROW 22.75 COL 71.63 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.state-temp-layer3 AT ROW 23.88 COL 87.13 COLON-ALIGNED
+     tt-rvs-line.state-temp-layer3 AT ROW 22.75 COL 87.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.meas-mh-qnty AT ROW 24.88 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.meas-mh-qnty AT ROW 23.75 COL 28.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 17 BY .88
-     tt-rvs-line.state-mh-qnty AT ROW 24.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-mh-qnty AT ROW 23.75 COL 73.5 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 10 BY .88
+     tt-rvs-line.meas-am-qnty AT ROW 24.75 COL 28.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 17 BY .88
-     tt-rvs-line.meas-am-qnty AT ROW 25.88 COL 28.13 COLON-ALIGNED
-          VIEW-AS FILL-IN 
-          SIZE 17 BY .88
-     tt-rvs-line.state-am-qnty AT ROW 25.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-am-qnty AT ROW 24.75 COL 73.5 COLON-ALIGNED
           LABEL "Факт сумма оборота"
           VIEW-AS FILL-IN 
-          SIZE 17 BY .88
-     tt-rvs-line.meas-cf-qnty AT ROW 26.88 COL 28.13 COLON-ALIGNED
+          SIZE 10 BY .88
+     tt-rvs-line.meas-cf-qnty AT ROW 25.75 COL 28.13 COLON-ALIGNED
           LABEL "Измеренное кол-во наливов"
           VIEW-AS FILL-IN 
           SIZE 17 BY .88
@@ -465,7 +470,7 @@ DEFINE FRAME Dialog-Frame
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     tt-rvs-line.state-cf-qnty AT ROW 26.88 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-cf-qnty AT ROW 25.75 COL 73.5 COLON-ALIGNED
           LABEL "Факт кол-во наливов"
           VIEW-AS FILL-IN 
           SIZE 10 BY .88
@@ -1001,7 +1006,9 @@ define buffer buf_place     for ub.place.
         tt-rvs-line.state-measure-cli-qnty = v-mm:M        
         tt-rvs-line.state-brutto-qnty      = tt-rvs-line.state-measure-qnty + varstate-water-qnty
         tt-rvs-line.state-density          = v-mm-density
-        tt-rvs-line.state-brutto-cli-qnty  = tt-rvs-line.state-measure-cli-qnty + varstate-water-qnty
+        .
+        if density = ? then density = tt-rvs-line.state-density .
+        tt-rvs-line.state-brutto-cli-qnty  = tt-rvs-line.state-brutto-qnty * density
         .
               if v-mm:DeltaOtn_M > "0.65" then delta-mass-qnty = 0.65. else delta-mass-qnty = v-mm:DeltaOtn_M  .
         
@@ -1291,46 +1298,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME tt-rvs-line.izmer-density
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.izmer-density Dialog-Frame
-ON LEAVE OF tt-rvs-line.izmer-density IN FRAME Dialog-Frame /* Плотность измер.для ПО МИ */
-DO:
-  if input frame {&frame-name} {&self-name} <> {&self-name} then do:
-    if input frame {&frame-name} tt-rvs-line.izmer-density = ?
-      or ( buf_goods.unit-base <> buf_goods.unit-cli
-          and ( input frame {&frame-name} tt-rvs-line.izmer-density <= 0
-                or input frame {&frame-name} tt-rvs-line.izmer-density >= 1
-              )
-        )
-      or ( buf_goods.unit-base = buf_goods.unit-cli
-          and input frame {&frame-name} tt-rvs-line.izmer-density <> 1
-        )
-    then do:
-      message "Неверно определена плотность топлива измер. для ПО МИ." view-as alert-box error.
-      apply "entry" to tt-rvs-line.izmer-density .
-      return no-apply.
-    end.
-
-    assign frame {&frame-name} tt-rvs-line.izmer-density.
-  end.
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.izmer-density Dialog-Frame
-ON RETURN OF tt-rvs-line.izmer-density IN FRAME Dialog-Frame /* Плотность измер.для ПО МИ */
-DO:
-  apply "entry" to tt-rvs-line.state-level-petrol in frame {&frame-name}.
-  return no-apply.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME tt-rvs-line.state-add-qnty
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.state-add-qnty Dialog-Frame
 ON LEAVE OF tt-rvs-line.state-add-qnty IN FRAME Dialog-Frame /* Факт в трубопроводе */
@@ -1451,6 +1418,47 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&Scoped-define SELF-NAME tt-rvs-line.izmer-density
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.izmer-density Dialog-Frame
+ON LEAVE OF tt-rvs-line.izmer-density IN FRAME Dialog-Frame /* Плотность */
+DO:
+  if input frame {&frame-name} {&self-name} <> {&self-name} then do:
+    if input frame {&frame-name} tt-rvs-line.izmer-density = ?
+      or ( buf_goods.unit-base <> buf_goods.unit-cli
+          and ( input frame {&frame-name} tt-rvs-line.izmer-density <= 0
+                or input frame {&frame-name} tt-rvs-line.izmer-density >= 1
+              )
+        )
+      or ( buf_goods.unit-base = buf_goods.unit-cli
+          and input frame {&frame-name} tt-rvs-line.izmer-density <> 1
+        )
+    then do:
+      message "Неверно определена плотность топлива измер. для ПО МИ." view-as alert-box error.
+      apply "entry" to tt-rvs-line.izmer-density .
+      return no-apply.
+    end.
+
+    assign frame {&frame-name} tt-rvs-line.izmer-density.
+  end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME tt-rvs-line.izmer-density
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.izmer-density Dialog-Frame
+ON RETURN OF tt-rvs-line.izmer-density IN FRAME Dialog-Frame /* Плотность */
+DO:
+  apply "entry" to tt-rvs-line.state-level-petrol in frame {&frame-name}.
+  return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 
 
 &Scoped-define SELF-NAME tt-rvs-line.state-level-petrol
@@ -1954,7 +1962,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     view
       tt-rvs-line.izmer-density
     in frame Dialog-Frame.
-    enable
+    enable   
       tt-rvs-line.izmer-density
     with frame Dialog-Frame.
     disable
@@ -1964,6 +1972,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       tt-rvs-line.state-brutto-qnty
       tt-rvs-line.state-brutto-cli-qnty
     with frame Dialog-Frame.
+    end.
 
     for each rvs-line-attr no-lock
        where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
@@ -1995,15 +2004,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               CriticalDif = decimal(rvs-line-attr.attr-value) .
             end.
           end case.
+    if rdc-value =  "pomi-rn" then do :
+    display
+      tt-rvs-line.izmer-density
+      delta-mass-qnty
+    with frame {&frame-name}.
     end.
     display
-/*      tt-rvs-line.meas-calc-qnty    */
-/*      tt-rvs-line.meas-calc-dens    */
-/*      tt-rvs-line.meas-cli-calc-qnty*/
-      tt-rvs-line.izmer-density
-/*      mass-float-cov*/
       CriticalDif
-      delta-mass-qnty
+
     with frame {&frame-name}.
     run placelib_get-attr  ( input {&place-type}
                             ,input tt-rvs-line.obj-code
@@ -2360,20 +2369,49 @@ if vartarirvalue = "yes" then do:
         if v-ok then 
         do :
 
-    CASE paraction:
+    /*CASE paraction:
       WHEN "state-level-total" THEN DO:
         DISPLAY input frame {&frame-name} tt-rvs-line.state-level-total @ tt-rvs-line.state-level-petrol WITH FRAME {&FRAME-NAME}.
       END.
       WHEN "state-level-petrol" THEN DO:
         DISPLAY input frame {&frame-name} tt-rvs-line.state-level-petrol @ tt-rvs-line.state-level-total WITH FRAME {&FRAME-NAME}.
       END.
-    END CASE.
+    END CASE.*/
+            { gbl/getsect.i run  tt-rvs-line.obj-type  tt-rvs-line.obj-code  {&attr-petrol} }
+    
+            if integer(v-value) = 1 then 
+            do:
+                for each thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-petrol_Delta-mass-vert}:    
+                    assign 
+                        v-full-name = thbjattr_thbj-attr.property-value-character .
+                end.
+            end.    
+            else 
+            do:
+                for each thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-petrol_Delta-mass-horiz}:    
+                    assign 
+                        v-full-name = thbjattr_thbj-attr.property-value-character .
+                end.
+            end.     
+            do ii = 1 to NUM-ENTRIES(v-full-name,{&new-line}): 
+                v-file-name = string(entry(ii,v-full-name,{&new-line})).
+                if    tt-rvs-line.state-level-petrol = decimal ( entry(1, v-file-name, ";")  )  then 
+                do: 
+                    v-delta-mas-qnty =  decimal( entry(2, v-file-name, ";") ) no-error.
+                end.
+            end.
+        end.
+        end.
+        if v-delta-mas-qnty > 0.65 then v-delta-mas-qnty = 0.65 .
+        delta-mass-qnty = v-delta-mas-qnty.
+        display  delta-mass-qnty with frame {&frame-name}.
+
     run volume-water.
 
   end.
 end.
-end.
-end.
+
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

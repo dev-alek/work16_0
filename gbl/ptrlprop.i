@@ -32,6 +32,9 @@ define variable ptrlprop-algrvspt      as integer   no-undo initial 1 .
 define variable ptrlprop-temp-for-pomi as integer   no-undo initial 1 .
 define variable ptrlprop-algoincome as integer no-undo init 0.
 define variable ptrlprop-mand-choice-autocar as logical no-undo init false.
+define variable ptrlprop-Delta-mass-horiz      as character no-undo .
+define variable ptrlprop-Delta-mass-vert       as character no-undo .
+
 procedure get-ptrl-prop :
   define input  parameter p-obj-type as character no-undo .
   define input  parameter p-obj-code as integer   no-undo .
@@ -159,6 +162,21 @@ procedure get-ptrl-prop :
             .
           end.
         end.
+        when {&attr-petrol_Delta-mass-horiz} then do:
+          if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-character} then do:
+            assign
+              ptrlprop-Delta-mass-horiz = thbjattr_thbj-attr.property-value-character
+            .
+          end.
+        end.
+        when {&attr-petrol_Delta-mass-vert} then do:
+          if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-character} then do:
+            assign
+              ptrlprop-Delta-mass-vert = thbjattr_thbj-attr.property-value-character
+            .
+          end.
+        end.
+        
       end case.
       delete thbjattr_thbj-attr .
     end.

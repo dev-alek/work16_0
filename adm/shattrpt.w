@@ -75,14 +75,15 @@ DEFINE VARIABLE v-db-num        like ub.db.db-num no-undo.
 &Scoped-define FRAME-NAME shattrpt
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 ~
-RECT-4 t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl ~
+&Scoped-Define ENABLED-OBJECTS B-exit RECT-1 RECT-2 RECT-3 RECT-4 b-quit ~
+B-Help t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl ~
 rvs-wt-email r-algrvspt t-rvsnmter t-invclipt f-invclipt b-invclipt ~
-r-temp-for-pomi r-denstclc mass-proc r-algoincptrl t-mand-chioce-autocar 
+r-temp-for-pomi r-denstclc mass-proc r-algoincptrl t-mand-chioce-autocar ~
+delta-horiz delta-vert 
 &Scoped-Define DISPLAYED-OBJECTS t-autopump-izm t-autopump t-avtinvpm ~
 t-olddens r-expptrl r-inpptrl rvs-wt-email r-algrvspt t-rvsnmter t-invclipt ~
 f-invclipt r-temp-for-pomi r-denstclc mass-proc r-algoincptrl ~
-t-mand-chioce-autocar f-invclipt-name 
+t-mand-chioce-autocar delta-horiz delta-vert f-invclipt-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -118,6 +119,14 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
+
+DEFINE VARIABLE delta-horiz AS CHARACTER 
+     VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
+     SIZE 20 BY 5 NO-UNDO.
+
+DEFINE VARIABLE delta-vert AS CHARACTER 
+     VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
+     SIZE 20 BY 5 NO-UNDO.
 
 DEFINE VARIABLE f-invclipt LIKE clients.obj-code
      VIEW-AS FILL-IN 
@@ -197,7 +206,7 @@ DEFINE RECTANGLE RECT-3
 
 DEFINE RECTANGLE RECT-4
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
-     SIZE 96.5 BY 3.75.
+     SIZE 96.5 BY 4.17.
 
 DEFINE VARIABLE t-autopump AS LOGICAL INITIAL no 
      LABEL "Автоматические сверки создавать с чтением всех счетчиков ТРК" 
@@ -254,16 +263,26 @@ DEFINE FRAME shattrpt
      f-invclipt AT ROW 19.83 COL 3 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 60
      b-invclipt AT ROW 19.83 COL 15.5 WIDGET-ID 68
-     r-temp-for-pomi AT ROW 20.25 COL 64.5 NO-LABEL WIDGET-ID 96
+     r-temp-for-pomi AT ROW 21.33 COL 64 NO-LABEL WIDGET-ID 96
      r-denstclc AT ROW 23.25 COL 3.5 NO-LABEL WIDGET-ID 32
-     mass-proc AT ROW 30.25 COL 45.63 COLON-ALIGNED WIDGET-ID 100
-     r-algoincptrl AT ROW 31.25 COL 36.88 NO-LABEL WIDGET-ID 118
-     t-mand-chioce-autocar AT ROW 32.21 COL 2.5 WIDGET-ID 106
+     mass-proc AT ROW 27.38 COL 46.75 COLON-ALIGNED WIDGET-ID 100
+     r-algoincptrl AT ROW 28.38 COL 38.13 NO-LABEL WIDGET-ID 118
+     t-mand-chioce-autocar AT ROW 29.33 COL 3.63 WIDGET-ID 106
+     delta-horiz AT ROW 32.54 COL 2.5 NO-LABEL WIDGET-ID 110
+     delta-vert AT ROW 32.54 COL 24 NO-LABEL WIDGET-ID 122
      f-invclipt-name AT ROW 19.83 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
+     "Настройки инвентаризации по сверке" VIEW-AS TEXT
+          SIZE 35.5 BY .67 AT ROW 15.08 COL 3 WIDGET-ID 78
+     "Тип ввода топлива во всех документах кроме прихода внешнего:" VIEW-AS TEXT
+          SIZE 61 BY .83 AT ROW 7.25 COL 3.5 WIDGET-ID 54
+     "Погрешность изм. массы для резервуаров" VIEW-AS TEXT
+          SIZE 57.5 BY .67 AT ROW 30.75 COL 2.5 WIDGET-ID 112
+     "горизонтальных" VIEW-AS TEXT
+          SIZE 17.5 BY .67 AT ROW 31.71 COL 2.5 WIDGET-ID 126
      "Температура, к которой приводиться плотность и объем (°С) :" VIEW-AS TEXT
           SIZE 60 BY .67 AT ROW 21.33 COL 4 WIDGET-ID 94
      "Алгоритм принятия топлива к учету:" VIEW-AS TEXT
-          SIZE 34.5 BY 1 AT ROW 31.25 COL 2.5 WIDGET-ID 116
+          SIZE 34.5 BY 1 AT ROW 28.38 COL 3.63 WIDGET-ID 116
      "на список почтовых адресов(разделять адреса запятыми):" VIEW-AS TEXT
           SIZE 79 BY .96 AT ROW 11.96 COL 4 WIDGET-ID 94
      "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
@@ -274,15 +293,13 @@ DEFINE FRAME shattrpt
           SIZE 50.5 BY .63 AT ROW 22.58 COL 3.5 WIDGET-ID 36
      "Тип ввода топлива в документах прихода внешнего :" VIEW-AS TEXT
           SIZE 49 BY .83 AT ROW 8.25 COL 4 WIDGET-ID 48
-     "Тип ввода топлива во всех документах кроме прихода внешнего:" VIEW-AS TEXT
-          SIZE 61 BY .83 AT ROW 7.25 COL 3.5 WIDGET-ID 54
-     "Настройки инвентаризации по сверке" VIEW-AS TEXT
-          SIZE 35.5 BY .67 AT ROW 15.08 COL 3 WIDGET-ID 78
+     "вертикальных" VIEW-AS TEXT
+          SIZE 17.5 BY .67 AT ROW 31.71 COL 24 WIDGET-ID 124
      RECT-1 AT ROW 22.33 COL 2.5 WIDGET-ID 38
      RECT-2 AT ROW 14.71 COL 2.5 WIDGET-ID 64
      RECT-3 AT ROW 7 COL 2.5 WIDGET-ID 66
      RECT-4 AT ROW 26.33 COL 2.5 WIDGET-ID 84
-     SPACE(1.24) SKIP(3.33)
+     SPACE(1.24) SKIP(7.62)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки работы с ТОПЛИВНЫМ товаром" WIDGET-ID 100.
@@ -678,12 +695,13 @@ PROCEDURE enable_UI :
   DISPLAY t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
           rvs-wt-email r-algrvspt t-rvsnmter t-invclipt f-invclipt 
           r-temp-for-pomi r-denstclc mass-proc r-algoincptrl 
-          t-mand-chioce-autocar f-invclipt-name 
+          t-mand-chioce-autocar delta-horiz delta-vert f-invclipt-name 
       WITH FRAME shattrpt.
-  ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 t-autopump-izm 
+  ENABLE B-exit RECT-1 RECT-2 RECT-3 RECT-4 b-quit B-Help t-autopump-izm 
          t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl rvs-wt-email 
          r-algrvspt t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi 
-         r-denstclc mass-proc r-algoincptrl t-mand-chioce-autocar 
+         r-denstclc mass-proc r-algoincptrl t-mand-chioce-autocar delta-horiz 
+         delta-vert 
       WITH FRAME shattrpt.
   {&OPEN-BROWSERS-IN-QUERY-shattrpt}
 END PROCEDURE.
@@ -808,6 +826,7 @@ on error undo, return error return-value
           r-algrvspt :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
         .
       end.
+
       when {&attr-petrol_temp-for-pomi} then do:
         assign
           r-temp-for-pomi = thbjattr_thbj-attr.property-value-integer
@@ -841,6 +860,20 @@ on error undo, return error return-value
               t-mand-chioce-autocar :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
             .  
           end.
+       when {&attr-petrol_Delta-mass-horiz} then 
+          do:
+            assign 
+              delta-horiz = thbjattr_thbj-attr.property-value-character 
+              delta-horiz :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+            .  
+          end.
+        when {&attr-petrol_Delta-mass-vert} then 
+          do:
+            assign 
+              delta-vert = thbjattr_thbj-attr.property-value-character 
+              delta-vert :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+            .  
+          end.  
     end case.
     create temp-thbj-attr.
     buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
