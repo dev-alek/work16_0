@@ -637,7 +637,7 @@ ON CHOOSE OF b-level IN FRAME d-pl-list /* Градуир. */
 DO:
    define variable v-recid as recid no-undo .
    if not avail X_place then return no-apply.
-   run ref/pl-level.w   ( input parparentproc
+   run ref/pl-lvls.w   ( input parparentproc
                         , input p-obj-type
                         , input p-obj-code
                         , input X_place.pl-code
