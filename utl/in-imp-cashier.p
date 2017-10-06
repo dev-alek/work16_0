@@ -153,6 +153,18 @@ procedure import-proc:
         num-BD    = integer(entry(2, ss ,";")) no-error.
         code-cashier = integer(entry(3, ss ,";")) no-error.
         password = entry(4 , ss ,";") no-error.
+        if LENGTH(string(code-cashier)) > 3 then do:
+            my-mess =     substitute("Код кассира превышает 3 символа"
+                , {&role-cashier}
+                , {&new-line}
+                , error-status:get-message(1)
+                , return-value ) . 
+            /*              run display-intelli-log in this-procedure ( input substitute("&1&2,&3,false,&4", my-obj-type, my-obj-code, my-parus-2-code, my-mess)).*/
+            run err-write in this-procedure ( input-output my-mess , v-obj-code , v-obj-type  ).
+            .
+            next  _stroka.
+
+        end.    
 
         find first clients where clients.obj-code = cod-fiz and clients.obj-type = {&prs} no-lock no-error.
     
