@@ -82,7 +82,12 @@ DEFINE VARIABLE v-obj-code            AS INTEGER   NO-UNDO.
 DEFINE VARIABLE v-obj-type            AS CHAR      NO-UNDO.
 DEFINE VARIABLE v-out-qnty-tot        AS DECIMAL   INITIAL 0 NO-UNDO.
 DEFINE VARIABLE v-out-litres-tot      AS DECIMAL   INITIAL 0 NO-UNDO.
+define VARIABLE v-attr-mark-value as character no-undo .
+define VARIABLE v-value as character no-undo .
+define VARIABLE ii as integer no-undo .
 
+define buffer buf_chk-gds-attr for ub.chk-gds-attr .
+        
 DEFINE TEMP-TABLE tt-rep1
     FIELD obj-code                AS INTEGER
     FIELD obj-type                AS CHARACTER 
@@ -113,7 +118,8 @@ DEFINE TEMP-TABLE tt-rep1
     FIELD gds-code                AS INTEGER
     FIELD itog_volume             AS INTEGER
     FIELD exp-doc-type            LIKE doc-line.ext-doc-type
-    INDEX pi IS PRIMARY alc-type-code       doc-line-code volume-piece-litres
+    field alc-mark                as character
+    INDEX pi IS PRIMARY alc-type-code       doc-line-code volume-piece-litres alc-mark
     INDEX fact_order    doc-line-fact-order
     .
 
@@ -137,7 +143,6 @@ DEFINE BUFFER buf_itog    FOR tt-rep1.
 DEFINE STREAM Out-Stream.
 DEFINE STREAM OutStr-html.
 DEFINE STREAM MyWatch-strm.
-
 
 /* ************************  Function Prototypes ********************** */
 
@@ -338,7 +343,7 @@ DO: /* S */
             END. 
             ELSE
             DO: /* Если в указанном объекте(маг,склад...) найден установленный в yes параметр "алкоголь", то... */
-               _alc:  FOR EACH ub.gds-obj WHERE                               /* Смотрим все связки Товар-Объект (Т-О) по известному объекту(obj-type;obj-code) находим КодТовара */
+                         _alc:  FOR EACH ub.gds-obj WHERE                               /* Смотрим все связки Товар-Объект (Т-О) по известному объекту(obj-type;obj-code) находим КодТовара */
                     ub.gds-obj.obj-type = obj-list.obj-type AND
                     ub.gds-obj.obj-code = obj-list.obj-code
                     NO-LOCK
@@ -415,12 +420,12 @@ DO: /* S */
                                     ub.alc-type.alc-type-inner-code = ub.alc-type-gds.alc-type-inner-code NO-LOCK
                                     :
                                     DO: /* M */
-/*                                        RUN gds-attr-value (alc-type-gds.gds-code ,                                               */
-/*                                            {&attr-egais-name},                                                                   */
-/*                                            OUTPUT v-par-val,                                                                     */
-/*                                            OUTPUT v-par-type                                                                     */
-/*                                            ).                                                                                    */
-/*                                        egais-name =   (IF v-par-val = ? OR v-par-val = ""  THEN   goods.gds-name ELSE v-par-val).*/
+                                        RUN gds-attr-value (alc-type-gds.gds-code ,
+                                            {&attr-egais-name},
+                                            OUTPUT v-par-val,
+                                            OUTPUT v-par-type
+                                            ).
+                                        egais-name =   (IF v-par-val = ? OR v-par-val = ""  THEN   goods.gds-name ELSE v-par-val).
                                         ASSIGN
                                             v-alc-type-name = ub.alc-type.alc-type-name /* Запись Вид_Алкогольной_Продукции во временную переменную. */
                                             v-alc-type-code = ub.alc-type.alc-type-code /* Запись Код_Вида_Продукции во временную переменную. */
@@ -458,30 +463,76 @@ DO: /* S */
                                                 /*                                                        then                                                                                                                                                                                                         */
                                                 /*                                                        next.                                                                                                                                                                                                        */
                                                 /*                                                end.                                                                                                                                                                                                                 */
-       
-                                                CREATE tt-rep1.
-                                                /*                                  v-cnt-line = v-cnt-line + 1.*/
-                                                /*                                                run ConvertStr-ext-doc-type (input ub.doc-line.ext-doc-type, output v-name-ext-doc-type).*/
-                                                ASSIGN
-                                                    tt-rep1.obj-code                = obj-list.obj-code
-                                                    tt-rep1.obj-type                = obj-list.obj-type
+                                                RUN gds-attr-value (
+                                                    INPUT alc-type-gds.gds-code,
+                                                    INPUT {&attr-mark},
+                                                    OUTPUT v-attr-mark-value,
+                                                    OUTPUT v-value
+                                                    ).
+
+                                                /*крепкие напитки*/      
+                                                if v-attr-mark-value = "yes" then 
+                                                do:
+                                                    find first buf_chk-gds-attr no-lock where buf_chk-gds-attr.doc-code = ub.chk-gds-pay.doc-code 
+                                                                                          and buf_chk-gds-attr.line-num = ub.chk-gds-pay.line-num 
+                                                                                          and buf_chk-gds-attr.attr-code = "mark-code" no-error .
+                                                    if AVAILABLE buf_chk-gds-attr then do:
+                                                        do ii = 1 to NUM-ENTRIES (buf_chk-gds-attr.attr-value,","):
+                                                            CREATE tt-rep1.
+                                                            /*                                  v-cnt-line = v-cnt-line + 1.*/
+                                                            /*                                                run ConvertStr-ext-doc-type (input ub.doc-line.ext-doc-type, output v-name-ext-doc-type).*/
+                                                            ASSIGN
+                                                                tt-rep1.obj-code                = obj-list.obj-code
+                                                                tt-rep1.obj-type                = obj-list.obj-type
                                                
-                                                    tt-rep1.exp-doc-line-code       = chk-gds-pay.doc-code           /* Служебное поле (не на экран) */
-                                                    tt-rep1.exp-alc-type-code       = v-alc-type-code             /* Служебное поле (не на экран) */
-                                                    tt-rep1.exp-time                = chk-gds-pay.chk-time
-                                                    tt-rep1.exp-td-fact-date        = chk-gds-pay.chk-date        /* Служебное поле (не на экран) */
-                                                    /*                                                tt-rep1.doc-line-fact-order     = chk-gds-pay.chk-date       /* Служебное поле (не на экран) */*/
-                                                    /*                                                    tt-rep1.exp-categoryes-prod     = v-name-ext-doc-type       /* 11 */*/
-                                                    tt-rep1.gds-code                = goods.gds-code
-                                                    /*                                                    tt-rep1.exp-name                = egais-name*/
-                                                    tt-rep1.exp-name = goods.gds-name
-                                                tt-rep1.exp-alc-type-name       = v-alc-type-name       /* 12 */
-                                                tt-rep1.exp-volume-piece-litres = goods.ms-base   
-                                                tt-rep1.cnt-line                = tt-rep1.cnt-line + 1 
-                                                tt-rep1.exp-fact-qnty           = tt-rep1.exp-fact-qnty +    chk-gds-pay.eff-doc-qnty
-                                                    /*-                                                    (if      = ? then 0 else        chk-gds-pay.eff-doc-qnty)*/
+                                                                tt-rep1.exp-doc-line-code       = chk-gds-pay.doc-code           /* Служебное поле (не на экран) */
+                                                                tt-rep1.exp-alc-type-code       = v-alc-type-code             /* Служебное поле (не на экран) */
+                                                                tt-rep1.exp-time                = chk-gds-pay.chk-time
+                                                                tt-rep1.exp-td-fact-date        = chk-gds-pay.chk-date        /* Служебное поле (не на экран) */
+                                                                /*                                                tt-rep1.doc-line-fact-order     = chk-gds-pay.chk-date       /* Служебное поле (не на экран) */*/
+                                                                /*                                                    tt-rep1.exp-categoryes-prod     = v-name-ext-doc-type       /* 11 */*/
+                                                                tt-rep1.gds-code                = goods.gds-code
+                                                                tt-rep1.exp-name                = egais-name 
+                                                                tt-rep1.exp-alc-type-name       = v-alc-type-name       /* 12 */
+                                                                tt-rep1.exp-volume-piece-litres = goods.ms-base   
+                                                                tt-rep1.cnt-line                = tt-rep1.cnt-line + 1 
+                                                                tt-rep1.exp-fact-qnty           = if chk-gds-pay.eff-doc-qnty < 0 then -1 else 1
+                                                                /*-                                                    (if      = ? then 0 else        chk-gds-pay.eff-doc-qnty)*/
+                                                                tt-rep1.alc-mark                = trim(entry(ii, buf_chk-gds-attr.attr-value,","),"-")                                            
+                                                                .
+
+                                                            
+                                                        end.    
+                                                    end.      
+                                                end.
+                                                /*пиво*/ 
+                                                else 
+                                                do:
+                                                    CREATE tt-rep1.
+                                                    /*                                  v-cnt-line = v-cnt-line + 1.*/
+                                                    /*                                                run ConvertStr-ext-doc-type (input ub.doc-line.ext-doc-type, output v-name-ext-doc-type).*/
+                                                    ASSIGN
+                                                        tt-rep1.obj-code                = obj-list.obj-code
+                                                        tt-rep1.obj-type                = obj-list.obj-type
+                                               
+                                                        tt-rep1.exp-doc-line-code       = chk-gds-pay.doc-code           /* Служебное поле (не на экран) */
+                                                        tt-rep1.exp-alc-type-code       = v-alc-type-code             /* Служебное поле (не на экран) */
+                                                        tt-rep1.exp-time                = chk-gds-pay.chk-time
+                                                        tt-rep1.exp-td-fact-date        = chk-gds-pay.chk-date        /* Служебное поле (не на экран) */
+                                                        /*                                                tt-rep1.doc-line-fact-order     = chk-gds-pay.chk-date       /* Служебное поле (не на экран) */*/
+                                                        /*                                                    tt-rep1.exp-categoryes-prod     = v-name-ext-doc-type       /* 11 */*/
+                                                        tt-rep1.gds-code                = goods.gds-code
+                                                        tt-rep1.exp-name                = egais-name 
+                                                        tt-rep1.exp-alc-type-name       = v-alc-type-name       /* 12 */
+                                                        tt-rep1.exp-volume-piece-litres = goods.ms-base   
+                                                        tt-rep1.cnt-line                = tt-rep1.cnt-line + 1 
+                                                        tt-rep1.exp-fact-qnty           = tt-rep1.exp-fact-qnty +    chk-gds-pay.eff-doc-qnty
+                                                        /*-                                                    (if      = ? then 0 else        chk-gds-pay.eff-doc-qnty)*/
                                             
-                                                    .
+                                                        .
+
+
+                                                end.    
                                             /*                                           message tt-rep1.exp-name chk-gds-pay.chk-date view-as alert-box.*/
                                             END.
                                         END.                        
@@ -922,8 +973,8 @@ PROCEDURE proc-create-HTML:
         '       <tr class="set_columns">' SKIP                 
         '         <td style="width: 41px; border: none;"></td>' SKIP  
         '         <td style="width: 74px; border: none;"></td>' SKIP   
-        '         <td style="width: 83px; border: none;"></td>' SKIP     
-        '         <td style="width: 573px; border: none;"></td>' SKIP    
+        '         <td style="width: 560px; border: none;"></td>' SKIP     
+        '         <td style="width: 100px; border: none;"></td>' SKIP    
         '         <td style="width: 77px; border: none;"></td>' SKIP 
         '         <td style="width: 70px; border: none;"></td>' SKIP  
         '         <td style="width: 77px; border: none;"></td>' SKIP  
@@ -1114,7 +1165,7 @@ DEFINE VARIABLE p-number AS INTEGER INIT 0.
                 '       <tr>' SKIP
                 '         <td style="display: yes; text-align: right;border: 1px solid black;">'  +  string(n) + '</td>' SKIP
                 '         <td style="display: yes; text-align:  right;border: 1px solid black;">' + IF buf_tt.exp-td-fact-date = ? THEN "" ELSE fnc-DD-MM-YYYY(DATE(STRING(buf_tt.exp-td-fact-date,"99.99.9999"))) +  '</td>' SKIP
-                '         <td style="display: yes; text-align:  left;border: 1px solid black;">'  '</td>' SKIP
+                '         <td style="display: yes; text-align:  left;border: 1px solid black;">' + buf_tt.alc-mark + '</td>' SKIP
                 '         <td text_wrap="true" style="display: yes; text-align:  left;border: 1px solid black;">'  +    buf_tt.exp-name + '</td>'  SKIP
                 '         <td style="display: yes; text-align:  right;border: 1px solid black;">'  +      buf_tt.exp-alc-type-code  + '</td>'  SKIP
                 '         <td style="display: yes; text-align:  right;border: 1px solid black;">'  +       v-exp-volume-piece-litres + '</td>'  SKIP
