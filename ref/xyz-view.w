@@ -1331,85 +1331,120 @@ def var for-time as char.
         '</TR>'skip
         .
 
-            
-define variable ii as integer no-undo .
-                if p-obj = true then do:
-               {&OPEN-QUERY-BROWSE-obj}
-                DO WHILE available Buf_XYZ-analysis-obj :
-                    ii = ii + 1 .    
-                get next browse-obj.
-                end.
-                end.            
-                ii = ii + 1 .
-     run OpenBR in this-procedure (yes, no, '':U).                
-     DO WHILE available Buf_XYZ-analysis-goods :
+
+    run OpenBR in this-procedure (yes, no, '':U).                
+    DO WHILE available Buf_XYZ-analysis-goods :
         run prt-goods in this-procedure .
 
-                
-            put stream OutStr-html unformatted
-                              '<TR>'skip
-                                  '<TD rowspan="' + string(ii) + '"> ' + string(buf_goods.artic) + '</TD>'skip
-                                  '<TD> ' + string(buf_goods.gds-name) + '</TD>'skip
-                                  '<TD rowspan="' + string(ii) + '"> ' + string(Buf_XYZ-analysis-goods.XYZg-XYZ) + '</TD>'skip
-                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD rowspan="' + string(ii) + '" num="0" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.kol-period,"->>>>>>>>>>>9",0) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.kol-period <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.kol-period,"->>>>>>>>>>>9",0) + '</TD>' else "" + '</td>' skip
-                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-for-estimate,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-for-estimate <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-for-estimate,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD> ' + string(v-izt) + '</TD>'skip
-                                  '<TD> ' + string(v-Amin) + '</TD>'skip
-                                  '<TD> ' + string(v-Acc-mat) + '</TD>'skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-price-acc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-sale,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-price-sale <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-sale,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-acc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-cur,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-cur <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-cur,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-doc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-doc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-doc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-temp-sale-goods <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-order-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-order-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-order-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                              '</TR>'skip    
-                              .
-                                                          
-            if p-obj = true then do:
-               /* расшифровка по объектам */
-               {&OPEN-QUERY-BROWSE-obj}
-                DO WHILE available Buf_XYZ-analysis-obj :
-                    run disp-obj in this-procedure .
                     
-                    put stream OutStr-html unformatted
-                              '<TR>'skip
-                                  '<TD> ' + string(Buf_XYZ-analysis-obj.obj-type + " " + string(Buf_XYZ-analysis-obj.obj-code)) + '</TD>'skip
-                                  '<TD> ' + string(v-obj-igt) + '</TD>'skip
-                                  '<TD> ' + string( v-obj-AssMin , "да/нет" ) + '</TD>'skip
-                                  '<TD> ' + string(v-ass-name) + '</TD>'skip
-                                  .
-                    if AVAILABLE Buf_XYZ-analysis-gds-obj then do:
-                    put stream OutStr-html unformatted              
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-stock-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-stock-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-stock-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon((Buf_XYZ-analysis-gds-obj.XYog-stock-qnty * buf_XYZ-analysis-gds-obj.XYog-price-crc ),"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if (Buf_XYZ-analysis-gds-obj.XYog-stock-qnty * buf_XYZ-analysis-gds-obj.XYog-price-crc ) <> ? then fnc-convert-dot-to-colon((Buf_XYZ-analysis-gds-obj.XYog-stock-qnty * buf_XYZ-analysis-gds-obj.XYog-price-crc ),"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+/*                define variable ii as integer no-undo .                                                       */
+/*                ii = 0.                                                                                       */
+/*                if AVAILABLE Buf_XYZ-analysis-gds-obj then                                                    */
+/*                do:                                                                                           */
+/*                    if Buf_XYZ-analysis-gds-obj.XYog-qnty <> ? or Buf_XYZ-analysis-gds-obj.XYog-qnty <> 0 then*/
+/*                    do:                                                                                       */
+/*                        ii = ii + 1 .                                                                         */
+/*                    end.                                                                                      */
+/*                end.                                                                                          */
+/*                ii = ii + 1 .                                                                                 */
+                put stream OutStr-html unformatted
+                    '<TR>'skip
+                    '<TD> ' + string(buf_goods.artic) + '</TD>'skip
+                    '<TD> ' + string(buf_goods.gds-name) + '</TD>'skip
+                    '<TD> ' + string(Buf_XYZ-analysis-goods.XYZg-XYZ) + '</TD>'skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '<TD num="0" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.kol-period,"->>>>>>>>>>>9",0) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.kol-period <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.kol-period,"->>>>>>>>>>>9",0) + '</TD>' else "" + '</td>' skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-for-estimate,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-for-estimate <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-for-estimate,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '<TD> ' + string(v-izt) + '</TD>'skip
+                    '<TD> ' + string(v-Amin) + '</TD>'skip
+                    '<TD> ' + string(v-Acc-mat) + '</TD>'skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-price-acc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-sale,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-price-sale <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-sale,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-acc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-cur,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-cur <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-cur,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-doc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-doc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-doc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-temp-sale-goods <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-order-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-order-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-order-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+                    '</TR>'skip    
+                    .                  
+/*                put stream OutStr-html unformatted                                                                                                                                                                                                                                                                                                                                                    */
+/*                    '<TR>'skip                                                                                                                                                                                                                                                                                                                                                                        */
+/*                    '<TD rowspan="' + string(ii) + '"> ' + string(buf_goods.artic) + '</TD>'skip                                                                                                                                                                                                                                                                                                      */
+/*                    '<TD> ' + string(buf_goods.gds-name) + '</TD>'skip                                                                                                                                                                                                                                                                                                                                */
+/*                    '<TD rowspan="' + string(ii) + '"> ' + string(Buf_XYZ-analysis-goods.XYZg-XYZ) + '</TD>'skip                                                                                                                                                                                                                                                                                      */
+/*                    '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-prcnt-for-estimate,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip*/
+/*                    '<TD rowspan="' + string(ii) + '" num="0" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.kol-period,"->>>>>>>>>>>9",0) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.kol-period <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.kol-period,"->>>>>>>>>>>9",0) + '</TD>' else "" + '</td>' skip                                                */
+/*                    '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-for-estimate,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-for-estimate <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-for-estimate,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip      */
+/*                    '<TD> ' + string(v-izt) + '</TD>'skip                                                                                                                                                                                                                                                                                                                                             */
+/*                    '<TD> ' + string(v-Amin) + '</TD>'skip                                                                                                                                                                                                                                                                                                                                            */
+/*                    '<TD> ' + string(v-Acc-mat) + '</TD>'skip                                                                                                                                                                                                                                                                                                                                         */
+/*                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip                                                                       */
+/*                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip                                                     */
+/*                    '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-price-acc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip         */
+/*                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-sale,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-stock-price-sale <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-stock-price-sale,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip                                   */
+/*                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-acc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip                                                              */
+/*                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-cur,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-cur <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-cur,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip                                                              */
+/*                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-doc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-sum-doc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-sum-doc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip                                                              */
+/*                    '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-temp-sale-goods <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip                                      */
+/*                    '<TD rowspan="' + string(ii) + '" num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-order-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-goods.XYZg-order-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-goods.XYZg-order-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip                        */
+/*                    '</TR>'skip                                                                                                                                                                                                                                                                                                                                                                       */
+/*                    .                                                                                                                                                                                                                                                                                                                                                                                 */
+                              
+        if p-obj = true then 
+        do:
+            /* расшифровка по объектам */
+            {&OPEN-QUERY-BROWSE-obj}
+            DO WHILE available Buf_XYZ-analysis-obj :
+                run disp-obj in this-procedure .    
+                    if AVAILABLE Buf_XYZ-analysis-gds-obj then 
+                    do:
+                        if Buf_XYZ-analysis-gds-obj.XYog-qnty <> ? or Buf_XYZ-analysis-gds-obj.XYog-qnty <> 0 then 
+                        do: 
+                            put stream OutStr-html unformatted
+                                '<TR>'skip
+                                '<TD></TD>'skip
+                                '<TD> ' + string(Buf_XYZ-analysis-obj.obj-type + " " + string(Buf_XYZ-analysis-obj.obj-code)) + '</TD>'skip
+                                '<TD></TD>'skip
+                                '<TD></TD>'skip
+                                '<TD></TD>'skip
+                                '<TD></TD>'skip
+                                '<TD> ' + string(v-obj-igt) + '</TD>'skip
+                                '<TD> ' + string( v-obj-AssMin , "да/нет" ) + '</TD>'skip
+                                '<TD> ' + string(v-ass-name) + '</TD>'skip
+                                .
+                            put stream OutStr-html unformatted              
+                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-stock-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-stock-qnty <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-stock-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                '<TD></TD>'skip
+                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon((Buf_XYZ-analysis-gds-obj.XYog-stock-qnty * buf_XYZ-analysis-gds-obj.XYog-price-crc ),"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if (Buf_XYZ-analysis-gds-obj.XYog-stock-qnty * buf_XYZ-analysis-gds-obj.XYog-price-crc ) <> ? then fnc-convert-dot-to-colon((Buf_XYZ-analysis-gds-obj.XYog-stock-qnty * buf_XYZ-analysis-gds-obj.XYog-price-crc ),"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
                                   '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-sum-acc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
                                   '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-cur,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-sum-cur <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-cur,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
                                   '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-doc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-sum-doc <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-sum-doc,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
                                   '<TD num="0.00" val="' + fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if Buf_XYZ-analysis-gds-obj.XYog-temp-sale-goods <> ? then fnc-convert-dot-to-colon(Buf_XYZ-analysis-gds-obj.XYog-temp-sale-goods,"->>>>>>>>>>>9.99",2) + '</TD>' else "-" + '</td>' skip
+                                  '<TD></TD>'skip
                               '</TR>'skip    
-                              .
+                                .
+                        end.
                     end.
-                    else do:
-                    put stream OutStr-html unformatted                        
-                                  '<TD style="text-align: right">' + "?" + '</TD>'skip
-                                  '<TD style="text-align: right">' + "?" + '</TD>'skip
-                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
-                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
-                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
-                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
-                                  '<TD style="text-align: right">' + "?" + '</TD>' skip
-                              '</TR>'skip    
-                              .
-                        
-                    end.    
+                    /*                    else do:                                                           */
+                    /*                    put stream OutStr-html unformatted                                 */
+                    /*                                  '<TD style="text-align: right">' + "?" + '</TD>'skip */
+                    /*                                  '<TD style="text-align: right">' + "?" + '</TD>'skip */
+                    /*                                  '<TD style="text-align: right">' + "?" + '</TD>' skip*/
+                    /*                                  '<TD style="text-align: right">' + "?" + '</TD>' skip*/
+                    /*                                  '<TD style="text-align: right">' + "?" + '</TD>' skip*/
+                    /*                                  '<TD style="text-align: right">' + "?" + '</TD>' skip*/
+                    /*                                  '<TD style="text-align: right">' + "?" + '</TD>' skip*/
+                    /*                              '</TR>'skip                                              */
+                    /*                              .                                                        */
+                    /*                                                                                       */
+                    /*                    end.                                                               */
                     get next browse-obj.
                 END.
-            end.
+/*            end.*/
+        end.
 
             GET next BROWSE-goods.
       END.
