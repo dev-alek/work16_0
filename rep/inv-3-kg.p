@@ -154,26 +154,32 @@ define variable tdoc-date           like ub.trn-doc.doc-date no-undo.
 define variable tdoc-code           like ub.trn-doc.doc-code no-undo.
 
 define temp-table temp-str no-undo
-  field grp-name    as character
-  field gds-name    as character
-  field gds-code    as integer
-  field artic       as character
-  field prod-type   as character
-  field prod-code   as integer
-  field b-code      as character
-  field tb-code     as character
-  field OKEI        as integer
-  field unit-base   as character
-  field empty-scale as logical
-  field Price-after as decimal
-  field a-qnty      as decimal
-  field a-qnty1     as decimal
-  field a-stoim     as decimal
-  field price-befor as decimal
-  field b-qnty      as decimal
-  field b-qnty1     as decimal
-  field b-stoim     as decimal
-  field ubl         as decimal
+    field   grp-name          as character
+    field   gds-name          as character
+    field   gds-code          as integer
+    field   artic             as character
+    field   prod-type         as character
+    field   prod-code         as integer
+    field   b-code            as character
+    field   tb-code           as character
+    field   OKEI              as integer
+    field   unit-base         as character
+    field   empty-scale       as logical
+    field   Price-after       as decimal
+    field   a-qnty            as decimal
+    field   aa-qnty           as decimal
+    field   a-qnty1           as decimal
+    field   a-stoim           as decimal
+    field   aa-stoim          as decimal
+    field   price-befor       as decimal
+    field   price             as decimal
+    field   b-qnty            as decimal
+    field   bb-stoim          as decimal
+    field   b-qnty1           as decimal
+    field   b-stoim           as decimal
+    field   bb-price          as decimal
+    field   ubl               as decimal
+    field   inv-peresort-qnty as decimal
   index pi          is primary artic    prod-type prod-code
   index pi1                    gds-name
   index pi2                    grp-name
