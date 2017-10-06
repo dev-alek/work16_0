@@ -59,10 +59,10 @@ define variable v-host-name as character no-undo.
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-1 Btn_OK Btn_save d_date i_shift ~
-i_op-id RADIO-SET_objects bt-sel-obj 
-&Scoped-Define DISPLAYED-OBJECTS d_date i_shift i_op-id RADIO-SET_objects ~
-EDITOR-objects 
+&Scoped-Define ENABLED-OBJECTS RECT-1 RECT-2 Btn_OK Btn_save cb-type d_date ~
+i_shift i_op-id RADIO-SET_objects bt-sel-obj 
+&Scoped-Define DISPLAYED-OBJECTS cb-type d_date i_shift i_op-id ~
+EDITOR-objects RADIO-SET_objects 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -92,6 +92,14 @@ DEFINE BUTTON Btn_OK AUTO-GO
 DEFINE BUTTON Btn_save 
      LABEL "Сохранить" 
      SIZE 15 BY 1.13.
+
+DEFINE VARIABLE cb-type AS CHARACTER FORMAT "X(256)":U 
+    LABEL "Тип выгрузки" 
+    VIEW-AS COMBO-BOX INNER-LINES 3
+    LIST-ITEM-PAIRS "Малина ","mal ",
+    "Система АТД", "atd"
+    DROP-DOWN-LIST
+    SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE EDITOR-objects AS CHARACTER 
      VIEW-AS EDITOR NO-BOX
@@ -124,24 +132,29 @@ DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 69 BY 4.04.
 
+DEFINE RECTANGLE RECT-2
+    EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+    SIZE 69 BY 2.
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     Btn_OK AT ROW 1.25 COL 2
-     Btn_save AT ROW 1.25 COL 18 WIDGET-ID 2
-     d_date AT ROW 2.92 COL 7 COLON-ALIGNED WIDGET-ID 4
-     i_shift AT ROW 2.92 COL 39 COLON-ALIGNED WIDGET-ID 6
-     i_op-id AT ROW 2.92 COL 58 COLON-ALIGNED WIDGET-ID 20
-     RADIO-SET_objects AT ROW 4.79 COL 4 NO-LABEL WIDGET-ID 8
-     EDITOR-objects AT ROW 4.79 COL 25 NO-LABEL WIDGET-ID 14
-     bt-sel-obj AT ROW 6.5 COL 21 WIDGET-ID 18
-     RECT-1 AT ROW 4.33 COL 2 WIDGET-ID 12
-     SPACE(1.19) SKIP(0.24)
+    Btn_OK AT ROW 1.25 COL 2
+    Btn_save AT ROW 1.25 COL 18 WIDGET-ID 2
+    cb-type AT ROW 4.25 COL 16.5 COLON-ALIGNED WIDGET-ID 22
+    d_date AT ROW 7 COL 7.5 COLON-ALIGNED WIDGET-ID 4
+    i_shift AT ROW 7 COL 38 COLON-ALIGNED WIDGET-ID 6
+    i_op-id AT ROW 7 COL 58 COLON-ALIGNED WIDGET-ID 20
+    EDITOR-objects AT ROW 9.25 COL 26 NO-LABEL WIDGET-ID 14
+    RADIO-SET_objects AT ROW 9.5 COL 4 NO-LABEL WIDGET-ID 8
+    bt-sel-obj AT ROW 11.25 COL 22 WIDGET-ID 18
+    RECT-1 AT ROW 9 COL 2.5 WIDGET-ID 12
+    RECT-2 AT ROW 3.75 COL 2.5 WIDGET-ID 24
+    SPACE(2.12) SKIP(7.74)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Изменение даты выгрузки данных в систему Малина"
-         DEFAULT-BUTTON Btn_OK WIDGET-ID 100.
+    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+    TITLE "Изменение даты выгрузки данных "
+    DEFAULT-BUTTON Btn_OK WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -218,7 +231,7 @@ DO:
         undo, return no-apply.
     end. /* if error-status */
 
-    if v-object-available = true then do:
+    if v-object-available then do:
         {gbl/uobjapnd.i
          v-cntxt-obj-type
          v-cntxt-obj-code}
@@ -273,41 +286,84 @@ DO:
     d_date
     i_shift
     i_op-id
-    RADIO-SET_objects.
+    RADIO-SET_objects
+    cb-type.
 
     if d_date = ? then do:
         message "Введите дату." view-as alert-box.
         return.
     end.
     
-    case RADIO-SET_objects:
-        when 1 then do:
-            
+    case cb-type:
+      when "mal" then do:
+        if RADIO-SET_objects = 1 then do: /* 1 = по фирме */
+
             for each buf_clients no-lock where buf_clients.host-code = v-cntxt-host-code-obj:
                 run clntattr-write in this-procedure (input buf_clients.obj-type
                                                      ,input buf_clients.obj-code
                                                      ,input {&attr-bge-exp-malina-last-shift}
                                                      ,input substitute ("&1,&2,&3",d_date ,i_shift,i_op-id)).
             end.
-        
-        end. /* when 1 */
-        
-        when 2 then do:
-            
+
+        end.
+        else do: /* 2 = по объектам */
+
             for each userobjs_temp-user-obj no-lock:
                 run clntattr-write in this-procedure (input userobjs_temp-user-obj.obj-type
                                                      ,input userobjs_temp-user-obj.obj-code
                                                      ,input {&attr-bge-exp-malina-last-shift}
                                                      ,input substitute ("&1,&2,&3",d_date ,i_shift,i_op-id)).
             end.
-            
-        end. /* when 2 */
-        
+
+        end.
+      end. /* end_of mal'ина */
+      when 'atd' then do:
+        if RADIO-SET_objects = 1 then do: /* 1 = по фирме */
+
+            for each buf_clients no-lock where buf_clients.host-code = v-cntxt-host-code-obj:
+              run clntattr-write in this-procedure (input buf_clients.obj-type
+                                ,input buf_clients.obj-code
+                                ,input {&attr-bge-exp-last-atd}
+                                ,input substitute ("&1,&2",d_date ,(i_shift))).
+            end.
+
+        end.
+        else do: /* 2 = по объектам */
+
+            for each userobjs_temp-user-obj no-lock:
+              run clntattr-write in this-procedure (input userobjs_temp-user-obj.obj-type
+                                ,input userobjs_temp-user-obj.obj-code
+                                ,input {&attr-bge-exp-last-atd}
+                                ,input substitute ("&1,&2",d_date ,(i_shift))).
+            end.
+
+        end.
+      end. /* end_of atd - анализ треков данных */
+      otherwise .
     end case.
 
 APPLY "GO" TO FRAME {&FRAME-NAME}.
 
 END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME cb-type
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-type Dialog-Frame
+ON VALUE-CHANGED OF cb-type IN FRAME Dialog-Frame /* Тип выгрузки */
+    DO:
+
+        assign cb-type.
+
+        if cb-type = "mal" then assign
+                i_shift:label  = "Порядок смены" 
+                i_shift:format = "x(1)"
+                .
+
+        run get-values in this-procedure.
+    end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -429,13 +485,13 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY d_date i_shift i_op-id RADIO-SET_objects EDITOR-objects 
-      WITH FRAME Dialog-Frame.
-  ENABLE RECT-1 Btn_OK Btn_save d_date i_shift i_op-id RADIO-SET_objects 
-         bt-sel-obj 
-      WITH FRAME Dialog-Frame.
-  VIEW FRAME Dialog-Frame.
-  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+    DISPLAY cb-type d_date i_shift i_op-id EDITOR-objects RADIO-SET_objects 
+        WITH FRAME Dialog-Frame.
+    ENABLE RECT-1 RECT-2 Btn_OK Btn_save cb-type d_date i_shift i_op-id 
+        RADIO-SET_objects bt-sel-obj 
+        WITH FRAME Dialog-Frame.
+    VIEW FRAME Dialog-Frame.
+    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -489,30 +545,69 @@ PROCEDURE get-values :
 define variable c_value as character no-undo.
 define variable c_type as character no-undo.
 
-run clntattr-value in this-procedure (input v-cntxt-obj-type,
+
+    case cb-type:
+      when "mal" then do:
+
+        run clntattr-value in this-procedure (input v-cntxt-obj-type,
                                       input v-cntxt-obj-code,
                                       input {&attr-bge-exp-malina-last-shift},
                                       output c_value,
                                       output c_type) no-error.
+        if num-entries(c_value,",") = 3 then do:
+          assign
+            RADIO-SET_objects:screen-value in frame dialog-frame = "2"
+            EDITOR-objects :screen-value in frame Dialog-frame = v-cntxt-obj-type + string( v-cntxt-obj-code )
+          .
+          assign
+            EDITOR-objects
+            RADIO-SET_objects
+            d_date = date(entry(1,c_value,","))
+            i_shift = integer(entry(2,c_value,",")) 
+            i_op-id = integer(entry(3,c_value,","))
+          no-error.
+          display d_date i_shift i_op-id with frame {&frame-name}.
 
-if num-entries(c_value,",") = 3 then do:
+          create userobjs_temp-user-obj.
+          assign
+            userobjs_temp-user-obj.obj-code = v-cntxt-obj-code
+            userobjs_temp-user-obj.obj-type = v-cntxt-obj-type
+          .
+        end. /* if num-entries(c_value,",") */
 
-assign
-    RADIO-SET_objects:screen-value in frame dialog-frame = "2"
-    EDITOR-objects :screen-value in frame Dialog-frame = v-cntxt-obj-type + string( v-cntxt-obj-code ).
-assign
-    EDITOR-objects
-    RADIO-SET_objects
-    d_date = date(entry(1,c_value,","))
-    i_shift = integer(entry(2,c_value,",")) 
-    i_op-id = integer(entry(3,c_value,",")) no-error.
-display d_date i_shift i_op-id with frame {&frame-name}.
+      end. /* end_of mal'ина */
+      when 'atd' then do:
 
-create userobjs_temp-user-obj.
-assign userobjs_temp-user-obj.obj-code = v-cntxt-obj-code
-       userobjs_temp-user-obj.obj-type = v-cntxt-obj-type.
+        run clntattr-value in this-procedure (input v-cntxt-obj-type,
+                                      input v-cntxt-obj-code,
+                                      input {&attr-bge-exp-last-atd},
+                                      output c_value,
+                                      output c_type) no-error.
+        if num-entries(c_value,",") = 2 then do:
+          assign
+            RADIO-SET_objects:screen-value in frame dialog-frame = "2"
+            EDITOR-objects :screen-value in frame Dialog-frame = v-cntxt-obj-type + string( v-cntxt-obj-code )
+          .
+          assign
+            EDITOR-objects
+            RADIO-SET_objects
+            d_date = date(entry(1,c_value,","))
+            i_shift = integer(entry(2,c_value,",")) 
+            i_op-id = ?
+          no-error.
+          display d_date i_shift i_op-id with frame {&frame-name}.
 
-end. /* if num-entries(c_value,",") */
+          create userobjs_temp-user-obj.
+          assign
+            userobjs_temp-user-obj.obj-code = v-cntxt-obj-code
+            userobjs_temp-user-obj.obj-type = v-cntxt-obj-type
+          .
+        end. /* if num-entries(c_value,",") */
+
+      end. /* end_of atd - анализ треков данных */
+      otherwise .
+    end case.
+
 
 END PROCEDURE. /* get-values */
 

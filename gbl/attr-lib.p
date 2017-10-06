@@ -662,6 +662,18 @@ end.
 &scop manual-edit-attr-bge-exp-malina-last-shift 0
 &scop batch-edit-attr-bge-exp-malina-last-shift 0
 
+/* Дата и номер последней выгруженной смены в систему АТД */
+&scop type-attr-bge-exp-last-atd {&type-char}
+&scop format-attr-bge-exp-last-atd "X(20)"
+&scop label-attr-bge-exp-last-atd "Дата и номер последней выгруженной смены в систему АТД "
+&scop tooltip-attr-bge-exp-last-atd "Дата и номер последней выгруженной смены в систему АТД "
+&scop user-can-edit-attr-bge-exp-last-atd false
+&scop output-display-attr-bge-exp-last-atd true
+&scop other-attr-bge-exp-last-atd '':u
+&scop news-attr-bge-exp-last-atd false
+&scop manual-edit-attr-bge-exp-last-atd 0
+&scop batch-edit-attr-bge-exp-last-atd 0
+
 /* Дата ЕГРИП */
 &scop type-attr-egrip-date {&type-char}
 &scop format-attr-egrip-date "X(13)"
@@ -1027,6 +1039,8 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-bge-sap-sng-last-shift
       {&attr-temp-full-code}
+      &scop attr-code attr-bge-exp-last-atd
+      {&attr-temp-full-code}
       &scop attr-code attr-bge-exp-malina-last-shift
       {&attr-temp-full-code}      
       &scop attr-code attr-egrip-date
@@ -1169,6 +1183,8 @@ procedure clntattr-tooltip :
       &scop attr-code attr-bge-incr-cur
       {&attr-temp-code}
       &scop attr-code attr-bge-sap-sng-last-shift
+      {&attr-temp-code}
+      &scop attr-code attr-bge-exp-last-atd
       {&attr-temp-code}
       &scop attr-code attr-bge-exp-malina-last-shift
       {&attr-temp-code}      
@@ -1519,6 +1535,8 @@ procedure clntattr-news :
       &scop attr-code attr-bge-incr-cur
       {&attr-news-code}
       &scop attr-code attr-bge-sap-sng-last-shift
+      {&attr-news-code}
+      &scop attr-code attr-bge-exp-last-atd
       {&attr-news-code}
       &scop attr-code attr-bge-exp-malina-last-shift
       {&attr-news-code} 
