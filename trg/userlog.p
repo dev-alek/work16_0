@@ -206,6 +206,9 @@ on error undo, return error
             buf_c-user-log.head-table       = v-parent-name
             buf_c-user-log.uniq-key-rec     = v-unique-key-rec
         .
+        if buf_c-user-log.corr-user-name = "" then do:
+               buf_c-user-log.corr-user-name = p-table-handle :buffer-field( "user-id":U ) :buffer-value. 
+        end.    
     end.
     /* Обработка таблиц истории, связанных в кусты */
     for each buf_temp_userlog-bush

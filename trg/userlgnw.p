@@ -103,7 +103,25 @@ on end-key undo main-block, return error substitute('userlgnd end-key main-block
     buf_c-usr-hist.source-type = (if g#news then {&hn-source-db} else "":U)
     buf_c-usr-hist.source-ref  = (if g#news then string(g#news-source-db) else "":U)
   .
-
+    if AVAILABLE ub.user-login then do:
+        if AVAILABLE buf_c-user-login then do:
+            if ub.user-login.last-login-mjd <> buf_c-user-login.last-login-mjd then do:
+                run trg/userlog.p (
+                      input {&nwsdochs_action_update}
+                    , input {&table_c-usr-hist}
+                    , input ( buffer buf_c-usr-hist :handle )
+                ) no-error.
+                if error-status :error
+                then do:
+                    undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                                        , {&new-line}
+                                        , vss-workfile
+                                        , return-value
+                                        , error-status :get-message ( 1 ) ).
+                end.                
+            end.    
+        end.    
+    end.    
   run str/callnews.p
     (input {&table_user-login}
     ,input (buffer ub.user-login :handle)
