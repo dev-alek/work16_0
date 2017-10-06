@@ -31,7 +31,8 @@ define variable vss-description as character no-undo init "Выгрузка в систему Ан
 {cmp/library.i}
 {gbl/clntattr.i}
 {cmp/trg-def.i}
-{ref/gds-attr.i }
+{ref/gds-attr.i}
+{str/findtank.i}
 
 /* ***************************  Definitions  ************************** */
 
@@ -355,6 +356,7 @@ define variable is-pieces              as logical   no-undo. /* для типа товара 
 define variable v-shift-head           as character no-undo . /* одинаковое начало выгрузки смены */
 define variable v-trn-stype            as character no-undo . /* тип транзакции выгружаемой накладной */
 define variable v-doc-qnty   as decimal decimals 10 no-undo . /* для умножения возврата на (-1) */
+define variable v-pl-code              as integer   no-undo . /* для поиска TankId через pl-code */
 define variable v-loc1                 as character no-undo . /* TankId если available */
 define buffer buf_rvs-doc     for ub.rvs-doc.
 define buffer buf_rvs-line    for ub.rvs-line.
@@ -438,7 +440,13 @@ define buffer buf_sale-doc    for ub.sale-doc .
         find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
         if available buf_goods then do:
           /*это топливо?*/
-          { str/is-petrl.i buf_goods.artic buf_goods.prod-type buf_goods.prod-code is-petrolium is-pieces }
+          { str/is-petrl.i
+              buf_goods.artic
+              buf_goods.prod-type
+              buf_goods.prod-code
+              is-petrolium
+              is-pieces
+          }
           if not is-petrolium
           then next chk-gds_.
         end.
@@ -447,6 +455,30 @@ define buffer buf_sale-doc    for ub.sale-doc .
       else next chk-gds_.
       
       v-doc-qnty = if buf_chk-doc.chk-type = {&bef-rcpt-return} then ( (-1) * buf_chk-gds.doc-qnty ) else buf_chk-gds.doc-qnty .
+
+      if buf_chk-gds.loc1 > ""  then v-loc1 = buf_chk-gds.loc1.
+      else do:
+             if buf_chk-gds.src-pl-code > 0 then v-pl-code = buf_chk-gds.src-pl-code.
+        else if buf_chk-gds.pl-code     > 0 then v-pl-code = buf_chk-gds.pl-code.
+        else do:
+          /* если нет резервуара в чеке, найти в топологии текущую связку ТРК+Пистолет,
+             определить по ней резервуар и выгрузить полученный код резервура */
+          run findtank in this-procedure
+            (input buf_chk-doc.obj-type,
+             input buf_chk-doc.obj-code,
+             input buf_chk-gds.pump,
+             input buf_chk-gds.nozzle-code,
+             input buf_chk-gds.pl-code,
+             input buf_bar-code.gds-code,
+             output v-pl-code) no-error.
+        end.
+        if v-pl-code > 0 then do:
+          find first buf_place no-lock where buf_place.pl-code = v-pl-code no-error .
+          v-loc1 = if available buf_place then buf_place.loc1 else "0" .
+        end.
+        else v-loc1 = "0" .
+      end. /* end_of if buf_chk-gds.loc1 empty */
+
       put unformatted "FuelTransaction,"
         v-shift-head ","
         format_datetime(buf_chk-doc.chk-date, buf_chk-doc.chk-time) ","
@@ -454,10 +486,10 @@ define buffer buf_sale-doc    for ub.sale-doc .
         string(buf_goods.gds-code) ","
         trim(string(v-doc-qnty, "->>>>>>9.99")) ","
         string(buf_chk-gds.pump) ","
-        left-trim(buf_chk-gds.loc1, "0") skip /* TankId [int] NOT NULL */
+        v-loc1 skip /* TankId [int] NOT NULL */
       .
-    end.                              
-  end.
+    end. /* end_of for_each buf_chk-gds */
+  end. /* end_of for_each buf_chk-doc */
 
 
   /* накладные - все, кроме накладных по чекам продажы и по чекам возврата;
@@ -489,26 +521,30 @@ define buffer buf_sale-doc    for ub.sale-doc .
      
     doc-line_ :
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code :
+      { str/is-petrl.i
+          buf_doc-line.artic
+          buf_doc-line.prod-type
+          buf_doc-line.prod-code
+          is-petrolium
+          is-pieces
+      }
+      if not is-petrolium then next doc-line_.
       find first buf_goods no-lock where buf_goods.artic      = buf_doc-line.artic
                                      and buf_goods.prod-type  = buf_doc-line.prod-type
                                      and buf_goods.prod-code  = buf_doc-line.prod-code
                                          no-error .
-      if available buf_goods
-      then do :                              
-        { str/is-petrl.i buf_goods.artic buf_goods.prod-type buf_goods.prod-code is-petrolium is-pieces }
-        if not is-petrolium
-        then next doc-line_.
-      end.
-      else next doc-line_.
+      if not available buf_goods then next doc-line_.
           
       find first buf_doc-pl no-lock where buf_doc-pl.out-code = buf_trn-doc.doc-code
                                       and buf_doc-pl.gds-code = buf_goods.gds-code
                                       and buf_doc-pl.obj-type = buf_trn-doc.obj-type
                                       and buf_doc-pl.obj-code = buf_trn-doc.obj-code
                                           no-error.
-      if available buf_doc-pl then
+      if available buf_doc-pl then do:
         find first buf_place no-lock where buf_place.pl-code = buf_doc-pl.pl-code no-error .
-      v-loc1 = if available buf_place then buf_place.loc1 else "0" . /* TankId [int] NOT NULL */
+        v-loc1 = if available buf_place then buf_place.loc1 else "0" . /* TankId [int] NOT NULL */
+      end.
+      else v-loc1 = "0".
         
       /* 24-aug-2017 - от инвентаризации отказались.
       if buf_trn-doc.ext-doc-type = {&TDEDT_Inv} then do:
