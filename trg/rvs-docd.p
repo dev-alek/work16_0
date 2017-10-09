@@ -32,7 +32,9 @@ define variable vss-description as character no-undo initial "Триггер на удалени
 { gbl/thbj-def.i }
 { ref/xobjgrp.i  }
 
-    { str/initiator.i }
+{ str/initiator.i }
+{ str/lib-rvs.i }
+
 define variable v-person as character no-undo.
 define variable v-mess as character no-undo .
 define variable v-value-character as character no-undo .
@@ -57,13 +59,13 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 
     
     { gbl/curshift.i
-   ub.rvs-doc.obj-type
-    ub.rvs-doc.obj-code
-    varshift-date
-    varshift-num
-    varshift-name
-    no-error
-  }
+      ub.rvs-doc.obj-type
+      ub.rvs-doc.obj-code
+      varshift-date
+      varshift-num
+      varshift-name
+      no-error
+    }
 
   /* Проверяем статус документа, в котором мы можем удалять документ */
   if ( ub.rvs-doc.status_ = {&fact}
@@ -105,12 +107,12 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     do:
 
         { str/hstc-rvs.i
-      "buffer ub.rvs-doc"
-        integer({&hn-delete})
-      ub.rvs-doc.rvs-code
-      "dynamic-next-value('s-corr-chip':U,'{&db-name_schema}':U)"
-      no-error
-    }
+          "buffer ub.rvs-doc"
+          integer({&hn-delete})
+          ub.rvs-doc.rvs-code
+          "dynamic-next-value('s-corr-chip':U,'{&db-name_schema}':U)"
+          no-error
+         }
         if error-status :error then 
         do:
             message
