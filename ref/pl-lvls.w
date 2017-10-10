@@ -117,7 +117,7 @@ DEFINE BUTTON b-del
 
 DEFINE BUTTON b-delete 
      LABEL "Очистить" 
-     SIZE 9.5 BY 1.
+     SIZE 9 BY 1.
 
 DEFINE BUTTON b-exit AUTO-GO 
      LABEL "&Выход" 
@@ -143,11 +143,11 @@ DEFINE QUERY BROWSE-2 FOR
 DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame _STRUCTURED
   QUERY BROWSE-2 NO-LOCK DISPLAY
-      buf_pl-level.pl-level WIDTH 15
-      pl-qnty WIDTH 45.13
+      buf_pl-level.pl-level COLUMN-LABEL "Уровень, см"
+      pl-qnty WIDTH 41.5
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 63.5 BY 17.5 ROW-HEIGHT-CHARS .75 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 66 BY 17.5 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -159,9 +159,8 @@ DEFINE FRAME Dialog-Frame
      b-del AT ROW 1 COL 31 WIDGET-ID 6
      b-load AT ROW 1 COL 41 WIDGET-ID 8
      b-delete AT ROW 1 COL 51 WIDGET-ID 10
-     b-help AT ROW 1 COL 54
+     b-help AT ROW 1 COL 57
      BROWSE-2 AT ROW 2.25 COL 1 WIDGET-ID 200
-     SPACE(3.49) SKIP(0.00)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Градуировочная таблица"
@@ -204,9 +203,9 @@ ASSIGN
  AND buf_pl-level.obj-code = p-obj-code
  AND buf_pl-level.pl-code = p-pl-code"
      _FldNameList[1]   > "_<CALC>"
-"buf_pl-level.pl-level" ? ? ? ? ? ? ? ? ? no ? no no "15" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"buf_pl-level.pl-level" ? ? ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > "_<CALC>"
-"pl-qnty" ? ? "decimal" ? ? ? ? ? ? no ? no no "45.13" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"pl-qnty" ? ? "decimal" ? ? ? ? ? ? no ? no no "54.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is OPENED
 */  /* BROWSE BROWSE-2 */
 &ANALYZE-RESUME

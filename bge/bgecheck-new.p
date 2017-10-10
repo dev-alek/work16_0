@@ -82,10 +82,10 @@ do
     DEFINE VARIABLE v-task-num         AS INTEGER   NO-UNDO.
     DEFINE VARIABLE v-action           AS CHARACTER NO-UNDO.
 
-    DEFINE BUFFER buf_cash-pay FOR cash-pay.
-    define buffer  buf_chk-pay-attr for chk-pay-attr.
-
-
+    DEFINE BUFFER buf_cash-pay      FOR cash-pay.
+    define buffer buf_chk-pay-attr  for chk-pay-attr.
+    DEFINE BUFFER buf_chk-discnt    for ub.chk-discnt .
+    define buffer buf_dis-card      for ub.dis-card.
 
 
 
@@ -657,6 +657,8 @@ procedure export-checks-by-object :
                         run wp-xmltagput   in this-procedure ( input 3, input "chekShiftDate"   , input string( buf_chk-doc.shift-date            ), input 0 ).            
                         run wp-xmltagput   in this-procedure ( input 3, input "chekShiftNum"   , input string( buf_chk-doc.shift-num            ), input 0 ).   
                         run wp-xmltagput   in this-procedure ( input 3, input "checkTotDoc"   , input string( buf_chk-doc.netto            ), input 0 ).                                    
+                        run wp-xmltagput   in this-procedure ( input 3, input "Reference-num"   , input string( buf_chk-doc.doc-num2            ), input 0 ).
+						run wp-xmltagput   in this-procedure ( input 3, input "Z-num"   , input string( buf_chk-doc.z-number            ), input 0 ).
                         run wp-xmltagclose in this-procedure ( input 2, input "checkHead").
         
                         for each buf_chk-gds no-lock
@@ -827,9 +829,6 @@ procedure export-checks-by-object :
                 v-rrn = "".
                  
             end.
-
-
-
             run wp-xmltagopen in this-procedure ( input 2, input "checkPays", input "" ).
             run wp-xmltagput in this-procedure ( input 3, input "ID"        , input string( buf_chk-pay.doc-code    ), input 0 ).
             run wp-xmltagput in this-procedure ( input 3, input "payCode"   , input string( buf_chk-pay.pay-code    ), input 0 ).
@@ -846,7 +845,18 @@ procedure export-checks-by-object :
             run wp-xmltagclose in this-procedure ( input 2, input "checkPays" ).
                             
         end.
-        
+            for each buf_chk-gds-pay no-lock
+                where buf_chk-gds-pay.doc-code = buf_chk-doc.doc-code
+                :                                                  
+                run wp-xmltagopen( input 2, input "checkGdsPay", input "" ).
+                run wp-xmltagput( input 3, input "line-num"      , input string( buf_chk-gds-pay.line-num )     , input 2 ).
+                run wp-xmltagput( input 3, input "cpline-num"    , input string( buf_chk-gds-pay.cpline-num )   , input 2 ).
+                run wp-xmltagput( input 3, input "sum-rubl"      , input string( buf_chk-gds-pay.tot-r-b )      , input 2 ).
+                run wp-xmltagput( input 3, input "CGPqnty"       , input string( buf_chk-gds-pay.eff-doc-qnty ) , input 2 ).     
+                run wp-xmltagput( input 3, input "pay-code"      , input string( buf_chk-gds-pay.pay-code )     , input 2 ).
+                run wp-xmltagclose( input 2, input "checkGdsPay" ).
+            end.     /* for each buf_chk-gds-pay */
+            
             if v-inf-bonus then 
             do: 
             
@@ -863,8 +873,60 @@ procedure export-checks-by-object :
                     run wp-xmltagput in this-procedure ( input 3, input "BonusCardNum"        , input buf_chk-doc.d-card , input 0 ).
                     run wp-xmltagput in this-procedure ( input 3, input "BonusMode"        , input string( chk-discnt.line-type) , input 0 ).
                     run wp-xmltagclose in this-procedure ( input 2, input "checkBonus" ).            
-                                    
-                end.
+                    
+               end.     
+                &scop discnt-type-code string(buf_chk-discnt.discnt-type)
+                &scop discnt-target-code string(buf_chk-discnt.line-type)
+                &scop discnt-v-code string(buf_chk-discnt.value-type)
+                for each buf_chk-discnt no-lock
+                    where buf_chk-discnt.doc-code = buf_chk-doc.doc-code
+                    and buf_chk-discnt.record-type = 0
+                    :
+                    run wp-xmltagopen in this-procedure ( input 2, input "checkDiscount"   , input "" ).
+                    run wp-xmltagput in this-procedure ( input 3, input "lineNum"          , input string( buf_chk-discnt.line-num )         , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntVName"      , input {&discnt-v-name}                          , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "objectLineNum"    , input string( buf_chk-discnt.object-line-num )  , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntTargetName" , input {&discnt-target-name}                     , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntTypeName"   , input {&discnt-type-name}                       , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntValueAbs"   , input string( buf_chk-discnt.discnt-value-abs ) , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntValuePcnt"  , input string( buf_chk-discnt.discnt-value-pcnt ), input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "srcDCard"         , input string( buf_chk-discnt.src-d-card )       , input 2 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntKategory"   , input string( if buf_chk-discnt.src-d-card <> ''
+                        and buf_chk-discnt.src-d-card <> ?
+                        and available buf_dis-card
+                        and buf_dis-card.d-card = buf_chk-discnt.src-d-card
+                        and buf_chk-discnt.kateg = ?
+                        then buf_dis-card.category
+                        else buf_chk-discnt.kateg )        , input 2 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntType"        , input string(buf_chk-discnt.discnt-type)  , input 1 ).
+                    run wp-xmltagclose in this-procedure ( input 2, input "checkDiscount" ).
+          
+                end. /* for each buf_chk-dicsnt no-lock  */
+
+                /*ƒобавл€ем в выгрузку скидок еще и скидки, которыми выравниваютс€ погрешности*/
+                for each buf_chk-discnt no-lock
+                    where buf_chk-discnt.doc-code = buf_chk-doc.doc-code
+                    and buf_chk-discnt.record-type = 2
+                    :
+                    run wp-xmltagopen in this-procedure ( input 2, input "checkDiscount"   , input "" ).
+                    run wp-xmltagput in this-procedure ( input 3, input "lineNum"          , input string( buf_chk-discnt.line-num )         , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntVName"      , input {&discnt-v-name}                          , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "objectLineNum"    , input string( buf_chk-discnt.object-line-num )  , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntTargetName" , input {&discnt-target-name}                     , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntTypeName"   , input {&discnt-type-name}                       , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntValueAbs"   , input string( buf_chk-discnt.discnt-value-abs ) , input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntValuePcnt"  , input string( buf_chk-discnt.discnt-value-pcnt ), input 1 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "srcDCard"         , input string( buf_chk-discnt.src-d-card )       , input 2 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntKategory"   , input string( if buf_chk-discnt.src-d-card <> ''
+                        and buf_chk-discnt.src-d-card <> ?
+                        and available buf_dis-card
+                        and buf_dis-card.d-card = buf_chk-discnt.src-d-card
+                        and buf_chk-discnt.kateg = ?
+                        then buf_dis-card.category
+                        else buf_chk-discnt.kateg )        , input 2 ).
+                    run wp-xmltagput in this-procedure ( input 3, input "discntType"        , input string(buf_chk-discnt.discnt-type)  , input 1 ).          
+                    run wp-xmltagclose in this-procedure ( input 2, input "checkDiscount" ).
+                end. /* for each buf_chk-dicsnt no-lock  */
             end.
    
     run wp-xmltagclose in this-procedure ( input 1, input "check").

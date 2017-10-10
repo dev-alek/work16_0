@@ -2624,6 +2624,30 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+      v-prop-code = "{&bef-attr-petrol_algoincome}".
+&scop ptype integer
+&scop prop-value 1
+&scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-petrol_mand-choice-autocar}".
+&scop ptype logical
+&scop prop-value no
+&scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
+      v-prop-code = "{&bef-attr-petrol_CriticalDif}".
+&scop ptype integer
+&scop prop-value 0
+&scop prop-code entry(v-ii, v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+          {&create-thbj-attr}.
+      end.
 
       v-prop-code = "{&bef-attr-petrol_autopump-izm},{&bef-attr-petrol_autopump},{&bef-attr-petrol_avtinvpm},{&bef-attr-petrol_rvsnmter},{&bef-attr-petrol_olddens}".
 &scop ptype logical
@@ -2633,6 +2657,27 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+    
+        v-prop-code = "{&bef-attr-petrol_Delta-mass-horiz}".
+            &scop ptype character
+            &scop prop-value ""
+            &scop prop-code entry(v-ii, v-prop-code)
+    
+        do v-ii = 1 to num-entries(v-prop-code):
+          {&create-thbj-attr}.
+        end.
+
+        v-prop-code = "{&bef-attr-petrol_Delta-mass-vert}".
+            &scop ptype character
+            &scop prop-value ""
+            &scop prop-code entry(v-ii, v-prop-code)
+    
+        do v-ii = 1 to num-entries(v-prop-code):
+          {&create-thbj-attr}.
+        end.
     end.
     when {&attr-staff-options} then do:
     v-prop-code = "{&bef-attr-staff-options_noanshftstaff},{&bef-attr-staff-options_obyznumbukv}".
@@ -2641,10 +2686,6 @@ end.
 &scop prop-value no
 &scop prop-code entry(v-ii, v-prop-code)
 
-      do v-ii = 1 to num-entries(v-prop-code):
-        {&create-thbj-attr}.
-      end.
-    
     v-prop-code = "{&bef-attr-staff-options_minparol}".
 &scop ptype integer
 &scop prop-value 0

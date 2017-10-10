@@ -1,4 +1,3 @@
-&ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
@@ -31,6 +30,7 @@ define variable vss-description as character no-undo init "Экран просмотра допол
 { cmp/showinf.i  }
 { str/attrlist.i }
 { gbl/cur-time.i }
+{ gbl/ptrlprop.i def}
 
 
 /* Parameters Definitions ---                                            */
@@ -46,10 +46,13 @@ define variable v-last-gds-code like ub.goods.gds-code no-undo .
 define variable varrec-id as recid no-undo.
 define variable v-no-news as logical   no-undo init false .
 
-define variable pomi-licvalue as character no-undo.
-define variable pomi-lictype  as character no-undo.
+define variable pomi-licvalue   as character no-undo.
+define variable pomi-lictype    as character no-undo.
+define variable v-avai-acc-ship as logical no-undo.
 define stream outstream.
 
+define variable rdc-dnstvalue as character no-undo.
+define variable rdc-dnsttype  as character no-undo.
 
 
 /* Local Variable Definitions ---                                       */
@@ -73,13 +76,15 @@ define buffer buf_goods for ub.goods .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-save b-quit b-help f-autoent-obj-code ~
-f-autoent-obj-type b-clients f-car-num b-auto-tank f-condition ~
-f-seals-condition f-insp-cert f-date-cert f-fio f-ptbocode f-ptbotype b-ptb ~
-f-date-pour f-hour-pour f-min-pour f-hour-income f-min-income f-item-pour 
+f-autoent-obj-type b-clients f-car-num b-auto-tank f-condition f-insp-cert ~
+f-seals-condition f-seals-condition-2 f-date-cert f-fio f-ptbocode ~
+f-ptbotype b-ptb f-date-pour f-hour-pour f-min-pour f-hour-income ~
+f-min-income f-item-pour f-acc-ship b-doc 
 &Scoped-Define DISPLAYED-OBJECTS f-autoent-obj-code f-autoent-obj-type ~
-f-autoent-obj-name f-car-num f-condition f-seals-condition f-insp-cert ~
-f-date-cert f-fio f-ptbocode f-ptbotype f-ptboname f-date-pour f-hour-pour ~
-f-min-pour f-hour-income f-min-income f-item-pour 
+f-autoent-obj-name f-car-num f-condition f-insp-cert f-seals-condition ~
+f-seals-condition-2 f-date-cert f-fio f-ptbocode f-ptbotype f-ptboname ~
+f-date-pour f-hour-pour f-min-pour f-hour-income f-min-income f-item-pour ~
+f-acc-ship b-doc f-item-doc 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -130,6 +135,11 @@ DEFINE BUTTON b-save AUTO-GO
      SIZE 10 BY 1
      BGCOLOR 8 .
 
+DEFINE VARIABLE f-acc-ship AS DECIMAL FORMAT ">>,>>9.99":U INITIAL 0 
+     LABEL "Допустимый % погрешности поставщика" 
+     VIEW-AS FILL-IN 
+     SIZE 7.25 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-autoent-obj-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL ? 
      LABEL "Автопредприятие" 
      VIEW-AS FILL-IN 
@@ -143,7 +153,7 @@ DEFINE VARIABLE f-autoent-obj-type AS CHARACTER FORMAT "X(3)":U
      VIEW-AS FILL-IN 
      SIZE 4 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-car-num AS CHARACTER FORMAT "X(256)":U 
+DEFINE VARIABLE f-car-num AS CHARACTER FORMAT "X(256)":U init "?" 
      LABEL "Гос. N автоцистерны" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -154,7 +164,7 @@ DEFINE VARIABLE f-condition AS CHARACTER FORMAT "X(256)":U
      SIZE 57.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-date-cert AS DATE FORMAT "99/99/99":U 
-     LABEL "Дата свидетельства о поверке" 
+     LABEL "Дата свид-ва о поверке" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
@@ -163,10 +173,10 @@ DEFINE VARIABLE f-date-pour AS DATE FORMAT "99/99/99":U
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-fio AS CHARACTER FORMAT "X(256)":U 
+DEFINE VARIABLE f-fio AS CHARACTER FORMAT "X(256)":U init "?"
      LABEL "Ф.И.О. водителя-экспедитора" 
      VIEW-AS FILL-IN 
-     SIZE 54.88 BY 1 NO-UNDO.
+     SIZE 51.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-hour-income AS INTEGER FORMAT "99":U INITIAL ? 
      LABEL "Время прибытия на азс" 
@@ -183,9 +193,13 @@ DEFINE VARIABLE f-insp-cert AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 13.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-item-doc AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 80.5 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-item-pour AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 80 BY 1 NO-UNDO.
+     SIZE 80.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-min-income AS INTEGER FORMAT "99":U INITIAL ? 
      VIEW-AS FILL-IN 
@@ -209,9 +223,19 @@ DEFINE VARIABLE f-ptbotype AS CHARACTER FORMAT "X(3)":U
      SIZE 4 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-seals-condition AS CHARACTER FORMAT "X(256)":U 
-     LABEL "Пломбы и их состояние" 
+     LABEL "Пломбы" 
      VIEW-AS FILL-IN 
-     SIZE 18 BY 1 NO-UNDO.
+     SIZE 33.5 BY .96 NO-UNDO.
+
+DEFINE VARIABLE f-seals-condition-2 AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Состояние пломб" 
+     VIEW-AS FILL-IN 
+     SIZE 24.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE b-doc AS LOGICAL INITIAL no 
+     LABEL "Документы НЕ предоставлены" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 34.5 BY .83 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -227,23 +251,27 @@ DEFINE FRAME Dialog-Frame
      f-car-num AT ROW 3.75 COL 20 COLON-ALIGNED
      b-auto-tank AT ROW 3.79 COL 36.75
      f-condition AT ROW 5 COL 1.13 WIDGET-ID 30
-     f-seals-condition AT ROW 6.21 COL 22 COLON-ALIGNED
-     f-insp-cert AT ROW 6.21 COL 62.5 COLON-ALIGNED WIDGET-ID 26
-     f-date-cert AT ROW 7.46 COL 62.25 COLON-ALIGNED WIDGET-ID 34
+     f-insp-cert AT ROW 6.21 COL 66 COLON-ALIGNED WIDGET-ID 26
+     f-seals-condition AT ROW 6.25 COL 7 COLON-ALIGNED
+     f-seals-condition-2 AT ROW 7.38 COL 16 COLON-ALIGNED WIDGET-ID 44
+     f-date-cert AT ROW 7.46 COL 65.5 COLON-ALIGNED WIDGET-ID 34
      f-fio AT ROW 8.58 COL 28 COLON-ALIGNED
      f-ptbocode AT ROW 9.83 COL 16.13 COLON-ALIGNED
      f-ptbotype AT ROW 9.83 COL 27.88 COLON-ALIGNED NO-LABEL
      f-ptboname AT ROW 9.83 COL 36.13 COLON-ALIGNED NO-LABEL
      b-ptb AT ROW 9.92 COL 34.63
-     f-date-pour AT ROW 11 COL 12.88 COLON-ALIGNED WIDGET-ID 40
+     f-date-pour AT ROW 11 COL 12.25 COLON-ALIGNED WIDGET-ID 40
      f-hour-pour AT ROW 11 COL 42 COLON-ALIGNED WIDGET-ID 38
      f-min-pour AT ROW 11 COL 46 COLON-ALIGNED NO-LABEL WIDGET-ID 36
      f-hour-income AT ROW 11 COL 73.13 COLON-ALIGNED
      f-min-income AT ROW 11 COL 76.63 COLON-ALIGNED NO-LABEL
-     f-item-pour AT ROW 13.29 COL 1.63 NO-LABEL
+     f-item-pour AT ROW 13.29 COL 1 NO-LABEL
+     f-acc-ship AT ROW 14.46 COL 1.13 WIDGET-ID 42
+     b-doc AT ROW 15.75 COL 2 WIDGET-ID 48
+     f-item-doc AT ROW 16.79 COL 1 NO-LABEL WIDGET-ID 46
      "Примечание к нефтебазе" VIEW-AS TEXT
-          SIZE 25.5 BY 1 AT ROW 12.17 COL 1.63
-     SPACE(57.75) SKIP(1.32)
+          SIZE 25.5 BY 1 AT ROW 12.17 COL 1.13
+     SPACE(56.11) SKIP(4.99)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Дополнительная информация по приемке топлива"
@@ -270,10 +298,14 @@ ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+/* SETTINGS FOR FILL-IN f-acc-ship IN FRAME Dialog-Frame
+   ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN f-autoent-obj-name IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-condition IN FRAME Dialog-Frame
    ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN f-item-doc IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
 /* SETTINGS FOR FILL-IN f-item-pour IN FRAME Dialog-Frame
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN f-ptboname IN FRAME Dialog-Frame
@@ -310,6 +342,7 @@ DO:
                               f-car-num
                               f-condition
                               f-seals-condition
+                              f-seals-condition-2
                               f-insp-cert
                               f-date-cert
                               f-fio
@@ -322,6 +355,9 @@ DO:
                               f-hour-pour
                               f-min-pour
                               f-date-pour
+                              f-acc-ship
+                              b-doc
+                              f-item-doc
   .
  
   if input frame {&frame-name} f-hour-income <> ?
@@ -361,26 +397,26 @@ DO:
     .
   end.
   
-  if f-car-num:SCREEN-VALUE = "" then do:
+  if f-car-num:SCREEN-VALUE = "" or f-car-num:SCREEN-VALUE = "?" then do:
     MESSAGE "Введите Гос.№ автоцистерны."
     VIEW-AS ALERT-BOX.
       return no-apply .
   end.     
   
-  if f-insp-cert:screen-value = "" then do:
-    MESSAGE "Введите свидетельство о поверке"
-    VIEW-AS ALERT-BOX.
-    return no-apply.
-  end.
+/*  if f-insp-cert:screen-value = "" then do:  */
+/*    MESSAGE "Введите свидетельство о поверке"*/
+/*    VIEW-AS ALERT-BOX.                       */
+/*    return no-apply.                         */
+/*  end.                                       */
   
-  if input frame {&frame-name} f-date-cert = ""
-    then do:
-      message "Введите дату свидетельства о поверке." view-as alert-box .
-      apply "entry" to f-date-cert in frame {&frame-name} .
-      return no-apply .
-    end.    
+/*  if input frame {&frame-name} f-date-cert = ""                          */
+/*    then do:                                                             */
+/*      message "Введите дату свидетельства о поверке." view-as alert-box .*/
+/*      apply "entry" to f-date-cert in frame {&frame-name} .              */
+/*      return no-apply .                                                  */
+/*    end.                                                                 */
   
-  if f-fio:SCREEN-VALUE = "" then do:
+  if f-fio:SCREEN-VALUE = "" or f-fio:SCREEN-VALUE = "?" then do:
     MESSAGE "Введите Ф.И.О. водителя-экспедитора"
     VIEW-AS ALERT-BOX.
     return no-apply.
@@ -392,11 +428,11 @@ DO:
     return no-apply.
   end.
   
-  if f-min-pour = ? or f-hour-pour = ? then do:
-    MESSAGE "Введите время налива"
-    VIEW-AS ALERT-BOX.
-    return no-apply.
-  end.
+/*  if f-min-pour = ? or f-hour-pour = ? then do:*/
+/*    MESSAGE "Введите время налива"             */
+/*    VIEW-AS ALERT-BOX.                         */
+/*    return no-apply.                           */
+/*  end.                                         */
   
   find ub.clients no-lock where
        ub.clients.obj-type = f-ptbotype and
@@ -547,6 +583,26 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-doc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-doc Dialog-Frame
+ON VALUE-CHANGED OF b-doc IN FRAME Dialog-Frame /* Документы НЕ предоставлены */
+DO:
+  if b-doc:SCREEN-VALUE = "yes" then do:
+    enable 
+    f-item-doc 
+    with frame Dialog-Frame .
+  end.
+  else do:
+    HIDE 
+    f-item-doc 
+    in frame Dialog-Frame .
+  end.    
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-ptb
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-ptb Dialog-Frame
 ON CHOOSE OF b-ptb IN FRAME Dialog-Frame /* b-ptb */
@@ -571,6 +627,18 @@ define variable ref-rec  as recid     no-undo.
          ub.clients.obj-type @ f-ptbotype
          ub.clients.obj-name @ f-ptboname with frame {&frame-name}.
   end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-acc-ship
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-acc-ship Dialog-Frame
+ON return OF f-acc-ship IN FRAME Dialog-Frame /* Допустимый % погрешности поставщика */
+DO:
+    apply "entry" to f-hour-income in frame {&frame-name}.
+return no-apply.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -653,7 +721,7 @@ END.
 
 &Scoped-define SELF-NAME f-date-cert
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date-cert Dialog-Frame
-ON return OF f-date-cert IN FRAME Dialog-Frame /* Дата свидетельства о поверке */
+ON return OF f-date-cert IN FRAME Dialog-Frame /* Дата свид-ва о поверке */
 DO:
 /*  apply "entry" to f-car-vol in frame {&frame-name}.*/
 return no-apply.
@@ -726,6 +794,18 @@ return no-apply.
 
 
 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-item-doc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-item-doc Dialog-Frame
+ON return OF f-item-doc IN FRAME Dialog-Frame
+DO:
+/*    apply "entry" to f-hour-income in frame {&frame-name}.*/
+return no-apply.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -847,7 +927,22 @@ END.
 
 &Scoped-define SELF-NAME f-seals-condition
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-seals-condition Dialog-Frame
-ON return OF f-seals-condition IN FRAME Dialog-Frame /* Пломбы и их состояние */
+ON return OF f-seals-condition IN FRAME Dialog-Frame /* Пломбы */
+DO:
+    apply "entry" to f-item-pour in frame {&frame-name}.
+return no-apply.
+
+
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-seals-condition-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-seals-condition-2 Dialog-Frame
+ON return OF f-seals-condition-2 IN FRAME Dialog-Frame /* Состояние пломб */
 DO:
     apply "entry" to f-item-pour in frame {&frame-name}.
 return no-apply.
@@ -996,17 +1091,33 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               f-condition = buf_doc-attr.attr-value.
         end.
         when {&trdcattr-seals-condition} then do:
-            assign
-              f-seals-condition = buf_doc-attr.attr-value.
+            if num-entries (buf_doc-attr.attr-value, {&delim-par}) = 2
+            then do:
+              assign
+                f-seals-condition = entry (1, buf_doc-attr.attr-value, {&delim-par})
+                f-seals-condition-2 = entry (2, buf_doc-attr.attr-value, {&delim-par})
+              .              
+            end.
+            else
+              assign
+                f-seals-condition = buf_doc-attr.attr-value.
         end.
-        
-  
+        when {&trdcattr-acc-ship} then do:
+            assign
+              f-acc-ship = decimal (buf_doc-attr.attr-value) no-error.
+              v-avai-acc-ship = true.
+        end.
+        when {&trdcattr-doc-not} then do:
+            assign
+              b-doc =  logical(buf_doc-attr.attr-value) no-error.
+        end.        
+        when {&trdcattr-spisok-not-doc} then do:
+            assign
+              f-item-doc =  buf_doc-attr.attr-value no-error.
+        end.        
       end case.
     end.
-    
-    
-    
-    
+
     
     /*assign
       f-car-vol = decimal(p-car-vol) no-error
@@ -1026,8 +1137,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   end.
   
+  if not v-avai-acc-ship
+    then f-acc-ship = 0.25.
+  
   RUN enable_UI.
-
+  run gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", no, output rdc-dnstvalue, output rdc-dnsttype) no-error.  
   display
       f-autoent-obj-code
       f-autoent-obj-name
@@ -1038,6 +1152,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       b-auto-tank
       f-condition
       f-seals-condition
+      f-seals-condition-2
       f-insp-cert
       f-date-cert
       f-fio
@@ -1053,7 +1168,32 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-hour-pour
       f-min-pour
       b-save
+      f-acc-ship
+      b-doc
     with frame {&frame-name}.
+    if b-doc = no then do:
+        hide
+            f-item-doc
+        in frame Dialog-Frame . 
+    end.
+    if rdc-dnstvalue <> "pomi-rn" then do:
+        HIDE
+            b-doc
+            f-item-doc
+        in frame Dialog-Frame .
+    end.
+    
+  find first ub.trn-doc no-lock where ub.trn-doc.doc-code = p-doc-code no-error.
+  { gbl/ptrlprop.i
+    run
+    ub.trn-doc.obj-type
+    ub.trn-doc.obj-code
+  }
+  if ptrlprop-mand-choice-autocar
+  then do:
+    disable f-car-num with frame {&frame-name}.
+  end. 
+  
   if p-mode <> {&update} and  p-mode <> {&add-def} then do:
     disable
       f-autoent-obj-code
@@ -1065,6 +1205,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       b-auto-tank
       f-condition
       f-seals-condition
+      f-seals-condition-2
       f-insp-cert
       f-date-cert
       f-fio
@@ -1078,9 +1219,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-hour-pour
       f-min-pour
       b-save
+      f-acc-ship
+      b-doc
       with frame {&frame-name}.
   end.
-    
+  assign
+    f-car-num:fgcolor = 12
+    f-fio:fgcolor = 12
+    f-min-income:fgcolor = 12
+    f-hour-income:fgcolor = 12
+  .
+  
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -1161,14 +1310,16 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY f-autoent-obj-code f-autoent-obj-type f-autoent-obj-name f-car-num 
-          f-condition f-seals-condition f-insp-cert f-date-cert f-fio f-ptbocode 
-          f-ptbotype f-ptboname f-date-pour f-hour-pour f-min-pour f-hour-income 
-          f-min-income f-item-pour 
+          f-condition f-insp-cert f-seals-condition f-seals-condition-2 
+          f-date-cert f-fio f-ptbocode f-ptbotype f-ptboname f-date-pour 
+          f-hour-pour f-min-pour f-hour-income f-min-income f-item-pour 
+          f-acc-ship b-doc f-item-doc 
       WITH FRAME Dialog-Frame.
   ENABLE b-save b-quit b-help f-autoent-obj-code f-autoent-obj-type b-clients 
-         f-car-num b-auto-tank f-condition f-seals-condition f-insp-cert 
-         f-date-cert f-fio f-ptbocode f-ptbotype b-ptb f-date-pour f-hour-pour 
-         f-min-pour f-hour-income f-min-income f-item-pour 
+         f-car-num b-auto-tank f-condition f-insp-cert f-seals-condition 
+         f-seals-condition-2 f-date-cert f-fio f-ptbocode f-ptbotype b-ptb 
+         f-date-pour f-hour-pour f-min-pour f-hour-income f-min-income 
+         f-item-pour f-acc-ship b-doc f-item-doc
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1239,9 +1390,24 @@ PROCEDURE save-attr :
         when {&trdcattr-seals-condition} then do:
             assign
               v-attr-value = f-seals-condition when f-seals-condition <> "".
+            assign
+              v-attr-value = (if v-attr-value = ? then "" else v-attr-value) + {&delim-par} + f-seals-condition-2 when f-seals-condition-2 <> "".
         end.
-        
-  
+        when {&trdcattr-acc-ship} then do:
+            assign
+              v-attr-value = string (f-acc-ship) when string (f-acc-ship) <> "".
+        end.
+        when {&trdcattr-doc-not} then do:
+            assign
+              v-attr-value = string (b-doc) when string (b-doc) <> "".
+        end.
+        when {&trdcattr-spisok-not-doc} then do:
+        if b-doc = yes then do:
+            assign
+              v-attr-value = string (f-item-doc) when string (f-item-doc) <> "".
+        end.
+        else v-attr-value = "".
+        end.
       end case.
       
       find first buf_doc-attr no-lock

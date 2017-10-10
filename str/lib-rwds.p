@@ -1351,16 +1351,18 @@ procedure lib-rwds_ccwstsum :
   define variable varwast-sum-rubl-line      like ub.doc-line.price-base no-undo.
   define variable varwast-fact-qnty-line     like ub.doc-line.fact-qnty  no-undo.
   define variable varwast-cli-qnty-line      like ub.doc-line.cli-qnty   no-undo.
-  define variable v_invclcsp                 as   character              no-undo.
-  define variable v_data-type                as   character              no-undo.
-  define variable v-is-petrol                as   logical                no-undo.
-  define variable v-is-pieces                as   logical                no-undo.
-  define variable v-normal-wastage           as   decimal                no-undo.
-  define variable attr-type                  as   character              no-undo.
-  define variable v-petrol                   as   logical                no-undo.
-  define variable v-value                    as   character              no-undo.
-  define variable v-type                     as   character              no-undo.
-  define variable v-sign                     as   integer                no-undo.
+  define variable v_invclcsp              as character no-undo.
+  define variable v_data-type             as character no-undo.
+  define variable v-is-petrol             as logical   no-undo.
+  define variable v-is-pieces             as logical   no-undo.
+  define variable v-normal-wastage        as decimal   no-undo.
+  define variable v-normal-wastage-winter as decimal   no-undo init ?.
+  define variable v-normal-wastage-summer as decimal   no-undo init ?.
+  define variable attr-type               as character no-undo.
+  define variable v-petrol                as logical   no-undo.
+  define variable v-value                 as character no-undo.
+  define variable v-type                  as character no-undo.
+  define variable v-sign                  as integer   no-undo.
 
   do on error undo, return error return-value :
     run waitfram-show in p-wasthandle ( input 'Подсчет фондов естественной убыли по товарам в инвентаризации.' ) no-error.
@@ -1411,14 +1413,15 @@ procedure lib-rwds_ccwstsum :
       end.
       if v-petrol then do:
       /* у топлива в атрибутах, т.к. до 3-х знаков после запятой */
-        run gdsoattr-value in this-procedure
-                          ( input  {&attr-normal-wastage-o}
-                           ,input  bf_goods.gds-code
-                           ,input  wast-cur-trn-doc.obj-type
-                           ,input  wast-cur-trn-doc.obj-code
-                          ,output v-normal-wastage
-                           ,output attr-type
-                          ) no-error .
+        run gds-o-normal-wastage-value in this-procedure
+                          ( input bf_goods.gds-code
+                           , input wast-cur-trn-doc.obj-type
+                           , input wast-cur-trn-doc.obj-type
+                           , input if wast-cur-trn-doc.fact-date <> ? then wast-cur-trn-doc.fact-date else wast-cur-trn-doc.doc-date
+                           , output v-normal-wastage-winter
+                           , output v-normal-wastage-summer
+                           , output v-normal-wastage
+                          ) no-error.
       end.
       else do:
         assign v-normal-wastage = if bf_goods.normal-wastage <> 0 and bf_goods.normal-wastage <> ? then bf_goods.normal-wastage  else 0 .
@@ -1488,14 +1491,15 @@ procedure lib-rwds_ccwstsum :
       end.
       if v-petrol then do:
       /* у топлива в атрибутах, т.к. до 3-х знаков после запятой */
-        run gdsoattr-value in this-procedure
-                          ( input  {&attr-normal-wastage-o}
-                           ,input  bf_goods.gds-code
-                           ,input  wast-cur-trn-doc.obj-type
-                           ,input  wast-cur-trn-doc.obj-code
-                          ,output v-normal-wastage
-                           ,output attr-type
-                          ) no-error .
+        run gds-o-normal-wastage-value in this-procedure
+                          ( input bf_goods.gds-code
+                           , input wast-cur-trn-doc.obj-type
+                           , input wast-cur-trn-doc.obj-type
+                           , input if wast-cur-trn-doc.fact-date <> ? then wast-cur-trn-doc.fact-date else wast-cur-trn-doc.doc-date
+                           , output v-normal-wastage-winter
+                           , output v-normal-wastage-summer
+                           , output v-normal-wastage
+                          ) no-error.
       end.
       else do:
         assign

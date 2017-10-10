@@ -32,6 +32,10 @@ define variable vss-description as character no-undo initial "Триггер на удалени
 { gbl/thbj-def.i }
 { ref/xobjgrp.i  }
 
+{ str/initiator.i }
+{ str/lib-rvs.i }
+
+define variable v-person as character no-undo.
 define variable v-mess as character no-undo .
 define variable v-value-character as character no-undo .
 define variable v-date-close-period as date      no-undo .
@@ -40,6 +44,11 @@ define variable v-value-integer as integer   no-undo .
 define variable v-value-logical as logical   no-undo .
 define variable v-value-type as character no-undo .
 
+define variable v-vid-action  as integer  no-undo .
+define variable v-vid-param   as longchar no-undo .
+define variable varshift-date as date     no-undo.
+define variable varshift-num  as integer  no-undo.
+define variable varshift-name as char     no-undo.
 
 Main-Block:
 do
@@ -47,6 +56,16 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
+
+    
+    { gbl/curshift.i
+      ub.rvs-doc.obj-type
+      ub.rvs-doc.obj-code
+      varshift-date
+      varshift-num
+      varshift-name
+      no-error
+    }
 
   /* Проверяем статус документа, в котором мы можем удалять документ */
   if ( ub.rvs-doc.status_ = {&fact}
@@ -82,6 +101,29 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     undo Main-Block, return error v-mess .
   end.
 
+    if  (ub.rvs-doc.status_ = {&fact}  and ub.rvs-doc.is-del = true)
+    
+        then 
+    do:
+
+        { str/hstc-rvs.i
+          "buffer ub.rvs-doc"
+          integer({&hn-delete})
+          ub.rvs-doc.rvs-code
+          "dynamic-next-value('s-corr-chip':U,'{&db-name_schema}':U)"
+          no-error
+         }
+        if error-status :error then 
+        do:
+            message
+                vss-workfile vss-revision vss-description skip
+                substitute("Ошибка записи истории удаления документа сверки &1", ub.rvs-doc.rvs-code ) skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error .
+            undo main-block, return error .
+        end.
+    end.
 
   if ub.rvs-doc.status_ = {&fact} then do:
   run adm/shattri.p (
@@ -142,6 +184,57 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   :
     delete ub.rvs-line-pump.
   end.
+define variable v-result as integer no-undo.
+
+    if v-mess = "" then v-result = 0.
+    else v-result = 1 .
+      
+    for first  ub.clients where ub.clients.obj-type = {&prs} and  ub.clients.obj-code = ub.rvs-doc.boss no-lock : 
+        v-person = clients.obj-name.
+    end.        
+    v-vid-action = 60.
+    v-vid-param =
+        "Initiator=" + v-initiator + {&delim-par} +
+        "ResponsiblePerson=" + (if v-person <> ?  then v-person else "") + {&delim-par} + 
+        "SHOP_NUM=" + string(rvs-doc.obj-code) + {&delim-par} +
+        "DocNum=" + string(rvs-doc.rvs-code) + {&delim-par} +
+        "FactDate=" + (if string(rvs-doc.fact-date) = ? then '' else string(rvs-doc.fact-date)) + {&delim-par} +
+        "DocType=" + string(rvs-doc.rvs-type) + {&delim-par} +
+        /*        "ShiftNum=" + string(rvs-doc.shift-num) + {&delim-par} +  */
+        /*        "ShiftDate=" + string(rvs-doc.shift-date) + {&delim-par} +*/
+        "SHIFT_NUM_DOC=" + (if string(rvs-doc.shift-num) = ? then '' else string(rvs-doc.shift-num)) + (if string(rvs-doc.shift-date) = ? then '' else string(rvs-doc.shift-date , "99999999")) + {&delim-par} +  
+        "SHIFT_NUM=" + (if string(varshift-num) = ? then '' else string(varshift-num)) + (if string(varshift-date) = ? then '' else string(varshift-date, "99999999")) + {&delim-par} +
+        
+        
+        /*                "ShiftNumCurr=" + (if string(parshift-num) = ? then '' else string(parshift-num)) + {&delim-par} +   */
+        /*                "ShiftDateCurr=" + (if string(parshift-date) = ? then '' else string(parshift-date)) + {&delim-par} +*/
+        "Status=" + string(rvs-doc.status_) + {&delim-par} +
+        
+
+        "RESULT=" + string( v-result ) + {&delim-par} + 
+        "Description=" + v-mess no-error.
+     
+      
+    run trg/userlog.p (
+        input {&nwsdochs_action_delete}
+        , input {&table_rvs-doc}
+        , input ( buffer rvs-doc  :handle )
+        , input v-vid-action
+        , input v-vid-param
+        ) no-error.
+    if error-status :error
+        then 
+    do:
+
+        message substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+            , {&new-line}
+            , vss-workfile
+            , return-value
+            , error-status :get-message ( 1 ) ) 
+            view-as alert-box.
+        return no-apply.
+    end.
+
 
   /* посылаем команду на удаление документа сверки */
   if g#db-num <> 0 then do:

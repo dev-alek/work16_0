@@ -29,10 +29,10 @@ main-block:
 do
 on error undo main-block, return error
 :
-  message
-    vss-workfile vss-revision vss-description skip
-    "Удаление записи метки цистерны невозможно" skip
-    view-as alert-box error .
+/*  message                                           */
+/*    vss-workfile vss-revision vss-description skip  */
+/*    "Удаление записи метки цистерны невозможно" skip*/
+/*    view-as alert-box error .                       */
     if g#oxml = yes
     then do:
     run str/calloxml.p (

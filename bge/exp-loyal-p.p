@@ -175,6 +175,7 @@ hSAXWriter:START-ELEMENT ("Goods") no-error .
                 
                 hSAXWriter:START-ELEMENT ("Good") no-error.
                 hSAXWriter:WRITE-DATA-ELEMENT("Gds-code" , string(buf_goods.gds-code, fill("9", p-long-code))  ) no-error.
+                hSAXWriter:WRITE-DATA-ELEMENT("Artic" , string(buf_goods.artic)  ) no-error.
                 hSAXWriter:WRITE-DATA-ELEMENT("Status" , string(buf_goods.stts)  ) no-error.
                 hSAXWriter:WRITE-DATA-ELEMENT("GrpCode" , string(buf_goods.grp-code)  ) no-error.
                 hSAXWriter:WRITE-DATA-ELEMENT("Units" , buf_goods.unit-base  ) no-error.

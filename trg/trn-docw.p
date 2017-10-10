@@ -301,6 +301,31 @@ end.
     where ub.clients.obj-type = ub.trn-doc.cli-type
       and ub.clients.obj-code = ub.trn-doc.cli-code
     no-error .
+  if  v-new-trn-doc = true
+  then do:
+
+    define variable v-vid-action  as integer    no-undo.
+    define variable v-vid-param   as longchar   no-undo.
+
+    { str/initiator.i }
+  
+    v-vid-action = 55 .
+    v-vid-param = "Initiator=" + v-initiator + {&delim-par} +
+                  "SHOP_NUM=" + string(ub.trn-doc.obj-code) + {&delim-par} +
+                  "DocNum=" + string(ub.trn-doc.doc-code) + {&delim-par} +
+                  "DocType=" + string(ub.trn-doc.doc-type) + {&delim-par} +
+                  "RESULT=0" + {&delim-par} + 
+                  "Description=".
+    
+    run trg/userlog.p (
+          input {&nwsdochs_action_create}
+        , input {&table_trn-doc}
+        , input ( buffer ub.trn-doc :handle )
+        , input v-vid-action
+        , input v-vid-param
+    ) no-error.
+
+  end.
   if not available ub.clients
   then do:
     if  v-new-trn-doc = true

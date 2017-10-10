@@ -120,6 +120,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
 define buffer buf_inkas-pay for ub.inkas-pay.
 define buffer buf_inkas-pay-desk for ub.inkas-pay-desk.
 define buffer buf_inkas-pay-wth for ub.inkas-pay-wth.
+define buffer buf_place       for ub.place.
 
 define buffer dop_trn-doc for ub.trn-doc.
 define buffer buf_doc-line for ub.doc-line.
@@ -859,13 +860,16 @@ on error undo, return error return-value
   {&display-message-laud} .
               UNDO _one-check, leave _one-check.
             end.
+            find first buf_place no-lock where buf_place.pl-code = plcode no-error .
             assign
               t-gds.pl-code = plcode
+              t-gds.loc1    = buf_place.loc1 when available buf_place
             .
 
             if buf_chk-gds.pl-code <> t-gds.pl-code then do:
               assign
                 buf_chk-gds.pl-code = t-gds.pl-code
+                buf_chk-gds.loc1    = t-gds.loc1
               .
             end.
 

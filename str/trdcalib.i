@@ -306,6 +306,19 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-envd           true
 &glob sort-trdcattr-envd           100
 
+/* Допустимый % погрешности поставщика */
+&glob fillin_width-trdcattr-acc-ship 20
+&glob fillin_height-trdcattr-acc-ship 1
+&glob type-trdcattr-acc-ship {&type-dec}
+&glob format-trdcattr-acc-ship ">>9.99"
+&glob label-trdcattr-acc-ship "Допустимый % погрешности поставщика"
+&glob tooltip-trdcattr-acc-ship "Допустимый % погрешности поставщика"
+&glob user-can-edit-trdcattr-acc-ship true
+&glob output-display-trdcattr-acc-ship true
+&glob other-trdcattr-acc-ship 'nws':u
+&glob news-trdcattr-acc-ship true
+&glob sort-trdcattr-acc-ship 100
+
 /* Флористы */
 /* Время выполнения заказа */
 &glob fillin_width-trdcattr-ord_time 6
@@ -1232,6 +1245,33 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob other-trdcattr-seals-condition '':u
 &glob news-trdcattr-seals-condition true
 &glob sort-trdcattr-seals-condition 190
+
+/* Документы НЕ предоставлены */
+&glob fillin_width-trdcattr-doc-not 4
+&glob fillin_height-trdcattr-doc-not 1
+&glob type-trdcattr-doc-not {&type-log}
+&glob format-trdcattr-doc-not "yes/no"
+&glob label-trdcattr-doc-not "Документы НЕ предоставлены"
+&glob tooltip-trdcattr-doc-not "Документы НЕ предоставлены"
+&glob user-can-edit-trdcattr-doc-not true
+&glob output-display-trdcattr-doc-not true
+&glob other-trdcattr-doc-not '':u
+&glob news-trdcattr-doc-not true
+&glob sort-trdcattr-doc-not 100
+
+
+/* Список не предоставленных документов */
+&glob fillin_width-trdcattr-spisok-not-doc 20
+&glob fillin_height-trdcattr-spisok-not-doc 1
+&glob type-trdcattr-spisok-not-doc {&type-char}
+&glob format-trdcattr-spisok-not-doc "X(100)"
+&glob label-trdcattr-spisok-not-doc "Список не предоставленных документов"
+&glob tooltip-trdcattr-spisok-not-doc "Список не предоставленных документов"
+&glob user-can-edit-trdcattr-spisok-not-doc true
+&glob output-display-trdcattr-spisok-not-doc true
+&glob other-trdcattr-spisok-not-doc '':u
+&glob news-trdcattr-spisok-not-doc true
+&glob sort-trdcattr-spisok-not-doc 190
 
 /* Дата налива */
 &glob fillin_width-trdcattr-date-pour 11

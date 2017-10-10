@@ -18,16 +18,18 @@ $Archive$
 Author: Dmitry Ukhanov
 Creation date: 08/16/07
 
-Автор1: Перваков Михаил Сергеевич
-Дата создания1: 04/11/06
+Автор: Перваков Михаил Сергеевич
+Дата создания: 04/11/06
+Author: Mikhail Pervakov
+Creation date: 04/11/06
 
 */
 
 /* ***************************  Definitions  ************************** */
 /* Parameters Definitions ---                                           */
 define input parameter parmode as character no-undo.
-define input parameter parrec-tank as recid no-undo.
-define input-output parameter parrecid as recid no-undo.
+define input parameter parnum-tank as CHARACTER no-undo.
+define input-output parameter parmeas-label as CHARACTER no-undo.
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -174,17 +176,19 @@ END.
 ON CHOOSE OF b-save IN FRAME Dialog-Frame /* Ввод */
 DO:
   if parmode = {&add-def} then do:
-    create ub.auto-tank-meas.
+    create auto-tank-meas.
     assign
-       ub.auto-tank-meas.auto-num = ub.auto-tank.auto-num
-       parrecid = recid(ub.auto-tank-meas).
+       auto-tank-meas.auto-num = auto-tank.auto-num
+    .   
   end.
   if parmode = {&add-def} or
      parmode = {&update} then do:
      assign
-       ub.auto-tank-meas.meas-label = input frame {&frame-name} varmeas-label
-       ub.auto-tank-meas.meas-qnty  = input frame {&frame-name} varmeas-qnty
-       ub.auto-tank-meas.ps         = input frame {&frame-name} varps.
+       auto-tank-meas.meas-label = input frame {&frame-name} varmeas-label
+       auto-tank-meas.meas-qnty  = input frame {&frame-name} varmeas-qnty
+       auto-tank-meas.ps         = input frame {&frame-name} varps
+       parmeas-label = auto-tank-meas.meas-label
+     .
   end.
 END.
 
@@ -211,26 +215,26 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   if parmode = {&lookup} then do:
-    find first ub.auto-tank      where recid(ub.auto-tank) = parrec-tank no-lock.
-    find first ub.auto-tank-meas where recid(ub.auto-tank-meas) = parrecid no-lock.
+    find first auto-tank      where auto-tank.auto-num = parnum-tank no-lock.
+    find first auto-tank-meas where auto-tank-meas.auto-num = auto-tank.auto-num and auto-tank-meas.meas-label = parmeas-label no-lock.
   end.
   if parmode = {&update} then do:
     do transaction:
-      find first ub.auto-tank      where recid(ub.auto-tank) = parrec-tank exclusive-lock.
-      find first ub.auto-tank-meas where recid(ub.auto-tank-meas) = parrecid exclusive-lock.
+      find first auto-tank      where auto-tank.auto-num = parnum-tank exclusive-lock.
+      find first auto-tank-meas where auto-tank-meas.auto-num = auto-tank.auto-num and auto-tank-meas.meas-label = parmeas-label exclusive-lock.
     end.
   end.
   if parmode = {&add-def} then do:
     do transaction:
-      find first ub.auto-tank      where recid(ub.auto-tank) = parrec-tank exclusive-lock.
+      find first auto-tank      where auto-tank.auto-num = parnum-tank exclusive-lock.
     end.
   end.
   if parmode = {&lookup} or
      parmode = {&update} then do:
     assign
-      varmeas-label  = ub.auto-tank-meas.meas-label
-      varmeas-qnty   = ub.auto-tank-meas.meas-qnty
-      varps          = ub.auto-tank-meas.ps.
+      varmeas-label  = auto-tank-meas.meas-label
+      varmeas-qnty   = auto-tank-meas.meas-qnty
+      varps          = auto-tank-meas.ps.
   end.
   RUN local-enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
@@ -302,3 +306,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

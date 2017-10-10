@@ -34,7 +34,7 @@ define variable vss-description as character no-undo init "создание топливных до
 { cmp/gds-list.i gds-list def }
 { gbl/getcntxt.i def }
 { str/getctxtp.i def }
-{ gbl/ptrlprop.i  def }
+{ gbl/ptrlprop.i def }
 { ref/gdsoattr.i     }
 
 do
@@ -43,8 +43,9 @@ on stop   undo, return error substitute( "&1. stop", vss-workfile )
 on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 :
 
-  define buffer buf_rvs-doc      for ub.rvs-doc .
-  define buffer buf_rvs-line     for ub.rvs-line .
+  define buffer buf_rvs-doc       for ub.rvs-doc .
+  define buffer buf_rvs-line      for ub.rvs-line .
+  define buffer buf_rvs-line-attr for ub.rvs-line-attr .
 
   define buffer buf-add_clients     for ub.clients .
   define buffer buf_sysconf         for ub.sysconf .
@@ -117,6 +118,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable O_FACT                              as   decimal                       no-undo.
   define variable v-metering-error                    as   decimal                       no-undo.
   define variable v-normal-wastage                    as   decimal                       no-undo.
+  define variable v-normal-wastage-winter             as   decimal                       no-undo init ?.
+  define variable v-normal-wastage-summer             as   decimal                       no-undo init ?.
   define variable v-rsrv-qnty                         like ub.doc-line.fact-qnty         no-undo.
 
   define variable O_PKH-base                          as   decimal                       no-undo.
@@ -153,7 +156,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-type              as character no-undo .
 
   { gbl/getcntxt.i get }
-
   find first buf_rvs-doc
     where rowid( buf_rvs-doc ) = p-rvs-rowid
   .
@@ -383,7 +385,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         K1 = 0.0
       .
     end.
-
+    define variable K1-all as decimal no-undo.
+    K1-all = K1.
+    
     for each buf_doc-line exclusive-lock
       where buf_doc-line.doc-code = v-inv-code
       ,first buf_inv-line exclusive-lock
@@ -397,14 +401,15 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         and buf_goods.prod-code = buf_doc-line.prod-code
     on error undo block_cre-inv, retry block_cre-inv
     :
-    run gdsoattr-value in this-procedure
-                      ( input  {&attr-normal-wastage-o}
-                       ,input  buf_goods.gds-code
-                       ,input  buf_trn-doc.obj-type
-                       ,input  buf_trn-doc.obj-code
-                       ,output v-normal-wastage
-                       ,output v-type
-                      ) no-error .
+      run gds-o-normal-wastage-value in this-procedure
+                        ( input buf_goods.gds-code
+                         , input buf_trn-doc.obj-type
+                         , input buf_trn-doc.obj-type
+                         , input if buf_trn-doc.fact-date <> ? then buf_trn-doc.fact-date else buf_trn-doc.doc-date
+                         , output v-normal-wastage-winter
+                         , output v-normal-wastage-summer
+                         , output v-normal-wastage
+                        ) no-error.
 
       if v-normal-wastage = ? then do:
         assign

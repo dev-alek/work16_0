@@ -65,7 +65,7 @@ define variable vss-description as character no-undo init "История пользователя 
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { gbl/key-rec.i  }
-
+{ cmp/showinf.i  }
 define buffer buf_head_c-user-log        for c-user-log.
 define buffer buf_line_c-user-log        for c-user-log.
 

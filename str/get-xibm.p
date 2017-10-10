@@ -855,11 +855,12 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           string(temp-cash-desk.last-z-count, "99999") +
           string(temp-cash-desk.last-chk-num, "-999999999")
   .
+   
   assign
   v-new = string(year(chk-date_), "9999") +
           string(month(chk-date_), "99") +
           string(day(chk-date_), "99") +
-          string(chk-time_, "HH:MM:SS") +
+          string(chk-time_ - min(chk-time_,60), "HH:MM:SS") +    /* В связи с тем, что стали появляться запросы о том, что последний чек не всегда корректно закачивается, сделаем так, чтобы время последнего принятого чека фиксировалось на минуту раньще*/ 
           string(integer(shift-name_), "99") +
           string(z-num_, "99999") +
           string(chk-num_, "-999999999")

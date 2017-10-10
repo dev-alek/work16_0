@@ -46,6 +46,10 @@ define variable v-try-connect       as logical   no-undo init false .
 define variable v-is-copy           as logical   no-undo init false .
 define variable v-load-cfg          as logical      no-undo.
 
+define variable v-vid-ok            as logical  no-undo .
+define variable v-vid-mes           as character no-undo .
+define variable v-vid-param         as longchar no-undo .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -323,6 +327,11 @@ on stop   undo, leave
   if v-cConnect = ?
   or trim (v-cConnect) = ""
   then do:
+    v-vid-param = "Login=" + name + {&delim-par} + "RESULT=101" + {&delim-par} + "Description=Не указаны параметры подключения к БД (секция REP-SETS ключ ConPar в .ini файле)".
+    run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
     message
       "Не указаны параметры подключения к БД"
       "(секция REP-SETS ключ ConPar в .ini файле)."
@@ -331,6 +340,11 @@ on stop   undo, leave
   end.
   if index(v-cConnect, '&1':u) = 0
   then do:
+    v-vid-param = "Login=" + name + {&delim-par} + "RESULT=102" + {&delim-par} + "Description=В строке подключения к БД не указан комбинация символов &1 (секция REP-SETS ключ ConPar в .ini файле)".
+    run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
     message
       "В строке подключения к БД не указан комбинация символов &1"
       "(секция REP-SETS ключ ConPar в .ini файле)."
@@ -381,6 +395,11 @@ on stop   undo, leave
     ) .
   if userid('{&db-name_schema}':U) = '':U
   then do:
+    v-vid-param = "Login=" + name + {&delim-par} + "RESULT=103" + {&delim-par} + "Description=Ошибка при подключении к базе данных. Неизвестный пользователь".
+    run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
     message
       "Ошибка при подключении к базе данных" skip
       "Неизвестный пользователь" skip
@@ -410,6 +429,11 @@ do
   then do:
     run adm/chk-db.p no-error .
     if error-status :error then do:
+      v-vid-param = "Login=" + name + {&delim-par} + "RESULT=104" + {&delim-par} + "Description=" + error-status :get-message(1) .
+      run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
       message
         error-status :get-message(1) skip
         return-value skip
@@ -435,6 +459,11 @@ do
         run adm/chkdbkey.p no-error .
         if error-status :error then do:
          /* ошибка проверки кодировки ключей БД - не запускаем систему */
+          v-vid-param = "Login=" + name + {&delim-par} + "RESULT=105" + {&delim-par} + "Description=Ошибка проверки кодировки ключей БД" .
+          run trg/video-action.p (input 50,
+                                input v-vid-param,
+                                output v-vid-ok,
+                                output v-vid-mes) .
           if error-status :get-message(1) <> "" then do:
               message
                 vss-workfile vss-revision vss-description skip
@@ -449,6 +478,11 @@ do
             ) no-error .
           if error-status :error then do:
               /* ошибка проверки параметров - не запускаем систему */
+            v-vid-param = "Login=" + name + {&delim-par} + "RESULT=106" + {&delim-par} + "Description=Ошибка проверки параметров" .
+            run trg/video-action.p (input 50,
+                                    input v-vid-param,
+                                    output v-vid-ok,
+                                    output v-vid-mes) .
             if error-status :get-message(1) <> "" then do:
               message
                 vss-workfile vss-revision vss-description skip
@@ -463,6 +497,11 @@ do
               ,input password
               ) no-error .
             if error-status :error then do:
+              v-vid-param = "Login=" + name + {&delim-par} + "RESULT=107" + {&delim-par} + "Description=" + error-status :get-message(1) .
+              run trg/video-action.p (input 50,
+                                    input v-vid-param,
+                                    output v-vid-ok,
+                                    output v-vid-mes) .
               message
                 vss-workfile vss-revision vss-description skip
                 error-status :get-message(1) skip
@@ -480,6 +519,11 @@ else do:
   if v-try-connect = true
   then do:
      if error-status :error then do:
+        v-vid-param = "Login=" + name + {&delim-par} + "RESULT=108" + {&delim-par} + "Description=Ошибка при подключении к БД. " + error-status :get-message(1) .
+        run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
         message
            "Ошибка при подключении к БД" skip
            error-status :get-message(1) skip
@@ -489,6 +533,11 @@ else do:
         quit.
      end.
      ELSE DO:
+        v-vid-param = "Login=" + name + {&delim-par} + "RESULT=109" + {&delim-par} + "Description=Ошибка при подключении к БД. " + error-status :get-message(1) .
+        run trg/video-action.p (input 50,
+                            input v-vid-param,
+                            output v-vid-ok,
+                            output v-vid-mes) .
         message
            "Ошибка при подключении к базе данных" skip
            "Обратитесь к администратору" skip

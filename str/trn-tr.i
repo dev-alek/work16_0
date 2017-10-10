@@ -1699,8 +1699,9 @@ end procedure.
 &endif
 
 procedure proc-exit :
-define variable v-vat-pc as decimal   no-undo .
-define variable v-slt-pc as decimal   no-undo .
+  define variable v-vat-pc   as decimal no-undo .
+  define variable v-slt-pc   as decimal no-undo .
+  define variable v-insalepr as logical no-undo .
   assign parnext-prev = ?.
   &if "{1}" <> "pr" &then
     &if "{1}" <> "inv" &then
@@ -1783,6 +1784,24 @@ define variable v-slt-pc as decimal   no-undo .
               return error.
             end.
       end.
+      find ub.goods where ub.goods.artic    = buff_doc-line.artic     and
+                       ub.goods.prod-type = buff_doc-line.prod-type and
+                       ub.goods.prod-code = buff_doc-line.prod-code no-lock.
+      
+      { gbl/gdsobjat.i
+        buff_doc-line.obj-type
+        buff_doc-line.obj-code
+        buff_doc-line.artic
+        buff_doc-line.prod-type
+        buff_doc-line.prod-code
+        "'insalepr=request'":U
+        v-insalepr
+      }
+      if v-insalepr <> ? and v-insalepr = true
+      then do:
+        t-doc.tot-cli = t-doc.tot-calc.
+      end.
+      
     end.
     &endif
   end.

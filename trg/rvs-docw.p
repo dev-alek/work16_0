@@ -34,17 +34,35 @@ define variable vss-description as character no-undo initial "Триггер на запись 
 
 define variable v-host-code     like ub.rvs-doc.host-code no-undo.
 define variable varis-back-date as   logical              no-undo initial "no".
-
+/*для работы с видеонаблюдением*/
+define variable v-vid-ok     as logical   no-undo .
+define variable v-vid-mes    as character no-undo .
+define variable v-vid-action as integer   no-undo .
+define variable v-vid-param  as longchar  no-undo .
+define variable v-mess        as character no-undo.
 define buffer buf_rvs-doc    for ub.rvs-doc .
 define buffer before_rvs-doc for ub.rvs-doc .
 define buffer after_rvs-doc  for ub.rvs-doc .
-
+  define variable varshift-date as date no-undo.
+  define variable  varshift-num as integer no-undo.
+  define variable varshift-name as char no-undo.
 main-block:
 do
 on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
+
+    
+    { gbl/curshift.i
+   ub.rvs-doc.obj-type
+    ub.rvs-doc.obj-code
+    varshift-date
+    varshift-num
+    varshift-name
+    no-error
+  }
+
   find first ub.clients no-lock
     where ub.clients.obj-type = ub.rvs-doc.obj-type
       and ub.clients.obj-code = ub.rvs-doc.obj-code
@@ -184,7 +202,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
        error-status :get-message(1) skip
        return-value skip
        view-as alert-box error .
-       undo main-block, return error .
+       undo main-block, return error return-value + error-status :get-message(1) .
     end.
   end.
 
@@ -297,6 +315,120 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       undo, return error return-value .
     end.
   end.
+
+    if  ub.rvs-doc.status_ = {&fact} then 
+    do: 
+    v-mess = return-value.  
+    define variable v-person as character no-undo.
+    for last  c-rvs-doc no-lock where
+        c-rvs-doc.rvs-code = rvs-doc.rvs-code and
+        c-rvs-doc.corr-user-db-num = g#db-num:
+          
+       
+            for first  ub.clients where ub.clients.obj-type = {&prs} and  ub.clients.obj-code = ub.rvs-doc.boss no-lock : 
+                v-person = clients.obj-name.
+            end.
+                { str/initiator.i }
+                v-vid-action = 58 .
+                v-vid-param =
+            "Initiator=" + v-initiator + {&delim-par} +
+            "ResponsiblePerson=" + (if v-person <> ?  then v-person else "") + {&delim-par} + 
+            "SHOP_NUM=" + string(ub.rvs-doc.obj-code) + {&delim-par} +
+            "DocType=" + string(ub.rvs-doc.rvs-type) + {&delim-par} +
+                    
+            "DocNum=" + string(ub.rvs-doc.rvs-code) + {&delim-par} +
+            "FactDate=" + (if ub.rvs-doc.status_ = {&fact} then string(rvs-doc.fact-date) else "") + {&delim-par} +
+            /*                    "ShiftNum=" + string(ub.rvs-doc.shift-num) + {&delim-par} +  */
+            /*                    "ShiftDate=" + string(ub.rvs-doc.shift-date) + {&delim-par} +*/
+            /*              "ShiftNumCurr=" + string(ub.c-rvs-doc.shift-num) + {&delim-par} +  */
+            /*              "ShiftDateCurr=" + string(ub.c-rvs-doc.shift-date) + {&delim-par} +*/
+            "SHIFT_NUM_DOC=" + (if string( ub.rvs-doc.shift-num) = ? then '' else string( ub.rvs-doc.shift-num)) + (if string( ub.rvs-doc.shift-date) = ? then '' else string( ub.rvs-doc.shift-date , "99999999" )) + {&delim-par} +  
+            "SHIFT_NUM=" + (if string(varshift-num) = ? then '' else string(varshift-num)) + (if string(varshift-date) = ? then '' else string(varshift-date, "99999999")) + {&delim-par} +
+            "StatusOld=" + string(buf-old_rvs-doc.status_) + {&delim-par} +
+            "StatusNew=" + string(ub.rvs-doc.status_) + {&delim-par} +
+            "RESULT=" + string( 0 ) + {&delim-par} + 
+            "Description=" + v-mess no-error.
+
+                run trg/userlog.p (
+                    input {&nwsdochs_action_update}
+                    , input {&table_c-rvs-doc}
+                    , input ( buffer ub.c-rvs-doc :handle )
+                    , input v-vid-action
+                    , input v-vid-param
+                    ) no-error.
+                if error-status :error
+                    then 
+                do:
+                   return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                        , {&new-line}
+                        , vss-workfile
+                        , return-value
+                        , error-status :get-message ( 1 ) ).
+                end.
+            end.
+          
+        for each rvs-line no-lock
+            where rvs-line.rvs-code = ub.rvs-doc.rvs-code
+            on error undo, return error return-value
+            :
+            find first rvs-line-attr no-lock
+                where rvs-line-attr.obj-code  = rvs-line.obj-code
+                and rvs-line-attr.obj-type  = rvs-line.obj-type
+                and rvs-line-attr.gds-code  = rvs-line.gds-code
+                and rvs-line-attr.pl-code   = rvs-line.pl-code
+                and rvs-line-attr.rvs-code  = rvs-line.rvs-code
+                and rvs-line-attr.attr-code = "CriticalDif" no-error.
+            if available rvs-line-attr then
+            do:
+                   
+
+                v-vid-action = 56 .
+                v-vid-param = 
+                             "Initiator=" + v-initiator + {&delim-par} +
+            "SHOP_NUM=" + string(ub.rvs-doc.obj-code) + {&delim-par} +
+            "DocType=" + string(ub.rvs-doc.rvs-type) + {&delim-par} +
+            "DocNum=" + string(ub.rvs-doc.rvs-code) + {&delim-par} +
+            "SHIFT_NUM_DOC=" + (if string( ub.rvs-doc.shift-num) = ? then '' else string( ub.rvs-doc.shift-num)) + (if string( ub.rvs-doc.shift-date) = ? then '' else string( ub.rvs-doc.shift-date , "99999999" )) + {&delim-par} +  
+            "SHIFT_NUM=" + (if string(varshift-num) = ? then '' else string(varshift-num)) + (if string(varshift-date) = ? then '' else string(varshift-date, "99999999")) + {&delim-par} +
+ 
+            "PlCode=" + string( rvs-line.pl-code) + {&delim-par} +
+            "RESULT=0" + {&delim-par} +
+/*            "Density=" + string(  rvs-line.density ) + {&delim-par} +*/
+            "Temperature=" + string( rvs-line.state-temperature) + {&delim-par} +
+            "StateDensity=" + string(  rvs-line.state-density) + {&delim-par} +
+            "StateMeasureQnty=" + string(   rvs-line.state-measure-qnty  ) + {&delim-par} + 
+            "StateBruttoQnty=" +  string( rvs-line.state-brutto-qnty ) + {&delim-par} +
+            "StateMeasureCliQnty=" + string( rvs-line.state-measure-cli-qnty)  + {&delim-par} +
+            "StateBruttoCliQnty=" + string( rvs-line.state-brutto-cli-qnty ) +  {&delim-par} +
+            "StateLevelTotal=" + string(  rvs-line.state-level-total) +  {&delim-par} +
+            "StateLevelPetrol=" + string(   rvs-line.state-level-petrol  ) +  {&delim-par} + 
+            "StateLevelWater=" + string(  rvs-line.state-level-water    ) +  {&delim-par} +  
+            "StateMeasureTcQnty=" + string(   rvs-line.state-measure-tc-qnty  ) +   {&delim-par} +  
+            "StateBruttoTcQnty=" + string(    rvs-line.state-brutto-tc-qnty ) +   {&delim-par} +  
+            "CriticalDiff=" + string(rvs-line-attr.attr-value) + {&delim-par} +
+                        
+            "Description=".
+            
+
+                run trg/userlog.p (
+                    input {&nwsdochs_action_update}
+                    , input {&table_rvs-doc}
+                    , input ( buffer ub.rvs-doc :handle )
+                    , input v-vid-action
+                    , input v-vid-param
+                    ) no-error.
+                if error-status :error
+                    then
+                do:
+                    return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                        , {&new-line}
+                        , vss-workfile
+                        , return-value
+                        , error-status :get-message ( 1 ) ).
+                end.
+            end.
+        end.
+    end.
   
   /* проверка на воду и отправка емайлов */
   if ub.rvs-doc.status_ = {&fact} and g#news then do:

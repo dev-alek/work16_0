@@ -79,6 +79,12 @@ on error undo, return error
   define variable v-var-level     as integer    no-undo .
   define variable p-ok            as logical    no-undo .
   define variable full-grp-name   as character  no-undo .
+  define VARIABLE v-izlish        as logical    no-undo .   
+  define buffer buf_parts         for ub.parts .
+  
+  define variable v-tth             as handle no-undo .	
+  define variable v-type            as character no-undo .  
+  
 
   { gbl/currsysk.i
     v-sys-key
@@ -126,12 +132,17 @@ on error undo, return error
     field   empty-scale       as logical
     field   Price-after       as decimal
     field   a-qnty            as decimal
+    field   aa-qnty           as decimal
     field   a-qnty1           as decimal
     field   a-stoim           as decimal
+    field   aa-stoim          as decimal
     field   price-befor       as decimal
+    field   price             as decimal
     field   b-qnty            as decimal
+    field   bb-stoim          as decimal
     field   b-qnty1           as decimal
     field   b-stoim           as decimal
+    field   bb-price          as decimal
     field   ubl               as decimal
     field   inv-peresort-qnty as decimal
     INDEX pi  IS PRIMARY   artic prod-type prod-code
@@ -241,6 +252,9 @@ on error undo, return error
   define variable sym13 as character initial ":"   no-undo.
   define variable sym14 as character initial ":"   no-undo.
   define variable sym15 as character initial ":"   no-undo.
+  define variable sym16 as character initial ":"   no-undo.
+  define variable sym17 as character initial ":"   no-undo.
+  define variable sym18 as character initial ":"   no-undo.
 
   FUNCTION f-wp-qnty returns character ( INPUT p-dec as decimal ) :
     define variable pr as character no-undo .
@@ -404,7 +418,21 @@ DEFINE FRAME sl-gold
     tdoc-date = (if buf_trn-doc.status_ <> {&fact} then buf_trn-doc.doc-date else buf_trn-doc.fact-date)
     tdoc-code = buf_trn-doc.doc-code
   .
-
+      run adm/shattri.p (
+        input "get":U
+        ,input buf_trn-doc.obj-type
+        ,input buf_trn-doc.obj-code
+        ,input {&attr-inv-obj}
+        ,input  "izlcstpr"
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-izlish
+        ,output v-type
+        ,INPUT-OUTPUT table-handle v-tth
+        ) no-error .
+        
   define variable v-host-code as integer   no-undo .
   define variable v-curr-code as integer   no-undo .
 
@@ -649,7 +677,7 @@ procedure print-line :
       when "invent-gold" THEN DO:  { rep/inv31.i invent-gold {&format-inv-gold} }  End.
       when  "sl"         THEN DO:  { rep/inv31.i sl          {&format-sl}       }  End.
       when  "sl-gold"    THEN DO:  { rep/inv31.i sl-gold     {&format-sl-gold}  }  End.
-    End.
+    End CASE.
   end.
 end procedure. /* print-line */
 

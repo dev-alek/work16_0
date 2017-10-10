@@ -88,6 +88,7 @@ define temp-table tt-place-attr
   field place-diameter as decimal
   field dead-balance as decimal
   field place-rel-error as decimal
+  field pl-twice-code like place.loc1
   field place-dens-prov as decimal
 index pi as primary unique
   pl-code
@@ -244,9 +245,10 @@ X_place.obj-code FORMAT "99999":U
 X_place.is-meas COLUMN-LABEL "Измер." FORMAT "+/-":U
 X_place.max-qnty FORMAT "->>,>>>,>>9.<<<":U
 X_place.add-qnty COLUMN-LABEL "Доп. кол-во" FORMAT "->>,>>>,>>9.<<<":U
+tt-place-attr.pl-twice-code column-label "Код сдвоенного резервуара" format "X(8)":U
 tt-place-attr.place-type      COLUMN-LABEL "Тип резервуара" FORMAT "X(14)":U
 tt-place-attr.place-Si        COLUMN-LABEL "Средство!измерения" Format ">>>,>>9":U
-tt-place-attr.place-diameter  COLUMN-LABEL "Диаметр резервуара (мм)" format ">>>,>>9.99":U
+tt-place-attr.place-diameter  COLUMN-LABEL "Диаметр резервуара (мм)" format ">,>>>,>>9":U
 tt-place-attr.dead-balance  COLUMN-LABEL "Мертвый остаток" format "->>,>>>,>>9.<<<":U
 tt-place-attr.place-rel-error COLUMN-LABEL "Относительная погрешность!составлениия калибровочной таблицы " FORMAT "9.99":U
 tt-place-attr.place-dens-prov COLUMN-LABEL "Плотность при! поверке резервуара" FORMAT "9.999999999"
@@ -637,7 +639,7 @@ ON CHOOSE OF b-level IN FRAME d-pl-list /* Градуир. */
 DO:
    define variable v-recid as recid no-undo .
    if not avail X_place then return no-apply.
-   run ref/pl-level.w   ( input parparentproc
+   run ref/pl-lvls.w   ( input parparentproc
                         , input p-obj-type
                         , input p-obj-code
                         , input X_place.pl-code
@@ -1049,6 +1051,10 @@ end.
                             do :
                                 if v-ok then tt-place-attr.place-dens-prov = decimal(v-value) .
                             end.
+                        when {&place-twice-code} then 
+                            do:
+                                if v-ok then tt-place-attr.pl-twice-code = v-value .
+                            end.
                     end case.
                 end.
             end.
@@ -1095,6 +1101,10 @@ do:
         when {&place-dens-prov} then do :
           if v-ok then tt-place-attr.place-dens-prov = decimal(v-value) .
         end.
+                         when {&place-twice-code} then 
+                            do:
+                                if v-ok then tt-place-attr.pl-twice-code = v-value .
+                            end.
       end case.
     end.
   end.

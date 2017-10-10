@@ -57,7 +57,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     define variable varinv                 as logical      no-undo initial no  .
     define variable varpercinv             as decimal      no-undo initial ?   .
     define variable varinv-set             as logical      no-undo initial no  .
-
+    define variable varrn-algo             as logical      no-undo initial no  .
+    define variable varrn-acc-ship         as decimal      no-undo .
+    define variable varcar-num             as character    no-undo .
+    
+        
     define variable is-vir as logical no-undo.
     define variable v-value as character no-undo.
     define variable v-ok as logical no-undo.
@@ -414,9 +418,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         end.
 
         case p-action :
-          when {&update} then /* Строка Накл в режиме "Изменить" */
+          when {&update} then
           do:
-           find buf_place no-lock
+              find buf_place no-lock
               where buf_place.obj-type = t-doc.obj-type
                 and buf_place.obj-code = t-doc.obj-code
                 and buf_place.pl-code  = v-pl-code
@@ -515,6 +519,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 view-as alert-box error .
               undo block_tr, return error .
             end.
+
             for each tt-meas
             :
               delete tt-meas .
@@ -929,7 +934,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             if v-setting = true
               and p-mode <> {&lookup}
               and p-stfactplvalue <> "":U
-              and p-auto-tank = true
+              and (p-auto-tank = true or p-infoSectionsTotal:IsRNAlgo)
               then 
             do:
               assign
@@ -940,6 +945,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
 
               def var v-calc-density like ub.rvs-line.state-density no-undo .
               def var v-new-sec-fact-qnty as decimal no-undo.
+              def var v-new-sec-fact-qnty-kg as decimal no-undo.
               def var v-chg-temp as logical no-undo.
               def var v-st-doc-temp as logical no-undo.
               def var infoSectionObj as class InfoSection no-undo.
@@ -949,23 +955,42 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               if infoSectionObj:TankWeight > 0 and infoSectionObj:TankVol > 0 
                 then v-calc-density = infoSectionObj:TankWeight / infoSectionObj:TankVol.
                 else v-calc-density = ?.
-
-              { str/stfactqt.i
-                p-stfactplvalue
-                infoSectionObj:DocQnty
-                infoSectionObj:DocDensity
-                0.00
-                0.00
-                infoSectionObj:TankVol
-                v-calc-density            
-                no
-                v-new-sec-fact-qnty
-                v-chg-temp
-                v-st-doc-temp
-                no-error
-              }
-              if error-status :error then do:
-                undo block_tr, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+              
+              if p-infoSectionsTotal:IsRNAlgo
+              then do:
+                assign
+                  v-calc-density = infoSectionObj:TankDensityPomi when not p-infoSectionsTotal:RdcDnstvalue = 'not'
+                  v-calc-density = infoSectionObj:TankDensity when p-infoSectionsTotal:RdcDnstvalue = 'not'.
+                p-infoSectionsTotal:RNAlgo (ii, output v-new-sec-fact-qnty-kg).
+                if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
+                then do:
+                  v-new-sec-fact-qnty = v-new-sec-fact-qnty-kg / v-calc-density.
+                  v-chg-temp = true.
+                  v-st-doc-temp = false.
+                end.
+                else do:
+                  v-st-doc-temp = true.
+                  v-chg-temp = false.
+                end.
+              end.
+              else do:
+                { str/stfactqt.i
+                  p-stfactplvalue
+                  infoSectionObj:DocQnty
+                  infoSectionObj:DocDensity
+                  0.00
+                  0.00
+                  infoSectionObj:TankVol
+                  v-calc-density            
+                  no
+                  v-new-sec-fact-qnty
+                  v-chg-temp
+                  v-st-doc-temp
+                  no-error
+                }
+                if error-status :error then do:
+                  undo block_tr, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+                end.
               end.
               
               if v-chg-temp
@@ -1001,9 +1026,18 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               v-chg =  yes.
             end.
             
-            if p-new-fact-qnty <> v-new-fact-qnty
+            
+            if v-calc-density = ? and not infoSectionsTotal:isFlagKPChg
+            then do:
+              message
+                substitute( "Невозможно рассчитать фактическое кол-во." )
+                view-as alert-box warning.
+                return.
+            end.
+            
+            if (p-new-fact-qnty <> v-new-fact-qnty
               or v-chg       =  yes
-              or v-st-doc    =  yes
+              or v-st-doc    =  yes) and not infoSectionsTotal:isFlagKPChg
             then do:
               assign
                 v-new-density = v-calc-density

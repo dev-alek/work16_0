@@ -224,7 +224,7 @@ procedure fill-table:
                     if p-value = ? then p-value = "".
                     t-report-tmp.obj-deprtmt = p-value.
                         
-                    if trn-doc.tot-fact <> ? then t-report-tmp.nakl-summ = trn-doc.tot-fact.
+                    if trn-doc.tot-fact <> ? then t-report-tmp.nakl-summ = trn-doc.tot-fact - trn-doc.discnt-rubl.
                     else t-report-tmp.nakl-summ = 0.
                     
                     { str/tdat-val.i trn-doc.doc-code {&trdcattr-deliv}       p-value p-type }
@@ -339,7 +339,7 @@ Report:worksheet-header("Дата печати: " + string(cur-time-date())).
 Report:worksheet-header("end").     /*Конец шапки отчета*/ 
 Report:table-columns("60,60,60,60,150,120,110,90,90,70,70,60,110,140").    /* Начало таблицы, задаем размеры колонок */
 Report:table-types = "String,String,String,String,String,String,String,String,String,Number,Number,Number,String,String".   /* Типы данных в таблице */
-Report:table-header("Дата доставки|Время доставки|Номер документа|Статус документа|Адрес доставки|Наименование клиента|Контактное лицо|Контактный телефон|Подразделение|Сумма по накладной|Сумма доставки|Количество мест|Описание груза|Примечание","40","4").    /* Шапка таблицы */ 
+Report:table-header("Дата доставки|Время доставки|Номер документа|Статус документа|Адрес доставки|Наименование клиента|Контактное лицо|Контактный телефон|Подразделение|Сумма по накладной с учетом скидок|Сумма доставки|Количество мест|Описание груза|Примечание","60","4").    /* Шапка таблицы */ 
 
 for each t-report-tmp no-lock by t-report-tmp.deliv-date:
     tmp-date = "Отсутствует".

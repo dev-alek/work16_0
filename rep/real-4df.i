@@ -29,6 +29,12 @@ FIELD netto as decimal  /*это всегда base*/
 FIELD out-name as character format "X(20)"
 FIELD is-pay as logical
 /*счетчик внутри товара*/
+&if not "{3}" = "bge" &then
+FIELD discnt-type   as integer
+FIELD brutto as decimal 
+FIELD discount-sum as decimal
+FIELD chk-qnty as int
+&endif
 FIELD ii as integer
 &if "{3}" = "bge" &then
 FIELD pay-desk as integer
@@ -41,6 +47,9 @@ INDEX pi IS UNIQUE PRIMARY
       pay-desk
 &endif
       cpay-code
+&if not "{3}" = "bge" &then
+	  discnt-type	
+&endif
       curr-code
 &if "{3}" = "bge" &then
       prefix
@@ -48,7 +57,7 @@ INDEX pi IS UNIQUE PRIMARY
       is-pay DESCENDING
 INDEX vi
 &if not "{3}" = "bge" &then
-IS UNIQUE
+/*IS UNIQUE*/
 &endif
       gds-code
       ii

@@ -276,6 +276,10 @@ on error undo, return error
 
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-chk-doc-attr         ":U, input "c-chk-doc-attr              ":U, input "кассового чека или кассового чека МЦ            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
 
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-chk-title            ":U, input "c-chk-title                 ":U, input "кассового чека матценностей                     ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-chk-title            ":U, input "c-chk-inst                  ":U, input "кассового чека матценностей                     ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-chk-title            ":U, input "c-chk-par                   ":U, input "кассового чека матценностей                     ", input "купюрности матценности                                            ":U, input v-err-msg, output v-err-msg ).
+
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-cli-grp              ":U, input "c-cli-grp                   ":U, input "                                                ", input "группы клиентов                                                   ":U, input v-err-msg, output v-err-msg ).
 
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-condition-keeping    ":U, input "c-condition-keeping         ":U, input "                                                ", input "условий хранени                                                   ":U, input v-err-msg, output v-err-msg ).
@@ -337,6 +341,8 @@ on error undo, return error
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-trn-doc              ":U, input "c-parts-root                ":U, input "складского документа                            ", input "порождающих партий                                                ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-trn-doc              ":U, input "c-clc-sum                   ":U, input "складского документа                            ", input "сумм в расчетах по накладной                                      ":U, input v-err-msg, output v-err-msg ).
 
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "trn-doc                ":U, input "trn-doc                     ":U, input "складского документа                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-ext-system           ":U, input "c-ext-system                ":U, input "внешней системы OpenXML                         ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-ext-system           ":U, input "c-esys-datatype-exp         ":U, input "внешней системы OpenXML                         ", input "типа данных экспорта                                              ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-ext-system           ":U, input "c-esys-datatype-imp         ":U, input "внешней системы OpenXML                         ", input "типа данных импорта                                               ":U, input v-err-msg, output v-err-msg ).
@@ -347,6 +353,15 @@ on error undo, return error
 
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fbr-doc              ":U, input "c-fbr-doc                   ":U, input "документа производства                          ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fbr-doc              ":U, input "c-fbr-line                  ":U, input "документа производства                          ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
+
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-sht-hist             ":U, input "c-sht-hist                  ":U, input "смены                                           ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-sht-hist             ":U, input "c-sht-hist-line             ":U, input "смены                                           ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
+
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "shift-obj              ":U, input "shift-obj                   ":U, input "смены                                           ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "shift-obj              ":U, input "shift-staff                 ":U, input "смены                                           ", input "персонала                                                         ":U, input v-err-msg, output v-err-msg ).
+
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-usr-hist                  ":U, input "времени входа                                   ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-user-login                ":U, input "логина пользователя системы                     ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
 
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fbr-pln              ":U, input "c-fbr-pln                   ":U, input "документа план-меню                             ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fbr-pln              ":U, input "c-fbr-pln-line              ":U, input "документа план-меню                             ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
@@ -374,7 +389,7 @@ on error undo, return error
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fin-statement        ":U, input "c-fin-statement             ":U, input "банковских выписок                              ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fin-statement        ":U, input "c-fin-statement-attr        ":U, input "банковских выписок                              ", input "атрибутов                                                         ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fin-statement        ":U, input "c-fin-statement-line        ":U, input "банковских выписок                              ", input "строк                                                             ":U, input v-err-msg, output v-err-msg ).
-
+    
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-gds-prt              ":U, input "c-gds-prt                   ":U, input "признаков товаров                               ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
 
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-group-period-validity":U, input "c-group-period-validity     ":U, input "группы сроков хранения                          ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
@@ -398,6 +413,8 @@ on error undo, return error
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-price-doc            ":U, input "c-price-doc                 ":U, input "документа переоценки                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-price-doc            ":U, input "c-price-list                ":U, input "документа переоценки                            ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-price-doc            ":U, input "c-price-list-attr           ":U, input "документа переоценки                            ", input "атрибута строки                                                   ":U, input v-err-msg, output v-err-msg ).
+
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "price-doc              ":U, input "price-doc                   ":U, input "документа переоценки                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
 
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-price-list-type      ":U, input "c-price-list-type           ":U, input "типа прайс-листа                                ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-price-list-type      ":U, input "c-price-list-type-attr      ":U, input "типа прайс-листа                                ", input "атрибута                                                          ":U, input v-err-msg, output v-err-msg ).
@@ -457,6 +474,9 @@ on error undo, return error
 
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-wth-ser              ":U, input "c-wth-ser                   ":U, input "маски (серии) матценностей                      ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-wth-ser              ":U, input "c-wth-ser-attr              ":U, input "маски (серии) матценностей                      ", input "атрибутов                                                         ":U, input v-err-msg, output v-err-msg ).
+    
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "rvs-doc              ":U, input "rvs-doc                   ":U, input "документа сверки                                ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "rvs-doc              ":U, input "rvs-line                   ":U, input "документа сверки                                ", input " строки                                                               ":U, input v-err-msg, output v-err-msg ).
 
     if v-err-msg <> "":U
     then do:

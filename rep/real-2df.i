@@ -27,9 +27,18 @@ FIELD curr-code as integer
 FIELD qnty1 as decimal
 FIELD qnty2 as decimal
 FIELD netto as decimal  /*это всегда base*/
+&if not "{3}" = "bge" &then
+FIELD brutto as decimal  /*это всегда base*/
+FIELD discount-sum as decimal
+FIELD chk-qnty as int  /*это всегда base*/
+&endif
 FIELD out-name as character format "X(18)"
 FIELD is-pay as logical
+/*FIELD jj as integer*/
 FIELD ii as integer
+&if not "{3}" = "bge" &then
+field discnt-type as integer
+&endif
 &if "{3}" = "bge" &then
 FIELD pay-desk as integer
 &if "{4}" = "pump" &then
@@ -67,9 +76,13 @@ INDEX pi IS
       is-pay DESCENDING
 INDEX vi
 &if not "{3}" = "bge" &then
-IS UNIQUE
+/* IS UNIQUE */
 &endif
       gds-code
+&if not "{3}" = "bge" &then
+      cpay-code
+      discnt-type
+&endif
       ii
 .
 

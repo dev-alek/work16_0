@@ -262,8 +262,7 @@ FOR EACH t-4 No-LOCK,
       pol2 = t-4.main-code
       pol3 = t-4.last-price
       main-line = yes
-      a-netto = a-netto + treal-4.netto
-      a-qnty1 = a-qnty1 + treal-4.qnty1
+
       .
       {&PutExcel}
       pol1 {&tabulation}
@@ -282,7 +281,12 @@ FOR EACH t-4 No-LOCK,
    pol5 = treal-4.qnty1
    pol6 = treal-4.netto
    .
-
+   if treal-4.discnt-type = -99 then do:
+	assign
+      a-netto = a-netto + treal-4.netto
+      a-qnty1 = a-qnty1 + treal-4.qnty1
+	.
+    end. 	
    if treal-4.cpay-code <> 0 then dO:
     /*создадим записи по подитогам по типам оплат*/
     FIND FIRST actreal-4 WHERE
@@ -378,6 +382,7 @@ FOR EACH t-4 No-LOCK,
         areal-no-pay-qnty1 = 0
         areal-no-pay-netto = 0
         .
+RELEASE actreal-4 no-error.
         FOR EACH actreal-4 No-LOCK
         BREAK
         BY actreal-4.gds-code

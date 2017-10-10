@@ -193,7 +193,8 @@ DEFINE BUTTON BUTTON-2
 DEFINE VARIABLE rep-shift-format AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 1 
      VIEW-AS COMBO-BOX INNER-LINES 5
      LIST-ITEM-PAIRS "Стандарт",1,
-                     "Форма 1",2
+                     "Форма 1",2,
+                     "Форма 3",3
      DROP-DOWN-LIST
      SIZE 23 BY 1 NO-UNDO.
 

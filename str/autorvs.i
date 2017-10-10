@@ -26,7 +26,7 @@ function autorvs return char
 
     find first r-d no-lock where recid(r-d) = p-rec no-error.
         
-    find first buf_doc-attr where r-d.rvs-code = buf_doc-attr.doc-code and buf_doc-attr.attr-code = "rvs-auto" and buf_doc-attr.attr-value = "Yes" no-error. 
+    find first buf_doc-attr no-lock where r-d.rvs-code = buf_doc-attr.doc-code and buf_doc-attr.attr-code = "rvs-auto" and buf_doc-attr.attr-value = "Yes" no-error. 
     
     
     if available buf_doc-attr then 

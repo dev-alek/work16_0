@@ -64,9 +64,21 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-noanshftstaff as logical no-undo .
 define variable v-tth as handle no-undo .
 
-DEFINE BUFFER next-shift-obj for ub.shift-obj.
-DEFINE BUFFER previous-shift-obj for ub.shift-obj.
-DEFINE BUFFER previous-shift-obj2 for ub.shift-obj.
+define variable par-type as character no-undo .
+define variable par-is-cctv as character no-undo .
+define variable is-cctv as logical no-undo .
+
+define variable v-vid-action        as integer no-undo .
+define variable v-vid-ok            as logical  no-undo .
+define variable v-vid-mes           as character no-undo .
+define variable v-vid-param         as longchar no-undo .
+
+define variable v-shift-staff-list  as character no-undo .
+define variable v-shift-manager     as character no-undo .
+
+DEFINE BUFFER next-shift-obj for shift-obj.
+DEFINE BUFFER previous-shift-obj for shift-obj.
+DEFINE BUFFER previous-shift-obj2 for shift-obj.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -373,6 +385,60 @@ DO:
     END.
     run fill-db in this-procedure no-error.
     if error-status:error then return no-apply.
+    
+   
+    for each ub.shift-staff no-lock where ub.shift-staff.obj-type = pobj-type
+                                      and ub.shift-staff.obj-code = pobj-code
+                                      and ub.shift-staff.shift-num = pshift-num
+                                      and ub.shift-staff.shift-date = pshift-date
+                                      and ub.shift-staff.next-shift = no :
+        if ub.shift-staff.staff-role
+        then
+        assign
+            v-shift-manager = ub.shift-staff.name
+        .
+        else
+        assign
+            v-shift-staff-list = v-shift-staff-list + (if v-shift-staff-list = "" then "" else ", ") + ub.shift-staff.name
+        .    
+        run trg/userlog.p (
+              input {&nwsdochs_action_update}
+            , input {&table_shift-staff}
+            , input ( buffer ub.shift-staff :handle )
+            , input ?
+            , input ""
+        ) no-error.
+        if error-status :error
+        then do:
+            undo, return no-apply .
+        end.                              
+    end.
+    
+    find first ub.shift-obj no-lock where ub.shift-obj.obj-type = pobj-type
+                                      and ub.shift-obj.obj-code = pobj-code
+                                      and ub.shift-obj.shift-num = pshift-num
+                                      and ub.shift-obj.shift-date = pshift-date .
+    
+    v-vid-action = 52 .
+    v-vid-param = "SHOP_NUM=" + string(ub.shift-obj.obj-code) + {&delim-par} +
+                  "SHIFT_NUM=" + string(ub.shift-obj.shift-num) + string(ub.shift-obj.shift-date, "99999999") + {&delim-par} +
+                  "ShiftManager=" + v-shift-manager + {&delim-par} +
+                  "ShiftStaff=" + v-shift-staff-list + {&delim-par} +
+                  "RESULT=0" + {&delim-par} + 
+                  "Description=".
+                  
+    run trg/userlog.p (
+          input {&nwsdochs_action_update}
+        , input {&table_shift-obj}
+        , input ( buffer ub.shift-obj :handle )
+        , input v-vid-action
+        , input v-vid-param
+    ) no-error.
+    if error-status :error
+    then do:
+        undo, return no-apply .
+    end. 
+
 END.
 
 /* _UIB-CODE-BLOCK-END */

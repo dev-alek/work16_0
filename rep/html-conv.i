@@ -26,6 +26,7 @@ function fnc-convert-dot-to-colon returns character
     define variable result as character no-undo.
     define variable v-str-result as character no-undo.
 /*message "dbg-p-data = " p-data skip "p-accur = " p-accur view-as alert-box.*/
+    if p-data = ? then p-data = 0 .
     p-data = round(p-data, p-num). /* „тобы не выйти случайно за рамки формата числа при выводе (несоотвесвие формата результата и формата отображени€ - приводит к ош) */
     v-str-result = trim(replace(string(p-data, p-accur), ".", ",")).
 

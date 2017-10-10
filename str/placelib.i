@@ -22,7 +22,8 @@ Creation date: 12/22/11
 &global-define place-ratio-error "place-ratio-error"  /*относительная погрешность составления калибровочной таблицы резервуара*/
 &global-define place-dens-prov         "dens-prov"         /*плотность при поверке резервуара*/
 &global-define place-virtual     "place-virtual"     /*виртуальный резервуар*/
-&global-define list-place-attr   'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov,place-virtual':u /*список атрибутов резервуара*/
+&global-define place-twice-code   "place-twice-code" /*Код сдвоенного резервуара*/
+&global-define list-place-attr   'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov,place-virtual,place-twice-code':u /*список атрибутов резервуара*/
 
 
 procedure placelib_write-attr:

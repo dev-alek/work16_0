@@ -56,6 +56,8 @@ on error undo, return error
               input {&nwsdochs_action_delete}
             , input {&table_c-fbr-doc}
             , input ( buffer ub.c-fbr-doc :handle )
+            , input ?
+            , input ""
         ) no-error.
         if error-status :error
         then do:

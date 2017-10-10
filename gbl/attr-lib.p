@@ -662,6 +662,18 @@ end.
 &scop manual-edit-attr-bge-exp-malina-last-shift 0
 &scop batch-edit-attr-bge-exp-malina-last-shift 0
 
+/* Дата и номер последней выгруженной смены в систему АТД */
+&scop type-attr-bge-exp-last-atd {&type-char}
+&scop format-attr-bge-exp-last-atd "X(20)"
+&scop label-attr-bge-exp-last-atd "Дата и номер последней выгруженной смены в систему АТД "
+&scop tooltip-attr-bge-exp-last-atd "Дата и номер последней выгруженной смены в систему АТД "
+&scop user-can-edit-attr-bge-exp-last-atd false
+&scop output-display-attr-bge-exp-last-atd true
+&scop other-attr-bge-exp-last-atd '':u
+&scop news-attr-bge-exp-last-atd false
+&scop manual-edit-attr-bge-exp-last-atd 0
+&scop batch-edit-attr-bge-exp-last-atd 0
+
 /* Дата ЕГРИП */
 &scop type-attr-egrip-date {&type-char}
 &scop format-attr-egrip-date "X(13)"
@@ -1027,6 +1039,8 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-bge-sap-sng-last-shift
       {&attr-temp-full-code}
+      &scop attr-code attr-bge-exp-last-atd
+      {&attr-temp-full-code}
       &scop attr-code attr-bge-exp-malina-last-shift
       {&attr-temp-full-code}      
       &scop attr-code attr-egrip-date
@@ -1169,6 +1183,8 @@ procedure clntattr-tooltip :
       &scop attr-code attr-bge-incr-cur
       {&attr-temp-code}
       &scop attr-code attr-bge-sap-sng-last-shift
+      {&attr-temp-code}
+      &scop attr-code attr-bge-exp-last-atd
       {&attr-temp-code}
       &scop attr-code attr-bge-exp-malina-last-shift
       {&attr-temp-code}      
@@ -1519,6 +1535,8 @@ procedure clntattr-news :
       &scop attr-code attr-bge-incr-cur
       {&attr-news-code}
       &scop attr-code attr-bge-sap-sng-last-shift
+      {&attr-news-code}
+      &scop attr-code attr-bge-exp-last-atd
       {&attr-news-code}
       &scop attr-code attr-bge-exp-malina-last-shift
       {&attr-news-code} 
@@ -4394,7 +4412,7 @@ character~
 &scop user-can-edit-attr-petrol   true
 &scop output-display-attr-petrol  true
 &scop other-attr-petrol 'spr-ext=adm\shattrpt.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character':U
+&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character,integer,integer,logical,character,character':U
 &scop prop-label-list-attr-petrol '~
 Расхождение в инвентаризации по сверке делать без учета погрешности измерения,~
 Алгоритм вычисления плотности для продаж,~
@@ -4406,7 +4424,12 @@ character~
 Контрагент для списания ЕУ при инвентаризации топлива по сверке,~
 В документы по умолчанию ставится плотность и темп. из предыдущего документа,~
 Настройки инвентаризации по сверке,~
-Температура к которой приводится плотность и объем (°С),При воде в сверке отправлять сообщения на список адресов~
+Температура к которой приводится плотность и объем (°С),При воде в сверке отправлять сообщения на список адресов,~
+Допустимый % расхождения массы в резервуаре,~
+Алгоритм принятия топлива к учету,~
+Обязательный выбор автотранспорта из справочника,~
+Погрешность изм массы для горизонтальных резер,~
+Погрешность изм массы для вертикальных резер~
 '
 &scop global-attr-petrol true
 &scop host-attr-petrol true
@@ -10895,15 +10918,15 @@ end procedure.
 &scop manual-edit-attr-doc-tickets-o  1
 &scop batch-edit-attr-doc-tickets-o  1
 
-&glob type-attr-normal-wastage-o {&type-dec}
-&glob format-attr-normal-wastage-o  ">9.999"
+&glob type-attr-normal-wastage-o {&type-char}
+&glob format-attr-normal-wastage-o  "X(21)"
 &glob label-attr-normal-wastage-o   "Нормы естественной убыли для топлива кг/т"
 &glob tooltip-attr-normal-wastage-o   "Нормы естественной убыли для топлива кг/т"
 &glob user-can-edit-attr-normal-wastage-o  true
 &glob output-display-attr-normal-wastage-o  true
-&glob other-attr-normal-wastage-o  "check=gds-obj-attr_check-ptrl-divis"
+&glob other-attr-normal-wastage-o  "spr=gds-obj-normal-wastage"
 &glob news-attr-normal-wastage-o true
-&glob copy-attr-normal-wastage-o  false
+&glob copy-attr-normal-wastage-o  true
 &scop manual-edit-attr-normal-wastage-o 1
 &scop batch-edit-attr-normal-wastage-o  1
 
@@ -11347,6 +11370,35 @@ DEFINE VARIABLE v-value as character no-undo .
 
 end procedure. /* gds-obj-gds-margin */
 
+procedure gds-obj-normal-wastage :
+define input parameter p-gds-code like ub.gds-obj-attr.gds-code no-undo .
+define input parameter p-obj-type like ub.gds-obj-attr.obj-type no-undo .
+define input parameter p-obj-code like ub.gds-obj-attr.obj-code no-undo .
+define input-output parameter p-value as character no-undo .
+define output parameter p-setted as logical no-undo .
+DEFINE VARIABLE v-value as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    assign
+    v-value = p-value.
+    run ref/gdswastage.w (
+                    input p-gds-code
+                   ,input p-obj-type
+                   ,input p-obj-code
+                   ,input-output v-value) no-error .
+                   
+    if p-value <> v-value then do:
+      assign
+      p-setted = yes
+      p-value = v-value
+      .
+    end.
+  end.
+
+end procedure. /* gds-obj-normal-wastage */
+
 procedure gds-obj-doc-tickets :
 define input parameter p-gds-code like ub.gds-obj-attr.gds-code no-undo .
 define input parameter p-obj-type like ub.gds-obj-attr.obj-type no-undo .
@@ -11543,6 +11595,72 @@ p-range-margin  = (if v-exists-margin then (- 1) else p-range-margin)
 p-range-increase = (if v-exists-increase then (- 1) else p-range-increase)
 p-range-rmethod  = (if v-exists-rmethod then  (- 1 )else p-range-rmethod)
 .
+end. /*doe*/
+end procedure.
+
+
+procedure gds-o-normal-wastage-value :
+do
+on error undo, return error
+:
+  define input parameter p-gds-code  as integer      no-undo.
+  define input parameter p-obj-type  as character    no-undo.
+  define input parameter p-obj-code  as integer      no-undo.
+  define input parameter p-date      as date      no-undo.
+  define output parameter p-normal-wastage-winter as decimal      no-undo init ?. /*ест. убыль зимой*/
+  define output parameter p-normal-wastage-summer as decimal      no-undo init ?. /*ест. убыль летом*/
+  define output parameter p-normal-wastage-date   as decimal      no-undo init ?. /*ест. убыль на указанную дату если p-date не ?*/
+  define variable v-mes as character no-undo .
+  
+  define buffer buf_goods for ub.goods.
+  define buffer buf_normal-wastage-gds-obj-attr      for ub.gds-obj-attr.
+  
+  find first buf_goods no-lock where
+             buf_goods.gds-code = p-gds-code no-error .
+  if not avail buf_goods then do:
+    message
+      skip "Не удалось найти товар с кодом" p-gds-code
+      view-as alert-box error .
+    undo, return error .
+  end.
+
+  find first buf_normal-wastage-gds-obj-attr no-lock
+      where buf_normal-wastage-gds-obj-attr.gds-code = p-gds-code
+        and buf_normal-wastage-gds-obj-attr.attr-code = {&attr-normal-wastage-o}
+        and buf_normal-wastage-gds-obj-attr.obj-type  = p-obj-type
+        and buf_normal-wastage-gds-obj-attr.obj-code  = p-obj-code
+  no-error .
+  if available buf_normal-wastage-gds-obj-attr then do:
+
+    define variable v-temp-str1 as character no-undo .
+    v-temp-str1 = buf_normal-wastage-gds-obj-attr.attr-value.
+    
+    if num-entries (v-temp-str1, ";") = 2 then do:
+      assign
+        p-normal-wastage-summer   =  decimal(trim(entry(1, v-temp-str1, ";":U)))
+        p-normal-wastage-winter   =  decimal(trim(entry(2, v-temp-str1, ";":U)))
+      .
+    end.
+    else do:
+      assign
+        p-normal-wastage-summer   =  decimal(trim(v-temp-str1))
+        p-normal-wastage-winter   =  decimal(trim(v-temp-str1))
+      .
+    end.
+    if p-date <> ?
+    then do:
+      if 3 < month (p-date) and month (p-date) < 10
+      then do:
+        p-normal-wastage-date = p-normal-wastage-summer.
+      end.
+      else do:
+        p-normal-wastage-date = p-normal-wastage-winter.
+      end.
+       
+    end.
+    
+  end.
+
 end. /*doe*/
 end procedure.
 
@@ -12634,6 +12752,20 @@ end procedure.
 &scop manual-edit-attr-ora-exp-seq 0
 &scop batch-edit-attr-ora-exp-seq 0
 
+
+/* Номер сообщения видеонаблюдения */
+&scop type-attr-mess-id-video {&type-log}
+&scop format-attr-mess-id-video "+/-"
+&scop label-attr-mess-id-video "Номер сообщения видеонаблюдения"
+&scop tooltip-attr-mess-id-video "Номер сообщения видеонаблюдения"
+&scop user-can-edit-attr-mess-id-video false
+&scop output-display-attr-mess-id-video true
+&scop other-attr-mess-id-video '':u
+&scop news-attr-mess-id-video no
+&scop manual-edit-attr-mess-id-video 0
+&scop batch-edit-attr-mess-id-video 0
+
+
 /* сюда добавлять новые параметры атрибутов баз данных */
 
 &scop attr-temp-code ~
@@ -12728,6 +12860,9 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-ora-exp-seq
       {&attr-temp-full-code}
+      &scop attr-code attr-mess-id-video
+      {&attr-temp-full-code}
+
 
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
@@ -12784,6 +12919,8 @@ procedure db-attr-tooltip :
       &scop attr-code attr-schedule-free
       {&attr-temp-code}
       &scop attr-code attr-ora-exp-seq
+      {&attr-temp-code}
+      &scop attr-code attr-mess-id-video
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -13030,6 +13167,8 @@ procedure db-attr-news :
       &scop attr-code attr-schedule-free
       {&attr-news-code}
       &scop attr-code attr-ora-exp-seq
+      {&attr-news-code}
+      &scop attr-code attr-mess-id-video
       {&attr-news-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */

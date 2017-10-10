@@ -968,6 +968,16 @@ define variable vss-description as character no-undo init "Информация об объекте
   "yes"
 }
 
+{ gbl/menuload.i
+  {&bef-menuload_adm_impexp}
+  "'Импорт кассиров'"
+  "'utl/imp-cashier.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
 
 
 { gbl/menuload.i

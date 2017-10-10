@@ -1,13 +1,19 @@
- 
-/*------------------------------------------------------------------------
-   File        : InfoSection
-   Purpose     : 
-   Syntax      : 
-   Description : 
-   Author(s)   : asmorozov
-   Created     : Thu Oct 08 20:06:08 MSK 2015
-   Notes       : 
- ----------------------------------------------------------------------*/
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Класс значений по секции топлива.
+
+Автор: Морозов Александр Сергеевич
+Дата создания: 09/29/2015
+Author: Alexandr Morozov
+Creation date: 09/29/2015
+
+*/ 
 
 using Progress.Lang.*.
 using ibs.th.str.*.
@@ -139,6 +145,63 @@ class ibs.th.str.InfoSection:
     set.
     
   define property CliQnty as decimal no-undo
+    get.
+    set.
+  
+   
+  define property KolProb as decimal no-undo
+    get.
+    set.
+
+  define property DateProb as date no-undo
+    get.
+    set.
+    
+  define property HourProb as integer no-undo
+    get.
+    set.
+  
+  define property MinProb as integer no-undo
+    get.
+    set.
+
+  define property NumPrintProb as character no-undo
+    get.
+    set.
+    
+  define property RnAlgo as character no-undo
+    get.
+    set.
+
+  define property AccAbsFact as decimal no-undo
+    get.
+    set.
+
+  define property NaturalLoss as decimal no-undo
+    get.
+    set.
+
+  define property Deficit as decimal no-undo
+    get.
+    set.
+
+  define property Excess as decimal no-undo
+    get.
+    set.
+
+  define property IsKP as logical no-undo init false
+    get.
+    set.
+
+  define property ListTank as character no-undo
+    get.
+    set.
+
+  define property TTNTemp as decimal no-undo init ?
+    get.
+    set.
+
+  define property AccPomi as decimal no-undo
     get.
     set.
 
@@ -317,7 +380,91 @@ class ibs.th.str.InfoSection:
             FactDensity = decimal (inAttrValue) 
             FactKgQnty = FactQnty * FactDensity no-error.
         end.
-        
+      when 'kol-prob' then 
+        do:
+          assign
+            KolProb = decimal (inAttrValue) no-error.
+        end.     
+      when 'num-print-prob' then 
+        do:
+          assign
+            NumPrintProb = string (inAttrValue) no-error.
+        end.        
+      when 'date-prob' then 
+        do:
+          assign
+            DateProb = date (inAttrValue) no-error.
+        end.    
+      when 'hour-prob' then 
+        do:
+          assign
+            HourProb = integer (inAttrValue) no-error.
+        end.     
+      when 'min-prob' then 
+        do:
+          assign
+            MinProb = integer (inAttrValue) no-error.
+        end.
+/*      when 'acc-comm' then                                 */
+/*        do:                                                */
+/*          assign                                           */
+/*            AccCommission = decimal (inAttrValue) no-error.*/
+/*          if error-status:error or inAttrValue = ""        */
+/*            then AccCommission = ?.                        */
+/*        end.                                               */
+/*      when 'acc-ship' then                                 */
+/*        do:                                                */
+/*          assign                                           */
+/*            AccShip = decimal (inAttrValue) no-error.      */
+/*          if error-status:error or inAttrValue = ""        */
+/*            then AccShip = 0.25.                           */
+/*        end.                                               */
+      when 'rn-algo' then 
+        do:
+          assign
+            RnAlgo = (inAttrValue) no-error.
+        end.
+      when 'dop-info' then 
+        do:
+          assign
+            AccAbsFact = decimal (entry (1, inAttrValue)) no-error.
+            NaturalLoss = decimal (entry (2, inAttrValue)) no-error.
+            Deficit = decimal (entry (3, inAttrValue)) no-error.
+            if Deficit < 0
+              then
+                assign 
+                  Deficit = abs(Deficit)
+                  Excess = 0.
+              else
+                assign 
+                  Excess = Deficit
+                  Deficit = 0.
+          if error-status:error or inAttrValue = ""
+            then AccAbsFact = ?.
+        end.
+      when 'is-kp' then 
+        do:
+          assign
+            IsKP = logical (inAttrValue) no-error.
+          if error-status:error or inAttrValue = "" or IsKP = ?
+            then IsKP = no.
+        end.
+      when 'list-tank' then 
+        do:
+          assign
+            ListTank = inAttrValue no-error.
+        end.
+      when 'ttn-temp' then 
+        do:
+          assign
+            TTNTemp = decimal (inAttrValue) no-error.
+        end.
+      when 'acc-pomi' then 
+        do:
+          assign
+            AccPomi = decimal (inAttrValue) no-error.
+        end.
+      
     end case.
 		
 

@@ -73,7 +73,7 @@ end.
 { str/getctxtp.i get }
 { gbl/fltopend.i defproc }
 
-define variable next-prev as logical   no-undo .
+define variable next-prev    as logical   no-undo .
 define variable g#report-num as integer   no-undo .
 define variable v-host-code  as integer   no-undo .
 define variable v-host-name  as character no-undo .
@@ -84,8 +84,16 @@ define variable v-pdf-db-num as integer   no-undo .
 define variable v-pdf-id     as integer   no-undo .
 define variable v-user-name  as character no-undo .
 define variable v-user-name-corr as character no-undo .
-define variable v-doc-rec as recid no-undo .
-define variable v-log-handle as handle no-undo .
+define variable v-doc-rec    as recid     no-undo .
+define variable v-log-handle as handle    no-undo .
+define variable v-mess as character no-undo .
+define variable v-vid-action        as integer no-undo .
+define variable v-vid-param         as longchar no-undo .
+define variable varoldstatus        as character no-undo .
+define variable varshift-date as date      no-undo.
+define variable varshift-num  as integer   no-undo.
+define variable varshift-name as character no-undo.
+{ str/initiator.i }
 
 { gbl/get-lgh.i  v-log-handle }
 
@@ -582,6 +590,16 @@ DO:
       end.
   end.
   /* ПРОВЕРКА ПРАВ */
+    v-mess = "".
+    varoldstatus = p-doc.status_.
+    { gbl/curshift.i
+        p-doc.obj-type
+        p-doc.obj-code
+        varshift-date
+        varshift-num
+        varshift-name
+        no-error
+      }
     run str/pr-stat.p
       ( input parParentProc
       , input v-log-handle
@@ -592,17 +610,72 @@ DO:
       , input false
       ) no-error .
     if error-status :error then do:
-        message "Ошибка закрытия переоценки " p-doc.doc-num skip
-                return-value skip
-                error-status :get-message(1)
+        v-mess = "Ошибка закрытия переоценки " + p-doc.doc-num + {&new-line} +
+          return-value + {&new-line} +
+          error-status :get-message(1).
+        message v-mess
                 "Продолжить процесс ?"
                 view-as alert-box question
                 buttons yes-no
                 update v11 as logical
                 .
                 assign mark-list = "" .
+                
+                v-vid-action = 57 .
+                v-vid-param = "Initiator=" + v-initiator + {&delim-par} +
+                              "SHOP_NUM=" + string(p-doc.obj-code) + {&delim-par} +
+                              "DocNum=" + string(p-doc.doc-num) + {&delim-par} +
+                              "DocType=" + "Переоценка" + {&delim-par} +
+                              "FactDate=" + (if string(p-doc.fact-date) = ? then '' else string(p-doc.fact-date)) + {&delim-par} +
+                              "ShiftNum=" + (if string(p-doc.shift-num) = ? then '' else string(p-doc.shift-num)) + {&delim-par} +
+                              "ShiftDate=" + (if string(p-doc.shift-date) = ? then '' else string(p-doc.shift-date)) + {&delim-par} +
+                              "ShiftNumCurr=" + (if string(varshift-num) = ? then '' else string(varshift-num)) + {&delim-par} +
+                              "ShiftDateCurr=" + (if string(varshift-date) = ? then '' else string(varshift-date)) + {&delim-par} +
+                              "StatusOld=" + varoldstatus + {&delim-par} +
+                              "StatusNew=" + string(p-doc.status_) + {&delim-par} +
+                              "RESULT=1" + {&delim-par} + 
+                              "Description=" + v-mess.
+                
+                run trg/userlog.p (
+                      input {&nwsdochs_action_update_err}
+                    , input {&table_price-doc}
+                    , input ( buffer p-doc :handle )
+                    , input v-vid-action
+                    , input v-vid-param
+                ) no-error.
+
         if v11 = false  then  return no-apply .
     end.
+    
+    if v-mess = ""
+    then do:
+      v-vid-action = 57 .
+      v-vid-param = "Initiator=" + v-initiator + {&delim-par} +
+                    "SHOP_NUM=" + string(p-doc.obj-code) + {&delim-par} +
+                    "DocNum=" + string(p-doc.doc-num) + {&delim-par} +
+                    "DocType=" + "Переоценка" + {&delim-par} +
+                    "FactDate=" + (if string(p-doc.fact-date) = ? then '' else string(p-doc.fact-date)) + {&delim-par} +
+                    "SHIFT_NUM_DOC=" + (if string(p-doc.shift-num) = ? then '' else string(p-doc.shift-num)) + (if string(p-doc.shift-date) = ? then '' else string(p-doc.shift-date, "99999999")) + {&delim-par} +
+                    "SHIFT_NUM=" + (if string(varshift-num) = ? then '' else string(varshift-num)) + (if string(varshift-date) = ? then '' else string(varshift-date, "99999999")) + {&delim-par} +
+                    "StatusOld=" + varoldstatus + {&delim-par} +
+                    "StatusNew=" + string(p-doc.status_) + {&delim-par} +
+                    "RESULT=" + {&delim-par} + 
+                    "Description=" no-error.
+      
+      find last ub.c-price-doc no-lock where ub.c-price-doc.doc-num = p-doc.doc-num no-error.   
+      if available (ub.c-price-doc)
+      then do:      
+        run trg/userlog.p (
+              input {&nwsdochs_action_update}
+            , input {&table_c-price-doc}
+            , input ( buffer ub.c-price-doc :handle )
+            , input v-vid-action
+            , input v-vid-param
+        ) no-error.
+      end.
+
+    end.
+    
   end.
   assign mark-list = "" .
   run OpenBr in this-procedure (yes, no, '':U).

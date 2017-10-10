@@ -30,6 +30,7 @@ DEFINE INPUT PARAMETER SHEET8       as logical                   no-undo.
 define input parameter pclassify    as logical                   no-undo.
 define input parameter pselectgood  as logical                   no-undo.
 define input parameter p-batch      as integer                   no-undo.
+define input parameter pdiscnt      as logical                   no-undo.
 
 define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
 define variable vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
@@ -62,7 +63,7 @@ define variable v-density    as decimal   no-undo .
 define variable v-value      as character no-undo .
 define variable v-type       as character no-undo .
 define variable v-upper-code as integer   no-undo .
-define variable v-p-accsup  as character no-undo .
+define variable v-p-accsup   as character no-undo .
 
 define buffer buf_dis-card    for ub.dis-card.
 define buffer buf_doc-line    for ub.doc-line.
@@ -73,16 +74,23 @@ define buffer buf_cash-pay    for ub.cash-pay.
 define buffer buf_chk-gds-pay for ub.chk-gds-pay.
 define buffer ras-doc         for ub.trn-doc.
 define buffer ret-doc         for ub.trn-doc.
+define buffer buf_chk-discnt  for ub.chk-discnt.
+define buffer buf_chk-gds     for ub.chk-gds.
 
-DEFINE BUFFER b-treal-2      for treal-2.
-DEFINE BUFFER b-treal-3      for treal-3.
-DEFINE BUFFER b-treal-4      for treal-4.
-define buffer buf_t-3        for t-3.
-define buffer cp-gds-treal-8 for treal-8.
-define buffer gds-treal-8    for treal-8.
-define buffer cp-treal-8     for treal-8.
-define buffer cli-treal-8    for treal-8.
-
+DEFINE BUFFER b-treal-2       for treal-2.
+DEFINE BUFFER bf-treal-2      for treal-2.
+DEFINE BUFFER b-treal-3       for treal-3.
+DEFINE BUFFER bf-treal-3      for treal-3.
+DEFINE BUFFER b-treal-4       for treal-4.
+DEFINE BUFFER bf-treal-4      for treal-4.
+define buffer buf_t-3         for t-3.
+define buffer cp-gds-treal-8  for treal-8.
+define buffer gds-treal-8     for treal-8.
+define buffer cp-treal-8      for treal-8.
+define buffer cli-treal-8     for treal-8.
+define TEMP-TABLE treal-2_1 LIKE treal-2 .
+define TEMP-TABLE treal-3_1 LIKE treal-3 .
+define TEMP-TABLE treal-4_1 LIKE treal-4 .
 /* Учет расходных материалов */
 { gbl/conf-rd.i
   "'accsup'"
@@ -105,8 +113,9 @@ define buffer cli-treal-8    for treal-8.
 { gbl/hostcode.i pobj-type pobj-code v-host-code }
 { gbl/basecode.i v-host-code v-base-code }
 
-if pclassify then do:
-  FIND FIRST t-3 where t-3.grp-code = 0 No-ERROR.
+if pclassify then 
+do:
+    FIND FIRST t-3 where t-3.grp-code = 0 No-ERROR.
 end.
 
 /*НАДО УБЕДИТЬСЯ ЧТО ВСЕ РАЗМАЗАНО!!*/
@@ -123,34 +132,64 @@ run rep/rpychk0.p ( input "r-shftc2"
                     ).
 _chk-doc:
 FOR EACH ub.chk-doc No-LOCK WHERE
-         ub.chk-doc.obj-type = pobj-type AND
-         ub.chk-doc.obj-code = pobj-code AND
-         ub.chk-doc.shift-date >= pshift-date AND
-         ub.chk-doc.shift-date <= pshift-date1 AND
-         ub.chk-doc.out-code <> ?
-:
-  if ub.chk-doc.shift-date = pshift-date  and ub.chk-doc.shift-num < pshift-num  then next _chk-doc.
-  if ub.chk-doc.shift-date = pshift-date1 and ub.chk-doc.shift-num > pshift-num1 then next _chk-doc.
-  if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next _chk-doc.
+    ub.chk-doc.obj-type = pobj-type AND
+    ub.chk-doc.obj-code = pobj-code AND
+    ub.chk-doc.shift-date >= pshift-date AND
+    ub.chk-doc.shift-date <= pshift-date1 AND
+    ub.chk-doc.out-code <> ?
+    :
+    if ub.chk-doc.shift-date = pshift-date  and ub.chk-doc.shift-num < pshift-num  then next _chk-doc.
+    if ub.chk-doc.shift-date = pshift-date1 and ub.chk-doc.shift-num > pshift-num1 then next _chk-doc.
+    if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next _chk-doc.
+    if sheet2 then 
+    do:
 
-  if sheet2 then do:
-    if lookup(string(ub.chk-doc.chk-type), {&sale-in-receipt-codes}) > 0
-    then do:
-      if v-doc-code-r <> ub.chk-doc.out-code
-      then do:
-        find first ras-doc no-lock
-          where ras-doc.doc-code = ub.chk-doc.out-code
-          no-error .
-        if not available ras-doc then do:
-          message
-          substitute("Отсутствует документ расхода по чеку &1"
-                      , ub.chk-doc.doc-code
-                      )   skip
-          "ЭКСПОРТ НЕ МОЖЕТ БЫТЬ ОСУЩЕСТВЛЕН" SKIP
-          view-as alert-box error .
-          return error .
-        end.
-        assign v-doc-code-r = ras-doc.doc-code.
+        if lookup(string(ub.chk-doc.chk-type), {&sale-in-receipt-codes}) > 0
+            then 
+        do:
+            if v-doc-code-r <> ub.chk-doc.out-code
+                then 
+            do:
+          
+                find first ras-doc no-lock
+                    where ras-doc.doc-code = ub.chk-doc.out-code
+                    no-error .
+                if not available ras-doc then 
+                do:
+                    message
+                        substitute("Отсутствует документ расхода по чеку &1"
+                        , ub.chk-doc.doc-code
+                        )   skip
+                        "ЭКСПОРТ НЕ МОЖЕТ БЫТЬ ОСУЩЕСТВЛЕН" SKIP
+                        view-as alert-box error .
+                    return error .
+                end.
+                assign 
+                    v-doc-code-r = ras-doc.doc-code.
+          
+            /*
+            first ret-doc no-lock where
+                          ret-doc.doc-code = replace(ras-doc.out-code,"у","") no-error .
+            
+            
+            if not available(ret-doc) then do:
+               find first ret-doc no-lock where
+                       ret-doc.doc-code = ras-doc.out-code no-error.
+            end.
+            
+            if not available ret-doc then do:
+              message
+              substitute("Отсутствует документ возврата &1 по чеку &2"
+                        , ras-doc.out-code
+                        , ub.chk-doc.doc-code
+                        )   skip
+              "ЭКСПОРТ НЕ МОЖЕТ БЫТЬ ОСУЩЕСТВЛЕН" SKIP
+              view-as alert-box error .
+              return error .
+              
+            end.
+            assign v-doc-code-v = ret-doc.doc-code.
+            */
         
         /*
         first ret-doc no-lock where
@@ -200,150 +239,221 @@ FOR EACH ub.chk-doc No-LOCK WHERE
           or
           (buf_chk-gds-pay.pay-code > 1 and buf_cash-pay.curr-code = buf_chk-gds-pay.curr-code)
         )*/   :
-    CASE entry(1, buf_chk-gds-pay.line-type, {&delim-par}):
-      WHEN {&petrolium} then do:
-        if sheet2 then do:
-          FIND FIRST treal-2 No-LOCK WHERE
-                    treal-2.gds-code = buf_bar-code.gds-code
-                AND treal-2.cpay-code = buf_chk-gds-pay.pay-code
-                AND treal-2.curr-code = buf_chk-gds-pay.curr-code
-                AND treal-2.is-pay = yes No-ERROR.
-          IF NOT AVAIL treal-2 then do:
-            FIND last b-treal-2 No-LOCK WHERE
-                      b-treal-2.gds-code = buf_bar-code.gds-code use-index vi No-ERROR.
-            create treal-2.
-            assign
-            treal-2.gds-code = buf_bar-code.gds-code
-            treal-2.cpay-code = buf_chk-gds-pay.pay-code
-            treal-2.curr-code = buf_chk-gds-pay.curr-code
-            treal-2.qnty1 = 0
-            treal-2.qnty2 = 0
-            treal-2.netto = 0
-            treal-2.out-name = buf_cash-pay.obj-name
-            treal-2.is-pay = yes
-            treal-2.ii = (if avail b-treal-2
+        CASE entry(1, buf_chk-gds-pay.line-type, {&delim-par}):
+            WHEN {&petrolium} then 
+                do:
+                    if sheet2 then 
+                    do:
+                        FIND FIRST treal-2 No-LOCK WHERE
+                            treal-2.gds-code = buf_bar-code.gds-code
+                            AND treal-2.cpay-code = buf_chk-gds-pay.pay-code
+                            AND treal-2.curr-code = buf_chk-gds-pay.curr-code
+                            and (treal-2.discnt-type = -99) 
+                            AND treal-2.is-pay = yes No-ERROR.
+                        IF NOT AVAIL treal-2 then 
+                        do:
+                            FIND last b-treal-2 No-LOCK WHERE
+                                b-treal-2.gds-code = buf_bar-code.gds-code use-index vi No-ERROR.
+                            create treal-2.
+                            assign
+                                treal-2.gds-code    = buf_bar-code.gds-code
+                                treal-2.cpay-code   = buf_chk-gds-pay.pay-code
+                                treal-2.curr-code   = buf_chk-gds-pay.curr-code
+                                treal-2.qnty1       = 0
+                                treal-2.qnty2       = 0
+                                treal-2.netto       = 0
+                                treal-2.discnt-type = -99 
+                                treal-2.out-name    = buf_cash-pay.obj-name
+                                treal-2.is-pay      = yes
+                                treal-2.ii          = (if avail b-treal-2
                           then b-treal-2.ii + 1
                           else 1)
-            .
-          END.
-          find first buf_goods    no-lock where buf_goods.gds-code  =
-                  buf_bar-code.gds-code no-error.
-            v-density = 0.       
-          if lookup(string(ub.chk-doc.chk-type), {&sale-in-receipt-codes}) > 0 then do: /* если чек возврата,то ищем хитро его документ */
-              ret-doc:
-            for each ret-doc fields( ret-doc.doc-code ret-doc.out-code ) no-lock where ret-doc.out-code = ub.chk-doc.out-code,
-                first buf_doc-line no-lock where 
-                  buf_doc-line.doc-code = ret-doc.doc-code AND
-                  buf_doc-line.artic     = buf_goods.artic AND
-                  buf_doc-line.prod-type = buf_goods.prod-type AND
-                  buf_doc-line.prod-code = buf_goods.prod-code :
+                                .
+                        END.
+
+                        find first buf_goods    no-lock where buf_goods.gds-code  =
+                            buf_bar-code.gds-code no-error.
+                        v-density = 0.       
+                        if lookup(string(ub.chk-doc.chk-type), {&sale-in-receipt-codes}) > 0 then 
+                        do: /* если чек возврата,то ищем хитро его документ */
+                            ret-doc:
+                            for each ret-doc fields( ret-doc.doc-code ret-doc.out-code ) no-lock where ret-doc.out-code = ub.chk-doc.out-code,
+                                first buf_doc-line no-lock where 
+                                buf_doc-line.doc-code = ret-doc.doc-code AND
+                                buf_doc-line.artic     = buf_goods.artic AND
+                                buf_doc-line.prod-type = buf_goods.prod-type AND
+                                buf_doc-line.prod-code = buf_goods.prod-code :
                       
                v-density =  buf_doc-line.fact-density
                             .
                    
-                  leave ret-doc.           
-            end.   
-          end. 
-          else do:
-          find first buf_doc-line no-lock where
-                    buf_doc-line.doc-code  = v-doc-code
-                and buf_doc-line.artic     = buf_goods.artic
-                and buf_doc-line.prod-type = buf_goods.prod-type
-                and buf_doc-line.prod-code = buf_goods.prod-code  no-error.
-          assign
-          v-density = ( if available buf_doc-line
-                            then buf_doc-line.fact-density
-                            else 0 ).
-          end.  
-          assign
-          treal-2.netto = treal-2.netto +
+                                leave ret-doc.           
+                            end.   
+                        end. 
+                        else 
+                        do:
+                            find first buf_doc-line no-lock where
+                                buf_doc-line.doc-code  = v-doc-code
+                                and buf_doc-line.artic     = buf_goods.artic
+                                and buf_doc-line.prod-type = buf_goods.prod-type
+                                and buf_doc-line.prod-code = buf_goods.prod-code  no-error.
+                            assign
+                                v-density = ( if available buf_doc-line
+                                then buf_doc-line.fact-density
+                                else 0 ).
+                        end.  
+                        assign
+                            treal-2.netto    = treal-2.netto +
                                           (if v-curr-r-b = {&r-b-base}
                                           or v-base-code = 0
                                           then buf_chk-gds-pay.tot-r-b
                                           else (if  buf_chk-gds-pay.tot-r-b = 0
                                                 then 0
                                                 else buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate))
-          /*netto всегда в б.в.*/
-          treal-2.qnty1 = treal-2.qnty1 + buf_chk-gds-pay.eff-doc-qnty
-          treal-2.qnty2 = treal-2.qnty2 + buf_chk-gds-pay.eff-doc-qnty * v-density
-          .
-        end.
-        if sheet8
-        and ub.chk-doc.d-card <> '':U
-        then do:
-          if buf_cash-pay.register > 0 then do:
-            if ub.chk-doc.cli-type = ?
-            or ub.chk-doc.cli-code = ?
-            or ub.chk-doc.cli-type = '':U
-            or ub.chk-doc.cli-code = 0 then do:
-              find first buf_dis-card no-lock where
-                        buf_dis-card.d-card = ub.chk-doc.d-card no-error .
-              if available buf_dis-card then do:
-                assign
-                v-cli-type = buf_dis-card.cli-type
-                v-cli-code = buf_dis-card.cli-code
-                .
-              end.
-            end.
-            else do:
-              assign
-              v-cli-type = ub.chk-doc.cli-type
-              v-cli-code = ub.chk-doc.cli-code
-              .
-            end.
-            FIND FIRST treal-8 No-LOCK WHERE
-                      treal-8.gds-code = buf_bar-code.gds-code
-                  AND treal-8.cpay-code = 0
-                  AND treal-8.curr-code = 0
-                  AND treal-8.cli-type = v-cli-type
-                  AND treal-8.cli-code = v-cli-code  No-ERROR.
-            IF NOT AVAIL treal-8 then do:
-              create treal-8.
-              assign
-              treal-8.gds-code = buf_bar-code.gds-code
-              treal-8.cpay-code = 0
-              treal-8.curr-code = 0
-              treal-8.qnty1  =  0
-              treal-8.netto = 0
-              treal-8.cli-type = v-cli-type
-              treal-8.cli-code = v-cli-code
-              .
-            END.
-            assign
-            treal-8.netto = treal-8.netto +  (if v-curr-r-b = {&r-b-base}
+                            /*netto всегда в б.в.*/
+                            treal-2.qnty1    = treal-2.qnty1 + buf_chk-gds-pay.eff-doc-qnty
+                            treal-2.qnty2    = treal-2.qnty2 + buf_chk-gds-pay.eff-doc-qnty * v-density
+                            treal-2.chk-qnty = treal-2.chk-qnty + 1 
+                            treal-2.brutto   = treal-2.brutto + buf_chk-gds-pay.tot-r-b.
+            
+                        if pdiscnt then
+                        do:
+                           
+                            for each buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-gds-pay.doc-code
+                                and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                and buf_chk-discnt.record-type = 0
+                                :
+                            
+                                FIND FIRST b-treal-2 No-LOCK WHERE
+                                    b-treal-2.gds-code = buf_bar-code.gds-code
+                                    AND b-treal-2.cpay-code = buf_chk-gds-pay.pay-code
+                                    and b-treal-2.discnt-type = buf_chk-discnt.discnt-type
+                                    No-ERROR.
+                                /*                        FIND FIRST bf-treal-2 No-LOCK WHERE                    */
+                                /*                            bf-treal-2.gds-code = buf_bar-code.gds-code        */
+                                /*                            AND bf-treal-2.cpay-code = buf_chk-gds-pay.pay-code*/
+                                /*                            and bf-treal-2.discnt-type = 0                     */
+                                /*                            No-ERROR.                                          */
+                                if not AVAILABLE b-treal-2 then
+                                do:
+                                    create b-treal-2.
+                                    assign
+                                        b-treal-2.gds-code    = buf_bar-code.gds-code
+                                        b-treal-2.cpay-code   = buf_chk-gds-pay.pay-code
+                                        b-treal-2.curr-code   = buf_chk-gds-pay.curr-code
+                                        b-treal-2.qnty1       = 0
+                                        b-treal-2.qnty2       = 0
+                                        b-treal-2.netto       = 0
+                                        b-treal-2.discnt-type = buf_chk-discnt.discnt-type
+                                        b-treal-2.out-name    = "    " + "-----    " + entry(lookup(string(buf_chk-discnt.discnt-type),{&discnt-type-list}), {&discnt-type-list-full} )
+                                        b-treal-2.is-pay      = yes
+                                        b-treal-2.ii          = treal-2.ii + 1
+                                        .
+                                end.       
+                                assign
+                                    b-treal-2.netto        = b-treal-2.netto +
+                                          (if v-curr-r-b = {&r-b-base}
+                                          or v-base-code = 0
+                                          then buf_chk-gds-pay.tot-r-b
+                                          else (if  buf_chk-gds-pay.tot-r-b = 0
+                                                then 0
+                                                else buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate))
+                                    /*                            treal-2.netto = buf_chk-gds.src-sum * (buf_chk-gds-pay.eff-doc-qnty /  buf_chk-gds.doc-qnty)*/
+                                    /*netto всегда в б.в.*/
+                                    b-treal-2.qnty1        = b-treal-2.qnty1 + buf_chk-gds-pay.eff-doc-qnty
+                                    b-treal-2.qnty2        = b-treal-2.qnty2 + buf_chk-gds-pay.eff-doc-qnty * v-density
+                                    b-treal-2.chk-qnty     = b-treal-2.chk-qnty + 1 
+                                    b-treal-2.brutto       = b-treal-2.brutto + buf_chk-discnt.object-sum 
+                                    b-treal-2.discount-sum = b-treal-2.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty)
+                                    treal-2.brutto         = treal-2.brutto + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty)
+                                    treal-2.discount-sum   = treal-2.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty) .
+                            end.
+                        end.
+                        
+                    end.
+                    if sheet8
+                        and ub.chk-doc.d-card <> '':U
+                        then 
+                    do:
+                        if buf_cash-pay.register > 0 then 
+                        do:
+                            if ub.chk-doc.cli-type = ?
+                                or ub.chk-doc.cli-code = ?
+                                or ub.chk-doc.cli-type = '':U
+                                or ub.chk-doc.cli-code = 0 then 
+                            do:
+                                find first buf_dis-card no-lock where
+                                    buf_dis-card.d-card = ub.chk-doc.d-card no-error .
+                                if available buf_dis-card then 
+                                do:
+                                    assign
+                                        v-cli-type = buf_dis-card.cli-type
+                                        v-cli-code = buf_dis-card.cli-code
+                                        .
+                                end.
+                            end.
+                            else 
+                            do:
+                                assign
+                                    v-cli-type = ub.chk-doc.cli-type
+                                    v-cli-code = ub.chk-doc.cli-code
+                                    .
+                            end.
+                            FIND FIRST treal-8 No-LOCK WHERE
+                                treal-8.gds-code = buf_bar-code.gds-code
+                                AND treal-8.cpay-code = 0
+                                AND treal-8.curr-code = 0
+                                AND treal-8.cli-type = v-cli-type
+                                AND treal-8.cli-code = v-cli-code  No-ERROR.
+                            IF NOT AVAIL treal-8 then 
+                            do:
+                                create treal-8.
+                                assign
+                                    treal-8.gds-code  = buf_bar-code.gds-code
+                                    treal-8.cpay-code = 0
+                                    treal-8.curr-code = 0
+                                    treal-8.qnty1     = 0
+                                    treal-8.netto     = 0
+                                    treal-8.cli-type  = v-cli-type
+                                    treal-8.cli-code  = v-cli-code
+                                    .
+                            END.
+                            assign
+                                treal-8.netto      = treal-8.netto +  (if v-curr-r-b = {&r-b-base}
                                               or v-base-code = 0
                                               then buf_chk-gds-pay.tot-r-b
                                               else (if buf_chk-gds-pay.tot-r-b = 0
                                                     then 0
                                                     else buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate))
 
-            treal-8.qnty1 = treal-8.qnty1 + buf_chk-gds-pay.eff-doc-qnty
-            treal-8.netto-rubl = treal-8.netto-rubl +  (if v-curr-r-b = {&r-b-rubl}
+                                treal-8.qnty1      = treal-8.qnty1 + buf_chk-gds-pay.eff-doc-qnty
+                                treal-8.netto-rubl = treal-8.netto-rubl +  (if v-curr-r-b = {&r-b-rubl}
                                                         or v-base-code = 0
                                                         then buf_chk-gds-pay.tot-r-b
                                                         else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate))
 
-            .
-            FIND FIRST cp-gds-treal-8 No-LOCK WHERE
-                      cp-gds-treal-8.gds-code = buf_bar-code.gds-code
-                  AND cp-gds-treal-8.cpay-code = buf_chk-gds-pay.pay-code
-                  AND cp-gds-treal-8.curr-code = buf_chk-gds-pay.curr-code
-                  AND cp-gds-treal-8.cli-type = '':U
-                  AND cp-gds-treal-8.cli-code = 0  No-ERROR.
-            if not available cp-gds-treal-8 then do:
-              create cp-gds-treal-8.
-              assign
-              cp-gds-treal-8.gds-code = buf_bar-code.gds-code
-              cp-gds-treal-8.cpay-code = buf_chk-gds-pay.pay-code
-              cp-gds-treal-8.curr-code = buf_chk-gds-pay.curr-code
-              cp-gds-treal-8.qnty1  =  0
-              cp-gds-treal-8.netto = 0
-              cp-gds-treal-8.cli-type = '':U
-              cp-gds-treal-8.cli-code = 0
-              .
-            end.
-            assign
-            cp-gds-treal-8.netto = cp-gds-treal-8.netto +  (if v-curr-r-b = {&r-b-base}
+                                .
+                            FIND FIRST cp-gds-treal-8 No-LOCK WHERE
+                                cp-gds-treal-8.gds-code = buf_bar-code.gds-code
+                                AND cp-gds-treal-8.cpay-code = buf_chk-gds-pay.pay-code
+                                AND cp-gds-treal-8.curr-code = buf_chk-gds-pay.curr-code
+                                AND cp-gds-treal-8.cli-type = '':U
+                                AND cp-gds-treal-8.cli-code = 0  No-ERROR.
+                            if not available cp-gds-treal-8 then 
+                            do:
+                                create cp-gds-treal-8.
+                                assign
+                                    cp-gds-treal-8.gds-code  = buf_bar-code.gds-code
+                                    cp-gds-treal-8.cpay-code = buf_chk-gds-pay.pay-code
+                                    cp-gds-treal-8.curr-code = buf_chk-gds-pay.curr-code
+                                    cp-gds-treal-8.qnty1     = 0
+                                    cp-gds-treal-8.netto     = 0
+                                    cp-gds-treal-8.cli-type  = '':U
+                                    cp-gds-treal-8.cli-code  = 0
+                                    .
+                            end.
+                            assign
+                                cp-gds-treal-8.netto      = cp-gds-treal-8.netto +  (if v-curr-r-b = {&r-b-base}
                                               or v-base-code = 0
                                               then buf_chk-gds-pay.tot-r-b
                                               else (if buf_chk-gds-pay.tot-r-b = 0
@@ -355,27 +465,28 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                                                         then buf_chk-gds-pay.tot-r-b
                                                         else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate))
 
-            .
-            FIND FIRST gds-treal-8 No-LOCK WHERE
-                      gds-treal-8.gds-code = buf_bar-code.gds-code
-                  AND gds-treal-8.cpay-code = 0
-                  AND gds-treal-8.curr-code = 0
-                  AND gds-treal-8.cli-type = '':U
-                  AND gds-treal-8.cli-code = 0  No-ERROR.
-            if not available gds-treal-8 then do:
-              create gds-treal-8.
-              assign
-              gds-treal-8.gds-code = buf_bar-code.gds-code
-              gds-treal-8.cpay-code = 0
-              gds-treal-8.curr-code = 0
-              gds-treal-8.qnty1  =  0
-              gds-treal-8.netto = 0
-              gds-treal-8.cli-type = '':U
-              gds-treal-8.cli-code = 0
-              .
-            end.
-            assign
-            gds-treal-8.netto = gds-treal-8.netto +  (if v-curr-r-b = {&r-b-base}
+                                .
+                            FIND FIRST gds-treal-8 No-LOCK WHERE
+                                gds-treal-8.gds-code = buf_bar-code.gds-code
+                                AND gds-treal-8.cpay-code = 0
+                                AND gds-treal-8.curr-code = 0
+                                AND gds-treal-8.cli-type = '':U
+                                AND gds-treal-8.cli-code = 0  No-ERROR.
+                            if not available gds-treal-8 then 
+                            do:
+                                create gds-treal-8.
+                                assign
+                                    gds-treal-8.gds-code  = buf_bar-code.gds-code
+                                    gds-treal-8.cpay-code = 0
+                                    gds-treal-8.curr-code = 0
+                                    gds-treal-8.qnty1     = 0
+                                    gds-treal-8.netto     = 0
+                                    gds-treal-8.cli-type  = '':U
+                                    gds-treal-8.cli-code  = 0
+                                    .
+                            end.
+                            assign
+                                gds-treal-8.netto      = gds-treal-8.netto +  (if v-curr-r-b = {&r-b-base}
                                               or v-base-code = 0
                                               then buf_chk-gds-pay.tot-r-b
                                               else (if buf_chk-gds-pay.tot-r-b = 0
@@ -451,28 +562,35 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                                                         then buf_chk-gds-pay.tot-r-b
                                                         else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate))
 
-            .
-          end. /*if available temp-cash-pay-attr then do:*/
-        end. /*if sheet8*/
-      END.
-      WHEN {&gds-goods} then do:
-        if sheet3 then do:
-          FIND FIRST buf_goods No-LOCK WHERE
-                      buf_goods.gds-code = buf_bar-code.gds-code No-ERROR.
-          if pclassify then do:
-            if pselectgood then do:
-              FIND FIRST buf_t-3 where
-                        buf_goods.grp-name begins buf_t-3.serv-name No-ERROR.
-              if not avail buf_t-3 then do:
-              end.
-            end.
-          end.
-          else dO:
-            FIND FIRST t-3 where
-                      buf_goods.grp-name begins t-3.serv-name No-ERROR.
-            if not avail t-3 then do:
-            end.
-          end.
+                                .
+                        end. /*if available temp-cash-pay-attr then do:*/
+                    end. /*if sheet8*/
+                END.
+            WHEN {&gds-goods} then 
+                do:
+                    if sheet3 then 
+                    do:
+                        FIND FIRST buf_goods No-LOCK WHERE
+                            buf_goods.gds-code = buf_bar-code.gds-code No-ERROR.
+                        if pclassify then 
+                        do:
+                            if pselectgood then 
+                            do:
+                                FIND FIRST buf_t-3 where
+                                    buf_goods.grp-name begins buf_t-3.serv-name No-ERROR.
+                                if not avail buf_t-3 then 
+                                do:
+                                end.
+                            end.
+                        end.
+                        else 
+                        dO:
+                            FIND FIRST t-3 where
+                                buf_goods.grp-name begins t-3.serv-name No-ERROR.
+                            if not avail t-3 then 
+                            do:
+                            end.
+                        end.
           
           /* #2789 Если есть атрибут группы товара Не учитывать в автоматической отчетности, то пропускаем товар */
           v-upper-code = buf_goods.grp-code.
@@ -497,81 +615,218 @@ FOR EACH ub.chk-doc No-LOCK WHERE
           end. 
           /* ------ */
           
-          if avail t-3 and v-value <> "yes"  then do:
-            FIND FIRST treal-3 No-LOCK WHERE
-                      treal-3.grp-code = t-3.grp-code-sheet
-                  AND treal-3.cpay-code = buf_chk-gds-pay.pay-code
-                  AND treal-3.curr-code = buf_chk-gds-pay.curr-code
-                      No-ERROR.
-            IF NOT AVAIL treal-3 then do:
-              FIND last b-treal-3 No-LOCK WHERE
-                        b-treal-3.grp-code-sheet = t-3.grp-code-sheet use-index vi No-ERROR.
-              create treal-3.
-              assign
-              treal-3.grp-code-sheet = t-3.grp-code-sheet
-              treal-3.cpay-code = buf_chk-gds-pay.pay-code
-              treal-3.curr-code = buf_chk-gds-pay.curr-code
-              treal-3.qnty1  =  0
-              treal-3.netto = 0
-              treal-3.is-pay = yes
-              treal-3.out-name = buf_cash-pay.obj-name
-              treal-3.ii = (if avail b-treal-3
+                        if avail t-3 and v-value <> "yes"  then 
+                        do:
+                            FIND FIRST treal-3 No-LOCK WHERE
+                                treal-3.grp-code = t-3.grp-code-sheet
+                                AND treal-3.cpay-code = buf_chk-gds-pay.pay-code
+                                AND treal-3.curr-code = buf_chk-gds-pay.curr-code
+                                and treal-3.discnt-type = -99
+                                No-ERROR.
+                            IF NOT AVAIL treal-3 then 
+                            do:
+                                FIND last b-treal-3 No-LOCK WHERE
+                                    b-treal-3.grp-code-sheet = t-3.grp-code-sheet use-index vi No-ERROR.
+                                create treal-3.
+                                assign
+                                    treal-3.grp-code-sheet = t-3.grp-code-sheet
+                                    treal-3.cpay-code      = buf_chk-gds-pay.pay-code
+                                    treal-3.curr-code      = buf_chk-gds-pay.curr-code
+                                    treal-3.qnty1          = 0
+                                    treal-3.netto          = 0
+                                    treal-3.discnt-type    = -99
+                                    treal-3.is-pay         = yes
+                                    treal-3.out-name       = buf_cash-pay.obj-name
+                                    treal-3.ii             = (if avail b-treal-3
                             then b-treal-3.ii + 1
                             else 1)
-              .
-            END.
-            assign
-            treal-3.netto = treal-3.netto + (if v-curr-r-b = {&r-b-base}
+                                    .
+                            END.
+                            assign
+                                treal-3.netto    = treal-3.netto + (if v-curr-r-b = {&r-b-base}
                                               or v-base-code = 0
                                               then buf_chk-gds-pay.tot-r-b
                                               else (if buf_chk-gds-pay.tot-r-b = 0
                                                     then 0
                                                     else buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
                                               )
-            treal-3.qnty1 = treal-3.qnty1 + buf_chk-gds-pay.eff-doc-qnty
-            .
-          end. /*if avail t-3*/
-        END.
-      END.
-      WHEN {&gds-office} then do:
-        if sheet4 then do:
-          FIND FIRST treal-4 No-LOCK WHERE
-                    treal-4.gds-code = buf_bar-code.gds-code
-                AND  treal-4.cpay-code = buf_chk-gds-pay.pay-code
-                AND  treal-4.curr-code = buf_chk-gds-pay.curr-code
-                AND  treal-4.is-pay = yes
-                    No-ERROR.
-          IF NOT AVAIL treal-4 then do:
-            FIND last b-treal-4 No-LOCK WHERE
-                      b-treal-4.gds-code = buf_bar-code.gds-code use-index vi No-ERROR.
+                                treal-3.qnty1    = treal-3.qnty1 + buf_chk-gds-pay.eff-doc-qnty
+                                treal-3.chk-qnty = treal-3.chk-qnty + 1
+                                treal-3.brutto   = treal-3.brutto + buf_chk-gds-pay.tot-r-b
+                                .
+                            if pdiscnt then
+                            do:
+                                for each buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-gds-pay.doc-code
+                                    and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                    and buf_chk-discnt.record-type = 0
+                                    :
+                                    FIND FIRST b-treal-3 No-LOCK WHERE
+                                        b-treal-3.grp-code = t-3.grp-code-sheet
+                                        AND b-treal-3.cpay-code = buf_chk-gds-pay.pay-code
+                                        AND b-treal-3.curr-code = buf_chk-gds-pay.curr-code
+                                        and b-treal-3.discnt-type = buf_chk-discnt.discnt-type
+                                        No-ERROR.
+                                 
+                                    if not AVAILABLE b-treal-3 then
+                                    do:
+                                        create b-treal-3.
+                                        assign
+                                            b-treal-3.grp-code-sheet = t-3.grp-code-sheet
+                                            b-treal-3.cpay-code      = buf_chk-gds-pay.pay-code
+                                            b-treal-3.curr-code      = buf_chk-gds-pay.curr-code
+                                            b-treal-3.qnty1          = 0
+                                            b-treal-3.netto          = 0
+                                            b-treal-3.is-pay         = yes
+                                            b-treal-3.discnt-type    = buf_chk-discnt.discnt-type
+                                            b-treal-3.out-name       = "    " +  "-----    " + entry(lookup(string(buf_chk-discnt.discnt-type),{&discnt-type-list}), {&discnt-type-list-full} )
+                                            b-treal-3.ii             = treal-3.ii + 1
+                                            .
+                                    end.       
+                                    assign
+                                        b-treal-3.netto        = b-treal-3.netto + (if v-curr-r-b = {&r-b-base}
+                                              or v-base-code = 0
+                                              then buf_chk-gds-pay.tot-r-b
+                                              else (if buf_chk-gds-pay.tot-r-b = 0
+                                                    then 0
+                                                    else buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
+                                              )
+                                        b-treal-3.qnty1        = b-treal-3.qnty1 + buf_chk-gds-pay.eff-doc-qnty
+                                        b-treal-3.chk-qnty     = b-treal-3.chk-qnty + 1
+                                        b-treal-3.brutto       = b-treal-3.brutto + buf_chk-discnt.object-sum
+                                        b-treal-3.discount-sum = b-treal-3.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty)
+                                        treal-3.brutto         = treal-3.brutto + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty)
+                                        treal-3.discount-sum   = treal-3.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty) 
+                                        .
+                                end.
+                            end.
+                      
+                        end.
+                    end. /*if avail t-3*/
+                END.
+        
+            /*                END.*/
+            WHEN {&gds-office} then 
+                do:
+                    if sheet4 then 
+                    do:
+                        FIND FIRST treal-4 No-LOCK WHERE
+                            treal-4.gds-code = buf_bar-code.gds-code
+                            AND  treal-4.cpay-code = buf_chk-gds-pay.pay-code
+                            AND  treal-4.curr-code = buf_chk-gds-pay.curr-code
+                            AND  treal-4.is-pay = yes
+                            AND  treal-4.discnt-type = -99   
+                            No-ERROR.
+                        IF NOT AVAIL treal-4 then 
+                        do:
+                            FIND last b-treal-4 No-LOCK WHERE
+                                b-treal-4.gds-code = buf_bar-code.gds-code use-index vi No-ERROR.
 
-            create treal-4.
-            assign
-            treal-4.gds-code = buf_bar-code.gds-code
-            treal-4.cpay-code = buf_chk-gds-pay.pay-code
-            treal-4.curr-code = buf_chk-gds-pay.curr-code
-            treal-4.qnty1  =  0
-            treal-4.netto = 0
-            treal-4.out-name = buf_cash-pay.obj-name
-            treal-4.is-pay = yes
-            treal-4.ii =  (if avail b-treal-4
+                            create treal-4.
+                            assign
+                                treal-4.gds-code  = buf_bar-code.gds-code
+                                treal-4.cpay-code = buf_chk-gds-pay.pay-code
+                                treal-4.curr-code = buf_chk-gds-pay.curr-code
+                                treal-4.qnty1     = 0
+                                treal-4.netto     = 0
+                                treal-4.out-name  = buf_cash-pay.obj-name
+                                treal-4.discnt-type    = -99
+                                treal-4.is-pay    = yes
+                                treal-4.ii        = (if avail b-treal-4
                           then b-treal-4.ii + 1
                           else 1)
-            .
-          END.
-          assign
-          treal-4.netto = treal-4.netto + (if v-curr-r-b = {&r-b-base}
+                                .
+                        END.
+                        assign
+                            treal-4.netto    = treal-4.netto + (if v-curr-r-b = {&r-b-base}
                                               or v-base-code = 0
                                               then buf_chk-gds-pay.tot-r-b
                                               else (if buf_chk-gds-pay.tot-r-b = 0
                                                     then 0
                                                     else buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
                                               )
-          treal-4.qnty1 = treal-4.qnty1 + buf_chk-gds-pay.eff-doc-qnty
-          .
-          END.
-      END.
-    END CASE.
-  end. /*    for each buf_chk-gds-pay where*/
+                            treal-4.qnty1    = treal-4.qnty1 + buf_chk-gds-pay.eff-doc-qnty
+                            treal-4.chk-qnty = treal-4.chk-qnty + 1
+                            treal-4.brutto   = treal-4.brutto + buf_chk-gds-pay.tot-r-b
+                            .
+                        if pdiscnt then
+                        do:
+                            for each buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-gds-pay.doc-code
+                                and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                and buf_chk-discnt.record-type = 0
+                                :
+                            
+                                FIND FIRST b-treal-4 No-LOCK WHERE
+                                    b-treal-4.gds-code = buf_bar-code.gds-code
+                                    AND  b-treal-4.cpay-code = buf_chk-gds-pay.pay-code
+                                    AND  b-treal-4.curr-code = buf_chk-gds-pay.curr-code
+                                    AND  b-treal-4.is-pay = yes
+                                    AND  b-treal-4.discnt-type = buf_chk-discnt.discnt-type   
+                                    No-ERROR.
+                                 
+                                IF NOT AVAIL b-treal-4 then 
+                                do:
+                                    create b-treal-4.
+                                    assign
+                                        b-treal-4.gds-code    = buf_bar-code.gds-code
+                                        b-treal-4.cpay-code   = buf_chk-gds-pay.pay-code
+                                        b-treal-4.curr-code   = buf_chk-gds-pay.curr-code
+                                        b-treal-4.qnty1       = 0
+                                        b-treal-4.netto       = 0
+                                        b-treal-4.discnt-type = buf_chk-discnt.discnt-type
+                                        b-treal-4.out-name    = "    " + "-----    " + entry(lookup(string(buf_chk-discnt.discnt-type),{&discnt-type-list}), {&discnt-type-list-full} )
+                                        b-treal-4.ii          = treal-4.ii + 1
+                                        b-treal-4.is-pay      = yes
+                                        .
+                                END.
+                                assign
+                                    b-treal-4.netto        = b-treal-4.netto + (if v-curr-r-b = {&r-b-base}
+                                              or v-base-code = 0
+                                              then buf_chk-gds-pay.tot-r-b
+                                              else (if buf_chk-gds-pay.tot-r-b = 0
+                                                    then 0
+                                                    else buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
+                                              )
+                                    b-treal-4.qnty1        = b-treal-4.qnty1 + buf_chk-gds-pay.eff-doc-qnty
+                                    b-treal-4.chk-qnty     = b-treal-4.chk-qnty + 1
+                                    b-treal-4.brutto       = b-treal-4.brutto + buf_chk-discnt.object-sum
+                                    b-treal-4.discount-sum = b-treal-4.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty)
+                                    treal-4.brutto         = treal-4.brutto + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty)
+                                    treal-4.discount-sum   = treal-4.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty) .
+                                .
+                            end.
+                        END.
+                    end.
+                end.
 
+        /*        END .*/
+        END CASE.
+    end. /*    for each buf_chk-gds-pay where*/
 END. /*FOR EACH ub.chk-doc No-LOCK WHERE*/
+
+/*if pdiscnt then*/
+/*do:            */
+    DEFINE variable ii as integer no-undo .
+    ii = 0 .
+
+    for each b-treal-2 break by b-treal-2.gds-code by b-treal-2.cpay-code by b-treal-2.discnt-type:
+        if b-treal-2.is-pay = yes then do:
+        if first-of(b-treal-2.gds-code) then ii =  1.
+        else ii = ii + 1.
+        b-treal-2.ii = ii.
+        end.
+        else b-treal-2.ii = 0 .
+    end.
+
+    for each b-treal-3 break by b-treal-3.grp-code-sheet by b-treal-3.cpay-code by b-treal-3.discnt-type:
+        if first-of(b-treal-3.grp-code-sheet) then ii =  1.
+        else ii = ii + 1.
+        b-treal-3.ii = ii.
+    
+    end.
+
+    for each b-treal-4 break by b-treal-4.gds-code by b-treal-4.cpay-code by b-treal-4.discnt-type:
+        if first-of(b-treal-4.gds-code) then ii =  1.
+        else ii = ii + 1.
+        b-treal-4.ii = ii.
+    end.
+/*end.*/

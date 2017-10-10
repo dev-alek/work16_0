@@ -49,6 +49,7 @@ define variable v-obj-list   as char      no-undo.
 define variable v-param-list as character no-undo.
 define variable v-param-type as character no-undo.
 
+
 run schedule-attr-value in this-procedure (input integer(p_db-num-char),
     input p_task-type,
     input p_task-num,
@@ -65,7 +66,6 @@ run schedule-attr-value in this-procedure (input integer(p_db-num-char),
 /* Разберем их */
 
 assign
-
     p-gds-inf-po = integer(entry (1, v-param-list, {&delim-par}))
     p-gds-active = integer(entry (2, v-param-list, {&delim-par}))
     p-directory  = entry (3, v-param-list, {&delim-par})
@@ -73,10 +73,41 @@ assign
     p-bge-active = logical(entry (5, v-param-list, {&delim-par}))
     p-bge-inf-po = logical(entry (6, v-param-list, {&delim-par}))
     p-per        = integer(ENTRY(7, v-param-list, {&delim-par}))
-    v-obj-list   = ENTRY(8, v-param-list, {&delim-par})
     .
+    
+define variable v-param2-list as character no-undo.
+define variable v-param2-type as character no-undo.
+define variable v-obj-range   as integer   no-undo .
+define variable v-host-code   like ub.sysconf.host-code no-undo .
+                
+
+run schedule-attr-value in this-procedure (input integer(p_db-num-char),
+    input p_task-type,
+    input p_task-num,
+    input {&attr-schedule-obj-list-h},
+    output v-param2-list,
+    output v-param2-type) no-error.
+    if v-param2-list = "" then do:
+        message "Не заданы параметры!"
+  VIEW-AS ALERT-BOX ERROR.
+        UNDO, RETURN ERROR.
+        
+        end.
+
+    if num-entries(v-param2-list,':') = 2
+    then do:
+      assign
+        v-obj-range = integer(entry(1, v-param2-list, ':'))
+        v-obj-list  = entry(2, v-param2-list, ':')
+      .
+      if v-obj-range = 2 then v-host-code = integer(v-obj-list) no-error. 
+    end. /* if num-entries(v-str,':') = 2 */
+
+
 run bge/active-vbrr.p (input parparentproc
-    ,input  v-obj-list
+    ,input v-obj-range
+    ,input v-host-code
+    ,input v-obj-list
     ,input p-date-to
     ,input p-date-from
     ,input p-gds-inf-po
@@ -95,6 +126,3 @@ run bge/active-vbrr.p (input parparentproc
    return-value  error-status:get-message(1) view-as alert-box.
     end.
     
-    
-    
-                  

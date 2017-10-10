@@ -110,6 +110,16 @@ define variable vss-description as character no-undo init "".
     "yes"
 }
 
+{ gbl/menuload.i
+   {&bef-menuload_service_impexp}
+   "'Выгрузка в систему АТД'"
+    " 'bge/p-exp-ATD.p' "
+    " "
+    " "
+    " "
+    " "
+    "yes"
+}
 
 { gbl/menuload.i
    {&bef-menuload_service_impexp}
@@ -251,6 +261,17 @@ define variable vss-description as character no-undo init "".
   "'clntbank'"
 }
 
+{ gbl/menuload.i
+  {&bef-menuload_service_fin_impexp}
+  "'Импорт договоров с поставщиками'"
+  "'bge/impcontract.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+  
+}
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_service_customs}                                                */
 /* Сервис/Заказные программы                                                  */
@@ -623,7 +644,7 @@ define variable vss-description as character no-undo init "".
 
 { gbl/menuload.i
   {&bef-menuload_adm_function}
-  "'Изменение даты выгрузки данных в Малину'"
+  "'Изменение даты выгрузки данных'"
   "'bge/setmalinad.w'"
   "''"
   "''"

@@ -1,13 +1,19 @@
- 
-/*------------------------------------------------------------------------
-   File        : 
-   Purpose     : 
-   Syntax      : 
-   Description : 
-   Author(s)   : asmorozov
-   Created     : Tue Sep 29 15:51:19 MSK 2015
-   Notes       : 
- ----------------------------------------------------------------------*/
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Класс работы с секциями по топливу.
+
+Автор: Морозов Александр Сергеевич
+Дата создания: 09/29/2015
+Author: Alexandr Morozov
+Creation date: 09/29/2015
+
+*/ 
 
 using Progress.Lang.*.
 using ibs.th.str.*.
@@ -21,6 +27,8 @@ class ibs.th.str.InfoSectionsTotal:
   define private buffer buf_doc-line  for ub.doc-line.
   define private buffer buf_doc-line-attr for ub.doc-line-attr.
   define private buffer buf_goods  for ub.goods.
+  
+  define stream log-algo.
 
   define private temp-table ttObjInfoSecProp no-undo
     field iSecNum as integer
@@ -122,6 +130,38 @@ class ibs.th.str.InfoSectionsTotal:
   define property DocQntyInput as logical no-undo
     get.
     set.
+    
+  define property NormalWastage as decimal no-undo
+    get.
+    set.
+
+  define property IsRNAlgo as logical no-undo
+    get.
+    set.
+    
+  define property PercAcc as decimal no-undo
+    get.
+    set.
+
+  define property IsActnComm as logical no-undo init false
+    get.
+    set.
+
+  define property AccShip as decimal no-undo
+    get.
+    set.    
+
+  define property CarNum as character no-undo
+    get.
+    set.    
+
+  define property IsFlagKPChg as logical no-undo
+    get.
+    set.    
+
+  define property RdcDnstvalue as character no-undo
+    get.
+    set.    
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -195,7 +235,7 @@ class ibs.th.str.InfoSectionsTotal:
 
       if SectionNum = 1
       then do:
-        find first buf_goods no-lock where buf_goods.gds-code = GdsCode. 
+        find first buf_goods no-lock where buf_goods.gds-code = GdsCode no-error. 
         find first buf_doc-line no-lock where
                                    buf_doc-line.doc-code = TrnDocNum 
                                and buf_goods.artic= buf_doc-line.artic
@@ -204,11 +244,11 @@ class ibs.th.str.InfoSectionsTotal:
         if available (buf_doc-line) then 
           assign
             InfoSectionProp:CliQnty = buf_doc-line.cli-qnty
-            InfoSectionProp:FactQnty = buf_doc-line.fact-qnty
+/*            InfoSectionProp:FactQnty = buf_doc-line.fact-qnty*/
             InfoSectionProp:DocDensity = buf_doc-line.doc-density
             InfoSectionProp:DocQnty = buf_doc-line.doc-qnty
-            InfoSectionProp:FactDensity = buf_doc-line.fact-density
-            InfoSectionProp:FactKgQnty = buf_doc-line.fact-density * buf_doc-line.fact-qnty
+/*            InfoSectionProp:FactDensity = buf_doc-line.fact-density*/
+/*            InfoSectionProp:FactKgQnty = buf_doc-line.fact-density * buf_doc-line.fact-qnty*/
           .
       end.
       
@@ -301,6 +341,7 @@ class ibs.th.str.InfoSectionsTotal:
       EndRealTime = ?
       StartRealTime = ?
       StartRealDate = ?
+      
     .
     do ii = 1 to SectionNum :
       assign
@@ -439,6 +480,36 @@ class ibs.th.str.InfoSectionsTotal:
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'kol-prob' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):KolProb).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'num-print-prob' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):NumPrintProb).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'date-prob' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):DateProb).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'hour-prob' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):HourProb).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'min-prob' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):MinProb).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'date-pov-plotn' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):DatePovPlotn).
       create buf_doc-line-attr.
@@ -567,11 +638,473 @@ class ibs.th.str.InfoSectionsTotal:
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'fact-qnty' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):FactQnty).
-
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'acc-pomi' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):AccPOMI).
+/*      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'acc-ship' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):AccShip).*/
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'rn-algo' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):RnAlgo).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'dop-info' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):AccAbsFact) + ',' + string ( GetInfoSectionProp(ii):NaturalLoss) 
+              + ',' + (if GetInfoSectionProp(ii):Deficit <> 0 then string ( - GetInfoSectionProp(ii):Deficit) else string ( GetInfoSectionProp(ii):Excess)).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'is-kp' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):IsKP).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'list-tank' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):ListTank).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'ttn-temp' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TTNTemp ).
+      
+      
+      release buf_doc-line-attr.
+      
     end.
 
   end method.
 
+  
+  method public void RNAlgo (ii as int, output MP as decimal):
+
+    def var dMP  as decimal no-undo.
+    def var MF   as decimal no-undo.
+    def var dMF  as decimal no-undo.
+    def var MTTH as decimal no-undo.
+    def var md   as decimal no-undo.
+    def var dmd  as decimal no-undo.
+    def var dF   as decimal no-undo.
+    def var NPE  as decimal no-undo.
+    def var ME   as decimal no-undo.
+    def var dMEd as decimal no-undo.
+    def var I    as decimal no-undo.
+    def var H    as decimal no-undo.
+    def var v-ok as logical no-undo.
+    
+    assign
+      MTTH = GetInfoSectionProp(ii):DocQnty * GetInfoSectionProp(ii):DocDensity
+      MF = GetInfoSectionProp(ii):TankWeight
+      dF = GetInfoSectionProp(ii):AccPomi
+      NPE = NormalWastage
+      dmd = MF * dF * 0.01
+      dMP = MF - MTTH
+      dMEd = MTTH * NPE * 0.001.
+      ME = MTTH - MF - dmd.
+    .
+    
+
+    if not GetInfoSectionProp(ii):IsKP 
+    then do: 
+      if abs (dMP) <= dmd /* условие (22) */
+      then do:
+        MP = MTTH.
+        GetInfoSectionProp(ii):AccAbsFact = dmd.
+        GetInfoSectionProp(ii):RnAlgo = "условие 22".
+        output stream log-algo to value ("log-algo-pomi.txt") append.
+        put stream log-algo unformatted
+          {&new-line}
+          "-----------------------------------------------"
+          {&new-line}
+          now {&new-line}
+          GetInfoSectionProp(ii):RnAlgo {&new-line}
+          "MTTH  = " string(MTTH) {&new-line}
+          "MF  = " string(MF) {&new-line}
+          "dF  = " string(dF) {&new-line}
+          "NPE  = " string(NPE) {&new-line}
+          "dmd  = " string(dmd) {&new-line}
+          "dMP  = " string(dMP) {&new-line}
+          "dMEd  = " string(dMEd) {&new-line}
+          "ME = " string(ME) {&new-line}
+        .
+        output stream log-algo close.
+        return.
+      end.
+      
+      if abs (dMP) <= dmd + dMed /* условие (25) */
+      then do:
+        MP = MTTH - ME.
+        GetInfoSectionProp(ii):AccAbsFact = dmd + dMed.
+        GetInfoSectionProp(ii):NaturalLoss = ME.
+        GetInfoSectionProp(ii):RnAlgo = "условие 25".
+        output stream log-algo to value ("log-algo-pomi.txt") append.
+        put stream log-algo unformatted
+          {&new-line}
+          "-----------------------------------------------"
+          {&new-line}
+          now {&new-line}
+          GetInfoSectionProp(ii):RnAlgo {&new-line}
+          "MTTH  = " string(MTTH) {&new-line}
+          "MF  = " string(MF) {&new-line}
+          "dF  = " string(dF) {&new-line}
+          "NPE  = " string(NPE) {&new-line}
+          "dmd  = " string(dmd) {&new-line}
+          "dMP  = " string(dMP) {&new-line}
+          "dMEd  = " string(dMEd) {&new-line}
+          "ME = " string(ME) {&new-line}
+        .
+        output stream log-algo close.
+        return.
+      end.
+    end.
+
+    if not GetInfoSectionProp(ii):IsKP 
+    then do: 
+      message substitute ("Имеются расхождения с документарным количеством больше допустимого. Требуется комиссионный прием нефтепродукта. Продолжить (для секции &1 будет установлен флаг комиссионного приема)?", ii)
+      view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok
+      then do:
+        MP = ?.
+        return.
+      end.
+      IsFlagKPChg = true.
+      assign
+        GetInfoSectionProp(ii):IsKP = true
+      .
+      MP = ?.
+      return.
+    end.
+    
+    IsFlagKPChg = false.
+    
+    if not IsActnComm
+    then do:
+      message substitute ( "По секции &1 включен комиссионный прием нефтепродукта. У пользователя отсутвует право <<Комиссионный прием нефтепродукта>>. Продолжение невозможно.", ii ).
+      MP = ?.
+      return.
+    end.
+    
+    def var MKP    as decimal no-undo.
+    def var dMKP   as decimal no-undo.
+    def var dmKPd  as decimal no-undo.
+    def var delKP  as decimal no-undo.
+    def var delTTH as decimal no-undo.
+    def var dTTH   as decimal no-undo.
+    def var dKP    as decimal no-undo.
+    def var MKPK   as decimal no-undo.
+    def var dmTTHd as decimal no-undo.
+    def var X1     as decimal no-undo.
+    def var X2     as decimal no-undo.
+    def var X3     as decimal no-undo.
+    def var X4     as decimal no-undo.
+
+    MKP = MF.
+    dMKP = MKP - MTTH.
+    dKP = GetInfoSectionProp(ii):AccPomi. /*if AccComm = ? then 0 else AccComm.*/
+    
+    dmKPd = MKP * dF * 0.01.
+    delKP = dF * MKP * 0.01. /*одно и тоже для наглядности с документацией*/
+
+
+    if abs(dMKP) <= dmKPd /* условие (30) */
+    then do:
+      MP = MTTH.
+      GetInfoSectionProp(ii):AccAbsFact = dmKPd.
+      GetInfoSectionProp(ii):RnAlgo = "условие 30".
+      output stream log-algo to value ("log-algo-pomi.txt") append.
+      put stream log-algo unformatted
+        {&new-line}
+        "-----------------------------------------------"
+        {&new-line}
+        now {&new-line}
+        GetInfoSectionProp(ii):RnAlgo {&new-line}
+        "MTTH  = " string(MTTH) {&new-line}
+        "MF  = " string(MF) {&new-line}
+        "dF  = " string(dF) {&new-line}
+        "NPE  = " string(NPE) {&new-line}
+        "dmd  = " string(dmd) {&new-line}
+        "dMP  = " string(dMP) {&new-line}
+        "dMEd  = " string(dMEd) {&new-line}
+        "ME = " string(ME) {&new-line}
+        "MKP = " string(MKP) {&new-line}
+        "dMKP = " string(dMKP) {&new-line}
+        "dmKPd = " string(dmKPd) {&new-line}
+        "delKP = " string(delKP) {&new-line}
+        "delTTH = " string(delTTH) {&new-line}
+        "dTTH = " string(dTTH) {&new-line}
+        "dKP = " string(dKP) {&new-line}
+        "MKPK = " string(MKPK) {&new-line}
+        "dmTTHd = " string(dmTTHd) {&new-line}
+        "X1 = " string(X1) {&new-line}
+        "X2 = " string(X2) {&new-line}
+        "X3 = " string(X3) {&new-line}
+        "X4 = " string(X4) {&new-line}
+        "MP = " string(MP) {&new-line}
+        "I = " string(I) {&new-line}
+        "H = " string(H) {&new-line}
+      .
+      output stream log-algo close.
+      return.
+    end.
+    
+    
+    dTTH = AccShip.
+    dmTTHd = MTTH * dTTH * 0.01.
+    
+
+    
+    X3 = MKP - dmKPd.
+    X4 = MTTH + dmTTHd.
+    
+    delTTH = dTTH * MTTH * 0.01.
+    
+    MKPK = X3 + dF * ((X4 - X3) / (dTTH + dF)).
+    
+    
+    if abs (dMKP) <= delTTH + delKP /* условие (32)*/ and MTTH < MKP /* условие (35) */
+    then do: 
+      I = MKPK - MTTH.
+      MP = MKPK.
+      GetInfoSectionProp(ii):AccAbsFact = delTTH + delKP.
+      GetInfoSectionProp(ii):Excess = I.
+      GetInfoSectionProp(ii):RnAlgo = "условие 32 и условие 35".
+      output stream log-algo to value ("log-algo-pomi.txt") append.
+      put stream log-algo unformatted
+        {&new-line}
+        "-----------------------------------------------"
+        {&new-line}
+        now {&new-line}
+        GetInfoSectionProp(ii):RnAlgo {&new-line}
+        "MTTH  = " string(MTTH) {&new-line}
+        "MF  = " string(MF) {&new-line}
+        "dF  = " string(dF) {&new-line}
+        "NPE  = " string(NPE) {&new-line}
+        "dmd  = " string(dmd) {&new-line}
+        "dMP  = " string(dMP) {&new-line}
+        "dMEd  = " string(dMEd) {&new-line}
+        "ME = " string(ME) {&new-line}
+        "MKP = " string(MKP) {&new-line}
+        "dMKP = " string(dMKP) {&new-line}
+        "dmKPd = " string(dmKPd) {&new-line}
+        "delKP = " string(delKP) {&new-line}
+        "delTTH = " string(delTTH) {&new-line}
+        "dTTH = " string(dTTH) {&new-line}
+        "dKP = " string(dKP) {&new-line}
+        "MKPK = " string(MKPK) {&new-line}
+        "dmTTHd = " string(dmTTHd) {&new-line}
+        "X1 = " string(X1) {&new-line}
+        "X2 = " string(X2) {&new-line}
+        "X3 = " string(X3) {&new-line}
+        "X4 = " string(X4) {&new-line}
+        "MP = " string(MP) {&new-line}
+        "I = " string(I) {&new-line}
+        "H = " string(H) {&new-line}
+      .
+      output stream log-algo close.
+      return.
+    end.
+
+
+    if not abs (dmKP) <= delTTH + delKP /* условие (32)*/ and MTTH < MKP /* условие (35) */
+    then do: 
+      MP = MKP - delKP.
+      I = MKP - MTTH - delKP.
+      GetInfoSectionProp(ii):AccAbsFact = delTTH + delKP.
+      GetInfoSectionProp(ii):Excess = I.
+      GetInfoSectionProp(ii):RnAlgo = "нет условие 32 и условие 35".
+      output stream log-algo to value ("log-algo-pomi.txt") append.
+      put stream log-algo unformatted
+        {&new-line}
+        "-----------------------------------------------"
+        {&new-line}
+        now {&new-line}
+        GetInfoSectionProp(ii):RnAlgo {&new-line}
+        "MTTH  = " string(MTTH) {&new-line}
+        "MF  = " string(MF) {&new-line}
+        "dF  = " string(dF) {&new-line}
+        "NPE  = " string(NPE) {&new-line}
+        "dmd  = " string(dmd) {&new-line}
+        "dMP  = " string(dMP) {&new-line}
+        "dMEd  = " string(dMEd) {&new-line}
+        "ME = " string(ME) {&new-line}
+        "MKP = " string(MKP) {&new-line}
+        "dMKP = " string(dMKP) {&new-line}
+        "dmKPd = " string(dmKPd) {&new-line}
+        "delKP = " string(delKP) {&new-line}
+        "delTTH = " string(delTTH) {&new-line}
+        "dTTH = " string(dTTH) {&new-line}
+        "dKP = " string(dKP) {&new-line}
+        "MKPK = " string(MKPK) {&new-line}
+        "dmTTHd = " string(dmTTHd) {&new-line}
+        "X1 = " string(X1) {&new-line}
+        "X2 = " string(X2) {&new-line}
+        "X3 = " string(X3) {&new-line}
+        "X4 = " string(X4) {&new-line}
+        "MP = " string(MP) {&new-line}
+        "I = " string(I) {&new-line}
+        "H = " string(H) {&new-line}
+      .
+      output stream log-algo close.
+      return.
+    end.
+    
+    if abs (dmKP) <= delTTH + delKP /* условие (32)*/ and MTTH > MKP /* условие (44) */
+    then do: 
+      if abs (dMKP) <= dmKPd + dMed /* условие (45) */
+      then do:
+        ME = MTTH - MKP - dmKPd.
+        MP = MTTH - ME.
+        GetInfoSectionProp(ii):AccAbsFact = dmKPd + dMed.
+        GetInfoSectionProp(ii):NaturalLoss = ME.
+        GetInfoSectionProp(ii):RnAlgo = "условие 32 и условие 44 и условие 45".
+        output stream log-algo to value ("log-algo-pomi.txt") append.
+        put stream log-algo unformatted
+          {&new-line}
+          "-----------------------------------------------"
+          {&new-line}
+          now {&new-line}
+          GetInfoSectionProp(ii):RnAlgo {&new-line}
+          "MTTH  = " string(MTTH) {&new-line}
+          "MF  = " string(MF) {&new-line}
+          "dF  = " string(dF) {&new-line}
+          "NPE  = " string(NPE) {&new-line}
+          "dmd  = " string(dmd) {&new-line}
+          "dMP  = " string(dMP) {&new-line}
+          "dMEd  = " string(dMEd) {&new-line}
+          "ME = " string(ME) {&new-line}
+          "MKP = " string(MKP) {&new-line}
+          "dMKP = " string(dMKP) {&new-line}
+          "dmKPd = " string(dmKPd) {&new-line}
+          "delKP = " string(delKP) {&new-line}
+          "delTTH = " string(delTTH) {&new-line}
+          "dTTH = " string(dTTH) {&new-line}
+          "dKP = " string(dKP) {&new-line}
+          "MKPK = " string(MKPK) {&new-line}
+          "dmTTHd = " string(dmTTHd) {&new-line}
+          "X1 = " string(X1) {&new-line}
+          "X2 = " string(X2) {&new-line}
+          "X3 = " string(X3) {&new-line}
+          "X4 = " string(X4) {&new-line}
+          "MP = " string(MP) {&new-line}
+          "I = " string(I) {&new-line}
+          "H = " string(H) {&new-line}
+        .
+        output stream log-algo close.
+        return.
+      end.
+      else do:
+        
+        X1 = MTTH - dmTTHd.
+        X2 = MKP + dmKPd.
+        
+        MKPK = X1 + dTTH * ((X2 - X1) / (dTTH + dKP)).
+        
+        MP = MKPK.
+        ME = dMEd.
+        H = MTTH - MKPK - ME.
+        GetInfoSectionProp(ii):AccAbsFact = dmKPd + dMed.
+        GetInfoSectionProp(ii):NaturalLoss = ME.
+        GetInfoSectionProp(ii):Deficit = H.
+        GetInfoSectionProp(ii):RnAlgo = "условие 32 и условие 44 и нет условие 45".
+        output stream log-algo to value ("log-algo-pomi.txt") append.
+        put stream log-algo unformatted
+          {&new-line}
+          "-----------------------------------------------"
+          {&new-line}
+          now {&new-line}
+          GetInfoSectionProp(ii):RnAlgo {&new-line}
+          "MTTH  = " string(MTTH) {&new-line}
+          "MF  = " string(MF) {&new-line}
+          "dF  = " string(dF) {&new-line}
+          "NPE  = " string(NPE) {&new-line}
+          "dmd  = " string(dmd) {&new-line}
+          "dMP  = " string(dMP) {&new-line}
+          "dMEd  = " string(dMEd) {&new-line}
+          "ME = " string(ME) {&new-line}
+          "MKP = " string(MKP) {&new-line}
+          "dMKP = " string(dMKP) {&new-line}
+          "dmKPd = " string(dmKPd) {&new-line}
+          "delKP = " string(delKP) {&new-line}
+          "delTTH = " string(delTTH) {&new-line}
+          "dTTH = " string(dTTH) {&new-line}
+          "dKP = " string(dKP) {&new-line}
+          "MKPK = " string(MKPK) {&new-line}
+          "dmTTHd = " string(dmTTHd) {&new-line}
+          "X1 = " string(X1) {&new-line}
+          "X2 = " string(X2) {&new-line}
+          "X3 = " string(X3) {&new-line}
+          "X4 = " string(X4) {&new-line}
+          "MP = " string(MP) {&new-line}
+          "I = " string(I) {&new-line}
+          "H = " string(H) {&new-line}
+        .
+        output stream log-algo close.
+        return.
+      end.
+
+    end.
+
+    if not ( abs (dmKP) <= delTTH + delKP ) /* условие (32)*/ and MTTH > MKP /* условие (44) */
+    then do:
+      ME = dMEd.
+      MP = MKP + delKP.
+      H = MTTH - MKP - delKP - ME.
+      GetInfoSectionProp(ii):AccAbsFact = delTTH + delKP.
+      GetInfoSectionProp(ii):NaturalLoss = ME.
+      GetInfoSectionProp(ii):Deficit = H.
+      GetInfoSectionProp(ii):RnAlgo =  "нет условие 32 и условие 44".
+      output stream log-algo to value ("log-algo-pomi.txt") append.
+      put stream log-algo unformatted
+        {&new-line}
+        "-----------------------------------------------"
+        {&new-line}
+        now {&new-line}
+        GetInfoSectionProp(ii):RnAlgo {&new-line}
+        "MTTH  = " string(MTTH) {&new-line}
+        "MF  = " string(MF) {&new-line}
+        "dF  = " string(dF) {&new-line}
+        "NPE  = " string(NPE) {&new-line}
+        "dmd  = " string(dmd) {&new-line}
+        "dMP  = " string(dMP) {&new-line}
+        "dMEd  = " string(dMEd) {&new-line}
+        "ME = " string(ME) {&new-line}
+        "MKP = " string(MKP) {&new-line}
+        "dMKP = " string(dMKP) {&new-line}
+        "dmKPd = " string(dmKPd) {&new-line}
+        "delKP = " string(delKP) {&new-line}
+        "delTTH = " string(delTTH) {&new-line}
+        "dTTH = " string(dTTH) {&new-line}
+        "dKP = " string(dKP) {&new-line}
+        "MKPK = " string(MKPK) {&new-line}
+        "dmTTHd = " string(dmTTHd) {&new-line}
+        "X1 = " string(X1) {&new-line}
+        "X2 = " string(X2) {&new-line}
+        "X3 = " string(X3) {&new-line}
+        "X4 = " string(X4) {&new-line}
+        "MP = " string(MP) {&new-line}
+        "I = " string(I) {&new-line}
+        "H = " string(H) {&new-line}
+      .
+      output stream log-algo close.
+      return.
+    end.
+
+  end method.
+  
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:

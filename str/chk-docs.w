@@ -194,7 +194,9 @@ DEFINE MENU m-print
        MENU-ITEM m-pay          LABEL "Список оплат чеков"
        MENU-ITEM m-one          LABEL "Чек"           
        MENU-ITEM m-gds-list     LABEL "Товары чеков в файл"
-       MENU-ITEM m-spcf         LABEL "Спецификация"  .
+       MENU-ITEM m-spcf         LABEL "Спецификация"
+       MENU-ITEM m-akt-spi    LABEL "Акт списания"
+         .
 
 
 /* Definitions of the field level widgets                               */
@@ -602,7 +604,8 @@ end.
             WARNING buttons YES-NO update glog.
             if NOT glog then return no-apply.
         end.
-
+      when "akt-spi" then do: 
+          end.
       END CASE.
     end.
     v-doc-rec = recid( c-doc ).
@@ -629,6 +632,16 @@ end.
   end.
   else do:
     CASE print-type:
+        when "akt-spi" then 
+            do: 
+                if c-doc.chk-type <>  integer({&rcpt-tech-refuell}) then 
+                do: 
+                
+                    message "Акт списания делается только по чекам ТехПролива" view-as alert-box ERROR.
+                    return no-apply.
+                end.
+                run rep/r-akt-spis.p (input c-doc.doc-code ).
+            end.
         when "one":U then do:
           if lookup(string(c-doc.chk-type), {&wth-receipt-codes}) > 0 then do:
             run str/checkwp.p ( input parparentproc, input c-doc.doc-code) no-error.
@@ -868,6 +881,20 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME m-akt-spi
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-akt-spi Dialog-Frame
+ON CHOOSE OF MENU-ITEM m-akt-spi /* Товары чеков в файл */
+DO:
+      print-type = "akt-spi":U.
+    apply "choose" to b-print in frame {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 
 
 &Scoped-define SELF-NAME m-list

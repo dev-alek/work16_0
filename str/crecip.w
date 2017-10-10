@@ -460,6 +460,7 @@ on error undo, return error
             end.        /* NOT( if v-find-success = yes ) */
             delete object v-old-recipe-handle.
         end.        /* if v-find-success = yes */
+        else
         delete object v-old-recipe-handle.
     end.        /* NOT( if buf_c-recipe-hist.action = {&hn-create} ) */
 end.

@@ -1474,7 +1474,7 @@ procedure lib-trn_is-petrl :
     if not available bf_units then do:
       return error substitute( 'lib-trn_is-petrl: не найдена базовая ед.изм. "&1" в товаре &2 (производитель &3 &4).',
                                bf_goods.unit-base, parartic, parprod-type, parprod-code ).
-    end.
+	end.
     assign paris-petrolium = ( if lookup( {&petrolium}, bf_units.type ) > 0 then yes else no ).
     if lookup( {&pieces}, bf_units.type ) = 0 then do:
       if paris-petrolium = yes and lookup( {&divisional}, bf_units.type ) = 0 then do:

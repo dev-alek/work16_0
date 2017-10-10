@@ -30,8 +30,10 @@ main-block:
 do
 on error undo main-block, return error
 :
+  if index (ub.auto-tank.auto-num , "#") = 0 then do :
   message
     "Удаление автоцистерны невозможно" skip
     view-as alert-box error .
     undo, return error .
+  end.      
 end.

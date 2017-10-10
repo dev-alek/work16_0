@@ -76,6 +76,7 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,c-gds-grp-obj~
 ,tax-units~
 ,c-tax-units~
+,sum-grp-attr~
 ,sum-grp~
 ,c-sum-grp~
 ,auto-tank~

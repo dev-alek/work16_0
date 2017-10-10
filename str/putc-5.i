@@ -229,6 +229,23 @@ CASE par-pos-type:
         end.
       end. /* if action <> 'D':U  then do:*/
     end.
+    if v-version-dec >= 1.12 then do:
+      if action <> 'D':U  then do:
+        /*найдем значение атрибута*/
+         find first buf_cash-pay-attr no-lock where buf_cash-pay-attr.host-code = v-host-code
+                                 and buf_cash-pay-attr.obj-code = i-obj-code
+                                 and buf_cash-pay-attr.obj-type = {&shop}
+                                 and buf_cash-pay-attr.cdpay-code = cash-pay.cdpay-code
+                                 and buf_cash-pay-attr.curr-code = cash-pay.curr-code
+                                 and buf_cash-pay-attr.attr-code = "cash-prop" no-error .
+      end. /* if action <> 'D':U  then do:*/
+    end.
+    if AVAILABLE buf_cash-pay-attr then do:
+        run bgelib-tag-put in this-procedure ( input 3, input "PaymentType":U
+                                             ,input (buf_cash-pay-attr.attr-value)
+                                            ,input 1
+                                                     ).
+    end.    
     if available buf_dis-rule
     then do:
       run bgelib-tag-put in this-procedure ( input 3, input "PaymentDType":U
@@ -254,6 +271,27 @@ CASE par-pos-type:
                                             ,input string(0)
                                             ,input 1 ).
     end.
+        find first buf_cash-pay-attr no-lock where buf_cash-pay-attr.cdpay-code = cash-pay.cdpay-code
+        and buf_cash-pay-attr.curr-code = cash-pay.curr-code
+        and buf_cash-pay-attr.attr-code = {&cp-attr-max_proc_sum} no-error .
+    if AVAILABLE buf_cash-pay-attr then 
+    do:
+        v-paymentetc = "MaxLimit" + ":" + string(decimal(buf_cash-pay-attr.attr-value) * 100).   
+    end.    
+    find first buf_cash-pay-attr no-lock where buf_cash-pay-attr.cdpay-code = cash-pay.cdpay-code
+        and buf_cash-pay-attr.curr-code = cash-pay.curr-code
+        and buf_cash-pay-attr.attr-code = {&cp-attr-mask_card_kup} no-error .
+    if AVAILABLE buf_cash-pay-attr then 
+    do:
+        v-paymentetc = v-paymentetc + "," + "Mask" + ":" + buf_cash-pay-attr.attr-value .   
+    end.    
+    if v-paymentetc <> "" then 
+    do:
+        run bgelib-tag-put in this-procedure ( input 3, input "PaymentEtc":U
+                                             ,input (trim(v-paymentetc,","))
+                                            ,input 1
+                                                     ).
+    end.    
     run bgelib-tag-open in this-procedure ( input 3, input "PaymentStatus"
                                           , input "":U).
     run bgelib-tag-put in this-procedure ( input 4, input "PSCash":U

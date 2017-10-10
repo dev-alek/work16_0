@@ -29,12 +29,17 @@ FIELD netto as decimal
 FIELD out-name as character format "X(20)"
 FIELD is-pay as logical
 FIELD ii as integer
+FIELD discnt-type   as integer
+FIELD brutto as decimal 
+FIELD discount-sum as decimal
+FIELD chk-qnty as int
 INDEX pi IS UNIQUE PRIMARY
       grp-code-sheet
       cpay-code
+      discnt-type
       curr-code
       is-pay DESCENDING
-INDEX vi IS UNIQUE
+INDEX vi 
       grp-code-sheet
       ii
 .

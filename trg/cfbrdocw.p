@@ -68,6 +68,8 @@ on error undo main-block, return error
               input {&nwsdochs_action_update}
             , input {&table_c-fbr-doc}
             , input ( buffer ub.c-fbr-doc :handle )
+            , input ?
+            , input ""
         ) no-error.
         if error-status :error
         then do:

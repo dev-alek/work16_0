@@ -36,6 +36,8 @@ define variable vss-description as character no-undo init "Процедура выгрузки ин
 { gbl/getcntxt.i def    }
 
 DEFINE INPUT PARAMETER p-log-handle AS HANDLE NO-UNDO. /* handle по которому находится процедура записи лога */
+define input parameter v-obj-range   as integer   no-undo .
+define input parameter v-host-code   like ub.sysconf.host-code no-undo .
 define input parameter v-obj-list as character no-undo.
 define input parameter date-to as date no-undo.
 define input parameter date-from as date no-undo.
@@ -61,21 +63,45 @@ define variable v-time           as char    no-undo.
 define buffer buf_goods for goods.
 define variable v-code-get    as integer no-undo.
 define variable v-obj-counter as integer no-undo.
+define variable v-obj-type    as character no-undo.
+define variable v-obj-code    as integer no-undo.
 
 
 for each temp-obj    :
     delete temp-obj.
 end.
 
-do v-obj-counter = 1 to num-entries ( v-obj-list ) / 2
-    :
-    create temp-obj.
-    assign
-        temp-obj.obj-type = entry( v-obj-counter * 2 - 1, v-obj-list )
-        temp-obj.obj-code = integer(entry( v-obj-counter * 2, v-obj-list ) )
-                    no-error .
-                    
-end.
+  case v-obj-range:
+    when 2 then do: /* по фирме */
+      run init-temphost.
+      for each temp-obj where temp-obj.host-code <> v-host-code :
+        delete temp-obj.
+      end.
+    end. /* end_of when 2 */
+    when 3 then do: /* по объектам */
+      do v-obj-counter = 1 to num-entries ( v-obj-list ) / 2 :
+        assign
+          v-obj-type =          entry( v-obj-counter * 2 - 1, v-obj-list )
+          v-obj-code = integer( entry( v-obj-counter * 2    , v-obj-list ) )
+        no-error .
+        if error-status:error then next.
+        
+        find first temp-obj no-lock
+             where temp-obj.obj-type = v-obj-type
+               and temp-obj.obj-code = v-obj-code no-error .
+        if available temp-obj then next.
+        
+        create temp-obj.
+        assign
+          temp-obj.obj-type = v-obj-type
+          temp-obj.obj-code = v-obj-code
+        .
+      end.
+    end. /* end_of when 3 */
+    otherwise do:
+      /* пустой перечень объектов никак не обрабатывался. */
+    end.
+  end case.
 
 
 v-ul-day = -1 *  (INTERVAL(date( 1 , 1 , YEAR(TODAY)), today , 'days')) + 1  .
@@ -184,8 +210,3 @@ do:
 
 end.
 
-
-
-
-
-            

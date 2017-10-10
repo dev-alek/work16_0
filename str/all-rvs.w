@@ -68,6 +68,9 @@ define variable vss-description as character no-undo initial "Список документов 
 { ref/gds-attr.i }
 { str/is-gas.i }
 { str/placelib.i }
+{ cmp/trg-def.i  }
+
+
 define buffer buf-inv_trn-doc for ub.trn-doc .
 define buffer buf-spi_trn-doc for ub.trn-doc .
 
@@ -652,15 +655,17 @@ do:
         yes
         no-error
       }
-        if error-status :error then 
-        do:
-            message
-                "Ошибка при закрытии документа сверки." skip
-                error-status:get-message(1) skip
-                return-value
-                view-as alert-box error.
-            undo tr, leave.
-        end.
+   
+      if error-status :error then do:
+       
+        message
+          "Ошибка при закрытии документа сверки." skip
+          error-status:get-message(1) skip
+          return-value
+          view-as alert-box error.
+        run userlogrvs(58, return-value + error-status:get-message(1) ) .
+        undo tr, leave.
+      end.
     end.
 end.
 else 
@@ -750,6 +755,7 @@ do:
       }
         if error-status :error then 
         do:
+        run userlogrvs(58, return-value + error-status:get-message(1) ) .
             message
                 "Ошибка при закрытии документа сверки." skip
                 error-status:get-message(1) skip
@@ -878,17 +884,66 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del d-all-r-docs
 ON CHOOSE OF b-del IN FRAME d-all-r-docs /* Удалить */
     DO:
+    define variable v-person as character no-undo.
+    define variable v-vid-action as integer  no-undo .
+    define variable v-vid-param  as longchar no-undo .
+    define variable v-mess as char no-undo.
+    define variable p-rvs-doc as character no-undo.
+
         if not available r-doc then 
         do:
             message "Не выбрана сверка, которую нужно удалить." view-as alert-box.
             return no-apply.
         end.
+		p-rvs-doc = r-doc.rvs-code.
         run proc-del in this-procedure
             no-error.
         if error-status :error then 
         do:
+    run userlogrvs(60, return-value + error-status:get-message(1) ) no-error.
+      /*  v-mess = return-value.
+        for first  ub.clients where ub.clients.obj-type = {&prs} and  ub.clients.obj-code = ub.c-rvs-doc.boss no-lock : 
+            v-person = clients.obj-name.
+        end.
+        v-vid-action = 60.
+        v-vid-param =
+            "Initiator=" + "User" + {&delim-par} +
+            "ResponsiblePerson=" + (if v-person <> ?  then v-person else "") + {&delim-par} + 
+            "SHOP_NUM=" + string(r-doc.obj-code) + {&delim-par} +
+            "DocNum=" + string(r-doc.rvs-code) + {&delim-par} +
+            "FactDate=" + (if string(r-doc.fact-date) = ? then '' else string(r-doc.fact-date)) + {&delim-par} +
+            "DocType=" + string(r-doc.rvs-type) + {&delim-par} +
+            "ShiftNum=" + string(r-doc.shift-num) + {&delim-par} +
+            "ShiftDate=" + string(r-doc.shift-date) + {&delim-par} +
+            /*                "ShiftNumCurr=" + (if string(parshift-num) = ? then '' else string(parshift-num)) + {&delim-par} +   */
+            /*                "ShiftDateCurr=" + (if string(parshift-date) = ? then '' else string(parshift-date)) + {&delim-par} +*/
+            "Status=" + string(r-doc.status_) + {&delim-par} +
+            "RESULT=0" + {&delim-par} +
+            "Description=" + v-mess.
+        
+         
+        run trg/userlog.p (
+            input {&nwsdochs_action_delete_err}
+            , input {&table_rvs-doc}
+            , input ( buffer r-doc :handle )
+            , input v-vid-action
+            , input v-vid-param
+            ) no-error.
+            */
+        if error-status :error
+            then 
+        do:
+            message substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ) 
+                view-as alert-box.
             return no-apply.
         end.
+        
+    end.
+
         run openbr in this-procedure .
     END.
 
@@ -1016,24 +1071,7 @@ do:
             return-value skip
             view-as alert-box error .
     end.
-    else 
-    do:
-        if v-docs-info <> "":U then 
-        do:
-            message
-                "Создание завершено." skip
-                "Созданы документы:" skip
-                v-docs-info
-                view-as alert-box information.
-        end.
-        else 
-        do:
-            message
-                "ДОКУМЕНТЫ НЕ СОЗДАНЫ!!!" skip
-                view-as alert-box warning .
-        end.
-    end.
-end.
+  end.
 
 END.
 
@@ -2280,7 +2318,7 @@ PROCEDURE proc-del :
             message
                 "Документ в данном статусе не может быть удален."
                 view-as alert-box.
-            return error.
+            return error   "Документ сверки с типом 'смена' в данном статусе не может быть удален" .
         end.
         if r-doc.status_ = {&fact} then 
         do:
@@ -2289,7 +2327,7 @@ PROCEDURE proc-del :
                 message
                     "Документ сверки с типом 'смена' в данном статусе не может быть удален"
                     view-as alert-box.
-                return error.
+                return error   "Документ сверки с типом 'смена' в данном статусе не может быть удален" .
             end.
             else 
             do:
@@ -2298,7 +2336,7 @@ PROCEDURE proc-del :
                     message
                         "Закрытый документ сверки с типом, отличным от 'контроль', не может быть удален"
                         view-as alert-box.
-                    return error.
+                    return error "Закрытый документ сверки с типом, отличным от 'контроль', не может быть удален" .
                 end.
                 else 
                 do:
@@ -2377,7 +2415,9 @@ PROCEDURE proc-del :
                                     "На объекте есть складские документы по этому товару. Номер документа " bf_doc-line.doc-code
                                     " Товар " bf_doc-line.artic " " bf_doc-line.prod-type " " bf_doc-line.prod-code
                                     view-as alert-box.
-                                return error.
+                                return error substitute (      "Нельзя удалить сверку, являющуюся первой контрольной для товара.
+                  На объекте есть складские документы по этому товару. Номер документа  &1 
+                  Товар &2&3&4 " , bf_doc-line.doc-code , bf_doc-line.artic , bf_doc-line.prod-type, bf_doc-line.prod-code).
                             end.
                         end.
                         find first bf_trn-doc no-lock where bf_trn-doc.out-code = r-doc.rvs-code no-error.
@@ -2386,7 +2426,7 @@ PROCEDURE proc-del :
                             message "К сверке есть привязанные складские документы. Удалить нельзя."
                                 "Номер документа " bf_trn-doc.doc-code " ."
                                 view-as alert-box.
-                            return error.
+                            return error "К сверке есть привязанные складские документы. Удалить нельзя." .
                         end.
                     end. /* for each bf_rvs-line */
                 end. /* r-doc.rvs-type = {&rvs-control} */
@@ -2560,7 +2600,71 @@ PROCEDURE UI-on :
     .
     run OpenBr in this-procedure .
 
+END PROCEDURE.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE userlogrvs d-all-r-docs 
+PROCEDURE userlogrvs :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+define input parameter p-vid-action as integer  no-undo .
+define input parameter p-mess as char no-undo.
+    define variable v-person as character no-undo.  
+    define variable v-vid-param  as longchar no-undo .
+  define variable v-result as integer no-undo.
+  define variable varshift-date as date no-undo.
+  define variable  varshift-num as integer no-undo.
+  define variable varshift-name as char no-undo.
+  
+    
+    { gbl/curshift.i
+    r-doc.obj-type
+    r-doc.obj-code
+    varshift-date
+    varshift-num
+    varshift-name
+    no-error
+  }
+        for first  ub.clients where ub.clients.obj-type = {&prs} and  ub.clients.obj-code = ub.c-rvs-doc.boss no-lock : 
+            v-person = clients.obj-name.
+        end.
+    v-vid-param =
+        "Initiator=" + "User" + {&delim-par} +
+        "ResponsiblePerson=" + (if v-person <> ?  then v-person else "") + {&delim-par} + 
+        "SHOP_NUM=" + string(r-doc.obj-code) + {&delim-par} +
+        "DocNum=" + string(r-doc.rvs-code) + {&delim-par} +
+        "FactDate=" + (if string(r-doc.fact-date) = ? then '' else string(r-doc.fact-date)) + {&delim-par} +
+        "DocType=" + string(r-doc.rvs-type) + {&delim-par} +
+        "SHIFT_NUM_DOC=" + (if string(r-doc.shift-num) = ? then '' else string(r-doc.shift-num)) + (if string(r-doc.shift-date) = ? then '' else string(r-doc.shift-date ,  "99999999" )) + {&delim-par} + 
+        "SHIFT_NUM=" + (if string(varshift-num) = ? then '' else string(varshift-num)) + (if string(varshift-date) = ? then '' else string(varshift-date, "99999999")) + {&delim-par} +
+        "Status=" + string(r-doc.status_) + {&delim-par} +
+        "RESULT=" + string( 1 ) + {&delim-par} + 
+        "Description=" + p-mess no-error.
+        
+         
+        run trg/userlog.p (
+            input if p-vid-action = 60 then {&nwsdochs_action_delete_err} else {&nwsdochs_action_update_err}
+            , input {&table_rvs-doc}
+            , input ( buffer r-doc :handle )
+            , input p-vid-action
+            , input v-vid-param
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            message substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ) 
+                view-as alert-box.
+            return no-apply.
+        end. 
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

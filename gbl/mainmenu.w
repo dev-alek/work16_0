@@ -65,7 +65,7 @@ define variable vss-description as character no-undo init "Главное окно IBS Trad
 { gbl/thbj-def.i }
 { gbl/godendo.i  }
 { gbl/mainproc.i def }
-
+{ gbl/db-attr.i  }
 
 &scoped-define open-mark   chr(187)
 &scoped-define close-mark   chr(171)
@@ -96,6 +96,9 @@ define variable parparentproc                  as widget-handle       no-undo.
 DEFINE VARIABLE fi-menu-group-name AS CHARACTER no-undo.
 define variable v-show-display-name as character format "x(60)" label "Меню" .
 define variable v-logo-image-visible    as logical      no-undo.
+define variable v-db-attr-value         as character    no-undo .
+define variable v-db-attr-type          as character    no-undo .
+define variable v-mess-id               as integer      no-undo .
 
 define temp-table temp-menu-item no-undo
   field num-level      as integer
@@ -172,6 +175,12 @@ define variable v-userio-bi-write      as decimal   no-undo .
 define variable v-userio-db-access     as decimal   no-undo .
 define variable v-userio-db-read       as decimal   no-undo .
 define variable v-userio-db-write      as decimal   no-undo .
+
+define variable par-is-cctv as character no-undo .
+define variable is-cctv     as logical   no-undo .
+define variable v-vid-ok    as logical   no-undo .
+define variable v-vid-mes   as character no-undo .
+define variable v-vid-param as longchar  no-undo .
 
 /* переменные для меню */
 define variable menu-bar-handle    as widget-handle no-undo. /* указатель на widget menu */
@@ -1240,9 +1249,74 @@ END.
 /* The CLOSE event can be used from inside or outside the procedure to  */
 /* terminate it.                                                        */
 on close of this-procedure
-do:
-   run disable_ui .
-end.
+    do:
+    { gbl/conf-rd.i "'is-cctv'"  "''" "''" 0 "''" "''" "''"  no par-is-cctv par-type      no-error}
+        is-cctv = lookup(par-is-cctv, "true,yes":U) > 0 .
+        if is-cctv then 
+        do:
+
+            v-vid-param = 
+                "SHOP_NUM=" + string(v-cntxt-obj-code) + {&delim-par} +
+                "Login=" + fi-user-login + {&delim-par} + 
+                "THname=" + fi-nickname .
+    run db-attr-value in this-procedure ( input v-cntxt-db-num
+                                          , input {&attr-mess-id-video}
+                                          , output v-db-attr-value
+                                          , output v-db-attr-type
+                                          ) no-error .
+    assign
+      v-mess-id = integer (v-db-attr-value) no-error.
+    
+    if v-mess-id = ?
+      then v-mess-id = 0.
+
+    v-vid-param = v-vid-param + {&delim-par} +
+     "MESSAGE_ID=" + string (v-mess-id)
+    .
+    
+    v-mess-id = v-mess-id + 1.
+    run db-attr-write in this-procedure ( input v-cntxt-db-num
+                                        , input {&attr-mess-id-video}
+                                        , input string (v-mess-id)
+                                        ) no-error .
+                
+/*            find first ub.db-attr exclusive-lock where ub.db-attr.db-num = v-cntxt-db-num and ub.db-attr.attr-code = "INum-video" no-error.*/
+/*                                                                                                                                           */
+/*            if available (ub.db-attr)                                                                                                      */
+/*                then                                                                                                                       */
+/*            do:                                                                                                                            */
+/*                assign                                                                                                                     */
+/*                    v-vid-param = v-vid-param + {&delim-par} +                                                                             */
+/*                      "INum=" + ub.db-attr.attr-value                                                                                      */
+/*                    .                                                                                                                      */
+/*                assign                                                                                                                     */
+/*                    ub.db-attr.attr-value = string (integer (ub.db-attr.attr-value) + 1).                                                  */
+/*                                                                                                                                           */
+/*            end.                                                                                                                           */
+/*            else                                                                                                                           */
+/*            do:                                                                                                                            */
+/*                assign                                                                                                                     */
+/*                    v-vid-param = v-vid-param + {&delim-par} +                                                                             */
+/*                      "INum=" + string (1).                                                                                                */
+/*                .                                                                                                                          */
+/*                                                                                                                                           */
+/*                create ub.db-attr.                                                                                                         */
+/*                                                                                                                                           */
+/*                assign                                                                                                                     */
+/*                    ub.db-attr.db-num    = v-cntxt-db-num                                                                                  */
+/*                    ub.db-attr.attr-code = "INum-video"                                                                                    */
+/*                    .                                                                                                                      */
+/*                assign                                                                                                                     */
+/*                    ub.db-attr.attr-value = string (1).                                                                                    */
+/*            end.                                                                                                                           */
+            
+            run trg/video-action.p (input 63,
+                input v-vid-param,
+                output v-vid-ok,
+                output v-vid-mes) .
+        end.    
+        run disable_ui .
+    end.
 
 /*  чтобы нельзя было выйти по esc и alt-f4, а только через меню  */
 on window-close of {&window-name}
@@ -1252,9 +1326,75 @@ do:
 end.
 
 on endkey, end-error of {&window-name} anywhere
-do:
-  return no-apply .
-end.
+    do:
+    { gbl/conf-rd.i "'is-cctv'"  "''" "''" 0 "''" "''" "''"  no par-is-cctv par-type      no-error}
+        is-cctv = lookup(par-is-cctv, "true,yes":U) > 0 .
+        if is-cctv then 
+        do:
+
+            v-vid-param = 
+                "SHOP_NUM=" + string(v-cntxt-obj-code) + {&delim-par} +
+                "Login=" + fi-user-login + {&delim-par} + 
+                "THname=" + fi-nickname .
+                
+    run db-attr-value in this-procedure ( input v-cntxt-db-num
+                                          , input {&attr-mess-id-video}
+                                          , output v-db-attr-value
+                                          , output v-db-attr-type
+                                          ) no-error .
+    assign
+      v-mess-id = integer (v-db-attr-value) no-error.
+    
+    if v-mess-id = ?
+      then v-mess-id = 0.
+
+    v-vid-param = v-vid-param + {&delim-par} +
+     "MESSAGE_ID=" + string (v-mess-id)
+    .
+    
+    v-mess-id = v-mess-id + 1.
+    run db-attr-write in this-procedure ( input v-cntxt-db-num
+                                        , input {&attr-mess-id-video}
+                                        , input string (v-mess-id)
+                                        ) no-error .
+                
+/*            find first ub.db-attr exclusive-lock where ub.db-attr.db-num = v-cntxt-db-num and ub.db-attr.attr-code = "INum-video" no-error.*/
+/*                                                                                                                                           */
+/*            if available (ub.db-attr)                                                                                                      */
+/*                then                                                                                                                       */
+/*            do:                                                                                                                            */
+/*                assign                                                                                                                     */
+/*                    v-vid-param = v-vid-param + {&delim-par} +                                                                             */
+/*                      "INum=" + ub.db-attr.attr-value                                                                                      */
+/*                    .                                                                                                                      */
+/*                assign                                                                                                                     */
+/*                    ub.db-attr.attr-value = string (integer (ub.db-attr.attr-value) + 1).                                                  */
+/*                                                                                                                                           */
+/*            end.                                                                                                                           */
+/*            else                                                                                                                           */
+/*            do:                                                                                                                            */
+/*                assign                                                                                                                     */
+/*                    v-vid-param = v-vid-param + {&delim-par} +                                                                             */
+/*                      "INum=" + string (1).                                                                                                */
+/*                .                                                                                                                          */
+/*                                                                                                                                           */
+/*                create ub.db-attr.                                                                                                         */
+/*                                                                                                                                           */
+/*                assign                                                                                                                     */
+/*                    ub.db-attr.db-num    = v-cntxt-db-num                                                                                  */
+/*                    ub.db-attr.attr-code = "INum-video"                                                                                    */
+/*                    .                                                                                                                      */
+/*                assign                                                                                                                     */
+/*                    ub.db-attr.attr-value = string (1).                                                                                    */
+/*            end.                                                                                                                           */
+            
+            run trg/video-action.p (input 63,
+                input v-vid-param,
+                output v-vid-ok,
+                output v-vid-mes) .
+        end.    
+        return no-apply .
+    end.
 
 /* Best default for GUI applications is...                              */
 pause 0 before-hide.

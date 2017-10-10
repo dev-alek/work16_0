@@ -42,6 +42,7 @@ DO ON ERROR UNDO _main, return error:
     {1}.out-name = pout-name
     {1}.is-pay = pis-pay
     {1}.ii = pii
+    {1}.discnt-type = -99
     no-error
     .
     if error-status:error then undo _main, return error.

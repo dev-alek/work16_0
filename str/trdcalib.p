@@ -468,6 +468,12 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-seals-condition
       {&attr-temp-full-code}
+      &scop attr-code trdcattr-doc-not
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-spisok-not-doc
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-acc-ship
+      {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры */
       otherwise do:

@@ -954,6 +954,8 @@ procedure lib-trn3_trdcattr-news:
       {&attr-news-code}
       &scop attr-code trdcattr-envd
       {&attr-news-code}
+      &scop attr-code trdcattr-acc-ship
+      {&attr-news-code}
       /* сюда добавлять новые параметры */
       otherwise do:
         undo, return error "неизвестный атрибут документа" + " " + p-code .
@@ -1009,6 +1011,8 @@ procedure lib-trn3_trdcattr-tooltip :
       &scop attr-code trdcattr-expense_own
       {&attr-temp-code}
       &scop attr-code trdcattr-envd
+      {&attr-temp-code}
+      &scop attr-code trdcattr-acc-ship
       {&attr-temp-code}
       /* сюда добавлять новые параметры */
       otherwise do:
