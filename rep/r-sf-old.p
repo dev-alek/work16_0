@@ -644,6 +644,7 @@ define variable v-print-parts     as logical    init no       no-undo.
               down stream Out-stream 1 with frame factur .
                 run facturxl-write-line-data in this-procedure (
                       input gds-str1        /*  p-Name     */
+                    , input "":U            /*  p-UAES     */
                     , input "":U            /*  p-EI       */
                     , input "":U            /*  p-qnty     */
                     , input "":U            /*  p-price    */
@@ -662,6 +663,7 @@ define variable v-print-parts     as logical    init no       no-undo.
                 down stream Out-stream 1 with frame factur .
                 run facturxl-write-line-data in this-procedure (
                       input "":U            /*  p-Name     */
+                    , input "":U            /*  p-UAES     */
                     , input "":U            /*  p-EI       */
                     , input "":U            /*  p-qnty     */
                     , input "":U            /*  p-price    */
@@ -681,6 +683,7 @@ define variable v-print-parts     as logical    init no       no-undo.
             down stream Out-stream 1 with frame factur .
             run facturxl-write-line-data in this-procedure (
                   input string( ub.goods.artic, "X(16)" ) + " " + ub.goods.gds-name  /*  p-Name     */
+                , input "":U            /*  p-UAES     */
                 , input "":U            /*  p-EI       */
                 , input "":U            /*  p-qnty     */
                 , input "":U            /*  p-price    */
@@ -882,6 +885,7 @@ define variable v-print-parts     as logical    init no       no-undo.
                 down stream out-stream 1 with frame factur .
                 run facturxl-write-line-data in this-procedure (
                       input v-prt-name                  /*  p-Name     */
+                    , input "":U                        /*  p-UAES     */
                     , input ub.goods.unit-base          /*  p-EI       */
                     , input string( v-prt-qnty )        /*  p-qnty     */
                     , input string( v-price-no-VAT )    /*  p-price    */
@@ -980,6 +984,7 @@ define variable v-print-parts     as logical    init no       no-undo.
                     down stream Out-stream 1 with frame factur .
                     run facturxl-write-line-data in this-procedure (
                           input string( ub.goods.artic, "X(16)" ) + " " + ub.goods.gds-name   /*  p-Name     */
+                        , input "":U            /*  p-UAES     */
                         , input ub.goods.unit-base                                         /*  p-EI       */
                         , input string( ub.parts.fact-qnty )                               /*  p-qnty     */
                         , input string( v-price-no-VAT )                                   /*  p-price    */
@@ -1131,6 +1136,7 @@ define variable v-print-parts     as logical    init no       no-undo.
             down stream Out-stream 1 with frame factur .
             run facturxl-write-line-data in this-procedure (
                   input string( ub.goods.artic, "X(16)" ) + " " + ub.goods.gds-name        /*  p-Name     */
+                , input "":U            /*  p-UAES     */
                 , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )            /*  p-EI       */
                 , input string( v-qnty          )            /*  p-qnty     */
                 , input string( v-price-no-VAT  )            /*  p-price    */
@@ -1304,6 +1310,7 @@ define variable v-print-parts     as logical    init no       no-undo.
                     with frame factur .
                     run facturxl-write-line-data in this-procedure (
                           input string( ub.goods.artic, "X(16)" ) + " " + ub.goods.gds-name                /*  p-Name     */
+                        , input "":U            /*  p-UAES     */
                         , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )            /*  p-EI       */
                         , input string( v-prt-qnty                        )     /*  p-qnty     */
                         , input string( v-parts-price-no-VAT              )     /*  p-price    */
@@ -1335,6 +1342,7 @@ define variable v-print-parts     as logical    init no       no-undo.
                     with frame factur .
                     run facturxl-write-line-data in this-procedure (
                           input string( ub.goods.artic, "X(16)" ) + " " + ub.goods.gds-name         /*  p-Name     */
+                        , input "":U            /*  p-UAES     */
                         , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )     /*  p-EI       */
                         , input string( v-prt-qnty                        )     /*  p-qnty     */
                         , input string( v-price-no-VAT              )           /*  p-price    */

@@ -52,7 +52,6 @@ define variable vss-description as character no-undo initial "Печать счета-факту
 { cmp/breakstr.i     }
 { str/in-vatp.i def  }
 { str/out-vatp.i def }
-{ cmp/library.i      }
 { cmp/croslist.i     }
 { str/hvrdtax.i      }
 { gbl/tax-name.i     }
@@ -197,6 +196,7 @@ define variable sym12 as char init ":" no-undo.
 define variable sym13 as char init ":" no-undo.
 define variable sym14 as char init ":" no-undo.
 define variable sym15 as char init ":" no-undo.
+define variable sym16 as character initial ":" no-undo.
 
 define variable v-prt-name      as character            no-undo.
 define variable v-country       as character            no-undo.
@@ -218,6 +218,8 @@ define variable v-tot-tax       as decimal      init 0          no-undo.
 define variable v-r-factur-is-vozvrat-vnesh  as logical      no-undo.
 define variable  tmp-var                    as character                 no-undo.
 define variable  FullGdsName                as logical                   no-undo.
+
+define variable v-uaes-code     as character             no-undo. /* Код вида товара в соответствии с единой Товарной номенклатурой внешнеэкономической деятельности ЕАЭС */
 
 define variable  v-trdcattr-type            as character                 no-undo.
 define variable  v-code-rec                 as integer                   no-undo.
@@ -243,6 +245,8 @@ define frame factur
         sym1               column-label ":!:!:!:!:!:" format "X(1)" space(0)
         buf_goods.gds-name     column-label "Наименование товара (описание выполненных ! работ, оказанных услуг),! имущественного права ! ! ":C45 format "X(45)" space(0)
         sym2               column-label ":!:!:!:!:!:" format "X(1)" space(0)
+        v-uaes-code        column-label "!Код!вида!товара":C6 format "x(6)" space(0)
+        sym16              column-label ":!:!:!:!:!:" format "X(1)" space(0)
         v-unit-code        column-label "   Е!  из!----! !код ! " format "X(3)" space(0)
         sym14              column-label "д!м!-!:!:!:" format "X(1)" space(0)
         buf_goods.unit-base    column-label "иница   !ерения  !--------!условное!обозна- ! чение  ":C8 format "X(8)" space(0)
@@ -265,7 +269,7 @@ define frame factur
         sym15              column-label "т!с!-!:!:!:" format "X(1)" space(0)
         v-country          column-label "рана      !хождения !----------! краткое  !наименова-!   ние    " format "X(10)" space(0)
         sym12              column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        v-GTD              column-label "Номер таможенной!декларации! ! ":C30 format "X(30)" space(0)
+        v-GTD              column-label "Регистра-!ционный!номер!таможенной!декларации":C30 format "X(30)" space(0)
         sym13              column-label ":!:!:!:!:!:" format "X(1)" space(0)
 header
         ( if PAGE-NUMBER( Out-stream ) > 1
@@ -281,6 +285,8 @@ define frame factur-10
     /*    sym1               column-label ":!:!:!:!:!:" format "X(1)" space(0)   */
         buf_goods.gds-name     column-label "Наименование товара (описание выполненных работ, ! оказанных услуг), имущественного права ! ! ":C54 format "X(54)" space(0)
         sym2               column-label ":!:!:!:!:!:" format "X(1)" space(0)
+        v-uaes-code        column-label "!Код!вида!товара":C6 format "x(6)" space(0)
+        sym16              column-label ":!:!:!:!:!:" format "X(1)" space(0)
         v-unit-code        column-label "   Е!  из!----! !код ! " format "X(3)" space(0)
         sym14              column-label "д!м!-!:!:!:" format "X(1)" space(0)
         buf_goods.unit-base    column-label "иница   !ерения  !--------!условное!обозна- ! чение  ":C8 format "X(8)" space(0)
@@ -534,6 +540,12 @@ if error-status:error or rep-artic = ? then do:
 end.
 
 delete object v-tth no-error.
+
+
+/* Код вида товара в соответствии с единой Товарной номенклатурой внешнеэкономической деятельности ЕАЭС.
+   При отсутствии данных в новой графе «Код вида товара» с 1 октября 2017 года проставляется прочерк. */ 
+v-uaes-code = "  -   " .
+
 
 IF LOOKUP( "dec10", p-mode ) <> 0
 THEN DO:
@@ -877,7 +889,7 @@ on error undo, return error
         THEN DO:
           display stream Out-stream
             /*sym1*/ ((if rep-artic then fill(" ",17) else "") + v-add-string) @ buf_goods.gds-name
-            sym14 sym2 sym3 sym4 sym5 sym6 sym7 sym8
+            sym16 sym14 sym2 sym3 sym4 sym5 sym6 sym7 sym8
             sym9 /*sym10*/ sym11 sym15 sym12 /*sym13*/
             with frame factur-10 .
           down stream Out-stream 1 with frame factur-10 .
@@ -885,7 +897,7 @@ on error undo, return error
         ELSE DO:
           display stream Out-stream
             sym1 ((if rep-artic then fill(" ",17) else "") + v-add-string) @ buf_goods.gds-name
-            sym14 sym2 sym3 sym4 sym5 sym6 sym7 sym8
+            sym16 sym14 sym2 sym3 sym4 sym5 sym6 sym7 sym8
             sym9 /*sym10*/ sym11 sym15 sym12 sym13
             with frame factur .
           down stream Out-stream 1 with frame factur .
@@ -1039,17 +1051,18 @@ on error undo, return error
               assign is-printed = yes .
               if lookup( "dec10", p-mode ) <> 0
               THEN DO:
-                display stream Out-stream /*sym1*/ gds-str1 @ buf_goods.gds-name sym14 sym2 v-country sym3 v-GTD
+                display stream Out-stream /*sym1*/ gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 v-GTD
                                           sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
                 down stream Out-stream 1 with frame factur-10 .
               END.
               ELSE DO:
-                display stream Out-stream sym1 gds-str1 @ buf_goods.gds-name sym14 sym2 v-country sym3 v-GTD
+                display stream Out-stream sym1 gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 v-GTD
                                           sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
                 down stream Out-stream 1 with frame factur .
               END.
                 run facturxl-write-line-data in this-procedure (
                       input gds-str1        /*  p-Name     */
+                    , input "":U            /*  p-UAES     */  
                     , input "":U            /*  p-OKEI     */
                     , input "":U            /*  p-EI       */
                     , input "":U            /*  p-qnty     */
@@ -1068,15 +1081,16 @@ on error undo, return error
               if v-GTD <> "" then do:
                 if lookup( "dec10", p-mode ) <> 0
                 THEN DO:
-                  display stream Out-stream /*sym1*/ sym14 sym2  sym3 v-GTD sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
+                  display stream Out-stream /*sym1*/ sym16 sym14 sym2  sym3 v-GTD sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
                   down stream Out-stream 1 with frame factur-10 .
                 END.
                 ELSE DO:
-                  display stream Out-stream sym1 sym14 sym2  sym3 v-GTD sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
+                  display stream Out-stream sym1 sym16 sym14 sym2  sym3 v-GTD sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
                   down stream Out-stream 1 with frame factur .
                 END.
                 run facturxl-write-line-data in this-procedure (
                       input "":U            /*  p-Name     */
+                    , input "":U            /*  p-UAES     */  
                     , input "":U            /*  p-OKEI     */
                     , input "":U            /*  p-EI       */
                     , input "":U            /*  p-qnty     */
@@ -1096,15 +1110,16 @@ on error undo, return error
           if is-printed = no then do:
             if lookup( "dec10", p-mode ) <> 0
             THEN DO:
-              display stream Out-stream /*sym1*/ gds-str1 @ buf_goods.gds-name sym14 sym2 v-country sym3 sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
+              display stream Out-stream /*sym1*/ gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
               down stream Out-stream 1 with frame factur-10 .
             END.
             ELSE DO:
-              display stream Out-stream sym1 gds-str1 @ buf_goods.gds-name sym14 sym2 v-country sym3 sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
+              display stream Out-stream sym1 gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
               down stream Out-stream 1 with frame factur .
             END.
             run facturxl-write-line-data in this-procedure (
                   input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name  /*  p-Name     */
+                , input "":U            /*  p-UAES     */  
                 , input "":U            /*  p-OKEI     */
                 , input "":U            /*  p-EI       */
                 , input "":U            /*  p-qnty     */
@@ -1295,7 +1310,8 @@ on error undo, return error
                 THEN DO:
                   display stream out-stream
                         /*sym1*/ v-prt-name @ buf_goods.gds-name
-                        sym2 v-unit-code
+                        sym2 "  -   " @ v-uaes-code
+                        sym16 v-unit-code
                         sym14 "  " + buf_goods.unit-base
                         sym3 v-prt-qnty @ v-qnty
                         sym4 v-price-no-VAT
@@ -1313,7 +1329,8 @@ on error undo, return error
                 ELSE DO:
                   display stream out-stream
                         sym1 v-prt-name @ buf_goods.gds-name
-                        sym2 v-unit-code
+                        sym2 "  -   " @ v-uaes-code
+                        sym16 v-unit-code
                         sym14 "  " + buf_goods.unit-base
                         sym3 v-prt-qnty @ v-qnty
                         sym4 v-price-no-VAT
@@ -1330,6 +1347,7 @@ on error undo, return error
                 END.
                 run facturxl-write-line-data in this-procedure (
                       input v-prt-name                  /*  p-Name     */
+                    , input v-uaes-code                 /*  p-UAES     */  
                     , input v-unit-code                 /*  p-OKEI     */
                     , input buf_goods.unit-base         /*  p-EI       */
                     , input string( v-prt-qnty )        /*  p-qnty     */
@@ -1417,7 +1435,8 @@ on error undo, return error
                     THEN DO:
                       display stream Out-stream
                             /*sym1*/ ((if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name)      @ buf_goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 "  " + buf_goods.unit-base
                             sym3 ub.parts.fact-qnty                                                       @ v-qnty
                             sym4 v-price-no-VAT
@@ -1437,7 +1456,8 @@ on error undo, return error
                     ELSE DO:
                       display stream Out-stream
                             sym1 ((if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name)          @ buf_goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 "  " + buf_goods.unit-base
                             sym3 ub.parts.fact-qnty                                                       @ v-qnty
                             sym4 v-price-no-VAT
@@ -1456,6 +1476,7 @@ on error undo, return error
                     END.
                     run facturxl-write-line-data in this-procedure (
                           input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name                 /*  p-Name     */
+                        , input v-uaes-code                                                                   /*  p-UAES     */  
                         , input v-unit-code                                                                   /*  p-OKEI     */
                         , input buf_goods.unit-base                                         /*  p-EI       */
                         , input string( ub.parts.fact-qnty )                               /*  p-qnty     */
@@ -1600,7 +1621,8 @@ on error undo, return error
             THEN DO:
                 display stream Out-stream
                 /*sym1*/ gds-str1 @ buf_goods.gds-name
-                sym2 v-unit-code
+                sym2 "  -   " @ v-uaes-code
+                sym16 v-unit-code
                 sym14 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + buf_goods.unit-base) ) @ buf_goods.unit-base
                 sym3 v-qnty
                 sym4 v-price-no-VAT
@@ -1620,7 +1642,8 @@ on error undo, return error
             ELSE DO:
               display stream Out-stream
                 sym1 gds-str1 @ buf_goods.gds-name
-                sym2 v-unit-code
+                sym2 "  -   " @ v-uaes-code
+                sym16 v-unit-code
                 sym14 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + buf_goods.unit-base) ) @ buf_goods.unit-base
                 sym3 v-qnty
                 sym4 v-price-no-VAT
@@ -1639,6 +1662,7 @@ on error undo, return error
             END.
             run facturxl-write-line-data in this-procedure (
                   input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name        /*  p-Name     */
+                , input v-uaes-code                          /*  p-UAES     */  
                 , input v-unit-code                          /*  p-OKEI     */
                 , input ( if invers then ub.doc-line.unit-cli else buf_goods.unit-base )            /*  p-EI       */
                 , input string( v-qnty          )            /*  p-qnty     */
@@ -1814,7 +1838,8 @@ on error undo, return error
                       if invers then do :   /*в единицах поставщика */
                           display stream Out-stream
                             /*sym1*/ gds-str1                                                       @ buf_goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 ub.doc-line.unit-cli                                               @ buf_goods.unit-base
                             sym3 v-prt-qnty                                                         @ v-qnty
                             sym4 v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty               @ v-price-no-VAT
@@ -1835,7 +1860,8 @@ on error undo, return error
                       else do :
                           display stream Out-stream
                             /*sym1*/ gds-str1                                                       @ buf_goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 buf_goods.unit-base                                                @ buf_goods.unit-base
                             sym3 v-prt-qnty                                                         @ v-qnty
                             sym4 v-parts-price-no-VAT                                               @ v-price-no-VAT
@@ -1856,7 +1882,8 @@ on error undo, return error
                       if invers then do :   /*в единицах поставщика */
                           display stream Out-stream
                             sym1 gds-str1                                                           @ buf_goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 ub.doc-line.unit-cli                                                  @ buf_goods.unit-base
                             sym3 v-prt-qnty                                                         @ v-qnty
                             sym4 v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty               @ v-price-no-VAT
@@ -1876,7 +1903,8 @@ on error undo, return error
                       else do :
                           display stream Out-stream
                             sym1 gds-str1                                                           @ buf_goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 buf_goods.unit-base                                                @ buf_goods.unit-base
                             sym3 v-prt-qnty                                                         @ v-qnty
                             sym4 v-parts-price-no-VAT                                               @ v-price-no-VAT
@@ -1896,6 +1924,7 @@ on error undo, return error
                     if invers then do : /*в единицах поставщика */
                         run facturxl-write-line-data in this-procedure (
                               input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name                /*  p-Name     */
+                            , input v-uaes-code                                                                  /*  p-UAES     */  
                             , input v-unit-code                                                                  /*  p-OKEI     */
                             , input ( ub.doc-line.unit-cli )                                                        /*  p-EI       */
                             , input string( v-prt-qnty                        )                                  /*  p-qnty     */
@@ -1915,6 +1944,7 @@ on error undo, return error
                     else do :
                         run facturxl-write-line-data in this-procedure (
                           input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name        /*  p-Name     */
+                        , input v-uaes-code                                     /*  p-UAES     */  
                         , input v-unit-code                                     /*  p-OKEI     */
                             , input ( buf_goods.unit-base )                         /*  p-EI       */
                             , input string( v-prt-qnty                        )     /*  p-qnty     */
@@ -1936,7 +1966,8 @@ on error undo, return error
                       if invers then do :   /*в единицах поставщика */
                           display stream Out-stream
                             /*sym1*/ gds-str1                                                       @ buf_goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 ub.doc-line.unit-cli                                                  @ buf_goods.unit-base
                             sym3 v-prt-qnty                                                         @ v-qnty
                             sym4 v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty                     @ v-price-no-VAT
@@ -1957,7 +1988,8 @@ on error undo, return error
                       else do :
                           display stream Out-stream
                             /*sym1*/ gds-str1                                                       @ buf_goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 buf_goods.unit-base                                                @ buf_goods.unit-base
                             sym3 v-qnty                                                             @ v-qnty
                             sym4 v-price-no-VAT                                                     @ v-price-no-VAT
@@ -1978,7 +2010,8 @@ on error undo, return error
                       if invers then do :   /*в единицах поставщика */
                           display stream Out-stream
                             sym1 gds-str1                                                           @ buf_goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 ub.doc-line.unit-cli                                                  @ buf_goods.unit-base
                             sym3 v-prt-qnty                                                         @ v-qnty
                             sym4 v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty                     @ v-price-no-VAT
@@ -1998,7 +2031,8 @@ on error undo, return error
                       else do :
                           display stream Out-stream
                             sym1 gds-str1                                                           @ buf_goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 buf_goods.unit-base                                                @ buf_goods.unit-base
                             sym3 v-qnty                                                             @ v-qnty
                             sym4 v-price-no-VAT                                                     @ v-price-no-VAT
@@ -2018,6 +2052,7 @@ on error undo, return error
                     if invers then do : /*в единицах поставщика */
                         run facturxl-write-line-data in this-procedure (
                               input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name                /*  p-Name     */
+                            , input v-uaes-code                                                                  /*  p-UAES     */  
                             , input v-unit-code                                                                  /*  p-OKEI     */
                             , input ( ub.doc-line.unit-cli )                                                        /*  p-EI       */
                             , input string( v-prt-qnty                        )                                  /*  p-qnty     */
@@ -2037,6 +2072,7 @@ on error undo, return error
                     else do :
                         run facturxl-write-line-data in this-procedure (
                               input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name         /*  p-Name     */
+                            , input v-uaes-code                                                           /*  p-UAES     */  
                             , input v-unit-code                                                           /*  p-OKEI     */
                             , input ( buf_goods.unit-base )                                          /*  p-EI       */
                             , input string( v-qnty )                                                 /*  p-qnty     */
@@ -2182,7 +2218,8 @@ on error undo, return error
           space(108) "                                                                           Приложение № 1" skip
           space(108) "                                                            к постановлению Правительства" skip
           space(108) "                                                                     Российской Федерации" skip
-          space(108) "                                                                    от 26.12.2011 № 1137," skip
+          space(108) "                                                                     от 26.12.2011 № 1137" skip
+          space(108) "                              (в ред. Постановления Правительства РФ от 19.08.2017 № 981)" skip
       .
     END.
     put stream Out-stream
@@ -2354,7 +2391,7 @@ on error undo, return error
 
     put stream Out-stream
         space(5)  
-        "Идентификатор государственного контракта, договора (соглашения ):  " 																																			
+        "Идентификатор государственного контракта, договора (соглашения) (при наличии): "                                                                       
          /*skip  space(5)*/ 
          + trim(v-idContr) format "X(120)" "(8)" at 196 skip(0)
     .
@@ -2667,7 +2704,8 @@ on error undo, return error
        or v-torgconf-self-host-egrip-num  <> "":U
        then do:
           put stream Out-stream
-              skip (1) space(10) substitute( "Индивидуальный предприниматель   &1  / &2 / ЕГРИП N &3 от &4 ", fill( "_", 26 ) , string(v-torgconf-self-host-name, "x(42)") , v-torgconf-self-host-egrip-num, v-torgconf-self-host-egrip-date ) format "X(174)"
+              skip (1) space(10) "Индивидуальный предприниматель"
+              skip (0) space(10) substitute( "или иное уполномоченное лицо     &1  / &2 / ЕГРИП N &3 от &4 ", fill( "_", 26 ) , string(v-torgconf-self-host-name, "x(42)") , v-torgconf-self-host-egrip-num, v-torgconf-self-host-egrip-date ) format "X(174)"
 
               skip     space(51) "(подпись)"  space(29) "(Ф.И.О)" space(22) "(реквизиты свидетельства о государственной"
               skip     space(119) substitute( "регистрации индивидуального предпринимателя)" ) format "X(90)"
@@ -2684,7 +2722,8 @@ on error undo, return error
       end.
       else do :
           put stream Out-stream
-              skip (1) space(10) substitute( "Индивидуальный предприниматель   &1  / &2 /  &3  ", fill( "_", 26 ) , fill("_", 42) , fill( "_", 50 ) ) format "X(174)"
+              skip (1) space(10) "Индивидуальный предприниматель"
+              skip (0) space(10) substitute( "или иное уполномоченное лицо     &1  / &2 /  &3  ", fill( "_", 26 ) , fill("_", 42) , fill( "_", 50 ) ) format "X(174)"
 
               skip     space(51) "(подпись)"  space(29) "(Ф.И.О)" space(22) "(реквизиты свидетельства о государственной"
               skip     space(119) substitute( "регистрации индивидуального предпринимателя)" ) format "X(90)"
@@ -2727,7 +2766,8 @@ on error undo, return error
         THEN DO:
           display stream Out-stream
             /*sym1*/  gds-str1              @ buf_goods.gds-name
-            sym2  gds-prop.unit-code        @ v-unit-code
+            sym2  "  -   "                  @ v-uaes-code
+            sym16 gds-prop.unit-code        @ v-unit-code
             sym14 gds-prop.unit-base        @ buf_goods.unit-base
             sym3  gds-prop.qnty             @ v-qnty
             sym4  gds-prop.price-no-VAT     @ v-price-no-vat
@@ -2746,7 +2786,8 @@ on error undo, return error
         ELSE DO:
           display stream Out-stream
             sym1  gds-str1                  @ buf_goods.gds-name
-            sym2  gds-prop.unit-code        @ v-unit-code
+            sym2  "  -   "                  @ v-uaes-code
+            sym16 gds-prop.unit-code        @ v-unit-code
             sym14 gds-prop.unit-base        @ buf_goods.unit-base
             sym3  gds-prop.qnty             @ v-qnty
             sym4  gds-prop.price-no-VAT     @ v-price-no-vat
@@ -2775,7 +2816,8 @@ on error undo, return error
         THEN DO:
           display stream Out-stream
             /*sym1*/  gds-str1              @ buf_goods.gds-name
-            sym2  gds-prop.unit-code        @ v-unit-code
+            sym2  "  -   "                  @ v-uaes-code
+            sym16 gds-prop.unit-code        @ v-unit-code
             sym14 gds-prop.unit-base        @ buf_goods.unit-base
             sym3  gds-prop.qnty             @ v-qnty
             sym4  gds-prop.price-no-VAT     @ v-price-no-vat
@@ -2794,7 +2836,8 @@ on error undo, return error
         ELSE DO:
           display stream Out-stream
             sym1  gds-str1                  @ buf_goods.gds-name
-            sym2  gds-prop.unit-code        @ v-unit-code
+            sym2  "  -   "                  @ v-uaes-code
+            sym16 gds-prop.unit-code        @ v-unit-code
             sym14 gds-prop.unit-base        @ buf_goods.unit-base
             sym3  gds-prop.qnty             @ v-qnty
             sym4  gds-prop.price-no-VAT     @ v-price-no-vat
@@ -2845,7 +2888,7 @@ procedure print-more-po:
           display stream Out-stream
             /*sym1*/
             ((if rep-artic then fill(" ",17) else "") + v-add-string)     @ buf_goods.gds-name
-            sym14 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 /*sym10*/ sym11 sym15 sym12 /*sym13*/
+            sym16 sym14 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 /*sym10*/ sym11 sym15 sym12 /*sym13*/
           with frame factur-10 .
           down stream Out-stream 1 with frame factur-10 .
         END.
@@ -2853,7 +2896,7 @@ procedure print-more-po:
           display stream Out-stream
             sym1
             ((if rep-artic then fill(" ",17) else "") + v-add-string)     @ buf_goods.gds-name
-            sym14 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 /*sym10*/ sym11 sym15 sym12 sym13
+            sym16 sym14 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 /*sym10*/ sym11 sym15 sym12 sym13
           with frame factur .
           down stream Out-stream 1 with frame factur .
         END.

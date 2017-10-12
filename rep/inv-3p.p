@@ -49,6 +49,7 @@ on error undo, return error
   { str/lib-trn.i      }
   { str/valddnst.i def }
   { ref/grplibfn.i     }
+
   define variable g#gds-engl as logical   no-undo .
   run get-gds-engl  in parParentProc ( output g#gds-engl ).
 
@@ -73,17 +74,21 @@ on error undo, return error
   define variable v-par-type as character no-undo .
 
   define variable skod as logical   no-undo .
-
+    
   define variable v-classify      as character  no-undo .
   define variable v-tog-level     as logical    no-undo .
   define variable v-var-level     as integer    no-undo .
   define variable p-ok            as logical    no-undo .
   define variable full-grp-name   as character  no-undo .
-
+  define buffer buf_parts         for ub.parts .
+  
+  
   { gbl/currsysk.i
     v-sys-key
     no-error
-  }
+  } 
+
+  if error-status:error then v-sys-key = '' .
 
   define variable v-sort-prod         as character         no-undo.
 
@@ -126,12 +131,17 @@ on error undo, return error
     field   empty-scale       as logical
     field   Price-after       as decimal
     field   a-qnty            as decimal
+    field   aa-qnty           as decimal
     field   a-qnty1           as decimal
     field   a-stoim           as decimal
+    field   aa-stoim          as decimal
     field   price-befor       as decimal
+    field   price             as decimal
     field   b-qnty            as decimal
+    field   bb-stoim          as decimal
     field   b-qnty1           as decimal
     field   b-stoim           as decimal
+    field   bb-price          as decimal
     field   ubl               as decimal
     field   inv-peresort-qnty as decimal
     INDEX pi  IS PRIMARY   artic prod-type prod-code
@@ -241,6 +251,9 @@ on error undo, return error
   define variable sym13 as character initial ":"   no-undo.
   define variable sym14 as character initial ":"   no-undo.
   define variable sym15 as character initial ":"   no-undo.
+  define variable sym16 as character initial ":"   no-undo.
+  define variable sym17 as character initial ":"   no-undo.
+  define variable sym18 as character initial ":"   no-undo.
 
   FUNCTION f-wp-qnty returns character ( INPUT p-dec as decimal ) :
     define variable pr as character no-undo .
@@ -489,10 +502,9 @@ DEFINE FRAME sl-gold
   { rep/repfrm.i on 25 } /* Показать окно информации о текущем процессе */
 
   /* сначала заполняем таблицу */
-  { rep/inv3.i }
+  { rep/inv3p.i }
 
   run PrintTitul in this-procedure .
-
   /*на каждой странице */
   if rep-tipe = "invent" THEN  DO:
     FORM with frame invent .
@@ -645,11 +657,11 @@ end procedure. /* print-prod */
 procedure print-line :
   do on error undo, return error return-value :
     case rep-tipe :
-      when "invent"      THEN DO:  { rep/inv31.i invent      {&format-inv}      }  End.
-      when "invent-gold" THEN DO:  { rep/inv31.i invent-gold {&format-inv-gold} }  End.
-      when  "sl"         THEN DO:  { rep/inv31.i sl          {&format-sl}       }  End.
-      when  "sl-gold"    THEN DO:  { rep/inv31.i sl-gold     {&format-sl-gold}  }  End.
-    End CASE.
+      when "invent"      THEN DO:  { rep/inv31p.i invent      {&format-inv}      }  End.
+      when "invent-gold" THEN DO:  { rep/inv31p.i invent-gold {&format-inv-gold} }  End.
+      when  "sl"         THEN DO:  { rep/inv31p.i sl          {&format-sl}       }  End.
+      when  "sl-gold"    THEN DO:  { rep/inv31p.i sl-gold     {&format-sl-gold}  }  End.
+    End.
   end.
 end procedure. /* print-line */
 
@@ -1082,7 +1094,6 @@ procedure PrintPodval :
       if PropisQnty = '' Then PropisQnty = 'Ноль'.
       if PrintRubl = yes then do: run rep/wp-rub.p (                      input sum1-a-stoim, output PropisSumall, output abbr ). end.
                          else do: run rep/wp.p     ( input parParentProc, input sum1-a-stoim, output PropisSumall, output abbr ). end.
-
     if rep-tipe begins "invent"
     and p-grp = "no"
     then do:

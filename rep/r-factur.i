@@ -67,6 +67,7 @@ initial "@(#)$Workfile$ $Revision$".
                     with frame factur.
                 run facturxl-write-line-data in this-procedure (
                       input fill(" ", 19) + v-tax-name          /*  p-Name     */
+                    , input "  -  ":U                           /*  p-UAES     */
                     , input "":U                                /*  p-OKEI       */  
                     , input "":U                                /*  p-EI       */
                     , input string( v-{2}qnty )                 /*  p-qnty     */
