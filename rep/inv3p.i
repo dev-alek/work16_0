@@ -18,6 +18,7 @@ Creation date: 03/22/06
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
+    
 for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code :
   find first buf_goods no-lock where
              buf_goods.prod-type = buf_doc-line.prod-type and
@@ -246,8 +247,31 @@ end.
              temp-str.a-qnty      = temp-str.b-qnty  + buf_doc-line.fact-qnty
              temp-str.price-after = temp-str.a-stoim / temp-str.a-qnty.
     end.
-    if temp-str.price-after = ? then do: assign temp-str.price-after = 0. end.
 
+    if temp-str.price-after = ? then do: assign temp-str.price-after = 0. end.
+    
+      if temp-str.a-qnty > temp-str.b-qnty then do:
+    
+        find first buf_parts no-lock where buf_parts.out-code = buf_doc-line.doc-code and 
+                                   buf_parts.obj-type = buf_doc-line.obj-type and
+                                   buf_parts.obj-code = buf_doc-line.obj-code and
+                                   buf_parts.artic = buf_doc-line.artic and
+                                   buf_parts.prod-type = buf_doc-line.prod-type and
+                                   buf_parts.prod-code = buf_doc-line.prod-code no-error .
+        if AVAILABLE buf_parts then do:
+        
+        if PrintRubl = yes then temp-str.price = buf_parts.price-rubl. 
+                           else temp-str.price = buf_parts.price-base.  
+        assign    
+            temp-str.aa-qnty        = temp-str.a-qnty - temp-str.b-qnty
+            temp-str.aa-stoim       = temp-str.aa-qnty * temp-str.price 
+            temp-str.bb-stoim       = (temp-str.a-stoim - temp-str.aa-stoim) 
+            temp-str.bb-price       = ABSOLUTE(temp-str.bb-stoim / temp-str.b-qnty)
+            temp-str.price = buf_parts.price-rubl
+        .    
+        end.    
+
+    end. 
     if rep-tipe = "invent-gold" then do:
       if is-after-cli = yes then do:
         find first buf_doc-line-sum no-lock where
@@ -299,7 +323,6 @@ end.
       end.
     end.
     assign qnty = buf_doc-line.fact-qnty.
-
     if sum >= 0 then do: /* излишек */
       assign temp-str.a-qnty      = qnty
              temp-str.a-stoim     = sum

@@ -24,6 +24,15 @@ initial "@(#)$Workfile$ $Revision$".
 define variable is-ptrl  as character no-undo .
 define variable is-jwlr  as character no-undo .
 define variable par-type as character no-undo .
+
+  define variable v-value-character as character no-undo .
+  define variable v-value-date      as date no-undo .
+  define variable v-value-decimal   as decimal no-undo .
+  define variable v-value-integer   as integer no-undo .
+  define variable v-tth             as handle no-undo .
+  define variable v-type            as character no-undo .
+  define VARIABLE v-izlish        as logical    no-undo .   
+  
 run gbl/conf-rd.p ("is-ptrl", "", "", 0, "", "", "", no, output is-ptrl, output par-type) no-error.
 if error-status :error
   or par-type <> "l"
@@ -38,11 +47,26 @@ if error-status :error
 then do:
   assign is-jwlr = "no".
 end.
-
+      run adm/shattri.p (
+        input "get":U
+        ,input v-cntxt-obj-type
+        ,input v-cntxt-obj-code
+        ,input {&attr-inv-obj}
+        ,input  "izlcstpr"
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-izlish
+        ,output v-type
+        ,INPUT-OUTPUT table-handle v-tth
+        ) no-error .
+        
+        
 /*-ИНВЕНТАРИЗАЦИЯ----------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /* 60- 89 */
-{ rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись'"                                           "'cost,sale,rubl,base'" "'rep/inv-3.p'"     "'invent,no,no'"            "'+-+++-+'"  "''"        "''"          "''"     ? }
-{ rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись'"                                             "'cost,sale,rubl,base'" "'rep/inv-3.p'"     "'invent,no,no'"                     "'+-+++-+'"  "''"                  "''"          "''"                   ? }
+{ rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись'"                                           "'cost,sale,rubl,base'" "'rep/inv-3p.p'"     "'invent,no,no'"            "'+-+++-+'"  "''"        "''"          "''"     ? }
+{ rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Предварительная инвентаризационная опись'"                             "'cost,sale,rubl,base'" "'rep/inv-3.p'"    "'invent,no,no'"                     "'+-+++-+'"  "''"                  "''"          "''"                   "v-izlish = yes" }
 { rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись сжатая'"                                    "'cost,sale,rubl,base'" "'rep/inv-3.p'"     "'invent,no,yes'"          "'+-+++-+'"  "''"        "''"          "''"     ? }
 { rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись топлива (вес)'"                             "'cost,sale,rubl,base'" "'rep/inv-3-kg.p'"  "'invent,no,no,no'"         "'+-+++--'"  "''"        "''"          "''"     "is-ptrl = 'yes'" }
 { rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись топлива (вес) сжатая'"                      "'cost,sale,rubl,base'" "'rep/inv-3-kg.p'"  "'invent,no,no,yes'"        "'+-+++--'"  "''"        "''"          "''"     "is-ptrl = 'yes'" }
