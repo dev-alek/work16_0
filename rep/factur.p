@@ -2182,7 +2182,8 @@ on error undo, return error
           space(108) "                                                                           Приложение № 1" skip
           space(108) "                                                            к постановлению Правительства" skip
           space(108) "                                                                     Российской Федерации" skip
-          space(108) "                                                                    от 26.12.2011 № 1137," skip
+          space(108) "                                                                     от 26.12.2011 № 1137" skip
+          space(108) "                              (в ред. Постановления Правительства РФ от 25.05.2017 № 625)" skip
       .
     END.
     put stream Out-stream
