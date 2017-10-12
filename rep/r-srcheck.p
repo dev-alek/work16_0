@@ -494,13 +494,13 @@ procedure create-fill-tt-chk:
          if error-status:error then
          do:
              message error-status:get-message(1) view-as alert-box.
+         end.
 
         if x-TOG-Shift = yes then
         do:  /* if x-TOG-Shift = yes */
         
         
     
-         end.
     _c-d: for each ub.chk-doc where
                 ub.chk-doc.obj-type = obj-list.obj-type and
                 ub.chk-doc.obj-code = obj-list.obj-code and

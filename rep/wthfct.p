@@ -646,6 +646,7 @@ on error undo, return error
     down stream Out-stream 1 with frame factur .
     run facturxl-write-line-data in this-procedure (
           input gds-str1        /*  p-Name     */
+        , input "  -   ":U            /*  p-UAES     */
         , input v-unit-code                       /*  p-OKEI     */
         , input ( if invers then ub.doc-line.unit-cli else buf_goods.unit-base )        /*  p-EI       */
         , input string( v-qnty              )     /*  p-qnty     */

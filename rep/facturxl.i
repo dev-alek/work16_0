@@ -89,6 +89,7 @@ define temp-table temp_line-data no-undo
     field xl-line-id   as integer
     field Name         as character
     field pokazately   as character
+    field UAES         as character
     field OKEI         as character
     field EI           as character
     field qnty         as character
@@ -114,6 +115,10 @@ procedure facturxl-init :
 
     define buffer buf_temp_cell-data        for temp_cell-data.
     define buffer buf_usr-flt               for ubflt.usr-flt.
+    define variable v-column-list as character no-undo .
+    define variable v-column-type as character no-undo .
+    define variable v-num-cloumns as integer no-undo .
+    
 do
 for buf_temp_cell-data
   , buf_usr-flt
@@ -135,47 +140,36 @@ on error undo, return error
     ).
     output stream excel-cell to value( v-facturxl-cell-file-name ).
 
-    if printrubl
-    then do:
-        run facturxl-write-cell-data in this-procedure (
-              input {&facturxl-valutCode}
-            , input "0":U
-        ).
-    end.
-    else do:
-        run facturxl-write-cell-data in this-procedure (
-              input {&facturxl-valutCode}
-            , input "1":U
-        ).
-    end.
+    run facturxl-write-cell-data in this-procedure (
+          input {&facturxl-valutCode}
+        , input if printrubl then "0":U else "1":U
+    ).
 
   if lookup ("corr" , p-mode) <> 0 then do :
-    run facturxl-write-cell-data in this-procedure (
-          input {&facturxl-columnList}
-        , input "Name,pokazately,OKEI,EI,qnty,price,SumNoVAT,SumActciz,VATpc,VATsum,sum":U
-    ).
-    run facturxl-write-cell-data in this-procedure (
-          input {&facturxl-columnType}
-        , input "S,S,I,S,D,C,C,S,D,C,C":U
-    ).
-    run facturxl-write-cell-data in this-procedure (
-          input {&facturxl-columnAmount}
-        , input "11":U
-    ).
+    v-column-list = "Name,pokazately,UAES,OKEI,EI,qnty,price,SumNoVAT,SumActciz,VATpc,VATsum,sum":U .
+    v-column-type = "S,S,S,I,S,D,C,C,S,D,C,C":U .
   end.
   else do :
-    run facturxl-write-cell-data in this-procedure (
+    v-column-list = "Name,UAES,OKEI,EI,qnty,price,SumNoVAT,SumActciz,VATpc,VATsum,sum,countrycode,country,GTD":U .
+    v-column-type = "S,S,I,S,D,C,C,S,D,C,C,I,S,S":U .
+  end.
+  v-num-cloumns = num-entries(v-column-list) .
+
+  run facturxl-write-cell-data in this-procedure (
           input {&facturxl-columnList}
-        , input "Name,OKEI,EI,qnty,price,SumNoVAT,SumActciz,VATpc,VATsum,sum,countrycode,country,GTD":U
-    ).
-    run facturxl-write-cell-data in this-procedure (
+        , input v-column-list
+  ).
+  run facturxl-write-cell-data in this-procedure (
           input {&facturxl-columnType}
-        , input "S,I,S,D,C,C,S,D,C,C,I,S,S":U
-    ).
-    run facturxl-write-cell-data in this-procedure (
+        , input v-column-type
+  ).
+  run facturxl-write-cell-data in this-procedure (
           input {&facturxl-columnAmount}
-        , input "13":U
-    ).
+        , input string(v-num-cloumns)
+  ).
+  
+  if lookup ("corr" , p-mode) <> 0 then .
+  else do :
     run facturxl-write-cell-data in this-procedure (
           input {&facturxl-subtotalList}
         , input "SumNoVAT,VATsum,sum":U
@@ -358,6 +352,7 @@ end procedure. /* facturxl-write-cell-data */
 /*==========================================================================*/
 procedure facturxl-write-line-data :
 define input parameter p-Name          as character        no-undo.
+define input parameter p-UAES          as character        no-undo.
 define input parameter p-OKEI          as character        no-undo.
 define input parameter p-EI            as character        no-undo.
 define input parameter p-qnty          as character        no-undo.
@@ -390,6 +385,7 @@ on error undo, return error
         buf_temp_line-data.data-key     = {&facturxl-line-data-key}
         buf_temp_line-data.xl-line-id   = v-facturxl-current-data-row
         buf_temp_line-data.Name         = p-Name
+        buf_temp_line-data.UAES         = p-UAES
         buf_temp_line-data.OKEI         = p-OKEI
         buf_temp_line-data.EI           = p-EI
         buf_temp_line-data.qnty         = p-qnty
@@ -406,6 +402,7 @@ on error undo, return error
     put stream excel-line unformatted
                         buf_temp_line-data.data-key
         {&tabulation}   buf_temp_line-data.Name
+        {&tabulation}   buf_temp_line-data.UAES
         {&tabulation}   buf_temp_line-data.OKEI
         {&tabulation}   buf_temp_line-data.EI
         {&tabulation}   buf_temp_line-data.qnty
@@ -428,6 +425,7 @@ end procedure. /* facturxl-write-line-data */
 procedure facturxl-write-line-data-corr :
 define input parameter p-Name          as character        no-undo.
 define input parameter p-pokazately    as character        no-undo.
+define input parameter p-UAES          as character        no-undo.
 define input parameter p-OKEI          as character        no-undo.
 define input parameter p-EI            as character        no-undo.
 define input parameter p-qnty          as character        no-undo.
@@ -458,6 +456,7 @@ on error undo, return error
         buf_temp_line-data.xl-line-id   = v-facturxl-current-data-row
         buf_temp_line-data.Name         = p-Name
         buf_temp_line-data.pokazately   = p-pokazately
+        buf_temp_line-data.UAES         = p-UAES
         buf_temp_line-data.OKEI         = p-OKEI
         buf_temp_line-data.EI           = p-EI
         buf_temp_line-data.qnty         = p-qnty
@@ -472,6 +471,7 @@ on error undo, return error
                         buf_temp_line-data.data-key
         {&tabulation}   buf_temp_line-data.Name
         {&tabulation}   buf_temp_line-data.pokazately
+        {&tabulation}   buf_temp_line-data.UAES
         {&tabulation}   buf_temp_line-data.OKEI
         {&tabulation}   buf_temp_line-data.EI
         {&tabulation}   buf_temp_line-data.qnty

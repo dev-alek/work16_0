@@ -177,6 +177,7 @@ define variable sym12 as character initial ":" no-undo.
 define variable sym13 as character initial ":" no-undo.
 define variable sym14 as character initial ":" no-undo.
 define variable sym15 as character initial ":" no-undo.
+define variable sym16 as character initial ":" no-undo.
 
 define variable v-prt-name       as character            no-undo.
 define variable v-country        as character            no-undo.
@@ -206,6 +207,8 @@ define variable v-r-factur-is-vozvrat-vnesh  as logical      no-undo.
 define variable tmp-var         as character             no-undo.
 define variable FullGdsName     as logical               no-undo.
 
+define variable v-uaes-code     as character             no-undo. /* Код вида товара в соответствии с единой Товарной номенклатурой внешнеэкономической деятельности ЕАЭС */
+
     /* Определение переменных для грузополучателя */
 define variable  v-trdcattr-type            as character                 no-undo .
 define variable  v-code-rec                 as integer                   no-undo .
@@ -234,33 +237,35 @@ define buffer buf_parts-attr            for ub.parts-attr.
 
 define frame factur
         sym1               column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        goods.gds-name     column-label "Наименование товара (описание выполненных!работ, оказанных услуг),!имущественного права! ! ":C42 format "X(42)" space(0)
-        sym2               column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        v-unit-code        column-label "    !   и!----! !код ! ! " format "X(3)" space(0)
-        sym14              column-label "Е!з!-!:!:!:!:" format "X(1)" space(0)
-        goods.unit-base    column-label "диница     !мерения    !-----------!условное!обозначение!(националь-!ное)":C11 format "X(11)" space(0)
-        sym3               column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        v-qnty             column-label "Количество! (объем)  ! ! ! " format ">>>>>>9.<<<" space(0)
-        sym4               column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        v-price-no-VAT     column-label "Цена (тариф)!за единицу!измерения! ! ":C12 format "->>>>>>>9.99" space(0)
-        sym5               column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        v-sum-no-VAT       column-label "Стоимость товаров!(работ, услуг),!имущественных!прав без налога -!всего! ":C17 format "->>>>>>>>>>>>9.99" space(0)
-        sym6               column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        v-sum-actciz       column-label "В том!числе!сумма!акциза! ":C10 format ">>>>>>9.99" space(0)
-        sym7               column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        doc-line.Vat-pc    column-label "Налог-!овая!ставка! ":C6 format ">9.9<%" space(0)
-        sym8               column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        v-VAT              column-label "Сумма!налога,!предъявляе-!мая!покупателю! ":C12 format "->>>>>>>9.99" space(0)
-        sym9               column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        v-sum              column-label "Стоимость!товаров!(работ, услуг),!имущественных!прав с налогом!- всего":c15 format "->>>>>>>>>>9.99" space(0)
+/* 42 */ goods.gds-name   column-label "Наименование товара (описание выполненных!работ, оказанных услуг),!имущественного права! ! ":C{&gds-len} format "X({&gds-len})" space(0)
+         sym2             column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
+/*  6 */ v-uaes-code      column-label "!Код!вида!товара!":C6 format "x(6)" space(0)
+         sym16            column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
+/*  4 */ v-unit-code      column-label "    !   и!----! !код ! ! ":C4 format "X(4)" space(0)
+         sym14            column-label "Е!з!-!:!:!:!:" format "X(1)" space(0)
+/* 11 */ goods.unit-base  column-label "диница     !мерения    !-----------!условное!обозначение!(националь-!ное)":C11 format "X(11)" space(0)
+         sym3             column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
+/* 11 */ v-qnty           column-label "Количество! (объем)  ! ! ! ":C11 format ">>>>>>9.<<<" space(0)
+         sym4             column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
+/* 12 */ v-price-no-VAT   column-label "Цена (тариф)!за единицу!измерения! ! ":C12 format "->>>>>>>9.99" space(0)
+         sym5             column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
+/* 17 */ v-sum-no-VAT     column-label "Стоимость!товаров (работ,! услуг),!имущественных!прав без налога -!всего! ":C17 format "->>>>>>>>>>>>9.99" space(0)
+         sym6             column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
+/* 10 */ v-sum-actciz     column-label "В том!числе!сумма!акциза! ":C10 format ">>>>>>9.99" space(0)
+         sym7             column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
+/*  6 */ doc-line.Vat-pc  column-label "Налог-!овая!ставка! ":C6 format ">9.9<%" space(0)
+         sym8             column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
+/* 12 */ v-VAT            column-label "Сумма!налога,!предъявляе-!мая!покупателю! ":C12 format "->>>>>>>9.99" space(0)
+         sym9             column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
+/* 15 */ v-sum            column-label "Стоимость!товаров!(работ, услуг),!имущественных!прав с налогом!- всего":c15 format "->>>>>>>>>>9.99" space(0)
 /*        sym10 column-label ":!:!:!:" format "X(1)" space(0)*/
 /*        v-SLT column-label "Сумма!НП":C12 format "->>>>>>>9.99" space(0)*/
         sym11              column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        v-country-code     column-label " Стран!  дени!------!цифро-! вой  ! код  " format "x(6)" space(0)
-        sym15              column-label "а!я!-!:!:!:" format "X(1)" space(0)
-        v-country          column-label " происхож-! товара   !----------! краткое  !наименова-!   ние    " format "X(10)" space(0)
-        sym12              column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
-        v-GTD              column-label "Номер таможенной!декларации! ! ! ":C30 format "X(30)" space(0)
+/*  6 */ v-country-code   column-label " Стран!  дени!------!цифро-! вой  ! код  " format "x(6)" space(0)
+         sym15            column-label "а!я!-!:!:!:" format "X(1)" space(0)
+/* 10 */ v-country        column-label " происхож-! товара   !----------! краткое  !наименова-!   ние    " format "X(10)" space(0)
+         sym12            column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
+/* 22 */ v-GTD            column-label "Регистра-!ционный!номер!таможенной!декларации":C22 format "X(22)" space(0)
         sym13              column-label ":!:!:!:!:!:!:" format "X(1)" space(0)
 header
         ( if PAGE-NUMBER( Out-stream ) > 1
@@ -272,34 +277,36 @@ with width {&DOS_CW} down stream-io.
 
 define frame corr-factur
         sym1               column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        goods.gds-name     column-label "Наименование товара!(описание выполненных работ,!оказанных услуг),!имущественного права! !":C54 format "X(54)" space(0)
-        sym2               column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        v-pokazately       column-label "Показатели в связи!с изменением стоимости!отгруженных товаров!(выполненных работ,!оказанных услуг), переданных!имущественных прав":C28 format "X(28)" space(0)
-        sym3               column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        v-unit-code        column-label "   Е!  из!----! !код ! " format "X(3)" space(0)
-        sym4               column-label "д!м!-!:!:!:" format "X(1)" space(0)
-        goods.unit-base    column-label "иница   !ерения  !--------!условное!обозна- ! чение  ":C8 format "X(8)" space(0)
-        sym5               column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        v-qnty             column-label "Количество! (объём)  ! ! " format ">>>>>>9.<<<" space(0)
-        sym6               column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        v-price-no-VAT     column-label "Цена (тариф)!за ед.изм.! ! ":C12 format "->>>>>>>9.99" space(0)
-        sym7               column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        v-sum-no-VAT       column-label "Стоимость товаров!(работ, услуг),!имуществ. прав!без налога -!всего! ":C17 format "->>>>>>>>>>>>9.99" space(0)
-        sym8               column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        v-sum-actciz       column-label "в т.ч.!сумма!акциза ! ":C10 format ">>>>>>9.99" space(0)
-        sym9               column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        doc-line.Vat-pc    column-label "Налоговая!ставка! ! ":C9 format ">>>>9.9<%" space(0)
-        sym10              column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        v-VAT              column-label "Сумма!налога! ! ":C12 format "->>>>>>>9.99" space(0)
-        sym11              column-label ":!:!:!:!:!:" format "X(1)" space(0)
-        v-sum              column-label "Ст-ть товаров!(работ, услуг),!имуществ. прав!с учетом налога!-всего! ":c15 format "->>>>>>>>>>9.99" space(0)
+/* 54 */ goods.gds-name   column-label "Наименование товара!(описание выполненных работ,!оказанных услуг),!имущественного права! !":C54 format "X(54)" space(0)
+         sym2             column-label ":!:!:!:!:!:" format "X(1)" space(0)
+/* 28 */ v-pokazately     column-label "Показатели в связи!с изменением стоимости!отгруженных товаров!(выполненных работ,!оказанных услуг), переданных!имущественных прав":C28 format "X(28)" space(0)
+         sym3             column-label ":!:!:!:!:!:" format "X(1)" space(0)
+/*  6 */ v-uaes-code      column-label "!Код!вида!товара":C6 format "x(6)" space(0)
+         sym16            column-label ":!:!:!:!:!:" format "X(1)" space(0)
+/*  4 */ v-unit-code      column-label "   Е!  из!----! !код ! " format "X(4)" space(0)
+         sym4             column-label "д!м!-!:!:!:" format "X(1)" space(0)
+/*  8 */ goods.unit-base  column-label "иница   !ерения  !--------!условное!обозна- ! чение  ":C8 format "X(8)" space(0)
+         sym5             column-label ":!:!:!:!:!:" format "X(1)" space(0)
+/* 11 */ v-qnty           column-label "Количество! (объём)  ! ! " format ">>>>>>9.<<<" space(0)
+         sym6             column-label ":!:!:!:!:!:" format "X(1)" space(0)
+/* 12 */ v-price-no-VAT   column-label "Цена (тариф)!за ед.изм.! ! ":C12 format "->>>>>>>9.99" space(0)
+         sym7             column-label ":!:!:!:!:!:" format "X(1)" space(0)
+/* 17 */ v-sum-no-VAT     column-label "Стоимость товаров!(работ, услуг),!имуществ. прав!без налога -!всего! ":C17 format "->>>>>>>>>>>>9.99" space(0)
+         sym8             column-label ":!:!:!:!:!:" format "X(1)" space(0)
+/* 10 */ v-sum-actciz     column-label "в т.ч.!сумма!акциза ! ":C10 format ">>>>>>9.99" space(0)
+         sym9             column-label ":!:!:!:!:!:" format "X(1)" space(0)
+/*  9 */ doc-line.Vat-pc  column-label "Налоговая!ставка! ! ":C9 format ">>>>9.9<%" space(0)
+         sym10            column-label ":!:!:!:!:!:" format "X(1)" space(0)
+/* 12 */ v-VAT            column-label "Сумма!налога! ! ":C12 format "->>>>>>>9.99" space(0)
+         sym11            column-label ":!:!:!:!:!:" format "X(1)" space(0)
+/* 15 */ v-sum            column-label "Ст-ть товаров!(работ, услуг),!имуществ. прав!с учетом налога!-всего! ":c15 format "->>>>>>>>>>9.99" space(0)
         sym12              column-label ":!:!:!:!:!:" format "X(1)" space(0)
 header
         ( if PAGE-NUMBER( Out-stream ) > 1
           then string( "Документ N: " + v-torgconf-doc-code + " от " + v-torgconf-doc-date )
           else "":U )                                                       at 40 format "X(50)"
         string( "Страница " + string( PAGE-NUMBER( Out-stream ), ">>9" ) )  at 175 format "X(13)" skip
-        v-single-line format "X(190)" at 1
+        v-single-line format "X(199)" at 1
 with width {&DOS_CW} down stream-io.
 
 { gbl/working.i }
@@ -314,17 +321,8 @@ run get-quest-print in p-mainmenu-handle (
 find first buf_trn-doc no-lock
      where recid( buf_trn-doc ) = rec_id
 .
-if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}
-then do:
-    assign
-        v-r-factur-is-vozvrat-vnesh = yes
-    .
-end.
-else do:
-    assign
-        v-r-factur-is-vozvrat-vnesh = no
-    .
-end.
+v-r-factur-is-vozvrat-vnesh = (buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}) .
+
 { gbl/hostcode.i
     buf_trn-doc.obj-type
     buf_trn-doc.obj-code
@@ -533,6 +531,10 @@ assign
     FullGdsName = ( tmp-var = "yes" )
 .
 
+/* Код вида товара в соответствии с единой Товарной номенклатурой внешнеэкономической деятельности ЕАЭС.
+   При отсутствии данных в новой графе «Код вида товара» с 1 октября 2017 года проставляется прочерк. */ 
+v-uaes-code = "  -   " .
+
 { cmp/open-out.i stream Out-stream " " {&LS_PS_A4} }
 
 run facturxl-init in this-procedure .
@@ -545,7 +547,7 @@ run print-header in this-procedure (
 if lookup( "corr", p-mode ) <> 0
 THEN DO:
   form header
-      v-single-line format "x(190)" at 1 skip
+      v-single-line format "x(199)" at 1 skip
       "Продолжение - на следующей странице" at 30 skip
       with frame Bottomframe-corr width {&DOS_CW} page-bottom no-labels no-box .
   view stream Out-stream frame Bottomframe-corr .
@@ -561,20 +563,20 @@ view stream Out-stream frame Bottomframe .
 form with frame factur .
 
   display stream out-stream
-          sym1 "                     1                    " @ goods.gds-name
-          sym2 "  2 "
-@ v-unit-code
-          sym14 "   2а   "     @ goods.unit-base
-          sym3 "     3    " @ v-qnty
-          sym4 "      4     " @ v-price-no-VAT
-          sym5 "        5        " @ v-sum-no-VAT
-          sym6 "     6    " @ v-sum-actciz
-          sym7 "   7  " @ doc-line.Vat-pc
-          sym8 "      8     " @ v-VAT
-          sym9 "       9       " @ v-sum
-          sym11 "  10  "   @ v-country-code
-          sym15 "    10а   "   @ v-country
-          sym12 "              11              "   @ v-GTD
+/* 42 */ sym1  "                     1                    " @ goods.gds-name
+/*  6 */ sym2  "  1а  " @ v-uaes-code
+/*  4 */ sym16 " 2  "   @ v-unit-code
+/* 11 */ sym14 "    2а     "     @ goods.unit-base
+/* 11 */ sym3  "     3     " @ v-qnty
+/* 12 */ sym4  "      4     " @ v-price-no-VAT
+/* 17 */ sym5  "        5        " @ v-sum-no-VAT
+/* 10 */ sym6  "     6    " @ v-sum-actciz
+/*  6 */ sym7  "   7  " @ doc-line.Vat-pc
+/* 12 */ sym8  "      8     " @ v-VAT
+/* 15 */ sym9  "       9       " @ v-sum
+/*  6 */ sym11 "  10  "   @ v-country-code
+/* 10 */ sym15 "    10а   "   @ v-country
+/* 22 */ sym12 "          11          "   @ v-GTD
           sym13
           with frame factur .
   /*v-lines-counter = v-lines-counter + 1 .*/
@@ -660,7 +662,7 @@ on error undo, return error
         display stream Out-stream
             sym1 (if rep-artic then fill(" ",17) else "") + v-add-string @ ub.goods.gds-name
             sym2 sym3 sym4 sym5 sym6 sym7 sym8
-            sym9 /*sym10*/ sym11 sym12 sym13 sym14 sym15
+            sym9 /*sym10*/ sym11 sym12 sym13 sym14 sym15 sym16
             with frame factur .
         down stream Out-stream 1 with frame factur .
     end. /* DO WHILE ... */
@@ -838,18 +840,19 @@ assign v-add-str = ""
               assign is-printed = yes .
               if lookup ( "corr", p-mode ) <> 0 then do :
                 display stream Out-stream sym1 gds-str1 @ goods.gds-name sym2 sym3
-                                          sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym12 with frame corr-factur .
+                                          sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym12 sym16 with frame corr-factur .
                 down stream Out-stream 1 with frame corr-factur .
 
 
 
               end.
               else do :
-                display stream Out-stream sym1 gds-str1 @ goods.gds-name sym14 sym2 v-country sym3 v-GTD
+                display stream Out-stream sym1 gds-str1 @ goods.gds-name sym16 sym14 sym2 v-country sym3 v-GTD
                                         sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
               down stream Out-stream 1 with frame factur .
                 run facturxl-write-line-data in this-procedure (
                       input gds-str1        /*  p-Name     */
+                    , input "":U            /*  p-UAES     */
                     , input "":U            /*  p-OKEI     */
                     , input "":U            /*  p-EI       */
                     , input "":U            /*  p-qnty     */
@@ -867,10 +870,11 @@ assign v-add-str = ""
             end.
             else do:
               if v-GTD <> "" and v-GTD <> "             -             " then do:
-                display stream Out-stream sym1 sym14 sym2  sym3 v-GTD sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
+                display stream Out-stream sym1 sym16 sym14 sym2  sym3 v-GTD sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
                 down stream Out-stream 1 with frame factur .
                 run facturxl-write-line-data in this-procedure (
                       input "":U            /*  p-Name     */
+                    , input "":U            /*  p-UAES     */
                     , input "":U            /*  p-OKEI     */
                     , input "":U            /*  p-EI       */
                     , input "":U            /*  p-qnty     */
@@ -888,12 +892,13 @@ assign v-add-str = ""
             end.
           end.
           if is-printed = no then do:
-            display stream Out-stream sym1 gds-str1 @ ub.goods.gds-name sym14 sym2 v-country sym3 sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
+            display stream Out-stream sym1 gds-str1 @ ub.goods.gds-name sym16 sym14 sym2 v-country sym3 sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
             down stream Out-stream 1 with frame factur .
             run facturxl-write-line-data in this-procedure (
                   input (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name  /*  p-Name     */
-                , input "":U            /*  p-OKEI     */
+                , input "":U            /*  p-UAES     */
                 , input "":U            /*  p-EI       */
+                , input "":U            /*  p-OKEI     */
                 , input "":U            /*  p-qnty     */
                 , input "":U            /*  p-price    */
                 , input "":U            /*  p-SumNoVAT */
@@ -1098,7 +1103,8 @@ assign v-add-str = ""
                       display stream Out-stream
                           sym1 v-prt-name                                                         @ ub.goods.gds-name
                           sym2 "А (до изменения)"                                                 @ v-pokazately
-                          sym3 v-unit-code
+                          sym3 "  -   " @ v-uaes-code
+                          sym16 v-unit-code
                           sym4 "  " + ub.goods.unit-base                                             @ ub.goods.unit-base
                           sym5 v-prt-doc-qnty                                               @ v-qnty
                           sym6 v-price-no-VAT
@@ -1117,7 +1123,8 @@ assign v-add-str = ""
                       display stream Out-stream
                           sym1 /*v-add-str                                                          @ ub.goods.gds-name*/
                           sym2 "Б (после изменения)"                                                 @ v-pokazately
-                          sym3 v-unit-code
+                          sym3 "  -   " @ v-uaes-code
+                          sym16 v-unit-code
                           sym4 "  " + ub.goods.unit-base                                                @ ub.goods.unit-base
                           sym5 v-prt-qnty                                             @ v-qnty
                           sym6 v-price-no-VAT
@@ -1140,6 +1147,7 @@ assign v-add-str = ""
                           sym1 /*v-add-str                                                       @ ub.goods.gds-name*/
                           sym2 "В (увеличение)"                                                   @ v-pokazately
                           sym3
+                          sym16
                           sym4
                           sym5
                           sym6
@@ -1158,6 +1166,7 @@ assign v-add-str = ""
                           sym1 /*v-add-str                                                       @ ub.goods.gds-name*/
                           sym2 "Г (уменьшение)"                                                   @ v-pokazately
                           sym3
+                          sym16
                           sym4
                           sym5
                           sym6
@@ -1174,6 +1183,7 @@ assign v-add-str = ""
                       run facturxl-write-line-data-corr in this-procedure (
                             input v-prt-name                  /*  p-Name        */
                           , input "А (до изменения)"          /*  p-pokazately  */
+                          , input v-uaes-code                 /*  p-UAES     */
                           , input v-unit-code                 /*  p-OKEI        */
                           , input ub.goods.unit-base             /*  p-EI          */
                           , input string( v-prt-doc-qnty )    /*  p-qnty        */
@@ -1187,6 +1197,7 @@ assign v-add-str = ""
                       run facturxl-write-line-data-corr in this-procedure (
                             input ""                          /*  p-Name        */
                           , input "Б (после изменения)"          /*  p-pokazately  */
+                          , input v-uaes-code                 /*  p-UAES     */
                           , input v-unit-code                 /*  p-OKEI        */
                           , input ub.goods.unit-base             /*  p-EI          */
                           , input string( v-prt-qnty )        /*  p-qnty        */
@@ -1200,6 +1211,7 @@ assign v-add-str = ""
                       run facturxl-write-line-data-corr in this-procedure (
                             input ""                          /*  p-Name        */
                           , input "В (увеличение)"          /*  p-pokazately  */
+                          , input ""                 /*  p-UAES     */
                           , input ""                 /*  p-OKEI        */
                           , input ""             /*  p-EI          */
                           , input ""        /*  p-qnty        */
@@ -1213,6 +1225,7 @@ assign v-add-str = ""
                       run facturxl-write-line-data-corr in this-procedure (
                             input ""                          /*  p-Name        */
                           , input "Г (уменьшение)"          /*  p-pokazately  */
+                          , input ""                 /*  p-UAES     */
                           , input ""                 /*  p-OKEI        */
                           , input ""             /*  p-EI          */
                           , input ""        /*  p-qnty        */
@@ -1227,7 +1240,8 @@ assign v-add-str = ""
                 else do :
                 display stream out-stream
                         sym1 v-prt-name @ ub.goods.gds-name
-                        sym2 v-unit-code
+                        sym2 "  -   " @ v-uaes-code
+                        sym16 v-unit-code
                         sym14 "  " + ub.goods.unit-base @ ub.goods.unit-base
                         sym3 v-prt-qnty @ v-qnty
                         sym4 v-price-no-VAT
@@ -1243,6 +1257,7 @@ assign v-add-str = ""
                 down stream out-stream 1 with frame factur .
                 run facturxl-write-line-data in this-procedure (
                       input v-prt-name                  /*  p-Name     */
+                    , input v-uaes-code                 /*  p-UAES     */
                     , input v-unit-code                 /*  p-OKEI     */
                     , input ub.goods.unit-base             /*  p-EI       */
                     , input string( v-prt-qnty )        /*  p-qnty     */
@@ -1337,7 +1352,8 @@ assign v-add-str = ""
                         display stream Out-stream
                             sym1 (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name         @ ub.goods.gds-name
                             sym2 "А (до изменения)"                                                 @ v-pokazately
-                            sym3 v-unit-code
+                            sym3 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym4 "  " + ub.goods.unit-base                                             @ ub.goods.unit-base
                             sym5 ub.parts.qnty                                                     @ v-qnty
                             sym6 v-price-no-VAT
@@ -1356,7 +1372,8 @@ assign v-add-str = ""
                         display stream Out-stream
                             sym1 /*v-add-str                                                          @ ub.goods.gds-name*/
                             sym2 "Б (после изменения)"                                                 @ v-pokazately
-                            sym3 v-unit-code
+                            sym3 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym4 "  " + ub.goods.unit-base                                             @ ub.goods.unit-base
                             sym5 ub.parts.fact-qnty                                                  @ v-qnty
                             sym6 v-price-no-VAT
@@ -1379,6 +1396,7 @@ assign v-add-str = ""
                             sym1 /*v-add-str                                                       @ ub.goods.gds-name*/
                             sym2 "В (увеличение)"                                                   @ v-pokazately
                             sym3
+                            sym16
                             sym4
                             sym5
                             sym6
@@ -1400,6 +1418,7 @@ assign v-add-str = ""
                             sym1 /*v-add-str                                                       @ ub.goods.gds-name*/
                             sym2 "Г (уменьшение)"                                                   @ v-pokazately
                             sym3
+                            sym16
                             sym4
                             sym5
                             sym6
@@ -1419,6 +1438,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                             input (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name /*  p-Name        */
                           , input "А (до изменения)"          /*  p-pokazately  */
+                          , input v-uaes-code                 /*  p-UAES     */
                           , input v-unit-code                 /*  p-OKEI        */
                           , input ub.goods.unit-base             /*  p-EI          */
                           , input string( ub.parts.qnty )    /*  p-qnty        */
@@ -1432,6 +1452,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                               input ""                          /*  p-Name        */
                             , input "Б (после изменения)"          /*  p-pokazately  */
+                            , input v-uaes-code                 /*  p-UAES     */
                             , input v-unit-code                 /*  p-OKEI        */
                             , input ub.goods.unit-base             /*  p-EI          */
                             , input string( ub.parts.fact-qnty )        /*  p-qnty        */
@@ -1445,6 +1466,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                               input ""                          /*  p-Name        */
                             , input "В (увеличение)"          /*  p-pokazately  */
+                            , input ""                 /*  p-UAES     */
                             , input ""                 /*  p-OKEI        */
                             , input ""             /*  p-EI          */
                             , input ""        /*  p-qnty        */
@@ -1458,6 +1480,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                               input ""                          /*  p-Name        */
                             , input "Г (уменьшение)"          /*  p-pokazately  */
+                            , input ""                 /*  p-UAES     */
                             , input ""                 /*  p-OKEI        */
                             , input ""             /*  p-EI          */
                             , input ""        /*  p-qnty        */
@@ -1472,7 +1495,8 @@ assign v-add-str = ""
                     else do :
                     display stream Out-stream
                             sym1 (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name @ ub.goods.gds-name
-                            sym2 v-unit-code
+                            sym2 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym14 "  " + ub.goods.unit-base  @  ub.goods.unit-base
                             sym3 ub.parts.fact-qnty @ v-qnty
                             sym4 v-price-no-VAT
@@ -1490,6 +1514,7 @@ assign v-add-str = ""
                     down stream Out-stream 1 with frame factur .
                     run facturxl-write-line-data in this-procedure (
                           input (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name   /*  p-Name     */
+                        , input v-uaes-code                                             /*  p-UAES     */
                         , input v-unit-code                                             /*  p-OKEI     */
                         , input ub.goods.unit-base                                         /*  p-EI       */
                         , input string( ub.parts.fact-qnty )                               /*  p-qnty     */
@@ -1634,7 +1659,8 @@ assign v-add-str = ""
                         display stream Out-stream
                             sym1 gds-str1                                                           @ ub.goods.gds-name
                             sym2 "А (до изменения)"                                                 @ v-pokazately
-                            sym3 v-unit-code
+                            sym3 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym4 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + ub.goods.unit-base) )          @ ub.goods.unit-base
                             sym5  v-doc-qnty                                                        @ v-qnty
                             sym6  v-price-no-VAT
@@ -1653,7 +1679,8 @@ assign v-add-str = ""
                         display stream Out-stream
                             sym1 v-add-str                                                          @ ub.goods.gds-name
                             sym2 "Б (после изменения)"                                                 @ v-pokazately
-                            sym3 v-unit-code
+                            sym3 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym4 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + ub.goods.unit-base) )          @ ub.goods.unit-base
                             sym5  v-qnty
                             sym6  v-price-no-VAT
@@ -1676,6 +1703,7 @@ assign v-add-str = ""
                             sym1 v-add-str                                                       @ ub.goods.gds-name
                             sym2 "В (увеличение)"                                                   @ v-pokazately
                             sym3
+                            sym16
                             sym4
                             sym5
                             sym6
@@ -1694,6 +1722,7 @@ assign v-add-str = ""
                             sym1 v-add-str                                                       @ ub.goods.gds-name
                             sym2 "Г (уменьшение)"                                                   @ v-pokazately
                             sym3
+                            sym16
                             sym4
                             sym5
                             sym6
@@ -1710,6 +1739,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                             input (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name /*  p-Name        */
                           , input "А (до изменения)"          /*  p-pokazately  */
+                          , input v-uaes-code                 /*  p-UAES     */
                           , input v-unit-code                 /*  p-OKEI        */
                           , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )             /*  p-EI          */
                           , input string( v-doc-qnty          )    /*  p-qnty        */
@@ -1723,6 +1753,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                               input ""                          /*  p-Name        */
                             , input "Б (после изменения)"          /*  p-pokazately  */
+                            , input v-uaes-code                 /*  p-UAES     */
                             , input v-unit-code                 /*  p-OKEI        */
                             , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )            /*  p-EI       */
                             , input string( v-qnty          )            /*  p-qnty     */
@@ -1736,6 +1767,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                               input ""                          /*  p-Name        */
                             , input "В (увеличение)"          /*  p-pokazately  */
+                            , input ""                 /*  p-UAES     */
                             , input ""                 /*  p-OKEI        */
                             , input ""             /*  p-EI          */
                             , input ""        /*  p-qnty        */
@@ -1749,6 +1781,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                               input ""                          /*  p-Name        */
                             , input "Г (уменьшение)"          /*  p-pokazately  */
+                            , input ""                 /*  p-UAES     */
                             , input ""                 /*  p-OKEI        */
                             , input ""             /*  p-EI          */
                             , input ""        /*  p-qnty        */
@@ -1763,7 +1796,8 @@ assign v-add-str = ""
           else do :
             display stream Out-stream
                 sym1 gds-str1 @ ub.goods.gds-name
-                sym2 v-unit-code
+                sym2 "  -   " @ v-uaes-code
+                sym16 v-unit-code
                 sym14 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + ub.goods.unit-base) ) @ ub.goods.unit-base
                 sym3 v-qnty
                 sym4 v-price-no-VAT
@@ -1781,6 +1815,7 @@ assign v-add-str = ""
             down stream Out-stream 1 with frame factur .
             run facturxl-write-line-data in this-procedure (
                   input (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name        /*  p-Name     */
+                , input v-uaes-code                 /*  p-UAES     */
                 , input v-unit-code                          /*  p-OKEI     */
                 , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )            /*  p-EI       */
                 , input string( v-qnty          )            /*  p-qnty     */
@@ -1948,7 +1983,8 @@ assign v-add-str = ""
                         display stream Out-stream
                             sym1 gds-str1                                                           @ ub.goods.gds-name
                             sym2 "А (до изменения)"                                                 @ v-pokazately
-                            sym3 v-unit-code
+                            sym3 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym4 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + ub.goods.unit-base) )          @ ub.goods.unit-base
                             sym5 v-prt-doc-qnty                                                         @ v-qnty
                             sym6 v-parts-price-no-VAT                                               @ v-price-no-VAT
@@ -1967,7 +2003,8 @@ assign v-add-str = ""
                         display stream Out-stream
                             sym1 v-add-str                                                          @ ub.goods.gds-name
                             sym2 "Б (после изменения)"                                                 @ v-pokazately
-                            sym3 v-unit-code
+                            sym3 "  -   " @ v-uaes-code
+                            sym16 v-unit-code
                             sym4 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + ub.goods.unit-base) )          @ ub.goods.unit-base
                             sym5 v-prt-qnty                                                         @ v-qnty
                             sym6 v-parts-price-no-VAT                                               @ v-price-no-VAT
@@ -1990,6 +2027,7 @@ assign v-add-str = ""
                             sym1 v-add-str                                                       @ ub.goods.gds-name
                             sym2 "В (увеличение)"                                                   @ v-pokazately
                             sym3
+                            sym16
                             sym4
                             sym5
                             sym6
@@ -2011,6 +2049,7 @@ assign v-add-str = ""
                             sym1 v-add-str                                                       @ ub.goods.gds-name
                             sym2 "Г (уменьшение)"                                                   @ v-pokazately
                             sym3
+                            sym16
                             sym4
                             sym5
                             sym6
@@ -2030,6 +2069,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                               input (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name /*  p-Name        */
                             , input "А (до изменения)"          /*  p-pokazately  */
+                            , input v-uaes-code                 /*  p-UAES     */
                             , input v-unit-code                 /*  p-OKEI        */
                             , input ( if invers then doc-line.unit-cli else goods.unit-base )            /*  p-EI       */
                             , input string( v-prt-doc-qnty                        )     /*  p-qnty     */
@@ -2043,6 +2083,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                               input ""                          /*  p-Name        */
                             , input "Б (после изменения)"          /*  p-pokazately  */
+                            , input v-uaes-code                 /*  p-UAES     */
                             , input v-unit-code                 /*  p-OKEI        */
                             , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )            /*  p-EI       */
                             , input string( v-prt-qnty                        )     /*  p-qnty     */
@@ -2056,6 +2097,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                               input ""                          /*  p-Name        */
                             , input "В (увеличение)"          /*  p-pokazately  */
+                            , input ""                 /*  p-UAES     */
                             , input ""                 /*  p-OKEI        */
                             , input ""             /*  p-EI          */
                             , input ""        /*  p-qnty        */
@@ -2069,6 +2111,7 @@ assign v-add-str = ""
                         run facturxl-write-line-data-corr in this-procedure (
                               input ""                          /*  p-Name        */
                             , input "Г (уменьшение)"          /*  p-pokazately  */
+                            , input ""                 /*  p-UAES     */
                             , input ""                 /*  p-OKEI        */
                             , input ""             /*  p-EI          */
                             , input ""        /*  p-qnty        */
@@ -2083,7 +2126,8 @@ assign v-add-str = ""
                     else do :
                     display stream Out-stream
                         sym1 gds-str1                                                           @ ub.goods.gds-name
-                        sym2 v-unit-code
+                        sym2 "  -   " @ v-uaes-code
+                        sym16 v-unit-code
                         sym14 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + ub.goods.unit-base) )          @ ub.goods.unit-base
                         sym3 v-prt-qnty                                                         @ v-qnty
                         sym4 v-parts-price-no-VAT                                               @ v-price-no-VAT
@@ -2101,6 +2145,7 @@ assign v-add-str = ""
                     with frame factur .
                     run facturxl-write-line-data in this-procedure (
                           input (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name                /*  p-Name     */
+                        , input v-uaes-code                                     /*  p-UAES     */
                         , input v-unit-code                                     /*  p-OKEI     */
                         , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )            /*  p-EI       */
                         , input string( v-prt-qnty                        )     /*  p-qnty     */
@@ -2121,7 +2166,8 @@ assign v-add-str = ""
                       display stream Out-stream
                           sym1 gds-str1                                                           @ ub.goods.gds-name
                           sym2 "А (до изменения)"                                                 @ v-pokazately
-                          sym3 v-unit-code
+                          sym3 "  -   " @ v-uaes-code
+                          sym16 v-unit-code
                           sym4 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + ub.goods.unit-base) )          @ ub.goods.unit-base
                           sym5 v-prt-doc-qnty                                                         @ v-qnty
                           sym6 v-price-no-VAT                                               @ v-price-no-VAT
@@ -2140,7 +2186,8 @@ assign v-add-str = ""
                       display stream Out-stream
                           sym1 v-add-str                                                          @ ub.goods.gds-name
                           sym2 "Б (после изменения)"                                                 @ v-pokazately
-                          sym3 v-unit-code
+                          sym3 "  -   " @ v-uaes-code
+                          sym16 v-unit-code
                           sym4 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + ub.goods.unit-base) )          @ ub.goods.unit-base
                           sym5 v-prt-qnty                                                         @ v-qnty
                           sym6 v-price-no-VAT                                               @ v-price-no-VAT
@@ -2163,6 +2210,7 @@ assign v-add-str = ""
                           sym1 v-add-str                                                       @ ub.goods.gds-name
                           sym2 "В (увеличение)"                                                   @ v-pokazately
                           sym3
+                          sym16
                           sym4
                           sym5
                           sym6
@@ -2184,6 +2232,7 @@ assign v-add-str = ""
                           sym1 v-add-str                                                       @ ub.goods.gds-name
                           sym2 "Г (уменьшение)"                                                   @ v-pokazately
                           sym3
+                          sym16
                           sym4
                           sym5
                           sym6
@@ -2203,6 +2252,7 @@ assign v-add-str = ""
                       run facturxl-write-line-data-corr in this-procedure (
                             input (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name /*  p-Name        */
                           , input "А (до изменения)"          /*  p-pokazately  */
+                          , input v-uaes-code                 /*  p-UAES     */
                           , input v-unit-code                 /*  p-OKEI        */
                           , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )            /*  p-EI       */
                           , input string( v-prt-doc-qnty              )     /*  p-qnty     */
@@ -2216,6 +2266,7 @@ assign v-add-str = ""
                       run facturxl-write-line-data-corr in this-procedure (
                             input ""                          /*  p-Name        */
                           , input "Б (после изменения)"          /*  p-pokazately  */
+                          , input v-uaes-code                 /*  p-UAES     */
                           , input v-unit-code                 /*  p-OKEI        */
                           , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )            /*  p-EI       */
                           , input string( v-prt-qnty                        )     /*  p-qnty     */
@@ -2229,6 +2280,7 @@ assign v-add-str = ""
                       run facturxl-write-line-data-corr in this-procedure (
                             input ""                          /*  p-Name        */
                           , input "В (увеличение)"          /*  p-pokazately  */
+                          , input ""                 /*  p-UAES     */
                           , input ""                 /*  p-OKEI        */
                           , input ""             /*  p-EI          */
                           , input ""        /*  p-qnty        */
@@ -2242,6 +2294,7 @@ assign v-add-str = ""
                       run facturxl-write-line-data-corr in this-procedure (
                             input ""                          /*  p-Name        */
                           , input "Г (уменьшение)"          /*  p-pokazately  */
+                          , input ""                 /*  p-UAES     */
                           , input ""                 /*  p-OKEI        */
                           , input ""             /*  p-EI          */
                           , input ""        /*  p-qnty        */
@@ -2256,7 +2309,8 @@ assign v-add-str = ""
                   else do :
                     display stream Out-stream
                         sym1 gds-str1                                                           @ ub.goods.gds-name
-                        sym2 v-unit-code
+                        sym2 "  -   " @ v-uaes-code
+                        sym16 v-unit-code
                         sym14 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + ub.goods.unit-base) )          @ ub.goods.unit-base
                         sym3 v-prt-qnty                                                         @ v-qnty
                         sym4 v-price-no-VAT
@@ -2274,6 +2328,7 @@ assign v-add-str = ""
                     with frame factur .
                     run facturxl-write-line-data in this-procedure (
                           input (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "") + ub.goods.gds-name         /*  p-Name     */
+                        , input v-uaes-code                                     /*  p-UAES     */
                         , input v-unit-code                                     /*  p-OKEI     */
                         , input ( if invers then ub.doc-line.unit-cli else ub.goods.unit-base )            /*  p-EI       */
                         , input string( v-prt-qnty                        )     /*  p-qnty     */
@@ -2319,7 +2374,7 @@ assign v-add-str = ""
       if v-diff-sum        < 0 then v-tot-sum2          = v-tot-sum2        + abs(v-diff-sum).
 
       put stream Out-stream
-          v-single-line format "X(190)"
+          v-single-line format "X(199)"
       .
     end.
 end.
@@ -2435,8 +2490,7 @@ end.
           space(90) "                                                            к постановлению Правительства" skip
           space(90) "                                                                     Российской Федерации" skip
           space(90) "                                                                     от 26.12.2011 № 1137" skip
-          space(90) "                              (в ред. Постановления Правительства РФ от 24.10.2013 № 952," skip
-          space(90) "                                                                     от 25.05.2017 № 625)" skip
+          space(90) "                              (в ред. Постановления Правительства РФ от 19.08.2017 № 981)" skip
         .
       end.
       else do :
@@ -2445,7 +2499,7 @@ end.
           space(108) "                                                            к постановлению Правительства" skip
           space(108) "                                                                     Российской Федерации" skip
           space(108) "                                                                     от 26.12.2011 № 1137" skip
-          space(108) "                              (в ред. Постановления Правительства РФ от 25.05.2017 № 625)" skip
+          space(108) "                              (в ред. Постановления Правительства РФ от 19.08.2017 № 981)" skip
         .
       end.
     END.
@@ -2701,7 +2755,7 @@ end.
  
     put stream Out-stream
         space(5)  
-        "Идентификатор государственного контракта, договора (соглашения):  " 																																			
+        "Идентификатор государственного контракта, договора (соглашения) (при наличии):  "                                                                      
          /*skip*  space(5) */
          + trim(v-idContr) format "X(120)" "(8)" at 196 skip(0)
     .
@@ -2855,7 +2909,7 @@ on error undo, return error
     with frame corr-factur .
     down stream Out-stream 1 with frame corr-factur .
     put stream Out-stream
-        v-single-line format "X(190)"
+        v-single-line format "X(199)"
     .
     display stream Out-stream
         sym1 "                     Всего уменьшение (сумма строк Г)"  @ goods.gds-name
@@ -2868,54 +2922,52 @@ on error undo, return error
     with frame corr-factur .
     down stream Out-stream 1 with frame corr-factur .
     put stream Out-stream
-        v-single-line format "X(190)"
+        v-single-line format "X(199)"
     .
   end.
   else do :
     if abs( v-tot-SLT ) >= 0.005
     or ( not invers and abs( buf_trn-doc.discnt-rubl ) >= 0.005 )
     then do:
-        yy = 150 - length(trim(string(v-tot-sum,"->>>>>>>>>>9.99"))).
+        yy = 158 - length(trim(string(v-tot-sum,"->>>>>>>>>>9.99"))).
         put stream Out-stream
-            skip ":Итого по документу" ":" at 44 ":" at 134
+            skip ":Итого по документу" ":" at 44 /* ":" at 142 */
             trim( string( v-tot-sum, "->>>>>>>>>>9.99" ) ) + ":" at yy
         .
         if v-tot-SLT <> 0 and p-no-slt = false
         then do:
-            yy = 150 - length(trim(string(v-tot-SLT,"->>>>>>>>>>9.99"))).
+            yy = 158 - length(trim(string(v-tot-SLT,"->>>>>>>>>>9.99"))).
             put stream Out-stream
-                skip ":Налог с продаж" ":" at 44 ":" at 134
+                skip ":Налог с продаж" ":" at 44 /* ":" at 142 */
                         trim( string( v-tot-SLT, "->>>>>>>>>>9.99" ) )  + ":" at yy
-
             .
         end.
         if buf_trn-doc.discnt-rubl <> 0
         and not invers
         and v-torgconf-outdisc = no
         then do:
-            yy = 150 - length(trim(string(if PrintRubl
+            yy = 158 - length(trim(string(if PrintRubl
                                         then buf_trn-doc.discnt-rubl
                                         else buf_trn-doc.tot-calc,"->>>>>>>>>>9.99"))).
             put stream Out-stream
-                skip ":Скидка" ":" at 44 ":" at 134
+                skip ":Скидка" ":" at 44 /* ":" at 142 */
                         trim( string( ( if PrintRubl
                                         then buf_trn-doc.discnt-rubl
                                         else buf_trn-doc.tot-calc ), "->>>>>>>>>>9.99" ) ) + ":" at yy
-
             .
         end.
     end.
     if v-tot-tax <> 0
     then do:
-        yy = 150 - length(trim(string(v-tot-tax,"->>>>>>>>>>9.99"))).
+        yy = 158 - length(trim(string(v-tot-tax,"->>>>>>>>>>9.99"))).
         put stream Out-stream
-            skip ":" + v-tax-name  format "X(20)" ":" at 44 ":" at 134
+            skip ":" + v-tax-name  format "X(20)" ":" at 44 /* ":" at 142 */
                 trim( string( v-tot-tax, "->>>>>>>>>>9.99" ) ) + ":" at yy
         .
     end.
-    xx = 134 - length(trim(string(v-tot-VAT,"->>>>>>>9.99"))).
-    yy = 150 - length(trim(string(v-tot-sum + v-tot-SLT,"->>>>>>>>>>9.99"))).
-    zz = 103  - length(trim(string(v-tot-sum-no-VAT,"->>>>>>>>>>>>9.99"))).
+    xx = 142 - length(trim(string(v-tot-VAT,"->>>>>>>9.99"))).
+    yy = 158 - length(trim(string(v-tot-sum + v-tot-SLT,"->>>>>>>>>>9.99"))).
+    zz = 111 - length(trim(string(v-tot-sum-no-VAT,"->>>>>>>>>>>>9.99"))).
     if PrintRubl
     and v-torgconf-outprops = yes
     then do:
@@ -2925,31 +2977,22 @@ on error undo, return error
             , output v-propis-cop
         ).
     put stream Out-stream
-          skip ":Всего к оплате" ":" at 44
+          skip ":Всего к оплате" /* ":" at 44 */
                           v-propis format "X(75)" at 46 ":" at 121
                           string( trim( string(v-tot-VAT, "->>>>>>>9.99") ) + ":" ) format "X(13)" at xx
                           string( trim( string( v-tot-sum + v-tot-SLT, "->>>>>>>>>>9.99" ) ) + ":" ) format "X(16)" at yy
-          skip fill("-",150) format "x(150)"
+          skip fill("-",158) format "x(158)"
    .
     end.
     else do:
       /*if lookup ("TopAukc" , p-mode) <> 0 then do :*/
       put stream Out-stream
-          skip ":Всего к оплате" ":" at 44 ":" at 85
+          skip ":Всего к оплате" /* ":" at 44 */ ":" at 93
                           string( trim( string( v-tot-sum-no-VAT, "->>>>>>>>>>>>9.99" ) ) + ":" ) format "X(18)" at zz
                           string( trim( string(v-tot-VAT, "->>>>>>>9.99") ) + ":" ) format "X(13)" at xx
                           string( trim( string( v-tot-sum + v-tot-SLT, "->>>>>>>>>>9.99" ) ) + ":" ) format "X(16)" at yy
-          skip fill("-",150) format "x(150)"
+          skip fill("-",158) format "x(158)"
         .
-      /*end.
-      else do :
-      put stream Out-stream
-              skip ":Всего к оплате" ":" at 44 ":" at 121
-                              string( trim( string(v-tot-VAT, "->>>>>>>9.99") ) + ":" ) format "X(13)" at xx
-                              string( trim( string( v-tot-sum + v-tot-SLT, "->>>>>>>>>>9.99" ) ) + ":" ) format "X(16)" at yy
-              skip fill("-",150) format "x(150)"
-      .
-      end.*/
     end.
 
   end.
@@ -3023,7 +3066,8 @@ on error undo, return error
        or v-torgconf-self-host-egrip-num  <> "":U
        then do:
           put stream Out-stream
-              skip (1) space(10) substitute( "Индивидуальный предприниматель   &1  / &2 / ЕГРИП N &3 от &4 ", fill( "_", 26 ) , string(v-torgconf-self-host-name, "x(42)") , v-torgconf-self-host-egrip-num, v-torgconf-self-host-egrip-date ) format "X(174)"
+              skip (1) space(10)             "Индивидуальный предприниматель"
+              skip (0) space(10) substitute( "или иное уполномоченное лицо     &1  / &2 / ЕГРИП N &3 от &4 ", fill( "_", 26 ) , string(v-torgconf-self-host-name, "x(42)") , v-torgconf-self-host-egrip-num, v-torgconf-self-host-egrip-date ) format "X(174)"
 
               skip     space(51) "(подпись)"  space(29) "(Ф.И.О)" space(22) "(реквизиты свидетельства о государственной"
               skip     space(119) substitute( "регистрации индивидуального предпринимателя)" ) format "X(60)"
@@ -3041,7 +3085,8 @@ on error undo, return error
       end.
       else do :
           put stream Out-stream
-              skip (1) space(10) substitute( "Индивидуальный предприниматель   &1  / &2 /  &3  ", fill( "_", 26 ) , fill("_", 42) , fill( "_", 50 ) ) format "X(174)"
+              skip (1) space(10)             "Индивидуальный предприниматель"
+              skip (0) space(10) substitute( "или иное уполномоченное лицо     &1  / &2 /  &3  ", fill( "_", 26 ) , fill("_", 42) , fill( "_", 50 ) ) format "X(174)"
 
               skip     space(51) "(подпись)"  space(29) "(Ф.И.О)" space(22) "(реквизиты свидетельства о государственной"
               skip     space(119) substitute( "регистрации индивидуального предпринимателя)" ) format "X(60)"

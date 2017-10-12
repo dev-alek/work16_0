@@ -286,6 +286,7 @@ end procedure. /* facturxl-write-cell-data */
 /*==========================================================================*/
 procedure facturxl-write-line-data :
 define input parameter p-Name          as character        no-undo.
+define input parameter p-UAES          as character        no-undo.
 define input parameter p-EI            as character        no-undo.
 define input parameter p-qnty          as character        no-undo.
 define input parameter p-price         as character        no-undo.
