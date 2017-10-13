@@ -108,6 +108,8 @@ on error undo, return error
                           input {&nwsdochs_action_update}
                         , input {&table_c-fbr-line}
                         , input ( buffer buf_c-fbr-line :handle )
+                        , input ?
+                        , input ""
                     ) no-error.
                     if error-status :error
                     then do:
@@ -175,6 +177,8 @@ on error undo, return error
                               input {&nwsdochs_action_update}
                             , input {&table_c-fbr-line}
                             , input ( buffer buf_c-fbr-line :handle )
+                            , input ?
+                            , input ""
                         ) no-error.
                         if error-status :error
                         then do:
