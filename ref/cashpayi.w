@@ -628,9 +628,9 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-cash-pay.cdpay-code Dialog-Frame
 ON LEAVE OF tt-cash-pay.cdpay-code IN FRAME Dialog-Frame /* Код типа платежа */
 DO:
-    IF integer(input frame {&frame-name} tt-cash-pay.cdpay-code) > 99 then
-    message "ВНИМАНИЕ! Для касс типа IBM разрешены только двузначные коды оплат!"
-    view-as alert-box WARNING.
+/*    IF integer(input frame {&frame-name} tt-cash-pay.cdpay-code) > 99 then       */
+/*    message "ВНИМАНИЕ! Для касс типа IBM разрешены только двузначные коды оплат!"*/
+/*    view-as alert-box WARNING.                                                   */
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -878,6 +878,8 @@ else do:
 
 end.
      find first buf_cash-pay-attr where buf_cash-pay-attr.host-code = p-host-code
+/*                                 and buf_cash-pay-attr.obj-code = p-obj-code*/
+/*                                 and buf_cash-pay-attr.obj-type = p-obj-type*/
                                  and buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
                                  and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
                                  and buf_cash-pay-attr.attr-code = "cash-prop" no-error .
@@ -1165,6 +1167,8 @@ tt-cash-pay.can-mix = (IF t-can-mix THEN 1 ELSE 0)
     undo, return error.
    END.
      find first buf_cash-pay-attr where buf_cash-pay-attr.host-code = p-host-code
+/*                                 and buf_cash-pay-attr.obj-code = p-obj-code*/
+/*                                 and buf_cash-pay-attr.obj-type = p-obj-type*/
                                  and buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
                                  and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
                                  and buf_cash-pay-attr.attr-code = "cash-prop" no-error .

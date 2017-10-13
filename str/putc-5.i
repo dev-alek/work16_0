@@ -233,8 +233,8 @@ CASE par-pos-type:
       if action <> 'D':U  then do:
         /*найдем значение атрибута*/
          find first buf_cash-pay-attr no-lock where buf_cash-pay-attr.host-code = v-host-code
-                                 and buf_cash-pay-attr.obj-code = i-obj-code
-                                 and buf_cash-pay-attr.obj-type = {&shop}
+/*                                 and buf_cash-pay-attr.obj-code = i-obj-code*/
+/*                                 and buf_cash-pay-attr.obj-type = {&shop}   */
                                  and buf_cash-pay-attr.cdpay-code = cash-pay.cdpay-code
                                  and buf_cash-pay-attr.curr-code = cash-pay.curr-code
                                  and buf_cash-pay-attr.attr-code = "cash-prop" no-error .
