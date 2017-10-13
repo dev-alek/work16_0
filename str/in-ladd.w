@@ -3052,8 +3052,8 @@ display {&list-1} with frame {&frame-name}.
     end.
     else 
     do:
-        f-hour-start = integer( truncate( infoSectionTotal:GetInfoSectionProp(v-page-current):TimeStart / 3600 , 0 ) ).
-        f-min-start  = integer( ( infoSectionTotal:GetInfoSectionProp(v-page-current):TimeStart - f-hour-start * 3600 ) / 60 ).
+        f-hour-start = integer( truncate( infoSectionTotal:GetInfoSectionProp(1):TimeStart / 3600 , 0 ) ).
+        f-min-start  = integer( ( infoSectionTotal:GetInfoSectionProp(1):TimeStart - f-hour-start * 3600 ) / 60 ).
     end.    
     if infoSectionTotal:GetInfoSectionProp(v-page-current):TimeEnd = 0 then 
     do:
@@ -3062,8 +3062,8 @@ display {&list-1} with frame {&frame-name}.
     end.
     else 
     do:
-        f-hour-end   = integer( truncate( infoSectionTotal:GetInfoSectionProp(v-page-current):TimeEnd / 3600 , 0 ) ).
-        f-min-end    = integer( ( infoSectionTotal:GetInfoSectionProp(v-page-current):TimeEnd - f-hour-end * 3600 ) / 60).
+        f-hour-end   = integer( truncate( infoSectionTotal:GetInfoSectionProp(1):TimeEnd / 3600 , 0 ) ).
+        f-min-end    = integer( ( infoSectionTotal:GetInfoSectionProp(1):TimeEnd - f-hour-end * 3600 ) / 60).
     end.        
     assign
       f-mouth = decimal (infoSectionTotal:GetInfoSectionProp(v-page-current):Mouth) no-error.

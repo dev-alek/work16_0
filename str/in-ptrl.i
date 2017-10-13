@@ -616,28 +616,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             .
             infoSectionsTotal:CalculateTotal().
             if p-rvs-type = {&rvs-before-doc}  then do:
-              if v-prt-start-real-date > buf_rvs-line.real-date
-                or ( v-prt-start-real-date = buf_rvs-line.real-date
-                    and v-prt-start-real-time > buf_rvs-line.real-time
-                  )
-              then do:
-                assign
-                  v-prt-start-real-date = buf_rvs-line.real-date
-                  v-prt-start-real-time = buf_rvs-line.real-time
-                .
-              end.
+                 if v-prt-start-real-date = ? then v-prt-start-real-date = today.
+                if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = time.
             end.
             else do:
-              if v-prt-end-real-date < buf_rvs-line.real-date
-                or ( v-prt-end-real-date = buf_rvs-line.real-date
-                    and v-prt-end-real-time < buf_rvs-line.real-time
-                  )
-              then do:
-                assign
-                  v-prt-end-real-date  = buf_rvs-line.real-date
-                  v-prt-end-real-time  = buf_rvs-line.real-time
-                .
-              end.
+                if v-prt-end-real-date = ? then v-prt-end-real-date = today.
+                if v-prt-end-real-time = ? or v-prt-end-real-time = 0 then v-prt-end-real-time = time.
             end.
           end.
           when "edit":U then do:
@@ -658,7 +642,14 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             
             else do:
-            
+            if p-rvs-type = {&rvs-before-doc}  then do:
+                if v-prt-start-real-date = ? then v-prt-start-real-date = today.
+                if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = time.
+            end.
+            else do:
+                if v-prt-end-real-date = ? then v-prt-end-real-date = today.
+                if v-prt-end-real-time = ? or v-prt-end-real-time = 0 then v-prt-end-real-time = time.
+            end.
                 run str/rvs-lin.w
                   (input  parparentproc
                   ,input  recid( buf_rvs-line )
@@ -685,7 +676,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               undo block_tr, return error .
             end.
           end.
-        end case.
+       end case.
+          
+          if infoSectionsTotal:GetInfoSectionProp(1):DateStart = ? then infoSectionsTotal:GetInfoSectionProp(1):DateStart = v-prt-start-real-date . 
+          if infoSectionsTotal:GetInfoSectionProp(1):DateEnd = ? then infoSectionsTotal:GetInfoSectionProp(1):DateEnd   = v-prt-end-real-date . 
+          if infoSectionsTotal:GetInfoSectionProp(1):TimeStart = ? or infoSectionsTotal:GetInfoSectionProp(1):TimeStart = 0 then infoSectionsTotal:GetInfoSectionProp(1):TimeStart = v-prt-start-real-time . 
+          if infoSectionsTotal:GetInfoSectionProp(1):TimeEnd = ? or infoSectionsTotal:GetInfoSectionProp(1):TimeEnd = 0 then infoSectionsTotal:GetInfoSectionProp(1):TimeEnd   = v-prt-end-real-time .
         
         run placelib_get-attr(input {&place-virtual}
                                  ,input buf_rvs-line.obj-code
