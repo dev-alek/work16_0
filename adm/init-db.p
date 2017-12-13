@@ -22,6 +22,7 @@ define input parameter p-r-b      as character no-undo . /* валюта прайс-листа *
 define input parameter p-sys-key  as character no-undo . /* системный ключ */
 define input parameter mess-view  as logical   no-undo . /* выводить сообщение в начале и в конце работы утилиты */
 define input parameter p-create-adm as logical          no-undo. /* */
+define input parameter p-extra-to as integer   no-undo . /* раскрутка под: 0=ниподкого, 1="1С", 2= */ 
 
 def var vss-revision    as character no-undo init "$Revision$":U .
 def var vss-author      as character no-undo init "$Author$":U .
@@ -63,13 +64,14 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     return error.
   end.
 
+  assign
+    err-log = FALSE
+  .
+  
   lv-block:
   do
   on error undo, leave lv-block
   :
-    assign
-      err-log = FALSE
-    .
     run adm/init-chk.p no-error.
     if error-status :error then do:
       message
@@ -89,6 +91,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
        ,input p-language
        ,input p-r-b
        ,input p-sys-key
+       ,input p-extra-to
       ) no-error.
     if error-status:error then do:
       message
@@ -100,12 +103,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       .
       undo, leave lv-block.
     end.
-
+    
     IF loc_db-num = 0
     THEN DO:
-      run utl/kick-db.p
-        ( input p-sys-key
-        ) no-error .
+      run utl/kick-db.p ( input p-sys-key ) no-error .
       if error-status:error then do:
          message
          vss-workfile vss-revision vss-description                   skip
@@ -162,3 +163,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   end.
 
 end.
+
+
+/* kick-db.p вызывается из adm/init-db.p и из gbl/menuload.p;
+   чтобы не менять параметры вызова из menuload.p - получаем входные параметры через указатель на вызывающую процедуру */
+procedure get-param :
+define output parameter p-get-extra-to as integer no-undo.
+  p-get-extra-to = p-extra-to.
+end procedure.

@@ -1706,6 +1706,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   run ver-movepar in this-procedure .
 
+  /* 29/IX-2017 - отказались в v.16_0 в рамках интеграции с 1С,
+                  т.к. оттуда вызывается str/saledc.p,
+                  который может затронуть справочники, приходящие из 1С
   run gbl/update2.p ( input parparentproc) no-error .
   if error-status :error then do:
     message
@@ -1716,6 +1719,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       view-as alert-box error .
     return error.
   end.
+  */
 
 
   if not this-procedure:persistent

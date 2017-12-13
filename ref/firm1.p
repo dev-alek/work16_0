@@ -64,7 +64,6 @@ define input parameter p-turnover-buyer      like ub.clients.turnover-buyer     
 define input parameter p-turnover-buyer-gds  like ub.clients.turnover-buyer-gds   no-undo .
 
 
-
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .

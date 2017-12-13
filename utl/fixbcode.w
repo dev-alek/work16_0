@@ -53,7 +53,7 @@ define variable v-curr-type-cdrg like ub.code-range.range-type no-undo .
 
 define temp-table temp-b-code-info no-undo
   field db-num            like ub.db.db-num
-  field curr-value-seq    as integer format ">>>>>>>>9" column-label "Текущее значение кода"
+  field curr-value-seq    as integer format ">>>>>>>>>9" column-label "Текущее значение кода"
   field active-exist      as logical format "yes/no"    column-label "Активный"
   field active-first-code like ub.code-range.first-code column-label "Активный c"
   field active-last-code  like ub.code-range.last-code  column-label "Активный по"

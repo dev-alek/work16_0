@@ -13,7 +13,9 @@ Author: Svetlana Chernova
 Creation date: 04/22/09
 
 */
-define input parameter parParentProc as handle           no-undo.
+/* define input parameter parParentProc as handle           no-undo.
+29/IX-2017 из kick-db.p вызывается без параметров; из menuloa2.p вызывается через препроцессоры, отследить трудно
+*/
 define variable p-install as logical no-undo init true  .
 
 
