@@ -47,6 +47,7 @@ define input parameter p-pl-code       as integer        no-undo .
 
 define buffer buf_pl-level for ub.pl-level .
 define buffer buf_place    for ub.place .
+define VARIABLE v-ok-level as logical no-undo INIT no .
 /* Local Variable Definitions ---                                       */
 
 /* _UIB-CODE-BLOCK-END */
@@ -256,6 +257,7 @@ ON CHOOSE OF b-add IN FRAME Dialog-Frame /* Добавить */
     IF v-ok then 
     do:
       run enable_UI in this-procedure.
+      v-ok-level = yes .
     end.
   END.
 
@@ -296,6 +298,7 @@ ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
     if v-ok then 
     do:
       run enable_ui in this-procedure.
+      v-ok-level = yes .
     end.
   END.
 
@@ -322,6 +325,7 @@ ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
       else 
       do:
         run enable_UI in this-procedure.
+        v-ok-level = yes .
       end.
     end.
   END.
@@ -369,6 +373,7 @@ ON CHOOSE OF b-delete IN FRAME Dialog-Frame /* Очистить */
         else 
         do:
           run enable_UI in this-procedure.
+          v-ok-level = yes .
         end.
       END.
     end.
@@ -404,7 +409,7 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
       END.
     END.
 
-    if AVAILABLE (buf_pl-level) then 
+    if AVAILABLE (buf_pl-level) and v-ok-level then 
     do:
       /*запуск машины правил для выгрузки резервуара*/
     { gbl/rum-runa.i
@@ -476,6 +481,7 @@ ON CHOOSE OF b-load IN FRAME Dialog-Frame /* Загрузить */
         return no-apply .
       end.
       run enable_UI in this-procedure.
+      v-ok-level = yes .
     END.
   END.
 

@@ -226,7 +226,7 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
 
   define buffer buf_ext-system for ub.ext-system.  
 
-/*  define variable expObj as class expsubject no-undo .*/
+  define variable expObj as class expsubject no-undo .
   define variable subTank as class tank no-undo .
   
 /* ------------------------- &end-hn-option& -----------------------------------*/
@@ -246,13 +246,13 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
     undo _main, return error v-last-error-message .
   end.
 
-/*  expObj = new expsubject ().*/
+  expObj = new expsubject ().
   subTank = new tank ().
   subTank:pl-code = v-doc-num.
-  subTank:CrContentToSW(?).
-/*  expObj:GetContent(subTank).*/
+
+  expObj:GetContent(subTank).
         
-      IF ExpData1:esys-add-dump-data ( INPUT subTank:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + 'tanks')) = false  THEN do:
+      IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + expObj:InitSecTag)) = false  THEN do:
         undo _main, return error v-last-error-message .
       end.
 /*      v-custom-pack-name = "rvs-doc_&pack-num.xml".*/

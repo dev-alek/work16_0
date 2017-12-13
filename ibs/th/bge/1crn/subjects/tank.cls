@@ -66,10 +66,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
     get.
     private set.
 
-  define property Data as memptr no-undo
-    get.
-    private set.
-    
+  
   define property pl-code as character no-undo
     get.
     set.
@@ -77,19 +74,14 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
   define variable sw as handle no-undo.
   
 
-  define property InitSecTag as character no-undo init ""
+  define property InitSecTag as character no-undo init "tanks"
     get.
     private set.
   
 
   method public void CrContentToSW (insw as handle):
     
-    create sax-writer sw.
-    sw:formatted = true.
-    sw:set-output-destination ("memptr", Data).
-    sw:encoding = "UTF-8".
-    sw:fragment = true .
-    sw:start-document () .
+    sw = insw .
     
     placelib = new placelib().
     /*    sw:start-element ("tanks") .*/
@@ -207,21 +199,24 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         sw:write-data-element ("dnsty"    , string-mth (tt-place-attr.place-dens-prov)).
         sw:write-data-element ("mi-code"  , string(tt-place-attr.place-Si)).
       end.
-      sw:start-element ("cal-tbl") .
-      for each tt-pl-level no-lock where tt-pl-level.pl-code = tt-place.pl-code and
+      find first tt-pl-level no-lock where tt-pl-level.pl-code = tt-place.pl-code and
         tt-pl-level.obj-code = tt-place.obj-code and
-        tt-pl-level.obj-type = tt-place.obj-type:
-        sw:start-element ("cal-tbl-line") .
-        sw:write-data-element ("lvl"  , string(tt-pl-level.pl-level)).
-        sw:write-data-element ("amnt" , string(tt-pl-level.pl-qnty)).
-        sw:end-element ("cal-tbl-line")  .
+        tt-pl-level.obj-type = tt-place.obj-type no-error .
+      if AVAILABLE (tt-pl-level) then 
+      do:      
+        sw:start-element ("cal-tbl") .
+        for each tt-pl-level no-lock where tt-pl-level.pl-code = tt-place.pl-code and
+          tt-pl-level.obj-code = tt-place.obj-code and
+          tt-pl-level.obj-type = tt-place.obj-type:
+          sw:start-element ("cal-tbl-line") .
+          sw:write-data-element ("lvl"  , string(tt-pl-level.pl-level)).
+          sw:write-data-element ("amnt" , string(tt-pl-level.pl-qnty)).
+          sw:end-element ("cal-tbl-line")  .
+        end.
+        sw:end-element ("cal-tbl")  .  
       end.
-      sw:end-element ("cal-tbl")  .  
-
       sw:END-ELEMENT ("tank") .  
     end.
-    /*    sw:END-ELEMENT ("tanks") .*/
-    sw:end-document () .
   end.  
   method private character string-mth (inValue as decimal):
     
