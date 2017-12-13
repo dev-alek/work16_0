@@ -20,7 +20,8 @@ using ibs.th.bge.1crn.subjects.*.
 USING ibs.th.gbl.*.
 USING ibs.th.trg.newbcod from propath.
 USING ibs.th.gbl.curdburt from propath.
-class ibs.th.bge.1crn.import.impcontracts: 
+
+class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimpsubject: 
   
   { cmp/str-glbl.i class }
   { cmp/str-glbl.i }
@@ -37,7 +38,7 @@ class ibs.th.bge.1crn.import.impcontracts:
    Notes:
   ------------------------------------------------------------------------------*/
 
-	method public logical Excute( objContracts as class contracts ):
+  method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
 	
     define variable ri     as recid   no-undo .
     define variable f-code as integer no-undo .	

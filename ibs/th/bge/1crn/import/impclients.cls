@@ -18,7 +18,7 @@ Creation date: 02/10/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 
-class ibs.th.bge.1crn.import.impclients: 
+class ibs.th.bge.1crn.import.impclients implements ibs.th.bge.1crn.import.iimpsubject: 
   
   { cmp/str-glbl.i class }
   
@@ -32,7 +32,7 @@ class ibs.th.bge.1crn.import.impclients:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method public logical Excute( objImp as class clients ):
+  method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
     define variable v-mode      as character no-undo. /* create/update */
     define variable v-rid       as recid no-undo.
     define variable v-firm-code as integer no-undo . /* like ub.firm.firm-code */
@@ -44,6 +44,10 @@ class ibs.th.bge.1crn.import.impclients:
     define variable v-addr4     as character no-undo . /* оставшиеся символы для address2 */
     define variable v-retfl     as logical no-undo .
     define buffer buf_firm for ub.firm .
+
+    define variable objImp as class clients no-undo.
+    
+    objImp = cast (subjectObj, clients).
 
     if objImp:del-f > 0 then do:
       Msg = "not supported in TH".

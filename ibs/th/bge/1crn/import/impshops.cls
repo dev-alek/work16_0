@@ -18,7 +18,7 @@ Creation date: 03/10/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 
-class ibs.th.bge.1crn.import.impshops: 
+class ibs.th.bge.1crn.import.impshops implements ibs.th.bge.1crn.import.iimpsubject:
   
   { cmp/str-glbl.i class }
   
@@ -32,7 +32,7 @@ class ibs.th.bge.1crn.import.impshops:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method public logical Excute( objImp as class shops ):
+  method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
     define variable v-mode      as character no-undo. /* create/update */
     define variable v-rid1      as recid no-undo .
     define variable v-rid2      as recid no-undo .
@@ -44,6 +44,10 @@ class ibs.th.bge.1crn.import.impshops:
     define variable v-addr2     as character no-undo . /* оставшиеся символы для address2 */
     define variable v-retfl     as logical no-undo .
     define buffer buf_shop for ub.shop .
+
+    define variable objImp as class shops no-undo.
+    
+    objImp = cast (subjectObj, shops).
 
     if objImp:del-f > 0 then do:
       Msg = "not supported in TH" .

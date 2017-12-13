@@ -18,7 +18,7 @@ Creation date: 02/10/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 
-class ibs.th.bge.1crn.import.impcli-grps: 
+class ibs.th.bge.1crn.import.impcli-grps implements ibs.th.bge.1crn.import.iimpsubject: 
   
   { cmp/str-glbl.i class }
   
@@ -31,14 +31,18 @@ class ibs.th.bge.1crn.import.impcli-grps:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-  method public logical Excute( objImp as class cli-grps ):
+  method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
     define variable v-mode       as character no-undo. /* create/update */
     define variable v-doc-rec    as recid no-undo.
     define variable v-node-code  as integer no-undo . /* like ub.cli-grp.node-code */
     define variable v-upper-code as integer no-undo . /* like ub.cli-grp.upper-code */
     define variable v-retfl      as logical no-undo .
     define buffer buf_cli-grp for ub.cli-grp .
+
+    define variable objImp as class cli-grps no-undo.
     
+    objImp = cast (subjectObj, cli-grps).
+
     assign
       Msg = ""
       v-node-code  = integer(objImp:code_)

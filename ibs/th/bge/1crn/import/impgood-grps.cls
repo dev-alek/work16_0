@@ -18,7 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 
-class ibs.th.bge.1crn.import.impgood-grps: 
+class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimpsubject: 
   
   { cmp/str-glbl.i class }
   { cmp/str-glbl.i }

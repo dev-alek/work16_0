@@ -19,7 +19,7 @@ using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 USING ibs.th.ref.cpattr FROM PROPATH.
 USING ibs.th.gbl.getcntxt FROM PROPATH.
-class ibs.th.bge.1crn.import.imppayment-type: 
+class ibs.th.bge.1crn.import.imppayment-type implements ibs.th.bge.1crn.import.iimpsubject:
   
   { cmp/str-glbl.i class }
     
@@ -36,32 +36,17 @@ define variable getcntxt  as class getcntxt no-undo .
 	 Notes:
 	------------------------------------------------------------------------------*/
 
-	method public logical Excute( objPaymentType as class payment-type ):
+  method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
 		
 		define var  v-rec as recid no-undo .
     define var  parparentproc as widget-handle no-undo .
     define var  v-delete as logical no-undo .
     define var  v-dop-doc as character no-undo .
     
-      define variable v-cntxt-db-num        as integer   no-undo . /* текущая БД            */
-      define variable v-cntxt-userid        as character no-undo . /* текущий пользователь  */
-      define variable v-cntxt-level         as character no-undo . /* уровень контекста     */
-      define variable v-cntxt-host-code-obj as integer   no-undo . /* текущая фирма         */
-      define variable v-cntxt-obj-type      as character no-undo . /* тип текущего объекта  */
-      define variable v-cntxt-obj-code      as integer   no-undo . /* код текущего объекта  */
-      define variable v-cntxt-db-num-obj    as integer   no-undo . /* база текущего объекта */
-      define variable v-cntxt-is-admin      as logical   no-undo . /* база текущего объекта */
+    define variable objPaymentType as class payment-type no-undo.
+    run gbl/inidebug.p.
+    objPaymentType = cast (subjectObj, payment-type).
     
-    getcntxt:MainMenuGetcntxt(output v-cntxt-db-num,
-                              output v-cntxt-userid,
-                              output v-cntxt-level,
-                              output v-cntxt-host-code-obj,
-                              output v-cntxt-obj-type,
-                              output v-cntxt-obj-code,
-                              output v-cntxt-db-num-obj,
-                              output v-cntxt-is-admin
-                              ).
-      
     if objPaymentType:del-f = 1 then 
     do:
       /*проверять не используется ли данные где-то в другом месте - не сделано*/
@@ -90,6 +75,7 @@ define variable getcntxt  as class getcntxt no-undo .
       find first ub.cash-pay where ub.cash-pay.cdpay-code = integer(objPaymentType:code_)
         and ub.cash-pay.curr-code = integer(objPaymentType:curr-code) no-error .
         if AVAILABLE ub.cash-pay then do:
+          v-rec = recid(ub.cash-pay) .
  run ref/cashpay1.p (
                   input parparentproc
                  ,input no
@@ -166,12 +152,11 @@ define variable getcntxt  as class getcntxt no-undo .
               v-dop-doc = v-dop-doc + (if v-dop-doc <> "" then "," else "") + {&cmp} + "," + objPaymentType:cnt-code .
             end.    
          end.
-           
          CpAttr:CpAttrWrite( integer(objPaymentType:code_),
                              integer(objPaymentType:curr-code),
-                             v-cntxt-host-code-obj,
-                             v-cntxt-obj-type,
-                             v-cntxt-host-code-obj,
+                             ub.clients.host-code,
+                             {&cmp},
+                             integer(objPaymentType:cnt-code),
                              "dop-doc",
                              v-dop-doc
                              ).            
@@ -179,25 +164,26 @@ define variable getcntxt  as class getcntxt no-undo .
 
          CpAttr:CpAttrWrite( integer(objPaymentType:code_),
                              integer(objPaymentType:curr-code),
-                             v-cntxt-host-code-obj,
-                             v-cntxt-obj-type,
-                             v-cntxt-host-code-obj,
+                             ub.clients.host-code,
+                             {&cmp},                             
+                             integer(objPaymentType:cnt-code),
                              "form_km3",
                              string(if objPaymentType:use-km3 = 1 then "yes" else "no")
                              ).            
 
          CpAttr:CpAttrWrite( integer(objPaymentType:code_),
                              integer(objPaymentType:curr-code),
-                             v-cntxt-host-code-obj,
-                             v-cntxt-obj-type,
-                             v-cntxt-host-code-obj,
+                             ub.clients.host-code,
+                             {&cmp},
+                             integer(objPaymentType:cnt-code),
                              "bal_malina",
                              string(if objPaymentType:malina = 1 then "yes" else "no")
                              ).            
-
-      end.                                
+        end.
       else do:		
-run ref/cashpay1.p (
+        create ub.cash-pay .
+        v-rec = recid(ub.cash-pay) .
+      run ref/cashpay1.p (
                   input parparentproc
                  ,input no
                  ,input-output v-rec
@@ -263,9 +249,9 @@ run ref/cashpay1.p (
            
          CpAttr:CpAttrWrite( integer(objPaymentType:code_),
                              integer(objPaymentType:curr-code),
-                             v-cntxt-host-code-obj,
-                             v-cntxt-obj-type,
-                             v-cntxt-host-code-obj,
+                             ub.clients.host-code,
+                             {&cmp},
+                             integer(objPaymentType:cnt-code),
                              "dop-doc",
                              v-dop-doc
                              ).            
@@ -273,18 +259,18 @@ run ref/cashpay1.p (
 
          CpAttr:CpAttrWrite( integer(objPaymentType:code_),
                              integer(objPaymentType:curr-code),
-                             v-cntxt-host-code-obj,
-                             v-cntxt-obj-type,
-                             v-cntxt-host-code-obj,
+                             ub.clients.host-code,
+                             {&cmp},
+                             integer(objPaymentType:cnt-code),
                              "form_km3",
                              string(if objPaymentType:use-km3 = 1 then "yes" else "no")
                              ).            
 
          CpAttr:CpAttrWrite( integer(objPaymentType:code_),
                              integer(objPaymentType:curr-code),
-                             v-cntxt-host-code-obj,
-                             v-cntxt-obj-type,
-                             v-cntxt-host-code-obj,
+                             ub.clients.host-code,
+                             {&cmp},
+                             integer(objPaymentType:cnt-code),
                              "bal_malina",
                              string(if objPaymentType:malina = 1 then "yes" else "no")
                              ).            

@@ -1,4 +1,3 @@
-
 /*
 
 $Revision$
@@ -7,11 +6,11 @@ $Date$
 $Workfile$
 $Archive$
 
-Структура данных good-grps в 1С
+Структура данных countries из 1С
 
-Автор: Елена Шкляр
+Автор: Александр Морозов
 Дата создания: 26/09/17
-Author: Shklyar Elena
+Author: Morozov Alexandr
 Creation date: 26/09/17
 
 */
@@ -19,13 +18,61 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 
 
-class ibs.th.bge.1crn.subjects.good-grps: 
+class ibs.th.bge.1crn.subjects.good-grps implements ibs.th.bge.1crn.subjects.isubject: 
 
-    define property code_       as character    no-undo get. set.
-    define property rn-code     as character    no-undo get. set.
-    define property del-l       as integer      no-undo get. set.
-    define property del-f       as integer      no-undo get. set.
-    define property upper-code  as character    no-undo get. set.
-    define property name_       as character    no-undo get. set.
+  define property code_ as character no-undo
+    get. 
+    private set.
+  define property del-l as integer no-undo 
+    get. 
+    private set.
+  define property del-f as integer no-undo 
+    get. 
+    private set.
+  define property upper-code as character no-undo 
+    get. 
+    private set.
+  define property name_ as character no-undo 
+    get. 
+    private set.
+  define property rn-code as character no-undo 
+    get. 
+    private set.
+
+  method public void SetProp (inTag as char, inValue as char):
+    case inTag:
+      when "code" then 
+        do:
+          assign 
+            code_ = inValue .
+        end.
+      when "del-l" then 
+        do:
+          assign 
+            del-l = integer (inValue).
+        end.
+      when "del-f" then 
+        do:
+          assign 
+            del-f = integer (inValue).
+        end.
+      when "upper-code" then 
+        do:
+          assign 
+            upper-code = inValue.
+        end.
+      when "name" then 
+        do:
+          assign 
+            name_ = inValue.
+        end.
+      when "rn-code" then 
+        do:
+          assign 
+            rn-code = inValue.
+        end.
+    end case.
+    
+  end method.
 
 end class.

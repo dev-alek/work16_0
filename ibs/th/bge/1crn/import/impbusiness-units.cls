@@ -18,7 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 
-class ibs.th.bge.1crn.import.impbusiness-units: 
+class ibs.th.bge.1crn.import.impbusiness-units implements ibs.th.bge.1crn.import.iimpsubject: 
   
   { cmp/str-glbl.i class }
   
@@ -32,10 +32,14 @@ class ibs.th.bge.1crn.import.impbusiness-units:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method public logical Excute( objBusiness as class business-units ):
+  method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
 	
 		
     define buffer buf_regions for regions.
+
+    define variable objBusiness as class business-units no-undo.
+    
+    objBusiness = cast (subjectObj, business-units).
 
 
     on write  of ub.regions override 
