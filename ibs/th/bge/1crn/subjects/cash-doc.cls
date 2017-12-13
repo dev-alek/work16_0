@@ -47,6 +47,10 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     get.
     set.
 
+  define property InitSecTag as character no-undo init ""
+    get.
+    private set.
+
   define variable sw     as handle    no-undo.
   define variable v-type as character no-undo .
 

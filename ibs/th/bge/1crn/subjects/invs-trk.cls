@@ -1,3 +1,4 @@
+
 /*
 
 $Revision$
@@ -36,6 +37,10 @@ class ibs.th.bge.1crn.subjects.invs-trk implements iexpsubject:
   define property DocCode as character no-undo
     get.
     set.
+    
+  define property InitSecTag as character no-undo init ""
+    get.
+    private set.
 
   define variable sw as handle no-undo.
   

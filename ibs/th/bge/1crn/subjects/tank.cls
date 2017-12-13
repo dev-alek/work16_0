@@ -77,6 +77,11 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
   define variable sw as handle no-undo.
   
 
+  define property InitSecTag as character no-undo init ""
+    get.
+    private set.
+  
+
   method public void CrContentToSW (insw as handle):
     
     create sax-writer sw.
