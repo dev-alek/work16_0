@@ -18,10 +18,30 @@ create : Суслов Алексей Юрьевич
 */
 &if defined (include_lib-trn) = 0 &then
 &glob include_lib-trn yes
+
+&if "{1}" = "class" &then
+&else
 define new global shared variable g#lib-trn  as handle no-undo .
 define new global shared variable g#lib-trn2 as handle no-undo .
 define new global shared variable g#lib-trn3 as handle no-undo .
 define new global shared variable g#lib-trn4 as handle no-undo .
+&endif
+
+&if "{1}" = "class" &then
+
+&glob run_proc_lib-trn {&check_lib-trn} ~
+run ~{&proc-name~} in ibs.th.gbl.gbl-hndllib:g#lib-trn
+
+&glob run_proc_lib-trn2 {&check_lib-trn2} ~ ~
+run ~{&proc-name~} in ibs.th.gbl.gbl-hndllib:g#lib-trn2
+
+&glob run_proc_lib-trn3 {&check_lib-trn3} ~
+run ~{&proc-name~} in ibs.th.gbl.gbl-hndllib:g#lib-trn3
+
+&glob run_proc_lib-trn4 {&check_lib-trn4} ~
+run ~{&proc-name~} in ibs.th.gbl.gbl-hndllib:g#lib-trn4
+
+&else
 
 &glob check_lib-trn if (valid-handle(g#lib-trn) <> true) then do: ~
   run str/lib-trn.p persistent no-error . ~
@@ -95,5 +115,6 @@ run ~{&proc-name~} in g#lib-trn3
 &glob run_proc_lib-trn4 {&check_lib-trn4} ~
 run ~{&proc-name~} in g#lib-trn4
 
+&endif
 &endif
 /* $Workfile$ e n d */

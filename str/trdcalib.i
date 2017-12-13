@@ -1299,8 +1299,18 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-time-pour true
 &glob sort-trdcattr-time-pour 190
 
+&if "{1}" = "class" &then
+&else
 define new global shared variable g#trdcalib as handle no-undo.
+&endif
 
+&if "{1}" = "class" &then
+
+  &glob run_proc_trdcalib ~
+    {&check_trdcalib} ~
+  run ~{&proc-name~} in ibs.th.gbl.gbl-hndllib:g#trdcalib
+
+&else
   &glob include_trdcalib yes
   &glob check_trdcalib ~
     if valid-handle( g#trdcalib ) <> yes then do: ~
@@ -1319,6 +1329,7 @@ define new global shared variable g#trdcalib as handle no-undo.
   &glob run_proc_trdcalib ~
     {&check_trdcalib} ~
     run ~{&proc-name~} in g#trdcalib
+&endif
 &endif
 
 /* $Workfile$   E n d */

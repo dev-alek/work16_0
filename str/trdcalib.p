@@ -29,6 +29,8 @@ create: Булгаков Андрей Николаевич
  *                                                                                                                       *
 \* ********************************************************************************************************************* */
 
+using ibs.th.gbl.gbl-hndllib from propath.
+
 define variable vss-revision    as character no-undo initial "$Revision$":U.
 define variable vss-author      as character no-undo initial "$Author$":U.
 define variable vss-date        as character no-undo initial "$Date$":U.
@@ -65,12 +67,20 @@ else do:
   assign
     g#trdcalib = this-procedure :handle
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#trdcalib", g#trdcalib).
+  delete object gbl-hndllibObj.
 end.
 
 on delete of this-procedure do:
   assign
     g#trdcalib = ?
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#trdcalib", g#trdcalib).
+  delete object gbl-hndllibObj.
 end.
 
 procedure trdcalib_tdat-val :

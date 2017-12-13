@@ -18,6 +18,8 @@ Creation date: 03/26/08
 
 */
 
+using ibs.th.gbl.gbl-hndllib from propath.
+
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
@@ -68,12 +70,20 @@ else do:
   assign
     g#lib-trn2 = this-procedure :handle
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#lib-trn2", g#lib-trn2).
+  delete object gbl-hndllibObj.
 end.
 
 on delete of this-procedure do:
   assign
     g#lib-trn2 = ?
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#lib-trn2", g#lib-trn2).
+  delete object gbl-hndllibObj.
 end.
 
 define stream str-err.
