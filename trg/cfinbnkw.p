@@ -32,50 +32,61 @@ define variable vss-description as character no-undo init "Триггер на запись ист
 { gbl/cur-time.i }
 
 define buffer buf_fin-bank for ub.fin-bank.
-define buffer buf_sysconf for ub.sysconf.
+define buffer buf_sysconf  for ub.sysconf.
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
 
 main-block:
 do
-on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
-on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
-:
+  on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+  on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
+  on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
+  :
 
-  if not g#news then do:
+  if not g#news then 
+  do:
     /*проверим реляционность*/
     find first buf_fin-bank no-lock where
-               buf_fin-bank.host-code = c-fin-bank.host-code
-           AND buf_fin-bank.code-bank = c-fin-bank.code-bank no-error .
-    if not available buf_fin-bank then do:
+      buf_fin-bank.host-code = c-fin-bank.host-code
+      AND buf_fin-bank.code-bank = c-fin-bank.code-bank no-error .
+    if not available buf_fin-bank then 
+    do:
       message
-      vss-workfile vss-revision vss-description skip
-      "Неправильная ссылка на БАНК" skip
-      "код фирмы" c-fin-bank.host-code skip
-      "код банка" c-fin-bank.code-bank
-      view-as alert-box error .
+        vss-workfile vss-revision vss-description skip
+        "Неправильная ссылка на БАНК" skip
+        "код фирмы" c-fin-bank.host-code skip
+        "код банка" c-fin-bank.code-bank
+        view-as alert-box error .
       undo main-block, return error.
     end.
   end.
   find first buf_sysconf no-lock where
-            buf_sysconf.host-code = c-fin-bank.host-code no-error .
-    if not available buf_sysconf then do:
-      message
+    buf_sysconf.host-code = c-fin-bank.host-code no-error .
+  if not available buf_sysconf then 
+  do:
+    message
       vss-workfile vss-revision vss-description skip
       "Неправильная ссылка на фирму" skip
       "код фирмы" c-fin-bank.host-code skip
       view-as alert-box error .
-      undo main-block, return error.
-    end.
-  if not g#news then do:
-    if buf_sysconf.firm-db-num <> g#db-num then do:
-      message
-      vss-workfile vss-revision vss-description skip
-      "Нельзя создавать записи истории БАНКа в БД, отличной от главной БД фирмы" skip
-      "код фирмы" c-fin-bank.host-code skip
-      "текущая БД" g#db-num skip
-      "главная БД фирмы" buf_sysconf.firm-db-num
-      view-as alert-box error .
-      undo main-block, return error.
+    undo main-block, return error.
+  end.
+  if not g#news then 
+  do:
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+    if v-value = "no"  then 
+    do:   
+      if buf_sysconf.firm-db-num <> g#db-num then 
+      do:
+        message
+          vss-workfile vss-revision vss-description skip
+          "Нельзя создавать записи истории БАНКа в БД, отличной от главной БД фирмы" skip
+          "код фирмы" c-fin-bank.host-code skip
+          "текущая БД" g#db-num skip
+          "главная БД фирмы" buf_sysconf.firm-db-num
+          view-as alert-box error .
+        undo main-block, return error.
+      end.
     end.
   end.
 
@@ -84,20 +95,22 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     ,input (buffer ub.c-fin-bank:handle)
     ).
 
-    if g#oxml = yes
-    then do:
+  if g#oxml = yes
+    then 
+  do:
     run str/calloxml.p (
-          input {&nwsdochs_action_update}
-        , input {&table_c-fin-bank}
-        , input ( buffer ub.c-fin-bank:handle )
-    ) no-error.
+      input {&nwsdochs_action_update}
+      , input {&table_c-fin-bank}
+      , input ( buffer ub.c-fin-bank:handle )
+      ) no-error.
     if error-status :error
-    then do:
-        undo, return error substitute( "&2&1Ошибка при отправке записи в систему OpenXML&1&3&1&4"
-                             , {&new-line}
-                             , vss-workfile
-                             , return-value
-                             , error-status :get-message ( 1 ) ).
+      then 
+    do:
+      undo, return error substitute( "&2&1Ошибка при отправке записи в систему OpenXML&1&3&1&4"
+        , {&new-line}
+        , vss-workfile
+        , return-value
+        , error-status :get-message ( 1 ) ).
     end.
-    end.
+  end.
 end.

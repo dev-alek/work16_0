@@ -56,6 +56,8 @@ define variable v2-mainholder as character no-undo .
 define variable v1type as character no-undo .
 define variable v2type as character no-undo .
 define variable v-dop1 as character no-undo .
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
 
 define buffer buf_sysconf  for ub.sysconf.
 define buffer buf_fin-bank for ub.fin-bank.
@@ -85,6 +87,9 @@ if not avail buf_sysconf then dO:
   run err-mess in this-procedure ( input-output v-err-mess ).
   undo, return error (if p-silent = yes then v-err-mess else 'host-code':U).
 end.
+run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+if v-value = "no"  then 
+do:   
 if v-db-num <> buf_sysconf.firm-db-num
 then do:
   v-err-mess = substitute("Нельзя изменять запись БАНКОВСКОГО СЧЕТА в БД, отличной от главной БД фирмы:&1" +
@@ -95,7 +100,7 @@ then do:
   run err-mess in this-procedure ( input-output v-err-mess ).
   undo, return error (if p-silent = yes then v-err-mess else 'host-code':U).
 end.
-
+end.
 find first buf_fin-bank no-lock where
                   buf_fin-bank.host-code = p-host-code
               AND buf_fin-bank.code-bank = p-code-bank no-error .
