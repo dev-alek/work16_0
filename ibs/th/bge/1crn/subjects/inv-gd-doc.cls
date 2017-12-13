@@ -1,0 +1,560 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Экспорт сообщения с накладаной в 1С ERPRN inv-gd-doc
+
+Автор: Александр Морозов
+Дата создания: 26/09/17
+Author: Morozov Alexandr
+Creation date: 26/09/17
+
+*/
+
+using Progress.Lang.*.
+using ibs.th.bge.1crn.subjects.*.
+using ibs.th.str.*.
+
+block-level on error undo, throw.
+
+class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
+
+  { cmp/str-glbl.i class }
+  { str/lib-trn.i  class }
+  { str/trdcalib.i class }
+  
+  define buffer buf_trn-doc for ub.trn-doc.
+  define buffer buf_inv-line for ub.inv-line.
+  define buffer buf_doc-line for ub.doc-line.
+  define buffer buf_doc-pl for ub.doc-pl.
+  define buffer buf_gds for ub.goods.
+  define buffer buf_doc-attr for ub.doc-attr.
+  define buffer buf_units for ub.units.
+  
+  define property Msg as character no-undo
+    get:
+      return trim (Msg, {&new-line}).
+    end.
+    private set (inArg as char):
+      Msg = Msg + {&new-line} + inArg.
+    end.
+    
+  define property InitSecTag as character no-undo
+    get.
+    private set.
+
+  define property DocCode as character no-undo
+    get.
+    set.
+  
+  define variable sw               as handle    no-undo.
+  define variable v-is-petrol-trn  as logical   no-undo.
+  define variable v-is-pieces      as logical   no-undo.
+  define variable isDel            as logical   no-undo.
+  define variable varinvclcwt      as logical   no-undo.
+  define variable varinvclcas      as logical   no-undo.
+  define variable varinvclcex      as logical   no-undo.
+  define variable varinvclcms      as logical   no-undo.
+  define variable varinvclcbef     as logical   no-undo.
+  define variable prtvalue         as character no-undo.
+  define variable varinvclcspvalue as character no-undo.
+  define variable varr-b           as character no-undo.
+  define variable is-cdinv         as character no-undo .
+
+  method public void CrContentToSW (insw as handle):
+    
+    define variable p-value      as character no-undo.
+    define variable p-type       as character no-undo.
+    
+    sw = insw.
+    
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = DocCode no-error.
+    if not available (buf_trn-doc)
+      then return.
+    
+    isDel = false.
+    
+    for each buf_inv-line no-lock where buf_inv-line.doc-code = buf_trn-doc.doc-code:
+      { str/is-petrl.i
+          buf_inv-line.artic
+          buf_inv-line.prod-type
+          buf_inv-line.prod-code
+          v-is-petrol-trn
+          v-is-pieces
+      }
+      if v-is-petrol-trn
+        then leave.
+    end.
+
+    { str/tdat-val.i buf_trn-doc.doc-code
+                 {&trdcattr-addsum}
+                 p-value
+                 p-type             }
+    assign
+      varinvclcbef = no
+      varinvclcas  = no
+      varinvclcex  = no
+      varinvclcms  = no
+      varinvclcwt  = no
+    .
+    if lookup( {&sum-before-doc}, p-value ) <> 0 then do:
+      assign
+        varinvclcbef = yes
+      .
+    end.
+    if lookup( {&sum-general-doc}, p-value ) <> 0 then do:
+      assign
+        varinvclcas = yes
+      .
+    end.
+    if lookup( {&sum-extra-doc}, p-value ) <> 0 then do:
+      assign
+        varinvclcex = yes
+      .
+    end.
+    if lookup( {&sum-miss-doc}, p-value ) <> 0 then do:
+      assign
+        varinvclcms = yes
+      .
+    end.
+    if lookup( {&sum-wastage-doc}, p-value ) <> 0 then do:
+      assign
+        varinvclcwt = yes
+      .
+    end.
+    
+    run str/invdcfrd.p (  input buf_trn-doc.doc-code,
+                     output varinvclcspvalue,
+                     output prtvalue,
+                     output varr-b ,
+                     output is-cdinv
+                     ) no-error.
+    
+    if v-is-petrol-trn
+    then do:
+      StartDocInvFuel().
+      GdsLineFuel().
+      EndDocInvFuel().
+    end.
+    else do: 
+      StartDocInv().
+      GdsLine().
+      EndDocInv().
+    end.
+    
+  end.
+
+
+  method private void GdsLine ():
+    
+    sw:start-element ("gds").
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
+      find first buf_gds where
+            buf_gds.artic = buf_doc-line.artic 
+        and buf_gds.prod-code = buf_doc-line.prod-code
+        and buf_gds.prod-type = buf_doc-line.prod-type.
+      sw:start-element ("gd").
+        write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
+        write-data-element ("qnty-b", string-mth (round (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty, 3))).
+        write-data-element ("qnty-a", string-mth (round (buf_doc-line.doc-qnty, 3))).
+        write-data-element ("qnty-df", string-mth (round (buf_doc-line.fact-qnty, 3))).
+        write-data-element ("qnty-izl", string-mth (round (fncextra-qnty( buffer buf_doc-line ), 3))).
+        write-data-element ("qnty-ned", string-mth (round (fncmiss-qnty( buffer buf_doc-line ), 3))).
+        write-data-element ("qnty-eu", string-mth (round (0.0, 3))).
+        write-data-element ("sum-b", string-mth (round (fncbefore-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-a", string-mth (round (fncafter-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-izl", string-mth (round (fncextra-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-ned", string-mth (round (fncmiss-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-eu", string-mth (round ( fncwastage( buffer buf_doc-line, buffer buf_gds ), 2))).
+      sw:end-element ("gd").
+    end.
+    sw:end-element ("gds").
+    
+  end.
+
+  
+  method private void GdsLineFuel ():
+    
+    sw:start-element ("gds").
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
+      find first buf_gds where
+            buf_gds.artic = buf_doc-line.artic 
+        and buf_gds.prod-code = buf_doc-line.prod-code
+        and buf_gds.prod-type = buf_doc-line.prod-type.
+      find first buf_doc-pl where buf_doc-pl.obj-type = buf_doc-line.obj-type and buf_doc-pl.obj-code = buf_doc-line.obj-code
+        and buf_doc-pl.out-code = buf_doc-line.doc-code and buf_doc-pl.gds-code = buf_gds.gds-code.
+
+      find first buf_units where buf_units.unit-name = buf_gds.unit-base.
+      sw:start-element ("gd").
+        write-data-element ("tank-num", string-mth (buf_doc-pl.pl-code)).
+        write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
+        write-data-element ("cap-b", string-mth (round (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty, 3))).
+        write-data-element ("cap-a", string-mth (round (buf_doc-line.doc-qnty, 3))).
+        write-data-element ("cap-df", string-mth (round (buf_doc-line.fact-qnty, 3))).
+        write-data-element ("wght-b", string-mth (round (fncwasqntykg( buffer buf_doc-line ), 3))).
+        write-data-element ("wght-a", string-mth (round (fncareqntykg( buffer buf_doc-line ), 3))).
+        write-data-element ("wght-df", string-mth (round (fncdiffqntykg( buffer buf_doc-line ), 3))).
+        write-data-element ("sum-b", string-mth (round (fncbefore-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-a", string-mth (round (fncafter-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-df", string-mth (round (fncdiff-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("wght-izl", string-mth (round (fncextra-qnty( buffer buf_doc-line ), 3))).
+        write-data-element ("wght-ned", string-mth (round (fncmiss-qnty( buffer buf_doc-line ), 3))).
+        write-data-element ("sum-izl", string-mth (round (fncextra-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-ned", string-mth (round (fncmiss-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("wght-eu", string-mth (round (0.0, 2))).
+        write-data-element ("sum-eu", string-mth (round ( fncwastage( buffer buf_doc-line, buffer buf_gds ), 2))).
+
+        
+      sw:end-element ("gd").
+    end.
+    sw:end-element ("gds").
+    
+  end.
+  
+  
+  method private void StartDocInv ():
+      InitSecTag =  "inv-gd-docs".
+      sw:start-element ("inv-gd-doc") .
+        write-data-element ("doc-code", buf_trn-doc.doc-code).
+        write-data-element ("doc-num", buf_trn-doc.doc-code).
+        write-data-element ("del-f", string (isDel, "1/0") ).
+        write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.sys-time-int))).
+        write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (date (buf_trn-doc.fact-date))).
+        write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
+        write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
+  end.
+
+  method private void EndDocInv ():
+    
+    sw:end-element ("inv-gd-doc") .
+/*    sw:end-element ("inv-gd-docs") .*/
+    
+  end.
+
+  method private void StartDocInvFuel ():
+      InitSecTag =  "inv-fuel-docs".
+      sw:start-element ("inv-fuel-doc") .
+        write-data-element ("doc-code", buf_trn-doc.doc-code).
+        write-data-element ("doc-num", buf_trn-doc.doc-code).
+        write-data-element ("del-f", string (isDel, "1/0") ).
+        write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.sys-time-int))).
+        write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (date (buf_trn-doc.fact-date))).
+        write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
+        write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
+  end.
+
+  method private void EndDocInvFuel ():
+    
+    sw:end-element ("inv-fuel-doc") .
+/*    sw:end-element ("inv-fuel-docs") .*/
+    
+  end.
+
+  method private void write-data-element (inTag as char, inValue as char):
+    
+    if inValue = ?
+    then do:
+      Msg = substitute ('Предупреждение отладки: тег &1 иммет неопределнное значение. Работа будет продолжена...', inTag).
+    end.
+
+    if inTag = ?
+    then do:
+      Msg = substitute ('Предупреждение отладки: Имя тега не может быть пустым...').
+      return.
+    end.
+
+    if inTag = "acc-ship"
+    then do:
+      if string (inValue) begins "."
+        then inValue = "0" + inValue.
+    end.
+
+    inTag = lc (InTag).
+
+    if inValue = ?
+      then sw:write-empty-element (inTag).
+      else sw:write-data-element (inTag, inValue).
+  
+  end.
+
+  method private character string-mth (inValue as integer):
+    
+    def var v-str as character no-undo.
+    
+    if inValue = ?
+      then v-str = "0".
+      else v-str = string (inValue). 
+    
+    return v-str.
+    
+  end.
+
+  method private character string-mth (inValue as decimal):
+    
+    def var v-str as character no-undo.
+    
+    if inValue = ?
+      then v-str = "0".
+    
+    if string (inValue) begins "."
+      then v-str = "0" + string (inValue).
+      else v-str = string (inValue).
+    return v-str.
+    
+  end.
+
+  method private decimal fncwastage ( buffer local-doc-line for ub.doc-line,
+                                        buffer local-goods for ub.goods ) :
+    define buffer bf_doc-line-sum      for ub.doc-line-sum.
+    define buffer bf-wst_doc-line-sum  for ub.doc-line-sum.
+
+    if varinvclcas = yes and
+       varinvclcwt = yes then do:
+      find first bf_doc-line-sum no-lock where
+                 bf_doc-line-sum.doc-code = local-doc-line.doc-code and
+                 bf_doc-line-sum.gds-code = local-goods.gds-code and
+                 bf_doc-line-sum.sum-type = {&sum-general-doc}.
+      find first bf-wst_doc-line-sum no-lock where
+                 bf-wst_doc-line-sum.doc-code = local-doc-line.doc-code and
+                 bf-wst_doc-line-sum.gds-code = local-goods.gds-code and
+                 bf-wst_doc-line-sum.sum-type = {&sum-wastage-doc}.
+      if bf_doc-line-sum.sale-sum-base < 0 then do:
+        if varr-b = "base" then do:
+          if bf-wst_doc-line-sum.sale-sum-base > - bf_doc-line-sum.sale-sum-base then do:
+            return - bf_doc-line-sum.sale-sum-base.
+          end.
+          else do:
+            return bf-wst_doc-line-sum.sale-sum-base.
+          end.
+        end.
+        else do:
+          if bf-wst_doc-line-sum.sale-sum-rubl > - bf_doc-line-sum.sale-sum-rubl then do:
+            return - bf_doc-line-sum.sale-sum-rubl.
+          end.
+          else do:
+            return bf-wst_doc-line-sum.sale-sum-rubl.
+          end.
+        end.
+      end.
+      else do:
+        return 0.00.
+      end.
+    end.
+    return 0.00.
+    
+  end. /* fncwastage */
+
+  method private decimal fncextra-qnty ( buffer local-doc-line for ub.doc-line ) :
+    if local-doc-line.fact-qnty > 0 then do:
+      return local-doc-line.fact-qnty.
+    end.
+    else do:
+      return 0.00.
+    end.
+  end.
+
+  method private decimal fncmiss-qnty ( buffer local-doc-line for ub.doc-line ) :
+    if local-doc-line.fact-qnty < 0 then do:
+      return - local-doc-line.fact-qnty.
+    end.
+    else do:
+      return 0.00.
+    end.
+  end.
+  
+  method private decimal fncextra-qntykg ( buffer local-doc-line for ub.doc-line ) :
+    if fncdiffqntykg( buffer buf_doc-line ) > 0 then do:
+      return local-doc-line.fact-qnty.
+    end.
+    else do:
+      return 0.00.
+    end.
+  end.
+
+  method private decimal fncmiss-qntykg ( buffer local-doc-line for ub.doc-line ) :
+    if fncdiffqntykg( buffer buf_doc-line ) < 0 then do:
+      return - local-doc-line.fact-qnty.
+    end.
+    else do:
+      return 0.00.
+    end.
+  end.
+
+  method private decimal fncbefore-rubl ( buffer local-doc-line for ub.doc-line ,
+                                          buffer local-goods for ub.goods) :
+    define variable varreturn as decimal no-undo.
+  
+    define buffer bf_doc-line-sum for ub.doc-line-sum.
+  
+    if varinvclcbef = yes then do:
+      find first bf_doc-line-sum no-lock where
+                 bf_doc-line-sum.doc-code = local-doc-line.doc-code and
+                 bf_doc-line-sum.gds-code = local-goods.gds-code and
+                 bf_doc-line-sum.sum-type = {&sum-before-doc}.
+      assign
+        varreturn = bf_doc-line-sum.cost-sum-rubl
+      .
+    end.
+    else do:
+      assign
+        varreturn = 0.00
+      .
+    end.
+    return varreturn.
+  end.
+
+  method private decimal fncafter-rubl ( buffer local-doc-line for ub.doc-line,
+                                         buffer local-goods for ub.goods ) :
+    define buffer bf_doc-line-sum for ub.doc-line-sum.
+  
+    if varinvclcas = yes then do:
+      find first bf_doc-line-sum no-lock where
+                 bf_doc-line-sum.doc-code = local-doc-line.doc-code and
+                 bf_doc-line-sum.gds-code = local-goods.gds-code and
+                 bf_doc-line-sum.sum-type = {&sum-after-doc}.
+      return bf_doc-line-sum.cost-sum-rubl.
+    end.
+    else do:
+      return 0.00.
+    end.
+  end.
+  
+  method private decimal fncextra-rubl ( buffer local-doc-line for ub.doc-line,
+                                         buffer local-goods for ub.goods ) :
+    define buffer bf_doc-line-sum for ub.doc-line-sum.
+  
+    if varinvclcas = yes then do:
+      find first bf_doc-line-sum no-lock where
+                 bf_doc-line-sum.doc-code = local-doc-line.doc-code and
+                 bf_doc-line-sum.gds-code = local-goods.gds-code and
+                 bf_doc-line-sum.sum-type = {&sum-general-doc}.
+      if bf_doc-line-sum.cost-sum-rubl > 0 then do:
+        return bf_doc-line-sum.cost-sum-rubl.
+      end.
+      else do:
+        return 0.00.
+      end.
+    end.
+    else do:
+      return 0.00.
+    end.
+  end.
+  
+  method private decimal fncmiss-rubl ( buffer local-doc-line for ub.doc-line,
+                                         buffer local-goods for ub.goods ) :
+                                           
+    define buffer bf_doc-line-sum for ub.doc-line-sum.
+  
+    if varinvclcas = yes then do:
+      find first bf_doc-line-sum no-lock where
+                 bf_doc-line-sum.doc-code = local-doc-line.doc-code and
+                 bf_doc-line-sum.gds-code = local-goods.gds-code and
+                 bf_doc-line-sum.sum-type = {&sum-general-doc}.
+      if bf_doc-line-sum.cost-sum-rubl < 0 then do:
+        return - bf_doc-line-sum.cost-sum-rubl.
+      end.
+      else do:
+        return 0.00.
+      end.
+    end.
+    else do:
+      return 0.00.
+    end.
+
+  end.
+  
+  method private decimal fncdiff-rubl ( buffer local-doc-line for ub.doc-line,
+                                         buffer local-goods for ub.goods ) :
+                                           
+    define buffer bf_doc-line-sum for ub.doc-line-sum.
+  
+    if varinvclcas = yes then do:
+      find first bf_doc-line-sum no-lock where
+                 bf_doc-line-sum.doc-code = local-doc-line.doc-code and
+                 bf_doc-line-sum.gds-code = local-goods.gds-code and
+                 bf_doc-line-sum.sum-type = {&sum-general-doc}.
+      return bf_doc-line-sum.cost-sum-rubl.
+    end.
+    else do:
+      return 0.00.
+    end.
+
+  end.
+
+  method private decimal fncwasqntykg ( buffer local-doc-line for ub.doc-line ) :
+    define variable d_out-qnty-kg as decimal no-undo.
+  
+    inv-line_qnty( input recid( local-doc-line ), input "was",  output d_out-qnty-kg ) no-error.
+    return ( if error-status :error then 0 else d_out-qnty-kg ).
+  end.
+  
+  method private decimal fncareqntykg ( buffer local-doc-line for ub.doc-line ) :
+    define variable d_out-qnty-kg as decimal no-undo.
+  
+    inv-line_qnty( input recid( local-doc-line ), input "are",  output d_out-qnty-kg ) no-error.
+    return ( if error-status :error then 0 else d_out-qnty-kg ).
+
+  end.
+
+  method private decimal fncdiffqntykg ( buffer local-doc-line for ub.doc-line ) :
+  define variable d_out-qnty-kg as decimal no-undo.
+
+  inv-line_qnty( input recid( local-doc-line ), input "diff", output d_out-qnty-kg ) no-error.
+    return ( if error-status :error then 0 else d_out-qnty-kg ).
+  end.
+
+  method private void inv-line_qnty ( p-doc-line-rec as recid,
+                                         p-mode as character, 
+                                         output p-qnty-kg as decimal ) :
+
+    define buffer buf_doc-line for ub.doc-line.
+    define buffer buf_inv-line for ub.inv-line.
+  
+    do on error undo, return error return-value :
+      find first buf_doc-line no-lock where
+          recid( buf_doc-line ) = p-doc-line-rec no-error.
+      if not available buf_doc-line then do:
+        assign
+          p-qnty-kg = 0.0
+        .
+        return.
+      end.
+  
+      find first buf_inv-line no-lock where
+                 buf_inv-line.doc-code  = buf_doc-line.doc-code  and
+                 buf_inv-line.artic     = buf_doc-line.artic     and
+                 buf_inv-line.prod-type = buf_doc-line.prod-type and
+                 buf_inv-line.prod-code = buf_doc-line.prod-code no-error.
+      if not available buf_inv-line then do:
+        assign
+          p-qnty-kg = 0.0
+        .
+        return.
+      end.
+  
+      case p-mode :
+        when "was"  then do:
+          assign
+            p-qnty-kg = buf_inv-line.before-cli-qnty
+          .
+        end.
+        when "are"  then do:
+          assign
+            p-qnty-kg = buf_inv-line.wast-cli-qnty
+          .
+        end.
+        when "diff" then do:
+          assign
+            p-qnty-kg = buf_doc-line.cli-qnty
+          .
+        end.
+      end case. /* p-mode */
+    end. /* on error */
+
+  end.
+
+end class.
