@@ -932,22 +932,22 @@ on error undo, return error return-value
       end.
     end.
     if par-bardis = 2 then do:
-      if par-gds-code = 0 or
-      par-gds-code = ?
-      or par-gds-code < 100000
-      or par-gds-code > 999999999
-      then do:
-        run do-message in this-procedure(
-                                          par-silence
-                                          ,substitute("Неверный код товара &1 при создании товара с кодом, определенным пользователем&2" +
-                                                      "Код не может=0, код не может=?, код не может быть < 100000, код не может быть > 999999999"
-                                                      , par-gds-code
-                                                      , {&new-line}
-                                                      )
-                                          ,"error":U
-                                          ) no-error .
-        undo _main, return error return-value.
-      end.
+/*      if par-gds-code = 0 or                                                                                                                     */
+/*      par-gds-code = ?                                                                                                                           */
+/*      or par-gds-code < 100000                                                                                                                   */
+/*      or par-gds-code > 999999999                                                                                                                */
+/*      then do:                                                                                                                                   */
+/*        run do-message in this-procedure(                                                                                                        */
+/*                                          par-silence                                                                                            */
+/*                                          ,substitute("Неверный код товара &1 при создании товара с кодом, определенным пользователем&2" +       */
+/*                                                      "Код не может=0, код не может=?, код не может быть < 100000, код не может быть > 999999999"*/
+/*                                                      , par-gds-code                                                                             */
+/*                                                      , {&new-line}                                                                              */
+/*                                                      )                                                                                          */
+/*                                          ,"error":U                                                                                             */
+/*                                          ) no-error .                                                                                           */
+/*        undo _main, return error return-value.                                                                                                   */
+/*      end.                                                                                                                                       */
     end.
   end.   /*if par-mode = {&add-def} then do:???*/
   if par-mode = {&add-def} then do:
