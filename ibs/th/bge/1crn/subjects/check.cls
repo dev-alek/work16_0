@@ -293,7 +293,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
                where buf_ext-classif.classif-subject = {&extclass_oss-ref}
                  and buf_ext-classif.Key#_One        = v-key-one no-error .
           if available buf_ext-classif then
-            insw:write-data-element (  "operator-name",  entry(1, ext-classif.charkey_two, {&delim-par})  ) . /* Наименование оператора(эмитента) (Строка) */
+            insw:write-data-element (  "operator-name",  entry(1, buf_ext-classif.charkey_two, {&delim-par})  ) . /* Наименование оператора(эмитента) (Строка) */
         end .
 
         /* 17/XI-2017 Добавляем поле «price» (цена до применения скидок) в секции «chk-gd». */
