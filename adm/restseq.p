@@ -4805,3 +4805,23 @@ procedure restore-s-sost :
   end.
 
 end procedure. /* restore-s-sost */
+
+procedure restore-s-sr-izmerenia :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define sequence-name   s-sr-izmerenia
+
+    &scoped-define table-name      sr-izmerenia
+    &scoped-define seq-field-name  node-code
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+
+end procedure. /* restore-s-sr-izmerenia */
