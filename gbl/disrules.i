@@ -24,7 +24,7 @@ def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@
 
 &if "{1}" = "def" or  "{1}" = "work"  or  "{1}" = "create"  or "{1}" = "" &then
 
-&glob rule-revision  "v15_1.12"
+&glob rule-revision  "v16_0.1"
 
 &glob num-dr-templates 93
 
