@@ -673,6 +673,27 @@ define variable v-custom-list as character no-undo initial
 ,gds-season-attr~
 ":U.
 
+/*-------------исключения из маршрутизации на параметре, таблицы не будут ходить не при каких условиях (кроме таблиц которые ходят только из ГБД указанные v-custom-0-rdb_rbd-0-not-news)*/
+define variable v-custom-except-list as character no-undo initial "".
+
+/*-------------исключения из маршрутизации на параметре is-erpRN, таблицы не будут ходить не при каких условиях (кроме таблиц которые ходят только из ГБД указанные v-custom-0-rdb_rbd-0-not-news)*/
+define variable v-custom-except-list-erprn as character no-undo initial
+"gds-grp~
+,c-gds-grp~
+,c-gds-grp-hist~
+,gds-grp-attr~
+,c-gds-grp-attr~
+,gds-grp-obj~
+,c-gds-grp-obj~
+,gds-grp-obj-attr~
+":U.
+
+/*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/
+define variable v-custom-0-rdb_rbd-0-not-news-erprn as character no-undo initial
+"~
+":U.
+
+
 &if "{1}" = "check" &then
 
 procedure call-nws_get-variable-names :
