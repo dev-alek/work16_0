@@ -18,16 +18,20 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 
-
-class ibs.th.bge.1crn.subjects.units implements ibs.th.bge.1crn.subjects.isubject:
+class ibs.th.bge.1crn.subjects.units inherits ibs.th.bge.1crn.subjects.asubject: 
 
   define property okei-code   as character    no-undo get. private set.
   define property del-l       as integer      no-undo get. private set.
   define property del-f       as integer      no-undo get. private set.
   define property name_       as character    no-undo get. private set.
   define property full-name   as character    no-undo get. private set.
+  define property type_       as integer      no-undo get. private set.
 
-  method public void SetProp (inTag as char, inValue as char):
+  define override property InitTag as character no-undo init "unit"
+    get. 
+
+
+  method OVERRIDE PROTECTED void SetPropProtected (inTag as char, inValue as char):
     case inTag:
       when "okei-code" then do:
         assign okei-code = inValue .
@@ -44,7 +48,38 @@ class ibs.th.bge.1crn.subjects.units implements ibs.th.bge.1crn.subjects.isubjec
       when "full-name" then do:
         assign full-name = inValue .
       end.
+      when "type" then do:
+        assign type_ = integer(inValue) .
+      end.
     end case.
   end.
 
+  method override protected void CheckData ():
+
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = "okei-code" when okei-code = ?
+      v-str = v-str + ",name" when name_ = ?
+      v-str = v-str + ",full-name" when full-name = ?
+      v-str = v-str + ",type" when type_ = ?
+    .
+    v-str = trim (v-str, ",").
+    if v-str > ''
+    then 
+      undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
+
+  end.
+  
+  method override protected void ClearSub():
+    assign 
+      okei-code = ?
+      del-l     = ?
+      del-f     = ?
+      name_     = ?
+      full-name = ?
+      type_     = ?
+    .
+  end.
+  
 end class.

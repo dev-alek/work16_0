@@ -18,10 +18,11 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 
+block-level on error undo, throw.
+
 class ibs.th.bge.1crn.import.impunits implements ibs.th.bge.1crn.import.iimpsubject:
   
   { cmp/str-glbl.i class }
-  
   
   define property Msg as character no-undo
     get. 
@@ -40,39 +41,39 @@ class ibs.th.bge.1crn.import.impunits implements ibs.th.bge.1crn.import.iimpsubj
     define variable objUnits as class     units no-undo.
     define variable v-type   as character no-undo.
     objUnits = cast (subjectObj, units).
-    run gbl\inidebug.p.
+
     case objUnits:type_:
       when 1 then 
         do:
-          v-type = {&pieces-full}.
+          v-type = "шту".
       end.
       when 2 then 
         do:
-          v-type = {&weight-full}.
+          v-type = "вес".
         end.
       when 3 then 
         do:
-          v-type = {&divisional-full}.
+          v-type = "дро".
         end.
       when 4 then 
         do:
-          v-type = {&petrolium-full}.
+          v-type = "топ" + {&comma-char} + {&divisional}.
         end.      
     end case.  
 		
-    if objUnits:del-f = 1 then 
-    do:
-      /*проверять не используется ли данные где-то в другом месте - не сделано*/
-		  
-      find first ub.units where ub.units.OKEI = integer(objUnits:okei-code) no-error .
-      if AVAILABLE ub.units then 
-      do:
-        delete ub.units .
-      end.  		                          
-    end.  
-    else 
-    do:
-      find first ub.units where ub.units.OKEI = integer(objUnits:okei-code) no-error .
+/*    if objUnits:del-f = 1 then                                                        */
+/*    do:                                                                               */
+/*      /*проверять не используется ли данные где-то в другом месте - не сделано*/      */
+/*		                                                                                      */
+/*      find first ub.units where ub.units.OKEI = integer(objUnits:okei-code) no-error .*/
+/*      if AVAILABLE ub.units then                                                      */
+/*      do:                                                                             */
+/*        delete ub.units .                                                             */
+/*      end.  		                                                                        */
+/*    end.                                                                              */
+/*    else                                                                              */
+/*    do:                                                                               */
+      find first ub.units where ub.units.unit-name = objUnits:name_ no-error .
       if AVAILABLE ub.units then 
       do:
         assign
@@ -95,15 +96,20 @@ class ibs.th.bge.1crn.import.impunits implements ibs.th.bge.1crn.import.iimpsubj
         ,input objUnits:full-name
         ,input v-type 
         ,input objUnits:name_
-        ).
+        ) no-error.
       if error-status:error then 
       do:
         Msg = return-value.
         return false.
       end.
-
+      find first ub.units where ub.units.unit-name = objUnits:name_ no-error .
+      if AVAILABLE ub.units then 
+      do:
+      ub.units.stts = objUnits:del-l .
+      end.
       return true.
-    end.
+
+/*    end.*/
   end method.
 
 end class.

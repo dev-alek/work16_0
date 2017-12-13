@@ -33,7 +33,8 @@ define variable vss-description as character no-undo init "Триггер на запись ист
 { cmp/trg-def.i }
 
 define buffer buf_units for ub.units.
-
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
 main-block:
 do
 on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -55,12 +56,15 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     end.
   end.
   if not g#news then do:
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+    if v-value = "no"  then do: 
     if ( g#db-num > 0 ) then do:
       message
       vss-workfile vss-revision vss-description skip
       "Нельзя создавать записи истории ЕД.ИЗМ." skip
       view-as alert-box error .
       undo main-block, return error.
+    end.
     end.
   end.
 
