@@ -24,6 +24,7 @@ Creation date: 01/20/04
 ОТДЕЛЕНИЕ БИЗНЕС-ЛОГИКИ ОТ ИНТЕРФЕЙСА!!!!!
 
 */
+using ibs.th.gbl.gbl-var.
 
 define input parameter p-mode as character no-undo .
 define input parameter p-silent as logical no-undo .
@@ -71,7 +72,7 @@ define variable v-ttype as character no-undo.
   end.
     run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
     if v-value = "no"  then do:   
-  if g#db-num <> 0 then do:
+  if gbl-var:g#db-num <> 0 then do:
     message
     vss-workfile vss-revision vss-description skip
     "Нельзя добавлять/изменить группы клиентов в УБД"

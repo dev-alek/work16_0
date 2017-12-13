@@ -16,6 +16,8 @@ Creation date: 03/10/17
 */
 
 using Progress.Lang.*.
+using ibs.th.gbl.gbl-var.
+using ibs.th.ref.typl-ad.
 using ibs.th.bge.1crn.subjects.*.
 
 class ibs.th.bge.1crn.import.impshops implements ibs.th.bge.1crn.import.iimpsubject:
@@ -28,6 +30,10 @@ class ibs.th.bge.1crn.import.impshops implements ibs.th.bge.1crn.import.iimpsubj
     get. 
     set.
 
+DEFINE TEMP-TABLE TT_cassa NO-UNDO LIKE ub.price-list-type-cassa.
+DEFINE TEMP-TABLE TT_grp   NO-UNDO LIKE ub.price-list-type-gds-grp.
+DEFINE TEMP-TABLE TT_pay-type NO-UNDO LIKE ub.price-list-type-pay-type.
+DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -488,7 +494,108 @@ class ibs.th.bge.1crn.import.impshops implements ibs.th.bge.1crn.import.iimpsubj
     end.
 
     /* При создании объекта магазин в системе автоматически создавать группу ценообразования для него и ГТПЛ. */
-            
+    define variable proc-typl-ad as class typl-ad no-undo .
+    define variable v-plt-id     as integer no-undo .
+    define variable v-plt-recid  as recid no-undo .
+    
+    proc-typl-ad = new typl-ad () .
+    if v-mode = {&add-def} then do :
+      /* первичный ключ по типам прайс-листов
+           ub.price-list-type.plt-id     = p-plt-id
+       and ub.price-list-type.plt-db-num = p-db-num,
+         где plt-db-num = v-db-num = v-obj-code = objImp:code_, т.к. тип прайс-листа создаётся для УБД 
+      */
+      v-plt-id = next-value (s-plt, {&db-name_schema})  .
+      proc-typl-ad:type-price-list-ADD
+      (input v-plt-id
+      ,input v-db-num
+      ,substitute("ГТПЛ по объекту &1&2", {&shop}, v-obj-code) /* p-name like ub.price-list-type.name not null */
+      
+      /* -- значения входных параметров копировались из вызова cmp/ththovr.p:type-price-list-ADD() -- */
+      
+      ,0 /* p-ban-discnt like ub.price-list-type.ban-discnt (int) Признак - запрещены еще какие-либо скидки (0 - не запрещены, 1 - запрещены) */
+      
+      ,{&pr-round-off} /* p-calc-round-method like ub.price-list-type.calc-round-method (chr) Метод округления по умолчанию */
+      ,0.0             /* p-calc-round-base   like ub.price-list-type.calc-round-base (dec-2) база для округления / коэффициент */
+      ,0.0             /* p-calc-increase-pc  like ub.price-list-type.calc-increase-pc (dec-10) Процент наценки по умолчанию */
+      ,{&pr-calc-no}   /* p-calc-method       like ub.price-list-type.calc-method (chr) Исходная цена - метод формирования цены */
+      
+      ,1 /* p-create-price-doc like ub.price-list-type.create-price-doc (int) Формировать переоценки (0 - не формировать, 1 - формировать) */
+      
+      ,false /* p-fix-cource-crc-base like ub.price-list-type.fix-cource-crc-base Признак - фиксированный курс базовой валюты */
+      ,false /* p-fix-cource-crc-doc  like ub.price-list-type.fix-cource-crc-doc  Признак - фиксированный курс валюты прайс-листа */
+
+      /* для p-plt-main-id = 0 в поля .plt-main-db-num и .plt-main-id запишутся значения, соответвтвующие .plt-db-num и .plt-id */
+      ,true     /* p-main            like ub.price-list-type.main                  Признак - главный прайс-лист */
+      ,0        /* p-plt-main-id     like ub.price-list-type.plt-main-id     (int) Код главного типа прайс-листа */      
+      ,v-db-num /* p-plt-main-db-num like ub.price-list-type.plt-main-db-num (int) Номер БД главного типа прайс-листа */
+      ,0        /* p-priority        like ub.price-list-type.priority Приоритет (у главного прйс-листа - самый низкий приоритет 0) */
+      ,1        /* p-only-gbd        like ub.price-list-type.only-gbd Признак - прайс-листы могут создаваться только в главной базе данных (0 - во всех базах, 1 - только в главной базе данных) */
+
+      /* признак "главный"/"неглавный" должен совпадать у подчинённого прайс-листа и у его родительского прайс-листа */   
+      ,0 /* p-under-type-list    like ub.price-list-type.under-type-list Признак - подчиненный прайс-лист (0 - не подчиненный, 1 - подчиненый) */
+      ,? /* p-under-round-method like ub.price-list-type.under-round-method (chr) Метод округления подчиненного прйс-листа */
+      ,? /* p-under-perc         like ub.price-list-type.under-perc (dec-2) Процент скидки-наценки подчиненного прайс-листа (минус - скидка, плюс - наценка) */
+      ,1 /* p-under-hand-corr    like ub.price-list-type.under-hand-corr Подлежит ручной коррекции (0 - не подлежит, 1 - подлежит) */
+      /* не заполняются under-round-base;decimal; ->>,>>9.99;база для округления / коэффициент;;0;база для округления / коэффициент для подчиненного ПЛ;560;2;0;;false;false;;;;;;;;;;;; */
+      /* не заполняются under-rule;      character;X(8);     Правило подчиненного прайс-листа;;;Правило подчиненного прайс-листа;360;;0;;false;false;;;;;;;;;;1251;RUSSIAN_I; */
+
+      ,1 /* p-send-cassa    like ub.price-list-type.send-cassa (int) Отправлять на кассы (0 - не отправлять, 1 - отправлять) */
+      ,0 /* p-use-cassa     like ub.price-list-type.use-cassa Признак распространения по кассам (0 - все кассы, 1 - кассы выборочно) */
+      ,0 /* p-use-gds-group like ub.price-list-type.use-gds-group Признак - имеется ограничение по группам товаров (0 - нет ограничения, 1 - есть ограничения) */
+      ,0 /* p-work-date     like ub.price-list-type.work-date Признак работы по дате на объекте (0 - работаем по дате на объекте, 1 - сменной дате и номеру смены, 2 - дате и времени сервера) */
+      ,0 /* p-curr-code     like ub.price-list-type.curr-code Код валюты; currency.curr-code = 0:рубли создана в начальной раскрутке */
+      ,0 /* p-use-cash-pay  like ub.price-list-type.use-cash-pay Признак - имеется ограничение по типам касоового платежа (0 - нет ограничения, 1 - есть ограничения) */
+      ,0 /* p-use-pay-type  like ub.price-list-type.use-pay-type Признак - имеется ограничение по типам платежа (0 - нет ограничения, 1 - есть ограничения) */
+
+      ,0        /* p-have-rs-qnty-group  like ub.price-list-type.have-rs-qnty-group Имеет связь с количественной группой (0 - имеет, 1 - не имеет) */
+      ,v-db-num /* p-qgr-db-num          like ub.price-list-type.qgr-db-num */
+      ,0        /* p-qgr-id              like ub.price-list-type.qgr-id             Код количественной группы */
+
+      ,false    /* p-have-rs-sum-group   like ub.price-list-type.have-rs-sum-group  Имеет связь с суммовой группой */
+      ,v-db-num /* p-sgr-db-num          like ub.price-list-type.sgr-db-num */
+      ,0        /* p-sgr-id              like ub.price-list-type.sgr-id             Код суммовой группы */
+
+      ,0        /* p-rs-buyer            like ub.price-list-type.rs-buyer           Признак связи с покупателями (0 - все покупатели, 1 - группа покупателей, 2 - суммарный оборот по покупателю) */
+      ,v-db-num /* p-bgr-db-num          like ub.price-list-type.bgr-db-num */
+      ,0        /* p-bgr-id              like ub.price-list-type.bgr-id             Код группы покупателей */
+      /* если p-tog-id = 0 и p-bgr-id = 0 то p-rs-buyer сбрасывается в 0 автоматически */
+      
+      ,?        /* p-obj-turnover        like ub.price-list-type.obj-turnover (log) Признак объектов для обсчета оборотов (0 - все объекты, 1 - группа объектов для расчета оборотов) */
+      ,v-db-num /* p-tog-db-num          like ub.price-list-type.tog-db-num */
+      ,0        /* p-tog-id              like ub.price-list-type.tog-id             Код группы оборотов */
+      ,v-db-num /* p-ttg-summa           like ub.price-list-type.ttg-summa (dec)    Оборот в группе оборотов */
+      /* значение параметра p-ttg-summa не понятно: за что купила - за то продаю */
+      /* если p-tog-id = 0 или p-gop-id-for-calc-turnover = 0 то p-obj-turnover сбрасывается в false автоматически */
+
+      ,0        /* p-have-rs-turn-group  like ub.price-list-type.have-rs-turn-group Имеет связь с группой по оборотам (0 - имеет, 1 - не имеет) */
+      ,0        /* p-have-tog-db-num     like ub.price-list-type.have-tog-db-num */
+      ,0        /* p-have-tog-id         like ub.price-list-type.have-tog-id        Код группы оборотов */
+
+      ,v-db-num /* p-gop-db-num          like ub.price-list-type.gop-db-num */ 
+      ,0        /* p-gop-id              like ub.price-list-type.gop-id             Код группы объектов для ценообразования */
+      ,2        /* p-use-obj             like ub.price-list-type.use-obj            Признак распространения по объектам (0 - все объекты, 1 - группа объектов) */
+
+      ,v-db-num /* p-gop-db-num-for-calc-turnover like ub.price-list-type.gop-db-num-for-calc-turnover Номер БД для группы объектов по обсчету оборотов */
+      ,0        /* p-gop-id-for-calc-turnover     like ub.price-list-type.gop-id-for-calc-turnover     Код группы об. по обсчету оборотов */
+
+      ,gbl-var:g#userid /* p-userid (chr) Кто последний изменял запись */
+      ,0                /* p-db-num-usr   База данных, где произошло последнее изменение */
+/* не заполяются:
+stts;integer;>,>>>,>>9;Статус типа прайс листа;;0;Статус типа прайс листа;270;;0;;false;false;;;;;;;;;;;;
+sys-date;date;99/99/99;Физическая дата последнего изменения;;;Физическая дата последнего изменения;490;;0;;false;false;;;;;;;;;;;;
+sys-time;integer;->,>>>,>>9;Физическое время последнего изменения;;0;Физическое время последнего изменения;470;;0;;false;false;;;;;;;;;;;;
+sys-time-chr;character;X(20);Физическое время последнего изменения(строка);;;Физическое время последнего изменения(строка);480;;0;;false;false;;;;;;;;;;1251;RUSSIAN_I;
+*/
+      
+    ,output v-plt-recid
+     ,input table TT_cassa
+     ,input table TT_grp
+     ,input table TT_pay-type
+     ,input table TT_cash-pay
+      ) .
+    end .
+    
     v-retfl = true.
     
     catch exAppErrors as class Progress.Lang.AppError :
@@ -514,6 +621,7 @@ class ibs.th.bge.1crn.import.impshops implements ibs.th.bge.1crn.import.iimpsubj
       undo, throw exAnyErrors .
     end catch .
     finally :
+      if valid-object(proc-typl-ad) then delete object proc-typl-ad .
       return v-retfl .
     end finally .
   end method. /* end_of Excute */
