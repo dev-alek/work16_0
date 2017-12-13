@@ -656,10 +656,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
             AND buf_fbr-gds-obj.gds-code = p-gds-code no-error .
     if p-depart-code > 0 then v-depart-code = p-depart-code.
     else do:  
-      find first buf_fbr-gds-obj no-lock where
-                 buf_fbr-gds-obj.obj-type = p-obj-type
-             AND buf_fbr-gds-obj.obj-code = p-obj-code
-             AND buf_fbr-gds-obj.gds-code = p-gds-code no-error .
+      
       if available buf_fbr-gds-obj
       AND (buf_fbr-gds-obj.is-menu
            or
@@ -676,13 +673,15 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
             v-depart-type = {&shop}
             .
 /*          end.*/
-      end.    
-      if v-depart-code = ?
-      or v-depart-code = 0  then do:
-        p-mess = substitute("Произведенный товар по кодом &1 продан без ссылки  на ОБЪЕКТ  ПРОИЗВОДСТВА (кухню)"
-                            , p-src-code
-                              ) .
-        p-chr-err = p-chr-err + {&comma-char}  + {&goods-err}.
+          
+      
+          if v-depart-code = ?
+          or v-depart-code = 0  then do:
+            p-mess = substitute("Произведенный товар по кодом &1 продан без ссылки  на ОБЪЕКТ  ПРОИЗВОДСТВА (кухню)"
+                                , p-src-code
+                                  ) .
+            p-chr-err = p-chr-err + {&comma-char}  + {&goods-err}.
+          end.
       end.
     end.
     if available buf_fbr-gds-obj
@@ -745,12 +744,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       .
     end.
   end.
-  else do:
-    assign
-    v-depart-code = 0
-    v-depart-type = "":U
-    .
-  end.
+  
   if p-src-price = 0
   and not {&wro-is-modificator}
   and not v-modificator-null-price
