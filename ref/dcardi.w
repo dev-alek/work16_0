@@ -354,6 +354,7 @@ DEFINE FRAME Dialog-Frame
           FGCOLOR 9
      temp-dis-card.emitent-host-code AT ROW 4.03 COL 15.3 COLON-ALIGNED
           LABEL "Ёмитент"
+		  FORMAT ">>>>>>>>99"
            VIEW-AS TEXT
           SIZE 7.1 BY 1
           FGCOLOR 4

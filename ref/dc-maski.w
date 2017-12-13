@@ -246,6 +246,7 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN
           SIZE 10 BY 1
      tt-dis-card-mask.emitent-host-code AT ROW 5 COL 18 COLON-ALIGNED
+	 FORMAT ">>>>>>>>99"
           LABEL "Ёмитент карты"
           VIEW-AS FILL-IN
           SIZE 7 BY 1

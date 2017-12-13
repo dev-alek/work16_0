@@ -41,13 +41,10 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     get.
     set.
 
-  define property Del-l as logical no-undo
-    get.
-    set.
-    
   define private variable libFindtank as class ibs.th.str.findtank no-undo . /* обёртка для findtank.i */
+
   define private variable m-chk-types as enum-chk-type extent 17 no-undo . /* маппинг типов чеков наших на 1с */
-  
+    
   &scop tag-message   'check':U
   &scop tag-section1  'chk-gds':U
   &scop tag-item1     'chk-gd':U
@@ -63,22 +60,6 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
   &scop tag-item6     'chk-pay-r':U
 
   constructor public check ():
-    /* mapping:
-       коды в enum - согласно протоколу взаимодействия с 1С;
-       номера элементов в массиве - согласно кодам, принятым в TH.
-    */
-    assign
-      m-chk-types[{&bef-rcpt-sale}]   = enum-chk-type:ensale
-      m-chk-types[{&bef-encashment}]  = enum-chk-type:encashment
-      m-chk-types[{&bef-cd-fund}]     = enum-chk-type:enfund
-      m-chk-types[{&bef-rcpt-return}] = enum-chk-type:enreturn
-      m-chk-types[{&bef-rcpt-z-rep}]  = enum-chk-type:enzrep 
-      m-chk-types[{&bef-rcpt-trans-cancell}]  = enum-chk-type:entranscancell
-      m-chk-types[{&bef-rcpt-overflow}]       = enum-chk-type:enoverflow
-      m-chk-types[{&bef-rcpt-trans-transfer}] = enum-chk-type:entranstransfer
-      m-chk-types[{&bef-rcpt-tech-refuell}]   = enum-chk-type:entechrefuell
-    .
-    /* end_of mapping */
   end constructor.
   
   /*------------------------------------------------------------------------------
@@ -93,13 +74,6 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define variable v-inkas-code     as character no-undo .
 
     Msg = "" .
-    /* 20/XI-2017 экономим поиск буффера buf_inkas:
-                  передаём указатель на текущую строку, в триггере на запись которой мы сейчас находимся 
-    find first buf_inkas no-lock where rowid(buf_inkas) = KeyRowid no-error .
-    if not available buf_inkas then undo, throw new Progress.Lang.AppError(
-      substitute("Не найдена запись ПРОДАЖИ inkas rowid [&1]", KeyRowid)
-    ) .
-    */
     if not valid-handle(BufHandle) then undo, throw new Progress.Lang.AppError("Отсутствует запись ПРОДАЖИ inkas") .
 
     v-fld-inkas-code = BufHandle:buffer-field( "inkas-code":U ) .
@@ -172,9 +146,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     
     /* 04/XII-2017 при удалении продажи чеки у нас не удаляются: они просто остаются непривязанными к продаже.
                    При удалении продажи надо посылать чеки с del-l = 1 (в протоколе поля del-l раньше не было) */
-    if Del-l then
-    insw:write-data-element (  "del-l":U,           "1":U                 ). /* Признак логического удаления (Число 1,0) */
-                   
+    /* 07/XII-2017 теперь чеки выгружаем вместе с закрытием смены, и никакое удаление продаж на них не влияет */
 
     /* 17/XI-2017 Добавляем поле «ext-num» в шапку.
        В поле хранятся внешние номера, в нашем случае номер карты активации, с типом платежа «Активация». */
@@ -193,7 +165,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     insw:write-data-element (  "chk-time",     timeFormat(buf_chk-doc.chk-time)    ). /* Время чека (Время) */
     insw:write-data-element (  "cashier",          string(buf_chk-doc.cashier)     ). /* Код кассира (Строка) */
     insw:write-data-element (  "z-num",            string(buf_chk-doc.z-number)    ). /* Номер z-отчета (Число) */
-    insw:write-data-element (  "chk-type", string(integer(m-chk-types[buf_chk-doc.chk-type]))  ). /* Тип чека (Число, enum) */
+    insw:write-data-element (  "chk-type", left-trim(string(buf_chk-doc.chk-type, ">9"))    ). /* Тип чека (Число, enum) */
     insw:write-data-element (  "netto",   left-trim(string(buf_chk-doc.netto,   "->>>>>>>>9.9<"))  ). /* Сумма чека нетто в валюте продаж. Выручка со скидками. (Число) */
     insw:write-data-element (  "tot-doc", left-trim(string(buf_chk-doc.tot-doc, "->>>>>>>>9.9<"))  ). /* Сумма брутто по чеку в валюте продаж. Сумма по текущей розничной цене (Число) */
 
@@ -209,7 +181,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       if available buf_dis-card then do:
         /* обязательность 0-1 */
         if buf_dis-card.card-num > 0 then
-      insw:write-data-element (  "dc-name",  string(buf_dis-card.card-num)  ). /* Наименование ДК (Строка) */
+      insw:write-data-element (  "dc-name",  string(buf_dis-card.type)  ). /* Наименование ДК (Строка) */
       end.
     end.  
 
@@ -247,7 +219,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
         
         if v-is-petrolium then do :
           /* номер резервуара */
-          if buf_chk-gds.loc1 > "" then v-loc1 = buf_chk-gds.loc1 .
+          if buf_chk-gds.pl-code > 0 then v-loc1 = string (buf_chk-gds.pl-code).
           else if available buf_bar-code then do:
             v-loc1 = getTankNum
               (input buf_chk-doc.obj-type
@@ -523,5 +495,5 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     return v-loc1 .        
   end method .
 
-
+  
 end class.

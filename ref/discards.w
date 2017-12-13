@@ -470,7 +470,7 @@ DEFINE BROWSE br-discard
 {&sort-clmn_5} COLUMN-LABEL {&label-clmn_5} FORMAT "99/99/9999":U
 {&sort-clmn_6} COLUMN-LABEL {&label-clmn_6} FORMAT "X(11)":U
 {&sort-clmn_7} COLUMN-LABEL {&label-clmn_7} FORMAT "X(4)":U
-{&sort-clmn_8} COLUMN-LABEL {&label-clmn_8} FORMAT "99999":U
+{&sort-clmn_8} COLUMN-LABEL {&label-clmn_8} FORMAT ">>>>>99999":U
 {&sort-clmn_9} COLUMN-LABEL {&label-clmn_9} FORMAT "X(19)":U
 {&sort-clmn_10} COLUMN-LABEL {&label-clmn_10} FORMAT ">9":U
 {&sort-clmn_11} COLUMN-LABEL {&label-clmn_11} FORMAT "X(19)":U

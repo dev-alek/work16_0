@@ -45,6 +45,12 @@ define input parameter v-curr-r-b   as character no-undo .
 define input parameter p-cmd-proc-handle as handle no-undo .
 define input parameter p-cmd-code  as integer no-undo .
 
+/* 07/XII-2017  чеки отдельно выгружають не надо.
+                Теперь их надо выгружать вместе с закрытием смены.
+                Файл остаётся до тех пор, пока на него есть ссылка из машины правил.
+*/ 
+return.
+
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -190,7 +196,7 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
   
     subObj = new check ().
     subObj:BufHandle = v-inkas-hdl.
-    subObj:Del-l     = v-inkas-delete . 
+/*    subObj:Del-l     = v-inkas-delete .*/
     expObj = new expsubject ().
     expObj:GetContent(subObj).
         

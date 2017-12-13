@@ -313,7 +313,7 @@ DEFINE BROWSE BR-dctype
   QUERY BR-dctype DISPLAY
       get-mark(recid(X_dis-card-type), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
 X_dis-card-type.type COLUMN-LABEL "Тип" FORMAT "X(8)":U
-X_dis-card-type.emitent-host-code COLUMN-LABEL "Код!эмитента" FORMAT "99999":U
+X_dis-card-type.emitent-host-code COLUMN-LABEL "Код!эмитента" FORMAT ">>>>99999":U
 get-emitent(X_dis-card-type.emitent-host-code) COLUMN-LABEL "Эмитент" FORMAT "X(15)":U
 get-dflt-dct-rule ( INPUT X_dis-card-type.emitent-host-code
                     ,INPUT X_dis-card-type.type

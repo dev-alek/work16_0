@@ -219,7 +219,7 @@ DEFINE BROWSE BR-dctype
   QUERY BR-dctype DISPLAY
       mark-string(recid(X_c-dis-card-type), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
 X_c-dis-card-type.type COLUMN-LABEL "Тип" FORMAT "X(8)":U
-X_c-dis-card-type.emitent-host-code COLUMN-LABEL "Код!эмитента" FORMAT "99999":U
+X_c-dis-card-type.emitent-host-code COLUMN-LABEL "Код!эмитента" FORMAT ">>>>>99999":U
 X_c-dis-card-type.corr-user-db-num COLUMN-LABEL "БД" FORMAT ">>>>9":U
 X_c-dis-card-type.corr-date COLUMN-LABEL "Дата корр" FORMAT "99/99/9999":U
 get-emitent(X_c-dis-card-type.emitent-host-code) COLUMN-LABEL "Эмитент" FORMAT "X(15)":U
