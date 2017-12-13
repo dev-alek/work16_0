@@ -35,10 +35,10 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     get.
     private set.
 
-  define property Data as memptr no-undo
+  define property InitSecTag as character no-undo init "cash"
     get.
     private set.
-    
+      
   define property fin-doc as character no-undo
     get.
     set.
@@ -47,22 +47,12 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     get.
     set.
 
-  define property InitSecTag as character no-undo init ""
-    get.
-    private set.
-
   define variable sw     as handle    no-undo.
   define variable v-type as character no-undo .
 
   method public void CrContentToSW (insw as handle):
     
-    create sax-writer sw.
-    sw:formatted = true.
-    sw:set-output-destination ("memptr", Data).
-    sw:encoding = "UTF-8".
-    sw:fragment = true .
-    sw:start-document () .
-    
+    sw = insw .    
 
     find first buf_fin-doc no-lock where buf_fin-doc.fin-doc-code = INTEGER (fin-doc) no-error .
     if AVAILABLE buf_fin-doc then 
@@ -137,10 +127,6 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     sw:end-element ("ndss")  .  
     sw:END-ELEMENT ("cash-doc") .  
     
-    /*      sw:END-ELEMENT ("cash-doc") .*/
-    sw:end-document () .
-
-
   end.
   
   method private character string-mth (inValue as decimal):

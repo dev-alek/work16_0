@@ -233,7 +233,7 @@ procedure proc-main :
 
     define buffer buf_ext-system  for ub.ext-system.  
 
-    /*  define variable expObj as class expsubject no-undo .*/
+      define variable expObj as class expsubject no-undo .
     define variable subCash as class cash-doc no-undo .
   
     /* ------------------------- &end-hn-option& -----------------------------------*/
@@ -258,15 +258,14 @@ procedure proc-main :
       undo _main, return error v-last-error-message .
     end.
 
-    /*  expObj = new expsubject ().*/
+    expObj = new expsubject ().
     subCash = new cash-doc ().
     subCash:fin-doc = v-doc-num.
     subCash:del_f   = v-del .
     
-    subCash:CrContentToSW(?) .
-    /*  expObj:GetContent(subCash).*/
+    expObj:GetContent(subCash).
         
-    IF ExpData1:esys-add-dump-data ( INPUT subCash:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + 'cash')) = false  THEN 
+    IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + expObj:InitSecTag)) = false  THEN 
     do:
       undo _main, return error v-last-error-message .
     end.
