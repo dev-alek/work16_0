@@ -87,13 +87,25 @@ define variable v-ttype as character no-undo.
     undo main-block, return error (if p-silent then v-error-message else "node-name").
   end.
   if p-mode = {&update} then do:
-    find first buf_cli-grp exclusive-lock where
-               buf_cli-grp.node-code = p-node-code
-           AND buf_cli-grp.upper-code = p-upper-code no-error .
-    if not avail buf_cli-grp then do:
-      assign
-      v-error-message = substitute("Не найдена группа клиентов, которую предполагалось изменить" ).
-      run err-mess in this-procedure ( input-output v-error-message).
+    find first buf_cli-grp exclusive-lock
+         where buf_cli-grp.node-code = p-node-code no-error no-wait .
+    if locked(buf_cli-grp) then do:
+      v-error-message = substitute(  "Запись о группе клиентов с внутр. № [&1] занята другим пользователем",  p-node-code  ).
+      run err-mess in this-procedure (input-output v-error-message).
+      undo main-block, return error (if p-silent then v-error-message else "node-code").
+    end.         
+    if not available buf_cli-grp then do:
+      v-error-message = substitute(  "Запись о группе клиентов с внутр. № [&1] отсутствует",  p-node-code  ).
+      run err-mess in this-procedure (input-output v-error-message).
+      undo main-block, return error (if p-silent then v-error-message else "node-code").
+    end.
+    if buf_cli-grp.upper-code <> p-upper-code then do:
+      v-error-message = substitute(
+        "Расхождение текущего кода родителя с параметрами обновления у группы клиентов с внутр. № [&1].&3" +
+        "Код родителя у группы = [&2], код родителя в параметрах обновления = [&4]",
+        p-node-code, buf_cli-grp.upper-code, {&new-line}, p-upper-code 
+      ) .
+      run err-mess in this-procedure (input-output v-error-message).
       undo main-block, return error (if p-silent then v-error-message else "node-code").
     end.
     assign
@@ -145,10 +157,13 @@ define variable v-ttype as character no-undo.
 
   end.
   if can-find (ub.cli-grp where ub.cli-grp.upper-code = p-upper-code
-                        AND cli-grp.node-name = p-node-name
+                            AND ub.cli-grp.node-name  = p-node-name
                         AND recid (ub.cli-grp) <> p-rid) then do:
-    assign
-    v-error-message = substitute("Группа с полным названием &1 уже есть", v-full-name ).
+    v-error-message = substitute(
+      "В группе верхнего уровня с внутр. № [&1] уже есть группа с названием [&2].&3" +
+      "Внутр. № существующей группы отличается от внутр. № [&4] добавляемой группы",
+      p-upper-code, p-node-name, {&new-line}, p-node-code
+    ) .
     run err-mess in this-procedure ( input-output v-error-message).
     undo main-block, return error (if p-silent then v-error-message else "node-name").
   end.

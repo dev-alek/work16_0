@@ -239,10 +239,10 @@ DEFINE QUERY br-list FOR
 DEFINE BROWSE br-list
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-list Dlg-grp _FREEFORM
   QUERY br-list DISPLAY
-      temp_cgrplib_grp.sel           format "X(1)" no-label
+      temp_cgrplib_grp.sel           format  "X(1)" no-label
       temp_cgrplib_grp.name          format "X(71)"      label " Наименование группы"
-      temp_cgrplib_grp.d-pcnt        format ">9.99"      label " Скидка"
-      temp_cgrplib_grp.node-code      FORMAT ">,>>>,>>9" LABEL "Вн №"
+      temp_cgrplib_grp.d-pcnt        format  ">9.99"      label " Скидка"
+      temp_cgrplib_grp.node-code     FORMAT ">>>,>>>,>>9" LABEL "Вн №"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 93.1 BY 18.

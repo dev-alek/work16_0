@@ -32,6 +32,7 @@ class ibs.th.bge.1crn.import.impcli-grps implements ibs.th.bge.1crn.import.iimps
    Notes:
   ------------------------------------------------------------------------------*/
   method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
+    define variable objImp       as class cli-grps no-undo.
     define variable v-mode       as character no-undo. /* create/update */
     define variable v-doc-rec    as recid no-undo.
     define variable v-node-code  as integer no-undo . /* like ub.cli-grp.node-code */
@@ -39,14 +40,12 @@ class ibs.th.bge.1crn.import.impcli-grps implements ibs.th.bge.1crn.import.iimps
     define variable v-retfl      as logical no-undo .
     define buffer buf_cli-grp for ub.cli-grp .
 
-    define variable objImp as class cli-grps no-undo.
-    
     objImp = cast (subjectObj, cli-grps).
 
     assign
-      Msg = ""
       v-node-code  = integer(objImp:code_)
       v-upper-code = integer(objImp:upper-code)
+      Msg = ""
     .
     
     if objImp:del-f > 0 then do:
@@ -90,18 +89,22 @@ class ibs.th.bge.1crn.import.impcli-grps implements ibs.th.bge.1crn.import.iimps
     
     catch exAppErrors as class Progress.Lang.AppError :
       Msg = exAppErrors:ReturnValue .
-      if Msg = "" then Msg = exAppErrors:GetMessage(1) .
-      v-retfl = false.
+      if Msg > "" then . else do :
+        Msg = exAppErrors:GetMessage(1) .
+        if Msg > "" then . else Msg = "AppError в группах клиентов" .
+      end .
+      v-retfl = false .
       undo, throw exAppErrors .
     end catch .
     catch exProErrors as class Progress.Lang.ProError :
       Msg = exProErrors:GetMessage(1) . 
-      v-retfl = false.
+      if Msg > "" then . else Msg = "ProError в группах клиентов" .
+      v-retfl = false .
       undo, throw exProErrors .
     end catch .
     catch exAnyErrors as class Progress.Lang.Error:
-      Msg = "Unexpected error occurred..." .
-      v-retfl = false.
+      Msg = "Unexpected error в группах клиентов" .
+      v-retfl = false .
       undo, throw exAnyErrors .
     end catch .
     finally :

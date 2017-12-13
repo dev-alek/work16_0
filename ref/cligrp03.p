@@ -51,16 +51,14 @@ define buffer buf_same_cli-grp for ub.cli-grp . /* для проверки совпадения имён 
     if error-status :error then do:
       undo, throw new Progress.Lang.AppError(
         substitute("&1 &2 &3&4Не найден корневой узел",
-                   vss-workfile, vss-revision, vss-description, {&new-line}),
-        500
+                   vss-workfile, vss-revision, vss-description, {&new-line})
       ) .
     end.
     if p-node-code = v-root-code then do:
       undo, throw new Progress.Lang.AppError(
         substitute("&1 &2 &3&4Запись о группе клиентов с кодом [&5] корневая. Нельзя удалить корневую группу",
                    vss-workfile, vss-revision, vss-description, {&new-line}, 
-                   p-node-code ),
-        500
+                   p-node-code )
       ) .
     end.
     
@@ -70,16 +68,14 @@ define buffer buf_same_cli-grp for ub.cli-grp . /* для проверки совпадения имён 
       undo, throw new Progress.Lang.AppError(
         substitute("&1 &2 &3&4Запись о группе клиентов с кодом [&5] занята другим пользователем",
                    vss-workfile, vss-revision, vss-description, {&new-line}, 
-                   p-node-code ),
-        500
+                   p-node-code )
       ) .
     end . 
     if not available {&buf-name} then do:
       undo, throw new Progress.Lang.AppError(
         substitute("&1 &2 &3&4Запись о группе клиентов с кодом [&5] отсутствует",
                    vss-workfile, vss-revision, vss-description, {&new-line}, 
-                   p-node-code ),
-        500
+                   p-node-code )
       ) .
     end .
 
@@ -91,8 +87,7 @@ define buffer buf_same_cli-grp for ub.cli-grp . /* для проверки совпадения имён 
         undo, throw new Progress.Lang.AppError(
           substitute("&1 &2 &3&4группа клиентов с кодом [&5] является единственной группой первого уровня.&4Нельзя удалить последнюю группу первого уровня.",
                    vss-workfile, vss-revision, vss-description, {&new-line}, 
-                   p-node-code ),
-          500
+                   p-node-code )
         ) .
       end .
     end .
@@ -105,8 +100,7 @@ define buffer buf_same_cli-grp for ub.cli-grp . /* для проверки совпадения имён 
       undo, throw new Progress.Lang.AppError(
         substitute("&1 &2 &3&4&6&4Ошибка определения типа группы (терм/корн) для группы [&5]",
                    vss-workfile, vss-revision, vss-description, {&new-line}, 
-                   p-node-code, return-value),
-        500
+                   p-node-code, return-value)
       ) .
     end .
     if v-is-terminal then do: /* терминальная группа */
@@ -115,8 +109,7 @@ define buffer buf_same_cli-grp for ub.cli-grp . /* для проверки совпадения имён 
         undo, throw new Progress.Lang.AppError(
           substitute("&1 &2 &3&4Ошибка определения наличия клиентов в группе [&5]",
                      vss-workfile, vss-revision, vss-description, {&new-line}, 
-                     p-node-code ),
-          500
+                     p-node-code )
         ) .
       end.
       if v-have-clients then do:
@@ -132,8 +125,7 @@ define buffer buf_same_cli-grp for ub.cli-grp . /* для проверки совпадения имён 
                        "&4В одной группе не могут быть одновременно подгруппы и клиенты." +
                        "&4Группа [&5] не может быть слита с вышестоящей группой [&6].",
                        vss-workfile, vss-revision, vss-description, {&new-line}, 
-                       p-node-code, {&buf-name}.upper-code ),
-            500
+                       p-node-code, {&buf-name}.upper-code )
           ) .
         end.
       end.
@@ -151,8 +143,7 @@ define buffer buf_same_cli-grp for ub.cli-grp . /* для проверки совпадения имён 
             substitute("&1 &2 &3&4Подгруппа [&6] группв [&5] имеет название такое же, как соседняя с удаляемой группой группа [&7]." +
                        "&4После удаления две группы на одном уровне будут иметь одинаковые названия [&8], что запрещено.",
                        vss-workfile, vss-revision, vss-description, {&new-line}, 
-                       p-node-code, buf_same_cli-grp.node-code, buf2_cli-grp.node-code, buf2_cli-grp.node-name ),
-            500
+                       p-node-code, buf_same_cli-grp.node-code, buf2_cli-grp.node-code, buf2_cli-grp.node-name )
           ) .
         end .
       end .

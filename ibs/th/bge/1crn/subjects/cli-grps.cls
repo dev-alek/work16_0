@@ -18,7 +18,7 @@ Creation date: 02/10/17
 using Progress.Lang.*.
 
 
-class ibs.th.bge.1crn.subjects.cli-grps implements ibs.th.bge.1crn.subjects.isubject: 
+class ibs.th.bge.1crn.subjects.cli-grps inherits ibs.th.bge.1crn.subjects.asubject: 
 
   define property code_ as character no-undo
     get. 
@@ -36,24 +36,44 @@ class ibs.th.bge.1crn.subjects.cli-grps implements ibs.th.bge.1crn.subjects.isub
     get. 
     private set.
 
-  method public void SetProp (inTag as char, inValue as char):
+  define override property InitTag as character no-undo init "contractor-group"
+    get. 
+
+  method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
-      when "code" then do:
-        assign code_ = inValue .
-      end.
-      when "upper-code" then do:
-        assign upper-code = inValue .
-      end.
-      when "del-l" then do:
-        assign del-l = integer (inValue).
-      end.
-      when "del-f" then do:
-        assign del-f = integer (inValue).
-      end.
-      when "name" then do:
-        assign name_ = inValue .
-      end.
+      when "code"       then code_      = if inValue >= "" then inValue else "" .
+      when "upper-code" then upper-code = if inValue >= "" then inValue else "" .
+      when "del-l"      then del-l      = if inValue >= "" then integer (inValue) else 0.
+      when "del-f"      then del-f      = if inValue >= "" then integer (inValue) else 0.
+      when "name"       then name_      = if inValue >= "" then inValue else "" .
     end case.
-  end.
+  end method .
+  
+  method override protected void CheckData ():
+
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = ",code" when code_ = ?
+      v-str = v-str + ",upper-code" when upper-code = ?
+      v-str = v-str + ",name" when name_ = ?
+    .
+    v-str = substring(v-str, 2).
+    if v-str > "" then undo, throw new Progress.Lang.AppError(
+      substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
+    ) .
+
+  end method.
+  
+  method override protected void ClearSub():
+    assign 
+      code_      = ?
+      upper-code = ?
+      del-l      = ?
+      del-f      = ?
+      name_      = ?
+    .
+  end method.
+  
 
 end class.
