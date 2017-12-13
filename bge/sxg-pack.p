@@ -98,7 +98,7 @@ on error undo, return error
       p0-arch = no.
     end.
     when integer({&esys-dm-erp-1C-RN}) then do:
-      p0-arch = no.
+      p0-arch = yes.
     end.
   end.
 
@@ -343,8 +343,8 @@ procedure file-s-g :
       end.
       when integer({&esys-dm-erp-1C-RN})
       then do:
-        v-arh-name = "".
-        v-arh-type = "".
+        v-arh-name = search('exe/pkzipc.exe':U).
+        v-arh-type = "zip".
       end.
       otherwise  do:
         assign

@@ -121,7 +121,7 @@ on error undo, return error
         .
         if not available buf_esys-pck-sent then do:  /* не было ни одного пакета */
           assign
-            p-pack-num = 0
+            p-pack-num = if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then 1 else 0
           .
         end.
         else do:
@@ -143,7 +143,7 @@ on error undo, return error
       end.
       when "fput" then do:
         /*экспорт файла*/
-        p-pack-num = 0.
+        p-pack-num = if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then 1 else 0.
       end.
       otherwise do:
         message

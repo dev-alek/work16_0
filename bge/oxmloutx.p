@@ -41,6 +41,7 @@ define variable vss-description as character no-undo init "Экспорт в файл OpenXM
 { str/xmllib.i   }
 { gbl/filelist.i }
 { bge/oxml-def.i }
+{ gbl/db-attr.i  }
 
 define stream out-stream.
 define variable v-action as character no-undo .
@@ -768,7 +769,9 @@ on error undo, return error return-value
                 then sw:start-element (buf_esys-route.esr-oper) .
                 
                 for each buf_esys-route-dump where buf_esys-route-dump.esrd-dump-ord = buf_esys-route.esr-dump-ord:
-                  copy-lob from buf_esys-route-dump.esrd-blob-value-rec to v-longdata .
+                  v-longdata = "" .
+                  fix-codepage(v-longdata) = "UTF-8" .
+                  copy-lob from buf_esys-route-dump.esrd-blob-value-rec to v-longdata no-convert.
                   sw:write-fragment (v-longdata) .
                 end.
                 
