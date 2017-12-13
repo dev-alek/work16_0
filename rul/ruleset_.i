@@ -74,6 +74,11 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define edoc-proc_18_event_intorder_125                  125
 &global-define edoc-proc_18_event_price-doc_110                 110
 &global-define edoc-proc_18_event_inkas_130                     130
+&global-define edoc-proc_18_event_rvs-doc_135                   135
+&global-define edoc-proc_18_event_shift_140                     140
+&global-define edoc-proc_18_event_icnt-doc_145                  145
+&global-define edoc-proc_18_event_fin-doc_150                   150
+&global-define edoc-proc_18_event_fbr-doc_155                   155
 &global-define edoc-proc_18_text-export_specif_223              223
 &global-define edoc-proc_18_text-import_specif_224              224
 &global-define edoc-proc_18_excel-export_specif_225             225
@@ -108,12 +113,13 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 &global-define cli-grp-proc_14                                    14
 
-&global-define thref-proc_20                              20
+&global-define thref-proc_20                            20
 &global-define thref-proc_20_batchwork-export
 &global-define thref-proc_20_batchwork-routing_2        2
-&global-define thref-proc_20_xml-file-import
-&global-define thref-proc_20_xml-esys-import
+&global-define thref-proc_20_xml-file-import            3
+&global-define thref-proc_20_xml-esys-import            4
 &global-define thref-proc_20_rec_5                      5
+&global-define thref-proc_20_ref-event_100              100
 
 
 &global-define rep-proc_22                              22

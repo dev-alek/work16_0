@@ -271,6 +271,13 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
       /*ищем первую запись*/
       v-schema-name = entry (1, v-file-name, "_").
     end.
+    when integer({&esys-dm-erp-1C-RN}) then do:
+      find first buf_temp_xmllib_rec where
+              buf_temp_xmllib_rec.recLevel = 0 no-error.
+      /*ищем первую запись*/
+      if available (buf_temp_xmllib_rec)
+        then v-schema-name =   buf_temp_xmllib_rec.recName.
+    end.
     when integer({&esys-dm-oracle-retail}) then do:
       v-esys-id = buf_ext-system.esys-id.
       find first buf_temp_xmllib_rec where
@@ -406,7 +413,7 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
     delete object v-header-th no-error.
     return '':U.
   end.
-    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi}) then do:
+    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi}) and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) then do:
       run get-gate-rec in this-procedure ( v-schema-name
                                           ,output v-gate-rec) no-error.
       if error-status:error then do:
@@ -538,7 +545,7 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
 
   end. /*  if v-insert-header = yes then do:*/
   else do:
-    if buf_ext-system.whole-send-news <> integer({&esys-dm-contour-edi}) then do:
+    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi}) and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN})then do:
         run gbl/_tmpfile.p (
                             input ""
                           , input "xml"
@@ -560,7 +567,7 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
         end.
       end.
     end.
-    if buf_ext-system.whole-send-news <> integer({&esys-dm-contour-edi}) then do:
+    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi}) and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) then do:
       assign
       v-rec-cnt = 0
       .
@@ -705,7 +712,7 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
     end.
   end.
   */
-  if buf_ext-system.whole-send-news <> integer({&esys-dm-contour-edi}) then do:
+  if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi}) and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) then do:
     os-delete value(v-schema-tmp-file).
   end.
   _rule-profile:
@@ -987,7 +994,7 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           ,input (
                  string(p-esys-id) + {&delim-par} +
                  v-file-name + {&delim-par} +
-                 string(v_dataseth) + {&delim-par} +
+                 (if string(v_dataseth) = ? then p-xml-file-name else string(v_dataseth)) + {&delim-par} +
                  string(v-pck-num) + {&delim-par} +
                  p-log-file-name + {&delim-par} +
                  buf_temp-param-name.param-name + {&delim-par} +

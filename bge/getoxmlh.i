@@ -85,7 +85,7 @@ on error undo, return error return-value
     when integer({&esys-dm-erp-1C-RN}) then do:
       v-root-name = "".
       run xmllib-add-rec-fld  in this-procedure (
-                                                    input "erp-1C-RN"
+                                                    input "ERPRN-GC"
                                                   ,input ""
                                                 )  .
     end.

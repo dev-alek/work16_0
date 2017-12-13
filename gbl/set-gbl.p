@@ -15,6 +15,8 @@ Creation date: 04/18/06
 
 */
 
+using ibs.th.gbl.*.
+
 define input  parameter p-auto-value  as logical   no-undo .
 define input  parameter p-user-id     as character no-undo .
 define input  parameter p-user-passwd as character no-undo .
@@ -79,6 +81,11 @@ on error undo, return error return-value
     g#userid         = p-user-id
     g#passwd         = p-user-passwd
   .
+  
+  def var gblVarObj as class gbl-var.
+  gblVarObj = new gbl-var().
+  gblVarObj:InitObj (g#auto, g#news, g#news-source-db, g#db-num, g#userid, g#passwd).
+  delete object gblVarObj no-error.
 
   /* считываем параметр: язык ядра системы */
   /* сравниваем его с языком, использованием для создания *.r кодов */

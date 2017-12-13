@@ -147,6 +147,15 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       v-curr-r-b = ?
       .
     end.
+    when {&thref-proc_ref-event}
+    then do:
+      assign
+      v-codex-id-list = string(20)
+      v-ruleset-id-list[1] = string(100)
+      v-prop-code = {&attr-rum_thref}
+      v-curr-r-b = ?
+      .
+    end.
     when {&edoc-proc_event_price-doc}
     then do:
       assign
@@ -197,6 +206,60 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       assign
       v-codex-id-list = string(18)
       v-ruleset-id-list[1] = string(130)
+      v-prop-code = {&attr-rum_edoc}
+      .
+      { gbl/curr-r-b.i v-curr-r-b }
+    end.
+    when {&edoc-proc_event_rvs-doc}
+    then do:
+      assign
+      v-codex-id-list = string(18)
+      v-ruleset-id-list[1] = string(135)
+      v-prop-code = {&attr-rum_edoc}
+      .
+      { gbl/curr-r-b.i v-curr-r-b }
+    end.
+    when {&edoc-proc_event_inkas}
+    then do:
+      assign
+      v-codex-id-list = string(18)
+      v-ruleset-id-list[1] = string(130)
+      v-prop-code = {&attr-rum_edoc}
+      .
+      { gbl/curr-r-b.i v-curr-r-b }
+    end.
+    when {&edoc-proc_event_shift}
+    then do:
+      assign
+      v-codex-id-list = string(18)
+      v-ruleset-id-list[1] = string(140)
+      v-prop-code = {&attr-rum_edoc}
+      .
+      { gbl/curr-r-b.i v-curr-r-b }
+    end.
+    when {&edoc-proc_event_icnt-doc}
+    then do:
+      assign
+      v-codex-id-list = string(18)
+      v-ruleset-id-list[1] = string(145)
+      v-prop-code = {&attr-rum_edoc}
+      .
+      { gbl/curr-r-b.i v-curr-r-b }
+    end.
+    when {&edoc-proc_event_fin-doc}
+    then do:
+      assign
+      v-codex-id-list = string(18)
+      v-ruleset-id-list[1] = string(150)
+      v-prop-code = {&attr-rum_edoc}
+      .
+      { gbl/curr-r-b.i v-curr-r-b }
+    end.
+    when {&edoc-proc_event_fbr-doc}
+    then do:
+      assign
+      v-codex-id-list = string(18)
+      v-ruleset-id-list[1] = string(155)
       v-prop-code = {&attr-rum_edoc}
       .
       { gbl/curr-r-b.i v-curr-r-b }

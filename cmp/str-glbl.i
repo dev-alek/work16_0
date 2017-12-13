@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: $
+$Author: $
+$Date: $
+$Workfile: $
+$Archive: $
                                         
 Файл глобальных определений
 
@@ -3754,6 +3754,8 @@ end.
 &global-define attr-ora-exp-seq '{&bef-attr-ora-exp-seq}':U
 &global-define bef-attr-mess-id-video mess-id-video
 &global-define attr-mess-id-video '{&bef-attr-mess-id-video}':U
+&global-define bef-attr-int-point int-point
+&global-define attr-int-point '{&bef-attr-int-point}':U
 &global-define db-attr-list 'schedule-nws,schedule-arc,schedule-exp,schedule-oxml,need-gen-new-pack,last-unload-db-key,schedule-cdimp,schedule-getcd,schedule-sale,schedule-suz,cut-date,cut-fin-date,unload-after-cut,cut-db-list,schedule-cbnk,arh-disable,ahsp-disable,aht-disable,schedule-free,ora-exp-seq':u
 &global-define bef-attr-need-gen-new-xpack need-gen-new-xpack
 &global-define attr-need-gen-new-xpack '{&bef-attr-need-gen-new-xpack}':U
@@ -5452,9 +5454,13 @@ end.
 &global-define thref-proc_recupdate '{&bef-thref-proc_recupdate}':U
 &global-define bef-thref-proc_recupdate-full Изменение записи
 &global-define thref-proc_recupdate-full '{&bef-thref-proc_recupdate-full}':U
-&global-define thref-proc-list 'batchwork-export,batchwork-routing,xml-file-import,xml-esys-import,recadd,recupdate':U
-&global-define thref-proc-list-full 'Операции по списку-экспорт,Операции по списку-маршрутизация,Импорт из xml-файла,Импорт из ВС,Добавление записи,Изменение записи':U
-&global-define thref-proc-name entry (lookup (~{&thref-proc-code}, 'batchwork-export,batchwork-routing,xml-file-import,xml-esys-import,recadd,recupdate':U) + 1, ',' + 'Операции по списку-экспорт,Операции по списку-маршрутизация,Импорт из xml-файла,Импорт из ВС,Добавление записи,Изменение записи':U)
+&global-define bef-thref-proc_ref-event ref-event
+&global-define thref-proc_ref-event '{&bef-thref-proc_ref-event}':U
+&global-define bef-thref-proc_ref-event-full События справочников
+&global-define thref-proc_ref-event-full '{&bef-thref-proc_ref-event-full}':U
+&global-define thref-proc-list 'batchwork-export,batchwork-routing,xml-file-import,xml-esys-import,recadd,recupdate,ref-event':U
+&global-define thref-proc-list-full 'Операции по списку-экспорт,Операции по списку-маршрутизация,Импорт из xml-файла,Импорт из ВС,Добавление записи,Изменение записи,События справочников':U
+&global-define thref-proc-name entry (lookup (~{&thref-proc-code}, 'batchwork-export,batchwork-routing,xml-file-import,xml-esys-import,recadd,recupdate,ref-event':U) + 1, ',' + 'Операции по списку-экспорт,Операции по списку-маршрутизация,Импорт из xml-файла,Импорт из ВС,Добавление записи,Изменение записи,События справочников':U)
 &global-define bef-chk-doc-proc_gline-discnt-calc gline-discnt-calc
 &global-define chk-doc-proc_gline-discnt-calc '{&bef-chk-doc-proc_gline-discnt-calc}':U
 &global-define bef-chk-doc-proc_gline-discnt-calc-full Расчет скидки по строке товара
@@ -5566,6 +5572,26 @@ end.
 &global-define edoc-proc_event_inkas '{&bef-edoc-proc_event_inkas}':U
 &global-define bef-edoc-proc_event_inkas-full Документ продажи-событие
 &global-define edoc-proc_event_inkas-full '{&bef-edoc-proc_event_inkas-full}':U
+&global-define bef-edoc-proc_event_rvs-doc event_rvs-doc
+&global-define edoc-proc_event_rvs-doc '{&bef-edoc-proc_event_rvs-doc}':U
+&global-define bef-edoc-proc_event_rvs-doc-full Документ сверки-событие
+&global-define edoc-proc_event_rvs-doc-full '{&bef-edoc-proc_event_rvs-doc-full}':U
+&global-define bef-edoc-proc_event_shift event_shift
+&global-define edoc-proc_event_shift '{&bef-edoc-proc_event_shift}':U
+&global-define bef-edoc-proc_event_shift-full Документ продажи-событие
+&global-define edoc-proc_event_shift-full '{&bef-edoc-proc_event_shift-full}':U
+&global-define bef-edoc-proc_event_icnt-doc event_icnt-doc
+&global-define edoc-proc_event_icnt-doc '{&bef-edoc-proc_event_icnt-doc}':U
+&global-define bef-edoc-proc_event_icnt-doc-full Документ инв. ТРК-событие
+&global-define edoc-proc_event_icnt-doc-full '{&bef-edoc-proc_event_icnt-doc-full}':U
+&global-define bef-edoc-proc_event_fin-doc event_fin-doc
+&global-define edoc-proc_event_fin-doc '{&bef-edoc-proc_event_fin-doc}':U
+&global-define bef-edoc-proc_event_fin-doc-full Документ финансовый-событие
+&global-define edoc-proc_event_fin-doc-full '{&bef-edoc-proc_event_fin-doc-full}':U
+&global-define bef-edoc-proc_event_fbr-doc event_fbr-doc
+&global-define edoc-proc_event_fbr-doc '{&bef-edoc-proc_event_fbr-doc}':U
+&global-define bef-edoc-proc_event_fbr-doc-full Документ производства-событие
+&global-define edoc-proc_event_fbr-doc-full '{&bef-edoc-proc_event_fbr-doc-full}':U
 &global-define bef-edoc-proc_text-export_specif text-export_specif
 &global-define edoc-proc_text-export_specif '{&bef-edoc-proc_text-export_specif}':U
 &global-define bef-edoc-proc_text-export_specif-full Экспорт спецификации в текст.файл
@@ -6726,7 +6752,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: da4a5b9c3eec, 1028, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 375e33a7bc6c, 1095, test  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -8040,7 +8066,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: 45325775eda4, 1021, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 4378eb070905, 246, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: da4a5b9c3eec, 1028, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 90fea97fc979, 803, rls ':U
-&global-define str-glblt_vss-revision 'Revision: da4a5b9c3eec, 1028, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 80913296bb47, 1122, test ':U
+&global-define str-glbl5_vss-revision 'Revision':U
+&global-define str-glblt_vss-revision 'Revision: 375e33a7bc6c, 1095, test ':U
 &endif

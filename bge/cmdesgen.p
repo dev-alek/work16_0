@@ -142,7 +142,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     undo, return error .
   end.
   /*наполняем временные таблицы*/
-  if not buf_ext-system.delivery-method = integer({&esys-dm-contour-edi}) then do:
+  if not buf_ext-system.delivery-method = integer({&esys-dm-contour-edi}) and not buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN}) then do:
     if p-esr-dump-ord >= 0 then do:
     find first buf_esys-route exclusive-lock where
               buf_esys-route.esr-dump-ord = p-esr-dump-ord

@@ -934,6 +934,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 /* Ќомер MessageID дл€ видеонаблюдени€ */
 { cmp/cr-prep.i 1 attr-mess-id-video          mess-id-video         " " mess-id-video        }
 
+/* Ќомер точки интеграции дл€ ERPRN */
+{ cmp/cr-prep.i 1 attr-int-point              int-point             " " int-point            }
 
 /* сюда добавл€ть новые названи€ атрибутов баз данных */
 

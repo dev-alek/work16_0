@@ -20,7 +20,7 @@ Creation date: 09/12/07
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 
-&glob rum-revision  "v15_1.72"
+&glob rum-revision  "v16_0.10"
 &glob rum-md5    { cmp/fixrum.md5 }
 
 procedure check-rum-version :
@@ -50,7 +50,7 @@ define buffer buf_ruledict for ub.ruledict .
       if error-status:error
       or v-dopi2 > v-dopi1
       or v-dopi4 > v-dopi3
-      or left-trim(entry(1, buf_ruledict.documentation, "."), "v":U) < "15"
+      or left-trim(entry(1, buf_ruledict.documentation, "."), "v":U) < "16"
       then do:
         assign
         p-check = yes.

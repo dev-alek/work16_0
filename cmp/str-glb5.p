@@ -1100,6 +1100,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cli-grp-p
 { cmp/cr-prep.i 1 thref-proc_xml-esys-import   xml-esys-import   "Импорт из ВС"                     xml-esys-import      "ES import"             }
 { cmp/cr-prep.i 1 thref-proc_recadd            recadd            "Добавление записи"                recadd               "Add Record"            }
 { cmp/cr-prep.i 1 thref-proc_recupdate         recupdate         "Изменение записи"                 recupdate            "Change Record"         }
+{ cmp/cr-prep.i 1 thref-proc_ref-event         ref-event         "События справочников"             ref-event            "References Event"      }
 
 
 
@@ -1110,6 +1111,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cli-grp-p
 ,{&bef-thref-proc_xml-esys-import}~
 ,{&bef-thref-proc_recadd}~
 ,{&bef-thref-proc_recupdate}~
+,{&bef-thref-proc_ref-event}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define thref-proc-list {&thref-proc-list}" ).
@@ -1121,6 +1123,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define thref-pro
 ,{&bef-thref-proc_xml-esys-import-full}~
 ,{&bef-thref-proc_recadd-full}~
 ,{&bef-thref-proc_recupdate-full}~
+,{&bef-thref-proc_ref-event-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define thref-proc-list-full {&thref-proc-list-full}" ).
@@ -1177,6 +1180,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define chk-doc-p
 { cmp/cr-prep.i 1 edoc-proc_event_intorder             event_intorder             "Заявки РЦ-событие"                  event_intorder              "Distr.Center Orders-event"    }
 { cmp/cr-prep.i 1 edoc-proc_event_price-doc            event_price-doc            "ДНЦ/переоценка-событие"             event_price-doc             "PDF-event"    }
 { cmp/cr-prep.i 1 edoc-proc_event_inkas                event_inkas                "Документ продажи-событие"           event_inkas                 "Sale document-event"    }
+{ cmp/cr-prep.i 1 edoc-proc_event_rvs-doc              event_rvs-doc              "Документ сверки-событие"            event_rvs-doc               "Кevise document-event"  }
+{ cmp/cr-prep.i 1 edoc-proc_event_shift                event_shift                "Документ продажи-событие"           event_shift                 "Shift-event" }
+{ cmp/cr-prep.i 1 edoc-proc_event_icnt-doc             event_icnt-doc             "Документ инв. ТРК-событие"          event_icnt-doc              "ICNT-event" }
+{ cmp/cr-prep.i 1 edoc-proc_event_fin-doc              event_fin-doc              "Документ финансовый-событие"        event_fin-doc               "fin-doc-event" }
+{ cmp/cr-prep.i 1 edoc-proc_event_fbr-doc              event_fbr-doc              "Документ производства-событие"      event_fbr-doc               "fbr-doc-event" }
 { cmp/cr-prep.i 1 edoc-proc_text-export_specif         text-export_specif         "Экспорт спецификации в текст.файл"  text-export_specif          "Specification export to text" }
 { cmp/cr-prep.i 1 edoc-proc_excel-export_specif        excel-export_specif        "Экспорт спецификации в Excel"       excel-export_specif         "Specification export to Excel" }
 { cmp/cr-prep.i 1 edoc-proc_text-import_specif         text-import_specif         "Импорт спецификации из текст.файла"  text-export_specif         "Specification import from text" }

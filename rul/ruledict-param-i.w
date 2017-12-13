@@ -603,7 +603,8 @@ cb-object-type:LIST-ITEMS IN FRAME {&FRAME-NAME} = {&comma-char} + {&r-b} +
                                                    {&comma-char} + "xsd" +
                                                    {&comma-char} + "sub-type" +
                                                    {&comma-char} + "output-type" +
-                                                   {&comma-char} + "dataset"
+                                                   {&comma-char} + "dataset" +
+                                                   {&comma-char} + "id"
 cb-object-type = tt-ruledict-param.param-2-data-type
 rs-list = (if lookup("LIST", tt-ruledict-param.param-3-data-type) > 0 then "LIST" else rs-list)
 rs-list = (if lookup("SORTED-LIST", tt-ruledict-param.param-3-data-type) > 0 then "SORTED-LIST" else rs-list)
