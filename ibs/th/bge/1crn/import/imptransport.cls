@@ -75,7 +75,7 @@ class ibs.th.bge.1crn.import.imptransport implements ibs.th.bge.1crn.import.iimp
         buf_auto-tank.name    = v-transport:name_
         .
       
-      find first buf_clients no-lock where buf_clients.obj-code = integer(v-transport:tr-owner) no-error .
+      find first buf_clients no-lock where buf_clients.obj-code = integer(v-transport:tr-owner) and buf_clients.obj-type = {&cmp} no-error .
       if not AVAILABLE (buf_clients) then 
       do:
         Msg = "В справочнике нет автопредприятия с кодом:" + v-transport:tr-owner. 
@@ -93,8 +93,8 @@ class ibs.th.bge.1crn.import.imptransport implements ibs.th.bge.1crn.import.iimp
             buf_auto-tank-attr.auto-num  = buf_auto-tank.auto-num 
             .
         end.
-        buf_auto-tank-attr.attr-value = v-transport:tr-owner
-          .
+        buf_auto-tank-attr.attr-value = buf_clients.obj-type + string(buf_clients.obj-code) .
+        
         for each bf_auto-tank where bf_auto-tank.auto-num BEGINS (v-transport:reg-num + chr(35)):
           
           delete bf_auto-tank .
@@ -107,6 +107,7 @@ class ibs.th.bge.1crn.import.imptransport implements ibs.th.bge.1crn.import.iimp
         end.   
         if VALID-OBJECT (v_sections) then 
         do:
+          buf_auto-tank.brutto-qnty = 0 .
           do ii = 1 to v_sections:Get(ii):
             v-section = cast(v_sections:SubjectObjCurr, transport_section) .
             
@@ -119,6 +120,7 @@ class ibs.th.bge.1crn.import.imptransport implements ibs.th.bge.1crn.import.iimp
             ASSIGN 
               bf_auto-tank.brutto-qnty = v-section:capacity
               bf_auto-tank.name        = STRING (v-section:min-of-lvl) + {&delim-par} + STRING (v-section:max-of-lvl) + {&delim-par} + STRING (v-section:throat-diameter)
+              buf_auto-tank.brutto-qnty = buf_auto-tank.brutto-qnty + bf_auto-tank.brutto-qnty .
               .
           end.  
         end.

@@ -1059,7 +1059,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY varname varauto-num varauto-firm varPS varps-meas 
       WITH FRAME Dialog-Frame.
-  ENABLE RECT-1 b-cancel b-help b-choose-auto-firm varPS b-view-sec 
+  ENABLE RECT-1 b-cancel b-help varPS b-view-sec 
          brw-auto-num-sec b-view-meas b-imp-meas brw-auto-meas varps-meas 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
@@ -1156,7 +1156,7 @@ PROCEDURE local-enable_UI :
 
   RUN enable_ui IN THIS-PROCEDURE.
   if parmode = {&add-def} or parmode = {&update} then do:
-      enable varauto-num varname varauto-firm b-save b-add-sec b-chg-sec b-add-meas b-chg-meas b-del-meas b-del-sec b-mark b-sel-all b-unmark with frame {&frame-name}.
+      enable varauto-num varname varauto-firm b-save b-add-sec b-chg-sec b-add-meas b-chg-meas b-del-meas b-choose-auto-firm b-del-sec b-mark b-sel-all b-unmark with frame {&frame-name}.
      assign varps:read-only = no.
   end.
   {&OPEN-QUERY-brw-auto-meas}

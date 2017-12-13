@@ -147,6 +147,8 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
       is-ac    = ?
       name_    = ?
       .
+      delete object sections no-error .
+      delete object calibration-table no-error . 
   end.
 
 end class.
