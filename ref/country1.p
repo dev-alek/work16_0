@@ -40,14 +40,15 @@ define variable vss-description as character no-undo init "Сохранение изменений 
 { cmp/library.i }
 
 define variable v-db-num like ub.db.db-num no-undo .
+define variable v-msg as character no-undo.
+define shared variable g#esys as logical no-undo.
+
 
 if p-mode <> {&add-def}
 AND p-mode <> {&update} then do:
-  message
-  vss-workfile vss-revision vss-description skip
-  "Неверный параметр p-mode" p-mode
-  view-as alert-box error .
-  return error '':u.
+  run err-mess (string (vss-workfile + vss-revision + vss-description + {&new-line} +
+    "Неверный параметр p-mode" + p-mode) ).
+  return error v-msg + '':u.
 end.
 
 { gbl/curdbnum.i v-db-num }
@@ -55,52 +56,52 @@ end.
 if v-db-num <> 0 then do:
   run err-mess (substitute("Нельзя изменять запись СТРАНЫ в УБД: Номер текущей БД &1"
                 , v-db-num) ).
-  undo, return error "":U.
+  undo, return error v-msg + "":U.
 end.
 
 if p-short-name = "":U
 then do:
   run err-mess ("Короткое название СТРАНЫ не может быть пустым").
-  undo, return error "short-name":U.
+  undo, return error v-msg + "short-name":U.
 end.
 if p-long-name = "":U
 then do:
   run err-mess ("Длинное название СТРАНЫ не может быть пустым").
-  undo, return error "short-name":U.
+  undo, return error v-msg + "short-name":U.
 end.
 
 if p-num-code = 0
 or p-num-code = ?
 then do:
   run err-mess ("Цифровой код СТРАНЫ не может равняться 0").
-  undo, return error "num-code":U.
+  undo, return error v-msg + "num-code":U.
 end.
 
 if p-alpha1 = "":U
 then do:
   run err-mess ("Буквенный код СТРАНЫ не может быть пустым").
-  undo, return error "alpha1":U.
+  undo, return error v-msg + "alpha1":U.
 end.
 
 if p-alpha2 = "":U
 then do:
   run err-mess ("Буквенный код СТРАНЫ не может быть пустым").
-  undo, return error "alpha2":U.
+  undo, return error v-msg + "alpha2":U.
 
 end.
 
 if p-mode = {&add-def} then do:
   if can-find(first ub.country no-lock where ub.country.alpha1 = p-alpha1) then do:
     run err-mess (substitute("Уже есть страна с буквенным кодом -1, равным &1", p-alpha1)).
-    undo, return error "alpha2":U.
+    undo, return error v-msg + "alpha2":U.
   end.
   if can-find(first ub.country no-lock where ub.country.alpha1 = p-alpha2) then do:
     run err-mess (substitute("Уже есть страна с буквенным кодом - 2, равным &1", p-alpha2)).
-    undo, return error "alpha2":U.
+    undo, return error v-msg + "alpha2":U.
  end.
   if can-find(first ub.country no-lock where ub.country.num-code = p-num-code) then do:
     run err-mess (substitute("Уже есть страна с цифровым кодом, равным &1", p-num-code)).
-    undo, return error "num-code":U.
+    undo, return error v-msg + "num-code":U.
  end.
 end.
 
@@ -124,7 +125,7 @@ ON STOP UNDO, RETURN ERROR:
       vss-workfile vss-revision vss-description skip
       "Не найдена запись СТРАНЫ - p-doc-rec" p-doc-rec
       view-as alert-box error .
-      undo, return error '':u.
+      undo, return error v-msg + '':u.
     end.
     if ub.country.alpha1 <> p-alpha1
     or ub.country.num-code <> p-num-code
@@ -134,7 +135,7 @@ ON STOP UNDO, RETURN ERROR:
       "Для уже имеющейся записи нельзя изменить"
       "цифровой код и/или буквенный код - 1" skip
       view-as alert-box ERROR.
-      undo, return error '':U.
+      undo, return error v-msg + '':U.
     end.
   end.
   assign
@@ -149,7 +150,7 @@ ON STOP UNDO, RETURN ERROR:
                              , ERROR-STATUS:GET-message(1)
                              , return-value
                              )).
-    undo, return error "":U.
+    undo, return error v-msg + "":U.
  end.
 
 end. /*doe*/
@@ -158,7 +159,10 @@ end. /*doe*/
 
 PROCEDURE err-mess:
   DEFINE INPUT PARAMETER p-mess as character No-UNDO.
+  if not g#esys
+    then
       message
       p-mess
       view-as alert-box error .
+    else v-msg = p-mess.
 END PROCEDURE.

@@ -32,11 +32,16 @@ do
 on error   undo main-block, return error return-value
 on end-key undo main-block, return error return-value
 :
+  define buffer buf_country-attr for ub.country-attr.
 
-  message
-    vss-workfile vss-revision vss-description skip
-    "‘изическое удаление страны в системе запрещено" skip
-    view-as alert-box error .
-  undo main-block, return error.
+/*  message                                                */
+/*    vss-workfile vss-revision vss-description skip       */
+/*    "‘изическое удаление страны в системе запрещено" skip*/
+/*    view-as alert-box error .                            */
+/*  undo main-block, return error.                         */
+  
+  for each buf_country-attr where buf_country-attr.num-code = ub.country.num-code:
+    delete buf_country-attr.
+  end.
 
 end.
