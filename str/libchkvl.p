@@ -3281,7 +3281,7 @@ if avail buf_bar-code then do:
     then do:
       if accum-pay <> 0
       or (accum-pay-count <> 0 
-            and lookup(string(chk-doc.chk-type), ({&rcpt-tech-refuell} + "," + {&rcpt-unlock-trans} + "," + {&rcpt-trans-transfer} + "," + {&rcpt-trans-cancell})) = 0)
+            and lookup(string(buf_chk-doc.chk-type), ({&rcpt-tech-refuell} + "," + {&rcpt-unlock-trans} + "," + {&rcpt-trans-transfer} + "," + {&rcpt-trans-cancell})) = 0)
       or (buf_chk-doc.discnt <> 0 and not v-is-ord-check)
       then do:
         assign

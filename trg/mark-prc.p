@@ -499,7 +499,7 @@ on error undo, return error return-value
           vss-workfile vss-revision vss-description skip
           "Закрытие документа задним числом" skip
           "Ошибка при отметке складского архива по товару, что он требует перерасчета" skip
-          "Документ" ub.trn-doc.doc-code skip
+          "Документ" buf_trn-doc.doc-code skip
           "Расширенный тип документа" buf_trn-doc.ext-doc-type skip
           "Объект" buf_trn-doc.obj-type buf_trn-doc.obj-code skip
           "Дата" buf_trn-doc.fact-date skip
@@ -521,7 +521,7 @@ on error undo, return error return-value
           vss-workfile vss-revision vss-description skip
           "Закрытие документа задним числом" skip
           "Ошибка при отметке складского архива по поставщикам, что он требует перерасчета" skip
-          "Документ" ub.trn-doc.doc-code skip
+          "Документ" buf_trn-doc.doc-code skip
           "Расширенный тип документа" buf_trn-doc.ext-doc-type skip
           "Объект" buf_trn-doc.obj-type buf_trn-doc.obj-code skip
           "Дата" buf_trn-doc.fact-date skip

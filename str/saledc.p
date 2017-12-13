@@ -804,7 +804,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                     else '')
       v-obj-code = (if available buf_stop-list
                     then buf_stop-list.obj-code
-                    else '')
+                    else 0)
       v-doc-date = (if available buf_stop-list
                     then buf_stop-list.doc-date
                     else ?)
