@@ -404,7 +404,7 @@ class ibs.th.bge.1crn.import.parsesub:
       case hnoderef:name:
         when "price-list" or when "recipe-gds" or
         when "sections" or when "calibration-table" or
-        when "barcodes"
+        when "barcodes" or when "bank" 
         then do: /*первый уровень. зависимых объектов gds-sale или Рецепты recipe-gds  */
           GetChildrenSub (hNoderef, (level + 1), ?). /*проваливаемся дальше в секцию*/
         end.
@@ -488,7 +488,7 @@ class ibs.th.bge.1crn.import.parsesub:
         otherwise do: /*конечный уровень*/
           subjectObj:SetProp( hNoderef:name, hText:node-value).
         end.
-      end.
+      end case.
     end.
     if valid-object (subjectObj)
       then subjectObj:SetProp( hParent:name, "").
