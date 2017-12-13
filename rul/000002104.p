@@ -231,7 +231,7 @@ procedure proc-main :
 
     define buffer buf_ext-system  for ub.ext-system.  
 
-    /*  define variable expObj as class expsubject no-undo .*/
+    define variable expObj as class expsubject no-undo .
     define variable subInvsTrk as class invs-trk no-undo .
   
     /* ------------------------- &end-hn-option& -----------------------------------*/
@@ -254,13 +254,13 @@ procedure proc-main :
       undo _main, return error v-last-error-message .
     end.
 
-    /*  expObj = new expsubject ().*/
+    expObj = new expsubject ().
     subInvsTrk = new invs-trk ().
     subInvsTrk:DocCode = v-doc-num.
-    subInvsTrk:CrContentToSW(?) .
-    /*  expObj:GetContent(subInvsTrk).*/
+
+    expObj:GetContent(subInvsTrk).
         
-    IF ExpData1:esys-add-dump-data ( INPUT subInvsTrk:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + 'invs-trk')) = false  THEN 
+    IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + expObj:InitSecTag)) = false  THEN 
     do:
       undo _main, return error v-last-error-message .
     end.

@@ -30,15 +30,11 @@ class ibs.th.bge.1crn.subjects.invs-trk implements iexpsubject:
     get.
     private set.
 
-  define property Data as memptr no-undo
-    get.
-    private set.
-    
   define property DocCode as character no-undo
     get.
     set.
     
-  define property InitSecTag as character no-undo init ""
+  define property InitSecTag as character no-undo init "invs-trk"
     get.
     private set.
 
@@ -46,12 +42,7 @@ class ibs.th.bge.1crn.subjects.invs-trk implements iexpsubject:
   
   method public void CrContentToSW (insw as handle):
     
-    create sax-writer sw.
-    sw:formatted = true.
-    sw:set-output-destination ("memptr", Data).
-    sw:encoding = "UTF-8".
-    sw:fragment = true .
-    sw:start-document () .
+    sw = insw .
 
     find first buf_icnt-doc no-lock where buf_icnt-doc.doc-code = DocCode no-error.
     if not available (buf_icnt-doc)
@@ -78,8 +69,6 @@ class ibs.th.bge.1crn.subjects.invs-trk implements iexpsubject:
     end.
     sw:end-element ("trk-inds")  .  
     sw:END-ELEMENT ("inv-trk") .  
-    /*    sw:END-ELEMENT ("invs-trk") .*/
-    sw:end-document () .    
   end.  
   method private character string-mth (inValue as decimal):
     
