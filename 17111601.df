@@ -1,0 +1,145 @@
+ADD FIELD "promo-id" OF "c-chk-discnt" AS character
+  DESCRIPTION "Код промоакции"
+  FORMAT "x(8)"
+  POSITION 33
+  INITIAL ""
+  LABEL "Промоакция"
+  COLUMN-LABEL "Промоакция"
+  ORDER 550
+  MAX-WIDTH 16
+
+ADD FIELD "obj-list" OF "c-contract" AS character
+  DESCRIPTION "Список объектов, для которых доступен договор"
+  FORMAT "x(8)"
+  POSITION 144
+  INITIAL ""
+  LABEL "Объекты"
+  COLUMN-LABEL "Объекты"
+  ORDER 1460
+  MAX-WIDTH 16
+
+ADD FIELD "obj-type" OF "c-contract-specif" AS character
+  DESCRIPTION "Перечислимый тип объекта учета товара: склад, магазин`Obj`Obiect"
+  FORMAT "x(3)"
+  POSITION 39
+  INITIAL ""
+  LABEL "Объект"
+  COLUMN-LABEL "Объект"
+  ORDER 370
+  MAX-WIDTH 6
+
+ADD FIELD "obj-code" OF "c-contract-specif" AS integer
+  DESCRIPTION "Код объекта - уникальный внутри конкретного справочника`Code`Cod"
+  FORMAT "99999"
+  POSITION 40
+  INITIAL "0"
+  LABEL "Код"
+  COLUMN-LABEL "Код"
+  ORDER 380
+  MAX-WIDTH 4
+
+ADD FIELD "date-from" OF "c-contract-specif" AS date
+  DESCRIPTION "Дата начала действия цены"
+  FORMAT "99/99/99"
+  POSITION 41
+  INITIAL ?
+  LABEL "Дата с"
+  COLUMN-LABEL "Дата с"
+  ORDER 390
+  MAX-WIDTH 4
+
+ADD FIELD "date-to" OF "c-contract-specif" AS date
+  DESCRIPTION "Дата окончания действия спецификации"
+  FORMAT "99/99/99"
+  POSITION 42
+  INITIAL ?
+  LABEL "Дата по"
+  COLUMN-LABEL "Дата по"
+  ORDER 400
+  MAX-WIDTH 4
+
+ADD FIELD "add-num" OF "c-contract-specif" AS character
+  DESCRIPTION "Номер документа установки цен по спецификации"
+  FORMAT "x(8)"
+  POSITION 43
+  INITIAL ""
+  LABEL "Номер"
+  COLUMN-LABEL "Номер"
+  ORDER 410
+  MAX-WIDTH 16
+
+ADD FIELD "promo-id" OF "c-contract-specif" AS character
+  DESCRIPTION "Код промоакции"
+  FORMAT "x(8)"
+  POSITION 44
+  INITIAL ""
+  LABEL "Промоакция"
+  COLUMN-LABEL "Промоакция"
+  ORDER 420
+  MAX-WIDTH 16
+
+ADD FIELD "promo-id" OF "c-dis-rule" AS character
+  DESCRIPTION "Код промоакции"
+  FORMAT "x(8)"
+  POSITION 43
+  INITIAL ""
+  LABEL "Промоакция"
+  COLUMN-LABEL "Промоакция"
+  ORDER 360
+  MAX-WIDTH 16
+
+ADD INDEX "promo" ON "c-dis-rule"
+  AREA "History"
+  DESCRIPTION "Для поиска правил по номеру промоакции"
+  INDEX-FIELD "promo-id" ASCENDING
+
+ADD FIELD "print-code" OF "c-gds-grp" AS character
+  FORMAT "x(16)"
+  POSITION 17
+  INITIAL ""
+  LABEL "код для печати"
+  COLUMN-LABEL "код для печати"
+  ORDER 180
+  MAX-WIDTH 32
+
+ADD INDEX "print-code" ON "c-gds-grp"
+  AREA "History"
+  INDEX-FIELD "print-code" ASCENDING
+
+ADD FIELD "doc-num-es" OF "c-price-doc" AS character
+  FORMAT "x(14)"
+  POSITION 52
+  INITIAL ""
+  ORDER 660
+  MAX-WIDTH 28
+
+ADD FIELD "uid-es" OF "c-price-doc" AS character
+  FORMAT "x(60)"
+  POSITION 53
+  INITIAL ""
+  ORDER 670
+  MAX-WIDTH 120
+
+ADD INDEX "doc-num-es" ON "c-price-doc"
+  AREA "History"
+  INDEX-FIELD "doc-num-es" ASCENDING
+
+ADD INDEX "uid-es" ON "c-price-doc"
+  AREA "History"
+  INDEX-FIELD "uid-es" ASCENDING
+
+ADD FIELD "gds-recipe-code" OF "c-recipe-gds" AS character
+  DESCRIPTION "номер рецепта  ингредиента "
+  FORMAT "x(8)"
+  POSITION 21
+  INITIAL ""
+  LABEL "Номер"
+  COLUMN-LABEL "Номер рецепта"
+  ORDER 200
+  MAX-WIDTH 16
+
+.
+PSC
+cpstream=1251
+.
+0000003197

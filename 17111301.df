@@ -1,0 +1,79 @@
+ADD FIELD "promo-id" OF "chk-discnt" AS character
+  DESCRIPTION "Код промоакции"
+  FORMAT "x(8)"
+  POSITION 31
+  INITIAL ""
+  LABEL "Промоакция"
+  COLUMN-LABEL "Промоакция"
+  ORDER 530
+  MAX-WIDTH 16
+
+ADD FIELD "date-from" OF "contract-specif" AS date
+  DESCRIPTION "Дата начала действия цены"
+  FORMAT "99/99/99"
+  POSITION 36
+  INITIAL ?
+  LABEL "Дата с"
+  COLUMN-LABEL "Дата с"
+  ORDER 330
+  MAX-WIDTH 4
+
+ADD FIELD "date-to" OF "contract-specif" AS date
+  DESCRIPTION "Дата окончания действия спецификации"
+  FORMAT "99/99/99"
+  POSITION 37
+  INITIAL ?
+  LABEL "Дата по"
+  COLUMN-LABEL "Дата по"
+  ORDER 340
+  MAX-WIDTH 4
+
+ADD FIELD "add-num" OF "contract-specif" AS character
+  DESCRIPTION "Номер документа установки цен по спецификации"
+  FORMAT "x(8)"
+  POSITION 38
+  INITIAL ""
+  LABEL "Номер"
+  COLUMN-LABEL "Номер"
+  ORDER 350
+  MAX-WIDTH 16
+
+ADD FIELD "promo-id" OF "contract-specif" AS character
+  DESCRIPTION "Код промоакции"
+  FORMAT "x(8)"
+  POSITION 39
+  INITIAL ""
+  LABEL "Промоакция"
+  COLUMN-LABEL "Промоакция"
+  ORDER 360
+  MAX-WIDTH 16
+
+ADD FIELD "promo-id" OF "dis-rule" AS character
+  DESCRIPTION "Код промоакции"
+  FORMAT "x(8)"
+  POSITION 35
+  INITIAL ""
+  LABEL "Промоакция"
+  COLUMN-LABEL "Промоакция"
+  ORDER 330
+  MAX-WIDTH 16
+
+ADD INDEX "promo" ON "dis-rule"
+  AREA "Primary_data"
+  DESCRIPTION "Для поиска правил по номеру промоакции"
+  INDEX-FIELD "promo-id" ASCENDING
+
+UPDATE FIELD "print-code" OF "gds-grp"
+  LABEL "код для печати"
+  COLUMN-LABEL "код для печати"
+  MAX-WIDTH 32
+
+UPDATE SEQUENCE "s-bcgb-code"
+  INITIAL 0
+  MIN-VAL ?
+
+.
+PSC
+cpstream=1251
+.
+0000001646

@@ -1,0 +1,17 @@
+
+ADD FIELD "doc-num-es" OF "price-doc" AS character
+  FORMAT "x(14)"
+  POSITION 46
+  INITIAL ""
+  ORDER 610
+  MAX-WIDTH 28
+
+ADD INDEX "doc-num-es" ON "price-doc"
+  AREA "Price"
+  INDEX-FIELD "doc-num-es" ASCENDING
+
+.
+PSC
+cpstream=1251
+.
+0000000327

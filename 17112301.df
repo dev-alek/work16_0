@@ -1,0 +1,14 @@
+ADD FIELD "esrd-blob-value-rec" OF "esys-route-dump" AS blob
+  FORMAT "x(8)"
+  POSITION 11
+  INITIAL ?
+  ORDER 100
+  LOB-AREA "ES-Route"
+  LOB-BYTES 1048576000
+  LOB-SIZE 1000M
+
+.
+PSC
+cpstream=1251
+.
+0000000190
