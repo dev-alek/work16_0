@@ -94,6 +94,7 @@ class ibs.th.bge.1crn.subjects.contr-price-docs inherits ibs.th.bge.1crn.subject
       contr-code   = ?
       cont-code    = ?
     .
+    delete object price-list no-error . 
   end.
 
 end class.
