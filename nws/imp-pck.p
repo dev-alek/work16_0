@@ -364,7 +364,7 @@ procedure local-imp-pck :
       ( output v-ver-num
       ).
 
-    if v-ver-num = "":U
+    /*if v-ver-num = "":U
       or num-entries( t-pck-conf.ver-num, ".":U ) < 2
       or num-entries( v-ver-num, ".":U ) < 2
       or entry( 1, t-pck-conf.ver-num, ".":U ) <> entry( 1, v-ver-num, ".":U )
@@ -377,7 +377,7 @@ procedure local-imp-pck :
                                   )
                       ).
       undo, return error.
-    end.
+    end.*/
 
     if t-pck-conf.db-num-dst <> g#db-num then do:
       run write-to-log( substitute( "&1. Ошибка приема! Ожидается прием пакета для БД № &2, а данный пакет для БД № &3"

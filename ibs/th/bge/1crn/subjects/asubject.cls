@@ -17,6 +17,7 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
+using ibs.th.bge.1crn.subjects.isubject from propath.
 
 block-level on error undo, throw.
 
@@ -45,6 +46,20 @@ class ibs.th.bge.1crn.subjects.asubject abstract implements ibs.th.bge.1crn.subj
     if not IsInitSubForWrite 
       then undo, throw new Progress.Lang.AppError( substitute ( "Сущность &1 не инициализирована для записи", InitTag )).
     SetPropProtected (inTag, inValue).
+  end.
+  
+  method public void SetProp (inSubObj as isubject).
+/*    if inTag = InitTag then do:                                                                                          */
+/*      InitSub().                                                                                                         */
+/*      return.                                                                                                            */
+/*    end.                                                                                                                 */
+/*    if not IsInitSubForWrite                                                                                             */
+/*      then undo, throw new Progress.Lang.AppError( substitute ( "Сущность &1 не инициализирована для записи", InitTag )).*/
+    SetPropProtected (inSubObj).
+  end.
+  
+  method protected void SetPropProtected (inSubObj as isubject):
+    
   end.
 
   method public void SetProp (inSubsObj as subjects).
