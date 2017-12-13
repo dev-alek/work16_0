@@ -59,7 +59,8 @@ on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
-
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
 
   if NOT (p-mode = {&add-def} or p-mode = {&update}) then do:
     message
@@ -68,12 +69,15 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     view-as alert-box error .
     undo main-block, return error .
   end.
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+    if v-value = "no"  then do:   
   if g#db-num <> 0 then do:
     message
     vss-workfile vss-revision vss-description skip
     "Нельзя добавлять/изменить группы клиентов в УБД"
     view-as alert-box error .
     undo main-block, return error .
+  end.
   end.
   if p-node-name = ""
   or p-node-name = ? then do:

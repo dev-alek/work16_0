@@ -49,6 +49,7 @@ define temp-table temp_grplib_grp no-undo
     field sel           as character     /* Метка выбора; обычно '*' */
     field nabor         as character     /* '+/-' */
     field full-name     as character
+    field print-code    as character
     field sort-name     as character
     field node-code     as integer
     field upper-code    as integer

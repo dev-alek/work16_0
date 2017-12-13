@@ -195,6 +195,7 @@ define variable v-current-upper-node-code as integer no-undo .
 define variable v-current-node-name as character no-undo .
 define variable v-calc-method as character no-undo .
 define variable v-increase-pc as decimal no-undo .
+define variable v-print-code  as character no-undo .
 define variable v-round-method as character no-undo .
 define variable v-base as decimal no-undo .
 
@@ -328,8 +329,10 @@ end.
             v-current-node-name = ImpData1:route-data_get-field-character( input "gds-grp-01", input "node-name") .
             v-calc-method = ImpData1:route-data_get-field-character( input "gds-grp-01", input "calc-method") .
             v-round-method = ImpData1:route-data_get-field-character( input "gds-grp-01", input "round-method") .
+            v-print-code = ImpData1:route-data_get-field-character( input "gds-grp-01", input "print-code") .
             v-increase-pc = ImpData1:route-data_get-field-decimal( input "gds-grp-01", input "increase-pc") .
             v-base = ImpData1:route-data_get-field-decimal( input "gds-grp-01", input "round-coef") .
+            
             run ref/gdsgrp01.p ( input {&add-def}
                                 ,input yes /*p-silent*/
                                 ,input yes /*p-get-node-code*/
@@ -339,6 +342,7 @@ end.
                                 ,input v-current-node-name
                                 ,input v-calc-method
                                 ,input v-increase-pc
+                                ,input v-print-code
                                 ,input v-round-method
                                 ,input v-base
                                 ,output v-rid ) no-error.

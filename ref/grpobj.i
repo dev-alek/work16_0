@@ -84,6 +84,7 @@ define output parameter p-max-value as decimal      no-undo init ?.
 define output parameter p-increase-pc as decimal      no-undo init ?.
 define output parameter p-round-method as character no-undo init "":U.
 define output parameter p-base as decimal no-undo init ?.
+/*define output parameter p-print-code as character no-undo "":U.*/
 define output parameter p-range-margin     as integer      no-undo.
 define output parameter p-exists-margin    as logical      no-undo.
 define output parameter p-range-increase     as integer      no-undo.
@@ -103,6 +104,7 @@ DEFINE VARIABLE v-max-value as decimal      no-undo.
 DEFINE VARIABLE v-increase-pc as decimal      no-undo.
 define variable v-round-method as character no-undo .
 define variable v-base as decimal no-undo .
+define variable v-print-code as character no-undo .
 
 
 define buffer buf_gds-grp for ub.gds-grp.

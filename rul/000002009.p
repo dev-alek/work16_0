@@ -199,6 +199,7 @@ define variable v-current-upper-node-code as integer no-undo .
 define variable v-current-node-name as character no-undo .
 define variable v-calc-method as character no-undo .
 define variable v-increase-pc as decimal no-undo .
+define variable v-print-code  as character  no-undo .
 define variable v-round-method as character no-undo .
 define variable v-base as decimal no-undo .
 define variable v-mode as character no-undo .
@@ -546,6 +547,7 @@ for each buf_temp-xml-tables where buf_temp-xml-tables.order >= 0:
                                       ,input v-current-node-name
                                       ,input v-calc-method
                                       ,input v-increase-pc
+                                      ,input v-print-code
                                       ,input v-round-method
                                       ,input v-base
                                       ,output v-rid ) no-error.

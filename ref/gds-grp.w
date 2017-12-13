@@ -110,7 +110,7 @@ define variable v-button-sel-clicked as logical no-undo init false. /* устанавли
 &Scoped-define INTERNAL-TABLES temp_grplib_grp
 
 /* Definitions for BROWSE br-list                                       */
-&Scoped-define FIELDS-IN-QUERY-br-list temp_grplib_grp.sel no-label temp_grplib_grp.nabor temp_grplib_grp.name temp_grplib_grp.calc-method temp_grplib_grp.increase-pc temp_grplib_grp.min-marg temp_grplib_grp.max-marg temp_grplib_grp.round-method if temp_grplib_grp.notcorr = 'yes' then "да" else "" string(temp_grplib_grp.cli-type + ' ' + string(temp_grplib_grp.cli-code,">>>>>")) @ v-cli-name temp_grplib_grp.node-code
+&Scoped-define FIELDS-IN-QUERY-br-list temp_grplib_grp.sel no-label temp_grplib_grp.nabor temp_grplib_grp.name temp_grplib_grp.print-code temp_grplib_grp.calc-method temp_grplib_grp.increase-pc temp_grplib_grp.min-marg temp_grplib_grp.max-marg temp_grplib_grp.round-method if temp_grplib_grp.notcorr = 'yes' then "да" else "" string(temp_grplib_grp.cli-type + ' ' + string(temp_grplib_grp.cli-code,">>>>>")) @ v-cli-name temp_grplib_grp.node-code
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-list
 &Scoped-define SELF-NAME br-list
 &Scoped-define QUERY-STRING-br-list FOR EACH temp_grplib_grp NO-LOCK by temp_grplib_grp.sort-name
@@ -277,8 +277,9 @@ DEFINE BROWSE br-list
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-list Dlg-grp _FREEFORM
   QUERY br-list DISPLAY
       temp_grplib_grp.sel           format "X(1)" no-label
-      temp_grplib_grp.nabor          format "X(1)" label "Н"
+      temp_grplib_grp.nabor         format "X(1)" label "Н"
       temp_grplib_grp.name          format "X(71)"      label " Наименование группы"
+      temp_grplib_grp.print-code    format "X(20)"      label " Код"
       temp_grplib_grp.calc-method   format "X(11)"      label " Исходная"
       temp_grplib_grp.increase-pc   format "->>>>9.99"  label " Наценка"
       temp_grplib_grp.min-marg      format "X(10)"  label " Мин.Нац."
@@ -2356,6 +2357,7 @@ define input parameter p-node-code  as integer      no-undo.
         .
     end.
     assign
+        buf_temp_grplib_grp.print-code  = buf_gds-grp.print-code
         buf_temp_grplib_grp.increase-pc = buf_gds-grp.increase-pc
         buf_temp_grplib_grp.calc-method = buf_gds-grp.calc-method
         v-old-full-name                 = buf_temp_grplib_grp.full-name
@@ -2649,8 +2651,9 @@ on error undo, return error
 define input parameter p-node-code      as integer      no-undo.
 define input parameter p-upper-code     as integer      no-undo.
 define input parameter p-level          as integer      no-undo.
-define input parameter p-is-terminal    as logical          no-undo.
+define input parameter p-is-terminal    as logical      no-undo.
 define input parameter p-node-name      as character    no-undo.
+define input parameter p-print-code     as character    no-undo .
 define input parameter p-increase-pc    as decimal      no-undo.
 define input parameter p-calc-method    as character    no-undo.
 define input parameter p-full-name      as character    no-undo.
@@ -2689,6 +2692,8 @@ define buffer buf_temp_grplib_grp       for temp_grplib_grp.
         buf_temp_grplib_grp.sort-name   = p-sort-name + (if p-full-name <> "" then {&grplib-separator}  else "") + p-node-name
         buf_temp_grplib_grp.calc-method = p-calc-method
         buf_temp_grplib_grp.increase-pc = p-increase-pc
+        buf_temp_grplib_grp.print-code  = p-print-code
+        
     .
     run get-first-char in this-procedure (
           input p-node-code
@@ -3156,6 +3161,7 @@ define input parameter p-refresh    as logical      no-undo.
                 , input buf_temp_grplib_grp.level + 1
                 , input buf_gds-grp.is-term
                 , input buf_gds-grp.node-name
+                , input buf_gds-grp.print-code
                 , input buf_gds-grp.increase-pc
                 , input buf_gds-grp.calc-method
                 , input buf_temp_grplib_grp.full-name
@@ -4769,6 +4775,7 @@ assign
     buf_temp_grplib_grp.name        = buf_gds-grp.node-name
     buf_temp_grplib_grp.increase-pc = buf_gds-grp.increase-pc
     buf_temp_grplib_grp.calc-method = buf_gds-grp.calc-method
+    buf_temp_grplib_grp.print-code  = buf_gds-grp.print-code
 .
 if v-grplib-not-fill-extra-info = yes
 then do:
@@ -4864,6 +4871,7 @@ for each buf_gds-grp no-lock
         , input 1
         , input buf_gds-grp.is-term
         , input buf_gds-grp.node-name
+        , input buf_gds-grp.print-code
         , input buf_gds-grp.increase-pc
         , input buf_gds-grp.calc-method
         , input "":U

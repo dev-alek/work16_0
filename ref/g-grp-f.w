@@ -89,6 +89,11 @@ DEFINE VARIABLE f-base AS DECIMAL FORMAT "->>>>9.99":U INITIAL 0
      SIZE 15.38 BY 1
      NO-UNDO.
 
+/*DEFINE VARIABLE f-print-code AS CHARACTER FORMAT "X(256)":U INITIAL "0"*/
+/*     LABEL "Код"                                                       */
+/*     VIEW-AS FILL-IN                                                   */
+/*     SIZE 30 BY 1 NO-UNDO.                                             */
+     
 DEFINE VARIABLE S-round-method AS CHARACTER
      VIEW-AS SELECTION-LIST SINGLE SCROLLBAR-VERTICAL
      SIZE 23.5 BY 5
@@ -97,7 +102,7 @@ DEFINE VARIABLE S-round-method AS CHARACTER
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 92 BY 8.25.
+     SIZE 92 BY 10.25.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -129,6 +134,9 @@ ub.gds-grp.increase-pc AT row 10.5 col 18 COLON-ALIGNED
           SIZE 10 BY 1
 RECT-1 AT ROW 4 COL 1.5 WIDGET-ID 2
 f-base AT ROW 10.5 COL 68 COLON-ALIGNED LABEL "База округления"
+ub.gds-grp.print-code AT ROW 12.5 COL 18 COLON-ALIGNED LABEL "Код" 
+          VIEW-AS FILL-IN
+          SIZE 30 BY 1
 SPACE (5) SKIP (0) WITH VIEW-AS DIALOG-BOX SIDE-LABELS THREE-D SCROLLABLE DEFAULT-BUTTON b-exit.
 
 /* ***************  Runtime Attributes and UIB Settings  ************** */
@@ -136,7 +144,7 @@ SPACE (5) SKIP (0) WITH VIEW-AS DIALOG-BOX SIDE-LABELS THREE-D SCROLLABLE DEFAUL
 ASSIGN FRAME {&frame-name}:SCROLLABLE = FALSE.
 
 /* ************************  Control Triggers  ************************ */
-
+run gbl\inidebug.p.
 ON GO OF FRAME {&frame-name} DO:
 DEFINE VARIABLE varnode-code like ub.gds-grp.node-code no-undo .
 DEFINE VARIABLE varupper-code like ub.gds-grp.upper-code no-undo .
@@ -168,6 +176,7 @@ f-base
                   ,input frame {&frame-name} gds-grp.node-name
                   ,input frame {&frame-name} gds-grp.calc-method
                   ,input frame {&frame-name} gds-grp.increase-pc
+                  ,input frame {&frame-name} gds-grp.print-code 
                   ,input s-round-method
                   ,input f-base
                   ,output rid
@@ -346,6 +355,7 @@ if available gds-grp then do:
   gds-grp.node-name
   gds-grp.calc-method
   v-increase-pc @ gds-grp.increase-pc
+  gds-grp.print-code
   WITH FRAME {&frame-name}.
   assign
   s-round-method:screen-value = v-round-method
@@ -358,6 +368,7 @@ gds-grp.node-name
 gds-grp.calc-method
 gds-grp.increase-pc  when mode = {&add-def}
 s-round-method when mode = {&add-def}
+gds-grp.print-code
 b-exit
 b-quit
 b-tax
