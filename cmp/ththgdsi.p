@@ -400,14 +400,14 @@ for each src_goods no-lock :
                                     , src_goods.gds-name  ~
                                     ,~{&new-line~} ~
                                     , p-from-version) + ~
-                       substitute("к товару v15.1 с кодом &1 (&2 &3&4 &5)&6"  ~
+                       substitute("к товару v16.0 с кодом &1 (&2 &3&4 &5)&6"  ~
                                     , buf_goods.gds-code ~
                                     , buf_goods.artic ~
                                     , buf_goods.prod-type ~
                                     , buf_goods.prod-code ~
                                     , buf_goods.gds-name  ~
                                     ,~{&new-line~}) + ~
-                       substitute("ТОВАР v15.1 УЖЕ СВЯЗАН С ТОВАРОМ &7 &1 (&2 &3&4 &5)" ~
+                       substitute("ТОВАР v16.0 УЖЕ СВЯЗАН С ТОВАРОМ &7 &1 (&2 &3&4 &5)" ~
                                     , buf2_ext-classif.key#_one ~
                                     , buf2_ext-classif.charkey_one ~
                                     , buf2_ext-classif.charkey_two ~
@@ -474,7 +474,7 @@ for each src_goods no-lock :
                 buf_prod-bc.b-str = src_prod-bc.b-str no-error.
       if not available buf_prod-bc then do:
         v-pbc = v-pbc + 1.
-        /*найдем в бд v15.1 bar-code */
+        /*найдем в бд v16.0 bar-code */
         find first buf_gds-prt no-lock WHERE
                   buf_gds-prt.upper-code = buf_goods.prt-root.
           run barcodcr in this-procedure (
@@ -490,7 +490,7 @@ for each src_goods no-lock :
         if error-status:error then do:
             &scop my-message substitute("Ошибка при добавлении собственного баркода для товара с найденным соответствием&1" + ~
                                         "&7&1&8" + ~
-                                        "код товара в БД v15.1 &2, код товара в БД &9 &3,&1" + ~
+                                        "код товара в БД v16.0 &2, код товара в БД &9 &3,&1" + ~
                                         " ДопБК &4, ед.изм в текущей БД &5, ед изм. в БД &9 &6" ~
                                         , ~{&new-line~} ~
                                         , src_goods.gds-code ~
@@ -509,9 +509,9 @@ for each src_goods no-lock :
           if buf_bar-code.cli-base-rate <> src_bar-code.cli-base-rate then do:
             &scop my-message substitute("Невозможно добавить отсутствующий в текущей БД ДопБК для товара с найденным соответствием&1" + ~
                                         "Не совпадают коэфф ед.изм." +  ~
-                                        "код товара в БД v15.1 &2, код товара в БД &9 &3,&1" + ~
+                                        "код товара в БД v16.0 &2, код товара в БД &9 &3,&1" + ~
                                         " ДопБК &4, ед.изм в текущей БД &5, ед изм. в БД &9 &6" + ~
-                                        " коэфф. в БД v15.1 &7 коэфф. в БД &9 &8" ~
+                                        " коэфф. в БД v16.0 &7 коэфф. в БД &9 &8" ~
                                         , ~{&new-line~} ~
                                         , src_goods.gds-code ~
                                         , v-gds-code ~
@@ -544,8 +544,8 @@ for each src_goods no-lock :
             else do:
               &scop my-message substitute("Ошибка при добавлении ДоБК для товара с найденным соответствием&1" + ~
                                           "&7&1&8" + ~
-                                          "код товара в БД v15.1 &2, код товара в БД &8 &3,&1" + ~
-                                          " ДопБК &4, ед.изм в БД v15.1 &5, ед изм. в БД &8 &6" ~
+                                          "код товара в БД v16.0 &2, код товара в БД &8 &3,&1" + ~
+                                          " ДопБК &4, ед.изм в БД v16.0 &5, ед изм. в БД &8 &6" ~
                                           , ~{&new-line~} ~
                                           , src_goods.gds-code ~
                                           , v-gds-code ~

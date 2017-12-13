@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Запуск пакета утилита THTH - 15.1 и 14
+Запуск пакета утилита THTH - 16.0 и 14
 
 Автор: Чернова Светлана Александровна
 Дата создания: 01/19/10
@@ -22,7 +22,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Запуск пакета утилита THTH - 15.1 и 14".
+define variable vss-description as character no-undo init "Запуск пакета утилита THTH - 16.0 и 14".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
 { gbl/getcntxt.i def }
@@ -126,7 +126,7 @@ on end-key undo, leave _leave
 :
   run gbl/d-list.w (
                 INPUT "b-sel":U
-                ,INPUT "Выберите операцию по сведению систем 15.1 и 14"
+                ,INPUT "Выберите операцию по сведению систем 16.0 и 14"
                 ,INPUT v-operation-codes
                 ,INPUT v-operations
                 ,INPUT {&delim-par}
@@ -164,7 +164,7 @@ on end-key undo, leave _leave
       end. /*do v-jj = 1 to num-entries(v-attr-query-list, {&delim-par} ):*/
       if lookup(string(no), v-value-list, {&delim-par} ) > 0 then do:
         message
-        "Начат но не закончен этап сведения v14 и v15.1"
+        "Начат но не закончен этап сведения v14 и v16.0"
         view-as alert-box error .
       end.
       else do:

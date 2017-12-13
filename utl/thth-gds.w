@@ -232,7 +232,7 @@ DEFINE VARIABLE sch-old-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
      SIZE 10 BY 1 NO-UNDO.
 
 DEFINE VARIABLE sch-self-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
-     LABEL "Поиск по коду v15.1"
+     LABEL "Поиск по коду v16.0"
      VIEW-AS FILL-IN
      SIZE 10 BY 1 NO-UNDO.
 
@@ -260,7 +260,7 @@ DEFINE BROWSE br-goods
 (IF X_ext-classif.uniq-key-rec BEGINS {&table_goods}
  THEN string(integer(entry(2, X_ext-classif.uniq-key-rec, {&delim-key})), ">>>>>>>>9")
 ELSE ''
-    ) COLUMN-LABEL "КОД ТОВАРА!v15.1" FORMAT "X(9)"
+    ) COLUMN-LABEL "КОД ТОВАРА!v16.0" FORMAT "X(9)"
 X_ext-classif.KEY#_one  COLUMN-LABEL "КОД ТОВАРА!" FORMAT ">>>>>>>>9"
 X_ext-classif.charkey_one COLUMN-LABEL "Артикул!ТОВАРА" FORMAT "X(16)"
 (X_ext-classif.charkey_two + string(X_ext-classif.KEY#_two))  COLUMN-LABEL {&prod-label} FORMAT "X(12)"
@@ -675,7 +675,7 @@ END.
 
 &Scoped-define SELF-NAME sch-self-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL sch-self-code Dialog-Frame
-ON RETURN OF sch-self-code IN FRAME Dialog-Frame /* Поиск по коду v15.1 */
+ON RETURN OF sch-self-code IN FRAME Dialog-Frame /* Поиск по коду v16.0 */
 DO:
   run proc-find-self-code in this-procedure ( input no, input frame {&frame-name} sch-self-code) no-error.
   if error-status:error then return no-apply.
@@ -999,10 +999,10 @@ define variable v-old-good as logical no-undo .
 
 
 DEFINE FRAME list1
-v-self-gds-code COLUMN-LABEL "Код ТОВАРА!v15.1" FORMAT "X(9)"
-v-self-artic COLUMN-LABEL "Артикул ТОВАРА!v15.1" FORMAT "X(16)"
-v-self-prodtypecode COLUMN-LABEL "Произв-ль ТОВАРА!v15.1" FORMAT "X(12)"
-v-self-gds-name COLUMN-LABEL "НАЗВАНИЕ ТОВАРА!v15.1" FORMAT "X(60)"
+v-self-gds-code COLUMN-LABEL "Код ТОВАРА!v16.0" FORMAT "X(9)"
+v-self-artic COLUMN-LABEL "Артикул ТОВАРА!v16.0" FORMAT "X(16)"
+v-self-prodtypecode COLUMN-LABEL "Произв-ль ТОВАРА!v16.0" FORMAT "X(12)"
+v-self-gds-name COLUMN-LABEL "НАЗВАНИЕ ТОВАРА!v16.0" FORMAT "X(60)"
 v-old-good COLUMN-LABEL "До upg" FORMAT "+/-"
 X_ext-classif.key#_one COLUMN-LABEL "Код ТОВАРА!старой версии" FORMAT ">>>>>>>>9"
 X_ext-classif.charkey_one COLUMN-LABEL "Артикул ТОВАРА!старой версии" FORMAT "X(16)"
@@ -1123,7 +1123,7 @@ run fltfield-add in this-procedure('charkey_one', substitute("Артикул товара &1"
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('charkey_three', substitute('Название товара|Ед.изм!&1', p-from-version), '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-run fltfield-add in this-procedure('uniq-key-rec', 'Уникальный ключ записи в БД v15.1', '',
+run fltfield-add in this-procedure('uniq-key-rec', 'Уникальный ключ записи в БД v16.0', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 
 
@@ -1185,7 +1185,7 @@ end.
 if X_ext-classif.uniq-key-rec <> '' then do:
   v-old-uniq-key-rec = X_ext-classif.uniq-key-rec.
   message
-  substitute("Уже есть соответствие  между данными товара &1 в БД v15.1 и этим же товаром в БД &3&2" +
+  substitute("Уже есть соответствие  между данными товара &1 в БД v16.0 и этим же товаром в БД &3&2" +
             "Вы УВЕРЕНЫ, что хотите их изменить?"
             , entry(2, X_ext-classif.uniq-key-rec, {&delim-key})
             , {&new-line}
@@ -1308,7 +1308,7 @@ FIND FIRST buf_ext-classif EXCLUSIVE-LOCK WHERE
           recid(buf_ext-classif) = RECID(X_ext-classif) .
 IF buf_ext-classif.uniq-key-rec = '' THEN DO:
    MESSAGE
-   substitute("товаром с кодом &1 (&2 &3 &4) в &5 версии НЕ ИМЕЕТ СООТВЕТСТВИЯ ТОВАРУ 15.1 версии&6" +
+   substitute("товаром с кодом &1 (&2 &3 &4) в &5 версии НЕ ИМЕЕТ СООТВЕТСТВИЯ ТОВАРУ 16.0 версии&6" +
               "Нечего отвязывать!!!"
               ,buf_ext-classif.key#_one
               ,buf_ext-classif.charkey_one
@@ -1339,7 +1339,7 @@ find first buf_goods no-lock where
 MESSAGE
 substitute("Вы уверены, что хотите удалить соответствие между &5" +
            "товаром с кодом &1 (&2 &3 &4) в старой версии&5" +
-           "товаром с кодом &6 (&7 &8 &9) в 15.1 версии&5"  +
+           "товаром с кодом &6 (&7 &8 &9) в 16.0 версии&5"  +
            "?????"
            ,buf_ext-classif.key#_one
            ,buf_ext-classif.charkey_one
@@ -1402,7 +1402,7 @@ find first buf_ext-classif no-lock where
       no-error.
 if available buf_ext-classif then do:
   message
-  substitute("ИМЕЕТСЯ запись по товару в БД &1, которой не соответствует ни один ТОВАР БД v15.1", p-from-version) skip
+  substitute("ИМЕЕТСЯ запись по товару в БД &1, которой не соответствует ни один ТОВАР БД v16.0", p-from-version) skip
   "Закрытие этапа НЕВОЗМОЖНО"
   view-as alert-box error .
   undo, return error .
@@ -1544,7 +1544,7 @@ if can-find (first goods-01) then do:
             , input p-from-version
             , input no /*p-auto-go*/
             , input ''
-            , input 'Сохранение данных по товарам в БД v15.1') no-error .
+            , input 'Сохранение данных по товарам в БД v16.0') no-error .
 end.
 else do:
   message
@@ -1725,7 +1725,7 @@ run str/diallog.w ( input parparentproc
           , input string(glog)
           , input no /*p-auto-go*/
           , input ''
-          , input substitute('Детальный отчет по имеющимся и отсутствующим  соответствиям по товарам БД &1 и v15.1', p-from-version)) no-error .
+          , input substitute('Детальный отчет по имеющимся и отсутствующим  соответствиям по товарам БД &1 и v16.0', p-from-version)) no-error .
 if connected ("src") then do:
   disconnect src.
 end.
@@ -1767,13 +1767,13 @@ run OpenForExcel in this-procedure  .
                          end
 
 assign
-sheetf.Excel-Column-Lable = substitute("Проблемы,&1 Код товара/ДопБК,v15.1 Код товара,&1 Артикул,v15.1 Артикул,"
+sheetf.Excel-Column-Lable = substitute("Проблемы,&1 Код товара/ДопБК,v16.0 Код товара,&1 Артикул,v16.0 Артикул,"
                                        , p-from-version)
                             +
-                            substitute("&1 Пр-ль,v15.1 Пр-ль,&1 Название,v15.1 Название,&1 ед.изм,v15.1 ед.изм,"
+                            substitute("&1 Пр-ль,v16.0 Пр-ль,&1 Название,v16.0 Название,&1 ед.изм,v16.0 ед.изм,"
                                        , p-from-version)
                             +
-                            substitute("&1Статус,v15.1Статус,&1Группа,v15.1Группа,&1Назв.Пр-ля,v15.1Назв.пр-ля,тип строки"
+                            substitute("&1Статус,v16.0Статус,&1Группа,v16.0Группа,&1Назв.Пр-ля,v16.0Назв.пр-ля,тип строки"
                                        , p-from-version)
 sheetf.colformat = "1=@;2=0;3=0;4=@;5=@;6=@;7=@;8=@;9=@;10=@;11=@;12=@;13=@;14=@;15=@;16=@;17=@;18=@"
 sheetf.sizes = "12,13,9,16,16,12,12,48,48,3,3,4,4,45,45,45,45,3"
@@ -1782,7 +1782,7 @@ sheetf.Bas-File = "exe/ththgdsr.bas"
 my-handle = parparentproc.
 run waitfram-show in this-procedure ("Ждите..." ).
 assign
-Reportname = substitute("Подробный отчет о проблемах в соответствиях товаров &1 и v15.1", p-from-version)
+Reportname = substitute("Подробный отчет о проблемах в соответствиях товаров &1 и v16.0", p-from-version)
 Reportheader = substitute("Удаленные товары - &1", (if glog then "Включены" else "не включены"))
 str1 = "Расшифровка для строк товаров (<голубые> строки: -1 -  запись соответствия не заполнена; 0 - нет записи соответствия; А - проблемы с артикулом, Н - проблемы с названием; Г - проблемы с группой; П - проблемы с производителем, У - проблемы со статусом; И - проблемы с осн.ед.изм; Д - проблемы с ДопБК "
 str2 = substitute("    если данные в таблице соответствия отличаются от данныъ в БД &1 на текущий момент: а - отличается артикул; п - отличается производитель; н - отличается название; и- отличается ед.изм", p-from-version)

@@ -44,7 +44,7 @@ define variable vss-description as character no-undo init "Информация об объекте
 /* -------------------------------------------------------------------------- */
 { gbl/menuload.i
   {&bef-menuload_adm_version}
- "'Перенос данных из старой БД в 15.1 (РАСТЯНУТЫЙ UPGRADE)'"
+ "'Перенос данных из старой БД в 16.0 (РАСТЯНУТЫЙ UPGRADE)'"
   "'utl/thth-all.p'"
   " "
   " "

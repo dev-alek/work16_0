@@ -242,7 +242,7 @@ find first buf2_ext-classif no-lock where
       and buf2_ext-classif.uniq-key-rec = v-uniq-key-rec no-error.
 if available buf2_ext-classif then do:
   &scop my-message ~
-  substitute('Товар с кодом &1 (&2 &3&4 &5) в БД v15.1 &6' ~
+  substitute('Товар с кодом &1 (&2 &3&4 &5) в БД v16.0 &6' ~
                                 , buf_goods.gds-code    ~
                                 , buf_goods.artic        ~
                                 , buf_goods.prod-type     ~
@@ -310,7 +310,7 @@ for each src_bar-code where src_bar-code.gds-code = src_goods.gds-code,
     if available buf_bar-code then do:
         if buf_bar-code.gds-code <> buf_goods.gds-code then do:
           /*НЕ ВСЕ БАРКОДЫ ПРИНАДЛЕЖАТ В БД v15,1 ОДНОМУ И ТОМУ ЖЕ ТОВАРУ*/
-          &scop my-message substitute("Для товара с кодом &1 в БД &5 имеется ДопБК &2, который в БД v15.1 принадлежит другому товару (&4) &3связывание невозможно" ~
+          &scop my-message substitute("Для товара с кодом &1 в БД &5 имеется ДопБК &2, который в БД v16.0 принадлежит другому товару (&4) &3связывание невозможно" ~
                                       , src_goods.gds-code ~
                                       , src_prod-bc.b-str ~
                                       , ~{&new-line~} ~
@@ -378,9 +378,9 @@ for each src_bar-code where src_bar-code.gds-code = src_goods.gds-code,
             buf_prod-bc.b-str = src_prod-bc.b-str no-error.
   if not available buf_prod-bc then do:
      /*НЕ БУДЕМ НИЧЕГО САМИ ДЕЛАТЬ НАФИГ!!!*/
-    &scop my-message substitute("В БД v15.1 отсутствует ДопБК &1, который в БД &3 принадлежит товару с кодом &2", src_prod-bc.b-str, src_bar-code.gds-code, p-from-version )
+    &scop my-message substitute("В БД v16.0 отсутствует ДопБК &1, который в БД &3 принадлежит товару с кодом &2", src_prod-bc.b-str, src_bar-code.gds-code, p-from-version )
     {&display-message}.
-    /*найдем в бд v15.1 bar-code */
+    /*найдем в бд v16.0 bar-code */
     /*
     find first buf_gds-prt no-lock WHERE
               buf_gds-prt.upper-code = buf_goods.prt-root.

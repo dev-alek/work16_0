@@ -12,7 +12,7 @@ $Archive$
 Дата создания: 15/10/14
 Author: Arnold Shutilov
 Creation date: 15/10/14
-ТН-15.1
+ТН-16.0
   ----------------------------------------------------------------------*/
 define input parameter parParentProc as handle no-undo.
 

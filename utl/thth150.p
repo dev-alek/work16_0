@@ -126,7 +126,7 @@ on end-key undo, leave _leave
 :
   run gbl/d-list.w (
                 INPUT "b-sel":U
-                ,INPUT "¬ыберите операцию по сведению систем 15.1 и 15.0 "
+                ,INPUT "¬ыберите операцию по сведению систем 16.0 и 15.0 "
                 ,INPUT v-operation-codes
                 ,INPUT v-operations
                 ,INPUT {&delim-par}
@@ -164,7 +164,7 @@ on end-key undo, leave _leave
       end. /*do v-jj = 1 to num-entries(v-attr-query-list, {&delim-par} ):*/
       if lookup(string(no), v-value-list, {&delim-par} ) > 0 then do:
         message
-        "Ќачат но не закончен этап сведени€ v15.0 и v15.1"
+        "Ќачат но не закончен этап сведени€ v15.0 и v16.0"
         view-as alert-box error .
       end.
       else do:

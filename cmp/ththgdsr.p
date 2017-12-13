@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Детальный отчет по соответствиям и их отсутствию TH старой версии и v15.1
+Детальный отчет по соответствиям и их отсутствию TH старой версии и v16.0
 
 Автор: Бахтадзе Наталья Викторовна
 Дата создания: 04/25/10
@@ -25,7 +25,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Детальный отчет по соответствиям и их отсутствию TH старой версии и v15.1".
+define variable vss-description as character no-undo init "Детальный отчет по соответствиям и их отсутствию TH старой версии и v16.0".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
 { cmp/ththgdsr.i "shared" }
@@ -284,7 +284,7 @@ for each src_goods no-lock :
     if buf_ext-classif.uniq-key-rec = '' then do:
       assign
       temp-bind.old-v151 = -1.
-      /*не известна связь с 15.1 версией - заполним ДопБк и отвалим*/
+      /*не известна связь с 16.0 версией - заполним ДопБк и отвалим*/
       run fill-prod-bc-src in this-procedure ( input temp-bind.src-gds-code
                                           ,input temp-bind.src-b-code
                                           ,input temp-bind.src-unit-base
@@ -319,7 +319,7 @@ for each src_goods no-lock :
       find first buf_goods no-lock where
                 rowid(buf_goods) = v-tbl-row no-error.
       if not available buf_goods then do:
-        /*не нашли по связи с 15.1 версией - заполним ДопБк и отвалим*/
+        /*не нашли по связи с 16.0 версией - заполним ДопБк и отвалим*/
         run fill-prod-bc-src in this-procedure ( input temp-bind.src-gds-code
                                             ,input temp-bind.src-b-code
                                             ,input temp-bind.src-unit-base
@@ -362,7 +362,7 @@ for each src_goods no-lock :
           and buf_bar-code.in-code = ''
           and buf_bar-code.part-code = '' no-error.
       if not available buf_bar-code then do:
-        &scop my-message substitute("Для товара v15.1 с кодом &1 не найден корневой бар-код", buf_goods.gds-code)
+        &scop my-message substitute("Для товара v16.0 с кодом &1 не найден корневой бар-код", buf_goods.gds-code)
         {&display-message}.
       end.
       else do:
@@ -378,7 +378,7 @@ for each src_goods no-lock :
                 buf_clients.obj-type = buf_goods.prod-type
             and buf_clients.obj-code = buf_goods.prod-code no-error.
       if not available buf_clients then do:
-        &scop my-message substitute("Для товара v15.1 с кодом &1 не найден производитель &2&3", buf_goods.gds-code, buf_goods.prod-type, buf_goods.prod-code)
+        &scop my-message substitute("Для товара v16.0 с кодом &1 не найден производитель &2&3", buf_goods.gds-code, buf_goods.prod-type, buf_goods.prod-code)
         {&display-message}.
       end.
       else do:
@@ -454,12 +454,12 @@ for each src_goods no-lock :
   release temp-bind.
 end. /*for each src_goods no-lock:*/
 /*пройдем по v151 найдем непривязанные и т.д*/
-&scop my-message "Просматриваем товары v15.1..."
+&scop my-message "Просматриваем товары v16.0..."
 {&display-message}.
 define variable v-kk as integer no-undo .
 for each buf_goods no-lock :
   if v-kk modulo 10 = 0 then do:
-    &scop my-count-message substitute("Обработано &1 записей v15.1" ~
+    &scop my-count-message substitute("Обработано &1 записей v16.0" ~
                                       , v-kk ~
                                       )
     {&display-count-message}.
@@ -475,7 +475,7 @@ for each buf_goods no-lock :
       and buf_bar-code.in-code = ''
       and buf_bar-code.part-code = '' no-error.
   if not available buf_bar-code then do:
-    &scop my-message substitute("Для товара v15.1 с кодом &1 не найден корневой бар-код", buf_goods.gds-code)
+    &scop my-message substitute("Для товара v16.0 с кодом &1 не найден корневой бар-код", buf_goods.gds-code)
     {&display-message}.
   end.
   else do:

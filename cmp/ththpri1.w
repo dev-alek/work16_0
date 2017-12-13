@@ -21,7 +21,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Выбор объектов для запуска ИМПОРТА ПН из старой версии TH в 15.1 ( перенос остатков )
+Выбор объектов для запуска ИМПОРТА ПН из старой версии TH в 16.0 ( перенос остатков )
 
 Автор: Чернова Светлана Александровна
 Дата создания: 01/13/09
@@ -46,7 +46,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Выбор объектов для запуска ИМПОРТА ПН из старой версии TH в 15.1 ( перенос остатков )".
+define variable vss-description as character no-undo init "Выбор объектов для запуска ИМПОРТА ПН из старой версии TH в 16.0 ( перенос остатков )".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/obj-list.i new }
@@ -144,7 +144,7 @@ DEFINE BROWSE br-obj
       tt_obj-list.obj-code FORMAT ">>>>>>>>9":U
       tt_obj-list.db-num FORMAT ">>>>9":U    column-label "БД"
       tt_obj-list.obj-name FORMAT "X(30)":U  column-label "Наименование"
-      tt_obj-list.grp-name FORMAT "X(40)":U  column-label "Наименование15.1"
+      tt_obj-list.grp-name FORMAT "X(40)":U  column-label "Наименование16.0"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 87 BY 16.83 FIT-LAST-COLUMN.
@@ -542,7 +542,7 @@ run str/diallog.w ( input parparentproc
           , input (passwd + {&delim-par} + p-from-version)
           , input yes /*p-auto-go*/
           , input ''
-          , input substitute('Импорт остатков из &1 БД в 15.1', P-FROM-VERSION)) no-error .
+          , input substitute('Импорт остатков из &1 БД в 16.0', P-FROM-VERSION)) no-error .
 if not error-status :error then do:
    v-okk = true .
 end.

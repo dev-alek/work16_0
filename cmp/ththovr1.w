@@ -21,7 +21,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Выбор объектов для запуска ИМПОРТА переоценок из старой версии TH в 15.1 ( перенос продажных цен )
+Выбор объектов для запуска ИМПОРТА переоценок из старой версии TH в 16.0 ( перенос продажных цен )
 
 Автор: Чернова Светлана Александровна
 Дата создания: 01/13/09
@@ -46,7 +46,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Выбор объектов для запуска ИМПОРТА переоценок из старой версии TH в 15.1 ( перенос продажных цен )".
+define variable vss-description as character no-undo init "Выбор объектов для запуска ИМПОРТА переоценок из старой версии TH в 16.0 ( перенос продажных цен )".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/obj-list.i new }
@@ -144,7 +144,7 @@ DEFINE BROWSE br-obj
       tt_obj-list.obj-code FORMAT ">>>>>>>>9":U
       tt_obj-list.db-num FORMAT ">>>>9":U    column-label "БД"
       tt_obj-list.obj-name FORMAT "X(30)":U  column-label "Наименование"
-      tt_obj-list.grp-name FORMAT "X(40)":U  column-label "Наименование15.1"
+      tt_obj-list.grp-name FORMAT "X(40)":U  column-label "Наименование16.0"
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -488,7 +488,7 @@ run str/diallog.w ( input parparentproc
           , input p-from-version
           , input yes /*p-auto-go*/
           , input ''
-          , input substitute('Импорт цены из &1 БД в 15.1', p-from-version)) no-error .
+          , input substitute('Импорт цены из &1 БД в 16.0', p-from-version)) no-error .
 if not error-status :error then do:
    v-okk = true .
 end.

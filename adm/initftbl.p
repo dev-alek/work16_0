@@ -28,6 +28,8 @@ define variable vss-description as character no-undo init "Начальная инициализац
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 
+&scop new-ver-num "v16_0000.000.000":U
+
 do
 on error undo, return error
 :
@@ -68,6 +70,28 @@ on error undo, return error
     buf_db.db-num  = 0
     buf_db.db-name = "Главная БД" /* db.db-name = "Cartea DB" */
   .
+
+  /*инициализация записи о версии TH для гбд первоночальным запускм*/
+  if loc_db-num = 0
+  then do:
+    find first ub.sys-ctrl where ub.sys-ctrl.db-num = 0 no-lock .
+    create ub.upgrade.
+        assign
+          ub.upgrade.db-num      = ub.sys-ctrl.db-num
+          ub.upgrade.version-num = {&new-ver-num}
+          ub.upgrade.version-ord = next-value( s-upg-ord, ub )
+        .
+    assign
+      ub.upgrade.step-num    = step-num
+      ub.upgrade.err-msgs    = "":U
+      ub.upgrade.err-code    = 0
+      ub.upgrade.complete    = false
+      ub.upgrade.UpgDate     = today
+      ub.upgrade.UpgTimeInt  = time
+      ub.upgrade.UpgTime     = string( time, "HH:MM:SS" )
+    .
+  end.
+
 
   /*____________ дерево клиентов _____________________*/
   create buf_cli-grp.
