@@ -263,4 +263,24 @@ define variable v-result as integer no-undo.
                                    ).
     end.
   end.
+  { gbl/rum-runa.i
+      ?
+      this-procedure:handle
+      ?
+        {&edoc-proc_event_rvs-doc}
+      " buffer ub.rvs-doc:handle "
+      ?
+      ''
+      ''
+      no-error
+      }
+      if error-status :error
+      then
+      do:
+          return error substitute( "&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"
+              , {&new-line}
+              , vss-workfile
+              , return-value
+              , error-status :get-message ( 1 ) ).
+      end.
 end. /* Main-Block */
