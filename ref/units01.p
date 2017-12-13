@@ -39,6 +39,7 @@ define variable vss-description as character no-undo init "Сохранение изменений 
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i }
+{ cmp/trg-def.i }
 
 define variable v-db-num like ub.db.db-num no-undo .
 define variable v-log         as logical   no-undo .
@@ -156,7 +157,14 @@ end. /*doe*/
 
 PROCEDURE err-mess:
   DEFINE INPUT PARAMETER p-mess as character No-UNDO.
-  message
-  p-mess
-  view-as alert-box error .
+  if g#esys then do:
+    p-mess .
+    return false.
+  end.
+  else do:
+      message
+      p-mess
+      view-as alert-box error .
+  end.    
+
 END PROCEDURE.
