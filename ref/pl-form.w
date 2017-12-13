@@ -407,14 +407,37 @@ DO:
              v-value = place-twice-code:screen-value .
             end.
       end case.
+      find first ub.place no-lock where recid(ub.place) = p-rep-rec .
       run placelib_write-attr  (input v-code
                                ,input p-obj-code
                                ,input p-obj-type
-                               ,input locked_place.pl-code
+                               ,input ub.place.pl-code
                                ,input v-value
                                ,output v-ok      ) no-error.
 
     end.
+  end.
+        { gbl/rum-runa.i
+    ?
+    this-procedure:handle
+    ?
+    {&thref-proc_ref-event}
+    " buffer ub.place:handle "
+    " buffer ub.place:handle "
+    ''
+    ''
+    no-error
+  }
+  if error-status :error
+  then
+  do:
+ message
+          error-status:get-message(1) skip
+          return-value
+          view-as alert-box error .
+
+        return no-apply .
+
   end.
 END.
 
