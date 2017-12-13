@@ -261,8 +261,8 @@ on error undo, return error
           ,input ""
           ) no-error.
           for each buf_temp-filelist exclusive-lock :
-              if num-entries(buf_temp-filelist.file-name, "_") = 3
-              or (num-entries(buf_temp-filelist.file-name, "_") = 4 and buf_temp-filelist.file-name begins "ack") 
+              if num-entries(buf_temp-filelist.file-name, "_") = 4
+              or (num-entries(buf_temp-filelist.file-name, "_") = 5 and buf_temp-filelist.file-name begins "ack") 
               then do :
               end.
               else do :

@@ -361,14 +361,14 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 if not available temp-filelist then do:
                   leave rcvd-pack.
                 end.
-                if not can-find(first temp-filelist where integer(entry(2, temp-filelist.file-name, "_")) = abs(v-espr-pack-num))
-                and can-find(first temp-filelist where integer(entry(2, temp-filelist.file-name, "_")) > abs(v-espr-pack-num))
+                if not can-find(first temp-filelist where integer(entry(3, temp-filelist.file-name, "_")) = abs(v-espr-pack-num))
+                and can-find(first temp-filelist where integer(entry(3, temp-filelist.file-name, "_")) > abs(v-espr-pack-num))
                 then do :
-                    find first temp-filelist where integer(entry(2, temp-filelist.file-name, "_")) > abs(v-espr-pack-num) .
+                    find first temp-filelist where integer(entry(3, temp-filelist.file-name, "_")) > abs(v-espr-pack-num) .
                     run write-log in p-log-handle (
                                                   input 2
                                                 , ("Ожидается прием пакета с номером " + string(abs(v-espr-pack-num)) +
-                                                   ", а в каталоге следующий пакет с номером " + entry(2, temp-filelist.file-name, "_"))
+                                                   ", а в каталоге следующий пакет с номером " + entry(3, temp-filelist.file-name, "_"))
                                                             ) .
                     run rul/send-ack_1c.p (input (abs(v-espr-pack-num) + 1)
                                           ,input 1
@@ -377,7 +377,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                           ) .                                         
                 end.
                 for each temp-filelist no-lock :
-                    if integer(entry(2, temp-filelist.file-name, "_")) = abs(v-espr-pack-num)
+                    if integer(entry(3, temp-filelist.file-name, "_")) = abs(v-espr-pack-num)
                     or temp-filelist.file-name begins "ack_"
                     then do :
                         assign v-custom-pack-name = temp-filelist.file-name.
@@ -455,7 +455,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 then do :
                   run write-log in p-log-handle (
                                                   input 2
-                                                , ("Прием подтверждения на пакет номер " + entry(3, v-file-name, "_") )
+                                                , ("Прием подтверждения на пакет номер " + entry(4, v-file-name, "_") )
                                                 ) .
                   run rul/rcv-ack_1c.p (input v-full-path
                                        ,input buf_ext-system.esys-id
@@ -770,19 +770,19 @@ on error undo, return error
           next.
         end.
         if temp-filelist.file-name begins "azs_up_th0" then do:
-*/        if num-entries(temp-filelist.file-name, "_") = 3
-          or (num-entries(temp-filelist.file-name, "_") = 4 and temp-filelist.file-name begins "ack")
+*/        if num-entries(temp-filelist.file-name, "_") = 4
+          or (num-entries(temp-filelist.file-name, "_") = 5 and temp-filelist.file-name begins "ack")
           then do :
           end.
           else do :
               delete temp-filelist.
               next.
           end.   
-          if v-espr-pack-num > integer (entry (2, temp-filelist.file-name-no-ext, "_"))
+          if v-espr-pack-num > integer (entry (3, temp-filelist.file-name-no-ext, "_"))
           then next .  
           assign
             tt-espcknum.tt-espr-pack-name = temp-filelist.file-name
-            tt-espcknum.tt-espr-pack-num = integer (entry (2, temp-filelist.file-name-no-ext, "_"))
+            tt-espcknum.tt-espr-pack-num = integer (entry (3, temp-filelist.file-name-no-ext, "_"))
           no-error.
           if error-status:error then do: /* ошибка возникнет при присвоение, если неверное имя пакета - например начинается не с номера пакета, пропускаем идем дальше.*/
             delete tt-espcknum .

@@ -38,11 +38,11 @@ define variable v-type as character no-undo .
 run db-attr-value in this-procedure 
            (input g#db-num
            ,input {&attr-int-point}
-           ,output v-receiver-id
+           ,output v-sender-id
            ,output v-type
            ) no-error .
 
-v-sender-id = '00000' .
+v-receiver-id = '00000' .
 
 run ext-system-attr-value in this-procedure ( input p-esys-id
                                                     ,input 0
@@ -50,7 +50,7 @@ run ext-system-attr-value in this-procedure ( input p-esys-id
                                                     ,output v-ftp-path-out
                                                     ,output v-type) no-error. 
 v-ftp-path-out = trim(v-ftp-path-out, "\").
-v-filename = v-ftp-path-out + "\ack_" + v-receiver-id + "_" + string(p-pck-num) + "_"
+v-filename = v-ftp-path-out + "\ack_" + v-sender-id + "_00000_" + string(p-pck-num) + "_"
                           + string(day(now)) + string(month(now)) + string(year(now))
                           + substring(string(TIME, "HH:MM:SS"), 1, 2)
                           + substring(string(TIME, "HH:MM:SS"), 4, 2)

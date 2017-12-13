@@ -103,7 +103,7 @@ case p-delivery-method:
            ) no-error .
        
        p-custom-flag = yes.
-       v-short-pack-name = v-int-point + "_" + string(p-pack-num) + "_"
+       v-short-pack-name = v-int-point + "_00000_" + string(p-pack-num) + "_"
                          + string(day(now)) + string(month(now)) + string(year(now))
                          + substring(string(TIME, "HH:MM:SS"), 1, 2)
                          + substring(string(TIME, "HH:MM:SS"), 4, 2)

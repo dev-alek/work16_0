@@ -360,7 +360,7 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
   end.
   if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
   then do :
-    v-pck-num = integer(entry(2, v-file-name-no-ext, "_"))  no-error.
+    v-pck-num = integer(entry(3, v-file-name-no-ext, "_"))  no-error.
   end.
   if v-pck-num <> p-pack-num
   and not (buf_ext-system.delivery-method = integer({&esys-dm-nnold}))
