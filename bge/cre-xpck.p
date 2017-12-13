@@ -484,7 +484,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       assign
         ub.esys-route.esr-last-pack = v-pack-num
       .
-      if buf_esys-route.esr-action = {&nwsdochs_action_command-bush} then do:
+      if buf_esys-route.esr-action = {&nwsdochs_action_command-bush}
+      and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) 
+      then do:
         leave route-label.
       end.
     end. /* for each buf_esys-route */

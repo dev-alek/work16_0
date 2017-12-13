@@ -91,6 +91,7 @@ end.
     {&cr-rt-log-db-name}.esys-route.uniq-gate-rec    = {&esr-uniq-gate-rec}
     {&cr-rt-log-db-name}.esys-route.esr-num-dump     = {&esr-num-dump}
     {&cr-rt-log-db-name}.esys-route.esr-action       = {&esr-action}
+    {&cr-rt-log-db-name}.esys-route.esr-oper         = {&esr-oper}
     .
   &if defined( esr-CreDate ) <> 0 &then
     assign

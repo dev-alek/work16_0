@@ -504,6 +504,7 @@ procedure send-command-esys :
     DEFINE VARIABLE v-cre-time as integer no-undo .
     define variable v-cre-user as character no-undo .
     define variable v-act-name as character no-undo .
+    define variable v-oper     as character no-undo .
     define buffer buf_sys-ctrl for ub.sys-ctrl.
     define buffer buf_esys-all-attr for ub.esys-all-attr.
 
@@ -530,6 +531,7 @@ procedure send-command-esys :
       assign
         v-dmp-ord = next-value( s-news-dord, {&db-name_schema} )
         v-rec-ord = 0
+        v-oper = ""
       .
 
       for each for-route-dump
@@ -551,6 +553,7 @@ procedure send-command-esys :
         buf_esys-route-dump.esrd-value-rec    = for-route-dump.value-rec
         .
         buf_esys-route-dump.esrd-blob-value-rec = for-route-dump.blob-value-rec .
+        v-oper = buf_esys-route-dump.esrd-dump-name .
       end.
       assign
         v-command-name = "command":U + {&delim-nws} + "bush":U + {&delim-nws} + for-route.name-rec
@@ -586,6 +589,7 @@ procedure send-command-esys :
           &esr-CreTimeInt=v-cre-time
           &esr-CreUserName=v-cre-user
           &esr-action="(if for-route.action = '' then {&nwsdochs_action_command-bush} else for-route.action)"
+          &esr-oper=v-oper
         }
         if for-route.custom-pck-name > '' then do:
           create buf_esys-all-attr.

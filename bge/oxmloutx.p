@@ -679,6 +679,11 @@ define variable v-start                as logical      no-undo init yes.
 define variable v-error-num            as integer      no-undo.
 define variable v-found-route          as logical      no-undo .
 
+define variable sw as handle no-undo.
+define variable sender-id as character no-undo.
+define variable v-longdata as longchar no-undo.
+define variable v-type as character no-undo .
+
 define buffer buf_esys-route         for ub.esys-route.
 define buffer buf_esys-route-dump    for ub.esys-route-dump.
 define buffer buf_temp_esys-route    for temp_esys-route.
@@ -696,6 +701,36 @@ on error undo, return error return-value
           v-end-regular-pack = no
           v-found-route = no
       .
+      if buf_Ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+      then do :
+        
+        run db-attr-value in this-procedure 
+           (input g#db-num
+           ,input {&attr-int-point}
+           ,output sender-id
+           ,output v-type
+           ) no-error .
+        
+        create sax-writer sw.
+        sw:formatted = true.
+        sw:set-output-destination ("file", p-pack-file).
+        sw:encoding = "UTF-8".
+        sw:start-document () .
+        
+        sw:start-element ("GC-ERPRN") .
+        
+        sw:insert-attribute ("xmlns", "http://www.rosneft.ru/GasComplex/Retail") .
+        sw:insert-attribute ("xmlns:xs", "http://www.w3.org/2001/XMLSchema") .
+        sw:insert-attribute ("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance") .
+          sw:start-element ("header") .
+            sw:write-data-element ("num", string(p-pack-num)) .
+            sw:write-data-element ("sender-id", sender-id) .
+            sw:write-data-element ("reciever-id", "00000") .
+            sw:write-data-element ("created-date", iso-date (now)) .
+          sw:end-element ("header") .
+
+      end.
+      
       _buf_esys-route:
       for each buf_esys-route no-lock
           where buf_esys-route.esys-id     = buf_ext-system.esys-id
@@ -703,6 +738,7 @@ on error undo, return error return-value
 /*            and buf_esys-route.esr-cr-db-num = v-cur-db-num*/
             and buf_esys-route.esr-last-pack = p-pack-num
       on error undo, return error
+      break by buf_esys-route.esr-oper
       :
         assign
             rec-cnt    = rec-cnt + (if v-start then 1 else 0)
@@ -726,50 +762,65 @@ on error undo, return error return-value
           when {&nwsdochs_action_command-pbush}
           then do:
             /*а это уже выгрузка по команде*/
-            if v-start then do:
-            run bge/cmdesgen.p (
-                                  input parparentproc
-                                  ,input p-log-handle
-                                  ,input buf_ext-system.esys-id
-                                  ,input buf_ext-system.db-num
-                                  ,input buf_ext-system.esys-db-num-exp
-                                  ,input buf_esys-route.esr-cr-db-num
-                                  ,input buf_esys-route.esr-dump-ord
-                                  ,input buf_esys-route.uniq-gate-rec
-                                  ,input p-pack-file
-                                  ,input 1 /*p-xml-file-number  пока 1 */
-                                  ,input buf_esys-route.esr-last-pack
-                                  ,output rec-cnt
-                                  ) no-error.
-            if error-status:error then do:
-              v-err-msg =  substitute( "Ошибка 1 разбора esys-route-dump. &1. &2. &3"
-                                      , return-value
-                                      , trim( error-status :get-message( 1 ) ))
-              .
-
-              run write-log in p-log-handle (
-                    input 2
-                  , input v-err-msg
-              ).
-              run send-msg-to-email in parparentproc
-                  ( input substitute( "ТН (ver &2) БД &1. Ошибка OXML при экспорте пакета из ВС &2"
-                                      , v-ver-num
-                                      , v-cur-db-num
-                                      , buf_ext-system.esys-id )
-                  ,input v-err-msg
-                  ,input "":U
-                  ) no-error .
-              if error-status :error then do:
-                  run write-log in p-log-handle (
-                  input 2
-                , input substitute( "&1. &3&2&4", vss-workfile, {&new-line}, error-status:get-message(1), return-value )
-                                                  ) .
-              end.
-              undo, return error .
+            if buf_Ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+            then do :
+                if first-of(buf_esys-route.esr-oper)
+                then sw:start-element (buf_esys-route.esr-oper) .
+                
+                for each buf_esys-route-dump where buf_esys-route-dump.esrd-dump-ord = buf_esys-route.esr-dump-ord:
+                  copy-lob from buf_esys-route-dump.esrd-blob-value-rec to v-longdata .
+                  sw:write-fragment (v-longdata) .
+                end.
+                
+                if last-of(buf_esys-route.esr-oper)
+                then sw:end-element (buf_esys-route.esr-oper) .
             end.
-            end. /*if v-start = yes then do:*/
-            v-start = no.
-            next _buf_esys-route.
+            else do :
+                if v-start then do:
+                run bge/cmdesgen.p (
+                                      input parparentproc
+                                      ,input p-log-handle
+                                      ,input buf_ext-system.esys-id
+                                      ,input buf_ext-system.db-num
+                                      ,input buf_ext-system.esys-db-num-exp
+                                      ,input buf_esys-route.esr-cr-db-num
+                                      ,input buf_esys-route.esr-dump-ord
+                                      ,input buf_esys-route.uniq-gate-rec
+                                      ,input p-pack-file
+                                      ,input 1 /*p-xml-file-number  пока 1 */
+                                      ,input buf_esys-route.esr-last-pack
+                                      ,output rec-cnt
+                                      ) no-error.
+                if error-status:error then do:
+                  v-err-msg =  substitute( "Ошибка 1 разбора esys-route-dump. &1. &2. &3"
+                                          , return-value
+                                          , trim( error-status :get-message( 1 ) ))
+                  .
+    
+                  run write-log in p-log-handle (
+                        input 2
+                      , input v-err-msg
+                  ).
+                  run send-msg-to-email in parparentproc
+                      ( input substitute( "ТН (ver &2) БД &1. Ошибка OXML при экспорте пакета из ВС &2"
+                                          , v-ver-num
+                                          , v-cur-db-num
+                                          , buf_ext-system.esys-id )
+                      ,input v-err-msg
+                      ,input "":U
+                      ) no-error .
+                  if error-status :error then do:
+                      run write-log in p-log-handle (
+                      input 2
+                    , input substitute( "&1. &3&2&4", vss-workfile, {&new-line}, error-status:get-message(1), return-value )
+                                                      ) .
+                  end.
+                  undo, return error .
+                end.
+                end. /*if v-start = yes then do:*/
+                v-start = no.
+                next _buf_esys-route.
+            end.
           end.
           when {&nwsdochs_action_update}
           or when {&nwsdochs_action_delete}
@@ -807,7 +858,7 @@ on error undo, return error return-value
                     , input "":U
                     , input v-parameter-list
                 ).
-                OUTPUT STREAM stmXMLOut TO VALUE( p-pack-file + {&xmllib-temp-extension} ) CONVERT TARGET "1251" APPEND.
+                output STREAM stmXMLOut TO VALUE( p-pack-file + {&xmllib-temp-extension} ) CONVERT TARGET "1251" APPEND.
                 v-start-regular-pack = no.
                 v-end-regular-pack = yes.
               end.
@@ -867,6 +918,12 @@ on error undo, return error return-value
             end.        /* when {&nwsdochs_action_update} */
         end case.       /* case buf_temp_esys-route.esr-action */
       end.        /* for each buf_esys-route */
+      if buf_Ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+      then do :
+          sw:end-element ("GC-ERPRN") .
+
+        sw:end-document () .
+      end.
     if v-found-route = no
     and buf_ext-system.esys-type > integer({&openxml-type-ordinal})
     then do:
@@ -898,7 +955,7 @@ on error undo, return error return-value
     if v-end-regular-pack
     and v-found-route = yes
     then do:
-      OUTPUT STREAM stmXMLOut close.
+      output STREAM stmXMLOut close.
       run bge/os_copy.p (
             input "D"
           , input (p-pack-file + "xml")
@@ -1027,8 +1084,8 @@ define input parameter p-esys-name as character no-undo .
 
 define variable v-del-pck-num as integer   no-undo.
 define variable v-del-cnt     as integer   no-undo.
-DEFINE VARIABLE v-today as date no-undo .
-DEFINE VARIABLE v-time as integer no-undo .
+define variable v-today as date no-undo .
+define variable v-time as integer no-undo .
 define buffer buf_esys-route for ub.esys-route.
 define buffer buf_esys-route-dump for ub.esys-route-dump.
 define frame del-route
