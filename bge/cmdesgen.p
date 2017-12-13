@@ -122,7 +122,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   find first buf_esys-pck-sent no-lock
     where buf_esys-pck-sent.esys-id  = p-esys-id
       and buf_esys-pck-sent.db-num   = p-db-num
-      and buf_esys-pck-sent.esps-cr-db-num   = p-cr-db-num
+/*      and buf_esys-pck-sent.esps-cr-db-num   = p-cr-db-num*/
       and buf_esys-pck-sent.esps-pack-num = p-pack-num
     no-error
   .
@@ -401,7 +401,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     define variable mbuffer as memptr .
     output stream exp-str to value(p-xml-file-name). 
     for each buf_esys-route-dump where buf_esys-route-dump.esrd-dump-ord = p-esr-dump-ord:
-      mbuffer = buf_esys-route-dump.esrd-value-rec.
+      mbuffer = buf_esys-route-dump.esrd-blob-value-rec.
       export stream exp-str mbuffer .
     end.
     output stream exp-str close.

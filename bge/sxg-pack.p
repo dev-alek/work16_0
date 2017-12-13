@@ -97,6 +97,9 @@ on error undo, return error
     when integer({&esys-dm-contour-edi}) then do:
       p0-arch = no.
     end.
+    when integer({&esys-dm-erp-1C-RN}) then do:
+      p0-arch = no.
+    end.
   end.
 
   if p0-file-name <> ? then do:  /*при get так не бывает*/
@@ -211,6 +214,25 @@ on error undo, return error
         end.
       end.
     end.
+    if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then do:
+      run ext-system-attr-value in this-procedure ( input p-esys-id
+                                                    ,input p-db-num
+                                                    ,input {&attr-esys-ftp-path-in}
+                                                    ,output v-ftp-path-in
+                                                    ,output v-type) no-error.
+      for each buf_temp-filelist no-lock:
+        delete buf_temp-filelist.
+      end.
+      run filelist-init in this-procedure
+      (input v-ftp-path-in
+      ,input false
+      ,input ""
+      ,input ""
+      ) no-error.
+      for each buf_temp-filelist no-lock:
+        os-rename value( buf_temp-filelist.full-name ) value( p0-source-dir + "/" + buf_temp-filelist.file-name ).
+      end.
+    end.
     input stream FLStream from os-dir ( p0-source-dir ) .
     v-current-pack-num = p-pck-num - 1.
     repeat
@@ -315,6 +337,11 @@ procedure file-s-g :
         v-arh-type = "zip".
       end.
       when integer({&esys-dm-cdash})
+      then do:
+        v-arh-name = "".
+        v-arh-type = "".
+      end.
+      when integer({&esys-dm-erp-1C-RN})
       then do:
         v-arh-name = "".
         v-arh-type = "".
@@ -568,6 +595,20 @@ procedure file-s-g :
           end.
           return error v-err-mess .
         end.
+      end.
+      if p-action = "put"
+      and p-delivery-method = integer({&esys-dm-erp-1C-RN})
+      then do :          
+          run ext-system-attr-value in this-procedure ( input p-esys-id
+                                                    ,input p-db-num
+                                                    ,input {&attr-esys-ftp-path-out}
+                                                    ,output v-ftp-path-out
+                                                    ,output v-type) no-error.
+          os-copy value( v-file-target ) value( v-ftp-path-out ).
+          if os-error <> 0 then do:
+            run adm/os-err.p ( output v-err-mess ).
+            return error substitute( "&1. Невозможно скопировать файл &2 в каталог &3&4&5", vss-workfile, v-file-temp, p-target-dir, {&new-line}, v-err-mess ) .
+          end.
       end.
       if p-action = "put"
       and (p-delivery-method = integer({&esys-dm-nn})

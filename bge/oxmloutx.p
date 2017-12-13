@@ -310,7 +310,7 @@ on error undo, return error
       for each buf_esys-route no-lock
         where buf_esys-route.esys-id       = buf_ext-system.esys-id
               and buf_esys-route.db-num = buf_ext-system.db-num
-              and buf_esys-route.esr-cr-db-num = v-cur-db-num
+             /* and buf_esys-route.esr-cr-db-num = v-cur-db-num */
       :
           create tt_esys-route.
           buffer-copy buf_esys-route to tt_esys-route.
@@ -386,7 +386,7 @@ on error undo, return error
         find first buf_esys-route no-lock where
                   buf_esys-route.esys-id = buf_ext-system.esys-id
               and buf_esys-route.db-num = buf_ext-system.db-num
-              and buf_esys-route.esr-cr-db-num = v-cur-db-num
+/*              and buf_esys-route.esr-cr-db-num = v-cur-db-num*/
               and buf_esys-route.esr-last-pack > 0
               no-error.
         if available buf_esys-route then do:
@@ -700,7 +700,7 @@ on error undo, return error return-value
       for each buf_esys-route no-lock
           where buf_esys-route.esys-id     = buf_ext-system.esys-id
             and buf_esys-route.db-num      = buf_Ext-system.db-num
-            and buf_esys-route.esr-cr-db-num = v-cur-db-num
+/*            and buf_esys-route.esr-cr-db-num = v-cur-db-num*/
             and buf_esys-route.esr-last-pack = p-pack-num
       on error undo, return error
       :

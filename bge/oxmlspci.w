@@ -1401,6 +1401,7 @@ then do:
 end.
 if tt-ext-system.delivery-method = integer({&esys-dm-exite-edi})
 or tt-ext-system.delivery-method = integer({&esys-dm-contour-edi})
+or tt-ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
 then do:
    assign
    f-ftp-path-in
@@ -1566,6 +1567,19 @@ case p-delivery-method:
   when integer({&esys-dm-egais})
   then do:
     t-delete-pck-on:label in frame {&frame-name} = 'Удал. записи с УТМ'.
+  end.
+  when integer({&esys-dm-erp-1C-RN})
+  then do:
+    display
+    f-ftp-path-in
+    f-ftp-path-out
+    with frame {&frame-name}.
+    if p-mode <> {&lookup} then do:
+      enable
+      f-ftp-path-in
+      f-ftp-path-out
+      with frame {&frame-name}.
+    end.
   end.
   otherwise do:
   end.   

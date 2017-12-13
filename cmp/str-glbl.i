@@ -6057,9 +6057,13 @@ end.
 &global-define esys-dm-egais '{&bef-esys-dm-egais}':U
 &global-define bef-esys-dm-egais-full ЕГАИС
 &global-define esys-dm-egais-full '{&bef-esys-dm-egais-full}':U
-&global-define esys-dm-list '0,2,3,4,5,9,10':U
-&global-define esys-dm-list-full 'Как в СПН,Не архивировать;FTP,Oracle Retail,Не архивировать(Панель Руководителя;DKLink),Exite-EDI,Контур.EDI,ЕГАИС':U
-&global-define esys-dm-name entry (lookup (~{&esys-dm-code}, '0,2,3,4,5,9,10':U) + 1, ',' + 'Как в СПН,Не архивировать;FTP,Oracle Retail,Не архивировать(Панель Руководителя;DKLink),Exite-EDI,Контур.EDI,ЕГАИС':U)
+&global-define bef-esys-dm-erp-1C-RN 11
+&global-define esys-dm-erp-1C-RN '{&bef-esys-dm-erp-1C-RN}':U
+&global-define bef-esys-dm-erp-1C-RN-full ERP 1С РН
+&global-define esys-dm-erp-1C-RN-full '{&bef-esys-dm-erp-1C-RN-full}':U
+&global-define esys-dm-list '0,2,3,4,5,9,10,11':U
+&global-define esys-dm-list-full 'Как в СПН,Не архивировать;FTP,Oracle Retail,Не архивировать(Панель Руководителя;DKLink),Exite-EDI,Контур.EDI,ЕГАИС,ERP 1С РН':U
+&global-define esys-dm-name entry (lookup (~{&esys-dm-code}, '0,2,3,4,5,9,10,11':U) + 1, ',' + 'Как в СПН,Не архивировать;FTP,Oracle Retail,Не архивировать(Панель Руководителя;DKLink),Exite-EDI,Контур.EDI,ЕГАИС,ERP 1С РН':U)
 &global-define bef-ggoattr-QntyAssMat QntyAssMat
 &global-define ggoattr-QntyAssMat '{&bef-ggoattr-QntyAssMat}':U
 &global-define bef-ggoattr-QntyAssMat-full QntyAssMat

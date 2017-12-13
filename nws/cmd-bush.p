@@ -40,7 +40,8 @@ define temp-table for-route no-undo
   index pi is primary unique dump-ord
 .
 
-define temp-table for-route-dump no-undo like ub.route-dump .
+define temp-table for-route-dump no-undo like ub.route-dump 
+    field blob-value-rec as blob.
 
 
 on delete of this-procedure do:
@@ -289,7 +290,7 @@ procedure add-dump-data :
       for-route-dump.action       = p-action
       for-route-dump.dump-ord     = p-command-code
       for-route-dump.rec-ord      = v-rec-ord
-      for-route-dump.value-rec    = p-data
+      for-route-dump.blob-value-rec    = p-data
       p-rec-ord                   = v-rec-ord
     .
   end.
@@ -549,6 +550,7 @@ procedure send-command-esys :
         buf_esys-route-dump.uniq-gate-rec     = for-route-dump.uniq-gate-rec
         buf_esys-route-dump.esrd-value-rec    = for-route-dump.value-rec
         .
+        buf_esys-route-dump.esrd-blob-value-rec = for-route-dump.blob-value-rec .
       end.
       assign
         v-command-name = "command":U + {&delim-nws} + "bush":U + {&delim-nws} + for-route.name-rec

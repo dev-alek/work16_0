@@ -1919,6 +1919,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-stts-
 { cmp/cr-prep.i 1 esys-dm-exite-edi       5    "Exite-EDI"                                    5  "Exite-EDI"              }
 { cmp/cr-prep.i 1 esys-dm-contour-edi     9    " ÓÌÚÛ.EDI"                                   9  "—ontour.EDI"            }
 { cmp/cr-prep.i 1 esys-dm-egais          10    "≈√¿»—"                                       10  "EGAIS"                  }
+{ cmp/cr-prep.i 1 esys-dm-erp-1C-RN      11    "ERP 1— –Õ"                                   11  "ERP-1C-RN"              }
+
 
 &glob esys-dm-list '~
 {&bef-esys-dm-ordinal}~
@@ -1928,6 +1930,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define edi-stts-
 ,{&bef-esys-dm-exite-edi}~
 ,{&bef-esys-dm-contour-edi}~
 ,{&bef-esys-dm-egais}~
+,{&bef-esys-dm-erp-1C-RN}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-list {&esys-dm-list}" ).
@@ -1940,6 +1943,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-l
 ,{&bef-esys-dm-exite-edi-full}~
 ,{&bef-esys-dm-contour-edi-full}~
 ,{&bef-esys-dm-egais-full}~
+,{&bef-esys-dm-erp-1C-RN-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-list-full {&esys-dm-list-full}" ).

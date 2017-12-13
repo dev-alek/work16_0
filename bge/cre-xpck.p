@@ -233,8 +233,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             and buf_esys-all-attr.key1 = buf_esys-route.esr-dump-ord
             and buf_esys-all-attr.key2 = buf_esys-route.esys-id
             and buf_esys-all-attr.key5 = buf_esys-route.db-num
-            and buf_esys-all-attr.key6 = g#db-num
-            no-error.
+            /*and buf_esys-all-attr.key6 = g#db-num*/ no-error.
         if available buf_esys-all-attr then do:
           v-custom-pack-name = buf_esys-all-attr.attr-value.
         end.
@@ -392,7 +391,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       where buf_esys-route.esys-id   = p-esys-id
         and buf_esys-route.db-num    = p-db-num
         and buf_esys-route.esr-last-pack = -1
-        and buf_esys-route.esr-cr-db-num = g#db-num
+/*        and buf_esys-route.esr-cr-db-num = g#db-num*/
       by buf_esys-route.esr-tbl-ord
     on error   undo, return error
     on end-key undo, return error
@@ -503,7 +502,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       find first ub.esys-pck-sent exclusive-lock
         where ub.esys-pck-sent.esys-id  = p-esys-id
           and ub.esys-pck-sent.db-num   = p-db-num
-          and ub.esys-pck-sent.esps-cr-db-num  = g#db-num
+/*          and ub.esys-pck-sent.esps-cr-db-num  = g#db-num*/
           and ub.esys-pck-sent.esps-pack-num = v-pack-num
         no-error
       .

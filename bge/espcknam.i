@@ -88,6 +88,25 @@ case p-delivery-method:
    p-custom-flag = yes.
    v-short-pack-name = p-custom-pack-name.
  end.
+ when integer({&esys-dm-erp-1C-RN}) then do:
+   case p-action:
+     when "put"
+     or when "fput" then do:
+       p-custom-flag = yes.
+       v-short-pack-name = "00000_" + string(p-pack-num) + "_"
+                         + string(day(now)) + string(month(now)) + string(year(now))
+                         + substring(string(TIME, "HH:MM:SS"), 1, 2)
+                         + substring(string(TIME, "HH:MM:SS"), 4, 2)
+                         + substring(string(TIME, "HH:MM:SS"), 7, 2)
+                         + ".xml" .
+     end.
+     when "get"
+     or when "fget" then do:
+       p-custom-flag = yes.
+       v-short-pack-name = p-custom-pack-name.
+     end. 
+   end case.   
+ end.
  otherwise do:
    v-short-pack-name = "o":U + string( p-pack-num, "999999999":U ) + ".":U.
  end.

@@ -187,6 +187,11 @@ on error undo, return error return-value
       v-header-schema-name = ""
       v-header-name = "".
     end.
+    when integer({&esys-dm-erp-1C-RN}) then do:
+      assign
+      v-header-schema-name = ""
+      v-header-name = "".
+    end.
     otherwise do:
       assign
       v-header-schema-name = "exe/THheader.xsd"
@@ -346,13 +351,17 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
   then do:
     v-pck-num = p-pack-num.
   end.
+  if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+  then do :
+    v-pck-num = integer(entry(2, v-file-name-no-ext, "_"))  no-error.
+  end.
   if v-pck-num <> p-pack-num
   and not (buf_ext-system.delivery-method = integer({&esys-dm-nnold}))
   then do:
     &scop my-message substitute("Ќомер пакета &1 в заголовке файла &2&5 не совпадает с номером пакета &3 дл€ вн.системы '&4'" ~
                                  , v-pck-num ~
-                                 , p-pack-num ~
                                  , p-xml-file-name ~
+                                 , p-pack-num ~
                                  ,buf_ext-system.esys-name ~
                                  , ~{&new-line~})
 
@@ -376,7 +385,8 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
     end.
   end. /* buf_ext-system.imp-conf-wait > 0*/
   if buf_ext-system.delivery-method <> integer({&esys-dm-exite-edi})
-    or buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi})
+    and buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi})
+    and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN})
   then do:
     assign
     v-pck-num = 0.
@@ -595,7 +605,9 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
       end.
     end.
   if buf_ext-system.delivery-method <>  integer({&esys-dm-exite-edi})
-    and buf_ext-system.delivery-method <>  integer({&esys-dm-contour-edi})  then do:
+    and buf_ext-system.delivery-method <>  integer({&esys-dm-contour-edi})
+    and buf_ext-system.delivery-method <>  integer({&esys-dm-erp-1C-RN})
+  then do:
   case buf_ext-system.delivery-method:
     when integer({&esys-dm-oracle-retail}) then do:
       find first buf_temp-xml-tables where

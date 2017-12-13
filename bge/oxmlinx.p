@@ -87,6 +87,7 @@ def var i as int.
 
 
 define buffer buf_ext-system         for ub.ext-system.
+define buffer buf_esys-pck-keys      for ub.esys-pck-keys.
 define temp-table tt-espcknum no-undo
   field tt-espr-pack-num  as integer
   field tt-espr-pack-name as character
@@ -283,13 +284,14 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
             /* получение всех файлов, находящихся в heap, 
             для внешней системы типа OR APM (SPAR) - разибарются все файлы находящиеся в heap
             в дальнейшем после удачного разбора в обязательном порядке удаляются*/
-            if buf_ext-system.whole-send-news = integer({&esys-dm-contour-edi})
+            if buf_ext-system.delivery-method = integer({&esys-dm-contour-edi})
+            or buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
             then do:
               run get-num-namepack in this-procedure
                 ( input v-target-dir
                 , input buf_Ext-system.esys-id
                 , input buf_Ext-system.db-num
-                , input buf_ext-system.whole-send-news
+                , input buf_ext-system.delivery-method
                 ) 
               no-error.
               if error-status:error then do:
@@ -317,6 +319,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 undo _ext-system, next _ext-system.
               end.
             end.
+            
             if lookup( v-action, "analys,take+analys":U ) <> 0 then do:
               rcvd-pack:
               do while TRUE
@@ -333,7 +336,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 v-custom-pack-name = temp-filelist.file-name.
                 delete temp-filelist.
               end.
-              if buf_ext-system.whole-send-news = integer({&esys-dm-contour-edi}) then do:
+              if buf_ext-system.delivery-method = integer({&esys-dm-contour-edi}) then do:
                 find first tt-espcknum use-index inum no-error.
                 if not available tt-espcknum then do:
                   leave rcvd-pack.
@@ -341,6 +344,28 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 assign
                 v-custom-pack-name = tt-espcknum.tt-espr-pack-name.
                 delete tt-espcknum.
+              end.
+              if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+              then do:
+                find last buf_esys-pck-keys no-lock use-index pi no-error.
+                if available buf_esys-pck-keys then do:
+                  find first tt-espcknum where tt-espcknum.tt-espr-pack-num > buf_esys-pck-keys.espr-pack-num use-index inum no-error.
+                  if available tt-espcknum then do:
+                    v-espr-pack-num = tt-espcknum.tt-espr-pack-num.
+                  end.
+                end.
+                find first temp-filelist no-error.
+                if not available temp-filelist then do:
+                  leave rcvd-pack.
+                end.
+                for each temp-filelist no-lock :
+                    if integer(entry(2, temp-filelist.file-name, "_")) = abs(v-espr-pack-num)
+                    then do :
+                        assign v-custom-pack-name = temp-filelist.file-name.
+                        leave.
+                    end.
+                    delete temp-filelist.
+                end.    
               end.
               run bge/espcknum.p ( input "get":U
                             ,input buf_ext-system.esys-id
@@ -665,24 +690,103 @@ on error undo, return error
   define variable xsl as character no-undo.
   define variable v-l-err as logical no-undo.
   define variable ii as integer no-undo.    
-
-
-  ii = 0.
-  for each temp-filelist where temp-filelist.file-name begins "fail" :
-    ii = ii + 1.
-    create tt-espcknum.
-    assign
-      tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
-      tt-espcknum.tt-espr-pack-num = ii
-    no-error.      
+  if p-ext-sys-met <> integer({&esys-dm-contour-edi})
+  then do:
+    run filelist-init in this-procedure
+    (input p-target-dir
+    ,input false
+    ,input ""
+    ,input ""
+    ) no-error.
+    if error-status:error then do:
+      undo, return error .
+    end.
   end.
-  for each temp-filelist where temp-filelist.file-name begins "ok" :
-    ii = ii + 1.
-    create tt-espcknum.
-    assign
-      tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
-      tt-espcknum.tt-espr-pack-num = ii
-    no-error.
+
+  if p-ext-sys-met <> integer({&esys-dm-contour-edi}) then do:
+    for each temp-filelist:
+      create tt-espcknum.
+      if p-ext-sys-met = integer({&esys-dm-erp-1C-RN}) then do:
+/*
+        if not temp-filelist.file-name begins "azs_up_th0" and not temp-filelist.file-name begins "o" then do:
+          delete tt-espcknum .
+          next.
+        end.
+        if temp-filelist.file-name begins "azs_up_th0" then do:
+*/        if num-entries(temp-filelist.file-name, "_") <> 3 then do :
+              delete temp-filelist.
+              next.
+          end.   
+          if v-espr-pack-num > integer (entry (2, temp-filelist.file-name-no-ext, "_"))
+          then next .  
+          assign
+            tt-espcknum.tt-espr-pack-name = temp-filelist.file-name
+            tt-espcknum.tt-espr-pack-num = integer (entry (2, temp-filelist.file-name-no-ext, "_"))
+          no-error.
+          if error-status:error then do: /* ошибка возникнет при присвоение, если неверное имя пакета - например начинается не с номера пакета, пропускаем идем дальше.*/
+            delete tt-espcknum .
+          end.
+          
+/*
+        end.
+        else do:
+          assign
+            tt-espcknum.tt-espr-pack-name = temp-filelist.file-name-no-ext
+            tt-espcknum.tt-espr-pack-num = integer (substring (temp-filelist.file-name-no-ext, 2))
+          no-error.
+          if error-status:error then do: /* ошибка возникнет при присвоение, если неверное имя пакета - например начинается не с номера пакета, пропускаем идем дальше.*/
+            delete tt-espcknum .
+          end.
+          else do:
+            if tt-espcknum.tt-espr-pack-name <> "o":U + string( tt-espcknum.tt-espr-pack-num, "999999999":U ) then delete tt-espcknum .
+          end.
+          next.
+        end.
+*/
+      end.
+    end.
+    
+  end.
+  else do:
+    ii = 0.
+    for each temp-filelist where temp-filelist.file-name begins "fail" 
+      and  not (temp-filelist.file-name matches "*Stsmsg*"
+                or  temp-filelist.file-name matches "*unknown*") :
+      ii = ii + 1.
+      create tt-espcknum.
+      assign
+        tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
+        tt-espcknum.tt-espr-pack-num = ii
+      no-error.      
+    end.
+    for each temp-filelist where temp-filelist.file-name begins "ok" 
+      and  not (temp-filelist.file-name matches "*Stsmsg*"
+                or  temp-filelist.file-name matches "*unknown*") :
+      ii = ii + 1.
+      create tt-espcknum.
+      assign
+        tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
+        tt-espcknum.tt-espr-pack-num = ii
+      no-error.
+    end.
+    for each temp-filelist where temp-filelist.file-name begins "ORDRSP" :
+      ii = ii + 1.
+      create tt-espcknum.
+      assign
+        tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
+        tt-espcknum.tt-espr-pack-num = ii
+      no-error.
+    end.
+    for each temp-filelist where temp-filelist.file-name begins "DESADV" :
+      ii = ii + 1.
+      create tt-espcknum.
+      assign
+        tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
+        tt-espcknum.tt-espr-pack-num = ii
+      no-error.            
+    end.
+    
+    
   end.
   for each temp-filelist where temp-filelist.file-name begins "ORDRSP" :
     ii = ii + 1.
