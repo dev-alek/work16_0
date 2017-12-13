@@ -41,6 +41,7 @@ define variable v-rec       as recid   no-undo .
 define variable v-rid       as recid   no-undo .
 define variable v-curr-code as integer no-undo .
 define buffer buf_clients for ub.clients .
+define buffer bf_clients  for ub.clients .
 define buffer buf_staff   for ub.staff .
 define buffer buf_person  for ub.person .
 define buffer buf_cli-grp for ub.cli-grp .
@@ -88,7 +89,6 @@ do:
 end.  
 else 
 do:
-
   find first buf_cli-grp no-lock where buf_cli-grp.node-code = 4 no-error .
   if not AVAILABLE buf_cli-grp then 
   do:
@@ -195,6 +195,9 @@ do:
     end.
     if p-Cashiers:role-code = 2 then 
     do:
+      find first bf_clients EXCLUSIVE-LOCK where bf_clients.obj-code = integer(p-Cashiers:code_) 
+        and bf_clients.obj-type = {&prs} no-error .
+      
       find first buf_staff EXCLUSIVE-LOCK where buf_staff.psn-code = integer(p-Cashiers:code_)
         and buf_staff.role       = {&role-cashier}
         /*        and buf_staff.date-end > TODAY*/
@@ -214,7 +217,10 @@ do:
 
       end.
       if p-Cashiers:del-l = 1 then buf_staff.date-end = v-today. 
-      else buf_staff.date-end = date("31/12/9999")  .
+      buf_staff.date-end = date("31/12/9999")  .
+      
+      if p-Cashiers:del-f = 0 then bf_clients.stts = 0 .
+      
     end.
   end.  
   
