@@ -26,7 +26,7 @@ define variable vss-description as character no-undo init "Триггер на удаление з
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 
-define variable cre-pay like ub.sysconf.credit-pay no-undo .
+/*define variable cre-pay like ub.sysconf.credit-pay no-undo .*/
 define variable conf-par as character no-undo .
 define variable par-type as character no-undo .
 

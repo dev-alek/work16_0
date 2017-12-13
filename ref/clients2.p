@@ -16,10 +16,17 @@ Creation date: 04/19/07
 */
 
 define input parameter parparentproc as widget-handle no-undo .
+/* Параметр parparentproc внутри процедуры не используется.
+   Передаётся в ref/dcardi02.p, и далее из str/saledc.p передаётся процедурам машины правил:
+     v-proc-name = "rul/" + string(rule-by-call.rule_id, '999999999') + '.p'
+     run value(v-proc-name) (input parparentproc, ... )        
+*/
 define input parameter p-rid as recid no-undo .
 define input parameter p-stts like ub.clients.stts no-undo.
 define input parameter p-silent as logical no-undo .
 define input parameter p-thbj-included as logical no-undo .
+
+/* параметры p-mode2, p-source-type и p-source-ref не используются */
 define input parameter p-mode2 as character no-undo .
 define input parameter p-source-type as character no-undo .
 define input parameter p-source-ref as character no-undo .
@@ -53,8 +60,10 @@ on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
-  run get-db-num in parparentproc ( output v-cntxt-db-num).
-  run get-userid in parparentproc ( output v-cntxt-userid).
+  { gbl/getcurus.i
+    v-cntxt-db-num
+    v-cntxt-userid
+  }
   FIND first buf_clients exclusive-lock where recid( buf_clients ) = p-rid .
   CASE buf_clients.obj-type:
     when {&cmp}
@@ -205,14 +214,14 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     else do:
 &scop status-code string(buf_clients.stts)
       if buf_clients.stts = integer({&current-status-int}) and p-stts = integer({&current-status-int})  then do:
-        v-mess = substitute("Клиент уже имеет статус&1&2"
+        v-mess = substitute("Клиент уже имеет статус = &1&2"
                             , {&status-int-name}
                             , {&new-line}).
         run err-mess in this-procedure ( input-output v-mess).
         undo main-block, return error (if p-silent = yes then v-mess else '':U).
       end.
       if buf_clients.stts = integer({&deleted-status-int})  and p-stts = integer({&deleted-status-int})  then do:
-        v-mess = substitute("Клиент уже имеет статус&1&2"
+        v-mess = substitute("Клиент уже имеет статус = &1&2"
                             , {&status-int-name}
                             , {&new-line}).
         run err-mess in this-procedure ( input-output v-mess).

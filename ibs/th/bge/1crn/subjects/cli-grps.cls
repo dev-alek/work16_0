@@ -41,6 +41,9 @@ class ibs.th.bge.1crn.subjects.cli-grps implements ibs.th.bge.1crn.subjects.isub
       when "code" then do:
         assign code_ = inValue .
       end.
+      when "upper-code" then do:
+        assign upper-code = inValue .
+      end.
       when "del-l" then do:
         assign del-l = integer (inValue).
       end.

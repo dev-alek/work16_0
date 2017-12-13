@@ -298,12 +298,12 @@ DEFINE VARIABLE f-db-name AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN
      SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-db-num AS INTEGER FORMAT ">>>>9":U INITIAL 0
+DEFINE VARIABLE f-db-num AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
      LABEL "БД"
      VIEW-AS FILL-IN
      SIZE 6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-host-code AS INTEGER FORMAT ">>>>9":U INITIAL 0
+DEFINE VARIABLE f-host-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
      LABEL "Фирма"
      VIEW-AS FILL-IN
      SIZE 6 BY 1 NO-UNDO.
@@ -340,9 +340,9 @@ DEFINE BROWSE br-objects
   QUERY br-objects NO-LOCK DISPLAY
       {&sort-clmn_1} Format "X(1)" COLUMN-LABEL {&label-clmn_1}
 X_clients.obj-type COLUMN-LABEL "Тип " FORMAT "X(3)"
-X_clients.obj-code COLUMN-LABEL "Код " FORMAT ">>>>9"
+X_clients.obj-code COLUMN-LABEL "Код " FORMAT ">>>>>>>>9"
 X_clients.obj-name COLUMN-LABEL "Название " FORMAT "x(80)" width 25
-X_clients.host-code COLUMN-LABEL "Код!фирмы " FORMAT ">>>>9"
+X_clients.host-code COLUMN-LABEL "Код фирмы " FORMAT ">>>>>>>>9"
 get-host-name(INPUT X_clients.host-code) COLUMN-LABEL {&label-clmn_6} FORMAT "x(80)" width 25
 {&sort-clmn_7} format "x(1)" column-label {&label-clmn_7}
 X_clients.db-num COLUMN-LABEL "БД"

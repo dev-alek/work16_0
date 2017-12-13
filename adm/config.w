@@ -337,7 +337,7 @@ DEFINE FRAME Dialog-Frame
      B-hist AT ROW 1 COL 92
      B-Help AT ROW 1 COL 95
      tt-sysconf.host-code AT ROW 2 COL 7 COLON-ALIGNED
-          LABEL "Фирма"
+          LABEL "Фирма" FORMAT "999999999"
           VIEW-AS FILL-IN
           SIZE 6 BY 1 TOOLTIP "Код текущей фирмы (доступен только при добавлении)"
           BGCOLOR 3 FGCOLOR 15
@@ -839,7 +839,9 @@ END.
 ON LEAVE OF tt-sysconf.cash-pay IN FRAME Dialog-Frame /* Опл. наличными */
 DO:
    if input frame {&frame-name} tt-sysconf.cash-pay <> tt-sysconf.cash-pay then do:
+    /* 31/X-2017  вместе с импортом из 1С сняты проверки на ввод видов оплаты в интерфейсе
     run local-payt-chk in this-procedure ("cash-pay", "leave").
+    */
   end.
 
 END.
@@ -867,7 +869,9 @@ END.
 ON LEAVE OF tt-sysconf.credit-pay IN FRAME Dialog-Frame /* Платеж в кредит на кассе */
 DO:
 if input frame {&frame-name} tt-sysconf.credit-pay <> tt-sysconf.credit-pay then do:
+    /* 31/X-2017  вместе с импортом из 1С сняты проверки на ввод видов оплаты в интерфейсе
     run local-cp-chk in this-procedure ("credit-pay", "leave").
+    */
   end.
 
 END.
@@ -938,7 +942,9 @@ END.
 ON LEAVE OF tt-sysconf.ret-credit-pay IN FRAME Dialog-Frame /* Опл. долгов по кредиту */
 DO:
  if input frame {&frame-name} tt-sysconf.ret-credit-pay <> tt-sysconf.ret-credit-pay then do:
+    /* 31/X-2017  вместе с импортом из 1С сняты проверки на ввод видов оплаты в интерфейсе
     run local-payt-chk in this-procedure ("ret-credit-pay", "leave").
+    */
   end.
 
 END.

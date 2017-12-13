@@ -260,7 +260,7 @@ DEFINE BROWSE br-host
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-host Dialog-Frame _FREEFORM
   QUERY br-host NO-LOCK DISPLAY
       mark-string(ub.user-host.host-code) @ v-brws-mark
-      ub.user-host.host-code
+      ub.user-host.host-code format "999999999"
       get-host-name(ub.user-host.host-code) @ v-host-name COLUMN-LABEL "Название" FORMAT "X(40)":U
       get-default-object(ub.user-host.host-code) @ v-default-object COLUMN-LABEL "Главн.объект!межфирм.перем."
 /* _UIB-CODE-BLOCK-END */

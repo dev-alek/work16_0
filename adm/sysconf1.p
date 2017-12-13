@@ -167,13 +167,6 @@ else do:
     undo, return error "host-code":U.
   end.
 end.
-if not p-is-deploy then do:
-  if not can-find (ub.pay-type where
-                  ub.pay-type.obj-code = p-cash-pay no-lock) then do:
-    run err-mess in this-procedure ( input substitute("Не найден тип оплаты наличными с кодом &1", p-cash-pay ) ).
-    undo, return error "cash-pay":U.
-  end.
-end.
 
 if not p-is-deploy then do:
   if p-credit-pay <> 0 then do:
@@ -212,11 +205,6 @@ if not p-is-deploy then do:
     end.
   end.
   end.
-  if not can-find (ub.pay-type where
-                  ub.pay-type.obj-code = p-cash-pay no-lock) then do:
-    run err-mess in this-procedure ( input substitute("Не найден тип оплаты наличными с кодом &1", p-cash-pay ) ).
-    undo, return error "cash-pay":U.
-  end.
 end.
 if not can-find (ub.clients where
                 ub.clients.obj-code = p-sale-code
@@ -227,10 +215,6 @@ end.
 if p-sale-type <> {&cmp} then do:
   run err-mess in this-procedure ( input substitute("Неверный тип контрагента РЕАЛИЗАЦИЯ: тип &1 код&2", p-sale-type, p-sale-code) ).
   undo, return error "sale-type":U.
-end.
-if LOOKUP (string(p-purch-code), {&purchase-codes}) = 0 then do:
-  run err-mess in this-procedure ( input substitute("Неверный код типа приобретения:  код &1", p-purch-code) ).
-  undo, return error "":U.
 end.
 
 /* есть ли межфирменные архивы */
@@ -339,12 +323,14 @@ on stop undo, return error return-value
       end.
     end.
     if p-is-deploy then do:
+      /* в строке 147 наличие записи в clients проверяется только для NOT p-is-deploy;
+         чтобы была возможность в импорте из 1с входить сюда с заранее созданным клиентом - приводим
+         логику этого блока в соответствие со строкой 147 */
       FIND FIRST main_clients where
                 main_clients.obj-type = {&cmp}
             AND main_clients.obj-code = p-host-code No-ERROR.
       if not available main_clients then do:
-        run err-mess in this-procedure ( input substitute("Не найдена запись КОНТРАГЕНТ для записи СВОЯ ФИРМА с кодом &1", p-host-code)).
-        undo, return error "":U.
+        create main_clients.
       end.
       find first main_firm where
                 main_firm.firm-code = p-host-code no-error .
