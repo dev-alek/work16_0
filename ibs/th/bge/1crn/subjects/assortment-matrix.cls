@@ -34,20 +34,27 @@ class ibs.th.bge.1crn.subjects.assortment-matrix inherits ibs.th.bge.1crn.subjec
 
 
   method override protected void SetPropProtected (inTag as char, inValue as char):
-    case inTag:
-      when "gds-code" then gds-code = if inValue >= "" then inValue else "" .
-      
       /* допустимые значения stg перечислены в enum;
          если дано значение вне enum - поле останется пустым,
-         если дано пустое значение - поле заполнится типом "archive"
-         (в БД TradeHouse запишется как "Пусто")
+         если дано пустое значение - поле заполнится типом "archive" (в БД TradeHouse запишется как "Пусто")
        */
+    case inTag:
+      when "gds-code" then gds-code = if inValue >= "" then inValue else "" .
       when "stg" then do :
-        if inValue >= "" then stg = enum-assortment-stg:GetEnum( integer (inValue) ) no-error .
+        if inValue >= "" then stg = enum-assortment-stg:GetEnum( integer (inValue) ) .
                          else stg = enum-assortment-stg:enarchive .
       end .
-      
     end case.
+    catch exProErrors as class Progress.Lang.ProError :
+      case exProErrors:GetMessageNum(1):
+        when 18207 then undo, throw new Progress.Lang.AppError(
+          substitute("Поле <&1> содержит ошибочное значение [&2]", inTag, inValue)
+        ) .
+        otherwise undo, throw new Progress.Lang.AppError(
+          substitute("Ошибка значения для поля <&1>: &2", inTag, exProErrors:GetMessage(1))
+        ) .
+      end case .
+    end catch .
   end method.
 
 
