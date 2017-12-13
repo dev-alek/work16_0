@@ -29,6 +29,7 @@ define variable vss-description as character no-undo init "Триггер на удаление п
 define buffer buf_c-price-doc  for ub.c-price-doc  .
 define buffer buf_c-price-list for ub.c-price-list  .
 define buffer buf_c-price-list-attr for ub.c-price-list-attr  .
+define buffer buf_c-doc-attr for ub.c-doc-attr .
 
 main-block :
 do transaction
@@ -182,6 +183,22 @@ on error undo main-block, return error
     on error undo main-block, return error
     :
     if ub.price-doc.status_ <> {&g___new} then do:
+      create buf_c-doc-attr.
+      BUFFER-COPY ub.doc-attr TO buf_c-doc-attr
+      assign
+        buf_c-doc-attr.chip-num           = buf_c-price-doc.chip-num
+        buf_c-doc-attr.corr-time           = time
+        buf_c-doc-attr.corr-user-db-num    = g#db-num
+        buf_c-doc-attr.corr-user-name     = g#userid
+        buf_c-doc-attr.corr-date          = today
+      .
+    end.
+    delete ub.doc-attr.
+  end.
+  for each ub.price-list-attr where ub.price-list-attr.doc-num = ub.price-doc.doc-num
+    on error undo main-block, return error
+    :
+    if ub.price-doc.status_ <> {&g___new} then do:
       create buf_c-price-list-attr.
       BUFFER-COPY ub.price-list-attr TO buf_c-price-list-attr
       assign
@@ -193,7 +210,7 @@ on error undo main-block, return error
         buf_c-price-list-attr.is-del             = true
       .
     end.
-    delete ub.doc-attr.
+    delete ub.price-list-attr.
   end.
     if g#oxml = yes
     then do:
