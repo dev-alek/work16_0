@@ -18,7 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 
 
-class ibs.th.bge.1crn.subjects.business-units implements ibs.th.bge.1crn.subjects.isubject: 
+class ibs.th.bge.1crn.subjects.business-units inherits ibs.th.bge.1crn.subjects.asubject: 
 
   define property code_ as character no-undo 
     get. 
@@ -33,7 +33,10 @@ class ibs.th.bge.1crn.subjects.business-units implements ibs.th.bge.1crn.subject
     get. 
     private set.
 
-  method public void SetProp (inTag as char, inValue as char):
+  define override property InitTag as character no-undo init "business-unit"
+    get.     
+
+  method OVERRIDE PROTECTED void SetPropProtected (inTag as char, inValue as char):
     case inTag:
       when "code" then do:
         assign code_ = inValue .
@@ -49,5 +52,27 @@ class ibs.th.bge.1crn.subjects.business-units implements ibs.th.bge.1crn.subject
       end.
     end case.
   end.
+  method override protected void CheckData ():
 
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = "code" when code_ = ?
+      v-str = v-str + ",name" when name_ = ?
+    .
+    v-str = trim (v-str, ",").
+    if v-str > ''
+    then 
+      undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
+
+  end.
+  
+  method override protected void ClearSub():
+    assign 
+      code_     = ?
+      del-l     = ?
+      del-f     = ?
+      name_     = ?
+    .
+  end.
 end class.
