@@ -33,20 +33,45 @@ class ibs.th.str.placelib:
   end constructor.
 
   method public void placelib_get-attr (  
-         input p-code as character,
-         input p-obj-code as integer,
-         input p-obj-type as character,
-         input p-pl-code  as integer,
-         output v-value   as character,
-         output p-ok      as logical):
+    input p-code as character,
+    input p-obj-code as integer,
+    input p-obj-type as character,
+    input p-pl-code  as integer,
+    output v-value   as character,
+    output p-ok      as logical):
     
     run placelib_get-attr in hndl-proc-placelib (   
-         input p-code,
-         input p-obj-code,
-         input p-obj-type,
-         input p-pl-code,
-         output v-value,
-         output p-ok) no-error.
+      input p-code,
+      input p-obj-code,
+      input p-obj-type,
+      input p-pl-code,
+      output v-value,
+      output p-ok) no-error.
+    
+    if error-status:error
+      then 
+    do:
+      
+    end.
+    
+  end.
+
+
+  method public void placelib_write-attr (  
+    input p-code as character,
+    input p-obj-code as integer,
+    input p-obj-type as character,
+    input p-pl-code  as integer,
+    input v-value   as character,
+    output p-ok      as logical):
+    
+    run placelib_write-attr in hndl-proc-placelib (   
+      input p-code,
+      input p-obj-code,
+      input p-obj-type,
+      input p-pl-code,
+      input v-value,
+      output p-ok) no-error.
     
     if error-status:error
       then 
