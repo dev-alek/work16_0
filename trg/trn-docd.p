@@ -59,6 +59,38 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
     undo main-block, return error "Нельзя удалять документ, закрытый до статуса" + {&fact}.
   end.
 
+
+  { gbl/rum-runa.i
+    ?
+    this-procedure:handle
+    ?
+      {&edoc-proc_event_trn-doc}
+    " buffer ub.trn-doc:handle "
+    ?
+    ''
+    ''
+    no-error
+    }
+  if error-status:error
+  then do:
+    v-message = substitute("&1 &2 &3&4Ошибка при вызове процедуры rum-runa.i&4&5&4&5&6"
+                            ,vss-workfile
+                            ,vss-revision
+                            ,vss-description
+                            ,{&new-line}
+                            , error-status:get-message(1)
+                            , return-value ).
+      if not g#news
+      and not g#auto
+      and not g#esys
+      then do:
+      message
+      v-message
+      view-as alert-box error .
+    end.
+    undo main-block,  return error v-message.
+  end.
+
   /* удаляем строки документа */
   /* при этом в триггере на удаление строки документа удаляется ряд подчиненных таблиц */
   for each ub.doc-line where
@@ -255,38 +287,6 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
     if error-status :error then do:
       return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
     end.
-  end.
-  if ub.trn-doc.status_ <> {&fact} then do:
-  { gbl/rum-runa.i
-    ?
-    this-procedure:handle
-    ?
-      {&edoc-proc_event_trn-doc}
-    " buffer ub.trn-doc:handle "
-    ?
-    ''
-    ''
-    no-error
-    }
-  if error-status:error
-  then do:
-    v-message = substitute("&1 &2 &3&4Ошибка при вызове процедуры rum-runa.i&4&5&4&5&6"
-                            ,vss-workfile
-                            ,vss-revision
-                            ,vss-description
-                            ,{&new-line}
-                            , error-status:get-message(1)
-                            , return-value ).
-      if not g#news
-      and not g#auto
-      and not g#esys
-      then do:
-      message
-      v-message
-      view-as alert-box error .
-    end.
-    undo main-block,  return error v-message.
-  end.
   end.
   if g#oxml = yes
   then do:
