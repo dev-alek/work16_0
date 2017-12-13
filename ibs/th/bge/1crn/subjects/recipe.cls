@@ -16,6 +16,7 @@ Creation date: 25/10/17
 */
 
 using Progress.Lang.*.
+using ibs.th.bge.1crn.enum-recipe-status.
 using ibs.th.bge.1crn.enum-recipe-type.
 using ibs.th.bge.1crn.subjects.subjects from propath.
 
@@ -28,9 +29,13 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
   define property del-f as integer no-undo 
     get. 
     private set.
+  define property status_ as enum-recipe-status no-undo
+    get.
+    private set.
   define property recipe-code as character no-undo
     get.
     private set.
+
   define property recipe-type as enum-recipe-type no-undo 
     get. 
     private set.
@@ -64,28 +69,42 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
   end constructor.
 
   method override protected void SetPropProtected (inTag as char, inValue as char):
+    /* допустимые значения полей status и recipe-type перечислены в enum;
+       если дано значение вне enum - поле останется пустым,
+       если дано пустое значение - поле заполнится одним из валидных значений типа,
+       которое согласовано как эквивалент значения ноль
+     */
     case inTag:
       when "recipe-code" then recipe-code = if inValue >= "" then inValue else "" .
       when "gd-code"     then gd-code     = if inValue >= "" then inValue else "" .
       when "del-l"       then del-l       = if inValue >= "" then integer (inValue) else 0 .
       when "del-f"       then del-f       = if inValue >= "" then integer (inValue) else 0 .
+      when "status"      then do:
+        if inValue >= "" then status_     = enum-recipe-status:GetEnum( integer (inValue) ) .
+                         else status_     = enum-recipe-status:enopen .
+      end .
       when "qnty"        then qnty        = if inValue >= "" then integer (inValue) else 0 .
       when "qnty-netto"  then qnty-netto  = if inValue >= "" then decimal (inValue) else 0.0 .
       when "recipe-name" then recipe-name = if inValue >= "" then inValue else "" .
-      
-      /* допустимые значения recipe-type перечислены в enum;
-         если дано значение вне enum - поле останется пустым,
-         если дано пустое значение - поле заполнится типом "manufacturing"
-         (если manufacrturing согласован как эквивалент значения ноль)
-       */
       when "recipe-type" then do :
-        if inValue >= "" then recipe-type = enum-recipe-type:GetEnum( integer (inValue) ) no-error .
+        if inValue >= "" then recipe-type = enum-recipe-type:GetEnum( integer (inValue) ) .
                          else recipe-type = enum-recipe-type:enmanufacturing .
       end .
-      
       when "recipe-num"  then recipe-num  = if inValue >= "" then inValue else "" .
       when "weight"      then weight      = if inValue >= "" then decimal (inValue) else 0.0 .
     end case.
+    
+    catch exProErrors as class Progress.Lang.ProError :
+      case exProErrors:GetMessageNum(1):
+        when 18207 then undo, throw new Progress.Lang.AppError(
+          substitute("Поле <&1> содержит ошибочное значение [&2]", inTag, inValue)
+        ) .
+        otherwise undo, throw new Progress.Lang.AppError(
+          substitute("Ошибка значения для поля <&1>: &2", inTag, exProErrors:GetMessage(1))
+        ) .
+      end case .
+    end catch .
+    
   end method.
 
 

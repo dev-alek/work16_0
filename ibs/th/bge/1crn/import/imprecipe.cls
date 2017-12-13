@@ -17,6 +17,7 @@ Creation date: 25/10/17
 */
 
 using Progress.Lang.*.
+using ibs.th.bge.1crn.enum-recipe-status.
 using ibs.th.bge.1crn.enum-recipe-type.
 using ibs.th.bge.1crn.subjects.*.
 
@@ -95,12 +96,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     end.
     /* По справочникам ..., Рецепты, ... при логическом удалении записей на стороне ТН никаких действий не производится,
        а при передаче из 1С к названию добавляется фраза «УДАЛЕНО» (или аналог). */
-    
+    /* Если придет удалено, то 1С сам поставит слово Удалено. */
+    /* ИТОГО ПО ЛОГИЧЕСКОМУ УДАЛЕНИЮ:
+       т.к. 1С сам впишет "Удалено" или "Не удалено" - то мы на del-l никак не реагируем.
+       У нас это "Удалено" пройдёт штатным обновлением записи.
+    */
 
-    /* чтобы при изменении записи не перезатирать поля, которые не приходят из 1С, значениями по умолчанию -
-       читаем их значения из исходной записи;
-       чтобы при изменении записи не затирать пустыми значениями поля из необязательных тегов, которые пришли из 1С, -
-       читаем их значения из исходной записи */
+
     find first buf_recipe no-lock where buf_recipe.recipe-code = v-recipe-code no-error .
     if available buf_recipe then do:
       if v-recipe-name > "" then . else v-recipe-name = buf_recipe.recipe-name .
@@ -115,6 +117,9 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       .
     end . /* end_of create */
 
+    /* 06/XII-2017 Если придет статус 2, то в начало названия добавляем ЗАКРЫТ.  Это закрытие рецепта в 1С. */    
+    if objImp:status_ = enum-recipe-status:enclose then v-recipe-name = "ЗАКРЫТ." + v-recipe-name .
+    
       
     /* ----- создание/обновление рецепта ----- */
     define variable proc-fbrlib   as class ibs.th.str.fbrlib no-undo .
@@ -199,7 +204,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       undo, throw exAppErrors .
     end catch .
     catch exProErrors as class Progress.Lang.ProError :
-      Msg = exProErrors:GetMessage(1) . 
+      Msg = exProErrors:GetMessage(1) .
       v-retfl = false.
       undo, throw exProErrors .
     end catch .
@@ -215,11 +220,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
   end method. /* end_of Excute */
 
 
+  /* mapping:
+     коды в enum - согласно протоколу взаимодействия с 1С;
+  */
   /* маппинг типов рецептов наших на 1с */
   method private character mapRecipeTypes (p-recipe-type as enum-recipe-type) :
-    /* mapping:
-       коды в enum - согласно протоколу взаимодействия с 1С;
-    */
     define variable v-th-recipe-type as character no-undo .
     case p-recipe-type :
       when enum-recipe-type:enmanufacturing then v-th-recipe-type = {&manufacturing} .
