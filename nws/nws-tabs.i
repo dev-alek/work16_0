@@ -667,6 +667,8 @@ abc-analysis~
 ,shop~
 ,c-shop~
 ,some-lk~
+,sr-izmerenia~
+,c-sr-izmerenia~
 ,staff~
 ,c-staff~
 ,stop-list~

@@ -207,6 +207,8 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,c-pump-nozzle~
 ,pl-pump-nozzle~
 ,c-pl-pump-nozzle~
+,sr-izmerenia~
+,c-sr-izmerenia~
 ,obj-date~
 ,shift-obj~
 ,c-shift-obj~

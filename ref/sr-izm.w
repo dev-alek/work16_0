@@ -21,6 +21,7 @@ Creation date: 28/12/11
 ------------------------------------------------------------------------*/
 /*          This .W file was created with the Progress AppBuilder.       */
 /*----------------------------------------------------------------------*/
+block-level on error undo, throw.
 
 /* ***************************  Definitions  ************************** */
 
@@ -44,14 +45,34 @@ define variable vss-description as character no-undo init "Справочник средств из
 { cmp/showinf.i }
 { gbl/getcntxt.i DEF}
 { gbl/color.i }
-{ ref/sr-izm.i sr-izmerenia ds}
+/*{ ref/sr-izm.i sr-izmerenia ds}*/
 { ref/sr-izm.i dop-sr-izm }
-{ ref/sr-izm.i " " proc }
+/*{ ref/sr-izm.i " " proc }*/
 
 DEFINE VARIABLE v-max-node-code AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-node-code AS INTEGER NO-UNDO.
 define variable v-edit-mode as logical no-undo .
 define buffer buf_clob-bind for ub.clob-bind.
+
+define variable cb-sr-type-id as integer column-label "Тип"
+  format ">9" label "Тип"
+  view-as combo-box list-item-pairs
+    "Ареометр калиброванный при 15°С",1,
+    "Ареометр калиброванный при 20°С",2,
+    "Поточный плотномер",3,
+    "Погружной плотномер",4,
+    "Канал измерения плотности (с поточным плотномером)",5,
+    "Канал измерения плотности (без поточного плотномера)",6
+  inner-lines 5 drop-down-list size-chars 55 by 1
+.
+
+define variable cb-sr-temp-line as decimal column-label "Температурный коэффициент линейного! расширения материала средства! измерения уровня "
+  format "-9.9999999" label "Температурный коэффициент линейного расширения материала средства измерения уровня "
+  view-as combo-box list-item-pairs
+    "Сталь",0.0000125,
+    "Алюминий",0.000023
+  inner-lines 2 drop-down-list size-chars 10 by 1
+.
 
 &scoped-define view-dop-sr-izm ~
 DISPLAY ~
@@ -81,7 +102,7 @@ dop-sr-izm.sr-abs-err-temp-dens  ~
 dop-sr-izm.sr-otnos              ~
 dop-sr-izm.sr-temp-line          ~
 in FRAME {&FRAME-NAME}
-
+/*
 &SCOPED-DEFINE disable-dop-sr-izm ~
 disable ~
 dop-sr-izm.node-code             ~
@@ -95,6 +116,46 @@ dop-sr-izm.sr-abs-err-temp-dens  ~
 dop-sr-izm.sr-otnos              ~
 dop-sr-izm.sr-temp-line          ~
 with FRAME {&FRAME-NAME}
+*/
+&SCOPED-DEFINE disable-dop-sr-izm ~
+disable ~
+dop-sr-izm.sr-model              ~
+cb-sr-type-id               ~
+dop-sr-izm.sr-abs-err-neft-water ~
+dop-sr-izm.sr-abs-err-water      ~
+dop-sr-izm.sr-abs-err-dens       ~
+dop-sr-izm.sr-abs-err-temp-vol   ~
+dop-sr-izm.sr-abs-err-temp-dens  ~
+dop-sr-izm.sr-otnos              ~
+cb-sr-temp-line          ~
+with FRAME {&FRAME-NAME}
+/*
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit b-add b-del b-sel B-Help BR-sr-izm
+DEFINE BUTTON B-exit AUTO-GO
+     LABEL "&Сохранить"
+     SIZE 10 BY 1
+     BGCOLOR 8 .
+     B-exit AT ROW 1 COL 1 WIDGET-ID 2
+&Scoped-define SELF-NAME B-exit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exit Dialog-Frame
+ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Сохранить */
+DO:
+DEFINE VARIABLE glog AS LOGICAL NO-UNDO.
+  MESSAGE
+  "Вы уверены, что хотите сохранить классификатор в таком виде в БД?" SKIP
+  "УДАЛЕНИЕ ДОБАВЛЕННЫХ ЗАПИСЕЙ (если Вы их добавляли) ПОСЛЕ ЭТОГО СТАНЕТ НЕВОЗМОЖНЫМ!"
+  VIEW-AS ALERT-BOX QUESTION BUTTONS YES-NO UPDATE glog.
+  if not glog then return no-apply.
+  RUN proc-save-all IN THIS-PROCEDURE NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+  ENABLE B-exit b-quit b-sel b-add b-del B-Help
+
+
+*/
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -128,7 +189,7 @@ with FRAME {&FRAME-NAME}
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit b-add b-del b-sel B-Help BR-sr-izm
+&Scoped-Define ENABLED-OBJECTS b-quit b-add b-del b-sel B-Help BR-sr-izm
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -162,11 +223,6 @@ DEFINE BUTTON b-sel
      LABEL "&Выбор"
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Сохранить"
-     SIZE 10 BY 1
-     BGCOLOR 8 .
-
 DEFINE BUTTON B-Help
      LABEL "Помо&щь"
      SIZE 3 BY 1
@@ -177,7 +233,7 @@ DEFINE BUTTON b-ok
      SIZE 10 BY 1.
 
 DEFINE BUTTON b-quit AUTO-GO
-     LABEL "&Отмена"
+     LABEL "&Закрыть"
      SIZE 10 BY 1
      BGCOLOR 8 .
 
@@ -194,7 +250,7 @@ DEFINE BROWSE BR-sr-izm
    QUERY BR-sr-izm NO-LOCK DISPLAY
       sr-izmerenia.node-code
       sr-izmerenia.sr-model
-      sr-izmerenia.sr-type
+      sr-izmerenia.sr-type-id
       sr-izmerenia.sr-abs-err-neft-water
       sr-izmerenia.sr-abs-err-water
       sr-izmerenia.sr-abs-err-dens
@@ -210,7 +266,6 @@ DEFINE BROWSE BR-sr-izm
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     B-exit AT ROW 1 COL 1 WIDGET-ID 2
      b-quit AT ROW 1 COL 11 WIDGET-ID 6
      b-sel at row 1 col 26  WIDGET-ID 10
      b-add AT ROW 1 COL 45 WIDGET-ID 14
@@ -325,30 +380,13 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME B-exit
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exit Dialog-Frame
-ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Сохранить */
-DO:
-DEFINE VARIABLE glog AS LOGICAL NO-UNDO.
-  MESSAGE
-  "Вы уверены, что хотите сохранить классификатор в таком виде в БД?" SKIP
-  "УДАЛЕНИЕ ДОБАВЛЕННЫХ ЗАПИСЕЙ (если Вы их добавляли) ПОСЛЕ ЭТОГО СТАНЕТ НЕВОЗМОЖНЫМ!"
-  VIEW-AS ALERT-BOX QUESTION BUTTONS YES-NO UPDATE glog.
-  if not glog then return no-apply.
-  RUN proc-save-all IN THIS-PROCEDURE NO-ERROR.
-  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME B-exit
+&Scoped-define SELF-NAME B-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-sel Dialog-Frame
 ON CHOOSE OF B-sel IN FRAME Dialog-Frame /* Выбор */
 DO:
   if available sr-izmerenia then do :
     p-node-code = sr-izmerenia.node-code. 
-    p-sr-type = sr-izmerenia.sr-type.
+    p-sr-type = string(sr-izmerenia.sr-type-id).
   end.
   else p-node-code = ? .
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
@@ -366,17 +404,19 @@ ON CHOOSE OF b-ok IN FRAME Dialog-Frame /* Ввод */
 DO:
   RUN proc-save-record (input {&add-def}) NO-ERROR.
   IF ERROR-STATUS:ERROR THEN do:
+    /*
     enable
     b-add when v-edit-mode
     b-del when v-edit-mode
     B-exit when v-edit-mode
     with frame {&frame-name} .
+    */
     RETURN NO-APPLY.
   end.
   enable
   b-add when v-edit-mode
   b-del when v-edit-mode
-  B-exit when v-edit-mode
+/*  B-exit when v-edit-mode */
   with frame {&frame-name} .
 END.
 
@@ -394,6 +434,7 @@ DO:
     return no-apply.
   end.
   IF AVAILABLE sr-izmerenia THEN do:
+    /*
     ASSIGN
     dop-sr-izm.node-code             = sr-izmerenia.node-code
     dop-sr-izm.sr-model              = sr-izmerenia.sr-model
@@ -407,10 +448,29 @@ DO:
     dop-sr-izm.sr-temp-line          = sr-izmerenia.sr-temp-line
     .
     {&view-dop-sr-izm}.
+    */
+    assign
+      cb-sr-type-id   = sr-izmerenia.sr-type-id
+      cb-sr-temp-line = sr-izmerenia.sr-temp-line
+    . 
+    DISPLAY
+      sr-izmerenia.node-code @ dop-sr-izm.node-code AT ROW 18 COL 5 LEFT-ALIGNED  SKIP
+      sr-izmerenia.sr-model  @ dop-sr-izm.sr-model  AT ROW 19 COL 5 LEFT-ALIGNED  SKIP
+      cb-sr-type-id    AT ROW 20 COL 5 LEFT-ALIGNED  SKIP
+      sr-izmerenia.sr-abs-err-neft-water @ dop-sr-izm.sr-abs-err-neft-water AT ROW 21 COL 5 LEFT-ALIGNED  SKIP
+      sr-izmerenia.sr-abs-err-water      @ dop-sr-izm.sr-abs-err-water      AT ROW 22 COL 5 LEFT-ALIGNED  SKIP
+      sr-izmerenia.sr-abs-err-dens       @ dop-sr-izm.sr-abs-err-dens       AT ROW 23 COL 5 LEFT-ALIGNED  SKIP
+      sr-izmerenia.sr-abs-err-temp-vol   @ dop-sr-izm.sr-abs-err-temp-vol   AT ROW 24 COL 5 LEFT-ALIGNED  SKIP
+      sr-izmerenia.sr-abs-err-temp-dens  @ dop-sr-izm.sr-abs-err-temp-dens  AT ROW 25 COL 5 LEFT-ALIGNED  SKIP
+      sr-izmerenia.sr-otnos              @ dop-sr-izm.sr-otnos              AT ROW 26 COL 5 LEFT-ALIGNED  SKIP
+      cb-sr-temp-line  AT ROW 27 COL 5 LEFT-ALIGNED
+    with FRAME {&FRAME-NAME} .
   END.
+  /*
   ELSE DO:
     {&view-dop-sr-izm}.
   END.
+  */
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -500,7 +560,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE B-exit b-quit b-sel b-add b-del B-Help
+  ENABLE b-quit b-sel b-add b-del B-Help
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -511,12 +571,10 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-tables Dialog-Frame
 PROCEDURE fill-tables :
-run sr-izmerenia_fill-sr-izm in this-procedure ( input p-mode
-                                               , buffer buf_clob-bind).
-
+/*
 CREATE dop-sr-izm.
 RELEASE dop-sr-izm.
-FIND LAST sr-izmerenia NO-ERROR.
+FIND LAST sr-izmerenia no-lock NO-ERROR.
 IF AVAILABLE sr-izmerenia THEN DO:
    ASSIGN
    v-max-node-code = sr-izmerenia.node-code.
@@ -527,7 +585,11 @@ ELSE DO:
 
 END.
 release sr-izmerenia NO-ERROR.
+*/
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
 PROCEDURE MyEnable :
@@ -537,21 +599,21 @@ assign
 if (lookup("b-add", bttns) > 0 AND v-cntxt-db-num = 0 AND NOT TRANSACTION AND p-mode = {&UPDATE}) then do:
   v-edit-mode = yes.
 end.
-FIND FIRST dop-sr-izm.
+/* FIND FIRST dop-sr-izm. */
 enable
 br-sr-izm
 b-add WHEN v-edit-mode
 b-del WHEN v-edit-mode
 b-help
-b-exit WHEN v-edit-mode
+/* b-exit WHEN v-edit-mode */
 b-quit
 b-sel when not v-edit-mode
 WITH FRAME {&FRAME-NAME}
 .
 IF p-mode <> {&UPDATE} THEN DO:
-  HIDE
+  /* HIDE
   b-exit
-  IN FRAME {&FRAME-NAME}.
+  IN FRAME {&FRAME-NAME}. */
   b-quit:COLUMN  = 1.
   b-quit:label in frame {&frame-name} = "&Выход".
 
@@ -560,10 +622,14 @@ END.
 APPLY "value-changed" TO BROWSE br-sr-izm.
 END PROCEDURE.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add Dialog-Frame
 PROCEDURE proc-b-add :
 DEFINE VARIABLE v-node-code AS INTEGER NO-UNDO.
 DEFINE BUFFER buf_sr-izm FOR sr-izmerenia.
+/*
 FIND LAST buf_sr-izm NO-ERROR.
 IF AVAILABLE buf_sr-izm  THEN DO:
     ASSIGN
@@ -572,51 +638,51 @@ END.
 ELSE DO:
    v-node-code = 1.
 END.
-DISPLAY
-b-ok
-b-cancel
-WITH FRAME {&FRAME-NAME}.
-ENABLE
-b-ok
-b-cancel
-WITH FRAME {&FRAME-NAME}.
-disable
-b-add
-b-exit
-b-del
-with frame {&frame-name} .
-do transaction:
-  delete dop-sr-izm.
+*/
+/*  DISPLAY b-ok b-cancel WITH FRAME {&FRAME-NAME}.*/
+/*  ENABLE b-ok b-cancel WITH FRAME {&FRAME-NAME}.*/
+  disable b-add /* b-exit */ b-del with frame {&frame-name} .
+/*  delete dop-sr-izm. */
   CREATE dop-sr-izm.
   ASSIGN
-  dop-sr-izm.node-code = v-node-code
+/*  dop-sr-izm.node-code = v-node-code */
+  dop-sr-izm.node-code = 0
+  cb-sr-type-id        = 1
+  cb-sr-temp-line      = 0.0000125 /* to-do: переопределить на выбор первого значения из перечня */  
   .
-end.
+HIDE  
+ dop-sr-izm.node-code
+IN FRAME {&FRAME-NAME} .
 DISPLAY
-dop-sr-izm.node-code             SKIP
-dop-sr-izm.sr-model              SKIP
-dop-sr-izm.sr-type               SKIP
-dop-sr-izm.sr-abs-err-neft-water SKIP
-dop-sr-izm.sr-abs-err-water      SKIP
-dop-sr-izm.sr-abs-err-dens       SKIP
-dop-sr-izm.sr-abs-err-temp-vol   SKIP
-dop-sr-izm.sr-abs-err-temp-dens  SKIP
-dop-sr-izm.sr-otnos              SKIP
-dop-sr-izm.sr-temp-line          SKIP
-WITH FRAME {&FRAME-NAME}
-.
+  b-ok
+  b-cancel
+/* dop-sr-izm.node-code */
+  dop-sr-izm.sr-model
+  cb-sr-type-id
+  dop-sr-izm.sr-abs-err-neft-water
+  dop-sr-izm.sr-abs-err-water
+  dop-sr-izm.sr-abs-err-dens
+  dop-sr-izm.sr-abs-err-temp-vol
+  dop-sr-izm.sr-abs-err-temp-dens
+  dop-sr-izm.sr-otnos
+  cb-sr-temp-line
+WITH FRAME {&FRAME-NAME} .
 enable
+  b-ok
+  b-cancel
 dop-sr-izm.sr-model
-dop-sr-izm.sr-type
+/* dop-sr-izm.sr-type */
+  cb-sr-type-id
 dop-sr-izm.sr-abs-err-neft-water
 dop-sr-izm.sr-abs-err-water
 dop-sr-izm.sr-abs-err-dens
 dop-sr-izm.sr-abs-err-temp-vol
 dop-sr-izm.sr-abs-err-temp-dens
 dop-sr-izm.sr-otnos
-dop-sr-izm.sr-temp-line
-WITH FRAME {&FRAME-NAME}
-.
+/* dop-sr-izm.sr-temp-line */
+  cb-sr-temp-line
+WITH FRAME {&FRAME-NAME} .
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -625,6 +691,8 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-del Dialog-Frame
 PROCEDURE proc-b-del :
 DEFINE BUFFER buf_sr-izm FOR sr-izmerenia.
+define variable v-del-confirm as logical no-undo. /* если вдруг случайно нажали */
+/*
 IF sr-izmerenia.node-code <= v-max-node-code  THEN DO:
   MESSAGE
   "К сожалению, удалить эту запись уже невозможно!!!" SKIP
@@ -633,9 +701,56 @@ IF sr-izmerenia.node-code <= v-max-node-code  THEN DO:
    undo, return error .
 END.
 FIND FIRST buf_sr-izm WHERE RECID(buf_sr-izm) = RECID(sr-izmerenia) NO-ERROR.
-DELETE buf_sr-izm .
-{&OPEN-QUERY-{&BROWSE-NAME}}
-APPLY "value-changed" TO BROWSE br-sr-izm.
+*/
+define variable Msg as character no-undo.
+define variable v-retfl as logical no-undo.
+Msg = "".
+v-retfl = false.
+
+  v-del-confirm = false.
+  message substitute("Удалить запись о средстве измерения &1 &2?", sr-izmerenia.node-code, sr-izmerenia.sr-model)
+    view-as alert-box question buttons yes-no update v-del-confirm .
+  if v-del-confirm then do transaction:
+    find first buf_sr-izm exclusive-lock where rowid(buf_sr-izm) = rowid(sr-izmerenia) no-error no-wait .
+    if locked(buf_sr-izm) then do:
+      undo, throw new Progress.Lang.AppError(
+        substitute("Запись о средстве измерения с ид. [&1] занята другим пользователем", sr-izmerenia.node-code)
+       ) .
+    end . 
+    if not available buf_sr-izm then do:
+      undo, throw new Progress.Lang.AppError(
+        substitute("Запись о средстве измерения с ид. [&1] отсутствует", sr-izmerenia.node-code)
+      ) .
+    end .
+
+    DELETE buf_sr-izm .
+    {&OPEN-QUERY-{&BROWSE-NAME}}
+    APPLY "value-changed" TO BROWSE br-sr-izm.
+    
+    v-retfl = true.
+    catch exAppErrors as class Progress.Lang.AppError :
+      Msg = exAppErrors:ReturnValue .
+      if Msg > "" then . else do :
+        Msg = exAppErrors:GetMessage(1) .
+        if Msg > "" then . else Msg = "AppError при удалении в sr-izmerenia" .
+      end .
+    end catch .
+    catch exProErrors as class Progress.Lang.ProError :
+      Msg = exProErrors:GetMessage(1) . 
+      if Msg > "" then . else Msg = "ProError при удалении в sr-izmerenia" .
+    end catch .
+    catch exAnyErrors as class Progress.Lang.Error:
+      Msg = "Unexpected error при удалении в sr-izmerenia" .
+    end catch .
+    finally :
+      if v-retfl then .
+      else do:
+        message Msg view-as alert-box error.
+        return error.
+      end.
+    end finally .
+  end.
+  else return error.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -643,104 +758,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save-all Dialog-Frame
 PROCEDURE proc-save-all :
-DEFINE VARIABLE glog AS LOGICAL NO-UNDO.
-define variable v-part-num as integer no-undo .
-define variable v-mode as character no-undo .
-define variable v-clob-mode as character no-undo .
-define variable v-clob-db-num as integer no-undo .
-define variable v-int64-id as int64 no-undo .
-define variable v-path                    as character                no-undo .
-DEFINE VARIABLE v-full-path               as character                no-undo .
-DEFINE VARIABLE v-file-name               as character                no-undo .
-DEFINE VARIABLE v-file-name-no-ext        as character                no-undo .
-DEFINE VARIABLE v-file-name-ext           as character                no-undo .
-
-DEFINE BUFFER buf_sr-izm FOR sr-izmerenia.
-FOR EACH buf_sr-izm WHERE buf_sr-izm.node-code < 0:
-    DELETE buf_sr-izm.
-END.
-find last buf_sr-izm no-error.
-if (available buf_sr-izm
-and buf_sr-izm.node-code = v-max-node-code )
-or (not available buf_sr-izm
-and v-max-node-code  = 0)
-then do:
-  message
-  "Справочник не изменился" skip
-  "сохранение не требуется"
-  view-as alert-box warning
-  .
-  return.
-end.
-run gbl/_tmpfile.p ( input ""
-                    ,input "xml"
-                    ,output v-file-name) .
-output to value(v-file-name).
-put 1 skip.
-output close.
-run gbl/filename.p (
-               input v-file-name
-              ,output v-full-path
-              ,output v-path
-              ,output v-file-name
-              ,output v-file-name-no-ext
-              ,output v-file-name-ext
-              ) no-error .
-if error-status:error then do:
-  undo, return error .
-end.
-glog = DATASET sr-izmerenia-ds:HANDLE:write-XML("FILE"
-                                           , v-full-path
-                                            , YES /*lformatted*/
-                                            , "windows-1251"
-                                            , ?
-                                            , YES /*write-xml-schema*/
-                                             ,NO /*min-schema*/ ) NO-ERROR.
-
-if error-status:error or not glog then do:
-  os-delete value(v-full-path) no-error.
-  MESSAGE
-  ERROR-STATUS:GET-MESSAGE(1) SKIP
-  RETURN-VALUE
-  VIEW-AS ALERT-BOX ERROR.
-  UNDO, RETURN ERROR.
-end.
-assign
-v-part-num = 1.
-if not available buf_clob-bind then do:
-  v-mode = {&add-def}.
-  v-clob-mode = "".
-  v-clob-db-num = ?.
-  v-int64-id = 0.
-end.
-else do:
-  v-mode = {&update}.
-  v-clob-mode = "add-new".
-  v-clob-db-num = buf_clob-bind.db-num.
-  v-int64-id = buf_clob-bind.int64-id.
-end.
-run gbl/file2clb.p ( input v-mode
-                    ,input v-clob-mode
-                    ,input ? /*p-bh*/
-                    ,input "sr-izmerenia.xml" /*p-uniq-key-rec*/
-                    ,input '' /*p-field-*/
-                    ,input frame {&frame-name}:title /*p-descr*/
-                    ,input-output v-part-num
-                    ,input {&lob-res-ref}
-                    ,input-output v-clob-db-num
-                    ,input-output v-int64-id
-                    ,input v-full-path
-                    ,input ? /*p-src-encoding*/
-                    ) no-error .
-IF ERROR-STATUS:ERROR THEN DO:
-  MESSAGE
-  ERROR-STATUS:GET-MESSAGE(1) SKIP
-  RETURN-VALUE
-  VIEW-AS ALERT-BOX ERROR.
-  os-delete value(v-full-path) no-error.
-  UNDO, RETURN ERROR.  
-END.
-os-delete value(v-full-path) no-error.
+  /* sr-izm-save.p */
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -749,112 +767,94 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save-record Dialog-Frame
 PROCEDURE proc-save-record :
 define input parameter p-action as character no-undo.
-define variable v-rec as recid no-undo .
+define variable v-node-code as integer no-undo .
+define variable v-rec       as recid no-undo .
+define variable Msg         as character no-undo.
+define variable v-retfl     as logical no-undo.
+define variable v-err-field as character no-undo .
 DEFINE BUFFER buf_sr-izm FOR sr-izmerenia.
+  
 ASSIGN
 FRAME {&FRAME-NAME}
-dop-sr-izm.node-code
 dop-sr-izm.sr-model
-dop-sr-izm.sr-type
+cb-sr-type-id
 dop-sr-izm.sr-abs-err-neft-water
 dop-sr-izm.sr-abs-err-water
 dop-sr-izm.sr-abs-err-dens
 dop-sr-izm.sr-abs-err-temp-vol
 dop-sr-izm.sr-abs-err-temp-dens
 dop-sr-izm.sr-otnos
-dop-sr-izm.sr-temp-line
+cb-sr-temp-line
 .
-if dop-sr-izm.sr-abs-err-neft-water > 3 or dop-sr-izm.sr-abs-err-neft-water < - 3 then do :
-  message
-    "Абсолютная погрешность измерений"         skip
-    "уровня нефтепродукта и подтоварной воды " skip
-    "выходит за границы допустимого диапазона (+/-)3 мм" skip
-  view-as alert-box error.
-  apply "entry" to dop-sr-izm.sr-abs-err-neft-water in frame {&frame-name} .
-  return no-apply.
-end.
-if dop-sr-izm.sr-abs-err-water > 3 or dop-sr-izm.sr-abs-err-water < - 3 then do :
-  message
-    "Абсолютная погрешность измерений уровня подтоварной воды" skip
-    "выходит за границы допустимого диапазона (+/-)3 мм"         skip
-  view-as alert-box error.
-  apply "entry" to dop-sr-izm.sr-abs-err-water in frame {&frame-name} .
-  return no-apply.
-end.
-if dop-sr-izm.sr-abs-err-dens > 0.5 or dop-sr-izm.sr-abs-err-dens < - 0.5 then do :
-  message
-    "Абсолютная погрешность измерений плотности нефтепродукта"    skip
-    "ареометром выходит за границы допустимого диапазона (+/-)0.5 кг/м3" skip
-  view-as alert-box error.
-  apply "entry" to dop-sr-izm.sr-abs-err-dens in frame {&frame-name} .
-  return no-apply.
-end.
-if dop-sr-izm.sr-abs-err-temp-vol > 0.5 or dop-sr-izm.sr-abs-err-temp-vol < - 0.5 then do :
-  message
-    "Абсолютная погрешность измерений температуры нефтепродукта при измерении"    skip
-    "его объема выходит за границы допустимого диапазона (+/-)0.5 °С" skip
-  view-as alert-box error.
-  apply "entry" to dop-sr-izm.sr-abs-err-temp-vol in frame {&frame-name} .
-  return no-apply.
-end.
-if dop-sr-izm.sr-abs-err-temp-dens > 0.5 or dop-sr-izm.sr-abs-err-temp-dens < - 0.5 then do :
-  message
-    "Абсолютная погрешность измерений температуры нефтепродукта при измерении"    skip
-    "его плотности выходит за границы допустимого диапазона (+/-)0.5 °С" skip
-  view-as alert-box error.
-  apply "entry" to dop-sr-izm.sr-abs-err-temp-dens in frame {&frame-name} .
-  return no-apply.
-end.
-if dop-sr-izm.sr-otnos > 0.05 or dop-sr-izm.sr-otnos < - 0.05 then do :
-  message
-    "Предел допускаемой относительной погрешности средства обработки"    skip
-    "результатов измерений выходит за границы допустимого диапазона (+/-)0.05 %" skip
-  view-as alert-box error.
-  apply "entry" to dop-sr-izm.sr-otnos in frame {&frame-name} .
-  return no-apply.
-end.
-FIND FIRST buf_sr-izm  WHERE
-    buf_sr-izm.node-code = dop-sr-izm.node-code NO-ERROR.
-IF AVAILABLE buf_sr-izm THEN DO:
-  if p-action  = {&add-def} then do :
-    ASSIGN
-    dop-sr-izm.node-code = 0
-    .
-    MESSAGE
-    substitute("Уже есть запись с таким вн. кодом &1", dop-sr-izm.node-code)
-    VIEW-AS ALERT-BOX ERROR.
-    RUN proc-undo-record IN this-procedure.
-    RETURN.
-  end.
-END.
-FIND FIRST buf_sr-izm  WHERE
-        buf_sr-izm.node-code              =  dop-sr-izm.node-code
-    AND buf_sr-izm.sr-model               =  dop-sr-izm.sr-model
-    AND buf_sr-izm.sr-type                =  dop-sr-izm.sr-type
-    AND buf_sr-izm.sr-abs-err-neft-water  =  dop-sr-izm.sr-abs-err-neft-water
-    AND buf_sr-izm.sr-abs-err-water       =  dop-sr-izm.sr-abs-err-water
-    AND buf_sr-izm.sr-abs-err-dens        =  dop-sr-izm.sr-abs-err-dens
-    AND buf_sr-izm.sr-abs-err-temp-vol    =  dop-sr-izm.sr-abs-err-temp-vol
-    AND buf_sr-izm.sr-abs-err-temp-dens   =  dop-sr-izm.sr-abs-err-temp-dens
-    AND buf_sr-izm.sr-otnos               =  dop-sr-izm.sr-otnos
-    AND buf_sr-izm.sr-temp-line           =  dop-sr-izm.sr-temp-line
-    NO-ERROR.
-IF AVAILABLE buf_sr-izm THEN DO:
-  MESSAGE
-  substitute("Уже есть запись с такими характеристиками")
-  VIEW-AS ALERT-BOX ERROR.
-  return.
-END.
-DO TRANSACTION
-ON error UNDO, RETURN ERROR :
-    CREATE buf_sr-izm.
-    BUFFER-COPY dop-sr-izm TO buf_sr-izm  .
+  assign
+    dop-sr-izm.sr-type-id   = cb-sr-type-id
+    dop-sr-izm.sr-temp-line = cb-sr-temp-line
+    v-node-code = if p-action = {&add-def} then next-value (s-sr-izmerenia, {&db-name_schema}) else dop-sr-izm.node-code
+    Msg = "":U
+    v-retfl = false
+  .
+
+  do transaction :
+    run ref/sr-izm01.p
+    (input v-node-code /* p-node-code (int) */
+    ,input dop-sr-izm.sr-model /* p-sr-model (chr) */
+    ,input dop-sr-izm.sr-type-id /* p-sr-type-id (int) */
+    ,input dop-sr-izm.sr-abs-err-neft-water /* p-sr-abs-err-neft-water (dec) */
+    ,input dop-sr-izm.sr-abs-err-water /* p-sr-abs-err-water (dec) */
+    ,input dop-sr-izm.sr-abs-err-dens /* p-sr-abs-err-dens (dec) */
+    ,input dop-sr-izm.sr-abs-err-temp-vol /* p-sr-abs-err-temp-vol (dec) */
+    ,input dop-sr-izm.sr-abs-err-temp-dens /* p-sr-abs-err-temp-dens (dec) */
+    ,input dop-sr-izm.sr-otnos /* p-sr-otnos (dec) */
+    ,input dop-sr-izm.sr-temp-line /* p-sr-temp-line (dec) */
+   ,output v-err-field
+    ) .
     DELETE dop-sr-izm.
-    CREATE dop-sr-izm.
-    FIND FIRST dop-sr-izm.
-    v-rec = RECID(buf_sr-izm).
-    RELEASE buf_sr-izm.
-END.
+    find first buf_sr-izm no-lock where buf_sr-izm.node-code = v-node-code no-error .
+    v-rec = if available buf_sr-izm then RECID(buf_sr-izm) else ?.
+    v-retfl = true.
+    
+    catch exAppErrors as class Progress.Lang.AppError :
+      Msg = exAppErrors:ReturnValue .
+      if Msg > "" then . else do :
+        Msg = exAppErrors:GetMessage(1) .
+        if Msg > "" then . else Msg = "AppError при добавлении в sr-izmerenia" .
+      end .
+    end catch .
+    catch exProErrors as class Progress.Lang.ProError :
+      Msg = exProErrors:GetMessage(1) . 
+      if Msg > "" then . else Msg = "ProError при добавлении в sr-izmerenia" .
+    end catch .
+    catch exAnyErrors as class Progress.Lang.Error:
+      Msg = "Unexpected error при добавлении в sr-izmerenia" .
+    end catch .
+    finally :
+      if v-retfl then .
+      else do:
+        message Msg view-as alert-box error.
+        case v-err-field:
+          when "sr-model":U then
+            apply "entry" to dop-sr-izm.sr-model in frame {&frame-name} .
+          when "sr-abs-err-neft-water":U then
+            apply "entry" to dop-sr-izm.sr-abs-err-neft-water in frame {&frame-name} .
+          when "sr-abs-err-water":U then
+            apply "entry" to dop-sr-izm.sr-abs-err-water in frame {&frame-name} .
+          when "sr-abs-err-dens":U then
+            apply "entry" to dop-sr-izm.sr-abs-err-dens in frame {&frame-name} .
+          when "sr-abs-err-temp-vol":U then
+            apply "entry" to dop-sr-izm.sr-abs-err-temp-vol in frame {&frame-name} .
+          when "sr-abs-err-temp-dens":U then
+            apply "entry" to dop-sr-izm.sr-abs-err-temp-dens in frame {&frame-name} .
+          when "sr-otnos":U then
+            apply "entry" to dop-sr-izm.sr-otnos in frame {&frame-name} .
+          when "sr-temp-line":U then
+            apply "entry" to cb-sr-temp-line in frame {&frame-name} .
+          otherwise .
+        end case .
+        return error.
+      end.
+    end finally .
+  end . /* end_of transaction */
+
 {&disable-dop-sr-izm}.
 HIDE b-ok b-cancel IN FRAME {&FRAME-NAME}.
 {&OPEN-QUERY-{&BROWSE-NAME}}
@@ -868,9 +868,11 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-undo-record Dialog-Frame
 PROCEDURE proc-undo-record :
 delete dop-sr-izm.
+/*
 create dop-sr-izm.
 RELEASE dop-sr-izm.
 FIND FIRST dop-sr-izm.
+*/
 {&disable-dop-sr-izm}.
 HIDE b-ok b-cancel IN FRAME {&FRAME-NAME}.
 APPLY "VALUE-CHANGED" TO br-sr-izm IN FRAME {&FRAME-NAME}.

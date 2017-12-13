@@ -1,8 +1,8 @@
 /*
 
-$Revision$
-$Author$
-$Date$
+$Revision: $
+$Author: $
+$Date: $
 $Workfile: $
 $Archive: $
 
@@ -438,6 +438,7 @@ Creation date: 04/05/06
 &glob table_c-shift-staff 'c-shift-staff':U
 &glob table_c-shop 'c-shop':U
 &glob table_c-sht-hist 'c-sht-hist':U
+&glob table_c-sr-izmerenia 'c-sr-izmerenia':U
 &glob table_c-staff 'c-staff':U
 &glob table_c-stop-list 'c-stop-list':U
 &glob table_c-stop-list-line 'c-stop-list-line':U
@@ -1091,6 +1092,7 @@ Creation date: 04/05/06
 &glob table_shop 'shop':U
 &glob table_some-lk 'some-lk':U
 &glob table_some-lk-attr 'some-lk-attr':U
+&glob table_sr-izmerenia 'sr-izmerenia':U
 &glob table_staff 'staff':U
 &glob table_staff-attr 'staff-attr':U
 &glob table_stk-line 'stk-line':U

@@ -1,8 +1,8 @@
 /*
 
-$Revision$
-$Author$
-$Date$
+$Revision: $
+$Author: $
+$Date: $
 $Workfile: $
 $Archive: $
 
@@ -859,6 +859,8 @@ Creation date: 01/29/07
 &glob table_c-shop-full '{&bef-table_c-shop-full}':U
 &glob bef-table_c-sht-hist-full шапка истории смен
 &glob table_c-sht-hist-full '{&bef-table_c-sht-hist-full}':U
+&glob bef-table_c-sr-izmerenia-full c-sr-izmerenia
+&glob table_c-sr-izmerenia-full '{&bef-table_c-sr-izmerenia-full}':U
 &glob bef-table_c-staff-full c-staff
 &glob table_c-staff-full '{&bef-table_c-staff-full}':U
 &glob bef-table_c-stop-list-full История стоплистов
@@ -2165,6 +2167,8 @@ Creation date: 01/29/07
 &glob table_some-lk-full '{&bef-table_some-lk-full}':U
 &glob bef-table_some-lk-attr-full Атрибуты для some-lk
 &glob table_some-lk-attr-full '{&bef-table_some-lk-attr-full}':U
+&glob bef-table_sr-izmerenia-full sr-izm
+&glob table_sr-izmerenia-full '{&bef-table_sr-izmerenia-full}':U
 &glob bef-table_staff-full Персонал
 &glob table_staff-full '{&bef-table_staff-full}':U
 &glob bef-table_staff-attr-full Атрибуты для staff

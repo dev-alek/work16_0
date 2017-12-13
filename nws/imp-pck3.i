@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: $
+$Author: $
+$Date: $
+$Workfile: $
+$Archive: $
 
 тюик цемепхпсеряъ опнжедспни utl/gen-imp.p
 
