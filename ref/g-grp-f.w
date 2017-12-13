@@ -144,7 +144,7 @@ SPACE (5) SKIP (0) WITH VIEW-AS DIALOG-BOX SIDE-LABELS THREE-D SCROLLABLE DEFAUL
 ASSIGN FRAME {&frame-name}:SCROLLABLE = FALSE.
 
 /* ************************  Control Triggers  ************************ */
-run gbl\inidebug.p.
+
 ON GO OF FRAME {&frame-name} DO:
 DEFINE VARIABLE varnode-code like ub.gds-grp.node-code no-undo .
 DEFINE VARIABLE varupper-code like ub.gds-grp.upper-code no-undo .
