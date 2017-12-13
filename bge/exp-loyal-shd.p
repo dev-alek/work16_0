@@ -44,6 +44,7 @@ define variable v-long-code as integer no-undo.
 /* Includes */
 {ref/shd-attr.i}
 
+
 /* Получим атрибуты запуска */
 run schedule-attr-value in this-procedure (input integer(p_db-num-char),
     input p_task-type,
