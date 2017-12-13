@@ -235,8 +235,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                              , error-status :get-message ( 1 ) ).
     end.
     end.
-    
-    { gbl/rum-runa.i
+  if ub.icnt-doc.status_ = {&fact} then 
+  do:
+  { gbl/rum-runa.i
       ?
       this-procedure:handle
       ?
@@ -248,15 +249,15 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       no-error
     }
     if error-status :error
-    then
+      then
     do:
-        return error substitute( "&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"
-            , {&new-line}
-            , vss-workfile
-            , return-value
-            , error-status :get-message ( 1 ) ).
+      return error substitute( "&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"
+        , {&new-line}
+        , vss-workfile
+        , return-value
+        , error-status :get-message ( 1 ) ).
     end.
-    
+  end.
 end.
 
 
