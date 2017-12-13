@@ -18,7 +18,7 @@ Creation date: 02/10/17
 using Progress.Lang.*.
 
 
-class ibs.th.bge.1crn.subjects.clients implements ibs.th.bge.1crn.subjects.isubject:
+class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubject:
 
   define property code_ as character no-undo
     get. 
@@ -35,6 +35,10 @@ class ibs.th.bge.1crn.subjects.clients implements ibs.th.bge.1crn.subjects.isubj
   define property full-name as character no-undo
     get. 
     private set.
+  /* от 21-окт-2017:
+     Справочник групп клиентов из 1С к нам приходить не будет.
+     Поле grp-code в импорте не приходит. Значение grp-code подставляется по согласованию с техносервом.
+  */
   define property grp-code as character no-undo
     get.
     private set.
@@ -66,51 +70,67 @@ class ibs.th.bge.1crn.subjects.clients implements ibs.th.bge.1crn.subjects.isubj
     get.
     private set.
 
-  method public void SetProp (inTag as char, inValue as char):
+  define override property InitTag as character no-undo init "contractor"
+    get. 
+    
+  method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
-      when "code" then do:
-        assign code_ = inValue .
-      end.
-      when "del-l" then do:
-        assign del-l = integer (inValue).
-      end.
-      when "del-f" then do:
-        assign del-f = integer (inValue).
-      end.
-      when "name" then do:
-        assign name_ = inValue .
-      end.
-      when "full-name" then do:
-        assign full-name = inValue .
-      end.
-      when "grp-code" then do:
-        assign grp-code = inValue .
-      end.
-      when "city" then do:
-        assign city = inValue .
-      end.
-      when "ind" then do:
-        assign ind = inValue .
-      end.
-      when "kpp" then do:
-        assign kpp = inValue .
-      end.
-      when "agnt" then do:
-        assign agnt = inValue .
-      end.
-      when "post-adr" then do:
-        assign post-adr = inValue .
-      end.
-      when "e-mail" then do:
-        assign e-mail = inValue .
-      end.
-      when "leg-adr" then do:
-        assign leg-adr = inValue .
-      end.
-      when "okpo" then do:
-        assign okpo = inValue .
-      end.
+      when "code"      then code_     = if inValue >= "" then inValue else "" .
+      when "del-l"     then del-l     = if inValue >= "" then integer (inValue) else 0 .
+      when "del-f"     then del-f     = if inValue >= "" then integer (inValue) else 0 .
+      when "name"      then name_     = if inValue >= "" then inValue else "" .
+      when "full-name" then full-name = if inValue >= "" then inValue else "" .
+      when "grp-code"  then grp-code  = if inValue >= "" then inValue else "" .
+      when "city"      then city      = if inValue >= "" then inValue else "" .
+      when "ind"       then ind       = if inValue >= "" then inValue else "" .
+      when "inn"       then inn       = if inValue >= "" then inValue else "" .
+      when "kpp"       then kpp       = if inValue >= "" then inValue else "" .
+      when "agnt"      then agnt      = if inValue >= "" then inValue else "" .
+      when "post-adr"  then post-adr  = if inValue >= "" then inValue else "" .
+      when "e-mail"    then e-mail    = if inValue >= "" then inValue else "" .
+      when "leg-adr"   then leg-adr   = if inValue >= "" then inValue else "" .
+      when "okpo"      then okpo      = if inValue >= "" then inValue else "" .
     end case.
-  end.
+  end method.
+  
+  
+  method override protected void CheckData ():
+
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = ",code" when code_ = ?
+      v-str = v-str + ",name" when name_ = ?
+      v-str = v-str + ",full-name" when full-name = ?
+      v-str = v-str + ",inn" when inn = ?
+      v-str = v-str + ",kpp" when kpp = ?
+    .
+    v-str = substring(v-str, 2).
+    if v-str > "" then undo, throw new Progress.Lang.AppError(
+      substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
+    ) .
+
+  end method.
+  
+  method override protected void ClearSub():
+    assign 
+      code_     = ?
+      del-l     = ?
+      del-f     = ?
+      name_     = ?
+      full-name = ?
+      grp-code  = ?
+      city      = ?
+      ind       = ?
+      inn       = ?
+      kpp       = ?
+      agnt      = ?
+      post-adr  = ?
+      e-mail    = ?
+      leg-adr   = ?
+      okpo      = ?
+    .
+  end method.
+  
 
 end class.
