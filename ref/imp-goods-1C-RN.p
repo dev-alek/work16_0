@@ -230,9 +230,9 @@ define variable v-barcode-list as longchar no-undo .
                   , input no /* import */
                   , input no /*par-file as logical идет импоррт из файла - из карточки товара*/
                   , input no /*par-single-record as logical надо сохранить только одну запись - потом выход в справ*/
-                  , input 0 /*par-host-code like ub.sysconf.host-code */
-                  , input '' /*par-obj-type like ub.clients.obj-type */
-                  , input 0 /*par-obj-code like ub.clients.obj-code */
+                  , input ub.clients.host-code /*par-host-code like ub.sysconf.host-code */
+                  , input ub.clients.obj-type /*par-obj-type like ub.clients.obj-type */
+                  , input ub.clients.obj-code /*par-obj-code like ub.clients.obj-code */
                   , input (if p-GdsObj:gds-type = {&gds-goods} or p-GdsObj:gds-type = "н" or p-GdsObj:gds-type = "б" then  yes else no)
                   , input ? /*par-copy-rec as recid recid записи с которой копируем*/
                   , input integer(p-GdsObj:code_)
@@ -522,6 +522,7 @@ define variable v-barcode-list as longchar no-undo .
   end.
   
   if p-GdsObj:calories <> ?
+  and p-GdsObj:calories <> 0
   then do :
     RUN gds-attr-write (v-nbc, {&attr-calories}, string(p-GdsObj:calories)).  
   end.
@@ -530,6 +531,7 @@ define variable v-barcode-list as longchar no-undo .
   end.
   
   if p-GdsObj:carbohydrates <> ?
+  and p-GdsObj:carbohydrates <> 0
   then do :
     RUN gds-attr-write (v-nbc, {&attr-carbohydrate}, string(p-GdsObj:carbohydrates)).  
   end.
@@ -538,6 +540,7 @@ define variable v-barcode-list as longchar no-undo .
   end.
   
   if p-GdsObj:fats <> ?
+  and p-GdsObj:fats <> 0
   then do :
     RUN gds-attr-write (v-nbc, {&attr-fat}, string(p-GdsObj:fats)).  
   end.
@@ -546,6 +549,7 @@ define variable v-barcode-list as longchar no-undo .
   end.
   
   if p-GdsObj:proteins <> ?
+  and p-GdsObj:proteins <> 0
   then do :
     RUN gds-attr-write (v-nbc, {&attr-protein}, string(p-GdsObj:proteins)).  
   end.
@@ -557,7 +561,7 @@ define variable v-barcode-list as longchar no-undo .
   then do :
     RUN gds-attr-write (v-nbc, {&attr-ptrl-as-good}, "yes").  
   end.
-  else if p-GdsObj:enbl-zc = 0
+  else if p-GdsObj:pay-trk = 0
   then do :
     RUN gds-attr-delete (v-nbc, {&attr-ptrl-as-good}, output v-attr-del).     
   end.

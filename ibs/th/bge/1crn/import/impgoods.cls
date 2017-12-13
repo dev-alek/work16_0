@@ -33,13 +33,31 @@ class ibs.th.bge.1crn.import.impgoods implements ibs.th.bge.1crn.import.iimpsubj
       
       objGoods = cast (subjectObj, goods).
       
+      find first buf_goods no-lock where buf_goods.gds-code = integer(objGoods:code_) no-error.
+      if available buf_goods and buf_goods.stts = integer({&deleted-status-int})
+      then do :
+          v-stts = integer({&current-status-int}) .
+          run ref/goods02.p (
+                    input recid(buf_goods)
+                    ,input yes /*p-silent*/
+                    ,input-output v-stts) no-error. 
+      end.
+      
+      run ref/imp-goods-1C-RN.p (input objGoods) no-error .
+      if error-status:error
+      then do :
+          Msg = return-value .
+          return false.
+      end.                          
+          
       if objGoods:del-f = 1
       or objGoods:del-l = 1
       then do :
           find first buf_goods no-lock where buf_goods.gds-code = integer(objGoods:code_) no-error.
           if not available buf_goods
           then do :
-              undo, return error ("Нет товара с кодом " + objGoods:code_) .
+              Msg = ("Нет товара с кодом " + objGoods:code_ + " . Удаление невозможно") .
+              return false .
           end.
           for each buf_bar-code no-lock where buf_bar-code.gds-code = integer(objGoods:code_),
             each buf_prod-bc exclusive-lock where buf_prod-bc.b-code = buf_bar-code.b-code :
@@ -50,27 +68,6 @@ class ibs.th.bge.1crn.import.impgoods implements ibs.th.bge.1crn.import.iimpsubj
                     input recid(buf_goods)
                     ,input yes /*p-silent*/
                     ,input-output v-stts) no-error. 
-      end.   
-      else do :
-          
-          find first buf_goods no-lock where buf_goods.gds-code = integer(objGoods:code_) no-error.
-          if available buf_goods and buf_goods.stts = integer({&deleted-status-int})
-          then do :
-              v-stts = integer({&current-status-int}) .
-              run ref/goods02.p (
-                        input recid(buf_goods)
-                        ,input yes /*p-silent*/
-                        ,input-output v-stts) no-error. 
-          end.
-          
-          run ref/imp-goods-1C-RN.p (input objGoods) no-error .
-          if error-status:error
-          then do :
-              Msg = return-value .
-              return false.
-          end.                          
-          
-          
       end. 
       
       return true .
