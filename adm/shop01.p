@@ -110,6 +110,8 @@ define variable v-envd      as character no-undo.
 define variable v-kpp       as character no-undo.
 define variable v-pharm     as character no-undo.
 define variable v-delete    as logical no-undo.
+define variable v-pay-type-list as character no-undo . /* список проверенных pay-type.obj-code */
+define variable v-pay-type-str  as character no-undo . /* проверяемое pay-type.obj-code */
 define buffer buf_sysconf for ub.sysconf.
 define buffer buf_clients for ub.clients.
 define buffer buf_pay-type for ub.pay-type .
@@ -119,180 +121,170 @@ define buffer buf_dis-card-type for ub.dis-card-type.
 
 if p-mode <> {&add-def}
 AND p-mode <> {&update} then do:
-  message
-  vss-workfile vss-revision vss-description skip
-  "Неверный параметр p-mode" p-mode
-  view-as alert-box error .
-  return error '':u.
+  undo, return error
+    substitute('&5&1 &2 &3&4Неверный параметр p-mode [&6]':u,
+               vss-workfile, vss-revision, vss-description, {&new-line}, {&delim-par}, p-mode).
 end.
 
 { gbl/curdbnum.i v-db-num }
-
 if v-db-num <> 0
 then do:
-  run err-mess in this-procedure  (substitute("Нельзя изменять запись МАГАЗИНА в УБД: Номер текущей БД &1 ", v-db-num ) ).
-  undo, return error "":U.
+  undo, return error 
+    substitute("&2Нельзя изменять запись МАГАЗИНА в УБД: Номер текущей БД &1 ", v-db-num, {&delim-par}).
 end.
 
 run chk-code in this-procedure (p-obj-code, p-mode) no-error .
-if error-status:error then do:
-  undo, return error "obj-code":U.
-end.
+if error-status:error then
+  undo, return error substitute("&1&3&2":U, "obj-code":U, return-value, {&delim-par}) .
 
-if p-obj-name = "":U then do:
-  run err-mess in this-procedure  (substitute("Введите название магазина &1 ", p-obj-code ) ).
-  undo, return error "obj-name":U.
-end.
+if p-obj-name = "":U then
+  undo, return error substitute("&1&3Введите название магазина &2", "obj-name":U, p-obj-code, {&delim-par}) .
 
-if not can-find( ub.db where
-                   ub.db.db-num = p-db-num )
-then do:
-  run err-mess in this-procedure  (substitute("Неверный номер БД. Нет БД с номером &1 ", p-db-num ) ).
-  undo, return error "db-num":U.
-end.
+if not can-find ( ub.db where ub.db.db-num = p-db-num ) then
+  undo, return error substitute("&1&3Неверный номер БД. Нет БД с номером &2", "db-num":U, p-db-num, {&delim-par}) .
 
-find first buf_sysconf no-lock where
-            buf_sysconf.host-code = p-host-code no-error .
-if not available buf_sysconf then do:
-  run err-mess in this-procedure  (substitute("Не найдена фирма с кодом &1 для магазина &2", p-host-code, p-obj-code ) ).
-  undo, return error "":U.
-end.
+find first buf_sysconf no-lock where buf_sysconf.host-code = p-host-code no-error .
+if not available buf_sysconf then
+  undo, return error substitute("&3Не найдена фирма с кодом &1 для магазина &2", p-host-code, p-obj-code, {&delim-par}) .
 
 if buf_sysconf.firm-db-num <> 0
 AND p-db-num <> buf_sysconf.firm-db-num
 then do:
-  run err-mess in this-procedure  (substitute("Главная БД фирмы &1 не совпадает с БД, к которой относится магазин &2: главная БД фирмы - &3, а магазин относится к БД &4", p-host-code, p-obj-code, buf_sysconf.firm-db-num, p-db-num ) ).
-  undo, return error "db-num":U.
+  undo, return error substitute(
+    "&1&6Главная БД фирмы &2 не совпадает с БД, к которой относится магазин &3: главная БД фирмы - &4, а магазин относится к БД &5",
+    "db-num":U, p-host-code, p-obj-code, buf_sysconf.firm-db-num, p-db-num, {&delim-par}
+  ) .
 end.
-
 
 IF p-sub-store-on = yes then do:
   find first buf_clients no-lock
     where buf_clients.obj-type = p-sub-store-type
       and buf_clients.obj-code = p-sub-store-code  no-error.
-  if not available buf_clients
-  then do:
-    run err-mess in this-procedure  (substitute("Не найден объект &1&2, выбранный в качестве склада-подсобки для магазина &3", p-sub-store-type, p-sub-store-code, p-obj-code ) ).
-    undo, return error "sub-store-code":U.
-  end.
-  if buf_clients.db-num <> p-db-num then do:
-    run err-mess in this-procedure  (substitute("Нельзя в качестве склада-подсобки указать объект другой БД: магазин &1 принадлежит БД &2, а склад-подсобка БД &3!", p-obj-code, buf_clients.db-num, p-db-num ) ).
-    undo, return error "sub-store-code":U.
-  end.
+  if not available buf_clients then
+    undo, return error substitute("&1&5Не найден объект &2&3, выбранный в качестве склада-подсобки для магазина &4",
+      "sub-store-code":U, p-sub-store-type, p-sub-store-code, p-obj-code, {&delim-par}) . 
+  if buf_clients.db-num <> p-db-num then
+    undo, return error substitute("&1&5Нельзя в качестве склада-подсобки указать объект другой БД: магазин &2 принадлежит БД &3, а склад-подсобка БД &4",
+      "sub-store-code":U, p-obj-code, buf_clients.db-num, p-db-num, {&delim-par}) . 
 end.
 
 IF p-is-kitchen then do:
+  if p-kitchen-store-type <> {&shop} then
+    undo, return error substitute(
+      "&1&5В качестве СКЛАДА КУХНИ для магазина (кухни) &2 указан объект с типом &3. Допустимо указывать объект только с типом &4",
+      "kitchen-store-type":U, p-obj-code, p-kitchen-store-type, {&shop}, {&delim-par}) .
   find first buf_clients no-lock
     where buf_clients.obj-type = p-kitchen-store-type
       and buf_clients.obj-code = p-kitchen-store-code
     no-error.
-  if not available buf_clients  then do:
-    run err-mess in this-procedure  (substitute("Не найден объект &1&2, выбранный в качестве СКЛАДА для магазина(кухни) &3", p-kitchen-store-type, p-kitchen-store-code, p-obj-code ) ).
-    undo, return error "kitchen-store-code":U.
-  end.
-  if buf_clients.db-num <> p-db-num  then do:
-    run err-mess in this-procedure  (substitute("Нельзя в качестве СКЛАДА КУХНИ указать объект другой БД: магазин(кухня) &1 принадлежит БД &2, а СКЛАД - БД &3!", p-obj-code, buf_clients.db-num, p-db-num ) ).
-    undo, return error "kitchen-store-code":U.
-  end.
-  if buf_clients.obj-type <> {&shop} then do:
-    run err-mess in this-procedure  (substitute("Нельзя в качестве СКЛАДА КУХНИ  для магазина (кухни) &1 указать &2", p-obj-code, buf_clients.obj-type ) ).
-    undo, return error "kitchen-store-type":U.
-  end.
-  find first buf_other_shop no-lock where
-            buf_other_shop.obj-code = buf_clients.obj-code no-error .
-  if not available buf_other_shop then do:
-    run err-mess in this-procedure  (substitute("Не найден магазин &1, указанный в качестве СКЛАДА КУХНИ  для магазина (кухни) &2", buf_clients.obj-type, p-obj-code) ).
-    undo, return error "kitchen-store-code":U.
-  end.
-  if buf_other_shop.host-code <> p-host-code then do:
-    run err-mess in this-procedure  (substitute("Нельзя в качестве СКЛАДА КУХНИ указать объект другой ФИРМЫ: магазин(кухня) &1 принадлежит фирме &2, а СКЛАД - фирме &3!", p-obj-code, p-host-code, buf_other_shop.host-code ) ).
-    undo, return error "kitchen-store-code":U.
-  end.
-  if (p-is-kitchen or
-  p-is-kitchen-store)
-  and not p-is-catering then do:
-    find first buf_cash-desk no-lock where
-            buf_cash-desk.obj-code = p-obj-code no-error .
+  if not available buf_clients then
+    undo, return error substitute("&1&5Не найден объект &2&3, выбранный в качестве СКЛАДА для магазина (кухни) &4",
+      "kitchen-store-code":U, p-kitchen-store-type, p-kitchen-store-code, p-obj-code, {&delim-par}) .
+  if buf_clients.db-num <> p-db-num then
+    undo, return error substitute("&1&5Нельзя в качестве СКЛАДА КУХНИ указать объект другой БД: магазин (кухня) &2 принадлежит БД &3, а СКЛАД - БД &4",
+      "kitchen-store-code":U, p-obj-code, buf_clients.db-num, p-db-num, {&delim-par}) .
+  find first buf_other_shop no-lock
+       where buf_other_shop.obj-code = buf_clients.obj-code no-error .
+  if not available buf_other_shop then
+    undo, return error substitute("&1&4Не найден магазин &2, указанный в качестве СКЛАДА КУХНИ для магазина (кухни) &3",
+      "kitchen-store-code":U, buf_clients.obj-type, p-obj-code, {&delim-par}) . 
+  if buf_other_shop.host-code <> p-host-code then
+    undo, return error substitute("&1&5Нельзя в качестве СКЛАДА КУХНИ указать объект другой ФИРМЫ: магазин(кухня) &2 принадлежит фирме &3, а СКЛАД - фирме &4",
+      "kitchen-store-code":U, p-obj-code, p-host-code, buf_other_shop.host-code, {&delim-par}) . 
+end. /* end_of p-is-kitchen */
+
+if (p-is-kitchen or p-is-kitchen-store) and not p-is-catering then do:
+    find first buf_cash-desk no-lock
+         where buf_cash-desk.obj-code = p-obj-code no-error .
     if available buf_cash-desk and
                 buf_cash-desk.cash-on then do:
-      run err-mess in this-procedure  (substitute("Магазин не можeт иметь признак КУХНЯ и/или СКЛАД КУХНИ и не быть РЕСТОРАНОМ, если у него есть ВКЛЮЧЕННЫЕ КАССЫ: магазин &1, касса: БД&2 тип кассы &3 номер кассы &4 ", p-obj-code, buf_cash-desk.db-num, buf_cash-desk.pos-type, buf_cash-desk.cash-num ) ).
-      undo, return error "kitchen-store-code":U.
+      undo, return error substitute(
+        "&1&6Магазин не можeт иметь признак КУХНЯ и/или СКЛАД КУХНИ и не быть РЕСТОРАНОМ, если у него есть ВКЛЮЧЕННЫЕ КАССЫ: магазин &2, касса: БД&3 тип кассы &4 номер кассы &5",
+        "kitchen-store-code":U, p-obj-code, buf_cash-desk.db-num, buf_cash-desk.pos-type, buf_cash-desk.cash-num, {&delim-par}) . 
     end.
-  end.
 end.
 
 
+/* ----- проверки по pay-type ----- */
+/* собираем в pay-type-list все pay-type, которые ещё не проверяли, чтобы не искать по ним pay-type повторно */
+v-pay-type-list = "":U .
 if p-chk-pay <> 0 then do:
-  FIND first buf_pay-type no-lock where
-            buf_pay-type.obj-code = p-chk-pay NO-error .
-  if not available buf_pay-type then do:
-    run err-mess in this-procedure  (substitute("Неверный код оплаты реализации (продажи) для магазина &1: &2", p-obj-code, p-chk-pay) ).
-    undo, return error "chk-pay":U.
-  end.
+  v-pay-type-str = string(p-chk-pay) .
+  if not can-find (first buf_pay-type where buf_pay-type.obj-code = p-chk-pay) then
+    undo, return error substitute("&1&4Неверный код оплаты реализации (продажи) для магазина &2: код оплаты &3",
+                                  "chk-pay":U, p-obj-code, v-pay-type-str, {&delim-par}) .
+  v-pay-type-list = v-pay-type-str .
 end.
 
 if p-down-pay <> 0 then do:
-  FIND first buf_pay-type no-lock where
-            buf_pay-type.obj-code = p-down-pay NO-error .
-  if not available buf_pay-type then do:
-    run err-mess in this-procedure  (substitute("Неверный код оплаты списания для магазина &1: &2", p-obj-code, p-down-pay) ).
-    undo, return error "down-pay":U.
+  v-pay-type-str = string(p-down-pay) .
+  if not can-do (v-pay-type-list, v-pay-type-str) then do:
+    if not can-find (first buf_pay-type where buf_pay-type.obj-code = p-down-pay) then
+    undo, return error substitute("&1&4Неверный код оплаты списания для магазина &2: код оплаты &3",
+                                  "down-pay":U, p-obj-code, v-pay-type-str, {&delim-par}) .
+    v-pay-type-list = substitute("&1,&2", v-pay-type-list, v-pay-type-str) .
   end.
 end.
 
 if p-in-pay <> 0 then do:
-  FIND first buf_pay-type no-lock where
-            buf_pay-type.obj-code = p-in-pay NO-error .
-  if not available buf_pay-type then do:
-    run err-mess in this-procedure  (substitute("Неверный код оплаты прихода для магазина &1: &2", p-obj-code, p-in-pay) ).
-    undo, return error "in-pay":U.
+  v-pay-type-str = string(p-in-pay) .
+  if not can-do (v-pay-type-list, v-pay-type-str) then do:
+    if not can-find (first buf_pay-type where buf_pay-type.obj-code = p-in-pay) then
+    undo, return error substitute("&1&4Неверный код оплаты прихода для магазина &2: код оплаты &3",
+                                  "in-pay":U, p-obj-code, v-pay-type-str, {&delim-par}) .
+    v-pay-type-list = substitute("&1,&2", v-pay-type-list, v-pay-type-str) .
   end.
 end.
 
 if p-inv-pay <> 0 then do:
-  FIND first buf_pay-type no-lock where
-            buf_pay-type.obj-code  = p-inv-pay NO-error .
-  if not available buf_pay-type then do:
-    run err-mess in this-procedure  (substitute("Неверный код оплаты инвентаризации для магазина &1: &2", p-obj-code, p-inv-pay) ).
-    undo, return error "inv-pay":U.
+  v-pay-type-str = string(p-inv-pay) .
+  if not can-do (v-pay-type-list, v-pay-type-str) then do:
+    if not can-find (first buf_pay-type where buf_pay-type.obj-code = p-inv-pay) then
+    undo, return error substitute("&1&4Неверный код оплаты инвентаризации для магазина &2: код оплаты &3",
+                                  "inv-pay":U, p-obj-code, p-inv-pay, {&delim-par}) .
+    v-pay-type-list = substitute("&1,&2", v-pay-type-list, v-pay-type-str) .
   end.
 end.
 
 if p-out-pay <> 0 then do:
-  FIND first buf_pay-type no-lock where
-            buf_pay-type.obj-code = p-out-pay NO-error .
-  if not available buf_pay-type then do:
-    run err-mess in this-procedure  (substitute("Неверный код оплаты расхода для магазина &1: &2", p-obj-code, p-out-pay) ).
-    undo, return error "out-pay":U.
+  v-pay-type-str = string(p-out-pay) .
+  if not can-do (v-pay-type-list, v-pay-type-str) then do:
+    if not can-find (first buf_pay-type where buf_pay-type.obj-code = p-out-pay) then
+    undo, return error substitute("&1&4Неверный код оплаты расхода для магазина &2: код оплаты &3",
+                                   "out-pay":U, p-obj-code, p-out-pay, {&delim-par}) . 
+    v-pay-type-list = substitute("&1,&2", v-pay-type-list, v-pay-type-str) .
   end.
 end.
 
 if p-ret-pay <> 0 then do:
-  FIND first buf_pay-type no-lock where
-            buf_pay-type.obj-code = p-ret-pay NO-error .
-  if not available buf_pay-type then do:
-    run err-mess in this-procedure  (substitute("Неверный код оплаты возврата от покупателя для магазина &1: &2", p-obj-code, p-ret-pay) ).
-    undo, return error "ret-pay":U.
+  v-pay-type-str = string(p-ret-pay) .
+  if not can-do (v-pay-type-list, v-pay-type-str) then do:
+    if not can-find (first buf_pay-type where buf_pay-type.obj-code = p-ret-pay) then
+    undo, return error substitute("&1&4Неверный код оплаты возврата от покупателя для магазина &2: код оплаты &3",
+                                  "ret-pay":U, p-obj-code, p-ret-pay, {&delim-par}) .
+    v-pay-type-list = substitute("&1,&2", v-pay-type-list, v-pay-type-str) .
   end.
 end.
 
 if p-ret-sup-pay <> 0 then do:
-  FIND first buf_pay-type no-lock where
-            buf_pay-type.obj-code = p-ret-sup-pay NO-error .
-  if not available buf_pay-type then do:
-    run err-mess in this-procedure  (substitute("Неверный код оплаты возврата поставщику для магазина &1: &2", p-obj-code, p-ret-sup-pay) ).
-    undo, return error "ret-sup-pay":U.
+  v-pay-type-str = string(p-ret-sup-pay) .
+  if not can-do (v-pay-type-list, v-pay-type-str) then do:
+    if not can-find (first buf_pay-type where buf_pay-type.obj-code = p-ret-sup-pay) then
+    undo, return error substitute("&1&4Неверный код оплаты возврата поставщику для магазина &2: код оплаты &3",
+                                  "ret-sup-pay":U, p-obj-code, p-ret-sup-pay, {&delim-par}) .
+    v-pay-type-list = substitute("&1,&2", v-pay-type-list, v-pay-type-str) .
   end.
 end.
 
 if p-fbr-pay <> 0 then do:
-  FIND first buf_pay-type no-lock where
-            buf_pay-type.obj-code = p-fbr-pay NO-error .
-  if not available buf_pay-type then do:
-    run err-mess in this-procedure  (substitute("Неверный код оплаты производства для магазина &1: &2", p-obj-code, p-fbr-pay) ).
-    undo, return error "fbr-pay":U.
+  v-pay-type-str = string(p-fbr-pay) .
+  if not can-do (v-pay-type-list, v-pay-type-str) then do:
+    if not can-find (first buf_pay-type where buf_pay-type.obj-code = p-fbr-pay) then
+    undo, return error substitute("&1&4Неверный код оплаты производства для магазина &2: код оплаты &3",
+                                  "fbr-pay":U, p-obj-code, p-fbr-pay, {&delim-par}) .
   end.
 end.
+/* ----- end_of проверки по pay-type ----- */
 
 
 _MAIN:
@@ -314,32 +306,20 @@ ON STOP UNDO, RETURN ERROR:
   else do:
     FIND FIRST ub.clients where
               recid(ub.clients) = p-rec No-ERROR.
-    if not available ub.clients then do:
-      message
-      vss-workfile vss-revision vss-description skip
-      "Не найдена запись КЛИЕНТ для записи МАГАЗИН - p-rec" p-rec
-      view-as alert-box error .
-      undo, return error '':u.
-    end.
+    if not available ub.clients then
+      undo, return error substitute('&5&1 &2 &3&4Не найдена запись КЛИЕНТ для записи МАГАЗИН - p-rec [&6]':u,
+                                     vss-workfile, vss-revision, vss-description, {&new-line}, {&delim-par}, p-rec).
     find first ub.shop where
               ub.shop.obj-code = p-obj-code no-error .
-    if not available ub.shop then do:
-      message
-      vss-workfile vss-revision vss-description skip
-      "Не найдена запись МАГАЗИН с кодом" p-obj-code
-      view-as alert-box error .
-      undo, return error '':u.
-    end.
+    if not available ub.shop then
+      undo, return error substitute('&5&1 &2 &3&4Не найдена запись МАГАЗИН с кодом [&6]':u,
+                                     vss-workfile, vss-revision, vss-description, {&new-line}, {&delim-par}, p-obj-code).
     if ub.shop.obj-code <> p-obj-code
     or ub.shop.host-code <> p-host-code
     or ub.clients.db-num    <> p-db-num
-    then do:
-      message
-      vss-workfile vss-revision vss-description skip
-      "Для уже имеющегося МАГАЗИНА нельзя изменить номер магазина, номер БД и код фирмы" skip
-      view-as alert-box ERROR.
-      undo, return error '':U.
-    end.
+    then
+      undo, return error substitute('&5&1 &2 &3&4Для уже имеющегося МАГАЗИНА нельзя изменить номер магазина, номер БД и код фирмы':u,
+                                     vss-workfile, vss-revision, vss-description, {&new-line}, {&delim-par}).
   end.
   assign
   ub.clients.obj-name         =  p-obj-name
@@ -413,26 +393,27 @@ ON STOP UNDO, RETURN ERROR:
   p-rec = recid(ub.clients )
   .
  release ub.clients no-error.
- 
  if error-status:error then do:
-    run err-mess in this-procedure (substitute("Ошибка при сохранении записи КЛИЕНТ для МАГАЗИНА &1:&2&3&2&4"
-                          , p-obj-code
-                          , {&new-line}
-                          , ERROR-STATUS:GET-message(1)
-                          , return-value
-                          )).
-    undo, return error "":U.
+    undo, return error substitute(
+      "&5Ошибка при сохранении записи КЛИЕНТ для МАГАЗИНА &1:&2&3&2&4"
+    , p-obj-code
+    , {&new-line}
+    , ERROR-STATUS:GET-message(1)
+    , return-value
+    , {&delim-par}
+    ) .
  end.
  p-obj-code = ub.shop.obj-code.
  release ub.shop no-error.
  if error-status:error then do:
-     run err-mess in this-procedure (substitute("Ошибка при сохранении записи МАГАЗИН &1:&2&3&2&4"
-                             , p-obj-code
-                             , {&new-line}
-                             , ERROR-STATUS:GET-message(1)
-                             , return-value
-                             )).
-    undo, return error "":U.
+    undo, return error substitute(
+      "&5Ошибка при сохранении записи МАГАЗИН &1:&2&3&2&4"
+    , p-obj-code
+    , {&new-line}
+    , ERROR-STATUS:GET-message(1)
+    , return-value
+    , {&delim-par}
+    ) .
  end.
 
  run clntattr-value in this-procedure
@@ -526,15 +507,12 @@ ON STOP UNDO, RETURN ERROR:
   
  if p-mode = {&add-def} then do:
     run trg/curr-shc.p (p-obj-code) no-error .
-    if error-status :error   then do:
-      run err-mess in this-procedure (substitute("Ошибка при создании записи курса базовой валюты при создании МАГАЗИНА &1: &2", p-obj-code, ERROR-STATUS:GET-message(1))).
-      undo, return error "":U.
-    end.
+    if error-status:error then
+      undo, return error substitute("&3Ошибка при создании записи курса базовой валюты при создании МАГАЗИНА &1: &2",
+                                    p-obj-code, ERROR-STATUS:GET-message(1), {&delim-par}) .
  end.
+ 
 end. /*doe*/
-
-
-
 
 
 PROCEDURE chk-code :
@@ -557,15 +535,13 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-tth as handle no-undo .
 
-if p-obj-code = 0 then do:
-  run err-mess in this-procedure  ("Код магазина должен быть больше 0 " ).
-  return error.
-end.
+if p-obj-code = 0 then
+  return error "Код магазина должен быть больше 0 ".
+
 if  p-mode = {&add-def}
-and can-find( ub.shop where ub.shop.obj-code = p-obj-code ) then   do:
-  run err-mess in this-procedure  (substitute("Магазин с кодом &1 уже есть, измените код", p-obj-code ) ).
-  return error.
-end.
+and can-find( ub.shop where ub.shop.obj-code = p-obj-code ) then
+  return error substitute("Магазин с кодом &1 уже есть, измените код", p-obj-code ).
+
 if p-obj-code > 999 and  p-mode = {&add-def}  then do:
   run adm/shattri.p (
       input "get":U
@@ -589,20 +565,15 @@ if p-obj-code > 999 and  p-mode = {&add-def}  then do:
     hnum = v-value-logical.
   end.
   if hnum then do:
-    run err-mess in this-procedure  (substitute("Вы не можете присвоить магазину номер > 999 (&1)&3пока настроечный параметр <НОМЕР МАГАЗИНА ПРИ ЧТЕНИИ ДАННЫХ С КАССЫ БРАТЬ ИЗ СПУЛА>&3для фирмы &2 равен ДА; измените код"
-                                               , p-obj-code
-                                               , p-host-code
-                                               , {&new-line}
-                                               ) ).
-    return error.
+    return error substitute(
+      "Вы не можете присвоить магазину номер > 999 (&1)&3" +
+      "пока настроечный параметр <НОМЕР МАГАЗИНА ПРИ ЧТЕНИИ ДАННЫХ С КАССЫ БРАТЬ ИЗ СПУЛА>&3" +
+      "для фирмы &2 равен ДА; измените код"
+    , p-obj-code
+    , p-host-code
+    , {&new-line}
+    ) .
   end.
 end.
 return.
-END PROCEDURE.
-
-PROCEDURE err-mess:
-  DEFINE INPUT PARAMETER p-mess as character No-UNDO.
-  message
-  p-mess
-  view-as alert-box error .
 END PROCEDURE.

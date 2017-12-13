@@ -267,10 +267,10 @@ DEFINE BROWSE br-obj
   QUERY br-obj NO-LOCK DISPLAY
       mark-string(buf_temp-obj-info.obj-type, buf_temp-obj-info.obj-code) @ v-brws-mark
       buf_temp-obj-info.obj-type       format 'X(3)':U  column-label "Тип"
-      buf_temp-obj-info.obj-code       format '>>>>9':U column-label "Код"
+      buf_temp-obj-info.obj-code       format '>>>>>>>>9':U column-label "Код"
       buf_temp-obj-info.brws-obj-name  format 'X(60)':U column-label "Название"
-      buf_temp-obj-info.brws-db-num    format 'X(5)':U  column-label "БД"
-      buf_temp-obj-info.brws-host-code format 'X(5)':U  column-label "Фирма"
+      buf_temp-obj-info.brws-db-num    format 'X(9)':U  column-label "БД"
+      buf_temp-obj-info.brws-host-code format 'X(9)':U  column-label "Фирма"
       buf_temp-obj-info.brws-host-name format 'X(40)':U column-label "Название фирмы"
       buf_temp-obj-info.brws-curr-code format '>>>>9':U  column-label "Валюта"
 ENABLE
@@ -1819,8 +1819,8 @@ on error undo, return error
             buf_temp-obj-info.obj-code        = o-code
             buf_temp-obj-info.db-num          = p-db-num
             buf_temp-obj-info.brws-obj-name   = buf_clients.obj-name
-            buf_temp-obj-info.brws-db-num     = string(buf_clients.db-num, '>>>>9':U)
-            buf_temp-obj-info.brws-host-code  = string(buf_clients.host-code, '>>>>9':U)
+            buf_temp-obj-info.brws-db-num     = string(buf_clients.db-num)
+            buf_temp-obj-info.brws-host-code  = string(buf_clients.host-code)
             buf_temp-obj-info.brws-host-name  = v-host-name
             buf_temp-obj-info.brws-curr-code  = v-base-code
         .
@@ -2346,8 +2346,8 @@ PROCEDURE temp-obj-info-append :
         buf_temp-obj-info.obj-code        = p-obj-code
         buf_temp-obj-info.db-num          = p-db-num
         buf_temp-obj-info.brws-obj-name   = buf_obj_clients.obj-name
-        buf_temp-obj-info.brws-db-num     = string(buf_obj_clients.db-num, '>>>>9':U)
-        buf_temp-obj-info.brws-host-code  = string(v-host-code, '>>>>9':U)
+        buf_temp-obj-info.brws-db-num     = string(buf_obj_clients.db-num)
+        buf_temp-obj-info.brws-host-code  = string(v-host-code)
         buf_temp-obj-info.brws-host-name  = v-host-name
         buf_temp-obj-info.brws-curr-code  = v-base-code
       .

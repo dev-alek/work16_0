@@ -43,7 +43,7 @@ define buffer buf_price-doc-forming for ub.price-doc-forming  .
 { str/lastincs.i }
 { ref/gdsoattr.i }
 { ref/obji-ad.i  }
-{ ref/typl-ad.i  }
+/* { ref/typl-ad.i  } 25/X-2017 использование процедур type-price-list-add() и type-price-list-delete() отсутствует */
 { gbl/waitfram.i }
 
 

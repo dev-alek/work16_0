@@ -25,6 +25,9 @@ define input-output parameter p-rec                 as recid no-undo .
 define input parameter        p-mode                as character no-undo .
 define input parameter        p-db-num              like ub.db.db-num no-undo .
 define input parameter        p-db-name             like ub.db.db-name no-undo .
+define input parameter        p-add-clients         like ub.db.add-clients no-undo .
+define input parameter        p-send-check          like ub.db.send-check no-undo .
+define input parameter        p-add-goods           like ub.db.add-goods no-undo .
 define input parameter        p-save-packs          like ub.db.save-packs no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -48,8 +51,7 @@ do on error undo, throw:
     undo, throw new Progress.Lang.AppError(
       substitute("&1 &2 &3&4Неверный параметр p-mode. Не предусмотрена операция [&5]",
                  vss-workfile, vss-revision, vss-description, {&new-line}, 
-                 p-mode ),
-      500
+                 p-mode )
     ) .
   end .
 
@@ -57,8 +59,7 @@ do on error undo, throw:
   else do: /* "Название БД не может быть пустым." */
     undo, throw new Progress.Lang.AppError(
       substitute("&1 &2 &3&4Имя БД отсутствует",
-                 vss-workfile, vss-revision, vss-description, {&new-line}),
-      500
+                 vss-workfile, vss-revision, vss-description, {&new-line})
     ) .
   end .
   
@@ -66,8 +67,7 @@ do on error undo, throw:
     undo, throw new Progress.Lang.AppError(
       substitute("&1 &2 &3&4Минимальный период хранения пакетов 10 дней.&4Удалять пакеты через [&5] дней нельзя.",
                  vss-workfile, vss-revision, vss-description, {&new-line},
-                 p-save-packs ),
-      500
+                 p-save-packs )
     ) .
   end.
   
@@ -79,16 +79,14 @@ do on error undo, throw:
       if p-db-num = ? then do:
         undo, throw new Progress.Lang.AppError(
           substitute("&1 &2 &3&4Номер БД отсутствует",
-                     vss-workfile, vss-revision, vss-description, {&new-line}),
-          500
+                     vss-workfile, vss-revision, vss-description, {&new-line})
         ) .
       end .
       if can-find (first buf_db where buf_db.db-num = p-db-num) then do:
         undo, throw new Progress.Lang.AppError(
           substitute("&1 &2 &3&4БД с номером [&5] уже существует",
                      vss-workfile, vss-revision, vss-description, {&new-line}, 
-                     p-db-num ),
-          500
+                     p-db-num )
         ) .
       end .
       create buf_db .
@@ -96,10 +94,7 @@ do on error undo, throw:
         buf_db.db-num       = p-db-num
         buf_db.db-key       = "":U
         buf_db.db-key-enc   = "":U
-        buf_db.add-clients  = false
         buf_db.remote-stock = false
-        buf_db.send-check   = true /* согласно скрин-шоту Юрия Румянцева от 02-мар-2017 */
-        buf_db.add-goods    = false
         buf_db.on-line-rest = false
         buf_db.max-p-size   = 10000 /* согласно скрин-шоту Юрия Румянцева от 02-мар-2017 */
         buf_db.max-p-queue  = 10    /* согласно скрин-шоту Юрия Румянцева от 02-мар-2017 */
@@ -114,16 +109,14 @@ do on error undo, throw:
         undo, throw new Progress.Lang.AppError(
           substitute("&1 &2 &3&4Запись о БД с ид. [&5] занята другим пользователем",
                      vss-workfile, vss-revision, vss-description, {&new-line}, 
-                     p-rec ),
-          500
+                     p-rec )
         ) .
       end . 
       if not available buf_db then do:
         undo, throw new Progress.Lang.AppError(
           substitute("&1 &2 &3&4Запись о БД с ид. [&5] отсутствует",
                      vss-workfile, vss-revision, vss-description, {&new-line}, 
-                     p-rec ),
-          500
+                     p-rec )
         ) .
       end .
     end . /* end_of UPDATE */
@@ -131,8 +124,11 @@ do on error undo, throw:
   end case .
 
   assign
-    buf_db.db-name    = p-db-name
-    buf_db.save-packs = p-save-packs
+    buf_db.db-name     = p-db-name
+    buf_db.add-clients = p-add-clients
+    buf_db.send-check  = p-send-check
+    buf_db.add-goods   = p-add-goods
+    buf_db.save-packs  = p-save-packs
   .
   validate buf_db .
     

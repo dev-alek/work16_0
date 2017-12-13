@@ -247,7 +247,7 @@ DEFINE BROWSE br-clients
 DEFINE BROWSE br-db
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-db d-db _STRUCTURED
   QUERY br-db NO-LOCK DISPLAY
-      ub.db.db-num FORMAT ">>>>9":U
+      ub.db.db-num FORMAT ">>>>>>>>9":U
       ub.db.db-name FORMAT "X(25)":U
       ub.db.add-clients COLUMN-LABEL "Клиенты" FORMAT "+/-":U
       ub.db.add-goods COLUMN-LABEL "Товары" FORMAT "+/-":U

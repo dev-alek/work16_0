@@ -136,7 +136,7 @@ DEFINE MENU MENU-B-cli-attr
        MENU-ITEM m_lookup-cli       LABEL "&Просмотр"
        MENU-ITEM m_update-cli        LABEL "Изменение"
        .
-DEFINE VARIABLE sch-code AS INTEGER FORMAT ">>>>9":U INITIAL 0
+DEFINE VARIABLE sch-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
      LABEL "код"
      VIEW-AS FILL-IN
      SIZE 6 BY 1 NO-UNDO.
@@ -145,11 +145,11 @@ DEFINE QUERY br-shops FOR X_shop, X_clients, X_cli-host SCROLLING.
 
 DEFINE BROWSE br-shops QUERY br-shops NO-LOCK DISPLAY
 mark-string(recid(X_shop), v-rid-list) Format "X(1)" COLUMN-LABEL "*"
-X_shop.obj-code COLUMN-LABEL "Код " FORMAT ">>>>9"
+X_shop.obj-code COLUMN-LABEL "Код " FORMAT ">>>>>>>>9"
 X_clients.obj-name COLUMN-LABEL "Название " FORMAT "x(80)" width 25
 X_cli-host.obj-name COLUMN-LABEL "Фирма" FORMAT "x(80)" width 25
 (if X_clients.stts = 0 then " " else "+") format "x(1)" column-label "Удал"
-X_clients.db-num
+X_clients.db-num FORMAT ">>>>>>>>9"
 X_shop.shift-on COLUMN-LABEL "Смены":L format " + / - "
 X_clients.grp-name COLUMN-LABEL "Группа" format "X(80)" width 25
 price-grp ( buffer X_clients ) @ v-grp COLUMN-LABEL "Группа ценообразования" FORMAT "x(80)" width 25

@@ -147,7 +147,7 @@ DEFINE VARIABLE f-db-key AS CHARACTER FORMAT "X(12)" INITIAL ?
      VIEW-AS FILL-IN
      SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-db-num AS INTEGER FORMAT ">>>>9" INITIAL ?
+DEFINE VARIABLE f-db-num AS INTEGER FORMAT ">>>>>>>>9" INITIAL ?
      LABEL "Номер БД"
      VIEW-AS FILL-IN
      SIZE 9 BY 1 NO-UNDO.
@@ -156,7 +156,7 @@ DEFINE VARIABLE f-end-date AS DATE FORMAT "99/99/9999":U
      VIEW-AS FILL-IN
      SIZE 11 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-obj-code AS INTEGER FORMAT ">>>>>9":U INITIAL 0
+DEFINE VARIABLE f-obj-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
      VIEW-AS FILL-IN
      SIZE 7 BY 1 NO-UNDO.
 
@@ -385,7 +385,7 @@ DO:
                 and ub.clients.obj-type = {&cmp}
             no-error.
             assign
-              f-host-name = substitute( "&1  &2", string(ub.clients.obj-code, "999999"), ub.clients.obj-name )
+              f-host-name = substitute( "&1  &2", string(ub.clients.obj-code, "999999999"), ub.clients.obj-name )
             .
             display f-host-name with frame {&frame-name}.
           end.
@@ -739,7 +739,7 @@ DO:
                 and ub.clients.obj-type = {&cmp}
               no-error.
             assign
-              f-host-name = substitute( "&1  &2", string(ub.clients.obj-code, "999999"), ub.clients.obj-name )
+              f-host-name = substitute( "&1  &2", string(ub.clients.obj-code, "999999999"), ub.clients.obj-name )
             .
             display
               f-host-name
@@ -1430,13 +1430,13 @@ define variable v-ok as logical   no-undo .
           and buf_clients.obj-type = {&cmp}
         no-error.
       assign
-        v-ok = f-host-name:add-last ( substitute( "&1  &2", string(buf_clients.obj-code, "999999"), buf_clients.obj-name ) ) in frame {&frame-name}
+        v-ok = f-host-name:add-last ( substitute( "&1  &2", string(buf_clients.obj-code, "999999999"), buf_clients.obj-name ) ) in frame {&frame-name}
       .
 
       if v-host-code = buf_sysconf.host-code
       then do:
         assign
-          f-host-name = substitute( "&1  &2", string(buf_clients.obj-code, "999999"), buf_clients.obj-name )
+          f-host-name = substitute( "&1  &2", string(buf_clients.obj-code, "999999999"), buf_clients.obj-name )
         .
       end.
     end.
