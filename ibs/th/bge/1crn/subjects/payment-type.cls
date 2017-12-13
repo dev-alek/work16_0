@@ -18,7 +18,8 @@ Creation date: 26/09/17
 USING Progress.Lang.*.
 using System.Boolean from assembly.
 
-CLASS ibs.th.bge.1crn.subjects.payment-type implements ibs.th.bge.1crn.subjects.isubject:
+class ibs.th.bge.1crn.subjects.payment-type inherits ibs.th.bge.1crn.subjects.asubject: 
+
   
   define property code_         as character    no-undo get. private set.
   define property del-l         as integer      no-undo get. private set.
@@ -26,22 +27,12 @@ CLASS ibs.th.bge.1crn.subjects.payment-type implements ibs.th.bge.1crn.subjects.
   define property name_         as character    no-undo get. private set.
   define property curr-code     as character    no-undo get. private set.
   define property ptg-code      as character    no-undo get. private set.
-  define property pmt-cash      as integer      no-undo get. private set.
-  define property pmt-fuel      as integer      no-undo get. private set.
-  define property pmt-service   as integer      no-undo get. private set.
-  define property cnt-code      as character    no-undo get. private set.
-  define property enbl-zd       as integer      no-undo get. private set.
-  define property use-km3       as integer      no-undo get. private set.
-  define property enbl-trf      as integer      no-undo get. private set.
-  define property pmt-ved       as integer      no-undo get. private set.
-  define property doc-type      as integer      no-undo get. private set.
-  define property mst-online    as integer      no-undo get. private set.
-  define property mst-slip      as integer      no-undo get. private set.
-  define property kbo           as integer      no-undo get. private set.
-  define property malina        as integer      no-undo get. private set.
-  define property prfx          as character    no-undo get. private set.
+  define property pay-type_     as integer      no-undo get. private set.
+
+  define override property InitTag as character no-undo init "payment-type"
+    get. 
   
-  method public void SetProp (inTag as char, inValue as char):
+  method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
       when "code" then do:
         assign code_ = inValue .
@@ -61,49 +52,38 @@ CLASS ibs.th.bge.1crn.subjects.payment-type implements ibs.th.bge.1crn.subjects.
       when "ptg-code" then do:
         assign ptg-code = inValue .
       end.
-      when "pmt-cash" then do:
-        assign pmt-cash = integer(inValue) .
-      end.
-      when "pmt-fuel" then do:
-        assign pmt-fuel = integer(inValue) .
-      end.
-      when "pmt-service" then do:
-        assign pmt-service = integer(inValue) .
-      end.
-      when "cnt-code" then do:
-        assign cnt-code = inValue .
-      end.
-      when "enbl-zd" then do:
-        assign enbl-zd = integer(inValue) .
-      end.
-      when "use-km3" then do:
-        assign use-km3 = integer(inValue) .
-      end.
-      when "enbl-trf" then do:
-        assign enbl-trf = integer(inValue) .
-      end.
-      when "pmt-ved" then do:
-        assign pmt-ved = integer(inValue) .
-      end.
-      when "doc-type" then do:
-        assign doc-type = integer(inValue) .
-      end.
-      when "mst-online" then do:
-        assign mst-online = integer(inValue) .
-      end.
-      when "mst-slip" then do:
-        assign mst-slip = integer(inValue) .
-      end.
-      when "kbo" then do:
-        assign kbo = integer(inValue) .
-      end.
-      when "malina" then do:
-        assign malina = integer(inValue) .
-      end.
-      when "prfx" then do:
-        assign prfx = inValue .
+      when "pay-type" then do:
+        assign pay-type_ = integer(inValue) .
       end.
     end case.
   end.
+  method override protected void CheckData ():
 
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = "code" when code_ = ?
+      v-str = v-str + ",name" when name_ = ?
+      v-str = v-str + ",curr-code" when curr-code = ?
+      v-str = v-str + ",ptg-code" when ptg-code = ?
+      v-str = v-str + ",pay-type" when pay-type_ = ?
+    .
+    v-str = trim (v-str, ",").
+    if v-str > ''
+    then 
+      undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
+
+  end.
+  
+  method override protected void ClearSub():
+    assign 
+      code_     = ?
+      del-l     = ?
+      del-f     = ?
+      name_     = ?
+      curr-code = ?
+      ptg-code  = ?
+      pay-type_ = ? 
+    .
+  end.
 END CLASS.

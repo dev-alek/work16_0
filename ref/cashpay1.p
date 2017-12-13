@@ -75,7 +75,7 @@ define variable vss-description as character no-undo init "Сохранение изменений 
 
 { cmp/str-glbl.i }
 { gbl/getcntxt.i def }
-
+{ cmp/trg-def.i }
 
 DEFINE VARIABLE loc#log as logical no-undo .
 DEFINE VARIABLE var-entry as character no-undo .
@@ -91,7 +91,8 @@ define buffer buf_chk-pay for ub.chk-pay.
 do
 on error undo, return error return-value
 :
-
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
   if NOT (par-mode = {&add-def} OR par-mode = {&update}) then do:
     message
     vss-workfile vss-revision vss-description skip
@@ -115,6 +116,9 @@ on error undo, return error return-value
     view-as alert-box ERROR.
     return error '':U.
   end.
+  
+  run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+  if v-value = "no"  then do: 
   { gbl/getcntxt.i get }
   if v-cntxt-db-num <> 0 then do:
     message
@@ -123,7 +127,7 @@ on error undo, return error return-value
     view-as alert-box ERROR.
     return error '':U.
   end.
-
+  end.
   run trg/cashpay2.p (
                    input p-silent
                   ,INPUT parcdpay-code
@@ -330,19 +334,37 @@ end. /*doe*/
 PROCEDURE err-mess:
   DEFINE INPUT-OUTPUT PARAMETER p-mess as character No-UNDO.
   CASE p-silent:
-    when yes then do:
-      assign
-      p-mess = substitute("Тип касс.платежа с кодом &1 и кодом валюты &2&3&4"
+    when yes then 
+      do:
+        assign
+          p-mess = substitute("Тип касс.платежа с кодом &1 и кодом валюты &2&3&4"
                          , parcdpay-code
                          , parcurr-code
                          , {&new-line}
                          , p-mess)
-      .
-    end.
-    when no then do:
-      message
-      p-mess
-      view-as alert-box error .
-    end.
+          .
+      end.
+
+    when no then 
+      do:
+        if g#esys then 
+        do:
+        assign
+          p-mess = substitute("Тип касс.платежа с кодом &1 и кодом валюты &2&3&4"
+                         , parcdpay-code
+                         , parcurr-code
+                         , {&new-line}
+                         , p-mess)
+          .
+          return error.
+        end.
+        else 
+        do:
+
+          message
+            p-mess
+            view-as alert-box error .
+        end.
+      end.
   end.
 END PROCEDURE.

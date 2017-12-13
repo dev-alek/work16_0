@@ -877,10 +877,7 @@ else do:
     end.
 
 end.
-     find first buf_cash-pay-attr where buf_cash-pay-attr.host-code = p-host-code
-/*                                 and buf_cash-pay-attr.obj-code = p-obj-code*/
-/*                                 and buf_cash-pay-attr.obj-type = p-obj-type*/
-                                 and buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+     find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
                                  and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
                                  and buf_cash-pay-attr.attr-code = "cash-prop" no-error .
     if AVAILABLE buf_cash-pay-attr then do:
@@ -1166,18 +1163,12 @@ tt-cash-pay.can-mix = (IF t-can-mix THEN 1 ELSE 0)
     { gbl/reterhnd.i error }
     undo, return error.
    END.
-     find first buf_cash-pay-attr where buf_cash-pay-attr.host-code = p-host-code
-/*                                 and buf_cash-pay-attr.obj-code = p-obj-code*/
-/*                                 and buf_cash-pay-attr.obj-type = p-obj-type*/
-                                 and buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+     find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
                                  and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
                                  and buf_cash-pay-attr.attr-code = "cash-prop" no-error .
     if not AVAILABLE buf_cash-pay-attr then do:
         create buf_cash-pay-attr .
         assign
-            buf_cash-pay-attr.host-code = p-host-code
-            buf_cash-pay-attr.obj-code = p-obj-code
-            buf_cash-pay-attr.obj-type = p-obj-type
             buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
             buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
             buf_cash-pay-attr.attr-code = "cash-prop"
