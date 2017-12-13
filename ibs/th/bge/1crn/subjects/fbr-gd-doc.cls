@@ -25,7 +25,8 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
 
   { cmp/str-glbl.i class }
   
-  define buffer buf_fbr-doc for ub.fbr-doc.
+  define temp-table buf_fbr-doc like ub.fbr-doc.
+  
   define buffer buf_fbr-line for ub.fbr-line.
   define buffer buf_trn-doc for ub.trn-doc.
   define buffer buf_doc-line for ub.doc-line.
@@ -61,22 +62,54 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
   define property InitSecTag as character no-undo init "trn-gd-docs"
     get.
 
+  define property BufTableHndlNew as handle no-undo
+    get.
+    set.
+
+  define property BufTableHndlOld as handle no-undo
+    get.
+    set.
+
   define variable sw               as handle    no-undo.
   define variable v-doc-type-ERPRN as character no-undo.
   define variable v-is-petrol-trn  as logical   no-undo.
   define variable v-is-pieces      as logical   no-undo.
   define variable isDel            as logical   no-undo.
+  define variable v-bufhnd         as handle    no-undo.
 
 
   method public void CrContentToSW (insw as handle):
     
     sw = insw.
     
-    find first buf_fbr-doc no-lock where buf_fbr-doc.doc-code = DocCode no-error.
-    if not available (buf_fbr-doc)
-      then return.
+    create buf_fbr-doc.
     
-    isDel = false.
+    v-bufhnd = buffer buf_fbr-doc:handle.
+    
+    if valid-handle (BufTableHndlNew)
+    then do:
+      v-bufhnd:buffer-copy (BufTableHndlNew) no-error.
+      if error-status:error
+      then do:
+        Msg = "Ошибка выгрузки fbr-gd-doc, неверный буфер BufTableHndlNew".
+        undo, return error Msg.
+      end.
+      isDel = false.
+    end.
+    else do:
+      if not valid-handle (BufTableHndlOld)
+      then do:
+        Msg = "Ошибка выгрузки fbr-gd-doc, неопеределен ни старый ни новый буфер".
+        undo, return error Msg.
+      end.
+      v-bufhnd:buffer-copy (BufTableHndlOld) no-error.
+      if error-status:error
+      then do:
+        Msg = "Ошибка выгрузки fbr-gd-doc, неверный буфер BufTableHndlOld".
+        undo, return error Msg.
+      end.
+      isDel = true.
+    end.
     
     case buf_fbr-doc.doc-type:
       when {&manufacturing} then do:
@@ -95,7 +128,12 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
 
   method private void FbrLine ():
     
-    def var ii as int no-undo.
+    find first buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code no-error.
+    if not available (buf_fbr-line)
+      then return.
+    
+    /*for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code:
+    
     
     sw:start-element ("gds").
     for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code:
@@ -124,41 +162,45 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
       sw:end-element ("gd").
       
     end.
-    sw:end-element ("gds").
+    sw:end-element ("gds").*/
     FBR ().
     
   end.
 
   method private void FBR ():
-        
-    sw:start-element ("dishs", "").    
+
+    def var ii as int no-undo.
+
+    sw:start-element ("dishs").    
     for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code
-      and buf_fbr-line.trn-type = {&income}:
+      and buf_fbr-line.is-comp:
       
       find first buf_gds where
             buf_gds.artic = buf_fbr-line.artic 
         and buf_gds.prod-code = buf_fbr-line.prod-code
         and buf_gds.prod-type = buf_fbr-line.prod-type.
       
-      
+      ii = ii + 1.
       
       find first tt-gds where tt-gds.gds-code = buf_gds.gds-code no-error.
-      
+
           sw:start-element ("dish").
-            write-data-element ("line-num", string-mth (tt-gds.line-num)).
+            write-data-element ("line-num", string-mth (ii)).
             write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
+            write-data-element ("oper-type", (if buf_fbr-line.trn-type = {&write-off}
+              then "2" else "1") ).
             write-data-element ("qnty", string-mth (round ((buf_fbr-line.fact-qnty) , 3))).
             write-data-element ("u-price", string-mth (round ((buf_fbr-line.price-rubl) , 2))).
             write-data-element ("p-price", string-mth (round ((buf_fbr-line.price-sale) , 2))).
             write-data-element ("rcp-code", buf_fbr-line.recipe-code).
           sw:end-element ("dish").
-         
+
     end.
     sw:end-element ("dishs").
 
     sw:start-element ("ingrs").
     for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code
-      and buf_fbr-line.trn-type = {&write-off}:    
+      and not buf_fbr-line.is-comp:    
 
       find first buf_gds where
             buf_gds.artic = buf_fbr-line.artic 
@@ -181,7 +223,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
         brutto = buf_fbr-line.fact-qnty
         netto = (buf_fbr-line.fact-qnty / buf_recipe-gds.brutto-qnty) * buf_recipe-gds.qnty
       .
-
+      
       sw:start-element ("ingr").
         write-data-element ("dish-code", string-mth (buf_recipe.gds-code)).
         write-data-element ("rcp-code", buf_recipe.recipe-code).

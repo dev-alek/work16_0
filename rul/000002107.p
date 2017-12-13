@@ -249,20 +249,20 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
     v-doc-code = v-oldbh:buffer-field("doc-code"):buffer-value.
     v-ext-doc-type = v-oldbh:buffer-field("doc-type"):buffer-value.
   end.
-  if not v-newbh = ?
+  if v-has-newbh
   then do:
     v-doc-status = v-newbh:buffer-field("status_"):buffer-value.
   end.
-  else return.
   v-doc-status-old = v-oldbh:buffer-field("status_"):buffer-value.
-/*  if v-doc-status = v-doc-status-old or not v-doc-status = {&fact}*/
-/*    then return.                                                  */
+  if not (v-doc-status-old = {&fact} and not v-has-newbh) and (v-doc-status = v-doc-status-old or not v-doc-status = {&fact})
+    then return.
 
   IF  context_begin-esys-command( input string(v-esys-id-list), input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) = false  THEN do:
     undo _main, return error v-last-error-message .
   end.
   subDocObj = new fbr-gd-doc ().
-  cast (subDocObj, fbr-gd-doc):DocCode = v-doc-code.    
+  cast (subDocObj, fbr-gd-doc):BufTableHndlNew = v-newbh.
+  cast (subDocObj, fbr-gd-doc):BufTableHndlOld = v-oldbh.
   expObj = new expsubject ().
   expObj:GetContent(subDocObj).
         
