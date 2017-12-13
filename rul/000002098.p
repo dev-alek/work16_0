@@ -123,6 +123,7 @@ define variable glog as logical no-undo .
 define variable v-ds-read-order as character no-undo .
 define variable v-esys-id as integer no-undo .
 define variable v-err-message as character no-undo .
+define variable v-pack-num as character no-undo .
 
 { rul/seterror.i }
 define buffer buf_temp-cmd for temp-cmd.
@@ -237,6 +238,7 @@ run write-log  in p-log-handle (
        undo _main, return error ''.
     end.
   do transaction:
+    v-err-message = "" .
     parseSubObj = new parsesub ().
     impSubObj = new impsubject (parseSubObj).
     parseSubObj:Parse1CRNSub(file-name).
@@ -244,6 +246,15 @@ run write-log  in p-log-handle (
       &scop my-message substitute("Ошибка при сохранении данных по пакету 1С (РОСНФЕТЬ) из ВС:&1&2&1&3", {&new-line}, parseSubObj:Msg , error-status :get-message(1)  )
       v-err-message = {&my-message} .
       {&display-message}.
+      v-err-message = trim(parseSubObj:Msg, ";") .
+      v-err-message = trim(v-err-message) .
+      v-err-message = trim(v-err-message, ";") .
+      
+      run rul/send-ack_1c.p (input v-pack-num
+                              ,input 4
+                              ,input v-err-message 
+                              ,input buf_ext-system.esys-id
+                              ) .
       undo, throw exAppErrors .
     end catch .
     catch exProErrors as class Progress.Lang.ProError :
@@ -254,6 +265,13 @@ run write-log  in p-log-handle (
       undo, throw exAnyErrors .
     end catch .
     finally :
+      if v-err-message = ""
+      then
+      run rul/send-ack_1c.p (input v-pack-num
+                              ,input 0
+                              ,input "" 
+                              ,input buf_ext-system.esys-id
+                              ) .
       delete object parseSubObj no-error.
       delete object impSubObj no-error.
     end finally .
@@ -340,6 +358,7 @@ end.
         v-esys-id = integer(trim(p-doc-code))
         no-error
        .
+       v-pack-num = entry(3, entry(num-entries(file-name, "\"), file-name, "\") ,"_") no-error.
        
         find first buf_ext-system no-lock where
                   buf_ext-system.esys-id = v-esys-id

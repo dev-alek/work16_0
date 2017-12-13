@@ -44,6 +44,7 @@ define variable vss-description as character no-undo init "Генерация для ВС номе
 { bge/esallatr.i work }
 { bge/esysattr.i }
 { gbl/filelist.i }
+{ gbl/db-attr.i  }
 
 function esys-id-format returns character ( input p-esys-id as integer):
   return string(p-esys-id, "99999").
@@ -260,8 +261,11 @@ on error undo, return error
           ,input ""
           ) no-error.
           for each buf_temp-filelist exclusive-lock :
-              if num-entries(buf_temp-filelist.file-name, "_") <> 3
+              if num-entries(buf_temp-filelist.file-name, "_") = 3
+              or (num-entries(buf_temp-filelist.file-name, "_") = 4 and buf_temp-filelist.file-name begins "ack") 
               then do :
+              end.
+              else do :
                   delete buf_temp-filelist .
               end.    
           end.

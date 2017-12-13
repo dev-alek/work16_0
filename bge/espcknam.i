@@ -26,6 +26,9 @@ function get-short-pack-name returns character ( input p-action as character
 define variable v-short-pack-name as character no-undo .
 define buffer buf_esys-pck-rcvd for ub.esys-pck-rcvd.
 define buffer buf_clients for ub.clients.
+define variable v-int-point as character no-undo .
+define variable v-type as character no-undo .
+
 case p-delivery-method:
  when integer({&esys-dm-oracle-retail}) then do:
    find first buf_clients no-lock where
@@ -92,8 +95,15 @@ case p-delivery-method:
    case p-action:
      when "put"
      or when "fput" then do:
+       run db-attr-value in this-procedure 
+           (input g#db-num
+           ,input {&attr-int-point}
+           ,output v-int-point
+           ,output v-type
+           ) no-error .
+       
        p-custom-flag = yes.
-       v-short-pack-name = "00000_" + string(p-pack-num) + "_"
+       v-short-pack-name = v-int-point + "_" + string(p-pack-num) + "_"
                          + string(day(now)) + string(month(now)) + string(year(now))
                          + substring(string(TIME, "HH:MM:SS"), 1, 2)
                          + substring(string(TIME, "HH:MM:SS"), 4, 2)
