@@ -27,7 +27,8 @@ class ibs.th.bge.1crn.subjects.peres-gd-doc implements iexpsubject:
   { str/lib-trn.i  class }
   { str/trdcalib.i class }
   
-  define buffer bf_trn-doc         for ub.trn-doc.
+  define temp-table bf_trn-doc like ub.trn-doc.
+  
   define buffer bf_doc-line        for ub.doc-line.
   define buffer bf_goods           for ub.goods.
   define buffer bf-plus_doc-line   for ub.doc-line.
@@ -149,7 +150,11 @@ index sum-type is primary unique sum-type.
   define property InitSecTag as character no-undo init "peres-gd-docs"
     get.
 
-  define property DocCode as character no-undo
+  define property BufTableHndlNew as handle no-undo
+    get.
+    set.
+
+  define property BufTableHndlOld as handle no-undo
     get.
     set.
   
@@ -165,15 +170,41 @@ index sum-type is primary unique sum-type.
   define variable varr-b           as character no-undo.
   define variable is-cdinv         as character no-undo .
   define variable clcprtsl-hndl    as handle    no-undo .
+  define variable v-bufhnd         as handle    no-undo.
 
   method public void CrContentToSW (insw as handle):
     
     sw = insw.
     
-    find first bf_trn-doc no-lock where bf_trn-doc.doc-code = DocCode no-error.
-    if not available (bf_trn-doc)
-      then return.
-    isDel = false.
+    create bf_trn-doc.
+    
+    v-bufhnd = buffer bf_trn-doc:handle.
+    
+    if valid-handle (BufTableHndlNew)
+    then do:
+      v-bufhnd:buffer-copy (BufTableHndlNew) no-error.
+      if error-status:error
+      then do:
+        Msg = "Ошибка выгрузки peres-gd-doc, неверный буфер BufTableHndlNew".
+        undo, return error Msg.
+      end.
+      isDel = false.
+    end.
+    else do:
+      if not valid-handle (BufTableHndlOld)
+      then do:
+        Msg = "Ошибка выгрузки peres-gd-doc, неопеределен ни старый ни новый буфер".
+        undo, return error Msg.
+      end.
+      v-bufhnd:buffer-copy (BufTableHndlOld) no-error.
+      if error-status:error
+      then do:
+        Msg = "Ошибка выгрузки peres-gd-doc, неверный буфер BufTableHndlOld".
+        undo, return error Msg.
+      end.
+      isDel = true.
+    end.
+    
     run str/clcprtsl.p persistent (output clcprtsl-hndl).
     StartDocInv().
     GdsLine().
@@ -188,7 +219,7 @@ index sum-type is primary unique sum-type.
     
     
     for each bf_doc-line 
-      where bf_doc-line.doc-code = DocCode no-lock,
+      where bf_doc-line.doc-code = bf_trn-doc.doc-code no-lock,
       first bf_goods where bf_goods.artic = bf_doc-line.artic     
       and bf_goods.prod-type = bf_doc-line.prod-type 
       and bf_goods.prod-code = bf_doc-line.prod-code no-lock,
@@ -202,7 +233,7 @@ index sum-type is primary unique sum-type.
         
       sw:start-element ("gds").        
       for each bf-plus_doc-line 
-        where bf-plus_doc-line.doc-code = DocCode no-lock,
+        where bf-plus_doc-line.doc-code = bf_trn-doc.doc-code no-lock,
         first bf-plus_goods where bf-plus_goods.artic = bf-plus_doc-line.artic     
         and bf-plus_goods.prod-type = bf-plus_doc-line.prod-type 
         and bf-plus_goods.prod-code = bf-plus_doc-line.prod-code no-lock,

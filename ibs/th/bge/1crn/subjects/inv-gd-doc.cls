@@ -27,7 +27,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   { str/lib-trn.i  class }
   { str/trdcalib.i class }
   
-  define buffer buf_trn-doc for ub.trn-doc.
+  define temp-table buf_trn-doc like ub.trn-doc.
+  
   define buffer buf_inv-line for ub.inv-line.
   define buffer buf_doc-line for ub.doc-line.
   define buffer buf_doc-pl for ub.doc-pl.
@@ -46,8 +47,12 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   define property InitSecTag as character no-undo
     get.
     private set.
+    
+  define property BufTableHndlNew as handle no-undo
+    get.
+    set.
 
-  define property DocCode as character no-undo
+  define property BufTableHndlOld as handle no-undo
     get.
     set.
   
@@ -64,6 +69,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   define variable varinvclcspvalue as character no-undo.
   define variable varr-b           as character no-undo.
   define variable is-cdinv         as character no-undo .
+  define variable v-bufhnd         as handle    no-undo.
 
   method public void CrContentToSW (insw as handle):
     
@@ -72,11 +78,34 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
     
     sw = insw.
     
-    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = DocCode no-error.
-    if not available (buf_trn-doc)
-      then return.
+    create buf_trn-doc.
     
-    isDel = false.
+    v-bufhnd = buffer buf_trn-doc:handle.
+    
+    if valid-handle (BufTableHndlNew)
+    then do:
+      v-bufhnd:buffer-copy (BufTableHndlNew) no-error.
+      if error-status:error
+      then do:
+        Msg = "Ошибка выгрузки inv-gd-doc, неверный буфер BufTableHndlNew".
+        undo, return error Msg.
+      end.
+      isDel = false.
+    end.
+    else do:
+      if not valid-handle (BufTableHndlOld)
+      then do:
+        Msg = "Ошибка выгрузки inv-gd-doc, неопеределен ни старый ни новый буфер".
+        undo, return error Msg.
+      end.
+      v-bufhnd:buffer-copy (BufTableHndlOld) no-error.
+      if error-status:error
+      then do:
+        Msg = "Ошибка выгрузки inv-gd-doc, неверный буфер BufTableHndlOld".
+        undo, return error Msg.
+      end.
+      isDel = true.
+    end.
     
     for each buf_inv-line no-lock where buf_inv-line.doc-code = buf_trn-doc.doc-code:
       { str/is-petrl.i
