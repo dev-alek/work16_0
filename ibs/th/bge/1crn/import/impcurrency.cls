@@ -60,22 +60,22 @@ class ibs.th.bge.1crn.import.impcurrency implements ibs.th.bge.1crn.import.iimps
         run ref/currenc1.p (
           input-output v-rec
           ,input {&update}
-          ,input false /* p-silent */
+          ,input true /* p-silent */
           ,input ub.currency.curr-code
-          ,input objCurrency:sym-name
+          ,input ub.currency.curr-abbr
           ,input ub.currency.part-abbr
           ,input objCurrency:name_
-          ,input ub.currency.curr-name-one
-          ,input ub.currency.curr-name-three
-          ,input ub.currency.curr-name-five
+          ,input objCurrency:name-in-words-1
+          ,input objCurrency:name-in-words-2
+          ,input objCurrency:name-in-words-3
           ,input ub.currency.curr-eng-name
           ,input ub.currency.curr-eng-name-one
           ,input ub.currency.curr-eng-name-three
           ,input ub.currency.curr-eng-name-five
           ,input ub.currency.part-name
-          ,input ub.currency.part-name-one
-          ,input ub.currency.part-name-three
-          ,input ub.currency.part-name-five
+          ,input objCurrency:name-in-words-4
+          ,input objCurrency:name-in-words-5
+          ,input objCurrency:name-in-words-6
           ,input objCurrency:code_
           ,input ""
           ) no-error .
@@ -100,22 +100,22 @@ class ibs.th.bge.1crn.import.impcurrency implements ibs.th.bge.1crn.import.iimps
         run ref/currenc1.p (
           input-output v-rec
           ,input {&add-def}
-          ,input false /* p-silent */
+          ,input true /* p-silent */
           ,input v-curr-code
           ,input objCurrency:sym-name
           ,input ""
           ,input objCurrency:name_
+          ,input objCurrency:name-in-words-1
+          ,input objCurrency:name-in-words-2
+          ,input objCurrency:name-in-words-3
           ,input ""
           ,input ""
           ,input ""
           ,input ""
           ,input ""
-          ,input ""
-          ,input ""
-          ,input ""
-          ,input ""
-          ,input ""
-          ,input ""
+          ,input objCurrency:name-in-words-4
+          ,input objCurrency:name-in-words-5
+          ,input objCurrency:name-in-words-6
           ,input objCurrency:code_
           ,input ""
           ) no-error .

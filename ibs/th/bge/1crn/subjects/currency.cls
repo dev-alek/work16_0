@@ -17,16 +17,24 @@ Creation date: 26/09/17
 
 USING Progress.Lang.*.
 
-CLASS ibs.th.bge.1crn.subjects.currency implements ibs.th.bge.1crn.subjects.isubject: 
+CLASS ibs.th.bge.1crn.subjects.currency inherits ibs.th.bge.1crn.subjects.asubject: 
   
   define property code_       as character    no-undo get. private set.
   define property del-l       as integer      no-undo get. private set.
   define property del-f       as integer      no-undo get. private set.
   define property name_       as character    no-undo get. private set.
   define property sym-name    as character    no-undo get. private set.
+  define property name-in-words-1    as character    no-undo get. private set.
+  define property name-in-words-2    as character    no-undo get. private set.
+  define property name-in-words-3    as character    no-undo get. private set.
+  define property name-in-words-4    as character    no-undo get. private set.
+  define property name-in-words-5    as character    no-undo get. private set.
+  define property name-in-words-6    as character    no-undo get. private set.
 
-
-  method public void SetProp (inTag as char, inValue as char):
+  define override property InitTag as character no-undo init "currency"
+    get. 
+    
+  method OVERRIDE PROTECTED void SetPropProtected (inTag as char, inValue as char):
     case inTag:
       when "code" then do:
         assign code_ = inValue .
@@ -43,8 +51,64 @@ CLASS ibs.th.bge.1crn.subjects.currency implements ibs.th.bge.1crn.subjects.isub
       when "sym-name" then do:
         assign sym-name = inValue .
       end.
+      when "name-in-words-1" then do:
+        assign name-in-words-1 = inValue .
+      end.
+      when "name-in-words-2" then do:
+        assign name-in-words-2 = inValue .
+      end.
+      when "name-in-words-3" then do:
+        assign name-in-words-3 = inValue .
+      end.
+      when "name-in-words-4" then do:
+        assign name-in-words-4 = inValue .
+      end.
+      when "name-in-words-5" then do:
+        assign name-in-words-5 = inValue .
+      end.
+      when "name-in-words-6" then do:
+        assign name-in-words-6 = inValue .
+      end.                        
     end case.
   end.
 
+  method override protected void CheckData ():
+
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = "code" when code_ = ?
+      v-str = v-str + ",name" when name_ = ?
+      v-str = v-str + ",sym-name" when sym-name = ?
+      v-str = v-str + ",name-in-words-1" when name-in-words-1 = ?
+      v-str = v-str + ",name-in-words-2" when name-in-words-2 = ?
+      v-str = v-str + ",name-in-words-3" when name-in-words-3 = ?
+      v-str = v-str + ",name-in-words-4" when name-in-words-4 = ?
+      v-str = v-str + ",name-in-words-5" when name-in-words-5 = ?
+      v-str = v-str + ",name-in-words-6" when name-in-words-6 = ?
+    .
+    v-str = trim (v-str, ",").
+    if v-str > ''
+    then 
+      undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
+
+  end.
+  
+  method override protected void ClearSub():
+    assign 
+      code_     = ?
+      del-l     = ?
+      del-f     = ?
+      name_     = ?
+      sym-name  = ?
+      name-in-words-1     = ?
+      name-in-words-2     = ?
+      name-in-words-3     = ?
+      name-in-words-4     = ?
+      name-in-words-5     = ?
+      name-in-words-6     = ?
+    .
+  end.
+  
 
 END CLASS.
