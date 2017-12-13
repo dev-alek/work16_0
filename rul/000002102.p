@@ -259,13 +259,12 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
     v-ext-doc-type = v-oldbh:buffer-field("ext-doc-type"):buffer-value.
     v-p-date = v-oldbh:buffer-field("doc-date"):buffer-value.
   end.
-  if not v-newbh = ?
+  if v-has-newbh
   then do:
     v-doc-status = v-newbh:buffer-field("status_"):buffer-value.
   end.
-  else return.
   v-doc-status-old = v-oldbh:buffer-field("status_"):buffer-value.
-  if v-doc-status = v-doc-status-old or not v-doc-status = {&fact}
+  if not (v-doc-status-old = {&fact} and not v-has-newbh) and (v-doc-status = v-doc-status-old or not v-doc-status = {&fact})
     then return.
 
   IF  context_begin-esys-command( input string(v-esys-id-list), input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) = false  THEN do:
@@ -279,23 +278,25 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
     when {&TDEDT_Ras_Perem}
     then do:
       subDocObj = new trn-gd-doc ().
-      cast (subDocObj, trn-gd-doc):DocCode = v-doc-code.      
+      cast (subDocObj, trn-gd-doc):BufTableHndlNew = v-newbh.
+      cast (subDocObj, trn-gd-doc):BufTableHndlOld = v-oldbh.      
     end. 
     when {&TDEDT_Inv} 
     then do:
       subDocObj = new inv-gd-doc ().
-      cast (subDocObj, inv-gd-doc):DocCode = v-doc-code.
+      cast (subDocObj, inv-gd-doc):BufTableHndlNew = v-newbh.
+      cast (subDocObj, inv-gd-doc):BufTableHndlOld = v-oldbh.
     end.
     when {&TDEDT_Peresort} 
     then do:
       subDocObj = new peres-gd-doc ().
-      cast (subDocObj, peres-gd-doc):DocCode = v-doc-code.
+      cast (subDocObj, peres-gd-doc):BufTableHndlNew = v-newbh.
+      cast (subDocObj, peres-gd-doc):BufTableHndlOld = v-oldbh.
     end.
     otherwise do:
       return.
     end.
   end case.
-    
   expObj = new expsubject ().
   expObj:GetContent(subDocObj).
         

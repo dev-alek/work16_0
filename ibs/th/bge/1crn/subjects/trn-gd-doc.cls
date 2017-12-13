@@ -44,7 +44,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   &scop create-record-cust-date find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
   if available (buf_doc-attr) then write-data-element ('~{&tag-code~}', iso-date (date (buf_doc-attr.attr-value))).  
 
-  define buffer buf_trn-doc for ub.trn-doc.
+  define temp-table buf_trn-doc like ub.trn-doc.
+  
   define buffer buf_doc-line for ub.doc-line.
   define buffer buf_gds-dtl for ub.gds-dtl.
   define buffer buf_doc-pl for ub.doc-pl.
@@ -67,7 +68,11 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     get.
     set.
 
-  define property BufTableHndl as handle no-undo
+  define property BufTableHndlNew as handle no-undo
+    get.
+    set.
+
+  define property BufTableHndlOld as handle no-undo
     get.
     set.
   
@@ -76,17 +81,43 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   define variable v-is-petrol-trn  as logical   no-undo.
   define variable v-is-pieces      as logical   no-undo.
   define variable isDel            as logical   no-undo.
+  define variable v-bufhnd         as handle    no-undo.
 
 
   method public void CrContentToSW (insw as handle):
 
     sw = insw.
     
-    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = DocCode no-error.
-    if not available (buf_trn-doc)
-      then return.
+    create buf_trn-doc.
     
-    isDel = false.
+    v-bufhnd = buffer buf_trn-doc:handle.
+    
+    if valid-handle (BufTableHndlNew)
+    then do:
+      v-bufhnd:buffer-copy (BufTableHndlNew) no-error.
+      if error-status:error
+      then do:
+        Msg = "Ошибка выгрузки trn-gd-code, неверный буфер BufTableHndlNew".
+        undo, return error Msg.
+      end.
+      isDel = false.
+    end.
+    else do:
+      if not valid-handle (BufTableHndlOld)
+      then do:
+        Msg = "Ошибка выгрузки trn-gd-code, неопеределен ни старый ни новый буфер".
+        undo, return error Msg.
+      end.
+      v-bufhnd:buffer-copy (BufTableHndlOld) no-error.
+      if error-status:error
+      then do:
+        Msg = "Ошибка выгрузки trn-gd-code, неверный буфер BufTableHndlOld".
+        undo, return error Msg.
+      end.
+      isDel = true.
+    end.
+    
+    DocCode = buf_trn-doc.doc-code.
     
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
       { str/is-petrl.i
@@ -257,8 +288,6 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     &scop tag-code spisok-not-doc
     {&create-record-cust}
     
-    
-    
     sw:start-element ("gds").
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
       
@@ -391,7 +420,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   method private void Ras ():
       
     if v-doc-type-ERPRN = "3"
-      then write-data-element ("fuel-st-code", string-mth (buf_trn-doc.obj-code)).
+      then write-data-element ("fuel-st-code", string-mth (buf_trn-doc.cli-code)).
     TrdcAattrRas().
     
     sw:start-element ("gds").
@@ -421,7 +450,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   method private void RasFuel ():
 
     if v-doc-type-ERPRN = "3"
-      then write-data-element ("fuel-st-code", string-mth (buf_trn-doc.obj-code)).
+      then write-data-element ("fuel-st-code", string-mth (buf_trn-doc.cli-code)).
     TrdcAattrRas().
     sw:start-element ("gds").
     for each buf_gds-dtl no-lock where buf_gds-dtl.doc-code = buf_trn-doc.doc-code:
@@ -486,6 +515,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.sys-time-int))).
         write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (date (buf_trn-doc.fact-date))).
         write-data-element ("doc-type", v-doc-type-ERPRN).
+        write-data-element ("doc-rsn-code", (if buf_trn-doc.reason-code = ? then "0" else string-mth (buf_trn-doc.reason-code))).
         write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
         write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
         write-data-element ("contr-code", string-mth (buf_trn-doc.cli-code)).
@@ -510,7 +540,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("del-f", string (isDel, "1/0") ).
         write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.sys-time-int))).
         write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (date (buf_trn-doc.fact-date))).
-        write-data-element ("doc-type", v-doc-type-ERPRN).        
+        write-data-element ("doc-type", v-doc-type-ERPRN).
+        write-data-element ("doc-rsn-code", string-mth (buf_trn-doc.reason-code)).
         write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
         write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
         write-data-element ("contr-code", string-mth (buf_trn-doc.cli-code)).
@@ -548,7 +579,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     inTag = lc (InTag).
 
     if inValue = ?
-      then sw:write-empty-element (inTag).
+      then 
+/*      sw:write-empty-element (inTag)*/
+      .
       else sw:write-data-element (inTag, inValue).
   
   end.
@@ -593,6 +626,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     {&create-record}
     &scop attr-code trdcattr-ddog
     {&create-record-date}
+    &scop attr-code trdcattr-nids
+    {&create-record}
     &scop attr-code trdcattr-ndov
     {&create-record}
     &scop attr-code trdcattr-ddov
@@ -639,6 +674,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     &scop attr-code trdcattr-ddov
     {&create-record-date}
     &scop attr-code trdcattr-ndov
+    {&create-record}
+    &scop attr-code trdcattr-nids
     {&create-record}
 /*    &scop attr-code trdcattr-ndog*/
 /*    {&create-record}             */
