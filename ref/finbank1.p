@@ -68,6 +68,8 @@ define variable v-import as logical no-undo .
 define buffer buf_sysconf  for ub.sysconf.
 define buffer buf_fin-bank for ub.fin-bank.
 define buffer buf_fin-schet for ub.fin-schet .
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
 
 if p-mode <> {&add-def}
 AND p-mode <> {&update}
@@ -83,7 +85,9 @@ if p-mode = {&add-import} then do:
   v-import = yes.
   p-mode = {&add-def}.
 end.
-
+run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+if v-value = "no"  then do:   
+  
 { gbl/curdbnum.i v-db-num }
 
 find first buf_sysconf no-lock where
@@ -103,7 +107,7 @@ then do:
   run err-mess in this-procedure ( input-output v-mess ).
   undo, return error (if p-silent then v-mess else "host-code":U).
 end.
-
+end.
 if
 can-find(first buf_fin-bank no-lock where
                   buf_fin-bank.host-code = p-host-code
