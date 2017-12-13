@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Структура данных countries из 1С
+Структура данных good-grps из 1С
 
 Автор: Александр Морозов
 Дата создания: 26/09/17
@@ -18,7 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 
 
-class ibs.th.bge.1crn.subjects.good-grps implements ibs.th.bge.1crn.subjects.isubject: 
+class ibs.th.bge.1crn.subjects.good-grps inherits ibs.th.bge.1crn.subjects.asubject: 
 
   define property code_ as character no-undo
     get. 
@@ -38,8 +38,14 @@ class ibs.th.bge.1crn.subjects.good-grps implements ibs.th.bge.1crn.subjects.isu
   define property rn-code as character no-undo 
     get. 
     private set.
+  define property r-mat as integer no-undo 
+    get. 
+    private set.  
 
-  method public void SetProp (inTag as char, inValue as char):
+  define override property InitTag as character no-undo init "good-grp"
+    get. 
+    
+  method OVERRIDE PROTECTED void SetPropProtected (inTag as char, inValue as char):
     case inTag:
       when "code" then 
         do:
@@ -71,8 +77,48 @@ class ibs.th.bge.1crn.subjects.good-grps implements ibs.th.bge.1crn.subjects.isu
           assign 
             rn-code = inValue.
         end.
+      when "r-mat" then 
+        do:
+          assign 
+            r-mat = integer(inValue).
+        end.
     end case.
-    
-  end method.
+  end .
 
+  method override protected void CheckData ():
+
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = "code" 
+      when code_ = ?
+      /*      v-str = v-str + ",upper-code" when upper-code = ?*/
+      v-str = v-str + ",name" 
+      when name_ = ?
+      v-str = v-str + ",rn-code" 
+      when rn-code = ?
+      v-str = v-str + ",r-mat" 
+      when r-mat = ?
+      .
+    v-str = trim (v-str, ",").
+    if v-str > ''
+      then 
+      undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
+
+  end.
+  
+  method override protected void ClearSub():
+    assign 
+      code_   = ?
+      del-l   = ?
+      del-f   = ?
+      name_   = ?
+      /*      upper-code = ?*/
+      rn-code = ?
+      r-mat   = ?
+      .
+  end.
+  
+
+  
 end class.

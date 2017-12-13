@@ -39,7 +39,7 @@ initial "@(#)$Workfile$ $Revision$".
 &global-define grplib-grp-amount-for-warning 1000
 
 &global-define tab-size 4
-&global-define grplib-max-chars-in-full-grp-name 170
+&global-define grplib-max-chars-in-full-grp-name 350
 &global-define grplib-ascii-exclude-list-for-grp-name 47,92,58,63,34,60,62,171,187,183
 &global-define grplib-literal-exclude-list-for-grp-name /\:*?"<>|«»·
 

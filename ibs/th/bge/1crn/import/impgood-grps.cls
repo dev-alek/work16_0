@@ -17,11 +17,14 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+USING ibs.th.gbl.ggoattr FROM PROPATH.
 
 class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimpsubject: 
   
   { cmp/str-glbl.i class }
   { cmp/str-glbl.i }
+  
+  define variable ggoattr as class ggoattr no-undo .
   
   define property Msg as character no-undo
     get. 
@@ -41,11 +44,15 @@ class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimp
     DEFINE VARIABLE varupper-code         like ub.gds-grp.upper-code no-undo .
     define variable v-fill-tax-from-upper as LOGICAL no-undo .
     define variable v-perenos             as logical no-undo .
-    
+    define variable v-value               as logical no-undo .
     define variable objGood-Grps          as class   good-grps no-undo.
 		
     objGood-Grps = cast (subjectObj, good-grps).
-
+    if objGood-Grps:code_ = "1" then 
+    do:
+      Msg = "Группа товара не должна иметь код равный 1 !!!".
+      return false.
+    end.  
     if objGood-Grps:del-f = 1 then 
     do:
       /*проверять не используется ли данные где-то в другом месте - не сделано*/
@@ -75,7 +82,7 @@ class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimp
     do:
       ASSIGN
         varnode-code  = INTEGER(objGood-Grps:code_)
-        varupper-code = INTEGER (objGood-Grps:upper-code)
+        varupper-code = if objGood-Grps:upper-code = ? or objGood-Grps:upper-code = "" then 1 else INTEGER (objGood-Grps:upper-code)
         .   	
       find first buf_gds-grp EXCLUSIVE-LOCK
         where buf_gds-grp.node-code = integer(objGood-Grps:code_)
@@ -123,6 +130,54 @@ class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimp
         Msg = return-value.
         return false.
       end.
+      else 
+      do:
+        ggoattr = new ggoattr ().
+        
+        if objGood-Grps:r-mat = 1 then 
+        do:
+          
+          ggoattr:ggoattr-write(
+            varnode-code
+            ,0
+            ,""
+            ,0
+            ,{&ggoattr-no-inc-auto-rep}
+            ,"yes"
+            ).
+            
+          ggoattr:ggoattr-write(
+            varnode-code
+            ,0
+            ,""
+            ,0
+            ,{&ggoattr-ban-sales-via-cd}
+            ,"yes"
+            ).
+            
+        end.
+        else 
+        do:
+          ggoattr:ggoattr-delete(
+            varnode-code
+            ,0
+            ,""
+            ,0
+            ,{&ggoattr-no-inc-auto-rep}
+            ,v-value
+            ).
+            
+          ggoattr:ggoattr-delete(
+            varnode-code
+            ,0
+            ,""
+            ,0
+            ,{&ggoattr-ban-sales-via-cd}
+            ,v-value
+            ).
+            
+        end.    
+      end.  
     end.
   end method.
 

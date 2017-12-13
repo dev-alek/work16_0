@@ -60,6 +60,9 @@ DEFINE VARIABLE v-node-code like ub.gds-grp.node-code no-undo .
 define variable v-last-node-code as integer no-undo .
 define variable v-is-import as logical no-undo .
 define variable v-print-code  as character no-undo .
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
+
 define buffer upper_gds-grp  for ub.gds-grp.
 define buffer buf_gds-grp-obj for ub.gds-grp-obj.
 define buffer buf_gds-grp for ub.gds-grp.
@@ -79,6 +82,8 @@ on error undo, return error
     view-as alert-box error .
     return error .
   end.
+run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+if v-value = "no"  then do:   
   if g#db-num <> 0 then do:
     message
     vss-workfile vss-revision vss-description skip
@@ -86,6 +91,7 @@ on error undo, return error
     view-as alert-box error .
     undo main-block, return error .
   end.
+end.  
   if p-node-name = ""
   or p-node-name = ? then do:
     assign
