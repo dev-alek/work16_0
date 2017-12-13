@@ -34,53 +34,46 @@ class ibs.th.bge.1crn.import.imppayment-type-group implements ibs.th.bge.1crn.im
 
   method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
 		
-		def var v-rec as recid no-undo .
-
+    def var v-rec  as recid     no-undo .
+    def var v-mode as character no-undo .
+    
     define variable objPaymentTypeGroup as class payment-type-group no-undo.
     
     objPaymentTypeGroup = cast (subjectObj, payment-type-group).
 
 		if objPaymentTypeGroup:del-f = 1 then do:
 		  /*проверять не используется ли данные где-то в другом месте - не сделано*/
-		  
-		  find first ub.pay-type where ub.pay-type.obj-code = integer(objPaymentTypeGroup:code_)
-		                           and ub.pay-type.obj-name = objPaymentTypeGroup:name_ no-error .
-      if AVAILABLE ub.pay-type then do:
-        delete ub.pay-type .
-      end.  		                          
+		  Msg = "Физическое удаление в базе не реализовано".
+/*		  find first ub.pay-type where ub.pay-type.obj-code = integer(objPaymentTypeGroup:code_) no-error .*/
+/*      if AVAILABLE ub.pay-type then do:                                                              */
+/*        delete ub.pay-type .                                                                         */
+/*      end.  		                                                                                       */
 		end.  
 		else do:
       find first ub.pay-type where ub.pay-type.obj-code = integer(objPaymentTypeGroup:code_) no-error .
       if AVAILABLE ub.pay-type then do:
-        v-rec = recid (ub.pay-type) .
-   run ref/paytype1.p
-     ( input-output v-rec
-     , input {&update}
-     , input no /* p-silent */
-     , input objPaymentTypeGroup:code_
-     , input objPaymentTypeGroup:name_
-     ) no-error.
-     
-        if error-status:error then do:
-          Msg = return-value.
-          return false.
-        end.
-      end.                                
-      else do:		
-        create ub.pay-type .
-        v-rec = recid(ub.pay-type) .
-   run ref/paytype1.p
-     ( input-output v-rec
-     , input {&add-def}
-     , input no /* p-silent */
-     , input objPaymentTypeGroup:code_
-     , input objPaymentTypeGroup:name_
-     ) no-error.
-        if error-status:error then do:
-          Msg = return-value.
-          return false.
-        end.
+        assign
+          v-mode = {&update}
+          v-rec = recid (ub.pay-type) 
+          .
       end.
+      else do:
+        assign
+          v-mode = {&add-def}
+          v-rec = ?
+        .
+      end.      
+   run ref/paytype1.p
+     ( input-output v-rec
+     , input v-mode
+     , input yes /* p-silent */
+     , input objPaymentTypeGroup:code_
+     , input objPaymentTypeGroup:name_
+     ) no-error.
+        if error-status:error then do:
+          Msg = return-value.
+          return false.
+        end.
 		return true.
     end.
 	end method.

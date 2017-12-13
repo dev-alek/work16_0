@@ -17,14 +17,17 @@ Creation date: 26/09/17
 
 USING Progress.Lang.*.
 
-CLASS ibs.th.bge.1crn.subjects.payment-type-group implements ibs.th.bge.1crn.subjects.isubject:
+CLASS ibs.th.bge.1crn.subjects.payment-type-group inherits ibs.th.bge.1crn.subjects.asubject:
   
   define property code_       as character    no-undo get. private set.
   define property del-l       as integer      no-undo get. private set.
   define property del-f       as integer      no-undo get. private set.
   define property name_       as character    no-undo get. private set.
 
-  method public void SetProp (inTag as char, inValue as char):
+  define override property InitTag as character no-undo init "payment-type-group"
+    get. 
+
+  method OVERRIDE PROTECTED void SetPropProtected (inTag as char, inValue as char):
     case inTag:
       when "code" then do:
         assign code_ = inValue .
@@ -41,4 +44,28 @@ CLASS ibs.th.bge.1crn.subjects.payment-type-group implements ibs.th.bge.1crn.sub
     end case.
   end.
 
+  method override protected void CheckData ():
+
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = "code" when code_ = ?
+      v-str = v-str + ",name" when name_ = ?
+    .
+    v-str = trim (v-str, ",").
+    if v-str > ''
+    then 
+      undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
+
+  end.
+  
+  method override protected void ClearSub():
+    assign 
+      code_     = ?
+      del-l     = ?
+      del-f     = ?
+      name_     = ?
+    .
+  end.
+  
 END CLASS.
