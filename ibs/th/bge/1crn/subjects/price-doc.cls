@@ -64,11 +64,11 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
             
             sw:write-data-element ("doc-code", string(pr-doc-hndl::doc-num)).
             sw:write-data-element ("doc-num-gs", string(pr-doc-hndl::doc-num)).
-            sw:write-data-element ("doc-date", if pr-doc-hndl::doc-date = ? then "" else replace(string(pr-doc-hndl::doc-date), "/", ".") ).  
+            sw:write-data-element ("doc-date", if pr-doc-hndl::doc-date = ? then "" else iso-date(pr-doc-hndl::doc-date) ).  
             
          
             sw:write-data-element ("doc-status", "4").
-            sw:write-data-element ("status-date", iso-date(pr-doc-hndl::doc-date)).
+            sw:write-data-element ("status-date", (iso-date(TODAY) + "T" + string(TIME, "HH:MM:SS") ) ).
           
       
           sw:end-element ("price-doc") .
@@ -92,17 +92,17 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
             
             sw:write-data-element ("doc-code", buf_price-doc.doc-num).
             sw:write-data-element ("doc-num-gs", buf_price-doc.doc-num).
-            sw:write-data-element ("doc-date", if buf_price-doc.doc-date = ? then "" else replace(string(buf_price-doc.doc-date), "/", ".") ).  
+            sw:write-data-element ("doc-date", if buf_price-doc.doc-date = ? then "" else iso-date(buf_price-doc.doc-date) ).  
             
           if buf_price-doc.status_ = {&order}
           then do :
             sw:write-data-element ("doc-status", "2").
-            sw:write-data-element ("status-date", iso-date(TODAY)).
+            sw:write-data-element ("status-date", (iso-date(TODAY) + "T" + string(TIME, "HH:MM:SS") ) ).
           end.  
           if buf_price-doc.status_ = {&act-overvalue}
           then do :
             sw:write-data-element ("doc-status", "3").
-            sw:write-data-element ("status-date", iso-date(buf_price-doc.fact-date)).
+            sw:write-data-element ("status-date", (iso-date(buf_price-doc.fact-date) + "T" + string(buf_price-doc.fact-time, "HH:MM:SS") ) ).
           end.
           if   (buf_price-doc.doc-num-es = ? or trim(buf_price-doc.doc-num-es) = "")
           and  (buf_price-doc.uid-es = ? or trim(buf_price-doc.uid-es) = "")
