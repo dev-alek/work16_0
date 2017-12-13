@@ -4284,7 +4284,7 @@ define variable v-chg-qnty      as decimal   no-undo .
             .
             delete tt-parts-split .
           end.
-          if v-split-count >= 1 then do:
+          if v-split-count >= 1 and not t-doc.doc-code matches "*=*" then do:
             /* загонять туда надо и партии, которые разбивать не нужно,                          */
             /* но нужно, чтобы менялся part-code для сохранения уникальности партии в резервуаре */
             run trg/partsplt.p

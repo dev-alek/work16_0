@@ -275,7 +275,7 @@ end.
   .
 
   if v-new-trn-doc = false
-  and ub.trn-doc.ext-doc-type <> old-doc.ext-doc-type
+  and ub.trn-doc.ext-doc-type <> old-doc.ext-doc-type and not (old-doc.ext-doc-type = {&TDEDT_Pri_Perem} or ub.trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
   then do:
     message
       vss-workfile vss-revision vss-description skip
@@ -2426,6 +2426,27 @@ procedure validate-trn-doc :
               undo, return error return-value .
             end.
           end.
+          
+          define variable v-is-petrol-trn  as logical   no-undo.
+          define variable v-is-pieces      as logical   no-undo.
+  
+          
+          if old-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+          then do:
+            { str/is-petrl.i
+                buf_parts.artic
+                buf_parts.prod-type
+                buf_parts.prod-code
+                v-is-petrol-trn
+                v-is-pieces
+            }
+            if not v-is-petrol-trn 
+            then do:  
+              find current buf_parts exclusive-lock. 
+              buf_parts.cli-qnty = buf_parts.qnty.
+              find current buf_parts no-lock.
+            end.
+          end.
 
           assign
             v-parts-fact-qnty = v-parts-fact-qnty + buf_parts.fact-qnty
@@ -3111,7 +3132,7 @@ procedure validate-trn-doc :
             view-as alert-box error .
           undo, return error return-value .
         end.
-
+        
         if ub.trn-doc.doc-type <> {&inventory}
         then do:
           if buf_gds-dtl.fact-qnty < 0

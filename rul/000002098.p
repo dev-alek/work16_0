@@ -124,6 +124,7 @@ define variable v-ds-read-order as character no-undo .
 define variable v-esys-id as integer no-undo .
 define variable v-err-message as character no-undo .
 define variable v-pack-num as character no-undo .
+define new shared variable g#LogStr as character no-undo.
 
 { rul/seterror.i }
 define buffer buf_temp-cmd for temp-cmd.

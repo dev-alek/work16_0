@@ -275,7 +275,10 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
     when {&TDEDT_Ras_Vnesh} or
     when {&TDEDT_Ras_Vnesh_VP} or
     when {&TDEDT_Spi_Vnesh} or
-    when {&TDEDT_Ras_Perem}
+    when {&TDEDT_Ras_Perem} or
+    when {&TDEDT_Pri_Perem} or
+    when {&TDEDT_Vozvrat_Perem} or
+    when {&TDEDT_Vozvrat_Vnesh}
     then do:
       subDocObj = new trn-gd-doc ().
       cast (subDocObj, trn-gd-doc):BufTableHndlNew = v-newbh.

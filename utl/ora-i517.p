@@ -428,7 +428,7 @@ assign
     find first ub.trn-doc where ub.trn-doc.doc-code = temp_trn-doc.doc-code no-error.
     
     if available (ub.trn-doc) then do:
-      v-end-message =  "Ошибка при генерации номера документа. chip"  + return-value  + error-status :get-message(1) .
+      v-end-message =  substitute ("Документ с номером &1 номером уже существует", ub.trn-doc.doc-code)  + return-value  + error-status :get-message(1) .
       run pcall-log-file in p-log-handle (input v-end-message) .
       undo, return error v-end-message.
     end.
@@ -571,7 +571,7 @@ assign
         parrec-doc = recid (new_trn-doc)
     .
     
-
+  
     find first ub.shift-obj no-lock
       where ub.shift-obj.obj-type = new_trn-doc.obj-type
       and ub.shift-obj.obj-code = new_trn-doc.obj-code
@@ -585,7 +585,7 @@ assign
         new_trn-doc.shift-date = ub.shift-obj.shift-date
         .
     end.
-
+  
   
   k = 0 .
 
@@ -751,18 +751,17 @@ assign
           tt2-doc-line.prod-code = temp_doc-line.prod-code and
           tt2-doc-line.prod-type = temp_doc-line.prod-type no-error.
         
+        
+       
         if not available (tt2-doc-line)
         then do:
           create tt2-doc-line .
           BUFFER-COPY temp_doc-line  to tt2-doc-line
             assign
-              tt2-doc-line.cli-qnty       = temp_doc-line.fact-qnty when not is-egais
-              tt2-doc-line.doc-qnty       = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty when not is-egais
-              tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty when not is-egais
-              
-              tt2-doc-line.cli-qnty       = temp_doc-line.cli-qnty when is-egais
-              tt2-doc-line.doc-qnty       = temp_doc-line.doc-qnty when is-egais
-              tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty when is-egais
+
+              tt2-doc-line.cli-qnty       = temp_doc-line.cli-qnty
+              tt2-doc-line.doc-qnty       = temp_doc-line.doc-qnty
+              tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty
               
               tt2-doc-line.price-cli      = temp_doc-line.price-cli
               tt2-doc-line.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / buf_goods.cli-base-rate
@@ -772,13 +771,12 @@ assign
               tt2-doc-line.status_        = "temp"
               tt2-doc-line.ext-doc-type   = v-ext-doc-type
               tt2-doc-line.slt-pc         = 0
-              tt2-doc-line.cli-base-rate  = 1 when not is-egais
-              tt2-doc-line.cli-base-rate  = buf_goods.cli-base-rate when is-egais
+              tt2-doc-line.cli-base-rate  = 1
+              tt2-doc-line.cli-base-rate  = 1
               
               tt2-doc-line.line-num       = next-value (s-line-num, {&db-name_schema})
               tt2-doc-line.prt-root       = buf_goods.prt-root
-              tt2-doc-line.unit-cli       = buf_goods.unit-base when not is-egais
-              tt2-doc-line.unit-cli       = buf_goods.unit-cli when is-egais 
+              tt2-doc-line.unit-cli       = buf_goods.unit-cli 
               
               tt2-doc-line.doc-density    = 1 / tt2-doc-line.cli-base-rate
               tt2-doc-line.fact-density   = 1 / tt2-doc-line.cli-base-rate
@@ -807,17 +805,8 @@ assign
               .
           end.
           else do:
-            assign
+
               
-              tt2-doc-line.price-cli      = (tt2-doc-line.price-cli * tt2-doc-line.cli-qnty + temp_doc-line.price-cli * temp_doc-line.cli-qnty) 
-                                          / (tt2-doc-line.cli-qnty + temp_doc-line.cli-qnty)
-              tt2-doc-line.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / buf_goods.cli-base-rate
-              tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
-              
-              tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + temp_doc-line.cli-qnty
-              tt2-doc-line.doc-qnty       = tt2-doc-line.doc-qnty +  temp_doc-line.doc-qnty
-              tt2-doc-line.fact-qnty      = tt2-doc-line.fact-qnty + temp_doc-line.fact-qnty
-              .
           end.
       end.
         
@@ -877,6 +866,9 @@ assign
               and temp_doc-line.prod-code = tt2-doc-line.prod-code
               and temp_doc-line.prod-type = tt2-doc-line.prod-type:
       jj = jj + 1.
+      find first ub.pl-gds where ub.pl-gds.obj-type = new_trn-doc.obj-type
+        and ub.pl-gds.obj-code = new_trn-doc.obj-code and ub.pl-gds.gds-code = temp_doc-line.gds-code no-error.
+      
       create tt-parts.
       buffer-copy tt2-doc-line except tt2-doc-line.status_ to tt-parts .
         assign
@@ -925,6 +917,7 @@ assign
           tt-parts.other-rubl     = 0
           tt-parts.purch-code     = new_trn-doc.purch-code
           tt-parts.contract-code  = new_trn-doc.contract-code
+          tt-parts.pl-code = ub.pl-gds.pl-code
           no-error.
           if error-status:error then do :
               v-end-message = substitute(" Ошибка &1 &2 " , error-status :get-message(1)  , return-value) .
@@ -1285,57 +1278,35 @@ end.
         end.
     end.
 
-    if is-egais then do:
+    /*if true then do:
       for each  ub.doc-line where ub.doc-line.doc-code = new_trn-doc.doc-code:
         find first buf_goods where ub.doc-line.artic = buf_goods.artic and
           ub.doc-line.prod-type = buf_goods.prod-type  and
           ub.doc-line.prod-code = buf_goods.prod-code
           no-lock no-error .
+        find first ub.gds-dtl where ub.gds-dtl.doc-code = ub.doc-line.doc-code and 
+          ub.gds-dtl.artic = buf_goods.artic and
+          ub.gds-dtl.prod-type = buf_goods.prod-type  and
+          ub.gds-dtl.prod-code = buf_goods.prod-code
+          no-error .
+        /*find first temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code.*/
+        ub.doc-line.cli-base-rate = 1.
+        ub.doc-line.price-cli = ub.doc-line.price-rubl.
         release temp_doc-line.
         for each ub.parts exclusive-lock
           where ub.parts.in-code   = new_trn-doc.doc-code
             and ub.parts.artic     = ub.doc-line.artic
             and ub.parts.prod-type = ub.doc-line.prod-type
             and ub.parts.prod-code = ub.doc-line.prod-code 
-            by ub.parts.qnty:
-
-          find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock use-index qntyIndex no-error.
-          if not available (temp_doc-line) then do:
-            find first temp_doc-line where  temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock use-index qntyIndex no-error.
-          end.
+            :
+          ub.parts.cli-qnty = ub.doc-line.cli-qnty.
+          ub.parts.cli-base-rate = 1.
+          ub.parts.price-cli = ub.parts.price-rubl.
           
-          ub.parts.price-cli = temp_doc-line.price-cli.
-          ub.parts.price-rubl = (temp_doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / ub.parts.cli-base-rate.
-          ub.parts.price-base = ub.parts.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale.
-          
-          run trg/partps.p ( input buf_goods.gds-code
-                           , input parts.in-code
-                           , ?
-                           , input parts.part-code
-                           , input g#db-num
-                           , input ?
-                           , input ?
-                           , input temp_doc-line.refA + ',' + temp_doc-line.refB + ',' + temp_doc-line.alc-code  + ',' + temp_doc-line.alc-type-code
-                           , input ""
-                           , input ""
-                           , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 1, 3) else ""
-                           , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 4) else ""
-                           ) no-error .
-          if error-status :error
-          then do:
-            message
-              vss-workfile vss-revision vss-description skip
-              "Ошибка при вызове процедуры partps.p" skip
-              error-status :get-message(1) skip
-              return-value skip
-              view-as alert-box error .
-            run waitfram-hide.
-            undo, return error .
-          end.
         end.      
       end.
       
-    end.
+    end.*/
     
     assign
         v-end-message =  string(temp_trn-doc.obj-type) + string(temp_trn-doc.obj-code)

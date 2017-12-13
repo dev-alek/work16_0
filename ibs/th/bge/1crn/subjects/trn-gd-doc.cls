@@ -36,7 +36,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   if available (buf_doc-attr) then write-data-element ('~{&tag-code~}', (buf_doc-attr.attr-value)).
   
   &scop create-record-cust-obj-code find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
-  if available (buf_doc-attr) then write-data-element ('~{&tag-code~}', (if buf_doc-attr.attr-value = ""  or buf_doc-attr.attr-value = ? then "" else (entry (2, buf_doc-attr.attr-value, ";")))).
+  if available (buf_doc-attr) then write-data-element ('~{&tag-code~}', (if buf_doc-attr.attr-value = ""  or buf_doc-attr.attr-value = ? then "" else ((if num-entries (buf_doc-attr.attr-value, ";") = 2 then (entry (2, buf_doc-attr.attr-value, ";" )) else substring (buf_doc-attr.attr-value, 4, length ( buf_doc-attr.attr-value)))))).
 
   &scop create-record-cust-time find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
   if available (buf_doc-attr) then write-data-element ('~{&tag-code~}', (string-mth (integer (buf_doc-attr.attr-value), "HH:MM"))) no-error.
@@ -88,6 +88,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
 
     sw = insw.
     
+    
     create buf_trn-doc.
     
     v-bufhnd = buffer buf_trn-doc:handle.
@@ -131,6 +132,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         then leave.
     end.
     
+    if valid-handle (BufTableHndlOld) and BufTableHndlOld:buffer-field("ext-doc-type"):buffer-value = {&TDEDT_Pri_Perem}
+      then buf_trn-doc.ext-doc-type = BufTableHndlOld:buffer-field("ext-doc-type"):buffer-value.
+    
     case buf_trn-doc.ext-doc-type:
       when {&TDEDT_Pri_Vnesh} then do:
         v-doc-type-ERPRN = "1".
@@ -157,7 +161,17 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         if v-is-petrol-trn
           then StartDocTrnFuel().
           else StartDocTrn().
-        SpiVnesh().
+        RasPerem().
+        if v-is-petrol-trn
+          then EndDocTrnFuel().
+          else EndDocTrn().
+      end.
+      when {&TDEDT_Pri_Perem} then do:
+        v-doc-type-ERPRN = "4".
+        if v-is-petrol-trn
+          then StartDocTrnFuel().
+          else StartDocTrn().
+        PriPerem().
         if v-is-petrol-trn
           then EndDocTrnFuel().
           else EndDocTrn().
@@ -182,7 +196,11 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
           then EndDocTrnFuel().
           else EndDocTrn().
       end.
-      when "" then do:
+      when {&TDEDT_Vozvrat_Perem} or when {&TDEDT_Vozvrat_Vnesh} then do:
+        v-doc-type-ERPRN = "8".
+        StartDocTrn().
+        PriPerem().
+        EndDocTrn().
       end.
       otherwise do:
         return.
@@ -203,6 +221,50 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
 
     
   end.
+  
+  method private void PriPerem ():
+
+    if v-doc-type-ERPRN = "4"
+      then write-data-element ("fuel-st-code", string-mth (buf_trn-doc.cli-code)).
+
+    if v-doc-type-ERPRN = "8"
+      then write-data-element ("fuel-st-code", string-mth (buf_trn-doc.cli-code)).
+
+    find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = {&trdcattr-nids} no-error. ~
+    if available (buf_doc-attr) 
+    then do:
+      write-data-element ('doc-id', buf_doc-attr.attr-value) no-error.
+    end.  
+    
+    if v-is-petrol-trn
+      then PriVneshLineFuel().
+      else PriVneshLine().
+
+  end.
+  
+  method private void SpiVnesh ():
+
+    if v-doc-type-ERPRN = "3"
+      then write-data-element ("fuel-st-code", string-mth (buf_trn-doc.cli-code)).
+    TrdcAattrRas().
+        
+    if v-is-petrol-trn
+      then RasFuel().
+      else Ras().
+    
+  end.
+  
+  method private void RasPerem ():
+    
+    if v-doc-type-ERPRN = "3"
+      then write-data-element ("fuel-st-code", string-mth (buf_trn-doc.cli-code)).
+
+
+    if v-is-petrol-trn
+      then RasFuel().
+      else Ras().
+    
+  end.
 
   method private void PriVneshLine ():
     
@@ -220,8 +282,21 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("unit-code", string (buf_gds.unit-base)).
         write-data-element ("qnty-ttn", string-mth (buf_doc-line.doc-qnty)).
         write-data-element ("qnty-fact", string-mth (buf_doc-line.fact-qnty)).
-        write-data-element ("sum", string-mth (round (buf_doc-line.price-cli * buf_doc-line.cli-qnty, 2))).
-        write-data-element ("sum-nds", string-mth (round ((buf_doc-line.price-cli * buf_doc-line.cli-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
+        
+        if v-doc-type-ERPRN = "8"
+        then do:
+          find first buf_gds-dtl where buf_gds-dtl.doc-code = buf_trn-doc.doc-code
+            and buf_gds-dtl.artic = buf_gds-dtl.artic 
+            and buf_gds-dtl.prod-code = buf_gds-dtl.prod-code
+            and buf_gds-dtl.prod-type = buf_gds-dtl.prod-type.
+          write-data-element ("sum", string-mth (round (buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty, 2))).
+          write-data-element ("sum-nds", string-mth ( round ((buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
+        end.
+        else do:
+          write-data-element ("sum", string-mth (round (buf_doc-line.price-cli * buf_doc-line.cli-qnty, 2))).
+          write-data-element ("sum-nds", string-mth (round ((buf_doc-line.price-cli * buf_doc-line.cli-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
+        end.
+        
       sw:end-element ("gd").
       
     end.
@@ -317,7 +392,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     sw:end-element ("gds").
     
     sw:start-element ("scs").
-    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
+    for each buf_doc-line no-lock where not v-doc-type-ERPRN = '4' and buf_doc-line.doc-code = buf_trn-doc.doc-code:
     
       find first buf_gds where
             buf_gds.artic = buf_doc-line.artic 
@@ -409,20 +484,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     
   end.
 
-  method private void SpiVnesh ():
-        
-    if v-is-petrol-trn
-      then RasFuel().
-      else Ras().
-    
-  end.
-  
   method private void Ras ():
       
-    if v-doc-type-ERPRN = "3"
-      then write-data-element ("fuel-st-code", string-mth (buf_trn-doc.cli-code)).
-    TrdcAattrRas().
-    
     sw:start-element ("gds").
     for each buf_gds-dtl no-lock where buf_gds-dtl.doc-code = buf_trn-doc.doc-code:
       find first buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code
@@ -449,9 +512,6 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   
   method private void RasFuel ():
 
-    if v-doc-type-ERPRN = "3"
-      then write-data-element ("fuel-st-code", string-mth (buf_trn-doc.cli-code)).
-    TrdcAattrRas().
     sw:start-element ("gds").
     for each buf_gds-dtl no-lock where buf_gds-dtl.doc-code = buf_trn-doc.doc-code:
       find first buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code
