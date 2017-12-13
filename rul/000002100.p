@@ -231,7 +231,7 @@ procedure proc-main :
 
     define buffer buf_ext-system  for ub.ext-system.  
 
-    /*  define variable expObj as class expsubject no-undo*/
+    define variable expObj as class expsubject no-undo .
     define variable subCheckFuelDoc as class check-fuel-docs no-undo .
   
     /* ------------------------- &end-hn-option& -----------------------------------*/
@@ -254,13 +254,13 @@ procedure proc-main :
       undo _main, return error v-last-error-message .
     end.
 
-    /*  expObj = new expsubject ().*/
+    expObj = new expsubject ().
     subCheckFuelDoc = new check-fuel-docs ().
     subCheckFuelDoc:DocCode = v-doc-num.
-    subCheckFuelDoc:CrContentToSW(?) .
-    /*  expObj:GetContent(subCheckFuelDoc).*/
+
+    expObj:GetContent(subCheckFuelDoc).
         
-    IF ExpData1:esys-add-dump-data ( INPUT subCheckFuelDoc:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + 'check-fuel-docs')) = false  THEN 
+    IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + expObj:InitSecTag)) = false  THEN 
     do:
       undo _main, return error v-last-error-message .
     end.

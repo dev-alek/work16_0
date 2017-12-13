@@ -403,9 +403,11 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
         RETURN NO-APPLY.
       END.
     END.
-      
+
+    if AVAILABLE (buf_pl-level) then 
+    do:
       /*запуск машины правил для выгрузки резервуара*/
-      { gbl/rum-runa.i
+    { gbl/rum-runa.i
         ?
         this-procedure:handle
         ?
@@ -427,6 +429,7 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
         return no-apply .
 
       end.     
+    end.      
   END.
 
 /* _UIB-CODE-BLOCK-END */

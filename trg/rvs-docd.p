@@ -263,6 +263,8 @@ define variable v-result as integer no-undo.
                                    ).
     end.
   end.
+  if ub.rvs-doc.status_ = {&fact} then 
+  do:
   { gbl/rum-runa.i
       ?
       this-procedure:handle
@@ -274,13 +276,14 @@ define variable v-result as integer no-undo.
       ''
       no-error
       }
-      if error-status :error
+    if error-status :error
       then
-      do:
-          return error substitute( "&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"
-              , {&new-line}
-              , vss-workfile
-              , return-value
-              , error-status :get-message ( 1 ) ).
-      end.
+    do:
+      return error substitute( "&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"
+        , {&new-line}
+        , vss-workfile
+        , return-value
+        , error-status :get-message ( 1 ) ).
+    end.
+  end.   
 end. /* Main-Block */

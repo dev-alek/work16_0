@@ -54,25 +54,19 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
     get.
     private set.
   
-  define property Data as memptr no-undo
-    get.
-    private set.
-    
-
   define property DocCode as character no-undo
     get.
     set.
 
+  define property InitSecTag as character no-undo init "check-fuel-docs"
+    get.
+    private set.
+      
   define variable sw as handle no-undo.
   
   method public void CrContentToSW (insw as handle):
 
-    create sax-writer sw.
-    sw:formatted = true.
-    sw:set-output-destination ("memptr", Data).
-    sw:encoding = "UTF-8".
-    sw:fragment = true .
-    sw:start-document () .
+sw = insw .
         
     find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-code = DocCode no-error.
     if AVAILABLE (buf_rvs-doc) then 
@@ -278,6 +272,8 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
       sw:end-element ("tank")  .
     end.
     sw:end-element ("tanks")  .
+    find first tt-rvs-line-pump no-error .
+    if AVAILABLE (tt-rvs-line-pump) then do:
     sw:start-element ("trk-ps") .
     for each tt-rvs-line-pump :
       sw:start-element ("trk-p") .
@@ -301,11 +297,10 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
       sw:end-element ("trk-p")  .
     end.
     sw:end-element ("trk-ps")  .
-      
+    end.  
   
     sw:END-ELEMENT ("check-fuel-doc") .
     /*    sw:END-ELEMENT ("check-fuel-docs") .*/
-    sw:end-document () .
   end.
   method private character string-mth (inValue as decimal):
     
