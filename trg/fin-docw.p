@@ -171,13 +171,12 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                              , error-status :get-message ( 1 ) ).
     end.
     end.
-    
-    
+    if ub.fin-doc.status_ = {&fin-fact} then do:
     { gbl/rum-runa.i
       ?
       this-procedure:handle
       ?
-      {&edoc-proc_event_inkas}
+      {&edoc-proc_event_fin-doc}
       " buffer oldb:handle "
       " buffer ub.fin-doc:handle "
       ''
@@ -193,6 +192,6 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
             , return-value
             , error-status :get-message ( 1 ) ).
     end.
-    
+    end.
     
 end.
