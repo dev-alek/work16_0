@@ -160,7 +160,7 @@ if not avail buf_cli-grp then do:
   assign
   v-err-mess = substitute("Неверный код группы клиента &1", p-grp-code) .
   run err-mess in this-procedure ( input-output v-err-mess ).
-  undo, return error "":U.
+  undo, return error v-err-mess.
 end.
 if can-find(first ub.cli-grp no-lock where
                     ub.cli-grp.upper-code = p-grp-code) then do:
