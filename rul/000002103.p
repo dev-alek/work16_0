@@ -8,7 +8,8 @@
 
     Author(s)   : SMMolotkov
     Created     : Wed Nov 15 15:29:31 MSK 2017
-    Notes       :
+    Notes       : выгружает смену открытую, смену закрытую,
+                  вместе с закрытой сменой выгружает все чеки продажи по закрытым продажам смены. 
   ----------------------------------------------------------------------*/
 /*
 ---------------------------&start-codex_id=18;ruleset_id=2;-------------------------------
@@ -20,6 +21,7 @@
 /*---------------------------&start-using-class&-------------------------------*/
 using Ibs.Th.Rul.Route-data_.
 using ibs.th.bge.1crn.export.expsubject from propath.
+using ibs.th.bge.1crn.subjects.check from propath.
 using ibs.th.bge.1crn.subjects.shift from propath.
 /*---------------------------&end-using-class&---------------------------------*/
 
@@ -57,10 +59,12 @@ define variable vss-description as character no-undo init "Библиотека процедур д
 { gbl/gate-clb.i }
 { rul/ruleset_.i }
 
+define variable v-last-error-message as character no-undo .
+{ rul/seterror.i }
+
 /*переменные контекста*/
 define variable v-view-log           as logical        no-undo .
 define variable log-file-name        as character      no-undo init "process-edoc.txt".
-define variable v-last-error-message as character no-undo .
 define variable v-has-newbh as logical no-undo .
 define variable v-has-oldbh as logical no-undo .
 define variable v-newbh     as handle no-undo .
@@ -137,18 +141,14 @@ if not this-procedure:persistent then do:
 end.
 
 procedure proc-main :
-define variable expObj as class expsubject no-undo .
-define variable subObj as class shift no-undo .
+define variable expObj  as class expsubject no-undo .
+define variable subObj  as class shift no-undo .
+define variable subObj2 as class check no-undo .
 define variable v-doc-rowid      as rowid  no-undo .
-/*
-define variable v-inkas-code       as character no-undo .
-define variable v-inkas-status     as character no-undo .
-define variable v-fld-inkas-code   as handle no-undo .
-define variable v-fld-inkas-status as handle no-undo .
-*/
 define variable v-custom-pack-name as character no-undo .
 define variable v-dump-ord-int64   as int64 no-undo .
 define buffer buf_shift-obj   for ub.shift-obj .
+define buffer buf_inkas       for ub.inkas .
 
 
 _main:
@@ -162,6 +162,11 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
   end.
   else do:
     v-doc-rowid = v-oldbh:rowid .
+    /* из триггера на write нам должен приходить и новый, и старый буффер;
+       если пришёл только старый буффер - это удаление записи.
+       Выгрузка удаления смен не предусмотрена.
+    */
+    return .
   end.
     
     
@@ -189,9 +194,50 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
                                   , input g#userid).
   if v-dump-ord-int64 = 0 THEN
     undo _main, return error v-last-error-message .
+  &scop release_1 clear-data ( )
+  ExpData1:Route-data_{&release_1} .
     
 
-  &scop my-message substitute( "Успешно. " + subObj:Msg)
+  /* 7/XII-2017 и к закрытию смены добавлена выгрузка чеков по всем продажам закрытой смены */
+  for first buf_shift-obj no-lock
+      where rowid(buf_shift-obj)  = v-doc-rowid
+        and buf_shift-obj.status_ = {&sht-closed} :
+    subObj2 = new check ().
+  for each buf_inkas no-lock
+     where buf_inkas.host-code  = buf_shift-obj.host-code 
+       and buf_inkas.obj-type   = buf_shift-obj.obj-type
+       and buf_inkas.obj-code   = buf_shift-obj.obj-code
+       and buf_inkas.shift-date = buf_shift-obj.shift-date
+       and buf_inkas.shift-num  = buf_shift-obj.shift-num
+       and buf_inkas.status_    = {&fact}
+    /* and buf_inkas.fact-date  = buf_shift-obj.shift-date - не всегда, и не факт; не проверялось */
+  :
+    IF context_begin-esys-command( input string(v-esys-id-list), input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) = false  THEN do:
+      undo _main, return error v-last-error-message .
+    end.
+    subObj2:BufHandle = buffer buf_inkas:HANDLE .
+    expObj:GetContent(subObj2).
+    IF not ExpData1:esys-add-dump-data ( INPUT expObj:Data
+                                       , INPUT v-esys-cmd-proc-handle
+                                       , INPUT v-esys-cmd-code
+                                      , '+update' + {&delim-par} + expObj:InitSecTag) THEN
+      undo _main, return error v-last-error-message .
+    IF not context_set-custom-esys-pck-name(  input v-esys-cmd-proc-handle
+                                            , input v-esys-cmd-code
+                                            , input v-custom-pack-name) THEN
+      undo _main, return error v-last-error-message .
+    v-dump-ord-int64 = context_send-esys-command( input v-esys-id-list
+                                  , input v-esys-cmd-proc-handle
+                                  , input v-esys-cmd-code
+                                  , input g#userid).
+    if v-dump-ord-int64 = 0 THEN
+      undo _main, return error v-last-error-message .
+    &scop release_1 clear-data ( )
+    ExpData1:Route-data_{&release_1} .
+  end. /* end_of for_each_inkas */
+  end.
+
+  &scop my-message substitute( "Успешно. ")
   {&display-message}.
       /* ------------------------- &end-rule& -------------------------------------*/
 
@@ -201,8 +247,6 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
       /* ------------------------- &end-release-obj& -------------------------------------*/
   num-rec-ok = num-rec-ok + 1.
        
-  &scop release_1 clear-data ( )
-  ExpData1:Route-data_{&release_1} .
   
 end. /*doe _main*/
 

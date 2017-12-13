@@ -79,13 +79,14 @@ class ibs.th.bge.1crn.subjects.shift implements iexpsubject:
     else insw:write-data-element (  "shift-end":U,    iso-date(v-dt-shift-end)    ) . 
 
 
-    insw:start-element ({&tag-section1}) .
+    /* 06/XII-2017 Если нет совсем в смене персонала, то секцию personal не формировать. */
     if can-find (first buf_shift-staff
                  where buf_shift-staff.obj-type   = buf_shift-obj.obj-type
                    and buf_shift-staff.obj-code   = buf_shift-obj.obj-code
                    and buf_shift-staff.shift-date = buf_shift-obj.shift-date
                    and buf_shift-staff.shift-num  = buf_shift-obj.shift-num
                    and buf_shift-staff.next-shift = false) then do:
+      insw:start-element ({&tag-section1}) .
       for each buf_shift-staff no-lock
          where buf_shift-staff.obj-type   = buf_shift-obj.obj-type
            and buf_shift-staff.obj-code   = buf_shift-obj.obj-code
@@ -102,11 +103,8 @@ class ibs.th.bge.1crn.subjects.shift implements iexpsubject:
         insw:write-data-element (  "main-cashier",  if buf_shift-staff.staff-role then "1" else "0"  ) . /* Признак старшего смены (Число (1,0)) */
         insw:end-element ({&tag-item1}) .
       end .
+      insw:end-element ({&tag-section1}) .
     end.
-    else do:
-      insw:write-empty-element ({&tag-item1}) .
-    end .
-    insw:end-element ({&tag-section1}) .
 
     
     insw:end-element ({&tag-message}) .
