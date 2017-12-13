@@ -35,8 +35,8 @@ define variable vss-description as character no-undo init "Экран просмотра допол
 { cmp/library.i  }
 { cmp/showinf.i }
 { str/lib-calc.i }
-{ ref/sr-izm.i sr-izmerenia ds}
-{ ref/sr-izm.i " " proc }
+/*{ ref/sr-izm.i sr-izmerenia ds}*/
+/*{ ref/sr-izm.i " " proc }*/
 { gbl/ptrlprop.i def}
 { gbl/cur-time.i }
 { ref/gds-attr.i }
@@ -547,7 +547,7 @@ DEFINE FRAME Dialog-Frame
      f-passport-plotn AT ROW 24.17 COL 52.63 COLON-ALIGNED WIDGET-ID 68
      f-tank-density-pomi AT ROW 25.54 COL 29 COLON-ALIGNED WIDGET-ID 24
      b-calc AT ROW 26.17 COL 81.63 WIDGET-ID 80
-     f-tank-vol-pomi AT ROW 26.75 COL 29 COLON-ALIGNED WIDGET-ID 28
+     f-tank-vol-pomi AT ROW 26.75 COL 30 COLON-ALIGNED WIDGET-ID 28
      f-date-start AT ROW 28.21 COL 21 COLON-ALIGNED
      f-hour-start AT ROW 28.21 COL 88 COLON-ALIGNED
      f-min-start AT ROW 28.21 COL 91.63 COLON-ALIGNED NO-LABEL
@@ -811,7 +811,8 @@ do:
   define variable error-string            as character no-undo.
   define variable v-mm as com-handle.
   define variable v-proc as character no-undo.
-  define buffer buf_clob-bind    for ub.clob-bind.
+/*  define buffer buf_clob-bind    for ub.clob-bind.*/
+  define buffer buf_sr-izmerenia    for ub.sr-izmerenia .
 
   assign
   f-car-vol
@@ -832,23 +833,19 @@ do:
   
 
           /*данные по средству измерения резервуара для ПО МИ*/
-        run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
-                                                    , buffer buf_clob-bind).
-        find first sr-izmerenia no-lock where sr-izmerenia.node-code = f-place-si no-error.
-        if error-status :error or not available sr-izmerenia then do :
-  
+        find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = f-place-si no-error.
+        if not available buf_sr-izmerenia then do :
           message
             substitute( 'Не найдено средство измерения с кодом &1', f-place-si ) skip
           view-as alert-box error.
           undo _trpomi, return no-apply  .
-  
         end.
         else do :
           assign
-            ToolType               = integer(sr-izmerenia.sr-type)
-            DeltaAbs_R             = sr-izmerenia.sr-abs-err-dens
-            DeltaAbs_Tv            = sr-izmerenia.sr-abs-err-temp-vol
-            DeltaAbs_Tr            = sr-izmerenia.sr-abs-err-temp-dens
+            ToolType               = buf_sr-izmerenia.sr-type
+            DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+            DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
+            DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
             .
         end.
         /*..........................................*/
@@ -1110,7 +1107,7 @@ do:
     define variable v-num-plotn as character no-undo.
     define variable v-date-pov-plotn as date no-undo.
     define variable v-passport-plotn as character no-undo.
-    
+    define buffer buf_sr-izmerenia for ub.sr-izmerenia .    
     
     run str/in-copy-iz.w
       ( input        parParentProc
@@ -1129,11 +1126,11 @@ do:
 
 
   f-place-si:screen-value = string(infoSectionTotal:GetInfoSectionProp(v-page-current):PlaceSi).
-    find first sr-izmerenia where sr-izmerenia.node-code = integer (f-place-si:screen-value) no-error.
-    if available sr-izmerenia then do:
+    find first buf_sr-izmerenia where buf_sr-izmerenia.node-code = integer (f-place-si:screen-value) no-error.
+    if available buf_sr-izmerenia then do:
       assign
-        f-place-si-name:screen-value = sr-izmerenia.sr-model
-        v-sr-type = integer(sr-izmerenia.sr-type).
+        f-place-si-name:screen-value = buf_sr-izmerenia.sr-model
+        v-sr-type = buf_sr-izmerenia.sr-type.
     end.
     else
       assign
@@ -1146,10 +1143,6 @@ do:
   f-num-plotn:SCREEN-VALUE = string(infoSectionTotal:GetInfoSectionProp(v-page-current):NumPlotn).
   f-passport-plotn:SCREEN-VALUE = string(infoSectionTotal:GetInfoSectionProp(v-page-current):PassportPlotn).
   f-date-pov-plotn:SCREEN-VALUE = string(infoSectionTotal:GetInfoSectionProp(v-page-current):DatePovPlotn).
-  
-
-
-
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1737,13 +1730,14 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-place-si Dialog-Frame
 ON leave OF f-place-si IN FRAME Dialog-Frame /* Средство измерения */
 do:
-define variable v-node-code as integer no-undo.  
+define variable v-node-code as integer no-undo.
+define buffer buf_sr-izmerenia for ub.sr-izmerenia .  
 
   assign f-place-si.
 
   if f-place-si <> 0 and v-node-code <> ? then do :
-    find first sr-izmerenia where sr-izmerenia.node-code = f-place-si no-error.
-    if not available (sr-izmerenia) then do:
+    find first buf_sr-izmerenia where buf_sr-izmerenia.node-code = f-place-si no-error.
+    if not available (buf_sr-izmerenia) then do:
       message "Не найдено средство измерения с кодом " f-place-si view-as alert-box.
       f-place-si = 0.
       f-place-si:screen-value = "0".
@@ -1766,8 +1760,8 @@ define variable v-node-code as integer no-undo.
       return.
     end.
     v-node-code = f-place-si.
-    f-place-si-name:screen-value = sr-izmerenia.sr-model.
-    v-sr-type = integer(sr-izmerenia.sr-type).
+    f-place-si-name:screen-value = buf_sr-izmerenia.sr-model.
+    v-sr-type = buf_sr-izmerenia.sr-type.
   end.
 
 
@@ -2130,6 +2124,7 @@ END.
 ON choose OF r-sr-izm IN FRAME Dialog-Frame /* r-sr-izm */
 do:
   define variable v-node-code as integer no-undo.
+  define buffer buf_sr-izmerenia for ub.sr-izmerenia .
   
   v-node-code = 0 .
   run ref/sr-izm.w (input parparentproc ,
@@ -2140,12 +2135,12 @@ do:
   if v-node-code <> 0 and v-node-code <> ? then do :
     f-place-si = v-node-code.
     f-place-si:screen-value = string(v-node-code).
-  find first sr-izmerenia where sr-izmerenia.node-code = v-node-code no-error.
-  if not available sr-izmerenia then do:
+  find first buf_sr-izmerenia where buf_sr-izmerenia.node-code = v-node-code no-error.
+  if not available buf_sr-izmerenia then do:
     message "Введено неизвестное стредство измерения" view-as alert-box.
     return no-apply.
   end.
-  f-place-si-name:screen-value = sr-izmerenia.sr-model.
+  f-place-si-name:screen-value = buf_sr-izmerenia.sr-model.
   end.
   apply "leave" to f-place-si.
 end.
@@ -2706,6 +2701,8 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE hide-disp-page Dialog-Frame 
 PROCEDURE hide-disp-page :
+define buffer buf_sr-izmerenia for ub.sr-izmerenia .
+
 if not infoSectionTotal:FlagTrn and (p-mode = {&update} or p-mode = {&add-def}) then do:
     enable {&list-1} with frame {&frame-name}.
     hide {&list-1} in frame {&frame-name}.
@@ -2728,14 +2725,12 @@ if not infoSectionTotal:FlagTrn and (p-mode = {&update} or p-mode = {&add-def}) 
   define variable IsKPPageCurrent as logical no-undo.
   IsKPPageCurrent = infoSectionTotal:GetInfoSectionProp(v-page-current):IsKP.
 
-  run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
-    , buffer buf_clob-bind).
   iTemp = infoSectionTotal:GetInfoSectionProp(v-page-current):PlaceSi.
-  find first sr-izmerenia no-lock where sr-izmerenia.node-code = iTemp no-error.
-  if available sr-izmerenia then do:
+  find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = iTemp no-error.
+  if available buf_sr-izmerenia then do:
     assign
-      f-place-si-name:screen-value = sr-izmerenia.sr-model
-      v-sr-type = integer(sr-izmerenia.sr-type).                           
+      f-place-si-name:screen-value = buf_sr-izmerenia.sr-model
+      v-sr-type = buf_sr-izmerenia.sr-type.                           
   end.
   else
     assign
@@ -2946,6 +2941,8 @@ end procedure.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE initialize-section Dialog-Frame 
 PROCEDURE initialize-section :
+define buffer buf_sr-izmerenia for ub.sr-izmerenia .
+
 display {&list-1} with frame {&frame-name}.
   hide {&list-2} in frame {&frame-name}.
   
@@ -3105,11 +3102,11 @@ display {&list-1} with frame {&frame-name}.
       f-doc-dens = infoSectionTotal:GetInfoSectionProp(v-page-current):DocDensity
       f-cli-qnty = infoSectionTotal:GetInfoSectionProp(v-page-current):CliQnty
     no-error.
-    find first sr-izmerenia where sr-izmerenia.node-code = f-place-si no-error.
-    if available sr-izmerenia then do:
+    find first buf_sr-izmerenia where buf_sr-izmerenia.node-code = f-place-si no-error.
+    if available buf_sr-izmerenia then do:
       assign
-        f-place-si-name:screen-value = sr-izmerenia.sr-model
-        v-sr-type = integer(sr-izmerenia.sr-type).
+        f-place-si-name:screen-value = buf_sr-izmerenia.sr-model
+        v-sr-type = buf_sr-izmerenia.sr-type.
     end.
     else
       assign

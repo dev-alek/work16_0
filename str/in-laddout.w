@@ -33,8 +33,8 @@ define variable vss-description as character no-undo init "Экран просмотра допол
 { cmp/library.i  }
 { cmp/showinf.i }
 { str/lib-calc.i }
-{ ref/sr-izm.i sr-izmerenia ds}
-{ ref/sr-izm.i " " proc }
+/*{ ref/sr-izm.i sr-izmerenia ds}*/
+/*{ ref/sr-izm.i " " proc }*/
 { gbl/ptrlprop.i def}
 { gbl/cur-time.i }
 
@@ -745,7 +745,8 @@ DO:
   define variable error-string            as character no-undo.
   define variable v-mm as com-handle.
   define variable v-proc as character no-undo.
-  define buffer buf_clob-bind    for ub.clob-bind.
+/*  define buffer buf_clob-bind    for ub.clob-bind.*/
+  define buffer buf_sr-izmerenia for ub.sr-izmerenia .
 
   assign
   f-car-vol
@@ -763,23 +764,19 @@ DO:
 
 
       /*данные по средству измерения резервуара для ПО МИ*/
-      run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
-                                                  , buffer buf_clob-bind).
-      find first sr-izmerenia no-lock where sr-izmerenia.node-code = f-place-si no-error.
-      if error-status :error or not available sr-izmerenia then do :
-
+      find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = f-place-si no-error.
+      if not available buf_sr-izmerenia then do :
         message
           substitute( 'Не найдено средство измерения с кодом &1', f-place-si ) skip
         view-as alert-box error.
         undo _trpomi, return no-apply  .
-
       end.
       else do :
         assign
-          ToolType               = integer(sr-izmerenia.sr-type)
-          DeltaAbs_R             = sr-izmerenia.sr-abs-err-dens
-          DeltaAbs_Tv            = sr-izmerenia.sr-abs-err-temp-vol
-          DeltaAbs_Tr            = sr-izmerenia.sr-abs-err-temp-dens
+          ToolType               = buf_sr-izmerenia.sr-type
+          DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+          DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
+          DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
           .
       end.
       /*..........................................*/

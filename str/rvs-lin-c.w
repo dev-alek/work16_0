@@ -57,8 +57,8 @@ define variable vss-description as character no-undo initial "Экран работы со ст
 { gbl/getcntxt.i def }
 { ref/gds-attr.i }
 { str/placelib.i }
-{ ref/sr-izm.i sr-izmerenia ds}
-{ ref/sr-izm.i " " proc }
+/*{ ref/sr-izm.i sr-izmerenia ds}*/
+/*{ ref/sr-izm.i " " proc }*/
 { gbl/ptrlprop.i def}
 { gbl/cur-time.i }
 
@@ -283,11 +283,11 @@ DEFINE FRAME Dialog-Frame
      b-save AT ROW 1 COL 1
      b-cancel AT ROW 1 COL 11
      b-help AT ROW 1 COL 21
-     tt-rvs-line.system-qnty AT ROW 2.25 COL 25 COLON-ALIGNED
+     tt-rvs-line.system-qnty AT ROW 2.25 COL 26 COLON-ALIGNED
           LABEL "Объем расчетно-книжный"
           VIEW-AS FILL-IN
           SIZE 19 BY .88
-     tt-rvs-line.system-cli-qnty AT ROW 2.25 COL 73 COLON-ALIGNED
+     tt-rvs-line.system-cli-qnty AT ROW 2.25 COL 74 COLON-ALIGNED
           LABEL "Вес расчетно-книжный"
           VIEW-AS FILL-IN
           SIZE 19 BY .88
@@ -450,11 +450,11 @@ DEFINE FRAME Dialog-Frame
           LABEL "Факт сумма оборота"
           VIEW-AS FILL-IN
           SIZE 17 BY .88
-     tt-rvs-line.meas-cf-qnty AT ROW 24.75 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.meas-cf-qnty AT ROW 24.75 COL 29.13 COLON-ALIGNED
           LABEL "Измеренное кол-во наливов"
           VIEW-AS FILL-IN
           SIZE 17 BY .88
-     tt-rvs-line.state-cf-qnty AT ROW 24.75 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-cf-qnty AT ROW 24.75 COL 74.5 COLON-ALIGNED
           LABEL "Факт кол-во наливов"
           VIEW-AS FILL-IN
           SIZE 17 BY .88
@@ -665,7 +665,8 @@ define variable error-string            as character no-undo.
 define variable v-is-meas               as logical no-undo.
 define variable v-mm-density            as decimal no-undo.
 
-define buffer buf_clob-bind for ub.clob-bind.
+/*define buffer buf_clob-bind for ub.clob-bind.*/
+define buffer buf_sr-izmerenia for ub.sr-izmerenia .
 define buffer buf_place     for ub.place.
 
 
@@ -731,8 +732,6 @@ define buffer buf_place     for ub.place.
     /*..........................................*/
 
     /*данные по средству измерения резервуара для ПО МИ*/
-    run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
-                                                , buffer buf_clob-bind).
     if place-si  = 0 then do :
       message
         substitute ("Для складского места &1 не заданно средство измерения",tt-rvs-line.pl-code)
@@ -740,8 +739,8 @@ define buffer buf_place     for ub.place.
       undo _trpomi, return no-apply.
     end.
     else do :
-      find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si no-error.
-      if error-status :error or not available sr-izmerenia then do :
+      find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = place-si no-error.
+      if not available buf_sr-izmerenia then do :
         message
         "Ошибка работы с библиотекой ПО МИ"
         substitute( 'Не найдено средство измерения с кодом &1', place-si ) skip
@@ -750,14 +749,14 @@ define buffer buf_place     for ub.place.
       end.
       else do :
         assign
-          ToolType               = integer(sr-izmerenia.sr-type)
-          A_LevelMeasurementTool = decimal(sr-izmerenia.sr-temp-line)
-          DeltaAbs_H             = sr-izmerenia.sr-abs-err-neft-water
-          DeltaAbs_H_Water       = sr-izmerenia.sr-abs-err-water
-          DeltaAbs_R             = sr-izmerenia.sr-abs-err-dens
-          DeltaAbs_Tv            = sr-izmerenia.sr-abs-err-temp-vol
-          DeltaAbs_Tr            = sr-izmerenia.sr-abs-err-temp-dens
-          DeltaOtn_N             = sr-izmerenia.sr-otnos
+          ToolType               = buf_sr-izmerenia.sr-type
+          A_LevelMeasurementTool = buf_sr-izmerenia.sr-temp-line
+          DeltaAbs_H             = buf_sr-izmerenia.sr-abs-err-neft-water
+          DeltaAbs_H_Water       = buf_sr-izmerenia.sr-abs-err-water
+          DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+          DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
+          DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
+          DeltaOtn_N             = buf_sr-izmerenia.sr-otnos
           .
       end.
     end.

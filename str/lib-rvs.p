@@ -61,8 +61,8 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { gbl/cur-time.i }
 { ref/gds-attr.i }
 { str/placelib.i }
-{ ref/sr-izm.i sr-izmerenia ds}
-{ ref/sr-izm.i " " proc }
+/*{ ref/sr-izm.i sr-izmerenia ds}*/
+/*{ ref/sr-izm.i " " proc }*/
 { gbl/ptrlprop.i def}
 { gbl/cur-time.i }
 { gbl/getsect.i def }
@@ -1803,7 +1803,8 @@ define variabl v-file-name as character no-undo.
   define buffer bf-prp_goods     for ub.goods.
   define buffer bf-prp_pl-gds    for ub.pl-gds.
   define buffer bf_rvs-line      for ub.rvs-line.
-  define buffer buf_clob-bind    for ub.clob-bind.
+/*  define buffer buf_clob-bind    for ub.clob-bind.*/
+  define buffer buf_sr-izmerenia for ub.sr-izmerenia .
   define buffer buf_doc-attr     for ub.doc-attr.
   define buffer buf_tt-meas      for tt-meas .
   define variable  v-cardif as integer no-undo.
@@ -2169,27 +2170,18 @@ IF available tt-meas-file and   tt-meas-file.log-brutto = no THEN DO:
       /*..........................................*/
 
       /*данные по средству измерения резервуара для ПО МИ*/
-      run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
-                                                  , buffer buf_clob-bind).
-      find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si no-error.
-      if error-status :error or not available sr-izmerenia then do :
-
-        undo _trpomi, return error substitute( 'Не найдено средство измерения с кодом &1'
-                                        , place-si ) .
-
-      end.
-      else do :
-        assign
-          ToolType               = integer(sr-izmerenia.sr-type)
-          A_LevelMeasurementTool = decimal(sr-izmerenia.sr-temp-line)
-          DeltaAbs_H             = sr-izmerenia.sr-abs-err-neft-water
-          DeltaAbs_H_Water       = sr-izmerenia.sr-abs-err-water
-          DeltaAbs_R             = sr-izmerenia.sr-abs-err-dens
-          DeltaAbs_Tv            = sr-izmerenia.sr-abs-err-temp-vol
-          DeltaAbs_Tr            = sr-izmerenia.sr-abs-err-temp-dens
-          DeltaOtn_N             = sr-izmerenia.sr-otnos
-          .
-      end.
+      find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = place-si no-error.
+      if available buf_sr-izmerenia then assign
+          ToolType               = buf_sr-izmerenia.sr-type
+          A_LevelMeasurementTool = buf_sr-izmerenia.sr-temp-line
+          DeltaAbs_H             = buf_sr-izmerenia.sr-abs-err-neft-water
+          DeltaAbs_H_Water       = buf_sr-izmerenia.sr-abs-err-water
+          DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+          DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
+          DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
+          DeltaOtn_N             = buf_sr-izmerenia.sr-otnos
+      .
+      else undo _trpomi, return error substitute( 'Не найдено средство измерения с кодом &1', place-si ) .
       /*..........................................*/
 
       /*дополнительные данные(берем из предыдущей сверки)*/

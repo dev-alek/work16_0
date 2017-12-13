@@ -89,26 +89,3 @@ define variable v-time      as integer   no-undo .
       ) .
     end.
   end.
-
-
-  { gbl/rum-runa.i
-    ?
-    this-procedure:handle
-    ?
-    {&thref-proc_ref-event}
-    " buffer old-sr-izmerenia:handle "
-    " buffer new-sr-izmerenia:handle "
-    v-field-chg
-    ''
-    no-error
-  }
-  if error-status :error then do:
-        undo, throw new Progress.Lang.AppError(
-    substitute( "&2&1Ошибка маршрутизации изменения записи в машину правил&1&3&1&4"
-                             , {&new-line}
-                             , vss-workfile
-                             , return-value
-                             , error-status :get-message ( 1 )
-              )
-        ) .
-  end.

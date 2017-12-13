@@ -42,7 +42,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define variable v-retfl      as logical no-undo .
 
     define variable v-ms-code    as integer no-undo .   /* like ub.sr-izmerenia.node-code */
-    define variable v-err-field  as character no-undo .
     define buffer buf_sr-izmerenia for ub.sr-izmerenia .
 
         
@@ -53,30 +52,27 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     .
     if v-ms-code > 0 then . else undo, throw new Progress.Lang.AppError("Не задан код средства измерения") .
     
+    /* По справочникам ...,  ... при логическом удалении записей на стороне ТН никаких действий не производится,
+       а при передаче из 1С к названию добавляется фраза «УДАЛЕНО» (или аналог).
+       05/XII-2017 Средства измерения тоже добавили к этому перечню.
+    */
     if objImp:del-f > 0 then do:
-      Msg = "физическое удаление средств измерения не предусмотрено".
-      v-retfl = false .
-      return false . /* уходит в finally, где перевозвращает v-retfl вместо false */
+      run ref/sr-izm03.p ( input v-ms-code ) .
     end .
-    if objImp:del-l > 0 then do:
-      Msg = "логическое удаление средств измерения не предусмотрено".
-      v-retfl = false .
-      return false . /* уходит в finally, где перевозвращает v-retfl вместо false */
+    else do:
+      run ref/sr-izm01.p
+      (input v-ms-code /* p-node-code (int) */
+      ,input objImp:name_ /* p-sr-model (chr) */
+      ,input mapMsType (objImp:ms-type) /* p-sr-type-id (int) */
+      ,input objImp:me-np /* p-sr-abs-err-neft-water (dec) */
+      ,input objImp:me-wtr /* p-sr-abs-err-water (dec) */
+      ,input objImp:me-dnsty /* p-sr-abs-err-dens (dec) */
+      ,input objImp:me-tmp-amnt /* p-sr-abs-err-temp-vol (dec) */
+      ,input objImp:me-tmp-dnsty /* p-sr-abs-err-temp-dens (dec) */
+      ,input objImp:limit /* p-sr-otnos (dec) */
+      ,input mapMsTkType (objImp:tk) /* p-sr-temp-line (dec) */
+      ) .
     end .
-    
-    run ref/sr-izm01.p
-    (input v-ms-code /* p-node-code (int) */
-    ,input objImp:name_ /* p-sr-model (chr) */
-    ,input mapMsType (objImp:ms-type) /* p-sr-type-id (int) */
-    ,input objImp:me-np /* p-sr-abs-err-neft-water (dec) */
-    ,input objImp:me-wtr /* p-sr-abs-err-water (dec) */
-    ,input objImp:me-dnsty /* p-sr-abs-err-dens (dec) */
-    ,input objImp:me-tmp-amnt /* p-sr-abs-err-temp-vol (dec) */
-    ,input objImp:me-tmp-dnsty /* p-sr-abs-err-temp-dens (dec) */
-    ,input objImp:limit /* p-sr-otnos (dec) */
-    ,input mapMsTkType (objImp:tk) /* p-sr-temp-line (dec) */
-   ,output v-err-field
-    ) .
     assign
       Msg = "":U
       v-retfl = true

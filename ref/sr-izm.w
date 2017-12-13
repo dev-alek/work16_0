@@ -44,7 +44,7 @@ define variable vss-description as character no-undo init "Справочник средств из
 { cmp/str-glbl.i }
 { cmp/showinf.i }
 { gbl/getcntxt.i DEF}
-{ gbl/color.i }
+/*{ gbl/color.i }*/
 /*{ ref/sr-izm.i sr-izmerenia ds}*/
 { ref/sr-izm.i dop-sr-izm }
 /*{ ref/sr-izm.i " " proc }*/
@@ -52,6 +52,7 @@ define variable vss-description as character no-undo init "Справочник средств из
 DEFINE VARIABLE v-max-node-code AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-node-code AS INTEGER NO-UNDO.
 define variable v-edit-mode as logical no-undo .
+define variable v-action-mode as character no-undo . /* что с редактируемой записью: {&add-def}, {&update} */ 
 define buffer buf_clob-bind for ub.clob-bind.
 
 define variable cb-sr-type-id as integer column-label "Тип"
@@ -129,33 +130,6 @@ dop-sr-izm.sr-abs-err-temp-dens  ~
 dop-sr-izm.sr-otnos              ~
 cb-sr-temp-line          ~
 with FRAME {&FRAME-NAME}
-/*
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit b-add b-del b-sel B-Help BR-sr-izm
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Сохранить"
-     SIZE 10 BY 1
-     BGCOLOR 8 .
-     B-exit AT ROW 1 COL 1 WIDGET-ID 2
-&Scoped-define SELF-NAME B-exit
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exit Dialog-Frame
-ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Сохранить */
-DO:
-DEFINE VARIABLE glog AS LOGICAL NO-UNDO.
-  MESSAGE
-  "Вы уверены, что хотите сохранить классификатор в таком виде в БД?" SKIP
-  "УДАЛЕНИЕ ДОБАВЛЕННЫХ ЗАПИСЕЙ (если Вы их добавляли) ПОСЛЕ ЭТОГО СТАНЕТ НЕВОЗМОЖНЫМ!"
-  VIEW-AS ALERT-BOX QUESTION BUTTONS YES-NO UPDATE glog.
-  if not glog then return no-apply.
-  RUN proc-save-all IN THIS-PROCEDURE NO-ERROR.
-  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-  ENABLE B-exit b-quit b-sel b-add b-del B-Help
-
-
-*/
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -189,7 +163,7 @@ END.
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-quit b-add b-del b-sel B-Help BR-sr-izm
+&Scoped-Define ENABLED-OBJECTS b-quit b-add b-cng b-del b-sel B-Help BR-sr-izm
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -213,6 +187,10 @@ DEFINE BUTTON b-add
 
 DEFINE BUTTON b-cancel
      LABEL "Отмена"
+     SIZE 10 BY 1.
+
+DEFINE BUTTON b-cng
+     LABEL "&Изменить"
      SIZE 10 BY 1.
 
 DEFINE BUTTON b-del
@@ -269,7 +247,8 @@ DEFINE FRAME Dialog-Frame
      b-quit AT ROW 1 COL 11 WIDGET-ID 6
      b-sel at row 1 col 26  WIDGET-ID 10
      b-add AT ROW 1 COL 45 WIDGET-ID 14
-     b-del AT ROW 1 COL 55 WIDGET-ID 22
+     b-cng AT ROW 1 COL 55 WIDGET-ID 4
+     b-del AT ROW 1 COL 65 WIDGET-ID 22
      B-Help AT ROW 1 COL 140.5
      BR-sr-izm AT ROW 4.25 COL 1.5 WIDGET-ID 200
      b-ok AT ROW 18 COL 78 WIDGET-ID 30
@@ -336,6 +315,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add Dialog-Frame
 ON CHOOSE OF b-add IN FRAME Dialog-Frame /* Добавить */
 DO:
+  v-action-mode = {&add-def} .
   RUN proc-b-add IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
 END.
@@ -352,15 +332,31 @@ DO:
   IF ERROR-STATUS:ERROR THEN do:
     enable
     b-add when v-edit-mode
+    b-cng when v-edit-mode
     b-del when v-edit-mode
     with frame {&frame-name} .
     RETURN NO-APPLY.
   end.
+  v-action-mode= "":U.
   enable
   b-add when v-edit-mode
+  b-cng when v-edit-mode
   b-del when v-edit-mode
   with frame {&frame-name} .
+END.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-cng
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cng Dialog-Frame
+ON CHOOSE OF b-cng IN FRAME Dialog-Frame /* Изменить */
+DO:
+  IF NOT AVAILABLE sr-izmerenia THEN RETURN NO-APPLY.
+  v-action-mode = {&update} .
+  RUN proc-b-cng IN THIS-PROCEDURE NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -402,21 +398,13 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-ok Dialog-Frame
 ON CHOOSE OF b-ok IN FRAME Dialog-Frame /* Ввод */
 DO:
-  RUN proc-save-record (input {&add-def}) NO-ERROR.
-  IF ERROR-STATUS:ERROR THEN do:
-    /*
-    enable
-    b-add when v-edit-mode
-    b-del when v-edit-mode
-    B-exit when v-edit-mode
-    with frame {&frame-name} .
-    */
-    RETURN NO-APPLY.
-  end.
+  RUN proc-save-record (input v-action-mode) NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  v-action-mode = "":U .
   enable
   b-add when v-edit-mode
+  b-cng when v-edit-mode
   b-del when v-edit-mode
-/*  B-exit when v-edit-mode */
   with frame {&frame-name} .
 END.
 
@@ -512,15 +500,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     VIEW-AS alert-box.
     UNDO, RETURN ERROR.
   END.
-  if p-mode = {&update}
-  and v-cntxt-db-num > 0 then do:
-    MESSAGE
-    substitute("Нельзя редактировать справочник в УБД")
-    VIEW-AS alert-box.
-    UNDO, RETURN ERROR.
-  end.
   v-node-code = p-node-code.
-  RUN fill-tables in THIS-PROCEDURE.
   RUN Myenable.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -560,32 +540,10 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-quit b-sel b-add b-del B-Help
+  ENABLE b-quit b-sel b-add b-cng b-del B-Help
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-tables Dialog-Frame
-PROCEDURE fill-tables :
-/*
-CREATE dop-sr-izm.
-RELEASE dop-sr-izm.
-FIND LAST sr-izmerenia no-lock NO-ERROR.
-IF AVAILABLE sr-izmerenia THEN DO:
-   ASSIGN
-   v-max-node-code = sr-izmerenia.node-code.
-END.
-ELSE DO:
-    ASSIGN
-    v-max-node-code = 0.
-
-END.
-release sr-izmerenia NO-ERROR.
-*/
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -596,27 +554,34 @@ PROCEDURE MyEnable :
 assign
   FRAME Dialog-Frame:visible = true
 .
+
+/*
+  if p-mode = {&update}
+  and v-cntxt-db-num > 0 then do:
+    MESSAGE
+    substitute("Нельзя редактировать справочник в УБД")
+    VIEW-AS alert-box.
+    UNDO, RETURN ERROR.
+  end.
+*/
 if (lookup("b-add", bttns) > 0 AND v-cntxt-db-num = 0 AND NOT TRANSACTION AND p-mode = {&UPDATE}) then do:
   v-edit-mode = yes.
 end.
+v-action-mode = "":U .
 /* FIND FIRST dop-sr-izm. */
 enable
 br-sr-izm
 b-add WHEN v-edit-mode
+b-cng WHEN v-edit-mode
 b-del WHEN v-edit-mode
 b-help
-/* b-exit WHEN v-edit-mode */
 b-quit
 b-sel when not v-edit-mode
 WITH FRAME {&FRAME-NAME}
 .
 IF p-mode <> {&UPDATE} THEN DO:
-  /* HIDE
-  b-exit
-  IN FRAME {&FRAME-NAME}. */
   b-quit:COLUMN  = 1.
   b-quit:label in frame {&frame-name} = "&Выход".
-
 END.
 {&OPEN-QUERY-{&BROWSE-NAME}}
 APPLY "value-changed" TO BROWSE br-sr-izm.
@@ -641,7 +606,7 @@ END.
 */
 /*  DISPLAY b-ok b-cancel WITH FRAME {&FRAME-NAME}.*/
 /*  ENABLE b-ok b-cancel WITH FRAME {&FRAME-NAME}.*/
-  disable b-add /* b-exit */ b-del with frame {&frame-name} .
+  disable b-add b-cng b-del with frame {&frame-name} .
 /*  delete dop-sr-izm. */
   CREATE dop-sr-izm.
   ASSIGN
@@ -671,7 +636,6 @@ enable
   b-ok
   b-cancel
 dop-sr-izm.sr-model
-/* dop-sr-izm.sr-type */
   cb-sr-type-id
 dop-sr-izm.sr-abs-err-neft-water
 dop-sr-izm.sr-abs-err-water
@@ -679,10 +643,52 @@ dop-sr-izm.sr-abs-err-dens
 dop-sr-izm.sr-abs-err-temp-vol
 dop-sr-izm.sr-abs-err-temp-dens
 dop-sr-izm.sr-otnos
-/* dop-sr-izm.sr-temp-line */
   cb-sr-temp-line
 WITH FRAME {&FRAME-NAME} .
 
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-cng Dialog-Frame
+PROCEDURE proc-b-cng :
+  
+  disable b-add b-cng b-del with frame {&frame-name} .
+  create dop-sr-izm.
+  buffer-copy sr-izmerenia to dop-sr-izm no-error .
+  assign
+    cb-sr-type-id        = dop-sr-izm.sr-type-id
+    cb-sr-temp-line      = dop-sr-izm.sr-temp-line  
+  .
+  display
+  b-ok
+  b-cancel
+  dop-sr-izm.node-code
+  dop-sr-izm.sr-model
+  cb-sr-type-id
+  dop-sr-izm.sr-abs-err-neft-water
+  dop-sr-izm.sr-abs-err-water
+  dop-sr-izm.sr-abs-err-dens
+  dop-sr-izm.sr-abs-err-temp-vol
+  dop-sr-izm.sr-abs-err-temp-dens
+  dop-sr-izm.sr-otnos
+  cb-sr-temp-line
+  WITH FRAME {&FRAME-NAME} .
+  enable
+  b-ok
+  b-cancel
+dop-sr-izm.sr-model
+  cb-sr-type-id
+dop-sr-izm.sr-abs-err-neft-water
+dop-sr-izm.sr-abs-err-water
+dop-sr-izm.sr-abs-err-dens
+dop-sr-izm.sr-abs-err-temp-vol
+dop-sr-izm.sr-abs-err-temp-dens
+dop-sr-izm.sr-otnos
+  cb-sr-temp-line
+  WITH FRAME {&FRAME-NAME} .
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -711,19 +717,10 @@ v-retfl = false.
   message substitute("Удалить запись о средстве измерения &1 &2?", sr-izmerenia.node-code, sr-izmerenia.sr-model)
     view-as alert-box question buttons yes-no update v-del-confirm .
   if v-del-confirm then do transaction:
-    find first buf_sr-izm exclusive-lock where rowid(buf_sr-izm) = rowid(sr-izmerenia) no-error no-wait .
-    if locked(buf_sr-izm) then do:
-      undo, throw new Progress.Lang.AppError(
-        substitute("Запись о средстве измерения с ид. [&1] занята другим пользователем", sr-izmerenia.node-code)
-       ) .
-    end . 
-    if not available buf_sr-izm then do:
-      undo, throw new Progress.Lang.AppError(
-        substitute("Запись о средстве измерения с ид. [&1] отсутствует", sr-izmerenia.node-code)
-      ) .
-    end .
 
-    DELETE buf_sr-izm .
+    run ref/sr-izm03.p
+    (input sr-izmerenia.node-code /* p-node-code (int) */
+    ) .
     {&OPEN-QUERY-{&BROWSE-NAME}}
     APPLY "value-changed" TO BROWSE br-sr-izm.
     
@@ -756,14 +753,6 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save-all Dialog-Frame
-PROCEDURE proc-save-all :
-  /* sr-izm-save.p */
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save-record Dialog-Frame
 PROCEDURE proc-save-record :
 define input parameter p-action as character no-undo.
@@ -786,6 +775,68 @@ dop-sr-izm.sr-abs-err-temp-dens
 dop-sr-izm.sr-otnos
 cb-sr-temp-line
 .
+
+/* проверки значений */
+define variable v-msg2  as character no-undo . /* "...воды выходит за границы допустимого диапазона..." */
+define variable v-delta as decimal decimals 2 no-undo . /* границы допустимого диапазона абсолютной погрешности измерений */
+
+  if dop-sr-izm.sr-model > "" then .
+  else do: /* Название не может быть пустым */
+    message "Пожалуйста заполните наименование модели средства измерения"
+    view-as alert-box.
+    apply "entry" to dop-sr-izm.sr-model in frame {&frame-name} .
+    return error .
+  end .
+
+  assign
+    v-msg2 = "выходит за границы допустимого диапазона"
+    v-delta = 3 
+  .
+  if dop-sr-izm.sr-abs-err-neft-water > v-delta or dop-sr-izm.sr-abs-err-neft-water < (-1) * v-delta then do :
+    message substitute("&1 &2&3(+/-)&4 мм",
+                 dop-sr-izm.sr-abs-err-neft-water:label in frame {&frame-name}, v-msg2, {&new-line}, string(v-delta, "9") )
+    view-as alert-box.
+    apply "entry" to dop-sr-izm.sr-abs-err-neft-water in frame {&frame-name} .
+    return error .
+  end.
+  if dop-sr-izm.sr-abs-err-water > v-delta or dop-sr-izm.sr-abs-err-water < (-1) * v-delta then do :
+    message substitute("&1 &2&3(+/-)&4 мм",
+                 dop-sr-izm.sr-abs-err-water:label in frame {&frame-name}, v-msg2, {&new-line}, string(v-delta, "9") )
+    view-as alert-box.
+    apply "entry" to dop-sr-izm.sr-abs-err-water in frame {&frame-name} .
+    return error .
+  end.
+  v-delta = 0.5 .
+  if dop-sr-izm.sr-abs-err-dens > v-delta or dop-sr-izm.sr-abs-err-dens < (-1) * v-delta then do :
+    message substitute("&1 &2&3(+/-)&4 кг/м3",
+                 dop-sr-izm.sr-abs-err-dens:label in frame {&frame-name}, v-msg2, {&new-line}, string(v-delta, "9.9") )
+    view-as alert-box.
+    apply "entry" to dop-sr-izm.sr-abs-err-dens in frame {&frame-name} .
+    return error .
+  end.
+  if dop-sr-izm.sr-abs-err-temp-vol > v-delta or dop-sr-izm.sr-abs-err-temp-vol < (-1) * v-delta then do :
+    message substitute("&1 &2&3(+/-)&4 °С",
+                 dop-sr-izm.sr-abs-err-temp-vol:label in frame {&frame-name}, v-msg2, {&new-line}, string(v-delta, "9.9") )
+    view-as alert-box.
+    apply "entry" to dop-sr-izm.sr-abs-err-temp-vol in frame {&frame-name} .
+    return error .
+  end.
+  if dop-sr-izm.sr-abs-err-temp-dens > v-delta or dop-sr-izm.sr-abs-err-temp-dens < (-1) * v-delta then do :
+    message substitute("&1 &2&3(+/-)&4 °С",
+                 dop-sr-izm.sr-abs-err-temp-dens:label in frame {&frame-name}, v-msg2, {&new-line}, string(v-delta, "9.9") )
+    view-as alert-box.
+    apply "entry" to dop-sr-izm.sr-abs-err-temp-dens in frame {&frame-name} .
+    return error .
+  end.
+  v-delta = 0.05 .
+  if dop-sr-izm.sr-otnos > v-delta or dop-sr-izm.sr-otnos < (-1) * v-delta then do :
+    message substitute("&1 &2&3(+/-)&4 %",
+                 dop-sr-izm.sr-otnos:label in frame {&frame-name}, v-msg2, {&new-line}, string(v-delta, "9.99") )
+    view-as alert-box.
+    apply "entry" to dop-sr-izm.sr-otnos in frame {&frame-name} .
+    return error .
+  end.
+
   assign
     dop-sr-izm.sr-type-id   = cb-sr-type-id
     dop-sr-izm.sr-temp-line = cb-sr-temp-line
@@ -806,7 +857,6 @@ cb-sr-temp-line
     ,input dop-sr-izm.sr-abs-err-temp-dens /* p-sr-abs-err-temp-dens (dec) */
     ,input dop-sr-izm.sr-otnos /* p-sr-otnos (dec) */
     ,input dop-sr-izm.sr-temp-line /* p-sr-temp-line (dec) */
-   ,output v-err-field
     ) .
     DELETE dop-sr-izm.
     find first buf_sr-izm no-lock where buf_sr-izm.node-code = v-node-code no-error .
@@ -831,25 +881,6 @@ cb-sr-temp-line
       if v-retfl then .
       else do:
         message Msg view-as alert-box error.
-        case v-err-field:
-          when "sr-model":U then
-            apply "entry" to dop-sr-izm.sr-model in frame {&frame-name} .
-          when "sr-abs-err-neft-water":U then
-            apply "entry" to dop-sr-izm.sr-abs-err-neft-water in frame {&frame-name} .
-          when "sr-abs-err-water":U then
-            apply "entry" to dop-sr-izm.sr-abs-err-water in frame {&frame-name} .
-          when "sr-abs-err-dens":U then
-            apply "entry" to dop-sr-izm.sr-abs-err-dens in frame {&frame-name} .
-          when "sr-abs-err-temp-vol":U then
-            apply "entry" to dop-sr-izm.sr-abs-err-temp-vol in frame {&frame-name} .
-          when "sr-abs-err-temp-dens":U then
-            apply "entry" to dop-sr-izm.sr-abs-err-temp-dens in frame {&frame-name} .
-          when "sr-otnos":U then
-            apply "entry" to dop-sr-izm.sr-otnos in frame {&frame-name} .
-          when "sr-temp-line":U then
-            apply "entry" to cb-sr-temp-line in frame {&frame-name} .
-          otherwise .
-        end case .
         return error.
       end.
     end finally .

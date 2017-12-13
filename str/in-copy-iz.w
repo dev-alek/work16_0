@@ -32,8 +32,8 @@ define variable vss-description as character no-undo init "Копирование информаци
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
-{ ref/sr-izm.i sr-izmerenia ds}
-{ ref/sr-izm.i " " proc }
+/*{ ref/sr-izm.i sr-izmerenia ds}*/
+/*{ ref/sr-izm.i " " proc }      */
 { ref/gds-attr.i }
 { gbl/lineattr.i }
 
@@ -61,7 +61,8 @@ define buffer buf_goods for ub.goods .
 define buffer buf_doc-line-attr for ub.doc-line-attr .
 define buffer buf_doc-line for ub.doc-line .
 define buffer buf_trn-doc for ub.trn-doc .
-define buffer buf_clob-bind for ub.clob-bind.
+/*define buffer buf_clob-bind for ub.clob-bind.*/
+define buffer buf_sr-izmerenia for ub.sr-izmerenia .
 
 /* Временная таблица для вывода в интерфейс */
 define temp-table tt-doc-iz no-undo like ub.trn-doc
@@ -383,10 +384,8 @@ find first buf_goods where buf_goods.gds-code = p-gds-code.
           i=i + 1.
           find first buf_trn-doc where buf_trn-doc.doc-code = buf_doc-line.doc-code no-error.
 
-          run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
-            , buffer buf_clob-bind).
           /*данные по средству измерения резервуара для ПО МИ*/
-          find first sr-izmerenia no-lock where sr-izmerenia.node-code = p-place-si no-error.
+          find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = p-place-si no-error.
 
           find first buf_doc-line-attr where buf_doc-line-attr.attr-code = "num-plotn" 
             and buf_doc-line-attr.gds-code = p-gds-code
@@ -400,7 +399,7 @@ find first buf_goods where buf_goods.gds-code = p-gds-code.
 
           p-date-pov-plotn = date(buf_doc-line-attr.attr-value) no-error.
 
-          if sr-izmerenia.sr-type = "3" or sr-izmerenia.sr-type = "4" then 
+          if buf_sr-izmerenia.sr-type = 3 or buf_sr-izmerenia.sr-type = 4 then 
           do:
 
             find first buf_doc-line-attr where buf_doc-line-attr.attr-code = "passport-plotn" 
@@ -418,7 +417,7 @@ find first buf_goods where buf_goods.gds-code = p-gds-code.
             tt-doc-iz.gds-code     = p-gds-code
             tt-doc-iz.date-doc     = buf_trn-doc.doc-date
             tt-doc-iz.num-iz       = p-place-si
-            tt-doc-iz.iz-name      = sr-izmerenia.sr-model
+            tt-doc-iz.iz-name      = buf_sr-izmerenia.sr-model
             tt-doc-iz.num-iz-pov   = p-num-plotn
             tt-doc-iz.date-pov     = p-date-pov-plotn
             tt-doc-iz.passport-pov = p-passport-plotn.    

@@ -63,34 +63,42 @@ class ibs.th.bge.1crn.subjects.measuring inherits ibs.th.bge.1crn.subjects.asubj
     get. 
     
   method override protected void SetPropProtected (inTag as char, inValue as char):
+    /* допустимые значения ms-type и tk перечислены в enum;
+       если дано пустое значение - поле заполнится типом "ареометр калиброванный при 15 градусах",
+       если дано значение вне enum - поле останется пустым
+     */
     case inTag:
       when "code"       then code_      = if inValue >= "" then inValue else "" .
       when "del-l"      then del-l      = if inValue >= "" then integer (inValue) else 0 .
       when "del-f"      then del-f      = if inValue >= "" then integer (inValue) else 0 .
       when "name"       then name_      = if inValue >= "" then inValue else "" .
-      
-      /* допустимые значения ms-type перечислены в enum;
-         если дано пустое значение - поле заполнится типом "ареометр калиброванный при 15 градусах",
-         если дано значение вне enum - поле останется пустым
-       */
       when "ms-type" then do :
-        if inValue >= "" then ms-type = enum-ms-type:GetEnum( integer (inValue) ) no-error .
+        if inValue >= "" then ms-type = enum-ms-type:GetEnum( integer (inValue) ) .
                          else ms-type = enum-ms-type:enare15 .
       end .
-
       when "me-np"        then me-np        = if inValue >= "" then decimal (inValue) else 0 .
       when "me-wtr"       then me-wtr       = if inValue >= "" then decimal (inValue) else 0 .
       when "me-dnsty"     then me-dnsty     = if inValue >= "" then decimal (inValue) else 0 .
       when "me-tmp-amnt"  then me-tmp-amnt  = if inValue >= "" then decimal (inValue) else 0 .
       when "me-tmp-dnsty" then me-tmp-dnsty = if inValue >= "" then decimal (inValue) else 0 .
       when "limit"        then limit        = if inValue >= "" then decimal (inValue) else 0 .
-
       when "tk" then do :
-        if inValue >= "" then tk = enum-ms-tk-type:GetEnum( integer (inValue) ) no-error .
+        if inValue >= "" then tk = enum-ms-tk-type:GetEnum( integer (inValue) ) .
                          else tk = enum-ms-tk-type:ensteel .
       end .
-
     end case.
+    
+    catch exProErrors as class Progress.Lang.ProError :
+      case exProErrors:GetMessageNum(1):
+        when 18207 then undo, throw new Progress.Lang.AppError(
+          substitute("Поле <&1> содержит ошибочное значение [&2]", inTag, inValue)
+        ) .
+        otherwise undo, throw new Progress.Lang.AppError(
+          substitute("Ошибка значения для поля <&1>: &2", inTag, exProErrors:GetMessage(1))
+        ) .
+      end case .
+    end catch .
+    
   end method.
 
   method override protected void CheckData ():
