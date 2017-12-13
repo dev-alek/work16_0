@@ -256,7 +256,7 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
   subPriceObj:pr-doc-hndl = v-oldbh .
   expObj:GetContent(subPriceObj).
         
-      IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, '+update') = false  THEN do:
+      IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + expObj:InitSecTag) ) = false  THEN do:
         undo _main, return error v-last-error-message .
       end.
       

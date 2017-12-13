@@ -23,7 +23,11 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
   define property Msg as character no-undo
     get.
     private set.
-    
+  
+  define property InitSecTag as character no-undo init "price-docs"
+    get.
+    private set.
+      
   define property DocNum as character no-undo
     get.
     set. 
@@ -36,16 +40,17 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
     get.
     set.   
     
+    
   define variable sw               as handle    no-undo.  
   
   method public void CrContentToSW (insw as handle):
     
-    sw = insw.
+    sw = insw .
     
     if ToDel
     then do :
           
-        sw:start-element ("price-docs") .
+/*        sw:start-element ("price-docs") .*/
           sw:start-element ("price-doc") .
           
           
@@ -67,14 +72,14 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
           
       
           sw:end-element ("price-doc") .
-        sw:end-element ("price-docs") .
+/*        sw:end-element ("price-docs") .*/
     end.    
     else do :
         find first buf_price-doc no-lock where buf_price-doc.doc-num = DocNum no-error.
         if not available (buf_price-doc)
           then return.
           
-        sw:start-element ("price-docs") .
+/*        sw:start-element ("price-docs") .*/
           sw:start-element ("price-doc") .
           
           if buf_price-doc.uid-es <> ? and buf_price-doc.uid-es <> ""
@@ -116,8 +121,9 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
           end.
       
           sw:end-element ("price-doc") .
-        sw:end-element ("price-docs") .
+/*        sw:end-element ("price-docs") .*/
     end.
+  
   end.
             
 
