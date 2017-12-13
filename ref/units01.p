@@ -70,7 +70,7 @@ if p-long-name = "":U then do:
   undo, return error "long-name":U.
 end.
 
-if p-unit-name = "":U then do:
+if p-unit-name = "":U or p-unit-name = ? then do:
   run err-mess ("”кажите аббревиатуру ед.изм").
   undo, return error "unit-name":U.
 end.
