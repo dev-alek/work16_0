@@ -47,7 +47,6 @@ class ibs.th.bge.1crn.subjects.int-point inherits ibs.th.bge.1crn.subjects.asubj
     
     assign
       v-str = "code" when code_ = ?
-      v-str = v-str + ",azk-code" when azk-code = ?
     .
     v-str = trim (v-str, ",").
     if v-str > ''

@@ -46,16 +46,19 @@ class ibs.th.bge.1crn.import.impint-point implements ibs.th.bge.1crn.import.iimp
     
     
     objIntPoint = cast (subjectObj, int-point).
-
-    find first buf_clients where buf_clients.obj-code = integer (objIntPoint:azk-code) and buf_clients.db-num <> ? no-error.
-    if error-status:error then 
-    do:
-      undo, throw new Progress.Lang.AppError("Нет объект с кодом (azk-code) - " + objIntPoint:azk-code).
+    
+    if not (objIntPoint:azk-code = ? or integer (objIntPoint:azk-code) = 0)
+    then do:
+      find first buf_clients where buf_clients.obj-code = integer (objIntPoint:azk-code) and buf_clients.db-num <> ? no-error.
+      if error-status:error then 
+      do:
+        undo, throw new Progress.Lang.AppError("Нет объект с кодом (azk-code) - " + objIntPoint:azk-code).
+      end.
     end.
     
     &scop proc-name db-attr-write
     {&run_proc_attr-lib}
-      (input buf_clients.db-num
+      (input (if not available (buf_clients) then 0 else buf_clients.db-num)
       ,input {&attr-int-point}
       ,input objIntPoint:code_
       ) no-error .
