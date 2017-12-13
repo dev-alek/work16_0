@@ -1,0 +1,83 @@
+
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Структура данных transport_section_ct-lvl в 1С
+
+Автор: Елена Шкляр
+Дата создания: 26/09/17
+Author: Shklyar Elena
+Creation date: 26/09/17
+
+*/
+
+using Progress.Lang.*.
+
+
+class ibs.th.bge.1crn.subjects.transport_section_ct-lvl inherits ibs.th.bge.1crn.subjects.asubject:
+
+  define property sec-num    as integer    no-undo get. 
+    private set.
+  define property lvl_  as decimal      no-undo get. 
+    private set.
+  define property amount    as decimal      no-undo get. 
+    private set.
+
+  define override property InitTag as character no-undo init "ct-lvl"
+    get. 
+    
+     
+  method override protected void SetPropProtected (inTag as char, inValue as char):
+    case inTag:
+      when "sec-num" then 
+        do:
+          assign 
+            sec-num = integer(inValue) .
+        end.
+      when "lvl" then 
+        do:
+          assign 
+            lvl_ = decimal(inValue) .
+        end.
+      when "amount" then 
+        do:
+          assign 
+            amount = decimal (inValue) .
+        end.
+    end case.
+  end.
+
+
+  method override protected void CheckData ():
+
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = v-str + ",sec-mum" 
+      when sec-num = ?
+      v-str = v-str + ",lvl" 
+      when lvl_ = ?
+      v-str = v-str + ",amount" 
+      when amount = ?
+      .
+    v-str = trim (v-str, ",").
+    if v-str > ''
+      then 
+      undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
+
+  end.
+  
+  method override protected void ClearSub():
+    assign 
+      sec-num   = ?
+      lvl_ = ?
+      amount   = ?
+      .
+  end.
+
+end class.
