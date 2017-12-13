@@ -175,7 +175,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     if "" > "" then insw:write-data-element ( "term-num", "" ).  /* Номер терминала POS (Строка) */
 
     if buf_chk-doc.d-card > "" then do:
-      insw:write-data-element (  "dc-num",          buf_chk-doc.d-card      ). /* Номер ДК (Строка) */
+      insw:write-data-element (  "dc-num",          buf_chk-doc.src-d-card      ). /* Номер ДК (Строка) */
       find first buf_dis-card no-lock
            where buf_dis-card.d-card = buf_chk-doc.d-card no-error .
       if available buf_dis-card then do:
@@ -256,7 +256,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
         /* обязательность 0-1; только для топливных чеков: к объёму в литрах прикладывается вес в киллограммах */
         if v-is-petrolium and (buf_chk-gds.density > 0) then do :
-          insw:write-data-element (  "cap",
+          insw:write-data-element (  "wgth",
             left-trim( string(buf_chk-gds.doc-qnty * buf_chk-gds.density, "->>>>>>>>9.999") )
           ) . /* Объем, кг (Число 15,3) */ 
         end.
@@ -428,6 +428,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       /* обязательность 0-1 */
       if buf_chk-gds-pay.price-base > 0 then
       insw:write-data-element ( "price-base", left-trim(string(buf_chk-gds-pay.price-base, "->>>>>>>>9.99"))  ) . /* Цена (Число 15,2) */
+      else insw:write-data-element ( "price-base", left-trim(string(0.0, "->>>>>>>>9.99"))  ) .
 
       /* 21/XI-2017 Добавлены поля pay-card (обязательность 0-1) и discntValueAbs (обязательность 1-1) */
       if buf_chk-gds-pay.pay-card > "" then
