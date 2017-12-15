@@ -390,75 +390,81 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
       sw:end-element ("gd").
     end.
     sw:end-element ("gds").
+
     
-    sw:start-element ("scs").
-    for each buf_doc-line no-lock where not v-doc-type-ERPRN = '4' and buf_doc-line.doc-code = buf_trn-doc.doc-code:
-    
-      find first buf_gds where
-            buf_gds.artic = buf_doc-line.artic 
-        and buf_gds.prod-code = buf_doc-line.prod-code
-        and buf_gds.prod-type = buf_doc-line.prod-type.
-        
-      infoSecsObj:Initialization(buf_doc-line.doc-code, buf_gds.gds-code).
-      infoSecsObj:GetDBAllAttr ().
-    
-      do ii = 1 to infoSecsObj:SectionNum:
-        infoSecObj = infoSecsObj:GetInfoSectionProp(ii).
-        sw:start-element ("sc").
-          write-data-element ("sc-num", string (infoSecObj:SectionName)).
-          write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
-          write-data-element ("cap-doc", string-mth (infoSecObj:DocQnty)).
-          write-data-element ("dnsty-doc", string-mth (infoSecObj:DocDensity)).
-          write-data-element ("wght-doc", string-mth (infoSecObj:CliQnty)).
-          write-data-element ("cap-psprt", string-mth (infoSecObj:CarVol)).
-          write-data-element ("sz-nck", string (infoSecObj:Diameter)).
-          write-data-element ("lvl", string-mth (infoSecObj:ABTarir)).
-          write-data-element ("cap-nck", string-mth (infoSecObj:Mouth)).
-          write-data-element ("cap", string-mth (infoSecObj:TankVol)).
-          write-data-element ("dnsty-f", string-mth (infoSecObj:TankDensity)).
-          write-data-element ("cap-wtr", string-mth (infoSecObj:TankWater)).
-          write-data-element ("t-cap", string-mth (infoSecObj:TankTemp)).
-          write-data-element ("t-dnsty", string-mth (infoSecObj:DensTemp)).
-          write-data-element ("ms-code", string-mth (infoSecObj:PlaceSi)).
-          write-data-element ("pv-date", string (iso-date (infoSecObj:DatePovPlotn))).
-          write-data-element ("dnsty-pr", string-mth (infoSecObj:TankDensityPomi)).
-          write-data-element ("cap-pr", string-mth (infoSecObj:TankVolPomi)).
-          write-data-element ("wght-pr", string-mth (infoSecObj:TankWeight)).
-          write-data-element ("wght-eu", string-mth (infoSecObj:NaturalLoss)).
-          write-data-element ("wght-vpr", string-mth (infoSecObj:AccAbsFact)).
-          write-data-element ("ned", string-mth (infoSecObj:Deficit)).
-          write-data-element ("izl", string-mth (infoSecObj:Excess)).
-          write-data-element ("dnsty-uch", string-mth (infoSecObj:FactDensity)).
-          write-data-element ("cap-uch", string-mth (infoSecObj:FactQnty)).
-          write-data-element ("wght-uch", string-mth (infoSecObj:FactKgQnty)).
-          write-data-element ("sl-date-s", string (iso-date (infoSecObj:DateStart))).
-          write-data-element ("sl-time-s", string (infoSecObj:TimeStart, "HH:MM")).
-          write-data-element ("sl-date-e", string (iso-date (infoSecObj:DateEnd))).
-          write-data-element ("sl-time-e", string (infoSecObj:TimeEnd, "HH:MM")).
-          write-data-element ("cmm", string (if infoSecObj:IsKP then "1" else "0")).
-          write-data-element ("er-ms", string-mth (infoSecObj:AccPomi)).
-          /*нормативный документ завода изготовителя*/
-          write-data-element ("norm-doc", string (infoSecObj:NormDoc)).
-          /*паспорт качества*/
-          write-data-element ("passport-num", string (infoSecObj:NumPassport)).
-          /*сертификат соответствия*/
-          write-data-element ("certif-fuel", string (infoSecObj:CertifFuel)).
-          /*срок действия сертификата*/
-          write-data-element ("validity-certif", string (infoSecObj:ValidityCertif)).
-          /*номер пробы*/
-          write-data-element ("tests", if string (infoSecObj:Tests) = "" then "0" else string (infoSecObj:Tests)).
-          /*номер печати пробы*/
-          write-data-element ("num-print-prob", string (infoSecObj:NumPrintProb)).
-          /*количество проб*/
-          write-data-element ("prob-kol", string-mth (infoSecObj:KolProb)).
-          /*дата отбора пробы*/
-          write-data-element ("prob-date", iso-date (infoSecObj:DateProb)).
-          /*время отбора пробы часы/минут HourProb MinProb*/
-          write-data-element ("prob-time", string (infoSecObj:HourProb, "99") + ":" + string (infoSecObj:MinProb, "99")).
-        sw:end-element ("sc").
+    if not buf_trn-doc.cli-code = 800000002
+    then do:
+      
+      sw:start-element ("scs").
+      for each buf_doc-line no-lock where not v-doc-type-ERPRN = '4' and buf_doc-line.doc-code = buf_trn-doc.doc-code:
+      
+        find first buf_gds where
+              buf_gds.artic = buf_doc-line.artic 
+          and buf_gds.prod-code = buf_doc-line.prod-code
+          and buf_gds.prod-type = buf_doc-line.prod-type.
+          
+        infoSecsObj:Initialization(buf_doc-line.doc-code, buf_gds.gds-code).
+        infoSecsObj:GetDBAllAttr ().
+  
+        do ii = 1 to infoSecsObj:SectionNum:
+          infoSecObj = infoSecsObj:GetInfoSectionProp(ii).
+          sw:start-element ("sc").
+            write-data-element ("sc-num", string (infoSecObj:SectionName)).
+            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
+            write-data-element ("cap-doc", string-mth (infoSecObj:DocQnty)).
+            write-data-element ("dnsty-doc", string-mth (infoSecObj:DocDensity)).
+            write-data-element ("wght-doc", string-mth (infoSecObj:CliQnty)).
+            write-data-element ("cap-psprt", string-mth (infoSecObj:CarVol)).
+            write-data-element ("sz-nck", string (infoSecObj:Diameter)).
+            write-data-element ("lvl", string-mth (infoSecObj:ABTarir)).
+            write-data-element ("cap-nck", string-mth (infoSecObj:Mouth)).
+            write-data-element ("cap", string-mth (infoSecObj:TankVol)).
+            write-data-element ("dnsty-f", string-mth (infoSecObj:TankDensity)).
+            write-data-element ("cap-wtr", string-mth (infoSecObj:TankWater)).
+            write-data-element ("t-cap", string-mth (infoSecObj:TankTemp)).
+            write-data-element ("t-dnsty", string-mth (infoSecObj:DensTemp)).
+            write-data-element ("ms-code", string-mth (infoSecObj:PlaceSi)).
+            write-data-element ("pv-date", string (iso-date (infoSecObj:DatePovPlotn))).
+            write-data-element ("dnsty-pr", string-mth (infoSecObj:TankDensityPomi)).
+            write-data-element ("cap-pr", string-mth (infoSecObj:TankVolPomi)).
+            write-data-element ("wght-pr", string-mth (infoSecObj:TankWeight)).
+            write-data-element ("wght-eu", string-mth (infoSecObj:NaturalLoss)).
+            write-data-element ("wght-vpr", string-mth (infoSecObj:AccAbsFact)).
+            write-data-element ("ned", string-mth (infoSecObj:Deficit)).
+            write-data-element ("izl", string-mth (infoSecObj:Excess)).
+            write-data-element ("dnsty-uch", string-mth (infoSecObj:FactDensity)).
+            write-data-element ("cap-uch", string-mth (infoSecObj:FactQnty)).
+            write-data-element ("wght-uch", string-mth (infoSecObj:FactKgQnty)).
+            write-data-element ("sl-date-s", string (iso-date (infoSecObj:DateStart))).
+            write-data-element ("sl-time-s", string (infoSecObj:TimeStart, "HH:MM")).
+            write-data-element ("sl-date-e", string (iso-date (infoSecObj:DateEnd))).
+            write-data-element ("sl-time-e", string (infoSecObj:TimeEnd, "HH:MM")).
+            write-data-element ("cmm", string (if infoSecObj:IsKP then "1" else "0")).
+            write-data-element ("er-ms", string-mth (infoSecObj:AccPomi)).
+            /*нормативный документ завода изготовителя*/
+            write-data-element ("norm-doc", string (infoSecObj:NormDoc)).
+            /*паспорт качества*/
+            write-data-element ("passport-num", string (infoSecObj:NumPassport)).
+            /*сертификат соответствия*/
+            write-data-element ("certif-fuel", string (infoSecObj:CertifFuel)).
+            /*срок действия сертификата*/
+            write-data-element ("validity-certif", string (infoSecObj:ValidityCertif)).
+            /*номер пробы*/
+            write-data-element ("tests", if string (infoSecObj:Tests) = "" then "0" else string (infoSecObj:Tests)).
+            /*номер печати пробы*/
+            write-data-element ("num-print-prob", string (infoSecObj:NumPrintProb)).
+            /*количество проб*/
+            write-data-element ("prob-kol", string-mth (infoSecObj:KolProb)).
+            /*дата отбора пробы*/
+            write-data-element ("prob-date", iso-date (infoSecObj:DateProb)).
+            /*время отбора пробы часы/минут HourProb MinProb*/
+            write-data-element ("prob-time", string (infoSecObj:HourProb, "99") + ":" + string (infoSecObj:MinProb, "99")).
+          sw:end-element ("sc").
+        end.
       end.
+      sw:end-element ("scs").
     end.
-    sw:end-element ("scs").
+    
     sw:start-element ("tanks").
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
       find first buf_gds where
