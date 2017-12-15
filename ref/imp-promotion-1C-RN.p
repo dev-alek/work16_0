@@ -86,6 +86,7 @@ empty temp-table tt0-term_dis-time-rule .
 empty temp-table tt0-term_dis-rule .
 empty temp-table tt0-dis-gds-rule .
 tmp-rule-num = 0 .
+v-rec-dis-rule = ? .
 
 v-strt-date = date(integer(entry(2, p-PromotionObj:strt-date, '-')), integer(entry(3, p-PromotionObj:strt-date, '-')), integer(entry(1, p-PromotionObj:strt-date, '-'))) .
 v-end-date  = date(integer(entry(2, p-PromotionObj:end-date , '-')), integer(entry(3, p-PromotionObj:end-date , '-')), integer(entry(1, p-PromotionObj:end-date , '-'))) .
@@ -345,6 +346,8 @@ case root_dis-rule.rule-num :
       do ii = 1 to v-gds:Get(ii) :
         v-gd = cast (v-gds:SubjectObjCurr, promotion_gd). 
         
+        empty temp-table tt0-dis-gds-rule .
+        
         create tt0-dis-gds-rule .
         assign
           tt0-dis-gds-rule.obj-type           = ub.clients.obj-type
@@ -359,6 +362,15 @@ case root_dis-rule.rule-num :
           tt0-dis-gds-rule.nonunique          = ""
           tt0-dis-gds-rule.rl-root            = buf_dis-rule.rule-num
         .
+        
+        for each buf_dis-gds-rule no-lock where buf_dis-gds-rule.obj-type           = ub.clients.obj-type
+                                            and buf_dis-gds-rule.obj-code           = ub.clients.obj-code
+                                            and buf_dis-gds-rule.gds-code           = integer(v-gd:gd-code)
+                                            and buf_dis-gds-rule.pos-type           = "IBM-XML" :
+          create tt0-dis-gds-rule .
+          buffer-copy buf_dis-gds-rule to tt0-dis-gds-rule no-error.
+          if error-status:error then delete tt0-dis-gds-rule no-error.
+        end.
         
         run ref/disgdsr1.p (
                  input {&update}
@@ -500,7 +512,7 @@ case root_dis-rule.rule-num :
     
     find first buf_dis-rule exclusive-lock where recid(buf_dis-rule) = v-rec-dis-rule .
     buf_dis-rule.promo-id = p-PromotionObj:code_ .
-    
+  
     if p-PromotionObj:status_ = 1
     then do :
       for each buf_dis-cp-rule exclusive-lock where buf_dis-cp-rule.rule-num = buf_dis-rule.rule-num :
@@ -528,6 +540,8 @@ case root_dis-rule.rule-num :
       do ii = 1 to v-gds:Get(ii) :
         v-gd = cast (v-gds:SubjectObjCurr, promotion_gd). 
         
+        empty temp-table tt0-dis-gds-rule .
+        
         create tt0-dis-gds-rule .
         assign
           tt0-dis-gds-rule.obj-type           = ub.clients.obj-type
@@ -542,6 +556,15 @@ case root_dis-rule.rule-num :
           tt0-dis-gds-rule.nonunique          = ""
           tt0-dis-gds-rule.rl-root            = buf_dis-rule.rule-num
         .
+        
+        for each buf_dis-gds-rule no-lock where buf_dis-gds-rule.obj-type           = ub.clients.obj-type
+                                            and buf_dis-gds-rule.obj-code           = ub.clients.obj-code
+                                            and buf_dis-gds-rule.gds-code           = integer(v-gd:gd-code)
+                                            and buf_dis-gds-rule.pos-type           = "IBM-XML" :
+          create tt0-dis-gds-rule .
+          buffer-copy buf_dis-gds-rule to tt0-dis-gds-rule no-error.
+          if error-status:error then delete tt0-dis-gds-rule no-error.
+        end.
         
         run ref/disgdsr1.p (
                  input {&update}
@@ -711,6 +734,8 @@ case root_dis-rule.rule-num :
       do ii = 1 to v-gds:Get(ii) :
         v-gd = cast (v-gds:SubjectObjCurr, promotion_gd). 
         
+        empty temp-table tt0-dis-gds-rule .
+        
         create tt0-dis-gds-rule .
         assign
           tt0-dis-gds-rule.obj-type           = ub.clients.obj-type
@@ -725,6 +750,15 @@ case root_dis-rule.rule-num :
           tt0-dis-gds-rule.nonunique          = ""
           tt0-dis-gds-rule.rl-root            = buf_dis-rule.rule-num
         .
+        
+        for each buf_dis-gds-rule no-lock where buf_dis-gds-rule.obj-type           = ub.clients.obj-type
+                                            and buf_dis-gds-rule.obj-code           = ub.clients.obj-code
+                                            and buf_dis-gds-rule.gds-code           = integer(v-gd:gd-code)
+                                            and buf_dis-gds-rule.pos-type           = "IBM-XML" :
+          create tt0-dis-gds-rule .
+          buffer-copy buf_dis-gds-rule to tt0-dis-gds-rule no-error.
+          if error-status:error then delete tt0-dis-gds-rule no-error.
+        end.
         
         run ref/disgdsr1.p (
                  input {&update}
@@ -1195,6 +1229,8 @@ case root_dis-rule.rule-num :
       do ii = 1 to v-gds:Get(ii) :
         v-gd = cast (v-gds:SubjectObjCurr, promotion_gd). 
         
+        empty temp-table tt0-dis-gds-rule .
+        
         create tt0-dis-gds-rule .
         assign
           tt0-dis-gds-rule.obj-type           = ub.clients.obj-type
@@ -1209,6 +1245,15 @@ case root_dis-rule.rule-num :
           tt0-dis-gds-rule.nonunique          = ""
           tt0-dis-gds-rule.rl-root            = buf_dis-rule.rule-num
         .
+        
+        for each buf_dis-gds-rule no-lock where buf_dis-gds-rule.obj-type           = ub.clients.obj-type
+                                            and buf_dis-gds-rule.obj-code           = ub.clients.obj-code
+                                            and buf_dis-gds-rule.gds-code           = integer(v-gd:gd-code)
+                                            and buf_dis-gds-rule.pos-type           = "IBM-XML" :
+          create tt0-dis-gds-rule .
+          buffer-copy buf_dis-gds-rule to tt0-dis-gds-rule no-error.
+          if error-status:error then delete tt0-dis-gds-rule no-error.
+        end.                                      
         
         run ref/disgdsr1.p (
                  input {&update}
