@@ -35,10 +35,18 @@ class ibs.th.bge.1crn.import.parsesub:
   
   define variable businessUnitsSubjectObj                  as class business-units              no-undo.
   define variable impbusinessUnitsEventHndlrObj            as class impbusiness-units           no-undo.
+
+/*----------*/
   
   define variable clientsSubjectObj                        as class clients                     no-undo.
+  define variable clients_carriersSubjectObj               as class clients_carriers            no-undo.
+  define variable clients_suppliersSubjectObj              as class clients_suppliers           no-undo.
   define variable impClientsEventHndlrObj                  as class impclients                  no-undo.
 
+  define variable clients_carriersListSubjectObj           as class subjects                    no-undo.
+  define variable clients_suppliersListSubjectObj          as class subjects                    no-undo.
+
+/*---------*/
   define variable contractsSubjectObj                      as class contracts                   no-undo.
   define variable impContractsEventHndlrObj                as class impcontracts                no-undo.
 
@@ -179,6 +187,10 @@ class ibs.th.bge.1crn.import.parsesub:
     impbusinessUnitsEventHndlrObj = new impbusiness-units ().
 
     clientsSubjectObj = new clients ().
+    clients_carriersSubjectObj = new clients_carriers ().
+    clients_suppliersSubjectObj = new clients_suppliers ().
+    clients_carriersListSubjectObj = new subjects ('nb-carriers').
+    clients_suppliersListSubjectObj = new subjects ('nb-suppliers').
     impClientsEventHndlrObj = new impclients ().
 
     contractsSubjectObj = new contracts ().
@@ -511,7 +523,8 @@ class ibs.th.bge.1crn.import.parsesub:
       case hnoderef:name:
         when "price-list" or when "recipe-gds" or
         when "sections" or when "calibration-table" or
-        when "barcodes" or when "cal-tbl" or when "gds" or when "schedule" or when "thresholds"
+        when "barcodes" or when "cal-tbl" or when "gds" or when "schedule" or when "thresholds" or
+        when "nb-carriers" or when "nb-suppliers"
         then do: /*первый уровень. зависимых объектов gds-sale или Рецепты recipe-gds  */
           if hnoderef:name = "schedule"
           then do:
@@ -681,6 +694,34 @@ class ibs.th.bge.1crn.import.parsesub:
               promotion_thresholdSubjectObj = cast (promotion_thresholdListSubjectsObj:SubjectObjCurr, promotion_threshold).
               GetChildrenSub (hNoderef, (level + 1), promotion_thresholdSubjectObj).
               promotionSubjectObj:SetProp (promotion_thresholdListSubjectsObj).
+            end.
+            otherwise do:
+              
+            end.
+          end case.
+        end.
+        when "nb-carrier" then do: /* второй уровень с данными. обработка зависимой сущности clientsSubjectObj  */
+          case true : 
+            when clientsSubjectObj:IsInitSubForWrite then do: /*идет запись clientsSubjectObj*/  
+              if not valid-object(clients_carriersListSubjectObj) then clients_carriersListSubjectObj = new subjects ("nb-carriers") .        
+              clients_carriersListSubjectObj:Add(new clients_carriers()). /* а вот здесь уже создаем объект сущнности*/
+              clients_carriersSubjectObj = cast (clients_carriersListSubjectObj:SubjectObjCurr, clients_carriers).
+              GetChildrenSub (hNoderef, (level + 1), clients_carriersSubjectObj).
+              clientsSubjectObj:SetProp (clients_carriersListSubjectObj).
+            end.
+            otherwise do:
+              
+            end.
+          end case.
+        end.
+        when "nb-supplier" then do: /* второй уровень с данными. обработка зависимой сущности clientsSubjectObj  */
+          case true : 
+            when clientsSubjectObj:IsInitSubForWrite then do: /*идет запись clientsSubjectObj*/  
+              if not valid-object(clients_suppliersListSubjectObj) then clients_suppliersListSubjectObj = new subjects ("nb-suppliers") .        
+              clients_suppliersListSubjectObj:Add(new clients_suppliers()). /* а вот здесь уже создаем объект сущнности*/
+              clients_suppliersSubjectObj = cast (clients_suppliersListSubjectObj:SubjectObjCurr, clients_suppliers).
+              GetChildrenSub (hNoderef, (level + 1), clients_suppliersSubjectObj).
+              clientsSubjectObj:SetProp (clients_suppliersListSubjectObj).
             end.
             otherwise do:
               
