@@ -53,6 +53,10 @@ class ibs.th.bge.1crn.subjects.recipe-gd inherits ibs.th.bge.1crn.subjects.asubj
   define property weight-gross    as decimal no-undo /* Число (10,3)  0-1 Вес брутто с учетом сезонных потерь */
     get. 
     private set.
+  define property wst as integer no-undo
+    get. 
+    private set.  
+  
 
   define override property InitTag as character no-undo init "recipe-gd"
     get. 
@@ -67,6 +71,7 @@ class ibs.th.bge.1crn.subjects.recipe-gd inherits ibs.th.bge.1crn.subjects.asubj
       when "seasonal-losses" then seasonal-losses = if inValue >= "" then decimal(inValue) else 0.0 .
       when "weight-gross"    then weight-gross    = if inValue >= "" then decimal(inValue) else 0.0 .
       when "recipe-code" then gds-recipe-code = if inValue >= "" then inValue else "" .
+      when "wst"        then wst        = if inValue >= "" then integer (inValue) else 0 .
     end case.
   end method.
 
@@ -97,6 +102,7 @@ class ibs.th.bge.1crn.subjects.recipe-gd inherits ibs.th.bge.1crn.subjects.asubj
       gds-recipe-code = ?
       seasonal-losses = ?
       weight-gross    = ?
+      wst             = ?
     .
   end method.
 

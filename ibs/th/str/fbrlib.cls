@@ -161,7 +161,8 @@ class ibs.th.str.fbrlib:
     input p-qnty-net    as decimal, /* recipe-gds.qnty */
     input p-qnty-gross  as decimal, /* recipe-gds.brutto-qnty */
     input p-lf          as decimal, /* recipe-gds.coeff-waste */
-    input p-gds-recipe-code as character /* код рецепта самого ингредиента, если он полуфабрикат */
+    input p-gds-recipe-code as character, /* код рецепта самого ингредиента, если он полуфабрикат */
+    input p-wst         as integer
   ):
   define variable v-rowid        as rowid no-undo . /* возвратное значение */
   define variable v-max-proc-num as integer no-undo .
@@ -209,9 +210,6 @@ class ibs.th.str.fbrlib:
         buf_recipe-gds.coeff-waste = 0
         buf_recipe-gds.calc-method = 1
         
-        /* "отметка, что это отходы" */
-        buf_recipe-gds.is-waste    = no /* из 1С приходят только неотходы */
-            
         /* "Отправлять запись по новостям не в составе куста рецепта" */
         buf_recipe-gds.nws-self    = no /* посылка товаров отдельно от рецептов отсутствует в протоколе обмена с 1С */
       .
@@ -223,6 +221,9 @@ class ibs.th.str.fbrlib:
       buf_recipe-gds.qnty        = p-qnty-net
       buf_recipe-gds.brutto-qnty = p-qnty-gross
       buf_recipe-gds.coeff-waste = p-lf when p-lf <> ?
+      
+      /* "отметка, что это отходы" */
+      buf_recipe-gds.is-waste    = if p-wst = 1 then yes else no
       
       buf_recipe-gds.gds-recipe-code = p-gds-recipe-code when p-gds-recipe-code <> ?
     .

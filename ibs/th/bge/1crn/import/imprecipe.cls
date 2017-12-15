@@ -43,6 +43,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define variable v-gds-list   as class subjects no-undo .
     define variable v-recipe-gd  as class recipe-gd no-undo .
     define variable v-retfl      as logical no-undo .
+    define variable v-db-num     as integer no-undo .
     
     define variable v-recipe-code as character no-undo . /* like ub.recipe.recipe-code */
     define variable v-recipe-name as character no-undo . /* like up.recipe.recipe-name */
@@ -52,6 +53,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define buffer buf_recipe-gds for ub.recipe-gds .
     define buffer buf_fbr-line   for ub.fbr-line .
     define buffer buf_fbr-doc    for ub.fbr-doc .
+    define buffer buf_fbr-gds-obj for ub.fbr-gds-obj .
     
     
     objImp = cast (subjectObj, {&impclass}).
@@ -140,15 +142,29 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     ,input objImp:weight     /* p-portion-weight Вес порции */
     ) .
       
-      /* делать рецепт установленным по умолчанию?
-    if v-recipe-code <> "":U  then do:        /* ri = recid( recipe ) */
-        run fbrlib-set-default-recipe in this-procedure (
-              input p-store-type
-            , input p-store-code
-            , input buf_goods.gds-code
+      /* делать рецепт установленным по умолчанию? */
+    if objImp:main = 1  then do:        /* ri = recid( recipe ) */
+        run gbl/getdbnum.p (output v-db-num).
+        find first ub.clients no-lock where ub.clients.db-num = v-db-num
+                                  and ub.clients.obj-type = {&shop}
+                                  and ub.clients.stts = 0 .
+        proc-fbrlib:fbrlib-set-default-recipe(
+              input ub.clients.obj-type
+            , input ub.clients.obj-code
+            , input v-gds-code
         ).
+        for each buf_fbr-gds-obj exclusive-lock
+           where buf_fbr-gds-obj.obj-type = ub.clients.obj-type
+             and buf_fbr-gds-obj.obj-code = ub.clients.obj-code
+             and buf_fbr-gds-obj.gds-code = v-gds-code
+        on error undo, return error
+        :
+            assign
+                buf_fbr-gds-obj.default-recipe-code = v-recipe-code
+            .
+        end.        /* for each buf_recipe */
     end.
-      */
+      
       
     /* Добавление/обновление товаров в рецепте: 
 1. для режима добавления - просто добавить товар
@@ -175,6 +191,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       ,input v-recipe-gd:qnty-gross
       ,input v-recipe-gd:lf /* внутри для новой записи = 0, далее присваивается только если gd:lf определено (gd:lf <> ?) */
       ,input v-recipe-gd:gds-recipe-code /* внутри присваивается только если значение определено (gds-recipe-code <> ?) */
+      ,input v-recipe-gd:wst
       ) .
       if (v-mode = {&update}) then v-rgds = v-rgds + "," + string(v-rowid) . 
     end . /* end_of do_in_gds-list */

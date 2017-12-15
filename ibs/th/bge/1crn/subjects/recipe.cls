@@ -57,6 +57,9 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
   define property weight as decimal no-undo
     get. 
     private set.
+  define property main as integer no-undo
+    get. 
+    private set.
   define property recipe-gds as subjects no-undo
     get. 
     private set.
@@ -92,6 +95,7 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
       end .
       when "recipe-num"  then recipe-num  = if inValue >= "" then inValue else "" .
       when "weight"      then weight      = if inValue >= "" then decimal (inValue) else 0.0 .
+      when "main"        then main        = if inValue >= "" then integer (inValue) else 0 .
     end case.
     
     catch exProErrors as class Progress.Lang.ProError :
@@ -153,6 +157,7 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
       recipe-type = ?
       recipe-num  = ?
       weight      = ?
+      main        = ?
     .
     if valid-object(recipe-gds) then delete object recipe-gds .
   end method.
