@@ -458,11 +458,9 @@ do
 /*              input {&apn-xl-spisok-doc-not}          */
 /*            , input v-validity-certif                 */
 /*        ).                                            */
-  run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
-                                               , buffer buf_clob-bind).
   find first sr-izmerenia no-lock where sr-izmerenia.node-code = integer(v-place-si) no-error.
       if available sr-izmerenia then do:
-          if sr-izmerenia.sr-type = "1" or sr-izmerenia.sr-type = "2" then do:
+          if sr-izmerenia.sr-type-id = 1 or sr-izmerenia.sr-type-id = 2 then do:
             /* Поле-25 "Нефтеденсиметр (ареометр) АНТ-1, ГОСТ 18481-81 № " (из строки ТоплНакл > ДопИнф > поле "Ареометр №") */
             run apn-xl-write-cell-data in this-procedure (
                   input {&apn-xl-num_areom}
@@ -475,7 +473,7 @@ do
                 , input fnc-DD-MM-YYYY(v-date-pov-plotn) 
             ).
           end.
-          if sr-izmerenia.sr-type = "3" or sr-izmerenia.sr-type = "4" then do:
+          if sr-izmerenia.sr-type = 3 or sr-izmerenia.sr-type = 4 then do:
             /* Поле-27 "Плотномер: ПЛОТ-3Б-1П, ГОСТ  АУТП.414122.006 ТУ(1)  №" (из строки ТоплНакл > ДопИнф > поле "Плотномер №") */
             run apn-xl-write-cell-data in this-procedure (
                   input {&apn-xl-num_plotn}
@@ -1433,7 +1431,6 @@ procedure proc-calc-library-pomi:
             _trpomi:
                 do on error undo, return no-apply:
                     /*данные по средству измерения резервуара для ПО МИ*/
-                    run sr-izmerenia_fill-sr-izm in this-procedure (input {&lookup}, buffer buf_clob-bind).
                     find first sr-izmerenia no-lock where sr-izmerenia.node-code = p-place-si no-error.
                     if error-status :error or not available sr-izmerenia then
                     do:
