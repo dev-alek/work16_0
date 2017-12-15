@@ -16,7 +16,10 @@ Creation date: 02/10/17
 */
 
 using Progress.Lang.*.
-
+using ibs.th.bge.1crn.subjects.subjects from propath.
+using ibs.th.bge.1crn.subjects.clients from propath.
+using ibs.th.bge.1crn.subjects.clients_suppliers from propath.
+using ibs.th.bge.1crn.subjects.clients_carriers from propath.
 
 class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubject:
 
@@ -34,6 +37,10 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
     private set.
   define property full-name as character no-undo
     get. 
+    private set.
+  define property nb-carriers     as subjects     no-undo get. 
+    private set.
+  define property nb-suppliers    as subjects     no-undo get. 
     private set.
   /* от 21-окт-2017:
      Справочник групп клиентов из 1С к нам приходить не будет.
@@ -73,42 +80,79 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
   define override property InitTag as character no-undo init "contractor"
     get. 
     
+  constructor public clients ():
+    InitListTag = "nb-carriers,nb-suppliers".
+  end constructor.
+      
   method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
-      when "code"      then code_     = if inValue >= "" then inValue else "" .
-      when "del-l"     then del-l     = if inValue >= "" then integer (inValue) else 0 .
-      when "del-f"     then del-f     = if inValue >= "" then integer (inValue) else 0 .
-      when "name"      then name_     = if inValue >= "" then inValue else "" .
-      when "full-name" then full-name = if inValue >= "" then inValue else "" .
-      when "grp-code"  then grp-code  = if inValue >= "" then inValue else "" .
-      when "city"      then city      = if inValue >= "" then inValue else "" .
-      when "ind"       then ind       = if inValue >= "" then inValue else "" .
-      when "inn"       then inn       = if inValue >= "" then inValue else "" .
-      when "kpp"       then kpp       = if inValue >= "" then inValue else "" .
-      when "agnt"      then agnt      = if inValue >= "" then inValue else "" .
-      when "post-adr"  then post-adr  = if inValue >= "" then inValue else "" .
-      when "e-mail"    then e-mail    = if inValue >= "" then inValue else "" .
-      when "leg-adr"   then leg-adr   = if inValue >= "" then inValue else "" .
-      when "okpo"      then okpo      = if inValue >= "" then inValue else "" .
+      when "code"      then 
+        code_     = if inValue >= "" then inValue else "" .
+      when "del-l"     then 
+        del-l     = if inValue >= "" then integer (inValue) else 0 .
+      when "del-f"     then 
+        del-f     = if inValue >= "" then integer (inValue) else 0 .
+      when "name"      then 
+        name_     = if inValue >= "" then inValue else "" .
+      when "full-name" then 
+        full-name = if inValue >= "" then inValue else "" .
+      when "grp-code"  then 
+        grp-code  = if inValue >= "" then inValue else "" .
+      when "city"      then 
+        city      = if inValue >= "" then inValue else "" .
+      when "ind"       then 
+        ind       = if inValue >= "" then inValue else "" .
+      when "inn"       then 
+        inn       = if inValue >= "" then inValue else "" .
+      when "kpp"       then 
+        kpp       = if inValue >= "" then inValue else "" .
+      when "agnt"      then 
+        agnt      = if inValue >= "" then inValue else "" .
+      when "post-adr"  then 
+        post-adr  = if inValue >= "" then inValue else "" .
+      when "e-mail"    then 
+        e-mail    = if inValue >= "" then inValue else "" .
+      when "leg-adr"   then 
+        leg-adr   = if inValue >= "" then inValue else "" .
+      when "okpo"      then 
+        okpo      = if inValue >= "" then inValue else "" .
     end case.
   end method.
   
+  method override protected void SetPropProtected(SubsObj as subjects):
+
+    case SubsObj:InitTag:   
+      when "nb-carriers" then
+        do:
+          nb-carriers = SubsObj.            
+        end.
+      when "nb-suppliers" then
+        do:
+          nb-suppliers = SubsObj.            
+        end.
+    end case.
+  end.
   
   method override protected void CheckData ():
 
     def var v-str as char no-undo.
     
     assign
-      v-str = ",code" when code_ = ?
-      v-str = v-str + ",name" when name_ = ?
-      v-str = v-str + ",full-name" when full-name = ?
-      v-str = v-str + ",inn" when inn = ?
-      v-str = v-str + ",kpp" when kpp = ?
-    .
+      v-str = ",code" 
+      when code_ = ?
+      v-str = v-str + ",name" 
+      when name_ = ?
+      v-str = v-str + ",full-name" 
+      when full-name = ?
+      v-str = v-str + ",inn" 
+      when inn = ?
+      v-str = v-str + ",kpp" 
+      when kpp = ?
+      .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(
-      substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
-    ) .
+        substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
+        ) .
 
   end method.
   
@@ -129,7 +173,7 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
       e-mail    = ?
       leg-adr   = ?
       okpo      = ?
-    .
+      .
   end method.
   
 
