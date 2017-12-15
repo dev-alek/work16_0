@@ -1079,7 +1079,7 @@ IF par-mode = {&LOOKUP} THEN DO:
   b-quit:LABEL = "&Выход".
 END.
 frame {&frame-name}:title = substitute("Серия номинала &1 &4 материальной ценности &2  &3"
-                                     ,if available LOCKED_wth-par then LOCKED_wth-par.par-val else ""
+                                     ,if available LOCKED_wth-par then string (LOCKED_wth-par.par-val) else ""
                                      ,if available locked_wealth then locked_wealth.wth-name else ""
                                      ,par-mode
                                      ,if available LOCKED_wth-par then LOCKED_wth-par.par-unit else ""
