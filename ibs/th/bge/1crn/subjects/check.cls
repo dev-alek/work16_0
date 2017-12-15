@@ -256,7 +256,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
         /* обязательность 0-1; только для топливных чеков: к объёму в литрах прикладывается вес в киллограммах */
         if v-is-petrolium and (buf_chk-gds.density > 0) then do :
-          insw:write-data-element (  "wgth",
+          insw:write-data-element (  "wght",
             left-trim( string(buf_chk-gds.doc-qnty * buf_chk-gds.density, "->>>>>>>>9.999") )
           ) . /* Объем, кг (Число 15,3) */ 
         end.
