@@ -681,9 +681,9 @@ define variable v-custom-except-list as character no-undo initial "".
 define variable v-custom-0-rdb-not-news as character no-undo initial "".
 
 /*-------------исключения из маршрутизации на параметре is-erpRN, таблицы не будут ходить ни при каких условиях (кроме таблиц которые ходят только из ГБД указанные v-custom-0-rdb_rbd-0-not-news)*/
-define variable v-custom-except-list-erprn as character no-undo initial
-"
-,add-doc~
+define variable v-custom-except-list-erprn as character no-undo.
+v-custom-except-list-erprn =
+"add-doc~
 ,add-line~
 ,add-trn~
 ,add-trn-attr~
@@ -1168,8 +1168,7 @@ define variable v-custom-except-list-erprn as character no-undo initial
 
 /*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/
 define variable v-custom-0-rdb-not-news-erprn as character no-undo initial
-"
-,c-shop~
+"c-shop~
 ,c-store~
 ,c-firm~
 ,shop~
