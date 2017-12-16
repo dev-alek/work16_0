@@ -88,6 +88,8 @@ DEFINE VARIABLE v-time as integer no-undo .
 define variable v-taxvalue as decimal no-undo .
 define variable v-bc-mode as character no-undo .
 define variable ii as integer no-undo .
+define variable par-recid-fbr as recid no-undo .
+define buffer buf-clients for clients.
 
 define variable v-fuel-type as character no-undo .
 define variable v-srvc-type as character no-undo .
@@ -233,7 +235,7 @@ define variable v-barcode-list as longchar no-undo .
                   , input ub.clients.host-code /*par-host-code like ub.sysconf.host-code */
                   , input ub.clients.obj-type /*par-obj-type like ub.clients.obj-type */
                   , input ub.clients.obj-code /*par-obj-code like ub.clients.obj-code */
-                  , input (if p-GdsObj:gds-type = {&gds-goods} or p-GdsObj:gds-type = "н" or p-GdsObj:gds-type = "б" then  yes else no)
+                  , input (if p-GdsObj:gds-type = {&gds-goods} or p-GdsObj:gds-type = "н":U or p-GdsObj:gds-type = "б":U or p-GdsObj:gds-type = "р":U  then  yes else no)
                   , input ? /*par-copy-rec as recid recid записи с которой копируем*/
                   , input integer(p-GdsObj:code_)
                   , input p-GdsObj:artic
@@ -319,7 +321,7 @@ define variable v-barcode-list as longchar no-undo .
   else do :
     RUN gds-attr-delete (v-nbc, {&attr-fuel-type}, output v-attr-del).     
   end.
-  
+  if v-is-petrl then RUN gds-attr-write (v-nbc, {&attr-dflt-insalepr}, 'yes').
   case p-GdsObj:srvc-type :
     when 1 then v-srvc-type = {&attr-office-type_oss-pay}.
     when 2 then v-srvc-type = {&attr-office-type_card-act} .
@@ -334,7 +336,42 @@ define variable v-barcode-list as longchar no-undo .
   else do :
     RUN gds-attr-delete (v-nbc, {&attr-office-type}, output v-attr-del).     
   end.
-  
+  /* Если блюдо поставим атрибуты на объекте, что это блюдо */
+
+  if p-GdsObj:gds-type = "б":U then do:
+       for each buf-clients no-lock where buf-clients.db-num = g#db-num
+                                  and buf-clients.obj-type = {&shop}
+                                  and buf-clients.stts = 0 :
+
+           find first  fbr-gds-obj where fbr-gds-obj.gds-code =  v-nbc 
+                                        and fbr-gds-obj.obj-type = buf-clients.obj-type 
+                                        and fbr-gds-obj.obj-code = buf-clients.obj-code 
+                                        no-lock no-error. 
+           par-recid-fbr    =  if available fbr-gds-obj then recid(fbr-gds-obj) else ?.   
+              
+           run ref/fgdsobj1.p (
+                            input-output par-recid-fbr
+                        , input (if available fbr-gds-obj
+                                    then {&update}
+                                    else {&add-def})
+                        , input no /*p-silent*/
+                        , input v-nbc
+                        , input buf-clients.obj-type 
+                        , input buf-clients.obj-code
+                        , input if available fbr-gds-obj then fbr-gds-obj.fbr-grp-code else 0
+                        , input buf-clients.obj-type
+                        , input buf-clients.obj-code
+                        , input if available fbr-gds-obj then fbr-gds-obj.is-cd else no
+                        , input true
+                        , input if available fbr-gds-obj then fbr-gds-obj.is-modificator else no
+                        , input if available fbr-gds-obj then fbr-gds-obj.is-null-price else no
+                        , input if available fbr-gds-obj then fbr-gds-obj.is-season else no
+                        , input if available fbr-gds-obj then fbr-gds-obj.is-semi-finished else no
+                        ) no-error.
+                                                    
+       end.                                
+  end.   
+
   v-barcode-list = "" .
   if valid-object (v-barcodes)
   then do :

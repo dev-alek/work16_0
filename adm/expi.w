@@ -102,6 +102,7 @@ DEFINE BUTTON b-quit AUTO-END-KEY
 
 DEFINE VARIABLE f-new-db-key LIKE ub.db.db-key
      LABEL "Ключ новой БД" 
+     FORMAT "X(25)"
      VIEW-AS FILL-IN 
      SIZE 9 BY 1 NO-UNDO.
 
