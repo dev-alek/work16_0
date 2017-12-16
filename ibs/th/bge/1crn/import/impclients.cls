@@ -300,25 +300,27 @@ class ibs.th.bge.1crn.import.impclients implements ibs.th.bge.1crn.import.iimpsu
 
     if valid-object (v_carrier) then 
     do:
+      /*удаление клиента из атрибута*/
+      for each buf_clients-attr EXCLUSIVE-LOCK where LOOKUP(({&cmp} + string(v-firm-code)),buf_clients-attr.attr-value) > 0:
+        do kk = 1 to NUM-ENTRIES(buf_clients-attr.attr-value,",") :
+          if ENTRY (kk,buf_clients-attr.attr-value,",") <> {&cmp} + string(v-firm-code) then 
+          do:
+            v-attr-value = if v-attr-value = "" then ENTRY (kk,buf_clients-attr.attr-value,",") else "," + ENTRY (kk,buf_clients-attr.attr-value,",") .
+          end.  
+        end.  
+        buf_clients-attr.attr-value = v-attr-value .
+      end.
+
       do ii = 1 to v_carrier:Get(ii):
         v-carrier = cast(v_carrier:SubjectObjCurr, clients_carriers) .
         find first bf_clients no-lock where bf_clients.obj-code = integer(v-carrier:code_) and bf_clients.obj-type = {&cmp} no-error .
         if AVAILABLE (bf_clients) then  
         do:
-          /*удаление клиента из атрибута*/
-          for each buf_clients-attr EXCLUSIVE-LOCK where LOOKUP(({&cmp} + string(v-firm-code)),buf_clients-attr.attr-value) > 0:
-            do kk = 1 to NUM-ENTRIES(buf_clients-attr.attr-value,",") :
-              if ENTRY (kk,buf_clients-attr.attr-value,",") <> {&cmp} + string(v-firm-code) then do:
-              v-attr-value = if v-attr-value = "" then ENTRY (kk,buf_clients-attr.attr-value,",") else "," + ENTRY (kk,buf_clients-attr.attr-value,",") .
-              end.  
-            end.  
-            buf_clients-attr.attr-value = v-attr-value .
-          end.
           find first buf_clients-attr EXCLUSIVE-LOCK where buf_clients-attr.attr-code = {&attr-auto-tank-for} and buf_clients-attr.obj-code = bf_clients.obj-code  
             and buf_clients-attr.obj-type = bf_clients.obj-type no-error .
           if AVAILABLE (buf_clients-attr) then 
           do:
-            buf_clients-attr.attr-value = buf_clients-attr.attr-value + "," + {&cmp} + string(v-firm-code) .
+            buf_clients-attr.attr-value = if buf_clients-attr.attr-value <> "" then buf_clients-attr.attr-value + "," + {&cmp} + string(v-firm-code) else {&cmp} + string(v-firm-code) .
           end. 
           else 
           do:
