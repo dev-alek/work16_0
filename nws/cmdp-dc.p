@@ -1346,7 +1346,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
     if v-is-empty then do:
       run delete-command in v-cmd-proc-handle ( input buf_temp-cmd.cmd-code ). /* p-command-code */
     end.
-    if not v-is-empty then do:
+    if false then do:
       run send-command in v-cmd-proc-handle
         ( input buf_temp-cmd.cmd-code  /* p-command-code */
           ,input buf_temp-cmd.db-list

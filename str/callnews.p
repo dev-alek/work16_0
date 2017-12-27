@@ -466,7 +466,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-found = yes.
   end. /*lookup(v-tbl-name, v-0-rdb-and-from-news) > 0*/
   /* эти таблицы идут только из ГБД в УБД  и НЕ ходят транзитом  УБД1-ГБД-УБД2 */
-  if v-found <> TRUE and (lookup(v-tbl-name, v-custom-0-rdb-not-news) > 0 or ((lookup(v-tbl-name, v-custom-except-list) = 0)
+  if v-found <> TRUE and (lookup(v-tbl-name, v-custom-0-rdb-not-news) > 0 or (lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-0-rdb-not-news) > 0))
   then do:
     if g#db-num = 0 and not g#news then do:

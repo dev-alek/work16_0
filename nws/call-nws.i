@@ -1244,6 +1244,27 @@ define variable v-custom-0-rdb-not-news-erprn as character no-undo initial
 ,dis-thbj-rule-attr~
 ,dis-time-rule~
 ,dis-time-rule-attr~
+,c-fin-code-an-uchet~
+,c-fin-code-cel-nazn~
+,c-fin-code-cor-acc~
+,c-fin-schet~
+,c-fin-schet-attr~
+,fin-schet~
+,fin-schet-attr~
+,fin-code-an-uchet~
+,fin-code-an-uchet-attr~
+,fin-code-cel-nazn~
+,fin-code-cel-nazn-attr~
+,fin-code-cor-acc~
+,fin-code-cor-acc-attr~
+,c-trn-reason~
+,c-trn-reason-host~
+,c-trn-reason-obj~
+,c-trn-rsn-attr~
+,trn-reason~
+,trn-reason-host~
+,trn-reason-obj~
+,trn-rsn-attr~
 ":U.
 
 
