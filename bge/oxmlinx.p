@@ -46,6 +46,7 @@ define variable vss-description as character no-undo init "Импорт из файла OpenX
 { gbl/orapreps.i }
 { rul/ora-rcpt.i proc }
 { gbl/filelist.i }
+{ gbl/db-attr.i  }
 
 define variable v-cur-db-num        as integer      no-undo.
 define variable v-cr-db-num         as integer      no-undo.
@@ -84,6 +85,8 @@ define variable v-return-error as integer no-undo .
 define variable v-extsys-list as character no-undo .
 define variable v-1c-stat as integer no-undo .
 define variable v-ack-err as character no-undo .
+define variable v-sender-id as character no-undo .
+define variable v-type as character no-undo .
 def var i as int.
 
 
@@ -189,6 +192,23 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                   , input return-value
               ).
               undo _ext-system, next _ext-system.
+          end.
+          if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+          then do :
+              run db-attr-value in this-procedure
+               (input g#db-num
+               ,input {&attr-int-point}
+               ,output v-sender-id
+               ,output v-type
+               ) no-error .
+              if (v-sender-id = ? or trim(v-sender-id) = "")
+              then do :
+                  run write-log in p-log-handle (
+                        input 2
+                      , input 'Нет атрибута БД "Номер точки интеграции". Без него работа с системой 1С-ERP не возможна!'
+                  ).
+                  undo _ext-system, next _ext-system.
+              end.
           end.
           if buf_ext-system.esys-have-import
           then do:

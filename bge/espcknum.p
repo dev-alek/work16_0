@@ -245,36 +245,31 @@ on error undo, return error
     end. /*if p-action = "put" then do:*/
     if p-action = "get" then do:
       if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then do:
-          run ext-system-attr-value in this-procedure ( input p-esys-id
-                                                        ,input p-db-num
-                                                        ,input {&attr-esys-ftp-path-in}
-                                                        ,output v-ftp-path-in
-                                                        ,output v-type) no-error.
-          
+
           for each buf_temp-filelist no-lock:
             delete buf_temp-filelist.
           end.
           run filelist-init in this-procedure
-          (input v-ftp-path-in
+          (input p-source-dir
           ,input false
           ,input ""
           ,input ""
           ) no-error.
           for each buf_temp-filelist exclusive-lock :
               if num-entries(buf_temp-filelist.file-name, "_") = 4
-              or (num-entries(buf_temp-filelist.file-name, "_") = 5 and buf_temp-filelist.file-name begins "ack") 
+              or (num-entries(buf_temp-filelist.file-name, "_") = 5 and buf_temp-filelist.file-name begins "ack")
               then do :
               end.
               else do :
                   delete buf_temp-filelist .
-              end.    
+              end.
           end.
           find first buf_temp-filelist no-error.
           if available buf_temp-filelist
           then do :
               p-custom-pack-name = buf_temp-filelist.file-name .
-          end.    
-      end.    
+          end.
+      end.
       find first buf_esys-all-attr share-lock where
               buf_esys-all-attr.attr-code = {&attr-custom-pack-name}
           and buf_esys-all-attr.table-name = {&table_esys-pck-rcvd}
