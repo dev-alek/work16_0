@@ -73,6 +73,7 @@ sw = insw .
     do:
       BUFFER-COPY buf_rvs-doc to tt-rvs-doc .
       tt-rvs-doc.del-f = 0 .
+      tt-rvs-doc.fact-time = buf_rvs-doc.fact-time .
     end.  
     else 
     do:
@@ -194,8 +195,8 @@ sw = insw .
     sw:start-element ("check-fuel-doc") .
     sw:write-data-element ("doc-code", if tt-rvs-doc.rvs-code = ? then "" else string(tt-rvs-doc.rvs-code)).
     sw:write-data-element ("doc-num", if tt-rvs-doc.rvs-code = ? then "" else string(tt-rvs-doc.rvs-code)).
-    sw:write-data-element ("doc-date", if tt-rvs-doc.doc-date = ? then "" else iso-date(datetime(tt-rvs-doc.doc-date, tt-rvs-doc.sys-time-int))).
-    sw:write-data-element ("doc-date-f", if tt-rvs-doc.fact-date = ? then "" else iso-date(date(tt-rvs-doc.fact-date))).
+    sw:write-data-element ("doc-date", if tt-rvs-doc.doc-date = ? then "" else iso-date(datetime(tt-rvs-doc.doc-date, (tt-rvs-doc.fact-time * 1000 )))).
+    sw:write-data-element ("doc-date-f", if tt-rvs-doc.fact-date = ? then "" else iso-date(datetime(tt-rvs-doc.fact-date, (tt-rvs-doc.sys-time-int * 1000 )))).
     sw:write-data-element ("del-f", if tt-rvs-doc.del-f = ? then "" else string(tt-rvs-doc.del-f)).
     sw:write-data-element ("doc-type", string(v-type)).
     sw:write-data-element ("shift-date", if tt-rvs-doc.shift-date = ? then "" else iso-date(tt-rvs-doc.shift-date)).
