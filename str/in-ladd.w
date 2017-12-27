@@ -2393,13 +2393,22 @@ end procedure.
 PROCEDURE check-page :
 if p-mode <> {&update} and p-mode <> {&add-def} then return.
 
+  integer (replace (f-sec-num, ".", "-")) no-error.
+  if error-status:error or f-sec-num matches "*,*"
+    then 
+  do:
+    message "Номер секции должен иметь числовое значение" view-as alert-box .
+    apply "entry" to f-sec-num in frame {&frame-name} .
+    return error .
+  end.
+  
   do ii = 1 to infoSectionTotal:SectionNum:
     if ii <> v-page-current and input frame {&frame-name} f-sec-num = infoSectionTotal:GetInfoSectionProp(ii):SectionName and infoSectionTotal:SectionNum >= v-page-current 
     then do:
-       message "Такой номер секции уже был" view-as alert-box .
-       apply "entry" to f-sec-num in frame {&frame-name} .
-       return error .
-    end.      
+      message "Такой номер секции уже был" view-as alert-box .
+      apply "entry" to f-sec-num in frame {&frame-name} .
+      return error .
+    end.   
   end.
   
   if not infoSectionTotal:FlagTrn then return.

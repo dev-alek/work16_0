@@ -922,11 +922,26 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           if error-status :error then do:
             undo block_tr, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
           end.
+          
+          def var ii as int no-undo.
+          def var infoSectionObj as class InfoSection no-undo.
+
+          if p-infoSectionsTotal:RdcDnstvalue = 'not'
+          then do:
+
+            
+            do ii = 1 to p-infoSectionsTotal:SectionNum :
+              infoSectionObj = p-infoSectionsTotal:GetInfoSectionProp(ii).
+              infoSectionObj:FactQnty = infoSectionObj:TankVol.
+              infoSectionObj:FactDensity = infoSectionObj:TankDensity.
+              p-infoSectionsTotal:SaveDb().
+              p-infoSectionsTotal:GetDBAllAttr().
+              p-infoSectionsTotal:CalculateTotal().
+            end.
+          end.
 
           if v-setting = false then p-infoSectionsTotal:GetDBAllAttr().
 
-            def var ii as int no-undo.
-            
             if v-setting = true
               and p-mode <> {&lookup}
               and p-stfactplvalue <> "":U
@@ -944,7 +959,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               def var v-new-sec-fact-qnty-kg as decimal no-undo.
               def var v-chg-temp as logical no-undo.
               def var v-st-doc-temp as logical no-undo.
-              def var infoSectionObj as class InfoSection no-undo.
               infoSectionObj = p-infoSectionsTotal:GetInfoSectionProp(ii).
                             
               v-new-sec-fact-qnty = if infoSectionObj:FactQnty = 0 or infoSectionObj:FactQnty = ? then infoSectionObj:DocQnty else infoSectionObj:FactQnty.
