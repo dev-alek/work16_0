@@ -112,9 +112,9 @@ b-quit AT ROW 1 COL 11
 b-tax  AT ROW 1 COL 21
 b-marg  AT ROW 1 COL 31
 b-help AT ROW 1 COL 81
-ub.gds-grp.node-name AT ROW 2.5 COL 18 COLON-ALIGNED LABEL "Название" VIEW-AS FILL-IN SIZE 50 BY 1
+ub.gds-grp.node-name AT ROW 2.5 COL 18 COLON-ALIGNED LABEL "Название" VIEW-AS FILL-IN SIZE 50 BY 1 format "X(90)"
 "Правило назначения продажной цены для автопереоценок" VIEW-AS TEXT
-          SIZE 59 BY 1 AT ROW 4.1 COL 3 WIDGET-ID 4  FGCOLOR 4
+          SIZE 59 BY 1 AT ROW 4.1 COL 3 WIDGET-ID 4  FGCOLOR 4 
 "Метод расчета" VIEW-AS TEXT
 SIZE 13 BY 1 AT ROW 5.1 COL 6 WIDGET-ID 4
 "баз. цены:" VIEW-AS TEXT
