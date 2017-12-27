@@ -1193,8 +1193,12 @@ define variable v-custom-0-rdb-not-news-erprn as character no-undo initial
 ,c-pay-type-attr~
 ,pay-type~
 ,pay-type-attr~
+,c-dis-card~
+,c-dis-card-long~
+,c-dis-card-long-attr~
 ,c-dis-card-mask~
 ,c-dis-card-mask-attr~
+,c-dis-card-property~
 ,c-dis-card-type~
 ,c-dis-card-type-attr~
 ,c-dis-cfg-rule~
@@ -1210,8 +1214,12 @@ define variable v-custom-0-rdb-not-news-erprn as character no-undo initial
 ,c-dis-some-rule~
 ,c-dis-thbj-rule~
 ,c-dis-time-rule~
+,dis-card~
+,dis-card-long~
+,dis-card-long-attr~
 ,dis-card-mask~
 ,dis-card-mask-attr~
+,dis-card-property~
 ,dis-card-type~
 ,dis-card-type-attr~
 ,dis-cfg-rule~
