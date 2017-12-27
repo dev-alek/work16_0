@@ -43,8 +43,6 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
   define private variable libFindtank as class ibs.th.str.findtank no-undo . /* обЄртка дл€ findtank.i */
 
-  define private variable m-chk-types as enum-chk-type extent 17 no-undo . /* маппинг типов чеков наших на 1с */
-    
   &scop tag-message   'check':U
   &scop tag-section1  'chk-gds':U
   &scop tag-item1     'chk-gd':U
@@ -72,6 +70,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define buffer buf_chk-doc for ub.chk-doc .
     define variable v-fld-inkas-code as handle no-undo .
     define variable v-inkas-code     as character no-undo .
+    define variable v-en-chktype     as enum-chk-type no-undo .
 
     Msg = "" .
     if not valid-handle(BufHandle) then undo, throw new Progress.Lang.AppError("ќтсутствует запись ѕ–ќƒј∆» inkas") .
@@ -83,9 +82,11 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
 
     for each buf_chk-doc no-lock
-       where buf_chk-doc.out-code = v-inkas-code
-         and buf_chk-doc.chk-type <> {&bef-rcpt-annu} : /* 29/XI-2017 аннул€цию не выгружаем */
-      CrContentInterfaceToSW (insw, buffer buf_chk-doc) .
+       where buf_chk-doc.out-code = v-inkas-code:
+      /* 19/XII-2017 выгружаем только те типы, которые указаны в протоколе */
+      v-en-chktype = enum-chk-type:GetEnum(buf_chk-doc.chk-type) no-error .
+      if not error-status:error then
+        CrContentInterfaceToSW (insw, buffer buf_chk-doc) .
     end . /* end_of for_each buf_chk-doc */
     
 
