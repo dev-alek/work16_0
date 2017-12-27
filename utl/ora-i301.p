@@ -447,7 +447,10 @@ define buffer ver_price-doc-forming-gds for ub.price-doc-forming-gds  .
     run str/diallog.w
         ( this-procedure
         , this-procedure
-        , 'str/pdf-clos.p':U
+        , if (temp-price-doc.doc-num-ES <> ? and temp-price-doc.doc-num-ES <> "")
+          or (temp-price-doc.doc-id <> ? and temp-price-doc.doc-id <> "")
+          then ('str/pdf-clos.p':U + {&delim-par} + '1' + {&delim-par} + '2' + {&delim-par} + '1')
+          else 'str/pdf-clos.p':U
         , ( string(recid(buf_price-doc-forming)) + {&delim-par} +
            'no' + {&delim-par} +
            'no' + {&delim-par} +

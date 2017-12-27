@@ -514,6 +514,8 @@ DO:
     if p-doc.doc-date > today
     then do :
       message ("Нельзя закрыть переоценку " + p-doc.doc-num + ". Дата переоценки больше текущей даты.") view-as alert-box information .
+      vv = 0.
+      mark-list = "" .
       return.
     end.
 
