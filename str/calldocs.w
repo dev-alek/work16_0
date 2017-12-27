@@ -817,8 +817,8 @@ on value-changed of br-docs do:
     assign wrkr-name = ( if available cli-buf then cli-buf.obj-name else ? ).
 
     find first pay-type no-lock where pay-type.obj-code = c-t-doc.pay-code no-error.
-    if available pay-type then do: display     pay-type.obj-name with frame {&frame-name}. end.
-                          else do: display ? @ pay-type.obj-name with frame {&frame-name}. end.
+/*    if available pay-type then do: display     pay-type.obj-name with frame {&frame-name}. end.*/
+/*                          else do: display ? @ pay-type.obj-name with frame {&frame-name}. end.*/
 
     assign ed-notes = c-t-doc.PS.
     find first cli-buf no-lock where
@@ -826,7 +826,7 @@ on value-changed of br-docs do:
                cli-buf.obj-code = c-t-doc.obj-code no-error.
     assign obj-name = ( if available cli-buf then cli-buf.obj-name else ? ).
 
-    display ed-notes obj-name boss-name agnt-name wrkr-name c-t-doc.creid with frame {&frame-name}.
+/*    display ed-notes obj-name boss-name agnt-name wrkr-name c-t-doc.creid with frame {&frame-name}.*/
 
     if doc-rec <> recid( c-t-doc ) then do:
       assign sch-num = 0.
