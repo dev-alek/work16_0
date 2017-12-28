@@ -238,7 +238,7 @@ DEFINE BROWSE BR-masks
   QUERY BR-masks NO-LOCK DISPLAY
       mark-string(recid(X_dis-card-mask), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
 X_dis-card-mask.type COLUMN-LABEL "Тип карты" FORMAT "X(8)":U
-X_dis-card-mask.emitent-host-code COLUMN-LABEL "Код!эмитента" FORMAT "99999":U
+X_dis-card-mask.emitent-host-code COLUMN-LABEL "Код!эмитента" FORMAT ">>>>>99999":U
 get-emitent(X_dis-card-mask.emitent-host-code) COLUMN-LABEL "Эмитент" FORMAT "X(15)":U
 X_dis-card-mask.mask COLUMN-LABEL {&label-mask-only} FORMAT "X(19)":U
 get-use-on-cd(X_dis-card-mask.use-on) COLUMN-LABEL {&label-use-on-cd} FORMAT "X(20)":U

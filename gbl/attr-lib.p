@@ -34,6 +34,8 @@ Creation date: 12/06/06
 	Last change:  NIA  21 Mar 2011    5:06 pm
 */
 
+using ibs.th.gbl.gbl-hndllib from propath.
+
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
@@ -73,6 +75,10 @@ else do:
   assign
     g#attr-lib = this-procedure :handle
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#attr-lib", g#attr-lib).
+  delete object gbl-hndllibObj.
 end.
 
 if this-procedure :persistent <> true
@@ -89,6 +95,10 @@ do:
   assign
     g#attr-lib = ?
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#attr-lib", g#attr-lib).
+  delete object gbl-hndllibObj.
   for each thbjattr_thbj-attr:
     delete thbjattr_thbj-attr.
   end.
@@ -7779,7 +7789,7 @@ end procedure. /* bc-oattr-taracode */
 
 /* ################## */
 /* атрибуты касс */
-/*при изменении надо менять pie на 15.1 08070701.p !!!!!!*/
+/*при изменении надо менять pie на 16.0 08070701.p !!!!!!*/
 
 
 /* настройки кассы MAGIA  */
@@ -8768,7 +8778,7 @@ false~
 ,false~
 '
 
-/*при изменении надо менять pie на 15.1 08070701.p !!!!!!*/
+/*при изменении надо менять pie на 16.0 08070701.p !!!!!!*/
 
 
 
@@ -12766,6 +12776,18 @@ end procedure.
 &scop batch-edit-attr-mess-id-video 0
 
 
+/* Точка интеграции ERPRN */
+&scop type-attr-int-point {&type-char}
+&scop format-attr-int-point "+/-"
+&scop label-attr-int-point "Точка интеграции ERPRN"
+&scop tooltip-attr-int-point "Точка интеграции ERPRN"
+&scop user-can-edit-attr-int-point false
+&scop output-display-attr-int-point true
+&scop other-attr-int-point '':u
+&scop news-attr-int-point no
+&scop manual-edit-attr-int-point 0
+&scop batch-edit-attr-int-point 0
+
 /* сюда добавлять новые параметры атрибутов баз данных */
 
 &scop attr-temp-code ~
@@ -12862,6 +12884,8 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-mess-id-video
       {&attr-temp-full-code}
+      &scop attr-code attr-int-point
+      {&attr-temp-full-code}
 
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -12921,6 +12945,8 @@ procedure db-attr-tooltip :
       &scop attr-code attr-ora-exp-seq
       {&attr-temp-code}
       &scop attr-code attr-mess-id-video
+      {&attr-temp-code}
+      &scop attr-code attr-int-point
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -13169,6 +13195,8 @@ procedure db-attr-news :
       &scop attr-code attr-ora-exp-seq
       {&attr-news-code}
       &scop attr-code attr-mess-id-video
+      {&attr-news-code}
+      &scop attr-code attr-int-point
       {&attr-news-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */

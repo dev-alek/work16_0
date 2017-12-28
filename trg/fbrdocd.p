@@ -31,6 +31,8 @@ define variable vss-description as character no-undo init "Триггер на удаление з
 { cmp/trg-def.i  }
 { str/fbrcode.i  }
 
+define variable v-message as character no-undo .
+
 main-block:
 do
 on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -75,6 +77,38 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         undo main-block, return error .
       end.
     end.
+  end.
+
+  { gbl/rum-runa.i
+    ?
+    this-procedure:handle
+    ?
+      {&edoc-proc_event_fbr-doc}
+    " buffer ub.fbr-doc:handle "
+    ?
+    ''
+    ''
+    no-error
+    }
+  
+  if error-status:error
+  then do:
+    v-message = substitute("&1 &2 &3&4Ошибка при вызове процедуры rum-runa.i&4&5&4&5&6"
+                            ,vss-workfile
+                            ,vss-revision
+                            ,vss-description
+                            ,{&new-line}
+                            , error-status:get-message(1)
+                            , return-value ).
+      if not g#news
+      and not g#auto
+      and not g#esys
+      then do:
+      message
+      v-message
+      view-as alert-box error .
+    end.
+    undo main-block,  return error v-message.
   end.
 
   /* проверяем, что не осталось подчиненных линий */

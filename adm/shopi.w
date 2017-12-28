@@ -344,7 +344,7 @@ DEFINE VARIABLE varpurch-code-name AS CHARACTER FORMAT "X(256)":U
      DROP-DOWN-LIST
      SIZE 26 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fi-holdfirm-code AS INTEGER FORMAT ">>>>>>9":U INITIAL 0 
+DEFINE VARIABLE fi-holdfirm-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0 
      LABEL "Фирма для накладных" 
       VIEW-AS TEXT 
      SIZE 6.6 BY .67
@@ -402,7 +402,7 @@ DEFINE FRAME Dialog-Frame
      b-tocd AT ROW 1 COL 51
      b-host AT ROW 1 COL 61
      tt-clients.db-num AT ROW 1 COL 80 COLON-ALIGNED
-          LABEL "Номер БД" FORMAT ">>>>9"
+          LABEL "Номер БД" FORMAT ">>>>>>>>9"
           VIEW-AS FILL-IN 
           SIZE 6 BY .91
           BGCOLOR 15 
@@ -410,7 +410,7 @@ DEFINE FRAME Dialog-Frame
      B-hist AT ROW 1 COL 92
      B-Help AT ROW 1 COL 95
      tt-shop.obj-code AT ROW 2 COL 5.2 COLON-ALIGNED
-          LABEL " Код"
+          LABEL " Код" format ">>>>>>>>9"
           VIEW-AS FILL-IN 
           SIZE 6 BY 1
           BGCOLOR 15 FGCOLOR 0 
@@ -2424,6 +2424,16 @@ run adm/shop01.p (
             )
              no-error .
 if error-status:error then do:
+  define variable l-ret-widg as character no-undo .
+  define variable l-ret-text as character no-undo .
+  assign
+    l-ret-widg = entry(1, return-value, {&delim-par})
+    l-ret-text = entry(2, return-value, {&delim-par})
+  .
+  message l-ret-text view-as alert-box error .
+  /* к этому моменту return-value должно было ещё сохраниться;
+     если не сохранится - замените вызов инклюда на  { gbl/reterhnd.i &1 = error &4 = l-ret-widg }
+  */   
  { gbl/reterhnd.i error }
   undo, return error.
 end.

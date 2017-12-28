@@ -325,7 +325,7 @@ DEFINE BROWSE br-schet
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-schet Dialog-Frame _FREEFORM
   QUERY br-schet DISPLAY
       mark-string(recid(X_fin-schet), v-rid-list) FORMAT "X(1)":U
-      X_fin-schet.host-code COLUMN-LABEL "Код!фирмы" FORMAT "99999":U
+      X_fin-schet.host-code COLUMN-LABEL "Код!фирмы" FORMAT ">>>>>99999":U
       X_fin-schet.code-schet COLUMN-LABEL "Код счета" FORMAT "9999999":U
       X_fin-schet.code-bank COLUMN-LABEL "Код!банка" FORMAT "9999999":U
       get-bank-short-name(buffer X_fin-schet) COLUMN-LABEL "Название банка" FORMAT "X(20)":U

@@ -226,4 +226,24 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                              , error-status :get-message ( 1 ) ).
     end.
     end.
+      { gbl/rum-runa.i
+    ?
+    this-procedure:handle
+    ?
+    {&thref-proc_ref-event}
+    " buffer ub.pl-gds:handle "
+    ''
+    ''
+    ''
+    no-error
+  }
+  if error-status :error
+  then
+  do:
+      return error substitute( "&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"
+          , {&new-line}
+          , vss-workfile
+          , return-value
+          , error-status :get-message ( 1 ) ).
+end.
 end.

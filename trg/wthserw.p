@@ -64,7 +64,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     buf_c-wth-hist.wth-code          = buf_c-wth-ser.wth-code
     buf_c-wth-hist.action = (if new(wth-ser)
                               then integer({&hn-create})
-                              else {&hn-update}
+                              else integer ({&hn-update})
                             )
     buf_c-wth-hist.subject = {&table_wth-ser}
     buf_c-wth-hist.is-news = g#news

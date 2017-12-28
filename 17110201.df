@@ -1,0 +1,46 @@
+ADD FIELD "obj-list" OF "contract" AS character
+  DESCRIPTION "Список объектов, для которых доступен договор"
+  FORMAT "x(8)"
+  POSITION 137
+  INITIAL ""
+  LABEL "Объекты"
+  COLUMN-LABEL "Объекты"
+  ORDER 1360
+  MAX-WIDTH 16
+
+ADD FIELD "obj-type" OF "contract-specif" AS character
+  DESCRIPTION "Перечислимый тип объекта учета товара: склад, магазин`Obj`Obiect"
+  FORMAT "X(3)"
+  POSITION 34
+  INITIAL ?
+  LABEL "Объект"
+  COLUMN-LABEL "Объект"
+  ORDER 310
+  MAX-WIDTH 6
+
+ADD FIELD "obj-code" OF "contract-specif" AS integer
+  DESCRIPTION "Код объекта - уникальный внутри конкретного справочника`Code`Cod"
+  FORMAT "99999"
+  POSITION 35
+  INITIAL ?
+  LABEL "Код"
+  COLUMN-LABEL "Код"
+  ORDER 320
+  MAX-WIDTH 4
+
+
+ADD FIELD "gds-recipe-code" OF "recipe-gds" AS character
+  DESCRIPTION "номер рецепта  ингредиента "
+  FORMAT "X(8)"
+  POSITION 15
+  INITIAL ""
+  LABEL "Номер"
+  COLUMN-LABEL "Номер рецепта"
+  ORDER 130
+  MAX-WIDTH 16
+
+.
+PSC
+cpstream=1251
+.
+0000001167

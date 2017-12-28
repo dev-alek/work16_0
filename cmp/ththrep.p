@@ -141,7 +141,7 @@ end case.
 
 for each obj-list:
    empty temp-table temp-goods.
-  /* поиск соответствия старого obj-code p-from-version версии в 15.1 */
+  /* поиск соответствия старого obj-code p-from-version версии в 16.0 */
   find first new_ext-classif no-lock where
               new_ext-classif.classif-subject = {&table_clients}
           and new_ext-classif.classif-name    = v-cli-classif-name
@@ -172,7 +172,7 @@ for each obj-list:
   v-obj-code = new_ext-classif.key#_one.
   v-new-obj-type = new_clients.obj-type.
   v-new-obj-code = new_clients.obj-code.
-    &scop my-message substitute("Объект &5 &1&2 v15.1 &3&4" ~
+    &scop my-message substitute("Объект &5 &1&2 v16.0 &3&4" ~
                          , obj-list.obj-type ~
                          ,obj-list.obj-code  ~
                          ,v-obj-type         ~
@@ -193,7 +193,7 @@ for each obj-list:
 
       if buf_trn-doc.ps begins "Перенос остатков" then do:
         for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
-            /* поиск соответствия старого gds-code p-from-versionверсии  в 15.1 */
+            /* поиск соответствия старого gds-code p-from-versionверсии  в 16.0 */
             find first buf_goods no-lock where
                     buf_goods.artic = buf_doc-line.artic
               and buf_goods.prod-type = buf_doc-line.prod-type
@@ -396,7 +396,7 @@ for each obj-list:
     {&display-message}.
     &scop my-message temp-goods.old-gds-name
     {&display-message}.
-    &scop my-message   substitute("Товар v15.1=&1 Статус в v15.1=&3 кол-во  v15.1=&2 " ~
+    &scop my-message   substitute("Товар v16.0=&1 Статус в v16.0=&3 кол-во  v16.0=&2 " ~
                                   ,string(temp-goods.new-gds-code, ~{&gcf~}) ~
                                   ,string(v-new-qnty, ~{&fqf~}) ~
                                   ,(if temp-goods.new-stts > 0 then "удал" else " тек") ~
@@ -429,7 +429,7 @@ for each obj-list:
               buf_temp-goods.old-gds-code = temp-goods.old-gds-code
           and buf_temp-goods.old-obj-type = obj-list.obj-type
           and buf_temp-goods.old-obj-code = obj-list.obj-code              :
-          &scop my-message substitute("    Товар v15.1=&1 удал в v15.1=&3 кол-во v15.1=&2&4         v15.1: &6" ~
+          &scop my-message substitute("    Товар v16.0=&1 удал в v16.0=&3 кол-во v16.0=&2&4         v16.0: &6" ~
                                       ,string(buf_temp-goods.new-gds-code, ~{&gcf~})  ~
                                       ,string(buf_temp-goods.new-fact-qnty, ~{&fqf~}) ~
                                       ,buf_temp-goods.new-stts ~
@@ -457,7 +457,7 @@ for each obj-list:
                                  , ~{&new-line~} ~
                                  , p-from-version )
       {&display-message}.
-      &scop my-message substitute("&1&2 Ассортимент  v15.1 &3 кол-во v15.1 &4&5" ~
+      &scop my-message substitute("&1&2 Ассортимент  v16.0 &3 кол-во v16.0 &4&5" ~
                                     ,temp-goods.new-obj-type ~
                                     ,temp-goods.new-obj-code ~
                                     ,string(v-new-ii-count, ~{&cntf~}) ~

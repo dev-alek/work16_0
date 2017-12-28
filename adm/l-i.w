@@ -133,7 +133,7 @@ DEFINE FRAME FRAME-A
 IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW w-login ASSIGN
          HIDDEN             = YES
-         TITLE              = "Trade House 15.1"
+         TITLE              = "Trade House 16.0"
          COLUMN             = 27
          ROW                = 7.58
          HEIGHT             = 9.13

@@ -2211,7 +2211,7 @@ DO ON ERROR undo _main, return error:
     run gbl/calc-trn.p ( input parparentproc, input recid(locked_trn-doc)).
 &scop sale-doc-kind buf_sale-doc.doc-kind
     if buf_sale-doc.doc-kind = {&sale-add-tech-refuell} or buf_sale-doc.doc-kind = {&sale-add-vir-res} 
-        or buf_sale-doc.doc-kind = 'none' or (not p-is-catering and buf_sale-doc.doc-kind = {&sale-add-write-off}) then do:
+        or buf_sale-doc.doc-kind = 'none' or (/*not p-is-catering and*/ buf_sale-doc.doc-kind = {&sale-add-write-off}) then do:
     end.
     else do:
       if buf_sale-doc.in-inkas then

@@ -30,27 +30,6 @@ define input parameter rec_id               as recid            no-undo.
 
 define stream out-stream.
 
-/*{ cmp/str-glbl.i }
-{ cmp/library.i  }
-{ cmp/showinf.i }
-{ str/lib-calc.i }
-
-{ cmp/r-pril.i new  }
-{ cmp/r-page1.i new }
-/*{ str/get-pr.i def  } */
-/*{ str/trdcalib.i    }   */
-{ ref/grplibfn.i    }
-/*{ gbl/getcntxt.i def }  */
-{ gbl/rep-clb.i }
-
-{ str/lib-trn.i  }
-/*{ str/trdcalib.i } */
-{ rep/w-rep.i    }
-{ rep/fmtcli.i   }
-/*{ rep/torgconf.i }   */
-{ str/getctxtp.i def }
-{ gbl/paramls.i  }            */
-
     { cmp/str-glbl.i }
     { cmp/library.i  }
     { cmp/r-pril.i   }
@@ -63,8 +42,8 @@ define stream out-stream.
     { gbl/paramls.i  }
 
 /*    { gbl/std-func.i }*/
-    { ref/sr-izm.i sr-izmerenia ds}
-    { ref/sr-izm.i " " proc }
+/*    { ref/sr-izm.i sr-izmerenia ds}*/
+/*    { ref/sr-izm.i " " proc }*/
     { gbl/ptrlprop.i def}
     { ref/gds-attr.i }
     { ref/gdsoattr.i }
@@ -87,7 +66,7 @@ define variable v-nakl as character no-undo.
 define variable v-date as character no-undo.
 define variable v-t-start as character no-undo.
 define variable v-t-end as character no-undo.
-define buffer buf_clob-bind for ub.clob-bind.
+/*define buffer buf_clob-bind for ub.clob-bind.*/
 
 define variable v-doc-code          like ub.trn-doc.doc-code   no-undo.
 define variable v-gds-code          like ub.goods.gds-code     no-undo.
@@ -172,7 +151,7 @@ define variable v-tank-weight-pomi-dll  as decimal             no-undo. /* "Коли
     define buffer buf_goods         for ub.goods.
     define buffer buf_clients       for ub.clients.
     define buffer buf_person        for ub.person.
-
+    define buffer buf_sr-izmerenia  for ub.sr-izmerenia .
 /* ************************  Function Implementations ***************** */
 
 function fnc-convert-dot-to-colon returns character 
@@ -444,11 +423,9 @@ do
             , input v-validity-certif
         ).
 
-  run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
-                                               , buffer buf_clob-bind).
-  find first sr-izmerenia no-lock where sr-izmerenia.node-code = integer(v-place-si) no-error.
-      if available sr-izmerenia then do:
-          if sr-izmerenia.sr-type = "1" or sr-izmerenia.sr-type = "2" then do:
+        find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = integer(v-place-si) no-error.
+        if available buf_sr-izmerenia then do:
+          if buf_sr-izmerenia.sr-type = 1 or buf_sr-izmerenia.sr-type = 2 then do:
             /* Поле-25 "Нефтеденсиметр (ареометр) АНТ-1, ГОСТ 18481-81 № " (из строки ТоплНакл > ДопИнф > поле "Ареометр №") */
             run apn-xl-write-cell-data in this-procedure (
                   input {&apn-xl-num_areom}
@@ -461,7 +438,7 @@ do
                 , input fnc-DD-MM-YYYY(v-date-pov-plotn) 
             ).
           end.
-          if sr-izmerenia.sr-type = "3" or sr-izmerenia.sr-type = "4" then do:
+          if buf_sr-izmerenia.sr-type = 3 or buf_sr-izmerenia.sr-type = 4 then do:
             /* Поле-27 "Плотномер: ПЛОТ-3Б-1П, ГОСТ  АУТП.414122.006 ТУ(1)  №" (из строки ТоплНакл > ДопИнф > поле "Плотномер №") */
             run apn-xl-write-cell-data in this-procedure (
                   input {&apn-xl-num_plotn}
@@ -1035,59 +1012,6 @@ procedure get-DD-Month-YYYY:
     do: /* Получаем прописью месяц */
     v-num-month = entry(2, v-str-date, "/").
     v-str-month = MonthNameRusCase(integer(v-num-month), 2).
-/*
-        v-num-month = entry(2, v-str-date, "/").
-        case v-num-month:
-            when "01" then
-                do:
-                    assign v-str-month = "Января".
-                end.
-            when "02" then
-                do:
-                    assign v-str-month = "Февраля".
-                end.
-            when "03" then
-                do:
-                    assign v-str-month = "Марта".
-                end.
-            when "04" then
-                do:
-                    assign v-str-month = "Апреля".
-                end.
-            when "05" then
-                do:
-                    assign v-str-month = "Мая".
-                end.
-            when "06" then
-                do:
-                    assign v-str-month = "Июня".
-                end.
-            when "07" then
-                do:
-                    assign v-str-month = "Июля".
-                end.
-            when "08" then
-                do:
-                    assign v-str-month = "Августа".
-                end.
-            when "09" then
-                do:
-                    assign v-str-month = "Сентября".
-                end.
-            when "10" then
-                do:
-                    assign v-str-month = "Октября".
-                end.
-            when "11" then
-                do:
-                    assign v-str-month = "Ноября".
-                end.
-            when "12" then
-                do:
-                    assign v-str-month = "Декабря".
-                end.
-        end case.
-*/
     end. /* Получаем прописью месяц */
 
     do: /* Получаем год в формате цифры, вида "NNNN" */
@@ -1383,8 +1307,9 @@ procedure proc-calc-library-pomi:
     define variable rdc-dnstvalue as character no-undo.
     define variable rdc-dnsttype as character no-undo.
 
-    define buffer buf_clob-bind for ub.clob-bind.
-
+/*    define buffer buf_clob-bind for ub.clob-bind.*/
+    define buffer buf_sr-izmerenia for ub.sr-izmerenia .
+    
 
     run gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", no, output rdc-dnstvalue, output rdc-dnsttype) no-error.
 /*    if rdc-dnstvalue = "" or rdc-dnstvalue = ? then rdc-dnstvalue = "not".*/
@@ -1396,9 +1321,8 @@ procedure proc-calc-library-pomi:
             _trpomi:
                 do on error undo, return no-apply:
                     /*данные по средству измерения резервуара для ПО МИ*/
-                    run sr-izmerenia_fill-sr-izm in this-procedure (input {&lookup}, buffer buf_clob-bind).
-                    find first sr-izmerenia no-lock where sr-izmerenia.node-code = p-place-si no-error.
-                    if error-status :error or not available sr-izmerenia then
+                    find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = p-place-si no-error.
+                    if not available buf_sr-izmerenia then
                     do:
                         message
                             substitute('Не найдено средство измерения с кодом &1', p-place-si) skip
@@ -1408,10 +1332,10 @@ procedure proc-calc-library-pomi:
                     else
                     do:
                         assign
-                            ToolType = integer(sr-izmerenia.sr-type)
-                            DeltaAbs_R = sr-izmerenia.sr-abs-err-dens
-                            DeltaAbs_Tv = sr-izmerenia.sr-abs-err-temp-vol
-                            DeltaAbs_Tr = sr-izmerenia.sr-abs-err-temp-dens
+                            ToolType    = buf_sr-izmerenia.sr-type
+                            DeltaAbs_R  = buf_sr-izmerenia.sr-abs-err-dens
+                            DeltaAbs_Tv = buf_sr-izmerenia.sr-abs-err-temp-vol
+                            DeltaAbs_Tr = buf_sr-izmerenia.sr-abs-err-temp-dens
                         .
                     end.
                     /*..........................................*/

@@ -26,7 +26,7 @@ define variable vss-description as character no-undo init "Триггер на удаление з
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 
-define variable cre-pay like ub.sysconf.credit-pay no-undo .
+/*define variable cre-pay like ub.sysconf.credit-pay no-undo .*/
 define variable conf-par as character no-undo .
 define variable par-type as character no-undo .
 
@@ -204,4 +204,28 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                              , error-status :get-message ( 1 ) ).
     end.
    end.
+   
+  { gbl/rum-runa.i
+    ?
+    this-procedure:handle
+    ?
+    {&edoc-proc_event_inkas}
+    " buffer ub.inkas:handle "
+    ''
+    ''
+    ''
+    no-error
+  }
+  if error-status :error
+  then
+  do:
+      return error substitute( "&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"
+          , {&new-line}
+          , vss-workfile
+          , return-value
+          , error-status :get-message ( 1 ) ).
+  end.
+   
+   
+   
 end.

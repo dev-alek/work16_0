@@ -24,6 +24,7 @@ Creation date: 01/20/04
 ОТДЕЛЕНИЕ БИЗНЕС-ЛОГИКИ ОТ ИНТЕРФЕЙСА!!!!!
 
 */
+using ibs.th.gbl.gbl-var.
 
 define input parameter p-mode as character no-undo .
 define input parameter p-silent as logical no-undo .
@@ -59,7 +60,8 @@ on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
-
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
 
   if NOT (p-mode = {&add-def} or p-mode = {&update}) then do:
     message
@@ -68,12 +70,15 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     view-as alert-box error .
     undo main-block, return error .
   end.
-  if g#db-num <> 0 then do:
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+    if v-value = "no"  then do:   
+  if gbl-var:g#db-num <> 0 then do:
     message
     vss-workfile vss-revision vss-description skip
     "Нельзя добавлять/изменить группы клиентов в УБД"
     view-as alert-box error .
     undo main-block, return error .
+  end.
   end.
   if p-node-name = ""
   or p-node-name = ? then do:
@@ -83,13 +88,25 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     undo main-block, return error (if p-silent then v-error-message else "node-name").
   end.
   if p-mode = {&update} then do:
-    find first buf_cli-grp exclusive-lock where
-               buf_cli-grp.node-code = p-node-code
-           AND buf_cli-grp.upper-code = p-upper-code no-error .
-    if not avail buf_cli-grp then do:
-      assign
-      v-error-message = substitute("Не найдена группа клиентов, которую предполагалось изменить" ).
-      run err-mess in this-procedure ( input-output v-error-message).
+    find first buf_cli-grp exclusive-lock
+         where buf_cli-grp.node-code = p-node-code no-error no-wait .
+    if locked(buf_cli-grp) then do:
+      v-error-message = substitute(  "Запись о группе клиентов с внутр. № [&1] занята другим пользователем",  p-node-code  ).
+      run err-mess in this-procedure (input-output v-error-message).
+      undo main-block, return error (if p-silent then v-error-message else "node-code").
+    end.         
+    if not available buf_cli-grp then do:
+      v-error-message = substitute(  "Запись о группе клиентов с внутр. № [&1] отсутствует",  p-node-code  ).
+      run err-mess in this-procedure (input-output v-error-message).
+      undo main-block, return error (if p-silent then v-error-message else "node-code").
+    end.
+    if buf_cli-grp.upper-code <> p-upper-code then do:
+      v-error-message = substitute(
+        "Расхождение текущего кода родителя с параметрами обновления у группы клиентов с внутр. № [&1].&3" +
+        "Код родителя у группы = [&2], код родителя в параметрах обновления = [&4]",
+        p-node-code, buf_cli-grp.upper-code, {&new-line}, p-upper-code 
+      ) .
+      run err-mess in this-procedure (input-output v-error-message).
       undo main-block, return error (if p-silent then v-error-message else "node-code").
     end.
     assign
@@ -141,10 +158,13 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 
   end.
   if can-find (ub.cli-grp where ub.cli-grp.upper-code = p-upper-code
-                        AND cli-grp.node-name = p-node-name
+                            AND ub.cli-grp.node-name  = p-node-name
                         AND recid (ub.cli-grp) <> p-rid) then do:
-    assign
-    v-error-message = substitute("Группа с полным названием &1 уже есть", v-full-name ).
+    v-error-message = substitute(
+      "В группе верхнего уровня с внутр. № [&1] уже есть группа с названием [&2].&3" +
+      "Внутр. № существующей группы отличается от внутр. № [&4] добавляемой группы",
+      p-upper-code, p-node-name, {&new-line}, p-node-code
+    ) .
     run err-mess in this-procedure ( input-output v-error-message).
     undo main-block, return error (if p-silent then v-error-message else "node-name").
   end.

@@ -559,7 +559,7 @@ DEFINE BROWSE br-fin-doc
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-fin-doc Dialog-Frame _FREEFORM
   QUERY br-fin-doc DISPLAY
       mark-string(recid(X_fin-doc), v-rid-list) FORMAT "X(1)":U
-X_fin-doc.host-code COLUMN-LABEL "Код!фирмы" FORMAT "99999":U
+X_fin-doc.host-code COLUMN-LABEL "Код!фирмы" FORMAT "999999999":U
 X_fin-doc.prn-doc-code FORMAT "X(16)":U
 X_fin-doc.fin-doc-type FORMAT "X(3)":U
 X_fin-doc.doc-date FORMAT "99/99/9999":U
@@ -576,7 +576,7 @@ get-contract(buffer X_fin-doc) COLUMN-LABEL "Договор" FORMAT "X(16)":U
 X_fin-doc.payer-type + string(X_fin-doc.payer-code) COLUMN-LABEL "Плательщик" FORMAT "X(12)":U
 X_fin-doc.payer-name COLUMN-LABEL "Название ПЛАТЕЛЬЩИКА" FORMAT "X(40)":U
 get-currency(buffer X_fin-doc) COLUMN-LABEL "Вал" FORMAT "X(3)":U
-if X_fin-doc.obj-code <> 0 then (X_fin-doc.obj-type + string(X_fin-doc.obj-code)) else "":U COLUMN-LABEL "Объект" FORMAT "X(8)":U
+if X_fin-doc.obj-code <> 0 then (X_fin-doc.obj-type + string(X_fin-doc.obj-code)) else "":U COLUMN-LABEL "Объект" FORMAT "X(12)":U
 X_fin-doc.fin-doc-code COLUMN-LABEL "Вн.N" FORMAT "999999999":U
 f-factur(buffer X_fin-doc) COLUMN-LABEL "Счет-фактура" FORMAT "X(8)":U
 get-shift(BUFFER X_fin-doc, OUTPUT v-fin-doc-shift-name-num) COLUMN-LABEL "Дата смены" FORMAT "99/99/9999":U

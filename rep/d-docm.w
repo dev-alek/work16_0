@@ -164,7 +164,7 @@ DEFINE BROWSE br-table
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-table Dialog-Frame _FREEFORM
   QUERY br-table NO-LOCK DISPLAY
       Tmp#List.last-use COLUMN-LABEL "*" FORMAT "*/"
-    Tmp#List.blank-name COLUMN-LABEL "Название печатной формы":C53 FORMAT "X(53)"
+    Tmp#List.blank-name COLUMN-LABEL "Название печатной формы":C53 FORMAT "X(128)"
     Tmp#List.type-price     column-label "ц.док"    format "X(5)"
     Tmp#List.type-scale     column-label "шкала"    format "X(5)"
     Tmp#List.type-val       column-label "в ..."    format "X(5)"

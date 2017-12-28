@@ -266,7 +266,7 @@ for each src_clients no-lock:
                     )
             then do:
               if available src_temp-sysconf then do:
-                &scop my-message substitute("Èìïîğò &1&2: â ÑÈÑÒÅÌÅ &5 ıòî ÑÂÎß ÔÈĞÌÀ , à â v15.1  (&3&4) - ÍÅÒ" ~
+                &scop my-message substitute("Èìïîğò &1&2: â ÑÈÑÒÅÌÅ &5 ıòî ÑÂÎß ÔÈĞÌÀ , à â v16.0  (&3&4) - ÍÅÒ" ~
                                             , src_clients.obj-type ~
                                             , src_clients.obj-code ~
                                             , ~{&cmp~} ~
@@ -275,7 +275,7 @@ for each src_clients no-lock:
                 {&display-message}.
               end.
               else do:
-                &scop my-message substitute("Èìïîğò &1&2: â v15.1 ıòî ÑÂÎß ÔÈĞÌÀ (&3&4), à â &5  - ÍÅÒ" ~
+                &scop my-message substitute("Èìïîğò &1&2: â v16.0 ıòî ÑÂÎß ÔÈĞÌÀ (&3&4), à â &5  - ÍÅÒ" ~
                                           , src_clients.obj-type ~
                                           , src_clients.obj-code ~
                                           , ~{&cmp~} ~

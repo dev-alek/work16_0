@@ -15,6 +15,8 @@ Creation date: 04/03/02
 
 */
  
+using ibs.th.gbl.gbl-hndllib from propath.
+
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
@@ -75,12 +77,20 @@ else do:
   assign
     g#lib-trn3 = this-procedure :handle
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#lib-trn3", g#lib-trn3).
+  delete object gbl-hndllibObj.
 end.
 
 on delete of this-procedure do:
   assign
     g#lib-trn3 = ?
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#lib-trn3", g#lib-trn3).
+  delete object gbl-hndllibObj.
 end.
 
 define temp-table temp-add-scal no-undo

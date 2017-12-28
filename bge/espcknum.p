@@ -42,6 +42,10 @@ define variable vss-description as character no-undo init "Генерация для ВС номе
 { cmp/trg-def.i  }
 { bge/espcknam.i }
 { bge/esallatr.i work }
+{ bge/esysattr.i }
+{ gbl/filelist.i }
+{ gbl/db-attr.i  }
+
 function esys-id-format returns character ( input p-esys-id as integer):
   return string(p-esys-id, "99999").
 end.
@@ -63,11 +67,15 @@ on error undo, return error
   define buffer buf_esys-pck-rcvd for ub.esys-pck-rcvd .
   define buffer buf_esys-pck-keys for ub.esys-pck-keys .
   define buffer buf_esys-all-attr for ub.esys-all-attr.
+  define buffer buf_temp-filelist for temp-filelist.
 
   define variable v-work-dir as character no-undo .
   define variable v-mess as character no-undo .
   define variable v-new-pack as logical no-undo .
   define variable v-to-return as logical no-undo .
+  
+  define variable v-ftp-path-in as character no-undo .
+  define variable v-type as character no-undo .
 
   if p-pack-num = -1 then do:
     v-new-pack = yes.
@@ -113,7 +121,7 @@ on error undo, return error
         .
         if not available buf_esys-pck-sent then do:  /* не было ни одного пакета */
           assign
-            p-pack-num = 0
+            p-pack-num = if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then 1 else 0
           .
         end.
         else do:
@@ -135,7 +143,7 @@ on error undo, return error
       end.
       when "fput" then do:
         /*экспорт файла*/
-        p-pack-num = 0.
+        p-pack-num = if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then 1 else 0.
       end.
       otherwise do:
         message
@@ -236,6 +244,32 @@ on error undo, return error
       end.
     end. /*if p-action = "put" then do:*/
     if p-action = "get" then do:
+      if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then do:
+
+          for each buf_temp-filelist no-lock:
+            delete buf_temp-filelist.
+          end.
+          run filelist-init in this-procedure
+          (input p-source-dir
+          ,input false
+          ,input ""
+          ,input ""
+          ) no-error.
+          for each buf_temp-filelist exclusive-lock :
+              if num-entries(buf_temp-filelist.file-name, "_") = 4
+              or (num-entries(buf_temp-filelist.file-name, "_") = 5 and buf_temp-filelist.file-name begins "ack")
+              then do :
+              end.
+              else do :
+                  delete buf_temp-filelist .
+              end.
+          end.
+          find first buf_temp-filelist no-error.
+          if available buf_temp-filelist
+          then do :
+              p-custom-pack-name = buf_temp-filelist.file-name .
+          end.
+      end.
       find first buf_esys-all-attr share-lock where
               buf_esys-all-attr.attr-code = {&attr-custom-pack-name}
           and buf_esys-all-attr.table-name = {&table_esys-pck-rcvd}

@@ -332,7 +332,7 @@ DO:
  
     find first  goods-attr where goods-attr.gds-code = v-gds-code and goods-attr.attr-value = 'oss-pay' 
     AND goods-attr.attr-code = {&attr-office-type}  no-lock no-error.
-        if available goods-attr then do: 
+    
             
 /*    if goods-attr.attr-value = 'oss-pay'                   */
 /*    AND goods-attr.attr-code = {&attr-office-type} then do:*/
@@ -341,8 +341,8 @@ DO:
     if error-status:error then return no-apply.
     RUN proc-save IN THIS-PROCEDURE NO-ERROR.
     IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
-    
-    
+    /*
+        if available goods-attr then do: 
 /*    flag-oss = yes.*/
     end.
 /*    if flag-oss = no then do:*/
@@ -356,7 +356,7 @@ else do:
 /*        message "У данной услуги нет типа услуги oss-pay" view-as alert-box error.*/
 /*                                                                                  */
 /*        end.                                                                      */
-
+*/
 end.
 
 /* _UIB-CODE-BLOCK-END */

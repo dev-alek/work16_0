@@ -287,7 +287,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
         temp-chk-dp.doc-code = ub.chk-doc.doc-code
         temp-chk-dp.sum = abs(chk-discnt.discnt-value-abs) * chk-discnt.object-qnty
         temp-chk-dp.line-num = chk-discnt.object-line-num
-        temp-chk-dp.pay-code = if chk-discnt.rank = ? then ub.chk-pay.pay-code else chk-discnt.rank
+        temp-chk-dp.pay-code = chk-discnt.rank
         .
     end. 
     
@@ -424,7 +424,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                       pychk_line-type-chr = temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
                     end.
                 end case.
-                pychk_dop-sumk = min(temp-chk-dp.sum,buf_temp-chk-gds.sum).
+                pychk_dop-sumk =  if temp-chk-dp.sum >= 0  then min(temp-chk-dp.sum,buf_temp-chk-gds.sum) else max(temp-chk-dp.sum,buf_temp-chk-gds.sum).
                 if abs(temp-chk-pay.tot-r-b - pychk_dop-sumk) <= 0.001 then pychk_dop-sumk = temp-chk-pay.tot-r-b.
                  create buf_chk-gds-pay.
                   assign

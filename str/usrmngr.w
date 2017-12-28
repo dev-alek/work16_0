@@ -36,7 +36,7 @@ define input  parameter p-menu-code   as integer   no-undo .
 DEFINE STREAM s-out.
 
 DEFINE TEMP-TABLE tt-work-place NO-UNDO
-    FIELD wp-code AS INTEGER   column-label "№"             FORMAT ">>>>9"
+    FIELD wp-code AS INTEGER   column-label "№"             FORMAT ">>>>>>>>9"
     FIELD wp-type AS CHARACTER column-label "тип"           FORMAT "x(3)"
     FIELD wp-host AS INTEGER   column-label "фирма"         FORMAT ">>>>9"
     FIELD wp-name AS CHARACTER column-label "наименование"  FORMAT "x(40)"

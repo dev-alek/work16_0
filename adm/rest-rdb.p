@@ -27,7 +27,7 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo initial "Добавление и восстановление УБД".
-
+define variable mode-erprn as logical no-undo.
 { cmp/str-glbl.i      }
 { cmp/library.i       }
 { cmp/getmcode.i dst  }
@@ -47,6 +47,7 @@ define variable vss-description as character no-undo initial "Добавление и восст
 define buffer buf_rrdb-option for rrdb-option.
 define variable conf-par as character no-undo.
 define variable ser-wth-conf-par as logical no-undo.
+
 define variable par-type as character no-undo.
 define variable fin-doc-par as integer no-undo.
 
@@ -55,7 +56,23 @@ define temp-table temp-cash-desk no-undo
   field last-time like ub.chk-doc.chk-time
   field cash-num  like ub.cash-desk.cash-num
   index pi        is   unique primary cash-num.
-
+/* Определяем интеграционный или нет режим работы */
+  { gbl/conf-rd.i
+    "'is-erpRN'"
+    0
+    "''"
+    0
+    "''"
+    "''"
+    "''"
+    NO
+    conf-par
+    par-type
+    no-error
+    }
+    IF not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+    else mode-erprn = no.
+    
 function get-hist-nws-option returns logical (  input p-db-num as integer
                                                ,input p-tbl-name as character ):
 define buffer buf_hist-nws-option for ub.hist-nws-option.
@@ -387,196 +404,268 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     end.
 
     /* при создании базы данных необходимо создать хотя бы один code-range */
-    if not can-find (first src.code-range no-lock
-      where src.code-range.db-num = p-db-num
-        and src.code-range.range-type = {&gbl-bc-code})
-    then do:
-      if not can-find (first ub.code-range no-lock
-        where ub.code-range.db-num = p-db-num
-          and ub.code-range.range-type = {&gbl-bc-code})
-      then do:
-        disable triggers for load of ub.code-range.
-        run new-bcod-gen-code-range in this-procedure
-          ( input p-db-num
-            ,input {&gbl-bc-code}
-          ) no-error .
-        if error-status :error then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Ошибка при создании нового свободного диапазона" skip
-            "База данных" p-db-num skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
-        end.
-      end.
-      if p-type-unload = {&unload-copy} then do:
-        for each ub.code-range no-lock
-          where ub.code-range.db-num = p-db-num
-            and ub.code-range.range-type = {&gbl-bc-code}
-        on error  undo, return error substitute( "&1 (code-range1). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-        on stop   undo, return error substitute( "&1 (code-range1). stop", vss-workfile )
-        on endkey undo, return error substitute( "&1 (code-range1). endkey", vss-workfile )
-        :
-          create src.code-range .
-          buffer-copy ub.code-range to src.code-range .
-        end.
-      end.
-    end.
-
-    /* при создании базы данных необходимо создать хотя бы один code-range */
-    if not can-find (first src.code-range no-lock
-      where src.code-range.db-num = p-db-num
-        and src.code-range.range-type = {&gbl-ct-code})
-    then do:
-      if not can-find (first ub.code-range no-lock
-        where ub.code-range.db-num = p-db-num
-          and ub.code-range.range-type = {&gbl-ct-code})
-      then do:
-        disable triggers for load of ub.code-range.
-        run new-bcod-gen-code-range in this-procedure
-          ( input p-db-num
-            ,input {&gbl-ct-code}
-          ) no-error .
-        if error-status :error then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Ошибка при создании нового свободного диапазона" skip
-            "База данных" p-db-num skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
-        end.
-      end.
-      if p-type-unload = {&unload-copy} then do:
-        for each ub.code-range no-lock
-          where ub.code-range.db-num = p-db-num
-            and ub.code-range.range-type = {&gbl-ct-code}
-        on error  undo, return error substitute( "&1 (code-range2). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-        on stop   undo, return error substitute( "&1 (code-range2). stop", vss-workfile )
-        on endkey undo, return error substitute( "&1 (code-range2). endkey", vss-workfile )
-        :
-          create src.code-range .
-          buffer-copy ub.code-range to src.code-range .
-        end.
-      end.
-    end.
-
-    if not can-find (first src.code-range no-lock
-      where src.code-range.db-num = p-db-num
-        and src.code-range.range-type = {&gbl-dr-code})
-    then do:
-      if not can-find (first ub.code-range no-lock
-        where ub.code-range.db-num = p-db-num
-          and ub.code-range.range-type = {&gbl-dr-code})
-      then do:
-        disable triggers for load of ub.code-range.
-        run new-bcod-gen-code-range in this-procedure
-          ( input p-db-num
-            ,input {&gbl-dr-code}
-          ) no-error .
-        if error-status :error then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Ошибка при создании нового свободного диапазона" skip
-            "База данных" p-db-num skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
-        end.
-      end.
-      if p-type-unload = {&unload-copy} then do:
-        for each ub.code-range no-lock
-          where ub.code-range.db-num = p-db-num
-            and ub.code-range.range-type = {&gbl-dr-code}
-        on error  undo, return error substitute( "&1 (code-range3). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-        on stop   undo, return error substitute( "&1 (code-range3). stop", vss-workfile )
-        on endkey undo, return error substitute( "&1 (code-range3). endkey", vss-workfile )
-        :
-          create src.code-range .
-          buffer-copy ub.code-range to src.code-range .
-        end.
-      end.
-
-      if not can-find (first src.code-range no-lock
-        where src.code-range.db-num = p-db-num
-          and src.code-range.range-type = {&gbl-fm-code})
-      then do:
-        if not can-find (first ub.code-range no-lock
-          where ub.code-range.db-num = p-db-num
-            and ub.code-range.range-type = {&gbl-fm-code})
+    if not mode-erprn then do: 
+        if not can-find (first src.code-range no-lock
+          where src.code-range.db-num = p-db-num
+            and src.code-range.range-type = {&gbl-bc-code})
         then do:
-          disable triggers for load of ub.code-range.
-          run new-bcod-gen-code-range in this-procedure
-            ( input p-db-num
-              ,input {&gbl-fm-code}
-            ) no-error .
-          if error-status :error then do:
-            message
-              vss-workfile vss-revision vss-description skip
-              "Ошибка при создании нового свободного диапазона" skip
-              "База данных" p-db-num skip
-              error-status :get-message(1) skip
-              return-value skip
-              view-as alert-box error .
-            undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+          if not can-find (first ub.code-range no-lock
+            where ub.code-range.db-num = p-db-num
+              and ub.code-range.range-type = {&gbl-bc-code})
+          then do:
+            disable triggers for load of ub.code-range.
+            run new-bcod-gen-code-range in this-procedure
+              ( input p-db-num
+                ,input {&gbl-bc-code}
+              ) no-error .
+            if error-status :error then do:
+              message
+                vss-workfile vss-revision vss-description skip
+                "Ошибка при создании нового свободного диапазона" skip
+                "База данных" p-db-num skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error .
+              undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+            end.
+          end.
+          if p-type-unload = {&unload-copy} then do:
+            for each ub.code-range no-lock
+              where ub.code-range.db-num = p-db-num
+                and ub.code-range.range-type = {&gbl-bc-code}
+            on error  undo, return error substitute( "&1 (code-range1). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (code-range1). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (code-range1). endkey", vss-workfile )
+            :
+              create src.code-range .
+              buffer-copy ub.code-range to src.code-range .
+            end.
           end.
         end.
-      end.
-      if p-type-unload = {&unload-copy} then do:
-        for each ub.code-range no-lock
-          where ub.code-range.db-num = p-db-num
-            and ub.code-range.range-type = {&gbl-fm-code}
-        on error  undo, return error substitute( "&1 (code-range3). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-        on stop   undo, return error substitute( "&1 (code-range3). stop", vss-workfile )
-        on endkey undo, return error substitute( "&1 (code-range3). endkey", vss-workfile )
-        :
-          create src.code-range .
-          buffer-copy ub.code-range to src.code-range .
-        end.
-      end.
-
-      if not can-find (first src.code-range no-lock
-        where src.code-range.db-num = p-db-num
-          and src.code-range.range-type = {&gbl-pn-code})
-      then do:
-        if not can-find (first ub.code-range no-lock
-          where ub.code-range.db-num = p-db-num
-            and ub.code-range.range-type = {&gbl-pn-code})
+    
+        /* при создании базы данных необходимо создать хотя бы один code-range */
+        if not can-find (first src.code-range no-lock
+          where src.code-range.db-num = p-db-num
+            and src.code-range.range-type = {&gbl-ct-code})
         then do:
-          disable triggers for load of ub.code-range.
-          run new-bcod-gen-code-range in this-procedure
-            ( input p-db-num
-              ,input {&gbl-pn-code}
-            ) no-error .
-          if error-status :error then do:
-            message
-              vss-workfile vss-revision vss-description skip
-              "Ошибка при создании нового свободного диапазона" skip
-              "База данных" p-db-num skip
-              error-status :get-message(1) skip
-              return-value skip
-              view-as alert-box error .
-            undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+          if not can-find (first ub.code-range no-lock
+            where ub.code-range.db-num = p-db-num
+              and ub.code-range.range-type = {&gbl-ct-code})
+          then do:
+            disable triggers for load of ub.code-range.
+            run new-bcod-gen-code-range in this-procedure
+              ( input p-db-num
+                ,input {&gbl-ct-code}
+              ) no-error .
+            if error-status :error then do:
+              message
+                vss-workfile vss-revision vss-description skip
+                "Ошибка при создании нового свободного диапазона" skip
+                "База данных" p-db-num skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error .
+              undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+            end.
+          end.
+          if p-type-unload = {&unload-copy} then do:
+            for each ub.code-range no-lock
+              where ub.code-range.db-num = p-db-num
+                and ub.code-range.range-type = {&gbl-ct-code}
+            on error  undo, return error substitute( "&1 (code-range2). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (code-range2). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (code-range2). endkey", vss-workfile )
+            :
+              create src.code-range .
+              buffer-copy ub.code-range to src.code-range .
+            end.
           end.
         end.
-      end.
-      if p-type-unload = {&unload-copy} then do:
-        for each ub.code-range no-lock
-          where ub.code-range.db-num = p-db-num
-            and ub.code-range.range-type = {&gbl-pn-code}
-        on error  undo, return error substitute( "&1 (code-range3). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-        on stop   undo, return error substitute( "&1 (code-range3). stop", vss-workfile )
-        on endkey undo, return error substitute( "&1 (code-range3). endkey", vss-workfile )
-        :
-          create src.code-range .
-          buffer-copy ub.code-range to src.code-range .
-        end.
-      end.
-    end.
+    
+        if not can-find (first src.code-range no-lock
+          where src.code-range.db-num = p-db-num
+            and src.code-range.range-type = {&gbl-dr-code})
+        then do:
+          if not can-find (first ub.code-range no-lock
+            where ub.code-range.db-num = p-db-num
+              and ub.code-range.range-type = {&gbl-dr-code})
+          then do:
+            disable triggers for load of ub.code-range.
+            run new-bcod-gen-code-range in this-procedure
+              ( input p-db-num
+                ,input {&gbl-dr-code}
+              ) no-error .
+            if error-status :error then do:
+              message
+                vss-workfile vss-revision vss-description skip
+                "Ошибка при создании нового свободного диапазона" skip
+                "База данных" p-db-num skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error .
+              undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+            end.
+          end.
+          if p-type-unload = {&unload-copy} then do:
+            for each ub.code-range no-lock
+              where ub.code-range.db-num = p-db-num
+                and ub.code-range.range-type = {&gbl-dr-code}
+            on error  undo, return error substitute( "&1 (code-range3). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (code-range3). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (code-range3). endkey", vss-workfile )
+            :
+              create src.code-range .
+              buffer-copy ub.code-range to src.code-range .
+            end.
+          end.
+    
+          if not can-find (first src.code-range no-lock
+            where src.code-range.db-num = p-db-num
+              and src.code-range.range-type = {&gbl-fm-code})
+          then do:
+            if not can-find (first ub.code-range no-lock
+              where ub.code-range.db-num = p-db-num
+                and ub.code-range.range-type = {&gbl-fm-code})
+            then do:
+              disable triggers for load of ub.code-range.
+              run new-bcod-gen-code-range in this-procedure
+                ( input p-db-num
+                  ,input {&gbl-fm-code}
+                ) no-error .
+              if error-status :error then do:
+                message
+                  vss-workfile vss-revision vss-description skip
+                  "Ошибка при создании нового свободного диапазона" skip
+                  "База данных" p-db-num skip
+                  error-status :get-message(1) skip
+                  return-value skip
+                  view-as alert-box error .
+                undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+              end.
+            end.
+          end.
+          if p-type-unload = {&unload-copy} then do:
+            for each ub.code-range no-lock
+              where ub.code-range.db-num = p-db-num
+                and ub.code-range.range-type = {&gbl-fm-code}
+            on error  undo, return error substitute( "&1 (code-range3). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (code-range3). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (code-range3). endkey", vss-workfile )
+            :
+              create src.code-range .
+              buffer-copy ub.code-range to src.code-range .
+            end.
+          end.
+    
+          if not can-find (first src.code-range no-lock
+            where src.code-range.db-num = p-db-num
+              and src.code-range.range-type = {&gbl-pn-code})
+          then do:
+            if not can-find (first ub.code-range no-lock
+              where ub.code-range.db-num = p-db-num
+                and ub.code-range.range-type = {&gbl-pn-code})
+            then do:
+              disable triggers for load of ub.code-range.
+              run new-bcod-gen-code-range in this-procedure
+                ( input p-db-num
+                  ,input {&gbl-pn-code}
+                ) no-error .
+              if error-status :error then do:
+                message
+                  vss-workfile vss-revision vss-description skip
+                  "Ошибка при создании нового свободного диапазона" skip
+                  "База данных" p-db-num skip
+                  error-status :get-message(1) skip
+                  return-value skip
+                  view-as alert-box error .
+                undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+              end.
+            end.
+          end.
+          if p-type-unload = {&unload-copy} then do:
+            for each ub.code-range no-lock
+              where ub.code-range.db-num = p-db-num
+                and ub.code-range.range-type = {&gbl-pn-code}
+            on error  undo, return error substitute( "&1 (code-range3). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (code-range3). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (code-range3). endkey", vss-workfile )
+            :
+              create src.code-range .
+              buffer-copy ub.code-range to src.code-range .
+            end.
+          end.
+      end.         
+     end. /* not mode-erprn */ 
+     else do: /* Для интеграционного решения принудительно создаем максимальные диапазоны для справочников, которые импортируются в УБД */
+        create dst.code-range.
+        assign
+          dst.code-range.range-type = {&gbl-bc-code}
+          dst.code-range.PS         = "FOR ERP"
+          dst.code-range.beg-date   = today
+          dst.code-range.first-code = 1
+          dst.code-range.last-code  = 999999999
+          dst.code-range.db-num = p-db-num
+          dst.code-range.stts = "a":U
+        .  
+        create dst.code-range.
+        assign
+          dst.code-range.range-type = {&gbl-fm-code}
+          dst.code-range.PS         = "FOR ERP"
+          dst.code-range.beg-date   = today
+          dst.code-range.first-code = 1
+          dst.code-range.last-code  = 999999999
+          dst.code-range.db-num = p-db-num
+          dst.code-range.stts = "a":U
+        .  
+        create dst.code-range.
+        assign
+          dst.code-range.range-type = {&gbl-pn-code}
+          dst.code-range.PS         = "FOR ERP"
+          dst.code-range.beg-date   = today
+          dst.code-range.first-code = 1
+          dst.code-range.last-code  = 999999999
+          dst.code-range.db-num = p-db-num
+          dst.code-range.stts = "a":U
+        .  
+        create dst.code-range.
+        assign
+          dst.code-range.range-type = {&gbl-fd-code}
+          dst.code-range.PS         = "FOR ERP"
+          dst.code-range.beg-date   = today
+          dst.code-range.first-code = 1
+          dst.code-range.last-code  = 999999999
+          dst.code-range.db-num = p-db-num
+          dst.code-range.stts = "a":U
+        .
+        /* Договоры  */  
+        create dst.code-range.
+        assign
+          dst.code-range.range-type = {&gbl-ct-code}
+          dst.code-range.PS         = "FOR ERP"
+          dst.code-range.beg-date   = today
+          dst.code-range.first-code = 1
+          dst.code-range.last-code  = 999999999
+          dst.code-range.db-num = p-db-num
+          dst.code-range.stts = "a":U
+        .  
+        create dst.code-range.
+        assign
+          dst.code-range.range-type = {&gbl-dr-code}
+          dst.code-range.PS         = "FOR ERP"
+          dst.code-range.beg-date   = today
+          dst.code-range.first-code = 1
+          dst.code-range.last-code  = 999999999
+          dst.code-range.db-num = p-db-num
+          dst.code-range.stts = "a":U
+        . 
+        for each src.code-range where src.code-range.db-num = 0 and
+            (src.code-range.range-type = {&loc-sc-code} or 
+            src.code-range.range-type =  {&loc-ss-code} or
+            src.code-range.range-type =  {&loc-pg-code}):
+                create dst.code-range.
+                buffer-copy src.code-range to dst.code-range .
+        end.    
+     end. 
   end.
 
   output stream slog to rest-rdb.txt append .

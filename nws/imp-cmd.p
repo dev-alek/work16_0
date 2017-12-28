@@ -1195,6 +1195,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_sert-join}
             or when {&table_sert}
             or when {&table_shift-obj}
+            or when {&table_sr-izmerenia}
             or when {&table_sum-grp}
             or when {&table_sum-grp-obj}
             or when {&table_tax-rate-gds-grp}

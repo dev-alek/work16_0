@@ -51,6 +51,32 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
   define variable v-lob-type as character no-undo .
   define variable v-full-tbl-name as character no-undo .
   define variable v-routing-type as character no-undo .
+  
+  
+  define variable conf-par as character no-undo.
+  define variable mode-erprn as logical no-undo.
+  define variable par-type as character no-undo.
+    { gbl/conf-rd.i
+    "'is-erpRN'"
+    0
+    "''"
+    0
+    "''"
+    "''"
+    "''"
+    NO
+    conf-par
+    par-type
+    no-error
+    }
+    IF not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+    else mode-erprn = no.
+  if mode-erprn
+  then 
+    assign
+      v-custom-except-list = v-custom-except-list-erprn
+      v-custom-0-rdb-not-news = v-custom-0-rdb-not-news-erprn
+    .
 
   define buffer buf_db                          for ub.db.
   define buffer buf_clients                     for ub.clients.
@@ -430,8 +456,8 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
    end.
 
   /********************************* "решатель" куда отправить ***************************************/
-
-  if v-found <> TRUE
+  
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-0-rdb-and-from-news) > 0 then do:
     /* отдельный блок т.к. только из ГБД но и во время работы новостей */
     if g#db-num = 0 then do: /* Если БД центральная, то  разослать  во все удаленные базы  */
@@ -440,14 +466,15 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-found = yes.
   end. /*lookup(v-tbl-name, v-0-rdb-and-from-news) > 0*/
   /* эти таблицы идут только из ГБД в УБД  и НЕ ходят транзитом  УБД1-ГБД-УБД2 */
-  if v-found <> TRUE
-  and lookup(v-tbl-name, v-0-rdb-not-news) > 0 then do:
+  if v-found <> TRUE and (lookup(v-tbl-name, v-custom-0-rdb-not-news) > 0 or (lookup(v-tbl-name, v-custom-except-list) = 0
+  and lookup(v-tbl-name, v-0-rdb-not-news) > 0))
+  then do:
     if g#db-num = 0 and not g#news then do:
       assign list-db-for-send = list-remote-db-wsd .
     end.
     v-found = yes.
   end. /*if lookup(v-tbl-name, v-0-rdb-not-news) > 0 then do:*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0 
   and lookup(v-tbl-name, v-0-rdb_rbd-0-not-news) > 0 then do:
     if g#db-num = 0 then do: /* Если БД центральная, то разослать во все удаленные базы */
       assign list-db-for-send = list-remote-db-wsd .
@@ -457,7 +484,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end. /*if lookup(v-tbl-name, v-0-rdb_rbd-0-not-news) > 0 then do:*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-0-remote-stock) > 0 then do:
     /* отдельный блок т.к. рассылка в некоторые УБД чужих остаков */
     if g#db-num = 0 then do:
@@ -465,7 +492,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end. /*if lookup(v-tbl-name, v-0-remote-stock) > 0 then do:*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-rdb-0-not-news) > 0 then do:
     if  g#db-num <> 0 and not g#news then do :
       assign list-db-for-send = "0" .
@@ -477,7 +504,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
   Для того чтобы их корректно просматривать нам нужны справочники во всех базах данных.*/
   /*из ГБД везде исключая БД источник*/
   /*из УБД в ГБД*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-0-rdb-no-src_rdb-0-no-news) > 0 then do:
     if g#db-num = 0 then do: /* Если БД центральная, то разослать во все удаленные базы кроме исх*/
       assign list-db-for-send = list-remote-db .
@@ -487,7 +514,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end. /*if lookup(v-tbl-name, v-0-rdb-no-src_rdb-0-no-news) > 0 then do:*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-route-c-glob-context) > 0 then do:
     assign
     v-obj-type = '':U
@@ -497,7 +524,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-is-c-route = yes
     .
   end. /*if lookup(v-tbl-name, v-route-c-glob-context) > 0 then do:*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-route-c-shapka-context) > 0 then do:
     assign
     v-obj-type = v-tbl-handle:buffer-field("obj-type"):buffer-value
@@ -513,7 +540,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
       .
     end.
   end. /*if lookup(v-tbl-name, v-route-c-shapka-context) > 0 then do:*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-route-c-quest-context) > 0 then do:
     assign
     v-obj-type = v-tbl-handle:buffer-field("obj-type"):buffer-value
@@ -523,7 +550,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-is-c-route = yes
     .
   end. /*if lookup(v-tbl-name, v-route-c-quest-context) > 0 then do:*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-c-quest-context-global-only-0) > 0 then do:
     assign
     v-obj-type = v-tbl-handle:buffer-field("obj-type"):buffer-value
@@ -534,7 +561,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-global-only-0 = yes
     .
   end. /*if lookup(v-tbl-name, v-c-quest-context-global-only-0) > 0 then do:*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and v-is-c-route then do:
     /*глобальный контекст истории*/
     if (v-obj-type = '':U
@@ -621,7 +648,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end.  /*маршрутизируем историю*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-route-c-only-0) > 0 then do:
     if g#db-num = 0 then do:
       assign list-db-for-send = list-remote-db-wsd .
@@ -631,7 +658,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end.
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-reply-through-news) > 0 then do:
     if g#news then do:
       assign list-db-for-send = string(g#news-source-db).
@@ -639,7 +666,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-found = yes.
   end.
    /*объектные таблицы - ходят только между двумя БД */
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-obj-tables) > 0 then do:
     if g#db-num <> 0 then do:
       assign list-db-for-send = "0" .
@@ -659,7 +686,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-found = yes.
   end. /*if lookup(v-tbl-name, v-obj-tables*/
   /*история объектных таблиц - ходят только между двумя БД */
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-c-obj-tables) > 0 then do:
     v-is-news = ( v-tbl-handle:buffer-field("corr-user-name"):buffer-value begins {&nts-user})
     .
@@ -682,7 +709,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end.
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-c-obj-tables-todo) > 0 then do:
     v-is-news = ( v-tbl-handle:buffer-field("corr-user-name"):buffer-value begins {&nts-user})
     .
@@ -705,7 +732,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-found = yes.
   end.
   /*НЕИСТОРИЧЕСКИЕ таблицы с двойным вариантом контекста */
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-quest-context) > 0 then do:
     assign
     v-obj-code = v-tbl-handle:buffer-field("obj-code"):buffer-value
@@ -736,7 +763,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-found = yes.
   end.
   /*таблицы с вдвойгым контекстом*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-quest-context-todo) > 0 then do:
     assign
     v-obj-code = v-tbl-handle:buffer-field("obj-code"):buffer-value
@@ -767,7 +794,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-found = yes.
   end.
   /*таблицы с двойным контекстом - но глобальный вводится только в ГБД*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-quest-context-global-only-0) > 0 then do:
     assign
     v-obj-code = v-tbl-handle:buffer-field("obj-code"):buffer-value
@@ -811,7 +838,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
   end.
   /*-----------маршрутизация таблиц имеющих глобальный и объектный контекст но глобальный вводится только в ГБД и не посслается*/
  /*---------------объектный посылается только в БД объекта---------------------*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-quest-context-glob-nosend) > 0 then do:
     assign
     v-obj-code = v-tbl-handle:buffer-field("obj-code"):buffer-value
@@ -840,7 +867,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-found = yes.
   end.
   /*-----------маршрутизация таблиц из главной БД фирмыи в ГБД*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name,  v-main-firm-db-0-not-news) > 0 then do:
     if not g#news then do:
       if g#db-num = 0 then do:
@@ -861,7 +888,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end.
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-0-rdb-not-news_rbd-0) > 0 then do:
     /* Если БД центральная, то разослать во все удаленные базы */
     if g#db-num = 0 and not g#news then do:
@@ -873,7 +900,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end.
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-rbd-0) > 0 then do:
     /*если удаленка, отсылать всегда*/
     if g#db-num <> 0 then do:
@@ -881,7 +908,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end.
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-db-num-tables) > 0 then do:
     if g#db-num > 0
       and g#news = false
@@ -900,7 +927,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end.
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-c-db-num-tables) > 0 then do:
     if g#db-num > 0
       and g#news = false
@@ -919,7 +946,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end.
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-shop-tables) > 0 then do:
     if g#db-num <> 0 and not g#news then do:
       assign list-db-for-send = "0" .
@@ -937,7 +964,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     end.
     v-found = yes.
   end. /*if lookup(v-tbl-name, v-shop-tables) > 0 then do:*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and lookup(v-tbl-name, v-c-shop-tables) > 0 then do:
     assign
     v-is-news = (v-tbl-handle:buffer-field("corr-user-name"):buffer-value begins {&nts-user})
@@ -962,7 +989,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
     v-found = yes.
   end. /*if lookup(v-tbl-name, v-shop-tables) > 0 then do:*/
   /*сложные случаи*/
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
     and lookup(v-tbl-name, v-custom-list) > 0
   then do:
     CASE v-tbl-name:
@@ -1481,7 +1508,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
       end.
     end case.
   end. /*if lookup (v-tbl-name, v-custom-list) > 0 */
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and v-routing-type <> "LOB"
   and not (v-has-subject
           and v-tbl-name-prim <> '')
@@ -1499,7 +1526,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
       view-as alert-box error .
     undo, return error .
   end.
-  if v-found <> TRUE
+  if v-found <> TRUE and lookup(v-tbl-name, v-custom-except-list) = 0
   and (v-has-subject
      and v-tbl-name-prim <> '') then do:
     return ''.

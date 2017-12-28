@@ -34,6 +34,7 @@ define input-output parameter p-upper-code like ub.gds-grp.upper-code no-undo .
 define input parameter p-node-name   like ub.gds-grp.node-name no-undo .
 define input parameter p-calc-method like ub.gds-grp.calc-method no-undo .
 define input parameter p-increase-pc like ub.gds-grp.increase-pc no-undo .
+define input parameter p-print-code  like ub.gds-grp.print-code no-undo .
 define input parameter p-round-method as character no-undo .
 define input parameter p-base         as decimal no-undo .
 /*метод округления + {&space-char} + string(база, "->>>>9.99":U)*/
@@ -58,6 +59,10 @@ DEFINE VARIABLE v-list as character no-undo .
 DEFINE VARIABLE v-node-code like ub.gds-grp.node-code no-undo .
 define variable v-last-node-code as integer no-undo .
 define variable v-is-import as logical no-undo .
+define variable v-print-code  as character no-undo .
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
+
 define buffer upper_gds-grp  for ub.gds-grp.
 define buffer buf_gds-grp-obj for ub.gds-grp-obj.
 define buffer buf_gds-grp for ub.gds-grp.
@@ -77,6 +82,8 @@ on error undo, return error
     view-as alert-box error .
     return error .
   end.
+run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+if v-value = "no"  then do:   
   if g#db-num <> 0 then do:
     message
     vss-workfile vss-revision vss-description skip
@@ -84,6 +91,7 @@ on error undo, return error
     view-as alert-box error .
     undo main-block, return error .
   end.
+end.  
   if p-node-name = ""
   or p-node-name = ? then do:
     assign
@@ -91,6 +99,56 @@ on error undo, return error
     run err-mess in this-procedure ( input-output v-error-message).
     undo main-block, return error (if p-silent then v-error-message else "node-name").
   end.
+    if p-mode = {&add-def}  then 
+  do:
+    find first buf_gds-grp  no-lock where
+      buf_gds-grp.node-code <> p-node-code and
+      buf_gds-grp.print-code = p-print-code no-error.
+    if available buf_gds-grp then 
+    do:
+      assign
+        v-error-message = substitute("Уже есть группа с кодом. № &1", p-print-code).
+      run err-mess in this-procedure ( input-output v-error-message).
+      undo main-block, return error (if p-silent then v-error-message else "print-code").
+    end.
+  end.
+  if p-mode = {&update} then 
+  do:
+    find first buf_gds-grp exclusive-lock where
+      buf_gds-grp.node-code = p-node-code
+      AND buf_gds-grp.upper-code = p-upper-code no-error .
+    if not avail buf_gds-grp then 
+    do:
+      assign
+        v-error-message = substitute("Не найдена группа товаров, которую предполагается изменить", p-node-code).
+      run err-mess in this-procedure ( input-output v-error-message).
+      undo main-block, return error (if p-silent then v-error-message else "node-code").
+    end.
+    else 
+    do:
+      find first buf_gds-grp  no-lock where
+        buf_gds-grp.node-code <> p-node-code and
+        buf_gds-grp.print-code = p-print-code no-error.
+      if AVAILABLE buf_gds-grp then 
+      do:
+        assign
+          v-error-message = substitute("Уже есть группа с кодом. № &1", p-print-code).
+        run err-mess in this-procedure ( input-output v-error-message).
+        undo main-block, return error (if p-silent then v-error-message else "print-code").
+      end.
+      else 
+      do:
+        assign
+          p-rid = recid(buf_gds-grp)
+          .
+        run grplib-get-full-name in this-procedure (
+          input p-node-code
+          ,output v-full-name).
+      end.    
+    end.  
+    
+  end.
+  
   if p-mode = {&add-def}
   and p-get-node-code = yes  then do:
     find first buf_gds-grp  no-lock where
@@ -119,6 +177,7 @@ on error undo, return error
                                                 input p-node-code
                                                ,output v-full-name).
   end.
+
   if p-mode = {&add-def} then do:
     find first upper_gds-grp exclusive-lock where
                upper_gds-grp.node-code = p-upper-code no-error .
@@ -205,6 +264,7 @@ on error undo, return error
   end.
   if can-find (ub.gds-grp where ub.gds-grp.upper-code = p-upper-code
                         AND gds-grp.node-name = p-node-name
+                        and gds-grp.print-code = p-print-code
                         AND recid (ub.gds-grp) <> p-rid) then do:
     assign
     v-error-message = substitute("Группа &1&2Группа с таким названием уже есть"
@@ -240,6 +300,7 @@ on error undo, return error
                             then  p-node-code
                             else next-value (s-gds-grp, {&db-name_schema}))
     buf_gds-grp.upper-code = p-upper-code
+    buf_gds-grp.print-code = p-print-code
     p-node-code = buf_gds-grp.node-code
     .
   end.
@@ -247,8 +308,10 @@ on error undo, return error
   buf_gds-grp.node-name = p-node-name
   buf_gds-grp.calc-method = p-calc-method
   buf_gds-grp.increase-pc = p-increase-pc
+  buf_gds-grp.print-code  = p-print-code
   p-rid = recid(buf_gds-grp)
   v-node-code = buf_gds-grp.node-code
+  
   .
   release buf_gds-grp no-error.
   if error-status:error then do:

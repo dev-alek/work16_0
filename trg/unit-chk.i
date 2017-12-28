@@ -39,6 +39,21 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
   if lookup (new-type, "10000000,01000000,00100000,00010000,10001000,01001000,01000100,10000010,10000001") = 0 then do:
     /* недопустимый тип единицы измерения */
+    if g#esys then do:
+              undo, return error substitute( "&2&1Недопустимый тип единицы измерения&1
+                                              Единица измерения &3&1
+                                              Тип единицы измерения &4&1
+                                              Характеристика типа &5&1 
+                                              &6&1&7"
+                             , {&new-line}
+                             , vss-workfile
+                             , {1}.unit-name
+                             , {1}.type
+                             , new-type
+                             , return-value
+                             , error-status :get-message ( 1 ) ).
+    end.
+    else do:  
     message
       vss-workfile vss-revision vss-description skip
       "Недопустимый тип единицы измерения" skip
@@ -47,6 +62,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
       "Характеристика типа" new-type skip
       view-as alert-box error .
     undo main-block, return error .
+    end.
   end.
 
 
@@ -61,6 +77,21 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
           */
       "10000000-01000000,10001000-01001000,00001000-10001000,00001000-01001000,10000000-10000010,10000010-10000000") = 0 and
       old-type <> "00000000" then do:
+        if g#esys then do:
+                        undo, return error substitute( "&2&1Недопустимая замена типа единицы измерения&1
+                                              Единица измерения &3&1
+                                              Тип единицы измерения &4&1
+                                              Характеристика типа &5&1 
+                                              &6&1&7"
+                             , {&new-line}
+                             , vss-workfile
+                             , {1}.unit-name
+                             , {1}.type
+                             , new-type
+                             , return-value
+                             , error-status :get-message ( 1 ) ).
+        end.
+        else do:  
       message
         vss-workfile vss-revision vss-description skip
         "Недопустимая замена типа единицы измерения" skip
@@ -69,6 +100,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
         "Изменение характеристики типа:" old-type "->" new-type skip
         view-as alert-box error .
       undo main-block, return error .
+      end.
     end.
   end.
 

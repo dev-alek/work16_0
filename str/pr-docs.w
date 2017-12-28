@@ -510,6 +510,14 @@ DO:
   repeat i-v = 1 to vv :
     find first p-doc no-lock  where recid(p-doc) = integer(entry(i-v,mark-list )) no-error .
     if error-status :error then next.
+    
+    if p-doc.doc-date > today
+    then do :
+      message ("Нельзя закрыть переоценку " + p-doc.doc-num + ". Дата переоценки больше текущей даты.") view-as alert-box information .
+      vv = 0.
+      mark-list = "" .
+      return.
+    end.
 
   if v-v1 = true then assign
     v-varmode = "close-act":U

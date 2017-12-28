@@ -29,11 +29,20 @@ define variable vss-description as character no-undo init "Триггер на удаление п
 define buffer buf_c-price-doc  for ub.c-price-doc  .
 define buffer buf_c-price-list for ub.c-price-list  .
 define buffer buf_c-price-list-attr for ub.c-price-list-attr  .
+define buffer buf_c-doc-attr for ub.c-doc-attr .
+
+define variable v-is-erpRN    as logical no-undo .
+define variable par-is-erpRN  as character no-undo .
+define variable par-type      as character no-undo .
 
 main-block :
 do transaction
 on error undo main-block, return error
 :
+
+  { gbl/conf-rd.i "'is-erpRN'"   "''" "''" 0 "''" "''" "''"  no par-is-erpRN     par-type      no-error}
+
+  v-is-erpRN = lookup(par-is-erpRN, "true,yes":U) > 0.
 
   /* Проверяем статус документа, в котором мы можем удалять переоценку */
   if ub.price-doc.status_ = {&act-overvalue}
@@ -82,6 +91,7 @@ on error undo main-block, return error
 
   /* переоценка удаляется на объекте, принадлежащем УБД */
   if buf_clients.db-num <> 0
+  and not v-is-erpRN
   and ub.price-doc.status_ <> {&g___new} then do:
     message
       vss-workfile vss-revision vss-description skip
@@ -182,6 +192,22 @@ on error undo main-block, return error
     on error undo main-block, return error
     :
     if ub.price-doc.status_ <> {&g___new} then do:
+      create buf_c-doc-attr.
+      BUFFER-COPY ub.doc-attr TO buf_c-doc-attr
+      assign
+        buf_c-doc-attr.chip-num           = buf_c-price-doc.chip-num
+        buf_c-doc-attr.corr-time           = time
+        buf_c-doc-attr.corr-user-db-num    = g#db-num
+        buf_c-doc-attr.corr-user-name     = g#userid
+        buf_c-doc-attr.corr-date          = today
+      .
+    end.
+    delete ub.doc-attr.
+  end.
+  for each ub.price-list-attr where ub.price-list-attr.doc-num = ub.price-doc.doc-num
+    on error undo main-block, return error
+    :
+    if ub.price-doc.status_ <> {&g___new} then do:
       create buf_c-price-list-attr.
       BUFFER-COPY ub.price-list-attr TO buf_c-price-list-attr
       assign
@@ -193,7 +219,7 @@ on error undo main-block, return error
         buf_c-price-list-attr.is-del             = true
       .
     end.
-    delete ub.doc-attr.
+    delete ub.price-list-attr.
   end.
     if g#oxml = yes
     then do:
@@ -211,35 +237,38 @@ on error undo main-block, return error
                              , error-status :get-message ( 1 ) ).
     end.
     end.
-  { gbl/rum-runa.i
-    ?
-    this-procedure:handle
-    ?
-      {&edoc-proc_event_price-doc}
-    " buffer ub.price-doc:handle "
-    ?
-    ''
-    ''
-    no-error
-    }
-  if error-status:error
-  then do:
-    define variable v-message as character no-undo .
-    v-message = substitute("&1 &2 &3&4Ошибка при вызове процедуры rum-runa.i&4&5&4&5&6"
-                            ,vss-workfile
-                            ,vss-revision
-                            ,vss-description
-                            ,{&new-line}
-                            , error-status:get-message(1)
-                            , return-value ).
-    if not g#news
-    and not g#auto
-    and not g#esys
-    then do:
-      message
-      v-message
-      view-as alert-box error .
-    end.
-    undo main-block,  return error v-message.
+  if ub.price-doc.PS <> "temp"
+  then do :   
+      { gbl/rum-runa.i
+        ?
+        this-procedure:handle
+        ?
+          {&edoc-proc_event_price-doc}
+        " buffer ub.price-doc:handle "
+        ?
+        ''
+        ''
+        no-error
+        }
+      if error-status:error
+      then do:
+        define variable v-message as character no-undo .
+        v-message = substitute("&1 &2 &3&4Ошибка при вызове процедуры rum-runa.i&4&5&4&5&6"
+                                ,vss-workfile
+                                ,vss-revision
+                                ,vss-description
+                                ,{&new-line}
+                                , error-status:get-message(1)
+                                , return-value ).
+        if not g#news
+        and not g#auto
+        and not g#esys
+        then do:
+          message
+          v-message
+          view-as alert-box error .
+        end.
+        undo main-block,  return error v-message.
+      end.
   end.
 end.

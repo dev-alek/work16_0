@@ -394,7 +394,7 @@ main-block:
 do
 on error undo, return error
 :
-
+ 
 
   assign
   v-num-rules = {&num-dtr-templates}
@@ -1115,8 +1115,8 @@ on error undo, return error
     buf_dis-time-rule.is-term           = yes
     buf_dis-time-rule.uniq-field        = p-tree
     buf_dis-time-rule.other-inf         = p-other
-    buf_dis-time-rule.rl-root           = p-time-rule-num       + {&dtr-templates-shift}
-    buf_dis-time-rule.templ-rl-root     = p-time-rule-num       + {&dtr-templates-shift}
+    buf_dis-time-rule.rl-root           = p-time-rule-num     /*  + {&dtr-templates-shift} */
+    buf_dis-time-rule.templ-rl-root     = p-time-rule-num     /*  + {&dtr-templates-shift} */
     buf_dis-time-rule.sts               = (if p-sts <> integer({&non-used-status-int})
                                             then integer({&used-status-int})
                                             else integer({&non-used-status-int}))

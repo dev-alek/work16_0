@@ -121,7 +121,7 @@ case p-copy-option:
       return.
     end.
     if buf_ext-classif.uniq-key-rec <> '' then do:
-      &scop my-message substitute("УЖЕ ЕСТЬ соответствие для &1&2 БД &3 в БД v15.1 - импортировать невозможно", p-obj-type, p-obj-code, p-from-version)
+      &scop my-message substitute("УЖЕ ЕСТЬ соответствие для &1&2 БД &3 в БД v16.0 - импортировать невозможно", p-obj-type, p-obj-code, p-from-version)
       {&display-message}.
       return.
     end.
@@ -153,7 +153,7 @@ case p-copy-option:
         next _ii.
       end.
       if buf_ext-classif.uniq-key-rec <> '' then do:
-        &scop my-message substitute("УЖЕ ЕСТЬ соответствие для &1&2 БД &3 в БД v15.1 - импортировать невозможно", buf_ext-classif.charkey_one, buf_ext-classif.key#_one, p-from-version)
+        &scop my-message substitute("УЖЕ ЕСТЬ соответствие для &1&2 БД &3 в БД v16.0 - импортировать невозможно", buf_ext-classif.charkey_one, buf_ext-classif.key#_one, p-from-version)
         {&display-message}.
         next _ii.
       end.

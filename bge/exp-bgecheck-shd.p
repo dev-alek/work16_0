@@ -44,6 +44,7 @@ define variable tb-deleted         as logical   no-undo.
 define variable tb-chk-pay-code    as logical   no-undo.
 define variable tb-cst-code        as logical   no-undo.
 define variable tb-exp-checks      as logical   no-undo.
+define variable tb-chk-type as character no-undo.
 {ref/shd-attr.i}
 
 
@@ -90,6 +91,7 @@ do:
         tb-cst-code        = logical (entry(19,v-param-list,{&delim-par})) 
         tb-exp-checks      = logical  (entry(20,v-param-list,{&delim-par}))
         tb-rs-2            = entry(21,v-param-list,{&delim-par})
+        tb-chk-type = entry(22,v-param-list,{&delim-par})
         no-error.
         
 end.
@@ -123,7 +125,9 @@ do :
         tb-chk-pay-code    = logical (entry(20,v-param-list,{&delim-par}))
         tb-cst-code        = logical (entry(21,v-param-list,{&delim-par})) 
       tb-exp-checks   =     logical(entry(22,v-param-list,{&delim-par}))
-       tb-rs-2 = entry(23,v-param-list,{&delim-par}) no-error
+       tb-rs-2 = entry(23,v-param-list,{&delim-par}) 
+         tb-chk-type = entry(24,v-param-list,{&delim-par})
+       no-error
         .          
 
                                        
@@ -151,7 +155,7 @@ if v-place = 1  then
         , v-per
         , v-inf-bonus
         , v-code_pool
-                 
+        , tb-chk-type
         ) .       
            
 if v-place = 2  then 
@@ -172,4 +176,5 @@ if v-place = 2  then
         , v-per
         , v-inf-bonus
         , v-code_pool
+        ,tb-chk-type
         ) .

@@ -486,7 +486,7 @@ DEFINE BROWSE br-ingr
       buf_ingr_fbr-line.fix-cost                                format "*/-"                column-label "Ф"
       buf_ingr_fbr-line.coeff-waste                             format "->,>>9.<<<"         column-label "%потерь"
       buf_ingr_fbr-line.coeff-value                             format "->,>>9.<<<"         column-label "%сезонн"
-      get-netto-qnty(recid(buf_comp_fbr-line)) @ ingr-netto     format ">>>>>9.999"         column-label "Нетто"
+      get-netto-qnty(recid(buf_ingr_fbr-line)) @ ingr-netto     format ">>>>>9.999"         column-label "Нетто"
       buf_ingr_fbr-line.price-base                              format "->>>,>>>,>>9.<<<"   column-label "Уч.ц.(б.в)"
       buf_ingr_fbr-line.price-sum-base                          format "->,>>>,>>>,>>9.<<<" column-label "Сумма (б.в)"
       buf_ingr_fbr-line.price-sum-vat-base                      format "->,>>>,>>>,>>9.<<<" column-label "НДС (б.в)"

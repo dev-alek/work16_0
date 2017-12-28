@@ -875,6 +875,7 @@ procedure change-status-act :
         end.
       end.
     end. /*if not g#news then do:*/
+    
     { gbl/rum-runa.i
       ?
       this-procedure:handle
@@ -1037,6 +1038,37 @@ procedure change-status-prikaz :
           view-as alert-box error .
         undo, return error .
       end.
+    end.
+    if ub.price-doc.doc-num-es <> ? and ub.price-doc.doc-num-es <> ""
+    then do :
+        { gbl/rum-runa.i
+          ?
+          this-procedure:handle
+          ?
+          {&edoc-proc_event_price-doc}
+          " buffer old-doc:handle "
+          " buffer ub.price-doc:handle "
+          ''
+          ''
+          no-error
+        }
+        if error-status:error
+        then do:
+          define variable v-message as character no-undo .
+          v-message = substitute("&1 &2 &3&4Ошибка при вызове процедуры rum-runa.i&4&5&4&5&6"
+                                ,vss-workfile
+                                ,vss-revision
+                                ,vss-description
+                                ,{&new-line}
+                                , error-status:get-message(1)
+                                , return-value ).
+          if not g#news then do:
+            message
+            v-message
+            view-as alert-box error .
+          end.
+          undo,  return error v-message.
+        end.
     end.
   end.
 

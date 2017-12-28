@@ -122,7 +122,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   find first buf_esys-pck-sent no-lock
     where buf_esys-pck-sent.esys-id  = p-esys-id
       and buf_esys-pck-sent.db-num   = p-db-num
-      and buf_esys-pck-sent.esps-cr-db-num   = p-cr-db-num
+/*      and buf_esys-pck-sent.esps-cr-db-num   = p-cr-db-num*/
       and buf_esys-pck-sent.esps-pack-num = p-pack-num
     no-error
   .
@@ -142,7 +142,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     undo, return error .
   end.
   /*наполняем временные таблицы*/
-  if not buf_ext-system.delivery-method = integer({&esys-dm-contour-edi}) then do:
+  if not buf_ext-system.delivery-method = integer({&esys-dm-contour-edi}) and not buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN}) then do:
     if p-esr-dump-ord >= 0 then do:
     find first buf_esys-route exclusive-lock where
               buf_esys-route.esr-dump-ord = p-esr-dump-ord
@@ -401,7 +401,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     define variable mbuffer as memptr .
     output stream exp-str to value(p-xml-file-name). 
     for each buf_esys-route-dump where buf_esys-route-dump.esrd-dump-ord = p-esr-dump-ord:
-      mbuffer = buf_esys-route-dump.esrd-value-rec.
+      mbuffer = buf_esys-route-dump.esrd-blob-value-rec.
       export stream exp-str mbuffer .
     end.
     output stream exp-str close.

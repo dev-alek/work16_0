@@ -47,6 +47,7 @@ define input parameter p-pl-code       as integer        no-undo .
 
 define buffer buf_pl-level for ub.pl-level .
 define buffer buf_place    for ub.place .
+define VARIABLE v-ok-level as logical no-undo INIT no .
 /* Local Variable Definitions ---                                       */
 
 /* _UIB-CODE-BLOCK-END */
@@ -104,47 +105,47 @@ b-help BROWSE-2
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-add 
-     LABEL "&Добавить" 
-     SIZE 10 BY 1.
+  LABEL "&Добавить" 
+  SIZE 10 BY 1.
 
 DEFINE BUTTON b-chg 
-     LABEL "&Изменить" 
-     SIZE 10 BY 1.
+  LABEL "&Изменить" 
+  SIZE 10 BY 1.
 
 DEFINE BUTTON b-del 
-     LABEL "&Удалить" 
-     SIZE 10 BY 1.
+  LABEL "&Удалить" 
+  SIZE 10 BY 1.
 
 DEFINE BUTTON b-delete 
-     LABEL "Очистить" 
-     SIZE 9 BY 1.
+  LABEL "Очистить" 
+  SIZE 9 BY 1.
 
 DEFINE BUTTON b-exit AUTO-GO 
-     LABEL "&Выход" 
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+  LABEL "&Выход" 
+  SIZE 10 BY 1
+  BGCOLOR 8 .
 
 DEFINE BUTTON b-help 
-     LABEL "Помо&щь" 
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+  LABEL "Помо&щь" 
+  SIZE 10 BY 1
+  BGCOLOR 8 .
 
 DEFINE BUTTON b-load 
-     LABEL "&Загрузить" 
-     SIZE 10 BY 1.
+  LABEL "&Загрузить" 
+  SIZE 10 BY 1.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BROWSE-2 FOR 
-      buf_pl-level SCROLLING.
+  buf_pl-level SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame _STRUCTURED
   QUERY BROWSE-2 NO-LOCK DISPLAY
-      buf_pl-level.pl-level COLUMN-LABEL "Уровень, см"
-      pl-qnty WIDTH 41.5
+  buf_pl-level.pl-level COLUMN-LABEL "Уровень, см"
+  pl-qnty WIDTH 41.5
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 66 BY 17.5 FIT-LAST-COLUMN.
@@ -153,18 +154,18 @@ DEFINE BROWSE BROWSE-2
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     b-exit AT ROW 1 COL 1
-     b-add AT ROW 1 COL 11 WIDGET-ID 2
-     b-chg AT ROW 1 COL 21 WIDGET-ID 4
-     b-del AT ROW 1 COL 31 WIDGET-ID 6
-     b-load AT ROW 1 COL 41 WIDGET-ID 8
-     b-delete AT ROW 1 COL 51 WIDGET-ID 10
-     b-help AT ROW 1 COL 57
-     BROWSE-2 AT ROW 2.25 COL 1 WIDGET-ID 200
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Градуировочная таблица"
-         DEFAULT-BUTTON b-exit WIDGET-ID 100.
+  b-exit AT ROW 1 COL 1
+  b-add AT ROW 1 COL 11 WIDGET-ID 2
+  b-chg AT ROW 1 COL 21 WIDGET-ID 4
+  b-del AT ROW 1 COL 31 WIDGET-ID 6
+  b-load AT ROW 1 COL 41 WIDGET-ID 8
+  b-delete AT ROW 1 COL 51 WIDGET-ID 10
+  b-help AT ROW 1 COL 57
+  BROWSE-2 AT ROW 2.25 COL 1 WIDGET-ID 200
+  WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+  SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+  TITLE "Градуировочная таблица"
+  DEFAULT-BUTTON b-exit WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -186,8 +187,8 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BROWSE-2 b-help Dialog-Frame */
 ASSIGN 
-       FRAME Dialog-Frame:SCROLLABLE       = FALSE
-       FRAME Dialog-Frame:HIDDEN           = TRUE.
+  FRAME Dialog-Frame:SCROLLABLE = FALSE
+  FRAME Dialog-Frame:HIDDEN     = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -219,9 +220,9 @@ ASSIGN
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Градуировочная таблица */
-DO:
-  APPLY "END-ERROR":U TO SELF.
-END.
+  DO:
+    APPLY "END-ERROR":U TO SELF.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -230,32 +231,35 @@ END.
 &Scoped-define SELF-NAME b-add
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add Dialog-Frame
 ON CHOOSE OF b-add IN FRAME Dialog-Frame /* Добавить */
-DO:
-  define variable v-level    as integer      no-undo.
-  define variable v-ok       as logical      no-undo.
-  assign
-    v-level = ?
-  .
-  run ref/pl-lvl.w
-    ( input parparentproc
-    , input p-obj-type
-    , input p-obj-code
-    , input p-pl-code
-    , input-output v-level
-    , output v-ok
-    ) no-error.
-  if error-status:error then do:
+  DO:
+    define variable v-level as integer no-undo.
+    define variable v-ok    as logical no-undo.
+    assign
+      v-level = ?
+      .
+    run ref/pl-lvl.w
+      ( input parparentproc
+      , input p-obj-type
+      , input p-obj-code
+      , input p-pl-code
+      , input-output v-level
+      , output v-ok
+      ) no-error.
+    if error-status:error then 
+    do:
       message
         error-status:get-message(1) skip
         return-value
-      view-as alert-box error .
+        view-as alert-box error .
 
       return no-apply .
-  end.
-  IF v-ok then do:
-    run enable_UI in this-procedure.
-  end.
-END.
+    end.
+    IF v-ok then 
+    do:
+      run enable_UI in this-procedure.
+      v-ok-level = yes .
+    end.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -264,35 +268,39 @@ END.
 &Scoped-define SELF-NAME b-chg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg Dialog-Frame
 ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
-DO:
-  define variable v-level    as integer      no-undo.
-  define variable v-ok       as logical      no-undo.
+  DO:
+    define variable v-level as integer no-undo.
+    define variable v-ok    as logical no-undo.
 
-  if available buf_pl-level then do:
-    assign
-      v-level = buf_pl-level.pl-level
-    .
-    run ref/pl-lvl.w
-      ( input parparentproc
-      , input buf_pl-level.obj-type
-      , input buf_pl-level.obj-code
-      , input buf_pl-level.pl-code
-      , input-output v-level
-      , output v-ok
-      ) no-error.
-    if error-status:error then do:
+    if available buf_pl-level then 
+    do:
+      assign
+        v-level = buf_pl-level.pl-level
+        .
+      run ref/pl-lvl.w
+        ( input parparentproc
+        , input buf_pl-level.obj-type
+        , input buf_pl-level.obj-code
+        , input buf_pl-level.pl-code
+        , input-output v-level
+        , output v-ok
+        ) no-error.
+      if error-status:error then 
+      do:
         message
           error-status:get-message(1) skip
           return-value
-        view-as alert-box error .
+          view-as alert-box error .
 
         return no-apply .
+      end.
     end.
-  end.
-  if v-ok then do:
-    run enable_ui in this-procedure.
-  end.
-END.
+    if v-ok then 
+    do:
+      run enable_ui in this-procedure.
+      v-ok-level = yes .
+    end.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -301,22 +309,26 @@ END.
 &Scoped-define SELF-NAME b-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
-DO:
-   if available buf_pl-level then do:
+  DO:
+    if available buf_pl-level then 
+    do:
       run del-pl-level in this-procedure no-error.
-      IF ERROR-STATUS:ERROR then do:
-         message
-            error-status:get-message(1) skip
-            return-value
-         view-as alert-box error .
+      IF ERROR-STATUS:ERROR then 
+      do:
+        message
+          error-status:get-message(1) skip
+          return-value
+          view-as alert-box error .
 
-         return no-apply .
+        return no-apply .
       end.
-      else do:
-         run enable_UI in this-procedure.
+      else 
+      do:
+        run enable_UI in this-procedure.
+        v-ok-level = yes .
       end.
-   end.
-END.
+    end.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -325,46 +337,47 @@ END.
 &Scoped-define SELF-NAME b-delete
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-delete Dialog-Frame
 ON CHOOSE OF b-delete IN FRAME Dialog-Frame /* Очистить */
-    DO:
+  DO:
    
-        define variable v-delete as logical no-undo.
-        if available buf_pl-level then 
-        do:
-            message
-                SUBSTITUTE ( "Очистить таблицу? " ) 
+    define variable v-delete as logical no-undo.
+    if available buf_pl-level then 
+    do:
+      message
+        SUBSTITUTE ( "Очистить таблицу? " ) 
                   
-                view-as alert-box information
-                BUTTONS YES-NO
-                update v-delete
-                .
-            IF v-delete
-                THEN 
-            DO:
-                run waitfram-show in this-procedure ( input "Ждите...").
+        view-as alert-box information
+        BUTTONS YES-NO
+        update v-delete
+        .
+      IF v-delete
+        THEN 
+      DO:
+        run waitfram-show in this-procedure ( input "Ждите...").
    
-                FOR EACH buf_pl-level 
-                    WHERE buf_pl-level.obj-type = p-obj-type 
-                    AND buf_pl-level.obj-code = p-obj-code 
-                    AND buf_pl-level.pl-code = p-pl-code .
+        FOR EACH buf_pl-level 
+          WHERE buf_pl-level.obj-type = p-obj-type 
+          AND buf_pl-level.obj-code = p-obj-code 
+          AND buf_pl-level.pl-code = p-pl-code .
  
-                    delete buf_pl-level.
-                end.
-                run waitfram-hide in this-procedure.
-                if error-status:error then 
-                do:
-                    message 
-                        error-status:get-message(1) skip
-                        return-value
-                        view-as alert-box error.
-                    return no-apply.
-                end.
-                else 
-                do:
-                    run enable_UI in this-procedure.
-                end.
-            END.
+          delete buf_pl-level.
         end.
-    END.
+        run waitfram-hide in this-procedure.
+        if error-status:error then 
+        do:
+          message 
+            error-status:get-message(1) skip
+            return-value
+            view-as alert-box error.
+          return no-apply.
+        end.
+        else 
+        do:
+          run enable_UI in this-procedure.
+          v-ok-level = yes .
+        end.
+      END.
+    end.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -373,26 +386,56 @@ ON CHOOSE OF b-delete IN FRAME Dialog-Frame /* Очистить */
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit Dialog-Frame
 ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
-DO:
-   define variable v-gap    as character    no-undo.
-   define variable v-ok     as logical      no-undo.
+  DO:
+    define variable v-gap as character no-undo.
+    define variable v-ok  as logical   no-undo.
 
-   run check-pl-level in this-procedure ( OUTPUT v-gap ).
-   IF v-gap <> ""
-   THEN DO:
+    run check-pl-level in this-procedure ( OUTPUT v-gap ).
+    IF v-gap <> ""
+      THEN 
+    DO:
       message
-         "В тарировочной таблице имеются пропуски. Пропущены следующие уровни:"
-         skip v-gap
-         SKIP "Выйти и оставить пропуски?"
-      view-as alert-box information
-      BUTTONS YES-NO
-      update v-ok
-      .
-      IF NOT v-ok THEN DO:
-         RETURN NO-APPLY.
+        "В тарировочной таблице имеются пропуски. Пропущены следующие уровни:"
+        skip v-gap
+        SKIP 
+        "Выйти и оставить пропуски?"
+        view-as alert-box information
+        BUTTONS YES-NO
+        update v-ok
+        .
+      IF NOT v-ok THEN 
+      DO:
+        RETURN NO-APPLY.
       END.
-   END.
-END.
+    END.
+
+    if AVAILABLE (buf_pl-level) and v-ok-level then 
+    do:
+      /*запуск машины правил для выгрузки резервуара*/
+    { gbl/rum-runa.i
+        ?
+        this-procedure:handle
+        ?
+        {&thref-proc_ref-event}
+        " buffer buf_pl-level:handle "
+        " buffer buf_pl-level:handle "
+        ''
+        ''
+        no-error
+        }
+      if error-status :error
+        then
+      do:
+        message
+          error-status:get-message(1) skip
+          return-value
+          view-as alert-box error .
+
+        return no-apply .
+
+      end.     
+    end.      
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -401,43 +444,46 @@ END.
 &Scoped-define SELF-NAME b-load
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-load Dialog-Frame
 ON CHOOSE OF b-load IN FRAME Dialog-Frame /* Загрузить */
-DO:
-   define variable v-file-name    as character    no-undo.
-   define variable v-dir-name    as character    no-undo.
-   define variable v-ok    as logical      no-undo.
+  DO:
+    define variable v-file-name as character no-undo.
+    define variable v-dir-name  as character no-undo.
+    define variable v-ok        as logical   no-undo.
 
-   run gbl/d-file.p  ( input-output v-file-name
-                     , input-output v-dir-name
-                     , input  "":U
-                     , input  "":U
-                     , input  "":U
-                     , input  "":U
-                     , input  TRUE
-                     , input  FALSE
-                     , input  TRUE
-                     , input  "Файл для загрузки тарировочной таблицы"
-                     , output v-ok
-                     ) .
-   IF v-ok
-   AND v-file-name <> "":U
-   AND v-file-name <> ?
-   THEN DO:
+    run gbl/d-file.p  ( input-output v-file-name
+      , input-output v-dir-name
+      , input  "":U
+      , input  "":U
+      , input  "":U
+      , input  "":U
+      , input  TRUE
+      , input  FALSE
+      , input  TRUE
+      , input  "Файл для загрузки тарировочной таблицы"
+      , output v-ok
+      ) .
+    IF v-ok
+      AND v-file-name <> "":U
+      AND v-file-name <> ?
+      THEN 
+    DO:
       run utl/tarir2.p  ( INPUT v-file-name
-                        , INPUT p-obj-type
-                        , INPUT p-obj-code
-                        , INPUT p-pl-code
-                        ) NO-ERROR.
-      IF ERROR-STATUS:ERROR THEN DO:
-         message
-            error-status:get-message(1) skip
-            return-value
-         view-as alert-box error .
+        , INPUT p-obj-type
+        , INPUT p-obj-code
+        , INPUT p-pl-code
+        ) NO-ERROR.
+      IF ERROR-STATUS:ERROR THEN 
+      DO:
+        message
+          error-status:get-message(1) skip
+          return-value
+          view-as alert-box error .
 
-         return no-apply .
+        return no-apply .
       end.
       run enable_UI in this-procedure.
-   END.
-END.
+      v-ok-level = yes .
+    END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -453,7 +499,7 @@ END.
 
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
-THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+  THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 
 { gbl/app_help.i }
 { gbl/hot-key.i b-add }
@@ -463,34 +509,35 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
-   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
-   find first buf_place
-        where buf_place.obj-type = p-obj-type
-          and buf_place.obj-code = p-obj-code
-          and buf_place.pl-code  = p-pl-code
-        no-lock
-        no-error
-        .
-   IF NOT AVAILABLE buf_place THEN DO:
-      return error SUBSTITUTE ( "Не найдено складское место &1 &2 &3"
-                              , p-pl-code
-                              , p-obj-code
-                              , p-obj-type
-                              ) .
-   end.
+  find first buf_place
+    where buf_place.obj-type = p-obj-type
+    and buf_place.obj-code = p-obj-code
+    and buf_place.pl-code  = p-pl-code
+    no-lock
+    no-error
+    .
+  IF NOT AVAILABLE buf_place THEN 
+  DO:
+    return error SUBSTITUTE ( "Не найдено складское место &1 &2 &3"
+      , p-pl-code
+      , p-obj-code
+      , p-obj-type
+      ) .
+  end.
 
-   ASSIGN
-      FRAME Dialog-Frame:TITLE = SUBSTITUTE  ( "Градуировочная таблица для резервуара &1 (&2) &3 &4"
+  ASSIGN
+    FRAME Dialog-Frame:TITLE = SUBSTITUTE  ( "Градуировочная таблица для резервуара &1 (&2) &3 &4"
                                              , p-pl-code
                                              , buf_place.loc1
                                              , p-obj-code
                                              , p-obj-type
                                              )
-   .
+    .
 
-   RUN enable_UI.
-   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+  RUN enable_UI.
+  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 
 END.
 RUN disable_UI.
@@ -503,56 +550,58 @@ RUN disable_UI.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-pl-level Dialog-Frame 
 PROCEDURE check-pl-level :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-define output parameter p-error as character        no-undo.
+  /*------------------------------------------------------------------------------
+    Purpose:
+    Parameters:  <none>
+    Notes:
+  ------------------------------------------------------------------------------*/
+  define output parameter p-error as character        no-undo.
 
-define buffer bf_pl-level    for ub.pl-level .
+  define buffer bf_pl-level for ub.pl-level .
 
-define variable v-pl-level-begin    as integer      no-undo.
-define variable v-pl-level-end      as integer      no-undo.
-define variable v-count    as integer      no-undo.
+  define variable v-pl-level-begin as integer no-undo.
+  define variable v-pl-level-end   as integer no-undo.
+  define variable v-count          as integer no-undo.
 
   FIND FIRST bf_pl-level
-       where bf_pl-level.obj-type = p-obj-type
-         and bf_pl-level.obj-code = p-obj-code
-         and bf_pl-level.pl-code  = p-pl-code
-       no-lock
-       no-error.
-  IF NOT AVAILABLE bf_pl-level THEN DO:
-     RETURN.
+    where bf_pl-level.obj-type = p-obj-type
+    and bf_pl-level.obj-code = p-obj-code
+    and bf_pl-level.pl-code  = p-pl-code
+    no-lock
+    no-error.
+  IF NOT AVAILABLE bf_pl-level THEN 
+  DO:
+    RETURN.
   END.
   assign
-     v-pl-level-begin = bf_pl-level.pl-level
-  .
+    v-pl-level-begin = bf_pl-level.pl-level
+    .
   FIND LAST  bf_pl-level
-       where bf_pl-level.obj-type = p-obj-type
-         and bf_pl-level.obj-code = p-obj-code
-         and bf_pl-level.pl-code  = p-pl-code
-       no-lock
-       .
+    where bf_pl-level.obj-type = p-obj-type
+    and bf_pl-level.obj-code = p-obj-code
+    and bf_pl-level.pl-code  = p-pl-code
+    no-lock
+    .
   assign
-     v-pl-level-end = bf_pl-level.pl-level
-  .
+    v-pl-level-end = bf_pl-level.pl-level
+    .
   do v-count = v-pl-level-begin to v-pl-level-end :
-     IF NOT CAN-FIND(FIRST bf_pl-level
-                     where bf_pl-level.obj-type = p-obj-type
-                       and bf_pl-level.obj-code = p-obj-code
-                       and bf_pl-level.pl-code  = p-pl-code
-                       and bf_pl-level.pl-level = v-count
-                     no-lock)
-     THEN DO:
-        ASSIGN
-           p-error = IF p-error = "" THEN STRING(v-count)
+    IF NOT CAN-FIND(FIRST bf_pl-level
+      where bf_pl-level.obj-type = p-obj-type
+      and bf_pl-level.obj-code = p-obj-code
+      and bf_pl-level.pl-code  = p-pl-code
+      and bf_pl-level.pl-level = v-count
+      no-lock)
+      THEN 
+    DO:
+      ASSIGN
+        p-error = IF p-error = "" THEN STRING(v-count)
                                      ELSE SUBSTITUTE  ( "&1,&2"
                                                       , p-error
                                                       , v-count
                                                       )
         .
-     END.
+    END.
 
   END.
 
@@ -567,67 +616,73 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE del-pl-level Dialog-Frame 
 PROCEDURE del-pl-level :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-define buffer bf_pl-level    for ub.pl-level .
+  /*------------------------------------------------------------------------------
+    Purpose:
+    Parameters:  <none>
+    Notes:
+  ------------------------------------------------------------------------------*/
+  define buffer bf_pl-level for ub.pl-level .
 
-define variable v-ok    as logical      no-undo.
-define variable v-del    as logical      no-undo.
+  define variable v-ok  as logical no-undo.
+  define variable v-del as logical no-undo.
 
-   message
-      SUBSTITUTE ( "Удалить ровень &1 "
-                  , buf_pl-level.pl-level
-                  )
-      view-as alert-box information
-      BUTTONS YES-NO
-      update v-del
-      .
-   IF v-del
-   THEN DO
-   on error undo, return error
-   :
-      IF CAN-FIND(FIRST bf_pl-level
-                  where bf_pl-level.obj-type = p-obj-type
-                     and bf_pl-level.obj-code = p-obj-code
-                     and bf_pl-level.pl-code  = p-pl-code
-                     and bf_pl-level.pl-level < buf_pl-level.pl-level
-                  no-lock)
+  message
+    SUBSTITUTE ( "Удалить ровень &1 "
+    , buf_pl-level.pl-level
+    )
+    view-as alert-box information
+    BUTTONS YES-NO
+    update v-del
+    .
+  IF v-del
+    THEN 
+  DO
+    on error undo, return error
+    :
+    IF CAN-FIND(FIRST bf_pl-level
+      where bf_pl-level.obj-type = p-obj-type
+      and bf_pl-level.obj-code = p-obj-code
+      and bf_pl-level.pl-code  = p-pl-code
+      and bf_pl-level.pl-level < buf_pl-level.pl-level
+      no-lock)
       AND CAN-FIND(FIRST bf_pl-level
-                  where bf_pl-level.obj-type = p-obj-type
-                     and bf_pl-level.obj-code = p-obj-code
-                     and bf_pl-level.pl-code  = p-pl-code
-                     and bf_pl-level.pl-level > buf_pl-level.pl-level
-                  no-lock)
-      THEN DO:
-         message
-            SUBSTITUTE ( "Уровень &1 находится в середине градуировочной таблицы"
-                     , buf_pl-level.pl-level
-                     )
-            skip "При его удалении возникнут пропуски в таблице."
-            skip "Все равно удалить Удалить?"
-            view-as alert-box information
-            BUTTONS YES-NO
-            update v-ok
-            .
-         IF v-ok THEN DO:
-            FIND FIRST bf_pl-level
-               where RowID(bf_pl-level) = RowID(buf_pl-level)
-               exclusive-lock
-               .
-            DELETE bf_pl-level .
-         END.
+      where bf_pl-level.obj-type = p-obj-type
+      and bf_pl-level.obj-code = p-obj-code
+      and bf_pl-level.pl-code  = p-pl-code
+      and bf_pl-level.pl-level > buf_pl-level.pl-level
+      no-lock)
+      THEN 
+    DO:
+      message
+        SUBSTITUTE ( "Уровень &1 находится в середине градуировочной таблицы"
+        , buf_pl-level.pl-level
+        )
+        skip 
+        "При его удалении возникнут пропуски в таблице."
+        skip 
+        "Все равно удалить Удалить?"
+        view-as alert-box information
+        BUTTONS YES-NO
+        update v-ok
+        .
+      IF v-ok THEN 
+      DO:
+        FIND FIRST bf_pl-level
+          where RowID(bf_pl-level) = RowID(buf_pl-level)
+          exclusive-lock
+          .
+        DELETE bf_pl-level .
       END.
-      ELSE DO:
-         FIND FIRST bf_pl-level
-               where RowID(bf_pl-level) = RowID(buf_pl-level)
-               exclusive-lock
-               .
-         DELETE bf_pl-level .
-      END.
-   END. /* v-del do on error */
+    END.
+    ELSE 
+    DO:
+      FIND FIRST bf_pl-level
+        where RowID(bf_pl-level) = RowID(buf_pl-level)
+        exclusive-lock
+        .
+      DELETE bf_pl-level .
+    END.
+  END. /* v-del do on error */
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -635,14 +690,14 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     DISABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide 
-               frames.  This procedure is usually called when
-               we are ready to "clean-up" after running.
-------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+    Purpose:     DISABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we clean-up the user-interface by deleting
+                 dynamic widgets we have created and/or hide 
+                 frames.  This procedure is usually called when
+                 we are ready to "clean-up" after running.
+  ------------------------------------------------------------------------------*/
   /* Hide all frames. */
   HIDE FRAME Dialog-Frame.
 END PROCEDURE.
@@ -652,17 +707,17 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     ENABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we display/view/enable the widgets in the
-               user-interface.  In addition, OPEN all queries
-               associated with each FRAME and BROWSE.
-               These statements here are based on the "Other 
-               Settings" section of the widget Property Sheets.
-------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+    Purpose:     ENABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we display/view/enable the widgets in the
+                 user-interface.  In addition, OPEN all queries
+                 associated with each FRAME and BROWSE.
+                 These statements here are based on the "Other 
+                 Settings" section of the widget Property Sheets.
+  ------------------------------------------------------------------------------*/
   ENABLE b-exit b-add b-chg b-del b-load b-delete b-help BROWSE-2 
-      WITH FRAME Dialog-Frame.
+    WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.

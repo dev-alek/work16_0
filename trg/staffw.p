@@ -158,11 +158,17 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 
   { trg/staffunq.i ub.staff buf_staff new(ub.staff) v-no-uniq v-mess }
   if v-no-uniq then do:
+    if g#esys then do:
+     v-mess.
+      return error.
+    end.
+    else do:  
      message
      vss-workfile vss-revision vss-description skip
      v-mess
      view-as alert-box .
      undo main-block, return error.
+    end. 
   end.
   if not (g#db-num <> 0 and g#news) then do:
     run str/callnews.p (

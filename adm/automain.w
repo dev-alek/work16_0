@@ -778,10 +778,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           {&window-name}:title = {&window-name}:title + "Система передачи новостей."
           g#auto = FALSE
         .
-        run write-to-log ( "Запущена система передачи новостей" ).
+        run write-to-log ( "Запущена система передачи новостей" ) no-error.
+        if error-status:error
+        then do:
+          run write-to-screen (return-value).
+        end.
 
         if v-hidden-mode = false then do:
-          run write-to-log ( "Через 5 секунд будет запущен автоматический режим обмена новостями" ).
+          run write-to-log ( "Через 5 секунд будет запущен автоматический режим обмена новостями" ) no-error.
           wait-for
             go of frame {&frame-name}
             or close of this-procedure
@@ -791,10 +795,18 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             focus frame {&frame-name}
             pause 5
             .
+          if error-status:error
+          then do:
+            run write-to-screen (return-value).
+          end.
         end.
         if not log-exit
         then do:
-          run write-to-log ( "Запущен автоматический режим обмена новостями" ).
+          run write-to-log ( "Запущен автоматический режим обмена новостями" ) no-error.
+          if error-status:error
+          then do:
+            run write-to-screen (return-value).
+          end.
           assign
             g#auto = TRUE
           .
@@ -919,7 +931,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     if v-for-proc <> "":U then do:
       run write-to-log ( substitute( "Сессия работает с Произвольными заданиями &1", v-for-proc ) ).
     end.
-
   end.
 
   main-cycl:
@@ -937,7 +948,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       .
     end.
     else do:
-
       run adm/chk-db.p no-error .
       if error-status :error then do:
         run write-to-log (  substitute( "&1. Проверка возможности работы сессии.&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
@@ -1036,7 +1046,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       .
       if num-entries( v-list-db ) > 0
       then do:
-        run write-to-log ( "Текущая" + {&space-char} + v-db-info ).
+        run write-to-log ( "Текущая" + {&space-char} + v-db-info ) no-error.
+        if error-status:error
+        then do:
+          run write-to-screen (return-value).
+        end.
 
         { gbl/mainproc.i }
 
@@ -1242,7 +1256,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                           + "Ошибка при анализе начала следующего сеанса" + {&new-line}
                           + error-status :get-message(error-status :num-messages) + {&new-line}
                           + return-value
-                        ) .
+                        ) no-error.
+        if error-status:error
+        then do:
+          run write-to-screen (return-value).
+        end.
       end.
       else do:
         assign
@@ -1252,7 +1270,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
       run gbl/dbdiscon.p no-error.
       if error-status :error then do:
-        run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
+        run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ) no-error.
+        if error-status:error
+        then do:
+          run write-to-screen (return-value).
+        end.
       end.
     end.
       assign
@@ -1314,7 +1336,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           assign
             v-hidden-mode = v-new-hidden-mode
           .
-          run write-to-log ( substitute( "Смена статуса 'видимости' сессии. Теперь сессия &1видна.", (if v-hidden-mode = true then "не":U else "") ) ).
+          run write-to-log ( substitute( "Смена статуса 'видимости' сессии. Теперь сессия &1видна.", (if v-hidden-mode = true then "не":U else "") ) ) no-error.
+          if error-status:error
+          then do:
+            run write-to-screen (return-value).
+          end.
         end.
       end.
 
@@ -1349,7 +1375,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   case p-auto-type :
     when {&btpr-type-autonws}
     then do:
-      run write-to-log ( "Закончен сеанс работы с системой передачи новостей" ).
+      run write-to-log ( "Закончен сеанс работы с системой передачи новостей" ) no-error.
+      if error-status:error
+      then do:
+        run write-to-screen (return-value).
+      end.
     end.
     when {&btpr-type-autoarh}
     then do:

@@ -18,6 +18,7 @@ define input parameter loc_db-num as integer   no-undo . /* номер базы данных */
 define input parameter p-language as character no-undo . /* язык */
 define input parameter p-r-b      as character no-undo . /* валюта прайс-листа */
 define input parameter p-sys-key  as character no-undo . /* системный ключ */
+define input parameter p-extra-to as integer   no-undo . /* раскрутка под: 0=ниподкого, 1="1С", 2= */ 
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -27,6 +28,8 @@ define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Начальная инициализация справочников".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
+
+&scop new-ver-num "v16_0000.000.000":U
 
 do
 on error undo, return error
@@ -65,9 +68,33 @@ on error undo, return error
       в УБД в табл. db содержится только ГБД (добавляется здесь) */
   create buf_db.
   assign
-    buf_db.db-num  = 0
-    buf_db.db-name = "Главная БД" /* db.db-name = "Cartea DB" */
+    buf_db.db-num      = 0
+    buf_db.db-name     = "Главная БД" /* db.db-name = "Cartea DB" */
+    /* по умолчанию в обычной ГБД флажок добавления клиентов не проставлялся; для раскрутки под 1С его надо проставлять */
+    buf_db.add-clients = true when (p-extra-to = 1) 
   .
+
+  /*инициализация записи о версии TH для гбд первоночальным запускм*/
+  if loc_db-num = 0
+  then do:
+    find first ub.sys-ctrl where ub.sys-ctrl.db-num = 0 no-lock .
+    create ub.upgrade.
+        assign
+          ub.upgrade.db-num      = ub.sys-ctrl.db-num
+          ub.upgrade.version-num = {&new-ver-num}
+          ub.upgrade.version-ord = next-value( s-upg-ord, ub )
+        .
+    assign
+      ub.upgrade.step-num    = step-num
+      ub.upgrade.err-msgs    = "":U
+      ub.upgrade.err-code    = 0
+      ub.upgrade.complete    = false
+      ub.upgrade.UpgDate     = today
+      ub.upgrade.UpgTimeInt  = time
+      ub.upgrade.UpgTime     = string( time, "HH:MM:SS" )
+    .
+  end.
+
 
   /*____________ дерево клиентов _____________________*/
   create buf_cli-grp.
@@ -77,7 +104,46 @@ on error undo, return error
     buf_cli-grp.node-name  = "Клиенты" /* &IF "rom" &THEN  cli-grp.node-name = "Clienti" */
     dynamic-current-value( "s-cli-grp":U, LDBNAME("DICTDB":U) ) = 1
   .
-
+  validate buf_cli-grp.
+  if p-extra-to = 1 then do:
+    /* с техносервом договорились, что группы клиентов нам не передают;
+       мы сами создаём:
+       2 - Фирмы, Объекты
+       3 - Поставщики
+       4 – Физ.лица
+       5 – Технологические контрагенты
+       наши технологические клиенты будут в диапазоне кодов 9 000 000, в группе 5 */
+    create buf_cli-grp.
+    assign
+      buf_cli-grp.upper-code = 1
+      buf_cli-grp.node-code  = 2
+      buf_cli-grp.node-name  = "Фирмы, Объекты"
+    .
+    validate buf_cli-grp.
+    create buf_cli-grp.
+    assign
+      buf_cli-grp.upper-code = 1
+      buf_cli-grp.node-code  = 3
+      buf_cli-grp.node-name  = "Поставщики"
+    .
+    validate buf_cli-grp.
+    create buf_cli-grp.
+    assign
+      buf_cli-grp.upper-code = 1
+      buf_cli-grp.node-code  = 4
+      buf_cli-grp.node-name  = "Физ.лица"
+    .
+    validate buf_cli-grp.
+    create buf_cli-grp.
+    assign
+      buf_cli-grp.upper-code = 1
+      buf_cli-grp.node-code  = 5
+      buf_cli-grp.node-name  = "Технологические контрагенты"
+      dynamic-current-value( "s-cli-grp":U, LDBNAME("DICTDB":U) ) = 5
+    .
+    validate buf_cli-grp.
+  end. /* end_of группы клиентов для p-extra-to = 1 */
+  
   /*____________ дерево товаров _____________________*/
   create buf_gds-grp.
   assign
@@ -154,16 +220,25 @@ on error undo, return error
       dynamic-current-value( "s-sclc-code":U, LDBNAME("DICTDB":U) ) = buf_code-range.first-code - 1
     .
 
+    /* границы интервалов для выгрузки в ЕРП-1С:
+       - технологические = 900 000 000,
+       - товары          = 999 999 999
+    */
+    define variable v-last-code as integer no-undo .
+    
+    v-last-code = (  if p-extra-to = 1 then 999999999
+                                       else (if p-sys-key <> "raimbek":U then 199999 else 2000000000)  ) .
     create buf_code-range.
     assign
       buf_code-range.range-type = {&gbl-bc-code}
       buf_code-range.PS         = "авто"
       buf_code-range.beg-date   = today
-      buf_code-range.first-code = 100000
-      buf_code-range.last-code  = ( if p-sys-key <> "raimbek":U then 199999 else 2000000000 )
+      buf_code-range.first-code = if p-extra-to = 1 then 1 else 100000
+      buf_code-range.last-code  = v-last-code
       buf_code-range.db-num = loc_db-num
       buf_code-range.stts = "a":U
-      dynamic-current-value( "s-bcgb-code":U, LDBNAME("DICTDB":U) ) = (if p-sys-key <> "raimbek":U then buf_code-range.first-code - 1 else buf_code-range.last-code + 1 )
+      dynamic-current-value( "s-bcgb-code":U, LDBNAME("DICTDB":U) ) =
+       (if p-sys-key <> "raimbek":U  and p-extra-to <> 1 then buf_code-range.first-code - 1 else buf_code-range.last-code + 1 )
     .
 
     create buf_code-range.
@@ -188,16 +263,20 @@ on error undo, return error
       buf_code-range.db-num = 0
       buf_code-range.stts = "u":U
     .
+    v-last-code = ( if (p-sys-key  = "raimbek":U) or
+                       (p-extra-to = 1) then 2000000000 else 99999 ). 
     create buf_code-range.
     assign
       buf_code-range.range-type = {&gbl-fm-code}
       buf_code-range.PS         = "авто"
       buf_code-range.beg-date   = today
       buf_code-range.first-code = 1000
-      buf_code-range.last-code  = ( if p-sys-key <> "raimbek":U then 99999 else 2000000000 )
+      buf_code-range.last-code  = v-last-code
       buf_code-range.db-num = 0
       buf_code-range.stts = "a":U
-      dynamic-current-value( "s-fmgb-code":U, LDBNAME("DICTDB":U) ) = (if p-sys-key <> "raimbek":U then buf_code-range.first-code - 1 else buf_code-range.last-code + 1 )
+      dynamic-current-value( "s-fmgb-code":U, LDBNAME("DICTDB":U) ) =
+       (if (p-sys-key  = "raimbek":U) or
+           (p-extra-to = 1) then buf_code-range.last-code + 1 else buf_code-range.first-code - 1 )
     .
 
     create buf_code-range.

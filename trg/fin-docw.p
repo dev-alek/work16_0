@@ -171,4 +171,27 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                              , error-status :get-message ( 1 ) ).
     end.
     end.
+    if ub.fin-doc.status_ = {&fin-fact} then do:
+    { gbl/rum-runa.i
+      ?
+      this-procedure:handle
+      ?
+      {&edoc-proc_event_fin-doc}
+      " buffer oldb:handle "
+      " buffer ub.fin-doc:handle "
+      ''
+      ''
+      no-error
+    }
+    if error-status :error
+    then
+    do:
+        return error substitute( "&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"
+            , {&new-line}
+            , vss-workfile
+            , return-value
+            , error-status :get-message ( 1 ) ).
+    end.
+    end.
+    
 end.

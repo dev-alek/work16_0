@@ -302,13 +302,13 @@ for each temp-items:
             and buf_ext-classif.key#_one = temp-items.gds-code-old no-error.
       if not available buf_ext-classif then do:
         assign
-        temp-items.notes = substitute("Не найдена запись в таблице соотвествий для бар-кода &1 &3 (код товара &2) в v15.1 ", temp-items.b-code-old, temp-items.gds-code-old, p-from-version).
+        temp-items.notes = substitute("Не найдена запись в таблице соотвествий для бар-кода &1 &3 (код товара &2) в v16.0 ", temp-items.b-code-old, temp-items.gds-code-old, p-from-version).
         v-ii-bind-err = v-ii-bind-err + 1.
         next _items1.
       end.
       if buf_ext-classif.uniq-key-rec = '' then do:
         assign
-        temp-items.notes = substitute("Запись в таблице соотвествий для бар-кода &1 &3 (код товара &2) в v15.1 НЕЗАПОЛНЕНА", temp-items.b-code-old, temp-items.gds-code-old, p-from-version).
+        temp-items.notes = substitute("Запись в таблице соотвествий для бар-кода &1 &3 (код товара &2) в v16.0 НЕЗАПОЛНЕНА", temp-items.b-code-old, temp-items.gds-code-old, p-from-version).
         v-ii-bind-err = v-ii-bind-err + 1.
         next _items1.
       end.
@@ -328,7 +328,7 @@ for each temp-items:
                                          ,output v-tbl-name) no-error.
       if error-status:error then do:
         assign
-        temp-items.notes = substitute("Ошибка при поиске товара v15.1 по ключу записи (&1): &2 &3"
+        temp-items.notes = substitute("Ошибка при поиске товара v16.0 по ключу записи (&1): &2 &3"
                                         , buf_ext-classif.uniq-key-rec
                                         , error-status:get-message(1)
                                         , return-value ).
@@ -339,7 +339,7 @@ for each temp-items:
                 rowid(buf_goods) = v-tbl-row no-error.
       if not available buf_goods then do:
         assign
-        temp-items.notes = substitute("Ошибка при поиске товара v15.1 по ключу записи (&1)", buf_ext-classif.uniq-key-rec).
+        temp-items.notes = substitute("Ошибка при поиске товара v16.0 по ключу записи (&1)", buf_ext-classif.uniq-key-rec).
         v-ii-bind-err = v-ii-bind-err + 1.
         next _items1.
       end.
@@ -358,7 +358,7 @@ for each temp-items:
            .
            if temp-items.cli-base-rate-151 <> temp-items.cli-base-rate-old then do:
               assign
-              temp-items.notes = substitute("Бар-код v15.1 (&1) имеет кратность ед.изм &2, бар-код &5 (&3) кратность &4"
+              temp-items.notes = substitute("Бар-код v16.0 (&1) имеет кратность ед.изм &2, бар-код &5 (&3) кратность &4"
                                             , temp-items.b-code-151
                                             , temp-items.cli-base-rate-151
                                             , temp-items.b-code-old
@@ -382,7 +382,7 @@ for each temp-items:
       end. /*      for each buf_bar-code no-lock where*/
       if not v-found then do:
         assign
-        temp-items.notes = substitute("Не найден подходящий бар-код в v15.1 для бар-кода &4 &1 (код товара в &4 - &2, код товара в v15.1 - &2"
+        temp-items.notes = substitute("Не найден подходящий бар-код в v16.0 для бар-кода &4 &1 (код товара в &4 - &2, код товара в v16.0 - &2"
                                       , temp-items.b-code-old
                                       , temp-items.gds-code-old
                                       , temp-items.gds-code-151
@@ -404,17 +404,17 @@ end. /*for each temp-items*/
 {&display-message}.
 &scop my-message substitute("пропущено   записей с партионным бар-кодом:                      &1", v-ii-part-err)
 {&display-message}.
-&scop my-message substitute("пропущено   записей без соответствия товара в v15.1:            &1", v-ii-bind-err)
+&scop my-message substitute("пропущено   записей без соответствия товара в v16.0:            &1", v-ii-bind-err)
 {&display-message}.
-&scop my-message substitute("пропущено   записей с другой кратностью бар-кода в v15.1:        &1", v-ii-cli-base-rate-err)
+&scop my-message substitute("пропущено   записей с другой кратностью бар-кода в v16.0:        &1", v-ii-cli-base-rate-err)
 {&display-message}.
-&scop my-message substitute("пропущено   записей с не найденным подходящим бар-кодом в v15.1: &1", v-ii-nf-bar-code-err)
+&scop my-message substitute("пропущено   записей с не найденным подходящим бар-кодом в v16.0: &1", v-ii-nf-bar-code-err)
 {&display-message}.
 &scop my-message substitute("...")
 {&display-message} .
 f-name = ''.
 system-dialog get-file v-full-path-2
-title "Введите имя файла, в который будет выведен список БАРКОД;ЦЕНА с бар-кодами из v15.1"
+title "Введите имя файла, в который будет выведен список БАРКОД;ЦЕНА с бар-кодами из v16.0"
 filters "Текстовый файл (*.csv)"   "*.csv" ,
         "Текстовый файл (*.txt)"   "*.txt" ,
         "Список кодов   (*.bb)"    "*.bb" ,

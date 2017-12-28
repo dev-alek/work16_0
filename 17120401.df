@@ -1,0 +1,309 @@
+ADD TABLE "sr-izmerenia"
+  AREA "Primary_data"
+  CAN-CREATE "!,!odbc,*"
+  CAN-DELETE "!,!odbc,*"
+  CAN-READ "!,*"
+  CAN-WRITE "!,!odbc,*"
+  CAN-DUMP "!odbc,*"
+  CAN-LOAD "!odbc,*"
+  DESCRIPTION "Средства измерения"
+  DUMP-NAME "sr-izm"
+  TABLE-TRIGGER "DELETE" OVERRIDE PROCEDURE "trg/srizmd.p" CRC "?" 
+  TABLE-TRIGGER "WRITE" OVERRIDE PROCEDURE "trg/srizmw.p" CRC "?" 
+
+ADD FIELD "node-code" OF "sr-izmerenia" AS integer 
+  FORMAT ">>>9"
+  INITIAL "0"
+  LABEL "Код"
+  POSITION 2
+  MAX-WIDTH 4
+  COLUMN-LABEL "Код"
+  ORDER 10
+  MANDATORY
+
+ADD FIELD "sr-model" OF "sr-izmerenia" AS character 
+  FORMAT "x(35)"
+  INITIAL ""
+  LABEL "Модель"
+  POSITION 3
+  MAX-WIDTH 70
+  COLUMN-LABEL "Модель"
+  ORDER 20
+
+ADD FIELD "sr-type-id" OF "sr-izmerenia" AS integer 
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Тип"
+  POSITION 4
+  MAX-WIDTH 4
+  COLUMN-LABEL "Тип"
+  ORDER 30
+
+ADD FIELD "sr-temp-line" OF "sr-izmerenia" AS decimal 
+  DESCRIPTION "Температурный коэффициент линейного расширения материала средства измерения уровня"
+  FORMAT "-9.9999999"
+  INITIAL "0"
+  LABEL "Температурный коэффициент линейного расширения"
+  POSITION 5
+  MAX-WIDTH 25
+  DECIMALS 10
+  ORDER 40
+
+ADD FIELD "sr-abs-err-neft-water" OF "sr-izmerenia" AS decimal 
+  DESCRIPTION "Абсолютная погрешность измерений уровня нефтепродукта и подтоварной воды"
+  FORMAT "-9.9999"
+  INITIAL "0"
+  LABEL "Абсолютная погрешность измерений"
+  POSITION 6
+  MAX-WIDTH 19
+  DECIMALS 4
+  ORDER 50
+
+ADD FIELD "sr-abs-err-water" OF "sr-izmerenia" AS decimal 
+  DESCRIPTION "Абсолютная погрешность измерений уровня подтоварной воды"
+  FORMAT "-9.9999"
+  INITIAL "0"
+  LABEL "Абсолютная погрешность измерений"
+  POSITION 7
+  MAX-WIDTH 19
+  DECIMALS 4
+  ORDER 60
+
+ADD FIELD "sr-abs-err-dens" OF "sr-izmerenia" AS decimal 
+  DESCRIPTION "Абсолютная погрешность измерений плотности нефтепродукта ареометром"
+  FORMAT "-9.9999"
+  INITIAL "0"
+  LABEL "Абсолютная погрешность измерений"
+  POSITION 8
+  MAX-WIDTH 19
+  DECIMALS 4
+  ORDER 70
+
+ADD FIELD "sr-abs-err-temp-vol" OF "sr-izmerenia" AS decimal 
+  DESCRIPTION "Абсолютная погрешность измерений температуры нефтепродукта при измерении его объема"
+  FORMAT "-9.9999"
+  INITIAL "0"
+  LABEL "Абсолютная погрешность измерений"
+  POSITION 9
+  MAX-WIDTH 19
+  DECIMALS 4
+  ORDER 80
+
+ADD FIELD "sr-abs-err-temp-dens" OF "sr-izmerenia" AS decimal 
+  DESCRIPTION "Абсолютная погрешность измерений температуры нефтепродукта при измерении его плотности"
+  FORMAT "-9.9999"
+  INITIAL "0"
+  LABEL "Абсолютная погрешность измерений"
+  POSITION 10
+  MAX-WIDTH 19
+  DECIMALS 4
+  ORDER 90
+
+ADD FIELD "sr-otnos" OF "sr-izmerenia" AS decimal 
+  DESCRIPTION "Предел допускаемой относительной погрешности средства обработки результатов измерений"
+  FORMAT "-9.999999"
+  INITIAL "0"
+  LABEL "Предел допускаемой относительной погрешности"
+  POSITION 11
+  MAX-WIDTH 21
+  DECIMALS 6
+  ORDER 100
+
+ADD INDEX "pi" ON "sr-izmerenia" 
+  AREA "Primary_data"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "node-code" ASCENDING 
+
+ADD SEQUENCE "s-sr-izmerenia"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+  MIN-VAL ?
+  MAX-VAL ?
+
+ADD TABLE "c-sr-izmerenia"
+  AREA "History"
+  CAN-CREATE "!,!odbc,*"
+  CAN-DELETE "!,!odbc,*"
+  CAN-READ "!,*"
+  CAN-WRITE "!,!odbc,*"
+  CAN-DUMP "!odbc,*"
+  CAN-LOAD "!odbc,*"
+  DESCRIPTION "История справочника Средства измерения"
+  DUMP-NAME "c-sr-izm"
+  TABLE-TRIGGER "DELETE" OVERRIDE PROCEDURE "trg/c-srizmd.p" CRC "?" 
+  TABLE-TRIGGER "WRITE" OVERRIDE PROCEDURE "trg/c-srizmw.p" CRC "?" 
+
+ADD FIELD "node-code" OF "c-sr-izmerenia" AS integer 
+  FORMAT ">>>9"
+  INITIAL "0"
+  LABEL "Код"
+  POSITION 2
+  MAX-WIDTH 4
+  COLUMN-LABEL "Код"
+  ORDER 10
+  MANDATORY
+
+ADD FIELD "sr-model" OF "c-sr-izmerenia" AS character 
+  FORMAT "x(35)"
+  INITIAL ""
+  LABEL "Модель"
+  POSITION 3
+  MAX-WIDTH 70
+  COLUMN-LABEL "Модель"
+  ORDER 20
+
+ADD FIELD "sr-type-id" OF "c-sr-izmerenia" AS integer 
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Тип"
+  POSITION 4
+  MAX-WIDTH 4
+  COLUMN-LABEL "Тип"
+  ORDER 30
+
+ADD FIELD "sr-temp-line" OF "c-sr-izmerenia" AS decimal 
+  DESCRIPTION "Температурный коэффициент линейного расширения материала средства измерения уровня"
+  FORMAT "-9.9999999"
+  INITIAL "0"
+  LABEL "Температурный коэффициент линейного расширения"
+  POSITION 5
+  MAX-WIDTH 25
+  DECIMALS 10
+  ORDER 40
+
+ADD FIELD "sr-abs-err-neft-water" OF "c-sr-izmerenia" AS decimal 
+  DESCRIPTION "Абсолютная погрешность измерений уровня нефтепродукта и подтоварной воды"
+  FORMAT "-9.9999"
+  INITIAL "0"
+  LABEL "Абсолютная погрешность измерений"
+  POSITION 6
+  MAX-WIDTH 19
+  DECIMALS 4
+  ORDER 50
+
+ADD FIELD "sr-abs-err-water" OF "c-sr-izmerenia" AS decimal 
+  DESCRIPTION "Абсолютная погрешность измерений уровня подтоварной воды"
+  FORMAT "-9.9999"
+  INITIAL "0"
+  LABEL "Абсолютная погрешность измерений"
+  POSITION 7
+  MAX-WIDTH 19
+  DECIMALS 4
+  ORDER 60
+
+ADD FIELD "sr-abs-err-dens" OF "c-sr-izmerenia" AS decimal 
+  DESCRIPTION "Абсолютная погрешность измерений плотности нефтепродукта ареометром"
+  FORMAT "-9.9999"
+  INITIAL "0"
+  LABEL "Абсолютная погрешность измерений"
+  POSITION 8
+  MAX-WIDTH 19
+  DECIMALS 4
+  ORDER 70
+
+ADD FIELD "sr-abs-err-temp-vol" OF "c-sr-izmerenia" AS decimal 
+  DESCRIPTION "Абсолютная погрешность измерений температуры нефтепродукта при измерении его объема"
+  FORMAT "-9.9999"
+  INITIAL "0"
+  LABEL "Абсолютная погрешность измерений"
+  POSITION 9
+  MAX-WIDTH 19
+  DECIMALS 4
+  ORDER 80
+
+ADD FIELD "sr-abs-err-temp-dens" OF "c-sr-izmerenia" AS decimal 
+  DESCRIPTION "Абсолютная погрешность измерений температуры нефтепродукта при измерении его плотности"
+  FORMAT "-9.9999"
+  INITIAL "0"
+  LABEL "Абсолютная погрешность измерений"
+  POSITION 10
+  MAX-WIDTH 19
+  DECIMALS 4
+  ORDER 90
+
+ADD FIELD "sr-otnos" OF "c-sr-izmerenia" AS decimal 
+  DESCRIPTION "Предел допускаемой относительной погрешности средства обработки результатов измерений"
+  FORMAT "-9.999999"
+  INITIAL "0"
+  LABEL "Предел допускаемой относительной погрешности"
+  POSITION 11
+  MAX-WIDTH 21
+  DECIMALS 6
+  ORDER 100
+
+ADD FIELD "chip-num" OF "c-sr-izmerenia" AS integer 
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  POSITION 12
+  MAX-WIDTH 4
+  ORDER 110
+
+ADD FIELD "corr-date" OF "c-sr-izmerenia" AS date 
+  FORMAT "99/99/99"
+  INITIAL ?
+  POSITION 13
+  MAX-WIDTH 4
+  ORDER 120
+
+ADD FIELD "corr-time" OF "c-sr-izmerenia" AS integer 
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  POSITION 14
+  MAX-WIDTH 4
+  ORDER 130
+
+ADD FIELD "corr-user-db-num" OF "c-sr-izmerenia" AS integer 
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  POSITION 15
+  MAX-WIDTH 4
+  ORDER 140
+
+ADD FIELD "corr-user-name" OF "c-sr-izmerenia" AS character 
+  FORMAT "x(8)"
+  INITIAL ""
+  POSITION 16
+  MAX-WIDTH 16
+  ORDER 150
+
+ADD FIELD "action" OF "c-sr-izmerenia" AS character 
+  FORMAT "x(8)"
+  INITIAL ""
+  POSITION 17
+  MAX-WIDTH 16
+  ORDER 160
+
+ADD FIELD "is-del" OF "c-sr-izmerenia" AS logical 
+  FORMAT "yes/no"
+  INITIAL "no"
+  POSITION 18
+  MAX-WIDTH 1
+  ORDER 170
+
+ADD INDEX "pi" ON "c-sr-izmerenia" 
+  AREA "History_Index"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "node-code" ASCENDING 
+  INDEX-FIELD "corr-user-db-num" ASCENDING 
+  INDEX-FIELD "chip-num" ASCENDING 
+
+ADD INDEX "idate" ON "c-sr-izmerenia" 
+  AREA "History_Index"
+  INDEX-FIELD "node-code" ASCENDING 
+  INDEX-FIELD "corr-date" ASCENDING 
+  INDEX-FIELD "corr-time" ASCENDING 
+  INDEX-FIELD "corr-user-db-num" ASCENDING 
+
+ADD INDEX "is-del" ON "c-sr-izmerenia" 
+  AREA "History_Index"
+  INDEX-FIELD "is-del" ASCENDING 
+
+
+.
+PSC
+cpstream=1251
+.
+0000000190

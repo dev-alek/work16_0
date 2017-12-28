@@ -1077,7 +1077,15 @@ class Ibs.Th.Rul.route-data_:
                                           , input p-action as character     ):
     define variable v-esys-rec-ord as integer no-undo .
     define variable v-local-xmlh as handle no-undo .
+    define variable v-dump-name as character no-undo .
     define buffer buf_temp-xml-tables for temp-xml-tables.
+    
+    v-dump-name = "" .
+    if num-entries(p-action, {&delim-par}) = 2
+    then do :
+        v-dump-name = entry(2, p-action, {&delim-par}) no-error.
+        p-action = entry(1, p-action, {&delim-par}) no-error.
+    end.
 
     if direction = {&route-import} then do:
         undo, return error substitute("Нельзя маршрутизировать буфер маршрутизации в режиме импорта").
@@ -1085,7 +1093,7 @@ class Ibs.Th.Rul.route-data_:
 
     run add-dump-data in p-esys-cmd-proc-handle
       (input p-esys-cmd-code
-      ,input "xml data"
+      ,input if v-dump-name = "" then "xml data" else v-dump-name
       ,input p-action
       ,input p-data
       ,output v-esys-rec-ord

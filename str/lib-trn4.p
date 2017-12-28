@@ -19,6 +19,8 @@ Create: Булгаков Андрей Николаевич
 
 */
 
+using ibs.th.gbl.gbl-hndllib from propath.
+
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
@@ -60,12 +62,20 @@ else do:
   assign
     g#lib-trn4 = this-procedure :handle
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#lib-trn4", g#lib-trn4).
+  delete object gbl-hndllibObj.
 end.
 
 on delete of this-procedure do:
   assign
     g#lib-trn4 = ?
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#lib-trn4", g#lib-trn4).
+  delete object gbl-hndllibObj.
 end.
 
 define stream str-err .
@@ -529,6 +539,7 @@ define buffer buf_goods for ub.goods .
 define variable var-ok-assort-pol   as logical   no-undo .
 define variable var-mess-assort-pol as character no-undo .
 define variable v-file-n as character no-undo .
+define variable v-ischg-ext-type as logical no-undo .
 
   do
   on error undo, return error return-value
@@ -536,6 +547,17 @@ define variable v-file-n as character no-undo .
     find first buf_trn-doc exclusive-lock
       where buf_trn-doc.doc-code = p-doc-code
       no-error .
+    
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+    then do:
+      buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}.
+      buf_trn-doc.internal = false.
+      buf_trn-doc.discnt-type = "".
+      v-ischg-ext-type = true.
+      buf_trn-doc.tot-cli = buf_trn-doc.tot-calc.
+      buf_trn-doc.fact-date = today.
+    end.
+    
     if not available buf_trn-doc
     then do:
       message
@@ -2347,6 +2369,14 @@ define variable v-file-n as character no-undo .
             no-error
           }
       end.
+      
+    if v-ischg-ext-type
+    then do:
+      buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}.
+      buf_trn-doc.internal = true.
+      buf_trn-doc.discnt-type = {&percent}.
+      v-ischg-ext-type = false.
+    end.
 
   end.
 end procedure. /* lib-trn4_int-clos */

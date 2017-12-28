@@ -23,8 +23,11 @@ define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Триггер на удаление записи валюта".
+
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
+
+define variable v-mess as character no-undo .
 
 main-block:
 do
@@ -32,11 +35,15 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
-
+if g#esys then do:
+    v-mess = "Физическое удаление валюты в системе запрещено".
+    return error.
+end.
+else do:  
   message
     vss-workfile vss-revision vss-description skip
     "Физическое удаление валюты в системе запрещено" skip
     view-as alert-box error .
   undo main-block, return error.
-
+end.
 end.

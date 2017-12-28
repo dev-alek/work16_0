@@ -971,4 +971,26 @@ if entry(1, p-param-2-data-type, "_") = {&table_sysconf} then do:
       p-ok = yes
       .
     end.
+    if p-param-2-data-type = "id" then do:
+      if p-mode = {&verify} then do:
+        p-ok = yes.
+        return '':U.
+      end.
+      run gbl/d-prompt.w (
+          'title=':u + "ВВЕДИТЕ ЗНАЧЕНИЕ" + '\':u
+        + 'text1=' + substitute("ЗНАЧЕНИЕ") + '\':u
+        + 'format=' + "X(40)" + '\':u
+        + 'type=' + {&type-char} + '\':u
+        + 'fillin_row=2\':u
+        + 'fillin_col=4\':u
+        + 'fillin_width=20\':u
+        + 'fillin_height=1\':u
+        + 'max-chars=70\':u     /*- максимальное количество символов для редактора*/
+        + 'readonly=no\':u
+        , input-output p-value-character
+        ).
+      assign
+      p-ok = yes
+      .
+    end.
 end.

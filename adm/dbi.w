@@ -136,13 +136,14 @@ DEFINE FRAME dbi
      b-quit AT ROW 1 COL 11
      b-help AT ROW 1 COL 67
      ub.db.db-num AT ROW 2.67 COL 10.63 COLON-ALIGNED
+          FORMAT ">>>>>>>>9"
           VIEW-AS FILL-IN
-          SIZE 6 BY 1
-     ub.db.db-key AT ROW 2.67 COL 26.5 COLON-ALIGNED
+          SIZE 10 BY 1
+     ub.db.db-key AT ROW 2.67 COL 30.5 COLON-ALIGNED
           LABEL "Ключ БД" FORMAT "X(12)"
           VIEW-AS FILL-IN
           SIZE 13 BY 1
-     ub.db.db-key-enc AT ROW 2.67 COL 51 COLON-ALIGNED
+     ub.db.db-key-enc AT ROW 2.67 COL  55 COLON-ALIGNED
           LABEL "Кодировка" FORMAT "X(16)"
           VIEW-AS FILL-IN
           SIZE 17 BY 1

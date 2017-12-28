@@ -458,6 +458,7 @@ DEFINE FRAME Dialog-Frame
      T-ho-join AT ROW 2.25 COL 47
      temp-dc-type.emitent-host-code AT ROW 3.38 COL 10.25 COLON-ALIGNED
           LABEL "Эмитент"
+		  FORMAT ">>>>>>>>99"
           VIEW-AS FILL-IN
           SIZE 10 BY 1 TOOLTIP "Код фирмы эмитента или 0 (если карта глобальна)"
           FGCOLOR 4

@@ -1,0 +1,16 @@
+ADD FIELD "uid-es" OF "price-doc" AS character
+  FORMAT "x(60)"
+  POSITION 47
+  INITIAL ""
+  ORDER 620
+  MAX-WIDTH 120
+
+ADD INDEX "uid-es" ON "price-doc"
+  AREA "Price"
+  INDEX-FIELD "uid-es" ASCENDING
+
+.
+PSC
+cpstream=1251
+.
+0000000217

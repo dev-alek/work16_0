@@ -502,6 +502,7 @@ on endkey undo block_cre-route, return error substitute( "&1. endkey", vss-workf
         &esr-CreTimeInt=v-cre-time
         &esr-CreUserName=v-cre-user
         &esr-action=v-esr-act-name
+        &esr-oper="''"
       }
     end.
   end.      /* if v-act-name = {&send-tbl-oxml} */

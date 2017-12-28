@@ -171,7 +171,7 @@ for each src_clients no-lock:
                 )
         then do:
           if available src_temp-sysconf then do:
-            &scop my-message substitute("хЛОНПР &1&2: Б яхяреле &1 ЩРН ябнъ тхплю , Ю Б v15.1 (&3&4) - мер" ~
+            &scop my-message substitute("хЛОНПР &1&2: Б яхяреле &1 ЩРН ябнъ тхплю , Ю Б v16.0 (&3&4) - мер" ~
                                         , src_clients.obj-type ~
                                         , src_clients.obj-code ~
                                         , ~{&cmp~} ~
@@ -180,7 +180,7 @@ for each src_clients no-lock:
             {&display-message}.
           end.
           else do:
-            &scop my-message substitute("хЛОНПР &1&2: Б яхяреле v15.1 ЩРН ябнъ тхплю (&3&4), Ю Б &5  - мер" ~
+            &scop my-message substitute("хЛОНПР &1&2: Б яхяреле v16.0 ЩРН ябнъ тхплю (&3&4), Ю Б &5  - мер" ~
                                       , src_clients.obj-type ~
                                       , src_clients.obj-code ~
                                       , ~{&cmp~} ~

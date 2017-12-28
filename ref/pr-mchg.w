@@ -1558,6 +1558,7 @@ end.
               ,input gds-grp.node-name
               ,input gds-grp.calc-method
               ,input v-increase-pc
+              ,input gds-grp.print-code
               ,input v-round-method
               ,input v-base
               ,output rid

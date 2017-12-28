@@ -26,6 +26,9 @@ function get-short-pack-name returns character ( input p-action as character
 define variable v-short-pack-name as character no-undo .
 define buffer buf_esys-pck-rcvd for ub.esys-pck-rcvd.
 define buffer buf_clients for ub.clients.
+define variable v-int-point as character no-undo .
+define variable v-type as character no-undo .
+
 case p-delivery-method:
  when integer({&esys-dm-oracle-retail}) then do:
    find first buf_clients no-lock where
@@ -87,6 +90,32 @@ case p-delivery-method:
  when integer({&esys-dm-contour-edi}) then do:
    p-custom-flag = yes.
    v-short-pack-name = p-custom-pack-name.
+ end.
+ when integer({&esys-dm-erp-1C-RN}) then do:
+   case p-action:
+     when "put"
+     or when "fput" then do:
+       run db-attr-value in this-procedure 
+           (input g#db-num
+           ,input {&attr-int-point}
+           ,output v-int-point
+           ,output v-type
+           ) no-error .
+       
+       p-custom-flag = yes.
+       v-short-pack-name = v-int-point + "_00000_" + string(p-pack-num) + "_"
+                         + string(day(now), "99") + string(month(now), "99") + string(year(now), "9999")
+                         + substring(string(TIME, "HH:MM:SS"), 1, 2)
+                         + substring(string(TIME, "HH:MM:SS"), 4, 2)
+                         + substring(string(TIME, "HH:MM:SS"), 7, 2)
+                         + ".xml" .
+     end.
+     when "get"
+     or when "fget" then do:
+       p-custom-flag = yes.
+       v-short-pack-name = p-custom-pack-name.
+     end. 
+   end case.   
  end.
  otherwise do:
    v-short-pack-name = "o":U + string( p-pack-num, "999999999":U ) + ".":U.

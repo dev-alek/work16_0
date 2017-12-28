@@ -34,22 +34,37 @@ define variable vss-description as character no-undo init "Закачка валют, едизм,
 { cmp/tblfname.i }
 { ref/cgrplbfn.i }
 { trg/new-bcod.i }
+{ gbl/attr-lib.i }  /* для &run_proc_attr-lib */
+
+
+/* kick-db.p вызывается из adm/init-db.p и из gbl/menuload.p;
+   чтобы не менять параметры вызова из menuload.p - получаем входные параметры через указатель на вызывающую процедуру */
+define /* input parameter */ variable p-extra-to as integer no-undo . /* раскрутка под: 0=ниподкого, 1="1С", 2= */ 
+define variable v-call-proc as handle no-undo.
+define variable v-func-list as character no-undo.
+v-call-proc = this-procedure:instantiating-procedure.
+if valid-handle(v-call-proc) then do:
+  /* if r-index(v-call-proc:file-name, "init-db.p") > 0 then do: */
+  v-func-list = v-call-proc:INTERNAL-ENTRIES.
+  if can-do(v-func-list, "get-param") then do:
+    run value("get-param") in v-call-proc (output p-extra-to).
+  end.
+end.  
+   
 
 define variable v-today as date      no-undo.
-define variable v-time  as integer   no-undo.
 define variable glog as logical no-undo .
 define variable v-cntxt-db-num         like ub.sys-ctrl.db-num   no-undo. /*текущая БД*/
 define variable v-cntxt-userid         as   character            no-undo. /*текущий пользователь*/
 define buffer buf_sys-ctrl for DICTDB.sys-ctrl.
 
-
+define variable v-is-1c-erp  as logical no-undo. /* true: если в качестве ERP используется 1C */  
 define variable country-path as char no-undo.
 define variable menu-grp-path as character no-undo .
 
-define temp-table  for-country no-undo like ub.country .
+define temp-table for-country      no-undo like ub.country .
 define temp-table temp_fbr-gds-grp no-undo like ub.fbr-gds-grp.
 
-define buffer buf_country           for DICTDB.country .
 define buffer buf_currency          for DICTDB.currency .
 define buffer buf_curr-accnt        for DICTDB.curr-accnt .
 define buffer buf_curr-bank         for DICTDB.curr-bank .
@@ -61,6 +76,7 @@ define buffer buf_tax-units         for DICTDB.tax-units .
 define buffer buf_tax-rate-gds-grp  for DICTDB.tax-rate-gds-grp .
 define buffer buf_cli-grp           for DICTDB.cli-grp .
 define buffer buf_clients           for DICTDB.clients .
+define buffer buf_clients-attr      for DICTDB.clients-attr .
 define buffer buf_firm              for DICTDB.firm .
 define buffer buf_cash-pay          for DICTDB.cash-pay .
 define buffer buf_wealth            for DICTDB.wealth .
@@ -81,6 +97,7 @@ disable triggers for load of DICTDB.fbr-gds-grp .
 disable triggers for load of DICTDB.hist-nws-option .
 disable triggers for load of DICTDB.cli-grp .
 disable triggers for load of DICTDB.clients .
+disable triggers for load of DICTDB.clients-attr .
 disable triggers for load of DICTDB.firm .
 disable triggers for load of DICTDB.cash-pay .
 disable triggers for load of DICTDB.wealth .
@@ -105,6 +122,8 @@ message
 view-as alert-box question buttons OK-Cancel update glog.
 if glog <> true then return.
 
+v-is-1c-erp = (p-extra-to = 1).
+
 run waitfram-show in this-procedure ("Инициализация валют").
 
 find buf_currency where buf_currency.curr-code = 0 no-error.
@@ -119,7 +138,7 @@ assign
   buf_currency.curr-abbr = "руб"
   buf_currency.part-name = "копейка"
   buf_currency.part-abbr = "коп"
-  buf_currency.okv-code = 810
+  buf_currency.okv-code  = 643
   buf_currency.curr-name-one =  "рубль":U
   buf_currency.curr-name-three = "рубля":U
   buf_currency.curr-name-five = "рублей":U
@@ -130,12 +149,10 @@ assign
 
 run waitfram-show in this-procedure ("Инициализация курсов валют").
 
+v-today = today.
 find buf_curr-accnt where buf_curr-accnt.curr-code = 0 no-error.
 if not available buf_curr-accnt then do:
   create buf_curr-accnt.
-  run cur-time in this-procedure ( output v-today
-                                 , output v-time
-                                 ).
   assign
     buf_curr-accnt.curr-code = 0
     buf_curr-accnt.exch-date = v-today
@@ -148,9 +165,6 @@ assign
 find buf_curr-bank where buf_curr-bank.curr-code = 0 no-error.
 if not available buf_curr-bank then do:
   create buf_curr-bank.
-  run cur-time in this-procedure ( output v-today
-                                  , output v-time
-                                  ).
    assign
      buf_curr-bank.curr-code = 0
      buf_curr-bank.exch-date = v-today
@@ -159,64 +173,37 @@ end.
 assign
   buf_curr-bank.exch-rate = 1
   buf_curr-bank.exch-scale = 1
-.
+no-error. /* чтобы сбросить error-status после find first */
 
-run waitfram-show in this-procedure ("Инициализация справочника стран").
-country-path = search("cmp/countris.txt").
-if country-path = ? then do:
+
+if not v-is-1c-erp then do:
+  run waitfram-show in this-procedure ("Инициализация справочника стран").
+  country-path = search("cmp/countris.txt").
+  if country-path = ? then do:
     message "Нет найден файл импорта для справочника стран countris.txt"
                     "Справочник стран не будет заполнен!"
                     view-as alert-box.
-end.
-else do:
-  input from value(country-path).
-  for each for-country:
-  delete for-country.
   end.
-  _repeat:
-  REPEAT:
-      CREATE for-country.
-      IMPORT for-country NO-ERROR.
-      if error-status:error then next _repeat.
-      if for-country.alpha1 = '':U then do:
-        delete for-country.
-        next _repeat.
-      end.
-      IF NOT (CAN-FIND(FIRST DICTDB.country where DICTDB.country.num-code = for-country.num-code) OR
-                  CAN-FIND(FIRST DICTDB.country where DICTDB.country.alpha1 = for-country.alpha1))
-                  and for-country.num-code > 0
-      then do:
-          create buf_country.
-          ASSIGN
-            buf_country.alpha1     = for-country.alpha1
-            buf_country.alpha2     = for-country.alpha2
-            buf_country.long-name  = for-country.long-name
-            buf_country.num-code   = for-country.num-code
-            buf_country.short-name = for-country.short-name
-          .
-      end.
-      delete for-country.
-  END.
-  for each for-country:
-    delete for-country.
+  else do:
+    run import-countries in this-procedure (input country-path) .
   end.
-
-  INPUT CLOSE.
 end.
 
 menu-grp-PATH = search("cmp/menu-grp.txt").
 if menu-grp-path = ? then do:
     message
-    "Нет найден файл импорта для справочника глобальных групп меню menu-grp.txt"
-    "Справочник глоальных групп меню не будет заполнен!"
+    "Отсутствует файл для импорта справочника глобальных групп меню menu-grp.txt" skip
+    "Справочник глобальных групп меню не будет заполнен."
     view-as alert-box.
 end.
 else do:
   run waitfram-show in this-procedure ("Инициализация справочника глобальных групп меню").
   run import-menu-grps in this-procedure .
+  /* оставляет после себя error-status */
 end.
 
-if p-sys-key <> "raimbek":U then do:
+if not v-is-1c-erp then do:
+  if p-sys-key <> "raimbek":U then do:
 
   run waitfram-show in this-procedure ("Инициализация единиц измерения").
 
@@ -225,17 +212,20 @@ if p-sys-key <> "raimbek":U then do:
   run cre-unit in this-procedure ("кг", "килограмм", {&weight}).
   run cre-unit in this-procedure ("м", "метр", {&divisional}).
   run cre-unit in this-procedure ("уп", "упаковка", {&pieces}).
+  end.
 end.
+
 
 run waitfram-show in this-procedure ("Инициализация категорий налогов").
 
 run cre-tax in this-procedure (1, "НДС", {&percentive}, no, ({&pieces} + {&comma-char} + {&weight} + {&comma-char} + {&serial} + {&comma-char} + {&divisional} + {&comma-char} + {&petrolium}), no).
+run cre-tax in this-procedure (2, "НП", {&percentive}, no, ({&pieces} + {&comma-char} + {&weight} + {&comma-char} + {&serial} + {&comma-char} + {&divisional} + {&comma-char} + {&petrolium}), no).
 run cre-tax in this-procedure (3, "Доп.компонента", {&absolute}, no, {&bottle}, yes).
 run cre-tax in this-procedure (4, "Акциз", {&absolute}, no, {&petrolium}, yes).
 
-if p-sys-key <> "raimbek":U then do:
-  run waitfram-show in this-procedure ("Инициализация ставок налогов").
+run waitfram-show in this-procedure ("Инициализация ставок налогов").
 
+if p-sys-key <> "raimbek":U then do:
   run cre-tax-rate in this-procedure (1, 1, "НДС 1").
   run cre-tax-rate in this-procedure (1, 2, "НДС 2").
   run cre-tax-rate in this-procedure (1, 3, "НДС 3").
@@ -243,27 +233,37 @@ if p-sys-key <> "raimbek":U then do:
   run cre-tax-rate-value in this-procedure (1, 1, 18).
   run cre-tax-rate-value in this-procedure (1, 2, 10).
   run cre-tax-rate-value in this-procedure (1, 3, 0).
-
 end.
 
-run cre-tax in this-procedure (2, "НП", {&percentive}, no, ({&pieces} + {&comma-char} + {&weight} + {&comma-char} + {&serial} + {&comma-char} + {&divisional} + {&comma-char} + {&petrolium}), no).
-
 run cre-tax-rate in this-procedure (2, 22, "НП 22").
-
 run cre-tax-rate-value in this-procedure (2, 22, 0).
 
+run waitfram-show in this-procedure ("Заполнение налогов на группу товаров").
 run add-tax-gds-grp in this-procedure  no-error .
 
+
 if p-sys-key <> "raimbek":U then do:
+  if not v-is-1c-erp then do:
+    /* согласованные с техносерв группы клиентов добавляются в initftbl.p */
   run waitfram-show in this-procedure ("Инициализация групп клиентов" ) .
   run cre-cli-grp in this-procedure ( "Свои объекты, фирмы" ) .
   run cre-cli-grp in this-procedure ( "Производители и поставщики" ) .
   run cre-cli-grp in this-procedure ( "Покупатели" ) .
   run cre-cli-grp in this-procedure ( "Персонал" ) .
+  end.
 
   run waitfram-show in this-procedure ("Инициализация клиентов").
-  run cre-cli in this-procedure ( "Реализация в магазине", "Покупатели" ) .
+  
+  if v-is-1c-erp then do:
+    /* контрагент создаётся после установки calc-range для gbl-fm-code */
+    run cre-cli2 in this-procedure .
+  end.
+  else do:
+    run cre-cli in this-procedure ( "Реализация в магазине", "Покупатели" ) .
+  end.
 
+  if not v-is-1c-erp then do:
+  /* для типов кассовых платежей должны быть созданы: валюта, вид оплаты, МЦ */
   run waitfram-show in this-procedure ("Инициализация видов оплаты").
   run cre-pay-type in this-procedure ( 1, "Наличные" ) .
   run cre-pay-type in this-procedure ( 2, "Безналичные" ) .
@@ -276,14 +276,17 @@ if p-sys-key <> "raimbek":U then do:
   run waitfram-show in this-procedure ("Инициализация типов кассовых платежей").
   run cre-cash-pay in this-procedure (  1, 0, 1, 1, "Наличные",          TRUE, FALSE ) .
   run cre-cash-pay in this-procedure ( 20, 0, 1, 0, "Оплата по кредиту", FALSE, TRUE ).
+  end.
 end.
 else do:
+  if not v-is-1c-erp then do:
   run waitfram-show in this-procedure ("Инициализация групп клиентов" ) .
   run cre-cli-grp in this-procedure ( "Группа по умолчанию" ) .
 
   run waitfram-show in this-procedure ("Инициализация видов оплаты").
   run cre-pay-type in this-procedure ( 4, "Наличные" ) .
   run cre-pay-type in this-procedure ( 5, "Безналичные" ) .
+  end.
 end.
 
 run waitfram-show in this-procedure ("Инициализация критериев анализа ABC и XYZ").
@@ -299,7 +302,7 @@ end.
     .
 
 run waitfram-show in this-procedure ("Инициализация настроек опций истории и маршрутизации").
-
+do:
 define variable v-codes1 as character no-undo .
 define variable v-labels1 as character no-undo .
 define variable v-groups1 as character no-undo .
@@ -366,9 +369,12 @@ v-groups1 = right-trim(v-groups1, {&delim-par} )
 run create-hist-nws-option in this-procedure ( input v-codes1
                                               ,input v-labels1
                                               ,input v-groups1) .
+end.
 
+if not v-is-1c-erp then do:
 run waitfram-show in this-procedure ("Заполнение справочника регионов РФ").
 run utl/reg-cre.p.
+end.
 
 run waitfram-hide in this-procedure .
 
@@ -410,6 +416,42 @@ def input param tp as char no-undo.
   end.
 
 end procedure.
+
+procedure import-countries private:
+define input parameter p-country-path as character no-undo .
+define buffer buf_country for DICTDB.country .
+
+  input from value(p-country-path).
+  empty temp-table for-country.
+  
+  _repeat:
+  REPEAT:
+      CREATE for-country.
+      IMPORT for-country NO-ERROR.
+      if error-status:error then next _repeat.
+      if for-country.alpha1 = '':U then do:
+        delete for-country.
+        next _repeat.
+      end.
+      IF NOT (CAN-FIND(FIRST DICTDB.country where DICTDB.country.num-code = for-country.num-code) OR
+              CAN-FIND(FIRST DICTDB.country where DICTDB.country.alpha1   = for-country.alpha1))
+                  and for-country.num-code > 0
+      then do:
+          create buf_country.
+          ASSIGN
+            buf_country.alpha1     = for-country.alpha1
+            buf_country.alpha2     = for-country.alpha2
+            buf_country.long-name  = for-country.long-name
+            buf_country.num-code   = for-country.num-code
+            buf_country.short-name = for-country.short-name
+          .
+      end.
+      delete for-country.
+  END.
+  
+  empty temp-table for-country.
+  INPUT CLOSE.
+end procedure. /* end_of import-countries */
 
 procedure cre-tax:
 def input param taxcode like DICTDB.tax.tax-code no-undo.
@@ -542,6 +584,7 @@ def input param taxcode   like DICTDB.tax.tax-code              no-undo.
 def input param ratecode  like DICTDB.tax-rate.rate-code        no-undo.
 def input param ratevalue like DICTDB.tax-rate-value.rate-value no-undo.
 DEFINE VARIABLE var-day-end-fact-order as decimal no-undo .
+define variable v-time  as integer   no-undo.
 
   run cur-time in this-procedure ( output v-today
                                  , output v-time
@@ -598,41 +641,27 @@ END PROCEDURE.
 
 
 procedure add-tax-gds-grp :
-define variable start-time     as integer   no-undo .
-define variable current-time   as integer   no-undo .
-define variable v-ind          as integer no-undo .
-define variable v-err-count    as integer no-undo .
+/*  
+ define variable start-time     as integer   no-undo .
+ define variable current-time   as integer   no-undo .
+ define variable v-err-count    as integer no-undo .
+*/ 
 DEFINE VARIABLE var-vat-code as character no-undo .
 DEFINE VARIABLE var-SLT-code as character no-undo .
-DEFINE VARIABLE rc as recid no-undo.
+/*
+ DEFINE VARIABLE rc as recid no-undo.
+*/ 
 DEFINE VARIABLE vattr-labels as character no-undo .
 DEFINE VARIABLE vattr-codes as character no-undo .
-DEFINE VARIABLE vartax-value like DICTDB.tax-rate-value.rate-value no-undo .
+DEFINE VARIABLE vartax-value like DICTDB.tax-rate-value.rate-value no-undo . /* dec-10 */
 define variable VATtaxcd as integer no-undo.
 define variable SLTtaxcd as integer no-undo.
 
 
 /*вспомогат*/
+/*
 define variable taxvalue like DICTDB.tax-rate-value.rate-value no-undo.
-
-def frame a
-  "Заполнение таблицы налогов на группу товаров tax-rate-gds-grp"
-  v-ind        format "->>>>>>>>9" label "Количество записей" skip
-  current-time format "->>>>>>>>9" label "Время" skip
-  with view-as dialog-box side-labels three-d
-  title "Налогов на группу товаров"
-  .
-
-
-define variable lok as logical no-undo .
-message
-vss-description
-"Заполнить таблицу налогов на группу товаров tax-rate-gds-grp" skip
-"Продолжить?"
-view-as alert-box question buttons yes-no update lok .
-if lok <> true then do:
-  return .
-end.
+*/
 
 /*определим какие налоги по сути являются НДС и НП*/
 vattaxcd = integer({&vat-tax-code}).
@@ -640,6 +669,7 @@ slttaxcd = integer({&slt-tax-code}).
 
 
 if p-sys-key <> "raimbek":U then do:
+  
   assign
   vattr-codes = "":U
   vattr-labels = "":U
@@ -649,12 +679,17 @@ if p-sys-key <> "raimbek":U then do:
 
     { gbl/pftaxval.i recid(DICTDB.tax-rate) DICTDB.tax-rate.tax-code DICTDB.tax-rate.rate-code ? 0 '':U 0 vartax-value no-error }
     if error-status:error then do:
-      message
-      return-value view-as alert-box error .
-      return error.
+      message return-value view-as alert-box error .
+      return error return-value.
     end.
     if vartax-value = ? then NEXT.
-    assign
+    
+    /* 15/XI-2017 - ставку налога по-умолчанию для 1С выбираем без участия пользователя */
+    if v-is-1c-erp then do:
+      var-vat-code = string(tax-rate.rate-code) .
+      leave .
+    end.
+    else assign
     vattr-labels = vattr-labels +
                   (if vattr-labels = "":U then "" else {&comma-char}) +
                   string(string(tax-rate.rate-code) + " - " + replace(tax-rate.rate-name, {&comma-char}, "":U), "X(25)") +
@@ -662,10 +697,12 @@ if p-sys-key <> "raimbek":U then do:
     vattr-codes = vattr-codes +
                   (if vattr-codes = "":U then "" else {&comma-char}) +
                   string(tax-rate.rate-code)
-                  .
+    .
   end.
 
-  run gbl/d-list.w (
+  /* 15/XI-2017 - ставку налога по-умолчанию для 1С выбираем без участия пользователя */
+  if not v-is-1c-erp then do:
+    run gbl/d-list.w (
                 INPUT "b-sel":U
                 ,INPUT "Выберите ставку НДС для групп (по умолчанию)"
                 ,INPUT vattr-codes
@@ -673,14 +710,16 @@ if p-sys-key <> "raimbek":U then do:
                 ,INPUT {&comma-char}
                 ,INPUT "":U
                 ,output var-vat-code).
-  IF var-vat-code = "":u THEN do:
+    IF var-vat-code = "":u THEN do:
     message
     "Вы не выбрали ставку НДС для групп!" skip
     "Это может привести к непредсказуемым результатам"
     view-as alert-box error .
     RETURN ERROR.
+    end.
   end.
 end.
+
 
 assign
 vattr-codes = "":U
@@ -697,7 +736,13 @@ for each tax-rate no-lock where
     return error.
   end.
   if vartax-value = ? then NEXT.
-  assign
+  
+  /* 15/XI-2017 - ставку налога по-умолчанию для 1С выбираем без участия пользователя */
+  if v-is-1c-erp then do:
+    var-slt-code = string(tax-rate.rate-code) .
+    leave .
+  end.
+  else assign
   vattr-labels = vattr-labels +
                 (if vattr-labels = "":U then "" else {&comma-char}) +
                 string(string(tax-rate.rate-code) + " - " + replace(tax-rate.rate-name, {&comma-char}, "":U), "X(25)") +
@@ -705,12 +750,12 @@ for each tax-rate no-lock where
   vattr-codes = vattr-codes +
                 (if vattr-codes = "":U then "" else {&comma-char}) +
                 string(tax-rate.rate-code)
-                .
+  .
 end.
 
-
-
-run gbl/d-list.w (
+/* 15/XI-2017 - ставку налога по-умолчанию для 1С выбираем без участия пользователя */
+if not v-is-1c-erp then do:
+  run gbl/d-list.w (
               INPUT "b-sel":U
               ,INPUT "Выберите ставку НП для групп (по умолчанию)(если НП не действует, выберите знач=0)"
               ,INPUT vattr-codes
@@ -718,33 +763,18 @@ run gbl/d-list.w (
               ,INPUT {&comma-char}
               ,INPUT "":U
               ,output var-slt-code).
-IF var-slt-code = "":u THEN do:
+  IF var-slt-code = "":u THEN do:
   message
   "Вы не выбрали ставку НП для групп!" skip
   "Это может привести к непредсказуемым результатам"
   view-as alert-box error .
   RETURN ERROR.
-end.
+  end.
+end .
 
 
-do
-on error undo, return error
-:
-  assign
-    start-time = time
-  .
-  view frame a .
-
-
+do on error undo, return error :
   FOR EACH DICTDB.gds-grp No-LOCK:
-    assign
-      v-ind        = v-ind + 1
-      current-time = time - start-time
-    .
-    if v-ind mod 10 = 0 then do:
-      display
-        v-ind current-time with frame a .
-    end.
 
     if p-sys-key <> "raimbek":U then do:
       if not can-find(first buf_tax-rate-gds-grp where
@@ -759,10 +789,10 @@ on error undo, return error
           buf_tax-rate-gds-grp.node-code = DICTDB.gds-grp.node-code
           buf_tax-rate-gds-grp.tax-code = vattaxcd
           buf_tax-rate-gds-grp.rate-code = integer(var-vat-code)
-          v-err-count = v-err-count + 1.
        .
       end.
     end.
+    
     if not can-find(first buf_tax-rate-gds-grp where
                           buf_tax-rate-gds-grp.tax-code = slttaxcd AND
                           buf_tax-rate-gds-grp.node-code = DICTDB.gds-grp.node-code AND
@@ -770,23 +800,16 @@ on error undo, return error
                           buf_tax-rate-gds-grp.obj-type = "":U AND
                           buf_tax-rate-gds-grp.obj-code = 0
                           ) then do:
-
       create buf_tax-rate-gds-grp.
       assign
          buf_tax-rate-gds-grp.node-code = DICTDB.gds-grp.node-code
          buf_tax-rate-gds-grp.tax-code = slttaxcd
          buf_tax-rate-gds-grp.rate-code = integer(var-slt-code)
-         v-err-count = v-err-count + 1.
       .
     end.
- end. /*for each DICTDB.gds-gpr*/
- end.
-
-  message
-  vss-description skip
-  "Завершено заполнение налогов по группам товаров" skip
-  view-as alert-box information .
-  return "Просмотрено групп товаров " + string(v-ind)  + " создано " + string(v-err-count).
+    
+  end. /*for each DICTDB.gds-gpr*/
+end.
 
 END PROCEDURE. /*add-tax-gds-grp*/
 
@@ -1027,8 +1050,86 @@ on error undo, return error
 end. /* do on error */
 end procedure. /* cre-cli */
 
+procedure cre-cli2 private:
+define variable v-name as character no-undo .
+/* классами импорта создавать нельзя:
+   Ошибка при проверке ИНН на уникальность.
+   trg/inn-uniq.p Shared variable g#news has not yet been created. (392) */
 
+    /* для технологических клиентов применяется серия кодов 800 000 000 */
+    /* для технологических контрагентов согласована привязка к группе 5 */
+    run cli-grplib-get-full-name in this-procedure (input 5 /* cli-grp.node-code */, output v-name) .
+         
+    create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000001 /* для контрагента РЕАЛИЗАЦИЯ согласован код 800 000 001 */
+      buf_clients.obj-name = "Реализация розничная"
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5 
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000001
+      buf_firm.ind       = 0 /* firm.ind на тестовом сервере 0 в формате "6-знаков" */
+    .
 
+    create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000002
+      buf_clients.obj-name = "Технологический пролив"
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000002
+      buf_firm.ind       = 0
+    .
+    /* Выставить атрибут Расходы отдельной строкой в yes */
+    &scop proc-name clntattr-write
+    {&run_proc_attr-lib}
+      (input  {&cmp}
+      ,input  800000002
+      ,input  {&attr-shftrep2}
+      ,input  "yes":U
+      ) no-error .
+    if error-status:error then do:
+      message return-value view-as alert-box error .
+      return error return-value.
+    end.
+    
+    create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000003
+      buf_clients.obj-name = "Отбор проб"
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000003
+      buf_firm.ind       = 0
+    .
+    /* Выставить атрибут Расходы отдельной строкой в yes */
+    &scop proc-name clntattr-write
+    {&run_proc_attr-lib}
+      (input  {&cmp}
+      ,input  800000003
+      ,input  {&attr-shftrep2}
+      ,input  "yes":U
+      ) no-error .
+    if error-status:error then do:
+      message return-value view-as alert-box error .
+      return error return-value.
+    end.
+
+end procedure . /* end_of cre-cli2 */
 /*==========================================================================*/
 procedure cre-pay-type :
 define input parameter p-code as integer        no-undo.

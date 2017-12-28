@@ -29,7 +29,7 @@ field sr-model as character column-label "Модель"
 format "X(35)" label "Модель"
 view-as fill-in size 35 by 1
 
-
+/*
 field sr-type as character column-label "Тип"
 format "X(55)" label "Тип"
 view-as combo-box list-item-pairs "Ареометр калиброванный при 15°С","1",
@@ -38,6 +38,15 @@ view-as combo-box list-item-pairs "Ареометр калиброванный при 15°С","1",
                                   "Погружной плотномер","4",
                                   "Канал измерения плотности (с поточным плотномером)","5",
                                   "Канал измерения плотности (без поточного плотномера)","6"   inner-lines 5 drop-down-list size-chars 55 by 1
+*/
+field sr-type-id as integer column-label "Тип"
+format ">9" label "Тип"
+view-as combo-box list-item-pairs "Ареометр калиброванный при 15°С",1,
+                                  "Ареометр калиброванный при 20°С",2,
+                                  "Поточный плотномер",3,
+                                  "Погружной плотномер",4,
+                                  "Канал измерения плотности (с поточным плотномером)",5,
+                                  "Канал измерения плотности (без поточного плотномера)",6   inner-lines 5 drop-down-list size-chars 55 by 1
 
 
 field sr-abs-err-neft-water as decimal column-label "Абсолютная погрешность измерений уровня! нефтепродукта и подтоварной воды"
@@ -70,11 +79,16 @@ format "9.999999" initial 0 label "Предел допускаемой относительной погрешности 
 view-as fill-in size 15  by 1
 
 
+/*
 field sr-temp-line as character column-label "Температурный коэффициент линейного! расширения материала средства! измерения уровня "
 format "X(10)" label "Температурный коэффициент линейного расширения материала средства измерения уровня "
 view-as combo-box list-item-pairs "Сталь","0.0000125",
                                   "Алюминий","0.000023" inner-lines 2 drop-down-list size-chars 10 by 1
-
+*/
+field sr-temp-line as decimal column-label "Температурный коэффициент линейного! расширения материала средства! измерения уровня "
+format "-9.9999999" label "Температурный коэффициент линейного расширения материала средства измерения уровня "
+view-as combo-box list-item-pairs "Сталь",0.0000125,
+                                  "Алюминий",0.000023 inner-lines 2 drop-down-list size-chars 10 by 1
 
 field node-code as integer  column-label "Код"
 format ">>>9" label "Код"

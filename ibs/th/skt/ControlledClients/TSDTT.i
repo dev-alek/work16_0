@@ -17,12 +17,6 @@ Creation date: 01/30/15
 
 /* ***************************  Definitions  ************************** */
 
-
-/* ********************  Preprocessor Definitions  ******************** */
-
-
-/* ***************************  Main Block  *************************** */
-
   define temp-table TempTrnDoc no-undo
     field line-num      as integer
     field ext-doc-code  as character
@@ -33,6 +27,7 @@ Creation date: 01/30/15
     field obj-type      as character
     field obj-code      as integer
     field ps            as character
+    field doc-id        as character
     index pi line-num ext-doc-code .
 
   define temp-table TempDocLine no-undo
@@ -43,6 +38,8 @@ Creation date: 01/30/15
     field price-rubl   as decimal
     field RowSum       as decimal
     field vat-pc       as decimal
+    field fact-dnsty   as decimal
+    field cli-qnty     as decimal
     field b-code       as character
     field is-tsd-qnty  as logical init no
     index pi

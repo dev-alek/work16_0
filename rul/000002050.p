@@ -458,7 +458,7 @@ on error undo main-block, retry main-block
       :
         v-b-str-list = ''.
         case buf_prod-bc.bc-on-type:
-          /*в 15.1 этоп поле всегда должно быть правильно заполнено*/
+          /*в 16.0 этоп поле всегда должно быть правильно заполнено*/
           when {&loc-sc-code}
           or
           when {&gbl-sc-code} then do:

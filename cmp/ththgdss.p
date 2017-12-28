@@ -254,7 +254,7 @@ for each goods-01:
     {&display-message}.
     next _goods.
   end.
-  /*найдем клиента в БД v15.1*/
+  /*найдем клиента в БД v16.0*/
   RUN gen-row-keyr IN THIS-PROCEDURE ( INPUT clients_ext-classif.uniq-key-rec
                                       ,input ?
                                       ,INPUT "ub"
@@ -312,7 +312,7 @@ for each goods-01:
           and temp-tax-rate.src-rate-code = goods-01.vat-pc-code no-error.
     if not available temp-tax-rate
     or temp-tax-rate.rate-code = 0 then do:
-      &scop my-message  substitute("Невозможно сохранить запись о товаре с кодом &1 из системы &3&2В системе v15.1 нет соответствующей ставки НДС" ~
+      &scop my-message  substitute("Невозможно сохранить запись о товаре с кодом &1 из системы &3&2В системе v16.0 нет соответствующей ставки НДС" ~
                             ,goods-01.src-gds-code ~
                             ,~{&new-line~}   ~
                             , p-from-version  ~
@@ -327,7 +327,7 @@ for each goods-01:
           and temp-tax-rate.src-rate-code = goods-01.slt-pc-code no-error.
     if not available temp-tax-rate
     or temp-tax-rate.rate-code = 0 then do:
-      &scop my-message  substitute("Невозможно сохранить запись о товаре с кодом &1 из системы &3&2В системе v15.1 нет соответствующей ставки НП" ~
+      &scop my-message  substitute("Невозможно сохранить запись о товаре с кодом &1 из системы &3&2В системе v16.0 нет соответствующей ставки НП" ~
                             ,goods-01.src-gds-code ~
                             ,~{&new-line~}   ~
                             , p-from-version  ~
@@ -561,7 +561,7 @@ for each goods-01:
     v-ii-ok = v-ii-ok + 1.
     /*
     if v-found = no then do:
-      &scop my-message substitute("Товар &3 с кодом &1 (товар БД v15.1 с кодом &2) переведен в удал, так как нет НИ ОДНОГО ВКЛЮЧЕННОГО ДопБК" ~
+      &scop my-message substitute("Товар &3 с кодом &1 (товар БД v16.0 с кодом &2) переведен в удал, так как нет НИ ОДНОГО ВКЛЮЧЕННОГО ДопБК" ~
                                   , goods-01.src-gds-code ~
                                   ,buf_goods.gds-code ~
                                   , p-from-version )

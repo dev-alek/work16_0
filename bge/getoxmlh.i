@@ -82,6 +82,13 @@ on error undo, return error return-value
                                                   ,input ""
                                                 )  .
     end.
+    when integer({&esys-dm-erp-1C-RN}) then do:
+      v-root-name = "".
+      run xmllib-add-rec-fld  in this-procedure (
+                                                    input "ERPRN-GC"
+                                                  ,input ""
+                                                )  .
+    end.
     otherwise do:
       v-root-name = "".
       run xmllib-add-rec-fld  in this-procedure (

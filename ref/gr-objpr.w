@@ -495,8 +495,8 @@ DEFINE BROWSE BROWSE-5all
   QUERY BROWSE-5all NO-LOCK DISPLAY
       buf_clients.obj-type + " "  + STRING( buf_clients.obj-code )  COLUMN-LABEL "Объект" FORMAT "X(11)":U
       buf_clients.obj-name  COLUMN-LABEL "Имя объекта" FORMAT  "X(20)":U
-      buf_clients.host-code COLUMN-LABEL "Фирма" FORMAT  ">>>>>>>9":U
-      buf_clients.db-num    COLUMN-LABEL "БД" FORMAT  ">>>>9":U
+      buf_clients.host-code COLUMN-LABEL "Фирма" FORMAT  ">>>>>>>>9":U
+      buf_clients.db-num    COLUMN-LABEL "БД" FORMAT  ">>>>>>>>9":U
       stts-string-5(buffer x_obj-grp-obj-price ) COLUMN-LABEL "Статус" FORMAT  "X(6)":U
       ENABLE
       buf_clients.db-num

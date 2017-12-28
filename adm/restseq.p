@@ -33,6 +33,27 @@ define variable vss-description as character no-undo init "Процедура проверки, в
 { cmp/getmcode.i restseq }
 { str/doc-code.i } /*function get-doc-code-int64 returns int64*/
 
+define variable conf-par as character no-undo.
+define variable par-type as character no-undo.
+define variable mode-erprn as logical no-undo.
+/* Определяем интеграционный или нет режим работы */
+{ cmp/library.i       }
+{ gbl/conf-rd.i
+    "'is-erpRN'"
+    0
+    "''"
+    0
+    "''"
+    "''"
+    "''"
+    NO
+    conf-par
+    par-type
+    no-error
+}
+IF not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+                                                 else mode-erprn = no.
+
 
 &scoped-define ignore_list "~
 next-report~
@@ -929,52 +950,73 @@ procedure restore-s-fmgb-code :
     define variable v-fm-code as   int64              no-undo .
 
     &scoped-define sequence-name   s-fmgb-code
-    assign
-      v-curr-seq-name  = "{&sequence-name}"
-      v-table-name     = "firm"
-      v-seq-field-name = "firm-code"
-      v-num-rec        = 0
-      v-curr-recid     = 0
-      v-new-seq-value  = 0
-    .
-
-    {&show-action}
-
-    find restseq.code-range no-lock
-      where restseq.code-range.range-type = {&gbl-fm-code}
-        and restseq.code-range.db-num     = p-curr-db-num
-        and restseq.code-range.stts       = "a":U
-      no-error
-    .
-    if available restseq.code-range then do:
-      run get-max-code ( input "get-m-code":U
-                        ,input restseq.code-range.db-num
-                        ,input restseq.code-range.range-type
-                        ,input restseq.code-range.first-code
-                        ,input restseq.code-range.last-code
-                        ,input FALSE
-                        ,output v-fm-code
-                        ).
-      assign
-        v-curr-seq-value = v-fm-code
-      .
-      {&update-sequence}
-    end.
-    else do:
+    
       find restseq.code-range no-lock
+        where restseq.code-range.range-type = {&gbl-fm-code}
+          and restseq.code-range.db-num     = p-curr-db-num
+          and restseq.code-range.stts       = "a":U
+        no-error
+      .
+      if not available restseq.code-range then do:
+        find restseq.code-range no-lock
         where restseq.code-range.range-type = {&gbl-fm-code}
           and restseq.code-range.db-num     = p-curr-db-num
           and restseq.code-range.stts       = "u":U
         no-error
-      .
+        .
+      end .
+
+      assign
+        v-curr-seq-name  = "{&sequence-name}"
+        v-curr-recid     = 0
+      .  
       if available restseq.code-range then do:
+            
+    if mode-erprn then do:
+          assign
+            v-curr-seq-value = restseq.code-range.last-code
+          .
+          run log-error in this-procedure
+    (input v-curr-seq-name 
+    ,input v-curr-recid 
+    ,input dynamic-current-value( v-curr-seq-name, v-ld-db-name ) 
+    ,input v-curr-seq-value 
+    ). 
+      dynamic-current-value( v-curr-seq-name, v-ld-db-name ) = v-curr-seq-value .
+    end.
+    else do:
+      assign
+        v-table-name     = "firm"
+        v-seq-field-name = "firm-code"
+        v-num-rec        = 0
+        v-new-seq-value  = 0
+      .
+
+      {&show-action}
+
+      if restseq.code-range.stts = "a":U then do:
+        run get-max-code ( input "get-m-code":U
+                          ,input restseq.code-range.db-num
+                          ,input restseq.code-range.range-type
+                          ,input restseq.code-range.first-code
+                          ,input restseq.code-range.last-code
+                          ,input FALSE
+                          ,output v-fm-code
+                          ).
         assign
-          v-curr-seq-value = restseq.code-range.last-code
+          v-curr-seq-value = v-fm-code
         .
         {&update-sequence}
-
       end.
-    end.
+      else do:
+          assign
+            v-curr-seq-value = restseq.code-range.last-code
+          .
+          {&update-sequence}
+      end.
+    end. /* end_of mode not erprn */
+
+      end . /* end_of available restseq.code-range */
   end.
 
 end procedure. /* restore-s-fmgb-code */
@@ -989,52 +1031,73 @@ procedure restore-s-pngb-code :
     define variable v-pn-code as   int64              no-undo .
 
     &scoped-define sequence-name   s-pngb-code
-    assign
-      v-curr-seq-name  = "{&sequence-name}"
-      v-table-name     = "person"
-      v-seq-field-name = "psn-code"
-      v-num-rec        = 0
-      v-curr-recid     = 0
-      v-new-seq-value  = 0
-    .
-
-    {&show-action}
-
+    
     find restseq.code-range no-lock
       where restseq.code-range.range-type = {&gbl-pn-code}
         and restseq.code-range.db-num     = p-curr-db-num
         and restseq.code-range.stts       = "a":U
       no-error
     .
-    if available restseq.code-range then do:
-      run get-max-code ( input "get-m-code":U
-                        ,input restseq.code-range.db-num
-                        ,input restseq.code-range.range-type
-                        ,input restseq.code-range.first-code
-                        ,input restseq.code-range.last-code
-                        ,input FALSE
-                        ,output v-pn-code
-                        ).
-      assign
-        v-curr-seq-value = v-pn-code
-      .
-      {&update-sequence}
-    end.
-    else do:
+    if not available restseq.code-range then do:
       find restseq.code-range no-lock
         where restseq.code-range.range-type = {&gbl-pn-code}
           and restseq.code-range.db-num     = p-curr-db-num
           and restseq.code-range.stts       = "u":U
         no-error
       .
+    end.
+        
+    assign
+      v-curr-seq-name  = "{&sequence-name}"
+      v-curr-recid     = 0
+    .
       if available restseq.code-range then do:
+            
+    if mode-erprn then do:
+          assign
+            v-curr-seq-value = restseq.code-range.last-code
+          .
+          run log-error in this-procedure
+    (input v-curr-seq-name 
+    ,input v-curr-recid 
+    ,input dynamic-current-value( v-curr-seq-name, v-ld-db-name ) 
+    ,input v-curr-seq-value 
+    ). 
+      dynamic-current-value( v-curr-seq-name, v-ld-db-name ) = v-curr-seq-value .
+    end.
+    else do:
+      assign
+        v-table-name     = "person"
+        v-seq-field-name = "psn-code"
+        v-num-rec        = 0
+        v-new-seq-value  = 0
+      .
+
+      {&show-action}
+
+      if restseq.code-range.stts = "a":U then do:
+        run get-max-code ( input "get-m-code":U
+                        ,input restseq.code-range.db-num
+                        ,input restseq.code-range.range-type
+                        ,input restseq.code-range.first-code
+                        ,input restseq.code-range.last-code
+                        ,input FALSE
+                        ,output v-pn-code
+                          ).
+        assign
+          v-curr-seq-value = v-pn-code
+        .
+        {&update-sequence}
+      end.
+      else do:
         assign
           v-curr-seq-value = restseq.code-range.last-code
         .
         {&update-sequence}
-
       end.
-    end.
+    end. /* end_of mode not erprn */
+
+      end . /* end_of available restseq.code-range */
   end.
 
 end procedure. /* restore-s-pngb-code */
@@ -4742,3 +4805,23 @@ procedure restore-s-sost :
   end.
 
 end procedure. /* restore-s-sost */
+
+procedure restore-s-sr-izmerenia :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define sequence-name   s-sr-izmerenia
+
+    &scoped-define table-name      sr-izmerenia
+    &scoped-define seq-field-name  node-code
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+
+end procedure. /* restore-s-sr-izmerenia */

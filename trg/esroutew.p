@@ -48,7 +48,7 @@ on stop   undo main-block, return error substitute("&1. stop")
     assign ub.esys-route.esr-tbl-ord = next-value( s-news-ord, {&db-name_schema} ) . 
   end.    
 
-  if ub.esys-route.db-num = 0 and not g#news and not g#db-num  = 0
+  if false /*ub.esys-route.db-num = 0 and not g#news and not g#db-num  = 0*/
   then do:
 
     for each buf_esys-all-attr exclusive-lock where

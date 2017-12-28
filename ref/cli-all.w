@@ -108,8 +108,8 @@ define variable vss-description as character no-undo init "Список клиентов" .
 &scop display-browse       (mark-string(buffer X_clients, v-rid-list)) COLUMN-LABEL "*" FORMAT "x(1)" ~
       (STRING (X_clients.obj-code, "999999999")  +  " "  +  TRIM (X_clients.obj-type)) COLUMN-LABEL "Код/Тип" FORMAT "X(13)" ~
       var-cli-name COLUMN-LABEL "Контрагент" FORMAT "x(130)" ~
-      X_clients.host-code COLUMN-LABEL "Фирма" FORMAT ">>>>9" ~
-      X_clients.db-num COLUMN-LABEL "БД" FORMAT ">>>>9" ~
+      X_clients.host-code COLUMN-LABEL "Фирма" FORMAT ">>>>>>>>9" ~
+      X_clients.db-num COLUMN-LABEL "БД" FORMAT ">>>>>>>>9" ~
       X_clients.is-prod COLUMN-LABEL "Пр-ль" FORMAT "  +/" ~
       X_clients.sup-gds COLUMN-LABEL "Пост-к/т" FORMAT "  +/" ~
       X_clients.sup-cons COLUMN-LABEL "Пост-к/к" FORMAT "  +/"  ~

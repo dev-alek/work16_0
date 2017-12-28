@@ -385,7 +385,9 @@ define buffer buf_temp-esys-pck-sent for THpck-sent.
       end case.
     end.
     else do:
-      if p-delivery-method = integer({&esys-dm-exite-edi}) then do:
+      if p-delivery-method = integer({&esys-dm-exite-edi})
+      or p-delivery-method = integer({&esys-dm-erp-1C-RN})
+      then do:
         assign
         v-recs = 1
         v-filename = buf_esys-pck-rcvd.custom-pack-name

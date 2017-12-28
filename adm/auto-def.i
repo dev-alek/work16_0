@@ -82,7 +82,7 @@ procedure write-to-log :
         run gbl/fileapnd.p
           ( input entry(v-jj, add-log-file-name, {&delim-nws} )
           ,input p-str
-          ,input 10 /* время ожинания освобождения файла */
+          ,input 20 /* время ожинания освобождения файла */
           ) no-error .
         if error-status:error then do:
           return error return-value .
@@ -93,7 +93,7 @@ procedure write-to-log :
     run gbl/fileapnd.p
       ( input log-file-name
        ,input p-str
-       ,input 10 /* время ожинания освобождения файла */
+        ,input 20 /* время ожинания освобождения файла */
       ) no-error .
     if error-status:error then do:
       return error return-value .

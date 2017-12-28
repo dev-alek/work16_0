@@ -328,7 +328,7 @@ DEFINE VARIABLE fi-gds-qnty AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE fi-host AS CHARACTER FORMAT "X(256)":U
      LABEL "Фирма"
       VIEW-AS TEXT
-     SIZE 10 BY .67 TOOLTIP "Фирма"
+     SIZE 13 BY .67 TOOLTIP "Фирма"
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE fi-host-basecode-desc AS CHARACTER FORMAT "X(3)":U
@@ -1706,6 +1706,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   run ver-movepar in this-procedure .
 
+  /* 29/IX-2017 - отказались в v.16_0 в рамках интеграции с 1С,
+                  т.к. оттуда вызывается str/saledc.p,
+                  который может затронуть справочники, приходящие из 1С
   run gbl/update2.p ( input parparentproc) no-error .
   if error-status :error then do:
     message
@@ -1716,6 +1719,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       view-as alert-box error .
     return error.
   end.
+  */
 
 
   if not this-procedure:persistent

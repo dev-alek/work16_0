@@ -39,10 +39,13 @@ define variable vss-description as character no-undo init "Сохранение изменений 
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i }
+{ cmp/trg-def.i }
 
 define variable v-db-num like ub.db.db-num no-undo .
 define variable v-log         as logical   no-undo .
 define buffer buf_units for ub.units.
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
 
 if p-mode <> {&add-def}
 AND p-mode <> {&update} then do:
@@ -54,19 +57,20 @@ AND p-mode <> {&update} then do:
 end.
 
 { gbl/curdbnum.i v-db-num }
-
+run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+if v-value = "no"  then do: 
 if v-db-num <> 0
 then do:
   run err-mess (substitute("Нельзя изменять запись ЕД.ИЗМ в УБД: Номер текущей БД &1 ", v-db-num ) ).
   undo, return error "":U.
 end.
-
+end.
 if p-long-name = "":U then do:
   run err-mess ("Укажите полное наименование ед.изм").
   undo, return error "long-name":U.
 end.
 
-if p-unit-name = "":U then do:
+if p-unit-name = "":U or p-unit-name = ? then do:
   run err-mess ("Укажите аббревиатуру ед.изм").
   undo, return error "unit-name":U.
 end.
@@ -98,10 +102,15 @@ can-find(first buf_units no-lock where
                   buf_units.OKEI = p-OKEI
               AND (p-mode = {&add-def} OR p-rec <> recid(buf_units))
               ) then do:
+                if v-value = "no" then do:
     message substitute("Уже есть  ЕД.ИЗМ &1 c таким же кодом ОКЕИ &2", p-unit-name, p-okei) skip "Добавить?" view-as alert-box information buttons YES-NO update v-log.
     if v-log = no then do:
       return error "okei":U.
     end.
+    end.
+    else do:
+      run err-mess (substitute("Уже есть  ЕД.ИЗМ &1 c таким же кодом ОКЕИ &2", p-unit-name, p-okei) ).
+    end.  
 end.
 
 
@@ -156,7 +165,13 @@ end. /*doe*/
 
 PROCEDURE err-mess:
   DEFINE INPUT PARAMETER p-mess as character No-UNDO.
-  message
-  p-mess
-  view-as alert-box error .
+  if v-value = "yes" then do:
+    p-mess .
+  end.
+  else do:
+      message
+      p-mess
+      view-as alert-box error .
+  end.    
+
 END PROCEDURE.

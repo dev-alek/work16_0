@@ -88,7 +88,6 @@ DEFINE VARIABLE upd-option AS CHARACTER NO-UNDO.
 DEFINE VARIABLE is-fin AS CHARACTER NO-UNDO.
 DEFINE VARIABLE is-fin-type AS CHARACTER NO-UNDO.
 
-
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -291,17 +290,17 @@ DEFINE BROWSE BR-obj
       X_clients.obj-type FORMAT "X(3)":U
       X_clients.obj-code FORMAT ">>>>>>>>9":U
       X_clients.obj-name FORMAT "X(40)":U
-      X_clients.db-num FORMAT ">>>>9":U WIDTH 6
+      X_clients.db-num FORMAT ">>>>>>>>9":U
       get-object-available(X_clients.obj-type, X_clients.obj-code) @ v-object-available COLUMN-LABEL "Доступен для тек.пользователя" FORMAT "X(8)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.5.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.52.
 
 DEFINE BROWSE BR-sysconf
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-sysconf Dialog-Frame _STRUCTURED
   QUERY BR-sysconf NO-LOCK DISPLAY
       mark-string(recid(X_sysconf), v-rid-list) FORMAT "X(1)":U
-      X_sysconf.host-code
+      X_sysconf.host-code FORMAT "999999999":U
       get-host-name(X_sysconf.host-code) @ v-host-name COLUMN-LABEL "Название" FORMAT "X(40)":U
       X_sysconf.branch FORMAT "X(40)":U
       X_sysconf.base-code COLUMN-LABEL "Код!валюты"
@@ -312,7 +311,7 @@ DEFINE BROWSE BR-sysconf
       get-host-available(X_sysconf.host-code) @ v-host-available COLUMN-LABEL "Доступна!для текущего пользователя" FORMAT "x(8)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 8.83.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 8.81.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -330,10 +329,10 @@ DEFINE FRAME Dialog-Frame
      B-Help AT ROW 1 COL 95
      BR-sysconf AT ROW 2.43 COL 1
      B-obj AT ROW 11.43 COL 80
-     BR-obj AT ROW 12.47 COL 1
-     mark-num AT ROW 1 COL 12.5 COLON-ALIGNED NO-LABEL
-     fi-object-list-description AT ROW 11.5 COL 14.5 COLON-ALIGNED
-     SPACE(22.37) SKIP(9.86)
+     BR-obj AT ROW 12.48 COL 1
+     mark-num AT ROW 1 COL 12.6 COLON-ALIGNED NO-LABEL
+     fi-object-list-description AT ROW 11.52 COL 17.2 COLON-ALIGNED
+     SPACE(22.37) SKIP(9.84)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Список <Своих> фирм системы"
@@ -395,8 +394,7 @@ ASSIGN
      _FldNameList[1]   = Temp-Tables.X_clients.obj-type
      _FldNameList[2]   = Temp-Tables.X_clients.obj-code
      _FldNameList[3]   = Temp-Tables.X_clients.obj-name
-     _FldNameList[4]   > Temp-Tables.X_clients.db-num
-"X_clients.db-num" ? ? "integer" ? ? ? ? ? ? no ? no no "6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[4]   = Temp-Tables.X_clients.db-num
      _FldNameList[5]   > "_<CALC>"
 "get-object-available(X_clients.obj-type, X_clients.obj-code) @ v-object-available" "Доступен для тек.пользователя" "X(8)" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is OPENED
@@ -410,7 +408,7 @@ ASSIGN
      _FldNameList[1]   > "_<CALC>"
 "mark-string(recid(X_sysconf), v-rid-list)" ? "X(1)" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > "_<CALC>"
-"X_sysconf.host-code" ? ? ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"X_sysconf.host-code" ? "9999999" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[3]   > "_<CALC>"
 "get-host-name(X_sysconf.host-code) @ v-host-name" "Название" "X(40)" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[4]   > "_<CALC>"
@@ -766,7 +764,7 @@ END.
 
 &Scoped-define SELF-NAME m_fin
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_fin Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_fin /* Параметры ВЗАИМОРАСЧЕТОВ */
+ON CHOOSE OF MENU-ITEM m_fin /* Параметры ВЗАИМОРАСЧЕТОВ и ФИНАНСОВЫХ ДОКУМЕНТОВ */
 DO:
     if not available X_sysconf
     then do:
@@ -843,7 +841,7 @@ END.
 
 &Scoped-define SELF-NAME m_upd-fin
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_upd-fin Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_upd-fin /* Параметры ВЗАИМОРАСЧЕТОВ */
+ON CHOOSE OF MENU-ITEM m_upd-fin /* Параметры ВЗАИМОРАСЧЕТОВ и ФИНАНСОВЫХ ДОКУМЕНТОВ */
 DO:
   if not available X_sysconf
     then do:
@@ -882,20 +880,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME m_update
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_update Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_update /* Изменение */
-DO:
-    assign
-  attr-option = {&UPDATE}.
-  APPLY "CHOOSE" to b-attr  in frame {&frame-name}.
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME m_upd-sysconf
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_upd-sysconf Dialog-Frame
 ON CHOOSE OF MENU-ITEM m_upd-sysconf /* СВОЯ Фирма */
@@ -910,6 +894,20 @@ DO:
   ASSIGN
   upd-option = '':U.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME m_update
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_update Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_update /* Изменение */
+DO:
+    assign
+  attr-option = {&UPDATE}.
+  APPLY "CHOOSE" to b-attr  in frame {&frame-name}.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1375,7 +1373,6 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
-
 do
 on error undo, return error return-value
 :

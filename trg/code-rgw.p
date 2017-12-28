@@ -357,7 +357,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 
   case ub.code-range.range-type :
     when {&gbl-bc-code} then do:
-      if ub.code-range.first-code < 100000 then do:
+      if ub.code-range.first-code < 1 then do:
         message
           vss-workfile vss-revision vss-description skip
           "Начало диапазона собственных кодов должно быть не меньше 100000" skip

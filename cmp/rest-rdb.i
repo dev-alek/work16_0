@@ -65,7 +65,7 @@ define variable table-firm-db-if-cond as character no-undo .
 define variable table-db       as character no-undo .
 define variable table-db-where as character no-undo .
 define variable table-db-if-cond as character no-undo .
-
+define variable table-erprn as character no-undo .
 &glob all-query-buffers (buf_rrdb-option.first-table-name + "," + ~
                          buf_rrdb-option.second-table-name + "," + ~
                          buf_rrdb-option.third-table-name + "," + ~
@@ -350,7 +350,7 @@ table-ref-where = table-ref-where + {&delim-par} + " (ub.dis-thbj-rule.obj-type 
 table-ref-where = table-ref-where + {&delim-par} + " (ub.c-dis-thbj-rule.obj-type = '' and ub.c-dis-thbj-rule.obj-code = 0) or ub.c-dis-thbj-rule.host-code = 0 "
 table-ref-where = table-ref-where + {&delim-par} + " (ub.dis-cp-rule.obj-type = '' and ub.dis-cp-rule.obj-code = 0) or ub.dis-cp-rule.host-code = 0 "
 table-ref-where = table-ref-where + {&delim-par} + " (ub.c-dis-cp-rule.obj-type = '' and ub.c-dis-cp-rule.obj-code = 0) or ub.c-dis-cp-rule.host-code = 0 "
-table-ref-where = table-ref-where + {&delim-par} + " ub.fbr-gds-grp.obj-type = '' and ub.fbr-gds-grp.obj-code = 0 "
+table-ref-where = table-ref-where + {&delim-par} + " ub.fbr-gds-grp.obj-type = '' and ub.fbr-gds-grp.obj-code = 0 and ub.fbr-gds-grp.upper-code > 0"
 table-ref-where = table-ref-where + {&delim-par} + " ub.c-fbr-gds-grp.obj-type = '' and ub.c-fbr-gds-grp.obj-code = 0 "
 table-ref-where = table-ref-where + {&delim-par} + " ub.fbr-gds-grp-attr.obj-type = '' and ub.fbr-gds-grp-attr.obj-code = 0 "
 table-ref-where = table-ref-where + {&delim-par} + " ub.c-fbr-gds-grp-attr.obj-type = '' and ub.c-fbr-gds-grp-attr.obj-code = 0 "
@@ -629,7 +629,24 @@ action-post~
 table-db-where = fill({&delim-par}, num-entries(table-db) - 1)
 table-db-if-cond = fill({&delim-par}, num-entries(table-db) - 1)
 .
-
+assign table-erprn    = '
+goods~
+,goods-attr~
+,gds-host-attr~
+,gds-obj-prop~
+,recipe~
+,recipe-gds~
+,dis-gds-rule~
+,c-dis-gds-rule~
+,gds-obj~
+,gds-obj-attr~
+,c-gds-obj-attr~
+,c-gds-obj-ref~
+,code-range~
+,contract~
+,contract-line~
+,contract-specif~
+':U.
 
 procedure prepare-tables :
 define input parameter p-table-list as character no-undo .
@@ -678,6 +695,8 @@ on error undo, return error
   :
     if p-unload-history = no
     and entry(v-ii, p-table-list) begins "c-" then next _v-ii.
+    /* Если система в режиме интеграции с ERP РН, то не все таблицы выгружаем */
+    if mode-erprn and  lookup(entry(v-ii, p-table-list),table-erprn) > 0 then next _v-ii.
     create buf_rrdb-option.
     assign
     buf_rrdb-option.first-table-name = entry(v-ii, p-table-list)

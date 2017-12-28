@@ -66,8 +66,8 @@ DEFINE OUTPUT PARAMETER p-cancel        AS LOGICAL      NO-UNDO.
 DEFINE OUTPUT PARAMETER p-params        AS CHARACTER    NO-UNDO.
 
 define variable v-dc-num-full    as char      init "" no-undo.
-
-
+define variable chr-list-chk-type as char no-undo.
+define variable v-list-chk-type as character no-undo.
 define variable p-rs-2 as char no-undo.
 define variable date_exp_from    as date      format "99/99/9999" no-undo.
 define variable date_exp_to      as date      format "99/99/9999" no-undo.
@@ -108,6 +108,9 @@ define variable vss-description      as character no-undo init "Выбор параметров
 { bge/bge-xml.i  }
 { gbl/usr-flt.i  }
 { ref/shd-attr.i }
+
+{ gbl/twowin.i    }
+
 define variable v-param-list          as character no-undo.
 define variable v-param-type          as character no-undo.
 define variable v-bge-dper-host-code  as integer   no-undo.
@@ -141,16 +144,18 @@ define temp-table temp_obj-list no-undo
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-2 RECT-1 RECT-3 RECT-5 RECT-6 RECT-7 ~
-btn_save Btn_start Btn_Cancel b-help v-per code_pool date_from date_to ~
-bt-dc-card rs-1 v-dc-card bt-sel-obj ed-doc-type bt-sel-doc-type ~
+RECT-8 btn_save Btn_start Btn_Cancel b-help v-per code_pool date_from ~
+date_to bt-dc-card rs-1 v-dc-card bt-sel-obj ed-doc-type bt-sel-doc-type ~
 tb-inkass-pay-code tb-deleted v-place tb-cst-code tb-exp-checks tb-parts ~
 tb-chk-pay-code rs-cash-pay v-directory tb-pay-desk bt-cash-pay ~
-v-ftp-address tb-pay-desk-cards v-inf-bonus v-login v-password rs-2 
+v-ftp-address tb-pay-desk-cards v-inf-bonus v-login v-password rs-2 ~
+list-chk-type b-chk-type 
 &Scoped-Define DISPLAYED-OBJECTS v-per code_pool date_from date_to ~
 time-days ed-object rs-1 v-dc-card ed-doc-type ed-doc-type-label ~
 tb-inkass-pay-code tb-deleted v-place tb-cst-code tb-exp-checks tb-parts ~
 tb-chk-pay-code rs-cash-pay v-directory tb-pay-desk v-ftp-address ~
-tb-pay-desk-cards v-inf-bonus v-login v-password ed-doc-type-label-2 rs-2 
+tb-pay-desk-cards v-inf-bonus v-login v-password ed-doc-type-label-2 rs-2 ~
+list-chk-type 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -165,274 +170,291 @@ tb-pay-desk-cards v-inf-bonus v-login v-password ed-doc-type-label-2 rs-2
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON b-chk-type 
+     LABEL "Выбор" 
+     SIZE 15 BY 1.13.
+
 DEFINE BUTTON b-help 
-    LABEL "Помо&щь" 
-    SIZE 10 BY 1.
+     LABEL "Помо&щь" 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON bt-cash-pay 
-    IMAGE-UP FILE "btn-down-arrow":U
-    IMAGE-DOWN FILE "btn-down-arrow":U
-    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-    LABEL "..." 
-    SIZE 3.63 BY 1.04.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "..." 
+     SIZE 3.63 BY 1.04.
 
 DEFINE BUTTON bt-dc-card 
-    IMAGE-UP FILE "btn-down-arrow":U
-    IMAGE-DOWN FILE "btn-down-arrow":U
-    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-    LABEL "Дисконтные карты" 
-    SIZE 3.63 BY 1.04.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "Дисконтные карты" 
+     SIZE 3.63 BY 1.04.
 
 DEFINE BUTTON bt-sel-doc-type 
-    IMAGE-UP FILE "btn-down-arrow":U
-    IMAGE-DOWN FILE "btn-down-arrow":U
-    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-    LABEL "..." 
-    SIZE 3.63 BY 1.04.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "..." 
+     SIZE 3.63 BY 1.04.
 
 DEFINE BUTTON bt-sel-obj 
-    IMAGE-UP FILE "btn-down-arrow":U
-    IMAGE-DOWN FILE "btn-down-arrow":U
-    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-    LABEL "..." 
-    SIZE 3.63 BY 1.04.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "..." 
+     SIZE 3.63 BY 1.04.
 
 DEFINE BUTTON Btn_Cancel 
-    LABEL "&Отмена" 
-    SIZE 10 BY 1
-    BGCOLOR 8 .
+     LABEL "&Отмена" 
+     SIZE 10 BY 1
+     BGCOLOR 8 .
 
 DEFINE BUTTON btn_save 
-    LABEL "Сохранить" 
-    SIZE 10 BY 1
-    BGCOLOR 8 .
+     LABEL "Сохранить" 
+     SIZE 10 BY 1
+     BGCOLOR 8 .
 
 DEFINE BUTTON Btn_start 
-    LABEL "&Запустить" 
-    SIZE 10 BY 1
-    BGCOLOR 8 .
+     LABEL "&Запустить" 
+     SIZE 10 BY 1
+     BGCOLOR 8 .
 
-DEFINE VARIABLE ed-doc-type         AS CHARACTER INITIAL "Все" 
-    VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-VERTICAL NO-BOX
-    SIZE 35.75 BY 1.79 NO-UNDO.
+DEFINE VARIABLE ed-doc-type AS CHARACTER INITIAL "Все" 
+     VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-VERTICAL NO-BOX
+     SIZE 35.75 BY 1.79 NO-UNDO.
 
-DEFINE VARIABLE ed-doc-type-label   AS CHARACTER INITIAL "Типы документов" 
-    VIEW-AS EDITOR NO-BOX
-    SIZE 12.63 BY 1.75 NO-UNDO.
+DEFINE VARIABLE ed-doc-type-label AS CHARACTER INITIAL "Типы документов" 
+     VIEW-AS EDITOR NO-BOX
+     SIZE 12.63 BY 1.75 NO-UNDO.
 
 DEFINE VARIABLE ed-doc-type-label-2 AS CHARACTER INITIAL "Выборка по товарам:" 
-    VIEW-AS EDITOR NO-BOX
-    SIZE 36 BY .71 NO-UNDO.
+     VIEW-AS EDITOR NO-BOX
+     SIZE 36 BY .71 NO-UNDO.
 
-DEFINE VARIABLE ed-object           AS CHARACTER 
-    VIEW-AS EDITOR NO-BOX
-    SIZE 35.63 BY 3.38
-    FGCOLOR 1 NO-UNDO.
+DEFINE VARIABLE ed-object AS CHARACTER 
+     VIEW-AS EDITOR NO-BOX
+     SIZE 35.63 BY 3.38
+     FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE time-days           AS CHARACTER INITIAL "дней" 
-    VIEW-AS EDITOR NO-BOX
-    SIZE 10 BY 1 NO-UNDO.
+DEFINE VARIABLE time-days AS CHARACTER INITIAL "дней" 
+     VIEW-AS EDITOR NO-BOX
+     SIZE 10 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-dc-card           AS CHARACTER 
-    VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
-    SIZE 35.5 BY 4.75 NO-UNDO.
+DEFINE VARIABLE v-dc-card AS CHARACTER 
+     VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
+     SIZE 35.5 BY 4.75 NO-UNDO.
 
-DEFINE VARIABLE code_pool           AS CHARACTER FORMAT "X(256)":U 
-    LABEL "ПНПО" 
-    VIEW-AS FILL-IN 
-    SIZE 25 BY 1 NO-UNDO.
+DEFINE VARIABLE code_pool AS CHARACTER FORMAT "X(256)":U 
+     LABEL "ПНПО" 
+     VIEW-AS FILL-IN 
+     SIZE 25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE date_from           AS DATE      FORMAT "99/99/9999":U 
-    LABEL "Дата с" 
-    VIEW-AS FILL-IN 
-    SIZE 12 BY 1 NO-UNDO.
+DEFINE VARIABLE date_from AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата с" 
+     VIEW-AS FILL-IN 
+     SIZE 12 BY 1 NO-UNDO.
 
-DEFINE VARIABLE date_to             AS DATE      FORMAT "99/99/9999":U 
-    LABEL "по" 
-    VIEW-AS FILL-IN 
-    SIZE 12 BY 1 NO-UNDO.
+DEFINE VARIABLE date_to AS DATE FORMAT "99/99/9999":U 
+     LABEL "по" 
+     VIEW-AS FILL-IN 
+     SIZE 12 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-directory         AS CHARACTER FORMAT "X(256)":U 
-    LABEL "Директория" 
-    VIEW-AS FILL-IN 
-    SIZE 25 BY 1 NO-UNDO.
+DEFINE VARIABLE v-directory AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Директория" 
+     VIEW-AS FILL-IN 
+     SIZE 25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-ftp-address       AS CHARACTER FORMAT "X(256)":U 
-    LABEL "FTP" 
-    VIEW-AS FILL-IN 
-    SIZE 25 BY 1 NO-UNDO.
+DEFINE VARIABLE v-ftp-address AS CHARACTER FORMAT "X(256)":U 
+     LABEL "FTP" 
+     VIEW-AS FILL-IN 
+     SIZE 25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-login             AS CHARACTER FORMAT "X(256)":U 
-    LABEL "Логин" 
-    VIEW-AS FILL-IN 
-    SIZE 25 BY 1 NO-UNDO.
+DEFINE VARIABLE v-login AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Логин" 
+     VIEW-AS FILL-IN 
+     SIZE 25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-password          AS CHARACTER FORMAT "X(256)":U 
-    LABEL "Пароль" 
-    VIEW-AS FILL-IN 
-    SIZE 25 BY 1 NO-UNDO.
+DEFINE VARIABLE v-password AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Пароль" 
+     VIEW-AS FILL-IN 
+     SIZE 25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-per               AS INTEGER   FORMAT "->,>>>,>>9" INITIAL 0 
-    LABEL "За последние" 
-    VIEW-AS FILL-IN 
-    SIZE 10 BY 1 NO-UNDO.
+DEFINE VARIABLE v-per AS INTEGER FORMAT "->,>>>,>>9" INITIAL 0 
+     LABEL "За последние" 
+     VIEW-AS FILL-IN 
+     SIZE 10 BY 1 NO-UNDO.
 
-DEFINE VARIABLE rs-1                AS INTEGER 
-    VIEW-AS RADIO-SET VERTICAL
-    RADIO-BUTTONS 
-    "глобально", 1,
-    "по фирме", 2,
-    "по объектам", 3
-    SIZE 13.75 BY 3.25 NO-UNDO.
+DEFINE VARIABLE rs-1 AS INTEGER 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
+          "глобально", 1,
+"по фирме", 2,
+"по объектам", 3
+     SIZE 13.75 BY 3.25 NO-UNDO.
 
-DEFINE VARIABLE rs-2                AS CHARACTER INITIAL "all" 
-    VIEW-AS RADIO-SET HORIZONTAL
-    RADIO-BUTTONS 
-    "Все", "all",
-    "Топливо", "fuel",
-    "Товары/Услуги", "other"
-    SIZE 41 BY .96 NO-UNDO.
+DEFINE VARIABLE rs-2 AS CHARACTER INITIAL "all" 
+     VIEW-AS RADIO-SET HORIZONTAL
+     RADIO-BUTTONS 
+          "Все", "all",
+"Топливо", "fuel",
+"Товары/Услуги", "other"
+     SIZE 41 BY .96 NO-UNDO.
 
-DEFINE VARIABLE rs-cash-pay         AS LOGICAL 
-    VIEW-AS RADIO-SET VERTICAL
-    RADIO-BUTTONS 
-    "Все", no,
-    "Выбор", yes
-    SIZE 9 BY 1.88 NO-UNDO.
+DEFINE VARIABLE rs-cash-pay AS LOGICAL 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
+          "Все", no,
+"Выбор", yes
+     SIZE 9 BY 1.88 NO-UNDO.
 
-DEFINE VARIABLE v-place             AS INTEGER 
-    VIEW-AS RADIO-SET VERTICAL
-    RADIO-BUTTONS 
-    "Локальная директория", 1,
-    "FTP", 2
-    SIZE 34.5 BY 1.75 NO-UNDO.
+DEFINE VARIABLE v-place AS INTEGER 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
+          "Локальная директория", 1,
+"FTP", 2
+     SIZE 34.5 BY 1.75 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
-    EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-    SIZE 55.38 BY 4.38.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 55.38 BY 4.38.
 
 DEFINE RECTANGLE RECT-2
-    EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-    SIZE 55.25 BY 2.21.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 55.25 BY 2.21.
 
 DEFINE RECTANGLE RECT-3
-    EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-    SIZE 55.25 BY 6.58.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 55.25 BY 6.58.
 
 DEFINE RECTANGLE RECT-5
-    EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-    SIZE 55 BY 2.5.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 55 BY 2.5.
 
 DEFINE RECTANGLE RECT-6
-    EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-    SIZE 39.5 BY 9.25.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 39.5 BY 9.25.
 
 DEFINE RECTANGLE RECT-7
-    EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-    SIZE 40 BY 6.75.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 40 BY 6.75.
 
-DEFINE VARIABLE tb-chk-pay-code    AS LOGICAL INITIAL no 
-    LABEL "По типу кассовых платежей из чеков" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 38 BY .79 NO-UNDO.
+DEFINE RECTANGLE RECT-8
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 55 BY 4.75.
 
-DEFINE VARIABLE tb-cst-code        AS LOGICAL INITIAL no 
-    LABEL "ГТД по строке документа" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 26.38 BY .79 NO-UNDO.
+DEFINE VARIABLE list-chk-type AS CHARACTER 
+     VIEW-AS SELECTION-LIST SINGLE SCROLLBAR-VERTICAL 
+     SIZE 23.5 BY 3 NO-UNDO.
 
-DEFINE VARIABLE tb-deleted         AS LOGICAL INITIAL no 
-    LABEL "Удалённые" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 19.38 BY .79 NO-UNDO.
+DEFINE VARIABLE tb-chk-pay-code AS LOGICAL INITIAL no 
+     LABEL "По типу кассовых платежей из чеков" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 38 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-exp-checks      AS LOGICAL INITIAL no 
-    LABEL "Чеки" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 18.38 BY .79 NO-UNDO.
+DEFINE VARIABLE tb-cst-code AS LOGICAL INITIAL no 
+     LABEL "ГТД по строке документа" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 26.38 BY .79 NO-UNDO.
+
+DEFINE VARIABLE tb-deleted AS LOGICAL INITIAL no 
+     LABEL "Удалённые" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 19.38 BY .79 NO-UNDO.
+
+DEFINE VARIABLE tb-exp-checks AS LOGICAL INITIAL no 
+     LABEL "Чеки" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 18.38 BY .79 NO-UNDO.
 
 DEFINE VARIABLE tb-inkass-pay-code AS LOGICAL INITIAL no 
-    LABEL "По виду оплаты" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 24.38 BY .79 NO-UNDO.
+     LABEL "По виду оплаты" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 24.38 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-parts           AS LOGICAL INITIAL no 
-    LABEL "По партиям" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 26.38 BY .79 NO-UNDO.
+DEFINE VARIABLE tb-parts AS LOGICAL INITIAL no 
+     LABEL "По партиям" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 26.38 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-pay-desk        AS LOGICAL INITIAL no 
-    LABEL "По кассе" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 12.25 BY .79 NO-UNDO.
+DEFINE VARIABLE tb-pay-desk AS LOGICAL INITIAL no 
+     LABEL "По кассе" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 12.25 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-pay-desk-cards  AS LOGICAL INITIAL no 
-    LABEL "По префиксам карт" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 22 BY .79 NO-UNDO.
+DEFINE VARIABLE tb-pay-desk-cards AS LOGICAL INITIAL no 
+     LABEL "По префиксам карт" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 22 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tb-supp            AS LOGICAL INITIAL no 
-    LABEL "Остатки по поставщикам" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 26.75 BY .79 NO-UNDO.
+DEFINE VARIABLE tb-supp AS LOGICAL INITIAL no 
+     LABEL "Остатки по поставщикам" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 26.75 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-inf-bonus        AS LOGICAL INITIAL no 
-    LABEL "Выгружать информацию по бонусам" 
-    VIEW-AS TOGGLE-BOX
-    SIZE 41 BY .83 NO-UNDO.
+DEFINE VARIABLE v-inf-bonus AS LOGICAL INITIAL no 
+     LABEL "Выгружать информацию по бонусам" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 41 BY .83 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-    btn_save AT ROW 1.25 COL 1.5
-    Btn_start AT ROW 1.25 COL 1.63
-    Btn_Cancel AT ROW 1.25 COL 11.63
-    b-help AT ROW 1.5 COL 86
-    v-per AT ROW 3 COL 15 COLON-ALIGNED WIDGET-ID 20
-    code_pool AT ROW 3 COL 62 COLON-ALIGNED WIDGET-ID 28
-    date_from AT ROW 3.13 COL 8.25 COLON-ALIGNED
-    date_to AT ROW 3.13 COL 25.25 COLON-ALIGNED
-    time-days AT ROW 3.13 COL 28 NO-LABEL WIDGET-ID 52
-    tb-supp AT ROW 4.5 COL 10.38
-    bt-dc-card AT ROW 4.75 COL 77.5 WIDGET-ID 42
-    ed-object AT ROW 4.96 COL 20.75 NO-LABEL
-    rs-1 AT ROW 5.04 COL 3 NO-LABEL
-    v-dc-card AT ROW 6.25 COL 58.5 NO-LABEL WIDGET-ID 40
-    bt-sel-obj AT ROW 7.21 COL 17
-    ed-doc-type AT ROW 9.21 COL 16.75 NO-LABEL
-    bt-sel-doc-type AT ROW 9.21 COL 53.25
-    ed-doc-type-label AT ROW 9.25 COL 3 NO-LABEL
-    tb-inkass-pay-code AT ROW 11.5 COL 2.63
-    tb-deleted AT ROW 11.5 COL 36.63
-    v-place AT ROW 11.75 COL 59.5 NO-LABEL WIDGET-ID 22
-    tb-cst-code AT ROW 12.25 COL 2.63
-    tb-exp-checks AT ROW 12.25 COL 36.63 WIDGET-ID 2
-    tb-parts AT ROW 13 COL 2.63
-    tb-chk-pay-code AT ROW 13.75 COL 2.63
-    rs-cash-pay AT ROW 13.79 COL 40 NO-LABEL
-    v-directory AT ROW 14 COL 69 COLON-ALIGNED WIDGET-ID 54
-    tb-pay-desk AT ROW 14.67 COL 5.63
-    bt-cash-pay AT ROW 14.71 COL 48
-    v-ftp-address AT ROW 15.25 COL 69 COLON-ALIGNED WIDGET-ID 14
-    tb-pay-desk-cards AT ROW 15.5 COL 5.63
-    v-inf-bonus AT ROW 16.5 COL 2.5 WIDGET-ID 26
-    v-login AT ROW 16.5 COL 69 COLON-ALIGNED WIDGET-ID 16
-    v-password AT ROW 17.75 COL 69 COLON-ALIGNED WIDGET-ID 18
-    ed-doc-type-label-2 AT ROW 18.5 COL 3 NO-LABEL WIDGET-ID 12
-    rs-2 AT ROW 19.5 COL 3 NO-LABEL WIDGET-ID 6
-    "Дисконтные карты" VIEW-AS TEXT
-    SIZE 18.5 BY .75 AT ROW 5 COL 59 WIDGET-ID 44
-    RECT-2 AT ROW 9.04 COL 2
-    RECT-1 AT ROW 4.42 COL 1.75
-    RECT-3 AT ROW 11.42 COL 2
-    RECT-5 AT ROW 18.25 COL 2 WIDGET-ID 4
-    RECT-6 AT ROW 11.5 COL 58 WIDGET-ID 46
-    RECT-7 AT ROW 4.5 COL 57.5 WIDGET-ID 48
-    SPACE(7.12) SKIP(11.45)
+     btn_save AT ROW 1.25 COL 1.5
+     Btn_start AT ROW 1.25 COL 1.63
+     Btn_Cancel AT ROW 1.25 COL 11.63
+     b-help AT ROW 1.5 COL 86
+     v-per AT ROW 3 COL 15 COLON-ALIGNED WIDGET-ID 20
+     code_pool AT ROW 3 COL 62 COLON-ALIGNED WIDGET-ID 28
+     date_from AT ROW 3.13 COL 8.25 COLON-ALIGNED
+     date_to AT ROW 3.13 COL 25.25 COLON-ALIGNED
+     time-days AT ROW 3.13 COL 28 NO-LABEL WIDGET-ID 52
+     tb-supp AT ROW 4.5 COL 10.38
+     bt-dc-card AT ROW 4.75 COL 77.5 WIDGET-ID 42
+     ed-object AT ROW 4.96 COL 20.75 NO-LABEL
+     rs-1 AT ROW 5.04 COL 3 NO-LABEL
+     v-dc-card AT ROW 6.25 COL 58.5 NO-LABEL WIDGET-ID 40
+     bt-sel-obj AT ROW 7.21 COL 17
+     ed-doc-type AT ROW 9.21 COL 16.75 NO-LABEL
+     bt-sel-doc-type AT ROW 9.21 COL 53.25
+     ed-doc-type-label AT ROW 9.25 COL 3 NO-LABEL
+     tb-inkass-pay-code AT ROW 11.5 COL 2.63
+     tb-deleted AT ROW 11.5 COL 36.63
+     v-place AT ROW 11.75 COL 59.5 NO-LABEL WIDGET-ID 22
+     tb-cst-code AT ROW 12.25 COL 2.63
+     tb-exp-checks AT ROW 12.25 COL 36.63 WIDGET-ID 2
+     tb-parts AT ROW 13 COL 2.63
+     tb-chk-pay-code AT ROW 13.75 COL 2.63
+     rs-cash-pay AT ROW 13.79 COL 40 NO-LABEL
+     v-directory AT ROW 14 COL 69 COLON-ALIGNED WIDGET-ID 54
+     tb-pay-desk AT ROW 14.67 COL 5.63
+     bt-cash-pay AT ROW 14.71 COL 48
+     v-ftp-address AT ROW 15.25 COL 69 COLON-ALIGNED WIDGET-ID 14
+     tb-pay-desk-cards AT ROW 15.5 COL 5.63
+     v-inf-bonus AT ROW 16.5 COL 2.5 WIDGET-ID 26
+     v-login AT ROW 16.5 COL 69 COLON-ALIGNED WIDGET-ID 16
+     v-password AT ROW 17.75 COL 69 COLON-ALIGNED WIDGET-ID 18
+     ed-doc-type-label-2 AT ROW 18.5 COL 3 NO-LABEL WIDGET-ID 12
+     rs-2 AT ROW 19.5 COL 3 NO-LABEL WIDGET-ID 6
+     list-chk-type AT ROW 22.25 COL 3 NO-LABEL WIDGET-ID 64
+     b-chk-type AT ROW 22.25 COL 27.5 WIDGET-ID 60
+     "Типы чеков:" VIEW-AS TEXT
+          SIZE 23.5 BY .92 AT ROW 21.25 COL 3 WIDGET-ID 62
+     "Дисконтные карты" VIEW-AS TEXT
+          SIZE 18.5 BY .75 AT ROW 5 COL 59 WIDGET-ID 44
+     RECT-2 AT ROW 9.04 COL 2
+     RECT-1 AT ROW 4.42 COL 1.75
+     RECT-3 AT ROW 11.42 COL 2
+     RECT-5 AT ROW 18.25 COL 2 WIDGET-ID 4
+     RECT-6 AT ROW 11.5 COL 58 WIDGET-ID 46
+     RECT-7 AT ROW 4.5 COL 57.5 WIDGET-ID 48
+     RECT-8 AT ROW 21 COL 2 WIDGET-ID 66
+     SPACE(60.37) SKIP(3.62)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-    TITLE "Диапазон дат для экспорта".
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "Диапазон дат для экспорта".
 
 
 /* *********************** Procedure Settings ************************ */
@@ -452,39 +474,39 @@ DEFINE FRAME Dialog-Frame
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
 ASSIGN 
-    FRAME Dialog-Frame:SCROLLABLE = FALSE
-    FRAME Dialog-Frame:HIDDEN     = TRUE.
+       FRAME Dialog-Frame:SCROLLABLE       = FALSE
+       FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 ASSIGN 
-    bt-cash-pay:HIDDEN IN FRAME Dialog-Frame = TRUE.
+       bt-cash-pay:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 ASSIGN 
-    ed-doc-type:READ-ONLY IN FRAME Dialog-Frame = TRUE.
+       ed-doc-type:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR ed-doc-type-label IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 ASSIGN 
-    ed-doc-type-label:READ-ONLY IN FRAME Dialog-Frame = TRUE.
+       ed-doc-type-label:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR ed-doc-type-label-2 IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 ASSIGN 
-    ed-doc-type-label-2:READ-ONLY IN FRAME Dialog-Frame = TRUE.
+       ed-doc-type-label-2:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR ed-object IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 ASSIGN 
-    rs-cash-pay:HIDDEN IN FRAME Dialog-Frame = TRUE.
+       rs-cash-pay:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* SETTINGS FOR TOGGLE-BOX tb-supp IN FRAME Dialog-Frame
    NO-DISPLAY NO-ENABLE                                                 */
 ASSIGN 
-    tb-supp:HIDDEN IN FRAME Dialog-Frame = TRUE.
+       tb-supp:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* SETTINGS FOR EDITOR time-days IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 ASSIGN 
-    time-days:READ-ONLY IN FRAME Dialog-Frame = TRUE.
+       time-days:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -498,9 +520,20 @@ ASSIGN
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Диапазон дат для экспорта */
-    DO:
+DO:
         APPLY "END-ERROR":U TO SELF.
     END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-chk-type
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chk-type Dialog-Frame
+ON CHOOSE OF b-chk-type IN FRAME Dialog-Frame /* Выбор */
+DO:
+        run chk-type-choose in this-procedure.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -509,7 +542,7 @@ ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Диапазон дат для экспорта */
 &Scoped-define SELF-NAME bt-cash-pay
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-cash-pay Dialog-Frame
 ON CHOOSE OF bt-cash-pay IN FRAME Dialog-Frame /* ... */
-    DO:
+DO:
         run ref/cashpays.w (
             INPUT parparentproc
             ,INPUT "b-sel,b-mark":U
@@ -527,7 +560,7 @@ ON CHOOSE OF bt-cash-pay IN FRAME Dialog-Frame /* ... */
 &Scoped-define SELF-NAME bt-dc-card
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-dc-card Dialog-Frame
 ON CHOOSE OF bt-dc-card IN FRAME Dialog-Frame /* Дисконтные карты */
-    DO:
+DO:
         define variable i        as integer   init 1 no-undo.
         define variable p-num    as integer   no-undo.
         define variable v-dc-num as char      init "" no-undo.
@@ -576,7 +609,7 @@ ON CHOOSE OF bt-dc-card IN FRAME Dialog-Frame /* Дисконтные карты */
 &Scoped-define SELF-NAME bt-sel-doc-type
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-sel-doc-type Dialog-Frame
 ON CHOOSE OF bt-sel-doc-type IN FRAME Dialog-Frame /* ... */
-    DO:
+DO:
 
         define variable v-cancel as logical no-undo.
         run bge/bgeseltp.w (
@@ -647,7 +680,7 @@ ON CHOOSE OF bt-sel-doc-type IN FRAME Dialog-Frame /* ... */
 &Scoped-define SELF-NAME bt-sel-obj
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-sel-obj Dialog-Frame
 ON CHOOSE OF bt-sel-obj IN FRAME Dialog-Frame /* ... */
-    DO:
+DO:
         define variable v-host-code like ub.sysconf.host-code no-undo .
         assign
             rs-1 :screen-value = "3"
@@ -742,7 +775,7 @@ ON CHOOSE OF bt-sel-obj IN FRAME Dialog-Frame /* ... */
 &Scoped-define SELF-NAME Btn_Cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel Dialog-Frame
 ON CHOOSE OF Btn_Cancel IN FRAME Dialog-Frame /* Отмена */
-    DO:
+DO:
         assign
             p-cancel = yes
             .
@@ -756,7 +789,7 @@ ON CHOOSE OF Btn_Cancel IN FRAME Dialog-Frame /* Отмена */
 &Scoped-define SELF-NAME btn_save
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_save Dialog-Frame
 ON CHOOSE OF btn_save IN FRAME Dialog-Frame /* Сохранить */
-    DO:
+DO:
         DEFINE VARIABLE l-dircrt AS LOGICAL. /* Для ответа на создание директории */
         /*        run check-param no-error.                                                       */
 
@@ -964,7 +997,7 @@ ON CHOOSE OF btn_save IN FRAME Dialog-Frame /* Сохранить */
                 + {&delim-par} + p-pay-type-list +  {&delim-par} + p-gds-type +  {&delim-par} + p-doc-type-list  +
                 {&delim-par} + v-dc-num-full + 
                 {&delim-par} + string(v-inf-bonus) + {&delim-par} + code_pool + {&delim-par}  +  string(tb-pay-desk-cards)  + {&delim-par} +  string(tb-pay-desk)  + {&delim-par} +  string(tb-parts) + 
-                {&delim-par} + string(tb-inkass-pay-code) + {&delim-par} + string(tb-deleted) + {&delim-par} + string(tb-chk-pay-code) + {&delim-par} +  string(tb-cst-code) + {&delim-par} + string(tb-exp-checks) + {&delim-par} + rs-2 
+                {&delim-par} + string(tb-inkass-pay-code) + {&delim-par} + string(tb-deleted) + {&delim-par} + string(tb-chk-pay-code) + {&delim-par} +  string(tb-cst-code) + {&delim-par} + string(tb-exp-checks) + {&delim-par} + rs-2 + {&delim-par} + chr-list-chk-type
                 .
 
         if v-place = 2 then 
@@ -977,7 +1010,7 @@ ON CHOOSE OF btn_save IN FRAME Dialog-Frame /* Сохранить */
                 {&delim-par} + v-dc-num-full + 
                 {&delim-par} + string(v-inf-bonus) + {&delim-par} + code_pool + {&delim-par} +  string(tb-pay-desk-cards)  + {&delim-par} +  string(tb-pay-desk)  + {&delim-par} +  string(tb-parts) + 
                 {&delim-par} + string(tb-inkass-pay-code) + {&delim-par} + string(tb-deleted)  + {&delim-par} + string(tb-chk-pay-code) + {&delim-par} +  string(tb-cst-code) + {&delim-par} + string(tb-exp-checks)
-                + {&delim-par} + rs-2 
+                + {&delim-par} + rs-2 +  {&delim-par} + chr-list-chk-type
                 .
         end.
   
@@ -1003,7 +1036,7 @@ ON CHOOSE OF btn_save IN FRAME Dialog-Frame /* Сохранить */
 &Scoped-define SELF-NAME Btn_start
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_start Dialog-Frame
 ON CHOOSE OF Btn_start IN FRAME Dialog-Frame /* Запустить */
-    DO:
+DO:
   
   
         
@@ -1034,7 +1067,10 @@ ON CHOOSE OF Btn_start IN FRAME Dialog-Frame /* Запустить */
             tb-pay-desk-cards
             v-per
             code_pool
-            v-inf-bonus.
+            v-inf-bonus
+            
+            
+            .
         date_exp_from = date_from.
         date_exp_to   = date_to.
         /*!!!*/
@@ -1248,17 +1284,17 @@ ON CHOOSE OF Btn_start IN FRAME Dialog-Frame /* Запустить */
                 , "" 
                 , date_exp_from  
                 , date_exp_to
-                , p-range 
-                , p-host-code
-                , p-obj-list  
-                , p-pay-type-list 
-                , p-gds-type      
-                , p-doc-type-list 
-                ,  v-dc-num-full  
-                , v-per
-                , v-inf-bonus
-                , code_pool
-                ) .       
+            , p-range 
+            , p-host-code
+            , p-obj-list  
+            , p-pay-type-list 
+            , p-gds-type      
+            , p-doc-type-list 
+            ,  v-dc-num-full  
+            , v-per
+            , v-inf-bonus
+            , code_pool,
+            chr-list-chk-type                ) .       
            
         if v-place = 2  then 
             run bge\bgecheck-new.p ( this-procedure:handle,
@@ -1277,8 +1313,8 @@ ON CHOOSE OF Btn_start IN FRAME Dialog-Frame /* Запустить */
                 ,  v-dc-num-full 
                 , v-per
                 , v-inf-bonus
-                , code_pool
-                   
+                , code_pool,
+                chr-list-chk-type                   
                 ) .
         /*        apply "go".*/
             
@@ -1294,7 +1330,7 @@ ON CHOOSE OF Btn_start IN FRAME Dialog-Frame /* Запустить */
 &Scoped-define SELF-NAME date_from
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL date_from Dialog-Frame
 ON RETURN OF date_from IN FRAME Dialog-Frame /* Дата с */
-    DO:
+DO:
         APPLY "ENTRY" TO date_to IN FRAME {&FRAME-NAME}.
         RETURN NO-APPLY.
     END.
@@ -1306,7 +1342,7 @@ ON RETURN OF date_from IN FRAME Dialog-Frame /* Дата с */
 &Scoped-define SELF-NAME date_to
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL date_to Dialog-Frame
 ON RETURN OF date_to IN FRAME Dialog-Frame /* по */
-    DO:
+DO:
         APPLY "ENTRY" TO btn_start IN FRAME {&FRAME-NAME}.
         RETURN NO-APPLY.
     END.
@@ -1318,7 +1354,7 @@ ON RETURN OF date_to IN FRAME Dialog-Frame /* по */
 &Scoped-define SELF-NAME rs-1
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-1 Dialog-Frame
 ON VALUE-CHANGED OF rs-1 IN FRAME Dialog-Frame
-    DO:
+DO:
         run object-select in this-procedure no-error .
         if error-status :error
             then 
@@ -1337,7 +1373,7 @@ ON VALUE-CHANGED OF rs-1 IN FRAME Dialog-Frame
 &Scoped-define SELF-NAME rs-cash-pay
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-cash-pay Dialog-Frame
 ON VALUE-CHANGED OF rs-cash-pay IN FRAME Dialog-Frame
-    DO:
+DO:
         bt-cash-pay :SENSITIVE IN FRAME {&frame-name} = LOGICAL(rs-cash-pay:SCREEN-VALUE IN FRAME {&frame-name}).
     END.
 
@@ -1348,7 +1384,7 @@ ON VALUE-CHANGED OF rs-cash-pay IN FRAME Dialog-Frame
 &Scoped-define SELF-NAME tb-chk-pay-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tb-chk-pay-code Dialog-Frame
 ON VALUE-CHANGED OF tb-chk-pay-code IN FRAME Dialog-Frame /* По типу кассовых платежей из чеков */
-    DO:
+DO:
         assign
             tb-chk-pay-code
             .
@@ -1363,7 +1399,7 @@ ON VALUE-CHANGED OF tb-chk-pay-code IN FRAME Dialog-Frame /* По типу кассовых пл
 &Scoped-define SELF-NAME v-place
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-place Dialog-Frame
 ON VALUE-CHANGED OF v-place IN FRAME Dialog-Frame
-    DO:
+DO:
         ASSIGN
             v-place
             .
@@ -1605,7 +1641,7 @@ RUN disable_UI.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE attach-attr-to-schedule-line Dialog-Frame 
 PROCEDURE attach-attr-to-schedule-line :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
               Purpose:     
               Parameters:  <none>
               Notes:       
@@ -1632,25 +1668,25 @@ PROCEDURE attach-attr-to-schedule-line :
         ,buffer lock-batchprocess
         ) no-error .
 
-    FIND FIRST buf_schedule-attr NO-LOCK WHERE
-        buf_schedule-attr.task-type   = p-task-type
-        and buf_schedule-attr.cre-db-num = INTEGER(p-db-num-char)
-        and buf_schedule-attr.attr-code = ({&attr-schd-free-id} + {&delim-par} + 'exp-bgecheck') NO-ERROR.
-    IF AVAILABLE  buf_schedule-attr
-        AND buf_schedule-attr.task-num <> p-task-num
-        AND buf_schedule-attr.task-num <> - 1
-        and p-task-num <> - 1
-        THEN 
-    DO:
-        MESSAGE
-            substitute("Уже есть расписание сохранения параметров выгрузки чеков для БД &1&2" +
-            "номер расписания &3"
-            ,buf_schedule-attr.cre-db-num
-            ,{&NEW-LINE}
-            ,buf_schedule-attr.task-num)
-            VIEW-AS ALERT-BOX ERROR.
-        UNDO, RETURN ERROR.
-    END.
+/*    FIND FIRST buf_schedule-attr NO-LOCK WHERE                                                            */
+/*        buf_schedule-attr.task-type   = p-task-type                                                       */
+/*        and buf_schedule-attr.cre-db-num = INTEGER(p-db-num-char)                                         */
+/*        and buf_schedule-attr.attr-code = ({&attr-schd-free-id} + {&delim-par} + 'exp-bgecheck') NO-ERROR.*/
+/*    IF AVAILABLE  buf_schedule-attr                                                                       */
+/*        AND buf_schedule-attr.task-num <> p-task-num                                                      */
+/*        AND buf_schedule-attr.task-num <> - 1                                                             */
+/*        and p-task-num <> - 1                                                                             */
+/*        THEN                                                                                              */
+/*    DO:                                                                                                   */
+/*        MESSAGE                                                                                           */
+/*            substitute("Уже есть расписание сохранения параметров выгрузки чеков для БД &1&2" +           */
+/*            "номер расписания &3"                                                                         */
+/*            ,buf_schedule-attr.cre-db-num                                                                 */
+/*            ,{&NEW-LINE}                                                                                  */
+/*            ,buf_schedule-attr.task-num)                                                                  */
+/*            VIEW-AS ALERT-BOX ERROR.                                                                      */
+/*        UNDO, RETURN ERROR.                                                                               */
+/*    END.                                                                                                  */
     find first buf_schedule no-lock
         where buf_schedule.task-type   = p-task-type
         and buf_schedule.cre-db-num  = INTEGER(p-db-num-char)
@@ -1689,16 +1725,16 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-    /*------------------------------------------------------------------------------
-      Purpose:     DISABLE the User Interface
-      Parameters:  <none>
-      Notes:       Here we clean-up the user-interface by deleting
-                   dynamic widgets we have created and/or hide 
-                   frames.  This procedure is usually called when
-                   we are ready to "clean-up" after running.
-    ------------------------------------------------------------------------------*/
-    /* Hide all frames. */
-    HIDE FRAME Dialog-Frame.
+/*------------------------------------------------------------------------------
+  Purpose:     DISABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we clean-up the user-interface by deleting
+               dynamic widgets we have created and/or hide 
+               frames.  This procedure is usually called when
+               we are ready to "clean-up" after running.
+------------------------------------------------------------------------------*/
+  /* Hide all frames. */
+  HIDE FRAME Dialog-Frame.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1706,30 +1742,31 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-    /*------------------------------------------------------------------------------
-      Purpose:     ENABLE the User Interface
-      Parameters:  <none>
-      Notes:       Here we display/view/enable the widgets in the
-                   user-interface.  In addition, OPEN all queries
-                   associated with each FRAME and BROWSE.
-                   These statements here are based on the "Other 
-                   Settings" section of the widget Property Sheets.
-    ------------------------------------------------------------------------------*/
-    DISPLAY v-per code_pool date_from date_to time-days ed-object rs-1 v-dc-card 
-        ed-doc-type ed-doc-type-label tb-inkass-pay-code tb-deleted v-place 
-        tb-cst-code tb-exp-checks tb-parts tb-chk-pay-code rs-cash-pay 
-        v-directory tb-pay-desk v-ftp-address tb-pay-desk-cards v-inf-bonus 
-        v-login v-password ed-doc-type-label-2 rs-2 
-        WITH FRAME Dialog-Frame.
-    ENABLE RECT-2 RECT-1 RECT-3 RECT-5 RECT-6 RECT-7 btn_save Btn_start 
-        Btn_Cancel b-help v-per code_pool date_from date_to bt-dc-card rs-1 
-        v-dc-card bt-sel-obj ed-doc-type bt-sel-doc-type tb-inkass-pay-code 
-        tb-deleted v-place tb-cst-code tb-exp-checks tb-parts tb-chk-pay-code 
-        rs-cash-pay v-directory tb-pay-desk bt-cash-pay v-ftp-address 
-        tb-pay-desk-cards v-inf-bonus v-login v-password rs-2 
-        WITH FRAME Dialog-Frame.
-    VIEW FRAME Dialog-Frame.
-    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+/*------------------------------------------------------------------------------
+  Purpose:     ENABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we display/view/enable the widgets in the
+               user-interface.  In addition, OPEN all queries
+               associated with each FRAME and BROWSE.
+               These statements here are based on the "Other 
+               Settings" section of the widget Property Sheets.
+------------------------------------------------------------------------------*/
+  DISPLAY v-per code_pool date_from date_to time-days ed-object rs-1 v-dc-card 
+          ed-doc-type ed-doc-type-label tb-inkass-pay-code tb-deleted v-place 
+          tb-cst-code tb-exp-checks tb-parts tb-chk-pay-code rs-cash-pay 
+          v-directory tb-pay-desk v-ftp-address tb-pay-desk-cards v-inf-bonus 
+          v-login v-password ed-doc-type-label-2 rs-2 list-chk-type 
+      WITH FRAME Dialog-Frame.
+  ENABLE RECT-2 RECT-1 RECT-3 RECT-5 RECT-6 RECT-7 RECT-8 btn_save Btn_start 
+         Btn_Cancel b-help v-per code_pool date_from date_to bt-dc-card rs-1 
+         v-dc-card bt-sel-obj ed-doc-type bt-sel-doc-type tb-inkass-pay-code 
+         tb-deleted v-place tb-cst-code tb-exp-checks tb-parts tb-chk-pay-code 
+         rs-cash-pay v-directory tb-pay-desk bt-cash-pay v-ftp-address 
+         tb-pay-desk-cards v-inf-bonus v-login v-password rs-2 list-chk-type 
+         b-chk-type 
+      WITH FRAME Dialog-Frame.
+  VIEW FRAME Dialog-Frame.
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1737,7 +1774,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE flt-load Dialog-Frame 
 PROCEDURE flt-load :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
               Purpose:
               Parameters:  <none>
               Notes:
@@ -1807,6 +1844,9 @@ PROCEDURE flt-load :
                 i = i + 1 
                     .
             end.
+            
+            
+            
             i = 0.
             v-dc-help = "".
 
@@ -1945,7 +1985,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE flt-save Dialog-Frame 
 PROCEDURE flt-save :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
               Purpose:
               Parameters:  <none>
               Notes:
@@ -2043,7 +2083,7 @@ PROCEDURE flt-save :
                    v-password + "," +     
                    code_pool  + "," + 
                    string( v-inf-bonus ) + "," + 
-                   v-dc-num-full.
+                   v-dc-num-full .
                    
         v-list = substitute( "&1:&2;&3"
             , v-obj-range
@@ -2069,7 +2109,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-host-name Dialog-Frame 
 PROCEDURE get-host-name :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
               Purpose:
               Parameters:  <none>
               Notes:
@@ -2115,7 +2155,7 @@ END PROCEDURE. /* get-host-name */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame 
 PROCEDURE init-fields :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
               Purpose:
               Parameters:  <none>
               Notes:
@@ -2171,7 +2211,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-tb-chk-pay-code Dialog-Frame 
 PROCEDURE manage-tb-chk-pay-code :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
               Purpose:
               Parameters:  <none>
               Notes:
@@ -2202,7 +2242,7 @@ END PROCEDURE. /* manage-tb-chk-pay-code */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE object-select Dialog-Frame 
 PROCEDURE object-select :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
               Purpose:
               Parameters:  <none>
               Notes:
@@ -2305,6 +2345,7 @@ PROCEDURE myenable :
                             tb-cst-code = logical (entry(21,v-param-list,{&delim-par}))
                               tb-exp-checks  =  logical (entry(22,v-param-list,{&delim-par}))
                                                p-rs-2 = entry(23,v-param-list,{&delim-par})
+                                               chr-list-chk-type = entry(24,v-param-list,{&delim-par})
                            NO-ERROR.
                         
                         disable v-directory with frame {&FRAME-NAME}.
@@ -2342,6 +2383,7 @@ PROCEDURE myenable :
                             tb-cst-code = logical (entry(19,v-param-list,{&delim-par}))
                             tb-exp-checks = logical (entry(20,v-param-list,{&delim-par}))
                             p-rs-2 = entry(21,v-param-list,{&delim-par})
+                            chr-list-chk-type =  entry(22,v-param-list,{&delim-par})
                                NO-ERROR.
                         disable v-ftp-address v-login v-password with frame {&FRAME-NAME}.
 /*                        v-dc-card :SCREEN-VALUE = v-dc-num-full.*/
@@ -2353,10 +2395,164 @@ PROCEDURE myenable :
                                         rs-1 :screen-value = string(p-range) no-error.
                                         v-dc-card :SCREEN-VALUE = v-dc-num-full .
                                          rs-2 :screen-value =  p-rs-2 no-error.
+             define variable i as integer no-undo.   
+             
+                                      
+             do i = 1 to num-entries(chr-list-chk-type) :
+   
+            if entry(i,chr-list-chk-type  ) = "1"   then v-list-chk-type = "Продажа,"   no-error.
+           if entry(i,chr-list-chk-type  )  = "6"   then v-list-chk-type = v-list-chk-type + "Возврат,"   no-error.
+        if entry(i,chr-list-chk-type  )   = "8"  then v-list-chk-type = v-list-chk-type + "Аннуляция,"   no-error.
+        if entry(i,chr-list-chk-type  )   = "17"  then v-list-chk-type = v-list-chk-type + "ТехПролив"  no-error.
+         end.
+                                         
+                                         
+                                         list-chk-type :list-items  =  v-list-chk-type.
             end.
    
     end case.
 end procedure.
+
+procedure chk-type-choose:
+
+
+ /*------------------------------------------------------------------------------
+      Purpose:     
+      Parameters:  <none>
+      Notes:       
+    ------------------------------------------------------------------------------*/
+    define variable v-counter       as integer   no-undo.
+    define variable v-label         as character no-undo.
+    define variable v-value         as character no-undo.
+    define variable v-list          as character no-undo.
+    define variable v-changed       as logical   no-undo.
+    define variable v-accepted      as logical   no-undo.
+    define variable v-list-edt      as character no-undo.
+    define variable v-list-edt-full as character no-undo.
+    
+    do
+        with frame {&frame-name}
+        on error undo, return error
+        :
+            
+            
+        v-uf-Naim = "".
+            
+        assign
+            v-list-edt = "Продажа" + 
+        "," + "Возврат" + 
+        "," + "Аннуляция" + 
+        "," + "ТехПролив" 
+        .
+        
+        assign
+            v-list-edt-full = "Продажа" + 
+        "," + "Возврат" + 
+        "," + "Аннуляция" + 
+        "," + "ТехПролив" 
+        .
+        
+        run twowin_clear in this-procedure.
+        do v-counter = 1 to num-entries( v-list-edt-full )
+            on error undo, return error
+            :
+            assign
+                v-label = entry( v-counter, v-list-edt-full )
+                v-value = entry( v-counter, v-list-edt )
+                .
+            run twowin_add-item in this-procedure (
+                input v-value
+                , input v-label
+                , input substitute( "Тип чеков: &1", v-value )
+                , input ( list-chk-type :lookup( v-value ) <> 0  )
+                ).
+        end. 
+        run gbl/twowin.w (
+            input ?
+            , input 1
+            , input "Выбор типа чека":U
+            , input "":U
+            , input "&Тест"
+            , input table temp_twowin_items
+            , output table temp_twowin_itemsSelected
+            , output v-changed
+            , output v-accepted
+            ).
+        
+        if
+
+            v-changed = yes
+            then 
+        do:
+            assign
+               list-chk-type :list-items = "":U
+                v-list                  = "":U
+                v-counter               = 0
+                .
+
+            for each temp_twowin_itemsSelected
+                by temp_twowin_itemsSelected.itm-key
+                :
+                assign
+                    v-counter = v-counter + 1
+                    v-list    = substitute( "&1&2&3"
+                                , v-list
+                                , ( if v-list = "":U then "":U else ",":U )
+                                , temp_twowin_itemsSelected.itmExtKey
+                                )
+                    .
+
+                list-chk-type :add-last (
+                    entry( lookup( temp_twowin_itemsSelected.itmExtKey, v-list-edt ), v-list-edt-full )
+                    , temp_twowin_itemsSelected.itmExtKey
+                    ) no-error.
+            end.
+   
+        end.
+           
+    end.
+   
+       chr-list-chk-type = "".
+
+    v-list-chk-type = "".
+    do v-counter = 1 to list-chk-type :num-items in frame {&frame-name}
+        on error undo, return error
+        :
+        assign
+            v-list-chk-type = substitute( "&1&2&3"
+                                        , v-list-chk-type
+                                        , ( if v-list-chk-type = "":U then "":U else ",":U )
+                                        , entry( v-counter , list-chk-type :list-items ) 
+                                        )  no-error
+            .
+       end.
+    
+      do v-counter = 1 to list-chk-type :num-items in frame {&frame-name}
+        on error undo, return error
+        :
+            if entry(v-counter,v-list-chk-type  ) = "Продажа"   then chr-list-chk-type = "1,"   no-error.
+           if entry(v-counter,v-list-chk-type  )  = "Возврат"   then chr-list-chk-type = chr-list-chk-type + "6,"   no-error.
+        if entry(v-counter,v-list-chk-type  )   = "Аннуляция"  then chr-list-chk-type = chr-list-chk-type + "8,"   no-error.
+        if entry(v-counter,v-list-chk-type  )   = "ТехПролив"  then chr-list-chk-type = chr-list-chk-type + "17"  no-error.
+         end. 
+/*        message chr-list-chk-type view-as alert-box.*/
+    
+       /* do */
+/*    v-uf-Naim = v-list-chk-type.*/
+    
+/*    run uf-set in this-procedure*/
+/*        ( input {&uf-alc-rees}  */
+/*        ,input v-cntxt-userid   */
+/*        ,input v-uf-List_       */
+/*        ,input v-uf-Naim        */
+/*        ,input v-uf-print-graft */
+/*        ,input v-uf-sort-gr     */
+/*        ,input v-uf-type-price  */
+/*        ,input v-uf-type-val    */
+/*        ) no-error .            */
+
+end.
+
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-log-and-file dialog-frame

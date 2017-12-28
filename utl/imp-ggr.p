@@ -40,6 +40,7 @@ DEFINE VARIABLE v-full-level-name as character no-undo .
 DEFINE VARIABLE v-node-code like ub.gds-grp.node-code no-undo .
 DEFINE VARIABLE v-calc-method like ub.gds-grp.calc-method no-undo .
 DEFINE VARIABLE v-increase-pc like ub.gds-grp.increase-pc no-undo .
+DEFINE VARIABLE v-print-code  like ub.gds-grp.print-code  no-undo .
 DEFINE VARIABLE v-d-pcnt like ub.gds-grp.d-pcnt no-undo .
 DEFINE VARIABLE v-new-node-code like ub.gds-grp.node-code no-undo .
 DEFINE VARIABLE v-rid as recid no-undo.
@@ -159,6 +160,7 @@ on error undo, return
       v-calc-method = buf_gds-grp.calc-method
       v-increase-pc = buf_gds-grp.increase-pc
       v-d-pcnt = buf_gds-grp.d-pcnt
+      v-print-code = buf_gds-grp.print-code
       .
       /* создать группу на основании полного имени v-full-name */
       _cycle:
@@ -181,6 +183,7 @@ on error undo, return
                         ,input v-level-name
                         ,input v-calc-method
                         ,input v-increase-pc
+                        ,input v-print-code
                         ,input {&pr-round-off}
                         ,input 0
                         ,output v-rid
@@ -206,6 +209,7 @@ on error undo, return
           v-node-code = buf_gds-grp.node-code
           v-calc-method = buf_gds-grp.calc-method
           v-increase-pc = buf_gds-grp.increase-pc
+          v-print-code  = buf_gds-grp.print-code
           v-d-pcnt = buf_gds-grp.d-pcnt
           .
           next _cycle.

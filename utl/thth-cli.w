@@ -211,7 +211,7 @@ DEFINE VARIABLE sch-old-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
      SIZE 10 BY 1 NO-UNDO.
 
 DEFINE VARIABLE sch-self-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
-     LABEL "Поиск по коду v15.1"
+     LABEL "Поиск по коду v16.0"
      VIEW-AS FILL-IN
      SIZE 10 BY 1 NO-UNDO.
 
@@ -247,7 +247,7 @@ DEFINE BROWSE br-clients
        entry(3, X_ext-classif.uniq-key-rec, {&delim-key})
        )
 ELSE ''
-    ) COLUMN-LABEL "КЛИЕНТ!v15.1" FORMAT "X(12)"
+    ) COLUMN-LABEL "КЛИЕНТ!v16.0" FORMAT "X(12)"
 (X_ext-classif.charkey_one + string(X_ext-classif.KEY#_one))  COLUMN-LABEL {&cli-type-code-label} FORMAT "X(12)"
 X_ext-classif.charkey_two COLUMN-LABEL "{&abbr_INN_ALLSHIFT}" FORMAT "X(12)"
 X_ext-classif.charkey_three COLUMN-LABEL "Название КЛИЕНТА в" FORMAT "X(60)"
@@ -607,7 +607,7 @@ END.
 
 &Scoped-define SELF-NAME sch-self-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL sch-self-code Dialog-Frame
-ON RETURN OF sch-self-code IN FRAME Dialog-Frame /* Поиск по коду v15.1 */
+ON RETURN OF sch-self-code IN FRAME Dialog-Frame /* Поиск по коду v16.0 */
 DO:
   run proc-find-self-code in this-procedure ( input no, input frame {&frame-name} sch-self-code) no-error.
   if error-status:error then return no-apply.
@@ -956,8 +956,8 @@ define variable v-self-cli-name as character no-undo .
 define variable v-old-client as logical no-undo .
 
 DEFINE FRAME list1
-v-self-objtypecode COLUMN-LABEL "КЛИЕНТ!v15.1" FORMAT "X(12)"
-v-self-cli-name COLUMN-LABEL "НАЗВАНИЕ КЛИЕНТА!v15.1" FORMAT "X(60)"
+v-self-objtypecode COLUMN-LABEL "КЛИЕНТ!v16.0" FORMAT "X(12)"
+v-self-cli-name COLUMN-LABEL "НАЗВАНИЕ КЛИЕНТА!v16.0" FORMAT "X(60)"
 X_ext-classif.charkey_two COLUMN-LABEL "{&abbr_INN_ALLSHIFT}" FORMAT "X(12)"
 v-old-client column-label "До upg" FORMAT "+/"
 v-alien-objtypecode COLUMN-LABEL "КЛИЕНТ!старой версии" FORMAT "X(12)"
@@ -1065,7 +1065,7 @@ run fltfield-add in this-procedure('charkey_two', "{&abbr_inn_allshift}", '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('charkey_three', substitute('Название клиента &1', p-from-version), '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-run fltfield-add in this-procedure('uniq-key-rec', 'Уникальный ключ записи в БД v15.1', '',
+run fltfield-add in this-procedure('uniq-key-rec', 'Уникальный ключ записи в БД v16.0', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 
 
@@ -1122,7 +1122,7 @@ end.
 
 if X_ext-classif.uniq-key-rec <> '' then do:
 message
-substitute("Уже есть соответствие  между данные клиента &1&2 в БД &4 и в БД v15.1&3" +
+substitute("Уже есть соответствие  между данные клиента &1&2 в БД &4 и в БД v16.0&3" +
            "Вы УВЕРЕНЫ, что хотите их изменить?"
            , entry(2, X_ext-classif.uniq-key-rec, {&delim-key})
            , entry(3, X_ext-classif.uniq-key-rec, {&delim-key})
@@ -1177,7 +1177,7 @@ find first buf_ext-classif no-lock where
       and buf_ext-classif.uniq-key-rec = v-uniq-key-rec no-error.
 if available buf_ext-classif then do:
   message
-  substitute('Клиент &1&2 в БД v15.1 уже привязан к клиенту в БД &5 (&3&4)'
+  substitute('Клиент &1&2 в БД v16.0 уже привязан к клиенту в БД &5 (&3&4)'
                                 , buf_clients.obj-type
                                 , buf_clients.obj-code
                                 , buf_ext-classif.charkey_One  /*obj-type*/
@@ -1196,7 +1196,7 @@ then do:
   then do:
     if buf_clients.obj-type <> {&cmp} then do:
       message
-      substitute('Клиент &1&2 в БД &4 является СВОЕЙ ФИРМОЙ - соответствующий клиент в БД v15.1 должен быть типа &3 и СВОЕЙ ФИРМОЙ'
+      substitute('Клиент &1&2 в БД &4 является СВОЕЙ ФИРМОЙ - соответствующий клиент в БД v16.0 должен быть типа &3 и СВОЕЙ ФИРМОЙ'
                 , X_ext-classif.charkey_One  /*obj-type*/
                 , X_ext-classif.key#_one
                 , {&cmp}
@@ -1208,8 +1208,8 @@ then do:
     end.
     else do:
       message
-      substitute('Клиент &1&2 в БД &4 является СВОЕЙ ФИРМОЙ - соответствующий клиент в БД v15.1 должен быть СВОЕЙ ФИРМОЙ&3' +
-                 "Сделать клиента &1&2 БД v15.1 СВОЕЙ ФИРМОЙ?"
+      substitute('Клиент &1&2 в БД &4 является СВОЕЙ ФИРМОЙ - соответствующий клиент в БД v16.0 должен быть СВОЕЙ ФИРМОЙ&3' +
+                 "Сделать клиента &1&2 БД v16.0 СВОЕЙ ФИРМОЙ?"
                 , X_ext-classif.charkey_One  /*obj-type*/
                 , X_ext-classif.key#_one   /*obj-code*/
                 , {&new-line}
@@ -1306,7 +1306,7 @@ if p-list-mode = {&g___object} then do:
           rowid(sysconf_clients) = v-rowid no-error.
   if not available sysconf_clients then do:
     message
-    substitute("Не найдена для СВОЕЙ ФИРМЫ &3 объекта &1&2 БД &4 не найдена соответствующая запись в БД v15.1"
+    substitute("Не найдена для СВОЕЙ ФИРМЫ &3 объекта &1&2 БД &4 не найдена соответствующая запись в БД v16.0"
                 , X_ext-classif.charkey_one
                 , X_ext-classif.key#_one
                 , X_ext-classif.key#_two
@@ -1317,7 +1317,7 @@ if p-list-mode = {&g___object} then do:
   end.
   if not can-find( first ub.sysconf no-lock where ub.sysconf.host-code = sysconf_clients.obj-code) then do:
       message
-      substitute("СВОЯ ФИРМА &3 объекта &1&2 БД &4 в БД v15.1 НЕ ЯВЛЯЕТСЯ СВОЕЙ ФИРМОЙ"
+      substitute("СВОЯ ФИРМА &3 объекта &1&2 БД &4 в БД v16.0 НЕ ЯВЛЯЕТСЯ СВОЕЙ ФИРМОЙ"
                   , X_ext-classif.charkey_one
                   , X_ext-classif.key#_one
                   , X_ext-classif.key#_two
@@ -1329,7 +1329,7 @@ if p-list-mode = {&g___object} then do:
   if not (buf_clients.host-code = sysconf_clients.obj-code)
   then do:
       message
-      substitute("Для того чтобы связать объект &1&2 БД &5 и объект БД v15.1 &3&4 их СВОИ ФИРМЫ тоже должны быть СВЯЗАНЫ"
+      substitute("Для того чтобы связать объект &1&2 БД &5 и объект БД v16.0 &3&4 их СВОИ ФИРМЫ тоже должны быть СВЯЗАНЫ"
                   , X_ext-classif.charkey_one
                   , X_ext-classif.key#_one
                   , buf_clients.obj-type
@@ -1438,14 +1438,14 @@ find first buf_ext-classif no-lock where
 if available buf_ext-classif then do:
   if p-list-mode = {&g___object} then do:
     message
-    substitute("ИМЕЕТСЯ запись по объекту в БД &1, которой не соответствует ни один ОБЪЕКТ БД v15.1", p-from-version) skip
+    substitute("ИМЕЕТСЯ запись по объекту в БД &1, которой не соответствует ни один ОБЪЕКТ БД v16.0", p-from-version) skip
     "Вы уверены, что хотите закрыть этап?"
     view-as alert-box question buttons YES-NO update glog .
     if not glog then undo, return error .
   end.
   else do:
     message
-    substitute("ИМЕЕТСЯ запись по клиенту в БД &1, которой не соответствует ни один КЛИЕНТ БД v15.1", p-from-version) skip
+    substitute("ИМЕЕТСЯ запись по клиенту в БД &1, которой не соответствует ни один КЛИЕНТ БД v16.0", p-from-version) skip
     "Закрытие этапа НЕВОЗМОЖНО"
 
     view-as alert-box error .
@@ -1573,7 +1573,7 @@ if can-find (first clients-01) then do:
             , input p-from-version
             , input no /*p-auto-go*/
             , input ''
-            , input 'Сохранение данных по клиентам в БД v15.1') no-error .
+            , input 'Сохранение данных по клиентам в БД v16.0') no-error .
 end.
 else do:
   message

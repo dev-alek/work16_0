@@ -66,7 +66,8 @@ define variable v-value-integer   as integer   no-undo .
 define variable v-value-logical   as logical   no-undo .
 define variable v-tth             as handle    no-undo .
 define variable v-mess            as character no-undo .
-
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
 
 define buffer buf_currency for ub.currency.
 define buffer buf_shop for ub.shop.
@@ -94,7 +95,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   end.
 
   { gbl/curdbnum.i v-db-num }
-
+   run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+  if v-value = "no"  then do: 
   if v-db-num <> 0
   then do:
     assign
@@ -102,6 +104,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     .
     run err-mess in this-procedure ( input-output v-mess ).
     undo main-block, return error (if p-silent = yes then v-mess else '':U ).
+  end.
   end.
   for each ibmrubc :
     delete ibmrubc.
@@ -290,8 +293,7 @@ return '':U .
 
 procedure err-mess:
   define input-output parameter p-mess as character no-undo.
-
-  case p-silent:
+    case p-silent:
     when yes then do:
       assign
       p-mess = substitute("Сохранение изменений в карточке ВАЛЮТЫ&1"

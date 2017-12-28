@@ -12,7 +12,7 @@ r-Отчет по картам ЛНР.
 Дата создания: 02/12/14
 Author: Shutilov Arnold
 Creation date: 02/12/14
-v15.1 */
+v16.0 */
 
 /* ***************************  Definitions  ************************** */
 using Progress.Lang.*.

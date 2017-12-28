@@ -16,8 +16,19 @@ Creation date: 04/05/06
 */
 &if defined (include_attr-lib) = 0 &then
 &glob include_attr-lib yes
+&if "{1}" = "class" &then
+&else
 define new global shared variable g#attr-lib  as handle no-undo .
 define variable v-attr-lib-variable as handle no-undo .
+&endif
+
+&if "{1}" = "class" &then
+
+&glob run_proc_attr-lib {&check_attr-lib} ~
+run ~{&proc-name~} in ibs.th.gbl.gbl-hndllib:g#attr-lib
+
+&else
+
 
 &glob check_attr-lib if (valid-handle(g#attr-lib) <> true) then do: ~
   run gbl/attr-lib.p persistent no-error . ~
@@ -45,5 +56,6 @@ run ~{&proc-name~} in g#attr-lib
   delete procedure v-attr-lib-variable . ~
 end.
 
+&endif
 &endif
 /* $Workfile$ e n d */

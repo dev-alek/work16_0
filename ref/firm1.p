@@ -64,7 +64,6 @@ define input parameter p-turnover-buyer      like ub.clients.turnover-buyer     
 define input parameter p-turnover-buyer-gds  like ub.clients.turnover-buyer-gds   no-undo .
 
 
-
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -160,7 +159,7 @@ if not avail buf_cli-grp then do:
   assign
   v-err-mess = substitute("Неверный код группы клиента &1", p-grp-code) .
   run err-mess in this-procedure ( input-output v-err-mess ).
-  undo, return error "":U.
+  undo, return error v-err-mess.
 end.
 if can-find(first ub.cli-grp no-lock where
                     ub.cli-grp.upper-code = p-grp-code) then do:

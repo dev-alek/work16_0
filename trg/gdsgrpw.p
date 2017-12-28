@@ -50,7 +50,8 @@ define buffer buf_scales-grp for ub.scales-grp.
 define buffer buf2_scales-grp for ub.scales-grp.
 define buffer buf_fbr-prn-grp for ub.fbr-prn-grp.
 define buffer buf2_fbr-prn-grp for ub.fbr-prn-grp.
-
+define variable v-value as character no-undo.
+define variable v-ttype as character no-undo.
 
 /* выходим из триггера в случае, если изменилось одно из вычисл€емых полей, не требующих
    истории или —ѕЌ - пока такое поле только одно - gds-grp.unit-base */
@@ -75,7 +76,8 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
-
+run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+if v-value = "no"  then do:   
   if not g#news and g#db-num > 0 then do:
     message
     vss-workfile vss-revision vss-description skip
@@ -84,7 +86,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     view-as alert-box error .
     undo main-block, return error .
   end.
-
+end.
   /* собираем полное им€, игнориру€ корневой узел */
   run grplib-get-full-name in this-procedure
     (input ub.gds-grp.node-code

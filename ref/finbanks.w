@@ -267,7 +267,7 @@ DEFINE BROWSE BR-bank
   QUERY BR-bank DISPLAY
       mark-string(recid(X_fin-bank), v-rid-list) FORMAT "X(1)":U
             WIDTH 1
-      X_fin-bank.host-code COLUMN-LABEL "Код!фирмы" FORMAT "99999":U
+      X_fin-bank.host-code COLUMN-LABEL "Код!фирмы" FORMAT ">>>>>99999":U
       X_fin-bank.code-bank COLUMN-LABEL "Код!банка" FORMAT "9999999":U
       X_fin-bank.bank-name COLUMN-LABEL "Наименование банка" FORMAT "X(60)":U
       X_fin-bank.bik FORMAT "X(9)":U

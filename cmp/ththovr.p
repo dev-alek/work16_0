@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Создание продажных цен на основе старой версии TH и перенос в 15.1
+Создание продажных цен на основе старой версии TH и перенос в 16.0
 
 Автор: Чернова Светлана Александровна
 Дата создания: 01/11/09
@@ -25,7 +25,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Создание продажных цен на основе старой версии TH и перенос в 15.1".
+define variable vss-description as character no-undo init "Создание продажных цен на основе старой версии TH и перенос в 16.0".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
@@ -126,7 +126,7 @@ if not available buf_global-state then do:
 end.
 
 
-&scop my-message substitute("Создание продажных цен на основе &1 БД и перенос в 15.1 ...", p-from-version)
+&scop my-message substitute("Создание продажных цен на основе &1 БД и перенос в 16.0 ...", p-from-version)
 {&display-message}.
 run save-conf-par in this-procedure .
 run proc_import in this-procedure .
@@ -145,7 +145,7 @@ on error undo, return error  substitute("ошибка &1 &2" , error-status :get-messa
       &scop my-message substitute("ошибка &1 &2" , error-status :get-message(1) , return-value )
       {&display-message}.
     end.
-    /* поиск соответствия старого obj-code p-from-version версии в 15.1 */
+    /* поиск соответствия старого obj-code p-from-version версии в 16.0 */
     find first new_ext-classif no-lock where
                 new_ext-classif.classif-subject = {&table_clients}
             and new_ext-classif.classif-name    = v-cli-classif-name
@@ -185,7 +185,7 @@ on error undo, return error  substitute("ошибка &1 &2" , error-status :get-messa
           ( old_gds-obj.fact-qnty     <> 0 or
             old_goods.stts = 0 )
            :
-      /* поиск соответствия старого gds-code p-from-version версии  в 15.1 */
+      /* поиск соответствия старого gds-code p-from-version версии  в 16.0 */
       find first new_ext-classif no-lock where
                 new_ext-classif.classif-subject = {&table_goods}
             and  new_ext-classif.classif-name    = v-classif-name
@@ -415,7 +415,7 @@ end. /*doe*/
 end procedure. /* uni-k */
 
 procedure ver-gtpl :
- /* проверяет наличие и если надо создает ГОЦ и ГТПЛ для объекта 15.1  */
+ /* проверяет наличие и если надо создает ГОЦ и ГТПЛ для объекта 16.0  */
 define input  parameter p-obj-type as character no-undo .
 define input  parameter p-obj-code as integer   no-undo .
 

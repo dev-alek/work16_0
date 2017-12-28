@@ -1,0 +1,83 @@
+ADD FIELD "tank-type" OF "auto-tank" AS character
+  DESCRIPTION "Тип автотранспорта : Прицеп\Полуприцеп"
+  FORMAT "x(8)"
+  POSITION 8
+  INITIAL ""
+  LABEL "Тип"
+  ORDER 61
+  MAX-WIDTH 16
+
+ADD FIELD "plomb-type" OF "auto-tank" AS character
+  DESCRIPTION "Тип пломбировки"
+  FORMAT "x(8)"
+  POSITION 9
+  INITIAL ""
+  ORDER 71
+  MAX-WIDTH 16
+
+ADD FIELD "cli-type" OF "auto-tank" AS character
+  DESCRIPTION "Перечислимый тип поставщика: организация, физ. лицо и т.д.`Contragent`Cotractan "
+  FORMAT "X(3)"
+  POSITION 10
+  INITIAL ?
+  LABEL "Контрагент"
+  COLUMN-LABEL "Контрагент"
+  ORDER 81
+  MAX-WIDTH 6
+
+ADD FIELD "cli-code" OF "auto-tank" AS integer
+  DESCRIPTION "Код поставщика - уникальный внутри конкретного справочника`Code`Cod"
+  FORMAT ">>>>>>>>9"
+  POSITION 11
+  INITIAL ?
+  LABEL "Код"
+  COLUMN-LABEL "Код"
+  ORDER 91
+  MAX-WIDTH 4
+
+ADD INDEX "idx-cli" ON "auto-tank"
+  AREA "Primary_data"
+  INDEX-FIELD "cli-type" ASCENDING
+  INDEX-FIELD "cli-code" ASCENDING
+
+ADD INDEX "pl-type" ON "auto-tank"
+  AREA "Primary_data"
+  INDEX-FIELD "plomb-type" ASCENDING
+
+ADD FIELD "tank-type" OF "c-auto-tank" AS character
+  DESCRIPTION "Тип автотранспорта : Прицеп\Полуприцеп"
+  FORMAT "x(8)"
+  POSITION 19
+  INITIAL ""
+  LABEL "Тип"
+  ORDER 180
+  MAX-WIDTH 16
+
+ADD FIELD "plomb-type" OF "c-auto-tank" AS character
+  DESCRIPTION "Тип пломбировки"
+  FORMAT "x(8)"
+  POSITION 20
+  INITIAL ""
+  ORDER 190
+  MAX-WIDTH 16
+
+ADD FIELD "cli-type" OF "c-auto-tank" AS character
+  DESCRIPTION "Перечислимый тип поставщика: организация, физ. лицо и т.д.`Contragent`Cotractan "
+  FORMAT "X(3)"
+  POSITION 21
+  INITIAL ?
+  LABEL "Контрагент"
+  COLUMN-LABEL "Контрагент"
+  ORDER 200
+  MAX-WIDTH 6
+
+ADD FIELD "cli-code" OF "c-auto-tank" AS integer
+  DESCRIPTION "Код поставщика - уникальный внутри конкретного справочника`Code`Cod"
+  FORMAT ">>>>>>>>9"
+  POSITION 22
+  INITIAL ?
+  LABEL "Код"
+  COLUMN-LABEL "Код"
+  ORDER 210
+  MAX-WIDTH 4
+

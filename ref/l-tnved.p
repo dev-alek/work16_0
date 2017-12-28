@@ -35,7 +35,7 @@ on error undo, return error return-value
 :
   define variable varTemp as character no-undo.
   define variable glog as logical no-undo .
-
+  if f-name = '' or f-name = ? then f-name = "cmp/tnved4.txt".
   if f-name = ""
   or search(f-name) = ?
   then do:

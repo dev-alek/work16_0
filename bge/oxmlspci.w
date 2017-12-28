@@ -1033,14 +1033,13 @@ on error undo, return error
     then do:
       enable
       tt-ext-system.esys-num-days-keep-exp
-      t-exp-conf-wait
+      t-exp-conf-wait when tt-ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN})
       tt-ext-system.esys-max-p-size
       b-db-export
       .
       assign
       tt-ext-system.esys-send-news-exp = yes
       .
-
     end.
     else do:
         disable
@@ -1084,7 +1083,7 @@ on error undo, return error
     then do:
         enable
         b-db-import
-        t-imp-conf-send
+        t-imp-conf-send when tt-ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN})
         .
         assign
         tt-ext-system.esys-send-news-imp = yes
@@ -1510,7 +1509,7 @@ PROCEDURE proc-value-change-method :
 define input parameter p-delivery-method as integer no-undo.
 
 t-delete-pck-on:label in frame {&frame-name} = "”дал. ф-лы из HEAP" .
-
+      
 hide
 f-ftp-ip in frame {&frame-name}
 f-login
@@ -1566,6 +1565,13 @@ case p-delivery-method:
   when integer({&esys-dm-egais})
   then do:
     t-delete-pck-on:label in frame {&frame-name} = '”дал. записи с ”“ћ'.
+  end.
+  when integer({&esys-dm-erp-1C-RN})
+  then do:
+      disable
+      T-exp-conf-wait
+      T-imp-conf-send
+      with frame {&frame-name}.
   end.
   otherwise do:
   end.   

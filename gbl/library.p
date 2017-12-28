@@ -15,6 +15,8 @@ Creation date: 08/17/00
 
 */
 
+using ibs.th.gbl.gbl-hndllib from propath.
+
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
@@ -60,6 +62,10 @@ else do:
   assign
     g#library = this-procedure :handle
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#library", g#library).
+  delete object gbl-hndllibObj.
 end.
 
 if this-procedure :persistent <> true
@@ -75,6 +81,10 @@ on delete of this-procedure do:
   assign
     g#library = ?
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#library", g#library).
+  delete object gbl-hndllibObj.
 end.
 
 define variable l-last-hostcode-exist     as logical                  no-undo initial false .
