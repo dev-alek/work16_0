@@ -578,7 +578,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("doc-code", buf_trn-doc.doc-code).
         write-data-element ("doc-num", buf_trn-doc.doc-code).
         write-data-element ("del-f", string (isDel, "1/0") ).
-        write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.sys-time-int * 1000))).
+        write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))).
         write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (datetime (buf_trn-doc.fact-date, buf_trn-doc.fact-time * 1000))).
         write-data-element ("doc-type", v-doc-type-ERPRN).
         write-data-element ("doc-rsn-code", (if buf_trn-doc.reason-code = ? then "0" else string-mth (buf_trn-doc.reason-code))).
@@ -604,7 +604,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("doc-code", buf_trn-doc.doc-code).
         write-data-element ("doc-num", buf_trn-doc.doc-code).
         write-data-element ("del-f", string (isDel, "1/0") ).
-        write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.sys-time-int * 1000))).
+        write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))).
         write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (datetime (buf_trn-doc.fact-date, buf_trn-doc.fact-time * 1000))).
         write-data-element ("doc-type", v-doc-type-ERPRN).
         write-data-element ("doc-rsn-code", string-mth (buf_trn-doc.reason-code)).

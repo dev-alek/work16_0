@@ -35,6 +35,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   define buffer buf_gds for ub.goods.
   define buffer buf_doc-attr for ub.doc-attr.
   define buffer buf_units for ub.units.
+  define buffer bf_rvs-line for ub.rvs-line.
+  define buffer bf_rvs-doc for ub.rvs-doc.
   
   define property Msg as character no-undo
     get:
@@ -207,6 +209,16 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
 
   
   method private void GdsLineFuel ():
+
+    define variable dAddCliQnty as decimal no-undo .
+    define variable dAddQnty    as decimal no-undo .
+    define variable v-sum-b     as decimal no-undo .
+    define variable v-sum-a     as decimal no-undo .
+    define variable v-sum-df    as decimal no-undo .
+
+    
+    find first bf_rvs-doc no-lock where
+             bf_rvs-doc.rvs-code = buf_trn-doc.out-code no-error .
     
     sw:start-element ("gds").
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
@@ -214,31 +226,67 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
             buf_gds.artic = buf_doc-line.artic 
         and buf_gds.prod-code = buf_doc-line.prod-code
         and buf_gds.prod-type = buf_doc-line.prod-type.
-      find first buf_doc-pl where buf_doc-pl.obj-type = buf_doc-line.obj-type and buf_doc-pl.obj-code = buf_doc-line.obj-code
-        and buf_doc-pl.out-code = buf_doc-line.doc-code and buf_doc-pl.gds-code = buf_gds.gds-code.
-
-      find first buf_units where buf_units.unit-name = buf_gds.unit-base.
-      sw:start-element ("gd").
-        write-data-element ("tank-num", string-mth (buf_doc-pl.pl-code)).
-        write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
-        write-data-element ("cap-b", string-mth (round (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty, 3))).
-        write-data-element ("cap-a", string-mth (round (buf_doc-line.doc-qnty, 3))).
-        write-data-element ("cap-df", string-mth (round (buf_doc-line.fact-qnty, 3))).
-        write-data-element ("wght-b", string-mth (round (fncwasqntykg( buffer buf_doc-line ), 3))).
-        write-data-element ("wght-a", string-mth (round (fncareqntykg( buffer buf_doc-line ), 3))).
-        write-data-element ("wght-df", string-mth (round (fncdiffqntykg( buffer buf_doc-line ), 3))).
-        write-data-element ("sum-b", string-mth (round (fncbefore-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
-        write-data-element ("sum-a", string-mth (round (fncafter-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
-        write-data-element ("sum-df", string-mth (round (fncdiff-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
-        write-data-element ("wght-izl", string-mth (round (fncextra-qnty( buffer buf_doc-line ), 3))).
-        write-data-element ("wght-ned", string-mth (round (fncmiss-qnty( buffer buf_doc-line ), 3))).
-        write-data-element ("sum-izl", string-mth (round (fncextra-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
-        write-data-element ("sum-ned", string-mth (round (fncmiss-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
-        write-data-element ("wght-eu", string-mth (round (0.0, 2))).
-        write-data-element ("sum-eu", string-mth (round ( fncwastage( buffer buf_doc-line, buffer buf_gds ), 2))).
-
+      for each buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_doc-line.obj-type and buf_doc-pl.obj-code = buf_doc-line.obj-code
+        and buf_doc-pl.out-code = buf_doc-line.doc-code and buf_doc-pl.gds-code = buf_gds.gds-code:
         
-      sw:end-element ("gd").
+        find first bf_rvs-line no-lock where
+          available (bf_rvs-doc) and
+          bf_rvs-line.rvs-code = bf_rvs-doc.rvs-code and
+          bf_rvs-line.obj-type = bf_rvs-doc.obj-type and
+          bf_rvs-line.obj-code = bf_rvs-doc.obj-code and
+          buf_gds.gds-code    = bf_rvs-line.gds-code and
+          bf_rvs-line.pl-code = buf_doc-pl.pl-code no-error.
+          
+        if available (bf_rvs-line)
+        then
+          assign
+            dAddCliQnty   = bf_rvs-line.state-add-qnty * bf_rvs-line.state-density
+            dAddQnty  = bf_rvs-line.state-add-qnty.
+    
+        assign
+          v-sum-b = fncbefore-rubl( buffer buf_doc-line, buffer buf_gds) / (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty) * buf_doc-pl.rest-bf-qnty
+          v-sum-a = fncafter-rubl( buffer buf_doc-line, buffer buf_gds) / buf_doc-line.doc-qnty * buf_doc-pl.rest-af-qnty
+          v-sum-df = v-sum-a - v-sum-b
+        .
+    
+        find first buf_units where buf_units.unit-name = buf_gds.unit-base.
+        sw:start-element ("gd").
+          write-data-element ("tank-num", string-mth (buf_doc-pl.pl-code)).
+          write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
+          write-data-element ("cap-b", string-mth (round (buf_doc-pl.rest-bf-qnty, 3))).
+          write-data-element ("cap-a", string-mth (round (buf_doc-pl.rest-af-qnty, 3))).
+          write-data-element ("cap-df", string-mth (round (buf_doc-pl.rest-af-qnty - buf_doc-pl.rest-bf-qnty, 3))).
+          write-data-element ("wght-b", string-mth (round (buf_doc-pl.cli-rest-bf-qnty, 3))).
+          write-data-element ("wght-a", string-mth (round ( buf_doc-pl.cli-rest-af-qnty , 3))).
+          write-data-element ("wght-df", string-mth (round (buf_doc-pl.cli-fact-qnty, 3))).
+          write-data-element ("sum-b", string-mth (round 
+                (
+                  v-sum-b
+                , 2))).
+          
+          write-data-element ("sum-a", string-mth (round 
+                (
+                  v-sum-a
+                , 2))).
+                
+          write-data-element ("sum-df", string-mth (round 
+                (
+                  v-sum-df
+                , 2))).
+                
+          write-data-element ("wght-izl", string-mth (round ((if buf_doc-pl.cli-fact-qnty > 0 then buf_doc-pl.cli-fact-qnty else 0.0), 3))).
+          write-data-element ("wght-ned", string-mth (round ((if buf_doc-pl.cli-fact-qnty < 0 then absolute (buf_doc-pl.cli-fact-qnty) else 0.0), 3))).
+          write-data-element ("sum-izl", string-mth (round ((if v-sum-df > 0 then v-sum-df else 0.0), 2))).
+          write-data-element ("sum-ned", string-mth (round ((if v-sum-df < 0 then absolute (v-sum-df) else 0), 2))).
+/*          write-data-element ("sum-ned", string-mth (round (fncmiss-rubl( buffer buf_doc-pl, buffer buf_gds ), 2))). */
+          write-data-element ("wght-eu", string-mth (round (0.0, 2))).
+          write-data-element ("sum-eu", string-mth (round ( 0.0, 2))).
+/*          write-data-element ("sum-eu", string-mth (round ( fncwastage( buffer buf_doc-pl, buffer buf_gds ), 2))).*/
+          write-data-element ("pipeline-cap", string-mth (round (dAddCliQnty, 2))).
+          write-data-element ("pipeline-wght", string-mth (round (dAddQnty, 2))).
+          
+        sw:end-element ("gd").
+      end.
     end.
     sw:end-element ("gds").
     
@@ -251,8 +299,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         write-data-element ("doc-code", buf_trn-doc.doc-code).
         write-data-element ("doc-num", buf_trn-doc.doc-code).
         write-data-element ("del-f", string (isDel, "1/0") ).
-        write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.sys-time-int))).
-        write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (date (buf_trn-doc.fact-date))).
+        write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))).
+        write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (datetime (buf_trn-doc.fact-date, buf_trn-doc.fact-time * 1000))).
         write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
         write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
   end.
@@ -270,8 +318,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         write-data-element ("doc-code", buf_trn-doc.doc-code).
         write-data-element ("doc-num", buf_trn-doc.doc-code).
         write-data-element ("del-f", string (isDel, "1/0") ).
-        write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.sys-time-int))).
-        write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (date (buf_trn-doc.fact-date))).
+        write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))).
+        write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (datetime (buf_trn-doc.fact-date, buf_trn-doc.fact-time * 1000))).
         write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
         write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
   end.
