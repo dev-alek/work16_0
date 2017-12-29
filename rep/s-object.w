@@ -1,7 +1,7 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI ADM1
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS s-object 
 /*
 
 $Revision$
@@ -97,7 +97,7 @@ define variable keep-spis as character no-undo .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -118,19 +118,19 @@ SET_val_TYPE SelectGood SelectObject Radio-customer BUTTON-node ~
 customer-name BUTTON-obj BUTTON-prod BUTTON-gds BUTTON-one BUTTON-keep-spis ~
 Radio-schet BUTTON-node-2 BUTTON-prod-2 Goods-Editor lkp-schet TOG-Excel ~
 TOG-list-hist TEXT-3 TEXT-4 TEXT-2 text-5 TEXT-1 Obj-count text-6 ~
-Goods-count
+Goods-count 
 &Scoped-Define DISPLAYED-OBJECTS Radio-Period TOG-Shift SET_PAY_TYPE ~
 Date-Alone TOG-Shift-2 ShowCrsa RADIO-task ShowCost Shift-Alone Shift-Start ~
 Shift-End ShowSale Date-Start Date-End SET_val_TYPE SelectGood SelectObject ~
 Radio-customer customer-name Radio-schet Goods-Editor lkp-schet TOG-Excel ~
 TOG-list-hist TEXT-3 TEXT-4 TEXT-2 text-5 TEXT-1 Obj-count text-6 ~
-Goods-count
+Goods-count 
 
 /* Custom List Definitions                                              */
 /* List-schet,List-2,List-3,List-4,List-5,List-6                        */
 &Scoped-define List-schet Radio-schet BUTTON-schet BUTTON-schet-one ~
-BUTTON-schet-val lkp-schet text-6
-&Scoped-define List-6 Shift-Alone Date-Start Date-End
+BUTTON-schet-val lkp-schet text-6 
+&Scoped-define List-6 Shift-Alone Date-Start Date-End 
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -141,218 +141,218 @@ BUTTON-schet-val lkp-schet text-6
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON BUTTON-gds
+DEFINE BUTTON BUTTON-gds 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "BUTTON-gds"
-     SIZE 3 BY .88.
+     LABEL "BUTTON-gds" 
+     SIZE 3 BY .86.
 
-DEFINE BUTTON BUTTON-keep-spis
+DEFINE BUTTON BUTTON-keep-spis 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
-     SIZE 3 BY .88.
+     LABEL "" 
+     SIZE 3 BY .86.
 
-DEFINE BUTTON BUTTON-node
+DEFINE BUTTON BUTTON-node 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "BUTTON-node"
-     SIZE 3 BY .88.
+     LABEL "BUTTON-node" 
+     SIZE 3 BY .86.
 
-DEFINE BUTTON BUTTON-node-2
+DEFINE BUTTON BUTTON-node-2 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Button node 2"
-     SIZE 3 BY .88
+     LABEL "Button node 2" 
+     SIZE 3 BY .86
      BGCOLOR 3 .
 
-DEFINE BUTTON BUTTON-obj
+DEFINE BUTTON BUTTON-obj 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "BUTTON-obj"
-     SIZE 3 BY .88.
+     LABEL "BUTTON-obj" 
+     SIZE 3 BY .86.
 
-DEFINE BUTTON BUTTON-one
+DEFINE BUTTON BUTTON-one 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Button one"
-     SIZE 3 BY .88.
+     LABEL "Button one" 
+     SIZE 3 BY .86.
 
-DEFINE BUTTON BUTTON-prod
+DEFINE BUTTON BUTTON-prod 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "BUTTON-prod"
-     SIZE 3 BY .88.
+     LABEL "BUTTON-prod" 
+     SIZE 3 BY .86.
 
-DEFINE BUTTON BUTTON-prod-2
+DEFINE BUTTON BUTTON-prod-2 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Button prod 2"
-     SIZE 3 BY .88
+     LABEL "Button prod 2" 
+     SIZE 3 BY .86
      BGCOLOR 4 .
 
-DEFINE BUTTON BUTTON-schet
+DEFINE BUTTON BUTTON-schet 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
-     SIZE 3 BY .88.
+     LABEL "" 
+     SIZE 3 BY .86.
 
-DEFINE BUTTON BUTTON-schet-one
+DEFINE BUTTON BUTTON-schet-one 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
-     SIZE 3 BY .88.
+     LABEL "" 
+     SIZE 3 BY .86.
 
-DEFINE BUTTON BUTTON-schet-val
+DEFINE BUTTON BUTTON-schet-val 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
-     SIZE 3 BY .88.
+     LABEL "" 
+     SIZE 3 BY .86.
 
-DEFINE BUTTON BUTTON-shift
+DEFINE BUTTON BUTTON-shift 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
-     SIZE 3 BY .88 TOOLTIP "Выбор  смены на объекте"
+     LABEL "" 
+     SIZE 3 BY .86 TOOLTIP "Выбор  смены на объекте"
      BGCOLOR 8 .
 
-DEFINE BUTTON BUTTON-Shift-end
+DEFINE BUTTON BUTTON-Shift-end 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
-     SIZE 3 BY .88 TOOLTIP "Выбор  смены на объекте"
+     LABEL "" 
+     SIZE 3 BY .86 TOOLTIP "Выбор  смены на объекте"
      BGCOLOR 8 .
 
-DEFINE BUTTON BUTTON-Shift-Start
+DEFINE BUTTON BUTTON-Shift-Start 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
-     SIZE 3 BY .88 TOOLTIP "Выбор  смены на объекте"
+     LABEL "" 
+     SIZE 3 BY .86 TOOLTIP "Выбор  смены на объекте"
      BGCOLOR 8 .
 
-DEFINE VARIABLE Radio-Period AS CHARACTER FORMAT "X(256)":U
+DEFINE VARIABLE Radio-Period AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS COMBO-BOX INNER-LINES 14
      LIST-ITEM-PAIRS "За квартал (текущий)","1",
                      "За квартал (прошлый)","3"
      DROP-DOWN-LIST
-     SIZE 52.5 BY 1
+     SIZE 52.6 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE customer-name AS CHARACTER
+DEFINE VARIABLE customer-name AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 28.5 BY 2.46 TOOLTIP "Список выбранных Поставщиков"
+     SIZE 28.6 BY 2.48 TOOLTIP "Список выбранных Поставщиков"
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE Goods-Editor AS CHARACTER
+DEFINE VARIABLE Goods-Editor AS CHARACTER 
      VIEW-AS EDITOR MAX-CHARS 32000 SCROLLBAR-VERTICAL
-     SIZE 33.38 BY 2.33
+     SIZE 33.4 BY 1.95
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE lkp-schet AS CHARACTER
+DEFINE VARIABLE lkp-schet AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 26 BY 1.96 TOOLTIP "Что выбрали"
+     SIZE 26 BY 1.95 TOOLTIP "Что выбрали"
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE Date-Alone AS DATE FORMAT "99/99/9999":U
-     LABEL "Дата"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE Date-Alone AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата" 
+     VIEW-AS FILL-IN 
      SIZE 11 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE Date-End AS DATE FORMAT "99/99/9999":U
-     LABEL "по"
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE Date-End AS DATE FORMAT "99/99/9999":U 
+     LABEL "по" 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 11 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE Date-Start AS DATE FORMAT "99/99/9999":U
-     LABEL "с"
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE Date-Start AS DATE FORMAT "99/99/9999":U 
+     LABEL "с" 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 11 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE Goods-count AS CHARACTER FORMAT "X(30)":U
-      VIEW-AS TEXT
-     SIZE 33.13 BY .67
+DEFINE VARIABLE Goods-count AS CHARACTER FORMAT "X(30)":U 
+      VIEW-AS TEXT 
+     SIZE 33.2 BY .67
      FGCOLOR 1 FONT 4 NO-UNDO.
 
-DEFINE VARIABLE Obj-count AS CHARACTER FORMAT "X(30)":U
-      VIEW-AS TEXT
-     SIZE 24 BY .83
+DEFINE VARIABLE Obj-count AS CHARACTER FORMAT "X(30)":U 
+      VIEW-AS TEXT 
+     SIZE 24 BY .81
      FGCOLOR 1 FONT 4 NO-UNDO.
 
-DEFINE VARIABLE Shift-Alone AS INTEGER FORMAT ">9":U INITIAL 1
-     LABEL "смена"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE Shift-Alone AS INTEGER FORMAT ">9":U INITIAL 1 
+     LABEL "смена" 
+     VIEW-AS FILL-IN 
      SIZE 3 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE Shift-End AS INTEGER FORMAT ">9":U INITIAL 0
-     LABEL "по"
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE Shift-End AS INTEGER FORMAT ">9":U INITIAL 0 
+     LABEL "по" 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 3 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE Shift-Start AS INTEGER FORMAT ">9":U INITIAL 0
-     LABEL "с"
-     VIEW-AS FILL-IN NATIVE
+DEFINE VARIABLE Shift-Start AS INTEGER FORMAT ">9":U INITIAL 0 
+     LABEL "с" 
+     VIEW-AS FILL-IN NATIVE 
      SIZE 3 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE TEXT-1 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор объекта"
-      VIEW-AS TEXT
+DEFINE VARIABLE TEXT-1 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор объекта" 
+      VIEW-AS TEXT 
      SIZE 14 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE TEXT-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор товара"
-      VIEW-AS TEXT
+DEFINE VARIABLE TEXT-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор товара" 
+      VIEW-AS TEXT 
      SIZE 14 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE TEXT-3 AS CHARACTER FORMAT "X(256)":U INITIAL "Задание даты"
-      VIEW-AS TEXT
+DEFINE VARIABLE TEXT-3 AS CHARACTER FORMAT "X(256)":U INITIAL "Задание даты" 
+      VIEW-AS TEXT 
      SIZE 14 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE TEXT-4 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор цен"
-      VIEW-AS TEXT
+DEFINE VARIABLE TEXT-4 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор цен" 
+      VIEW-AS TEXT 
      SIZE 14 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE text-5 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор поставщика"
-      VIEW-AS TEXT
-     SIZE 29.5 BY .67
+DEFINE VARIABLE text-5 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор поставщика" 
+      VIEW-AS TEXT 
+     SIZE 29.6 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE text-6 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор счета"
-      VIEW-AS TEXT
-     SIZE 15.5 BY .75
+DEFINE VARIABLE text-6 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор счета" 
+      VIEW-AS TEXT 
+     SIZE 15.6 BY .76
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE Radio-customer AS INTEGER
+DEFINE VARIABLE Radio-customer AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "все", 1,
 "Выборочно", 2
      SIZE 25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE Radio-schet AS INTEGER
+DEFINE VARIABLE Radio-schet AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все по фирме", 1,
 "Своей фирмы", 2,
 "Выборочно", 3,
@@ -360,20 +360,20 @@ DEFINE VARIABLE Radio-schet AS INTEGER
 "Все abbr_rublevye", 5,
 "Все валютные", 6,
 "По валюте", 7
-     SIZE 15 BY 5.25 TOOLTIP "Выбор банковского счета" NO-UNDO.
+     SIZE 15 BY 5.24 TOOLTIP "Выбор банковского счета" NO-UNDO.
 
-DEFINE VARIABLE RADIO-task AS INTEGER
+DEFINE VARIABLE RADIO-task AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Календарные даты", 1,
 "Сменные сутки", 2,
 "Сменные сутки и порядок", 3,
 "По сменам", 4
      SIZE 26 BY 3 NO-UNDO.
 
-DEFINE VARIABLE SelectGood AS INTEGER
+DEFINE VARIABLE SelectGood AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", 1,
 "Группы товаров", 2,
 "Производители", 3,
@@ -381,162 +381,162 @@ DEFINE VARIABLE SelectGood AS INTEGER
 "Один", 5,
 "Хранимый список", 6,
 "Группы товаров + Производители", 7
-     SIZE 32.63 BY 5.29
+     SIZE 32.6 BY 5.29
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
-DEFINE VARIABLE SelectObject AS CHARACTER
+DEFINE VARIABLE SelectObject AS CHARACTER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все по фирме", "obj-firm",
 "Текущий", "obj-currency",
 "Выборочно", "obj-choice",
 "Все", "all"
-     SIZE 16.38 BY 2.75 NO-UNDO.
+     SIZE 16.4 BY 2.76 NO-UNDO.
 
-DEFINE VARIABLE SET_PAY_TYPE AS INTEGER
+DEFINE VARIABLE SET_PAY_TYPE AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Продажные цены", 1,
 "Учетные цены", 2,
 "Цены документа", 3
-     SIZE 19.25 BY 2.33 NO-UNDO.
+     SIZE 19.2 BY 2.33 NO-UNDO.
 
-DEFINE VARIABLE SET_val_TYPE AS INTEGER
+DEFINE VARIABLE SET_val_TYPE AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "abbr_rub", 1,
 "вал", 2,
 "обе валюты", 3
-     SIZE 26.25 BY 1.13 NO-UNDO.
+     SIZE 26.2 BY 1.14 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 59.88 BY 4.5.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 59.8 BY 4.52.
 
 DEFINE RECTANGLE RECT-2
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 28.75 BY 4.5.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 28.8 BY 4.52.
 
 DEFINE RECTANGLE RECT-3
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 25.75 BY 4.71.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 25.8 BY 4.71.
 
 DEFINE RECTANGLE RECT-4
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 34.13 BY 10.29
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 34.2 BY 10.29
      BGCOLOR 8 FGCOLOR 0 .
 
 DEFINE RECTANGLE RECT-7
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 28.5 BY 4.71.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 28.6 BY 4.71.
 
 DEFINE RECTANGLE RECT-node
-     EDGE-PIXELS 1 GRAPHIC-EDGE
-     SIZE 4 BY 1.17
+     EDGE-PIXELS 1 GRAPHIC-EDGE    
+     SIZE 4 BY 1.19
      FGCOLOR 8 .
 
 DEFINE RECTANGLE RECT-node-2
-     EDGE-PIXELS 1 GRAPHIC-EDGE
-     SIZE 4 BY 1.17
+     EDGE-PIXELS 1 GRAPHIC-EDGE    
+     SIZE 4 BY 1.19
      BGCOLOR 8 FGCOLOR 8 .
 
-DEFINE VARIABLE ShowCost AS LOGICAL INITIAL no
-     LABEL "Учетные цены"
+DEFINE VARIABLE ShowCost AS LOGICAL INITIAL no 
+     LABEL "Учетные цены" 
      VIEW-AS TOGGLE-BOX
-     SIZE 18.88 BY .83 TOOLTIP "Показать суммы  в учетных ценах" NO-UNDO.
+     SIZE 18.8 BY .81 TOOLTIP "Показать суммы  в учетных ценах" NO-UNDO.
 
-DEFINE VARIABLE ShowCrsa AS LOGICAL INITIAL no
-     LABEL "Продажные цены"
+DEFINE VARIABLE ShowCrsa AS LOGICAL INITIAL no 
+     LABEL "Продажные цены" 
      VIEW-AS TOGGLE-BOX
-     SIZE 18.25 BY .83 TOOLTIP "Показать суммы  в продажных ценах" NO-UNDO.
+     SIZE 18.2 BY .81 TOOLTIP "Показать суммы  в продажных ценах" NO-UNDO.
 
-DEFINE VARIABLE ShowSale AS LOGICAL INITIAL no
-     LABEL "Цены документа"
+DEFINE VARIABLE ShowSale AS LOGICAL INITIAL no 
+     LABEL "Цены документа" 
      VIEW-AS TOGGLE-BOX
-     SIZE 18.25 BY .83 TOOLTIP "Показать суммы  в ценах документа" NO-UNDO.
+     SIZE 18.2 BY .81 TOOLTIP "Показать суммы  в ценах документа" NO-UNDO.
 
-DEFINE VARIABLE TOG-Excel AS LOGICAL INITIAL yes
-     LABEL "Есть экспорт в Excel"
+DEFINE VARIABLE TOG-Excel AS LOGICAL INITIAL yes 
+     LABEL "Есть экспорт в Excel" 
      VIEW-AS TOGGLE-BOX
-     SIZE 22.13 BY .83
+     SIZE 22.2 BY .81
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE TOG-list-hist AS LOGICAL INITIAL yes
-     LABEL "Печать истории формир. списков"
+DEFINE VARIABLE TOG-list-hist AS LOGICAL INITIAL yes 
+     LABEL "Печать истории формир. списков" 
      VIEW-AS TOGGLE-BOX
-     SIZE 33.5 BY .83
+     SIZE 33.6 BY .81
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE TOG-Shift AS LOGICAL INITIAL yes
-     LABEL "Смены"
+DEFINE VARIABLE TOG-Shift AS LOGICAL INITIAL yes 
+     LABEL "Смены" 
      VIEW-AS TOGGLE-BOX
-     SIZE 11.25 BY .79 NO-UNDO.
+     SIZE 11.2 BY .81 NO-UNDO.
 
-DEFINE VARIABLE TOG-Shift-2 AS LOGICAL INITIAL no
-     LABEL "Одна смена"
+DEFINE VARIABLE TOG-Shift-2 AS LOGICAL INITIAL no 
+     LABEL "Одна смена" 
      VIEW-AS TOGGLE-BOX
-     SIZE 14.75 BY .79 NO-UNDO.
+     SIZE 14.8 BY .81 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
      Radio-Period AT ROW 2 COL 4 NO-LABEL WIDGET-ID 8
-     TOG-Shift AT ROW 2 COL 32.25
-     SET_PAY_TYPE AT ROW 2 COL 64.63 NO-LABEL
-     Date-Alone AT ROW 2.04 COL 17.88 COLON-ALIGNED
-     TOG-Shift-2 AT ROW 2.04 COL 41.5
-     ShowCrsa AT ROW 2.08 COL 64.5
-     RADIO-task AT ROW 2.25 COL 2 NO-LABEL
-     ShowCost AT ROW 2.75 COL 64.5
-     Shift-Alone AT ROW 2.96 COL 48.25 COLON-ALIGNED
-     BUTTON-shift AT ROW 2.96 COL 53.38
-     Shift-Start AT ROW 3.21 COL 30.5 COLON-ALIGNED
-     BUTTON-Shift-Start AT ROW 3.25 COL 36 WIDGET-ID 2
-     Shift-End AT ROW 3.25 COL 46.88 COLON-ALIGNED
-     BUTTON-Shift-end AT ROW 3.25 COL 52 WIDGET-ID 6
-     ShowSale AT ROW 3.42 COL 64.5
-     Date-Start AT ROW 4.25 COL 30.5 COLON-ALIGNED
-     Date-End AT ROW 4.25 COL 47 COLON-ALIGNED
-     SET_val_TYPE AT ROW 4.25 COL 61.5 NO-LABEL
-     SelectGood AT ROW 6.46 COL 1.88 NO-LABEL
-     SelectObject AT ROW 6.5 COL 38.5 NO-LABEL
-     Radio-customer AT ROW 6.5 COL 61.5 NO-LABEL
-     BUTTON-node AT ROW 7.17 COL 20.13
-     customer-name AT ROW 7.5 COL 61 NO-LABEL
-     BUTTON-obj AT ROW 7.75 COL 52.5
-     BUTTON-prod AT ROW 7.88 COL 20.13
-     BUTTON-gds AT ROW 8.63 COL 20.13
-     BUTTON-one AT ROW 9.42 COL 20.13
-     BUTTON-keep-spis AT ROW 10.13 COL 20.13 WIDGET-ID 12
+     TOG-Shift AT ROW 2 COL 32.2
+     SET_PAY_TYPE AT ROW 2 COL 64.6 NO-LABEL
+     Date-Alone AT ROW 2.05 COL 17.8 COLON-ALIGNED
+     TOG-Shift-2 AT ROW 2.05 COL 41.6
+     ShowCrsa AT ROW 2.1 COL 64.6
+     RADIO-task AT ROW 2.24 COL 2 NO-LABEL
+     ShowCost AT ROW 2.76 COL 64.6
+     Shift-Alone AT ROW 2.95 COL 48.2 COLON-ALIGNED
+     BUTTON-shift AT ROW 2.95 COL 53.4
+     Shift-Start AT ROW 3.19 COL 30.6 COLON-ALIGNED
+     BUTTON-Shift-Start AT ROW 3.24 COL 36 WIDGET-ID 2
+     Shift-End AT ROW 3.24 COL 46.8 COLON-ALIGNED
+     BUTTON-Shift-end AT ROW 3.24 COL 52 WIDGET-ID 6
+     ShowSale AT ROW 3.43 COL 64.6
+     Date-Start AT ROW 4.24 COL 30.6 COLON-ALIGNED
+     Date-End AT ROW 4.24 COL 47 COLON-ALIGNED
+     SET_val_TYPE AT ROW 4.24 COL 61.6 NO-LABEL
+     SelectGood AT ROW 6.33 COL 1.8 NO-LABEL
+     SelectObject AT ROW 6.52 COL 38.6 NO-LABEL
+     Radio-customer AT ROW 6.52 COL 61.6 NO-LABEL
+     BUTTON-node AT ROW 7.19 COL 28.4
+     customer-name AT ROW 7.52 COL 61 NO-LABEL
+     BUTTON-obj AT ROW 7.67 COL 56
+     BUTTON-prod AT ROW 7.86 COL 28.4
+     BUTTON-gds AT ROW 8.62 COL 28.4
+     BUTTON-one AT ROW 9.43 COL 28.4
+     BUTTON-keep-spis AT ROW 10.14 COL 28.4 WIDGET-ID 12
      Radio-schet AT ROW 11 COL 36 NO-LABEL
-     BUTTON-node-2 AT ROW 11.54 COL 3.5
-     BUTTON-prod-2 AT ROW 11.54 COL 7.5
-     BUTTON-schet AT ROW 12.5 COL 51
-     Goods-Editor AT ROW 13.25 COL 1 NO-LABEL
-     BUTTON-schet-one AT ROW 13.25 COL 51
-     BUTTON-schet-val AT ROW 15.5 COL 51
-     lkp-schet AT ROW 16.5 COL 35.5 NO-LABEL
-     TOG-Excel AT ROW 16.75 COL 1
-     TOG-list-hist AT ROW 17.75 COL 1
-     TEXT-3 AT ROW 1.29 COL 17.13 COLON-ALIGNED NO-LABEL
+     BUTTON-node-2 AT ROW 11.81 COL 3.6
+     BUTTON-prod-2 AT ROW 11.81 COL 7.6
+     BUTTON-schet AT ROW 12.52 COL 55.2
+     BUTTON-schet-one AT ROW 13.24 COL 55.2
+     Goods-Editor AT ROW 13.62 COL 1 NO-LABEL
+     BUTTON-schet-val AT ROW 15.52 COL 55.2
+     lkp-schet AT ROW 16.52 COL 35.6 NO-LABEL
+     TOG-Excel AT ROW 16.76 COL 1
+     TOG-list-hist AT ROW 17.76 COL 1
+     TEXT-3 AT ROW 1.29 COL 17.2 COLON-ALIGNED NO-LABEL
      TEXT-4 AT ROW 1.29 COL 68 COLON-ALIGNED NO-LABEL
      TEXT-2 AT ROW 5.67 COL 9 COLON-ALIGNED NO-LABEL
-     text-5 AT ROW 5.75 COL 59.5 COLON-ALIGNED NO-LABEL
-     TEXT-1 AT ROW 5.83 COL 39.5 COLON-ALIGNED NO-LABEL
-     Obj-count AT ROW 9.25 COL 34.5 COLON-ALIGNED NO-LABEL
-     text-6 AT ROW 10.25 COL 35 COLON-ALIGNED NO-LABEL
-     Goods-count AT ROW 12.54 COL 1 NO-LABEL
+     text-5 AT ROW 5.76 COL 59.4 COLON-ALIGNED NO-LABEL
+     TEXT-1 AT ROW 5.81 COL 39.6 COLON-ALIGNED NO-LABEL
+     Obj-count AT ROW 9.24 COL 34.6 COLON-ALIGNED NO-LABEL
+     text-6 AT ROW 10.24 COL 35 COLON-ALIGNED NO-LABEL
+     Goods-count AT ROW 12.91 COL 1 NO-LABEL
      RECT-1 AT ROW 1 COL 1
-     RECT-2 AT ROW 1 COL 60.75
-     RECT-3 AT ROW 5.5 COL 35.13
-     RECT-4 AT ROW 5.5 COL 1
-     RECT-7 AT ROW 5.5 COL 61
-     RECT-node AT ROW 11.04 COL 4.13
-     RECT-node-2 AT ROW 11.04 COL 8.5
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
-         AT COL 1 ROW 1 SCROLLABLE
+     RECT-2 AT ROW 1 COL 60.8
+     RECT-3 AT ROW 5.52 COL 35.2
+     RECT-4 AT ROW 5.52 COL 1
+     RECT-7 AT ROW 5.52 COL 61
+     RECT-node AT ROW 11.05 COL 4.2
+     RECT-node-2 AT ROW 11.05 COL 8.6
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
+         AT COL 1 ROW 1 SCROLLABLE 
          BGCOLOR 8 FGCOLOR 0 .
 
 
@@ -554,15 +554,15 @@ DEFINE FRAME F-Main
 /* *************************  Create Window  ************************** */
 
 &ANALYZE-SUSPEND _CREATE-WINDOW
-/* DESIGN Window definition (used by the UIB)
+/* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW s-object ASSIGN
-         HEIGHT             = 17.58
+         HEIGHT             = 17.57
          WIDTH              = 90.
 /* END WINDOW DEFINITION */
                                                                         */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB s-object 
 /* ************************* Included-Libraries *********************** */
 
 {src/adm/method/viewer.i}
@@ -580,9 +580,30 @@ DEFINE FRAME F-Main
   VISIBLE,,RUN-PERSISTENT                                               */
 /* SETTINGS FOR FRAME F-Main
    NOT-VISIBLE FRAME-NAME Size-to-Fit                                   */
-ASSIGN
+ASSIGN 
        FRAME F-Main:SCROLLABLE       = FALSE
        FRAME F-Main:HIDDEN           = TRUE.
+
+ASSIGN 
+       BUTTON-gds:HIDDEN IN FRAME F-Main           = TRUE.
+
+ASSIGN 
+       BUTTON-keep-spis:HIDDEN IN FRAME F-Main           = TRUE.
+
+ASSIGN 
+       BUTTON-node:HIDDEN IN FRAME F-Main           = TRUE.
+
+ASSIGN 
+       BUTTON-node-2:HIDDEN IN FRAME F-Main           = TRUE.
+
+ASSIGN 
+       BUTTON-one:HIDDEN IN FRAME F-Main           = TRUE.
+
+ASSIGN 
+       BUTTON-prod:HIDDEN IN FRAME F-Main           = TRUE.
+
+ASSIGN 
+       BUTTON-prod-2:HIDDEN IN FRAME F-Main           = TRUE.
 
 /* SETTINGS FOR BUTTON BUTTON-schet IN FRAME F-Main
    NO-ENABLE 1                                                          */
@@ -590,7 +611,7 @@ ASSIGN
    NO-ENABLE 1                                                          */
 /* SETTINGS FOR BUTTON BUTTON-schet-val IN FRAME F-Main
    NO-ENABLE 1                                                          */
-ASSIGN
+ASSIGN 
        customer-name:READ-ONLY IN FRAME F-Main        = TRUE.
 
 /* SETTINGS FOR FILL-IN Date-End IN FRAME F-Main
@@ -599,12 +620,12 @@ ASSIGN
    6                                                                    */
 /* SETTINGS FOR FILL-IN Goods-count IN FRAME F-Main
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        Goods-Editor:READ-ONLY IN FRAME F-Main        = TRUE.
 
 /* SETTINGS FOR EDITOR lkp-schet IN FRAME F-Main
    1                                                                    */
-ASSIGN
+ASSIGN 
        lkp-schet:READ-ONLY IN FRAME F-Main        = TRUE.
 
 /* SETTINGS FOR COMBO-BOX Radio-Period IN FRAME F-Main
@@ -613,13 +634,13 @@ ASSIGN
    1                                                                    */
 /* SETTINGS FOR FILL-IN Shift-Alone IN FRAME F-Main
    6                                                                    */
-ASSIGN
+ASSIGN 
        ShowCost:HIDDEN IN FRAME F-Main           = TRUE.
 
-ASSIGN
+ASSIGN 
        ShowCrsa:HIDDEN IN FRAME F-Main           = TRUE.
 
-ASSIGN
+ASSIGN 
        ShowSale:HIDDEN IN FRAME F-Main           = TRUE.
 
 /* SETTINGS FOR FILL-IN text-6 IN FRAME F-Main
@@ -637,7 +658,7 @@ ASSIGN
 */  /* FRAME F-Main */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -1644,7 +1665,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK s-object 
 
 
 /* ***************************  Main Block  *************************** */
@@ -1726,7 +1747,7 @@ assign
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Assign-frame s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Assign-frame s-object 
 PROCEDURE Assign-frame :
 define variable L#obj-code like obj-list.obj-code no-undo.
 define variable l#obj-type like obj-list.obj-type no-undo.
@@ -1966,7 +1987,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -1978,7 +1999,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Display-count s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Display-count s-object 
 PROCEDURE Display-count :
 if SelectGood = {&g-spis} then do:
         Assign
@@ -2007,7 +2028,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Display-count-OTHER s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Display-count-OTHER s-object 
 PROCEDURE Display-count-OTHER :
 /* -----------------------------------------------------------
   Purpose:
@@ -2029,7 +2050,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-date s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-date s-object 
 PROCEDURE display-date :
 /*Обработка первого параметра - DATE - как показывать блок с датами */
 define buffer buf_shift-obj for ub.shift-obj .
@@ -2168,7 +2189,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-goods s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-goods s-object 
 PROCEDURE display-goods :
 /*Обработка 2 параметра - ТОВАРЫ - как показывать блок с выбором товаров */
 define buffer buf_clob-bind for ub.clob-bind  .
@@ -2177,7 +2198,6 @@ define variable J#          as integer   no-undo .
 define variable L#          as integer   no-undo .
 define variable RET#        as logical   no-undo .
 define variable R#          as integer   no-undo .
-
  IF  temp-param-goods = ""
     then DO:
          disable TEXT-2 SelectGood BUTTON-gds button-keep-spis BUTTON-node BUTTON-prod BUTTON-node-2 BUTTON-prod-2 BUTTON-one Goods-count Goods-Editor  with frame {&FRAME-NAME} .
@@ -2219,7 +2239,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-obj s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-obj s-object 
 PROCEDURE display-obj :
 /*Обработка 3 параметра - ОБЬЕКТЫ - как показывать блок с выбором объектов */
 
@@ -2266,7 +2286,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-pay s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-pay s-object 
 PROCEDURE display-pay :
 /*Обработка 4 параметра - цены - как показывать блок  */
 
@@ -2322,7 +2342,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-RAdio-task s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-RAdio-task s-object 
 PROCEDURE display-RAdio-task :
 Case RAdio-task:screen-value in frame {&FRAME-NAME} :
   When '1' then DO:
@@ -2370,7 +2390,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-radio-schet s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-radio-schet s-object 
 PROCEDURE init-radio-schet :
 /* -----------------------------------------------------------
   Purpose:
@@ -2472,9 +2492,8 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-apply-layout s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-apply-layout s-object 
 PROCEDURE local-apply-layout :
-
 define buffer buf_shift-obj for ub.shift-obj .
 
 RUN dispatch IN THIS-PROCEDURE ( INPUT 'apply-layout':U ) .
@@ -2653,7 +2672,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-enable s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-enable s-object 
 PROCEDURE local-enable :
 /*------------------------------------------------------------------------------
   Purpose:     Override standard ADM method
@@ -2672,7 +2691,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-initialize s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-initialize s-object 
 PROCEDURE local-initialize :
 /*------------------------------------------------------------------------------
   Purpose:     Override standard ADM method
@@ -2782,7 +2801,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE make-6-gds-list s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE make-6-gds-list s-object 
 PROCEDURE make-6-gds-list :
 /* -----------------------------------------------------------
   Purpose:
@@ -2819,7 +2838,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE return-var s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE return-var s-object 
 PROCEDURE return-var :
 /*------------------------------------------------------------------------------
   Purpose:    передать введенные параметры во внешний фрайм
@@ -2834,7 +2853,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE sel-customer s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE sel-customer s-object 
 PROCEDURE sel-customer :
 /* -----------------------------------------------------------
   Purpose:
@@ -2858,7 +2877,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE sel-x-SelectGood s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE sel-x-SelectGood s-object 
 PROCEDURE sel-x-SelectGood :
 /* -----------------------------------------------------------
   Purpose:
@@ -2975,45 +2994,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-objects-proc s-object
-PROCEDURE select-objects-proc :
-/* -----------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
--------------------------------------------------------------*/
-
-  define variable v-ii as integer   no-undo .
-  def buffer cli-obj  for ub.clients .
-
-  { rep/s-selobj.i }
-
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-radio-period s-object
-PROCEDURE select-radio-period :
-/* -----------------------------------------------------------
-  Purpose: можно запустить принудительно со второй закладки
-
-  Пример :
-      { rep/get-link.i 'State':U }
-       run select-radio-period in State-source ({&period-type-quarter}) .
-
-  Parameters:  <none>
-  Notes:
--------------------------------------------------------------*/
-define input  parameter p-radio-period as character no-undo .
-  radio-period = p-radio-period .
-display radio-period with frame {&frame-name} .
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-keep-spis s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-keep-spis s-object 
 PROCEDURE select-keep-spis :
 /* -----------------------------------------------------------
   Purpose: можно запустить принудительно со второй закладки
@@ -3055,8 +3036,45 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-objects-proc s-object 
+PROCEDURE select-objects-proc :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-Radio-schet s-object
+  define variable v-ii as integer   no-undo .
+  def buffer cli-obj  for ub.clients .
+
+  { rep/s-selobj.i }
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-radio-period s-object 
+PROCEDURE select-radio-period :
+/* -----------------------------------------------------------
+  Purpose: можно запустить принудительно со второй закладки
+
+  Пример :
+      { rep/get-link.i 'State':U }
+       run select-radio-period in State-source ({&period-type-quarter}) .
+
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+define input  parameter p-radio-period as character no-undo .
+  radio-period = p-radio-period .
+display radio-period with frame {&frame-name} .
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-Radio-schet s-object 
 PROCEDURE select-Radio-schet :
 /* -----------------------------------------------------------
   Purpose:
@@ -3184,7 +3202,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-radio-schet-no-apply s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-radio-schet-no-apply s-object 
 PROCEDURE select-radio-schet-no-apply :
 /* -----------------------------------------------------------
   Purpose:
@@ -3236,7 +3254,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select1 s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select1 s-object 
 PROCEDURE select1 :
 /* -----------------------------------------------------------
   Purpose:
@@ -3252,7 +3270,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Set_VAl s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Set_VAl s-object 
 PROCEDURE Set_VAl :
 /*------------------------------------------------------------------------------
   Purpose: Перемаргивание параметром SET_VAL_TYPE
@@ -3277,7 +3295,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE sss s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE sss s-object 
 PROCEDURE sss :
 /* -----------------------------------------------------------
   Purpose:
@@ -3403,7 +3421,7 @@ define buffer buf_sysconf for ub.sysconf .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE state-changed s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE state-changed s-object 
 PROCEDURE state-changed :
 /* -----------------------------------------------------------
   Purpose:     Receive and process 'state-changed' methods
@@ -3472,7 +3490,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE take-var s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE take-var s-object 
 PROCEDURE take-var :
 { rep/get-link.i 'Record':U }
    Run get-var in State-source (OUTPUT temp-str,
@@ -3498,7 +3516,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE val-goods s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE val-goods s-object 
 PROCEDURE val-goods :
 If temp-param-goods <> "" THEN DO:
  assign
@@ -3563,7 +3581,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE val-obj s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE val-obj s-object 
 PROCEDURE val-obj :
 If SelectObject:screen-value IN FRAME {&FRAME-NAME} = {&obj-choice}
     then  enable BUTTON-obj with frame {&FRAME-NAME} .
@@ -3574,7 +3592,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE val-shift s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE val-shift s-object 
 PROCEDURE val-shift :
 define buffer buf_shift-obj for ub.shift-obj .
 if TOG-Shift:screen-value IN frame {&FRAME-NAME} = string(true)  Then DO:
@@ -3621,7 +3639,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE verify-check s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE verify-check s-object 
 PROCEDURE verify-check :
 /* -----------------------------------------------------------
   Purpose:
@@ -3656,7 +3674,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE verify-check-currency s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE verify-check-currency s-object 
 PROCEDURE verify-check-currency :
 /* -----------------------------------------------------------
   Purpose:
@@ -3686,7 +3704,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE verify-date s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE verify-date s-object 
 PROCEDURE verify-date :
 if Date(Date-End:screen-value In frame {&frame-name}) < DATE(Date-Start:screen-value In frame {&frame-name}) then DO:
    message "Интервал дат введен неверно !" view-as alert-box error TITLE "О Ш И Б К А !!!".
@@ -3697,7 +3715,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE verify-obj s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE verify-obj s-object 
 PROCEDURE verify-obj :
 /* -----------------------------------------------------------
   Purpose:
@@ -3724,7 +3742,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE verify-shift s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE verify-shift s-object 
 PROCEDURE verify-shift :
 /* -----------------------------------------------------------
   Purpose:
@@ -3756,3 +3774,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
