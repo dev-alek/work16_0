@@ -412,6 +412,7 @@ on error undo, return error
         , input p-obj-code
         , input p-shift-date
         , input p-shift-num
+
     ) no-error.
     if error-status :error
     then do:
@@ -427,6 +428,27 @@ on error undo, return error
                             )
         ).
     end.
+      run export-invTRK in this-procedure (
+    input p-obj-type
+    , input p-obj-code
+    , input p-shift-date
+    , input p-shift-num
+    ) no-error.
+  if error-status :error
+    then 
+  do:
+    run wp-XMLWriteLog in this-procedure (
+      input p-log-file-name
+      , input 1
+      , input substitute( "&1. Ошибка выгрузки &2. &3. &4. &5."
+      , vss-description
+      , "товарных остатков ТНП"
+      , return-value
+      , trim(error-status :get-message(1))
+      , trim(error-status :get-message(2))
+      )
+      ).
+  end.
     run export-stkTNP in this-procedure (
           input p-obj-type
         , input p-obj-code
@@ -1815,6 +1837,44 @@ on error undo, return error
     end.
 end.
 end procedure. /* export-stkTNP */
+
+
+procedure export-invTRK :
+  define input parameter p-obj-type   as character        no-undo.
+  define input parameter p-obj-code   as integer          no-undo.
+  define input parameter p-shift-date as date             no-undo.
+  define input parameter p-shift-num  as integer          no-undo.
+
+  define buffer buf_icnt-doc  for ub.icnt-doc .
+  define buffer buf_icnt-line for ub.icnt-line .
+  
+  
+  for each buf_icnt-doc no-lock where buf_icnt-doc.obj-type = p-obj-type
+    and buf_icnt-doc.obj-code = p-obj-code
+    and buf_icnt-doc.shift-date = p-shift-date
+    and buf_icnt-doc.shift-num = p-shift-num
+    :
+        
+    run wp-xmltagopen( input 2, input "invTRK", input "" ).
+    run wp-xmltagput( input 3, "DocCode"        , input string( buf_icnt-doc.doc-code                      ), input 0 ).
+    run wp-xmltagput( input 3, "DocDate"        , input string( buf_icnt-doc.doc-date                      ), input 0 ).
+    run wp-xmltagput( input 3, "shiftDate"      , input string( p-shift-date, "99.99.9999"      ), input 0 ).
+    run wp-xmltagput( input 3, "shiftNum"       , input string( p-shift-num                     ), input 0 ).
+    for each buf_icnt-line no-lock where buf_icnt-line.doc-code = buf_icnt-doc.doc-code:
+      run wp-xmltagopen( input 3, input "indTRK", input "" ).
+      run wp-xmltagput( input 4, "GdsCode"      , input string( buf_icnt-line.gds-code           ), input 0 ).
+      run wp-xmltagput( input 4, "TrkNum"       , input string( buf_icnt-line.pump-code          ), input 0 ).
+      run wp-xmltagput( input 4, "TrkNozzle"    , input string( buf_icnt-line.nozzle-code        ), input 0 ).
+      run wp-xmltagput( input 4, "IndEl"        , input string( buf_icnt-line.state-el-cnt       ), input 0 ).
+      run wp-xmltagput( input 4, "IndMeh"       , input string( buf_icnt-line.state-mh-cnt       ), input 0 ).
+      run wp-xmltagput( input 4, "DIF"          , input string( buf_icnt-line.state-el-cnt - buf_icnt-line.state-mh-cnt   ), input 0 ).
+      run wp-xmltagput( input 4, "IndAuto"      , input string( buf_icnt-line.meas-el-cnt    ), input 0 ).
+      run wp-xmltagclose( input 3, input "indTRK").
+    end.
+    run wp-xmltagclose( input 2, input "invTRK").
+  end.
+
+end procedure. /* export-invTRK */
 
 
 /*==========================================================================*/
