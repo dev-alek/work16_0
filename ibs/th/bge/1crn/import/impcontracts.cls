@@ -56,7 +56,7 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
     
     objContracts = cast (subjectObj, contracts).
         
-    if objContracts:date-srt <> ? and objContracts:date-end <> ? and objContracts:date_ <> ? then 
+    if objContracts:date-srt <> ? and objContracts:date-end <> ? and objContracts:date_ <> ? and objContracts:date-srt <> "0001-01-01" then 
     do:
       if objContracts:date_ > objContracts:date-srt then 
       do:
@@ -71,98 +71,119 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
           return error.
         end.
       end.
-      if objContracts:contr-code = "" or objContracts:contr-code = ? then 
+    end.
+    if objContracts:contr-code = "" or objContracts:contr-code = ? then 
+    do:
+      Msg = "Не задан контрагент".
+      return error.
+    end.
+    if objContracts:org-code = "" or objContracts:org-code = ? then 
+    do:
+      Msg = "Не задана организация" .
+      return error Msg.
+    end.  
+    find first ub.clients no-lock where ub.clients.obj-code = integer(objContracts:org-code)
+      and ub.clients.obj-type = {&cmp} no-error .
+    if not AVAILABLE ub.clients then 
+    do:
+/*      assign                            */
+/*        v-cli-code = ub.clients.obj-code*/
+/*        v-cli-name = ub.clients.obj-name*/
+/*        .                               */
+/*    end.                                */
+/*    else                                */
+/*    do:                                 */
+      Msg = "Нет такой организации" .
+      return error Msg.
+    end.  
+    find first ub.clients no-lock where ub.clients.obj-code = integer(objContracts:contr-code)
+      and ub.clients.obj-type = {&cmp} no-error .
+    if AVAILABLE ub.clients then 
+    do:
+      assign
+        v-cli-code = ub.clients.obj-code
+        v-cli-name = ub.clients.obj-name
+        .
+    end.
+    else 
+    do:
+      /*Создаем нового клиента?*/
+      Msg = "Нет такого контрагента" .
+      return error Msg.
+    end.  
+      
+        
+    find first ub.contract EXCLUSIVE-LOCK
+      where ub.contract.contract-code = integer(objContracts:code_)
+      and ub.contract.host-code         = integer(objContracts:org-code)
+      and ub.contract.contract-type     = {&contr-buy-sale} /*заглушка*/ 
+      no-error .
+    if AVAILABLE ub.contract then 
+    do:
+      assign
+        v-status    = if objContracts:status_ = 1 then {&current-contr} else {&close-contr}
+        /*          v-status    = if objContracts:del-l = 0 then {&current-contr} else {&close-contr}*/
+        v-cli-code  = ub.contract.cli-code
+        v-cli-name  = ub.contract.cli-name
+        v-curr-code = ub.contract.curr-code
+        .
+    end.
+    else 
+    do:
+      /*        newbcod1 = new newbcod () .                           */
+      /*        newbcod1:GenBCod(input {&gbl-ct-code},                */
+      /*          output f-code) no-error.                            */
+      /*        if error-status:error then                            */
+      /*        do:                                                   */
+      /*          Msg = "Ошибка при генерации внутреннего № договора".*/
+      /*          return error.                                       */
+      /*        end.                                                  */
+      /*combo-usl-opl = {&contr-pay-nodef} .*/
+      /*combo-type-contr = "Купли-продажи". */
+      create ub.contract .
+      assign
+        ub.contract.contract-prn-code = objContracts:number
+        ub.contract.host-code         = integer(objContracts:org-code)
+        ub.contract.contract-type     = {&contr-buy-sale} /*заглушка*/ 
+        ub.contract.db-num            = gbl-var:g#db-num
+        ub.contract.user-db-num       = gbl-var:g#db-num
+        ub.contract.usl-opl           = {&contr-pay-nodef}
+        ub.contract.contract-code     = integer(objContracts:code_)
+        .
+      find first ub.sysconf no-lock where ub.sysconf.host-code = integer(objContracts:org-code) no-error.
+      if AVAILABLE ub.sysconf then 
       do:
-        Msg = "Не задан контрагент".
-        return error.
-      end.
-
-      find first ub.contract EXCLUSIVE-LOCK
-        where ub.contract.contract-code = integer(objContracts:code_)
-        and ub.contract.host-code         = integer(objContracts:org-code)
-        and ub.contract.contract-type     = {&contr-buy-sale} /*заглушка*/ 
-        no-error .
-      if AVAILABLE ub.contract then 
-      do:
-        assign
-          v-status    = if objContracts:status_ = 1 then {&current-contr} else {&close-contr}
-          /*          v-status    = if objContracts:del-l = 0 then {&current-contr} else {&close-contr}*/
-          v-cli-code  = ub.contract.cli-code
-          v-cli-name  = ub.contract.cli-name
-          v-curr-code = ub.contract.curr-code
-          .
+        v-curr-code = ub.sysconf.base-code .
       end.
       else 
       do:
-        /*        newbcod1 = new newbcod () .                           */
-        /*        newbcod1:GenBCod(input {&gbl-ct-code},                */
-        /*          output f-code) no-error.                            */
-        /*        if error-status:error then                            */
-        /*        do:                                                   */
-        /*          Msg = "Ошибка при генерации внутреннего № договора".*/
-        /*          return error.                                       */
-        /*        end.                                                  */
-        /*combo-usl-opl = {&contr-pay-nodef} .*/
-        /*combo-type-contr = "Купли-продажи". */
-        create ub.contract .
-        assign
-          ub.contract.contract-prn-code = objContracts:number
-          ub.contract.host-code         = integer(objContracts:org-code)
-          ub.contract.contract-type     = {&contr-buy-sale} /*заглушка*/ 
-          ub.contract.db-num            = gbl-var:g#db-num
-          ub.contract.user-db-num       = gbl-var:g#db-num
-          ub.contract.usl-opl           = {&contr-pay-nodef}
-          ub.contract.contract-code     = integer(objContracts:code_)
-          .
-        find first ub.clients no-lock where ub.clients.obj-code = integer(objContracts:contr-code)
-          and ub.clients.obj-type = {&cmp} no-error .
-        if AVAILABLE ub.clients then 
+        Msg = "Не найдены системные настройки для фирмы с кодом:" + objContracts:org-code .
+        find first ub.currency no-lock no-error.
+        if AVAILABLE ub.currency then 
         do:
-          assign
-            v-cli-code = ub.clients.obj-code
-            v-cli-name = ub.clients.obj-name
-            .
-        end.
-        else 
-        do:
-          /*Создаем нового клиента?*/
-          Msg = "Нет такого контрагента" .
-          return error.
+          v-curr-code = ub.currency.curr-code .
         end.  
-        find first ub.sysconf no-lock where ub.sysconf.host-code = integer(objContracts:org-code) no-error.
-        if AVAILABLE ub.sysconf then 
-        do:
-          v-curr-code = ub.sysconf.base-code .
-        end.
         else 
         do:
-          Msg = "Не найдены системные настройки для фирмы с кодом:" + objContracts:org-code .
-          find first ub.currency no-lock no-error.
-          if AVAILABLE ub.currency then 
-          do:
-            v-curr-code = ub.currency.curr-code .
-          end.  
-          else 
-          do:
-            Msg = "Не найден справочник видов оплат".
-            return error .
-          end.  
-        end.     
-      end.
-      assign
-        ub.contract.doc-type          = {&income}
-        ub.contract.status_           = if objContracts:status_ = 1 then {&current-contr} else {&close-contr}
-        /*        ub.contract.status_           = if objContracts:del-l = 0 then {&current-contr} else {&close-contr}*/
-        ub.contract.curr-code         = v-curr-code /*какую брать валюту*/
-        ub.contract.own-name          = {&company} /*Откуда брать?*/
-        ub.contract.cli-type          = {&cmp}
-        ub.contract.cli-code          = v-cli-code 
-        ub.contract.cli-name          = v-cli-name
-        ub.contract.contract-date     = if objContracts:date_ = "01/01/01" then today else date(date-1C(objContracts:date_))
-        ub.contract.contract-date-beg = if objContracts:date-srt = "0001-01-01" then ? else date(date-1C(objContracts:date-srt))
-        ub.contract.contract-date-end = if objContracts:date-end = "0001-01-01" then ? else date(date-1C(objContracts:date-end))
-        .
+          Msg = "Не найден справочник видов оплат".
+          return error .
+        end.  
+      end.     
     end.
+    assign
+      ub.contract.doc-type          = {&income}
+      ub.contract.status_           = if objContracts:status_ = 1 then {&current-contr} else {&close-contr}
+      /*        ub.contract.status_           = if objContracts:del-l = 0 then {&current-contr} else {&close-contr}*/
+      ub.contract.curr-code         = v-curr-code /*какую брать валюту*/
+      ub.contract.own-name          = {&company} /*Откуда брать?*/
+      ub.contract.cli-type          = {&cmp}
+      ub.contract.cli-code          = v-cli-code 
+      ub.contract.cli-name          = v-cli-name
+      ub.contract.contract-date     = if objContracts:date_ = "0001-01-01" then today else date(date-1C(objContracts:date_))
+      ub.contract.contract-date-beg = if objContracts:date-srt = "0001-01-01" then ? else date(date-1C(objContracts:date-srt))
+      ub.contract.contract-date-end = if objContracts:date-end = "0001-01-01" then ? else date(date-1C(objContracts:date-end))
+      .
+
   end method.
   method private character date-1C (inValue as character):
     

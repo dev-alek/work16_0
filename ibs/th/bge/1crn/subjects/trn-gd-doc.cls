@@ -25,6 +25,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
 
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
+  { cmp/library.i  class }
   
   &scop create-record find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
   if available (buf_doc-attr) then write-data-element (buf_doc-attr.attr-code, buf_doc-attr.attr-value).
@@ -82,6 +83,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   define variable v-is-pieces      as logical   no-undo.
   define variable isDel            as logical   no-undo.
   define variable v-bufhnd         as handle    no-undo.
+  define variable v-user-name      as character no-undo.
 
 
   method public void CrContentToSW (insw as handle):
@@ -134,6 +136,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     
     if valid-handle (BufTableHndlOld) and BufTableHndlOld:buffer-field("ext-doc-type"):buffer-value = {&TDEDT_Pri_Perem}
       then buf_trn-doc.ext-doc-type = BufTableHndlOld:buffer-field("ext-doc-type"):buffer-value.
+    
+    { gbl/usrfulnm.i
+      buf_trn-doc.creid
+      v-user-name }
     
     case buf_trn-doc.ext-doc-type:
       when {&TDEDT_Pri_Vnesh} then do:
@@ -280,8 +286,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("line-num", string-mth (buf_doc-line.line-num)).
         write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
         write-data-element ("unit-code", string (buf_gds.unit-base)).
+        write-data-element ("koef", string (buf_gds.cli-base-rate)).
         write-data-element ("qnty-ttn", string-mth (buf_doc-line.doc-qnty)).
-        write-data-element ("qnty-fact", string-mth (buf_doc-line.fact-qnty)).
+        write-data-element ("qnty-fact", string-mth (buf_doc-line.cli-qnty)).
         
         if v-doc-type-ERPRN = "8"
         then do:
@@ -306,8 +313,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
 
   method private void PriVneshLineFuel ():
 
-    define variable infoSecsObj as class InfoSectionsTotal no-undo.
-    define variable infoSecObj  as class InfoSection       no-undo.
+    define variable infoSecsObj     as class InfoSectionsTotal no-undo.
+    define variable infoSecObj      as class InfoSection       no-undo.
+    define variable infoSecObjFirst as class InfoSection       no-undo.
     define variable ii as integer no-undo.
     
     infoSecsObj = new InfoSectionsTotal(). 
@@ -405,7 +413,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
           
         infoSecsObj:Initialization(buf_doc-line.doc-code, buf_gds.gds-code).
         infoSecsObj:GetDBAllAttr ().
-  
+        infoSecObjFirst = infoSecsObj:GetInfoSectionProp(1).
         do ii = 1 to infoSecsObj:SectionNum:
           infoSecObj = infoSecsObj:GetInfoSectionProp(ii).
           sw:start-element ("sc").
@@ -435,10 +443,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
             write-data-element ("dnsty-uch", string-mth (infoSecObj:FactDensity)).
             write-data-element ("cap-uch", string-mth (infoSecObj:FactQnty)).
             write-data-element ("wght-uch", string-mth (infoSecObj:FactKgQnty)).
-            write-data-element ("sl-date-s", string (iso-date (infoSecObj:DateStart))).
-            write-data-element ("sl-time-s", string (infoSecObj:TimeStart, "HH:MM")).
-            write-data-element ("sl-date-e", string (iso-date (infoSecObj:DateEnd))).
-            write-data-element ("sl-time-e", string (infoSecObj:TimeEnd, "HH:MM")).
+            write-data-element ("sl-date-s", string (iso-date (infoSecObjFirst:DateStart))).
+            write-data-element ("sl-time-s", string (infoSecObjFirst:TimeStart, "HH:MM")).
+            write-data-element ("sl-date-e", string (iso-date (infoSecObjFirst:DateEnd))).
+            write-data-element ("sl-time-e", string (infoSecObjFirst:TimeEnd, "HH:MM")).
             write-data-element ("cmm", string (if infoSecObj:IsKP then "1" else "0")).
             write-data-element ("er-ms", string-mth (infoSecObj:AccPomi)).
             /*нормативный документ завода изготовителя*/
@@ -506,6 +514,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("line-num", string-mth (buf_doc-line.line-num)).
         write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
         write-data-element ("unit-code", string (buf_gds.unit-base)).
+        write-data-element ("koef", string (1)).
         write-data-element ("qnty-ttn", string-mth (buf_gds-dtl.doc-qnty)).
         write-data-element ("qnty-fact", string-mth (buf_gds-dtl.fact-qnty)).
         write-data-element ("sum", string-mth (round (buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty, 2))).
@@ -586,6 +595,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
         write-data-element ("contr-code", string-mth (buf_trn-doc.cli-code)).
         write-data-element ("dog-code", string-mth (buf_trn-doc.contract-code)).
+        write-data-element ("operator", v-user-name ).
         write-data-element ("psn-wrkr", string-mth (buf_trn-doc.wrkr)).
         write-data-element ("psn-agnt", string-mth (buf_trn-doc.agnt)).
         write-data-element ("psn-boss", string-mth (buf_trn-doc.boss)).
@@ -612,6 +622,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
         write-data-element ("contr-code", string-mth (buf_trn-doc.cli-code)).
         write-data-element ("dog-code", string-mth (buf_trn-doc.contract-code)).
+        write-data-element ("operator", v-user-name ).
         write-data-element ("psn-wrkr", string-mth (buf_trn-doc.wrkr)).
         write-data-element ("psn-agnt", string-mth (buf_trn-doc.agnt)).
         write-data-element ("psn-boss", string-mth (buf_trn-doc.boss)).

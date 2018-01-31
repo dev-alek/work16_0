@@ -40,7 +40,9 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
   define buffer buf_place-attr for ub.place-attr .
   define buffer buf_pl-level   for ub.pl-level .
   define buffer buf_c-pl-level for ub.c-pl-level .
-  define temp-table tt-place like ub.c-place .
+  define buffer buf_pl-gds     for ub.pl-gds .
+  define temp-table tt-place like ub.c-place 
+  field gds-code as integer.
   define temp-table tt-pl-level like ub.c-pl-level .
   
   define variable ii      as integer   no-undo .
@@ -91,6 +93,10 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
       v-del = no .
       create tt-place .
       BUFFER-COPY buf_place to tt-place .
+      find first buf_pl-gds no-lock where buf_pl-gds.pl-code = buf_place.pl-code no-error .
+      if AVAILABLE (buf_pl-gds) then do:
+        tt-place.gds-code = buf_pl-gds.gds-code .
+      end.  
     end.  
     else 
     do:
@@ -100,6 +106,11 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         v-del = yes .
         create tt-place .
         BUFFER-COPY buf_place to tt-place .
+        find first buf_pl-gds no-lock where buf_pl-gds.pl-code = buf_place.pl-code no-error .
+        if AVAILABLE (buf_pl-gds) then 
+        do:
+          tt-place.gds-code = buf_pl-gds.gds-code .
+        end.  
       end.  
       else 
       do:
@@ -199,6 +210,8 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         sw:write-data-element ("dnsty"    , string-mth (tt-place-attr.place-dens-prov)).
         sw:write-data-element ("mi-code"  , string(tt-place-attr.place-Si)).
       end.
+      sw:write-data-element ("gds-code", string(tt-place.gds-code)).
+      sw:write-data-element ("izm-pr", if tt-place.is-meas = yes then "1" else "0").
       find first tt-pl-level no-lock where tt-pl-level.pl-code = tt-place.pl-code and
         tt-pl-level.obj-code = tt-place.obj-code and
         tt-pl-level.obj-type = tt-place.obj-type no-error .

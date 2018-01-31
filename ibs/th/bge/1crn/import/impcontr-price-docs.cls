@@ -67,7 +67,7 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
     if not AVAILABLE buf_contract then 
     do:
       Msg = "Контракт не найден с кодом:" + v-ContrPrice:cont-code .
-      
+      return error Msg.
     end.  
     else 
     do:
@@ -136,7 +136,7 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
           else 
           do:
             Msg = "Товар не найден с кодом:" + v-Gds-sale:gds-code .
-      
+            return error Msg.
           end.  
         end.
       end.

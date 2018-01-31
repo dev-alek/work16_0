@@ -18,11 +18,13 @@ Creation date: 03/11/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.enum-chk-type.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
+  { cmp/library.i  class }
   { ref/extclass.i }
 
   define property Msg as character no-undo
@@ -66,27 +68,72 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
    Param:   insw = create sax-writer
   ------------------------------------------------------------------------------*/
   method public void CrContentToSW (insw as handle):
-    /* define buffer buf_inkas   for ub.inkas . */
-    define buffer buf_chk-doc for ub.chk-doc .
     define variable v-fld-inkas-code as handle no-undo .
+    define variable v-fld-inkas-date as handle no-undo .
+    define variable v-fld-inkas-time as handle no-undo .
+    define variable v-fld-inkas-oper as handle no-undo .
+    define variable v-fld-obj-type   as handle no-undo .
+    define variable v-fld-obj-code   as handle no-undo .
     define variable v-inkas-code     as character no-undo .
+    define variable v-inkas-date     as date no-undo .
+    define variable v-inkas-time     as integer no-undo .
+    define variable v-inkas-dtime    as datetime no-undo .
+    define variable v-inkas-operator as character no-undo .
+    define variable v-user-name      as character no-undo .
+    define variable v-obj-type       as character no-undo .
+    define variable v-obj-code       as integer no-undo .
     define variable v-en-chktype     as enum-chk-type no-undo .
+    /* define buffer buf_inkas   for ub.inkas . */
+    define buffer over_buf_chk-doc        for ub.chk-doc .
 
     Msg = "" .
     if not valid-handle(BufHandle) then undo, throw new Progress.Lang.AppError("Отсутствует запись ПРОДАЖИ inkas") .
 
-    v-fld-inkas-code = BufHandle:buffer-field( "inkas-code":U ) .
-    v-inkas-code = v-fld-inkas-code:buffer-value .
-    
+    assign
+      v-fld-inkas-code = BufHandle:buffer-field( "inkas-code":U )
+      v-fld-inkas-date = BufHandle:buffer-field( "fact-date":U   )
+      v-fld-inkas-time = BufHandle:buffer-field( "sys-time-int":U   )
+      v-fld-inkas-oper = BufHandle:buffer-field( "user-name":U  )
+      v-fld-obj-type   = BufHandle:buffer-field( "obj-type":U  )
+      v-fld-obj-code   = BufHandle:buffer-field( "obj-code":U  )
+    .
+    assign
+      v-inkas-code     = v-fld-inkas-code:buffer-value
+      v-inkas-date     = v-fld-inkas-date:buffer-value
+      v-inkas-time     = v-fld-inkas-time:buffer-value
+      v-inkas-dtime    = datetime(v-inkas-date, v-inkas-time * 1000)
+      v-inkas-operator = v-fld-inkas-oper:buffer-value
+      v-obj-type       = v-fld-obj-type:buffer-value
+      v-obj-code       = v-fld-obj-code:buffer-value
+    .
+
+    /* 17/I-2018 Operator – надо выводить ФИО пользователя */
+    { gbl/usrfulnm.i
+      v-inkas-operator
+      v-user-name }
+
+    /* 28/XI-2017 при выгрузке чеков надо еще запускать размаз чеков, иначе chk-pay-r нет. */
+    run rep/rpychk0.p ( input "bgepych2"
+                      , input v-obj-type
+                      , input v-obj-code
+                      ,input ? /*p-date-from*/
+                      ,input ? /*p-date-to*/
+                      ,input ? /*p-shift-date-from*/
+                      ,input ? /*p-shift-date-to*/
+                      ,input ? /*p-shift-num-start*/
+                      ,input ? /*p-shift-num-end*/
+                      , input v-inkas-code
+                      ) .
+
     libFindtank = new ibs.th.str.findtank ().
 
-
-    for each buf_chk-doc no-lock
-       where buf_chk-doc.out-code = v-inkas-code:
+    for each over_buf_chk-doc no-lock
+       where over_buf_chk-doc.out-code = v-inkas-code:
       /* 19/XII-2017 выгружаем только те типы, которые указаны в протоколе */
-      v-en-chktype = enum-chk-type:GetEnum(buf_chk-doc.chk-type) no-error .
+      v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
       if not error-status:error then
-        CrContentInterfaceToSW (insw, buffer buf_chk-doc) .
+        CrContentInterfaceToSW (insw, buffer over_buf_chk-doc
+          , v-inkas-code, v-inkas-dtime, v-user-name) .
     end . /* end_of for_each buf_chk-doc */
     
 
@@ -114,7 +161,11 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
    Param:   insw = create sax-writer
   ------------------------------------------------------------------------------*/
   method private void CrContentInterfaceToSW (insw as handle
-                                          , buffer buf_chk-doc for ub.chk-doc) :
+                                          , buffer p-buf_chk-doc for ub.chk-doc
+                                          , input p-inkas-code     as character
+                                          , input p-inkas-dtime    as datetime
+                                          , input p-inkas-operator as character
+                                          ) :
     define buffer buf_dis-card     for ub.dis-card .
     define buffer buf_chk-gds      for ub.chk-gds .
     define buffer buf_bar-code     for ub.bar-code .
@@ -135,13 +186,13 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     insw:start-element ({&tag-message}) .
 
     /* обязательность 1-1 */
-    if buf_chk-doc.shift-date = ? then insw:write-empty-element ( "shift-date":U ) . /* Дата смены (Дата) */
-    else insw:write-data-element (  "shift-date":U,  iso-date(buf_chk-doc.shift-date)  ). 
+    if p-buf_chk-doc.shift-date = ? then insw:write-empty-element ( "shift-date":U ) . /* Дата смены (Дата) */
+    else insw:write-data-element (  "shift-date":U,  iso-date(p-buf_chk-doc.shift-date)  ). 
 
-    insw:write-data-element (  "shift-num":U,       string(buf_chk-doc.shift-num)   ). /* Номер смены (Число) */
-    insw:write-data-element (  "chk-num":U,         string(buf_chk-doc.chk-num)     ). /* Номер чека на кассе (Число) */
-    insw:write-data-element (  "cb-num":U,          string(buf_chk-doc.pay-desk)    ). /* Номер кассы (Число) */
-    insw:write-data-element (  "chk-id":U,                 buf_chk-doc.doc-code     ). /* Номер чека в GC (Строка) */
+    insw:write-data-element (  "shift-num":U,       string(p-buf_chk-doc.shift-num)   ). /* Номер смены (Число) */
+    insw:write-data-element (  "chk-num":U,         string(p-buf_chk-doc.chk-num)     ). /* Номер чека на кассе (Число) */
+    insw:write-data-element (  "cb-num":U,          string(p-buf_chk-doc.pay-desk)    ). /* Номер кассы (Число) */
+    insw:write-data-element (  "chk-id":U,                 p-buf_chk-doc.doc-code     ). /* Номер чека в GC (Строка) */
     
     /* обязательность 0-1 для del-l, ext-num, direct-chk-num */
     
@@ -151,47 +202,56 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
     /* 17/XI-2017 Добавляем поле «ext-num» в шапку.
        В поле хранятся внешние номера, в нашем случае номер карты активации, с типом платежа «Активация». */
-    if buf_chk-doc.doc-num > "" then
-    insw:write-data-element (  "ext-num":U,         buf_chk-doc.doc-num   ). /* Внешний номер. В случае типа платежа «активация» номер карты активации (Строка) */
+    if p-buf_chk-doc.doc-num > "" then
+    insw:write-data-element (  "ext-num":U,         p-buf_chk-doc.doc-num   ). /* Внешний номер. В случае типа платежа «активация» номер карты активации (Строка) */
     
     /* 17/XI-2017 Добавляем поле «direct-chk-num» в шапке.
        В этом поле будет номер прямого чека. */
-    if buf_chk-doc.doc-num2 > "" then
-    insw:write-data-element (  "direct-chk-num":U,  buf_chk-doc.doc-num2  ). /* Номер прямого чека (Строка) */
+    if p-buf_chk-doc.doc-num2 > "" then
+    insw:write-data-element (  "direct-chk-num":U,  p-buf_chk-doc.doc-num2  ). /* Номер прямого чека (Строка) */
     
     /* обязательность 1-1 */
-    if buf_chk-doc.chk-date = ? then insw:write-empty-element( "chk-date":U ). /* Дата чека (Дата) */
-    else insw:write-data-element (  "chk-date":U,  iso-date(buf_chk-doc.chk-date)  ).
+    if p-buf_chk-doc.chk-date = ? then insw:write-empty-element( "chk-date":U ). /* Дата чека (Дата) */
+    else insw:write-data-element (  "chk-date":U,  iso-date(p-buf_chk-doc.chk-date)  ).
     
-    insw:write-data-element (  "chk-time",     timeFormat(buf_chk-doc.chk-time)    ). /* Время чека (Время) */
-    insw:write-data-element (  "cashier",          string(buf_chk-doc.cashier)     ). /* Код кассира (Строка) */
-    insw:write-data-element (  "z-num",            string(buf_chk-doc.z-number)    ). /* Номер z-отчета (Число) */
-    insw:write-data-element (  "chk-type", left-trim(string(buf_chk-doc.chk-type, ">9"))    ). /* Тип чека (Число, enum) */
-    insw:write-data-element (  "netto",   left-trim(string(buf_chk-doc.netto,   "->>>>>>>>9.9<"))  ). /* Сумма чека нетто в валюте продаж. Выручка со скидками. (Число) */
-    insw:write-data-element (  "tot-doc", left-trim(string(buf_chk-doc.tot-doc, "->>>>>>>>9.9<"))  ). /* Сумма брутто по чеку в валюте продаж. Сумма по текущей розничной цене (Число) */
+    insw:write-data-element (  "chk-time",     timeFormat(p-buf_chk-doc.chk-time)    ). /* Время чека (Время) */
+    insw:write-data-element (  "cashier",          string(p-buf_chk-doc.cashier)     ). /* Код кассира (Строка) */
+    insw:write-data-element (  "z-num",            string(p-buf_chk-doc.z-number)    ). /* Номер z-отчета (Число) */
+    insw:write-data-element (  "chk-type", left-trim(string(p-buf_chk-doc.chk-type, ">9"))    ). /* Тип чека (Число, enum) */
+    insw:write-data-element (  "netto",   left-trim(string(p-buf_chk-doc.netto,   "->>>>>>>>9.9<"))  ). /* Сумма чека нетто в валюте продаж. Выручка со скидками. (Число) */
+    insw:write-data-element (  "tot-doc", left-trim(string(p-buf_chk-doc.tot-doc, "->>>>>>>>9.9<"))  ). /* Сумма брутто по чеку в валюте продаж. Сумма по текущей розничной цене (Число) */
 
     /* обязательность 0-1 */
     
     /* 28/XI-2017 term-num будет строкой, поэтому пустой можно, и необязательный. */
     if "" > "" then insw:write-data-element ( "term-num", "" ).  /* Номер терминала POS (Строка) */
 
-    if buf_chk-doc.d-card > "" then do:
-      insw:write-data-element (  "dc-num",          buf_chk-doc.src-d-card      ). /* Номер ДК (Строка) */
+    if p-buf_chk-doc.d-card > "" then do:
+      insw:write-data-element (  "dc-num":U,     p-buf_chk-doc.src-d-card     ). /* Номер ДК (Строка) */
       find first buf_dis-card no-lock
-           where buf_dis-card.d-card = buf_chk-doc.d-card no-error .
+           where buf_dis-card.d-card = p-buf_chk-doc.d-card no-error .
       if available buf_dis-card then do:
         /* обязательность 0-1 */
         if buf_dis-card.card-num > 0 then
-      insw:write-data-element (  "dc-name",  string(buf_dis-card.type)  ). /* Наименование ДК (Строка) */
+      insw:write-data-element (  "dc-name":U,    string(buf_dis-card.type)  ). /* Наименование ДК (Строка) */
       end.
     end.  
+
+    /* 16/I-2018 в каждый чек добавить поля с номером и датой документа «Продажа» в нашей системе,
+                 и ФИО оператора, который оформлял документ */
+    if p-inkas-operator > "" then
+      insw:write-data-element (  "operator":U,   p-inkas-operator           ). /* Оператор создавший документ (Строка) */
+    if p-inkas-code > "" then
+      insw:write-data-element (  "prdoc-num":U,  p-inkas-code               ). /* Номер документа продажи в GC (Строка) */
+    if p-inkas-dtime = ? then . else
+      insw:write-data-element (  "prdoc-date":U, iso-date(p-inkas-dtime)    ). /* Дата документа продажи в GC со временем в формате ISO (Дата) */ 
 
 
     /* section1 обязательность 1-1 */
     insw:start-element ({&tag-section1}) .
-    if can-find (first buf_chk-gds where buf_chk-gds.doc-code = buf_chk-doc.doc-code) then do:
+    if can-find (first buf_chk-gds where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code) then do:
       for each buf_chk-gds no-lock
-         where buf_chk-gds.doc-code = buf_chk-doc.doc-code :
+         where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code :
         insw:start-element ({&tag-item1}) .
         
         insw:write-data-element (  "line-num",  string(buf_chk-gds.line-num)  ) . /* Номер строки чека (Число) */
@@ -223,8 +283,8 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
           if buf_chk-gds.pl-code > 0 then v-loc1 = string (buf_chk-gds.pl-code).
           else if available buf_bar-code then do:
             v-loc1 = getTankNum
-              (input buf_chk-doc.obj-type
-              ,input buf_chk-doc.obj-code
+              (input p-buf_chk-doc.obj-type
+              ,input p-buf_chk-doc.obj-code
               ,input buf_chk-gds.pump
               ,input buf_chk-gds.nozzle-code
               ,input buf_chk-gds.src-pl-code
@@ -262,7 +322,12 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
           ) . /* Объем, кг (Число 15,3) */ 
         end.
 
-        insw:write-data-element (  "sum",  left-trim(string(buf_chk-gds.sum-base, "->>>>>>>>9.99"))  ) . /* Сумма (Число 15,2) */
+        /* 18/I-2018 даже если в БД в поле sum-base лежит ? - в выгрузке всё равно должен быть 0 */
+        insw:write-data-element (  "sum",
+          if buf_chk-gds.sum-base = ?
+          then  "0"
+          else  left-trim( string(buf_chk-gds.sum-base, "->>>>>>>>9.99") )
+        ) . /* Сумма (Число 15,2) */
         
         
         /* далее обязательность 0-1 */
@@ -300,6 +365,13 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
         /* 17/XI-2017 Добавляем поле «price» (цена до применения скидок) в секции «chk-gd». */
         insw:write-data-element (  "price",  left-trim(string(buf_chk-gds.src-price, "->>>>>>>>9.99"))  ) . /* Цена до применения скидок (Число 15,2) */
 
+        /* 16/I-2018 Деление сбросов (тип чека 14) на два типа (Пролито и не пролито).
+                     Для разделения используется специальный флаг в товарной строке чека. */
+        if enum-chk-type:GetEnum(p-buf_chk-doc.chk-type) = enum-chk-type:entranscancell then do:
+          if buf_chk-gds.write-off-code >= 0 then
+            insw:write-data-element (  "prolito",  string(buf_chk-gds.write-off-code)  ). /* Признак для сбросов: 0 – не пролито; 1 – пролито. (Число, enum) */
+        end .
+ 
         insw:end-element ({&tag-item1}) .
       end . /* end_of for each buf_chk-gds */
     end .
@@ -311,7 +383,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
     /* section2 обязательность 0-1 */
     for each buf_chk-pay no-lock
-       where buf_chk-pay.doc-code = buf_chk-doc.doc-code
+       where buf_chk-pay.doc-code = p-buf_chk-doc.doc-code
     break by buf_chk-pay.doc-code :
       if first-of(buf_chk-pay.doc-code) then insw:start-element ({&tag-section2}) .
       insw:start-element ({&tag-item2}) .
@@ -339,7 +411,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
     /* section3 обязательность 0-1 */
     for each buf_chk-discnt no-lock
-       where buf_chk-discnt.doc-code = buf_chk-doc.doc-code
+       where buf_chk-discnt.doc-code = p-buf_chk-doc.doc-code
         /* скидки обычные (record-type = 0) и скидки, которыми выравниваются погрешности (record-type = 2) */
          and ( buf_chk-discnt.record-type = 0 or
                buf_chk-discnt.record-type = 2 )
@@ -364,7 +436,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
     /* section4 обязательность 0-1 */
     for each buf_chk-discnt no-lock
-       where buf_chk-discnt.doc-code    = buf_chk-doc.doc-code
+       where buf_chk-discnt.doc-code    = p-buf_chk-doc.doc-code
          and buf_chk-discnt.record-type = 4
          and buf_chk-discnt.discnt-value-abs <> 0
     break by buf_chk-discnt.doc-code :
@@ -399,22 +471,9 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     /* section5 исключена */
 
 
-    /* 28/XI-2017 при выгрузке чеков надо еще запускать размаз чеков, иначе chk-pay-r нет. */
-    run rep/rpychk0.p ( input "bgepych2"
-                       ,input buf_chk-doc.obj-type
-                       ,input buf_chk-doc.obj-code
-                      ,input ? /*p-date-from*/
-                      ,input ? /*p-date-to*/
-                      ,input ? /*p-shift-date-from*/
-                      ,input ? /*p-shift-date-to*/
-                      ,input ? /*p-shift-num-start*/
-                      ,input ? /*p-shift-num-end*/
-                       ,input buf_chk-doc.out-code /* p-inkas-code */
-                      ) .
-
     /* section6 обязательность 0-1 */
     for each buf_chk-gds-pay no-lock
-       where buf_chk-gds-pay.doc-code = buf_chk-doc.doc-code
+       where buf_chk-gds-pay.doc-code = p-buf_chk-doc.doc-code
     break by buf_chk-gds-pay.doc-code :
       if first-of(buf_chk-gds-pay.doc-code) then insw:start-element ({&tag-section6}) .
       insw:start-element ({&tag-item6}) .
