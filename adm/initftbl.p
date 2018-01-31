@@ -36,6 +36,7 @@ on error undo, return error
 :
 
   disable triggers for load of DICTDB.db.
+  disable triggers for load of DICTDB.db-attr.
   disable triggers for load of DICTDB.cli-grp.
   disable triggers for load of DICTDB.gds-grp.
   disable triggers for load of DICTDB.fbr-gds-grp.
@@ -44,7 +45,8 @@ on error undo, return error
   disable triggers for load of DICTDB.code-range.
 
   define buffer buf_sys-ctrl for DICTDB.sys-ctrl .
-  define buffer buf_db for DICTDB.db .
+  define buffer buf_db      for DICTDB.db .
+  define buffer buf_db-attr for DICTDB.db-attr .
   define buffer buf_cli-grp for DICTDB.cli-grp .
   define buffer buf_gds-grp for DICTDB.gds-grp .
   define buffer buf_fbr-gds-grp for DICTDB.fbr-gds-grp .
@@ -73,7 +75,16 @@ on error undo, return error
     /* по умолчанию в обычной ГБД флажок добавления клиентов не проставлялся; для раскрутки под 1С его надо проставлять */
     buf_db.add-clients = true when (p-extra-to = 1) 
   .
-
+  if p-extra-to = 1 then do:
+    /* к записи о ГБД - запись о точке интеграции */
+    create buf_db-attr .
+    assign
+      buf_db-attr.db-num     = 0
+      buf_db-attr.attr-code  = {&attr-int-point}
+      buf_db-attr.attr-value = "00001":U
+    .
+  end.
+  
   /*инициализация записи о версии TH для гбд первоночальным запускм*/
   if loc_db-num = 0
   then do:
