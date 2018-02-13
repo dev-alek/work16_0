@@ -385,6 +385,26 @@ if input frame {&frame-name} t-doc.cli-type = ? or input frame {&frame-name} t-d
     end.
   end.
 end.
+
+define variable conf-par as character no-undo.
+define variable mode-erprn as logical no-undo.
+define variable par-type as character no-undo.
+  { gbl/conf-rd.i
+  "'is-erpRN'"
+  0
+  "''"
+  0
+  "''"
+  "''"
+  "''"
+  NO
+  conf-par
+  par-type
+  no-error
+  }
+if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+  else mode-erprn = no.
+
 find ub.clients where ub.clients.obj-code = input frame {&frame-name} t-doc.cli-code
                and ub.clients.obj-type = input frame {&frame-name} t-doc.cli-type no-error.
 if not available ub.clients then do:
@@ -479,8 +499,8 @@ end.
 if ( varis-fin = "yes":u
  and ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or
        t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or
-   ( t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and paris-hold = true   ) or
-     ( t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} and paris-hold = true   )))
+   ( t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and (paris-hold = true or mode-erprn = true) ) or
+     ( t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} and (paris-hold = true or mode-erprn = true)   )))
   or ( varis-finby = "yes":u
   and ( t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}      or
         t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or
@@ -512,7 +532,7 @@ if ( varis-fin = "yes":u
                                                   input  ?,
                                                   input  parparentproc,
                                                   input  t-doc.doc-date,
-                                                  input if paris-hold = yes then "all" else (if ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} ) then {&income} else {&expense}) ,
+                                                  input if paris-hold = yes or mode-erprn = true then "all" else (if ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} ) then {&income} else {&expense}) ,
                                                   output varcontract-code) no-error.
       if error-status :error    or
          varcontract-code = ?  or
