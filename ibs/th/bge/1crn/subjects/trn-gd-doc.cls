@@ -141,77 +141,89 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
       buf_trn-doc.creid
       v-user-name }
     
-    case buf_trn-doc.ext-doc-type:
-      when {&TDEDT_Pri_Vnesh} then do:
-        v-doc-type-ERPRN = "1".
-        if v-is-petrol-trn
-          then StartDocTrnFuel().
-          else StartDocTrn().
-        PriVnesh().
-        if v-is-petrol-trn
-          then EndDocTrnFuel().
-          else EndDocTrn().
-      end. 
-      when {&TDEDT_Ras_Vnesh_VP} then do:
-        v-doc-type-ERPRN = "2".
-        if v-is-petrol-trn
-          then StartDocTrnFuel().
-          else StartDocTrn().
-        SpiVnesh().
-        if v-is-petrol-trn
-          then EndDocTrnFuel().
-          else EndDocTrn().
-      end.
-      when {&TDEDT_Ras_Perem} then do:
-        v-doc-type-ERPRN = "3".
-        if v-is-petrol-trn
-          then StartDocTrnFuel().
-          else StartDocTrn().
-        RasPerem().
-        if v-is-petrol-trn
-          then EndDocTrnFuel().
-          else EndDocTrn().
-      end.
-      when {&TDEDT_Pri_Perem} then do:
-        v-doc-type-ERPRN = "4".
-        if v-is-petrol-trn
-          then StartDocTrnFuel().
-          else StartDocTrn().
-        PriPerem().
-        if v-is-petrol-trn
-          then EndDocTrnFuel().
-          else EndDocTrn().
-      end.
-      when {&TDEDT_Spi_Vnesh} then do:
-        v-doc-type-ERPRN = "5".
-        if v-is-petrol-trn
-          then StartDocTrnFuel().
-          else StartDocTrn().
-        SpiVnesh().
-        if v-is-petrol-trn
-          then EndDocTrnFuel().
-          else EndDocTrn().
-      end.
-      when {&TDEDT_Ras_Vnesh} then do:
-        v-doc-type-ERPRN = "7".
-        if v-is-petrol-trn
-          then StartDocTrnFuel().
-          else StartDocTrn().
-        SpiVnesh().
-        if v-is-petrol-trn
-          then EndDocTrnFuel().
-          else EndDocTrn().
-      end.
-      when {&TDEDT_Vozvrat_Perem} or when {&TDEDT_Vozvrat_Vnesh} then do:
-        v-doc-type-ERPRN = "8".
-        StartDocTrn().
-        PriPerem().
-        EndDocTrn().
-      end.
-      otherwise do:
-        return.
-      end.
+    if buf_trn-doc.reason-code = 23 and buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} /*особый случай дл€ расхода внешнего, если код основание 23 то это идет в 1— как возврат поставщику*/
+    then do:
+      v-doc-type-ERPRN = "2".
+      if v-is-petrol-trn
+        then StartDocTrnFuel().
+        else StartDocTrn().
+      SpiVnesh().
+      if v-is-petrol-trn
+        then EndDocTrnFuel().
+        else EndDocTrn().
     end.
+    else
+      case buf_trn-doc.ext-doc-type:
+        when {&TDEDT_Pri_Vnesh} then do:
+          v-doc-type-ERPRN = "1".
+          if v-is-petrol-trn
+            then StartDocTrnFuel().
+            else StartDocTrn().
+          PriVnesh().
+          if v-is-petrol-trn
+            then EndDocTrnFuel().
+            else EndDocTrn().
+        end. 
+        when {&TDEDT_Ras_Vnesh_VP} then do:
+          v-doc-type-ERPRN = "2".
+          if v-is-petrol-trn
+            then StartDocTrnFuel().
+            else StartDocTrn().
+          SpiVnesh().
+          if v-is-petrol-trn
+            then EndDocTrnFuel().
+            else EndDocTrn().
+        end.
+        when {&TDEDT_Ras_Perem} then do:
+          v-doc-type-ERPRN = "3".
+          if v-is-petrol-trn
+            then StartDocTrnFuel().
+            else StartDocTrn().
+          RasPerem().
+          if v-is-petrol-trn
+            then EndDocTrnFuel().
+            else EndDocTrn().
+        end.
+        when {&TDEDT_Pri_Perem} then do:
+          v-doc-type-ERPRN = "4".
+          if v-is-petrol-trn
+            then StartDocTrnFuel().
+            else StartDocTrn().
+          PriPerem().
+          if v-is-petrol-trn
+            then EndDocTrnFuel().
+            else EndDocTrn().
+        end.
+        when {&TDEDT_Spi_Vnesh} then do:
+          v-doc-type-ERPRN = "5".
+          if v-is-petrol-trn
+            then StartDocTrnFuel().
+            else StartDocTrn().
+          SpiVnesh().
+          if v-is-petrol-trn
+            then EndDocTrnFuel().
+            else EndDocTrn().
+        end.
+        when {&TDEDT_Ras_Vnesh} then do:
+          v-doc-type-ERPRN = "7".
+          if v-is-petrol-trn
+            then StartDocTrnFuel().
+            else StartDocTrn().
+          SpiVnesh().
+          if v-is-petrol-trn
+            then EndDocTrnFuel().
+            else EndDocTrn().
+        end.
+        when {&TDEDT_Vozvrat_Perem} or when {&TDEDT_Vozvrat_Vnesh} then do:
+          v-doc-type-ERPRN = "8".
+          StartDocTrn().
+          PriPerem().
+          EndDocTrn().
+        end.
+        otherwise do:
+          return.
+        end.
+      end.
     
   end.
 
