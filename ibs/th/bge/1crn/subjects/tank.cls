@@ -210,7 +210,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         sw:write-data-element ("dnsty"    , string-mth (tt-place-attr.place-dens-prov)).
         sw:write-data-element ("mi-code"  , string(tt-place-attr.place-Si)).
       end.
-      sw:write-data-element ("gds-code", string(tt-place.gds-code)).
+      sw:write-data-element ("gd-code", string(tt-place.gds-code)).
       sw:write-data-element ("izm-pr", if tt-place.is-meas = yes then "1" else "0").
       find first tt-pl-level no-lock where tt-pl-level.pl-code = tt-place.pl-code and
         tt-pl-level.obj-code = tt-place.obj-code and
