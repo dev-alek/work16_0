@@ -14,6 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 09/09/05
 
 */
+block-level on error undo, throw.
 
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-parent-handle  as widget-handle no-undo .
@@ -69,7 +70,19 @@ p-obj-code = integer(entry(2, p-parameter, {&delim-par}))
 action     = entry(3, p-parameter, {&delim-par})
 no-error
 .
-if error-status:error then return error.
+if error-status:error then do:
+  run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("Ошибка входных параметров &1:&2&3"
+                         , p-parameter
+                         , {&new-line}
+                         , error-status:get-message(1)
+                         )).
+  v-view-log = yes.
+  undo, return error .
+end .
 
 { gbl/getcntxt.i get }
 
@@ -343,6 +356,20 @@ else do:
                             , p-obj-code
                                         ).
 end.
+
+  finally :
 { str/cdviewlg.i
 "'!!!При отсылке информации на кассы произошли ошибки!!!'"
-"'send-cd.txt'" }
+log-file-name not-delete }
+
+    run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("&1", {&new-line})
+    ).
+    define variable v-save-file-name as character no-undo .
+    v-save-file-name = substitute("&1get-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+    OS-APPEND value(log-file-name) value(v-save-file-name).
+    OS-DELETE value(log-file-name).
+  end finally .

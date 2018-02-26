@@ -18,6 +18,7 @@ Input:
 Output:
 
 */
+block-level on error undo, throw.
 
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-parent-handle  as widget-handle no-undo .
@@ -34,6 +35,9 @@ define variable vss-description as character no-undo init "Отсылка данных по спр
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 { gbl/getcntxt.i def }
+{ str/cdsnddef.i }
+{ bge/bgelib.i }
+{ str/cd-xml.i }
 
 
 define variable p-obj-type as character no-undo .
@@ -46,14 +50,21 @@ i-obj-code = integer(entry(2, p-parameter, {&delim-par}))
 action     = entry(3, p-parameter, {&delim-par})
 no-error
 .
-if error-status:error then return error substitute("&1 &2", error-status:get-message(1) , return-value ).
+if error-status:error then do:
+  run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("Ошибка входных параметров &1:&2&3"
+                         , p-parameter
+                         , {&new-line}
+                         , error-status:get-message(1)
+                         )).
+  v-view-log = yes.
+  undo, return error .
+end .
 
 
-
-
-{ str/cdsnddef.i }
-{ bge/bgelib.i }
-{ str/cd-xml.i }
 
 FIND FIRST ub.cash-desk NO-LOCK WHERE
            ub.cash-desk.db-num = g#db-num AND
@@ -105,10 +116,15 @@ if error-status:error then do:
                                         ).
 end.
 
-
-
-
-
-
-
-
+  finally :
+    run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("&1", {&new-line})
+    ).
+    define variable v-save-file-name as character no-undo .
+    v-save-file-name = substitute("&1get-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+    OS-APPEND value(log-file-name) value(v-save-file-name).
+    OS-DELETE value(log-file-name).
+  end finally .

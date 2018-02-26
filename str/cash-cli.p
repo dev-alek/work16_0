@@ -14,6 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 12/12/05
 
 */
+block-level on error undo, throw.
 
 define input parameter parparentproc    as widget-handle no-undo .
 define input parameter p-parent-handle  as widget-handle no-undo .
@@ -81,7 +82,7 @@ define variable par-type as character no-undo .
 define variable v-curr-r-b as character no-undo .
 DEFINE VARIABLE v-date as date no-undo .
 DEFINE VARIABLE v-time as integer no-undo .
-
+define variable v-disp-msg as character no-undo .
 
 define buffer for-cash-desk for ub.cash-desk.
 define buffer for-shop for ub.shop.
@@ -94,9 +95,19 @@ p-obj-code = integer(entry(3, p-parameter, {&delim-par}))
 mode       = entry(4, p-parameter, {&delim-par})
 no-error
 .
-if error-status:error
-then
-return error.
+if error-status:error then do:
+  run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("Ошибка входных параметров &1:&2&3"
+                         , p-parameter
+                         , {&new-line}
+                         , error-status:get-message(1)
+                         )).
+  v-view-log = yes.
+  undo, return error .
+end .
 
 { gbl/getcntxt.i get }
 
@@ -126,15 +137,20 @@ run adm/shattri.p (
   ) no-error .
 IF error-status:error then do:
   delete object v-tth.
-  message
-  substitute("Ошибка при получении настроек передачи данных на кассы НА ОБЪЕКТЕ &1&2:&3&4 &5"
+  v-disp-msg = substitute("Ошибка при получении настроек передачи данных на кассы НА ОБЪЕКТЕ &1&2:&3&4 &5"
             , p-obj-type
             , p-obj-code
             , {&new-line}
             , error-status:get-message(1)
-            , return-value )
-  view-as alert-box error .
-  return error.
+            , return-value ) .
+  message v-disp-msg view-as alert-box error .
+  run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input v-disp-msg).
+  v-view-log = yes.
+  undo, return error .
 end.
 delete object v-tth.
 assign
@@ -456,3 +472,16 @@ run write-log-and-file in p-log-handle (
     , input 1
     , input substitute("Отправлены данные по клиентским картам на кассы &1&2", {&shop}, p-obj-code)
                                           ).
+                                          
+  finally :
+    run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("&1", {&new-line})
+    ).
+    define variable v-save-file-name as character no-undo .
+    v-save-file-name = substitute("&1get-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+    OS-APPEND value(log-file-name) value(v-save-file-name).
+    OS-DELETE value(log-file-name).
+  end finally .

@@ -878,13 +878,18 @@ procedure finish-send :
     else do:
       { str/cdviewlg.i
       "'!!!При отсылке информации на кассы произошли ошибки!!!'"
-      log-file-name }
+      log-file-name not-delete}
     end.
     &else
     { str/cdviewlg.i
     "'!!!При отсылке информации на кассы произошли ошибки!!!'"
-    log-file-name }
+    log-file-name not-delete}
     &endif
+
+    define variable v-save-file-name as character no-undo .
+    v-save-file-name = substitute("&1get-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+    OS-APPEND value(log-file-name) value(v-save-file-name).
+    OS-DELETE value(log-file-name).
   end.
 
 end procedure. /* finish-send */

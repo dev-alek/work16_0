@@ -14,6 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 09/09/05
 
 */
+block-level on error undo, throw.
 
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-parent-handle  as widget-handle no-undo .
@@ -63,7 +64,19 @@ i-obj-code = integer(entry(1, p-parameter, {&delim-par}))
 mode = entry(2, p-parameter, {&delim-par})
 no-error
 .
-if error-status:error then return error.
+if error-status:error then do:
+  run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("ќшибка входных параметров &1:&2&3"
+                         , p-parameter
+                         , {&new-line}
+                         , error-status:get-message(1)
+                         )).
+  v-view-log = yes.
+  undo, return error .
+end .
 
 { gbl/getcntxt.i get }
 
@@ -309,3 +322,55 @@ else do:
                                              ).
   end.
 end.
+
+define variable v-disp-msg as character no-undo .
+catch exAppErrors as class Progress.Lang.AppError :
+  v-disp-msg = exAppErrors:ReturnValue .
+  if v-disp-msg > "" then . else do :
+    v-disp-msg = exAppErrors:GetMessage(1) .
+    if v-disp-msg > "" then . else v-disp-msg = "ќшибка A-sendcash" .
+  end .
+  run write-log-and-file in p-log-handle (
+                input 1
+              , input log-file-name
+              , input 1
+              , input v-disp-msg
+  ).
+  v-view-log = yes .
+end catch .
+catch exProErrors as class Progress.Lang.ProError :
+  v-disp-msg = exAppErrors:GetMessage(1) .
+  if v-disp-msg > "" then . else v-disp-msg = "ќшибка P-sendcash" .
+  run write-log-and-file in p-log-handle (
+                input 1
+              , input log-file-name
+              , input 1
+              , input v-disp-msg
+  ).
+  v-view-log = yes .
+end catch .
+catch exAnyErrors as class Progress.Lang.Error:
+  v-disp-msg = "ќшибка U-sendcash" .
+  run write-log-and-file in p-log-handle (
+                input 1
+              , input log-file-name
+              , input 1
+              , input v-disp-msg
+  ).
+  v-view-log = yes .
+end catch .
+finally :
+    run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("&1", {&new-line})
+    ).
+  define variable v-save-file-name as character no-undo .
+  
+  v-save-file-name = substitute("&1get-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+  
+  // где смотр€т файл и где его удал€ют - не известно.
+  // поэтому здесь мы его только копируем  
+  OS-APPEND value(log-file-name) value(v-save-file-name).
+end finally .
