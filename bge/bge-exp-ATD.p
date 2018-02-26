@@ -413,7 +413,7 @@ define buffer buf_sale-doc    for ub.sale-doc .
           string(buf_rvs-line.gds-code) ","
           trim(string(buf_rvs-line.state-measure-qnty, ">>>>>>>>9.99")) ","
           string(buf_rvs-line-pump.nozzle-code) ","
-          trim(string(buf_rvs-line-pump.state-mh-cnt, ">>>>>>>>9.99")) ","
+          trim(string(buf_rvs-line-pump.state-el-cnt, ">>>>>>>>9.99")) ","
           string(buf_rvs-doc.shift-date, "99.99.9999") skip
         .                                     
       end.            
