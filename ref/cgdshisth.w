@@ -308,7 +308,7 @@ DEFINE BROWSE BR-gds-hist
   v-artic COLUMN-LABEL "Артикул" FORMAT "X(14)":U
   v-prod-type + string(v-prod-code) COLUMN-LABEL "Пр-ль" FORMAT "X(12)":U
   get-subject(X_c-gds-hist.subject) COLUMN-LABEL {&subject} FORMAT "X(55)":U width 15
-  X_c-gds-hist.host-code COLUMN-LABEL "Фирма" FORMAT "99999":U
+  X_c-gds-hist.host-code COLUMN-LABEL "Фирма" FORMAT "999999999":U
   X_c-gds-hist.obj-type + string(X_c-gds-hist.obj-code) COLUMN-LABEL "Объект" FORMAT "X(8)":U
 ENABLE
   X_c-gds-hist.is-news

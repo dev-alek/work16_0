@@ -223,7 +223,7 @@ DEFINE BROWSE BR-bank
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-bank Dialog-Frame _FREEFORM
   QUERY BR-bank DISPLAY
       mark-string(recid(X_c-fin-bank), v-rid-list) FORMAT "X(1)":U
-      X_c-fin-bank.host-code COLUMN-LABEL "Фирма" FORMAT "99999":U
+      X_c-fin-bank.host-code COLUMN-LABEL "Фирма" FORMAT "999999999":U
       X_c-fin-bank.code-bank COLUMN-LABEL "Код!банка" FORMAT "9999999":U
       X_c-fin-bank.bank-name FORMAT "X(40)":U
       X_c-fin-bank.bik FORMAT "X(9)":U

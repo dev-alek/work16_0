@@ -1181,11 +1181,11 @@ DEFINE BUFFER buf_clients FOR ub.clients.
     if temp-string = ""
     then do:
       assign
-      temp-string = string(buf_sysconf.host-code,">>>>9") + " " + buf_clients.obj-name  .
+      temp-string = string(buf_sysconf.host-code,">>>>>>>>>9") + " " + buf_clients.obj-name  .
     end.
     else do:
       assign
-      temp-string = temp-string + "," + string(buf_sysconf.host-code,">>>>9") + " " + buf_clients.obj-name
+      temp-string = temp-string + "," + string(buf_sysconf.host-code,">>>>>>>>>9") + " " + buf_clients.obj-name
       .
     end.
   end.

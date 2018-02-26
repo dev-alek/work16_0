@@ -1,19 +1,21 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
 
+
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER locked_fin-bank FOR ub.fin-bank.
-DEFINE TEMP-TABLE tt-fin-bank NO-UNDO LIKE ub.fin-bank.
-DEFINE BUFFER X_clients FOR ub.clients.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER locked_fin-bank FOR fin-bank.
+DEFINE TEMP-TABLE tt-fin-bank NO-UNDO LIKE fin-bank.
+DEFINE BUFFER X_clients FOR clients.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -75,14 +77,14 @@ define buffer X_curr_sysconf for ub.sysconf.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
@@ -95,13 +97,13 @@ tt-fin-bank.cor-acc tt-fin-bank.rkc tt-fin-bank.bank-name ~
 tt-fin-bank.short-name tt-fin-bank.licenz tt-fin-bank.bank-city ~
 tt-fin-bank.addres tt-fin-bank.addres1 tt-fin-bank.phone tt-fin-bank.fax ~
 tt-fin-bank.e-mail tt-fin-bank.cl-bank tt-fin-bank.okato tt-fin-bank.okonx ~
-tt-fin-bank.okpo tt-fin-bank.PS
+tt-fin-bank.okpo tt-fin-bank.PS 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-Dialog-Frame tt-fin-bank.bik ~
 tt-fin-bank.inn tt-fin-bank.kpp tt-fin-bank.cor-acc tt-fin-bank.rkc ~
 tt-fin-bank.bank-name tt-fin-bank.short-name tt-fin-bank.licenz ~
 tt-fin-bank.bank-city tt-fin-bank.addres tt-fin-bank.addres1 ~
 tt-fin-bank.phone tt-fin-bank.fax tt-fin-bank.e-mail tt-fin-bank.cl-bank ~
-tt-fin-bank.okato tt-fin-bank.okonx tt-fin-bank.okpo tt-fin-bank.PS
+tt-fin-bank.okato tt-fin-bank.okonx tt-fin-bank.okpo tt-fin-bank.PS 
 &Scoped-define ENABLED-TABLES-IN-QUERY-Dialog-Frame tt-fin-bank
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-Dialog-Frame tt-fin-bank
 &Scoped-define QUERY-STRING-Dialog-Frame FOR EACH tt-fin-bank WHERE TRUE /* Join to tt-fin-bank incomplete */ SHARE-LOCK
@@ -116,20 +118,20 @@ tt-fin-bank.kpp tt-fin-bank.cor-acc tt-fin-bank.rkc tt-fin-bank.bank-name ~
 tt-fin-bank.short-name tt-fin-bank.licenz tt-fin-bank.bank-city ~
 tt-fin-bank.addres tt-fin-bank.addres1 tt-fin-bank.phone tt-fin-bank.fax ~
 tt-fin-bank.e-mail tt-fin-bank.cl-bank tt-fin-bank.okato tt-fin-bank.okonx ~
-tt-fin-bank.okpo tt-fin-bank.PS
+tt-fin-bank.okpo tt-fin-bank.PS 
 &Scoped-define ENABLED-TABLES tt-fin-bank
 &Scoped-define FIRST-ENABLED-TABLE tt-fin-bank
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-print B-hist B-Help
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-print B-hist B-Help 
 &Scoped-Define DISPLAYED-FIELDS tt-fin-bank.host-code tt-fin-bank.code-bank ~
 tt-fin-bank.bik tt-fin-bank.inn tt-fin-bank.kpp tt-fin-bank.cor-acc ~
 tt-fin-bank.rkc tt-fin-bank.bank-name tt-fin-bank.short-name ~
 tt-fin-bank.licenz tt-fin-bank.bank-city tt-fin-bank.addres ~
 tt-fin-bank.addres1 tt-fin-bank.phone tt-fin-bank.fax tt-fin-bank.e-mail ~
 tt-fin-bank.cl-bank tt-fin-bank.okato tt-fin-bank.okonx tt-fin-bank.okpo ~
-tt-fin-bank.PS
+tt-fin-bank.PS 
 &Scoped-define DISPLAYED-TABLES tt-fin-bank
 &Scoped-define FIRST-DISPLAYED-TABLE tt-fin-bank
-&Scoped-Define DISPLAYED-OBJECTS f-host-name
+&Scoped-Define DISPLAYED-OBJECTS f-host-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -144,36 +146,36 @@ tt-fin-bank.PS
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-hist
-     LABEL "Ис&тория"
+DEFINE BUTTON B-hist 
+     LABEL "Ис&тория" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-print
-     LABEL "Пе&чать"
+DEFINE BUTTON B-print 
+     LABEL "Пе&чать" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-host-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-host-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 40 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY Dialog-Frame FOR
+DEFINE QUERY Dialog-Frame FOR 
       tt-fin-bank SCROLLING.
 &ANALYZE-RESUME
 
@@ -186,73 +188,73 @@ DEFINE FRAME Dialog-Frame
      B-hist AT ROW 1 COL 51
      B-Help AT ROW 1 COL 71
      tt-fin-bank.host-code AT ROW 2.5 COL 13 COLON-ALIGNED
-          LABEL "Фирма"
-          VIEW-AS FILL-IN
-          SIZE 7 BY 1
-     f-host-name AT ROW 2.5 COL 23.5 COLON-ALIGNED NO-LABEL
+          LABEL "Фирма" format 9999999999
+          VIEW-AS FILL-IN 
+          SIZE 12.5 BY 1
+     f-host-name AT ROW 2.5 COL 26.38 COLON-ALIGNED NO-LABEL
      tt-fin-bank.code-bank AT ROW 2.5 COL 78.5 COLON-ALIGNED
           LABEL "Код банка"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 8 BY 1
      tt-fin-bank.bik AT ROW 3.75 COL 13 COLON-ALIGNED
           LABEL "БИК"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 12 BY 1
      tt-fin-bank.inn AT ROW 3.75 COL 32 COLON-ALIGNED
           LABEL "INN"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 22 BY 1
      tt-fin-bank.kpp AT ROW 3.75 COL 62.13 COLON-ALIGNED
           LABEL "KPP"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 22 BY 1
      tt-fin-bank.cor-acc AT ROW 5.33 COL 13.13 COLON-ALIGNED
           LABEL "№ Корсчета"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 22 BY 1
      tt-fin-bank.rkc AT ROW 5.38 COL 41 COLON-ALIGNED
           LABEL "РКЦ"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 55 BY 1
      tt-fin-bank.bank-name AT ROW 6.75 COL 13 COLON-ALIGNED
           LABEL "Наим. банка"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 84 BY 1
      tt-fin-bank.short-name AT ROW 8 COL 13 COLON-ALIGNED
           LABEL "Кратк. назв."
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 84 BY 1
      tt-fin-bank.licenz AT ROW 9.25 COL 13 COLON-ALIGNED
           LABEL "Лицензия"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 50 BY 1
      tt-fin-bank.otdel AT ROW 10.5 COL 13 COLON-ALIGNED
           LABEL "Отделение"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 62.88 BY 1
      tt-fin-bank.bank-city AT ROW 11.58 COL 13 COLON-ALIGNED
           LABEL "Город"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 13 BY 1
      tt-fin-bank.addres AT ROW 12.75 COL 13 COLON-ALIGNED
           LABEL "Адрес юрид."
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 78 BY 1
      tt-fin-bank.addres1 AT ROW 14 COL 13 COLON-ALIGNED
           LABEL "Адрес почт."
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 78 BY 1
      tt-fin-bank.phone AT ROW 15.25 COL 13 COLON-ALIGNED
           LABEL "Телефон"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 22 BY 1
      tt-fin-bank.fax AT ROW 15.25 COL 55.63 COLON-ALIGNED
           LABEL "Факс"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 22 BY 1
      tt-fin-bank.e-mail AT ROW 16.5 COL 13 COLON-ALIGNED
           LABEL "E-mail"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 34 BY 1
      tt-fin-bank.cl-bank AT ROW 16.5 COL 61 COLON-ALIGNED
           LABEL "Клиент-Банк" FORMAT "X(25)"
@@ -262,21 +264,21 @@ DEFINE FRAME Dialog-Frame
           SIZE 35.5 BY 1
      tt-fin-bank.okato AT ROW 17.75 COL 13 COLON-ALIGNED
           LABEL "ОКАТО"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 12 BY 1
      tt-fin-bank.okonx AT ROW 17.75 COL 36 COLON-ALIGNED
           LABEL "OKNH"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 12 BY 1
      tt-fin-bank.okpo AT ROW 17.75 COL 55.75 COLON-ALIGNED
           LABEL "ОКПО" FORMAT "X(10)"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 12 BY 1
      tt-fin-bank.PS AT ROW 19 COL 15 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 63.5 BY 4
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
@@ -284,8 +286,8 @@ DEFINE FRAME Dialog-Frame
      "Примечания" VIEW-AS TEXT
           SIZE 10.63 BY 1 AT ROW 19.75 COL 2.5
      SPACE(85.87) SKIP(2.41)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Банк"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -311,8 +313,8 @@ DEFINE FRAME Dialog-Frame
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
-                                                                        */
-ASSIGN
+   FRAME-NAME                                                           */
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -354,7 +356,7 @@ ASSIGN
    EXP-LABEL EXP-FORMAT                                                 */
 /* SETTINGS FOR FILL-IN tt-fin-bank.otdel IN FRAME Dialog-Frame
    NO-DISPLAY NO-ENABLE EXP-LABEL                                       */
-ASSIGN
+ASSIGN 
        tt-fin-bank.otdel:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* SETTINGS FOR FILL-IN tt-fin-bank.phone IN FRAME Dialog-Frame
@@ -377,7 +379,7 @@ ASSIGN
 */  /* DIALOG-BOX Dialog-Frame */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -468,7 +470,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -566,7 +568,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -585,30 +587,30 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY f-host-name
+  DISPLAY f-host-name 
       WITH FRAME Dialog-Frame.
-  IF AVAILABLE tt-fin-bank THEN
-    DISPLAY tt-fin-bank.host-code tt-fin-bank.code-bank tt-fin-bank.bik
-          tt-fin-bank.inn tt-fin-bank.kpp tt-fin-bank.cor-acc tt-fin-bank.rkc
-          tt-fin-bank.bank-name tt-fin-bank.short-name tt-fin-bank.licenz
-          tt-fin-bank.bank-city tt-fin-bank.addres tt-fin-bank.addres1
-          tt-fin-bank.phone tt-fin-bank.fax tt-fin-bank.e-mail
-          tt-fin-bank.cl-bank tt-fin-bank.okato tt-fin-bank.okonx
-          tt-fin-bank.okpo tt-fin-bank.PS
+  IF AVAILABLE tt-fin-bank THEN 
+    DISPLAY tt-fin-bank.host-code tt-fin-bank.code-bank tt-fin-bank.bik 
+          tt-fin-bank.inn tt-fin-bank.kpp tt-fin-bank.cor-acc tt-fin-bank.rkc 
+          tt-fin-bank.bank-name tt-fin-bank.short-name tt-fin-bank.licenz 
+          tt-fin-bank.bank-city tt-fin-bank.addres tt-fin-bank.addres1 
+          tt-fin-bank.phone tt-fin-bank.fax tt-fin-bank.e-mail 
+          tt-fin-bank.cl-bank tt-fin-bank.okato tt-fin-bank.okonx 
+          tt-fin-bank.okpo tt-fin-bank.PS 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-print B-hist B-Help tt-fin-bank.bik tt-fin-bank.inn
-         tt-fin-bank.kpp tt-fin-bank.cor-acc tt-fin-bank.rkc
-         tt-fin-bank.bank-name tt-fin-bank.short-name tt-fin-bank.licenz
-         tt-fin-bank.bank-city tt-fin-bank.addres tt-fin-bank.addres1
-         tt-fin-bank.phone tt-fin-bank.fax tt-fin-bank.e-mail
-         tt-fin-bank.cl-bank tt-fin-bank.okato tt-fin-bank.okonx
-         tt-fin-bank.okpo tt-fin-bank.PS
+  ENABLE B-exit b-quit B-print B-hist B-Help tt-fin-bank.bik tt-fin-bank.inn 
+         tt-fin-bank.kpp tt-fin-bank.cor-acc tt-fin-bank.rkc 
+         tt-fin-bank.bank-name tt-fin-bank.short-name tt-fin-bank.licenz 
+         tt-fin-bank.bank-city tt-fin-bank.addres tt-fin-bank.addres1 
+         tt-fin-bank.phone tt-fin-bank.fax tt-fin-bank.e-mail 
+         tt-fin-bank.cl-bank tt-fin-bank.okato tt-fin-bank.okonx 
+         tt-fin-bank.okpo tt-fin-bank.PS 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -617,7 +619,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -722,7 +724,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -799,3 +801,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

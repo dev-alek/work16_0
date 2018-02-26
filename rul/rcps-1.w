@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,15 +8,15 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE TEMP-TABLE tt-rule-call-param NO-UNDO LIKE ub.rule-call-param.
-DEFINE TEMP-TABLE tt0-rule-call-param NO-UNDO LIKE ub.rule-call-param.
-DEFINE BUFFER X_rp-rule-param FOR ub.rp-rule-param.
-DEFINE BUFFER X_rule FOR ub.rule.
-DEFINE BUFFER X_ruledict-param FOR ub.ruledict-param.
+DEFINE TEMP-TABLE tt-rule-call-param NO-UNDO LIKE rule-call-param.
+DEFINE TEMP-TABLE tt0-rule-call-param NO-UNDO LIKE rule-call-param.
+DEFINE BUFFER X_rp-rule-param FOR rp-rule-param.
+DEFINE BUFFER X_rule FOR rule.
+DEFINE BUFFER X_ruledict-param FOR ruledict-param.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -103,7 +103,7 @@ DEFINE BUFFER X_dis-rule FOR ub.dis-rule.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -119,8 +119,8 @@ DEFINE BUFFER X_dis-rule FOR ub.dis-rule.
 tt-rule-call-param TERM_tt-rule-call-param
 
 /* Definitions for BROWSE BR-rcp                                        */
-&Scoped-define FIELDS-IN-QUERY-BR-rcp X_rp-rule-param.rp-param-name term_tt-rule-call-param.codex_id term_tt-rule-call-param.ruleset_id term_tt-rule-call-param.order_id term_tt-rule-call-param.rule_id term_tt-rule-call-param.profile_id term_tt-rule-call-param.once-more {&abl-datatype-name} term_tt-rule-call-param.param-num TERM_tt-rule-call-param.p-index term_tt-rule-call-param.param-name term_tt-rule-call-param.param-label {&script-parmode-name} get-param-value( INPUT term_tt-rule-call-param.param-data-type ,INPUT term_tt-rule-call-param.param-2-data-type ,INPUT term_tt-rule-call-param.param-3-data-type ,INPUT TERM_tt-rule-call-param.p-index ,INPUT term_tt-rule-call-param.param-value-character ,INPUT term_tt-rule-call-param.param-value-date ,INPUT term_tt-rule-call-param.param-value-decimal ,INPUT term_tt-rule-call-param.param-value-integer ,INPUT term_tt-rule-call-param.param-value-logical) (IF term_tt-rule-call-param.param-data-type = {&abl-datatype-character} THEN term_tt-rule-call-param.param-value-character ELSE '':U) (IF term_tt-rule-call-param.param-data-type = {&abl-datatype-date} THEN STRING(term_tt-rule-call-param.param-value-date, "99/99/9999") ELSE '':U) (IF term_tt-rule-call-param.param-data-type = {&abl-datatype-decimal} THEN STRING(term_tt-rule-call-param.param-value-decimal) ELSE '':U) (IF term_tt-rule-call-param.param-data-type = {&abl-datatype-integer} THEN STRING(term_tt-rule-call-param.param-value-integer) ELSE '':U) (IF term_tt-rule-call-param.param-data-type = {&abl-datatype-logical} THEN STRING(term_tt-rule-call-param.param-value-logical, "+/-") ELSE '':U) calldscr(tt-rule-call-param.call_id)
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-rcp
+&Scoped-define FIELDS-IN-QUERY-BR-rcp X_rp-rule-param.rp-param-name term_tt-rule-call-param.codex_id term_tt-rule-call-param.ruleset_id term_tt-rule-call-param.order_id term_tt-rule-call-param.rule_id term_tt-rule-call-param.profile_id term_tt-rule-call-param.once-more {&abl-datatype-name} term_tt-rule-call-param.param-num TERM_tt-rule-call-param.p-index term_tt-rule-call-param.param-name term_tt-rule-call-param.param-label {&script-parmode-name} get-param-value( INPUT term_tt-rule-call-param.param-data-type ,INPUT term_tt-rule-call-param.param-2-data-type ,INPUT term_tt-rule-call-param.param-3-data-type ,INPUT TERM_tt-rule-call-param.p-index ,INPUT term_tt-rule-call-param.param-value-character ,INPUT term_tt-rule-call-param.param-value-date ,INPUT term_tt-rule-call-param.param-value-decimal ,INPUT term_tt-rule-call-param.param-value-integer ,INPUT term_tt-rule-call-param.param-value-logical) (IF term_tt-rule-call-param.param-data-type = {&abl-datatype-character} THEN term_tt-rule-call-param.param-value-character ELSE '':U) (IF term_tt-rule-call-param.param-data-type = {&abl-datatype-date} THEN STRING(term_tt-rule-call-param.param-value-date, "99/99/9999") ELSE '':U) (IF term_tt-rule-call-param.param-data-type = {&abl-datatype-decimal} THEN STRING(term_tt-rule-call-param.param-value-decimal) ELSE '':U) (IF term_tt-rule-call-param.param-data-type = {&abl-datatype-integer} THEN STRING(term_tt-rule-call-param.param-value-integer) ELSE '':U) (IF term_tt-rule-call-param.param-data-type = {&abl-datatype-logical} THEN STRING(term_tt-rule-call-param.param-value-logical, "+/-") ELSE '':U) calldscr(tt-rule-call-param.call_id)   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-rcp   
 &Scoped-define SELF-NAME BR-rcp
 &Scoped-define QUERY-STRING-BR-rcp FOR EACH X_ruledict-param, ~
        FIRST X_rp-rule-param, ~
@@ -141,13 +141,13 @@ tt-rule-call-param TERM_tt-rule-call-param
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit RECT-1 b-quit B-Help f-issue-code ~
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help RECT-1 f-issue-code ~
 b-issue-code EDITOR-1 f-dis-tot-obj-code b-dis-tot-obj-code f-issue-date ~
 f-valid-date f-cli-grp-code b-cli-grp f-grp-name f-category f-lim-cr ~
-t-on-off BR-rcp
+t-on-off BR-rcp 
 &Scoped-Define DISPLAYED-OBJECTS f-issue-code EDITOR-1 f-issue-name ~
 f-dis-tot-obj-code f-dis-tot-obj-name f-issue-date f-valid-date ~
-f-cli-grp-code f-grp-name f-category f-lim-cr t-on-off
+f-cli-grp-code f-grp-name f-category f-lim-cr t-on-off 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -162,111 +162,111 @@ f-cli-grp-code f-grp-name f-category f-lim-cr t-on-off
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-cli-grp
+DEFINE BUTTON b-cli-grp 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-dis-tot-obj-code
+DEFINE BUTTON b-dis-tot-obj-code 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-issue-code
+DEFINE BUTTON b-issue-code 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE EDITOR-1 AS CHARACTER INITIAL "данные параметры используются при импорте новых карт из текстового файла для установки значений по умолчанию"
+DEFINE VARIABLE EDITOR-1 AS CHARACTER INITIAL "данные параметры используются при импорте новых карт из текстового файла для установки значений по умолчанию" 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 27.5 BY 4.27 NO-UNDO.
+     SIZE 27.5 BY 4.25 NO-UNDO.
 
-DEFINE VARIABLE f-category AS INTEGER FORMAT ">>>9":U INITIAL 0
-     LABEL "Категория карты"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-category AS INTEGER FORMAT ">>>9":U INITIAL 0 
+     LABEL "Категория карты" 
+     VIEW-AS FILL-IN 
      SIZE 5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-cli-grp-code AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0
-     LABEL "Группа клиентов, в которую попадет клиент новой карты"
-     VIEW-AS FILL-IN
-     SIZE 10 BY 1 NO-UNDO.
+DEFINE VARIABLE f-cli-grp-code AS INTEGER FORMAT ">,>>>,>>>>9":U INITIAL 0 
+     LABEL "Группа клиентов, в которую попадет клиент новой карты" 
+     VIEW-AS FILL-IN 
+     SIZE 15.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-dis-tot-obj-code AS INTEGER FORMAT ">>>>9":U INITIAL 0
-     LABEL "Код магазина для начисления общих итогов"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-dis-tot-obj-code AS INTEGER FORMAT ">>>>9":U INITIAL 0 
+     LABEL "Код магазина для начисления общих итогов" 
+     VIEW-AS FILL-IN 
      SIZE 6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-dis-tot-obj-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-dis-tot-obj-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 55 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE f-grp-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-grp-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 96.5 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE f-issue-code AS INTEGER FORMAT ">>>>9":U INITIAL 0
-     LABEL "Код магазина, выдавшего карту"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-issue-code AS INTEGER FORMAT ">>>>9":U INITIAL 0 
+     LABEL "Код магазина, выдавшего карту" 
+     VIEW-AS FILL-IN 
      SIZE 6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-issue-date AS DATE FORMAT "99/99/9999":U
-     LABEL "Дата выдачи карты"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-issue-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата выдачи карты" 
+     VIEW-AS FILL-IN 
      SIZE 11 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-issue-name AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-issue-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 55 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE f-lim-cr AS DECIMAL FORMAT "->>,>>9,999.99":U INITIAL 0
-     LABEL "Лимит кредита (только для КРЕДИТНЫХ карт)"
-     VIEW-AS FILL-IN
-     SIZE 16 BY 1.07 NO-UNDO.
+DEFINE VARIABLE f-lim-cr AS DECIMAL FORMAT "->>,>>9,999.99":U INITIAL 0 
+     LABEL "Лимит кредита (только для КРЕДИТНЫХ карт)" 
+     VIEW-AS FILL-IN 
+     SIZE 16 BY 1.08 NO-UNDO.
 
-DEFINE VARIABLE f-valid-date AS DATE FORMAT "99/99/9999":U
-     LABEL "Дата действия карты"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-valid-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата действия карты" 
+     VIEW-AS FILL-IN 
      SIZE 11 BY 1 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 97.5 BY 13.6.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 97.5 BY 13.58.
 
-DEFINE VARIABLE t-on-off AS LOGICAL INITIAL no
-     LABEL "Включен обсчет ОБЩИХ итогов по ДК (по объекту, фирме и глобально)"
+DEFINE VARIABLE t-on-off AS LOGICAL INITIAL no 
+     LABEL "Включен обсчет ОБЩИХ итогов по ДК (по объекту, фирме и глобально)" 
      VIEW-AS TOGGLE-BOX
      SIZE 88 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-rcp FOR
-      X_ruledict-param,
-      X_rp-rule-param,
-      tt-rule-call-param,
+DEFINE QUERY BR-rcp FOR 
+      X_ruledict-param, 
+      X_rp-rule-param, 
+      tt-rule-call-param, 
       TERM_tt-rule-call-param SCROLLING.
 &ANALYZE-RESUME
 
@@ -327,24 +327,24 @@ DEFINE FRAME Dialog-Frame
      B-Help AT ROW 1 COL 95
      f-issue-code AT ROW 2 COL 43 COLON-ALIGNED WIDGET-ID 150
      b-issue-code AT ROW 2 COL 53 WIDGET-ID 170
-     EDITOR-1 AT ROW 2.07 COL 71 NO-LABEL WIDGET-ID 168
+     EDITOR-1 AT ROW 2.08 COL 71 NO-LABEL WIDGET-ID 168
      f-issue-name AT ROW 3 COL 12 COLON-ALIGNED NO-LABEL WIDGET-ID 174
      f-dis-tot-obj-code AT ROW 4 COL 43 COLON-ALIGNED WIDGET-ID 152
      b-dis-tot-obj-code AT ROW 4 COL 53 WIDGET-ID 172
      f-dis-tot-obj-name AT ROW 5 COL 11.5 COLON-ALIGNED NO-LABEL WIDGET-ID 176
-     f-issue-date AT ROW 7.4 COL 42.5 COLON-ALIGNED WIDGET-ID 154
-     f-valid-date AT ROW 8.47 COL 42.5 COLON-ALIGNED WIDGET-ID 156
-     f-cli-grp-code AT ROW 10.6 COL 72 COLON-ALIGNED WIDGET-ID 158
-     b-cli-grp AT ROW 10.6 COL 85.5 WIDGET-ID 166
+     f-issue-date AT ROW 7.42 COL 42.5 COLON-ALIGNED WIDGET-ID 154
+     f-valid-date AT ROW 8.46 COL 42.5 COLON-ALIGNED WIDGET-ID 156
+     f-cli-grp-code AT ROW 10.58 COL 72 COLON-ALIGNED WIDGET-ID 158
+     b-cli-grp AT ROW 10.58 COL 89.5 WIDGET-ID 166
      f-grp-name AT ROW 11.67 COL 2 NO-LABEL WIDGET-ID 160
-     f-category AT ROW 12.73 COL 43 COLON-ALIGNED WIDGET-ID 164
-     f-lim-cr AT ROW 13.8 COL 43 COLON-ALIGNED WIDGET-ID 162
+     f-category AT ROW 12.75 COL 43 COLON-ALIGNED WIDGET-ID 164
+     f-lim-cr AT ROW 13.79 COL 43 COLON-ALIGNED WIDGET-ID 162
      t-on-off AT ROW 15.67 COL 2 WIDGET-ID 180
      BR-rcp AT ROW 17 COL 1 WIDGET-ID 100
      RECT-1 AT ROW 2 COL 1.5 WIDGET-ID 182
-     SPACE(1.10) SKIP(7.66)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     SPACE(1.10) SKIP(7.68)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE ""
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -373,26 +373,26 @@ DEFINE FRAME Dialog-Frame
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-rcp t-on-off Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-ASSIGN
+ASSIGN 
        BR-rcp:HIDDEN  IN FRAME Dialog-Frame                = TRUE.
 
-ASSIGN
+ASSIGN 
        EDITOR-1:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-dis-tot-obj-name IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        f-dis-tot-obj-name:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-grp-name IN FRAME Dialog-Frame
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN f-issue-name IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        f-issue-name:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -417,7 +417,7 @@ BY term_tt-rule-call-param                                  .
 */  /* BROWSE BR-rcp */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -576,7 +576,7 @@ END.
 &Scoped-define BROWSE-NAME BR-rcp
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -669,7 +669,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -688,17 +688,17 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-issue-code EDITOR-1 f-issue-name f-dis-tot-obj-code
-          f-dis-tot-obj-name f-issue-date f-valid-date f-cli-grp-code f-grp-name
-          f-category f-lim-cr t-on-off
+  DISPLAY f-issue-code EDITOR-1 f-issue-name f-dis-tot-obj-code 
+          f-dis-tot-obj-name f-issue-date f-valid-date f-cli-grp-code f-grp-name 
+          f-category f-lim-cr t-on-off 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit RECT-1 b-quit B-Help f-issue-code b-issue-code EDITOR-1
-         f-dis-tot-obj-code b-dis-tot-obj-code f-issue-date f-valid-date
-         f-cli-grp-code b-cli-grp f-grp-name f-category f-lim-cr t-on-off
-         BR-rcp
+  ENABLE B-exit b-quit B-Help RECT-1 f-issue-code b-issue-code EDITOR-1 
+         f-dis-tot-obj-code b-dis-tot-obj-code f-issue-date f-valid-date 
+         f-cli-grp-code b-cli-grp f-grp-name f-category f-lim-cr t-on-off 
+         BR-rcp 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -707,7 +707,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 define variable v-list as character no-undo .
 define variable glog as logical no-undo .
@@ -1083,7 +1083,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 /*здесь делаем assig и свои свобсвтенные проверки*/
 define variable v-ii as integer   no-undo .
@@ -1364,3 +1364,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

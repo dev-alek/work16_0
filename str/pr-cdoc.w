@@ -200,7 +200,7 @@ buf_c-price-doc.is-del       COLUMN-LABEL "Удаление!переоценки"
 buf_c-price-doc.is-del-act   COLUMN-LABEL "Удаление!в стат. АКТ"
 buf_c-price-doc.rest-qnty
 buf_c-price-doc.rest-sale
-buf_c-price-doc.host-code  COLUMN-LABEL "Фирма"
+buf_c-price-doc.host-code FORMAT ">>>>>>>>>9" COLUMN-LABEL "Фирма"
 buf_c-price-doc.status_    COLUMN-LABEL "Статус"
 buf_c-price-doc.doc-date  FORMAT "99/99/99" COLUMN-LABEL "Дата!док-та"
 buf_c-price-doc.fact-date FORMAT "99/99/99" COLUMN-LABEL "Дата!факт"
