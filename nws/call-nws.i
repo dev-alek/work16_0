@@ -1265,6 +1265,10 @@ define variable v-custom-0-rdb-not-news-erprn as character no-undo initial
 ,trn-reason-host~
 ,trn-reason-obj~
 ,trn-rsn-attr~
+,pay-type~
+,pay-type-attr~
+,c-pay-type~
+,c-pay-type-attr~
 ":U.
 
 
