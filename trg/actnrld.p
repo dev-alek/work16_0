@@ -46,13 +46,15 @@ on end-key undo main-block, return error substitute('actnrld end-key main-block,
       :
       DELETE buf_user-login-action-role .
   END.
-  run nws/cmd-del.p
-    ( input {&table_action-role}
-      ,input (buffer ub.action-role:handle)
-      ,input "":U
-    ) no-error .
-  if error-status :error then do:
-    undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+  if not g#news then do:
+      run nws/cmd-del.p
+        ( input {&table_action-role}
+          ,input (buffer ub.action-role:handle)
+          ,input "":U
+        ) no-error .
+      if error-status :error then do:
+        undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+      end.
   end.
     if g#oxml = yes
     then do:

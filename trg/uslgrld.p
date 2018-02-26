@@ -35,6 +35,7 @@ do transaction
 on error   undo main-block, return error substitute('uslgrld error main-block,&1', return-value )
 on end-key undo main-block, return error substitute('uslgrld end-key main-block,&1', return-value )
 :
+if not g#news then do:
   run nws/cmd-del.p
     ( input {&table_user-login-action-role}
       ,input (buffer ub.user-login-action-role:handle)
@@ -43,6 +44,7 @@ on end-key undo main-block, return error substitute('uslgrld end-key main-block,
   if error-status :error then do:
     undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
   end.
+end.  
     if g#oxml = yes
     then do:
     run str/calloxml.p (

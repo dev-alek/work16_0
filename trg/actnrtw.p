@@ -35,6 +35,7 @@ do transaction
 on error   undo main-block, return error substitute('actnrtw error main-block,&1', return-value )
 on end-key undo main-block, return error substitute('actnrtw end-key main-block,&1', return-value )
 :
+if not g#news then do:
   run str/callnews.p
     (input {&table_action-role-item}
     ,input (buffer ub.action-role-item :handle)
@@ -42,6 +43,7 @@ on end-key undo main-block, return error substitute('actnrtw end-key main-block,
   if error-status:error then do:
     undo main-block,  return error return-value .
   end.
+end.  
     if g#oxml = yes
     then do:
     run str/calloxml.p (
