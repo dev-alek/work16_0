@@ -111,7 +111,7 @@ auto-tank.name auto-tank.brutto-qnty
     ~{&OPEN-QUERY-brw-auto-tank}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-view b-help brw-auto-tank ~
+&Scoped-Define ENABLED-OBJECTS b-exit b-view B-hist b-help brw-auto-tank ~
 brw-auto-tank-2 varps RS-status_ 
 &Scoped-Define DISPLAYED-OBJECTS varps 
 
@@ -152,6 +152,11 @@ DEFINE BUTTON b-exit AUTO-END-KEY
 
 DEFINE BUTTON b-help
      LABEL "&Помощь"
+     SIZE 10 BY 1
+     BGCOLOR 8 .
+
+DEFINE BUTTON B-hist
+     LABEL "Ис&тория"
      SIZE 10 BY 1
      BGCOLOR 8 .
 
@@ -223,6 +228,7 @@ DEFINE FRAME Dialog-Frame
      b-chg AT ROW 1 COL 32
      b-view AT ROW 1 COL 42
      b-del AT ROW 1 COL 52
+     b-hist at row 1 col 63
      b-help AT ROW 1 COL 68
      RS-status_ AT ROW 2 COL 2 NO-LABEL
      brw-auto-tank AT ROW 3.1 COL 2
@@ -381,6 +387,28 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-hist Dialog-Frame
+ON CHOOSE OF B-hist IN FRAME Dialog-Frame /* История */
+DO:
+  DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
+  IF AVAILABLE auto-tank THEN DO:
+
+  run str/c-auto-tn.w (
+                    INPUT parParentProc
+                   ,input '':U /*bttns*/
+                   ,input 'one':U /*p-mode*/
+                   ,INPUT auto-tank.auto-num
+                   ,INPUT-OUTPUT v-rid-list) NO-ERROR.
+
+  END.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 
 &Scoped-define SELF-NAME b-view
@@ -548,7 +576,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY varps 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-view b-help brw-auto-tank brw-auto-tank-2 varps RS-status_
+  ENABLE b-exit b-view b-hist b-help brw-auto-tank brw-auto-tank-2 varps RS-status_
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
