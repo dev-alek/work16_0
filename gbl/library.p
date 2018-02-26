@@ -11937,6 +11937,72 @@ procedure tblnmusr :
           p-user-name = 'СЗФП'
         .
       end.
+      when {&table_c-usr-hist}
+      then do:
+        assign
+          p-user-name = 'История пользователя'
+        .
+      end.
+      when {&table_cash-pay}
+      then do:
+        assign
+          p-user-name = 'Тип кассовых платежей'
+        .
+      end.
+      when {&table_cli-grp}
+      then do:
+        assign
+          p-user-name = 'Группа клиентов'
+        .
+      end.
+      when {&table_config}
+      then do:
+        assign
+          p-user-name = 'Конфигурация'
+        .
+      end.      
+      when {&table_dis-card}
+      then do:
+        assign
+          p-user-name = 'Дисконтная карта'
+        .
+      end.      
+      when {&table_dis-card-type}
+      then do:
+        assign
+          p-user-name = 'Тип дисконтной карты'
+        .
+      end.      
+      when {&table_fin-bank}
+      then do:
+        assign
+          p-user-name = 'Банк'
+        .
+      end.    
+      when {&table_gds-grp}
+      then do:
+        assign
+          p-user-name = 'Группа товаров'
+        .
+      end.  
+      when {&table_units}
+      then do:
+        assign
+          p-user-name = 'Единица измерения'
+        .
+      end.      
+      when {&table_auto-tank}
+      then do:
+        assign
+          p-user-name = 'Транспорт'
+        .
+      end.       
+      when {&table_sr-izmerenia}
+      then do:
+        assign
+          p-user-name = 'Средство измерения'
+        .
+      end.  
       otherwise do:
         assign
           p-user-name = p-table-name
