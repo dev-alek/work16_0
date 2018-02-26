@@ -1380,6 +1380,18 @@ on error undo, return error
                     PrintScale  = ( trim( buf_tmp#list.type-scale  ) = "+":U )
                     PrintRubl   = ( trim( buf_tmp#list.type-val    ) = "+":U )
                 .
+                run trg/userlog.p (
+                      input "printdoc":U
+                    , input substitute("&1&2&3&2&4&2&5",buf_tmp#list.blank-name,{&delim-key},temp_form-list.doc-code, buf_tmp#list.proc-param,
+                    string(print-graft) + ',' + string(no-vat) + ',' + string(print-graft) + ',' + string(sort-gr) + ',' + string(sort-name) + ',' + string(CostPrice) + ',' + string(PrintScale)  + ',' + string(PrintRubl))
+                    , input ?
+                    , input ?
+                    , input ""
+                ) no-error.
+                if error-status :error
+                then do:
+                    message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
+                end.  
                 case num-entries( buf_tmp#list.proc-param )
                 :
                     when 0

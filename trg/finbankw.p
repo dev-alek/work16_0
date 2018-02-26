@@ -37,73 +37,112 @@ define variable v-ttype as character no-undo.
 
 main-block:
 do
-  on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-  on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
-  on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
-  :
+    on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+    on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
+    on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
+    :
 
-  if not g#news then 
-  do:
-    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
-    if v-value = "no"  then 
-    do:   
-      find first buf_sysconf no-lock where
-        buf_sysconf.host-code = ub.fin-bank.host-code.
-      if buf_sysconf.firm-db-num <> g#db-num then 
-      do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Нельзя изменять запись БАНКОВСКОГО СЧЕТА в БД, отличной от главной БД фирмы" skip
-          "Номер текущей БД" g#db-num "Номер главной БД фирмы" buf_sysconf.firm-db-num
-          view-as alert-box error .
-        undo main-block, return error .
-      end.
-    end.
-  end.
-  buffer-compare old_fin-bank
-    to ub.fin-bank
-    case-sensitive
-    save result in v-cmp
-    .
-
-  if not g#news and v-cmp <> "":U then 
-  do:
-    run cur-time in this-procedure(output v-date, output v-time).
-    create buf_c-fin-bank.
-    buffer-copy old_fin-bank to buf_c-fin-bank
-      assign
-      buf_c-fin-bank.host-code          = ub.fin-bank.host-code
-      buf_c-fin-bank.code-bank          = ub.fin-bank.code-bank
-      buf_c-fin-bank.chip-num           = next-value (s-corr-chip, {&db-name_schema})
-      buf_c-fin-bank.corr-time          = v-time
-      buf_c-fin-bank.corr-user-db-num   = g#db-num
-      buf_c-fin-bank.corr-user-name     = g#userid
-      buf_c-fin-bank.corr-date          = v-date
-      .
-  end.
-  if v-cmp <> "":U then
-    run str/callnews.p
-      (input "fin-bank"
-      ,input (buffer ub.fin-bank:handle)
-      ).
-
-
-  if g#oxml = yes
-    then 
-  do:
-    run str/calloxml.p (
-      input {&nwsdochs_action_update}
-      , input {&table_fin-bank}
-      , input ( buffer ub.fin-bank:handle )
-      ) no-error.
-    if error-status :error
-      then 
+    if not g#news then 
     do:
-      undo, return error substitute( "&2&1Ошибка при отправке записи в систему OpenXML&1&3&1&4"
-        , {&new-line}
-        , vss-workfile
-        , return-value
-        , error-status :get-message ( 1 ) ).
+        run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-ttype) no-error.
+        if v-value = "no"  then 
+        do:   
+            find first buf_sysconf no-lock where
+                buf_sysconf.host-code = ub.fin-bank.host-code.
+            if buf_sysconf.firm-db-num <> g#db-num then 
+            do:
+                message
+                    vss-workfile vss-revision vss-description skip
+                    "Нельзя изменять запись БАНКОВСКОГО СЧЕТА в БД, отличной от главной БД фирмы" skip
+                    "Номер текущей БД" g#db-num "Номер главной БД фирмы" buf_sysconf.firm-db-num
+                    view-as alert-box error .
+                undo main-block, return error .
+            end.
+        end.
     end.
-  end.
+    buffer-compare old_fin-bank
+        to ub.fin-bank
+        case-sensitive
+        save result in v-cmp
+        .
+
+    if not g#news and v-cmp <> "":U then 
+    do:
+        run cur-time in this-procedure(output v-date, output v-time).
+        create buf_c-fin-bank.
+        buffer-copy old_fin-bank to buf_c-fin-bank
+            assign
+            buf_c-fin-bank.host-code          = ub.fin-bank.host-code
+            buf_c-fin-bank.code-bank          = ub.fin-bank.code-bank
+            buf_c-fin-bank.chip-num           = next-value (s-corr-chip, {&db-name_schema})
+            buf_c-fin-bank.corr-time          = v-time
+            buf_c-fin-bank.corr-user-db-num   = g#db-num
+            buf_c-fin-bank.corr-user-name     = g#userid
+            buf_c-fin-bank.corr-date          = v-date
+            .
+    end.
+    if v-cmp <> "":U then
+        run str/callnews.p
+            (input "fin-bank"
+            ,input (buffer ub.fin-bank:handle)
+            ).
+
+
+    if g#oxml = yes
+        then 
+    do:
+        run str/calloxml.p (
+            input {&nwsdochs_action_update}
+            , input {&table_fin-bank}
+            , input ( buffer ub.fin-bank:handle )
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при отправке записи в систему OpenXML&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+    end.
+    if new(ub.fin-bank) then 
+    do:   
+        run trg/userlog.p (
+            input {&nwsdochs_action_create}
+            , input {&table_fin-bank}
+            , input ( buffer ub.fin-bank :handle )
+            , input ?
+            , input ""
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+    end. 
+    else 
+    do:
+        run trg/userlog.p (
+            input {&nwsdochs_action_update}
+            , input {&table_fin-bank}
+            , input ( buffer ub.fin-bank :handle )
+            , input ?
+            , input ""
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+
+    end.      
 end.

@@ -89,3 +89,43 @@ define variable v-time      as integer   no-undo .
       ) .
     end.
   end.
+  
+  if new(buf_c-sr-izmerenia) then 
+    do:   
+        run trg/userlog.p (
+            input {&nwsdochs_action_create}
+            , input {&table_c-sr-izmerenia}
+            , input ( buffer buf_c-sr-izmerenia :handle )
+            , input ?
+            , input ""
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+    end. 
+    else 
+    do:
+        run trg/userlog.p (
+            input {&nwsdochs_action_update}
+            , input {&table_c-sr-izmerenia}
+            , input ( buffer buf_c-sr-izmerenia :handle )
+            , input ?
+            , input ""
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+
+    end.  

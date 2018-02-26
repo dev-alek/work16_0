@@ -35,24 +35,42 @@ define variable vss-description as character no-undo init "Триггер на запись ист
 /*маршрутизируется в кусте при закрытии смены на факт или в кусте c-sht-hist при удалении смены*/
 main-block:
 do
-on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
-on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
-:
+    on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+    on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
+    on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
+    :
     if g#oxml = yes
-    then do:
-    run str/calloxml.p (
-          input {&nwsdochs_action_update}
-        , input {&table_c-shift-staff}
-        , input ( buffer ub.c-shift-staff:handle )
-    ) no-error.
-    if error-status :error
-    then do:
-        undo, return error substitute( "&2&1Ошибка при отправке записи в систему OpenXML&1&3&1&4"
-                             , {&new-line}
-                             , vss-workfile
-                             , return-value
-                             , error-status :get-message ( 1 ) ).
+        then 
+    do:
+        run str/calloxml.p (
+            input {&nwsdochs_action_update}
+            , input {&table_c-shift-staff}
+            , input ( buffer ub.c-shift-staff:handle )
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при отправке записи в систему OpenXML&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
     end.
+    run trg/userlog.p (
+        input {&nwsdochs_action_update}
+        , input {&table_c-sht-hist}
+        , input ( buffer ub.c-shift-staff :handle )
+        , input ?
+        , input ""
+        ) no-error.
+    if error-status :error
+        then 
+    do:
+        undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+            , {&new-line}
+            , vss-workfile
+            , return-value
+            , error-status :get-message ( 1 ) ).
     end.
 end.

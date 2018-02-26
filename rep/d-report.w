@@ -245,6 +245,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK D-Dialog
 ON CHOOSE OF Btn_OK IN FRAME D-Dialog /* Выполнить */
 DO:
+
   if params-only then do:
      run proc-save-param-RUM in this-procedure no-error .
      if error-status :error then do:
@@ -252,6 +253,19 @@ DO:
      end.
   end.
   else do:
+    run trg/userlog.p (
+          input "report":U
+        , input namereport + {&delim-key} + procname 
+        , input ?
+        , input ?
+        , input ""
+    ) no-error.
+    if error-status :error
+    then do:
+        message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
+    end.    
+   
+
     run print-report in this-procedure no-error .
     if error-status :error
     then do:
