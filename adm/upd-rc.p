@@ -35,6 +35,7 @@ define variable v-pathrc         as character no-undo .
 define variable v-filename         as character no-undo .
 define variable v-fullfilename     as character no-undo .
 define variable v-filetype         as character no-undo .
+define variable v-copy-err         as logical no-undo .
 
 define variable v-delfile as char no-undo.
 define variable v-date   as date no-undo .
@@ -150,6 +151,74 @@ on error undo, return error
       end.
     end.
   end.  /*   if v-filetype begins "f" and  */
+  
+  /* Для кассы */
+  if v-filetype begins "f" and num-entries( v-filename, "." ) > 1
+  and ( v-filename begins "UFO-")
+  then do:
+      
+      os-command silent
+        value( "copy" )
+        value( v-fullfilename )
+        value( p0-pathrc )
+      .
+      if os-error <> 0 then do:
+        return error substitute("Невозможно скопировать файл &1 в каталог &2", v-fullfilename, p0-pathrc) .
+      end.
+      
+      if search (p0-pathrc + "/" + v-filename) = ?
+      then
+      v-copy-err = true .
+      
+      assign
+        file-info:file-name = p0-pathrc + "\ufo_update"
+      .
+      if file-info:file-type = ? then do:
+          os-create-dir value( p0-pathrc  + "\ufo_update" ). 
+          if os-error <> 0 then do:
+              return error string ( "Невозможно создать папку " + p0-pathrc  + "\ufo_update" ).
+          end.
+      end.
+      else do :
+          assign
+            file-info:file-name = p0-pathrc + "\ufo_update-old"
+          .
+          if file-info:file-type <> ? then do:
+              os-delete value ( p0-pathrc + "\ufo_update-old" ) recursive. 
+              if os-error <> 0 then do:
+                  os-rename  value ( p0-pathrc + "\ufo_update-old" ) value ( p0-pathrc + "\ufo_update-old1" ). 
+                  if os-error <> 0 then do:
+                      return error string ( "Невозможно удалить папку " + p0-pathrc + "\ufo_update-old, удалите ее сами" ).
+                  end.
+              end.
+          end.
+        
+          os-rename  value ( p0-pathrc + "\ufo_update" ) value ( p0-pathrc + "\ufo_update-old" ). 
+          if os-error <> 0 then do:
+              return error string(( "Невозможно переименовать папку " + p0-pathrc + "\ufo_update для сохранности" )).
+          end.
+          os-create-dir value( p0-pathrc  + "\ufo_update" ). /* создаем rc */
+          if os-error <> 0 then do:
+              os-rename  value ( p0-pathrc  + "\ufo_update-old") value ( p0-pathrc  + "\ufo_update" ). /* переименовываем rc-old в rc при ошибке создания  rc*/
+              return error string ( "Невозможно создать папку " + p0-pathrc  + "\ufo_update" ).
+          end.
+      end. 
+      
+      if not v-copy-err
+      then do :
+        v-txt = p0-pathrc + "\rc\exe\7z.exe" + " x -y -o" + p0-pathrc + "\ufo_update " +  p0-pathrc + "/" + v-filename.   
+      end.
+      else do :
+        FILE-INFO:FILE-NAME = ".".
+        v-txt = v-pathrc + "\exe\7z.exe" + " x -y -o" + p0-pathrc + "\ufo_update " +  FILE-INFO:FULL-PATHNAME + "/" + v-filename.  
+      end.
+      
+      os-command silent value ( v-txt ) .
+      
+      v-pathrc = search( p0-source-dir + "/" + v-filename ).
+      os-delete value ( v-pathrc ) recursive.
+      
+  end.    
 end.  /*  repeat  on error undo   */
 input stream flstream close.
 

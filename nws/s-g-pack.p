@@ -32,7 +32,7 @@ def var vss-description as character no-undo init "отправка и прием пакета новос
 { cmp/str-glbl.i }
 { adm/auto-def.i }
 
-&scop condition-upd-file ~{&cur-file-name~} BEGINS "RC_":U or ~{&cur-file-name~} BEGINS "update_":U
+&scop condition-upd-file ~{&cur-file-name~} BEGINS "RC_":U or ~{&cur-file-name~} BEGINS "update_":U or ~{&cur-file-name~} BEGINS "UFO-":U
 
 do
 on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
