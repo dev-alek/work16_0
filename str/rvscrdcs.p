@@ -401,16 +401,50 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         and buf_goods.prod-code = buf_doc-line.prod-code
     on error undo block_cre-inv, retry block_cre-inv
     :
+      
+      K1 = K1-all.
+      
+      find first buf_rvs-line no-lock
+        where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+          and buf_goods.gds-code = buf_rvs-line.gds-code no-error.
+      find first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "delta-mass-qnty" no-lock no-error.
+      
+      if available (buf_rvs-line-attr)
+      then do:
+        decimal (buf_rvs-line-attr.attr-value) no-error.
+        if not error-status:error
+        then do: 
+        if not decimal (buf_rvs-line-attr.attr-value) = 0
+          then K1 = decimal (buf_rvs-line-attr.attr-value) no-error.
+        end.
+      end.
+      
       run gds-o-normal-wastage-value in this-procedure
                         ( input buf_goods.gds-code
                          , input buf_trn-doc.obj-type
-                         , input buf_trn-doc.obj-type
+                         , input buf_trn-doc.obj-code
                          , input if buf_trn-doc.fact-date <> ? then buf_trn-doc.fact-date else buf_trn-doc.doc-date
                          , output v-normal-wastage-winter
                          , output v-normal-wastage-summer
                          , output v-normal-wastage
                         ) no-error.
 
+      if error-status:error
+      then do:
+        message
+          "ОШИБКА при определние нормы естественной убыли." skip
+          "По строке товара : " buf_goods.artic " " buf_goods.prod-type " " buf_goods.prod-code " " buf_goods.gds-name skip
+          "на объекте: " buf_trn-doc.obj-type " " buf_trn-doc.obj-code
+          skip
+          view-as alert-box error.
+        undo block_cre-inv, retry block_cre-inv.
+      end.
+      
       if v-normal-wastage = ? then do:
         assign
           K2 = 0.0
