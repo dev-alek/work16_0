@@ -1561,6 +1561,7 @@ define input parameter p-sum-all-parts          as decimal          no-undo.
     define buffer buf_doc-line              for ub.doc-line.
     define buffer buf_parts                 for ub.parts.
     define buffer buf_parts-attr            for ub.parts-attr.
+    define buffer buf_parts-root            for parts-root.
     define buffer buf_doc-line-sum          for ub.doc-line-sum.
     define buffer buf_inkas                 for ub.inkas.
     define buffer buf_units                 for ub.units.
@@ -1584,6 +1585,7 @@ for buf_ot-tot-sale
   , buf_doc-line
   , buf_parts
   , buf_parts-attr
+  , buf_parts-root
   , buf_doc-line-sum
   , buf_inkas
   , buf_units
@@ -2109,6 +2111,16 @@ on endkey undo, return error return-value
                 , input buf_goods.gds-code
             ).
             run wp-xmltagput( 4, "good",      string( buf_goods.gds-code )    , 0 ).
+            if p-ext-doc-type = {&TDEDT_Peresort}
+            then do :
+              find first buf_parts-root no-lock where buf_parts-root.doc-code = p-doc-code
+                                                  and buf_parts-root.gds-code = buf_goods.gds-code
+                                                  no-error .
+              if available buf_parts-root
+              and buf_parts-root.orig-gds-code > 0
+              then 
+              run wp-xmltagput( 4, "orig-gds-code",      string( buf_parts-root.orig-gds-code ), 0 ).                                    
+            end.
             run wp-xmltagput( 4, "artic",     string( buf_goods.artic    )    , 0 ).
             run wp-xmltagput( 4, "prodtype",  string( buf_goods.prod-type)    , 0 ).
             run wp-xmltagput( 4, "prodcode",  string( buf_goods.prod-code)    , 0 ).
