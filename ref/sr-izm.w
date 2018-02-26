@@ -163,7 +163,7 @@ with FRAME {&FRAME-NAME}
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-quit b-add b-cng b-del b-sel B-Help BR-sr-izm
+&Scoped-Define ENABLED-OBJECTS b-quit b-add b-cng b-del b-sel B-hist B-Help BR-sr-izm
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -205,6 +205,10 @@ DEFINE BUTTON B-Help
      LABEL "Помо&щь"
      SIZE 3 BY 1
      BGCOLOR 8 .
+
+DEFINE BUTTON B-hist
+     LABEL "Ис&тория"
+     SIZE 3 BY 1.
 
 DEFINE BUTTON b-ok
      LABEL "&Ввод"
@@ -249,6 +253,7 @@ DEFINE FRAME Dialog-Frame
      b-add AT ROW 1 COL 45 WIDGET-ID 14
      b-cng AT ROW 1 COL 55 WIDGET-ID 4
      b-del AT ROW 1 COL 65 WIDGET-ID 22
+     B-hist AT ROW 1 COL 137
      B-Help AT ROW 1 COL 140.5
      BR-sr-izm AT ROW 4.25 COL 1.5 WIDGET-ID 200
      b-ok AT ROW 18 COL 78 WIDGET-ID 30
@@ -387,6 +392,29 @@ DO:
   else p-node-code = ? .
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
   apply "choose" to b-quit .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-hist Dialog-Frame
+ON CHOOSE OF B-hist IN FRAME Dialog-Frame /* История */
+DO:
+  DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
+  IF AVAILABLE sr-izmerenia THEN DO:
+
+  run ref/csr-izm.w (
+                    INPUT parParentProc
+                   ,input '':U /*bttns*/
+                   ,input 'one':U /*p-mode*/
+                   ,input /* X_wth-place.obj-type */ ''
+                   ,input /* X_wth-place.obj-code */ 0
+                   ,INPUT sr-izmerenia.node-code
+                   ,INPUT-OUTPUT v-rid-list) NO-ERROR.
+
+  END.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -540,7 +568,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-quit b-sel b-add b-cng b-del B-Help
+  ENABLE b-quit b-sel b-add b-cng b-del B-hist B-Help
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -574,6 +602,7 @@ br-sr-izm
 b-add WHEN v-edit-mode
 b-cng WHEN v-edit-mode
 b-del WHEN v-edit-mode
+b-hist
 b-help
 b-quit
 b-sel when not v-edit-mode
