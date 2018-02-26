@@ -1,10 +1,10 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v9r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -115,7 +115,7 @@ define variable v-report-name-html-list   as CHARACTER            no-undo .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -131,8 +131,8 @@ define variable v-report-name-html-list   as CHARACTER            no-undo .
 temp_filter-fields
 
 /* Definitions for BROWSE br-login                                      */
-&Scoped-define FIELDS-IN-QUERY-br-login buf_init_user-login.db-num buf_init_user-login.user-login buf_init_user-login.max-discnt
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-login
+&Scoped-define FIELDS-IN-QUERY-br-login buf_init_user-login.db-num buf_init_user-login.user-login buf_init_user-login.max-discnt   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-login   
 &Scoped-define SELF-NAME br-login
 &Scoped-define OPEN-QUERY-br-login /* OPEN QUERY {&SELF-NAME} FOR EACH buf_init_user-login NO-LOCK INDEXED-REPOSITION. */ run open-query-login in this-procedure.
 &Scoped-define TABLES-IN-QUERY-br-login buf_init_user-login
@@ -140,8 +140,8 @@ temp_filter-fields
 
 
 /* Definitions for BROWSE br-user                                       */
-&Scoped-define FIELDS-IN-QUERY-br-user buf_init_user-account.nik buf_init_user-account.last-name buf_init_user-account.first-name get-user-login( buf_init_user-account.user-id ) @ v-users-user-login buf_init_user-account.user-id /* get-work-status(buf_init_user-account.user-id) @ v-users-work-status */ get-person-name( buf_init_user-account.psn-code )
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-user
+&Scoped-define FIELDS-IN-QUERY-br-user buf_init_user-account.nik buf_init_user-account.last-name buf_init_user-account.first-name get-user-login( buf_init_user-account.user-id ) @ v-users-user-login buf_init_user-account.user-id /* get-work-status(buf_init_user-account.user-id) @ v-users-work-status */ get-person-name( buf_init_user-account.psn-code )   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-user   
 &Scoped-define SELF-NAME br-user
 &Scoped-define OPEN-QUERY-br-user /* OPEN QUERY {&SELF-NAME} FOR EACH buf_init_user-account NO-LOCK, ~
        first temp_filter-fields INDEXED-REPOSITION. */ run open-query in this-procedure ( input this-procedure ).
@@ -158,11 +158,11 @@ temp_filter-fields
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit cb-db b-filter fi-filter-comment ~
-b-help tb-filter b-print rs-scope b-add b-chg b-dup b-del b-userhist ~
-b-add-2 b-chg-2 b-del-2 bt-password br-user br-login bt-object bt-firm ~
-bt-role bt-menu ed-login-object ed-user-info
+tb-filter b-print b-help rs-scope b-add b-chg b-dup b-del b-userhist ~
+b-hist-user b-add-2 b-chg-2 b-del-2 bt-password br-user br-login bt-object ~
+bt-firm bt-role bt-menu ed-login-object ed-user-info 
 &Scoped-Define DISPLAYED-OBJECTS cb-db fi-filter-comment tb-filter rs-scope ~
-ed-login-object ed-user-info
+ed-login-object ed-user-info 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -173,21 +173,21 @@ ed-login-object ed-user-info
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-person-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-person-name Dialog-Frame 
 FUNCTION get-person-name RETURNS CHARACTER
   ( p-psn-code as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-user-login Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-user-login Dialog-Frame 
 FUNCTION get-user-login RETURNS CHARACTER
   ( p-user-id as character )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-work-status Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-work-status Dialog-Frame 
 FUNCTION get-work-status RETURNS CHARACTER
   ( p-user-id as character )  FORWARD.
 
@@ -206,118 +206,122 @@ DEFINE MENU POPUP-MENU-b-print
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить"
+DEFINE BUTTON b-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-add-2
-     LABEL "&Добавить"
+DEFINE BUTTON b-add-2 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg-2
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg-2 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-del
-     LABEL "&Удалить"
+DEFINE BUTTON b-del 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-del-2
-     LABEL "&Удалить"
+DEFINE BUTTON b-del-2 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-dup
-     LABEL "&Копия"
+DEFINE BUTTON b-dup 
+     LABEL "&Копия" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "В&ыход"
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "В&ыход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-filter
-     LABEL "Ф&Поиск"
+DEFINE BUTTON b-filter 
+     LABEL "Ф&Поиск" 
      SIZE 10 BY 1 TOOLTIP "Поиск с фильтрацией по фамилии, имени пользователя, псевдониму и логину".
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-print
-     LABEL "Печать"
+DEFINE BUTTON b-hist-user 
+     LABEL "Печать" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-userhist
-     LABEL "&История"
+DEFINE BUTTON b-print 
+     LABEL "Печать" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON b-userhist 
+     LABEL "&История" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON bt-firm
-     LABEL "Фирмы"
+DEFINE BUTTON bt-firm 
+     LABEL "Фирмы" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON bt-menu
-     LABEL "Меню"
+DEFINE BUTTON bt-menu 
+     LABEL "Меню" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON bt-object
-     LABEL "Объекты"
+DEFINE BUTTON bt-object 
+     LABEL "Объекты" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON bt-password
-     LABEL "&Пароль"
+DEFINE BUTTON bt-password 
+     LABEL "&Пароль" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON bt-role
-     LABEL "Права"
+DEFINE BUTTON bt-role 
+     LABEL "Права" 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE cb-db AS INTEGER FORMAT "->>>>9":U INITIAL -1
-     LABEL "БД"
+DEFINE VARIABLE cb-db AS INTEGER FORMAT "->>>>9":U INITIAL -1 
+     LABEL "БД" 
      VIEW-AS COMBO-BOX INNER-LINES 15
      LIST-ITEM-PAIRS "0",1
      DROP-DOWN-LIST
      SIZE 20 BY 1 TOOLTIP "База данных, в которой у пользователя есть логин" NO-UNDO.
 
-DEFINE VARIABLE ed-login-object AS CHARACTER
+DEFINE VARIABLE ed-login-object AS CHARACTER 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-VERTICAL
      SIZE 40 BY 12.25
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE ed-user-info AS CHARACTER
+DEFINE VARIABLE ed-user-info AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 56.5 BY 3.5
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-filter-comment AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE fi-filter-comment AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 24.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE rs-scope AS INTEGER
+DEFINE VARIABLE rs-scope AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Тек", 1,
 "Все", 2,
 "Удал", 3
      SIZE 18 BY .75
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE tb-filter AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE tb-filter AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 2.63 BY .79 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY br-login FOR
+DEFINE QUERY br-login FOR 
       buf_init_user-login SCROLLING.
 
-DEFINE QUERY br-user FOR
-      buf_init_user-account,
+DEFINE QUERY br-user FOR 
+      buf_init_user-account, 
       temp_filter-fields SCROLLING.
 &ANALYZE-RESUME
 
@@ -354,8 +358,7 @@ DEFINE FRAME Dialog-Frame
      b-exit AT ROW 1 COL 1.5
      cb-db AT ROW 1 COL 14.5 COLON-ALIGNED WIDGET-ID 40
      b-filter AT ROW 1 COL 56.5 WIDGET-ID 26
-     fi-filter-comment AT ROW 1 COL 65 COLON-ALIGNED NO-LABEL WIDGET-ID 20 NO-TAB-STOP
-     b-help AT ROW 1 COL 89.5
+     fi-filter-comment AT ROW 1 COL 65 COLON-ALIGNED NO-LABEL WIDGET-ID 20 NO-TAB-STOP 
      tb-filter AT ROW 1 COL 92 WIDGET-ID 60
      b-print AT ROW 1 COL 93.5 WIDGET-ID 62
      b-help AT ROW 1 COL 96.5
@@ -365,6 +368,7 @@ DEFINE FRAME Dialog-Frame
      b-dup AT ROW 2.25 COL 21.5 WIDGET-ID 58
      b-del AT ROW 2.25 COL 31.5 WIDGET-ID 6
      b-userhist AT ROW 2.25 COL 41.5 WIDGET-ID 62
+     b-hist-user AT ROW 2.25 COL 51.5 WIDGET-ID 64
      b-add-2 AT ROW 2.25 COL 58.5 WIDGET-ID 28
      b-chg-2 AT ROW 2.25 COL 68.5 WIDGET-ID 30
      b-del-2 AT ROW 2.25 COL 78.5 WIDGET-ID 32
@@ -378,8 +382,8 @@ DEFINE FRAME Dialog-Frame
      ed-login-object AT ROW 11.25 COL 58.5 NO-LABEL WIDGET-ID 36
      ed-user-info AT ROW 20 COL 1.5 NO-LABEL WIDGET-ID 34
      SPACE(41.87) SKIP(0.12)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Пользователи"
          DEFAULT-BUTTON b-exit WIDGET-ID 100.
 
@@ -402,21 +406,21 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-user bt-password Dialog-Frame */
 /* BROWSE-TAB br-login br-user Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+
 ASSIGN 
        b-print:POPUP-MENU IN FRAME Dialog-Frame       = MENU POPUP-MENU-b-print:HANDLE.
-ASSIGN b-print :MENU-MOUSE = 1.
 
-ASSIGN
+ASSIGN 
        ed-login-object:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
-ASSIGN
+ASSIGN 
        ed-user-info:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
-ASSIGN
+ASSIGN 
        fi-filter-comment:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -447,7 +451,7 @@ run open-query in this-procedure ( input this-procedure ).
 */  /* BROWSE br-user */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -1057,6 +1061,23 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-hist-user
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist-user Dialog-Frame
+ON CHOOSE OF b-hist-user IN FRAME Dialog-Frame /* Печать */
+DO:
+  if available buf_init_user-account
+    then do:
+run str\cusrhist.w (
+                input parparentproc,
+                input buf_init_user-account.user-id) no-error.
+    end.  
+END.
+
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-print
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
 ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
@@ -1372,6 +1393,7 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &Scoped-define SELF-NAME cb-db
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-db Dialog-Frame
 ON VALUE-CHANGED OF cb-db IN FRAME Dialog-Frame /* БД */
@@ -1408,27 +1430,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME m_b-print-prava
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-print-prava Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_b-print-prava /* Список прав пользователя*/
-DO:
-  
-        run get-report-num in parParentProc (
-            output p-report-id
-        ).
-
-  v-report-name-html = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
-    
-    run PROC-print-prava in this-procedure.
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 &Scoped-define SELF-NAME m_b-print-list
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-print-list Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_b-print-list /* Список */
+ON CHOOSE OF MENU-ITEM m_b-print-list /* Список пользователей */
 DO:
   
         run get-report-num in parParentProc (
@@ -1438,6 +1442,25 @@ DO:
   v-report-name-html-list = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
     
     run PROC-print-list in this-procedure.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME m_b-print-prava
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-print-prava Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_b-print-prava /* Список прав пользователей */
+DO:
+  
+        run get-report-num in parParentProc (
+            output p-report-id
+        ).
+
+  v-report-name-html = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
+    
+    run PROC-print-prava in this-procedure.
 
 END.
 
@@ -1457,7 +1480,6 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
 
 &Scoped-define SELF-NAME rs-scope
@@ -1532,7 +1554,7 @@ END.
 &Scoped-define BROWSE-NAME br-login
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -1604,7 +1626,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-field-filter-mark Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE assign-field-filter-mark Dialog-Frame 
 PROCEDURE assign-field-filter-mark :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1658,7 +1680,7 @@ END PROCEDURE. /* assign-field-filter-mark */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE can-edit-login Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE can-edit-login Dialog-Frame 
 PROCEDURE can-edit-login :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1704,7 +1726,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -1715,7 +1737,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE duplicate-user Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE duplicate-user Dialog-Frame 
 PROCEDURE duplicate-user :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1979,16 +2001,16 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY cb-db fi-filter-comment tb-filter rs-scope ed-login-object
-          ed-user-info
+  DISPLAY cb-db fi-filter-comment tb-filter rs-scope ed-login-object 
+          ed-user-info 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit cb-db b-filter fi-filter-comment b-help tb-filter b-print
-         rs-scope b-add b-chg b-dup b-del b-userhist b-add-2 b-chg-2 b-del-2
-         bt-password br-user br-login bt-object bt-firm bt-role bt-menu
-         ed-login-object ed-user-info
+  ENABLE b-exit cb-db b-filter fi-filter-comment tb-filter b-print b-help 
+         rs-scope b-add b-chg b-dup b-del b-userhist b-hist-user b-add-2 
+         b-chg-2 b-del-2 bt-password br-user br-login bt-object bt-firm bt-role 
+         bt-menu ed-login-object ed-user-info 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1997,7 +2019,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-new-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-new-name Dialog-Frame 
 PROCEDURE get-new-name :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2225,7 +2247,7 @@ END PROCEDURE. /* get-saved-position */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-user-fields Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-user-fields Dialog-Frame 
 PROCEDURE get-user-fields :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2293,7 +2315,7 @@ END PROCEDURE. /* get-user-fields */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame 
 PROCEDURE init-fields :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2371,7 +2393,7 @@ END PROCEDURE. /* init-fields */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-fields Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-fields Dialog-Frame 
 PROCEDURE manage-fields :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2470,7 +2492,7 @@ END PROCEDURE. /* manage-fields */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-fields-login Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-fields-login Dialog-Frame 
 PROCEDURE manage-fields-login :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2728,7 +2750,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE open-query Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE open-query Dialog-Frame 
 PROCEDURE open-query :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2826,7 +2848,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE open-query-login Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE open-query-login Dialog-Frame 
 PROCEDURE open-query-login :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2853,6 +2875,100 @@ on error undo, return error
     end.
 end.
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE person-user Dialog-Frame 
+PROCEDURE person-user :
+/*------------------------------------------------------------------------------
+Purpose:
+Parameters:  <none>
+Notes:
+------------------------------------------------------------------------------*/
+define input parameter  p-rec-user-account as recid            no-undo.
+define output parameter p-ok               as logical          no-undo.
+
+do
+on error undo, return error
+:
+   define buffer buf_user-account      for ub.user-account .
+   define buffer buf_clients     for ub.clients .
+
+   define variable recid-person as character no-undo.
+   FIND FIRST buf_user-account
+        WHERE RECID(buf_user-account) = p-rec-user-account
+        NO-LOCK
+        .
+
+   IF AVAILABLE buf_user-account
+   AND buf_user-account.psn-code <> 0
+   AND buf_user-account.psn-code <> ?
+   THEN DO:
+      FIND FIRST buf_clients
+           WHERE buf_clients.obj-code = buf_user-account.psn-code
+             and buf_clients.obj-type = {&prs}
+           no-lock
+           no-error
+           .
+      IF AVAILABLE buf_clients
+      THEN DO:
+         ASSIGN
+           recid-person = string( recid( buf_clients ) )
+         .
+      END.
+   END.
+
+   run ref/cli-all.w ( input parparentproc
+                     , input "b-sel"
+                     , input {&prs}
+                     , input {&all}
+                     , input {&current}
+                     , input ?
+                     , input ",,,,,,NO,,"
+                     , input "lock-cli-type":U
+                     , output recid-person
+                     ) .
+   IF recid-person <> "":U
+   THEN DO:
+      FIND FIRST buf_clients
+           WHERE RECID(buf_clients) = INTEGER(ENTRY(1, recid-person))
+           no-lock
+           no-error
+           .
+      IF AVAILABLE buf_clients
+      AND buf_user-account.psn-code <> buf_clients.obj-code
+      THEN DO TRANSACTION:
+         FIND CURRENT buf_user-account
+              EXCLUSIVE-LOCK
+              .
+         ASSIGN
+            buf_user-account.psn-code = buf_clients.obj-code
+            p-ok = yes
+         .
+         FIND CURRENT buf_user-account
+              NO-LOCK
+              .
+      END.  /* TRANSACTION */
+   END.
+   ELSE DO:
+      IF buf_user-account.psn-code <> ?
+      THEN DO TRANSACTION:
+         FIND CURRENT buf_user-account
+              EXCLUSIVE-LOCK
+              .
+         ASSIGN
+            buf_user-account.psn-code = ?
+            p-ok = yes
+         .
+         FIND CURRENT buf_user-account
+              NO-LOCK
+              .
+      END. /* TRANSACTION */
+   END.
+   RELEASE buf_user-account.
+end.  /* do on error */
+END PROCEDURE. /* person-user */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -3352,137 +3468,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-user-login Dialog-Frame 
-PROCEDURE procedure-get-user-login :
-/* -----------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
--------------------------------------------------------------*/
-define input  parameter p-user-id    as character no-undo .
-define output parameter p-user-login as character no-undo .
-
-    define buffer buf_user-login for ub.user-login .
-do
-for buf_user-login
-on error undo, return error return-value
-:
-    assign
-        p-user-login = "":U
-    .
-
-    for each buf_user-login no-lock
-       where buf_user-login.user-id = p-user-id
-    by buf_user-login.db-num
-    :
-        assign
-            p-user-login = substitute( "&1&2&3"
-                                , p-user-login
-                                , ( if p-user-login = "":U then "":U else ",":U )
-                                , buf_user-login.db-num )
-        .
-    end.
-end.
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE person-user Dialog-Frame
-PROCEDURE person-user :
-/*------------------------------------------------------------------------------
-Purpose:
-Parameters:  <none>
-Notes:
-------------------------------------------------------------------------------*/
-define input parameter  p-rec-user-account as recid            no-undo.
-define output parameter p-ok               as logical          no-undo.
-
-do
-on error undo, return error
-:
-   define buffer buf_user-account      for ub.user-account .
-   define buffer buf_clients     for ub.clients .
-
-   define variable recid-person as character no-undo.
-   FIND FIRST buf_user-account
-        WHERE RECID(buf_user-account) = p-rec-user-account
-        NO-LOCK
-        .
-
-   IF AVAILABLE buf_user-account
-   AND buf_user-account.psn-code <> 0
-   AND buf_user-account.psn-code <> ?
-   THEN DO:
-      FIND FIRST buf_clients
-           WHERE buf_clients.obj-code = buf_user-account.psn-code
-             and buf_clients.obj-type = {&prs}
-           no-lock
-           no-error
-           .
-      IF AVAILABLE buf_clients
-      THEN DO:
-         ASSIGN
-           recid-person = string( recid( buf_clients ) )
-         .
-      END.
-   END.
-
-   run ref/cli-all.w ( input parparentproc
-                     , input "b-sel"
-                     , input {&prs}
-                     , input {&all}
-                     , input {&current}
-                     , input ?
-                     , input ",,,,,,NO,,"
-                     , input "lock-cli-type":U
-                     , output recid-person
-                     ) .
-   IF recid-person <> "":U
-   THEN DO:
-      FIND FIRST buf_clients
-           WHERE RECID(buf_clients) = INTEGER(ENTRY(1, recid-person))
-           no-lock
-           no-error
-           .
-      IF AVAILABLE buf_clients
-      AND buf_user-account.psn-code <> buf_clients.obj-code
-      THEN DO TRANSACTION:
-         FIND CURRENT buf_user-account
-              EXCLUSIVE-LOCK
-              .
-         ASSIGN
-            buf_user-account.psn-code = buf_clients.obj-code
-            p-ok = yes
-         .
-         FIND CURRENT buf_user-account
-              NO-LOCK
-              .
-      END.  /* TRANSACTION */
-   END.
-   ELSE DO:
-      IF buf_user-account.psn-code <> ?
-      THEN DO TRANSACTION:
-         FIND CURRENT buf_user-account
-              EXCLUSIVE-LOCK
-              .
-         ASSIGN
-            buf_user-account.psn-code = ?
-            p-ok = yes
-         .
-         FIND CURRENT buf_user-account
-              NO-LOCK
-              .
-      END. /* TRANSACTION */
-   END.
-   RELEASE buf_user-account.
-end.  /* do on error */
-END PROCEDURE. /* person-user */
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-person-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-person-name Dialog-Frame 
 PROCEDURE procedure-get-person-name :
 /* -----------------------------------------------------------
   Purpose:
@@ -3544,8 +3530,43 @@ END PROCEDURE.  /* procedure-get-person-name */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-user-login Dialog-Frame 
+PROCEDURE procedure-get-user-login :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+define input  parameter p-user-id    as character no-undo .
+define output parameter p-user-login as character no-undo .
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-work-status Dialog-Frame
+    define buffer buf_user-login for ub.user-login .
+do
+for buf_user-login
+on error undo, return error return-value
+:
+    assign
+        p-user-login = "":U
+    .
+
+    for each buf_user-login no-lock
+       where buf_user-login.user-id = p-user-id
+    by buf_user-login.db-num
+    :
+        assign
+            p-user-login = substitute( "&1&2&3"
+                                , p-user-login
+                                , ( if p-user-login = "":U then "":U else ",":U )
+                                , buf_user-login.db-num )
+        .
+    end.
+end.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-work-status Dialog-Frame 
 PROCEDURE procedure-get-work-status :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3597,7 +3618,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-action-role Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-action-role Dialog-Frame 
 PROCEDURE procedure-user-login-action-role :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3646,7 +3667,7 @@ END PROCEDURE. /* procedure-user-login-action-role */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-change-password Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-change-password Dialog-Frame 
 PROCEDURE procedure-user-login-change-password :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3746,7 +3767,7 @@ END PROCEDURE. /* procedure-user-login-change-password */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-create Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-create Dialog-Frame 
 PROCEDURE procedure-user-login-create :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3854,7 +3875,7 @@ END PROCEDURE. /* procedure-user-login-create */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-delete Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-delete Dialog-Frame 
 PROCEDURE procedure-user-login-delete :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3978,7 +3999,7 @@ END PROCEDURE. /* procedure-user-login-delete */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-edit Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-edit Dialog-Frame 
 PROCEDURE procedure-user-login-edit :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4101,7 +4122,7 @@ END PROCEDURE. /* procedure-user-login-edit */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-menu-group Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-menu-group Dialog-Frame 
 PROCEDURE procedure-user-login-menu-group :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4207,7 +4228,7 @@ END PROCEDURE. /* procedure-user-login-menu-group */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-user-host Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-user-host Dialog-Frame 
 PROCEDURE procedure-user-login-user-host :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4242,7 +4263,7 @@ END PROCEDURE. /* procedure-user-login-user-host */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-user-obj Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-user-obj Dialog-Frame 
 PROCEDURE procedure-user-login-user-obj :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4277,7 +4298,7 @@ END PROCEDURE. /* procedure-user-login-user-obj */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-position Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-position Dialog-Frame 
 PROCEDURE save-position :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4324,10 +4345,9 @@ END PROCEDURE. /* save-position */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-person-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-person-name Dialog-Frame 
 FUNCTION get-person-name RETURNS CHARACTER
   ( p-psn-code as integer ) :
 /*------------------------------------------------------------------------------
@@ -4348,7 +4368,7 @@ END FUNCTION. /* get-person-name */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-user-login Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-user-login Dialog-Frame 
 FUNCTION get-user-login RETURNS CHARACTER
   ( p-user-id as character ) :
 /*------------------------------------------------------------------------------
@@ -4369,7 +4389,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-work-status Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-work-status Dialog-Frame 
 FUNCTION get-work-status RETURNS CHARACTER
   ( p-user-id as character ) :
 /*------------------------------------------------------------------------------
@@ -4389,3 +4409,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

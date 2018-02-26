@@ -32,32 +32,62 @@ define variable vss-description as character no-undo init "Триггер на запись таб
 
 main-block:
 do transaction
-on error   undo main-block, return error substitute('uslgrlw error main-block,&1', return-value )
-on end-key undo main-block, return error substitute('uslgrlw end-key main-block,&1', return-value )
-:
-  if not g#news then do:
-  run str/callnews.p
-    (input {&table_user-login-action-role}
-    ,input (buffer ub.user-login-action-role :handle)
-    ) no-error .
-  if error-status:error then do:
-    undo main-block,  return error return-value .
-  end.
-  end.
-    if g#oxml = yes
-    then do:
-    run str/calloxml.p (
-          input {&nwsdochs_action_update}
-        , input {&table_user-login-action-role}
-        , input ( buffer ub.user-login-action-role:handle )
-    ) no-error.
-    if error-status :error
-    then do:
-        undo, return error substitute( "&2&1Ошибка при отправке записи в систему OpenXML&1&3&1&4"
-                             , {&new-line}
-                             , vss-workfile
-                             , return-value
-                             , error-status :get-message ( 1 ) ).
+    on error   undo main-block, return error substitute('uslgrlw error main-block,&1', return-value )
+    on end-key undo main-block, return error substitute('uslgrlw end-key main-block,&1', return-value )
+    :
+    if not g#news then 
+    do:
+        run str/callnews.p
+            (input {&table_user-login-action-role}
+            ,input (buffer ub.user-login-action-role :handle)
+            ) no-error .
+        if error-status:error then 
+        do:
+            undo main-block,  return error return-value .
+        end.
     end.
+    if g#oxml = yes
+        then 
+    do:
+        run str/calloxml.p (
+            input {&nwsdochs_action_update}
+            , input {&table_user-login-action-role}
+            , input ( buffer ub.user-login-action-role:handle )
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при отправке записи в систему OpenXML&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+    end.
+    define BUFFER buf_action-role for ub.action-role .
+      
+    For FIRST buf_action-role
+        WHERE buf_action-role.db-num                      = ub.user-login-action-role.db-num
+        AND buf_action-role.action-head-code            = {&action-head-code-main}
+        AND buf_action-role.action-role-code            = ub.user-login-action-role.action-role-code
+        NO-LOCK
+        :
+           
+        run trg/userhist.p ( 
+            input integer({&hn-create})
+            ,input {&table_user-login-action-role}
+            ,input string(ub.user-login-action-role.action-role-context + " " + string(buf_action-role.action-role-name) + " " + string(ub.user-login-action-role.obj-type) + " " + string(ub.user-login-action-role.obj-code))
+            ,input ub.user-login-action-role.user-id
+            ) no-error .
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при отправке записи в user-hist &1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
     end.
 end.
+
