@@ -30,7 +30,7 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
   
   define temp-table tt-fin-doc like ub.c-fin-doc .
   define temp-table tt-fin-doc-tax like ub.c-fin-doc-tax .
-
+  
   define property Msg as character no-undo
     get.
     private set.
@@ -114,6 +114,9 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
       sw:write-data-element ("contr-code", string-mth(tt-fin-doc.receiver-code)).
     end.    
     sw:write-data-element ("doc-osn", if tt-fin-doc.naznach-plat = ? then "" else string(tt-fin-doc.naznach-plat)).
+    sw:write-data-element ("pril", if tt-fin-doc.enclosure = ? then "" else string(tt-fin-doc.enclosure)).
+    sw:write-data-element ("nds-str", if tt-fin-doc.including = ? then "" else string(tt-fin-doc.including)).
+    sw:write-data-element ("operator", if tt-fin-doc.user-name-doc = ? then "" else user-name(tt-fin-doc.user-name-doc)).
     sw:write-data-element ("idty-doc", if tt-fin-doc.payer-dop1 = ? then "" else string(tt-fin-doc.receiver-passport)).
       
     sw:start-element ("ndss") .
@@ -142,4 +145,28 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     return v-str.
     
   end.
+  
+  method private character  user-name   (v-user-code as character):
+      define variable v-user-name as character no-undo .
+      
+      define buffer buf_user-account    for ub.user-account .
+      
+      find first buf_user-account no-lock
+          where buf_user-account.user-id = v-user-code
+          no-error .
+        if not available buf_user-account
+          then 
+        do:
+          assign
+            v-user-name = string(v-user-code)
+            .
+        end.
+        else 
+        do:
+          assign
+            v-user-name = buf_user-account.nik
+            .
+        end.
+      return v-user-name.
+  end.    
 end class.
