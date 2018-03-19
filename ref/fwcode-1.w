@@ -251,7 +251,7 @@ DEFINE BROWSE BR-docs
       sel-type(recid( ub.buf_fin-code)) @ t-a COLUMN-LABEL "Тип" FORMAT "x(9)"
       buf_fin-code.descr    COLUMN-LABEL "Описание"
       buf_fin-code.fin-code COLUMN-LABEL "Внутр. №"
-      buf_fin-code.host-code    COLUMN-LABEL "Фирма"
+      buf_fin-code.host-code    COLUMN-LABEL "Фирма" format ">>>>>>>>9"
       {&status-int-name} @ t-s  COLUMN-LABEL "Статус" FORMAT "x(6)"
       buf_fin-code.level-1 COLUMN-LABEL   "Уровень1" format ">>>9"
       buf_fin-code.level-2 COLUMN-LABEL   "Уровень2" format ">>>9"

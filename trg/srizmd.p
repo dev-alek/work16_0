@@ -64,7 +64,7 @@ define variable v-time as integer no-undo .
   end. /* end_of not-g-news */
 
 
-    if g#oxml then do:
+  if g#oxml then do:
       run str/calloxml.p (
           input {&nwsdochs_action_delete}
         , input {&table_sr-izmerenia}
@@ -80,7 +80,10 @@ define variable v-time as integer no-undo .
               )
         ) .
       end.
-    end.
+  end.
+  
+  /* буффер для записи истории buf_c-sr-izmerenia валидный только при условии (not g#news) */
+  if not g#news then do:
         run trg/userlog.p (
             input {&nwsdochs_action_delete}
             , input {&table_c-sr-izmerenia}
@@ -97,3 +100,4 @@ define variable v-time as integer no-undo .
                 , return-value
                 , error-status :get-message ( 1 ) ).
         end.
+  end. /* end_of not-g-news */

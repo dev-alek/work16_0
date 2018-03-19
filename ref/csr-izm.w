@@ -238,6 +238,10 @@ DEFINE FRAME Dialog-Frame
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+ASSIGN 
+       br-wp:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 1
+       br-wp:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE
+       br-wp:COLUMN-MOVABLE IN FRAME Dialog-Frame         = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -418,8 +422,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     if not available X_c-sr-izmerenia then do:
         message
         vss-workfile vss-revision vss-description skip
-        "Неверное значение параметра вызова p-node-code"
-        p-node-code
+        substitute("Отсутствует история средства измерения с кодом &1", p-node-code)
         view-as alert-box ERROR.
         return.
     end.

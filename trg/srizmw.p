@@ -54,7 +54,9 @@ define variable v-time      as integer   no-undo .
    end.
 
 
+  /* 07/III-2018 в историю надо писать и из новостей, и из интерфейса
   if not g#news then do:
+  */
     run cur-time in this-procedure (output v-date, output v-time).
 
     /* пишем историю */
@@ -69,7 +71,7 @@ define variable v-time      as integer   no-undo .
       buf_c-sr-izmerenia.action             = if new(new-sr-izmerenia) then {&hn-create} else {&hn-update}
       buf_c-sr-izmerenia.is-del             = false
     .
-  end.
+  /* end. */
 
 
   if g#oxml then do:
@@ -90,10 +92,9 @@ define variable v-time      as integer   no-undo .
     end.
   end.
   
-  if new(buf_c-sr-izmerenia) then 
-    do:   
+  if not g#news then do:
         run trg/userlog.p (
-            input {&nwsdochs_action_create}
+            input if new(buf_c-sr-izmerenia) then {&nwsdochs_action_create} else {&nwsdochs_action_update}
             , input {&table_c-sr-izmerenia}
             , input ( buffer buf_c-sr-izmerenia :handle )
             , input ?
@@ -108,24 +109,4 @@ define variable v-time      as integer   no-undo .
                 , return-value
                 , error-status :get-message ( 1 ) ).
         end.
-    end. 
-    else 
-    do:
-        run trg/userlog.p (
-            input {&nwsdochs_action_update}
-            , input {&table_c-sr-izmerenia}
-            , input ( buffer buf_c-sr-izmerenia :handle )
-            , input ?
-            , input ""
-            ) no-error.
-        if error-status :error
-            then 
-        do:
-            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
-                , {&new-line}
-                , vss-workfile
-                , return-value
-                , error-status :get-message ( 1 ) ).
-        end.
-
-    end.  
+  end. /* end_of not_g#news */
