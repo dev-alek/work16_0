@@ -48,6 +48,8 @@ define variable v-target    as character no-undo .
 define stream temp-list .
 define stream work-list .
 define stream news-list .
+define stream oxml-list .
+define stream log-list .
 
 define temp-table temp-filelist no-undo
   field file-name        as character
@@ -166,6 +168,8 @@ procedure main-proc :
   define variable v-section   as character no-undo .
   define variable v-key       as character no-undo .
   define variable v-news-dir  as character no-undo .
+  define variable v-oxml-dir  as character no-undo .
+  define variable v-log-dir   as character no-undo .
   
   define variable v-arh-name         as character no-undo .
   
@@ -187,8 +191,20 @@ procedure main-proc :
     v-section = 'news':u
     v-key     = 'nws-heap-dir':u
   .
-  
   get-key-value section v-section key v-key value v-news-dir .
+  
+  assign
+    v-section = 'OXML':u
+    v-key     = 'oxml-dir':u
+  .
+  get-key-value section v-section key v-key value v-oxml-dir .
+  
+  assign
+    v-section = 'REP-SETS':u
+    v-key     = 'logDir':u
+  .
+  get-key-value section v-section key v-key value v-log-dir .
+  
   
   assign
     v-arh-name = search( "exe/7z.exe":U )
@@ -206,6 +222,8 @@ procedure main-proc :
   
   empty temp-table temp-filelist.
   
+  
+/*  ТЕМПОВАЯ ПАПКА  */
   input stream temp-list from os-dir( v-temp-dir ).
   
   repeat
@@ -237,6 +255,16 @@ procedure main-proc :
     or v-file begins "ext-exp"
     or v-file begins "alc-rsrv"
     or v-file begins "exp-ATD"
+    or v-file begins "rvs-err"
+    or v-file begins "pmp-err"
+    or v-file begins "pump"
+    or v-file begins "revis.err"
+    or v-file begins "delfsale"
+    or v-file begins "process-fdoc"
+    or v-file begins "sktsrv"
+    or v-file begins "svn-err"
+    or v-file begins "get-cd"
+    or v-file begins "send-cd"
     then do :
       
     end.
@@ -271,7 +299,9 @@ procedure main-proc :
     
   end .  
   input stream temp-list close .
-  
+ 
+ 
+/*  РАБОЧАЯ ПАПКА  */  
   input stream work-list from os-dir( v-work-dir ).
   
   repeat
@@ -303,6 +333,16 @@ procedure main-proc :
     or v-file begins "ext-exp"
     or v-file begins "alc-rsrv"
     or v-file begins "exp-ATD"
+    or v-file begins "rvs-err"
+    or v-file begins "pmp-err"
+    or v-file begins "pump"
+    or v-file begins "revis.err"
+    or v-file begins "delfsale"
+    or v-file begins "process-fdoc"
+    or v-file begins "sktsrv"
+    or v-file begins "svn-err"
+    or v-file begins "get-cd"
+    or v-file begins "send-cd"
     then do :
       
     end.
@@ -337,7 +377,9 @@ procedure main-proc :
     
   end .  
   input stream work-list close .
-  
+
+
+/*  НОВОСТНАЯ ПАПКА  */  
   input stream news-list from os-dir( v-news-dir ).
   
   repeat
@@ -390,6 +432,139 @@ procedure main-proc :
     
   end .  
   input stream news-list close .
+  
+  
+/*  OXML ПАПКА  */  
+  input stream oxml-list from os-dir( v-oxml-dir ).
+  
+  repeat
+  on error undo, return error
+  :
+    import stream oxml-list v-file v-path v-mask .
+
+    /* проверяем, что найден файл */
+    if  v-mask <> ?
+    and v-mask begins 'F':u
+    then do:
+      /* это обычный файл */
+    end.
+    else do:
+      next . /* --->>>--- */
+    end.
+    
+    if v-file begins "openxml"
+    then do :
+      
+    end.
+    else do :
+      next.
+    end.
+
+    if num-entries(v-file, '.':u) > 1
+    then do:
+      /* файл имеет расширение */
+      assign
+        v-extension = entry(num-entries(v-file, '.':u), v-file,  '.':u )
+        v-file-name-without-ext = entry(num-entries(v-file, '.':u) - 1, v-file, '.':u )
+      .
+    end.
+    else do:
+      /* файл имеет пустое расширение */
+      assign
+        v-extension = ''
+        v-file-name-without-ext = v-file
+      .
+    end.
+
+    create buf_temp-filelist .
+    assign
+      buf_temp-filelist.file-name        = v-file
+      buf_temp-filelist.directory-name   = v-oxml-dir
+      buf_temp-filelist.file-name-no-ext = v-file-name-without-ext
+      buf_temp-filelist.file-extension   = v-extension
+      buf_temp-filelist.full-name        = v-oxml-dir + '/':u + v-file
+    .
+    
+  end .  
+  input stream news-list close .  
+
+
+/*  LOG ПАПКА  */   
+  input stream log-list from os-dir( v-log-dir ).
+  
+  repeat
+  on error undo, return error
+  :
+    import stream log-list v-file v-path v-mask .
+
+    /* проверяем, что найден файл */
+    if  v-mask <> ?
+    and v-mask begins 'F':u
+    then do:
+      /* это обычный файл */
+    end.
+    else do:
+      next . /* --->>>--- */
+    end.
+    
+    if v-file begins "auto-st"
+    or v-file begins "calc-rep"
+    or v-file begins "extgetcd"
+    or v-file begins "ext-sale"
+    or v-file begins "Objahsp"
+    or v-file begins "Objarh"
+    or v-file begins "Saleclos"
+    or v-file begins "shd-free"
+    or v-file begins "pomi"
+    or v-file begins "calc-arc"
+    or v-file begins "calc-ord"
+    or v-file begins "ext-exp"
+    or v-file begins "alc-rsrv"
+    or v-file begins "exp-ATD"
+    or v-file begins "rvs-err"
+    or v-file begins "pmp-err"
+    or v-file begins "pump"
+    or v-file begins "revis.err"
+    or v-file begins "delfsale"
+    or v-file begins "process-fdoc"
+    or v-file begins "sktsrv"
+    or v-file begins "svn-err"
+    or v-file begins "get-cd"
+    or v-file begins "send-cd"
+    then do :
+      
+    end.
+    else do :
+      next.
+    end.
+
+    if num-entries(v-file, '.':u) > 1
+    then do:
+      /* файл имеет расширение */
+      assign
+        v-extension = entry(num-entries(v-file, '.':u), v-file,  '.':u )
+        v-file-name-without-ext = entry(num-entries(v-file, '.':u) - 1, v-file, '.':u )
+      .
+    end.
+    else do:
+      /* файл имеет пустое расширение */
+      assign
+        v-extension = ''
+        v-file-name-without-ext = v-file
+      .
+    end.
+
+    create buf_temp-filelist .
+    assign
+      buf_temp-filelist.file-name        = v-file
+      buf_temp-filelist.directory-name   = v-log-dir
+      buf_temp-filelist.file-name-no-ext = v-file-name-without-ext
+      buf_temp-filelist.file-extension   = v-extension
+      buf_temp-filelist.full-name        = v-log-dir + '/':u + v-file
+    .
+    
+  end .  
+  input stream log-list close .
   
   
   
