@@ -441,6 +441,10 @@ define variable v-run-tpsi-line as logical no-undo.
 define variable v-new_doc-code as character no-undo.
 define variable v-root-node as integer no-undo.
 
+/* для выгрузке смены с изменёнными продажами в 1с */
+define variable v-old-shift-obj as handle no-undo  .
+define variable v-new-shift-obj as handle no-undo  .
+
 define buffer buf_shift-obj for ub.shift-obj.
 define buffer tpsi_sale-doc for ub.sale-doc.
 define buffer buf-new_trn-doc for ub.trn-doc.
@@ -466,14 +470,6 @@ on error undo, return error return-value
       return "":U.
     end.
   end.
-  assign
-    varoldstatus = buf_inkas.status_
-    varoldflag = buf_inkas.flag_ 
-    .
-  assign
-  v-obj-type = buf_inkas.obj-type
-  v-obj-code = buf_inkas.obj-code
-  .
   if (p-auto < 2
   and not (buf_inkas.status_ = {&g___new}
            or
@@ -486,6 +482,32 @@ on error undo, return error return-value
   then do:
     return "":U.
   end.
+  
+  if p-auto < 2 then do:
+      { gbl/chk-actg.i
+        g#db-num
+        g#userid
+        {&action-head-code-main}
+        'actn_sale_fact':U
+        {&cntxt-object}
+        buf_inkas.host-code
+        buf_inkas.obj-type
+        buf_inkas.obj-code
+        0
+        0
+        0
+        true
+        glog
+      }
+     if NOT glog then do:
+        return error.
+     end.
+  end.
+  
+  if NOT can-find (first ub.chk-doc where ub.chk-doc.out-code = buf_inkas.inkas-code) then do:
+    return error substitute("Отчет о продаже N&1 пуст. Закрытие невозможно.", buf_inkas.inkas-code).
+  end.
+
   { gbl/objdbnum.i {&shop}  buf_inkas.obj-code v-db-num }
   if v-db-num <> g#db-num then do:
     return error substitute("Отчет о продаже №&1 относится к магазину БД &2, текущая БД &3"
@@ -495,6 +517,12 @@ on error undo, return error return-value
                             ).
   end.
 
+  assign
+    varoldstatus = buf_inkas.status_
+    varoldflag = buf_inkas.flag_ 
+    v-obj-type = buf_inkas.obj-type
+    v-obj-code = buf_inkas.obj-code
+  .
   FIND FIRST buf_trn-doc WHERE
             buf_trn-doc.doc-code = buf_inkas.inkas-code NO-LOCK.
   FIND FIRST buf_ret-doc WHERE
@@ -560,31 +588,6 @@ on error undo, return error return-value
      .
   end.
 
-
-  if p-auto < 2 then do:
-      { gbl/chk-actg.i
-        g#db-num
-        g#userid
-        {&action-head-code-main}
-        'actn_sale_fact':U
-        {&cntxt-object}
-        buf_inkas.host-code
-        buf_inkas.obj-type
-        buf_inkas.obj-code
-        0
-        0
-        0
-        true
-        glog
-      }
-     if NOT glog then do:
-        return error.
-     end.
-  end.
-
-  if NOT can-find( first ub.chk-doc NO-LOCK where ub.chk-doc.out-code = buf_inkas.inkas-code ) then  do:
-    return error substitute("Отчет о продаже N&1 пуст. Закрытие невозможно.", buf_inkas.inkas-code).
-  end.
   
   run fbrhist-read-conf in this-procedure .
   if p-auto < 2 then do:
@@ -672,8 +675,10 @@ on error undo, return error return-value
     end.
   end.
 
+  /* 02/III-2018 buf_trn-doc уже найден в строке 522, также в режиме no-lock, и также без no-error
   FIND FIRST buf_trn-doc WHERE
            buf_trn-doc.doc-code = buf_inkas.inkas-code NO-LOCK .
+  */
   glog = no.
 
   RUN Inv-chk in this-procedure  (
@@ -1043,10 +1048,10 @@ on error undo, return error return-value
     locked_inkas.rest-tpsi  = rest-tpsi
     locked_Inkas.auto-comp  = auto-comp
     .
-     /*попробуем и для сменного объекта*/
-    /*if not l-shift-on then do:*/
-   if l-shift-on then do:
+    if l-shift-on then do:
       { gbl/curshift.i locked_inkas.obj-type locked_inkas.obj-code v-shift-date v-shift-num v-shift-name no-error }
+      /* 02/III-2018 заходим сюда в рамках задачи добавления продажи в закрытую смену задним числом.
+                     Смена, в которую добавляем, ТОЧНО НЕ ТЕКУЩАЯ, и она уже закрыта. Возможно, gbl/curshift.i избыточен */
       if error-status:error
       or not (v-shift-date = locked_inkas.shift-date
               and
@@ -1080,11 +1085,12 @@ on error undo, return error return-value
         assign
         v-back-date = yes
         locked_inkas.fact-date = buf_shift-obj.close-date
+        v-old-shift-obj = buffer buf_shift-obj:handle
+        v-new-shift-obj = v-old-shift-obj
         .
       end.
-   end.
-   else do: /*else if l-shift-on then do:*/
-   end.
+    end.
+    else . /*else if l-shift-on then do:*/
    if not v-back-date then do:
     if p-auto > 1 then do:
       assign
@@ -1154,6 +1160,8 @@ on error undo, return error return-value
         run waitfram-hide in this-procedure .
         undo f-close,  return error return-value .
     end.
+    /* внутри inkas-closing значение locked_inkas.status_ изменили на {&fact};
+       теперь, как только отработает триггер, новую продажу можно выгружать в экспорт */
     glog = no.
     if not v-is-inquiry then do:
       _dtl:
@@ -1225,6 +1233,7 @@ on error undo, return error return-value
     if error-status:error then do:
       undo f-close, return error return-value .
     end.
+    /* триггер на locked_inkas.status_ отработал, однако перед выгрузкой надо дождаться обновления вложенных таблиц */
     if can-find( first ub.chk-doc NO-LOCK WHERE
                     ub.chk-doc.out-code = buf_inkas.inkas-code
                 AND ub.chk-doc.d-card <> "" ) then do:
@@ -1260,7 +1269,43 @@ on error undo, return error return-value
       end.
     end.
   end. /*if not v-is-inquiry then do:*/
-END.
+END. /* end_of f-close */
+
+  /* 02/III-2018 При закрытии (is-back-date) или удалении документа продажи ЗАДНИМ ЧИСЛОМ
+                 посылать в 1С сообщение в формате закрытия смены.
+                 Если сделали новую, то мы посылаем смену со всеми чеками, включая чеки новой продажи.
+     p.s. "задним числом" - когда продажу добавляют в закрытую смену и там её закрывают
+  */
+  if l-shift-on then do:
+    /* смена, полученная выше в строке 1060 - именна та, которая нам требуется */
+    if v-back-date and v-new-shift-obj:available then do :
+      /* указатели old и new указывают в одно место, т.к. фактически запись о смене не менялась */
+      { gbl/rum-runa.i
+      ?
+      this-procedure:handle
+      ?
+      {&edoc-proc_event_shift}
+      v-old-shift-obj
+      v-new-shift-obj
+      ''
+      ''
+      no-error
+      }
+      if error-status :error then do:
+        run write-log-and-file in p-log-handle (
+            input 1
+          , input log-file-name
+          , input 1
+          , input substitute("&1Ошибка маршрутизации записи в машину правил&1&2&1&3"
+                            , {&new-line}
+                            , error-status:get-message(1)
+                            , return-value
+                            )).
+        v-view-log = yes.
+      end.
+    end .
+  end. /* end_of if_shift_on */
+
 if not v-is-inquiry then do:
   run fbrhist-table-to-base in this-procedure no-error.
   if error-status:error then do:
@@ -2169,7 +2214,6 @@ DO ON ERROR undo _main, return error:
                                       , output nf-gds-amount
                                       , output ps-where-rus
                                       ).
-  run cur-time in this-procedure ( output v-today, output v-time).
   run adm/shattri.p (
       input "get":U
       ,input ''
@@ -2240,6 +2284,7 @@ DO ON ERROR undo _main, return error:
     end.
     end.
   end. /*ОСНОВНЫЕ ДОКУМЕНТЫ ПОСЧИТАЛИ*/
+
   if abs(locked_inkas.netto - (for-netto  - (locked_inkas.sub-discnt - for-write-off))) > 0.015
   then do:
     undo _main, return error substitute("Невозможно закрыть продажу&1" +
@@ -2255,6 +2300,8 @@ DO ON ERROR undo _main, return error:
                           , v-docs-sum
                           ).
   end.
+
+  run cur-time in this-procedure ( output v-today, output v-time).
   locked_inkas.PS = ''.
   _v-doc-ii:
     do v-doc-ii = 1 to num-entries({&sale-all-doc-kinds})

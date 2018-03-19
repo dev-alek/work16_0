@@ -633,17 +633,32 @@ DO:
   define variable v-parameter as character no-undo .
   define variable ri as recid no-undo .
   define variable v-normal-call as logical no-undo .
-  if last-event:lABEL = "CHOOSE"
-  or last-event:lABEL = "ENTER" then do:
-    v-normal-call = yes.
-  end.
-
-  if not available ink-doc then return no-apply.
   define variable v-inkas-code as character no-undo .
+  
+  if not available ink-doc then return no-apply.
+  if par-mode = {&g___new} then .
+  else do:
+    { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_sale_del-sale-fact':U
+      {&cntxt-object}
+      ink-doc.host-code
+      ink-doc.obj-type
+      ink-doc.obj-code
+      0
+      0
+      0
+      true
+      v-ok
+    }
+    if not v-ok then return no-apply .
+  end .
+  
   assign
-    v-inkas-code = ink-doc.inkas-code
-  .
-  assign
+    v-inkas-code  = ink-doc.inkas-code
+    v-normal-call = can-do("CHOOSE,ENTER":U, last-event:label)
     v-ok = false
   .
   message
@@ -694,22 +709,6 @@ DO:
     end.
   END.
   ELSE DO:
-    { gbl/chk-actg.i
-      v-cntxt-db-num
-      v-cntxt-userid
-      {&action-head-code-main}
-      'actn_sale_del-sale-fact':U
-      {&cntxt-object}
-      ink-doc.host-code
-      ink-doc.obj-type
-      ink-doc.obj-code
-      0
-      0
-      0
-      true
-      v-ok
-    }
-    if NOT v-ok then  return no-apply.
     v-parameter = ink-doc.inkas-code.
       
       
@@ -1948,10 +1947,7 @@ define variable v-normal-call as logical no-undo .
 define variable v-inkas-code as character no-undo .
 CASE p-mode:
   WHEN {&cash-desk} THEN DO:
-    if last-event:lABEL = "CHOOSE"
-    or last-event:lABEL = "ENTER" then do:
-      v-normal-call = yes.
-    end.
+    v-normal-call = can-do("CHOOSE,ENTER":U, last-event:label) .
     if not v-normal-call
     and not l-shift-on then return no-apply.
     run str/cre-sale.p (
@@ -2295,10 +2291,6 @@ define variable v-value-decimal as decimal no-undo .
 define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-tth as handle no-undo .
-assign
-v-tth = buffer thbjattr_thbj-attr:table-handle .
-
-
 DEFINE BUFFER buf_shop FOR ub.shop.
 v-loc-rec = recid(ink-doc).
 
@@ -2327,6 +2319,7 @@ CASE p-close-type:
     FIND FIRST buf_shop NO-LOCK WHERE
               buf_shop.obj-code = ink-doc.obj-code .
     run gbl/tpsi-obj.p ( input ink-doc.obj-type, input ink-doc.obj-code, output v-is-tpsi-obj) no-error .
+    v-tth = buffer thbjattr_thbj-attr:table-handle .
     for each thbjattr_thbj-attr:
       delete thbjattr_thbj-attr.
     end.
