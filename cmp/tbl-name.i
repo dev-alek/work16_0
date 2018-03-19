@@ -161,6 +161,8 @@ Creation date: 04/05/06
 &glob table_buyer-group-attr 'buyer-group-attr':U
 &glob table_buyer-in-buyer-group 'buyer-in-buyer-group':U
 &glob table_buyer-in-buyer-group-attr 'buyer-in-buyer-group-attr':U
+&glob table_c-action-role 'c-action-role':U
+&glob table_c-action-role-item 'c-action-role-item':U
 &glob table_c-add-doc 'c-add-doc':U
 &glob table_c-add-line 'c-add-line':U
 &glob table_c-alc-sale-lic 'c-alc-sale-lic':U
