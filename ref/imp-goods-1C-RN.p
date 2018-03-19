@@ -221,7 +221,26 @@ define variable v-barcode-list as longchar no-undo .
     assign
     tt-tax.rate-code = v-nds-rate-code
     .
-    
+    /* Проверим не изменился ли производитель. Если изменился, запустим утилититу переименования производителя. */
+    if v-gds-mode = {&update} and integer(p-GdsObj:prod-code) <> buf_goods.prod-code then do:
+        run utl\ren-art.p(buf_goods.gds-code,
+            buf_goods.artic,
+            buf_goods.prod-type,
+            buf_goods.prod-code,
+            buf_goods.artic,
+            buf_goods.prod-type,
+            integer(p-GdsObj:prod-code)
+        ) no-error.
+        if error-status:error then do:
+            v-err-mess = substitute("Ошибка при смене производителя у товара  &1. &2&3&2"
+                                , p-GdsObj:code_
+                                , {&new-line}
+                                , error-status:get-message(1)
+                                , return-value                                
+                                ).
+      undo, return error v-err-mess .
+        end.     
+    end.    
   run ref/goods01.p (
                     input parparentproc
                     , input v-gds-mode
@@ -239,7 +258,7 @@ define variable v-barcode-list as longchar no-undo .
                   , input ? /*par-copy-rec as recid recid записи с которой копируем*/
                   , input integer(p-GdsObj:code_)
                   , input p-GdsObj:artic
-                  , input "орг"
+                  , input "орг":U
                   , input integer(p-GdsObj:prod-code)
                   , input v-node-code
                   , input integer(p-GdsObj:grp-code)
