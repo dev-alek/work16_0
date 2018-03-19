@@ -198,11 +198,12 @@ FUNCTION get-work-status RETURNS CHARACTER
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
+
 /* Menu Definitions                                                     */
 DEFINE MENU POPUP-MENU-b-print 
-       MENU-ITEM m_b-print-prava  LABEL "Список прав пользователей"        
-       MENU-ITEM m_b-print-user   LABEL "Пользователь"  
-       MENU-ITEM m_b-print-list   LABEL "Список пользователей"  .
+       MENU-ITEM m_b-print-prava LABEL "Список прав пользователей"
+       MENU-ITEM m_b-print-user LABEL "Пользователь"  
+       MENU-ITEM m_b-print-list LABEL "Список пользователей".
 
 
 /* Definitions of the field level widgets                               */
@@ -249,7 +250,7 @@ DEFINE BUTTON b-help
      BGCOLOR 8 .
 
 DEFINE BUTTON b-hist-user 
-     LABEL "Печать" 
+     LABEL "История" 
      SIZE 3 BY 1.
 
 DEFINE BUTTON b-print 
@@ -409,7 +410,6 @@ DEFINE FRAME Dialog-Frame
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
-
 
 ASSIGN 
        b-print:POPUP-MENU IN FRAME Dialog-Frame       = MENU POPUP-MENU-b-print:HANDLE.
@@ -1063,7 +1063,7 @@ END.
 
 &Scoped-define SELF-NAME b-hist-user
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist-user Dialog-Frame
-ON CHOOSE OF b-hist-user IN FRAME Dialog-Frame /* Печать */
+ON CHOOSE OF b-hist-user IN FRAME Dialog-Frame /* История */
 DO:
   if available buf_init_user-account
     then do:
@@ -1072,7 +1072,6 @@ run str\cusrhist.w (
                 input buf_init_user-account.user-id) no-error.
     end.  
 END.
-
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

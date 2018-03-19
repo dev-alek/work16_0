@@ -68,7 +68,7 @@ do transaction
     define BUFFER buf_action-role for ub.action-role .
       
     For FIRST buf_action-role
-        WHERE buf_action-role.db-num                      = ub.user-login-action-role.db-num
+        WHERE buf_action-role.db-num                    = ub.user-login-action-role.db-num
         AND buf_action-role.action-head-code            = {&action-head-code-main}
         AND buf_action-role.action-role-code            = ub.user-login-action-role.action-role-code
         NO-LOCK
@@ -77,7 +77,7 @@ do transaction
         run trg/userhist.p ( 
             input integer({&hn-delete})
             ,input {&table_user-login-action-role}
-            ,input string(ub.user-login-action-role.action-role-context + " " + string(buf_action-role.action-role-name) + " " + string(ub.user-login-action-role.obj-type) + " " + string(ub.user-login-action-role.obj-code))
+            ,input string(ub.user-login-action-role.action-role-context + " " + string(buf_action-role.action-role-name) + " " + string(ub.user-login-action-role.obj-type) + " " + string(ub.user-login-action-role.obj-code) + " " + if ub.user-login-action-role.gds-grp-code <> ? then STRING (ub.user-login-action-role.gds-grp-code) else "")
             ,input ub.user-login-action-role.user-id
             ) no-error .
         if error-status :error

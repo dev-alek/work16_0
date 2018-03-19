@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,16 +8,16 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER find_c-sht-hist FOR ub.c-sht-hist.
-DEFINE BUFFER X_c-sht-hist FOR ub.c-sht-hist.
-DEFINE BUFFER X_clients FOR ub.clients.
-DEFINE BUFFER X_curr-sysconf FOR ub.sysconf.
-DEFINE BUFFER X_shift-obj FOR ub.shift-obj.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER find_c-sht-hist FOR c-sht-hist.
+DEFINE BUFFER X_c-sht-hist FOR c-sht-hist.
+DEFINE BUFFER X_clients FOR clients.
+DEFINE BUFFER X_curr-sysconf FOR sysconf.
+DEFINE BUFFER X_shift-obj FOR shift-obj.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -105,7 +105,7 @@ define buffer X_curr_sysconf for ub.sysconf.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -120,8 +120,8 @@ define buffer X_curr_sysconf for ub.sysconf.
 &Scoped-define INTERNAL-TABLES temp-changes X_c-sht-hist
 
 /* Definitions for BROWSE BR-changes                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes
+&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes   
 &Scoped-define SELF-NAME BR-changes
 &Scoped-define QUERY-STRING-BR-changes FOR EACH temp-changes
 &Scoped-define OPEN-QUERY-BR-changes OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
@@ -130,8 +130,8 @@ define buffer X_curr_sysconf for ub.sysconf.
 
 
 /* Definitions for BROWSE br-sht-hist                                   */
-&Scoped-define FIELDS-IN-QUERY-br-sht-hist mark-string(recid(X_c-sht-hist), v-rid-list) X_c-sht-hist.shift-date X_c-sht-hist.shift-name X_c-sht-hist.shift-num X_c-sht-hist.corr-date usrfulnf(X_c-sht-hist.corr-user-name) X_c-sht-hist.corr-user-db-num string(X_c-sht-hist.corr-time, "HH:MM:SS":U) get-action(X_c-sht-hist.action) get-subject(X_c-sht-hist.subject) X_c-sht-hist.obj-type + string(X_c-sht-hist.obj-code)
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-sht-hist X_c-sht-hist.corr-date
+&Scoped-define FIELDS-IN-QUERY-br-sht-hist mark-string(recid(X_c-sht-hist), v-rid-list) X_c-sht-hist.shift-date X_c-sht-hist.shift-name X_c-sht-hist.shift-num X_c-sht-hist.corr-date usrfulnf(X_c-sht-hist.corr-user-name) X_c-sht-hist.corr-user-db-num string(X_c-sht-hist.corr-time, "HH:MM:SS":U) get-action(X_c-sht-hist.action) get-subject(X_c-sht-hist.subject) X_c-sht-hist.obj-type + string(X_c-sht-hist.obj-code)   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-sht-hist X_c-sht-hist.corr-date   
 &Scoped-define ENABLED-TABLES-IN-QUERY-br-sht-hist X_c-sht-hist
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br-sht-hist X_c-sht-hist
 &Scoped-define SELF-NAME br-sht-hist
@@ -146,9 +146,9 @@ define buffer X_curr_sysconf for ub.sysconf.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel B-lookup B-print B-sch ~
 B-Help br-sht-hist sch-corr-date sch-shift-date sch-corr-user-name ~
-BR-changes mark-num
+BR-changes mark-num 
 &Scoped-Define DISPLAYED-OBJECTS sch-corr-date sch-shift-date ~
-sch-corr-user-name mark-num
+sch-corr-user-name mark-num 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -159,14 +159,14 @@ sch-corr-user-name mark-num
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
   ( p-action as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-subject Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-subject Dialog-Frame 
 FUNCTION get-subject RETURNS CHARACTER
   ( p-subject as character )  FORWARD.
 
@@ -179,63 +179,63 @@ FUNCTION get-subject RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-lookup
-     LABEL "&Просмотр"
+DEFINE BUTTON B-lookup 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-print
-     LABEL "Пе&чать"
+DEFINE BUTTON B-print 
+     LABEL "Пе&чать" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-sch
-     LABEL "&Фильтр"
+DEFINE BUTTON B-sch 
+     LABEL "&Фильтр" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&бор"
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 6 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE sch-corr-date AS DATE FORMAT "99/99/9999":U
-     LABEL "Дате изменения"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-corr-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дате изменения" 
+     VIEW-AS FILL-IN 
      SIZE 11 BY 1 NO-UNDO.
 
-DEFINE VARIABLE sch-corr-user-name AS CHARACTER FORMAT "X(9)":U
-     LABEL "пользователю"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-corr-user-name AS CHARACTER FORMAT "X(9)":U 
+     LABEL "пользователю" 
+     VIEW-AS FILL-IN 
      SIZE 12 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sch-shift-date AS DATE FORMAT "99/99/9999":U
-     LABEL "Дате смены"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-shift-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дате смены" 
+     VIEW-AS FILL-IN 
      SIZE 8 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-changes FOR
+DEFINE QUERY BR-changes FOR 
       temp-changes SCROLLING.
 
-DEFINE QUERY br-sht-hist FOR
+DEFINE QUERY br-sht-hist FOR 
       X_c-sht-hist SCROLLING.
 &ANALYZE-RESUME
 
@@ -289,10 +289,10 @@ DEFINE FRAME Dialog-Frame
      mark-num AT ROW 1 COL 12.5 COLON-ALIGNED NO-LABEL
      "ПОИСК ПО" VIEW-AS TEXT
           SIZE 8.38 BY 1 AT ROW 13.63 COL 1.38
-          FGCOLOR 4
+          FGCOLOR 4 
      SPACE(89.48) SKIP(7.44)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Полная история по смене на объекте"
          CANCEL-BUTTON b-quit.
 
@@ -323,9 +323,12 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-sht-hist B-Help Dialog-Frame */
 /* BROWSE-TAB BR-changes sch-corr-user-name Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+ASSIGN 
+       br-sht-hist:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -352,7 +355,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH X_c-sht-hist NO-LOCK INDEXED-REPOSITION.
 */  /* BROWSE br-sht-hist */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -558,7 +561,7 @@ END.
 &Scoped-define BROWSE-NAME BR-changes
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -699,7 +702,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -718,13 +721,13 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY sch-corr-date sch-shift-date sch-corr-user-name mark-num
+  DISPLAY sch-corr-date sch-shift-date sch-corr-user-name mark-num 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-mark b-sel B-lookup B-print B-sch B-Help br-sht-hist
-         sch-corr-date sch-shift-date sch-corr-user-name BR-changes mark-num
+  ENABLE b-quit B-mark b-sel B-lookup B-print B-sch B-Help br-sht-hist 
+         sch-corr-date sch-shift-date sch-corr-user-name BR-changes mark-num 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -733,7 +736,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 assign
   br-sht-hist:num-locked-columns in frame {&frame-name} = 1
@@ -775,7 +778,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 define input  parameter p-open-query     as logical   no-undo .
 define input  parameter p-find-next      as logical   no-undo .
@@ -935,7 +938,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-print Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-print Dialog-Frame 
 PROCEDURE proc-b-print :
 define variable date_string     as      char    no-undo.
 define variable Line                as      char    no-undo.
@@ -1037,7 +1040,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame 
 PROCEDURE proc-b-sch :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1091,7 +1094,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-br-sht-hist Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-br-sht-hist Dialog-Frame 
 PROCEDURE proc-br-sht-hist :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1104,7 +1107,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-corr-date Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-corr-date Dialog-Frame 
 PROCEDURE proc-find-corr-date :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1138,7 +1141,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-shift-date Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-shift-date Dialog-Frame 
 PROCEDURE proc-find-shift-date :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1176,7 +1179,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-user Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-user Dialog-Frame 
 PROCEDURE proc-find-user :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1207,7 +1210,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1248,7 +1251,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
   ( p-action as integer ) :
 /*------------------------------------------------------------------------------
@@ -1265,7 +1268,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-subject Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-subject Dialog-Frame 
 FUNCTION get-subject RETURNS CHARACTER
   ( p-subject as character ) :
 /*------------------------------------------------------------------------------
@@ -1279,3 +1282,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

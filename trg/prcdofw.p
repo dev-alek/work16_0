@@ -51,9 +51,9 @@ do transaction
 
     run cur-time in this-procedure(output v-today, output start-time).
     /* Запись в историю только корректировки ФАКТ */
-    if old_price-doc-forming.stts = integer({&pdf-fact}) then 
+    if ub.price-doc-forming.stts = integer({&pdf-fact}) then
     do:  /*{&fact}*/
-        if new (ub.price-doc-forming) then 
+        if new (ub.price-doc-forming) then
         do:
             create ub.c-price-doc-forming.
             assign
@@ -68,10 +68,10 @@ do transaction
                 ub.c-price-doc-forming.corr-date        = v-today
                 .
         end.
-        else 
+        else
         do:
             create ub.c-price-doc-forming.
-            BUFFER-COPY old_price-doc-forming TO ub.c-price-doc-forming
+            BUFFER-COPY ub.price-doc-forming TO ub.c-price-doc-forming
                 assign
                 ub.c-price-doc-forming.chip-num           = next-value (s-corr-chip, {&db-name_schema})
                 ub.c-price-doc-forming.corr-user-db-num   = g#db-num

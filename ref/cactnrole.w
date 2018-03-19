@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -13,7 +13,7 @@ DEFINE BUFFER X_c-action-role   FOR ub.c-action-role.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -92,7 +92,7 @@ define buffer X_action-role for ub.c-action-role.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -130,8 +130,8 @@ define buffer X_action-role for ub.c-action-role.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel B-sch B-Help mark-num ~
-BR-c-action-role BR-changes
-&Scoped-Define DISPLAYED-OBJECTS mark-num
+BR-c-action-role BR-changes 
+&Scoped-Define DISPLAYED-OBJECTS mark-num 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -142,51 +142,52 @@ BR-c-action-role BR-changes
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
     ( p-action as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-subject Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-subject Dialog-Frame 
 FUNCTION get-subject RETURNS CHARACTER
     ( p-subject as character )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-Help
-    LABEL "Помо&щь"
-    SIZE 3 BY 1
-    BGCOLOR 8 .
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
+     SIZE 3 BY 1
+     BGCOLOR 8 .
 
-DEFINE BUTTON B-mark
-    LABEL "&*"
-    SIZE 3 BY 1.
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
+     SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-    LABEL "&Выход"
-    SIZE 10 BY 1
-    BGCOLOR 8 .
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
+     SIZE 10 BY 1
+     BGCOLOR 8 .
 
-DEFINE BUTTON B-sch
-    LABEL "&Фильтр"
-    SIZE 3 BY 1.
+DEFINE BUTTON B-sch 
+     LABEL "&Фильтр" 
+     SIZE 3 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO
-    LABEL "Вы&бор"
-    SIZE 10 BY 1.
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор" 
+     SIZE 10 BY 1.
 
-DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
-    VIEW-AS FILL-IN
-    SIZE 9 BY 1
-    FGCOLOR 4 NO-UNDO.
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1
+     FGCOLOR 4  NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -200,8 +201,8 @@ DEFINE QUERY BR-changes FOR
 /* Browse definitions                                                   */
 DEFINE BROWSE BR-c-action-role
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-c-action-role Dialog-Frame _FREEFORM
-    QUERY BR-c-action-role DISPLAY
-    mark-string( recid(X_c-action-role), v-rid-list ) COLUMN-LABEL "*" FORMAT "X(1)":U
+  QUERY BR-c-action-role DISPLAY
+      mark-string( recid(X_c-action-role), v-rid-list ) COLUMN-LABEL "*" FORMAT "X(1)":U
     get-subject(X_c-action-role.subject) COLUMN-LABEL "Предмет изменений" FORMAT "X(25)":U
     get-action(X_c-action-role.action) COLUMN-LABEL "Действие" FORMAT "X(20)":U
     usrfulnf(X_c-action-role.corr-user-name) COLUMN-LABEL "Изменил" FORMAT "X(28)":U
@@ -225,19 +226,19 @@ DEFINE BROWSE BR-changes
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-    b-quit AT ROW 1 COL 1
-    B-mark AT ROW 1 COL 11
-    b-sel AT ROW 1 COL 14
-    B-sch AT ROW 1 COL 92
-    B-Help AT ROW 1 COL 95
-    mark-num AT ROW 1.92 COL 9 COLON-ALIGNED NO-LABEL
-    BR-c-action-role AT ROW 3.42 COL 1
-    BR-changes AT ROW 16.04 COL 1
-    SPACE(0.24) SKIP(0.00)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-    TITLE "Справочник групп прав"
-    CANCEL-BUTTON b-quit.
+     b-quit AT ROW 1 COL 1
+     B-mark AT ROW 1 COL 11
+     b-sel AT ROW 1 COL 14
+     B-sch AT ROW 1 COL 92
+     B-Help AT ROW 1 COL 95
+     mark-num AT ROW 1.92 COL 9 COLON-ALIGNED NO-LABEL
+     BR-c-action-role AT ROW 3.42 COL 1
+     BR-changes AT ROW 16.04 COL 1
+     SPACE(0.24) SKIP(0.00)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "Справочник групп прав"
+         CANCEL-BUTTON b-quit.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -261,11 +262,14 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB BR-c-cash-desk mark-num Dialog-Frame */
-/* BROWSE-TAB BR-changes BR-c-cash-desk Dialog-Frame */
-ASSIGN
-    FRAME Dialog-Frame:SCROLLABLE = FALSE
-    FRAME Dialog-Frame:HIDDEN     = TRUE.
+/* BROWSE-TAB BR-c-action-role mark-num Dialog-Frame */
+/* BROWSE-TAB BR-changes BR-c-action-role Dialog-Frame */
+ASSIGN 
+       FRAME Dialog-Frame:SCROLLABLE       = FALSE
+       FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+ASSIGN 
+       BR-c-action-role:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -286,7 +290,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
 */  /* BROWSE BR-changes */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -295,7 +299,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON GO OF FRAME Dialog-Frame /* Справочник групп прав */
-    DO:
+DO:
         p-rid-list = v-rid-list.
     END.
 
@@ -305,7 +309,7 @@ ON GO OF FRAME Dialog-Frame /* Справочник групп прав */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Справочник групп прав */
-    DO:
+DO:
         APPLY "END-ERROR":U TO SELF.
     END.
 
@@ -316,7 +320,7 @@ ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Справочник групп прав */
 &Scoped-define SELF-NAME B-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-mark Dialog-Frame
 ON CHOOSE OF B-mark IN FRAME Dialog-Frame /* * */
-    DO:
+DO:
         define variable glog as logical no-undo .
         if not available X_c-action-role then return no-apply.
         { gbl/markstrn.i X_c-action-role v-rid-list  }
@@ -342,7 +346,7 @@ ON CHOOSE OF B-mark IN FRAME Dialog-Frame /* * */
 &Scoped-define SELF-NAME B-sch
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-sch Dialog-Frame
 ON CHOOSE OF B-sch IN FRAME Dialog-Frame /* Фильтр */
-    DO:
+DO:
         run proc-b-sch in this-procedure no-error.
         if error-status:error then return no-apply.
     END.
@@ -354,7 +358,7 @@ ON CHOOSE OF B-sch IN FRAME Dialog-Frame /* Фильтр */
 &Scoped-define SELF-NAME b-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel Dialog-Frame
 ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор */
-    DO:
+DO:
         if ( available X_c-action-role ) AND ( v-rid-list = "" ) then
             v-rid-list = string( recid( X_c-action-role ) ) .
 
@@ -368,7 +372,7 @@ ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор */
 &Scoped-define SELF-NAME BR-c-action-role
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BR-c-action-role Dialog-Frame
 ON RETURN OF BR-c-action-role IN FRAME Dialog-Frame
-    DO:
+DO:
         apply "DEFAULT-ACTION":U to self.
     END.
 
@@ -378,7 +382,7 @@ ON RETURN OF BR-c-action-role IN FRAME Dialog-Frame
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BR-c-action-role Dialog-Frame
 ON VALUE-CHANGED OF BR-c-action-role IN FRAME Dialog-Frame
-    DO:
+DO:
         run proc-view-changes in this-procedure no-error.
     END.
 
@@ -388,7 +392,7 @@ ON VALUE-CHANGED OF BR-c-action-role IN FRAME Dialog-Frame
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -472,16 +476,16 @@ RUN disable_UI.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-    /*------------------------------------------------------------------------------
-      Purpose:     DISABLE the User Interface
-      Parameters:  <none>
-      Notes:       Here we clean-up the user-interface by deleting
-                   dynamic widgets we have created and/or hide
-                   frames.  This procedure is usually called when
-                   we are ready to "clean-up" after running.
-    ------------------------------------------------------------------------------*/
-    /* Hide all frames. */
-    HIDE FRAME Dialog-Frame.
+/*------------------------------------------------------------------------------
+  Purpose:     DISABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we clean-up the user-interface by deleting
+               dynamic widgets we have created and/or hide 
+               frames.  This procedure is usually called when
+               we are ready to "clean-up" after running.
+------------------------------------------------------------------------------*/
+  /* Hide all frames. */
+  HIDE FRAME Dialog-Frame.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -489,29 +493,29 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-    /*------------------------------------------------------------------------------
-      Purpose:     ENABLE the User Interface
-      Parameters:  <none>
-      Notes:       Here we display/view/enable the widgets in the
-                   user-interface.  In addition, OPEN all queries
-                   associated with each FRAME and BROWSE.
-                   These statements here are based on the "Other
-                   Settings" section of the widget Property Sheets.
-    ------------------------------------------------------------------------------*/
-    DISPLAY mark-num
-        WITH FRAME Dialog-Frame.
-    ENABLE b-quit B-mark b-sel B-sch B-Help mark-num BR-c-action-role BR-changes
-        WITH FRAME Dialog-Frame.
-    VIEW FRAME Dialog-Frame.
-    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+/*------------------------------------------------------------------------------
+  Purpose:     ENABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we display/view/enable the widgets in the
+               user-interface.  In addition, OPEN all queries
+               associated with each FRAME and BROWSE.
+               These statements here are based on the "Other 
+               Settings" section of the widget Property Sheets.
+------------------------------------------------------------------------------*/
+  DISPLAY mark-num 
+      WITH FRAME Dialog-Frame.
+  ENABLE b-quit B-mark b-sel B-sch B-Help mark-num BR-c-action-role 
+      WITH FRAME Dialog-Frame.
+  VIEW FRAME Dialog-Frame.
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
       Purpose:
       Parameters:  <none>
       Notes:
@@ -547,9 +551,9 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
-    define variable l-query-was-opened as logical   no-undo .
+define variable l-query-was-opened as logical   no-undo .
 
 
     define variable sort-column-phrase as character no-undo .
@@ -650,9 +654,9 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame 
 PROCEDURE proc-b-sch :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
       Purpose:
       Parameters:  <none>
       Notes:
@@ -705,9 +709,9 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
-    /*------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
       Purpose:
       Parameters:  <none>
       Notes:
@@ -744,7 +748,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
     ( p-action as integer ) :
 /*------------------------------------------------------------------------------
@@ -765,7 +769,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-subject Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-subject Dialog-Frame 
 FUNCTION get-subject RETURNS CHARACTER
     ( p-subject as character ) :
     /*------------------------------------------------------------------------------
@@ -795,3 +799,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

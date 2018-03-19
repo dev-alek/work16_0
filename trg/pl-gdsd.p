@@ -229,7 +229,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     run trg/userlog.p (
         input {&nwsdochs_action_delete}
         , input {&table_pl-gds}
-        , input ( buffer buf_c-pl-gds :handle )
+        , input ( buffer ub.pl-gds :handle )
         , input ?
         , input ""
         ) no-error.

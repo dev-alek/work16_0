@@ -8,9 +8,9 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER X_c-units FOR ub.c-units.
-DEFINE BUFFER X_curr_clients FOR ub.clients.
-DEFINE BUFFER X_units FOR ub.units.
+DEFINE BUFFER X_c-units FOR c-units.
+DEFINE BUFFER X_curr_clients FOR clients.
+DEFINE BUFFER X_units FOR units.
 
 
 
@@ -176,7 +176,7 @@ temp-changes.v_old COLUMn-LABEL "Было" format "X(70)"
 temp-changes.v_new COLUMn-LABEL "Стало" format "X(70)"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.03.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.04.
 
 DEFINE BROWSE br-cunits
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-cunits Dialog-Frame _FREEFORM
@@ -190,7 +190,7 @@ WIDTH 18
 mark-string(recid(X_c-units), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.27 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.25 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -242,6 +242,9 @@ ASSIGN
    NO-ENABLE                                                            */
 ASSIGN 
        B-lookup:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+ASSIGN 
+       br-cunits:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME

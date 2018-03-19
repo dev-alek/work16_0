@@ -1,11 +1,10 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
-
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /* ***************************  Definitions  ************************** */
 /*
 
@@ -91,7 +90,7 @@ f_name.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -106,8 +105,8 @@ f_name.
 &Scoped-define INTERNAL-TABLES temp-changes buf_c-price-doc-forming
 
 /* Definitions for BROWSE BR-changes                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes
+&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes   
 &Scoped-define SELF-NAME BR-changes
 &Scoped-define QUERY-STRING-BR-changes FOR EACH temp-changes
 &Scoped-define OPEN-QUERY-BR-changes OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
@@ -116,8 +115,8 @@ f_name.
 
 
 /* Definitions for BROWSE BR-docs                                       */
-&Scoped-define FIELDS-IN-QUERY-BR-docs buf_c-price-doc-forming.chip-num buf_c-price-doc-forming.name buf_c-price-doc-forming.sys-date buf_c-price-doc-forming.sys-time-chr buf_c-price-doc-forming.corr-date STRING(buf_c-price-doc-forming.corr-time, "HH:MM") @ buf_c-price-doc-forming.corr-time buf_c-price-doc-forming.corr-user-name usrfulnf(buf_c-price-doc-forming.corr-user-name) buf_c-price-doc-forming.corr-user-db-num
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-docs
+&Scoped-define FIELDS-IN-QUERY-BR-docs buf_c-price-doc-forming.chip-num buf_c-price-doc-forming.name buf_c-price-doc-forming.sys-date buf_c-price-doc-forming.sys-time-chr buf_c-price-doc-forming.corr-date STRING(buf_c-price-doc-forming.corr-time, "HH:MM") @ buf_c-price-doc-forming.corr-time buf_c-price-doc-forming.corr-user-name usrfulnf(buf_c-price-doc-forming.corr-user-name) buf_c-price-doc-forming.corr-user-db-num   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-docs   
 &Scoped-define SELF-NAME BR-docs
 &Scoped-define QUERY-STRING-BR-docs FOR EACH buf_c-price-doc-forming no-lock
 &Scoped-define OPEN-QUERY-BR-docs OPEN QUERY {&SELF-NAME} FOR EACH buf_c-price-doc-forming no-lock.
@@ -130,7 +129,7 @@ f_name.
     ~{&OPEN-QUERY-BR-docs}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-Cancel B-Help BR-docs BR-changes
+&Scoped-Define ENABLED-OBJECTS B-Cancel B-Help BR-docs BR-changes 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -145,27 +144,27 @@ f_name.
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-Cancel AUTO-END-KEY
-     LABEL "Выход"
+DEFINE BUTTON B-Cancel AUTO-END-KEY 
+     LABEL "Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помощь"
+DEFINE BUTTON B-Help 
+     LABEL "Помощь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-sch
-     LABEL "Фильтр"
+DEFINE BUTTON B-sch 
+     LABEL "Фильтр" 
      SIZE 10 BY 1 TOOLTIP "Фильтрация списка"
      BGCOLOR 8 .
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-changes FOR
+DEFINE QUERY BR-changes FOR 
       temp-changes SCROLLING.
 
-DEFINE QUERY BR-docs FOR
+DEFINE QUERY BR-docs FOR 
       buf_c-price-doc-forming SCROLLING.
 &ANALYZE-RESUME
 
@@ -184,14 +183,14 @@ DEFINE BROWSE BR-docs
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-docs Dialog-Frame _FREEFORM
   QUERY BR-docs DISPLAY
       buf_c-price-doc-forming.chip-num FORMAT ">>>>>>>>>9"
-buf_c-price-doc-forming.name       COLUMN-LABEL "Наименование! "
+buf_c-price-doc-forming.name       COLUMN-LABEL "Наименование"
 buf_c-price-doc-forming.sys-date   COLUMN-LABEL "Дата"
 buf_c-price-doc-forming.sys-time-chr COLUMN-LABEL "Время" FORMAT "x(5)"
-buf_c-price-doc-forming.corr-date  COLUMN-LABEL "Дата!изм"    LABEL-FGCOLOR 15 LABEL-BGCOLOR 3
-STRING(buf_c-price-doc-forming.corr-time, "HH:MM")    @ buf_c-price-doc-forming.corr-time COLUMN-LABEL "Время!изм" LABEL-FGCOLOR 15 LABEL-BGCOLOR 3
-buf_c-price-doc-forming.corr-user-name   COLUMN-LABEL "Кто!менял" FORMAT "x(10)"   LABEL-FGCOLOR 15 LABEL-BGCOLOR 3
-usrfulnf(buf_c-price-doc-forming.corr-user-name)    column-label "Кто менял!ФИО" LABEL-FGCOLOR 15 LABEL-BGCOLOR 3
-buf_c-price-doc-forming.corr-user-db-num COLUMN-LABEL "В !БД"  FORMAT ">>>>9"  LABEL-FGCOLOR 15 LABEL-BGCOLOR 3
+buf_c-price-doc-forming.corr-date  COLUMN-LABEL "Дата!изм"    
+STRING(buf_c-price-doc-forming.corr-time, "HH:MM")    @ buf_c-price-doc-forming.corr-time COLUMN-LABEL "Время!изм" 
+buf_c-price-doc-forming.corr-user-name   COLUMN-LABEL "Кто!менял" FORMAT "x(10)"   
+usrfulnf(buf_c-price-doc-forming.corr-user-name)    column-label "Кто менял!ФИО" 
+buf_c-price-doc-forming.corr-user-db-num COLUMN-LABEL "в БД"  FORMAT ">>>>9"  
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS NO-COLUMN-SCROLLING SEPARATORS SIZE 96.75 BY 10.04.
@@ -206,8 +205,8 @@ DEFINE FRAME Dialog-Frame
      BR-docs AT ROW 2.21 COL 1.25
      BR-changes AT ROW 12.5 COL 1
      SPACE(0.49) SKIP(0.00)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "История ДНЦ"
          CANCEL-BUTTON B-Cancel.
 
@@ -230,14 +229,15 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-docs B-Help Dialog-Frame */
 /* BROWSE-TAB BR-changes BR-docs Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* SETTINGS FOR BUTTON B-sch IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
-       BR-docs:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 1.
+ASSIGN 
+       BR-docs:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 1
+       BR-docs:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -270,7 +270,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH buf_c-price-doc-forming no-lock.
 */  /* DIALOG-BOX Dialog-Frame */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -323,7 +323,7 @@ END.
 &Scoped-define BROWSE-NAME BR-changes
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -369,7 +369,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -388,10 +388,10 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE B-Cancel B-Help BR-docs BR-changes
+  ENABLE B-Cancel B-Help BR-docs BR-changes 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -400,7 +400,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-enable_UI Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-enable_UI Dialog-Frame 
 PROCEDURE my-enable_UI :
 ENABLE B-Cancel
          B-sch
@@ -414,7 +414,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 define input  parameter p-open-query     as logical   no-undo .
 define input  parameter p-find-next      as logical   no-undo .
@@ -497,7 +497,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame 
 PROCEDURE proc-b-sch :
 assign
   tbl = 'c-price-doc-forming'
@@ -525,7 +525,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-code Dialog-Frame 
 PROCEDURE proc-find-code :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -540,7 +540,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -710,6 +710,7 @@ for each ub.c-price-doc-forming-gds where
          ub.c-price-doc-forming-gds.pdf-db      = buf_c-price-doc-forming.pdf-db     and
          ub.c-price-doc-forming-gds.chip-num    = buf_c-price-doc-forming.chip-num
          :
+          v-chg-fields = ''.   
      find first old_c-price-doc-forming-gds no-lock where
          old_c-price-doc-forming-gds.plt-id      = ub.c-price-doc-forming-gds.plt-id    and
          old_c-price-doc-forming-gds.plt-db-num  = ub.c-price-doc-forming-gds.plt-db-num and
@@ -892,7 +893,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-filter-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-filter-name Dialog-Frame 
 PROCEDURE set-filter-name :
 define input parameter p-filter-name as character no-undo .
 
@@ -918,3 +919,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

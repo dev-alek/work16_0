@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,15 +8,15 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER buf_host FOR ub.clients.
-DEFINE BUFFER buf_obj FOR ub.clients.
-DEFINE BUFFER X_c-inkas FOR ub.c-inkas.
-DEFINE BUFFER X_inkas FOR ub.inkas.
-DEFINE BUFFER X_trn-doc FOR ub.trn-doc.
+DEFINE BUFFER buf_host FOR clients.
+DEFINE BUFFER buf_obj FOR clients.
+DEFINE BUFFER X_c-inkas FOR c-inkas.
+DEFINE BUFFER X_inkas FOR inkas.
+DEFINE BUFFER X_trn-doc FOR trn-doc.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -103,7 +103,7 @@ DEFINE VARIABLE v-is-tpsi-obj AS LOGICAL NO-UNDO INIT ?.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -118,8 +118,8 @@ DEFINE VARIABLE v-is-tpsi-obj AS LOGICAL NO-UNDO INIT ?.
 &Scoped-define INTERNAL-TABLES temp-changes X_c-inkas
 
 /* Definitions for BROWSE BR-changes                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes
+&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes   
 &Scoped-define SELF-NAME BR-changes
 &Scoped-define QUERY-STRING-BR-changes FOR EACH temp-changes
 &Scoped-define OPEN-QUERY-BR-changes OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
@@ -128,8 +128,8 @@ DEFINE VARIABLE v-is-tpsi-obj AS LOGICAL NO-UNDO INIT ?.
 
 
 /* Definitions for BROWSE BR-docs                                       */
-&Scoped-define FIELDS-IN-QUERY-BR-docs mark-string( recid(X_c-inkas), v-rid-list ) X_c-inkas.inkas-code X_c-inkas.doc-date X_c-inkas.fact-date X_c-inkas.shift-date shift-name-no-err(BUFFER X_c-inkas) X_c-inkas.real-corr-date string(X_c-inkas.corr-time, "HH:MM:SS") {&sort-clmn_2} X_c-inkas.corr-date X_c-inkas.corr-shift-date X_c-inkas.corr-shift-num X_c-inkas.netto X_c-inkas.tot-doc X_c-inkas.discnt X_c-inkas.sub-discnt X_c-inkas.qnty (X_c-inkas.discnt / X_c-inkas.tot-doc * 100) X_c-inkas.num-chk X_c-inkas.num-chk-nf X_c-inkas.status_ X_c-inkas.flag_ X_c-inkas.is-auto-born X_c-inkas.is-auto-get X_c-inkas.is-auto-rsrv X_c-inkas.is-auto-close X_c-inkas.auto-comp X_c-inkas.AUTO-fbr X_c-inkas.rest-dish X_c-inkas.rest-ingr X_c-inkas.auto-tpsi X_c-inkas.rest-tpsi
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-docs
+&Scoped-define FIELDS-IN-QUERY-BR-docs mark-string( recid(X_c-inkas), v-rid-list ) X_c-inkas.inkas-code X_c-inkas.doc-date X_c-inkas.fact-date X_c-inkas.shift-date shift-name-no-err(BUFFER X_c-inkas) X_c-inkas.real-corr-date string(X_c-inkas.corr-time, "HH:MM:SS") {&sort-clmn_2} X_c-inkas.corr-date X_c-inkas.corr-shift-date X_c-inkas.corr-shift-num X_c-inkas.netto X_c-inkas.tot-doc X_c-inkas.discnt X_c-inkas.sub-discnt X_c-inkas.qnty (X_c-inkas.discnt / X_c-inkas.tot-doc * 100) X_c-inkas.num-chk X_c-inkas.num-chk-nf X_c-inkas.status_ X_c-inkas.flag_ X_c-inkas.is-auto-born X_c-inkas.is-auto-get X_c-inkas.is-auto-rsrv X_c-inkas.is-auto-close X_c-inkas.auto-comp X_c-inkas.AUTO-fbr X_c-inkas.rest-dish X_c-inkas.rest-ingr X_c-inkas.auto-tpsi X_c-inkas.rest-tpsi   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-docs   
 &Scoped-define SELF-NAME BR-docs
 &Scoped-define OPEN-QUERY-BR-docs /* OPEN QUERY {&SELF-NAME} FOR EACH X_c-inkas NO-LOCK INDEXED-REPOSITION. */ RUN reopen-query IN THIS-PROCEDURE.
 &Scoped-define TABLES-IN-QUERY-BR-docs X_c-inkas
@@ -141,9 +141,9 @@ DEFINE VARIABLE v-is-tpsi-obj AS LOGICAL NO-UNDO INIT ?.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark B-sel B-print B-sch B-Help ~
 BR-docs ED-notes sch-code sch-date sch-fact BR-changes mark-num l-qnty qnty ~
-l-num-chk num-chk shop-name f-search-label
+l-num-chk num-chk shop-name f-search-label 
 &Scoped-Define DISPLAYED-OBJECTS ED-notes sch-code sch-date sch-fact ~
-mark-num l-qnty qnty l-num-chk num-chk shop-name f-search-label
+mark-num l-qnty qnty l-num-chk num-chk shop-name f-search-label 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -158,88 +158,88 @@ mark-num l-qnty qnty l-num-chk num-chk shop-name f-search-label
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-print
-     LABEL "Пе&чать"
+DEFINE BUTTON B-print 
+     LABEL "Пе&чать" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-sch
-     LABEL "&Фильтр"
+DEFINE BUTTON B-sch 
+     LABEL "&Фильтр" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-sel AUTO-GO
-     LABEL "Вы&бор"
+DEFINE BUTTON B-sel AUTO-GO 
+     LABEL "Вы&бор" 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE ED-notes AS CHARACTER
+DEFINE VARIABLE ED-notes AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 98 BY 2
      BGCOLOR 8 FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE f-search-label AS CHARACTER FORMAT "X(256)":U INITIAL "Поиск по:"
-      VIEW-AS TEXT
+DEFINE VARIABLE f-search-label AS CHARACTER FORMAT "X(256)":U INITIAL "Поиск по:" 
+      VIEW-AS TEXT 
      SIZE 10.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE l-num-chk AS CHARACTER FORMAT "X(256)":U INITIAL "Число чеков"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-num-chk AS CHARACTER FORMAT "X(256)":U INITIAL "Число чеков" 
+      VIEW-AS TEXT 
      SIZE 12.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-qnty AS CHARACTER FORMAT "X(256)":U INITIAL "Кол-во товара"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-qnty AS CHARACTER FORMAT "X(256)":U INITIAL "Кол-во товара" 
+      VIEW-AS TEXT 
      SIZE 13.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 6 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE num-chk AS INTEGER FORMAT "->>>,>>9":U INITIAL 0
-      VIEW-AS TEXT
+DEFINE VARIABLE num-chk AS INTEGER FORMAT "->>>,>>9":U INITIAL 0 
+      VIEW-AS TEXT 
      SIZE 16.13 BY .67 NO-UNDO.
 
-DEFINE VARIABLE qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0
-      VIEW-AS TEXT
+DEFINE VARIABLE qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
+      VIEW-AS TEXT 
      SIZE 16.13 BY .67 NO-UNDO.
 
-DEFINE VARIABLE sch-code AS CHARACTER FORMAT "X(14)":U
-     LABEL "номеру"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-code AS CHARACTER FORMAT "X(14)":U 
+     LABEL "номеру" 
+     VIEW-AS FILL-IN 
      SIZE 12.5 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sch-date AS DATE FORMAT "99/99/9999":U
-     LABEL "дате"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "дате" 
+     VIEW-AS FILL-IN 
      SIZE 11.63 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sch-fact AS DATE FORMAT "99/99/9999":U
-     LABEL "дате факт"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-fact AS DATE FORMAT "99/99/9999":U 
+     LABEL "дате факт" 
+     VIEW-AS FILL-IN 
      SIZE 11.63 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE shop-name AS CHARACTER FORMAT "X(25)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE shop-name AS CHARACTER FORMAT "X(25)":U 
+      VIEW-AS TEXT 
      SIZE 27 BY .67 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-changes FOR
+DEFINE QUERY BR-changes FOR 
       temp-changes SCROLLING.
 
-DEFINE QUERY BR-docs FOR X_c-inkas scrolling.
+DEFINE qUERY BR-docs FOR X_c-inkas scrolling.
 
 &ANALYZE-RESUME
 
@@ -317,8 +317,8 @@ DEFINE FRAME Dialog-Frame
      shop-name AT ROW 11.75 COL 70 COLON-ALIGNED NO-LABEL
      f-search-label AT ROW 12.75 COL 1.5 NO-LABEL
      SPACE(87.12) SKIP(6.85)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Продажи"
          CANCEL-BUTTON b-quit.
 
@@ -348,13 +348,16 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-docs B-Help Dialog-Frame */
 /* BROWSE-TAB BR-changes sch-fact Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+ASSIGN 
+       BR-docs:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
+
 /* SETTINGS FOR FILL-IN f-search-label IN FRAME Dialog-Frame
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        f-search-label:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN l-num-chk IN FRAME Dialog-Frame
@@ -392,7 +395,7 @@ DEFINE qUERY BR-docs FOR X_c-inkas scrolling.
 */  /* BROWSE BR-docs */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -684,7 +687,7 @@ END.
 &Scoped-define BROWSE-NAME BR-changes
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -798,7 +801,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -817,15 +820,15 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY ED-notes sch-code sch-date sch-fact mark-num l-qnty qnty l-num-chk
-          num-chk shop-name f-search-label
+  DISPLAY ED-notes sch-code sch-date sch-fact mark-num l-qnty qnty l-num-chk 
+          num-chk shop-name f-search-label 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-mark B-sel B-print B-sch B-Help BR-docs ED-notes sch-code
-         sch-date sch-fact BR-changes mark-num l-qnty qnty l-num-chk num-chk
-         shop-name f-search-label
+  ENABLE b-quit B-mark B-sel B-print B-sch B-Help BR-docs ED-notes sch-code 
+         sch-date sch-fact BR-changes mark-num l-qnty qnty l-num-chk num-chk 
+         shop-name f-search-label 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -834,7 +837,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Get-params Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Get-params Dialog-Frame 
 PROCEDURE Get-params :
 define input parameter locp-obj-type like ub.clients.obj-type no-undo.
 define input parameter locp-obj-code like ub.clients.obj-code no-undo.
@@ -859,7 +862,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 define variable v-shift as integer no-undo .
 define variable fh as widget-handle no-undo .
@@ -978,7 +981,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 define input  parameter p-open-query     as logical   no-undo .
 define input  parameter p-find-next      as logical   no-undo .
@@ -1123,7 +1126,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-print Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-print Dialog-Frame 
 PROCEDURE proc-b-print :
 DEFINE VARIABLE v-frame-width as integer no-undo .
 define variable accum-count as integer.
@@ -1292,7 +1295,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame 
 PROCEDURE proc-b-sch :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1374,7 +1377,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Proc-find-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Proc-find-code Dialog-Frame 
 PROCEDURE Proc-find-code :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1405,7 +1408,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-date Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-date Dialog-Frame 
 PROCEDURE proc-find-date :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1463,7 +1466,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
 for each temp-changes:
     delete temp-changes.
@@ -1534,7 +1537,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reopen-query Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reopen-query Dialog-Frame 
 PROCEDURE reopen-query :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1549,3 +1552,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

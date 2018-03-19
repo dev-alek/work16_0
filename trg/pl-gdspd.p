@@ -177,7 +177,7 @@ do
     run trg/userlog.p (
         input {&nwsdochs_action_delete}
         , input {&table_pl-gds-pump}
-        , input ( buffer ub.pl-gds-pump :handle )
+        , input ( buffer buf_c-pl-gds-pump :handle )
         , input ?
         , input ""
         ) no-error.

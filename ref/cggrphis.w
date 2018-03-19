@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,13 +8,13 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER buf_cli FOR ub.clients.
-DEFINE BUFFER for-c-gds-grp-hist FOR ub.c-gds-grp-hist.
-DEFINE BUFFER X_c-gds-grp-hist FOR ub.c-gds-grp-hist.
+DEFINE BUFFER buf_cli FOR clients.
+DEFINE BUFFER for-c-gds-grp-hist FOR c-gds-grp-hist.
+DEFINE BUFFER X_c-gds-grp-hist FOR c-gds-grp-hist.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -109,7 +109,7 @@ define buffer X_tax for ub.tax.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -124,8 +124,8 @@ define buffer X_tax for ub.tax.
 &Scoped-define INTERNAL-TABLES X_c-gds-grp-hist temp-changes
 
 /* Definitions for BROWSE BR-c-gds-grp-hist                             */
-&Scoped-define FIELDS-IN-QUERY-BR-c-gds-grp-hist mark-string( recid(X_c-gds-grp-hist), v-rid-list ) X_c-gds-grp-hist.corr-date usrfulnf(X_c-gds-grp-hist.corr-user-name) X_c-gds-grp-hist.corr-user-db-num {&hn-0-gds-grp-hist-name} abs(X_c-gds-grp-hist.node-code) get-action(X_c-gds-grp-hist.action) string(X_c-gds-grp-hist.corr-time, "HH:MM") if X_c-gds-grp-hist.subject <> {&table_gds-grp} and X_c-gds-grp-hist.host-code > 0 then string(X_c-gds-grp-hist.host-code) else '':U if X_c-gds-grp-hist.subject <> {&table_gds-grp} and X_c-gds-grp-hist.obj-code > 0 then (X_c-gds-grp-hist.obj-type + string(X_c-gds-grp-hist.obj-code)) else '':U
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-c-gds-grp-hist
+&Scoped-define FIELDS-IN-QUERY-BR-c-gds-grp-hist mark-string( recid(X_c-gds-grp-hist), v-rid-list ) X_c-gds-grp-hist.corr-date usrfulnf(X_c-gds-grp-hist.corr-user-name) X_c-gds-grp-hist.corr-user-db-num {&hn-0-gds-grp-hist-name} abs(X_c-gds-grp-hist.node-code) get-action(X_c-gds-grp-hist.action) string(X_c-gds-grp-hist.corr-time, "HH:MM") if X_c-gds-grp-hist.subject <> {&table_gds-grp} and X_c-gds-grp-hist.host-code > 0 then string(X_c-gds-grp-hist.host-code) else '':U if X_c-gds-grp-hist.subject <> {&table_gds-grp} and X_c-gds-grp-hist.obj-code > 0 then (X_c-gds-grp-hist.obj-type + string(X_c-gds-grp-hist.obj-code)) else '':U   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-c-gds-grp-hist   
 &Scoped-define SELF-NAME BR-c-gds-grp-hist
 &Scoped-define QUERY-STRING-BR-c-gds-grp-hist FOR EACH X_c-gds-grp-hist NO-LOCK
 &Scoped-define OPEN-QUERY-BR-c-gds-grp-hist OPEN QUERY {&SELF-NAME} FOR EACH X_c-gds-grp-hist NO-LOCK.
@@ -134,8 +134,8 @@ define buffer X_tax for ub.tax.
 
 
 /* Definitions for BROWSE BR-changes                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes
+&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes   
 &Scoped-define SELF-NAME BR-changes
 &Scoped-define QUERY-STRING-BR-changes FOR EACH temp-changes
 &Scoped-define OPEN-QUERY-BR-changes OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
@@ -149,8 +149,8 @@ define buffer X_tax for ub.tax.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel B-sch B-Help mark-num ~
-BR-c-gds-grp-hist BR-changes v-full-name-old v-full-name-new
-&Scoped-Define DISPLAYED-OBJECTS mark-num v-full-name-old v-full-name-new
+BR-c-gds-grp-hist BR-changes v-full-name-old v-full-name-new 
+&Scoped-Define DISPLAYED-OBJECTS mark-num v-full-name-old v-full-name-new 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -161,7 +161,7 @@ BR-c-gds-grp-hist BR-changes v-full-name-old v-full-name-new
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
   (  p-action as integer )  FORWARD.
 
@@ -174,49 +174,49 @@ FUNCTION get-action RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-sch
-     LABEL "&Фильтр"
+DEFINE BUTTON B-sch 
+     LABEL "&Фильтр" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&бор"
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор" 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 9 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE v-full-name-new AS CHARACTER FORMAT "X(256)":U
-     LABEL "Стало"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-full-name-new AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Стало" 
+     VIEW-AS FILL-IN 
      SIZE 91 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-full-name-old AS CHARACTER FORMAT "X(256)":U
-     LABEL "Было"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-full-name-old AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Было" 
+     VIEW-AS FILL-IN 
      SIZE 91 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-c-gds-grp-hist FOR
+DEFINE QUERY BR-c-gds-grp-hist FOR 
       X_c-gds-grp-hist SCROLLING.
 
-DEFINE QUERY BR-changes FOR
+DEFINE QUERY BR-changes FOR 
       temp-changes SCROLLING.
 &ANALYZE-RESUME
 
@@ -268,8 +268,8 @@ DEFINE FRAME Dialog-Frame
      v-full-name-old AT ROW 20 COL 2
      v-full-name-new AT ROW 21 COL 1
      SPACE(0.24) SKIP(0.04)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Справочник истории групп товаров"
          CANCEL-BUTTON b-quit.
 
@@ -297,9 +297,12 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-c-gds-grp-hist mark-num Dialog-Frame */
 /* BROWSE-TAB BR-changes BR-c-gds-grp-hist Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+ASSIGN 
+       BR-c-gds-grp-hist:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 /* SETTINGS FOR FILL-IN v-full-name-new IN FRAME Dialog-Frame
    ALIGN-L                                                              */
@@ -329,7 +332,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
 */  /* BROWSE BR-changes */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -430,7 +433,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -597,7 +600,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -616,13 +619,13 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY mark-num v-full-name-old v-full-name-new
+  DISPLAY mark-num v-full-name-old v-full-name-new 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-mark b-sel B-sch B-Help mark-num BR-c-gds-grp-hist BR-changes
-         v-full-name-old v-full-name-new
+  ENABLE b-quit B-mark b-sel B-sch B-Help mark-num BR-c-gds-grp-hist BR-changes 
+         v-full-name-old v-full-name-new 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -631,7 +634,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -668,7 +671,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 define input  parameter p-open-query     as logical   no-undo .
 define input  parameter p-find-next      as logical   no-undo .
@@ -957,7 +960,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame 
 PROCEDURE proc-b-sch :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1013,7 +1016,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1072,7 +1075,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
   (  p-action as integer ) :
 /*------------------------------------------------------------------------------
@@ -1091,3 +1094,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

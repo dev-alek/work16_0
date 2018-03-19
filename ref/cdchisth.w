@@ -367,6 +367,9 @@ ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+ASSIGN 
+       br-dc-hist:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
+
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
