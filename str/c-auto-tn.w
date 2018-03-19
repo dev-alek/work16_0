@@ -179,7 +179,8 @@ DEFINE BROWSE br-wp
       usrfulnf(X_c-auto-tank.corr-user-name) COLUMN-LABEL "Изменил" FORMAT "X(18)":U
       X_c-auto-tank.corr-date COLUMN-LABEL "Дата!измен" FORMAT "99/99/9999":U
       string(X_c-auto-tank.corr-time, "HH:MM") COLUMN-LABEL "Время!измен" FORMAT "X(5)":U
-      X_c-auto-tank.auto-num
+      entry(1, X_c-auto-tank.auto-num, "#") column-label "Номер!машины" format "x(11)"
+      (  if index(X_c-auto-tank.auto-num, "#") > 0 then entry(2, X_c-auto-tank.auto-num, "#") else ""  ) column-label "Секция" format "x(6)"
       X_c-auto-tank.brutto-qnty
       X_c-auto-tank.name
       X_c-auto-tank.status_
@@ -187,7 +188,7 @@ DEFINE BROWSE br-wp
       X_c-auto-tank.tank-type
       X_c-auto-tank.plomb-type
       X_c-auto-tank.cli-type
-      X_c-auto-tank.cli-code
+      X_c-auto-tank.cli-code      
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.24 FIT-LAST-COLUMN.
@@ -235,6 +236,10 @@ DEFINE FRAME Dialog-Frame
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+ASSIGN 
+       br-wp:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 1
+       br-wp:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE
+       br-wp:COLUMN-MOVABLE IN FRAME Dialog-Frame         = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -362,6 +367,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
     reposition br-wp to recid v-doc-rec no-error.
     apply 'value-changed' to br-wp.
 " }
+/* 06/III-2018 не позволяет делать сортировку по полям запроса: позволяет только по столбцам броузера
 { gbl/srt-clmn.i
   &browse-name    = "br-wp"
   &frame-name     = "{&frame-name}"
@@ -374,6 +380,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
   &re-move-clmn   = "yes"
   &mv-brw-default = "yes"
 }
+*/
 { gbl/brwrepos.i
   &line-num=5
 }
@@ -397,8 +404,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     return error .
  end.
  if p-mode = "one":U then do:
+   /* 06/III-2018 добавляем изменения по секциям:
+                  отобразить все резервуары и секции автоцистерны и только их
+                  (условие X_c-auto-tank.auto-num begins p-auto-num ложится на индекс,
+                   а второе условие с "or" отсекает другие автоцистерны с совпадающим началом auto-num)  */
    find first X_c-auto-tank no-lock
-        where X_c-auto-tank.auto-num = p-auto-num no-error.
+        where X_c-auto-tank.auto-num begins p-auto-num
+         and ( X_c-auto-tank.auto-num = p-auto-num or
+               X_c-auto-tank.auto-num begins (p-auto-num + "#") )
+   no-error.
     if not available X_c-auto-tank then do:
         message
         vss-workfile vss-revision vss-description skip
@@ -497,7 +511,11 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 OPEN QUERY br-wp FOR EACH X_c-auto-tank NO-LOCK
-                    where X_c-auto-tank.auto-num = p-auto-num
+        where X_c-auto-tank.auto-num begins p-auto-num
+         and ( X_c-auto-tank.auto-num = p-auto-num or
+               X_c-auto-tank.auto-num begins (p-auto-num + "#") )
+/* 06/III-2018                   where X_c-auto-tank.auto-num = p-auto-num*/
+/* by X_c-auto-tank.corr-date by X_c-auto-tank.corr-time 06/III-2018 меняем на */ by X_c-auto-tank.chip-num descending
                               INDEXED-REPOSITION.
 APPLY "VALUE-CHANGED" TO br-wp in frame {&frame-name}.
 APPLY "ENTRY" TO br-wp.
@@ -521,13 +539,14 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
-for each temp-changes:
-    delete temp-changes.
-END.
-if not available X_c-auto-tank then do:
-  Open QUery br-changes for each temp-changes.
-  return.
-end.
+define variable v-s-old as character no-undo .
+define variable v-s-new as character no-undo .
+define variable v-n-old as integer no-undo .
+define variable v-n-new as integer no-undo .
+define buffer buf_temp-changes for temp-changes .
+
+  if available X_c-auto-tank then do:
+// if 
 
 &scop fields-name-list "auto-num,brutto-qnty,name,status_,PS,tank-type,plomb-type,cli-type,cli-code"
 
@@ -549,7 +568,67 @@ v-label-param =   "auto-num" + {&delim-par} + "Номер машины" + {&delim-par} + ""
                                             ,input  {&table_auto-tank}
                                             ,input  {&fields-name-list}
                                             ,input  v-label-param).
-
+    if can-find (first temp-changes) and ( index(X_c-auto-tank.auto-num, "#") > 0 ) then do:
+      find first buf_temp-changes where buf_temp-changes.f_name = "name" no-error .
+      if available buf_temp-changes then do :
+        /* для секций сюда пишутся параметры ёмкости;
+           трансформируем их в человекочитаемый вид */
+        assign
+          v-s-old = ENTRY(1, buf_temp-changes.v_old, {&delim-par})
+          v-s-new = ENTRY(1, buf_temp-changes.v_new, {&delim-par})
+        .
+        if (v-s-old > "") or (v-s-new > "") then do:
+          create temp-changes.
+          assign
+            temp-changes.t_name = {&table_auto-tank}
+            temp-changes.f_name = "name#1"
+            temp-changes.l_name = "Min ур.взлива(мм)"
+            temp-changes.v_old  = v-s-old
+            temp-changes.v_new  = v-s-new
+            temp-changes.num_   = 0
+          .
+        end .
+        assign
+          v-n-old = num-entries(buf_temp-changes.v_old, {&delim-par})
+          v-n-new = num-entries(buf_temp-changes.v_new, {&delim-par})
+        .
+        assign
+          v-s-old = if v-n-old > 1 then ENTRY(2, buf_temp-changes.v_old, {&delim-par}) else ""
+          v-s-new = if v-n-new > 1 then ENTRY(2, buf_temp-changes.v_new, {&delim-par}) else ""
+        .
+        if (v-s-old > "") or (v-s-new > "") then do:
+          create temp-changes.
+          assign
+            temp-changes.t_name = {&table_auto-tank}
+            temp-changes.f_name = "name#2"
+            temp-changes.l_name = "Max ур.взлива(мм)"
+            temp-changes.v_old  = v-s-old
+            temp-changes.v_new  = v-s-new
+            temp-changes.num_   = 0
+          .
+        end .
+        assign
+          v-s-old = if v-n-old > 2 then ENTRY(3, buf_temp-changes.v_old, {&delim-par}) else ""
+          v-s-new = if v-n-new > 2 then ENTRY(3, buf_temp-changes.v_new, {&delim-par}) else ""
+        .
+        if (v-s-old > "") or (v-s-new > "") then do:
+          create temp-changes.
+          assign
+            temp-changes.t_name = {&table_auto-tank}
+            temp-changes.f_name = "name#3"
+            temp-changes.l_name = "Диаметр горловины(мм)"
+            temp-changes.v_old  = v-s-old
+            temp-changes.v_new  = v-s-new
+            temp-changes.num_   = 0
+          .
+        end .
+        delete buf_temp-changes . /* исходную запись удаляем после того, как мы её распилили */
+      end . /* end_of available buf_temp-changes */
+    end .
+  end . /* end_of if_available X_c-auto-tank */
+  else do :
+    empty temp-table temp-changes .
+  end .
 Open QUery br-changes for each temp-changes.
 
 END PROCEDURE.

@@ -772,6 +772,10 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-save Dialog-Frame
 ON CHOOSE OF b-save IN FRAME Dialog-Frame /* Ввод */
 DO:
+define variable v-auto-secnum as character no-undo .
+define variable v-brutto-qnty as decimal no-undo .
+define buffer auto-tank-sec for ub.auto-tank .
+
   if varauto-num:screen-value = ? or trim(varauto-num:screen-value) = "" 
   or varname:screen-value = ? or trim(varname:screen-value) = ""
   then do :
@@ -780,34 +784,31 @@ DO:
   end.    
   
   if parmode = {&add-def} then do:
-    find first ub.auto-tank where ub.auto-tank.auto-num = input frame {&frame-name} varauto-num no-error.
-    if available (ub.auto-tank)
+    if can-find (first ub.auto-tank where ub.auto-tank.auto-num = input frame {&frame-name} varauto-num)
     then do:
       message "Уже существует автотранспорт с гос. номером: " input frame {&frame-name} varauto-num view-as alert-box.
       return no-apply.
     end.
+  end .
+      
+  assign
+    v-auto-secnum = (input frame {&frame-name} varauto-num) + "#"
+    v-brutto-qnty = 0
+  .
+  for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins v-auto-secnum :
+    v-brutto-qnty = v-brutto-qnty + auto-tank-sec.brutto-qnty .    
+  end.
+  
+  if parmode = {&add-def} then do:
     create ub.auto-tank.
     assign
-        parrecid = recid(ub.auto-tank)
-        ub.auto-tank.status_ = {&current-status}
+      ub.auto-tank.auto-num    = input frame {&frame-name} varauto-num
+      ub.auto-tank.name        = input frame {&frame-name} varname
+      ub.auto-tank.ps          = input frame {&frame-name} varps
+      ub.auto-tank.brutto-qnty = v-brutto-qnty
+      ub.auto-tank.status_     = {&current-status}
     .
-  end.
-  if parmode = {&update} and ub.auto-tank.auto-num <> varauto-num:screen-value then
-  for each buf_auto-tank exclusive-lock where buf_auto-tank.auto-num begins (ub.auto-tank.auto-num + "#") :
-      for each buf_auto-tank-meas exclusive-lock where buf_auto-tank-meas.auto-num = buf_auto-tank.auto-num :
-          buf_auto-tank-meas.auto-num = varauto-num:screen-value + "#" + entry(2,buf_auto-tank.auto-num,"#") no-error.
-      end.    
-      buf_auto-tank.auto-num = varauto-num:screen-value + "#" + entry(2,buf_auto-tank.auto-num,"#") no-error.
-  end.
-  if parmode = {&add-def} or
-     parmode = {&update} then do:
-     assign
-       ub.auto-tank.auto-num    = input frame {&frame-name} varauto-num
-       ub.auto-tank.name        = input frame {&frame-name} varname
-       ub.auto-tank.ps          = input frame {&frame-name} varps
-.
-  end.
-  if parmode = {&add-def} then do :
+    parrecid = recid(ub.auto-tank) .
     if varauto-firm <> "" then do :
       create ub.auto-tank-attr.
       assign
@@ -816,9 +817,15 @@ DO:
         ub.auto-tank-attr.attr-value = input frame {&frame-name} varauto-firm
       .
     end.
-  end.
-  if parmode = {&update} then do:
-    if varauto-firm <> "" then do :
+  end. /* end_of create */
+  else if parmode = {&update} then do:
+     assign
+       ub.auto-tank.auto-num    = input frame {&frame-name} varauto-num
+       ub.auto-tank.name        = input frame {&frame-name} varname
+       ub.auto-tank.ps          = input frame {&frame-name} varps
+       ub.auto-tank.brutto-qnty = v-brutto-qnty
+    .
+    if varauto-firm > "" then do :
       if available ub.auto-tank-attr then ub.auto-tank-attr.attr-value = input frame {&frame-name} varauto-firm .
       else do :
         create ub.auto-tank-attr.
@@ -832,7 +839,20 @@ DO:
     else do :
       if available ub.auto-tank-attr then delete ub.auto-tank-attr.
     end.
+  end. /* end_of update */
+
+  /* 06/III-2018 если parmode = {&update} то менять auto-tank.auto-num нельзя:
+     при отправке новостей принимающая сторона сопоставляет записи по первичному ключу,
+     и при смене auto-num принимающая сторона вместо update создаст новую запись с изменённым auto-num
+  if parmode = {&update} and ub.auto-tank.auto-num <> varauto-num:screen-value then
+  for each buf_auto-tank exclusive-lock where buf_auto-tank.auto-num begins (ub.auto-tank.auto-num + "#") :
+      for each buf_auto-tank-meas exclusive-lock where buf_auto-tank-meas.auto-num = buf_auto-tank.auto-num :
+          buf_auto-tank-meas.auto-num = varauto-num:screen-value + "#" + entry(2,buf_auto-tank.auto-num,"#") no-error.
+      end.    
+      buf_auto-tank.auto-num = varauto-num:screen-value + "#" + entry(2,buf_auto-tank.auto-num,"#") no-error.
   end.
+  */
+  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1156,9 +1176,10 @@ PROCEDURE local-enable_UI :
 
   RUN enable_ui IN THIS-PROCEDURE.
   if parmode = {&add-def} or parmode = {&update} then do:
-      enable varauto-num varname varauto-firm b-save b-add-sec b-chg-sec b-add-meas b-chg-meas b-del-meas b-choose-auto-firm b-del-sec b-mark b-sel-all b-unmark with frame {&frame-name}.
+      enable  varname varauto-firm b-save b-add-sec b-chg-sec b-add-meas b-chg-meas b-del-meas b-choose-auto-firm b-del-sec b-mark b-sel-all b-unmark with frame {&frame-name}.
      assign varps:read-only = no.
   end.
+  if parmode = {&add-def} then enable varauto-num with frame {&frame-name}.
   {&OPEN-QUERY-brw-auto-meas}
 /*  if parmode = {&add-def} then do:                                                                                                          */
 /*     enable varauto-num varname varauto-firm b-save with frame {&frame-name}.                                                               */
