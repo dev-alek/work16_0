@@ -82,6 +82,8 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,auto-tank~
 ,auto-tank-meas~
 ,c-auto-tank~
+,sr-izmerenia~
+,c-sr-izmerenia~
 ,parts-attr~
 ,group-period-validity~
 ,c-group-period-validity~
@@ -207,8 +209,6 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,c-pump-nozzle~
 ,pl-pump-nozzle~
 ,c-pl-pump-nozzle~
-,sr-izmerenia~
-,c-sr-izmerenia~
 ,obj-date~
 ,shift-obj~
 ,c-shift-obj~
@@ -713,6 +713,8 @@ v-custom-except-list-erprn =
 ,c-chk-doc-attr~
 ,c-chk-gds~
 ,c-chk-pay~
+,c-cash-pay~
+,c-cash-pay-attr~
 ,c-cli-grp~
 ,c-cli-grp-attr~
 ,c-cli-hist~
@@ -1269,6 +1271,10 @@ define variable v-custom-0-rdb-not-news-erprn as character no-undo initial
 ,pay-type-attr~
 ,c-pay-type~
 ,c-pay-type-attr~
+,cash-pay~
+,c-cash-pay~
+,cash-pay-attr~
+,c-cash-pay-attr~
 ":U.
 
 
