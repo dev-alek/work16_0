@@ -77,8 +77,10 @@ define variable v-prod-bc              as character no-undo.
 
 define variable v-date-file-name as character no-undo.
 DEFINE VARIABLE file_name        AS CHARACTER NO-UNDO.
+define variable v-time           as integer   no-undo.
 define variable v-time-file      as char      no-undo.
-DEFINE VARIABLE log-file-name    AS CHARACTER NO-UNDO. 
+DEFINE VARIABLE log-file-name    AS CHARACTER NO-UNDO.
+define variable v-date           as date      no-undo. 
 define variable v-date-end       as character no-undo.
 define variable v-sdate-end      as character no-undo. /* для сохранения последней выгруженной смены */
        
@@ -92,16 +94,19 @@ if v-arc = ? then do:
   return error "Не найдена программа 7z.exe, невозможно упаковать выгрузку в zip" .
 end.          
 
-log-file-name = p_path + "exp-ATD.log"
-    .
+log-file-name = substitute("&1exp-ATD.log", ibs.th.gbl.gbl-inipar:logDir) .
+
 /* Для лога */
 &scop display-message run write-log-and-file in p_log-handle ~
     (input 1, input log-file-name, input 1, input ~{&my-message~})
       
 
-
-v-time-file =   substring(string(time,"HH:MM"),1,2) + substring(string(time,"HH:MM"),4,2) + substring(string(time,"HH:MM:SS"),7,2).
-v-date-file-name  =  STRING(YEAR(TODAY), "9999") +  STRING(DAY(TODAY), "99") + STRING(MONTH(TODAY), "99") .
+assign
+  v-time = time
+  v-date = today
+  v-time-file = substring(string(v-time,"HH:MM"),1,2) + substring(string(v-time,"HH:MM"),4,2) + substring(string(v-time,"HH:MM:SS"),7,2)
+v-date-file-name = STRING(YEAR(v-date), "9999") + STRING(DAY(v-date), "99") + STRING(MONTH(v-date), "99")
+.
 
 file_name = p_path + 'HDB_' + trim(p-region) + '_'  + v-date-file-name  + '_' + v-time-file +  '.csv'. 
 

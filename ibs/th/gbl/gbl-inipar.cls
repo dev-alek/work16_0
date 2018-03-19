@@ -71,15 +71,25 @@ class ibs.th.gbl.gbl-inipar:
    
     
   constructor static gbl-inipar():
+    ibs.th.gbl.gbl-inipar:InitPar ( ) .
   end constructor.
 
-  method public void InitPar ( ) :
+  method public static void InitPar ( ) :
     get-key-value section "rep-sets" key "ConPar"    value conPar .
     get-key-value section "rep-sets" key "ConParFlt" value conParFlt .
     get-key-value section "rep-sets" key "logDir"    value logDir .
     get-key-value section "revision" key "comstr"    value comstr .
     get-key-value section "revision" key "dirflrvs"  value dirflrvs .
     get-key-value section "revision" key "dirflpmp"  value dirflpmp .
+    if logDir = ?
+    then do :
+      logDir = ".\" .
+    end .
+    else do :
+      logDir = right-trim(logDir, "\") .
+      logDir = right-trim(logDir, "/") .
+      logDir = logDir + "\" .
+    end. 
   end method. // end_of InitPar
   
 end class.

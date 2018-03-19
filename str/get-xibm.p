@@ -53,7 +53,6 @@ define stream stmXMLOut.
 { str/magiachk.i }
 { str/magiachk.i -line " extent 2 "}
 { str/magiachk.i proc }
-{ gbl/thbj-def.i }
 
 DEFINE VARIABLE n-entry                    as   char no-undo extent 20.
 DEFINE VARIABLE accept-types               as   character no-undo .

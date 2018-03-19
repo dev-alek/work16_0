@@ -325,11 +325,6 @@ on stop   undo, leave
     name
     password .
   
-  define variable v-inipar as ibs.th.gbl.gbl-inipar no-undo.
-  v-inipar = new ibs.th.gbl.gbl-inipar().
-  v-inipar:InitPar().
-  delete object v-inipar.
-  
   v-cConnect = ibs.th.gbl.gbl-inipar:conPar.
   if v-cConnect = ?
   or trim (v-cConnect) = ""

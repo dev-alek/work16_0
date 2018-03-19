@@ -54,6 +54,7 @@ define variable v-md5-signature-check     as character                no-undo .
 define variable path-sig                  as character                no-undo .
 define variable v-second-mode             as character                no-undo .
 define variable v-rv                      as character                no-undo .
+define variable v-lengthfname             as integer                  no-undo .
 
 define stream SigStream.
 
@@ -67,18 +68,25 @@ end.
 input stream DirStream from os-dir ( p-in_ + p-spl ) .
 REPEAT :
   import stream DirStream file path atr.
-  if length(file) > 3
-  AND
-  ( substring( file, length(file) - 2, 3 ) = "xml":u
-  ) AND
-      can-do( "f", atr )  /* see "os-dir" help : f - Regular file or FIFO pipe */
-  and
-  (p-spool-or-data = "spool"
+  v-lengthfname = length(file) .
+  if (v-lengthfname > 3) AND
+     ( substring( file, v-lengthfname - 2, 3 ) = "xml":u ) AND
+     can-do( "f", atr )  /* see "os-dir" help : f - Regular file or FIFO pipe */
+     and (p-spool-or-data = "spool"
        or entry(1,  file, ".":U) = p-waiting-name)
   then do:
     assign
     v-view-log = no
     .
+    run write-log-and-file in p-log-handle (
+          input 1
+        , input log-file-name
+        , input 1
+        , input substitute(
+            (if p-spool-or-data = "spool" then "Обработка файла &1" else "Обработка файла-ответа &1")
+                           , path
+                           )
+                                        ).
     if p-spool-or-data = "spool" then do:
       run str/get-xibm.p (
                     input parparentproc
@@ -98,14 +106,6 @@ REPEAT :
       .
     end.
     else do:
-      run write-log-and-file in p-log-handle (
-            input 1
-          , input log-file-name
-          , input 1
-          , input substitute( "Обработка файла-ответа &1"
-                              , path
-                            )
-                                        ).
       run str/get-xrpl.p (
                     input parparentproc
                     ,input p-log-handle

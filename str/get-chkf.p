@@ -112,18 +112,7 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-tth as handle no-undo .
 define variable v-disp-msg as character no-undo .
-assign
-v-tth = buffer thbjattr_thbj-attr:table-handle .
 
-
-&scop view-log   if p-auto = 0 then do: ~
-                   ~{ str/cdviewlg.i   ~
-                    "substitute('!!!При приеме информации с касс &1&2 произошли ошибки!!!'  ~
-                                 ,p-obj-type                                                ~
-                                 ,p-obj-code)"                                               ~
-                    "'get-chkf.log'" ~}   ~
-                    return "error":U. ~
-                 end
 
 
 if num-entries(p-parameter, {&delim-par}) < 3
@@ -193,7 +182,6 @@ if v-input-error = yes then do:
   assign
   v-view-log = yes.
   undo, return .
-//  {&view-log}.
 end.
 
 { str/waitp.i }
@@ -222,13 +210,13 @@ if TRANSACTION then do:
   assign
   v-view-log = yes.
   undo, return .
-//  {&view-log}.
 end.
 
 for each thbjattr_thbj-attr:
   delete thbjattr_thbj-attr.
 end.
-
+assign
+v-tth = buffer thbjattr_thbj-attr:table-handle .
 run adm/shattri.p (
       input "get":U
     ,input  '':U
@@ -243,7 +231,6 @@ run adm/shattri.p (
     ,output v-param-type
     ,INPUT-OUTPUT table-handle v-tth
     ) no-error .
-
 IF error-status:error then do:
   delete object v-tth.
   v-disp-msg = substitute("Ошибка при получении опций работы со справочником товаров:&1&2 &3"
@@ -259,7 +246,6 @@ IF error-status:error then do:
   assign
   v-view-log = yes.
   undo, return .
-//  undo, return no-apply .
 end.
 for each thbjattr_thbj-attr  where
         thbjattr_thbj-attr.obj-type = '':U
@@ -331,6 +317,7 @@ run write-log-and-file in p-log-handle (
 
 
 define variable v-cd-prfx as character no-undo .
+define variable v-spl-obj-cash-name as character no-undo .
 
 { gbl/dflt-cd.i p-obj-type p-obj-code dflt-cd no-error }
 
@@ -468,7 +455,6 @@ with frame a :
                                 )).
           assign
           v-view-log = yes.
-//          {&view-log}.
           undo,  return "error".
         end.
         if cash-desk.pos-type = {&cd-type-magia-XML} then do:
@@ -479,6 +465,7 @@ with frame a :
           .
         end.
         else do:
+          /* выбор секции, из которой читать настройки для кассы */
           define variable v-effective-pos-type as character no-undo .
           v-effective-pos-type =  (if (cash-desk.pos-type = {&cd-type-ibm}
                                       or
@@ -486,9 +473,7 @@ with frame a :
                                   then {&attr-cd-type-ibm}
                                   else {&attr-cd-type-ibm-xml}
                                   ).
-          
-          
-          /*/* выбор секции, из которой читать настройки для кассы */
+          /*
           if ub.cash-desk.pos-type = {&cd-type-ibm} OR ub.cash-desk.pos-type = {&cd-type-nkt-ibm} 
               then v-effective-pos-type = {&attr-cd-type-ibm}.
               else if ub.cash-desk.pos-type = {&cd-type-IBM-XML} 
@@ -497,8 +482,6 @@ with frame a :
                           if ub.cash-desk.pos-type = {&cd-type-Autotank} 
                               then v-effective-pos-type = {&attr-cd-type-Autotank}.
                               else v-effective-pos-type = {&attr-cd-type-marketer}.*/
-              
-            
           run adm/shattri.p (
               input "get":U
               ,input  p-obj-type
@@ -605,10 +588,10 @@ with frame a :
             if p-remote = 0 then NEXT _ibm-cash-desk.
             /*запрос на remote кассу отправляется только в случае p-remote = 1*/
             assign
+            v-spl-obj-cash-name = string(for-cash-desk.obj-code, "99999") + "-":U +
+                             trim(string(for-cash-desk.cash-num, ">999"))
             v-dir-remote-tmp = v-remote + "tmp":U
-            v-dir-remote =  v-remote + "out":U +
-                            string(for-cash-desk.obj-code, "99999") + "-":U +
-                            trim(string(for-cash-desk.cash-num, ">999"))
+            v-dir-remote =  v-remote + "out":U + v-spl-obj-cash-name
             .
 
             run gbl/dir-cre.p ( input v-dir-remote-tmp) no-error .
@@ -634,18 +617,17 @@ with frame a :
             end. /*if error-status:error при dire-cre then do:*/
             assign
             var-spl-suffix = v-dir-remote + {&slash-char} +
-                            "spl":U + string(for-cash-desk.obj-code, "99999") + "-":U +
-                            trim(string(for-cash-desk.cash-num, ">999"))
+                            "spl":U + v-spl-obj-cash-name
             var-spl-suffix-tmp = v-dir-remote-tmp + {&slash-char} +
-                            "spl":U + string(for-cash-desk.obj-code, "99999") + "-":U +
-                            trim(string(for-cash-desk.cash-num, ">999"))
+                            "spl":U + v-spl-obj-cash-name
             .
           end. /*remote*/
           else do:
             if p-remote = 1  then NEXT _ibm-cash-desk.
             assign
-            var-spl-suffix = "spl":U  + string(for-cash-desk.obj-code, "99999") + "-":U + trim(string(for-cash-desk.cash-num, ">999"))
-            var-spl-suffix-tmp = "spl":U  + string(for-cash-desk.obj-code, "99999") + "-":U + trim(string(for-cash-desk.cash-num, ">999"))
+            v-spl-obj-cash-name = string(for-cash-desk.obj-code, "99999") + "-":U + trim(string(for-cash-desk.cash-num, ">999"))
+            var-spl-suffix = "spl":U  + v-spl-obj-cash-name
+            var-spl-suffix-tmp = "spl":U  + v-spl-obj-cash-name
             .
           end.
           if (p-remote = 0 and Not for-cash-desk.remote = 1) or
@@ -923,7 +905,6 @@ with frame a :
                                       )).
                 assign
                 v-view-log = yes.
-//                {&view-log}.
                 undo, return .
               end.
               if for-cash-desk.remote = 1 then do:
@@ -1063,6 +1044,10 @@ with frame a :
         if cash-desk.pos-type = {&cd-type-ibm}
         or cash-desk.pos-type = {&cd-type-nkt-ibm}
         then do:
+          /* до этого момента писали в лог-файл log-file-name, определённый как
+              = (if p-auto = 0 then 'get-chkf.log' else 'extgetcd.log');
+             внутри get-ibmf.p сообщения безусловно выводятся в get-chkf.log
+          */
           run str/get-ibmf.p (
                          input parparentproc
                         ,input p-log-handle
@@ -1077,9 +1062,7 @@ with frame a :
                         ,input-output v-view-log
                         ) no-error  .
           if return-value = "error":U then do:
-            assign
             v-view-log = yes.
-//            {&view-log}.
             undo, return .
           end.
           /*по жалобам МОРОЗКО подчищаем возможные необработанные файлы*/
@@ -1097,9 +1080,7 @@ with frame a :
                         ,input-output v-view-log
                         ) no-error .
           if return-value = "error":U then do:
-            assign
             v-view-log = yes.
-//            {&view-log}.
             undo, return .
           end.
         end.
@@ -1129,9 +1110,7 @@ with frame a :
                         ,input-output v-view-log
                         ) no-error .
           if return-value = "error":U then do:
-            assign
             v-view-log = yes.
-//            {&view-log}.
             undo, return .
           end.
         end.
@@ -1187,9 +1166,7 @@ with frame a :
                             ,input-output v-view-log
                             ) no-error .
               if return-value = "error":U then do:
-                assign
                 v-view-log = yes.
-//                {&view-log}.
                 undo, return .
               end.
             end.
@@ -1219,9 +1196,7 @@ with frame a :
                             ,input-output v-view-log
                             ) no-error .
               if return-value = "error":U then do:
-                assign
                 v-view-log = yes.
-//                {&view-log}.
                 undo, return .
               end.
             end.
@@ -1259,9 +1234,7 @@ with frame a :
                                 , error-status:get-message(1)
                                 , return-value
                                 )).
-          assign
           v-view-log = yes.
-//          {&view-log}.
            undo,  return .
         end.
         for each thbjattr_thbj-attr:
@@ -1720,9 +1693,7 @@ with frame a :
                                 , error-status:get-message(1)
                                 , return-value
                                 )).
-            assign
             v-view-log = yes.
-//            {&view-log}.
             undo, return.
         end.
         /*если директория есть и есть файл то считаем его */
@@ -1808,9 +1779,7 @@ with frame a :
                                 , (out + 'spl.dat')
                                 , {&new-line}
                                 )).
-          assign
           v-view-log = yes.
-//          {&view-log}.
           undo, return.
         end.
         RUN waitp in this-procedure (
@@ -1901,9 +1870,7 @@ with frame a :
                                 , error-status:get-message(1)
                                 , return-value
                                 )).
-            assign
             v-view-log = yes.
-//            {&view-log}.
             undo, return.
         end.
         run str/get-rkpf.p (
@@ -1939,7 +1906,6 @@ with frame a :
           assign
           v-view-log = yes
           .
-          {&view-log}.
           else undo, return "error":U.
         end. /*if not l-shift-on then do:*/
         { gbl/curshift.i p-obj-type p-obj-code v-shift-date v-shift-num no-error}
@@ -1959,7 +1925,6 @@ with frame a :
             assign
             v-view-log = yes
             .
-            {&view-log}.
             else undo, return "error":U.
           end. /*if p-shft-close <> - 1 /*тогда это открытие*/ then do:*/
           else do:
@@ -2013,9 +1978,7 @@ with frame a :
                                 , error-status:get-message(1)
                                 , return-value
                                 )).
-          assign
           v-view-log = yes.
-//          {&view-log}.
           undo, return "error".
         end.
         /*чтобы получить файлы с МАРИИ надо записать файлы заданий в директорию out*/
@@ -2191,9 +2154,7 @@ with frame a :
                       ,input-output v-view-log
                       ) no-error  .
         if return-value = "error":U then do:
-          assign
           v-view-log = yes.
-//          {&view-log}.
           undo, return .
         end.
       end. /*maria*/
@@ -2279,6 +2240,16 @@ catch exAnyErrors as class Progress.Lang.Error:
   v-view-log = yes .
 end catch .
 finally :
+  /* 28/II-2018 не используется:
+&scop view-log   if p-auto = 0 then do: ~
+                   ~{ str/cdviewlg.i   ~
+                    "substitute('!!!При приеме информации с касс &1&2 произошли ошибки!!!'  ~
+                                 ,p-obj-type                                                ~
+                                 ,p-obj-code)"                                               ~
+                    "'get-chkf.log'" ~}   ~
+                    return "error":U. ~
+                 end
+  */
   define variable v-save-file-name as character no-undo .
   
   v-save-file-name = substitute("&1get-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
@@ -2310,4 +2281,10 @@ finally :
     ).
   OS-APPEND value(log-file-name) value(v-save-file-name).
   OS-DELETE value(log-file-name).
+  /* если log-file-name писал в extgetcd.log - то отдельно
+     надо добавить get-chkf.log, в который писали вложенные процессы */
+  if index (log-file-name, "get-chkf.log") > 0 then . else do:
+    OS-APPEND value("get-chkf.log") value(v-save-file-name).
+    OS-DELETE value("get-chkf.log").
+  end.
 end finally .

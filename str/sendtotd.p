@@ -213,7 +213,7 @@ log-file-name not-delete }
       , input substitute("&1", {&new-line})
     ).
     define variable v-save-file-name as character no-undo .
-    v-save-file-name = substitute("&1get-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+    v-save-file-name = substitute("&1send-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
     OS-APPEND value(log-file-name) value(v-save-file-name).
     OS-DELETE value(log-file-name).
   end finally .

@@ -368,7 +368,7 @@ finally :
     ).
   define variable v-save-file-name as character no-undo .
   
-  v-save-file-name = substitute("&1get-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+  v-save-file-name = substitute("&1send-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
   
   // где смотр€т файл и где его удал€ют - не известно.
   // поэтому здесь мы его только копируем  
