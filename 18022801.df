@@ -1,0 +1,366 @@
+ADD TABLE "c-action-role"
+  AREA "Primary_data"
+  DUMP-NAME "cactnrole"
+  TABLE-TRIGGER "DELETE" OVERRIDE PROCEDURE "trg/cactnrld.p" CRC "?" 
+  TABLE-TRIGGER "WRITE" OVERRIDE PROCEDURE "trg/cactnrlw.p" CRC "?" 
+
+ADD FIELD "db-num" OF "c-action-role" AS integer 
+  DESCRIPTION "Номер БД"
+  FORMAT ">>>>9"
+  INITIAL "0"
+  LABEL "Номер БД"
+  POSITION 2
+  MAX-WIDTH 4
+  ORDER 10
+  MANDATORY
+
+ADD FIELD "action-head-code" OF "c-action-role" AS integer 
+  DESCRIPTION "Код заголовка прав доступа"
+  FORMAT "->>>,>>>,>>9"
+  INITIAL "0"
+  LABEL "Код заголовка права"
+  POSITION 3
+  MAX-WIDTH 4
+  ORDER 20
+  MANDATORY
+
+ADD FIELD "action-role-code" OF "c-action-role" AS integer 
+  DESCRIPTION "Код роли"
+  FORMAT "->>>,>>>,>>9"
+  INITIAL "0"
+  LABEL "Код роли"
+  POSITION 4
+  MAX-WIDTH 4
+  ORDER 30
+  MANDATORY
+
+ADD FIELD "action-role-context" OF "c-action-role" AS character 
+  DESCRIPTION "Контекст роли"
+  FORMAT "X(8)"
+  INITIAL ""
+  LABEL "Контекст роли"
+  POSITION 5
+  MAX-WIDTH 16
+  ORDER 40
+
+ADD FIELD "action-role-name" OF "c-action-role" AS character 
+  DESCRIPTION "Имя роли"
+  FORMAT "X(40)"
+  INITIAL ""
+  LABEL "Имя роли"
+  POSITION 6
+  MAX-WIDTH 80
+  ORDER 50
+
+ADD FIELD "action-role-description" OF "c-action-role" AS character 
+  DESCRIPTION "Описание роли"
+  FORMAT "X(40)"
+  INITIAL ""
+  LABEL "Описание роли"
+  POSITION 7
+  MAX-WIDTH 80
+  ORDER 60
+
+ADD FIELD "whole-send-news" OF "c-action-role" AS integer 
+  DESCRIPTION "Признак отправки в новости из текущей бд"
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  LABEL "Отправилась в новости целой записью"
+  POSITION 8
+  MAX-WIDTH 4
+  ORDER 70
+
+ADD FIELD "chip-num" OF "c-action-role" AS integer 
+  FORMAT ">,>>>,>>9"
+  INITIAL "0"
+  LABEL "Щепка"
+  POSITION 9
+  MAX-WIDTH 4
+  COLUMN-LABEL "Щепка"
+  ORDER 80
+  MANDATORY
+
+ADD FIELD "corr-user-db-num" OF "c-action-role" AS integer 
+  DESCRIPTION "Номер БД"
+  FORMAT ">>>>9"
+  INITIAL ?
+  LABEL "Номер БД"
+  POSITION 10
+  MAX-WIDTH 4
+  ORDER 90
+  MANDATORY
+
+ADD FIELD "corr-user-name" OF "c-action-role" AS character 
+  DESCRIPTION "Имя пользователя"
+  FORMAT "X(8)"
+  INITIAL ""
+  LABEL "Имя"
+  POSITION 11
+  MAX-WIDTH 16
+  ORDER 100
+  MANDATORY
+
+ADD FIELD "corr-date" OF "c-action-role" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Дата коррекции"
+  POSITION 12
+  MAX-WIDTH 4
+  COLUMN-LABEL "Дата коррекции"
+  ORDER 110
+
+ADD FIELD "is-del" OF "c-action-role" AS logical 
+  FORMAT "yes/no"
+  INITIAL "no"
+  LABEL "Роль удаляется"
+  POSITION 13
+  MAX-WIDTH 1
+  ORDER 120
+
+ADD FIELD "corr-time" OF "c-action-role" AS integer 
+  FORMAT "99999"
+  INITIAL "0"
+  LABEL "Время коррекции"
+  POSITION 14
+  MAX-WIDTH 4
+  ORDER 130
+
+ADD FIELD "subject" OF "c-action-role" AS character 
+  DESCRIPTION "Предмет изменения"
+  FORMAT "X(8)"
+  INITIAL ""
+  LABEL "Имя"
+  POSITION 15
+  MAX-WIDTH 16
+  ORDER 140
+  MANDATORY
+
+ADD FIELD "action" OF "c-action-role" AS integer 
+  DESCRIPTION "Описание действия"
+  FORMAT "99"
+  INITIAL "0"
+  LABEL "Описание действия"
+  POSITION 16
+  MAX-WIDTH 4
+  ORDER 150
+
+ADD INDEX "pi" ON "c-action-role" 
+  AREA "History_Index"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "db-num" ASCENDING 
+  INDEX-FIELD "action-head-code" ASCENDING 
+  INDEX-FIELD "action-role-code" ASCENDING 
+  INDEX-FIELD "corr-user-db-num" ASCENDING 
+  INDEX-FIELD "chip-num" ASCENDING 
+
+ADD INDEX "auto_corr-user" ON "c-action-role" 
+  AREA "Primary_data"
+  INDEX-FIELD "corr-user-name" ASCENDING 
+  INDEX-FIELD "corr-user-db-num" ASCENDING 
+
+ADD INDEX "auto_corr-user-db" ON "c-action-role" 
+  AREA "History_Index"
+  INDEX-FIELD "corr-user-db-num" ASCENDING 
+
+ADD INDEX "is-del" ON "c-action-role" 
+  AREA "History_Index"
+  INDEX-FIELD "db-num" ASCENDING 
+  INDEX-FIELD "is-del" ASCENDING 
+
+ADD INDEX "isubject" ON "c-action-role" 
+  AREA "History_Index"
+  INDEX-FIELD "subject" ASCENDING 
+  INDEX-FIELD "corr-user-db-num" ASCENDING 
+  INDEX-FIELD "chip-num" ASCENDING 
+
+ADD TABLE "c-action-role-item"
+  AREA "Primary_data"
+  DUMP-NAME "cactnroleit"
+  TABLE-TRIGGER "DELETE" OVERRIDE PROCEDURE "trg/cactnrtd.p" CRC "?" 
+  TABLE-TRIGGER "WRITE" OVERRIDE PROCEDURE "trg/cactnrtw.p" CRC "?" 
+
+ADD FIELD "db-num" OF "c-action-role-item" AS integer 
+  DESCRIPTION "Номер БД"
+  FORMAT ">>>>9"
+  INITIAL "0"
+  LABEL "Номер БД"
+  POSITION 2
+  MAX-WIDTH 4
+  ORDER 10
+  MANDATORY
+
+ADD FIELD "action-head-code" OF "c-action-role-item" AS integer 
+  DESCRIPTION "Код заголовка прав доступа"
+  FORMAT "->>>,>>>,>>9"
+  INITIAL "0"
+  LABEL "Код заголовка права"
+  POSITION 3
+  MAX-WIDTH 4
+  ORDER 20
+  MANDATORY
+
+ADD FIELD "action-role-code" OF "c-action-role-item" AS integer 
+  DESCRIPTION "Код роли"
+  FORMAT "->>>,>>>,>>9"
+  INITIAL "0"
+  LABEL "Код роли"
+  POSITION 4
+  MAX-WIDTH 4
+  ORDER 30
+  MANDATORY
+
+ADD FIELD "action-role-item-code" OF "c-action-role-item" AS integer 
+  DESCRIPTION "Код действия"
+  FORMAT "->>>,>>>,>>9"
+  INITIAL "0"
+  LABEL "Код действи "
+  POSITION 5
+  MAX-WIDTH 4
+  ORDER 40
+  MANDATORY
+
+ADD FIELD "action-item-code" OF "c-action-role-item" AS integer 
+  DESCRIPTION "Код права"
+  FORMAT "->>>,>>>,>>9"
+  INITIAL "0"
+  LABEL "Код права"
+  POSITION 6
+  MAX-WIDTH 4
+  ORDER 50
+
+ADD FIELD "action-item-id" OF "c-action-role-item" AS character 
+  DESCRIPTION "Идентификатор права"
+  FORMAT "X(55)"
+  INITIAL ""
+  LABEL "Идентификатор права"
+  POSITION 7
+  MAX-WIDTH 110
+  ORDER 60
+
+ADD FIELD "whole-send-news" OF "c-action-role-item" AS integer 
+  DESCRIPTION "Признак отправки в новости из текущей бд"
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  LABEL "Отправилась в новости целой записью"
+  POSITION 8
+  MAX-WIDTH 4
+  ORDER 70
+
+ADD FIELD "chip-num" OF "c-action-role-item" AS integer 
+  FORMAT ">,>>>,>>9"
+  INITIAL "0"
+  LABEL "Щепка"
+  POSITION 9
+  MAX-WIDTH 4
+  COLUMN-LABEL "Щепка"
+  ORDER 80
+  MANDATORY
+
+ADD FIELD "corr-user-db-num" OF "c-action-role-item" AS integer 
+  DESCRIPTION "Номер БД"
+  FORMAT ">>>>9"
+  INITIAL ?
+  LABEL "Номер БД"
+  POSITION 10
+  MAX-WIDTH 4
+  ORDER 90
+  MANDATORY
+
+ADD FIELD "corr-user-name" OF "c-action-role-item" AS character 
+  DESCRIPTION "Имя пользователя"
+  FORMAT "X(8)"
+  INITIAL ""
+  LABEL "Имя"
+  POSITION 11
+  MAX-WIDTH 16
+  ORDER 100
+  MANDATORY
+
+ADD FIELD "corr-date" OF "c-action-role-item" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Дата коррекции"
+  POSITION 12
+  MAX-WIDTH 4
+  COLUMN-LABEL "Дата коррекции"
+  ORDER 110
+
+ADD FIELD "is-del" OF "c-action-role-item" AS logical 
+  FORMAT "yes/no"
+  INITIAL "no"
+  LABEL "Право удаляется"
+  POSITION 13
+  MAX-WIDTH 1
+  ORDER 120
+
+ADD FIELD "corr-time" OF "c-action-role-item" AS integer 
+  FORMAT "99999"
+  INITIAL "0"
+  LABEL "Время коррекции"
+  POSITION 14
+  MAX-WIDTH 4
+  ORDER 130
+
+ADD FIELD "subject" OF "c-action-role-item" AS character 
+  DESCRIPTION "Предмет изменения"
+  FORMAT "X(8)"
+  INITIAL ""
+  LABEL "Имя"
+  POSITION 15
+  MAX-WIDTH 16
+  ORDER 140
+  MANDATORY
+
+ADD FIELD "action" OF "c-action-role-item" AS integer 
+  DESCRIPTION "Описание действия"
+  FORMAT "99"
+  INITIAL "0"
+  LABEL "Описание действия"
+  POSITION 16
+  MAX-WIDTH 4
+  ORDER 150
+
+ADD INDEX "pi" ON "c-action-role-item" 
+  AREA "History_Index"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "db-num" ASCENDING 
+  INDEX-FIELD "action-head-code" ASCENDING 
+  INDEX-FIELD "action-role-code" ASCENDING 
+  INDEX-FIELD "action-role-item-code" ASCENDING 
+  INDEX-FIELD "corr-user-db-num" ASCENDING 
+  INDEX-FIELD "chip-num" ASCENDING 
+
+ADD INDEX "auto_corr-user" ON "c-action-role-item" 
+  AREA "History_Index"
+  INDEX-FIELD "corr-user-name" ASCENDING 
+  INDEX-FIELD "corr-user-db-num" ASCENDING 
+
+ADD INDEX "auto_corr-user-db" ON "c-action-role-item" 
+  AREA "History_Index"
+  INDEX-FIELD "corr-user-db-num" ASCENDING 
+
+ADD INDEX "is-del" ON "c-action-role-item" 
+  AREA "History_Index"
+  INDEX-FIELD "db-num" ASCENDING 
+  INDEX-FIELD "is-del" ASCENDING 
+
+ADD INDEX "isubject" ON "c-action-role-item" 
+  AREA "History_Index"
+  INDEX-FIELD "subject" ASCENDING 
+  INDEX-FIELD "corr-user-db-num" ASCENDING 
+  INDEX-FIELD "chip-num" ASCENDING 
+
+ADD SEQUENCE "s-action-role-chip"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+  MIN-VAL ?
+  MAX-VAL 2147483647
+
+.
+PSC
+cpstream=1251
+.
+0000008387
