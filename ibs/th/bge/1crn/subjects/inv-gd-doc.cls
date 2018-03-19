@@ -26,11 +26,14 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
   { str/trdcalib.i class }
+  { cmp/library.i  class }
+  { gbl/thbj-def.i       }
   
   define temp-table buf_trn-doc like ub.trn-doc.
   
   define buffer buf_inv-line for ub.inv-line.
   define buffer buf_doc-line for ub.doc-line.
+  define buffer bf_doc-line-sum for ub.doc-line-sum.
   define buffer buf_doc-pl for ub.doc-pl.
   define buffer buf_gds for ub.goods.
   define buffer buf_doc-attr for ub.doc-attr.
@@ -72,7 +75,16 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   define variable varr-b           as character no-undo.
   define variable is-cdinv         as character no-undo .
   define variable v-bufhnd         as handle    no-undo.
-
+  define variable v-doc-num        as character no-undo .
+  define variable dprice-sale      as decimal   no-undo .
+  define variable droad-tax        as decimal   no-undo .
+  define variable dexcise          as decimal   no-undo .
+  define variable v-qnty-type      as character no-undo .
+  define variable dcurr-price      as decimal   no-undo .
+  define variable prc-density      as decimal   no-undo .
+  define variable dLoss-qnty       as decimal   no-undo .
+  define variable dLoss-sum        as decimal   no-undo .
+  
   method public void CrContentToSW (insw as handle):
     
     define variable p-value      as character no-undo.
@@ -209,14 +221,14 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
 
   
   method private void GdsLineFuel ():
+    define variable dAddCliQnty       as decimal   no-undo .
+    define variable dAddQnty          as decimal   no-undo .
+    define variable v-sum-b           as decimal   no-undo .
+    define variable v-sum-a           as decimal   no-undo .
+    define variable v-sum-df          as decimal   no-undo .
 
-    define variable dAddCliQnty as decimal no-undo .
-    define variable dAddQnty    as decimal no-undo .
-    define variable v-sum-b     as decimal no-undo .
-    define variable v-sum-a     as decimal no-undo .
-    define variable v-sum-df    as decimal no-undo .
 
-    
+          
     find first bf_rvs-doc no-lock where
              bf_rvs-doc.rvs-code = buf_trn-doc.out-code no-error .
     
@@ -231,10 +243,10 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         
         find first bf_rvs-line no-lock where
           available (bf_rvs-doc) and
-          bf_rvs-line.rvs-code = bf_rvs-doc.rvs-code and
-          bf_rvs-line.obj-type = bf_rvs-doc.obj-type and
-          bf_rvs-line.obj-code = bf_rvs-doc.obj-code and
-          buf_gds.gds-code    = bf_rvs-line.gds-code and
+          bf_rvs-line.rvs-code = buf_trn-doc.out-code and
+          bf_rvs-line.obj-type = buf_doc-line.obj-type and
+          bf_rvs-line.obj-code = buf_doc-line.obj-code and
+          bf_rvs-line.gds-code = buf_doc-pl.gds-code and
           bf_rvs-line.pl-code = buf_doc-pl.pl-code no-error.
           
         if available (bf_rvs-line)
@@ -278,12 +290,69 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
           write-data-element ("wght-ned", string-mth (round ((if buf_doc-pl.cli-fact-qnty < 0 then absolute (buf_doc-pl.cli-fact-qnty) else 0.0), 3))).
           write-data-element ("sum-izl", string-mth (round ((if v-sum-df > 0 then v-sum-df else 0.0), 2))).
           write-data-element ("sum-ned", string-mth (round ((if v-sum-df < 0 then absolute (v-sum-df) else 0), 2))).
-/*          write-data-element ("sum-ned", string-mth (round (fncmiss-rubl( buffer buf_doc-pl, buffer buf_gds ), 2))). */
-          write-data-element ("wght-eu", string-mth (round (0.0, 2))).
-          write-data-element ("sum-eu", string-mth (round ( 0.0, 2))).
-/*          write-data-element ("sum-eu", string-mth (round ( fncwastage( buffer buf_doc-pl, buffer buf_gds ), 2))).*/
-          write-data-element ("pipeline-cap", string-mth (round (dAddCliQnty, 2))).
-          write-data-element ("pipeline-wght", string-mth (round (dAddQnty, 2))).
+
+          { gbl/bcodeprc.i
+              buf_trn-doc.obj-type
+              buf_trn-doc.obj-code
+              buf_gds.gds-code
+              0
+              buf_trn-doc.fact-order
+              v-doc-num
+              dprice-sale
+              droad-tax
+              dexcise
+              no-error
+          }
+          if error-status :error
+          then do:
+            Msg = 'Ќе могу определить текущие продажные цены.'.
+            undo, return error Msg.
+          end.
+          
+          assign
+            v-qnty-type = "cli":U
+          .
+          assign
+            dcurr-price = dprice-sale
+          .
+          
+          assign
+            dLoss-qnty = 0.0
+          .
+          find first bf_doc-line-sum no-lock
+            where bf_doc-line-sum.doc-code  = buf_trn-doc.doc-code
+              and bf_doc-line-sum.gds-code  = buf_gds.gds-code
+              and bf_doc-line-sum.sum-type  = substitute( "&1&2&3&2&4", {&sum-wastage-doc}, {&delim-par}, 'base', bf_rvs-line.pl-code )
+            no-error .
+          if available bf_doc-line-sum then do:
+            assign
+              dLoss-qnty = bf_doc-line-sum.fact-qnty
+            .
+          end.
+          assign
+            dLoss-sum  = dLoss-qnty  * dcurr-price
+          .
+
+
+          assign
+            dLoss-qnty = 0.0
+          .
+          find first bf_doc-line-sum no-lock
+            where bf_doc-line-sum.doc-code  = buf_trn-doc.doc-code
+              and bf_doc-line-sum.gds-code  = buf_gds.gds-code
+              and bf_doc-line-sum.sum-type  = substitute( "&1&2&3&2&4", {&sum-wastage-doc}, {&delim-par}, 'cli', bf_rvs-line.pl-code )
+            no-error .
+          if available bf_doc-line-sum then do:
+            assign
+              dLoss-qnty = bf_doc-line-sum.fact-qnty
+            .
+          end.
+          
+          write-data-element ("wght-eu", string-mth (round (dLoss-qnty, 2))).
+          write-data-element ("sum-eu", string-mth (round ( dLoss-sum, 2))).
+          
+          write-data-element ("pipeline-cap", string-mth (round (dAddQnty, 2))).
+          write-data-element ("pipeline-wght", string-mth (round (dAddCliQnty, 2))).
           
         sw:end-element ("gd").
       end.
