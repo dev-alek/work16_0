@@ -73,13 +73,19 @@ define variable vss-description as character no-undo init "История пользователя 
 { gbl/key-rec.i  }
 { cmp/showinf.i  }
 { cmp/tblfname.i }
-
+{ gbl/prn-lib.i }
 define variable v-c-table as character no-undo .
 define variable v-table   as character no-undo .
   
 define buffer buf_head_c-user-log for c-user-log.
 define buffer buf_line_c-user-log for c-user-log.
 
+define stream out-stream.
+define stream OutStr-html.
+
+define variable p-report-id               as integer              no-undo .
+define variable v-report-name-html        as CHARACTER            no-undo .
+define variable v-report-name-html-list   as CHARACTER            no-undo .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -113,7 +119,7 @@ define buffer buf_line_c-user-log for c-user-log.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-cancel fi-date-to fi-date-for ~
-cb-table bt-doc-hist b-help br-head 
+cb-table bt-doc-hist b-print br-head 
 &Scoped-Define DISPLAYED-OBJECTS fi-date-to fi-date-for cb-table 
 
 /* Custom List Definitions                                              */
@@ -137,6 +143,8 @@ FUNCTION get-unique-key RETURNS CHARACTER
 
 /* Define a dialog box                                                  */
 
+/* Menu Definitions                                                     */
+
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-cancel AUTO-END-KEY 
      LABEL "&Отмена" 
@@ -148,10 +156,9 @@ DEFINE BUTTON b-exit AUTO-GO
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help 
-     LABEL "Помо&щь" 
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+DEFINE BUTTON b-print 
+     LABEL "Печать" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON bt-doc-hist 
      LABEL "Просмотр" 
@@ -202,7 +209,7 @@ DEFINE FRAME Dialog-Frame
      fi-date-for AT ROW 1 COL 44.63 COLON-ALIGNED WIDGET-ID 10
      cb-table AT ROW 1 COL 66 COLON-ALIGNED WIDGET-ID 8
      bt-doc-hist AT ROW 1 COL 92 WIDGET-ID 4
-     b-help AT ROW 1 COL 94.5
+     b-print AT ROW 1 COL 101.5 WIDGET-ID 62
      br-head AT ROW 2.25 COL 1 WIDGET-ID 200
      SPACE(0.74) SKIP(0.37)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -227,10 +234,13 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB br-head b-help Dialog-Frame */
+/* BROWSE-TAB br-head b-print Dialog-Frame */
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+ASSIGN 
+       br-head:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -271,6 +281,23 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
 DO:
         { gbl/stdbtn.i }
 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
+ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
+DO:
+        run get-report-num in parParentProc (
+            output p-report-id
+        ).
+
+  v-report-name-html-list = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
+    
+    run PROC-print-list in this-procedure.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -384,7 +411,7 @@ DO:
 
 /* ***************************  Main Block  *************************** */
 
-{ gbl/app_help.i }
+
 { gbl/ed_date.i fi-date-to }
 { gbl/ed_date.i fi-date-for }
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
@@ -439,7 +466,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY fi-date-to fi-date-for cb-table 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-cancel fi-date-to fi-date-for cb-table bt-doc-hist b-help 
+  ENABLE b-exit b-cancel fi-date-to fi-date-for cb-table bt-doc-hist b-print 
          br-head 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
@@ -501,7 +528,7 @@ PROCEDURE init-fields :
         
         for each bf_c-user-log no-lock where bf_c-user-log.corr-date > fi-date-to  and bf_c-user-log.corr-date <= fi-date-for and bf_c-user-log.corr-user-name = p-userid by bf_c-user-log.head-table :
             v-table = bf_c-user-log.head-table .
-            if v-table begins "c-" and v-table <> {&table_c-usr-hist} then do:
+            if v-table begins "c-" and v-table <> {&table_c-usr-hist} and v-table <> {&table_c-plc-hist} then do:
                 v-user-table = replace(v-table,"c-","").
             end.
             else v-user-table = v-table .    
@@ -583,6 +610,97 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-print-list Dialog-Frame 
+PROCEDURE proc-print-list :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+define buffer buf_c-user-log for ub.c-user-log .
+do
+on error undo, return error
+:
+            
+  /*вызов процедуры печати шапки отчета*/      
+output stream OutStr-html to value(v-report-name-html-list) convert target 'UTF-8'.
+put stream OutStr-html unformatted
+  "<!DOCTYPE HTML>" skip
+  ' <html>' skip
+  '  <head>' skip
+  '   <meta charset="utf-8">' skip
+  '    <style type="text/css">' skip
+                        
+  '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+  '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+  '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+  '   </style>' skip
+  '  </head>' skip
+  .
+
+  put stream OutStr-html unformatted
+    '<body>' skip
+    '<TABLE name="1"  fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0">'skip
+    '<thead>' skip
+    .
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td style="width: 100px;"></td>' skip
+    '<td style="width: 150px;"></td>' skip
+    '<td style="width: 180px;"></td>' skip
+    '<td style="width: 180px;"></td>' skip
+    '<td style="width: 180px;"></td>' skip
+    '</tr>' skip
+    .
+                        
+ 
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="5" style="text-align: center;">История действий пользователя за период с ' + string(fi-date-to,"99.99.99") + ' по ' + string(fi-date-for,"99.99.99") + ' </td>' skip
+    '</tr>' skip   
+    '</thead>' skip .
+    
+    put stream OutStr-html unformatted
+    '<tbody>' skip
+    '<TR>' skip
+    '<TD text_wrap="true" style="text-align: center;">Дата</TD>' skip
+    '<TD text_wrap="true" style="text-align: center;">Время</TD>' skip
+    '<TD text_wrap="true" style="text-align: center;">Описание</TD>' skip
+    '<TD text_wrap="true" style="text-align: center;">Объект</TD>' skip
+    '<TD text_wrap="true" style="text-align: center;">Информация</TD>' skip
+    '</TR>'skip       
+           
+    .
+    for each buf_c-user-log no-lock where buf_c-user-log.corr-date > fi-date-to  and buf_c-user-log.corr-date <= fi-date-for and buf_c-user-log.corr-user-name = p-userid by buf_c-user-log.head-table :
+
+      put stream OutStr-html unformatted
+        '<TR>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-user-log.corr-date,"99.99.9999") + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-user-log.corr-time,"hh:mm:ss") + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-user-log.des) + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-user-log.head-table) + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + STRING (buf_c-user-log.uniq-key-rec) + '</TD>' skip
+        '</TR>'skip                       
+        .     
+    end.
+         output stream OutStr-html close.   
+ 
+
+
+  /*вызов программы печати*/ 
+  run prn-lib-reportviewer-report-name in this-procedure (
+    input parParentProc
+    ,input v-report-name-html-list
+    ).
+
+
+end.
+
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 /* ************************  Function Implementations ***************** */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-unique-key Dialog-Frame 

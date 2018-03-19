@@ -83,7 +83,7 @@ define variable filter-label     as character no-undo init "Справочник_истории_г
 define variable v-rid-list       as character no-undo .
 define variable sort-column-name as character no-undo .
 define variable v-doc-rec        as recid     no-undo .
-define buffer X_action-role for ub.action-role.
+define buffer X_action-role for ub.c-action-role.
 { ref/tmpchgs.i "NEW SHARED" }
 
 &SCOPED-DEFINE hn-action-role-hist-code X_c-action-role.subject

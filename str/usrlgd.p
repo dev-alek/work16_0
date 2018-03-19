@@ -379,20 +379,41 @@ do
             end. 
         when "gds-grp" then 
             do:
-                run ref/cggrphis.w (
-                    input parparentproc
-                    ,INPUT "":U /* bttns */
-                    ,INPUT "gds-grp":U /*parref-mode */
-                    ,INPUT integer(entry(1, v-field-value-list, {&delim-key}))
-                    , "":U /*p-attr-code*/
-                    , INPUT 0
-                    , INPUT "":U /*p-obj-type*/
-                    , INPUT 0 /*p-obj-code*/
-                    , INPUT 0 /*p-tax-code*/
-                    , INPUT NO
-                    ,input "":U /*p-subject*/
-                    ,OUTPUT v-list
-                    ) .
+                find first ub.gds-grp no-lock where ub.gds-grp.node-code = integer(entry(1, v-field-value-list, {&delim-key})) no-error .
+                if AVAILABLE (ub.gds-grp) then 
+                do:
+                    run ref/cggrphis.w (
+                        input parparentproc
+                        ,INPUT "":U /* bttns */
+                        ,INPUT "gds-grp":U /*parref-mode */
+                        ,INPUT integer(entry(1, v-field-value-list, {&delim-key}))
+                        , "":U /*p-attr-code*/
+                        , INPUT 0
+                        , INPUT "":U /*p-obj-type*/
+                        , INPUT 0 /*p-obj-code*/
+                        , INPUT 0 /*p-tax-code*/
+                        , INPUT NO
+                        ,input "":U /*p-subject*/
+                        ,OUTPUT v-list
+                        ) .
+                end.
+                else 
+                do:
+                    run ref/cggrphis.w (
+                        input parparentproc
+                        ,INPUT "":U /* bttns */
+                        ,INPUT "gds-grp":U /*parref-mode */
+                        ,INPUT integer(entry(1, v-field-value-list, {&delim-key}))
+                        , "":U /*p-attr-code*/
+                        , INPUT 0
+                        , INPUT "":U /*p-obj-type*/
+                        , INPUT 0 /*p-obj-code*/
+                        , INPUT 0 /*p-tax-code*/
+                        , INPUT yes
+                        ,input "":U /*p-subject*/
+                        ,OUTPUT v-list
+                        ) .
+                end.    
             end.
         when "thbj-attr" then 
             do:
@@ -411,22 +432,37 @@ do
             end.   
         when "pl-gds" then 
             do:
-            /*                run ref/cplchist.w (                         */
-            /*                       INPUT parParentProc                   */
-            /*                     , input p-obj-type                      */
-            /*                     , input p-obj-code                      */
-            /*                     , input "":U /*bttns  */                */
-            /*                     , input "subject":U /*p-mode*/          */
-            /*                     , input X_pl-gds.obj-type               */
-            /*                     , input X_pl-gds.obj-code               */
-            /*                     , input X_pl-gds.pl-code                */
-            /*                     , input X_pl-gds.gds-code /*p-gds-code*/*/
-            /*                     , input 0 /*p-pump-code*/               */
-            /*                     , input 0 /*p-nozzle-code*/             */
-            /*                     , input {&table_pl-gds} /*p-subject*/   */
-            /*                     , input-output v-rid-list               */
-            /*                     ) no-error .                            */
+
+                run ref/cplchisth.w (
+                    INPUT parParentProc
+                    , input "":U /*bttns  */
+                    , input "subject":U /*p-mode*/
+                    , input entry(1, v-field-value-list, {&delim-key})
+                    , input INTEGER (entry(2, v-field-value-list, {&delim-key}))
+                    , input INTEGER (entry(3, v-field-value-list, {&delim-key}))
+                    , input INTEGER (entry(4, v-field-value-list, {&delim-key})) /*p-gds-code*/
+                    , input 0 /*p-pump-code*/
+                    , input 0 /*p-nozzle-code*/
+                    , input {&table_pl-gds} /*p-subject*/
+                    , input-output v-list
+                    ) no-error .
             end.  
+        when "pl-gds-pump" then
+            do:
+                run ref/cplchisth.w (
+                    INPUT parParentProc
+                    , input "":U /*bttns  */
+                    , input "subject":U /*p-mode*/
+                    , input entry(1, v-field-value-list, {&delim-key})
+                    , input INTEGER (entry(2, v-field-value-list, {&delim-key}))
+                    , input INTEGER (entry(5, v-field-value-list, {&delim-key}))
+                    , input INTEGER (entry(3, v-field-value-list, {&delim-key})) /*p-gds-code*/
+                    , input INTEGER (entry(4, v-field-value-list, {&delim-key})) /*p-pump-code*/
+                    , input 0 /*p-nozzle-code*/
+                    , input {&table_pl-gds-pump} /*p-subject*/
+                    , input-output v-list
+                    ) no-error .
+            end.
         when "staff" then 
             do:
                 run ref/cstaffsh.w (
@@ -452,6 +488,23 @@ do
                     ,input-output v-list
                     ) no-error .
             end.    
+        when "ord-doc" then 
+            do:
+                run cus/ordcdoch.w
+                    (
+                    parParentProc,
+                    entry(1, v-field-value-list, {&delim-key}),
+                    "" ) .
+            end.           
+        when "auto-tank" then 
+            do:
+                run str/c-auto-tn.w (
+                    INPUT parParentProc
+                    ,input '':U /*bttns*/
+                    ,input 'one':U /*p-mode*/
+                    ,INPUT entry(1, v-field-value-list, {&delim-key})
+                    ,INPUT-OUTPUT v-rid-list) NO-ERROR.
+            end.                   
         when "config" then 
             do:
                 find first ub.config where ub.config.param-code = entry(1, v-field-value-list, {&delim-key}) no-error .
@@ -474,6 +527,45 @@ do
                     ,buffer cnf
                     ) no-error .
             end.    
+        when "action-role" or 
+        when "action-role-item" then 
+            do:
+                run ref/cactnrole.w (
+                    INPUT parparentproc
+                    , INPUT "":U /*bttns*/
+                    , INPUT "one":U /*parref-mode*/
+                    , OUTPUT  v-list
+                    , INPUT INTEGER (entry(1, v-field-value-list, {&delim-key}))
+                    , INPUT INTEGER (entry(2, v-field-value-list, {&delim-key}))
+                    , INPUT INTEGER (entry(3, v-field-value-list, {&delim-key}))
+                    , input "":U /*p-subject*/
+                    ).
+            end. 
+        when "c-plc-hist" then 
+            do:
+                
+                if entry(6, v-field-value-list, {&delim-key}) = "pl-gds-pump" then 
+                do:
+                    find first ub.c-pl-gds-pump no-lock where ub.c-pl-gds-pump.chip-num = INTEGER (entry(5, v-field-value-list, {&delim-key})) no-error .
+                    if AVAILABLE (ub.c-pl-gds-pump) then 
+                    do:
+                        run ref/cplchisth.w (
+                            INPUT parParentProc
+                            , input "":U /*bttns  */
+                            , input "subject":U /*p-mode*/
+                            , input ub.c-pl-gds-pump.obj-type
+                            , input ub.c-pl-gds-pump.obj-code
+                            , input ub.c-pl-gds-pump.pl-code
+                            , input ub.c-pl-gds-pump.gds-code /*p-gds-code*/
+                            , input ub.c-pl-gds-pump.pump-code /*p-pump-code*/
+                            , input 0 /*p-nozzle-code*/
+                            , input {&table_pl-gds-pump} /*p-subject*/
+                            , input-output v-list
+                            ) no-error .
+                    end.    
+                end.    
+            end.    
+
     end case.       /* case p-table-name */
   
 end.

@@ -575,9 +575,9 @@ then do:
   return.
 end.
   if p-mode = "one":U then do:
-    FIND FIRST X_chk-doc No-LOCK where
-                X_chk-doc.doc-code = p-doc-code No-ERROR.
-    if not avail X_chk-doc then do:
+    FIND FIRST X_c-chk-doc No-LOCK where
+                X_c-chk-doc.doc-code = p-doc-code No-ERROR.
+    if not avail X_c-chk-doc then do:
       message
       vss-workfile vss-revision vss-description skip
       "Неверное значение параметра вызова p-doc-code" p-doc-code
@@ -1185,8 +1185,8 @@ temp-changes.v_new:width in browse br-changes = 20
 
 if p-mode =  "one":u then do:
   assign
-  p-obj-type = X_chk-doc.obj-type
-  p-obj-code = X_chk-doc.obj-code
+  p-obj-type = X_c-chk-doc.obj-type
+  p-obj-code = X_c-chk-doc.obj-code
   .
 end.
 
