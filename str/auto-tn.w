@@ -57,8 +57,6 @@ define variable varauto-tank-rec as recid no-undo.
 define variable v-log as logical no-undo .
 define variable v-status_ like ub.auto-tank.status_ no-undo .
 
-define buffer auto-tank-sec for ub.auto-tank .
-
 assign parrec-tank      = ?
        varauto-tank-rec = ?.
 
@@ -111,7 +109,7 @@ auto-tank.name auto-tank.brutto-qnty
     ~{&OPEN-QUERY-brw-auto-tank}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-view b-help brw-auto-tank ~
+&Scoped-Define ENABLED-OBJECTS b-exit b-view B-hist b-help brw-auto-tank ~
 brw-auto-tank-2 varps RS-status_ 
 &Scoped-Define DISPLAYED-OBJECTS varps 
 
@@ -152,6 +150,11 @@ DEFINE BUTTON b-exit AUTO-END-KEY
 
 DEFINE BUTTON b-help
      LABEL "&Помощь"
+     SIZE 10 BY 1
+     BGCOLOR 8 .
+
+DEFINE BUTTON B-hist
+     LABEL "Ис&тория"
      SIZE 10 BY 1
      BGCOLOR 8 .
 
@@ -223,6 +226,7 @@ DEFINE FRAME Dialog-Frame
      b-chg AT ROW 1 COL 32
      b-view AT ROW 1 COL 42
      b-del AT ROW 1 COL 52
+     b-hist at row 1 col 63
      b-help AT ROW 1 COL 68
      RS-status_ AT ROW 2 COL 2 NO-LABEL
      brw-auto-tank AT ROW 3.1 COL 2
@@ -326,13 +330,6 @@ DO:
      ,input {&add-def}
      ,input-output varauto-tank-rec
     ) no-error.
-  if varauto-tank-rec <> ? then do :
-      find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
-      ub.auto-tank.brutto-qnty = 0 .
-      for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins (ub.auto-tank.auto-num + "#") :
-          ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + auto-tank-sec.brutto-qnty .    
-end.
-end.
   run local-enable_ui.
 END.
 
@@ -353,11 +350,7 @@ DO:
        ,input {&update}
        ,input-output varauto-tank-rec
       ) no-error.
-    find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
-    ub.auto-tank.brutto-qnty = 0 .
-    for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins (ub.auto-tank.auto-num + "#") :
-        ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + auto-tank-sec.brutto-qnty .    
-  end.
+    // find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
       run local-enable_ui.
     end.
     else do:
@@ -381,6 +374,28 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-hist Dialog-Frame
+ON CHOOSE OF B-hist IN FRAME Dialog-Frame /* История */
+DO:
+  DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
+  IF AVAILABLE auto-tank THEN DO:
+
+  run str/c-auto-tn.w (
+                    INPUT parParentProc
+                   ,input '':U /*bttns*/
+                   ,input 'one':U /*p-mode*/
+                   ,INPUT auto-tank.auto-num
+                   ,INPUT-OUTPUT v-rid-list) NO-ERROR.
+
+  END.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 
 &Scoped-define SELF-NAME b-view
@@ -548,7 +563,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY varps 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-view b-help brw-auto-tank brw-auto-tank-2 varps RS-status_
+  ENABLE b-exit b-view b-hist b-help brw-auto-tank brw-auto-tank-2 varps RS-status_
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

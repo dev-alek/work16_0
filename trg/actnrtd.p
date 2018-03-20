@@ -33,6 +33,11 @@ define variable vss-description as character no-undo init "Триггер на удаление a
 define buffer buf_action-role-item-gds       for ub.action-role-item-gds .
 define buffer buf_action-role-item-gds-grp   for ub.action-role-item-gds-grp .
 
+define variable v-date    as date      no-undo .
+define variable v-time    as integer   no-undo .
+
+define buffer buf_c-action-role-item for ub.c-action-role-item .
+define buffer buf_c-action-role     for ub.c-action-role .
 main-block:
 do transaction
 on error   undo main-block, return error substitute('actnrtd error main-block,&1', return-value )
@@ -58,7 +63,45 @@ on end-key undo main-block, return error substitute('actnrtd end-key main-block,
       :
       DELETE buf_action-role-item-gds.
   end.
+if not g#news then do:
+        run cur-time in this-procedure(output v-date, output v-time).
+        create buf_c-action-role-item.
+        buffer-copy ub.action-role-item to buf_c-action-role-item
+            assign
+            buf_c-action-role-item.chip-num           = next-value (s-corr-chip, {&db-name_schema})
+            buf_c-action-role-item.corr-time          = v-time
+            buf_c-action-role-item.corr-user-db-num   = g#db-num
+            buf_c-action-role-item.corr-user-name     = g#userid
+            buf_c-action-role-item.corr-date          = v-date
+            buf_c-action-role-item.is-del             = yes
+            buf_c-action-role-item.subject            = {&table_action-role-item}
+            buf_c-action-role-item.action             = integer({&hn-delete})
+            .
+        create buf_c-action-role.
+        buffer-copy buf_c-action-role-item to buf_c-action-role
+        assign
+        buf_c-action-role.subject            = {&table_action-role-item}
+        buf_c-action-role.action             = integer({&hn-delete})
+        .    
 
+        run trg/userlog.p (
+            input {&nwsdochs_action_delete}
+            , input {&table_action-role-item}
+            , input ( buffer ub.action-role-item :handle )
+            , input ?
+            , input ""
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+    
+    
   run nws/cmd-del.p
     ( input {&table_action-role-item}
       ,input (buffer ub.action-role-item:handle)
@@ -67,6 +110,7 @@ on end-key undo main-block, return error substitute('actnrtd end-key main-block,
   if error-status :error then do:
     undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
   end.
+end.  
     if g#oxml = yes
     then do:
     run str/calloxml.p (

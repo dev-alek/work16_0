@@ -119,6 +119,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       v-extsys-list =  entry( 3, p-parameter-string )
       v-esys-db-num  = integer( entry( 4, p-parameter-string ) )
       .
+      if v-extsys-list = '' then v-extsys-list = '0'.
     end.
     v-pack-num = -1.
     if num-entries(p-parameter-string) > 4 then do:
@@ -144,6 +145,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     run xmlischn_fill in this-procedure ( input 18, input 20).
     run xmlischn_fill in this-procedure ( input 18, input 24).
     run xmlischn_fill in this-procedure ( input 20, input 4).
+    
 
     _ext-system:
     do i = 1 to num-entries(v-extsys-list)

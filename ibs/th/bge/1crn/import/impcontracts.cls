@@ -121,11 +121,12 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
     if AVAILABLE ub.contract then 
     do:
       assign
-        v-status    = if objContracts:status_ = 1 then {&current-contr} else {&close-contr}
+
         /*          v-status    = if objContracts:del-l = 0 then {&current-contr} else {&close-contr}*/
         v-cli-code  = ub.contract.cli-code
         v-cli-name  = ub.contract.cli-name
         v-curr-code = ub.contract.curr-code
+        
         .
     end.
     else 
@@ -142,7 +143,6 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
       /*combo-type-contr = "Купли-продажи". */
       create ub.contract .
       assign
-        ub.contract.contract-prn-code = objContracts:number
         ub.contract.host-code         = integer(objContracts:org-code)
         ub.contract.contract-type     = {&contr-buy-sale} /*заглушка*/ 
         ub.contract.db-num            = gbl-var:g#db-num
@@ -171,6 +171,7 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
       end.     
     end.
     assign
+      ub.contract.contract-prn-code = objContracts:number
       ub.contract.doc-type          = {&income}
       ub.contract.status_           = if objContracts:status_ = 1 then {&current-contr} else {&close-contr}
       /*        ub.contract.status_           = if objContracts:del-l = 0 then {&current-contr} else {&close-contr}*/
@@ -179,6 +180,7 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
       ub.contract.cli-type          = {&cmp}
       ub.contract.cli-code          = v-cli-code 
       ub.contract.cli-name          = v-cli-name
+      
       ub.contract.contract-date     = if objContracts:date_ = "0001-01-01" then today else date(date-1C(objContracts:date_))
       ub.contract.contract-date-beg = if objContracts:date-srt = "0001-01-01" then ? else date(date-1C(objContracts:date-srt))
       ub.contract.contract-date-end = if objContracts:date-end = "0001-01-01" then ? else date(date-1C(objContracts:date-end))

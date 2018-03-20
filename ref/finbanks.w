@@ -267,8 +267,8 @@ DEFINE BROWSE BR-bank
   QUERY BR-bank DISPLAY
       mark-string(recid(X_fin-bank), v-rid-list) FORMAT "X(1)":U
             WIDTH 1
-      X_fin-bank.host-code COLUMN-LABEL "Код!фирмы" FORMAT ">>>>>99999":U
-      X_fin-bank.code-bank COLUMN-LABEL "Код!банка" FORMAT "9999999":U
+      X_fin-bank.host-code COLUMN-LABEL "Код!фирмы" FORMAT ">>>>>9999999999":U
+      X_fin-bank.code-bank COLUMN-LABEL "Код!банка" FORMAT "999999999":U
       X_fin-bank.bank-name COLUMN-LABEL "Наименование банка" FORMAT "X(60)":U
       X_fin-bank.bik FORMAT "X(9)":U
       X_fin-bank.status_ FORMAT "X(8)":U
@@ -1736,8 +1736,8 @@ define variable date_string     as      char    no-undo.
 define variable Line            as      char    no-undo.
 
 DEFINE FRAME fin-bank-list
-X_fin-bank.host-code COLUMN-LABEL "Код!фирмы"
-X_fin-bank.code-bank COLUMN-LABEL "Код банка"  format ">>>>>>9"
+X_fin-bank.host-code COLUMN-LABEL "Код!фирмы"  format ">>>>>>>>>>9"
+X_fin-bank.code-bank COLUMN-LABEL "Код банка"  format ">>>>>>>>>>9"
 X_fin-bank.bank-name format "X(160)"
 X_fin-bank.status_
 X_fin-bank.BIK

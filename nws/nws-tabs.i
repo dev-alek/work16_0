@@ -247,7 +247,9 @@ abc-analysis~
 ,action-post-role~
 ,action-post-user-login~
 ,action-role~
+,c-action-role~
 ,action-role-item~
+,c-action-role-item~
 ,action-role-item-gds~
 ,action-role-item-gds-grp~
 ,alc-sale-lic~

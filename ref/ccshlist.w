@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,13 +8,13 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER buf_cli FOR ub.clients.
-DEFINE BUFFER for-c-cash-desk FOR ub.c-cash-desk.
-DEFINE BUFFER X_c-cash-desk FOR ub.c-cash-desk.
+DEFINE BUFFER buf_cli FOR clients.
+DEFINE BUFFER for-c-cash-desk FOR c-cash-desk.
+DEFINE BUFFER X_c-cash-desk FOR c-cash-desk.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -95,7 +95,7 @@ define buffer X_cash-desk for ub.cash-desk.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -110,8 +110,8 @@ define buffer X_cash-desk for ub.cash-desk.
 &Scoped-define INTERNAL-TABLES X_c-cash-desk temp-changes
 
 /* Definitions for BROWSE BR-c-cash-desk                                */
-&Scoped-define FIELDS-IN-QUERY-BR-c-cash-desk mark-string( recid(X_c-cash-desk), v-rid-list ) {&hn-cash-desk-hist-name} get-action(X_c-cash-desk.action) X_c-cash-desk.corr-date usrfulnf(X_c-cash-desk.corr-user-name) string(X_c-cash-desk.corr-time, "HH:MM")
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-c-cash-desk
+&Scoped-define FIELDS-IN-QUERY-BR-c-cash-desk mark-string( recid(X_c-cash-desk), v-rid-list ) {&hn-cash-desk-hist-name} get-action(X_c-cash-desk.action) X_c-cash-desk.corr-date usrfulnf(X_c-cash-desk.corr-user-name) string(X_c-cash-desk.corr-time, "HH:MM")   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-c-cash-desk   
 &Scoped-define SELF-NAME BR-c-cash-desk
 &Scoped-define QUERY-STRING-BR-c-cash-desk FOR EACH X_c-cash-desk NO-LOCK
 &Scoped-define OPEN-QUERY-BR-c-cash-desk OPEN QUERY {&SELF-NAME} FOR EACH X_c-cash-desk NO-LOCK.
@@ -120,8 +120,8 @@ define buffer X_cash-desk for ub.cash-desk.
 
 
 /* Definitions for BROWSE BR-changes                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes
+&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes   
 &Scoped-define SELF-NAME BR-changes
 &Scoped-define QUERY-STRING-BR-changes FOR EACH temp-changes
 &Scoped-define OPEN-QUERY-BR-changes OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
@@ -133,8 +133,8 @@ define buffer X_cash-desk for ub.cash-desk.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel B-sch B-Help mark-num ~
-BR-c-cash-desk BR-changes
-&Scoped-Define DISPLAYED-OBJECTS mark-num
+BR-c-cash-desk BR-changes 
+&Scoped-Define DISPLAYED-OBJECTS mark-num 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -145,7 +145,7 @@ BR-c-cash-desk BR-changes
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
   ( p-action as integer )  FORWARD.
 
@@ -158,39 +158,39 @@ FUNCTION get-action RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-sch
-     LABEL "&Фильтр"
+DEFINE BUTTON B-sch 
+     LABEL "&Фильтр" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&бор"
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор" 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 9 BY 1
      FGCOLOR 4  NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-c-cash-desk FOR
+DEFINE QUERY BR-c-cash-desk FOR 
       X_c-cash-desk SCROLLING.
 
-DEFINE QUERY BR-changes FOR
+DEFINE QUERY BR-changes FOR 
       temp-changes SCROLLING.
 &ANALYZE-RESUME
 
@@ -231,8 +231,8 @@ DEFINE FRAME Dialog-Frame
      BR-c-cash-desk AT ROW 3.42 COL 1
      BR-changes AT ROW 16.04 COL 1
      SPACE(0.24) SKIP(0.00)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Справочник касс"
          CANCEL-BUTTON b-quit.
 
@@ -260,9 +260,12 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-c-cash-desk mark-num Dialog-Frame */
 /* BROWSE-TAB BR-changes BR-c-cash-desk Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+ASSIGN 
+       BR-c-cash-desk:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -288,7 +291,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
 */  /* BROWSE BR-changes */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -389,7 +392,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -473,7 +476,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -492,12 +495,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY mark-num
+  DISPLAY mark-num 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-mark b-sel B-sch B-Help mark-num BR-c-cash-desk BR-changes
+  ENABLE b-quit B-mark b-sel B-sch B-Help mark-num BR-c-cash-desk BR-changes 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -506,7 +509,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -542,7 +545,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 define variable l-query-was-opened as logical no-undo .
 
@@ -648,7 +651,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame 
 PROCEDURE proc-b-sch :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -711,7 +714,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -751,7 +754,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
   ( p-action as integer ) :
 /*------------------------------------------------------------------------------
@@ -770,3 +773,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

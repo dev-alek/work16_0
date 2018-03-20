@@ -245,6 +245,45 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                              , error-status :get-message ( 1 ) ).
     end.
   end.
+    if new(ub.cli-grp) then 
+  do:   
+    run trg/userlog.p (
+      input {&nwsdochs_action_create}
+      , input {&table_cli-grp}
+      , input ( buffer ub.cli-grp :handle )
+      , input ?
+      , input ""
+      ) no-error.
+    if error-status :error
+      then 
+    do:
+      undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+        , {&new-line}
+        , vss-workfile
+        , return-value
+        , error-status :get-message ( 1 ) ).
+    end.
+  end. 
+  else 
+  do:
+    run trg/userlog.p (
+      input {&nwsdochs_action_update}
+      , input {&table_cli-grp}
+      , input ( buffer ub.cli-grp :handle )
+      , input ?
+      , input ""
+      ) no-error.
+    if error-status :error
+      then 
+    do:
+      undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+        , {&new-line}
+        , vss-workfile
+        , return-value
+        , error-status :get-message ( 1 ) ).
+    end.
+
+  end.  
 END.
 
 

@@ -1173,6 +1173,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
     define variable v_string-tmp  as   character     no-undo.
     define variable v_command     as   character     no-undo.
     define variable v_File-Name   as   character     no-undo.
+    define variable v-err-file-name as character no-undo .
     define variable is_FatalError as   logical       no-undo.
     define variable l_read        as   logical       no-undo.
     define variable j_num         as   integer       no-undo.
@@ -1209,9 +1210,8 @@ define variable      v-water-qnty as decimal no-undo.
                             , return-value ) .
     end.
 
-    for each tt-meas-file :
-      delete tt-meas-file .
-    end.
+    empty temp-table tt-meas-file .
+    
     /* Если запрос по одному баку */
     if p-one-place = yes then do:
       find first tt-meas no-error .
@@ -1276,7 +1276,7 @@ define variable      v-water-qnty as decimal no-undo.
       if v_comstring = '':U
         or v_comstring = ?
       then do:
-        return error 'Не задан парам. comstr в секции revision ini файла.' .
+        return error substitute('Не задан параметр &1', ibs.th.gbl.gbl-inipar:comstrKeyName) .
       end.
       assign
         v_command = substitute( "&1 &2 &3 &4", v_comstring, string( anl-loc ), v_File-Name, p-obj-code)
@@ -1289,13 +1289,10 @@ define variable      v-water-qnty as decimal no-undo.
      v_File-Name  = search( v_File-Name ) . 
      end.
 
-      input  stream str-anl from  value ( v_File-Name)   .
-      output stream str-err to     'revis.err' .
     end.
     else do:
-      get-key-value section 'revision'
-                    key     'dirflrvs'
-                    value   v_DirFilervs.
+      
+      v_DirFilervs = ibs.th.gbl.gbl-inipar:dirflrvs .
       if v_DirFilervs = '':U
         or v_DirFilervs = ?
       then do:
@@ -1310,13 +1307,12 @@ define variable      v-water-qnty as decimal no-undo.
       if l_log <> yes then do:
         return error .
       end.
-      input  stream str-anl from  value ( v_File-Name  )  .
-      output stream str-err to   'revis.err' .
     end.
 
-    assign
-      is_FatalError = no
-    .
+    v-err-file-name = substitute('&1revis.err', ibs.th.gbl.gbl-inipar:logDir) .
+    input  stream str-anl from  value (  v_File-Name  )  .
+    output stream str-err to    value (  v-err-file-name  ) .
+
     rpt:
     repeat :
          is_FatalError = no.
@@ -1329,10 +1325,8 @@ define variable      v-water-qnty as decimal no-undo.
           v_string-tmp = substring( v_string-tmp, 1, index( v_string-tmp, v_comment ) - 1 )
         .
       end.
-
-      if v_string-tmp = '':U then do:
-        next rpt .
-      end.
+      if v_string-tmp = '':U then next rpt .
+      
       if index( v_string-tmp, v_StartString ) > 0 then do:
         /* перешли к новому баку, следует в старом баке проставить */
         assign
@@ -1364,9 +1358,11 @@ define variable      v-water-qnty as decimal no-undo.
               
               if pl-twice-code = ""  then 
               do: 
-/*                  message "1" view-as alert-box.*/
-          put stream str-err unformatted substitute( 'Не найден резервуар по системе с локальным кодом(коорд1) &1 .'
-                                                  , trim( entry( 2, v_string-tmp, '=' ) ) ) skip .
+          put stream str-err unformatted
+            substitute( '&2 Не найден резервуар по системе с локальным кодом(коорд1) &1 .'
+                      , trim( entry( 2, v_string-tmp, '=' ) )
+                      , cur-time-string-sec()
+                      ) skip .
           assign
             is_FatalError = yes
           .
@@ -1378,11 +1374,13 @@ define variable      v-water-qnty as decimal no-undo.
           do: 
               if bf_place.is-meas = no   then 
               do:
-          put stream str-err unformatted substitute( 'Получены данные с приборов по резервуару &1 '
-                                                  + 'с локальным кодом(коорд1) &2, определенного в системе как '
-                                                  + 'неизмеряемый.'
-                                                  , bf_place.pl-code
-                                                  , trim( entry( 2, v_string-tmp, '=' ) ) ) skip .
+          put stream str-err unformatted
+            substitute( '&3 Получены данные с приборов по резервуару &1 '
+                      + 'с локальным кодом(коорд1) &2, определенного в системе как неизмеряемый.'
+                      , bf_place.pl-code
+                      , trim( entry( 2, v_string-tmp, '=' ) ) 
+                      , cur-time-string-sec()
+                      ) skip .
           assign
             is_FatalError = yes
           .
@@ -1397,8 +1395,21 @@ define variable      v-water-qnty as decimal no-undo.
                   tt-meas-file.obj-code = p-obj-code
                   tt-meas-file.pl-code  = bf_place.pl-code
                   tt-meas-file.loc1     = bf_place.loc1
-                  l_read                = yes
-                  .
+              no-error .
+              if error-status:error then do:
+                put stream str-err unformatted
+                  substitute( '&4 Ошибка принятия к обработке резервуара id &1 с локальным кодом(коорд1) &2 &3'
+                       , bf_place.pl-code
+                       , bf_place.loc1
+                       , error-status:get-message(1)
+                       , cur-time-string-sec()
+                  )
+                  skip
+                .
+                is_FatalError = yes.
+                undo, leave rpt .
+              end .
+              l_read = yes .
           end.
           else 
           do: 
@@ -1408,8 +1419,20 @@ define variable      v-water-qnty as decimal no-undo.
                   tt-meas-file.obj-code = p-obj-code
                   /*          tt-meas-file.pl-code  = bf_place.pl-code*/
                   tt-meas-file.loc1     = pl-twice-code
-                  l_read                = yes
-                  .            
+              no-error .
+              if error-status:error then do:
+                put stream str-err unformatted
+                  substitute( '&3 Ошибка принятия к обработке резервуара с локальным кодом(коорд1) &1 &2'
+                       , pl-twice-code
+                       , error-status:get-message(1)
+                       , cur-time-string-sec()
+                  )
+                  skip
+                .
+                is_FatalError = yes.
+                undo, leave rpt .
+              end .
+              l_read = yes .
           end.
       end.
       else do:
@@ -1462,13 +1485,18 @@ define variable      v-water-qnty as decimal no-undo.
                 end.
           end.
           else do:
-            put stream str-err unformatted 'Неизвестный параметр: ' trim( entry( 1, v_string-tmp, '=' ) ) skip .
+            put stream str-err unformatted
+              substitute('&2 Неизвестный параметр: &1'
+                         , trim( entry(1, v_string-tmp, '=') )
+                         , cur-time-string-sec()
+                         ) skip .
           end.
         end. /* читаем данные по резервуару */
       end. /* не номер танка */
     end. /* repeat rpt */
 
-      for each tt-meas-file
+    if is_FatalError = no then do:
+    for each tt-meas-file
           on error undo, return error return-value
           :
         
@@ -1484,7 +1512,11 @@ define variable      v-water-qnty as decimal no-undo.
                   assign
                       is_FatalError = yes
                       .
-                  put stream str-err "Вычисляем объем резервуаров через градуировочные таблицы. Для резервуара " tt-meas-file.loc1 " не задан уровень в резервуаре." skip.
+                  put stream str-err unformatted
+                    substitute("&2 Вычисляем объем резервуаров через градуировочные таблицы. Для резервуара &1 не задан уровень в резервуаре."
+                      , tt-meas-file.loc1
+                      , cur-time-string-sec()
+                     ) skip.
               end.
               else 
               do:
@@ -1502,7 +1534,12 @@ define variable      v-water-qnty as decimal no-undo.
                           assign
                               is_FatalError = yes
                               .
-                          put stream str-err "Вычисляем объем резервуаров через градуировочные таблицы. Для резервуара " tt-meas-file.loc1 " не задан объем для уровня " varlevel-sm skip.
+                          put stream str-err unformatted
+                            substitute("&3 Вычисляем объем резервуаров через градуировочные таблицы. Для резервуара &1 не задан объем для уровня &2" 
+                            , tt-meas-file.loc1
+                            , varlevel-sm 
+                            , cur-time-string-sec()
+                            ) skip.
                       end.
                   end.
                   else 
@@ -1529,7 +1566,13 @@ define variable      v-water-qnty as decimal no-undo.
                               assign
                                   is_FatalError = yes
                                   .
-                              put stream str-err "Вычисляем объем резервуаров через градуировочные таблицы. Для резервуара " tt-meas-file.loc1 " не задан объем для уровня " varlevel-sm " измерение " tt-meas-file.level-total skip.
+                              put stream str-err unformatted
+                                substitute("&4 Вычисляем объем резервуаров через градуировочные таблицы. Для резервуара &1 не задан объем для уровня &2 измерение &3"
+                                , tt-meas-file.loc1
+                                , varlevel-sm
+                                , tt-meas-file.level-total
+                                , cur-time-string-sec()
+                                ) skip.
                           end.
                           else 
                           do:
@@ -1675,8 +1718,11 @@ define variable      v-water-qnty as decimal no-undo.
           assign
             is_FatalError = yes
           .
-          put stream str-err unformatted substitute( 'Не получены данные по резервуару &1 .'
-                                                     , tt-meas.pl-code ) skip .
+          put stream str-err unformatted
+            substitute( '&2 Не получены данные по резервуару &1 .'
+                      , tt-meas.pl-code
+                      , cur-time-string-sec()
+                       ) skip .
         end.
       end. /* if not available tt-meas-file */
     end. /* tt-meas */
@@ -1705,13 +1751,16 @@ define variable      v-water-qnty as decimal no-undo.
             is_FatalError = yes
           .
         end.
-        put stream str-err unformatted substitute( 'Получены данные по резервуару &1 по которому нет запроса.'
-                                                , tt-meas-file.pl-code ) skip .
+        put stream str-err unformatted
+          substitute( '&2 Получены данные по резервуару &1 по которому нет запроса.'
+                     , tt-meas-file.pl-code
+                     , cur-time-string-sec()
+                      ) skip .
       end.
       end.
     end. /* tt-meas-file */
+    end . /* end of if_is_FatalError = no  */
     input  stream str-anl close.
-    output stream str-err close.
 
     if is_FatalError = yes then do:
       return error 'При считывании данных с резервуаров произошли ошибки НЕПОЗВОЛЯЮЩИЕ ЗАГРУЗИТЬ ДАННЫЕ.' .
@@ -1743,6 +1792,16 @@ define variable      v-water-qnty as decimal no-undo.
     end. /* for each */
 end.
   return .
+  
+  finally:
+    input  stream str-anl close.
+    put stream str-err unformatted skip(0) .
+    output stream str-err close.
+
+    define variable v-save-file-name as character no-undo .
+    v-save-file-name = substitute("&1rvs-err.log", ibs.th.gbl.gbl-inipar:logDir) .
+    OS-APPEND value(v-err-file-name) value(v-save-file-name).
+  end finally .
 end procedure. /* lib-rvs_rvsplace */
 
 procedure lib-rvs_fill1plc : /* fill-one-place */
@@ -3080,9 +3139,7 @@ procedure lib-rvs_crtt-rvs : /* cr-tt-param */
     .
   end.
 
-  get-key-value section 'revision'
-                key     'comstr'
-                value   p-comstring.
+  p-comstring = ibs.th.gbl.gbl-inipar:comstr .
   if p-comstring <> ?    and
      p-comstring <> '':U
   then do:
@@ -3239,7 +3296,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   if p-read-cur = yes then do:
     assign
       v_File-Name = './pump.txt'
-      v_File-Err  = './pump.err'
+      v_File-Err  = substitute('&1pump.err', ibs.th.gbl.gbl-inipar:logDir) .
     .
     os-delete value( v_File-Name ) .
     assign
@@ -3251,9 +3308,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     end.
   end.
   else do:
-    get-key-value section 'revision'
-                  key     'dirflpmp'
-                  value   v_DirFilePump.
+    v_DirFilePump = ibs.th.gbl.gbl-inipar:dirflpmp .
     if v_DirFilePump = '':U or
        v_DirFilePump = ?
     then do:
@@ -3268,14 +3323,11 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     if l_log <> yes then do:
       return error .
     end.
-    assign
-      v_File-Name = v_File-Name
-      v_File-Err  = entry( 1, v_File-Name, '.':U ) + '.err':U
-    .
+    v_File-Err  = substitute("&1.err":U,  entry(1, v_File-Name, '.':U)) .
   end.
 
   &scop pf-put-err  output stream str-err to value( v_File-Err ) append.~
-                    put stream str-err unformatted
+                    put stream str-err unformatted cur-time-string-sec() ' '
   &scop wsf-put-err skip . ~
                     output stream str-err close.~
                     assign ~
@@ -3295,12 +3347,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   repeat :
     import stream str-anl unformatted v_String-Temp.
     /* Отсекем комментарий */
-    if trim( v_String-Temp ) = '':U then do:
-      next main-cycle .
-    end.
-    if substring( v_String-Temp, 1, 3 ) <> '212' then do:
-      next main-cycle .
-    end.
+    if trim( v_String-Temp ) = '':U then next main-cycle .
+    if substring( v_String-Temp, 1, 3 ) <> '212' then next main-cycle .
+    
     assign
       v_Prefix =       substring( v_String-Temp, 1, 4 )
       v_String = trim( substring( v_String-Temp, 5    ) )
@@ -3582,6 +3631,13 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       {&wsf-put-err}
     end. /* if not available tt-pump-nozzle-file */
   end. /* for each tt-pump-nozzle */
+
+  output stream str-err to value( v_File-Err ) append.
+  put stream str-err unformatted skip(0) .
+  output stream str-err close .
+  define variable v-save-file-name as character no-undo .
+  v-save-file-name = substitute("&1pmp-err.log", ibs.th.gbl.gbl-inipar:logDir) .
+  OS-APPEND value(v_File-Err) value(v-save-file-name).
 
   if is_FatalError = yes then do:
     return error 'Во время загрузки файла произошли фатальные ошибки, НЕПОЗВОЛЯЮЩИЕ ЗАГРУЗИТЬ ДАННЫЕ С ТРК. ' +

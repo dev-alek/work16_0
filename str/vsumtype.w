@@ -38,9 +38,9 @@ Creation date: 09/12/07
 define input parameter paris-doc      as logical no-undo.
 define input parameter pardoc-code like ub.trn-doc.doc-code no-undo.
 define input parameter pargds-code like ub.goods.gds-code no-undo.
-define variable varvalue   as character no-undo.
-define variable vartype     as character no-undo.
-define variable rdtaxname as character no-undo.
+define variable varvalue        as character no-undo.
+define variable vartype         as character no-undo.
+define variable rdtaxname       as character no-undo.
 
 
 /* Local Variable Definitions ---                                       */
@@ -128,69 +128,69 @@ FUNCTION fname-sum-type RETURNS CHARACTER
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-exit AUTO-GO
-     LABEL "&Выход"
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+  LABEL "&Выход"
+  SIZE 10 BY 1
+  BGCOLOR 8 .
 
 DEFINE BUTTON b-help
-     LABEL "&Помощь"
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+  LABEL "&Помощь"
+  SIZE 10 BY 1
+  BGCOLOR 8 .
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BROWSE-1 FOR
-      tt-sum SCROLLING.
+  tt-sum SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE BROWSE-1
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-1 Dialog-Frame _STRUCTURED
   QUERY BROWSE-1 DISPLAY
-      fname-sum-type (buffer tt-sum) COLUMN-LABEL "Тип суммы" FORMAT "x(27)":U
-      tt-sum.fact-qnty FORMAT "->>>,>>>,>>>,>>9.999":U
-      tt-sum.crsa-sum-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-sum-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-discnt-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-discnt-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-VAT-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-VAT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-SLT-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-SLT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-road-tax-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-road-tax-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-excise-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.crsa-excise-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-sum-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-sum-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-VAT-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-VAT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-SLT-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-SLT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-road-tax-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-road-tax-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-transport-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-transport-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-other-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-other-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-excise-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.cost-excise-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-sum-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-sum-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-discnt-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-discnt-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-VAT-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-VAT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-SLT-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-SLT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-road-tax-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-road-tax-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-excise-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-excise-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-transport-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-transport-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-other-base FORMAT "->>>,>>>,>>>,>>9.99":U
-      tt-sum.sale-other-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  fname-sum-type (buffer tt-sum) COLUMN-LABEL "Тип суммы" FORMAT "x(39)":U
+  tt-sum.fact-qnty FORMAT "->>>,>>>,>>>,>>9.999":U
+  tt-sum.crsa-sum-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-sum-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-discnt-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-discnt-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-VAT-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-VAT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-SLT-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-SLT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-road-tax-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-road-tax-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-excise-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.crsa-excise-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-sum-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-sum-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-VAT-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-VAT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-SLT-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-SLT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-road-tax-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-road-tax-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-transport-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-transport-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-other-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-other-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-excise-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.cost-excise-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-sum-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-sum-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-discnt-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-discnt-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-VAT-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-VAT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-SLT-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-SLT-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-road-tax-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-road-tax-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-excise-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-excise-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-transport-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-transport-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-other-base FORMAT "->>>,>>>,>>>,>>9.99":U
+  tt-sum.sale-other-rubl FORMAT "->>>,>>>,>>>,>>9.99":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 97.63 BY 9.92.
@@ -199,14 +199,14 @@ DEFINE BROWSE BROWSE-1
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     b-exit AT ROW 1 COL 1
-     b-help AT ROW 1 COL 11
-     BROWSE-1 AT ROW 2.33 COL 1
-     SPACE(0.11) SKIP(0.03)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         TITLE "Суммы по документу"
-         DEFAULT-BUTTON b-exit.
+  b-exit AT ROW 1 COL 1
+  b-help AT ROW 1 COL 11
+  BROWSE-1 AT ROW 2.33 COL 1
+  SPACE(0.11) SKIP(0.03)
+  WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
+  SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+  TITLE "Суммы по документу"
+  DEFAULT-BUTTON b-exit.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -230,8 +230,8 @@ DEFINE FRAME Dialog-Frame
                                                                         */
 /* BROWSE-TAB BROWSE-1 b-help Dialog-Frame */
 ASSIGN
-       FRAME Dialog-Frame:SCROLLABLE       = FALSE
-       FRAME Dialog-Frame:HIDDEN           = TRUE.
+  FRAME Dialog-Frame:SCROLLABLE = FALSE
+  FRAME Dialog-Frame:HIDDEN     = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -342,9 +342,9 @@ ASSIGN
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Суммы по документу */
-DO:
-  APPLY "END-ERROR":U TO SELF.
-END.
+  DO:
+    APPLY "END-ERROR":U TO SELF.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -360,7 +360,7 @@ END.
 
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
-THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+  THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 
 { gbl/app_help.i }
 
@@ -368,7 +368,12 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
-   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+
+  define variable v-sum-type as character no-undo.
+  define variable isPrlSum   as logical   no-undo.
+  
+
   { str/tdat-val.i
       pardoc-code
       {&trdcattr-addsum}
@@ -376,40 +381,58 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       vartype
       no-error
   }
-  if error-status :error then do:
+  if error-status :error then 
+  do:
     return error return-value.
   end.
 
   for each tt-sum :
-      delete tt-sum.
+    delete tt-sum.
   end.
-    if paris-doc then do:
-      for each trn-doc-sum where trn-doc-sum.doc-code = pardoc-code no-lock :
-          if lookup (trn-doc-sum.sum-type, varvalue) <> 0 then do:
-          create tt-sum.
-         buffer-copy trn-doc-sum to tt-sum.
+  if paris-doc then 
+  do:
+    for each trn-doc-sum where trn-doc-sum.doc-code = pardoc-code no-lock :
+      if lookup (trn-doc-sum.sum-type, varvalue) <> 0 then 
+      do:
+        create tt-sum.
+        buffer-copy trn-doc-sum to tt-sum.
+      end.
+    end.
+  end.
+  else 
+  do:
+    varvalue = varvalue + ",mterr".
+    for each doc-line-sum where doc-line-sum.doc-code = pardoc-code and
+      doc-line-sum.gds-code = pargds-code no-lock :
+
+      if num-entries (doc-line-sum.sum-type, {&delim-par}) > 1 
+        then do:
+          v-sum-type =  entry (1, doc-line-sum.sum-type, {&delim-par}).
+          isPrlSum = true.
         end.
+        else v-sum-type = doc-line-sum.sum-type.
+
+         
+      if lookup (v-sum-type, varvalue) <> 0 then 
+      do:
+        create tt-sum.
+        buffer-copy doc-line-sum to tt-sum.
       end.
     end.
-  else do:
-      for each doc-line-sum where doc-line-sum.doc-code = pardoc-code and
-                                  doc-line-sum.gds-code = pargds-code no-lock :
-         if lookup (doc-line-sum.sum-type, varvalue) <> 0 then do:
-           create tt-sum.
-           buffer-copy doc-line-sum to tt-sum.
-         end.
-      end.
-    end.
-    run tax-name in this-procedure ({&road-tax}, output rdtaxname).
+    find first tt-sum where isPrlSum and tt-sum.sum-type = {&sum-wastage-doc} no-error.
+    if available (tt-sum) then delete tt-sum. 
+  end.
+  run tax-name in this-procedure ({&road-tax}, output rdtaxname).
   assign
-       tt-sum.cost-road-tax-base:label in browse {&browse-name} = rdtaxname + "  учет. (вал)"
-   tt-sum.cost-road-tax-rubl:label in browse {&browse-name} = rdtaxname + " учет. ({&abbr_rub})"
-   tt-sum.crsa-road-tax-base:label in browse {&browse-name} = rdtaxname + " тек. прод. (вал)"
-   tt-sum.crsa-road-tax-rubl:label in browse {&browse-name} = rdtaxname + " тек. прод. ({&abbr_rub})"
-   tt-sum.sale-road-tax-base:label in browse {&browse-name} = rdtaxname + " прод. (вал)"
+    tt-sum.cost-road-tax-base:label in browse {&browse-name} = rdtaxname + "  учет. (вал)"
+    tt-sum.cost-road-tax-rubl:label in browse {&browse-name} = rdtaxname + " учет. ({&abbr_rub})"
+    tt-sum.crsa-road-tax-base:label in browse {&browse-name} = rdtaxname + " тек. прод. (вал)"
+    tt-sum.crsa-road-tax-rubl:label in browse {&browse-name} = rdtaxname + " тек. прод. ({&abbr_rub})"
+    tt-sum.sale-road-tax-base:label in browse {&browse-name} = rdtaxname + " прод. (вал)"
     tt-sum.sale-road-tax-rubl:label in browse {&browse-name} = rdtaxname + " прод. ({&abbr_rub})"   .
 
-  if paris-doc = no then do:
+  if paris-doc = no then 
+  do:
     find first goods where goods.gds-code = pargds-code no-lock.
     assign
       frame {&frame-name}:title = "Суммы по товару: " + goods.artic + " " + goods.prod-type + " " + string(goods.prod-code) + " " + string(goods.gds-name, "x(30)").
@@ -427,14 +450,14 @@ RUN disable_UI.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     DISABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
-               frames.  This procedure is usually called when
-               we are ready to "clean-up" after running.
-------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+    Purpose:     DISABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we clean-up the user-interface by deleting
+                 dynamic widgets we have created and/or hide
+                 frames.  This procedure is usually called when
+                 we are ready to "clean-up" after running.
+  ------------------------------------------------------------------------------*/
   /* Hide all frames. */
   HIDE FRAME Dialog-Frame.
 END PROCEDURE.
@@ -444,17 +467,17 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     ENABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we display/view/enable the widgets in the
-               user-interface.  In addition, OPEN all queries
-               associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
-               Settings" section of the widget Property Sheets.
-------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+    Purpose:     ENABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we display/view/enable the widgets in the
+                 user-interface.  In addition, OPEN all queries
+                 associated with each FRAME and BROWSE.
+                 These statements here are based on the "Other
+                 Settings" section of the widget Property Sheets.
+  ------------------------------------------------------------------------------*/
   ENABLE b-exit b-help BROWSE-1
-      WITH FRAME Dialog-Frame.
+    WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
@@ -467,15 +490,38 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION fname-sum-type Dialog-Frame
 FUNCTION fname-sum-type RETURNS CHARACTER
   ( buffer local-tt-sum for tt-sum ) :
-/*------------------------------------------------------------------------------
-  Purpose:
-    Notes:
-------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+    Purpose:
+      Notes:
+  ------------------------------------------------------------------------------*/
+  define variable v-sum-type as char no-undo.
+  
   &scop sum-type local-tt-sum.sum-type
-  if available local-tt-sum then do:
-  RETURN {&sum-name}.   /* Function return value. */
+  if available local-tt-sum then 
+  do:
+    if num-entries (local-tt-sum.sum-type, {&delim-par}) > 1 
+    then do: 
+      case entry (1, local-tt-sum.sum-type, {&delim-par}) + {&delim-par} + entry (2, local-tt-sum.sum-type, {&delim-par}):
+        when {&sum-wastage-doc} + {&delim-par} + "base":U then do:
+          return "Сумма_естест_убыли,_л,_мест.хр.-" + entry (3, local-tt-sum.sum-type, {&delim-par}).
+        end.
+        when {&sum-wastage-doc} + {&delim-par} + "cli":U then do:
+          return "Сумма_естест_убыли,_кг,_мест.хр.-" + entry (3, local-tt-sum.sum-type, {&delim-par}).
+        end.
+        when "mterr" + {&delim-par} + "base":U then do:
+          return "Погреш. измерения,_л,_мест.хр.-" + entry (3, local-tt-sum.sum-type, {&delim-par}).
+        end.
+        when "mterr" + {&delim-par} + "cli":U then do:
+          return "Погреш. измерения,_кг,_мест.хр.-" + entry (3, local-tt-sum.sum-type, {&delim-par}).
+        end.
+      end.
+    end.
+    else 
+    do:
+      RETURN {&sum-name}.   /* Function return value. */
+    end.
   end.
-  else return local-tt-sum.sum-type .
+/*  else return local-tt-sum.sum-type .*/
 
 END FUNCTION.
 

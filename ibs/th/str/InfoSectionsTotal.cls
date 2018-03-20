@@ -289,8 +289,11 @@ class ibs.th.str.InfoSectionsTotal:
 
   method public class InfoSection GetInfoSectionProp (inSecNum as integer):
     
+    define variable objInfoSec as class InfoSection.
+    
     for first ttObjInfoSecProp where ttObjInfoSecProp.iSecNum = inSecNum:
-      return cast ( ttObjInfoSecProp.objInfoSecProp, InfoSection ).
+      objInfoSec = cast ( ttObjInfoSecProp.objInfoSecProp, InfoSection ). 
+      return objInfoSec.
     end.
 
   end method.
@@ -388,6 +391,25 @@ class ibs.th.str.InfoSectionsTotal:
       delete ttObjInfoSecProp.
     end.
 
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
+  method private void putheader(input inpGetInfoSectionProp as class InfoSection ):
+
+    put stream log-algo unformatted
+          {&new-line}
+          "-----------------------------------------------"
+          {&new-line}
+          now {&new-line}
+          "Ќомер документа: " TrnDocNum {&new-line}
+          "—екци€: " inpGetInfoSectionProp:SectionName {&new-line}
+          "‘лаг комиссионного приема: " inpGetInfoSectionProp:IsKP {&new-line}
+          inpGetInfoSectionProp:RnAlgo {&new-line}.
+  
   end method.
 
   /*------------------------------------------------------------------------------
@@ -726,12 +748,8 @@ class ibs.th.str.InfoSectionsTotal:
         GetInfoSectionProp(ii):AccAbsFact = dmd.
         GetInfoSectionProp(ii):RnAlgo = "условие 22".
         output stream log-algo to value ("log-algo-pomi.txt") append.
+        putheader(GetInfoSectionProp(ii)).
         put stream log-algo unformatted
-          {&new-line}
-          "-----------------------------------------------"
-          {&new-line}
-          now {&new-line}
-          GetInfoSectionProp(ii):RnAlgo {&new-line}
           "MTTH  = " string(MTTH) {&new-line}
           "MF  = " string(MF) {&new-line}
           "dF  = " string(dF) {&new-line}
@@ -752,12 +770,8 @@ class ibs.th.str.InfoSectionsTotal:
         GetInfoSectionProp(ii):NaturalLoss = ME.
         GetInfoSectionProp(ii):RnAlgo = "условие 25".
         output stream log-algo to value ("log-algo-pomi.txt") append.
+        putheader(GetInfoSectionProp(ii)).
         put stream log-algo unformatted
-          {&new-line}
-          "-----------------------------------------------"
-          {&new-line}
-          now {&new-line}
-          GetInfoSectionProp(ii):RnAlgo {&new-line}
           "MTTH  = " string(MTTH) {&new-line}
           "MF  = " string(MF) {&new-line}
           "dF  = " string(dF) {&new-line}
@@ -826,12 +840,8 @@ class ibs.th.str.InfoSectionsTotal:
       GetInfoSectionProp(ii):AccAbsFact = dmKPd.
       GetInfoSectionProp(ii):RnAlgo = "условие 30".
       output stream log-algo to value ("log-algo-pomi.txt") append.
+      putheader(GetInfoSectionProp(ii)).
       put stream log-algo unformatted
-        {&new-line}
-        "-----------------------------------------------"
-        {&new-line}
-        now {&new-line}
-        GetInfoSectionProp(ii):RnAlgo {&new-line}
         "MTTH  = " string(MTTH) {&new-line}
         "MF  = " string(MF) {&new-line}
         "dF  = " string(dF) {&new-line}
@@ -883,12 +893,8 @@ class ibs.th.str.InfoSectionsTotal:
       GetInfoSectionProp(ii):Excess = I.
       GetInfoSectionProp(ii):RnAlgo = "условие 32 и условие 35".
       output stream log-algo to value ("log-algo-pomi.txt") append.
+      putheader(GetInfoSectionProp(ii)).
       put stream log-algo unformatted
-        {&new-line}
-        "-----------------------------------------------"
-        {&new-line}
-        now {&new-line}
-        GetInfoSectionProp(ii):RnAlgo {&new-line}
         "MTTH  = " string(MTTH) {&new-line}
         "MF  = " string(MF) {&new-line}
         "dF  = " string(dF) {&new-line}
@@ -927,12 +933,8 @@ class ibs.th.str.InfoSectionsTotal:
       GetInfoSectionProp(ii):Excess = I.
       GetInfoSectionProp(ii):RnAlgo = "нет условие 32 и условие 35".
       output stream log-algo to value ("log-algo-pomi.txt") append.
+      putheader(GetInfoSectionProp(ii)).
       put stream log-algo unformatted
-        {&new-line}
-        "-----------------------------------------------"
-        {&new-line}
-        now {&new-line}
-        GetInfoSectionProp(ii):RnAlgo {&new-line}
         "MTTH  = " string(MTTH) {&new-line}
         "MF  = " string(MF) {&new-line}
         "dF  = " string(dF) {&new-line}
@@ -972,12 +974,8 @@ class ibs.th.str.InfoSectionsTotal:
         GetInfoSectionProp(ii):NaturalLoss = ME.
         GetInfoSectionProp(ii):RnAlgo = "условие 32 и условие 44 и условие 45".
         output stream log-algo to value ("log-algo-pomi.txt") append.
+        putheader(GetInfoSectionProp(ii)).
         put stream log-algo unformatted
-          {&new-line}
-          "-----------------------------------------------"
-          {&new-line}
-          now {&new-line}
-          GetInfoSectionProp(ii):RnAlgo {&new-line}
           "MTTH  = " string(MTTH) {&new-line}
           "MF  = " string(MF) {&new-line}
           "dF  = " string(dF) {&new-line}
@@ -1021,12 +1019,8 @@ class ibs.th.str.InfoSectionsTotal:
         GetInfoSectionProp(ii):Deficit = H.
         GetInfoSectionProp(ii):RnAlgo = "условие 32 и условие 44 и нет условие 45".
         output stream log-algo to value ("log-algo-pomi.txt") append.
+        putheader(GetInfoSectionProp(ii)).
         put stream log-algo unformatted
-          {&new-line}
-          "-----------------------------------------------"
-          {&new-line}
-          now {&new-line}
-          GetInfoSectionProp(ii):RnAlgo {&new-line}
           "MTTH  = " string(MTTH) {&new-line}
           "MF  = " string(MF) {&new-line}
           "dF  = " string(dF) {&new-line}
@@ -1068,12 +1062,8 @@ class ibs.th.str.InfoSectionsTotal:
       GetInfoSectionProp(ii):Deficit = H.
       GetInfoSectionProp(ii):RnAlgo =  "нет условие 32 и условие 44".
       output stream log-algo to value ("log-algo-pomi.txt") append.
+      putheader(GetInfoSectionProp(ii)).
       put stream log-algo unformatted
-        {&new-line}
-        "-----------------------------------------------"
-        {&new-line}
-        now {&new-line}
-        GetInfoSectionProp(ii):RnAlgo {&new-line}
         "MTTH  = " string(MTTH) {&new-line}
         "MF  = " string(MF) {&new-line}
         "dF  = " string(dF) {&new-line}
@@ -1114,7 +1104,6 @@ class ibs.th.str.InfoSectionsTotal:
     clearObj().
 
   end destructor.
-
 
 
 end class.

@@ -221,7 +221,26 @@ define variable v-barcode-list as longchar no-undo .
     assign
     tt-tax.rate-code = v-nds-rate-code
     .
-    
+    /* ѕроверим не изменилс€ ли производитель. ≈сли изменилс€, запустим утилититу переименовани€ производител€. */
+    if v-gds-mode = {&update} and integer(p-GdsObj:prod-code) <> buf_goods.prod-code then do:
+        run utl\ren-art.p(buf_goods.gds-code,
+            buf_goods.artic,
+            buf_goods.prod-type,
+            buf_goods.prod-code,
+            buf_goods.artic,
+            buf_goods.prod-type,
+            integer(p-GdsObj:prod-code)
+        ) no-error.
+        if error-status:error then do:
+            v-err-mess = substitute("ќшибка при смене производител€ у товара  &1. &2&3&2"
+                                , p-GdsObj:code_
+                                , {&new-line}
+                                , error-status:get-message(1)
+                                , return-value                                
+                                ).
+      undo, return error v-err-mess .
+        end.     
+    end.    
   run ref/goods01.p (
                     input parparentproc
                     , input v-gds-mode
@@ -239,7 +258,7 @@ define variable v-barcode-list as longchar no-undo .
                   , input ? /*par-copy-rec as recid recid записи с которой копируем*/
                   , input integer(p-GdsObj:code_)
                   , input p-GdsObj:artic
-                  , input "орг"
+                  , input "орг":U
                   , input integer(p-GdsObj:prod-code)
                   , input v-node-code
                   , input integer(p-GdsObj:grp-code)
@@ -406,9 +425,17 @@ define variable v-barcode-list as longchar no-undo .
                   next ii_ .
               end. 
               else do :
+/*                  undo, return error                                                      */
+/*                  ("”же есть собственный код " + v-barcode:bcode +                        */
+/*                   " и он пренадлежит другому товару - " + string(ub.bar-code.gds-code)) .*/
+                delete ub.prod-bc no-error .
+                if error-status:error
+                then do :
                   undo, return error
-                  ("”же есть собственный код " + v-barcode:bcode + 
-                   " и он пренадлежит другому товару - " + string(ub.bar-code.gds-code)) .
+                  ("ќшибка при удалении собственного кода " +
+                   v-barcode:bcode + " товара " + string(ub.bar-code.gds-code) + " дл€ переприв€зки его к товару " + p-GdsObj:code_) .
+                end .
+                v-bc-mode = {&add-def} .
               end.
             end.
             v-bc-mode = {&update} .

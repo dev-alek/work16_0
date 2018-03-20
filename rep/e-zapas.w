@@ -28,7 +28,8 @@ define variable vss-description as character no-undo init "Состояние запаса(закл
 { cmp/str-glbl.i }
 { cmp/r-page1.i  }
 { rep/rep-bt.i   }
-
+{ cmp/library.i }
+{ gbl/thbjattr.i }
 
 CREATE WIDGET-POOL.
 

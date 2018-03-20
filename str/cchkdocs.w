@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,13 +8,13 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE TEMP-TABLE find_c-chk-doc NO-UNDO LIKE ub.c-chk-doc.
-DEFINE BUFFER X_c-chk-doc FOR ub.c-chk-doc.
-DEFINE BUFFER X_chk-doc FOR ub.chk-doc.
+DEFINE TEMP-TABLE find_c-chk-doc NO-UNDO LIKE c-chk-doc.
+DEFINE BUFFER X_c-chk-doc FOR c-chk-doc.
+DEFINE BUFFER X_chk-doc FOR chk-doc.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -99,7 +99,7 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -114,8 +114,8 @@ END FUNCTION.
 &Scoped-define INTERNAL-TABLES temp-changes X_c-chk-doc
 
 /* Definitions for BROWSE BR-changes                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes
+&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes   
 &Scoped-define SELF-NAME BR-changes
 &Scoped-define QUERY-STRING-BR-changes FOR EACH temp-changes
 &Scoped-define OPEN-QUERY-BR-changes OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
@@ -124,8 +124,8 @@ END FUNCTION.
 
 
 /* Definitions for BROWSE BR-docs                                       */
-&Scoped-define FIELDS-IN-QUERY-BR-docs mark-string(RECID( X_c-chk-doc), v-rid-list) X_c-chk-doc.corr-date string(X_c-chk-doc.corr-time, "HH:MM") X_c-chk-doc.corr-user-db-num usrfulnf(X_c-chk-doc.corr-user-name) X_c-chk-doc.office X_c-chk-doc.is-add X_c-chk-doc.is-del X_c-chk-doc.doc-code X_c-chk-doc.chk-num X_c-chk-doc.chk-date X_c-chk-doc.shift-date shift-name-no-err(buffer X_c-chk-doc) (string (X_c-chk-doc.chk-time, "HH:MM")) X_c-chk-doc.netto X_c-chk-doc.tot-doc X_c-chk-doc.discnt X_c-chk-doc.sub-discnt X_c-chk-doc.pay-desk X_c-chk-doc.cashier X_c-chk-doc.sales-man X_c-chk-doc.out-code X_c-chk-doc.d-card
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-docs X_c-chk-doc.cashier
+&Scoped-define FIELDS-IN-QUERY-BR-docs mark-string(RECID( X_c-chk-doc), v-rid-list) X_c-chk-doc.corr-date string(X_c-chk-doc.corr-time, "HH:MM") X_c-chk-doc.corr-user-db-num usrfulnf(X_c-chk-doc.corr-user-name) X_c-chk-doc.office X_c-chk-doc.is-add X_c-chk-doc.is-del X_c-chk-doc.doc-code X_c-chk-doc.chk-num X_c-chk-doc.chk-date X_c-chk-doc.shift-date shift-name-no-err(buffer X_c-chk-doc) (string (X_c-chk-doc.chk-time, "HH:MM")) X_c-chk-doc.netto X_c-chk-doc.tot-doc X_c-chk-doc.discnt X_c-chk-doc.sub-discnt X_c-chk-doc.pay-desk X_c-chk-doc.cashier X_c-chk-doc.sales-man X_c-chk-doc.out-code X_c-chk-doc.d-card   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-docs X_c-chk-doc.cashier   
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-docs X_c-chk-doc
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-docs X_c-chk-doc
 &Scoped-define SELF-NAME BR-docs
@@ -139,8 +139,8 @@ END FUNCTION.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel B-lkp b-restore B-print ~
-B-sch B-Help BR-docs ED-notes BR-changes mark-num
-&Scoped-Define DISPLAYED-OBJECTS ED-notes mark-num
+B-sch B-Help BR-docs ED-notes BR-changes mark-num 
+&Scoped-Define DISPLAYED-OBJECTS ED-notes mark-num 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -155,54 +155,54 @@ B-sch B-Help BR-docs ED-notes BR-changes mark-num
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-lkp
-     LABEL "&Просмотр"
+DEFINE BUTTON B-lkp 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-print
-     LABEL "Пе&чать"
+DEFINE BUTTON B-print 
+     LABEL "Пе&чать" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-restore
-     LABEL "Восс&танов."
+DEFINE BUTTON b-restore 
+     LABEL "Восс&танов." 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-sch
-     LABEL "&Фильтр"
+DEFINE BUTTON B-sch 
+     LABEL "&Фильтр" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&бор"
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE ED-notes AS CHARACTER
+DEFINE VARIABLE ED-notes AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 98 BY 2
      BGCOLOR 8 FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 6 BY 1
      FGCOLOR 4  NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-changes FOR
+DEFINE QUERY BR-changes FOR 
       temp-changes SCROLLING.
 
 DEFINE QUERY BR-docs FOR X_c-chk-doc SCROLLING.
@@ -270,8 +270,8 @@ DEFINE FRAME Dialog-Frame
      BR-changes AT ROW 14.67 COL 1
      mark-num AT ROW 1 COL 12.5 COLON-ALIGNED NO-LABEL
      SPACE(78.50) SKIP(18.67)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE ""
          CANCEL-BUTTON b-quit.
 
@@ -299,9 +299,12 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-docs B-Help Dialog-Frame */
 /* BROWSE-TAB BR-changes ED-notes Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+ASSIGN 
+       BR-docs:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -330,7 +333,7 @@ DEFINE QUERY BR-docs FOR X_c-chk-doc SCROLLING.
 */  /* BROWSE BR-docs */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -515,7 +518,7 @@ END.
 &Scoped-define BROWSE-NAME BR-changes
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -575,9 +578,9 @@ then do:
   return.
 end.
   if p-mode = "one":U then do:
-    FIND FIRST X_chk-doc No-LOCK where
-                X_chk-doc.doc-code = p-doc-code No-ERROR.
-    if not avail X_chk-doc then do:
+    FIND FIRST X_c-chk-doc No-LOCK where
+                X_c-chk-doc.doc-code = p-doc-code No-ERROR.
+    if not avail X_c-chk-doc then do:
       message
       vss-workfile vss-revision vss-description skip
       "Неверное значение параметра вызова p-doc-code" p-doc-code
@@ -623,7 +626,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -642,13 +645,13 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY ED-notes mark-num
+  DISPLAY ED-notes mark-num 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-mark b-sel B-lkp b-restore B-print B-sch B-Help BR-docs
-         ED-notes BR-changes mark-num
+  ENABLE b-quit B-mark b-sel B-lkp b-restore B-print B-sch B-Help BR-docs 
+         ED-notes BR-changes mark-num 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -657,7 +660,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-line-changes-current Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-line-changes-current Dialog-Frame 
 PROCEDURE get-line-changes-current :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -885,7 +888,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-line-changes-hist Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-line-changes-hist Dialog-Frame 
 PROCEDURE get-line-changes-hist :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1169,7 +1172,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 define buffer buf_currency for ub.currency.
 ASSIGN
@@ -1185,8 +1188,8 @@ temp-changes.v_new:width in browse br-changes = 20
 
 if p-mode =  "one":u then do:
   assign
-  p-obj-type = X_chk-doc.obj-type
-  p-obj-code = X_chk-doc.obj-code
+  p-obj-type = X_c-chk-doc.obj-type
+  p-obj-code = X_c-chk-doc.obj-code
   .
 end.
 
@@ -1220,7 +1223,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 define input  parameter p-open-query     as logical   no-undo .
 define input  parameter p-find-next      as logical   no-undo .
@@ -1339,7 +1342,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-lkp Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-lkp Dialog-Frame 
 PROCEDURE proc-b-lkp :
 define variable next-prev as character no-undo .
 define variable v-doc-rec as recid no-undo .
@@ -1370,7 +1373,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-print Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-print Dialog-Frame 
 PROCEDURE proc-b-print :
 define variable date_string     as      char    no-undo.
 define variable Line                as      char    no-undo.
@@ -1513,7 +1516,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-restore Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-restore Dialog-Frame 
 PROCEDURE proc-b-restore :
 define variable glog as logical no-undo .
   if available X_c-chk-doc
@@ -1570,7 +1573,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame 
 PROCEDURE proc-b-sch :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1648,7 +1651,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1768,7 +1771,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-c-chk-doc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-c-chk-doc Dialog-Frame 
 PROCEDURE reposition-c-chk-doc :
 define input  parameter p-direction   as character no-undo .
 define output parameter p-chk-doc-recid as recid no-undo .
@@ -1817,7 +1820,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-query Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-query Dialog-Frame 
 PROCEDURE reposition-query :
 define input parameter p-recid as recid no-undo .
 
@@ -1838,3 +1841,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

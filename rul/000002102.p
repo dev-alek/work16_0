@@ -390,10 +390,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       and v-newbh:table <> {&table_trn-doc} then do:
         undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_trn-doc}).
       end.
-      if v-has-oldbh
+      /*if v-has-oldbh
       and v-oldbh:table <> {&table_trn-doc} then do:
         undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_trn-doc}).
-      end.
+      end.*/
     end.
     otherwise do:
       undo, return error substitute("Неверный вызов &1 для набора правил &2", vss-workfile , p-ruleset-id).

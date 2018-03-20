@@ -918,7 +918,7 @@ define input parameter p-is-envd_               as logical          no-undo.
     define variable v-tankweight         as decimal no-undo.
     define variable v-sum-line           as decimal no-undo .
         
-    
+    define buffer buf_parts-root            for parts-root.
     find first buf_ot-line-crsa-loop no-lock
          where recid( buf_ot-line-crsa-loop ) = p-ot-line-loop-recid
     .
@@ -942,6 +942,16 @@ define input parameter p-is-envd_               as logical          no-undo.
     if available buf_goods
     then do:
         run wp-xmltagput( 4, "good",      string( buf_goods.gds-code ), 0 ).
+        if p-ext-doc-type = {&TDEDT_Peresort}
+        then do :
+          find first buf_parts-root no-lock where buf_parts-root.doc-code = p-doc-code
+                                              and buf_parts-root.gds-code = buf_goods.gds-code
+                                              no-error .
+          if available buf_parts-root
+          and buf_parts-root.orig-gds-code > 0
+          then 
+          run wp-xmltagput( 4, "orig-gds-code",      string( buf_parts-root.orig-gds-code ), 0 ).                                    
+        end.
         run wp-xmltagput( 4, "artic",     string( buf_goods.artic    ), 0 ).
         run wp-xmltagput( 4, "prodtype",  string( buf_goods.prod-type), 0 ).
         run wp-xmltagput( 4, "prodcode",  string( buf_goods.prod-code), 0 ).

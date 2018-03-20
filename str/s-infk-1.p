@@ -14,6 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 08/30/05
 
 */
+block-level on error undo, throw.
 
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-parent-handle  as widget-handle no-undo .
@@ -63,7 +64,18 @@ p-necessary = (if num-entries(p-parameter, {&delim-par}) > 1
                else no)
 no-error
 .
-if error-status:error then return error substitute("&1 &2", error-status:get-message(1) , return-value ).
+if error-status:error then do:
+  run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("Ошибка входных параметров &1:&2&3"
+                         , p-parameter
+                         , {&new-line}
+                         , error-status:get-message(1)
+                         )).
+  undo, return error .
+end .
 
 find first buf_cash-desk no-lock where
           buf_cash-desk.db-num = g#db-num
@@ -267,3 +279,17 @@ then do:
                   ,input (string(p-obj-code) + {&delim-par} + 'A':U + {&delim-par} + 'gds-prt')
                   ) no-error .
 end.
+
+
+finally :
+    run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("&1", {&new-line})
+    ).
+  define variable v-save-file-name as character no-undo .
+  v-save-file-name = substitute("&1send-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+  OS-APPEND value(log-file-name) value(v-save-file-name).
+  OS-DELETE value(log-file-name).
+end finally .

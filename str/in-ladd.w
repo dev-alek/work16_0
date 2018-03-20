@@ -951,7 +951,12 @@ do:
           v-mm:Exec() .
           output stream outstream to value ("pomi.log") append.
           put stream outstream
-                                       cur-time-string()       skip
+            {&new-line}
+            "-----------------------------------------------"
+            {&new-line}
+                                       now                     skip
+            'Номер документа:'         p-doc-code              skip
+            'Секция:'                  v-section-names         skip
             'Процедура'                v-proc                  skip
             'V_real                 =' f-car-vol               skip
             'DeltaH                 =' f-a-b-tarir             skip
@@ -2369,7 +2374,8 @@ define variable ii as integer no-undo.
   end.
   end case.
 
-
+  assign
+    f-list-tank = f-list-tank:screen-value in frame {&frame-name}.
 
   for each buf_doc-pl where buf_doc-pl.out-code = p-doc-code and buf_doc-pl.gds-code = p-gds-code:
     find first ub.place no-lock where ub.place.pl-code = buf_doc-pl.pl-code no-error.
@@ -2381,6 +2387,7 @@ define variable ii as integer no-undo.
     if lookup (entry (ii, f-list-tank), v-list-tank) = 0
     then do:
       message substitute ("Неверно указаны резервуары") view-as alert-box error.
+      return error.
     end. 
   end.
   
@@ -2391,7 +2398,11 @@ end procedure.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-page Dialog-Frame 
 PROCEDURE check-page :
-if p-mode <> {&update} and p-mode <> {&add-def} then return.
+
+define variable v-list-tank as character no-undo.
+  
+  
+  if p-mode <> {&update} and p-mode <> {&add-def} then return.
 
   integer (replace (f-sec-num, ".", "-")) no-error.
   if error-status:error or f-sec-num matches "*,*"
@@ -2650,6 +2661,26 @@ if input frame {&frame-name} f-hour-prob > 24
      apply "entry" to f-min-start in frame {&frame-name} .
      return error .
   end.
+  
+  assign
+    f-list-tank = f-list-tank:screen-value in frame {&frame-name}.
+
+  for each buf_doc-pl where buf_doc-pl.out-code = p-doc-code and buf_doc-pl.gds-code = p-gds-code:
+    find first ub.place no-lock where ub.place.pl-code = buf_doc-pl.pl-code no-error.
+    v-list-tank = v-list-tank + "," + ub.place.loc1.
+  end.
+  v-list-tank = left-trim (v-list-tank, ",").
+  
+  do ii = 1 to num-entries (f-list-tank):
+    if lookup (entry (ii, f-list-tank), v-list-tank) = 0
+    then do:
+      message substitute ("Неверно указаны резервуары") view-as alert-box.
+      apply "entry" to f-list-tank in frame {&frame-name} .
+      return error.
+    end. 
+  end.
+
+  
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */

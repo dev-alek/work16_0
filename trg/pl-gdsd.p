@@ -226,6 +226,22 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                              , error-status :get-message ( 1 ) ).
     end.
     end.
+    run trg/userlog.p (
+        input {&nwsdochs_action_delete}
+        , input {&table_pl-gds}
+        , input ( buffer ub.pl-gds :handle )
+        , input ?
+        , input ""
+        ) no-error.
+    if error-status :error
+        then
+    do:
+        undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+            , {&new-line}
+            , vss-workfile
+            , return-value
+            , error-status :get-message ( 1 ) ).
+    end.
       { gbl/rum-runa.i
     ?
     this-procedure:handle

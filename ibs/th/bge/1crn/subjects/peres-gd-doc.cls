@@ -217,7 +217,7 @@ index sum-type is primary unique sum-type.
   method private void GdsLine ():
     
     
-    
+    sw:start-element ("gds").
     for each bf_doc-line 
       where bf_doc-line.doc-code = bf_trn-doc.doc-code no-lock,
       first bf_goods where bf_goods.artic = bf_doc-line.artic     
@@ -231,7 +231,6 @@ index sum-type is primary unique sum-type.
       and bf_parts.prod-code = bf_doc-line.prod-code
       and bf_parts.fact-qnty < 0 no-lock:
         
-      sw:start-element ("gds").        
       for each bf-plus_doc-line 
         where bf-plus_doc-line.doc-code = bf_trn-doc.doc-code no-lock,
         first bf-plus_goods where bf-plus_goods.artic = bf-plus_doc-line.artic     
@@ -248,9 +247,9 @@ index sum-type is primary unique sum-type.
           write-data-element ("sum-to", string-mth (round (get-income-sum-rbl (buffer bf_doc-line, buffer bf-plus_doc-line ), 3))).
         sw:end-element ("gd").
       end.
-      sw:end-element ("gds").
     end.
-        
+    sw:end-element ("gds").
+    
   end.
 
   

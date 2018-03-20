@@ -11907,6 +11907,24 @@ procedure tblnmusr :
           p-user-name = 'План-меню'
         .
       end.
+      when {&table_chk-doc}
+      then do:
+        assign
+          p-user-name = 'Чек'
+        .
+      end.
+      when {&table_goods}
+      then do:
+        assign
+          p-user-name = 'Товар'
+        .
+      end.
+      when {&table_place}
+      then do:
+        assign
+          p-user-name = 'Складское место'
+        .
+      end.
       when {&table_rvs-doc}
       then do:
         assign
@@ -11937,6 +11955,150 @@ procedure tblnmusr :
           p-user-name = 'СЗФП'
         .
       end.
+      when {&table_c-usr-hist}
+      then do:
+        assign
+          p-user-name = 'История пользователя'
+        .
+      end.
+      when {&table_cash-pay}
+      then do:
+        assign
+          p-user-name = 'Тип кассовых платежей'
+        .
+      end.
+      when {&table_cli-grp}
+      then do:
+        assign
+          p-user-name = 'Группа клиентов'
+        .
+      end.
+      when {&table_clients}
+      then do:
+        assign
+          p-user-name = 'Клиенты'
+        .
+      end.
+      when {&table_config}
+      then do:
+        assign
+          p-user-name = 'Конфигурация'
+        .
+      end.      
+      when {&table_dis-card}
+      then do:
+        assign
+          p-user-name = 'Дисконтная карта'
+        .
+      end.      
+      when {&table_dis-card-type}
+      then do:
+        assign
+          p-user-name = 'Тип дисконтной карты'
+        .
+      end.      
+      when {&table_fin-bank}
+      then do:
+        assign
+          p-user-name = 'Банк'
+        .
+      end.    
+      when {&table_gds-grp}
+      then do:
+        assign
+          p-user-name = 'Группа товаров'
+        .
+      end.  
+      when {&table_units}
+      then do:
+        assign
+          p-user-name = 'Единица измерения'
+        .
+      end.      
+      when {&table_auto-tank}
+      then do:
+        assign
+          p-user-name = 'Транспорт'
+        .
+      end.       
+      when {&table_sr-izmerenia}
+      then do:
+        assign
+          p-user-name = 'Средство измерения'
+        .
+      end.
+      when {&table_action-role}
+      then do:
+        assign
+          p-user-name = 'Группа прав'
+        .
+      end.    
+      when {&table_action-role-item}
+      then do:
+        assign
+          p-user-name = 'Группа прав пункты'
+        .
+      end.    
+      when {&table_pl-gds}
+      then do:
+        assign
+          p-user-name = 'Товар на скл.месте'
+        .
+      end.    
+      when {&table_pl-gds-pump}
+      then do:
+        assign
+          p-user-name = 'Контейнер через товар'
+        .
+      end.     
+      when {&table_price-doc-forming}
+      then do:
+        assign
+          p-user-name = 'Документ формир.цены'
+        .
+      end.                
+      when {&table_c-sht-hist} or when "sht-hist"
+      then do:
+        assign
+          p-user-name = 'История смены'
+        .
+      end.                
+      when {&table_cash-desk}
+      then do:
+        assign
+          p-user-name = 'Касса'
+        .
+      end.             
+      when {&table_thbj-attr}
+      then do:
+        assign
+          p-user-name = 'Конфигурационные атрибуты'
+        .
+      end.       
+      when {&table_staff}
+      then do:
+        assign
+          p-user-name = 'Персонал'
+        .
+      end.   
+      when {&table_pl-level}
+      then do:
+        assign
+          p-user-name = 'Градуир. таблица'
+        .
+      end.
+      when {&table_c-plc-hist}
+      THEN do:
+          assign
+          p-user-name = "Хранения тов. на скл. месте"
+          .
+      end.    
+      when "report"
+      THEN do:
+          assign
+          p-user-name = "Отчеты"
+          .
+      end.    
       otherwise do:
         assign
           p-user-name = p-table-name

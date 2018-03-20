@@ -1,10 +1,10 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v9r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*          This .W file was created with the Progress AppBuilder.       */
 /*----------------------------------------------------------------------*/
 /*
@@ -92,7 +92,7 @@ define variable vss-description as character no-undo init "Окно истории документ
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -107,8 +107,8 @@ define variable vss-description as character no-undo init "Окно истории документ
 &Scoped-define INTERNAL-TABLES temp_fbr-history-line temp_fbr-history
 
 /* Definitions for BROWSE br-lines                                      */
-&Scoped-define FIELDS-IN-QUERY-br-lines temp_fbr-history-line.fblLabel temp_fbr-history-line.fblOldValue temp_fbr-history-line.fblNewValue temp_fbr-history-line.fblFieldName temp_fbr-history-line.fblType
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-lines
+&Scoped-define FIELDS-IN-QUERY-br-lines temp_fbr-history-line.fblLabel temp_fbr-history-line.fblOldValue temp_fbr-history-line.fblNewValue temp_fbr-history-line.fblFieldName temp_fbr-history-line.fblType   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-lines   
 &Scoped-define SELF-NAME br-lines
 &Scoped-define OPEN-QUERY-br-lines run local-open-query-line in this-procedure. /* OPEN QUERY {&SELF-NAME} FOR EACH temp_fbr-history-line NO-LOCK INDEXED-REPOSITION. */.
 &Scoped-define TABLES-IN-QUERY-br-lines temp_fbr-history-line
@@ -116,8 +116,8 @@ define variable vss-description as character no-undo init "Окно истории документ
 
 
 /* Definitions for BROWSE br-table                                      */
-&Scoped-define FIELDS-IN-QUERY-br-table temp_fbr-history.fbhType temp_fbr-history.fbhAction temp_fbr-history.fbhDate temp_fbr-history.fbhTime temp_fbr-history.fbhUser
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-table
+&Scoped-define FIELDS-IN-QUERY-br-table temp_fbr-history.fbhType temp_fbr-history.fbhAction temp_fbr-history.fbhDate temp_fbr-history.fbhTime temp_fbr-history.fbhUser   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-table   
 &Scoped-define SELF-NAME br-table
 &Scoped-define OPEN-QUERY-br-table run local-open-query in this-procedure. /* OPEN QUERY {&SELF-NAME} FOR EACH temp_fbr-history NO-LOCK INDEXED-REPOSITION. */.
 &Scoped-define TABLES-IN-QUERY-br-table temp_fbr-history
@@ -130,7 +130,7 @@ define variable vss-description as character no-undo init "Окно истории документ
     ~{&OPEN-QUERY-br-table}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-cancel b-help br-table br-lines
+&Scoped-Define ENABLED-OBJECTS b-exit b-cancel b-help br-table br-lines 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -141,7 +141,7 @@ define variable vss-description as character no-undo init "Окно истории документ
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-nik Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-nik Dialog-Frame 
 FUNCTION get-nik RETURNS CHARACTER
   ( input p-userid as character )  FORWARD.
 
@@ -154,27 +154,27 @@ FUNCTION get-nik RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-cancel AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-cancel AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "В&ыход"
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "В&ыход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY br-lines FOR
+DEFINE QUERY br-lines FOR 
       temp_fbr-history-line SCROLLING.
 
-DEFINE QUERY br-table FOR
+DEFINE QUERY br-table FOR 
       temp_fbr-history SCROLLING.
 &ANALYZE-RESUME
 
@@ -213,8 +213,8 @@ DEFINE FRAME Dialog-Frame
      br-table AT ROW 2.5 COL 1.5 WIDGET-ID 200
      br-lines AT ROW 17.5 COL 1 WIDGET-ID 300
      SPACE(0.37) SKIP(0.00)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "История документа производства"
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-cancel WIDGET-ID 100.
 
@@ -237,9 +237,12 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-table b-help Dialog-Frame */
 /* BROWSE-TAB br-lines br-table Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+ASSIGN 
+       br-table:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -267,7 +270,7 @@ run local-open-query in this-procedure. /* OPEN QUERY {&SELF-NAME} FOR EACH temp
 */  /* BROWSE br-table */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -317,7 +320,7 @@ END.
 &Scoped-define BROWSE-NAME br-lines
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -347,7 +350,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE create-field-exception Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE create-field-exception Dialog-Frame 
 PROCEDURE create-field-exception :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -387,7 +390,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -406,10 +409,10 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-exit b-cancel b-help br-table br-lines
+  ENABLE b-exit b-cancel b-help br-table br-lines 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -418,7 +421,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame 
 PROCEDURE init-fields :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -604,7 +607,7 @@ END PROCEDURE. /* init-fields */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query Dialog-Frame 
 PROCEDURE local-open-query :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -623,7 +626,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query-line Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query-line Dialog-Frame 
 PROCEDURE local-open-query-line :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -654,7 +657,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-fields Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE manage-fields Dialog-Frame 
 PROCEDURE manage-fields :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -674,7 +677,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-nik Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-nik Dialog-Frame 
 FUNCTION get-nik RETURNS CHARACTER
   ( input p-userid as character ) :
 /*------------------------------------------------------------------------------
@@ -692,3 +695,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

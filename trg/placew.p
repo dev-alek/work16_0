@@ -36,65 +36,110 @@ define variable v-db-num as integer no-undo .
 
 main-block:
 do
-on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
-on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
-:
+    on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+    on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
+    on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
+    :
 
-if g#news then do:
-    assign
-      v-db-num = g#news-source-db
-    .
-  end.
-  else do:
-    assign
-      v-db-num = g#db-num
-    .
-  end.
-
-  if new(ub.place) then do:
-   /* только для новых записей надо искать диапазон
-    старые и так там находятся */
-    run gen-new-code-range-if-neces in this-procedure (
-                                                       input v-db-num
-                                                      ,input {&gbl-bc-code}
-                                                      ,input ub.place.pl-code
-                                                      ,input g#news
-                                                      ,input g#db-num
-                                                      ,input g#news-source-db
-                                                    ) no-error .
-    if error-status:error then do:
-      message
-      vss-workfile vss-revision vss-description skip
-      error-status:get-message(1) skip
-      return-value
-      view-as alert-box error .
-      undo main-block,  return error .
+    if g#news then 
+    do:
+        assign
+            v-db-num = g#news-source-db
+            .
     end.
-  end.
+    else 
+    do:
+        assign
+            v-db-num = g#db-num
+            .
+    end.
 
-  run str/callnews.p
-    ( input {&table_place}
-     ,input (buffer ub.place:handle)
-    ) .
+    if new(ub.place) then 
+    do:
+        /* только для новых записей надо искать диапазон
+         старые и так там находятся */
+        run gen-new-code-range-if-neces in this-procedure (
+            input v-db-num
+            ,input {&gbl-bc-code}
+            ,input ub.place.pl-code
+            ,input g#news
+            ,input g#db-num
+            ,input g#news-source-db
+            ) no-error .
+        if error-status:error then 
+        do:
+            message
+                vss-workfile vss-revision vss-description skip
+                error-status:get-message(1) skip
+                return-value
+                view-as alert-box error .
+            undo main-block,  return error .
+        end.
+  
+        run trg/userlog.p (
+            input {&nwsdochs_action_create}
+            , input {&table_place}
+            , input ( buffer ub.place :handle )
+            , input ?
+            , input ""
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+  
+    end.
 
-  if not g#news then do:
-    run trg/placeh.p ( buffer oldplace, buffer ub.place ).
-  end.
+    else 
+    do:
+        run trg/userlog.p (
+            input {&nwsdochs_action_update}
+            , input {&table_place}
+            , input ( buffer ub.place :handle )
+            , input ?
+            , input ""
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+
+    end. 
+    run str/callnews.p
+        ( input {&table_place}
+        ,input (buffer ub.place:handle)
+        ) .
+
+    if not g#news then 
+    do:
+        run trg/placeh.p ( buffer oldplace, buffer ub.place ).
+    end.
     if g#oxml = yes
-    then do:
-    run str/calloxml.p (
-          input {&nwsdochs_action_update}
-        , input {&table_place}
-        , input ( buffer ub.place:handle )
-    ) no-error.
-    if error-status :error
-    then do:
-        undo, return error substitute( "&2&1Ошибка при отправке записи в систему OpenXML&1&3&1&4"
-                             , {&new-line}
-                             , vss-workfile
-                             , return-value
-                             , error-status :get-message ( 1 ) ).
-    end.
+        then 
+    do:
+        run str/calloxml.p (
+            input {&nwsdochs_action_update}
+            , input {&table_place}
+            , input ( buffer ub.place:handle )
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при отправке записи в систему OpenXML&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
     end.
 end.

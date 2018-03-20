@@ -1176,12 +1176,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             f-item-doc
         in frame Dialog-Frame . 
     end.
-    if rdc-dnstvalue <> "pomi-rn" then do:
-        HIDE
-            b-doc
-            f-item-doc
-        in frame Dialog-Frame .
-    end.
+
     
   find first ub.trn-doc no-lock where ub.trn-doc.doc-code = p-doc-code no-error.
   { gbl/ptrlprop.i

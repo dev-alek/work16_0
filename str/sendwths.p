@@ -18,6 +18,7 @@ Input:
 Output:
 
 */
+block-level on error undo, throw.
 
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-parent-handle  as widget-handle no-undo .
@@ -60,7 +61,19 @@ v-obj-type = entry(1, p-parameter, {&delim-par})
 v-obj-code = integer(entry(2, p-parameter, {&delim-par}))
 v-action     = entry(3, p-parameter, {&delim-par})
 no-error .
-if error-status:error then return error .
+if error-status:error then do:
+  run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("Ошибка входных параметров &1:&2&3"
+                         , p-parameter
+                         , {&new-line}
+                         , error-status:get-message(1)
+                         )).
+  v-view-log = yes.
+  undo, return error .
+end .
 
 { gbl/getcntxt.i get }
 { gbl/hostcode.i v-obj-type v-obj-code v-host-code }
@@ -82,7 +95,8 @@ IF not avail(ub.cash-desk) then do:
                         )
                                         ).
       v-view-log = yes.
-      {&view-log}.
+//      {&view-log}.
+  undo, return .
 end.
 
 run gbl/d-askw.w (input "Выбор масок серийных МЦ для пересылки",
@@ -121,8 +135,8 @@ CASE choice:
                                           ).
       assign
       v-view-log = yes.
-      {&view-log}.
-
+//      {&view-log}.
+      undo, return .
       end.
     if rid-list = "" then return.
   end.
@@ -152,3 +166,21 @@ run str/sndwssh.p (parparentproc
     assign
     v-view-log = yes.
   end.
+  
+  finally :
+{ str/cdviewlg.i
+"'!!!При отсылке информации на кассы произошли ошибки!!!'"
+log-file-name not-delete }
+
+    run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("&1", {&new-line})
+    ).
+    define variable v-save-file-name as character no-undo .
+    v-save-file-name = substitute("&1send-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+    OS-APPEND value(log-file-name) value(v-save-file-name).
+    OS-DELETE value(log-file-name).
+  end finally .
+  

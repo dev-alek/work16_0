@@ -305,6 +305,10 @@ Creation date: 01/29/07
 &glob table_buyer-in-buyer-group-full '{&bef-table_buyer-in-buyer-group-full}':U
 &glob bef-table_buyer-in-buyer-group-attr-full Атрибуты для buyer-in-buyer-group
 &glob table_buyer-in-buyer-group-attr-full '{&bef-table_buyer-in-buyer-group-attr-full}':U
+&glob bef-table_c-action-role-full c-action-role
+&glob table_c-action-role-full '{&bef-table_c-action-role-full}':U
+&glob bef-table_c-action-role-item-full c-action-role-item
+&glob table_c-action-role-item-full '{&bef-table_c-action-role-item-full}':U
 &glob bef-table_c-add-doc-full История документа доп.расходы
 &glob table_c-add-doc-full '{&bef-table_c-add-doc-full}':U
 &glob bef-table_c-add-line-full История строк доп.расхода
@@ -2167,7 +2171,7 @@ Creation date: 01/29/07
 &glob table_some-lk-full '{&bef-table_some-lk-full}':U
 &glob bef-table_some-lk-attr-full Атрибуты для some-lk
 &glob table_some-lk-attr-full '{&bef-table_some-lk-attr-full}':U
-&glob bef-table_sr-izmerenia-full sr-izm
+&glob bef-table_sr-izmerenia-full sr-izmerenia
 &glob table_sr-izmerenia-full '{&bef-table_sr-izmerenia-full}':U
 &glob bef-table_staff-full Персонал
 &glob table_staff-full '{&bef-table_staff-full}':U

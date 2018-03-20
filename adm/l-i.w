@@ -49,6 +49,7 @@ define variable v-load-cfg          as logical      no-undo.
 define variable v-vid-ok            as logical  no-undo .
 define variable v-vid-mes           as character no-undo .
 define variable v-vid-param         as longchar no-undo .
+define variable v-vid-descr         as character no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -323,32 +324,29 @@ on stop   undo, leave
   assign
     name
     password .
-  GET-KEY-VALUE SECTION "REP-SETS" KEY "ConPar" VALUE v-cConnect.
+  
+  v-cConnect = ibs.th.gbl.gbl-inipar:conPar.
   if v-cConnect = ?
   or trim (v-cConnect) = ""
   then do:
-    v-vid-param = "Login=" + name + {&delim-par} + "RESULT=101" + {&delim-par} + "Description=Не указаны параметры подключения к БД (секция REP-SETS ключ ConPar в .ini файле)".
+    v-vid-descr = substitute("Не указаны параметры подключения к БД (&1)", ibs.th.gbl.gbl-inipar:conParKeyName) .  
+    v-vid-param = substitute("Login=&1&2RESULT=&3&2Description=&4", name, {&delim-par}, "101", v-vid-descr ) .
     run trg/video-action.p (input 50,
                             input v-vid-param,
                             output v-vid-ok,
                             output v-vid-mes) .
-    message
-      "Не указаны параметры подключения к БД"
-      "(секция REP-SETS ключ ConPar в .ini файле)."
-      view-as alert-box error .
+    message v-vid-descr view-as alert-box error .
     undo do1, leave.
   end.
   if index(v-cConnect, '&1':u) = 0
   then do:
-    v-vid-param = "Login=" + name + {&delim-par} + "RESULT=102" + {&delim-par} + "Description=В строке подключения к БД не указан комбинация символов &1 (секция REP-SETS ключ ConPar в .ini файле)".
+    v-vid-descr = substitute("В строке подключения к БД не указан комбинация символов ~&1 (&1)", ibs.th.gbl.gbl-inipar:conParKeyName) .  
+    v-vid-param = substitute("Login=&1&2RESULT=&3&2Description=&4", name, {&delim-par}, "102", v-vid-descr ) .
     run trg/video-action.p (input 50,
                             input v-vid-param,
                             output v-vid-ok,
                             output v-vid-mes) .
-    message
-      "В строке подключения к БД не указан комбинация символов &1"
-      "(секция REP-SETS ключ ConPar в .ini файле)."
-      view-as alert-box error .
+    message v-vid-descr view-as alert-box error .
     undo do1, leave.
   end.
 
@@ -364,7 +362,7 @@ on stop   undo, leave
     .
   end.
 
-  GET-KEY-VALUE SECTION "REP-SETS":U KEY "ConParFlt":U VALUE v-fltConnect .
+  v-fltConnect = ibs.th.gbl.gbl-inipar:conParFlt.
   if trim (v-fltConnect) = "":U
     or trim( v-fltConnect ) = trim( v-cConnect )
   then do:
@@ -375,10 +373,8 @@ on stop   undo, leave
   else do:
     if index(v-fltConnect, '&1':u) = 0
     then do:
-      message
-        "В строке подключения к БД параметров не указана комбинация символов &1"
-        "(секция REP-SETS ключ ConParFlt в .ini файле)."
-        view-as alert-box error .
+      v-vid-descr = substitute("В строке подключения к БД параметров не указана комбинация символов ~&1 (&1)", ibs.th.gbl.gbl-inipar:conParFltKeyName) .  
+      message v-vid-descr view-as alert-box error .
       undo do1, leave.
     end.
   end.

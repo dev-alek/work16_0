@@ -735,7 +735,6 @@ procedure lib-calc_chkqtpl :
         end. /* auto-tank */
         when "inv":U then do:
           assign
-            v-cnt-true = v-cnt-true + 1
             p-inv      = true
             p-percinv  = decimal( entry( 2, trim( entry( v-count, p-stfactpl, ";" ) ), "=" ) )
             no-error.

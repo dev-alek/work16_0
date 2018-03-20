@@ -253,7 +253,7 @@ DEFINE BROWSE BR-docs
       buf_fin-code.code-value COLUMN-LABEL "Код"
       buf_fin-code.descr COLUMN-LABEL "Описание"
       buf_fin-code.fin-code COLUMN-LABEL "Внутр.№"
-      buf_fin-code.host-code COLUMN-LABEL "Фирма"
+      buf_fin-code.host-code COLUMN-LABEL "Фирма" format ">>>>>>>>9"
       {&status-int-name} @ t-s  COLUMN-LABEL "Статус" FORMAT "x(6)"
       buf_fin-code.level-1 COLUMN-LABEL   "Уровень1"
       buf_fin-code.level-2 COLUMN-LABEL   "Уровень2"

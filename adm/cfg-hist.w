@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,11 +8,11 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER X_c-config FOR ub.c-config.
+DEFINE BUFFER X_c-config FOR c-config.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-cfg-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-cfg-hist 
 /*------------------------------------------------------------------------
 $Revision$
 $Author$
@@ -68,7 +68,7 @@ define variable v-filter-point as character no-undo .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -83,8 +83,8 @@ define variable v-filter-point as character no-undo .
 &Scoped-define INTERNAL-TABLES X_c-config temp-changes
 
 /* Definitions for BROWSE br-cfg-hist                                   */
-&Scoped-define FIELDS-IN-QUERY-br-cfg-hist X_c-config.corr-user-name usrfulnf(X_c-config.corr-user-name) X_c-config.corr-user-db-num X_c-config.corr-date string(X_c-config.corr-time,"HH:MM:SS") get-action(X_c-config.action) X_c-config.db-num X_c-config.param-code X_c-config.host-code substitute("&1 &2",X_c-config.obj-type,X_c-config.obj-code) (if X_c-config.beg-date = {&beg-unlim-lcns} then "не ограничен" else string( X_c-config.beg-date, "99/99/9999")) (if X_c-config.end-date = {&end-unlim-lcns} then "не ограничен" else string( X_c-config.end-date, "99/99/9999"))
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-cfg-hist
+&Scoped-define FIELDS-IN-QUERY-br-cfg-hist X_c-config.corr-user-name usrfulnf(X_c-config.corr-user-name) X_c-config.corr-user-db-num X_c-config.corr-date string(X_c-config.corr-time,"HH:MM:SS") get-action(X_c-config.action) X_c-config.db-num X_c-config.param-code X_c-config.host-code substitute("&1 &2",X_c-config.obj-type,X_c-config.obj-code) (if X_c-config.beg-date = {&beg-unlim-lcns} then "не ограничен" else string( X_c-config.beg-date, "99/99/9999")) (if X_c-config.end-date = {&end-unlim-lcns} then "не ограничен" else string( X_c-config.end-date, "99/99/9999"))   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-cfg-hist   
 &Scoped-define SELF-NAME br-cfg-hist
 &Scoped-define QUERY-STRING-br-cfg-hist FOR EACH X_c-config NO-LOCK     BY X_c-config.corr-date      BY X_c-config.corr-time       BY X_c-config.corr-user-db-num        BY X_c-config.chip-num
 &Scoped-define OPEN-QUERY-br-cfg-hist OPEN QUERY {&SELF-NAME} FOR EACH X_c-config NO-LOCK     BY X_c-config.corr-date      BY X_c-config.corr-time       BY X_c-config.corr-user-db-num        BY X_c-config.chip-num.
@@ -93,8 +93,8 @@ define variable v-filter-point as character no-undo .
 
 
 /* Definitions for BROWSE BR-changes                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes
+&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes   
 &Scoped-define SELF-NAME BR-changes
 &Scoped-define QUERY-STRING-BR-changes FOR EACH temp-changes
 &Scoped-define OPEN-QUERY-BR-changes OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
@@ -105,7 +105,7 @@ define variable v-filter-point as character no-undo .
 /* Definitions for DIALOG-BOX d-cfg-hist                                */
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-quit b-sch b-help br-cfg-hist BR-changes
+&Scoped-Define ENABLED-OBJECTS b-quit b-sch b-help br-cfg-hist BR-changes 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -116,7 +116,7 @@ define variable v-filter-point as character no-undo .
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action d-cfg-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action d-cfg-hist 
 FUNCTION get-action RETURNS CHARACTER
     ( p-action as integer )  FORWARD.
 
@@ -129,18 +129,18 @@ FUNCTION get-action RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY DEFAULT
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY DEFAULT 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-sch
-     LABEL "&Фильтр"
+DEFINE BUTTON b-sch 
+     LABEL "&Фильтр" 
      SIZE 3 BY 1.
 
 /* Query definitions                                                    */
@@ -149,7 +149,7 @@ DEFINE QUERY br-cfg-hist FOR
 X_c-config.
 
 
-DEFINE QUERY BR-changes FOR
+DEFINE QUERY BR-changes FOR 
       temp-changes SCROLLING.
 &ANALYZE-RESUME
 
@@ -193,8 +193,8 @@ DEFINE FRAME d-cfg-hist
      br-cfg-hist AT ROW 2.25 COL 2
      BR-changes AT ROW 14.25 COL 2
      SPACE(0.87) SKIP(0.37)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "История изменения параметров конфигурации"
          CANCEL-BUTTON b-quit.
 
@@ -220,8 +220,11 @@ DEFINE FRAME d-cfg-hist
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-cfg-hist b-help d-cfg-hist */
 /* BROWSE-TAB BR-changes br-cfg-hist d-cfg-hist */
-ASSIGN
+ASSIGN 
        FRAME d-cfg-hist:SCROLLABLE       = FALSE.
+
+ASSIGN 
+       br-cfg-hist:COLUMN-RESIZABLE IN FRAME d-cfg-hist       = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -263,7 +266,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
 */  /* DIALOG-BOX d-cfg-hist */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -334,7 +337,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-cfg-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-cfg-hist 
 
 
 /* ***************************  Main Block  *************************** */
@@ -412,7 +415,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -431,10 +434,10 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-quit b-sch b-help br-cfg-hist BR-changes
+  ENABLE b-quit b-sch b-help br-cfg-hist BR-changes 
       WITH FRAME d-cfg-hist.
   {&OPEN-BROWSERS-IN-QUERY-d-cfg-hist}
 END PROCEDURE.
@@ -442,7 +445,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-open-query d-cfg-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-open-query d-cfg-hist 
 PROCEDURE my-open-query :
 /* приходится изголяться... */
   define input  parameter p-open-query     as logical   no-undo .
@@ -576,7 +579,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch d-cfg-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch d-cfg-hist 
 PROCEDURE proc-b-sch :
 assign
   tbl = 'c-config'
@@ -629,7 +632,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action d-cfg-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action d-cfg-hist 
 FUNCTION get-action RETURNS CHARACTER
     ( p-action as integer ) :
   /*------------------------------------------------------------------------------
@@ -651,3 +654,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

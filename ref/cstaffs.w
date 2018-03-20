@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,14 +8,14 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER X_c-cli-hist FOR ub.c-cli-hist.
-DEFINE BUFFER X_c-staff FOR ub.c-staff.
-DEFINE BUFFER X_curr_clients FOR ub.clients.
-DEFINE BUFFER X_staff FOR ub.staff.
+DEFINE BUFFER X_c-cli-hist FOR c-cli-hist.
+DEFINE BUFFER X_c-staff FOR c-staff.
+DEFINE BUFFER X_curr_clients FOR clients.
+DEFINE BUFFER X_staff FOR staff.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -85,7 +85,7 @@ define variable v-rid-list as character no-undo .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -100,8 +100,8 @@ define variable v-rid-list as character no-undo .
 &Scoped-define INTERNAL-TABLES temp-changes X_c-staff
 
 /* Definitions for BROWSE BR-changes                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes
+&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes   
 &Scoped-define SELF-NAME BR-changes
 &Scoped-define QUERY-STRING-BR-changes FOR EACH temp-changes
 &Scoped-define OPEN-QUERY-BR-changes OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
@@ -110,8 +110,8 @@ define variable v-rid-list as character no-undo .
 
 
 /* Definitions for BROWSE br-cstaff                                     */
-&Scoped-define FIELDS-IN-QUERY-br-cstaff mark-string(recid(X_c-staff), v-rid-list) usrfulnf(X_c-staff.corr-user-name) X_c-staff.corr-date string(X_c-staff.corr-time, "HH:MM") gbclcode-get-position ( input X_c-staff.role ,input X_c-staff.role-level ,input X_c-staff.work-place ,input X_c-staff.staff-code ) get-action-from-c-cli(X_c-staff.psn-code, X_c-staff.corr-user-db-num, X_c-staff.chip-num) X_c-staff.psn-code X_c-staff.date-start
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-cstaff
+&Scoped-define FIELDS-IN-QUERY-br-cstaff mark-string(recid(X_c-staff), v-rid-list) usrfulnf(X_c-staff.corr-user-name) X_c-staff.corr-date string(X_c-staff.corr-time, "HH:MM") gbclcode-get-position ( input X_c-staff.role ,input X_c-staff.role-level ,input X_c-staff.work-place ,input X_c-staff.staff-code ) get-action-from-c-cli(X_c-staff.psn-code, X_c-staff.corr-user-db-num, X_c-staff.chip-num) X_c-staff.psn-code X_c-staff.date-start   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-cstaff   
 &Scoped-define SELF-NAME br-cstaff
 &Scoped-define QUERY-STRING-br-cstaff FOR EACH X_c-staff NO-LOCK INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-br-cstaff OPEN QUERY {&SELF-NAME} FOR EACH X_c-staff NO-LOCK INDEXED-REPOSITION.
@@ -125,8 +125,8 @@ define variable v-rid-list as character no-undo .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark B-sel B-Help br-cstaff ~
-BR-changes mark-num
-&Scoped-Define DISPLAYED-OBJECTS mark-num
+BR-changes mark-num 
+&Scoped-Define DISPLAYED-OBJECTS mark-num 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -137,14 +137,14 @@ BR-changes mark-num
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
   ( INPUT p-action AS integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action-from-c-cli Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action-from-c-cli Dialog-Frame 
 FUNCTION get-action-from-c-cli RETURNS CHARACTER
   ( INPUT p-psn-code AS INTEGER, INPUT p-corr-user-db-num AS INTEGER, INPUT p-chip-num AS INTEGER )  FORWARD.
 
@@ -157,39 +157,39 @@ FUNCTION get-action-from-c-cli RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-lookup
-     LABEL "&Просмотр"
+DEFINE BUTTON B-lookup 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-sel AUTO-GO
-     LABEL "Вы&бор"
+DEFINE BUTTON B-sel AUTO-GO 
+     LABEL "Вы&бор" 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 6 BY 1
      FGCOLOR 4  NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-changes FOR
+DEFINE QUERY BR-changes FOR 
       temp-changes SCROLLING.
 
-DEFINE QUERY br-cstaff FOR
+DEFINE QUERY br-cstaff FOR 
       X_c-staff SCROLLING.
 &ANALYZE-RESUME
 
@@ -202,7 +202,7 @@ temp-changes.v_old COLUMn-LABEL "Было" format "X(70)"
 temp-changes.v_new COLUMn-LABEL "Стало" format "X(70)"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.03.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.04.
 
 DEFINE BROWSE br-cstaff
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-cstaff Dialog-Frame _FREEFORM
@@ -221,7 +221,7 @@ X_c-staff.psn-code COLUMN-LABEL "Код физ.лица" FORMAT ">>>>>>>>9"
 X_c-staff.date-start FORMAT "99/99/9999":U COLUMN-LABEL "Работает с"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.27.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.25.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -236,8 +236,8 @@ DEFINE FRAME Dialog-Frame
      BR-changes AT ROW 13 COL 1
      mark-num AT ROW 1 COL 12.5 COLON-ALIGNED NO-LABEL
      SPACE(78.62) SKIP(20.04)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "История персонала"
          CANCEL-BUTTON b-quit.
 
@@ -266,14 +266,17 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-cstaff B-Help Dialog-Frame */
 /* BROWSE-TAB BR-changes br-cstaff Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* SETTINGS FOR BUTTON B-lookup IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        B-lookup:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+ASSIGN 
+       br-cstaff:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -300,7 +303,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH X_c-staff NO-LOCK INDEXED-REPOSITION.
 */  /* BROWSE br-cstaff */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -397,7 +400,7 @@ END.
 &Scoped-define BROWSE-NAME BR-changes
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -491,7 +494,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -510,12 +513,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY mark-num
+  DISPLAY mark-num 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-mark B-sel B-Help br-cstaff BR-changes mark-num
+  ENABLE b-quit B-mark B-sel B-Help br-cstaff BR-changes mark-num 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -524,7 +527,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 assign
 temp-changes.l_name:resizable in browse br-changes = true
@@ -551,7 +554,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 CASE p-mode:
     WHEN 'one':U THEN DO:
@@ -579,7 +582,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-br-cstaff Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-br-cstaff Dialog-Frame 
 PROCEDURE proc-br-cstaff :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -592,7 +595,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
 define buffer buf_c-cli-hist for ub.c-cli-hist.
 define buffer next_c-staff for ub.c-staff.
@@ -654,7 +657,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
   ( INPUT p-action AS integer ) :
 
@@ -669,7 +672,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action-from-c-cli Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action-from-c-cli Dialog-Frame 
 FUNCTION get-action-from-c-cli RETURNS CHARACTER
   ( INPUT p-psn-code AS INTEGER, INPUT p-corr-user-db-num AS INTEGER, INPUT p-chip-num AS INTEGER ) :
 define buffer buf_c-cli-hist for ub.c-cli-hist.
@@ -686,3 +689,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

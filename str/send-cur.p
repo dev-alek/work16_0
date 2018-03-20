@@ -121,7 +121,6 @@ define variable dflt-cd as character no-undo .
 { str/cd-send1.i }
 
 
-
 do
 on error undo, return error
 :
@@ -332,9 +331,25 @@ on error undo, return error
       DELETE t-cs.
     END.
   END.
+
+  finally :
 { str/cdviewlg.i
 "'!!!При отсылке информации на кассы произошли ошибки!!!'"
-"'send-cd.txt'" }
+log-file-name not-delete }
+
+    run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("&1", {&new-line})
+    ).
+
+    define variable v-save-file-name as character no-undo .
+    v-save-file-name = substitute("&1send-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+    OS-APPEND value(log-file-name) value(v-save-file-name).
+    OS-DELETE value(log-file-name).
+
+  end finally .
 end . /*doe*/
 
 PROCEDURE out-back-curs :

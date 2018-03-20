@@ -221,7 +221,10 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
     cre-pay = sysconf.credit-pay
     .
   end.
-  { gbl/curobjdt.i
+/* { gbl/curobjdt.i
+  01/III-2018 заменено на gbl/objdtget.i: только возвращает дату, без проверок её правильности и без её переустановки
+*/
+  { gbl/objdtget.i
     buf_inkas.obj-type
     buf_inkas.obj-code
     varobj-date
@@ -385,7 +388,11 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
   /*отвязываем чеки и*/
   /*создаем копию*/
   /*удаление inkas-pay inkas-pay-desk*/
-  { str/del-sale.i buf_inkas.inkas-code buf_inkas.obj-type buf_inkas.obj-code jj
+  { str/del-sale.i
+    buf_inkas.inkas-code
+    buf_inkas.obj-type
+    buf_inkas.obj-code
+    jj
     del
     buf_inkas
     recid(buf_inkas)
@@ -403,16 +410,69 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
   define variable v-obj-code as integer   no-undo .
   define variable v-host-code as integer no-undo .
   define variable v-auto-fbr as logical no-undo .
+  define variable v-inkas-shift-date as date no-undo .
+  define variable v-inkas-shift-num as integer no-undo .
 
   assign
   v-host-code = buf_inkas.host-code
   v-obj-type = buf_inkas.obj-type
   v-obj-code = buf_inkas.obj-code
   v-auto-fbr = buf_inkas.auto-fbr
+  v-inkas-shift-date = buf_inkas.shift-date
+  v-inkas-shift-num = buf_inkas.shift-num
   .
 
   /* удаляем продажу */
   delete buf_inkas .
+  
+  /* 01/III-2018 При закрытии (is-back-date) или удалении документа продажи ЗАДНИМ ЧИСЛОМ
+                 посылать в 1С сообщение в формате закрытия смены.
+                 Т.е. если продажу удалили, то мы посылаем смену уже без чеков, которые были в этой продаже.
+     p.s. "задним числом" - когда закрытую продажу удаляют из закрытой смены
+  */
+  define variable v-old-shift-obj as handle no-undo  .
+  define variable v-new-shift-obj as handle no-undo  .
+  define buffer buf_shift-obj for ub.shift-obj .
+  if l-shift-on then do:
+    /* смена, полученная выше из gbl/curshift.i не подходит, т.к. там текущая смена, а нам
+       нужна смена, на которую ссылался удалённый inkas */
+    find first buf_shift-obj no-lock
+         where buf_shift-obj.obj-type = v-obj-type
+           and buf_shift-obj.obj-code = v-obj-code
+           and buf_shift-obj.shift-date = v-inkas-shift-date
+           and buf_shift-obj.shift-num  = v-inkas-shift-num
+           and buf_shift-obj.status_  = {&sht-closed} /* - иначе это не задним числом */
+               no-error .
+    if available buf_shift-obj then do:
+      /* оба указателя указывают в одно место, т.к. фактически запись о смене не менялась */
+      assign
+        v-old-shift-obj = buffer buf_shift-obj:handle
+        v-new-shift-obj = v-old-shift-obj
+      .  
+      { gbl/rum-runa.i
+      ?
+      this-procedure:handle
+      ?
+      {&edoc-proc_event_shift}
+      v-old-shift-obj
+      v-new-shift-obj
+      ''
+      ''
+      no-error
+      }
+      if error-status :error then do:
+&scop   my-message  substitute("&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"  ~
+            , ~{&new-line~} ~
+            , vss-workfile ~
+            , return-value ~
+            , error-status :get-message ( 1 ) ~
+        )
+        {&display-message}.
+        undo _main, return error.
+      end.
+    end. /* end_of available_shift-obj */
+  end. /* end_of if_shift_on */
+  
   if not g#news
   then do:
     /* удаляем документы матценностей */

@@ -64,7 +64,7 @@ define variable v-time as integer no-undo .
   end. /* end_of not-g-news */
 
 
-    if g#oxml then do:
+  if g#oxml then do:
       run str/calloxml.p (
           input {&nwsdochs_action_delete}
         , input {&table_sr-izmerenia}
@@ -80,4 +80,24 @@ define variable v-time as integer no-undo .
               )
         ) .
       end.
-    end.
+  end.
+  
+  /* буффер для записи истории buf_c-sr-izmerenia валидный только при условии (not g#news) */
+  if not g#news then do:
+        run trg/userlog.p (
+            input {&nwsdochs_action_delete}
+            , input {&table_c-sr-izmerenia}
+            , input ( buffer buf_c-sr-izmerenia :handle )
+            , input ?
+            , input ""
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
+  end. /* end_of not-g-news */

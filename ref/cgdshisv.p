@@ -227,7 +227,7 @@ v-label-param =
  + "cr-db-num" + {&delim-par} + "Номер БД где создан" + {&delim-par} + "" + {&delim-flf}
  + "cond-keep-code" + {&delim-par} + "Код условий хранения" + {&delim-par} + "" + {&delim-flf}
  + "wt-cart" + {&delim-par} + "Вес штуки" + {&delim-par} + "" + {&delim-flf}
- + "ms-cart" + {&delim-par} + "Об'ем штуки" + {&delim-par} + ""  .
+ + "ms-cart" + {&delim-par} + "Объем штуки" + {&delim-par} + ""  .
 
  run proc-full-temp-changes in this-procedure (
                                              input  (buf_c-gds-hist.action = integer({&hn-create}))
@@ -1602,8 +1602,8 @@ on error  undo , return error substitute( "&1. &2&3&4", vss-workfile, return-val
                                        ,output v-uniq-key-rec).
     delete temp-goods.
     find first curr_c-ext-classif no-lock where
-               curr_c-ext-classif.classif-subject = {&table_ext-classif}
-           and curr_c-ext-classif.uniq-key-rec = v-uniq-key-rec
+               
+           curr_c-ext-classif.uniq-key-rec = v-uniq-key-rec
            AND curr_c-ext-classif.chip-num = p-chip-num
            AND curr_c-ext-classif.corr-user-db-num = p-corr-user-db-num
            no-error .

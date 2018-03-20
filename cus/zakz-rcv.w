@@ -522,7 +522,7 @@ DEFINE BROWSE br-docs QUERY br-docs NO-LOCK DISPLAY
       shar-buf_ord-doc.cli-name  format "x(27)"
       shar-buf_ord-doc.doc-code   format "x(12)"
       shar-buf_ord-doc.cons-code  column-label "СЗФП"
-      shar-buf_ord-doc.host-code  column-label "Фирма"
+      shar-buf_ord-doc.host-code  format "9999999999" column-label "Фирма"
       shar-buf_ord-doc.obj-type + " " + string(shar-buf_ord-doc.obj-code)  column-label "Объект"
       shar-buf_ord-doc.ship-date column-label "Доставка"
       string(shar-buf_ord-doc.ship-time,"hh:mm") column-label "Время" format "x(5)"

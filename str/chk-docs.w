@@ -3063,7 +3063,22 @@ define variable v-host-code as integer no-undo .
     end. /*when */
   END CASE.
 end.
-
+  run trg/userlog.p (
+    input {&nwsdochs_action_update}
+    , input {&table_chk-doc}
+    , input ( buffer c-doc :handle )
+    , input ?
+    , input ""
+    ) no-error.
+  if error-status :error
+    then 
+  do:
+    undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+      , {&new-line}
+      , vss-workfile
+      , return-value
+      , error-status :get-message ( 1 ) ).
+  end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3346,6 +3361,22 @@ CASE par-mode:
             run waitfram-show in this-procedure ( input "Ждите...").
             FIND FIRST del_chk-doc where recid(del_chk-doc) = recid(c-doc) no-error.
             if not avail del_chk-doc then next _list1.
+            run trg/userlog.p (
+              input {&nwsdochs_action_delete}
+              , input {&table_chk-doc}
+              , input ( buffer del_chk-doc :handle )
+              , input ?
+              , input ""
+              ) no-error.
+            if error-status :error
+              then 
+            do:
+              undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+            end.
             if del_chk-doc.out-code = ? then delete del_chk-doc no-error .
             if error-status:error then do:
                message
@@ -3373,6 +3404,22 @@ CASE par-mode:
           varlog = br-docs:select-next-row().
           if not varlog then varlog = br-docs:select-prev-row().
           v-doc-rec = recid(c-doc).
+          run trg/userlog.p (
+              input {&nwsdochs_action_delete}
+              , input {&table_chk-doc}
+              , input ( buffer del_chk-doc :handle )
+              , input ?
+              , input ""
+              ) no-error.
+            if error-status :error
+              then 
+            do:
+              undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+            end.
           if del_chk-doc.out-code = ?  then delete del_chk-doc no-error.
           if error-status:error then do:
             message

@@ -31,12 +31,12 @@ DEFINE INPUT PARAMETER p-user-id     AS CHARACTER     NO-UNDO.
 DEFINE INPUT PARAMETER p-db-num      AS integer       NO-UNDO.
 
 DEFINE TEMP-TABLE tt-work-place NO-UNDO
-    FIELD wp-code AS INTEGER   column-label "Код"           FORMAT ">>>>9"
+    FIELD wp-code AS INTEGER   column-label "Код"           FORMAT ">>>>>>>>>9"
     FIELD wp-type AS CHARACTER column-label "Тип"           FORMAT "x(3)"
-    FIELD wp-host AS INTEGER   column-label "фирма"         FORMAT ">>>>9"
+    FIELD wp-host AS INTEGER   column-label "фирма"         FORMAT ">>>>>>>>>9"
     FIELD wp-name AS CHARACTER column-label "наименование"  FORMAT "x(40)"
     FIELD context AS CHARACTER column-label "привязка"
-    FIELD db-num  AS INTEGER   column-label "БД"            FORMAT ">>>>9"
+    FIELD db-num  AS INTEGER   column-label "БД"            FORMAT ">>>>>>>>>9"
     field marked  as logical
     field deleted  as logical
 INDEX i-code-type IS PRIMARY UNIQUE

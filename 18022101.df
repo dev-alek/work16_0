@@ -1,0 +1,111 @@
+DROP FIELD "obj-type" OF "c-contract-specif"
+DROP FIELD "obj-code" OF "c-contract-specif"
+
+ADD FIELD "stts" OF "c-recipe" AS integer
+  DESCRIPTION "Статус: 0 - запись видна, > 0  - запись не видна в справочнике, т.е.
+как бы удалена`Status`Statut"
+  FORMAT "->>>>>>9"
+  POSITION 31
+  INITIAL "0"
+  LABEL "Статус"
+  COLUMN-LABEL "Статус"
+  ORDER 300
+  MAX-WIDTH 4
+
+ADD FIELD "measure-type" OF "c-rvs-line" AS character
+  DESCRIPTION "Тип проведения замера"
+  FORMAT "x(8)"
+  POSITION 55
+  INITIAL ""
+  ORDER 890
+  MAX-WIDTH 16
+
+ADD FIELD "obj-num" OF "c-shop" AS character
+  FORMAT "x(8)"
+  POSITION 68
+  INITIAL ""
+  ORDER 810
+  MAX-WIDTH 16
+
+UPDATE FIELD "chip-num" OF "c-sr-izmerenia"
+  MANDATORY
+
+UPDATE FIELD "corr-user-db-num" OF "c-sr-izmerenia"
+  MANDATORY
+
+ADD INDEX "auto-corr-user-db" ON "c-sr-izmerenia"
+  AREA "History"
+  INDEX-FIELD "corr-user-db-num" ASCENDING
+
+ADD INDEX "auto-corrr-user" ON "c-sr-izmerenia"
+  AREA "History"
+  INDEX-FIELD "corr-user-name" ASCENDING
+  INDEX-FIELD "corr-user-db-num" ASCENDING
+
+ADD FIELD "obj-num" OF "c-store" AS character
+  FORMAT "x(8)"
+  POSITION 41
+  INITIAL ""
+  ORDER 650
+  MAX-WIDTH 16
+
+DROP FIELD "obj-type" OF "contract-specif"
+DROP FIELD "obj-code" OF "contract-specif"
+
+ADD FIELD "stts" OF "recipe" AS integer
+  DESCRIPTION "Статус: 0 - запись видна, > 0  - запись не видна в справочнике, т.е.
+как бы удалена`Status`Statut"
+  FORMAT "->>>>>>9"
+  POSITION 25
+  INITIAL "0"
+  LABEL "Статус"
+  COLUMN-LABEL "Статус"
+  ORDER 230
+  MAX-WIDTH 4
+
+RENAME INDEX "artic" TO "temp-80833" ON "recipe"
+
+ADD INDEX "artic" ON "recipe"
+  AREA "Primary_data"
+  INDEX-FIELD "artic" ASCENDING
+  INDEX-FIELD "obj-type" ASCENDING
+  INDEX-FIELD "obj-code" ASCENDING
+  INDEX-FIELD "stts" ASCENDING
+
+ADD INDEX "stts" ON "recipe"
+  AREA "Primary_data"
+  INDEX-FIELD "stts" ASCENDING
+
+DROP INDEX "temp-80833" ON "recipe"
+
+ADD FIELD "measure-type" OF "rvs-line" AS character
+  DESCRIPTION "Тип проведения замера"
+  FORMAT "x(8)"
+  POSITION 53
+  INITIAL ""
+  ORDER 870
+  MAX-WIDTH 16
+
+ADD FIELD "obj-num" OF "shop" AS character
+  FORMAT "x(8)"
+  POSITION 63
+  INITIAL ""
+  ORDER 750
+  MAX-WIDTH 16
+
+ADD INDEX "num" ON "shop"
+  AREA "Primary_data"
+  INDEX-FIELD "obj-num" ASCENDING
+
+ADD FIELD "obj-num" OF "store" AS character
+  FORMAT "x(8)"
+  POSITION 36
+  INITIAL ""
+  ORDER 600
+  MAX-WIDTH 16
+
+.
+PSC
+cpstream=1251
+.
+0000002437

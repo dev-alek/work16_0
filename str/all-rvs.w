@@ -201,7 +201,7 @@ define variable p-auto           as char      no-undo.
 &Scoped-define INTERNAL-TABLES r-doc
 
 /* Definitions for BROWSE br-r-docs                                     */
-&Scoped-define FIELDS-IN-QUERY-br-r-docs {&sort-clmn_1-br-dtl} {&sort-clmn_2-br-dtl} {&sort-clmn_3-br-dtl} @ p-auto {&sort-clmn_4-br-dtl} {&sort-clmn_5-br-dtl} {&sort-clmn_6-br-dtl} {&sort-clmn_7-br-dtl} {&sort-clmn_8-br-dtl} {&sort-clmn_9-br-dtl} {&sort-clmn_10-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_12-br-dtl} {&sort-clmn_13-br-dtl} {&sort-clmn_14-br-dtl} {&sort-clmn_15-br-dtl} {&sort-clmn_16-br-dtl} {&sort-clmn_17-br-dtl} {&sort-clmn_18-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl} {&sort-clmn_21-br-dtl} {&sort-clmn_22-br-dtl} {&sort-clmn_23-br-dtl} {&sort-clmn_24-br-dtl} {&sort-clmn_25-br-dtl} {&sort-clmn_26-br-dtl} {&sort-clmn_27-br-dtl} {&sort-clmn_28-br-dtl} {&sort-clmn_29-br-dtl} {&sort-clmn_30-br-dtl} {&sort-clmn_31-br-dtl} {&sort-clmn_32-br-dtl} {&sort-clmn_33-br-dtl} {&sort-clmn_34-br-dtl}   
+&Scoped-define FIELDS-IN-QUERY-br-r-docs {&sort-clmn_1-br-dtl} {&sort-clmn_2-br-dtl} {&sort-clmn_3-br-dtl} {&sort-clmn_4-br-dtl} {&sort-clmn_5-br-dtl} {&sort-clmn_6-br-dtl} {&sort-clmn_7-br-dtl} {&sort-clmn_8-br-dtl} {&sort-clmn_9-br-dtl} {&sort-clmn_10-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_12-br-dtl} {&sort-clmn_13-br-dtl} {&sort-clmn_14-br-dtl} {&sort-clmn_15-br-dtl} {&sort-clmn_16-br-dtl} {&sort-clmn_17-br-dtl} {&sort-clmn_18-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl} {&sort-clmn_21-br-dtl} {&sort-clmn_22-br-dtl} {&sort-clmn_23-br-dtl} {&sort-clmn_24-br-dtl} {&sort-clmn_25-br-dtl} {&sort-clmn_26-br-dtl} {&sort-clmn_27-br-dtl} {&sort-clmn_28-br-dtl} {&sort-clmn_29-br-dtl} {&sort-clmn_30-br-dtl} {&sort-clmn_31-br-dtl} {&sort-clmn_32-br-dtl} {&sort-clmn_33-br-dtl} {&sort-clmn_34-br-dtl}   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-r-docs {&enabled-clmn}   
 &Scoped-define SELF-NAME br-r-docs
 &Scoped-define QUERY-STRING-br-r-docs FOR EACH r-doc
@@ -216,7 +216,8 @@ define variable p-auto           as char      no-undo.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit b-mark b-sel b-add b-lkp b-chg b-del ~
-b-close b-open b-help Btn_Copy b-inv b-sch b-print br-r-docs ed-notes 
+b-close b-open b-hist b-help Btn_Copy b-inv b-sch b-print br-r-docs ~
+ed-notes 
 &Scoped-Define DISPLAYED-OBJECTS ed-notes f-boss-name f-obj-name ~
 f-agnt-name f-wrkr-name f-cre-name 
 
@@ -250,90 +251,94 @@ FUNCTION shift-name RETURNS CHARACTER
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-add 
-    LABEL "Добавить":L 
-    SIZE 10 BY 1.
+     LABEL "Добавить":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-chg 
-    LABEL "Изменить":L 
-    SIZE 10 BY 1.
+     LABEL "Изменить":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-close 
-    LABEL "Закрыть":L 
-    SIZE 10 BY 1.
+     LABEL "Закрыть":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-del 
-    LABEL "Удалить":L 
-    SIZE 10 BY 1.
+     LABEL "Удалить":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-help 
-    LABEL "Помощь":L 
-    SIZE 7 BY 1.
+     LABEL "Помощь":L 
+     SIZE 7 BY 1.
+
+DEFINE BUTTON b-hist 
+     LABEL "История" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON b-inv 
-    LABEL "Инвент." 
-    SIZE 10 BY 1.
+     LABEL "Инвент." 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-lkp 
-    LABEL "Просмотр":L 
-    SIZE 10 BY 1.
+     LABEL "Просмотр":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-mark 
-    LABEL "*":L 
-    SIZE 3 BY 1.
+     LABEL "*":L 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON b-open 
-    LABEL "Открыть" 
-    SIZE 10 BY 1.
+     LABEL "Открыть" 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-print 
-    LABEL "Печать":L 
-    SIZE 7 BY 1.
+     LABEL "Печать":L 
+     SIZE 7 BY 1.
 
 DEFINE BUTTON b-quit AUTO-GO 
-    LABEL "Выход":L 
-    SIZE 10 BY 1.
+     LABEL "Выход":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-sch 
-    LABEL "&Фильтр":L 
-    SIZE 7 BY 1.
+     LABEL "&Фильтр":L 
+     SIZE 7 BY 1.
 
 DEFINE BUTTON b-sel 
-    LABEL "Выбор":L 
-    SIZE 10 BY 1.
+     LABEL "Выбор":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON Btn_Copy 
-    LABEL "&Ст.Смен." 
-    SIZE 10 BY 1 TOOLTIP "Сделать сменную сверку на основе контрольной (полной)".
+     LABEL "&Ст.Смен." 
+     SIZE 10 BY 1 TOOLTIP "Сделать сменную сверку на основе контрольной (полной)".
 
-DEFINE VARIABLE ed-notes    AS CHARACTER 
-    VIEW-AS EDITOR
-    SIZE 99 BY 2
-    BGCOLOR 8 NO-UNDO.
+DEFINE VARIABLE ed-notes AS CHARACTER 
+     VIEW-AS EDITOR
+     SIZE 99 BY 2
+     BGCOLOR 8  NO-UNDO.
 
 DEFINE VARIABLE f-agnt-name AS CHARACTER FORMAT "X(19)":U 
-    LABEL "Исп" 
-    VIEW-AS TEXT 
-    SIZE 19.5 BY .67 NO-UNDO.
+     LABEL "Исп" 
+      VIEW-AS TEXT 
+     SIZE 19.5 BY .67 NO-UNDO.
 
 DEFINE VARIABLE f-boss-name AS CHARACTER FORMAT "X(19)":U 
-    LABEL "М-р" 
-    VIEW-AS TEXT 
-    SIZE 19.5 BY .67 NO-UNDO.
+     LABEL "М-р" 
+      VIEW-AS TEXT 
+     SIZE 19.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE f-cre-name  AS CHARACTER FORMAT "X(19)":U 
-    LABEL "Опер" 
-    VIEW-AS TEXT 
-    SIZE 19.5 BY .67 NO-UNDO.
+DEFINE VARIABLE f-cre-name AS CHARACTER FORMAT "X(19)":U 
+     LABEL "Опер" 
+      VIEW-AS TEXT 
+     SIZE 19.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE f-obj-name  AS CHARACTER FORMAT "X(13)":U 
-    LABEL "Объект" 
-    VIEW-AS TEXT 
-    SIZE 62.5 BY .67 NO-UNDO.
+DEFINE VARIABLE f-obj-name AS CHARACTER FORMAT "X(13)":U 
+     LABEL "Объект" 
+      VIEW-AS TEXT 
+     SIZE 62.5 BY .67 NO-UNDO.
 
 DEFINE VARIABLE f-wrkr-name AS CHARACTER FORMAT "X(19)":U 
-    LABEL "Кл-к" 
-    VIEW-AS TEXT 
-    SIZE 19.5 BY .67 NO-UNDO.
+     LABEL "Кл-к" 
+      VIEW-AS TEXT 
+     SIZE 19.5 BY .67 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -344,8 +349,8 @@ DEFINE NEW SHARED QUERY {&browse-name} for r-doc SCROLLING.
 /* Browse definitions                                                   */
 DEFINE BROWSE br-r-docs
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-r-docs d-all-r-docs _FREEFORM
-    QUERY br-r-docs DISPLAY
-    {&sort-clmn_1-br-dtl}   COLUMN-LABEL {&label-clmn_1-br-dtl}  FORMAT "x(1)"
+  QUERY br-r-docs DISPLAY
+      {&sort-clmn_1-br-dtl}   COLUMN-LABEL {&label-clmn_1-br-dtl}  FORMAT "x(1)"
      {&sort-clmn_2-br-dtl}   COLUMN-LABEL {&label-clmn_2-br-dtl}  FORMAT "x(9)"
      {&sort-clmn_3-br-dtl}    COLUMN-LABEL {&label-clmn_3-br-dtl}  format "x(1)" 
      {&sort-clmn_4-br-dtl}   column-label {&label-clmn_4-br-dtl}  format "x(5)"
@@ -388,31 +393,32 @@ DEFINE BROWSE br-r-docs
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-all-r-docs
-    b-quit AT ROW 1 COL 1
-    b-mark AT ROW 1 COL 11
-    b-sel AT ROW 1 COL 14
-    b-add AT ROW 1 COL 24
-    b-lkp AT ROW 1 COL 34
-    b-chg AT ROW 1 COL 44
-    b-del AT ROW 1 COL 54
-    b-close AT ROW 1 COL 64
-    b-open AT ROW 1 COL 74
-    b-help AT ROW 1 COL 92.5
-    Btn_Copy AT ROW 2 COL 64
-    b-inv AT ROW 2 COL 74
-    b-sch AT ROW 2 COL 85.5
-    b-print AT ROW 2 COL 92.5
-    br-r-docs AT ROW 3 COL 1
-    ed-notes AT ROW 21.5 COL 1 NO-LABEL
-    f-boss-name AT ROW 20 COL 5 COLON-ALIGNED
-    f-obj-name AT ROW 20 COL 35 COLON-ALIGNED
-    f-agnt-name AT ROW 20.75 COL 5 COLON-ALIGNED
-    f-wrkr-name AT ROW 20.75 COL 35 COLON-ALIGNED
-    f-cre-name AT ROW 20.75 COL 65 COLON-ALIGNED
-    SPACE(13.50) SKIP(2.08)
+     b-quit AT ROW 1 COL 1
+     b-mark AT ROW 1 COL 11
+     b-sel AT ROW 1 COL 14
+     b-add AT ROW 1 COL 24
+     b-lkp AT ROW 1 COL 34
+     b-chg AT ROW 1 COL 44
+     b-del AT ROW 1 COL 54
+     b-close AT ROW 1 COL 64
+     b-open AT ROW 1 COL 74
+     b-hist AT ROW 1 COL 89.5 WIDGET-ID 64
+     b-help AT ROW 1 COL 92.5
+     Btn_Copy AT ROW 2 COL 64
+     b-inv AT ROW 2 COL 74
+     b-sch AT ROW 2 COL 85.5
+     b-print AT ROW 2 COL 92.5
+     br-r-docs AT ROW 3 COL 1
+     ed-notes AT ROW 21.5 COL 1 NO-LABEL
+     f-boss-name AT ROW 20 COL 5 COLON-ALIGNED
+     f-obj-name AT ROW 20 COL 35 COLON-ALIGNED
+     f-agnt-name AT ROW 20.75 COL 5 COLON-ALIGNED
+     f-wrkr-name AT ROW 20.75 COL 35 COLON-ALIGNED
+     f-cre-name AT ROW 20.75 COL 65 COLON-ALIGNED
+     SPACE(13.50) SKIP(2.08)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-    TITLE "<insert dialog title>".
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "<insert dialog title>".
 
 
 /* *********************** Procedure Settings ************************ */
@@ -436,12 +442,12 @@ DEFINE FRAME d-all-r-docs
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-r-docs b-print d-all-r-docs */
 ASSIGN 
-    FRAME d-all-r-docs:SCROLLABLE = FALSE
-    FRAME d-all-r-docs:HIDDEN     = TRUE.
+       FRAME d-all-r-docs:SCROLLABLE       = FALSE
+       FRAME d-all-r-docs:HIDDEN           = TRUE.
 
 ASSIGN 
-    br-r-docs:NUM-LOCKED-COLUMNS IN FRAME d-all-r-docs = 4
-    br-r-docs:COLUMN-RESIZABLE IN FRAME d-all-r-docs   = TRUE.
+       br-r-docs:NUM-LOCKED-COLUMNS IN FRAME d-all-r-docs     = 4
+       br-r-docs:COLUMN-RESIZABLE IN FRAME d-all-r-docs       = TRUE.
 
 /* SETTINGS FOR FILL-IN f-agnt-name IN FRAME d-all-r-docs
    NO-ENABLE                                                            */
@@ -487,7 +493,7 @@ DEFINE NEW SHARED QUERY {&browse-name} for r-doc SCROLLING.
 &Scoped-define SELF-NAME d-all-r-docs
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL d-all-r-docs d-all-r-docs
 ON WINDOW-CLOSE OF FRAME d-all-r-docs /* <insert dialog title> */
-    DO:
+DO:
         APPLY "END-ERROR":U TO SELF.
     END.
 
@@ -498,7 +504,7 @@ ON WINDOW-CLOSE OF FRAME d-all-r-docs /* <insert dialog title> */
 &Scoped-define SELF-NAME b-add
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add d-all-r-docs
 ON CHOOSE OF b-add IN FRAME d-all-r-docs /* Добавить */
-    DO:
+DO:
         define buffer bf_icnt-doc for ub.icnt-doc.
         define buffer bf_rvs-doc  for ub.rvs-doc.
         find first bf_icnt-doc no-lock
@@ -567,7 +573,7 @@ ON CHOOSE OF b-add IN FRAME d-all-r-docs /* Добавить */
 &Scoped-define SELF-NAME b-chg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg d-all-r-docs
 ON CHOOSE OF b-chg IN FRAME d-all-r-docs /* Изменить */
-    DO:
+DO:
         define buffer bf_trn-doc for ub.trn-doc.
         {&no-rvs}
   if r-doc.status_ = {&fact}
@@ -618,7 +624,7 @@ END.
 &Scoped-define SELF-NAME b-close
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-close d-all-r-docs
 ON CHOOSE OF b-close IN FRAME d-all-r-docs /* Закрыть */
-    DO:
+DO:
         define variable varchg-inv as logical   no-undo.
         define variable v-inv-doc  as character no-undo .
 
@@ -883,7 +889,7 @@ END.
 &Scoped-define SELF-NAME b-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del d-all-r-docs
 ON CHOOSE OF b-del IN FRAME d-all-r-docs /* Удалить */
-    DO:
+DO:
     define variable v-person as character no-undo.
     define variable v-vid-action as integer  no-undo .
     define variable v-vid-param  as longchar no-undo .
@@ -895,7 +901,7 @@ ON CHOOSE OF b-del IN FRAME d-all-r-docs /* Удалить */
             message "Не выбрана сверка, которую нужно удалить." view-as alert-box.
             return no-apply.
         end.
-		p-rvs-doc = r-doc.rvs-code.
+                p-rvs-doc = r-doc.rvs-code.
         run proc-del in this-procedure
             no-error.
         if error-status :error then 
@@ -951,10 +957,29 @@ ON CHOOSE OF b-del IN FRAME d-all-r-docs /* Удалить */
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist d-all-r-docs
+ON CHOOSE OF b-hist IN FRAME d-all-r-docs /* История */
+DO:
+    define variable v-list as character no-undo.
+
+  if available r-doc then do:
+    run str/rvscdocs.w ( input        parparentproc,
+                     input        "":U,
+                     input        "one":U,
+                     input        r-doc.rvs-code,
+                     input-output v-list                  ).
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-inv
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-inv d-all-r-docs
 ON CHOOSE OF b-inv IN FRAME d-all-r-docs /* Инвент. */
-    DO:
+DO:
 
         define variable v-docs-info as character no-undo .
 
@@ -1082,7 +1107,7 @@ END.
 &Scoped-define SELF-NAME b-lkp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-lkp d-all-r-docs
 ON CHOOSE OF b-lkp IN FRAME d-all-r-docs /* Просмотр */
-    DO:
+DO:
         br-handle = {&browse-name}:handle.
         {&no-rvs}
   case r-doc.rvs-type
@@ -1187,7 +1212,7 @@ END.
 &Scoped-define SELF-NAME b-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark d-all-r-docs
 ON CHOOSE OF b-mark IN FRAME d-all-r-docs /* * */
-    DO:
+DO:
         run local-mark in this-procedure .
         assign
             varlog = {&browse-name}:select-next-row ()
@@ -1202,7 +1227,7 @@ ON CHOOSE OF b-mark IN FRAME d-all-r-docs /* * */
 &Scoped-define SELF-NAME b-open
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-open d-all-r-docs
 ON CHOOSE OF b-open IN FRAME d-all-r-docs /* Открыть */
-    DO:
+DO:
         {&no-rvs}
   if r-doc.status_ <> {&permitted} then do:
         message
@@ -1315,7 +1340,7 @@ END.
 &Scoped-define SELF-NAME b-print
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print d-all-r-docs
 ON CHOOSE OF b-print IN FRAME d-all-r-docs /* Печать */
-    DO:
+DO:
         {&no-rvs}
   assign rvs-rec = recid (r-doc).
         case r-doc.rvs-type
@@ -1407,7 +1432,7 @@ ON CHOOSE OF b-print IN FRAME d-all-r-docs /* Печать */
 &Scoped-define SELF-NAME b-quit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit d-all-r-docs
 ON CHOOSE OF b-quit IN FRAME d-all-r-docs /* Выход */
-    DO:
+DO:
         assign 
             rvs-rec = ?.
     END.
@@ -1419,7 +1444,7 @@ ON CHOOSE OF b-quit IN FRAME d-all-r-docs /* Выход */
 &Scoped-define SELF-NAME b-sch
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sch d-all-r-docs
 ON CHOOSE OF b-sch IN FRAME d-all-r-docs /* Фильтр */
-    DO:
+DO:
         assign
             filter-point = "all-rvs"
             tbl          = 'rvs-doc'
@@ -1453,7 +1478,7 @@ ON CHOOSE OF b-sch IN FRAME d-all-r-docs /* Фильтр */
 &Scoped-define SELF-NAME b-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel d-all-r-docs
 ON CHOOSE OF b-sel IN FRAME d-all-r-docs /* Выбор */
-    DO:
+DO:
         {&no-rvs}
   assign
     out-rec = recid( r-doc )
@@ -1469,7 +1494,7 @@ ON CHOOSE OF b-sel IN FRAME d-all-r-docs /* Выбор */
 &Scoped-define SELF-NAME br-r-docs
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-r-docs d-all-r-docs
 ON RETURN OF br-r-docs IN FRAME d-all-r-docs
-    OR mouse-select-dblclick of {&browse-name} in frame {&frame-name} 
+OR mouse-select-dblclick of {&browse-name} in frame {&frame-name} 
     do:
         apply "choose" to b-lkp in frame {&frame-name}.
     end.
@@ -1480,7 +1505,7 @@ ON RETURN OF br-r-docs IN FRAME d-all-r-docs
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-r-docs d-all-r-docs
 ON ROW-DISPLAY OF br-r-docs IN FRAME d-all-r-docs
-    DO:
+DO:
         
    
     if   autorvs(recid(r-doc)) = "А"
@@ -1503,7 +1528,7 @@ ON ROW-DISPLAY OF br-r-docs IN FRAME d-all-r-docs
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-r-docs d-all-r-docs
 ON VALUE-CHANGED OF br-r-docs IN FRAME d-all-r-docs
-    DO:
+DO:
         define buffer buf_clients for ub.clients .
 
         if available r-doc then 
@@ -1581,7 +1606,7 @@ ON VALUE-CHANGED OF br-r-docs IN FRAME d-all-r-docs
 &Scoped-define SELF-NAME Btn_Copy
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Copy d-all-r-docs
 ON CHOOSE OF Btn_Copy IN FRAME d-all-r-docs /* Ст.Смен. */
-    DO:
+DO:
         if not available r-doc then 
         do:
             message
@@ -1605,7 +1630,7 @@ ON CHOOSE OF Btn_Copy IN FRAME d-all-r-docs /* Ст.Смен. */
 &Scoped-define SELF-NAME ed-notes
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ed-notes d-all-r-docs
 ON ENTRY OF ed-notes IN FRAME d-all-r-docs
-    DO:
+DO:
         if not available r-doc then 
         do:
             message
@@ -1631,7 +1656,7 @@ ON ENTRY OF ed-notes IN FRAME d-all-r-docs
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ed-notes d-all-r-docs
 ON LEAVE OF ed-notes IN FRAME d-all-r-docs
-    DO:
+DO:
         define buffer bf-rvs for ub.rvs-doc.
         do
             on stop  undo, return no-apply
@@ -1653,7 +1678,7 @@ ON LEAVE OF ed-notes IN FRAME d-all-r-docs
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ed-notes d-all-r-docs
 ON RETURN OF ed-notes IN FRAME d-all-r-docs
-    OR mouse-select-dblclick of {&self-name} in frame {&frame-name}
+OR mouse-select-dblclick of {&self-name} in frame {&frame-name}
     DO:
         apply "entry" to {&browse-name} in frame {&frame-name}.
         return no-apply.
@@ -1795,7 +1820,7 @@ RUN disable_UI in this-procedure .
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE delete-doc-inv d-all-r-docs 
 PROCEDURE delete-doc-inv :
-    define input parameter pardoc-rec as recid no-undo.
+define input parameter pardoc-rec as recid no-undo.
 
     do
         on error  undo, return error substitute( "&1 (delete-doc-inv). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
@@ -2049,16 +2074,16 @@ end procedure.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI d-all-r-docs  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-    /*------------------------------------------------------------------------------
-      Purpose:     DISABLE the User Interface
-      Parameters:  <none>
-      Notes:       Here we clean-up the user-interface by deleting
-                   dynamic widgets we have created and/or hide 
-                   frames.  This procedure is usually called when
-                   we are ready to "clean-up" after running.
-    ------------------------------------------------------------------------------*/
-    /* Hide all frames. */
-    HIDE FRAME d-all-r-docs.
+/*------------------------------------------------------------------------------
+  Purpose:     DISABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we clean-up the user-interface by deleting
+               dynamic widgets we have created and/or hide 
+               frames.  This procedure is usually called when
+               we are ready to "clean-up" after running.
+------------------------------------------------------------------------------*/
+  /* Hide all frames. */
+  HIDE FRAME d-all-r-docs.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2066,22 +2091,22 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI d-all-r-docs  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-    /*------------------------------------------------------------------------------
-      Purpose:     ENABLE the User Interface
-      Parameters:  <none>
-      Notes:       Here we display/view/enable the widgets in the
-                   user-interface.  In addition, OPEN all queries
-                   associated with each FRAME and BROWSE.
-                   These statements here are based on the "Other 
-                   Settings" section of the widget Property Sheets.
-    ------------------------------------------------------------------------------*/
-    DISPLAY ed-notes f-boss-name f-obj-name f-agnt-name f-wrkr-name f-cre-name 
-        WITH FRAME d-all-r-docs.
-    ENABLE b-quit b-mark b-sel b-add b-lkp b-chg b-del b-close b-open b-help 
-        Btn_Copy b-inv b-sch b-print br-r-docs ed-notes 
-        WITH FRAME d-all-r-docs.
-    VIEW FRAME d-all-r-docs.
-    {&OPEN-BROWSERS-IN-QUERY-d-all-r-docs}
+/*------------------------------------------------------------------------------
+  Purpose:     ENABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we display/view/enable the widgets in the
+               user-interface.  In addition, OPEN all queries
+               associated with each FRAME and BROWSE.
+               These statements here are based on the "Other 
+               Settings" section of the widget Property Sheets.
+------------------------------------------------------------------------------*/
+  DISPLAY ed-notes f-boss-name f-obj-name f-agnt-name f-wrkr-name f-cre-name 
+      WITH FRAME d-all-r-docs.
+  ENABLE b-quit b-mark b-sel b-add b-lkp b-chg b-del b-close b-open b-hist 
+         b-help Btn_Copy b-inv b-sch b-print br-r-docs ed-notes 
+      WITH FRAME d-all-r-docs.
+  VIEW FRAME d-all-r-docs.
+  {&OPEN-BROWSERS-IN-QUERY-d-all-r-docs}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2089,7 +2114,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark d-all-r-docs 
 PROCEDURE local-mark :
-    if not available r-doc then 
+if not available r-doc then 
     do:
         message "Неправильный выбор строки.".
         return .
@@ -2104,7 +2129,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr d-all-r-docs 
 PROCEDURE Openbr :
-    define variable sort-column-phrase as character no-undo .
+define variable sort-column-phrase as character no-undo .
     define variable l-query-was-opened as logical   no-undo .
 
     define buffer bf_clients for ub.clients.
@@ -2254,7 +2279,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-copy d-all-r-docs 
 PROCEDURE proc-copy :
-    define variable v-str as character no-undo.
+define variable v-str as character no-undo.
     define variable jj    as integer   no-undo.
 
     do
@@ -2295,7 +2320,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-del d-all-r-docs 
 PROCEDURE proc-del :
-    define variable del-rec   as recid   no-undo.
+define variable del-rec   as recid   no-undo.
     define variable unrv-qnty as decimal no-undo. /* количество из gds-dtl, по которому снимаются резервы перед удалением */
     define variable varfind   as logical no-undo.
 
@@ -2586,11 +2611,12 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE UI-on d-all-r-docs 
 PROCEDURE UI-on :
-    ENABLE
+ENABLE
         b-quit
         b-lkp
         b-print
         b-sch
+        b-hist
         b-help
         ed-notes
         {&browse-name}

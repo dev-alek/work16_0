@@ -14,6 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 12/05/05
 
 */
+block-level on error undo, throw.
 
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-parent-handle  as widget-handle no-undo .
@@ -26,7 +27,6 @@ define input parameter p-obj-type as character no-undo .
 define input parameter i-obj-code like ub.cash-desk.obj-code no-undo .
 DEFINE INPUT PARAMETER action as char no-undo.
 */
-
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -45,21 +45,9 @@ define variable action     as character no-undo init 'U':U.
 define variable p-batch as logical no-undo .
 define variable p-other    as character no-undo .
 
-assign
-p-obj-type = entry(1, p-parameter, {&delim-par})
-i-obj-code = integer(entry(2, p-parameter, {&delim-par}))
-action     = entry(3, p-parameter, {&delim-par})
-no-error
-.
-if error-status:error then return error substitute("&1 &2", error-status:get-message(1) , return-value ).
-
 { gbl/getcntxt.i get }
-
 { cmp/gds-list.i gds-list def " NEW shared " " " NO-HIST }
 &SCOPED-DEFINE called send-codes-only
-{ str/sendgood.i }
-{ str/defc-pl.i }
-
 
 define variable is-petrolium as logical no-undo .
 define variable is-pieces as logical no-undo .
@@ -70,6 +58,40 @@ define buffer buf_place for ub.place.
 define buffer buf_pl-gds for ub.pl-gds.
 define buffer buf_goods for ub.goods.
 
+
+define variable v-is-err-stat as logical no-undo .
+define variable v-err-mess1   as character no-undo .
+assign
+p-obj-type = entry(1, p-parameter, {&delim-par})
+i-obj-code = integer(entry(2, p-parameter, {&delim-par}))
+action     = entry(3, p-parameter, {&delim-par})
+no-error
+.
+v-is-err-stat = error-status:error.
+v-err-mess1 = error-status:get-message(1).
+
+/* 19/II-2018 Проблема:
+  переменная log-file-name определяется где-то внутри str/sendgood.i;
+  там же, внутри str/sendgood.i, выполняется чтение из conf-rd, по значению i-obj-code.
+  Поэтому обработку ошибок чтения i-obj-code пришлость отделить от самого чтения.
+*/
+{ str/sendgood.i }
+
+if v-is-err-stat then do:
+  run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("Ошибка входных параметров &1:&2&3"
+                         , p-parameter
+                         , {&new-line}
+                         , v-err-mess1
+                         )).
+  v-view-log = yes.
+  undo, return error .
+end .
+
+{ str/defc-pl.i }
 
 /*PROCEDURE putc-pet*/
 /*разнящийся вывод для разных типов касс*/
@@ -233,3 +255,16 @@ if error-status:error then do:
   .
 end.
 if v-view-log then return error .
+
+  finally :
+    run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute("&1", {&new-line})
+    ).
+    define variable v-save-file-name as character no-undo .
+    v-save-file-name = substitute("&1send-cd.log", ibs.th.gbl.gbl-inipar:logDir) .
+    OS-APPEND value(log-file-name) value(v-save-file-name).
+    OS-DELETE value(log-file-name).
+  end finally .

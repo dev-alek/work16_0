@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,15 +8,15 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER find_c-fin-bank FOR ub.c-fin-bank.
-DEFINE BUFFER X_c-fin-bank FOR ub.c-fin-bank.
-DEFINE BUFFER X_clients FOR ub.clients.
-DEFINE BUFFER X_fin-bank FOR ub.fin-bank.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER find_c-fin-bank FOR c-fin-bank.
+DEFINE BUFFER X_c-fin-bank FOR c-fin-bank.
+DEFINE BUFFER X_clients FOR clients.
+DEFINE BUFFER X_fin-bank FOR fin-bank.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -100,7 +100,7 @@ define buffer X_curr_sysconf for ub.sysconf.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -115,8 +115,8 @@ define buffer X_curr_sysconf for ub.sysconf.
 &Scoped-define INTERNAL-TABLES X_c-fin-bank temp-changes
 
 /* Definitions for BROWSE BR-bank                                       */
-&Scoped-define FIELDS-IN-QUERY-BR-bank mark-string(recid(X_c-fin-bank), v-rid-list) X_c-fin-bank.host-code X_c-fin-bank.code-bank X_c-fin-bank.bank-name X_c-fin-bank.bik X_c-fin-bank.status_ usrfulnf(X_c-fin-bank.corr-user-name) X_c-fin-bank.corr-date string(X_c-fin-bank.corr-time, "HH:MM")
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-bank X_c-fin-bank.corr-date
+&Scoped-define FIELDS-IN-QUERY-BR-bank mark-string(recid(X_c-fin-bank), v-rid-list) X_c-fin-bank.host-code X_c-fin-bank.code-bank X_c-fin-bank.bank-name X_c-fin-bank.bik X_c-fin-bank.status_ usrfulnf(X_c-fin-bank.corr-user-name) X_c-fin-bank.corr-date string(X_c-fin-bank.corr-time, "HH:MM")   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-bank X_c-fin-bank.corr-date   
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-bank X_c-fin-bank
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-bank X_c-fin-bank
 &Scoped-define SELF-NAME BR-bank
@@ -127,8 +127,8 @@ define buffer X_curr_sysconf for ub.sysconf.
 
 
 /* Definitions for BROWSE BR-changes                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes
+&Scoped-define FIELDS-IN-QUERY-BR-changes temp-changes.l_name temp-changes.v_old temp-changes.v_new   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-changes   
 &Scoped-define SELF-NAME BR-changes
 &Scoped-define QUERY-STRING-BR-changes FOR EACH temp-changes
 &Scoped-define OPEN-QUERY-BR-changes OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
@@ -140,9 +140,9 @@ define buffer X_curr_sysconf for ub.sysconf.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel b-lkp B-sch B-Help ~
-BR-bank ED-notes sch-code sch-BIK sch-name BR-changes mark-num
+BR-bank ED-notes sch-code sch-BIK sch-name BR-changes mark-num 
 &Scoped-Define DISPLAYED-OBJECTS ED-notes sch-code sch-BIK sch-name ~
-mark-num
+mark-num 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -157,64 +157,64 @@ mark-num
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-lkp
-     LABEL "&Просмотр"
+DEFINE BUTTON b-lkp 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-sch
-     LABEL "&Фильтр"
+DEFINE BUTTON B-sch 
+     LABEL "&Фильтр" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&бор"
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE ED-notes AS CHARACTER
+DEFINE VARIABLE ED-notes AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 98 BY 2
      BGCOLOR 8 FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 6 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE sch-BIK AS CHARACTER FORMAT "X(9)":U
-     LABEL "БИК"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-BIK AS CHARACTER FORMAT "X(9)":U 
+     LABEL "БИК" 
+     VIEW-AS FILL-IN 
      SIZE 12 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sch-code AS INTEGER FORMAT ">>>>>>9":U INITIAL 0
-     LABEL "коду"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-code AS INTEGER FORMAT ">>>>>>9":U INITIAL 0 
+     LABEL "коду" 
+     VIEW-AS FILL-IN 
      SIZE 8 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sch-name AS CHARACTER FORMAT "X(35)":U
-     LABEL "нач.назв."
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-name AS CHARACTER FORMAT "X(35)":U 
+     LABEL "нач.назв." 
+     VIEW-AS FILL-IN 
      SIZE 41.88 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BR-bank FOR
+DEFINE QUERY BR-bank FOR 
       X_c-fin-bank SCROLLING.
 
-DEFINE QUERY BR-changes FOR
+DEFINE QUERY BR-changes FOR 
       temp-changes SCROLLING.
 &ANALYZE-RESUME
 
@@ -223,7 +223,7 @@ DEFINE BROWSE BR-bank
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-bank Dialog-Frame _FREEFORM
   QUERY BR-bank DISPLAY
       mark-string(recid(X_c-fin-bank), v-rid-list) FORMAT "X(1)":U
-      X_c-fin-bank.host-code COLUMN-LABEL "Фирма" FORMAT "99999":U
+      X_c-fin-bank.host-code COLUMN-LABEL "Фирма" FORMAT "999999999":U
       X_c-fin-bank.code-bank COLUMN-LABEL "Код!банка" FORMAT "9999999":U
       X_c-fin-bank.bank-name FORMAT "X(40)":U
       X_c-fin-bank.bik FORMAT "X(9)":U
@@ -266,10 +266,10 @@ DEFINE FRAME Dialog-Frame
      mark-num AT ROW 1 COL 12.5 COLON-ALIGNED NO-LABEL
      "ПОИСК ПО" VIEW-AS TEXT
           SIZE 9.25 BY 1 AT ROW 14.58 COL 1.5
-          FGCOLOR 4
+          FGCOLOR 4 
      SPACE(88.49) SKIP(6.46)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Список истории банков"
          CANCEL-BUTTON b-quit.
 
@@ -299,11 +299,14 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-bank B-Help Dialog-Frame */
 /* BROWSE-TAB BR-changes sch-name Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-ASSIGN
+ASSIGN 
+       BR-bank:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
+
+ASSIGN 
        ED-notes:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -330,7 +333,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH temp-changes.
 */  /* BROWSE BR-changes */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -580,7 +583,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -731,7 +734,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -750,13 +753,13 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY ED-notes sch-code sch-BIK sch-name mark-num
+  DISPLAY ED-notes sch-code sch-BIK sch-name mark-num 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-mark b-sel b-lkp B-sch B-Help BR-bank ED-notes sch-code
-         sch-BIK sch-name BR-changes mark-num
+  ENABLE b-quit B-mark b-sel b-lkp B-sch B-Help BR-bank ED-notes sch-code 
+         sch-BIK sch-name BR-changes mark-num 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -765,7 +768,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 assign
   br-bank:num-locked-columns in frame {&frame-name} = 1
@@ -805,7 +808,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 define input  parameter p-open-query     as logical   no-undo .
 define input  parameter p-find-next      as logical   no-undo .
@@ -929,7 +932,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame 
 PROCEDURE proc-b-sch :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1017,7 +1020,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-br-bank Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-br-bank Dialog-Frame 
 PROCEDURE proc-br-bank :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1030,7 +1033,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-bik Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-bik Dialog-Frame 
 PROCEDURE proc-find-bik :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1059,7 +1062,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-code Dialog-Frame 
 PROCEDURE proc-find-code :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1088,7 +1091,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-name Dialog-Frame 
 PROCEDURE proc-find-name :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1118,7 +1121,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
 for each temp-changes:
     delete temp-changes.
@@ -1166,3 +1169,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
