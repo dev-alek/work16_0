@@ -101,8 +101,9 @@ on error undo, return error
             , input buf_ext-system.db-num
         ).
       end.
-      if buf_ext-system.esys-db-num-exp = p-db-num
-      or buf_ext-system.esys-db-num-imp = p-db-num then do:
+      if (buf_ext-system.esys-db-num-exp = p-db-num
+      or buf_ext-system.esys-db-num-imp = p-db-num)
+      and not buf_ext-system.delivery-method = 11 then do:
         run restext-esys-pck in this-procedure (
               input buf_ext-system.esys-id
             , input buf_ext-system.db-num

@@ -1655,6 +1655,29 @@ procedure restore-s-action-role :
 
 end procedure. /* restore-action-role */
 
+procedure restore-s-action-role-chip :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+
+
+    {&init-validation}
+
+    &scoped-define sequence-name   s-action-role-chip
+
+    &scoped-define table-name      c-action-role
+    &scoped-define seq-field-name  action-role-code
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    &undefine not-include-in-seq-records
+
+    {&update-sequence}
+  end.
+
+end procedure. /* restore-action-role-chip */
 procedure restore-s-action-role-item :
   define input parameter p-curr-db-num as integer no-undo.
 
