@@ -1251,7 +1251,7 @@ if p-rht then do:
                  WHERE ub.action-role-item.db-num           = temp-action-role-item.db-num
                    and ub.action-role-item.action-head-code = temp-action-role-item.action-head-code
                    and ub.action-role-item.action-role-code = temp-action-role-item.action-role-code
-                   and ub.action-role-item.action-role-item-code = temp-action-role-item.action-role-item-code
+                   and ub.action-role-item.action-item-id = temp-action-role-item.action-item-id
                  NO-ERROR
                  .
             IF AVAILABLE ub.action-role-item then do:
@@ -1261,13 +1261,40 @@ if p-rht then do:
                                             + STRING(temp-action-role-item.action-role-code) ~
                                             + STRING(temp-action-role-item.action-role-item-code) ~
                                             )
-               {&wl-mes}
-            END.
-            create ub.action-role-item.
-            buffer-copy temp-action-role-item to ub.action-role-item.
-            release ub.action-role-item No-error.
-            if error-status:error then do:
-               {&get-mes}
+            {&wl-mes}
+             END.
+          create ub.action-role-item.
+          
+          assign
+            ub.action-role-item.action-head-code = temp-action-role-item.action-head-code
+            ub.action-role-item.action-item-id   = temp-action-role-item.action-item-id
+            ub.action-role-item.action-role-code = temp-action-role-item.action-role-code
+            ub.action-role-item.action-role-item-code = dynamic-next-value("s-action-role":U, "{&db-name_schema}":U)
+            ub.action-role-item.db-num          = temp-action-role-item.db-num
+            ub.action-role-item.whole-send-news = temp-action-role-item.whole-send-news 
+          .
+/*          buffer-copy temp-action-role-item EXCEPT temp-action-role-item.action-role-item-code temp-action-role-item.action-item-id to ub.action-role-item*/
+/*            .                                                                                                                                             */
+/*          assign                                                                                                                                          */
+/*            ub.action-role-item.action-role-item-code = dynamic-next-value("s-action-role":U, "{&db-name_schema}":U)                                      */
+/*            .                                                                                                                                             */
+          find first ub.action-item
+            where ub.action-item.action-head-code = ub.action-role-item.action-head-code
+            and ub.action-item.action-item-id  = ub.action-role-item.action-item-id
+            no-lock
+            no-error
+            .
+          if available ub.action-item then 
+          do:
+            assign
+              ub.action-role-item.action-item-code = ub.action-item.action-item-code
+              .
+          end.
+            
+          release ub.action-role-item No-error.
+          if error-status:error then 
+          do:
+            {&get-mes}
                &scop err-mes (~{&err-mes0~} +  " ошибка при сохранении привязки к ГРУППЕ ПРАВ (action-role-item):" ~
                                             + STRING(temp-action-role-item.db-num) ~
                                             + STRING(temp-action-role-item.action-head-code) ~
