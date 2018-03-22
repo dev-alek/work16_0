@@ -74,6 +74,7 @@ define variable vss-description as character no-undo init "Список пользователей 
 { cmp/showinf.i  }
 { gbl/usr-flt.i }
 { gbl/prn-lib.i }
+
 &scoped-define current-position-rowid "users-rowid":U
 &scoped-define current-position-focus "users-focus":U
 &scoped-define current-position-db "users-db":U
