@@ -659,6 +659,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-
 ,{&bef-attr-alias-tpsi}~
 ,{&bef-attr-cd-type-r-keeper}~
 ,{&bef-attr-cd-type-maria}~
+,{&bef-attr-cd-type-autotank}~
 ,{&bef-attr-arh-global}~
 ,{&bef-attr-nakl-glob}~
 ,{&bef-attr-nakl_par}~
