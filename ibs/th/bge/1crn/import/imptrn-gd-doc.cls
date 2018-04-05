@@ -64,12 +64,11 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     create TempTrnDoc.
     assign
       TempTrnDoc.obj-type = buf_clients.obj-type
-      TempTrnDoc.obj-code = 15
-      TempTrnDoc.cli-code = 1 /*integer (objTrnDoc:fuel-st-code)*/
+      TempTrnDoc.obj-code = buf_clients.obj-code
+      TempTrnDoc.cli-code = integer (objTrnDoc:fuel-st-code)
       TempTrnDoc.cli-type = "маг"
       TempTrnDoc.doc-date = objTrnDoc:doc-date
-      TempTrnDoc.ext-doc-code = replace (objTrnDoc:doc-code, "-", "=") when trim (objTrnDoc:doc-type, '0') = '4'
-      TempTrnDoc.ext-doc-code = replace (objTrnDoc:doc-code, "=", "*") when trim (objTrnDoc:doc-type, '0') = '8'
+      TempTrnDoc.ext-doc-code = replace (objTrnDoc:doc-code, "-", "=").
       TempTrnDoc.doc-id = objTrnDoc:doc-id
     .
 
