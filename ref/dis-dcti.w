@@ -167,7 +167,7 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      LABEL "&Отмена":L
      SIZE 10 BY 1 TOOLTIP "Выход из режима".
 
-DEFINE VARIABLE card-emitent AS INTEGER FORMAT ">>,>>9":U INITIAL 0
+DEFINE VARIABLE card-emitent AS INTEGER FORMAT ">>>>>>>>>>9":U INITIAL 0
      LABEL "Эмитент"
       VIEW-AS TEXT
      SIZE 16.4 BY 1

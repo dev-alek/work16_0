@@ -197,7 +197,7 @@ DEFINE VARIABLE f-bank-name AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE f-bik AS CHARACTER FORMAT "X(22)":U 
      LABEL "БИК" 
      VIEW-AS FILL-IN 
-     SIZE 14.8 BY 1 NO-UNDO.
+     SIZE 14.75 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-cli-name AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
@@ -227,42 +227,42 @@ DEFINE FRAME Dialog-Frame
      B-hist AT ROW 1 COL 92
      B-Help AT ROW 1 COL 95
      tt-fin-schet.host-code AT ROW 2.5 COL 13 COLON-ALIGNED
-          LABEL "Фирма"
+          LABEL "Фирма" FORMAT ">>>>>>>>9"
           VIEW-AS FILL-IN 
-          SIZE 7 BY 1
-     f-host-name AT ROW 2.5 COL 23.5 COLON-ALIGNED NO-LABEL
+          SIZE 12 BY 1
+     f-host-name AT ROW 2.5 COL 25.25 COLON-ALIGNED NO-LABEL
      tt-fin-schet.code-schet AT ROW 2.5 COL 78.5 COLON-ALIGNED
           LABEL "Код счета"
           VIEW-AS FILL-IN 
           SIZE 8 BY 1
-     f-cli-name AT ROW 4 COL 46.1 COLON-ALIGNED NO-LABEL
-     tt-fin-schet.cli-code AT ROW 4.03 COL 28.5 COLON-ALIGNED NO-LABEL FORMAT ">>>>>>>>9"
+     f-cli-name AT ROW 4 COL 46.13 COLON-ALIGNED NO-LABEL
+     tt-fin-schet.cli-code AT ROW 4.04 COL 28.5 COLON-ALIGNED NO-LABEL FORMAT ">>>>>>>>9"
           VIEW-AS FILL-IN 
           SIZE 11 BY 1
-     B-cli AT ROW 4.07 COL 44.4
-     tt-fin-schet.cli-type AT ROW 4.13 COL 17.6 NO-LABEL
+     B-cli AT ROW 4.08 COL 44.38
+     tt-fin-schet.cli-type AT ROW 4.13 COL 17.63 NO-LABEL
           VIEW-AS RADIO-SET HORIZONTAL
           RADIO-BUTTONS 
                     "Item 1", "1":U
-          SIZE 12.3 BY .97
-     tt-fin-schet.code-bank AT ROW 6.07 COL 13 COLON-ALIGNED
+          SIZE 12.25 BY .96
+     tt-fin-schet.code-bank AT ROW 6.08 COL 13 COLON-ALIGNED
           LABEL "Банк"
           VIEW-AS FILL-IN 
           SIZE 9 BY 1
-     B-bank AT ROW 6.07 COL 25.3
-     f-bank-name AT ROW 6.07 COL 28 COLON-ALIGNED NO-LABEL
+     B-bank AT ROW 6.08 COL 25.25
+     f-bank-name AT ROW 6.08 COL 28 COLON-ALIGNED NO-LABEL
      f-bik AT ROW 7.33 COL 28 COLON-ALIGNED
-     tt-fin-schet.c-schet AT ROW 9.53 COL 13 COLON-ALIGNED
+     tt-fin-schet.c-schet AT ROW 9.54 COL 13 COLON-ALIGNED
           LABEL "Корр.счет"
           VIEW-AS FILL-IN 
           SIZE 23 BY 1
-     tt-fin-schet.curr-code AT ROW 9.53 COL 53.1 COLON-ALIGNED
+     tt-fin-schet.curr-code AT ROW 9.54 COL 53.13 COLON-ALIGNED
           LABEL "Код валюты"
           VIEW-AS FILL-IN 
           SIZE 4 BY 1
-     B-currency AT ROW 9.53 COL 59.9
-     f-curr-abbr AT ROW 9.53 COL 62.8 COLON-ALIGNED NO-LABEL
-     tt-fin-schet.r-schet AT ROW 10.8 COL 13 COLON-ALIGNED
+     B-currency AT ROW 9.54 COL 59.88
+     f-curr-abbr AT ROW 9.54 COL 62.75 COLON-ALIGNED NO-LABEL
+     tt-fin-schet.r-schet AT ROW 10.79 COL 13 COLON-ALIGNED
           LABEL "Расч. счет"
           VIEW-AS FILL-IN 
           SIZE 23 BY 1
@@ -270,7 +270,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "Дополн. к названию держателя счета"
           VIEW-AS FILL-IN 
           SIZE 30 BY 1
-     tt-fin-schet.dop2 AT ROW 13.27 COL 43.5 COLON-ALIGNED
+     tt-fin-schet.dop2 AT ROW 13.25 COL 43.5 COLON-ALIGNED
           LABEL "Дополн. к названию банка"
           VIEW-AS FILL-IN 
           SIZE 30 BY 1
@@ -278,10 +278,10 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 63.5 BY 4
      "Держатель счета" VIEW-AS TEXT
-          SIZE 15.1 BY .93 AT ROW 4.17 COL 1.8
+          SIZE 15.13 BY .92 AT ROW 4.17 COL 1.75
      "Примечания" VIEW-AS TEXT
-          SIZE 10.6 BY 1 AT ROW 15.13 COL 2
-     SPACE(86.39) SKIP(3.57)
+          SIZE 10.63 BY 1 AT ROW 15.13 COL 2
+     SPACE(86.36) SKIP(3.57)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Банковский счет"
