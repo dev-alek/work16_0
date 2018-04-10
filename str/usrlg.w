@@ -86,6 +86,7 @@ define stream OutStr-html.
 define variable p-report-id               as integer              no-undo .
 define variable v-report-name-html        as CHARACTER            no-undo .
 define variable v-report-name-html-list   as CHARACTER            no-undo .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -119,7 +120,7 @@ define variable v-report-name-html-list   as CHARACTER            no-undo .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-cancel fi-date-to fi-date-for ~
-cb-table bt-doc-hist b-print br-head 
+cb-table bt-doc-hist b-print b-help br-head 
 &Scoped-Define DISPLAYED-OBJECTS fi-date-to fi-date-for cb-table 
 
 /* Custom List Definitions                                              */
@@ -143,8 +144,6 @@ FUNCTION get-unique-key RETURNS CHARACTER
 
 /* Define a dialog box                                                  */
 
-/* Menu Definitions                                                     */
-
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-cancel AUTO-END-KEY 
      LABEL "&Отмена" 
@@ -154,6 +153,11 @@ DEFINE BUTTON b-cancel AUTO-END-KEY
 DEFINE BUTTON b-exit AUTO-GO 
      LABEL "В&ыход" 
      SIZE 10 BY 1
+     BGCOLOR 8 .
+
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
+     SIZE 3 BY 1
      BGCOLOR 8 .
 
 DEFINE BUTTON b-print 
@@ -168,7 +172,7 @@ DEFINE VARIABLE cb-table AS CHARACTER FORMAT "X(256)":U
      LABEL "Объект" 
      VIEW-AS COMBO-BOX INNER-LINES 15
      DROP-DOWN-LIST
-     SIZE 24 BY 1 NO-UNDO.
+     SIZE 22.75 BY 1 NO-UNDO.
 
 DEFINE VARIABLE fi-date-for AS DATE FORMAT "99.99.9999":U 
      LABEL "по" 
@@ -207,9 +211,10 @@ DEFINE FRAME Dialog-Frame
      b-cancel AT ROW 1 COL 11
      fi-date-to AT ROW 1 COL 27.5 COLON-ALIGNED WIDGET-ID 2
      fi-date-for AT ROW 1 COL 44.63 COLON-ALIGNED WIDGET-ID 10
-     cb-table AT ROW 1 COL 66 COLON-ALIGNED WIDGET-ID 8
-     bt-doc-hist AT ROW 1 COL 92 WIDGET-ID 4
+     cb-table AT ROW 1 COL 65.75 COLON-ALIGNED WIDGET-ID 8
+     bt-doc-hist AT ROW 1 COL 91 WIDGET-ID 4
      b-print AT ROW 1 COL 101.5 WIDGET-ID 62
+     b-help AT ROW 1 COL 102.25 WIDGET-ID 64
      br-head AT ROW 2.25 COL 1 WIDGET-ID 200
      SPACE(0.74) SKIP(0.37)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -234,7 +239,7 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB br-head b-print Dialog-Frame */
+/* BROWSE-TAB br-head b-help Dialog-Frame */
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
@@ -366,6 +371,7 @@ DO:
             if AVAILABLE (tt-field) then 
             do:
                 v-table = tt-field.f-table .
+                v-c-table = "c-" + tt-field.f-table .
             end.    
         end.
 
@@ -414,6 +420,7 @@ DO:
 
 { gbl/ed_date.i fi-date-to }
 { gbl/ed_date.i fi-date-for }
+{ gbl/app_help.i }
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
     THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
@@ -467,7 +474,7 @@ PROCEDURE enable_UI :
   DISPLAY fi-date-to fi-date-for cb-table 
       WITH FRAME Dialog-Frame.
   ENABLE b-exit b-cancel fi-date-to fi-date-for cb-table bt-doc-hist b-print 
-         br-head 
+         b-help br-head 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -645,9 +652,9 @@ put stream OutStr-html unformatted
     .
   put stream OutStr-html unformatted
     '<tr>' skip
-    '<td style="width: 100px;"></td>' skip
     '<td style="width: 150px;"></td>' skip
-    '<td style="width: 180px;"></td>' skip
+    '<td style="width: 150px;"></td>' skip
+    '<td style="width: 150px;"></td>' skip
     '<td style="width: 180px;"></td>' skip
     '<td style="width: 180px;"></td>' skip
     '</tr>' skip
@@ -671,7 +678,9 @@ put stream OutStr-html unformatted
     '</TR>'skip       
            
     .
-    for each buf_c-user-log no-lock where buf_c-user-log.corr-date > fi-date-to  and buf_c-user-log.corr-date <= fi-date-for and buf_c-user-log.corr-user-name = p-userid by buf_c-user-log.head-table :
+    for each buf_c-user-log no-lock where buf_c-user-log.corr-date >= fi-date-to  and buf_c-user-log.corr-date <= fi-date-for and buf_c-user-log.corr-user-name = p-userid 
+    by buf_c-user-log.corr-date descending
+    by buf_c-user-log.corr-time descending :
 
       put stream OutStr-html unformatted
         '<TR>' skip
@@ -701,6 +710,7 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 /* ************************  Function Implementations ***************** */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-unique-key Dialog-Frame 
