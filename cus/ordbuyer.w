@@ -1347,7 +1347,7 @@ PROCEDURE my-enable_UI :
   ENABLE b-quit
          b-mark       when LOOKUP("b-mark":U,  bttns) > 0
          b-sel        when LOOKUP("b-sel":U,   bttns) > 0
-         /* b-history */
+         b-history
          b-sch
          b-help
          b-add        when LOOKUP("b-add":U,  bttns) > 0

@@ -192,7 +192,7 @@ DEFINE BROWSE BR-docs
       buf_c-ord-doc.chip-num FORMAT ">>>>>>>>>9"
 buf_c-ord-doc.doc-code COLUMN-LABEL "Заказ"
 buf_c-ord-doc.rcv-code COLUMN-LABEL "Номер !Поставки"
-buf_c-ord-doc.host-code  COLUMN-LABEL "Фирма"
+buf_c-ord-doc.host-code FORMAT ">>>>>>>>9" COLUMN-LABEL "Фирма"
 buf_c-ord-doc.doc-type
 buf_c-ord-doc.status_
 buf_c-ord-doc.flag_     FORMAT "+/-"
@@ -255,8 +255,10 @@ ASSIGN
 
 /* SETTINGS FOR BUTTON B-sch IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
-       BR-docs:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 1.
+ASSIGN 
+       BR-docs:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 1
+       BR-docs:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE
+       BR-docs:COLUMN-MOVABLE IN FRAME Dialog-Frame         = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -685,6 +687,20 @@ end.
       . ~
   end. ~
 
+&scop  disp-field-ord-rcv ~
+  when "~{&field-name~}":U then do: ~
+    create temp-changes. ~
+      assign ~
+        temp-changes.f_name = "~{&field-name~}":U ~
+        temp-changes.l_name = ~{&field-label~} ~
+        temp-changes.v_old = string(buf_c-ord-doc.~{&field-name~}) ~
+        temp-changes.v_new = (if available new_c-ord-doc  ~
+                                   then string(new_c-ord-doc.~{&field-name~})  ~
+else (if available current_ord-doc then string(current_ord-doc.~{&field-name~}) ~
+                                   else string(current_ord-doc-rcv.~{&field-name~}) )) ~
+      . ~
+  end. ~
+
 /* message "HEADER = " skip v-chg-fields. */
 define variable v-nn as integer   no-undo .
 v-nn = num-entries (v-chg-fields) .
@@ -850,10 +866,10 @@ CASE entry(ii, v-chg-fields):
 {&disp-field-ord}
 &scop field-name  user-db-num
 &scop field-label "БД кто менял"
-{&disp-field-ord}
+{&disp-field-ord-rcv}
 &scop field-name  user-name
 &scop field-label "Кто менял"
-{&disp-field-ord}
+{&disp-field-ord-rcv}
 &scop field-name  wrkr
 &scop field-label "Код Кладовщика"
 {&disp-field-ord}

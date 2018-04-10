@@ -258,7 +258,7 @@ buf-OR_trn-doc
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit b-sel b-rep b-close b-PS b-sch ~
-b-print b-help b-mark b-add b-lkp b-chg b-del b-open sch-code sch-date ~
+b-print b-hist b-help b-mark b-add b-lkp b-chg b-del b-open sch-code sch-date ~
 sch-fact br-docs loc-ps B-lkp-2 br-zapr sch-num loc-boss loc-agnt loc-wrkr ~
 loc-creid
 &Scoped-Define DISPLAYED-OBJECTS sch-code sch-date sch-fact loc-ps sch-num ~
@@ -308,6 +308,10 @@ DEFINE BUTTON b-del
 
 DEFINE BUTTON b-help
      LABEL "Помо&щь":L
+     SIZE 2.88 BY 1.
+
+DEFINE BUTTON b-hist
+     LABEL "Ис&тория":L
      SIZE 2.88 BY 1.
 
 DEFINE BUTTON b-lkp
@@ -471,8 +475,9 @@ DEFINE FRAME Dialog-Frame
      b-close AT ROW 1 COL 38
      b-PS AT ROW 1 COL 50 WIDGET-ID 2
      b-reject AT ROW 1 COL 62 WIDGET-ID 6
-     b-sch AT ROW 1 COL 87.5
-     b-print AT ROW 1 COL 90.5
+     b-sch AT ROW 1 COL 84.5
+     b-print AT ROW 1 COL 87.5
+     b-hist AT ROW 1 COL 90.5
      b-help AT ROW 1 COL 93.5
      b-mark AT ROW 2 COL 2
      b-add AT ROW 2 COL 5
@@ -802,6 +807,24 @@ end.
   end.
 
   run ord-del in this-procedure ( recid ( buf-OR_ord-doc ) ) .
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist Dialog-Frame
+ON CHOOSE OF b-hist IN FRAME Dialog-Frame /* История */
+DO:
+if not available buf-OR_ord-doc then return .
+    run cus/ordcdoc.w
+    (
+    parParentProc,
+    buf-OR_ord-doc.host-code,
+    buf-OR_ord-doc.doc-code,
+    "" ) .
 
 END.
 
@@ -1455,7 +1478,7 @@ PROCEDURE enable_UI :
   DISPLAY sch-code sch-date sch-fact loc-ps sch-num loc-boss loc-agnt loc-wrkr
           loc-creid
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit b-sel b-rep b-close b-PS b-sch b-print b-help b-mark b-add
+  ENABLE b-quit b-sel b-rep b-close b-PS b-sch b-print b-hist b-help b-mark b-add
          b-lkp b-chg b-del b-open sch-code sch-date sch-fact br-docs loc-ps
          B-lkp-2 br-zapr sch-num loc-boss loc-agnt loc-wrkr loc-creid b-reject
       WITH FRAME Dialog-Frame.
@@ -1514,6 +1537,7 @@ PROCEDURE my-enable_UI :
          b-mark       when lookup("b-mark":U,  bttns) > 0
          b-sel        when lookup("b-sel":U,   bttns) > 0
          b-sch
+         b-hist
          b-help
          b-add        when lookup("b-add":U,  bttns) > 0 and not ( par-mode begins "rc" )
          b-lkp
