@@ -1481,6 +1481,7 @@ define variable      v-water-qnty as decimal no-undo.
             if tt-param.strfrfile = 'mass_total':U  then do: 
                      assign
                 tt-meas-file.log-brutto = yes
+                tt-meas-file.measure-cli-qnty = decimal( trim( entry( 2, v_string-tmp, '=' ) ) )
               . 
                 end.
           end.
@@ -1621,6 +1622,36 @@ define variable      v-water-qnty as decimal no-undo.
                   end.
               end.
           end.
+        if vartarirvalue = "no" or vartarirvalue = "" then 
+        do:
+          if tt-meas-file.log-brutto = yes then 
+          do:
+            if tt-meas-file.density <> 0 or tt-meas-file.density <> ? then 
+            do:
+              assign
+                tt-meas-file.measure-qnty    = tt-meas-file.measure-cli-qnty / tt-meas-file.density 
+                tt-meas-file.brutto-qnty     = tt-meas-file.measure-qnty
+                tt-meas-file.brutto-cli-qnty = tt-meas-file.density * tt-meas-file.brutto-qnty
+                .
+            end.  
+            else 
+            do:
+              if tt-meas-file.brutto-qnty <> 0 or tt-meas-file.brutto-qnty <> ? then 
+              do:
+                assign
+                  tt-meas-file.density         = tt-meas-file.measure-cli-qnty / tt-meas-file.brutto-qnty
+                  tt-meas-file.measure-qnty    = tt-meas-file.brutto-qnty
+                  tt-meas-file.brutto-cli-qnty = tt-meas-file.density * tt-meas-file.brutto-qnty
+                  .
+              end.
+              else 
+              do:
+                put stream str-err unformatted 
+                  'Не заданы объем и плотность'  skip .
+              end.    
+            end.  
+          end.  
+        end.  
 
                 if tt-meas-file.level-petrol  = 0 and
                    tt-meas-file.level-total  <> 0 then do:
@@ -1770,7 +1801,9 @@ define variable      v-water-qnty as decimal no-undo.
       first tt-meas-file
       where tt-meas-file.obj-type = tt-meas.obj-type
         and tt-meas-file.obj-code = tt-meas.obj-code
-        and tt-meas-file.pl-code  = tt-meas.pl-code
+        and ((tt-meas-file.pl-code  = tt-meas.pl-code
+        and tt-meas.pl-code <> 0) or tt-meas-file.loc1 = tt-meas.loc1) 
+        
     on error undo, return error return-value
     :
       assign

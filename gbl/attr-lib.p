@@ -12784,7 +12784,7 @@ end procedure.
 &scop user-can-edit-attr-int-point false
 &scop output-display-attr-int-point true
 &scop other-attr-int-point '':u
-&scop news-attr-int-point no
+&scop news-attr-int-point yes
 &scop manual-edit-attr-int-point 0
 &scop batch-edit-attr-int-point 0
 

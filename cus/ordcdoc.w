@@ -179,7 +179,7 @@ DEFINE QUERY BR-docs FOR
 DEFINE BROWSE BR-changes
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-changes Dialog-Frame _FREEFORM
   QUERY BR-changes DISPLAY
-      temp-changes.l_name COLUMn-LABEL "Изменилось" format "X(30)"
+      temp-changes.l_name COLUMn-LABEL "Изменилось" format "X(130)"
       temp-changes.v_old COLUMn-LABEL "Было" format "X(35)"
       temp-changes.v_new COLUMn-LABEL "Стало" format "X(35)"
 /* _UIB-CODE-BLOCK-END */
@@ -192,7 +192,7 @@ DEFINE BROWSE BR-docs
       buf_c-ord-doc.chip-num FORMAT ">>>>>>>>>9"
 buf_c-ord-doc.doc-code COLUMN-LABEL "Заказ"
 buf_c-ord-doc.rcv-code COLUMN-LABEL "Номер !Поставки"
-buf_c-ord-doc.host-code  COLUMN-LABEL "Фирма"
+buf_c-ord-doc.host-code FORMAT ">>>>>>>>9" COLUMN-LABEL "Фирма"
 buf_c-ord-doc.doc-type
 buf_c-ord-doc.status_
 buf_c-ord-doc.flag_     FORMAT "+/-"
@@ -201,16 +201,16 @@ buf_c-ord-doc.fact-date FORMAT "99/99/99"
 buf_c-ord-doc.ship-date COLUMN-LABEL "Доставка" FORMAT "99/99/99"
 buf_c-ord-doc.cli-type + " " + string(buf_c-ord-doc.cli-code) COLUMN-LABEL "Поставщик" FORMAT "x(10)"
 buf_c-ord-doc.obj-type + " " + string(buf_c-ord-doc.obj-code) COLUMN-LABEL "Объект" FORMAT "x(10)"
-STRING(buf_c-ord-doc.ship-time, "HH:MM")  FORMAT "x(6)" @ buf_c-ord-doc.ship-time COLUMN-LABEL "Время"
+STRING(buf_c-ord-doc.ship-time, "HH:MM")  FORMAT "x(6)" @ buf_c-ord-doc.ship-time COLUMN-LABEL "Время доставки"
 /*STRING(buf_c-ord-doc.fact-ship-time, "HH:MM")  FORMAT "x(6)" @ buf_c-ord-doc.fact-ship-time COLUMN-LABEL "Факт" */
 buf_c-ord-doc.cons-code COLUMN-LABEL "СЗФП"
 buf_c-ord-doc.sys-date
-STRING(buf_c-ord-doc.sys-time-int, "HH:MM")  FORMAT "x(6)" @ buf_c-ord-doc.sys-time-int
-buf_c-ord-doc.corr-date  COLUMN-LABEL "Дата!изменения"    LABEL-FGCOLOR 15 LABEL-BGCOLOR 3
-STRING(buf_c-ord-doc.corr-time, "HH:MM")  FORMAT "x(6)" @ buf_c-ord-doc.corr-time COLUMN-LABEL "Время!изменения" LABEL-FGCOLOR 15 LABEL-BGCOLOR 3
-buf_c-ord-doc.corr-user-name   COLUMN-LABEL "Кто менял!Код"    LABEL-FGCOLOR 15 LABEL-BGCOLOR 3
-usrfulnf (buf_c-ord-doc.corr-user-name) COLUMN-LABEL "Кто менял!ФИО"    LABEL-FGCOLOR 15 LABEL-BGCOLOR 3
-buf_c-ord-doc.corr-user-db-num COLUMN-LABEL "В !БД"  FORMAT ">>>>>9"  LABEL-FGCOLOR 15 LABEL-BGCOLOR 3
+STRING(buf_c-ord-doc.sys-time-int, "HH:MM")  FORMAT "x(6)" @ buf_c-ord-doc.sys-time-int COLUMN-LABEL "Время"
+buf_c-ord-doc.corr-date  COLUMN-LABEL "Дата!изменения"   /* LABEL-FGCOLOR 15 LABEL-BGCOLOR 3 */
+STRING(buf_c-ord-doc.corr-time, "HH:MM")  FORMAT "x(6)" @ buf_c-ord-doc.corr-time COLUMN-LABEL "Время!изменения" /*LABEL-FGCOLOR 15 LABEL-BGCOLOR 3*/
+buf_c-ord-doc.corr-user-name   COLUMN-LABEL "Кто менял!Код"    /*LABEL-FGCOLOR 15 LABEL-BGCOLOR 3*/
+usrfulnf (buf_c-ord-doc.corr-user-name) COLUMN-LABEL "Кто менял!ФИО"   /* LABEL-FGCOLOR 15 LABEL-BGCOLOR 3*/
+buf_c-ord-doc.corr-user-db-num COLUMN-LABEL "В !БД"  FORMAT ">>>>>9" /* LABEL-FGCOLOR 15 LABEL-BGCOLOR 3*/
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS NO-COLUMN-SCROLLING SEPARATORS SIZE 97.75 BY 10.04.
@@ -255,8 +255,10 @@ ASSIGN
 
 /* SETTINGS FOR BUTTON B-sch IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
-       BR-docs:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 1.
+ASSIGN 
+       BR-docs:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 1
+       BR-docs:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE
+       BR-docs:COLUMN-MOVABLE IN FRAME Dialog-Frame         = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -685,6 +687,20 @@ end.
       . ~
   end. ~
 
+&scop  disp-field-ord-rcv ~
+  when "~{&field-name~}":U then do: ~
+    create temp-changes. ~
+      assign ~
+        temp-changes.f_name = "~{&field-name~}":U ~
+        temp-changes.l_name = ~{&field-label~} ~
+        temp-changes.v_old = string(buf_c-ord-doc.~{&field-name~}) ~
+        temp-changes.v_new = (if available new_c-ord-doc  ~
+                                   then string(new_c-ord-doc.~{&field-name~})  ~
+else (if available current_ord-doc then string(current_ord-doc.~{&field-name~}) ~
+                                   else string(current_ord-doc-rcv.~{&field-name~}) )) ~
+      . ~
+  end. ~
+
 /* message "HEADER = " skip v-chg-fields. */
 define variable v-nn as integer   no-undo .
 v-nn = num-entries (v-chg-fields) .
@@ -850,10 +866,10 @@ CASE entry(ii, v-chg-fields):
 {&disp-field-ord}
 &scop field-name  user-db-num
 &scop field-label "БД кто менял"
-{&disp-field-ord}
+{&disp-field-ord-rcv}
 &scop field-name  user-name
 &scop field-label "Кто менял"
-{&disp-field-ord}
+{&disp-field-ord-rcv}
 &scop field-name  wrkr
 &scop field-label "Код Кладовщика"
 {&disp-field-ord}

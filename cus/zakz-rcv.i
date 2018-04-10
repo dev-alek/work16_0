@@ -1613,7 +1613,7 @@ define variable v-mail as logical no-undo.
 
 v-mail = b-email:load-image ("cmp/www.bmp").
 v-ok = b-cons:load-IMAGE ("cmp/group.bmp") .
-ENABLE b-quit  b-print b-sch b-help br-docs  sch-code sch-date sch-fact ed-notes  b-rep  b-exec b-cons b-email
+ENABLE b-quit  b-print b-sch b-history b-help br-docs  sch-code sch-date sch-fact ed-notes  b-rep  b-exec b-cons b-email
 &if "{1}" = "true" &then
  b-print-rcv
  br-rcv
@@ -1747,8 +1747,6 @@ end case.
 &scop flt-open-waitfram             true
 
 define variable l-open-query as logical   no-undo .
-
-disable b-history with frame {&frame-name} .
 
 if Lookup("nob-exec",p-buttons) <> 0 then disable b-exec WITH FRAME {&frame-name}. else enable b-exec  WITH FRAME {&frame-name}.
 if Lookup("nob-copy",p-buttons) <> 0 then disable b-copy WITH FRAME {&frame-name}. else enable b-copy  WITH FRAME {&frame-name}.

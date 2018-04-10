@@ -373,6 +373,7 @@ on error undo, return error
 
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-ext-classif          ":U, input "c-ext-classif               ":U, input "внешнего классификатора                         ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
 
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "fbr-doc                ":U, input "fbr-doc                     ":U, input "документа производства                          ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fbr-doc              ":U, input "c-fbr-doc                   ":U, input "документа производства                          ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fbr-doc              ":U, input "c-fbr-line                  ":U, input "документа производства                          ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
 

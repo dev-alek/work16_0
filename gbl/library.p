@@ -12093,6 +12093,24 @@ procedure tblnmusr :
           p-user-name = "Хранения тов. на скл. месте"
           .
       end.    
+      when {&table_pl-pump}
+      THEN do:
+          assign
+          p-user-name = "Склад.место ТРК"
+          .
+      end.         
+      when {&table_pl-pump-nozzle}
+      THEN do:
+          assign
+          p-user-name = "Соотв. пистолета и ТРК"
+          .
+      end.  
+      when {&table_shift-obj}
+      THEN do:
+          assign
+          p-user-name = "Смены"
+          .
+      end.       
       when "report"
       THEN do:
           assign

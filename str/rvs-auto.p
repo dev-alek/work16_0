@@ -210,7 +210,7 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
         ) .
       undo block_obj, next block_obj .
     end.
-
+/*
     find first buf_rvs-doc no-lock
       where buf_rvs-doc.obj-type =  v-obj-type
         and buf_rvs-doc.obj-code =  v-obj-code
@@ -229,7 +229,7 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
         ) .
       undo block_obj, next block_obj .
     end.
-
+*/
     find first cur_shift-obj no-lock
       where cur_shift-obj.obj-type = v-obj-type
         and cur_shift-obj.obj-code = v-obj-code

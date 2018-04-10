@@ -108,6 +108,7 @@ define variable  SendOption as char no-undo.
 define variable  from-card as logical no-undo.
 define variable  from-parts as logical no-undo.
 define variable v-doc-rec as recid no-undo .
+define variable v-mess		as character no-undo .
 define variable line-rec    as recid             no-undo.
 define variable gds-rec     as recid             no-undo.
 define variable glog       as logical no-undo .
@@ -1944,7 +1945,8 @@ view-as alert-box QUESTION buttons YES-NO update v-update.
                   NEXT _to-gds.
                 end.
                 else do:
-                  ves-err = ves-err + 1.
+				v-mess =  return-value .                  
+				ves-err = ves-err + 1.
                   next _TO-GDS.
                 end.
               end. /*if error-status:error then do*/
@@ -1974,7 +1976,8 @@ view-as alert-box QUESTION buttons YES-NO update v-update.
                     "                  Эти товары на весы НЕ ДОБАВЛЕНЫ !!!!"
                   ,b-scales.scales-num
                   ,ves-err
-                  ,{&new-line})
+                  ,{&new-line}
+				  ,v-mess)
         view-as alert-box warning.
       end. /*if ves-err > 0 then do:*/
       /* уничтожение лишних записей */

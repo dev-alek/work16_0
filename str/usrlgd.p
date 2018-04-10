@@ -48,7 +48,7 @@ do
   
     case p-table-name
         :
-        when "c-fbr-doc":U
+        when "c-fbr-doc":U or when "fbr-doc"
         then 
             do:
                 run str/fbrdocsh.w (
@@ -98,7 +98,7 @@ do
 
                 end.
             end.
-        when "trn-doc" then 
+        when "trn-doc" or when "c-trn-doc" then 
             do:
                 find first ub.trn-doc where ub.trn-doc.doc-code = entry( 1, v-field-value-list, {&delim-key} ) no-error.
                 if AVAILABLE (ub.trn-doc) then 
@@ -122,31 +122,16 @@ do
 
                 end.
             end.   
-        when "rvs-doc" then 
+        when "rvs-doc" or when "c-rvs-doc" then 
             do:
-         
-                find first ub.rvs-doc where ub.rvs-doc.rvs-code = entry( 1, v-field-value-list, {&delim-key} ) no-error.
-                if AVAILABLE (ub.rvs-doc) then 
-                do:
-                    run str/rvscdocs.w ( input        parparentproc,
+                    run str/rvscdocs.w 
+                    (   input        parparentproc,
                         input        "":U,
                         input        "one":U,
-                        input        rvs-doc.rvs-code,
-                        input-output v-list                  ).
-                end. 
-            end.
-        when "c-rvs-doc" then 
-            do:
-                find first ub.c-rvs-doc where ub.c-rvs-doc.rvs-code = entry( 1, v-field-value-list, {&delim-key} ) no-error.
-                if AVAILABLE (ub.c-rvs-doc) then 
-                do:
-                    run str/rvscdocs.w ( input        parparentproc,
-                        input        "":U,
-                        input        "one":U,
-                        input        c-rvs-doc.rvs-code,
-                        input-output v-list                  ).
-                end.
-            end.      
+                        input        entry( 1, v-field-value-list, {&delim-key} ),
+                        input-output v-list                  ) 
+                        no-error .
+        end.       
         when "c-inkas" then 
             do:
                 find first ub.c-inkas where ub.c-inkas.inkas-code = entry( 1, v-field-value-list, {&delim-key} ) no-error.

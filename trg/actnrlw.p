@@ -45,7 +45,7 @@ on end-key undo main-block, return error substitute('actnrlw end-key main-block,
     
         run cur-time in this-procedure(output v-date, output v-time).
         create buf_c-action-role.
-        buffer-copy old-action-role to buf_c-action-role
+/*        buffer-copy old-action-role to buf_c-action-role*/
             assign
             buf_c-action-role.db-num           =  ub.action-role.db-num
             buf_c-action-role.action-head-code =  ub.action-role.action-head-code

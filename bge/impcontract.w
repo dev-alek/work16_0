@@ -182,7 +182,7 @@ DEFINE BROWSE br-contract
     tt-contract.contract-date FORMAT "99/99/9999":U       LABEL "Дата"
     tt-contract.contract-date-beg FORMAT "99/99/9999":U   LABEL "Начало"
     tt-contract.contract-date-end FORMAT "99/99/9999":U   LABEL "Конец"
-    tt-contract.host-code FORMAT "99999":U WIDTH 13.63    LABEL "Фирма"
+    tt-contract.host-code FORMAT "999999999":U WIDTH 13.63    LABEL "Фирма"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 95.5 BY 15.5 FIT-LAST-COLUMN.
@@ -266,26 +266,26 @@ ON ROW-DISPLAY OF br-contract IN FRAME Dialog-Frame
     DO:
    
      
-            if tt-contract.contract-type = ""  then 
-            do:
-                tt-contract.contract-type:BGCOLOR in browse br-contract = red_COLOR.
-            end.
-            if tt-contract.contract-prn-code = "" then 
-            do:
-                tt-contract.contract-prn-code:BGCOLOR in browse br-contract = red_COLOR.
-            end.
-            if tt-contract.cli-code = 0 then 
-            do:
-                tt-contract.cli-code:BGCOLOR in browse br-contract = red_COLOR.
-            end.    
-            if tt-contract.cli-type = "" then 
-            do:
-                tt-contract.cli-type:BGCOLOR in browse br-contract = red_COLOR.
-            end.    
-            if tt-contract.doc-type = "" then 
-            do:
-                tt-contract.doc-type:BGCOLOR in browse br-contract = red_COLOR.
-            end.    
+        if tt-contract.contract-type = ""  then 
+        do:
+            tt-contract.contract-type:BGCOLOR in browse br-contract = red_COLOR.
+        end.
+        if tt-contract.contract-prn-code = "" then 
+        do:
+            tt-contract.contract-prn-code:BGCOLOR in browse br-contract = red_COLOR.
+        end.
+        if tt-contract.cli-code = 0 then 
+        do:
+            tt-contract.cli-code:BGCOLOR in browse br-contract = red_COLOR.
+        end.    
+        if tt-contract.cli-type = "" then 
+        do:
+            tt-contract.cli-type:BGCOLOR in browse br-contract = red_COLOR.
+        end.    
+        if tt-contract.doc-type = "" then 
+        do:
+            tt-contract.doc-type:BGCOLOR in browse br-contract = red_COLOR.
+        end.    
 
     END.
 
@@ -307,7 +307,7 @@ ON CHOOSE OF Btn_change IN FRAME Dialog-Frame /* Изменить */
         DEFINE VARIABLE v-contract-date-beg as date      no-undo .
         DEFINE VARIABLE v-contract-date-end as date      no-undo .
         DEFINE VARIABLE v-host-code         as integer   no-undo .
-    
+
         assign
             v-doc-type          = tt-contract.doc-type
             v-cli-type          = tt-contract.cli-type
@@ -332,16 +332,16 @@ ON CHOOSE OF Btn_change IN FRAME Dialog-Frame /* Изменить */
             ) no-error .                                                                        
 
         find first buf_tt-contract where buf_tt-contract.contract-prn-code = tt-contract.contract-prn-code no-error .
-        if AVAILABLE buf_tt-contract then 
+        if not AVAILABLE buf_tt-contract then 
         do:
-            delete buf_tt-contract .
+            create buf_tt-contract .
+            tt-contract.contract-prn-code = v-contract-prn-code .
         end.    
-        create tt-contract .
+        
         assign
             tt-contract.doc-type          = v-doc-type
             tt-contract.cli-type          = v-cli-type
             tt-contract.cli-code          = v-cli-code
-            tt-contract.contract-prn-code = v-contract-prn-code
             tt-contract.contract-type     = v-contract-type
             tt-contract.contract-date     = v-contract-date
             tt-contract.contract-date-beg = v-contract-date-beg
@@ -501,20 +501,21 @@ PROCEDURE proc-choose-file :
                 tt-contract.log-error = yes .
                 tt-contract.cli-type = "" .
             end.
-            if tt-contract.cli-code <> 0 then do:
-            find first buf_clients no-lock where buf_clients.obj-code = tt-contract.cli-code and buf_clients.obj-type = tt-contract.cli-type no-error .
-            if not AVAILABLE buf_clients then 
+            if tt-contract.cli-code <> 0 then 
             do:
-                put stream str-err unformatted
-                    "Нет поставщика с типом" + " " + tt-contract.cli-type + " и кодом " + string(tt-contract.cli-code)
-                    skip .
-                tt-contract.log-error = yes .
-                tt-contract.cli-code = 0 .
-            end.
-            else 
-            do:
-                tt-contract.cli-name = buf_clients.obj-name .
-            end.    
+                find first buf_clients no-lock where buf_clients.obj-code = tt-contract.cli-code and buf_clients.obj-type = tt-contract.cli-type no-error .
+                if not AVAILABLE buf_clients then 
+                do:
+                    put stream str-err unformatted
+                        "Нет поставщика с типом" + " " + tt-contract.cli-type + " и кодом " + string(tt-contract.cli-code)
+                        skip .
+                    tt-contract.log-error = yes .
+                    tt-contract.cli-code = 0 .
+                end.
+                else 
+                do:
+                    tt-contract.cli-name = buf_clients.obj-name .
+                end.    
             end.
             if tt-contract.cli-code <>  0 and tt-contract.cli-type <> "" and tt-contract.doc-type <> "" and (tt-contract.contract-prn-code = "" or tt-contract.contract-prn-code = ?) then 
             do:
@@ -547,11 +548,12 @@ PROCEDURE proc-choose-file :
         message substitute("Импорт контрактов завершен.")
             view-as alert-box.
     END.
-for each tt-contract:            if tt-contract.doc-type = "" and tt-contract.cli-type = "" and tt-contract.cli-code = 0 then 
-            do:
-                DELETE tt-contract .
-            end.
-            end.    
+    for each tt-contract:            
+        if tt-contract.doc-type = "" and tt-contract.cli-type = "" and tt-contract.cli-code = 0 then 
+        do:
+            DELETE tt-contract .
+        end.
+    end.    
     open query br-contract for each tt-contract .
 END PROCEDURE.
 
@@ -571,18 +573,24 @@ PROCEDURE create-proc :
     define variable f-code         as integer   no-undo .
 
     for each tt-contract no-lock where tt-contract.log-error = no and tt-contract.doc-type <> "":
-
-        run gen-b-code in this-procedure ( input {&gbl-ct-code}, output f-code) no-error .
-        if error-status:error then 
+        find first b_contract EXCLUSIVE-LOCK where b_contract.contract-prn-code = tt-contract.contract-prn-code no-error .
+        if not AVAILABLE (b_contract) then 
         do:
-            message "Ошибка при генерации внутреннего № договора" view-as alert-box ERROR.
-            return error.
+            run gen-b-code in this-procedure ( input {&gbl-ct-code}, output f-code) no-error .
+            if error-status:error then 
+            do:
+                message "Ошибка при генерации внутреннего № договора" view-as alert-box ERROR.
+                return error.
+            end.
+            { gbl/curdburt.i  tt-contract.user-db-num   tt-contract.user-name   p-sys-date   p-sys-time   p-sys-time-int  }
+            create b_contract .
+            assign
+                b_contract.contract-code     = f-code
+                b_contract.contract-prn-code = tt-contract.contract-prn-code .
         end.
-        { gbl/curdburt.i  tt-contract.user-db-num   tt-contract.user-name   p-sys-date   p-sys-time   p-sys-time-int  }
-        create b_contract .
         assign
             b_contract.doc-type          = tt-contract.doc-type
-            b_contract.contract-code     = f-code
+            
             b_contract.host-code         = tt-contract.host-code
             b_contract.contract-type     = tt-contract.contract-type
             b_contract.status_           = {&current-contr}

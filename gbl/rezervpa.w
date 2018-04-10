@@ -73,10 +73,10 @@ v-tthg = buffer thbjattr_thbj-attr-g:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help I-invngbeg I-invngend ~
-I-negmanuf I-negparts I-prcshrs0 I-prcshrs1 I-prdocfc0 I-prdocrs1 I-prsalpr ~
-I-parts-bc I-prcshfc0 I-prdocrs0 B-1 invngbeg invngend B-2 B-3 negmanuf B-4 ~
-negparts v-negparts B-10 prcshfc0 v-prcshfc0 parts-bc B-7 prdocfc0 B-9 ~
+&Scoped-Define ENABLED-OBJECTS B-exit I-invngbeg I-invngend I-negmanuf ~
+I-negparts I-prcshrs0 I-prcshrs1 I-prdocfc0 I-prdocrs1 I-prsalpr I-parts-bc ~
+I-prcshfc0 I-prdocrs0 B-quit B-Help B-1 invngbeg invngend B-2 B-3 negmanuf ~
+B-4 negparts v-negparts B-10 prcshfc0 v-prcshfc0 parts-bc B-7 prdocfc0 B-9 ~
 prsalpr B-6 v-prcshrs1 B-5 v-prcshrs0 prcshrs1 prcshrs0 B-8 v-prdocrs1 B-11 ~
 v-prdocrs0 prdocrs1 prdocrs0 v-invngbeg v-invngend v-negmanuf v-parts-bc ~
 v-prdocfc0 v-prsalpr 
@@ -175,7 +175,7 @@ DEFINE VARIABLE v-negparts AS CHARACTER
 
 DEFINE VARIABLE v-prcshfc0 AS CHARACTER 
      VIEW-AS EDITOR NO-BOX
-     SIZE 90.13 BY 1.46 NO-UNDO.
+     SIZE 89.13 BY 1.46 NO-UNDO.
 
 DEFINE VARIABLE v-prcshrs0 AS CHARACTER 
      VIEW-AS EDITOR NO-BOX
@@ -224,11 +224,11 @@ DEFINE VARIABLE v-parts-bc AS CHARACTER FORMAT "X(256)":U
 
 DEFINE VARIABLE v-prdocfc0 AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 88.88 BY 1 NO-UNDO.
+     SIZE 88 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-prsalpr AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 89.88 BY 1 NO-UNDO.
+     SIZE 89 BY 1 NO-UNDO.
 
 DEFINE IMAGE I-invngbeg
      FILENAME "cmp/info.bmp":U
@@ -331,22 +331,22 @@ DEFINE VARIABLE prdocrs1 AS CHARACTER
 DEFINE VARIABLE parts-bc AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 60.5 BY 1 NO-UNDO.
+     SIZE 2.13 BY 1 NO-UNDO.
 
 DEFINE VARIABLE prcshfc0 AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 86.75 BY 1 NO-UNDO.
+     SIZE 2.25 BY 1 NO-UNDO.
 
 DEFINE VARIABLE prdocfc0 AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 59.5 BY 1 NO-UNDO.
+     SIZE 2.25 BY 1 NO-UNDO.
 
 DEFINE VARIABLE prsalpr AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 60.5 BY 1 NO-UNDO.
+     SIZE 2.25 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -366,7 +366,7 @@ DEFINE FRAME Dialog-Frame
      v-negparts AT ROW 4.04 COL 17.5 NO-LABEL WIDGET-ID 272
      B-10 AT ROW 5.42 COL 3.5 WIDGET-ID 246
      prcshfc0 AT ROW 5.42 COL 6.75 WIDGET-ID 182
-     v-prcshfc0 AT ROW 5.5 COL 8.5 NO-LABEL WIDGET-ID 270
+     v-prcshfc0 AT ROW 5.5 COL 9.5 NO-LABEL WIDGET-ID 270
      parts-bc AT ROW 7.04 COL 3.88 WIDGET-ID 130
      B-7 AT ROW 8.08 COL 3.5 WIDGET-ID 92
      prdocfc0 AT ROW 8.08 COL 6.75 WIDGET-ID 96
@@ -388,8 +388,8 @@ DEFINE FRAME Dialog-Frame
      v-invngend AT ROW 2 COL 79.5 NO-LABEL WIDGET-ID 18
      v-negmanuf AT ROW 2.96 COL 17.5 NO-LABEL WIDGET-ID 54
      v-parts-bc AT ROW 7.04 COL 6.75 NO-LABEL WIDGET-ID 132
-     v-prdocfc0 AT ROW 8.17 COL 8.63 NO-LABEL WIDGET-ID 98
-     v-prsalpr AT ROW 9.25 COL 8.63 NO-LABEL WIDGET-ID 114
+     v-prdocfc0 AT ROW 8.17 COL 9.5 NO-LABEL WIDGET-ID 98
+     v-prsalpr AT ROW 9.25 COL 9.5 NO-LABEL WIDGET-ID 114
      I-invngbeg AT ROW 2 COL 1 WIDGET-ID 10
      I-invngend AT ROW 2.08 COL 81.5 WIDGET-ID 34
      I-negmanuf AT ROW 2.96 COL 1 WIDGET-ID 50
@@ -880,9 +880,9 @@ PROCEDURE enable_UI :
           v-prdocrs1 v-prdocrs0 prdocrs1 prdocrs0 v-invngbeg v-invngend 
           v-negmanuf v-parts-bc v-prdocfc0 v-prsalpr 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit B-Help I-invngbeg I-invngend I-negmanuf I-negparts 
-         I-prcshrs0 I-prcshrs1 I-prdocfc0 I-prdocrs1 I-prsalpr I-parts-bc 
-         I-prcshfc0 I-prdocrs0 B-1 invngbeg invngend B-2 B-3 negmanuf B-4 
+  ENABLE B-exit I-invngbeg I-invngend I-negmanuf I-negparts I-prcshrs0 
+         I-prcshrs1 I-prdocfc0 I-prdocrs1 I-prsalpr I-parts-bc I-prcshfc0 
+         I-prdocrs0 B-quit B-Help B-1 invngbeg invngend B-2 B-3 negmanuf B-4 
          negparts v-negparts B-10 prcshfc0 v-prcshfc0 parts-bc B-7 prdocfc0 B-9 
          prsalpr B-6 v-prcshrs1 B-5 v-prcshrs0 prcshrs1 prcshrs0 B-8 v-prdocrs1 
          B-11 v-prdocrs0 prdocrs1 prdocrs0 v-invngbeg v-invngend v-negmanuf 

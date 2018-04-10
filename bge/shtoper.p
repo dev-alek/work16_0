@@ -164,7 +164,10 @@ define variable vss-description as character no-undo init "Ёкспорт XML смены".
         field state-add-quantity as decimal
         field system-qnty as decimal
         field systen-cli-qnty as decimal
-
+        field temperature as decimal 
+        field level-petrol as decimal
+        field level-water as decimal
+        field level-total as decimal
         index pi is primary unique
             gds-code
             pl-code
@@ -207,7 +210,10 @@ define variable vss-description as character no-undo init "Ёкспорт XML смены".
         field state-add-quantity as decimal
         field system-qnty as decimal
         field systen-cli-qnty as decimal
-
+        field temperature as decimal 
+        field level-petrol as decimal
+        field level-total as decimal 
+        field level-water as decimal
         index pi is primary unique
             gds-code
             pl-code
@@ -1476,6 +1482,11 @@ end.
                   buf_temp_stkPlShiftEnd.state-density  = buf_rvs-line.state-density
                   buf_temp_stkPlShiftEnd.system-qnty = buf_rvs-line.system-qnty
                   buf_temp_stkPlShiftEnd.systen-cli-qnty = buf_rvs-line.system-cli-qnty
+				  buf_temp_stkPlShiftEnd.temperature     = buf_rvs-line.state-temperature
+              	  buf_temp_stkPlShiftEnd.level-petrol    = buf_rvs-line.state-level-petrol
+              	  buf_temp_stkPlShiftEnd.level-total     = buf_rvs-line.state-level-total
+              	  buf_temp_stkPlShiftEnd.level-water     = buf_rvs-line.state-level-water
+              	  buf_temp_stkPlShiftEnd.state-add-quantity        = buf_rvs-line.state-add-qnty
                   .
                 end. /*if available buf_goods*/
             end. /*if not available buf_temp_stkPlShiftEnd*/
@@ -1580,6 +1591,11 @@ end.
                   buf_temp_stkPlShiftOpen.state-density  = buf_rvs-line.state-density
                   buf_temp_stkPlShiftOpen.system-qnty = buf_rvs-line.system-qnty
                   buf_temp_stkPlShiftOpen.systen-cli-qnty = buf_rvs-line.system-cli-qnty
+                  buf_temp_stkPlShiftOpen.temperature =  buf_rvs-line.state-temperature
+                  buf_temp_stkPlShiftOpen.level-petrol =  buf_rvs-line.state-level-petrol
+                  buf_temp_stkPlShiftOpen.level-total =  buf_rvs-line.state-level-total
+                  buf_temp_stkPlShiftOpen.level-water =  buf_rvs-line.state-level-water
+                   
                   .
                 end. /*if available buf_goods*/
             end. /*if not available buf_temp_stkPlShiftEnd*/
@@ -1634,19 +1650,28 @@ end.
               run wp-xmltagput( input 4, "ssePlFactQnty", input string( buf_temp_stkPlShiftOpen.qnty       ), input 0 ).
               run wp-xmltagput( input 4, "ssePlCliFactQnty", input string( buf_temp_stkPlShiftOpen.cli-qnty       ), input 0 ).
               run wp-xmltagput( input 4, "ssePlDensity", input string( buf_temp_stkPlShiftOpen.state-density), input 0 ).
+              run wp-xmltagput( input 4, "ssePlTemperature", input string( buf_temp_stkPlShiftOpen.temperature), input 0 ).
+              run wp-xmltagput( input 4, "ssePlLevelPetrol", input string( buf_temp_stkPlShiftOpen.level-petrol), input 0 ).
+              run wp-xmltagput( input 4, "ssePlLevelTotal", input string( buf_temp_stkPlShiftOpen.level-total), input 0 ).
+              run wp-xmltagput( input 4, "ssePlLevelWater", input string( buf_temp_stkPlShiftOpen.level-water), input 0 ).
+              
               run wp-xmltagput( input 4, "ssePlAddQuantity", input string( buf_temp_stkPlShiftOpen.state-add-quantity), input 0 ).
               run wp-xmltagput( input 4, "ssePlSysQnty", input string( buf_temp_stkPlShiftOpen.system-qnty), input 0 ).
               run wp-xmltagput( input 4, "ssePlSysWeight", input string( buf_temp_stkPlShiftOpen.systen-cli-qnty), input 0 ).
               run wp-xmltagclose( input 3, input "stkPlShiftOpen").
            end.
-              run wp-xmltagopen( input 3, input "stkPlShiftEnd", input "" ).
-              run wp-xmltagput( input 4, "ssePlCode", input string( buf_temp_stkPlShiftEnd.pl-code       ), input 0 ).
-              run wp-xmltagput( input 4, "ssePlFactQnty", input string( buf_temp_stkPlShiftEnd.qnty       ), input 0 ).
-              run wp-xmltagput( input 4, "ssePlCliFactQnty", input string( buf_temp_stkPlShiftEnd.cli-qnty       ), input 0 ).
-              run wp-xmltagput( input 4, "ssePlDensity", input string( buf_temp_stkPlShiftEnd.state-density), input 0 ).
-              run wp-xmltagput( input 4, "ssePlAddQuantity", input string( buf_temp_stkPlShiftEnd.state-add-quantity), input 0 ).
-              run wp-xmltagput( input 4, "ssePlSysQnty", input string( buf_temp_stkPlShiftEnd.system-qnty), input 0 ).
-              run wp-xmltagput( input 4, "ssePlSysWeight", input string( buf_temp_stkPlShiftEnd.systen-cli-qnty), input 0 ).
+          run wp-xmltagopen( input 3, input "stkPlShiftEnd", input "" ).
+          run wp-xmltagput( input 4, "ssePlCode", input string( buf_temp_stkPlShiftEnd.pl-code       ), input 0 ).
+          run wp-xmltagput( input 4, "ssePlFactQnty", input string( buf_temp_stkPlShiftEnd.qnty       ), input 0 ).
+          run wp-xmltagput( input 4, "ssePlCliFactQnty", input string( buf_temp_stkPlShiftEnd.cli-qnty       ), input 0 ).
+          run wp-xmltagput( input 4, "ssePlDensity", input string( buf_temp_stkPlShiftEnd.state-density), input 0 ).
+          run wp-xmltagput( input 4, "ssePlTemperature", input string(  buf_temp_stkPlShiftEnd.temperature), input 0 ).
+          run wp-xmltagput( input 4, "ssePlLevelPetrol", input string(  buf_temp_stkPlShiftEnd.level-petrol), input 0 ).
+          run wp-xmltagput( input 4, "ssePlLevelTotal", input string(  buf_temp_stkPlShiftEnd.level-total), input 0 ).
+          run wp-xmltagput( input 4, "ssePlLevelWater", input string(  buf_temp_stkPlShiftEnd.level-water), input 0 ).          
+          run wp-xmltagput( input 4, "ssePlAddQuantity", input string( buf_temp_stkPlShiftEnd.state-add-quantity), input 0 ).
+          run wp-xmltagput( input 4, "ssePlSysQnty", input string( buf_temp_stkPlShiftEnd.system-qnty), input 0 ).
+          run wp-xmltagput( input 4, "ssePlSysWeight", input string( buf_temp_stkPlShiftEnd.systen-cli-qnty), input 0 ).
               run wp-xmltagclose( input 3, input "stkPlShiftEnd").
       end.
         for each buf_temp_stkTrkShiftEnd where buf_temp_stkTrkShiftEnd.gds-code = buf_temp_stkShiftEnd.gds-code:

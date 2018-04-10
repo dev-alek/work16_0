@@ -1077,7 +1077,7 @@ on error undo, return error
       v-prop-code = "{&bef-attr-cd-type-autotank_cash-pay-list}".
 
 &scop ptype character
-&scop prop-value  '0,Наличные/1,0;1,Банковская карта/?,?;2,Топливная карта/?,?;3,Наличные со скидкой/?,?;4,Банковская карта со скидкой/?,?'
+&scop prop-value  '0,Наличные/1,0;1,Банковская карта/?,?;2,Топливная карта/?,?;3,Наличные со скидкой/?,?;4,Банковская карта со скидкой/?,?;5,Кошелек Элекснет/?,?;6,Мобильное приложение/?,?'
 &scop prop-code  v-prop-code
 
       {&create-thbj-attr}.

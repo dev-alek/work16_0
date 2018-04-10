@@ -308,7 +308,7 @@ DEFINE BROWSE br-cli-hist
       X_c-cli-hist.obj-type + string(X_c-cli-hist.obj-code) COLUMN-LABEL "Объект" FORMAT "X(12)":U
       if v-find then get-cli(X_c-cli-hist.obj-type, X_c-cli-hist.obj-code) else "":U COLUMN-LABEL "Назв. контрагента" FORMAT "X(25)":U
       get-subject(X_c-cli-hist.subject) COLUMN-LABEL {&label-subject} FORMAT "X(35)":U WIDTH 15
-      X_c-cli-hist.host-code COLUMN-LABEL "Фирма" FORMAT "99999":U
+      X_c-cli-hist.host-code COLUMN-LABEL "Фирма" FORMAT "9999999999":U
   ENABLE
       X_c-cli-hist.corr-date
 /* _UIB-CODE-BLOCK-END */

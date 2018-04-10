@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -54,7 +54,7 @@ if g#db-num <> 0 then p-mode = {&lookup} .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -65,13 +65,12 @@ if g#db-num <> 0 then p-mode = {&lookup} .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit I-contr-in-income I-contr-in-expense ~
-I-contr-qnty-spec B-quit B-Help contr-in-income B-2 B-3 ~
-contr-in-expense B-4 contr-qnty-spec v-contr-in-income ~
-v-contr-in-expense v-contr-qnty-spec
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help I-contr-in-income ~
+I-contr-in-expense I-contr-qnty-spec contr-in-income B-2 B-3 ~
+contr-in-expense B-4 contr-qnty-spec v-contr-in-income v-contr-in-expense ~
+v-contr-qnty-spec 
 &Scoped-Define DISPLAYED-OBJECTS contr-in-income contr-in-expense ~
-contr-qnty-spec ontr-in-less v-contr-in-income v-contr-in-expense ~
-v-contr-qnty-spec
+contr-qnty-spec v-contr-in-income v-contr-in-expense v-contr-qnty-spec 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -86,46 +85,46 @@ v-contr-qnty-spec
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-2
+DEFINE BUTTON B-2 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-3
+DEFINE BUTTON B-3 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-4
+DEFINE BUTTON B-4 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "&Help"
+DEFINE BUTTON B-Help 
+     LABEL "&Help" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON B-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE v-contr-in-expense AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-contr-in-expense AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 71.25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-contr-in-income AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-contr-in-income AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 77 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-contr-qnty-spec AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-contr-qnty-spec AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 71.25 BY 1 NO-UNDO.
 
 DEFINE IMAGE I-contr-in-expense
@@ -140,20 +139,20 @@ DEFINE IMAGE I-contr-qnty-spec
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
-DEFINE VARIABLE contr-in-expense AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE contr-in-expense AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 73.63 BY 1 NO-UNDO.
+     SIZE 2.13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE contr-in-income AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE contr-in-income AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 80 BY 1 NO-UNDO.
+     SIZE 2.13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE contr-qnty-spec AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE contr-qnty-spec AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 73.63 BY 1 NO-UNDO.
+     SIZE 2.13 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -175,8 +174,8 @@ DEFINE FRAME Dialog-Frame
      I-contr-in-expense AT ROW 4.25 COL 1 WIDGET-ID 34
      I-contr-qnty-spec AT ROW 5.46 COL 1 WIDGET-ID 104
      SPACE(83.12) SKIP(8.33)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для накладных"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON B-quit WIDGET-ID 100.
 
@@ -197,29 +196,29 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* SETTINGS FOR FILL-IN v-contr-in-expense IN FRAME Dialog-Frame
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-contr-in-expense:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-contr-in-income IN FRAME Dialog-Frame
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-contr-in-income:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-contr-qnty-spec IN FRAME Dialog-Frame
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-contr-qnty-spec:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -324,7 +323,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -379,7 +378,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -398,16 +397,15 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY contr-in-income contr-in-expense contr-qnty-spec
-          v-contr-in-income v-contr-in-expense v-contr-qnty-spec
+  DISPLAY contr-in-income contr-in-expense contr-qnty-spec v-contr-in-income 
+          v-contr-in-expense v-contr-qnty-spec 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit I-contr-in-income I-contr-in-expense I-contr-qnty-spec 
-         B-quit B-Help contr-in-income B-2 B-3 contr-in-expense
-         B-4 contr-qnty-spec v-contr-in-income
-         v-contr-in-expense v-contr-qnty-spec
+  ENABLE B-exit B-quit B-Help I-contr-in-income I-contr-in-expense 
+         I-contr-qnty-spec contr-in-income B-2 B-3 contr-in-expense B-4 
+         contr-qnty-spec v-contr-in-income v-contr-in-expense v-contr-qnty-spec 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -416,7 +414,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -527,7 +525,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame 
 PROCEDURE init-proc :
 define variable v-i as integer   no-undo .
 define variable v-value-character as character no-undo .
@@ -587,7 +585,7 @@ end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-tt Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-tt Dialog-Frame 
 PROCEDURE init-tt :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -600,7 +598,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-proc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-proc Dialog-Frame 
 PROCEDURE save-proc :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -700,3 +698,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

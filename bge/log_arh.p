@@ -257,7 +257,7 @@ procedure main-proc :
     or v-file begins "exp-ATD"
     or v-file begins "rvs-err"
     or v-file begins "pmp-err"
-    or v-file begins "pump"
+    or v-file begins "pump.err"
     or v-file begins "revis.err"
     or v-file begins "delfsale"
     or v-file begins "process-fdoc"
@@ -265,6 +265,7 @@ procedure main-proc :
     or v-file begins "svn-err"
     or v-file begins "get-cd"
     or v-file begins "send-cd"
+    or v-file begins "log-algo-pomi"
     then do :
       
     end.
@@ -335,7 +336,7 @@ procedure main-proc :
     or v-file begins "exp-ATD"
     or v-file begins "rvs-err"
     or v-file begins "pmp-err"
-    or v-file begins "pump"
+    or v-file begins "pump.err"
     or v-file begins "revis.err"
     or v-file begins "delfsale"
     or v-file begins "process-fdoc"
@@ -343,6 +344,7 @@ procedure main-proc :
     or v-file begins "svn-err"
     or v-file begins "get-cd"
     or v-file begins "send-cd"
+    or v-file begins "log-algo-pomi"
     then do :
       
     end.
@@ -523,7 +525,7 @@ procedure main-proc :
     or v-file begins "exp-ATD"
     or v-file begins "rvs-err"
     or v-file begins "pmp-err"
-    or v-file begins "pump"
+    or v-file begins "pump.err"
     or v-file begins "revis.err"
     or v-file begins "delfsale"
     or v-file begins "process-fdoc"
@@ -531,6 +533,7 @@ procedure main-proc :
     or v-file begins "svn-err"
     or v-file begins "get-cd"
     or v-file begins "send-cd"
+    or v-file begins "log-algo-pomi"
     then do :
       
     end.

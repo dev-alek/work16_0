@@ -501,7 +501,8 @@ end function. /* c-holding */
 &scop sort-clmn_43-br-dtl   c-t-doc.reason-code
 &scop label-clmn_44-br-dtl  'Действие'
 &scop sort-clmn_44-br-dtl   c-t-doc.action
-
+&scop label-clmn_45-br-dtl  'Время'
+&scop sort-clmn_45-br-dtl    string(c-t-doc.corr-time, "HH:MM")
 
 &scop enabled-clmn-br-dtl  {&sort-clmn_32-br-dtl}
 
@@ -514,6 +515,7 @@ define browse br-docs query br-docs no-lock display
   {&sort-clmn_6-br-dtl}              column-label {&label-clmn_6-br-dtl}  format "x(5)"
   {&sort-clmn_7-br-dtl}              column-label {&label-clmn_7-br-dtl}
   {&sort-clmn_8-br-dtl}              column-label {&label-clmn_8-br-dtl}
+  {&sort-clmn_45-br-dtl}             column-label {&label-clmn_45-br-dtl}
   {&sort-clmn_33-br-dtl}             column-label {&label-clmn_33-br-dtl}
   {&sort-clmn_41-br-dtl}             column-label {&label-clmn_41-br-dtl}
   usrfulnf(c-t-doc.user-name)        column-label "Исправил"

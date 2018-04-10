@@ -1269,7 +1269,7 @@ if p-rht then do:
             ub.action-role-item.action-head-code = temp-action-role-item.action-head-code
             ub.action-role-item.action-item-id   = temp-action-role-item.action-item-id
             ub.action-role-item.action-role-code = temp-action-role-item.action-role-code
-            ub.action-role-item.action-role-item-code = dynamic-next-value("s-action-role":U, "{&db-name_schema}":U)
+            ub.action-role-item.action-role-item-code = dynamic-next-value("s-action-role-item":U, "{&db-name_schema}":U)
             ub.action-role-item.db-num          = temp-action-role-item.db-num
             ub.action-role-item.whole-send-news = temp-action-role-item.whole-send-news 
           .
@@ -1767,15 +1767,17 @@ if p-usr then do:
                {&undo-mes}
             end.
          END. /*for each temp-user-menu-group */
-
          &scop next-line _user-login-action-role
          &scop table-name temp-user-login-action-role
          _user-login-action-role:
          FOR EACH temp-user-login-action-role:
             FIND FIRST ub.user-login-action-role No-LOCK
-                 WHERE ub.user-login-action-role.user-id  = temp-user-login-action-role.user-id
-                   AND ub.user-login-action-role.db-num   = temp-user-login-action-role.db-num
+                 WHERE 
+/*                 ub.user-login-action-role.user-id  = temp-user-login-action-role.user-id*/
+/*                   AND                                                                   */
+                   ub.user-login-action-role.db-num   = temp-user-login-action-role.db-num
                    AND ub.user-login-action-role.user-login-role-code = temp-user-login-action-role.user-login-role-code
+                   AND ub.user-login-action-role.action-head-code   =   temp-user-login-action-role.action-head-code
                  NO-ERROR
                  .
             IF AVAILABLE ub.user-login-action-role then do:

@@ -1363,7 +1363,6 @@ if not (is-edi and is-edoc-nn) then do:
     v-status-trn-edi:VISIBLE IN BROWSE browse-34 = FALSE.
 end.
   RUN enable_UI.
-  disable b-history with frame {&frame-name} .
   RUN init-p.
   run OpenBr in this-procedure .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.

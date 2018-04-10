@@ -162,15 +162,15 @@ DEFINE VARIABLE ord-wgt-div-prc AS DECIMAL FORMAT ">>9.99":U INITIAL 0
 
 DEFINE VARIABLE ordshipd AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 0 
      VIEW-AS FILL-IN 
-     SIZE 4.6 BY 1 NO-UNDO.
+     SIZE 4.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-ord-11 AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 77.6 BY 1 NO-UNDO.
+     SIZE 77.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-ord-askp AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 77.6 BY 1 NO-UNDO.
+     SIZE 77.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-ord-comp-prc AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
@@ -186,7 +186,7 @@ DEFINE VARIABLE v-ord-min-ost-day AS CHARACTER FORMAT "X(256)":U
 
 DEFINE VARIABLE v-ord-obj-rc AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 59.8 BY 1 NO-UNDO.
+     SIZE 59.75 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-ord-ofof AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
@@ -214,27 +214,27 @@ DEFINE VARIABLE v-ordshipd AS CHARACTER FORMAT "X(256)":U
 
 DEFINE IMAGE I-ord-11
      FILENAME "cmp/info.bmp":U
-     SIZE 3.6 BY 1.
+     SIZE 3.63 BY 1.
 
 DEFINE IMAGE I-ord-askp
      FILENAME "cmp/info.bmp":U
-     SIZE 3.6 BY 1.
+     SIZE 3.63 BY 1.
 
 DEFINE IMAGE I-ord-comp-prc
      FILENAME "cmp/info.bmp":U
-     SIZE 3.6 BY 1.
+     SIZE 3.63 BY 1.
 
 DEFINE IMAGE I-ord-log
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY 1.05.
+     SIZE 3 BY 1.04.
 
 DEFINE IMAGE I-ord-min-ost-day
      FILENAME "cmp/info.bmp":U
-     SIZE 3.6 BY 1.
+     SIZE 3.63 BY 1.
 
 DEFINE IMAGE I-ord-obj-rc
      FILENAME "cmp/info.bmp":U
-     SIZE 3.6 BY 1.
+     SIZE 3.63 BY 1.
 
 DEFINE IMAGE I-ord-ofof
      FILENAME "cmp/info.bmp":U
@@ -246,59 +246,59 @@ DEFINE IMAGE I-ord-oobj
 
 DEFINE IMAGE I-ord-op
      FILENAME "cmp/info.bmp":U
-     SIZE 3.6 BY 1.
+     SIZE 3.63 BY 1.
 
 DEFINE IMAGE I-ord-wgt-div-prc
      FILENAME "cmp/info.bmp":U
-     SIZE 3.6 BY 1.
+     SIZE 3.63 BY 1.
 
 DEFINE IMAGE I-ordcyclg
      FILENAME "cmp/info.bmp":U
-     SIZE 3.6 BY 1.
+     SIZE 3.63 BY 1.
 
 DEFINE IMAGE I-ordshipd
      FILENAME "cmp/info.bmp":U
-     SIZE 3.6 BY 1.
+     SIZE 3.63 BY 1.
 
 DEFINE VARIABLE ord-11 AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 76.6 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE ord-askp AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 76.6 BY 1 NO-UNDO.
+     SIZE 1.75 BY 1 NO-UNDO.
 
 DEFINE VARIABLE ord-log AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 80 BY 1 NO-UNDO.
+     SIZE 2 BY 1 NO-UNDO.
 
 DEFINE VARIABLE ord-min-ost-day AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 79.6 BY 1 NO-UNDO.
+     SIZE 2 BY 1 NO-UNDO.
 
 DEFINE VARIABLE ord-ofof AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 81 BY 1 NO-UNDO.
+     SIZE 2 BY 1 NO-UNDO.
 
 DEFINE VARIABLE ord-oobj AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 80 BY 1 NO-UNDO.
+     SIZE 2 BY 1 NO-UNDO.
 
 DEFINE VARIABLE ord-op AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 79.6 BY 1 NO-UNDO.
+     SIZE 2 BY 1 NO-UNDO.
 
 DEFINE VARIABLE ordcyclg AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 79.6 BY 1 NO-UNDO.
+     SIZE 2 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -306,50 +306,50 @@ DEFINE VARIABLE ordcyclg AS LOGICAL INITIAL no
 DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      B-quit AT ROW 1 COL 11
-     B-Help AT ROW 1 COL 74.6
+     B-Help AT ROW 1 COL 74.63
      ord-log AT ROW 3 COL 4 WIDGET-ID 44
-     ord-ofof AT ROW 3.95 COL 4 WIDGET-ID 46
-     ord-oobj AT ROW 4.95 COL 4 WIDGET-ID 48
-     ord-op AT ROW 5.91 COL 4 WIDGET-ID 50
-     ord-min-ost-day AT ROW 6.86 COL 4 WIDGET-ID 54
-     B-attr-ord-askp AT ROW 7.81 COL 3.6 WIDGET-ID 72
-     ord-askp AT ROW 7.81 COL 6.8 WIDGET-ID 60
-     B-attr-ord-obj-rc AT ROW 9.05 COL 3.6 WIDGET-ID 74
-     B-cli AT ROW 9.05 COL 6.2 WIDGET-ID 76
-     ordshipd AT ROW 10.19 COL 1.6 COLON-ALIGNED NO-LABEL WIDGET-ID 84
-     ordcyclg AT ROW 11.19 COL 4 WIDGET-ID 88
-     B-attr-ord-wgt-div-prc AT ROW 12.29 COL 3.6 WIDGET-ID 98
-     ord-wgt-div-prc AT ROW 12.29 COL 4.8 COLON-ALIGNED NO-LABEL WIDGET-ID 94
-     B-attr-ord-11 AT ROW 13.52 COL 3.4 WIDGET-ID 100
-     ord-11 AT ROW 13.52 COL 6.6 WIDGET-ID 104
-     B-attr-ord-comp-prc AT ROW 14.71 COL 3.6 WIDGET-ID 108
-     ord-comp-prc AT ROW 14.71 COL 4.8 COLON-ALIGNED NO-LABEL WIDGET-ID 112
-     v-ord-log AT ROW 3 COL 6.6 NO-LABEL WIDGET-ID 6
-     v-ord-ofof AT ROW 3.95 COL 6.6 NO-LABEL WIDGET-ID 18
-     v-ord-oobj AT ROW 4.95 COL 6.6 NO-LABEL WIDGET-ID 20
-     v-ord-op AT ROW 5.91 COL 6.6 NO-LABEL WIDGET-ID 38
-     v-ord-min-ost-day AT ROW 6.86 COL 6.6 NO-LABEL WIDGET-ID 56
-     v-ord-askp AT ROW 7.86 COL 9.6 NO-LABEL WIDGET-ID 62
-     ord-obj-rc AT ROW 9.05 COL 7.6 COLON-ALIGNED NO-LABEL WIDGET-ID 70
-     v-ord-obj-rc AT ROW 9.05 COL 23.6 NO-LABEL WIDGET-ID 68
-     v-ordshipd AT ROW 10.19 COL 8.6 NO-LABEL WIDGET-ID 82
-     v-ordcyclg AT ROW 11.19 COL 6.6 NO-LABEL WIDGET-ID 90
-     v-ord-wgt-div-prc AT ROW 12.29 COL 12.2 COLON-ALIGNED NO-LABEL WIDGET-ID 96
-     v-ord-11 AT ROW 13.52 COL 9.4 NO-LABEL WIDGET-ID 106
-     v-ord-comp-prc AT ROW 14.71 COL 12.2 COLON-ALIGNED NO-LABEL WIDGET-ID 114
-     I-ord-log AT ROW 3 COL 1.6 WIDGET-ID 10
-     I-ord-ofof AT ROW 3.95 COL 1.6 WIDGET-ID 34
-     I-ord-oobj AT ROW 4.95 COL 1.6 WIDGET-ID 36
-     I-ord-op AT ROW 5.91 COL 1.6 WIDGET-ID 40
-     I-ord-min-ost-day AT ROW 6.86 COL 1.6 WIDGET-ID 52
-     I-ord-askp AT ROW 7.86 COL 1.6 WIDGET-ID 58
-     I-ord-obj-rc AT ROW 9.05 COL 1.6 WIDGET-ID 64
-     I-ordshipd AT ROW 10.19 COL 1.6 WIDGET-ID 78
-     I-ordcyclg AT ROW 11.19 COL 1.6 WIDGET-ID 86
-     I-ord-wgt-div-prc AT ROW 12.29 COL 1.6 WIDGET-ID 92
-     I-ord-11 AT ROW 13.52 COL 1.6 WIDGET-ID 102
-     I-ord-comp-prc AT ROW 14.71 COL 1.6 WIDGET-ID 110
-     SPACE(82.00) SKIP(3.45)
+     ord-ofof AT ROW 3.96 COL 4 WIDGET-ID 46
+     ord-oobj AT ROW 4.96 COL 4 WIDGET-ID 48
+     ord-op AT ROW 5.92 COL 4 WIDGET-ID 50
+     ord-min-ost-day AT ROW 6.88 COL 4 WIDGET-ID 54
+     B-attr-ord-askp AT ROW 7.79 COL 3.63 WIDGET-ID 72
+     ord-askp AT ROW 7.79 COL 6.75 WIDGET-ID 60
+     B-attr-ord-obj-rc AT ROW 9.04 COL 3.63 WIDGET-ID 74
+     B-cli AT ROW 9.04 COL 6.25 WIDGET-ID 76
+     ordshipd AT ROW 10.21 COL 1.63 COLON-ALIGNED NO-LABEL WIDGET-ID 84
+     ordcyclg AT ROW 11.21 COL 4 WIDGET-ID 88
+     B-attr-ord-wgt-div-prc AT ROW 12.29 COL 3.63 WIDGET-ID 98
+     ord-wgt-div-prc AT ROW 12.29 COL 4.75 COLON-ALIGNED NO-LABEL WIDGET-ID 94
+     B-attr-ord-11 AT ROW 13.5 COL 3.38 WIDGET-ID 100
+     ord-11 AT ROW 13.5 COL 6.63 WIDGET-ID 104
+     B-attr-ord-comp-prc AT ROW 14.71 COL 3.63 WIDGET-ID 108
+     ord-comp-prc AT ROW 14.71 COL 4.75 COLON-ALIGNED NO-LABEL WIDGET-ID 112
+     v-ord-log AT ROW 3 COL 6.63 NO-LABEL WIDGET-ID 6
+     v-ord-ofof AT ROW 3.96 COL 6.63 NO-LABEL WIDGET-ID 18
+     v-ord-oobj AT ROW 4.96 COL 6.63 NO-LABEL WIDGET-ID 20
+     v-ord-op AT ROW 5.92 COL 6.63 NO-LABEL WIDGET-ID 38
+     v-ord-min-ost-day AT ROW 6.88 COL 6.63 NO-LABEL WIDGET-ID 56
+     v-ord-askp AT ROW 7.88 COL 9.63 NO-LABEL WIDGET-ID 62
+     ord-obj-rc AT ROW 9.04 COL 7.63 COLON-ALIGNED NO-LABEL WIDGET-ID 70
+     v-ord-obj-rc AT ROW 9.04 COL 23.63 NO-LABEL WIDGET-ID 68
+     v-ordshipd AT ROW 10.21 COL 8.63 NO-LABEL WIDGET-ID 82
+     v-ordcyclg AT ROW 11.21 COL 6.63 NO-LABEL WIDGET-ID 90
+     v-ord-wgt-div-prc AT ROW 12.29 COL 12.25 COLON-ALIGNED NO-LABEL WIDGET-ID 96
+     v-ord-11 AT ROW 13.5 COL 9.38 NO-LABEL WIDGET-ID 106
+     v-ord-comp-prc AT ROW 14.71 COL 12.25 COLON-ALIGNED NO-LABEL WIDGET-ID 114
+     I-ord-log AT ROW 3 COL 1.63 WIDGET-ID 10
+     I-ord-ofof AT ROW 3.96 COL 1.63 WIDGET-ID 34
+     I-ord-oobj AT ROW 4.96 COL 1.63 WIDGET-ID 36
+     I-ord-op AT ROW 5.92 COL 1.63 WIDGET-ID 40
+     I-ord-min-ost-day AT ROW 6.88 COL 1.63 WIDGET-ID 52
+     I-ord-askp AT ROW 7.88 COL 1.63 WIDGET-ID 58
+     I-ord-obj-rc AT ROW 9.04 COL 1.63 WIDGET-ID 64
+     I-ordshipd AT ROW 10.21 COL 1.63 WIDGET-ID 78
+     I-ordcyclg AT ROW 11.21 COL 1.63 WIDGET-ID 86
+     I-ord-wgt-div-prc AT ROW 12.29 COL 1.63 WIDGET-ID 92
+     I-ord-11 AT ROW 13.5 COL 1.63 WIDGET-ID 102
+     I-ord-comp-prc AT ROW 14.71 COL 1.63 WIDGET-ID 110
+     SPACE(81.98) SKIP(3.45)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для заказов"

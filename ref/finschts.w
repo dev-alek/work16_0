@@ -2302,7 +2302,7 @@ define variable v-cli-name      as character no-undo .
 define variable v-curr-abbr     as character no-undo .
 
 DEFINE FRAME fin-schet-list
-X_fin-schet.host-code COLUMN-LABEL "Код!фирмы"
+X_fin-schet.host-code COLUMN-LABEL "Код!фирмы" format "9999999999"
 X_fin-schet.code-schet
 X_fin-schet.code-bank COLUMN-LABEL "Код банка"  format ">>>>>>9"
 v-bank-short-name format "X(40)" COLUMN-LABEL "Банк"

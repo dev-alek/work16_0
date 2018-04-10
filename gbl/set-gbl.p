@@ -84,7 +84,7 @@ on error undo, return error return-value
   
   def var gblVarObj as class gbl-var.
   gblVarObj = new gbl-var().
-  gblVarObj:InitObj (g#auto, g#news, g#news-source-db, g#db-num, g#userid, g#passwd).
+  gblVarObj:InitObj (g#auto, g#news, g#news-source-db, g#db-num, g#userid, g#passwd, g#esys).
   delete object gblVarObj no-error.
 
   /* считываем параметр: язык ядра системы */

@@ -76,7 +76,7 @@ on error undo, return error
         v-parameter-list         =  substitute( "&1,&2,&3,&4,&5,&6,&7,&8,&9"
                                                , {&parameters-amount}
                                                , "docName"          , "catconk":U
-                                               , "version"          , {&version-string}
+                                               , "version"          , replace({&version-string},',','')
                                                , "exportDate"       , string( today,          "99/99/9999" )
                                                , "exportTime"       , string( time,           "HH:MM:SS"   )
                                               )
