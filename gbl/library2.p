@@ -18,7 +18,9 @@ Creation date: 07/16/07
 
 */
 
-using ibs.th.gbl.gbl-hndllib from propath.
+using ibs.th.gbl.*.
+using ibs.th.gbl.gbl-var.
+
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
@@ -27,7 +29,7 @@ define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo initial "Ѕиблиотека  процедур".
 { cmp/vssrevis.i }
-{ cmp/trg-def.i }
+{ cmp/str-glbl.i }
 { cmp/library.i  }
 { ref/xobjgrp.i  }
 { gbl/getsect.i def }
@@ -1374,12 +1376,15 @@ procedure chk-actg :
     on error undo, leave
     :
 /*       проверка прав при приеме новостей бессмысленна */
-      if g#news = YES  or g#auto or g#esys then do:
+
+
+      if gbl-var:g#news = YES  or gbl-var:g#auto or gbl-var:g#esys then do:
          assign
             p-ok = YES
          .
          leave check_block . 
       end.
+
 
 
       /* поиск пользовател€ */
