@@ -55,6 +55,7 @@ class ibs.th.bge.1crn.subjects.invs-trk implements iexpsubject:
     sw:write-data-element ("date", if buf_icnt-doc.doc-date = ? then "" else ISO-DATE(buf_icnt-doc.doc-date)).
     sw:write-data-element ("shift-date", if buf_icnt-doc.shift-date = ? then "" else ISO-DATE (buf_icnt-doc.shift-date)).
     sw:write-data-element ("shift-num", if buf_icnt-doc.shift-num = ? then "0" else string(buf_icnt-doc.shift-num)).
+    sw:write-data-element ("operator", if buf_icnt-doc.creid = ? then "" else pr-objname(buf_icnt-doc.creid)).
     sw:start-element ("trk-inds") .
     for each buf_icnt-line no-lock where buf_icnt-line.doc-code = buf_icnt-doc.doc-code:
       sw:start-element ("trk-ind") .
@@ -88,4 +89,18 @@ class ibs.th.bge.1crn.subjects.invs-trk implements iexpsubject:
     return v-str.
     
   end.
+  
+    method private character pr-objname (inValue as character):
+    
+        define variable v-obj-name as character no-undo .
+
+            find first ub.user-account NO-LOCK where ub.user-account.user-id = inValue no-error .
+            if AVAILABLE (ub.user-account) then do:
+                v-obj-name = ub.user-account.last-name + " " + (if ub.user-account.first-name <> "" then SUBSTRING (ub.user-account.first-name,1,1) + "." else "") + (if ub.user-account.second-name <> "" then SUBSTRING (ub.user-account.second-name,1,1) + "." else "").
+            end.    
+            
+       RETURN v-obj-name.
+    
+    end.  
+
 end class.
