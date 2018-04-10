@@ -46,8 +46,8 @@ case p-table-name:
   when "fin-doc":U  then do:
     find first buf_fin-doc exclusive-lock where
              buf_fin-doc.host-code = p-host-code
-        AND  buf_fin-doc.fin-doc-code = p-fin-doc-code  .
-      assign
+        AND  buf_fin-doc.fin-doc-code = p-fin-doc-code no-error .
+      if available buf_fin-doc then assign
           buf_fin-doc.bge-date = p-cur-date
       .
    end.        /* when "trn-doc":U */
@@ -56,8 +56,8 @@ case p-table-name:
              buf_c-fin-doc.host-code = p-host-code
         AND  buf_c-fin-doc.fin-doc-code = p-fin-doc-code
         AND  buf_c-fin-doc.corr-user-db-num = p-corr-user-db-num
-        AND  buf_c-fin-doc.chip-num       = p-chip-num .
-      assign
+        AND  buf_c-fin-doc.chip-num       = p-chip-num no-error.
+      if available buf_c-fin-doc then assign
           buf_c-fin-doc.bge-date = p-cur-date
       .
 

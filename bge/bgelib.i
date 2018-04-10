@@ -129,7 +129,7 @@ define input parameter v-tag-level      as integer      no-undo.
 define input parameter v-tag-name       as character    no-undo.
 define input parameter v-tag-value      as character    no-undo.
 define input parameter v-empty-mode     as integer      no-undo.
-
+    v-tag-name = trim(v-tag-name).
     if  v-empty-mode = 1
     or (v-empty-mode = 0 and (v-tag-value <> "" and v-tag-value <> ?) )
     or (v-empty-mode = 2 and (v-tag-value <> "" and v-tag-value <> ? and v-tag-value <> "0"))
@@ -383,12 +383,13 @@ define input parameter p-parameter-list as character    no-undo.
     run bgelib-tag-put( input 2, input "prevFileName"   , input p-prev-filename            , input 0 ).
     run bgelib-tag-put( input 2, input "objList"        , input p-obj-list                 , input 0 ).
     run bgelib-tag-put( input 2, input "docTypeList"    , input p-doc-type-list            , input 0 ).
+    
     do v-counter = 1 to integer( entry( 1, p-parameter-list ) )
     :
         run bgelib-tag-put(
               input 2
-            , input entry( 2 * v-counter, p-parameter-list )
-            , input entry( 2 * v-counter + 1, p-parameter-list )
+            , input trim(entry( 2 * v-counter, p-parameter-list ))
+            , input trim(entry( 2 * v-counter + 1, p-parameter-list ))
             , input 0
         ).
     end.
