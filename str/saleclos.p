@@ -1278,7 +1278,7 @@ END. /* end_of f-close */
   */
   if l-shift-on then do:
     /* смена, полученная выше в строке 1060 - именна та, которая нам требуется */
-    if v-back-date and v-new-shift-obj:available then do :
+    if v-back-date and v-new-shift-obj <> ? and v-new-shift-obj:available then do :
       /* указатели old и new указывают в одно место, т.к. фактически запись о смене не менялась */
       { gbl/rum-runa.i
       ?
