@@ -27,7 +27,7 @@ define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo initial "Библиотека  процедур".
 { cmp/vssrevis.i }
-{ cmp/str-glbl.i }
+{ cmp/trg-def.i }
 { cmp/library.i  }
 { ref/xobjgrp.i  }
 { gbl/getsect.i def }
@@ -1373,13 +1373,13 @@ procedure chk-actg :
     do
     on error undo, leave
     :
-/*       проверка прав при приеме новостей бессмысленна*/
-/*      if g#news = YES then do:*/
-/*         assign*/
-/*            p-ok = YES*/
-/*         .*/
-/*         leave check_block . */
-/*      end.*/
+/*       проверка прав при приеме новостей бессмысленна */
+      if g#news = YES  or g#auto or g#esys then do:
+         assign
+            p-ok = YES
+         .
+         leave check_block . 
+      end.
 
 
       /* поиск пользователя */
