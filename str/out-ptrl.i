@@ -202,7 +202,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 view-as alert-box error .
               return error .
             end.
-            if olddensvalue <> 'yes':U
+            if ptrlprop-olddens <> true
               and bf_after_rvs-line.state-density <> ?
               and buf_goods.unit-base <> buf_goods.unit-cli
             then do:
