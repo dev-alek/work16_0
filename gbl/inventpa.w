@@ -104,6 +104,11 @@ DEFINE BUTTON B-1
      LABEL "" 
      SIZE 3 BY 1.
 
+DEFINE BUTTON B-10 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
 DEFINE BUTTON B-2 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
@@ -161,23 +166,23 @@ DEFINE BUTTON B-quit AUTO-END-KEY
 
 DEFINE VARIABLE inv-prs AS INTEGER FORMAT ">>9":U INITIAL 0 
      VIEW-AS FILL-IN 
-     SIZE 13.4 BY 1 NO-UNDO.
+     SIZE 13.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE mxpcdcp AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
      VIEW-AS FILL-IN 
-     SIZE 13.4 BY 1 NO-UNDO.
+     SIZE 13.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE mxpcicp AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
      VIEW-AS FILL-IN 
-     SIZE 13.4 BY 1 NO-UNDO.
+     SIZE 13.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE mxsmdcp AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
      VIEW-AS FILL-IN 
-     SIZE 13.4 BY 1 NO-UNDO.
+     SIZE 13.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE mxsmicp AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
      VIEW-AS FILL-IN 
-     SIZE 13.4 BY 1 NO-UNDO.
+     SIZE 13.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-inv-prs AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
@@ -185,7 +190,7 @@ DEFINE VARIABLE v-inv-prs AS CHARACTER FORMAT "X(256)":U
 
 DEFINE VARIABLE v-invclcas AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 92.2 BY 1 NO-UNDO.
+     SIZE 92.25 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-invclcsp AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
@@ -193,9 +198,13 @@ DEFINE VARIABLE v-invclcsp AS CHARACTER FORMAT "X(256)":U
 
 DEFINE VARIABLE v-invclcwt AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 92.2 BY 1 NO-UNDO.
+     SIZE 92.25 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-invdnull AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 87 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-izlcstpr AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 87 BY 1 NO-UNDO.
 
@@ -229,7 +238,7 @@ DEFINE VARIABLE v-wastage AS CHARACTER FORMAT "X(256)":U
 
 DEFINE IMAGE I-inv-prs
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY 1.05.
+     SIZE 3 BY 1.04.
 
 DEFINE IMAGE I-invclcas
      FILENAME "cmp/info.bmp":U
@@ -247,9 +256,13 @@ DEFINE IMAGE I-invdnull
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
+DEFINE IMAGE I-izlcstpr
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
+
 DEFINE IMAGE I-mxpcdcp
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY 1.05.
+     SIZE 3 BY 1.04.
 
 DEFINE IMAGE I-mxpcicp
      FILENAME "cmp/info.bmp":U
@@ -261,7 +274,7 @@ DEFINE IMAGE I-mxsmdcp
 
 DEFINE IMAGE I-mxsmicp
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY 1.05.
+     SIZE 3 BY 1.04.
 
 DEFINE IMAGE I-pstgrp
      FILENAME "cmp/info.bmp":U
@@ -278,37 +291,37 @@ DEFINE IMAGE I-wastage
 DEFINE VARIABLE invclcas AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 87 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE invclcsp AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 87 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE invclcwt AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 87 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE invdnull AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 59.6 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE pstgrp AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 87 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE pstunqtn AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 87 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE wastage AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 87 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -494,6 +507,20 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-10
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-10 Dialog-Frame
+ON CHOOSE OF B-10 IN FRAME Dialog-Frame
+DO:
+  run gbl/v-taobj.w
+      ({&attr-inv-obj},
+       "izlcstpr"
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME B-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-2 Dialog-Frame
 ON CHOOSE OF B-2 IN FRAME Dialog-Frame
@@ -659,6 +686,8 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
 
 
 &Scoped-define SELF-NAME I-mxpcdcp

@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -65,7 +65,7 @@ if g#db-num <> 0 then p-mode = {&lookup} .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -76,7 +76,7 @@ if g#db-num <> 0 then p-mode = {&lookup} .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit b-frame-a b-frame-b B-Help
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit b-frame-a b-frame-b B-Help 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -91,234 +91,234 @@ if g#db-num <> 0 then p-mode = {&lookup} .
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-frame-a
-     LABEL "Параметры 1"
+DEFINE BUTTON b-frame-a 
+     LABEL "Параметры 1" 
      SIZE 15 BY 1.13.
 
-DEFINE BUTTON b-frame-b
-     LABEL "Параметры 2"
+DEFINE BUTTON b-frame-b 
+     LABEL "Параметры 2" 
      SIZE 15 BY 1.13.
 
-DEFINE BUTTON B-Help
-     LABEL "&Help"
+DEFINE BUTTON B-Help 
+     LABEL "&Help" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON B-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-attr-pr-abs-d
+DEFINE BUTTON B-attr-pr-abs-d 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-altex
+DEFINE BUTTON B-attr-pr-altex 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-clt-q
+DEFINE BUTTON B-attr-pr-clt-q 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-discm
+DEFINE BUTTON B-attr-pr-discm 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-dpl-q
+DEFINE BUTTON B-attr-pr-dpl-q 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-dscnt
+DEFINE BUTTON B-attr-pr-dscnt 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-equ-dq
+DEFINE BUTTON B-attr-pr-equ-dq 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-incpc
+DEFINE BUTTON B-attr-pr-incpc 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-list
+DEFINE BUTTON B-attr-pr-list 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-notls
+DEFINE BUTTON B-attr-pr-notls 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-parex
+DEFINE BUTTON B-attr-pr-parex 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-print
+DEFINE BUTTON B-attr-pr-print 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-rdc-q
+DEFINE BUTTON B-attr-pr-rdc-q 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-rndbs
+DEFINE BUTTON B-attr-pr-rndbs 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-rndmt
+DEFINE BUTTON B-attr-pr-rndmt 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-sclex
+DEFINE BUTTON B-attr-pr-sclex 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-sigma
+DEFINE BUTTON B-attr-pr-sigma 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-corr-pr-list
+DEFINE BUTTON B-corr-pr-list 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE VARIABLE pr-discm AS CHARACTER FORMAT "X(256)":U INITIAL "cost"
+DEFINE VARIABLE pr-discm AS CHARACTER FORMAT "X(256)":U INITIAL "cost" 
      VIEW-AS COMBO-BOX INNER-LINES 7
-     LIST-ITEMS "","cost","sale","sale-","cost-vat","prod","prod-vat"
+     LIST-ITEMS "","cost","sale","sale-","cost-vat","prod","prod-vat" 
      DROP-DOWN-LIST
      SIZE 11 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-equ-dq AS integer FORMAT "9":U INITIAL 2
+DEFINE VARIABLE pr-equ-dq AS INTEGER FORMAT "9":U INITIAL 2 
      VIEW-AS COMBO-BOX INNER-LINES 5
      LIST-ITEM-PAIRS "Не удалять",1,
                      "Запрос на удаление",2,
-                     "Удаление без запроса", 3
+                     "Удаление без запроса",3
      DROP-DOWN-LIST
      SIZE 24 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-rndmt AS CHARACTER FORMAT "X(256)":U INITIAL "pr-round-off"
+DEFINE VARIABLE pr-rndmt AS CHARACTER FORMAT "X(256)":U INITIAL "pr-round-off" 
      VIEW-AS COMBO-BOX INNER-LINES 7
      LIST-ITEM-PAIRS "9-окончание","pr-round-9end   ",
                      "9-99окончание","pr-round-9-99end",
                      "Без-дробных","pr-round-integer",
                      "Произвольно","pr-round-select ",
-                     "Вверх"      ,"pr-round-up     ",
+                     "Вверх","pr-round-up     ",
                      "Коэффициент","pr-round-coef   ",
-                     "Отключено"  ,"pr-round-off"
+                     "Отключено","pr-round-off"
      DROP-DOWN-LIST
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-list AS CHARACTER INITIAL "Товар,Группа,УчетнаяS,Учетная,Учет-рзрвS,Учет-резерв,ПриходнаяS,Приходная,Старая,Новая,Объект,Накладная,Переоценка,ДокФормЦены,Накл-безНДС,Учет-НДСS,Учет-безНДС,Стар-безНДС,Учет+накл,Уч+накл-НДС,Единая,Отсутствует,Откат_цен,Не-считать,Производит,Произв-НДС,ПорогПр-НДС,ПорогПр+НДС,Спецификация"
+DEFINE VARIABLE pr-list AS CHARACTER INITIAL "Товар,Группа,УчетнаяS,Учетная,Учет-рзрвS,Учет-резерв,ПриходнаяS,Приходная,Старая,Новая,Объект,Накладная,Переоценка,ДокФормЦены,Накл-безНДС,Учет-НДСS,Учет-безНДС,Стар-безНДС,Учет+накл,Уч+накл-НДС,Единая,Отсутствует,Откат_цен,Не-считать,Производит,Произв-НДС,ПорогПр-НДС,ПорогПр+НДС,Спецификация" 
      VIEW-AS EDITOR
      SIZE 56 BY 2.5
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Начальные значения для ТПЛ"
-      VIEW-AS TEXT
+DEFINE VARIABLE FILL-IN-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Начальные значения для ТПЛ" 
+      VIEW-AS TEXT 
      SIZE 28 BY .67
      FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE pr-incpc AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE pr-incpc AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 9 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-rndbs AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE pr-rndbs AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 9 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-sigma AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE pr-sigma AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 10.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-abs-d AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-abs-d AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 79 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-altex AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-altex AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 48.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-clt-q AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-clt-q AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 77 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-discm AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-discm AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 39.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-dpl-q AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-dpl-q AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 77 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-dscnt AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-dscnt AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 77 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-equ-dq AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-equ-dq AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 70 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-incpc AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-incpc AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 30.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-list AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-list AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 32 BY 1
      FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE v-pr-notls AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-notls AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 77 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-parex AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-parex AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 48 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-print AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-print AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 77 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-rdc-q AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-rdc-q AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 77 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-rndbs AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-rndbs AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 30.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-rndmt AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 26.88 BY 1 NO-UNDO.
+DEFINE VARIABLE v-pr-rndmt AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 25.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-sclex AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-sclex AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 49.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-sigma AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-sigma AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 59.5 BY 1 NO-UNDO.
 
 DEFINE IMAGE I-pr-abs-d
@@ -389,132 +389,132 @@ DEFINE IMAGE I-pr-sigma
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
-DEFINE VARIABLE pr-abs-d AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE pr-abs-d AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 81.38 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-altex AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE pr-altex AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 50.13 BY 1 NO-UNDO.
+     SIZE 2.13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-clt-q AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE pr-clt-q AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 81 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-dpl-q AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE pr-dpl-q AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 81 BY 1 NO-UNDO.
+     SIZE 1.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-dscnt AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE pr-dscnt AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 81 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-notls AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE pr-notls AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 81 BY 1 NO-UNDO.
+     SIZE 2.25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-parex AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE pr-parex AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 47.63 BY 1 NO-UNDO.
+     SIZE 2.13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-print AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE pr-print AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 81 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-rdc-q AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE pr-rdc-q AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 81 BY 1 NO-UNDO.
+     SIZE 2.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-sclex AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE pr-sclex AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 52.13 BY 1 NO-UNDO.
+     SIZE 2.13 BY 1 NO-UNDO.
 
-DEFINE BUTTON B-attr-pr-goods
+DEFINE BUTTON B-attr-pr-goods 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-goods0
+DEFINE BUTTON B-attr-pr-goods0 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-nogds
+DEFINE BUTTON B-attr-pr-nogds 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-attr-pr-nogds0
+DEFINE BUTTON B-attr-pr-nogds0 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-corr-pr-nogds
+DEFINE BUTTON B-corr-pr-nogds 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-corr-pr-nogds0
+DEFINE BUTTON B-corr-pr-nogds0 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE VARIABLE pr-goods AS CHARACTER FORMAT "X(256)":U INITIAL "1.нет запрета"
+DEFINE VARIABLE pr-goods AS CHARACTER FORMAT "X(256)":U INITIAL "1.нет запрета" 
      VIEW-AS COMBO-BOX INNER-LINES 8
-     LIST-ITEMS "1.нет запрета","2.на товар","3.на топливо","4.на услугу","5.на товар и услугу","6.на товар и топливо","7.на услугу и топливо","8.запрет на все"
+     LIST-ITEMS "1.нет запрета","2.на товар","3.на топливо","4.на услугу","5.на товар и услугу","6.на товар и топливо","7.на услугу и топливо","8.запрет на все" 
      DROP-DOWN-LIST
      SIZE 24.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-goods0 AS CHARACTER FORMAT "X(256)":U INITIAL "1.нет запрета"
+DEFINE VARIABLE pr-goods0 AS CHARACTER FORMAT "X(256)":U INITIAL "1.нет запрета" 
      VIEW-AS COMBO-BOX INNER-LINES 8
-     LIST-ITEMS "1.нет запрета","2.на товар","3.на топливо","4.на услугу","5.на товар и услугу","6.на товар и топливо","7.на услугу и топливо","8.запрет на все"
+     LIST-ITEMS "1.нет запрета","2.на товар","3.на топливо","4.на услугу","5.на товар и услугу","6.на товар и топливо","7.на услугу и топливо","8.запрет на все" 
      DROP-DOWN-LIST
      SIZE 24.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE pr-nogds AS CHARACTER
+DEFINE VARIABLE pr-nogds AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 46 BY 1
      FONT 2 NO-UNDO.
 
-DEFINE VARIABLE pr-nogds0 AS CHARACTER
+DEFINE VARIABLE pr-nogds0 AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 46 BY 1
      FONT 2 NO-UNDO.
 
-DEFINE VARIABLE scr-nogrp AS CHARACTER
+DEFINE VARIABLE scr-nogrp AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 51.75 BY 2.75
      FONT 2 NO-UNDO.
 
-DEFINE VARIABLE scr-nogrp0 AS CHARACTER
+DEFINE VARIABLE scr-nogrp0 AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 51.75 BY 2.75
      FONT 2 NO-UNDO.
 
-DEFINE VARIABLE v-pr-goods AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-goods AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 69 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-goods0 AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-goods0 AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 69 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-nogds AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-nogds AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 47 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-pr-nogds0 AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-pr-nogds0 AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 47 BY 1 NO-UNDO.
 
 DEFINE IMAGE I-pr-goods
@@ -543,8 +543,8 @@ DEFINE FRAME Dialog-Frame
      b-frame-b AT ROW 1 COL 41 WIDGET-ID 250
      B-Help AT ROW 1 COL 93
      SPACE(0.12) SKIP(20.87)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для  П Е Р Е О Ц Е Н О К" WIDGET-ID 100.
 
 DEFINE FRAME FRAME-A
@@ -562,8 +562,8 @@ DEFINE FRAME FRAME-A
      pr-dpl-q AT ROW 6.21 COL 6.13 WIDGET-ID 66
      B-attr-pr-rdc-q AT ROW 7.21 COL 2.75 WIDGET-ID 126
      pr-rdc-q AT ROW 7.21 COL 6.13 WIDGET-ID 130
-     pr-equ-dq AT ROW 8.21 COL 4 COLON-ALIGNED NO-LABEL WIDGET-ID 274
      B-attr-pr-equ-dq AT ROW 8.21 COL 2.75 WIDGET-ID 216
+     pr-equ-dq AT ROW 8.21 COL 4 COLON-ALIGNED NO-LABEL WIDGET-ID 274
      B-attr-pr-abs-d AT ROW 10.21 COL 2.75 WIDGET-ID 48
      pr-abs-d AT ROW 10.21 COL 6.13 WIDGET-ID 44
      B-attr-pr-dscnt AT ROW 12 COL 2.75 WIDGET-ID 70
@@ -583,35 +583,35 @@ DEFINE FRAME FRAME-A
      pr-discm AT ROW 17.63 COL 4.63 COLON-ALIGNED NO-LABEL WIDGET-ID 142
      B-attr-pr-sigma AT ROW 18.63 COL 3.25 WIDGET-ID 162
      pr-sigma AT ROW 18.63 COL 4.63 COLON-ALIGNED NO-LABEL WIDGET-ID 166
-     v-pr-notls AT ROW 1.21 COL 8.13 NO-LABEL WIDGET-ID 108
-     v-pr-altex AT ROW 2.21 COL 10.75 NO-LABEL WIDGET-ID 18
-     v-pr-sclex AT ROW 3.21 COL 10.75 NO-LABEL WIDGET-ID 192
-     v-pr-parex AT ROW 4.21 COL 10.75 NO-LABEL WIDGET-ID 116
-     v-pr-clt-q AT ROW 5.21 COL 8 NO-LABEL WIDGET-ID 60
-     v-pr-dpl-q AT ROW 6.21 COL 8 NO-LABEL WIDGET-ID 68
-     v-pr-rdc-q AT ROW 7.21 COL 8 NO-LABEL WIDGET-ID 132
+     v-pr-notls AT ROW 1.21 COL 8.63 NO-LABEL WIDGET-ID 108
+     v-pr-altex AT ROW 2.21 COL 11.25 NO-LABEL WIDGET-ID 18
+     v-pr-sclex AT ROW 3.21 COL 11.25 NO-LABEL WIDGET-ID 192
+     v-pr-parex AT ROW 4.21 COL 11.25 NO-LABEL WIDGET-ID 116
+     v-pr-clt-q AT ROW 5.21 COL 8.5 NO-LABEL WIDGET-ID 60
+     v-pr-dpl-q AT ROW 6.21 COL 8.5 NO-LABEL WIDGET-ID 68
+     v-pr-rdc-q AT ROW 7.21 COL 8.5 NO-LABEL WIDGET-ID 132
      v-pr-equ-dq AT ROW 8.21 COL 29 COLON-ALIGNED NO-LABEL WIDGET-ID 220
-     v-pr-abs-d AT ROW 10.21 COL 8 NO-LABEL WIDGET-ID 6
-     v-pr-dscnt AT ROW 12 COL 8 NO-LABEL WIDGET-ID 76
-     v-pr-print AT ROW 13 COL 8 NO-LABEL WIDGET-ID 124
+     v-pr-abs-d AT ROW 10.21 COL 8.5 NO-LABEL WIDGET-ID 6
+     v-pr-dscnt AT ROW 12 COL 8.5 NO-LABEL WIDGET-ID 76
+     v-pr-print AT ROW 13 COL 8.25 NO-LABEL WIDGET-ID 124
      v-pr-list AT ROW 14 COL 6 NO-LABEL WIDGET-ID 176
      FILL-IN-2 AT ROW 14.13 COL 55 COLON-ALIGNED NO-LABEL WIDGET-ID 212
-     v-pr-rndmt AT ROW 15 COL 75.88 NO-LABEL WIDGET-ID 184
+     v-pr-rndmt AT ROW 15 COL 77 NO-LABEL WIDGET-ID 184
      v-pr-rndbs AT ROW 16 COL 72.38 NO-LABEL WIDGET-ID 160
      v-pr-incpc AT ROW 17 COL 72.25 NO-LABEL WIDGET-ID 150
      v-pr-discm AT ROW 17.63 COL 18.13 NO-LABEL WIDGET-ID 140
      v-pr-sigma AT ROW 18.63 COL 18 NO-LABEL WIDGET-ID 168
-    WITH 1 DOWN KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
+     I-pr-abs-d AT ROW 10.25 COL 1 WIDGET-ID 10
+     I-pr-altex AT ROW 2.21 COL 3.75 WIDGET-ID 34
+     I-pr-clt-q AT ROW 5.25 COL 1 WIDGET-ID 56
+     I-pr-dpl-q AT ROW 6.25 COL 1 WIDGET-ID 64
+    WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 2
          SIZE 102 BY 20.75 WIDGET-ID 200.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME FRAME-A
-     I-pr-abs-d AT ROW 10.25 COL 1 WIDGET-ID 10
-     I-pr-altex AT ROW 2.21 COL 3.75 WIDGET-ID 34
-     I-pr-clt-q AT ROW 5.25 COL 1 WIDGET-ID 56
-     I-pr-dpl-q AT ROW 6.25 COL 1 WIDGET-ID 64
      I-pr-dscnt AT ROW 12 COL 1 WIDGET-ID 72
      I-pr-equ-dq AT ROW 8.25 COL 1 WIDGET-ID 272
      I-pr-notls AT ROW 1.21 COL 1.13 WIDGET-ID 104
@@ -625,8 +625,8 @@ DEFINE FRAME FRAME-A
      I-pr-list AT ROW 14.04 COL 1 WIDGET-ID 172
      I-pr-rndmt AT ROW 15 COL 57 WIDGET-ID 180
      I-pr-sclex AT ROW 3.21 COL 3.75 WIDGET-ID 188
-    WITH 1 DOWN KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
+    WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 2
          SIZE 102 BY 20.75 WIDGET-ID 200.
 
@@ -649,16 +649,16 @@ DEFINE FRAME FRAME-B
      v-pr-nogds AT ROW 9.21 COL 6.5 NO-LABEL WIDGET-ID 238
      "УБД" VIEW-AS TEXT
           SIZE 8 BY .67 AT ROW 7.25 COL 3.63 WIDGET-ID 270
-          FGCOLOR 1
+          FGCOLOR 1 
      "ГБД" VIEW-AS TEXT
           SIZE 8 BY .67 AT ROW 1.25 COL 4 WIDGET-ID 268
-          FGCOLOR 1
+          FGCOLOR 1 
      I-pr-goods AT ROW 7.96 COL 1.63 WIDGET-ID 226
      I-pr-nogds AT ROW 9.21 COL 1.5 WIDGET-ID 236
      I-pr-goods0 AT ROW 2 COL 1.63 WIDGET-ID 246
      I-pr-nogds0 AT ROW 3.08 COL 1.5 WIDGET-ID 256
-    WITH 1 DOWN KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
+    WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 2
          SIZE 102 BY 20.75 WIDGET-ID 300.
 
@@ -686,11 +686,11 @@ ASSIGN FRAME FRAME-A:FRAME = FRAME Dialog-Frame:HANDLE
 
 DEFINE VARIABLE XXTABVALXX AS LOGICAL NO-UNDO.
 
-ASSIGN XXTABVALXX = FRAME FRAME-A:MOVE-AFTER-TAB-ITEM (B-Help:HANDLE IN FRAME Dialog-Frame)
-       XXTABVALXX = FRAME FRAME-A:MOVE-BEFORE-TAB-ITEM (FRAME FRAME-B:HANDLE)
+ASSIGN XXTABVALXX = FRAME FRAME-B:MOVE-AFTER-TAB-ITEM (B-Help:HANDLE IN FRAME Dialog-Frame)
+       XXTABVALXX = FRAME FRAME-B:MOVE-BEFORE-TAB-ITEM (FRAME FRAME-A:HANDLE)
 /* END-ASSIGN-TABS */.
 
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -698,124 +698,123 @@ ASSIGN
                                                                         */
 /* SETTINGS FOR EDITOR pr-list IN FRAME FRAME-A
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        pr-list:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-abs-d IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-abs-d:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-altex IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-altex:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-clt-q IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-clt-q:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-discm IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-discm:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-dpl-q IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-dpl-q:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-dscnt IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-dscnt:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-incpc IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-incpc:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-list IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-list:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-notls IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-notls:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-parex IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-parex:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-print IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-print:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-rdc-q IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-rdc-q:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-rndbs IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-rndbs:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-rndmt IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-rndmt:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-sclex IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-sclex:READ-ONLY IN FRAME FRAME-A        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-sigma IN FRAME FRAME-A
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-sigma:READ-ONLY IN FRAME FRAME-A        = TRUE.
-
 
 /* SETTINGS FOR FRAME FRAME-B
                                                                         */
-ASSIGN
+ASSIGN 
        pr-nogds:READ-ONLY IN FRAME FRAME-B        = TRUE.
 
-ASSIGN
+ASSIGN 
        pr-nogds0:READ-ONLY IN FRAME FRAME-B        = TRUE.
 
-ASSIGN
+ASSIGN 
        scr-nogrp:READ-ONLY IN FRAME FRAME-B        = TRUE.
 
-ASSIGN
+ASSIGN 
        scr-nogrp0:READ-ONLY IN FRAME FRAME-B        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-goods IN FRAME FRAME-B
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-goods:READ-ONLY IN FRAME FRAME-B        = TRUE.
 
-ASSIGN
+ASSIGN 
        v-pr-goods0:READ-ONLY IN FRAME FRAME-B        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-pr-nogds IN FRAME FRAME-B
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        v-pr-nogds:READ-ONLY IN FRAME FRAME-B        = TRUE.
 
-ASSIGN
+ASSIGN 
        v-pr-nogds0:READ-ONLY IN FRAME FRAME-B        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -1571,7 +1570,7 @@ END.
 &Scoped-define FRAME-NAME Dialog-Frame
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -1636,7 +1635,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -1657,43 +1656,42 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE B-exit B-quit b-frame-a b-frame-b B-Help
+  ENABLE B-exit B-quit b-frame-a b-frame-b B-Help 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-  DISPLAY pr-notls pr-altex pr-sclex pr-parex pr-clt-q pr-dpl-q pr-rdc-q
-          pr-list pr-equ-dq pr-abs-d pr-dscnt pr-print pr-rndmt pr-rndbs
-          pr-incpc pr-discm pr-sigma v-pr-notls v-pr-altex
-          v-pr-sclex v-pr-parex v-pr-clt-q v-pr-dpl-q v-pr-rdc-q v-pr-equ-dq
-          v-pr-abs-d v-pr-dscnt v-pr-print FILL-IN-2 v-pr-rndmt v-pr-list
-          v-pr-rndbs v-pr-incpc v-pr-discm v-pr-sigma
+  DISPLAY pr-notls pr-altex pr-sclex pr-parex pr-clt-q pr-dpl-q pr-rdc-q 
+          pr-equ-dq pr-abs-d pr-dscnt pr-print pr-list pr-rndmt pr-rndbs 
+          pr-incpc pr-discm pr-sigma v-pr-notls v-pr-altex v-pr-sclex v-pr-parex 
+          v-pr-clt-q v-pr-dpl-q v-pr-rdc-q v-pr-equ-dq v-pr-abs-d v-pr-dscnt 
+          v-pr-print v-pr-list FILL-IN-2 v-pr-rndmt v-pr-rndbs v-pr-incpc 
+          v-pr-discm v-pr-sigma 
       WITH FRAME FRAME-A.
-  ENABLE I-pr-abs-d I-pr-altex I-pr-clt-q I-pr-dpl-q I-pr-dscnt
-         I-pr-equ-dq I-pr-notls I-pr-parex I-pr-print I-pr-rdc-q
-         I-pr-discm I-pr-incpc I-pr-rndbs I-pr-sigma I-pr-rndmt
-         I-pr-sclex B-attr-pr-notls pr-notls B-attr-pr-altex pr-altex
-         B-attr-pr-sclex pr-sclex B-attr-pr-parex pr-parex B-attr-pr-clt-q
-         pr-clt-q B-attr-pr-dpl-q pr-dpl-q B-attr-pr-rdc-q pr-rdc-q pr-equ-dq
-         B-attr-pr-equ-dq B-attr-pr-abs-d pr-abs-d B-attr-pr-dscnt pr-dscnt
-         B-attr-pr-print pr-print B-attr-pr-rndmt
-         pr-rndmt B-attr-pr-rndbs pr-rndbs B-attr-pr-incpc pr-incpc
-         B-attr-pr-discm pr-discm B-attr-pr-sigma pr-sigma v-pr-notls v-pr-altex
-         v-pr-parex v-pr-clt-q v-pr-dpl-q v-pr-rdc-q v-pr-equ-dq v-pr-abs-d
-         v-pr-dscnt v-pr-print FILL-IN-2 v-pr-rndmt v-pr-rndbs
-         I-pr-list B-attr-pr-list B-corr-pr-list v-pr-list
-         v-pr-incpc v-pr-discm v-pr-sigma v-pr-sclex
+  ENABLE I-pr-abs-d I-pr-altex I-pr-clt-q I-pr-dpl-q I-pr-dscnt I-pr-equ-dq 
+         I-pr-notls I-pr-parex I-pr-print I-pr-rdc-q I-pr-discm I-pr-incpc 
+         I-pr-rndbs I-pr-sigma I-pr-list I-pr-rndmt I-pr-sclex B-attr-pr-notls 
+         pr-notls B-attr-pr-altex pr-altex B-attr-pr-sclex pr-sclex 
+         B-attr-pr-parex pr-parex B-attr-pr-clt-q pr-clt-q B-attr-pr-dpl-q 
+         pr-dpl-q B-attr-pr-rdc-q pr-rdc-q B-attr-pr-equ-dq pr-equ-dq 
+         B-attr-pr-abs-d pr-abs-d B-attr-pr-dscnt pr-dscnt B-attr-pr-print 
+         pr-print B-attr-pr-list B-corr-pr-list B-attr-pr-rndmt pr-rndmt 
+         B-attr-pr-rndbs pr-rndbs B-attr-pr-incpc pr-incpc B-attr-pr-discm 
+         pr-discm B-attr-pr-sigma pr-sigma v-pr-notls v-pr-altex v-pr-sclex 
+         v-pr-parex v-pr-clt-q v-pr-dpl-q v-pr-rdc-q v-pr-equ-dq v-pr-abs-d 
+         v-pr-dscnt v-pr-print v-pr-list FILL-IN-2 v-pr-rndmt v-pr-rndbs 
+         v-pr-incpc v-pr-discm v-pr-sigma 
       WITH FRAME FRAME-A.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-A}
-  DISPLAY pr-goods0 pr-nogds0 scr-nogrp0 pr-goods pr-nogds scr-nogrp v-pr-goods0
-          v-pr-nogds0 v-pr-goods v-pr-nogds
+  DISPLAY pr-goods0 pr-nogds0 scr-nogrp0 pr-goods pr-nogds scr-nogrp v-pr-goods0 
+          v-pr-nogds0 v-pr-goods v-pr-nogds 
       WITH FRAME FRAME-B.
-  ENABLE I-pr-goods I-pr-nogds I-pr-goods0 I-pr-nogds0 B-attr-pr-goods0
-         pr-goods0 B-attr-pr-nogds0 pr-nogds0 B-corr-pr-nogds0 scr-nogrp0
-         B-attr-pr-goods pr-goods B-attr-pr-nogds pr-nogds B-corr-pr-nogds
-         scr-nogrp v-pr-goods0 v-pr-nogds0 v-pr-goods v-pr-nogds
+  ENABLE I-pr-goods I-pr-nogds I-pr-goods0 I-pr-nogds0 B-attr-pr-goods0 
+         pr-goods0 B-attr-pr-nogds0 pr-nogds0 B-corr-pr-nogds0 scr-nogrp0 
+         B-attr-pr-goods pr-goods B-attr-pr-nogds pr-nogds B-corr-pr-nogds 
+         scr-nogrp v-pr-goods0 v-pr-nogds0 v-pr-goods v-pr-nogds 
       WITH FRAME FRAME-B.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
 END PROCEDURE.
@@ -1701,7 +1699,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 define variable v-value-character as character no-undo .
 define variable v-value-date      as date      no-undo .
@@ -1928,7 +1926,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame 
 PROCEDURE init-proc :
 define variable v-i               as integer   no-undo .
 define variable v-value-character as character no-undo .
@@ -2017,7 +2015,7 @@ end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-proc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-proc Dialog-Frame 
 PROCEDURE save-proc :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2155,3 +2153,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
