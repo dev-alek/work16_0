@@ -1767,15 +1767,17 @@ if p-usr then do:
                {&undo-mes}
             end.
          END. /*for each temp-user-menu-group */
-
          &scop next-line _user-login-action-role
          &scop table-name temp-user-login-action-role
          _user-login-action-role:
          FOR EACH temp-user-login-action-role:
             FIND FIRST ub.user-login-action-role No-LOCK
-                 WHERE ub.user-login-action-role.user-id  = temp-user-login-action-role.user-id
-                   AND ub.user-login-action-role.db-num   = temp-user-login-action-role.db-num
+                 WHERE 
+/*                 ub.user-login-action-role.user-id  = temp-user-login-action-role.user-id*/
+/*                   AND                                                                   */
+                   ub.user-login-action-role.db-num   = temp-user-login-action-role.db-num
                    AND ub.user-login-action-role.user-login-role-code = temp-user-login-action-role.user-login-role-code
+                   AND ub.user-login-action-role.action-head-code   =   temp-user-login-action-role.action-head-code
                  NO-ERROR
                  .
             IF AVAILABLE ub.user-login-action-role then do:
