@@ -48,7 +48,7 @@ define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo initial "Блокировка и разблокировка товаров на складских местах":U .
 
 { cmp/vssrevis.i }
-{ cmp/str-glbl.i }
+{ cmp/trg-def.i }
 { cmp/library.i }
 
 define buffer buf_goods    for ub.goods .
@@ -245,24 +245,26 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                                       buf_rvs-doc.status_ ) .
           end.
         end.
-        if p-is-berate = yes then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Невозможно заблокировать товар на месте хранения" skip
-            "Товар уже является заблокированным" skip
-            "Объект" p-obj-type p-obj-code skip
-            "Место хранения" p-pl-code skip
-            "Артикул" buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
-          view-as alert-box error .
-        end.
-        undo main-block, return error substitute( 'Невозможно заблокировать товар на месте хранения.&1' +
-                                                  'Товар уже является заблокированным.&1' +
-                                                  'Объект &2 &3&1Место хранения &4&1Код товара&5&1',
-                                                  {&new-line},
-                                                  p-obj-type,
-                                                  p-obj-code,
-                                                  p-pl-code,
-                                                  p-gds-code ) .
+        if not g#auto or not g#news then do:  /* автосверки и новости не должны вставать  */
+            if p-is-berate = yes then do:
+              message
+                vss-workfile vss-revision vss-description skip
+                "Невозможно заблокировать товар на месте хранения" skip
+                "Товар уже является заблокированным" skip
+                "Объект" p-obj-type p-obj-code skip
+                "Место хранения" p-pl-code skip
+                "Артикул" buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
+              view-as alert-box error .
+            end.
+            undo main-block, return error substitute( 'Невозможно заблокировать товар на месте хранения.&1' +
+                                                      'Товар уже является заблокированным.&1' +
+                                                      'Объект &2 &3&1Место хранения &4&1Код товара&5&1',
+                                                      {&new-line},
+                                                      p-obj-type,
+                                                      p-obj-code,
+                                                      p-pl-code,
+                                                      p-gds-code ) .
+        end.                                          
       end.
     end.
     when "assign-rvs-on=false" then do:
@@ -320,24 +322,27 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         end.
       end.
       else do:
-        if p-is-berate = yes then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Невозможно разблокировать товар на месте хранения" skip
-            "Товар не является заблокированным" skip
-            "Объект" p-obj-type p-obj-code skip
-            "Место хранения" p-pl-code skip
-            "Артикул" buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
-          view-as alert-box error .
-        end.
-        undo main-block, return error substitute( 'Невозможно снять блокировку на товар на месте хранения.&1' +
-                                                  'Товар не является заблокированным.&1' +
-                                                  'Объект &2 &3&1Место хранения &4&1Код товара&5&1',
-                                                  {&new-line},
-                                                  p-obj-type,
-                                                  p-obj-code,
-                                                  p-pl-code,
-                                                  p-gds-code ) .
+        if not g#auto or not g#news then do:  /* автосверки и новости не должны вставать  */  
+            if p-is-berate = yes then do:
+              message
+                vss-workfile vss-revision vss-description skip
+                "Невозможно разблокировать товар на месте хранения" skip
+                "Товар не является заблокированным" skip
+                "Объект" p-obj-type p-obj-code skip
+                "Место хранения" p-pl-code skip
+                "Артикул" buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
+              view-as alert-box error .
+            end.
+            undo main-block, return error substitute( 'Невозможно снять блокировку на товар на месте хранения.&1' +
+                                                      'Товар не является заблокированным.&1' +
+                                                      'Объект &2 &3&1Место хранения &4&1Код товара&5&1',
+                                                      {&new-line},
+                                                      p-obj-type,
+                                                      p-obj-code,
+                                                      p-pl-code,
+                                                      p-gds-code ) .
+                                                  
+       end.
       end.
     end.
     when "check-rvs-on=true" then do:
