@@ -182,7 +182,7 @@ DEFINE BROWSE br-contract
     tt-contract.contract-date FORMAT "99/99/9999":U       LABEL "Дата"
     tt-contract.contract-date-beg FORMAT "99/99/9999":U   LABEL "Начало"
     tt-contract.contract-date-end FORMAT "99/99/9999":U   LABEL "Конец"
-    tt-contract.host-code FORMAT "99999":U WIDTH 13.63    LABEL "Фирма"
+    tt-contract.host-code FORMAT "999999999":U WIDTH 13.63    LABEL "Фирма"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 95.5 BY 15.5 FIT-LAST-COLUMN.
