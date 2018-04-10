@@ -182,7 +182,7 @@ DEFINE QUERY br-table FOR
 DEFINE BROWSE br-lines
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-lines Dialog-Frame _FREEFORM
   QUERY br-lines NO-LOCK DISPLAY
-      temp_fbr-history-line.fblLabel     FORMAT "X(15)":U column-label "Поле"
+      temp_fbr-history-line.fblLabel     FORMAT "X(40)":U column-label "Поле"
       temp_fbr-history-line.fblOldValue  FORMAT "X(40)":U column-label "Старое значение"
       temp_fbr-history-line.fblNewValue  FORMAT "X(40)":U column-label "Значение после изменения"
       temp_fbr-history-line.fblFieldName FORMAT "X(20)":U column-label "Имя поля"
@@ -240,6 +240,9 @@ DEFINE FRAME Dialog-Frame
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+ASSIGN 
+       br-lines:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
 ASSIGN 
        br-table:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.

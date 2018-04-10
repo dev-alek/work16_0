@@ -373,7 +373,7 @@ DEFINE BUTTON B-mark
 
 DEFINE VARIABLE dsp-rs AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT
-    SIZE 98.5 BY 1
+    SIZE 80 BY 1
     tooltip "Строка текущего состояния списка"
     FGCOLOR 4
     no-undo.
@@ -1241,11 +1241,14 @@ define buffer buf_{1}-hist for {1}-hist.
   &endif
   &endif
   reposition br-option to recid v-recid0.
-  if tot-lns > 0 then
-    ENABLE b-print b-arch b-rest b-save b-del b-lkp b-clr a-n-c
+ 
+  if tot-lns > 0 then do:
+   /* View b-print. Enable b-print. b-print:move-to-top(). */
+    Enable b-print b-arch b-rest b-save b-del b-lkp b-clr a-n-c
     b-mark when lookup("b-mark", bttns) > 0
     b-sel  when lookup("b-sel", bttns) > 0
     WITH FRAME {&frame-name}.
+  end.  
   else do:
     DISABLE b-print b-arch b-rest b-save b-del b-lkp b-clr a-n-c
     b-mark b-sel

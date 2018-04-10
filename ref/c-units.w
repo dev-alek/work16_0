@@ -532,7 +532,7 @@ PROCEDURE OpenBr :
 ------------------------------------------------------------------------------*/
 OPEN QUERY br-cunits FOR EACH X_c-units NO-LOCK where
                                X_c-units.unit-name = p-unit-name
-                           AND X_c-units.corr-user-db-num = 0
+                           
                               INDEXED-REPOSITION.
 APPLY "VALUE-CHANGED" TO br-cunits in frame {&frame-name}.
 APPLY "ENTRY" TO br-cunits.

@@ -784,7 +784,7 @@ for each buf_chk-pay no-lock where
                                      ,buf_chk-pay.line-num
                                      ,v-field-name)
     temp-changes.l_name = substitute("Строка оплат &1 &2"
-                                      ,buf_chk-gds.line-num
+                                      ,buf_chk-pay.line-num
                                       ,v-field-label)
     temp-changes.v_old = string(buffer buf_c-chk-pay:buffer-field(v-real-field-name):buffer-value)
     temp-changes.v_new = string(buffer buf_chk-pay:buffer-field(v-real-field-name):buffer-value)

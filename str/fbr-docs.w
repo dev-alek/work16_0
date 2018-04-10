@@ -1080,7 +1080,7 @@ then do:
         p-rid-list = string(recid( f-doc ))
     .
 end.
-/*apply "go" to frame {&frame-name}.*/
+apply "go" to frame {&frame-name}.
 END.
 
 on choose of b-sch in frame {&frame-name} do:

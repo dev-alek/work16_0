@@ -49,20 +49,6 @@ on error undo, return error
     if new( newb )
     then do:
         /* Первое изменение документа производства создаёт пустой документ, не прописан даже тип. */
-/*        assign*/
-/*            buf_c-fbr-doc.doc-code         = newb.doc-code*/
-/*            buf_c-fbr-doc.corr-date        = v-today*/
-/*            buf_c-fbr-doc.corr-time        = v-time*/
-/*            buf_c-fbr-doc.corr-user-db-num = g#db-num*/
-/*            buf_c-fbr-doc.corr-user-name   = g#userid*/
-/*            buf_c-fbr-doc.chip-num         = v-chip-num*/
-/*            buf_c-fbr-doc.user-db-num      = newb.user-db-num*/
-/*            buf_c-fbr-doc.user-name        = newb.user-name*/
-/*            buf_c-fbr-doc.obj-type         = newb.obj-type*/
-/*            buf_c-fbr-doc.obj-code         = newb.obj-code*/
-/*        .*/
-    end.
-    else do:
         run cur-time in this-procedure (
             output v-today
             , output v-time
@@ -72,42 +58,41 @@ on error undo, return error
         .
         create buf_c-fbr-doc .
         buffer-copy
-            oldb except doc-code
+            newb except doc-code
         to buf_c-fbr-doc
         assign
-            buf_c-fbr-doc.doc-code         = oldb.doc-code
+            buf_c-fbr-doc.doc-code         = newb.doc-code
             buf_c-fbr-doc.corr-date        = v-today
             buf_c-fbr-doc.corr-time        = v-time
             buf_c-fbr-doc.corr-user-db-num = g#db-num
             buf_c-fbr-doc.corr-user-name   = g#userid
             buf_c-fbr-doc.chip-num         = v-chip-num
         .
-        for each buf_fbr-line no-lock
-           where buf_fbr-line.doc-code = oldb.doc-code
-        on error undo, return error
-        :
-            if new( newb )
-            then do:
-                create buf_c-fbr-line.
-                assign
-                    buf_c-fbr-line.doc-code             = buf_fbr-line.doc-code
-                    buf_c-fbr-line.trn-type             = buf_fbr-line.trn-type
-                    buf_c-fbr-line.recipe-code          = buf_fbr-line.recipe-code
-                    buf_c-fbr-line.artic                = buf_fbr-line.artic
-                    buf_c-fbr-line.prod-type            = buf_fbr-line.prod-type
-                    buf_c-fbr-line.prod-code            = buf_fbr-line.prod-code
-                    buf_c-fbr-line.corr-date            = v-today
-                    buf_c-fbr-line.corr-time            = v-time
-                    buf_c-fbr-line.corr-user-db-num     = g#db-num
-                    buf_c-fbr-line.corr-user-name       = g#userid
-                    buf_c-fbr-line.chip-num             = v-chip-num
-                .
+/*        for each buf_fbr-line no-lock                                             */
+/*           where buf_fbr-line.doc-code = newb.doc-code                            */
+/*        on error undo, return error                                               */
+/*        :                                                                         */
+/*                                                                                  */
+/*                create buf_c-fbr-line.                                            */
+/*                assign                                                            */
+/*                    buf_c-fbr-line.doc-code             = buf_fbr-line.doc-code   */
+/*                    buf_c-fbr-line.trn-type             = buf_fbr-line.trn-type   */
+/*                    buf_c-fbr-line.recipe-code          = buf_fbr-line.recipe-code*/
+/*                    buf_c-fbr-line.artic                = buf_fbr-line.artic      */
+/*                    buf_c-fbr-line.prod-type            = buf_fbr-line.prod-type  */
+/*                    buf_c-fbr-line.prod-code            = buf_fbr-line.prod-code  */
+/*                    buf_c-fbr-line.corr-date            = v-today                 */
+/*                    buf_c-fbr-line.corr-time            = v-time                  */
+/*                    buf_c-fbr-line.corr-user-db-num     = g#db-num                */
+/*                    buf_c-fbr-line.corr-user-name       = g#userid                */
+/*                    buf_c-fbr-line.chip-num             = v-chip-num              */
+/*                .                                                                 */
                 if g#news <> yes
                 then do:
                     run trg/userlog.p (
-                          input {&nwsdochs_action_update}
-                        , input {&table_c-fbr-line}
-                        , input ( buffer buf_c-fbr-line :handle )
+                          input {&nwsdochs_action_create}
+                        , input {&table_c-fbr-doc}
+                        , input ( buffer buf_c-fbr-doc :handle )
                         , input ?
                         , input ""
                     ) no-error.
@@ -119,9 +104,70 @@ on error undo, return error
                                             , return-value
                                             , error-status :get-message ( 1 ) ).
                     end.
-                end.
-            end.
-            else do:
+/*                end.*/
+
+    end.
+    end.
+    else do:
+        run cur-time in this-procedure (
+            output v-today
+            , output v-time
+        ).
+        assign
+            v-chip-num = next-value( s-fbr-chip )
+        .
+        create buf_c-fbr-doc .
+        buffer-copy
+            newb except doc-code
+        to buf_c-fbr-doc
+        assign
+            buf_c-fbr-doc.doc-code         = newb.doc-code
+            buf_c-fbr-doc.corr-date        = v-today
+            buf_c-fbr-doc.corr-time        = v-time
+            buf_c-fbr-doc.corr-user-db-num = g#db-num
+            buf_c-fbr-doc.corr-user-name   = g#userid
+            buf_c-fbr-doc.chip-num         = v-chip-num
+        .
+        for each buf_fbr-line no-lock
+           where buf_fbr-line.doc-code = newb.doc-code
+        on error undo, return error
+        :
+/*            if new( newb )                                                                                 */
+/*            then do:                                                                                       */
+/*                create buf_c-fbr-line.                                                                     */
+/*                assign                                                                                     */
+/*                    buf_c-fbr-line.doc-code             = buf_fbr-line.doc-code                            */
+/*                    buf_c-fbr-line.trn-type             = buf_fbr-line.trn-type                            */
+/*                    buf_c-fbr-line.recipe-code          = buf_fbr-line.recipe-code                         */
+/*                    buf_c-fbr-line.artic                = buf_fbr-line.artic                               */
+/*                    buf_c-fbr-line.prod-type            = buf_fbr-line.prod-type                           */
+/*                    buf_c-fbr-line.prod-code            = buf_fbr-line.prod-code                           */
+/*                    buf_c-fbr-line.corr-date            = v-today                                          */
+/*                    buf_c-fbr-line.corr-time            = v-time                                           */
+/*                    buf_c-fbr-line.corr-user-db-num     = g#db-num                                         */
+/*                    buf_c-fbr-line.corr-user-name       = g#userid                                         */
+/*                    buf_c-fbr-line.chip-num             = v-chip-num                                       */
+/*                .                                                                                          */
+/*                if g#news <> yes                                                                           */
+/*                then do:                                                                                   */
+/*                    run trg/userlog.p (                                                                    */
+/*                          input {&nwsdochs_action_update}                                                  */
+/*                        , input {&table_c-fbr-line}                                                        */
+/*                        , input ( buffer buf_c-fbr-line :handle )                                          */
+/*                        , input ?                                                                          */
+/*                        , input ""                                                                         */
+/*                    ) no-error.                                                                            */
+/*                    if error-status :error                                                                 */
+/*                    then do:                                                                               */
+/*                        undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"*/
+/*                                            , {&new-line}                                                  */
+/*                                            , vss-workfile                                                 */
+/*                                            , return-value                                                 */
+/*                                            , error-status :get-message ( 1 ) ).                           */
+/*                    end.                                                                                   */
+/*                end.                                                                                       */
+/*            end.                                                                                           */
+/*            else do:                                                                                       */
                 assign
                     v-is-equal = no
                 .
@@ -187,7 +233,7 @@ on error undo, return error
                                                 , vss-workfile
                                                 , return-value
                                                 , error-status :get-message ( 1 ) ).
-                        end.
+/*                        end.*/
                     end.
                 end.
             end.

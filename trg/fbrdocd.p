@@ -76,6 +76,21 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       then do:
         undo main-block, return error .
       end.
+      run trg/userlog.p (
+                          input {&nwsdochs_action_delete}
+                        , input {&table_fbr-doc}
+                        , input ( buffer ub.fbr-doc :handle )
+                        , input ?
+                        , input ""
+                    ) no-error.
+                    if error-status :error
+                    then do:
+                        undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                                            , {&new-line}
+                                            , vss-workfile
+                                            , return-value
+                                            , error-status :get-message ( 1 ) ).
+                    end.
     end.
   end.
 
