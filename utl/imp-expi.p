@@ -1269,7 +1269,7 @@ if p-rht then do:
             ub.action-role-item.action-head-code = temp-action-role-item.action-head-code
             ub.action-role-item.action-item-id   = temp-action-role-item.action-item-id
             ub.action-role-item.action-role-code = temp-action-role-item.action-role-code
-            ub.action-role-item.action-role-item-code = dynamic-next-value("s-action-role":U, "{&db-name_schema}":U)
+            ub.action-role-item.action-role-item-code = dynamic-next-value("s-action-role-item":U, "{&db-name_schema}":U)
             ub.action-role-item.db-num          = temp-action-role-item.db-num
             ub.action-role-item.whole-send-news = temp-action-role-item.whole-send-news 
           .
