@@ -507,18 +507,18 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME B-10
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-10 Dialog-Frame
-ON CHOOSE OF B-10 IN FRAME Dialog-Frame
-DO:
-  run gbl/v-taobj.w
-      ({&attr-inv-obj},
-       "izlcstpr"
-       ).
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&Scoped-define SELF-NAME B-10                              */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-10 Dialog-Frame*/
+/*ON CHOOSE OF B-10 IN FRAME Dialog-Frame                    */
+/*DO:                                                        */
+/*  run gbl/v-taobj.w                                        */
+/*      ({&attr-inv-obj},                                    */
+/*       "izlcstpr"                                          */
+/*       ).                                                  */
+/*END.                                                       */
+/*                                                           */
+/*/* _UIB-CODE-BLOCK-END */                                  */
+/*&ANALYZE-RESUME                                            */
 
 
 &Scoped-define SELF-NAME B-2
