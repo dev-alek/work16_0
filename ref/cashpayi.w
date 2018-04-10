@@ -12,8 +12,9 @@ DEFINE BUFFER buf_currency FOR currency.
 DEFINE BUFFER buf_pay-type FOR pay-type.
 DEFINE BUFFER buf_wealth FOR wealth.
 DEFINE BUFFER locked_cash-pay FOR cash-pay.
+DEFINE BUFFER buf_cash-pay-attr FOR ub.cash-pay-attr.
 DEFINE TEMP-TABLE tt-cash-pay NO-UNDO LIKE cash-pay.
-DEFINE buffer buf_cash-pay-attr for ub.cash-pay-attr .
+
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
@@ -82,7 +83,7 @@ define variable tcode like ub.cash-pay.cdpay-code no-undo.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-FIELDS tt-cash-pay.cdpay-code tt-cash-pay.obj-name ~
 tt-cash-pay.curr-code tt-cash-pay.pay-code tt-cash-pay.wth-code ~
-tt-cash-pay.pay-limit tt-cash-pay.rule-file-name tt-cash-pay.slip-file-name ~
+tt-cash-pay.pay-limit tt-cash-pay.slip-file-name tt-cash-pay.rule-file-name ~
 tt-cash-pay.is-cash tt-cash-pay.atr128 tt-cash-pay.atr1 ~
 tt-cash-pay.is-credit-card tt-cash-pay.atr2 tt-cash-pay.is-debet-card ~
 tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8 ~
@@ -97,7 +98,7 @@ b-curr b-pay b-wealth cb-prop T-register T-kbo T-can-mix T-lnr T-has-return ~
 T-has-overpay for-curr-name for-pay-name for-wth-name 
 &Scoped-Define DISPLAYED-FIELDS tt-cash-pay.cdpay-code tt-cash-pay.obj-name ~
 tt-cash-pay.curr-code tt-cash-pay.pay-code tt-cash-pay.wth-code ~
-tt-cash-pay.pay-limit tt-cash-pay.rule-file-name tt-cash-pay.slip-file-name ~
+tt-cash-pay.pay-limit tt-cash-pay.slip-file-name tt-cash-pay.rule-file-name ~
 tt-cash-pay.is-cash tt-cash-pay.atr128 tt-cash-pay.atr1 ~
 tt-cash-pay.is-credit-card tt-cash-pay.atr2 tt-cash-pay.is-debet-card ~
 tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8 ~
@@ -170,6 +171,16 @@ DEFINE BUTTON b-wealth
      SIZE 3 BY 1
      BGCOLOR 8 FGCOLOR 0 .
 
+DEFINE VARIABLE cb-card-type AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Тип карты" 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEM-PAIRS "","off-line",
+                     "Гамаюн","gamayun",
+                     "Премиум","premium",
+                     "Unipos","unipos"
+     DROP-DOWN-LIST
+     SIZE 16 BY 1 NO-UNDO.
+
 DEFINE VARIABLE cb-prop AS CHARACTER FORMAT "X(256)":U INITIAL "0" 
      LABEL "Тип" 
      VIEW-AS COMBO-BOX INNER-LINES 8
@@ -202,7 +213,7 @@ DEFINE VARIABLE for-wth-name AS CHARACTER FORMAT "X(256)":U
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 96.5 BY 15.46.
+     SIZE 96.5 BY 17.17.
 
 DEFINE VARIABLE T-can-mix AS LOGICAL INITIAL no 
      LABEL "Разрешена смеш.оплата" 
@@ -232,7 +243,7 @@ DEFINE VARIABLE T-lnr AS LOGICAL INITIAL no
 DEFINE VARIABLE T-register AS LOGICAL INITIAL no 
      LABEL "Ведомость" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .79 NO-UNDO.
+     SIZE 45 BY 1.08 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -270,60 +281,61 @@ DEFINE FRAME Dialog-Frame
           LABEL "Предел без авторизации"
           VIEW-AS FILL-IN 
           SIZE 15.63 BY 1
-     cb-prop AT ROW 6.58 COL 48.63 COLON-ALIGNED WIDGET-ID 14
-     tt-cash-pay.rule-file-name AT ROW 7.88 COL 71.63 COLON-ALIGNED
-          LABEL "Имя файла правил обработки"
-          VIEW-AS FILL-IN 
-          SIZE 22 BY 1
-     tt-cash-pay.slip-file-name AT ROW 7.92 COL 17.13 COLON-ALIGNED
+     cb-prop AT ROW 6.58 COL 48.63 COLON-ALIGNED WIDGET-ID 4
+     cb-card-type AT ROW 7.88 COL 48.75 COLON-ALIGNED WIDGET-ID 8
+     tt-cash-pay.slip-file-name AT ROW 9.17 COL 17.13 COLON-ALIGNED
           LABEL "Имя файла слипа"
           VIEW-AS FILL-IN 
           SIZE 22 BY .96
-     tt-cash-pay.is-cash AT ROW 9.79 COL 2.13
+     tt-cash-pay.rule-file-name AT ROW 9.17 COL 71.63 COLON-ALIGNED
+          LABEL "Имя файла правил обработки"
+          VIEW-AS FILL-IN 
+          SIZE 22 BY 1
+     tt-cash-pay.is-cash AT ROW 11.5 COL 2.5
           LABEL "Платеж наличными"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.atr128 AT ROW 9.79 COL 48.63
+     tt-cash-pay.atr128 AT ROW 11.5 COL 49
           LABEL "Платеж по топливной карте"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.atr1 AT ROW 10.79 COL 2.13
+     tt-cash-pay.atr1 AT ROW 12.5 COL 2.5
           LABEL "Разрешается сдача и возврат"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-credit-card AT ROW 10.79 COL 48.63
+     tt-cash-pay.is-credit-card AT ROW 12.5 COL 49
           LABEL "Кредитная карта"
           VIEW-AS TOGGLE-BOX
           SIZE 45.38 BY .92
-     tt-cash-pay.atr2 AT ROW 11.79 COL 2.13
+     tt-cash-pay.atr2 AT ROW 13.5 COL 2.5
           LABEL "Разрешен перевод оплаты на платеж"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-debet-card AT ROW 11.79 COL 48.63
+     tt-cash-pay.is-debet-card AT ROW 13.5 COL 49
           LABEL "Расчетная (дебетовая) карта"
           VIEW-AS TOGGLE-BOX
           SIZE 45.38 BY .92
-     tt-cash-pay.atr4 AT ROW 12.79 COL 2.13
+     tt-cash-pay.atr4 AT ROW 14.5 COL 2.5
           LABEL "Принудительная печать слипа по платежу"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-goods-pay AT ROW 12.79 COL 48.63
+     tt-cash-pay.is-goods-pay AT ROW 14.5 COL 49
           LABEL "Платеж за товары"
           VIEW-AS TOGGLE-BOX
           SIZE 45.38 BY .92
-     tt-cash-pay.atr8 AT ROW 13.79 COL 2.13
+     tt-cash-pay.atr8 AT ROW 15.5 COL 2.5
           LABEL "Принудительная печать фактуры по платежу"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-service-pay AT ROW 13.79 COL 48.75
+     tt-cash-pay.is-service-pay AT ROW 15.5 COL 49.13
           LABEL "Сервисный платеж"
           VIEW-AS TOGGLE-BOX
           SIZE 45.38 BY .92
-     tt-cash-pay.atr16 AT ROW 14.79 COL 2.13
+     tt-cash-pay.atr16 AT ROW 16.5 COL 2.5
           LABEL "Необходима on-line авторизация"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-all-pay AT ROW 14.79 COL 48.75
+     tt-cash-pay.is-all-pay AT ROW 16.5 COL 49.13
           LABEL "'Общий' платеж"
           VIEW-AS TOGGLE-BOX
           SIZE 45.38 BY .92
@@ -333,37 +345,37 @@ DEFINE FRAME Dialog-Frame
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     tt-cash-pay.atr32 AT ROW 15.79 COL 2.13
+     tt-cash-pay.atr32 AT ROW 17.5 COL 2.5
           LABEL "Обязателен ввод PIN-кода"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-card-swap AT ROW 15.79 COL 48.88
+     tt-cash-pay.is-card-swap AT ROW 17.5 COL 49.25
           LABEL "Запрос ввода карты"
           VIEW-AS TOGGLE-BOX
           SIZE 45.38 BY .92
-     tt-cash-pay.atr64 AT ROW 16.79 COL 2.13
+     tt-cash-pay.atr64 AT ROW 18.5 COL 2.5
           LABEL "Топливный платеж"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-bar-read AT ROW 16.79 COL 48.88
+     tt-cash-pay.is-bar-read AT ROW 18.5 COL 49.25
           LABEL "Запрашивать сканирование баркода талона для платежа"
           VIEW-AS TOGGLE-BOX
           SIZE 48.75 BY .92
-     tt-cash-pay.is-credit AT ROW 17.79 COL 2.13
+     tt-cash-pay.is-credit AT ROW 19.5 COL 2.5
           LABEL "Платеж <В кредит>"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1 TOOLTIP "Не кредитная карта!!!!"
-     tt-cash-pay.is-advance AT ROW 17.79 COL 48.88
+     tt-cash-pay.is-advance AT ROW 19.5 COL 49.25
           LABEL "Учет авансового платежа"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     T-register AT ROW 18.79 COL 2.13 WIDGET-ID 2
-     T-kbo AT ROW 18.79 COL 48.88 WIDGET-ID 4
-     T-can-mix AT ROW 19.79 COL 2.13 WIDGET-ID 6
-     T-lnr AT ROW 19.79 COL 48.88 WIDGET-ID 8
-     T-has-return AT ROW 20.79 COL 2.13 WIDGET-ID 10
-     T-has-overpay AT ROW 20.79 COL 48.75 WIDGET-ID 12
-     tt-cash-pay.pay-card-view AT ROW 21.92 COL 1
+     T-register AT ROW 20.5 COL 2.5 WIDGET-ID 2
+     T-kbo AT ROW 20.5 COL 49.25 WIDGET-ID 4
+     T-can-mix AT ROW 21.5 COL 2.5 WIDGET-ID 6
+     T-lnr AT ROW 21.5 COL 49.25 WIDGET-ID 8
+     T-has-return AT ROW 22.5 COL 2.5 WIDGET-ID 10
+     T-has-overpay AT ROW 22.5 COL 49.13 WIDGET-ID 12
+     tt-cash-pay.pay-card-view AT ROW 23.63 COL 1.38
           LABEL "Префиксы N плат.карт для просмотра"
           VIEW-AS FILL-IN 
           SIZE 52.25 BY 1 TOOLTIP "Список префикс номеров платежных карт, которые будут видны в BO"
@@ -371,10 +383,10 @@ DEFINE FRAME Dialog-Frame
      for-pay-name AT ROW 5 COL 21 COLON-ALIGNED NO-LABEL
      for-wth-name AT ROW 5 COL 70 COLON-ALIGNED NO-LABEL
      "Свойства платежа :" VIEW-AS TEXT
-          SIZE 18 BY .75 AT ROW 9.04 COL 38
+          SIZE 18 BY .75 AT ROW 10.75 COL 38.38
           BGCOLOR 8 FGCOLOR 4 
      RECT-3 AT ROW 6.33 COL 1.5
-     SPACE(0.19) SKIP(1.17)
+     SPACE(0.24) SKIP(1.49)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры типа кассового платежа"
@@ -424,6 +436,11 @@ ASSIGN
    EXP-LABEL                                                            */
 /* SETTINGS FOR TOGGLE-BOX tt-cash-pay.atr8 IN FRAME Dialog-Frame
    EXP-LABEL                                                            */
+/* SETTINGS FOR COMBO-BOX cb-card-type IN FRAME Dialog-Frame
+   NO-DISPLAY NO-ENABLE                                                 */
+ASSIGN 
+       cb-card-type:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
 /* SETTINGS FOR FILL-IN tt-cash-pay.cdpay-code IN FRAME Dialog-Frame
    EXP-LABEL EXP-FORMAT                                                 */
 /* SETTINGS FOR FILL-IN tt-cash-pay.curr-code IN FRAME Dialog-Frame
@@ -613,11 +630,35 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME cb-card-type
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-card-type Dialog-Frame
+ON VALUE-CHANGED OF cb-card-type IN FRAME Dialog-Frame /* Тип карты */
+DO:
+  assign  
+  cb-card-type.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME cb-prop
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-prop Dialog-Frame
 ON VALUE-CHANGED OF cb-prop IN FRAME Dialog-Frame /* Тип */
 DO:
   assign cb-prop .
+  if cb-prop = "4" then do:
+    enable
+    cb-card-type
+    with frame {&frame-name}
+    .
+    APPLY "value-change" to cb-card-type in FRAME {&frame-name} .
+  end.
+  else do:
+    HIDE 
+    cb-card-type
+    in frame {&frame-name} .
+  end.    
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -778,7 +819,7 @@ PROCEDURE enable_UI :
   IF AVAILABLE tt-cash-pay THEN 
     DISPLAY tt-cash-pay.cdpay-code tt-cash-pay.obj-name tt-cash-pay.curr-code 
           tt-cash-pay.pay-code tt-cash-pay.wth-code tt-cash-pay.pay-limit 
-          tt-cash-pay.rule-file-name tt-cash-pay.slip-file-name 
+          tt-cash-pay.slip-file-name tt-cash-pay.rule-file-name 
           tt-cash-pay.is-cash tt-cash-pay.atr128 tt-cash-pay.atr1 
           tt-cash-pay.is-credit-card tt-cash-pay.atr2 tt-cash-pay.is-debet-card 
           tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8 
@@ -790,7 +831,7 @@ PROCEDURE enable_UI :
   ENABLE B-exit b-quit B-attr B-hist B-Help RECT-3 tt-cash-pay.cdpay-code 
          tt-cash-pay.obj-name tt-cash-pay.curr-code b-curr tt-cash-pay.pay-code 
          b-pay tt-cash-pay.wth-code b-wealth tt-cash-pay.pay-limit cb-prop 
-         tt-cash-pay.rule-file-name tt-cash-pay.slip-file-name 
+         tt-cash-pay.slip-file-name tt-cash-pay.rule-file-name 
          tt-cash-pay.is-cash tt-cash-pay.atr128 tt-cash-pay.atr1 
          tt-cash-pay.is-credit-card tt-cash-pay.atr2 tt-cash-pay.is-debet-card 
          tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8 
@@ -883,6 +924,12 @@ end.
     if AVAILABLE buf_cash-pay-attr then do:
     cb-prop = buf_cash-pay-attr.attr-value .                                 
     end.
+     find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+                                 and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
+                                 and buf_cash-pay-attr.attr-code = "cash-card-type" no-error .
+    if AVAILABLE buf_cash-pay-attr then do:
+    cb-card-type = buf_cash-pay-attr.attr-value .                                 
+    end.
 
 
 
@@ -944,6 +991,10 @@ t-has-return
 t-has-overpay
 WITH FRAME {&FRAME-NAME}.
 END.
+if cb-prop = "4" then do:
+  display cb-card-type
+WITH FRAME {&frame-name}.
+end.  
 if available buf_currency then
 display
 buf_currency.curr-name @ for-curr-name
@@ -992,12 +1043,15 @@ when {&add-def} then do:
       tt-cash-pay.slip-file-name
       t-register
       cb-prop
-	  t-kbo
+          t-kbo
       t-lnr
       t-can-mix
       t-has-return
       t-has-overpay
       WITH FRAME {&frame-name}.
+      if cb-prop = "4" then do:
+        enable cb-card-type with frame {&frame-name} .
+      end.  
 end.
 when {&update} then do:
   find first ub.db No-LOCK where ub.db.db-num > 0 No-ERROR.
@@ -1046,6 +1100,9 @@ when {&update} then do:
       t-has-return
       t-has-overpay
       WITH FRAME {&frame-name}.
+            if cb-prop = "4" then do:
+        enable cb-card-type with frame {&frame-name} .
+      end.  
 end.
 when {&lookup} then do:
 assign
@@ -1105,6 +1162,7 @@ tt-cash-pay.slip-file-name
 t-register
 tt-cash-pay.register = (IF t-register THEN 1 ELSE 0)
 cb-prop
+cb-card-type
 t-kbo
 tt-cash-pay.is-kbo = (IF t-kbo THEN 1 ELSE 0)
 t-lnr
@@ -1163,21 +1221,56 @@ tt-cash-pay.can-mix = (IF t-can-mix THEN 1 ELSE 0)
     { gbl/reterhnd.i error }
     undo, return error.
    END.
-     find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
-                                 and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
-                                 and buf_cash-pay-attr.attr-code = "cash-prop" no-error .
-    if not AVAILABLE buf_cash-pay-attr then do:
-        create buf_cash-pay-attr .
-        assign
-            buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
-            buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
-            buf_cash-pay-attr.attr-code = "cash-prop"
-            buf_cash-pay-attr.attr-value = cb-prop 
+  find first buf_cash-pay-attr where 
+        buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+    and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
+    and buf_cash-pay-attr.attr-code = "cash-prop" no-error .
+  if not AVAILABLE buf_cash-pay-attr then 
+  do:
+    create buf_cash-pay-attr .
+    assign
+      buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+      buf_cash-pay-attr.curr-code  = tt-cash-pay.curr-code
+      buf_cash-pay-attr.attr-code  = "cash-prop"
+      buf_cash-pay-attr.attr-value = cb-prop 
+      .
+  end.
+  else 
+  do:
+    buf_cash-pay-attr.attr-value = cb-prop .
+  end.  
+
+  find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+    and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
+    and buf_cash-pay-attr.attr-code = "cash-card-type" no-error .
+  if not AVAILABLE buf_cash-pay-attr then 
+  do:
+    if cb-prop = "4" then 
+    do:
+      create buf_cash-pay-attr .
+      assign
+        buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+        buf_cash-pay-attr.curr-code  = tt-cash-pay.curr-code
+        buf_cash-pay-attr.attr-code  = "cash-card-type"
+        buf_cash-pay-attr.attr-value = cb-card-type 
         .
     end.
     else do:
-        buf_cash-pay-attr.attr-value = cb-prop .
+      cb-card-type = "" .
     end.  
+  end.
+  else 
+  do:
+    if cb-prop = "4" then 
+    do:
+      buf_cash-pay-attr.attr-value = cb-card-type .
+    end.
+    else 
+    do:
+      delete buf_cash-pay-attr .
+      cb-card-type = "" .
+    end.  
+  end.  
    
 END PROCEDURE.
 
