@@ -1377,14 +1377,16 @@ procedure chk-actg :
     :
 /*       проверка прав при приеме новостей бессмысленна */
 
-
-      if gbl-var:g#news = YES  or gbl-var:g#auto or gbl-var:g#esys then do:
+run gbl\get-gbl2.p (output p-ok ) no-error.
+if p-ok then leave check_block .
+/*
+      if ibs.th.gbl.gbl-var:g#news = YES  or ibs.th.gbl.gbl-var:g#auto or ibs.th.gbl.gbl-var:g#esys then do:
          assign
             p-ok = YES
          .
          leave check_block . 
       end.
-
+*/
 
 
       /* поиск пользователя */
