@@ -134,6 +134,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define order-typ
 { cmp/cr-prep.i 1 pay-transfer     4                Перевод_опл           4   Pay_transfer}
 { cmp/cr-prep.i 1 cd-expense       5                Расход_кассы          5   CR_expense}
 { cmp/cr-prep.i 1 cd-drawer        7                Декл_ден_ящ           7   Cash_drawer}
+{ cmp/cr-prep.i 1 income-corr           43                Приход_Корр           43   Income_Corr}
+{ cmp/cr-prep.i 1 expense-corr          44                Расход_Корр           44   Expense_Corr}
 
 
 
@@ -173,7 +175,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define order-typ
 {&bef-cd-fund-full},{&bef-cd-fund},~
 {&bef-pay-transfer-full},{&bef-pay-transfer},~
 {&bef-cd-expense-full},{&bef-cd-expense},~
-{&bef-cd-drawer-full},{&bef-cd-drawer}~
+{&bef-cd-drawer-full},{&bef-cd-drawer},~
+{&bef-income-corr-full},{&bef-income-corr},~
+{&bef-expense-corr-full},{&bef-expense-corr}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-codes-combo {&receipt-codes-combo}" ).
@@ -244,7 +248,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-ord-return},~
 {&bef-rcpt-ord-annu},~
 {&bef-rcpt-ord-sale-closed},~
-{&bef-rcpt-ord-return-closed}~
+{&bef-rcpt-ord-return-closed},~
+{&bef-income-corr},~
+{&bef-expense-corr}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-codes {&receipt-codes}" ).
@@ -279,7 +285,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-rcpt-ord-return-full},~
 {&bef-rcpt-ord-annu-full},~
 {&bef-rcpt-ord-sale-closed-full},~
-{&bef-rcpt-ord-return-closed-full}~
+{&bef-rcpt-ord-return-closed-full},~
+{&bef-income-corr-full},~
+{&bef-expense-corr-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-codes-full {&receipt-codes-full}" ).
@@ -320,7 +328,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-cd-fund},~
 {&bef-pay-transfer},~
 {&bef-cd-expense},~
-{&bef-cd-drawer}~
+{&bef-cd-drawer},~
+{&bef-income-corr},~
+{&bef-expense-corr}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-codes-all {&receipt-codes-all}" ).
@@ -360,7 +370,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-c
 {&bef-cd-fund-full},~
 {&bef-pay-transfer-full},~
 {&bef-cd-expense-full},~
-{&bef-cd-drawer-full}~
+{&bef-cd-drawer-full},~
+{&bef-income-corr-full},~
+{&bef-expense-corr-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define receipt-codes-all-full {&receipt-codes-all-full}" ).
@@ -409,7 +421,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define petrol-re
 {&bef-cd-fund},~
 {&bef-pay-transfer},~
 {&bef-cd-expense},~
-{&bef-cd-drawer}~
+{&bef-cd-drawer},~
+{&bef-income-corr},~
+{&bef-expense-corr}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define no-docum-receipt-codes {&no-docum-receipt-codes}" ).
@@ -446,7 +460,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define no-docum-
 {&bef-cd-fund},~
 {&bef-pay-transfer},~
 {&bef-cd-expense},~
-{&bef-cd-drawer}~
+{&bef-cd-drawer},~
+{&bef-income-corr},~
+{&bef-expense-corr}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define no-sale-receipt-codes {&no-sale-receipt-codes}" ).
@@ -483,7 +499,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define no-sale-r
 {&bef-cd-fund},~
 {&bef-pay-transfer},~
 {&bef-cd-expense},~
-{&bef-cd-drawer}~
+{&bef-cd-drawer},~
+{&bef-income-corr},~
+{&bef-expense-corr}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define no-d-card-receipt-codes {&no-d-card-receipt-codes}" ).
