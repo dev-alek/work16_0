@@ -808,7 +808,7 @@ if not firstline then   do: end.
      num#str# = num#str# + 1.
      num#col# = 1.
      run macr_excel_char_with_format(
-     string(  "он наэейрс : " + ObjName)
+     string(  "он назейрс : " + ObjName)
       , num#str# , num#col#  ) .
 
      num#col# = num#col# + 3.

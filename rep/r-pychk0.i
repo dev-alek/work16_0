@@ -280,15 +280,25 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
       temp-chk-gds.num-lines = 1
       .
     END. /* FOR EACH ub.chk-gds No-LOCK WHERE */
-    for each chk-discnt where chk-discnt.doc-code = ub.chk-doc.doc-code and record-type = 10 and chk-discnt.discnt-value-abs <> 0 no-lock:
+    for each chk-discnt where chk-discnt.doc-code = ub.chk-doc.doc-code and record-type = 10 and chk-discnt.discnt-value-abs <> 0 no-lock,
+        first ub.chk-gds of ub.chk-doc where ub.chk-gds.line-num =  chk-discnt.object-line-num :
+            if ub.chk-doc.chk-type = 1 and chk-discnt.object-qnty < 0 then do:  /*Если есть */
+                for first temp-chk-dp where temp-chk-dp.doc-code = ub.chk-doc.doc-code
+                and temp-chk-dp.b-code = chk-gds.b-code:
+                    temp-chk-dp.sum = temp-chk-dp.sum - abs(chk-discnt.discnt-value-abs * chk-discnt.object-qnty).
+                end.    
+            end.
+            else do:    
         /*создаем временную структуру для принудительного распределения */
         create temp-chk-dp .
         assign
         temp-chk-dp.doc-code = ub.chk-doc.doc-code
         temp-chk-dp.sum = abs(chk-discnt.discnt-value-abs) * chk-discnt.object-qnty
         temp-chk-dp.line-num = chk-discnt.object-line-num
-        temp-chk-dp.pay-code = chk-discnt.rank
+                temp-chk-dp.pay-code = chk-discnt.rank
+                temp-chk-dp.b-code = chk-gds.b-code
         .
+           end.
     end. 
     
     
@@ -407,7 +417,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
     by temp-chk-pay.curr-code*/
     by temp-chk-pay.line-num:
         /* Сначала распределяем принудительные платежи. */
-        dp: for each temp-chk-dp no-lock where temp-chk-dp.pay-code = temp-chk-pay.pay-code and temp-chk-dp.doc-code = temp-chk-pay.doc-code:        
+       dp: for each temp-chk-dp no-lock where temp-chk-dp.pay-code = temp-chk-pay.pay-code and temp-chk-dp.doc-code = temp-chk-pay.doc-code and temp-chk-dp.sum <> 0 :        
             for each buf_temp-chk-gds where
                 buf_temp-chk-gds.doc-code = ub.chk-doc.doc-code            
             and buf_temp-chk-gds.line-num  =  temp-chk-dp.line-num:
@@ -416,6 +426,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                     and buf_temp-chk-gds.b-code = temp-chk-gds.b-code          
                   and temp-chk-gds.line-num = 0
                 no-error .
+                if not available temp-chk-gds then next dp.
                 case num-entries(buf_temp-chk-gds.line-type, {&delim-par}):
                     when 1 then do:
                       pychk_line-type-chr = temp-chk-gds.line-type + {&delim-par} + {&delim-par} + string(temp-chk-pay.num-lines).
@@ -424,7 +435,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                       pychk_line-type-chr = temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
                     end.
                 end case.
-                pychk_dop-sumk =  if temp-chk-dp.sum >= 0  then min(temp-chk-dp.sum,buf_temp-chk-gds.sum) else max(temp-chk-dp.sum,buf_temp-chk-gds.sum).
+                pychk_dop-sumk =  if temp-chk-dp.sum >= 0  then min(temp-chk-dp.sum,buf_temp-chk-gds.sum,temp-chk-pay.tot-r-b) else max(temp-chk-dp.sum,buf_temp-chk-gds.sum).
                 if abs(temp-chk-pay.tot-r-b - pychk_dop-sumk) <= 0.001 then pychk_dop-sumk = temp-chk-pay.tot-r-b.
                  create buf_chk-gds-pay.
                   assign
