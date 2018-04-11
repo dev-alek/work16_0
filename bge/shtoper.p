@@ -1595,7 +1595,7 @@ end.
                   buf_temp_stkPlShiftOpen.level-petrol =  buf_rvs-line.state-level-petrol
                   buf_temp_stkPlShiftOpen.level-total =  buf_rvs-line.state-level-total
                   buf_temp_stkPlShiftOpen.level-water =  buf_rvs-line.state-level-water
-                   
+                  buf_temp_stkPlShiftOpen.state-add-quantity  = buf_rvs-line.state-add-qnty 
                   .
                 end. /*if available buf_goods*/
             end. /*if not available buf_temp_stkPlShiftEnd*/
