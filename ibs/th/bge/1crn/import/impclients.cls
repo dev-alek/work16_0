@@ -200,9 +200,8 @@ class ibs.th.bge.1crn.import.impclients implements ibs.th.bge.1crn.import.iimpsu
     end. /* end_of available buf_clients */
     else 
     do:
-      if objImp:del-l > 0 then undo, throw new Progress.Lang.AppError(
-          substitute("Не найдена запись КЛИЕНТ с кодом [&1] для логического удаления", v-firm-code)
-          ) .
+      /* 13/IV-2018  из 1С могут присылать производителей (обрабатывается почему-то здесь), у которых изначально
+                     проставлено логическое удаление. Нам надо создавать их тоже с признаком логического удаления. */
       assign
         v-mode = {&add-import}
         v-rid  = ?
