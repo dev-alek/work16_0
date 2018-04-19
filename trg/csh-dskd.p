@@ -144,22 +144,6 @@ do
             buf_c-cash-desk.action             = integer({&hn-delete})
             .
 
-        run trg/userlog.p (
-            input {&nwsdochs_action_delete}
-            , input {&table_c-cash-desk}
-            , input ( buffer buf_c-cash-desk :handle )
-            , input ?
-            , input ""
-            ) no-error.
-        if error-status :error
-            then 
-        do:
-            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
-                , {&new-line}
-                , vss-workfile
-                , return-value
-                , error-status :get-message ( 1 ) ).
-        end.
     end.
 
 
@@ -189,6 +173,22 @@ do
         if error-status :error then 
         do:
             return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+        end.
+        run trg/userlog.p (
+            input {&nwsdochs_action_delete}
+            , input {&table_cash-desk}
+            , input ( buffer ub.cash-desk :handle )
+            , input ?
+            , input ""
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
         end.
     end.
 

@@ -61,8 +61,10 @@ define variable v-time      as integer   no-undo .
 
     /* пишем историю */
     create buf_c-sr-izmerenia.
-    buffer-copy new-sr-izmerenia to buf_c-sr-izmerenia
+    /* в историю копируется запись до изменений; при создании в историю копирются начальные пустые значения */
+    buffer-copy old-sr-izmerenia to buf_c-sr-izmerenia
     assign
+      buf_c-sr-izmerenia.node-code          = new-sr-izmerenia.node-code
       buf_c-sr-izmerenia.chip-num           = next-value (s-ref-corr-chip, {&db-name_schema})
       buf_c-sr-izmerenia.corr-date          = v-date
       buf_c-sr-izmerenia.corr-time          = v-time

@@ -363,6 +363,10 @@ ON CHOOSE OF bt-doc-hist IN FRAME Dialog-Frame /* Просмотр */
 ON VALUE-CHANGED OF cb-table IN FRAME Dialog-Frame /* Объект */
     DO:
         assign
+            v-table   = ""
+            v-c-table = ""
+            .
+        assign
             cb-table.
         if cb-table = "все" then v-table = "" .
         else 
@@ -585,6 +589,7 @@ PROCEDURE local-open-query-head :
     do
         on error undo, return error
         :
+
         if v-table <> "" or v-c-table <> "" then 
         do:
             OPEN QUERY br-head
