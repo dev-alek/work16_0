@@ -54,6 +54,7 @@ define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
 define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
 define variable vss-description AS CHAR NO-UNDO INIT "Список истории средств измерения":U.
 { cmp/vssrevis.i }
+
 { cmp/str-glbl.i }
 { cmp/library.i }
 { cmp/showinf.i }
@@ -166,7 +167,7 @@ DEFINE QUERY br-wp FOR
 DEFINE BROWSE BR-changes
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-changes Dialog-Frame _FREEFORM
   QUERY BR-changes DISPLAY
-temp-changes.l_name COLUMn-LABEL "Изменилось" format "X(40)"
+temp-changes.l_name COLUMn-LABEL "Изменилось" format "X(120)"
 temp-changes.v_old COLUMn-LABEL "Было" format "X(70)"
 temp-changes.v_new COLUMn-LABEL "Стало" format "X(70)"
 /* _UIB-CODE-BLOCK-END */
@@ -183,6 +184,7 @@ DEFINE BROWSE br-wp
       X_c-sr-izmerenia.node-code
       X_c-sr-izmerenia.sr-model
       X_c-sr-izmerenia.sr-type-id
+      /* 17/IV-2018 лишние поля не показывать
       X_c-sr-izmerenia.sr-temp-line column-label "Температурный коэффициент!линейного расширения материала!средства измерения уровня"
       X_c-sr-izmerenia.sr-abs-err-neft-water column-label "Абсолютная погрешность!измерений уровня нефтепродукта!и подтоварной воды"
       X_c-sr-izmerenia.sr-abs-err-water column-label "Абсолютная погрешность!измерений уровня!подтоварной воды"
@@ -190,6 +192,7 @@ DEFINE BROWSE br-wp
       X_c-sr-izmerenia.sr-abs-err-temp-vol column-label "Абсолютная погрешность!измерений температуры нефтепродукта!при измерении его объема"
       X_c-sr-izmerenia.sr-abs-err-temp-dens column-label "Абсолютная погрешность!измерений температуры нефтепродукта!при измерении его плотности"
       X_c-sr-izmerenia.sr-otnos column-label "Предел допускаемой!относительной погрешности!средства обработки!результатов измерений"
+      */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 9.24 FIT-LAST-COLUMN.
@@ -395,19 +398,6 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-     /* 26/II-2018 - не применяется
-  find first X_curr_clients no-lock where
-            X_curr_clients.obj-type = p-obj-type
-       AND X_curr_clients.obj-code = p-obj-code no-error.
-  if not available X_curr_clients then do:
-    message
-    vss-workfile vss-revision vss-description skip
-    "Неверное значение параметра вызова p-obj-type p-obj-code"
-    p-obj-type p-obj-code
-    view-as alert-box ERROR.
-    return error .
-  end.
-  */
  if LOOKUP(p-mode, 'one':U, {&delim-par}) = 0 then dO:
     message
     vss-workfile vss-revision vss-description skip
@@ -428,13 +418,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     end.
   end.
 
-/* { gbl/curdbnum.i v-db-num }*/
+/* { gbl/curdbnum.i v-db-num } 17/IV-2018 - не применяется */
   RUN MyEnable.
   RUn OpenBR.
   HIDE mark-num in frame {&frame-name} .
   if v-doc-rec <> ? then
   REPOSITION br-wp to recid v-doc-rec No-ERROR.
-  /*
+  /* 17/IV-2018 - не применяется
   { gbl/mv-clmn.i
     &browse-name = "br-wp"
     &frame-name = "{&frame-name}"
@@ -527,7 +517,7 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 define variable v-host-code as integer no-undo .
-/*{ gbl/hostcode.i p-obj-type p-obj-code v-host-code }*/
+/*{ gbl/hostcode.i p-obj-type p-obj-code v-host-code } 17/IV-2018 - не применяется */
 OPEN QUERY br-wp FOR EACH X_c-sr-izmerenia NO-LOCK
                     where X_c-sr-izmerenia.node-code = p-node-code
                               INDEXED-REPOSITION.
@@ -545,7 +535,7 @@ PROCEDURE proc-br-wp :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-/*{ ref/brwsretr.i }*/
+/*{ ref/brwsretr.i } 17/IV-2018 - не применяется */
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -553,6 +543,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
+/* 17/IV-2018 - то же самое выполняется внутри proc-full-temp-changes()
 for each temp-changes:
     delete temp-changes.
 END.
@@ -560,10 +551,8 @@ if not available X_c-sr-izmerenia then do:
   Open QUery br-changes for each temp-changes.
   return.
 end.
-
+*/
 &scop fields-name-list "node-code,sr-model,sr-type-id,sr-temp-line,sr-abs-err-neft-water,sr-abs-err-water,sr-abs-err-dens,sr-abs-err-temp-vol,sr-abs-err-temp-dens,sr-otnos"
-
-
 define variable v-label-param as character no-undo .
 
 v-label-param =   "node-code" + {&delim-par} + "Код средства измерения" + {&delim-par} + ""
