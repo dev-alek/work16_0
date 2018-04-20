@@ -8,7 +8,7 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER X_place FOR place.
+DEFINE BUFFER X_place FOR ub.place.
 
 
 
@@ -570,6 +570,27 @@ ON CHOOSE OF b-del IN FRAME d-pl-list /* Удалить */
                     else 
                     do:
                         buf_place.status_ = {&deleted-status}.
+                        { gbl/rum-runa.i
+                            ?
+                            this-procedure:handle
+                            ?
+                            {&thref-proc_ref-event}
+                            " buffer buf_place:handle "
+                            ''
+                            ''
+                            ''
+                            no-error
+                          }
+                        if error-status :error
+                            then
+                        do:
+                            return NO-APPLY substitute( "&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"
+                                , {&new-line}
+                                , vss-workfile
+                                , return-value
+                                , error-status :get-message ( 1 ) ).
+                        end.
+  
                     end.
                       
                 end.
