@@ -401,7 +401,13 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 for each temp-filelist no-lock :
                     if integer(entry(3, temp-filelist.file-name, "_")) = abs(v-espr-pack-num)
                     or temp-filelist.file-name begins "ack_"
+                    or temp-filelist.file-name begins "err_"
                     then do :
+                        if temp-filelist.file-name begins "err_"
+                        then do :
+                          delete temp-filelist .
+                          next .
+                        end.
                         assign v-custom-pack-name = temp-filelist.file-name.
                         if temp-filelist.file-name begins "ack_"
                         then
@@ -601,24 +607,13 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                   add-log-file-name = add-log-file-name0
                   .
                 end.
-/*                if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})*/
-/*                and not v-file-name begins "ack_"                                */
-/*                then do:                                                         */
-/*                  if v-return-error > 0 then do:                                 */
-/*                    run rul/send-ack_1c.p (input abs(v-espr-pack-num)            */
-/*                                          ,input 4                               */
-/*                                          ,input v-err-msg                       */
-/*                                          ,input buf_ext-system.esys-id          */
-/*                                          ) .                                    */
-/*                  end.                                                           */
-/*                  else do :                                                      */
-/*                    run rul/send-ack_1c.p (input abs(v-espr-pack-num)            */
-/*                                          ,input 0                               */
-/*                                          ,input ""                              */
-/*                                          ,input buf_ext-system.esys-id          */
-/*                                          ) .                                    */
-/*                  end.                                                           */
-/*                end.                                                             */
+                if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+                and v-return-error > 0
+                then do:
+                  run gbl/ren-file.p (input v-full-path,
+                                      input (v-path + "\err_" + v-file-name)
+                                      ) no-error.
+                end.
                 if v-return-error > 0
                 and buf_ext-system.delivery-method <> integer({&esys-dm-exite-edi})
                 then do:
