@@ -140,7 +140,6 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
       end.      
     end.        
     
-    
     for each tt-place where tt-place.pl-code = INTEGER (pl-code) no-lock :    
       find first tt-place-attr exclusive-lock where tt-place-attr.pl-code = tt-place.pl-code no-error.
       if not available tt-place-attr then 
@@ -193,10 +192,11 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
           end case.
         end.
       end.
+      
       sw:start-element ("tank") .
       sw:write-data-element ("tank-code", string(tt-place.pl-code)).
       sw:write-data-element ("tank-num", string(tt-place.loc1)).
-      sw:write-data-element ("del-l", if tt-place.status_ = {&deleted-status} then "1" else "0").
+      sw:write-data-element ("del-l", if tt-place.status_ <> {&deleted-status} then "0" else "1").
       sw:write-data-element ("del-f", if v-del then "1" else "0").
       sw:write-data-element ("name", if tt-place.pl-name = ? then "" else tt-place.pl-name).
       sw:write-data-element ("gs-code", string(tt-place.obj-code)).

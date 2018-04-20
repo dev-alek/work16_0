@@ -482,7 +482,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                 temp-chk-pay.tot-r-b = temp-chk-pay.tot-r-b - buf_chk-gds-pay.tot-r-b
                 pychk_dop-sumk = pychk_dop-sumk - buf_chk-gds-pay.tot-r-b
                 .
-                if temp-chk-pay.tot-r-b <= 0 then leave dp.  /* это подстраховка, если касса лишнего прислала в распределении */
+                   if (ub.chk-doc.chk-type = {&bef-rcpt-sale} and temp-chk-pay.tot-r-b <= 0) or (ub.chk-doc.chk-type <> {&bef-rcpt-sale} and temp-chk-pay.tot-r-b >= 0) then leave dp.  /* это подстраховка, если касса лишнего прислала в распределении */
             end.    
         end.    
       assign
