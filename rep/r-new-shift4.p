@@ -30,6 +30,7 @@ define input parameter p-obj-type            like ub.clients.obj-type no-undo.
 define input parameter p-obj-code            like ub.clients.obj-code no-undo.
 define input parameter p-z-number-list       as   character           no-undo.
 define input parameter p-previous-shift-date as   date                no-undo.
+define input parameter p-param  as logical no-undo .
 
 define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
 define variable vss-author      AS CHAR NO-UNDO INIT "$Author$":U.

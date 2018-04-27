@@ -7628,10 +7628,20 @@ procedure m-rep-shift4-exe :
   do
   on error undo, return error return-value
   :
+    run rep/g-new-shift.p (input parparentproc, input '') .
+  end.
+
+end procedure. /* m-rep-shift4-exe */
+procedure m-rep-shiftOld-exe :
+
+  do
+  on error undo, return error return-value
+  :
     run rep/g-shift.p (input parparentproc, input '') .
   end.
 
 end procedure. /* m-rep-shift4-exe */
+
 
 procedure m-rep-shift4-ukr-exe :
   do on error undo, return error return-value :
