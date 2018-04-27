@@ -486,6 +486,7 @@ ON CHOOSE OF b-del IN FRAME d-pl-list /* Удалить */
             message "Неправильно выбрана строка." view-as alert-box .
             return no-apply.
         end.
+        
         { gbl/hostcode.i
     p-obj-type
     p-obj-code
@@ -528,7 +529,7 @@ ON CHOOSE OF b-del IN FRAME d-pl-list /* Удалить */
             find first pl-gds-pump where pl-gds-pump.obj-type = buf_place.obj-type and 
                 pl-gds-pump.obj-code = buf_place.obj-code and
                 pl-gds-pump.pl-code = buf_place.pl-code
-          no-error.
+                no-error.
           
             if available pl-gds-pump then 
             do:
@@ -570,6 +571,7 @@ ON CHOOSE OF b-del IN FRAME d-pl-list /* Удалить */
                     else 
                     do:
                         buf_place.status_ = {&deleted-status}.
+
                         { gbl/rum-runa.i
                             ?
                             this-procedure:handle
@@ -608,6 +610,26 @@ ON CHOOSE OF b-del IN FRAME d-pl-list /* Удалить */
                 if del-choice = yes then 
                 do:
                     buf_place.status_ = "".
+                       { gbl/rum-runa.i
+                            ?
+                            this-procedure:handle
+                            ?
+                            {&thref-proc_ref-event}
+                            " buffer buf_place:handle "
+                            ''
+                            ''
+                            ''
+                            no-error
+                          }
+                    if error-status :error
+                        then
+                    do:
+                        return NO-APPLY substitute( "&2&1Ошибка маршрутизации записи в машину правил&1&3&1&4"
+                            , {&new-line}
+                            , vss-workfile
+                            , return-value
+                            , error-status :get-message ( 1 ) ).
+                    end.
                 /*                    {&current-status}.*/
                   
                 end.
