@@ -198,7 +198,7 @@ define temp-table temp-rvs no-undo
       IF AVAILABLE previous-rvs-doc THEN DO:
         FOR EACH previous-rvs-line NO-LOCK WHERE
              previous-rvs-line.rvs-code = previous-rvs-doc.rvs-code AND
-             previous-rvs-line.pl-code  = ub.rvs-line.pl-code       AND
+/*             previous-rvs-line.pl-code  = ub.rvs-line.pl-code       AND*/
              previous-rvs-line.gds-code = t-2.gds-code              :
           ASSIGN found-in-previous = YES .
           if pshift-date = ub.rvs-doc.shift-date and pshift-num  = ub.rvs-doc.shift-num then do:

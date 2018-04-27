@@ -1003,7 +1003,13 @@ procedure dfc-pr-good :
     }
 
   /* Исключение из Запрета */
-  run ver-pr-nogds ( input  buf_goods.gds-code , input par-pr-nogds, output v-next , output v-errstr ) .
+  if g#esys
+  then do :
+    v-next = true .
+  end.
+  else do :
+    run ver-pr-nogds ( input  buf_goods.gds-code , input par-pr-nogds, output v-next , output v-errstr ) .
+  end.
   if not v-next then do:
 
     case string(v-type-goods) :

@@ -65,6 +65,16 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Импорт накладных по партиям'"
+  "'utl/impdoc4run.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
 
 { gbl/menuload.i
   {&bef-menuload_service_impexp}
@@ -305,16 +315,6 @@ define variable vss-description as character no-undo init "".
   {&bef-menuload_service_customs}
   "'Понедельный отчет по товарам (реализация в магазине)'"
   "'rep/g-weekm.p'"
-  " "
-  " "
-  " "
-  " "
-  "yes"
-}
-{ gbl/menuload.i
-  {&bef-menuload_service_customs}
-  "'Сменный отчет (формат HTML)'"
-  "'rep/g-new-shift.p'"
   " "
   " "
   " "

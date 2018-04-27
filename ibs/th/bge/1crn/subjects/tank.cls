@@ -34,7 +34,6 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
 &global-define place-twice-code   "place-twice-code" /*Код сдвоенного резервуара*/
 &global-define list-place-attr   'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov,place-virtual,place-twice-code':u /*список атрибутов резервуара*/
   
-
   define buffer buf_place      for ub.place .
   define buffer buf_c-place    for ub.c-place .
   define buffer buf_place-attr for ub.place-attr .
@@ -82,7 +81,6 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
   
 
   method public void CrContentToSW (insw as handle):
-    
     sw = insw .
     
     placelib = new placelib().
@@ -100,13 +98,13 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
     end.  
     else 
     do:
-      find first buf_place no-lock where buf_place.pl-code = INTEGER (pl-code) no-error .
-      if AVAILABLE buf_place then 
+      find first buf_c-place no-lock where buf_c-place.pl-code = INTEGER (pl-code) no-error .
+      if AVAILABLE buf_c-place then 
       do:
         v-del = yes .
         create tt-place .
-        BUFFER-COPY buf_place to tt-place .
-        find first buf_pl-gds no-lock where buf_pl-gds.pl-code = buf_place.pl-code no-error .
+        BUFFER-COPY buf_c-place to tt-place .
+        find first buf_pl-gds no-lock where buf_pl-gds.pl-code = buf_c-place.pl-code no-error .
         if AVAILABLE (buf_pl-gds) then 
         do:
           tt-place.gds-code = buf_pl-gds.gds-code .

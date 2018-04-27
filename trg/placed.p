@@ -127,15 +127,16 @@ do
             buf_c-plc-hist.gds-code = ?
             .
     end.
+
     run trg/userlog.p (
         input {&nwsdochs_action_delete}
         , input {&table_c-place}
-        , input ( buffer buf_c-place :handle )
+        , input ( buffer buf_c-plc-hist :handle )
         , input ?
         , input ""
         ) no-error.
     if error-status :error
-        then 
+        then
     do:
         undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
             , {&new-line}
@@ -143,7 +144,7 @@ do
             , return-value
             , error-status :get-message ( 1 ) ).
     end.
-  
+
     if g#oxml = yes
         then 
     do:

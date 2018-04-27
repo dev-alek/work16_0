@@ -208,7 +208,7 @@ on error undo, return error
       end.
       /* Если по палтежу нет никаких скидок, удалим запись "Без скидок" */
       for each t-10 where t-10.discnt-type = 0:
-        if not can-find(bf_t-10 where bf_t-10.gds-code = t-10.gds-code
+        if not can-find(first bf_t-10 where bf_t-10.gds-code = t-10.gds-code
                               and bf_t-10.pay-code = t-10.pay-code
                               and bf_t-10.discnt-type > 0
                         )
