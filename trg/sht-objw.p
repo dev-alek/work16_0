@@ -239,11 +239,18 @@ on error undo, return error return-value
   end.
 /*---END----------- Проверки для ожидаемой смены ---------------------*/
 
-  run cur-time in this-procedure ( output v-sys-date
-                                 , output v-sys-time
-                                 ).
+  /* 20/IV-2018 curobjdt.i (чтение даты с провеками по всем параметрам и с возможной установкой
+                более правильной даты заменить на objdtget.i (только чтение даты объекта),
+                если по текущим изменениям будет предполагаться обильное тестирование смен и их закрытия.
+  { gbl/objdtget.i ub.shift-obj.obj-type ub.shift-obj.obj-code v-obj-date no-error }
+  if error-status:error then undo, return error
+    substitute( "Ошибка чтения текущей даты на объекте &1&2 смены N&3", obj-type, obj-code, shiftnum ).
+  */
   { gbl/curobjdt.i ub.shift-obj.obj-type ub.shift-obj.obj-code v-obj-date }
   if not g#news and not v-edit-time then do:
+    run cur-time in this-procedure ( output v-sys-date
+                                 , output v-sys-time
+                                 ).
     /* проверки выполняются только там, где закрывается смена */
     /* при приеме */
     if oldb.status_ = ub.shift-obj.status_ then do:

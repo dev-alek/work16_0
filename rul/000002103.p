@@ -145,6 +145,8 @@ define variable expObj  as class expsubject no-undo .
 define variable subObj  as class shift no-undo .
 define variable subObj2 as class check no-undo .
 define variable v-doc-rowid      as rowid  no-undo .
+define variable v-sht-status     as character no-undo .
+define variable v-fld-sht-status as handle no-undo .
 define variable v-custom-pack-name as character no-undo .
 define variable v-dump-ord-int64   as int64 no-undo .
 define buffer buf_shift-obj   for ub.shift-obj .
@@ -159,6 +161,9 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
 
   if v-has-newbh then do:
     v-doc-rowid = v-newbh:rowid .
+    v-fld-sht-status = v-newbh:BUFFER-FIELD ("status_") .
+    if not valid-handle(v-fld-sht-status) then undo _main, return error "не найдено поле shift-obj.status_" .
+    v-sht-status = v-fld-sht-status:BUFFER-VALUE ( ) .
   end.
   else do:
     v-doc-rowid = v-oldbh:rowid .
@@ -169,6 +174,11 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
     return .
   end.
     
+  /* Смена может иметь четыре статуса:
+     ожд sht-expected, тек sht-current, зкр sht-closed, отм sht-canceled
+     Экспорт в машину правил только если статус поменялся на тек или на зкр 
+  */
+  if (v-sht-status = {&sht-closed}) or (v-sht-status = {&sht-current}) then do:
     
   IF context_begin-esys-command( input string(v-esys-id-list), input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) = false  THEN do:
     undo _main, return error v-last-error-message .
@@ -194,10 +204,12 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
                                   , input g#userid).
   if v-dump-ord-int64 = 0 THEN
     undo _main, return error v-last-error-message .
+  end. /* end_of if_status_  */
   &scop release_1 clear-data ( )
   ExpData1:Route-data_{&release_1} .
     
 
+  if (v-sht-status = {&sht-closed}) or (v-sht-status = {&sht-current}) then do:
   /* 7/XII-2017 и к закрытию смены добавлена выгрузка чеков по всем продажам закрытой смены */
   for first buf_shift-obj no-lock
       where rowid(buf_shift-obj)  = v-doc-rowid
@@ -236,6 +248,7 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
     ExpData1:Route-data_{&release_1} .
   end. /* end_of for_each_inkas */
   end.
+  end. /* end_of if_status_  */
 
   &scop my-message substitute( "Успешно. ")
   {&display-message}.
