@@ -2342,18 +2342,15 @@ do
 on error undo, return error return-value
 :
 
-{ gbl/curr-r-b.i varr-b }
-if parmode <> "cr-upd" and
-   parmode <> "copy"   then do:
-   return error "Некорректный параметр parmode передан процедуре lib-trn_copy-inh.".
-end.
-{ gbl/curr-r-b.i
-  varr-b
-  no-error
-}
-if error-status :error then do:
-  return error "Ошибка при определении валюты продажи.".
-end.
+  if not can-do ("cr-upd,copy", parmode) then do:
+    return error "Некорректный параметр parmode передан процедуре lib-trn_copy-inh.".
+  end.
+  
+  { gbl/curr-r-b.i varr-b no-error }
+  if error-status :error then do:
+    return error "Ошибка при определении валюты продажи.".
+  end.
+  
 find first ca_trn-doc where recid(ca_trn-doc) = parrec-doc.
 find first ca_clients where ca_clients.obj-type = ca_trn-doc.obj-type and
                             ca_clients.obj-code = ca_trn-doc.obj-code no-lock no-error.
