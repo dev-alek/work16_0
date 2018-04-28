@@ -131,7 +131,7 @@ do
     run trg/userlog.p (
         input {&nwsdochs_action_delete}
         , input {&table_c-place}
-        , input ( buffer buf_c-plc-hist :handle )
+        , input ( buffer buf_c-place :handle )
         , input ?
         , input ""
         ) no-error.

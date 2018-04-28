@@ -66,7 +66,7 @@ define variable vss-description as character no-undo init "Процедура заполнения 
     define variable is-cctv as logical no-undo .
 
     define variable v-action-type   as character no-undo .
-     
+  
 do
 for buf_c-user-log
   , buf_temp_userlog-bush
