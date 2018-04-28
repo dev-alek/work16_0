@@ -377,9 +377,9 @@ define variable v-contract-code as integer no-undo .
 define variable new_cli-type  as character no-undo .
 define variable new_cli-code  as integer   no-undo .
 define variable v-is-supp-err as logical no-undo .
+define variable v-is-cont-err as logical no-undo .
 define variable v-is-good-err as logical no-undo .
 define variable v-my-message  as character no-undo .
-define variable v-gds-fname   as character no-undo .
 define buffer buf_tt-parts for tt-imp-parts .
 define buffer buf_goods    for ub.goods .
 define buffer buf_contract for ub.contract .
@@ -391,11 +391,6 @@ define buffer new_clients  for ub.clients .
   
 
 v-count-err = 0 .
-v-gds-fname = substitute("&1/&2.txt"
-    , ibs.th.gbl.gbl-inipar:logDir
-    , "gds-list"
-  ) .
-// output stream f-tgds to value(v-gds-fname) .
 
   for each buf_tt-parts
   break by buf_tt-parts.supp-code
@@ -433,7 +428,6 @@ v-gds-fname = substitute("&1/&2.txt"
       if v-is-supp-err then do :
         /* Ошибку выводить в лог-файл, а строку ошибки выводить в отдельный файл, пригодный для повторного импорта, как есть.
            Работу по остальным строкам продолжать. */
-        &scop my-message v-my-message
         {&display-message}.
       end .
     end . /* end_of first_of_tt-parts.supp-code */
@@ -447,7 +441,14 @@ v-gds-fname = substitute("&1/&2.txt"
     if first-of (buf_tt-parts.cont-prn-code) then do:
       find first buf_contract no-lock
            where buf_contract.contract-prn-code = buf_tt-parts.cont-prn-code no-error .
-      v-contract-code = if available buf_contract then buf_contract.contract-code else 0 .
+      if available buf_contract then assign
+        v-contract-code = buf_contract.contract-code
+        v-is-cont-err   = false
+      .
+      else assign
+        v-contract-code = 0
+        v-is-cont-err   = true
+      .
     end .
 
     if first-of (buf_tt-parts.artic) then do:
@@ -464,13 +465,24 @@ v-gds-fname = substitute("&1/&2.txt"
         v-prod-type = ""
         v-prod-code = 0
         v-is-good-err = true
+        v-my-message  = substitute ("Отсутствует товар с артикулом &1 в справочнике товаров БД", buf_tt-parts.artic )
       .
+      /* 28/IV-2018 Ошибку выводить в лог-файл, как и в случае отвергнутого поставщика. */
+      if v-is-good-err then do :
+        {&display-message}.
+      end .
     end .
     /* 26/IV-2018  Партии с ненайденным товаром надо отвергать */
     if v-is-good-err then do :
       put stream f-err-lines unformatted buf_tt-parts.imp-row skip .
       v-count-err = v-count-err + 1 .
       next .
+    end .
+    /* 26/IV-2018  Товары с ненайденным договором надо отображатьв логе */
+    if v-is-cont-err then do :
+      v-my-message  = substitute ("Отсутствует договор № &1 в целевой БД. Товар &2 будет загружен без указания договора.",
+                                  buf_tt-parts.cont-prn-code, buf_tt-parts.artic ) .
+      {&display-message}.
     end .
 
     if buf_tt-parts.srok-god = "" then v-last-date = 01/01/2001 .
@@ -552,12 +564,17 @@ prt-code;integer;>>>>>>9;Признак;Признак;0;Код узла дерева признаков.`Nomenclatu
 defect;logical;yes/no;;;no;;761;;0;;false;false;;;;;;;;;;;;
 price-prod-vat;decimal;->>,>>9.99;Цена производителя;Цена производителя;0;Цена производителя с НДС;771;2;0;;false;false;;;;;;;;;;;;
   */
+
+    do : /* 28/IV-2018 перенести создание партий tt-parts из import-hed() сюда */
+    end .
+
   end . /* end_of for_each_tt-parts */
 // output stream f-tgds close .
   
 // define variable dsXmlFileName as character no-undo .
 // dsXmlFileName = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "temp_parts").
 // temp-table temp_parts:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
+&undefine my-message
 end procedure . /* create_temp_parts */
 
 
@@ -589,7 +606,7 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
    by temp_parts.part-code
   :
     
-    /* 16/IV-2018 перенос создания партий из create-nakl() */
+    do : /* 16/IV-2018 перенос создания партий из create-nakl() */
     create tt-parts.
     assign
       tt-parts.prod-type      = temp_parts.new_prod-type
@@ -643,11 +660,24 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
       tt-parts.cst-code       = ""
       tt-parts.status_        = no
     .
+    end .
     
     v-qnty-fact = v-qnty-fact + temp_parts.fact-qnty  .
     v-qnty-cli  = v-qnty-cli  + temp_parts.cli-qnty  . // - не заполняется
 
     if last-of ( temp_parts.part-code ) then do:
+      /* 28/IV-2018 - добавить вместе с объединением партий с разной ценой в одну накладную
+      if temp_parts.price-rubl <= 0  or temp_parts.price-rubl = ? then do:
+        &scop my-message substitute("Цена &2   = &1 Пропускаю " , temp_parts.price-rubl  , temp_parts.artic )
+        {&display-message}.
+        next.
+      end.
+      if v-qnty-fact <= 0 then do:
+        &scop my-message substitute("Количество &2   = &1 Пропускаю " , v-qnty-fact  , temp_parts.artic )
+        {&display-message}.
+        next.
+      end.
+      */
       create temp-line .
       assign
       temp-line.supp-type     = temp_parts.supp-type
@@ -770,16 +800,12 @@ end procedure. /* uni-k */
 */
 
 procedure create-nakl :
+/* temp_parts и temp-line спозиционированны в вызывающей процедуре */
 define input parameter p-num        as integer no-undo .
 define input parameter new_cli-type as character no-undo .
 define input parameter new_cli-code as integer no-undo . 
 define variable n-d as character no-undo .
-define variable v-doc-type as character no-undo .
-define variable v-internal  as logical   no-undo .
 define variable v-ext-doc-type as character no-undo .
-define variable v-discnt-type as character no-undo .
-define variable v-status_ as character no-undo .
-define variable v-contract-code as integer no-undo .
 define buffer buf_goods for ub.goods .
 
 do on error undo, return error return-value :
@@ -794,20 +820,10 @@ do on error undo, return error return-value :
     {&display-message}.
     undo, throw new Progress.Lang.AppError({&my-message}) .
   end.
-
-  assign
-    v-doc-type     = {&income}
-    v-internal     = false
-    v-ext-doc-type = {&TDEDT_Pri_Vnesh}
-    v-discnt-type  = ""
-    v-status_      = {&wayb}
-  .
   &scop my-message substitute("Создание ПН № &1 объект &2&3 контраг &4&5 &6" , n-d  , new_obj-type , new_obj-code ,  new_cli-type ,  new_cli-code , temp-line.contract-code )
   {&display-message}.
 
     
-  v-contract-code = temp-line.contract-code .
-  
   find first temp_parts where
              temp_parts.artic         = temp-line.artic     and
              temp_parts.prod-type     = temp-line.prod-type and
@@ -837,6 +853,10 @@ do on error undo, return error return-value :
     return. 
   end .
 
+  assign
+    v-ext-doc-type = {&TDEDT_Pri_Vnesh}
+  .
+  
   do : /* create_tt-trn-doc */
   create  tt-trn-doc.
   buffer-copy temp_parts to tt-trn-doc
@@ -849,9 +869,9 @@ do on error undo, return error return-value :
     tt-trn-doc.obj-type      = new_obj-type
     tt-trn-doc.obj-code      = new_obj-code
     tt-trn-doc.host-code     = new_host-code
-    tt-trn-doc.contract-code = v-contract-code
-    tt-trn-doc.doc-type      = v-doc-type
-    tt-trn-doc.internal      = v-internal
+    tt-trn-doc.contract-code = temp-line.contract-code
+    tt-trn-doc.doc-type      = {&income}
+    tt-trn-doc.internal      = false
     tt-trn-doc.cr-db-num     = v-cntxt-db-num
     tt-trn-doc.office        = false
     tt-trn-doc.fact-num      = 0
@@ -859,7 +879,7 @@ do on error undo, return error return-value :
     tt-trn-doc.creid         = v-cntxt-userid
     tt-trn-doc.flag_         = false
     tt-trn-doc.ext-doc-type  = v-ext-doc-type
-    tt-trn-doc.discnt-type   = v-discnt-type
+    tt-trn-doc.discnt-type   = ""
     tt-trn-doc.ret-supp      = false
     tt-trn-doc.pay-code      = v-cntxp-in-pay
     tt-trn-doc.purch-code    = new_purch-code
@@ -923,20 +943,20 @@ do on error undo, return error return-value :
   end.
 
   assign
-   new_trn-doc.contract-code  = v-contract-code
+   new_trn-doc.contract-code = temp-line.contract-code /* уже было присвоено при создании tt-trn-doc */
    new_trn-doc.exch-rate  = tt-trn-doc.exch-rate
    new_trn-doc.exch-scale = tt-trn-doc.exch-scale
    new_trn-doc.exch-date  = to-day
    new_trn-doc.exch-code  = tt-trn-doc.exch-code
-   new_trn-doc.status_    = v-status_
+   new_trn-doc.status_    = {&wayb}
    new_trn-doc.hold-doc-code-child   = "no-hold"
    new_trn-doc.hold-doc-code-parent  = "no-hold"
    new_trn-doc.print-rubl = v-print-rubl
   .
   
-// define variable dsXmlFileName1 as character no-undo .
-// define variable dsXmlFileName2 as character no-undo .
-// define variable dsXmlFileName3 as character no-undo .
+ define variable dsXmlFileName1 as character no-undo .
+ define variable dsXmlFileName2 as character no-undo .
+ define variable dsXmlFileName3 as character no-undo .
 // dsXmlFileName1 = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "tt-doc-line0").
 // dsXmlFileName2 = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "tt2-doc-line0").
   for each    new_line where
@@ -1070,9 +1090,9 @@ do on error undo, return error return-value :
 // temp-table tt2-doc-line:WRITE-XML ( "FILE", dsXmlFileName2, true, "UTF-8").
   end .
   end . /*for each    new_line where*/
-// dsXmlFileName1 = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "tt-doc-line").
+// dsXmlFileName1 = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt-doc-line", n-d).
 // temp-table tt-doc-line:WRITE-XML ( "FILE", dsXmlFileName1, true, "UTF-8").
-// dsXmlFileName2 = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "tt2-doc-line").
+// dsXmlFileName2 = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt2-doc-line", n-d).
 // temp-table tt2-doc-line:WRITE-XML ( "FILE", dsXmlFileName2, true, "UTF-8").
   
   /* 16/IV-2018 создание партий перенесено до линий документов;
@@ -1102,9 +1122,11 @@ message "parts -> doc-line" skip string(rowid(tt-parts)) string(rowid(tt2-doc-li
       tt-parts.out-code = tt2-doc-line.doc-code no-error .
     end . // end_of for_each tt-parts
   end. /*  for each tt2-doc-line :*/
-// dsXmlFileName3 = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "tt_parts-2").
+// dsXmlFileName3 = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt_parts-2", n-d).
 // temp-table tt-parts:WRITE-XML ( "FILE", dsXmlFileName3, true, "UTF-8").
 
+  /* 26/IV-2018 внутри copy-in.i партии создаются по линиям документа tt2-doc-line;
+                входная таблица tt-parts для создания партий не используется */
   { str/copy-in.i
     parParentProc
     recid(new_trn-doc)
