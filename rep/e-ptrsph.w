@@ -40,8 +40,8 @@ define variable vss-description as character no-undo initial "Запуск отчета поча
 { cmp/r-page1.i  }
 { gbl/getcntxt.i def }
 
-&scop ENABLED-OBJECTS   {&Btn_Mark} Btn_UnMark {&Btn_Save} use-column[ 1 ] use-column[ 2 ] use-column[ 3 ] use-column[ 4 ] use-column[ 5 ] use-column[ 6 ] use-column[ 7 ] use-column[ 8 ] use-column[ 9 ] use-column[ 10 ] use-column[ 11 ]
-&scop DISPLAYED-OBJECTS Tog-Excel use-column[ 1 ] use-column[ 2 ] use-column[ 3 ] use-column[ 4 ] use-column[ 5 ] use-column[ 6 ] use-column[ 7 ] use-column[ 8 ] use-column[ 9 ] use-column[ 10 ] use-column[ 11 ]
+&scop ENABLED-OBJECTS   {&Btn_Mark} Btn_UnMark {&Btn_Save} use-column[ 1 ] use-column[ 2 ] use-column[ 3 ] use-column[ 4 ] use-column[ 5 ] use-column[ 6 ] use-column[ 7 ] use-column[ 8 ] use-column[ 9 ] use-column[ 10 ] use-column[ 11 ] use-column[ 12 ] use-column[ 13 ] use-column[ 14 ]
+&scop DISPLAYED-OBJECTS Tog-Excel use-column[ 1 ] use-column[ 2 ] use-column[ 3 ] use-column[ 4 ] use-column[ 5 ] use-column[ 6 ] use-column[ 7 ] use-column[ 8 ] use-column[ 9 ] use-column[ 10 ] use-column[ 11 ] use-column[ 12 ] use-column[ 13 ] use-column[ 14 ]
 
 /* Local Variable Definitions ---                                       */
 define variable State-Source as widget-handle no-undo .
@@ -74,10 +74,13 @@ define frame {&FRAME-NAME}
   use-column[  5 ] at row  8.00 col  2.50 label "&Наименование товара" {&toggle}
   use-column[  6 ] at row  9.25 col  2.50 label "Номер &ТРК"           {&toggle}
   use-column[  7 ] at row 10.50 col  2.50 label "Номер &пистолета"     {&toggle}
-  use-column[  8 ] at row 11.75 col  2.50 label "Количество &чеков"    {&toggle}
-  use-column[  9 ] at row 13.00 col  2.50 label "Количество, &л"       {&toggle}
-  use-column[ 10 ] at row 14.25 col  2.50 label "Сумма прода&ж"        {&toggle}
-  use-column[ 11 ] at row 15.50 col  2.50 label "Вид &оплаты"          {&toggle}
+  use-column[  8 ] at row  3.00 col 42.50 label "Количество &чеков"    {&toggle}
+  use-column[  9 ] at row  4.25 col 42.50 label "Количество, &л"       {&toggle}
+  use-column[ 10 ] at row  5.50 col 42.50 label "Сумма прода&ж"        {&toggle}
+  use-column[ 11 ] at row  6.75 col 42.50 label "Вид &оплаты"          {&toggle}
+  use-column[ 12 ] at row  8.00 col 42.50 label "Номер &чека"          {&toggle}
+  use-column[ 13 ] at row  9.25 col 42.50 label "Сухой &чек"           {&toggle}
+  use-column[ 14 ] at row 10.50 col 42.50 label "№ заказа"             {&toggle}
   Tog-Excel        at row 18.50 col 38.50
 with 1 down no-box keep-tab-order overlay side-labels no-underline three-d at col 1 row 1 scrollable .
 
@@ -92,64 +95,76 @@ assign
 
 /* ************************  Control Triggers  ************************ */
 on choose of {&Btn_Mark} in frame {&FRAME-NAME} /* Отметить * */
-do:
-  assign
-    use-column[  1 ] = yes
-    use-column[  2 ] = yes
-    use-column[  3 ] = yes
-    use-column[  4 ] = yes
-    use-column[  5 ] = yes
-    use-column[  6 ] = yes
-    use-column[  7 ] = yes
-    use-column[  8 ] = yes
-    use-column[  9 ] = yes
-    use-column[ 10 ] = yes
-    use-column[ 11 ] = yes
-  .
-  display
-    use-column[  1 ]
-    use-column[  2 ]
-    use-column[  3 ]
-    use-column[  4 ]
-    use-column[  5 ]
-    use-column[  6 ]
-    use-column[  7 ]
-    use-column[  8 ]
-    use-column[  9 ]
-    use-column[ 10 ]
-    use-column[ 11 ]
-  with frame {&FRAME-NAME} .
-end.
+  do:
+    assign
+      use-column[  1 ] = yes
+      use-column[  2 ] = yes
+      use-column[  3 ] = yes
+      use-column[  4 ] = yes
+      use-column[  5 ] = yes
+      use-column[  6 ] = yes
+      use-column[  7 ] = yes
+      use-column[  8 ] = yes
+      use-column[  9 ] = yes
+      use-column[ 10 ] = yes
+      use-column[ 11 ] = yes
+      use-column[ 12 ] = yes
+      use-column[ 13 ] = yes
+      use-column[ 14 ] = yes
+      .
+    display
+      use-column[  1 ]
+      use-column[  2 ]
+      use-column[  3 ]
+      use-column[  4 ]
+      use-column[  5 ]
+      use-column[  6 ]
+      use-column[  7 ]
+      use-column[  8 ]
+      use-column[  9 ]
+      use-column[ 10 ]
+      use-column[ 11 ]
+      use-column[ 12 ]
+      use-column[ 13 ]
+      use-column[ 14 ]
+      with frame {&FRAME-NAME} .
+  end.
 
 on choose of Btn_UnMark in frame {&FRAME-NAME} /* Снять * */
-do:
-  assign
-    use-column[  1 ] = no
-    use-column[  2 ] = no
-    use-column[  3 ] = no
-    use-column[  4 ] = no
-    use-column[  5 ] = no
-    use-column[  6 ] = no
-    use-column[  7 ] = no
-    use-column[  8 ] = no
-    use-column[  9 ] = no
-    use-column[ 10 ] = no
-    use-column[ 11 ] = no
-  .
-  display
-    use-column[  1 ]
-    use-column[  2 ]
-    use-column[  3 ]
-    use-column[  4 ]
-    use-column[  5 ]
-    use-column[  6 ]
-    use-column[  7 ]
-    use-column[  8 ]
-    use-column[  9 ]
-    use-column[ 10 ]
-    use-column[ 11 ]
-  with frame {&FRAME-NAME} .
-end.
+  do:
+    assign
+      use-column[  1 ] = no
+      use-column[  2 ] = no
+      use-column[  3 ] = no
+      use-column[  4 ] = no
+      use-column[  5 ] = no
+      use-column[  6 ] = no
+      use-column[  7 ] = no
+      use-column[  8 ] = no
+      use-column[  9 ] = no
+      use-column[ 10 ] = no
+      use-column[ 11 ] = no
+      use-column[ 12 ] = no
+      use-column[ 13 ] = no
+      use-column[ 14 ] = no
+      .
+    display
+      use-column[  1 ]
+      use-column[  2 ]
+      use-column[  3 ]
+      use-column[  4 ]
+      use-column[  5 ]
+      use-column[  6 ]
+      use-column[  7 ]
+      use-column[  8 ]
+      use-column[  9 ]
+      use-column[ 10 ]
+      use-column[ 11 ]
+      use-column[ 12 ]
+      use-column[ 13 ]
+      use-column[ 14 ]
+      with frame {&FRAME-NAME} .
+  end.
 
 on choose of {&Btn_Save} in frame {&FRAME-NAME} /* Сохранить */
 do:
@@ -173,36 +188,39 @@ do:
   .
   find first buf_usr-flt exclusive-lock where
       recid( buf_usr-flt ) = r-flt .
-  assign
-    buf_usr-flt.list_ = '':U
-  .
-  do jj = 1 to 11
-  :
     assign
-      buf_usr-flt.list_ = buf_usr-flt.list_ + ( if use-column[ jj ] = yes then '+':U else '-':U )
-    .
-    if use-column[ jj ] = yes
-    then do:
-      assign
-        jndex = jndex + 1
+      buf_usr-flt.list_ = '':U
       .
+    do jj = 1 to 14
+      :
+      assign
+        buf_usr-flt.list_ = buf_usr-flt.list_ + ( if use-column[ jj ] = yes then '+':U else '-':U )
+        .
+      if use-column[ jj ] = yes
+        then 
+      do:
+        assign
+          jndex = jndex + 1
+          .
+      end.
+    end.
+    release buf_usr-flt no-error .
+    if error-status :error
+      then 
+    do:
+      message vss-workfile skip( 0 ) vss-date skip( 0 ) vss-revision skip( 1 ) vss-description skip( 1 )
+        error-status :get-message(1) skip
+        return-value skip
+        'Ошибка  release'
+        view-as alert-box error .
+    end.
+    if jndex = 0
+      then 
+    do:
+      message 'Не выбрано ни одно поле для печати.' view-as alert-box error .
+      return no-apply .
     end.
   end.
-  release buf_usr-flt no-error .
-  if error-status :error
-  then do:
-    message vss-workfile skip( 0 ) vss-date skip( 0 ) vss-revision skip( 1 ) vss-description skip( 1 )
-            error-status :get-message(1) skip
-            return-value skip
-            'Ошибка  release'
-    view-as alert-box error .
-  end.
-  if jndex = 0
-  then do:
-    message 'Не выбрано ни одно поле для печати.' view-as alert-box error .
-    return no-apply .
-  end.
-end.
 
 { gbl/hot-key.i {&Btn_Save} }
 { gbl/hot-key.i {&Btn_Mark} }
@@ -244,9 +262,9 @@ procedure local-initialize :
   assign
     c-flt = 'r-ptrsph':U
     jj    = 0
-  .
-  do jndex = 1 to 11
-  :
+    .
+  do jndex = 1 to 14
+    :
     assign
       use-column[ jndex ] = no
     .
@@ -270,10 +288,11 @@ procedure local-initialize :
         .
       end.
     end. /* do */
-    if length( buf_usr-flt.list_ ) < 11
-    then do:
-      do jndex = length( buf_usr-flt.list_ ) + 1 to 11
-      :
+    if length( buf_usr-flt.list_ ) < 14
+      then 
+    do:
+      do jndex = length( buf_usr-flt.list_ ) + 1 to 14
+        :
         assign
           use-column[ jndex ] = yes
           jj                  = jj + 1
@@ -281,9 +300,10 @@ procedure local-initialize :
       end. /* do */
     end.
   end. /* if available buf_usr-flt */
-  else do: /* if not available buf_usr-flt */
-    do jndex = 1 to 11
-    :
+  else 
+  do: /* if not available buf_usr-flt */
+    do jndex = 1 to 14
+      :
       if use-column[ jndex ] = yes
       then do:
         assign
@@ -297,9 +317,9 @@ procedure local-initialize :
       buf_usr-flt.user-name  = v-cntxt-userid
       buf_usr-flt.call-point = c-flt
       buf_usr-flt.list_      = '':U
-    .
-    do jndex = 1 to 11
-    :
+      .
+    do jndex = 1 to 14
+      :
       assign
         buf_usr-flt.list_ = buf_usr-flt.list_ + ( if use-column[ jndex ] = yes then '+':U else '-':U )
       .
@@ -321,7 +341,10 @@ procedure local-initialize :
     use-column[  9 ]
     use-column[ 10 ]
     use-column[ 11 ]
-  with frame {&FRAME-NAME} .
+    use-column[ 12 ]
+    use-column[ 13 ]
+    use-column[ 14 ]    
+    with frame {&FRAME-NAME} .
 end procedure. /* local-initialize */
 
 procedure my-report :
@@ -363,9 +386,9 @@ procedure my-report :
         recid( buf_usr-flt ) = r-flt .
     assign
       buf_usr-flt.list_ = '':U
-    .
-    do jndex = 1 to 11
-    :
+      .
+    do jndex = 1 to 14
+      :
       assign
         buf_usr-flt.list_ = buf_usr-flt.list_ + ( if use-column[ jndex ] = yes then '+':U else '-':U )
       .
@@ -410,7 +433,10 @@ procedure my-var :
     use-column[  9 ]
     use-column[ 10 ]
     use-column[ 11 ]
-  .
+    use-column[ 12 ]
+    use-column[ 13 ]
+    use-column[ 14 ]    
+    .
   /* строки в которых содержатся выбранные объекты */
   assign
     STR-obj-type = '':U

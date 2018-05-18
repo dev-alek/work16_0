@@ -136,6 +136,9 @@ define temp-table tt_line no-undo
   field chk-date    like ub.chk-doc.chk-date    /* 18) дата чека                */
   field chk-time    like ub.chk-doc.chk-time    /* 19) время чека               */
   field chk-code    like ub.chk-doc.doc-code    /* 20) уникальный номер чека    */
+  field chk-num     as character                /* 21) Номер чека на кассе:номер z-отчета */
+  field pass-gds    as character                /* 22) Сухой чек                */
+  field doc-num2    like ub.chk-doc.doc-num2    /* 23) № заказа                 */
 
   index upi         is   unique primary order
   index ui1         is   unique   gds-code pump-code nozzle-code pay-code curr-code chk-date chk-time
@@ -551,6 +554,9 @@ if varnozzle-code = ? then varnozzle-code = 0.
           tt_line.chk-date    = chk-doc.chk-date
           tt_line.chk-time    = chk-doc.chk-time
           tt_line.chk-code    = chk-doc.doc-code
+          tt_line.chk-num     = string(chk-doc.chk-num) + ":" + STRING (chk-doc.z-number)
+          tt_line.pass-gds    = if bf_chk-gds.pass-gds = 1 then "+" else "-"
+          tt_line.doc-num2    = if chk-doc.doc-num2 <> ? then chk-doc.doc-num2 else " "
         .
       end. /* if not available tt_line */
       assign
@@ -1440,13 +1446,43 @@ procedure get-print-line :
         when "C":U
         then do:
           case j_length :
-            when 16
+            when 10
             then do:
               assign
-                p-print-line = p-print-line + string( bf_print-line.artic, "x(16)":U ) + ":":U
-                p-excel-line = p-excel-line + string( bf_print-line.artic, "x(16)":U ) + {&tabulation}
+                p-print-line = p-print-line + string( bf_print-line.artic, "x(10)":U ) + ":":U
+                p-excel-line = p-excel-line + string( bf_print-line.artic, "x(10)":U ) + {&tabulation}
               .
             end.
+            when 15
+            then 
+              do:
+                case jj :
+                  when 12
+                  then 
+                    do:
+                      assign
+                        p-print-line = p-print-line + string( bf_print-line.chk-num, "x(15)":U ) + ":":U
+                        p-excel-line = p-excel-line + string( bf_print-line.chk-num, "x(15)":U ) + {&tabulation}
+                        .
+                    end.
+                  when 13
+                  then 
+                    do:
+                      assign
+                        p-print-line = p-print-line + string( bf_print-line.pass-gds, "x(15)":U ) + ":":U
+                        p-excel-line = p-excel-line + string( bf_print-line.pass-gds, "x(15)":U ) + {&tabulation}
+                        .
+                    end.
+                  when 14
+                  then 
+                    do:
+                      assign
+                        p-print-line = p-print-line + "  ":U + string( bf_print-line.doc-num2, "x(12)":U ) + " ":U + ":":U
+                        p-excel-line = p-excel-line          + string( bf_print-line.doc-num2, "x(12)":U ) + {&tabulation}
+                        .
+                    end.
+                end case.     
+              end.       
             when 17
             then do:
               case jj :
@@ -1558,10 +1594,10 @@ procedure get-lbl-data :
   on error undo, return error return-value
   :
     assign
-      p-list-length = "10,8,10,16,24,5,8,5,13,21,24":U
+      p-list-length = "10,8,10,10,24,5,8,5,13,21,24,15,15,15":U
       p-list-label  = "Дата,Время,Код товара,Артикул,Наименование товара,№ ТРК,Пистолет,Чеков,Количество,":U +
-                      "Сумма продаж,Вид оплаты":U
-      p-list-types  = "D,T,Z,C,C,I,I,I,Q,S,C":U
+                      "Сумма продаж,Вид оплаты,Номер чека,Сухой чек,№ заказа":U
+      p-list-types  = "D,T,Z,C,C,I,I,I,Q,S,C,C,C,C":U
     .
     if num-entries( p-list-length ) <> num-entries( p-list-label ) or
        num-entries( p-list-length ) <> num-entries( p-list-types )
