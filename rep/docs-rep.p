@@ -266,7 +266,7 @@ Assign l-col-type="DATE" l-col-len=10 l-col-format= "99/99/99"            l-col-
   { rep/dincol.i cr  3    for-fact-date      x1                }
   { rep/dincol.i crx 3 }
 
-Assign l-col-type="CHARACTER" l-col-len=10 l-col-format= "x(10)"            l-col-lable="Номер документа".
+Assign l-col-type="CHARACTER" l-col-len=15 l-col-format= "x(15)"            l-col-lable="Номер документа".
   { rep/dincol.i cr  4    for-doc-code      x1                }
   { rep/dincol.i crx 4 }
 
