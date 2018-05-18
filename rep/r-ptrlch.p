@@ -321,7 +321,7 @@ define buffer buf_temp-petrol-chk for temp-petrol-chk.
 /*             message  buf_temp-petrol-chk.gds-code "al" buf_temp-petrol-chk.chk-type "type" buf_temp-petrol-chk.doc-qnty  "doc-code" buf_chk-gds.doc-code view-as alert-box.*/
 /*        assign*/
             if (p-chk-type = integer({&rcpt-trans-cancell}) or p-chk-type = integer({&rcpt-unlock-trans}))
-            and v-write-off-code = 1
+            and v-write-off-code = 0
              then
             do:
                 
