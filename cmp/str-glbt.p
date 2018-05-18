@@ -626,6 +626,7 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-images}~
 ,{&bef-attr-prt-glob}~
 ,{&bef-attr-report-glob}~
+,{&bef-attr-report-obj}~
 ,{&bef-attr-code-range}~
 ,{&bef-attr-bge-export}~
 ,{&bef-attr-auto-task}~
