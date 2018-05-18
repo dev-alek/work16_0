@@ -71,7 +71,6 @@ define variable cashparts as logical no-undo.
 define variable cashparts-chk as logical no-undo.
 define variable serparts as logical no-undo.
 define variable plcode like ub.place.pl-code no-undo.
-define variable cashplace-chk as logical no-undo.
 define variable cashfbrs as logical no-undo .
 define variable v-is-dish as character no-undo .
 define variable v-deleted as logical no-undo .
@@ -95,7 +94,6 @@ define variable v-created as logical no-undo .
 define variable v-created-dtl as logical no-undo .
 define variable add-nf-amount as integer   no-undo .
 define variable add-NF-gds-amount as integer   no-undo .
-define variable v-rare-doc as logical no-undo.
 define variable v-dop as character no-undo .
 define variable v-rec-inv-line as recid no-undo .
 define variable nff-chk-amount as integer no-undo .
@@ -182,8 +180,12 @@ on error undo, return error return-value
                                          ,output v-is-tpsi-obj
                                          ,output v-tpsi-mode
                                          ,output v-main-tpsi ) no-error.
+end. /*doe*/
 
 
+do
+on error undo, return error return-value
+:
   for each buf_sale-doc where
            buf_sale-doc.inkas-code = ink-doc.inkas-code
        and buf_sale-doc.order > 0:
@@ -313,13 +315,7 @@ on error undo, return error return-value
     then do:
       run display-chk in p-call-handle (chk-amount, nf-chk-amount).
     end.
-    /*очистим*/
-    assign
-    docs-to-reserv = 0
-    kind-to-reserv = '':U
-    office-to-reserv = '':U
-    add-nf-amount  = 0
-    .
+    
     docs-to-reserv = get-inc-sal (
                                   input string(X_chk-doc.chk-type)
                                 , input X_chk-doc.netto
@@ -427,21 +423,14 @@ on error undo, return error return-value
       on stop undo _one-check, leave _one-check
       :
         buf_chk-gds.out-code = ink-doc.inkas-code .
-        /*очистим!!*/
-        assign
-        docs-to-reserv-gds = 0
-        kind-to-reserv-gds = '':U
-        office-to-reserv-gds = '':U
-        add-nf-gds-amount  = 0
-        v-add = no
-        .
         if buf_chk-gds.doc-qnty = 0 then do:
           assign
           GDS-AMOUNT = GDS-AMOUNT + 1
-          nf-gds-amount = nf-gds-amount  + (if lookup(string(X_chk-doc.chk-type),{&no-docum-receipt-codes}) > 0 then 1 else 0)
+          nf-gds-amount = nf-gds-amount  + 1 when (  lookup( string(X_chk-doc.chk-type), {&no-docum-receipt-codes} )  >  0  )
           .
           NEXT _Buf_chk-gds.
         end.
+        
         docs-to-reserv-gds = get-inc-sal(
                                       input string(X_chk-doc.chk-type)
                                     , input X_chk-doc.netto
@@ -505,7 +494,6 @@ on error undo, return error return-value
         nf-gds-amount = nf-gds-amount  + add-nf-gds-amount
         .
         assign
-        v-rare-doc = (docs-to-reserv-gds > 0)
         office-to-reserv-gds = (if v-add
                               then (office-to-reserv + (if kind-to-reserv-gds = '':u
                                                       then '':u
@@ -518,28 +506,88 @@ on error undo, return error return-value
                                                       else {&comma-char}) +
                                   kind-to-reserv-gds)
                             else  kind-to-reserv-gds)
-        docs-to-reserv-gds = (if v-add
-                              then (docs-to-reserv  + docs-to-reserv-gds)
-                              else docs-to-reserv-gds)
+          docs-to-reserv-gds = (docs-to-reserv  + docs-to-reserv-gds) when v-add
         .
+        if buf_chk-gds.pump > 0 then do :
+          FIND FIRST ub.bar-code WHERE ub.bar-code.b-code = buf_chk-gds.b-code NO-LOCK NO-ERROR.
+          if not avail ub.bar-code then do:
+        &scop my-message substitute("&1 &2 &3&4Чек &5 строка &6,&4отсутствует в БД бар-код &7&4Чек не будет закачан в продажу"  ~
+                                    , vss-workfile                   ~
+                                    , vss-revision                   ~
+                                    , vss-description                ~
+                                    , ~{&new-line~}                  ~
+                                    , X_chk-doc.doc-code             ~
+                                    , buf_chk-gds.line-num           ~
+                                    , buf_chk-gds.b-code)
+
+        {&display-message-laud} .
+            undo _one-check, leave _one-check.
+          end.
+          run findtank in this-procedure
+                              (input p-obj-type,
+                              input p-obj-code,
+                              input buf_chk-gds.pump,
+                              input buf_chk-gds.nozzle-code,
+                              input buf_chk-gds.pl-code,
+                              input ub.bar-code.gds-code,
+                              output plcode) no-error.
+          if error-status :error or plcode = ? then do:
+  &scop my-message substitute("Чек &1 Бар-код &2 ТРК &3&4Не удается определить танк&4Чек не будет закачан в продажу&4&5"  ~
+                              , X_chk-doc.doc-code             ~
+                              , buf_chk-gds.b-code                   ~
+                              , buf_chk-gds.pump                     ~
+                              , ~{&new-line~}                  ~
+                              , return-value                   ~
+                              )
+
+  {&display-message-laud} .
+            UNDO _one-check, leave _one-check.
+          end.
+          find first buf_place no-lock where buf_place.pl-code = plcode no-error .
+          if not available buf_place then do:
+  &scop my-message substitute("Чек &1 Бар-код &2 ТРК &3&4Не удается определить резервуар&4Чек не будет закачан в продажу&4&5"  ~
+                              , X_chk-doc.doc-code             ~
+                              , buf_chk-gds.b-code                   ~
+                              , buf_chk-gds.pump                     ~
+                              , ~{&new-line~}                  ~
+                              , return-value                   ~
+                              )
+
+  {&display-message-laud} .
+            UNDO _one-check, leave _one-check.
+          end.
+          assign
+            buf_chk-gds.pl-code = plcode
+            buf_chk-gds.loc1    = buf_place.loc1
+          .
+        end . /* end_of pump > 0 */
+        
+define variable v-chk-gds-line-type-1    as character no-undo .
+define variable v-office-to-reserv-gds-n as character no-undo .
+define variable v-kind-to-reserv-gds-n   as character no-undo .
+
         if docs-to-reserv-gds <> 0 then do:
-          if v-rare-doc then  do:
-            _dtrg-gds:
-            do dtrg = 1 to docs-to-reserv-gds :
-              if entry(dtrg, office-to-reserv-gds) <> entry(1, buf_chk-gds.line-type, {&delim-par})
-              then next _dtrg-gds.
-              if KIND-TO-RESERV-GDS = 'none' then next.
+          v-chk-gds-line-type-1 = entry(1, buf_chk-gds.line-type, {&delim-par}) .
+          
+          
+          if docs-to-reserv-gds > 0 then  do:
+            if KIND-TO-RESERV-GDS <> 'none' then do :
+              _dtrg-gds:
+              do dtrg = 1 to docs-to-reserv-gds :
+                v-office-to-reserv-gds-n = entry(dtrg, office-to-reserv-gds) . 
+                if v-office-to-reserv-gds-n <> v-chk-gds-line-type-1 then next _dtrg-gds.
+                v-kind-to-reserv-gds-n = entry(dtrg, kind-to-reserv-gds) .
               find first buf_sale-doc where
                         buf_Sale-doc.inkas-code = ink-doc.inkas-code
-                    and buf_sale-doc.doc-kind = entry(dtrg, kind-to-reserv-gds)
-                    and buf_sale-doc.chr-office = entry(dtrg, office-to-reserv-gds)
+                    and buf_sale-doc.doc-kind = v-kind-to-reserv-gds-n
+                    and buf_sale-doc.chr-office = v-office-to-reserv-gds-n
                     no-error .
-              if not available buf_sale-doc then do:
+              if available buf_sale-doc then next _dtrg-gds .
                 run str/cresalad.p (
                                 buffer trn-doc
                               , buffer dop_trn-doc
-                              , input entry(dtrg, kind-to-reserv-gds)
-                              , input entry(dtrg, office-to-reserv-gds)
+                              , input v-kind-to-reserv-gds-n
+                              , input v-office-to-reserv-gds-n
                               , input cli-type-to-reserv
                               , input cli-code-to-reserv
                               , output other-doc-code) no-error .
@@ -554,51 +602,63 @@ on error undo, return error return-value
                   {&display-message-laud} .
                   undo c-d, NEXT c-d.
                 end. /*es */
-              end. /*fot avail buf_sale-doc*/
-            end. /* do dtrg = 1 to docs-to-reserv-gds :*/
-          end. /*do dtrg = 2 to doc-to-reserv-gds*/
+              end. /* do dtrg = 1 to docs-to-reserv-gds :*/
+            end . /* end_of if_kind-to-reserv */
+          end. /* end_of if_rare_doc */
+
+
           dtrg-start = ?.
           v-real-doc-kind = ''.
           _dtrg-gds2:
           do dtrg = 1 to docs-to-reserv-gds:
-            if entry(dtrg, office-to-reserv-gds) <> entry(1, buf_chk-gds.line-type, {&delim-par})
-            then next _dtrg-gds2.
-            if dtrg-start = ? then do:
-               dtrg-start = yes.
-            end.
-            else do:
-              dtrg-start = no.
-            end.
-            assign
-            v-real-doc-kind = v-real-doc-kind + entry(dtrg, kind-to-reserv-gds).
+            v-office-to-reserv-gds-n = entry(dtrg, office-to-reserv-gds) . 
+            if v-office-to-reserv-gds-n <> v-chk-gds-line-type-1 then next _dtrg-gds2.
+            
+            v-kind-to-reserv-gds-n = entry(dtrg, kind-to-reserv-gds) .
+            dtrg-start = (dtrg-start = ?) .
+            v-real-doc-kind = v-real-doc-kind + v-kind-to-reserv-gds-n.
             find first buf_sale-doc where
                        buf_sale-doc.inkas-code = ink-doc.inkas-code
-                   and buf_sale-doc.doc-kind = entry(dtrg, kind-to-reserv-gds)
-                   and buf_sale-doc.chr-office = entry(dtrg, office-to-reserv-gds)
+                   and buf_sale-doc.doc-kind = v-kind-to-reserv-gds-n
+                   and buf_sale-doc.chr-office = v-office-to-reserv-gds-n
                    no-error.
+                   
             if buf_chk-gds.grp-code = 0 then /* else - cуммовая строка */  do:
+              /* find first t-gds: */
               if cr > 0 then do:
-                if (buf_chk-gds.pl-code = 0
-                or buf_chk-gds.pl-code = ?)
-                and buf_chk-gds.pump > 0 then do:
-                  find first t-gds WHERE
-                          t-gds.doc-code = buf_sale-doc.doc-code
-                      and t-gds.b-code = buf_chk-gds.b-code
-                      and t-gds.drc = recid(X_chk-doc)
-                      AND t-gds.pump = buf_chk-gds.pump
-                      AND if buf_chk-gds.nozzle-code <> 0 then t-gds.nozzle-code = buf_chk-gds.nozzle-code else true
-                      NO-ERROR.
+                if (buf_chk-gds.pump > 0) and (buf_chk-gds.pl-code = 0 or buf_chk-gds.pl-code = ?) then do:
+                  if buf_chk-gds.nozzle-code <> 0 then
+find first t-gds
+     WHERE t-gds.doc-code    = buf_sale-doc.doc-code
+       and t-gds.b-code      = buf_chk-gds.b-code
+       and t-gds.drc         = recid(X_chk-doc)
+       AND t-gds.pump        = buf_chk-gds.pump
+       AND t-gds.nozzle-code = buf_chk-gds.nozzle-code NO-ERROR.
+                  else
+find first t-gds
+     WHERE t-gds.doc-code    = buf_sale-doc.doc-code
+       and t-gds.b-code      = buf_chk-gds.b-code
+       and t-gds.drc         = recid(X_chk-doc)
+       AND t-gds.pump        = buf_chk-gds.pump NO-ERROR.
                 end.
                 else do:
-              find first t-gds WHERE
-                        t-gds.doc-code = buf_sale-doc.doc-code
-                    and t-gds.b-code = buf_chk-gds.b-code
-                    and t-gds.drc = recid(X_chk-doc)
-                    AND t-gds.pump = buf_chk-gds.pump
-                    AND if buf_chk-gds.nozzle-code <> 0 then t-gds.nozzle-code = buf_chk-gds.nozzle-code else true
-                    AND t-gds.pl-code = buf_chk-gds.pl-code NO-ERROR.
+                  if buf_chk-gds.nozzle-code <> 0 then
+find first t-gds
+     WHERE t-gds.doc-code    = buf_sale-doc.doc-code
+       and t-gds.b-code      = buf_chk-gds.b-code
+       and t-gds.drc         = recid(X_chk-doc)
+       AND t-gds.pump        = buf_chk-gds.pump
+       AND t-gds.nozzle-code = buf_chk-gds.nozzle-code
+       AND t-gds.pl-code     = buf_chk-gds.pl-code NO-ERROR.
+                  else
+find first t-gds
+     WHERE t-gds.doc-code    = buf_sale-doc.doc-code
+       and t-gds.b-code      = buf_chk-gds.b-code
+       and t-gds.drc         = recid(X_chk-doc)
+       AND t-gds.pump        = buf_chk-gds.pump
+       AND t-gds.pl-code     = buf_chk-gds.pl-code NO-ERROR.
                 end.
-              end.
+              end. /* end_of cr>0 */
               if not avail t-gds
               or cr = 0
               OR (t-gds.grc <> ? AND t-gds.grc <> recid(buf_chk-gds))
@@ -732,24 +792,30 @@ on error undo, return error return-value
                   buf_sale-doc.pay-code
                   v-clcdoc-slt-pc
                 }
-                FIND FIRST t-gds where t-gds.crf = cr + 1 use-index crfi No-ERROR.
-                if not avail t-gds then do:
-                  create t-gds.
+                
+                cr = cr + 1 .
+                FIND FIRST t-gds where t-gds.crf = cr use-index crfi No-ERROR.
+                if available t-gds then do :
                   t-gds.marks = ''.
-                end.
-                else do:
+                end .
+                else do :
+                  create t-gds.
+                  assign
+                    t-gds.crf   = cr
+                    t-gds.marks = ''
+                  .
+                end .
+
+                if avail t-gds then do:
                   assign
                   t-gds.is-modificator = no
                   t-gds.price-base = 0
                   t-gds.price-service = 0
                   t-gds.doc-code = '':U
                   .
-                  t-gds.marks = ''.
                 end.
                 assign
                 t-gds.doc-code = buf_sale-doc.doc-code
-                t-gds.crf = cr + 1
-                cr = cr + 1
                 t-gds.b-code = buf_chk-gds.b-code
                 t-gds.gds-code = goods.gds-code
                 t-gds.artic = goods.artic
@@ -782,21 +848,18 @@ on error undo, return error return-value
                                         or t-gds.is-modificator
                                         then yes
                                         else t-gds.is-modificator
-/*                t-gds.marks = ''*/
                 .
-              end.
-              else do:
               end.
               assign
               t-gds.doc-qnty = t-gds.doc-qnty + buf_chk-gds.doc-qnty
               t-gds.num-lines = t-gds.num-lines + 1
               t-gds.price-base = if (buf_chk-gds.price-base + buf_chk-gds.price-service) > 0 then
                                 (buf_chk-gds.price-base + buf_chk-gds.price-service)
-                                else t-gds.price-base
+                                                               else t-gds.price-base
               t-gds.price-service = if (buf_chk-gds.price-base + buf_chk-gds.price-service) > 0 then
                                     buf_chk-gds.price-service
-                                    else t-gds.price-service
-              t-gds.discnt = (if buf_sale-doc.doc-type = {&write-off}
+                                                               else t-gds.price-service
+              t-gds.discnt        = (if buf_sale-doc.doc-type = {&write-off}
                               then 0
                               else buf_chk-gds.discnt)
               t-gds.price-sum = t-gds.price-sum +
@@ -835,43 +898,8 @@ on error undo, return error return-value
           if t-gds.pump > 0
           then do:
             assign
-              plcode = ?
               t-gds.density = buf_chk-gds.density
             .
-            run findtank in this-procedure
-                              (input p-obj-type,
-                              input p-obj-code,
-                              input t-gds.pump,
-                              input t-gds.nozzle-code,
-                              input t-gds.pl-code,
-                              input t-gds.gds-code,
-                              output plcode) no-error.
-            if error-status :error
-              or plcode = ?
-            then do:
-  &scop my-message substitute("Чек &1 Бар-код &2 ТРК &3&4Не удается определить танк&4Чек не будет закачан в продажу&4&5"  ~
-                              , X_chk-doc.doc-code             ~
-                              , t-gds.b-code                   ~
-                              , t-gds.pump                     ~
-                              , ~{&new-line~}                  ~
-                              , return-value                   ~
-                              )
-
-  {&display-message-laud} .
-              UNDO _one-check, leave _one-check.
-            end.
-            find first buf_place no-lock where buf_place.pl-code = plcode no-error .
-            assign
-              t-gds.pl-code = plcode
-              t-gds.loc1    = buf_place.loc1 when available buf_place
-            .
-
-            if buf_chk-gds.pl-code <> t-gds.pl-code then do:
-              assign
-                buf_chk-gds.pl-code = t-gds.pl-code
-                buf_chk-gds.loc1    = t-gds.loc1
-              .
-            end.
 
             if valid-density( buf_chk-gds.density, (goods.unit-base = goods.unit-cli)  ) <> true then do:
               /*здесь определим density*/
@@ -913,7 +941,11 @@ on error undo, return error return-value
                                   .
 
         end. /*fi docs-to-reserv > 0 */
+
+
       end. /*for each buf_chk-gds*/
+
+
       if docs-to-reserv > 0 or KIND-TO-RESERV = 'none' then do:
       /*к этому моменту имеем массив t-gds в которых лежат все данные для создания строк документов*/
 
@@ -965,9 +997,7 @@ on error undo, return error return-value
             buf_doc-line.cli-base-rate = 1
             .
           end.  /*not avail doc-line*/
-          else do:
-            v-created = no.
-          end.
+          else v-created = no.
           assign
           buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + abs( t-gds.doc-qnty )
           .
@@ -996,13 +1026,10 @@ on error undo, return error return-value
             doc-line-attr.attr-value = trim(doc-line-attr.attr-value, ',') .
           end.  
           /*ищем нужное складское место*/
-          if t-gds.pump > 0
-          then cashplace-chk = yes.
-          else cashplace-chk = no.
-          if cashplace-chk then do:
-          define variable v-doc-pl-rowid as rowid no-undo .
-          define variable v-qnty as decimal no-undo .
-          define variable v-cli-qnty as decimal no-undo .
+          if t-gds.pump > 0 then do:
+            define variable v-doc-pl-rowid as rowid no-undo .
+            define variable v-qnty as decimal no-undo .
+            define variable v-cli-qnty as decimal no-undo .
             { str/crdocpl.i
               t-gds.doc-code
               t-gds.gds-code
@@ -1011,7 +1038,7 @@ on error undo, return error return-value
               X_chk-doc.obj-code
               v-doc-pl-rowid
               no-error
-           }
+            }
             if error-status:error then do:
 &scop my-message substitute("Чек &1 Бар-код &2 скл.место &3&4Не удается создать строку документа для скл.места&4&5&4Чек не будет закачан в продажу"  ~
                             , X_chk-doc.doc-code             ~
@@ -1085,29 +1112,23 @@ on error undo, return error return-value
             assign
             ub.doc-pl-pump.fact-qnty = ub.doc-pl-pump.fact-qnty + abs( t-gds.doc-qnty ).
 
-          end. /*if cashpla-ch*/
+          end. /*if t-gds.pump > 0 */
           /*нельзя торговать одновременно по складским местам и по партиям*/
           if not t-gds.pump > 0 then do:
             /*ищем нужную партию*/
             if t-gds.cashparts then do:
+              define variable v-nonunique as integer no-undo .
               if lookup({&twounit}, t-gds.type) > 0 then do:
-                define variable v-nonunique as integer no-undo .
                 FIND FIRST ub.doc-prts WHERE
                             ub.doc-prts.out-code = t-gds.doc-code
                         AND ub.doc-prts.gds-code = t-gds.gds-code  NO-ERROR.
-                if available ub.doc-prts then do:
-                  v-nonunique = ub.doc-prts.b-code - 1.
-                end.
-                else do:
-                  v-nonunique = -1.
-                end.
+                v-nonunique = if available ub.doc-prts then (ub.doc-prts.b-code - 1) else -1 .
               end.
-              FIND FIRST ub.doc-prts WHERE
-                          ub.doc-prts.out-code = t-gds.doc-code
-                      AND ub.doc-prts.b-code = (if lookup({&twounit}, t-gds.type) > 0
-                                                then v-nonunique
-                                                else t-gds.b-code)
-                      AND ub.doc-prts.gds-code = t-gds.gds-code  NO-ERROR.
+              else v-nonunique = t-gds.b-code .
+              FIND FIRST ub.doc-prts
+                   WHERE ub.doc-prts.out-code = t-gds.doc-code
+                     AND ub.doc-prts.b-code   = v-nonunique 
+                     AND ub.doc-prts.gds-code = t-gds.gds-code NO-ERROR.
                 /*ДА ИМЕННО ТАК !!! если (if lookup({&twounit}, t-gds.type) > 0 то все кусочки по отдельности резервируем!!!*/
                 IF not avail ub.doc-prts THEN do:
                   create ub.doc-prts.
@@ -1399,6 +1420,8 @@ on error undo, return error return-value
           .
         end.
       end. /*if docs-to0-resertv > 0 */
+
+
      if X_chk-doc.chk-type = integer({&rcpt-z-rep})
      or X_chk-doc.chk-type = integer({&income-corr})
      or X_chk-doc.chk-type = integer({&expense-corr})
