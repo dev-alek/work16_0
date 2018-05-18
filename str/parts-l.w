@@ -4583,6 +4583,8 @@ then do:
       rs-one-all = {&parts-l_object-current}
       rs-one-all :screen-value = rs-one-all
     .
+    MESSAGE "Нет права просмотра партий для всех объектов"
+    VIEW-AS ALERT-BOX.
   end.
 end.
 
