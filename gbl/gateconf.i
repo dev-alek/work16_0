@@ -20,7 +20,7 @@ Creation date: 02/02/08
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 
-&glob gate-revision  "v15_1.59"
+&glob gate-revision  "v15_1.60"
 &glob gate-md5    { cmp/fix-gate.md5 }
 
 procedure check-gate-version :

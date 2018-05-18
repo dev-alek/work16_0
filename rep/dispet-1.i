@@ -42,6 +42,9 @@ field gds-name as character
 field loc1 as character
 field max-qnty as decimal
 field add-qnty as decimal
+field min-qnty as decimal
+field current-sale  as decimal
+field income as decimal
 field sale-qnty-7 as decimal
 field curr-qnty as decimal
 field doc-qnty as decimal

@@ -45,7 +45,7 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Отчет диспетчера".
 
-define variable g#report-num   as integer      no-undo.
+define variable g#report-num  as integer      no-undo .
 define variable v-sort-list    as character    no-undo.
 define variable v-sort-type    as character    no-undo.
 define variable v-sort         as logical      no-undo.
@@ -55,6 +55,7 @@ define variable v-message    as character    no-undo.
 define variable v-err-mess as character no-undo .
 define variable v-start-datetime as datetime no-undo .
 
+define buffer buf_rvs-line-attr for ub.rvs-line-attr .
 
 { cmp/vssrevis.i   }
 { cmp/str-glbl.i   }
@@ -72,6 +73,7 @@ define variable v-start-datetime as datetime no-undo .
 { ref/gds-attr.i   }
 { gbl/gate-clb.i }
 { rep/reprumpr.i print-xlt }
+{ str/placelib.i     }
 &scop display-message ~
    if p-batch > 0 then do: ~
      run write-log-and-file in p-log-handle ( ~
@@ -356,6 +358,11 @@ define variable v-attr-type     as character no-undo .
 define variable v-number      as INTEGER    no-undo.
 define variable v-cntxt-db-num    as INTEGER       no-undo .
 define variable v-fact-order      as decimal       no-undo .
+define variable v-res as logical no-undo.
+define variable v-value as character no-undo.
+define variable v-min-qnty as decimal no-undo .
+define variable v-income   as decimal no-undo .
+define variable v-current-sale  as decimal no-undo .
 
 do
 on error undo, return error
@@ -421,7 +428,41 @@ on error undo, return error
         WHERE buf_place.obj-type = buf_obj-list.obj-type
           and buf_place.obj-code = buf_obj-list.obj-code
         no-lock :
+        assign  
+          v-min-qnty = 0
+          v-income = 0
+          v-current-sale = 0 
+        .  
+        run placelib_get-attr(
+              {&dead-balance},
+              buf_place.obj-code,
+              buf_place.obj-type,
+              buf_place.pl-code,
+              output v-value,
+              output v-res
+          ).
+          if v-res then do:
+              v-min-qnty = decimal(v-value).
+          end.  
 
+          for first buf_rvs-line-attr EXCLUSIVE-LOCK where buf_rvs-line-attr.attr-code = "income"
+                                 and buf_rvs-line-attr.rvs-code = buf_rvs-doc.rvs-code
+                                 and buf_rvs-line-attr.obj-code = buf_place.obj-code
+                                 and buf_rvs-line-attr.obj-type = buf_place.obj-type
+                                 and buf_rvs-line-attr.pl-code = buf_place.pl-code
+                                 and buf_rvs-line-attr.rvs-code = buf_rvs-doc.rvs-code:
+            v-income = DECIMAL (buf_rvs-line-attr.attr-value) .
+          end.                                   
+
+          for first buf_rvs-line-attr EXCLUSIVE-LOCK where buf_rvs-line-attr.attr-code = "current-sale"
+                                 and buf_rvs-line-attr.rvs-code = buf_rvs-doc.rvs-code
+                                 and buf_rvs-line-attr.obj-code = buf_place.obj-code
+                                 and buf_rvs-line-attr.obj-type = buf_place.obj-type
+                                 and buf_rvs-line-attr.pl-code = buf_place.pl-code
+                                 and buf_rvs-line-attr.rvs-code = buf_rvs-doc.rvs-code:
+            v-current-sale = DECIMAL (buf_rvs-line-attr.attr-value) .
+          end.   
+                              
       assign
       v-sort-code = v-sort-max
       v-gds-code  = 0
@@ -440,6 +481,9 @@ on error undo, return error
       buf_tt-place.loc1     = buf_place.loc1
       buf_tt-place.max-qnty = buf_place.max-qnty
       buf_tt-place.add-qnty = buf_place.add-qnty
+      buf_tt-place.min-qnty = v-min-qnty
+      buf_tt-place.current-sale = v-current-sale
+      buf_tt-place.income = v-income
       buf_tt-place.is-meas    = buf_place.is-meas
       buf_tt-place.obj-number = v-number
       buf_tt-place.obj-name = buf_obj-list.obj-name

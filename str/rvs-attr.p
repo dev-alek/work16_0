@@ -32,9 +32,9 @@ define variable vss-description as character no-undo init "Оборот по по чекам".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
-{ cmp/showinf.i  }
-
-define temp-table tt-rvs-line-attr no-undo
+{ gbl/cur-time.i }  
+{ gbl/cur-time.i }  
+define temp-table tt-doc-line-attr no-undo
   field gds-code    like ub.goods.gds-code
   field pl-code     like ub.place.pl-code
   field artic       like ub.goods.artic
@@ -45,7 +45,18 @@ define temp-table tt-rvs-line-attr no-undo
   field oo          as decimal initial 0.0
   index pi is primary unique gds-code pl-code
 .
+define TEMP-TABLE tt-rvs-line-attr no-undo
+  field rvs-code    like ub.rvs-line-attr.rvs-code
+  field obj-type    like ub.rvs-line-attr.obj-type
+  field obj-code    like ub.rvs-line-attr.obj-code
+  field pl-code     like ub.rvs-line-attr.pl-code
+  field gds-code    like ub.rvs-line-attr.gds-code
+  field attr-code   like ub.rvs-line-attr.attr-code
+  field attr-value  as decimal 
+index pi is primary unique gds-code pl-code obj-type obj-code attr-code
+.
 
+define buffer buf_tt-doc-line-attr  for tt-doc-line-attr .
 define buffer buf_tt-rvs-line-attr  for tt-rvs-line-attr .
 define buffer buf_place             for ub.place .
 define buffer buf_pl-gds            for ub.pl-gds .
@@ -54,13 +65,18 @@ define buffer buf_doc-pl            for ub.doc-pl .
 define buffer buf_trn-doc           for ub.trn-doc .
 define buffer buf_goods             for ub.goods .
 define buffer buf_doc-line          for ub.doc-line .
-define buffer buf_rvs-line-attr     for ub.rvs-line-attr .
+define buffer buf_doc-line-attr     for ub.doc-line-attr .
 define buffer curr_shift-obj        for ub.shift-obj .
 define buffer prev_shift-obj        for ub.shift-obj .
 define buffer buf_rvs-doc           for ub.rvs-doc .
 define buffer buf_rvs-line          for ub.rvs-line .
-
-define variable v-sign            as decimal   no-undo .
+define buffer buf_rvs-line-attr     for ub.rvs-line-attr .
+define buffer buf_chk-doc           for ub.chk-doc .
+define buffer buf_chk-gds           for ub.chk-gds .
+define buffer buf_bar-code          for ub.bar-code .
+define buffer buf_pl-pump-nozzle    for ub.pl-pump-nozzle .
+define variable v-sign              as decimal   no-undo .
+define variable v-pl-code           as integer   no-undo .
 
 do
 on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
@@ -76,22 +92,22 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
   on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
   :
 
-    find first buf_tt-rvs-line-attr
-      where buf_tt-rvs-line-attr.gds-code = buf_pl-gds.gds-code
-        and buf_tt-rvs-line-attr.pl-code  = buf_pl-gds.pl-code
+    find first buf_tt-doc-line-attr
+      where buf_tt-doc-line-attr.gds-code = buf_pl-gds.gds-code
+        and buf_tt-doc-line-attr.pl-code  = buf_pl-gds.pl-code
       no-error .
-    if not available buf_tt-rvs-line-attr then do:
+    if not available buf_tt-doc-line-attr then do:
       find first buf_goods no-lock
         where buf_goods.gds-code = buf_pl-gds.gds-code
         no-error.
       if available buf_goods then do:
-        create buf_tt-rvs-line-attr.
+        create buf_tt-doc-line-attr.
         assign
-          buf_tt-rvs-line-attr.gds-code    = buf_pl-gds.gds-code
-          buf_tt-rvs-line-attr.pl-code     = buf_pl-gds.pl-code
-          buf_tt-rvs-line-attr.artic       = buf_goods.artic
-          buf_tt-rvs-line-attr.prod-type   = buf_goods.prod-type
-          buf_tt-rvs-line-attr.prod-code   = buf_goods.prod-code
+          buf_tt-doc-line-attr.gds-code    = buf_pl-gds.gds-code
+          buf_tt-doc-line-attr.pl-code     = buf_pl-gds.pl-code
+          buf_tt-doc-line-attr.artic       = buf_goods.artic
+          buf_tt-doc-line-attr.prod-type   = buf_goods.prod-type
+          buf_tt-doc-line-attr.prod-code   = buf_goods.prod-code
         .
       end.
     end.
@@ -131,19 +147,96 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     if available buf_rvs-doc then do:
       for each buf_rvs-line no-lock
         where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-        ,first buf_tt-rvs-line-attr
-        where buf_tt-rvs-line-attr.gds-code = buf_rvs-line.gds-code
-          and buf_tt-rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+        ,first buf_tt-doc-line-attr
+        where buf_tt-doc-line-attr.gds-code = buf_rvs-line.gds-code
+          and buf_tt-doc-line-attr.pl-code  = buf_rvs-line.pl-code
       on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
       :
         assign
-          buf_tt-rvs-line-attr.rest = buf_tt-rvs-line-attr.rest + buf_rvs-line.state-measure-qnty
+          buf_tt-doc-line-attr.rest = buf_tt-doc-line-attr.rest + buf_rvs-line.state-measure-qnty
         .
       end.
     end.
   end.
-
-
+  /*ищем все чеки за текущую смену*/
+define variable v-today        as date         no-undo.  
+define variable v-time         as integer      no-undo.    
+  run cur-time in this-procedure ( output v-today, output v-time).
+  
+for each buf_chk-doc where buf_chk-doc.chk-date = v-today
+                       and buf_chk-doc.obj-code = curr_shift-obj.obj-code
+                       and buf_chk-doc.obj-type = curr_shift-obj.obj-type,
+                       each buf_chk-gds where buf_chk-gds.doc-code = buf_chk-doc.doc-code,
+                       first buf_bar-code where buf_bar-code.b-code = buf_chk-gds.b-code,
+                       first tt-doc-line-attr where tt-doc-line-attr.gds-code = buf_bar-code.gds-code:
+if (buf_chk-doc.chk-type = INTEGER({&rcpt-sale}) OR  buf_chk-doc.chk-type = INTEGER({&rcpt-return})) then do:
+  v-pl-code = 0 .
+  if buf_chk-gds.pl-code = 0 or buf_chk-gds.pl-code = ? then do:
+    find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.status_ <> {&blocked-status}
+                                  and buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
+                                  and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
+                                  and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
+                                  and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type no-error .
+  if AVAILABLE buf_pl-pump-nozzle then do:
+  v-pl-code = buf_pl-pump-nozzle.pl-code .    
+  end.
+end.                   
+   else v-pl-code = buf_chk-gds.pl-code .
+                       
+   find first tt-rvs-line-attr EXCLUSIVE-LOCK where tt-rvs-line-attr.attr-code = "current-sale"
+                                 and tt-rvs-line-attr.gds-code = tt-doc-line-attr.gds-code
+                                 and tt-rvs-line-attr.obj-code = buf_chk-doc.obj-code
+                                 and tt-rvs-line-attr.obj-type = buf_chk-doc.obj-type
+                                 and tt-rvs-line-attr.pl-code = v-pl-code
+                                 and tt-rvs-line-attr.rvs-code = p-rvs-code no-error .
+  if not AVAILABLE tt-rvs-line-attr then do:
+    create tt-rvs-line-attr .
+    ASSIGN
+    tt-rvs-line-attr.attr-code = "current-sale"
+    tt-rvs-line-attr.gds-code = tt-doc-line-attr.gds-code
+    tt-rvs-line-attr.obj-code = buf_chk-doc.obj-code
+    tt-rvs-line-attr.obj-type = buf_chk-doc.obj-type
+    tt-rvs-line-attr.pl-code = v-pl-code
+    tt-rvs-line-attr.rvs-code = p-rvs-code
+    .
+  end.
+    tt-rvs-line-attr.attr-value = tt-rvs-line-attr.attr-value + buf_chk-gds.doc-qnty .
+end.                         
+end.        
+for each buf_trn-doc no-lock where buf_trn-doc.doc-date = v-today
+                       and buf_trn-doc.obj-code = p-obj-code
+                       and buf_trn-doc.obj-type = p-obj-type
+                       and buf_trn-doc.doc-type = {&income},
+      each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code,
+      first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic
+                        and buf_goods.prod-code = buf_doc-line.prod-code
+                        and buf_goods.prod-type = buf_doc-line.prod-type,
+                        each tt-doc-line-attr no-lock where tt-doc-line-attr.gds-code = buf_goods.gds-code,
+                        each buf_doc-pl no-lock
+                        where buf_doc-pl.out-code = buf_trn-doc.doc-code
+                          and buf_doc-pl.gds-code = tt-doc-line-attr.gds-code
+                          and buf_doc-pl.pl-code  = tt-doc-line-attr.pl-code
+                         :
+   find first tt-rvs-line-attr EXCLUSIVE-LOCK where tt-rvs-line-attr.attr-code = "income"
+                                 and tt-rvs-line-attr.gds-code = tt-doc-line-attr.gds-code
+                                 and tt-rvs-line-attr.obj-code = p-obj-code
+                                 and tt-rvs-line-attr.obj-type = p-obj-type
+                                 and tt-rvs-line-attr.pl-code = tt-doc-line-attr.pl-code
+                                 and tt-rvs-line-attr.rvs-code = p-rvs-code no-error .
+  if not AVAILABLE tt-rvs-line-attr then do:
+    create tt-rvs-line-attr .
+    ASSIGN
+    tt-rvs-line-attr.attr-code = "income"
+    tt-rvs-line-attr.gds-code = tt-doc-line-attr.gds-code
+    tt-rvs-line-attr.obj-code = p-obj-code
+    tt-rvs-line-attr.obj-type = p-obj-type
+    tt-rvs-line-attr.pl-code = tt-doc-line-attr.pl-code
+    tt-rvs-line-attr.rvs-code = p-rvs-code
+    .
+  end.
+    tt-rvs-line-attr.attr-value = tt-rvs-line-attr.attr-value + buf_doc-pl.fact-qnty . 
+end.                                         
+                        
   /* все незакрытые продажи текущей смены */
   for each buf_inkas no-lock
     where buf_inkas.obj-type   = p-obj-type
@@ -156,32 +249,32 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     for each buf_trn-doc no-lock
       where buf_trn-doc.doc-code = buf_inkas.inkas-code
         and buf_trn-doc.ext-doc-type = {&tdedt_ras_vnesh_kass}
-      ,each buf_tt-rvs-line-attr no-lock
+      ,each buf_tt-doc-line-attr no-lock
       ,each buf_doc-pl no-lock
       where buf_doc-pl.out-code = buf_trn-doc.doc-code
-        and buf_doc-pl.gds-code = buf_tt-rvs-line-attr.gds-code
-        and buf_doc-pl.pl-code  = buf_tt-rvs-line-attr.pl-code
+        and buf_doc-pl.gds-code = buf_tt-doc-line-attr.gds-code
+        and buf_doc-pl.pl-code  = buf_tt-doc-line-attr.pl-code
     on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
     :
       assign
-        buf_tt-rvs-line-attr.rest = buf_tt-rvs-line-attr.rest - buf_doc-pl.fact-qnty
-        buf_tt-rvs-line-attr.oo   = buf_tt-rvs-line-attr.oo   - buf_doc-pl.fact-qnty
+        buf_tt-doc-line-attr.rest = buf_tt-doc-line-attr.rest - buf_doc-pl.fact-qnty
+        buf_tt-doc-line-attr.oo   = buf_tt-doc-line-attr.oo   - buf_doc-pl.fact-qnty
       .
     end.
 
     for each buf_trn-doc no-lock
       where buf_trn-doc.out-code = buf_inkas.inkas-code
         and buf_trn-doc.ext-doc-type = {&tdedt_vozvrat_vnesh_kass}
-      ,each buf_tt-rvs-line-attr no-lock
+      ,each buf_tt-doc-line-attr no-lock
       ,each buf_doc-pl no-lock
       where buf_doc-pl.out-code = buf_trn-doc.doc-code
-        and buf_doc-pl.gds-code = buf_tt-rvs-line-attr.gds-code
-        and buf_doc-pl.pl-code  = buf_tt-rvs-line-attr.pl-code
+        and buf_doc-pl.gds-code = buf_tt-doc-line-attr.gds-code
+        and buf_doc-pl.pl-code  = buf_tt-doc-line-attr.pl-code
     on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
     :
       assign
-        buf_tt-rvs-line-attr.rest = buf_tt-rvs-line-attr.rest + buf_doc-pl.fact-qnty
-        buf_tt-rvs-line-attr.oo   = buf_tt-rvs-line-attr.oo   + buf_doc-pl.fact-qnty
+        buf_tt-doc-line-attr.rest = buf_tt-doc-line-attr.rest + buf_doc-pl.fact-qnty
+        buf_tt-doc-line-attr.oo   = buf_tt-doc-line-attr.oo   + buf_doc-pl.fact-qnty
       .
     end.
 
@@ -196,11 +289,11 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       and buf_trn-doc.shift-num  = curr_shift-obj.shift-num
   on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
   :
-    for each buf_tt-rvs-line-attr no-lock
+    for each buf_tt-doc-line-attr no-lock
       ,each buf_doc-pl no-lock
       where buf_doc-pl.out-code = buf_trn-doc.doc-code
-        and buf_doc-pl.gds-code = buf_tt-rvs-line-attr.gds-code
-        and buf_doc-pl.pl-code  = buf_tt-rvs-line-attr.pl-code
+        and buf_doc-pl.gds-code = buf_tt-doc-line-attr.gds-code
+        and buf_doc-pl.pl-code  = buf_tt-doc-line-attr.pl-code
     on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
     :
       if lookup( buf_trn-doc.ext-doc-type, {&TDEDT_out_list} ) > 0 then do:
@@ -219,8 +312,8 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       end.
 
       assign
-        buf_tt-rvs-line-attr.rest = buf_tt-rvs-line-attr.rest + buf_doc-pl.fact-qnty * v-sign
-        buf_tt-rvs-line-attr.oo   = buf_tt-rvs-line-attr.oo   + buf_doc-pl.fact-qnty * v-sign
+        buf_tt-doc-line-attr.rest = buf_tt-doc-line-attr.rest + buf_doc-pl.fact-qnty * v-sign
+        buf_tt-doc-line-attr.oo   = buf_tt-doc-line-attr.oo   + buf_doc-pl.fact-qnty * v-sign
       .
     end.
   end. /*for each trn-doc*/
@@ -229,30 +322,51 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
   do transaction
   on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
   :
-    for each buf_tt-rvs-line-attr
+    for each buf_tt-doc-line-attr
     on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
     :
-      find first buf_rvs-line-attr exclusive-lock
-        where buf_rvs-line-attr.rvs-code  = p-rvs-code
-          and buf_rvs-line-attr.gds-code  = buf_tt-rvs-line-attr.gds-code
-          and buf_rvs-line-attr.attr-code = substitute("rvs-&1", buf_tt-rvs-line-attr.pl-code)
+      find first buf_doc-line-attr exclusive-lock
+        where buf_doc-line-attr.doc-code  = p-rvs-code
+          and buf_doc-line-attr.gds-code  = buf_tt-doc-line-attr.gds-code
+          and buf_doc-line-attr.attr-code = substitute("rvs-&1", buf_tt-doc-line-attr.pl-code)
         no-error .
-      if not available buf_rvs-line-attr then do:
-        create buf_rvs-line-attr .
+      if not available buf_doc-line-attr then do:
+        create buf_doc-line-attr .
         assign
-          buf_rvs-line-attr.rvs-code = p-rvs-code
-          buf_rvs-line-attr.gds-code = buf_tt-rvs-line-attr.gds-code
-          buf_rvs-line-attr.attr-code = substitute("rvs-&1", buf_tt-rvs-line-attr.pl-code)
+          buf_doc-line-attr.doc-code = p-rvs-code
+          buf_doc-line-attr.gds-code = buf_tt-doc-line-attr.gds-code
+          buf_doc-line-attr.attr-code = substitute("rvs-&1", buf_tt-doc-line-attr.pl-code)
         .
       end.
       assign
-        buf_rvs-line-attr.attr-value = substitute ( "&1&2&3", buf_tt-rvs-line-attr.rest, {&delim-par}, buf_tt-rvs-line-attr.oo )
+        buf_doc-line-attr.attr-value = substitute ( "&1&2&3", buf_tt-doc-line-attr.rest, {&delim-par}, buf_tt-doc-line-attr.oo )
       .
     end.
+    for each buf_tt-rvs-line-attr:
+      find first buf_rvs-line-attr EXCLUSIVE-LOCK where buf_rvs-line-attr.attr-code = buf_tt-rvs-line-attr.attr-code
+                                                    and buf_rvs-line-attr.obj-code = buf_tt-rvs-line-attr.obj-code
+                                                    and buf_rvs-line-attr.obj-type = buf_tt-rvs-line-attr.obj-type
+                                                    and buf_rvs-line-attr.pl-code = buf_tt-rvs-line-attr.pl-code
+                                                    and buf_rvs-line-attr.rvs-code = buf_tt-rvs-line-attr.rvs-code
+                                                    and buf_rvs-line-attr.gds-code = buf_tt-rvs-line-attr.gds-code no-error .
+      if not AVAILABLE buf_rvs-line-attr then do:
+        create buf_rvs-line-attr .
+      assign
+        buf_rvs-line-attr.attr-code = buf_tt-rvs-line-attr.attr-code
+        buf_rvs-line-attr.obj-code = buf_tt-rvs-line-attr.obj-code
+        buf_rvs-line-attr.obj-type = buf_tt-rvs-line-attr.obj-type
+        buf_rvs-line-attr.pl-code = buf_tt-rvs-line-attr.pl-code
+        buf_rvs-line-attr.rvs-code = buf_tt-rvs-line-attr.rvs-code
+        buf_rvs-line-attr.gds-code = buf_tt-rvs-line-attr.gds-code
+      .  
+      end.
+      buf_rvs-line-attr.attr-value = string(buf_tt-rvs-line-attr.attr-value) .                                                      
+    end.  
   end.     /* do transaction */
 
   /* уборка мусора */
-  empty temp-table  buf_tt-rvs-line-attr.
+  empty temp-table  buf_tt-doc-line-attr.
+  empty TEMP-TABLE  buf_tt-rvs-line-attr.
   assign
     p-ok = true
   .

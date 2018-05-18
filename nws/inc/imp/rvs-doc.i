@@ -51,6 +51,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-include-info{&vssseq}
       create locbr-doc-attr.
       { nws/impl-nws.i "doc-attr" "locbr-" }
     end.
+    when "doc-line-attr" then do:
+      create locbr-doc-line-attr.
+      { nws/impl-nws.i "doc-line-attr" "locbr-" }
+    end.
     when "rvs-line-attr" then do:
       create locbr-rvs-line-attr.
       { nws/impl-nws.i "rvs-line-attr" "locbr-" }
@@ -136,6 +140,22 @@ on endkey undo, return error substitute( "&1. endkey", vss-include-info{&vssseq}
   create buf_doc-attr.
   buffer-copy locbr-doc-attr to buf_doc-attr.
 end.
+for each buf_doc-line-attr where buf_doc-line-attr.doc-code = wt-rvs-doc.rvs-code
+on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+on stop   undo, return error substitute( "&1. stop", vss-include-info{&vssseq} )
+on endkey undo, return error substitute( "&1. endkey", vss-include-info{&vssseq} )
+:
+  delete buf_doc-line-attr.
+end.
+for each locbr-doc-line-attr where locbr-doc-line-attr.doc-code = wt-rvs-doc.rvs-code
+                       no-lock
+on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+on stop   undo, return error substitute( "&1. stop", vss-include-info{&vssseq} )
+on endkey undo, return error substitute( "&1. endkey", vss-include-info{&vssseq} )
+:
+  create buf_doc-line-attr.
+  buffer-copy locbr-doc-line-attr to buf_doc-line-attr.
+end.
 for each buf_rvs-line-attr where buf_rvs-line-attr.rvs-code = wt-rvs-doc.rvs-code
 on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
 on stop   undo, return error substitute( "&1. stop", vss-include-info{&vssseq} )
@@ -208,7 +228,7 @@ then do:
   run trg/lock-rvs.p
     ( input wt-rvs-doc.rvs-code
      ,input "assign-rvs-on=true"
-     ,input ?
+     ,input wt-rvs-doc.rvs-code
      ,input false
     ) no-error.
   if error-status :error then do:
