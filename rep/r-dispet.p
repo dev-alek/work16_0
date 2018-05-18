@@ -380,14 +380,14 @@ on error undo, return error
     v-obj-list = v-obj-list + SUBSTITUTE("&1 &2", buf_obj-list.obj-type, buf_obj-list.obj-code) + ","
     .
 
-    find first buf_rvs-doc
+    find last buf_rvs-doc
         where buf_rvs-doc.obj-type  = buf_obj-list.obj-type
           and buf_rvs-doc.obj-code  = buf_obj-list.obj-code
           and buf_rvs-doc.status_   = {&fact}
           and ((buf_rvs-doc.doc-date < p-date)
           OR  (buf_rvs-doc.doc-date = p-date
           AND buf_rvs-doc.fact-time < p-time))
-          use-index stat-date
+          use-index stat-fact
         no-lock
         no-error
         .
