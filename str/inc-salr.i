@@ -1399,7 +1399,10 @@ on error undo, return error return-value
           .
         end.
       end. /*if docs-to0-resertv > 0 */
-     if X_chk-doc.chk-type = integer({&rcpt-z-rep}) then do:
+     if X_chk-doc.chk-type = integer({&rcpt-z-rep})
+     or X_chk-doc.chk-type = integer({&income-corr})
+     or X_chk-doc.chk-type = integer({&expense-corr})
+     then do:
         for each buf_chk-pay where
                buf_chk-pay.doc-code = X_chk-doc.doc-code
          on error undo c-d, NEXT c-d:
@@ -1456,6 +1459,10 @@ on error undo, return error return-value
       chk-amount = chk-amount + 1
       nf-chk-amount = nf-chk-amount + add-nf-amount
       nff-chk-amount = nff-chk-amount + (if lookup(string(X_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then 1 else 0)
+      .
+      if X_chk-doc.chk-type <> integer({&income-corr}) and X_chk-doc.chk-type <> integer({&expense-corr})
+      then
+      assign
       accum-chk-doc-tot-doc = accum-chk-doc-tot-doc  + X_chk-doc.tot-doc
       accum-chk-doc-discnt = accum-chk-doc-discnt + X_chk-doc.discnt
       accum-chk-doc-netto = accum-chk-doc-netto + X_chk-doc.netto

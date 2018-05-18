@@ -2366,7 +2366,10 @@ if avail buf_bar-code then do:
                 end. /*  if length(v-bc-buf) =  */
               end. /* do iii = 1 to num-entries(mask_s-c) */
             end.  /* if mask_s-c <> "" */
-        if not available buf_bar-code then do :
+        if not available buf_bar-code
+        and buf_chk-doc.chk-type <> integer({&income-corr})
+        and buf_chk-doc.chk-type <> integer({&expense-corr})
+        then do :  
           assign
           v-b-c = ?
           iserr = yes
@@ -2382,8 +2385,14 @@ if avail buf_bar-code then do:
           {&display-message}.
         end.
       end.
-        { str/setchkt.i prefix=~{&prefix~} }
+        if buf_chk-doc.chk-type <> integer({&income-corr})
+        and buf_chk-doc.chk-type <> integer({&expense-corr})
+        then do :
+          { str/setchkt.i prefix=~{&prefix~} }
+        end.
         IF v-b-c = ?
+        and buf_chk-doc.chk-type <> integer({&income-corr})
+        and buf_chk-doc.chk-type <> integer({&expense-corr})
         then
         buf_chk-doc.PS = buf_chk-doc.PS + "@":U +
                     "строка" + {&space-char} + string(buf_chk-gds.LINE-NUM) + {&space-char} +
@@ -2421,8 +2430,17 @@ if avail buf_bar-code then do:
         buf_chk-gds.line-type = (if avail buf_goods
                             then buf_goods.gds-type
                             else "":U)
-        buf_chk-gds.depart-type = (if buf_chk-gds.depart-code > 0 then {&shop} else "":U)
         .
+        if buf_chk-doc.chk-type <> integer({&income-corr})
+        and buf_chk-doc.chk-type <> integer({&expense-corr})
+        then do :                    
+          buf_chk-gds.depart-type = (if buf_chk-gds.depart-code > 0 then {&shop} else "":U) .
+        end .
+        if buf_chk-doc.chk-type = integer({&income-corr})
+        or buf_chk-doc.chk-type = integer({&expense-corr})
+        then do :
+          buf_chk-gds.b-code = integer(v-bc-buf) .
+        end .
         if buf_chk-gds.src-qnty <> 0
         or (buf_chk-gds.doc-qnty <> 0 and v-is-petrol-check)  /*глюки колонки - в src = 0 в doc - нет*/
         then do:
@@ -3295,6 +3313,7 @@ if avail buf_bar-code then do:
     else do:
       if v-is-z-rep
       or v-is-shft-close
+      or buf_chk-doc.chk-type = integer({&income-corr}) or buf_chk-doc.chk-type = integer({&expense-corr}) /* Чеки коррекции */
       then do:
       end.
       else do:
@@ -3871,6 +3890,20 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   else do:
     log-file-name = log-file-name0.
   end.
+  
+  if buf_chk-doc.chk-type = integer({&income-corr}) or buf_chk-doc.chk-type = integer({&expense-corr})
+  then do :
+    assign
+      buf_chk-pay.tot-rubl = buf_chk-pay.tot-sum
+      buf_chk-pay.exch-date = buf_chk-doc.chk-date
+      buf_chk-pay.exch-time = buf_chk-doc.chk-time
+      buf_chk-pay.exch-rate = 1
+      buf_chk-pay.exch-scale = 1
+      buf_chk-pay.calc-rate = 1
+    .
+    
+    return .
+  end .
 
   assign
   buf_chk-pay.is-error = ?
