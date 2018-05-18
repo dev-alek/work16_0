@@ -2442,14 +2442,16 @@ procedure chk-type-choose:
             v-list-edt = "Продажа" + 
         "," + "Возврат" + 
         "," + "Аннуляция" + 
-        "," + "ТехПролив" 
+        "," + "ТехПролив" +
+        "," + "Коррекции"
         .
         
         assign
             v-list-edt-full = "Продажа" + 
         "," + "Возврат" + 
         "," + "Аннуляция" + 
-        "," + "ТехПролив" 
+        "," + "ТехПролив" +
+        "," + "Коррекции"
         .
         
         run twowin_clear in this-procedure.
@@ -2530,11 +2532,12 @@ procedure chk-type-choose:
       do v-counter = 1 to list-chk-type :num-items in frame {&frame-name}
         on error undo, return error
         :
-            if entry(v-counter,v-list-chk-type  ) = "Продажа"   then chr-list-chk-type = "1,"   no-error.
-           if entry(v-counter,v-list-chk-type  )  = "Возврат"   then chr-list-chk-type = chr-list-chk-type + "6,"   no-error.
-        if entry(v-counter,v-list-chk-type  )   = "Аннуляция"  then chr-list-chk-type = chr-list-chk-type + "8,"   no-error.
-        if entry(v-counter,v-list-chk-type  )   = "ТехПролив"  then chr-list-chk-type = chr-list-chk-type + "17"  no-error.
-         end. 
+          if entry(v-counter,v-list-chk-type  ) = "Продажа"   then chr-list-chk-type = "1,"   no-error.
+          if entry(v-counter,v-list-chk-type  )  = "Возврат"   then chr-list-chk-type = chr-list-chk-type + "6,"   no-error.
+          if entry(v-counter,v-list-chk-type  )   = "Аннуляция"  then chr-list-chk-type = chr-list-chk-type + "8,"   no-error.
+          if entry(v-counter,v-list-chk-type  )   = "ТехПролив"  then chr-list-chk-type = chr-list-chk-type + "17,"  no-error.
+          if entry(v-counter,v-list-chk-type  )   = "Коррекции"  then chr-list-chk-type = chr-list-chk-type + "43,44"  no-error.
+      end. 
 /*        message chr-list-chk-type view-as alert-box.*/
     
        /* do */

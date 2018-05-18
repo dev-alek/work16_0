@@ -1184,7 +1184,7 @@ procedure nws-impl :
       .
     end.
     if v-fh-b-code <> ?
-      and lookup( p-tbl-name, 'bar-code,c-bar-code,c-gds-hist,c-prod-bc,c-chk-gds,c-sert':U) = 0
+      and lookup( p-tbl-name, 'bar-code,c-bar-code,c-gds-hist,c-prod-bc,c-chk-gds,chk-gds,c-sert':U) = 0
     then do:
       assign
         v-old-b-code = integer( v-fh-b-code:buffer-value )

@@ -217,6 +217,7 @@ on error undo, return error return-value
   end.
 
   if p-fact-date = v-cur-date
+  or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object}
   then do:
     /* дата равна текущей */
     return .

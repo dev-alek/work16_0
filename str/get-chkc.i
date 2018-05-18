@@ -107,6 +107,9 @@ DEFINE VARIABLE mc-prev-code               like ub.chk-doc.doc-code    no-undo i
 DEFINE VARIABLE pay_code                   like ub.cash-pay.cdpay-code     no-undo .
 DEFINE VARIABLE curr_code                  like ub.cash-pay.curr-code    no-undo .
 DEFINE VARIABLE pay-type                   as   character             no-undo .
+DEFINE VARIABLE cstCode                    as   character             no-undo .
+DEFINE VARIABLE cstValue                   as   decimal               no-undo .
+
 DEFINE VARIABLE tot_sum                    as   decimal               no-undo .
 DEFINE VARIABLE curr-chk-type              as   character             no-undo .
 DEFINE VARIABLE mc-curr-chk-type           like ub.chk-doc.chk-type no-undo .

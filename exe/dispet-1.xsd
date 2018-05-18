@@ -24,6 +24,9 @@
                     <xsd:element name="loc1" type="xsd:string"/>
                     <xsd:element name="max-qnty" type="xsd:decimal"/>
                     <xsd:element name="add-qnty" type="xsd:decimal"/>
+					<xsd:element name="min-qnty" type="xsd:decimal"/>
+					<xsd:element name="current-sale" type="xsd:decimal"/>
+					<xsd:element name="income" type="xsd:decimal"/>
                     <xsd:element name="sale-qnty-7" type="xsd:decimal"/>
                     <xsd:element name="curr-qnty" type="xsd:decimal"/>
                     <xsd:element name="doc-qnty" type="xsd:decimal"/>

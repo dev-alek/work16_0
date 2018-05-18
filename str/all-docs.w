@@ -216,6 +216,7 @@ if t-doc.status_      = {&doc-froze}                or       ~
    t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass}     or       ~
    t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass} or       ~
    t-doc.ext-doc-type = {&TDEDT_Chg_Purch_Code}     or       ~
+   t-doc.ext-doc-type = {&TDEDT_Pri_Object}         or       ~
    t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}          and varhold-doc = yes or ~
    t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}      and varhold-doc = yes or ~
    (t-doc.ext-doc-type = {&TDEDT_Corr_Minus_Parts}  and not (t-doc.status_ = {&inquiry} and not t-doc.flag )) or       ~
@@ -4348,7 +4349,8 @@ if vardoc-hold = true and t-doc.status_      = {&fact}  then do:
 
 end.
 
-if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} and
+if (t-doc.ext-doc-type = {&TDEDT_Ras_Perem} or
+   t-doc.ext-doc-type = {&TDEDT_Ras_Object}) and
    t-doc.status_      = {&fact}            then do:
 
   find first bf_clients where bf_clients.obj-type = t-doc.obj-type and
@@ -4371,7 +4373,8 @@ if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} and
   end.
 
   find first bf-pri_trn-doc where bf-pri_trn-doc.out-code     = t-doc.doc-code     and
-                                  bf-pri_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} exclusive-lock no-error .
+                                  (bf-pri_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} or
+                                   bf-pri_trn-doc.ext-doc-type = {&TDEDT_Pri_Object}) exclusive-lock no-error .
   if available bf-pri_trn-doc then do:
   if bf-pri_trn-doc.status_ = {&fact} then do:
     find first bf-vzv_trn-doc where bf-vzv_trn-doc.out-code     = bf-pri_trn-doc.doc-code and

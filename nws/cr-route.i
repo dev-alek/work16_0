@@ -400,10 +400,11 @@ PROCEDURE cre-dump-rvs-doc :
   :
     define buffer buf_rvs-doc       for ub.rvs-doc.
     define buffer buf_rvs-line      for ub.rvs-line.
+    define buffer buf_rvs-line-attr for ub.rvs-line-attr.
     define buffer buf_rvs-line-pump for ub.rvs-line-pump.
     define buffer buf_rvs-pump      for ub.rvs-pump.
     define buffer buf_doc-attr      for ub.doc-attr.
-    define buffer buf_rvs-line-attr for ub.rvs-line-attr.
+    define buffer buf_doc-line-attr for ub.doc-line-attr.
 
     find first buf_rvs-doc
       where rowid( buf_rvs-doc ) = tbl-row
@@ -433,11 +434,17 @@ PROCEDURE cre-dump-rvs-doc :
     :
       run cre-route-dump( p-act-name, {&table_doc-attr}, (buffer buf_doc-attr:handle), dmp-ord, input-output rc-ord ) .
     end. /* for each buf_doc-attr */
+    for each buf_doc-line-attr
+      where buf_doc-line-attr.doc-code = buf_rvs-doc.rvs-code
+    on error undo, return error return-value :
+      run cre-route-dump( p-act-name, {&table_doc-line-attr}, ( buffer buf_doc-line-attr:handle ), dmp-ord, input-output rc-ord ) .
+    end. /* for each buf_doc-line-attr */
     for each buf_rvs-line-attr
       where buf_rvs-line-attr.rvs-code = buf_rvs-doc.rvs-code
-    on error undo, return error return-value :
-      run cre-route-dump( p-act-name, {&table_rvs-line-attr}, ( buffer buf_rvs-line-attr :handle ), dmp-ord, input-output rc-ord ) .
-    end. /* for each buf_doc-line-attr */
+    on error undo, return error return-value
+    :
+      run cre-route-dump( p-act-name, {&table_rvs-line-attr}, (buffer buf_rvs-line-attr:handle), dmp-ord, input-output rc-ord ) .
+    end. /* for each buf_rvs-line-attr */
   end. /* transaction */
 END PROCEDURE. /* cre-dump-rvs-doc */
 

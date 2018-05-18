@@ -112,6 +112,8 @@ define variable vss-description as character no-undo init "Ёкспорт XML смены".
         field state-density as decimal
         field chk-date      as date
         FIELD doc-code      as character
+        FIELD doc-num       as character
+        FIELD doc-num2      as character
         FIELD chk-num       as integer
         FIELD chk-time      as integer
         FIELD cashier       as integer
@@ -121,6 +123,7 @@ define variable vss-description as character no-undo init "Ёкспорт XML смены".
         field sum-qnty      as decimal
         field sum-cli-qnty  as decimal
         field chk-type      as integer
+        field netto         as decimal
         index pi is primary unique
             doc-code
     .
@@ -135,6 +138,9 @@ define variable vss-description as character no-undo init "Ёкспорт XML смены".
         field nozzle-code   as integer
         field line-num      as INTEGER
         field sbros-type    as character
+        field src-sum     as decimal
+        field OFDcode     as character
+        field OFDvalue    as decimal
         index pi is primary unique
             b-code
             doc-code
@@ -410,6 +416,28 @@ on error undo, return error
                                     , trim(error-status :get-message(1))
                                     , trim(error-status :get-message(2))
                             )
+        ).
+    end.
+    
+    run export-CorrChk in this-procedure (
+      input p-obj-type
+      , input p-obj-code
+      , input p-shift-date
+      , input p-shift-num
+      ) no-error.
+    if error-status :error
+      then 
+    do:
+      run wp-XMLWriteLog in this-procedure (
+        input p-log-file-name
+        , input 1
+        , input substitute( "&1. ќшибка выгрузки &2. &3. &4. &5."
+        , vss-description
+        , "чеков коррекции"
+        , return-value
+        , trim(error-status :get-message(1))
+        , trim(error-status :get-message(2))
+        )
         ).
     end.
 
@@ -1318,6 +1346,144 @@ procedure export-techChk :
 
     end.
 end procedure. /* export-techChk */
+
+/*==========================================================================*/
+procedure export-CorrChk :
+  define input parameter p-obj-type   as character        no-undo.
+  define input parameter p-obj-code   as integer          no-undo.
+  define input parameter p-shift-date as date             no-undo.
+  define input parameter p-shift-num  as integer          no-undo.
+
+  define buffer buf_goods        for ub.goods.
+  define buffer buf_chk-gds      for ub.chk-gds.
+  define buffer buf_chk-pay      for ub.chk-pay.
+  DEFINE buffer buf_chk-doc      for ub.chk-doc.
+  define buffer buf_temp_chk-doc for temp_chk-doc.
+  define buffer buf_temp_chk-gds for temp_chk-gds.
+  define buffer buf_bar-code     for ub.bar-code.
+  do
+    for  buf_chk-gds
+    , buf_chk-pay
+    , buf_chk-doc
+    on error undo, return error
+    :
+    empty temp-table buf_temp_chk-doc.
+    empty temp-table buf_temp_chk-gds.
+            
+    for each buf_chk-doc where (buf_chk-doc.chk-type = integer({&expense-corr}) or buf_chk-doc.chk-type = integer({&income-corr}) )
+      and buf_chk-doc.shift-date = p-shift-date and buf_chk-doc.shift-num = p-shift-num
+      and buf_chk-doc.obj-code = p-obj-code and buf_chk-doc.obj-type = p-obj-type    :
+      find first buf_temp_chk-doc where buf_temp_chk-doc.doc-code = buf_chk-doc.doc-code no-error.
+
+      if not AVAILABLE buf_temp_chk-doc then
+      do:
+        create buf_temp_chk-doc .
+        ASSIGN
+          buf_temp_chk-doc.doc-code = buf_chk-doc.doc-code
+          buf_temp_chk-doc.doc-num  = buf_chk-doc.doc-num
+          buf_temp_chk-doc.doc-num2 = buf_chk-doc.doc-num2
+          buf_temp_chk-doc.chk-date = buf_chk-doc.chk-date
+          buf_temp_chk-doc.pay-desk = buf_chk-doc.pay-desk
+          buf_temp_chk-doc.chk-type = buf_chk-doc.chk-type
+          buf_temp_chk-doc.cashier  = buf_chk-doc.cashier
+          buf_temp_chk-doc.chk-num  = buf_chk-doc.chk-num
+          buf_temp_chk-doc.chk-time = buf_chk-doc.chk-time 
+          buf_temp_chk-doc.netto    = buf_chk-doc.netto
+        .
+        if num-entries(buf_chk-doc.doc-num2, ":") = 2
+        then do :
+          if entry(1, buf_chk-doc.doc-num2, ":") = "0"
+          then buf_temp_chk-doc.doc-num2 = "самосто€тельно" .
+          else
+          if entry(1, buf_chk-doc.doc-num2, ":") = "1"
+          then buf_temp_chk-doc.doc-num2 = "по предписанию" .
+          else
+          buf_temp_chk-doc.doc-num2 = "неизвестн." .
+        end.
+        else
+        buf_temp_chk-doc.doc-num2 = "неизвестн." .
+      end.
+                                        
+      for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code :
+        find first buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_chk-gds.doc-code and buf_temp_chk-gds.line-num = buf_chk-gds.line-num no-error . 
+        if not AVAILABLE buf_temp_chk-gds then 
+        do:
+          create buf_temp_chk-gds .
+          assign      
+            buf_temp_chk-gds.doc-code    = buf_chk-gds.doc-code         
+            buf_temp_chk-gds.b-code      = buf_chk-gds.b-code
+            buf_temp_chk-gds.src-sum     = buf_chk-gds.src-sum
+            buf_temp_chk-gds.OFDcode     = buf_chk-gds.depart-type
+            buf_temp_chk-gds.OFDvalue    = buf_chk-gds.road-tax
+            buf_temp_chk-gds.line-num    = buf_chk-gds.line-num
+            . 
+        end.
+      end.   
+    end.                       
+    run wp-xmltagopen( input 2, input "CorrChk", input "" ).
+        
+    for each buf_temp_chk-doc where buf_temp_chk-doc.chk-type = integer({&income-corr}): 
+      run wp-xmltagopen( input 3, input "Check", input "" ).
+      run wp-xmltagput( input 4, "ChkTypeName", input string( "ѕриход орр" ), input 0 ).
+      run wp-xmltagput( input 4, "ChkType"    , input string( {&income-corr}   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkDate"    , input string( buf_temp_chk-doc.chk-date   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkTime"    , input string( buf_temp_chk-doc.chk-time, "hh:mm:ss"   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkDocNum"  , input string( buf_temp_chk-doc.doc-code   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkNum"     , input string( buf_temp_chk-doc.chk-num   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkNumDesk" , input string( buf_temp_chk-doc.pay-desk   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkTotal"   , input string( buf_temp_chk-doc.netto   ), input 0 ).
+      run wp-xmltagput( input 4, "Cashier"    , input string( buf_temp_chk-doc.cashier   ), input 0 ).
+      run wp-xmltagput( input 4, "Reason"     , input string( buf_temp_chk-doc.doc-num   ), input 0 ).
+      run wp-xmltagput( input 4, "CorrType"   , input string( buf_temp_chk-doc.doc-num2   ), input 0 ).
+      for each buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_temp_chk-doc.doc-code:
+        run wp-xmltagopen( input 4, input "CheckLine", input "" ).
+        run wp-xmltagput( input 5, "ChkTaxCode", input string( buf_temp_chk-gds.b-code ), input 0 ).
+        run wp-xmltagput( input 5, "ChkSum"    , input string( buf_temp_chk-gds.src-sum ), input 0 ).
+        run wp-xmltagput( input 5, "ChkCSTCode"  , input string( buf_temp_chk-gds.OFDcode ), input 0 ).
+        run wp-xmltagput( input 5, "ChkCSTValue" , input string( buf_temp_chk-gds.OFDvalue ), input 0 ).
+        run wp-xmltagclose( input 4, input "CheckLine").
+      end .          
+      for each buf_chk-pay no-lock where buf_chk-pay.doc-code = buf_temp_chk-doc.doc-code :
+        run wp-xmltagopen( input 4, input "CheckPay", input "" ).
+        run wp-xmltagput( input 5, "ChkPayCode", input string( buf_chk-pay.pay-code ), input 0 ).
+        run wp-xmltagput( input 5, "ChkPaySum" , input string( buf_chk-pay.tot-sum ), input 0 ).
+        run wp-xmltagclose( input 4, input "CheckPay").
+      end . 
+      run wp-xmltagclose( input 3, input "Check").
+    end.
+        
+    for each buf_temp_chk-doc where buf_temp_chk-doc.chk-type = integer({&expense-corr}): 
+      run wp-xmltagopen( input 3, input "Check", input "" ).
+      run wp-xmltagput( input 4, "ChkTypeName", input string( "–асход орр" ), input 0 ).
+      run wp-xmltagput( input 4, "ChkType"    , input string( {&expense-corr}   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkDate"    , input string( buf_temp_chk-doc.chk-date   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkTime"    , input string( buf_temp_chk-doc.chk-time, "hh:mm:ss"   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkDocNum"  , input string( buf_temp_chk-doc.doc-code   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkNum"     , input string( buf_temp_chk-doc.chk-num   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkNumDesk" , input string( buf_temp_chk-doc.pay-desk   ), input 0 ).
+      run wp-xmltagput( input 4, "ChkTotal"   , input string( buf_temp_chk-doc.netto   ), input 0 ).
+      run wp-xmltagput( input 4, "Cashier"    , input string( buf_temp_chk-doc.cashier   ), input 0 ).
+      run wp-xmltagput( input 4, "Reason"     , input string( buf_temp_chk-doc.doc-num   ), input 0 ).
+      run wp-xmltagput( input 4, "CorrType"   , input string( buf_temp_chk-doc.doc-num2   ), input 0 ).
+      for each buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_temp_chk-doc.doc-code:
+        run wp-xmltagopen( input 4, input "CheckLine", input "" ).
+        run wp-xmltagput( input 5, "ChkTaxCode", input string( buf_temp_chk-gds.b-code ), input 0 ).
+        run wp-xmltagput( input 5, "ChkSum"    , input string( buf_temp_chk-gds.src-sum ), input 0 ).
+        run wp-xmltagput( input 5, "ChkCSTCode"  , input string( buf_temp_chk-gds.OFDcode ), input 0 ).
+        run wp-xmltagput( input 5, "ChkCSTValue" , input string( buf_temp_chk-gds.OFDvalue ), input 0 ).
+        run wp-xmltagclose( input 4, input "CheckLine").
+      end .      
+      for each buf_chk-pay no-lock where buf_chk-pay.doc-code = buf_temp_chk-doc.doc-code :
+        run wp-xmltagopen( input 4, input "CheckPay", input "" ).
+        run wp-xmltagput( input 5, "ChkPayCode", input string( buf_chk-pay.pay-code ), input 0 ).
+        run wp-xmltagput( input 5, "ChkPaySum" , input string( buf_chk-pay.tot-sum ), input 0 ).
+        run wp-xmltagclose( input 4, input "CheckPay").
+      end .       
+      run wp-xmltagclose( input 3, input "Check").
+    end.
+
+  end.
+end procedure. /* export-CorrChk */
 
 /*==========================================================================*/
 procedure export-stkShift :

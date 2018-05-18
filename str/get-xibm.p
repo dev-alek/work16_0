@@ -360,10 +360,10 @@ if get-chkc_context.t-shft > 0 and get-chkc_context.shift-on = yes then do:
   undo, return .
 end.
 if get-chkc_context.is-wth = yes then do:
-  accept-types =  "1,2,3,4,5,6,7,13":U.
+  accept-types =  "1,2,3,4,5,6,7,13,43,44":U.
 end.
 else do:
-  accept-types =  "1,6,13":U.
+  accept-types =  "1,6,13,43,44":U.
 end.
 dflt-cd = p-pos-type.
 if get-chkc_context.is-ptrl
@@ -632,6 +632,8 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     v-chk-type[1] = 0
     v-chk-type[2] = 0
     v-is-petrol-check = no
+    cstCode = ""
+    cstValue = 0
     no-error
     .
     _buf_temp:
@@ -1124,6 +1126,13 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       if error-status:error then do:
         ub.chk-doc.correct = no.
       end.
+      if ub.chk-doc.chk-type = integer({&income-corr}) or ub.chk-doc.chk-type = integer({&expense-corr})
+      then do :
+        assign
+          ub.chk-doc.tot-doc = brutto-sum_
+          ub.chk-doc.netto   = netto-sum_
+        .
+      end.
       prev-code = ub.chk-doc.doc-code.
 
 
@@ -1350,6 +1359,17 @@ on error undo, return error
           assign
           sum-from-check = fdecimal(buf_temp-temp.field-value)
           no-error .
+        end.
+        when "CSTValue":U then do:
+          assign
+          cstValue = fdecimal(buf_temp-temp.field-value)
+          no-error .
+        end.
+        when "CSTCode":U then do:
+          run xmlchar-decode in this-procedure (
+                input trim(buf_temp-temp.field-value)
+              , output cstCode
+          ) no-error.
         end.
         when "CSSNoTotal":U then do:
           /*составной товар не добавлять к сумме продажи*/
@@ -1650,7 +1670,9 @@ on error undo, return error
     or p-pos-type = {&cd-type-Autotank})
     and v-line-type = 'grp':U
     and get-chkc_context.ibmgroup
-    and can-find(first tt-sum-grp)  then do:
+    and can-find(first tt-sum-grp)
+    and gbl-type <> "43" and gbl-type <> "44"
+    then do:
       find first buf_tt-sum-grp no-lock where
               buf_tt-sum-grp.grp-code = integer(bc-buf)
       no-error .
@@ -1801,6 +1823,11 @@ on error undo, return error
     if p-pos-type = {&cd-type-ibm-xml}
     or p-pos-type = {&cd-type-autotank}
     then do:
+      if ub.chk-doc.chk-type = integer({&income-corr}) or ub.chk-doc.chk-type = integer({&expense-corr})
+      then do :
+        ub.chk-gds.road-tax = cstValue .
+        ub.chk-gds.depart-type = cstCode .
+      end.
       if ub.chk-doc.chk-type = integer({&rcpt-tech-refuell}) then do:
         assign
         ub.chk-gds.write-off-code =  integer({&wro-r-tech-refuell})
@@ -2806,7 +2833,9 @@ define variable v-time-loc-char as character no-undo .
             when "15" or
             when "16" or
             when "17" or
-            when "36"
+            when "36" or
+            when "43" or
+            when "44"
             then do:
               run proc-01-gds in this-procedure no-error .
             end.

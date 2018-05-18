@@ -473,11 +473,11 @@ define variable v-chg-rec as recid     no-undo.
 define variable FI-1 as character view-as text size 76 by 1 no-undo format "x(80)":U.
 define variable FI-2 as character view-as text size 76 by 1 no-undo format "x(80)":U.
 define variable FI-3 as character view-as text size 45 by 1 no-undo format "x(49)":U.
-define variable FI-4 as character view-as text size 30 by 1 no-undo format "x(49)":U.
+define variable FI-4 as character view-as text size 45 by 1 no-undo format "x(49)":U.
 define variable FI-5 as character view-as text size 45 by 1 no-undo format "x(49)":U.
-define variable FI-6 as character view-as text size 30 by 1 no-undo format "x(49)":U.
+define variable FI-6 as character view-as text size 45 by 1 no-undo format "x(49)":U.
 define variable FI-7 as character view-as text size 45 by 1 no-undo format "x(49)":U.
-define variable FI-8 as character view-as text size 30 by 1 no-undo format "x(49)":U.
+define variable FI-8 as character view-as text size 45 by 1 no-undo format "x(49)":U.
 
 define variable v-obj-type as character view-as fill-in size  4 by 1 fgcolor 12 no-undo.
 define variable v-obj-code as integer   view-as fill-in size  6 by 1 fgcolor 12 no-undo.
@@ -724,6 +724,39 @@ FIND FIRST goo-doc NO-LOCK WHERE
         g-rep = recid( {1} )
       .
     end.
+    IF mImagePh THEN
+    DO:
+        IF AVAILABLE goo-doc THEN
+        DO:
+            DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
+            DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
+            RUN gds-attr-value (goo-doc.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+            RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, goo-doc.gds-code, OUTPUT vImageList).
+            vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
+        END.
+        g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
+        
+    END.    
+    if vCh <> "" then do:
+      ASSIGN
+        FI-4:FORMAT in frame {&frame-name} = "X(30)"
+        FI-4:WIDTH-CHARS in frame {&frame-name} = 30
+        FI-6:FORMAT in frame {&frame-name} = "X(30)"
+        FI-6:WIDTH-CHARS in frame {&frame-name} = 30 
+        FI-8:FORMAT in frame {&frame-name} = "X(30)"
+        FI-8:WIDTH-CHARS in frame {&frame-name} = 30  
+      .
+    end.  
+    else do:
+     ASSIGN
+        FI-4:FORMAT in frame {&frame-name} = "X(49)"
+        FI-4:WIDTH-CHARS in frame {&frame-name} = 45
+        FI-6:FORMAT in frame {&frame-name} = "X(49)"
+        FI-6:WIDTH-CHARS in frame {&frame-name} = 45 
+        FI-8:FORMAT in frame {&frame-name} = "X(49)"
+        FI-8:WIDTH-CHARS in frame {&frame-name} = 45  
+      .
+    end.  
     RUN gds-ref-fi IN THIS-PROCEDURE ( BUFFER       goo-doc,
                                        BUFFER       gob-doc,
                                        INPUT        p-obj-type,
@@ -745,18 +778,7 @@ FIND FIRST goo-doc NO-LOCK WHERE
       .
       { gbl/gdsbcode.i goo-doc.gds-code ? main-code }
     end.
-    IF mImagePh THEN
-    DO:
-        IF AVAILABLE goo-doc THEN
-        DO:
-            DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
-            DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
-            RUN gds-attr-value (goo-doc.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
-            RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, goo-doc.gds-code, OUTPUT vImageList).
-            vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
-        END.
-        g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
-    END.
+
     DISPLAY
       fi-1
       fi-2

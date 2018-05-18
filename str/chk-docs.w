@@ -461,6 +461,13 @@ define variable v-host-code as integer no-undo .
     run gbl/pop-up.p ( input b-chg:handle, input no) no-error.
   end.
   if change-type = '':U then return no-apply.
+  if change-type <> "list-shift" and
+  (c-doc.chk-type = integer({&expense-corr})
+  or c-doc.chk-type = integer({&income-corr}) )
+  then do :
+    message "Чеки коррекции нельзя изменять!" view-as alert-box.
+    return no-apply.
+  end.
   run proc-b-chg in this-procedure ( input change-type) no-error.
   assign
   change-type = "":U.
@@ -3195,9 +3202,13 @@ CASE par-mode:
             run str/excl-chk.p ( input parparentproc,  input v-curr-r-b, buffer del_chk-doc) no-error.
           end.
           if error-status:error OR
-          buf_inkas.netto <> old-netto  - del_chk-doc.netto OR
+          (del_chk-doc.chk-type <> integer({&income-corr}) and del_chk-doc.chk-type <> integer({&expense-corr})
+          and 
+          (buf_inkas.netto <> old-netto  - del_chk-doc.netto OR
           buf_inkas.tot-doc <> old-tot-doc  - del_chk-doc.tot-doc OR
-          buf_inkas.discnt <> old-discnt - del_chk-doc.discnt then do:
+          buf_inkas.discnt <> old-discnt - del_chk-doc.discnt)
+          )
+          then do:
             message
             substitute("Исключение чека &1 из продажи &2 не удалось:&3&4 &5"
                     ,del_chk-doc.doc-code

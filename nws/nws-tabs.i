@@ -180,6 +180,7 @@ abc-analysis-attr~
 ,rule-script~
 ,rule-trans-memo~
 ,rvs-line~
+,rvs-line-attr~
 ,c-rvs-line~
 ,rvs-line-pump~
 ,c-rvs-line-pump~
@@ -1184,7 +1185,6 @@ abc-analysis-doc-attr~
 ,ruledict-param-attr~
 ,ruleset-attr~
 ,rvs-doc-attr~
-,rvs-line-attr~
 ,rvs-line-pump-attr~
 ,rvs-pump-attr~
 ,s-coeff-attr~

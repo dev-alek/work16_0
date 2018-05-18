@@ -456,35 +456,23 @@ do
 on error undo, return error return-value
 :
 
-  find first buf_inkas exclusive-lock where
-              buf_inkas.inkas-code = p-inkas-code no-error no-wait.
-  if NOT available buf_inkas
-  and not locked buf_inkas
-  then do:
+  find first buf_inkas exclusive-lock
+       where buf_inkas.inkas-code = p-inkas-code no-error no-wait.
+  if locked buf_inkas then do:
+    if p-auto < 2 then return error substitute("Отчет о продаже №&1 занят", p-inkas-code).
+                  else return "":U.
+  end.
+  if NOT available buf_inkas then do:
     return error substitute("Не найден отчет о продаже №&1", p-inkas-code).
   end.
-  if locked buf_inkas then do:
-    if p-auto < 2 then
-    return error substitute("Отчет о продаже №&1 занят", p-inkas-code).
-    else do:
-      return "":U.
-    end.
-  end.
-  if (p-auto < 2
-  and not (buf_inkas.status_ = {&g___new}
-           or
-           buf_inkas.status_ = {&doc-froze} ))
-  then do:
-    return error substitute("Отчет о продаже №&1 имеет статус &2", buf_inkas.inkas-code, buf_inkas.status_).
-  end.
-  if p-auto = 2
-  and buf_inkas.status_ <> {&doc-froze}
-  then do:
+  if p-auto = 2 and buf_inkas.status_ <> {&doc-froze} then do:
     return "":U.
   end.
-  
   if p-auto < 2 then do:
-      { gbl/chk-actg.i
+    if not (buf_inkas.status_ = {&g___new} or buf_inkas.status_ = {&doc-froze}) then do:
+      return error substitute("Отчет о продаже №&1 имеет статус &2", buf_inkas.inkas-code, buf_inkas.status_).
+    end.
+    { gbl/chk-actg.i
         g#db-num
         g#userid
         {&action-head-code-main}
@@ -498,12 +486,9 @@ on error undo, return error return-value
         0
         true
         glog
-      }
-     if NOT glog then do:
-        return error.
-     end.
+    }
+    if NOT glog then return error.
   end.
-  
   if NOT can-find (first ub.chk-doc where ub.chk-doc.out-code = buf_inkas.inkas-code) then do:
     return error substitute("Отчет о продаже N&1 пуст. Закрытие невозможно.", buf_inkas.inkas-code).
   end.
@@ -519,10 +504,11 @@ on error undo, return error return-value
 
   assign
     varoldstatus = buf_inkas.status_
-    varoldflag = buf_inkas.flag_ 
+    varoldflag   = buf_inkas.flag_ 
     v-obj-type = buf_inkas.obj-type
     v-obj-code = buf_inkas.obj-code
   .
+  /* @findfirst trn-doc */
   FIND FIRST buf_trn-doc WHERE
             buf_trn-doc.doc-code = buf_inkas.inkas-code NO-LOCK.
   FIND FIRST buf_ret-doc WHERE
@@ -675,7 +661,7 @@ on error undo, return error return-value
     end.
   end.
 
-  /* 02/III-2018 buf_trn-doc уже найден в строке 522, также в режиме no-lock, и также без no-error
+  /* 02/III-2018 buf_trn-doc уже найден в строке 522 @findfirst trn-doc, также в режиме no-lock, и также без no-error
   FIND FIRST buf_trn-doc WHERE
            buf_trn-doc.doc-code = buf_inkas.inkas-code NO-LOCK .
   */
@@ -1038,7 +1024,6 @@ on error undo, return error return-value
     end. /*not v-is-inquiry*/
     FIND FIRST locked_inkas WHERE recid( locked_inkas ) = recid( buf_inkas ) .
     FIND FIRST locked_trn-doc WHERE locked_trn-doc.doc-code = buf_inkas.inkas-code .
-    { gbl/curobjdt.i locked_inkas.obj-type locked_inkas.obj-code sys-today no-error }
     assign
     locked_inkas.is-auto-close = (p-auto >= 2)
     locked_inkas.auto-fbr   = force-auto-fbr
@@ -1091,6 +1076,7 @@ on error undo, return error return-value
       end.
     end.
     else . /*else if l-shift-on then do:*/
+    { gbl/curobjdt.i locked_inkas.obj-type locked_inkas.obj-code sys-today no-error }
    if not v-back-date then do:
     if p-auto > 1 then do:
       assign

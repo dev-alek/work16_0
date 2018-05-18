@@ -122,6 +122,10 @@ define variable exch-time_ like ub.curr-shop.exch-time no-undo .
 define variable v-exch-time-str as character no-undo.
 define variable dc-change as logical no-undo .
 DEFINE VARIABLE v-br-discnt-current-type AS INTEGER NO-UNDO.
+define variable v-tax-type as character no-undo label "Вид налога" FORMAT "X(10)".
+define variable v-OVDtax-type as character no-undo label "Вид налога ОФД" FORMAT "X(14)".
+define variable v-corr-osnov as character no-undo view-as fill-in size 50 by 1 label "Основание" .
+define variable v-corr-type as character no-undo view-as fill-in size 20 by 1 label "Тип коррекции" .
 define buffer buf_shop for ub.shop.
 define variable p-view-log as logical no-undo.
 { str/get-chkc.i def  update }
@@ -358,6 +362,44 @@ FUNCTION get-pay RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-tax-type Dialog-Frame 
+FUNCTION get-tax-type RETURNS CHARACTER
+  ( input p-tax-code as integer) :
+
+case p-tax-code :
+  when 1 then return "18%" .
+  when 2 then return "10%" .
+  when 3 then return "0%" .
+  when 4 then return "Б/Н" .
+  when 5 then return "18/118" .
+  when 6 then return "10/110" .
+  otherwise return "Неизвестн." .
+end case .
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-tax-type Dialog-Frame 
+FUNCTION get-OVDtax-type RETURNS CHARACTER
+  ( input p-tax-code as integer) :
+
+case p-tax-code :
+  when 1102 then return "18%" .
+  when 1103 then return "10%" .
+  when 1104 then return "0%" .
+  when 1105 then return "Б/Н" .
+  when 1106 then return "18/118" .
+  when 1107 then return "10/110" .
+  otherwise return "Неизвестн." .
+end case .
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-salesman Dialog-Frame 
 FUNCTION get-salesman RETURNS CHARACTER
   ( input  p-salesman as integer, input p-date as date, output p-psn-code as integer)  FORWARD.
@@ -510,6 +552,9 @@ DEFINE QUERY BR-discnt FOR
 DEFINE QUERY BR-gds FOR 
       tt-chk-gds, 
       tt-gds-info SCROLLING.
+      
+DEFINE QUERY BR-corr FOR 
+      tt-chk-gds SCROLLING.      
 
 DEFINE QUERY BR-pay FOR 
       tt-chk-pay, 
@@ -596,6 +641,25 @@ DEFINE BROWSE BR-gds
       tt-chk-gds.src-price
       tt-chk-gds.src-discnt
       tt-chk-gds.road-tax
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 97.88 BY 6.67
+         FONT 4 ROW-HEIGHT-CHARS .67.
+DEFINE BROWSE BR-corr
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-corr Dialog-Frame _FREEFORM
+  QUERY BR-corr SHARE-LOCK NO-WAIT DISPLAY
+      tt-chk-gds.line-num COLUMN-LABEL "NN"  FORMAT "->>>>9"
+      tt-chk-gds.b-code column-label "Номер!налога" format "9"
+      get-tax-type(tt-chk-gds.b-code) @ v-tax-type
+      tt-chk-gds.src-sum COLUMN-LABEL "Сумма" FORMAT "->>>,>>>,>>>,>>9.99"
+      tt-chk-gds.depart-type COLUMN-LABEL "Номер!налога ОФД" format "X(4)"
+      get-OVDtax-type(integer(tt-chk-gds.depart-type)) @ v-OVDtax-type
+      tt-chk-gds.road-tax COLUMN-LABEL "Налог ОФД"
+/*  ENABLE                    */
+/*      tt-chk-gds.b-code     */
+/*      tt-chk-gds.src-sum    */
+/*      tt-chk-gds.depart-type*/
+/*      tt-chk-gds.road-tax   */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 97.88 BY 6.67
@@ -691,10 +755,12 @@ DEFINE FRAME Dialog-Frame
      tt-chk-doc.doc-num AT ROW 5.96 COL 33.88 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 17.13 BY 1
+     v-corr-osnov AT ROW 5.96 col 11 colon-aligned format "X(80)"
      tt-chk-doc.doc-num2 AT ROW 5.96 COL 63 COLON-ALIGNED WIDGET-ID 6
           LABEL "№ заказа"
           VIEW-AS FILL-IN 
           SIZE 33 BY 1
+     v-corr-type AT ROW 5.96 col 63 colon-aligned format "X(15)"     
      tt-chk-doc.chk-num AT ROW 6.88 COL 11 COLON-ALIGNED
           LABEL "N по кассе" FORMAT "->>>>>>>>9"
           VIEW-AS FILL-IN 
@@ -735,6 +801,7 @@ DEFINE FRAME Dialog-Frame
      B-adddiscnt AT ROW 9 COL 70.88
      B-addgds AT ROW 9 COL 84.88
      BR-gds AT ROW 10.08 COL 1
+     BR-corr AT ROW 10.08 COL 1
      BR-discnt AT ROW 10.08 COL 1
      BR-pay AT ROW 16.79 COL 1
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -4358,6 +4425,21 @@ define output parameter varpay-name like ub.cash-pay.obj-name no-undo.
 define buffer loc_cash-pay for ub.cash-pay.
 define buffer loc_currency for ub.currency.
 
+if tt-chk-doc.chk-type = integer({&expense-corr})
+or tt-chk-doc.chk-type = integer({&income-corr})
+then do :
+  case parpay-code :
+    when 1031 then varpay-name = "Наличный".
+    when 1081 then varpay-name = "Электронный".
+    when 1215 then varpay-name = "Аванс".
+    when 1216 then varpay-name = "Кредит".
+    when 1217 then varpay-name = "Встречное представление".
+    otherwise varpay-name = "Неизвестная оплата".
+  end case.
+  parcurr-name = "Рубль".
+  return.
+end.
+
 FIND FIRST loc_cash-pay No-LOCK WHERE
                   loc_cash-pay.cdpay-code = parpay-code AND
                   loc_cash-pay.curr-code = parcurr-code No-ERROR.
@@ -4940,6 +5022,32 @@ VIEW FRAME {&FRAME-NAME}.
 hide br-discnt in frame {&frame-name}.
 IF b-cf:SENSITIVE IN FRAME {&FRAME-NAME} = NO THEN HIDE
 b-cf IN FRAME {&FRAME-NAME}.
+hide BR-corr in frame {&frame-name}.
+hide v-corr-osnov v-corr-type in frame {&frame-name}.
+
+if tt-chk-doc.chk-type = integer({&income-corr})
+or tt-chk-doc.chk-type = integer({&expense-corr})
+then do :
+  v-corr-osnov = tt-chk-doc.doc-num .
+  if num-entries(tt-chk-doc.doc-num2, ":") = 2
+  then do :
+    if entry(1, tt-chk-doc.doc-num2, ":") = "0"
+    then v-corr-type = "самостоятельно" .
+    else
+    if entry(1, tt-chk-doc.doc-num2, ":") = "1"
+    then v-corr-type = "по предписанию" .
+    else
+    v-corr-type = "неизвестн." .
+  end.
+  else
+  v-corr-type = "неизвестн." .
+  hide BR-gds in frame {&frame-name}.
+  open query br-corr for each tt-chk-gds WHERE tt-chk-gds.doc-code = tt-chk-doc.doc-code .
+  display BR-corr v-corr-osnov v-corr-type with frame {&frame-name}.
+  enable BR-corr with frame {&frame-name}.
+  
+  hide tt-chk-doc.doc-num2 tt-chk-doc.doc-num in frame {&frame-name}.
+end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
