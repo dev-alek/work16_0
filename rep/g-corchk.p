@@ -8,12 +8,12 @@ $Archive$
 
 Общий Отчет о количестве кассовых чеков коррекции за период
 
-Автор: Комаров Иван Сергеевич
-Дата создания: 06/30/10
-Author: Ivan Komarov
-Creation date: 06/30/10
+Автор: Шкляр Елена
+Дата создания: 04/29/10
+Author: Elena Shklyar
+Creation date: 04/29/10
 
-Автор1: Белоусов Илья Александрович
+
 
 */
 define input parameter parParentProc    AS WIDGET-HANDLE    NO-UNDO .
@@ -40,7 +40,7 @@ define NEW SHARED variable cas-shft as logical no-undo init no.
 run rep/d-report.w
     ( input parParentProc                   /* 0               */
     , input 'rep/r-corchkr.p'                   /* 1 RUN           */
-    , input "Общий отчет по чекам транзакции":U                        /* 2 Title         */
+    , input "Общий отчет по чекам коррекции":U                        /* 2 Title         */
     , input 4   /* 3 dates         */
     , input ""                              /* 4 goods         */
     , input "*"                           /* 5 objects       */

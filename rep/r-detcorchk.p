@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Детализированный отчет по чекам транзакции
+Детализированный отчет по чекам коррекции
 
 Автор: Шкляр Елена
 Дата создания: 04/29/10
@@ -35,7 +35,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Детализированный отчет по чекам транзакции".
+define variable vss-description as character no-undo init "Детализированный отчет по чекам коррекции".
 { cmp/vssrevis.i }
 
 { cmp/str-glbl.i }

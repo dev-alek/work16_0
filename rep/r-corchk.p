@@ -35,7 +35,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Общий отчет по чекам транзакции".
+define variable vss-description as character no-undo init "Общий отчет по чекам коррекции".
 { cmp/vssrevis.i }
 
 { cmp/str-glbl.i }
