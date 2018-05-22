@@ -6,15 +6,12 @@ $Date$
 $Workfile$
 $Archive$
 
-Промежуточный вызов детализированного отчета по чекам транзакции
+Промежуточный вызов детализированного отчета по чекам коррекции
 
-Автор: Бахтадзе Наталья Викторовна
-Дата создания: 06/01/10
-Author: Bakhtadze Natalya
-Creation date: 06/01/10
-
-нужен чтобы вызвать r - k m . 7 из e - k m 7 . w с параметрами
-
+Автор: Шкляр Елена
+Дата создания: 04/29/10
+Author: Elena Shklyar
+Creation date: 04/29/10
 
 */
 
@@ -25,7 +22,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Промежуточный вызов детализированного отчета по чекам транзакции".
+define variable vss-description as character no-undo init "Промежуточный вызов детализированного отчета по чекам коррекции".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }

@@ -730,15 +730,17 @@ define output parameter p-count-input-fact-qnty          as decimal      no-undo
             if error-status :error
             then do:
                 if return-value = 'not-reserved' then do:
-                  v-not-reserved = true.
-                  run write-fbr-rsrv-log(subst(
-                      "Не зарезервирован товар &1 &2 &3 кол-во &4 рецепт &5",
+                  run writelog in this-procedure (
+                    input {&fbr-rsrv-log-file-name}
+                  , input 0
+                  , input substitute("Не зарезервирован товар &1 &2 &3 кол-во &4 рецепт &5",
                       buf_fbr-line.artic,
                       buf_fbr-line.prod-type,
                       buf_fbr-line.prod-code,
                       buf_fbr-line.fact-qnty,
-                      buf_fbr-line.recipe-code
-                  )).
+                      buf_fbr-line.recipe-code)
+                  ).
+                  v-not-reserved = true.
                   next calc-prices-for-each-fbr-line.
                 end.
                 if error-status :get-message(1) <> ""
