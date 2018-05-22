@@ -166,6 +166,7 @@ define variable v-print-rubl as logical   no-undo .
 define variable v-ii          as integer   no-undo .
 define variable v-count-all   as integer no-undo .
 define variable v-count-err   as integer no-undo .
+define variable local-trace-on as logical no-undo .
 
 define buffer new_ext-classif for ub.ext-classif  .
 define buffer new_trn-doc     for ub.trn-doc  .
@@ -179,6 +180,7 @@ define buffer buf_shop        for ub.shop .
 &glob display-count-message  run write-counter in p-log-handle (input ~{&my-count-message~})
 &glob hide-count-message  run hide-counter in p-log-handle
 */
+local-trace-on = false .
 
 /* разбор и проверка входных параметров */
 define variable v-input-error as logical no-undo .
@@ -318,7 +320,7 @@ run import-hed in this-procedure no-error .
     end.
 /*run re-save-conf-par in this-procedure .*/
 
-  &scop my-message substitute("Всего загружено &1 записей. Из них отвергнуто &2", v-count-all, v-count-err )
+  &scop my-message substitute("Всего прочитано &1 записей. Из них отвергнуто &2", v-count-all, v-count-err )
   {&display-message}.
 
 {&hide-count-message}.
@@ -338,30 +340,35 @@ define buffer buf_tt-parts for tt-imp-parts .
        поэтому каждую прочитанную строку необходимо разбирать поэнтриво и хранить в текстовом виде
        вместе с записью, которая по ней создалась во временной таблице */
     // import stream f-inp DELIMITER ';' tt-imp-parts2 .
+    v-imp-row = "" .
     import stream f-inp unformatted v-imp-row .
-    create buf_tt-parts .
-    assign
-      buf_tt-parts.artic         = substring(  entry( 1, v-imp-row, ';'),  7  ) // отрезаем начальное "PART: &1;"
-      buf_tt-parts.part-code     =      trim(  entry( 3, v-imp-row, ';')  )
-      buf_tt-parts.in-code       =      trim(  entry( 4, v-imp-row, ';')  )
-      buf_tt-parts.gds-code      =   integer(  entry( 5, v-imp-row, ';')  )
-      buf_tt-parts.price-rubl    =   decimal(  entry( 6, v-imp-row, ';')  )
-      buf_tt-parts.fact-qnty     =   decimal(  entry( 7, v-imp-row, ';')  )
-      buf_tt-parts.vat-tax-value =   decimal(  entry(11, v-imp-row, ';')  )
-      buf_tt-parts.name-gtd      =             entry(14, v-imp-row, ';')
-      buf_tt-parts.srok-god      =             entry(17, v-imp-row, ';')
-      buf_tt-parts.supp-code     =   integer(  entry(20, v-imp-row, ';')  )
-      buf_tt-parts.supp-type     =             entry(21, v-imp-row, ';')
-      buf_tt-parts.cont-prn-code =             entry(22, v-imp-row, ';')
-      buf_tt-parts.imp-row       =                       v-imp-row
-      v-count-all = v-count-all + 1
-    .
+    if v-imp-row > "" then do:
+      create buf_tt-parts .
+      assign
+        buf_tt-parts.artic         = substring(  entry( 1, v-imp-row, ';'),  7  ) // отрезаем начальное "PART: &1;"
+        buf_tt-parts.part-code     =      trim(  entry( 3, v-imp-row, ';')  )
+        buf_tt-parts.in-code       =      trim(  entry( 4, v-imp-row, ';')  )
+        buf_tt-parts.gds-code      =   integer(  entry( 5, v-imp-row, ';')  )
+        buf_tt-parts.price-rubl    =   decimal(  entry( 6, v-imp-row, ';')  )
+        buf_tt-parts.fact-qnty     =   decimal(  entry( 7, v-imp-row, ';')  )
+        buf_tt-parts.vat-tax-value =   decimal(  entry(11, v-imp-row, ';')  )
+        buf_tt-parts.name-gtd      =             entry(14, v-imp-row, ';')
+        buf_tt-parts.srok-god      =             entry(17, v-imp-row, ';')
+        buf_tt-parts.supp-code     =   integer(  entry(20, v-imp-row, ';')  )
+        buf_tt-parts.supp-type     =             entry(21, v-imp-row, ';')
+        buf_tt-parts.cont-prn-code =             entry(22, v-imp-row, ';')
+        buf_tt-parts.imp-row       =                       v-imp-row
+        v-count-all = v-count-all + 1
+      .
+    end .
   end.
   input stream f-inp close.
 
-//define variable dsXmlFileName as character no-undo .
-//dsXmlFileName = substitute("&1.xml", entry(1, p-file-name, ".")).
-//temp-table tt-imp-parts:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
+if local-trace-on then do:
+define variable dsXmlFileName as character no-undo .
+dsXmlFileName = substitute("&1.xml", entry(1, p-file-name, ".")).
+temp-table tt-imp-parts:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
+end .
 end procedure . /* import_file */
 
 
@@ -571,9 +578,11 @@ price-prod-vat;decimal;->>,>>9.99;Цена производителя;Цена производителя;0;Цена п
   end . /* end_of for_each_tt-parts */
 // output stream f-tgds close .
   
-// define variable dsXmlFileName as character no-undo .
-// dsXmlFileName = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "temp_parts").
-// temp-table temp_parts:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
+if local-trace-on then do:
+ define variable dsXmlFileName as character no-undo .
+ dsXmlFileName = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "temp_parts").
+ temp-table temp_parts:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
+end .
 &undefine my-message
 end procedure . /* create_temp_parts */
 
@@ -583,11 +592,15 @@ define variable v-qnty-fact as decimal   no-undo .
 define variable v-qnty-cli  as decimal   no-undo .
 define variable v-num       as integer   no-undo .
 
+define variable dsXmlFileName as character no-undo .
+define variable dsLineCount   as integer no-undo .
+
 // Message "Обработка файла" p-in-file view-as alert-box .
 do on error undo, return error substitute("ошибка &1 &2", error-status:get-message(1) , return-value) :
   assign
   v-qnty-fact = 0
   v-qnty-cli  = 0
+  dsLineCount = 0
   .
   &scop my-message substitute("Подготовка партий..."  )
   {&display-message}.
@@ -603,9 +616,11 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
    by temp_parts.prod-code
    by temp_parts.artic
    by temp_parts.price-rubl
-   by temp_parts.part-code
+/* 21/V-2018 - с разной ценой ложится в разные накладные;
+               с разными номерами партий ложится в одну накладную.
+   by temp_parts.part-code*/
   :
-    
+    dsLineCount = dsLineCount + 1 .  
     do : /* 16/IV-2018 перенос создания партий из create-nakl() */
     create tt-parts.
     assign
@@ -665,7 +680,7 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
     v-qnty-fact = v-qnty-fact + temp_parts.fact-qnty  .
     v-qnty-cli  = v-qnty-cli  + temp_parts.cli-qnty  . // - не заполняется
 
-    if last-of ( temp_parts.part-code ) then do:
+    if last-of ( temp_parts.price-rubl ) then do:
       /* 28/IV-2018 - добавить вместе с объединением партий с разной ценой в одну накладную
       if temp_parts.price-rubl <= 0  or temp_parts.price-rubl = ? then do:
         &scop my-message substitute("Цена &2   = &1 Пропускаю " , temp_parts.price-rubl  , temp_parts.artic )
@@ -690,7 +705,7 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
       temp-line.prod-code     = temp_parts.prod-code
       temp-line.artic         = temp_parts.artic
       temp-line.price-rubl    = temp_parts.price-rubl
-      temp-line.part-code     = temp_parts.part-code
+// 21/V-2018 temp-line.part-code     = temp_parts.part-code
 //  field num           as integer
       temp-line.fact-qnty     = v-qnty-fact
       temp-line.cli-qnty      = v-qnty-cli
@@ -700,10 +715,11 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
       v-qnty-cli  = 0
       .
     end.
+if local-trace-on then do:
+ dsXmlFileName = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt_parts", string(dsLineCount, "9999999")).
+ temp-table tt-parts:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
+end.
   end. /* for each temp_parts break*/
-// define variable dsXmlFileName as character no-undo .
-// dsXmlFileName = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "tt_parts").
-// temp-table tt-parts:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
 
   /* связка полей temp-line.prod-type + prod-code + artic меняется на temp-line.num;
      поля temp_parts.price-rubl и temp_parts.part-code из признаков разделения по накладным исключены */
@@ -724,8 +740,11 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
     v-num = v-num + 1 .
     temp-line.num = v-num .
   end.
-// dsXmlFileName = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "temp_line").
-// temp-table temp-line:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
+if local-trace-on then do:
+ dsXmlFileName = substitute("&1/&2.xml", ibs.th.gbl.gbl-inipar:logDir, "temp_line").
+ temp-table temp-line:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
+end.
+
 
   for each temp-line break
   by temp-line.supp-type
@@ -823,6 +842,9 @@ do on error undo, return error return-value :
   &scop my-message substitute("Создание ПН № &1 объект &2&3 контраг &4&5 &6" , n-d  , new_obj-type , new_obj-code ,  new_cli-type ,  new_cli-code , temp-line.contract-code )
   {&display-message}.
 
+  assign
+    v-ext-doc-type = {&TDEDT_Pri_Vnesh}
+  .
     
   find first temp_parts where
              temp_parts.artic         = temp-line.artic     and
@@ -834,7 +856,7 @@ do on error undo, return error return-value :
              temp_parts.vat-type      = temp-line.vat-type  and
              temp_parts.vat-pc        = temp-line.vat-pc    and
              temp_parts.contract-code = temp-line.contract-code  and
-             temp_parts.part-code     = temp-line.part-code  and
+/*             temp_parts.part-code     = temp-line.part-code  and*/
              temp_parts.price-rubl    = temp-line.price-rubl no-error .
   if not available temp_parts then do:
     message "Parts not found" skip
@@ -853,9 +875,6 @@ do on error undo, return error return-value :
     return. 
   end .
 
-  assign
-    v-ext-doc-type = {&TDEDT_Pri_Vnesh}
-  .
   
   do : /* create_tt-trn-doc */
   create  tt-trn-doc.
@@ -967,6 +986,17 @@ do on error undo, return error return-value :
               new_line.vat-pc         = temp_parts.vat-pc        and
               new_line.contract-code  = temp_parts.contract-code and
               new_line.num            = p-num :
+    if new_line.price-rubl <= 0  or new_line.price-rubl = ? then do:
+      &scop my-message substitute("Цена &2   = &1 Пропускаю " , new_line.price-rubl  , new_line.artic )
+      {&display-message}.
+      next.
+    end.
+    if new_line.fact-qnty <= 0 then do:
+      &scop my-message substitute("Количество &2   = &1 Пропускаю " , new_line.fact-qnty  , new_line.artic )
+      {&display-message}.
+      next.
+    end.
+
   for each buf2_temp_parts no-lock where
         buf2_temp_parts.host-code      = temp_parts.host-code and
         buf2_temp_parts.price-rubl <> ? and
@@ -979,39 +1009,49 @@ do on error undo, return error return-value :
         buf2_temp_parts.artic          = new_line.artic       and
         buf2_temp_parts.prod-type      = new_line.prod-type   and
         buf2_temp_parts.prod-code      = new_line.prod-code   and
-        buf2_temp_parts.part-code      = new_line.part-code   and
+/*        buf2_temp_parts.part-code      = new_line.part-code   and*/
         buf2_temp_parts.price-rubl     = new_line.price-rubl
   :
+    /*
     if can-find (first temp-2exists where
-        temp-2exists.artic = buf2_temp_parts.artic
+        temp-2exists.artic     = buf2_temp_parts.artic
     and temp-2exists.prod-type = buf2_temp_parts.prod-type
     and temp-2exists.prod-code = buf2_temp_parts.prod-code
     and temp-2exists.doc-code = n-d) then next .
+    */
 
-    find first buf_goods no-lock
-         where buf_goods.artic     = buf2_temp_parts.new_artic
-           and buf_goods.prod-type = buf2_temp_parts.new_prod-type
-           and buf_goods.prod-code = buf2_temp_parts.new_prod-code no-error .
-    if not available buf_goods then next .
-       
-    if new_line.price-rubl <= 0  or new_line.price-rubl = ? then do:
-      &scop my-message substitute("Цена &2   = &1 Пропускаю " , new_line.price-rubl  , new_line.artic )
-      {&display-message}.
-      next.
-    end.
-    if new_line.fact-qnty <= 0 then do:
-      &scop my-message substitute("Количество &2   = &1 Пропускаю " , new_line.fact-qnty  , new_line.artic )
-      {&display-message}.
-      next.
-    end.
     find first tt-doc-line exclusive-lock where
               tt-doc-line.doc-code       = n-d and
               tt-doc-line.artic          = buf2_temp_parts.new_artic   and
               tt-doc-line.prod-type      = buf2_temp_parts.new_prod-type and
               tt-doc-line.prod-code      = buf2_temp_parts.new_prod-code no-error .
     if not available tt-doc-line then do:
+      find first buf_goods no-lock
+           where buf_goods.artic     = buf2_temp_parts.new_artic
+             and buf_goods.prod-type = buf2_temp_parts.new_prod-type
+             and buf_goods.prod-code = buf2_temp_parts.new_prod-code no-error .
+      if not available buf_goods then next .
       create  tt-doc-line.
       assign
+      tt-doc-line.doc-code       = n-d
+      tt-doc-line.obj-type       = new_obj-type
+      tt-doc-line.obj-code       = new_obj-code
+      tt-doc-line.line-num       = next-value (s-line-num, {&db-name_schema})
+      tt-doc-line.artic          = buf2_temp_parts.new_artic
+      tt-doc-line.prod-type      = buf2_temp_parts.new_prod-type
+      tt-doc-line.prod-code      = buf2_temp_parts.new_prod-code
+      tt-doc-line.prt-root       = buf_goods.prt-root
+      tt-doc-line.unit-cli       = buf_goods.unit-base
+      tt-doc-line.slt-pc         = buf2_temp_parts.slt-pc
+      tt-doc-line.vat-pc         = buf2_temp_parts.vat-pc
+      tt-doc-line.ext-doc-type   = v-ext-doc-type
+      tt-doc-line.price-base     = buf2_temp_parts.price-rubl
+      tt-doc-line.price-cli      = buf2_temp_parts.price-rubl
+      tt-doc-line.price-rubl     = buf2_temp_parts.price-rubl
+      tt-doc-line.cli-base-rate  = 1
+      tt-doc-line.doc-density    = 1 / tt-doc-line.cli-base-rate
+      tt-doc-line.fact-density   = 1 / tt-doc-line.cli-base-rate
+      tt-doc-line.status_        = "temp"
       tt-doc-line.cli-qnty       = 0
       tt-doc-line.doc-qnty       = 0
       tt-doc-line.fact-qnty      = 0
@@ -1026,28 +1066,9 @@ do on error undo, return error return-value :
       release temp-2exists.
     end.
     assign
-    tt-doc-line.doc-code       = n-d
-    tt-doc-line.status_        = "temp"
-    tt-doc-line.obj-code       = new_obj-code
-    tt-doc-line.obj-type       = new_obj-type
-    tt-doc-line.slt-pc         = buf2_temp_parts.slt-pc
-    tt-doc-line.vat-pc         = buf2_temp_parts.vat-pc
-    tt-doc-line.cli-base-rate  = 1
-    tt-doc-line.cli-qnty       = tt-doc-line.cli-qnty + new_line.fact-qnty
-    tt-doc-line.doc-qnty       = tt-doc-line.doc-qnty + new_line.fact-qnty
-    tt-doc-line.fact-qnty      = tt-doc-line.fact-qnty + new_line.fact-qnty
-    tt-doc-line.ext-doc-type   = v-ext-doc-type
-    tt-doc-line.line-num       = next-value (s-line-num, {&db-name_schema})
-    tt-doc-line.price-base     = buf2_temp_parts.price-rubl
-    tt-doc-line.price-cli      = buf2_temp_parts.price-rubl
-    tt-doc-line.price-rubl     = buf2_temp_parts.price-rubl
-    tt-doc-line.artic          = buf2_temp_parts.new_artic
-    tt-doc-line.prod-type      = buf2_temp_parts.new_prod-type
-    tt-doc-line.prod-code      = buf2_temp_parts.new_prod-code
-    tt-doc-line.prt-root       = buf_goods.prt-root
-    tt-doc-line.unit-cli       = buf_goods.unit-base
-    tt-doc-line.doc-density     = 1 / tt-doc-line.cli-base-rate
-    tt-doc-line.fact-density    = 1 / tt-doc-line.cli-base-rate
+      tt-doc-line.cli-qnty  = tt-doc-line.cli-qnty  + buf2_temp_parts.fact-qnty
+      tt-doc-line.doc-qnty  = tt-doc-line.doc-qnty  + buf2_temp_parts.fact-qnty
+      tt-doc-line.fact-qnty = tt-doc-line.fact-qnty + buf2_temp_parts.fact-qnty
     .
 
     find first tt2-doc-line exclusive-lock where
@@ -1090,10 +1111,12 @@ do on error undo, return error return-value :
 // temp-table tt2-doc-line:WRITE-XML ( "FILE", dsXmlFileName2, true, "UTF-8").
   end .
   end . /*for each    new_line where*/
-// dsXmlFileName1 = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt-doc-line", n-d).
-// temp-table tt-doc-line:WRITE-XML ( "FILE", dsXmlFileName1, true, "UTF-8").
-// dsXmlFileName2 = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt2-doc-line", n-d).
-// temp-table tt2-doc-line:WRITE-XML ( "FILE", dsXmlFileName2, true, "UTF-8").
+if local-trace-on then do:
+ dsXmlFileName1 = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt-doc-line", n-d).
+ temp-table tt-doc-line:WRITE-XML ( "FILE", dsXmlFileName1, true, "UTF-8").
+ dsXmlFileName2 = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt2-doc-line", n-d).
+ temp-table tt2-doc-line:WRITE-XML ( "FILE", dsXmlFileName2, true, "UTF-8").
+end .
   
   /* 16/IV-2018 создание партий перенесено до линий документов;
                 здесь созданные партии привязываются к линиям */
@@ -1122,8 +1145,10 @@ message "parts -> doc-line" skip string(rowid(tt-parts)) string(rowid(tt2-doc-li
       tt-parts.out-code = tt2-doc-line.doc-code no-error .
     end . // end_of for_each tt-parts
   end. /*  for each tt2-doc-line :*/
-// dsXmlFileName3 = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt_parts-2", n-d).
-// temp-table tt-parts:WRITE-XML ( "FILE", dsXmlFileName3, true, "UTF-8").
+if local-trace-on then do:
+ dsXmlFileName3 = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt_parts-2", n-d).
+ temp-table tt-parts:WRITE-XML ( "FILE", dsXmlFileName3, true, "UTF-8").
+end .
 
   /* 26/IV-2018 внутри copy-in.i партии создаются по линиям документа tt2-doc-line;
                 входная таблица tt-parts для создания партий не используется */
