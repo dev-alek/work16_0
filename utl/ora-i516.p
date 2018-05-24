@@ -423,12 +423,12 @@ assign
 /*        input  ? ,                   */
 /*        output n-d ) no-error.       */
     
-     n-d = temp_trn-doc.doc-code.
+    n-d = temp_trn-doc.doc-code.
     
     find first ub.trn-doc where ub.trn-doc.doc-code = temp_trn-doc.doc-code no-error.
     
     if available (ub.trn-doc) then do:
-      v-end-message =  "Ошибка при генерации номера документа. chip"  + return-value  + error-status :get-message(1) .
+      v-end-message =  "Ошибка при генерации номера документа. chip"  + return-value  + error-status :get-message(1) + "Документ с номер " + ub.trn-doc.doc-code + " уже есть" .
       run pcall-log-file in p-log-handle (input v-end-message) .
       undo, return error v-end-message.
     end.
