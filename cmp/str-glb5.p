@@ -2564,8 +2564,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define rp-parent
 { cmp/cr-prep.i 1 price-parts 1  "Продажная цена по партиям" 1 "price sale from parts"  }
 
 
-{ cmp/cr-prep.i 1 exite-edi-without-ordrsp      without-ordrsp     "Без ORDRSP"     without-ordrsp       "Without ORDRSP" }
-{ cmp/cr-prep.i 1 exite-edi-with-ordrsp         with-ordrsp        "С ORDRSP"       with-ordrsp          "With ORDRSP" }
+{ cmp/cr-prep.i 1 exite-edi-without-ordrsp      without-ordrsp     "Без ORDRSP"           without-ordrsp       "Without ORDRSP" }
+{ cmp/cr-prep.i 1 exite-edi-with-ordrsp         with-ordrsp        "С ORDRSP"             with-ordrsp          "With ORDRSP" }
+{ cmp/cr-prep.i 1 exite-edi-only-nakl           only-nakl          "Только накладные"     only-nakl            "only NAKL" }
 
 /*методы доставки заказов  и пр*/
 { cmp/cr-prep.i 1 doc-dm-empty        0     "_"           0       "_" }
