@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: $
+$Author: $
+$Date: $
+$Workfile: $
+$Archive: $
                                         
 Файл глобальных определений
 
@@ -174,6 +174,8 @@ end.
 &global-define btpr-type-autocbnk '{&bef-btpr-type-autocbnk}':U
 &global-define bef-btpr-type-autofree autofree
 &global-define btpr-type-autofree '{&bef-btpr-type-autofree}':U
+&global-define bef-btpr-type-mercury mercury
+&global-define btpr-type-mercury '{&bef-btpr-type-mercury}':U
 &global-define bef-btpr-type-cutdbs cutdbs
 &global-define btpr-type-cutdbs '{&bef-btpr-type-cutdbs}':U
 &global-define bef-btpr-type-lock-route lkrt
@@ -3405,6 +3407,10 @@ end.
 &global-define attr-mark '{&bef-attr-mark}':U
 &global-define bef-attr-sum-grp-gl sum-grp-gl
 &global-define attr-sum-grp-gl '{&bef-attr-sum-grp-gl}':U
+&global-define bef-attr-mercur_FGIS mercur_FGIS
+&global-define attr-mercur_FGIS '{&bef-attr-mercur_FGIS}':U
+&global-define bef-attr-perishable perishable
+&global-define attr-perishable '{&bef-attr-perishable}':U
 &global-define bef-attr-15x80 15x80
 &global-define attr-15x80 '{&bef-attr-15x80}':U
 &global-define bef-attr-8x50 8x50
@@ -3445,7 +3451,7 @@ end.
 &global-define attr-weight-of-pallet '{&bef-attr-weight-of-pallet}':U
 &global-define bef-attr-image-list image-list
 &global-define attr-image-list '{&bef-attr-image-list}':U
-&global-define gds-attr-list 'alcohol-prod,egais-name,is-gas,ptrl-without-rvs,office-type,fuel-type,is-loyalty-payment,ban-bonus,null-price,fasovka,mark,sum-grp-gl,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet,image-list':U
+&global-define gds-attr-list 'alcohol-prod,egais-name,is-gas,ptrl-without-rvs,office-type,fuel-type,is-loyalty-payment,ban-bonus,null-price,fasovka,mark,sum-grp-gl,mercur_FGIS,perishable,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet,image-list':U
 &global-define bef-prop-list-attr-office-type oss-pay,tso-ret,card-act
 &global-define prop-list-attr-office-type '{&bef-prop-list-attr-office-type}':U
 &global-define bef-attr-office-type_oss-pay oss-pay
@@ -3740,6 +3746,8 @@ end.
 &global-define attr-schedule-sale '{&bef-attr-schedule-sale}':U
 &global-define bef-attr-schedule-suz schedule-suz
 &global-define attr-schedule-suz '{&bef-attr-schedule-suz}':U
+&global-define bef-attr-schedule-merc schedule-merc
+&global-define attr-schedule-merc '{&bef-attr-schedule-merc}':U
 &global-define bef-attr-cut-date cut-date
 &global-define attr-cut-date '{&bef-attr-cut-date}':U
 &global-define bef-attr-cut-fin-date cut-fin-date
@@ -4108,12 +4116,16 @@ end.
 &global-define openxml-type-exite-edi '{&bef-openxml-type-exite-edi}':U
 &global-define bef-openxml-type-exite-edi-full EDI
 &global-define openxml-type-exite-edi-full '{&bef-openxml-type-exite-edi-full}':U
-&global-define openxml-type-list '0,1,2,3,4,5,6,7,8,9':U
-&global-define openxml-type-list-full 'НЕспециальная,Специальная,IBS TH,Oracle Retail,Lantab,EDOC-НН,Панель Руководителя,ДатаКрат DKLink,1C,EDI':U
-&global-define openxml-type-name entry (lookup (~{&openxml-type-code}, '0,1,2,3,4,5,6,7,8,9':U), 'НЕспециальная,Специальная,IBS TH,Oracle Retail,Lantab,EDOC-НН,Панель Руководителя,ДатаКрат DKLink,1C,EDI':U)
-&global-define openxml-special-type-list '1,2,3,4,5,6,7,8,9':U
+&global-define bef-openxml-type-mercury 10
+&global-define openxml-type-mercury '{&bef-openxml-type-mercury}':U
+&global-define bef-openxml-type-mercury-full Меркурий
+&global-define openxml-type-mercury-full '{&bef-openxml-type-mercury-full}':U
+&global-define openxml-type-list '0,1,2,3,4,5,6,7,8,9,10':U
+&global-define openxml-type-list-full 'НЕспециальная,Специальная,IBS TH,Oracle Retail,Lantab,EDOC-НН,Панель Руководителя,ДатаКрат DKLink,1C,EDI,Меркурий':U
+&global-define openxml-type-name entry (lookup (~{&openxml-type-code}, '0,1,2,3,4,5,6,7,8,9,10':U), 'НЕспециальная,Специальная,IBS TH,Oracle Retail,Lantab,EDOC-НН,Панель Руководителя,ДатаКрат DKLink,1C,EDI,Меркурий':U)
+&global-define openxml-special-type-list '1,2,3,4,5,6,7,8,9,10':U
 &global-define openxml-licensed-type-list '7,9':U
-&global-define max-openxml-type-code 9
+&global-define max-openxml-type-code 10
 &global-define bef-assmatr Ассортиментная матрица
 &global-define assmatr '{&bef-assmatr}':U
 &global-define bef-type-assmatr-obj Объект
@@ -6684,6 +6696,10 @@ end.
 &global-define exite-edi-with-ordrsp '{&bef-exite-edi-with-ordrsp}':U
 &global-define bef-exite-edi-with-ordrsp-full С ORDRSP
 &global-define exite-edi-with-ordrsp-full '{&bef-exite-edi-with-ordrsp-full}':U
+&global-define bef-exite-edi-only-nakl only-nakl
+&global-define exite-edi-only-nakl '{&bef-exite-edi-only-nakl}':U
+&global-define bef-exite-edi-only-nakl-full Только накладные
+&global-define exite-edi-only-nakl-full '{&bef-exite-edi-only-nakl-full}':U
 &global-define bef-doc-dm-empty 0
 &global-define doc-dm-empty '{&bef-doc-dm-empty}':U
 &global-define bef-doc-dm-empty-full _
@@ -6760,7 +6776,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: d4bcf8d1c746, 1340, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: c4bcabd2b746, 1380, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -8067,14 +8083,36 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-egais-host_egais-inn '{&bef-attr-egais-host_egais-inn}':U
 &global-define bef-attr-egais-host_egais-exsys egais-exsys
 &global-define attr-egais-host_egais-exsys '{&bef-attr-egais-host_egais-exsys}':U
+&global-define bef-attr-mercur mercur
+&global-define attr-mercur '{&bef-attr-mercur}':U
+&global-define bef-prop-list-attr-mercur apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server
+&global-define prop-list-attr-mercur '{&bef-prop-list-attr-mercur}':U
+&global-define bef-attr-mercur_apikey apikey
+&global-define attr-mercur_apikey '{&bef-attr-mercur_apikey}':U
+&global-define bef-attr-mercur_login_is login_is
+&global-define attr-mercur_login_is '{&bef-attr-mercur_login_is}':U
+&global-define bef-attr-mercur_login login
+&global-define attr-mercur_login '{&bef-attr-mercur_login}':U
+&global-define bef-attr-mercur_password password
+&global-define attr-mercur_password '{&bef-attr-mercur_password}':U
+&global-define bef-attr-mercur_manual-vcd manual-vcd
+&global-define attr-mercur_manual-vcd '{&bef-attr-mercur_manual-vcd}':U
+&global-define bef-attr-mercur_close close
+&global-define attr-mercur_close '{&bef-attr-mercur_close}':U
+&global-define bef-attr-mercur_type-connect type-connect
+&global-define attr-mercur_type-connect '{&bef-attr-mercur_type-connect}':U
+&global-define bef-attr-mercur_qrcode qrcode
+&global-define attr-mercur_qrcode '{&bef-attr-mercur_qrcode}':U
+&global-define bef-attr-mercur_server server
+&global-define attr-mercur_server '{&bef-attr-mercur_server}':U
 &global-define cpdoc-attr-code 'rrn-vbrr,cpdoc':U
 &global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U
-&global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,report-glob,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
+&global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,mercur,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,report-glob,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,cd-type-autotank,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais':U
-&global-define str-glbl_vss-revision 'Revision: 45325775eda4, 1021, rls ':U
-&global-define str-glbl2_vss-revision 'Revision: f51e93a1df8e, 1312, rls ':U
-&global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 993a05482fd8, 1104, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 993a05482fd8, 1104, rls ':U
-&global-define str-glblt_vss-revision 'Revision: d4bcf8d1c746, 1340, rls ':U
+&global-define str-glbl_vss-revision 'Revision: c4bcabd2b746, 1380, rls ':U
+&global-define str-glbl2_vss-revision 'Revision: f51e93a1df8e, 1329, rls ':U
+&global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 496, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: c4bcabd2b746, 1380, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: c4bcabd2b746, 1380, rls ':U
+&global-define str-glblt_vss-revision 'Revision: c4bcabd2b746, 1380, rls ':U
 &endif
