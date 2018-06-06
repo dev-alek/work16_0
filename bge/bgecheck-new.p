@@ -68,9 +68,7 @@ DEFINE TEMP-TABLE tt-cash-pay NO-UNDO
     .
 
 
-do
-    on error undo, return error
-    :
+do on error undo, return error :
     define variable v-xml-file-name    as character no-undo.
     define variable v-log-file-name    as character no-undo.
     define variable v-locked           as logical   no-undo.
@@ -209,9 +207,11 @@ end .
     define variable v-is-ok      as logical no-undo .
     define variable v-d-card     as character no-undo.
     define variable v-pack-lim   as int64 initial 94371840 no-undo . /* после 90Mb закрываем пакет и делаем новый */
+    define variable v-manual-add as character no-undo .
     define buffer buf_chk-doc     for ub.chk-doc .
     define buffer buf_chk-pay     for ub.chk-pay .
     define buffer buf_tt-cash-pay for tt-cash-pay .
+    define buffer buf_c-chk-doc   for ub.c-chk-doc .
 
     v-must-open = true.
     for each temp-obj :
@@ -405,6 +405,24 @@ end .
           v-corr-type = "неизвестн." .
           run wp-xmltagput   in this-procedure ( input 3, input "CorrType" , input string( v-corr-type  ), input 1 ).
         end.  
+        /* 24/V-2018 В расширенную выгрузку чеков добавить тэг с признаком, что чек был создан вручную.
+                     Определяется это по истории. Посмотреть как сделано в интерфейсе ручных чеков.
+                     Название тэга - manual. значение 1\0
+           @NOTE     Согласно str/superchk.p уникальный индекс по c-chk-doc строится по полям 
+                     1 doc-code
+                     2 corr-user-db-num
+                     3 chip-num
+                     при отображении в фильтр передаётся только doc-code;
+                     поле chip-num заполняется нарастающими значениями.
+        */
+        v-manual-add = "?" .
+        for each buf_c-chk-doc no-lock
+           where buf_c-chk-doc.doc-code = buf_chk-doc.doc-code
+              by buf_c-chk-doc.chip-num :
+          v-manual-add = if buf_c-chk-doc.is-add then "1" else "0" .
+          leave .
+        end .
+        run wp-xmltagput   in this-procedure ( input 3, input "manual", v-manual-add, input 0 ). 
         run wp-xmltagclose in this-procedure ( input 2, input "checkHead").
         /* end_of заголовок чека */      
         
@@ -413,15 +431,6 @@ end .
         (input buf_chk-doc.doc-code
        , input v-log-file-name
        , input v-d-card
-        /*
-                input temp-obj.obj-type
-                , input temp-obj.obj-code
-                , input v-date-from
-                , input v-date-to
-                , input v-pay-type-list
-                , INPUT v-need-pay-type
-                , input v-trim-zero
-          */
         ) no-error.
         if error-status:error then do:
           run wp-XMLWriteLog in this-procedure (

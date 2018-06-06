@@ -1481,6 +1481,8 @@ procedure export-CorrChk :
       end .       
       run wp-xmltagclose( input 3, input "Check").
     end.
+	
+	run wp-xmltagclose( input 2, input "CorrChk").
 
   end.
 end procedure. /* export-CorrChk */

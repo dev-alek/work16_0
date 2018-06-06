@@ -1037,9 +1037,6 @@ DO:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_start Dialog-Frame
 ON CHOOSE OF Btn_start IN FRAME Dialog-Frame /* Запустить */
 DO:
-  
-  
-        
         DEFINE VARIABLE l-dircrt  AS LOGICAL       NO-UNDO. /* Для ответа на создание директории */
         define variable h-par     as widget-handle no-undo.
         DEFINE variable loghandle AS HANDLE        no-undo.
@@ -1078,73 +1075,49 @@ DO:
  
         
         case v-place:
-            WHEN 2
-            then 
-                do:
-                    IF trim(v-ftp-address) = '':U
-                        THEN 
-                    DO:
-                        message
-                            "Не задано FTP адрес"
-                            view-as alert-box error .
+            WHEN 2 then do:
+                    IF trim(v-ftp-address) > '':U THEN . 
+                    ELSE DO:
+                        message "Не задан FTP адрес" view-as alert-box error .
                         return no-apply.
                     END.
                 end.
-            OTHERWISE 
-            do:
-            
-               
+            OTHERWISE do:
                 v-directory = right-trim(v-directory,'/\').
     
                 /* Проверим каталог */
                 file-info:file-name = v-directory.
             
-                if file-info:file-name = " " then 
-                do:
-    
-                    MESSAGE SUBSTITUTE("Заполните директорию для выгрузки!",v-directory) VIEW-AS ALERT-BOX ERROR.
+                if file-info:file-name = " " then do:
+                    MESSAGE "Укажите директорию для выгрузки" VIEW-AS ALERT-BOX ERROR.
                     leave.
                 end.         
-                IF FILE-INFO:FILE-type = ? THEN 
-                DO:
-                
+                IF FILE-INFO:FILE-type = ? THEN DO:
                     MESSAGE SUBSTITUTE("Директории &1 не существует.",v-directory) SKIP
                         "Создать?" VIEW-AS ALERT-BOX WARNING BUTTONS YES-NO UPDATE l-dircrt.
-                    IF l-dircrt THEN 
-                    DO:
+                    IF l-dircrt THEN DO:
                         OS-CREATE-DIR VALUE(v-directory).
-                        IF OS-ERROR <> 0 THEN 
-                        DO:
+                        IF OS-ERROR <> 0 THEN DO:
                             MESSAGE SUBSTITUTE("Невозможно создать директорию &1",v-directory) VIEW-AS ALERT-BOX ERROR.
                             leave.
                         END. /* if os-error <> 0 */
                     END. /* if dir_crt */
                     Else leave .
                 END. /* if file-info:file-type = ? */
-                ELSE 
-                DO:
-                    IF NOT (FILE-INFO:file-type BEGINS "D":U) THEN 
-                    DO:
+                ELSE DO:
+                    IF NOT (FILE-INFO:file-type BEGINS "D":U) THEN DO:
                         MESSAGE SUBSTITUTE("&1 не является директорией.",v-directory) VIEW-AS ALERT-BOX ERROR.
                         leave.
                     END. /*if not */
                 END. /* else */
-       
-       
                 ASSIGN
                     v-ftp-address = "":U
-                    .
+                .
             end.
         END CASE. 
-     
-    
         FILE-INFO:FILE-NAME = v-directory.
-    
-        
-        
-        
-        
-        
+
+
         assign
             p-chk      = tb-exp-checks
             p-gds-type = rs-2
@@ -1163,47 +1136,29 @@ DO:
             apply "entry" to date_from.
             undo, return no-apply.
         end.
-        if p-output-type = 0
-            then 
-        do:
-            case rs-1 :screen-value
-                :
-                when "1"
-                then 
-                    do:
-                        assign
+        if p-output-type = 0 then do:
+            case rs-1 :screen-value :
+                when "1" then assign
                             p-range    = 1
                             p-obj-list = ""
                             .
-                    end.
-                when "2"
-                then 
-                    do:
-                        assign
+                when "2" then assign
                             p-range    = 2
                             p-obj-list = ""
                             .
-                    end.
-                when "3"
-                then 
-                    do:
+                when "3" then do:
                         assign
                             p-range    = 3
                             p-obj-list = ""
                             .
-                        for each temp_obj-list
-                            :
-                            assign
-                                p-obj-list = p-obj-list
-                          + ( if p-obj-list = "" then "" else "," ) + temp_obj-list.obj-type
-                          + "," + string( temp_obj-list.obj-code )
-                                .
-                        end.
-                    end.
+                  for each temp_obj-list :
+                    p-obj-list = p-obj-list + substitute(",&1,&2", temp_obj-list.obj-type, temp_obj-list.obj-code) .
+                  end.
+                  p-obj-list = substring(p-obj-list, 2) .
+                end.
             end case.
         end.
-        if p-output-type = 2
-            then 
+        if p-output-type = 2 then 
         do:
             assign
                 p-cst       = tb-supp
@@ -1232,41 +1187,26 @@ DO:
                     p-pay-desk-cards = tb-pay-desk-cards
                     .
             end.
-            case rs-1 :screen-value
-                :
-                when "1"
-                then 
-                    do:
-                        assign
+            case rs-1 :screen-value :
+                when "1" then assign
                             p-range    = 1
                             p-obj-list = ""
                             .
-                    end.
-                when "2"
-                then 
-                    do:
-                        assign
+                when "2" then assign
                             p-range     = 2
                             p-host-code = v-bge-dper-host-code
                             p-obj-list  = ""
                             .
-                    end.
-                when "3"
-                then 
-                    do:
+                when "3" then do:
                         assign
                             p-range    = 3
                             p-obj-list = ""
                             .
-                        for each temp_obj-list
-                            :
-                            assign
-                                p-obj-list = p-obj-list
-                            + ( if p-obj-list = "" then "" else "," ) + temp_obj-list.obj-type
-                            + "," + string( temp_obj-list.obj-code )
-                                .
-                        end.
-                    end.
+                  for each temp_obj-list :
+                    p-obj-list = p-obj-list + substitute(",&1,&2", temp_obj-list.obj-type, temp_obj-list.obj-code) .
+                  end.
+                  p-obj-list = substring(p-obj-list, 2) .
+                end.
             end case.
             
             
@@ -1275,8 +1215,6 @@ DO:
         if v-dc-card:screen-value = "" then v-dc-num-full = "".
             
         if v-place = 1  then  
-                
-    
             run bge\bgecheck-new.p ( this-procedure:handle
                 , v-directory
                 , v-place 
@@ -1297,8 +1235,8 @@ DO:
             chr-list-chk-type                ) .       
            
         if v-place = 2  then 
-            run bge\bgecheck-new.p ( this-procedure:handle,
-                v-ftp-address
+            run bge\bgecheck-new.p ( this-procedure:handle
+                , v-ftp-address
                 , v-place
                 , v-login
                 , v-password

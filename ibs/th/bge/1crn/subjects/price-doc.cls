@@ -115,6 +115,10 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
               sw:start-element ("gds-sale") .
                 sw:write-data-element ("gds-code", string(buf_bar-code.gds-code)).
                 sw:write-data-element ("price-sale", string(buf_price-list.price-sale)).
+                if buf_price-list.price-prev <> ?
+                then sw:write-data-element ("price-sale-old", string(buf_price-list.price-prev)).
+                if buf_price-list.doc-qnty <> ?
+                then sw:write-data-element ("qnty", string(buf_price-list.doc-qnty)).
               sw:end-element ("gds-sale")  .  
             end.
           sw:end-element ("price-list") .

@@ -739,6 +739,7 @@ on error undo, return error return-value
 /*            and buf_esys-route.esr-cr-db-num = v-cur-db-num*/
             and buf_esys-route.esr-last-pack = p-pack-num
       on error undo, return error
+      break by buf_esys-route.esr-oper by buf_esys-route.esr-tbl-ord
       :
         assign
             rec-cnt    = rec-cnt + (if v-start then 1 else 0)
@@ -764,7 +765,8 @@ on error undo, return error return-value
             /*а это уже выгрузка по команде*/
             if buf_Ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
             then do :
-                sw:start-element (buf_esys-route.esr-oper) .
+                if first-of(buf_esys-route.esr-oper)
+                then sw:start-element (buf_esys-route.esr-oper) .
                 
                 for each buf_esys-route-dump where buf_esys-route-dump.esrd-dump-ord = buf_esys-route.esr-dump-ord:
                   v-longdata = "" .
@@ -773,7 +775,8 @@ on error undo, return error return-value
                   sw:write-fragment (v-longdata) .
                 end.
                 
-                sw:end-element (buf_esys-route.esr-oper) .
+                if last-of(buf_esys-route.esr-oper)
+                then sw:end-element (buf_esys-route.esr-oper) .
             end.
             else do :
                 if v-start then do:
