@@ -482,7 +482,8 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       insw:write-data-element (  "line-num",  string(buf_chk-gds-pay.line-num)    ) . /* Номер строки с товарах чека (Число) */
       insw:write-data-element (  "pay-num",   string(buf_chk-gds-pay.cpline-num)  ) . /* Номер строки в оплатах чека (Число) */
       insw:write-data-element (  "sum",       left-trim(string(buf_chk-gds-pay.tot-r-b,      "->>>>>>>>9.99"))  ) . /* Сумма отнесенная на товар (либо бонус в рублевом эквиваленте) (Число 15,2) */
-      insw:write-data-element (  "qnty",      left-trim(string(buf_chk-gds-pay.eff-doc-qnty, "->>>>>>>9.999"))  ) . /* Эффективное количество (Число 15,3) */
+      /* 04/VI-2018 в чеках в chk-gds-pay сделать количество с 10 знаками после запятой */
+      insw:write-data-element (  "qnty",      left-trim(string(buf_chk-gds-pay.eff-doc-qnty, "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Эффективное количество (Число 15,3) */
 
       /* 17/XI-2017 Добавляем поле «price-base» (цена) в секции «chk-pay-r». */
       /* обязательность 0-1 */
