@@ -99,6 +99,7 @@ define temp-table temp_esys-route no-undo
 
     define temp-table tt_esys-route no-undo like ub.esys-route.
 
+    define stream 1c-log .
 
 do
 for buf_ext-system
@@ -426,6 +427,7 @@ on error undo, return error
         end.
       end.
     end.
+    output stream 1c-log to value ("1c-tech.log") append.
     gen-pack:
     for each t-list-pack
       by t-list-pack.pack-num
@@ -516,6 +518,8 @@ on error undo, return error
         leave gen-pack.
       end.
     end. /*for each t-list-pack*/
+    
+    output stream 1c-log close.
 
     for each t-list-pack
     on error undo, return error
@@ -712,6 +716,8 @@ on error undo, return error return-value
            ,output v-type
            ) no-error .
         
+        put stream 1c-log unformatted string(now) "  Начало формирования пакета " string(p-pack-num) "  " p-pack-file skip .
+        
         create sax-writer sw.
         sw:formatted = true.
         sw:set-output-destination ("file", p-pack-file).
@@ -723,12 +729,14 @@ on error undo, return error return-value
         sw:insert-attribute ("xmlns", "http://www.rosneft.ru/GasComplex/Retail") .
         sw:insert-attribute ("xmlns:xs", "http://www.w3.org/2001/XMLSchema") .
         sw:insert-attribute ("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance") .
+        put stream 1c-log unformatted string(now) "  Заполнение шапки" skip .
           sw:start-element ("header") .
             sw:write-data-element ("num", string(p-pack-num)) .
             sw:write-data-element ("sender-id", sender-id) .
             sw:write-data-element ("reciever-id", "00000") .
             sw:write-data-element ("created-date", iso-date (now)) .
           sw:end-element ("header") .
+        put stream 1c-log unformatted string(now) "  Шапка заполнена" skip .
 
       end.
       
@@ -766,6 +774,9 @@ on error undo, return error return-value
             if buf_Ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
             then do :
                 if first-of(buf_esys-route.esr-oper)
+                then put stream 1c-log unformatted string(now) "  Запись секции " buf_esys-route.esr-oper skip .
+                
+                if first-of(buf_esys-route.esr-oper)
                 then sw:start-element (buf_esys-route.esr-oper) .
                 
                 for each buf_esys-route-dump where buf_esys-route-dump.esrd-dump-ord = buf_esys-route.esr-dump-ord:
@@ -777,6 +788,9 @@ on error undo, return error return-value
                 
                 if last-of(buf_esys-route.esr-oper)
                 then sw:end-element (buf_esys-route.esr-oper) .
+                
+                if last-of(buf_esys-route.esr-oper)
+                then put stream 1c-log unformatted string(now) "  Запись секции " buf_esys-route.esr-oper " завершена" skip .
             end.
             else do :
                 if v-start then do:
@@ -924,12 +938,22 @@ on error undo, return error return-value
       if buf_Ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
       then do :
           sw:end-element ("GC-ERPRN") .
+          
+        put stream 1c-log unformatted string(now) "  Окончание формирования пакета" skip .
 
         sw:end-document () .
+        put stream 1c-log unformatted string(now) "  Пакет " string(p-pack-num) "  " p-pack-file "   СФОРМИРОВАН" skip .
+        
+        file-info:file-name = p-pack-file .
+        if file-info:file-size = 0
+        then put stream 1c-log unformatted "!!!!!!!!! " string(now) "  Пакет " string(p-pack-num) "  " p-pack-file "   ПУСТОЙ" skip .
       end.
     if v-found-route = no
     and buf_ext-system.esys-type > integer({&openxml-type-ordinal})
     then do:
+      if buf_Ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+      then put stream 1c-log unformatted string(now) "  1_cmdesgen.p  Пакет " string(p-pack-num) "  " p-pack-file skip .
+        
       run bge/cmdesgen.p (
                             input parparentproc
                             ,input p-log-handle
@@ -954,6 +978,9 @@ on error undo, return error return-value
         ).
         undo, return error .
       end.
+      
+      if buf_Ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+      then put stream 1c-log unformatted string(now) "  2_cmdesgen.p  Пакет " string(p-pack-num) "  " p-pack-file skip .
     end.
     if v-end-regular-pack
     and v-found-route = yes
