@@ -261,6 +261,11 @@ DEFINE VARIABLE date_to AS DATE FORMAT "99/99/9999":U
      VIEW-AS FILL-IN 
      SIZE 12 BY 1 NO-UNDO.
 
+DEFINE VARIABLE fi-pack-lim AS INT64 FORMAT ">,>>9":U 
+     LABEL "Макс.размер файла (Мб)" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY 1 TOOLTIP "После достижения заданного размера создаётся следующий файл" NO-UNDO.
+
 DEFINE VARIABLE v-directory AS CHARACTER FORMAT "X(256)":U 
      LABEL "Директория" 
      VIEW-AS FILL-IN 
@@ -799,6 +804,7 @@ DO:
             v-login   
             v-password  
             v-place
+            fi-pack-lim = 90
             date_from
             date_to
             tb-inkass-pay-code
@@ -946,7 +952,6 @@ DO:
             
         if v-place = 2 then 
         do:
-            /*        DEFINE VARIABLE l-dircrt AS LOGICAL. /* Для ответа на создание директории */*/
             IF trim(v-ftp-address) = '':U
                 THEN 
             DO:
@@ -1046,6 +1051,7 @@ DO:
         ASSIGN
             v-directory
             v-place
+            fi-pack-lim = 90
             date_from
             date_to
             tb-inkass-pay-code
@@ -1065,11 +1071,10 @@ DO:
             v-per
             code_pool
             v-inf-bonus
-            
-            
-            .
-        date_exp_from = date_from.
-        date_exp_to   = date_to.
+        .
+        assign
+        date_exp_from = date_from
+        date_exp_to   = date_to
         /*!!!*/
         .
  
@@ -1220,6 +1225,7 @@ DO:
                 , v-place 
                 , ""
                 , "" 
+                , fi-pack-lim
                 , date_exp_from  
                 , date_exp_to
             , p-range 
@@ -1240,6 +1246,7 @@ DO:
                 , v-place
                 , v-login
                 , v-password
+                , fi-pack-lim
                 , date_exp_from  
                 , date_exp_to
                 , p-range 
@@ -1736,6 +1743,7 @@ PROCEDURE flt-load :
     define variable v-obj-code    as integer   no-undo .
     define variable i             as integer   no-undo .
     define variable v-dc-help     as char      no-undo .
+    define variable n-i           as integer   no-undo .
     
     
     do
@@ -1965,6 +1973,7 @@ PROCEDURE flt-save :
             v-inf-bonus
             v-dc-card
             v-directory
+            fi-pack-lim = 90
             .
 
 
