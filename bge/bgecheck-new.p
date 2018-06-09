@@ -25,6 +25,7 @@ define input parameter v-ftp-adress        as character            no-undo.
 define input parameter v-place             as integer              no-undo.
 define input parameter v-login             as character            no-undo.
 define input parameter v-password          as character            no-undo.
+define input parameter p-pack-lim          as int64                no-undo. /* после 90Mb закрываем пакет и делаем новый; на входе целое число мегабайт */
 define input parameter v-date-from         as date      INIT ?     no-undo.
 define input parameter v-date-to           as date      INIT ?     no-undo.
 define input parameter v-range             as integer              no-undo.
@@ -58,6 +59,7 @@ define variable vss-description as character no-undo init "Экспорт чеков".
 &scop discnt-target-code string(buf_chk-discnt.line-type)
 &scop discnt-v-code string(buf_chk-discnt.value-type)
 define variable   log-file-name  as char no-undo.
+define VARIABLE   bonus-relation as char no-undo .
 
 DEFINE TEMP-TABLE tt-cash-pay NO-UNDO
     FIELD pay-code  LIKE cash-pay.cdpay-code
@@ -133,14 +135,14 @@ end .
 
     case v-range:
         when 1 then run init-temphost.
-        when 2 then do :     /* Экспорт по текущей фирме */
+        when 2 then do: /* Экспорт по текущей фирме */
                 run init-temphost.
                 for each temp-obj where temp-obj.host-code <> v-host-code :
                     delete temp-obj.
                 end.
         end.
-        when 3 then do:     /* Экспорт по списку объектов */
-                for each temp-obj : 
+        when 3 then do: /* Экспорт по списку объектов */
+                for each temp-obj :
                     delete temp-obj.
                 end.
                 do v-obj-counter = 1 to num-entries ( v-obj-list ) / 2 :
@@ -186,7 +188,6 @@ end .
         end.
     end case.
 
-
     define variable v-full-path as character no-undo .
          if v-place = 1 then v-full-path = v-ftp-adress .
     else if v-place = 2 then v-full-path = session:temp-directory .
@@ -203,17 +204,21 @@ end .
     define variable v-trim-zero  as character no-undo.
     define variable v-par-type   as character no-undo.
     define variable v-must-open  as logical no-undo. /* true: требуется открыть выходной поток */
+    define variable v-is-started as logical no-undo. /* true: файл был создан (т.е. были магазины и чеки для выгрузки) */ 
     DEFINE VARIABLE v-finded-pay-type AS LOGICAL   NO-UNDO.
     define variable v-is-ok      as logical no-undo .
     define variable v-d-card     as character no-undo.
-    define variable v-pack-lim   as int64 initial 94371840 no-undo . /* после 90Mb закрываем пакет и делаем новый */
     define variable v-manual-add as character no-undo .
     define buffer buf_chk-doc     for ub.chk-doc .
     define buffer buf_chk-pay     for ub.chk-pay .
     define buffer buf_tt-cash-pay for tt-cash-pay .
     define buffer buf_c-chk-doc   for ub.c-chk-doc .
 
+    if p-pack-lim > 0 then 
+      p-pack-lim = p-pack-lim * 1024 * 1024 . /* 90 * 1024 * 1024 = 94371840 байт */
+
     v-must-open = true.
+    v-is-started = false.
     for each temp-obj :
       do:
         run gbl/conf-rd.p (
@@ -328,6 +333,7 @@ end .
         , input substitute( "................с параметрами: ... список объектов: &1", v-obj-list )
           ).
           output stream stmXMLOut to value( v-xml-file-name + "xm1" ) convert target "1251" .
+          v-is-started = true .
           run bge-xml-write-header-check in this-procedure
           (input "check"
         , input {&version-string}
@@ -369,7 +375,7 @@ end .
       
         /* заголовок чека */
         v-d-card = if v-trim-zero = "yes":U then left-trim(buf_chk-doc.d-card, "0":U) else buf_chk-doc.d-card .
-         
+        
         run wp-xmltagopen  in this-procedure ( input 1, input "check"     , input "" ).
         run wp-xmltagopen  in this-procedure ( input 2, input "checkHead" , input "" ).
         run wp-xmltagput   in this-procedure ( input 3, input "ID"        , input string( buf_chk-doc.doc-code ), input 0 ).
@@ -415,7 +421,12 @@ end .
                      при отображении в фильтр передаётся только doc-code;
                      поле chip-num заполняется нарастающими значениями.
         */
-        v-manual-add = "?" .
+        /* 07/VI-2018 в выгрузке значение &#63 (символ "?"), т.е. записи в истории нет.
+                      Эта ситуация в постановке задачи и в методах проверки задачи отсутствует.
+                      Поэтому при отсутствии истории выгружаем "0", чтобы уменьшить заказчику
+                      количество подозрительных чеков и количество головной боли на их перепроверку.
+        */
+        v-manual-add = "0" .
         for each buf_c-chk-doc no-lock
            where buf_c-chk-doc.doc-code = buf_chk-doc.doc-code
               by buf_c-chk-doc.chip-num :
@@ -425,7 +436,7 @@ end .
         run wp-xmltagput   in this-procedure ( input 3, input "manual", v-manual-add, input 0 ). 
         run wp-xmltagclose in this-procedure ( input 2, input "checkHead").
         /* end_of заголовок чека */      
-        
+    
         /* товары, оплаты, скидки, и т.п. */
         run export-checks-by-object in this-procedure
         (input buf_chk-doc.doc-code
@@ -440,41 +451,27 @@ end .
                     , temp-obj.obj-type
                     , temp-obj.obj-code
                     , return-value
-                    , error-status :get-message(1)
-                    , error-status :get-message(2)
+                    , error-status:get-message(1)
+                    , error-status:get-message(2)
                     )
                     ).
         end.
         run wp-xmltagclose in this-procedure ( input 1, input "check").
-               
+
         /* как только свыше 90Mb - переоткрываем поток */
-        if seek(stmxmlout) > v-pack-lim then do:
-          output stream stmxmlout close.
-          run xml-bge-write-footer in this-procedure (
-            input v-xml-file-name
-          ).
-          run wp-XMLWriteLog in this-procedure (
-        input v-log-file-name
-        , input 1
-        , input substitute( "Данные выгружены в файл &1"
-        , replace( v-xml-file-name, "/", "\" ) + "xml"
-        )
-          ).
-          run wp-XMLWriteLog in this-procedure (
-        input v-log-file-name
-        , input 1
-        , input "&DLine"
-          ).
-          v-must-open = true.
+        if p-pack-lim > 0 then do:
+          if seek(stmxmlout) > p-pack-lim then do:
+            run close-xml-out in this-procedure.
+            v-must-open = true.
+          end .
         end .
       end . /* end_of for_each chk-doc */
     end.  /* for each temp-obj */
-    output stream stmXMLOut close.
+    
+    if v-is-started then do:
+    run close-xml-out in this-procedure.
         /*НАДО УБЕДИТЬСЯ ЧТО ВСЕ РАЗМАЗАНО!!*/
-    
-    
-    
-    if  v-place  = 2 then
+                 if  v-place  = 2 then
 do:
    
         run ftp-send in this-procedure (input (v-xml-file-name)) no-error.
@@ -491,11 +488,68 @@ do:
         end.
    
 end.
-        
+
+    end. /* end_of v-is-started */
+    else do:
+      run wp-XMLWriteLog in this-procedure (
+        input v-log-file-name
+        , input 1
+        , input "&DLine"
+      ).
+      run wp-XMLWriteLog in this-procedure (
+                    input v-log-file-name
+                    , input 1
+                    , input "*** Ошибка выгрузки чеков. Отсутствуют чеки, подлежащие выгрузке. Файл не был выгружен."
+                    ).
+          run wp-XMLWriteLog in this-procedure (
+            input v-log-file-name
+            , input 1
+            , input substitute( "................с параметрами: Дата с: &1, дата по: &2"
+            , v-date-from
+            , v-date-to
+            )
+      ).
+      run wp-XMLWriteLog in this-procedure (
+        input v-log-file-name
+        , input 1
+        , input substitute( "................с параметрами: ... список объектов: &1", v-obj-list )
+      ).
+    end.
+    
+
     { gbl/stopwork.i }
 end.
 
 /*==========================================================================*/
+procedure close-xml-out private:
+  output stream stmXMLOut close.
+  
+  run xml-bge-write-footer in this-procedure (
+            input v-xml-file-name
+          ) no-error .
+  if error-status:error then do:
+    run wp-XMLWriteLog in this-procedure (
+                    input v-log-file-name
+                    , input 1
+                    , input substitute( "*** Ошибка выгрузки чеков. Ошибка при закрытии файла выгрузки. &1."
+                    , return-value
+                    )
+                    ).
+  end.
+          run wp-XMLWriteLog in this-procedure (
+        input v-log-file-name
+        , input 1
+        , input substitute( "Данные выгружены в файл &1xml"
+        , replace( v-xml-file-name, "/", "\" )
+        )
+          ).
+          run wp-XMLWriteLog in this-procedure (
+        input v-log-file-name
+        , input 1
+        , input "&DLine"
+          ).
+end procedure. /* end_of close-xml-out */
+
 procedure export-checks-by-object :
     do
         on error undo, return error
@@ -777,24 +831,7 @@ DEFINE BUFFER buf_chk-discnt   for ub.chk-discnt .
     end. /* end_of if_v-inf-bonus */
   end.  
 end.
-/*          
-        define input parameter p-obj-type       as character    no-undo.
-        define input parameter p-obj-code       as integer      no-undo.
-        define input parameter p-date-from      as date         no-undo.
-        define input parameter p-date-to        as date         no-undo.
-        define input parameter p-pay-type-list  as character    no-undo.
-        define input parameter p-need-pay-type  as logical      no-undo.
-        define input parameter p-trim-zero       as character no-undo.
 
-
-        define variable conf-attr         as character no-undo.
-        define variable conf-par          as character no-undo.
-        define variable par-type          as character no-undo.
-        define variable i                 as integer   init 1 no-undo .
-        define variable v-num             as integer   no-undo.
-        define variable v-dcard-num       as char      no-undo.
-        define variable v-qnty-bonus      as decimal   no-undo.
-  */  
 end procedure. /* export-checks-by-object */
 
 

@@ -23,6 +23,7 @@ define variable v-ftp-address      as char      no-undo .
 define variable v-per              as integer   no-undo .
 define variable v-login            as char      no-undo .
 define variable v-password         as char      no-undo .
+define variable p-pack-lim         as int64     no-undo. /* после 90Mb закрываем пакет и делаем новый; 90 * 1024 * 1024 = 94371840 */
 define variable date_exp_from      as date      no-undo.
 define variable date_exp_to        as date      no-undo.
 define variable p-range            as integer   no-undo.
@@ -93,6 +94,8 @@ do:
         tb-rs-2            = entry(21,v-param-list,{&delim-par})
         tb-chk-type = entry(22,v-param-list,{&delim-par})
         no-error.
+        p-pack-lim         = 90 no-error.
+        if p-pack-lim = ? then p-pack-lim = 0.
         
 end.
    
@@ -129,6 +132,8 @@ do :
          tb-chk-type = entry(24,v-param-list,{&delim-par})
        no-error
         .          
+        p-pack-lim         = 90 no-error.
+        if p-pack-lim = ? then p-pack-lim = 0.
 
                                        
               
@@ -143,6 +148,7 @@ if v-place = 1  then
         , v-place 
         , ""
         , "" 
+        , p-pack-lim
         , date_exp_from  
         , date_exp_to
         , p-range 
@@ -164,6 +170,7 @@ if v-place = 2  then
         , v-place
         , v-login
         , v-password
+        , p-pack-lim
         , date_exp_from  
         , date_exp_to
         , p-range 
