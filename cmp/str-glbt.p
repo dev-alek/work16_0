@@ -570,8 +570,11 @@ attr-srv-auth-ASU
 "egais-fsrar,egais-utm,egais-ver-xsd,egais-inn,egais-exsys"
 attr-egais-host }
 
-
-
+ /*набор опций работы с документами МЦ*/
+{ cmp/cr-prep.i 1 attr-mercur                 mercur                  " " mercur }
+{ cmp/cr-prepc.i 1 prop-list-attr-mercur
+"apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server"
+attr-mercur }
 /* сюда добавлять новые названия атрибутов объектов TH */
 
 run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-code 'rrn-vbrr,cpdoc':U" ) .
@@ -619,6 +622,7 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-cashpays}~
 ,{&bef-attr-wthdoc}~
 ,{&bef-attr-wthdoc_obj}~
+,{&bef-attr-mercur}~
 ,{&bef-attr-wthrep}~
 ,{&bef-attr-rum}~
 ,{&bef-attr-rum_obj}~
