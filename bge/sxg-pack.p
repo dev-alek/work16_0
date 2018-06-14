@@ -489,12 +489,15 @@ procedure file-s-g :
             v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
             v-file-source-all = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".*":U
           .
+          
           os-command silent
             value( v-arh-name )
-            value( "-add -path=none -span=700 ":U )
+            value( "-add -path=none ":U )
             value( v-file-source-arj )
             value( v-file-source-all )
+            value( ">> pkzipc-log.txt" )
           .
+          run write-to-log in p-parent-handle ( substitute( "Файл &1 заархивирован в &2)", v-file-source, v-file-source-arj ) ).
         end.
       end.
         end.
@@ -520,6 +523,7 @@ procedure file-s-g :
           return error return-value .
         end.
       end.
+      run write-to-log in p-parent-handle ( substitute( "Копирование файла &1 во временную папку &2)", v-file-source-arj, v-file-temp ) ).
       os-copy value( v-file-source-arj ) value( v-file-temp ).
       if os-error <> 0 then do:
         run adm/os-err.p ( output v-err-mess ).
@@ -533,6 +537,7 @@ procedure file-s-g :
         end.
       end.
       if p-arch = true then do:
+        run write-to-log in p-parent-handle ( substitute( "Удаление файла &1)", v-file-source-arj ) ).
         run del-file ( input v-file-source-arj ) no-error .
         if error-status :error then do:
           return error return-value .
@@ -545,6 +550,7 @@ procedure file-s-g :
         end.
       end.
 
+      run write-to-log in p-parent-handle ( substitute( "Перенос файла из временной папки &1 в &2)", v-file-temp, v-file-target ) ).
       run ren-file ( input v-file-temp
                     ,input v-file-target
                    ) no-error .
