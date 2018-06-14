@@ -1,11 +1,11 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -83,30 +83,30 @@ define variable vss-description as character no-undo init "Диалог редактирования
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help RECT-from RECT-to ~
 f-date-1 l-loc-hour-1 l-loc-min-1 l-loc-sec-1 f-date-2 l-loc-hour-2 ~
 l-loc-min-2 l-loc-sec-2 F-shift-num-1 F-shift-num-2 f-z-count-1 f-z-count-2 ~
-F-chk-num-1 F-chk-num-2 F-delim-11 F-delim-12 F-delim-21 F-delim-22
+F-chk-num-1 F-chk-num-2 F-delim-11 F-delim-12 F-delim-21 F-delim-22 
 &Scoped-Define DISPLAYED-OBJECTS f-date-1 l-loc-hour-1 l-loc-min-1 ~
 l-loc-sec-1 f-date-2 l-loc-hour-2 l-loc-min-2 l-loc-sec-2 F-shift-num-1 ~
 F-shift-num-2 f-z-count-1 f-z-count-2 F-chk-num-1 F-chk-num-2 F-delim-11 ~
-F-delim-12 F-delim-21 F-delim-22
+F-delim-12 F-delim-21 F-delim-22 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
 &Scoped-define List-1 l-loc-hour-1 l-loc-min-1 l-loc-sec-1 l-loc-hour-2 ~
-l-loc-min-2 l-loc-sec-2
+l-loc-min-2 l-loc-sec-2 
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -118,109 +118,109 @@ l-loc-min-2 l-loc-sec-2
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE F-chk-num-1 LIKE ub.chk-doc.chk-num
-     LABEL "Номер чека"
-     VIEW-AS FILL-IN
-     SIZE 8 BY 1 NO-UNDO.
+DEFINE VARIABLE F-chk-num-1 LIKE chk-doc.chk-num
+     LABEL "Номер чека" 
+     VIEW-AS FILL-IN 
+     SIZE 15 BY 1 NO-UNDO.
 
-DEFINE VARIABLE F-chk-num-2 LIKE ub.chk-doc.chk-num
-     LABEL "Номер чека"
-     VIEW-AS FILL-IN
-     SIZE 8 BY 1 NO-UNDO.
+DEFINE VARIABLE F-chk-num-2 LIKE chk-doc.chk-num
+     LABEL "Номер чека" 
+     VIEW-AS FILL-IN 
+     SIZE 15 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-date-1 AS DATE FORMAT "99/99/9999":U
-     LABEL "Дата"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-date-1 AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата" 
+     VIEW-AS FILL-IN 
      SIZE 12 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-date-2 AS DATE FORMAT "99/99/9999":U
-     LABEL "Дата"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-date-2 AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата" 
+     VIEW-AS FILL-IN 
      SIZE 12 BY 1 NO-UNDO.
 
-DEFINE VARIABLE F-delim-11 AS CHARACTER FORMAT "X(256)":U INITIAL ":"
-      VIEW-AS TEXT
+DEFINE VARIABLE F-delim-11 AS CHARACTER FORMAT "X(256)":U INITIAL ":" 
+      VIEW-AS TEXT 
      SIZE 1 BY .83 NO-UNDO.
 
-DEFINE VARIABLE F-delim-12 AS CHARACTER FORMAT "X(256)":U INITIAL ":"
-      VIEW-AS TEXT
+DEFINE VARIABLE F-delim-12 AS CHARACTER FORMAT "X(256)":U INITIAL ":" 
+      VIEW-AS TEXT 
      SIZE 1 BY .67 NO-UNDO.
 
-DEFINE VARIABLE F-delim-21 AS CHARACTER FORMAT "X(256)":U INITIAL ":"
-      VIEW-AS TEXT
+DEFINE VARIABLE F-delim-21 AS CHARACTER FORMAT "X(256)":U INITIAL ":" 
+      VIEW-AS TEXT 
      SIZE 1 BY .67 NO-UNDO.
 
-DEFINE VARIABLE F-delim-22 AS CHARACTER FORMAT "X(256)":U INITIAL ":"
-      VIEW-AS TEXT
+DEFINE VARIABLE F-delim-22 AS CHARACTER FORMAT "X(256)":U INITIAL ":" 
+      VIEW-AS TEXT 
      SIZE 1 BY .67 NO-UNDO.
 
-DEFINE VARIABLE F-shift-num-1 LIKE ub.chk-doc.shift-num
-     LABEL "№ смены"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE F-shift-num-1 LIKE chk-doc.shift-num
+     LABEL "№ смены" 
+     VIEW-AS FILL-IN 
      SIZE 4.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE F-shift-num-2 LIKE ub.chk-doc.shift-num
-     LABEL "№ смены"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE F-shift-num-2 LIKE chk-doc.shift-num
+     LABEL "№ смены" 
+     VIEW-AS FILL-IN 
      SIZE 4.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-z-count-1 AS INTEGER FORMAT ">>>>>>9":U INITIAL 0
-     LABEL "№ Z-отчета"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-z-count-1 AS INTEGER FORMAT ">>>>>>9":U INITIAL 0 
+     LABEL "№ Z-отчета" 
+     VIEW-AS FILL-IN 
      SIZE 11.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-z-count-2 AS INTEGER FORMAT ">>>>>>9":U INITIAL 0
-     LABEL "№ Z-отчета"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-z-count-2 AS INTEGER FORMAT ">>>>>>9":U INITIAL 0 
+     LABEL "№ Z-отчета" 
+     VIEW-AS FILL-IN 
      SIZE 11.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE l-loc-hour-1 AS INTEGER FORMAT "99":U INITIAL 0
-     LABEL "Время"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE l-loc-hour-1 AS INTEGER FORMAT "99":U INITIAL 0 
+     LABEL "Время" 
+     VIEW-AS FILL-IN 
      SIZE 3.25 BY 1 TOOLTIP "Стрелка вверх, вниз - изменение часа" NO-UNDO.
 
-DEFINE VARIABLE l-loc-hour-2 AS INTEGER FORMAT "99":U INITIAL 0
-     LABEL "Время"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE l-loc-hour-2 AS INTEGER FORMAT "99":U INITIAL 0 
+     LABEL "Время" 
+     VIEW-AS FILL-IN 
      SIZE 3.25 BY 1 TOOLTIP "Стрелка вверх, вниз - изменение часа" NO-UNDO.
 
-DEFINE VARIABLE l-loc-min-1 AS INTEGER FORMAT "99":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE l-loc-min-1 AS INTEGER FORMAT "99":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 3.25 BY 1 TOOLTIP "Стрелка вверх, вниз - изменение минут" NO-UNDO.
 
-DEFINE VARIABLE l-loc-min-2 AS INTEGER FORMAT "99":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE l-loc-min-2 AS INTEGER FORMAT "99":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 3.25 BY 1 TOOLTIP "Стрелка вверх, вниз - изменение минут" NO-UNDO.
 
-DEFINE VARIABLE l-loc-sec-1 AS INTEGER FORMAT "99":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE l-loc-sec-1 AS INTEGER FORMAT "99":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 3.25 BY 1 TOOLTIP "Стрелка вверх, вниз - изменение секунд" NO-UNDO.
 
-DEFINE VARIABLE l-loc-sec-2 AS INTEGER FORMAT "99":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE l-loc-sec-2 AS INTEGER FORMAT "99":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 3.25 BY 1 TOOLTIP "Стрелка вверх, вниз - изменение секунд" NO-UNDO.
 
 DEFINE RECTANGLE RECT-from
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 47 BY 7.
 
 DEFINE RECTANGLE RECT-to
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 47 BY 7.
 
 
@@ -238,16 +238,20 @@ DEFINE FRAME Dialog-Frame
      l-loc-hour-2 AT ROW 3 COL 78.5 COLON-ALIGNED
      l-loc-min-2 AT ROW 3 COL 83.5 COLON-ALIGNED NO-LABEL
      l-loc-sec-2 AT ROW 3 COL 88.5 COLON-ALIGNED NO-LABEL
-     F-shift-num-1 AT ROW 4.5 COL 14 COLON-ALIGNED
+     F-shift-num-1 AT ROW 4.5 COL 14 COLON-ALIGNED HELP
+          ""
           LABEL "№ смены"
-     F-shift-num-2 AT ROW 4.5 COL 62 COLON-ALIGNED
+     F-shift-num-2 AT ROW 4.5 COL 62 COLON-ALIGNED HELP
+          ""
           LABEL "№ смены"
      f-z-count-1 AT ROW 6 COL 14 COLON-ALIGNED
      f-z-count-2 AT ROW 6 COL 62 COLON-ALIGNED
-     F-chk-num-1 AT ROW 7.5 COL 14 COLON-ALIGNED
-          LABEL "Номер чека" FORMAT "->>>>>>9"
-     F-chk-num-2 AT ROW 7.5 COL 62 COLON-ALIGNED
-          LABEL "Номер чека" FORMAT "->>>>>>9"
+     F-chk-num-1 AT ROW 7.5 COL 14 COLON-ALIGNED HELP
+          ""
+          LABEL "Номер чека" FORMAT "->>>>>>>>>>9"
+     F-chk-num-2 AT ROW 7.5 COL 62 COLON-ALIGNED HELP
+          ""
+          LABEL "Номер чека" FORMAT "->>>>>>>>>>9"
      F-delim-11 AT ROW 3.17 COL 34 COLON-ALIGNED NO-LABEL
      F-delim-12 AT ROW 3.17 COL 39 COLON-ALIGNED NO-LABEL
      F-delim-21 AT ROW 3.17 COL 82 COLON-ALIGNED NO-LABEL
@@ -255,8 +259,8 @@ DEFINE FRAME Dialog-Frame
      RECT-from AT ROW 2.25 COL 1
      RECT-to AT ROW 2.25 COL 48.5
      SPACE(0.49) SKIP(0.03)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры последнего чека"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -276,15 +280,15 @@ DEFINE FRAME Dialog-Frame
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
-                                                                        */
-ASSIGN
+   FRAME-NAME                                                           */
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* SETTINGS FOR FILL-IN F-chk-num-1 IN FRAME Dialog-Frame
-   LIKE = ub.chk-doc.chk-num EXP-LABEL EXP-FORMAT                       */
+   LIKE = ub.chk-doc.chk-num EXP-LABEL EXP-FORMAT EXP-SIZE              */
 /* SETTINGS FOR FILL-IN F-chk-num-2 IN FRAME Dialog-Frame
-   LIKE = ub.chk-doc.chk-num EXP-LABEL EXP-FORMAT                       */
+   LIKE = ub.chk-doc.chk-num EXP-LABEL EXP-FORMAT EXP-SIZE              */
 /* SETTINGS FOR FILL-IN F-shift-num-1 IN FRAME Dialog-Frame
    LIKE = ub.chk-doc.shift-num EXP-LABEL EXP-SIZE                       */
 /* SETTINGS FOR FILL-IN F-shift-num-2 IN FRAME Dialog-Frame
@@ -304,7 +308,7 @@ ASSIGN
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -615,7 +619,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -650,7 +654,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -669,18 +673,18 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-date-1 l-loc-hour-1 l-loc-min-1 l-loc-sec-1 f-date-2 l-loc-hour-2
-          l-loc-min-2 l-loc-sec-2 F-shift-num-1 F-shift-num-2 f-z-count-1
-          f-z-count-2 F-chk-num-1 F-chk-num-2 F-delim-11 F-delim-12 F-delim-21
-          F-delim-22
+  DISPLAY f-date-1 l-loc-hour-1 l-loc-min-1 l-loc-sec-1 f-date-2 l-loc-hour-2 
+          l-loc-min-2 l-loc-sec-2 F-shift-num-1 F-shift-num-2 f-z-count-1 
+          f-z-count-2 F-chk-num-1 F-chk-num-2 F-delim-11 F-delim-12 F-delim-21 
+          F-delim-22 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-Help RECT-from RECT-to f-date-1 l-loc-hour-1
-         l-loc-min-1 l-loc-sec-1 f-date-2 l-loc-hour-2 l-loc-min-2 l-loc-sec-2
-         F-shift-num-1 F-shift-num-2 f-z-count-1 f-z-count-2 F-chk-num-1
-         F-chk-num-2 F-delim-11 F-delim-12 F-delim-21 F-delim-22
+  ENABLE B-exit b-quit B-Help RECT-from RECT-to f-date-1 l-loc-hour-1 
+         l-loc-min-1 l-loc-sec-1 f-date-2 l-loc-hour-2 l-loc-min-2 l-loc-sec-2 
+         F-shift-num-1 F-shift-num-2 f-z-count-1 f-z-count-2 F-chk-num-1 
+         F-chk-num-2 F-delim-11 F-delim-12 F-delim-21 F-delim-22 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -689,7 +693,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 ASSIGN
 f-date-1 = p-date-1
@@ -825,7 +829,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -917,3 +921,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
