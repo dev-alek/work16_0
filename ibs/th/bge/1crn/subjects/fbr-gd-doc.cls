@@ -217,13 +217,11 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
 
       
       def var brutto as decimal no-undo.
-      def var netto as decimal no-undo.
-      
+      def var netto as decimal no-undo.    
       assign
         brutto = buf_fbr-line.fact-qnty
         netto = (buf_fbr-line.fact-qnty / buf_recipe-gds.brutto-qnty) * buf_recipe-gds.qnty
-      .
-      
+      .   
       sw:start-element ("ingr").
         write-data-element ("dish-code", string-mth (buf_recipe.gds-code)).
         write-data-element ("rcp-code", buf_recipe.recipe-code).
@@ -305,8 +303,10 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
     def var v-str as character no-undo.
     
     if inValue = ?
-      then v-str = "0".
-    
+    then do:
+        v-str = "0".
+        return v-str.
+    end.
     if string (inValue) begins "."
       then v-str = "0" + string (inValue).
       else v-str = string (inValue).
