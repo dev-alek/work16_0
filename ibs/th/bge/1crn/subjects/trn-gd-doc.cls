@@ -428,6 +428,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         infoSecObjFirst = infoSecsObj:GetInfoSectionProp(1).
         do ii = 1 to infoSecsObj:SectionNum:
           infoSecObj = infoSecsObj:GetInfoSectionProp(ii).
+          if infoSecObj:FactQnty = 0  or infoSecObj:FactQnty = ?
+            then next.
           sw:start-element ("sc").
             write-data-element ("sc-num", string (infoSecObj:SectionName)).
             write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
