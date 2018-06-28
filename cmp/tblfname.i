@@ -601,6 +601,8 @@ Creation date: 01/29/07
 &glob table_c-gds-hist-full '{&bef-table_c-gds-hist-full}':U
 &glob bef-table_c-gds-host-attr-full ИСТОРИЯ атрибутов товара на фирме
 &glob table_c-gds-host-attr-full '{&bef-table_c-gds-host-attr-full}':U
+&glob bef-table_c-gds-mercury-full c-gds-mercury
+&glob table_c-gds-mercury-full '{&bef-table_c-gds-mercury-full}':U
 &glob bef-table_c-gds-obj-full c-gds-obj
 &glob table_c-gds-obj-full '{&bef-table_c-gds-obj-full}':U
 &glob bef-table_c-gds-obj-attr-full История атрибутов товара на объекте
@@ -931,6 +933,8 @@ Creation date: 01/29/07
 &glob table_c-variant-delivery-full '{&bef-table_c-variant-delivery-full}':U
 &glob bef-table_c-varianty-delivery-gds-obj-full История вариантов доставки тов. на об
 &glob table_c-varianty-delivery-gds-obj-full '{&bef-table_c-varianty-delivery-gds-obj-full}':U
+&glob bef-table_c-vsd-full c-vsd
+&glob table_c-vsd-full '{&bef-table_c-vsd-full}':U
 &glob bef-table_c-wealth-full c-wealth
 &glob table_c-wealth-full '{&bef-table_c-wealth-full}':U
 &glob bef-table_c-wi-mode-full История режимов
@@ -1505,6 +1509,10 @@ Creation date: 01/29/07
 &glob table_gds-grp-obj-attr-full '{&bef-table_gds-grp-obj-attr-full}':U
 &glob bef-table_gds-host-attr-full Атр-т тов. на фирме
 &glob table_gds-host-attr-full '{&bef-table_gds-host-attr-full}':U
+&glob bef-table_gds-mercury-full gds-mercury
+&glob table_gds-mercury-full '{&bef-table_gds-mercury-full}':U
+&glob bef-table_gds-mercury-attr-full Аттр. справ. соот. TH-Mercury
+&glob table_gds-mercury-attr-full '{&bef-table_gds-mercury-attr-full}':U
 &glob bef-table_gds-obj-full Товар на объекте
 &glob table_gds-obj-full '{&bef-table_gds-obj-full}':U
 &glob bef-table_gds-obj-attr-full Атр-т тов. на объекте
@@ -2371,6 +2379,10 @@ Creation date: 01/29/07
 &glob table_variant-delivery-attr-full '{&bef-table_variant-delivery-attr-full}':U
 &glob bef-table_varianty-delivery-gds-obj-full Варианты доставки
 &glob table_varianty-delivery-gds-obj-full '{&bef-table_varianty-delivery-gds-obj-full}':U
+&glob bef-table_vsd-full vsd
+&glob table_vsd-full '{&bef-table_vsd-full}':U
+&glob bef-table_vsd-attr-full Аттрибуты ВСД
+&glob table_vsd-attr-full '{&bef-table_vsd-attr-full}':U
 &glob bef-table_wealth-full МЦ
 &glob table_wealth-full '{&bef-table_wealth-full}':U
 &glob bef-table_wealth-attr-full Атрибуты для wealth

@@ -65,12 +65,26 @@ define variable vss-description as character no-undo init "Коды объектов внешней
 { cmp/r-pril.i }
 { gbl/prn-lib.i }
 { gbl/fltopend.i defproc }
+
+
+define variable g#report-num as integer no-undo .
+define stream OutStr-html .
+
+define variable i as integer no-undo.
+
+define variable v-cli-obj-type as character no-undo.
+define variable v-cli-obj-code as character no-undo.
 define variable sort-column-name as character no-undo.
 define variable filter-point     as character NO-UNDO INIT "esysclis".
 define variable filter-label     as character NO-UNDO INIT "Коды объектов внешней системы".
 define variable filter-point0     as character NO-UNDO INIT "esysclis".
 define variable filter-label0     as character NO-UNDO INIT "Коды объектов внешней системы".
 DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
+
+define variable v-full-path-RepView as character no-undo.   /* Полный путь к файлу Просмотровщика (отчётов) */
+define variable v-file-name-rep-htm as character no-undo.   /* Полный путь к файлу отчёта */
+
+define variable v-report-name as character no-undo.         /* Наименование отчёта */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -91,7 +105,7 @@ DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
 &Scoped-define INTERNAL-TABLES X_ext-classif X_clients
 
 /* Definitions for BROWSE br-esys-cli                                   */
-&Scoped-define FIELDS-IN-QUERY-br-esys-cli mark-string(recid(X_ext-classif), v-rid-list) X_ext-classif.KEY#_one get-esys-name(X_ext-classif.KEY#_one) X_ext-classif.charkey_one X_ext-classif.KEY#_two X_clients.obj-type X_clients.obj-code X_clients.obj-name
+&Scoped-define FIELDS-IN-QUERY-br-esys-cli mark-string(recid(X_ext-classif), v-rid-list) X_ext-classif.KEY#_one get-esys-name(X_ext-classif.KEY#_one) X_ext-classif.charkey_one X_ext-classif.charkey_three X_clients.obj-type X_clients.obj-code X_clients.obj-name   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-esys-cli
 &Scoped-define SELF-NAME br-esys-cli
 &Scoped-define QUERY-STRING-br-esys-cli FOR EACH X_ext-classif NO-LOCK, ~
@@ -109,8 +123,8 @@ DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark B-sel b-add b-del b-cli b-esys ~
-b-sch b-print B-Help br-esys-cli mark-num
-&Scoped-Define DISPLAYED-OBJECTS mark-num
+b-look b-sch b-print B-Help fill-cli-vn fill-cli-th br-esys-cli mark-num 
+&Scoped-Define DISPLAYED-OBJECTS fill-cli-vn fill-cli-th mark-num 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -169,8 +183,12 @@ DEFINE BUTTON B-Help
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON b-look 
+     LABEL "&Просмотр" 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
 DEFINE BUTTON b-print
@@ -189,6 +207,16 @@ DEFINE BUTTON b-sch
 DEFINE BUTTON B-sel AUTO-GO
      LABEL "Вы&бор"
      SIZE 10 BY 1.
+
+DEFINE VARIABLE fill-cli-th AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Код объекта/клиента в TH" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE fill-cli-vn AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Код объекта/клиента во внешней системе" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT
@@ -215,7 +243,7 @@ X_clients.obj-code COLUMN-LABEL "Код!объекта" FORMAT ">>>>>>>>9"
 X_clients.obj-name COLUMN-LABEL "Название объекта" FORMAT "X(60)"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 98.3 BY 20.37 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 116 BY 17.75 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -228,14 +256,17 @@ DEFINE FRAME Dialog-Frame
      b-del AT ROW 1 COL 41 WIDGET-ID 16
      b-cli AT ROW 1 COL 51 WIDGET-ID 2
      b-esys AT ROW 1 COL 61 WIDGET-ID 18
-     b-sch AT ROW 1 COL 86 WIDGET-ID 12
-     b-print AT ROW 1 COL 89 WIDGET-ID 10
-     B-Help AT ROW 1 COL 95
-     br-esys-cli AT ROW 2.87 COL 1.5 WIDGET-ID 100
+     b-look AT ROW 1 COL 71.13 WIDGET-ID 24
+     b-sch AT ROW 1 COL 102.5 WIDGET-ID 12
+     b-print AT ROW 1 COL 106 WIDGET-ID 10
+     B-Help AT ROW 1 COL 113
+     fill-cli-vn AT ROW 3 COL 40.5 COLON-ALIGNED WIDGET-ID 20
+     fill-cli-th AT ROW 3 COL 93 COLON-ALIGNED WIDGET-ID 22
+     br-esys-cli AT ROW 5.5 COL 1.5 WIDGET-ID 100
      mark-num AT ROW 1 COL 12.5 COLON-ALIGNED NO-LABEL WIDGET-ID 8
-     SPACE(79.30) SKIP(21.26)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     SPACE(97.00) SKIP(21.41)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE ""
          CANCEL-BUTTON b-quit.
 
@@ -261,7 +292,7 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB br-esys-cli B-Help Dialog-Frame */
+/* BROWSE-TAB br-esys-cli fill-cli-th Dialog-Frame */
 ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
@@ -386,6 +417,35 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-look
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-look Dialog-Frame
+ON CHOOSE OF b-look IN FRAME Dialog-Frame /* Просмотр */
+DO:
+define VARIABLE v-ok as LOGICAL no-undo .
+    if ( available X_ext-classif ) then do:
+      
+      find first ub.ext-system no-lock where
+      ub.ext-system.esys-id = integer(X_ext-classif.KEY#_one) no-error .
+      
+run ref/esysclii.w (INPUT parparentproc
+                   ,input {&lookup}
+                   ,input substitute("Добавление кода объекта во внешней системе &1 для &2&3"
+                              ,ub.ext-system.esys-name
+                              ,X_clients.obj-type
+                              ,X_clients.obj-code)
+                   ,input INTEGER (ub.ext-system.esys-type)
+                   ,input-output X_ext-classif.CharKey_One
+                   ,input-output X_ext-classif.CharKey_Three
+                   ,input-output X_ext-classif.CharKey_Two
+                   ,output v-ok) no-error.
+if not v-ok then return NO-APPLY.
+end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME B-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-mark Dialog-Frame
 ON CHOOSE OF B-mark IN FRAME Dialog-Frame /* * */
@@ -416,8 +476,23 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
 ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
 DO:
+    
+    
+      run get-full-path-RepViewer(output v-full-path-RepView).   
+  
+run get-report-num in parParentProc(output g#report-num).
+
+ run define-full-path-Report(input g#report-num, output v-file-name-rep-htm).
+
+run create-file(v-file-name-rep-htm). 
+    
+    
   run proc-b-print IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  
+    run search-full-path-Report(input v-file-name-rep-htm).
+run Report-Viewer(input v-full-path-RepView, input v-file-name-rep-htm).
+  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -447,6 +522,43 @@ DO:
   end.
 
 END.
+
+
+
+
+ON ENTER OF fill-cli-vn IN FRAME Dialog-Frame /* fill-in-code-system */
+DO:
+  /* new trigger */  
+   find first ub.ext-classif no-lock  where 
+                                        ub.ext-classif.charkey_three = fill-cli-vn:screen-value 
+                                        and (if fill-cli-th:screen-value > "" then
+                                             ub.ext-classif.Key#_One = integer(fill-cli-th:screen-value) else true)
+                                        and  ub.ext-classif.classif-subject = {&table_clients} 
+                                        and  ub.ext-classif.classif-name = {&extclass_clients_esys} no-error.
+                                        
+  if available ub.ext-classif then reposition br-esys-cli to rowid rowid(ub.ext-classif).
+                           else message "Указанный код объекта/клиента во внешней системе отсутствует. ".
+  apply "entry" to br-esys-cli in frame {&frame-name} .
+  return no-apply.                    
+  
+END.
+
+ON ENTER OF fill-cli-th IN FRAME Dialog-Frame /* fill-in-code-th */
+DO:
+  /* new trigger */ 
+  
+  find first ub.ext-classif no-lock   where integer(ENTRY(3, ub.ext-classif.uniq-key-rec, {&delim-key})) = integer(fill-cli-th:screen-value) 
+                                         and (if fill-cli-vn:screen-value>"" then
+                                              ub.ext-classif.CharKey_One = fill-cli-vn:screen-value else true )
+                                         and ub.ext-classif.classif-subject = {&table_clients} 
+                                         and ub.ext-classif.classif-name = {&extclass_clients_esys}  no-error.                                         
+  if available ub.ext-classif then reposition br-esys-cli to rowid rowid(ub.ext-classif).
+                           else message "Указанный код объекта/клиента в TH отсутствует. ".
+  apply "entry" to br-esys-cli in frame {&frame-name} .  
+  return no-apply.  
+END.
+
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -543,10 +655,10 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY mark-num
+  DISPLAY fill-cli-vn fill-cli-th mark-num 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-mark B-sel b-add b-del b-cli b-esys b-sch b-print B-Help
-         br-esys-cli mark-num
+  ENABLE b-quit B-mark B-sel b-add b-del b-cli b-esys b-look b-sch b-print 
+         B-Help fill-cli-vn fill-cli-th br-esys-cli mark-num 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -561,10 +673,13 @@ ENABLE
 b-quit
 b-cli
 b-print
+b-look
 b-add when (v-cntxt-db-num = 0 and lookup("b-add", bttns) > 0 and not transaction)
 b-del when (v-cntxt-db-num = 0 and lookup("b-add", bttns) > 0 and not transaction)
 b-esys
 b-sch
+fill-cli-vn
+fill-cli-th
 B-Help
 br-esys-cli
 WITH FRAME {&frame-name}.
@@ -623,7 +738,7 @@ filter-point = filter-point0 + p-list-mode .
 
 case p-list-mode :
   when {&all} then do:
-    title0 = "Объекты всех внешних систем".
+    title0 = "Объекты и клиенты во внешних системах".
     ASSIGN
     frame {&frame-name}:title = substitute("&1", title0)
     filter-label = SUBSTITUTE("&1"
@@ -674,7 +789,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add Dialog-Frame 
 PROCEDURE proc-b-add :
 DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
 define variable v-rid as recid no-undo .
@@ -682,12 +797,14 @@ DEFINE VARIABLE v-ok AS logical NO-UNDO.
 define variable v-esys-id as integer no-undo .
 DEFINE VARIABLE v-value-character2 AS character NO-UNDO.
 define variable v-value-character as character no-undo .
+define VARIABLE v-value-character3  as character  no-undo .
 define variable v-uniq-key-rec as character no-undo .
 define variable v-esys-uniq-key-rec as character no-undo .
 define variable v-tbl-row as rowid no-undo .
 define variable v-tbl-name as character no-undo .
 define buffer buf_clients for ub.clients.
 define buffer buf_ext-system for ub.ext-system.
+define buffer buf_ext-classif for ub.ext-classif .
 if not available X_ext-system then do:
   message
   "Выберите внешнюю систему, для которой Вы хотите добавить запись объекта"
@@ -747,13 +864,24 @@ assign
 v-value-character = buf_clients.obj-type
 v-value-character2 = string(buf_clients.obj-code)
 .
-run ref/esysclii.w ( input {&add-def}
+find first buf_ext-classif NO-LOCK where buf_ext-classif.classif-subject = {&table_clients}
+                                     and buf_ext-classif.classif-name = {&extclass_clients_esys}
+                                     and buf_ext-classif.CharKey_One = STRING (buf_ext-system.esys-id)
+                                     and buf_ext-classif.CharKey_One = v-value-character
+                                     and buf_ext-classif.CharKey_Three = v-value-character2 no-error .
+if AVAILABLE (buf_ext-classif) then do:
+  v-value-character3 = buf_ext-classif.CharKey_Two .
+end.                                       
+run ref/esysclii.w (INPUT parparentproc 
+                   ,input {&add-def}
                    ,input substitute("Добавление кода объекта во внешней системе &1 для &2&3"
                               ,buf_ext-system.esys-name
                               ,buf_clients.obj-type
                               ,buf_clients.obj-code)
+                   ,input INTEGER (buf_ext-system.esys-type)                               
                    ,input-output v-value-character
                    ,input-output v-value-character2
+                   ,input-output v-value-character3
                    ,output v-ok) no-error.
 if not v-ok then return error.
 run gen-key-rec IN THIS-PROCEDURE ( input {&table_clients}
@@ -769,7 +897,7 @@ run ref/extclas1.p ( INPUT {&add-def}
                     ,input 0 /*p-Key#_Two*/
                     ,input 0 /*p-key#_Three*/
                     ,input v-value-character  /*p-CharKey_One */
-                    ,input '':U /*p-CharKey_two */
+                    ,input v-value-character3 /*p-CharKey_two */
                     ,input v-value-character2 /*p-CharKey_three */
                     ,input 0 /*p-nonunique */
                     ,input v-uniq-key-rec ) no-error.
@@ -817,88 +945,196 @@ DEFINE VARIABLE for-time                 as   character no-undo .
 DEFINE VARIABLE accum-count              as   integer   no-undo .
 define variable v-rid                    as   recid no-undo .
 DEFINE VARIABLE v-esys-name AS CHARACTER NO-UNDO.
-DEFINE FRAME list1
-X_ext-classif.KEY#_one  COLUMN-LABEL "Код!внешней!системы" FORMAT ">>>>>>>>9"
-v-esys-name COLUMN-LABEL "Внешняя система" FORMAT "X(30)"
-X_ext-classif.charkey_one  COLUMN-LABEL "Тип!объ!во вн.!сист." FORMAT "X(3)"
-X_ext-classif.KEY#_two  COLUMN-LABEL "Код!объекта!во вн.!сист." FORMAT ">>>>>>>>9"
-X_clients.obj-type COLUMN-LABEL "Тип!объекта" FORMAT "X(3)"
-X_clients.obj-code COLUMN-LABEL "Код!объекта" FORMAT ">>>>>>>>9"
-X_clients.obj-name COLUMN-LABEL "Название объекта" FORMAT "X(60)"
-HEADER  date_string AT 5 format "X(35)"
-string( "Страница " ) format "X(9)" AT 75 PAGE-NUMBER(PrnLibStream) AT 85 FORMAT ">>9" SKIP
-Line format "X(192)" AT 1
-with width {&DOS_CW_2} down stream-io use-text    .
 
-Line = fill("-", 121).
-date_string = cur-time-print() .
 
-run prn-lib-open-stream  in this-procedure (
-                                             input parParentProc
-                                            ,input  {&CS_PS}
-                                            ,input yes /*p-is-stream*/
-                                            ,input no /*p-append*/
-                                            ).
+output stream OutStr-html to value(v-file-name-rep-htm) append convert target 'UTF-8'.
+    put stream OutStr-html unformatted
+        "<!DOCTYPE HTML>" skip
+        ' <html>' skip
+        '  <head>' skip
+        '   <meta charset="utf-8">' skip
+        '    <style type="text/css">' skip
+        '      table ' + chr(123) + ' border-collapse: collapse; font-size: 9pt; table-layout: fixed; width: 1157px; padding: 12px; ' + chr(125) skip
+        '      td ' + chr(123) ' border: 1px black ridge; word-wrap:break-word; ' + chr(125) skip
+        '      htm' skip
+        '      .rotate ' + chr(123) skip
+        '        -webkit-transform: rotate(-90deg);' skip
+        '        -moz-transform: rotate(-90deg);' skip
+        '        -ms-transform: rotate(-90deg);' skip
+        '        -o-transform: rotate(-90deg);' skip
+        '        transform: rotate(-90deg);' skip
 
-PUT  STREAM PrnLibStream
-SPACE(25) ( frame {&frame-name}:title )
-format "x(90)" SKIP(1) .
-FORM HEADER
-Line format "X(177)" AT 1 SKIP
-"Продолжение - на следующей странице" AT 30 SKIP
-with FRAME BottomFrame width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS NO-BOX .
-VIEW  STREAM PrnLibStream FRAME BottomFrame .
-v-rid = recid(X_ext-classif).
-FORM with FRAME List1.
-run waitfram-show in this-procedure ( input "Ждите...").
-DO WHILE available X_ext-classif :
-   GET prev br-esys-cli.
-END.
-GET next br-esys-cli.
-DO WHILE available X_ext-classif :
-  v-esys-name = get-esys-name(X_ext-classif.key#_one).
-  Display STREAM PrnLibStream
-  X_ext-classif.KEY#_one
-  v-esys-name
-  X_ext-classif.charKEY_one
-  X_ext-classif.KEY#_two
-  X_clients.obj-type
-  X_clients.obj-code
-  X_clients.obj-name
-  with FRAME List1.
-  DOWN STREAM PrnLibStream
-  1
-  with FRAME List1.
-  assign
-  accum-count = accum-count + 1
+
+        '        -webkit-transform-origin: 50% 50%;' skip
+        '        -moz-transform-origin: 50% 50%;' skip
+        '        -ms-transform-origin: 50% 50%;' skip
+        '        -o-transform-origin: 50% 50%;' skip
+        '        transform-origin: 50% 50%;' skip
+
+
+        '        filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);' skip
+        '          ' + chr(125) skip
+        '            th' + ' ' + chr(123) skip
+        '            border: 1px black solid;' skip
+        '            word-wrap: break-word;' skip
+        '          ' + chr(125) skip
+        '   </style>' skip
+        '  </head>' skip
+        .
+        
+        
+    put stream OutStr-html unformatted
+        ' <body>' skip
+        '   <table name="ВС" fit_to_page="true" orientation="portrait" outline_below="false">' skip
+        '     <thead>' skip
+        '       <tr class="set_columns">' skip
+        '         <td style="width: 60px; border: none;"></td>' skip   
+        '         <td style="width: 120px; border: none;"></td>' skip     
+        '         <td style="width: 60px; border: none;"></td>' skip   
+        '         <td style="width: 100px; border: none;"></td>' skip   
+        '         <td style="width: 60px; border: none;"></td>' skip  
+        '         <td style="width: 100px; border: none;"></td>' skip    
+        '         <td style="width: 200px; border: none;"></td>' skip    
+           '</tr>' skip
+.
+
+put stream OutStr-html unformatted
+        '       <tr>' skip
+        '         <td colspan="7" style="border: none;text-align: center; font-weight: bold">Объекты и Клиенты всех внешних систем</td>' skip
+        '</tr>' skip
+        '       <tr>' skip
+        '         <td colspan="7" style="border: none;text-align: left; font-weight: bold">Дата печати: ' + STRING(DAY(TODAY), "99") + "." + STRING(MONTH(TODAY), "99") + "." + STRING(YEAR(TODAY), "9999") +  "   " + substring(string(time,"HH:MM:SS"),1,2) + ":" + substring(string(time,"HH:MM:SS"),4,2) +   '</td>' skip
+        '</tr>' skip
+        .
+
+
+    put stream OutStr-html unformatted
+        '     <tbody>' skip
+        '       <tr>' skip
+        '         <th  style="background-color:#ffffcc; text-align: center;">Код внешней системы </th>' skip
+        '         <th  style="background-color:#ffffcc; text-align: center;">Внешняя система</th>' skip
+        '         <th  style="background-color:#ffffcc; text-align: center;">Тип объекта во внешней системе</th>' skip
+        '         <th  style="background-color:#ffffcc; text-align: center;">Код объекта во внешней системе</th>' skip
+        '         <th  style="background-color:#ffffcc; text-align: center;">Тип Объекта</th>' skip
+        '         <th  style="background-color:#ffffcc; text-align: center;">Код объекта</th>' skip
+                '         <th  style="background-color:#ffffcc; text-align: center;">Название объекта</th>' skip
+        
+        '</tr>'
+        .
+    output stream OutStr-html close.
+        
+        
+output stream OutStr-html to value(v-file-name-rep-htm) append convert target 'UTF-8'.
+        
+        
+for each  ub.ext-classif where     ub.ext-classif.classif-subject = {&table_clients} 
+    and  ub.ext-classif.classif-name = {&extclass_clients_esys} :
+        
+        
+    i = i + 1.
+    v-cli-obj-type = ENTRY(2, ub.eXt-classif.uniq-key-rec, {&delim-key}) no-error.      
+    v-cli-obj-code =   ENTRY(3, ub.ext-classif.uniq-key-rec, {&delim-key}) no-error.
+             
+    find first clients where clients.obj-code =   integer(v-cli-obj-code) and  clients.obj-type =    v-cli-obj-type no-lock no-error.
+                               
+    put stream OutStr-html unformatted
+        '       <tr >' skip
+        '         <td style="display: yes; text-align: center; font-weight: bold">' +  string(ext-classif.KEY#_one) + '</td>' skip
+        '         <td text_wrap="true" style="display: yes; text-align:  right; font-weight: bold">'  + get-esys-name(ext-classif.key#_one) + '</td>' skip
+        '         <td style="display: yes; text-align:  right; font-weight: bold">'   + ext-classif.charKEY_one + '</td>' skip
+        '         <td style="display: yes; text-align:  right; font-weight: bold">'   + ext-classif.charkey_three + '</td>' skip
+        '         <td style="display: yes; text-align:  right; font-weight: bold">'   +  v-cli-obj-type + '</td>' skip
+        '         <td style="display: yes; text-align:  right; font-weight: bold">'   + v-cli-obj-code + '</td>' skip
+        '         <td text_wrap="true" style="display: yes; text-align:  right; font-weight: bold">'   + clients.obj-name + '</td>' skip
+        '       </tr>' skip
+        .                           
+end.      
+
+    put stream OutStr-html unformatted
+        '       <tr >' skip
+        '         <td colspan = "7" style="display: yes; text-align:  left; font-weight: bold">Количество записей : '   + string(i) + '</td>' skip
+        '       </tr>' skip
   .
-  GET next br-esys-cli.
-END.
-UNDERLINE  STREAM PrnLibStream
-v-esys-name
-X_ext-classif.KEY#_one
-X_ext-classif.charKEY_one
-X_ext-classif.KEY#_two
-X_clients.obj-type
-X_clients.obj-code
-X_clients.obj-name
-with FRAME List1.
-DISPLAY STREAM PrnLibStream
-accum-count @ X_ext-classif.key#_one
-with frame List1.
-HIDE  STREAM PrnLibStream FRAME BottomFrame .
-HIDE  STREAM PrnLibStream FRAME List1.
-output  STREAM PrnLibStream CLOSE.
-reposition br-esys-cli to recid v-rid no-error .
-apply "ENTRY" to br-esys-cli in frame {&frame-name} .
-run waitfram-hide in this-procedure .
-run prn-lib-prn-file in this-procedure (
-                                          input parParentProc
-                                          ,input 0
-                                          ).
 
+
+put stream OutStr-html unformatted
+    '     </tbody>' skip
+    '   </table>' skip
+    '  </body>' skip
+    ' </html>' skip
+    . /* Точка для закрытия Put */
+output stream OutStr-html close.                                 
+                                        
+                                        
+                                        
+i = 0.
 
 END PROCEDURE.
+
+
+ procedure define-full-path-Report:  /* Получение полного пути к отчёту html (input №Отчёта, output Полный_путь_имя_файла_отчHTML) */
+/* Получение полного пути к отчёту html */
+    define input parameter p-rep-num as integer no-undo.
+    define output parameter p-file-name-rep-htm as character no-undo.
+
+    p-file-name-rep-htm = session:temp-directory + "Объекты_и_Клиенты_ВС" + ".html".
+
+end procedure.
+
+
+procedure create-file:              /* СоздЛюбогоФайлаНаДиске(input полный_путь_с_именем) */
+/* Создание пустого файла (во входном параметре: полный путь и имя файла) */
+    define input parameter p-file-name as character no-undo.
+    output to value(string(p-file-name)).
+    output close.
+
+end procedure.
+
+
+procedure Report-Viewer:            /* Запуск на выполнение RV (input Полный_путь_имя_файла_RV, input Полный_путь_имя_файла_отчHTML) */
+/* Запуск программы "Просмотровщик Отчётов" - ReportViewer. */
+    define input parameter p-full-path-RepView as character no-undo.
+    define input parameter p-file-name-rep-htm as character no-undo.
+
+    os-command no-wait value(p-full-path-RepView + " " + search(p-file-name-rep-htm)).
+
+end procedure.
+
+procedure get-full-path-RepViewer:  /* Получение полного пути к исполняемому файлу RV.exe (output Полный_путь_имя_файла_RV.exe) */
+/* Получение полного пути к exe-файлу просмотровщика отчётов */
+    define output parameter p-fill-path-RepView as character no-undo.
+
+    if search("exe\ReportViewer\reportviewer.exe") <> ? then
+    do:
+        p-fill-path-RepView = search("exe\ReportViewer\reportviewer.exe").
+    end.
+    else
+    do:
+        message "Не найдена программа просмотра отчёта!" view-as alert-box error.
+    end.
+end procedure.
+
+
+
+procedure search-full-path-Report:  /* Только проверка, есть файл отчёта HTML или нет(тогда вывод сбщ-ош) */
+/* Поиск файла */
+    define input parameter p-file-name as character no-undo.
+
+    if search(p-file-name) = ? then
+        do:
+            message "Не найден файл отчёта: " p-file-name view-as alert-box error.
+        end.
+    else
+        do:
+            p-file-name = search(p-file-name).
+        end.
+
+end procedure.
+
+
+
+
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

@@ -530,6 +530,8 @@ then do:
 end.
     { adm/autotask.i ASSIGN {&btpr-type-autoarh} }
 
+    { adm/autotask.i ASSIGN {&btpr-type-mercury} }
+
     if par-is-bge = true then do:
      { adm/autotask.i ASSIGN {&btpr-type-autoexp} }
     END.

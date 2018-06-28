@@ -1046,11 +1046,17 @@ create X_auto-session .
     X_auto-session.session-name = "Произвольные задания"
     X_auto-session.proc-name    = "adm/l-i-free.w":U
   .
-create X_auto-session .
+  create X_auto-session .
   assign
     X_auto-session.session-type = {&btpr-type-sktsrv}
     X_auto-session.session-name = "Сокет Сервер"
     X_auto-session.proc-name    = "adm/l-i-skt.w":U
+  .
+  create X_auto-session .
+  assign
+    X_auto-session.session-type = {&btpr-type-mercury}
+    X_auto-session.session-name = "Меркурий"
+    X_auto-session.proc-name    = "adm/l-i-merc.w":U
   .
 
 END PROCEDURE.

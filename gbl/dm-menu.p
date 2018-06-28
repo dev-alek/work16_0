@@ -414,7 +414,7 @@ procedure proc-create-menu-item :
   end.
 
 end procedure. /* proc-create-menu-item */
-
+  
 procedure run-menu-drop-procedure :
 
   define input  parameter p-item-handle as widget-handle no-undo .
@@ -8447,22 +8447,6 @@ procedure m-fbr-gds-grp-attr-exe :
 
 end procedure. /* m-fbr-gds-grp-attr-exe */
 
-procedure m_clients-elcos-exe :
-define variable v-rid-list as character no-undo .
-
-  do
-  on error undo, return error
-  :
-    run ref/elc-clis.w ( input parparentproc
-                        ,input (if v-cntxt-db-num > 0 then '':U else "b-add")
-                        ,input '':U
-                        ,input-output v-rid-list) no-error.
-
-  end.
-
-end procedure. /* m_clients-elcos-exe */
-
-
 procedure m_clients-parus-exe :
 define variable v-rid-list as character no-undo .
 
@@ -8506,7 +8490,7 @@ define variable v-rid-list as character no-undo .
 
 
   end.
-end procedure. /* m_clients-elcos-exe */
+end procedure. /* m_clients-esys-exe */
 
 procedure m_goods-esys-exe :
 define variable v-rid-list as character no-undo .
@@ -8521,7 +8505,7 @@ define variable v-rid-list as character no-undo .
 
 
   end.
-end procedure. /* m_goods-elcos-exe */
+end procedure. /* m_goods-esys-exe */
 
 procedure m_gds-grp-esys-exe :
 define variable v-rid-list as character no-undo .
@@ -8536,7 +8520,7 @@ define variable v-rid-list as character no-undo .
 
 
   end.
-end procedure. /* m_goods-elcos-exe */
+end procedure. /* m_gds-grp-esys-exe */
 
 procedure m_gds-ef-exe :
 define variable v-rid-list as character no-undo .
@@ -8551,7 +8535,7 @@ define variable v-rid-list as character no-undo .
 
   end.
 
-end procedure. /* m_clients-elcos-exe */
+end procedure. /* m_gds-ef-exe */
 
 
 procedure m-obj-unrv-exe :
@@ -10450,6 +10434,44 @@ procedure chk-alcohol :
   end.
 
 end procedure. /* chk-alcohol */
+
+procedure chk-mercuri :
+
+  define output parameter p-enable-item as logical   no-undo .
+
+  define variable v-mercuri as character no-undo .
+  define variable par-type  as character no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    { gbl/conf-rd.i
+      "'mercuri':u"
+      "'':u"
+      "'':u"
+      0
+      "'':u"
+      "'':u"
+      "'':u"
+      no
+      v-mercuri
+      par-type
+      no-error
+    }
+    if v-mercuri = 'no':u or v-mercuri = ""
+    then do:
+      assign
+        p-enable-item = false
+      .
+    end.
+    else do:
+      assign
+        p-enable-item = true
+      .
+    end.
+  end.
+
+end procedure. /* chk-mercuri */
 
 procedure chk-holding :
 
@@ -12549,7 +12571,14 @@ procedure m__menu-fas-exe :
   end.
 
 end procedure. /* m__menu-fas-exe */
-
+PROCEDURE journal-vsd :
+     DEFINE VARIABLE v-vsd-dialog AS  CLASS  ibs.th.ref.journal_vsd_abl  .  
+     v-vsd-dialog = NEW ibs.th.ref.journal_vsd_abl (  parparentproc  ) .
+     v-vsd-dialog:ShowModalDialog().
+     finally: 
+         DELETE  OBJECT v-vsd-dialog no-error.
+     end finally.  
+END PROCEDURE.
 procedure m__menu-adm-exe :
 
   define buffer buf_menu-group for ub.menu-group .

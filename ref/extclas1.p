@@ -54,9 +54,15 @@ define variable v-gds-code as integer no-undo .
 define variable v-tbl-rid as rowid no-undo .
 define variable v-tbl-name as character no-undo .
 
+define variable v-guid1      as character no-undo .
+define variable v-guid2      as character no-undo .
+
+define variable v-guid1_     as character no-undo .
+define variable v-guid2_     as character no-undo .
 
 define buffer buf_ext-classif for ub.ext-classif.
 define buffer buf_ext-system for ub.ext-system.
+define variable choice         as LOGICAL   NO-UNDO .
 define buffer buf2_ext-classif for ub.ext-classif.
 define buffer buf2_ext-system for ub.ext-system.
 
@@ -96,30 +102,6 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
   case p-classif-subject:
     when {&table_clients} then do:
       case p-classif-name:
-        when {&extclass_clients_elcos} then do:
-          if g#db-num > 0 then do:
-            v-mess = substitute("Запрещено добавлять коды клиента системы ЭЛКОС-ТАЛОН в УБД").
-            run err-mess in this-procedure ( input-output v-mess).
-            undo _main, return error (if p-silent = yes then v-mess else '':U).
-          end.
-          assign
-          v-obj-type = entry(lookup("obj-type":U
-                                            , v-field-list
-                                            , {&delim-key})
-                                      , v-value-list, {&delim-key})
-          v-obj-code = integer(entry(lookup("obj-code":U
-                                            , v-field-list
-                                            , {&delim-key})
-                                      , v-value-list, {&delim-key}))
-          no-error .
-          if not (v-obj-type = {&cmp}
-                  or
-                  v-obj-type = {&prs}) then do:
-            v-mess = substitute("В классификатор Клиенты системы ЭЛКОС-ТАЛОН можно добавлять только &1 или &2", {&cmp}, {&prs}).
-            run err-mess in this-procedure ( input-output v-mess).
-            undo _main, return error (if p-silent = yes then v-mess else '':U).
-        end.
-        end. /*when {&extclass_clients_elcos} then do:*/
         when {&extclass_clients_parus} then do:
           if g#db-num > 0 then do:
             v-mess = substitute("Запрещено добавлять коды клиента системы ПАРУС в УБД").
@@ -209,6 +191,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                   v-obj-type = {&stock}
                   or
                   v-obj-type = ''
+                  or v-obj-type = {&prs}
                   ) then do:
             v-mess = substitute("В классификатор Объекты внешних систем можно добавлять только <&1> или <&2> или <>", {&shop}, {&stock}).
             run err-mess in this-procedure ( input-output v-mess).
@@ -319,7 +302,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
               and recid(buf_ext-system) <> recid(buf2_ext-system)
               and (p-mode = {&add-def} or recid(buf_ext-classif) <> recid(buf2_ext-classif))
               then do:
-                v-mess = substitute("Для данного объекта уже определена внешняя система &2 с экспортом/импортом в БД &1"
+                v-mess = substitute("Для данного объекта уже определена внешняя система &1 с экспортом/импортом в БД &2"
                                   , buf2_ext-system.esys-id
                                   , buf2_ext-system.esys-db-num-exp).
                 run err-mess in this-procedure ( input-output v-mess).
@@ -451,7 +434,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                                 , buf2_ext-classif.CharKey_One
                                 , buf2_ext-classif.Key#_One
                                 , buf2_ext-classif.CharKey_two
-                                , buf2_ext-classif.Key#_two
+                                , buf2_ext-classif.charkey_three
                                 ).
               run err-mess in this-procedure ( input-output v-mess).
               undo _main, return error (if p-silent = yes then v-mess else '':U).
@@ -464,17 +447,12 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       define variable v-s   as logical   no-undo .
       define buffer buf_goods for ub.goods.
       case p-classif-name:
-        when {&extclass_goods_elcos}
-        or
         when {&extclass_goods_accor}
         or
         when {&extclass_goods_easyfuel}
         then do:
           if g#db-num > 0 then do:
             case p-classif-name:
-              when {&extclass_goods_elcos}  then do:
-                v-mess = substitute("Запрещено добавлять типы топлива в классификатор ЭЛКОС-ТАЛОН в УБД").
-              end.
               when {&extclass_goods_accor} then do:
                 v-mess = substitute("Запрещено добавлять типы топлива в классификатор АККОР в УБД").
               end.
@@ -584,6 +562,34 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       undo _main, return error (if p-silent = yes then v-mess else '':U).
     end.
 
+    for each buf_ext-classif no-lock where
+              buf_ext-classif.classif-subject = p-classif-subject
+          and buf_ext-classif.classif-name = p-classif-name
+          and buf_ext-classif.db-num = p-db-num
+          and buf_ext-classif.key#_one = p-key#_one
+          and buf_ext-classif.key#_two = p-key#_two
+          and buf_ext-classif.nonunique = p-nonunique  :
+    
+      v-guid1 = entry(1,buf_ext-classif.charkey_two,{&delim-cmd}) .
+      v-guid2 = entry(2,buf_ext-classif.charkey_two,{&delim-cmd}) .
+      
+      v-guid1_ = entry(1,p-charkey_two,{&delim-cmd}) . 
+      v-guid2_ = entry(2,p-charkey_two,{&delim-cmd}) .
+  
+      if (v-guid1 <> "" and v-guid1 = v-guid1_ ) or (v-guid2 <> "" and v-guid2 = v-guid2_)  then do:
+      message
+        "Уже есть запись с таким GUID-ом, продолжить?"
+        view-as alert-box QUestion buttons yes-no update choice.
+      if not choice then 
+      do:
+        RETURN NO-APPLY .
+      end.
+/*        v-mess = substitute("Уже запись c таким GUID-ом").                 */
+/*/*        run err-mess in this-procedure ( input-output v-mess).*/         */
+/*        undo _main, return error (if p-silent = yes then v-mess else '':U).*/
+      end.
+    end.
+    
     create buf_ext-classif.
     assign
     buf_ext-classif.classif-subject = p-classif-subject
@@ -646,16 +652,6 @@ CASE p-silent:
                               , p-mess)
             .
           end.
-          when {&extclass_clients_elcos} then do:
-            assign
-          p-mess = substitute("Код клиента в системе ЭЛКОС ТАЛОН: &1 для клиента &2&3&4&5"
-                              , p-key#_one
-                              , v-obj-type
-                              , v-obj-code
-                              , {&new-line}
-                              , p-mess)
-            .
-          end.
           when {&extclass_clients_parus} then do:
             assign
           p-mess = substitute("Код клиента в системе ПАРУС: &1 для клиента &2&3&4&5"
@@ -681,7 +677,7 @@ CASE p-silent:
             p-mess = substitute("Объект во внешней системе &1: &2&3 для объекта &4&5 &6&7"
                               , p-key#_one
                               , p-charkey_one
-                              , p-key#_two
+                            , p-charkey_three
                               , v-obj-type
                               , v-obj-code
                               , {&new-line}
@@ -693,14 +689,6 @@ CASE p-silent:
       end.
       when {&table_goods} then do:
         case p-classif-name:
-          when {&extclass_goods_elcos} then do:
-            assign
-          p-mess = substitute("Код товара &1&2&3"
-                              , v-gds-code
-                              , {&new-line}
-                              , p-mess)
-            .
-          end.
           when  {&extclass_goods_accor} then do:
             assign
           p-mess = substitute("Код товара &1&2&3"

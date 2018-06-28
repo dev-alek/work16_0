@@ -66,6 +66,7 @@ define buffer buf_doc-pl      for ub.doc-pl .
 define buffer buf_doc-pl-pump for ub.doc-pl-pump .
 define buffer buf_doc-fbr-gds for ub.doc-fbr-gds .
 define buffer buf_inv-line    for ub.inv-line .
+define variable part-key-rec as character no-undo .
 
 do transaction
 on error undo, return error return-value
@@ -248,6 +249,18 @@ on error undo, return error return-value
         and buf_parts.prod-code = buf_doc-line.prod-code
     on error undo, return error return-value
     :
+      define variable vsds as class ibs.th.str.mercury.vsdsubs no-undo.
+      define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.
+      define variable ii as integer no-undo.
+      vsds = new ibs.th.str.mercury.vsdsubs ().
+      vsdstr = new ibs.th.gbl.storage.vsdtostorage ().
+      vsds = vsdstr:getVSDsubs(input "part-key", input part-key-rec).
+      do ii = 1 to vsds:GetItem(ii):
+        vsdstr:deleteDB(vsds:VsdObjCurr).
+      end.
+      delete object vsds no-error.
+      delete object vsdstr no-error.
+        
       delete buf_parts .
     end.
 

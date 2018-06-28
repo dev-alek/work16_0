@@ -15,6 +15,8 @@ Creation date: 08/12/99
 
 */
 
+using ibs.th.adm.upd.*.
+
 define input parameter p-tbl-name   like ub.route.name-rec no-undo .
 define input parameter p-tbl-handle as   handle            no-undo .
 
@@ -1501,6 +1503,31 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
         end.
         v-found = true.
       end.
+      when {&table_vsd} then do:
+        find first ub.vsd no-lock where rowid (ub.vsd) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          find first buf_clients where buf_clients.obj-type = ub.vsd.obj-type and buf_clients.obj-code = ub.vsd.obj-code no-error.
+          if available (buf_clients) and not buf_clients.db-num = 0
+            then assign list-db-for-send = string (buf_clients.db-num).
+        end.
+        v-found = true.
+      end.
+      when {&table_vsd-attr} then do:
+        find first ub.vsd-attr no-lock where rowid (ub.vsd-attr) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          find first ub.vsd no-lock where ub.vsd.ID = ub.vsd-attr.ID and ub.vsd.db-num = ub.vsd-attr.db-num.
+          find first buf_clients where buf_clients.obj-type = ub.vsd.obj-type and buf_clients.obj-code = ub.vsd.obj-code no-error.
+          if available (buf_clients) and not buf_clients.db-num = 0
+            then assign list-db-for-send = string (buf_clients.db-num).
+        end.
+        v-found = true.
+      end.  
       otherwise do:
         assign
           v-found = false
@@ -1533,6 +1560,22 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
   end.
 
   /*************************************** собственно маршрутизация **********************************/
+  
+  define variable observupdObj as class observupd no-undo.
+  if g#db-num = 0 /* на гбд отправляем в любом случае так как схема БД должна быть обязатльно обновлена*/
+  then do:
+  
+    observupdObj = new observupd ().
+  
+    /*исключение из списка бд маршуртизации обновленных таблиц, где схема бд не обновилась туда не уходит*/
+  
+    observupdObj:dbexcept(input-output list-db-for-send, input p-tbl-name).
+  
+    delete object observupdObj no-error.
+    if list-db-for-send = "NULL"
+      then return.
+  end.
+
   if v-routing-type = 'LOB':U
   then do:
     /*для LOB*/

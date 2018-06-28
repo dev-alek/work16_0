@@ -1614,14 +1614,6 @@ on error  undo , return error substitute( "&1. &2&3&4", vss-workfile, return-val
     end.
 
 case curr_c-ext-classif.classif-name:
-  when {&extclass_goods_elcos} then do:
-&scop fields-name-list "key#_one"
-   assign
-   v-label-param = "key#_one" + {&delim-par} + "Код топлива " + {&delim-par} + ""
-   p-description = "Классификатор ЭЛКОС-ТАЛОН"
-   .
-
-  end.
   when {&extclass_goods_accor} then do:
 &scop fields-name-list "key#_one"
    assign

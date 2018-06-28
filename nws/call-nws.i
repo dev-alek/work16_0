@@ -137,6 +137,8 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,cd-events-attr~
 ,cd-video-link~
 ,cd-video-link-attr~
+,gds-mercury~
+,gds-mercury-attr~
 ":U.
 
 
@@ -673,6 +675,8 @@ define variable v-custom-list as character no-undo initial
 ,season-attr~
 ,gds-season~
 ,gds-season-attr~
+,vsd~
+,vsd-attr~
 ":U.
 
 /*-------------исключения из маршрутизации на параметре, таблицы не будут ходить ни при каких условиях (кроме таблиц которые ходят только из ГБД указанные v-custom-0-rdb_rbd-0-not-news)*/
@@ -1166,6 +1170,8 @@ v-custom-except-list-erprn =
 ,dis-thbj-rule-attr~
 ,dis-time-rule~
 ,dis-time-rule-attr~
+,vsd~
+,vsd-attr~
 ":U.
 
 /*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/
@@ -1275,6 +1281,8 @@ define variable v-custom-0-rdb-not-news-erprn as character no-undo initial
 ,c-cash-pay~
 ,cash-pay-attr~
 ,c-cash-pay-attr~
+,gds-mercury~
+,gds-mercury-attr~
 ":U.
 
 

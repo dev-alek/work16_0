@@ -931,6 +931,36 @@ assign
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
           end.
+          assign
+            tt-parts.part-code      =  temp_doc-line.part-id when temp_doc-line.part-id <> "".
+          
+/*          define variable vsdObj as class ibs.th.str.mercury.vsdsub no-undo.
+          define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.
+          define variable vsdsts as class ibs.th.str.mercury.vsdstatustype no-undo.
+          define variable keyrecObj as class ibs.th.gbl.keyrec no-undo.
+          define variable keypart as character no-undo.
+          if temp_doc-line.vsd-uuid <> '' and temp_doc-line.vsd-uuid <> ?
+          then do:
+            vsdstr = new ibs.th.gbl.storage.vsdtostorage ().
+            keyrecObj = new ibs.th.gbl.keyrec ().
+            keyrecObj:GenKeyRec({&table_parts}, buffer parts:handle, output keypart).
+            vsdSts = new ibs.th.str.mercury.vsdstatustype ().
+            vsdObj = new ibs.th.str.mercury.vsdsub ().
+            vsdObj:VSDType = vsdSts:VSDIn.
+            vsdObj:PartKey = keypart.
+            vsdObj:GdsCode = temp_doc-line.gds-code.
+            vsdObj:ObjType = new_trn-doc.obj-type.
+            vsdObj:ObjCode = new_trn-doc.obj-code.
+            vsdObj:CliCode = new_trn-doc.cli-code.
+            vsdObj:CliType = new_trn-doc.cli-type.
+            vsdObj:UUID = temp_doc-line.vsd-uuid.
+            vsdstr:insertDB(vsdObj).
+            delete object vsdObj no-error.
+            delete object vsdSts no-error.
+            delete object vsdstr no-error.
+            delete object keyrecObj no-error.
+          end.*/
+          
           if is-tsd and v-ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
             run unitqnty1 (
               input tt2-doc-line.unit-cli, 

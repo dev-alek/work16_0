@@ -101,19 +101,19 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     if not (glog and not new(ub.hist-nws-option))
     and ub.hist-nws-option.subject-group <> {&table_c-dc-hist}
     then do:
-      run str/callnews.p
-        (input {&table_hist-nws-option}
-        ,input (buffer ub.hist-nws-option:handle)
-        ) no-error .
-      if error-status :error then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Невозможно маршрутизировать запись для отправки в новости" skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
-        undo main-block,  return error .
-      end.
+/*      run str/callnews.p                                                  */
+/*        (input {&table_hist-nws-option}                                   */
+/*        ,input (buffer ub.hist-nws-option:handle)                         */
+/*        ) no-error .                                                      */
+/*      if error-status :error then do:                                     */
+/*        message                                                           */
+/*          vss-workfile vss-revision vss-description skip                  */
+/*          "Невозможно маршрутизировать запись для отправки в новости" skip*/
+/*          error-status :get-message(1) skip                               */
+/*          return-value skip                                               */
+/*          view-as alert-box error .                                       */
+/*        undo main-block,  return error .                                  */
+/*      end.                                                                */
     end.
   end.
   define variable v-cmp as logical no-undo .

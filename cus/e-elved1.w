@@ -444,16 +444,7 @@ if can-find( first dcards ) then do:
     END CASE.
     form with frame X123.
     _clients:
-    /* 03/14/12 Modified by Samkov */
-/*    FOR EACH buf_ext-classif no-lock where*/
-/*            buf_ext-classif.classif-subject  =  {&table_clients}*/
-/*        and buf_ext-classif.classif-name =  {&extclass_clients_elcos}*/
-/*        and buf_ext-classif.db-num = - 1,*/
-/*       first buf_clients no-lock where*/
-/*            buf_clients.obj-type = entry(2, buf_ext-classif.uniq-key-rec, {&delim-key})*/
-/*        and buf_clients.obj-code = integer(entry(3, buf_ext-classif.uniq-key-rec, {&delim-key}))*/
     FOR EACH buf_clients no-lock
-    /* 03/14/12 Samkov E n d of changes */
     by buf_clients.obj-name:
       if climode = "LIST" then do:
         find first cli-list no-lock where

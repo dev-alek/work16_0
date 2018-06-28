@@ -29,6 +29,7 @@ define variable vss-description as character no-undo initial "Триггер на удалени
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4', ub.doc-line.doc-code, ub.doc-line.artic, ub.doc-line.prod-type, ub.doc-line.prod-code) " }
 { cmp/trg-def.i  }
 { str/lib-trn.i  }
+{ gbl/key-rec.i  }
 
 main-block:
 do transaction
@@ -41,6 +42,7 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
   define variable v-after-cli-qnty as decimal   no-undo .
   define variable is-petrol        as logical   no-undo.
   define variable is-pieces        as logical   no-undo.
+  define variable part-key-rec     as character no-undo .
 
   define buffer next_doc-line for ub.doc-line .
   define buffer next_inv-line for ub.inv-line .
@@ -112,6 +114,17 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
       :
          delete ub.parts-root.
       end.
+      define variable vsds as class ibs.th.str.mercury.vsdsubs no-undo.
+      define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.
+      define variable ii as integer no-undo.
+      vsds = new ibs.th.str.mercury.vsdsubs ().
+      vsdstr = new ibs.th.gbl.storage.vsdtostorage ().
+      vsds = vsdstr:getVSDsubs(input "part-key", input part-key-rec).
+      do ii = 1 to vsds:GetItem(ii):
+        vsdstr:deleteDB(vsds:VsdObjCurr).
+      end.
+      delete object vsds no-error.
+      delete object vsdstr no-error.
       delete ub.parts .
     end.
   end.

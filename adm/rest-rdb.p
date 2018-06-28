@@ -3267,6 +3267,36 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       .
       return.
     end.
+    
+    output stream slog to rest-rdb.txt append .
+    export stream slog "start gds-mercury " cur-time-string() .
+    output stream slog close .
+    
+    for each src.gds-mercury no-lock:
+      for each src.gds-mercury-attr no-lock where src.gds-mercury-attr.ID =  src.gds-mercury.ID 
+        and src.gds-mercury-attr.db-num = src.gds-mercury.db-num:
+        create dst.gds-mercury-attr .
+        buffer-copy src.gds-mercury-attr to dst.gds-mercury-attr .
+      end.
+      create dst.gds-mercury.
+      buffer-copy src.gds-mercury to dst.gds-mercury.
+    end.
+    
+    output stream slog to rest-rdb.txt append .
+    export stream slog "start vsd " cur-time-string() .
+    output stream slog close .
+    
+    for each src.vsd where src.vsd.db-num = p-db-num no-lock:
+      for each src.vsd-attr no-lock where src.vsd-attr.ID =  src.vsd.ID 
+        and src.vsd-attr.db-num = src.vsd.db-num:
+        create dst.vsd-attr .
+        buffer-copy src.vsd-attr to dst.vsd-attr .
+      end.
+      create dst.vsd.
+      buffer-copy src.vsd to dst.vsd.
+    end.
+    
+
     do transaction
     on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
     on stop   undo, return error substitute( "&1. stop", vss-workfile )

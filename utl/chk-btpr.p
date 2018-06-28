@@ -56,7 +56,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       when {&btpr-type-autogetcd} or
       when {&btpr-type-autosale} or
       when {&btpr-type-autocbnk} or
-      when {&btpr-type-autofree}
+      when {&btpr-type-autofree} or
+      when {&btpr-type-mercury}
       then do:
         /* Игнорируется. Создаются сами заново. */
       end.

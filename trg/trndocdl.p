@@ -39,6 +39,7 @@ define variable vss-description as character no-undo init "Процедура удаления за
 { trg/partrqst.i }
 { str/lib-trn.i  }
 { str/hvrdtax.i  }
+{ gbl/key-rec.i  }
 { trg/partcopy.i }
 { trg/gdsobjcl.i }
 { str/libtfarh.i }
@@ -62,6 +63,8 @@ on error undo, return error return-value
   define variable v-current-action         as character no-undo .
   define variable v-description-doc-type as character no-undo .
   define variable v-doc-line-artic       like ub.doc-line.artic no-undo .
+  
+  define variable part-key-rec as character no-undo .
 
   /* для показа процесса закрытия документа */
   define frame a
@@ -436,6 +439,18 @@ on error undo, return error return-value
       where buf_parts.out-code = buf_trn-doc.doc-code
     on error undo, return error return-value
     :
+      define variable vsds as class ibs.th.str.mercury.vsdsubs no-undo.
+      define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.
+      define variable ii as integer no-undo.
+      vsds = new ibs.th.str.mercury.vsdsubs ().
+      vsdstr = new ibs.th.gbl.storage.vsdtostorage ().
+      vsds = vsdstr:getVSDsubs(input "part-key", input part-key-rec).
+      do ii = 1 to vsds:GetItem(ii):
+        vsdstr:deleteDB(vsds:VsdObjCurr).
+      end.
+      delete object vsds no-error.
+      delete object vsdstr no-error.
+
       delete buf_parts .
     end.
 

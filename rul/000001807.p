@@ -191,7 +191,6 @@ define variable v-txt-file-name2        as character no-undo .
 define variable v-txt-file-name-no-ext2 as character no-undo .
 define variable v-txt-file-name-ext2    as character no-undo .
 define variable v-found as logical no-undo .
-define variable v-uniq-key-rec as character no-undo .
 define variable v-resource-id as character no-undo .
 define variable v-line-num as integer no-undo .
 
@@ -201,7 +200,6 @@ define variable v-value-list as character no-undo .
 define variable v-status           as character no-undo .
 define variable v-stop-list-mess as character no-undo .
 define variable v-value as character no-undo .
-define variable v-exp-elcos-talon-code-chr as character no-undo .
 define variable v-stop-status as integer no-undo .
 DEFINE VARIABLE v-today as date no-undo .
 DEFINE VARIABLE v-time as integer no-undo .
@@ -470,40 +468,6 @@ run write-log-and-file in p-log-handle (
     , input 1
     , input substitute("Импорт стоплиста по ДК из файла &1", file-name)).
 
-for each bufg_ext-classif no-lock where
-        bufg_ext-classif.classif-subject = {&table_goods}
-    and bufg_ext-classif.classif-name = {&extclass_goods_elcos}
-:
-  v-gds-code = 0.
-  run gen-key-fv in this-procedure (
-                                      input bufg_ext-classif.uniq-key-rec
-                                      ,output v-field-list
-                                      ,output v-value-list) no-error .
-  assign
-  v-gds-code = integer(entry(lookup("gds-code":U
-                                    , v-field-list
-                                    , {&delim-key})
-                              , v-value-list, {&delim-key}))
-  no-error .
-  if v-gds-code > 0 then do:
-    create ext-product-code.
-    assign
-    ext-product-code.ext-code = bufg_ext-classif.key#_one
-    ext-product-code.gds-code = v-gds-code
-    .
-    release ext-product-code.
-  end.
-end. /*for each bufg_ext-classif no-lock where*/
-find first ext-product-code no-error.
-if not available ext-product-code then do:
-  run write-log-and-file in p-log-handle (
-        input 1
-      , input log-file-name
-      , input 1
-      , input substitute("Не сделана привязка кодов топлив в IBS TH к кодам топлив во внешней системе (см АТРИБУТЫ ТОВАРА)")).
-  v-view-log = yes.
-  {&view-log}.
-end.
 /*заполним таблицу скидок*/
 for each ext-product-code,
     each buf_shop no-lock:
@@ -1044,43 +1008,6 @@ if not v-stop then do:
                             , buf_Dis-card.d-card
                             , buf_Dis-card.cli-type
                             , buf_Dis-card.cli-code
-                            ).
-      run err-write2 in this-procedure ( input-output my-mess).
-      NEXT _stroka2.
-    end.
-    v-uniq-key-rec = '':U.
-    run gen-key-rec in this-procedure ( input {&table_clients}
-                                       ,input (buffer buf_clients:handle)
-                                       ,output v-uniq-key-rec) no-error.
-    find first bufc_ext-classif no-lock where
-              bufc_ext-classif.classif-subject = {&table_clients}
-          and bufc_ext-classif.classif-name = {&extclass_clients_elcos}
-          and bufc_ext-classif.uniq-key-rec = v-uniq-key-rec  no-error.
-    if not available bufc_ext-classif
-    then do:
-      my-mess = substitute("!!!Не найдена запись для клиента-держателя карты &1 в справочнике клиентов для системы Элкос-Талон"
-                            , temp-imp.d-card
-                            ).
-      run err-write2 in this-procedure ( input-output my-mess).
-      NEXT _stroka2.
-    end.
-    if bufc_ext-classif.key#_one = 0
-    or bufc_ext-classif.key#_one = ?
-    then do:
-      my-mess = substitute("!!!В IBS TH Не задан Номер клиента для экспорта данных в систему Элкос-Талон для ДК &1"
-                            , temp-imp.product-code
-                            , temp-imp.d-card
-                            ).
-      run err-write2 in this-procedure ( input-output my-mess).
-      NEXT _stroka2.
-    end.
-    if bufc_Ext-classif.key#_one <> temp-imp.ext-cli-code then do:
-      my-mess = substitute("!!!Значение Номер клиента для экспорта данных в систему Элкос-Талон =&1 для ДК &2 в системе IBS TH&3" +
-                            "не совпадает со значением Номера клиента для экспорта данных в систему Элкос-Талон =&4, указанным в стоплисте"
-                            , bufc_Ext-classif.key#_one
-                            , temp-imp.d-card
-                            , {&new-line}
-                            , temp-imp.ext-cli-code
                             ).
       run err-write2 in this-procedure ( input-output my-mess).
       NEXT _stroka2.

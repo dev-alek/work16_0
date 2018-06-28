@@ -1,0 +1,872 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Класс работы с ВСД
+
+Автор: Сливенко Сергей
+Дата создания: 05/03/18
+Author: Slivenko Sergey
+Creation date: 05/03/18
+
+
+*/
+
+using Progress.Lang.*.
+using ibs.th.str.gds.*.
+using ibs.th.str.mercury.*.
+using ibs.th.gbl.storage.*.
+using ibs.th.str.clients.*.
+
+
+
+class ibs.th.bge.mercury.mercury:
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  
+  define variable vsdStat as class ibs.th.str.mercury.vsdstatustype no-undo.
+  { cmp/str-glbl.i class}
+
+{ ref/extclass.i }
+
+  define property apiKey as character no-undo init ?
+    get.
+    private set.
+
+  define property issuerId as character no-undo init ?
+    get.
+    private set.
+    
+  define property login as character no-undo init ?
+    get.
+    private set.
+    
+  define property login_is as character no-undo init ?
+    get.
+    private set.
+    
+  define property password as character no-undo init ?
+    get.
+    private set.
+    
+  define property esysId as integer no-undo init ?
+    get.
+    private set.
+    
+  define property server_ as character no-undo init ?
+    get.
+    private set.
+
+  define property applicationId as character no-undo
+    get.
+    protected set.
+    
+  define property Status_ as character no-undo
+    get.
+    protected set.  
+
+  define property Msg as character no-undo
+    get.
+    protected set.
+
+  define property StatusErr as logical no-undo init false
+    get.
+    protected set.
+    
+  define variable vsds as class vsdsubs .
+  define variable vsdStorage as class vsdtostorage .
+  define variable gdsMercsubsObj as class gdsmercsubs.
+  define variable gdsmercstrObj as class gdsmercstr.
+  
+  
+  define buffer buf_ext-classif        for ub.ext-classif.
+  define buffer buf_ext-system         for ub.ext-system.
+  def var ii as integer no-undo .
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+		
+  constructor public mercury (inApiKey as char, inIssuerId as char, inLogin as char, inPassword as char, inLogin_is as char, inEsysId as int, inServer as int):
+    
+    assign
+      apiKey   = inApiKey
+      issuerId = inIssuerId
+      login    = inLogin
+      password = inPassword
+      login_is = inLogin_is
+      esysId   = inEsysId
+    .
+    if inServer = 1 then server_ = "https://api2.vetrf.ru:8002" .
+    if inServer = 2 then server_ = "https://api.vetrf.ru" .
+    
+		vsdStat = new vsdstatustype () .
+		
+  end constructor.
+  
+  method public void GetVetDocumentByUuid
+  (
+   input inUuid as char,
+   input inEntGuid as char,
+   output p-applicationId as char,
+   output p-Status_ as char,
+   output p-Msg  as char
+  ) :
+    
+    define variable cmd as character no-undo .
+    define variable sw as handle no-undo .
+    define variable v-file  as character no-undo initial "GetVetDocumentByUuid_.xml".
+    
+    create sax-writer sw .
+    
+    sw:formatted = true.
+    sw:set-output-destination ("file", v-file).
+    sw:encoding = "UTF-8".
+    
+    sw:start-document () .
+    sw:start-element ("se:Envelope") .
+    
+    sw:insert-attribute ("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance") .
+    sw:insert-attribute ("xmlns:dt", "http://api.vetrf.ru/schema/cdm/dictionary/v2") .
+    sw:insert-attribute ("xmlns:bs", "http://api.vetrf.ru/schema/cdm/base") .
+    sw:insert-attribute ("xmlns:merc", "http://api.vetrf.ru/schema/cdm/mercury/g2b/applications/v2") .
+    sw:insert-attribute ("xmlns:apldef", "http://api.vetrf.ru/schema/cdm/application/ws-definitions") .
+    sw:insert-attribute ("xmlns:apl", "http://api.vetrf.ru/schema/cdm/application") .
+    sw:insert-attribute ("xmlns:vd", "http://api.vetrf.ru/schema/cdm/mercury/vet-document/v2") .
+    sw:insert-attribute ("xmlns:se", "http://schemas.xmlsoap.org/soap/envelope/") .
+    
+      sw:start-element ("se:Body") .
+        sw:start-element ("apldef:submitApplicationRequest") .
+          sw:write-data-element ("apldef:apiKey", apiKey) .
+          sw:start-element ("apl:application") .
+            sw:write-data-element ("apl:serviceId", "mercury-g2b.service:2.0") .
+            sw:write-data-element ("apl:issuerId", issuerId) .
+            sw:write-data-element ("apl:issueDate", iso-date(now)) .
+            sw:start-element ("apl:data") .
+              sw:start-element ("merc:getVetDocumentByUuidRequest") .
+                sw:write-data-element ("merc:localTransactionId", "1") .
+                sw:start-element ("merc:initiator") .
+                  sw:write-data-element ("vd:login", login_is) .
+                sw:end-element ("merc:initiator") .
+                sw:write-data-element ("bs:uuid", inUuid) .
+                sw:write-data-element ("dt:enterpriseGuid", inEntGuid) .
+              sw:end-element ("merc:getVetDocumentByUuidRequest") .
+            sw:end-element ("apl:data") .
+          sw:end-element ("apl:application") .
+        sw:end-element ("apldef:submitApplicationRequest") .
+      sw:end-element ("se:Body") .
+    sw:end-element ("se:Envelope") .
+    sw:end-document () .
+    
+    delete object sw.
+    
+    cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_ ).
+
+    os-command silent value (cmd).
+    
+    ParseXML(input search("ApplicationResponse_.xml")) .
+    
+    p-applicationId = applicationId .
+    p-Status_ = Status_ .
+    p-Msg = Msg .
+    
+    pause 0.2 .
+    
+  end method.
+  
+  method public void processIncomingConsignment
+  (
+   input inVsdSubs as class vsdsubs,
+   input p-qnty as decimal,
+   output p-applicationId as char,
+   output p-Status_ as char,
+   output p-Msg  as char
+  ) :
+    
+    define variable cmd as character no-undo .
+    define variable sw as handle no-undo .
+    define variable v-file  as character no-undo initial "processIncomingConsignment_.xml".
+    define variable v-cli-be-guid as character no-undo .
+    define variable v-cli-ent-guid as character no-undo .
+    define variable v-obj-be-guid as character no-undo .
+    define variable v-obj-ent-guid as character no-undo .
+/*    define variable v-prod-ent-guid as character no-undo .                        */
+/*    define variable v-prod-country-guid as character no-undo .                    */
+/*    define variable v-perishable as character no-undo init "false".               */
+/*    define variable v-transportStorageType as character no-undo init "VENTILATED".*/
+    gdsMercsubsObj = new gdsmercsubs ().
+    gdsmercstrObj = new gdsmercstr ().
+    
+    
+    find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-mercury}) no-error.
+    if not available buf_ext-system
+    then do :
+      
+    end.
+    
+    find first buf_ext-classif no-lock 
+        where buf_ext-classif.classif-subject = {&table_clients}
+          and buf_ext-classif.classif-name = {&extclass_clients_esys}
+          and buf_ext-classif.db-num = 0
+          and buf_ext-classif.key#_one = buf_ext-system.esys-id
+          and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + inVsdSubs:VsdObjCurr:ObjType + {&delim-key} + string (inVsdSubs:VsdObjCurr:ObjCode)
+          no-error. 
+    v-obj-be-guid = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
+    v-obj-ent-guid = entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
+    if v-obj-be-guid = "" or v-obj-be-guid = ? then v-obj-be-guid = issuerId .
+    
+    find first buf_ext-classif no-lock 
+        where buf_ext-classif.classif-subject = {&table_clients}
+          and buf_ext-classif.classif-name = {&extclass_clients_esys}
+          and buf_ext-classif.db-num = 0
+          and buf_ext-classif.key#_one = buf_ext-system.esys-id
+          and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + inVsdSubs:VsdObjCurr:CliType + {&delim-key} + string (inVsdSubs:VsdObjCurr:CliCode)
+          no-error. 
+    v-cli-be-guid = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
+    v-cli-ent-guid = entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
+    
+    
+    create sax-writer sw .
+    
+    sw:formatted = true.
+    sw:set-output-destination ("file", v-file).
+    sw:encoding = "UTF-8".
+    
+    sw:start-document () .
+    sw:start-element ("se:Envelope") .
+    
+    sw:insert-attribute ("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance") .
+    sw:insert-attribute ("xmlns:dt", "http://api.vetrf.ru/schema/cdm/dictionary/v2") .
+    sw:insert-attribute ("xmlns:bs", "http://api.vetrf.ru/schema/cdm/base") .
+    sw:insert-attribute ("xmlns:merc", "http://api.vetrf.ru/schema/cdm/mercury/g2b/applications/v2") .
+    sw:insert-attribute ("xmlns:apldef", "http://api.vetrf.ru/schema/cdm/application/ws-definitions") .
+    sw:insert-attribute ("xmlns:apl", "http://api.vetrf.ru/schema/cdm/application") .
+    sw:insert-attribute ("xmlns:vd", "http://api.vetrf.ru/schema/cdm/mercury/vet-document/v2") .
+    sw:insert-attribute ("xmlns:se", "http://schemas.xmlsoap.org/soap/envelope/") .
+    
+      sw:start-element ("se:Body") .
+        sw:start-element ("apldef:submitApplicationRequest") .
+          sw:write-data-element ("apldef:apiKey", apiKey) .
+          sw:start-element ("apl:application") .
+            sw:write-data-element ("apl:serviceId", "mercury-g2b.service:2.0") .
+            sw:write-data-element ("apl:issuerId", issuerId) .
+            sw:write-data-element ("apl:issueDate", iso-date(now)) .
+            sw:start-element ("apl:data") .
+              sw:start-element ("merc:processIncomingConsignmentRequest") .
+                sw:write-data-element ("merc:localTransactionId", "1") .
+                sw:start-element ("merc:initiator") .
+                  sw:write-data-element ("vd:login", login_is) .
+                sw:end-element ("merc:initiator") .
+                sw:start-element ("merc:delivery") .
+                  sw:write-data-element ("vd:deliveryDate", iso-date(inVsdSubs:VsdObjCurr:FactDatetime)) .
+                  sw:start-element ("vd:consignor") .
+                    sw:start-element ("dt:businessEntity") .
+                      sw:write-data-element ("bs:guid", LC(v-cli-be-guid)) .
+                    sw:end-element ("dt:businessEntity") .
+                    sw:start-element ("dt:enterprise") .
+                      sw:write-data-element ("bs:guid", LC(v-cli-ent-guid)) .
+                    sw:end-element ("dt:enterprise") .
+                  sw:end-element ("vd:consignor") .
+                  sw:start-element ("vd:consignee") .
+                    sw:start-element ("dt:businessEntity") .
+                      sw:write-data-element ("bs:guid", LC(v-obj-be-guid)) .
+                    sw:end-element ("dt:businessEntity") .
+                    sw:start-element ("dt:enterprise") .
+                      sw:write-data-element ("bs:guid", LC(v-obj-ent-guid)) .
+                    sw:end-element ("dt:enterprise") .
+                  sw:end-element ("vd:consignee") .
+                  sw:start-element ("vd:consignment") .
+                    gdsMercsubsObj = gdsmercstrObj:getgdsmercs(inVsdSubs:VsdObjCurr:GdsCode).
+                    sw:write-data-element ("vd:productType", inVsdSubs:VsdObjCurr:TypeProd) .
+                    sw:start-element ("vd:product") .
+                      if inVsdSubs:VsdObjCurr:ProductGuid <> "" and inVsdSubs:VsdObjCurr:ProductGuid <> ?
+                      then sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:ProductGuid)) .
+                      else sw:write-data-element ("bs:guid", LC(gdsMercsubsObj:GdsMercsubsCurr:GUIDType)) .
+                    sw:end-element ("vd:product") .
+                    sw:start-element ("vd:subProduct") .
+                      if inVsdSubs:VsdObjCurr:SubProductGuid <> "" and inVsdSubs:VsdObjCurr:SubProductGuid <> ?
+                      then sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:SubProductGuid)) .
+                      else sw:write-data-element ("bs:guid", LC(gdsMercsubsObj:GdsMercsubsCurr:GUIDSubType)) .
+                    sw:end-element ("vd:subProduct") .
+                    sw:start-element ("vd:productItem") .
+                      if inVsdSubs:VsdObjCurr:GdsGuid <> ? and inVsdSubs:VsdObjCurr:GdsGuid <> ""
+                      then sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:GdsGuid)) .
+/*                      else                                                                                                                       */
+/*                      if gdsMercsubsObj:iCounter > 0 and gdsMercsubsObj:GdsMercsubsCurr:GUID_ <> ? and gdsMercsubsObj:GdsMercsubsCurr:GUID_ <> ""*/
+/*                      then sw:write-data-element ("bs:guid", gdsMercsubsObj:GdsMercsubsCurr:GUID_) .                                             */
+                      if inVsdSubs:VsdObjCurr:GdsName <> ? and inVsdSubs:VsdObjCurr:GdsName <> ""
+                      then sw:write-data-element ("dt:name", inVsdSubs:VsdObjCurr:GdsName) .
+/*                      else                                                                                                                             */
+/*                      if gdsMercsubsObj:iCounter > 0 and gdsMercsubsObj:GdsMercsubsCurr:MercName <> ? and gdsMercsubsObj:GdsMercsubsCurr:MercName <> ""*/
+/*                      then sw:write-data-element ("dt:name", gdsMercsubsObj:GdsMercsubsCurr:MercName) .                                                */
+                    sw:end-element ("vd:productItem") .
+                    sw:write-data-element ("vd:volume", string(p-qnty)) .
+                    sw:start-element ("vd:unit") .
+                      sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:UnitGuid)) .
+                    sw:end-element ("vd:unit") .
+                    sw:start-element ("vd:dateOfProduction") .
+                      sw:start-element ("vd:firstDate") .
+                        sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:DateOut, ":")) .
+                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:DateOut, ":")) .
+                        if entry(3, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:DateOut, ":")) .
+                        if entry(4, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        then sw:write-data-element ("dt:hour", entry(4, inVsdSubs:VsdObjCurr:DateOut, ":")) .
+                      sw:end-element ("vd:firstDate") .
+                    if inVsdSubs:VsdObjCurr:ExpiryOutDate <> ? and inVsdSubs:VsdObjCurr:ExpiryOutDate <> ":::" and inVsdSubs:VsdObjCurr:ExpiryOutDate <> ""
+                    then do :
+                      sw:start-element ("vd:secondDate") .
+                        sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
+                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
+                        if entry(3, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":") <> ""
+                        then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
+                        if entry(4, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":") <> ""
+                        then sw:write-data-element ("dt:hour", entry(4, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
+                      sw:end-element ("vd:secondDate") .  
+                    end.
+                    sw:end-element ("vd:dateOfProduction") .
+                    sw:start-element ("vd:expiryDate") .
+                      sw:start-element ("vd:firstDate") .
+                        sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
+                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
+                        if entry(3, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
+                        if entry(4, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        then sw:write-data-element ("dt:hour", entry(4, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
+                      sw:end-element ("vd:firstDate") .
+                    if inVsdSubs:VsdObjCurr:ExpiryDate2 <> ? and inVsdSubs:VsdObjCurr:ExpiryDate2 <> ":::" and inVsdSubs:VsdObjCurr:ExpiryDate2 <> ""
+                    then do :
+                      sw:start-element ("vd:secondDate") .
+                        sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
+                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
+                        if entry(3, inVsdSubs:VsdObjCurr:ExpiryDate2, ":") <> ""
+                        then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
+                        if entry(4, inVsdSubs:VsdObjCurr:ExpiryDate2, ":") <> ""
+                        then sw:write-data-element ("dt:hour", entry(4, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
+                      sw:end-element ("vd:secondDate") .  
+                    end.
+                    sw:end-element ("vd:expiryDate") .
+                    sw:write-data-element ("vd:batchID", inVsdSubs:VsdObjCurr:NumPart) .
+                    sw:write-data-element ("vd:perishable", inVsdSubs:VsdObjCurr:Perishable) .
+                    sw:start-element ("vd:origin") .
+                      sw:start-element ("vd:country") .
+                        sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:OrigCountryGuid)) .
+                      sw:end-element ("vd:country") .
+                      sw:start-element ("vd:producer") .
+                        if inVsdSubs:VsdObjCurr:ProducerGuid <> "" and inVsdSubs:VsdObjCurr:ProducerGuid <> ?
+                        then do :
+                          sw:start-element ("dt:enterprise") .
+                            sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:ProducerGuid)) .
+                          sw:end-element ("dt:enterprise") .
+                        end.
+                        else sw:write-empty-element ("dt:enterprise") .
+                        if inVsdSubs:VsdObjCurr:ProducerRole <> ""
+                        then  sw:write-data-element ("dt:role", inVsdSubs:VsdObjCurr:ProducerRole) .
+                      sw:end-element ("vd:producer") .
+                    sw:end-element ("vd:origin") .
+                  sw:end-element ("vd:consignment") .
+                  sw:start-element ("vd:transportInfo") .
+                    sw:write-data-element ("vd:transportType", inVsdSubs:VsdObjCurr:Transport) . 
+                    sw:start-element ("vd:transportNumber") .
+                      if inVsdSubs:VsdObjCurr:ContainerNum <> ""
+                      then sw:write-data-element ("vd:containerNumber", inVsdSubs:VsdObjCurr:ContainerNum) .
+                      case inVsdSubs:VsdObjCurr:Transport :
+                        when "1" then sw:write-data-element ("vd:vehicleNumber", inVsdSubs:VsdObjCurr:CarNum) .
+                        when "2" then sw:write-data-element ("vd:wagonNumber", inVsdSubs:VsdObjCurr:CarNum) .
+                        when "3" then sw:write-data-element ("vd:flightNumber", inVsdSubs:VsdObjCurr:CarNum) .
+                        when "4" or
+                        when "5 "then sw:write-data-element ("vd:shipName", inVsdSubs:VsdObjCurr:CarNum) .
+                      end case .
+                      if inVsdSubs:VsdObjCurr:TrailerNum <> ""
+                      then sw:write-data-element ("vd:trailerNumber", inVsdSubs:VsdObjCurr:TrailerNum) .
+                    sw:end-element ("vd:transportNumber") .
+                  sw:end-element ("vd:transportInfo") .
+                  sw:write-data-element ("vd:transportStorageType", inVsdSubs:VsdObjCurr:TransportType) .
+                  sw:start-element ("vd:accompanyingForms") .
+                    if inVsdSubs:VsdObjCurr:TTNtype = "1"
+                    then do :
+                      sw:start-element ("vd:waybill") .
+                        if inVsdSubs:VsdObjCurr:TTNissueSeries <> ""
+                        then sw:write-data-element ("vd:issueSeries", inVsdSubs:VsdObjCurr:TTNissueSeries) .
+                        sw:write-data-element ("vd:issueNumber", inVsdSubs:VsdObjCurr:TTNissueNumber) .
+                        sw:write-data-element ("vd:issueDate", inVsdSubs:VsdObjCurr:TTNissueDate) .
+                        sw:write-data-element ("vd:type", inVsdSubs:VsdObjCurr:TTNtype) .
+                      sw:end-element ("vd:waybill") .
+                    end.
+                    sw:start-element ("vd:vetCertificate") .
+                      sw:write-data-element ("bs:uuid", LC(inVsdSubs:VsdObjCurr:UUID)) .
+                    sw:end-element ("vd:vetCertificate") .
+                  sw:end-element ("vd:accompanyingForms") .
+                sw:end-element ("merc:delivery") .
+                sw:start-element ("merc:deliveryFacts") .
+                  sw:write-data-element ("vd:vetCertificatePresence", "ELECTRONIC") .
+                  sw:start-element ("vd:docInspection") .
+                    sw:start-element ("vd:responsible") .
+                      sw:write-data-element ("vd:login", login_is) .
+                    sw:end-element ("vd:responsible") .
+                    sw:write-data-element ("vd:result", "CORRESPONDS") .
+                  sw:end-element ("vd:docInspection") .
+                  sw:start-element ("vd:vetInspection") .
+                    sw:start-element ("vd:responsible") .
+                      sw:write-data-element ("vd:login", login_is) .
+                    sw:end-element ("vd:responsible") .
+                    sw:write-data-element ("vd:result", "CORRESPONDS") .
+                  sw:end-element ("vd:vetInspection") .
+                  if p-qnty < inVsdSubs:VsdObjCurr:Qnty 
+                  then sw:write-data-element ("vd:decision", "PARTIALLY") .
+                  else sw:write-data-element ("vd:decision", "ACCEPT_ALL") .
+                sw:end-element ("merc:deliveryFacts") .
+/*              ВОЗВРАТ                          */
+              if p-qnty < inVsdSubs:VsdObjCurr:Qnty 
+              then do :
+                sw:start-element ("merc:returnedDelivery") .
+                  sw:write-data-element ("vd:deliveryDate", iso-date(inVsdSubs:VsdObjCurr:FactDatetime)) .
+                  sw:start-element ("vd:consignor") .
+                    sw:start-element ("dt:businessEntity") .
+                      sw:write-data-element ("bs:guid", LC(v-obj-be-guid)) .
+                    sw:end-element ("dt:businessEntity") .
+                    sw:start-element ("dt:enterprise") .
+                      sw:write-data-element ("bs:guid", LC(v-obj-ent-guid)) .
+                    sw:end-element ("dt:enterprise") .
+                  sw:end-element ("vd:consignor") .
+                  sw:start-element ("vd:consignee") .
+                    sw:start-element ("dt:businessEntity") .
+                      sw:write-data-element ("bs:guid", LC(v-cli-be-guid)) .
+                    sw:end-element ("dt:businessEntity") .
+                    sw:start-element ("dt:enterprise") .
+                      sw:write-data-element ("bs:guid", LC(v-cli-ent-guid)) .
+                    sw:end-element ("dt:enterprise") .
+                  sw:end-element ("vd:consignee") .
+                  sw:start-element ("vd:consignment") .
+/*                    gdsMercsubsObj = gdsmercstrObj:getgdsmercs(inVsdSubs:VsdObjCurr:GdsCode).*/
+                    sw:write-data-element ("vd:productType", inVsdSubs:VsdObjCurr:TypeProd) .
+                    sw:start-element ("vd:product") .
+                      if inVsdSubs:VsdObjCurr:ProductGuid <> "" and inVsdSubs:VsdObjCurr:ProductGuid <> ?
+                      then sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:ProductGuid)) .
+                      else sw:write-data-element ("bs:guid", LC(gdsMercsubsObj:GdsMercsubsCurr:GUIDType)) .
+                    sw:end-element ("vd:product") .
+                    sw:start-element ("vd:subProduct") .
+                      if inVsdSubs:VsdObjCurr:SubProductGuid <> "" and inVsdSubs:VsdObjCurr:SubProductGuid <> ?
+                      then sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:SubProductGuid)) .
+                      else sw:write-data-element ("bs:guid", LC(gdsMercsubsObj:GdsMercsubsCurr:GUIDSubType)) .
+                    sw:end-element ("vd:subProduct") .
+                    sw:start-element ("vd:productItem") .
+                      if inVsdSubs:VsdObjCurr:GdsGuid <> ? and inVsdSubs:VsdObjCurr:GdsGuid <> ""
+                      then sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:GdsGuid)) .
+/*                      else                                                                                                                       */
+/*                      if gdsMercsubsObj:iCounter > 0 and gdsMercsubsObj:GdsMercsubsCurr:GUID_ <> ? and gdsMercsubsObj:GdsMercsubsCurr:GUID_ <> ""*/
+/*                      then sw:write-data-element ("bs:guid", gdsMercsubsObj:GdsMercsubsCurr:GUID_) .                                             */
+                      if inVsdSubs:VsdObjCurr:GdsName <> ? and inVsdSubs:VsdObjCurr:GdsName <> ""
+                      then sw:write-data-element ("dt:name", inVsdSubs:VsdObjCurr:GdsName) .
+/*                      else                                                                                                                             */
+/*                      if gdsMercsubsObj:iCounter > 0 and gdsMercsubsObj:GdsMercsubsCurr:MercName <> ? and gdsMercsubsObj:GdsMercsubsCurr:MercName <> ""*/
+/*                      then sw:write-data-element ("dt:name", gdsMercsubsObj:GdsMercsubsCurr:MercName) .                                                */
+                    sw:end-element ("vd:productItem") .
+                    sw:write-data-element ("vd:volume", string(inVsdSubs:VsdObjCurr:Qnty - p-qnty)) .
+                    sw:start-element ("vd:unit") .
+                      sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:UnitGuid)) .
+                    sw:end-element ("vd:unit") .
+                    sw:start-element ("vd:dateOfProduction") .
+                      sw:start-element ("vd:firstDate") .
+                        sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:DateOut, ":")) .
+                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:DateOut, ":")) .
+                        if entry(3, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:DateOut, ":")) .
+                        if entry(4, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        then sw:write-data-element ("dt:hour", entry(4, inVsdSubs:VsdObjCurr:DateOut, ":")) .
+                      sw:end-element ("vd:firstDate") .
+                    if inVsdSubs:VsdObjCurr:ExpiryOutDate <> ? and inVsdSubs:VsdObjCurr:ExpiryOutDate <> ":::" and inVsdSubs:VsdObjCurr:ExpiryOutDate <> ""
+                    then do :
+                      sw:start-element ("vd:secondDate") .
+                        sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
+                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
+                        if entry(3, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":") <> ""
+                        then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
+                        if entry(4, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":") <> ""
+                        then sw:write-data-element ("dt:hour", entry(4, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
+                      sw:end-element ("vd:secondDate") .  
+                    end.
+                    sw:end-element ("vd:dateOfProduction") .
+                    sw:start-element ("vd:expiryDate") .
+                      sw:start-element ("vd:firstDate") .
+                        sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
+                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
+                        if entry(3, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
+                        if entry(4, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        then sw:write-data-element ("dt:hour", entry(4, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
+                      sw:end-element ("vd:firstDate") .
+                    if inVsdSubs:VsdObjCurr:ExpiryDate2 <> ? and inVsdSubs:VsdObjCurr:ExpiryDate2 <> ":::" and inVsdSubs:VsdObjCurr:ExpiryDate2 <> ""
+                    then do :
+                      sw:start-element ("vd:secondDate") .
+                        sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
+                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
+                        if entry(3, inVsdSubs:VsdObjCurr:ExpiryDate2, ":") <> ""
+                        then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
+                        if entry(4, inVsdSubs:VsdObjCurr:ExpiryDate2, ":") <> ""
+                        then sw:write-data-element ("dt:hour", entry(4, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
+                      sw:end-element ("vd:secondDate") .  
+                    end.  
+                    sw:end-element ("vd:expiryDate") .
+                    sw:write-data-element ("vd:batchID", inVsdSubs:VsdObjCurr:NumPart) .
+                    sw:write-data-element ("vd:perishable", inVsdSubs:VsdObjCurr:Perishable) .
+                    sw:start-element ("vd:origin") .
+                      sw:start-element ("vd:country") .
+                        sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:OrigCountryGuid)) .
+                      sw:end-element ("vd:country") .
+                      sw:start-element ("vd:producer") .
+                        if inVsdSubs:VsdObjCurr:ProducerGuid <> "" and inVsdSubs:VsdObjCurr:ProducerGuid <> ?
+                        then do :
+                          sw:start-element ("dt:enterprise") .
+                            sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:ProducerGuid)) .
+                          sw:end-element ("dt:enterprise") .
+                        end.
+                        else sw:write-empty-element ("dt:enterprise") .
+                        if inVsdSubs:VsdObjCurr:ProducerRole <> ""
+                        then  sw:write-data-element ("dt:role", inVsdSubs:VsdObjCurr:ProducerRole) .
+                      sw:end-element ("vd:producer") .
+                    sw:end-element ("vd:origin") .
+                  sw:end-element ("vd:consignment") .
+                  sw:start-element ("vd:transportInfo") .
+                    sw:write-data-element ("vd:transportType", inVsdSubs:VsdObjCurr:Transport) . 
+                    sw:start-element ("vd:transportNumber") .
+                      if inVsdSubs:VsdObjCurr:ContainerNum <> ""
+                      then sw:write-data-element ("vd:containerNumber", inVsdSubs:VsdObjCurr:ContainerNum) .
+                      case inVsdSubs:VsdObjCurr:Transport :
+                        when "1" then sw:write-data-element ("vd:vehicleNumber", inVsdSubs:VsdObjCurr:CarNum) .
+                        when "2" then sw:write-data-element ("vd:wagonNumber", inVsdSubs:VsdObjCurr:CarNum) .
+                        when "3" then sw:write-data-element ("vd:flightNumber", inVsdSubs:VsdObjCurr:CarNum) .
+                        when "4" or
+                        when "5 "then sw:write-data-element ("vd:shipName", inVsdSubs:VsdObjCurr:CarNum) .
+                      end case .
+                      if inVsdSubs:VsdObjCurr:TrailerNum <> ""
+                      then sw:write-data-element ("vd:trailerNumber", inVsdSubs:VsdObjCurr:TrailerNum) .
+                    sw:end-element ("vd:transportNumber") .
+                  sw:end-element ("vd:transportInfo") .
+                  sw:write-data-element ("vd:transportStorageType", inVsdSubs:VsdObjCurr:TransportType) .
+                  sw:start-element ("vd:accompanyingForms") .
+                    if inVsdSubs:VsdObjCurr:TTNtype = "1"
+                    then do :
+                      sw:start-element ("vd:waybill") .
+                        if inVsdSubs:VsdObjCurr:TTNissueSeries <> ""
+                        then sw:write-data-element ("vd:issueSeries", inVsdSubs:VsdObjCurr:TTNissueSeries) .
+                        sw:write-data-element ("vd:issueNumber", inVsdSubs:VsdObjCurr:TTNissueNumber) .
+                        sw:write-data-element ("vd:issueDate", inVsdSubs:VsdObjCurr:TTNissueDate) .
+                        sw:write-data-element ("vd:type", inVsdSubs:VsdObjCurr:TTNtype) .
+                      sw:end-element ("vd:waybill") .
+                    end.
+                    sw:start-element ("vd:vetCertificate") .
+                      sw:start-element ("vd:authentication") .
+                        sw:start-element ("vd:purpose") .
+                          sw:write-data-element ("bs:guid", LC(inVsdSubs:VsdObjCurr:PurposeGuid)) .
+                        sw:end-element ("vd:purpose") .
+                        if inVsdSubs:VsdObjCurr:CargoInspected <> ""
+                        then sw:write-data-element ("vd:cargoInspected", inVsdSubs:VsdObjCurr:CargoInspected) .
+                        sw:write-data-element ("vd:cargoExpertized", inVsdSubs:VsdObjCurr:CargoExpertized) .
+                        if inVsdSubs:VsdObjCurr:LocationProsperity <> ""
+                        then sw:write-data-element ("vd:locationProsperity", inVsdSubs:VsdObjCurr:LocationProsperity) .
+                      sw:end-element ("vd:authentication") .
+                    sw:end-element ("vd:vetCertificate") .
+                  sw:end-element ("vd:accompanyingForms") .
+                sw:end-element ("merc:returnedDelivery") .
+              end. 
+/*/*                Акт о несоответствии              */                                                                                            */
+/*              if p-qnty < (inVsdSubs:VsdObjCurr:Qnty * 0.95)                                                                                      */
+/*              then do :                                                                                                                           */
+/*                sw:start-element ("merc:discrepancyReport") .                                                                                     */
+/*                  sw:write-data-element ("vd:description", ("Oбъем в ВСД больше фактического на " + string(inVsdSubs:VsdObjCurr:Qnty - p-qnty))) .*/
+/*                  inVsdSubs:VsdObjCurr:Note = ("Oбъем в ВСД больше фактического на " + string(inVsdSubs:VsdObjCurr:Qnty - p-qnty)) .              */
+/*                sw:end-element ("merc:discrepancyReport") .                                                                                       */
+/*              end.                                                                                                                                */
+              sw:end-element ("merc:processIncomingConsignmentRequest") .
+            sw:end-element ("apl:data") .
+          sw:end-element ("apl:application") .
+        sw:end-element ("apldef:submitApplicationRequest") .
+      sw:end-element ("se:Body") .
+    sw:end-element ("se:Envelope") .
+    sw:end-document () .
+    
+    delete object sw.
+    
+    cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_ ).
+
+    os-command silent value (cmd).
+    
+    ParseXML(input search("ApplicationResponse_.xml")) .
+    
+    p-applicationId = applicationId .
+    p-Status_ = Status_ .
+    p-Msg = Msg .
+    
+    delete object gdsMercsubsObj no-error .
+    delete object gdsmercstrObj no-error .
+    
+    pause 0.2 .
+    
+  end method.
+  
+  method public void receiveVetDoc
+  (
+   input inApplicationId as char,
+   input inUUID as char,
+   input p-qnty as decimal,
+   output p-Status_ as char,
+   output p-Msg  as char
+  ) :
+    
+    define variable gdsMercsubsObj as class gdsmercsubs.
+    define variable gdsMercsubObj as class gdsmercsub.
+    define variable gdsMercstrObj as class gdsmercstr.
+    
+    define buffer buf_ext-classif for ext-classif .
+    
+    vsds = new vsdsubs() .
+    vsdStorage = new vsdtostorage ().
+    
+    gdsMercsubsObj = new gdsmercsubs ().
+    gdsMercsubObj = new gdsmercsub ().
+    gdsMercstrObj = new gdsmercstr ().
+    
+    receiveApplicationResult ("VetDocumentByUuidResponse_.xml", inApplicationId) .
+    
+    if Status_ = "COMPLETED"
+    then 
+    do ii = 1 to vsds:GetItem (ii): 
+      vsds:VsdObjCurr:MsgErr = "" .
+      gdsMercsubsObj = gdsMercstrObj:getgdsmercs(vsds:VsdObjCurr:GdsCode) .
+      if valid-object(gdsMercsubsObj:GdsMercsubsCurr)
+      and gdsMercsubsObj:GdsMercsubsCurr:GUID_ <> vsds:VsdObjCurr:GdsGuid
+      and vsds:VsdObjCurr:GdsGuid <> ""
+      and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
+      then do :
+        Msg = Msg + chr(10) + "GUID'ы товаров не совпадают." .
+        Status_ = "REJECTED" .
+      end .
+      if not valid-object(gdsMercsubsObj:GdsMercsubsCurr)
+      and vsds:VsdObjCurr:GdsGuid <> ""
+      and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
+      then do :
+        Msg = Msg + chr(10) + "В ВСД товар с GUID'ом. В TH товар не синхронизирован с ФГИС Меркурий (нет GUID'а)" .
+        Status_ = "REJECTED" .
+      end .
+      if issuerId <> vsds:VsdObjCurr:ObjBeGuid
+      and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
+      then do :
+        Msg = Msg + chr(10) + "GUID'ы хоз. субъекта получателя не совпадают." .
+        Status_ = "REJECTED" .  
+      end.
+      find first buf_ext-classif no-lock
+        where buf_ext-classif.classif-subject = {&table_clients}
+          and buf_ext-classif.classif-name = {&extclass_clients_esys}
+          and buf_ext-classif.db-num = 0
+          and buf_ext-classif.key#_one = esysId
+          and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + vsds:VsdObjCurr:ObjType + {&delim-key} + string (vsds:VsdObjCurr:ObjCode)
+          no-error.
+      if entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) <> vsds:VsdObjCurr:ObjEntGuid
+      and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
+      then do :
+        Msg = Msg + chr(10) + "GUID'ы предприятия получателя не совпадают." .
+        Status_ = "REJECTED" .  
+      end.    
+      find first buf_ext-classif no-lock
+        where buf_ext-classif.classif-subject = {&table_clients}
+          and buf_ext-classif.classif-name = {&extclass_clients_esys}
+          and buf_ext-classif.db-num = 0
+          and buf_ext-classif.key#_one = esysId
+          and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + vsds:VsdObjCurr:CliType + {&delim-key} + string (vsds:VsdObjCurr:CliCode)
+          no-error.
+      if entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) <> vsds:VsdObjCurr:CliBeGuid
+      and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
+      then do :
+        Msg = Msg + chr(10) + "GUID'ы хоз. субъекта отправителя не совпадают." .
+        Status_ = "REJECTED" .  
+      end.
+      if entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) <> vsds:VsdObjCurr:CliEntGuid
+      and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
+      then do :
+        Msg = Msg + chr(10) + "GUID'ы предприятия отправителя не совпадают." .
+        Status_ = "REJECTED" .  
+      end.
+      if p-qnty > vsds:VsdObjCurr:Qnty
+      and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
+      then do :
+        Msg = Msg + chr(10) + "Количество в TH больше, чем количество в ВСД." .
+        Status_ = "REJECTED" .  
+      end.
+      if Status_ <> "REJECTED" 
+      then
+      vsdStorage:updateDB(vsds:VsdObjCurr) .
+    end .  
+    if Status_ = "REJECTED"
+    then do :
+      vsds = vsdStorage:getVSDsubs (input "UUID", input inUUID) .
+      do ii = 1 to vsds:GetItem(ii):
+        Msg = left-trim(Msg, chr(10)) .
+        vsds:VsdObjCurr:Status_ = vsdStat:IsErrCheck .
+        vsds:VsdObjCurr:MsgErr = Msg .
+        vsdStorage:updateDB(vsds:VsdObjCurr) .
+      end.
+    end .
+    
+    delete object vsds no-error.
+    delete object vsdStorage no-error.
+    delete object gdsMercsubsObj no-error.
+    delete object gdsMercsubObj no-error.
+    delete object gdsMercstrObj no-error.
+    
+    p-Status_ = Status_ .
+    p-Msg = Msg .
+  end method .
+  
+  method public void receiveIncomingConsignmentResponse
+  (
+   input inApplicationId as char,
+   input inUUID as char,
+   output p-Status_ as char,
+   output p-Msg  as char
+  ) :
+    
+    define buffer buf_vsd for ub.vsd .
+    
+    vsds = new vsdsubs() .
+    vsdStorage = new vsdtostorage ().
+    
+    receiveApplicationResult ("IncomingConsignmentResponse_.xml", inApplicationId) .
+    
+    if Status_ = "COMPLETED"
+    then
+    do ii = 1 to vsds:GetItem (ii):
+      vsds:VsdObjCurr:MsgErr = "" .
+      if vsds:VsdObjCurr:ID > 0
+      then do :
+        vsdStorage:updateDB(vsds:VsdObjCurr) .
+      end.
+      else do :
+        find first buf_vsd no-lock where buf_vsd.UUID = inUUID no-error .
+        if available buf_vsd
+        then do :
+          vsds:VsdObjCurr:PartKey     = buf_vsd.part-key .
+          vsds:VsdObjCurr:GdsCode     = buf_vsd.gds-code .
+          vsds:VsdObjCurr:ObjType     = buf_vsd.obj-type .
+          vsds:VsdObjCurr:ObjCode     = buf_vsd.obj-code .
+          vsds:VsdObjCurr:CliType     = buf_vsd.cli-type .
+          vsds:VsdObjCurr:CliCode     = buf_vsd.cli-code .
+          vsds:VsdObjCurr:Status_     = vsdStat:IsUtilized .
+        end. 
+        vsdStorage:insertDB(vsds:VsdObjCurr) . 
+      end.
+    end .
+    if Status_ = "REJECTED"
+    then do :
+      vsds = vsdStorage:getVSDsubs (input "UUID", input inUUID) .
+      do ii = 1 to vsds:GetItem(ii):
+        Msg = left-trim(Msg, chr(10)) .
+        vsds:VsdObjCurr:Status_ = vsdStat:IsErrUtilized .
+        vsds:VsdObjCurr:MsgErr = Msg .
+        vsdStorage:updateDB(vsds:VsdObjCurr) .
+      end.
+    end .
+    delete object vsds no-error.
+    delete object vsdStorage no-error.
+    
+    p-Status_ = Status_ .
+    p-Msg = Msg .
+    
+  end method .
+  
+  method private void receiveApplicationResult 
+  (
+   input v-result-file as char, 
+   input inApplicationId as char
+  ) :
+    define variable cmd as character no-undo .
+    define variable sw as handle no-undo .
+    define variable v-file  as character no-undo initial "receiveApplicationResult_.xml".
+    
+    create sax-writer sw .
+    
+    sw:formatted = true.
+    sw:set-output-destination ("file", v-file).
+    sw:encoding = "UTF-8".
+    
+    sw:start-document () .
+    sw:start-element ("se:Envelope") .
+    
+    sw:insert-attribute ("xmlns:se", "http://schemas.xmlsoap.org/soap/envelope/") .
+    sw:insert-attribute ("xmlns:ws", "http://api.vetrf.ru/schema/cdm/application/ws-definitions") .
+    
+      sw:start-element ("se:Body") .
+        sw:start-element ("ws:receiveApplicationResultRequest") .
+          sw:write-data-element ("ws:apiKey", apiKey) .
+          sw:write-data-element ("ws:issuerId", issuerId) .
+          sw:write-data-element ("ws:applicationId", inApplicationId) .
+        sw:end-element ("ws:receiveApplicationResultRequest") .
+      sw:end-element ("se:Body") .
+    
+    sw:end-element ("se:Envelope") .
+    sw:end-document () .
+    
+    delete object sw.
+    
+    cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                      search ("exe/curl.exe"), search ("receiveApplicationResult_.xml"), v-result-file, login, password, server_ ).
+
+    os-command silent value (cmd).
+    
+    ParseXML(input search(v-result-file)) .
+    
+  end method .
+  
+  method public logical ParseXML 
+  (
+    input p-inFileName as character
+  ):
+    define variable lresult  as logical no-undo.
+    define variable hHandler as handle no-undo.
+    define variable hParser  as handle no-undo.
+    
+    define variable nameChildrenCurr as character no-undo.
+    define variable iNum             as integer   no-undo.
+    
+    run ibs/th/bge/mercury/parseMercXML.p persistent set hHandler.
+    
+    create sax-reader hParser.
+    hParser:handler = hHandler.
+    hParser:set-input-source("FILE", p-inFileName). /* This XML file does not use namespaces. */
+    hParser:SUPPRESS-NAMESPACE-PROCESSING = true.
+    hParser:VALIDATION-ENABLED = false.
+    hParser:SCHEMA-LOCATION = "".
+    hParser:NONAMESPACE-SCHEMA-LOCATION = "".
+    
+  
+    iNum = 0.
+    hParser:sax-parse ( ).
+    if p-inFileName = search("ApplicationResponse_.xml")
+    then do :
+      run getData in hHandler (output applicationId, output Status_, output Msg).
+    end.
+    if p-inFileName = search("VetDocumentByUuidResponse_.xml")
+    or p-inFileName = search("IncomingConsignmentResponse_.xml")
+    then do :
+     
+      run getVsds in hHandler (output applicationId, output Status_, output Msg, output vsds).
+      
+    end.
+    
+    delete object hParser.
+    delete procedure hHandler.
+    
+    return lresult.
+  end method.
+
+end class.

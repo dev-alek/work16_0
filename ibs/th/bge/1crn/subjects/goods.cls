@@ -44,7 +44,9 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property fats          as decimal      no-undo get. private set.
   define property carbohydrates as decimal      no-undo get. private set.
   define property calories      as decimal      no-undo get. private set.
+  define property vad-gds       as integer      no-undo get. private set.
   define property barcode       as subjects     no-undo get. private set.
+  
   
   define override property InitTag as character no-undo init "good"
     get. 
@@ -205,6 +207,11 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
           assign 
             calories = decimal(inValue).
         end.
+      when "vad-gds" then 
+        do:
+          assign 
+            vad-gds = integer(inValue).
+        end.
     end case.
   end method.
   
@@ -269,6 +276,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         fats          = ?
         carbohydrates = ?
         calories      = ?
+        vad-gds       = ?
     .   
     delete object barcode no-error . 
   end method .    

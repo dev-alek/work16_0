@@ -2534,6 +2534,73 @@ end.
 
     end.
 
+
+    when  {&attr-mercur} then do:
+      v-prop-code = "{&bef-attr-mercur_apikey}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_login}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_password}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_qrcode}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_server}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype integer
+&scop prop-value ?
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_manual-vcd}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype logical
+&scop prop-value no
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_close}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype logical
+&scop prop-value no
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_login_is}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_type-connect}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype integer
+&scop prop-value ?
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.      
+    end.
+
     when {&attr-fbrattr} then do:
       v-prop-code = "{&bef-attr-fbrattr_fbr-frcp},{&bef-attr-fbrattr_fbr-ioff},{&bef-attr-fbrattr_fbr-qntc},{&bef-attr-fbrattr_fbrrcpgb}"  .
 &scop ptype logical

@@ -105,6 +105,11 @@ task-type
             buf_temp-autotask.task-name = "Сокет-Сервер"
             .
           end.
+          when {&btpr-type-mercury} then do:
+            assign
+            buf_temp-autotask.task-name = "Меркурий"
+            .
+          end.
         END CASE.
     END.
 

@@ -170,6 +170,8 @@ define buffer buf_bar-code              for ub.bar-code.
 define buffer buf_alc-type              for ub.alc-type.
 define buffer buf_alc-type-gds          for ub.alc-type-gds.
 define buffer buf_temp_gds-host-attr    for temp_gds-host-attr.
+  define variable v-gds-mercur         as character no-undo .
+  define variable v-gds-perishable     as character no-undo .
 
 FIND FIRST buf_goods NO-LOCK
      WHERE buf_goods.gds-code = p-gds-code
@@ -183,6 +185,18 @@ run get-tax-rate-code in this-procedure (
     , output v-rate-code
 ).
 
+/*явл€етс€ подконтрольным ‘√»— "ћеркурий"*/                                          
+    run gds-attr-value in this-procedure (input Buf_goods.gds-code
+                                         ,input {&attr-mercur_FGIS}
+                                         ,output v-gds-mercur
+                                         ,output v-gds-attr-type ) no-error .
+                                         
+
+/*явл€етс€ скоропорт€щейс€ продукцией*/                                          
+    run gds-attr-value in this-procedure (input Buf_goods.gds-code
+                                         ,input {&attr-perishable}
+                                         ,output v-gds-perishable
+                                         ,output v-gds-attr-type ) no-error .
 /*{ gbl/gdsbcode.i buf_goods.gds-code ? iBarCode no-error }          */
 /*IF ERROR-STATUS:ERROR THEN                                         */
 /*DO:                                                                */
@@ -306,6 +320,8 @@ RUN gds-attr-value (
         end.         
      end.                   
 run wp-XMLTagPut(3, "comment", buf_goods.PS, 0).
+  run wp-XMLTagPut(3, "mercuri"           , string( if v-gds-mercur = "no" then "0" else "1"),  0).
+  run wp-XMLTagPut(3, "perishable"        , string( if v-gds-perishable = "no" then "0" else "1"),  0).
 
 
 run fill-gds-host-attr in this-procedure (

@@ -123,8 +123,10 @@ class ibs.th.bge.1crn.import.parsesub:
   
   define variable trn-gd-doc-inSubjectObj                  as class trn-gd-doc-in               no-undo.
   define variable trn-gdSubjectObj                         as class trn-gd                      no-undo.
+  define variable trn-prtSubjectObj                        as class trn-prt                      no-undo.
   define variable imptrn-gd-docEventHndlrObj               as class imptrn-gd-doc               no-undo.
   define variable trn-gd-doc-inlistSubjectsObj             as class subjects                    no-undo.
+  define variable trn-prt-doc-inlistSubjectsObj             as class subjects                    no-undo.
 
   define variable trn-fuel-doc-inSubjectObj      as class trn-fuel-doc-in no-undo.
   define variable trn-gd-fuelSubjectObj          as class trn-gd-fuel     no-undo.
@@ -260,9 +262,9 @@ class ibs.th.bge.1crn.import.parsesub:
     imptank-impEventHndlrObj = new imptank-imp ().
     tank-imp_cal-tbllistSubjectsObj = new subjects ("cal-tbl").
 		
-		trn-gd-doc-inSubjectObj = new trn-gd-doc-in ().
-    imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().
-    trn-gd-doc-inlistSubjectsObj = new subjects ("gds").
+/*		trn-gd-doc-inSubjectObj = new trn-gd-doc-in ().       */
+/*    imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().  */
+/*    trn-gd-doc-inlistSubjectsObj = new subjects ("gds").*/
     
 	  promotionSubjectObj = new promotion().                  
 	  promotion_gdSubjectObj = new promotion_gd().               
@@ -279,6 +281,7 @@ class ibs.th.bge.1crn.import.parsesub:
     trn-gdSubjectObj = new trn-gd ().
     imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().
     trn-gd-doc-inlistSubjectsObj = new subjects ("gds").
+    trn-prt-doc-inlistSubjectsObj = new subjects ("prts").
 		
     trn-fuel-doc-inSubjectObj = new trn-fuel-doc-in ().
     trn-gd-fuelSubjectObj = new trn-gd-fuel ().
@@ -524,7 +527,7 @@ class ibs.th.bge.1crn.import.parsesub:
         when "price-list" or when "recipe-gds" or
         when "sections" or when "calibration-table" or
         when "barcodes" or when "cal-tbl" or when "gds" or when "schedule" or when "thresholds" or
-        when "nb-carriers" or when "nb-suppliers"
+        when "nb-carriers" or when "nb-suppliers" or when "prts"
         then do: /*первый уровень. зависимых объектов gds-sale или Рецепты recipe-gds  */
           if hnoderef:name = "schedule"
           then do:
@@ -671,6 +674,17 @@ class ibs.th.bge.1crn.import.parsesub:
               
             end.
           end case.
+        end.
+        when "prt" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
+          case true : 
+            when trn-gd-doc-inSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/
+              if not valid-object(trn-prt-doc-inlistSubjectsObj) then trn-prt-doc-inlistSubjectsObj = new subjects ("prts") .        
+              trn-prt-doc-inlistSubjectsObj:Add(new trn-prt()). /* а вот здесь уже создаем объект сущнности*/
+              trn-prtSubjectObj = cast (trn-prt-doc-inlistSubjectsObj:SubjectObjCurr, trn-prt).
+              GetChildrenSub (hNoderef, (level + 1), trn-prtSubjectObj).
+              trn-gd-doc-inSubjectObj:SetProp (trn-prt-doc-inlistSubjectsObj).
+            end.
+          end.
         end.
         when "schedule-line" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
           case true : 

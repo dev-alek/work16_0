@@ -1411,7 +1411,8 @@ CASE p-list-mode:
           open query {&browse-name}
           for each buf_init_ext-system no-lock
           where (buf_init_ext-system.esys-db-num-imp = v-cntxt-db-num
-              or buf_init_ext-system.esys-db-num-exp = v-cntxt-db-num)
+              or buf_init_ext-system.esys-db-num-exp = v-cntxt-db-num
+              or buf_init_ext-system.esys-type = integer({&openxml-type-mercury}) )
             and { bge/oxmlext1.i }
           by buf_init_ext-system.esys-date-change descending
           .
@@ -1432,7 +1433,8 @@ CASE p-list-mode:
           for each buf_init_ext-system no-lock
              WHERE buf_init_ext-system.esys-type = p-esys-type
           AND (buf_init_ext-system.esys-db-num-imp = v-cntxt-db-num
-                or buf_init_ext-system.esys-db-num-exp = v-cntxt-db-num)
+                or buf_init_ext-system.esys-db-num-exp = v-cntxt-db-num
+                or buf_init_ext-system.esys-type = integer({&openxml-type-mercury}) )
           and { bge/oxmlext1.i }
           by buf_init_ext-system.esys-date-change descending
           .
@@ -1456,7 +1458,8 @@ CASE p-list-mode:
         for each buf_init_ext-system no-lock
           WHERE buf_init_ext-system.esys-type > integer({&openxml-type-ordinal})
             AND (buf_init_ext-system.esys-db-num-imp = v-cntxt-db-num
-              or buf_init_ext-system.esys-db-num-exp = v-cntxt-db-num)
+              or buf_init_ext-system.esys-db-num-exp = v-cntxt-db-num
+              or buf_init_ext-system.esys-type = integer({&openxml-type-mercury}) )
             and { bge/oxmlext1.i }
         by buf_init_ext-system.esys-date-change descending
         .

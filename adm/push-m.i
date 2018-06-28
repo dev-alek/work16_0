@@ -69,6 +69,11 @@ def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@
           v-db-attr-code = {&attr-schedule-free}
         .
       end.
+      when {&btpr-type-mercury} then do:
+        assign
+          v-db-attr-code = {&attr-schedule-merc}
+        .
+      end.
       otherwise do:
         assign
           v-db-attr-code = ?
@@ -130,6 +135,12 @@ function get-str-type returns character (input p-task-type as character ).
     when {&btpr-type-autofree} then do:
       assign
         v-str = "выполнение произ.заданий"
+      .
+    end.
+    
+    when {&btpr-type-mercury} then do:
+      assign
+        v-str = "обмена с ФГИС Меркурий по БД"
       .
     end.
 

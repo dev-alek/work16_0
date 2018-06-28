@@ -123,7 +123,6 @@ ABC-анализы,abc-analysis,                         ~
 XYZ-анализы,xyz-analysis,                         ~
 ABC-XYZ-анализы,abcxyz,                           ~
 Коллекции,collection,                             ~
-Товар классиф.ТИПЫ ТОПЛИВА ДЛЯ ВЫГРУЗКИ В ЭЛКОС ТАЛОН,elcos,   ~
 Нет ингредиентов рецептов,no-recipe-gds,           ~
 Неактивные,deleted,                                ~
 Виды алкогольной продукции,choose-alc-prod,        ~

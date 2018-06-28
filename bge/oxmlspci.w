@@ -307,7 +307,7 @@ DEFINE FRAME Dialog-Frame
           SIZE 34.5 BY 2
      tt-ext-system.esys-type AT ROW 3.58 COL 11 COLON-ALIGNED WIDGET-ID 64
           LABEL "Тип ВС" FORMAT "->,>>>,>>9"
-          VIEW-AS COMBO-BOX INNER-LINES 8
+          VIEW-AS COMBO-BOX INNER-LINES 10
           LIST-ITEM-PAIRS "Item 1",0
           DROP-DOWN-LIST
           SIZE 34.5 BY 1
@@ -1407,6 +1407,17 @@ then do:
    .
 end.
 if p-mode = {&add-def} then do:
+  if tt-ext-system.esys-type = integer({&openxml-type-mercury})
+  then do :
+    find first ext-system no-lock where ext-system.esys-type = integer({&openxml-type-mercury}) no-error .
+    if available ext-system
+    then do :
+      MESSAGE
+      "В системе уже есть ВС с типом 'Меркурий'. Код ВС: " string(ext-system.esys-id)
+      VIEW-AS ALERT-BOX ERROR.
+      UNDO, RETURN ERROR.
+    end.  
+  end.
   do v-ii = 1 to num-entries({&form-esys-attr}):
     find first tt-ext-system-attr where
             tt-ext-system-attr.esya-attr-code = entry(v-ii, {&form-esys-attr}) no-error.

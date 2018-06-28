@@ -29,6 +29,11 @@ create1: Перваков Михаил Сергеевич
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
+
+using ibs.th.str.mercury.*.
+using ibs.th.gbl.storage.*.
+using ibs.th.gbl.*.
+
 define input  parameter parparentproc  as widget-handle no-undo.
 define input  parameter v-obj-type   as character no-undo .
 define input  parameter v-obj-code   as integer   no-undo .
@@ -85,8 +90,13 @@ define variable parts-contract-prn-code as character                no-undo colu
 define variable in-code-date as character no-undo .
 define variable vprice-prod1 as decimal   no-undo .
 define variable vprice-prod2 as decimal   no-undo .
+define variable vsdsubsObj as class vsdsubs no-undo.
+define variable vsdsubObj  as class vsdsub no-undo.
+define variable vsdStorageObj as class vsdtostorage no-undo.
+define variable vsdSts as class vsdstatustype no-undo.
 
 define new shared buffer  parts for ub.parts  .
+define buffer  buf_trn for ub.trn-doc  .
 
 FUNCTION get-in-code-date RETURNS CHARACTER
   ( input p-recid as recid ) :
@@ -405,6 +415,10 @@ DEFINE BUTTON b-add
 DEFINE BUTTON b-alc-attr
      LABEL "АлкАт&р"
      SIZE 10 BY 1 TOOLTIP "Атрибуты алкогольной продукции".
+
+DEFINE BUTTON b-vsd
+     LABEL "ВС&Д"
+     SIZE 10 BY 1 TOOLTIP "Ветеренарная справка".
 
 DEFINE BUTTON b-b-alt
      LABEL "&Коды"
@@ -793,6 +807,7 @@ DEFINE FRAME Dialog-Frame
      b-chg AT ROW 1 COL 54
      b-del AT ROW 1 COL 64
      b-alc-attr AT ROW 1 COL 74
+     b-vsd AT ROW 1 COL 74
      b-sch AT ROW 1 COL 88
      b-print AT ROW 1 COL 91
      b-help AT ROW 1 COL 94
@@ -876,7 +891,8 @@ ASSIGN
 /* SETTINGS FOR BUTTON b-alc-attr IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 ASSIGN
-       b-alc-attr:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+       b-alc-attr:HIDDEN IN FRAME Dialog-Frame           = TRUE
+       b-vsd:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 ASSIGN
        br-parts:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 3.
@@ -1200,6 +1216,112 @@ end.
       apply "entry":u to br-parts.
     end.
   end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-vsd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-vsd Dialog-Frame
+ON CHOOSE OF b-vsd IN FRAME Dialog-Frame /* АлкАтр */
+  DO:
+    { gbl/stdbtn.i }
+    define variable ii as integer no-undo.
+    define variable isSave as logical no-undo.
+    define variable keyrecObj as class keyrec no-undo.
+    define variable keypart as character no-undo.
+    if not available parts then 
+    do: 
+      message 
+        "Нет партий по товару"
+        view-as alert-box.
+      return no-apply.
+    end.
+    vsdStorageObj = new vsdtostorage ().
+    vsdSts = new vsdstatustype ().
+    keyrecObj = new keyrec ().
+    keyrecObj:GenKeyRec({&table_parts}, buffer parts:handle, output keypart).
+    vsdsubsObj = vsdStorageObj:getVSDsubs(input "part-key", input keypart).
+    
+    define variable v-host-code as integer   no-undo .
+    define variable lok         as logical   no-undo .
+
+    { gbl/hostcode.i
+      v-obj-type
+      v-obj-code
+      v-host-code
+    }
+    
+
+    { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_mercury-chg-vsd':U
+    {&cntxt-object}
+    v-host-code
+    v-obj-type
+    v-obj-code
+    0
+    0
+    0
+    false
+    lok
+    }
+    
+    if vsdsubsObj:iCounter = 0
+    then do:
+      if p-edit-mode = {&lookup}
+      then do:
+        message "К партии отсутсвуют ВСД" view-as alert-box.
+        return.
+      end.
+      lok = yes. /*для нового всд право не учитывается */
+      vsdsubObj = new vsdsub ().
+      vsdsubsObj:AddItem(vsdsubObj).
+      vsdsubObj = vsdsubsObj:VsdObjCurr.
+      vsdsubObj:VSDType = vsdSts:VSDIn.
+      vsdsubObj:PartKey = keypart.
+      vsdsubObj:GdsCode = p-gds-code.
+      vsdsubObj:ObjType = v-obj-type.
+      vsdsubObj:ObjCode = v-obj-code.
+      find first buf_trn no-lock where buf_trn.doc-code = p-doc-code.
+      if available (buf_trn)
+      then do:
+        vsdsubObj:CliCode = buf_trn.cli-code.
+        vsdsubObj:CliType = buf_trn.cli-type.
+      end.
+    end.
+    if p-edit-mode = {&lookup}
+    then do:
+      run str/vsd.w (input parparentproc, input {&lookup}, input vsdsubsObj, input lok, output isSave).
+    end.
+    else do:
+      run str/vsd.w (input parparentproc, input {&update}, input vsdsubsObj, input lok, output isSave).
+    end.
+    if isSave then do:
+      do ii = 1 to vsdsubsObj:GetItem(ii):
+        vsdsubObj = vsdsubsObj:VsdObjCurr.
+        if vsdsubObj:Changed
+        then do: 
+          case true:
+            when vsdsubObj:ID > 0 then do:
+              vsdStorageObj:updateDB(vsdsubObj).
+            end.
+            otherwise do:
+              vsdStorageObj:insertDB(vsdsubObj).
+            end.
+          end.
+        end.
+      end.
+    end.
+    delete object keyrecObj no-error.
+    delete object vsdsubsObj no-error.
+    find current parts no-lock.
+    br-parts:refresh() in frame {&frame-name}.
+    run display-parts-info in this-procedure .
+    apply "entry":u to br-parts.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2235,6 +2357,60 @@ define variable v-alcohol-prod as logical.
       .
     end.
 
+    define variable v-mercury-value as character no-undo .
+    define variable v-mercury-type  as character no-undo .
+    define variable v-mercury-prod as logical init false.
+    define buffer buf_trn-doc for ub.trn-doc .
+    
+    find first buf_trn-doc no-lock
+      where buf_trn-doc.doc-code = p-doc-code no-error
+      .
+    
+    if p-doc-code = ? or p-doc-code = "" or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or  buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+    then do:
+      { gbl/conf-rd.i
+        "'mercuri':u"
+        "'':u"
+        "'':u"
+        0
+        "'':u"
+        "'':u"
+        "'':u"
+        no
+        v-mercury-value
+        v-mercury-type
+        no-error
+      }
+      if  not error-status :error
+      and lookup(v-mercury-value, 'no':u) = 0
+      then do:
+        { gbl/gdscdat.i
+          p-gds-code
+          "'mercur_FGIS=request':u"
+          v-mercury-prod
+          no-error
+        }
+        if error-status :error
+        then do:
+          message
+            vss-workfile vss-revision vss-description skip
+            "Ошибка при определении атрибута товара" skip
+            "Код товара" p-gds-code skip
+            'mercur_FGIS=request':u skip
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
+          undo, return error .
+        end.
+      end.
+      else do:
+        assign
+          v-mercury-prod = false
+        .
+      end.
+    end.
+
+
 if  p-call-point = {&parts-l_call-document}
 and (p-edit-mode = {&update}
      or p-edit-mode = {&add-def}
@@ -2291,10 +2467,10 @@ then do:
   /* здесь имеется одно исключение при редактировании партий */
   /* для документа коррекции учетной цены нельзя добавлять и удалять партии */
   /* партии, которые были добавлены ранее нельзя изменять */
-  define buffer buf_trn-doc for ub.trn-doc .
-  find first buf_trn-doc no-lock
-    where buf_trn-doc.doc-code = p-doc-code no-error
-    .
+/*  define buffer buf_trn-doc for ub.trn-doc .        */
+/*  find first buf_trn-doc no-lock                    */
+/*    where buf_trn-doc.doc-code = p-doc-code no-error*/
+/*    .                                               */
   if buf_trn-doc.ext-doc-type = {&TDEDT_Corr_Acc_Price}
   then do:
     assign
@@ -3676,6 +3852,7 @@ PROCEDURE main-block-procedure :
       ed-notes
       rs-one-all
       b-alc-attr when v-alcohol-prod = yes
+      b-vsd when v-mercury-prod = yes
       WITH FRAME {&frame-name}.
 
     assign

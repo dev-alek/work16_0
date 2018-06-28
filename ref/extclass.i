@@ -35,8 +35,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 /*ext-classif.classif-name*/
 &glob bef-extclass_clients_inn inn
 &glob extclass_clients_inn '{&bef-extclass_clients_inn}':U
-&glob bef-extclass_clients_elcos exp-elcos-talon-code
-&glob extclass_clients_elcos '{&bef-extclass_clients_elcos}':U
 &glob bef-extclass_clients_parus exp-parus-code
 &glob extclass_clients_parus '{&bef-extclass_clients_parus}':U
 &glob bef-extclass_clients_parus-2 exp-parus-2-code
@@ -56,8 +54,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob extclass_clients_th-th14 '{&bef-extclass_clients_th-th14}':U
 
 
-&glob bef-extclass_goods_elcos   exp-elcos-talon-gds-code
-&glob extclass_goods_elcos   '{&bef-extclass_goods_elcos}':U
 &glob bef-extclass_goods_accor   exp-accor-gds-code
 &glob extclass_goods_accor   '{&bef-extclass_goods_accor}':U
 &glob bef-extclass_goods_esys   exp-esys-gds-code
@@ -100,14 +96,12 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 &glob extclass_name-list '~
 ~{&bef-extclass_clients_inn}~
-,~{&bef-extclass_clients_elcos}~
 ,~{&bef-extclass_clients_parus}~
 ,~{&bef-extclass_clients_parus-2}~
 ,~{&bef-extclass_clients_GLN}~
 ,~{&bef-extclass_clients_th-th150}~
 ,~{&bef-extclass_clients_th-th14}~
 ,~{&bef-extclass_clients_exite-edi}~
-,~{&bef-extclass_goods_elcos}~
 ,~{&bef-extclass_goods_th-th150}~
 ,~{&bef-extclass_goods_th-th14}~
 ,~{&bef-extclass_goods_accor}~

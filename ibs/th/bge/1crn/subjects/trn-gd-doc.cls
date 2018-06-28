@@ -18,6 +18,8 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.str.*.
+using ibs.th.str.mercury.*.
+using ibs.th.gbl.storage.*.
 
 block-level on error undo, throw.
 
@@ -48,6 +50,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   define temp-table buf_trn-doc like ub.trn-doc.
   
   define buffer buf_doc-line for ub.doc-line.
+  define buffer buf_parts for ub.parts.
   define buffer buf_gds-dtl for ub.gds-dtl.
   define buffer buf_doc-pl for ub.doc-pl.
   define buffer buf_gds for ub.goods.
@@ -182,7 +185,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
           RasPerem().
           if v-is-petrol-trn
             then EndDocTrnFuel().
-            else EndDocTrn().
+            else do:
+              writeprts ().
+              EndDocTrn().
+            end.
         end.
         when {&TDEDT_Pri_Perem} then do:
           v-doc-type-ERPRN = "4".
@@ -256,7 +262,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     
     if v-is-petrol-trn
       then PriVneshLineFuel().
-      else PriVneshLine().
+      else do: 
+        PriVneshLine().
+      end.
 
   end.
   
@@ -289,7 +297,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     sw:start-element ("gds").
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
       
-      find first buf_gds where
+      find first buf_gds no-lock where
             buf_gds.artic = buf_doc-line.artic 
         and buf_gds.prod-code = buf_doc-line.prod-code
         and buf_gds.prod-type = buf_doc-line.prod-type.
@@ -300,7 +308,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("unit-code", string (buf_gds.unit-base)).
         write-data-element ("koef", string (buf_gds.cli-base-rate)).
         write-data-element ("qnty-ttn", string-mth (buf_doc-line.doc-qnty)).
-        write-data-element ("qnty-fact", string-mth (buf_doc-line.cli-qnty)).
+        write-data-element ("qnty-fact", string-mth (buf_doc-line.fact-qnty)).
         
         if v-doc-type-ERPRN = "8"
         then do:
@@ -319,7 +327,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
       sw:end-element ("gd").
       
     end.
+
     sw:end-element ("gds").
+    
+    writeprts ().
     
   end.
 
@@ -513,7 +524,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   end.
 
   method private void Ras ():
-      
+    
     sw:start-element ("gds").
     for each buf_gds-dtl no-lock where buf_gds-dtl.doc-code = buf_trn-doc.doc-code:
       find first buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code
@@ -814,6 +825,82 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
 /*    {&create-record}                      */
 /*    &scop attr-code trdcattr-zakaz-date   */
 /*    {&create-record-date}                 */
+
+    
+  end.
+  
+  method private void writeprts ():
+
+    def var vsds as class vsdsubs no-undo.
+    def var vsdstr as class vsdtostorage no-undo.
+    def var vsdsts as class vsdstatustype no-undo.
+    def var ii as integer no-undo.
+    define variable v-mercury-value as character no-undo .
+    define variable v-mercury-type  as character no-undo .
+    define variable v-mercury-prod as logical init false.
+    define variable tagPrts as logical init false.
+
+    vsdstr = new vsdtostorage ().
+    vsdsts = new vsdstatustype ().
+    
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
+  
+      find first buf_gds no-lock where
+            buf_gds.artic = buf_doc-line.artic 
+        and buf_gds.prod-code = buf_doc-line.prod-code
+        and buf_gds.prod-type = buf_doc-line.prod-type.
+
+      { gbl/gdscdat.i
+        buf_gds.gds-code
+        "'mercur_FGIS=request':u"
+        v-mercury-prod
+        no-error
+      }
+      
+      if not v-mercury-prod 
+        then next.
+      
+      if not tagPrts 
+      then do: 
+        sw:start-element ("prts").
+        tagPrts = true.
+      end.
+      
+      for each buf_parts no-lock where buf_parts.out-code = buf_doc-line.doc-code
+          and buf_parts.artic = buf_doc-line.artic
+          and buf_parts.prod-type = buf_doc-line.prod-type
+          and buf_parts.prod-code = buf_doc-line.prod-code:
+        vsds = new vsdsubs ().
+        vsds = vsdstr:getVSDsubs(buffer buf_parts).
+        sw:start-element ("prt").      
+          write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
+          write-data-element ("prt-id", buf_parts.part-code).
+          if vsds:iCounter > 0
+          then do:
+            do ii = 1 to vsds:GetItem(ii):
+              if vsds:VsdObjCurr:VSDType = vsdsts:VSDTrans or vsds:VsdObjCurr:VSDType = vsdsts:VSDIn 
+              then do:
+                write-data-element ("vad-guid", vsds:VsdObjCurr:UUID).
+                leave.
+              end.
+            end.
+          end.
+          else do:
+            write-data-element ("vad-guid", "").
+          end.
+          write-data-element ("qnty", string-mth (buf_parts.fact-qnty)).
+        sw:end-element ("prt").
+        
+        delete object vsds no-error.        
+      
+      end.      
+    end.
+    
+    if tagPrts
+      then sw:end-element ("prts").
+    
+    delete object vsdsts no-error.
+    delete object vsdstr no-error.    
 
     
   end.

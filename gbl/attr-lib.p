@@ -4388,6 +4388,25 @@ character~
 &scop level-way-attr-obj-date "obj,host,global"
 &scop up-way-attr-obj-date "obj-date,obj-date,obj-date"
 
+/* Параметры для работы с ФГИС Меркурий */
+&scop type-attr-mercur            {&type-char}
+&scop format-attr-mercur          "x(40)"
+&scop label-attr-mercur           "Параметры для работы с ФГИС Меркурий"
+&scop tooltip-attr-mercur         "Параметры для работы с ФГИС Меркурий"
+&scop user-can-edit-attr-mercur   true
+&scop output-display-attr-mercur  true
+&scop other-attr-mercur           'spr-ext=gbl\mercur.w':U
+&scop prop-type-list-attr-mercur  'character,character,character,character,logical,logical,integer,character,integer':U
+&scop prop-label-list-attr-mercur 'APIKey,Логин входа в ИС,Логин,Пароль,Разрешено вводить код ВСД вручную,Разрешено закрывать документ без указ. ВСД,Тип взаимодействия,Настройки для печати QR-кода,Сервер'
+&scop prop-list-attr-mercur       'apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server'
+&scop global-attr-mercur true
+&scop host-attr-mercur true
+&scop shop-attr-mercur true
+&scop store-attr-mercur true
+&scop db-attr-mercur false
+&scop batch-edit-attr-mercur  0
+&scop level-way-attr-mercur "obj,host,global"
+&scop up-way-attr-mercur "mercur,mercur,mercur"
 
 /* Настройки производства  */
 &scop label-attr-fbrattr "Настройки производства"
@@ -4709,7 +4728,9 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-egais-host
       {&attr-temp-full-code}
-
+      &scop attr-code attr-mercur
+      {&attr-temp-full-code}
+      
       /* сюда добавлять новые параметры атрибутов объектов TH */
       otherwise do:
         undo, return error substitute("неизвестный атрибут объекта TH &1", p-upper-code ).
@@ -4885,8 +4906,9 @@ on error undo, return error return-value
     {&attr-temp-code}
     &scop attr-code attr-egais-host
     {&attr-temp-code}
-
-    /* сюда добавлять новые параметры  */
+    &scop attr-code attr-mercur
+    {&attr-temp-code}
+    /* сюда добавлять новые параметры атрибутов клиентов */
     otherwise do:
       undo, return error substitute("неизвестный атрибут объекта TH &1 &2"
                                     , p-upper-code
@@ -5590,7 +5612,9 @@ on error undo, return error return-value
     {&attr-legacy-code}
     &scop attr-code attr-egais-host
     {&attr-legacy-code}
-    
+    &scop attr-code attr-mercur
+    {&attr-legacy-code}
+
     /* сюда добавлять новые параметры  */
     otherwise do:
       undo, return error substitute("неизвестная секция параметров TH &1"
@@ -5818,6 +5842,33 @@ end procedure.
 &glob copy-attr-sum-grp-gl  true
 &scop manual-edit-attr-sum-grp-gl  1
 &scop batch-edit-attr-sum-grp-gl  1
+
+
+/* Является подконтрольным ФГИС "Меркурий" */
+&glob type-attr-mercur_FGIS {&type-log}
+&glob format-attr-mercur_FGIS  "+/-"
+&glob label-attr-mercur_FGIS   "Является подконтрольным ФГИС Меркурий"
+&glob tooltip-attr-mercur_FGIS   "Является подконтрольным ФГИС Меркурий"
+&glob user-can-edit-attr-mercur_FGIS  true
+&glob output-display-attr-mercur_FGIS  true
+&glob other-attr-mercur_FGIS  ""
+&glob news-attr-mercur_FGIS true
+&glob copy-attr-mercur_FGIS  true
+&scop manual-edit-attr-mercur_FGIS  1
+&scop batch-edit-attr-mercur_FGIS  1
+
+/* Является скоропортящейся продукцией */
+&glob type-attr-perishable {&type-log}
+&glob format-attr-perishable  "+/-"
+&glob label-attr-perishable   "Является скоропортящейся продукцией"
+&glob tooltip-attr-perishable   "Является скоропортящейся продукцией"
+&glob user-can-edit-attr-perishable  true
+&glob output-display-attr-perishable  true
+&glob other-attr-perishable  ""
+&glob news-attr-perishable true
+&glob copy-attr-perishable  true
+&scop manual-edit-attr-perishable  1
+&scop batch-edit-attr-perishable  1
 
 &glob type-attr-15x80 {&type-char}
 &glob format-attr-15x80  "X(255)"
@@ -6156,6 +6207,10 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-mark
       {&attr-temp-full-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-temp-full-code}
+      &scop attr-code attr-perishable
+      {&attr-temp-full-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-temp-full-code}
       &scop attr-code attr-15x80
@@ -6241,6 +6296,10 @@ do
       &scop attr-code attr-fasovka
       {&attr-temp-code}
       &scop attr-code attr-mark
+      {&attr-temp-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-temp-code}
+      &scop attr-code attr-perishable
       {&attr-temp-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-temp-code}
@@ -6563,6 +6622,10 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-news-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-news-code}
+      &scop attr-code attr-perishable
+      {&attr-news-code}
       &scop attr-code attr-15x80
       {&attr-news-code}
       &scop attr-code attr-8x50
@@ -6642,6 +6705,10 @@ procedure gds-attr-copy :
       &scop attr-code attr-mark
       {&attr-copy-code}
       &scop attr-code attr-sum-grp-gl
+      {&attr-copy-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-copy-code}
+      &scop attr-code attr-perishable
       {&attr-copy-code}
       &scop attr-code attr-15x80
       {&attr-copy-code}
@@ -7109,6 +7176,10 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-fasovka
       {&attr-manual-edit-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-manual-edit-code}
+      &scop attr-code attr-perishable
+      {&attr-manual-edit-code}
       &scop attr-code attr-mark
       {&attr-manual-edit-code}
       &scop attr-code attr-sum-grp-gl
@@ -7193,6 +7264,10 @@ do
       &scop attr-code attr-mark
       {&attr-batch-edit-code}
       &scop attr-code attr-sum-grp-gl
+      {&attr-batch-edit-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-batch-edit-code}
+      &scop attr-code attr-perishable
       {&attr-batch-edit-code}
       &scop attr-code attr-calories
       {&attr-batch-edit-code}
@@ -12638,6 +12713,17 @@ end procedure.
 &scop manual-edit-attr-schedule-suz 0
 &scop batch-edit-attr-schedule-suz 0
 
+/* Наличие расписания обмена с ФГИС Меркурий для БД */
+&scop type-attr-schedule-merc {&type-log}
+&scop format-attr-schedule-merc "+/-"
+&scop label-attr-schedule-merc "Расписание обмена с ФГИС Меркурий для БД"
+&scop tooltip-attr-schedule-merc "Составлено ли расписание обмена с ФГИС Меркурий для базы данных"
+&scop user-can-edit-attr-schedule-merc false
+&scop output-display-attr-schedule-merc true
+&scop other-attr-schedule-merc '':u
+&scop news-attr-schedule-merc no
+&scop manual-edit-attr-schedule-merc 0
+&scop batch-edit-attr-schedule-merc 0
  /* Дата по которую усечены документы по БД в ГБД */
 &scop type-attr-cut-date {&type-date}
 &scop format-attr-cut-date "99.99.9999"
@@ -12846,6 +12932,8 @@ procedure db-attr-code :
     case p-code :
       &scop attr-code attr-schedule-nws
       {&attr-temp-full-code}
+      &scop attr-code attr-schedule-merc
+      {&attr-temp-full-code}
       &scop attr-code attr-schedule-arc
       {&attr-temp-full-code}
       &scop attr-code attr-schedule-exp
@@ -12907,6 +12995,8 @@ procedure db-attr-tooltip :
   :
     case p-code :
       &scop attr-code attr-schedule-nws
+      {&attr-temp-code}
+      &scop attr-code attr-schedule-merc
       {&attr-temp-code}
       &scop attr-code attr-schedule-arc
       {&attr-temp-code}
@@ -13157,6 +13247,8 @@ procedure db-attr-news :
   :
     case p-code :
       &scop attr-code attr-schedule-nws
+      {&attr-news-code}
+      &scop attr-code attr-schedule-merc
       {&attr-news-code}
       &scop attr-code attr-schedule-arc
       {&attr-news-code}

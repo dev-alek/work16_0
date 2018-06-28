@@ -221,6 +221,10 @@ abc-analysis-gds-obj~
 ,xyz-analysis-goods-attr~
 ,egais-gds~
 ,c-egais-gds~
+,vsd~
+,c-vsd~
+,gds-mercury~
+,c-gds-mercury~
 ":U
 
 procedure valid-ren-gdsc-tbl-list :
