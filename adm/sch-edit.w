@@ -737,6 +737,9 @@ PROCEDURE fill-temp-table :
           when {&btpr-type-autonws}
           then do:
           end.
+          when {&btpr-type-mercury}
+          then do:
+          end.
           otherwise do:
             if p-action = {&update}
               or p-action = {&add-copy}

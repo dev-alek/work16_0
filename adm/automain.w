@@ -911,6 +911,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         .
         run write-to-log ( "Запущен Сокет-Сервер" ).
       end.
+      when {&btpr-type-mercury}
+      then do:
+        assign
+          {&window-name}:title = {&window-name}:title + "ФГИС Меркурий"
+        .
+        run write-to-log ( "Запущена система Меркурий" ).
+      end.
       otherwise do:
         assign
           log-exit = yes
@@ -1065,6 +1072,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               , input g#auto-user-id
               , input g#auto-user-password
               , input v-list-db
+              ) no-error.
+          end.
+          when {&btpr-type-mercury}
+          then do:
+            run bge/auto-merc.p
+              (input g#auto-user-id
+              ,input g#auto-user-password
+              ,input v-list-db
               ) no-error.
           end.
           when {&btpr-type-autoarh}

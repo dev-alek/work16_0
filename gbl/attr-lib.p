@@ -12638,6 +12638,17 @@ end procedure.
 &scop manual-edit-attr-schedule-suz 0
 &scop batch-edit-attr-schedule-suz 0
 
+/* Наличие расписания обмена с ФГИС Меркурий для БД */
+&scop type-attr-schedule-merc {&type-log}
+&scop format-attr-schedule-merc "+/-"
+&scop label-attr-schedule-merc "Расписание обмена с ФГИС Меркурий для БД"
+&scop tooltip-attr-schedule-merc "Составлено ли расписание обмена с ФГИС Меркурий для базы данных"
+&scop user-can-edit-attr-schedule-merc false
+&scop output-display-attr-schedule-merc true
+&scop other-attr-schedule-merc '':u
+&scop news-attr-schedule-merc no
+&scop manual-edit-attr-schedule-merc 0
+&scop batch-edit-attr-schedule-merc 0
  /* Дата по которую усечены документы по БД в ГБД */
 &scop type-attr-cut-date {&type-date}
 &scop format-attr-cut-date "99.99.9999"
@@ -12846,6 +12857,8 @@ procedure db-attr-code :
     case p-code :
       &scop attr-code attr-schedule-nws
       {&attr-temp-full-code}
+      &scop attr-code attr-schedule-merc
+      {&attr-temp-full-code}
       &scop attr-code attr-schedule-arc
       {&attr-temp-full-code}
       &scop attr-code attr-schedule-exp
@@ -12907,6 +12920,8 @@ procedure db-attr-tooltip :
   :
     case p-code :
       &scop attr-code attr-schedule-nws
+      {&attr-temp-code}
+      &scop attr-code attr-schedule-merc
       {&attr-temp-code}
       &scop attr-code attr-schedule-arc
       {&attr-temp-code}
@@ -13157,6 +13172,8 @@ procedure db-attr-news :
   :
     case p-code :
       &scop attr-code attr-schedule-nws
+      {&attr-news-code}
+      &scop attr-code attr-schedule-merc
       {&attr-news-code}
       &scop attr-code attr-schedule-arc
       {&attr-news-code}

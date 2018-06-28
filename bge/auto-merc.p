@@ -1,0 +1,478 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Работа с ФГИС меркурий
+
+Автор: Сливенко Сергей
+Дата создания: 05/28/18
+Author: Slivenko Sergey
+Creation date: 05/28/18
+
+*/
+
+using Progress.Lang.*.
+using ibs.th.str.gds.*.
+using ibs.th.str.mercury.*.
+using ibs.th.gbl.*.
+using ibs.th.gbl.storage.*.
+using ibs.th.str.clients.*.
+using ibs.th.bge.mercury.*.
+
+
+define input  parameter p-user-login    as character no-undo .
+define input  parameter p-user-password as character no-undo .
+define input  parameter p-list-db       as character no-undo .
+
+def var vss-revision    as character no-undo init "$Revision$":U .
+def var vss-author      as character no-undo init "$Author$":U .
+def var vss-date        as character no-undo init "$Date$":U .
+def var vss-workfile    as character no-undo init "$Workfile$":U .
+def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-description as character no-undo init "Работа с ФГИС меркурий".
+{ cmp/vssrevis.i }
+{ cmp/trg-def.i  }
+{ adm/auto-def.i }
+{ gbl/getsect.i def }
+{ ref/extclass.i }
+
+do
+on error undo, return error
+:
+  define variable v-ind                    as integer   no-undo .
+  define variable v-num-entries-db-list    as integer   no-undo .
+  define variable v-db-num                 as integer   no-undo .
+  define variable v-err-gen-pack           as integer   no-undo .
+  define variable v-err-code               as integer   no-undo .
+  define variable v-step-num               as integer   no-undo .
+  define variable v-action                 as character no-undo .
+  define variable v-message                as character no-undo .
+  
+  define variable v-apiKey              as character no-undo .
+  define variable v-issuerId            as character no-undo .
+  define variable v-login               as character no-undo .
+  define variable v-login_is            as character no-undo .
+  define variable v-password            as character no-undo .
+  define variable v-initiator           as character no-undo .
+  define variable v-type-connect        as integer   no-undo .
+  define variable v-server              as integer   no-undo .
+  
+  define variable v-appId           as character no-undo .
+  define variable v-status_         as character no-undo .
+  define variable v-Msg             as character no-undo .
+  
+  define buffer buf_ext-classif       for ub.ext-classif .
+  define buffer buf2_ext-classif      for ub.ext-classif .
+  define buffer buf_ext-system        for ub.ext-system .
+  define buffer buf_parts             for ub.parts .
+  define buffer buf_vsd               for ub.vsd .
+  define buffer buf_clients           for ub.clients .
+  
+  define variable mercury       as class mercury   no-undo.
+  define variable vsdStorage    as class vsdtostorage.
+  define variable vsdsTHObj     as class ibs.th.str.mercury.vsdsubs.
+  define variable vsdTHObj      as class ibs.th.str.mercury.vsdsub.
+  define variable vsdStsType    as class ibs.th.str.mercury.vsdstatustype. 
+  define variable objThObj      as clisub.
+  define variable objKeyRec     as keyrec.
+  
+  define variable v-part-rowid as rowid no-undo .
+  define variable v-tbl-name as character no-undo .
+  
+  define variable ii as integer no-undo.
+
+  if transaction then do:
+    message
+      substitute( "&1. Вызов данной процедуры невозможен при наличии транзакции", vss-workfile )
+      view-as alert-box error .
+    return error .
+  end.
+  if valid-handle( session :first-procedure ) then do:
+    message
+      substitute( "&1. Вызов данной процедуры невозможен при наличии определений persistent prosedures (&2)", vss-workfile, session:first-procedure:file-name )
+      view-as alert-box error .
+    return error .
+  end.
+
+  assign
+    g#auto                = true
+    v-num-entries-db-list = num-entries( p-list-db )
+  .
+  run gbl/set-gbl.p
+    (input true
+    ,input p-user-login
+    ,input p-user-password
+    ) no-error.
+  if error-status :error
+  then do:
+    run write-to-log( substitute("&1. Ошибка при инициализации переменных g#... &2&3&4"
+                                  ,vss-workfile
+                                  ,error-status:get-message(error-status:num-messages)
+                                  ,{&new-line}
+                                  ,return-value
+                                )
+                    ) .
+    return error.
+  end.
+  assign
+    g#auto = true
+  .
+  
+  find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-mercury}) no-error.
+  if not available buf_ext-system
+  then do :
+    run write-to-log( "Нет внешней системы с типом Меркурий." ) .
+    return .
+  end.
+  
+  objThObj = new clisub ().
+  vsdStsType = new vsdstatustype().
+  
+  run write-to-log( "Получение ответов на отправленные запросы " ) .
+  /*  Получение ответов   */
+  ans_ :
+  for each ub.esys-all-attr exclusive-lock where ub.esys-all-attr.table-name = "esys-pck-sent"
+                                              and ub.esys-all-attr.attr-code = "mercury"
+                                              and ub.esys-all-attr.key3 = "Запрос отправлен" :
+    find first buf_vsd no-lock where buf_vsd.UUID = ub.esys-all-attr.attr-value no-error.
+    if not available buf_vsd then next .
+    
+    { gbl/getsect.i run buf_vsd.obj-type buf_vsd.obj-code {&attr-mercur} }
+
+    for each thbjattr_thbj-attr :
+      case thbjattr_thbj-attr.prop-code :
+        when "apikey" then v-apiKey = thbjattr_thbj-attr.property-value-character .
+        when "login" then v-login = thbjattr_thbj-attr.property-value-character .
+        when "login_is" then v-login_is = thbjattr_thbj-attr.property-value-character .
+        when "password" then v-password = thbjattr_thbj-attr.property-value-character .
+        when "type-connect" then v-type-connect = thbjattr_thbj-attr.property-value-integer .
+        when "server" then v-server = thbjattr_thbj-attr.property-value-integer .
+      end case.
+    end.
+    
+    if g#db-num <> 0 and v-type-connect = 2
+    then do :
+      next ans_ .
+    end.
+    
+    find first buf_clients no-lock where buf_clients.obj-type = buf_vsd.obj-type and buf_clients.obj-code = buf_vsd.obj-code no-error.
+    if not available buf_clients
+    then do :
+      run write-to-log( "В ВСД с UUID " + buf_vsd.UUID + " не верно задан объект!!!") .
+      next ans_ .
+    end.
+    
+    if v-type-connect = 1 and g#db-num <> 0 and g#db-num <> buf_clients.db-num
+    then do :
+      next ans_ .
+    end.
+    
+    if g#db-num = 0 and v-type-connect = 1 and buf_clients.db-num <> 0
+    then do :
+      next ans_ .
+    end.
+    
+    find first buf_ext-classif no-lock 
+          where buf_ext-classif.classif-subject = {&table_clients}
+            and buf_ext-classif.classif-name = {&extclass_clients_esys}
+            and buf_ext-classif.db-num = 0
+            and buf_ext-classif.key#_one = buf_ext-system.esys-id
+            and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + "орг" + {&delim-key} + string (buf_clients.host-code)
+            no-error.  
+    if not available buf_ext-classif
+    then do :
+      run write-to-log( "Фирма орг" + string (buf_clients.host-code) + " не синхронизирована с ФГИС Меркурий (Нет GUID'а ХЗ)" ) .
+      next ans_ .
+    end. 
+      
+    v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
+    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server).
+  
+    case ub.esys-all-attr.key2 :  
+      when 1
+      then do :  
+        objKeyRec = new keyrec () .
+        find first buf_vsd no-lock where buf_vsd.UUID = ub.esys-all-attr.attr-value no-error.
+        if not available buf_vsd then next .
+        objKeyRec:GenRowKeyr(buf_vsd.part-key, ?, "ub", ?, ?, v-part-rowid, v-tbl-name) .
+        delete object objKeyRec no-error .
+        find first buf_parts no-lock where rowid (buf_parts) = v-part-rowid no-error.   
+        if not available  buf_parts
+        then do :
+          run write-to-log( "ВСД с UUID " + buf_vsd.UUID + " не привязана к партии!!!") .
+          next ans_.
+        end.                  
+        run write-to-log( "Получение ответа на запрос ВСД по UUID " + buf_vsd.UUID ) .                  
+        mercury:receiveVetDoc(input ub.esys-all-attr.key7, input LC(ub.esys-all-attr.attr-value), input buf_parts.cli-qnty, output v-Status_, output v-Msg) . 
+        if v-Status_ = "COMPLETED"
+        then ub.esys-all-attr.key3 = "Ответ получен" .
+        else do :
+          v-Msg = trim(trim(v-Msg, chr(10))) .
+          if v-Msg = ""
+          then do :
+            v-Msg = "Нет связи со шлюзом Ветис.Api..." .
+            run write-to-log( v-Msg ) .
+          end.  
+          else do :
+            ub.esys-all-attr.key3 = "Запрос отклонён" .
+            run write-to-log( "UUID ВСД:  " + ub.esys-all-attr.attr-value + chr(10) + v-Msg ) .
+          end.  
+        end.
+      end.
+      when 2
+      then do :  
+        run write-to-log( "Получение ответа на запрос на гашение ВСД с UUID " + ub.esys-all-attr.attr-value ) . 
+        mercury:receiveIncomingConsignmentResponse(input ub.esys-all-attr.key7, input ub.esys-all-attr.attr-value, output v-Status_, output v-Msg) . 
+        if v-Status_ = "COMPLETED"
+        then ub.esys-all-attr.key3 = "Ответ получен" .
+        else do :
+          v-Msg = trim(trim(v-Msg, chr(10))) .
+          if v-Msg = ""
+          then do :
+            v-Msg = "Нет связи со шлюзом Ветис.Api..." .
+            run write-to-log( v-Msg ) .
+          end.  
+          else do :
+            ub.esys-all-attr.key3 = "Запрос отклонён" .
+            run write-to-log( "UUID ВСД:  " + ub.esys-all-attr.attr-value + chr(10) + v-Msg ) .
+          end. 
+        end.
+      end.  
+    end case.                               
+  
+    delete object mercury no-error .
+  
+  end.
+  
+  pause 0.2 .
+
+  
+  do v-ind = 1 to v-num-entries-db-list
+  on error undo, return error
+  :
+    assign
+      v-db-num = integer( entry( v-ind, p-list-db ) )
+    .
+    
+    run write-to-log( "Работа с БД " + string(v-db-num) ) .
+
+/*    Отправка запросов    */
+    clients_ :
+    for each clients no-lock where clients.obj-type = {&shop} 
+                               and clients.db-num = v-db-num
+                               and clients.stts = 0 :
+      
+      { gbl/getsect.i run clients.obj-type clients.obj-code {&attr-mercur} }
+  
+      for each thbjattr_thbj-attr :
+        case thbjattr_thbj-attr.prop-code :
+          when "apikey" then v-apiKey = thbjattr_thbj-attr.property-value-character .
+          when "login" then v-login = thbjattr_thbj-attr.property-value-character .
+          when "login_is" then v-login_is = thbjattr_thbj-attr.property-value-character .
+          when "password" then v-password = thbjattr_thbj-attr.property-value-character .
+          when "type-connect" then v-type-connect = thbjattr_thbj-attr.property-value-integer .
+          when "server" then v-server = thbjattr_thbj-attr.property-value-integer .
+        end case.
+      end.
+      
+      if v-type-connect = 1 and g#db-num <> 0 and g#db-num <> clients.db-num
+      then do :
+        next clients_.
+      end.
+      
+      if g#db-num <> 0 and v-type-connect = 2
+      then do :
+        next clients_.
+      end.
+      
+      if g#db-num = 0 and v-type-connect = 1 and clients.db-num <> 0
+      then do :
+        next clients_.
+      end.
+      
+      find first buf_ext-classif no-lock 
+            where buf_ext-classif.classif-subject = {&table_clients}
+              and buf_ext-classif.classif-name = {&extclass_clients_esys}
+              and buf_ext-classif.db-num = 0
+              and buf_ext-classif.key#_one = buf_ext-system.esys-id
+              and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + "орг" + {&delim-key} + string (clients.host-code)
+              no-error.
+      if not available buf_ext-classif
+      then do :
+        run write-to-log( "Фирма орг" + string (clients.host-code) + " не синхронизирована с ФГИС Меркурий (Нет GUID'а ХЗ)" ) .
+        next clients_.
+      end.    
+      v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
+      mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server).
+      
+      objThObj:ObjType = clients.obj-type.
+      objThObj:ObjCode = clients.obj-code.
+      vsdsTHObj = new vsdsubs ().
+      vsdStorage = new vsdtostorage ().
+      vsdsTHObj = vsdStorage:getVSDsubs(input objThObj).
+  
+  /*    delete object objThObj no-error .*/
+  
+      find first buf_ext-classif no-lock
+          where buf_ext-classif.classif-subject = {&table_clients}
+            and buf_ext-classif.classif-name = {&extclass_clients_esys}
+            and buf_ext-classif.db-num = 0
+            and buf_ext-classif.key#_one = buf_ext-system.esys-id
+            and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + clients.obj-type + {&delim-key} + string (clients.obj-code)
+            no-error.
+      
+      run write-to-log( "Отправка запросов по объекту " + clients.obj-type + string(clients.obj-code) ) .
+  
+      vsds_ :
+      do ii = 1 to vsdsTHObj:GetItem (ii):
+        
+        if ii = 1 and not available buf_ext-classif
+        then do :
+          run write-to-log( "Объект маг" + string (clients.obj-code) + " не синхронизирован с ФГИС Меркурий (Нет GUID'а предприятия)" ) .
+          next clients_.
+        end.  
+        
+        if vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsNeedCheck /* Требует проверки */
+        or vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrCheck /* Ошибка проверки */
+        or vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrUtilized /* Ошибка гашения */
+        then do :
+          
+          if vsdsTHObj:VsdObjCurr:UUID = "" or vsdsTHObj:VsdObjCurr:UUID = ? or vsdsTHObj:VsdObjCurr:FactDatetime = ? then next .
+          find first buf2_ext-classif no-lock
+              where buf2_ext-classif.classif-subject = {&table_clients}
+                and buf2_ext-classif.classif-name = {&extclass_clients_esys}
+                and buf2_ext-classif.db-num = 0
+                and buf2_ext-classif.key#_one = buf_ext-system.esys-id
+                and buf2_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + vsdsTHObj:VsdObjCurr:CliType + {&delim-key} + string (vsdsTHObj:VsdObjCurr:CliCode)
+                no-error. 
+          if not available buf2_ext-classif
+          then do :
+            vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrCheck .
+            vsdsTHObj:VsdObjCurr:MsgErr = "Контрагент-поставщик не синхронизирован с ФГИС Меркурий." .
+            vsdStorage:updateDB(vsdsTHObj:VsdObjCurr) .
+            run write-to-log( "UUID ВСД: " + vsdsTHObj:VsdObjCurr:UUID + " .   Контрагент-поставщик не синхронизирован с ФГИС Меркурий. Запрос не отправлен." ) .
+            next vsds_.
+          end. 
+          else do :
+            if num-entries(buf2_ext-classif.charKey_Two, {&delim-cmd}) = 2
+            then do :
+              if entry(1, buf2_ext-classif.charKey_Two, {&delim-cmd}) = ""
+              or entry(2, buf2_ext-classif.charKey_Two, {&delim-cmd}) = ""
+              then do :
+                vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrCheck .
+                vsdsTHObj:VsdObjCurr:MsgErr = "Не заполнены GUID'ы хоз. субъекта поставщика и/или предприятия поставщика." .
+                vsdStorage:updateDB(vsdsTHObj:VsdObjCurr) .
+                run write-to-log( "UUID ВСД: " + vsdsTHObj:VsdObjCurr:UUID + " .   Не заполнены GUID'ы хоз. субъекта поставщика и/или предприятия поставщика. Запрос не отправлен." ) .
+                next vsds_.
+              end .
+            end.
+            else do :
+              vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrCheck .
+              vsdsTHObj:VsdObjCurr:MsgErr = "Не верный формат связки поставщика с ФГИС Меркурий" .
+              vsdStorage:updateDB(vsdsTHObj:VsdObjCurr) .
+              run write-to-log( "UUID ВСД: " + vsdsTHObj:VsdObjCurr:UUID + " .   Не верный формат связки поставщика с ФГИС Меркурий. Запрос не отправлен." ) .
+              next vsds_.
+            end.
+          end.   
+            
+          find first ub.esys-all-attr no-lock where ub.esys-all-attr.table-name = "esys-pck-sent"
+                                                and ub.esys-all-attr.attr-code = "mercury"
+                                                and ub.esys-all-attr.attr-value = vsdsTHObj:VsdObjCurr:UUID
+                                                and ub.esys-all-attr.key1 = vsdsTHObj:VsdObjCurr:ID
+                                                and ub.esys-all-attr.key2 = 1
+                                                and ub.esys-all-attr.key3 <> "Запрос отклонён"
+                                                no-error .
+          if available ub.esys-all-attr then next  vsds_.
+          run write-to-log( "Отправка запроса на получение ВСД по UUID " + vsdsTHObj:VsdObjCurr:UUID ) .
+          mercury:GetVetDocumentByUuid(LC(vsdsTHObj:VsdObjCurr:UUID), entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}), v-appId, v-status_, v-Msg) .
+          if v-status_ <> "ACCEPTED"
+          then do :
+            v-Msg = trim(trim(v-Msg, chr(10))) .
+            if v-Msg = "" then v-Msg = "Нет связи со шлюзом Ветис.Api..." .
+            run write-to-log( v-Msg ) .
+            next  vsds_.
+          end .
+          create ub.esys-all-attr .
+          assign
+            ub.esys-all-attr.table-name = "esys-pck-sent"
+            ub.esys-all-attr.attr-code = "mercury"
+            ub.esys-all-attr.key3 = "Запрос отправлен"
+            ub.esys-all-attr.key4 = string(now)
+            ub.esys-all-attr.key7 = v-appId
+            ub.esys-all-attr.key2 = 1
+            ub.esys-all-attr.key8 = g#auto-user-id
+          .
+          ub.esys-all-attr.key1 = vsdsTHObj:VsdObjCurr:ID .
+          ub.esys-all-attr.attr-value = LC(vsdsTHObj:VsdObjCurr:UUID) .
+          
+        end.
+        
+        if vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsNeedUtilized /* К гашению */
+        then do :
+          if vsdsTHObj:VsdObjCurr:UUID = "" or vsdsTHObj:VsdObjCurr:UUID = ? or vsdsTHObj:VsdObjCurr:FactDatetime = ? then next .
+        
+          find first ub.esys-all-attr no-lock where ub.esys-all-attr.table-name = "esys-pck-sent"
+                                                and ub.esys-all-attr.attr-code = "mercury"
+                                                and ub.esys-all-attr.attr-value = vsdsTHObj:VsdObjCurr:UUID
+                                                and ub.esys-all-attr.key1 = vsdsTHObj:VsdObjCurr:ID
+                                                and ub.esys-all-attr.key2 = 2
+                                                and ub.esys-all-attr.key3 <> "Запрос отклонён"
+                                                no-error .
+          if available ub.esys-all-attr then next  vsds_.
+          
+          objKeyRec = new keyrec () .
+          objKeyRec:GenRowKeyr(vsdsTHObj:VsdObjCurr:PartKey, ?, "ub", ?, ?, v-part-rowid, v-tbl-name) .
+          delete object objKeyRec no-error .
+          find first buf_parts no-lock where rowid (buf_parts) = v-part-rowid no-error.
+          if not available  buf_parts
+          then do :
+            run write-to-log( "ВСД с UUID " + vsdsTHObj:VsdObjCurr:UUID + " не привязана к партии!!!") .
+            next vsds_.
+          end. 
+          run write-to-log( "Отправка запроса на гашение ВСД с UUID " + vsdsTHObj:VsdObjCurr:UUID ) .
+          mercury:processIncomingConsignment(vsdsTHObj, buf_parts.cli-qnty, v-appId, v-status_, v-Msg) .
+          if v-status_ <> "ACCEPTED"
+          then do :
+            v-Msg = trim(trim(v-Msg, chr(10))) .
+            if v-Msg = "" then v-Msg = "Нет связи со шлюзом Ветис.Api..." .
+            run write-to-log( v-Msg ) .
+            next vsds_ .
+          end .
+          create ub.esys-all-attr .
+          assign
+            ub.esys-all-attr.table-name = "esys-pck-sent"
+            ub.esys-all-attr.attr-code = "mercury"
+            ub.esys-all-attr.key3 = "Запрос отправлен"
+            ub.esys-all-attr.key4 = string(now)
+            ub.esys-all-attr.key7 = v-appId
+            ub.esys-all-attr.key2 = 2
+            ub.esys-all-attr.key8 = g#auto-user-id
+          .
+          ub.esys-all-attr.attr-value = LC(vsdsTHObj:VsdObjCurr:UUID) .
+        end.
+      end.
+      
+      delete object vsdsTHObj .
+      delete object vsdStorage .
+      
+      
+      delete object mercury no-error .
+      
+    end.
+    
+    run write-to-log( "Закончена работа с БД " + string(v-db-num) ) .
+    
+    pause 0.2 .
+    
+  end.
+
+  delete object objThObj no-error . 
+  delete object vsdStsType no-error . 
+  
+end.
+
+/* $Workfile$ end */
