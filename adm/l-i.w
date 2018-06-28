@@ -24,6 +24,7 @@ Creation date: 05/08/07
 */
 
 /* ***************************  Definitions  ************************** */
+using ibs.th.adm.upd.*.
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -402,6 +403,42 @@ on stop   undo, leave
       view-as alert-box error .
     disconnect ub no-error .
     quit.
+  end.
+  def var v-isUpdShm as logical no-undo.
+  run adm/upddb.p (input v-cConnect, output v-isUpdShm) no-error.
+  if error-status:error
+  then do:
+    message
+      "Ошибка при обновлении схемы БД" skip
+      return-value skip
+      view-as alert-box error .
+    disconnect ub no-error .
+    quit.
+  end.
+  
+  if v-isUpdShm
+  then do:
+    run gbl/dbconn.p
+      (input v-cConnect
+      ,input v-fltConnect
+      ,input name
+      ,input password
+      ,input-output v-user-entered
+      ) .
+    if userid('{&db-name_schema}':U) = '':U
+    then do:
+      v-vid-param = "Login=" + name + {&delim-par} + "RESULT=103" + {&delim-par} + "Description=Ошибка при подключении к базе данных. Неизвестный пользователь".
+      run trg/video-action.p (input 50,
+                              input v-vid-param,
+                              output v-vid-ok,
+                              output v-vid-mes) .
+      message
+        "Ошибка при подключении к базе данных" skip
+        "Неизвестный пользователь" skip
+        view-as alert-box error .
+      disconnect ub no-error .
+      quit.
+    end.
   end.
 end. /* do1 */
 

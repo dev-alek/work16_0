@@ -258,6 +258,7 @@ DEFINE BROWSE br-db
       ub.db.max-p-time FORMAT ">>>>>9":U
       ub.db.max-p-size FORMAT ">>>,>>9":U
       ub.db.db-key FORMAT "X(12)":U
+      ub.db.reserve1-char COLUMN-LABEL "БД вер." FORMAT "X(12)":U
       ub.db.stts FORMAT "->>>>>>9":U
       get-infodb-date( ub.db.db-num) COLUMN-LABEL "Дата!актуальности!инф. о БД" FORMAT "99/99/9999":U
 /* _UIB-CODE-BLOCK-END */

@@ -58,6 +58,7 @@ define variable v-vid-param         as longchar no-undo .
 define buffer buf_sys-ctrl     for ub.sys-ctrl .
 define buffer buf_user-account for ub.user-account .
 define buffer buf_user-login   for ub.user-login .
+define buffer buf_db           for ub.db .
 
 define variable v-TH-name as character no-undo .
 
@@ -235,6 +236,15 @@ on error undo, return error return-value
     return .
   end.
 
+  do transaction:
+    find first buf_db exclusive-lock where buf_db.db-num = buf_sys-ctrl.db-num and buf_db.reserve2-char = "deferred-callnews" no-error.
+    if available (buf_db)
+    then do:
+      buf_db.reserve2-char = "".
+      release buf_db.
+    end. 
+  end.
+  
   { gbl/conf-rd.i
     "'lcns-lim':U"
     "'':U"

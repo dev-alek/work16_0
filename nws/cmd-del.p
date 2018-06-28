@@ -15,6 +15,8 @@ Creation date: 03/23/05
 
 */
 
+using ibs.th.adm.upd.*.
+
 define input parameter p-tbl-name   as character no-undo .
 define input parameter p-tbl-handle as handle    no-undo .
 define input parameter p-db-list    as character no-undo .
@@ -87,6 +89,22 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         .
       end.
     end.
+    
+    define variable observupdObj as class observupd no-undo.
+    if g#db-num = 0 /* на гбд отправляем в любом случае так как схема БД должна быть обязатльно обновлена*/
+    then do:
+    
+      observupdObj = new observupd ().
+    
+      /*исключение из списка бд маршуртизации обновленных таблиц, где схема бд не обновилась туда не уходит*/
+    
+      observupdObj:dbexcept(input-output p-db-list, input p-tbl-name).
+    
+      delete object observupdObj no-error.
+      if p-db-list = "NULL" 
+        then return.
+    end.
+
     run nws/cr-route.p
       ( input {&send-cmd}
        ,input "command":U + {&delim-nws} + "delete":U + {&delim-nws} + v-key-rec
