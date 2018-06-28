@@ -47,10 +47,13 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     define variable glog      as logical   no-undo.
     define variable mode      as character no-undo.
     define variable ii        as integer   no-undo.
+    define variable jj        as integer   no-undo.
     define variable objTrnDoc  as class     trn-gd-doc-in   no-undo.
     define variable objGd      as class     trn-gd          no-undo.
+    define variable objPrt     as class     trn-prt         no-undo.
     define variable adapObj    as class     AdapterOra-i516 no-undo.
     define variable objGds     as class     subjects        no-undo.
+    define variable objPrts    as class     subjects        no-undo.
     
     objTrnDoc = cast (subjectObj, trn-gd-doc-in).
     
@@ -87,17 +90,44 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     end case.
     
     objGds = objTrnDoc:GDS.
+    objPrts = objTrnDoc:prts.
     
     do ii = 1 to objGds:Get(ii):
       objGd = cast (objGds:SubjectObjCurr, trn-gd).
-      create TempDocLine.
-      assign
-        TempDocLine.gds-code = objGd:gd-code
-        TempDocLine.fact-qnty = objGd:qnty-fact
-        TempDocLine.doc-qnty = objGd:qnty-fact
-        TempDocLine.price-rubl = round (objGd:sum / objGd:qnty-fact, 2)
-        TempDocLine.vat-pc = round (objGd:sum-nds / objGd:qnty-fact , 2). 
-      .
+    
+      if valid-object (objPrts)
+      then do jj = 1 to objPrts:Get(jj):
+        objPrt =  cast (objPrts:SubjectObjCurr, trn-prt).
+        if objPrt:gd-line-num = objGd:line-num
+        then do:
+          create TempDocLine.
+          assign
+            TempDocLine.gds-code = objGd:gd-code
+            TempDocLine.fact-qnty = objPrt:qnty
+            TempDocLine.doc-qnty = objPrt:qnty
+            TempDocLine.vsd-uuid = objPrt:vad-guid
+            TempDocLine.part-id = objPrt:prt-id
+            TempDocLine.price-rubl = round (objGd:sum / objGd:qnty-fact, 2)
+            TempDocLine.vat-pc = round (objGd:sum-nds / objGd:qnty-fact , 2). 
+          .
+        end.        
+      end.
+      if available (TempDocLine)
+      then do:
+        release TempDocLine.
+        next.
+      end.
+      else do:
+        create TempDocLine.
+        assign
+          TempDocLine.gds-code = objGd:gd-code
+          TempDocLine.fact-qnty = objGd:qnty-fact
+          TempDocLine.doc-qnty = objGd:qnty-fact
+          TempDocLine.price-rubl = round (objGd:sum / objGd:qnty-fact, 2)
+          TempDocLine.vat-pc = round (objGd:sum-nds / objGd:qnty-fact , 2). 
+        .
+        release TempDocLine.
+      end.
     end.
     
     adapObj:SetTempTable(table TempTrnDoc, table TempDocLine, "").

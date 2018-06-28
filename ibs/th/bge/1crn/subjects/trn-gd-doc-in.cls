@@ -71,13 +71,17 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
   define property GDS as subjects no-undo 
     get. 
     private set.
+
+  define property prts as subjects no-undo 
+    get. 
+    private set.
     
   define override property InitTag as character no-undo init "trn-gd-doc"
     get. 
 
 
   constructor public trn-gd-doc-in ():
-    InitListTag = "gds".
+    InitListTag = "gds,prts".
   end constructor.
     
   method override protected void SetPropProtected(SubsObj as subjects):
@@ -86,6 +90,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
       when "gds" then
         do:
           gds = SubsObj.            
+        end.
+      when "prts" then
+        do:
+          prts = SubsObj.            
         end.
     end case.
 
@@ -170,6 +178,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
       fuel-st-code = ? 
     .
     delete object gds no-error.
+    delete object prts no-error.
     
   end.
   

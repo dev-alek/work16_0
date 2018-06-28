@@ -93,6 +93,8 @@ do:
       temp_doc-line.doc-density  = TempDocLine.fact-dnsty
       temp_doc-line.fact-density = TempDocLine.fact-dnsty
       temp_doc-line.cli-qnty     = TempDocLine.cli-qnty
+      temp_doc-line.part-id      = TempDocLine.part-id
+      temp_doc-line.vsd-uuid     = TempDocLine.vsd-uuid
       .
     
   end.

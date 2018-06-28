@@ -70,6 +70,8 @@ define temp-table temp_doc-line no-undo
   field refB          as character
   field alc-code      as character
   field alc-type-code as character
+  field vsd-uuid     as character
+  field part-id       as character
   field importer-th   as character
   field line-num-str  as character /* порядок чтения из xml */ /* не присылают */
 index pi

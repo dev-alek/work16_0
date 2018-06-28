@@ -42,6 +42,10 @@ Creation date: 01/30/15
     field cli-qnty     as decimal
     field b-code       as character
     field is-tsd-qnty  as logical init no
+    field vsd-uuid     as character
+    field part-id      as character
+    field aclMarksList as character
+    field PartIDTH     as character
     index pi
     line-num
     gds-code
