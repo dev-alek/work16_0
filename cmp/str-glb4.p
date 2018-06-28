@@ -445,6 +445,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Группа товаров на кассе */
 { cmp/cr-prep.i 1 attr-sum-grp-gl              sum-grp-gl               " " sum-grp-gl              }
 
+/* Является подконтрольным ФГИС "Меркурий" */
+{ cmp/cr-prep.i 1 attr-mercur_FGIS              mercur_FGIS               " " mercur_FGIS              }
+
+/* Является скоропортящейся продукцией */
+{ cmp/cr-prep.i 1 attr-perishable              perishable               " " perishable              }
+
 /* состав сырья 15x80 */
 { cmp/cr-prep.i 1 attr-15x80              15x80         " " 15x80       }
 
@@ -520,6 +526,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-fasovka}~
 ,{&bef-attr-mark}~
 ,{&bef-attr-sum-grp-gl}~
+,{&bef-attr-mercur_FGIS}~
+,{&bef-attr-perishable}~
 ,{&bef-attr-15x80}~
 ,{&bef-attr-8x50}~
 ,{&bef-attr-6x50}~
@@ -900,6 +908,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 
 /* Наличие расписания запуска отчетов для БД */
 { cmp/cr-prep.i 1 attr-schedule-suz           schedule-suz          " " schedule-suz         }
+
+/* Наличие расписания обмена с ФГИС Меркурий */
+{ cmp/cr-prep.i 1 attr-schedule-merc          schedule-merc         " " schedule-merc        }
 
 /* Дата по которую усечены документы по БД в ГБД */
 { cmp/cr-prep.i 1 attr-cut-date               cut-date              " " cut-date             }
@@ -1423,7 +1434,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define calc-petr
 { cmp/cr-prep.i 1 openxml-type-com-dashboard 6         "Панель Руководителя" 6                    "Commanders Dashboard"   }
 { cmp/cr-prep.i 1 openxml-type-dklink        7         "ДатаКрат DKLink"     7                    "DataKrat DKLink"   }
 { cmp/cr-prep.i 1 openxml-type-1c            8         "1C"                  8                    "1C"   }
-{ cmp/cr-prep.i 1 openxml-type-exite-edi     9         "EDI"           9                          "EDI"   }
+{ cmp/cr-prep.i 1 openxml-type-exite-edi     9         "EDI"                 9                    "EDI"   }
+{ cmp/cr-prep.i 1 openxml-type-mercury       10        "Меркурий"            10                   "Mercury"   }
 
 &glob openxml-type-list '~
 {&bef-openxml-type-ordinal}~
@@ -1436,6 +1448,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define calc-petr
 ,{&bef-openxml-type-dklink}~
 ,{&bef-openxml-type-1c}~
 ,{&bef-openxml-type-exite-edi}~
+,{&bef-openxml-type-mercury}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define openxml-type-list {&openxml-type-list}" ).
 
@@ -1450,6 +1463,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define openxml-t
 ,{&bef-openxml-type-dklink-full}~
 ,{&bef-openxml-type-1c-full}~
 ,{&bef-openxml-type-exite-edi-full}~
+,{&bef-openxml-type-mercury-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define openxml-type-list-full {&openxml-type-list-full}" ).
@@ -1469,6 +1483,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define openxml-t
 ,{&bef-openxml-type-dklink}~
 ,{&bef-openxml-type-1c}~
 ,{&bef-openxml-type-exite-edi}~
+,{&bef-openxml-type-mercury}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define openxml-special-type-list {&openxml-special-type-list}" ).
 
