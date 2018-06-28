@@ -4848,3 +4848,47 @@ procedure restore-s-sr-izmerenia :
   end.
 
 end procedure. /* restore-s-sr-izmerenia */
+procedure restore-s-gds-mercury-id :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+
+    {&init-validation}
+
+    &scoped-define sequence-name   s-gds-mercury-id
+
+    &scoped-define table-name      gds-mercury
+    &scoped-define seq-field-name  id
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+
+
+    {&update-sequence}
+  end.
+ end procedure. /* restore-s-gds-mercury-id  */ 
+  procedure restore-s-vsd-id :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+
+    {&init-validation}
+
+    &scoped-define sequence-name   s-vsd-id
+
+    &scoped-define table-name      vsd
+    &scoped-define seq-field-name  id
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+
+
+    {&update-sequence}
+  end.
+  
+
+end procedure. /* restore-s-vsd-id */
