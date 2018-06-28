@@ -54,9 +54,15 @@ define variable v-gds-code as integer no-undo .
 define variable v-tbl-rid as rowid no-undo .
 define variable v-tbl-name as character no-undo .
 
+define variable v-guid1      as character no-undo .
+define variable v-guid2      as character no-undo .
+
+define variable v-guid1_     as character no-undo .
+define variable v-guid2_     as character no-undo .
 
 define buffer buf_ext-classif for ub.ext-classif.
 define buffer buf_ext-system for ub.ext-system.
+define variable choice         as LOGICAL   NO-UNDO .
 define buffer buf2_ext-classif for ub.ext-classif.
 define buffer buf2_ext-system for ub.ext-system.
 
@@ -585,6 +591,34 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       undo _main, return error (if p-silent = yes then v-mess else '':U).
     end.
 
+    for each buf_ext-classif no-lock where
+              buf_ext-classif.classif-subject = p-classif-subject
+          and buf_ext-classif.classif-name = p-classif-name
+          and buf_ext-classif.db-num = p-db-num
+          and buf_ext-classif.key#_one = p-key#_one
+          and buf_ext-classif.key#_two = p-key#_two
+          and buf_ext-classif.nonunique = p-nonunique  :
+    
+      v-guid1 = entry(1,buf_ext-classif.charkey_two,{&delim-cmd}) .
+      v-guid2 = entry(2,buf_ext-classif.charkey_two,{&delim-cmd}) .
+      
+      v-guid1_ = entry(1,p-charkey_two,{&delim-cmd}) . 
+      v-guid2_ = entry(2,p-charkey_two,{&delim-cmd}) .
+  
+      if (v-guid1 <> "" and v-guid1 = v-guid1_ ) or (v-guid2 <> "" and v-guid2 = v-guid2_)  then do:
+      message
+        "Уже есть запись с таким GUID-ом, продолжить?"
+        view-as alert-box QUestion buttons yes-no update choice.
+      if not choice then 
+      do:
+        RETURN NO-APPLY .
+      end.
+/*        v-mess = substitute("Уже запись c таким GUID-ом").                 */
+/*/*        run err-mess in this-procedure ( input-output v-mess).*/         */
+/*        undo _main, return error (if p-silent = yes then v-mess else '':U).*/
+      end.
+    end.
+    
     create buf_ext-classif.
     assign
     buf_ext-classif.classif-subject = p-classif-subject

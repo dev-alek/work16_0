@@ -123,7 +123,7 @@ define variable v-report-name as character no-undo.         /* Наименование отчё
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark B-sel b-add b-del b-cli b-esys ~
-b-sch b-print B-Help fill-cli-vn fill-cli-th br-esys-cli mark-num 
+b-look b-sch b-print B-Help fill-cli-vn fill-cli-th br-esys-cli mark-num 
 &Scoped-Define DISPLAYED-OBJECTS fill-cli-vn fill-cli-th mark-num 
 
 /* Custom List Definitions                                              */
@@ -183,8 +183,12 @@ DEFINE BUTTON B-Help
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON b-look 
+     LABEL "&Просмотр" 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
 DEFINE BUTTON b-print
@@ -252,6 +256,7 @@ DEFINE FRAME Dialog-Frame
      b-del AT ROW 1 COL 41 WIDGET-ID 16
      b-cli AT ROW 1 COL 51 WIDGET-ID 2
      b-esys AT ROW 1 COL 61 WIDGET-ID 18
+     b-look AT ROW 1 COL 71.13 WIDGET-ID 24
      b-sch AT ROW 1 COL 102.5 WIDGET-ID 12
      b-print AT ROW 1 COL 106 WIDGET-ID 10
      B-Help AT ROW 1 COL 113
@@ -259,9 +264,9 @@ DEFINE FRAME Dialog-Frame
      fill-cli-th AT ROW 3 COL 93 COLON-ALIGNED WIDGET-ID 22
      br-esys-cli AT ROW 5.5 COL 1.5 WIDGET-ID 100
      mark-num AT ROW 1 COL 12.5 COLON-ALIGNED NO-LABEL WIDGET-ID 8
-     SPACE(96.99) SKIP(21.41)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     SPACE(97.00) SKIP(21.41)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE ""
          CANCEL-BUTTON b-quit.
 
@@ -406,6 +411,35 @@ define variable v-esys-id   as integer        no-undo.
  end.
 
   APPLY "entry" TO br-esys-cli.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-look
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-look Dialog-Frame
+ON CHOOSE OF b-look IN FRAME Dialog-Frame /* Просмотр */
+DO:
+define VARIABLE v-ok as LOGICAL no-undo .
+    if ( available X_ext-classif ) then do:
+      
+      find first ub.ext-system no-lock where
+      ub.ext-system.esys-id = integer(X_ext-classif.KEY#_one) no-error .
+      
+run ref/esysclii.w (INPUT parparentproc
+                   ,input {&lookup}
+                   ,input substitute("Добавление кода объекта во внешней системе &1 для &2&3"
+                              ,ub.ext-system.esys-name
+                              ,X_clients.obj-type
+                              ,X_clients.obj-code)
+                   ,input INTEGER (ub.ext-system.esys-type)
+                   ,input-output X_ext-classif.CharKey_One
+                   ,input-output X_ext-classif.CharKey_Three
+                   ,input-output X_ext-classif.CharKey_Two
+                   ,output v-ok) no-error.
+if not v-ok then return NO-APPLY.
+end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -623,8 +657,8 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY fill-cli-vn fill-cli-th mark-num 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-mark B-sel b-add b-del b-cli b-esys b-sch b-print B-Help
-         fill-cli-vn fill-cli-th br-esys-cli mark-num 
+  ENABLE b-quit B-mark B-sel b-add b-del b-cli b-esys b-look b-sch b-print 
+         B-Help fill-cli-vn fill-cli-th br-esys-cli mark-num 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -639,6 +673,7 @@ ENABLE
 b-quit
 b-cli
 b-print
+b-look
 b-add when (v-cntxt-db-num = 0 and lookup("b-add", bttns) > 0 and not transaction)
 b-del when (v-cntxt-db-num = 0 and lookup("b-add", bttns) > 0 and not transaction)
 b-esys
@@ -754,7 +789,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add Dialog-Frame 
 PROCEDURE proc-b-add :
 DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
 define variable v-rid as recid no-undo .
@@ -769,6 +804,7 @@ define variable v-tbl-row as rowid no-undo .
 define variable v-tbl-name as character no-undo .
 define buffer buf_clients for ub.clients.
 define buffer buf_ext-system for ub.ext-system.
+define buffer buf_ext-classif for ub.ext-classif .
 if not available X_ext-system then do:
   message
   "Выберите внешнюю систему, для которой Вы хотите добавить запись объекта"
@@ -828,13 +864,24 @@ assign
 v-value-character = buf_clients.obj-type
 v-value-character2 = string(buf_clients.obj-code)
 .
-run ref/esysclii.w ( input {&add-def}
+find first buf_ext-classif NO-LOCK where buf_ext-classif.classif-subject = {&table_clients}
+                                     and buf_ext-classif.classif-name = {&extclass_clients_esys}
+                                     and buf_ext-classif.CharKey_One = STRING (buf_ext-system.esys-id)
+                                     and buf_ext-classif.CharKey_One = v-value-character
+                                     and buf_ext-classif.CharKey_Three = v-value-character2 no-error .
+if AVAILABLE (buf_ext-classif) then do:
+  v-value-character3 = buf_ext-classif.CharKey_Two .
+end.                                       
+run ref/esysclii.w (INPUT parparentproc 
+                   ,input {&add-def}
                    ,input substitute("Добавление кода объекта во внешней системе &1 для &2&3"
                               ,buf_ext-system.esys-name
                               ,buf_clients.obj-type
                               ,buf_clients.obj-code)
+                   ,input INTEGER (buf_ext-system.esys-type)                               
                    ,input-output v-value-character
                    ,input-output v-value-character2
+                   ,input-output v-value-character3
                    ,output v-ok) no-error.
 if not v-ok then return error.
 run gen-key-rec IN THIS-PROCEDURE ( input {&table_clients}
@@ -850,7 +897,7 @@ run ref/extclas1.p ( INPUT {&add-def}
                     ,input 0 /*p-Key#_Two*/
                     ,input 0 /*p-key#_Three*/
                     ,input v-value-character  /*p-CharKey_One */
-                    ,input '':U /*p-CharKey_two */
+                    ,input v-value-character3 /*p-CharKey_two */
                     ,input v-value-character2 /*p-CharKey_three */
                     ,input 0 /*p-nonunique */
                     ,input v-uniq-key-rec ) no-error.
