@@ -655,6 +655,15 @@ define variable v-barcode-list as longchar no-undo .
     RUN gdsoattr-delete (v-nbc, {&shop}, ub.clients.obj-code, {&attr-normal-wastage-o}, output v-attr-del).     
   end.
   
+  if p-GdsObj:vad-gds = 1
+  then do :
+    RUN gds-attr-write (v-nbc, {&attr-mercur_FGIS}, "yes").  
+  end.
+  else if p-GdsObj:vad-gds = 0
+  then do :
+    RUN gds-attr-delete (v-nbc, {&attr-mercur_FGIS}, output v-attr-del).     
+  end.
+  
   
   procedure mainmenu_getcntxt :
     define output parameter v-cntxt-db-num        as integer   no-undo . /* текущая БД            */   
