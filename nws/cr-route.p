@@ -325,6 +325,8 @@ on endkey undo block_cre-route, return error substitute( "&1. endkey", vss-workf
         or when {&table_stop-list}
         or when {&table_esys-route}
         or when {&table_layout}
+        or when {&table_vsd}
+        or when {&table_gds-mercury}
         then do:
           /* маршрутизация кустовой записи без проверки необходимости отправки чеков */
           assign

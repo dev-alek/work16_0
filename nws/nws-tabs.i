@@ -744,6 +744,13 @@ abc-analysis~
 ,c-egais-clients~
 ,egais-gds~
 ,c-egais-gds~
+,c-vsd~
+,c-gds-mercury
+,vsd~
+,vsd-attr~
+,c-gds-mercury~
+,gds-mercury~
+,gds-mercury-attr~
 ':U .
 
 

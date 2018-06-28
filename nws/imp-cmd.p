@@ -1317,6 +1317,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_rule-process}
             or when {&table_dis-gds-rule-attr}
             or when {&table_auto-tank-attr}
+            or when {&table_vsd}
+            or when {&table_gds-mercury}
+            or when {&table_c-vsd}
+            or when {&table_c-gds-mercury}
+            or when {&table_vsd-attr}
+            or when {&table_gds-mercury-attr}
             then do:
               run nws/del-rec.p
                 ( input v-key-rec
