@@ -15,6 +15,9 @@ Creation date: 10/05/2006
 
 */
 using ibs.th.str.*.
+using ibs.th.str.mercury.*.
+using ibs.th.gbl.storage.*.
+using ibs.th.gbl.*.
 
 define input  parameter parparentproc   as   widget-handle       no-undo.
 define input  parameter parparenthandle as   handle              no-undo.
@@ -194,6 +197,11 @@ define variable v-vid-param         as longchar no-undo .
 define temp-table tt-trn no-undo like ub.trn-doc.
 define variable res        as character no-undo .
 define variable infoSectionsTotal as class InfoSectionsTotal no-undo.
+define variable vsdSubsObj as class vsdsubs no-undo.
+define variable vsdSubCurr as class vsdsub no-undo.
+define variable vsdSts as class vsdstatustype no-undo.
+define variable vsdStr as class vsdtostorage no-undo.
+define variable keyrecObj as class keyrec no-undo.
 
 
 define stream str-err.
@@ -420,6 +428,117 @@ do:
       view-as alert-box error .
     return error .
   end.
+end.
+
+define variable v-mercury-value as character no-undo .
+define variable v-mercury-type  as character no-undo .
+define variable v-mercury-prod as logical init false.
+define variable keypart as character init false.
+define variable v-close as logical.
+
+if varstatus = {&fact} and (bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} )
+then do:
+  { gbl/conf-rd.i
+    "'mercuri':u"
+    "0"
+    "''"
+    0
+    "''"
+    "''"
+    "''"
+    no
+    v-mercury-value
+    v-mercury-type
+    no-error
+  }
+  if  not error-status :error
+  and lookup(v-mercury-value, 'th':u) > 0
+  then do:
+    { gbl/getsect.i run bf_trn-doc.obj-type bf_trn-doc.obj-code {&attr-mercur} }
+    
+    for each thbjattr_thbj-attr :
+      case thbjattr_thbj-attr.prop-code :
+        when "close" then v-close = thbjattr_thbj-attr.property-value-logical.
+      end case.
+    end.
+
+    
+    vsdSts = new vsdstatustype ().
+    vsdSubsObj = new vsdsubs ().
+    vsdStr = new vsdtostorage ().
+    keyrecObj = new keyrec ().
+
+    for each bf_parts where bf_parts.out-code = bf_trn-doc.doc-code:
+      
+      find first bf_goods where 
+        bf_goods.artic = bf_parts.artic and
+        bf_goods.prod-type = bf_parts.prod-type and
+        bf_goods.prod-code = bf_parts.prod-code no-error.
+      
+      { gbl/gdscdat.i
+        bf_goods.gds-code
+        "'mercur_FGIS=request':u"
+        v-mercury-prod
+        no-error
+      }
+      if error-status :error
+      then do:
+        message
+          vss-workfile vss-revision vss-description skip
+          "Ошибка при определении атрибута товара" skip
+          "Код товара" bf_goods.gds-code skip
+          'mercur_FGIS=request':u skip
+          error-status :get-message(1) skip
+          return-value skip
+          view-as alert-box error .
+        undo, return error .
+      end.
+      keyrecObj:GenKeyRec({&table_parts}, buffer bf_parts:handle, output keypart).
+      vsdsubsObj = vsdStr:getVSDsubs(input "part-key", input keypart).
+      if not (vsdSubsObj:iCounter = 0)
+      then do:
+          vsdSubsObj:GetItem(1).
+        end.
+      if (vsdSubsObj:iCounter = 0 or vsdSubsObj:VsdObjCurr:UUID = "") and v-mercury-prod
+      then do:
+        varlog = false.
+        if v-close = true
+        then do:
+          if parmessage then do:
+            message   "В документе " bf_trn-doc.doc-code skip
+                      "На объекте  " bf_trn-doc.obj-type " " bf_trn-doc.obj-code skip
+                      "По товару " bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code skip
+                      "Подкотрольного ФГИС Меркурий не заведен ВСД."
+                      "Продолжить закрытие документа?"
+                      view-as alert-box buttons yes-no update varlog.
+            if varlog <> yes
+            then do:
+              run waitfram-hide in this-procedure no-error.
+              undo, return error.
+            end.
+          end.
+        end.
+        else do:
+          message   "В документе " bf_trn-doc.doc-code skip
+                    "На объекте  " bf_trn-doc.obj-type " " bf_trn-doc.obj-code skip
+                    "По товару " bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code skip
+                    "Подкотрольного ФГИС Меркурий не заведен ВСД."
+                    view-as alert-box error.
+
+          run waitfram-hide in this-procedure no-error.
+          undo, return error.
+        end.
+      end.
+      do ii = 1 to vsdSubsObj:GetItem(ii):
+        vsdSubCurr = vsdSubsObj:VsdObjCurr.
+        vsdSubCurr:FactDatetime = now.
+        vsdStr:updateDB(input vsdSubCurr ).
+      end.
+      
+    end.
+  end.
+  
+  
 end.
 
 if ((varstatus = {&wayb} and varflag) or varstatus = {&fact}) and varauto-tank = true and stfactplvalue <> ""
